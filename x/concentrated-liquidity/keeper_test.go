@@ -1,6 +1,7 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -8,7 +9,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/clmocks"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -20,20 +22,19 @@ import (
 )
 
 var (
-	DefaultExponentAtPriceOne                      = sdk.NewInt(-4)
-	DefaultMinTick, DefaultMaxTick                 = cl.GetMinAndMaxTicksFromExponentAtPriceOne(DefaultExponentAtPriceOne)
+	DefaultMinTick, DefaultMaxTick                 = cltypes.MinTick, cltypes.MaxTick
 	DefaultLowerPrice                              = sdk.NewDec(4545)
-	DefaultLowerTick                               = int64(305450)
+	DefaultLowerTick                               = int64(30545000)
 	DefaultUpperPrice                              = sdk.NewDec(5500)
-	DefaultUpperTick                               = int64(315000)
+	DefaultUpperTick                               = int64(31500000)
 	DefaultCurrPrice                               = sdk.NewDec(5000)
-	DefaultCurrTick                                = sdk.NewInt(310000)
+	DefaultCurrTick                                = sdk.NewInt(31000000)
 	DefaultCurrSqrtPrice, _                        = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
 	DefaultZeroSwapFee                             = sdk.ZeroDec()
 	DefaultFeeAccumCoins                           = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
-	DefaultJoinTime                                = time.Unix(0, 0)
-	DefaultFreezeDuration                          = time.Duration(time.Hour * 24)
 	DefaultPositionId                              = uint64(1)
+	DefaultUnderlyingLockId                        = uint64(0)
+	DefaultJoinTime                                = time.Unix(0, 0)
 	ETH                                            = "eth"
 	DefaultAmt0                                    = sdk.NewInt(1000000)
 	DefaultAmt0Expected                            = sdk.NewInt(998976)
@@ -43,12 +44,16 @@ var (
 	DefaultAmt1Expected                            = sdk.NewInt(5000000000)
 	DefaultCoin1                                   = sdk.NewCoin(USDC, DefaultAmt1)
 	DefaultLiquidityAmt                            = sdk.MustNewDecFromStr("1517882343.751510418088349649")
-	DefaultTickSpacing                             = uint64(1)
+	FullRangeLiquidityAmt                          = sdk.MustNewDecFromStr("70710678.118654752940000000")
+	DefaultTickSpacing                             = uint64(100)
 	PoolCreationFee                                = poolmanagertypes.DefaultParams().PoolCreationFee
-	DefaultExponentConsecutivePositionLowerTick, _ = math.PriceToTick(sdk.NewDec(5500), DefaultExponentAtPriceOne)
-	DefaultExponentConsecutivePositionUpperTick, _ = math.PriceToTick(sdk.NewDec(6250), DefaultExponentAtPriceOne)
-	DefaultExponentOverlappingPositionLowerTick, _ = math.PriceToTick(sdk.NewDec(4000), DefaultExponentAtPriceOne)
-	DefaultExponentOverlappingPositionUpperTick, _ = math.PriceToTick(sdk.NewDec(4999), DefaultExponentAtPriceOne)
+	DefaultExponentConsecutivePositionLowerTick, _ = math.PriceToTickRoundDown(sdk.NewDec(5500), DefaultTickSpacing)
+	DefaultExponentConsecutivePositionUpperTick, _ = math.PriceToTickRoundDown(sdk.NewDec(6250), DefaultTickSpacing)
+	DefaultExponentOverlappingPositionLowerTick, _ = math.PriceToTickRoundDown(sdk.NewDec(4000), DefaultTickSpacing)
+	DefaultExponentOverlappingPositionUpperTick, _ = math.PriceToTickRoundDown(sdk.NewDec(4999), DefaultTickSpacing)
+	BAR                                            = "bar"
+	FOO                                            = "foo"
+	InsufficientFundsError                         = fmt.Errorf("insufficient funds")
 )
 
 type KeeperTestSuite struct {
@@ -64,12 +69,12 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {
-	s.SetupPosition(poolId, s.TestAccs[0], DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime(), DefaultFreezeDuration)
+	s.SetupPosition(poolId, s.TestAccs[0], DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime())
 }
 
-func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, coin0, coin1 sdk.Coin, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration) (sdk.Dec, uint64) {
+func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, coin0, coin1 sdk.Coin, lowerTick, upperTick int64, joinTime time.Time) (sdk.Dec, uint64) {
 	s.FundAcc(owner, sdk.NewCoins(coin0, coin1))
-	positionId, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, coin0.Amount, coin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick, freezeDuration)
+	positionId, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, coin0.Amount, coin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
 	s.Require().NoError(err)
 	liquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, positionId)
 	s.Require().NoError(err)
@@ -98,22 +103,22 @@ func (s *KeeperTestSuite) SetupDefaultPositions(poolId uint64) {
 }
 
 func (s *KeeperTestSuite) SetupDefaultPositionAcc(poolId uint64, owner sdk.AccAddress) uint64 {
-	_, positionId := s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime(), DefaultFreezeDuration)
+	_, positionId := s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime())
 	return positionId
 }
 
 func (s *KeeperTestSuite) SetupFullRangePositionAcc(poolId uint64, owner sdk.AccAddress) uint64 {
-	_, positionId := s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime(), DefaultFreezeDuration)
+	_, positionId := s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime())
 	return positionId
 }
 
 func (s *KeeperTestSuite) SetupConsecutiveRangePositionAcc(poolId uint64, owner sdk.AccAddress) uint64 {
-	_, positionId := s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultExponentConsecutivePositionLowerTick.Int64(), DefaultExponentConsecutivePositionUpperTick.Int64(), s.Ctx.BlockTime(), DefaultFreezeDuration)
+	_, positionId := s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultExponentConsecutivePositionLowerTick.Int64(), DefaultExponentConsecutivePositionUpperTick.Int64(), s.Ctx.BlockTime())
 	return positionId
 }
 
 func (s *KeeperTestSuite) SetupOverlappingRangePositionAcc(poolId uint64, owner sdk.AccAddress) uint64 {
-	_, positionId := s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultExponentOverlappingPositionLowerTick.Int64(), DefaultExponentOverlappingPositionUpperTick.Int64(), s.Ctx.BlockTime(), DefaultFreezeDuration)
+	_, positionId := s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultExponentOverlappingPositionLowerTick.Int64(), DefaultExponentOverlappingPositionUpperTick.Int64(), s.Ctx.BlockTime())
 	return positionId
 }
 
@@ -155,16 +160,13 @@ func (s *KeeperTestSuite) initializeTick(ctx sdk.Context, currentTick int64, tic
 
 // initializeFeeAccumulatorPositionWithLiquidity initializes fee accumulator position with given parameters and updates it with given liquidity.
 func (s *KeeperTestSuite) initializeFeeAccumulatorPositionWithLiquidity(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidity sdk.Dec) {
-	err := s.App.ConcentratedLiquidityKeeper.InitializeFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId)
-	s.Require().NoError(err)
-
-	err = s.App.ConcentratedLiquidityKeeper.UpdateFeeAccumulatorPosition(ctx, liquidity, positionId)
+	err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId, liquidity)
 	s.Require().NoError(err)
 }
 
 // addLiquidityToUptimeAccumulators adds shares to all uptime accumulators as defined by the `liquidity` parameter.
 // This helper is primarily used to test incentive accrual for specific tick ranges, so we pass in filler values
-// for all other components (e.g. join time and freeze duration).
+// for all other components (e.g. join time).
 func (s *KeeperTestSuite) addLiquidityToUptimeAccumulators(ctx sdk.Context, poolId uint64, liquidity []sdk.Dec, positionId uint64) {
 	s.Require().Equal(len(liquidity), len(types.SupportedUptimes))
 
@@ -283,4 +285,69 @@ func (s *KeeperTestSuite) validatePositionFeeAccUpdate(ctx sdk.Context, poolId u
 	s.Require().NoError(err)
 
 	s.Require().Equal(liquidity.String(), accumulatorPosition.String())
+}
+
+// validateListenerCallCount validates that the listeners were invoked the expected number of times.
+func (s *KeeperTestSuite) validateListenerCallCount(
+	expectedPoolCreatedListenerCallCount,
+	expectedInitialPositionCreationListenerCallCount,
+	expectedLastPositionWithdrawalListenerCallCount,
+	expectedSwapListenerCallCount int) {
+	// Validate that listeners were called the desired number of times
+	listeners := s.App.ConcentratedLiquidityKeeper.GetListenersUnsafe()
+	s.Require().Len(listeners, 1)
+
+	mockListener, ok := listeners[0].(*clmocks.ConcentratedLiquidityListenerMock)
+	s.Require().True(ok)
+
+	s.Require().Equal(expectedPoolCreatedListenerCallCount, mockListener.AfterConcentratedPoolCreatedCallCount)
+	s.Require().Equal(expectedInitialPositionCreationListenerCallCount, mockListener.AfterInitialPoolPositionCreatedCallCount)
+	s.Require().Equal(expectedLastPositionWithdrawalListenerCallCount, mockListener.AfterLastPoolPositionRemovedCallCount)
+	s.Require().Equal(expectedSwapListenerCallCount, mockListener.AfterConcentratedPoolSwapCallCount)
+}
+
+// setListenerMockOnConcentratedLiquidityKeeper injects the mock into the concentrated liquidity keeper
+// so that listener invocation can be tested via the mock
+func (s *KeeperTestSuite) setListenerMockOnConcentratedLiquidityKeeper() {
+	s.App.ConcentratedLiquidityKeeper.SetListenersUnsafe(types.NewConcentratedLiquidityListeners(&clmocks.ConcentratedLiquidityListenerMock{}))
+}
+
+// Crosses the tick and charges the fee on the global fee accumulator.
+// This mimics crossing an initialized tick during a swap and charging the fee on swap completion.
+func (s *KeeperTestSuite) crossTickAndChargeFee(poolId uint64, tickIndexToCross int64) {
+	// Cross the tick to update it.
+	_, err := s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, poolId, tickIndexToCross, DefaultFeeAccumCoins[0])
+	s.Require().NoError(err)
+	err = s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, poolId, DefaultFeeAccumCoins[0])
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) validatePositionFeeGrowth(poolId uint64, positionId uint64, expectedUnclaimedRewards sdk.DecCoins) {
+	accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, poolId)
+	s.Require().NoError(err)
+	positionRecord, err := accum.GetPosition(cltypes.KeyFeePositionAccumulator(positionId))
+	s.Require().NoError(err)
+	if expectedUnclaimedRewards.IsZero() {
+		s.Require().Equal(expectedUnclaimedRewards, positionRecord.UnclaimedRewards)
+	} else {
+		s.Require().Equal(expectedUnclaimedRewards[0].Amount.Mul(DefaultLiquidityAmt), positionRecord.UnclaimedRewards.AmountOf(expectedUnclaimedRewards[0].Denom))
+		if expectedUnclaimedRewards.Len() > 1 {
+			s.Require().Equal(expectedUnclaimedRewards[1].Amount.Mul(DefaultLiquidityAmt), positionRecord.UnclaimedRewards.AmountOf(expectedUnclaimedRewards[1].Denom))
+		}
+	}
+}
+
+func (s *KeeperTestSuite) TestValidatePermissionlessPoolCreationEnabled() {
+	s.SetupTest()
+	// Normally, by default, permissionless pool creation is disabled.
+	// SetupTest, however, calls SetupConcentratedLiquidityDenomsAndPoolCreation which enables permissionless pool creation.
+	s.Require().NoError(s.App.ConcentratedLiquidityKeeper.ValidatePermissionlessPoolCreationEnabled(s.Ctx))
+
+	// Disable permissionless pool creation.
+	defaultParams := types.DefaultParams()
+	defaultParams.IsPermissionlessPoolCreationEnabled = false
+	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, defaultParams)
+
+	// Validate that permissionless pool creation is disabled.
+	s.Require().Error(s.App.ConcentratedLiquidityKeeper.ValidatePermissionlessPoolCreationEnabled(s.Ctx))
 }

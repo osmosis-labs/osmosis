@@ -10,6 +10,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	osmoapp "github.com/osmosis-labs/osmosis/v15/app"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	clmodule "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/clmodule"
@@ -19,17 +20,24 @@ import (
 )
 
 type singlePoolGenesisEntry struct {
-	pool     model.Pool
-	tick     []genesis.FullTick
-	positons []model.Position
+	pool                  model.Pool
+	tick                  []genesis.FullTick
+	positionData          []genesis.PositionData
+	feeAccumValues        genesis.AccumObject
+	incentiveAccumulators []genesis.AccumObject
+	incentiveRecords      []types.IncentiveRecord
 }
 
 var (
 	baseGenesis = genesis.GenesisState{
 		Params: types.Params{
-			AuthorizedTickSpacing: []uint64{1, 10, 50},
-			AuthorizedSwapFees:    []sdk.Dec{sdk.MustNewDecFromStr("0.0001"), sdk.MustNewDecFromStr("0.0003"), sdk.MustNewDecFromStr("0.0005")}},
-		PoolData: []*genesis.PoolData{},
+			AuthorizedTickSpacing:        []uint64{1, 10, 100, 1000},
+			AuthorizedSwapFees:           []sdk.Dec{sdk.MustNewDecFromStr("0.0001"), sdk.MustNewDecFromStr("0.0003"), sdk.MustNewDecFromStr("0.0005")},
+			AuthorizedQuoteDenoms:        []string{ETH, USDC},
+			BalancerSharesRewardDiscount: types.DefaultBalancerSharesDiscount,
+			AuthorizedUptimes:            types.DefaultAuthorizedUptimes,
+		},
+		PoolData: []genesis.PoolData{},
 	}
 	testCoins    = sdk.NewDecCoins(cl.HundredFooCoins)
 	testTickInfo = model.TickInfo{
@@ -48,25 +56,70 @@ var (
 		Info:      testTickInfo,
 	}
 	testPositionModel = model.Position{
-		PositionId:     1,
-		PoolId:         1,
-		Address:        testAddressOne.String(),
-		Liquidity:      sdk.OneDec(),
-		LowerTick:      -1,
-		UpperTick:      100,
-		JoinTime:       defaultBlockTime,
-		FreezeDuration: DefaultFreezeDuration,
+		PositionId: 1,
+		PoolId:     1,
+		Address:    testAddressOne.String(),
+		Liquidity:  sdk.OneDec(),
+		LowerTick:  -1,
+		UpperTick:  100,
+		JoinTime:   defaultBlockTime,
+	}
+	testFeeAccumRecord = accum.Record{
+		NumShares:        sdk.OneDec(),
+		InitAccumValue:   sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+		UnclaimedRewards: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(5))),
+		Options:          nil,
 	}
 )
 
-func positionWithPoolId(position model.Position, poolId uint64) model.Position {
+func positionWithPoolId(position model.Position, poolId uint64) *model.Position {
 	position.PoolId = poolId
-	return position
+	return &position
 }
 
-func withPositionId(position model.Position, positionId uint64) model.Position {
+func withPositionId(position model.Position, positionId uint64) *model.Position {
 	position.PositionId = positionId
-	return position
+	return &position
+}
+
+func incentiveAccumsWithPoolId(poolId uint64) []genesis.AccumObject {
+	return []genesis.AccumObject{
+		{
+			Name: types.KeyUptimeAccumulator(poolId, uint64(0)),
+			AccumContent: &accum.AccumulatorContent{
+				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(20))),
+				TotalShares: sdk.NewDec(20),
+			},
+		},
+		{
+			Name: types.KeyUptimeAccumulator(poolId, uint64(1)),
+			AccumContent: &accum.AccumulatorContent{
+				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
+				TotalShares: sdk.NewDec(30),
+			},
+		},
+		{
+			Name: types.KeyUptimeAccumulator(poolId, uint64(2)),
+			AccumContent: &accum.AccumulatorContent{
+				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("baz", sdk.NewInt(10))),
+				TotalShares: sdk.NewDec(10),
+			},
+		},
+		{
+			Name: types.KeyUptimeAccumulator(poolId, uint64(3)),
+			AccumContent: &accum.AccumulatorContent{
+				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("qux", sdk.NewInt(20))),
+				TotalShares: sdk.NewDec(20),
+			},
+		},
+		{
+			Name: types.KeyUptimeAccumulator(poolId, uint64(4)),
+			AccumContent: &accum.AccumulatorContent{
+				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("quux", sdk.NewInt(20))),
+				TotalShares: sdk.NewDec(20),
+			},
+		},
+	}
 }
 
 // setupGenesis initializes the GenesisState with the given poolGenesisEntries data.
@@ -74,12 +127,12 @@ func withPositionId(position model.Position, positionId uint64) model.Position {
 //
 // baseGenesis is the initial GenesisState.
 // poolGenesisEntries is a slice of singlePoolGenesisEntry structures, each containing data
-// for a single pool (the pool itself, its ticks, and positions).
+// for a single pool (the pool itself, its ticks, positions, incentives records, accumulators and the next position ID).
 //
 // The function iterates over the poolGenesisEntries, and for each entry, it creates a new Any type using
 // the pool's data, then appends a new PoolData structure containing the pool and its corresponding
 // ticks to the baseGenesis.PoolData. It also appends the corresponding positions to the
-// baseGenesis.Positions.
+// baseGenesis.Positions, along with the incentive records and accumulator values for fees and incentives.
 func setupGenesis(baseGenesis genesis.GenesisState, poolGenesisEntries []singlePoolGenesisEntry) genesis.GenesisState {
 	for _, poolGenesisEntry := range poolGenesisEntries {
 		poolCopy := poolGenesisEntry.pool
@@ -87,12 +140,15 @@ func setupGenesis(baseGenesis genesis.GenesisState, poolGenesisEntries []singleP
 		if err != nil {
 			panic(err)
 		}
-		baseGenesis.PoolData = append(baseGenesis.PoolData, &genesis.PoolData{
-			Pool:  poolAny,
-			Ticks: poolGenesisEntry.tick,
+		baseGenesis.PoolData = append(baseGenesis.PoolData, genesis.PoolData{
+			Pool:                   poolAny,
+			Ticks:                  poolGenesisEntry.tick,
+			FeeAccumulator:         poolGenesisEntry.feeAccumValues,
+			IncentivesAccumulators: poolGenesisEntry.incentiveAccumulators,
+			IncentiveRecords:       poolGenesisEntry.incentiveRecords,
 		})
-		baseGenesis.Positions = append(baseGenesis.Positions, poolGenesisEntry.positons...)
-		baseGenesis.NextPositionId = uint64(len(poolGenesisEntry.positons))
+		baseGenesis.PositionData = append(baseGenesis.PositionData, poolGenesisEntry.positionData...)
+		baseGenesis.NextPositionId = uint64(len(poolGenesisEntry.positionData))
 	}
 	return baseGenesis
 }
@@ -100,7 +156,7 @@ func setupGenesis(baseGenesis genesis.GenesisState, poolGenesisEntries []singleP
 // TestInitGenesis tests the InitGenesis function of the ConcentratedLiquidityKeeper.
 // It checks that the state is initialized correctly based on the provided genesis.
 func (s *KeeperTestSuite) TestInitGenesis() {
-	s.Setup()
+	s.SetupTest()
 	poolE := s.PrepareConcentratedPool()
 	poolOne, ok := poolE.(*model.Pool)
 	s.Require().True(ok)
@@ -109,15 +165,20 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 	poolTwo, ok := poolE.(*model.Pool)
 	s.Require().True(ok)
 
+	defaultTime1 := time.Unix(100, 100)
+	defaultTime2 := time.Unix(300, 100)
+
 	testCase := []struct {
-		name                   string
-		genesis                genesis.GenesisState
-		expectedPools          []model.Pool
-		expectedTicksPerPoolId map[uint64][]genesis.FullTick
-		expectedPositions      []model.Position
+		name                     string
+		genesis                  genesis.GenesisState
+		expectedPools            []model.Pool
+		expectedTicksPerPoolId   map[uint64][]genesis.FullTick
+		expectedPositionData     []genesis.PositionData
+		expectedfeeAccumValues   []genesis.AccumObject
+		expectedIncentiveRecords []types.IncentiveRecord
 	}{
 		{
-			name: "one pool, one position, two ticks",
+			name: "one pool, one position, two ticks, one accumulator, two incentive records",
 			genesis: setupGenesis(baseGenesis, []singlePoolGenesisEntry{
 				{
 					pool: *poolOne,
@@ -125,7 +186,50 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), -10),
 						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), 10),
 					},
-					positons: []model.Position{testPositionModel},
+					positionData: []genesis.PositionData{
+						{
+							LockId:         1,
+							Position:       &testPositionModel,
+							FeeAccumRecord: testFeeAccumRecord,
+						},
+						{
+							LockId:         0,
+							Position:       withPositionId(testPositionModel, 2),
+							FeeAccumRecord: testFeeAccumRecord,
+						},
+					},
+					feeAccumValues: genesis.AccumObject{
+						Name: types.KeyFeePoolAccumulator(1),
+						AccumContent: &accum.AccumulatorContent{
+							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+							TotalShares: sdk.NewDec(10),
+						},
+					},
+					incentiveAccumulators: incentiveAccumsWithPoolId(1),
+					incentiveRecords: []types.IncentiveRecord{
+						{
+							PoolId:               uint64(1),
+							IncentiveDenom:       "foo",
+							IncentiveCreatorAddr: testAddressOne.String(),
+							IncentiveRecordBody: types.IncentiveRecordBody{
+								RemainingAmount: sdk.NewDec(5),
+								EmissionRate:    sdk.NewDec(10),
+								StartTime:       defaultTime1,
+							},
+							MinUptime: testUptimeOne,
+						},
+						{
+							PoolId:               uint64(1),
+							IncentiveDenom:       "bar",
+							IncentiveCreatorAddr: testAddressTwo.String(),
+							IncentiveRecordBody: types.IncentiveRecordBody{
+								RemainingAmount: sdk.NewDec(15),
+								EmissionRate:    sdk.NewDec(20),
+								StartTime:       defaultTime2,
+							},
+							MinUptime: testUptimeOne,
+						},
+					},
 				},
 			}),
 			expectedPools: []model.Pool{
@@ -137,17 +241,88 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					withTickIndex(withPoolId(defaultFullTick, poolOne.Id), 10),
 				},
 			},
-			expectedPositions: []model.Position{testPositionModel},
+			expectedPositionData: []genesis.PositionData{
+				{
+					LockId:         1,
+					Position:       &testPositionModel,
+					FeeAccumRecord: testFeeAccumRecord,
+				},
+				{
+					LockId:         0,
+					Position:       withPositionId(testPositionModel, 2),
+					FeeAccumRecord: testFeeAccumRecord,
+				},
+			},
+			expectedfeeAccumValues: []genesis.AccumObject{
+				{
+					Name: types.KeyFeePoolAccumulator(1),
+					AccumContent: &accum.AccumulatorContent{
+						AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+						TotalShares: sdk.NewDec(10),
+					},
+				},
+			},
+			expectedIncentiveRecords: []types.IncentiveRecord{
+				{
+					PoolId:               uint64(1),
+					IncentiveDenom:       "bar",
+					IncentiveCreatorAddr: testAddressTwo.String(),
+					IncentiveRecordBody: types.IncentiveRecordBody{
+						RemainingAmount: sdk.NewDec(15),
+						EmissionRate:    sdk.NewDec(20),
+						StartTime:       defaultTime2,
+					},
+					MinUptime: testUptimeOne,
+				},
+				{
+					PoolId:               uint64(1),
+					IncentiveDenom:       "foo",
+					IncentiveCreatorAddr: testAddressOne.String(),
+					IncentiveRecordBody: types.IncentiveRecordBody{
+						RemainingAmount: sdk.NewDec(5),
+						EmissionRate:    sdk.NewDec(10),
+						StartTime:       defaultTime1,
+					},
+					MinUptime: testUptimeOne,
+				},
+			},
 		},
 		{
-			name: "two pools, two positions, one tick pool one, two ticks pool two",
+			name: "two pools, two positions, one tick pool one, two ticks pool two, two accumulators, one incentive records each",
 			genesis: setupGenesis(baseGenesis, []singlePoolGenesisEntry{
 				{
 					pool: *poolOne,
 					tick: []genesis.FullTick{
 						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), -1234),
 					},
-					positons: []model.Position{testPositionModel},
+					positionData: []genesis.PositionData{
+						{
+							LockId:         1,
+							Position:       &testPositionModel,
+							FeeAccumRecord: testFeeAccumRecord,
+						},
+					},
+					feeAccumValues: genesis.AccumObject{
+						Name: types.KeyFeePoolAccumulator(1),
+						AccumContent: &accum.AccumulatorContent{
+							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+							TotalShares: sdk.NewDec(10),
+						},
+					},
+					incentiveAccumulators: incentiveAccumsWithPoolId(1),
+					incentiveRecords: []types.IncentiveRecord{
+						{
+							PoolId:               uint64(1),
+							IncentiveDenom:       "foo",
+							IncentiveCreatorAddr: testAddressOne.String(),
+							IncentiveRecordBody: types.IncentiveRecordBody{
+								RemainingAmount: sdk.NewDec(5),
+								EmissionRate:    sdk.NewDec(10),
+								StartTime:       defaultTime1,
+							},
+							MinUptime: testUptimeOne,
+						},
+					},
 				},
 				{
 					pool: *poolTwo,
@@ -155,7 +330,34 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), 0),
 						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), 999),
 					},
-					positons: []model.Position{withPositionId(positionWithPoolId(testPositionModel, 2), DefaultPositionId+1)},
+					positionData: []genesis.PositionData{
+						{
+							LockId:   2,
+							Position: withPositionId(*positionWithPoolId(testPositionModel, 2), DefaultPositionId+1),
+						},
+					},
+
+					feeAccumValues: genesis.AccumObject{
+						Name: types.KeyFeePoolAccumulator(2),
+						AccumContent: &accum.AccumulatorContent{
+							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
+							TotalShares: sdk.NewDec(20),
+						},
+					},
+					incentiveAccumulators: incentiveAccumsWithPoolId(2),
+					incentiveRecords: []types.IncentiveRecord{
+						{
+							PoolId:               uint64(2),
+							IncentiveDenom:       "bar",
+							IncentiveCreatorAddr: testAddressOne.String(),
+							IncentiveRecordBody: types.IncentiveRecordBody{
+								RemainingAmount: sdk.NewDec(5),
+								EmissionRate:    sdk.NewDec(10),
+								StartTime:       defaultTime1,
+							},
+							MinUptime: testUptimeOne,
+						},
+					},
 				},
 			}),
 			expectedPools: []model.Pool{
@@ -171,7 +373,58 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					withTickIndex(withPoolId(defaultFullTick, poolTwo.Id), 999),
 				},
 			},
-			expectedPositions: []model.Position{testPositionModel, withPositionId(positionWithPoolId(testPositionModel, 2), DefaultPositionId+1)},
+			expectedfeeAccumValues: []genesis.AccumObject{
+				{
+					Name: types.KeyFeePoolAccumulator(1),
+					AccumContent: &accum.AccumulatorContent{
+						AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+						TotalShares: sdk.NewDec(10),
+					},
+				},
+				{
+					Name: types.KeyFeePoolAccumulator(2),
+					AccumContent: &accum.AccumulatorContent{
+						AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
+						TotalShares: sdk.NewDec(20),
+					},
+				},
+			},
+			expectedIncentiveRecords: []types.IncentiveRecord{
+				{
+					PoolId:               uint64(1),
+					IncentiveDenom:       "foo",
+					IncentiveCreatorAddr: testAddressOne.String(),
+					IncentiveRecordBody: types.IncentiveRecordBody{
+						RemainingAmount: sdk.NewDec(5),
+						EmissionRate:    sdk.NewDec(10),
+						StartTime:       defaultTime1,
+					},
+					MinUptime: testUptimeOne,
+				},
+				{
+					PoolId:               uint64(2),
+					IncentiveDenom:       "bar",
+					IncentiveCreatorAddr: testAddressOne.String(),
+					IncentiveRecordBody: types.IncentiveRecordBody{
+						RemainingAmount: sdk.NewDec(5),
+						EmissionRate:    sdk.NewDec(10),
+						StartTime:       defaultTime1,
+					},
+					MinUptime: testUptimeOne,
+				},
+			},
+			expectedPositionData: []genesis.PositionData{
+				{
+					LockId:         1,
+					Position:       &testPositionModel,
+					FeeAccumRecord: testFeeAccumRecord,
+				},
+				{
+					LockId:         2,
+					Position:       withPositionId(*positionWithPoolId(testPositionModel, 2), DefaultPositionId+1),
+					FeeAccumRecord: testFeeAccumRecord,
+				},
+			},
 		},
 	}
 
@@ -180,7 +433,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 
 		s.Run(tc.name, func() {
 			// This erases previously created pools.
-			s.Setup()
+			s.SetupTest()
 
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 			ctx := s.Ctx
@@ -195,6 +448,8 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			s.Require().NoError(err)
 
 			// Check pools
+			feeAccums := []accum.AccumulatorObject{}
+			incentiveRecords := []types.IncentiveRecord{}
 			s.Require().Equal(len(clPoolsAfterInitialization), len(tc.genesis.PoolData))
 			for i, actualPoolI := range clPoolsAfterInitialization {
 				actualPool, ok := actualPoolI.(*model.Pool)
@@ -209,15 +464,79 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 
 				// Validate ticks.
 				s.validateTicks(expectedTicks, actualTicks)
+
+				// get fee accumulator
+				feeAccum, err := clKeeper.GetFeeAccumulator(s.Ctx, actualPool.GetId())
+				s.Require().NoError(err)
+				feeAccums = append(feeAccums, feeAccum)
+
+				// check incentive accumulators
+				acutalIncentiveAccums, err := clKeeper.GetUptimeAccumulators(ctx, actualPool.Id)
+				s.Require().NoError(err)
+				for j, actualIncentiveAccum := range acutalIncentiveAccums {
+					expectedAccum := tc.genesis.PoolData[i].IncentivesAccumulators
+					actualTotalShares, err := actualIncentiveAccum.GetTotalShares()
+					s.Require().NoError(err)
+
+					s.Require().Equal(expectedAccum[j].GetName(), actualIncentiveAccum.GetName())
+					s.Require().Equal(expectedAccum[j].AccumContent.AccumValue, actualIncentiveAccum.GetValue())
+					s.Require().Equal(expectedAccum[j].AccumContent.TotalShares, actualTotalShares)
+				}
+
+				// get incentive records for pool
+				poolIncentiveRecords, err := clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, actualPool.GetId())
+				s.Require().NoError(err)
+				incentiveRecords = append(incentiveRecords, poolIncentiveRecords...)
 			}
 
 			// get all positions.
-			positions, err := clKeeper.GetAllPositions(ctx)
 			s.Require().NoError(err)
+			var actualPositionData []genesis.PositionData
+			for _, positionDataEntry := range tc.expectedPositionData {
+				getPosition, err := clKeeper.GetPosition(ctx, positionDataEntry.Position.PositionId)
+				s.Require().NoError(err)
+
+				actualLockId := uint64(0)
+				if positionDataEntry.LockId != 0 {
+					actualLockId, err = clKeeper.GetLockIdFromPositionId(ctx, positionDataEntry.Position.PositionId)
+					s.Require().NoError(err)
+				} else {
+					_, err = clKeeper.GetLockIdFromPositionId(ctx, positionDataEntry.Position.PositionId)
+					s.Require().Error(err)
+					s.Require().ErrorIs(err, types.PositionIdToLockNotFoundError{PositionId: positionDataEntry.Position.PositionId})
+				}
+
+				actualPositionData = append(actualPositionData, genesis.PositionData{
+					LockId:         actualLockId,
+					Position:       &getPosition,
+					FeeAccumRecord: positionDataEntry.FeeAccumRecord,
+				})
+			}
 
 			// Validate positions
-			s.Require().Equal(tc.expectedPositions, positions)
+			s.Require().Equal(tc.expectedPositionData, actualPositionData)
 
+			// Validate accum objects
+			s.Require().Equal(len(feeAccums), len(tc.expectedfeeAccumValues))
+			for i, accumObject := range feeAccums {
+				s.Require().Equal(feeAccums[i].GetValue(), tc.expectedfeeAccumValues[i].AccumContent.AccumValue)
+
+				totalShares, err := accumObject.GetTotalShares()
+				s.Require().NoError(err)
+				s.Require().Equal(totalShares, tc.expectedfeeAccumValues[i].AccumContent.TotalShares)
+			}
+
+			// Validate incentive records
+			s.Require().Equal(len(incentiveRecords), len(tc.expectedIncentiveRecords))
+			for i, incentiveRecord := range incentiveRecords {
+				s.Require().Equal(incentiveRecord.IncentiveCreatorAddr, tc.expectedIncentiveRecords[i].IncentiveCreatorAddr)
+				s.Require().Equal(incentiveRecord.PoolId, tc.expectedIncentiveRecords[i].PoolId)
+				s.Require().Equal(incentiveRecord.IncentiveDenom, tc.expectedIncentiveRecords[i].IncentiveDenom)
+				s.Require().Equal(incentiveRecord.MinUptime, tc.expectedIncentiveRecords[i].MinUptime)
+				s.Require().Equal(incentiveRecord.IncentiveRecordBody.EmissionRate.String(), tc.expectedIncentiveRecords[i].IncentiveRecordBody.EmissionRate.String())
+				s.Require().Equal(incentiveRecord.IncentiveRecordBody.RemainingAmount.String(), tc.expectedIncentiveRecords[i].IncentiveRecordBody.RemainingAmount.String())
+				s.Require().True(incentiveRecord.IncentiveRecordBody.StartTime.Equal(tc.expectedIncentiveRecords[i].IncentiveRecordBody.StartTime))
+			}
 			// Validate next position id.
 			s.Require().Equal(tc.genesis.NextPositionId, clKeeper.GetNextPositionId(ctx))
 		})
@@ -227,7 +546,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 // TestExportGenesis tests the ExportGenesis function of the ConcentratedLiquidityKeeper.
 // It checks that the correct genesis state is returned.
 func (s *KeeperTestSuite) TestExportGenesis() {
-	s.Setup()
+	s.SetupTest()
 
 	poolE := s.PrepareConcentratedPool()
 	poolOne, ok := poolE.(*model.Pool)
@@ -237,12 +556,15 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 	poolTwo, ok := poolE.(*model.Pool)
 	s.Require().True(ok)
 
+	defaultTime1 := time.Unix(100, 100)
+	defaultTime2 := time.Unix(300, 100)
+
 	testCase := []struct {
 		name    string
 		genesis genesis.GenesisState
 	}{
 		{
-			name: "one pool, one position, two ticks",
+			name: "one pool, one position, two ticks, one accumulator, two incentive records",
 			genesis: setupGenesis(baseGenesis, []singlePoolGenesisEntry{
 				{
 					pool: *poolOne,
@@ -250,19 +572,89 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), -10),
 						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), 10),
 					},
-					positons: []model.Position{testPositionModel},
+					positionData: []genesis.PositionData{
+						{
+							LockId:         1,
+							Position:       &testPositionModel,
+							FeeAccumRecord: testFeeAccumRecord,
+						},
+					},
+					feeAccumValues: genesis.AccumObject{
+						Name: types.KeyFeePoolAccumulator(poolOne.Id),
+						AccumContent: &accum.AccumulatorContent{
+							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+							TotalShares: sdk.NewDec(10),
+						},
+					},
+					incentiveAccumulators: incentiveAccumsWithPoolId(1),
+					incentiveRecords: []types.IncentiveRecord{
+						{
+							PoolId:               uint64(1),
+							IncentiveDenom:       "bar",
+							IncentiveCreatorAddr: testAddressTwo.String(),
+							IncentiveRecordBody: types.IncentiveRecordBody{
+								RemainingAmount: sdk.NewDec(15),
+								EmissionRate:    sdk.NewDec(20),
+								StartTime:       defaultTime2,
+							},
+							MinUptime: testUptimeOne,
+						},
+						{
+							PoolId:               uint64(1),
+							IncentiveDenom:       "foo",
+							IncentiveCreatorAddr: testAddressOne.String(),
+							IncentiveRecordBody: types.IncentiveRecordBody{
+								RemainingAmount: sdk.NewDec(5),
+								EmissionRate:    sdk.NewDec(10),
+								StartTime:       defaultTime1,
+							},
+							MinUptime: testUptimeOne,
+						},
+					},
 				},
 			}),
 		},
 		{
-			name: "two pools, two positions, one tick pool one, two ticks pool two",
+			name: "two pools, two positions, one tick pool one, two ticks pool two, two accumulators, one incentive records each",
 			genesis: setupGenesis(baseGenesis, []singlePoolGenesisEntry{
 				{
 					pool: *poolOne,
 					tick: []genesis.FullTick{
 						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), -1234),
 					},
-					positons: []model.Position{testPositionModel},
+					positionData: []genesis.PositionData{
+						{
+							LockId:         1,
+							Position:       &testPositionModel,
+							FeeAccumRecord: testFeeAccumRecord,
+						},
+						{
+							LockId:         0,
+							Position:       withPositionId(testPositionModel, DefaultPositionId+1),
+							FeeAccumRecord: testFeeAccumRecord,
+						},
+					},
+					feeAccumValues: genesis.AccumObject{
+						Name: types.KeyFeePoolAccumulator(poolOne.Id),
+						AccumContent: &accum.AccumulatorContent{
+							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+							TotalShares: sdk.NewDec(10),
+						},
+					},
+					incentiveAccumulators: incentiveAccumsWithPoolId(1),
+					incentiveRecords: []types.IncentiveRecord{
+						{
+							PoolId:               uint64(1),
+							IncentiveDenom:       "foo",
+							IncentiveCreatorAddr: testAddressOne.String(),
+							IncentiveRecordBody: types.IncentiveRecordBody{
+								RemainingAmount: sdk.NewDec(5),
+								EmissionRate:    sdk.NewDec(10),
+								StartTime:       defaultTime1,
+							},
+							MinUptime: testUptimeOne,
+						},
+					},
 				},
 				{
 					pool: *poolTwo,
@@ -270,7 +662,34 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						withTickIndex(withPoolId(defaultFullTick, poolTwo.Id), 0),
 						withTickIndex(withPoolId(defaultFullTick, poolTwo.Id), 999),
 					},
-					positons: []model.Position{withPositionId(positionWithPoolId(testPositionModel, 2), DefaultPositionId+1)},
+					feeAccumValues: genesis.AccumObject{
+						Name: types.KeyFeePoolAccumulator(poolTwo.Id),
+						AccumContent: &accum.AccumulatorContent{
+							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
+							TotalShares: sdk.NewDec(20),
+						},
+					},
+					incentiveAccumulators: incentiveAccumsWithPoolId(2),
+					incentiveRecords: []types.IncentiveRecord{
+						{
+							PoolId:               uint64(2),
+							IncentiveDenom:       "bar",
+							IncentiveCreatorAddr: testAddressOne.String(),
+							IncentiveRecordBody: types.IncentiveRecordBody{
+								RemainingAmount: sdk.NewDec(5),
+								EmissionRate:    sdk.NewDec(10),
+								StartTime:       defaultTime1,
+							},
+							MinUptime: testUptimeOne,
+						},
+					},
+					positionData: []genesis.PositionData{
+						{
+							LockId:         2,
+							Position:       withPositionId(*positionWithPoolId(testPositionModel, 2), DefaultPositionId+2),
+							FeeAccumRecord: testFeeAccumRecord,
+						},
+					},
 				},
 			}),
 		},
@@ -280,12 +699,13 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			s.Setup()
+			s.SetupTest()
 
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 			ctx := s.Ctx
 			expectedGenesis := tc.genesis
 
+			// System Under test
 			clKeeper.InitGenesis(ctx, tc.genesis)
 
 			// Export the genesis state.
@@ -301,10 +721,31 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 				s.Require().Equal(expectedPoolData.Pool, actualPoolData.Pool)
 
 				s.validateTicks(expectedPoolData.Ticks, actualPoolData.Ticks)
+
+				// validate fee accumulators
+				s.Require().Equal(expectedPoolData.FeeAccumulator, actualPoolData.FeeAccumulator)
+
+				// validate incentive accumulator
+				for i, incentiveAccumulator := range actualPoolData.IncentivesAccumulators {
+					s.Require().Equal(expectedPoolData.IncentivesAccumulators[i], incentiveAccumulator)
+				}
+
+				// Validate Incentive Records
+				s.Require().Equal(len(expectedPoolData.IncentiveRecords), len(actualPoolData.IncentiveRecords))
+				for i, incentiveRecord := range actualPoolData.IncentiveRecords {
+					s.Require().Equal(incentiveRecord.IncentiveCreatorAddr, expectedPoolData.IncentiveRecords[i].IncentiveCreatorAddr)
+					s.Require().Equal(incentiveRecord.IncentiveDenom, expectedPoolData.IncentiveRecords[i].IncentiveDenom)
+					s.Require().Equal(incentiveRecord.PoolId, expectedPoolData.IncentiveRecords[i].PoolId)
+					s.Require().Equal(incentiveRecord.MinUptime, expectedPoolData.IncentiveRecords[i].MinUptime)
+					s.Require().Equal(incentiveRecord.IncentiveRecordBody.EmissionRate.String(), expectedPoolData.IncentiveRecords[i].IncentiveRecordBody.EmissionRate.String())
+					s.Require().Equal(incentiveRecord.IncentiveRecordBody.RemainingAmount.String(), expectedPoolData.IncentiveRecords[i].IncentiveRecordBody.RemainingAmount.String())
+					s.Require().True(incentiveRecord.IncentiveRecordBody.StartTime.Equal(expectedPoolData.IncentiveRecords[i].IncentiveRecordBody.StartTime))
+				}
+
 			}
 
 			// Validate positions.
-			s.Require().Equal(tc.genesis.Positions, actualExported.Positions)
+			s.Require().Equal(tc.genesis.PositionData, actualExported.PositionData)
 
 			// Validate next position id.
 			s.Require().Equal(tc.genesis.NextPositionId, actualExported.NextPositionId)

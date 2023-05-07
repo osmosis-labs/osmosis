@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package osmosis.cosmwasmpool.v1beta1;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/model";
+
+message CosmWasmPool {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (cosmos_proto.implements_interface) = "PoolI";
+  string pool_address = 1 [ (gogoproto.moretags) = "yaml:\"pool_address\"" ];
+  string contract_address = 2
+      [ (gogoproto.moretags) = "yaml:\"contract_address\"" ];
+  uint64 pool_id = 3;
+  uint64 code_id = 4;
+}

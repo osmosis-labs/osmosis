@@ -6,10 +6,11 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
+
 	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // GetLastLockID returns ID used last time.
@@ -241,7 +242,7 @@ func (k Keeper) GetLockByID(ctx sdk.Context, lockID uint64) (*types.PeriodLock, 
 	store := ctx.KVStore(k.storeKey)
 	lockKey := lockStoreKey(lockID)
 	if !store.Has(lockKey) {
-		return nil, sdkerrors.Wrap(types.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", lockID))
+		return nil, errorsmod.Wrap(types.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", lockID))
 	}
 	bz := store.Get(lockKey)
 	err := proto.Unmarshal(bz, &lock)

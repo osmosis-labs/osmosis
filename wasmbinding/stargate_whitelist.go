@@ -14,7 +14,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 
-	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
+	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/queryproto"
 	downtimequerytypes "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/client/queryproto"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	gammv2types "github.com/osmosis-labs/osmosis/v15/x/gamm/v2types"
@@ -126,9 +126,9 @@ func init() {
 	// poolmanager
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/NumPools", &poolmanagerqueryproto.NumPoolsResponse{})
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/EstimateSwapExactAmountIn", &poolmanagerqueryproto.EstimateSwapExactAmountInResponse{})
-	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/EstimateSwapExactAmountOut", &poolmanagerqueryproto.EstimateSwapExactAmountOutRequest{})
+	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/EstimateSwapExactAmountOut", &poolmanagerqueryproto.EstimateSwapExactAmountOutResponse{})
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/EstimateSinglePoolSwapExactAmountIn", &poolmanagerqueryproto.EstimateSwapExactAmountInResponse{})
-	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/EstimateSinglePoolSwapExactAmountOut", &poolmanagerqueryproto.EstimateSwapExactAmountOutRequest{})
+	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/EstimateSinglePoolSwapExactAmountOut", &poolmanagerqueryproto.EstimateSwapExactAmountOutResponse{})
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/Pool", &poolmanagerqueryproto.PoolResponse{})
 
 	// txfees
@@ -153,9 +153,9 @@ func init() {
 	setWhitelistedQuery("/osmosis.downtimedetector.v1beta1.Query/RecoveredSinceDowntimeOfLength", &downtimequerytypes.RecoveredSinceDowntimeOfLengthResponse{})
 
 	// concentrated-liquidity
-	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/PositionById", &concentratedliquidityquery.QueryPositionByIdResponse{})
-	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/Params", &concentratedliquidityquery.QueryParamsResponse{})
-	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/ClaimableFees", &concentratedliquidityquery.QueryClaimableFeesResponse{})
+	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/PositionById", &concentratedliquidityquery.PositionByIdResponse{})
+	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/Params", &concentratedliquidityquery.ParamsResponse{})
+	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/ClaimableFees", &concentratedliquidityquery.ClaimableFeesResponse{})
 }
 
 // GetWhitelistedQuery returns the whitelisted query at the provided path.

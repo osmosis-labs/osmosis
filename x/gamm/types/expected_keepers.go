@@ -47,10 +47,10 @@ type CommunityPoolKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
 
-// CLKeeper defines the contract needed to be fulfilled for the concentrated liquidity keeper.
-type CLKeeper interface {
+// ConcentratedLiquidityKeeper defines the contract needed to be fulfilled for the concentrated liquidity keeper.
+type ConcentratedLiquidityKeeper interface {
 	GetPoolFromPoolIdAndConvertToConcentrated(ctx sdk.Context, poolId uint64) (cltypes.ConcentratedPoolExtension, error)
-	CreateFullRangePosition(ctx sdk.Context, concentratedPool cltypes.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins, freezeDuration time.Duration) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, err error)
+	CreateFullRangePosition(ctx sdk.Context, clPoolId uint64, owner sdk.AccAddress, coins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, err error)
 }
 
 // PoolManager defines the interface needed to be fulfilled for
@@ -87,5 +87,5 @@ type PoolManager interface {
 
 	GetPoolModule(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolModuleI, error)
 
-	RoutePool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
+	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
 }

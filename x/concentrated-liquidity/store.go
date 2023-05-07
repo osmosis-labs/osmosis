@@ -23,19 +23,8 @@ const (
 
 // getAllPositions gets all CL positions for export genesis.
 func (k Keeper) getAllPositions(ctx sdk.Context) ([]model.Position, error) {
-	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.PositionIdPrefix, ParsePosition)
-}
-
-// ParseLiquidityFromBz parses and returns a position's liquidity from a byte array.
-// Returns an error if the byte array is empty.
-// Returns an error if fails to parse.
-func ParseLiquidityFromBz(bz []byte) (sdk.Dec, error) {
-	if len(bz) == 0 {
-		return sdk.Dec{}, errors.New("position not found")
-	}
-	liquidityStruct := &sdk.DecProto{}
-	err := proto.Unmarshal(bz, liquidityStruct)
-	return liquidityStruct.Dec, err
+	return osmoutils.GatherValuesFromStorePrefix(
+		ctx.KVStore(k.storeKey), types.PositionIdPrefix, ParsePositionFromBz)
 }
 
 // ParsePositionIdFromBz parses and returns a position's id from a byte array.
@@ -48,10 +37,10 @@ func ParsePositionIdFromBz(bz []byte) (uint64, error) {
 	return sdk.BigEndianToUint64(bz), nil
 }
 
-// ParsePosition unmarshals a byte slice into a model.Position struct.
+// ParsePositionFromBz parses and returns a position from a byte array.
 // Returns an error if the byte slice is empty.
 // Returns an error if fails to unmarshal.
-func ParsePosition(value []byte) (model.Position, error) {
+func ParsePositionFromBz(value []byte) (model.Position, error) {
 	position := model.Position{}
 	err := proto.Unmarshal(value, &position)
 	if err != nil {
@@ -198,7 +187,7 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 	incentiveDenom := relevantIncentiveKeyComponents[2]
 
 	// Note that we skip the first byte since we prefix addresses by length in key
-	incentiveCreator := sdk.AccAddress(relevantIncentiveKeyComponents[3][1:])
+	incentiveCreator, err := sdk.AccAddressFromBech32(relevantIncentiveKeyComponents[3])
 	if err != nil {
 		return types.IncentiveRecord{}, err
 	}
@@ -208,13 +197,17 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 		return types.IncentiveRecord{}, err
 	}
 
+	incentiveRecordBody := types.IncentiveRecordBody{
+		RemainingAmount: incentiveBody.RemainingAmount,
+		EmissionRate:    incentiveBody.EmissionRate,
+		StartTime:       incentiveBody.StartTime,
+	}
+
 	return types.IncentiveRecord{
-		PoolId:           poolId,
-		IncentiveDenom:   incentiveDenom,
-		IncentiveCreator: incentiveCreator,
-		RemainingAmount:  incentiveBody.RemainingAmount,
-		EmissionRate:     incentiveBody.EmissionRate,
-		StartTime:        incentiveBody.StartTime,
-		MinUptime:        types.SupportedUptimes[minUptimeIndex],
+		PoolId:               poolId,
+		IncentiveDenom:       incentiveDenom,
+		IncentiveCreatorAddr: incentiveCreator.String(),
+		IncentiveRecordBody:  incentiveRecordBody,
+		MinUptime:            types.SupportedUptimes[minUptimeIndex],
 	}, nil
 }

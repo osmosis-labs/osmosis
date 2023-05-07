@@ -29,14 +29,14 @@ type Keeper struct {
 	hooks      types.GammHooks
 
 	// keepers
-	accountKeeper       types.AccountKeeper
-	bankKeeper          types.BankKeeper
-	communityPoolKeeper types.CommunityPoolKeeper
-	poolManager         types.PoolManager
-	clKeeper            types.CLKeeper
+	accountKeeper               types.AccountKeeper
+	bankKeeper                  types.BankKeeper
+	communityPoolKeeper         types.CommunityPoolKeeper
+	poolManager                 types.PoolManager
+	concentratedLiquidityKeeper types.ConcentratedLiquidityKeeper
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, communityPoolKeeper types.CommunityPoolKeeper, clKeeper types.CLKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, communityPoolKeeper types.CommunityPoolKeeper, concentratedLiquidityKeeper types.ConcentratedLiquidityKeeper) Keeper {
 	// Ensure that the module account are set.
 	moduleAddr, perms := accountKeeper.GetModuleAddressAndPermissions(types.ModuleName)
 	if moduleAddr == nil {
@@ -56,10 +56,10 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtyp
 		cdc:        cdc,
 		paramSpace: paramSpace,
 		// keepers
-		accountKeeper:       accountKeeper,
-		bankKeeper:          bankKeeper,
-		communityPoolKeeper: communityPoolKeeper,
-		clKeeper:            clKeeper,
+		accountKeeper:               accountKeeper,
+		bankKeeper:                  bankKeeper,
+		communityPoolKeeper:         communityPoolKeeper,
+		concentratedLiquidityKeeper: concentratedLiquidityKeeper,
 	}
 }
 
@@ -87,4 +87,10 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 // SetParams sets the total set of params.
 func (k Keeper) setParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
+}
+
+// ValidatePermissionlessPoolCreationEnabled returns nil if permissionless pool creation in the module is enabled.
+// Pools in gamm module have permissionless pool creation enabled, thus always return nil.
+func (k Keeper) ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error {
+	return nil
 }

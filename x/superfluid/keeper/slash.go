@@ -1,9 +1,13 @@
 package keeper
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -59,11 +63,81 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.SyntheticLock, slashFactor sdk.Dec) {
 	// Only single token lock is allowed here
 	lock, _ := k.lk.GetLockByID(ctx, synthLock.UnderlyingLockId)
-	slashAmt := lock.Coins[0].Amount.ToDec().Mul(slashFactor).TruncateInt()
-	slashCoins := sdk.NewCoins(sdk.NewCoin(lock.Coins[0].Denom, slashAmt))
+	slashAmt := lock.Coins[0].Amount.ToDec().Mul(slashFactor)
+	lockSharesToSlash := sdk.NewCoins(sdk.NewCoin(lock.Coins[0].Denom, slashAmt.TruncateInt()))
+
+	// If the slashCoins contains a cl denom, we need to update the underlying cl position to reflect the slash.
 	_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
-		// These tokens get moved to the community pool.
-		_, err := k.lk.SlashTokensFromLockByID(cacheCtx, lock.ID, slashCoins)
-		return err
+		if strings.HasPrefix(lock.Coins[0].Denom, cltypes.ClTokenPrefix) {
+			// Run prepare logic to get the underlying coins to slash.
+			// We get the pool address here since the underlying coins will be sent directly from the pool to the community pool instead of the lock module account.
+			// Additionally, we update the cl position's state entry to reflect the slash in the position's liquidity.
+			poolAddress, underlyingCoinsToSlash, err := k.prepareConcentratedLockForSlash(cacheCtx, lock, slashAmt)
+			if err != nil {
+				return err
+			}
+			// Run the normal slashing logic, but instead of sending gamm shares to the community pool, we send the underlying coins
+			// the cl shares represent to the community pool and burn the cl shares from the lockup module account as well as the lock itself
+			_, err = k.lk.SlashTokensFromLockByIDSendUnderlyingAndBurn(cacheCtx, lock.ID, lockSharesToSlash, underlyingCoinsToSlash, poolAddress)
+			return err
+		} else {
+			// These tokens get moved to the community pool.
+			_, err := k.lk.SlashTokensFromLockByID(cacheCtx, lock.ID, lockSharesToSlash)
+			return err
+		}
 	})
+}
+
+// prepareConcentratedLockForSlash is a helper function that runs pre-slash logic for concentrated lockups. This function:
+// 1. Figures out the underlying assets from the liquidity being slashed and creates a coin object this represents
+// 2. Sets the cl position's liquidity state entry to reflect the slash
+// 3. Returns the pool address that will send the underlying coins as well as the underlying coins to slash
+func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptypes.PeriodLock, slashAmt sdk.Dec) (sdk.AccAddress, sdk.Coins, error) {
+	// Ensure lock is a single coin lock
+	if len(lock.Coins) != 1 {
+		return sdk.AccAddress{}, sdk.Coins{}, fmt.Errorf("lock must be a single coin lock, got %s", lock.Coins)
+	}
+
+	// Get the position ID from the lock denom
+	positionID, err := k.clk.GetPositionIdToLockId(ctx, lock.GetID())
+	if err != nil {
+		return sdk.AccAddress{}, sdk.Coins{}, err
+	}
+
+	// Figure out the underlying assets from the liquidity slash
+	position, err := k.clk.GetPosition(ctx, positionID)
+	if err != nil {
+		return sdk.AccAddress{}, sdk.Coins{}, err
+	}
+	slashAmtNeg := slashAmt.Neg()
+
+	// If slashAmt is not negative, return an error
+	if slashAmtNeg.IsPositive() {
+		return sdk.AccAddress{}, sdk.Coins{}, fmt.Errorf("slash amount must be negative, got %s", slashAmt)
+	}
+
+	// Create new position object from the position being slashed
+	// We use this to safely calculate the underlying assets from the liquidity being slashed
+	positionForCalculatingUnderlying := position
+	positionForCalculatingUnderlying.Liquidity = slashAmt
+
+	concentratedPool, err := k.clk.GetPoolFromPoolIdAndConvertToConcentrated(ctx, position.PoolId)
+	if err != nil {
+		return sdk.AccAddress{}, sdk.Coins{}, err
+	}
+	asset0, asset1, err := cl.CalculateUnderlyingAssetsFromPosition(ctx, positionForCalculatingUnderlying, concentratedPool)
+	if err != nil {
+		return sdk.AccAddress{}, sdk.Coins{}, err
+	}
+
+	// Create a coins object to be sent to the community pool
+	coinsToSlash := sdk.NewCoins(asset0, asset1)
+
+	// Update the cl positions liquidity to the new amount
+	_, _, err = k.clk.UpdatePosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, slashAmtNeg, position.JoinTime, position.PositionId)
+	if err != nil {
+		return sdk.AccAddress{}, sdk.Coins{}, err
+	}
+
+	return concentratedPool.GetAddress(), coinsToSlash, nil
 }

@@ -148,18 +148,18 @@ func (mr *MockConcentratedPoolExtensionMockRecorder) GetLiquidity() *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLiquidity", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).GetLiquidity))
 }
 
-// GetPrecisionFactorAtPriceOne mocks base method.
-func (m *MockConcentratedPoolExtension) GetPrecisionFactorAtPriceOne() types.Int {
+// GetExponentAtPriceOne mocks base method.
+func (m *MockConcentratedPoolExtension) GetExponentAtPriceOne() types.Int {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPrecisionFactorAtPriceOne")
+	ret := m.ctrl.Call(m, "GetExponentAtPriceOne")
 	ret0, _ := ret[0].(types.Int)
 	return ret0
 }
 
-// GetPrecisionFactorAtPriceOne indicates an expected call of GetPrecisionFactorAtPriceOne.
-func (mr *MockConcentratedPoolExtensionMockRecorder) GetPrecisionFactorAtPriceOne() *gomock.Call {
+// GetExponentAtPriceOne indicates an expected call of GetExponentAtPriceOne.
+func (mr *MockConcentratedPoolExtensionMockRecorder) GetExponentAtPriceOne() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrecisionFactorAtPriceOne", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).GetPrecisionFactorAtPriceOne))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExponentAtPriceOne", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).GetExponentAtPriceOne))
 }
 
 // GetSwapFee mocks base method.

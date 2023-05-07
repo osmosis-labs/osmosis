@@ -7,8 +7,10 @@ import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
+	_ "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
+	accum "github.com/osmosis-labs/osmosis/osmoutils/accum"
 	model "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	types1 "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	io "io"
@@ -98,7 +100,11 @@ type PoolData struct {
 	// pool struct
 	Pool *types.Any `protobuf:"bytes,1,opt,name=pool,proto3" json:"pool,omitempty"`
 	// pool's ticks
-	Ticks []FullTick `protobuf:"bytes,2,rep,name=ticks,proto3" json:"ticks" yaml:"ticks"`
+	Ticks                  []FullTick    `protobuf:"bytes,2,rep,name=ticks,proto3" json:"ticks" yaml:"ticks"`
+	FeeAccumulator         AccumObject   `protobuf:"bytes,3,opt,name=fee_accumulator,json=feeAccumulator,proto3" json:"fee_accumulator" yaml:"fee_accumulator"`
+	IncentivesAccumulators []AccumObject `protobuf:"bytes,4,rep,name=incentives_accumulators,json=incentivesAccumulators,proto3" json:"incentives_accumulators" yaml:"incentives_accumulator"`
+	// incentive records to be set
+	IncentiveRecords []types1.IncentiveRecord `protobuf:"bytes,5,rep,name=incentive_records,json=incentiveRecords,proto3" json:"incentive_records"`
 }
 
 func (m *PoolData) Reset()         { *m = PoolData{} }
@@ -148,21 +154,102 @@ func (m *PoolData) GetTicks() []FullTick {
 	return nil
 }
 
+func (m *PoolData) GetFeeAccumulator() AccumObject {
+	if m != nil {
+		return m.FeeAccumulator
+	}
+	return AccumObject{}
+}
+
+func (m *PoolData) GetIncentivesAccumulators() []AccumObject {
+	if m != nil {
+		return m.IncentivesAccumulators
+	}
+	return nil
+}
+
+func (m *PoolData) GetIncentiveRecords() []types1.IncentiveRecord {
+	if m != nil {
+		return m.IncentiveRecords
+	}
+	return nil
+}
+
+type PositionData struct {
+	Position       *model.Position `protobuf:"bytes,1,opt,name=position,proto3" json:"position,omitempty"`
+	LockId         uint64          `protobuf:"varint,2,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty" yaml:"lock_id"`
+	FeeAccumRecord accum.Record    `protobuf:"bytes,3,opt,name=fee_accum_record,json=feeAccumRecord,proto3" json:"fee_accum_record"`
+}
+
+func (m *PositionData) Reset()         { *m = PositionData{} }
+func (m *PositionData) String() string { return proto.CompactTextString(m) }
+func (*PositionData) ProtoMessage()    {}
+func (*PositionData) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5c140d686ee6724a, []int{2}
+}
+func (m *PositionData) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PositionData) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PositionData.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PositionData) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PositionData.Merge(m, src)
+}
+func (m *PositionData) XXX_Size() int {
+	return m.Size()
+}
+func (m *PositionData) XXX_DiscardUnknown() {
+	xxx_messageInfo_PositionData.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PositionData proto.InternalMessageInfo
+
+func (m *PositionData) GetPosition() *model.Position {
+	if m != nil {
+		return m.Position
+	}
+	return nil
+}
+
+func (m *PositionData) GetLockId() uint64 {
+	if m != nil {
+		return m.LockId
+	}
+	return 0
+}
+
+func (m *PositionData) GetFeeAccumRecord() accum.Record {
+	if m != nil {
+		return m.FeeAccumRecord
+	}
+	return accum.Record{}
+}
+
 // GenesisState defines the concentrated liquidity module's genesis state.
 type GenesisState struct {
 	// params are all the parameters of the module
 	Params types1.Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 	// pool data containining serialized pool struct and ticks.
-	PoolData       []*PoolData      `protobuf:"bytes,2,rep,name=pool_data,json=poolData,proto3" json:"pool_data,omitempty"`
-	Positions      []model.Position `protobuf:"bytes,3,rep,name=positions,proto3" json:"positions"`
-	NextPositionId uint64           `protobuf:"varint,4,opt,name=next_position_id,json=nextPositionId,proto3" json:"next_position_id,omitempty" yaml:"next_position_id"`
+	PoolData       []PoolData     `protobuf:"bytes,2,rep,name=pool_data,json=poolData,proto3" json:"pool_data"`
+	PositionData   []PositionData `protobuf:"bytes,3,rep,name=position_data,json=positionData,proto3" json:"position_data"`
+	NextPositionId uint64         `protobuf:"varint,4,opt,name=next_position_id,json=nextPositionId,proto3" json:"next_position_id,omitempty" yaml:"next_position_id"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
 func (m *GenesisState) String() string { return proto.CompactTextString(m) }
 func (*GenesisState) ProtoMessage()    {}
 func (*GenesisState) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5c140d686ee6724a, []int{2}
+	return fileDescriptor_5c140d686ee6724a, []int{3}
 }
 func (m *GenesisState) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -198,16 +285,16 @@ func (m *GenesisState) GetParams() types1.Params {
 	return types1.Params{}
 }
 
-func (m *GenesisState) GetPoolData() []*PoolData {
+func (m *GenesisState) GetPoolData() []PoolData {
 	if m != nil {
 		return m.PoolData
 	}
 	return nil
 }
 
-func (m *GenesisState) GetPositions() []model.Position {
+func (m *GenesisState) GetPositionData() []PositionData {
 	if m != nil {
-		return m.Positions
+		return m.PositionData
 	}
 	return nil
 }
@@ -219,10 +306,65 @@ func (m *GenesisState) GetNextPositionId() uint64 {
 	return 0
 }
 
+type AccumObject struct {
+	// Accumulator's name (pulled from AccumulatorContent)
+	Name         string                    `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty" yaml:"name"`
+	AccumContent *accum.AccumulatorContent `protobuf:"bytes,2,opt,name=accum_content,json=accumContent,proto3" json:"accum_content,omitempty"`
+}
+
+func (m *AccumObject) Reset()         { *m = AccumObject{} }
+func (m *AccumObject) String() string { return proto.CompactTextString(m) }
+func (*AccumObject) ProtoMessage()    {}
+func (*AccumObject) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5c140d686ee6724a, []int{4}
+}
+func (m *AccumObject) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AccumObject) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AccumObject.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AccumObject) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccumObject.Merge(m, src)
+}
+func (m *AccumObject) XXX_Size() int {
+	return m.Size()
+}
+func (m *AccumObject) XXX_DiscardUnknown() {
+	xxx_messageInfo_AccumObject.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AccumObject proto.InternalMessageInfo
+
+func (m *AccumObject) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *AccumObject) GetAccumContent() *accum.AccumulatorContent {
+	if m != nil {
+		return m.AccumContent
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*FullTick)(nil), "osmosis.concentratedliquidity.v1beta1.FullTick")
 	proto.RegisterType((*PoolData)(nil), "osmosis.concentratedliquidity.v1beta1.PoolData")
+	proto.RegisterType((*PositionData)(nil), "osmosis.concentratedliquidity.v1beta1.PositionData")
 	proto.RegisterType((*GenesisState)(nil), "osmosis.concentratedliquidity.v1beta1.GenesisState")
+	proto.RegisterType((*AccumObject)(nil), "osmosis.concentratedliquidity.v1beta1.AccumObject")
 }
 
 func init() {
@@ -230,41 +372,58 @@ func init() {
 }
 
 var fileDescriptor_5c140d686ee6724a = []byte{
-	// 530 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x54, 0xcd, 0x6e, 0xd3, 0x4c,
-	0x14, 0x8d, 0x93, 0x34, 0x5f, 0x32, 0xad, 0xaa, 0x7e, 0xa3, 0x20, 0x4c, 0x91, 0x9c, 0xc8, 0x52,
-	0xa5, 0x48, 0x25, 0xb6, 0xd2, 0xc2, 0x86, 0x1d, 0xe6, 0x4f, 0x41, 0x2c, 0x2a, 0xb7, 0x2b, 0x10,
-	0x8a, 0x26, 0xf6, 0xc4, 0x8c, 0xea, 0xcc, 0x84, 0xcc, 0xa4, 0x4a, 0xde, 0x82, 0x07, 0xe0, 0x31,
-	0xd8, 0xb2, 0xaf, 0x10, 0x8b, 0x2e, 0x59, 0x45, 0x28, 0x79, 0x83, 0x3c, 0x01, 0x9a, 0x3f, 0x02,
-	0x48, 0x28, 0xcd, 0x6e, 0xee, 0xdc, 0x73, 0xce, 0x3d, 0x73, 0xef, 0xb5, 0xc1, 0x03, 0xc6, 0x87,
-	0x8c, 0x13, 0x1e, 0x26, 0x8c, 0x26, 0x98, 0x8a, 0x31, 0x12, 0x38, 0x6d, 0xe7, 0xe4, 0xc3, 0x84,
-	0xa4, 0x44, 0xcc, 0xc2, 0x0c, 0x53, 0xcc, 0x09, 0x0f, 0x46, 0x63, 0x26, 0x18, 0x3c, 0x32, 0xe8,
-	0xe0, 0x77, 0xf4, 0x2f, 0x70, 0x70, 0xd5, 0xe9, 0x63, 0x81, 0x3a, 0x87, 0xf5, 0x8c, 0x65, 0x4c,
-	0x31, 0x42, 0x79, 0xd2, 0xe4, 0xc3, 0x7b, 0x89, 0x62, 0xf7, 0x74, 0x42, 0x07, 0x36, 0x95, 0x31,
-	0x96, 0xe5, 0x38, 0x54, 0x51, 0x7f, 0x32, 0x08, 0x11, 0x9d, 0x99, 0xd4, 0xf1, 0x06, 0x83, 0x23,
-	0x34, 0x46, 0x43, 0xab, 0xd3, 0xde, 0x04, 0x66, 0x9c, 0x08, 0xc2, 0xe8, 0x2d, 0xe1, 0x82, 0x24,
-	0x97, 0x5d, 0x3a, 0x30, 0x0f, 0xf0, 0xbf, 0x39, 0xa0, 0xfa, 0x62, 0x92, 0xe7, 0x17, 0x24, 0xb9,
-	0x84, 0xc7, 0xe0, 0xbf, 0x11, 0x63, 0x79, 0x8f, 0xa4, 0xae, 0xd3, 0x74, 0x5a, 0xe5, 0x08, 0xae,
-	0xe6, 0x8d, 0xfd, 0x19, 0x1a, 0xe6, 0x8f, 0x7d, 0x93, 0xf0, 0xe3, 0x8a, 0x3c, 0x75, 0x53, 0xf8,
-	0x10, 0x00, 0xa9, 0xd5, 0x23, 0x34, 0xc5, 0x53, 0xb7, 0xd8, 0x74, 0x5a, 0xa5, 0xe8, 0xce, 0x6a,
-	0xde, 0xf8, 0x5f, 0xe3, 0xd7, 0x39, 0x3f, 0xae, 0xe9, 0xa2, 0x29, 0x9e, 0xc2, 0x77, 0xa0, 0x4c,
-	0xe8, 0x80, 0xb9, 0xa5, 0xa6, 0xd3, 0xda, 0x3d, 0x09, 0x83, 0x5b, 0x35, 0x3f, 0xb8, 0x30, 0xa6,
-	0x23, 0xf7, 0x7a, 0xde, 0x28, 0xac, 0xe6, 0x8d, 0x83, 0x3f, 0x8a, 0x0c, 0x98, 0x1f, 0x2b, 0x59,
-	0xff, 0x93, 0x03, 0xaa, 0x67, 0x8c, 0xe5, 0xcf, 0x90, 0x40, 0xf0, 0x14, 0x94, 0xa5, 0x57, 0xf5,
-	0x96, 0xdd, 0x93, 0x7a, 0xa0, 0x07, 0x12, 0xd8, 0x81, 0x04, 0x4f, 0xe8, 0x2c, 0xaa, 0x7d, 0xfd,
-	0xdc, 0xde, 0x91, 0x8c, 0x6e, 0xac, 0xc0, 0xf0, 0x2d, 0xd8, 0x91, 0xaa, 0xdc, 0x2d, 0x36, 0x4b,
-	0x5b, 0x38, 0xb4, 0x3d, 0x8c, 0xea, 0xc6, 0xe1, 0xde, 0xda, 0x21, 0xf7, 0x63, 0xad, 0xe9, 0x7f,
-	0x29, 0x82, 0xbd, 0x97, 0x7a, 0xfb, 0xce, 0x05, 0x12, 0x18, 0x3e, 0x05, 0x15, 0x3d, 0x6c, 0x63,
-	0xf2, 0x68, 0x43, 0xb9, 0x33, 0x05, 0x8e, 0xca, 0xb2, 0x48, 0x6c, 0xa8, 0xf0, 0x35, 0xa8, 0xa9,
-	0xe9, 0xa4, 0x48, 0xa0, 0x2d, 0x6d, 0xdb, 0x5e, 0xc5, 0xd5, 0x91, 0xed, 0xda, 0xb9, 0x54, 0xd3,
-	0x2b, 0xc5, 0xdd, 0xd2, 0x96, 0x6a, 0x9a, 0x67, 0xfc, 0xad, 0x75, 0xe0, 0x73, 0x70, 0x40, 0xf1,
-	0x54, 0xf4, 0xec, 0x8d, 0x5c, 0xb1, 0xb2, 0x5a, 0xb1, 0xfb, 0xab, 0x79, 0xe3, 0xae, 0xee, 0xd5,
-	0xdf, 0x08, 0x3f, 0xde, 0x97, 0x57, 0x56, 0xb5, 0x9b, 0x46, 0xe9, 0xf5, 0xc2, 0x73, 0x6e, 0x16,
-	0x9e, 0xf3, 0x63, 0xe1, 0x39, 0x1f, 0x97, 0x5e, 0xe1, 0x66, 0xe9, 0x15, 0xbe, 0x2f, 0xbd, 0xc2,
-	0x9b, 0x57, 0x19, 0x11, 0xef, 0x27, 0xfd, 0x20, 0x61, 0xc3, 0xd0, 0x98, 0x6d, 0xe7, 0xa8, 0xcf,
-	0x6d, 0x10, 0x5e, 0x75, 0x1e, 0x85, 0xd3, 0x7f, 0x7e, 0x14, 0xb3, 0x11, 0xe6, 0xf6, 0xbf, 0xd0,
-	0xaf, 0xa8, 0x0d, 0x39, 0xfd, 0x19, 0x00, 0x00, 0xff, 0xff, 0x87, 0x02, 0xd1, 0xd3, 0x48, 0x04,
-	0x00, 0x00,
+	// 805 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x55, 0xdd, 0x4e, 0xe3, 0x46,
+	0x14, 0x8e, 0x89, 0x49, 0x93, 0x49, 0x80, 0x60, 0x51, 0x70, 0xa9, 0x70, 0x52, 0x57, 0x48, 0x54,
+	0x34, 0xb6, 0x08, 0xa5, 0x17, 0xbd, 0xc3, 0xf4, 0x47, 0x69, 0xd5, 0x16, 0xb9, 0x5c, 0xb5, 0x6a,
+	0xa3, 0x89, 0x3d, 0x49, 0xa7, 0x38, 0x9e, 0x34, 0x33, 0x41, 0x89, 0x7a, 0xd7, 0x27, 0x58, 0xed,
+	0xdd, 0xbe, 0xc7, 0x3e, 0x04, 0x5a, 0xad, 0x56, 0xdc, 0xed, 0x5e, 0x45, 0x2b, 0x78, 0x83, 0x3c,
+	0xc1, 0xca, 0xf3, 0xe3, 0x24, 0x68, 0x51, 0xc2, 0xde, 0x79, 0xe6, 0x7c, 0xe7, 0x3b, 0xdf, 0xf9,
+	0x1b, 0x83, 0x2f, 0x09, 0xed, 0x12, 0x8a, 0xa9, 0x1b, 0x90, 0x38, 0x40, 0x31, 0xeb, 0x43, 0x86,
+	0xc2, 0x5a, 0x84, 0xff, 0x1d, 0xe0, 0x10, 0xb3, 0x91, 0xdb, 0x41, 0x31, 0xa2, 0x98, 0x3a, 0xbd,
+	0x3e, 0x61, 0xc4, 0xd8, 0x97, 0x68, 0x67, 0x16, 0x9d, 0x82, 0x9d, 0xab, 0xa3, 0x16, 0x62, 0xf0,
+	0x68, 0x77, 0xab, 0x43, 0x3a, 0x84, 0x7b, 0xb8, 0xc9, 0x97, 0x70, 0xde, 0xfd, 0x24, 0xe0, 0xde,
+	0x4d, 0x61, 0x10, 0x07, 0x69, 0xb2, 0xc4, 0xc9, 0x6d, 0x41, 0x8a, 0x5c, 0xc9, 0xe2, 0x06, 0x04,
+	0xc7, 0xca, 0xb5, 0x43, 0x48, 0x27, 0x42, 0x2e, 0x3f, 0xb5, 0x06, 0x6d, 0x17, 0xc6, 0x23, 0x69,
+	0xfa, 0x4c, 0x25, 0x00, 0x83, 0x60, 0xd0, 0x4d, 0x9d, 0xf9, 0x49, 0x42, 0x0e, 0x17, 0xe4, 0xd8,
+	0x83, 0x7d, 0xd8, 0x55, 0x52, 0x6a, 0x8b, 0xc0, 0x84, 0x62, 0x86, 0x49, 0xbc, 0x24, 0x9c, 0xe1,
+	0xe0, 0xb2, 0x11, 0xb7, 0x55, 0x0d, 0x4e, 0x16, 0xc0, 0x31, 0xbf, 0xc5, 0x57, 0xa8, 0xd9, 0x47,
+	0x01, 0xe9, 0x87, 0xc2, 0xcd, 0x7e, 0xa9, 0x81, 0xfc, 0xf7, 0x83, 0x28, 0xba, 0xc0, 0xc1, 0xa5,
+	0x71, 0x08, 0x3e, 0xea, 0x11, 0x12, 0x35, 0x71, 0x68, 0x6a, 0x55, 0xed, 0x40, 0xf7, 0x8c, 0xc9,
+	0xb8, 0xb2, 0x3e, 0x82, 0xdd, 0xe8, 0x1b, 0x5b, 0x1a, 0x6c, 0x3f, 0x97, 0x7c, 0x35, 0x42, 0xe3,
+	0x2b, 0x00, 0x12, 0x09, 0x4d, 0x1c, 0x87, 0x68, 0x68, 0xae, 0x54, 0xb5, 0x83, 0xac, 0xf7, 0xf1,
+	0x64, 0x5c, 0xd9, 0x14, 0xf8, 0xa9, 0xcd, 0xf6, 0x0b, 0x42, 0x6b, 0x88, 0x86, 0xc6, 0x9f, 0x40,
+	0xc7, 0x71, 0x9b, 0x98, 0xd9, 0xaa, 0x76, 0x50, 0xac, 0xbb, 0xce, 0x52, 0x6d, 0x77, 0x2e, 0x64,
+	0xae, 0x9e, 0x79, 0x3d, 0xae, 0x64, 0x26, 0xe3, 0x4a, 0x79, 0x2e, 0x48, 0x9b, 0xd8, 0x3e, 0xa7,
+	0xb5, 0x9f, 0xe9, 0x20, 0x7f, 0x4e, 0x48, 0xf4, 0x2d, 0x64, 0xd0, 0x38, 0x06, 0x7a, 0xa2, 0x95,
+	0xe7, 0x52, 0xac, 0x6f, 0x39, 0xa2, 0xd5, 0x8e, 0x6a, 0xb5, 0x73, 0x1a, 0x8f, 0xbc, 0xc2, 0x8b,
+	0xe7, 0xb5, 0xd5, 0xc4, 0xa3, 0xe1, 0x73, 0xb0, 0xf1, 0x07, 0x58, 0x4d, 0x58, 0xa9, 0xb9, 0x52,
+	0xcd, 0x3e, 0x42, 0xa1, 0xaa, 0xa1, 0xb7, 0x25, 0x15, 0x96, 0xa6, 0x0a, 0xa9, 0xed, 0x0b, 0x4e,
+	0xe3, 0x3f, 0xb0, 0xd1, 0x46, 0xa8, 0xc9, 0x47, 0x68, 0x10, 0x41, 0x46, 0xfa, 0xb2, 0x10, 0xf5,
+	0x25, 0xc3, 0x9c, 0x26, 0x9e, 0xbf, 0xb6, 0xfe, 0x41, 0x01, 0xf3, 0x2c, 0x19, 0x69, 0x5b, 0x44,
+	0xba, 0x47, 0x6c, 0xfb, 0xeb, 0x6d, 0x84, 0x4e, 0xa7, 0x17, 0xc6, 0x53, 0x0d, 0xec, 0xa4, 0x53,
+	0x40, 0x67, 0xb1, 0xd4, 0xd4, 0x79, 0xb2, 0x1f, 0xa2, 0x62, 0x5f, 0xaa, 0xd8, 0x13, 0x2a, 0xde,
+	0x1f, 0xc0, 0xf6, 0xb7, 0xa7, 0x86, 0x19, 0x4d, 0xd4, 0xc0, 0x60, 0xf3, 0xfe, 0x64, 0x52, 0x73,
+	0x95, 0xab, 0xf9, 0x7a, 0x49, 0x35, 0x0d, 0xe5, 0xef, 0x73, 0x77, 0x4f, 0x4f, 0x14, 0xf9, 0x65,
+	0x3c, 0x7f, 0x4d, 0xed, 0xd7, 0x1a, 0x28, 0x9d, 0xcb, 0x1d, 0xe3, 0xf3, 0xf1, 0x13, 0xc8, 0xab,
+	0x9d, 0x93, 0x33, 0xb2, 0x6c, 0xb7, 0x15, 0x8d, 0x9f, 0x12, 0x24, 0xbb, 0x13, 0x91, 0x64, 0x1a,
+	0x43, 0xbe, 0x0b, 0x73, 0xbb, 0x23, 0x0d, 0xb6, 0x9f, 0x4b, 0xbe, 0x1a, 0xa1, 0xf1, 0x33, 0x28,
+	0xa7, 0xed, 0x92, 0x59, 0xcb, 0x41, 0xd8, 0x4b, 0x15, 0x88, 0x77, 0x46, 0x45, 0x9c, 0xcb, 0x2d,
+	0xed, 0xac, 0xb8, 0xb5, 0x5f, 0xad, 0x80, 0xd2, 0x0f, 0xe2, 0x39, 0xfd, 0x8d, 0x41, 0x86, 0x8c,
+	0x33, 0x90, 0x13, 0x4f, 0x8f, 0xcc, 0x6b, 0x7f, 0x41, 0x5e, 0xe7, 0x1c, 0x2c, 0xd9, 0xa5, 0xab,
+	0xe1, 0x83, 0x02, 0x5f, 0xfa, 0x10, 0x32, 0xf8, 0xc8, 0x6d, 0x50, 0x2b, 0x28, 0x19, 0xf3, 0x3d,
+	0xb5, 0x92, 0x7f, 0x81, 0x35, 0x55, 0x31, 0xc1, 0x9b, 0xe5, 0xbc, 0xc7, 0x8f, 0xac, 0xfb, 0x0c,
+	0x77, 0xa9, 0x37, 0xdb, 0xd2, 0xef, 0x40, 0x39, 0x46, 0x43, 0xd6, 0x4c, 0x83, 0xe0, 0xd0, 0xd4,
+	0x79, 0x3b, 0x3e, 0x9d, 0x8c, 0x2b, 0x3b, 0xa2, 0x1d, 0xf7, 0x11, 0xb6, 0xbf, 0x9e, 0x5c, 0x29,
+	0xf2, 0x46, 0x68, 0xff, 0xaf, 0x81, 0xe2, 0xcc, 0x90, 0x1b, 0x9f, 0x03, 0x3d, 0x86, 0x5d, 0xc4,
+	0xab, 0x59, 0xf0, 0x36, 0x26, 0xe3, 0x4a, 0x51, 0x52, 0xc1, 0x2e, 0xb2, 0x7d, 0x6e, 0x34, 0x7e,
+	0x01, 0x6b, 0xa2, 0xa1, 0x01, 0x89, 0x19, 0x8a, 0x19, 0x9f, 0x83, 0x62, 0xfd, 0x8b, 0x07, 0x3a,
+	0x3a, 0xb3, 0x06, 0x67, 0xc2, 0xc1, 0x2f, 0x71, 0x84, 0x3c, 0x79, 0xe1, 0xf5, 0xad, 0xa5, 0xdd,
+	0xdc, 0x5a, 0xda, 0xdb, 0x5b, 0x4b, 0x7b, 0x72, 0x67, 0x65, 0x6e, 0xee, 0xac, 0xcc, 0x9b, 0x3b,
+	0x2b, 0xf3, 0xfb, 0x8f, 0x1d, 0xcc, 0xfe, 0x1e, 0xb4, 0x9c, 0x80, 0x74, 0x5d, 0x49, 0x5e, 0x8b,
+	0x60, 0x8b, 0xaa, 0x83, 0x7b, 0x75, 0x74, 0xe2, 0x0e, 0x1f, 0xfc, 0x71, 0x8c, 0x7a, 0x88, 0xaa,
+	0xdf, 0x6f, 0x2b, 0xc7, 0x9f, 0xc3, 0xe3, 0x77, 0x01, 0x00, 0x00, 0xff, 0xff, 0x06, 0x88, 0x43,
+	0xca, 0xaf, 0x07, 0x00, 0x00,
 }
 
 func (m *FullTick) Marshal() (dAtA []byte, err error) {
@@ -330,6 +489,44 @@ func (m *PoolData) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.IncentiveRecords) > 0 {
+		for iNdEx := len(m.IncentiveRecords) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.IncentiveRecords[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if len(m.IncentivesAccumulators) > 0 {
+		for iNdEx := len(m.IncentivesAccumulators) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.IncentivesAccumulators[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	{
+		size, err := m.FeeAccumulator.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
 	if len(m.Ticks) > 0 {
 		for iNdEx := len(m.Ticks) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -347,6 +544,56 @@ func (m *PoolData) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	if m.Pool != nil {
 		{
 			size, err := m.Pool.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintGenesis(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *PositionData) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PositionData) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PositionData) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.FeeAccumRecord.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if m.LockId != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.LockId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Position != nil {
+		{
+			size, err := m.Position.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -384,10 +631,10 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x20
 	}
-	if len(m.Positions) > 0 {
-		for iNdEx := len(m.Positions) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.PositionData) > 0 {
+		for iNdEx := len(m.PositionData) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.Positions[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.PositionData[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -422,6 +669,48 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *AccumObject) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AccumObject) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AccumObject) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.AccumContent != nil {
+		{
+			size, err := m.AccumContent.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintGenesis(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0xa
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -469,6 +758,38 @@ func (m *PoolData) Size() (n int) {
 			n += 1 + l + sovGenesis(uint64(l))
 		}
 	}
+	l = m.FeeAccumulator.Size()
+	n += 1 + l + sovGenesis(uint64(l))
+	if len(m.IncentivesAccumulators) > 0 {
+		for _, e := range m.IncentivesAccumulators {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.IncentiveRecords) > 0 {
+		for _, e := range m.IncentiveRecords {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *PositionData) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Position != nil {
+		l = m.Position.Size()
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	if m.LockId != 0 {
+		n += 1 + sovGenesis(uint64(m.LockId))
+	}
+	l = m.FeeAccumRecord.Size()
+	n += 1 + l + sovGenesis(uint64(l))
 	return n
 }
 
@@ -486,14 +807,31 @@ func (m *GenesisState) Size() (n int) {
 			n += 1 + l + sovGenesis(uint64(l))
 		}
 	}
-	if len(m.Positions) > 0 {
-		for _, e := range m.Positions {
+	if len(m.PositionData) > 0 {
+		for _, e := range m.PositionData {
 			l = e.Size()
 			n += 1 + l + sovGenesis(uint64(l))
 		}
 	}
 	if m.NextPositionId != 0 {
 		n += 1 + sovGenesis(uint64(m.NextPositionId))
+	}
+	return n
+}
+
+func (m *AccumObject) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	if m.AccumContent != nil {
+		l = m.AccumContent.Size()
+		n += 1 + l + sovGenesis(uint64(l))
 	}
 	return n
 }
@@ -724,6 +1062,245 @@ func (m *PoolData) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FeeAccumulator", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.FeeAccumulator.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IncentivesAccumulators", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.IncentivesAccumulators = append(m.IncentivesAccumulators, AccumObject{})
+			if err := m.IncentivesAccumulators[len(m.IncentivesAccumulators)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IncentiveRecords", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.IncentiveRecords = append(m.IncentiveRecords, types1.IncentiveRecord{})
+			if err := m.IncentiveRecords[len(m.IncentiveRecords)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PositionData) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PositionData: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PositionData: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Position", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Position == nil {
+				m.Position = &model.Position{}
+			}
+			if err := m.Position.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LockId", wireType)
+			}
+			m.LockId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LockId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FeeAccumRecord", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.FeeAccumRecord.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipGenesis(dAtA[iNdEx:])
@@ -836,14 +1413,14 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.PoolData = append(m.PoolData, &PoolData{})
+			m.PoolData = append(m.PoolData, PoolData{})
 			if err := m.PoolData[len(m.PoolData)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Positions", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field PositionData", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -870,8 +1447,8 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Positions = append(m.Positions, model.Position{})
-			if err := m.Positions[len(m.Positions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.PositionData = append(m.PositionData, PositionData{})
+			if err := m.PositionData[len(m.PositionData)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -894,6 +1471,124 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AccumObject) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AccumObject: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AccumObject: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AccumContent", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.AccumContent == nil {
+				m.AccumContent = &accum.AccumulatorContent{}
+			}
+			if err := m.AccumContent.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipGenesis(dAtA[iNdEx:])
