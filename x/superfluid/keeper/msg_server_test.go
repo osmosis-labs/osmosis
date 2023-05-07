@@ -16,6 +16,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
+var defaultFunds = sdk.NewCoins(defaultPoolAssets[0].Token, sdk.NewCoin("stake", sdk.NewInt(5000000000)))
+
 func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 	type param struct {
 		coinsToLock sdk.Coins
@@ -174,7 +176,7 @@ func (suite *KeeperTestSuite) TestMsgCreateFullRangePositionAndSuperfluidDelegat
 
 			ctx := sdk.WrapSDKContext(suite.Ctx)
 
-			clPool := suite.PrepareConcentratedPoolWithCoinsAndFullRangePosition("stake", "eth")
+			clPool := suite.PrepareConcentratedPoolWithCoinsAndFullRangePosition(defaultFunds[0].Denom, defaultFunds[1].Denom)
 			clLockupDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPool.GetId())
 			err := suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
 				Denom:     clLockupDenom,
@@ -184,7 +186,7 @@ func (suite *KeeperTestSuite) TestMsgCreateFullRangePositionAndSuperfluidDelegat
 
 			// If there is no coinsToLock in the param, use pool denom
 			if test.param.coinsToLock.Empty() {
-				test.param.coinsToLock = sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000)), sdk.NewCoin("stake", sdk.NewInt(5000000000)))
+				test.param.coinsToLock = defaultFunds
 			}
 			if test.param.poolId == 0 {
 				test.param.poolId = clPool.GetId()
@@ -564,8 +566,8 @@ func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition_E
 			posId, _, _, _, _, poolJoinAcc := suite.SetupSuperfluidConcentratedPosition(suite.Ctx, true, false, false, owner)
 
 			if !tc.isLastPositionInPool {
-				suite.FundAcc(suite.TestAccs[1], defaultAcctFunds)
-				_, _, _, _, _, err := concentratedLiquidityKeeper.CreateFullRangePosition(suite.Ctx, 1, suite.TestAccs[1], defaultAcctFunds)
+				suite.FundAcc(suite.TestAccs[1], defaultFunds)
+				_, _, _, _, _, err := concentratedLiquidityKeeper.CreateFullRangePosition(suite.Ctx, 1, suite.TestAccs[1], defaultFunds)
 				suite.Require().NoError(err)
 			}
 
@@ -573,12 +575,12 @@ func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition_E
 			suite.Ctx = suite.Ctx.WithEventManager(sdk.NewEventManager())
 			suite.Equal(0, len(suite.Ctx.EventManager().Events()))
 
-			suite.FundAcc(poolJoinAcc, defaultAcctFunds)
+			suite.FundAcc(poolJoinAcc, defaultFunds)
 			msg := &types.MsgAddToConcentratedLiquiditySuperfluidPosition{
 				PositionId:    posId,
 				Sender:        poolJoinAcc.String(),
-				TokenDesired0: defaultAcctFunds[0],
-				TokenDesired1: defaultAcctFunds[1],
+				TokenDesired0: defaultFunds[0],
+				TokenDesired1: defaultFunds[1],
 			}
 
 			response, err := msgServer.AddToConcentratedLiquiditySuperfluidPosition(sdk.WrapSDKContext(suite.Ctx), msg)

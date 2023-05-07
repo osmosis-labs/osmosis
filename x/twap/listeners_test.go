@@ -418,7 +418,7 @@ func (s *TestSuite) TestPoolStateChange_Concentrated_SeparateBlocks() {
 	////////////////////////////////////////////////////////////
 	// Second block: create a first position that initializes twap record.
 
-	positionId, liquidityCreated := s.CreateFullRangePosition(clPool, defaultThreeAssetCoins)
+	positionId, liquidityCreated := s.CreateFullRangePosition(clPool, defaultTwoAssetCoins)
 
 	s.validateChangedPool()
 
@@ -430,7 +430,7 @@ func (s *TestSuite) TestPoolStateChange_Concentrated_SeparateBlocks() {
 	////////////////////////////////////////////////////////////
 	// Third block: create a second position that does not change twap record.
 
-	positionId2, liquidityCreated2 := s.CreateFullRangePosition(clPool, defaultThreeAssetCoins)
+	positionId2, liquidityCreated2 := s.CreateFullRangePosition(clPool, defaultTwoAssetCoins)
 
 	s.validateUnchangedPool()
 
@@ -486,7 +486,7 @@ func (s *TestSuite) TestPoolStateChange_Concentrated_SeparateBlocks() {
 	////////////////////////////////////////////////////////////
 	// Seventh block: create new position, updating twap with valid spot price
 
-	s.CreateFullRangePosition(clPool, defaultThreeAssetCoins)
+	s.CreateFullRangePosition(clPool, defaultTwoAssetCoins)
 
 	s.validateChangedPool()
 
@@ -532,12 +532,12 @@ func (s *TestSuite) TestPoolStateChange_Concentrated_SameBlock() {
 	////////////////////////////////////////////////////////////
 	// 2: create a first position that initializes twap record.
 
-	positionId, liquidityCreated := s.CreateFullRangePosition(clPool, defaultThreeAssetCoins)
+	positionId, liquidityCreated := s.CreateFullRangePosition(clPool, defaultTwoAssetCoins)
 
 	////////////////////////////////////////////////////////////
 	// 3: create a second position that does not change twap record.
 
-	positionId2, liquidityCreated2 := s.CreateFullRangePosition(clPool, defaultThreeAssetCoins)
+	positionId2, liquidityCreated2 := s.CreateFullRangePosition(clPool, defaultTwoAssetCoins)
 
 	// Note that creating second position has no effect.
 
@@ -559,7 +559,7 @@ func (s *TestSuite) TestPoolStateChange_Concentrated_SameBlock() {
 	////////////////////////////////////////////////////////////
 	// 7: create new position, updating twap with valid spot price
 
-	s.CreateFullRangePosition(clPool, defaultThreeAssetCoins)
+	s.CreateFullRangePosition(clPool, defaultTwoAssetCoins)
 
 	////////////////////////////////////////////////////////////
 	// 8: swap after re-adding liquidity
