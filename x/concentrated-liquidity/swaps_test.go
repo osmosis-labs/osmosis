@@ -11,7 +11,6 @@ import (
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
@@ -2075,10 +2074,10 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 
 				// Check that we consume enough gas that a CL pool swap warrants
 				// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
-				s.Require().Greater(gasConsumedForSwap, uint64(cltypes.ConcentratedGasFeeForSwap))
+				s.Require().Greater(gasConsumedForSwap, uint64(types.ConcentratedGasFeeForSwap))
 
 				// Assert events
-				s.AssertEventEmitted(s.Ctx, cltypes.TypeEvtTokenSwapped, 1)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtTokenSwapped, 1)
 
 				// Retrieve pool again post swap
 				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
@@ -2251,10 +2250,10 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 				gasConsumedForSwap := s.Ctx.GasMeter().GasConsumed() - prevGasConsumed
 				// Check that we consume enough gas that a CL pool swap warrants
 				// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
-				s.Require().Greater(gasConsumedForSwap, uint64(cltypes.ConcentratedGasFeeForSwap))
+				s.Require().Greater(gasConsumedForSwap, uint64(types.ConcentratedGasFeeForSwap))
 
 				// Assert events
-				s.AssertEventEmitted(s.Ctx, cltypes.TypeEvtTokenSwapped, 1)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtTokenSwapped, 1)
 
 				// Retrieve pool again post swap
 				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
@@ -2705,7 +2704,7 @@ func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
 }
 
 func (s *KeeperTestSuite) inverseRelationshipInvariants(firstTokenIn, firstTokenOut, secondTokenIn, secondTokenOut sdk.Coin, poolBefore poolmanagertypes.PoolI, userBalanceBeforeSwap sdk.Coins, poolBalanceBeforeSwap sdk.Coins, outGivenIn bool) {
-	pool, ok := poolBefore.(cltypes.ConcentratedPoolExtension)
+	pool, ok := poolBefore.(types.ConcentratedPoolExtension)
 	s.Require().True(ok)
 
 	liquidityBefore, err := s.App.ConcentratedLiquidityKeeper.GetTotalPoolLiquidity(s.Ctx, pool.GetId())
@@ -2831,7 +2830,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	//                              5000
 
 	// Swap multiple times USDC for ETH, therefore increasing the spot price
-	_, _, totalTokenIn, totalTokenOut := s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin1, ETH, cltypes.MaxSpotPrice, positions.numSwaps)
+	_, _, totalTokenIn, totalTokenOut := s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin1, ETH, types.MaxSpotPrice, positions.numSwaps)
 	clPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 	s.Require().NoError(err)
 
@@ -2879,7 +2878,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	}
 
 	// Swap multiple times ETH for USDC, therefore decreasing the spot price
-	_, _, totalTokenIn, totalTokenOut = s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin0, USDC, cltypes.MinSpotPrice, positions.numSwaps)
+	_, _, totalTokenIn, totalTokenOut = s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin0, USDC, types.MinSpotPrice, positions.numSwaps)
 	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 	s.Require().NoError(err)
 
@@ -2938,7 +2937,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	}
 
 	// Swap multiple times USDC for ETH, therefore increasing the spot price
-	_, _, totalTokenIn, totalTokenOut = s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin1, ETH, cltypes.MaxSpotPrice, positions.numSwaps)
+	_, _, totalTokenIn, totalTokenOut = s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin1, ETH, types.MaxSpotPrice, positions.numSwaps)
 	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 	s.Require().NoError(err)
 
@@ -2997,7 +2996,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	}
 
 	// Swap multiple times ETH for USDC, therefore decreasing the spot price
-	_, _, totalTokenIn, totalTokenOut = s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin0, USDC, cltypes.MinSpotPrice, positions.numSwaps)
+	_, _, totalTokenIn, totalTokenOut = s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin0, USDC, types.MinSpotPrice, positions.numSwaps)
 	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 	s.Require().NoError(err)
 
