@@ -736,7 +736,7 @@ func (suite *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDele
 	}
 
 	// Set up a single validator.
-	valAddr = suite.SetupValidator(stakingtypes.BondStatus(stakingtypes.Bonded))
+	valAddr = suite.SetupValidator(stakingtypes.Bonded)
 
 	// Create a balancer pool of "stake" and "foo".
 	msg := balancer.NewMsgCreateBalancerPool(poolCreateAcc, balancer.PoolParams{
