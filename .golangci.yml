@@ -43,13 +43,6 @@ linters:
 
 issues:
   exclude-rules:
-    - path: x/gamm/pool-models/stableswap
-      linters:
-        # Stableswap is in development.
-        # We should re-enable deadcode and unused linting
-        # across its files, once stableswap is fully complete.
-        - unused
-        - deadcode
     - linters:
         - staticcheck
       text: "SA1024: cutset contains duplicate characters" # proved to not provide much value, only false positives.
