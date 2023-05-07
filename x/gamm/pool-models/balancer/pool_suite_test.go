@@ -1007,7 +1007,7 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 		denomIn  = "denomIn"
 	)
 
-	now := int64(time.Now().Unix())
+	now := time.Now().Unix()
 	rng := rand.NewSource(now)
 	suite.T().Logf("Using random source of %d\n", now)
 

@@ -730,7 +730,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	}
 
 	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
-	timeoutPeriod := time.Duration(2 * time.Minute)
+	timeoutPeriod := 2 * time.Minute
 	select {
 	case <-time.After(timeoutPeriod):
 		err := fmt.Errorf("go routine took longer than %s", timeoutPeriod)
@@ -1438,7 +1438,7 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 	}
 	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
 	var elapsed time.Duration
-	timeoutPeriod := time.Duration(2 * time.Minute)
+	timeoutPeriod := 2 * time.Minute
 	select {
 	case elapsed = <-totalTimeChan:
 	case <-time.After(timeoutPeriod):
