@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"sort"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // FundCommunityPoolFromModule allows the pool-incentives module to directly fund the community fund pool.
@@ -89,7 +90,7 @@ func (k Keeper) validateRecords(ctx sdk.Context, records ...types.DistrRecord) e
 
 	for _, record := range records {
 		if gaugeIdFlags[record.GaugeId] {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrDistrRecordRegisteredGauge,
 				"Gauge ID #%d has duplications.",
 				record.GaugeId,
@@ -98,7 +99,7 @@ func (k Keeper) validateRecords(ctx sdk.Context, records ...types.DistrRecord) e
 
 		// Ensure records are sorted because ~AESTHETIC~
 		if record.GaugeId < lastGaugeID {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrDistrRecordNotSorted,
 				"Gauge ID #%d came after Gauge ID #%d.",
 				record.GaugeId, lastGaugeID,
@@ -113,7 +114,7 @@ func (k Keeper) validateRecords(ctx sdk.Context, records ...types.DistrRecord) e
 				return err
 			}
 			if !gauge.IsPerpetual {
-				return sdkerrors.Wrapf(types.ErrDistrRecordRegisteredGauge,
+				return errorsmod.Wrapf(types.ErrDistrRecordRegisteredGauge,
 					"Gauge ID #%d is not perpetual.",
 					record.GaugeId)
 			}
