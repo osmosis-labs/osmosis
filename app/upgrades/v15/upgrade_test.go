@@ -101,7 +101,7 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 
 	// Create the balancer pool
 	swapFee := sdk.MustNewDecFromStr("0.003")
-	exitFee := sdk.MustNewDecFromStr("0.025")
+	exitFee := sdk.ZeroDec()
 	poolID, err := suite.App.PoolManagerKeeper.CreatePool(
 		suite.Ctx,
 		balancer.NewMsgCreateBalancerPool(suite.TestAccs[0],
@@ -130,10 +130,11 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 	suite.Require().NoError(err)
 
 	// shares before migration
-	balancerPool, err := gammKeeper.GetPool(suite.Ctx, poolID)
+	balancerPool, err := gammKeeper.GetCFMMPool(suite.Ctx, poolID)
+	balancerLiquidity, err := gammKeeper.GetTotalPoolLiquidity(suite.Ctx, balancerPool.GetId())
 	suite.Require().NoError(err)
+
 	balancerShares := balancerPool.GetTotalShares()
-	balancerLiquidity := balancerPool.GetTotalPoolLiquidity(ctx).String()
 	// check balancer pool liquidity using the bank module
 	balancerBalances := suite.App.BankKeeper.GetAllBalances(ctx, balancerPool.GetAddress())
 
@@ -141,13 +142,16 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 	v15.MigrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanagerKeeper, suite.App.BankKeeper, poolID)
 
 	// check that the pool is now a stable pool
-	stablepool, err := gammKeeper.GetPool(ctx, poolID)
+	stablepool, err := gammKeeper.GetCFMMPool(ctx, poolID)
 	suite.Require().NoError(err)
 	suite.Require().Equal(stablepool.GetType(), poolmanagertypes.Stableswap)
+
 	// check that the number of stableswap LP shares is the same as the number of balancer LP shares
 	suite.Require().Equal(balancerShares.String(), stablepool.GetTotalShares().String())
 	// check that the pool liquidity is the same
-	suite.Require().Equal(balancerLiquidity, stablepool.GetTotalPoolLiquidity(ctx).String())
+	stableLiquidity, err := gammKeeper.GetTotalPoolLiquidity(suite.Ctx, balancerPool.GetId())
+	suite.Require().NoError(err)
+	suite.Require().Equal(balancerLiquidity.String(), stableLiquidity.String())
 	// check pool liquidity using the bank module
 	stableBalances := suite.App.BankKeeper.GetAllBalances(ctx, stablepool.GetAddress())
 	suite.Require().Equal(balancerBalances, stableBalances)

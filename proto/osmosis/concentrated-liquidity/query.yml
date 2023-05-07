@@ -1,0 +1,45 @@
+keeper:
+  path: "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+  struct: "Keeper"
+client_path: "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client"
+queries:
+  Pools:
+    proto_wrapper:
+      query_func: "k.Pools"
+    cli:
+      cmd: "Pools"
+  Params:
+    proto_wrapper:
+      query_func: "k.Params"
+    cli:
+      cmd: "Params"
+  UserPositions:
+    proto_wrapper:
+      query_func: "k.UserPositions"
+    cli:
+      cmd: "UserPositions"
+  LiquidityPerTickRange:
+    proto_wrapper:
+      query_func: "k.LiquidityPerTickRange"
+    cli:
+      cmd: "LiquidityPerTickRange"
+  LiquidityNetInDirection:
+    proto_wrapper:
+      query_func: "k.LiquidityNetInDirection"
+    cli:
+      cmd: "LiquidityNetInDirection"
+  ClaimableFees:
+    proto_wrapper:
+      query_func: "k.ClaimableFees"
+    cli:
+      cmd: "ClaimableFees"
+  ClaimableIncentives:
+    proto_wrapper:
+      query_func: "k.ClaimableIncentives"
+    cli:
+      cmd: "ClaimableIncentives"
+  PositionById:
+    proto_wrapper:
+      query_func: "k.PositionById"
+    cli:
+      cmd: "PositionById"

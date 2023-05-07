@@ -1,17 +1,16 @@
 package concentrated_liquidity_test
 
 import (
-	"reflect"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
 )
 
 const validPoolId = 1
@@ -39,7 +38,7 @@ func (s *KeeperTestSuite) TestTickOrdering() {
 	storeKey := sdk.NewKVStoreKey("concentrated_liquidity")
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	s.Ctx = testutil.DefaultContext(storeKey, tKey)
-	s.App.ConcentratedLiquidityKeeper = cl.NewKeeper(s.App.AppCodec(), storeKey, s.App.BankKeeper, s.App.GetSubspace(types.ModuleName))
+	s.App.ConcentratedLiquidityKeeper = cl.NewKeeper(s.App.AppCodec(), storeKey, s.App.AccountKeeper, s.App.BankKeeper, s.App.GAMMKeeper, s.App.PoolIncentivesKeeper, s.App.IncentivesKeeper, s.App.LockupKeeper, s.App.DistrKeeper, s.App.GetSubspace(types.ModuleName))
 
 	liquidityTicks := []int64{-200, -55, -4, 70, 78, 84, 139, 240, 535}
 	for _, t := range liquidityTicks {
@@ -97,6 +96,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		tickExists             bool
 		expectedLiquidityNet   sdk.Dec
 		expectedLiquidityGross sdk.Dec
+		minimumGasConsumed     uint64
 		expectedErr            error
 	}{
 		{
@@ -110,6 +110,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             false,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Neg(),
 			expectedLiquidityGross: DefaultLiquidityAmt,
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Init tick 50 with DefaultLiquidityAmt liquidity, lower",
@@ -122,6 +123,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             false,
 			expectedLiquidityNet:   DefaultLiquidityAmt,
 			expectedLiquidityGross: DefaultLiquidityAmt,
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Update tick 50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity, upper",
@@ -134,6 +136,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             true,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(sdk.NewDec(2)).Neg(),
 			expectedLiquidityGross: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Update tick 50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity, lower",
@@ -146,6 +149,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             true,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
 			expectedLiquidityGross: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Init tick -50 with DefaultLiquidityAmt liquidity, upper",
@@ -158,6 +162,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             false,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Neg(),
 			expectedLiquidityGross: DefaultLiquidityAmt,
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Init tick -50 with DefaultLiquidityAmt liquidity, lower",
@@ -170,6 +175,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             false,
 			expectedLiquidityNet:   DefaultLiquidityAmt,
 			expectedLiquidityGross: DefaultLiquidityAmt,
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Update tick -50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity, upper",
@@ -182,6 +188,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             true,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(sdk.NewDec(2)).Neg(),
 			expectedLiquidityGross: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Update tick -50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity, lower",
@@ -194,6 +201,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             true,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
 			expectedLiquidityGross: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Init tick 50 with Negative DefaultLiquidityAmt liquidity, upper",
@@ -206,6 +214,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             false,
 			expectedLiquidityNet:   DefaultLiquidityAmt,
 			expectedLiquidityGross: DefaultLiquidityAmt.Neg(),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Update tick 50 that already contains DefaultLiquidityAmt liquidity with -DefaultLiquidityAmt liquidity, upper",
@@ -218,6 +227,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             true,
 			expectedLiquidityNet:   sdk.ZeroDec(),
 			expectedLiquidityGross: sdk.ZeroDec(),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Update tick -50 that already contains DefaultLiquidityAmt liquidity with negative DefaultLiquidityAmt liquidity, lower",
@@ -230,6 +240,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             true,
 			expectedLiquidityNet:   sdk.ZeroDec(),
 			expectedLiquidityGross: sdk.ZeroDec(),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Init tick for non-existing pool",
@@ -247,7 +258,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 
 			// Create a default CL pool
 			pool := s.PrepareConcentratedPool()
@@ -261,6 +272,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			// manually update accumulator for testing
 			defaultAccumCoins := sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
 			feeAccum.AddToAccumulator(defaultAccumCoins)
+
+			existingGasConsumed := s.Ctx.GasMeter().GasConsumed()
 
 			// If tickExists set, initialize the specified tick with defaultLiquidityAmt
 			preexistingLiquidity := sdk.ZeroDec()
@@ -310,6 +323,10 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			} else {
 				s.Require().Equal(sdk.DecCoins(nil), tickInfoAfter.FeeGrowthOutside)
 			}
+
+			// Ensure that at least the minimum amount of gas was charged
+			gasConsumed := s.Ctx.GasMeter().GasConsumed() - existingGasConsumed
+			s.Require().True(gasConsumed >= test.minimumGasConsumed)
 		})
 	}
 }
@@ -388,7 +405,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 
 			// Create a default CL pool
 			clPool := s.PrepareConcentratedPool()
@@ -544,7 +561,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 
 			// Create a default CL pool
 			clPool := s.PrepareConcentratedPool()
@@ -552,7 +569,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 
 			if test.poolToGet == validPoolId {
 				s.FundAcc(s.TestAccs[0], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
-				_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, test.poolToGet, s.TestAccs[0], DefaultCoin0.Amount, DefaultCoin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick, DefaultFreezeDuration)
+				_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, test.poolToGet, s.TestAccs[0], DefaultCoin0.Amount, DefaultCoin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 				s.Require().NoError(err)
 			}
 
@@ -608,14 +625,14 @@ func (s *KeeperTestSuite) TestCrossTick() {
 	}
 }
 
-func (s *KeeperTestSuite) TestGetTickLiquidityForRange() {
+func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 	defaultTick := withPoolId(defaultTick, defaultPoolId)
 
 	tests := []struct {
 		name        string
 		presetTicks []genesis.FullTick
 
-		expectedLiquidityDepthForRange []query.LiquidityDepthWithRange
+		expectedLiquidityDepthForRange []queryproto.LiquidityDepthWithRange
 	}{
 		{
 			name: "one full range position, testing range in between",
@@ -623,7 +640,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForRange() {
 				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
 				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
 			},
-			expectedLiquidityDepthForRange: []query.LiquidityDepthWithRange{
+			expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
 				{
 					LiquidityAmount: sdk.NewDec(10),
 					LowerTick:       sdk.NewInt(DefaultMinTick),
@@ -637,7 +654,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForRange() {
 				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
 				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(-10)),
 			},
-			expectedLiquidityDepthForRange: []query.LiquidityDepthWithRange{
+			expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
 				{
 					LiquidityAmount: sdk.NewDec(10),
 					LowerTick:       sdk.NewInt(DefaultMinTick),
@@ -655,7 +672,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForRange() {
 				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(50)),
 				withLiquidityNetandTickIndex(defaultTick, 30, sdk.NewDec(-50)),
 			},
-			expectedLiquidityDepthForRange: []query.LiquidityDepthWithRange{
+			expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
 				{
 					LiquidityAmount: sdk.NewDec(10),
 					LowerTick:       sdk.NewInt(-20),
@@ -683,7 +700,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForRange() {
 				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(50)),
 				withLiquidityNetandTickIndex(defaultTick, 30, sdk.NewDec(-50)),
 			},
-			expectedLiquidityDepthForRange: []query.LiquidityDepthWithRange{
+			expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
 				{
 					LiquidityAmount: sdk.NewDec(10),
 					LowerTick:       sdk.NewInt(DefaultMinTick),
@@ -714,7 +731,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForRange() {
 				withLiquidityNetandTickIndex(defaultTick, 11, sdk.NewDec(100)),
 				withLiquidityNetandTickIndex(defaultTick, 13, sdk.NewDec(-100)),
 			},
-			expectedLiquidityDepthForRange: []query.LiquidityDepthWithRange{
+			expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
 				{
 					LiquidityAmount: sdk.NewDec(10),
 					LowerTick:       sdk.NewInt(-20),
@@ -747,7 +764,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForRange() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 
 			// Create a default CL pool
 			s.PrepareConcentratedPool()
@@ -755,125 +772,430 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForRange() {
 				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, tick.Info)
 			}
 
-			liquidityForRange, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityForRange(s.Ctx, defaultPoolId)
+			liquidityForRange, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityForFullRange(s.Ctx, defaultPoolId)
 			s.Require().NoError(err)
 			s.Require().Equal(liquidityForRange, test.expectedLiquidityDepthForRange)
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestGetLiquidityDepthFromIterator() {
-	firstTickLiquidityDepth := query.LiquidityDepth{
-		TickIndex:    sdk.NewInt(-3),
-		LiquidityNet: sdk.NewDec(-30),
-	}
-	secondTickLiquidityDepth := query.LiquidityDepth{
-		TickIndex:    sdk.NewInt(1),
-		LiquidityNet: sdk.NewDec(10),
-	}
-	thirdTickLiquidityDepth := query.LiquidityDepth{
-		TickIndex:    sdk.NewInt(2),
-		LiquidityNet: sdk.NewDec(20),
-	}
-	fourthTickLiquidityDepth := query.LiquidityDepth{
-		TickIndex:    sdk.NewInt(4),
-		LiquidityNet: sdk.NewDec(40),
-	}
+func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
+	defaultTick := withPoolId(defaultTick, defaultPoolId)
+
 	tests := []struct {
-		name                    string
-		invalidPool             bool
-		expectedErr             bool
-		lowerTick               int64
-		upperTick               int64
-		expectedLiquidityDepths []query.LiquidityDepth
+		name        string
+		presetTicks []genesis.FullTick
+
+		// testing params
+		poolId          uint64
+		tokenIn         string
+		currentPoolTick sdk.Int
+		startTick       sdk.Int
+		boundTick       sdk.Int
+
+		// expected values
+		expectedLiquidityDepths []queryproto.TickLiquidityNet
+		expectedError           bool
 	}{
 		{
-			name:      "Entire range of user position",
-			lowerTick: firstTickLiquidityDepth.TickIndex.Int64(),
-			upperTick: fourthTickLiquidityDepth.TickIndex.Int64(),
-			expectedLiquidityDepths: []query.LiquidityDepth{
-				firstTickLiquidityDepth,
-				secondTickLiquidityDepth,
-				thirdTickLiquidityDepth,
-				fourthTickLiquidityDepth,
+			name: "one full range position, zero for one true",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+			},
+
+			poolId:    defaultPoolId,
+			tokenIn:   ETH,
+			boundTick: sdk.Int{},
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(10),
+					TickIndex:    sdk.NewInt(DefaultMinTick),
+				},
 			},
 		},
 		{
-			name:      "Half range of user position",
-			lowerTick: thirdTickLiquidityDepth.TickIndex.Int64(),
-			upperTick: fourthTickLiquidityDepth.TickIndex.Int64(),
-			expectedLiquidityDepths: []query.LiquidityDepth{
-				thirdTickLiquidityDepth,
-				fourthTickLiquidityDepth,
+			name: "one full range position, zero for one false",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+			},
+
+			poolId:    defaultPoolId,
+			tokenIn:   USDC,
+			boundTick: sdk.Int{},
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(-10),
+					TickIndex:    sdk.NewInt(DefaultMaxTick),
+				},
 			},
 		},
 		{
-			name:      "single range",
-			lowerTick: thirdTickLiquidityDepth.TickIndex.Int64(),
-			upperTick: thirdTickLiquidityDepth.TickIndex.Int64(),
-			expectedLiquidityDepths: []query.LiquidityDepth{
-				thirdTickLiquidityDepth,
+			name: "one full range position, one range position above current tick, zero for one true",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:    defaultPoolId,
+			tokenIn:   ETH,
+			boundTick: sdk.Int{},
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(10),
+					TickIndex:    sdk.NewInt(DefaultMinTick),
+				},
 			},
 		},
 		{
-			name:                    "tick that does not exist",
-			lowerTick:               10,
-			upperTick:               10,
-			expectedLiquidityDepths: []query.LiquidityDepth{},
+			name: "one full range position, one range position above current tick, zero for one false",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:    defaultPoolId,
+			tokenIn:   USDC,
+			boundTick: sdk.Int{},
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(20),
+					TickIndex:    sdk.NewInt(5),
+				},
+				{
+					LiquidityNet: sdk.NewDec(-20),
+					TickIndex:    sdk.NewInt(10),
+				},
+				{
+					LiquidityNet: sdk.NewDec(-10),
+					TickIndex:    sdk.NewInt(DefaultMaxTick),
+				},
+			},
 		},
 		{
-			name:        "invalid pool id",
-			invalidPool: true,
-			lowerTick:   thirdTickLiquidityDepth.TickIndex.Int64(),
-			upperTick:   fourthTickLiquidityDepth.TickIndex.Int64(),
-			expectedErr: true,
+			name: "one full range position, one range position above current tick, zero for one false, bound tick below with non-empty ticks",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:    defaultPoolId,
+			tokenIn:   ETH,
+			boundTick: sdk.NewInt(-15),
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(20),
+					TickIndex:    sdk.NewInt(-10),
+				},
+			},
+		},
+		{
+			name: "one ranged position, returned empty array",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:                  defaultPoolId,
+			tokenIn:                 ETH,
+			boundTick:               sdk.NewInt(-5),
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{},
+		},
+		{
+			name: "one full range position, one range position above current tick, zero for one false, bound tick below with non-empty ticks",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:    defaultPoolId,
+			tokenIn:   USDC,
+			boundTick: sdk.NewInt(10),
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(-20),
+					TickIndex:    sdk.NewInt(10),
+				},
+			},
+		},
+		{
+			name: "one full range position, two ranged positions, zero for one true",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -5, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, 2, sdk.NewDec(40)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-40)),
+			},
+
+			poolId:    defaultPoolId,
+			tokenIn:   ETH,
+			boundTick: sdk.Int{},
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(20),
+					TickIndex:    sdk.NewInt(-5),
+				},
+				{
+					LiquidityNet: sdk.NewDec(10),
+					TickIndex:    sdk.NewInt(DefaultMinTick),
+				},
+			},
+		},
+		{
+			name: "one full range position, two ranged positions, zero for one false",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -5, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, 2, sdk.NewDec(40)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-40)),
+			},
+
+			poolId:    defaultPoolId,
+			tokenIn:   USDC,
+			boundTick: sdk.Int{},
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(40),
+					TickIndex:    sdk.NewInt(2),
+				},
+				{
+					LiquidityNet: sdk.NewDec(-20),
+					TickIndex:    sdk.NewInt(5),
+				},
+				{
+					LiquidityNet: sdk.NewDec(-40),
+					TickIndex:    sdk.NewInt(10),
+				},
+				{
+					LiquidityNet: sdk.NewDec(-10),
+					TickIndex:    sdk.NewInt(DefaultMaxTick),
+				},
+			},
+		},
+		{
+			name: "current pool tick == start tick, zero for one",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:          defaultPoolId,
+			tokenIn:         ETH,
+			currentPoolTick: sdk.NewInt(10),
+			startTick:       sdk.NewInt(10),
+			boundTick:       sdk.NewInt(-15),
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(20),
+					TickIndex:    sdk.NewInt(-10),
+				},
+			},
+		},
+		{
+			name: "current pool tick != start tick, zero for one",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:          defaultPoolId,
+			tokenIn:         ETH,
+			currentPoolTick: sdk.NewInt(21),
+			startTick:       sdk.NewInt(10),
+			boundTick:       sdk.NewInt(-15),
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(20),
+					TickIndex:    sdk.NewInt(-10),
+				},
+			},
+		},
+		{
+			name: "11: current pool tick == start tick, one for zero",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:          defaultPoolId,
+			tokenIn:         USDC,
+			currentPoolTick: sdk.NewInt(5),
+			startTick:       sdk.NewInt(5),
+			boundTick:       sdk.NewInt(15),
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(-20),
+					TickIndex:    sdk.NewInt(10),
+				},
+			},
+		},
+		{
+			name: "current pool tick != start tick, one for zero",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:          defaultPoolId,
+			tokenIn:         USDC,
+			currentPoolTick: sdk.NewInt(-50),
+			startTick:       sdk.NewInt(5),
+			boundTick:       sdk.NewInt(15),
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(-20),
+					TickIndex:    sdk.NewInt(10),
+				},
+			},
+		},
+
+		// error cases
+		{
+			name: "error: invalid pool id",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+			},
+
+			poolId:        5,
+			tokenIn:       "invalid_token",
+			boundTick:     sdk.NewInt(-5),
+			expectedError: true,
+		},
+		{
+			name: "error: invalid token in",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+			},
+
+			poolId:        defaultPoolId,
+			tokenIn:       "invalid_token",
+			boundTick:     sdk.NewInt(-5),
+			expectedError: true,
+		},
+		{
+			name: "error: wrong direction of bound ticks",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:        defaultPoolId,
+			tokenIn:       USDC,
+			boundTick:     sdk.NewInt(-5),
+			expectedError: true,
+		},
+		{
+			name: "error: bound tick is greater than max tick",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+			},
+
+			poolId:        defaultPoolId,
+			tokenIn:       USDC,
+			boundTick:     sdk.NewInt(DefaultMaxTick + 1),
+			expectedError: true,
+		},
+		{
+			name: "error: bound tick is greater than min tick",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+			},
+
+			poolId:        defaultPoolId,
+			tokenIn:       ETH,
+			boundTick:     sdk.NewInt(DefaultMinTick - 1),
+			expectedError: true,
+		},
+		{
+			name: "start tick is in invalid range relative to current pool tick, zero for one",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:          defaultPoolId,
+			tokenIn:         ETH,
+			currentPoolTick: sdk.NewInt(10),
+			startTick:       sdk.NewInt(21),
+			boundTick:       sdk.NewInt(-15),
+			expectedError:   true,
+		},
+		{
+			name: "start tick is in invalid range relative to current pool tick, one for zero",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:          defaultPoolId,
+			tokenIn:         USDC,
+			currentPoolTick: sdk.NewInt(5),
+			startTick:       sdk.NewInt(-50),
+			boundTick:       sdk.NewInt(15),
+			expectedError:   true,
 		},
 	}
 
 	for _, test := range tests {
+		test := test
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 
 			// Create a default CL pool
 			pool := s.PrepareConcentratedPool()
-
-			// Create ticks
-			// Initialized tickIndex -> liquidity net gross as following:
-			// 1 -> 10, 2 -> 20, 3 -> 30, 4 -> 40
-			s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, pool.GetId(), firstTickLiquidityDepth.TickIndex.Int64(), model.TickInfo{
-				LiquidityNet: firstTickLiquidityDepth.LiquidityNet,
-			})
-			s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, pool.GetId(), secondTickLiquidityDepth.TickIndex.Int64(), model.TickInfo{
-				LiquidityNet: secondTickLiquidityDepth.LiquidityNet,
-			})
-			s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, pool.GetId(), thirdTickLiquidityDepth.TickIndex.Int64(), model.TickInfo{
-				LiquidityNet: thirdTickLiquidityDepth.LiquidityNet,
-			})
-			s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, pool.GetId(), fourthTickLiquidityDepth.TickIndex.Int64(), model.TickInfo{
-				LiquidityNet: fourthTickLiquidityDepth.LiquidityNet,
-			})
-
-			paramPoolId := pool.GetId()
-			if test.invalidPool {
-				paramPoolId = pool.GetId() + 1
+			for _, tick := range test.presetTicks {
+				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, tick.Info)
 			}
 
-			// System Under Test
-			liquidityDepths, err := s.App.ConcentratedLiquidityKeeper.GetPerTickLiquidityDepthFromRange(
-				s.Ctx,
-				paramPoolId,
-				test.lowerTick,
-				test.upperTick,
-			)
+			// Force initialize current sqrt price to 1.
+			// Normally, initialized during position creation.
+			// We only initialize ticks in this test for simplicity.
+			curPrice := sdk.OneDec()
+			// TOOD: consider adding tests for GetTickLiquidityNetInDirection
+			// with tick spacing > 1, requiring price to tick conversion with rounding.
+			curTick, err := math.PriceToTick(curPrice)
+			s.Require().NoError(err)
+			if !test.currentPoolTick.IsNil() {
+				sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)
+				s.Require().NoError(err)
 
-			if test.expectedErr {
+				curTick = test.currentPoolTick
+				curPrice = sqrtPrice
+			}
+			pool.SetCurrentSqrtPrice(curPrice)
+			pool.SetCurrentTick(curTick)
+
+			s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+
+			// system under test
+			liquidityForRange, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityNetInDirection(s.Ctx, test.poolId, test.tokenIn, test.startTick, test.boundTick)
+			if test.expectedError {
 				s.Require().Error(err)
 				return
 			}
 
 			s.Require().NoError(err)
-			s.Require().True(reflect.DeepEqual(liquidityDepths, test.expectedLiquidityDepths))
+			s.Require().Equal(liquidityForRange, test.expectedLiquidityDepths)
 		})
 	}
 }
@@ -890,7 +1212,18 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 		expectedError error
 	}{
 		{
-			name:          "lower tick is not divisible by deafult tick spacing",
+			name:      "happy path with default tick spacing",
+			lowerTick: 2,
+			upperTick: 4,
+		},
+		{
+			name:        "happy path with non default tick spacing",
+			tickSpacing: 3,
+			lowerTick:   3,
+			upperTick:   6,
+		},
+		{
+			name:          "lower tick is not divisible by default tick spacing",
 			lowerTick:     3,
 			upperTick:     2,
 			expectedError: types.TickSpacingError{LowerTick: 3, UpperTick: 2, TickSpacing: defaultTickSpacing},
@@ -946,25 +1279,11 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 
 			expectedError: types.InvalidLowerUpperTickError{LowerTick: 2, UpperTick: 0},
 		},
-		{
-			name:      "happy path with default tick spacing",
-			lowerTick: 2,
-			upperTick: 4,
-		},
-		{
-			name:        "happy path with non default tick spacing",
-			tickSpacing: 3,
-			lowerTick:   3,
-			upperTick:   6,
-		},
 	}
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			s.Setup()
-
-			// use default exponent at price one
-			exponentAtPriceOne := DefaultExponentAtPriceOne
+			s.SetupTest()
 
 			tickSpacing := defaultTickSpacing
 			if test.tickSpacing != uint64(0) {
@@ -972,7 +1291,7 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 			}
 
 			// System Under Test
-			err := cl.ValidateTickInRangeIsValid(tickSpacing, exponentAtPriceOne, test.lowerTick, test.upperTick)
+			err := cl.ValidateTickRangeIsValid(tickSpacing, test.lowerTick, test.upperTick)
 
 			if test.expectedError != nil {
 				s.Require().Error(err)
@@ -1059,7 +1378,7 @@ func (s *KeeperTestSuite) TestGetAllInitializedTicksForPool() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			s.Setup()
+			s.SetupTest()
 
 			for _, tick := range test.preSetTicks {
 				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, tick.Info)

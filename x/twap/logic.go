@@ -71,6 +71,14 @@ func getSpotPrices(
 	return sp0, sp1, latestErrTime
 }
 
+// mustTrackCreatedPool is a wrapper around afterCreatePool that panics on error.
+func (k Keeper) mustTrackCreatedPool(ctx sdk.Context, poolId uint64) {
+	err := k.afterCreatePool(ctx, poolId)
+	if err != nil {
+		panic(err)
+	}
+}
+
 // afterCreatePool creates new twap records of all the unique pairs of denoms within a pool.
 func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 	denoms, err := k.poolmanagerKeeper.RouteGetPoolDenoms(ctx, poolId)
@@ -136,7 +144,10 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 	}
 
 	for _, record := range records {
-		newRecord := k.updateRecord(ctx, record)
+		newRecord, err := k.updateRecord(ctx, record)
+		if err != nil {
+			return err
+		}
 		k.storeNewRecord(ctx, newRecord)
 	}
 	return nil
@@ -144,7 +155,28 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 
 // updateRecord returns a new record with updated accumulators and block time
 // for the current block time.
-func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.TwapRecord {
+func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) (types.TwapRecord, error) {
+	// Returns error for last updated records in the same block.
+	// Exception: record is initialized when creating a pool,
+	// then the TwapAccumulator variables are zero.
+
+	// Handle record after creating pool
+	// Incase record height should equal to ctx height
+	// But ArithmeticTwapAccumulators should be zero
+	if (record.Height == ctx.BlockHeight() || record.Time.Equal(ctx.BlockTime())) &&
+		!record.P1ArithmeticTwapAccumulator.Equal(sdk.ZeroDec()) &&
+		!record.P0ArithmeticTwapAccumulator.Equal(sdk.ZeroDec()) {
+		return types.TwapRecord{}, types.InvalidUpdateRecordError{}
+	} else if record.Height > ctx.BlockHeight() || record.Time.After(ctx.BlockTime()) {
+		// Normal case, ctx should be after record height & time
+		return types.TwapRecord{}, types.InvalidUpdateRecordError{
+			RecordBlockHeight: record.Height,
+			RecordTime:        record.Time,
+			ActualBlockHeight: ctx.BlockHeight(),
+			ActualTime:        ctx.BlockTime(),
+		}
+	}
+
 	newRecord := recordWithUpdatedAccumulators(record, ctx.BlockTime())
 	newRecord.Height = ctx.BlockHeight()
 
@@ -156,7 +188,7 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 	newRecord.P1LastSpotPrice = newSp1
 	newRecord.LastErrorTime = lastErrorTime
 
-	return newRecord
+	return newRecord, nil
 }
 
 // pruneRecords prunes twap records that happened earlier than recordHistoryKeepPeriod

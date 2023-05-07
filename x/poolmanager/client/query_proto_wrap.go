@@ -102,7 +102,7 @@ func (q Querier) NumPools(ctx sdk.Context, _ queryproto.NumPoolsRequest) (*query
 
 // Pool returns the pool specified by id.
 func (q Querier) Pool(ctx sdk.Context, req queryproto.PoolRequest) (*queryproto.PoolResponse, error) {
-	pool, err := q.K.RoutePool(ctx, req.PoolId)
+	pool, err := q.K.GetPool(ctx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -155,4 +155,25 @@ func (q Querier) SpotPrice(ctx sdk.Context, req queryproto.SpotPriceRequest) (*q
 	return &queryproto.SpotPriceResponse{
 		SpotPrice: sp.String(),
 	}, err
+}
+
+// TotalPoolLiquidity returns the total liquidity of the pool.
+func (q Querier) TotalPoolLiquidity(ctx sdk.Context, req queryproto.TotalPoolLiquidityRequest) (*queryproto.TotalPoolLiquidityResponse, error) {
+	if req.PoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Invalid Pool Id")
+	}
+
+	poolI, err := q.K.GetPool(ctx, req.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	coins, err := q.K.GetTotalPoolLiquidity(ctx, poolI.GetId())
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &queryproto.TotalPoolLiquidityResponse{
+		Liquidity: coins,
+	}, nil
 }

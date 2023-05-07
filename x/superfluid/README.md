@@ -349,6 +349,33 @@ lock until after the the unstaking has finished.
 - This runs the functionality of `MsgSuperfluidUndelegate`
 - It then triggers a force unbond of the underlying lock id
 
+### Create Full Range Position and Superfluid Delegate
+
+```{.go}
+type MsgCreateFullRangePositionAndSuperfluidDelegate struct {
+ Sender string
+ Coins sdk.Coins
+ ValAddr string
+ PoolId uint64
+}
+```
+
+This is effectively a multi msg tx of concentrated liquidity's `CreateFullRangePositionLocked`, lockup's `MsgLockTokens`, and
+superfluid's `MsgSuperfluidDelegate`, but it is implemented as a single
+msg. Upon completion, the following response is given:
+
+```{.go}
+type MsgCreateFullRangePositionAndSuperfluidDelegateResponse struct {
+ LockID uint64
+ PositionID uint64
+}
+```
+
+The message starts by creating a full range position in the given pool.
+It then mints concentrated liquidity shares and locks them up for the
+staking duration. From there, the normal superfluid delegation logic
+is executed.
+
 ## Epochs
 
 Overall Epoch sequence
@@ -875,6 +902,13 @@ We do this by:
 - The slash works by calculating the amount of tokens to slash.
 - It removes these from the underlying lock and the synthetic lock.
 - These coins are moved to the community pool.
+
+Slashing a concentrated liquidity superfluid lockup happens in the same way, however
+instead of sending the concentrated full range position shares from the lockup
+module account to the community pool, we determine the underlying assets
+that the slashed shares represent and send those from the respective pool
+account to the community pool. The shares residing in the lockup module
+account that represented the funds that got sent to the community pool are then burned.
 
 ### Nuances
 

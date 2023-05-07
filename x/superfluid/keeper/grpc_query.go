@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -49,11 +50,14 @@ func (q Querier) AssetType(goCtx context.Context, req *types.AssetTypeRequest) (
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Denom) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	asset := q.Keeper.GetSuperfluidAsset(ctx, req.Denom)
+	asset, err := q.Keeper.GetSuperfluidAsset(ctx, req.Denom)
+	if err != nil {
+		return nil, err
+	}
 	return &types.AssetTypeResponse{
 		AssetType: asset.AssetType,
 	}, nil
@@ -74,7 +78,7 @@ func (q Querier) AssetMultiplier(goCtx context.Context, req *types.AssetMultipli
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Denom) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -170,22 +174,23 @@ func (q Querier) SuperfluidDelegationAmount(goCtx context.Context, req *types.Su
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Denom) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
 	}
 	if len(req.ValidatorAddress) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty validator address")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty validator address")
 	}
 	if len(req.DelegatorAddress) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty delegator address")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty delegator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if q.Keeper.GetSuperfluidAsset(ctx, req.Denom).Denom == "" {
-		return nil, types.ErrNonSuperfluidAsset
+	_, err := q.Keeper.GetSuperfluidAsset(ctx, req.Denom)
+	if err != nil {
+		return nil, err
 	}
 
-	_, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	_, err = sdk.ValAddressFromBech32(req.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +216,7 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.DelegatorAddress) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty delegator address")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty delegator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -243,10 +248,16 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 		baseDenom := periodLock.Coins.GetDenomByIndex(0)
 		lockedCoins := sdk.NewCoin(baseDenom, periodLock.GetCoins().AmountOf(baseDenom))
 		valAddr, err := ValidatorAddressFromSyntheticDenom(syntheticLock.SynthDenom)
+		if err != nil {
+			return nil, err
+		}
 
 		// Find how many osmo tokens this delegation is worth at superfluids current risk adjustment
 		// and twap of the denom.
-		equivalentAmount := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
+		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
+		if err != nil {
+			return nil, err
+		}
 		coin := sdk.NewCoin(appparams.BaseCoinUnit, equivalentAmount)
 
 		if err != nil {
@@ -273,7 +284,7 @@ func (q Querier) SuperfluidUndelegationsByDelegator(goCtx context.Context, req *
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.DelegatorAddress) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty delegator address")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty delegator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -331,19 +342,20 @@ func (q Querier) SuperfluidDelegationsByValidatorDenom(goCtx context.Context, re
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Denom) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
 	}
 	if len(req.ValidatorAddress) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty validator address")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty validator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if q.Keeper.GetSuperfluidAsset(ctx, req.Denom).Denom == "" {
-		return nil, types.ErrNonSuperfluidAsset
+	_, err := q.Keeper.GetSuperfluidAsset(ctx, req.Denom)
+	if err != nil {
+		return nil, err
 	}
 
-	_, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	_, err = sdk.ValAddressFromBech32(req.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -378,16 +390,17 @@ func (q Querier) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Denom) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
 	}
 	if len(req.ValidatorAddress) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty validator address")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty validator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if q.Keeper.GetSuperfluidAsset(ctx, req.Denom).Denom == "" {
-		return nil, types.ErrNonSuperfluidAsset
+	_, err := q.Keeper.GetSuperfluidAsset(ctx, req.Denom)
+	if err != nil {
+		return nil, err
 	}
 
 	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
@@ -443,7 +456,10 @@ func (q Querier) TotalDelegationByValidatorForDenom(goCtx context.Context, req *
 			amount = amount.Add(record.DelegationAmount.Amount)
 		}
 
-		equivalentAmountOSMO := q.Keeper.GetSuperfluidOSMOTokens(ctx, req.Denom, amount)
+		equivalentAmountOSMO, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, req.Denom, amount)
+		if err != nil {
+			return nil, err
+		}
 
 		result := types.Delegations{
 			ValAddr:        valAddr.String(),
@@ -496,7 +512,7 @@ func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.Qu
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.DelegatorAddress) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty delegator address")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty delegator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)

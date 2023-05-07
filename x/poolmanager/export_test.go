@@ -6,6 +6,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
+var (
+	IntMaxValue = intMaxValue
+)
+
 func (k Keeper) GetNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 	return k.getNextPoolIdAndIncrement(ctx)
 }
@@ -33,4 +37,8 @@ func (k *Keeper) SetPoolModulesUnsafe(poolModules []types.PoolModuleI) {
 
 func (k Keeper) GetAllPoolRoutes(ctx sdk.Context) []types.ModuleRoute {
 	return k.getAllPoolRoutes(ctx)
+}
+
+func (k Keeper) ValidateCreatedPool(ctx sdk.Context, poolId uint64, pool types.PoolI) error {
+	return k.validateCreatedPool(ctx, poolId, pool)
 }

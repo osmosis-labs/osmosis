@@ -89,7 +89,12 @@ func migrateBalancerPoolsToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper
 
 func migrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanagerKeeper *poolmanager.Keeper, bankKeeper bankkeeper.Keeper, poolId uint64) {
 	// fetch the pool with the given poolId
-	balancerPool, err := gammKeeper.GetPool(ctx, poolId)
+	balancerPool, err := gammKeeper.GetCFMMPool(ctx, poolId)
+	if err != nil {
+		panic(err)
+	}
+
+	balancerPoolLiquidity, err := gammKeeper.GetTotalPoolLiquidity(ctx, poolId)
 	if err != nil {
 		panic(err)
 	}
@@ -98,7 +103,7 @@ func migrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.
 	stableswapPool, err := stableswap.NewStableswapPool(
 		poolId,
 		stableswap.PoolParams{SwapFee: balancerPool.GetSwapFee(ctx), ExitFee: balancerPool.GetExitFee(ctx)},
-		balancerPool.GetTotalPoolLiquidity(ctx),
+		balancerPoolLiquidity,
 		[]uint64{1, 1},
 		"osmo1k8c2m5cn322akk5wy8lpt87dd2f4yh9afcd7af", // Stride Foundation 2/3 multisig
 		"",

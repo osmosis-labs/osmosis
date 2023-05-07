@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"strconv"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -75,18 +74,6 @@ func (server msgServer) CreatePool(goCtx context.Context, msg poolmanagertypes.C
 	if err != nil {
 		return 0, err
 	}
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.TypeEvtPoolCreated,
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.PoolCreator().String()),
-		),
-	})
 
 	return poolId, nil
 }
@@ -319,7 +306,7 @@ func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx conte
 		return nil, err
 	}
 
-	positionId, amount0, amount1, liquidity, joinTime, poolIdLeaving, poolIdEntering, err := server.keeper.MigrateFromBalancerToConcentrated(ctx, sender, msg.SharesToMigrate)
+	positionId, amount0, amount1, liquidity, joinTime, poolIdLeaving, poolIdEntering, err := server.keeper.MigrateUnlockedPositionFromBalancerToConcentrated(ctx, sender, msg.SharesToMigrate, msg.TokenOutMins)
 	if err != nil {
 		return nil, err
 	}
@@ -329,7 +316,6 @@ func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx conte
 			types.TypeEvtMigrateShares,
 			sdk.NewAttribute(types.AttributeKeyPoolIdEntering, strconv.FormatUint(poolIdEntering, 10)),
 			sdk.NewAttribute(types.AttributeKeyPoolIdLeaving, strconv.FormatUint(poolIdLeaving, 10)),
-			sdk.NewAttribute(types.AttributeFreezeDuration, time.Duration(0).String()),
 			sdk.NewAttribute(types.AttributePositionId, strconv.FormatUint(positionId, 10)),
 			sdk.NewAttribute(types.AttributeAmount0, amount0.String()),
 			sdk.NewAttribute(types.AttributeAmount1, amount1.String()),

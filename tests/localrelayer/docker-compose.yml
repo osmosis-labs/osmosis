@@ -1,15 +1,14 @@
 version: "3"
 
 services:
-
   localosmosis-a:
     image: local:osmosis
     build:
       context: ../../
       dockerfile: Dockerfile
       args:
-        RUNNER_IMAGE: alpine:3.16
-        GO_VERSION: 1.19
+        RUNNER_IMAGE: alpine:3.17
+        GO_VERSION: "1.20"
     volumes:
       - ./scripts/setup_chain.sh:/osmosis/setup.sh
       - $HOME/.osmosisd-local-a/:/osmosis/.osmosisd/
@@ -27,25 +26,25 @@ services:
       - 9090:9090
     networks:
       - localosmosis
-    
+
   faucet-a:
     command:
       - start
       - localosmosis-a:26657
     image: confio/faucet:0.28.11
     environment:
-      FAUCET_CONCURRENCY:         1
-      FAUCET_MNEMONIC:            "increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great"
-      FAUCET_PORT:                8000
-      FAUCET_GAS_PRICE:           0.025uosmo
-      FAUCET_PATH_PATTERN:        "m/44'/118'/0'/0/a"
-      FAUCET_ADDRESS_PREFIX:      osmo
-      FAUCET_TOKENS:              uosmo,uion
-      FAUCET_CREDIT_AMOUNT_UOSMO: 10000000   # 10 osmo  
-      FAUCET_CREDIT_AMOUNT_UION:  100000     # 0.1 ion
-      FAUCET_REFILL_FACTOR:       8
-      FAUCET_REFILL_THRESHOLD:    20
-      FAUCET_COOLDOWN_TIME:       30         # 30s
+      FAUCET_CONCURRENCY: 1
+      FAUCET_MNEMONIC: "increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great"
+      FAUCET_PORT: 8000
+      FAUCET_GAS_PRICE: 0.025uosmo
+      FAUCET_PATH_PATTERN: "m/44'/118'/0'/0/a"
+      FAUCET_ADDRESS_PREFIX: osmo
+      FAUCET_TOKENS: uosmo,uion
+      FAUCET_CREDIT_AMOUNT_UOSMO: 10000000 # 10 osmo
+      FAUCET_CREDIT_AMOUNT_UION: 100000 # 0.1 ion
+      FAUCET_REFILL_FACTOR: 8
+      FAUCET_REFILL_THRESHOLD: 20
+      FAUCET_COOLDOWN_TIME: 30 # 30s
     ports:
       - 8000:8000
     depends_on:
@@ -59,8 +58,8 @@ services:
       context: ../../
       dockerfile: Dockerfile
       args:
-        RUNNER_IMAGE: alpine:3.16
-        GO_VERSION: 1.19
+        RUNNER_IMAGE: alpine:3.17
+        GO_VERSION: "1.20"
     volumes:
       - ./scripts/setup_chain.sh:/osmosis/setup.sh
       - $HOME/.osmosisd-local-b/:/osmosis/.osmosisd/
@@ -79,29 +78,29 @@ services:
       - 39090:9090
     networks:
       - localosmosis
-    
+
   faucet-b:
     command:
       - start
       - localosmosis-b:26657
     image: confio/faucet:0.28.11
     environment:
-      FAUCET_CONCURRENCY:         1
-      FAUCET_MNEMONIC:            "increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great"
-      FAUCET_PORT:                8000
-      FAUCET_GAS_PRICE:           0.025uosmo
-      FAUCET_PATH_PATTERN:        "m/44'/118'/0'/0/a"
-      FAUCET_ADDRESS_PREFIX:      osmo
-      FAUCET_TOKENS:              uosmo,uion
-      FAUCET_CREDIT_AMOUNT_UOSMO: 10000000   # 10 osmo  
-      FAUCET_CREDIT_AMOUNT_UION:  100000     # 0.1 ion
-      FAUCET_REFILL_FACTOR:       8
-      FAUCET_REFILL_THRESHOLD:    20
-      FAUCET_COOLDOWN_TIME:       30         # 30s
+      FAUCET_CONCURRENCY: 1
+      FAUCET_MNEMONIC: "increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great"
+      FAUCET_PORT: 8000
+      FAUCET_GAS_PRICE: 0.025uosmo
+      FAUCET_PATH_PATTERN: "m/44'/118'/0'/0/a"
+      FAUCET_ADDRESS_PREFIX: osmo
+      FAUCET_TOKENS: uosmo,uion
+      FAUCET_CREDIT_AMOUNT_UOSMO: 10000000 # 10 osmo
+      FAUCET_CREDIT_AMOUNT_UION: 100000 # 0.1 ion
+      FAUCET_REFILL_FACTOR: 8
+      FAUCET_REFILL_THRESHOLD: 20
+      FAUCET_COOLDOWN_TIME: 30 # 30s
     ports:
       - 38000:8000
     depends_on:
-    - localosmosis-b
+      - localosmosis-b
     networks:
       - localosmosis
 

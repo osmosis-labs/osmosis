@@ -1,30 +1,96 @@
-use cosmwasm_std::{coins, to_binary, wasm_execute, BankMsg, Env, Timestamp};
+use cosmwasm_std::{coins, to_binary, wasm_execute, BankMsg, Env, MessageInfo};
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, SubMsg, SubMsgResponse, SubMsgResult};
-use registry::Registry;
+use registry::msg::{Callback, SerializableJson};
+use registry::{Registry, RegistryError};
 use swaprouter::msg::ExecuteMsg as SwapRouterExecute;
 
 use crate::checks::{check_is_contract_governor, ensure_key_missing, validate_receiver};
 use crate::consts::{MsgReplyID, CALLBACK_KEY};
-use crate::msg::{CrosschainSwapResponse, FailedDeliveryAction, SerializableJson};
+use crate::msg::{CrosschainSwapResponse, FailedDeliveryAction};
 use registry::proto::MsgTransferResponse;
 
-use crate::state;
 use crate::state::{
     Config, ForwardMsgReplyState, ForwardTo, SwapMsgReplyState, CONFIG, FORWARD_REPLY_STATE,
     INFLIGHT_PACKETS, RECOVERY_STATES, SWAP_REPLY_STATE,
 };
 use crate::utils::{build_memo, parse_swaprouter_reply};
 use crate::ContractError;
+use crate::{state, ExecuteMsg};
 
-/// This is the main execute call of this contract.
+/// This function takes any token. If it's already something we can work with
+/// (either native to osmosis or native to a chain connected to osmosis via a
+/// valid channel), it will just proceed to swap and forward. If it's not, then
+/// it will send an IBC message to unwrap it first and provide a callback to
+/// ensure the right swap_and_forward gets called after the unwrap succeeds
+pub fn unwrap_or_swap_and_forward(
+    ctx: (DepsMut, Env, MessageInfo),
+    output_denom: String,
+    slippage: swaprouter::Slippage,
+    receiver: &str,
+    next_memo: Option<SerializableJson>,
+    failed_delivery_action: FailedDeliveryAction,
+) -> Result<Response, ContractError> {
+    let (ref deps, ref env, ref info) = ctx;
+    let swap_coin = cw_utils::one_coin(info)?;
+
+    deps.api
+        .debug(&format!("executing unwrap or swap and forward"));
+    let registry = Registry::default(deps.as_ref());
+
+    // Check the path that the coin took to get to the current chain.
+    // Each element in the path is an IBC hop.
+    let path = registry.unwrap_denom_path(&swap_coin.denom)?;
+    if path.is_empty() {
+        return Err(RegistryError::InvalidDenomTracePath {
+            path: String::new(),
+            denom: swap_coin.denom,
+        }
+        .into());
+    }
+
+    // If the path is larger than 2, we need to unwrap this token first
+    if path.len() > 2 {
+        let registry = Registry::default(deps.as_ref());
+        let ibc_transfer = registry.unwrap_coin_into(
+            swap_coin,
+            env.contract.address.to_string(),
+            None,
+            env.contract.address.to_string(),
+            env.block.time,
+            String::new(),
+            Some(Callback {
+                contract: env.contract.address.clone(),
+                msg: serde_cw_value::to_value(&ExecuteMsg::OsmosisSwap {
+                    output_denom,
+                    receiver: receiver.to_string(),
+                    slippage,
+                    next_memo,
+                    on_failed_delivery: failed_delivery_action,
+                })?
+                .into(),
+            }),
+        )?;
+        return Ok(Response::new().add_message(ibc_transfer));
+    }
+
+    // If the denom is either native or only one hop, we swap it directly
+    swap_and_forward(
+        ctx,
+        swap_coin,
+        output_denom,
+        slippage,
+        receiver,
+        next_memo,
+        failed_delivery_action,
+    )
+}
+
+/// This function takes token "known to the chain", swaps it, and then forwards
+/// the result to the receiver.
 ///
-/// It's objective is to trigger a swap between the supplied pairs
 ///
-#[allow(clippy::too_many_arguments)]
 pub fn swap_and_forward(
-    deps: DepsMut,
-    block_time: Timestamp,
-    contract_addr: Addr,
+    ctx: (DepsMut, Env, MessageInfo),
     swap_coin: Coin,
     output_denom: String,
     slippage: swaprouter::Slippage,
@@ -32,8 +98,36 @@ pub fn swap_and_forward(
     next_memo: Option<SerializableJson>,
     failed_delivery_action: FailedDeliveryAction,
 ) -> Result<Response, ContractError> {
+    let (deps, env, _) = ctx;
+
     deps.api.debug(&format!("executing swap and forward"));
     let config = CONFIG.load(deps.storage)?;
+
+    // Check that the received is valid and retrieve its channel
+    let (valid_chain, valid_receiver) = validate_receiver(deps.as_ref(), receiver)?;
+    // If there is a memo, check that it is valid (i.e. a valud json object that
+    // doesn't contain the key that we will insert later)
+    let memo = if let Some(memo) = &next_memo {
+        // Ensure the json is an object ({...}) and that it does not contain the CALLBACK_KEY
+        deps.api.debug(&format!("checking memo: {memo:?}"));
+        ensure_key_missing(memo.as_value(), CALLBACK_KEY)?;
+        serde_json_wasm::to_string(&memo)?
+    } else {
+        String::new()
+    };
+
+    // Validate that the swapped token can be unwrapped. If it can't, abort
+    // early to avoid swapping unnecessarily
+    let registry = Registry::default(deps.as_ref());
+    registry.unwrap_coin_into(
+        Coin::new(1, output_denom.clone()),
+        valid_receiver.to_string(),
+        Some(&valid_chain),
+        env.contract.address.to_string(),
+        env.block.time,
+        memo,
+        None,
+    )?;
 
     // Message to swap tokens in the underlying swaprouter contract
     let swap_msg = SwapRouterExecute::Swap {
@@ -42,16 +136,6 @@ pub fn swap_and_forward(
         slippage,
     };
     let msg = wasm_execute(config.swap_contract, &swap_msg, vec![swap_coin])?;
-
-    // Check that the received is valid and retrieve its channel
-    let (valid_chain, valid_receiver) = validate_receiver(deps.as_ref(), receiver)?;
-    // If there is a memo, check that it is valid (i.e. a valud json object that
-    // doesn't contain the key that we will insert later)
-    if let Some(memo) = &next_memo {
-        // Ensure the json is an object ({...}) and that it does not contain the CALLBACK_KEY
-        deps.api.debug(&format!("checking memo: {memo:?}"));
-        ensure_key_missing(memo.as_value(), CALLBACK_KEY)?;
-    }
 
     // Check that there isn't anything stored in SWAP_REPLY_STATES. If there is,
     // it means that the contract is already waiting for a reply and should not
@@ -64,15 +148,13 @@ pub fn swap_and_forward(
         });
     }
 
-    // TODO: Unwrap before swap
-
     // Store information about the original message to be used in the reply
     SWAP_REPLY_STATE.save(
         deps.storage,
         &SwapMsgReplyState {
             swap_msg,
-            block_time,
-            contract_addr,
+            block_time: env.block.time,
+            contract_addr: env.contract.address,
             forward_to: ForwardTo {
                 chain: valid_chain,
                 receiver: valid_receiver,
@@ -117,6 +199,7 @@ pub fn handle_swap_reply(
         env.contract.address.to_string(),
         env.block.time,
         memo,
+        None,
     )?;
     deps.api.debug(&format!("IBC transfer: {ibc_transfer:?}"));
 

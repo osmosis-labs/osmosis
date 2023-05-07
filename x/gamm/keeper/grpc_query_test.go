@@ -4,8 +4,8 @@ import (
 	gocontext "context"
 	"errors"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
@@ -13,6 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/v2types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
@@ -43,13 +44,13 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 			"zero share in amount",
 			poolId,
 			sdk.ZeroInt(),
-			sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
+			errorsmod.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
 		},
 		{
 			"negative share in amount",
 			poolId,
 			sdk.NewInt(-10000),
-			sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
+			errorsmod.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
 		},
 	}
 
@@ -131,7 +132,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
 			"token in denom does not exist",
 			poolId,
 			sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10000))),
-			sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, "input denoms must already exist in the pool (%s)", "random"),
+			errorsmod.Wrapf(types.ErrDenomNotFoundInPool, "input denoms must already exist in the pool (%s)", "random"),
 		},
 		{
 			"join pool with incorrect amount of assets",
@@ -395,7 +396,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 			"token in denom does not exist",
 			poolId,
 			sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10000))),
-			sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, "input denoms must already exist in the pool (%s)", "random"),
+			errorsmod.Wrapf(types.ErrDenomNotFoundInPool, "input denoms must already exist in the pool (%s)", "random"),
 		},
 		{
 			"join pool with incorrect amount of assets",
@@ -455,7 +456,7 @@ func (suite *KeeperTestSuite) TestQueryPool() {
 		err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(poolId, pool.GetId())
-		suite.Require().Equal(types.NewPoolAddress(poolId).String(), pool.GetAddress().String())
+		suite.Require().Equal(poolmanagertypes.NewPoolAddress(poolId).String(), pool.GetAddress().String())
 	}
 }
 
@@ -472,7 +473,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 		err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(poolId, pool.GetId())
-		suite.Require().Equal(types.NewPoolAddress(poolId).String(), pool.GetAddress().String())
+		suite.Require().Equal(poolmanagertypes.NewPoolAddress(poolId).String(), pool.GetAddress().String())
 	}
 
 	res, err := queryClient.Pools(gocontext.Background(), &types.QueryPoolsRequest{
@@ -488,7 +489,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 		var pool types.CFMMPoolI
 		err = suite.App.InterfaceRegistry().UnpackAny(r, &pool)
 		suite.Require().NoError(err)
-		suite.Require().Equal(types.NewPoolAddress(uint64(1)).String(), pool.GetAddress().String())
+		suite.Require().Equal(poolmanagertypes.NewPoolAddress(uint64(1)).String(), pool.GetAddress().String())
 		suite.Require().Equal(uint64(1), pool.GetId())
 	}
 
@@ -505,7 +506,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 		var pool types.CFMMPoolI
 		err = suite.App.InterfaceRegistry().UnpackAny(r, &pool)
 		suite.Require().NoError(err)
-		suite.Require().Equal(types.NewPoolAddress(uint64(i+1)).String(), pool.GetAddress().String())
+		suite.Require().Equal(poolmanagertypes.NewPoolAddress(uint64(i+1)).String(), pool.GetAddress().String())
 		suite.Require().Equal(uint64(i+1), pool.GetId())
 	}
 }
