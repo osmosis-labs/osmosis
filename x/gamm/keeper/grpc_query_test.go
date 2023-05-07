@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/v2types"
@@ -189,7 +188,7 @@ func (suite *KeeperTestSuite) TestPoolsWithFilter() {
 		expected_num_pools_response int
 		min_liquidity               string
 		pool_type                   string
-		poolAssets                  []balancertypes.PoolAsset
+		poolAssets                  []balancer.PoolAsset
 		expectedErr                 bool
 	}{
 		{
@@ -198,7 +197,7 @@ func (suite *KeeperTestSuite) TestPoolsWithFilter() {
 			expected_num_pools_response: 1,
 			min_liquidity:               "50000foo, 50000bar",
 			pool_type:                   "Balancer",
-			poolAssets: []balancertypes.PoolAsset{
+			poolAssets: []balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
@@ -215,7 +214,7 @@ func (suite *KeeperTestSuite) TestPoolsWithFilter() {
 			num_pools:                   1,
 			expected_num_pools_response: 0,
 			min_liquidity:               "500000000foo, 500000000bar",
-			poolAssets: []balancertypes.PoolAsset{
+			poolAssets: []balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
@@ -233,7 +232,7 @@ func (suite *KeeperTestSuite) TestPoolsWithFilter() {
 			expected_num_pools_response: 0,
 			min_liquidity:               "",
 			pool_type:                   "balaswap",
-			poolAssets: []balancertypes.PoolAsset{
+			poolAssets: []balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
@@ -251,7 +250,7 @@ func (suite *KeeperTestSuite) TestPoolsWithFilter() {
 			expected_num_pools_response: 4,
 			min_liquidity:               "500foo",
 			pool_type:                   "Balancer",
-			poolAssets: []balancertypes.PoolAsset{
+			poolAssets: []balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
@@ -268,7 +267,7 @@ func (suite *KeeperTestSuite) TestPoolsWithFilter() {
 			num_pools:                   1,
 			expected_num_pools_response: 0,
 			min_liquidity:               "500whoami",
-			poolAssets: []balancertypes.PoolAsset{
+			poolAssets: []balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
@@ -285,7 +284,7 @@ func (suite *KeeperTestSuite) TestPoolsWithFilter() {
 			num_pools:                   1,
 			expected_num_pools_response: 6,
 			min_liquidity:               "0foo,0bar",
-			poolAssets: []balancertypes.PoolAsset{
+			poolAssets: []balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
@@ -302,7 +301,7 @@ func (suite *KeeperTestSuite) TestPoolsWithFilter() {
 			num_pools:                   1,
 			expected_num_pools_response: 7,
 			pool_type:                   "Balancer",
-			poolAssets: []balancertypes.PoolAsset{
+			poolAssets: []balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
@@ -320,7 +319,7 @@ func (suite *KeeperTestSuite) TestPoolsWithFilter() {
 			expected_num_pools_response: 1,
 			min_liquidity:               "wrong300foo",
 			pool_type:                   "Balancer",
-			poolAssets: []balancertypes.PoolAsset{
+			poolAssets: []balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
