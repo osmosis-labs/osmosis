@@ -8,9 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
-var (
-	defaultFeePerTx = sdk.NewInt(1000)
-)
+var defaultFeePerTx = sdk.NewInt(1000)
 
 // calculateFeeGrowthGlobal calculates fee growth global per unit of virtual liquidity based on swap parameters:
 // amountIn - amount being swapped

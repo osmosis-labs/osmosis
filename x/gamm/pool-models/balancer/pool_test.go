@@ -19,7 +19,7 @@ import (
 
 var (
 	defaultSwapFee            = sdk.MustNewDecFromStr("0.025")
-	defaultZeroExitFee            = sdk.ZeroDec()
+	defaultZeroExitFee        = sdk.ZeroDec()
 	defaultPoolId             = uint64(10)
 	defaultBalancerPoolParams = balancer.PoolParams{
 		SwapFee: defaultSwapFee,
@@ -570,7 +570,8 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 				suite.Require().NotNil(pool)
 
 				errTolerance := osmomath.ErrTolerance{
-					AdditiveTolerance: sdk.OneDec(), MultiplicativeTolerance: sdk.Dec{}}
+					AdditiveTolerance: sdk.OneDec(), MultiplicativeTolerance: sdk.Dec{},
+				}
 				sut := func() {
 					test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, poolAssetIn.Token.Denom, poolAssetOut.Token.Denom, tc.initialCalcOut, swapFeeDec, errTolerance)
 				}

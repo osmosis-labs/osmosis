@@ -1709,7 +1709,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 		},
 		"error: duplicate split routes": {
 			routes: []types.SwapAmountInSplitRoute{
-
 				defaultSingleRouteTwoHops,
 				{
 					Pools: defaultSingleRouteTwoHops.Pools,
@@ -1911,7 +1910,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 
 		"error: duplicate split routes": {
 			routes: []types.SwapAmountOutSplitRoute{
-
 				defaultSingleRouteTwoHops,
 				{
 					Pools: defaultSingleRouteTwoHops.Pools,

@@ -211,7 +211,6 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition() {
 	for _, tc := range tests {
 		tc := tc
 		s.Run(tc.name, func() {
-
 			// System under test
 			err := clKeeper.InitOrUpdateFeeAccumulatorPosition(s.Ctx, tc.positionFields.poolId, tc.positionFields.lowerTick, tc.positionFields.upperTick, tc.positionFields.positionId, tc.positionFields.liquidity)
 			if tc.expectedPass {

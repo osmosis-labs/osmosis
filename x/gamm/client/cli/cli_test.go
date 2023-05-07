@@ -315,7 +315,7 @@ func TestNewMigrateSharesToFullRangeConcentratedPosition(t *testing.T) {
 			ExpectedMsg: &balancer.MsgMigrateSharesToFullRangeConcentratedPosition{
 				Sender:          testAddresses[0].String(),
 				SharesToMigrate: sdk.NewCoin("stake", sdk.NewInt(1000)),
-				TokenOutMins:  sdk.NewCoins(sdk.NewInt64Coin("stake", 100), sdk.NewInt64Coin("uosmo", 1000)),
+				TokenOutMins:    sdk.NewCoins(sdk.NewInt64Coin("stake", 100), sdk.NewInt64Coin("uosmo", 1000)),
 			},
 		},
 	}

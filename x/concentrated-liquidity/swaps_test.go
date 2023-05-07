@@ -1444,7 +1444,6 @@ var (
 )
 
 func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
-
 	tests := make(map[string]SwapTest, len(swapOutGivenInCases)+len(swapOutGivenInFeeCases)+len(swapOutGivenInErrorCases))
 	for name, test := range swapOutGivenInCases {
 		tests[name] = test
@@ -1599,7 +1598,6 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 }
 
 func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
-
 	tests := make(map[string]SwapTest)
 	for name, test := range swapOutGivenInCases {
 		tests[name] = test
@@ -1678,7 +1676,6 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 }
 
 func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
-
 	tests := make(map[string]SwapTest, len(swapInGivenOutTestCases)+len(swapInGivenOutFeeTestCases)+len(swapInGivenOutErrorTestCases))
 	for name, test := range swapInGivenOutTestCases {
 		tests[name] = test
@@ -1848,7 +1845,6 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 }
 
 func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
-
 	tests := make(map[string]SwapTest)
 	for name, test := range swapInGivenOutTestCases {
 		tests[name] = test
@@ -2286,7 +2282,6 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 // TestCalcOutAmtGivenInWriteCtx tests that writeCtx successfully performs state changes as expected.
 // We expect writeCtx to only change fee accum state, since pool state change is not handled via writeCtx function.
 func (s *KeeperTestSuite) TestCalcOutAmtGivenInWriteCtx() {
-
 	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
 	tests := make(map[string]SwapTest, len(swapOutGivenInFeeCases))
 
@@ -2371,7 +2366,6 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenInWriteCtx() {
 // TestCalcInAmtGivenOutWriteCtx tests that writeCtx succesfully perfroms state changes as expected.
 // We expect writeCtx to only change fee accum state, since pool state change is not handled via writeCtx function.
 func (s *KeeperTestSuite) TestCalcInAmtGivenOutWriteCtx() {
-
 	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
 	tests := make(map[string]SwapTest, len(swapInGivenOutFeeTestCases))
 
@@ -2452,8 +2446,8 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOutWriteCtx() {
 		})
 	}
 }
-func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 
+func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 	tests := swapOutGivenInCases
 
 	for name, test := range tests {
