@@ -3326,63 +3326,63 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
 			numShares:        sdk.OneDec(),
 		},
-		// "claim and forfeit rewards (2 shares)": {
-		// 	poolId:            validPoolId,
-		// 	positionIdCreate:  DefaultPositionId,
-		// 	positionIdClaim:   DefaultPositionId,
-		// 	defaultJoinTime:   true,
-		// 	growthInside:      uptimeHelper.hundredTokensMultiDenom,
-		// 	growthOutside:     uptimeHelper.twoHundredTokensMultiDenom,
-		// 	forfeitIncentives: true,
-		// 	numShares:         sdk.NewDec(2),
-		// },
-		// "claim and forfeit rewards when no rewards have accrued": {
-		// 	poolId:            validPoolId,
-		// 	positionIdCreate:  DefaultPositionId,
-		// 	positionIdClaim:   DefaultPositionId,
-		// 	defaultJoinTime:   true,
-		// 	forfeitIncentives: true,
-		// 	numShares:         sdk.OneDec(),
-		// },
-		// "claim and forfeit rewards with varying amounts and different denoms": {
-		// 	poolId:            validPoolId,
-		// 	positionIdCreate:  DefaultPositionId,
-		// 	positionIdClaim:   DefaultPositionId,
-		// 	defaultJoinTime:   true,
-		// 	growthInside:      uptimeHelper.varyingTokensMultiDenom,
-		// 	growthOutside:     uptimeHelper.varyingTokensSingleDenom,
-		// 	forfeitIncentives: true,
-		// 	numShares:         sdk.OneDec(),
-		// },
+		"claim and forfeit rewards (2 shares)": {
+			poolId:            validPoolId,
+			positionIdCreate:  DefaultPositionId,
+			positionIdClaim:   DefaultPositionId,
+			defaultJoinTime:   true,
+			growthInside:      uptimeHelper.hundredTokensMultiDenom,
+			growthOutside:     uptimeHelper.twoHundredTokensMultiDenom,
+			forfeitIncentives: true,
+			numShares:         sdk.NewDec(2),
+		},
+		"claim and forfeit rewards when no rewards have accrued": {
+			poolId:            validPoolId,
+			positionIdCreate:  DefaultPositionId,
+			positionIdClaim:   DefaultPositionId,
+			defaultJoinTime:   true,
+			forfeitIncentives: true,
+			numShares:         sdk.OneDec(),
+		},
+		"claim and forfeit rewards with varying amounts and different denoms": {
+			poolId:            validPoolId,
+			positionIdCreate:  DefaultPositionId,
+			positionIdClaim:   DefaultPositionId,
+			defaultJoinTime:   true,
+			growthInside:      uptimeHelper.varyingTokensMultiDenom,
+			growthOutside:     uptimeHelper.varyingTokensSingleDenom,
+			forfeitIncentives: true,
+			numShares:         sdk.OneDec(),
+		},
 
-		// // error catching
+		// error catching
 
-		// "error: non existent position": {
-		// 	poolId:           validPoolId + 1,
-		// 	positionIdCreate: DefaultPositionId,
-		// 	positionIdClaim:  DefaultPositionId + 1, // non existent position
-		// 	defaultJoinTime:  true,
-		// 	growthInside:     uptimeHelper.hundredTokensMultiDenom,
-		// 	growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
-		// 	numShares:        sdk.OneDec(),
+		"error: non existent position": {
+			poolId:           validPoolId + 1,
+			positionIdCreate: DefaultPositionId,
+			positionIdClaim:  DefaultPositionId + 1, // non existent position
+			defaultJoinTime:  true,
+			growthInside:     uptimeHelper.hundredTokensMultiDenom,
+			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
+			numShares:        sdk.OneDec(),
 
 			expectedError: types.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
 		},
 
-		// "error: negative duration": {
-		// 	poolId:           validPoolId,
-		// 	positionIdCreate: DefaultPositionId,
-		// 	positionIdClaim:  DefaultPositionId,
-		// 	defaultJoinTime:  false,
-		// 	growthInside:     uptimeHelper.hundredTokensMultiDenom,
-		// 	growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
-		// 	numShares:        sdk.OneDec(),
+		"error: negative duration": {
+			poolId:           validPoolId,
+			positionIdCreate: DefaultPositionId,
+			positionIdClaim:  DefaultPositionId,
+			defaultJoinTime:  false,
+			growthInside:     uptimeHelper.hundredTokensMultiDenom,
+			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
+			numShares:        sdk.OneDec(),
 
+<<<<<<< HEAD
 			expectedError: types.NegativeDurationError{Duration: time.Hour * 504 * -1},
+=======
+			expectedError: cltypes.NegativeDurationError{Duration: time.Hour * 504 * -1},
 		},
-	}
-	for name, tc := range tests {
-		s.Run(name, func() {
 			// --- Setup test env ---
 
 			s.SetupTest()
@@ -3417,6 +3417,18 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			// Store initial pool and sender balances for comparison later
 			initSenderBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, defaultSender)
 			initPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetAddress())
+
+			uptimeAccums, err := clKeeper.GetUptimeAccumulators(s.Ctx, validPoolId)
+			s.Require().NoError(err)
+
+			var oldAccumRecord []accum.Record
+			for _, uptimeAccum := range uptimeAccums {
+				positionName := string(types.KeyPositionId(DefaultPositionId))
+				accRecord, err := uptimeAccum.GetPosition(positionName)
+				s.Require().NoError(err)
+
+				oldAccumRecord = append(oldAccumRecord, accRecord)
+			}
 
 			if !tc.forfeitIncentives {
 				// Let enough time elapse for the position to accrue rewards for all uptimes
@@ -3488,6 +3500,25 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 				}
 				s.Require().Equal(expectedCoins, amountClaimed)
 				s.Require().Equal(sdk.Coins(nil), amountForfeited)
+
+				uptimeAccumsNew, err := clKeeper.GetUptimeAccumulators(s.Ctx, validPoolId)
+				s.Require().NoError(err)
+
+				var newAccumRecord []accum.Record
+				for _, uptimeAccum := range uptimeAccumsNew {
+					positionName := string(types.KeyPositionId(DefaultPositionId))
+					accRecord, err := uptimeAccum.GetPosition(positionName)
+					s.Require().NoError(err)
+
+					newAccumRecord = append(newAccumRecord, accRecord)
+				}
+				expectedUptimeAccValue := sdk.NewDecCoinsFromCoins(sdk.NewCoin("bar", sdk.NewInt(100)), sdk.NewCoin("foo", sdk.NewInt(100)))
+
+				for i := 0; i < len(oldAccumRecord); i++ {
+					actualUptimeAccumValue, err := osmoutils.SubDecCoinArrays([]sdk.DecCoins{newAccumRecord[i].InitAccumValue}, []sdk.DecCoins{oldAccumRecord[i].InitAccumValue})
+					s.Require().NoError(err)
+					s.Require().Equal(expectedUptimeAccValue, actualUptimeAccumValue[0])
+				}
 			}
 
 			// Ensure balances have not been mutated
