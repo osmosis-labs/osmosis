@@ -70,6 +70,7 @@ func genQueryCondition(
 
 // benchmarkDistributionLogic creates gauges with lockups that get distributed to. Benchmarks the performance of the distribution process.
 func benchmarkDistributionLogic(b *testing.B, numAccts, numDenoms, numGauges, numLockups, numDistrs int) {
+	b.Helper()
 	b.StopTimer()
 
 	blockStartTime := time.Now().UTC()
