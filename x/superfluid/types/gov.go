@@ -7,6 +7,8 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 const (
@@ -59,6 +61,18 @@ func (p *SetSuperfluidAssetsProposal) ValidateBasic() error {
 		case SuperfluidAssetTypeLPShare:
 			if _, err := gammtypes.GetPoolIdFromShareDenom(asset.Denom); err != nil {
 				return err
+			}
+			// Denom must be from GAMM
+			if !strings.HasPrefix(asset.Denom, gammtypes.GAMMTokenPrefix) {
+				return fmt.Errorf("denom %s must be from GAMM", asset.Denom)
+			}
+		case SuperfluidAssetTypeConcentratedShare:
+			if _, err := cltypes.GetPoolIdFromShareDenom(asset.Denom); err != nil {
+				return err
+			}
+			// Denom must be from CL
+			if !strings.HasPrefix(asset.Denom, cltypes.ClTokenPrefix) {
+				return fmt.Errorf("denom %s must be from CL", asset.Denom)
 			}
 		default:
 			return fmt.Errorf("unsupported superfluid asset type")

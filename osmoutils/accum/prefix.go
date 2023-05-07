@@ -22,9 +22,9 @@ func formatAccumPrefixKey(name string) []byte {
 	return formatModulePrefixKey(fmt.Sprintf("%s/%s", accumulatorPrefix, name))
 }
 
-// formatPositionPrefixKey returns the key prefix used
+// FormatPositionPrefixKey returns the key prefix used
 // specifically for position values in the KVStore.
 // Returns "accum/pos/{accumName}/{name}" as bytes.
-func formatPositionPrefixKey(accumName, name string) []byte {
+func FormatPositionPrefixKey(accumName, name string) []byte {
 	return formatAccumPrefixKey(fmt.Sprintf("%s/%s/%s", positionPrefix, accumName, name))
 }

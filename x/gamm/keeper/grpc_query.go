@@ -7,10 +7,12 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	errorsmod "cosmossdk.io/errors"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
@@ -54,9 +56,9 @@ func (q Querier) Pool(
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	// Route the call to poolmanager that has the knowledge of all pool ids
+	// GetPool gets pool from poolmanager that has the knowledge of all pool ids
 	// within Osmosis.
-	pool, err := q.Keeper.poolManager.RoutePool(sdkCtx, req.PoolId)
+	pool, err := q.Keeper.poolManager.GetPool(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -153,7 +155,7 @@ func (q Querier) CalcJoinPoolShares(ctx context.Context, req *types.QueryCalcJoi
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	pool, err := q.Keeper.getPoolForSwap(sdkCtx, req.PoolId)
+	pool, err := q.Keeper.GetCFMMPool(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, err
 	}
@@ -251,7 +253,7 @@ func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.Que
 
 	totalSharesAmount := pool.GetTotalShares()
 	if req.ShareInAmount.GTE(totalSharesAmount) || req.ShareInAmount.LTE(sdk.ZeroInt()) {
-		return nil, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
+		return nil, errorsmod.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
 	}
 
 	exitCoins, err := pool.CalcExitPoolCoinsFromShares(sdkCtx, req.ShareInAmount, exitFee)
@@ -311,11 +313,13 @@ func (q Querier) PoolParams(ctx context.Context, req *types.QueryPoolParamsReque
 
 	default:
 		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
+		return nil, errorsmod.Wrap(sdkerrors.ErrUnpackAny, errMsg)
 	}
 }
 
 // TotalPoolLiquidity returns total liquidity in pool.
+// Deprecated: please use the alternative in x/poolmanager
+// nolint: staticcheck
 func (q Querier) TotalPoolLiquidity(ctx context.Context, req *types.QueryTotalPoolLiquidityRequest) (*types.QueryTotalPoolLiquidityResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -475,5 +479,23 @@ func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.Quer
 
 	return &types.QuerySwapExactAmountOutResponse{
 		TokenInAmount: tokenInAmount,
+	}, nil
+}
+
+// ConcentratedPoolIdLinkFromCFMM queries the concentrated pool id linked to a cfmm pool id.
+func (q Querier) ConcentratedPoolIdLinkFromCFMM(ctx context.Context, req *types.QueryConcentratedPoolIdLinkFromCFMMRequest) (*types.QueryConcentratedPoolIdLinkFromCFMMResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if req.CfmmPoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid cfmm pool id")
+	}
+	poolIdEntering, err := q.Keeper.GetLinkedConcentratedPoolID(sdk.UnwrapSDKContext(ctx), req.CfmmPoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryConcentratedPoolIdLinkFromCFMMResponse{
+		ConcentratedPoolId: poolIdEntering,
 	}, nil
 }

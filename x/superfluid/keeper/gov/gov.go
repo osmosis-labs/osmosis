@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper/internal/events"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
@@ -14,6 +16,12 @@ import (
 
 func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek types.EpochKeeper, p *types.SetSuperfluidAssetsProposal) error {
 	for _, asset := range p.Assets {
+		// Add check to ensure concentrated LP shares are formatted correctly
+		if strings.HasPrefix(asset.Denom, cltypes.ClTokenPrefix) {
+			if asset.AssetType != types.SuperfluidAssetTypeConcentratedShare {
+				return fmt.Errorf("concentrated LP share denom (%s) must have asset type %s", asset.Denom, types.SuperfluidAssetTypeConcentratedShare)
+			}
+		}
 		if err := k.AddNewSuperfluidAsset(ctx, asset); err != nil {
 			return err
 		}
@@ -24,7 +32,10 @@ func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek type
 
 func HandleRemoveSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, p *types.RemoveSuperfluidAssetsProposal) error {
 	for _, denom := range p.SuperfluidAssetDenoms {
-		asset := k.GetSuperfluidAsset(ctx, denom)
+		asset, err := k.GetSuperfluidAsset(ctx, denom)
+		if err != nil {
+			return err
+		}
 		dummyAsset := types.SuperfluidAsset{}
 		if asset == dummyAsset {
 			return fmt.Errorf("superfluid asset %s doesn't exist", denom)

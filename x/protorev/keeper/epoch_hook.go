@@ -69,8 +69,8 @@ func (k Keeper) UpdatePools(ctx sdk.Context) error {
 		baseDenomPools[baseDenom.Denom] = make(map[string]LiquidityPoolStruct)
 	}
 
-	// Get the highest liquidity pools
-	if err := k.GetHighestLiquidityPools(ctx, baseDenomPools); err != nil {
+	// Update baseDenomPools with the highest liquidity pools
+	if err := k.UpdateHighestLiquidityPools(ctx, baseDenomPools); err != nil {
 		return err
 	}
 
@@ -84,17 +84,20 @@ func (k Keeper) UpdatePools(ctx sdk.Context) error {
 	return nil
 }
 
-// GetHighestLiquidityPools returns the highest liquidity pools for all base denoms
-func (k Keeper) GetHighestLiquidityPools(ctx sdk.Context, baseDenomPools map[string]map[string]LiquidityPoolStruct) error {
-	// Get all pools
-	pools, err := k.gammKeeper.GetPoolsAndPoke(ctx)
+// UpdateHighestLiquidityPools updates the baseDenomPools map (passed in by reference) with the
+// highest liquidity pools for each base denom by iterating through all pools, getting the
+// total liquidity for each pool, and updating the highest liquidity pools based upon comparing total liquidity.
+func (k Keeper) UpdateHighestLiquidityPools(ctx sdk.Context, baseDenomPools map[string]map[string]LiquidityPoolStruct) error {
+	pools, err := k.poolmanagerKeeper.AllPools(ctx)
 	if err != nil {
 		return err
 	}
 
-	// Iterate through all pools and find valid matches
 	for _, pool := range pools {
-		coins := pool.GetTotalPoolLiquidity(ctx)
+		coins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, pool.GetId())
+		if err != nil {
+			return err
+		}
 
 		// Pool must be active and the number of coins must be 2
 		if pool.IsActive(ctx) && len(coins) == 2 {
@@ -108,10 +111,10 @@ func (k Keeper) GetHighestLiquidityPools(ctx sdk.Context, baseDenomPools map[str
 
 			// Update happens both ways to ensure the pools that contain multiple base denoms are properly updated
 			if highestLiquidityPools, ok := baseDenomPools[tokenA.Denom]; ok {
-				k.updateHighestLiquidityPool(tokenB.Denom, highestLiquidityPools, newPool)
+				k.compareAndStoreHighestLiquidityPool(tokenB.Denom, highestLiquidityPools, newPool)
 			}
 			if highestLiquidityPools, ok := baseDenomPools[tokenB.Denom]; ok {
-				k.updateHighestLiquidityPool(tokenA.Denom, highestLiquidityPools, newPool)
+				k.compareAndStoreHighestLiquidityPool(tokenA.Denom, highestLiquidityPools, newPool)
 			}
 		}
 	}
@@ -119,8 +122,8 @@ func (k Keeper) GetHighestLiquidityPools(ctx sdk.Context, baseDenomPools map[str
 	return nil
 }
 
-// updateHighestLiquidityPool updates the pool with the highest liquidity for the base denom
-func (k Keeper) updateHighestLiquidityPool(denom string, pools map[string]LiquidityPoolStruct, newPool LiquidityPoolStruct) {
+// compareAndStoreHighestLiquidityPool updates the pool with the highest liquidity for the base denom
+func (k Keeper) compareAndStoreHighestLiquidityPool(denom string, pools map[string]LiquidityPoolStruct, newPool LiquidityPoolStruct) {
 	if currPool, ok := pools[denom]; !ok {
 		pools[denom] = newPool
 	} else {

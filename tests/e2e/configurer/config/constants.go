@@ -26,7 +26,12 @@ var (
 	InitialMinDeposit = MinDepositValue / 4
 	// Minimum expedited deposit value for proposal to be submitted.
 	InitialMinExpeditedDeposit = MinExpeditedDepositValue / 4
-	// The first id of a pool create via CLI before starting an
+	// v16 upgrade specific canonical OSMO/DAI pool id.
+	// It is expected to create a concentrated liquidity pool
+	// associated with this balancer pool in the upgrade handler.
+	// This is meant to be removed post-v16.
+	DaiOsmoPoolIdv16 uint64
+	// A pool created via CLI before starting an
 	// upgrade.
 	PreUpgradePoolId uint64
 

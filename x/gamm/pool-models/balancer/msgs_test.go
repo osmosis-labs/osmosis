@@ -285,8 +285,12 @@ func (suite *KeeperTestSuite) TestMsgCreateBalancerPool() {
 			for _, asset := range tc.msg.PoolAssets {
 				expectedPoolLiquidity = expectedPoolLiquidity.Add(asset.Token)
 			}
-			suite.Require().Equal(expectedPoolLiquidity, pool.GetTotalPoolLiquidity(suite.Ctx))
-			suite.Require().Equal(types.InitPoolSharesSupply, pool.GetTotalShares())
+
+			cfmmPool, ok := pool.(types.CFMMPoolI)
+			suite.Require().True(ok)
+
+			suite.Require().Equal(expectedPoolLiquidity, cfmmPool.GetTotalPoolLiquidity(suite.Ctx))
+			suite.Require().Equal(types.InitPoolSharesSupply, cfmmPool.GetTotalShares())
 		})
 	}
 }

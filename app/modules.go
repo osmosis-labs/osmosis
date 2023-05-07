@@ -118,6 +118,7 @@ var moduleAccountPermissions = map[string][]string{
 	wasm.ModuleName:                          {authtypes.Burner},
 	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
 	valsetpreftypes.ModuleName:               {authtypes.Staking},
+	poolmanagertypes.ModuleName:              nil,
 }
 
 // appModules return modules to initialize module manager.
@@ -298,6 +299,10 @@ func (app *OsmosisApp) GetIBCKeeper() *ibckeeper.Keeper {
 
 func (app *OsmosisApp) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
 	return app.AppKeepers.ScopedIBCKeeper
+}
+
+func (app *OsmosisApp) GetPoolManagerKeeper() simtypes.PoolManagerKeeper {
+	return app.AppKeepers.PoolManagerKeeper
 }
 
 func (app *OsmosisApp) GetTxConfig() client.TxConfig {
