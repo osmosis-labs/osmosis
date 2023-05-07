@@ -3378,11 +3378,11 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
 			numShares:        sdk.OneDec(),
 
-<<<<<<< HEAD
 			expectedError: types.NegativeDurationError{Duration: time.Hour * 504 * -1},
-=======
-			expectedError: cltypes.NegativeDurationError{Duration: time.Hour * 504 * -1},
 		},
+	}
+	for name, tc := range tests {
+		s.Run(name, func() {
 			// --- Setup test env ---
 
 			s.SetupTest()
