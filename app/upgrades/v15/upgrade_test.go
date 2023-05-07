@@ -181,7 +181,7 @@ func (suite *UpgradeTestSuite) TestRegisterOsmoIonMetadata() {
 	uosmoMetadata, found := suite.App.BankKeeper.GetDenomMetaData(ctx, "uosmo")
 	suite.Require().False(found)
 
-	uionMetadata, found := suite.App.BankKeeper.GetDenomMetaData(ctx, "uion")
+	_, found = suite.App.BankKeeper.GetDenomMetaData(ctx, "uion")
 	suite.Require().False(found)
 
 	// system under test.
@@ -190,7 +190,7 @@ func (suite *UpgradeTestSuite) TestRegisterOsmoIonMetadata() {
 	uosmoMetadata, found = suite.App.BankKeeper.GetDenomMetaData(ctx, "uosmo")
 	suite.Require().True(found)
 
-	uionMetadata, found = suite.App.BankKeeper.GetDenomMetaData(ctx, "uion")
+	uionMetadata, found := suite.App.BankKeeper.GetDenomMetaData(ctx, "uion")
 	suite.Require().True(found)
 
 	suite.Require().Equal(expectedUosmodenom, uosmoMetadata.Base)
