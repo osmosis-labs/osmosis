@@ -8,6 +8,7 @@ import (
 
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
@@ -31,16 +32,17 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			expectedPoolCreatedEvent: 1,
 			expectedMessageEvents:    4, // 1 for pool created, 1 for coin spent, 1 for coin received, 1 for after pool create hook
 		},
-		"error: missing tickSpacing": {
+		"error: tickSpacing not positive": {
 			denom0:        ETH,
 			denom1:        USDC,
+			tickSpacing:   0,
 			expectedError: fmt.Errorf("tick spacing must be positive"),
 		},
 		"error: tickSpacing not authorized": {
 			denom0:        ETH,
 			denom1:        USDC,
 			tickSpacing:   DefaultTickSpacing + 1,
-			expectedError: fmt.Errorf("invalid tick spacing. Got %d", DefaultTickSpacing+1),
+			expectedError: types.UnauthorizedTickSpacingError{ProvidedTickSpacing: DefaultTickSpacing + 1, AuthorizedTickSpacings: suite.App.ConcentratedLiquidityKeeper.GetParams(suite.Ctx).AuthorizedTickSpacing},
 		},
 	}
 
@@ -72,12 +74,78 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			if tc.expectedError == nil {
 				suite.NoError(err)
 				suite.NotNil(response)
-				suite.AssertEventEmitted(ctx, cltypes.TypeEvtPoolCreated, tc.expectedPoolCreatedEvent)
+				suite.AssertEventEmitted(ctx, poolmanagertypes.TypeEvtPoolCreated, tc.expectedPoolCreatedEvent)
 				suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 			} else {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
 				suite.Require().Nil(response)
+			}
+		})
+	}
+}
+
+// TestAddToPosition_Events tests that events are correctly emitted
+// when calling AddToPosition.
+func (suite *KeeperTestSuite) TestAddToPosition_Events() {
+	testcases := map[string]struct {
+		lastPositionInPool           bool
+		expectedAddedToPositionEvent int
+		expectedMessageEvents        int
+		expectedError                error
+	}{
+		"happy path": {
+			expectedAddedToPositionEvent: 1,
+			expectedMessageEvents:        4,
+		},
+		"error: last position in pool": {
+			lastPositionInPool:           true,
+			expectedAddedToPositionEvent: 0,
+			expectedError:                types.AddToLastPositionInPoolError{PoolId: 1, PositionId: 1},
+		},
+	}
+
+	for name, tc := range testcases {
+		suite.Run(name, func() {
+			suite.SetupTest()
+
+			msgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
+
+			// Create a cl pool with a default position
+			pool := suite.PrepareConcentratedPool()
+
+			// Position from current account.
+			posId := suite.SetupDefaultPositionAcc(pool.GetId(), suite.TestAccs[0])
+
+			if !tc.lastPositionInPool {
+				// Position from another account.
+				suite.SetupDefaultPositionAcc(pool.GetId(), suite.TestAccs[1])
+			}
+
+			// Reset event counts to 0 by creating a new manager.
+			suite.Ctx = suite.Ctx.WithEventManager(sdk.NewEventManager())
+			suite.Equal(0, len(suite.Ctx.EventManager().Events()))
+
+			suite.FundAcc(suite.TestAccs[0], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
+			msg := &cltypes.MsgAddToPosition{
+				PositionId:    posId,
+				Sender:        suite.TestAccs[0].String(),
+				TokenDesired0: DefaultCoin0,
+				TokenDesired1: DefaultCoin1,
+			}
+
+			response, err := msgServer.AddToPosition(sdk.WrapSDKContext(suite.Ctx), msg)
+
+			if tc.expectedError == nil {
+				suite.NoError(err)
+				suite.NotNil(response)
+				suite.AssertEventEmitted(suite.Ctx, types.TypeEvtAddToPosition, tc.expectedAddedToPositionEvent)
+				suite.AssertEventEmitted(suite.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().ErrorContains(err, tc.expectedError.Error())
+				suite.Require().Nil(response)
+				suite.AssertEventEmitted(suite.Ctx, types.TypeEvtAddToPosition, tc.expectedAddedToPositionEvent)
 			}
 		})
 	}
@@ -127,18 +195,11 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 			expectedCollectFeesEvent:      3,
 			expectedMessageEvents:         4, // 1 for collect fees, 3 for send messages
 		},
-		"error: not owner with three position IDs": {
-			upperTick:                  DefaultUpperTick,
-			lowerTick:                  DefaultLowerTick,
-			positionIds:                []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
-			shouldSetupUnownedPosition: true,
-			numPositionsToCreate:       2,
-			expectedError:              cltypes.NotPositionOwnerError{},
-		},
-		"error": {
+		"error: attempt to claim fees with different owner": {
 			upperTick:                     DefaultUpperTick,
 			lowerTick:                     DefaultLowerTick,
 			positionIds:                   []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			shouldSetupUnownedPosition:    true,
 			numPositionsToCreate:          2,
 			expectedTotalCollectFeesEvent: 0,
 			expectedError:                 cltypes.NotPositionOwnerError{},

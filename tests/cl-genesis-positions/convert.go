@@ -101,7 +101,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 		Sender:      osmosis.TestAccs[0].String(),
 		Denom0:      denom0,
 		Denom1:      denom1,
-		TickSpacing: 1,
+		TickSpacing: 100,
 		SwapFee:     sdk.MustNewDecFromStr("0.0005"),
 	}
 
@@ -125,7 +125,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 	// Initialize first position to be 1:1 price
 	// this is because the first position must have non-zero token0 and token1 to initialize the price
 	// however, our data has first position with non-zero amount.
-	_, _, _, _, _, err = osmosis.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(osmosis.Ctx, pool, osmosis.TestAccs[0], sdk.NewCoins(sdk.NewCoin(msgCreatePool.Denom0, sdk.NewInt(100)), sdk.NewCoin(msgCreatePool.Denom1, sdk.NewInt(100))))
+	_, _, _, _, _, err = osmosis.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(osmosis.Ctx, pool.GetId(), osmosis.TestAccs[0], sdk.NewCoins(sdk.NewCoin(msgCreatePool.Denom0, sdk.NewInt(100)), sdk.NewCoin(msgCreatePool.Denom1, sdk.NewInt(100))))
 	if err != nil {
 		panic(err)
 	}
@@ -148,12 +148,12 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 			continue
 		}
 
-		lowerTickOsmosis, err := math.PriceToTick(lowerPrice, pool.GetTickSpacing())
+		lowerTickOsmosis, err := math.PriceToTickRoundDown(lowerPrice, pool.GetTickSpacing())
 		if err != nil {
 			panic(err)
 		}
 
-		upperTickOsmosis, err := math.PriceToTick(upperPrice, pool.GetTickSpacing())
+		upperTickOsmosis, err := math.PriceToTickRoundDown(upperPrice, pool.GetTickSpacing())
 		if err != nil {
 			panic(err)
 		}

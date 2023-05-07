@@ -1,6 +1,7 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -46,12 +47,13 @@ var (
 	FullRangeLiquidityAmt                          = sdk.MustNewDecFromStr("70710678.118654752940000000")
 	DefaultTickSpacing                             = uint64(100)
 	PoolCreationFee                                = poolmanagertypes.DefaultParams().PoolCreationFee
-	DefaultExponentConsecutivePositionLowerTick, _ = math.PriceToTick(sdk.NewDec(5500), DefaultTickSpacing)
-	DefaultExponentConsecutivePositionUpperTick, _ = math.PriceToTick(sdk.NewDec(6250), DefaultTickSpacing)
-	DefaultExponentOverlappingPositionLowerTick, _ = math.PriceToTick(sdk.NewDec(4000), DefaultTickSpacing)
-	DefaultExponentOverlappingPositionUpperTick, _ = math.PriceToTick(sdk.NewDec(4999), DefaultTickSpacing)
+	DefaultExponentConsecutivePositionLowerTick, _ = math.PriceToTickRoundDown(sdk.NewDec(5500), DefaultTickSpacing)
+	DefaultExponentConsecutivePositionUpperTick, _ = math.PriceToTickRoundDown(sdk.NewDec(6250), DefaultTickSpacing)
+	DefaultExponentOverlappingPositionLowerTick, _ = math.PriceToTickRoundDown(sdk.NewDec(4000), DefaultTickSpacing)
+	DefaultExponentOverlappingPositionUpperTick, _ = math.PriceToTickRoundDown(sdk.NewDec(4999), DefaultTickSpacing)
 	BAR                                            = "bar"
 	FOO                                            = "foo"
+	InsufficientFundsError                         = fmt.Errorf("insufficient funds")
 )
 
 type KeeperTestSuite struct {
@@ -305,7 +307,7 @@ func (s *KeeperTestSuite) validateListenerCallCount(
 }
 
 // setListenerMockOnConcentratedLiquidityKeeper injects the mock into the concentrated liquidity keeper
-// so that listner invocation can be tested via the mock
+// so that listener invocation can be tested via the mock
 func (s *KeeperTestSuite) setListenerMockOnConcentratedLiquidityKeeper() {
 	s.App.ConcentratedLiquidityKeeper.SetListenersUnsafe(types.NewConcentratedLiquidityListeners(&clmocks.ConcentratedLiquidityListenerMock{}))
 }
@@ -333,4 +335,19 @@ func (s *KeeperTestSuite) validatePositionFeeGrowth(poolId uint64, positionId ui
 			s.Require().Equal(expectedUnclaimedRewards[1].Amount.Mul(DefaultLiquidityAmt), positionRecord.UnclaimedRewards.AmountOf(expectedUnclaimedRewards[1].Denom))
 		}
 	}
+}
+
+func (s *KeeperTestSuite) TestValidatePermissionlessPoolCreationEnabled() {
+	s.SetupTest()
+	// Normally, by default, permissionless pool creation is disabled.
+	// SetupTest, however, calls SetupConcentratedLiquidityDenomsAndPoolCreation which enables permissionless pool creation.
+	s.Require().NoError(s.App.ConcentratedLiquidityKeeper.ValidatePermissionlessPoolCreationEnabled(s.Ctx))
+
+	// Disable permissionless pool creation.
+	defaultParams := types.DefaultParams()
+	defaultParams.IsPermissionlessPoolCreationEnabled = false
+	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, defaultParams)
+
+	// Validate that permissionless pool creation is disabled.
+	s.Require().Error(s.App.ConcentratedLiquidityKeeper.ValidatePermissionlessPoolCreationEnabled(s.Ctx))
 }

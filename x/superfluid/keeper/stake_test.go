@@ -10,8 +10,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -193,7 +193,7 @@ func (suite *KeeperTestSuite) TestValidateLockForSFDelegate() {
 				ID:       1,
 			},
 			superfluidAssetToSet: types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
-			expectedErr:          sdkerrors.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", "uosmo"),
+			expectedErr:          errorsmod.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", "uosmo"),
 		},
 		{
 			name: "invalid lock - unbonding lockup not supported",
@@ -205,7 +205,7 @@ func (suite *KeeperTestSuite) TestValidateLockForSFDelegate() {
 				EndTime:  time.Now().Add(time.Hour * 24),
 			},
 			superfluidAssetToSet: types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
-			expectedErr:          sdkerrors.Wrapf(types.ErrUnbondingLockupNotSupported, "lock id : %d", uint64(1)),
+			expectedErr:          errorsmod.Wrapf(types.ErrUnbondingLockupNotSupported, "lock id : %d", uint64(1)),
 		},
 		{
 			name: "invalid lock - not enough lockup duration",
@@ -216,7 +216,7 @@ func (suite *KeeperTestSuite) TestValidateLockForSFDelegate() {
 				ID:       1,
 			},
 			superfluidAssetToSet: types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
-			expectedErr: sdkerrors.Wrapf(types.ErrNotEnoughLockupDuration,
+			expectedErr: errorsmod.Wrapf(types.ErrNotEnoughLockupDuration,
 				"lock duration (%d) must be greater than unbonding time (%d)",
 				time.Hour*24, time.Hour*24*21),
 		},
@@ -230,7 +230,7 @@ func (suite *KeeperTestSuite) TestValidateLockForSFDelegate() {
 			},
 			superfluidAssetToSet:             types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
 			lockIdAlreadySuperfluidDelegated: true,
-			expectedErr:                      sdkerrors.Wrapf(types.ErrAlreadyUsedSuperfluidLockup, "lock id : %d", uint64(1)),
+			expectedErr:                      errorsmod.Wrapf(types.ErrAlreadyUsedSuperfluidLockup, "lock id : %d", uint64(1)),
 		},
 	}
 

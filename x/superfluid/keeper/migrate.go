@@ -26,13 +26,13 @@ func (k Keeper) RouteLockedBalancerToConcentratedMigration(ctx sdk.Context, send
 
 	if isSuperfluidBonded {
 		// Migration logic for superfluid bonded locks
-		positionId, amount0, amount1, liquidity, joinTime, gammLockId, concentratedLockId, err = k.migrateSuperfluidBondedBalancerToConcentrated(ctx, sender, poolIdLeaving, preMigrationLock, lockId, sharesToMigrate, synthLockBeforeMigration[0].SynthDenom, concentratedPool, remainingLockTime, tokenOutMins)
+		positionId, amount0, amount1, liquidity, joinTime, gammLockId, concentratedLockId, err = k.migrateSuperfluidBondedBalancerToConcentrated(ctx, sender, poolIdLeaving, poolIdEntering, preMigrationLock, lockId, sharesToMigrate, synthLockBeforeMigration[0].SynthDenom, concentratedPool, remainingLockTime, tokenOutMins)
 	} else if isSuperfluidUnbonding {
 		// Migration logic for superfluid unbonding locks
 		positionId, amount0, amount1, liquidity, joinTime, gammLockId, concentratedLockId, err = k.migrateSuperfluidUnbondingBalancerToConcentrated(ctx, sender, poolIdLeaving, poolIdEntering, preMigrationLock, sharesToMigrate, synthLockBeforeMigration[0].SynthDenom, concentratedPool, remainingLockTime, tokenOutMins)
 	} else if !isSuperfluidBonded && !isSuperfluidUnbonding && len(synthLockBeforeMigration) == 0 {
 		// Migration logic for non-superfluid locks
-		positionId, amount0, amount1, liquidity, joinTime, gammLockId, concentratedLockId, err = k.migrateNonSuperfluidLockBalancerToConcentrated(ctx, sender, poolIdLeaving, preMigrationLock, sharesToMigrate, concentratedPool, remainingLockTime, tokenOutMins)
+		positionId, amount0, amount1, liquidity, joinTime, gammLockId, concentratedLockId, err = k.migrateNonSuperfluidLockBalancerToConcentrated(ctx, sender, poolIdLeaving, poolIdEntering, preMigrationLock, sharesToMigrate, concentratedPool, remainingLockTime, tokenOutMins)
 	} else {
 		// Unsupported migration
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, 0, fmt.Errorf("unexpected synth lock state for lock %d", lockId)
@@ -46,7 +46,7 @@ func (k Keeper) RouteLockedBalancerToConcentratedMigration(ctx sdk.Context, send
 // tokens in the position, the liquidity amount, join time, and IDs of the involved pools and locks.
 func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolIdLeaving uint64,
+	poolIdLeaving, poolIdEntering uint64,
 	preMigrationLock *lockuptypes.PeriodLock,
 	lockId uint64,
 	sharesToMigrate sdk.Coin,
@@ -78,7 +78,7 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position, lock it, and superfluid delegate it.
-	positionId, amount0, amount1, liquidity, joinTime, concentratedLockId, err = k.clk.CreateFullRangePositionLocked(ctx, concentratedPool, sender, exitCoins, remainingLockTime)
+	positionId, amount0, amount1, liquidity, joinTime, concentratedLockId, err = k.clk.CreateFullRangePositionLocked(ctx, poolIdEntering, sender, exitCoins, remainingLockTime)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
@@ -142,7 +142,7 @@ func (k Keeper) migrateSuperfluidUnbondingBalancerToConcentrated(ctx sdk.Context
 
 	// Create a full range (min to max tick) concentrated liquidity position.
 	// If the lock was unlocking, we create a new lock that is unlocking for the remaining time of the old lock.
-	positionId, amount0, amount1, liquidity, joinTime, concentratedLockId, err = k.clk.CreateFullRangePositionUnlocking(ctx, concentratedPool, sender, exitCoins, remainingLockTime)
+	positionId, amount0, amount1, liquidity, joinTime, concentratedLockId, err = k.clk.CreateFullRangePositionUnlocking(ctx, poolIdEntering, sender, exitCoins, remainingLockTime)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
@@ -199,7 +199,7 @@ func (k Keeper) migrateSuperfluidUnbondingBalancerToConcentrated(ctx sdk.Context
 // If there are any remaining gamm shares, they are re-locked. The function returns the concentrated liquidity position ID, amounts of tokens in the position, the liquidity amount, join time, and IDs of the involved pools and locks.
 func (k Keeper) migrateNonSuperfluidLockBalancerToConcentrated(ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolIdLeaving uint64,
+	poolIdLeaving, poolIdEntering uint64,
 	preMigrationLock *lockuptypes.PeriodLock,
 	sharesToMigrate sdk.Coin,
 	concentratedPool cltypes.ConcentratedPoolExtension,
@@ -219,7 +219,7 @@ func (k Keeper) migrateNonSuperfluidLockBalancerToConcentrated(ctx sdk.Context,
 
 	// Create a new lock that is unlocking for the remaining time of the old lock.
 	// Regardless of the previous lock's status, we create a new lock that is unlocking.
-	positionId, amount0, amount1, liquidity, joinTime, concentratedLockId, err = k.clk.CreateFullRangePositionUnlocking(ctx, concentratedPool, sender, exitCoins, remainingLockTime)
+	positionId, amount0, amount1, liquidity, joinTime, concentratedLockId, err = k.clk.CreateFullRangePositionUnlocking(ctx, poolIdEntering, sender, exitCoins, remainingLockTime)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}

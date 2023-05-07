@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -36,7 +37,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	// So this is not a real restriction at the moment.
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
 	// Ensure that the provided gas is less than the maximum gas per tx,
@@ -45,7 +46,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	if ctx.IsCheckTx() && !simulate {
 		if feeTx.GetGas() > mfd.Opts.MaxGasWantedPerTx {
 			msg := "Too much gas wanted: %d, maximum is %d"
-			return ctx, sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, msg, feeTx.GetGas(), mfd.Opts.MaxGasWantedPerTx)
+			return ctx, errorsmod.Wrapf(sdkerrors.ErrOutOfGas, msg, feeTx.GetGas(), mfd.Opts.MaxGasWantedPerTx)
 		}
 	}
 
@@ -81,7 +82,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 	// You should only be able to pay with one fee token in a single tx
 	if len(feeCoins) != 1 {
-		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee,
+		return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee,
 			"Expected 1 fee denom attached, got %d", len(feeCoins))
 	}
 	// The minimum base gas price is in uosmo, convert the fee denom's worth to uosmo terms.
@@ -128,7 +129,7 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasReq
 	}
 	// check to ensure that the convertedFee should always be greater than or equal to the requireBaseFee
 	if !(convertedFee.IsGTE(requiredBaseFee)) {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s which converts to %s. required: %s", feeCoin, convertedFee, requiredBaseFee)
+		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s which converts to %s. required: %s", feeCoin, convertedFee, requiredBaseFee)
 	}
 
 	return nil
@@ -170,7 +171,7 @@ func NewDeductFeeDecorator(tk Keeper, ak types.AccountKeeper, bk types.BankKeepe
 func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
 	// checks to make sure the module account has been set to collect fees in base token
@@ -194,11 +195,11 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	// If a fee granter was set, deduct fee from the fee granter's account.
 	if feeGranter != nil {
 		if dfd.feegrantKeeper == nil {
-			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants is not enabled")
+			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "fee grants is not enabled")
 		} else if !feeGranter.Equals(feePayer) {
 			err := dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, tx.GetMsgs())
 			if err != nil {
-				return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
+				return ctx, errorsmod.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
 			}
 		}
 
@@ -208,7 +209,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 
 	deductFeesFromAcc := dfd.ak.GetAccount(ctx, deductFeesFrom)
 	if deductFeesFromAcc == nil {
-		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
+		return ctx, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
 	}
 
 	// deducts the fees and transfer them to the module account
@@ -230,7 +231,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 func DeductFees(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, ctx sdk.Context, acc authtypes.AccountI, fees sdk.Coins) error {
 	// Checks the validity of the fee tokens (sorted, have positive amount, valid and unique denomination)
 	if !fees.IsValid() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
+		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
 
 	// pulls base denom from TxFeesKeeper (should be uOSMO)
@@ -244,13 +245,13 @@ func DeductFees(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, ct
 		// sends to FeeCollectorName module account
 		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fees)
 		if err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
 	} else {
 		// sends to NonNativeFeeCollectorName module account
 		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.NonNativeFeeCollectorName, fees)
 		if err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
 	}
 

@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/events"
@@ -58,11 +58,11 @@ func (k Keeper) SwapExactAmountIn(
 	tokenOutAmount = tokenOutCoin.Amount
 
 	if !tokenOutAmount.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
+		return sdk.Int{}, errorsmod.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
 	}
 
 	if tokenOutAmount.LT(tokenOutMinAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", tokenOutDenom)
+		return sdk.Int{}, errorsmod.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", tokenOutDenom)
 	}
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
@@ -104,7 +104,7 @@ func (k Keeper) SwapExactAmountOut(
 
 	poolOutBal := liquidity.AmountOf(tokenOut.Denom)
 	if tokenOut.Amount.GTE(poolOutBal) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrTooManyTokensOut,
+		return sdk.Int{}, errorsmod.Wrapf(types.ErrTooManyTokensOut,
 			"can't get more tokens out than there are tokens in the pool")
 	}
 
@@ -120,11 +120,11 @@ func (k Keeper) SwapExactAmountOut(
 	tokenInAmount = tokenIn.Amount
 
 	if tokenInAmount.LTE(sdk.ZeroInt()) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
+		return sdk.Int{}, errorsmod.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
 	}
 
 	if tokenInAmount.GT(tokenInMaxAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "Swap requires %s, which is greater than the amount %s", tokenIn, tokenInMaxAmount)
+		return sdk.Int{}, errorsmod.Wrapf(types.ErrLimitMaxAmount, "Swap requires %s, which is greater than the amount %s", tokenIn, tokenInMaxAmount)
 	}
 
 	err = k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOut)

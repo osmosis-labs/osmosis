@@ -3,8 +3,9 @@ package keeper
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -151,17 +152,17 @@ func (k Keeper) JoinPoolNoSwap(
 	}
 
 	// check that needed lp liquidity does not exceed the given `tokenInMaxs` parameter. Return error if so.
-	//if tokenInMaxs == 0, don't do this check.
+	// if tokenInMaxs == 0, don't do this check.
 	if tokenInMaxs.Len() != 0 {
 		if !(neededLpLiquidity.DenomsSubsetOf(tokenInMaxs)) {
-			return nil, sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs does not include all the tokens that are part of the target pool,"+
+			return nil, sdk.ZeroInt(), errorsmod.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs does not include all the tokens that are part of the target pool,"+
 				" upperbound: %v, needed %v", tokenInMaxs, neededLpLiquidity)
 		} else if !(tokenInMaxs.DenomsSubsetOf(neededLpLiquidity)) {
-			return nil, sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, "TokenInMaxs includes tokens that are not part of the target pool,"+
+			return nil, sdk.ZeroInt(), errorsmod.Wrapf(types.ErrDenomNotFoundInPool, "TokenInMaxs includes tokens that are not part of the target pool,"+
 				" input tokens: %v, pool tokens %v", tokenInMaxs, neededLpLiquidity)
 		}
 		if !(tokenInMaxs.IsAllGTE(neededLpLiquidity)) {
-			return nil, sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap,"+
+			return nil, sdk.ZeroInt(), errorsmod.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap,"+
 				" upperbound: %v, needed %v", tokenInMaxs, neededLpLiquidity)
 		}
 	}
@@ -191,7 +192,7 @@ func getMaximalNoSwapLPAmount(ctx sdk.Context, pool types.CFMMPoolI, shareOutAmo
 	// shares currently in the pool. It is intended to be used in scenarios where you want
 	shareRatio := shareOutAmount.ToDec().QuoInt(totalSharesAmount)
 	if shareRatio.LTE(sdk.ZeroDec()) {
-		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "Too few shares out wanted. "+
+		return sdk.Coins{}, errorsmod.Wrapf(types.ErrInvalidMathApprox, "Too few shares out wanted. "+
 			"(debug: getMaximalNoSwapLPAmount share ratio is zero or negative)")
 	}
 
@@ -202,7 +203,7 @@ func getMaximalNoSwapLPAmount(ctx sdk.Context, pool types.CFMMPoolI, shareOutAmo
 		// (coin.Amt * shareRatio).Ceil()
 		neededAmt := coin.Amount.ToDec().Mul(shareRatio).Ceil().RoundInt()
 		if neededAmt.LTE(sdk.ZeroInt()) {
-			return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "Too few shares out wanted")
+			return sdk.Coins{}, errorsmod.Wrapf(types.ErrInvalidMathApprox, "Too few shares out wanted")
 		}
 		neededCoin := sdk.Coin{Denom: coin.Denom, Amount: neededAmt}
 		neededLpLiquidity = neededLpLiquidity.Add(neededCoin)
@@ -241,14 +242,14 @@ func (k Keeper) JoinSwapExactAmountIn(
 		return sdk.ZeroInt(), err
 
 	case sharesOut.LT(shareOutMinAmount):
-		return sdk.ZeroInt(), sdkerrors.Wrapf(
+		return sdk.ZeroInt(), errorsmod.Wrapf(
 			types.ErrLimitMinAmount,
 			"too much slippage; needed a minimum of %s shares to pass, got %s",
 			shareOutMinAmount, sharesOut,
 		)
 
 	case sharesOut.LTE(sdk.ZeroInt()):
-		return sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share amount is zero or negative")
+		return sdk.ZeroInt(), errorsmod.Wrapf(types.ErrInvalidMathApprox, "share amount is zero or negative")
 	}
 
 	if err := k.applyJoinPoolStateChange(ctx, pool, sender, sharesOut, tokensIn); err != nil {
@@ -290,7 +291,7 @@ func (k Keeper) JoinSwapShareAmountOut(
 	}
 
 	if tokenInAmount.GT(tokenInMaxAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s resulted tokens is larger than the max amount of %s", tokenInAmount, tokenInMaxAmount)
+		return sdk.Int{}, errorsmod.Wrapf(types.ErrLimitMaxAmount, "%s resulted tokens is larger than the max amount of %s", tokenInAmount, tokenInMaxAmount)
 	}
 
 	tokenIn := sdk.NewCoins(sdk.NewCoin(tokenInDenom, tokenInAmount))
@@ -318,9 +319,9 @@ func (k Keeper) ExitPool(
 
 	totalSharesAmount := pool.GetTotalShares()
 	if shareInAmount.GTE(totalSharesAmount) {
-		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "Trying to exit >= the number of shares contained in the pool.")
+		return sdk.Coins{}, errorsmod.Wrapf(types.ErrInvalidMathApprox, "Trying to exit >= the number of shares contained in the pool.")
 	} else if shareInAmount.LTE(sdk.ZeroInt()) {
-		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "Trying to exit a negative amount of shares")
+		return sdk.Coins{}, errorsmod.Wrapf(types.ErrInvalidMathApprox, "Trying to exit a negative amount of shares")
 	}
 	exitFee := pool.GetExitFee(ctx)
 	exitCoins, err = pool.ExitPool(ctx, shareInAmount, exitFee)
@@ -328,7 +329,7 @@ func (k Keeper) ExitPool(
 		return sdk.Coins{}, err
 	}
 	if !tokenOutMins.DenomsSubsetOf(exitCoins) || tokenOutMins.IsAnyGT(exitCoins) {
-		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrLimitMinAmount,
+		return sdk.Coins{}, errorsmod.Wrapf(types.ErrLimitMinAmount,
 			"Exit pool returned %s , minimum tokens out specified as %s",
 			exitCoins, tokenOutMins)
 	}
@@ -376,7 +377,7 @@ func (k Keeper) ExitSwapShareAmountIn(
 	}
 
 	if tokenOutAmount.LT(tokenOutMinAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMinAmount,
+		return sdk.Int{}, errorsmod.Wrapf(types.ErrLimitMinAmount,
 			"Provided LP shares yield %s tokens out, wanted a minimum of %s for it to work",
 			tokenOutAmount, tokenOutMinAmount)
 	}
