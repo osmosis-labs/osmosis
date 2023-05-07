@@ -17,7 +17,7 @@ const (
 
 	QuerierRoute = ModuleName
 
-	GAMMTokenPrefix = "gamm/pool"
+	GAMMTokenPrefix = "gamm/pool/"
 )
 
 var (
@@ -33,7 +33,7 @@ var (
 )
 
 func MustGetPoolIdFromShareDenom(denom string) uint64 {
-	numberStr := strings.TrimLeft(denom, "gamm/pool/")
+	numberStr := strings.TrimLeft(denom, GAMMTokenPrefix)
 	number, err := strconv.Atoi(numberStr)
 	if err != nil {
 		panic(err)
@@ -42,7 +42,7 @@ func MustGetPoolIdFromShareDenom(denom string) uint64 {
 }
 
 func GetPoolIdFromShareDenom(denom string) (uint64, error) {
-	numberStr := strings.TrimLeft(denom, "gamm/pool/")
+	numberStr := strings.TrimLeft(denom, GAMMTokenPrefix)
 	number, err := strconv.Atoi(numberStr)
 	if err != nil {
 		return 0, err
@@ -55,7 +55,7 @@ func GetDenomPrefix(denom string) []byte {
 }
 
 func GetPoolShareDenom(poolId uint64) string {
-	return fmt.Sprintf("gamm/pool/%d", poolId)
+	return fmt.Sprintf("%s%d", GAMMTokenPrefix, poolId)
 }
 
 func GetKeyPrefixPools(poolId uint64) []byte {

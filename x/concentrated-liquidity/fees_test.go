@@ -13,7 +13,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 const (
@@ -221,7 +220,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition() {
 				poolFeeAccumulator, err := clKeeper.GetFeeAccumulator(s.Ctx, defaultPoolId)
 				s.Require().NoError(err)
 
-				positionKey := cltypes.KeyFeePositionAccumulator(tc.positionFields.positionId)
+				positionKey := types.KeyFeePositionAccumulator(tc.positionFields.positionId)
 
 				positionSize, err := poolFeeAccumulator.GetPositionSize(positionKey)
 				s.Require().NoError(err)
@@ -882,7 +881,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 
 			currentTick: 2,
 
-			expectedError: cltypes.PositionIdNotFoundError{PositionId: 2},
+			expectedError: types.PositionIdNotFoundError{PositionId: 2},
 		},
 		"non owner attempts to collect": {
 			initialLiquidity: sdk.OneDec(),
@@ -899,7 +898,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 
 			currentTick: 2,
 
-			expectedError: cltypes.NotPositionOwnerError{Address: s.TestAccs[1].String(), PositionId: DefaultPositionId},
+			expectedError: types.NotPositionOwnerError{Address: s.TestAccs[1].String(), PositionId: DefaultPositionId},
 		},
 	}
 
@@ -936,7 +935,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			ownerBalancerBeforeCollect := s.App.BankKeeper.GetBalance(ctx, tc.owner, ETH)
 
 			var preQueryPosition accum.Record
-			positionKey := cltypes.KeyFeePositionAccumulator(DefaultPositionId)
+			positionKey := types.KeyFeePositionAccumulator(DefaultPositionId)
 
 			// Note the position accumulator before the query to ensure the query in non-mutating.
 			accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, validPoolId)
@@ -1166,7 +1165,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableFees() {
 
 			currentTick: 2,
 
-			expectedError: cltypes.PositionIdNotFoundError{PositionId: 2},
+			expectedError: types.PositionIdNotFoundError{PositionId: 2},
 		},
 	}
 
@@ -1194,7 +1193,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableFees() {
 			err = clKeeper.ChargeFee(ctx, validPoolId, tc.globalFeeGrowth[0])
 			s.Require().NoError(err)
 
-			positionKey := cltypes.KeyFeePositionAccumulator(DefaultPositionId)
+			positionKey := types.KeyFeePositionAccumulator(DefaultPositionId)
 
 			// Note the position accumulator before calling prepare
 			accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, validPoolId)
@@ -1344,8 +1343,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition_UpdatingPositio
 }
 
 func (s *KeeperTestSuite) TestPreparePositionAccumulator() {
-	validPositionKey := cltypes.KeyFeePositionAccumulator(1)
-	invalidPositionKey := cltypes.KeyFeePositionAccumulator(2)
+	validPositionKey := types.KeyFeePositionAccumulator(1)
+	invalidPositionKey := types.KeyFeePositionAccumulator(2)
 	tests := []struct {
 		name               string
 		poolId             uint64
@@ -1463,16 +1462,16 @@ func (s *KeeperTestSuite) TestFunctional_Fees_Swaps() {
 	}
 
 	// Swap multiple times USDC for ETH, therefore increasing the spot price
-	ticksActivatedAfterEachSwap, totalFeesExpected, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, cltypes.MaxSpotPrice, positions.numSwaps)
+	ticksActivatedAfterEachSwap, totalFeesExpected, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, types.MaxSpotPrice, positions.numSwaps)
 	s.CollectAndAssertFees(s.Ctx, clPool.GetId(), totalFeesExpected, positionIds, [][]sdk.Int{ticksActivatedAfterEachSwap}, onlyUSDC, positions)
 
 	// Swap multiple times ETH for USDC, therefore decreasing the spot price
-	ticksActivatedAfterEachSwap, totalFeesExpected, _, _ = s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, cltypes.MinSpotPrice, positions.numSwaps)
+	ticksActivatedAfterEachSwap, totalFeesExpected, _, _ = s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, types.MinSpotPrice, positions.numSwaps)
 	s.CollectAndAssertFees(s.Ctx, clPool.GetId(), totalFeesExpected, positionIds, [][]sdk.Int{ticksActivatedAfterEachSwap}, onlyETH, positions)
 
 	// Do the same swaps as before, however this time we collect fees after both swap directions are complete.
-	ticksActivatedAfterEachSwapUp, totalFeesExpectedUp, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, cltypes.MaxSpotPrice, positions.numSwaps)
-	ticksActivatedAfterEachSwapDown, totalFeesExpectedDown, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, cltypes.MinSpotPrice, positions.numSwaps)
+	ticksActivatedAfterEachSwapUp, totalFeesExpectedUp, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, types.MaxSpotPrice, positions.numSwaps)
+	ticksActivatedAfterEachSwapDown, totalFeesExpectedDown, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, types.MinSpotPrice, positions.numSwaps)
 	totalFeesExpected = totalFeesExpectedUp.Add(totalFeesExpectedDown...)
 
 	// We expect all positions to have both denoms in their fee accumulators except USDC for the overlapping range position since
@@ -1514,7 +1513,7 @@ func (s *KeeperTestSuite) TestFunctional_Fees_LP() {
 	s.Require().NoError(err)
 
 	// Swap once.
-	ticksActivatedAfterEachSwap, totalFeesExpected, _, _ := s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin1, ETH, cltypes.MaxSpotPrice, 1)
+	ticksActivatedAfterEachSwap, totalFeesExpected, _, _ := s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin1, ETH, types.MaxSpotPrice, 1)
 
 	// Withdraw half.
 	halfLiquidity := liquidity.Mul(sdk.NewDecWithPrec(5, 1))
@@ -1533,7 +1532,7 @@ func (s *KeeperTestSuite) TestFunctional_Fees_LP() {
 	s.Require().NoError(err)
 
 	// Swap once in the other direction.
-	ticksActivatedAfterEachSwap, totalFeesExpected, _, _ = s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin0, USDC, cltypes.MinSpotPrice, 1)
+	ticksActivatedAfterEachSwap, totalFeesExpected, _, _ = s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin0, USDC, types.MinSpotPrice, 1)
 
 	// This should claim under the hood for position 2 since full liquidity is removed.
 	balanceBeforeWithdraw := s.App.BankKeeper.GetBalance(ctx, owner, ETH)

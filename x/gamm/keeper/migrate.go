@@ -14,7 +14,7 @@ import (
 )
 
 // MigrateUnlockedPositionFromBalancerToConcentrated migrates unlocked lp tokens from a balancer pool to a concentrated liquidity pool.
-// Fails if the lp tokens are locked (must utilize UnlockAndMigrate function in the superfluid module)
+// Fails if the lp tokens are locked (must instead utilize UnlockAndMigrate function in the superfluid module)
 func (k Keeper) MigrateUnlockedPositionFromBalancerToConcentrated(ctx sdk.Context,
 	sender sdk.AccAddress, sharesToMigrate sdk.Coin,
 	tokenOutMins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, poolIdLeaving, poolIdEntering uint64, err error) {

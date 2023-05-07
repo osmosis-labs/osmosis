@@ -790,3 +790,11 @@ type ModifySamePositionAccumulatorError struct {
 func (e ModifySamePositionAccumulatorError) Error() string {
 	return fmt.Sprintf("attempted to modify the same accumulator with name %s", e.PositionAccName)
 }
+
+type NumCoinsError struct {
+	NumCoins int
+}
+
+func (e NumCoinsError) Error() string {
+	return fmt.Sprintf("num coins provided (%d) must be 2 for a full range position", e.NumCoins)
+}
