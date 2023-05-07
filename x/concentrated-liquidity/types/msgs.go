@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -9,9 +10,11 @@ import (
 // constants.
 const (
 	TypeMsgCreatePosition          = "create-position"
+	TypeAddToPosition              = "add-to-position"
 	TypeMsgWithdrawPosition        = "withdraw-position"
 	TypeMsgCollectFees             = "collect-fees"
 	TypeMsgCollectIncentives       = "collect-incentives"
+	TypeMsgCreateIncentive         = "create-incentive"
 	TypeMsgFungifyChargedPositions = "fungify-charged-positions"
 )
 
@@ -53,6 +56,43 @@ func (msg MsgCreatePosition) GetSignBytes() []byte {
 }
 
 func (msg MsgCreatePosition) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgAddToPosition{}
+
+func (msg MsgAddToPosition) Route() string { return RouterKey }
+func (msg MsgAddToPosition) Type() string  { return TypeAddToPosition }
+func (msg MsgAddToPosition) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return fmt.Errorf("Invalid sender address (%s)", err)
+	}
+
+	if msg.PositionId <= 0 {
+		return fmt.Errorf("Invalid position id (%s)", strconv.FormatUint(msg.PositionId, 10))
+	}
+
+	if !msg.TokenDesired0.IsValid() || !msg.TokenDesired0.IsPositive() {
+		return fmt.Errorf("Invalid coins (%s)", msg.TokenDesired0.String())
+	}
+
+	if !msg.TokenDesired1.IsValid() || !msg.TokenDesired1.IsPositive() {
+		return fmt.Errorf("Invalid coins (%s)", msg.TokenDesired1.String())
+	}
+
+	return nil
+}
+
+func (msg MsgAddToPosition) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgAddToPosition) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)
@@ -142,7 +182,7 @@ func (msg MsgCollectIncentives) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgCreateIncentive{}
 
 func (msg MsgCreateIncentive) Route() string { return RouterKey }
-func (msg MsgCreateIncentive) Type() string  { return TypeMsgCollectIncentives }
+func (msg MsgCreateIncentive) Type() string  { return TypeMsgCreateIncentive }
 func (msg MsgCreateIncentive) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {

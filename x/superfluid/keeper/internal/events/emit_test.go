@@ -156,6 +156,53 @@ func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidDelegateEvent() {
 	}
 }
 
+func (suite *SuperfluidEventsTestSuite) TestEmitCreateFullRangePositionAndSuperfluidDelegateEvent() {
+	testcases := map[string]struct {
+		ctx        sdk.Context
+		lockID     uint64
+		positionID uint64
+		valAddr    string
+	}{
+		"basic valid": {
+			ctx:        suite.CreateTestContext(),
+			lockID:     1,
+			positionID: 1,
+			valAddr:    sdk.AccAddress([]byte(addressString)).String(),
+		},
+		"context with no event manager": {
+			ctx: sdk.Context{},
+		},
+	}
+
+	for name, tc := range testcases {
+		suite.Run(name, func() {
+			expectedEvents := sdk.Events{
+				sdk.NewEvent(
+					types.TypeEvtCreateFullRangePositionAndSFDelegate,
+					sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", tc.lockID)),
+					sdk.NewAttribute(types.AttributePositionId, fmt.Sprintf("%d", tc.positionID)),
+					sdk.NewAttribute(types.AttributeValidator, tc.valAddr),
+				),
+			}
+
+			hasNoEventManager := tc.ctx.EventManager() == nil
+
+			// System under test.
+			events.EmitCreateFullRangePositionAndSuperfluidDelegateEvent(tc.ctx, tc.lockID, tc.positionID, tc.valAddr)
+
+			// Assertions
+			if hasNoEventManager {
+				// If there is no event manager on context, this is a no-op.
+				return
+			}
+
+			eventManager := tc.ctx.EventManager()
+			actualEvents := eventManager.Events()
+			suite.Equal(expectedEvents, actualEvents)
+		})
+	}
+}
+
 func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidIncreaseDelegationEvent() {
 	testcases := map[string]struct {
 		ctx    sdk.Context

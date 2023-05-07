@@ -36,6 +36,10 @@ service Msg {
   rpc LockAndSuperfluidDelegate(MsgLockAndSuperfluidDelegate)
       returns (MsgLockAndSuperfluidDelegateResponse);
 
+  rpc CreateFullRangePositionAndSuperfluidDelegate(
+      MsgCreateFullRangePositionAndSuperfluidDelegate)
+      returns (MsgCreateFullRangePositionAndSuperfluidDelegateResponse);
+
   rpc UnPoolWhitelistedPool(MsgUnPoolWhitelistedPool)
       returns (MsgUnPoolWhitelistedPoolResponse);
 
@@ -43,6 +47,10 @@ service Msg {
       MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition)
       returns (
           MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse);
+
+  rpc AddToConcentratedLiquiditySuperfluidPosition(
+      MsgAddToConcentratedLiquiditySuperfluidPosition)
+      returns (MsgAddToConcentratedLiquiditySuperfluidPositionResponse);
 }
 
 message MsgSuperfluidDelegate {
@@ -71,7 +79,12 @@ message MsgSuperfluidUndelegateAndUnbondLock {
   cosmos.base.v1beta1.Coin coin = 3
       [ (gogoproto.moretags) = "yaml:\"coin\"", (gogoproto.nullable) = false ];
 }
-message MsgSuperfluidUndelegateAndUnbondLockResponse {}
+message MsgSuperfluidUndelegateAndUnbondLockResponse {
+  // lock id of the new lock created for the remaining amount.
+  // returns the original lockid if the unlocked amount is equal to the
+  // original lock's amount.
+  uint64 lock_id = 1;
+}
 
 // message MsgSuperfluidRedelegate {
 //   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
@@ -92,6 +105,22 @@ message MsgLockAndSuperfluidDelegate {
   string val_addr = 3;
 }
 message MsgLockAndSuperfluidDelegateResponse { uint64 ID = 1; }
+
+// MsgCreateFullRangePositionAndSuperfluidDelegate creates a full range position
+// in a concentrated liquidity pool, then superfluid delegates.
+message MsgCreateFullRangePositionAndSuperfluidDelegate {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  repeated cosmos.base.v1beta1.Coin coins = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  string val_addr = 3;
+  uint64 pool_id = 4 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+message MsgCreateFullRangePositionAndSuperfluidDelegateResponse {
+  uint64 lockID = 1;
+  uint64 positionID = 2;
+}
 
 // MsgUnPoolWhitelistedPool Unpools every lock the sender has, that is
 // associated with pool pool_id. If pool_id is not approved for unpooling by
@@ -119,6 +148,11 @@ message MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition {
     (gogoproto.moretags) = "yaml:\"shares_to_migrate\"",
     (gogoproto.nullable) = false
   ];
+  // token_out_mins indicates minimum token to exit Balancer pool with.
+  repeated cosmos.base.v1beta1.Coin token_out_mins = 4 [
+    (gogoproto.moretags) = "yaml:\"token_out_min_amounts\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse {
@@ -142,4 +176,33 @@ message MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse {
     (gogoproto.stdtime) = true,
     (gogoproto.moretags) = "yaml:\"join_time\""
   ];
+}
+
+// ===================== MsgAddToConcentratedLiquiditySuperfluidPosition
+message MsgAddToConcentratedLiquiditySuperfluidPosition {
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  cosmos.base.v1beta1.Coin token_desired0 = 3 [
+    (gogoproto.moretags) = "yaml:\"token_desired0\"",
+    (gogoproto.nullable) = false
+  ];
+  cosmos.base.v1beta1.Coin token_desired1 = 4 [
+    (gogoproto.moretags) = "yaml:\"token_desired1\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgAddToConcentratedLiquiditySuperfluidPositionResponse {
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  string amount0 = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"amount0\"",
+    (gogoproto.nullable) = false
+  ];
+  string amount1 = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"amount1\"",
+    (gogoproto.nullable) = false
+  ];
+  uint64 lock_id = 4 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
 }

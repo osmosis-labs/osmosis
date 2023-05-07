@@ -20,14 +20,16 @@ type Keeper struct {
 
 	// keepers
 	poolmanagerKeeper    types.PoolManagerKeeper
+	accountKeeper        types.AccountKeeper
 	bankKeeper           types.BankKeeper
 	gammKeeper           types.GAMMKeeper
 	poolIncentivesKeeper types.PoolIncentivesKeeper
 	incentivesKeeper     types.IncentivesKeeper
 	lockupKeeper         types.LockupKeeper
+	communityPoolKeeper  types.CommunityPoolKeeper
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.BankKeeper, gammKeeper types.GAMMKeeper, poolIncentivesKeeper types.PoolIncentivesKeeper, incentivesKeeper types.IncentivesKeeper, lockupKeeper types.LockupKeeper, paramSpace paramtypes.Subspace) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, gammKeeper types.GAMMKeeper, poolIncentivesKeeper types.PoolIncentivesKeeper, incentivesKeeper types.IncentivesKeeper, lockupKeeper types.LockupKeeper, communityPoolKeeper types.CommunityPoolKeeper, paramSpace paramtypes.Subspace) *Keeper {
 	// ParamSubspace must be initialized within app/keepers/keepers.go
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -36,11 +38,13 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.Ba
 		storeKey:             storeKey,
 		paramSpace:           paramSpace,
 		cdc:                  cdc,
+		accountKeeper:        accountKeeper,
 		bankKeeper:           bankKeeper,
 		gammKeeper:           gammKeeper,
 		poolIncentivesKeeper: poolIncentivesKeeper,
 		incentivesKeeper:     incentivesKeeper,
 		lockupKeeper:         lockupKeeper,
+		communityPoolKeeper:  communityPoolKeeper,
 	}
 }
 
@@ -98,4 +102,13 @@ func (k *Keeper) SetListeners(listeners types.ConcentratedLiquidityListeners) *K
 	k.listeners = listeners
 
 	return k
+}
+
+// ValidatePermissionlessPoolCreationEnabled returns nil if permissionless pool creation in the module is enabled.
+// Otherwise, returns an error.
+func (k Keeper) ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error {
+	if !k.GetParams(ctx).IsPermissionlessPoolCreationEnabled {
+		return types.ErrPermissionlessPoolCreationDisabled
+	}
+	return nil
 }

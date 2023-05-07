@@ -166,3 +166,15 @@ func (q Querier) ClaimableFees(ctx sdk.Context, req clquery.ClaimableFeesRequest
 		ClaimableFees: claimableFees,
 	}, nil
 }
+
+func (q Querier) ClaimableIncentives(ctx sdk.Context, req clquery.ClaimableIncentivesRequest) (*clquery.ClaimableIncentivesResponse, error) {
+	claimableIncentives, forfeitedIncentives, err := q.Keeper.GetClaimableIncentives(ctx, req.PositionId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &clquery.ClaimableIncentivesResponse{
+		ClaimableIncentives: claimableIncentives,
+		ForfeitedIncentives: forfeitedIncentives,
+	}, nil
+}

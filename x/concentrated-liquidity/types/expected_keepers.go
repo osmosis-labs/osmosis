@@ -4,11 +4,16 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
+
+type AccountKeeper interface {
+	GetModuleAccount(ctx sdk.Context, moduleName string) authtypes.ModuleAccountI
+}
 
 // BankKeeper defines the banking contract that must be fulfilled when
 // creating a x/concentrated-liquidity keeper.
@@ -27,6 +32,7 @@ type BankKeeper interface {
 type PoolManagerKeeper interface {
 	CreatePool(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (uint64, error)
 	GetNextPoolId(ctx sdk.Context) uint64
+	CreateConcentratedPoolAsPoolManager(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (poolmanagertypes.PoolI, error)
 }
 
 type GAMMKeeper interface {
@@ -35,8 +41,8 @@ type GAMMKeeper interface {
 }
 
 type PoolIncentivesKeeper interface {
-	GetLockableDurations(ctx sdk.Context) []time.Duration
 	GetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration time.Duration) (uint64, error)
+	GetLongestLockableDuration(ctx sdk.Context) (time.Duration, error)
 }
 
 type IncentivesKeeper interface {
@@ -52,4 +58,9 @@ type LockupKeeper interface {
 	ForceUnlock(ctx sdk.Context, lock lockuptypes.PeriodLock) error
 	CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockuptypes.PeriodLock, error)
 	SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*lockuptypes.PeriodLock, error)
+}
+
+// CommunityPoolKeeper defines the contract needed to be fulfilled for distribution keeper.
+type CommunityPoolKeeper interface {
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }

@@ -30,6 +30,7 @@ import (
 	icq "github.com/strangelove-ventures/async-icq/v4"
 
 	_ "github.com/osmosis-labs/osmosis/v15/client/docs/statik"
+	clclient "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/clmodule"
 	downtimemodule "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/module"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm"
@@ -78,6 +79,8 @@ var AppModuleBasics = []module.AppModuleBasic{
 			superfluidclient.UpdateUnpoolWhitelistProposalHandler,
 			gammclient.ReplaceMigrationRecordsProposalHandler,
 			gammclient.UpdateMigrationRecordsProposalHandler,
+			clclient.CreateConcentratedLiquidityPoolProposalHandler,
+			clclient.TickSpacingDecreaseProposalHandler,
 		)...,
 	),
 	params.AppModuleBasic{},

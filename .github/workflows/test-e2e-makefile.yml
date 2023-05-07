@@ -9,16 +9,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - 
-        name: 🐿 Setup Golang
+      - name: 🐿 Setup Golang
         uses: actions/setup-go@v4
         with:
-          go-version: '^1.20'
-      -
-        name: Check out repository code
-        uses: actions/checkout@v2
-      -
-        name: Get git diff
+          go-version: "^1.20"
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Get git diff
         uses: technote-space/get-diff-action@v6.0.1
         with:
           PATTERNS: |
@@ -27,9 +26,8 @@ jobs:
             Dockerfile
             go.mod
             go.sum
-      -
-        name: Get data from build cache
-        uses: actions/cache@v2
+      - name: Get data from build cache
+        uses: actions/cache@v3
         with:
           # In order:
           # * Module download cache
@@ -44,15 +42,14 @@ jobs:
           key: ${{ runner.os }}-go-docker-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-docker-${{ matrix.go-version }}-
-      -
-        name: Set up QEMU
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
-      -
-        name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-      -
-        name: Build e2e init chain image
+      - name: Build e2e init chain image
         run: make docker-build-e2e-init-chain
-      -
-        name: Test e2e short
+      - name: Test e2e short
         run: make test-e2e-short
+      - name: 🧹 Clean up Osmosis Home
+        if: always()
+        run: rm -rf $HOME/.osmosisd/ || true

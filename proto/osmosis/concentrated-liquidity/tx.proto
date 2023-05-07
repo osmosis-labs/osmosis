@@ -12,9 +12,11 @@ service Msg {
   rpc CreatePosition(MsgCreatePosition) returns (MsgCreatePositionResponse);
   rpc WithdrawPosition(MsgWithdrawPosition)
       returns (MsgWithdrawPositionResponse);
+  rpc AddToPosition(MsgAddToPosition) returns (MsgAddToPositionResponse);
   rpc CollectFees(MsgCollectFees) returns (MsgCollectFeesResponse);
   rpc CollectIncentives(MsgCollectIncentives)
       returns (MsgCollectIncentivesResponse);
+  rpc CreateIncentive(MsgCreateIncentive) returns (MsgCreateIncentiveResponse);
   rpc FungifyChargedPositions(MsgFungifyChargedPositions)
       returns (MsgFungifyChargedPositionsResponse);
 }
@@ -69,6 +71,34 @@ message MsgCreatePositionResponse {
   ];
 }
 
+// ===================== MsgAddToPosition
+message MsgAddToPosition {
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  cosmos.base.v1beta1.Coin token_desired0 = 3 [
+    (gogoproto.moretags) = "yaml:\"token_desired0\"",
+    (gogoproto.nullable) = false
+  ];
+  cosmos.base.v1beta1.Coin token_desired1 = 4 [
+    (gogoproto.moretags) = "yaml:\"token_desired1\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgAddToPositionResponse {
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  string amount0 = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"amount0\"",
+    (gogoproto.nullable) = false
+  ];
+  string amount1 = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"amount1\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
 // ===================== MsgWithdrawPosition
 message MsgWithdrawPosition {
   uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
@@ -117,6 +147,10 @@ message MsgCollectIncentives {
 message MsgCollectIncentivesResponse {
   repeated cosmos.base.v1beta1.Coin collected_incentives = 1 [
     (gogoproto.moretags) = "yaml:\"collected_incentives\"",
+    (gogoproto.nullable) = false
+  ];
+  repeated cosmos.base.v1beta1.Coin forfeited_incentives = 2 [
+    (gogoproto.moretags) = "yaml:\"forfeited_incentives\"",
     (gogoproto.nullable) = false
   ];
 }
