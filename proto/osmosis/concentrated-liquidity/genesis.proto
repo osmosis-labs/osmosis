@@ -51,6 +51,8 @@ message PoolData {
 message PositionData {
   Position position = 1;
   uint64 lock_id = 2 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
+  osmosis.accum.v1beta1.Record fee_accum_record = 3
+      [ (gogoproto.nullable) = false ];
 }
 
 // GenesisState defines the concentrated liquidity module's genesis state.

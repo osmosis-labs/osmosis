@@ -4,7 +4,8 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
@@ -16,7 +17,7 @@ const errMsgFormatSharesLargerThanMax = "%s resulted shares is larger than the m
 func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares sdk.Int, exitFee sdk.Dec) (sdk.Coins, error) {
 	totalShares := pool.GetTotalShares()
 	if exitingShares.GTE(totalShares) {
-		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, errMsgFormatSharesLargerThanMax, exitingShares, totalShares)
+		return sdk.Coins{}, errorsmod.Wrapf(types.ErrLimitMaxAmount, errMsgFormatSharesLargerThanMax, exitingShares, totalShares)
 	}
 
 	// refundedShares = exitingShares * (1 - exit fee)

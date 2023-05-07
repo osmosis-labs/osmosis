@@ -5,11 +5,12 @@ go 1.20
 require (
 	github.com/cosmos/cosmos-sdk v0.47.2
 	github.com/ignite/cli v0.23.0
-	github.com/osmosis-labs/osmosis/v15 v15.0.0-20230428145105-bbf71267279b
+	github.com/osmosis-labs/osmosis/v15 v15.0.0-20230502194055-e465f0b40c14
 
 )
 
 require (
+	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -88,7 +89,7 @@ require (
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230425121701-4d427b673864 // indirect
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230411200859-ae3065d0ca05 // indirect
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230502182115-74bd398c7d6d // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
