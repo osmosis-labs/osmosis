@@ -277,7 +277,8 @@ func (s *TestSuite) TestAfterEpochEnd() {
 	// iterate through all epoch, ensure that epoch only gets pruned in prune epoch identifier
 	// we reverse iterate here to test epochs that are not prune epoch
 	for i := len(allEpochs) - 1; i >= 0; i-- {
-		s.App.TwapKeeper.EpochHooks().AfterEpochEnd(s.Ctx, allEpochs[i].Identifier, int64(1))
+		err = s.App.TwapKeeper.EpochHooks().AfterEpochEnd(s.Ctx, allEpochs[i].Identifier, int64(1))
+		s.Require().NoError(err)
 
 		recordsAfterEpoch, err := s.twapkeeper.GetAllHistoricalTimeIndexedTWAPs(s.Ctx)
 

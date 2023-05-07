@@ -206,7 +206,8 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	}
 
 	// Change the parameter to enable permisionless pool creation.
-	chainA.SubmitParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"))
+	err = chainA.SubmitParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"))
+	s.Require().NoError(err)
 
 	// Confirm that the parameter has been changed.
 	isPermisionlessCreationEnabledStr = chainANode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))

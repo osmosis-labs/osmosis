@@ -72,7 +72,8 @@ func (suite *KeeperTestSuite) TestGetAllBaseDenoms() {
 	suite.Require().Equal(0, len(baseDenoms))
 
 	// Should be able to set the base denoms
-	suite.App.ProtoRevKeeper.SetBaseDenoms(suite.Ctx, []types.BaseDenom{{Denom: "osmo"}, {Denom: "atom"}, {Denom: "weth"}})
+	err = suite.App.ProtoRevKeeper.SetBaseDenoms(suite.Ctx, []types.BaseDenom{{Denom: "osmo"}, {Denom: "atom"}, {Denom: "weth"}})
+	suite.Require().NoError(err)
 	baseDenoms, err = suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(3, len(baseDenoms))
@@ -235,7 +236,8 @@ func (suite *KeeperTestSuite) TestGetMaxPointsPerTx() {
 	suite.Require().Equal(uint64(18), maxPoints)
 
 	// Should be able to set the max points per tx
-	suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 4)
+	err = suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 4)
+	suite.Require().NoError(err)
 	maxPoints, err = suite.App.ProtoRevKeeper.GetMaxPointsPerTx(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(4), maxPoints)
@@ -290,7 +292,8 @@ func (suite *KeeperTestSuite) TestGetMaxPointsPerBlock() {
 	suite.Require().Equal(uint64(100), maxPoints)
 
 	// Should be able to set the max points per block
-	suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 4)
+	err = suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 4)
+	suite.Require().NoError(err)
 	maxPoints, err = suite.App.ProtoRevKeeper.GetMaxPointsPerBlock(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(4), maxPoints)
