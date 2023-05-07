@@ -641,7 +641,6 @@ func (s *TestSuite) TestPruneRecords() {
 // older records or set to current block time in case error occurred.
 func (s *TestSuite) TestUpdateRecords() {
 	type spOverride struct {
-		poolId      uint64
 		baseDenom   string
 		quoteDenom  string
 		overrideSp  sdk.Dec

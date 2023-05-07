@@ -22,10 +22,7 @@ var (
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultZeroExitFee,
 	}
-	defaultStableSwapPoolParams = stableswap.PoolParams{
-		SwapFee: defaultSwapFee,
-		ExitFee: defaultZeroExitFee,
-	}
+
 	defaultScalingFactor  = []uint64{1, 1}
 	defaultFutureGovernor = ""
 

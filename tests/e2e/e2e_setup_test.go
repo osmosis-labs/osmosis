@@ -18,8 +18,6 @@ const (
 	skipUpgradeEnv = "OSMOSIS_E2E_SKIP_UPGRADE"
 	// Environment variable name to skip the IBC tests
 	skipIBCEnv = "OSMOSIS_E2E_SKIP_IBC"
-	// Environment variable name to skip state sync testing
-	skipStateSyncEnv = "OSMOSIS_E2E_SKIP_STATE_SYNC"
 	// Environment variable name to determine if this upgrade is a fork
 	forkHeightEnv = "OSMOSIS_E2E_FORK_HEIGHT"
 	// Environment variable name to skip cleaning up Docker resources in teardown
@@ -35,7 +33,6 @@ type IntegrationTestSuite struct {
 	skipUpgrade   bool
 	skipIBC       bool
 	skipStateSync bool
-	forkHeight    int
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
