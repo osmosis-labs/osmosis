@@ -1,4 +1,4 @@
-package grpc
+package grpc 
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
 // SOURCE AT `proto/osmosis/ibc-rate-limit/v1beta1/query.yml`
@@ -29,3 +29,4 @@ func (q Querier) Params(grpcCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.Params(ctx, *req)
 }
+
