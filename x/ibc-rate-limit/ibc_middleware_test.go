@@ -362,14 +362,16 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 
 	// Move chainA forward one block
 	suite.chainA.NextBlock()
-	suite.chainA.SenderAccount.SetSequence(suite.chainA.SenderAccount.GetSequence() + 1)
+	err = suite.chainA.SenderAccount.SetSequence(suite.chainA.SenderAccount.GetSequence() + 1)
+	suite.Require().NoError(err)
 
 	// Reset time + one second
 	oneSecAfterReset := resetTime.Add(time.Second)
 	suite.coordinator.IncrementTimeBy(oneSecAfterReset.Sub(suite.coordinator.CurrentTime))
 
 	// Sending should succeed again
-	suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1)))
+	_, err = suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1)))
+	suite.Require().NoError(err)
 }
 
 // Test rate limiting on receives
@@ -406,13 +408,16 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 
 	// receive 2.5% (quota is 5%)
 	fmt.Printf("Sending %s from B to A. Represented in chain A as wrapped? %v\n", sendDenom, native)
-	suite.AssertReceive(true, suite.MessageFromBToA(sendDenom, sendAmount))
+	_, err := suite.AssertReceive(true, suite.MessageFromBToA(sendDenom, sendAmount))
+	suite.Require().NoError(err)
 
 	// receive 2.5% (quota is 5%)
-	suite.AssertReceive(true, suite.MessageFromBToA(sendDenom, sendAmount))
+	_, err = suite.AssertReceive(true, suite.MessageFromBToA(sendDenom, sendAmount))
+	suite.Require().NoError(err)
 
 	// Sending above the quota should fail. We send 2 instead of 1 to account for rounding errors
-	suite.AssertReceive(false, suite.MessageFromBToA(sendDenom, sdk.NewInt(2)))
+	_, err = suite.AssertReceive(false, suite.MessageFromBToA(sendDenom, sdk.NewInt(2)))
+	suite.Require().NoError(err)
 }
 
 func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimitingNative() {
@@ -438,7 +443,8 @@ func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 
 	// send 1 token.
 	// If the contract doesn't have a quota for the current channel, all transfers are allowed
-	suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1)))
+	_, err := suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1)))
+	suite.Require().NoError(err)
 }
 
 // Test rate limits are reverted if a "send" fails
@@ -474,11 +480,13 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	suite.Require().NoError(err)
 
 	// Sending again fails as the quota is filled
-	suite.AssertSend(false, suite.MessageFromAToB(sdk.DefaultBondDenom, quota))
+	_, err = suite.AssertSend(false, suite.MessageFromAToB(sdk.DefaultBondDenom, quota))
+	suite.Require().Error(err)
 
 	// Move forward one block
 	suite.chainA.NextBlock()
-	suite.chainA.SenderAccount.SetSequence(suite.chainA.SenderAccount.GetSequence() + 1)
+	err = suite.chainA.SenderAccount.SetSequence(suite.chainA.SenderAccount.GetSequence() + 1)
+	suite.Require().NoError(err)
 	suite.chainA.Coordinator.IncrementTime()
 
 	// Update both clients
@@ -506,7 +514,8 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	suite.Require().NoError(err)
 
 	// We should be able to send again because the packet that exceeded the quota failed and has been reverted
-	suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1)))
+	_, err = suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1)))
+	suite.Require().NoError(err)
 }
 
 func (suite *MiddlewareTestSuite) TestUnsetRateLimitingContract() {

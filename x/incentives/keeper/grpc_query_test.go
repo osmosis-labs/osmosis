@@ -135,7 +135,8 @@ func (suite *KeeperTestSuite) TestGRPCActiveGauges() {
 
 		// move the first 9 gauges from upcoming to active (now 10 active gauges, 30 total gauges)
 		if i < 9 {
-			suite.querier.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
+			err = suite.querier.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
+			suite.Require().NoError(err)
 		}
 	}
 
@@ -192,7 +193,8 @@ func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 
 		// move the first 10 of 20 gauges to an active status
 		if i < 10 {
-			suite.querier.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
+			err = suite.querier.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
+			suite.Require().NoError(err)
 		}
 	}
 
@@ -252,7 +254,8 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
 		// move the first 9 created gauges to an active status
 		// 1 + (20 -9) = 12 upcoming gauges
 		if i < 9 {
-			suite.querier.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
+			err = suite.querier.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
+			suite.Require().NoError(err)
 		}
 	}
 
@@ -317,7 +320,8 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 		// move the first 10 created gauges from upcoming to active
 		// this leaves 10 upcoming gauges
 		if i < 10 {
-			suite.querier.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
+			err = suite.querier.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
+			suite.Require().NoError(err)
 		}
 	}
 

@@ -543,7 +543,8 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 		developerAccountBalanceBeforeHook := app.BankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
 
 		// System under test.
-		mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, i)
+		err = mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, i)
+		suite.Require().NoError(err)
 
 		// System truncates EpochProvisions because bank takes an Int.
 		// This causes rounding errors. Let's refer to this source as #1.
@@ -604,7 +605,8 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 
 	// This end of epoch should trigger thirdening. It will utilize the updated
 	// (reduced) provisions.
-	mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, defaultThirdeningEpochNum)
+	err = mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, defaultThirdeningEpochNum)
+	suite.Require().NoError(err)
 
 	suite.Require().Equal(defaultThirdeningEpochNum, mintKeeper.GetLastReductionEpochNum(ctx))
 

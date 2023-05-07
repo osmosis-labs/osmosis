@@ -238,7 +238,8 @@ func (suite *KeeperTestSuite) TestIncentivizedPools() {
 					})
 
 					// update records and ensure that non-perpetuals pot cannot get rewards.
-					keeper.UpdateDistrRecords(suite.Ctx, distRecords...)
+					err = keeper.UpdateDistrRecords(suite.Ctx, distRecords...)
+					suite.Require().NoError(err)
 				}
 				res, err := queryClient.IncentivizedPools(context.Background(), &types.QueryIncentivizedPoolsRequest{})
 				suite.Require().NoError(err)

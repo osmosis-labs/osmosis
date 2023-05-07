@@ -221,7 +221,9 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 			suite.FundAcc(addr, coinsToMint)
 
 			// make sure the module has enough funds
-			suite.App.BankKeeper.SendCoinsFromAccountToModule(suite.Ctx, addr, types.ModuleName, coinsToMint)
+			err := suite.App.BankKeeper.SendCoinsFromAccountToModule(suite.Ctx, addr, types.ModuleName, coinsToMint)
+			suite.Require().NoError(err)
+
 			var poolId uint64
 			// prepare a CL Pool that creates gauge at the end of createPool
 			if tc.poolType == poolmanagertypes.Concentrated {

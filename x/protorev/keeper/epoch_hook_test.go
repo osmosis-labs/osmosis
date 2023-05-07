@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"fmt"
 	"strings"
-
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,7 +23,10 @@ func BenchmarkEpochHook(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		b.StartTimer()
-		suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
+		err := suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
+		if err != nil {
+			panic(fmt.Sprintf("error updating pools in protorev epoch hook benchmark: %s", err))
+		}
 		b.StopTimer()
 	}
 }
