@@ -531,3 +531,68 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedP
 	// Asset event emitted
 	suite.AssertEventEmitted(suite.Ctx, types.TypeEvtUnlockAndMigrateShares, 1)
 }
+
+// TestAddToConcentratedLiquiditySuperfluidPosition_Events tests that events are correctly emitted
+// when calling addToConcentratedLiquiditySuperfluidPosition.
+func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition_Events() {
+	testcases := map[string]struct {
+		isLastPositionInPool         bool
+		expectedAddedToPositionEvent int
+		expectedMessageEvents        int
+		expectedError                error
+	}{
+		"happy path": {
+			isLastPositionInPool:         false,
+			expectedAddedToPositionEvent: 1,
+		},
+		"error: last position in pool": {
+			isLastPositionInPool:         true,
+			expectedAddedToPositionEvent: 0,
+			expectedError:                cltypes.AddToLastPositionInPoolError{PoolId: 1, PositionId: 1},
+		},
+	}
+
+	for name, tc := range testcases {
+		suite.Run(name, func() {
+			suite.SetupTest()
+
+			msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
+			concentratedLiquidityKeeper := suite.App.ConcentratedLiquidityKeeper
+			owner := suite.TestAccs[0]
+
+			// Position from current account.
+			posId, _, _, _, _, poolJoinAcc := suite.SetupSuperfluidConcentratedPosition(suite.Ctx, true, false, false, owner)
+
+			if !tc.isLastPositionInPool {
+				suite.FundAcc(suite.TestAccs[1], defaultAcctFunds)
+				_, _, _, _, _, err := concentratedLiquidityKeeper.CreateFullRangePosition(suite.Ctx, 1, suite.TestAccs[1], defaultAcctFunds)
+				suite.Require().NoError(err)
+			}
+
+			// Reset event counts to 0 by creating a new manager.
+			suite.Ctx = suite.Ctx.WithEventManager(sdk.NewEventManager())
+			suite.Equal(0, len(suite.Ctx.EventManager().Events()))
+
+			suite.FundAcc(poolJoinAcc, defaultAcctFunds)
+			msg := &types.MsgAddToConcentratedLiquiditySuperfluidPosition{
+				PositionId:    posId,
+				Sender:        poolJoinAcc.String(),
+				TokenDesired0: defaultAcctFunds[0],
+				TokenDesired1: defaultAcctFunds[1],
+			}
+
+			response, err := msgServer.AddToConcentratedLiquiditySuperfluidPosition(sdk.WrapSDKContext(suite.Ctx), msg)
+
+			if tc.expectedError == nil {
+				suite.NoError(err)
+				suite.NotNil(response)
+				suite.AssertEventEmitted(suite.Ctx, types.TypeEvtAddToConcentratedLiquiditySuperfluidPosition, tc.expectedAddedToPositionEvent)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().ErrorContains(err, tc.expectedError.Error())
+				suite.Require().Nil(response)
+				suite.AssertEventEmitted(suite.Ctx, types.TypeEvtAddToConcentratedLiquiditySuperfluidPosition, tc.expectedAddedToPositionEvent)
+			}
+		})
+	}
+}

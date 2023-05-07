@@ -24,6 +24,7 @@ import (
 func NewTxCmd() *cobra.Command {
 	txCmd := osmocli.TxIndexCmd(types.ModuleName)
 	osmocli.AddTxCmd(txCmd, NewCreatePositionCmd)
+	osmocli.AddTxCmd(txCmd, NewAddToPositionCmd)
 	osmocli.AddTxCmd(txCmd, NewWithdrawPositionCmd)
 	osmocli.AddTxCmd(txCmd, NewCreateConcentratedPoolCmd)
 	osmocli.AddTxCmd(txCmd, NewCollectFeesCmd)
@@ -48,11 +49,19 @@ func NewCreateConcentratedPoolCmd() (*osmocli.TxCliDesc, *clmodel.MsgCreateConce
 func NewCreatePositionCmd() (*osmocli.TxCliDesc, *types.MsgCreatePosition) {
 	return &osmocli.TxCliDesc{
 		Use:                 "create-position [lower-tick] [upper-tick] [token-0] [token-1] [token-0-min-amount] [token-1-min-amount]",
-		Short:               "create or add to existing concentrated liquidity position",
+		Short:               "create a concentrated liquidity position",
 		Example:             "create-position [-69082] 69082 1000000000uosmo 10000000uion 0 0 --pool-id 1 --from val --chain-id osmosis-1",
 		CustomFlagOverrides: poolIdFlagOverride,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
 	}, &types.MsgCreatePosition{}
+}
+
+func NewAddToPositionCmd() (*osmocli.TxCliDesc, *types.MsgAddToPosition) {
+	return &osmocli.TxCliDesc{
+		Use:     "add-to-position [position-id] [token-0] [token-1]",
+		Short:   "add to an existing concentrated liquidity position",
+		Example: "add-to-position 10 1000000000uosmo 10000000uion",
+	}, &types.MsgAddToPosition{}
 }
 
 func NewWithdrawPositionCmd() (*osmocli.TxCliDesc, *types.MsgWithdrawPosition) {
@@ -83,7 +92,7 @@ func NewCreateIncentiveCmd() (*osmocli.TxCliDesc, *types.MsgCreateIncentive) {
 	return &osmocli.TxCliDesc{
 		Use:                 "create-incentive [incentive-denom] [incentive-amount] [emission-rate] [start-time] [min-uptime]",
 		Short:               "create an incentive record to emit incentives (per second) to a given pool",
-		Example:             "create-incentive uosmo 69082 0.02 100 2023-03-03 03:20:35.419543805 24h --pool-id 1 --from val --chain-id osmosis-1",
+		Example:             "create-incentive uosmo 69082 0.02 2023-03-03 03:20:35.419543805 24h --pool-id 1 --from val --chain-id osmosis-1",
 		CustomFlagOverrides: poolIdFlagOverride,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
 	}, &types.MsgCreateIncentive{}
