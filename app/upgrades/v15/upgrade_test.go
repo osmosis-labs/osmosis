@@ -21,7 +21,6 @@ import (
 	v15 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v15"
 	gamm "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	balancer "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
@@ -109,7 +108,7 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 				SwapFee: swapFee,
 				ExitFee: exitFee,
 			},
-			[]balancertypes.PoolAsset{
+			[]balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),

@@ -11,7 +11,6 @@ import (
 	_ "github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
@@ -32,15 +31,15 @@ var (
 	defaultFutureGovernor = ""
 
 	// pool assets
-	defaultFooAsset = balancertypes.PoolAsset{
+	defaultFooAsset = balancer.PoolAsset{
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 	}
-	defaultBarAsset = balancertypes.PoolAsset{
+	defaultBarAsset = balancer.PoolAsset{
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}
-	defaultPoolAssets                     = []balancertypes.PoolAsset{defaultFooAsset, defaultBarAsset}
+	defaultPoolAssets                     = []balancer.PoolAsset{defaultFooAsset, defaultBarAsset}
 	defaultStableSwapPoolAssets sdk.Coins = sdk.NewCoins(
 		sdk.NewCoin("foo", sdk.NewInt(10000)),
 		sdk.NewCoin("bar", sdk.NewInt(10000)),
@@ -70,7 +69,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	// TODO: should be moved to balancer package
 	tests := []struct {
 		name        string
-		msg         balancertypes.MsgCreateBalancerPool
+		msg         balancer.MsgCreateBalancerPool
 		emptySender bool
 		expectPass  bool
 	}{
@@ -104,16 +103,26 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with empty PoolAssets",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
+<<<<<<< HEAD
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []balancertypes.PoolAsset{}, defaultFutureGovernor),
+=======
+				ExitFee: defaultZeroExitFee,
+			}, []balancer.PoolAsset{}, defaultFutureGovernor),
+>>>>>>> 9efe7239 (eliminate double imports (#5107))
 			emptySender: false,
 			expectPass:  false,
 		}, {
 			name: "create the pool with 0 weighted PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
+<<<<<<< HEAD
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []balancertypes.PoolAsset{{
+=======
+				ExitFee: defaultZeroExitFee,
+			}, []balancer.PoolAsset{{
+>>>>>>> 9efe7239 (eliminate double imports (#5107))
 				Weight: sdk.NewInt(0),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}, {
@@ -126,8 +135,13 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with negative weighted PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
+<<<<<<< HEAD
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []balancertypes.PoolAsset{{
+=======
+				ExitFee: defaultZeroExitFee,
+			}, []balancer.PoolAsset{{
+>>>>>>> 9efe7239 (eliminate double imports (#5107))
 				Weight: sdk.NewInt(-1),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}, {
@@ -140,8 +154,13 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with 0 balance PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
+<<<<<<< HEAD
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []balancertypes.PoolAsset{{
+=======
+				ExitFee: defaultZeroExitFee,
+			}, []balancer.PoolAsset{{
+>>>>>>> 9efe7239 (eliminate double imports (#5107))
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(0)),
 			}, {
@@ -154,8 +173,13 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with negative balance PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
+<<<<<<< HEAD
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []balancertypes.PoolAsset{{
+=======
+				ExitFee: defaultZeroExitFee,
+			}, []balancer.PoolAsset{{
+>>>>>>> 9efe7239 (eliminate double imports (#5107))
 				Weight: sdk.NewInt(100),
 				Token: sdk.Coin{
 					Denom:  "foo",
@@ -171,8 +195,13 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with duplicated PoolAssets",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
+<<<<<<< HEAD
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []balancertypes.PoolAsset{{
+=======
+				ExitFee: defaultZeroExitFee,
+			}, []balancer.PoolAsset{{
+>>>>>>> 9efe7239 (eliminate double imports (#5107))
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}, {
@@ -655,7 +684,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 	testCases := []struct {
 		name             string
-		pool             balancertypes.MsgCreateBalancerPool
+		pool             balancer.MsgCreateBalancerPool
 		joinPoolShareAmt sdk.Int
 	}{
 		{
@@ -663,7 +692,7 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 			pool: balancer.NewMsgCreateBalancerPool(nil, balancer.PoolParams{
 				SwapFee: sdk.ZeroDec(),
 				ExitFee: sdk.ZeroDec(),
-			}, []balancertypes.PoolAsset{
+			}, []balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -680,7 +709,7 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 			pool: balancer.NewMsgCreateBalancerPool(nil, balancer.PoolParams{
 				SwapFee: sdk.ZeroDec(),
 				ExitFee: sdk.ZeroDec(),
-			}, []balancertypes.PoolAsset{
+			}, []balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("foo", sdk.NewInt(7000)),
@@ -846,7 +875,7 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 
 			poolID := suite.prepareCustomBalancerPool(
 				defaultAcctFunds,
-				[]balancertypes.PoolAsset{
+				[]balancer.PoolAsset{
 					{
 						Weight: sdk.NewInt(100),
 						Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
