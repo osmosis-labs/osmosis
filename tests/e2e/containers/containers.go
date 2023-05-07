@@ -113,7 +113,6 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 	if _, ok := m.resources[containerName]; !ok {
 		return bytes.Buffer{}, bytes.Buffer{}, fmt.Errorf("no resource %s found", containerName)
 	}
-	t.Helper()
 	containerId := m.resources[containerName].Container.ID
 
 	var (
