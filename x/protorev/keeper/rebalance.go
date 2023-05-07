@@ -60,16 +60,22 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit sdk.I
 	}
 
 	// Get the pool
-	conversionPool, err := k.gammKeeper.GetPoolAndPoke(ctx, conversionPoolID)
+	conversionPool, err := k.poolmanagerKeeper.GetPool(ctx, conversionPoolID)
+	if err != nil {
+		return profit, err
+	}
+
+	swapModule, err := k.poolmanagerKeeper.GetPoolModule(ctx, conversionPoolID)
 	if err != nil {
 		return profit, err
 	}
 
 	// Calculate the amount of uosmo that we can get if we swapped the
 	// profited amount of the orignal asset through the highest uosmo liquidity pool
-	conversionTokenOut, err := conversionPool.CalcOutAmtGivenIn(
+	conversionTokenOut, err := swapModule.CalcOutAmtGivenIn(
 		ctx,
-		sdk.NewCoins(sdk.NewCoin(inputCoin.Denom, profit)),
+		conversionPool,
+		sdk.NewCoin(inputCoin.Denom, profit),
 		types.OsmosisDenomination,
 		conversionPool.GetSwapFee(ctx),
 	)

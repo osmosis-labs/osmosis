@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -74,7 +74,7 @@ func (suite *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 		"error: non-existent lock": {
 			overwriteLockId:          true,
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			expectedError:            sdkerrors.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", 5)),
+			expectedError:            errorsmod.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", 5)),
 		},
 		"error: lock that is not superfluid delegated, not unlocking, min exit coins more than being exitted": {
 			// migrateNonSuperfluidLockBalancerToConcentrated
@@ -280,7 +280,7 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated(
 			}
 
 			// System under test.
-			positionId, amount0, amount1, _, _, newGammLockId, concentratedLockId, err := superfluidKeeper.MigrateSuperfluidBondedBalancerToConcentrated(ctx, poolJoinAcc, poolIdLeaving, preMigrationLock, originalGammLockId, coinsToMigrate, synthLockBeforeMigration[0].SynthDenom, concentratedPool, remainingLockTime, tc.tokenOutMins)
+			positionId, amount0, amount1, _, _, newGammLockId, concentratedLockId, err := superfluidKeeper.MigrateSuperfluidBondedBalancerToConcentrated(ctx, poolJoinAcc, poolIdLeaving, poolIdEntering, preMigrationLock, originalGammLockId, coinsToMigrate, synthLockBeforeMigration[0].SynthDenom, concentratedPool, remainingLockTime, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
@@ -547,7 +547,7 @@ func (suite *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated
 			}
 
 			// System under test.
-			positionId, amount0, amount1, _, _, newGammLockId, concentratedLockId, err := superfluidKeeper.MigrateNonSuperfluidLockBalancerToConcentrated(ctx, poolJoinAcc, poolIdLeaving, preMigrationLock, coinsToMigrate, concentratedPool, remainingLockTime, tc.tokenOutMins)
+			positionId, amount0, amount1, _, _, newGammLockId, concentratedLockId, err := superfluidKeeper.MigrateNonSuperfluidLockBalancerToConcentrated(ctx, poolJoinAcc, poolIdLeaving, poolIdEntering, preMigrationLock, coinsToMigrate, concentratedPool, remainingLockTime, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())

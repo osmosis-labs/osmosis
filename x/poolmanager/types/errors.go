@@ -14,7 +14,6 @@ const (
 
 var (
 	ErrEmptyRoutes               = errors.New("provided empty routes")
-	ErrInvalidPool               = errors.New("attempting to create an invalid pool")
 	ErrTooFewPoolAssets          = errors.New("pool should have at least 2 assets, as they must be swapping between at least two assets")
 	ErrTooManyPoolAssets         = errors.New("pool has too many assets (currently capped at 8 assets per pool)")
 	ErrDuplicateRoutesNotAllowed = errors.New("duplicate multihop routes are not allowed")
@@ -107,4 +106,22 @@ type InvalidPoolTypeError struct {
 
 func (e InvalidPoolTypeError) Error() string {
 	return fmt.Sprintf("invalid pool type (%s)", PoolType_name[int32(e.PoolType)])
+}
+
+type IncorrectPoolIdError struct {
+	ExpectedPoolId uint64
+	ActualPoolId   uint64
+}
+
+func (e IncorrectPoolIdError) Error() string {
+	return fmt.Sprintf("Pool was attempted to be created with incorrect pool ID. Expected (%d), actual (%d)", e.ExpectedPoolId, e.ActualPoolId)
+}
+
+type IncorrectPoolAddressError struct {
+	ExpectedPoolAddress string
+	ActualPoolAddress   string
+}
+
+func (e IncorrectPoolAddressError) Error() string {
+	return fmt.Sprintf("Pool was attempted to be created with incorrect pool address. Expected (%s), actual (%s)", e.ExpectedPoolAddress, e.ActualPoolAddress)
 }

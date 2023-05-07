@@ -3,6 +3,7 @@ package types
 const (
 	TypeEvtCreatePosition         = "create_position"
 	TypeEvtWithdrawPosition       = "withdraw_position"
+	TypeEvtAddToPosition          = "add_to_position"
 	TypeEvtTotalCollectFees       = "total_collect_fees"
 	TypeEvtCollectFees            = "collect_fees"
 	TypeEvtTotalCollectIncentives = "total_collect_incentives"
@@ -25,7 +26,6 @@ const (
 	AttributeUpperTick             = "upper_tick"
 	TypeEvtPoolJoined              = "pool_joined"
 	TypeEvtPoolExited              = "pool_exited"
-	TypeEvtPoolCreated             = "pool_created"
 	TypeEvtTokenSwapped            = "token_swapped"
 	AttributeIncentiveDenom        = "incentive_denom"
 	AttributeIncentiveAmount       = "incentive_amount"

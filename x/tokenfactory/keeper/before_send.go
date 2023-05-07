@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
 
+	errorsmod "cosmossdk.io/errors"
 	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 )
@@ -127,7 +127,7 @@ func (k Keeper) callBeforeSendListener(ctx sdk.Context, wasmKeeper wasmKeeper.Ke
 
 			_, err = wasmKeeper.Sudo(ctx.WithEventManager(em), cwAddr, msgBz)
 			if err != nil {
-				return sdkerrors.Wrapf(err, "failed to call before send hook for denom %s", coin.Denom)
+				return errorsmod.Wrapf(err, "failed to call before send hook for denom %s", coin.Denom)
 			}
 		}
 	}

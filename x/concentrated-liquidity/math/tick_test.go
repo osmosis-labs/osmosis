@@ -7,6 +7,18 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
+const (
+	defaultTickSpacing = 100
+)
+
+var (
+	// spot price - (10^(spot price exponent - 6 - 1))
+	// Note we get spot price exponent by counting the number of digits in the max spot price and subtracting 1.
+	closestPriceBelowMaxPriceDefaultTickSpacing = types.MaxSpotPrice.Sub(sdk.NewDec(10).PowerMut(uint64(len(types.MaxSpotPrice.TruncateInt().String()) - 1 - int(types.ExponentAtPriceOne.Neg().Int64()) - 1)))
+	// min tick + 10 ^ -expoentAtPriceOne
+	closestTickAboveMinPriceDefaultTickSpacing = sdk.NewInt(types.MinTick).Add(sdk.NewInt(10).ToDec().Power(types.ExponentAtPriceOne.Neg().Uint64()).TruncateInt())
+)
+
 // use following equations to test testing vectors using sage
 // geometricExponentIncrementDistanceInTicks(exponentAtPriceOne) = (9 * (10^(-exponentAtPriceOne)))
 // geometricExponentDelta(tickIndex, exponentAtPriceOne)  = floor(tickIndex / geometricExponentIncrementDistanceInTicks(exponentAtPriceOne))
@@ -185,11 +197,109 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 	}
 }
 
-func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
+func (suite *ConcentratedMathTestSuite) TestTicksToSqrtPrice() {
 	testCases := map[string]struct {
-		price         sdk.Dec
-		tickExpected  string
-		expectedError error
+		tickIndexLower     int64
+		expectedPriceLower sdk.Dec
+		tickIndexUpper     int64
+		expectedPriceUpper sdk.Dec
+		expectedError      error
+	}{
+		"Ten billionths cent increments at the millionths place": {
+			tickIndexLower:     -51630100,
+			expectedPriceLower: sdk.MustNewDecFromStr("0.0000033699"),
+			tickIndexUpper:     -51630000,
+			expectedPriceUpper: sdk.MustNewDecFromStr("0.0000033700"),
+		},
+		"One millionths cent increments at the hundredths place": {
+			tickIndexLower:     -11999800,
+			expectedPriceLower: sdk.MustNewDecFromStr("0.070002"),
+			tickIndexUpper:     -11999700,
+			expectedPriceUpper: sdk.MustNewDecFromStr("0.070003"),
+		},
+		"One hundred thousandth cent increments at the tenths place": {
+			tickIndexLower:     -999800,
+			expectedPriceLower: sdk.MustNewDecFromStr("0.90002"),
+			tickIndexUpper:     -999700,
+			expectedPriceUpper: sdk.MustNewDecFromStr("0.90003"),
+		},
+		"One ten thousandth cent increments at the ones place": {
+			tickIndexLower:     1000000,
+			expectedPriceLower: sdk.MustNewDecFromStr("2"),
+			tickIndexUpper:     1000100,
+			expectedPriceUpper: sdk.MustNewDecFromStr("2.0001"),
+		},
+		"One thousandth cent increments at the tens place": {
+			tickIndexLower:     9200100,
+			expectedPriceLower: sdk.MustNewDecFromStr("12.001"),
+			tickIndexUpper:     9200200,
+			expectedPriceUpper: sdk.MustNewDecFromStr("12.002"),
+		},
+		"One cent increments at the hundreds place": {
+			tickIndexLower:     18320100,
+			expectedPriceLower: sdk.MustNewDecFromStr("132.01"),
+			tickIndexUpper:     18320200,
+			expectedPriceUpper: sdk.MustNewDecFromStr("132.02"),
+		},
+		"Ten cent increments at the thousands place": {
+			tickIndexLower:     27732100,
+			expectedPriceLower: sdk.MustNewDecFromStr("1732.10"),
+			tickIndexUpper:     27732200,
+			expectedPriceUpper: sdk.MustNewDecFromStr("1732.20"),
+		},
+		"Dollar increments at the ten thousands place": {
+			tickIndexLower:     36073200,
+			expectedPriceLower: sdk.MustNewDecFromStr("10732"),
+			tickIndexUpper:     36073300,
+			expectedPriceUpper: sdk.MustNewDecFromStr("10733"),
+		},
+		"error: lower tick greater than upper tick": {
+			tickIndexUpper:     36073200,
+			expectedPriceUpper: sdk.MustNewDecFromStr("10732"),
+			tickIndexLower:     36073300,
+			expectedPriceLower: sdk.MustNewDecFromStr("10733"),
+			expectedError:      types.InvalidLowerUpperTickError{LowerTick: 36073300, UpperTick: 36073200},
+		},
+		"error: lower tick equal to upper tick": {
+			tickIndexUpper:     36073300,
+			expectedPriceUpper: sdk.MustNewDecFromStr("10733"),
+			tickIndexLower:     36073300,
+			expectedPriceLower: sdk.MustNewDecFromStr("10733"),
+			expectedError:      types.InvalidLowerUpperTickError{LowerTick: 36073300, UpperTick: 36073300},
+		},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		suite.Run(name, func() {
+			sqrtPriceLower, sqrtPriceUpper, err := math.TicksToSqrtPrice(tc.tickIndexLower, tc.tickIndexUpper)
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().Equal(tc.expectedError.Error(), err.Error())
+				return
+			}
+			suite.Require().NoError(err)
+			expectedSqrtPriceLower, err := tc.expectedPriceLower.ApproxSqrt()
+			suite.Require().NoError(err)
+
+			suite.Require().Equal(expectedSqrtPriceLower.String(), sqrtPriceLower.String())
+
+			expectedSqrtPriceUpper, err := tc.expectedPriceUpper.ApproxSqrt()
+			suite.Require().NoError(err)
+
+			suite.Require().Equal(expectedSqrtPriceUpper.String(), sqrtPriceUpper.String())
+		})
+	}
+}
+
+func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
+	const (
+		one = uint64(1)
+	)
+
+	testCases := map[string]struct {
+		price        sdk.Dec
+		tickExpected string
 	}{
 		"BTC <> USD, tick 38035200 -> price 30352": {
 			price:        sdk.MustNewDecFromStr("30352"),
@@ -261,13 +371,82 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 		tc := tc
 
 		suite.Run(name, func() {
-			tickSpacing := uint64(100)
-			tick, err := math.PriceToTick(tc.price, tickSpacing)
-			if tc.expectedError != nil {
-				suite.Require().Error(err)
-				suite.Require().Equal(tc.expectedError.Error(), err.Error())
-				return
-			}
+			tick, err := math.PriceToTick(tc.price)
+			// With tick spacing of one, no rounding should occur.
+			tickRoundDown, err1 := math.PriceToTickRoundDown(tc.price, one)
+
+			suite.Require().NoError(err)
+			suite.Require().NoError(err1)
+			suite.Require().Equal(tc.tickExpected, tick.String())
+			suite.Require().Equal(tc.tickExpected, tickRoundDown.String())
+		})
+	}
+}
+
+func (suite *ConcentratedMathTestSuite) TestPriceToTick_RoundDown() {
+	testCases := map[string]struct {
+		price        sdk.Dec
+		tickSpacing  uint64
+		tickExpected string
+	}{
+		"tick spacing 100, price of 1": {
+			price:        sdk.OneDec(),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "0",
+		},
+		"tick spacing 100, price of 1.000030, tick 30 -> 0": {
+			price:        sdk.MustNewDecFromStr("1.000030"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "0",
+		},
+		"tick spacing 100, price of 0.9999970, tick -30 -> -100": {
+			price:        sdk.MustNewDecFromStr("0.9999970"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "-100",
+		},
+		"tick spacing 50, price of 0.9999730, tick -270 -> -300": {
+			price:        sdk.MustNewDecFromStr("0.9999730"),
+			tickSpacing:  50,
+			tickExpected: "-300",
+		},
+		"tick spacing 100, MinSpotPrice, MinTick": {
+			price:        types.MinSpotPrice,
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: sdk.NewInt(types.MinTick).String(),
+		},
+		"tick spacing 100, Spot price one tick above min, one tick above min -> MinTick": {
+			price:        types.MinSpotPrice.Add(sdk.SmallestDec()),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: closestTickAboveMinPriceDefaultTickSpacing.String(),
+		},
+		"tick spacing 100, Spot price one tick below max, one tick below max -> MaxTick - 1": {
+			price:        closestPriceBelowMaxPriceDefaultTickSpacing,
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: sdk.NewInt(types.MaxTick - 100).String(),
+		},
+		"tick spacing 100, Spot price 100_000_050 -> 72000000": {
+			price:        sdk.NewDec(100_000_050),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "72000000",
+		},
+		"tick spacing 100, Spot price 100_000_051 -> 72000100 (rounded up to tick spacing)": {
+			price:        sdk.NewDec(100_000_051),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "72000000",
+		},
+		"tick spacing 1, Spot price 100_000_051 -> 72000001 no tick spacing rounding": {
+			price:        sdk.NewDec(100_000_051),
+			tickSpacing:  1,
+			tickExpected: "72000001",
+		},
+	}
+	for name, tc := range testCases {
+		tc := tc
+
+		suite.Run(name, func() {
+
+			tick, err := math.PriceToTickRoundDown(tc.price, tc.tickSpacing)
+
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.tickExpected, tick.String())
 		})
@@ -400,7 +579,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			tickSpacing := uint64(1)
 
 			// 1. Compute tick from price.
-			tickFromPrice, err := math.PriceToTick(tc.price, tickSpacing)
+			tickFromPrice, err := math.PriceToTickRoundDown(tc.price, tickSpacing)
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.tickExpected, tickFromPrice.String())
 
@@ -416,7 +595,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			suite.Require().Equal(expectedPrice, price)
 
 			// 3. Compute tick from inverse price (inverse tick)
-			inverseTickFromPrice, err := math.PriceToTick(price, tickSpacing)
+			inverseTickFromPrice, err := math.PriceToTickRoundDown(price, tickSpacing)
 			suite.Require().NoError(err)
 
 			// Make sure original tick and inverse tick match.
@@ -433,7 +612,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			// suite.Require().Equal(expectedPrice.String(), priceFromSqrtPrice.String())
 
 			// 5. Compute tick from sqrt price from the original tick.
-			inverseTickFromSqrtPrice, err := math.PriceToTick(priceFromSqrtPrice, tickSpacing)
+			inverseTickFromSqrtPrice, err := math.PriceToTickRoundDown(priceFromSqrtPrice, tickSpacing)
 			suite.Require().NoError(err)
 
 			suite.Require().Equal(tickFromPrice, inverseTickFromSqrtPrice, "expected: %s, actual: %s", tickFromPrice, inverseTickFromSqrtPrice)
@@ -453,6 +632,22 @@ func (suite *ConcentratedMathTestSuite) TestCalculatePriceToTick() {
 		"Price less than 1": {
 			price:             sdk.MustNewDecFromStr("0.71"),
 			expectedTickIndex: sdk.NewInt(-2900000),
+		},
+		"100_000_000 -> 72000000": {
+			price:             sdk.NewDec(100_000_000),
+			expectedTickIndex: sdk.NewInt(72000000),
+		},
+		"100_000_050 -> 72000000": {
+			price:             sdk.NewDec(100_000_050),
+			expectedTickIndex: sdk.NewInt(72000000),
+		},
+		"100_000_051 -> 72000001": {
+			price:             sdk.NewDec(100_000_051),
+			expectedTickIndex: sdk.NewInt(72000001),
+		},
+		"100_000_100 -> 72000001": {
+			price:             sdk.NewDec(100_000_100),
+			expectedTickIndex: sdk.NewInt(72000001),
 		},
 	}
 	for name, t := range testCases {

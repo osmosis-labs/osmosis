@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
@@ -161,18 +161,18 @@ func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.Per
 
 	// prevent unbonding lockups to be not able to be used for superfluid staking
 	if lock.IsUnlocking() {
-		return sdkerrors.Wrapf(types.ErrUnbondingLockupNotSupported, "lock id : %d", lock.ID)
+		return errorsmod.Wrapf(types.ErrUnbondingLockupNotSupported, "lock id : %d", lock.ID)
 	}
 
 	// ensure that lock duration >= staking.UnbondingTime
 	unbondingTime := k.sk.GetParams(ctx).UnbondingTime
 	if lock.Duration < unbondingTime {
-		return sdkerrors.Wrapf(types.ErrNotEnoughLockupDuration, "lock duration (%d) must be greater than unbonding time (%d)", lock.Duration, unbondingTime)
+		return errorsmod.Wrapf(types.ErrNotEnoughLockupDuration, "lock duration (%d) must be greater than unbonding time (%d)", lock.Duration, unbondingTime)
 	}
 
 	// Thus when we stake now, this will be the only superfluid position for this lockID.
 	if k.alreadySuperfluidStaking(ctx, lock.ID) {
-		return sdkerrors.Wrapf(types.ErrAlreadyUsedSuperfluidLockup, "lock id : %d", lock.ID)
+		return errorsmod.Wrapf(types.ErrAlreadyUsedSuperfluidLockup, "lock id : %d", lock.ID)
 	}
 
 	return nil
