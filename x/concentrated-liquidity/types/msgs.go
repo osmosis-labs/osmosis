@@ -33,7 +33,7 @@ func (msg MsgCreatePosition) ValidateBasic() error {
 	}
 
 	if msg.TokensProvided.Empty() {
-		return fmt.Errorf("Invalid coins (%s)", msg.TokensProvided.String())
+		return fmt.Errorf("Empty coins provided (%s)", msg.TokensProvided.String())
 	}
 
 	if !msg.TokensProvided.IsValid() {
@@ -41,7 +41,13 @@ func (msg MsgCreatePosition) ValidateBasic() error {
 	}
 
 	if len(msg.TokensProvided) > 2 {
-		return fmt.Errorf("Invalid coins (%s)", msg.TokensProvided.String())
+		return CoinLengthError{Length: len(msg.TokensProvided), MaxLength: 2}
+	}
+
+	for _, coin := range msg.TokensProvided {
+		if coin.Amount.LTE(sdk.ZeroInt()) {
+			return NotPositiveRequireAmountError{Amount: coin.Amount.String()}
+		}
 	}
 
 	if msg.TokenMinAmount0.IsNegative() {

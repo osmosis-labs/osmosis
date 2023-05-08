@@ -798,3 +798,12 @@ type NumCoinsError struct {
 func (e NumCoinsError) Error() string {
 	return fmt.Sprintf("num coins provided (%d) must be 2 for a full range position", e.NumCoins)
 }
+
+type CoinLengthError struct {
+	MaxLength int
+	Length    int
+}
+
+func (e CoinLengthError) Error() string {
+	return fmt.Sprintf("coin length (%d) must be less than or equal to max length (%d)", e.Length, e.MaxLength)
+}

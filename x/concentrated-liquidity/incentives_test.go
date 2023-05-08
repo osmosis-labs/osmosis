@@ -3835,7 +3835,6 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, sdk.ZeroDec())
 
 			// Set up an existing full range position. Note that the second return value is the position ID, not an error.
-			fmt.Println(tc.existingConcentratedLiquidity)
 			initialLiquidity, _ := s.SetupPosition(clPool.GetId(), s.TestAccs[0], tc.existingConcentratedLiquidity, DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime())
 
 			// If a canonical balancer pool exists, we create it and link it with the CL pool
