@@ -20,7 +20,7 @@ var (
 	// base asset as the lexicographically smaller denom and the quote as the larger. When
 	// set to false, this order is switched. These constants are provided to understand the
 	// base/quote asset for every test at a glance rather than a raw boolean value.
-	baseQuoteAB, baseQuoteCA, baseQuoteBC = true, true, true
+	baseQuoteAB, baseQuoteCA              = true, true
 	baseQuoteBA, baseQuoteAC, baseQuoteCB = false, false, false
 
 	ThreePlusOneThird sdk.Dec = sdk.MustNewDecFromStr("3.333333333333333333")
@@ -849,14 +849,6 @@ func (s *TestSuite) TestGeometricTwapToNow_BalancerPool_Randomized() {
 	seed := int64(1)
 	r := rand.New(rand.NewSource(seed))
 	retries := 200
-
-	type randTestCase struct {
-		elapsedTimeMs int
-		weightA       sdk.Int
-		tokenASupply  sdk.Int
-		weightB       sdk.Int
-		tokenBSupply  sdk.Int
-	}
 
 	maxUint64 := ^uint(0)
 

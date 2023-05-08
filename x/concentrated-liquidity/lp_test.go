@@ -16,7 +16,6 @@ import (
 
 type lpTest struct {
 	poolId                            uint64
-	owner                             sdk.AccAddress
 	currentTick                       sdk.Int
 	lowerTick                         int64
 	upperTick                         int64

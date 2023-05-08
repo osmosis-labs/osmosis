@@ -16,20 +16,11 @@ import (
 )
 
 var (
-	defaultPoolAssetsStableSwap = sdk.Coins{
-		sdk.NewCoin("atom", sdk.NewInt(100)),
-		sdk.NewCoin("osmo", sdk.NewInt(100)),
-	}
 	defaultPoolParamsStableSwap = stableswap.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.ZeroDec(),
 	}
-	defaultPoolId                        = uint64(1)
-	defaultAcctFundsStableSwap sdk.Coins = sdk.NewCoins(
-		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
-		sdk.NewCoin("atom", sdk.NewInt(100)),
-		sdk.NewCoin("osmo", sdk.NewInt(100)),
-	)
+	defaultPoolId = uint64(1)
 )
 
 // import (

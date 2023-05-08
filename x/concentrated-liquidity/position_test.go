@@ -31,7 +31,6 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 		joinTime       time.Time
 		positionId     uint64
 		liquidityDelta sdk.Dec
-		liquidityIn    sdk.Dec
 	}
 
 	tests := []struct {

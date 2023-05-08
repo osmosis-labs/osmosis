@@ -13,14 +13,7 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
-var (
-	defaultPoolId       uint64 = 1
-	noErrorTime                = time.Time{}
-	withZeroLastErrTime        = func(record types.TwapRecord) types.TwapRecord {
-		record.LastErrorTime = time.Time{}
-		return record
-	}
-)
+var defaultPoolId uint64 = 1
 
 // TestAfterPoolCreatedHook tests if internal tracking logic has been triggered correctly,
 // and the correct state entries have been created upon pool creation.

@@ -5,12 +5,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 )
 
-var testAddresses = osmoutils.CreateRandomAccounts(3)
 
 func TestGetCmdGauges(t *testing.T) {
 	desc, _ := GetCmdGauges()
