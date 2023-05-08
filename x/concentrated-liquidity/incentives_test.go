@@ -2906,7 +2906,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			// Set up invalid pool ID for error-catching case(s)
 			sutPoolId := validPoolId
 			if tc.isInvalidPoolIdGiven {
-				sutPoolId = sutPoolId + 1 //nolint:staticcheck,ineffassign // this is an ineffectual asisgnment, but i worry about disturbing nature's delicate balance by changing this odd conditional here.
+				sutPoolId = sutPoolId + 1 //nolint:staticcheck,ineffassign
 			}
 
 			// System under test
