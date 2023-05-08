@@ -35,6 +35,7 @@ type TestSuite struct {
 }
 
 func TestSuiteRun(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(TestSuite))
 }
 

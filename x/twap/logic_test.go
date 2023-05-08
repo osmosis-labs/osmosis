@@ -253,6 +253,7 @@ func (s *TestSuite) TestUpdateRecord() {
 }
 
 func TestRecordWithUpdatedAccumulators(t *testing.T) {
+	t.Parallel()
 	poolId := uint64(1)
 	defaultRecord := newRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), oneDec, twoDec, pointFiveDec)
 	tests := map[string]struct {
@@ -310,7 +311,9 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 	}
 
 	for name, test := range tests {
+		test := test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// correct expected record based off copy/paste values
 			test.expRecord.Time = test.newTime
 			test.expRecord.PoolId = test.record.PoolId
@@ -326,6 +329,7 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 }
 
 func TestRecordWithUpdatedAccumulators_ThreeAsset(t *testing.T) {
+	t.Parallel()
 	poolId := uint64(2)
 	tests := map[string]struct {
 		record          []types.TwapRecord
@@ -350,7 +354,9 @@ func TestRecordWithUpdatedAccumulators_ThreeAsset(t *testing.T) {
 	}
 
 	for name, test := range tests {
+		test := test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			for i := range test.record {
 				// correct expected record based off copy/paste values
 				test.expRecord[i].Time = test.interpolateTime

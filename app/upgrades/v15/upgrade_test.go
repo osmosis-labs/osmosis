@@ -40,6 +40,7 @@ func (suite *UpgradeTestSuite) SetupTest() {
 }
 
 func TestUpgradeTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(UpgradeTestSuite))
 }
 
@@ -56,7 +57,7 @@ func (suite *UpgradeTestSuite) TestMigrateNextPoolIdAndCreatePool() {
 	gammKeeper := suite.App.GAMMKeeper
 	poolmanagerKeeper := suite.App.PoolManagerKeeper
 
-	nextPoolId := gammKeeper.GetNextPoolId(ctx)
+	nextPoolId := gammKeeper.GetNextPoolId(ctx) //nolint:staticcheck // we are using the deprecated call for testing purposes
 	suite.Require().Equal(expectedNextPoolId, nextPoolId)
 
 	// system under test.

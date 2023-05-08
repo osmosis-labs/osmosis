@@ -16,6 +16,7 @@ import (
 
 // // Test authz serialize and de-serializes for tokenfactory msg.
 func TestAuthzMsg(t *testing.T) {
+	t.Parallel()
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	coin := sdk.NewCoin("denom", sdk.NewInt(1))
@@ -55,7 +56,9 @@ func TestAuthzMsg(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			apptesting.TestMessageAuthzSerialization(t, tc.msg)
 		})
 	}
@@ -63,6 +66,7 @@ func TestAuthzMsg(t *testing.T) {
 
 // TestMsgCreateDenom tests if valid/invalid create denom messages are properly validated/invalidated
 func TestMsgCreateDenom(t *testing.T) {
+	t.Parallel()
 	// generate a private/public key pair and get the respective address
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address())
@@ -128,6 +132,7 @@ func TestMsgCreateDenom(t *testing.T) {
 
 // TestMsgMint tests if valid/invalid create denom messages are properly validated/invalidated
 func TestMsgMint(t *testing.T) {
+	t.Parallel()
 	// generate a private/public key pair and get the respective address
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address())
@@ -201,6 +206,7 @@ func TestMsgMint(t *testing.T) {
 
 // TestMsgBurn tests if valid/invalid create denom messages are properly validated/invalidated
 func TestMsgBurn(t *testing.T) {
+	t.Parallel()
 	// generate a private/public key pair and get the respective address
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address())
@@ -271,6 +277,7 @@ func TestMsgBurn(t *testing.T) {
 
 // TestMsgChangeAdmin tests if valid/invalid create denom messages are properly validated/invalidated
 func TestMsgChangeAdmin(t *testing.T) {
+	t.Parallel()
 	// generate a private/public key pair and get the respective address
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address())
@@ -345,6 +352,7 @@ func TestMsgChangeAdmin(t *testing.T) {
 
 // TestMsgSetDenomMetadata tests if valid/invalid create denom messages are properly validated/invalidated
 func TestMsgSetDenomMetadata(t *testing.T) {
+	t.Parallel()
 	// generate a private/public key pair and get the respective address
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address())

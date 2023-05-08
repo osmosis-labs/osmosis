@@ -12,6 +12,7 @@ func (t TwapRecord) Validate() error {
 }
 
 func TestValidatePeriod(t *testing.T) {
+	t.Parallel()
 	testCases := map[string]struct {
 		period      interface{}
 		expectedErr bool
@@ -31,7 +32,9 @@ func TestValidatePeriod(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			err := validatePeriod(tc.period)
 
 			// Assertions.

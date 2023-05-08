@@ -18,6 +18,7 @@ import (
 )
 
 func TestCreateDenomMsg(t *testing.T) {
+	t.Parallel()
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
 
@@ -49,6 +50,7 @@ func TestCreateDenomMsg(t *testing.T) {
 }
 
 func TestMintMsg(t *testing.T) {
+	t.Parallel()
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
 
@@ -177,6 +179,7 @@ func TestMintMsg(t *testing.T) {
 }
 
 func TestBurnMsg(t *testing.T) {
+	t.Parallel()
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
 

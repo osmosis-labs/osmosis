@@ -10,6 +10,7 @@ import (
 )
 
 func TestDeconstructDenom(t *testing.T) {
+	t.Parallel()
 	appparams.SetAddressPrefixes()
 
 	for _, tc := range []struct {
@@ -54,7 +55,9 @@ func TestDeconstructDenom(t *testing.T) {
 			err:   types.ErrInvalidDenom,
 		},
 	} {
+		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
+			t.Parallel()
 			expectedCreator := "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44"
 			creator, subdenom, err := types.DeconstructDenom(tc.denom)
 			if tc.err != nil {
@@ -69,6 +72,7 @@ func TestDeconstructDenom(t *testing.T) {
 }
 
 func TestGetTokenDenom(t *testing.T) {
+	t.Parallel()
 	appparams.SetAddressPrefixes()
 	for _, tc := range []struct {
 		desc     string
@@ -119,7 +123,9 @@ func TestGetTokenDenom(t *testing.T) {
 			valid:    true,
 		},
 	} {
+		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
+			t.Parallel()
 			_, err := types.GetTokenDenom(tc.creator, tc.subdenom)
 			if tc.valid {
 				require.NoError(t, err)

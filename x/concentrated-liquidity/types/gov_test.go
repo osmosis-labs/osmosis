@@ -11,6 +11,7 @@ import (
 )
 
 func TestCreateConcentratedLiquidityPoolProposalMarshalUnmarshal(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		proposal *types.CreateConcentratedLiquidityPoolProposal
 	}{

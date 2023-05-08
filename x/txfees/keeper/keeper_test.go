@@ -22,6 +22,7 @@ type KeeperTestSuite struct {
 }
 
 func TestKeeperTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(KeeperTestSuite))
 }
 

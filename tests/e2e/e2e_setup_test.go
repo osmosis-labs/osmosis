@@ -18,7 +18,7 @@ const (
 	// Environment variable name to skip the IBC tests
 	skipIBCEnv = "OSMOSIS_E2E_SKIP_IBC"
 	// Environment variable name to skip state sync testing
-	skipStateSyncEnv = "OSMOSIS_E2E_SKIP_STATE_SYNC"
+	skipStateSyncEnv = "OSMOSIS_E2E_SKIP_STATE_SYNC" //nolint:unused // this is used in the code
 	// Environment variable name to determine if this upgrade is a fork
 	forkHeightEnv = "OSMOSIS_E2E_FORK_HEIGHT"
 	// Environment variable name to skip cleaning up Docker resources in teardown
@@ -37,6 +37,7 @@ type IntegrationTestSuite struct {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
+	t.Parallel()
 	isEnabled := os.Getenv(e2eEnabledEnv)
 	if isEnabled != "True" {
 		t.Skipf("e2e test is disabled. To run, set %s to True", e2eEnabledEnv)

@@ -43,6 +43,7 @@ func (suite *StargateTestSuite) SetupTest() {
 }
 
 func TestStargateTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(StargateTestSuite))
 }
 

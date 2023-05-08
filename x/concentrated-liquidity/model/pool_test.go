@@ -38,6 +38,7 @@ type ConcentratedPoolTestSuite struct {
 }
 
 func TestConcentratedPoolTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(ConcentratedPoolTestSuite))
 }
 

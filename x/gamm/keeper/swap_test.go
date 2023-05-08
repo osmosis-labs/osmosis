@@ -295,7 +295,6 @@ func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
 				}
 
 				pool = poolI
-
 			} else if test.param.poolType == "stableswap" {
 				poolId := suite.PrepareBasicStableswapPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)

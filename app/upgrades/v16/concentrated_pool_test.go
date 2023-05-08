@@ -34,6 +34,7 @@ func (suite *ConcentratedUpgradeTestSuite) SetupTest() {
 }
 
 func TestConcentratedUpgradeTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(ConcentratedUpgradeTestSuite))
 }
 

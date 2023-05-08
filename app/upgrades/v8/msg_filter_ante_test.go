@@ -19,6 +19,7 @@ func noOpAnteDecorator() sdk.AnteHandler {
 }
 
 func TestMsgFilterDecorator(t *testing.T) {
+	t.Parallel()
 	handler := v8.MsgFilterDecorator{}
 	txCfg := app.MakeEncodingConfig().TxConfig
 
@@ -63,6 +64,7 @@ func TestMsgFilterDecorator(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			txBuilder := txCfg.NewTxBuilder()
 			require.NoError(t, txBuilder.SetMsgs(tc.msgs...))
 

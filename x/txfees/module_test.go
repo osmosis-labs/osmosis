@@ -11,6 +11,7 @@ import (
 )
 
 func TestSetBaseDenomOnInitBlock(t *testing.T) {
+	t.Parallel()
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 

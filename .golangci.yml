@@ -1,6 +1,10 @@
 run:
-  tests: false
+  tests: true
   timeout: 10m
+  allow-parallel-runners: false
+
+output:
+  sort-results: true
 
 linters:
   disable-all: true
@@ -18,7 +22,6 @@ linters:
     - goconst
     - gofmt
     - goimports
-    # - gofumpt
     - goheader
     - gomodguard
     - goprintffuncname
@@ -35,8 +38,9 @@ linters:
     - stylecheck
     - tenv
     - thelper
+    - tparallel
+    - paralleltest
     - typecheck
-    - thelper
     - unconvert
     - unused
     - whitespace

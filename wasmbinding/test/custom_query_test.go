@@ -34,6 +34,7 @@ func SetupCustomApp(t *testing.T, addr sdk.AccAddress) (*app.OsmosisApp, sdk.Con
 }
 
 func TestQueryFullDenom(t *testing.T) {
+	t.Parallel()
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
 

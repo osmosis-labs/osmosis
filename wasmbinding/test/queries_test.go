@@ -13,6 +13,7 @@ import (
 )
 
 func TestFullDenom(t *testing.T) {
+	t.Parallel()
 	actor := RandomAccountAddress()
 
 	specs := map[string]struct {
@@ -48,7 +49,9 @@ func TestFullDenom(t *testing.T) {
 		},
 	}
 	for name, spec := range specs {
+		spec := spec
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// when
 			gotFullDenom, gotErr := wasmbinding.GetFullDenom(spec.addr, spec.subdenom)
 			// then

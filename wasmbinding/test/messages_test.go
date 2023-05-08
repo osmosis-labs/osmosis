@@ -14,6 +14,7 @@ import (
 )
 
 func TestCreateDenom(t *testing.T) {
+	t.Parallel()
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
 
@@ -48,7 +49,9 @@ func TestCreateDenom(t *testing.T) {
 		},
 	}
 	for name, spec := range specs {
+		spec := spec
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// when
 			gotErr := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, spec.createDenom)
 			// then
@@ -62,6 +65,7 @@ func TestCreateDenom(t *testing.T) {
 }
 
 func TestChangeAdmin(t *testing.T) {
+	t.Parallel()
 	const validDenom = "validdenom"
 
 	tokenCreator := RandomAccountAddress()
@@ -140,7 +144,9 @@ func TestChangeAdmin(t *testing.T) {
 		},
 	}
 	for name, spec := range specs {
+		spec := spec
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// Setup
 			osmosis, ctx := SetupCustomApp(t, tokenCreator)
 
