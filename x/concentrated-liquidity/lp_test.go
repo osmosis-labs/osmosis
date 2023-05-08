@@ -539,7 +539,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			expectedPoolBalanceDelta := expectedFeesClaimed.Add(sdk.NewCoin(ETH, config.amount0Expected.Abs())).Add(sdk.NewCoin(USDC, config.amount1Expected.Abs()))
 
-			withdrawAccount := sdk.AccAddress{}
+			var withdrawAccount sdk.AccAddress
 			if tc.withdrawWithNonOwner {
 				withdrawAccount = nonOwner
 			} else {

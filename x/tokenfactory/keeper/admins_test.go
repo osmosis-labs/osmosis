@@ -45,7 +45,6 @@ func (suite *KeeperTestSuite) TestAdminMsgs() {
 
 	// Test burning from own account
 	_, err = suite.msgServer.Burn(sdk.WrapSDKContext(suite.Ctx), types.NewMsgBurn(suite.TestAccs[0].String(), sdk.NewInt64Coin(suite.defaultDenom, 5)))
-	addr0bal -= 5
 	suite.Require().NoError(err)
 	suite.Require().True(bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[1], suite.defaultDenom).Amount.Int64() == addr1bal)
 

@@ -1179,7 +1179,7 @@ func (s *KeeperTestSuite) TestGetInitialUptimeGrowthOutsidesForTick() {
 				uptimeAccum.AddToAccumulator(expectedUptimes.hundredTokensMultiDenom[uptimeId])
 			}
 
-			poolUptimeAccumulators, err = clKeeper.GetUptimeAccumulators(s.Ctx, tc.poolId)
+			_, err = clKeeper.GetUptimeAccumulators(s.Ctx, tc.poolId)
 			s.Require().NoError(err)
 
 			val, err := clKeeper.GetInitialUptimeGrowthOutsidesForTick(s.Ctx, tc.poolId, tc.tick)
@@ -2906,13 +2906,13 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			// Set up invalid pool ID for error-catching case(s)
 			sutPoolId := validPoolId
 			if tc.isInvalidPoolIdGiven {
-				sutPoolId = sutPoolId + 1
+				sutPoolId = sutPoolId + 1 //nolint:staticcheck,ineffassign
 			}
 
 			// System under test
 			incentivesClaimedQuery, incentivesForfeitedQuery, err := clKeeper.GetClaimableIncentives(ctx, DefaultPositionId)
 
-			poolBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetAddress())
+			_ = s.App.BankKeeper.GetAllBalances(ctx, validPool.GetAddress())
 			incentivesBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetIncentivesAddress())
 			ownerBalancerAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, ownerWithValidPosition)
 
@@ -2933,7 +2933,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			s.Require().Equal(incentivesClaimedQuery, actualIncentivesClaimed)
 			s.Require().Equal(incentivesForfeitedQuery, actualIncetivesForfeited)
 
-			poolBalanceAfterCollect = s.App.BankKeeper.GetAllBalances(ctx, validPool.GetAddress())
+			poolBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetAddress())
 			incentivesBalanceAfterCollect = s.App.BankKeeper.GetAllBalances(ctx, validPool.GetIncentivesAddress())
 			ownerBalancerAfterCollect = s.App.BankKeeper.GetAllBalances(ctx, ownerWithValidPosition)
 
