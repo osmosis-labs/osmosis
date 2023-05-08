@@ -918,16 +918,25 @@ func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positi
 	return collectedIncentivesForPosition, forfeitedIncentivesForPosition, nil
 }
 
-// createIncentive creates an incentive record in state for the given pool
-func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveDenom string, incentiveAmount sdk.Int, emissionRate sdk.Dec, startTime time.Time, minUptime time.Duration) (types.IncentiveRecord, error) {
+// createIncentive creates an incentive record in state for the given pool.
+//
+// Upon successful creation, it bank sends the incentives from the owner address to the pool address and returns the incentives record.
+// Returns error if:
+// - poolId is invalid
+// - incentiveAmount is invalid (zero or negative).
+// - emissionRate is invalid (zero or negative)
+// - startTime is < blockTime.
+// - minUptime is not an authorizedUptime.
+// - other internal database or math errors.
+func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveCoin sdk.Coin, emissionRate sdk.Dec, startTime time.Time, minUptime time.Duration) (types.IncentiveRecord, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return types.IncentiveRecord{}, err
 	}
 
-	// Ensure incentive amount is nonzero and nonnegative
-	if !incentiveAmount.IsPositive() {
-		return types.IncentiveRecord{}, types.NonPositiveIncentiveAmountError{PoolId: poolId, IncentiveAmount: incentiveAmount.ToDec()}
+	// checks if the Coin has a non-negative amount and the denom is valid.
+	if !incentiveCoin.IsValid() || incentiveCoin.IsZero() {
+		return types.IncentiveRecord{}, types.InvalidIncentiveCoinError{PoolId: poolId, IncentiveCoin: incentiveCoin}
 	}
 
 	// Ensure start time is >= current blocktime
@@ -960,11 +969,9 @@ func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 		return types.IncentiveRecord{}, types.InvalidMinUptimeError{PoolId: poolId, MinUptime: minUptime, AuthorizedUptimes: authorizedUptimes}
 	}
 
-	// Ensure sender has balance for incentive denom
-	incentiveCoin := sdk.NewCoin(incentiveDenom, incentiveAmount)
 	senderHasBalance := k.bankKeeper.HasBalance(ctx, sender, incentiveCoin)
 	if !senderHasBalance {
-		return types.IncentiveRecord{}, types.IncentiveInsufficientBalanceError{PoolId: poolId, IncentiveDenom: incentiveDenom, IncentiveAmount: incentiveAmount}
+		return types.IncentiveRecord{}, types.IncentiveInsufficientBalanceError{PoolId: poolId, IncentiveDenom: incentiveCoin.Denom, IncentiveAmount: incentiveCoin.Amount}
 	}
 
 	// Sync global uptime accumulators to current blocktime to ensure consistency in reward emissions
@@ -974,14 +981,14 @@ func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 	}
 
 	incentiveRecordBody := types.IncentiveRecordBody{
-		RemainingAmount: incentiveAmount.ToDec(),
+		RemainingAmount: incentiveCoin.Amount.ToDec(),
 		EmissionRate:    emissionRate,
 		StartTime:       startTime,
 	}
 	// Set up incentive record to put in state
 	incentiveRecord := types.IncentiveRecord{
 		PoolId:               poolId,
-		IncentiveDenom:       incentiveDenom,
+		IncentiveDenom:       incentiveCoin.Denom,
 		IncentiveCreatorAddr: sender.String(),
 		IncentiveRecordBody:  incentiveRecordBody,
 		MinUptime:            minUptime,
@@ -994,7 +1001,7 @@ func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 	}
 
 	// Fixed gas consumption per incentive creation to prevent spam
-	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForNewIncentive*len(existingRecordsForUptime)), "cl incentive creation")
+	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForNewIncentive*len(existingRecordsForUptime)), "cl incentive creation fee")
 
 	// Set incentive record in state
 	err = k.setIncentiveRecord(ctx, incentiveRecord)
