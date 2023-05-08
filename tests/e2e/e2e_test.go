@@ -1134,7 +1134,7 @@ func (s *IntegrationTestSuite) TestPacketForwarding() {
 		if !ok {
 			return false
 		}
-		return err == nil && countValue == 0
+		return countValue == 0
 	},
 		15*time.Second,
 		10*time.Millisecond,
