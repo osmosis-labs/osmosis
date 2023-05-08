@@ -83,16 +83,15 @@ func (k Keeper) RouteExactAmountIn(
 
 		// Check if pool has swaps enabled.
 		if !pool.IsActive(ctx) {
-			return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
+			return sdk.Int{}, types.InactivePoolError{PoolId: pool.GetId()}
 		}
 
 		swapFee := pool.GetSwapFee(ctx)
 
 		// If we determined the routeStep is an osmo multi-hop and both route are incentivized,
 		// we modify the swap fee accordingly.
-		// TODO: evaluate rounding
 		if isMultiHopRouted {
-			swapFee = routeSwapFee.Mul((swapFee.Quo(sumOfSwapFees)))
+			swapFee = routeSwapFee.MulRoundUp((swapFee.QuoRoundUp(sumOfSwapFees)))
 		}
 
 		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, routeStep.TokenOutDenom, _outMinAmount, swapFee)
@@ -584,12 +583,14 @@ func (k Keeper) isOsmoRoutedMultihop(ctx sdk.Context, route types.MultihopRoute,
 	return route0Incentivized && route1Incentivized
 }
 
-// getOsmoRoutedMultihopTotalSwapFee calculates the effective swap fees and the sum of swap fees for the route of pools.
+// getOsmoRoutedMultihopTotalSwapFee calculates and returns the average swap fee and the sum of swap fees for
+// a given route. For the former, it sets a lower bound of the highest swap fee pool in the route to ensure total
+// swap fees for a route are never more than halved.
 func (k Keeper) getOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.MultihopRoute) (
 	totalPathSwapFee sdk.Dec, sumOfSwapFees sdk.Dec, err error,
 ) {
 	additiveSwapFee := sdk.ZeroDec()
-	maxSwapFee := sdk.ZeroDec()
+	highestSwapFee := sdk.ZeroDec()
 
 	for _, poolId := range route.PoolIds() {
 		swapModule, err := k.GetPoolModule(ctx, poolId)
@@ -603,11 +604,17 @@ func (k Keeper) getOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.M
 		}
 		swapFee := pool.GetSwapFee(ctx)
 		additiveSwapFee = additiveSwapFee.Add(swapFee)
-		maxSwapFee = sdk.MaxDec(maxSwapFee, swapFee)
+		highestSwapFee = sdk.MaxDec(highestSwapFee, swapFee)
 	}
+
+	// We divide by 2 to get the average since OSMO-routed multihops always have exactly 2 pools.
 	averageSwapFee := additiveSwapFee.QuoInt64(2)
-	maxSwapFee = sdk.MaxDec(maxSwapFee, averageSwapFee)
-	return maxSwapFee, additiveSwapFee, nil
+
+	// We take the max here as a guardrail to ensure that there is a lowerbound on the swap fee for the
+	// whole route equivalent to the highest fee pool
+	routeSwapFee := sdk.MaxDec(highestSwapFee, averageSwapFee)
+
+	return routeSwapFee, additiveSwapFee, nil
 }
 
 // createMultihopExpectedSwapOuts defines the output denom and output amount for the last pool in

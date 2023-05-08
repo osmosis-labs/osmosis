@@ -2621,6 +2621,15 @@ func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
 			newLiquidity:         sdk.NewDec(2),
 			newSqrtPrice:         sdk.NewDec(2),
 		},
+		"success case with different/uneven numbers": {
+			senderInitialBalance: defaultInitialBalance.Add(defaultInitialBalance...),
+			poolInitialBalance:   defaultInitialBalance,
+			tokenIn:              oneHundredETH.Add(oneHundredETH),
+			tokenOut:             oneHundredUSDC,
+			newCurrentTick:       sdk.NewInt(8),
+			newLiquidity:         sdk.NewDec(37),
+			newSqrtPrice:         sdk.NewDec(91),
+		},
 		"sender does not have enough balance": {
 			senderInitialBalance: defaultInitialBalance,
 			poolInitialBalance:   defaultInitialBalance,

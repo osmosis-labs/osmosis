@@ -61,10 +61,11 @@ type SwapState struct {
 // between the ticks. This is possible when there are only 2 positions with no overlapping ranges.
 // As a result, the range from the end of position one to the beginning of position
 // two has no liquidity and can be skipped.
-// TODO: test
 func (ss *SwapState) updateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
 	if !ss.liquidity.IsZero() {
-		feeChargePerUnitOfLiquidity := feeChargeTotal.Quo(ss.liquidity)
+		// We round down here since we want to avoid overdistributing (the "fee charge" refers to
+		// the total fees that will be accrued to the fee accumulator)
+		feeChargePerUnitOfLiquidity := feeChargeTotal.QuoTruncate(ss.liquidity)
 		ss.feeGrowthGlobal = ss.feeGrowthGlobal.Add(feeChargePerUnitOfLiquidity)
 		return
 	}
