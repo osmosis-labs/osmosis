@@ -3544,7 +3544,7 @@ func (s *KeeperTestSuite) TestFunctional_ClaimIncentices_LiquidityChange_Varying
 
 	expectedAmount := sdk.NewInt(60 * 60 * 24) // 1 day in seconds * 1 per second
 
-	oneUSDCCoin := sdk.NewCoin(USDC, sdk.OneInt())
+	oneUUSDCCoin := sdk.NewCoin(USDC, sdk.OneInt())
 	// -1 for acceptable rounding error
 	expectedCoinsPerFullCharge := sdk.NewCoins(sdk.NewCoin(USDC, expectedAmount.Sub(sdk.OneInt())))
 	expectedHalfOfExpectedCoinsPerFullCharge := sdk.NewCoins(sdk.NewCoin(USDC, expectedAmount.QuoRaw(2).Sub(sdk.OneInt())))
@@ -3600,7 +3600,7 @@ func (s *KeeperTestSuite) TestFunctional_ClaimIncentices_LiquidityChange_Varying
 	collected, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, positionIdOne)
 	s.Require().NoError(err)
 	// Note, adding one since both expected amounts already subtract one (-2 in total)
-	s.Require().Equal(expectedCoinsPerFullCharge.Add(expectedHalfOfExpectedCoinsPerFullCharge.Add(oneUSDCCoin)...).String(), collected.String())
+	s.Require().Equal(expectedCoinsPerFullCharge.Add(expectedHalfOfExpectedCoinsPerFullCharge.Add(oneUUSDCCoin)...).String(), collected.String())
 }
 
 func (s *KeeperTestSuite) TestGetAllIncentiveRecordsForUptime() {
