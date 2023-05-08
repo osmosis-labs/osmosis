@@ -40,7 +40,15 @@ type HooksTestSuite struct {
 	chainA *osmosisibctesting.TestChain
 	chainB *osmosisibctesting.TestChain
 
+<<<<<<< HEAD
 	path *ibctesting.Path
+=======
+	pathAB *ibctesting.Path
+	pathAC *ibctesting.Path
+	pathBC *ibctesting.Path
+	// This is used to test cw20s. It will only get assigned in the cw20 test
+	pathCW20 *ibctesting.Path
+>>>>>>> 7ec4c2f0 (style: remove unused code in tests (#5108))
 }
 
 var oldConsensusMinFee = txfeetypes.ConsensusMinFee

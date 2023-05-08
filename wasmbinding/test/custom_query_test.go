@@ -17,16 +17,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/app"
 	"github.com/osmosis-labs/osmosis/v15/wasmbinding/bindings"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-)
-
-// we must pay this many uosmo for every pool we create
-var poolFee int64 = 1000000000
-
-var defaultFunds = sdk.NewCoins(
-	sdk.NewInt64Coin("uatom", 333000000),
-	sdk.NewInt64Coin("uosmo", 555000000+2*poolFee),
-	sdk.NewInt64Coin("ustar", 999000000),
 )
 
 func SetupCustomApp(t *testing.T, addr sdk.AccAddress) (*app.OsmosisApp, sdk.Context) {
@@ -95,13 +85,6 @@ func queryCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contrac
 	require.NoError(t, err)
 }
 
-func assertValidShares(t *testing.T, shares wasmvmtypes.Coin, poolID uint64) {
-	// sanity check: check the denom and ensure at least 18 decimal places
-	denom := fmt.Sprintf("gamm/pool/%d", poolID)
-	require.Equal(t, denom, shares.Denom)
-	require.Greater(t, len(shares.Amount), 18)
-}
-
 func storeReflectCode(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress) {
 	govKeeper := osmosis.GovKeeper
 	wasmCode, err := os.ReadFile("../testdata/osmo_reflect.wasm")
@@ -142,24 +125,4 @@ func fundAccount(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sd
 		coins,
 	)
 	require.NoError(t, err)
-}
-
-func preparePool(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress, funds []sdk.Coin) uint64 {
-	var assets []balancer.PoolAsset
-	for _, coin := range funds {
-		assets = append(assets, balancer.PoolAsset{
-			Weight: sdk.NewInt(100),
-			Token:  coin,
-		})
-	}
-
-	poolParams := balancer.PoolParams{
-		SwapFee: sdk.NewDec(0),
-		ExitFee: sdk.NewDec(0),
-	}
-
-	msg := balancer.NewMsgCreateBalancerPool(addr, poolParams, assets, "")
-	poolId, err := osmosis.PoolManagerKeeper.CreatePool(ctx, &msg)
-	require.NoError(t, err)
-	return poolId
 }

@@ -24,10 +24,14 @@ var (
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}
+<<<<<<< HEAD
 	defaultStableSwapPoolParams = stableswap.PoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}
+=======
+
+>>>>>>> 7ec4c2f0 (style: remove unused code in tests (#5108))
 	defaultScalingFactor  = []uint64{1, 1}
 	defaultFutureGovernor = ""
 

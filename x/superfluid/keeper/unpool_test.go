@@ -14,12 +14,15 @@ import (
 )
 
 var (
+<<<<<<< HEAD
 	defaultSwapFee    = sdk.MustNewDecFromStr("0.025")
 	defaultExitFee    = sdk.MustNewDecFromStr("0.025")
 	defaultPoolParams = balancer.PoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}
+=======
+>>>>>>> 7ec4c2f0 (style: remove unused code in tests (#5108))
 	defaultFutureGovernor = ""
 
 	// pool assets

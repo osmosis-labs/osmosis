@@ -8,7 +8,15 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/twap"
 	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
+<<<<<<< HEAD
 )
+=======
+
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+)
+
+var defaultPoolId uint64 = 1
+>>>>>>> 7ec4c2f0 (style: remove unused code in tests (#5108))
 
 // TestAfterPoolCreatedHook tests if internal tracking logic has been triggered correctly,
 // and the correct state entries have been created upon pool creation.
