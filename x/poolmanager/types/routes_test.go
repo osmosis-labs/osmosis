@@ -349,8 +349,7 @@ func TestIntermediateDenoms(t *testing.T) {
 				},
 			}),
 
-			// Note that we expect the function to "fail" quietly and
-			// simply return nil
+			// Note that we expect the function to fail quietly
 			expectedDenoms: nil,
 		},
 	}
