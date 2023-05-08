@@ -3535,7 +3535,7 @@ func (s *KeeperTestSuite) TestFunctional_ClaimIncentices_LiquidityChange_Varying
 	params.AuthorizedUptimes = []time.Duration{time.Nanosecond, testFullChargeDuration}
 	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
 
-	// Fund accounts
+	// Fund accounts twice because two positions are created.
 	s.FundAcc(defaultAddress, requiredBalances)
 	s.FundAcc(defaultAddress, requiredBalances)
 
