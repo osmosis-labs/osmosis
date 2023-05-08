@@ -32,12 +32,16 @@ func (msg MsgCreatePosition) ValidateBasic() error {
 		return InvalidLowerUpperTickError{LowerTick: msg.LowerTick, UpperTick: msg.UpperTick}
 	}
 
-	if !msg.TokenDesired0.IsValid() || msg.TokenDesired0.IsZero() {
-		return fmt.Errorf("Invalid coins (%s)", msg.TokenDesired0.String())
+	if msg.TokensProvided.Empty() {
+		return fmt.Errorf("Invalid coins (%s)", msg.TokensProvided.String())
 	}
 
-	if !msg.TokenDesired1.IsValid() || msg.TokenDesired1.IsZero() {
-		return fmt.Errorf("Invalid coins (%s)", msg.TokenDesired1.String())
+	if !msg.TokensProvided.IsValid() {
+		return fmt.Errorf("Invalid coins (%s)", msg.TokensProvided.String())
+	}
+
+	if len(msg.TokensProvided) > 2 {
+		return fmt.Errorf("Invalid coins (%s)", msg.TokensProvided.String())
 	}
 
 	if msg.TokenMinAmount0.IsNegative() {

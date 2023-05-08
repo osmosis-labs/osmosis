@@ -297,9 +297,8 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 
 			// we manually set position for CL to set spot price to correct value
 			if tc.setPositionForCLPool {
-				coin0 := sdk.NewCoin("eth", sdk.NewInt(1000000))
-				coin1 := sdk.NewCoin("usdc", sdk.NewInt(5000000000))
-				suite.FundAcc(suite.TestAccs[0], sdk.NewCoins(coin0, coin1))
+				coins := sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000)), sdk.NewCoin("usdc", sdk.NewInt(5000000000)))
+				suite.FundAcc(suite.TestAccs[0], coins)
 
 				clMsgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
 				_, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(suite.Ctx), &cltypes.MsgCreatePosition{
@@ -307,8 +306,7 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 					Sender:          suite.TestAccs[0].String(),
 					LowerTick:       int64(30545000),
 					UpperTick:       int64(31500000),
-					TokenDesired0:   coin0,
-					TokenDesired1:   coin1,
+					TokensProvided:  coins,
 					TokenMinAmount0: sdk.ZeroInt(),
 					TokenMinAmount1: sdk.ZeroInt(),
 				})
