@@ -214,7 +214,7 @@ func (s *KeeperTestSuite) TestPoolIToConcentratedPool() {
 	concentratedPool := s.PrepareConcentratedPool()
 	poolI, ok := concentratedPool.(poolmanagertypes.PoolI)
 	if !ok {
-		s.Fail("failed to cast pool to PoolI")
+		s.FailNow("failed to cast pool to PoolI")
 	}
 
 	// Ensure no error occurs when converting to ConcentratedPool
