@@ -18,6 +18,9 @@ var (
 // individually calling `TickToSqrtPrice` method.
 // Returns error if fails to calculate price.
 func TicksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, error) {
+	if lowerTick >= upperTick {
+		return sdk.Dec{}, sdk.Dec{}, types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
+	}
 	sqrtPriceUpperTick, err := TickToSqrtPrice(sdk.NewInt(upperTick))
 	if err != nil {
 		return sdk.Dec{}, sdk.Dec{}, err

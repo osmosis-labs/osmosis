@@ -9,7 +9,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	stableswap "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
@@ -27,7 +26,7 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 	tests := []struct {
 		name            string
 		poolCreationFee sdk.Coins
-		msg             balancertypes.MsgCreateBalancerPool
+		msg             balancer.MsgCreateBalancerPool
 		expectPass      bool
 	}{
 		{
@@ -436,7 +435,7 @@ func (suite *KeeperTestSuite) TestValidateCreatedPool() {
 		{
 			name:   "pool ID 1",
 			poolId: 1,
-			pool: &balancertypes.Pool{
+			pool: &balancer.Pool{
 				Address: types.NewPoolAddress(1).String(),
 				Id:      1,
 			},
@@ -444,7 +443,7 @@ func (suite *KeeperTestSuite) TestValidateCreatedPool() {
 		{
 			name:   "pool ID 309",
 			poolId: 309,
-			pool: &balancertypes.Pool{
+			pool: &balancer.Pool{
 				Address: types.NewPoolAddress(309).String(),
 				Id:      309,
 			},
@@ -452,7 +451,7 @@ func (suite *KeeperTestSuite) TestValidateCreatedPool() {
 		{
 			name:   "error: unexpected ID",
 			poolId: 1,
-			pool: &balancertypes.Pool{
+			pool: &balancer.Pool{
 				Address: types.NewPoolAddress(1).String(),
 				Id:      2,
 			},
@@ -461,7 +460,7 @@ func (suite *KeeperTestSuite) TestValidateCreatedPool() {
 		{
 			name:   "error: unexpected address",
 			poolId: 2,
-			pool: &balancertypes.Pool{
+			pool: &balancer.Pool{
 				Address: types.NewPoolAddress(1).String(),
 				Id:      2,
 			},

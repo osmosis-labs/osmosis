@@ -18,7 +18,6 @@ import (
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 type poolSetup struct {
@@ -342,7 +341,7 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 		name                    string
 		poolCoins               []sdk.Coins
 		poolFee                 []sdk.Dec
-		routes                  []poolmanagertypes.SwapAmountInRoute
+		routes                  []types.SwapAmountInRoute
 		incentivizedGauges      []uint64
 		tokenIn                 sdk.Coin
 		tokenOutMinAmount       sdk.Int
@@ -354,7 +353,7 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			name:      "One route: Swap - [foo -> bar], 1 percent fee",
 			poolCoins: []sdk.Coins{sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount))},
 			poolFee:   []sdk.Dec{defaultPoolSwapFee},
-			routes: []poolmanagertypes.SwapAmountInRoute{
+			routes: []types.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: bar,
@@ -370,7 +369,7 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 				sdk.NewCoins(sdk.NewCoin(bar, defaultInitPoolAmount), sdk.NewCoin(baz, defaultInitPoolAmount)), // pool 2.
 			},
 			poolFee: []sdk.Dec{defaultPoolSwapFee, defaultPoolSwapFee},
-			routes: []poolmanagertypes.SwapAmountInRoute{
+			routes: []types.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: bar,
@@ -582,7 +581,7 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 		name                    string
 		poolCoins               []sdk.Coins
 		poolFee                 []sdk.Dec
-		routes                  []poolmanagertypes.SwapAmountOutRoute
+		routes                  []types.SwapAmountOutRoute
 		incentivizedGauges      []uint64
 		tokenOut                sdk.Coin
 		tokenInMaxAmount        sdk.Int
@@ -594,7 +593,7 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 			name:      "One route: Swap - [foo -> bar], 1 percent fee",
 			poolCoins: []sdk.Coins{sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount))},
 			poolFee:   []sdk.Dec{defaultPoolSwapFee},
-			routes: []poolmanagertypes.SwapAmountOutRoute{
+			routes: []types.SwapAmountOutRoute{
 				{
 					PoolId:       1,
 					TokenInDenom: bar,
@@ -1189,7 +1188,7 @@ func (suite *KeeperTestSuite) makeGaugesIncentivized(incentivizedGauges []uint64
 	suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, distInfo)
 }
 
-func (suite *KeeperTestSuite) calcOutAmountAsSeparateSwaps(osmoFeeReduced bool, routes []poolmanagertypes.SwapAmountOutRoute, tokenOut sdk.Coin) sdk.Coin {
+func (suite *KeeperTestSuite) calcOutAmountAsSeparateSwaps(osmoFeeReduced bool, routes []types.SwapAmountOutRoute, tokenOut sdk.Coin) sdk.Coin {
 	cacheCtx, _ := suite.Ctx.CacheContext()
 	if osmoFeeReduced {
 		// extract route from swap
@@ -1229,7 +1228,7 @@ func (suite *KeeperTestSuite) calcOutAmountAsSeparateSwaps(osmoFeeReduced bool, 
 	}
 }
 
-func (suite *KeeperTestSuite) calcInAmountAsSeparateSwaps(osmoFeeReduced bool, routes []poolmanagertypes.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
+func (suite *KeeperTestSuite) calcInAmountAsSeparateSwaps(osmoFeeReduced bool, routes []types.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
 	cacheCtx, _ := suite.Ctx.CacheContext()
 	if osmoFeeReduced {
 		// extract route from swap
@@ -1709,7 +1708,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 		},
 		"error: duplicate split routes": {
 			routes: []types.SwapAmountInSplitRoute{
-
 				defaultSingleRouteTwoHops,
 				{
 					Pools: defaultSingleRouteTwoHops.Pools,
@@ -1911,7 +1909,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 
 		"error: duplicate split routes": {
 			routes: []types.SwapAmountOutSplitRoute{
-
 				defaultSingleRouteTwoHops,
 				{
 					Pools: defaultSingleRouteTwoHops.Pools,

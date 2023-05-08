@@ -45,6 +45,23 @@ func (e NotPositiveRequireAmountError) Error() string {
 	return fmt.Sprintf("Required amount should be positive. Got: %s", e.Amount)
 }
 
+type QualifyingLiquidityOrTimeElapsedNotPositiveError struct {
+	QualifyingLiquidity sdk.Dec
+	TimeElapsed         sdk.Dec
+}
+
+func (e QualifyingLiquidityOrTimeElapsedNotPositiveError) Error() string {
+	return fmt.Sprintf("Qualifying liquidity and time elapsed must both be positive. Got: QualifyingLiquidity (%s), timeElapsed (%s)", e.QualifyingLiquidity, e.TimeElapsed)
+}
+
+type TimeElapsedNotPositiveError struct {
+	TimeElapsed sdk.Dec
+}
+
+func (e TimeElapsedNotPositiveError) Error() string {
+	return fmt.Sprintf("Time elapsed must both be positive. Got: timeElapsed (%s)", e.TimeElapsed)
+}
+
 type PositionNotFoundError struct {
 	PoolId    uint64
 	LowerTick int64
@@ -62,6 +79,14 @@ type PositionIdNotFoundError struct {
 
 func (e PositionIdNotFoundError) Error() string {
 	return fmt.Sprintf("position not found. position id (%d)", e.PositionId)
+}
+
+type FeePositionNotFoundError struct {
+	PositionId uint64
+}
+
+func (e FeePositionNotFoundError) Error() string {
+	return fmt.Sprintf("position not found in fee accumulator. position id (%d)", e.PositionId)
 }
 
 type PoolNotFoundError struct {
@@ -730,4 +755,46 @@ type NotPositionOwnerError struct {
 
 func (e NotPositionOwnerError) Error() string {
 	return fmt.Sprintf("address (%s) is not the owner of position ID (%d)", e.Address, e.PositionId)
+}
+
+type PositionNotFullRangeError struct {
+	PositionId uint64
+	LowerTick  int64
+	UpperTick  int64
+}
+
+func (e PositionNotFullRangeError) Error() string {
+	return fmt.Sprintf("position ID (%d) is not a full range position, lower tick (%d), upper tick (%d)", e.PositionId, e.LowerTick, e.UpperTick)
+}
+
+type Amount0IsNegativeError struct {
+	Amount0 sdk.Int
+}
+
+func (e Amount0IsNegativeError) Error() string {
+	return fmt.Sprintf("amount0 (%s) is negative", e.Amount0)
+}
+
+type Amount1IsNegativeError struct {
+	Amount1 sdk.Int
+}
+
+func (e Amount1IsNegativeError) Error() string {
+	return fmt.Sprintf("amount1 (%s) is negative", e.Amount1)
+}
+
+type ModifySamePositionAccumulatorError struct {
+	PositionAccName string
+}
+
+func (e ModifySamePositionAccumulatorError) Error() string {
+	return fmt.Sprintf("attempted to modify the same accumulator with name %s", e.PositionAccName)
+}
+
+type NumCoinsError struct {
+	NumCoins int
+}
+
+func (e NumCoinsError) Error() string {
+	return fmt.Sprintf("num coins provided (%d) must be 2 for a full range position", e.NumCoins)
 }

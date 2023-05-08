@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -102,7 +101,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 		sdk.NewCoin("randToken1", sdk.NewInt(100)),
 	)
 	suite.FundAcc(defaultAddr, coins)
-	defaultPoolParams := balancertypes.PoolParams{
+	defaultPoolParams := balancer.PoolParams{
 		SwapFee: sdk.NewDec(0),
 		ExitFee: sdk.NewDec(0),
 	}
@@ -113,7 +112,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 
 		suite.FundAcc(defaultAddr, coins)
 
-		poolAssets := []balancertypes.PoolAsset{
+		poolAssets := []balancer.PoolAsset{
 			{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin(prevRandToken, sdk.NewInt(10)),

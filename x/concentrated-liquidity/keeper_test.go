@@ -1,6 +1,7 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	DefaultMinTick, DefaultMaxTick                 = cltypes.MinTick, cltypes.MaxTick
+	DefaultMinTick, DefaultMaxTick                 = types.MinTick, types.MaxTick
 	DefaultLowerPrice                              = sdk.NewDec(4545)
 	DefaultLowerTick                               = int64(30545000)
 	DefaultUpperPrice                              = sdk.NewDec(5500)
@@ -52,6 +52,7 @@ var (
 	DefaultExponentOverlappingPositionUpperTick, _ = math.PriceToTickRoundDown(sdk.NewDec(4999), DefaultTickSpacing)
 	BAR                                            = "bar"
 	FOO                                            = "foo"
+	InsufficientFundsError                         = fmt.Errorf("insufficient funds")
 )
 
 type KeeperTestSuite struct {
@@ -279,7 +280,7 @@ func (s *KeeperTestSuite) validatePositionFeeAccUpdate(ctx sdk.Context, poolId u
 	accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, poolId)
 	s.Require().NoError(err)
 
-	accumulatorPosition, err := accum.GetPositionSize(cltypes.KeyFeePositionAccumulator(positionId))
+	accumulatorPosition, err := accum.GetPositionSize(types.KeyFeePositionAccumulator(positionId))
 	s.Require().NoError(err)
 
 	s.Require().Equal(liquidity.String(), accumulatorPosition.String())
@@ -323,7 +324,7 @@ func (s *KeeperTestSuite) crossTickAndChargeFee(poolId uint64, tickIndexToCross 
 func (s *KeeperTestSuite) validatePositionFeeGrowth(poolId uint64, positionId uint64, expectedUnclaimedRewards sdk.DecCoins) {
 	accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, poolId)
 	s.Require().NoError(err)
-	positionRecord, err := accum.GetPosition(cltypes.KeyFeePositionAccumulator(positionId))
+	positionRecord, err := accum.GetPosition(types.KeyFeePositionAccumulator(positionId))
 	s.Require().NoError(err)
 	if expectedUnclaimedRewards.IsZero() {
 		s.Require().Equal(expectedUnclaimedRewards, positionRecord.UnclaimedRewards)

@@ -5,8 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -260,15 +262,15 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 func (s *KeeperTestSuite) TestGetPosition() {
 
 	tests := []struct {
-		name             string
-		positionId       uint64
-		expectedPosition sdk.Dec
-		expectedErr      error
+		name                      string
+		positionId                uint64
+		expectedPositionLiquidity sdk.Dec
+		expectedErr               error
 	}{
 		{
-			name:             "Get position info on existing pool and existing position",
-			positionId:       DefaultPositionId,
-			expectedPosition: DefaultLiquidityAmt,
+			name:                      "Get position info on existing pool and existing position",
+			positionId:                DefaultPositionId,
+			expectedPositionLiquidity: DefaultLiquidityAmt,
 		},
 		{
 			name:        "Get position info on a non-existent positionId",
@@ -282,6 +284,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			// Init suite for each test.
 			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
+
 			// Create a default CL pool
 			s.PrepareConcentratedPool()
 
@@ -289,14 +292,14 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, DefaultPositionId)
 
 			// System under test
-			positionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, test.positionId)
+			position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, test.positionId)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, test.expectedErr)
-				s.Require().Equal(sdk.Dec{}, positionLiquidity)
+				s.Require().Equal(sdk.Dec{}, position.Liquidity)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Equal(test.expectedPosition, positionLiquidity)
+				s.Require().Equal(test.expectedPositionLiquidity, position.Liquidity)
 			}
 		})
 	}
@@ -321,29 +324,66 @@ func (s *KeeperTestSuite) TestGetNextPositionAndIncrement() {
 	s.Require().Equal(positionId, uint64(3))
 }
 
-func (s *KeeperTestSuite) TestHasAnyPositionForPool() {
-	// Init suite for each test.
-	s.SetupTest()
-	s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
-	// Create a default CL pool
-	pool := s.PrepareConcentratedPool()
+func (s *KeeperTestSuite) TestIsPositionOwner() {
+	actualOwner := s.TestAccs[0]
+	nonOwner := s.TestAccs[1]
 
-	hasPosition, err := s.App.ConcentratedLiquidityKeeper.HasAnyPositionForPool(s.Ctx, pool.GetId())
-	s.Require().NoError(err)
-	s.Require().False(hasPosition)
+	tests := []struct {
+		name         string
+		ownerToQuery sdk.AccAddress
+		poolId       uint64
+		positionId   uint64
+		isOwner      bool
+	}{
+		{
+			name:         "Happy path",
+			ownerToQuery: actualOwner,
+			poolId:       1,
+			positionId:   DefaultPositionId,
+			isOwner:      true,
+		},
+		{
+			name:         "query non owner",
+			ownerToQuery: nonOwner,
+			poolId:       1,
+			positionId:   DefaultPositionId,
+			isOwner:      false,
+		},
+		{
+			name:         "different pool ID, not the owner",
+			ownerToQuery: actualOwner,
+			poolId:       2,
+			positionId:   DefaultPositionId,
+			isOwner:      false,
+		},
+		{
+			name:         "different position ID, not the owner",
+			ownerToQuery: actualOwner,
+			poolId:       1,
+			positionId:   DefaultPositionId + 1,
+			isOwner:      false,
+		},
+	}
 
-	// Set up a default initialized position
-	s.SetupDefaultPosition(pool.GetId())
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			// Init suite for each test.
+			s.SetupTest()
+			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
-	// now try checking if the pool has position
-	hasPosition, err = s.App.ConcentratedLiquidityKeeper.HasAnyPositionForPool(s.Ctx, pool.GetId())
-	s.Require().NoError(err)
-	s.Require().True(hasPosition)
+			// Create a default CL pool.
+			s.PrepareConcentratedPool()
 
-	// try getting from invalid pool
-	hasPosition, err = s.App.ConcentratedLiquidityKeeper.HasAnyPositionForPool(s.Ctx, 10)
-	s.Require().NoError(err)
-	s.Require().False(hasPosition)
+			// Set up a default initialized position.
+			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, actualOwner, DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, DefaultPositionId)
+			s.Require().NoError(err)
+
+			// System under test.
+			isOwner, err := s.App.ConcentratedLiquidityKeeper.IsPositionOwner(s.Ctx, test.ownerToQuery, test.poolId, test.positionId)
+			s.Require().Equal(test.isOwner, isOwner)
+			s.Require().NoError(err)
+		})
+	}
 }
 
 func (s *KeeperTestSuite) TestGetAllUserPositions() {
@@ -762,7 +802,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 				totalLiquidity = totalLiquidity.Add(liquidityCreated)
 			}
 
-			// Increase block time by the fully charged duration
+			// Increase block time by the fully charged duration to make sure previously added positions are charged.
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration))
 
 			// Set up uncharged positions
@@ -771,8 +811,8 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 				s.Require().NoError(err)
 			}
 
-			// Increase block time by one more day
-			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24))
+			// Increase block time by one more day - 1 ns to ensure that the previously added positions are not fully charged.
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration - time.Nanosecond))
 
 			// First run non mutative validation and check results
 			poolId, lowerTick, upperTick, liquidity, err := s.App.ConcentratedLiquidityKeeper.ValidatePositionsAndGetTotalLiquidity(s.Ctx, test.accountCallingMigration, test.positionIdsToMigrate)
@@ -920,12 +960,18 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 
 				s.Require().Equal(sdk.Coins(nil), claimedRewards)
 				s.Require().Equal(sdk.Coins(nil), claimedRewards)
+
+				// Check that cannot claim rewards for the old positions.
+				for _, positionId := range test.positionIdsToMigrate {
+					_, _, err := s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, positionId)
+					s.Require().Error(err)
+				}
 			}
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestHasAnyPosition() {
+func (s *KeeperTestSuite) TestHasAnyPositionForPool() {
 	s.SetupTest()
 	defaultAddress := s.TestAccs[0]
 	DefaultJoinTime := s.Ctx.BlockTime()
@@ -1022,30 +1068,274 @@ func (s *KeeperTestSuite) TestHasAnyPosition() {
 	}
 }
 
-func (s *KeeperTestSuite) TestCreateFullRangePosition() {
+// This test specifically tests that fee collection works as expected
+// after fungifying positions.
+func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
+	// Init suite for the test.
 	s.SetupTest()
-	defaultAddress := s.TestAccs[0]
-	DefaultJoinTime := s.Ctx.BlockTime()
+
+	const (
+		numPositions           = 3
+		testFullChargeDuration = time.Hour * 24
+		swapAmount             = 1_000_000
+	)
+
+	var (
+		defaultAddress   = s.TestAccs[0]
+		defaultBlockTime = time.Unix(1, 1).UTC()
+		swapFee          = sdk.NewDecWithPrec(2, 3)
+	)
+
+	expectedPositionIds := make([]uint64, numPositions)
+	for i := 0; i < numPositions; i++ {
+		expectedPositionIds[i] = uint64(i + 1)
+	}
+
+	s.TestAccs = apptesting.CreateRandomAccounts(5)
+	s.Ctx = s.Ctx.WithBlockTime(defaultBlockTime)
+	totalPositionsToCreate := sdk.NewInt(int64(numPositions))
+	requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0.Mul(totalPositionsToCreate)), sdk.NewCoin(USDC, DefaultAmt1.Mul(totalPositionsToCreate)))
+
+	// Set test authorized uptime params.
+	params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+	params.AuthorizedUptimes = []time.Duration{time.Nanosecond, testFullChargeDuration}
+	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
+
+	// Fund account
+	s.FundAcc(defaultAddress, requiredBalances)
+
+	// Create CL pool
+	s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, swapFee)
+
+	// Set incentives for pool to ensure accumulators work correctly
+	s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, DefaultIncentiveRecords)
+
+	// Set up fully charged positions
+	totalLiquidity := sdk.ZeroDec()
+	for i := 0; i < numPositions; i++ {
+		_, _, _, liquidityCreated, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoin0.Amount, DefaultCoin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+		s.Require().NoError(err)
+		totalLiquidity = totalLiquidity.Add(liquidityCreated)
+	}
+
+	// Perform a swap to earn fees
+	swapAmountIn := sdk.NewCoin(ETH, sdk.NewInt(swapAmount))
+	expectedFee := swapAmountIn.Amount.ToDec().Mul(swapFee)
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(swapAmountIn))
+	s.swapAndTrackXTimesInARow(defaultPoolId, swapAmountIn, USDC, types.MinSpotPrice, 1)
+
+	// Increase block time by the fully charged duration
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration))
+
+	// First run non mutative validation and check results
+	newPositionId, err := s.App.ConcentratedLiquidityKeeper.FungifyChargedPosition(s.Ctx, defaultAddress, expectedPositionIds)
+	s.Require().NoError(err)
+
+	// Claim fees
+	collected, err := s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, defaultAddress, newPositionId)
+	s.Require().NoError(err)
+
+	// Validate that the correct fee amount was collected.
+	s.Require().Equal(expectedFee, collected.AmountOf(swapAmountIn.Denom).ToDec())
+
+	// Check that cannot claim again.
+	collected, err = s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, defaultAddress, newPositionId)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.Coins(nil), collected)
+
+	feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, defaultPoolId)
+	s.Require().NoError(err)
+
+	// Check that cannot claim old positions
+	for _, oldPositionId := range expectedPositionIds {
+		collected, err = s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, defaultAddress, oldPositionId)
+		s.Require().Error(err)
+		s.Require().Equal(sdk.Coins{}, collected)
+
+		hasPosition := s.App.ConcentratedLiquidityKeeper.HasPosition(s.Ctx, oldPositionId)
+		s.Require().False(hasPosition)
+
+		hasFeePositionTracker, err := feeAccum.HasPosition(types.KeyFeePositionAccumulator(oldPositionId))
+		s.Require().NoError(err)
+		s.Require().False(hasFeePositionTracker)
+	}
+}
+
+func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
+	// Init suite for the test.
+	s.SetupTest()
+
+	const (
+		numPositions           = 3
+		testFullChargeDuration = 24 * time.Hour
+	)
+
+	var (
+		defaultAddress   = s.TestAccs[0]
+		defaultBlockTime = time.Unix(1, 1).UTC()
+		swapFee          = sdk.NewDecWithPrec(2, 3)
+	)
+
+	expectedPositionIds := make([]uint64, numPositions)
+	for i := 0; i < numPositions; i++ {
+		expectedPositionIds[i] = uint64(i + 1)
+	}
+
+	s.TestAccs = apptesting.CreateRandomAccounts(5)
+	s.Ctx = s.Ctx.WithBlockTime(defaultBlockTime)
+	totalPositionsToCreate := sdk.NewInt(int64(numPositions))
+	requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0.Mul(totalPositionsToCreate)), sdk.NewCoin(USDC, DefaultAmt1.Mul(totalPositionsToCreate)))
+
+	// Set test authorized uptime params.
+	params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+	params.AuthorizedUptimes = []time.Duration{time.Nanosecond, testFullChargeDuration}
+	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
+
+	// Fund accounts
+	s.FundAcc(defaultAddress, requiredBalances)
+
+	// Create CL pool
+	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, swapFee)
+
+	// an error of 1 for each position
+	roundingError := int64(numPositions)
+	roundingTolerance := osmomath.ErrTolerance{
+		AdditiveTolerance: sdk.NewDec(roundingError),
+		RoundingDir:       osmomath.RoundDown,
+	}
+	expectedAmount := sdk.NewInt(60 * 60 * 24) // 1 day in seconds * 1 per second
+
+	s.FundAcc(pool.GetIncentivesAddress(), sdk.NewCoins(sdk.NewCoin(USDC, expectedAmount)))
+	// Set incentives for pool to ensure accumulators work correctly
+	testIncentiveRecord := types.IncentiveRecord{
+		PoolId:               1,
+		IncentiveDenom:       USDC,
+		IncentiveCreatorAddr: s.TestAccs[0].String(),
+		IncentiveRecordBody: types.IncentiveRecordBody{
+			RemainingAmount: sdk.NewDec(1000000000000000000),
+			EmissionRate:    sdk.NewDec(1), // 1 per second
+			StartTime:       defaultBlockTime,
+		},
+		MinUptime: time.Nanosecond,
+	}
+	s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, []types.IncentiveRecord{testIncentiveRecord})
+
+	// Set up fully charged positions
+	totalLiquidity := sdk.ZeroDec()
+	for i := 0; i < numPositions; i++ {
+		_, _, _, liquidityCreated, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoin0.Amount, DefaultCoin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+		s.Require().NoError(err)
+		totalLiquidity = totalLiquidity.Add(liquidityCreated)
+	}
+
+	// Increase block time by the fully charged duration
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration))
+
+	// sync accumulators
+	err := s.App.ConcentratedLiquidityKeeper.UpdateUptimeAccumulatorsToNow(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+
+	claimableIncentives := sdk.NewCoins()
+	for i := 0; i < numPositions; i++ {
+		positionIncentices, forfeitedIncentives, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, uint64(i+1))
+		s.Require().NoError(err)
+		s.Require().Equal(sdk.Coins(nil), forfeitedIncentives)
+		claimableIncentives = claimableIncentives.Add(positionIncentices...)
+	}
+
+	actualClaimedAmount := claimableIncentives.AmountOf(USDC)
+	s.Require().Equal(0, roundingTolerance.Compare(expectedAmount, actualClaimedAmount), "expected: %s, got: %s", expectedAmount, actualClaimedAmount)
+
+	// System under test
+	newPositionId, err := s.App.ConcentratedLiquidityKeeper.FungifyChargedPosition(s.Ctx, defaultAddress, expectedPositionIds)
+	s.Require().NoError(err)
+
+	// Claim fees
+	collected, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, newPositionId)
+	s.Require().NoError(err)
+
+	// Validate that the correct incentives amount was collected.
+	actualClaimedAmount = collected.AmountOf(USDC)
+	s.Require().Equal(1, len(collected))
+	s.Require().Equal(0, roundingTolerance.Compare(expectedAmount, actualClaimedAmount), "expected: %s, got: %s", expectedAmount, actualClaimedAmount)
+
+	// Check that cannot claim again.
+	collected, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, newPositionId)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.Coins(nil), collected)
+
+	// Check that cannot claim old positions
+	for i := 0; i < numPositions; i++ {
+		collected, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, uint64(i+1))
+		s.Require().Error(err)
+		s.Require().Equal(sdk.Coins{}, collected)
+	}
+}
+
+func (s *KeeperTestSuite) TestCreateFullRangePosition() {
+	var (
+		positionId         uint64
+		liquidity          sdk.Dec
+		concentratedLockId uint64
+		err                error
+	)
 	defaultPositionCoins := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
+	invalidCoinsAmount := sdk.NewCoins(DefaultCoin0)
+	invalidCoin0Denom := sdk.NewCoins(sdk.NewCoin("invalidDenom", sdk.NewInt(1000000000000000000)), DefaultCoin1)
+	invalidCoin1Denom := sdk.NewCoins(DefaultCoin0, sdk.NewCoin("invalidDenom", sdk.NewInt(1000000000000000000)))
 
 	tests := []struct {
 		name                  string
 		remainingLockDuration time.Duration
+		coinsForPosition      sdk.Coins
 		isLocked              bool
 		isUnlocking           bool
+		expectedErr           error
 	}{
 		{
-			name: "full range position",
+			name:             "full range position",
+			coinsForPosition: defaultPositionCoins,
 		},
 		{
 			name:                  "full range position: locked",
 			remainingLockDuration: 24 * time.Hour * 14,
+			coinsForPosition:      defaultPositionCoins,
 			isLocked:              true,
 		},
 		{
 			name:                  "full range position: unlocking",
 			remainingLockDuration: 24 * time.Hour,
+			coinsForPosition:      defaultPositionCoins,
 			isUnlocking:           true,
+		},
+		{
+			name:             "err: only one asset provided for a full range",
+			coinsForPosition: invalidCoinsAmount,
+			expectedErr:      types.NumCoinsError{NumCoins: 1},
+		},
+		{
+			name:                  "err: only one asset provided for a full range locked",
+			remainingLockDuration: 24 * time.Hour * 14,
+			coinsForPosition:      invalidCoinsAmount,
+			isLocked:              true,
+			expectedErr:           types.NumCoinsError{NumCoins: 1},
+		},
+		{
+			name:                  "err: only one asset provided for a full range unlocking",
+			remainingLockDuration: 24 * time.Hour,
+			coinsForPosition:      invalidCoinsAmount,
+			isUnlocking:           true,
+			expectedErr:           types.NumCoinsError{NumCoins: 1},
+		},
+		{
+			name:             "err: wrong denom 0 provided for a full range",
+			coinsForPosition: invalidCoin0Denom,
+			expectedErr:      types.Amount0IsNegativeError{Amount0: sdk.ZeroInt()},
+		},
+		{
+			name:             "err: wrong denom 1 provided for a full range",
+			coinsForPosition: invalidCoin1Denom,
+			expectedErr:      types.Amount1IsNegativeError{Amount1: sdk.ZeroInt()},
 		},
 	}
 
@@ -1054,28 +1344,30 @@ func (s *KeeperTestSuite) TestCreateFullRangePosition() {
 		s.Run(test.name, func() {
 			// Init suite for each test.
 			s.SetupTest()
+			DefaultJoinTime := s.Ctx.BlockTime()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
-			// Create a default CL pools
-			clPool := s.PrepareConcentratedPool()
-
-			var (
-				positionId         uint64
-				liquidity          sdk.Dec
-				concentratedLockId uint64
-				err                error
-			)
+			// Create a default CL pool
+			// We prepare it with a position already registered to prevent any oddities that we are not testing for here.
+			clPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(ETH, USDC)
 
 			// Fund the owner account
-			s.FundAcc(defaultAddress, defaultPositionCoins)
+			defaultAddress := s.TestAccs[0]
+			s.FundAcc(defaultAddress, test.coinsForPosition)
 
 			// System under test
 			if test.isLocked {
-				positionId, _, _, liquidity, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool.GetId(), defaultAddress, defaultPositionCoins, test.remainingLockDuration)
+				positionId, _, _, liquidity, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool.GetId(), defaultAddress, test.coinsForPosition, test.remainingLockDuration)
 			} else if test.isUnlocking {
-				positionId, _, _, liquidity, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, clPool.GetId(), defaultAddress, defaultPositionCoins, test.remainingLockDuration)
+				positionId, _, _, liquidity, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, clPool.GetId(), defaultAddress, test.coinsForPosition, test.remainingLockDuration)
 			} else {
-				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), defaultAddress, defaultPositionCoins)
+				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), defaultAddress, test.coinsForPosition)
+			}
+
+			if test.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, test.expectedErr.Error())
+				return
 			}
 
 			s.Require().NoError(err)
@@ -1105,6 +1397,7 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 		owner                   sdk.AccAddress
 		remainingLockDuration   time.Duration
 		createFullRangePosition bool
+		expectedErr             error
 	}{
 		{
 			name:                    "2 week lock",
@@ -1117,6 +1410,13 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 			owner:                   defaultAddress,
 			createFullRangePosition: true,
 			remainingLockDuration:   24 * time.Hour,
+		},
+		{
+			name:                    "err: not a full range position",
+			owner:                   defaultAddress,
+			createFullRangePosition: false,
+			remainingLockDuration:   24 * time.Hour,
+			expectedErr:             types.PositionNotFullRangeError{PositionId: 1, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick},
 		},
 	}
 
@@ -1140,13 +1440,25 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 				var err error
 				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), test.owner, defaultPositionCoins)
 				s.Require().NoError(err)
+			} else {
+				var err error
+				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), test.owner, defaultPositionCoins[0].Amount, defaultPositionCoins[1].Amount, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				s.Require().NoError(err)
 			}
 
 			lockupModuleAccountBalancePre := s.App.LockupKeeper.GetModuleBalance(s.Ctx)
 
 			// System under test
-			concentratedLockId, underlyingLiquidityTokenized, err := s.App.ConcentratedLiquidityKeeper.MintSharesLockAndUpdate(s.Ctx, clPool.GetId(), positionId, test.owner, test.remainingLockDuration, liquidity)
+			concentratedLockId, underlyingLiquidityTokenized, err := s.App.ConcentratedLiquidityKeeper.MintSharesLockAndUpdate(s.Ctx, clPool.GetId(), positionId, test.owner, test.remainingLockDuration)
+			if test.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, test.expectedErr)
+				return
+			}
 			s.Require().NoError(err)
+
+			// Check that the underlying liquidity tokenized is equal to the liquidity of the position
+			s.Require().Equal(liquidity.TruncateInt().String(), underlyingLiquidityTokenized[0].Amount.String())
 
 			lockupModuleAccountBalancePost := s.App.LockupKeeper.GetModuleBalance(s.Ctx)
 
@@ -1173,6 +1485,239 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 	}
 }
 
+func (s *KeeperTestSuite) TestPositionHasActiveUnderlyingLock() {
+	defaultLockDuration := 24 * time.Hour
+	clPool := s.PrepareConcentratedPool()
+	owner := s.TestAccs[0]
+	defaultPositionCoins := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
+
+	type testParams struct {
+		name                                 string
+		createPosition                       func(s *KeeperTestSuite) (uint64, uint64)
+		expectedHasActiveLock                bool
+		expectedHasActiveLockAfterTimeUpdate bool
+		expectedLockError                    bool
+		expectedPositionLockID               uint64
+		expectedGetPositionLockIdErr         bool
+	}
+
+	tests := []testParams{
+		{
+			name: "position with lock locked",
+			createPosition: func(s *KeeperTestSuite) (uint64, uint64) {
+				s.FundAcc(owner, defaultPositionCoins)
+				positionID, _, _, _, _, concentratedLockID, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(
+					s.Ctx, clPool.GetId(), owner, defaultPositionCoins, defaultLockDuration)
+				s.Require().NoError(err)
+				return positionID, concentratedLockID
+			},
+			expectedHasActiveLock:                true, // lock starts as active
+			expectedHasActiveLockAfterTimeUpdate: true, // since lock is locked, it remains active after time update
+			expectedLockError:                    false,
+			expectedPositionLockID:               1,
+			expectedGetPositionLockIdErr:         false,
+		},
+		{
+			name: "position with lock unlocking",
+			createPosition: func(s *KeeperTestSuite) (uint64, uint64) {
+				s.FundAcc(owner, defaultPositionCoins)
+				positionID, _, _, _, _, concentratedLockID, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(
+					s.Ctx, clPool.GetId(), owner, defaultPositionCoins, defaultLockDuration)
+				s.Require().NoError(err)
+				return positionID, concentratedLockID
+			},
+			expectedHasActiveLock:                true,  // lock starts as active
+			expectedHasActiveLockAfterTimeUpdate: false, // since lock is unlocking, it should no longer be active after time update
+			expectedLockError:                    false,
+			expectedPositionLockID:               2,
+			expectedGetPositionLockIdErr:         false,
+		},
+		{
+			name: "position without lock",
+			createPosition: func(s *KeeperTestSuite) (uint64, uint64) {
+				s.FundAcc(owner, defaultPositionCoins)
+				positionID, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(
+					s.Ctx, clPool.GetId(), owner, defaultPositionCoins)
+				s.Require().NoError(err)
+				return positionID, 0
+			},
+			expectedHasActiveLock:                false,
+			expectedHasActiveLockAfterTimeUpdate: false,
+			expectedLockError:                    true,
+			expectedPositionLockID:               0,
+			expectedGetPositionLockIdErr:         true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			positionID, lockID := tc.createPosition(s)
+
+			retrievedLockID, err := s.App.ConcentratedLiquidityKeeper.GetLockIdFromPositionId(s.Ctx, positionID)
+			if tc.expectedLockError {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(lockID, retrievedLockID)
+			}
+
+			// System under test (non mutative)
+			hasActiveLockInState, retrievedLockID, err := s.App.ConcentratedLiquidityKeeper.PositionHasActiveUnderlyingLock(s.Ctx, positionID)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedHasActiveLock, hasActiveLockInState)
+			s.Require().Equal(tc.expectedPositionLockID, retrievedLockID)
+
+			// Position ID to lock ID mapping should not change
+			retrievedPositionID, err := s.App.ConcentratedLiquidityKeeper.GetPositionIdToLockId(s.Ctx, lockID)
+			if tc.expectedGetPositionLockIdErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(positionID, retrievedPositionID)
+			}
+
+			// Move time forward by the lock duration
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(defaultLockDuration + 1))
+
+			// System under test (non mutative)
+			hasActiveLockInState, retrievedLockID, err = s.App.ConcentratedLiquidityKeeper.PositionHasActiveUnderlyingLock(s.Ctx, positionID)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedHasActiveLockAfterTimeUpdate, hasActiveLockInState)
+			s.Require().Equal(tc.expectedPositionLockID, retrievedLockID)
+
+			// Position ID to lock ID mapping should not change, even though underlying lock might be mature
+			retrievedPositionID, err = s.App.ConcentratedLiquidityKeeper.GetPositionIdToLockId(s.Ctx, lockID)
+			if tc.expectedGetPositionLockIdErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(positionID, retrievedPositionID)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestPositionHasActiveUnderlyingLockAndUpdate() {
+	defaultLockDuration := 24 * time.Hour
+	clPool := s.PrepareConcentratedPool()
+	owner := s.TestAccs[0]
+	defaultPositionCoins := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
+
+	type testParams struct {
+		name                                        string
+		createPosition                              func(s *KeeperTestSuite) (uint64, uint64)
+		expectedHasActiveLock                       bool
+		expectedHasActiveLockAfterTimeUpdate        bool
+		expectedLockError                           bool
+		expectedPositionLockID                      uint64
+		expectedPositionLockIDAfterTimeUpdate       uint64
+		expectedGetPositionLockIdErr                bool
+		expectedGetPositionLockIdErrAfterTimeUpdate bool
+	}
+
+	tests := []testParams{
+		{
+			name: "position with lock locked",
+			createPosition: func(s *KeeperTestSuite) (uint64, uint64) {
+				s.FundAcc(owner, defaultPositionCoins)
+				positionID, _, _, _, _, concentratedLockID, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(
+					s.Ctx, clPool.GetId(), owner, defaultPositionCoins, defaultLockDuration)
+				s.Require().NoError(err)
+				return positionID, concentratedLockID
+			},
+			expectedHasActiveLock:                       true, // lock starts as active
+			expectedHasActiveLockAfterTimeUpdate:        true, // since lock is locked, it remains active after time update
+			expectedLockError:                           false,
+			expectedPositionLockID:                      1,
+			expectedPositionLockIDAfterTimeUpdate:       1, // since it stays locked, the mutative method wont change the underlying lock ID
+			expectedGetPositionLockIdErr:                false,
+			expectedGetPositionLockIdErrAfterTimeUpdate: false,
+		},
+		{
+			name: "position with lock unlocking",
+			createPosition: func(s *KeeperTestSuite) (uint64, uint64) {
+				s.FundAcc(owner, defaultPositionCoins)
+				positionID, _, _, _, _, concentratedLockID, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(
+					s.Ctx, clPool.GetId(), owner, defaultPositionCoins, defaultLockDuration)
+				s.Require().NoError(err)
+				return positionID, concentratedLockID
+			},
+			expectedHasActiveLock:                       true,  // lock starts as active
+			expectedHasActiveLockAfterTimeUpdate:        false, // since lock is unlocking, it should no longer be active after time update
+			expectedLockError:                           false,
+			expectedPositionLockID:                      2,
+			expectedPositionLockIDAfterTimeUpdate:       0, // since it becomes unlocked, the mutative method will change the underlying lock ID to 0
+			expectedGetPositionLockIdErr:                false,
+			expectedGetPositionLockIdErrAfterTimeUpdate: true, // since it becomes unlocked, the mutative method will change the underlying lock ID to 0 and this now errors
+		},
+		{
+			name: "position without lock",
+			createPosition: func(s *KeeperTestSuite) (uint64, uint64) {
+				s.FundAcc(owner, defaultPositionCoins)
+				positionID, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(
+					s.Ctx, clPool.GetId(), owner, defaultPositionCoins)
+				s.Require().NoError(err)
+				return positionID, 0
+			},
+			expectedHasActiveLock:                       false,
+			expectedHasActiveLockAfterTimeUpdate:        false,
+			expectedLockError:                           true,
+			expectedPositionLockID:                      0,
+			expectedPositionLockIDAfterTimeUpdate:       0,
+			expectedGetPositionLockIdErr:                true,
+			expectedGetPositionLockIdErrAfterTimeUpdate: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			positionID, lockID := tc.createPosition(s)
+
+			retrievedLockID, err := s.App.ConcentratedLiquidityKeeper.GetLockIdFromPositionId(s.Ctx, positionID)
+			if tc.expectedLockError {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(lockID, retrievedLockID)
+			}
+
+			// System under test (mutative)
+			hasActiveLockInState, retrievedLockID, err := s.App.ConcentratedLiquidityKeeper.PositionHasActiveUnderlyingLockAndUpdate(s.Ctx, positionID)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedHasActiveLock, hasActiveLockInState)
+			s.Require().Equal(tc.expectedPositionLockID, retrievedLockID)
+
+			// Position ID to lock ID mapping should not change
+			retrievedPositionID, err := s.App.ConcentratedLiquidityKeeper.GetPositionIdToLockId(s.Ctx, lockID)
+			if tc.expectedGetPositionLockIdErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(positionID, retrievedPositionID)
+			}
+
+			// Move time forward by the lock duration
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(defaultLockDuration + 1))
+
+			// System under test (mutative)
+			hasActiveLockInState, retrievedLockID, err = s.App.ConcentratedLiquidityKeeper.PositionHasActiveUnderlyingLockAndUpdate(s.Ctx, positionID)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedHasActiveLockAfterTimeUpdate, hasActiveLockInState)
+			s.Require().Equal(tc.expectedPositionLockIDAfterTimeUpdate, retrievedLockID)
+
+			// Position ID to lock ID mapping should not change, even though underlying lock might be mature
+			retrievedPositionID, err = s.App.ConcentratedLiquidityKeeper.GetPositionIdToLockId(s.Ctx, lockID)
+			s.Require().Equal(tc.expectedPositionLockIDAfterTimeUpdate, retrievedPositionID)
+			if tc.expectedGetPositionLockIdErrAfterTimeUpdate {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+			}
+		})
+	}
+}
+
+// Tests Set, Get, and Remove methods for positionId -> lockId mappings
 func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	// Init suite for each test.
 	s.SetupTest()
@@ -1196,10 +1741,10 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	s.Require().NoError(err)
 	s.Require().Equal(concentratedLockId, retrievedLockId)
 
-	// Check if position has lock in state, should be true
-	hasLockInState, err := s.App.ConcentratedLiquidityKeeper.PositionHasUnderlyingLockInState(s.Ctx, positionId)
+	// Check if lock has position in state
+	retrievedPositionId, err := s.App.ConcentratedLiquidityKeeper.GetPositionIdToLockId(s.Ctx, retrievedLockId)
 	s.Require().NoError(err)
-	s.Require().True(hasLockInState)
+	s.Require().Equal(positionId, retrievedPositionId)
 
 	// Create a position without a lock
 	positionId, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), owner, defaultPositionCoins)
@@ -1208,11 +1753,6 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	retrievedLockId, err = s.App.ConcentratedLiquidityKeeper.GetLockIdFromPositionId(s.Ctx, positionId)
 	s.Require().Error(err)
 	s.Require().Equal(uint64(0), retrievedLockId)
-
-	// Check if position has lock in state, should be false
-	hasLockInState, err = s.App.ConcentratedLiquidityKeeper.PositionHasUnderlyingLockInState(s.Ctx, positionId)
-	s.Require().NoError(err)
-	s.Require().False(hasLockInState)
 
 	// Set the position to have a lockId (despite it not actually having a lock)
 	s.App.ConcentratedLiquidityKeeper.SetPositionIdToLock(s.Ctx, positionId, concentratedLockId)
@@ -1223,14 +1763,9 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	s.Require().Equal(concentratedLockId, retrievedLockId)
 
 	// Check if lock has position in state
-	retrievedPositionId, err := s.App.ConcentratedLiquidityKeeper.GetPositionIdToLockId(s.Ctx, retrievedLockId)
+	retrievedPositionId, err = s.App.ConcentratedLiquidityKeeper.GetPositionIdToLockId(s.Ctx, retrievedLockId)
 	s.Require().NoError(err)
 	s.Require().Equal(positionId, retrievedPositionId)
-
-	// Check if position has lock in state, should now be true
-	hasLockInState, err = s.App.ConcentratedLiquidityKeeper.PositionHasUnderlyingLockInState(s.Ctx, positionId)
-	s.Require().NoError(err)
-	s.Require().True(hasLockInState)
 
 	// Remove the lockId from the position
 	s.App.ConcentratedLiquidityKeeper.RemovePositionIdToLock(s.Ctx, positionId, retrievedLockId)
@@ -1239,17 +1774,6 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	retrievedLockId, err = s.App.ConcentratedLiquidityKeeper.GetLockIdFromPositionId(s.Ctx, positionId)
 	s.Require().Error(err)
 	s.Require().Equal(uint64(0), retrievedLockId)
-
-	// Check if position has lock in state, should be false
-	hasLockInState, err = s.App.ConcentratedLiquidityKeeper.PositionHasUnderlyingLockInState(s.Ctx, positionId)
-	s.Require().NoError(err)
-	s.Require().False(hasLockInState)
-
-	// Check if lock has position in state, should not
-	retrievedPositionId, err = s.App.ConcentratedLiquidityKeeper.GetPositionIdToLockId(s.Ctx, concentratedLockId)
-	s.Require().Error(err)
-	s.Require().Equal(uint64(0), retrievedPositionId)
-
 }
 
 func (s *KeeperTestSuite) TestSetPosition() {
