@@ -545,7 +545,7 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 				{foo, bar},
 			},
 			poolFee: []sdk.Dec{defaultPoolSwapFee},
-			routes: []poolmanagertypes.SwapAmountInRoute{
+			routes: []types.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: bar,
@@ -1328,7 +1328,7 @@ func (suite *KeeperTestSuite) calcInAmountAsSeparateBalancerSwaps(osmoFeeReduced
 
 // calcInAmountAsSeparateBalancerSwaps calculates the output amount of a series of swaps on Concentrated pools while factoring in reduces swap fee changes.
 // It uses CL functions directly to ensure the poolmanager functions route to the correct modules.
-func (suite *KeeperTestSuite) calcInAmountAsSeparateConcentratedSwaps(osmoFeeReduced bool, routes []poolmanagertypes.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
+func (suite *KeeperTestSuite) calcInAmountAsSeparateConcentratedSwaps(osmoFeeReduced bool, routes []types.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
 	cacheCtx, _ := suite.Ctx.CacheContext()
 	if osmoFeeReduced {
 		// extract route from swap
@@ -2183,7 +2183,7 @@ func (suite *KeeperTestSuite) TestIsOsmoRoutedMultihop() {
 		expectIsRouted         bool
 	}{
 		"happy path: osmo routed (balancer)": {
-			route: types.SwapAmountInRoutes([]poolmanagertypes.SwapAmountInRoute{
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: uosmo,
@@ -2205,7 +2205,7 @@ func (suite *KeeperTestSuite) TestIsOsmoRoutedMultihop() {
 			expectIsRouted: true,
 		},
 		"happy path: osmo routed (balancer, only one active gauge for each pool)": {
-			route: types.SwapAmountInRoutes([]poolmanagertypes.SwapAmountInRoute{
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: uosmo,
@@ -2226,7 +2226,7 @@ func (suite *KeeperTestSuite) TestIsOsmoRoutedMultihop() {
 			expectIsRouted: true,
 		},
 		"osmo routed (concentrated)": {
-			route: types.SwapAmountInRoutes([]poolmanagertypes.SwapAmountInRoute{
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: uosmo,
@@ -2247,7 +2247,7 @@ func (suite *KeeperTestSuite) TestIsOsmoRoutedMultihop() {
 			expectIsRouted: true,
 		},
 		"osmo routed (mixed concentrated and balancer)": {
-			route: types.SwapAmountInRoutes([]poolmanagertypes.SwapAmountInRoute{
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: uosmo,
@@ -2271,7 +2271,7 @@ func (suite *KeeperTestSuite) TestIsOsmoRoutedMultihop() {
 			expectIsRouted: true,
 		},
 		"not osmo routed (single pool)": {
-			route: types.SwapAmountInRoutes([]poolmanagertypes.SwapAmountInRoute{
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: bar,
@@ -2283,7 +2283,7 @@ func (suite *KeeperTestSuite) TestIsOsmoRoutedMultihop() {
 			expectIsRouted: false,
 		},
 		"not osmo routed (two pools)": {
-			route: types.SwapAmountInRoutes([]poolmanagertypes.SwapAmountInRoute{
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: bar,
@@ -2341,7 +2341,7 @@ func (suite *KeeperTestSuite) TestGetOsmoRoutedMultihopTotalSwapFee() {
 		expectedError    error
 	}{
 		"happy path: balancer route": {
-			route: types.SwapAmountInRoutes([]poolmanagertypes.SwapAmountInRoute{
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: uosmo,
@@ -2361,7 +2361,7 @@ func (suite *KeeperTestSuite) TestGetOsmoRoutedMultihopTotalSwapFee() {
 			expectedTotalFee: defaultPoolSwapFee.Add(defaultPoolSwapFee),
 		},
 		"concentrated route": {
-			route: types.SwapAmountInRoutes([]poolmanagertypes.SwapAmountInRoute{
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: uosmo,
@@ -2381,7 +2381,7 @@ func (suite *KeeperTestSuite) TestGetOsmoRoutedMultihopTotalSwapFee() {
 			expectedTotalFee: defaultPoolSwapFee.Add(defaultPoolSwapFee),
 		},
 		"mixed concentrated and balancer route": {
-			route: types.SwapAmountInRoutes([]poolmanagertypes.SwapAmountInRoute{
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: uosmo,
@@ -2403,7 +2403,7 @@ func (suite *KeeperTestSuite) TestGetOsmoRoutedMultihopTotalSwapFee() {
 			expectedTotalFee: defaultPoolSwapFee.Add(defaultPoolSwapFee),
 		},
 		"edge case: average fee is lower than highest pool fee": {
-			route: types.SwapAmountInRoutes([]poolmanagertypes.SwapAmountInRoute{
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: uosmo,
@@ -2424,7 +2424,7 @@ func (suite *KeeperTestSuite) TestGetOsmoRoutedMultihopTotalSwapFee() {
 			expectedTotalFee: defaultPoolSwapFee.Mul(sdk.NewDec(6)),
 		},
 		"error: pool does not exist": {
-			route: types.SwapAmountInRoutes([]poolmanagertypes.SwapAmountInRoute{
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: uosmo,
