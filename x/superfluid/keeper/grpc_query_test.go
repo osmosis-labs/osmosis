@@ -66,6 +66,7 @@ func (suite *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 		}
 	}
 }
+
 func (suite *KeeperTestSuite) TestGRPCSuperfluidAsset() {
 	suite.SetupTest()
 

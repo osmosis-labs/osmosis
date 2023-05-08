@@ -112,7 +112,7 @@ func (suite *KeeperTestSuite) TestCreateLockablePoolGauges() {
 			name:                   "Create Gauge with valid PoolId",
 			poolId:                 uint64(1),
 			expectedGaugeDurations: durations,
-			expectedGaugeIds:       []uint64{4, 5, 6}, //note: it's not 1,2,3 because we create 3 gauges during setup of suite.PrepareBalancerPool()
+			expectedGaugeIds:       []uint64{4, 5, 6}, // note: it's not 1,2,3 because we create 3 gauges during setup of suite.PrepareBalancerPool()
 			expectedErr:            false,
 		},
 		{

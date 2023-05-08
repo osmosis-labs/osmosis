@@ -330,7 +330,6 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 			tickExpected: sdk.NewInt(types.MaxTick - 100).String(),
 		},
 		"max sqrt price, max tick neg six -> max spot price": {
-
 			price:        types.MaxSqrtPrice.Power(2),
 			tickExpected: sdk.NewInt(types.MaxTick).String(),
 		},
