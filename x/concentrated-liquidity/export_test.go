@@ -165,8 +165,12 @@ func ValidateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int
 	return validateTickRangeIsValid(tickSpacing, lowerTick, upperTick)
 }
 
-func PreparePositionAccumulator(feeAccumulator accum.AccumulatorObject, positionKey string, feeGrowthOutside sdk.DecCoins) error {
-	return preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
+func UpdatePosValueToInitValuePlusGrowthOutside(feeAccumulator accum.AccumulatorObject, positionKey string, feeGrowthOutside sdk.DecCoins) error {
+	return updatePositionToInitValuePlusGrowthOutside(feeAccumulator, positionKey, feeGrowthOutside)
+}
+
+func UpdatePositionToInitValuePlusGrowthOutside(accumulator accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) error {
+	return updatePositionToInitValuePlusGrowthOutside(accumulator, positionKey, growthOutside)
 }
 
 func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (uint64, sdk.Int, sdk.Int, sdk.Dec, time.Time, error) {
@@ -239,8 +243,8 @@ func GetUptimeTrackerValues(uptimeTrackers []model.UptimeTracker) []sdk.DecCoins
 	return getUptimeTrackerValues(uptimeTrackers)
 }
 
-func PrepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) (sdk.Coins, sdk.DecCoins, error) {
-	return prepareAccumAndClaimRewards(accum, positionKey, growthOutside)
+func UpdateAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) (sdk.Coins, sdk.DecCoins, error) {
+	return updateAccumAndClaimRewards(accum, positionKey, growthOutside)
 }
 
 func (k Keeper) ClaimAllIncentivesForPosition(ctx sdk.Context, positionId uint64) (sdk.Coins, sdk.Coins, error) {
@@ -267,8 +271,8 @@ func (k Keeper) ClaimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 	return k.claimAndResetFullRangeBalancerPool(ctx, clPoolId, balPoolId)
 }
 
-func (k Keeper) UninitializePool(ctx sdk.Context, poolId uint64) error {
-	return k.uninitializePool(ctx, poolId)
+func (k Keeper) ReinitializePool(ctx sdk.Context, poolId uint64) error {
+	return k.reinitializePool(ctx, poolId)
 }
 
 // SetListenersUnsafe sets the listeners of the module. It is only meant to be used in tests.

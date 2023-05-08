@@ -28,8 +28,6 @@ var (
 	testAddressThree = sdk.MustAccAddressFromBech32("osmo1qwexv7c6sm95lwhzn9027vyu2ccneaqad4w8ka")
 	testAddressFour  = sdk.MustAccAddressFromBech32("osmo14hcxlnwlqtq75ttaxf674vk6mafspg8xwgnn53")
 
-	testAccumOne = "testAccumOne"
-
 	// Note: lexicographic order is denomFour, denomOne, denomThree, denomTwo
 	testDenomOne   = "denomOne"
 	testDenomTwo   = "denomTwo"
@@ -514,6 +512,35 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulatorValues() {
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestUpdatePositionToInitValuePlusGrowthOutside() {
+	s.SetupTest()
+	clKeeper := s.App.ConcentratedLiquidityKeeper
+
+	pool := s.PrepareConcentratedPool()
+	testAccumulator, err := clKeeper.GetFeeAccumulator(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+
+	defaultPositionKey := "test_position"
+	defaultFeeGrowthOutside := sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10)))
+
+	err = testAccumulator.NewPosition(defaultPositionKey, sdk.NewDec(5), nil)
+	s.Require().NoError(err)
+
+	// first attempt to update position with invalid position key in accum, should error
+	err = cl.UpdatePositionToInitValuePlusGrowthOutside(testAccumulator, "invalid_key", defaultFeeGrowthOutside)
+	s.Require().Error(err)
+
+	// System under test
+	err = cl.UpdatePositionToInitValuePlusGrowthOutside(testAccumulator, defaultPositionKey, defaultFeeGrowthOutside)
+	s.Require().NoError(err)
+
+	decCoins := testAccumulator.GetValue()
+	fmt.Println("===")
+	fmt.Println(decCoins.String())
+
+	// testAccumulator.AddToAccumulator()
 }
 
 func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
@@ -3321,7 +3348,7 @@ func (s *KeeperTestSuite) TestPrepareAccumAndClaimRewards() {
 			poolFeeAccumulator.AddToAccumulator(tc.growthOutside.Add(tc.growthInside...))
 
 			// System under test.
-			amountClaimed, _, err := cl.PrepareAccumAndClaimRewards(poolFeeAccumulator, positionKey, tc.growthOutside)
+			amountClaimed, _, err := cl.UpdateAccumAndClaimRewards(poolFeeAccumulator, positionKey, tc.growthOutside)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)

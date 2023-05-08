@@ -1389,7 +1389,7 @@ func (s *KeeperTestSuite) TestPreparePositionAccumulator() {
 			}
 
 			// System under test.
-			err = cl.PreparePositionAccumulator(poolFeeAccumulator, positionKey, tc.feeGrowthOutside)
+			err = cl.UpdatePosValueToInitValuePlusGrowthOutside(poolFeeAccumulator, positionKey, tc.feeGrowthOutside)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)

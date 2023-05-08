@@ -667,7 +667,7 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liqui
 			}
 		} else {
 			// Prep accum since we claim rewards first under the hood before any update (otherwise we would overpay)
-			err = preparePositionAccumulator(curUptimeAccum, positionName, globalUptimeGrowthOutsideRange[uptimeIndex])
+			err = updatePositionToInitValuePlusGrowthOutside(curUptimeAccum, positionName, globalUptimeGrowthOutsideRange[uptimeIndex])
 			if err != nil {
 				return err
 			}
@@ -684,16 +684,17 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liqui
 	return nil
 }
 
-// prepareAccumAndClaimRewards claims and returns the rewards that `positionKey` is entitled to, updating the accumulator's value before
+// updateAccumAndClaimRewards claims and returns the rewards that `positionKey` is entitled to, updating the accumulator's value before
 // and after claiming to ensure that rewards are never over distributed.
-func prepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) (sdk.Coins, sdk.DecCoins, error) {
+func updateAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) (sdk.Coins, sdk.DecCoins, error) {
 	// Set the position's accumulator value to it's initial value at creation time plus the growth outside at this moment.
-	err := preparePositionAccumulator(accum, positionKey, growthOutside)
+	err := updatePositionToInitValuePlusGrowthOutside(accum, positionKey, growthOutside)
 	if err != nil {
 		return sdk.Coins{}, sdk.DecCoins{}, err
 	}
 
 	// Claim rewards, set the unclaimed rewards to zero, and update the position's accumulator value to reflect the current accumulator value.
+	// Removes the position state from accum if remaining liquidity is zero for the position.
 	incentivesClaimedCurrAccum, dust, err := accum.ClaimRewards(positionKey)
 	if err != nil {
 		return sdk.Coins{}, sdk.DecCoins{}, err
@@ -728,7 +729,7 @@ func moveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum accum.Accumu
 		return types.ModifySamePositionAccumulatorError{PositionAccName: oldPositionName}
 	}
 
-	if err := preparePositionAccumulator(accum, oldPositionName, growthOutside); err != nil {
+	if err := updatePositionToInitValuePlusGrowthOutside(accum, oldPositionName, growthOutside); err != nil {
 		return err
 	}
 
@@ -802,7 +803,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 
 		// If the accumulator contains the position, claim the position's incentives.
 		if hasPosition {
-			collectedIncentivesForUptime, dust, err := prepareAccumAndClaimRewards(uptimeAccum, positionName, uptimeGrowthOutside[uptimeIndex])
+			collectedIncentivesForUptime, dust, err := updateAccumAndClaimRewards(uptimeAccum, positionName, uptimeGrowthOutside[uptimeIndex])
 			if err != nil {
 				return sdk.Coins{}, sdk.Coins{}, err
 			}
