@@ -249,7 +249,7 @@ func TestTWAPRecord_Validate(t *testing.T) {
 				r := baseRecord
 				r.LastErrorTime = r.Time
 				r.P0LastSpotPrice = sdk.NewDec(5)
-				r.P1LastSpotPrice = sdk.NewDecWithPrec(2, 1) // need this to be 0, to test the other case on error
+				r.P1LastSpotPrice = sdk.NewDecWithPrec(2, 1)
 				return r
 			}(),
 
