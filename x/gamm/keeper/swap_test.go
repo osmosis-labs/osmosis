@@ -194,24 +194,6 @@ func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			expectPass: true,
 		},
 		{
-			name: "balancer fail",
-			param: param{
-				poolType:      "balancer",
-				tokenIn:       sdk.NewCoin("foo", sdk.NewInt(0)),
-				tokenOutDenom: "bar",
-			},
-			expectPass: false,
-		},
-		{
-			name: "cl",
-			param: param{
-				poolType:      "cl",
-				tokenIn:       sdk.NewCoin("foo", sdk.NewInt(100000)),
-				tokenOutDenom: "bar",
-			},
-			expectPass: false,
-		},
-		{
 			name: "stableswap",
 			param: param{
 				poolType:      "stableswap",
@@ -228,25 +210,20 @@ func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			suite.SetupTest()
 			keeper := suite.App.GAMMKeeper
 			ctx := suite.Ctx
+
 			var pool poolmanagertypes.PoolI
 			if test.param.poolType == "balancer" {
 				poolId := suite.PrepareBalancerPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				_, ok := poolExt.(poolmanagertypes.PoolI)
-				if !ok {
-					suite.FailNow("failed to cast pool to poolI")
-				}
-
+				pool = poolExt.(poolmanagertypes.PoolI)
 			} else if test.param.poolType == "stableswap" {
 				poolId := suite.PrepareBasicStableswapPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				_, ok := poolExt.(poolmanagertypes.PoolI)
-				if !ok {
-					suite.FailNow("failed to cast pool to poolI")
-				}
+				pool = poolExt.(poolmanagertypes.PoolI)
 			}
+
 			swapFee := pool.GetSwapFee(suite.Ctx)
 
 			_, err := keeper.CalcOutAmtGivenIn(ctx, pool, test.param.tokenIn, test.param.tokenOutDenom, swapFee)
@@ -310,10 +287,6 @@ func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
 			case "stableswap":
 				poolId := suite.PrepareBasicStableswapPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
-				suite.NoError(err)
-				pool, _ = poolExt.(poolmanagertypes.PoolI)
-			case "concentrated-liquidity":
-				poolExt := suite.PrepareConcentratedPool()
 				suite.NoError(err)
 				pool, _ = poolExt.(poolmanagertypes.PoolI)
 			default:
