@@ -194,6 +194,24 @@ func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			expectPass: true,
 		},
 		{
+			name: "balancer fail",
+			param: param{
+				poolType:      "balancer",
+				tokenIn:       sdk.NewCoin("foo", sdk.NewInt(0)),
+				tokenOutDenom: "bar",
+			},
+			expectPass: false,
+		},
+		{
+			name: "cl",
+			param: param{
+				poolType:      "cl",
+				tokenIn:       sdk.NewCoin("foo", sdk.NewInt(100000)),
+				tokenOutDenom: "bar",
+			},
+			expectPass: false,
+		},
+		{
 			name: "stableswap",
 			param: param{
 				poolType:      "stableswap",
@@ -215,7 +233,7 @@ func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				poolId := suite.PrepareBalancerPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				pool, ok := poolExt.(poolmanagertypes.PoolI)
+				_, ok := poolExt.(poolmanagertypes.PoolI)
 				if !ok {
 					suite.FailNow("failed to cast pool to poolI")
 				}
@@ -224,11 +242,10 @@ func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				poolId := suite.PrepareBasicStableswapPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				pool, ok := poolExt.(poolmanagertypes.PoolI)
+				_, ok := poolExt.(poolmanagertypes.PoolI)
 				if !ok {
 					suite.FailNow("failed to cast pool to poolI")
 				}
-
 			}
 			swapFee := pool.GetSwapFee(suite.Ctx)
 
@@ -289,21 +306,23 @@ func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
 				poolId := suite.PrepareBalancerPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				pool, ok := poolExt.(poolmanagertypes.PoolI)
+				poolI, ok := poolExt.(poolmanagertypes.PoolI)
 				if !ok {
 					suite.FailNow("failed to cast pool to poolI")
 				}
 
+				pool = poolI
 
 			} else if test.param.poolType == "stableswap" {
 				poolId := suite.PrepareBasicStableswapPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				pool, ok := poolExt.(poolmanagertypes.PoolI)
+				poolI, ok := poolExt.(poolmanagertypes.PoolI)
 				if !ok {
 					suite.FailNow("failed to cast pool to poolI")
 				}
 
+				pool = poolI
 			}
 
 			swapFee := pool.GetSwapFee(suite.Ctx)
