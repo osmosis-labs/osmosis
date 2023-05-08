@@ -340,7 +340,6 @@ func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
 			liq1 := math.Liquidity1(tc.amount1Desired, tc.currentSqrtP, tc.sqrtPLow)
 			liq := sdk.MinDec(liq0, liq1)
 			suite.Require().Equal(liq.String(), liquidity.String())
-
 		})
 	}
 }
@@ -374,7 +373,6 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount0InRoundin
 	for name, tc := range tests {
 		tc := tc
 		suite.Run(name, func() {
-
 			sqrtPriceNext := math.GetNextSqrtPriceFromAmount0InRoundingUp(tc.sqrtPriceCurrent, tc.liquidity, tc.amountZeroRemaininIn)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext.String(), sqrtPriceNext.String())
@@ -411,7 +409,6 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount0OutRoundi
 	for name, tc := range tests {
 		tc := tc
 		suite.Run(name, func() {
-
 			sqrtPriceNext := math.GetNextSqrtPriceFromAmount0OutRoundingUp(tc.sqrtPriceCurrent, tc.liquidity, tc.amountZeroRemainingOut)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext.String(), sqrtPriceNext.String())
@@ -448,7 +445,6 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount1InRoundin
 	for name, tc := range tests {
 		tc := tc
 		suite.Run(name, func() {
-
 			sqrtPriceNext := math.GetNextSqrtPriceFromAmount1InRoundingDown(tc.sqrtPriceCurrent, tc.liquidity, tc.amountOneRemainingIn)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext.String(), sqrtPriceNext.String())
@@ -485,10 +481,63 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount1OutRoundi
 	for name, tc := range tests {
 		tc := tc
 		suite.Run(name, func() {
-
 			sqrtPriceNext := math.GetNextSqrtPriceFromAmount1OutRoundingDown(tc.sqrtPriceCurrent, tc.liquidity, tc.amountOneRemainingOut)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext.String(), sqrtPriceNext.String())
+		})
+	}
+}
+
+// TestAddLiquidity tests the AddLiquidity function
+func (suite *ConcentratedMathTestSuite) TestAddLiquidity() {
+	type args struct {
+		liquidityA sdk.Dec
+		liquidityB sdk.Dec
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want sdk.Dec
+	}{
+		{
+			name: "Test Case 1: Add positive values",
+			args: args{
+				liquidityA: sdk.NewDecFromInt(sdk.NewInt(10)),
+				liquidityB: sdk.NewDecFromInt(sdk.NewInt(20)),
+			},
+			want: sdk.NewDecFromInt(sdk.NewInt(30)),
+		},
+		{
+			name: "Test Case 2: Subtract positive and negative values",
+			args: args{
+				liquidityA: sdk.NewDecFromInt(sdk.NewInt(50)),
+				liquidityB: sdk.NewDecFromInt(sdk.NewInt(-10)),
+			},
+			want: sdk.NewDecFromInt(sdk.NewInt(60)),
+		},
+		{
+			name: "Test Case 3: Add zero and positive value",
+			args: args{
+				liquidityA: sdk.NewDecFromInt(sdk.NewInt(0)),
+				liquidityB: sdk.NewDecFromInt(sdk.NewInt(15)),
+			},
+			want: sdk.NewDecFromInt(sdk.NewInt(15)),
+		},
+		{
+			name: "Test Case 4: Add zero and negative value",
+			args: args{
+				liquidityA: sdk.NewDecFromInt(sdk.NewInt(0)),
+				liquidityB: sdk.NewDecFromInt(sdk.NewInt(-10)),
+			},
+			want: sdk.NewDecFromInt(sdk.NewInt(10)),
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			got := math.AddLiquidity(tt.args.liquidityA, tt.args.liquidityB)
+			suite.Require().Equal(tt.want, got)
 		})
 	}
 }
