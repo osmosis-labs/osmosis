@@ -1189,7 +1189,8 @@ func (s *KeeperTestSuite) TestPrepareClaimableFees() {
 			s.initializeTick(ctx, tc.currentTick, tc.lowerTick, tc.initialLiquidity, tc.lowerTickFeeGrowthOutside, emptyUptimeTrackers, false)
 			s.initializeTick(ctx, tc.currentTick, tc.upperTick, tc.initialLiquidity, tc.upperTickFeeGrowthOutside, emptyUptimeTrackers, true)
 			validPool.SetCurrentTick(sdk.NewInt(tc.currentTick))
-			err = clKeeper.SetPool(ctx, validPool)
+
+			_ = clKeeper.SetPool(ctx, validPool)
 
 			err = clKeeper.ChargeFee(ctx, validPoolId, tc.globalFeeGrowth[0])
 			s.Require().NoError(err)

@@ -74,7 +74,7 @@ func (s *IntegrationTestSuite) TestProtoRev() {
 	s.Require().Len(hotRoutes, 0)
 
 	// The module should have no trades by default.
-	numTrades, err := chainANode.QueryProtoRevNumberOfTrades()
+	_, err = chainANode.QueryProtoRevNumberOfTrades()
 	s.T().Logf("checking that the protorev module has no trades on init: %s", err)
 	s.Require().Error(err)
 
@@ -140,7 +140,7 @@ func (s *IntegrationTestSuite) TestProtoRev() {
 	s.Require().Equal(supplyBefore, supplyAfter)
 
 	// Check that the number of trades executed by the protorev module is 1.
-	numTrades, err = chainANode.QueryProtoRevNumberOfTrades()
+	numTrades, err := chainANode.QueryProtoRevNumberOfTrades()
 	s.T().Logf("checking that the protorev module has executed 1 trade")
 	s.Require().NoError(err)
 	s.Require().NotNil(numTrades)
