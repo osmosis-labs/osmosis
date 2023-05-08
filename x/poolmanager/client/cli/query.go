@@ -74,7 +74,8 @@ func GetCmdPool() (*osmocli.QueryDescriptor, *queryproto.PoolRequest) {
 		Use:   "pool [poolID]",
 		Short: "Query pool",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} pool 1`}, &queryproto.PoolRequest{}
+{{.CommandPrefix}} pool 1`,
+	}, &queryproto.PoolRequest{}
 }
 
 func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *queryproto.SpotPriceRequest) {
@@ -83,7 +84,8 @@ func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *queryproto.SpotPriceRequest) 
 		Short: "Query spot-price",
 		Long: `Query spot-price
 {{.CommandPrefix}} spot-price 1 uosmo ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
-`}, &queryproto.SpotPriceRequest{}
+`,
+	}, &queryproto.SpotPriceRequest{}
 }
 
 func EstimateSwapExactAmountInParseArgs(args []string, fs *flag.FlagSet) (proto.Message, error) {

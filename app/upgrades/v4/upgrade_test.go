@@ -66,7 +66,7 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 				plan := upgradetypes.Plan{Name: "v4", Height: dummyUpgradeHeight}
 				err := suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
 				suite.Require().NoError(err)
-				plan, exists := suite.app.UpgradeKeeper.GetUpgradePlan(suite.ctx)
+				_, exists := suite.app.UpgradeKeeper.GetUpgradePlan(suite.ctx)
 				suite.Require().True(exists)
 
 				suite.ctx = suite.ctx.WithBlockHeight(dummyUpgradeHeight)

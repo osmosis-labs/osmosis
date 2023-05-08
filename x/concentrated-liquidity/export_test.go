@@ -223,6 +223,10 @@ func (k Keeper) GetInitialUptimeGrowthOutsidesForTick(ctx sdk.Context, poolId ui
 	return k.getInitialUptimeGrowthOutsidesForTick(ctx, poolId, tick)
 }
 
+func (k Keeper) GetAllIncentiveRecordsForUptime(ctx sdk.Context, poolId uint64, minUptime time.Duration) ([]types.IncentiveRecord, error) {
+	return k.getAllIncentiveRecordsForUptime(ctx, poolId, minUptime)
+}
+
 func (k Keeper) InitOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, position sdk.Dec, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId uint64) error {
 	return k.initOrUpdatePositionUptime(ctx, poolId, position, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
 }

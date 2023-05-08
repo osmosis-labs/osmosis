@@ -16,9 +16,7 @@ type LiquidityPoolStruct struct {
 	PoolId    uint64
 }
 
-var (
-	_ epochstypes.EpochHooks = EpochHooks{}
-)
+var _ epochstypes.EpochHooks = EpochHooks{}
 
 func (k Keeper) EpochHooks() epochstypes.EpochHooks {
 	return EpochHooks{k}

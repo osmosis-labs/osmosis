@@ -14,12 +14,6 @@ import (
 )
 
 var (
-	defaultSwapFee    = sdk.MustNewDecFromStr("0.025")
-	defaultExitFee    = sdk.ZeroDec()
-	defaultPoolParams = balancer.PoolParams{
-		SwapFee: defaultSwapFee,
-		ExitFee: defaultExitFee,
-	}
 	defaultFutureGovernor = ""
 
 	// pool assets
@@ -108,7 +102,7 @@ func (suite *KeeperTestSuite) TestUnpool() {
 			}
 
 			// set up validator
-			valAddr := suite.SetupValidator(stakingtypes.BondStatus(stakingtypes.Bonded))
+			valAddr := suite.SetupValidator(stakingtypes.Bonded)
 
 			// create pool of "stake" and "foo"
 			msg := balancer.NewMsgCreateBalancerPool(poolCreateAcc, balancer.PoolParams{

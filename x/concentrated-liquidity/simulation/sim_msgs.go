@@ -3,7 +3,6 @@ package simulation
 import (
 	"errors"
 	"fmt"
-
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

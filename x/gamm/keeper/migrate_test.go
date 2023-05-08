@@ -719,23 +719,22 @@ func (suite *KeeperTestSuite) TestGetLinkedConcentratedPoolID() {
 		name                   string
 		poolIdLeaving          []uint64
 		expectedPoolIdEntering []uint64
-		expectErr              bool
+		expectedErr            error
 	}{
 		{
 			name:                   "Happy path",
 			poolIdLeaving:          []uint64{1, 2, 3},
 			expectedPoolIdEntering: []uint64{4, 5, 6},
-			expectErr:              false,
 		},
 		{
 			name:          "error: set poolIdLeaving to a concentrated pool ID",
 			poolIdLeaving: []uint64{4},
-			expectErr:     true,
+			expectedErr:   types.ConcentratedPoolMigrationLinkNotFoundError{PoolIdLeaving: 4},
 		},
 		{
 			name:          "error: set poolIdLeaving to a non existent pool ID",
 			poolIdLeaving: []uint64{7},
-			expectErr:     true,
+			expectedErr:   types.ConcentratedPoolMigrationLinkNotFoundError{PoolIdLeaving: 7},
 		},
 	}
 
@@ -755,8 +754,9 @@ func (suite *KeeperTestSuite) TestGetLinkedConcentratedPoolID() {
 
 			for i, poolIdLeaving := range test.poolIdLeaving {
 				poolIdEntering, err := keeper.GetLinkedConcentratedPoolID(suite.Ctx, poolIdLeaving)
-				if test.expectErr {
+				if test.expectedErr != nil {
 					suite.Require().Error(err)
+					suite.Require().ErrorIs(err, test.expectedErr)
 					suite.Require().Zero(poolIdEntering)
 				} else {
 					suite.Require().NoError(err)
@@ -774,30 +774,32 @@ func (suite *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 		expectedPoolIdLeaving []uint64
 
 		skipLinking bool
-		expectErr   bool
+		expectedErr []error
 	}{
 		{
 			name:                  "Happy path",
 			poolIdEntering:        []uint64{4, 5, 6},
 			expectedPoolIdLeaving: []uint64{1, 2, 3},
-			expectErr:             false,
 		},
 		{
 			name:           "error: set poolIdEntering to a balancer pool ID",
 			poolIdEntering: []uint64{3},
-			expectErr:      true,
+			expectedErr:    []error{types.BalancerPoolMigrationLinkNotFoundError{PoolIdEntering: 3}},
 		},
 		{
 			name:           "error: set poolIdEntering to a non existent pool ID",
 			poolIdEntering: []uint64{7},
-			expectErr:      true,
+			expectedErr:    []error{types.BalancerPoolMigrationLinkNotFoundError{PoolIdEntering: 7}},
 		},
 		{
 			name:                  "error: pools exist but link does not",
 			poolIdEntering:        []uint64{4, 5, 6},
 			expectedPoolIdLeaving: []uint64{1, 2, 3},
 			skipLinking:           true,
-			expectErr:             true,
+			expectedErr: []error{
+				types.BalancerPoolMigrationLinkNotFoundError{PoolIdEntering: 4},
+				types.BalancerPoolMigrationLinkNotFoundError{PoolIdEntering: 5},
+				types.BalancerPoolMigrationLinkNotFoundError{PoolIdEntering: 6}},
 		},
 	}
 
@@ -820,8 +822,9 @@ func (suite *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 			suite.Require().True(len(test.poolIdEntering) > 0)
 			for i, poolIdEntering := range test.poolIdEntering {
 				poolIdLeaving, err := keeper.GetLinkedBalancerPoolID(suite.Ctx, poolIdEntering)
-				if test.expectErr {
+				if test.expectedErr != nil {
 					suite.Require().Error(err)
+					suite.Require().ErrorIs(err, test.expectedErr[i])
 					suite.Require().Zero(poolIdLeaving)
 				} else {
 					suite.Require().NoError(err)

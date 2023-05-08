@@ -45,6 +45,23 @@ func (e NotPositiveRequireAmountError) Error() string {
 	return fmt.Sprintf("Required amount should be positive. Got: %s", e.Amount)
 }
 
+type QualifyingLiquidityOrTimeElapsedNotPositiveError struct {
+	QualifyingLiquidity sdk.Dec
+	TimeElapsed         sdk.Dec
+}
+
+func (e QualifyingLiquidityOrTimeElapsedNotPositiveError) Error() string {
+	return fmt.Sprintf("Qualifying liquidity and time elapsed must both be positive. Got: QualifyingLiquidity (%s), timeElapsed (%s)", e.QualifyingLiquidity, e.TimeElapsed)
+}
+
+type TimeElapsedNotPositiveError struct {
+	TimeElapsed sdk.Dec
+}
+
+func (e TimeElapsedNotPositiveError) Error() string {
+	return fmt.Sprintf("Time elapsed must both be positive. Got: timeElapsed (%s)", e.TimeElapsed)
+}
+
 type PositionNotFoundError struct {
 	PoolId    uint64
 	LowerTick int64
@@ -772,4 +789,12 @@ type ModifySamePositionAccumulatorError struct {
 
 func (e ModifySamePositionAccumulatorError) Error() string {
 	return fmt.Sprintf("attempted to modify the same accumulator with name %s", e.PositionAccName)
+}
+
+type NumCoinsError struct {
+	NumCoins int
+}
+
+func (e NumCoinsError) Error() string {
+	return fmt.Sprintf("num coins provided (%d) must be 2 for a full range position", e.NumCoins)
 }
