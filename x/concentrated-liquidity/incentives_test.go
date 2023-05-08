@@ -3595,7 +3595,7 @@ func (s *KeeperTestSuite) TestFunctional_ClaimIncentices_LiquidityChange_Varying
 	s.Require().NoError(err)
 	s.Require().Equal(expectedHalfOfExpectedCoinsPerFullCharge.String(), collected.String())
 
-	// Claim again and observe that claims full expected charge for the period between 1st claim and 2nd position creation
+	// Claim for first position and observe that claims full expected charge for the period between 1st claim and 2nd position creation
 	// and half of the full charge amount since the 2nd position was created.
 	collected, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, positionIdOne)
 	s.Require().NoError(err)
