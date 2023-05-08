@@ -14,7 +14,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
@@ -981,7 +980,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 					qualifyingBalancerLiquidity = (sdk.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingBalancerLiquidityPreDiscount)
 					qualifyingLiquidity = qualifyingLiquidity.Add(qualifyingBalancerLiquidity)
 
-					actualLiquidityAdded0, actualLiquidityAdded1, err := clPool.CalcActualAmounts(s.Ctx, cltypes.MinTick, cltypes.MaxTick, qualifyingBalancerLiquidity)
+					actualLiquidityAdded0, actualLiquidityAdded1, err := clPool.CalcActualAmounts(s.Ctx, types.MinTick, types.MaxTick, qualifyingBalancerLiquidity)
 					s.Require().NoError(err)
 					s.FundAcc(clPool.GetIncentivesAddress(), sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), actualLiquidityAdded0.TruncateInt()), sdk.NewCoin(clPool.GetToken1(), actualLiquidityAdded1.TruncateInt())))
 				}
@@ -1842,7 +1841,7 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 	}
 }
 
-func (s *KeeperTestSuite) TestInitPositionUptime() {
+func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 	uptimeHelper := getExpectedUptimes()
 	type tick struct {
 		tickIndex      int64
@@ -2849,7 +2848,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 
 			expectedIncentivesClaimed:   sdk.Coins{},
 			expectedForfeitedIncentives: sdk.Coins{},
-			expectedError:               cltypes.PositionIdNotFoundError{PositionId: DefaultPositionId},
+			expectedError:               types.PositionIdNotFoundError{PositionId: DefaultPositionId},
 		},
 	}
 
@@ -3275,8 +3274,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 }
 
 func (s *KeeperTestSuite) TestPrepareAccumAndClaimRewards() {
-	validPositionKey := cltypes.KeyFeePositionAccumulator(1)
-	invalidPositionKey := cltypes.KeyFeePositionAccumulator(2)
+	validPositionKey := types.KeyFeePositionAccumulator(1)
+	invalidPositionKey := types.KeyFeePositionAccumulator(2)
 	tests := map[string]struct {
 		poolId             uint64
 		growthInside       sdk.DecCoins
@@ -3412,7 +3411,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
 			numShares:        sdk.OneDec(),
 
-			expectedError: cltypes.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
+			expectedError: types.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
 		},
 
 		"error: negative duration": {
@@ -3424,7 +3423,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
 			numShares:        sdk.OneDec(),
 
-			expectedError: cltypes.NegativeDurationError{Duration: time.Hour * 504 * -1},
+			expectedError: types.NegativeDurationError{Duration: time.Hour * 504 * -1},
 		},
 	}
 	for _, tc := range tests {
@@ -3544,7 +3543,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 	}
 }
 
-func (s *KeeperTestSuite) TestGetAllIncentivesForUptime() {
+func (s *KeeperTestSuite) TestGetAllIncentiveRecordsForUptime() {
 	invalidPoolId := uint64(2)
 	tests := map[string]struct {
 		poolIncentiveRecords []types.IncentiveRecord
@@ -4219,6 +4218,152 @@ func (s *KeeperTestSuite) TestGetLargestAuthorizedUptime() {
 			actual := k.GetLargestAuthorizedUptimeDuration(s.Ctx)
 
 			s.Require().Equal(tc.expected, actual)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestMoveRewardsToNewPositionAndDeleteOldAcc() {
+	const (
+		oldName = "old"
+		newName = "new"
+	)
+
+	var (
+		// 2 ETH.
+		defaultGlobalGrowth = sdk.NewDecCoins(oneEth.Add(oneEth))
+		emptyCoins          = sdk.DecCoins(nil)
+	)
+
+	tests := map[string]struct {
+		oldPositionName          string
+		newPositionName          string
+		growthOutside            sdk.DecCoins
+		expectedUnclaimedRewards sdk.DecCoins
+		numShares                int64
+		expectError              error
+	}{
+		"empty growth outside": {
+			oldPositionName:          oldName,
+			newPositionName:          newName,
+			growthOutside:            emptyCoins,
+			numShares:                1,
+			expectedUnclaimedRewards: defaultGlobalGrowth,
+		},
+		"default global growth equals growth outside": {
+			oldPositionName:          oldName,
+			newPositionName:          newName,
+			growthOutside:            defaultGlobalGrowth,
+			numShares:                1,
+			expectedUnclaimedRewards: emptyCoins,
+		},
+		"global growth outside half of global": {
+			oldPositionName:          oldName,
+			newPositionName:          newName,
+			growthOutside:            defaultGlobalGrowth.QuoDec(sdk.NewDec(2)),
+			numShares:                1,
+			expectedUnclaimedRewards: defaultGlobalGrowth.QuoDec(sdk.NewDec(2)),
+		},
+		"multiple shares, partial growth outside": {
+			oldPositionName:          oldName,
+			newPositionName:          newName,
+			growthOutside:            defaultGlobalGrowth.QuoDec(sdk.NewDec(2)),
+			numShares:                2,
+			expectedUnclaimedRewards: defaultGlobalGrowth,
+		},
+		"error: same name": {
+			oldPositionName: oldName,
+			newPositionName: oldName,
+			expectError:     types.ModifySamePositionAccumulatorError{PositionAccName: oldName},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+			k := s.App.ConcentratedLiquidityKeeper
+
+			// Get the fee accumulator. The fact that this is a fee accumulator is irrelevant for this test.
+			// It is created this way for setup convenience.
+			pool := s.PrepareConcentratedPool()
+			testAccumulator, err := k.GetFeeAccumulator(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+
+			err = testAccumulator.NewPosition(tc.oldPositionName, sdk.NewDec(tc.numShares), nil)
+			s.Require().NoError(err)
+
+			// 2 shares is chosen arbitrarily. It is not relevant for this test.
+			err = testAccumulator.NewPosition(tc.newPositionName, sdk.NewDec(2), nil)
+			s.Require().NoError(err)
+
+			// Grow the global rewards.
+			testAccumulator.AddToAccumulator(defaultGlobalGrowth)
+
+			err = cl.MoveRewardsToNewPositionAndDeleteOldAcc(s.Ctx, testAccumulator, tc.oldPositionName, tc.newPositionName, tc.growthOutside)
+
+			if tc.expectError != nil {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+
+			// Check the old accumulator is now deleted.
+			hasPosition, err := testAccumulator.HasPosition(oldName)
+			s.Require().NoError(err)
+			s.Require().False(hasPosition)
+
+			// Check that the new accumulator has the correct amount of rewards in unclaimed rewards.
+			newPositionAccumulator, err := testAccumulator.GetPosition(newName)
+			s.Require().NoError(err)
+
+			// Validate unclaimed rewards
+			s.Require().Equal(tc.expectedUnclaimedRewards, newPositionAccumulator.UnclaimedRewards)
+
+			// Validate that position accumulator equals to the growth inside.
+			s.Require().Equal(testAccumulator.GetValue().Sub(tc.growthOutside), newPositionAccumulator.InitAccumValue)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetUptimeTrackerValues() {
+	testCases := []struct {
+		name           string
+		input          []model.UptimeTracker
+		expectedOutput []sdk.DecCoins
+	}{
+		{
+			name:           "Empty uptime tracker",
+			input:          []model.UptimeTracker{},
+			expectedOutput: []sdk.DecCoins{},
+		},
+		{
+			name: "One uptime tracker",
+			input: []model.UptimeTracker{
+				{UptimeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(100)))},
+			},
+			expectedOutput: []sdk.DecCoins{
+				sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(100))),
+			},
+		},
+		{
+			name: "Multiple uptime trackers",
+			input: []model.UptimeTracker{
+				{UptimeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(100)))},
+				{UptimeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin("fooa", sdk.NewInt(100)))},
+				{UptimeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin("foob", sdk.NewInt(100)))},
+			},
+			expectedOutput: []sdk.DecCoins{
+				sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(100))),
+				sdk.NewDecCoins(sdk.NewDecCoin("fooa", sdk.NewInt(100))),
+				sdk.NewDecCoins(sdk.NewDecCoin("foob", sdk.NewInt(100))),
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			result := cl.GetUptimeTrackerValues(tc.input)
+			s.Require().Equal(tc.expectedOutput, result)
 		})
 	}
 }

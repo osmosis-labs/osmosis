@@ -15,9 +15,13 @@ var (
 )
 
 // TicksToSqrtPrice returns the sqrtPrice for the lower and upper ticks.
-// Returns error if fails to calculate price.
-// TODO: spec and tests
+// Returns error if:
+// - lower tick is greater than or equal to the upper tick
+// - fails to calculate price.
 func TicksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, error) {
+	if lowerTick >= upperTick {
+		return sdk.Dec{}, sdk.Dec{}, types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
+	}
 	sqrtPriceUpperTick, err := TickToSqrtPrice(sdk.NewInt(upperTick))
 	if err != nil {
 		return sdk.Dec{}, sdk.Dec{}, err

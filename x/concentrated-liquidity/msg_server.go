@@ -106,7 +106,7 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 		return nil, err
 	}
 
-	amount0, amount1, err := server.keeper.withdrawPosition(ctx, sender, msg.PositionId, msg.LiquidityAmount)
+	amount0, amount1, err := server.keeper.WithdrawPosition(ctx, sender, msg.PositionId, msg.LiquidityAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +160,7 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 	return &types.MsgCollectFeesResponse{CollectedFees: totalCollectedFees}, nil
 }
 
-// CollectIncentives collects incentives for all positions in given range that belong to sender
+// CollectIncentives collects incentives for all given PositionIds in a given range that belong to sender.
 func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgCollectIncentives) (*types.MsgCollectIncentivesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

@@ -307,6 +307,21 @@ func TestNewExitSwapShareAmountInCmd(t *testing.T) {
 	osmocli.RunTxTestCases(t, desc, tcs)
 }
 
+func TestNewMigrateSharesToFullRangeConcentratedPosition(t *testing.T) {
+	desc, _ := cli.NewMigrateSharesToFullRangeConcentratedPosition()
+	tcs := map[string]osmocli.TxCliTestCase[*balancer.MsgMigrateSharesToFullRangeConcentratedPosition]{
+		"migrate shares to full range concentrated position": {
+			Cmd: "1000stake --min-amounts-out=100stake,1000uosmo --from=" + testAddresses[0].String(),
+			ExpectedMsg: &balancer.MsgMigrateSharesToFullRangeConcentratedPosition{
+				Sender:          testAddresses[0].String(),
+				SharesToMigrate: sdk.NewCoin("stake", sdk.NewInt(1000)),
+				TokenOutMins:  sdk.NewCoins(sdk.NewInt64Coin("stake", 100), sdk.NewInt64Coin("uosmo", 1000)),
+			},
+		},
+	}
+	osmocli.RunTxTestCases(t, desc, tcs)
+}
+
 func TestGetCmdPools(t *testing.T) {
 	desc, _ := cli.GetCmdPools()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryPoolsRequest]{
