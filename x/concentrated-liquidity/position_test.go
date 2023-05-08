@@ -14,9 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
-var (
-	DefaultIncentiveRecords = []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour}
-)
+var DefaultIncentiveRecords = []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour}
 
 func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 	const (
@@ -260,7 +258,6 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 }
 
 func (s *KeeperTestSuite) TestGetPosition() {
-
 	tests := []struct {
 		name                      string
 		positionId                uint64
@@ -1460,7 +1457,6 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 			s.Require().NoError(err)
 			s.Require().Equal(underlyingLiquidityTokenized[0].Amount.String(), concentratedLock.Coins[0].Amount.String())
 			s.Require().Equal(test.remainingLockDuration, concentratedLock.Duration)
-
 		},
 		)
 	}

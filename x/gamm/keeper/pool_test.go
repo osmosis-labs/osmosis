@@ -378,7 +378,6 @@ func (suite *KeeperTestSuite) TestConvertToCFMMPool() {
 // change the underlying bytes. This shows that migrations are
 // not necessary.
 func (suite *KeeperTestSuite) TestMarshalUnmarshalPool() {
-
 	suite.SetupTest()
 	k := suite.App.GAMMKeeper
 
@@ -525,5 +524,4 @@ func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
 			}
 		})
 	}
-
 }

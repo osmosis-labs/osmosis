@@ -221,7 +221,6 @@ func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition()
 			delegationAmt, found := stakingKeeper.GetDelegation(ctx, newIntermediaryAcc, valAddr)
 			suite.Require().True(found)
 			suite.Require().Equal(expectedDelegationAmt, delegationAmt.Shares.TruncateInt())
-
 		})
 	}
 }

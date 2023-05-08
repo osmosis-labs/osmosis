@@ -389,7 +389,6 @@ func (s *KeeperTestSuite) TestSetPool() {
 			retrievedPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, test.pool.GetId())
 			s.Require().NoError(err)
 			s.Require().Equal(test.pool, retrievedPool)
-
 		})
 	}
 }

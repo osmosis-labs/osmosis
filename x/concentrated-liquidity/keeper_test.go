@@ -291,7 +291,8 @@ func (s *KeeperTestSuite) validateListenerCallCount(
 	expectedPoolCreatedListenerCallCount,
 	expectedInitialPositionCreationListenerCallCount,
 	expectedLastPositionWithdrawalListenerCallCount,
-	expectedSwapListenerCallCount int) {
+	expectedSwapListenerCallCount int,
+) {
 	// Validate that listeners were called the desired number of times
 	listeners := s.App.ConcentratedLiquidityKeeper.GetListenersUnsafe()
 	s.Require().Len(listeners, 1)

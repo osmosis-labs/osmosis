@@ -63,7 +63,6 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-
 	// TODO: re-enable this once poolmanager is fully merged.
 	t.SkipNow()
 

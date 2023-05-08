@@ -319,7 +319,6 @@ func (suite *KeeperTestSuite) TestUnlock() {
 }
 
 func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
-
 	testCases := []struct {
 		name                       string
 		coinsLocked, coinsBurned   sdk.Coins
@@ -417,7 +416,6 @@ func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
 					suite.Require().Equal(sdk.ZeroInt().String(), assetsSupplyAtLockEnd.AmountOf(coin.Denom).String())
 				}
 			}
-
 		})
 	}
 }

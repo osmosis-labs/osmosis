@@ -275,7 +275,6 @@ func (k Keeper) distributeConcentratedLiquidity(ctx sdk.Context, poolId uint64, 
 		startTime,
 		minUptime,
 	)
-
 	if err != nil {
 		return err
 	}

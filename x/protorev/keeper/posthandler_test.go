@@ -554,7 +554,6 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 			} else if strings.Contains(tc.name, "Block Pool Points Limit") {
 				suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 100)
 			}
-
 		})
 	}
 }
@@ -915,7 +914,6 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-
 			suite.Ctx = suite.Ctx.WithIsCheckTx(tc.params.isCheckTx)
 			suite.Ctx = suite.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 			suite.Ctx = suite.Ctx.WithMinGasPrices(tc.params.minGasPrices)
