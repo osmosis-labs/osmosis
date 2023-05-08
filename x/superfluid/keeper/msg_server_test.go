@@ -146,7 +146,6 @@ func (suite *KeeperTestSuite) TestMsgCreateFullRangePositionAndSuperfluidDelegat
 		expectedLockId     uint64
 		expectedPositionId uint64
 	}{
-
 		{
 			name:               "happy case",
 			param:              param{},

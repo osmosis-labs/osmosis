@@ -210,7 +210,6 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition() {
 	for _, tc := range tests {
 		tc := tc
 		s.Run(tc.name, func() {
-
 			// System under test
 			err := clKeeper.InitOrUpdateFeeAccumulatorPosition(s.Ctx, tc.positionFields.poolId, tc.positionFields.lowerTick, tc.positionFields.upperTick, tc.positionFields.positionId, tc.positionFields.liquidity)
 			if tc.expectedPass {
@@ -261,7 +260,6 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 		globalFeeGrowth           sdk.DecCoin
 
 		expectedFeeGrowthOutside sdk.DecCoins
-		invalidTick              bool
 		expectedError            bool
 	}
 
@@ -1188,7 +1186,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableFees() {
 			s.initializeTick(ctx, tc.currentTick, tc.lowerTick, tc.initialLiquidity, tc.lowerTickFeeGrowthOutside, emptyUptimeTrackers, false)
 			s.initializeTick(ctx, tc.currentTick, tc.upperTick, tc.initialLiquidity, tc.upperTickFeeGrowthOutside, emptyUptimeTrackers, true)
 			validPool.SetCurrentTick(sdk.NewInt(tc.currentTick))
-			clKeeper.SetPool(ctx, validPool)
+			_ = clKeeper.SetPool(ctx, validPool)
 
 			err = clKeeper.ChargeFee(ctx, validPoolId, tc.globalFeeGrowth[0])
 			s.Require().NoError(err)

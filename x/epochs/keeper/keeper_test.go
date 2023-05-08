@@ -48,10 +48,9 @@ func Setup() (sdk.Context, *epochskeeper.Keeper) {
 	epochsKeeper.InitGenesis(ctx, *types.DefaultGenesis())
 	SetEpochStartTime(ctx, epochsKeeper)
 	return ctx, epochsKeeper
-
 }
-func SetEpochStartTime(ctx sdk.Context, epochsKeeper *epochskeeper.Keeper) {
 
+func SetEpochStartTime(ctx sdk.Context, epochsKeeper *epochskeeper.Keeper) {
 	for _, epoch := range epochsKeeper.AllEpochInfos(ctx) {
 		epoch.StartTime = ctx.BlockTime()
 		epochsKeeper.DeleteEpochInfo(ctx, epoch.Identifier)

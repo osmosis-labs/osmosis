@@ -16,7 +16,6 @@ import (
 
 type lpTest struct {
 	poolId                            uint64
-	owner                             sdk.AccAddress
 	currentTick                       sdk.Int
 	lowerTick                         int64
 	upperTick                         int64
@@ -539,7 +538,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			expectedPoolBalanceDelta := expectedFeesClaimed.Add(sdk.NewCoin(ETH, config.amount0Expected.Abs())).Add(sdk.NewCoin(USDC, config.amount1Expected.Abs()))
 
-			withdrawAccount := sdk.AccAddress{}
+			var withdrawAccount sdk.AccAddress
 			if tc.withdrawWithNonOwner {
 				withdrawAccount = nonOwner
 			} else {
@@ -1371,13 +1370,11 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 }
 
 func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
-	var (
-		sqrt = func(x int64) sdk.Dec {
-			sqrt, err := sdk.NewDec(x).ApproxSqrt()
-			s.Require().NoError(err)
-			return sqrt
-		}
-	)
+	sqrt := func(x int64) sdk.Dec {
+		sqrt, err := sdk.NewDec(x).ApproxSqrt()
+		s.Require().NoError(err)
+		return sqrt
+	}
 
 	type sendTest struct {
 		amount0Desired        sdk.Int
@@ -1464,7 +1461,6 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 }
 
 func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() {
-
 	tests := map[string]lpTest{}
 
 	// add test cases for different positions
