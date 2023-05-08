@@ -2,7 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -90,7 +90,7 @@ func (suite *KeeperTestSuite) TestBeforeSendHook() {
 			suite.SetupTest()
 
 			// upload and instantiate wasm code
-			wasmCode, err := ioutil.ReadFile(tc.wasmFile)
+			wasmCode, err := os.ReadFile(tc.wasmFile)
 			suite.Require().NoError(err, "test: %v", tc.desc)
 			codeID, _, err := suite.contractKeeper.Create(suite.Ctx, suite.TestAccs[0], wasmCode, nil)
 			suite.Require().NoError(err, "test: %v", tc.desc)
