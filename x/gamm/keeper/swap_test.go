@@ -215,20 +215,20 @@ func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				poolId := suite.PrepareBalancerPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				poolI, ok := poolExt.(poolmanagertypes.PoolI)
+				pool, ok := poolExt.(poolmanagertypes.PoolI)
 				if !ok {
 					suite.FailNow("failed to cast pool to poolI")
 				}
-				pool = poolI
+
 			} else if test.param.poolType == "stableswap" {
 				poolId := suite.PrepareBasicStableswapPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				poolI, ok := poolExt.(poolmanagertypes.PoolI)
+				pool, ok := poolExt.(poolmanagertypes.PoolI)
 				if !ok {
 					suite.FailNow("failed to cast pool to poolI")
 				}
-				pool = poolI
+
 			}
 			swapFee := pool.GetSwapFee(suite.Ctx)
 
@@ -289,23 +289,21 @@ func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
 				poolId := suite.PrepareBalancerPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				poolI, ok := poolExt.(poolmanagertypes.PoolI)
+				pool, ok := poolExt.(poolmanagertypes.PoolI)
 				if !ok {
 					suite.FailNow("failed to cast pool to poolI")
 				}
 
-				pool = poolI
 
 			} else if test.param.poolType == "stableswap" {
 				poolId := suite.PrepareBasicStableswapPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				poolI, ok := poolExt.(poolmanagertypes.PoolI)
+				pool, ok := poolExt.(poolmanagertypes.PoolI)
 				if !ok {
 					suite.FailNow("failed to cast pool to poolI")
 				}
 
-				pool = poolI
 			}
 
 			swapFee := pool.GetSwapFee(suite.Ctx)
