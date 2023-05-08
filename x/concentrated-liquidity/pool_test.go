@@ -9,7 +9,6 @@ import (
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
@@ -436,37 +435,37 @@ func (s *KeeperTestSuite) TestDecreaseConcentratedPoolTickSpacing() {
 
 	tests := []struct {
 		name                       string
-		poolIdToTickSpacingRecord  []cltypes.PoolIdToTickSpacingRecord
+		poolIdToTickSpacingRecord  []types.PoolIdToTickSpacingRecord
 		position                   positionRange
 		expectedDecreaseSpacingErr error
 		expectedCreatePositionErr  error
 	}{
 		{
 			name:                      "happy path: tick spacing 100 -> 10",
-			poolIdToTickSpacingRecord: []cltypes.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 10}},
+			poolIdToTickSpacingRecord: []types.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 10}},
 			position:                  positionRange{lowerTick: -10, upperTick: 10},
 		},
 		{
 			name:                       "error: new tick spacing not authorized",
-			poolIdToTickSpacingRecord:  []cltypes.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 11}},
+			poolIdToTickSpacingRecord:  []types.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 11}},
 			position:                   positionRange{lowerTick: -10, upperTick: 10},
 			expectedDecreaseSpacingErr: fmt.Errorf("tick spacing %d is not valid", 11),
 		},
 		{
 			name:                       "error: new tick spacing higher than current",
-			poolIdToTickSpacingRecord:  []cltypes.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 1000}},
+			poolIdToTickSpacingRecord:  []types.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 1000}},
 			position:                   positionRange{lowerTick: -10, upperTick: 10},
 			expectedDecreaseSpacingErr: fmt.Errorf("tick spacing %d is not valid", 1000),
 		},
 		{
 			name:                      "error: cant create position whose lower tick is not divisible by new tick spacing",
-			poolIdToTickSpacingRecord: []cltypes.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 10}},
+			poolIdToTickSpacingRecord: []types.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 10}},
 			position:                  positionRange{lowerTick: -95, upperTick: 100},
 			expectedCreatePositionErr: types.TickSpacingError{TickSpacing: 10, LowerTick: -95, UpperTick: 100},
 		},
 		{
 			name:                      "error: cant create position whose upper tick is not divisible by new tick spacing",
-			poolIdToTickSpacingRecord: []cltypes.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 10}},
+			poolIdToTickSpacingRecord: []types.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 10}},
 			position:                  positionRange{lowerTick: -100, upperTick: 95},
 			expectedCreatePositionErr: types.TickSpacingError{TickSpacing: 10, LowerTick: -100, UpperTick: 95},
 		},

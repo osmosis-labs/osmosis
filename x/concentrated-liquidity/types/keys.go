@@ -125,10 +125,10 @@ func keyTickPrefixByPoolIdPrealloc(poolId uint64, preAllocBytes int) []byte {
 }
 
 // PositionId<>LockId and LockId<>PositionId Prefix Keys
-func PositionIdForLockIdKeys(positionId, lockId uint64) (positionIdToLockIdKey []byte, lockIdToPositionIdKeu []byte) {
+func PositionIdForLockIdKeys(positionId, lockId uint64) (positionIdToLockIdKey []byte, lockIdToPositionIdKey []byte) {
 	positionIdToLockIdKey = []byte(fmt.Sprintf("%s%s%d", PositionToLockPrefix, KeySeparator, positionId))
-	lockIdToPositionIdKeu = []byte(fmt.Sprintf("%s%s%d", LockToPositionPrefix, KeySeparator, lockId))
-	return positionIdToLockIdKey, lockIdToPositionIdKeu
+	lockIdToPositionIdKey = []byte(fmt.Sprintf("%s%s%d", LockToPositionPrefix, KeySeparator, lockId))
+	return positionIdToLockIdKey, lockIdToPositionIdKey
 }
 
 // PositionToLockPrefix Prefix Keys
@@ -238,34 +238,26 @@ func KeyBalancerFullRange(clPoolId, balancerPoolId, uptimeIndex uint64) []byte {
 }
 
 // Helper Functions
-func MustGetPoolIdFromShareDenom(denom string) uint64 {
+func GetPoolIdFromShareDenom(denom string) (uint64, error) {
 	if !strings.HasPrefix(denom, ClTokenPrefix) {
-		panic("denom does not start with the cl token prefix")
+		return 0, fmt.Errorf("denom does not start with the cl token prefix")
 	}
 	parts := strings.Split(denom, "/")
 	if len(parts) != 3 {
-		panic("cl token denom does not have the correct number of parts")
+		return 0, fmt.Errorf("cl token denom does not have the correct number of parts")
 	}
 	poolIdStr := parts[2]
 	poolId, err := strconv.Atoi(poolIdStr)
 	if err != nil {
-		panic(err)
-	}
-	return uint64(poolId)
-}
-
-func GetPositionIdFromShareDenom(denom string) (uint64, error) {
-	if !strings.HasPrefix(denom, ClTokenPrefix) {
-		return uint64(0), fmt.Errorf("denom does not start with the cl token prefix")
-	}
-	parts := strings.Split(denom, "/")
-	if len(parts) != 4 {
-		return uint64(0), fmt.Errorf("cl token denom does not have the correct number of parts")
-	}
-	poolIdStr := parts[3]
-	poolId, err := strconv.Atoi(poolIdStr)
-	if err != nil {
-		return uint64(0), err
+		return 0, fmt.Errorf("failed to convert poolIdStr to integer: %v", err)
 	}
 	return uint64(poolId), nil
+}
+
+func MustGetPoolIdFromShareDenom(denom string) uint64 {
+	poolId, err := GetPoolIdFromShareDenom(denom)
+	if err != nil {
+		panic(err)
+	}
+	return poolId
 }
