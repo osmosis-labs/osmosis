@@ -172,7 +172,7 @@ func withSp1(twap types.TwapRecord, sp sdk.Dec) types.TwapRecord {
 // TestTWAPInitGenesis tests that genesis is initialized correctly
 // with different parameters and state.
 // Asserts that the most recent records are set correctly.
-func (suite *TestSuite) TestTwapInitGenesis() {
+func (s *TestSuite) TestTwapInitGenesis() {
 	testCases := map[string]struct {
 		twapGenesis *types.GenesisState
 
@@ -234,14 +234,14 @@ func (suite *TestSuite) TestTwapInitGenesis() {
 	}
 
 	for name, tc := range testCases {
-		suite.Run(name, func() {
-			suite.Setup()
+		s.Run(name, func() {
+			s.Setup()
 			// Setup.
-			ctx := suite.Ctx
-			twapKeeper := suite.App.TwapKeeper
+			ctx := s.Ctx
+			twapKeeper := s.App.TwapKeeper
 
 			// Test.
-			osmoassert.ConditionalPanic(suite.T(), tc.expectPanic, func() { twapKeeper.InitGenesis(ctx, tc.twapGenesis) })
+			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() { twapKeeper.InitGenesis(ctx, tc.twapGenesis) })
 			if tc.expectPanic {
 				return
 			}
@@ -249,12 +249,12 @@ func (suite *TestSuite) TestTwapInitGenesis() {
 			// Assertions.
 
 			// Parameters were set.
-			suite.Require().Equal(tc.twapGenesis.Params, twapKeeper.GetParams(ctx))
+			s.Require().Equal(tc.twapGenesis.Params, twapKeeper.GetParams(ctx))
 
 			for _, expectedMostRecentRecord := range tc.expectedMostRecentRecord {
 				record, err := twapKeeper.GetMostRecentRecordStoreRepresentation(ctx, expectedMostRecentRecord.PoolId, expectedMostRecentRecord.Asset0Denom, expectedMostRecentRecord.Asset1Denom)
-				suite.Require().NoError(err)
-				suite.Require().Equal(expectedMostRecentRecord, record)
+				s.Require().NoError(err)
+				s.Require().Equal(expectedMostRecentRecord, record)
 			}
 		})
 	}
@@ -263,7 +263,7 @@ func (suite *TestSuite) TestTwapInitGenesis() {
 // TestTWAPExportGenesis tests that genesis is exported correctly.
 // It first initializes genesis to the expected value. Then, attempts
 // to export it. Lastly, compares exported to the expected.
-func (suite *TestSuite) TestTWAPExportGenesis() {
+func (s *TestSuite) TestTWAPExportGenesis() {
 	testCases := map[string]struct {
 		expectedGenesis *types.GenesisState
 	}{
@@ -282,11 +282,11 @@ func (suite *TestSuite) TestTWAPExportGenesis() {
 	}
 
 	for name, tc := range testCases {
-		suite.Run(name, func() {
-			suite.Setup()
+		s.Run(name, func() {
+			s.Setup()
 			// Setup.
-			app := suite.App
-			ctx := suite.Ctx
+			app := s.App
+			ctx := s.Ctx
 			twapKeeper := app.TwapKeeper
 
 			twapKeeper.InitGenesis(ctx, tc.expectedGenesis)
@@ -295,7 +295,7 @@ func (suite *TestSuite) TestTWAPExportGenesis() {
 			actualGenesis := twapKeeper.ExportGenesis(ctx)
 
 			// Assertions.
-			suite.Require().Equal(tc.expectedGenesis.Params, actualGenesis.Params)
+			s.Require().Equal(tc.expectedGenesis.Params, actualGenesis.Params)
 
 			// Sort expected by time. This is done because the exported genesis returns
 			// recors in ascending order by time.
@@ -303,7 +303,7 @@ func (suite *TestSuite) TestTWAPExportGenesis() {
 				return tc.expectedGenesis.Twaps[i].Time.Before(tc.expectedGenesis.Twaps[j].Time)
 			})
 
-			suite.Require().Equal(tc.expectedGenesis.Twaps, actualGenesis.Twaps)
+			s.Require().Equal(tc.expectedGenesis.Twaps, actualGenesis.Twaps)
 		})
 	}
 }

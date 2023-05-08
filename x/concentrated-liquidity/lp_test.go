@@ -514,7 +514,6 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			expectedRemainingLiquidity := liquidityCreated.Sub(config.liquidityAmount)
 
 			expectedFeesClaimed := sdk.NewCoins()
-			expectedIncentivesClaimed := sdk.NewCoins()
 			// Set the expected fees claimed to the amount of liquidity created since the global fee growth is 1.
 			// Fund the pool account with the expected fees claimed.
 			if expectedRemainingLiquidity.IsZero() {
@@ -525,7 +524,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			communityPoolBalanceBefore := s.App.BankKeeper.GetAllBalances(ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
 
 			// Set expected incentives and fund pool with appropriate amount
-			expectedIncentivesClaimed = expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, tc.timeElapsed, defaultMultiplier)
+			expectedIncentivesClaimed := expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, tc.timeElapsed, defaultMultiplier)
 
 			// Fund full amount since forfeited incentives for the last position are sent to the community pool.
 			expectedFullIncentivesFromAllUptimes := expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, types.SupportedUptimes[len(types.SupportedUptimes)-1], defaultMultiplier)
@@ -1069,12 +1068,12 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 		"only asset0 is greater than sender has, position creation (user to pool)": {
 			coin0:       sdk.NewCoin("eth", sdk.NewInt(100000000000000)),
 			coin1:       sdk.NewCoin("usdc", sdk.NewInt(1000000)),
-			expectedErr: InsufficientFundsError,
+			expectedErr: ErrInsufficientFunds,
 		},
 		"only asset1 is greater than sender has, position creation (user to pool)": {
 			coin0:       sdk.NewCoin("eth", sdk.NewInt(1000000)),
 			coin1:       sdk.NewCoin("usdc", sdk.NewInt(100000000000000)),
-			expectedErr: InsufficientFundsError,
+			expectedErr: ErrInsufficientFunds,
 		},
 		"asset0 and asset1 are positive, withdraw (pool to user)": {
 			coin0:      sdk.NewCoin("eth", sdk.NewInt(1000000)),
@@ -1095,13 +1094,13 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 			coin0:       sdk.NewCoin("eth", sdk.NewInt(100000000000000)),
 			coin1:       sdk.NewCoin("usdc", sdk.NewInt(1000000)),
 			poolToUser:  true,
-			expectedErr: InsufficientFundsError,
+			expectedErr: ErrInsufficientFunds,
 		},
 		"only asset1 is greater than sender has, withdraw (pool to user)": {
 			coin0:       sdk.NewCoin("eth", sdk.NewInt(1000000)),
 			coin1:       sdk.NewCoin("usdc", sdk.NewInt(100000000000000)),
 			poolToUser:  true,
-			expectedErr: InsufficientFundsError,
+			expectedErr: ErrInsufficientFunds,
 		},
 		"asset0 is negative - error": {
 			coin0: sdk.Coin{Denom: "eth", Amount: sdk.NewInt(1000000).Neg()},

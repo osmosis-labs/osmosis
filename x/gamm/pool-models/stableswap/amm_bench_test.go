@@ -27,13 +27,6 @@ func runCalcCFMM(solve func(osmomath.BigDec, osmomath.BigDec, []osmomath.BigDec,
 	solve(xReserve, yReserve, []osmomath.BigDec{}, yIn)
 }
 
-func runCalcTwoAsset(solve func(osmomath.BigDec, osmomath.BigDec, osmomath.BigDec) osmomath.BigDec) {
-	xReserve := osmomath.NewBigDec(rand.Int63n(100000) + 50000)
-	yReserve := osmomath.NewBigDec(rand.Int63n(100000) + 50000)
-	yIn := osmomath.NewBigDec(rand.Int63n(100000))
-	solve(xReserve, yReserve, yIn)
-}
-
 func runCalcMultiAsset(solve func(osmomath.BigDec, osmomath.BigDec, osmomath.BigDec, osmomath.BigDec) osmomath.BigDec) {
 	xReserve := osmomath.NewBigDec(rand.Int63n(100000) + 50000)
 	yReserve := osmomath.NewBigDec(rand.Int63n(100000) + 50000)
