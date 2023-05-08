@@ -12,11 +12,10 @@ import (
 
 	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"
-	poolmanagerkeeper "github.com/osmosis-labs/osmosis/v15/x/poolmanager"
 )
 
-func MigrateNextPoolId(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanagerKeeper *poolmanagerkeeper.Keeper) {
-	migrateNextPoolId(ctx, gammKeeper, poolmanagerKeeper)
+func MigrateNextPoolId(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanager *poolmanager.Keeper) {
+	migrateNextPoolId(ctx, gammKeeper, poolmanager)
 }
 
 func RegisterOsmoIonMetadata(ctx sdk.Context, bankKeeper bankkeeper.Keeper) {
@@ -27,8 +26,8 @@ func SetICQParams(ctx sdk.Context, icqKeeper *icqkeeper.Keeper) {
 	setICQParams(ctx, icqKeeper)
 }
 
-func MigrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanagerKeeper *poolmanager.Keeper, bankKeeper bankkeeper.Keeper, poolId uint64) {
-	migrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanagerKeeper, bankKeeper, poolId)
+func MigrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanager *poolmanager.Keeper, bankKeeper bankkeeper.Keeper, poolId uint64) {
+	migrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanager, bankKeeper, poolId)
 }
 
 func SetRateLimits(ctx sdk.Context, accountKeeper *authkeeper.AccountKeeper, rateLimitingICS4Wrapper *ibcratelimit.ICS4Wrapper, wasmKeeper *wasmkeeper.Keeper) {
