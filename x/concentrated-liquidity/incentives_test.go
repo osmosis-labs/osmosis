@@ -28,8 +28,6 @@ var (
 	testAddressThree = sdk.MustAccAddressFromBech32("osmo1qwexv7c6sm95lwhzn9027vyu2ccneaqad4w8ka")
 	testAddressFour  = sdk.MustAccAddressFromBech32("osmo14hcxlnwlqtq75ttaxf674vk6mafspg8xwgnn53")
 
-	testAccumOne = "testAccumOne"
-
 	// Note: lexicographic order is denomFour, denomOne, denomThree, denomTwo
 	testDenomOne   = "denomOne"
 	testDenomTwo   = "denomTwo"
@@ -112,9 +110,7 @@ var (
 		MinUptime: testUptimeFour,
 	}
 
-	testQualifyingDepositsOne   = sdk.NewInt(50)
-	testQualifyingDepositsTwo   = sdk.NewInt(100)
-	testQualifyingDepositsThree = sdk.NewInt(399)
+	testQualifyingDepositsOne = sdk.NewInt(50)
 
 	defaultBalancerAssets = []balancer.PoolAsset{
 		{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
@@ -123,8 +119,6 @@ var (
 	defaultConcentratedAssets = sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)))
 	defaultBalancerPoolParams = balancer.PoolParams{SwapFee: sdk.NewDec(0), ExitFee: sdk.NewDec(0)}
 	invalidPoolId             = uint64(10)
-
-	defaultAuthorizedUptimes = []time.Duration{time.Nanosecond}
 )
 
 type ExpectedUptimes struct {
@@ -214,14 +208,6 @@ func chargeIncentive(incentiveRecord types.IncentiveRecord, timeElapsed time.Dur
 	return incentiveRecord
 }
 
-// emittedIncentives returns the amount of incentives emitted by incentiveRecord over timeElapsed.
-// It uses the same logic as chargeIncentive for calculating this amount.
-func emittedIncentives(incentiveRecord types.IncentiveRecord, timeElapsed time.Duration) sdk.Dec {
-	secToNanoSec := int64(1000000000)
-	incentivesEmitted := incentiveRecord.IncentiveRecordBody.EmissionRate.Mul(sdk.NewDec(int64(timeElapsed)).Quo(sdk.NewDec(secToNanoSec)))
-	return incentivesEmitted
-}
-
 // Helper for adding a predetermined amount to each global uptime accum in clPool
 func addToUptimeAccums(ctx sdk.Context, poolId uint64, clKeeper *cl.Keeper, addValues []sdk.DecCoins) error {
 	poolUptimeAccumulators, err := clKeeper.GetUptimeAccumulators(ctx, poolId)
@@ -249,18 +235,6 @@ func addDecCoinsArray(decCoinsArrayA []sdk.DecCoins, decCoinsArrayB []sdk.DecCoi
 	}
 
 	return finalDecCoinArray, nil
-}
-
-func createIncentiveRecord(incentiveDenom string, remainingAmt, emissionRate sdk.Dec, startTime time.Time, minUpTime time.Duration) types.IncentiveRecord {
-	return types.IncentiveRecord{
-		IncentiveDenom: incentiveDenom,
-		IncentiveRecordBody: types.IncentiveRecordBody{
-			RemainingAmount: remainingAmt,
-			EmissionRate:    emissionRate,
-			StartTime:       startTime,
-		},
-		MinUptime: minUpTime,
-	}
 }
 
 func withDenom(record types.IncentiveRecord, denom string) types.IncentiveRecord {
@@ -758,16 +732,11 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 	longestLockableDuration := lockableDurations[len(lockableDurations)-1]
 	type updateAccumToNow struct {
 		poolId                      uint64
-		accumUptime                 time.Duration
-		qualifyingLiquidity         sdk.Dec
 		timeElapsed                 time.Duration
 		poolIncentiveRecords        []types.IncentiveRecord
 		canonicalBalancerPoolAssets []balancer.PoolAsset
 
-		isInvalidPoolId          bool
 		isInvalidBalancerPool    bool
-		expectedResult           sdk.DecCoins
-		expectedUptimeDeltas     []sdk.DecCoins
 		expectedIncentiveRecords []types.IncentiveRecord
 		expectedError            error
 	}
@@ -1205,7 +1174,6 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 		globalUptimeGrowth           []sdk.DecCoins
 
 		expectedUptimeGrowthInside []sdk.DecCoins
-		invalidTick                bool
 		expectedError              bool
 	}
 
@@ -1533,7 +1501,6 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 		globalUptimeGrowth           []sdk.DecCoins
 
 		expectedUptimeGrowthOutside []sdk.DecCoins
-		invalidTick                 bool
 		expectedError               bool
 	}
 

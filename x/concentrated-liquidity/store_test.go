@@ -32,11 +32,6 @@ var (
 )
 
 func (s *KeeperTestSuite) TestParseFullTickFromBytes() {
-	const (
-		emptyKeySeparator   = ""
-		invalidKeySeparator = "-"
-	)
-
 	var (
 		cdc = s.App.AppCodec()
 
