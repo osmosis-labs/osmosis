@@ -108,7 +108,7 @@ func (suite *KeeperTestSuite) TestUnpool() {
 			}
 
 			// set up validator
-			valAddr := suite.SetupValidator(stakingtypes.BondStatus(stakingtypes.Bonded))
+			valAddr := suite.SetupValidator(stakingtypes.Bonded)
 
 			// create pool of "stake" and "foo"
 			msg := balancer.NewMsgCreateBalancerPool(poolCreateAcc, balancer.PoolParams{

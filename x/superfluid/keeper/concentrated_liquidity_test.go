@@ -247,7 +247,7 @@ func (suite *KeeperTestSuite) SetupSuperfluidConcentratedPosition(ctx sdk.Contex
 	}
 
 	// Set up a single validator.
-	valAddr = suite.SetupValidator(stakingtypes.BondStatus(stakingtypes.Bonded))
+	valAddr = suite.SetupValidator(stakingtypes.Bonded)
 
 	// Create a cl pool.
 	clPool := suite.PrepareCustomConcentratedPool(poolCreateAcc, defaultPoolAssets[0].Token.Denom, defaultPoolAssets[1].Token.Denom, 1, sdk.ZeroDec())

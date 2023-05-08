@@ -147,9 +147,9 @@ func (suite *MiddlewareTestSuite) TestInvalidReceiver() {
 		0,
 	)
 	_, ack, _ := suite.FullSendBToA(msg)
-	suite.Require().Contains(string(ack), "error",
+	suite.Require().Contains(ack, "error",
 		"acknowledgment is not an error")
-	suite.Require().Contains(string(ack), fmt.Sprintf("ABCI code: %d", types.ErrBadMessage.ABCICode()),
+	suite.Require().Contains(ack, fmt.Sprintf("ABCI code: %d", types.ErrBadMessage.ABCICode()),
 		"acknowledgment error is not of the right type")
 }
 
@@ -218,12 +218,12 @@ func (suite *MiddlewareTestSuite) AssertReceive(success bool, msg sdk.Msg) (stri
 	_, ack, err := suite.FullSendBToA(msg)
 	if success {
 		suite.Require().NoError(err)
-		suite.Require().NotContains(string(ack), "error",
+		suite.Require().NotContains(ack, "error",
 			"acknowledgment is an error")
 	} else {
-		suite.Require().Contains(string(ack), "error",
+		suite.Require().Contains(ack, "error",
 			"acknowledgment is not an error")
-		suite.Require().Contains(string(ack), fmt.Sprintf("ABCI code: %d", types.ErrRateLimitExceeded.ABCICode()),
+		suite.Require().Contains(ack, fmt.Sprintf("ABCI code: %d", types.ErrRateLimitExceeded.ABCICode()),
 			"acknowledgment error is not of the right type")
 	}
 	return ack, err
