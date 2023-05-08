@@ -249,7 +249,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Create 2 positions for address3: overlap together, overlap with 2 address1 positions, one position starts from minimum
 	chainANode.CreateConcentratedPosition(address3, "[-160000]", "[-20000]", "10000000", "10000000", 0, 0, poolID)
-	chainANode.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", cltypes.MinTick), "140000", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
+	chainANode.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", cltypes.MinTick), "140000", "10000000", "10000000", 0, 0, poolID)
 
 	// Get newly created positions
 	positionsAddress1 := chainANode.QueryConcentratedPositions(address1)
