@@ -12,10 +12,10 @@ func (k Keeper) GetNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 	return k.getNextPoolIdAndIncrement(ctx)
 }
 
-func (k Keeper) GetOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.MultihopRoute) (
-	totalPathSwapFee sdk.Dec, sumOfSwapFees sdk.Dec, err error,
+func (k Keeper) GetOsmoRoutedMultihopTotalSpreadFactor(ctx sdk.Context, route types.MultihopRoute) (
+	totalPathSpreadFactor sdk.Dec, sumOfSpreadFactors sdk.Dec, err error,
 ) {
-	return k.getOsmoRoutedMultihopTotalSwapFee(ctx, route)
+	return k.getOsmoRoutedMultihopTotalSpreadFactor(ctx, route)
 }
 
 // SetPoolRoutesUnsafe sets the given routes to the poolmanager keeper

@@ -554,7 +554,7 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 			ctx := suite.Ctx
 			clKeeper := suite.App.ConcentratedLiquidityKeeper
 
-			pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, ETH, USDC, DefaultTickSpacing, DefaultZeroSwapFee)
+			pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, ETH, USDC, DefaultTickSpacing, DefaultZeroSpreadFactor)
 			suite.Require().NoError(err)
 
 			// N.B.: we set the listener mock because we would like to avoid
@@ -1434,7 +1434,7 @@ func (s *KeeperTestSuite) TestFunctional_Fees_Swaps() {
 	// Default setup only creates 3 accounts, but we need 5 for this test.
 	s.TestAccs = apptesting.CreateRandomAccounts(positions.numAccounts)
 
-	// Create a default CL pool, but with a 0.3 percent swap fee.
+	// Create a default CL pool, but with a 0.3 percent spread factor.
 	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, sdk.MustNewDecFromStr("0.002"))
 
 	positionIds := make([][]uint64, 4)
@@ -1500,13 +1500,13 @@ func (s *KeeperTestSuite) TestFunctional_Fees_LP() {
 		owner                       = s.TestAccs[0]
 	)
 
-	// Create pool with 0.2% swap fee.
+	// Create pool with 0.2% spread factor.
 	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, sdk.MustNewDecFromStr("0.002"))
 	fundCoins := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0.MulRaw(2)), sdk.NewCoin(USDC, DefaultAmt1.MulRaw(2)))
 	s.FundAcc(owner, fundCoins)
 
 	// Errors since no position.
-	_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, owner, pool, sdk.NewCoin(ETH, sdk.OneInt()), USDC, pool.GetSwapFee(s.Ctx), types.MaxSpotPrice)
+	_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, owner, pool, sdk.NewCoin(ETH, sdk.OneInt()), USDC, pool.GetSpreadFactor(s.Ctx), types.MaxSpotPrice)
 	s.Require().Error(err)
 
 	// Create position in the default range 1.
@@ -1645,9 +1645,9 @@ func (s *KeeperTestSuite) swapAndTrackXTimesInARow(poolId uint64, coinIn sdk.Coi
 	totalTokenIn = sdk.NewCoin(coinIn.Denom, sdk.ZeroInt())
 	totalTokenOut = sdk.NewCoin(coinOutDenom, sdk.ZeroInt())
 	for i := 0; i < numSwaps; i++ {
-		coinIn, coinOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, s.TestAccs[4], clPool, coinIn, coinOutDenom, clPool.GetSwapFee(s.Ctx), priceLimit)
+		coinIn, coinOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, s.TestAccs[4], clPool, coinIn, coinOutDenom, clPool.GetSpreadFactor(s.Ctx), priceLimit)
 		s.Require().NoError(err)
-		fee := coinIn.Amount.ToDec().Mul(clPool.GetSwapFee(s.Ctx))
+		fee := coinIn.Amount.ToDec().Mul(clPool.GetSpreadFactor(s.Ctx))
 		totalFees = totalFees.Add(sdk.NewCoin(coinIn.Denom, fee.TruncateInt()))
 		clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 		s.Require().NoError(err)

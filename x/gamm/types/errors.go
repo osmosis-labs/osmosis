@@ -67,9 +67,9 @@ var (
 
 	ErrEmptyRoutes              = errorsmod.Register(ModuleName, 21, "routes not defined")
 	ErrEmptyPoolAssets          = errorsmod.Register(ModuleName, 22, "PoolAssets not defined")
-	ErrNegativeSwapFee          = errorsmod.Register(ModuleName, 23, "swap fee is negative")
+	ErrNegativeSpreadFactor     = errorsmod.Register(ModuleName, 23, "spread factor is negative")
 	ErrNegativeExitFee          = errorsmod.Register(ModuleName, 24, "exit fee is negative")
-	ErrTooMuchSwapFee           = errorsmod.Register(ModuleName, 25, "swap fee should be lesser than 1 (100%)")
+	ErrTooMuchSpreadFactor      = errorsmod.Register(ModuleName, 25, "spread factor should be lesser than 1 (100%)")
 	ErrTooMuchExitFee           = errorsmod.Register(ModuleName, 26, "exit fee should be lesser than 1 (100%)")
 	ErrNotPositiveWeight        = errorsmod.Register(ModuleName, 27, "token weight should be greater than 0")
 	ErrWeightTooLarge           = errorsmod.Register(ModuleName, 28, "user specified token weight should be less than 2^20")

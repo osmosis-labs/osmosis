@@ -26,12 +26,12 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 	tests := []struct {
 		name  string
 		param param
-		// Note: by default swap fee is zero in all tests
+		// Note: by default spread factor is zero in all tests
 		// It is only set to non-zero when this overwrite is non-nil
 		swapFeeOverwrite sdk.Dec
-		// Note: this is the value by which the original swap fee is divided
+		// Note: this is the value by which the original spread factor is divided
 		// by if it is non-nil. This is done to test the case where the given
-		// parameter swap fee is reduced by more than allowed (max factor of 0.5)
+		// parameter spread factor is reduced by more than allowed (max factor of 0.5)
 		swapFeeOverwriteQuotient sdk.Dec
 		expectPass               bool
 	}{
@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 			expectPass: true,
 		},
 		{
-			name: "boundary valid swap fee given (= 0.5 pool swap fee)",
+			name: "boundary valid spread factor given (= 0.5 pool spread factor)",
 			param: param{
 				tokenIn:           sdk.NewCoin("foo", sdk.NewInt(100000)),
 				tokenOutDenom:     "bar",
@@ -68,7 +68,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 			expectPass:               true,
 		},
 		{
-			name: "invalid swap fee given (< 0.5 pool swap fee)",
+			name: "invalid spread factor given (< 0.5 pool spread factor)",
 			param: param{
 				tokenIn:           sdk.NewCoin("foo", sdk.NewInt(100000)),
 				tokenOutDenom:     "bar",
@@ -122,16 +122,16 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 		suite.Run(test.name, func() {
 			// Init suite for each test.
 			suite.SetupTest()
-			swapFee := sdk.ZeroDec()
+			spreadFactor := sdk.ZeroDec()
 			if !test.swapFeeOverwrite.IsNil() {
-				swapFee = test.swapFeeOverwrite
+				spreadFactor = test.swapFeeOverwrite
 			}
 			poolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-				SwapFee: swapFee,
+				SwapFee: spreadFactor,
 				ExitFee: sdk.ZeroDec(),
 			})
 			if !test.swapFeeOverwriteQuotient.IsNil() {
-				swapFee = swapFee.Quo(test.swapFeeOverwriteQuotient)
+				spreadFactor = spreadFactor.Quo(test.swapFeeOverwriteQuotient)
 			}
 			keeper := suite.App.GAMMKeeper
 			ctx := suite.Ctx
@@ -143,7 +143,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				suite.NoError(err, "test: %v", test.name)
 
 				prevGasConsumed := suite.Ctx.GasMeter().GasConsumed()
-				tokenOutAmount, err := keeper.SwapExactAmountIn(ctx, suite.TestAccs[0], pool, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, swapFee)
+				tokenOutAmount, err := keeper.SwapExactAmountIn(ctx, suite.TestAccs[0], pool, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, spreadFactor)
 				suite.NoError(err, "test: %v", test.name)
 				suite.Require().Equal(test.param.expectedTokenOut.String(), tokenOutAmount.String())
 				gasConsumedForSwap := suite.Ctx.GasMeter().GasConsumed() - prevGasConsumed
@@ -163,7 +163,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				tradeAvgPrice := test.param.tokenIn.Amount.ToDec().Quo(tokenOutAmount.ToDec())
 				suite.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
 			} else {
-				_, err := keeper.SwapExactAmountIn(ctx, suite.TestAccs[0], pool, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, swapFee)
+				_, err := keeper.SwapExactAmountIn(ctx, suite.TestAccs[0], pool, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, spreadFactor)
 				suite.Error(err, "test: %v", test.name)
 			}
 		})
@@ -224,9 +224,9 @@ func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				pool = poolExt.(poolmanagertypes.PoolI)
 			}
 
-			swapFee := pool.GetSwapFee(suite.Ctx)
+			spreadFactor := pool.GetSpreadFactor(suite.Ctx)
 
-			_, err := keeper.CalcOutAmtGivenIn(ctx, pool, test.param.tokenIn, test.param.tokenOutDenom, swapFee)
+			_, err := keeper.CalcOutAmtGivenIn(ctx, pool, test.param.tokenIn, test.param.tokenOutDenom, spreadFactor)
 
 			if test.expectPass {
 				suite.Require().NoError(err)
@@ -291,9 +291,9 @@ func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
 				pool = poolExt.(poolmanagertypes.PoolI)
 			}
 
-			swapFee := pool.GetSwapFee(suite.Ctx)
+			spreadFactor := pool.GetSpreadFactor(suite.Ctx)
 
-			_, err := keeper.CalcInAmtGivenOut(ctx, pool, test.param.tokenOut, test.param.tokenInDenom, swapFee)
+			_, err := keeper.CalcInAmtGivenOut(ctx, pool, test.param.tokenOut, test.param.tokenInDenom, spreadFactor)
 
 			if test.expectPass {
 				suite.Require().NoError(err)
@@ -385,7 +385,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 			ctx := suite.Ctx
 			pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 			suite.Require().NoError(err)
-			swapFee := pool.GetSwapFee(suite.Ctx)
+			spreadFactor := pool.GetSpreadFactor(suite.Ctx)
 
 			if test.expectPass {
 				spotPriceBefore, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
@@ -393,7 +393,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 
 				prevGasConsumed := suite.Ctx.GasMeter().GasConsumed()
 
-				tokenInAmount, err := keeper.SwapExactAmountOut(ctx, suite.TestAccs[0], pool, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut, swapFee)
+				tokenInAmount, err := keeper.SwapExactAmountOut(ctx, suite.TestAccs[0], pool, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut, spreadFactor)
 				suite.NoError(err, "test: %v", test.name)
 				suite.True(tokenInAmount.Equal(test.param.expectedTokenInAmount),
 					"test: %v\n expect_eq actual: %s, expected: %s",
@@ -411,7 +411,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 				tradeAvgPrice := tokenInAmount.ToDec().Quo(test.param.tokenOut.Amount.ToDec())
 				suite.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
 			} else {
-				_, err := keeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], pool, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut, swapFee)
+				_, err := keeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], pool, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut, spreadFactor)
 				suite.Error(err, "test: %v", test.name)
 			}
 		})
@@ -444,19 +444,19 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 			suite.Ctx = suite.Ctx.WithBlockTime(tc.blockTime)
 			pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 			suite.Require().NoError(err)
-			swapFee := pool.GetSwapFee(suite.Ctx)
+			spreadFactor := pool.GetSpreadFactor(suite.Ctx)
 
 			foocoin := sdk.NewCoin("foo", sdk.NewInt(10))
 
 			if tc.expectPass {
-				_, err := suite.App.GAMMKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], pool, foocoin, "bar", sdk.ZeroInt(), swapFee)
+				_, err := suite.App.GAMMKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], pool, foocoin, "bar", sdk.ZeroInt(), spreadFactor)
 				suite.Require().NoError(err)
-				_, err = suite.App.GAMMKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], pool, "bar", sdk.NewInt(1000000000000000000), foocoin, swapFee)
+				_, err = suite.App.GAMMKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], pool, "bar", sdk.NewInt(1000000000000000000), foocoin, spreadFactor)
 				suite.Require().NoError(err)
 			} else {
-				_, err := suite.App.GAMMKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], pool, foocoin, "bar", sdk.ZeroInt(), swapFee)
+				_, err := suite.App.GAMMKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], pool, foocoin, "bar", sdk.ZeroInt(), spreadFactor)
 				suite.Require().Error(err)
-				_, err = suite.App.GAMMKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], pool, "bar", sdk.NewInt(1000000000000000000), foocoin, swapFee)
+				_, err = suite.App.GAMMKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], pool, "bar", sdk.NewInt(1000000000000000000), foocoin, spreadFactor)
 				suite.Require().Error(err)
 			}
 		}

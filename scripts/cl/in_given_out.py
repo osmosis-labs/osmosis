@@ -12,7 +12,7 @@ def estimate_test_case_in_given_out(tick_ranges: list[SqrtPriceRange], token_out
     Given
       - sqrt price range with the start sqrt price, next sqrt price and liquidity
       - token out
-      - swap fee
+      - spread factor
       - zero for one boolean flag
     Estimates the token in with fee applied and the fee growth per share and prints it to stdout.
     Also, estimates these and other values at each range and prints them to stdout.

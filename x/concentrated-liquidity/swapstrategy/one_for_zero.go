@@ -19,7 +19,7 @@ import (
 type oneForZeroStrategy struct {
 	sqrtPriceLimit sdk.Dec
 	storeKey       sdk.StoreKey
-	swapFee        sdk.Dec
+	spreadFactor   sdk.Dec
 	tickSpacing    uint64
 }
 
@@ -59,7 +59,7 @@ func (s oneForZeroStrategy) ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPric
 	amountOneIn := math.CalcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
 
 	// Calculate sqrtPriceNext on the amount of token remaining after fee.
-	amountOneInRemainingLessFee := amountOneInRemaining.Mul(sdk.OneDec().Sub(s.swapFee))
+	amountOneInRemainingLessFee := amountOneInRemaining.Mul(sdk.OneDec().Sub(s.spreadFactor))
 
 	var sqrtPriceNext sdk.Dec
 	// If have more of the amount remaining after fee than estimated until target,
@@ -85,7 +85,7 @@ func (s oneForZeroStrategy) ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPric
 
 	// Handle fees.
 	// Note that fee is always charged on the amount in.
-	feeChargeTotal := computeFeeChargePerSwapStepOutGivenIn(hasReachedTarget, amountOneIn, amountOneInRemaining, s.swapFee)
+	feeChargeTotal := computeFeeChargePerSwapStepOutGivenIn(hasReachedTarget, amountOneIn, amountOneInRemaining, s.spreadFactor)
 
 	return sqrtPriceNext, amountOneIn, amountZeroOut, feeChargeTotal
 }
@@ -142,7 +142,7 @@ func (s oneForZeroStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPric
 
 	// Handle fees.
 	// Note that fee is always charged on the amount in.
-	feeChargeTotal := computeFeeChargeFromAmountIn(amountOneIn, s.swapFee)
+	feeChargeTotal := computeFeeChargeFromAmountIn(amountOneIn, s.spreadFactor)
 
 	return sqrtPriceNext, amountZeroOut, amountOneIn, feeChargeTotal
 }

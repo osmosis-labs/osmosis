@@ -247,7 +247,7 @@ type SwapI interface {
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		tokenOutMinAmount sdk.Int,
-		swapFee sdk.Dec,
+		spreadFactor sdk.Dec,
 	) (sdk.Int, error)
 }
 ```
@@ -261,7 +261,7 @@ For example, in the context of balancer pools, given a `tokenIn`, the
 following calculations are done to calculate how many tokens are to be
 swapped into and removed from the pool:
 
-`tokenBalanceOut * [1 - { tokenBalanceIn / (tokenBalanceIn + (1 - swapFee) * tokenAmountIn)} ^ (tokenWeightIn / tokenWeightOut)]`
+`tokenBalanceOut * [1 - { tokenBalanceIn / (tokenBalanceIn + (1 - spreadFactor) * tokenAmountIn)} ^ (tokenWeightIn / tokenWeightOut)]`
 
 The calculation is also able to be reversed, the case where user
 provides `tokenOut`. The calculation for the amount of tokens that the
@@ -300,8 +300,8 @@ The most cost-efficient route is determined offline and the list of the pools is
 At the moment of execution, the provided route may not be the most cost-efficient one anymore.
 
 When a trade consists of just two OSMO-included routes during a single transaction,
-the swap fees on each hop would be automatically halved.
-Example: for converting `ATOM -> OSMO -> LUNA` using two pools with swap fees `0.3% + 0.2%`,
+the spread factors on each hop would be automatically halved.
+Example: for converting `ATOM -> OSMO -> LUNA` using two pools with spread factors `0.3% + 0.2%`,
 instead `0.15% + 0.1%` fees will be applied.
 
 [Multi-Hop](https://github.com/osmosis-labs/osmosis/blob/f26ceb958adaaf31510e17ed88f5eab47e2bac03/x/poolmanager/router.go#L16)

@@ -54,10 +54,10 @@ message Pool {
     (gogoproto.nullable) = false
   ];
 
-  // swap_fee is the ratio that is charged on the amount of token in.
-  string swap_fee = 11 [
+  // spread_factor is the ratio that is charged on the amount of token in.
+  string spread_factor = 11 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"swap_fee\"",
+    (gogoproto.moretags) = "yaml:\"spread_factor\"",
     (gogoproto.nullable) = false
   ];
 

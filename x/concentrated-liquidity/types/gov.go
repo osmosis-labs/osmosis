@@ -26,7 +26,7 @@ var (
 )
 
 // NewCreateConcentratedLiquidityPoolProposal returns a new instance of a create concentrated liquidity pool proposal struct.
-func NewCreateConcentratedLiquidityPoolProposal(title, description string, denom0, denom1 string, tickSpacing uint64, exponentAtPriceOne sdk.Int, swapFee sdk.Dec) govtypes.Content {
+func NewCreateConcentratedLiquidityPoolProposal(title, description string, denom0, denom1 string, tickSpacing uint64, exponentAtPriceOne sdk.Int, spreadFactor sdk.Dec) govtypes.Content {
 	return &CreateConcentratedLiquidityPoolProposal{
 		Title:              title,
 		Description:        description,
@@ -34,7 +34,7 @@ func NewCreateConcentratedLiquidityPoolProposal(title, description string, denom
 		Denom1:             denom1,
 		TickSpacing:        tickSpacing,
 		ExponentAtPriceOne: exponentAtPriceOne,
-		SwapFee:            swapFee,
+		SpreadFactor:       spreadFactor,
 	}
 }
 
@@ -74,9 +74,9 @@ func (p *CreateConcentratedLiquidityPoolProposal) ValidateBasic() error {
 		return fmt.Errorf("denom1 is invalid: %s", sdk.ValidateDenom(p.Denom1))
 	}
 
-	swapFee := p.SwapFee
-	if swapFee.IsNegative() || swapFee.GTE(sdk.OneDec()) {
-		return InvalidSwapFeeError{ActualFee: swapFee}
+	spreadFactor := p.SpreadFactor
+	if spreadFactor.IsNegative() || spreadFactor.GTE(sdk.OneDec()) {
+		return InvalidSpreadFactorError{ActualFee: spreadFactor}
 	}
 
 	return nil
@@ -128,7 +128,7 @@ func (p CreateConcentratedLiquidityPoolProposal) String() string {
   Tick Spacing:          %d
   ExponentAtPriceOne     %s
   Swap Fee:              %s
-`, p.Title, p.Description, p.Denom0, p.Denom1, p.TickSpacing, p.ExponentAtPriceOne.String(), p.SwapFee.String()))
+`, p.Title, p.Description, p.Denom0, p.Denom1, p.TickSpacing, p.ExponentAtPriceOne.String(), p.SpreadFactor.String()))
 	return b.String()
 }
 

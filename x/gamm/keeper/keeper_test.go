@@ -20,8 +20,8 @@ type KeeperTestSuite struct {
 }
 
 var (
-	defaultSwapFee     = sdk.MustNewDecFromStr("0.025")
-	defaultZeroExitFee = sdk.ZeroDec()
+	defaultSpreadFactor = sdk.MustNewDecFromStr("0.025")
+	defaultZeroExitFee  = sdk.ZeroDec()
 )
 
 func TestKeeperTestSuite(t *testing.T) {

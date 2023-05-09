@@ -26,9 +26,9 @@ func (k Keeper) RouteExactAmountIn(
 	tokenOutMinAmount sdk.Int,
 ) (tokenOutAmount sdk.Int, err error) {
 	var (
-		isMultiHopRouted bool
-		routeSwapFee     sdk.Dec
-		sumOfSwapFees    sdk.Dec
+		isMultiHopRouted   bool
+		routeSpreadFactor  sdk.Dec
+		sumOfSpreadFactors sdk.Dec
 	)
 
 	route := types.SwapAmountInRoutes(routes)
@@ -44,11 +44,11 @@ func (k Keeper) RouteExactAmountIn(
 	//
 	// If all of the above is true, then we collect the additive and max fee between the
 	// two pools to later calculate the following:
-	// total_swap_fee = total_swap_fee = max(swapfee1, swapfee2)
-	// fee_per_pool = total_swap_fee * ((pool_fee) / (swapfee1 + swapfee2))
+	// total_spread_factor = total_spread_factor = max(spread_factor1, spread_factor2)
+	// fee_per_pool = total_swap_fee * ((pool_fee) / (spread_factor1 + spread_factor2))
 	if k.isOsmoRoutedMultihop(ctx, route, routes[0].TokenOutDenom, tokenIn.Denom) {
 		isMultiHopRouted = true
-		routeSwapFee, sumOfSwapFees, err = k.getOsmoRoutedMultihopTotalSwapFee(ctx, route)
+		routeSpreadFactor, sumOfSpreadFactors, err = k.getOsmoRoutedMultihopTotalSpreadFactor(ctx, route)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -78,15 +78,15 @@ func (k Keeper) RouteExactAmountIn(
 			return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
 		}
 
-		swapFee := pool.GetSwapFee(ctx)
+		spreadFactor := pool.GetSpreadFactor(ctx)
 
 		// If we determined the route is an osmo multi-hop and both routes are incentivized,
-		// we modify the swap fee accordingly.
+		// we modify the spread factor accordingly.
 		if isMultiHopRouted {
-			swapFee = routeSwapFee.Mul((swapFee.Quo(sumOfSwapFees)))
+			spreadFactor = routeSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors)))
 		}
 
-		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, route.TokenOutDenom, _outMinAmount, swapFee)
+		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, route.TokenOutDenom, _outMinAmount, spreadFactor)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -184,9 +184,9 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
 	}
 
-	swapFee := pool.GetSwapFee(ctx)
+	spreadFactor := pool.GetSpreadFactor(ctx)
 
-	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
+	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, spreadFactor)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -200,9 +200,9 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 	tokenIn sdk.Coin,
 ) (tokenOutAmount sdk.Int, err error) {
 	var (
-		isMultiHopRouted bool
-		routeSwapFee     sdk.Dec
-		sumOfSwapFees    sdk.Dec
+		isMultiHopRouted   bool
+		routeSpreadFactor  sdk.Dec
+		sumOfSpreadFactors sdk.Dec
 	)
 
 	// recover from panic
@@ -220,7 +220,7 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 
 	if k.isOsmoRoutedMultihop(ctx, route, routes[0].TokenOutDenom, tokenIn.Denom) {
 		isMultiHopRouted = true
-		routeSwapFee, sumOfSwapFees, err = k.getOsmoRoutedMultihopTotalSwapFee(ctx, route)
+		routeSpreadFactor, sumOfSpreadFactors, err = k.getOsmoRoutedMultihopTotalSpreadFactor(ctx, route)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -238,15 +238,15 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 			return sdk.Int{}, poolErr
 		}
 
-		swapFee := poolI.GetSwapFee(ctx)
+		spreadFactor := poolI.GetSpreadFactor(ctx)
 
 		// If we determined the route is an osmo multi-hop and both routes are incentivized,
-		// we modify the swap fee accordingly.
+		// we modify the spread factor accordingly.
 		if isMultiHopRouted {
-			swapFee = routeSwapFee.Mul((swapFee.Quo(sumOfSwapFees)))
+			spreadFactor = routeSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors)))
 		}
 
-		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenIn, route.TokenOutDenom, swapFee)
+		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenIn, route.TokenOutDenom, spreadFactor)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -272,7 +272,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
 ) (tokenInAmount sdk.Int, err error) {
-	isMultiHopRouted, routeSwapFee, sumOfSwapFees := false, sdk.Dec{}, sdk.Dec{}
+	isMultiHopRouted, routeSpreadFactor, sumOfSpreadFactors := false, sdk.Dec{}, sdk.Dec{}
 	route := types.SwapAmountOutRoutes(routes)
 	if err := route.Validate(); err != nil {
 		return sdk.Int{}, err
@@ -291,11 +291,11 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	// - route 1 contains uosmo
 	// - both route 1 and route 2 are incentivized pools
 	// if all of the above is true, then we collect the additive and max fee between the two pools to later calculate the following:
-	// total_swap_fee = total_swap_fee = max(swapfee1, swapfee2)
-	// fee_per_pool = total_swap_fee * ((pool_fee) / (swapfee1 + swapfee2))
+	// total_swap_fee = total_spread_factor = max(spread_factor1, spread_factor2)
+	// fee_per_pool = total_spread_factor * ((pool_fee) / (spread_factor1 + spread_factor2))
 	if k.isOsmoRoutedMultihop(ctx, route, routes[0].TokenInDenom, tokenOut.Denom) {
 		isMultiHopRouted = true
-		routeSwapFee, sumOfSwapFees, err = k.getOsmoRoutedMultihopTotalSwapFee(ctx, route)
+		routeSpreadFactor, sumOfSpreadFactors, err = k.getOsmoRoutedMultihopTotalSpreadFactor(ctx, route)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -303,10 +303,10 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 
 	// Determine what the estimated input would be for each pool along the multi-hop route
 	// if we determined the route is an osmo multi-hop and both routes are incentivized,
-	// we utilize a separate function that calculates the discounted swap fees
+	// we utilize a separate function that calculates the discounted spread factors
 	var insExpected []sdk.Int
 	if isMultiHopRouted {
-		insExpected, err = k.createOsmoMultihopExpectedSwapOuts(ctx, routes, tokenOut, routeSwapFee, sumOfSwapFees)
+		insExpected, err = k.createOsmoMultihopExpectedSwapOuts(ctx, routes, tokenOut, routeSpreadFactor, sumOfSpreadFactors)
 	} else {
 		insExpected, err = k.createMultihopExpectedSwapOuts(ctx, routes, tokenOut)
 	}
@@ -347,12 +347,12 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 			return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
 		}
 
-		swapFee := pool.GetSwapFee(ctx)
+		spreadFactor := pool.GetSpreadFactor(ctx)
 		if isMultiHopRouted {
-			swapFee = routeSwapFee.Mul((swapFee.Quo(sumOfSwapFees)))
+			spreadFactor = routeSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors)))
 		}
 
-		_tokenInAmount, swapErr := swapModule.SwapExactAmountOut(ctx, sender, pool, route.TokenInDenom, insExpected[i], _tokenOut, swapFee)
+		_tokenInAmount, swapErr := swapModule.SwapExactAmountOut(ctx, sender, pool, route.TokenInDenom, insExpected[i], _tokenOut, spreadFactor)
 		if swapErr != nil {
 			return sdk.Int{}, swapErr
 		}
@@ -469,7 +469,7 @@ func (k Keeper) MultihopEstimateInGivenExactAmountOut(
 	routes []types.SwapAmountOutRoute,
 	tokenOut sdk.Coin,
 ) (tokenInAmount sdk.Int, err error) {
-	isMultiHopRouted, routeSwapFee, sumOfSwapFees := false, sdk.Dec{}, sdk.Dec{}
+	isMultiHopRouted, routeSpreadFactor, sumOfSpreadFactors := false, sdk.Dec{}, sdk.Dec{}
 	var insExpected []sdk.Int
 
 	// recover from panic
@@ -487,7 +487,7 @@ func (k Keeper) MultihopEstimateInGivenExactAmountOut(
 
 	if k.isOsmoRoutedMultihop(ctx, route, routes[0].TokenInDenom, tokenOut.Denom) {
 		isMultiHopRouted = true
-		routeSwapFee, sumOfSwapFees, err = k.getOsmoRoutedMultihopTotalSwapFee(ctx, route)
+		routeSpreadFactor, sumOfSpreadFactors, err = k.getOsmoRoutedMultihopTotalSpreadFactor(ctx, route)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -495,9 +495,9 @@ func (k Keeper) MultihopEstimateInGivenExactAmountOut(
 
 	// Determine what the estimated input would be for each pool along the multi-hop route
 	// if we determined the route is an osmo multi-hop and both routes are incentivized,
-	// we utilize a separate function that calculates the discounted swap fees
+	// we utilize a separate function that calculates the discounted spread factors
 	if isMultiHopRouted {
-		insExpected, err = k.createOsmoMultihopExpectedSwapOuts(ctx, routes, tokenOut, routeSwapFee, sumOfSwapFees)
+		insExpected, err = k.createOsmoMultihopExpectedSwapOuts(ctx, routes, tokenOut, routeSpreadFactor, sumOfSpreadFactors)
 	} else {
 		insExpected, err = k.createMultihopExpectedSwapOuts(ctx, routes, tokenOut)
 	}
@@ -570,11 +570,11 @@ func (k Keeper) isOsmoRoutedMultihop(ctx sdk.Context, route types.MultihopRoute,
 	return route0Incentivized && route1Incentivized
 }
 
-func (k Keeper) getOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.MultihopRoute) (
-	totalPathSwapFee sdk.Dec, sumOfSwapFees sdk.Dec, err error,
+func (k Keeper) getOsmoRoutedMultihopTotalSpreadFactor(ctx sdk.Context, route types.MultihopRoute) (
+	totalPathSpreadFactor sdk.Dec, sumOfSpreadFactors sdk.Dec, err error,
 ) {
-	additiveSwapFee := sdk.ZeroDec()
-	maxSwapFee := sdk.ZeroDec()
+	additiveSpreadFactor := sdk.ZeroDec()
+	maxSpreadFactor := sdk.ZeroDec()
 
 	for _, poolId := range route.PoolIds() {
 		swapModule, err := k.GetPoolModule(ctx, poolId)
@@ -586,13 +586,13 @@ func (k Keeper) getOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.M
 		if poolErr != nil {
 			return sdk.Dec{}, sdk.Dec{}, poolErr
 		}
-		swapFee := pool.GetSwapFee(ctx)
-		additiveSwapFee = additiveSwapFee.Add(swapFee)
-		maxSwapFee = sdk.MaxDec(maxSwapFee, swapFee)
+		spreadFactor := pool.GetSpreadFactor(ctx)
+		additiveSpreadFactor = additiveSpreadFactor.Add(spreadFactor)
+		maxSpreadFactor = sdk.MaxDec(maxSpreadFactor, spreadFactor)
 	}
-	averageSwapFee := additiveSwapFee.QuoInt64(2)
-	maxSwapFee = sdk.MaxDec(maxSwapFee, averageSwapFee)
-	return maxSwapFee, additiveSwapFee, nil
+	averageSpreadFactor := additiveSpreadFactor.QuoInt64(2)
+	maxSpreadFactor = sdk.MaxDec(maxSpreadFactor, averageSpreadFactor)
+	return maxSpreadFactor, additiveSpreadFactor, nil
 }
 
 // createMultihopExpectedSwapOuts defines the output denom and output amount for the last pool in
@@ -620,7 +620,7 @@ func (k Keeper) createMultihopExpectedSwapOuts(
 			return nil, err
 		}
 
-		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, route.TokenInDenom, poolI.GetSwapFee(ctx))
+		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, route.TokenInDenom, poolI.GetSpreadFactor(ctx))
 		if err != nil {
 			return nil, err
 		}
@@ -632,12 +632,12 @@ func (k Keeper) createMultihopExpectedSwapOuts(
 	return insExpected, nil
 }
 
-// createOsmoMultihopExpectedSwapOuts does the same as createMultihopExpectedSwapOuts, however discounts the swap fee
+// createOsmoMultihopExpectedSwapOuts does the same as createMultihopExpectedSwapOuts, however discounts the spread factor
 func (k Keeper) createOsmoMultihopExpectedSwapOuts(
 	ctx sdk.Context,
 	routes []types.SwapAmountOutRoute,
 	tokenOut sdk.Coin,
-	cumulativeRouteSwapFee, sumOfSwapFees sdk.Dec,
+	cumulativeRouteSpreadFactor, sumOfSpreadFactors sdk.Dec,
 ) ([]sdk.Int, error) {
 	insExpected := make([]sdk.Int, len(routes))
 	for i := len(routes) - 1; i >= 0; i-- {
@@ -653,8 +653,8 @@ func (k Keeper) createOsmoMultihopExpectedSwapOuts(
 			return nil, err
 		}
 
-		swapFee := poolI.GetSwapFee(ctx)
-		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, route.TokenInDenom, cumulativeRouteSwapFee.Mul((swapFee.Quo(sumOfSwapFees))))
+		spreadFactor := poolI.GetSpreadFactor(ctx)
+		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, route.TokenInDenom, cumulativeRouteSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors))))
 		if err != nil {
 			return nil, err
 		}

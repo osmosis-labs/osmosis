@@ -206,7 +206,7 @@ This release includes stableswap, and expands the IBC safety & composability fun
 
 * Gamm:
   * Introduction of the stableswap pool type
-  * Multi-hop swapfee reduction
+  * Multi-hop spread factor reduction
   * Filtered queries to help front-ends
   * Adding a spot price v2 query
     * spotprice v1beta1 had baseassetdenom and quoteassetdenom backwards.
