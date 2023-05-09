@@ -752,11 +752,6 @@ func moveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum accum.Accumu
 		return err
 	}
 
-	positionSize, err := accum.GetPositionSize(oldPositionName)
-	if err != nil {
-		return err
-	}
-
 	unclaimedRewards, err := accum.DeletePosition(oldPositionName)
 	if err != nil {
 		return err
@@ -773,20 +768,6 @@ func moveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum accum.Accumu
 	if err != nil {
 		return err
 	}
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.TypeEvtFungifyChargedPosition,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(types.AttributePoolAccumName, accum.GetName()),
-			sdk.NewAttribute(types.AttributeOldPositionAccumName, oldPositionName),
-			sdk.NewAttribute(types.AttributeNewPositionAccumName, newPositionName),
-			sdk.NewAttribute(types.AttributeGlobalGrowth, accum.GetValue().String()),
-			sdk.NewAttribute(types.AttributeInsideGrowth, currentGrowthInsideForPosition.String()),
-			sdk.NewAttribute(types.AttributeMovedRewards, unclaimedRewards.String()),
-			sdk.NewAttribute(types.AttributeLiquidity, positionSize.String()),
-		),
-	})
 
 	return nil
 }
