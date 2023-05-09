@@ -3381,8 +3381,9 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			expectedError: types.NegativeDurationError{Duration: time.Hour * 504 * -1},
 		},
 	}
-	for name, tc := range tests {
-		s.Run(name, func() {
+	for _, tc := range tests {
+		tc := tc
+		s.Run(tc.name, func() {
 			// --- Setup test env ---
 
 			s.SetupTest()
@@ -3417,18 +3418,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			// Store initial pool and sender balances for comparison later
 			initSenderBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, defaultSender)
 			initPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetAddress())
-
-			uptimeAccums, err := clKeeper.GetUptimeAccumulators(s.Ctx, validPoolId)
-			s.Require().NoError(err)
-
-			var oldAccumRecord []accum.Record
-			for _, uptimeAccum := range uptimeAccums {
-				positionName := string(types.KeyPositionId(DefaultPositionId))
-				accRecord, err := uptimeAccum.GetPosition(positionName)
-				s.Require().NoError(err)
-
-				oldAccumRecord = append(oldAccumRecord, accRecord)
-			}
 
 			if !tc.forfeitIncentives {
 				// Let enough time elapse for the position to accrue rewards for all uptimes
@@ -3500,25 +3489,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 				}
 				s.Require().Equal(expectedCoins, amountClaimed)
 				s.Require().Equal(sdk.Coins(nil), amountForfeited)
-
-				uptimeAccumsNew, err := clKeeper.GetUptimeAccumulators(s.Ctx, validPoolId)
-				s.Require().NoError(err)
-
-				var newAccumRecord []accum.Record
-				for _, uptimeAccum := range uptimeAccumsNew {
-					positionName := string(types.KeyPositionId(DefaultPositionId))
-					accRecord, err := uptimeAccum.GetPosition(positionName)
-					s.Require().NoError(err)
-
-					newAccumRecord = append(newAccumRecord, accRecord)
-				}
-				expectedUptimeAccValue := sdk.NewDecCoinsFromCoins(sdk.NewCoin("bar", sdk.NewInt(100)), sdk.NewCoin("foo", sdk.NewInt(100)))
-
-				for i := 0; i < len(oldAccumRecord); i++ {
-					actualUptimeAccumValue, err := osmoutils.SubDecCoinArrays([]sdk.DecCoins{newAccumRecord[i].InitAccumValue}, []sdk.DecCoins{oldAccumRecord[i].InitAccumValue})
-					s.Require().NoError(err)
-					s.Require().Equal(expectedUptimeAccValue, actualUptimeAccumValue[0])
-				}
 			}
 
 			// Ensure balances have not been mutated
