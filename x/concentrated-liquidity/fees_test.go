@@ -1342,7 +1342,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition_UpdatingPositio
 	}
 }
 
-func (s *KeeperTestSuite) TestPreparePositionAccumulator() {
+func (s *KeeperTestSuite) TestUpdatePosValueToInitValuePlusGrowthOutside() {
 	validPositionKey := types.KeyFeePositionAccumulator(1)
 	invalidPositionKey := types.KeyFeePositionAccumulator(2)
 	tests := []struct {

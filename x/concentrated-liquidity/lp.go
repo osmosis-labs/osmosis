@@ -114,12 +114,13 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 // WithdrawPosition attempts to withdraw liquidityAmount from a position with the given pool id in the given tick range.
 // On success, returns a positive amount of each token withdrawn.
+// If we are attempting to withdraw all liquidity available in the position, we also collect fees and incentives for the position.
 // When the last position within a pool is removed, this function calls an AfterLastPoolPosistionRemoved listener
 // Currently, it creates twap records. Assumming that pool had all liqudity drained and then re-initialized,
 // the whole twap state is completely reset. This is because when there is no liquidity in pool, spot price
 // is undefined.
 // Additionally, when the last position is removed by calling this method, the current sqrt price and current
-// tick are set to zero.
+// tick of the pool are set to zero.
 // Returns error if
 // - the provided owner does not own the position being withdrawn
 // - there is no position in the given tick ranges
@@ -139,7 +140,7 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 
 	// defense in depths, requestedLiquidityAmountToWithdraw should always be possible value.
 	if requestedLiquidityAmountToWithdraw.IsNegative() {
-		return sdk.Int{}, sdk.Int{}, types.NegativeLiquidityError{Liquidity: requestedLiquidityAmountToWithdraw}
+		return sdk.Int{}, sdk.Int{}, types.InsufficientLiquidityError{Actual: requestedLiquidityAmountToWithdraw, Available: position.Liquidity}
 	}
 
 	// If underlying lock exists in state, validate unlocked conditions are met before withdrawing liquidity.
