@@ -293,9 +293,7 @@ func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
 				suite.FailNow("unsupported pool type")
 			}
 
-			if pool == nil {
-				suite.FailNow("failed to cast pool to poolI")
-			}
+			suite.Require().NotNil(pool)
 
 			swapFee := pool.GetSwapFee(suite.Ctx)
 
