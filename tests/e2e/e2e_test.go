@@ -1554,13 +1554,13 @@ func (s *IntegrationTestSuite) TestAConcentratedLiquidity_CanonicalPool_And_Para
 		s.T().Skip("Skipping v16 canonical pool creation test because upgrade is not enabled")
 	}
 
-	// Taken from: https://app.osmosis.zone/pool/674
 	expectedFee := sdk.MustNewDecFromStr("0.002")
 
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
 
+	// Taken from: https://app.osmosis.zone/pool/674
 	concentratedPoolId := chainANode.QueryConcentratedPooIdLinkFromCFMM(config.DaiOsmoPoolIdv16)
 
 	concentratedPool := s.updatedPool(chainANode, concentratedPoolId)
