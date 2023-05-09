@@ -1112,7 +1112,48 @@ func TestValidatePoolLiquidity(t *testing.T) {
 				ScalingFactorCount: 2,
 			},
 		},
-		// TODO: cover remaining edge cases by referring to the function implementation.
+		"pool should have at least 2 assets": {
+			liquidity: sdk.Coins{
+				coinA,
+			},
+			scalingFactors: []uint64{10},
+			expectError:    types.ErrTooFewPoolAssets,
+		},
+		"pool has too many assets": {
+			liquidity: sdk.Coins{
+				coinA,
+				coinB,
+				coinC,
+				coinD,
+				coinA,
+				coinB,
+				coinC,
+				coinD,
+				coinA,
+			},
+			scalingFactors: []uint64{10, 10, 10, 10, 10, 10, 10, 10, 10},
+			expectError:    types.ErrTooManyPoolAssets,
+		},
+		"pool assets too much": {
+			liquidity: sdk.Coins{
+				sdk.NewCoin(a, sdk.Int(sdk.MustNewDecFromStr("100000000000000000000000000000000000"))),
+				coinB,
+				coinC,
+				coinD,
+			},
+			scalingFactors: []uint64{10, 10, 10, 10},
+			expectError:    types.ErrHitMaxScaledAssets,
+		},
+		"pool assets are too small": {
+			liquidity: sdk.Coins{
+				sdk.NewCoin(a, sdk.NewIntFromUint64(1)),
+				coinB,
+				coinC,
+				coinD,
+			},
+			scalingFactors: []uint64{10, 10, 10, 10},
+			expectError:    types.ErrHitMinScaledAssets,
+		},
 	}
 
 	for name, tc := range tests {
