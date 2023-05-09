@@ -95,7 +95,7 @@ func (suite *KeeperTestSuite) TestAddToPosition_Events() {
 	}{
 		"happy path": {
 			expectedAddedToPositionEvent: 1,
-			expectedMessageEvents:        4,
+			expectedMessageEvents:        5,
 		},
 		"error: last position in pool": {
 			lastPositionInPool:           true,
