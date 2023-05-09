@@ -1371,7 +1371,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				}
 				s.Require().Equal(tc.expectedPoolLiquidity, concentratedPool.GetLiquidity())
 
-				// Test that liquidity update time was succesfully changed.
+				// Test that liquidity update time was successfully changed.
 				s.Require().Equal(expectedUpdateTime, poolI.GetLastLiquidityUpdate())
 			}
 		})
