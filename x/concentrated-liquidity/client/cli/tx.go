@@ -91,9 +91,9 @@ func NewCollectIncentivesCmd() (*osmocli.TxCliDesc, *types.MsgCollectIncentives)
 
 func NewCreateIncentiveCmd() (*osmocli.TxCliDesc, *types.MsgCreateIncentive) {
 	return &osmocli.TxCliDesc{
-		Use:                 "create-incentive [incentive-denom] [incentive-amount] [emission-rate] [start-time] [min-uptime]",
+		Use:                 "create-incentive [incentive-coin] [emission-rate] [start-time] [min-uptime]",
 		Short:               "create an incentive record to emit incentives (per second) to a given pool",
-		Example:             "create-incentive uosmo 69082 0.02 \"2023-03-03T03:20:35.419543805\" 24h --pool-id 1 --from val --chain-id osmosis-1 --fees 875uosmo",
+		Example:             "create-incentive 69082uosmo 0.02 \"2023-03-03T03:20:35.419543805\" 24h --pool-id 1 --from val --chain-id osmosis-1 --fees 875uosmo",
 		CustomFlagOverrides: poolIdFlagOverride,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
 	}, &types.MsgCreateIncentive{}
