@@ -3572,7 +3572,7 @@ func (s *KeeperTestSuite) TestFunctional_ClaimIncentices_LiquidityChange_Varying
 	s.Require().NoError(err)
 
 	// Set up position
-	positionIdOne, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoin0.Amount, DefaultCoin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	positionIdOne, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 	s.Require().NoError(err)
 
 	// Increase block time by the fully charged duration (first time)
@@ -3587,7 +3587,7 @@ func (s *KeeperTestSuite) TestFunctional_ClaimIncentices_LiquidityChange_Varying
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration))
 
 	// Create another position
-	positionIdTwo, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoin0.Amount, DefaultCoin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	positionIdTwo, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 	s.Require().NoError(err)
 
 	// Increase block time by the fully charged duration (third time)
