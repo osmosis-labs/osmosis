@@ -189,8 +189,8 @@ func (msg MsgCreateIncentive) ValidateBasic() error {
 		return fmt.Errorf("Invalid sender address (%s)", err)
 	}
 
-	if !msg.IncentiveAmount.IsPositive() {
-		return NonPositiveIncentiveAmountError{PoolId: msg.PoolId, IncentiveAmount: msg.IncentiveAmount.ToDec()}
+	if !msg.IncentiveCoin.IsValid() {
+		return InvalidIncentiveCoinError{PoolId: msg.PoolId, IncentiveCoin: msg.IncentiveCoin}
 	}
 
 	if !msg.EmissionRate.IsPositive() {

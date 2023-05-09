@@ -365,13 +365,13 @@ func (e BalancerRecordNotClearedError) Error() string {
 	return fmt.Sprintf("balancer record was not cleared after reward claiming. CL pool id (%d), Balancer pool ID (%d), Uptime index (%d)", e.ClPoolId, e.BalancerPoolId, e.UptimeIndex)
 }
 
-type NonPositiveIncentiveAmountError struct {
-	PoolId          uint64
-	IncentiveAmount sdk.Dec
+type InvalidIncentiveCoinError struct {
+	PoolId        uint64
+	IncentiveCoin sdk.Coin
 }
 
-func (e NonPositiveIncentiveAmountError) Error() string {
-	return fmt.Sprintf("incentive amount must be position (nonzero and nonnegative). Pool id (%d), incentive amount (%s)", e.PoolId, e.IncentiveAmount)
+func (e InvalidIncentiveCoinError) Error() string {
+	return fmt.Sprintf("incentive coin denom must be valid and have non negative amount Pool id (%d), incentive coin (%s)", e.PoolId, e.IncentiveCoin)
 }
 
 type NonPositiveEmissionRateError struct {

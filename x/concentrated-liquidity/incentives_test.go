@@ -3075,7 +3075,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 
 			expectedError: types.PoolNotFoundError{PoolId: 2},
 		},
-		"zero incentive amount": {
+		"invalid incentive coin": {
 			poolId: defaultPoolId,
 			sender: sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr),
 			senderBalance: sdk.NewCoins(
@@ -3087,21 +3087,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			recordToSet:       withAmount(incentiveRecordOne, sdk.ZeroDec()),
 			authorizedUptimes: types.SupportedUptimes,
 
-			expectedError: types.NonPositiveIncentiveAmountError{PoolId: 1, IncentiveAmount: sdk.ZeroDec()},
-		},
-		"negative incentive amount": {
-			poolId: defaultPoolId,
-			sender: sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr),
-			senderBalance: sdk.NewCoins(
-				sdk.NewCoin(
-					incentiveRecordOne.IncentiveDenom,
-					sdk.ZeroInt(),
-				),
-			),
-			recordToSet:       withAmount(incentiveRecordOne, sdk.NewDec(-1)),
-			authorizedUptimes: types.SupportedUptimes,
-
-			expectedError: types.NonPositiveIncentiveAmountError{PoolId: 1, IncentiveAmount: sdk.NewDec(-1)},
+			expectedError: types.InvalidIncentiveCoinError{PoolId: 1, IncentiveCoin: sdk.NewCoin(incentiveRecordOne.IncentiveDenom, sdk.ZeroInt())},
 		},
 		"start time too early": {
 			poolId: defaultPoolId,
@@ -3215,8 +3201,10 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 
 			existingGasConsumed := s.Ctx.GasMeter().GasConsumed()
 
+			incentiveCoin := sdk.NewCoin(tc.recordToSet.IncentiveDenom, tc.recordToSet.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt())
+
 			// system under test
-			incentiveRecord, err := clKeeper.CreateIncentive(s.Ctx, tc.poolId, tc.sender, tc.recordToSet.IncentiveDenom, tc.recordToSet.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(), tc.recordToSet.IncentiveRecordBody.EmissionRate, tc.recordToSet.IncentiveRecordBody.StartTime, tc.recordToSet.MinUptime)
+			incentiveRecord, err := clKeeper.CreateIncentive(s.Ctx, tc.poolId, tc.sender, incentiveCoin, tc.recordToSet.IncentiveRecordBody.EmissionRate, tc.recordToSet.IncentiveRecordBody.StartTime, tc.recordToSet.MinUptime)
 
 			// Assertions
 			if tc.expectedError != nil {
@@ -3519,6 +3507,99 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			s.Require().Equal(initPoolBalances, newPoolBalances)
 		})
 	}
+}
+
+// This functional test focuses on changing liquidity in the same range and collecting incentives
+// at different times.
+// This is important because the final amount of incentives claimed depends on the last time when the pool
+// was updated. We use this time to calculate the amount of incentives to emit into the uptime accumulators.
+func (s *KeeperTestSuite) TestFunctional_ClaimIncentices_LiquidityChange_VaryingTime() {
+	// Init suite for the test.
+	s.SetupTest()
+
+	const (
+		testFullChargeDuration = 24 * time.Hour
+	)
+
+	var (
+		defaultAddress   = s.TestAccs[0]
+		defaultBlockTime = time.Unix(1, 1).UTC()
+	)
+
+	s.Ctx = s.Ctx.WithBlockTime(defaultBlockTime)
+	requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1))
+
+	// Set test authorized uptime params.
+	params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+	params.AuthorizedUptimes = []time.Duration{time.Nanosecond, testFullChargeDuration}
+	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
+
+	// Fund accounts twice because two positions are created.
+	s.FundAcc(defaultAddress, requiredBalances)
+	s.FundAcc(defaultAddress, requiredBalances)
+
+	// Create CL pool
+	pool := s.PrepareConcentratedPool()
+
+	expectedAmount := sdk.NewInt(60 * 60 * 24) // 1 day in seconds * 1 per second
+
+	oneUUSDCCoin := sdk.NewCoin(USDC, sdk.OneInt())
+	// -1 for acceptable rounding error
+	expectedCoinsPerFullCharge := sdk.NewCoins(sdk.NewCoin(USDC, expectedAmount.Sub(sdk.OneInt())))
+	expectedHalfOfExpectedCoinsPerFullCharge := sdk.NewCoins(sdk.NewCoin(USDC, expectedAmount.QuoRaw(2).Sub(sdk.OneInt())))
+
+	// Multiplied by 3 because we change the block time 3 times and claim
+	// 1. by directly calling CollectIncentives
+	// 2. by calling WithdrawPosition
+	// 3. by calling CollectIncentives
+	s.FundAcc(pool.GetIncentivesAddress(), sdk.NewCoins(sdk.NewCoin(USDC, expectedAmount.Mul(sdk.NewInt(3)))))
+	// Set incentives for pool to ensure accumulators work correctly
+	testIncentiveRecord := types.IncentiveRecord{
+		PoolId:               1,
+		IncentiveDenom:       USDC,
+		IncentiveCreatorAddr: s.TestAccs[0].String(),
+		IncentiveRecordBody: types.IncentiveRecordBody{
+			RemainingAmount: sdk.NewDec(1000000000000000000),
+			EmissionRate:    sdk.NewDec(1), // 1 per second
+			StartTime:       defaultBlockTime,
+		},
+		MinUptime: time.Nanosecond,
+	}
+	s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, []types.IncentiveRecord{testIncentiveRecord})
+
+	// Set up position
+	positionIdOne, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoin0.Amount, DefaultCoin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	s.Require().NoError(err)
+
+	// Increase block time by the fully charged duration (first time)
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration))
+
+	// Claim incentives.
+	collected, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, positionIdOne)
+	s.Require().NoError(err)
+	s.Require().Equal(expectedCoinsPerFullCharge.String(), collected.String())
+
+	// Increase block time by the fully charged duration (second time)
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration))
+
+	// Create another position
+	positionIdTwo, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoin0.Amount, DefaultCoin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	s.Require().NoError(err)
+
+	// Increase block time by the fully charged duration (third time)
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration))
+
+	// Claim for second position. Must only claim half of the original expected amount since now there are 2 positions.
+	collected, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, positionIdTwo)
+	s.Require().NoError(err)
+	s.Require().Equal(expectedHalfOfExpectedCoinsPerFullCharge.String(), collected.String())
+
+	// Claim for first position and observe that claims full expected charge for the period between 1st claim and 2nd position creation
+	// and half of the full charge amount since the 2nd position was created.
+	collected, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, positionIdOne)
+	s.Require().NoError(err)
+	// Note, adding one since both expected amounts already subtract one (-2 in total)
+	s.Require().Equal(expectedCoinsPerFullCharge.Add(expectedHalfOfExpectedCoinsPerFullCharge.Add(oneUUSDCCoin)...).String(), collected.String())
 }
 
 func (s *KeeperTestSuite) TestGetAllIncentiveRecordsForUptime() {
