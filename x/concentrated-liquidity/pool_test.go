@@ -211,9 +211,7 @@ func (s *KeeperTestSuite) TestPoolIToConcentratedPool() {
 	// Create default CL pool
 	concentratedPool := s.PrepareConcentratedPool()
 	poolI, ok := concentratedPool.(poolmanagertypes.PoolI)
-	if !ok {
-		s.FailNow("failed to cast pool to PoolI")
-	}
+	s.Require().True(ok)
 
 	// Ensure no error occurs when converting to ConcentratedPool
 	_, err := cl.ConvertPoolInterfaceToConcentrated(poolI)
