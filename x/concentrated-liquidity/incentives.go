@@ -769,6 +769,10 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 		return sdk.Coins{}, sdk.Coins{}, err
 	}
 
+	if err := k.updateUptimeAccumulatorsToNow(ctx, position.PoolId); err != nil {
+		return sdk.Coins{}, sdk.Coins{}, err
+	}
+
 	// Compute the age of the position.
 	positionAge := ctx.BlockTime().Sub(position.JoinTime)
 	if positionAge < 0 {
