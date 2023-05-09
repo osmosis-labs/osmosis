@@ -436,7 +436,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 				s.Require().Equal(model.TickInfo{}, tickInfo)
 			} else {
 				s.Require().NoError(err)
-				_, err = clKeeper.GetPoolById(s.Ctx, validPoolId)
+				clPool, err = clKeeper.GetPoolById(s.Ctx, validPoolId)
 				s.Require().NoError(err)
 				s.Require().Equal(test.expectedTickInfo, tickInfo)
 			}
