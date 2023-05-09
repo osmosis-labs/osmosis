@@ -1774,7 +1774,7 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			// Note, we use a 1% error tolerance with rounding down
 			// because we initialize the reserves 1:1 so by performing
 			// the swap we don't expect the price to change significantly.
-			// As a result, we rougly expect the amount out to be the same
+			// As a result, we roughly expect the amount out to be the same
 			// as the amount in given in another token. However, the actual
 			// amount must be stricly less than the given due to price impact.
 			errTolerance := osmomath.ErrTolerance{
@@ -1975,7 +1975,7 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			// Note, we use a 1% error tolerance with rounding up
 			// because we initialize the reserves 1:1 so by performing
 			// the swap we don't expect the price to change significantly.
-			// As a result, we rougly expect the amount in to be the same
+			// As a result, we roughly expect the amount in to be the same
 			// as the amount out given of another token. However, the actual
 			// amount must be stricly greater than the given due to price impact.
 			errTolerance := osmomath.ErrTolerance{

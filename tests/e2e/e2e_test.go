@@ -206,7 +206,8 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	}
 
 	// Change the parameter to enable permisionless pool creation.
-	chainA.SubmitParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"))
+	err = chainA.SubmitParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"))
+	s.Require().NoError(err)
 
 	// Confirm that the parameter has been changed.
 	isPermisionlessCreationEnabledStr = chainANode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
@@ -599,7 +600,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		addr1BalancesAfter.AmountOf("uion"),
 	)
 
-	// Assert position that was active thoughout the whole swap:
+	// Assert position that was active throughout the whole swap:
 
 	// Track balance of address3
 	addr3BalancesBefore = s.addrBalance(chainANode, address3)
@@ -770,7 +771,7 @@ func (s *IntegrationTestSuite) TestStableSwapPostUpgrade() {
 }
 
 // TestGeometricTwapMigration tests that the geometric twap record
-// migration runs succesfully. It does so by attempting to execute
+// migration runs successfully. It does so by attempting to execute
 // the swap on the pool created pre-upgrade. When a pool is created
 // pre-upgrade, twap records are initialized for a pool. By runnning
 // a swap post-upgrade, we confirm that the geometric twap was initialized
@@ -987,7 +988,6 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 			val := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
 			return strings.Contains(val, param)
 		}, time.Second*30, time.Millisecond*500)
-
 	}
 }
 
@@ -1100,6 +1100,7 @@ func (s *IntegrationTestSuite) TestPacketForwarding() {
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
+	s.Require().NoError(err)
 	s.Require().Eventually(func() bool {
 		response, err := nodeA.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, senderBech32))
 		if err != nil {
@@ -1154,7 +1155,7 @@ func (s *IntegrationTestSuite) TestAddToExistingLock() {
 // TestArithmeticTWAP tests TWAP by creating a pool, performing a swap.
 // These two operations should create TWAP records.
 // Then, we wait until the epoch for the records to be pruned.
-// The records are guranteed to be pruned at the next epoch
+// The records are guaranteed to be pruned at the next epoch
 // because twap keep time = epoch time / 4 and we use a timer
 // to wait for at least the twap keep time.
 func (s *IntegrationTestSuite) TestArithmeticTWAP() {

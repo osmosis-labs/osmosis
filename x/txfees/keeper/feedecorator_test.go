@@ -158,7 +158,8 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 				sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 				sdk.NewInt64Coin(uion, 500),
 			)
-			suite.ExecuteUpgradeFeeTokenProposal(uion, uionPoolId)
+			err := suite.ExecuteUpgradeFeeTokenProposal(uion, uionPoolId)
+			suite.Require().NoError(err)
 
 			if tc.minGasPrices == nil {
 				tc.minGasPrices = sdk.NewDecCoins()
@@ -192,14 +193,15 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 				accSeqs[0],
 			)
 
-			simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, tc.txFee)
+			err = simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, tc.txFee)
+			suite.Require().NoError(err)
 
 			tx := suite.BuildTx(txBuilder, msgs, sigV2, "", tc.txFee, gasLimit)
 
 			mfd := keeper.NewMempoolFeeDecorator(*suite.App.TxFeesKeeper, mempoolFeeOpts)
 			dfd := keeper.NewDeductFeeDecorator(*suite.App.TxFeesKeeper, *suite.App.AccountKeeper, *suite.App.BankKeeper, nil)
 			antehandlerMFD := sdk.ChainAnteDecorators(mfd, dfd)
-			_, err := antehandlerMFD(suite.Ctx, tx, tc.isSimulate)
+			_, err = antehandlerMFD(suite.Ctx, tx, tc.isSimulate)
 
 			if tc.expectPass {
 				// ensure fee was collected

@@ -152,7 +152,6 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 
 				suite.Require().NoError(err)
 				suite.Require().Equal(suite.TestAccs[0].String(), queryRes.AuthorityMetadata.Admin)
-
 			} else {
 				suite.Require().Error(err)
 				// Ensure we don't charge if we expect an error

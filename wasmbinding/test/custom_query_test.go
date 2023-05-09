@@ -20,6 +20,8 @@ import (
 )
 
 func SetupCustomApp(t *testing.T, addr sdk.AccAddress) (*app.OsmosisApp, sdk.Context) {
+	t.Helper()
+
 	osmosis, ctx := CreateTestInput()
 	wasmKeeper := osmosis.WasmKeeper
 
@@ -65,6 +67,8 @@ type ChainResponse struct {
 }
 
 func queryCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contract sdk.AccAddress, request bindings.OsmosisQuery, response interface{}) {
+	t.Helper()
+
 	msgBz, err := json.Marshal(request)
 	require.NoError(t, err)
 
@@ -86,6 +90,8 @@ func queryCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contrac
 }
 
 func storeReflectCode(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress) {
+	t.Helper()
+
 	govKeeper := osmosis.GovKeeper
 	wasmCode, err := os.ReadFile("../testdata/osmo_reflect.wasm")
 	require.NoError(t, err)
@@ -108,6 +114,8 @@ func storeReflectCode(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, ad
 }
 
 func instantiateReflectContract(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, funder sdk.AccAddress) sdk.AccAddress {
+	t.Helper()
+
 	initMsgBz := []byte("{}")
 	contractKeeper := keeper.NewDefaultPermissionKeeper(osmosis.WasmKeeper)
 	codeID := uint64(1)
@@ -118,6 +126,7 @@ func instantiateReflectContract(t *testing.T, ctx sdk.Context, osmosis *app.Osmo
 }
 
 func fundAccount(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress, coins sdk.Coins) {
+	t.Helper()
 	err := simapp.FundAccount(
 		osmosis.BankKeeper,
 		ctx,

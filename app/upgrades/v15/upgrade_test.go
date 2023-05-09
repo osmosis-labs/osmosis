@@ -128,6 +128,7 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 
 	// shares before migration
 	balancerPool, err := gammKeeper.GetCFMMPool(suite.Ctx, poolID)
+	suite.Require().NoError(err)
 	balancerLiquidity, err := gammKeeper.GetTotalPoolLiquidity(suite.Ctx, balancerPool.GetId())
 	suite.Require().NoError(err)
 
@@ -240,13 +241,16 @@ func (suite *UpgradeTestSuite) TestSetRateLimits() {
 
 	state, err := suite.App.WasmKeeper.QuerySmart(suite.Ctx, addr, []byte(`{"get_quotas": {"channel_id": "any", "denom": "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"}}`))
 	suite.Require().Greaterf(len(state), 0, "state should not be empty")
+	suite.Require().NoError(err)
 
 	state, err = suite.App.WasmKeeper.QuerySmart(suite.Ctx, addr, []byte(`{"get_quotas": {"channel_id": "any", "denom": "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858"}}`))
 	suite.Require().Greaterf(len(state), 0, "state should not be empty")
+	suite.Require().NoError(err)
 
 	// This is the last one. If the others failed the upgrade would've panicked before adding this one
 	state, err = suite.App.WasmKeeper.QuerySmart(suite.Ctx, addr, []byte(`{"get_quotas": {"channel_id": "any", "denom": "ibc/E6931F78057F7CC5DA0FD6CEF82FF39373A6E0452BF1FD76910B93292CF356C1"}}`))
 	suite.Require().Greaterf(len(state), 0, "state should not be empty")
+	suite.Require().NoError(err)
 }
 
 func (suite *UpgradeTestSuite) validateCons(coinsA, coinsB sdk.Coins) {

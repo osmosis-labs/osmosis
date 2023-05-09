@@ -393,7 +393,6 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 	}
 
 	for _, test := range tests {
-
 		// Empty SwapToBackrun var to pass in as param
 		pool := protorevtypes.SwapToBackrun{}
 		txPoolPointsRemaining := uint64(100)
@@ -644,8 +643,12 @@ func (suite *KeeperTestSuite) TestRemainingPoolPointsForTx() {
 		suite.Run(tc.description, func() {
 			suite.SetupTest()
 
-			suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, tc.maxRoutesPerTx)
-			suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, tc.maxRoutesPerBlock)
+			err := suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, tc.maxRoutesPerTx)
+			suite.Require().NoError(err)
+
+			err = suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, tc.maxRoutesPerBlock)
+			suite.Require().NoError(err)
+
 			suite.App.ProtoRevKeeper.SetPointCountForBlock(suite.Ctx, tc.currentRouteCount)
 
 			points, _, err := suite.App.ProtoRevKeeper.GetRemainingPoolPoints(suite.Ctx)

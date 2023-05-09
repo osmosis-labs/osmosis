@@ -20,6 +20,7 @@ func (s *KeeperTestSuite) TestInitializePool() {
 	// Create a concentrated liquidity pool with unauthorized tick spacing
 	invalidTickSpacing := uint64(25)
 	invalidTickSpacingConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(2, ETH, USDC, invalidTickSpacing, DefaultZeroSwapFee)
+	s.Require().NoError(err)
 
 	// Create a concentrated liquidity pool with unauthorized swap fee
 	invalidSwapFee := sdk.MustNewDecFromStr("0.1")
@@ -107,7 +108,6 @@ func (s *KeeperTestSuite) TestInitializePool() {
 				}
 
 				s.validateListenerCallCount(1, 0, 0, 0)
-
 			} else {
 				// Ensure specified error is returned
 				s.Require().Error(err)
