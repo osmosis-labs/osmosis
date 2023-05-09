@@ -429,7 +429,8 @@ type MsgCollectFeesResponse struct {
 
 ### `MsgFungifyChargedPositions`
 
-This message allows fungifying the fully charged unlocked positions belonging to the same owner.
+This message allows fungifying the fully charged unlocked positions belonging to the same owner
+and located in the same tick range.
 MsgFungifyChargedPosition takes in a list of positionIds and combines them into a single position.
 It validates that all positions belong to the same owner, are in the same ticks and are fully charged.
 Fails if not. Otherwise, it creates a completely new position P. P's liquidity equals to the sum of all
