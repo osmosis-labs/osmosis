@@ -1470,8 +1470,6 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 		denomB = "stake" // 2_000_000 stake
 
 		minAmountOut = "1"
-
-		epochIdentifier = "day"
 	)
 
 	chainA := s.configurer.GetChainConfig(0)

@@ -9,15 +9,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/twap/client"
 	"github.com/osmosis-labs/osmosis/v15/x/twap/client/queryproto"
 )
 
 type QueryTestSuite struct {
 	apptesting.KeeperTestHelper
-
-	queryClient types.QueryClient
 }
 
 func TestKeeperTestSuite(t *testing.T) {

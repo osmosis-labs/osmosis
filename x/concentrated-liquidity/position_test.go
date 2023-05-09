@@ -31,7 +31,6 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 		joinTime       time.Time
 		positionId     uint64
 		liquidityDelta sdk.Dec
-		liquidityIn    sdk.Dec
 	}
 
 	tests := []struct {
@@ -1234,7 +1233,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 	newPositionId, err := s.App.ConcentratedLiquidityKeeper.FungifyChargedPosition(s.Ctx, defaultAddress, expectedPositionIds)
 	s.Require().NoError(err)
 
-	// Claim fees
+	// Claim incentives.
 	collected, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, newPositionId)
 	s.Require().NoError(err)
 

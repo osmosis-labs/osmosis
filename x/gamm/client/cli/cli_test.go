@@ -14,7 +14,6 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
@@ -23,9 +22,6 @@ var testAddresses = osmoutils.CreateRandomAccounts(3)
 
 type IntegrationTestSuite struct {
 	suite.Suite
-
-	cfg     network.Config
-	network *network.Network
 }
 
 func TestNewCreatePoolCmd(t *testing.T) {

@@ -585,7 +585,6 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 	type testcase struct {
 		initialPoolOut   int64
-		initialPoolIn    int64
 		initialWeightOut int64
 		tokenOut         int64
 		initialWeightIn  int64

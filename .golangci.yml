@@ -18,7 +18,6 @@ linters:
     - goconst
     - gofmt
     - goimports
-    # - gofumpt
     - goheader
     - gomodguard
     - goprintffuncname
@@ -35,6 +34,7 @@ linters:
     - stylecheck
     - tenv
     - thelper
+    - tparallel
     - typecheck
     - thelper
     - unconvert

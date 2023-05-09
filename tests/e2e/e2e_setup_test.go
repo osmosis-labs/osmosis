@@ -34,7 +34,6 @@ type IntegrationTestSuite struct {
 	skipUpgrade   bool
 	skipIBC       bool
 	skipStateSync bool
-	forkHeight    int
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

@@ -49,9 +49,6 @@ type HooksTestSuite struct {
 	pathAB *ibctesting.Path
 	pathAC *ibctesting.Path
 	pathBC *ibctesting.Path
-	pathBA *ibctesting.Path
-	pathCA *ibctesting.Path
-	pathCB *ibctesting.Path
 	// This is used to test cw20s. It will only get assigned in the cw20 test
 	pathCW20 *ibctesting.Path
 }

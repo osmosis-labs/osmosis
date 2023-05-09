@@ -260,7 +260,6 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 		globalFeeGrowth           sdk.DecCoin
 
 		expectedFeeGrowthOutside sdk.DecCoins
-		invalidTick              bool
 		expectedError            bool
 	}
 
