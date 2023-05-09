@@ -237,6 +237,7 @@ func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command, denom
 
 	return content, nil
 }
+
 func parsePoolIdToTickSpacingRecordsArgsToContent(cmd *cobra.Command) (govtypes.Content, error) {
 	title, err := cmd.Flags().GetString(govcli.FlagTitle)
 	if err != nil {

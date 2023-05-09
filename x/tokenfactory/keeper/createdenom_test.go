@@ -152,12 +152,76 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 
 				suite.Require().NoError(err)
 				suite.Require().Equal(suite.TestAccs[0].String(), queryRes.AuthorityMetadata.Admin)
-
 			} else {
 				suite.Require().Error(err)
 				// Ensure we don't charge if we expect an error
 				suite.Require().True(preCreateBalance.IsEqual(postCreateBalance))
 			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGasConsume() {
+	// It's hard to estimate exactly how much gas will be consumed when creating a
+	// denom, because besides consuming the gas specified by the params, the keeper
+	// also does a bunch of other things that consume gas.
+	//
+	// Rather, we test whether the gas consumed is within a range. Specifically,
+	// the range [gasConsume, gasConsume + offset]. If the actual gas consumption
+	// falls within the range for all test cases, we consider the test passed.
+	//
+	// In experience, the total amount of gas consumed should consume be ~30k more
+	// than the set amount.
+	const offset = 50000
+
+	for _, tc := range []struct {
+		desc       string
+		gasConsume uint64
+	}{
+		{
+			desc:       "gas consume zero",
+			gasConsume: 0,
+		},
+		{
+			desc:       "gas consume 1,000,000",
+			gasConsume: 1_000_000,
+		},
+		{
+			desc:       "gas consume 10,000,000",
+			gasConsume: 10_000_000,
+		},
+		{
+			desc:       "gas consume 25,000,000",
+			gasConsume: 25_000_000,
+		},
+		{
+			desc:       "gas consume 50,000,000",
+			gasConsume: 50_000_000,
+		},
+		{
+			desc:       "gas consume 200,000,000",
+			gasConsume: 200_000_000,
+		},
+	} {
+		suite.SetupTest()
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			// set params with the gas consume amount
+			suite.App.TokenFactoryKeeper.SetParams(suite.Ctx, types.NewParams(nil, tc.gasConsume))
+
+			// amount of gas consumed prior to the denom creation
+			gasConsumedBefore := suite.Ctx.GasMeter().GasConsumed()
+
+			// create a denom
+			_, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "larry"))
+			suite.Require().NoError(err)
+
+			// amount of gas consumed after the denom creation
+			gasConsumedAfter := suite.Ctx.GasMeter().GasConsumed()
+
+			// the amount of gas consumed must be within the range
+			gasConsumed := gasConsumedAfter - gasConsumedBefore
+			suite.Require().Greater(gasConsumed, tc.gasConsume)
+			suite.Require().Less(gasConsumed, tc.gasConsume+offset)
 		})
 	}
 }

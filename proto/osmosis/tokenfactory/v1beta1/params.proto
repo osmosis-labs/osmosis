@@ -10,9 +10,21 @@ option go_package = "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types";
 
 // Params defines the parameters for the tokenfactory module.
 message Params {
+  // DenomCreationFee defines the fee to be charged on the creation of a new
+  // denom. The fee is drawn from the MsgCreateDenom's sender account, and
+  // transferred to the community pool.
   repeated cosmos.base.v1beta1.Coin denom_creation_fee = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"denom_creation_fee\"",
     (gogoproto.nullable) = false
+  ];
+
+  // DenomCreationGasConsume defines the gas cost for creating a new denom.
+  // This is intended as a spam deterrence mechanism.
+  //
+  // See: https://github.com/CosmWasm/token-factory/issues/11
+  uint64 denom_creation_gas_consume = 2 [
+    (gogoproto.moretags) = "yaml:\"denom_creation_gas_consume\"",
+    (gogoproto.nullable) = true
   ];
 }

@@ -66,6 +66,7 @@ func (suite *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 		}
 	}
 }
+
 func (suite *KeeperTestSuite) TestGRPCSuperfluidAsset() {
 	suite.SetupTest()
 
@@ -174,7 +175,6 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 		suite.Require().NotEqual("", connectedIntermediaryAccountRes.Account.Denom)
 		suite.Require().NotEqual("", connectedIntermediaryAccountRes.Account.Address)
 		suite.Require().NotEqual(uint64(0), connectedIntermediaryAccountRes.Account.GaugeId)
-
 	}
 	connectedIntermediaryAccountRes, err := suite.queryClient.ConnectedIntermediaryAccount(sdk.WrapSDKContext(suite.Ctx), &types.ConnectedIntermediaryAccountRequest{LockId: 123})
 	suite.Require().NoError(err)

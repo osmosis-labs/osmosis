@@ -13,14 +13,7 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
-var (
-	defaultPoolId       uint64 = 1
-	noErrorTime                = time.Time{}
-	withZeroLastErrTime        = func(record types.TwapRecord) types.TwapRecord {
-		record.LastErrorTime = time.Time{}
-		return record
-	}
-)
+var defaultPoolId uint64 = 1
 
 // TestAfterPoolCreatedHook tests if internal tracking logic has been triggered correctly,
 // and the correct state entries have been created upon pool creation.
@@ -245,7 +238,7 @@ func (s *TestSuite) TestEndBlock() {
 	}
 }
 
-// TestAfterEpochEnd tests if records get succesfully deleted via `AfterEpochEnd` hook.
+// TestAfterEpochEnd tests if records get successfully deleted via `AfterEpochEnd` hook.
 // We test details of correct implementation of pruning method in store test.
 // Specifically, the newest record that is younger than the (current block time - record keep period)
 // is kept, and the rest are deleted.
@@ -277,7 +270,8 @@ func (s *TestSuite) TestAfterEpochEnd() {
 	// iterate through all epoch, ensure that epoch only gets pruned in prune epoch identifier
 	// we reverse iterate here to test epochs that are not prune epoch
 	for i := len(allEpochs) - 1; i >= 0; i-- {
-		s.App.TwapKeeper.EpochHooks().AfterEpochEnd(s.Ctx, allEpochs[i].Identifier, int64(1))
+		err = s.App.TwapKeeper.EpochHooks().AfterEpochEnd(s.Ctx, allEpochs[i].Identifier, int64(1))
+		s.Require().NoError(err)
 
 		recordsAfterEpoch, err := s.twapkeeper.GetAllHistoricalTimeIndexedTWAPs(s.Ctx)
 

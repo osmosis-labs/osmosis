@@ -268,11 +268,6 @@ func TestAuthzMsg(t *testing.T) {
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	coin := sdk.NewCoin("denom", sdk.NewInt(1))
 
-	const (
-		mockGranter string = "cosmos1abc"
-		mockGrantee string = "cosmos1xyz"
-	)
-
 	testCases := []struct {
 		name string
 		msg  sdk.Msg

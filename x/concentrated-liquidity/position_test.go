@@ -14,9 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
-var (
-	DefaultIncentiveRecords = []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour}
-)
+var DefaultIncentiveRecords = []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour}
 
 func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 	const (
@@ -33,7 +31,6 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 		joinTime       time.Time
 		positionId     uint64
 		liquidityDelta sdk.Dec
-		liquidityIn    sdk.Dec
 	}
 
 	tests := []struct {
@@ -125,7 +122,8 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			}
 
 			// Set incentives for pool to ensure accumulators work correctly
-			s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, test.incentiveRecords)
+			err = s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, test.incentiveRecords)
+			s.Require().NoError(err)
 
 			// If positionExists set, initialize the specified position with defaultLiquidityAmt
 			preexistingLiquidity := sdk.ZeroDec()
@@ -207,7 +205,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			s.Require().NoError(err)
 
 			// Setup for checks
-			actualUptimeAccumDelta, expectedUptimeAccumValueGrowth, expectedIncentiveRecords, expectedGrowthCurAccum := emptyAccumValues, emptyAccumValues, test.incentiveRecords, sdk.DecCoins{}
+			actualUptimeAccumDelta, expectedUptimeAccumValueGrowth, expectedIncentiveRecords, _ := emptyAccumValues, emptyAccumValues, test.incentiveRecords, sdk.DecCoins{}
 
 			timeElapsedSec := sdk.NewDec(int64(test.timeElapsedSinceInit)).Quo(sdk.NewDec(10e8))
 			positionName := string(types.KeyPositionId(test.param.positionId))
@@ -216,7 +214,6 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			// 1. Position is properly updated on it
 			// 2. Accum value has changed by the correct amount
 			for uptimeIndex, uptime := range supportedUptimes {
-
 				// Position-related checks
 
 				recordExists, err := newUptimeAccums[uptimeIndex].HasPosition(positionName)
@@ -237,7 +234,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 					// Track how much the current uptime accum has grown by
 					actualUptimeAccumDelta[uptimeIndex] = newUptimeAccumValues[uptimeIndex].Sub(initUptimeAccumValues[uptimeIndex])
 					if timeElapsedSec.GT(sdk.ZeroDec()) {
-						expectedGrowthCurAccum, expectedIncentiveRecords, err = cl.CalcAccruedIncentivesForAccum(s.Ctx, uptime, test.param.liquidityDelta, timeElapsedSec, expectedIncentiveRecords)
+						expectedGrowthCurAccum, _, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, uptime, test.param.liquidityDelta, timeElapsedSec, expectedIncentiveRecords)
 						s.Require().NoError(err)
 						expectedUptimeAccumValueGrowth[uptimeIndex] = expectedGrowthCurAccum
 					}
@@ -260,7 +257,6 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 }
 
 func (s *KeeperTestSuite) TestGetPosition() {
-
 	tests := []struct {
 		name                      string
 		positionId                uint64
@@ -290,6 +286,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 
 			// Set up a default initialized position
 			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, DefaultPositionId)
+			s.Require().NoError(err)
 
 			// System under test
 			position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, test.positionId)
@@ -574,7 +571,8 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 				// Retrieve the position from the store via position ID and compare to expected values.
 				position := model.Position{}
 				positionIdToPositionKey := types.KeyPositionId(DefaultPositionId)
-				osmoutils.Get(store, positionIdToPositionKey, &position)
+				_, err = osmoutils.Get(store, positionIdToPositionKey, &position)
+				s.Require().NoError(err)
 				s.Require().Equal(model.Position{}, position)
 
 				// Retrieve the position ID from the store via owner/poolId key and compare to expected values.
@@ -633,9 +631,10 @@ func (s *KeeperTestSuite) TestCalculateUnderlyingAssetsFromPosition() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			// prepare concentrated pool with a default position
-			clPool := s.PrepareConcentratedPool()
+			s.PrepareConcentratedPool()
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1)))
-			s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, 1, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+			_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, 1, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+			s.Require().NoError(err)
 
 			// create a position from the test case
 			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1)))
@@ -651,7 +650,7 @@ func (s *KeeperTestSuite) TestCalculateUnderlyingAssetsFromPosition() {
 			}
 
 			// calculate underlying assets from the position
-			clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, tc.position.PoolId)
+			clPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, tc.position.PoolId)
 			s.Require().NoError(err)
 			calculatedCoin0, calculatedCoin1, err := cl.CalculateUnderlyingAssetsFromPosition(s.Ctx, tc.position, clPool)
 
@@ -773,7 +772,8 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			s.PrepareConcentratedPool()
 
 			// Set incentives for pool to ensure accumulators work correctly
-			s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, DefaultIncentiveRecords)
+			err := s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, DefaultIncentiveRecords)
+			s.Require().NoError(err)
 
 			// Set up fully charged positions
 			totalLiquidity := sdk.ZeroDec()
@@ -936,7 +936,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 				s.Require().Equal(sdk.Coins(nil), forfeitedRewards)
 
 				// Sanity check that cannot claim again.
-				claimedRewards, forfeitedRewards, err = s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, newPositionId)
+				claimedRewards, _, err = s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, newPositionId)
 				s.Require().NoError(err)
 
 				s.Require().Equal(sdk.Coins(nil), claimedRewards)
@@ -1089,7 +1089,8 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 	s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, swapFee)
 
 	// Set incentives for pool to ensure accumulators work correctly
-	s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, DefaultIncentiveRecords)
+	err := s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, DefaultIncentiveRecords)
+	s.Require().NoError(err)
 
 	// Set up fully charged positions
 	totalLiquidity := sdk.ZeroDec()
@@ -1199,7 +1200,8 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 		},
 		MinUptime: time.Nanosecond,
 	}
-	s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, []types.IncentiveRecord{testIncentiveRecord})
+	err := s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, []types.IncentiveRecord{testIncentiveRecord})
+	s.Require().NoError(err)
 
 	// Set up fully charged positions
 	totalLiquidity := sdk.ZeroDec()
@@ -1213,7 +1215,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration))
 
 	// sync accumulators
-	err := s.App.ConcentratedLiquidityKeeper.UpdateUptimeAccumulatorsToNow(s.Ctx, pool.GetId())
+	err = s.App.ConcentratedLiquidityKeeper.UpdateUptimeAccumulatorsToNow(s.Ctx, pool.GetId())
 	s.Require().NoError(err)
 
 	claimableIncentives := sdk.NewCoins()
@@ -1231,7 +1233,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 	newPositionId, err := s.App.ConcentratedLiquidityKeeper.FungifyChargedPosition(s.Ctx, defaultAddress, expectedPositionIds)
 	s.Require().NoError(err)
 
-	// Claim fees
+	// Claim incentives.
 	collected, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, newPositionId)
 	s.Require().NoError(err)
 
@@ -1460,7 +1462,6 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 			s.Require().NoError(err)
 			s.Require().Equal(underlyingLiquidityTokenized[0].Amount.String(), concentratedLock.Coins[0].Amount.String())
 			s.Require().Equal(test.remainingLockDuration, concentratedLock.Duration)
-
 		},
 		)
 	}
@@ -1663,19 +1664,18 @@ func (s *KeeperTestSuite) TestPositionHasActiveUnderlyingLockAndUpdate() {
 			expectedGetPositionLockIdErrAfterTimeUpdate: true,
 		},
 		{
-			name: "position without lock: ",
+			name: "invalid position without lock ",
 			// we return invalid lock id with no-op to trigger error
 			createPosition: func(s *KeeperTestSuite) (uint64, uint64) {
 				return 10, 0
 			},
-			expectedHasActiveLock:                            false,
-			expectedHasActiveLockAfterTimeUpdate:             false,
-			expectedLockError:                                true,
-			expectedPositionLockID:                           0,
-			expectedPositionLockIDAfterTimeUpdate:            0,
-			expectedGetPositionLockIdErr:                     true,
-			expectedGetPositionLockIdErrAfterTimeUpdate:      true,
-			expectedPositionHasActiveUnderlyingLockAndUpdate: true,
+			expectedHasActiveLock:                       false,
+			expectedHasActiveLockAfterTimeUpdate:        false,
+			expectedLockError:                           true,
+			expectedPositionLockID:                      0,
+			expectedPositionLockIDAfterTimeUpdate:       0,
+			expectedGetPositionLockIdErr:                true,
+			expectedGetPositionLockIdErrAfterTimeUpdate: true,
 		},
 	}
 
@@ -1762,6 +1762,7 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 
 	// Create a position without a lock
 	positionId, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), owner, defaultPositionCoins)
+	s.Require().Error(err)
 
 	// Check if position has lock in state, should not
 	retrievedLockId, err = s.App.ConcentratedLiquidityKeeper.GetLockIdFromPositionId(s.Ctx, positionId)
