@@ -131,7 +131,6 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 			suite.Require().Len(resp.Assets, 0)
 
 			for i, action := range tc.actions {
-
 				// here we set two different string arrays of denoms.
 				// The reason we do this is because native denom should be an asset within the pool,
 				// while we do not want native asset to be in gov proposals.

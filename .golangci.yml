@@ -18,7 +18,6 @@ linters:
     - goconst
     - gofmt
     - goimports
-    # - gofumpt
     - goheader
     - gomodguard
     - goprintffuncname
@@ -30,14 +29,14 @@ linters:
     - misspell
     - nakedret
     - nilnil
-    - paralleltest
     - promlinter
     - staticcheck
     - stylecheck
     - tenv
     - thelper
-    - testpackage
+    - tparallel
     - typecheck
+    - thelper
     - unconvert
     - unused
     - whitespace

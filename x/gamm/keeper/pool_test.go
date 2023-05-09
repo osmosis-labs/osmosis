@@ -499,7 +499,8 @@ func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
 				pool, _ := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
 				stableswapPool, _ := pool.(*stableswap.Pool)
 				stableswapPool.ScalingFactorController = controllerAddr.String()
-				suite.App.GAMMKeeper.SetPool(suite.Ctx, stableswapPool)
+				err := suite.App.GAMMKeeper.SetPool(suite.Ctx, stableswapPool)
+				suite.Require().NoError(err)
 			} else {
 				suite.prepareCustomBalancerPool(
 					defaultAcctFunds,

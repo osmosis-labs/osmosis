@@ -412,7 +412,8 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 
 			if test.preInitUptimeAccumValues != nil {
-				addToUptimeAccums(s.Ctx, clPool.GetId(), clKeeper, test.preInitUptimeAccumValues)
+				err := addToUptimeAccums(s.Ctx, clPool.GetId(), clKeeper, test.preInitUptimeAccumValues)
+				s.Require().NoError(err)
 			}
 
 			// Set up an initialized tick
@@ -436,6 +437,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			} else {
 				s.Require().NoError(err)
 				clPool, err = clKeeper.GetPoolById(s.Ctx, validPoolId)
+				s.Require().NoError(err)
 				s.Require().Equal(test.expectedTickInfo, tickInfo)
 			}
 		})
@@ -581,7 +583,8 @@ func (s *KeeperTestSuite) TestCrossTick() {
 
 			// Initialize global uptime accums
 			if test.initGlobalUptimeAccumValues != nil {
-				addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.initGlobalUptimeAccumValues)
+				err = addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.initGlobalUptimeAccumValues)
+				s.Require().NoError(err)
 			}
 
 			// Set up an initialized tick
@@ -590,7 +593,8 @@ func (s *KeeperTestSuite) TestCrossTick() {
 
 			// Update global uptime accums for edge case testing
 			if test.globalUptimeAccumDelta != nil {
-				addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.globalUptimeAccumDelta)
+				err = addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.globalUptimeAccumDelta)
+				s.Require().NoError(err)
 			}
 
 			// update the fee accumulator so that we have accum value > tick fee growth value
@@ -1171,7 +1175,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			// Normally, initialized during position creation.
 			// We only initialize ticks in this test for simplicity.
 			curPrice := sdk.OneDec()
-			// TOOD: consider adding tests for GetTickLiquidityNetInDirection
+			// TODO: consider adding tests for GetTickLiquidityNetInDirection
 			// with tick spacing > 1, requiring price to tick conversion with rounding.
 			curTick, err := math.PriceToTick(curPrice)
 			s.Require().NoError(err)
@@ -1185,7 +1189,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			pool.SetCurrentSqrtPrice(curPrice)
 			pool.SetCurrentTick(curTick)
 
-			s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+			err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+			s.Require().NoError(err)
 
 			// system under test
 			liquidityForRange, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityNetInDirection(s.Ctx, test.poolId, test.tokenIn, test.startTick, test.boundTick)
