@@ -16,9 +16,7 @@ func (s *KeeperTestSuite) TestInitializePool() {
 	// Create a valid PoolI from a valid ConcentratedPoolExtension
 	validConcentratedPool := s.PrepareConcentratedPool()
 	validPoolI, ok := validConcentratedPool.(poolmanagertypes.PoolI)
-	if !ok {
-		s.FailNow("validConcentratedPool is not a PoolI")
-	}
+	s.Require().True(ok)
 
 	// Create a concentrated liquidity pool with unauthorized tick spacing
 	invalidTickSpacing := uint64(25)
@@ -213,9 +211,7 @@ func (s *KeeperTestSuite) TestPoolIToConcentratedPool() {
 	// Create default CL pool
 	concentratedPool := s.PrepareConcentratedPool()
 	poolI, ok := concentratedPool.(poolmanagertypes.PoolI)
-	if !ok {
-		s.Fail("failed to cast pool to PoolI")
-	}
+	s.Require().True(ok)
 
 	// Ensure no error occurs when converting to ConcentratedPool
 	_, err := cl.ConvertPoolInterfaceToConcentrated(poolI)
