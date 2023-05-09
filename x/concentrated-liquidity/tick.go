@@ -121,7 +121,7 @@ func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	// return 0 values if key has not been initialized
 	if !found {
 		// If tick has not yet been initialized, we create a new one and initialize
-		// the fee growth below.
+		// the fee growth opposite direction of last traversal value.
 		initialFeeGrowthOppositeDirectionOfLastTraversal, err := k.getInitialFeeGrowthOppositeDirectionOfLastTraversalForTick(ctx, poolId, tickIndex)
 		if err != nil {
 			return tickStruct, err
