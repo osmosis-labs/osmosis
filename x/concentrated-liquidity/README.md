@@ -1037,7 +1037,7 @@ type TickInfo struct {
 }
 ```
 
-TickInfo keeps a record of fees accumulated opposite the direction the tick was las traversed.
+TickInfo keeps a record of fees accumulated opposite the direction the tick was last traversed.
 In other words, when traversing the tick from right to left, `FeeGrowthOppositeDirectionOfLastTraversal`
 represents the fees accumulated above that tick. When traversing the tick from left to right,
 `FeeGrowthOppositeDirectionOfLastTraversal` represents the fees accumulated below that tick.
