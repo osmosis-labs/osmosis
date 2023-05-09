@@ -1,6 +1,6 @@
 run:
   tests: true
-  timeout: 10m
+  timeout: 5m
   allow-parallel-runners: true
 
 output:
