@@ -27,6 +27,10 @@ message MsgCreatePosition {
   string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   int64 lower_tick = 3 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
   int64 upper_tick = 4 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
+  // tokens_provided is the amount of tokens provided for the position.
+  // It must at a minimum be of length 1 (for a single sided position)
+  // and at a maximum be of length 2 (for a position that straddles the current
+  // tick).
   repeated cosmos.base.v1beta1.Coin tokens_provided = 5 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"

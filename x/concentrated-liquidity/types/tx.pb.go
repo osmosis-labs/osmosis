@@ -36,10 +36,14 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // ===================== MsgCreatePosition
 type MsgCreatePosition struct {
-	PoolId          uint64                                   `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
-	Sender          string                                   `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	LowerTick       int64                                    `protobuf:"varint,3,opt,name=lower_tick,json=lowerTick,proto3" json:"lower_tick,omitempty" yaml:"lower_tick"`
-	UpperTick       int64                                    `protobuf:"varint,4,opt,name=upper_tick,json=upperTick,proto3" json:"upper_tick,omitempty" yaml:"upper_tick"`
+	PoolId    uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+	Sender    string `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	LowerTick int64  `protobuf:"varint,3,opt,name=lower_tick,json=lowerTick,proto3" json:"lower_tick,omitempty" yaml:"lower_tick"`
+	UpperTick int64  `protobuf:"varint,4,opt,name=upper_tick,json=upperTick,proto3" json:"upper_tick,omitempty" yaml:"upper_tick"`
+	// tokens_provided is the amount of tokens provided for the position.
+	// It must at a minimum be of length 1 (for a single sided position)
+	// and at a maximum be of length 2 (for a position that straddles the current
+	// tick).
 	TokensProvided  github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=tokens_provided,json=tokensProvided,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"tokens_provided"`
 	TokenMinAmount0 github_com_cosmos_cosmos_sdk_types.Int   `protobuf:"bytes,6,opt,name=token_min_amount0,json=tokenMinAmount0,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"token_min_amount0" yaml:"token_min_amount0"`
 	TokenMinAmount1 github_com_cosmos_cosmos_sdk_types.Int   `protobuf:"bytes,7,opt,name=token_min_amount1,json=tokenMinAmount1,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"token_min_amount1" yaml:"token_min_amount1"`
