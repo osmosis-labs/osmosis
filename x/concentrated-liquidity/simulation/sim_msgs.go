@@ -249,15 +249,15 @@ func RandMsgCreateIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 
 	// Get the duration value at the random index
 	randomDuration := durations[randomDurationIndex]
+	incentiveCoin := sdk.NewCoin(incentivesTokens[0].Denom, incentivesTokens[0].Amount)
 
 	return &cltypes.MsgCreateIncentive{
-		PoolId:          clPool.GetId(),
-		Sender:          incentiveCreator.Address.String(),
-		IncentiveDenom:  incentivesTokens[0].Denom,
-		IncentiveAmount: incentivesTokens[0].Amount,
-		EmissionRate:    randEmissionVal,
-		StartTime:       startTime,
-		MinUptime:       randomDuration,
+		PoolId:        clPool.GetId(),
+		Sender:        incentiveCreator.Address.String(),
+		IncentiveCoin: incentiveCoin,
+		EmissionRate:  randEmissionVal,
+		StartTime:     startTime,
+		MinUptime:     randomDuration,
 	}, nil
 }
 
