@@ -45,6 +45,9 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 	amount0Desired := tokensProvided.AmountOf(pool.GetToken0())
 	amount1Desired := tokensProvided.AmountOf(pool.GetToken1())
+	if amount0Desired.IsZero() && amount1Desired.IsZero() {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, errors.New("cannot create a position with zero amounts of both pool tokens")
+	}
 
 	// Transform the provided ticks into their corresponding sqrtPrices.
 	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
