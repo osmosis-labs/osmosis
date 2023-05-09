@@ -1275,8 +1275,8 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 
 	// sync accumulators
 	// We use cache context to update uptime accumulators for estimating claimable incentives
-	// Prior to running fungigy. However, we do not want the mutations made in test setup to have
-	// impact on the system under test because it must update the uptime accumulators itself.
+	// prior to running fungify. However, we do not want the mutations made in test setup to have
+	// impact on the system under test because it (fungify) must update the uptime accumulators itself.
 	cacheCtx, _ := s.Ctx.CacheContext()
 	err = s.App.ConcentratedLiquidityKeeper.UpdateUptimeAccumulatorsToNow(cacheCtx, pool.GetId())
 	s.Require().NoError(err)
