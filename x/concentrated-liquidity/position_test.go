@@ -764,7 +764,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			expectedErr:             types.PositionQuantityTooLowError{MinNumPositions: cl.MinNumPositionsToCombine, NumPositions: 1},
 		},
 		{
-			name: "22Error: one of the full range positions is locked",
+			name: "Error: one of the full range positions is locked",
 			setupFullyChargedPositions: []position{
 				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, types.MinTick, types.MaxTick, false},
 				{2, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, types.MinTick, types.MaxTick, true},
