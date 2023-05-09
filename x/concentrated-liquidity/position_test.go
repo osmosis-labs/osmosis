@@ -1662,21 +1662,21 @@ func (s *KeeperTestSuite) TestPositionHasActiveUnderlyingLockAndUpdate() {
 			expectedGetPositionLockIdErr:                true,
 			expectedGetPositionLockIdErrAfterTimeUpdate: true,
 		},
-		// {
-		// 	name: "position without lock: ",
-		// 	// we return invalid lock id with no-op to trigger error
-		// 	createPosition: func(s *KeeperTestSuite) (uint64, uint64) {
-		// 		return 10, 0
-		// 	},
-		// 	expectedHasActiveLock:                            false,
-		// 	expectedHasActiveLockAfterTimeUpdate:             false,
-		// 	expectedLockError:                                true,
-		// 	expectedPositionLockID:                           0,
-		// 	expectedPositionLockIDAfterTimeUpdate:            0,
-		// 	expectedGetPositionLockIdErr:                     true,
-		// 	expectedGetPositionLockIdErrAfterTimeUpdate:      true,
-		// 	expectedPositionHasActiveUnderlyingLockAndUpdate: true,
-		// },
+		{
+			name: "position without lock: ",
+			// we return invalid lock id with no-op to trigger error
+			createPosition: func(s *KeeperTestSuite) (uint64, uint64) {
+				return 10, 0
+			},
+			expectedHasActiveLock:                            false,
+			expectedHasActiveLockAfterTimeUpdate:             false,
+			expectedLockError:                                true,
+			expectedPositionLockID:                           0,
+			expectedPositionLockIDAfterTimeUpdate:            0,
+			expectedGetPositionLockIdErr:                     true,
+			expectedGetPositionLockIdErrAfterTimeUpdate:      true,
+			expectedPositionHasActiveUnderlyingLockAndUpdate: true,
+		},
 	}
 
 	for _, tc := range tests {
