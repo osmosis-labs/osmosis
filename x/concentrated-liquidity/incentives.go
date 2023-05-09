@@ -299,6 +299,7 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 // Specifically, it gets the time elapsed since the last update and divides it
 // by the qualifying liquidity for each uptime. It then adds this value to the
 // respective accumulator and updates relevant time trackers accordingly.
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) error {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -554,6 +555,8 @@ func (k Keeper) getAllIncentiveRecordsForUptime(ctx sdk.Context, poolId uint64, 
 // UptimeGrowthInside tracks the incentives accured by a specific LP within a pool. It keeps track of the cumulative amount of incentives
 // collected by a specific LP within a pool. This function also measures the growth of incentives accured by a particular LP since the last
 // time incentives were collected.
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
+// The mutation occurs in the call to GetTickInfo().
 func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64) ([]sdk.DecCoins, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -620,6 +623,7 @@ func (k Keeper) GetUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, lowe
 }
 
 // initOrUpdatePositionUptime either adds or updates records for all uptime accumulators `position` qualifies for
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liquidity sdk.Dec, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId uint64) error {
 	// We update accumulators _prior_ to any position-related updates to ensure
 	// past rewards aren't distributed to new liquidity. We also update pool's
@@ -762,6 +766,10 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 	// Retrieve the position with the given ID.
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
+		return sdk.Coins{}, sdk.Coins{}, err
+	}
+
+	if err := k.updateUptimeAccumulatorsToNow(ctx, position.PoolId); err != nil {
 		return sdk.Coins{}, sdk.Coins{}, err
 	}
 
@@ -928,6 +936,7 @@ func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positi
 // - startTime is < blockTime.
 // - minUptime is not an authorizedUptime.
 // - other internal database or math errors.
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveCoin sdk.Coin, emissionRate sdk.Dec, startTime time.Time, minUptime time.Duration) (types.IncentiveRecord, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
