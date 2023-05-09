@@ -1068,7 +1068,8 @@ func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
 	s.Require().Equal(emptyIncentiveRecords, poolTwoRecords)
 
 	// Ensure setting and getting a single record works with single Get and GetAll
-	clKeeper.SetIncentiveRecord(s.Ctx, incentiveRecordOne)
+	err = clKeeper.SetIncentiveRecord(s.Ctx, incentiveRecordOne)
+	s.Require().NoError(err)
 	poolOneRecord, err := clKeeper.GetIncentiveRecord(s.Ctx, clPoolOne.GetId(), incentiveRecordOne.IncentiveDenom, incentiveRecordOne.MinUptime, sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr))
 	s.Require().NoError(err)
 	s.Require().Equal(incentiveRecordOne, poolOneRecord)
@@ -1086,7 +1087,8 @@ func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
 	s.Require().Equal(emptyIncentiveRecords, allRecordsPoolTwo)
 
 	// Ensure directly setting additional records don't overwrite previous ones
-	clKeeper.SetIncentiveRecord(s.Ctx, incentiveRecordTwo)
+	err = clKeeper.SetIncentiveRecord(s.Ctx, incentiveRecordTwo)
+	s.Require().NoError(err)
 	poolOneRecord, err = clKeeper.GetIncentiveRecord(s.Ctx, clPoolOne.GetId(), incentiveRecordTwo.IncentiveDenom, incentiveRecordTwo.MinUptime, sdk.MustAccAddressFromBech32(incentiveRecordTwo.IncentiveCreatorAddr))
 	s.Require().NoError(err)
 	s.Require().Equal(incentiveRecordTwo, poolOneRecord)
@@ -3565,7 +3567,8 @@ func (s *KeeperTestSuite) TestFunctional_ClaimIncentices_LiquidityChange_Varying
 		},
 		MinUptime: time.Nanosecond,
 	}
-	s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, []types.IncentiveRecord{testIncentiveRecord})
+	err := s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, []types.IncentiveRecord{testIncentiveRecord})
+	s.Require().NoError(err)
 
 	// Set up position
 	positionIdOne, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoin0.Amount, DefaultCoin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
