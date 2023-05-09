@@ -160,7 +160,7 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 	return &types.MsgCollectFeesResponse{CollectedFees: totalCollectedFees}, nil
 }
 
-// CollectIncentives collects incentives for all given PositionIds in a given range that belong to sender.
+// CollectIncentives collects incentives for all positions in given range that belong to sender
 func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgCollectIncentives) (*types.MsgCollectIncentivesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -205,7 +205,7 @@ func (server msgServer) CreateIncentive(goCtx context.Context, msg *types.MsgCre
 		return nil, err
 	}
 
-	incentiveRecord, err := server.keeper.CreateIncentive(ctx, msg.PoolId, sender, msg.IncentiveDenom, msg.IncentiveAmount, msg.EmissionRate, msg.StartTime, msg.MinUptime)
+	incentiveRecord, err := server.keeper.CreateIncentive(ctx, msg.PoolId, sender, msg.IncentiveCoin, msg.EmissionRate, msg.StartTime, msg.MinUptime)
 	if err != nil {
 		return nil, err
 	}
@@ -221,8 +221,7 @@ func (server msgServer) CreateIncentive(goCtx context.Context, msg *types.MsgCre
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
-			sdk.NewAttribute(types.AttributeIncentiveDenom, msg.IncentiveDenom),
-			sdk.NewAttribute(types.AttributeIncentiveAmount, msg.IncentiveAmount.String()),
+			sdk.NewAttribute(types.AttributeIncentiveCoin, msg.IncentiveCoin.String()),
 			sdk.NewAttribute(types.AttributeIncentiveEmissionRate, msg.EmissionRate.String()),
 			sdk.NewAttribute(types.AttributeIncentiveStartTime, msg.StartTime.String()),
 			sdk.NewAttribute(types.AttributeIncentiveMinUptime, msg.MinUptime.String()),

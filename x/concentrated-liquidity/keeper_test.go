@@ -33,7 +33,7 @@ var (
 	DefaultFeeAccumCoins                           = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
 	DefaultPositionId                              = uint64(1)
 	DefaultUnderlyingLockId                        = uint64(0)
-	DefaultJoinTime                                = time.Unix(0, 0)
+	DefaultJoinTime                                = time.Unix(0, 0).UTC()
 	ETH                                            = "eth"
 	DefaultAmt0                                    = sdk.NewInt(1000000)
 	DefaultAmt0Expected                            = sdk.NewInt(998976)
@@ -85,7 +85,7 @@ func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, pro
 // Sets up the following positions:
 // 1. Default position
 // 2. Full range position
-// 3. Postion with consecutive price range from the default position
+// 3. Position with consecutive price range from the default position
 // 4. Position with overlapping price range from the default position
 func (s *KeeperTestSuite) SetupDefaultPositions(poolId uint64) {
 	// ----------- set up positions ----------
@@ -218,7 +218,8 @@ func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uin
 
 	// In all cases, global uptime accums need to be updated. If lowerTick <= currentTick < upperTick,
 	// nothing more needs to be done.
-	addToUptimeAccums(ctx, poolId, s.App.ConcentratedLiquidityKeeper, uptimeGrowthToAdd)
+	err := addToUptimeAccums(ctx, poolId, s.App.ConcentratedLiquidityKeeper, uptimeGrowthToAdd)
+	s.Require().NoError(err)
 }
 
 // addUptimeGrowthOutsideRange adds uptime growth outside the range defined by [lowerTick, upperTick).
@@ -272,7 +273,8 @@ func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId ui
 
 	// In all cases, global uptime accums need to be updated. If currentTick < lowerTick,
 	// nothing more needs to be done.
-	addToUptimeAccums(ctx, poolId, s.App.ConcentratedLiquidityKeeper, uptimeGrowthToAdd)
+	err := addToUptimeAccums(ctx, poolId, s.App.ConcentratedLiquidityKeeper, uptimeGrowthToAdd)
+	s.Require().NoError(err)
 }
 
 // validatePositionFeeAccUpdate validates that the position's accumulator with given parameters
@@ -292,7 +294,8 @@ func (s *KeeperTestSuite) validateListenerCallCount(
 	expectedPoolCreatedListenerCallCount,
 	expectedInitialPositionCreationListenerCallCount,
 	expectedLastPositionWithdrawalListenerCallCount,
-	expectedSwapListenerCallCount int) {
+	expectedSwapListenerCallCount int,
+) {
 	// Validate that listeners were called the desired number of times
 	listeners := s.App.ConcentratedLiquidityKeeper.GetListenersUnsafe()
 	s.Require().Len(listeners, 1)

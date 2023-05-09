@@ -61,7 +61,6 @@ func TestParseCoinsNoSort(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-
 			coins, err := cli.ParseCoinsNoSort(tc.coinsStr)
 
 			require.NoError(t, err)

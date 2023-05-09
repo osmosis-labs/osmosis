@@ -281,6 +281,7 @@ func (n *NodeConfig) QueryConcentratedPositions(address string) []model.Position
 	require.NoError(n.t, err)
 	return positionsResponse.Positions
 }
+
 func (n *NodeConfig) QueryConcentratedPool(poolId uint64) (cltypes.ConcentratedPoolExtension, error) {
 	path := fmt.Sprintf("/osmosis/poolmanager/v1beta1/pools/%d", poolId)
 	bz, err := n.QueryGRPCGateway(path)

@@ -159,7 +159,6 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 		TokenMinAmount1: tokenMinAmount1,
 	}
 	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
-
 	if err != nil {
 		log.Fatal(err)
 	}

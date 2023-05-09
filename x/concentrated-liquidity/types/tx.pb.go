@@ -579,13 +579,12 @@ func (m *MsgCollectIncentivesResponse) GetForfeitedIncentives() []types.Coin {
 
 // ===================== MsgCreateIncentive
 type MsgCreateIncentive struct {
-	PoolId          uint64                                 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
-	Sender          string                                 `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	IncentiveDenom  string                                 `protobuf:"bytes,3,opt,name=incentive_denom,json=incentiveDenom,proto3" json:"incentive_denom,omitempty"`
-	IncentiveAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=incentive_amount,json=incentiveAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"incentive_amount" yaml:"incentive_amount"`
-	EmissionRate    github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=emission_rate,json=emissionRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"emission_rate" yaml:"emission_rate"`
-	StartTime       time.Time                              `protobuf:"bytes,6,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time" yaml:"start_time"`
-	MinUptime       time.Duration                          `protobuf:"bytes,7,opt,name=min_uptime,json=minUptime,proto3,stdduration" json:"duration,omitempty" yaml:"min_uptime"`
+	PoolId        uint64                                 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+	Sender        string                                 `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	IncentiveCoin types.Coin                             `protobuf:"bytes,3,opt,name=incentive_coin,json=incentiveCoin,proto3" json:"incentive_coin" yaml:"incentive_coin"`
+	EmissionRate  github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=emission_rate,json=emissionRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"emission_rate" yaml:"emission_rate"`
+	StartTime     time.Time                              `protobuf:"bytes,5,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time" yaml:"start_time"`
+	MinUptime     time.Duration                          `protobuf:"bytes,6,opt,name=min_uptime,json=minUptime,proto3,stdduration" json:"duration,omitempty" yaml:"min_uptime"`
 }
 
 func (m *MsgCreateIncentive) Reset()         { *m = MsgCreateIncentive{} }
@@ -635,11 +634,11 @@ func (m *MsgCreateIncentive) GetSender() string {
 	return ""
 }
 
-func (m *MsgCreateIncentive) GetIncentiveDenom() string {
+func (m *MsgCreateIncentive) GetIncentiveCoin() types.Coin {
 	if m != nil {
-		return m.IncentiveDenom
+		return m.IncentiveCoin
 	}
-	return ""
+	return types.Coin{}
 }
 
 func (m *MsgCreateIncentive) GetStartTime() time.Time {
@@ -1773,7 +1772,7 @@ func (m *MsgCreateIncentive) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i -= n9
 	i = encodeVarintTx(dAtA, i, uint64(n9))
 	i--
-	dAtA[i] = 0x32
+	dAtA[i] = 0x2a
 	{
 		size := m.EmissionRate.Size()
 		i -= size
@@ -1783,24 +1782,17 @@ func (m *MsgCreateIncentive) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x2a
+	dAtA[i] = 0x22
 	{
-		size := m.IncentiveAmount.Size()
-		i -= size
-		if _, err := m.IncentiveAmount.MarshalTo(dAtA[i:]); err != nil {
+		size, err := m.IncentiveCoin.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
 			return 0, err
 		}
+		i -= size
 		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x22
-	if len(m.IncentiveDenom) > 0 {
-		i -= len(m.IncentiveDenom)
-		copy(dAtA[i:], m.IncentiveDenom)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.IncentiveDenom)))
-		i--
-		dAtA[i] = 0x1a
-	}
+	dAtA[i] = 0x1a
 	if len(m.Sender) > 0 {
 		i -= len(m.Sender)
 		copy(dAtA[i:], m.Sender)
@@ -1850,6 +1842,14 @@ func (m *MsgCreateIncentiveResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 	}
 	i -= n11
 	i = encodeVarintTx(dAtA, i, uint64(n11))
+	i--
+	dAtA[i] = 0x2a
+	n14, err14 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
+	if err14 != nil {
+		return 0, err14
+	}
+	i -= n14
+	i = encodeVarintTx(dAtA, i, uint64(n14))
 	i--
 	dAtA[i] = 0x22
 	{
@@ -2177,11 +2177,7 @@ func (m *MsgCreateIncentive) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	l = len(m.IncentiveDenom)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = m.IncentiveAmount.Size()
+	l = m.IncentiveCoin.Size()
 	n += 1 + l + sovTx(uint64(l))
 	l = m.EmissionRate.Size()
 	n += 1 + l + sovTx(uint64(l))
@@ -3853,9 +3849,9 @@ func (m *MsgCreateIncentive) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IncentiveDenom", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field IncentiveCoin", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -3865,59 +3861,26 @@ func (m *MsgCreateIncentive) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.IncentiveDenom = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IncentiveAmount", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.IncentiveAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.IncentiveCoin.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
-		case 5:
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field EmissionRate", wireType)
 			}
@@ -3951,7 +3914,7 @@ func (m *MsgCreateIncentive) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 6:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
 			}
@@ -3984,7 +3947,7 @@ func (m *MsgCreateIncentive) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 7:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MinUptime", wireType)
 			}

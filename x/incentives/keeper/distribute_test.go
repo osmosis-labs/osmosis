@@ -221,7 +221,9 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 			suite.FundAcc(addr, coinsToMint)
 
 			// make sure the module has enough funds
-			suite.App.BankKeeper.SendCoinsFromAccountToModule(suite.Ctx, addr, types.ModuleName, coinsToMint)
+			err := suite.App.BankKeeper.SendCoinsFromAccountToModule(suite.Ctx, addr, types.ModuleName, coinsToMint)
+			suite.Require().NoError(err)
+
 			var poolId uint64
 			// prepare a CL Pool that creates gauge at the end of createPool
 			if tc.poolType == poolmanagertypes.Concentrated {
@@ -290,7 +292,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 							poolId, err := suite.App.PoolIncentivesKeeper.GetPoolIdFromGaugeId(suite.Ctx, gauge.GetId(), currentEpoch.Duration)
 							suite.Require().NoError(err)
 
-							// GetIncentiveRecord to see if pools recieved incentives properly
+							// GetIncentiveRecord to see if pools received incentives properly
 							incentiveRecord, err := suite.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(suite.Ctx, poolId, defaultRewardDenom, types.DefaultConcentratedUptime, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
 							suite.Require().NoError(err)
 

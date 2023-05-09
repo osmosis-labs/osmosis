@@ -57,7 +57,6 @@ func (suite *StrategyTestSuite) TestNextInitializedTick() {
 
 	suite.Run("lte=true", func() {
 		suite.Run("returns tick to right if at initialized tick", func() {
-
 			swapStrategy := swapstrategy.New(false, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec(), defaultTickSpacing)
 
 			n, initd := swapStrategy.NextInitializedTick(ctx, 1, 78)

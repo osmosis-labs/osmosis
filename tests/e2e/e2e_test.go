@@ -74,7 +74,7 @@ func (s *IntegrationTestSuite) TestProtoRev() {
 	s.Require().Len(hotRoutes, 0)
 
 	// The module should have no trades by default.
-	numTrades, err := chainANode.QueryProtoRevNumberOfTrades()
+	_, err = chainANode.QueryProtoRevNumberOfTrades()
 	s.T().Logf("checking that the protorev module has no trades on init: %s", err)
 	s.Require().Error(err)
 
@@ -140,7 +140,7 @@ func (s *IntegrationTestSuite) TestProtoRev() {
 	s.Require().Equal(supplyBefore, supplyAfter)
 
 	// Check that the number of trades executed by the protorev module is 1.
-	numTrades, err = chainANode.QueryProtoRevNumberOfTrades()
+	numTrades, err := chainANode.QueryProtoRevNumberOfTrades()
 	s.T().Logf("checking that the protorev module has executed 1 trade")
 	s.Require().NoError(err)
 	s.Require().NotNil(numTrades)
@@ -206,7 +206,8 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	}
 
 	// Change the parameter to enable permisionless pool creation.
-	chainA.SubmitParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"))
+	err = chainA.SubmitParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"))
+	s.Require().NoError(err)
 
 	// Confirm that the parameter has been changed.
 	isPermisionlessCreationEnabledStr = chainANode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
@@ -599,7 +600,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		addr1BalancesAfter.AmountOf("uion"),
 	)
 
-	// Assert position that was active thoughout the whole swap:
+	// Assert position that was active throughout the whole swap:
 
 	// Track balance of address3
 	addr3BalancesBefore = s.addrBalance(chainANode, address3)
@@ -660,10 +661,8 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Withdraw Position
 
-	var (
-		// Withdraw Position parameters
-		defaultLiquidityRemoval string = "1000"
-	)
+	// Withdraw Position parameters
+	var defaultLiquidityRemoval string = "1000"
 
 	chainA.WaitForNumHeights(2)
 
@@ -730,7 +729,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	}
 
 	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
-	timeoutPeriod := time.Duration(2 * time.Minute)
+	timeoutPeriod := 2 * time.Minute
 	select {
 	case <-time.After(timeoutPeriod):
 		err := fmt.Errorf("go routine took longer than %s", timeoutPeriod)
@@ -772,7 +771,7 @@ func (s *IntegrationTestSuite) TestStableSwapPostUpgrade() {
 }
 
 // TestGeometricTwapMigration tests that the geometric twap record
-// migration runs succesfully. It does so by attempting to execute
+// migration runs successfully. It does so by attempting to execute
 // the swap on the pool created pre-upgrade. When a pool is created
 // pre-upgrade, twap records are initialized for a pool. By runnning
 // a swap post-upgrade, we confirm that the geometric twap was initialized
@@ -977,7 +976,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 
 	// Removing the rate limit so it doesn't affect other tests
 	node.WasmExecute(contract, `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
-	//reset the param to the original contract if it existed
+	// reset the param to the original contract if it existed
 	if param != "" {
 		err = chainA.SubmitParamChangeProposal(
 			ibcratelimittypes.ModuleName,
@@ -989,9 +988,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 			val := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
 			return strings.Contains(val, param)
 		}, time.Second*30, time.Millisecond*500)
-
 	}
-
 }
 
 func (s *IntegrationTestSuite) TestLargeWasmUpload() {
@@ -1103,6 +1100,7 @@ func (s *IntegrationTestSuite) TestPacketForwarding() {
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
+	s.Require().NoError(err)
 	s.Require().Eventually(func() bool {
 		response, err := nodeA.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, senderBech32))
 		if err != nil {
@@ -1157,11 +1155,10 @@ func (s *IntegrationTestSuite) TestAddToExistingLock() {
 // TestArithmeticTWAP tests TWAP by creating a pool, performing a swap.
 // These two operations should create TWAP records.
 // Then, we wait until the epoch for the records to be pruned.
-// The records are guranteed to be pruned at the next epoch
+// The records are guaranteed to be pruned at the next epoch
 // because twap keep time = epoch time / 4 and we use a timer
 // to wait for at least the twap keep time.
 func (s *IntegrationTestSuite) TestArithmeticTWAP() {
-
 	s.T().Skip("TODO: investigate further: https://github.com/osmosis-labs/osmosis/issues/4342")
 
 	const (
@@ -1438,7 +1435,7 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 	}
 	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
 	var elapsed time.Duration
-	timeoutPeriod := time.Duration(2 * time.Minute)
+	timeoutPeriod := 2 * time.Minute
 	select {
 	case elapsed = <-totalTimeChan:
 	case <-time.After(timeoutPeriod):
@@ -1473,8 +1470,6 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 		denomB = "stake" // 2_000_000 stake
 
 		minAmountOut = "1"
-
-		epochIdentifier = "day"
 	)
 
 	chainA := s.configurer.GetChainConfig(0)
@@ -1559,10 +1554,8 @@ func (s *IntegrationTestSuite) TestAConcentratedLiquidity_CanonicalPool_And_Para
 		s.T().Skip("Skipping v16 canonical pool creation test because upgrade is not enabled")
 	}
 
-	var (
-		// Taken from: https://app.osmosis.zone/pool/674
-		expectedFee = sdk.MustNewDecFromStr("0.002")
-	)
+	// Taken from: https://app.osmosis.zone/pool/674
+	expectedFee := sdk.MustNewDecFromStr("0.002")
 
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()

@@ -741,7 +741,6 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 					s.Require().Equal(incentiveRecord.IncentiveRecordBody.RemainingAmount.String(), expectedPoolData.IncentiveRecords[i].IncentiveRecordBody.RemainingAmount.String())
 					s.Require().True(incentiveRecord.IncentiveRecordBody.StartTime.Equal(expectedPoolData.IncentiveRecords[i].IncentiveRecordBody.StartTime))
 				}
-
 			}
 
 			// Validate positions.

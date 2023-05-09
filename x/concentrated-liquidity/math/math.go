@@ -6,9 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
-var (
-	smallestDec = sdk.SmallestDec()
-)
+var smallestDec = sdk.SmallestDec()
 
 // liquidity0 takes an amount of asset0 in the pool as well as the sqrtpCur and the nextPrice
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice

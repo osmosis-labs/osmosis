@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"fmt"
 	"strings"
-
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,7 +23,10 @@ func BenchmarkEpochHook(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		b.StartTimer()
-		suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
+		err := suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
+		if err != nil {
+			panic(fmt.Sprintf("error updating pools in protorev epoch hook benchmark: %s", err))
+		}
 		b.StopTimer()
 	}
 }
@@ -49,7 +51,6 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 	baseDenoms, err := suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
 	suite.Require().NoError(err)
 	for _, pool := range suite.pools {
-
 		// Module currently limited to two asset pools
 		// Instantiate asset and amounts for the pool
 		if len(pool.PoolAssets) == 2 {
