@@ -455,6 +455,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 		return 0, err
 	}
 
+	// Get the fully charged duration for the pool.
 	fullyChargedDuration := k.getLargestAuthorizedUptimeDuration(ctx)
 
 	// The new position's timestamp is the current block time minus the fully charged duration.
@@ -463,6 +464,11 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	// Get the next position ID and increment the global counter.
 	newPositionId := k.getNextPositionIdAndIncrement(ctx)
 
+	// Update pool uptime acccumulators to now
+	if err := k.updatePoolUptimeAccumulatorsToNow(ctx, poolId); err != nil {
+		return 0, err
+	}
+
 	// Update the position in the pool based on the provided tick range and liquidity delta.
 	// This also initializes the fee accumulator and the uptime accumulators for the new position.
 	_, _, err = k.UpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, newPositionId)
@@ -470,21 +476,19 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 		return 0, err
 	}
 
-	// Get the new position's store name as well as uptime accumulators for the pool.
+	// Get the new position's name in the pool's uptime accumulators.
 	newPositionUptimeAccName := string(types.KeyPositionId(newPositionId))
 	uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return 0, err
 	}
 
+	// Get the new position's name in the pool's fee accumulator.
 	newPositionFeeAccName := types.KeyFeePositionAccumulator(newPositionId)
 	feeAccumulator, err := k.GetFeeAccumulator(ctx, poolId)
 	if err != nil {
 		return 0, err
 	}
-
-	// Move unclaimed rewards from the old positions to the new position.
-	// Also, delete the old positions from state.
 
 	// Compute uptime growth outside of the range between lower tick and upper tick
 	uptimeGrowthOutside, err := k.GetUptimeGrowthOutsideRange(ctx, poolId, lowerTick, upperTick)
@@ -511,10 +515,10 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 			if err != nil {
 				return 0, err
 			}
-			// If the accumulator contains the position, move the unclaimed rewards to the new position.
 			if !hasPosition {
 				return 0, types.PositionIdNotFoundError{PositionId: oldPositionId}
 			}
+			// If the accumulator contains the position, move the unclaimed rewards to the new position.
 			if err := moveRewardsToNewPositionAndDeleteOldAcc(ctx, uptimeAccum, oldPositionName, newPositionUptimeAccName, uptimeGrowthOutside[uptimeIndex]); err != nil {
 				return 0, err
 			}
