@@ -3360,15 +3360,15 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 		forfeitIncentives bool
 		expectedError     error
 	}{
-		// "happy path: claim rewards without forfeiting": {
-		// 	poolId:           validPoolId,
-		// 	positionIdCreate: DefaultPositionId,
-		// 	positionIdClaim:  DefaultPositionId,
-		// 	defaultJoinTime:  true,
-		// 	growthInside:     uptimeHelper.hundredTokensMultiDenom,
-		// 	growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
-		// 	numShares:        sdk.OneDec(),
-		// },
+		"happy path: claim rewards without forfeiting": {
+			poolId:           validPoolId,
+			positionIdCreate: DefaultPositionId,
+			positionIdClaim:  DefaultPositionId,
+			defaultJoinTime:  true,
+			growthInside:     uptimeHelper.hundredTokensMultiDenom,
+			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
+			numShares:        sdk.OneDec(),
+		},
 		"claim and forfeit rewards (2 shares)": {
 			poolId:            validPoolId,
 			positionIdCreate:  DefaultPositionId,
@@ -3379,50 +3379,50 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			forfeitIncentives: true,
 			numShares:         sdk.NewDec(2),
 		},
-		// "claim and forfeit rewards when no rewards have accrued": {
-		// 	poolId:            validPoolId,
-		// 	positionIdCreate:  DefaultPositionId,
-		// 	positionIdClaim:   DefaultPositionId,
-		// 	defaultJoinTime:   true,
-		// 	forfeitIncentives: true,
-		// 	numShares:         sdk.OneDec(),
-		// },
-		// "claim and forfeit rewards with varying amounts and different denoms": {
-		// 	poolId:            validPoolId,
-		// 	positionIdCreate:  DefaultPositionId,
-		// 	positionIdClaim:   DefaultPositionId,
-		// 	defaultJoinTime:   true,
-		// 	growthInside:      uptimeHelper.varyingTokensMultiDenom,
-		// 	growthOutside:     uptimeHelper.varyingTokensSingleDenom,
-		// 	forfeitIncentives: true,
-		// 	numShares:         sdk.OneDec(),
-		// },
+		"claim and forfeit rewards when no rewards have accrued": {
+			poolId:            validPoolId,
+			positionIdCreate:  DefaultPositionId,
+			positionIdClaim:   DefaultPositionId,
+			defaultJoinTime:   true,
+			forfeitIncentives: true,
+			numShares:         sdk.OneDec(),
+		},
+		"claim and forfeit rewards with varying amounts and different denoms": {
+			poolId:            validPoolId,
+			positionIdCreate:  DefaultPositionId,
+			positionIdClaim:   DefaultPositionId,
+			defaultJoinTime:   true,
+			growthInside:      uptimeHelper.varyingTokensMultiDenom,
+			growthOutside:     uptimeHelper.varyingTokensSingleDenom,
+			forfeitIncentives: true,
+			numShares:         sdk.OneDec(),
+		},
 
-		// // error catching
+		// error catching
 
-		// "error: non existent position": {
-		// 	poolId:           validPoolId + 1,
-		// 	positionIdCreate: DefaultPositionId,
-		// 	positionIdClaim:  DefaultPositionId + 1, // non existent position
-		// 	defaultJoinTime:  true,
-		// 	growthInside:     uptimeHelper.hundredTokensMultiDenom,
-		// 	growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
-		// 	numShares:        sdk.OneDec(),
+		"error: non existent position": {
+			poolId:           validPoolId + 1,
+			positionIdCreate: DefaultPositionId,
+			positionIdClaim:  DefaultPositionId + 1, // non existent position
+			defaultJoinTime:  true,
+			growthInside:     uptimeHelper.hundredTokensMultiDenom,
+			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
+			numShares:        sdk.OneDec(),
 
-		// 	expectedError: types.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
-		// },
+			expectedError: types.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
+		},
 
-		// "error: negative duration": {
-		// 	poolId:           validPoolId,
-		// 	positionIdCreate: DefaultPositionId,
-		// 	positionIdClaim:  DefaultPositionId,
-		// 	defaultJoinTime:  false,
-		// 	growthInside:     uptimeHelper.hundredTokensMultiDenom,
-		// 	growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
-		// 	numShares:        sdk.OneDec(),
+		"error: negative duration": {
+			poolId:           validPoolId,
+			positionIdCreate: DefaultPositionId,
+			positionIdClaim:  DefaultPositionId,
+			defaultJoinTime:  false,
+			growthInside:     uptimeHelper.hundredTokensMultiDenom,
+			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
+			numShares:        sdk.OneDec(),
 
-		// 	expectedError: types.NegativeDurationError{Duration: time.Hour * 504 * -1},
-		// },
+			expectedError: types.NegativeDurationError{Duration: time.Hour * 504 * -1},
+		},
 	}
 	for _, tc := range tests {
 		tc := tc
