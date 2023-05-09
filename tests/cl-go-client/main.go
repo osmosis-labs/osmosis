@@ -27,8 +27,8 @@ const (
 	addressPrefix                   = "osmo"
 	localosmosisFromHomePath        = "/.osmosisd-local"
 	consensusFee                    = "1500uosmo"
-	denom0                          = "uosmo"
-	denom1                          = "uion"
+	denom0                          = "uusdc"
+	denom1                          = "uosmo"
 	accountNamePrefix               = "lo-test"
 	numPositions                    = 1_000
 	minAmountDeposited              = int64(1_000_000)
@@ -159,7 +159,6 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 		TokenMinAmount1: tokenMinAmount1,
 	}
 	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
-
 	if err != nil {
 		log.Fatal(err)
 	}

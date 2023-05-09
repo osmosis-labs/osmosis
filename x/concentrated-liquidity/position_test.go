@@ -14,9 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
-var (
-	DefaultIncentiveRecords = []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour}
-)
+var DefaultIncentiveRecords = []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour}
 
 func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 	const (
@@ -33,7 +31,6 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 		joinTime       time.Time
 		positionId     uint64
 		liquidityDelta sdk.Dec
-		liquidityIn    sdk.Dec
 	}
 
 	tests := []struct {
@@ -207,7 +204,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			s.Require().NoError(err)
 
 			// Setup for checks
-			actualUptimeAccumDelta, expectedUptimeAccumValueGrowth, expectedIncentiveRecords, expectedGrowthCurAccum := emptyAccumValues, emptyAccumValues, test.incentiveRecords, sdk.DecCoins{}
+			actualUptimeAccumDelta, expectedUptimeAccumValueGrowth, expectedIncentiveRecords, _ := emptyAccumValues, emptyAccumValues, test.incentiveRecords, sdk.DecCoins{}
 
 			timeElapsedSec := sdk.NewDec(int64(test.timeElapsedSinceInit)).Quo(sdk.NewDec(10e8))
 			positionName := string(types.KeyPositionId(test.param.positionId))
@@ -237,7 +234,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 					// Track how much the current uptime accum has grown by
 					actualUptimeAccumDelta[uptimeIndex] = newUptimeAccumValues[uptimeIndex].Sub(initUptimeAccumValues[uptimeIndex])
 					if timeElapsedSec.GT(sdk.ZeroDec()) {
-						expectedGrowthCurAccum, expectedIncentiveRecords, err = cl.CalcAccruedIncentivesForAccum(s.Ctx, uptime, test.param.liquidityDelta, timeElapsedSec, expectedIncentiveRecords)
+						expectedGrowthCurAccum, _, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, uptime, test.param.liquidityDelta, timeElapsedSec, expectedIncentiveRecords)
 						s.Require().NoError(err)
 						expectedUptimeAccumValueGrowth[uptimeIndex] = expectedGrowthCurAccum
 					}
@@ -260,7 +257,6 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 }
 
 func (s *KeeperTestSuite) TestGetPosition() {
-
 	tests := []struct {
 		name                      string
 		positionId                uint64
@@ -995,7 +991,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 				s.Require().Equal(sdk.Coins(nil), forfeitedRewards)
 
 				// Sanity check that cannot claim again.
-				claimedRewards, forfeitedRewards, err = s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, newPositionId)
+				claimedRewards, _, err = s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, newPositionId)
 				s.Require().NoError(err)
 
 				s.Require().Equal(sdk.Coins(nil), claimedRewards)
@@ -1290,7 +1286,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 	newPositionId, err := s.App.ConcentratedLiquidityKeeper.FungifyChargedPosition(s.Ctx, defaultAddress, expectedPositionIds)
 	s.Require().NoError(err)
 
-	// Claim fees
+	// Claim incentives.
 	collected, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, newPositionId)
 	s.Require().NoError(err)
 
@@ -1313,29 +1309,69 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 }
 
 func (s *KeeperTestSuite) TestCreateFullRangePosition() {
-	s.SetupTest()
-	defaultAddress := s.TestAccs[0]
-	DefaultJoinTime := s.Ctx.BlockTime()
+	var (
+		positionId         uint64
+		liquidity          sdk.Dec
+		concentratedLockId uint64
+		err                error
+	)
 	defaultPositionCoins := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
+	invalidCoinsAmount := sdk.NewCoins(DefaultCoin0)
+	invalidCoin0Denom := sdk.NewCoins(sdk.NewCoin("invalidDenom", sdk.NewInt(1000000000000000000)), DefaultCoin1)
+	invalidCoin1Denom := sdk.NewCoins(DefaultCoin0, sdk.NewCoin("invalidDenom", sdk.NewInt(1000000000000000000)))
 
 	tests := []struct {
 		name                  string
 		remainingLockDuration time.Duration
+		coinsForPosition      sdk.Coins
 		isLocked              bool
 		isUnlocking           bool
+		expectedErr           error
 	}{
 		{
-			name: "full range position",
+			name:             "full range position",
+			coinsForPosition: defaultPositionCoins,
 		},
 		{
 			name:                  "full range position: locked",
 			remainingLockDuration: 24 * time.Hour * 14,
+			coinsForPosition:      defaultPositionCoins,
 			isLocked:              true,
 		},
 		{
 			name:                  "full range position: unlocking",
 			remainingLockDuration: 24 * time.Hour,
+			coinsForPosition:      defaultPositionCoins,
 			isUnlocking:           true,
+		},
+		{
+			name:             "err: only one asset provided for a full range",
+			coinsForPosition: invalidCoinsAmount,
+			expectedErr:      types.NumCoinsError{NumCoins: 1},
+		},
+		{
+			name:                  "err: only one asset provided for a full range locked",
+			remainingLockDuration: 24 * time.Hour * 14,
+			coinsForPosition:      invalidCoinsAmount,
+			isLocked:              true,
+			expectedErr:           types.NumCoinsError{NumCoins: 1},
+		},
+		{
+			name:                  "err: only one asset provided for a full range unlocking",
+			remainingLockDuration: 24 * time.Hour,
+			coinsForPosition:      invalidCoinsAmount,
+			isUnlocking:           true,
+			expectedErr:           types.NumCoinsError{NumCoins: 1},
+		},
+		{
+			name:             "err: wrong denom 0 provided for a full range",
+			coinsForPosition: invalidCoin0Denom,
+			expectedErr:      types.Amount0IsNegativeError{Amount0: sdk.ZeroInt()},
+		},
+		{
+			name:             "err: wrong denom 1 provided for a full range",
+			coinsForPosition: invalidCoin1Denom,
+			expectedErr:      types.Amount1IsNegativeError{Amount1: sdk.ZeroInt()},
 		},
 	}
 
@@ -1344,28 +1380,30 @@ func (s *KeeperTestSuite) TestCreateFullRangePosition() {
 		s.Run(test.name, func() {
 			// Init suite for each test.
 			s.SetupTest()
+			DefaultJoinTime := s.Ctx.BlockTime()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
-			// Create a default CL pools
-			clPool := s.PrepareConcentratedPool()
-
-			var (
-				positionId         uint64
-				liquidity          sdk.Dec
-				concentratedLockId uint64
-				err                error
-			)
+			// Create a default CL pool
+			// We prepare it with a position already registered to prevent any oddities that we are not testing for here.
+			clPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(ETH, USDC)
 
 			// Fund the owner account
-			s.FundAcc(defaultAddress, defaultPositionCoins)
+			defaultAddress := s.TestAccs[0]
+			s.FundAcc(defaultAddress, test.coinsForPosition)
 
 			// System under test
 			if test.isLocked {
-				positionId, _, _, liquidity, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool.GetId(), defaultAddress, defaultPositionCoins, test.remainingLockDuration)
+				positionId, _, _, liquidity, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool.GetId(), defaultAddress, test.coinsForPosition, test.remainingLockDuration)
 			} else if test.isUnlocking {
-				positionId, _, _, liquidity, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, clPool.GetId(), defaultAddress, defaultPositionCoins, test.remainingLockDuration)
+				positionId, _, _, liquidity, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, clPool.GetId(), defaultAddress, test.coinsForPosition, test.remainingLockDuration)
 			} else {
-				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), defaultAddress, defaultPositionCoins)
+				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), defaultAddress, test.coinsForPosition)
+			}
+
+			if test.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, test.expectedErr.Error())
+				return
 			}
 
 			s.Require().NoError(err)
@@ -1477,7 +1515,6 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 			s.Require().NoError(err)
 			s.Require().Equal(underlyingLiquidityTokenized[0].Amount.String(), concentratedLock.Coins[0].Amount.String())
 			s.Require().Equal(test.remainingLockDuration, concentratedLock.Duration)
-
 		},
 		)
 	}

@@ -235,7 +235,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		ctx := suite.Ctx
 
 		addr1 := sdk.AccAddress([]byte("addr1---------------"))
-		lock := types.NewPeriodLock(1, addr1, time.Second, time.Time{}, tc.fundAcc)
+		_ = types.NewPeriodLock(1, addr1, time.Second, time.Time{}, tc.fundAcc)
 
 		// lock with balance
 		suite.FundAcc(addr1, tc.fundAcc)
@@ -319,7 +319,6 @@ func (suite *KeeperTestSuite) TestUnlock() {
 }
 
 func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
-
 	testCases := []struct {
 		name                       string
 		coinsLocked, coinsBurned   sdk.Coins
@@ -417,7 +416,6 @@ func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
 					suite.Require().Equal(sdk.ZeroInt().String(), assetsSupplyAtLockEnd.AmountOf(coin.Denom).String())
 				}
 			}
-
 		})
 	}
 }

@@ -48,7 +48,7 @@ func (k Keeper) GetChangedPools(ctx sdk.Context) []uint64 {
 	return k.getChangedPools(ctx)
 }
 
-func (k Keeper) UpdateRecord(ctx sdk.Context, record types.TwapRecord) types.TwapRecord {
+func (k Keeper) UpdateRecord(ctx sdk.Context, record types.TwapRecord) (types.TwapRecord, error) {
 	return k.updateRecord(ctx, record)
 }
 

@@ -16,7 +16,6 @@ import (
 
 type lpTest struct {
 	poolId                            uint64
-	owner                             sdk.AccAddress
 	currentTick                       sdk.Int
 	lowerTick                         int64
 	upperTick                         int64
@@ -538,7 +537,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			expectedPoolBalanceDelta := expectedFeesClaimed.Add(sdk.NewCoin(ETH, config.amount0Expected.Abs())).Add(sdk.NewCoin(USDC, config.amount1Expected.Abs()))
 
-			withdrawAccount := sdk.AccAddress{}
+			var withdrawAccount sdk.AccAddress
 			if tc.withdrawWithNonOwner {
 				withdrawAccount = nonOwner
 			} else {
@@ -903,7 +902,6 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
 			var (
-				ctx                         = s.Ctx
 				concentratedLiquidityKeeper = s.App.ConcentratedLiquidityKeeper
 				owner                       = s.TestAccs[0]
 				tc                          = tc
@@ -926,23 +924,23 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			// Create a position from the parameters in the test case.
 			var amount0Initial, amount1Initial sdk.Int
 			if tc.createLockLocked {
-				_, amount0Initial, amount1Initial, _, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionLocked(ctx, pool.GetId(), owner, fundCoins, tc.timeElapsed)
+				_, amount0Initial, amount1Initial, _, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, pool.GetId(), owner, fundCoins, tc.timeElapsed)
 				s.Require().NoError(err)
 			} else if tc.createLockUnlocking {
-				_, amount0Initial, amount1Initial, _, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionUnlocking(ctx, pool.GetId(), owner, fundCoins, tc.timeElapsed+time.Hour)
+				_, amount0Initial, amount1Initial, _, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pool.GetId(), owner, fundCoins, tc.timeElapsed+time.Hour)
 				s.Require().NoError(err)
 			} else if tc.createLockUnlocked {
-				_, amount0Initial, amount1Initial, _, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionUnlocking(ctx, pool.GetId(), owner, fundCoins, tc.timeElapsed-time.Hour)
+				_, amount0Initial, amount1Initial, _, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pool.GetId(), owner, fundCoins, tc.timeElapsed-time.Hour)
 				s.Require().NoError(err)
 			} else {
-				_, amount0Initial, amount1Initial, _, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				_, amount0Initial, amount1Initial, _, _, err = concentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 				s.Require().NoError(err)
 			}
 			preSendBalanceSender := s.App.BankKeeper.GetAllBalances(s.Ctx, owner)
 
 			if !tc.lastPositionInPool {
 				s.FundAcc(s.TestAccs[1], fundCoins)
-				_, _, _, _, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), s.TestAccs[1], config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				_, _, _, _, _, err = concentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 				s.Require().NoError(err)
 			}
 
@@ -952,7 +950,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			}
 
 			// --- System under test ---
-			newPosId, newAmt0, newAmt1, err := concentratedLiquidityKeeper.AddToPosition(ctx, sender, config.positionId, tc.amount0ToAdd, tc.amount1ToAdd)
+			newPosId, newAmt0, newAmt1, err := concentratedLiquidityKeeper.AddToPosition(s.Ctx, sender, config.positionId, tc.amount0ToAdd, tc.amount1ToAdd)
 			if config.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().Equal(sdk.Int{}, newAmt0)
@@ -1314,6 +1312,10 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			)
 			s.Require().NoError(err)
 
+			// explicitly make update time different to ensure that the pool is updated with last liqudity update.
+			expectedUpdateTime := tc.joinTime.Add(time.Second)
+			s.Ctx = s.Ctx.WithBlockTime(expectedUpdateTime)
+
 			// system under test
 			actualAmount0, actualAmount1, err := s.App.ConcentratedLiquidityKeeper.UpdatePosition(
 				s.Ctx,
@@ -1364,19 +1366,20 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				s.Require().NoError(err)
 				concentratedPool := poolI.(types.ConcentratedPoolExtension)
 				s.Require().Equal(tc.expectedPoolLiquidity, concentratedPool.GetLiquidity())
+
+				// Test that liquidity update time was succesfully changed.
+				s.Require().Equal(expectedUpdateTime, poolI.GetLastLiquidityUpdate())
 			}
 		})
 	}
 }
 
 func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
-	var (
-		sqrt = func(x int64) sdk.Dec {
-			sqrt, err := sdk.NewDec(x).ApproxSqrt()
-			s.Require().NoError(err)
-			return sqrt
-		}
-	)
+	sqrt := func(x int64) sdk.Dec {
+		sqrt, err := sdk.NewDec(x).ApproxSqrt()
+		s.Require().NoError(err)
+		return sqrt
+	}
 
 	type sendTest struct {
 		amount0Desired        sdk.Int
@@ -1463,7 +1466,6 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 }
 
 func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() {
-
 	tests := map[string]lpTest{}
 
 	// add test cases for different positions

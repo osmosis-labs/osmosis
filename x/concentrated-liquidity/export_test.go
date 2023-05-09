@@ -230,6 +230,10 @@ func (k Keeper) InitOrUpdatePositionUptimeAccumulators(ctx sdk.Context, poolId u
 	return k.initOrUpdatePositionUptimeAccumulators(ctx, poolId, position, owner, lowerTick, upperTick, liquidityDelta, positionId)
 }
 
+func (k Keeper) GetAllIncentiveRecordsForUptime(ctx sdk.Context, poolId uint64, minUptime time.Duration) ([]types.IncentiveRecord, error) {
+	return k.getAllIncentiveRecordsForUptime(ctx, poolId, minUptime)
+}
+
 func (k Keeper) CollectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, sdk.Coins, error) {
 	return k.collectIncentives(ctx, owner, positionId)
 }

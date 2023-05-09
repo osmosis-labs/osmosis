@@ -362,6 +362,7 @@ func (msg MsgAddToConcentratedLiquiditySuperfluidPosition) Route() string { retu
 func (msg MsgAddToConcentratedLiquiditySuperfluidPosition) Type() string {
 	return TypeMsgAddToConcentratedLiquiditySuperfluidPosition
 }
+
 func (msg MsgAddToConcentratedLiquiditySuperfluidPosition) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {

@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper/gov"
@@ -189,9 +189,7 @@ func (suite *KeeperTestSuite) TestHandleUnpoolWhiteListChange() {
 		testDescription = "test description"
 	)
 
-	var (
-		basePoolIds = []uint64{1, 2, 3}
-	)
+	basePoolIds := []uint64{1, 2, 3}
 
 	tests := map[string]struct {
 		preCreatedPoolCount int

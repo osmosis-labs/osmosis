@@ -32,11 +32,6 @@ var (
 )
 
 func (s *KeeperTestSuite) TestParseFullTickFromBytes() {
-	const (
-		emptyKeySeparator   = ""
-		invalidKeySeparator = "-"
-	)
-
 	var (
 		cdc = s.App.AppCodec()
 
@@ -125,7 +120,6 @@ func (s *KeeperTestSuite) TestParseFullTickFromBytes() {
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-
 			fullTick, err := cl.ParseFullTickFromBytes(tc.key, tc.val)
 			if tc.expectedErr != nil {
 				s.Require().Error(err)

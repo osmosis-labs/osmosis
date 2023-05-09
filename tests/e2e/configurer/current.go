@@ -17,6 +17,7 @@ type CurrentBranchConfigurer struct {
 var _ Configurer = (*CurrentBranchConfigurer)(nil)
 
 func NewCurrentBranchConfigurer(t *testing.T, chainConfigs []*chain.Config, setupTests setupFn, containerManager *containers.Manager) Configurer {
+	t.Helper()
 	return &CurrentBranchConfigurer{
 		baseConfigurer: baseConfigurer{
 			chainConfigs:     chainConfigs,

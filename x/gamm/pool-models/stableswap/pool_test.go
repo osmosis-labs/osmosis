@@ -1365,7 +1365,6 @@ func TestStableswapSpotPrice(t *testing.T) {
 }
 
 func TestValidateScalingFactors(t *testing.T) {
-
 	tests := map[string]struct {
 		scalingFactors []uint64
 		numAssets      int

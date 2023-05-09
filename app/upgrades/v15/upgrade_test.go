@@ -21,7 +21,6 @@ import (
 	v15 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v15"
 	gamm "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	balancer "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
@@ -51,9 +50,7 @@ func (suite *UpgradeTestSuite) TestMigrateNextPoolIdAndCreatePool() {
 		expectedNextPoolId uint64 = 1
 	)
 
-	var (
-		gammKeeperType = reflect.TypeOf(&gamm.Keeper{})
-	)
+	gammKeeperType := reflect.TypeOf(&gamm.Keeper{})
 
 	ctx := suite.Ctx
 	gammKeeper := suite.App.GAMMKeeper
@@ -109,7 +106,7 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 				SwapFee: swapFee,
 				ExitFee: exitFee,
 			},
-			[]balancertypes.PoolAsset{
+			[]balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
@@ -182,7 +179,7 @@ func (suite *UpgradeTestSuite) TestRegisterOsmoIonMetadata() {
 	uosmoMetadata, found := suite.App.BankKeeper.GetDenomMetaData(ctx, "uosmo")
 	suite.Require().False(found)
 
-	uionMetadata, found := suite.App.BankKeeper.GetDenomMetaData(ctx, "uion")
+	_, found = suite.App.BankKeeper.GetDenomMetaData(ctx, "uion")
 	suite.Require().False(found)
 
 	// system under test.
@@ -191,7 +188,7 @@ func (suite *UpgradeTestSuite) TestRegisterOsmoIonMetadata() {
 	uosmoMetadata, found = suite.App.BankKeeper.GetDenomMetaData(ctx, "uosmo")
 	suite.Require().True(found)
 
-	uionMetadata, found = suite.App.BankKeeper.GetDenomMetaData(ctx, "uion")
+	uionMetadata, found := suite.App.BankKeeper.GetDenomMetaData(ctx, "uion")
 	suite.Require().True(found)
 
 	suite.Require().Equal(expectedUosmodenom, uosmoMetadata.Base)
@@ -250,7 +247,6 @@ func (suite *UpgradeTestSuite) TestSetRateLimits() {
 	// This is the last one. If the others failed the upgrade would've panicked before adding this one
 	state, err = suite.App.WasmKeeper.QuerySmart(suite.Ctx, addr, []byte(`{"get_quotas": {"channel_id": "any", "denom": "ibc/E6931F78057F7CC5DA0FD6CEF82FF39373A6E0452BF1FD76910B93292CF356C1"}}`))
 	suite.Require().Greaterf(len(state), 0, "state should not be empty")
-
 }
 
 func (suite *UpgradeTestSuite) validateCons(coinsA, coinsB sdk.Coins) {

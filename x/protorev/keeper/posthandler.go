@@ -169,7 +169,8 @@ func extractSwapInPools(routes []poolmanagertypes.SwapAmountInRoute, tokenInDeno
 		swappedPools = append(swappedPools, SwapToBackrun{
 			PoolId:        route.PoolId,
 			TokenOutDenom: route.TokenOutDenom,
-			TokenInDenom:  prevTokenIn})
+			TokenInDenom:  prevTokenIn,
+		})
 
 		prevTokenIn = route.TokenOutDenom
 	}
@@ -187,7 +188,8 @@ func extractSwapOutPools(routes []poolmanagertypes.SwapAmountOutRoute, tokenOutD
 		swappedPools = append(swappedPools, SwapToBackrun{
 			PoolId:        route.PoolId,
 			TokenOutDenom: prevTokenOut,
-			TokenInDenom:  route.TokenInDenom})
+			TokenInDenom:  route.TokenInDenom,
+		})
 
 		prevTokenOut = route.TokenInDenom
 	}

@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"fmt"
 	"strings"
-
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

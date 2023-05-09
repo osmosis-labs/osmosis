@@ -17,8 +17,10 @@ import (
 
 var _ = suite.TestingSuite(nil)
 
-var seventyTokens = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(70000000)))
-var tenTokens = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000)))
+var (
+	seventyTokens = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(70000000)))
+	tenTokens     = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000)))
+)
 
 func (suite *KeeperTestSuite) TestCreateGauge_Fee() {
 	tests := []struct {

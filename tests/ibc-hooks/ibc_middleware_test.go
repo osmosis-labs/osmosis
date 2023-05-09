@@ -3,10 +3,11 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/tidwall/gjson"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/tidwall/gjson"
 
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 
@@ -48,9 +49,6 @@ type HooksTestSuite struct {
 	pathAB *ibctesting.Path
 	pathAC *ibctesting.Path
 	pathBC *ibctesting.Path
-	pathBA *ibctesting.Path
-	pathCA *ibctesting.Path
-	pathCB *ibctesting.Path
 	// This is used to test cw20s. It will only get assigned in the cw20 test
 	pathCW20 *ibctesting.Path
 }
@@ -608,7 +606,6 @@ func (suite *HooksTestSuite) TestAcks() {
 		&suite.Suite, addr,
 		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, addr)))
 	suite.Require().Equal(`{"count":2}`, state)
-
 }
 
 func (suite *HooksTestSuite) TestTimeouts() {
@@ -641,7 +638,6 @@ func (suite *HooksTestSuite) TestTimeouts() {
 		&suite.Suite, addr,
 		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, addr)))
 	suite.Require().Equal(`{"count":10}`, state)
-
 }
 
 func (suite *HooksTestSuite) TestSendWithoutMemo() {
@@ -1200,7 +1196,6 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 	// Calling recovery again should fail
 	_, err = contractKeeper.Execute(suite.chainA.GetContext(), crosschainAddr, recoverAddr2, []byte(recoverMsg), sdk.NewCoins())
 	suite.Require().Error(err)
-
 }
 
 // CrosschainSwapsViaIBCBadSwap tests that if the crosschain-swap fails, the tokens are returned to the sender
@@ -1363,7 +1358,6 @@ func (suite *HooksTestSuite) SetupIBCRouteOnChain(swaprouterAddr, owner sdk.AccA
 	suite.Require().NoError(err)
 	err = suite.pathAB.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
-
 }
 
 func (suite *HooksTestSuite) SetupIBCSimpleRouteOnChain(swaprouterAddr, owner sdk.AccAddress, poolId uint64, chainName Chain, denom1, denom2 string) {
@@ -1390,7 +1384,6 @@ func (suite *HooksTestSuite) SetupIBCSimpleRouteOnChain(swaprouterAddr, owner sd
 	suite.Require().NoError(err)
 	err = suite.pathAB.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
-
 }
 
 // TestCrosschainForwardWithMemo tests the that the next_memo field is correctly forwarded to the other chain on the IBC transfer.
@@ -1418,7 +1411,7 @@ func (suite *HooksTestSuite) TestCrosschainForwardWithMemo() {
 	fmt.Println("receiver now has: ", balanceToken0IBCBefore)
 	suite.Require().Equal(int64(0), balanceToken0IBCBefore.Amount.Int64())
 
-	//suite.Require().Equal(int64(0), balanceToken1.Amount.Int64())
+	// suite.Require().Equal(int64(0), balanceToken1.Amount.Int64())
 
 	// Generate swap instructions for the contract
 	//
@@ -1788,9 +1781,7 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 
 			receivedTokenAfter := receiverChain.GetOsmosisApp().BankKeeper.GetBalance(receiverChain.GetContext(), tc.receiver.address, tc.receivedToken)
 			suite.Require().True(receivedTokenAfter.Amount.GT(receivedTokenBalance.Amount))
-
 		})
-
 	}
 }
 
@@ -1853,7 +1844,7 @@ func (suite *HooksTestSuite) ExecuteOutpostSwap(initializer, receiverAddr sdk.Ac
 
 	// But the receiver now has some token1IBC
 	balanceToken1After := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), receiverAddr, token1IBC)
-	//fmt.Println("receiver now has: ", balanceToken1After)
+	// fmt.Println("receiver now has: ", balanceToken1After)
 	suite.Require().Greater(balanceToken1After.Amount.Int64(), int64(0))
 }
 

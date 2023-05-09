@@ -24,6 +24,7 @@ import (
 // Otherwise, it is set to zero.
 // if we are initializing or updating an upper tick, we subtract the liquidityIn from the LiquidityNet
 // if we are initializing or updating a lower tick, we add the liquidityIn from the LiquidityNet
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
 	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
@@ -68,6 +69,7 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 	return nil
 }
 
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapStateFeeGrowth sdk.DecCoin) (liquidityDelta sdk.Dec, err error) {
 	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
@@ -106,6 +108,7 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapS
 
 // GetTickInfo gets the tickInfo given a poolId and tickIndex. If the tick has not been initialized, it will initialize it.
 // If the tick has been initialized, it will return the tickInfo. If the pool does not exist, it will return an error.
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo model.TickInfo, err error) {
 	store := ctx.KVStore(k.storeKey)
 	tickStruct := model.TickInfo{}
