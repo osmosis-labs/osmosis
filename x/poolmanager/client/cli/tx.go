@@ -269,7 +269,7 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, f
 
 	poolParams := &stableswap.PoolParams{
 		SwapFee: spreadFactor,
-		ExitFee:      exitFee,
+		ExitFee: exitFee,
 	}
 
 	scalingFactors := []uint64{}
