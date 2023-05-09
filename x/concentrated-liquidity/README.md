@@ -439,10 +439,8 @@ The previous positions are deleted from state. Prior to deleting, the rewards ar
 The old position's unclaimed rewards are transferred to the new position.
 The new position ID is returned.
 
-The fee collection is discussed in more detail in the "Fees" section of this document.
-
 ```go
-type MsgCollectFees struct {
+type MsgFungifyChargedPositions struct {
  PositionIds    []uint64
  Sender         string
 }
