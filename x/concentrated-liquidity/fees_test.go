@@ -491,7 +491,7 @@ func (s *KeeperTestSuite) TestCalculateFeeGrowth() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
+func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOppositeDirectionOfLastTraversalForTick() {
 	const (
 		validPoolId = 1
 	)
@@ -506,29 +506,29 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 		initialGlobalFeeGrowth   sdk.DecCoin
 		shouldAvoidCreatingAccum bool
 
-		expectedInitialFeeGrowthOutside sdk.DecCoins
-		expectError                     error
+		expectedInitialFeeGrowthOppositeDirectionOfLastTraversal sdk.DecCoins
+		expectError                                              error
 	}{
 		"current tick > tick -> fee growth global": {
 			poolId:                 validPoolId,
 			tick:                   initialPoolTick - 1,
 			initialGlobalFeeGrowth: oneEth,
 
-			expectedInitialFeeGrowthOutside: sdk.NewDecCoins(oneEth),
+			expectedInitialFeeGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth),
 		},
 		"current tick == tick -> fee growth global": {
 			poolId:                 validPoolId,
 			tick:                   initialPoolTick,
 			initialGlobalFeeGrowth: oneEth,
 
-			expectedInitialFeeGrowthOutside: sdk.NewDecCoins(oneEth),
+			expectedInitialFeeGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth),
 		},
 		"current tick < tick -> empty coins": {
 			poolId:                 validPoolId,
 			tick:                   initialPoolTick + 1,
 			initialGlobalFeeGrowth: oneEth,
 
-			expectedInitialFeeGrowthOutside: cl.EmptyCoins,
+			expectedInitialFeeGrowthOppositeDirectionOfLastTraversal: cl.EmptyCoins,
 		},
 		"pool does not exist": {
 			poolId:                 validPoolId + 1,
@@ -583,7 +583,7 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 			}
 
 			// System under test.
-			initialFeeGrowthOutside, err := clKeeper.GetInitialFeeGrowthOutsideForTick(ctx, tc.poolId, tc.tick)
+			initialFeeGrowthOppositeDirectionOfLastTraversal, err := clKeeper.GetInitialFeeGrowthOppositeDirectionOfLastTraversalForTick(ctx, tc.poolId, tc.tick)
 
 			if tc.expectError != nil {
 				suite.Require().Error(err)
@@ -591,7 +591,7 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 				return
 			}
 			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedInitialFeeGrowthOutside, initialFeeGrowthOutside)
+			suite.Require().Equal(tc.expectedInitialFeeGrowthOppositeDirectionOfLastTraversal, initialFeeGrowthOppositeDirectionOfLastTraversal)
 		})
 	}
 }

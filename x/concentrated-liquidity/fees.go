@@ -146,22 +146,19 @@ func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 	}
 	poolFeeGrowth := poolFeeAccumulator.GetValue()
 
-	feeGrowthAboveUpperTick := calculateFeeGrowth(upperTick, upperTickInfo.FeeGrowthOutside, currentTick, poolFeeGrowth, true)
-	feeGrowthBelowLowerTick := calculateFeeGrowth(lowerTick, lowerTickInfo.FeeGrowthOutside, currentTick, poolFeeGrowth, false)
+	feeGrowthAboveUpperTick := calculateFeeGrowth(upperTick, upperTickInfo.FeeGrowthOppositeDirectionOfLastTraversal, currentTick, poolFeeGrowth, true)
+	feeGrowthBelowLowerTick := calculateFeeGrowth(lowerTick, lowerTickInfo.FeeGrowthOppositeDirectionOfLastTraversal, currentTick, poolFeeGrowth, false)
 
 	return feeGrowthAboveUpperTick.Add(feeGrowthBelowLowerTick...), nil
 }
 
-// getInitialFeeGrowthOutsideForTick returns the initial value of fee growth outside for a given tick.
-// This value depends on the tick's location relative to the current tick.
+// getInitialFeeGrowthOppositeDirectionOfLastTraversalForTick returns what the initial value of the fee growth opposite direction of last traversal field should be for a given tick.
+// This value depends on the provided tick's location relative to the current tick. If the provided tick is greater than the current tick,
+// then the value is zero. Otherwise, the value is the value of the current global fee growth.
 //
-// feeGrowthOutside =
-// { feeGrowthGlobal current tick >= tick }
-// { 0               current tick <  tick }
-//
-// The value is chosen as if all of the fees earned to date had occurrd below the tick.
+// The value is chosen as if all of the fees earned to date had occurred below the tick.
 // Returns error if the pool with the given id does exist or if fails to get the fee accumulator.
-func (k Keeper) getInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
+func (k Keeper) getInitialFeeGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.DecCoins{}, err
@@ -291,11 +288,11 @@ func (k Keeper) prepareClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Co
 // 1. currentTick >= upperTick: If current Tick is GTE than the upper Tick, the fee growth would be pool fee growth - uppertick's fee growth outside
 // 2. currentTick < upperTick: If current tick is smaller than upper tick, fee growth would be the upper tick's fee growth outside
 // this goes vice versa for calculating fee growth for lower tick.
-func calculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, currentTick int64, feesGrowthGlobal sdk.DecCoins, isUpperTick bool) sdk.DecCoins {
+func calculateFeeGrowth(targetTick int64, ticksFeeGrowthOppositeDirectionOfLastTraversal sdk.DecCoins, currentTick int64, feesGrowthGlobal sdk.DecCoins, isUpperTick bool) sdk.DecCoins {
 	if (isUpperTick && currentTick >= targetTick) || (!isUpperTick && currentTick < targetTick) {
-		return feesGrowthGlobal.Sub(feeGrowthOutside)
+		return feesGrowthGlobal.Sub(ticksFeeGrowthOppositeDirectionOfLastTraversal)
 	}
-	return feeGrowthOutside
+	return ticksFeeGrowthOppositeDirectionOfLastTraversal
 }
 
 // preparePositionAccumulator is called prior to updating unclaimed rewards,

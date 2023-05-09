@@ -22,7 +22,12 @@ message TickInfo {
     (gogoproto.moretags) = "yaml:\"liquidity_net\"",
     (gogoproto.nullable) = false
   ];
-  repeated cosmos.base.v1beta1.DecCoin fee_growth_outside = 3 [
+  // Total fees accumulated in the opposite direction that the tick was last
+  // crossed. i.e. if the tick was last crossed from left to right, then this is
+  // the total fees accumulated below the tick. If the tick was last crossed
+  // from right to left, then this is the total fees accumulated above the tick.
+  repeated cosmos.base.v1beta1.DecCoin
+      fee_growth_opposite_direction_of_last_traversal = 3 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable) = false
   ];

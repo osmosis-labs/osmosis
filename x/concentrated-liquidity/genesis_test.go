@@ -41,9 +41,9 @@ var (
 	}
 	testCoins    = sdk.NewDecCoins(cl.HundredFooCoins)
 	testTickInfo = model.TickInfo{
-		LiquidityGross:   sdk.OneDec(),
-		LiquidityNet:     sdk.OneDec(),
-		FeeGrowthOutside: testCoins,
+		LiquidityGross: sdk.OneDec(),
+		LiquidityNet:   sdk.OneDec(),
+		FeeGrowthOppositeDirectionOfLastTraversal: testCoins,
 		UptimeTrackers: []model.UptimeTracker{
 			{
 				UptimeGrowthOutside: testCoins,
