@@ -1268,12 +1268,16 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration))
 
 	// sync accumulators
-	err := s.App.ConcentratedLiquidityKeeper.UpdateUptimeAccumulatorsToNow(s.Ctx, pool.GetId())
+	// We use cache context to update uptime accumulators for estimating claimable incentives
+	// Prior to running fungigy. However, we do not want the mutations made in test setup to have
+	// impact on the system under test because it must update the uptime accumulators itself.
+	cacheCtx, _ := s.Ctx.CacheContext()
+	err := s.App.ConcentratedLiquidityKeeper.UpdateUptimeAccumulatorsToNow(cacheCtx, pool.GetId())
 	s.Require().NoError(err)
 
 	claimableIncentives := sdk.NewCoins()
 	for i := 0; i < numPositions; i++ {
-		positionIncentices, forfeitedIncentives, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, uint64(i+1))
+		positionIncentices, forfeitedIncentives, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(cacheCtx, uint64(i+1))
 		s.Require().NoError(err)
 		s.Require().Equal(sdk.Coins(nil), forfeitedIncentives)
 		claimableIncentives = claimableIncentives.Add(positionIncentices...)
