@@ -52,7 +52,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Misc Improvements
 
-  * [#5103](https://github.com/osmosis-labs/osmosis/pull/5103) Run `make format`
   * [#5105](https://github.com/osmosis-labs/osmosis/pull/5105) Lint stableswap in the same manner as all of Osmosis
   * [#5065](https://github.com/osmosis-labs/osmosis/pull/5065) Use cosmossdk.io/errors
   * [#4549](https://github.com/osmosis-labs/osmosis/pull/4549) Add single pool price estimate queries
@@ -65,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * [#4912](https://github.com/osmosis-labs/osmosis/pull/4912) Export Position_lock_id mappings to GenesisState
   * [#4974](https://github.com/osmosis-labs/osmosis/pull/4974) Add lock id to `MsgSuperfluidUndelegateAndUnbondLockResponse`
   * [#2741](https://github.com/osmosis-labs/osmosis/pull/2741) Prevent updating the twap record if `ctx.BlockTime <= record.Time` or `ctx.BlockHeight <= record.Height`. Exception, can update the record created when creating the pool in the same block.
+  * [#5129](https://github.com/osmosis-labs/osmosis/pull/5129) Relax twap record validation in init genesis to allow one of the spot prices to be non-zero when twap error is observed.
   
 ### API breaks
 

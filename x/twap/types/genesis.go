@@ -54,15 +54,14 @@ func (t TwapRecord) validate() error {
 		return errors.New("twap record time cannot be 0")
 	}
 
-	// if there was an error in this record, the spot prices should be 0.
-	// else, the the spot prices must be positive.
+	// if there was an error in this record, one of the spot prices should be 0.
+	// else, the spot prices must be positive for both spot prices.
 	if t.LastErrorTime.Equal(t.Time) {
-		if t.P0LastSpotPrice.IsNil() || !t.P0LastSpotPrice.IsZero() {
-			return fmt.Errorf("twap record p0 last spot price must be zero due to having an error, was (%s)", t.P0LastSpotPrice)
-		}
+		isP0LastSpotPriseZero := t.P0LastSpotPrice.IsNil() || t.P0LastSpotPrice.IsZero()
+		isP1LastSpotPriseZero := t.P1LastSpotPrice.IsNil() || t.P1LastSpotPrice.IsZero()
 
-		if t.P1LastSpotPrice.IsNil() || !t.P1LastSpotPrice.IsZero() {
-			return fmt.Errorf("twap record p1 last spot price must be zero due to having an error, was (%s)", t.P1LastSpotPrice)
+		if !isP0LastSpotPriseZero && !isP1LastSpotPriseZero {
+			return fmt.Errorf("one of twap record p0 and p1 last spot price must be zero due to having an error, was (%s, %s)", t.P0LastSpotPrice, t.P1LastSpotPrice)
 		}
 	} else {
 		if t.P0LastSpotPrice.IsNil() || !t.P0LastSpotPrice.IsPositive() {

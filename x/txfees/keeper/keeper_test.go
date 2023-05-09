@@ -34,7 +34,7 @@ func (suite *KeeperTestSuite) SetupTest(isCheckTx bool) {
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
-		WithJSONCodec(encodingConfig.Marshaler)
+		WithCodec(encodingConfig.Marshaler)
 
 	// Mint some assets to the accounts.
 	for _, acc := range suite.TestAccs {
