@@ -16,7 +16,7 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
-const MinNumPositionsToCombine = 2
+const MinNumPositions = 2
 
 var emptyOptions = &accum.Options{}
 
@@ -444,8 +444,8 @@ func (k Keeper) getNextPositionIdAndIncrement(ctx sdk.Context) uint64 {
 // - all positions are unlocked
 func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, error) {
 	// Check we meet the minimum number of positions to combine.
-	if len(positionIds) < MinNumPositionsToCombine {
-		return 0, types.PositionQuantityTooLowError{MinNumPositions: MinNumPositionsToCombine, NumPositions: len(positionIds)}
+	if len(positionIds) < MinNumPositions {
+		return 0, types.PositionQuantityTooLowError{MinNumPositions: MinNumPositions, NumPositions: len(positionIds)}
 	}
 
 	// Check that all the positions are in the same pool, tick range, and are fully charged.
@@ -559,6 +559,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 
 // validatePositionsAndGetTotalLiquidity validates a list of positions owned by the caller and returns their total liquidity.
 // It also returns the pool ID, lower tick, and upper tick that all the provided positions are confirmed to share.
+// Returns error if:
 // - the caller does not own all the positions
 // - positions are not in the same pool
 // - positions are all not fully charged
@@ -567,8 +568,8 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, int64, int64, sdk.Dec, error) {
 	totalLiquidity := sdk.ZeroDec()
 
-	if len(positionIds) < MinNumPositionsToCombine {
-		return 0, 0, 0, sdk.Dec{}, types.PositionQuantityTooLowError{MinNumPositions: MinNumPositionsToCombine, NumPositions: len(positionIds)}
+	if len(positionIds) < 1 {
+		return 0, 0, 0, sdk.Dec{}, types.PositionQuantityTooLowError{MinNumPositions: MinNumPositions, NumPositions: 1}
 	}
 
 	// Note the first position's params to use as the base for comparison.

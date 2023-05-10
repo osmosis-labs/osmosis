@@ -695,6 +695,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		unlockBeforeBlockTimeMs    time.Duration
 		expectedNewPositionId      uint64
 		expectedErr                error
+		doesValidatePass           bool
 	}{
 		{
 			name: "Happy path: Fungify three fully charged positions",
@@ -766,7 +767,8 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			positionIdsToMigrate:    []uint64{1},
 			accountCallingMigration: defaultAddress,
 			expectedNewPositionId:   0,
-			expectedErr:             types.PositionQuantityTooLowError{MinNumPositions: cl.MinNumPositionsToCombine, NumPositions: 1},
+			expectedErr:             types.PositionQuantityTooLowError{MinNumPositions: cl.MinNumPositions, NumPositions: 1},
+			doesValidatePass:        true,
 		},
 		{
 			name: "Error: one of the full range positions is locked",
@@ -860,7 +862,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 
 			// First run non mutative validation and check results
 			poolId, lowerTick, upperTick, liquidity, err := s.App.ConcentratedLiquidityKeeper.ValidatePositionsAndGetTotalLiquidity(s.Ctx, test.accountCallingMigration, test.positionIdsToMigrate)
-			if test.expectedErr != nil {
+			if test.expectedErr != nil && !test.doesValidatePass {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, test.expectedErr)
 				s.Require().Equal(uint64(0), poolId)
