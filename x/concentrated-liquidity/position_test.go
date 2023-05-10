@@ -302,6 +302,25 @@ func (s *KeeperTestSuite) TestGetPosition() {
 	}
 }
 
+func (s *KeeperTestSuite) TestGetNextPositionAndIncrement() {
+	// Init suite for each test.
+	s.SetupTest()
+	s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
+	// Create a default CL pool
+	pool := s.PrepareConcentratedPool()
+
+	// Set up a default initialized position
+	s.SetupDefaultPosition(pool.GetId())
+
+	// System under test
+	positionId := s.App.ConcentratedLiquidityKeeper.GetNextPositionIdAndIncrement(s.Ctx)
+	s.Require().Equal(positionId, uint64(2))
+
+	// try incrementing one more time
+	positionId = s.App.ConcentratedLiquidityKeeper.GetNextPositionIdAndIncrement(s.Ctx)
+	s.Require().Equal(positionId, uint64(3))
+}
+
 func (s *KeeperTestSuite) TestIsPositionOwner() {
 	actualOwner := s.TestAccs[0]
 	nonOwner := s.TestAccs[1]
