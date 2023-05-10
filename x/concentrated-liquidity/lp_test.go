@@ -188,7 +188,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			isNotFirstPosition:   true,
 			customTokensProvided: true,
 			tokensProvided:       sdk.Coins{},
-			expectedError:        errors.New("liquidityDelta calculated equals zero"),
+			expectedError:        errors.New("cannot create a position with zero amounts of both pool tokens"),
 		},
 		"error: attempt to use and upper and lower tick that are not divisible by tick spacing": {
 			lowerTick:     int64(305451),
@@ -209,7 +209,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 		"error: first position cannot have a zero amount for both denom0 and denom1": {
 			customTokensProvided: true,
 			tokensProvided:       sdk.Coins{},
-			expectedError:        types.InitialLiquidityZeroError{Amount0: sdk.ZeroInt(), Amount1: sdk.ZeroInt()},
+			expectedError:        errors.New("cannot create a position with zero amounts of both pool tokens"),
 		},
 		// TODO: add more tests
 		// - custom hand-picked values
