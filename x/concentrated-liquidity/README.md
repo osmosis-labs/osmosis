@@ -1076,7 +1076,8 @@ Once a tick is activated again (crossed in either direction),
 between the pool's current accumulator value and the old value of
 `tickInfo.FeeGrowthOppositeDirectionOfLastTraversal`.
 
-Tracking how many fees are collected below a tick allows us to calculate the
+Tracking how many fees are collected below, in the case of a lower tick, and above,
+in the case of an upper tick, allows us to calculate the
 amount of fees inside a position (fee growth inside between two ticks) on demand.
 This is done by updating the activated tick with the amount of fees collected for
 every tick lower than the tick that is being crossed.
