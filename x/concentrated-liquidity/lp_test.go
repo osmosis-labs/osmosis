@@ -366,15 +366,15 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		createLockUnlocked      bool
 		withdrawWithNonOwner    bool
 	}{
-		// "base case: withdraw full liquidity amount": {
-		// 	setupConfig: baseCase,
-		// 	sutConfigOverwrite: &lpTest{
-		// 		amount0Expected: baseCase.amount0Expected, // 0.998976 eth
-		// 		// Note: subtracting one due to truncations in favor of the pool when withdrawing.
-		// 		amount1Expected: baseCase.amount1Expected.Sub(sdk.OneInt()), // 5000 usdc
-		// 	},
-		// 	timeElapsed: defaultTimeElapsed,
-		// },
+		"base case: withdraw full liquidity amount": {
+			setupConfig: baseCase,
+			sutConfigOverwrite: &lpTest{
+				amount0Expected: baseCase.amount0Expected, // 0.998976 eth
+				// Note: subtracting one due to truncations in favor of the pool when withdrawing.
+				amount1Expected: baseCase.amount1Expected.Sub(sdk.OneInt()), // 5000 usdc
+			},
+			timeElapsed: defaultTimeElapsed,
+		},
 		"withdraw full liquidity amount with underlying lock that has finished unlocking": {
 			setupConfig: baseCase,
 			sutConfigOverwrite: &lpTest{
@@ -387,77 +387,77 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			createLockUnlocked: true,
 			timeElapsed:        defaultTimeElapsed,
 		},
-		// "error: withdraw full liquidity amount but still locked": {
-		// 	setupConfig: baseCase,
-		// 	sutConfigOverwrite: &lpTest{
-		// 		liquidityAmount:  FullRangeLiquidityAmt,
-		// 		underlyingLockId: 1,
-		// 		expectedError:    types.LockNotMatureError{PositionId: 1, LockId: 1},
-		// 	},
-		// 	createLockLocked: true,
-		// 	timeElapsed:      defaultTimeElapsed,
-		// },
-		// "error: withdraw full liquidity amount but still unlocking": {
-		// 	setupConfig: baseCase,
-		// 	sutConfigOverwrite: &lpTest{
-		// 		liquidityAmount:  FullRangeLiquidityAmt,
-		// 		underlyingLockId: 1,
-		// 		expectedError:    types.LockNotMatureError{PositionId: 1, LockId: 1},
-		// 	},
-		// 	createLockUnlocking: true,
-		// 	timeElapsed:         defaultTimeElapsed,
-		// },
-		// "withdraw partial liquidity amount": {
-		// 	setupConfig: baseCase,
-		// 	sutConfigOverwrite: &lpTest{
-		// 		liquidityAmount: baseCase.liquidityAmount.QuoRoundUp(sdk.NewDec(2)),
-		// 		amount0Expected: baseCase.amount0Expected.QuoRaw(2), // 0.499488
-		// 		amount1Expected: baseCase.amount1Expected.QuoRaw(2), // 2500 usdc
-		// 	},
-		// 	timeElapsed: defaultTimeElapsed,
-		// },
-		// "withdraw full liquidity amount, forfeit incentives": {
-		// 	setupConfig: baseCase,
-		// 	sutConfigOverwrite: &lpTest{
-		// 		amount0Expected: baseCase.amount0Expected, // 0.998976 eth
-		// 		// Note: subtracting one due to truncations in favor of the pool when withdrawing.
-		// 		amount1Expected: baseCase.amount1Expected.Sub(sdk.OneInt()), // 5000 usdc
-		// 	},
-		// 	timeElapsed: 0,
-		// },
-		// "error: no position created": {
-		// 	setupConfig: baseCase,
-		// 	sutConfigOverwrite: &lpTest{
-		// 		lowerTick:     -1, // valid tick at which no position exists
-		// 		positionId:    DefaultPositionId + 1,
-		// 		expectedError: types.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
-		// 	},
-		// 	timeElapsed: defaultTimeElapsed,
-		// },
-		// "error: insufficient liquidity": {
-		// 	setupConfig: baseCase,
-		// 	sutConfigOverwrite: &lpTest{
-		// 		liquidityAmount: baseCase.liquidityAmount.Add(sdk.OneDec()), // 1 more than available
-		// 		expectedError:   types.InsufficientLiquidityError{Actual: baseCase.liquidityAmount.Add(sdk.OneDec()), Available: baseCase.liquidityAmount},
-		// 	},
-		// 	timeElapsed: defaultTimeElapsed,
-		// },
-		// "error: try withdrawing negative liquidity": {
-		// 	setupConfig: baseCase,
-		// 	sutConfigOverwrite: &lpTest{
-		// 		liquidityAmount: baseCase.liquidityAmount.Sub(baseCase.liquidityAmount.Mul(sdk.NewDec(2))),
-		// 		expectedError:   types.InsufficientLiquidityError{Actual: baseCase.liquidityAmount.Sub(baseCase.liquidityAmount.Mul(sdk.NewDec(2))), Available: baseCase.liquidityAmount},
-		// 	},
-		// 	timeElapsed: defaultTimeElapsed,
-		// },
-		// "error: attempt to withdraw a position that does not belong to the caller": {
-		// 	setupConfig: baseCase,
-		// 	sutConfigOverwrite: &lpTest{
-		// 		expectedError: types.NotPositionOwnerError{PositionId: 1, Address: nonOwner.String()},
-		// 	},
-		// 	timeElapsed:          defaultTimeElapsed,
-		// 	withdrawWithNonOwner: true,
-		// },
+		"error: withdraw full liquidity amount but still locked": {
+			setupConfig: baseCase,
+			sutConfigOverwrite: &lpTest{
+				liquidityAmount:  FullRangeLiquidityAmt,
+				underlyingLockId: 1,
+				expectedError:    types.LockNotMatureError{PositionId: 1, LockId: 1},
+			},
+			createLockLocked: true,
+			timeElapsed:      defaultTimeElapsed,
+		},
+		"error: withdraw full liquidity amount but still unlocking": {
+			setupConfig: baseCase,
+			sutConfigOverwrite: &lpTest{
+				liquidityAmount:  FullRangeLiquidityAmt,
+				underlyingLockId: 1,
+				expectedError:    types.LockNotMatureError{PositionId: 1, LockId: 1},
+			},
+			createLockUnlocking: true,
+			timeElapsed:         defaultTimeElapsed,
+		},
+		"withdraw partial liquidity amount": {
+			setupConfig: baseCase,
+			sutConfigOverwrite: &lpTest{
+				liquidityAmount: baseCase.liquidityAmount.QuoRoundUp(sdk.NewDec(2)),
+				amount0Expected: baseCase.amount0Expected.QuoRaw(2), // 0.499488
+				amount1Expected: baseCase.amount1Expected.QuoRaw(2), // 2500 usdc
+			},
+			timeElapsed: defaultTimeElapsed,
+		},
+		"withdraw full liquidity amount, forfeit incentives": {
+			setupConfig: baseCase,
+			sutConfigOverwrite: &lpTest{
+				amount0Expected: baseCase.amount0Expected, // 0.998976 eth
+				// Note: subtracting one due to truncations in favor of the pool when withdrawing.
+				amount1Expected: baseCase.amount1Expected.Sub(sdk.OneInt()), // 5000 usdc
+			},
+			timeElapsed: 0,
+		},
+		"error: no position created": {
+			setupConfig: baseCase,
+			sutConfigOverwrite: &lpTest{
+				lowerTick:     -1, // valid tick at which no position exists
+				positionId:    DefaultPositionId + 1,
+				expectedError: types.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
+			},
+			timeElapsed: defaultTimeElapsed,
+		},
+		"error: insufficient liquidity": {
+			setupConfig: baseCase,
+			sutConfigOverwrite: &lpTest{
+				liquidityAmount: baseCase.liquidityAmount.Add(sdk.OneDec()), // 1 more than available
+				expectedError:   types.InsufficientLiquidityError{Actual: baseCase.liquidityAmount.Add(sdk.OneDec()), Available: baseCase.liquidityAmount},
+			},
+			timeElapsed: defaultTimeElapsed,
+		},
+		"error: try withdrawing negative liquidity": {
+			setupConfig: baseCase,
+			sutConfigOverwrite: &lpTest{
+				liquidityAmount: baseCase.liquidityAmount.Sub(baseCase.liquidityAmount.Mul(sdk.NewDec(2))),
+				expectedError:   types.InsufficientLiquidityError{Actual: baseCase.liquidityAmount.Sub(baseCase.liquidityAmount.Mul(sdk.NewDec(2))), Available: baseCase.liquidityAmount},
+			},
+			timeElapsed: defaultTimeElapsed,
+		},
+		"error: attempt to withdraw a position that does not belong to the caller": {
+			setupConfig: baseCase,
+			sutConfigOverwrite: &lpTest{
+				expectedError: types.NotPositionOwnerError{PositionId: 1, Address: nonOwner.String()},
+			},
+			timeElapsed:          defaultTimeElapsed,
+			withdrawWithNonOwner: true,
+		},
 	}
 
 	for name, tc := range tests {
