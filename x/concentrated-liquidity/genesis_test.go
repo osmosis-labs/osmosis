@@ -65,10 +65,10 @@ var (
 		JoinTime:   defaultBlockTime,
 	}
 	testFeeAccumRecord = accum.Record{
-		NumShares:        sdk.OneDec(),
-		InitAccumValue:   sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
-		UnclaimedRewards: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(5))),
-		Options:          nil,
+		NumShares:             sdk.OneDec(),
+		AccumValuePerShare:    sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+		UnclaimedRewardsTotal: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(5))),
+		Options:               nil,
 	}
 )
 

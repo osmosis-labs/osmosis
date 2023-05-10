@@ -226,13 +226,13 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionFeeAccumulator() {
 				feeGrowthInside := poolFeeAccumulator.GetValue().Sub(feeGrowthOutside)
 
 				// Position's accumulator must always equal to the fee growth inside the position.
-				s.Require().Equal(feeGrowthInside, positionRecord.InitAccumValue)
+				s.Require().Equal(feeGrowthInside, positionRecord.AccumValuePerShare)
 
 				// Position's fee growth must be zero. Note, that on position update,
 				// the unclaimed rewards are updated if there was fee growth. However,
 				// this test case does not set up this condition.
 				// It is tested in TestInitOrUpdateFeeAccumulatorPosition_UpdatingPosition.
-				s.Require().Equal(cl.EmptyCoins, positionRecord.UnclaimedRewards)
+				s.Require().Equal(cl.EmptyCoins, positionRecord.UnclaimedRewardsTotal)
 			} else {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
@@ -1209,7 +1209,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableFees() {
 
 			postPreparePosition, err := accum.GetPosition(positionKey)
 			s.Require().NoError(err)
-			s.Require().Equal(tc.expectedInitAccumValue, postPreparePosition.InitAccumValue)
+			s.Require().Equal(tc.expectedInitAccumValue, postPreparePosition.AccumValuePerShare)
 			s.Require().Equal(tc.initialLiquidity, postPreparePosition.NumShares)
 
 			expectedFeeClaimAmount := tc.expectedInitAccumValue.AmountOf(ETH).Mul(tc.initialLiquidity).TruncateInt()
@@ -1370,7 +1370,7 @@ func (s *KeeperTestSuite) TestPreparePositionAccumulator() {
 			positionKey := validPositionKey
 
 			// Initialize position accumulator.
-			err = poolFeeAccumulator.NewPositionCustomAcc(positionKey, sdk.OneDec(), sdk.DecCoins{}, nil)
+			err = poolFeeAccumulator.NewPosition(positionKey, sdk.OneDec(), nil)
 			s.Require().NoError(err)
 
 			// Record the initial position accumulator value.
@@ -1397,7 +1397,7 @@ func (s *KeeperTestSuite) TestPreparePositionAccumulator() {
 			s.Require().NoError(err)
 
 			// Check that the difference between the new and old position accumulator values is equal to the fee growth outside.
-			positionAccumDelta := positionPost.InitAccumValue.Sub(positionPre.InitAccumValue)
+			positionAccumDelta := positionPost.AccumValuePerShare.Sub(positionPre.AccumValuePerShare)
 			s.Require().Equal(tc.feeGrowthOutside, positionAccumDelta)
 		})
 	}
