@@ -232,13 +232,3 @@ func SetCustomEnvVariablesFromClientToml(ctx client.Context) {
 func errUnknownConfigKey(key string) error {
 	return fmt.Errorf("unknown configuration key: %q", key)
 }
-
-// defaultClientConfig returns the reference to ClientConfig with default values.
-func defaultClientConfig() *OsmosisCustomClient {
-	return &OsmosisCustomClient{"", "os", "text", "tcp://localhost:26657", "sync", "", "", "", ""}
-}
-
-// ensureConfigPath creates a directory configPath if it does not exist
-func ensureConfigPath(configPath string) error {
-	return os.MkdirAll(configPath, os.ModePerm)
-}

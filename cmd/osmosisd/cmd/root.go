@@ -42,8 +42,8 @@ import (
 
 	"github.com/joho/godotenv"
 
-	osmosis "github.com/osmosis-labs/osmosis/v15/app"
 	"github.com/cosmos/cosmos-sdk/client/config"
+	osmosis "github.com/osmosis-labs/osmosis/v15/app"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the
