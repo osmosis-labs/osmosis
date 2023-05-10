@@ -40,6 +40,7 @@ func (k Keeper) getOrInitPosition(
 // If a position is not present, it initializes the position with the provided liquidity delta.
 // If a position is present, it combines the existing liquidity in that position with the provided liquidity delta. It also
 // bumps up all uptime accumulators to current time, including the ones the new position isn't eligible for.
+// Errors if given liquidityDelta is negative and exceeds the amount of liquidity in the position.
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 func (k Keeper) initOrUpdatePosition(
 	ctx sdk.Context,
@@ -303,9 +304,12 @@ func (k Keeper) CreateFullRangePosition(ctx sdk.Context, clPoolId uint64, owner 
 	if coins.AmountOf(concentratedPool.GetToken1()).LTE(sdk.ZeroInt()) {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, types.Amount1IsNegativeError{Amount1: coins.AmountOf(concentratedPool.GetToken1())}
 	}
+	if len(coins) != 2 {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, types.NumCoinsError{NumCoins: len(coins)}
+	}
 
 	// Create a full range (min to max tick) concentrated liquidity position.
-	positionId, amount0, amount1, liquidity, joinTime, err = k.createPosition(ctx, concentratedPool.GetId(), owner, coins.AmountOf(concentratedPool.GetToken0()), coins.AmountOf(concentratedPool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), types.MinTick, types.MaxTick)
+	positionId, amount0, amount1, liquidity, joinTime, err = k.createPosition(ctx, concentratedPool.GetId(), owner, coins, sdk.ZeroInt(), sdk.ZeroInt(), types.MinTick, types.MaxTick)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}

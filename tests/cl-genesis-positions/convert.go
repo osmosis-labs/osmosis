@@ -179,6 +179,8 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 			continue
 		}
 
+		tokensProvided := sdk.NewCoins(sdk.NewCoin(msgCreatePool.Denom0, depositedAmount0), sdk.NewCoin(msgCreatePool.Denom1, depositedAmount1))
+
 		randomCreator := osmosis.TestAccs[rand.Intn(len(osmosis.TestAccs))]
 
 		position, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(osmosis.Ctx), &cltypes.MsgCreatePosition{
@@ -186,8 +188,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 			Sender:          randomCreator.String(),
 			LowerTick:       lowerTickOsmosis.Int64(),
 			UpperTick:       upperTickOsmosis.Int64(),
-			TokenDesired0:   sdk.NewCoin(msgCreatePool.Denom0, depositedAmount0),
-			TokenDesired1:   sdk.NewCoin(msgCreatePool.Denom1, depositedAmount1),
+			TokensProvided:  tokensProvided,
 			TokenMinAmount0: sdk.ZeroInt(),
 			TokenMinAmount1: sdk.ZeroInt(),
 		})
