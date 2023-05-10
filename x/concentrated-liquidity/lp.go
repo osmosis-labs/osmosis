@@ -31,12 +31,8 @@ const noUnderlyingLockId = uint64(0)
 // - the liquidity delta is zero
 // - the amount0 or amount1 returned from the position update is less than the given minimums
 // - the pool or user does not have enough tokens to satisfy the requested amount
-func (k Keeper) createPosition(ctx sdk.Context,
-	poolId uint64,
-	owner sdk.AccAddress,
-	amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int,
-	lowerTick, upperTick int64) (uint64, sdk.Int, sdk.Int, sdk.Dec, time.Time, error) {
-	// get current blockTime that user joins the position
+func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (uint64, sdk.Int, sdk.Int, sdk.Dec, time.Time, error) {
+	// Use the current blockTime as the position's join time.
 	joinTime := ctx.BlockTime()
 
 	// Retrieve the pool associated with the given pool ID.
@@ -48,6 +44,11 @@ func (k Keeper) createPosition(ctx sdk.Context,
 	// Check if the provided tick range is valid according to the pool's tick spacing and module parameters.
 	if err := validateTickRangeIsValid(pool.GetTickSpacing(), lowerTick, upperTick); err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
+	}
+	amount0Desired := tokensProvided.AmountOf(pool.GetToken0())
+	amount1Desired := tokensProvided.AmountOf(pool.GetToken1())
+	if amount0Desired.IsZero() && amount1Desired.IsZero() {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, errors.New("cannot create a position with zero amounts of both pool tokens")
 	}
 
 	// sanity check that both given minimum accounts are not negative amounts.
@@ -290,7 +291,14 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 	}
 
 	// Create new position with updated liquidity.
-	newPositionId, actualAmount0, actualAmount1, _, _, err := k.createPosition(ctx, position.PoolId, owner, amount0Withdrawn.Add(amount0Added), amount1Withdrawn.Add(amount1Added), amount0Withdrawn, amount1Withdrawn, position.LowerTick, position.UpperTick)
+	amount0Desired := amount0Withdrawn.Add(amount0Added)
+	amount1Desired := amount1Withdrawn.Add(amount1Added)
+	pool, err := k.GetPoolFromPoolIdAndConvertToConcentrated(ctx, position.PoolId)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, err
+	}
+	tokensProvided := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), amount0Desired), sdk.NewCoin(pool.GetToken1(), amount1Desired))
+	newPositionId, actualAmount0, actualAmount1, _, _, err := k.createPosition(ctx, position.PoolId, owner, tokensProvided, amount0Withdrawn, amount1Withdrawn, position.LowerTick, position.UpperTick)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
 	}
@@ -316,6 +324,7 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 // Updates ticks and pool liquidity. Returns how much of each token is either added or removed.
 // Negative returned amounts imply that tokens are removed from the pool.
 // Positive returned amounts imply that tokens are added to the pool.
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId uint64) (sdk.Int, sdk.Int, error) {
 	if err := k.validatePositionUpdateById(ctx, positionId, owner, lowerTick, upperTick, liquidityDelta, joinTime, poolId); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
@@ -341,6 +350,13 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	// update position state
 	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	// Refetch pool to get the updated pool.
+	// Note that updateUptimeAccumulatorsToNow may modify the pool state and rewrite it to the store.
+	pool, err = k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}

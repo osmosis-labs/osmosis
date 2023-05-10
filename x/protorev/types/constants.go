@@ -30,12 +30,16 @@ const MaxPoolPointsPerBlock uint64 = 200
 // ---------------- Module Profit Splitting Constants ---------------- //
 
 // Year 1 (20% of total profit)
-const Phase1Length uint64 = 365
-const ProfitSplitPhase1 int64 = 20
+const (
+	Phase1Length      uint64 = 365
+	ProfitSplitPhase1 int64  = 20
+)
 
 // Year 2 (10% of total profit)
-const Phase2Length uint64 = 730
-const ProfitSplitPhase2 int64 = 10
+const (
+	Phase2Length      uint64 = 730
+	ProfitSplitPhase2 int64  = 10
+)
 
 // All other years (5% of total profit)
 const ProfitSplitPhase3 int64 = 5

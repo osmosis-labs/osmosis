@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
@@ -175,5 +176,4 @@ func (suite *HooksTestSuite) TestCW20ICS20() {
 	// Check that the receiver has more cw20 tokens than before
 	newCw20Balance := suite.getCW20Balance(chainB, cw20Addr, receiver2)
 	suite.Require().Greater(newCw20Balance.Int64(), cw20Balance.Int64())
-
 }

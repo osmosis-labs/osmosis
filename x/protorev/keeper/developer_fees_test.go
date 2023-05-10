@@ -131,7 +131,6 @@ func (suite *KeeperTestSuite) TestUpdateDeveloperFees() {
 			profit:      sdk.NewInt(200),
 			alterState: func() {
 				suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 731)
-
 			},
 			expected: sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10)),
 		},
@@ -141,7 +140,6 @@ func (suite *KeeperTestSuite) TestUpdateDeveloperFees() {
 			profit:      sdk.NewInt(200),
 			alterState: func() {
 				suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 365*10+1)
-
 			},
 			expected: sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10)),
 		},
@@ -167,7 +165,10 @@ func (suite *KeeperTestSuite) pseudoExecuteTrade(denom string, profit sdk.Int, d
 	// Initialize the number of days since genesis
 	suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, daysSinceGenesis)
 	// Mint the profit to the module account (which will be sent to the developer account later)
-	suite.App.AppKeepers.BankKeeper.MintCoins(suite.Ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(denom, profit)))
+	err := suite.App.AppKeepers.BankKeeper.MintCoins(suite.Ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(denom, profit)))
+	if err != nil {
+		return err
+	}
 	// Update the developer fees
 	return suite.App.ProtoRevKeeper.UpdateDeveloperFees(suite.Ctx, denom, profit)
 }

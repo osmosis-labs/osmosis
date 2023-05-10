@@ -114,6 +114,11 @@ edit_config () {
 
     # Expose the rpc
     dasel put string -f $CONFIG_FOLDER/config.toml '.rpc.laddr' "tcp://0.0.0.0:26657"
+    
+    # Expose pprof for debugging
+    # To make the change enabled locally, make sure to add 'EXPOSE 6060' to the root Dockerfile
+    # and rebuild the image.
+    dasel put string -f $CONFIG_FOLDER/config.toml '.rpc.pprof_laddr' "0.0.0.0:6060"
 }
 
 enable_cors () {

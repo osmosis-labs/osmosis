@@ -87,7 +87,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition() {
 	// Setup is done once so that we test
 	// the relationship between test cases.
 	// For example, that positions with non-zero liquidity
-	// cannot be overriden.
+	// cannot be overridden.
 	s.SetupTest()
 	s.PrepareConcentratedPool()
 
@@ -210,7 +210,6 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition() {
 	for _, tc := range tests {
 		tc := tc
 		s.Run(tc.name, func() {
-
 			// System under test
 			err := clKeeper.InitOrUpdateFeeAccumulatorPosition(s.Ctx, tc.positionFields.poolId, tc.positionFields.lowerTick, tc.positionFields.upperTick, tc.positionFields.positionId, tc.positionFields.liquidity)
 			if tc.expectedPass {
@@ -261,7 +260,6 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 		globalFeeGrowth           sdk.DecCoin
 
 		expectedFeeGrowthOutside sdk.DecCoins
-		invalidTick              bool
 		expectedError            bool
 	}
 
@@ -415,8 +413,9 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 				s.initializeTick(s.Ctx, currentTick, tc.lowerTick, defaultInitialLiquidity, tc.lowerTickFeeGrowthOutside, emptyUptimeTrackers, false)
 				s.initializeTick(s.Ctx, currentTick, tc.upperTick, defaultInitialLiquidity, tc.upperTickFeeGrowthOutside, emptyUptimeTrackers, true)
 				pool.SetCurrentTick(sdk.NewInt(tc.currentTick))
-				s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
-				err := s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, tc.globalFeeGrowth)
+				err := s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+				s.Require().NoError(err)
+				err = s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, tc.globalFeeGrowth)
 				s.Require().NoError(err)
 			}
 
@@ -926,7 +925,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			s.initializeTick(ctx, tc.currentTick, tc.upperTick, tc.initialLiquidity, tc.upperTickFeeGrowthOutside, emptyUptimeTrackers, true)
 
 			validPool.SetCurrentTick(sdk.NewInt(tc.currentTick))
-			clKeeper.SetPool(ctx, validPool)
+			err = clKeeper.SetPool(ctx, validPool)
+			s.Require().NoError(err)
 
 			err = clKeeper.ChargeFee(ctx, validPoolId, tc.globalFeeGrowth[0])
 			s.Require().NoError(err)
@@ -1188,7 +1188,8 @@ func (s *KeeperTestSuite) TestPrepareClaimableFees() {
 			s.initializeTick(ctx, tc.currentTick, tc.lowerTick, tc.initialLiquidity, tc.lowerTickFeeGrowthOutside, emptyUptimeTrackers, false)
 			s.initializeTick(ctx, tc.currentTick, tc.upperTick, tc.initialLiquidity, tc.upperTickFeeGrowthOutside, emptyUptimeTrackers, true)
 			validPool.SetCurrentTick(sdk.NewInt(tc.currentTick))
-			clKeeper.SetPool(ctx, validPool)
+
+			_ = clKeeper.SetPool(ctx, validPool)
 
 			err = clKeeper.ChargeFee(ctx, validPoolId, tc.globalFeeGrowth[0])
 			s.Require().NoError(err)
@@ -1196,7 +1197,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableFees() {
 			positionKey := types.KeyFeePositionAccumulator(DefaultPositionId)
 
 			// Note the position accumulator before calling prepare
-			accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, validPoolId)
+			_, err = s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, validPoolId)
 			s.Require().NoError(err)
 
 			// System under test
@@ -1210,7 +1211,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableFees() {
 			}
 			s.Require().NoError(err)
 
-			accum, err = s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, validPoolId)
+			accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, validPoolId)
 			s.Require().NoError(err)
 
 			postPreparePosition, err := accum.GetPosition(positionKey)
@@ -1509,7 +1510,7 @@ func (s *KeeperTestSuite) TestFunctional_Fees_LP() {
 	s.Require().Error(err)
 
 	// Create position in the default range 1.
-	positionIdOne, _, _, liquidity, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	positionIdOne, _, _, liquidity, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 	s.Require().NoError(err)
 
 	// Swap once.
@@ -1528,7 +1529,7 @@ func (s *KeeperTestSuite) TestFunctional_Fees_LP() {
 	s.validatePositionFeeGrowth(pool.GetId(), positionIdOne, cl.EmptyCoins)
 
 	// Create position in the default range 2.
-	positionIdTwo, _, _, fullLiquidity, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	positionIdTwo, _, _, fullLiquidity, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 	s.Require().NoError(err)
 
 	// Swap once in the other direction.
@@ -1556,7 +1557,7 @@ func (s *KeeperTestSuite) TestFunctional_Fees_LP() {
 	s.Require().Equal(expectesFeesCollected.String(), feesCollected.AmountOf(ETH).String())
 
 	// Create position in the default range 3.
-	positionIdThree, _, _, fullLiquidity, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	positionIdThree, _, _, fullLiquidity, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 	s.Require().NoError(err)
 
 	collectedThree, err := s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, owner, positionIdThree)

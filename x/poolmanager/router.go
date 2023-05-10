@@ -12,10 +12,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
-var (
-	// 1 << 256 - 1 where 256 is the max bit length defined for sdk.Int
-	intMaxValue = sdk.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
-)
+// 1 << 256 - 1 where 256 is the max bit length defined for sdk.Int
+var intMaxValue = sdk.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
 
 // RouteExactAmountIn defines the input denom and input amount for the first pool,
 // the output of the first pool is chained as the input for the next routed pool

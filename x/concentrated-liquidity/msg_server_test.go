@@ -93,13 +93,9 @@ func (suite *KeeperTestSuite) TestCreatePositionMsg() {
 			lowerTick:     DefaultUpperTick,
 			expectedError: types.InvalidLowerUpperTickError{LowerTick: DefaultUpperTick, UpperTick: DefaultUpperTick},
 		},
-		"error: tokenDesired0 is zero": {
-			amount0Desired: sdk.ZeroInt(),
-			expectedError:  fmt.Errorf("Invalid token desired amount0 (%s)", sdk.ZeroInt().String()),
-		},
-		"error: tokenDesired1 is zero": {
-			amount1Desired: sdk.ZeroInt(),
-			expectedError:  fmt.Errorf("Invalid token desired amount1 (%s)", sdk.ZeroInt().String()),
+		"error: tokens provided is three": {
+			tokensProvided: DefaultCoins.Add(sdk.NewCoin("foo", sdk.NewInt(10))),
+			expectedError:  types.CoinLengthError{Length: 3, MaxLength: 2},
 		},
 		"error: token min amount 0 is negative": {
 			amount0Minimum: sdk.NewInt(-10),
@@ -116,6 +112,7 @@ func (suite *KeeperTestSuite) TestCreatePositionMsg() {
 			ctx := suite.Ctx
 
 			baseConfigCopy := *baseCase
+			fmt.Println(baseConfigCopy.tokensProvided)
 			mergeConfigs(&baseConfigCopy, &tc)
 			tc = baseConfigCopy
 
@@ -128,15 +125,15 @@ func (suite *KeeperTestSuite) TestCreatePositionMsg() {
 
 			// fund sender to create position
 			suite.FundAcc(suite.TestAccs[0], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
+
 			msg := &types.MsgCreatePosition{
-				PoolId:              tc.poolId,
-				Sender:              suite.TestAccs[0].String(),
-				LowerTick:           tc.lowerTick,
-				UpperTick:           tc.upperTick,
-				TokenDesiredAmount0: tc.amount0Desired,
-				TokenDesiredAmount1: tc.amount1Desired,
-				TokenMinAmount0:     tc.amount0Minimum,
-				TokenMinAmount1:     tc.amount1Minimum,
+				PoolId:          tc.poolId,
+				Sender:          suite.TestAccs[0].String(),
+				LowerTick:       tc.lowerTick,
+				UpperTick:       tc.upperTick,
+				TokensProvided:  tc.tokensProvided,
+				TokenMinAmount0: tc.amount0Minimum,
+				TokenMinAmount1: tc.amount1Minimum,
 			}
 
 			if tc.expectedError == nil {

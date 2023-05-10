@@ -235,7 +235,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		ctx := suite.Ctx
 
 		addr1 := sdk.AccAddress([]byte("addr1---------------"))
-		lock := types.NewPeriodLock(1, addr1, time.Second, time.Time{}, tc.fundAcc)
+		_ = types.NewPeriodLock(1, addr1, time.Second, time.Time{}, tc.fundAcc)
 
 		// lock with balance
 		suite.FundAcc(addr1, tc.fundAcc)
@@ -276,7 +276,6 @@ func (suite *KeeperTestSuite) TestUnlock() {
 			// check lock state
 			suite.Require().Equal(ctx.BlockTime().Add(lock.Duration), lock.EndTime)
 			suite.Require().Equal(true, lock.IsUnlocking())
-
 		} else {
 			suite.Require().Error(err)
 
@@ -319,7 +318,6 @@ func (suite *KeeperTestSuite) TestUnlock() {
 }
 
 func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
-
 	testCases := []struct {
 		name                       string
 		coinsLocked, coinsBurned   sdk.Coins
@@ -417,7 +415,6 @@ func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
 					suite.Require().Equal(sdk.ZeroInt().String(), assetsSupplyAtLockEnd.AmountOf(coin.Denom).String())
 				}
 			}
-
 		})
 	}
 }
@@ -1003,7 +1000,9 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByID() {
 	})
 	suite.Require().Equal(int64(10), acc.Int64())
 
-	suite.App.LockupKeeper.SlashTokensFromLockByID(suite.Ctx, 1, sdk.Coins{sdk.NewInt64Coin("stake", 1)})
+	_, err = suite.App.LockupKeeper.SlashTokensFromLockByID(suite.Ctx, 1, sdk.Coins{sdk.NewInt64Coin("stake", 1)})
+	suite.Require().NoError(err)
+
 	acc = suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
 		Denom:    "stake",
 		Duration: time.Second,
@@ -1066,6 +1065,7 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn()
 		clPool := suite.PrepareConcentratedPool()
 		clPoolId := clPool.GetId()
 		positionID, _, _, liquidity, _, concentratedLockId, err := suite.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(suite.Ctx, clPoolId, addr, tc.positionCoins, time.Hour)
+		suite.Require().NoError(err)
 
 		// Refetch the cl pool post full range position creation
 		clPool, err = suite.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(suite.Ctx, clPoolId)

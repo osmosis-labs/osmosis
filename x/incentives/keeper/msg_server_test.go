@@ -17,8 +17,10 @@ import (
 
 var _ = suite.TestingSuite(nil)
 
-var seventyTokens = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(70000000)))
-var tenTokens = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000)))
+var (
+	seventyTokens = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(70000000)))
+	tenTokens     = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000)))
+)
 
 func (suite *KeeperTestSuite) TestCreateGauge_Fee() {
 	tests := []struct {
@@ -264,8 +266,10 @@ func (suite *KeeperTestSuite) completeGauge(gauge *types.Gauge, sendingAddress s
 	}
 	suite.BeginNewBlock(false)
 	for i := 0; i < int(gauge.NumEpochsPaidOver); i++ {
-		suite.App.IncentivesKeeper.BeforeEpochStart(suite.Ctx, epochId, int64(i))
-		suite.App.IncentivesKeeper.AfterEpochEnd(suite.Ctx, epochId, int64(i))
+		err := suite.App.IncentivesKeeper.BeforeEpochStart(suite.Ctx, epochId, int64(i))
+		suite.Require().NoError(err)
+		err = suite.App.IncentivesKeeper.AfterEpochEnd(suite.Ctx, epochId, int64(i))
+		suite.Require().NoError(err)
 	}
 	suite.BeginNewBlock(false)
 	gauge2, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gauge.Id)

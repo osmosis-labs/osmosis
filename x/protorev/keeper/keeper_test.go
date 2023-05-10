@@ -100,7 +100,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 			StepSize: sdk.NewInt(1_000_000),
 		},
 	}
-	suite.App.ProtoRevKeeper.SetBaseDenoms(suite.Ctx, baseDenomPriorities)
+	err := suite.App.ProtoRevKeeper.SetBaseDenoms(suite.Ctx, baseDenomPriorities)
+	suite.Require().NoError(err)
 
 	encodingConfig := osmosisapp.MakeEncodingConfig()
 	suite.clientCtx = client.Context{}.
@@ -148,7 +149,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	// Set the Admin Account
 	suite.adminAccount = apptesting.CreateRandomAccounts(1)[0]
-	err := protorev.HandleSetProtoRevAdminAccount(suite.Ctx, *suite.App.ProtoRevKeeper, &types.SetProtoRevAdminAccountProposal{Account: suite.adminAccount.String()})
+	err = protorev.HandleSetProtoRevAdminAccount(suite.Ctx, *suite.App.ProtoRevKeeper, &types.SetProtoRevAdminAccountProposal{Account: suite.adminAccount.String()})
 	suite.Require().NoError(err)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.Ctx, suite.App.InterfaceRegistry())
@@ -895,7 +896,8 @@ func (suite *KeeperTestSuite) setUpPools() {
 	suite.Require().NoError(err)
 
 	// Set all of the pool info into the stores
-	suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
+	err = suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
+	suite.Require().NoError(err)
 }
 
 // createStableswapPool creates a stableswap pool with the given pool assets and params
@@ -1037,6 +1039,7 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 	for _, tokenPair := range suite.tokenPairArbRoutes {
 		err := tokenPair.Validate()
 		suite.Require().NoError(err)
-		suite.App.ProtoRevKeeper.SetTokenPairArbRoutes(suite.Ctx, tokenPair.TokenIn, tokenPair.TokenOut, tokenPair)
+		err = suite.App.ProtoRevKeeper.SetTokenPairArbRoutes(suite.Ctx, tokenPair.TokenIn, tokenPair.TokenOut, tokenPair)
+		suite.Require().NoError(err)
 	}
 }
