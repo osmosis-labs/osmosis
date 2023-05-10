@@ -237,7 +237,9 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin() {
 			suite.Require().NoError(err)
 
 			// validate that AfterDistributeMintedCoin hook was called once.
-			suite.Require().Equal(1, mintKeeper.GetMintHooksUnsafe().(*mintHooksMock).hookCallCount)
+			hooks, ok := mintKeeper.GetMintHooksUnsafe().(*mintHooksMock)
+			suite.Require().True(ok, "unexpected type of mint hooks")
+			suite.Require().Equal(1, hooks.hookCallCount)
 
 			// validate distributions to fee collector.
 			feeCollectorBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(authtypes.FeeCollectorName), sdk.DefaultBondDenom).Amount.ToDec()

@@ -81,7 +81,7 @@ var (
 		sdk.ZeroDec(),                // TODO: choose correct
 	)
 
-	spotPriceError = errors.New("twap: error in pool spot price occurred between start and end time, twap result may be faulty")
+	errSpotPrice = errors.New("twap: error in pool spot price occurred between start and end time, twap result may be faulty")
 )
 
 func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
@@ -311,7 +311,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime, tPlusOneMin, baseQuoteBA),
 			expTwap:      sdk.NewDec(10),
-			expectError:  spotPriceError,
+			expectError:  errSpotPrice,
 			expectSpErr:  baseTime,
 		},
 		"spot price error in record at record time (start time > record time)": {
@@ -319,7 +319,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(tPlusOne, tPlusOneMin, baseQuoteBA),
 			expTwap:      sdk.NewDec(10),
-			expectError:  spotPriceError,
+			expectError:  errSpotPrice,
 			expectSpErr:  baseTime,
 		},
 		"spot price error in record after record time": {
@@ -327,7 +327,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime, tPlusOneMin, baseQuoteBA),
 			expTwap:      sdk.NewDec(10),
-			expectError:  spotPriceError,
+			expectError:  errSpotPrice,
 			expectSpErr:  baseTime,
 		},
 		// should error, since start time may have been used to interpolate this value
@@ -336,7 +336,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime, tPlusOne, baseQuoteBA),
 			expTwap:      sdk.NewDec(10),
-			expectError:  spotPriceError,
+			expectError:  errSpotPrice,
 			expectSpErr:  baseTime,
 		},
 		"spot price error exactly at end time": {
@@ -344,7 +344,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime, tPlusOne, baseQuoteBA),
 			expTwap:      sdk.NewDec(10),
-			expectError:  spotPriceError,
+			expectError:  errSpotPrice,
 			expectSpErr:  baseTime,
 		},
 		// should not happen, but if it did would error
@@ -353,7 +353,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime, tPlusOne, baseQuoteBA),
 			expTwap:      sdk.NewDec(10),
-			expectError:  spotPriceError,
+			expectError:  errSpotPrice,
 			expectSpErr:  baseTime,
 		},
 	}
@@ -754,7 +754,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 			ctxTime:       tPlusOneMin,
 			input:         makeSimpleTwapInput(tPlusOne, tPlusOneMin, baseQuoteBA),
 			expTwap:       sdk.NewDec(10),
-			expectedError: spotPriceError,
+			expectedError: errSpotPrice,
 		},
 	}
 	for name, test := range tests {
