@@ -1113,15 +1113,15 @@ func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
 	s.Require().Equal(emptyIncentiveRecords, allRecordsPoolTwo)
 }
 
-func (s *KeeperTestSuite) TestGetInitialUptimeGrowthOutsidesForTick() {
+func (s *KeeperTestSuite) TestGetInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick() {
 	expectedUptimes := getExpectedUptimes()
 
-	type getInitialUptimeGrowthOutsidesForTick struct {
+	type getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick struct {
 		poolId                          uint64
 		tick                            int64
 		expectedUptimeAccumulatorValues []sdk.DecCoins
 	}
-	tests := map[string]getInitialUptimeGrowthOutsidesForTick{
+	tests := map[string]getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick{
 		"uptime growth for tick <= currentTick": {
 			poolId:                          1,
 			tick:                            -2,
@@ -1155,7 +1155,7 @@ func (s *KeeperTestSuite) TestGetInitialUptimeGrowthOutsidesForTick() {
 			_, err = clKeeper.GetUptimeAccumulators(s.Ctx, tc.poolId)
 			s.Require().NoError(err)
 
-			val, err := clKeeper.GetInitialUptimeGrowthOutsidesForTick(s.Ctx, tc.poolId, tc.tick)
+			val, err := clKeeper.GetInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(s.Ctx, tc.poolId, tc.tick)
 			s.Require().NoError(err)
 			s.Require().Equal(val, tc.expectedUptimeAccumulatorValues)
 		})
