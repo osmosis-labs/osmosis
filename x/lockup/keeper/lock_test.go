@@ -18,10 +18,10 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestRebondTokens() {
-	// coins to lock
-	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
-	// coins to rebond
-	coinsRebond := sdk.NewCoins(sdk.NewInt64Coin("stake", 5))
+	// coins that will be locked
+	lockedCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
+	// coins, which if rebonded, will split the lock
+	notFullRebondCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 5))
 
 	addr1 := suite.TestAccs[0]
 	defaultLockID := uint64(1)
@@ -39,13 +39,13 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 			name:          "Valid: rebond some tokens",
 			unlock:        true,
 			rebondLockID:  defaultLockID,
-			coinsToRebond: coinsRebond,
+			coinsToRebond: notFullRebondCoins,
 		},
 		{
 			name:          "Valid: explicitly rebond all tokens",
 			unlock:        true,
 			rebondLockID:  defaultLockID,
-			coinsToRebond: coins,
+			coinsToRebond: lockedCoins,
 		},
 		{
 			name:         "Valid: implicitly rebond all tokens by setting coinsToRebond as nil",
@@ -56,14 +56,14 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 			name:          "Invalid: Trying to rebond a non existent lock id",
 			unlock:        true,
 			rebondLockID:  nonExistingLockID,
-			coinsToRebond: coinsRebond,
+			coinsToRebond: notFullRebondCoins,
 			expectedError: sdkerrors.Wrap(types.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", nonExistingLockID)),
 		},
 		{
 			name:          "Invalid: Trying to rebond a non-unbonding lock",
 			unlock:        false,
 			rebondLockID:  defaultLockID,
-			coinsToRebond: coinsRebond,
+			coinsToRebond: notFullRebondCoins,
 			expectedError: fmt.Errorf("lock %d is not unlocking, rebonding only possible in unlocking stage", defaultLockID),
 		},
 	}
@@ -73,11 +73,11 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 			suite.SetupTest()
 
 			// lock coins
-			lockID := suite.LockTokens(addr1, coins, time.Second)
+			lockID := suite.LockTokens(addr1, lockedCoins, time.Second)
 
 			if tc.unlock {
 				// unlock coins
-				_, err := suite.App.LockupKeeper.BeginUnlock(suite.Ctx, lockID, coins)
+				_, err := suite.App.LockupKeeper.BeginUnlock(suite.Ctx, lockID, lockedCoins)
 				suite.Require().NoError(err)
 			}
 
@@ -101,9 +101,9 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 			suite.Require().Equal(lock.Owner, initialLock.Owner)
 			suite.Require().Equal(lock.Duration, initialLock.Duration)
 			suite.Require().Equal(lock.ID, initialLock.ID)
-			if tc.coinsToRebond != nil && !coins.IsEqual(tc.coinsToRebond) { // means lock was splitted
+			if tc.coinsToRebond != nil && !lockedCoins.IsEqual(tc.coinsToRebond) { // means lock was splitted
 				// check original lock: should have less coins and be in unlocking state
-				suite.Require().Equal(lock.Coins, coins.Sub(tc.coinsToRebond))
+				suite.Require().Equal(lock.Coins, lockedCoins.Sub(tc.coinsToRebond))
 				suite.Require().True(lock.IsUnlocking())
 
 				// check newly created lock
@@ -122,7 +122,7 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 				suite.assertLockRefs(*lock)
 			} else { // means lock was completely replaced
 				// check original lock: should be replaced with rebonding lock
-				suite.Require().Equal(lock.Coins, coins)
+				suite.Require().Equal(lock.Coins, lockedCoins)
 				suite.Require().False(lock.IsUnlocking())
 
 				// Check lock refs
