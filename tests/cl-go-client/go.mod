@@ -87,12 +87,12 @@ require (
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230503232557-ba905586c111 // indirect
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230504190933-b174397f0bc5 // indirect
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230510161551-8bf252f26bae // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_golang v1.15.0 // indirect
+	github.com/prometheus/client_golang v1.15.1 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
