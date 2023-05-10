@@ -427,3 +427,88 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestFungify_Events() {
+	testcases := map[string]struct {
+		positionIdsToFungify       []uint64
+		numPositionsToCreate       int
+		shouldSetupUnownedPosition bool
+		shouldSetupUncharged       bool
+		expectedFungifyEvents      int
+		expectedMessageEvents      int
+		expectedError              error
+	}{
+		"three position IDs": {
+			positionIdsToFungify:  []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			numPositionsToCreate:  3,
+			expectedFungifyEvents: 1,
+			expectedMessageEvents: 1, // 1 for fungify
+		},
+		"error: single position ID": {
+			positionIdsToFungify: []uint64{DefaultPositionId},
+			numPositionsToCreate: 1,
+
+			expectedError: types.PositionQuantityTooLowError{},
+		},
+		"error: attempt to fungify with different owner": {
+			positionIdsToFungify:       []uint64{DefaultPositionId, DefaultPositionId + 1},
+			shouldSetupUnownedPosition: true,
+			numPositionsToCreate:       1,
+			expectedError:              types.NotPositionOwnerError{},
+		},
+		"error: not fully charged": {
+			positionIdsToFungify: []uint64{DefaultPositionId, DefaultPositionId + 1},
+			numPositionsToCreate: 2,
+			shouldSetupUncharged: true,
+			expectedError:        types.PositionNotFullyChargedError{},
+		},
+	}
+
+	for name, tc := range testcases {
+		suite.Run(name, func() {
+			suite.SetupTest()
+
+			msgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
+
+			// Create a cl pool with a default position
+			pool := suite.PrepareConcentratedPool()
+			for i := 0; i < tc.numPositionsToCreate; i++ {
+				suite.SetupDefaultPosition(pool.GetId())
+			}
+
+			if tc.shouldSetupUnownedPosition {
+				// Position from another account.
+				suite.SetupDefaultPositionAcc(pool.GetId(), suite.TestAccs[1])
+			}
+
+			fullChargeDuration := suite.App.ConcentratedLiquidityKeeper.GetLargestAuthorizedUptimeDuration(suite.Ctx)
+			suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(fullChargeDuration))
+
+			if tc.shouldSetupUncharged {
+				suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(-time.Millisecond))
+			}
+
+			// Reset event counts to 0 by creating a new manager.
+			suite.Ctx = suite.Ctx.WithEventManager(sdk.NewEventManager())
+			suite.Equal(0, len(suite.Ctx.EventManager().Events()))
+
+			msg := &types.MsgFungifyChargedPositions{
+				Sender:      suite.TestAccs[0].String(),
+				PositionIds: tc.positionIdsToFungify,
+			}
+
+			response, err := msgServer.FungifyChargedPositions(sdk.WrapSDKContext(suite.Ctx), msg)
+
+			if tc.expectedError == nil {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(response)
+				suite.AssertEventEmitted(suite.Ctx, types.TypeEvtFungifyChargedPosition, tc.expectedFungifyEvents)
+				suite.AssertEventEmitted(suite.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().ErrorAs(err, &tc.expectedError)
+				suite.Require().Nil(response)
+			}
+		})
+	}
+}

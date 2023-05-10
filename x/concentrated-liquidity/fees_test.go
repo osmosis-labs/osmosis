@@ -83,7 +83,7 @@ func (s *KeeperTestSuite) TestCreateAndGetFeeAccumulator() {
 	}
 }
 
-func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition() {
+func (s *KeeperTestSuite) TestInitOrUpdatePositionFeeAccumulator() {
 	// Setup is done once so that we test
 	// the relationship between test cases.
 	// For example, that positions with non-zero liquidity
@@ -137,42 +137,37 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition() {
 		positionFields positionFields
 
 		expectedLiquidity sdk.Dec
-		expectedPass      bool
+		expectedError     error
 	}
 	tests := []initFeeAccumTest{
 		{
 			name:           "error: negative liquidity for the first position",
 			positionFields: withLiquidity(defaultPositionFields, DefaultLiquidityAmt.Neg()),
-			expectedPass:   false,
+			expectedError:  types.NonPositiveLiquidityForNewPositionError{LiquidityDelta: DefaultLiquidityAmt.Neg(), PositionId: DefaultPositionId},
 		},
 		{
 			name:              "first position",
 			positionFields:    defaultPositionFields,
 			expectedLiquidity: defaultPositionFields.liquidity,
-			expectedPass:      true,
 		},
 		{
 			name:              "second position",
 			positionFields:    withPositionId(withLowerTick(defaultPositionFields, DefaultLowerTick+1), DefaultPositionId+1),
 			expectedLiquidity: defaultPositionFields.liquidity,
-			expectedPass:      true,
 		},
 		{
 			name:              "adding to first position",
 			positionFields:    defaultPositionFields,
-			expectedPass:      true,
 			expectedLiquidity: defaultPositionFields.liquidity.MulInt64(2),
 		},
 		{
 			name:              "removing from first position",
 			positionFields:    withLiquidity(defaultPositionFields, defaultPositionFields.liquidity.Neg()),
-			expectedPass:      true,
 			expectedLiquidity: defaultPositionFields.liquidity,
 		},
 		{
 			name:              "adding to second position",
 			positionFields:    withPositionId(withLowerTick(defaultPositionFields, DefaultLowerTick+1), DefaultPositionId+1),
-			expectedPass:      true,
 			expectedLiquidity: defaultPositionFields.liquidity.MulInt64(2),
 		},
 		{
@@ -185,25 +180,22 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition() {
 				DefaultPositionId,
 				DefaultLiquidityAmt,
 			},
-			expectedPass: false,
+			expectedError: accum.AccumDoesNotExistError{AccumName: types.KeyFeePoolAccumulator(defaultPoolId + 1)},
 		},
 		{
 			name:              "existing accumulator, different owner - different position",
 			positionFields:    withPositionId(withOwner(defaultPositionFields, s.TestAccs[1]), DefaultPositionId+2),
 			expectedLiquidity: defaultPositionFields.liquidity,
-			expectedPass:      true,
 		},
 		{
 			name:              "existing accumulator, different upper tick - different position",
 			positionFields:    withPositionId(withUpperTick(defaultPositionFields, DefaultUpperTick+1), DefaultPositionId+3),
 			expectedLiquidity: defaultPositionFields.liquidity,
-			expectedPass:      true,
 		},
 		{
 			name:              "existing accumulator, different lower tick - different position",
 			positionFields:    withPositionId(withLowerTick(defaultPositionFields, DefaultUpperTick+1), DefaultPositionId+4),
 			expectedLiquidity: defaultPositionFields.liquidity,
-			expectedPass:      true,
 		},
 	}
 
@@ -211,8 +203,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition() {
 		tc := tc
 		s.Run(tc.name, func() {
 			// System under test
-			err := clKeeper.InitOrUpdateFeeAccumulatorPosition(s.Ctx, tc.positionFields.poolId, tc.positionFields.lowerTick, tc.positionFields.upperTick, tc.positionFields.positionId, tc.positionFields.liquidity)
-			if tc.expectedPass {
+			err := clKeeper.InitOrUpdatePositionFeeAccumulator(s.Ctx, tc.positionFields.poolId, tc.positionFields.lowerTick, tc.positionFields.upperTick, tc.positionFields.positionId, tc.positionFields.liquidity)
+			if tc.expectedError == nil {
 				s.Require().NoError(err)
 
 				// get fee accum and see if position size has been properly initialized
@@ -243,6 +235,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition() {
 				s.Require().Equal(cl.EmptyCoins, positionRecord.UnclaimedRewards)
 			} else {
 				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
 			}
 		})
 	}
@@ -1302,7 +1295,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition_UpdatingPositio
 			s.Require().NoError(err)
 
 			// InitOrUpdateFeeAccumulatorPosition #1 lower tick to upper tick
-			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateFeeAccumulatorPosition(s.Ctx, poolId, DefaultLowerTick, DefaultUpperTick, DefaultPositionId, DefaultLiquidityAmt)
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionFeeAccumulator(s.Ctx, poolId, DefaultLowerTick, DefaultUpperTick, DefaultPositionId, DefaultLiquidityAmt)
 			s.Require().NoError(err)
 
 			// Imaginary fee charge #2.
@@ -1311,7 +1304,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition_UpdatingPositio
 			}
 
 			// InitOrUpdateFeeAccumulatorPosition # 2 lower tick to upper tick with a different position id.
-			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateFeeAccumulatorPosition(s.Ctx, poolId, DefaultLowerTick, DefaultUpperTick, DefaultPositionId+1, DefaultLiquidityAmt)
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionFeeAccumulator(s.Ctx, poolId, DefaultLowerTick, DefaultUpperTick, DefaultPositionId+1, DefaultLiquidityAmt)
 			s.Require().NoError(err)
 
 			// Imaginary fee charge #3.
@@ -1320,7 +1313,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition_UpdatingPositio
 			}
 
 			// InitOrUpdateFeeAccumulatorPosition # 3 lower tick to upper tick with the original position id.
-			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateFeeAccumulatorPosition(s.Ctx, poolId, DefaultLowerTick, DefaultUpperTick, DefaultPositionId, DefaultLiquidityAmt)
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionFeeAccumulator(s.Ctx, poolId, DefaultLowerTick, DefaultUpperTick, DefaultPositionId, DefaultLiquidityAmt)
 			s.Require().NoError(err)
 
 			// Imaginary fee charge #4.

@@ -53,7 +53,6 @@ func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.A
 	return accums, nil
 }
 
-// nolint: unused
 // getUptimeAccumulatorValues gets the accumulator values for the supported uptimes for the given poolId
 // Returns error if accumulator for the given poolId does not exist.
 func (k Keeper) getUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sdk.DecCoins, error) {
@@ -70,7 +69,6 @@ func (k Keeper) getUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sd
 	return uptimeValues, nil
 }
 
-// nolint: unused
 // getInitialUptimeGrowthOutsidesForTick returns an array of the initial values of uptime growth outside
 // for each supported uptime for a given tick. This value depends on the tick's location relative to the current tick.
 //
@@ -105,7 +103,6 @@ func (k Keeper) getInitialUptimeGrowthOutsidesForTick(ctx sdk.Context, poolId ui
 	return emptyUptimeValues, nil
 }
 
-// nolint: unused
 // prepareBalancerPoolAsFullRange find the canonical Balancer pool that corresponds to the given CL poolId and,
 // if it exists, adds the number of full range shares it qualifies for to the CL pool uptime accumulators.
 // This is functionally equivalent to treating the Balancer pool shares as a single full range position on the CL pool,
@@ -295,12 +292,12 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 	return totalRewards, nil
 }
 
-// updateUptimeAccumulatorsToNow syncs all uptime accumulators to be up to date.
+// updatePoolUptimeAccumulatorsToNow syncs all uptime accumulators to be up to date for the given pool.
 // Specifically, it gets the time elapsed since the last update and divides it
 // by the qualifying liquidity for each uptime. It then adds this value to the
 // respective accumulator and updates relevant time trackers accordingly.
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
-func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) error {
+func (k Keeper) updatePoolUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) error {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return err
@@ -622,18 +619,27 @@ func (k Keeper) GetUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, lowe
 	return osmoutils.SubDecCoinArrays(globalUptimeValues, uptimeGrowthInside)
 }
 
-// initOrUpdatePositionUptime either adds or updates records for all uptime accumulators `position` qualifies for
+// initOrUpdatePositionUptimeAccumulators either initializes or updates liquidity for uptime position accumulators for every supported uptime.
+// It syncs the uptime accumulators to the current block time. If this is a new position, it creates a new position accumulator for every supported uptime accumulator.
+// If this is an existing position, it updates the existing position accumulator for every supported uptime accumulator.
+// Returns error if:
+// - fails to update global uptime accumulators
+// - fails to get global uptime accumulators
+// - fails to calculate uptime growth inside range
+// - fails to calculate uptime growth outside range
+// - fails to determine if position accumulator is new or existing
+// - fails to create/update position uptime accumulators
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
-func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liquidity sdk.Dec, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId uint64) error {
+func (k Keeper) initOrUpdatePositionUptimeAccumulators(ctx sdk.Context, poolId uint64, liquidity sdk.Dec, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, positionId uint64) error {
 	// We update accumulators _prior_ to any position-related updates to ensure
 	// past rewards aren't distributed to new liquidity. We also update pool's
 	// LastLiquidityUpdate here.
-	err := k.updateUptimeAccumulatorsToNow(ctx, poolId)
+	err := k.updatePoolUptimeAccumulatorsToNow(ctx, poolId)
 	if err != nil {
 		return err
 	}
 
-	// Now update or init records for relevant uptime accumulators
+	// Get uptime accumulators for every supported uptime.
 	uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return err
@@ -649,10 +655,8 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liqui
 
 	// Loop through uptime accums for all supported uptimes on the pool and init or update position's records
 	positionName := string(types.KeyPositionId(positionId))
-	for uptimeIndex := range types.SupportedUptimes {
-		curUptimeAccum := uptimeAccumulators[uptimeIndex]
-
-		// If a record does not exist for this uptime accumulator for the given position, create a new position.
+	for uptimeIndex, curUptimeAccum := range uptimeAccumulators {
+		// If a record does not exist for this uptime accumulator, create a new position.
 		// Otherwise, add to existing record.
 		recordExists, err := curUptimeAccum.HasPosition(positionName)
 		if err != nil {
@@ -660,6 +664,11 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liqui
 		}
 
 		if !recordExists {
+			// Liquidity cannot be negative for a new position
+			if !liquidityDelta.IsPositive() {
+				return types.NonPositiveLiquidityForNewPositionError{LiquidityDelta: liquidityDelta, PositionId: positionId}
+			}
+
 			// Since the position should only be entitled to uptime growth within its range, we checkpoint globalUptimeGrowthInsideRange as
 			// its accumulator's init value. During the claiming (or, equivalently, position updating) process, we ensure that incentives are
 			// not overpaid.
@@ -687,7 +696,13 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liqui
 }
 
 // prepareAccumAndClaimRewards claims and returns the rewards that `positionKey` is entitled to, updating the accumulator's value before
-// and after claiming to ensure that rewards are never over distributed.
+// and after claiming to ensure that rewards are never overdistributed.
+// CONTRACT: position accumulator value prior to this call is equal to the growth inside the position at the time of last update.
+// Returns error if:
+// - fails to prepare position accumulator
+// - fails to claim rewards
+// - fails to check if position record exists
+// - fails to update position accumulator with the current growth inside the position
 func prepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) (sdk.Coins, sdk.DecCoins, error) {
 	// Set the position's accumulator value to it's initial value at creation time plus the growth outside at this moment.
 	err := preparePositionAccumulator(accum, positionKey, growthOutside)
@@ -709,8 +724,11 @@ func prepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey stri
 
 	// If position still exists, we update the position's accumulator value to be the current accumulator value minus the growth outside.
 	if hasPosition {
-		customAccumulatorValue := accum.GetValue().Sub(growthOutside)
-		err := accum.SetPositionCustomAcc(positionKey, customAccumulatorValue)
+		// The position accumulator value must always equal to the growth inside at the time of last update.
+		// Since this is the time we update the accumulator, we must subtract the growth outside from the global accumulator value
+		// to get growth inside at the current block time.
+		currentGrowthInsideForPosition := accum.GetValue().Sub(growthOutside)
+		err := accum.SetPositionCustomAcc(positionKey, currentGrowthInsideForPosition)
 		if err != nil {
 			return sdk.Coins{}, sdk.DecCoins{}, err
 		}
@@ -767,7 +785,8 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 		return sdk.Coins{}, sdk.Coins{}, err
 	}
 
-	if err := k.updateUptimeAccumulatorsToNow(ctx, position.PoolId); err != nil {
+	err = k.updatePoolUptimeAccumulatorsToNow(ctx, position.PoolId)
+	if err != nil {
 		return sdk.Coins{}, sdk.Coins{}, err
 	}
 
@@ -982,7 +1001,7 @@ func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 	}
 
 	// Sync global uptime accumulators to current blocktime to ensure consistency in reward emissions
-	err = k.updateUptimeAccumulatorsToNow(ctx, poolId)
+	err = k.updatePoolUptimeAccumulatorsToNow(ctx, poolId)
 	if err != nil {
 		return types.IncentiveRecord{}, err
 	}

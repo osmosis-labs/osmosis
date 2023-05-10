@@ -427,6 +427,36 @@ type MsgCollectFeesResponse struct {
 }
 ```
 
+### `MsgFungifyChargedPositions`
+
+This message allows fungifying the fully charged unlocked positions belonging to the same owner
+and located in the same tick range.
+MsgFungifyChargedPosition takes in a list of positionIds and combines them into a single position.
+It validates that all positions belong to the same owner, are in the same ticks and are fully charged.
+Fails if not. Otherwise, it creates a completely new position P. P's liquidity equals to the sum of all
+liquidities of positions given by positionIds. The uptime of the join time of the new position equals
+to current block time - max authorized uptime duration (to signify that it is fully charged).
+The previous positions are deleted from state. Prior to deleting, the rewards are claimed.
+The old position's unclaimed rewards are transferred to the new position.
+The new position ID is returned.
+
+```go
+type MsgFungifyChargedPositions struct {
+ PositionIds    []uint64
+ Sender         string
+}
+```
+
+- **Response**
+
+On successful response, the new position id is returned.
+
+```go
+type MsgFungifyChargedPositionsResponse struct {
+ NewPositionId uint64
+}
+```
+
 ## Relationship to Pool Manager Module
 
 ### Pool Creation

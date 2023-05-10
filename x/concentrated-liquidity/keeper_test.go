@@ -160,7 +160,7 @@ func (s *KeeperTestSuite) initializeTick(ctx sdk.Context, currentTick int64, tic
 
 // initializeFeeAccumulatorPositionWithLiquidity initializes fee accumulator position with given parameters and updates it with given liquidity.
 func (s *KeeperTestSuite) initializeFeeAccumulatorPositionWithLiquidity(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidity sdk.Dec) {
-	err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId, liquidity)
+	err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionFeeAccumulator(ctx, poolId, lowerTick, upperTick, positionId, liquidity)
 	s.Require().NoError(err)
 }
 

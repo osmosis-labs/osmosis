@@ -16,11 +16,14 @@ const (
 )
 
 var (
-	EmptyCoins           = emptyCoins
-	HundredFooCoins      = sdk.NewDecCoin("foo", sdk.NewInt(100))
-	HundredBarCoins      = sdk.NewDecCoin("bar", sdk.NewInt(100))
-	TwoHundredFooCoins   = sdk.NewDecCoin("foo", sdk.NewInt(200))
-	TwoHundredBarCoins   = sdk.NewDecCoin("bar", sdk.NewInt(200))
+	EmptyCoins         = emptyCoins
+	HundredFooCoins    = sdk.NewDecCoin("foo", sdk.NewInt(100))
+	HundredBarCoins    = sdk.NewDecCoin("bar", sdk.NewInt(100))
+	TwoHundredFooCoins = sdk.NewDecCoin("foo", sdk.NewInt(200))
+	TwoHundredBarCoins = sdk.NewDecCoin("bar", sdk.NewInt(200))
+	// TODO: this is incorrect. Should be grabbing from
+	// authorized params instead. Must verify that all tests still make sense.
+	// https://github.com/osmosis-labs/osmosis/issues/5039
 	FullyChargedDuration = types.SupportedUptimes[len(types.SupportedUptimes)-1]
 )
 
@@ -145,8 +148,8 @@ func (k Keeper) CreateFeeAccumulator(ctx sdk.Context, poolId uint64) error {
 	return k.createFeeAccumulator(ctx, poolId)
 }
 
-func (k Keeper) InitOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidity sdk.Dec) error {
-	return k.initOrUpdateFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId, liquidity)
+func (k Keeper) InitOrUpdatePositionFeeAccumulator(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidity sdk.Dec) error {
+	return k.initOrUpdatePositionFeeAccumulator(ctx, poolId, lowerTick, upperTick, positionId, liquidity)
 }
 
 func (k Keeper) GetFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {
@@ -212,7 +215,7 @@ func CalcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 }
 
 func (k Keeper) UpdateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) error {
-	return k.updateUptimeAccumulatorsToNow(ctx, poolId)
+	return k.updatePoolUptimeAccumulatorsToNow(ctx, poolId)
 }
 
 func (k Keeper) SetIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) error {
@@ -227,12 +230,12 @@ func (k Keeper) GetInitialUptimeGrowthOutsidesForTick(ctx sdk.Context, poolId ui
 	return k.getInitialUptimeGrowthOutsidesForTick(ctx, poolId, tick)
 }
 
-func (k Keeper) GetAllIncentiveRecordsForUptime(ctx sdk.Context, poolId uint64, minUptime time.Duration) ([]types.IncentiveRecord, error) {
-	return k.getAllIncentiveRecordsForUptime(ctx, poolId, minUptime)
+func (k Keeper) InitOrUpdatePositionUptimeAccumulators(ctx sdk.Context, poolId uint64, position sdk.Dec, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, positionId uint64) error {
+	return k.initOrUpdatePositionUptimeAccumulators(ctx, poolId, position, owner, lowerTick, upperTick, liquidityDelta, positionId)
 }
 
-func (k Keeper) InitOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, position sdk.Dec, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId uint64) error {
-	return k.initOrUpdatePositionUptime(ctx, poolId, position, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
+func (k Keeper) GetAllIncentiveRecordsForUptime(ctx sdk.Context, poolId uint64, minUptime time.Duration) ([]types.IncentiveRecord, error) {
+	return k.getAllIncentiveRecordsForUptime(ctx, poolId, minUptime)
 }
 
 func (k Keeper) CollectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, sdk.Coins, error) {
