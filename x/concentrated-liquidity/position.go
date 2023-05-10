@@ -668,6 +668,8 @@ func (k Keeper) PositionHasActiveUnderlyingLock(ctx sdk.Context, positionId uint
 	if lockIsMature {
 		return false, lockId, nil
 	}
+
+	// if the lock id <> position id mapping exists, but the lock is not matured, we consider the lock to have active underlying lock.
 	return true, lockId, nil
 }
 

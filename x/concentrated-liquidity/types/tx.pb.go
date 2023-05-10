@@ -939,6 +939,11 @@ const _ = grpc.SupportPackageIsVersion4
 type MsgClient interface {
 	CreatePosition(ctx context.Context, in *MsgCreatePosition, opts ...grpc.CallOption) (*MsgCreatePositionResponse, error)
 	WithdrawPosition(ctx context.Context, in *MsgWithdrawPosition, opts ...grpc.CallOption) (*MsgWithdrawPositionResponse, error)
+	// AddToPosition attempts to add amount0Added and amount1Added to a position
+	// with the given position id.
+	// Due backwards-compatibility with future implementations of charging, this
+	// function deletes the old position and creates a new one with the resulting
+	// amount after addition.
 	AddToPosition(ctx context.Context, in *MsgAddToPosition, opts ...grpc.CallOption) (*MsgAddToPositionResponse, error)
 	CollectFees(ctx context.Context, in *MsgCollectFees, opts ...grpc.CallOption) (*MsgCollectFeesResponse, error)
 	CollectIncentives(ctx context.Context, in *MsgCollectIncentives, opts ...grpc.CallOption) (*MsgCollectIncentivesResponse, error)
@@ -1021,6 +1026,11 @@ func (c *msgClient) FungifyChargedPositions(ctx context.Context, in *MsgFungifyC
 type MsgServer interface {
 	CreatePosition(context.Context, *MsgCreatePosition) (*MsgCreatePositionResponse, error)
 	WithdrawPosition(context.Context, *MsgWithdrawPosition) (*MsgWithdrawPositionResponse, error)
+	// AddToPosition attempts to add amount0Added and amount1Added to a position
+	// with the given position id.
+	// Due backwards-compatibility with future implementations of charging, this
+	// function deletes the old position and creates a new one with the resulting
+	// amount after addition.
 	AddToPosition(context.Context, *MsgAddToPosition) (*MsgAddToPositionResponse, error)
 	CollectFees(context.Context, *MsgCollectFees) (*MsgCollectFeesResponse, error)
 	CollectIncentives(context.Context, *MsgCollectIncentives) (*MsgCollectIncentivesResponse, error)
