@@ -76,25 +76,20 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		feePositionKey := types.KeyFeePositionAccumulator(positionWrapper.Position.PositionId)
 
+		feePositionKey := types.KeyFeePositionAccumulator(positionWrapper.Position.PositionId)
 		k.initOrUpdateAccumPosition(ctx, feeAccumObject, positionWrapper.FeeAccumRecord.InitAccumValue, feePositionKey, positionWrapper.FeeAccumRecord.NumShares, positionWrapper.FeeAccumRecord.UnclaimedRewards, positionWrapper.FeeAccumRecord.Options)
+
 		uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, positionWrapper.Position.PoolId)
 		if err != nil {
 			panic(err)
 		}
+
 		positionName := string(types.KeyPositionId(positionWrapper.Position.PositionId))
-
-		for uptimeIndex := range types.SupportedUptimes {
-			accumRecord, err := uptimeAccumulators[uptimeIndex].GetPosition(positionName)
-			if err != nil {
-				panic(err)
-			}
-
-			k.initOrUpdateAccumPosition(ctx, uptimeAccumulators[uptimeIndex], accumRecord.InitAccumValue, positionName, accumRecord.NumShares, accumRecord.UnclaimedRewards, accumRecord.Options)
+		for uptimeIndex, uptimeRecord := range positionWrapper.UptimeAccumRecord {
+			k.initOrUpdateAccumPosition(ctx, uptimeAccumulators[uptimeIndex], uptimeRecord.InitAccumValue, positionName, uptimeRecord.NumShares, uptimeRecord.UnclaimedRewards, uptimeRecord.Options)
 
 		}
-
 	}
 }
 
@@ -219,15 +214,17 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 			if err != nil {
 				panic(err)
 			}
+
 			uptimeAccumRecords[uptimeIndex] = append(uptimeAccumRecords[uptimeIndex], accumRecord)
+
+			positionData = append(positionData, genesis.PositionData{
+				LockId:            lockId,
+				Position:          &position,
+				FeeAccumRecord:    feeAccumPositionRecord,
+				UptimeAccumRecord: uptimeAccumRecords[uptimeIndex],
+			})
 		}
 
-		positionData = append(positionData, genesis.PositionData{
-			LockId:            lockId,
-			Position:          &position,
-			FeeAccumRecord:    feeAccumPositionRecord,
-			UptimeAccumRecord: uptimeAccumRecords,
-		})
 	}
 
 	return &genesis.GenesisState{

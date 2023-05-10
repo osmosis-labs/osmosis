@@ -71,38 +71,20 @@ var (
 		Options:          nil,
 	}
 
+	accumRecord = accum.Record{
+		NumShares:        sdk.OneDec(),
+		InitAccumValue:   sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50))),
+		UnclaimedRewards: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(25))),
+		Options:          nil,
+	}
+
 	// five records because we have 5 supportive uptimes
 	testUptimeAccumRecord = []accum.Record{
-		{
-			NumShares:        sdk.OneDec(),
-			InitAccumValue:   sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50))),
-			UnclaimedRewards: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(25))),
-			Options:          nil,
-		},
-		{
-			NumShares:        sdk.OneDec(),
-			InitAccumValue:   sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50))),
-			UnclaimedRewards: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(25))),
-			Options:          nil,
-		},
-		{
-			NumShares:        sdk.OneDec(),
-			InitAccumValue:   sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50))),
-			UnclaimedRewards: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(25))),
-			Options:          nil,
-		},
-		{
-			NumShares:        sdk.OneDec(),
-			InitAccumValue:   sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50))),
-			UnclaimedRewards: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(25))),
-			Options:          nil,
-		},
-		{
-			NumShares:        sdk.OneDec(),
-			InitAccumValue:   sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50))),
-			UnclaimedRewards: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(25))),
-			Options:          nil,
-		},
+		accumRecord,
+		accumRecord,
+		accumRecord,
+		accumRecord,
+		accumRecord,
 	}
 )
 
