@@ -1152,7 +1152,10 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 			// store pool interface
 			poolI, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, 1)
 			s.Require().NoError(err)
-			concentratedPool := poolI.(types.ConcentratedPoolExtension)
+			concentratedPool, ok := poolI.(types.ConcentratedPoolExtension)
+			if !ok {
+				s.FailNow("poolI is not a ConcentratedPoolExtension")
+			}
 
 			// fund pool address and user address
 			s.FundAcc(poolI.GetAddress(), sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
@@ -1381,7 +1384,10 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				// validate if pool liquidity has been updated properly
 				poolI, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, tc.poolId)
 				s.Require().NoError(err)
-				concentratedPool := poolI.(types.ConcentratedPoolExtension)
+				concentratedPool, ok := poolI.(types.ConcentratedPoolExtension)
+				if !ok {
+					s.FailNow("poolI is not a ConcentratedPoolExtension")
+				}
 				s.Require().Equal(tc.expectedPoolLiquidity, concentratedPool.GetLiquidity())
 
 				// Test that liquidity update time was succesfully changed.

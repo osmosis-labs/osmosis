@@ -192,11 +192,11 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().NoError(err)
 
 	var (
-		denom0      string  = "uion"
-		denom1      string  = "uosmo"
-		tickSpacing uint64  = 100
-		swapFee             = "0.001" // 0.1%
-		swapFeeDec  sdk.Dec = sdk.MustNewDecFromStr("0.001")
+		denom0             = "uion"
+		denom1             = "uosmo"
+		tickSpacing uint64 = 100
+		swapFee            = "0.001" // 0.1%
+		swapFeeDec         = sdk.MustNewDecFromStr("0.001")
 	)
 
 	// Get the permisionless pool creation parameter.
@@ -1053,12 +1053,34 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	var response map[string]interface{}
 	s.Require().Eventually(func() bool {
 		response, err = nodeA.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
-		totalFunds := response["total_funds"].([]interface{})[0]
-		amount := totalFunds.(map[string]interface{})["amount"].(string)
-		denom := totalFunds.(map[string]interface{})["denom"].(string)
+		if err != nil {
+			return false
+		}
+
+		totalFundsIface, ok := response["total_funds"].([]interface{})
+		if !ok || len(totalFundsIface) == 0 {
+			return false
+		}
+
+		totalFunds, ok := totalFundsIface[0].(map[string]interface{})
+		if !ok {
+			return false
+		}
+
+		amount, ok := totalFunds["amount"].(string)
+		if !ok {
+			return false
+		}
+
+		denom, ok := totalFunds["denom"].(string)
+		if !ok {
+			return false
+		}
+
 		// check if denom contains "uosmo"
-		return err == nil && amount == strconv.FormatInt(transferAmount, 10) && strings.Contains(denom, "ibc")
+		return amount == strconv.FormatInt(transferAmount, 10) && strings.Contains(denom, "ibc")
 	},
+
 		15*time.Second,
 		10*time.Millisecond,
 	)
@@ -1106,8 +1128,11 @@ func (s *IntegrationTestSuite) TestPacketForwarding() {
 		if err != nil {
 			return false
 		}
-		count := response["count"].(float64)
-		return err == nil && count == 0
+		countValue, ok := response["count"].(float64)
+		if !ok {
+			return false
+		}
+		return countValue == 0
 	},
 		15*time.Second,
 		10*time.Millisecond,
