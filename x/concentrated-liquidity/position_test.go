@@ -703,16 +703,16 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 	}
 
 	tests := []struct {
-		name                       string
-		setupFullyChargedPositions []position
-		setupUnchargedPositions    []position
-		lockPositionIds            []uint64
-		positionIdsToMigrate       []uint64
-		accountCallingMigration    sdk.AccAddress
-		unlockBeforeBlockTimeMs    time.Duration
-		expectedNewPositionId      uint64
-		expectedErr                error
-		doesValidatePass           bool
+		name                              string
+		setupFullyChargedPositions        []position
+		setupUnchargedPositions           []position
+		lockPositionIds                   []uint64
+		positionIdsToMigrate              []uint64
+		accountCallingMigration           sdk.AccAddress
+		unlockBeforeBlockTimeMilliseconds time.Duration //nolint:stylecheck // writing out the unit of measure for the time makes this clearer
+		expectedNewPositionId             uint64
+		expectedErr                       error
+		doesValidatePass                  bool
 	}{
 		{
 			name: "Happy path: Fungify three fully charged positions",
@@ -813,8 +813,8 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			accountCallingMigration: defaultAddress,
 			// Subtracting one millisecond from the block time (when it's supposed to be unlocked
 			// by default, makes the lock mature)
-			unlockBeforeBlockTimeMs: time.Millisecond * -1,
-			expectedNewPositionId:   4,
+			unlockBeforeBlockTimeMilliseconds: time.Millisecond * -1,
+			expectedNewPositionId:             4,
 		},
 	}
 
@@ -848,7 +848,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			// See increases in the test below.
 			// The reason we double testFullChargeDurationis is because that is by how much we increase block time in total
 			// to set up the fully charged positions.
-			lockDuration := testFullChargeDuration + testFullChargeDuration + test.unlockBeforeBlockTimeMs
+			lockDuration := testFullChargeDuration + testFullChargeDuration + test.unlockBeforeBlockTimeMilliseconds
 			for _, pos := range test.setupFullyChargedPositions {
 				var (
 					liquidityCreated sdk.Dec

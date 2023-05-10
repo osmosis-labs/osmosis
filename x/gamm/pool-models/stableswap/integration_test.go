@@ -31,7 +31,7 @@ func (suite *TestSuite) TestSetScalingFactors() {
 	suite.SetupTest()
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address())
-	nextPoolId := suite.App.GAMMKeeper.GetNextPoolId(suite.Ctx)
+	nextPoolId := suite.App.GAMMKeeper.GetNextPoolId(suite.Ctx) //nolint:staticcheck // we're using the deprecated call for testing
 	defaultCreatePoolMsg := *baseCreatePoolMsgGen(addr1)
 	defaultCreatePoolMsg.ScalingFactorController = defaultCreatePoolMsg.Sender
 	defaultAdjustSFMsg := stableswap.NewMsgStableSwapAdjustScalingFactors(defaultCreatePoolMsg.Sender, nextPoolId, []uint64{1, 1})
