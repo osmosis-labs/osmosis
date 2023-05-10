@@ -726,10 +726,6 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 			swapFee:  sdk.ZeroDec(),
 			expError: false,
 		},
-		// TODO: Add test cases here, where they're off 1-1 ratio
-		// * (we just need to verify that the further off they are, further slippage is)
-		// * Add test cases with non-zero swap fee.
-		// looks like its really an error due to slippage at limit
 		"trade hits max pool capacity for asset": {
 			poolAssets: sdk.NewCoins(
 				sdk.NewInt64Coin("foo", 9_999_999_998),
@@ -759,6 +755,30 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 			),
 			swapFee:  sdk.ZeroDec(),
 			expError: true,
+		},
+		"non-zero swap fee": {
+			poolAssets:            twoEvenStablePoolAssets,
+			scalingFactors:        defaultTwoAssetScalingFactors,
+			tokenIn:               sdk.NewCoins(sdk.NewInt64Coin("foo", 100)),
+			expectedTokenOut:      sdk.NewInt64Coin("bar", 98),
+			expectedPoolLiquidity: twoEvenStablePoolAssets.Add(sdk.NewInt64Coin("foo", 100)).Sub(sdk.NewCoins(sdk.NewInt64Coin("bar", 98))),
+			swapFee:               sdk.NewDecWithPrec(1, 2),
+			expError:              false,
+		},
+		"100_000:1 scaling factor ratio, further slippage is": {
+			poolAssets: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 10_000_000_000),
+				sdk.NewInt64Coin("bar", 100_000),
+			),
+			scalingFactors:   []uint64{100_000, 1},
+			tokenIn:          sdk.NewCoins(sdk.NewInt64Coin("foo", 9_900_000_000)),
+			expectedTokenOut: sdk.NewInt64Coin("bar", 87_310),
+			expectedPoolLiquidity: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 10_000_000_000+9_900_000_000),
+				sdk.NewInt64Coin("bar", 100_000-87_310),
+			),
+			swapFee:  sdk.ZeroDec(),
+			expError: false,
 		},
 	}
 
