@@ -43,6 +43,7 @@ import (
 	"github.com/joho/godotenv"
 
 	osmosis "github.com/osmosis-labs/osmosis/v15/app"
+	"github.com/cosmos/cosmos-sdk/client/config"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the
@@ -79,7 +80,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			if err != nil {
 				return err
 			}
-			initClientCtx, err = ReadFromClientConfig(initClientCtx)
+			initClientCtx, err = config.ReadFromClientConfig(initClientCtx)
 			if err != nil {
 				return err
 			}

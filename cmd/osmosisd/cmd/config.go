@@ -25,6 +25,7 @@ type OsmosisCustomClient struct {
 	Gas            string `mapstructure:"gas" json:"gas"`
 	GasPrices      string `mapstructure:"gas-prices" json:"gas-prices"`
 	GasAdjustment  string `mapstructure:"gas-adjustment" json:"gas-adjustment"`
+	Fees           string `mapstructure:"fees" json:"fees"`
 }
 
 // Override sdk ConfigCmd func
@@ -47,11 +48,9 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("couldn't get client config: %v", err)
 	}
 
-	occ := *conf
-
 	switch len(args) {
 	case 0:
-		s, err := json.MarshalIndent(occ, "", "\t")
+		s, err := json.MarshalIndent(conf, "", "\t")
 		if err != nil {
 			return err
 		}
@@ -74,11 +73,13 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		case flags.FlagBroadcastMode:
 			cmd.Println(conf.BroadcastMode)
 		case flags.FlagGas:
-			cmd.Println(occ.Gas)
+			cmd.Println(conf.Gas)
 		case flags.FlagGasPrices:
-			cmd.Println(occ.GasPrices)
+			cmd.Println(conf.GasPrices)
 		case flags.FlagGasAdjustment:
-			cmd.Println(occ.GasAdjustment)
+			cmd.Println(conf.GasAdjustment)
+		case flags.FlagFees:
+			cmd.Println(conf.Fees)
 		default:
 			err := errUnknownConfigKey(key)
 			return fmt.Errorf("couldn't get the value for the key: %v, error:  %v", key, err)
@@ -90,27 +91,29 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 
 		switch key {
 		case flags.FlagChainID:
-			occ.ChainID = value
+			conf.ChainID = value
 		case flags.FlagKeyringBackend:
-			occ.KeyringBackend = value
+			conf.KeyringBackend = value
 		case tmcli.OutputFlag:
-			occ.Output = value
+			conf.Output = value
 		case flags.FlagNode:
-			occ.Node = value
+			conf.Node = value
 		case flags.FlagBroadcastMode:
-			occ.BroadcastMode = value
+			conf.BroadcastMode = value
 		case flags.FlagGas:
-			occ.Gas = value
+			conf.Gas = value
 		case flags.FlagGasPrices:
-			occ.GasPrices = value
+			conf.GasPrices = value
 		case flags.FlagGasAdjustment:
-			occ.GasAdjustment = value
+			conf.GasAdjustment = value
+		case flags.FlagFees:
+			conf.Fees = value
 		default:
 			return errUnknownConfigKey(key)
 		}
 
 		confFile := filepath.Join(configPath, "client.toml")
-		if err := writeConfigToFile(confFile, &occ); err != nil {
+		if err := writeConfigToFile(confFile, conf); err != nil {
 			return fmt.Errorf("could not write client config to the file: %v", err)
 		}
 
@@ -148,6 +151,7 @@ gas = "{{ .Gas }}"
 # Price per unit of gas (ex: 0.005uosmo)
 gas-prices = "{{ .GasPrices }}"
 gas-adjustment = "{{ .GasAdjustment }}"
+fees = "{{ .Fees }}"
 `
 
 // writeConfigToFile parses defaultConfigTemplate, renders config using the template and writes it to
@@ -201,61 +205,37 @@ func SetCustomEnvVariablesFromClientToml(ctx client.Context) {
 	if err := viper.ReadInConfig(); err != nil {
 		panic(err)
 	}
+
+	setEnvFromConfig := func(key string, envVar string) {
+		// if the user sets the env key manually, then we don't want to override it
+		if os.Getenv(envVar) != "" {
+			return
+		}
+
+		// reads from the config file
+		val := viper.GetString(key)
+		if val != "" {
+			// Sets the env for this instance of the app only.
+			os.Setenv(envVar, val)
+		}
+	}
+
+	// Bound custom flags to environment variable
+	// gas
+	setEnvFromConfig("gas", "OSMOSISD_GAS")
+	setEnvFromConfig("gas-prices", "OSMOSISD_GAS_PRICES")
+	setEnvFromConfig("gas-adjustment", "OSMOSISD_GAS_ADJUSTMENT")
+	// fees
+	setEnvFromConfig("fees", "OSMOSISD_FEES")
 }
 
 func errUnknownConfigKey(key string) error {
 	return fmt.Errorf("unknown configuration key: %q", key)
 }
 
-// ReadFromClientConfig reads values from client.toml file and updates them in client Context
-func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
-	configPath := filepath.Join(ctx.HomeDir, "config")
-	configFilePath := filepath.Join(configPath, "client.toml")
-	conf := defaultClientConfig()
-
-	// if config.toml file does not exist we create it and write default ClientConfig values into it.
-	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
-		if err := ensureConfigPath(configPath); err != nil {
-			return ctx, fmt.Errorf("couldn't make client config: %v", err)
-		}
-
-		if err := writeConfigToFile(configFilePath, conf); err != nil {
-			return ctx, fmt.Errorf("could not write client config to the file: %v", err)
-		}
-	}
-
-	conf, err := getClientConfig(configPath, ctx.Viper)
-	if err != nil {
-		return ctx, fmt.Errorf("couldn't get client config: %v", err)
-	}
-	// we need to update KeyringDir field on Client Context first cause it is used in NewKeyringFromBackend
-	ctx = ctx.WithOutputFormat(conf.Output).
-		WithChainID(conf.ChainID).
-		WithKeyringDir(ctx.HomeDir)
-
-	keyring, err := client.NewKeyringFromBackend(ctx, conf.KeyringBackend)
-	if err != nil {
-		return ctx, fmt.Errorf("couldn't get key ring: %v", err)
-	}
-
-	ctx = ctx.WithKeyring(keyring)
-
-	// https://github.com/cosmos/cosmos-sdk/issues/8986
-	client, err := client.NewClientFromNode(conf.Node)
-	if err != nil {
-		return ctx, fmt.Errorf("couldn't get client from nodeURI: %v", err)
-	}
-
-	ctx = ctx.WithNodeURI(conf.Node).
-		WithClient(client).
-		WithBroadcastMode(conf.BroadcastMode)
-
-	return ctx, nil
-}
-
 // defaultClientConfig returns the reference to ClientConfig with default values.
 func defaultClientConfig() *OsmosisCustomClient {
-	return &OsmosisCustomClient{"", "os", "text", "tcp://localhost:26657", "sync", "", "", ""}
+	return &OsmosisCustomClient{"", "os", "text", "tcp://localhost:26657", "sync", "", "", "", ""}
 }
 
 // ensureConfigPath creates a directory configPath if it does not exist
