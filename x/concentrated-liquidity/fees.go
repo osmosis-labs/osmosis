@@ -309,7 +309,7 @@ func preparePositionAccumulator(accumulator accum.AccumulatorObject, positionKey
 		return err
 	}
 
-	// The reason for adding the growth outside to the position's initial accumulator value is as follows:
+	// The reason for adding the growth outside to the position's initial accumulator value per share is as follows:
 	// - At any time in-between position updates or claiming, a position must have its InitAccumValue be equal to growth_inside_at_{last time of update}.
 	// - Prior to claiming (the logic below), the position's accumulator is updated to:
 	//   growth_inside_at_{last time of update} + growth_outside_at_{current block time of update}
