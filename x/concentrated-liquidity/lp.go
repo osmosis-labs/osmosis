@@ -30,7 +30,7 @@ const noUnderlyingLockId = uint64(0)
 // - the liquidity delta is zero
 // - the amount0 or amount1 returned from the position update is less than the given minimums
 // - the pool or user does not have enough tokens to satisfy the requested amount
-func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (uint64, sdk.Int, sdk.Int, sdk.Dec, time.Time, error) {
+func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (uint64, sdk.Int, sdk.Int, sdk.Dec, time.Time, error) {
 	// Use the current blockTime as the position's join time.
 	joinTime := ctx.BlockTime()
 
@@ -42,6 +42,11 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	// Check if the provided tick range is valid according to the pool's tick spacing and module parameters.
 	if err := validateTickRangeIsValid(pool.GetTickSpacing(), lowerTick, upperTick); err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
+	}
+	amount0Desired := tokensProvided.AmountOf(pool.GetToken0())
+	amount1Desired := tokensProvided.AmountOf(pool.GetToken1())
+	if amount0Desired.IsZero() && amount1Desired.IsZero() {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, errors.New("cannot create a position with zero amounts of both pool tokens")
 	}
 
 	// Transform the provided ticks into their corresponding sqrtPrices.
@@ -284,7 +289,14 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 	}
 
 	// Create new position with updated liquidity.
-	newPositionId, actualAmount0, actualAmount1, _, _, err := k.createPosition(ctx, position.PoolId, owner, amount0Withdrawn.Add(amount0Added), amount1Withdrawn.Add(amount1Added), amount0Withdrawn, amount1Withdrawn, position.LowerTick, position.UpperTick)
+	amount0Desired := amount0Withdrawn.Add(amount0Added)
+	amount1Desired := amount1Withdrawn.Add(amount1Added)
+	pool, err := k.GetPoolFromPoolIdAndConvertToConcentrated(ctx, position.PoolId)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, err
+	}
+	tokensProvided := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), amount0Desired), sdk.NewCoin(pool.GetToken1(), amount1Desired))
+	newPositionId, actualAmount0, actualAmount1, _, _, err := k.createPosition(ctx, position.PoolId, owner, tokensProvided, amount0Withdrawn, amount1Withdrawn, position.LowerTick, position.UpperTick)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
 	}

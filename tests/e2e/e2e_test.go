@@ -242,15 +242,15 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	address3 := chainANode.CreateWalletAndFund("addr3", fundTokens)
 
 	// Create 2 positions for address1: overlap together, overlap with 2 address3 positions
-	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
-	chainANode.CreateConcentratedPosition(address1, "[-40000]", "120000", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
+	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
+	chainANode.CreateConcentratedPosition(address1, "[-40000]", "120000", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
 
 	// Create 1 position for address2: does not overlap with anything, ends at maximum
-	chainANode.CreateConcentratedPosition(address2, "220000", fmt.Sprintf("%d", cltypes.MaxTick), fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
+	chainANode.CreateConcentratedPosition(address2, "220000", fmt.Sprintf("%d", cltypes.MaxTick), fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
 
 	// Create 2 positions for address3: overlap together, overlap with 2 address1 positions, one position starts from minimum
-	chainANode.CreateConcentratedPosition(address3, "[-160000]", "[-20000]", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
-	chainANode.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", cltypes.MinTick), "140000", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
+	chainANode.CreateConcentratedPosition(address3, "[-160000]", "[-20000]", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
+	chainANode.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", cltypes.MinTick), "140000", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
 
 	// Get newly created positions
 	positionsAddress1 := chainANode.QueryConcentratedPositions(address1)
