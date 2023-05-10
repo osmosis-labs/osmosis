@@ -79,18 +79,22 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		feePositionKey := types.KeyFeePositionAccumulator(positionWrapper.Position.PositionId)
 
 		k.initOrUpdateAccumPosition(ctx, feeAccumObject, positionWrapper.FeeAccumRecord.InitAccumValue, feePositionKey, positionWrapper.FeeAccumRecord.NumShares, positionWrapper.FeeAccumRecord.UnclaimedRewards, positionWrapper.FeeAccumRecord.Options)
-		uptimeAccumObject, err := k.GetUptimeAccumulators(ctx, positionWrapper.Position.PoolId)
+		uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, positionWrapper.Position.PoolId)
 		if err != nil {
 			panic(err)
 		}
-		uptimePositionKey := string(types.KeyPositionId(positionWrapper.Position.PositionId))
+		positionName := string(types.KeyPositionId(positionWrapper.Position.PositionId))
 
-		// for each position we initialize all uptime  accumulator
-		for _, uptimeRecord := range positionWrapper.UptimeAccumRecord {
-			for _, uptimeAccum := range uptimeAccumObject {
-				k.initOrUpdateAccumPosition(ctx, uptimeAccum, uptimeRecord.InitAccumValue, uptimePositionKey, uptimeRecord.NumShares, uptimeRecord.UnclaimedRewards, uptimeRecord.Options)
+		for uptimeIndex := range types.SupportedUptimes {
+			accumRecord, err := uptimeAccumulators[uptimeIndex].GetPosition(positionName)
+			if err != nil {
+				panic(err)
 			}
+
+			k.initOrUpdateAccumPosition(ctx, uptimeAccumulators[uptimeIndex], accumRecord.InitAccumValue, positionName, accumRecord.NumShares, accumRecord.UnclaimedRewards, accumRecord.Options)
+
 		}
+
 	}
 }
 
@@ -203,21 +207,19 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		}
 
 		// Retrieve uptime incentive accumulator state for position
-		uptimePositionKey := string(types.KeyPositionId(position.PositionId))
-		uptimeAccumObject, err := k.GetUptimeAccumulators(ctx, position.PoolId)
+		positionName := string(types.KeyPositionId(position.PositionId))
+		uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, position.PoolId)
 		if err != nil {
 			panic(err)
 		}
 
-		var uptimeAccumRecords []accum.Record
-
-		for _, uptimeAccum := range uptimeAccumObject {
-			uptimeAccumPositionRecord, err := uptimeAccum.GetPosition(uptimePositionKey)
+		var uptimeAccumRecords [][]accum.Record
+		for uptimeIndex := range types.SupportedUptimes {
+			accumRecord, err := uptimeAccumulators[uptimeIndex].GetPosition(positionName)
 			if err != nil {
 				panic(err)
 			}
-
-			uptimeAccumRecords = append(uptimeAccumRecords, uptimeAccumPositionRecord)
+			uptimeAccumRecords[uptimeIndex] = append(uptimeAccumRecords[uptimeIndex], accumRecord)
 		}
 
 		positionData = append(positionData, genesis.PositionData{
