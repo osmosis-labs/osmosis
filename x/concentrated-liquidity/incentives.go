@@ -343,17 +343,17 @@ func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 		curUptimeDuration := types.SupportedUptimes[uptimeIndex]
 
 		// Qualifying liquidity is the amount of liquidity that satisfies uptime requirements
-		uptimeAccumTotalShares, err := uptimeAccum.GetTotalShares()
+		qualifyingLiquidity, err := uptimeAccum.GetTotalShares()
 		if err != nil {
 			return err
 		}
 
 		// If there is no share to be incentivized for the current uptime accumulator, we leave it unchanged
-		if uptimeAccumTotalShares.LT(sdk.OneDec()) {
+		if qualifyingLiquidity.LT(sdk.OneDec()) {
 			continue
 		}
 
-		incentivesToAddToCurAccum, updatedPoolRecords, err := calcAccruedIncentivesForAccum(ctx, curUptimeDuration, uptimeAccumTotalShares, timeElapsedSec, poolIncentiveRecords)
+		incentivesToAddToCurAccum, updatedPoolRecords, err := calcAccruedIncentivesForAccum(ctx, curUptimeDuration, qualifyingLiquidity, timeElapsedSec, poolIncentiveRecords)
 		if err != nil {
 			return err
 		}
@@ -418,7 +418,6 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 
 			// if total amount emitted does not exceed remaining rewards,
 			if totalEmittedAmount.LTE(remainingRewards) {
-				// Question: why do we add emitted liquidity "per liquidity" not the entire emitted liquidity?
 				incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
 
 				// Update incentive record to reflect the incentives that were emitted
