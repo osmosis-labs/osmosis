@@ -424,7 +424,7 @@ func (accum AccumulatorObject) GetTotalShares() (sdk.Dec, error) {
 
 // AddToUnclaimedRewards adds the given amount of rewards to the unclaimed rewards
 // for the given position. Returns error if no position exists for the given position name.
-// Returns error if any database errors occur.
+// Returns error if any database errors occur or if neggative rewards are provided.
 func (accum AccumulatorObject) AddToUnclaimedRewards(positionName string, rewards sdk.DecCoins) error {
 	position, err := GetPosition(accum, positionName)
 	if err != nil {
