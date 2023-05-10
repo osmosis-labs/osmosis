@@ -52,7 +52,7 @@ jobs:
           GOWRK=off go build .
         if: env.GIT_DIFF
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: osmosisd ${{ matrix.targetos }} ${{ matrix.arch }}
           path: cmd/osmosisd/osmosisd
