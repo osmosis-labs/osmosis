@@ -4,6 +4,8 @@ import (
 	fmt "fmt"
 
 	errorsmod "cosmossdk.io/errors"
+
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 // x/superfluid module errors.
@@ -50,4 +52,13 @@ type LockOwnerMismatchError struct {
 
 func (e LockOwnerMismatchError) Error() string {
 	return fmt.Sprintf("lock ID %d owner %s does not match provided owner %s.", e.LockId, e.LockOwner, e.ProvidedOwner)
+}
+
+type ConcentratedTickRangeNotFullError struct {
+	ActualLowerTick int64
+	ActualUpperTick int64
+}
+
+func (e ConcentratedTickRangeNotFullError) Error() string {
+	return fmt.Sprintf("position must be full range. Lower tick (%d) must be (%d). Upper tick (%d) must be (%d)", e.ActualLowerTick, e.ActualUpperTick, cltypes.MinTick, cltypes.MaxTick)
 }

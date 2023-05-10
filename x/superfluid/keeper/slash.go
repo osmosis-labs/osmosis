@@ -68,7 +68,7 @@ func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.Synthetic
 
 	// If the slashCoins contains a cl denom, we need to update the underlying cl position to reflect the slash.
 	_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
-		if strings.HasPrefix(lock.Coins[0].Denom, cltypes.ClTokenPrefix) {
+		if strings.HasPrefix(lock.Coins[0].Denom, cltypes.ConcentratedLiquidityTokenPrefix) {
 			// Run prepare logic to get the underlying coins to slash.
 			// We get the pool address here since the underlying coins will be sent directly from the pool to the community pool instead of the lock module account.
 			// Additionally, we update the cl position's state entry to reflect the slash in the position's liquidity.
@@ -109,6 +109,9 @@ func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptyp
 	if err != nil {
 		return sdk.AccAddress{}, sdk.Coins{}, err
 	}
+
+	// Q: this would make the amounts calculated in alculateUnderlyingAssetsFromPosition
+	// be rounded down. Is this fine? I think yes, should be minimal impact.
 	slashAmtNeg := slashAmt.Neg()
 
 	// If slashAmt is not negative, return an error
@@ -121,7 +124,7 @@ func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptyp
 	positionForCalculatingUnderlying := position
 	positionForCalculatingUnderlying.Liquidity = slashAmt
 
-	concentratedPool, err := k.clk.GetPoolFromPoolIdAndConvertToConcentrated(ctx, position.PoolId)
+	concentratedPool, err := k.clk.GetConcentratedPoolById(ctx, position.PoolId)
 	if err != nil {
 		return sdk.AccAddress{}, sdk.Coins{}, err
 	}

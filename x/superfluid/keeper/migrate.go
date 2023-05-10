@@ -66,7 +66,7 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 
 	// Superfluid undelegate the superfluid delegated position.
 	// This deletes the connection between the lock and the intermediate account, deletes the synthetic lock, and burns the synthetic osmo.
-	intermediateAccount, err := k.SuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), lockId)
+	intermediateAccount, err := k.SuperfluidForceUndelegate(ctx, sender.String(), lockId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
@@ -280,7 +280,7 @@ func (k Keeper) prepareMigration(ctx sdk.Context, sender sdk.AccAddress, lockId 
 	}
 
 	// Get the concentrated pool from the provided ID and type cast it to ConcentratedPoolExtension.
-	concentratedPool, err = k.clk.GetPoolFromPoolIdAndConvertToConcentrated(ctx, poolIdEntering)
+	concentratedPool, err = k.clk.GetConcentratedPoolById(ctx, poolIdEntering)
 	if err != nil {
 		return 0, 0, nil, &lockuptypes.PeriodLock{}, 0, nil, false, false, err
 	}

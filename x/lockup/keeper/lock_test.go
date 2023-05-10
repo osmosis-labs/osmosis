@@ -913,7 +913,7 @@ func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 	// We expect that only non-CL locks (i.e. locks that do not have the CL token prefix) send tokens back to the user's balance when mature. This is because CL tokens get burned after the lock matures.
 	expectedCoins := sdk.NewCoins()
 	for _, coin := range totalCoins {
-		if !strings.HasPrefix(coin.Denom, cltypes.ClTokenPrefix) {
+		if !strings.HasPrefix(coin.Denom, cltypes.ConcentratedLiquidityTokenPrefix) {
 			expectedCoins = expectedCoins.Add(coin)
 		}
 	}
@@ -1068,7 +1068,7 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn()
 		suite.Require().NoError(err)
 
 		// Refetch the cl pool post full range position creation
-		clPool, err = suite.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(suite.Ctx, clPoolId)
+		clPool, err = suite.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(suite.Ctx, clPoolId)
 		suite.Require().NoError(err)
 
 		clPoolPositionDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPoolId)
@@ -1096,7 +1096,7 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn()
 		position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, positionID)
 		suite.Require().NoError(err)
 
-		concentratedPool, err := suite.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(suite.Ctx, position.PoolId)
+		concentratedPool, err := suite.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(suite.Ctx, position.PoolId)
 		suite.Require().NoError(err)
 
 		tempPositionToCalculateUnderlyingAssets := position

@@ -204,5 +204,10 @@ message MsgAddToConcentratedLiquiditySuperfluidPositionResponse {
     (gogoproto.moretags) = "yaml:\"amount1\"",
     (gogoproto.nullable) = false
   ];
+  string new_liquidity = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"new_liquidity\"",
+    (gogoproto.nullable) = false
+  ];
   uint64 lock_id = 4 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
 }

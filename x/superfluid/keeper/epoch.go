@@ -134,7 +134,7 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 	} else if asset.AssetType == types.SuperfluidAssetTypeConcentratedShare {
 		// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
 		poolId := cltypes.MustGetPoolIdFromShareDenom(asset.Denom)
-		pool, err := k.clk.GetPoolFromPoolIdAndConvertToConcentrated(ctx, poolId)
+		pool, err := k.clk.GetConcentratedPoolById(ctx, poolId)
 		if err != nil {
 			k.Logger(ctx).Error(err.Error())
 			// Pool has unexpectedly removed Osmo from its assets.
@@ -152,6 +152,7 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 			UpperTick: cltypes.MaxTick,
 			Liquidity: fullRangeLiquidity,
 		}
+		// Note that the returned amounts are rounded up. This should be fine as they both are used for calculating the multiplier.
 		asset0, asset1, err := cl.CalculateUnderlyingAssetsFromPosition(ctx, position, pool)
 		if err != nil {
 			k.Logger(ctx).Error(err.Error())
