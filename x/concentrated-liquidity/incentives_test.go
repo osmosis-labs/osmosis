@@ -3738,7 +3738,7 @@ func (s *KeeperTestSuite) TestGetAllIncentiveRecordsForUptime() {
 				curUptimeRecords, err := clKeeper.GetAllIncentiveRecordsForUptime(s.Ctx, poolId, supportedUptime)
 				s.Require().NoError(err)
 
-				retrievedRecordsByUptime = append(retrievedRecordsByUptime, curUptimeRecords...)
+				retrievedRecordsByUptime = append(retrievedRecordsByUptime, curUptimeRecords...) //nolint:makezero // this is a test
 			}
 		})
 	}
