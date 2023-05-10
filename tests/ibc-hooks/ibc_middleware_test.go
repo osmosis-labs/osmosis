@@ -3,10 +3,11 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/tidwall/gjson"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/tidwall/gjson"
 
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 
@@ -48,9 +49,6 @@ type HooksTestSuite struct {
 	pathAB *ibctesting.Path
 	pathAC *ibctesting.Path
 	pathBC *ibctesting.Path
-	pathBA *ibctesting.Path
-	pathCA *ibctesting.Path
-	pathCB *ibctesting.Path
 	// This is used to test cw20s. It will only get assigned in the cw20 test
 	pathCW20 *ibctesting.Path
 }
@@ -321,6 +319,7 @@ func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo string, pr
 
 	// recv in chain a
 	res, err := suite.pathAB.EndpointA.RecvPacketWithResult(packet)
+	suite.Require().NoError(err)
 
 	// get the ack from the chain a's response
 	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
@@ -595,7 +594,8 @@ func (suite *HooksTestSuite) TestAcks() {
 	callbackMemo := fmt.Sprintf(`{"ibc_callback":"%s"}`, addr)
 	// Send IBC transfer with the memo with crosschain-swap instructions
 	transferMsg := NewMsgTransfer(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)), suite.chainA.SenderAccount.GetAddress().String(), addr.String(), "channel-0", callbackMemo)
-	suite.FullSend(transferMsg, AtoB)
+	_, _, _, err := suite.FullSend(transferMsg, AtoB)
+	suite.Require().NoError(err)
 
 	// The test contract will increment the counter for itself every time it receives an ack
 	state := suite.chainA.QueryContract(
@@ -603,12 +603,12 @@ func (suite *HooksTestSuite) TestAcks() {
 		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, addr)))
 	suite.Require().Equal(`{"count":1}`, state)
 
-	suite.FullSend(transferMsg, AtoB)
+	_, _, _, err = suite.FullSend(transferMsg, AtoB)
+	suite.Require().NoError(err)
 	state = suite.chainA.QueryContract(
 		&suite.Suite, addr,
 		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, addr)))
 	suite.Require().Equal(`{"count":2}`, state)
-
 }
 
 func (suite *HooksTestSuite) TestTimeouts() {
@@ -641,7 +641,6 @@ func (suite *HooksTestSuite) TestTimeouts() {
 		&suite.Suite, addr,
 		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, addr)))
 	suite.Require().Equal(`{"count":10}`, state)
-
 }
 
 func (suite *HooksTestSuite) TestSendWithoutMemo() {
@@ -796,17 +795,20 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) (sdk.AccAd
 
 	// Send some token0 tokens from C to B
 	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainC.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String(), "channel-0", "")
-	suite.FullSend(transferMsg, CtoB)
+	_, _, _, err = suite.FullSend(transferMsg, CtoB)
+	suite.Require().NoError(err)
 
 	// Send some token0 tokens from B to A
 	transferMsg = NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(), "channel-0", "")
-	suite.FullSend(transferMsg, BtoA)
+	_, _, _, err = suite.FullSend(transferMsg, BtoA)
+	suite.Require().NoError(err)
 
 	// Send some token0 tokens from C to B to A
 	denomTrace0CB := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", suite.pathBC.EndpointA.ChannelID, "token0"))
 	token0CB := denomTrace0CB.IBCDenom()
 	transferMsg = NewMsgTransfer(sdk.NewCoin(token0CB, sdk.NewInt(2000)), suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(), "channel-0", "")
-	suite.FullSend(transferMsg, BtoA)
+	_, _, _, err = suite.FullSend(transferMsg, BtoA)
+	suite.Require().NoError(err)
 
 	// Denom traces
 	CBAPath := fmt.Sprintf("transfer/%s/transfer/%s", suite.pathAB.EndpointA.ChannelID, suite.pathBC.EndpointA.ChannelID)
@@ -1064,7 +1066,8 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCTest() {
 	_, crosschainAddr := suite.SetupCrosschainSwaps(ChainA)
 	// Send some token0 tokens to B so that there are ibc tokens to send to A and crosschain-swap
 	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
-	suite.FullSend(transferMsg, AtoB)
+	_, _, _, err := suite.FullSend(transferMsg, AtoB)
+	suite.Require().NoError(err)
 
 	// Calculate the names of the tokens when swapped via IBC
 	denomTrace0 := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "token0"))
@@ -1114,7 +1117,8 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 	_, crosschainAddr := suite.SetupCrosschainSwaps(ChainA)
 	// Send some token0 tokens to B so that there are ibc tokens to send to A and crosschain-swap
 	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
-	suite.FullSend(transferMsg, AtoB)
+	_, _, _, err := suite.FullSend(transferMsg, AtoB)
+	suite.Require().NoError(err)
 
 	// Calculate the names of the tokens when swapped via IBC
 	denomTrace0 := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "token0"))
@@ -1200,7 +1204,6 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 	// Calling recovery again should fail
 	_, err = contractKeeper.Execute(suite.chainA.GetContext(), crosschainAddr, recoverAddr2, []byte(recoverMsg), sdk.NewCoins())
 	suite.Require().Error(err)
-
 }
 
 // CrosschainSwapsViaIBCBadSwap tests that if the crosschain-swap fails, the tokens are returned to the sender
@@ -1210,7 +1213,8 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadSwap() {
 	_, crosschainAddr := suite.SetupCrosschainSwaps(ChainA)
 	// Send some token0 tokens to B so that there are ibc tokens to send to A and crosschain-swap
 	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
-	suite.FullSend(transferMsg, AtoB)
+	_, _, _, err := suite.FullSend(transferMsg, AtoB)
+	suite.Require().NoError(err)
 
 	// Calculate the names of the tokens when swapped via IBC
 	denomTrace0 := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "token0"))
@@ -1252,7 +1256,8 @@ func (suite *HooksTestSuite) TestBadCrosschainSwapsNextMemoMessages() {
 	_, crosschainAddr := suite.SetupCrosschainSwaps(ChainA)
 	// Send some token0 tokens to B so that there are ibc tokens to send to A and crosschain-swap
 	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(20000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
-	suite.FullSend(transferMsg, AtoB)
+	_, _, _, err := suite.FullSend(transferMsg, AtoB)
+	suite.Require().NoError(err)
 
 	// Calculate the names of the tokens when swapped via IBC
 	denomTrace0 := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "token0"))
@@ -1363,7 +1368,6 @@ func (suite *HooksTestSuite) SetupIBCRouteOnChain(swaprouterAddr, owner sdk.AccA
 	suite.Require().NoError(err)
 	err = suite.pathAB.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
-
 }
 
 func (suite *HooksTestSuite) SetupIBCSimpleRouteOnChain(swaprouterAddr, owner sdk.AccAddress, poolId uint64, chainName Chain, denom1, denom2 string) {
@@ -1390,7 +1394,6 @@ func (suite *HooksTestSuite) SetupIBCSimpleRouteOnChain(swaprouterAddr, owner sd
 	suite.Require().NoError(err)
 	err = suite.pathAB.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
-
 }
 
 // TestCrosschainForwardWithMemo tests the that the next_memo field is correctly forwarded to the other chain on the IBC transfer.
@@ -1403,9 +1406,11 @@ func (suite *HooksTestSuite) TestCrosschainForwardWithMemo() {
 	swaprouterAddrB, crosschainAddrB := suite.SetupCrosschainSwaps(ChainB)
 	// Send some token0 and token1 tokens to B so that there are ibc token0 to send to A and crosschain-swap, and token1 to create the pool
 	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(500000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
-	suite.FullSend(transferMsg, AtoB)
+	_, _, _, err := suite.FullSend(transferMsg, AtoB)
+	suite.Require().NoError(err)
 	transferMsg1 := NewMsgTransfer(sdk.NewCoin("token1", sdk.NewInt(500000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
-	suite.FullSend(transferMsg1, AtoB)
+	_, _, _, err = suite.FullSend(transferMsg1, AtoB)
+	suite.Require().NoError(err)
 	denom := suite.GetIBCDenom(ChainA, ChainB, "token1")
 	poolId := suite.CreateIBCNativePoolOnChain(ChainB, denom)
 	suite.SetupIBCRouteOnChain(swaprouterAddrB, suite.chainB.SenderAccount.GetAddress(), poolId, ChainB, denom)
@@ -1418,7 +1423,7 @@ func (suite *HooksTestSuite) TestCrosschainForwardWithMemo() {
 	fmt.Println("receiver now has: ", balanceToken0IBCBefore)
 	suite.Require().Equal(int64(0), balanceToken0IBCBefore.Amount.Int64())
 
-	//suite.Require().Equal(int64(0), balanceToken1.Amount.Int64())
+	// suite.Require().Equal(int64(0), balanceToken1.Amount.Int64())
 
 	// Generate swap instructions for the contract
 	//
@@ -1479,7 +1484,8 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCMultiHop() {
 		suite.pathAC.EndpointA.ChannelID,
 		"",
 	)
-	suite.FullSend(transferMsg, AtoC)
+	_, _, _, err := suite.FullSend(transferMsg, AtoC)
+	suite.Require().NoError(err)
 
 	token0AC := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", suite.pathAC.EndpointB.ChannelID, "token0")).IBCDenom()
 	transferMsg = NewMsgTransfer(
@@ -1489,7 +1495,8 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCMultiHop() {
 		suite.pathBC.EndpointB.ChannelID,
 		"",
 	)
-	suite.FullSend(transferMsg, CtoB)
+	_, _, _, err = suite.FullSend(transferMsg, CtoB)
+	suite.Require().NoError(err)
 
 	// Calculate the names of the tokens when sent via IBC
 	ACBPath := fmt.Sprintf("transfer/%s/transfer/%s", suite.pathAC.EndpointB.ChannelID, suite.pathBC.EndpointA.ChannelID)
@@ -1571,7 +1578,6 @@ func (suite *HooksTestSuite) SimpleNativeTransfer(token string, amount sdk.Int, 
 		prevPrefix = strings.TrimLeft(prevPrefix, "/")
 		denom = transfertypes.DenomTrace{Path: prevPrefix, BaseDenom: token}.IBCDenom()
 		prev = toChain
-
 	}
 	return denom
 }
@@ -1788,9 +1794,7 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 
 			receivedTokenAfter := receiverChain.GetOsmosisApp().BankKeeper.GetBalance(receiverChain.GetContext(), tc.receiver.address, tc.receivedToken)
 			suite.Require().True(receivedTokenAfter.Amount.GT(receivedTokenBalance.Amount))
-
 		})
-
 	}
 }
 
@@ -1804,7 +1808,8 @@ func (suite *HooksTestSuite) ExecuteOutpostSwap(initializer, receiverAddr sdk.Ac
 
 	// Send some token0 tokens to B so that there are ibc tokens to send to A and crosschain-swap
 	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
-	suite.FullSend(transferMsg, AtoB)
+	_, _, _, err := suite.FullSend(transferMsg, AtoB)
+	suite.Require().NoError(err)
 
 	// Calculate the names of the tokens when swapped via IBC
 	denomTrace0 := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "token0"))
@@ -1826,7 +1831,7 @@ func (suite *HooksTestSuite) ExecuteOutpostSwap(initializer, receiverAddr sdk.Ac
 	// Call the outpost
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisAppB.WasmKeeper)
 	ctxB := suite.chainB.GetContext()
-	_, err := contractKeeper.Execute(ctxB, outpostAddr, initializer, []byte(swapMsg), sdk.NewCoins(sdk.NewCoin(token0IBC, sdk.NewInt(1000))))
+	_, err = contractKeeper.Execute(ctxB, outpostAddr, initializer, []byte(swapMsg), sdk.NewCoins(sdk.NewCoin(token0IBC, sdk.NewInt(1000))))
 	suite.Require().NoError(err)
 	suite.chainB.NextBlock()
 	err = suite.pathAB.EndpointA.UpdateClient()
@@ -1853,7 +1858,7 @@ func (suite *HooksTestSuite) ExecuteOutpostSwap(initializer, receiverAddr sdk.Ac
 
 	// But the receiver now has some token1IBC
 	balanceToken1After := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), receiverAddr, token1IBC)
-	//fmt.Println("receiver now has: ", balanceToken1After)
+	// fmt.Println("receiver now has: ", balanceToken1After)
 	suite.Require().Greater(balanceToken1After.Amount.Int64(), int64(0))
 }
 

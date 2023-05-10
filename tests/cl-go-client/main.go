@@ -108,13 +108,14 @@ func main() {
 
 			tokenDesired0 = sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
 			tokenDesired1 = sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
+			tokensDesired = sdk.NewCoins(tokenDesired0, tokenDesired1)
 		)
 
 		log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
 
 		maxRetries := 100
 		for j := 0; j < maxRetries; j++ {
-			amt0, amt1, liquidity := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokenDesired0, tokenDesired1, defaultMinAmount, defaultMinAmount)
+			amt0, amt1, liquidity := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokensDesired, defaultMinAmount, defaultMinAmount)
 			if err == nil {
 				log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
 				break
@@ -143,7 +144,7 @@ func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 	return resp.PoolID
 }
 
-func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokenDesired0, tokenDesired1 sdk.Coin, tokenMinAmount0, tokenMinAmount1 sdk.Int) (amountCreated0, amountCreated1 sdk.Int, liquidityCreated sdk.Dec) {
+func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokensProvided sdk.Coins, tokenMinAmount0, tokenMinAmount1 sdk.Int) (amountCreated0, amountCreated1 sdk.Int, liquidityCreated sdk.Dec) {
 	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
 	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
 	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
@@ -153,13 +154,11 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 		Sender:          senderAddress,
 		LowerTick:       lowerTick,
 		UpperTick:       upperTick,
-		TokenDesired0:   tokenDesired0,
-		TokenDesired1:   tokenDesired1,
+		TokensProvided:  tokensProvided,
 		TokenMinAmount0: tokenMinAmount0,
 		TokenMinAmount1: tokenMinAmount1,
 	}
 	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
-
 	if err != nil {
 		log.Fatal(err)
 	}

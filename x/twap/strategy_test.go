@@ -298,7 +298,6 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap() {
 		tc := tc
 		s.Run(name, func() {
 			osmoassert.ConditionalPanic(s.T(), tc.expPanic, func() {
-
 				geometricStrategy := &twap.GeometricTwapStrategy{TwapKeeper: *s.App.TwapKeeper}
 				actualTwap := geometricStrategy.ComputeTwap(tc.startRecord, tc.endRecord, tc.quoteAsset)
 

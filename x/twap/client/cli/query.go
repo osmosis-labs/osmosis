@@ -61,7 +61,6 @@ Example:
 				StartTime:  startTime,
 				EndTime:    &endTime,
 			})
-
 			if err != nil {
 				return err
 			}
@@ -113,7 +112,6 @@ Example:
 				StartTime:  startTime,
 				EndTime:    &endTime,
 			})
-
 			if err != nil {
 				return err
 			}

@@ -45,9 +45,7 @@ type OsmosisApp struct {
 	TestAccs    []sdk.AccAddress
 }
 
-var (
-	osmosisPrecision = 6
-)
+var osmosisPrecision = 6
 
 func ReadSubgraphDataFromDisk(subgraphFilePath string) []SubgraphPosition {
 	// read in the data from file
@@ -181,6 +179,8 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 			continue
 		}
 
+		tokensProvided := sdk.NewCoins(sdk.NewCoin(msgCreatePool.Denom0, depositedAmount0), sdk.NewCoin(msgCreatePool.Denom1, depositedAmount1))
+
 		randomCreator := osmosis.TestAccs[rand.Intn(len(osmosis.TestAccs))]
 
 		position, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(osmosis.Ctx), &cltypes.MsgCreatePosition{
@@ -188,12 +188,10 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 			Sender:          randomCreator.String(),
 			LowerTick:       lowerTickOsmosis.Int64(),
 			UpperTick:       upperTickOsmosis.Int64(),
-			TokenDesired0:   sdk.NewCoin(msgCreatePool.Denom0, depositedAmount0),
-			TokenDesired1:   sdk.NewCoin(msgCreatePool.Denom1, depositedAmount1),
+			TokensProvided:  tokensProvided,
 			TokenMinAmount0: sdk.ZeroInt(),
 			TokenMinAmount1: sdk.ZeroInt(),
 		})
-
 		if err != nil {
 			fmt.Printf("\n\n\nWARNING: Failed to create position: %v\n\n\n", err)
 			fmt.Printf("attempted creation between ticks (%s) and (%s), desired amount 0: (%s), desired amount 1 (%s)\n", lowerTickOsmosis, upperTickOsmosis, depositedAmount0, depositedAmount1)
@@ -273,7 +271,7 @@ func writeStateToDisk(state map[string]json.RawMessage) {
 		panic(err)
 	}
 
-	err = os.WriteFile(pathToFilesFromRoot+osmosisGenesisFileName, stateBz, 0644)
+	err = os.WriteFile(pathToFilesFromRoot+osmosisGenesisFileName, stateBz, 0o644)
 	if err != nil {
 		panic(err)
 	}
@@ -287,7 +285,7 @@ func writeBigBangPositionsToState(positions []BigBangPosition) {
 	if err != nil {
 		panic(err)
 	}
-	err = os.WriteFile(pathToFilesFromRoot+bigbangPosiionsFileName, positionsBytes, 0644)
+	err = os.WriteFile(pathToFilesFromRoot+bigbangPosiionsFileName, positionsBytes, 0o644)
 	if err != nil {
 		panic(err)
 	}

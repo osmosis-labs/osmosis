@@ -28,7 +28,8 @@ var (
 		sdk.MustNewDecFromStr("0.001"),  // 0.1%
 		sdk.MustNewDecFromStr("0.002"),  // 0.2%
 		sdk.MustNewDecFromStr("0.003"),  // 0.3%
-		sdk.MustNewDecFromStr("0.005")}  // 0.5%
+		sdk.MustNewDecFromStr("0.005"),
+	} // 0.5%
 	BaseGasFeeForNewIncentive     = 10_000
 	DefaultBalancerSharesDiscount = sdk.MustNewDecFromStr("0.05")
 	// By default, we only authorize one nanosecond (one block) uptime as an option

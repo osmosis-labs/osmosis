@@ -35,7 +35,7 @@ func dummyUpgrade(suite *UpgradeTestSuite) {
 	plan := upgradetypes.Plan{Name: "v16", Height: dummyUpgradeHeight}
 	err := suite.App.UpgradeKeeper.ScheduleUpgrade(suite.Ctx, plan)
 	suite.Require().NoError(err)
-	plan, exists := suite.App.UpgradeKeeper.GetUpgradePlan(suite.Ctx)
+	_, exists := suite.App.UpgradeKeeper.GetUpgradePlan(suite.Ctx)
 	suite.Require().True(exists)
 
 	suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight)
@@ -105,6 +105,10 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				suite.Require().False(params.IsPermissionlessPoolCreationEnabled)
 			},
 			func() {
+				// Validate that tokenfactory params have been updated
+				params := suite.App.TokenFactoryKeeper.GetParams(suite.Ctx)
+				suite.Require().Nil(params.DenomCreationFee)
+				suite.Require().Equal(v16.NewDenomCreationGasConsume, params.DenomCreationGasConsume)
 			},
 		},
 		{

@@ -220,7 +220,7 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 		{
 			name:             "Delegate very small amount to existing valSet",
 			delegator:        sdk.AccAddress([]byte("addr4---------------")),
-			amountToDelegate: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(010_013)), // small case
+			amountToDelegate: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0o10_013)), // small case
 			expectedShares:   []sdk.Dec{sdk.NewDec(821), sdk.NewDec(1355), sdk.NewDec(492), sdk.NewDec(1439)},
 			setValSet:        true,
 			expectPass:       true,
@@ -420,7 +420,6 @@ func (suite *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 						suite.Require().Equal(test.expectedShares[i], del.GetShares())
 					}
 				}
-
 			} else {
 				suite.Require().Error(err)
 			}
@@ -557,12 +556,12 @@ func (suite *KeeperTestSuite) TestRedelegateToValidatorSet() {
 				suite.Require().NoError(err)
 			}
 
-			// RedelegateValidatorSet redelegates from an exisitng set to a new one
+			// RedelegateValidatorSet redelegates from an existing set to a new one
 			_, err := msgServer.RedelegateValidatorSet(c, types.NewMsgRedelegateValidatorSet(test.delegator, test.newPreferences))
 			if test.expectPass {
 				suite.Require().NoError(err)
 
-				// check if the validator have recieved the correct amount of tokens
+				// check if the validator have received the correct amount of tokens
 				for i, val := range test.newPreferences {
 					valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
 					suite.Require().NoError(err)
@@ -627,7 +626,7 @@ func (suite *KeeperTestSuite) TestWithdrawDelegationRewards() {
 				_, err = msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.coinsToDelegate))
 				suite.Require().NoError(err)
 
-				suite.SetupDelegationReward(ctx, test.delegator, preferences, "", test.setValSetDelegation, test.setExistingDelegation)
+				suite.SetupDelegationReward(test.delegator, preferences, "", test.setValSetDelegation, test.setExistingDelegation)
 			}
 
 			// setup test for only existing staking position
@@ -635,14 +634,14 @@ func (suite *KeeperTestSuite) TestWithdrawDelegationRewards() {
 				err := suite.PrepareExistingDelegations(suite.Ctx, valAddrs, test.delegator, test.coinsToDelegate.Amount)
 				suite.Require().NoError(err)
 
-				suite.SetupDelegationReward(ctx, test.delegator, nil, valAddrs[0], test.setValSetDelegation, test.setExistingDelegation)
+				suite.SetupDelegationReward(test.delegator, nil, valAddrs[0], test.setValSetDelegation, test.setExistingDelegation)
 			}
 
 			_, err := msgServer.WithdrawDelegationRewards(c, types.NewMsgWithdrawDelegationRewards(test.delegator))
 			if test.expectPass {
 				suite.Require().NoError(err)
 
-				// the rewards for valset and exising delegations should be nil
+				// the rewards for valset and existing delegations should be nil
 				if test.setValSetDelegation {
 					for _, val := range preferences {
 						rewardAfterWithdrawValSet, _ := suite.GetDelegationRewards(ctx, val.ValOperAddress, test.delegator)
@@ -654,7 +653,6 @@ func (suite *KeeperTestSuite) TestWithdrawDelegationRewards() {
 					rewardAfterWithdrawExistingSet, _ := suite.GetDelegationRewards(ctx, valAddrs[0], test.delegator)
 					suite.Require().Nil(rewardAfterWithdrawExistingSet)
 				}
-
 			} else {
 				suite.Require().Error(err)
 			}

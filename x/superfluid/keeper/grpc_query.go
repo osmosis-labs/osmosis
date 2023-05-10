@@ -9,10 +9,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
+
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
@@ -90,22 +94,45 @@ func (q Querier) AssetMultiplier(goCtx context.Context, req *types.AssetMultipli
 }
 
 // AllIntermediaryAccounts returns all superfluid intermediary accounts.
-func (q Querier) AllIntermediaryAccounts(goCtx context.Context, _ *types.AllIntermediaryAccountsRequest) (*types.AllIntermediaryAccountsResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	accounts := q.Keeper.GetAllIntermediaryAccounts(ctx)
+func (q Querier) AllIntermediaryAccounts(goCtx context.Context, req *types.AllIntermediaryAccountsRequest) (*types.AllIntermediaryAccountsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	sdkCtx := sdk.UnwrapSDKContext(goCtx)
+	store := sdkCtx.KVStore(q.Keeper.storeKey)
+	accStore := prefix.NewStore(store, types.KeyPrefixIntermediaryAccount)
+	iterator := sdk.KVStorePrefixIterator(accStore, nil)
+	defer iterator.Close()
+
 	accInfos := []types.SuperfluidIntermediaryAccountInfo{}
 
-	for _, acc := range accounts {
-		accInfos = append(accInfos, types.SuperfluidIntermediaryAccountInfo{
-			Denom:   acc.Denom,
-			ValAddr: acc.ValAddr,
-			GaugeId: acc.GaugeId,
-			Address: acc.GetAccAddress().String(),
+	pageRes, err := query.FilteredPaginate(accStore, req.Pagination,
+		func(key, value []byte, accumulate bool) (bool, error) {
+			account := types.SuperfluidIntermediaryAccount{}
+			err := proto.Unmarshal(iterator.Value(), &account)
+			if err != nil {
+				return false, err
+			}
+			iterator.Next()
+
+			accountInfo := types.SuperfluidIntermediaryAccountInfo{
+				Denom:   account.Denom,
+				ValAddr: account.ValAddr,
+				GaugeId: account.GaugeId,
+				Address: account.GetAccAddress().String(),
+			}
+			if accumulate {
+				accInfos = append(accInfos, accountInfo)
+			}
+			return true, nil
 		})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.AllIntermediaryAccountsResponse{
-		Accounts: accInfos,
+		Accounts:   accInfos,
+		Pagination: pageRes,
 	}, nil
 }
 

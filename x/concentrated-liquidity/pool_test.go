@@ -20,6 +20,7 @@ func (s *KeeperTestSuite) TestInitializePool() {
 	// Create a concentrated liquidity pool with unauthorized tick spacing
 	invalidTickSpacing := uint64(25)
 	invalidTickSpacingConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(2, ETH, USDC, invalidTickSpacing, DefaultZeroSwapFee)
+	s.Require().NoError(err)
 
 	// Create a concentrated liquidity pool with unauthorized swap fee
 	invalidSwapFee := sdk.MustNewDecFromStr("0.1")
@@ -107,7 +108,6 @@ func (s *KeeperTestSuite) TestInitializePool() {
 				}
 
 				s.validateListenerCallCount(1, 0, 0, 0)
-
 			} else {
 				// Ensure specified error is returned
 				s.Require().Error(err)
@@ -389,7 +389,6 @@ func (s *KeeperTestSuite) TestSetPool() {
 			retrievedPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, test.pool.GetId())
 			s.Require().NoError(err)
 			s.Require().Equal(test.pool, retrievedPool)
-
 		})
 	}
 }
@@ -477,14 +476,14 @@ func (s *KeeperTestSuite) TestDecreaseConcentratedPoolTickSpacing() {
 			owner := s.TestAccs[0]
 
 			// Create OSMO <> USDC pool with tick spacing of 100
-			concentratedPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("uosmo", "usdc")
+			concentratedPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(ETH, USDC)
 
 			// Create a position in the pool that is divisible by the tick spacing
-			_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), -100, 100)
+			_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), -100, 100)
 			s.Require().NoError(err)
 
 			// Attempt to create a position that is not divisible by the tick spacing
-			_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), test.position.lowerTick, test.position.upperTick)
+			_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), test.position.lowerTick, test.position.upperTick)
 			s.Require().Error(err)
 
 			// Alter the tick spacing of the pool
@@ -497,7 +496,7 @@ func (s *KeeperTestSuite) TestDecreaseConcentratedPoolTickSpacing() {
 			s.Require().NoError(err)
 
 			// Attempt to create a position that was previously not divisible by the tick spacing but now is
-			_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), test.position.lowerTick, test.position.upperTick)
+			_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), test.position.lowerTick, test.position.upperTick)
 			if test.expectedCreatePositionErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, test.expectedCreatePositionErr.Error())

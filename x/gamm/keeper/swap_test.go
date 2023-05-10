@@ -490,7 +490,8 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	// mock objects don't have interface functions implemented by default.
 	inactivePool.EXPECT().IsActive(suite.Ctx).Return(false).AnyTimes()
 	inactivePool.EXPECT().GetId().Return(inactivePoolId).AnyTimes()
-	gammKeeper.SetPool(suite.Ctx, inactivePool)
+	err = gammKeeper.SetPool(suite.Ctx, inactivePool)
+	suite.Require().NoError(err)
 
 	type testCase struct {
 		pool       poolmanagertypes.PoolI

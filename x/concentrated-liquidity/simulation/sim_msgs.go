@@ -3,7 +3,6 @@ package simulation
 import (
 	"errors"
 	"fmt"
-
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -79,8 +78,7 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 		Sender:          positionCreator.String(),
 		LowerTick:       lowerTick,
 		UpperTick:       upperTick,
-		TokenDesired0:   tokens[0],
-		TokenDesired1:   tokens[1],
+		TokensProvided:  tokens,
 		TokenMinAmount0: sdk.NewInt(0),
 		TokenMinAmount1: sdk.NewInt(0),
 	}, nil
@@ -250,15 +248,15 @@ func RandMsgCreateIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 
 	// Get the duration value at the random index
 	randomDuration := durations[randomDurationIndex]
+	incentiveCoin := sdk.NewCoin(incentivesTokens[0].Denom, incentivesTokens[0].Amount)
 
 	return &cltypes.MsgCreateIncentive{
-		PoolId:          clPool.GetId(),
-		Sender:          incentiveCreator.Address.String(),
-		IncentiveDenom:  incentivesTokens[0].Denom,
-		IncentiveAmount: incentivesTokens[0].Amount,
-		EmissionRate:    randEmissionVal,
-		StartTime:       startTime,
-		MinUptime:       randomDuration,
+		PoolId:        clPool.GetId(),
+		Sender:        incentiveCreator.Address.String(),
+		IncentiveCoin: incentiveCoin,
+		EmissionRate:  randEmissionVal,
+		StartTime:     startTime,
+		MinUptime:     randomDuration,
 	}, nil
 }
 

@@ -9,15 +9,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/twap/client"
 	"github.com/osmosis-labs/osmosis/v15/x/twap/client/queryproto"
 )
 
 type QueryTestSuite struct {
 	apptesting.KeeperTestHelper
-
-	queryClient types.QueryClient
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -59,7 +56,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 		result             string
 	}{
 		{
-			name:            "non-existant pool",
+			name:            "non-existent pool",
 			poolId:          0,
 			baseAssetDenom:  "tokenA",
 			quoteAssetDenom: "tokenB",
