@@ -35,9 +35,19 @@ type TickInfo struct {
 	LiquidityGross github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=liquidity_gross,json=liquidityGross,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"liquidity_gross" yaml:"liquidity_gross"`
 	LiquidityNet   github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=liquidity_net,json=liquidityNet,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"liquidity_net" yaml:"liquidity_net"`
 	// Total fees accumulated in the opposite direction that the tick was last
-	// crossed. i.e. if the tick was last crossed from left to right, then this is
-	// the total fees accumulated below the tick. If the tick was last crossed
-	// from right to left, then this is the total fees accumulated above the tick.
+	// crossed. i.e. if the current tick is to the right of this tick (meaning its
+	// currently a greater price), then this is the total fees accumulated below
+	// the tick. If the current tick is to the left of this tick (meaning its
+	// currently at a lower price), then this is the total fees accumulated above
+	// the tick.
+	//
+	// Note: the way this value is used depends on the direction of fees we are
+	// calculating for. If we are calculating fees below the lower tick and the
+	// lower tick is the active tick, then this is the feeGrowthGlobal - the
+	// lower tick's feeGrowthOppositeDirectionOfLastTraversal. If we are
+	// calculating fees above the upper tick and the upper tick is the active
+	// tick, then this is just the tick's
+	// feeGrowthOppositeDirectionOfLastTraversal value.
 	FeeGrowthOppositeDirectionOfLastTraversal github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,3,rep,name=fee_growth_opposite_direction_of_last_traversal,json=feeGrowthOppositeDirectionOfLastTraversal,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"fee_growth_opposite_direction_of_last_traversal"`
 	UptimeTrackers                            []UptimeTracker                             `protobuf:"bytes,4,rep,name=uptime_trackers,json=uptimeTrackers,proto3" json:"uptime_trackers" yaml:"uptime_trackers"`
 }
