@@ -3,7 +3,7 @@ updates:
 - package-ecosystem: gomod
   directory: "/"
   schedule:
-    interval: daily
+    interval: weekly
   ignore:
     - dependency-name: "github.com/tendermint/tendermint"
       update-types: ["version-update:semver-major", "version-update:semver-minor"]
@@ -14,5 +14,5 @@ updates:
 - package-ecosystem: cargo
   directory: "/"
   schedule:
-    interval: daily
+    interval: weekly
   open-pull-requests-limit: 10
