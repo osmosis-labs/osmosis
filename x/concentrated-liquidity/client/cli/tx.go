@@ -43,7 +43,7 @@ func NewCreateConcentratedPoolCmd() (*osmocli.TxCliDesc, *clmodel.MsgCreateConce
 		Use:     "create-pool [denom-0] [denom-1] [tick-spacing] [swap-fee]",
 		Short:   "create a concentrated liquidity pool with the given denom pair, tick spacing, and swap fee",
 		Long:    "denom-1 (the quote denom), tick spacing, and swap fees must all be authorized by the concentrated liquidity module",
-		Example: "create-pool uion uosmo 1 0.01 --from val --chain-id osmosis-1",
+		Example: "create-pool uion uosmo 100 0.01 --from val --chain-id osmosis-1",
 	}, &clmodel.MsgCreateConcentratedPool{}
 }
 
