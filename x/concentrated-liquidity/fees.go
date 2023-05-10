@@ -46,7 +46,7 @@ func (k Keeper) chargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 	return nil
 }
 
-// initOrUpdateFeeAccumulatorPosition mutates the fee accumulator position by either creating or updating it
+// initOrUpdatePositionFeeAccumulator mutates the fee accumulator position by either creating or updating it
 // for the given pool id in the range specified by the given lower and upper ticks, position id and liquidityDelta.
 // If liquidityDelta is positive, it adds liquidity. If liquidityDelta is negative, it removes liquidity.
 // If this is a new position, liqudityDelta must be positive.
@@ -62,7 +62,7 @@ func (k Keeper) chargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 // - fails to create a new position.
 // - fails to prepare the accumulator for update.
 // - fails to update the position's accumulator.
-func (k Keeper) initOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidityDelta sdk.Dec) error {
+func (k Keeper) initOrUpdatePositionFeeAccumulator(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidityDelta sdk.Dec) error {
 	// Get the fee accumulator for the position's pool.
 	feeAccumulator, err := k.GetFeeAccumulator(ctx, poolId)
 	if err != nil {
@@ -302,6 +302,7 @@ func calculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, current
 // as we must set the position's accumulator value to the sum of
 // - the fee/uptime growth inside at position creation time (position.InitAccumValue)
 // - fee/uptime growth outside at the current block time (feeGrowthOutside/uptimeGrowthOutside)
+// CONTRACT: position accumulator value prior to this call is equal to the growth inside the position at the time of last update.
 func preparePositionAccumulator(accumulator accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) error {
 	position, err := accum.GetPosition(accumulator, positionKey)
 	if err != nil {

@@ -85,7 +85,7 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapS
 	tickInfo.FeeGrowthOutside = feeAccum.GetValue().Add(swapStateFeeGrowth).Sub(tickInfo.FeeGrowthOutside)
 
 	// Update global accums to now before uptime outside changes
-	if err := k.updateUptimeAccumulatorsToNow(ctx, poolId); err != nil {
+	if err := k.updatePoolUptimeAccumulatorsToNow(ctx, poolId); err != nil {
 		return sdk.Dec{}, err
 	}
 
@@ -128,7 +128,7 @@ func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 		}
 
 		// Sync global uptime accumulators to ensure the uptime tracker init values are up to date.
-		if err := k.updateUptimeAccumulatorsToNow(ctx, poolId); err != nil {
+		if err := k.updatePoolUptimeAccumulatorsToNow(ctx, poolId); err != nil {
 			return tickStruct, err
 		}
 

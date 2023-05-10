@@ -2,9 +2,7 @@ package concentrated_liquidity
 
 import (
 	"context"
-	"fmt"
 	"strconv"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -255,13 +253,6 @@ func (server msgServer) FungifyChargedPositions(goCtx context.Context, msg *type
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-		),
-		sdk.NewEvent(
-			types.TypeEvtFungifyChargedPosition,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeInputPositionIds, strings.Trim(strings.Join(strings.Fields(fmt.Sprint(msg.PositionIds)), ","), "[]")),
-			sdk.NewAttribute(types.AttributeOutputPositionId, strconv.FormatUint(newPositionId, 10)),
 		),
 	})
 

@@ -1816,7 +1816,7 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 	}
 }
 
-func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
+func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 	uptimeHelper := getExpectedUptimes()
 	type tick struct {
 		tickIndex      int64
@@ -1948,6 +1948,23 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 			expectedInitAccumValue:   uptimeHelper.hundredTokensMultiDenom,
 			expectedUnclaimedRewards: uptimeHelper.emptyExpectedAccumValues,
 		},
+		{
+			name:              "error: negative liquidity for first position",
+			positionLiquidity: DefaultLiquidityAmt.Neg(),
+			lowerTick: tick{
+				tickIndex:      -50,
+				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
+			},
+			upperTick: tick{
+				tickIndex:      50,
+				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
+			},
+			positionId:              DefaultPositionId,
+			currentTickIndex:        sdk.ZeroInt(),
+			globalUptimeAccumValues: uptimeHelper.threeHundredTokensMultiDenom,
+
+			expectedErr: types.NonPositiveLiquidityForNewPositionError{PositionId: DefaultPositionId, LiquidityDelta: DefaultLiquidityAmt.Neg()},
+		},
 	}
 
 	for _, test := range tests {
@@ -1975,7 +1992,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 
 			// If applicable, set up existing position and update ticks & global accums
 			if test.existingPosition {
-				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptime(s.Ctx, clPool.GetId(), test.positionLiquidity, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultJoinTime, DefaultPositionId)
+				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptimeAccumulators(s.Ctx, clPool.GetId(), test.positionLiquidity, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultPositionId)
 				s.Require().NoError(err)
 				err = s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, clPool.GetId(), s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, DefaultJoinTime, test.positionLiquidity, DefaultPositionId, DefaultUnderlyingLockId)
 				s.Require().NoError(err)
@@ -1992,7 +2009,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 
 			// --- System under test ---
 
-			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptime(s.Ctx, clPool.GetId(), test.positionLiquidity, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultJoinTime, DefaultPositionId)
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptimeAccumulators(s.Ctx, clPool.GetId(), test.positionLiquidity, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultPositionId)
 
 			// --- Error catching ---
 
