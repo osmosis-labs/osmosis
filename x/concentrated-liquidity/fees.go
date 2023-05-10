@@ -309,9 +309,9 @@ func preparePositionAccumulator(accumulator accum.AccumulatorObject, positionKey
 		return err
 	}
 
-	// The reason for adding the growth outside to the position's initial accumulator value is as follows:
-	// - At any time in-between position updates or claiming, a position must have its InitAccumValue be equal to growth_inside_at_{last time of update}.
-	// - Prior to claiming (the logic below) updates the position's accumulator to:
+	// The reason for adding the growth outside to the position's initial accumulator value per share is as follows:
+	// - At any time in-between position updates or claiming, a position must have its AccumValuePerShare be equal to growth_inside_at_{last time of update}.
+	// - Prior to claiming (the logic below), the position's accumulator is updated to:
 	//   growth_inside_at_{last time of update} + growth_outside_at_{current block time of update}
 	// - Then, during claiming in osmoutils.ClaimRewards, we perform the following computation:
 	// growth_global_at{current block time} - (growth_inside_at_{last time of update} + growth_outside_at_{current block time of update}})

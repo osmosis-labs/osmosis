@@ -24,7 +24,7 @@ type NegativeIntervalAccumulationPerShareError struct {
 }
 
 func (e NegativeIntervalAccumulationPerShareError) Error() string {
-	return fmt.Sprintf("interval accumulaton per share must be non-negative, was (%s)", e.IntervalAccumulationPerShare)
+	return fmt.Sprintf("interval accumulation per share must be non-negative, was (%s)", e.IntervalAccumulationPerShare)
 }
 
 type NegativeAccDifferenceError struct {
