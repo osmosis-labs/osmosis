@@ -50,10 +50,6 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
 
-	// Create a cache context for the current transaction.
-	// This allows us to make changes to the context without persisting it until later.
-	// We only write the cache context (i.e. persist the changes) if the actual amounts returned
-	// are greater than the given minimum amounts.
 	positionId := k.getNextPositionIdAndIncrement(ctx)
 
 	// If this is the first position created in this pool, ensure that the position includes both asset0 and asset1

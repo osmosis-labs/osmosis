@@ -180,7 +180,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionFeeAccumulator() {
 				DefaultPositionId,
 				DefaultLiquidityAmt,
 			},
-			expectedError: accum.AccumDoesNotExistError{AccumName: types.KeyFeePoolAccumulator(2)},
+			expectedError: accum.AccumDoesNotExistError{AccumName: types.KeyFeePoolAccumulator(defaultPoolId + 1)},
 		},
 		{
 			name:              "existing accumulator, different owner - different position",

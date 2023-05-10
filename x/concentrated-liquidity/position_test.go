@@ -662,6 +662,11 @@ func (s *KeeperTestSuite) TestCalculateUnderlyingAssetsFromPosition() {
 }
 
 func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
+	const (
+		locked   = true
+		unlocked = !locked
+	)
+
 	var (
 		defaultAddress         = s.TestAccs[0]
 		secondAddress          = s.TestAccs[1]
@@ -694,9 +699,9 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		{
 			name: "Happy path: Fungify three fully charged positions",
 			setupFullyChargedPositions: []position{
-				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
-				{2, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
-				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
+				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, unlocked},
+				{2, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, unlocked},
+				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, unlocked},
 			},
 			positionIdsToMigrate:    []uint64{1, 2, 3},
 			accountCallingMigration: defaultAddress,
@@ -705,11 +710,11 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		{
 			name: "Error: Fungify three positions, but one of them is not fully charged",
 			setupFullyChargedPositions: []position{
-				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
-				{2, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
+				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, unlocked},
+				{2, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, unlocked},
 			},
 			setupUnchargedPositions: []position{
-				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
+				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, unlocked},
 			},
 			positionIdsToMigrate:    []uint64{1, 2, 3},
 			accountCallingMigration: defaultAddress,
@@ -719,9 +724,9 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		{
 			name: "Error: Fungify three positions, but one of them is not in the same pool",
 			setupFullyChargedPositions: []position{
-				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
-				{2, 2, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
-				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
+				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, unlocked},
+				{2, 2, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, unlocked},
+				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, unlocked},
 			},
 			positionIdsToMigrate:    []uint64{1, 2, 3},
 			accountCallingMigration: defaultAddress,
@@ -731,9 +736,9 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		{
 			name: "Error: Fungify three positions, but one of them is not owned by the same owner",
 			setupFullyChargedPositions: []position{
-				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
-				{2, defaultPoolId, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
-				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
+				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, unlocked},
+				{2, defaultPoolId, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, unlocked},
+				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, unlocked},
 			},
 			positionIdsToMigrate:    []uint64{1, 2, 3},
 			accountCallingMigration: defaultAddress,
@@ -743,9 +748,9 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		{
 			name: "Error: Fungify three positions, but one of them is not in the same range",
 			setupFullyChargedPositions: []position{
-				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
-				{2, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick - 100, DefaultUpperTick, false},
-				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
+				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, unlocked},
+				{2, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick - 100, DefaultUpperTick, unlocked},
+				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, unlocked},
 			},
 			positionIdsToMigrate:    []uint64{1, 2, 3},
 			accountCallingMigration: defaultAddress,
@@ -755,7 +760,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		{
 			name: "Error: Fungify one position, must have at least two",
 			setupFullyChargedPositions: []position{
-				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
+				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, unlocked},
 			},
 			setupUnchargedPositions: []position{},
 			positionIdsToMigrate:    []uint64{1},
@@ -766,9 +771,9 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		{
 			name: "Error: one of the full range positions is locked",
 			setupFullyChargedPositions: []position{
-				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, types.MinTick, types.MaxTick, false},
-				{2, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, types.MinTick, types.MaxTick, true},
-				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, types.MinTick, types.MaxTick, false},
+				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, types.MinTick, types.MaxTick, unlocked},
+				{2, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, types.MinTick, types.MaxTick, locked},
+				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, types.MinTick, types.MaxTick, unlocked},
 			},
 			lockPositionIds:         []uint64{2},
 			positionIdsToMigrate:    []uint64{1, 2, 3},
@@ -779,9 +784,9 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		{
 			name: "Pass: one of the full range positions was locked but got unlocked 1ms before fungification",
 			setupFullyChargedPositions: []position{
-				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, types.MinTick, types.MaxTick, false},
-				{2, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, types.MinTick, types.MaxTick, true},
-				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, types.MinTick, types.MaxTick, false},
+				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, types.MinTick, types.MaxTick, unlocked},
+				{2, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, types.MinTick, types.MaxTick, locked},
+				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, types.MinTick, types.MaxTick, unlocked},
 			},
 
 			lockPositionIds:         []uint64{2},

@@ -429,7 +429,7 @@ func (k Keeper) getNextPositionIdAndIncrement(ctx sdk.Context) uint64 {
 }
 
 // fungifyChargedPosition takes in a list of positionIds and combines them into a single position.
-// It validates that all positions belong to the same owner, are in the same ticks and are fully charged. Fails if not.
+// It validates that all positions belong to the same owner, are in the same ticks, in the same pool and fully charged. Fails if not.
 // Otherwise, it creates a completely new position P. P's liquidity equals to the sum of all
 // liquidities of positions given by positionIds. The uptime of the join time of the new position equals
 // to current block time - max authorized uptime duration (to signify that it is fully charged).

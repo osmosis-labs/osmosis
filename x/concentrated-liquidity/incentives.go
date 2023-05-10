@@ -628,6 +628,7 @@ func (k Keeper) GetUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, lowe
 // - fails to calculate uptime growth outside range
 // - fails to determine if position accumulator is new or existing
 // - fails to create/update position uptime accumulators
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 func (k Keeper) initOrUpdatePositionUptimeAccumulators(ctx sdk.Context, poolId uint64, liquidity sdk.Dec, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, positionId uint64) error {
 	// We update accumulators _prior_ to any position-related updates to ensure
 	// past rewards aren't distributed to new liquidity. We also update pool's
