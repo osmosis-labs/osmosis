@@ -90,7 +90,7 @@ func (k Keeper) initOrUpdatePositionFeeAccumulator(ctx sdk.Context, poolId uint6
 		}
 
 		// Initialize the position with the fee growth inside the tick range
-		if err := feeAccumulator.NewPositionCustomAcc(positionKey, liquidityDelta, feeGrowthInside, nil); err != nil {
+		if err := feeAccumulator.NewPositionIntervalAccumulation(positionKey, liquidityDelta, feeGrowthInside, nil); err != nil {
 			return err
 		}
 	} else {
@@ -111,7 +111,7 @@ func (k Keeper) initOrUpdatePositionFeeAccumulator(ctx sdk.Context, poolId uint6
 		// The move happens by subtracting the "fee growth inside from 0 to t + fee growth outside from 0 to t + 1" from the global
 		// fee accumulator growth at time t + 1. This yields the "fee growth inside from t to t + 1". That is, the unclaimed fee growth
 		// from the last time the position was either modified or created.
-		err = feeAccumulator.UpdatePositionCustomAcc(positionKey, liquidityDelta, feeGrowthInside)
+		err = feeAccumulator.UpdatePositionIntervalAccumulation(positionKey, liquidityDelta, feeGrowthInside)
 		if err != nil {
 			return err
 		}
@@ -306,8 +306,15 @@ func preparePositionAccumulator(accumulator accum.AccumulatorObject, positionKey
 		return err
 	}
 
-	customAccumulatorValue := position.InitAccumValue.Add(growthOutside...)
-	err = accumulator.SetPositionCustomAcc(positionKey, customAccumulatorValue)
+	// The reason for adding the growth outside to the position's initial accumulator value per share is as follows:
+	// - At any time in-between position updates or claiming, a position must have its AccumValuePerShare be equal to growth_inside_at_{last time of update}.
+	// - Prior to claiming (the logic below), the position's accumulator is updated to:
+	//   growth_inside_at_{last time of update} + growth_outside_at_{current block time of update}
+	// - Then, during claiming in osmoutils.ClaimRewards, we perform the following computation:
+	// growth_global_at{current block time} - (growth_inside_at_{last time of update} + growth_outside_at_{current block time of update}})
+	// which ends up being equal to growth_inside_from_{last_time_of_update}_to_{current block time of update}}.
+	intervalAccumulationOutside := position.AccumValuePerShare.Add(growthOutside...)
+	err = accumulator.SetPositionIntervalAccumulation(positionKey, intervalAccumulationOutside)
 	if err != nil {
 		return err
 	}
