@@ -854,7 +854,7 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 			tokenOutMinAmount: sdk.ZeroInt(),
 		},
 		{
-			name:              "single coin with positive swap fee and zero exit fee",
+			name:              "corner case: single coin with positive swap fee and zero exit fee",
 			poolSwapFee:       sdk.NewDecWithPrec(1, 2),
 			poolExitFee:       sdk.ZeroDec(),
 			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1_000_000))),
@@ -872,6 +872,16 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 			tokenOutMinAmount: sdk.ZeroInt(),
 			expectError:       sdkerrors.Wrapf(types.ErrLimitMinAmount, fmt.Sprintf("too much slippage; needed a minimum of %v shares to pass, got %v", 6266484702880621000, 6265857020099440400)),
 		},
+		{
+			name:              "error: non zero exit fee",
+			poolSwapFee:       sdk.NewDecWithPrec(1, 2),
+			poolExitFee:       sdk.NewDecWithPrec(1, 2),
+			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1_000_000))),
+			shareOutMinAmount: sdk.ZeroInt(),
+			expectedSharesOut: sdk.NewInt(6265857020099440400),
+			tokenOutMinAmount: sdk.ZeroInt(),
+			expectError:       fmt.Errorf("can not create pool with non zero exit fee, got %v", sdk.NewDecWithPrec(1, 2)),
+		},
 	}
 
 	for _, tc := range testCases {
@@ -883,7 +893,7 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 			gammKeeper := suite.App.GAMMKeeper
 			testAccount := suite.TestAccs[0]
 
-			poolID := suite.prepareCustomBalancerPool(
+			poolID, err := suite.prepareCustomBalancerPool(
 				defaultAcctFunds,
 				[]balancertypes.PoolAsset{
 					{
@@ -900,28 +910,32 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 					ExitFee: tc.poolExitFee,
 				},
 			)
+			if err != nil {
+				suite.Require().Equal(err, tc.expectError)
 
-			shares, err := gammKeeper.JoinSwapExactAmountIn(ctx, testAccount, poolID, tc.tokensIn, tc.shareOutMinAmount)
-			if tc.expectError != nil {
-				suite.Require().ErrorIs(err, tc.expectError)
 			} else {
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.expectedSharesOut, shares)
+				shares, err := gammKeeper.JoinSwapExactAmountIn(ctx, testAccount, poolID, tc.tokensIn, tc.shareOutMinAmount)
+				if tc.expectError != nil {
+					suite.Require().ErrorIs(err, tc.expectError)
+				} else {
+					suite.Require().NoError(err)
+					suite.Require().Equal(tc.expectedSharesOut, shares)
 
-				tokenOutAmt, err := gammKeeper.ExitSwapShareAmountIn(
-					ctx,
-					testAccount,
-					poolID,
-					tc.tokensIn[0].Denom,
-					shares,
-					tc.tokenOutMinAmount,
-				)
-				suite.Require().NoError(err)
+					tokenOutAmt, err := gammKeeper.ExitSwapShareAmountIn(
+						ctx,
+						testAccount,
+						poolID,
+						tc.tokensIn[0].Denom,
+						shares,
+						tc.tokenOutMinAmount,
+					)
+					suite.Require().NoError(err)
 
-				// require swapTokenOutAmt <= (tokenInAmt * (1 - tc.poolSwapFee))
-				oneMinusSwapFee := sdk.OneDec().Sub(tc.poolSwapFee)
-				swapFeeAdjustedAmount := oneMinusSwapFee.MulInt(tc.tokensIn[0].Amount).RoundInt()
-				suite.Require().True(tokenOutAmt.LTE(swapFeeAdjustedAmount))
+					// require swapTokenOutAmt <= (tokenInAmt * (1 - tc.poolSwapFee))
+					oneMinusSwapFee := sdk.OneDec().Sub(tc.poolSwapFee)
+					swapFeeAdjustedAmount := oneMinusSwapFee.MulInt(tc.tokensIn[0].Amount).RoundInt()
+					suite.Require().True(tokenOutAmt.LTE(swapFeeAdjustedAmount))
+				}
 			}
 
 		})
