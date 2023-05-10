@@ -72,11 +72,11 @@ func ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quote
 	return computeTwap(startRecord, endRecord, quoteAsset, strategy)
 }
 
-func (ct arithmetic) ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec { //nolint:stylecheck // it did not seem appropriate to have the same reciever name
+func (ct arithmetic) ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec { //nolint:stylecheck // it did not seem appropriate to have the same receiver name
 	return ct.computeTwap(startRecord, endRecord, quoteAsset)
 }
 
-func (ct geometric) ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec { //nolint:stylecheck // it did not seem appropriate to have the same reciever name
+func (ct geometric) ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec { //nolint:stylecheck // it did not seem appropriate to have the same receiver name
 	return ct.computeTwap(startRecord, endRecord, quoteAsset)
 }
 
