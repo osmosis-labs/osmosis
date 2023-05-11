@@ -8,7 +8,7 @@ require (
 	github.com/golang/protobuf v1.5.3
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230329102328-d2e229f9cb78
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230510161551-8bf252f26bae
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.2
 	github.com/tendermint/tendermint v0.34.26
