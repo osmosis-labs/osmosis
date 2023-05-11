@@ -27,6 +27,6 @@ func ParseProtoFilePath(filePath string) (string, string) {
 	} else {
 		protoFilePath = strings.Replace(filepath.Join(folderPath, filepath.Base(filePath[:len(filePath)-4]+"proto")), "_template", "", 1)
 	}
-	
+
 	return folderPath, protoFilePath
 }
