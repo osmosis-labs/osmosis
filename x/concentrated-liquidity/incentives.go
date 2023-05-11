@@ -330,8 +330,6 @@ func (k Keeper) updatePoolUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64
 		return err
 	}
 
-	ctx.Logger().Error("HEEEREE")
-
 	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return err
@@ -351,6 +349,8 @@ func (k Keeper) updatePoolUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64
 		if qualifyingLiquidity.LT(sdk.OneDec()) {
 			continue
 		}
+
+		ctx.Logger().Error("uptime index", uptimeIndex)
 
 		incentivesToAddToCurAccum, updatedPoolRecords, err := calcAccruedIncentivesForAccum(ctx, curUptimeDuration, qualifyingLiquidity, timeElapsedSec, poolIncentiveRecords)
 		if err != nil {
