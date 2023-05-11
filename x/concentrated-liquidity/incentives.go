@@ -350,8 +350,6 @@ func (k Keeper) updatePoolUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64
 			continue
 		}
 
-		ctx.Logger().Error("uptime index", uptimeIndex)
-
 		incentivesToAddToCurAccum, updatedPoolRecords, err := calcAccruedIncentivesForAccum(ctx, curUptimeDuration, qualifyingLiquidity, timeElapsedSec, poolIncentiveRecords)
 		if err != nil {
 			return err
@@ -825,6 +823,8 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 		if err != nil {
 			return sdk.Coins{}, sdk.Coins{}, err
 		}
+
+		ctx.Logger().Error("HEEERE", "uptimeIndex", uptimeIndex)
 
 		// If the accumulator contains the position, claim the position's incentives.
 		if hasPosition {
