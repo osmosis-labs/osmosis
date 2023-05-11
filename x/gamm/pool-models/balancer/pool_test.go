@@ -1363,3 +1363,85 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 		})
 	}
 }
+
+// This test check returns the coins(lp liquidity) needed to get the specified amount of shares in the pool
+func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
+	type testcase struct {
+		name                    string
+		shareOutAmount          sdk.Int
+		swapFee                 sdk.Dec
+		poolAssets              []balancer.PoolAsset
+		expectneededLpLiquidity sdk.Coins
+		err                     error
+	}
+
+	testcases := []testcase{
+		{
+			name:           "Share ratio is zero",
+			shareOutAmount: sdk.ZeroInt(),
+			swapFee:        sdk.ZeroDec(),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 10),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 10),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			err: types.ErrInvalidMathApprox,
+		},
+		{
+			name:           "Share ratio is negative",
+			shareOutAmount: sdk.NewInt(-1),
+			swapFee:        sdk.ZeroDec(),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 10),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 10),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			err: types.ErrInvalidMathApprox,
+		},
+		{
+			name:           "Pass",
+			shareOutAmount: sdk.NewInt(8_000_000_000_000_000_000),
+			swapFee:        sdk.ZeroDec(),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1000000000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1000000000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			expectneededLpLiquidity: sdk.Coins{
+				sdk.NewInt64Coin("uatom", 80000000),
+				sdk.NewInt64Coin("uosmo", 80000000),
+			},
+		},
+	}
+	for _, tc := range testcases {
+		tc := tc
+
+		suite.T().Run(tc.name, func(t *testing.T) {
+			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+			neededLpLiquidity, err := pool.GetMaximalNoSwapLPAmount(suite.Ctx, tc.shareOutAmount)
+			if tc.err != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorAs(tc.err, &err)
+			} else {
+				println("check :", neededLpLiquidity.String())
+				suite.Require().NoError(err)
+				suite.Require().Equal(neededLpLiquidity, tc.expectneededLpLiquidity)
+			}
+		})
+	}
+}

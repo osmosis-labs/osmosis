@@ -2,6 +2,7 @@
 package stableswap
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1398,6 +1399,85 @@ func TestValidateScalingFactors(t *testing.T) {
 			}
 
 			require.NoError(t, err)
+		})
+	}
+}
+
+// This test check returns the coins(lp liquidity) needed to get the specified amount of shares in the pool
+func TestGetMaximalNoSwapLPAmount(t *testing.T) {
+	type testcase struct {
+		name                    string
+		shareOutAmount          sdk.Int
+		poolAssets              sdk.Coins
+		expectneededLpLiquidity sdk.Coins
+		scalingFactors          []uint64
+		err                     error
+	}
+
+	testcases := []testcase{
+		{
+			name:           "Share ratio is zero with even two-asset",
+			shareOutAmount: sdk.ZeroInt(),
+			poolAssets:     twoEvenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			err:            types.ErrInvalidMathApprox,
+		},
+		{
+			name:           "Share ratio is zero with uneven two-asset",
+			shareOutAmount: sdk.ZeroInt(),
+			poolAssets:     twoUnevenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			err:            types.ErrInvalidMathApprox,
+		},
+		{
+			name:           "Share ratio is negative with even two-asset",
+			shareOutAmount: sdk.NewInt(-1),
+			poolAssets:     twoEvenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			err:            types.ErrInvalidMathApprox,
+		},
+		{
+			name:           "Share ratio is negative with uneven two-asset",
+			shareOutAmount: sdk.NewInt(-1),
+			poolAssets:     twoUnevenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			err:            types.ErrInvalidMathApprox,
+		},
+		{
+			name:           "Pass with even two-asset ",
+			shareOutAmount: sdk.NewInt(8_000_000_000_000_000_000),
+			poolAssets:     twoEvenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			expectneededLpLiquidity: sdk.Coins{
+				sdk.NewInt64Coin("bar", 80000000),
+				sdk.NewInt64Coin("foo", 80000000),
+			},
+		},
+		{
+			name:           "Pass with uneven two-asset ",
+			shareOutAmount: sdk.NewInt(8_000_000_000_000_000_000),
+			poolAssets:     twoUnevenStablePoolAssets,
+			scalingFactors: defaultTwoAssetScalingFactors,
+			expectneededLpLiquidity: sdk.Coins{
+				sdk.NewInt64Coin("bar", 80000000),
+				sdk.NewInt64Coin("foo", 160000000),
+			},
+		},
+	}
+	for _, tc := range testcases {
+		tc := tc
+		ctx := sdk.Context{}
+		t.Run(tc.name, func(t *testing.T) {
+			pool := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
+			neededLpLiquidity, err := pool.GetMaximalNoSwapLPAmount(ctx, tc.shareOutAmount)
+			if tc.err != nil {
+				require.Error(t, err)
+				msgError := fmt.Sprintf("Too few shares out wanted. "+"(debug: getMaximalNoSwapLPAmount share ratio is zero or negative): %s", tc.err)
+				require.EqualError(t, err, msgError)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, neededLpLiquidity, tc.expectneededLpLiquidity)
+			}
 		})
 	}
 }
