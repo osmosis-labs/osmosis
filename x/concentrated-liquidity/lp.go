@@ -2,6 +2,7 @@ package concentrated_liquidity
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -293,11 +294,14 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 	// Create new position with updated liquidity.
 	amount0Desired := amount0Withdrawn.Add(amount0Added)
 	amount1Desired := amount1Withdrawn.Add(amount1Added)
+	fmt.Println(amount0Withdrawn.String(), " ", amount0Added.String())
+	fmt.Println(amount1Withdrawn.String(), " ", amount1Added.String())
 	pool, err := k.GetPoolFromPoolIdAndConvertToConcentrated(ctx, position.PoolId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
 	}
 	tokensProvided := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), amount0Desired), sdk.NewCoin(pool.GetToken1(), amount1Desired))
+	fmt.Println(tokensProvided.String(), " ", amount0Withdrawn.String(), " ", amount1Withdrawn.String())
 	newPositionId, actualAmount0, actualAmount1, _, _, err := k.createPosition(ctx, position.PoolId, owner, tokensProvided, amount0Withdrawn, amount1Withdrawn, position.LowerTick, position.UpperTick)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err

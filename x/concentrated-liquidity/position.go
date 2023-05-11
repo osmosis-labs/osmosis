@@ -682,13 +682,15 @@ func (k Keeper) positionHasActiveUnderlyingLockAndUpdate(ctx sdk.Context, positi
 	if err != nil {
 		return false, 0, err
 	}
+
+	// Defense in depth check. If we have an active underlying lock but no lock ID, return an error.
 	if hasActiveUnderlyingLock && lockId == 0 {
-		// Defense in depth check. If we have an active underlying lock but no lock ID, return an error.
 		return false, 0, types.PositionIdToLockNotFoundError{PositionId: positionId}
 	}
+
+	// If the position does not have an active underlying lock but still has a lock ID associated with it,
+	// remove the link between the position and the underlying lock since the lock is mature.
 	if !hasActiveUnderlyingLock && lockId != 0 {
-		// If the position does not have an active underlying lock but still has a lock ID associated with it,
-		// remove the link between the position and the underlying lock since the lock is mature.
 		k.RemovePositionIdToLock(ctx, positionId, lockId)
 		return false, 0, nil
 	}
