@@ -416,7 +416,7 @@ func (suite *KeeperTestSuite) TestGetNextPoolIdAndIncrement() {
 			nextPoolId := suite.App.PoolManagerKeeper.GetNextPoolId(suite.Ctx)
 			suite.Require().Equal(tc.expectedNextPoolId, nextPoolId)
 
-			// Sytem under test.
+			// System under test.
 			nextPoolId = suite.App.PoolManagerKeeper.GetNextPoolIdAndIncrement(suite.Ctx)
 			suite.Require().Equal(tc.expectedNextPoolId, nextPoolId)
 			suite.Require().Equal(tc.expectedNextPoolId+1, suite.App.PoolManagerKeeper.GetNextPoolId(suite.Ctx))

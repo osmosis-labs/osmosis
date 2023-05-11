@@ -105,6 +105,10 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				suite.Require().False(params.IsPermissionlessPoolCreationEnabled)
 			},
 			func() {
+				// Validate that tokenfactory params have been updated
+				params := suite.App.TokenFactoryKeeper.GetParams(suite.Ctx)
+				suite.Require().Nil(params.DenomCreationFee)
+				suite.Require().Equal(v16.NewDenomCreationGasConsume, params.DenomCreationGasConsume)
 			},
 		},
 		{

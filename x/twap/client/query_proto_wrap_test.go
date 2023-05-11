@@ -56,7 +56,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 		result             string
 	}{
 		{
-			name:            "non-existant pool",
+			name:            "non-existent pool",
 			poolId:          0,
 			baseAssetDenom:  "tokenA",
 			quoteAssetDenom: "tokenB",
