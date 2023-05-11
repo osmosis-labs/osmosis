@@ -149,7 +149,7 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		if err != nil {
 			k.Logger(ctx).Error(err.Error())
 			k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
-			return err
+			return fmt.Errorf("failed to retrieve full range liquidity from pool (%d): %w", poolId, err)
 		}
 
 		position := model.Position{
