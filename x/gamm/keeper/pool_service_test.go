@@ -850,7 +850,7 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 			poolExitFee:       sdk.ZeroDec(),
 			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1_000_000))),
 			shareOutMinAmount: sdk.ZeroInt(),
-			expectedSharesOut: sdk.NewInt(6265857020099440400),
+			expectedSharesOut: sdk.NewInt(6265857020099440400), //100000000000000000000*(1 - ((1000000*(1-0*(1 -1/3)) + 5000000)/5000000)^(1/3))
 			tokenOutMinAmount: sdk.ZeroInt(),
 		},
 		{
@@ -859,7 +859,7 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 			poolExitFee:       sdk.ZeroDec(),
 			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1_000_000))),
 			shareOutMinAmount: sdk.ZeroInt(),
-			expectedSharesOut: sdk.NewInt(6226484702880621000),
+			expectedSharesOut: sdk.NewInt(6226484702880621000), //100000000000000000000*(1 - ((1000000*(1-0.01*(1 -1/3)) + 5000000)/5000000)^(1/3))
 			tokenOutMinAmount: sdk.ZeroInt(),
 		},
 		{
@@ -868,7 +868,7 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 			poolExitFee:       sdk.ZeroDec(),
 			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1_000_000))),
 			shareOutMinAmount: sdk.NewInt(6266484702880621000),
-			expectedSharesOut: sdk.NewInt(6265857020099440400),
+			expectedSharesOut: sdk.NewInt(6265857020099440400), //100000000000000000000*(1 - ((1000000*(1-0*(1 -1/3)) + 5000000)/5000000)^(1/3))
 			tokenOutMinAmount: sdk.ZeroInt(),
 			expectedError:     sdkerrors.Wrapf(types.ErrLimitMinAmount, fmt.Sprintf("too much slippage; needed a minimum of %v shares to pass, got %v", 6266484702880621000, 6265857020099440400)),
 		},
@@ -878,7 +878,7 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 			poolExitFee:       sdk.NewDecWithPrec(1, 2),
 			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1_000_000))),
 			shareOutMinAmount: sdk.ZeroInt(),
-			expectedSharesOut: sdk.NewInt(6265857020099440400),
+			expectedSharesOut: sdk.NewInt(6265857020099440400), //100000000000000000000*(1 - ((1000000*(1-0*(1 -1/3)) + 5000000)/5000000)^(1/3))
 			tokenOutMinAmount: sdk.ZeroInt(),
 			expectedError:     fmt.Errorf("cannot create pool with non zero exit fee, got %v", sdk.NewDecWithPrec(1, 2)),
 		},
