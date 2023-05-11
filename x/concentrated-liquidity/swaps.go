@@ -114,6 +114,8 @@ func (k Keeper) SwapExactAmountIn(
 	return tokenOutAmount, nil
 }
 
+// TODO: add godoc
+// SwapExactAmountOut does
 func (k Keeper) SwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,

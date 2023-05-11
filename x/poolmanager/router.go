@@ -285,7 +285,9 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 // MultihopSwapExactAmountOut defines the output denom and output amount for the last pool.
 // Calculation starts by providing the tokenOutAmount of the final pool to calculate the required tokenInAmount
 // the calculated tokenInAmount is used as defined tokenOutAmount of the previous pool, calculating in reverse order of the swap
-// Transaction succeeds if the calculated tokenInAmount of the first pool is less than the defined tokenInMaxAmount defined.
+// Transaction succeeds if the calculated tokenInAmount of the first pool is less than the defined tokenInMaxAmount defined and no errors
+// are encountered along the way
+
 func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	sender sdk.AccAddress,
 	route []types.SwapAmountOutRoute,
@@ -293,25 +295,28 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	tokenOut sdk.Coin,
 ) (tokenInAmount sdk.Int, err error) {
 	isMultiHopRouted, routeSwapFee, sumOfSwapFees := false, sdk.Dec{}, sdk.Dec{}
+	// Ensure that provided route is not empty and has valid denom format.
 	routeStep := types.SwapAmountOutRoutes(route)
 	if err := routeStep.Validate(); err != nil {
 		return sdk.Int{}, err
 	}
 
-	defer func() {
-		if r := recover(); r != nil {
-			tokenInAmount = sdk.Int{}
-			err = fmt.Errorf("function RouteExactAmountOut failed due to internal reason: %v", r)
-		}
-	}()
+	// ? removing defer function since we donot use panic anywhere now
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		tokenInAmount = sdk.Int{}
+	// 		err = fmt.Errorf("function RouteExactAmountOut failed due to internal reason: %v", r)
+	// 	}
+	// }()
 
-	// in this loop, we check if:
+	// In this loop (isOsmoRoutedMultihop), we check if:
 	// - the routeStep is of length 2
 	// - routeStep 1 and routeStep 2 don't trade via the same pool
 	// - routeStep 1 contains uosmo
 	// - both routeStep 1 and routeStep 2 are incentivized pools
+	//
 	// if all of the above is true, then we collect the additive and max fee between the two pools to later calculate the following:
-	// total_swap_fee = total_swap_fee = max(swapfee1, swapfee2)
+	// total_swap_fee =  max(swapfee1, swapfee2)
 	// fee_per_pool = total_swap_fee * ((pool_fee) / (swapfee1 + swapfee2))
 	if k.isOsmoRoutedMultihop(ctx, routeStep, route[0].TokenInDenom, tokenOut.Denom) {
 		isMultiHopRouted = true
@@ -343,6 +348,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	// value of this method is done when we calculate insExpected – this for loop primarily serves to execute the actual
 	// swaps on each pool.
 	for i, routeStep := range route {
+		// Get underlying pool type corresponding to the pool ID at the current routeStep.
 		swapModule, err := k.GetPoolModule(ctx, routeStep.PoolId)
 		if err != nil {
 			return sdk.Int{}, err
@@ -362,12 +368,14 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 			return sdk.Int{}, poolErr
 		}
 
-		// check if pool is active, if not error
+		// check if pool has swaps enabled
 		if !pool.IsActive(ctx) {
-			return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
+			return sdk.Int{}, types.InactivePoolError{PoolId: pool.GetId()}
 		}
 
 		swapFee := pool.GetSwapFee(ctx)
+		// If we determined the routeStep is an osmo multi-hop and both route are incentivized,
+		// we modify the swap fee accordingly.
 		if isMultiHopRouted {
 			swapFee = routeSwapFee.Mul((swapFee.Quo(sumOfSwapFees)))
 		}
