@@ -396,7 +396,7 @@ func (k Keeper) mintSharesAndLock(ctx sdk.Context, concentratedPoolId, positionI
 	// Note, the end blocker for the lockup module contains an exception for this CL denom. When a lock with a denom of cl/pool/{poolId} is mature,
 	// it does not send the coins to the owner account but instead burns them.
 	// This is implemented in such a way to use well-tested pre-existing methods rather than
-	// completely re-implementing concentrated liquidity superfluid infrastructure that has a riks of introducing bugs with new logic and methods.
+	// completely re-implementing concentrated liquidity superfluid infrastructure that has a risk of introducing bugs with new logic and methods.
 	concentratedLock, err := k.lockupKeeper.CreateLock(ctx, owner, underlyingLiquidityTokenized, remainingLockDuration)
 	if err != nil {
 		return 0, sdk.Coins{}, err
