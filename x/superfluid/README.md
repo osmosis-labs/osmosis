@@ -378,7 +378,7 @@ is executed.
 
 ## Add To Superfluid Concentrated Position
 
-This message allows a user to add liquidity to a concentrated liquidity position.
+This message allows a user to add liquidity to a concentrated liquidity superfluid position.
 
 ```{.go}
 type MsgAddToConcentratedLiquiditySuperfluidPosition struct {
