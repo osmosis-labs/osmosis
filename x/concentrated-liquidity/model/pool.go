@@ -30,6 +30,7 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 		return Pool{}, types.MatchingDenomError{Denom: denom0}
 	}
 
+	// Swap fee must be [0,1)
 	if swapFee.IsNegative() || swapFee.GTE(one) {
 		return Pool{}, types.InvalidSwapFeeError{ActualFee: swapFee}
 	}
@@ -183,9 +184,8 @@ func (p *Pool) SetLastLiquidityUpdate(newTime time.Time) {
 
 // updateLiquidityIfActivePosition updates the pool's liquidity if the position is active.
 // Returns true if updated, false otherwise.
-// TODO: add tests.
 func (p *Pool) UpdateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta sdk.Dec) bool {
-	if p.isCurrentTickInRange(lowerTick, upperTick) {
+	if p.IsCurrentTickInRange(lowerTick, upperTick) {
 		p.CurrentTickLiquidity = p.CurrentTickLiquidity.Add(liquidityDelta)
 		return true
 	}
@@ -234,7 +234,7 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 	// in favor of the pool.
 	roundUp := liquidityDelta.IsPositive()
 
-	if p.isCurrentTickInRange(lowerTick, upperTick) {
+	if p.IsCurrentTickInRange(lowerTick, upperTick) {
 		// outcome one: the current price falls within the position
 		// if this is the case, we attempt to provide liquidity evenly between asset0 and asset1
 		// we also update the pool liquidity since the virtual liquidity is modified by this position's creation
@@ -258,9 +258,8 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 
 // isCurrentTickInRange returns true if pool's current tick is within
 // the range of the lower and upper ticks. False otherwise.
-// TODO: add tests.
-func (p Pool) isCurrentTickInRange(lowerTick, upperTick int64) bool {
-	return p.CurrentTick.GTE(sdk.NewInt(lowerTick)) && p.CurrentTick.LT(sdk.NewInt(upperTick))
+func (p Pool) IsCurrentTickInRange(lowerTick, upperTick int64) bool {
+	return p.CurrentTick.GTE(sdk.NewInt(lowerTick)) && p.CurrentTick.LTE(sdk.NewInt(upperTick))
 }
 
 // ApplySwap state of pool after swap.
@@ -279,9 +278,9 @@ func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurren
 	// Check if the new tick provided is within boundaries of the pool's precision factor.
 	if newCurrentTick.LT(sdk.NewInt(types.MinTick)) || newCurrentTick.GT(sdk.NewInt(types.MaxTick)) {
 		return types.TickIndexNotWithinBoundariesError{
-			MaxTick:  types.MaxTick,
-			MinTick:  types.MinTick,
-			WantTick: newCurrentTick.Int64(),
+			MaxTick:    types.MaxTick,
+			MinTick:    types.MinTick,
+			ActualTick: newCurrentTick.Int64(),
 		}
 	}
 

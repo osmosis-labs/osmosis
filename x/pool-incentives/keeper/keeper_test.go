@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
@@ -112,7 +112,7 @@ func (suite *KeeperTestSuite) TestCreateLockablePoolGauges() {
 			name:                   "Create Gauge with valid PoolId",
 			poolId:                 uint64(1),
 			expectedGaugeDurations: durations,
-			expectedGaugeIds:       []uint64{4, 5, 6}, //note: it's not 1,2,3 because we create 3 gauges during setup of suite.PrepareBalancerPool()
+			expectedGaugeIds:       []uint64{4, 5, 6}, // note: it's not 1,2,3 because we create 3 gauges during setup of suite.PrepareBalancerPool()
 			expectedErr:            false,
 		},
 		{
@@ -218,7 +218,7 @@ func (suite *KeeperTestSuite) TestCreateConcentratedLiquidityPoolGauge() {
 				suite.Require().True(gaugeInfo.IsPerpetual)
 				suite.Require().Empty(gaugeInfo.Coins)
 				suite.Require().Equal(suite.Ctx.BlockTime(), gaugeInfo.StartTime)
-				suite.Require().Equal(sdk.DefaultBondDenom, gaugeInfo.DistributeTo.Denom)
+				suite.Require().Equal(appParams.BaseCoinUnit, gaugeInfo.DistributeTo.Denom)
 				suite.Require().Equal(uint64(1), gaugeInfo.NumEpochsPaidOver)
 			}
 		})
@@ -303,7 +303,6 @@ func (suite *KeeperTestSuite) TestGetLongestLockableDuration() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-
 			suite.App.PoolIncentivesKeeper.SetLockableDurations(suite.Ctx, tc.lockableDurations)
 
 			result, err := suite.App.PoolIncentivesKeeper.GetLongestLockableDuration(suite.Ctx)

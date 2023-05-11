@@ -14,10 +14,11 @@ import (
 )
 
 // MigrateUnlockedPositionFromBalancerToConcentrated migrates unlocked lp tokens from a balancer pool to a concentrated liquidity pool.
-// Fails if the lp tokens are locked (must utilize UnlockAndMigrate function in the superfluid module)
+// Fails if the lp tokens are locked (must instead utilize UnlockAndMigrate function in the superfluid module)
 func (k Keeper) MigrateUnlockedPositionFromBalancerToConcentrated(ctx sdk.Context,
 	sender sdk.AccAddress, sharesToMigrate sdk.Coin,
-	tokenOutMins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, poolIdLeaving, poolIdEntering uint64, err error) {
+	tokenOutMins sdk.Coins,
+) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, poolIdLeaving, poolIdEntering uint64, err error) {
 	// Get the balancer poolId by parsing the gamm share denom.
 	poolIdLeaving, err = types.GetPoolIdFromShareDenom(sharesToMigrate.Denom)
 	if err != nil {
@@ -47,7 +48,7 @@ func (k Keeper) MigrateUnlockedPositionFromBalancerToConcentrated(ctx sdk.Contex
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position.
-	positionId, amount0, amount1, liquidity, joinTime, err = k.concentratedLiquidityKeeper.CreateFullRangePosition(ctx, concentratedPool, sender, exitCoins)
+	positionId, amount0, amount1, liquidity, joinTime, err = k.concentratedLiquidityKeeper.CreateFullRangePosition(ctx, concentratedPool.GetId(), sender, exitCoins)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}

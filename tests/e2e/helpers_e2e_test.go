@@ -8,9 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
-var (
-	defaultFeePerTx = sdk.NewInt(1000)
-)
+var defaultFeePerTx = sdk.NewInt(1000)
 
 // calculateFeeGrowthGlobal calculates fee growth global per unit of virtual liquidity based on swap parameters:
 // amountIn - amount being swapped
@@ -84,6 +82,6 @@ func (s *IntegrationTestSuite) updatedPool(node *chain.NodeConfig, poolId uint64
 // Assert returned positions:
 func (s *IntegrationTestSuite) validateCLPosition(position model.Position, poolId uint64, lowerTick, upperTick int64) {
 	s.Require().Equal(position.PoolId, poolId)
-	s.Require().Equal(position.LowerTick, int64(lowerTick))
-	s.Require().Equal(position.UpperTick, int64(upperTick))
+	s.Require().Equal(position.LowerTick, lowerTick)
+	s.Require().Equal(position.UpperTick, upperTick)
 }

@@ -11,7 +11,6 @@ import (
 	_ "github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
@@ -22,23 +21,20 @@ var (
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultZeroExitFee,
 	}
-	defaultStableSwapPoolParams = stableswap.PoolParams{
-		SwapFee: defaultSwapFee,
-		ExitFee: defaultZeroExitFee,
-	}
+
 	defaultScalingFactor  = []uint64{1, 1}
 	defaultFutureGovernor = ""
 
 	// pool assets
-	defaultFooAsset = balancertypes.PoolAsset{
+	defaultFooAsset = balancer.PoolAsset{
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 	}
-	defaultBarAsset = balancertypes.PoolAsset{
+	defaultBarAsset = balancer.PoolAsset{
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}
-	defaultPoolAssets                     = []balancertypes.PoolAsset{defaultFooAsset, defaultBarAsset}
+	defaultPoolAssets                     = []balancer.PoolAsset{defaultFooAsset, defaultBarAsset}
 	defaultStableSwapPoolAssets sdk.Coins = sdk.NewCoins(
 		sdk.NewCoin("foo", sdk.NewInt(10000)),
 		sdk.NewCoin("bar", sdk.NewInt(10000)),
@@ -67,7 +63,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	// TODO: should be moved to balancer package
 	tests := []struct {
 		name        string
-		msg         balancertypes.MsgCreateBalancerPool
+		msg         balancer.MsgCreateBalancerPool
 		emptySender bool
 		expectPass  bool
 	}{
@@ -110,7 +106,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: defaultZeroExitFee,
-			}, []balancertypes.PoolAsset{}, defaultFutureGovernor),
+			}, []balancer.PoolAsset{}, defaultFutureGovernor),
 			emptySender: false,
 			expectPass:  false,
 		}, {
@@ -118,7 +114,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: defaultZeroExitFee,
-			}, []balancertypes.PoolAsset{{
+			}, []balancer.PoolAsset{{
 				Weight: sdk.NewInt(0),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}, {
@@ -132,7 +128,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: defaultZeroExitFee,
-			}, []balancertypes.PoolAsset{{
+			}, []balancer.PoolAsset{{
 				Weight: sdk.NewInt(-1),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}, {
@@ -146,7 +142,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: defaultZeroExitFee,
-			}, []balancertypes.PoolAsset{{
+			}, []balancer.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(0)),
 			}, {
@@ -160,7 +156,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: defaultZeroExitFee,
-			}, []balancertypes.PoolAsset{{
+			}, []balancer.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token: sdk.Coin{
 					Denom:  "foo",
@@ -177,7 +173,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: defaultZeroExitFee,
-			}, []balancertypes.PoolAsset{{
+			}, []balancer.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}, {
@@ -382,7 +378,6 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 					suite.Require().NoError(err, "test: %v", test.name)
 					suite.Require().Equal(poolIdFromPoolIncentives, defaultPoolId)
 				}
-
 			} else {
 				suite.Require().Error(err, "test: %v", test.name)
 			}
@@ -649,6 +644,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 				ExitFee: sdk.NewDec(0),
 			}, defaultPoolAssets, defaultFutureGovernor)
 			poolId, err := poolmanagerKeeper.CreatePool(ctx, msg)
+			suite.Require().NoError(err)
 
 			// If we are testing insufficient pool share balances, switch tx sender from pool creator to empty account
 			if test.emptySender {
@@ -685,7 +681,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 	testCases := []struct {
 		name             string
-		pool             balancertypes.MsgCreateBalancerPool
+		pool             balancer.MsgCreateBalancerPool
 		joinPoolShareAmt sdk.Int
 	}{
 		{
@@ -693,7 +689,7 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 			pool: balancer.NewMsgCreateBalancerPool(nil, balancer.PoolParams{
 				SwapFee: sdk.ZeroDec(),
 				ExitFee: sdk.ZeroDec(),
-			}, []balancertypes.PoolAsset{
+			}, []balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -710,7 +706,7 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 			pool: balancer.NewMsgCreateBalancerPool(nil, balancer.PoolParams{
 				SwapFee: sdk.ZeroDec(),
 				ExitFee: sdk.ZeroDec(),
-			}, []balancertypes.PoolAsset{
+			}, []balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("foo", sdk.NewInt(7000)),
@@ -753,6 +749,7 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 			suite.AssertEventEmitted(ctx, types.TypeEvtPoolJoined, 1)
 
 			_, err = gammKeeper.ExitPool(ctx, joinPoolAcc, poolId, tc.joinPoolShareAmt, sdk.Coins{})
+			suite.Require().NoError(err)
 
 			suite.AssertEventEmitted(ctx, types.TypeEvtPoolExited, 1)
 
@@ -876,7 +873,7 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 
 			poolID := suite.prepareCustomBalancerPool(
 				defaultAcctFunds,
-				[]balancertypes.PoolAsset{
+				[]balancer.PoolAsset{
 					{
 						Weight: sdk.NewInt(100),
 						Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),

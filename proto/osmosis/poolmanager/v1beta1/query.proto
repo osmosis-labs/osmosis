@@ -152,9 +152,7 @@ message PoolResponse {
 }
 
 //=============================== AllPools
-message AllPoolsRequest {
-  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-}
+message AllPoolsRequest {}
 message AllPoolsResponse {
   repeated google.protobuf.Any pools = 1
       [ (cosmos_proto.accepts_interface) = "PoolI" ];

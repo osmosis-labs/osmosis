@@ -3,9 +3,11 @@ package keeper_test
 import (
 	"fmt"
 	"strings"
-
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
@@ -21,7 +23,10 @@ func BenchmarkEpochHook(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		b.StartTimer()
-		suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
+		err := suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
+		if err != nil {
+			panic(fmt.Sprintf("error updating pools in protorev epoch hook benchmark: %s", err))
+		}
 		b.StopTimer()
 	}
 }
@@ -46,7 +51,6 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 	baseDenoms, err := suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
 	suite.Require().NoError(err)
 	for _, pool := range suite.pools {
-
 		// Module currently limited to two asset pools
 		// Instantiate asset and amounts for the pool
 		if len(pool.PoolAssets) == 2 {
@@ -115,6 +119,67 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 	}
 
 	suite.Require().Equal(totalNumberExpected, totalActuallySeen)
+}
+
+// TestUpdateHighestLiquidityPools tests that UpdateHighestLiquidityPools correctly returns the pools with the highest liquidity
+// given specific base denoms as input. The pools this test uses are created in the SetupTest function in keeper_test.go.
+// This test uses pools with denoms prefixed with "epoch" which are only used for this test, so that pools created for
+// other tests do not change the results of this test.
+func (suite *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
+	testCases := []struct {
+		name                   string
+		inputBaseDenomPools    map[string]map[string]keeper.LiquidityPoolStruct
+		expectedBaseDenomPools map[string]map[string]keeper.LiquidityPoolStruct
+	}{
+		{
+			// There are 2 pools with epochOne and uosmo as denoms, both in the GAMM module.
+			// pool with ID 46 has a liquidity value of 1,000,000
+			// pool with ID 47 has a liquidity value of 2,000,000
+			// pool with ID 47 should be returned as the highest liquidity pool
+			// We provide epochOne as the input base denom, to test the method chooses the correct pool
+			// within the same pool module
+			name: "Get highest liquidity pools for two GAMM pools",
+			inputBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
+				"epochOne": {},
+			},
+			expectedBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
+				"epochOne": {
+					"uosmo": {Liquidity: sdk.NewInt(2000000), PoolId: 47},
+				},
+			},
+		},
+		{
+			// There are 2 pools with epochTwo and uosmo as denoms,
+			// One in the GAMM module and one in the Concentrated Liquidity module.
+			// pool with ID 48 has a liquidity value of 1,000,000
+			// pool with ID 49 has a liquidity value of 2,000,000
+			// pool with ID 49 should be returned as the highest liquidity pool
+			// We provide epochTwo as the input base denom, to test the method chooses the correct pool
+			// across the GAMM and Concentrated Liquidity modules
+			name: "Get highest liquidity pools for one GAMM pool and one Concentrated Liquidity pool",
+			inputBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
+				"epochTwo": {},
+			},
+			expectedBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
+				"epochTwo": {
+					"uosmo": {Liquidity: sdk.NewInt(2000000), PoolId: 49},
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		suite.Run(tc.name, func() {
+			// SetupTest creates all the pools used in the ProtoRev test suite,
+			// including the pools with "epoch" prefixed denoms used in this test
+			suite.SetupTest()
+
+			err := suite.App.ProtoRevKeeper.UpdateHighestLiquidityPools(suite.Ctx, tc.inputBaseDenomPools)
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.inputBaseDenomPools, tc.expectedBaseDenomPools)
+		})
+	}
 }
 
 func contains(baseDenoms []types.BaseDenom, denomToMatch string) bool {

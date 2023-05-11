@@ -386,7 +386,7 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares_Events() {
 			},
 			sharesToCreate:             defaultGammShares.Amount,
 			expectedMigrateShareEvents: 1,
-			expectedMessageEvents:      3, // 1 exitPool, 1 createPosition, 1 migrateShares.
+			expectedMessageEvents:      4, // 1 create pool, 1 exitPool, 1 createPosition, 1 migrateShares.
 		},
 		{
 			name: "migrate half of the shares",
@@ -397,7 +397,7 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares_Events() {
 			},
 			sharesToCreate:             defaultGammShares.Amount,
 			expectedMigrateShareEvents: 1,
-			expectedMessageEvents:      3, // 1 exitPool, 1 createPosition, 1 migrateShares.
+			expectedMessageEvents:      4, // 1 create pool, 1 exitPool, 1 createPosition, 1 migrateShares.
 		},
 		{
 			name: "double the created shares, migrate 1/4 of the shares",
@@ -408,7 +408,7 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares_Events() {
 			},
 			sharesToCreate:             defaultGammShares.Amount.Mul(sdk.NewInt(2)),
 			expectedMigrateShareEvents: 1,
-			expectedMessageEvents:      3, // 1 exitPool, 1 createPosition, 1 migrateShares.
+			expectedMessageEvents:      4, // 1 create pool, 1 exitPool, 1 createPosition, 1 migrateShares.
 		},
 		{
 			name: "error: attempt to migrate shares from non-existent pool",
@@ -428,7 +428,7 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares_Events() {
 				sharesToMigrateAmount: defaultGammShares.Amount.Add(sdk.NewInt(1)),
 			},
 			sharesToCreate:        defaultGammShares.Amount,
-			expectedMessageEvents: 1, // 1 exitPool.
+			expectedMessageEvents: 1, // 1 create pool
 			expectError:           true,
 		},
 	}

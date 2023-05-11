@@ -343,7 +343,7 @@ func (suite *KeeperTestSuite) TestLockedByID() {
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
 	// lock by not available id check
-	res, err := suite.querier.LockedByID(sdk.WrapSDKContext(suite.Ctx), &types.LockedRequest{LockId: 0})
+	_, err := suite.querier.LockedByID(sdk.WrapSDKContext(suite.Ctx), &types.LockedRequest{LockId: 0})
 	suite.Require().Error(err)
 
 	// lock coins
@@ -351,7 +351,7 @@ func (suite *KeeperTestSuite) TestLockedByID() {
 	suite.LockTokens(addr1, coins, time.Second)
 
 	// lock by available available id check
-	res, err = suite.querier.LockedByID(sdk.WrapSDKContext(suite.Ctx), &types.LockedRequest{LockId: 1})
+	res, err := suite.querier.LockedByID(sdk.WrapSDKContext(suite.Ctx), &types.LockedRequest{LockId: 1})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Lock.ID, uint64(1))
 	suite.Require().Equal(res.Lock.Owner, addr1.String())
@@ -389,11 +389,11 @@ func (suite *KeeperTestSuite) TestAccountLockedLongerDuration() {
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
 	// empty address locks longer than duration check
-	res, err := suite.querier.AccountLockedLongerDuration(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationRequest{Owner: "", Duration: time.Second})
+	_, err := suite.querier.AccountLockedLongerDuration(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationRequest{Owner: "", Duration: time.Second})
 	suite.Require().Error(err)
 
 	// initial check
-	res, err = suite.querier.AccountLockedLongerDuration(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationRequest{Owner: addr1.String(), Duration: time.Second})
+	res, err := suite.querier.AccountLockedLongerDuration(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationRequest{Owner: addr1.String(), Duration: time.Second})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Locks, 0)
 
@@ -423,11 +423,11 @@ func (suite *KeeperTestSuite) TestAccountLockedLongerDurationNotUnlockingOnly() 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
 	// empty address locks longer than duration check
-	res, err := suite.querier.AccountLockedLongerDurationNotUnlockingOnly(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: "", Duration: time.Second})
+	_, err := suite.querier.AccountLockedLongerDurationNotUnlockingOnly(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: "", Duration: time.Second})
 	suite.Require().Error(err)
 
 	// initial check
-	res, err = suite.querier.AccountLockedLongerDurationNotUnlockingOnly(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: addr1.String(), Duration: time.Second})
+	res, err := suite.querier.AccountLockedLongerDurationNotUnlockingOnly(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: addr1.String(), Duration: time.Second})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Locks, 0)
 
@@ -453,11 +453,11 @@ func (suite *KeeperTestSuite) TestAccountLockedLongerDurationDenom() {
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
 	// empty address locks longer than duration by denom check
-	res, err := suite.querier.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: "", Duration: time.Second, Denom: "stake"})
+	_, err := suite.querier.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: "", Duration: time.Second, Denom: "stake"})
 	suite.Require().Error(err)
 
 	// initial check
-	res, err = suite.querier.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: addr1.String(), Duration: time.Second, Denom: "stake"})
+	res, err := suite.querier.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: addr1.String(), Duration: time.Second, Denom: "stake"})
 	suite.Require().NoError(err)
 	suite.Require().Len(res.Locks, 0)
 
