@@ -12,7 +12,7 @@ updates:
       update-types: ["version-update:semver-major", "version-update:semver-minor"]
   open-pull-requests-limit: 10
 - package-ecosystem: cargo
-  directory: "/"
+  directory: "/cosmwasm"
   schedule:
     interval: weekly
   open-pull-requests-limit: 10
