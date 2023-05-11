@@ -421,7 +421,7 @@ func (p *Pool) SetScalingFactors(ctx sdk.Context, scalingFactors []uint64, sende
 // 1. calculate how much percent of the pool does given share account for(# of input shares / # of current total shares)
 // 2. since we know how much % of the pool we want, iterate through all pool liquidity to calculate how much coins we need for
 // each pool asset.
-func (p *Pool) GetMaximalNoSwapLPAmount(ctx sdk.Context, shareOutAmount sdk.Int) (neededLpLiquidity sdk.Coins, err error) {
+func (p Pool) GetMaximalNoSwapLPAmount(ctx sdk.Context, shareOutAmount sdk.Int) (neededLpLiquidity sdk.Coins, err error) {
 	totalSharesAmount := p.GetTotalShares()
 	// shareRatio is the desired number of shares, divided by the total number of
 	// shares currently in the pool. It is intended to be used in scenarios where you want
