@@ -917,7 +917,7 @@ func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 	}
 
 	if !lock.IsUnlocking() {
-		return fmt.Errorf("lock %d is not unlocking, rebonding only possible in unlocking stage", lockID)
+		return errorsmod.Wrap(types.ErrLockNotUnlocking, fmt.Sprintf("lock %d is not unlocking, rebonding only possible in unlocking stage", lockID))
 	}
 
 	// If all checks pass, we can rebond the tokens
@@ -932,7 +932,7 @@ func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 		lock.Coins = lock.Coins.Sub(coins)
 		err = k.setLock(ctx, *lock)
 		if err != nil {
-			return fmt.Errorf("failed to set original lock: %w", err)
+			return errorsmod.Wrap(types.ErrFailedToSetLock, fmt.Sprintf("failed to set original lock %d: %s", lock.ID, err.Error()))
 		}
 
 		// create a rebonded lock
@@ -942,7 +942,7 @@ func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 
 		err = k.setLock(ctx, rebondedLock)
 		if err != nil {
-			return fmt.Errorf("failed to set rebonded lock: %w", err)
+			return errorsmod.Wrap(types.ErrFailedToSetLock, fmt.Sprintf("failed to set rebonding lock %d: %s", rebondedLock.ID, err.Error()))
 		}
 	} else {
 		// Fully re-bonding the lock
