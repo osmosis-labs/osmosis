@@ -114,8 +114,8 @@ func (k Keeper) SwapExactAmountIn(
 	return tokenOutAmount, nil
 }
 
-// TODO: add godoc
-// SwapExactAmountOut does
+// SwapExactAmountOut allows users to specify the output token amount they want to receive from a swap and get the exact
+// input token amount they need to provide based on the current pool prices and any applicable fees.
 func (k Keeper) SwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -140,6 +140,7 @@ func (k Keeper) SwapExactAmountOut(
 	zeroForOne := tokenOut.Denom == asset1
 
 	// change priceLimit based on which direction we are swapping
+	// if zeroForOne == true, use MinSpotPrice else use MaxSpotPrice
 	priceLimit := swapstrategy.GetPriceLimit(zeroForOne)
 	tokenIn, tokenOut, _, _, _, err := k.swapInAmtGivenOut(ctx, sender, pool, tokenOut, tokenInDenom, swapFee, priceLimit)
 	if err != nil {
@@ -155,7 +156,7 @@ func (k Keeper) SwapExactAmountOut(
 	return tokenInAmount, nil
 }
 
-// SwapOutAmtGivenIn is the internal mutative method for CalcOutAmtGivenIn. Utilizing CalcOutAmtGivenIn's output, this function applies the
+// swapOutAmtGivenIn is the internal mutative method for CalcOutAmtGivenIn. Utilizing CalcOutAmtGivenIn's output, this function applies the
 // new tick, liquidity, and sqrtPrice to the respective pool
 func (k Keeper) swapOutAmtGivenIn(
 	ctx sdk.Context,
@@ -184,6 +185,8 @@ func (k Keeper) swapOutAmtGivenIn(
 	return tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, nil
 }
 
+// swapInAmtGivenOut is the internal mutative method for calcInAmtGivenOut. Utilizing calcInAmtGivenOut's output, this function applies the
+// new tick, liquidity, and sqrtPrice to the respective pool.
 func (k *Keeper) swapInAmtGivenOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
