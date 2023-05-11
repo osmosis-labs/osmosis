@@ -531,6 +531,7 @@ func (k Keeper) computeInAmtGivenOut(
 		feeGrowthGlobal:          sdk.ZeroDec(),
 	}
 
+	// ? is this todo still valid?
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
 	for swapState.amountSpecifiedRemaining.GT(smallestDec) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
