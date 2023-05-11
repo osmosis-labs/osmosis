@@ -218,7 +218,7 @@ func (k Keeper) beginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Co
 	// Otherwise, split the lock into two locks, and fully unlock the newly created lock.
 	// (By virtue, the newly created lock we split into should have the unlock amount)
 	if len(coins) != 0 && !coins.IsEqual(lock.Coins) {
-		splitLock, err := k.splitLock(ctx, lock, coins, false)
+		splitLock, err := k.SplitLock(ctx, lock, coins, false)
 		if err != nil {
 			return 0, err
 		}
@@ -336,7 +336,7 @@ func (k Keeper) PartialForceUnlock(ctx sdk.Context, lock types.PeriodLock, coins
 	// split lock to support partial force unlock.
 	// (By virtue, the newly created lock we split into should have the unlock amount)
 	if len(coins) != 0 && !coins.IsEqual(lock.Coins) {
-		splitLock, err := k.splitLock(ctx, lock, coins, true)
+		splitLock, err := k.SplitLock(ctx, lock, coins, true)
 		if err != nil {
 			return err
 		}
@@ -750,9 +750,9 @@ func (k Keeper) deleteLock(ctx sdk.Context, id uint64) {
 	store.Delete(lockStoreKey(id))
 }
 
-// splitLock splits a lock with the given amount, and stores split new lock to the state.
+// SplitLock splits a lock with the given amount, and stores split new lock to the state.
 // Returns the new lock after modifying the state of the old lock.
-func (k Keeper) splitLock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins, forceUnlock bool) (types.PeriodLock, error) {
+func (k Keeper) SplitLock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins, forceUnlock bool) (types.PeriodLock, error) {
 	if !forceUnlock && lock.IsUnlocking() {
 		return types.PeriodLock{}, fmt.Errorf("cannot split unlocking lock")
 	}

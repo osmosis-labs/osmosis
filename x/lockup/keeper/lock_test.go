@@ -1272,6 +1272,7 @@ func (suite *KeeperTestSuite) TestPartialForceUnlock() {
 
 	defaultDenomToLock := "stake"
 	defaultAmountToLock := sdk.NewInt(10000000)
+	coinsToLock := sdk.NewCoins(sdk.NewCoin("stake", defaultAmountToLock))
 
 	testCases := []struct {
 		name               string
@@ -1280,7 +1281,7 @@ func (suite *KeeperTestSuite) TestPartialForceUnlock() {
 	}{
 		{
 			name:               "unlock full amount",
-			coinsToForceUnlock: sdk.Coins{sdk.NewCoin(defaultDenomToLock, defaultAmountToLock)},
+			coinsToForceUnlock: coinsToLock,
 			expectedPass:       true,
 		},
 		{
@@ -1302,9 +1303,9 @@ func (suite *KeeperTestSuite) TestPartialForceUnlock() {
 	for _, tc := range testCases {
 		// set up test and create default lock
 		suite.SetupTest()
-		coinsToLock := sdk.NewCoins(sdk.NewCoin("stake", defaultAmountToLock))
+
 		suite.FundAcc(addr1, sdk.NewCoins(coinsToLock...))
-		// balanceBeforeLock := suite.App.BankKeeper.GetAllBalances(suite.Ctx, addr1)
+
 		lock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, addr1, coinsToLock, time.Minute)
 		suite.Require().NoError(err)
 
