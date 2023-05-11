@@ -170,6 +170,21 @@ func (mr *MockCFMMPoolIMockRecorder) GetId() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetId", reflect.TypeOf((*MockCFMMPoolI)(nil).GetId))
 }
 
+// GetMaximalNoSwapLPAmount mocks base method.
+func (m *MockCFMMPoolI) GetMaximalNoSwapLPAmount(ctx types.Context, shareOutAmount types.Int) (types.Coins, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMaximalNoSwapLPAmount", ctx, shareOutAmount)
+	ret0, _ := ret[0].(types.Coins)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMaximalNoSwapLPAmount indicates an expected call of GetMaximalNoSwapLPAmount.
+func (mr *MockCFMMPoolIMockRecorder) GetMaximalNoSwapLPAmount(ctx, shareOutAmount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaximalNoSwapLPAmount", reflect.TypeOf((*MockCFMMPoolI)(nil).GetMaximalNoSwapLPAmount), ctx, shareOutAmount)
+}
+
 // GetSwapFee mocks base method.
 func (m *MockCFMMPoolI) GetSwapFee(ctx types.Context) types.Dec {
 	m.ctrl.T.Helper()
@@ -540,6 +555,21 @@ func (mr *MockPoolAmountOutExtensionMockRecorder) GetId() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetId", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).GetId))
 }
 
+// GetMaximalNoSwapLPAmount mocks base method.
+func (m *MockPoolAmountOutExtension) GetMaximalNoSwapLPAmount(ctx types.Context, shareOutAmount types.Int) (types.Coins, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMaximalNoSwapLPAmount", ctx, shareOutAmount)
+	ret0, _ := ret[0].(types.Coins)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMaximalNoSwapLPAmount indicates an expected call of GetMaximalNoSwapLPAmount.
+func (mr *MockPoolAmountOutExtensionMockRecorder) GetMaximalNoSwapLPAmount(ctx, shareOutAmount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaximalNoSwapLPAmount", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).GetMaximalNoSwapLPAmount), ctx, shareOutAmount)
+}
+
 // GetSwapFee mocks base method.
 func (m *MockPoolAmountOutExtension) GetSwapFee(ctx types.Context) types.Dec {
 	m.ctrl.T.Helper()
@@ -905,6 +935,21 @@ func (m *MockWeightedPoolExtension) GetId() uint64 {
 func (mr *MockWeightedPoolExtensionMockRecorder) GetId() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetId", reflect.TypeOf((*MockWeightedPoolExtension)(nil).GetId))
+}
+
+// GetMaximalNoSwapLPAmount mocks base method.
+func (m *MockWeightedPoolExtension) GetMaximalNoSwapLPAmount(ctx types.Context, shareOutAmount types.Int) (types.Coins, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMaximalNoSwapLPAmount", ctx, shareOutAmount)
+	ret0, _ := ret[0].(types.Coins)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMaximalNoSwapLPAmount indicates an expected call of GetMaximalNoSwapLPAmount.
+func (mr *MockWeightedPoolExtensionMockRecorder) GetMaximalNoSwapLPAmount(ctx, shareOutAmount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaximalNoSwapLPAmount", reflect.TypeOf((*MockWeightedPoolExtension)(nil).GetMaximalNoSwapLPAmount), ctx, shareOutAmount)
 }
 
 // GetSwapFee mocks base method.
