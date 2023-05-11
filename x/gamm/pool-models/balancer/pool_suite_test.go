@@ -1106,7 +1106,7 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 			initialTokensDenomOut: 9_223_372_036_854_775_807,
 			percentRatio:          0,
 		},
-		{ //
+		{
 			initialTokensDenomIn:  9_223_372_036_854_775_807,
 			initialTokensDenomOut: 1,
 			percentRatio:          101,
