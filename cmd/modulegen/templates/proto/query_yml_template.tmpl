@@ -1,0 +1,10 @@
+keeper: 
+  path: "{{.ModulePath}}"
+  struct: "Keeper"
+client_path: "{{.ModulePath}}/client"
+queries:
+  Params:
+    proto_wrapper:
+      query_func: "k.GetParams"
+    cli:
+      cmd: "GetParams"

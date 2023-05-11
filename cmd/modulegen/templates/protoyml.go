@@ -20,6 +20,13 @@ func ParseProtoFilePath(filePath string) (string, string) {
 	if err != nil {
 		panic(err)
 	}
-	protoFilePath := strings.Replace(filepath.Join(folderPath, filepath.Base(filePath[:len(filePath)-4]+"proto")), "_template", "", 1)
+	var protoFilePath string
+	if strings.Contains(filePath, "yml") {
+		// parse query.yml file
+		protoFilePath = strings.Replace(filepath.Join(folderPath, filepath.Base(filePath[:len(filePath)-4]+"yml")), "_yml_template", "", 1)
+	} else {
+		protoFilePath = strings.Replace(filepath.Join(folderPath, filepath.Base(filePath[:len(filePath)-4]+"proto")), "_template", "", 1)
+	}
+	
 	return folderPath, protoFilePath
 }
