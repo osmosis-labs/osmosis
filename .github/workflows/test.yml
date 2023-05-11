@@ -89,7 +89,7 @@ jobs:
         uses: docker/setup-buildx-action@v2
         if: env.GIT_DIFF
       - name: Build e2e image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           load: true
           context: .
