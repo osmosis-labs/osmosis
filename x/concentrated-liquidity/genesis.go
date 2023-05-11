@@ -79,6 +79,16 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		feePositionKey := types.KeyFeePositionAccumulator(positionWrapper.Position.PositionId)
 
 		k.initOrUpdateAccumPosition(ctx, feeAccumObject, positionWrapper.FeeAccumRecord.AccumValuePerShare, feePositionKey, positionWrapper.FeeAccumRecord.NumShares, positionWrapper.FeeAccumRecord.UnclaimedRewardsTotal, positionWrapper.FeeAccumRecord.Options)
+
+		positionName := string(types.KeyPositionId(positionWrapper.Position.PositionId))
+		uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, positionWrapper.Position.PoolId)
+		if err != nil {
+			panic(err)
+		}
+
+		for uptimeIndex, uptimeRecord := range positionWrapper.UptimeAccumRecord {
+			k.initOrUpdateAccumPosition(ctx, uptimeAccumulators[uptimeIndex], uptimeRecord.AccumValuePerShare, positionName, uptimeRecord.NumShares, uptimeRecord.UnclaimedRewardsTotal, uptimeRecord.Options)
+		}
 	}
 }
 

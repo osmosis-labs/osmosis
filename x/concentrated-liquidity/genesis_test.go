@@ -72,10 +72,10 @@ var (
 	}
 
 	accumRecord = accum.Record{
-		NumShares:        sdk.OneDec(),
-		InitAccumValue:   sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50))),
-		UnclaimedRewards: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(25))),
-		Options:          nil,
+		NumShares:             sdk.OneDec(),
+		AccumValuePerShare:    sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50))),
+		UnclaimedRewardsTotal: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(25))),
+		Options:               nil,
 	}
 
 	// five records because we have 5 supportive uptimes
@@ -90,8 +90,8 @@ var (
 
 func accumRecordWithDefinedValues(accumRecord accum.Record, numShares sdk.Dec, initAccumValue, unclaimedRewards sdk.Int) accum.Record {
 	accumRecord.NumShares = numShares
-	accumRecord.InitAccumValue = sdk.NewDecCoins(sdk.NewDecCoin("uion", initAccumValue))
-	accumRecord.UnclaimedRewards = sdk.NewDecCoins(sdk.NewDecCoin("uosmo", unclaimedRewards))
+	accumRecord.AccumValuePerShare = sdk.NewDecCoins(sdk.NewDecCoin("uion", initAccumValue))
+	accumRecord.UnclaimedRewardsTotal = sdk.NewDecCoins(sdk.NewDecCoin("uosmo", unclaimedRewards))
 	return accumRecord
 }
 
