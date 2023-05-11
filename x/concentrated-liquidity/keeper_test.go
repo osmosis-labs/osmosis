@@ -331,11 +331,11 @@ func (s *KeeperTestSuite) validatePositionFeeGrowth(poolId uint64, positionId ui
 	positionRecord, err := accum.GetPosition(types.KeyFeePositionAccumulator(positionId))
 	s.Require().NoError(err)
 	if expectedUnclaimedRewards.IsZero() {
-		s.Require().Equal(expectedUnclaimedRewards, positionRecord.UnclaimedRewards)
+		s.Require().Equal(expectedUnclaimedRewards, positionRecord.UnclaimedRewardsTotal)
 	} else {
-		s.Require().Equal(expectedUnclaimedRewards[0].Amount.Mul(DefaultLiquidityAmt), positionRecord.UnclaimedRewards.AmountOf(expectedUnclaimedRewards[0].Denom))
+		s.Require().Equal(expectedUnclaimedRewards[0].Amount.Mul(DefaultLiquidityAmt), positionRecord.UnclaimedRewardsTotal.AmountOf(expectedUnclaimedRewards[0].Denom))
 		if expectedUnclaimedRewards.Len() > 1 {
-			s.Require().Equal(expectedUnclaimedRewards[1].Amount.Mul(DefaultLiquidityAmt), positionRecord.UnclaimedRewards.AmountOf(expectedUnclaimedRewards[1].Denom))
+			s.Require().Equal(expectedUnclaimedRewards[1].Amount.Mul(DefaultLiquidityAmt), positionRecord.UnclaimedRewardsTotal.AmountOf(expectedUnclaimedRewards[1].Denom))
 		}
 	}
 }

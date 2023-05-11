@@ -225,7 +225,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				s.Require().NoError(err)
 
 				// We expect the position's accum record to be initialized to the uptime growth *inside* its range
-				s.Require().Equal(expectedInitAccumValues[uptimeIndex], positionRecord.InitAccumValue)
+				s.Require().Equal(expectedInitAccumValues[uptimeIndex], positionRecord.AccumValuePerShare)
 				s.Require().Equal(test.expectedLiquidity, positionRecord.NumShares)
 
 				// Accumulator value related checks

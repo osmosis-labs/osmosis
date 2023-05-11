@@ -671,7 +671,7 @@ func (k Keeper) initOrUpdatePositionUptimeAccumulators(ctx sdk.Context, poolId u
 			// Since the position should only be entitled to uptime growth within its range, we checkpoint globalUptimeGrowthInsideRange as
 			// its accumulator's init value. During the claiming (or, equivalently, position updating) process, we ensure that incentives are
 			// not overpaid.
-			err = curUptimeAccum.NewPositionCustomAcc(positionName, liquidity, globalUptimeGrowthInsideRange[uptimeIndex], emptyOptions)
+			err = curUptimeAccum.NewPositionIntervalAccumulation(positionName, liquidity, globalUptimeGrowthInsideRange[uptimeIndex], emptyOptions)
 			if err != nil {
 				return err
 			}
@@ -684,7 +684,7 @@ func (k Keeper) initOrUpdatePositionUptimeAccumulators(ctx sdk.Context, poolId u
 
 			// Note that even though "unclaimed rewards" accrue in the accumulator prior to reaching minUptime, since position withdrawal
 			// and incentive collection are only allowed when current time is past minUptime these rewards are not accessible until then.
-			err = curUptimeAccum.UpdatePositionCustomAcc(positionName, liquidityDelta, globalUptimeGrowthInsideRange[uptimeIndex])
+			err = curUptimeAccum.UpdatePositionIntervalAccumulation(positionName, liquidityDelta, globalUptimeGrowthInsideRange[uptimeIndex])
 			if err != nil {
 				return err
 			}
@@ -727,7 +727,7 @@ func prepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey stri
 		// Since this is the time we update the accumulator, we must subtract the growth outside from the global accumulator value
 		// to get growth inside at the current block time.
 		currentGrowthInsideForPosition := accum.GetValue().Sub(growthOutside)
-		err := accum.SetPositionCustomAcc(positionKey, currentGrowthInsideForPosition)
+		err := accum.SetPositionIntervalAccumulation(positionKey, currentGrowthInsideForPosition)
 		if err != nil {
 			return sdk.Coins{}, sdk.DecCoins{}, err
 		}
@@ -763,7 +763,7 @@ func moveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum accum.Accumu
 
 	// Ensure that the new position's accumulator value is the growth inside.
 	currentGrowthInsideForPosition := accum.GetValue().Sub(growthOutside)
-	err = accum.SetPositionCustomAcc(newPositionName, currentGrowthInsideForPosition)
+	err = accum.SetPositionIntervalAccumulation(newPositionName, currentGrowthInsideForPosition)
 	if err != nil {
 		return err
 	}

@@ -78,7 +78,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		}
 		feePositionKey := types.KeyFeePositionAccumulator(positionWrapper.Position.PositionId)
 
-		k.initOrUpdateAccumPosition(ctx, feeAccumObject, positionWrapper.FeeAccumRecord.InitAccumValue, feePositionKey, positionWrapper.FeeAccumRecord.NumShares, positionWrapper.FeeAccumRecord.UnclaimedRewards, positionWrapper.FeeAccumRecord.Options)
+		k.initOrUpdateAccumPosition(ctx, feeAccumObject, positionWrapper.FeeAccumRecord.AccumValuePerShare, feePositionKey, positionWrapper.FeeAccumRecord.NumShares, positionWrapper.FeeAccumRecord.UnclaimedRewardsTotal, positionWrapper.FeeAccumRecord.Options)
 	}
 }
 
@@ -206,12 +206,12 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 
 // initOrUpdateAccumPosition creates a new position or override an existing position
 // at accumulator's current value with a specific number of shares and unclaimed rewards
-func (k Keeper) initOrUpdateAccumPosition(ctx sdk.Context, accumumulator accum.AccumulatorObject, accumulatorValue sdk.DecCoins, index string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *accum.Options) {
+func (k Keeper) initOrUpdateAccumPosition(ctx sdk.Context, accumumulator accum.AccumulatorObject, accumulatorValuePerShare sdk.DecCoins, index string, numShareUnits sdk.Dec, unclaimedRewardsTotal sdk.DecCoins, options *accum.Options) {
 	position := accum.Record{
-		NumShares:        numShareUnits,
-		InitAccumValue:   accumulatorValue,
-		UnclaimedRewards: unclaimedRewards,
-		Options:          options,
+		NumShares:             numShareUnits,
+		AccumValuePerShare:    accumulatorValuePerShare,
+		UnclaimedRewardsTotal: unclaimedRewardsTotal,
+		Options:               options,
 	}
 
 	osmoutils.MustSet(ctx.KVStore(k.storeKey), accum.FormatPositionPrefixKey(accumumulator.GetName(), index), &position)

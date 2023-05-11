@@ -2039,7 +2039,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 				positionRecord, err := accum.GetPosition(uptimeAccums[uptimeIndex], positionName)
 				s.Require().NoError(err)
 
-				s.Require().Equal(test.expectedInitAccumValue[uptimeIndex], positionRecord.InitAccumValue)
+				s.Require().Equal(test.expectedInitAccumValue[uptimeIndex], positionRecord.AccumValuePerShare)
 
 				if test.existingPosition {
 					s.Require().Equal(sdk.NewDec(2).Mul(test.positionLiquidity), positionRecord.NumShares)
@@ -2048,7 +2048,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 				}
 
 				// Note that the rewards only apply to the initial shares, not the new ones
-				s.Require().Equal(test.expectedUnclaimedRewards[uptimeIndex].MulDec(test.positionLiquidity), positionRecord.UnclaimedRewards)
+				s.Require().Equal(test.expectedUnclaimedRewards[uptimeIndex].MulDec(test.positionLiquidity), positionRecord.UnclaimedRewardsTotal)
 			}
 		})
 	}
@@ -3292,7 +3292,7 @@ func (s *KeeperTestSuite) TestPrepareAccumAndClaimRewards() {
 			positionKey := validPositionKey
 
 			// Initialize position accumulator.
-			err = poolFeeAccumulator.NewPositionCustomAcc(positionKey, sdk.OneDec(), sdk.DecCoins{}, nil)
+			err = poolFeeAccumulator.NewPosition(positionKey, sdk.OneDec(), nil)
 			s.Require().NoError(err)
 
 			// Record the initial position accumulator value.
@@ -3326,7 +3326,7 @@ func (s *KeeperTestSuite) TestPrepareAccumAndClaimRewards() {
 
 			// Check that the difference between the new and old position accumulator values is equal to the growth inside (since
 			// we recalibrate the position accum value after claiming).
-			positionAccumDelta := positionPost.InitAccumValue.Sub(positionPre.InitAccumValue)
+			positionAccumDelta := positionPost.AccumValuePerShare.Sub(positionPre.AccumValuePerShare)
 			s.Require().Equal(tc.growthInside, positionAccumDelta)
 		})
 	}
@@ -4398,10 +4398,10 @@ func (s *KeeperTestSuite) TestMoveRewardsToNewPositionAndDeleteOldAcc() {
 			s.Require().NoError(err)
 
 			// Validate unclaimed rewards
-			s.Require().Equal(tc.expectedUnclaimedRewards, newPositionAccumulator.UnclaimedRewards)
+			s.Require().Equal(tc.expectedUnclaimedRewards, newPositionAccumulator.UnclaimedRewardsTotal)
 
 			// Validate that position accumulator equals to the growth inside.
-			s.Require().Equal(testAccumulator.GetValue().Sub(tc.growthOutside), newPositionAccumulator.InitAccumValue)
+			s.Require().Equal(testAccumulator.GetValue().Sub(tc.growthOutside), newPositionAccumulator.AccumValuePerShare)
 		})
 	}
 }
