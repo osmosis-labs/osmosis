@@ -26,11 +26,12 @@ const noUnderlyingLockId = uint64(0)
 // On success, returns an actual amount of each token used and liquidity created.
 // Returns error if:
 // - the provided ticks are out of range / invalid
+// - if one of the provided min amounts are negative
 // - the pool provided does not exist
 // - the liquidity delta is zero
 // - the amount0 or amount1 returned from the position update is less than the given minimums
 // - the pool or user does not have enough tokens to satisfy the requested amount
-func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (uint64, sdk.Int, sdk.Int, sdk.Dec, time.Time, error) {
+func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (uint64, sdk.Int, sdk.Int, sdk.Dec, time.Time, error) {
 	// Use the current blockTime as the position's join time.
 	joinTime := ctx.BlockTime()
 
@@ -39,9 +40,23 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
+
 	// Check if the provided tick range is valid according to the pool's tick spacing and module parameters.
 	if err := validateTickRangeIsValid(pool.GetTickSpacing(), lowerTick, upperTick); err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
+	}
+	amount0Desired := tokensProvided.AmountOf(pool.GetToken0())
+	amount1Desired := tokensProvided.AmountOf(pool.GetToken1())
+	if amount0Desired.IsZero() && amount1Desired.IsZero() {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, errors.New("cannot create a position with zero amounts of both pool tokens")
+	}
+
+	// sanity check that both given minimum accounts are not negative amounts.
+	if amount0Min.IsNegative() {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, types.NotPositiveRequireAmountError{Amount: amount0Min.String()}
+	}
+	if amount1Min.IsNegative() {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, types.NotPositiveRequireAmountError{Amount: amount1Min.String()}
 	}
 
 	// Transform the provided ticks into their corresponding sqrtPrices.
@@ -50,11 +65,6 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
 
-	// Create a cache context for the current transaction.
-	// This allows us to make changes to the context without persisting it until later.
-	// We only write the cache context (i.e. persist the changes) if the actual amounts returned
-	// are greater than the given minimum amounts.
-	cacheCtx, writeCacheCtx := ctx.CacheContext()
 	positionId := k.getNextPositionIdAndIncrement(ctx)
 
 	// If this is the first position created in this pool, ensure that the position includes both asset0 and asset1
@@ -64,7 +74,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
 	if !hasPositions {
-		err := k.initializeInitialPositionForPool(cacheCtx, pool, amount0Desired, amount1Desired)
+		err := k.initializeInitialPositionForPool(ctx, pool, amount0Desired, amount1Desired)
 		if err != nil {
 			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 		}
@@ -77,7 +87,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// Initialize / update the position in the pool based on the provided tick range and liquidity delta.
-	actualAmount0, actualAmount1, err := k.UpdatePosition(cacheCtx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
+	actualAmount0, actualAmount1, err := k.UpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
@@ -91,13 +101,10 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// Transfer the actual amounts of tokens 0 and 1 from the position owner to the pool.
-	err = k.sendCoinsBetweenPoolAndUser(cacheCtx, pool.GetToken0(), pool.GetToken1(), actualAmount0, actualAmount1, owner, pool.GetAddress())
+	err = k.sendCoinsBetweenPoolAndUser(ctx, pool.GetToken0(), pool.GetToken1(), actualAmount0, actualAmount1, owner, pool.GetAddress())
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
-
-	// Persist the changes made to the cache context if the actual amounts of tokens 0 and 1 are greater than or equal to the given minimum amounts.
-	writeCacheCtx()
 
 	emitLiquidityChangeEvent(ctx, types.TypeEvtCreatePosition, positionId, owner, poolId, lowerTick, upperTick, joinTime, liquidityDelta, actualAmount0, actualAmount1)
 
@@ -284,7 +291,14 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 	}
 
 	// Create new position with updated liquidity.
-	newPositionId, actualAmount0, actualAmount1, _, _, err := k.createPosition(ctx, position.PoolId, owner, amount0Withdrawn.Add(amount0Added), amount1Withdrawn.Add(amount1Added), amount0Withdrawn, amount1Withdrawn, position.LowerTick, position.UpperTick)
+	amount0Desired := amount0Withdrawn.Add(amount0Added)
+	amount1Desired := amount1Withdrawn.Add(amount1Added)
+	pool, err := k.GetPoolFromPoolIdAndConvertToConcentrated(ctx, position.PoolId)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, err
+	}
+	tokensProvided := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), amount0Desired), sdk.NewCoin(pool.GetToken1(), amount1Desired))
+	newPositionId, actualAmount0, actualAmount1, _, _, err := k.createPosition(ctx, position.PoolId, owner, tokensProvided, amount0Withdrawn, amount1Withdrawn, position.LowerTick, position.UpperTick)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
 	}
@@ -310,6 +324,7 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 // Updates ticks and pool liquidity. Returns how much of each token is either added or removed.
 // Negative returned amounts imply that tokens are removed from the pool.
 // Positive returned amounts imply that tokens are added to the pool.
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId uint64) (sdk.Int, sdk.Int, error) {
 	if err := k.validatePositionUpdateById(ctx, positionId, owner, lowerTick, upperTick, liquidityDelta, joinTime, poolId); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
@@ -322,23 +337,26 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	currentTick := pool.GetCurrentTick().Int64()
 
-	// update lower tickInfo state
-	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
+	// update tickInfo state for lower tick and upper tick
 	err = k.initOrUpdateTick(ctx, poolId, currentTick, lowerTick, liquidityDelta, false)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	// update upper tickInfo state
-	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
 	err = k.initOrUpdateTick(ctx, poolId, currentTick, upperTick, liquidityDelta, true)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
 	// update position state
-	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
 	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	// Refetch pool to get the updated pool.
+	// Note that updateUptimeAccumulatorsToNow may modify the pool state and rewrite it to the store.
+	pool, err = k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -356,7 +374,7 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	if err := k.initOrUpdateFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId, liquidityDelta); err != nil {
+	if err := k.initOrUpdatePositionFeeAccumulator(ctx, poolId, lowerTick, upperTick, positionId, liquidityDelta); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 

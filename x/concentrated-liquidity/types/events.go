@@ -10,6 +10,7 @@ const (
 	TypeEvtCollectIncentives      = "collect_incentives"
 	TypeEvtCreateIncentive        = "create_incentive"
 	TypeEvtFungifyChargedPosition = "fungify_charged_position"
+	TypeEvtMoveRewards            = "move_rewards"
 
 	AttributeValueCategory         = ModuleName
 	AttributeKeyPositionId         = "position_id"
@@ -27,11 +28,17 @@ const (
 	TypeEvtPoolJoined              = "pool_joined"
 	TypeEvtPoolExited              = "pool_exited"
 	TypeEvtTokenSwapped            = "token_swapped"
-	AttributeIncentiveDenom        = "incentive_denom"
-	AttributeIncentiveAmount       = "incentive_amount"
+	AttributeIncentiveCoin         = "incentive_coin"
 	AttributeIncentiveEmissionRate = "incentive_emission_rate"
 	AttributeIncentiveStartTime    = "incentive_start_time"
 	AttributeIncentiveMinUptime    = "incentive_min_uptime"
 	AttributeInputPositionIds      = "input_position_ids"
 	AttributeOutputPositionId      = "output_position_id"
+	AttributePoolAccumName         = "pool_accum_name"
+	AttributeOldPositionAccumName  = "old_position_accum_name"
+	AttributeNewPositionAccumName  = "new_position_accum_name"
+	AttributeGlobalGrowth          = "global_growth"
+	AttributeInsideGrowth          = "inside_growth"
+	AttributeMovedRewards          = "moved_rewards"
+	AttributeClaimableIncentives   = "claimable_incentives"
 )

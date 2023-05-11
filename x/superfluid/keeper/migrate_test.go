@@ -27,16 +27,13 @@ import (
 func (suite *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 	defaultJoinTime := suite.Ctx.BlockTime()
 	type sendTest struct {
-		superfluidDelegated            bool
-		superfluidUndelegating         bool
-		unlocking                      bool
-		overwriteLockId                bool
-		multiAssetLock                 bool
-		clLiquidityLock                bool
-		noInitialConcentratedSpotPrice bool
-		percentOfSharesToMigrate       sdk.Dec
-		minExitCoins                   sdk.Coins
-		expectedError                  error
+		superfluidDelegated      bool
+		superfluidUndelegating   bool
+		unlocking                bool
+		overwriteLockId          bool
+		percentOfSharesToMigrate sdk.Dec
+		minExitCoins             sdk.Coins
+		expectedError            error
 	}
 	testCases := map[string]sendTest{
 		"lock that is not superfluid delegated, not unlocking": {
@@ -628,8 +625,6 @@ func (suite *KeeperTestSuite) TestValidateMigration() {
 func (suite *KeeperTestSuite) TestValidateSharesToMigrateUnlockAndExitBalancerPool() {
 	defaultJoinTime := suite.Ctx.BlockTime()
 	type sendTest struct {
-		unlocking                 bool
-		overwriteValidatorAddress bool
 		overwritePreMigrationLock bool
 		overwriteShares           bool
 		overwritePool             bool

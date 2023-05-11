@@ -73,7 +73,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevProfitsByDenom() {
 	suite.Require().NoError(err)
 	suite.Commit()
 
-	res, err = suite.queryClient.GetProtoRevProfitsByDenom(sdk.WrapSDKContext(suite.Ctx), req)
+	_, err = suite.queryClient.GetProtoRevProfitsByDenom(sdk.WrapSDKContext(suite.Ctx), req)
 	suite.Require().NoError(err)
 	req = &types.QueryGetProtoRevProfitsByDenomRequest{
 		Denom: "Atom",

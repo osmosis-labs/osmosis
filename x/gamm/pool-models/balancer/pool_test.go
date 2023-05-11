@@ -382,7 +382,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 	}
 }
 
-// TestGetPoolAssetsByDenom tests if `GetPoolAssetsByDenom` succesfully creates a map of denom to pool asset
+// TestGetPoolAssetsByDenom tests if `GetPoolAssetsByDenom` successfully creates a map of denom to pool asset
 // given pool asset as parameter
 func TestGetPoolAssetsByDenom(t *testing.T) {
 	testCases := []struct {
@@ -585,7 +585,6 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 	type testcase struct {
 		initialPoolOut   int64
-		initialPoolIn    int64
 		initialWeightOut int64
 		tokenOut         int64
 		initialWeightIn  int64
@@ -694,6 +693,7 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 
 // Expected is un-scaled
 func testTotalWeight(t *testing.T, expected sdk.Int, pool balancer.Pool) {
+	t.Helper()
 	scaledExpected := expected.MulRaw(balancer.GuaranteedWeightPrecision)
 	require.Equal(t,
 		scaledExpected.String(),

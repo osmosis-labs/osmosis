@@ -297,9 +297,8 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 
 			// we manually set position for CL to set spot price to correct value
 			if tc.setPositionForCLPool {
-				coin0 := sdk.NewCoin("eth", sdk.NewInt(1000000))
-				coin1 := sdk.NewCoin("usdc", sdk.NewInt(5000000000))
-				suite.FundAcc(suite.TestAccs[0], sdk.NewCoins(coin0, coin1))
+				coins := sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000)), sdk.NewCoin("usdc", sdk.NewInt(5000000000)))
+				suite.FundAcc(suite.TestAccs[0], coins)
 
 				clMsgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
 				_, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(suite.Ctx), &cltypes.MsgCreatePosition{
@@ -307,8 +306,7 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 					Sender:          suite.TestAccs[0].String(),
 					LowerTick:       int64(30545000),
 					UpperTick:       int64(31500000),
-					TokenDesired0:   coin0,
-					TokenDesired1:   coin1,
+					TokensProvided:  coins,
 					TokenMinAmount0: sdk.ZeroInt(),
 					TokenMinAmount1: sdk.ZeroInt(),
 				})
@@ -1774,7 +1772,7 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			// Note, we use a 1% error tolerance with rounding down
 			// because we initialize the reserves 1:1 so by performing
 			// the swap we don't expect the price to change significantly.
-			// As a result, we rougly expect the amount out to be the same
+			// As a result, we roughly expect the amount out to be the same
 			// as the amount in given in another token. However, the actual
 			// amount must be stricly less than the given due to price impact.
 			errTolerance := osmomath.ErrTolerance{
@@ -1975,7 +1973,7 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			// Note, we use a 1% error tolerance with rounding up
 			// because we initialize the reserves 1:1 so by performing
 			// the swap we don't expect the price to change significantly.
-			// As a result, we rougly expect the amount in to be the same
+			// As a result, we roughly expect the amount in to be the same
 			// as the amount out given of another token. However, the actual
 			// amount must be stricly greater than the given due to price impact.
 			errTolerance := osmomath.ErrTolerance{

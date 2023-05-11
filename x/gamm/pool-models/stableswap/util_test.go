@@ -10,6 +10,7 @@ import (
 )
 
 func createTestPool(t *testing.T, poolLiquidity sdk.Coins, swapFee, exitFee sdk.Dec, scalingFactors []uint64) types.CFMMPoolI {
+	t.Helper()
 	scalingFactors, _ = applyScalingFactorMultiplier(scalingFactors)
 
 	pool, err := NewStableswapPool(1, PoolParams{

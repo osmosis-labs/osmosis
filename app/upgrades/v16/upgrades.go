@@ -9,6 +9,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/app/keepers"
 	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
+
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
 )
 
 const (
@@ -81,6 +84,12 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		updateTokenFactoryParams(ctx, keepers.TokenFactoryKeeper)
+
 		return migrations, nil
 	}
+}
+
+func updateTokenFactoryParams(ctx sdk.Context, tokenFactoryKeeper *tokenfactorykeeper.Keeper) {
+	tokenFactoryKeeper.SetParams(ctx, tokenfactorytypes.NewParams(nil, NewDenomCreationGasConsume))
 }

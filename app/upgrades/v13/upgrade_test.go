@@ -35,7 +35,7 @@ func dummyUpgrade(suite *UpgradeTestSuite) {
 	plan := upgradetypes.Plan{Name: "v13", Height: dummyUpgradeHeight}
 	err := suite.App.UpgradeKeeper.ScheduleUpgrade(suite.Ctx, plan)
 	suite.Require().NoError(err)
-	plan, exists := suite.App.UpgradeKeeper.GetUpgradePlan(suite.Ctx)
+	_, exists := suite.App.UpgradeKeeper.GetUpgradePlan(suite.Ctx)
 	suite.Require().True(exists)
 
 	suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight)
@@ -73,7 +73,6 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				// Same comment as above: this was the case when the upgrade happened, but we don't have accounts anymore
 				// hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
 				// suite.Require().False(hasAcc)
-
 			},
 			func() { dummyUpgrade(suite) },
 			func() {

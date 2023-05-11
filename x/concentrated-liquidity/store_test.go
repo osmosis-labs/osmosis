@@ -18,10 +18,10 @@ const (
 
 var (
 	defaultTickInfo = model.TickInfo{
-		LiquidityGross:   DefaultLiquidityAmt,
-		LiquidityNet:     DefaultLiquidityAmt,
-		FeeGrowthOutside: DefaultFeeAccumCoins,
-		UptimeTrackers:   wrapUptimeTrackers(getExpectedUptimes().hundredTokensMultiDenom),
+		LiquidityGross: DefaultLiquidityAmt,
+		LiquidityNet:   DefaultLiquidityAmt,
+		FeeGrowthOppositeDirectionOfLastTraversal: DefaultFeeAccumCoins,
+		UptimeTrackers: wrapUptimeTrackers(getExpectedUptimes().hundredTokensMultiDenom),
 	}
 
 	defaultTick = genesis.FullTick{
@@ -32,11 +32,6 @@ var (
 )
 
 func (s *KeeperTestSuite) TestParseFullTickFromBytes() {
-	const (
-		emptyKeySeparator   = ""
-		invalidKeySeparator = "-"
-	)
-
 	var (
 		cdc = s.App.AppCodec()
 

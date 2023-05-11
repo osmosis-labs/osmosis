@@ -20,10 +20,11 @@ import (
 
 // initOrUpdateTick retrieves the tickInfo from the specified tickIndex and updates both the liquidityNet and LiquidityGross.
 // The given currentTick value is used to determine the strategy for updating the fee accumulator.
-// We update the tick's fee growth outside accumulator to the fee growth global when tick index is <= current tick.
+// We update the tick's fee growth opposite direction of last traversal accumulator to the fee growth global when tick index is <= current tick.
 // Otherwise, it is set to zero.
 // if we are initializing or updating an upper tick, we subtract the liquidityIn from the LiquidityNet
 // if we are initializing or updating a lower tick, we add the liquidityIn from the LiquidityNet
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
 	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
@@ -39,7 +40,7 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 	liquidityBefore := tickInfo.LiquidityGross
 
 	// if given tickIndex is LTE to the current tick and the liquidityBefore is zero,
-	// set the tick's fee growth outside to the fee accumulator's value
+	// set the tick's fee growth opposite direction of last traversal to the fee accumulator's value
 	if liquidityBefore.IsZero() {
 		if tickIndex <= currentTick {
 			accum, err := k.GetFeeAccumulator(ctx, poolId)
@@ -47,7 +48,7 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 				return err
 			}
 
-			tickInfo.FeeGrowthOutside = accum.GetValue()
+			tickInfo.FeeGrowthOppositeDirectionOfLastTraversal = accum.GetValue()
 		}
 	}
 
@@ -68,6 +69,7 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 	return nil
 }
 
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapStateFeeGrowth sdk.DecCoin) (liquidityDelta sdk.Dec, err error) {
 	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
@@ -79,11 +81,11 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapS
 		return sdk.Dec{}, err
 	}
 
-	// subtract tick's fee growth outside from current fee growth global, including the fee growth of the current swap.
-	tickInfo.FeeGrowthOutside = feeAccum.GetValue().Add(swapStateFeeGrowth).Sub(tickInfo.FeeGrowthOutside)
+	// subtract tick's fee growth opposite direction of last traversal from current fee growth global, including the fee growth of the current swap.
+	tickInfo.FeeGrowthOppositeDirectionOfLastTraversal = feeAccum.GetValue().Add(swapStateFeeGrowth).Sub(tickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
 
 	// Update global accums to now before uptime outside changes
-	if err := k.updateUptimeAccumulatorsToNow(ctx, poolId); err != nil {
+	if err := k.updatePoolUptimeAccumulatorsToNow(ctx, poolId); err != nil {
 		return sdk.Dec{}, err
 	}
 
@@ -106,6 +108,7 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapS
 
 // GetTickInfo gets the tickInfo given a poolId and tickIndex. If the tick has not been initialized, it will initialize it.
 // If the tick has been initialized, it will return the tickInfo. If the pool does not exist, it will return an error.
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo model.TickInfo, err error) {
 	store := ctx.KVStore(k.storeKey)
 	tickStruct := model.TickInfo{}
@@ -118,19 +121,19 @@ func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	// return 0 values if key has not been initialized
 	if !found {
 		// If tick has not yet been initialized, we create a new one and initialize
-		// the fee growth outside.
-		initialFeeGrowthOutside, err := k.getInitialFeeGrowthOutsideForTick(ctx, poolId, tickIndex)
+		// the fee growth opposite direction of last traversal value.
+		initialFeeGrowthOppositeDirectionOfLastTraversal, err := k.getInitialFeeGrowthOppositeDirectionOfLastTraversalForTick(ctx, poolId, tickIndex)
 		if err != nil {
 			return tickStruct, err
 		}
 
 		// Sync global uptime accumulators to ensure the uptime tracker init values are up to date.
-		if err := k.updateUptimeAccumulatorsToNow(ctx, poolId); err != nil {
+		if err := k.updatePoolUptimeAccumulatorsToNow(ctx, poolId); err != nil {
 			return tickStruct, err
 		}
 
 		// Initialize uptime trackers for the new tick to the appropriate starting values.
-		valuesToAdd, err := k.getInitialUptimeGrowthOutsidesForTick(ctx, poolId, tickIndex)
+		valuesToAdd, err := k.getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ctx, poolId, tickIndex)
 		if err != nil {
 			return tickStruct, err
 		}
@@ -140,7 +143,7 @@ func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 			initialUptimeTrackers = append(initialUptimeTrackers, model.UptimeTracker{UptimeGrowthOutside: uptimeTrackerValue})
 		}
 
-		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: initialFeeGrowthOutside, UptimeTrackers: initialUptimeTrackers}, nil
+		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOppositeDirectionOfLastTraversal: initialFeeGrowthOppositeDirectionOfLastTraversal, UptimeTrackers: initialUptimeTrackers}, nil
 	}
 	if err != nil {
 		return tickStruct, err

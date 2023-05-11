@@ -19,12 +19,12 @@ func (e NoPositionError) Error() string {
 	return fmt.Sprintf("no position found for position key (%s)", e.Name)
 }
 
-type NegativeCustomAccError struct {
-	CustomAccumulatorValue sdk.DecCoins
+type NegativeIntervalAccumulationPerShareError struct {
+	IntervalAccumulationPerShare sdk.DecCoins
 }
 
-func (e NegativeCustomAccError) Error() string {
-	return fmt.Sprintf("customAccumulatorValue must be non-negative, was (%s)", e.CustomAccumulatorValue)
+func (e NegativeIntervalAccumulationPerShareError) Error() string {
+	return fmt.Sprintf("interval accumulation per share must be non-negative, was (%s)", e.IntervalAccumulationPerShare)
 }
 
 type NegativeAccDifferenceError struct {

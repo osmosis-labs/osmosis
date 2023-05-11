@@ -21,10 +21,7 @@ var (
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultZeroExitFee,
 	}
-	defaultStableSwapPoolParams = stableswap.PoolParams{
-		SwapFee: defaultSwapFee,
-		ExitFee: defaultZeroExitFee,
-	}
+
 	defaultScalingFactor  = []uint64{1, 1}
 	defaultFutureGovernor = ""
 
@@ -381,7 +378,6 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 					suite.Require().NoError(err, "test: %v", test.name)
 					suite.Require().Equal(poolIdFromPoolIncentives, defaultPoolId)
 				}
-
 			} else {
 				suite.Require().Error(err, "test: %v", test.name)
 			}
@@ -648,6 +644,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 				ExitFee: sdk.NewDec(0),
 			}, defaultPoolAssets, defaultFutureGovernor)
 			poolId, err := poolmanagerKeeper.CreatePool(ctx, msg)
+			suite.Require().NoError(err)
 
 			// If we are testing insufficient pool share balances, switch tx sender from pool creator to empty account
 			if test.emptySender {
@@ -752,6 +749,7 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 			suite.AssertEventEmitted(ctx, types.TypeEvtPoolJoined, 1)
 
 			_, err = gammKeeper.ExitPool(ctx, joinPoolAcc, poolId, tc.joinPoolShareAmt, sdk.Coins{})
+			suite.Require().NoError(err)
 
 			suite.AssertEventEmitted(ctx, types.TypeEvtPoolExited, 1)
 
