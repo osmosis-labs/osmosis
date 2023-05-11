@@ -824,8 +824,6 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 			return sdk.Coins{}, sdk.Coins{}, err
 		}
 
-		ctx.Logger().Error("HEEERE", "uptimeIndex", uptimeIndex)
-
 		// If the accumulator contains the position, claim the position's incentives.
 		if hasPosition {
 			collectedIncentivesForUptime, dust, err := prepareAccumAndClaimRewards(uptimeAccum, positionName, uptimeGrowthOutside[uptimeIndex])
