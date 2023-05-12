@@ -2390,11 +2390,11 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn_NonMutative() {
 			s.Require().NoError(err)
 
 			// perform calc
-			_, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenInInternal(
+			_, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(
 				s.Ctx,
-				pool.GetId(),
+				poolBeforeCalc,
 				test.tokenIn, test.tokenOutDenom,
-				test.swapFee, test.priceLimit)
+				test.swapFee)
 			s.Require().NoError(err)
 
 			// check that the pool has not been modified after performing calc

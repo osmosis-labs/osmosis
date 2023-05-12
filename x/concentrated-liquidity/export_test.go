@@ -55,16 +55,6 @@ func (k Keeper) CalcInAmtGivenOutInternal(ctx sdk.Context, desiredTokenOut sdk.C
 	return k.calcInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, swapFee, priceLimit, poolId)
 }
 
-func (k Keeper) CalcOutAmtGivenInInternal(
-	ctx sdk.Context,
-	poolId uint64,
-	tokenInMin sdk.Coin,
-	tokenOutDenom string,
-	swapFee sdk.Dec,
-	priceLimit sdk.Dec) (tokenOut sdk.Coin, err error) {
-	return k.calcOutAmtGivenIn(ctx, poolId, tokenInMin, tokenOutDenom, swapFee, priceLimit)
-}
-
 func (k Keeper) SwapOutAmtGivenIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
