@@ -385,15 +385,12 @@ func (k Keeper) mintSharesLockAndUpdate(ctx sdk.Context, concentratedPoolId, pos
 	if err != nil {
 		return 0, sdk.Coins{}, err
 	}
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, lockuptypes.ModuleName, owner, underlyingLiquidityTokenized)
-	if err != nil {
-		return 0, sdk.Coins{}, err
-	}
 
 	// Lock the position for the specified duration.
+	// We don't need to send the coins from the owner to the lockup module account because the coins were minted directly to the module account above.
 	// Note, the end blocker for the lockup module contains an exception for this CL denom. When a lock with a denom of cl/pool/{poolId} is mature,
 	// it does not send the coins to the owner account and instead burns them. This is strictly to use well tested pre-existing methods rather than potentially introducing bugs with new logic and methods.
-	concentratedLock, err := k.lockupKeeper.CreateLock(ctx, owner, underlyingLiquidityTokenized, remainingLockDuration)
+	concentratedLock, err := k.lockupKeeper.CreateLockNoSend(ctx, owner, underlyingLiquidityTokenized, remainingLockDuration)
 	if err != nil {
 		return 0, sdk.Coins{}, err
 	}

@@ -135,6 +135,30 @@ func (k Keeper) CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coin
 	return lock, nil
 }
 
+// CreateLockNoSend behaves the same as CreateLock, but does not send the coins to the lockup module account.
+func (k Keeper) CreateLockNoSend(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
+	ID := k.GetLastLockID(ctx) + 1
+	// unlock time is initially set without a value, gets set as unlock start time + duration
+	// when unlocking starts.
+	lock := types.NewPeriodLock(ID, owner, duration, time.Time{}, coins)
+
+	// lock the coins without sending them to the lockup module account
+	// this should only be used in concentrated liquidity, where we mint directly to the lockup module account
+	err := k.lockNoSend(ctx, lock, lock.Coins)
+	if err != nil {
+		return lock, err
+	}
+
+	// add lock refs into not unlocking queue
+	err = k.addLockRefs(ctx, lock)
+	if err != nil {
+		return lock, err
+	}
+
+	k.SetLastLockID(ctx, lock.ID)
+	return lock, nil
+}
+
 // lock is an internal utility to lock coins and set corresponding states.
 // This is only called by either of the two possible entry points to lock tokens.
 // 1. CreateLock
@@ -145,6 +169,28 @@ func (k Keeper) lock(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Co
 		return err
 	}
 	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, tokensToLock); err != nil {
+		return err
+	}
+
+	// store lock object into the store
+	err = k.setLock(ctx, lock)
+	if err != nil {
+		return err
+	}
+
+	// add to accumulation store
+	for _, coin := range tokensToLock {
+		k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
+	}
+
+	k.hooks.OnTokenLocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+	return nil
+}
+
+// lockNoSend behaves the same as lock, but does not send the coins to the lockup module account.
+func (k Keeper) lockNoSend(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Coins) error {
+	owner, err := sdk.AccAddressFromBech32(lock.Owner)
+	if err != nil {
 		return err
 	}
 
