@@ -111,6 +111,11 @@ func (s *KeeperTestSuite) TestGetPoolModule() {
 			poolId:            1,
 			expectedModule:    gammKeeperType,
 		},
+		"valid concentrated liquidity pool": {
+			preCreatePoolType: types.Concentrated,
+			poolId:            1,
+			expectedModule:    concentratedKeeperType,
+		},
 		"non-existent pool": {
 			preCreatePoolType: types.Balancer,
 			poolId:            2,
@@ -127,7 +132,6 @@ func (s *KeeperTestSuite) TestGetPoolModule() {
 
 			expectError: types.UndefinedRouteError{PoolId: 1, PoolType: types.Balancer},
 		},
-		// TODO: valid concentrated liquidity test case.
 	}
 
 	for name, tc := range tests {
@@ -338,12 +342,14 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 	tests := []struct {
 		name                    string
 		poolCoins               []sdk.Coins
+		poolDenoms              [][]string
 		poolFee                 []sdk.Dec
 		routes                  []types.SwapAmountInRoute
 		incentivizedGauges      []uint64
 		tokenIn                 sdk.Coin
 		tokenOutMinAmount       sdk.Int
 		swapFee                 sdk.Dec
+		isConcentrated          bool
 		expectError             bool
 		expectReducedFeeApplied bool
 	}{
@@ -530,8 +536,50 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			tokenOutMinAmount:       sdk.NewInt(1),
 			expectReducedFeeApplied: false,
 		},
+		{
+			name:           "[Concentrated] One route: Swap - [foo -> bar], 1 percent fee",
+			isConcentrated: true,
+			poolDenoms: [][]string{
+				{foo, bar},
+			},
+			poolFee: []sdk.Dec{defaultPoolSwapFee},
+			routes: []types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: bar,
+				},
+			},
+			tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100000)),
+			tokenOutMinAmount: sdk.NewInt(1),
+		},
+		{
+			name:           "[Concentrated[ Three routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
+			isConcentrated: true,
+			poolDenoms: [][]string{
+				{foo, uosmo}, // pool 1.
+				{baz, uosmo}, // pool 2.
+				{bar, baz},   // pool 3.
+			},
+			poolFee: []sdk.Dec{defaultPoolSwapFee, defaultPoolSwapFee, defaultPoolSwapFee},
+			routes: []types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: baz,
+				},
+				{
+					PoolId:        3,
+					TokenOutDenom: bar,
+				},
+			},
+			incentivizedGauges: []uint64{1, 2, 3, 4, 5, 6},
+			tokenIn:            sdk.NewCoin(foo, sdk.NewInt(100000)),
+			tokenOutMinAmount:  sdk.NewInt(1),
+		},
 		// TODO:
-		// tests for concentrated liquidity
 		// change values in and out to be different with each swap module type
 		// tests for stable-swap pools
 		// edge cases:
@@ -545,7 +593,12 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			s.SetupTest()
 			poolmanagerKeeper := s.App.PoolManagerKeeper
 
-			s.createBalancerPoolsFromCoinsWithSwapFee(tc.poolCoins, tc.poolFee)
+			if tc.isConcentrated {
+				// create a concentrated pool with a full range position
+				s.CreateConcentratedPoolsAndFullRangePositionWithSwapFee(tc.poolDenoms, tc.poolFee)
+			} else {
+				s.createBalancerPoolsFromCoinsWithSwapFee(tc.poolCoins, tc.poolFee)
+			}
 
 			// if test specifies incentivized gauges, set them here
 			if len(tc.incentivizedGauges) > 0 {
@@ -558,7 +611,8 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 				s.Require().Error(err)
 			} else {
 				// calculate the swap as separate swaps with either the reduced swap fee or normal fee
-				expectedMultihopTokenOutAmount := s.calcInAmountAsSeparateSwaps(tc.expectReducedFeeApplied, tc.routes, tc.tokenIn)
+				expectedMultihopTokenOutAmount := s.calcInAmountAsSeparatePoolSwaps(tc.expectReducedFeeApplied, tc.routes, tc.tokenIn)
+
 				// execute the swap
 				multihopTokenOutAmount, err := poolmanagerKeeper.RouteExactAmountIn(s.Ctx, s.TestAccs[0], tc.routes, tc.tokenIn, tc.tokenOutMinAmount)
 				// compare the expected tokenOut to the actual tokenOut
@@ -1226,45 +1280,64 @@ func (s *KeeperTestSuite) calcOutAmountAsSeparateSwaps(osmoFeeReduced bool, rout
 	}
 }
 
-func (s *KeeperTestSuite) calcInAmountAsSeparateSwaps(osmoFeeReduced bool, routes []types.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
-	cacheCtx, _ := s.Ctx.CacheContext()
+// calcInAmountAsSeparatePoolSwaps calculates the output amount of a series of swaps on PoolManager pools while factoring in reduces swap fee changes.
+// If its GAMM pool functions directly to ensure the poolmanager functions route to the correct modules. It it's CL pool functions directly to ensure the
+// poolmanager functions route to the correct modules.
+func (suite *KeeperTestSuite) calcInAmountAsSeparatePoolSwaps(osmoFeeReduced bool, routes []types.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
+	cacheCtx, _ := suite.Ctx.CacheContext()
 	if osmoFeeReduced {
 		// extract route from swap
 		route := types.SwapAmountInRoutes(routes)
 		// utilizing the extracted route, determine the routeSwapFee and sumOfSwapFees
 		// these two variables are used to calculate the overall swap fee utilizing the following formula
 		// swapFee = routeSwapFee * ((pool_fee) / (sumOfSwapFees))
-		routeSwapFee, sumOfSwapFees, err := s.App.PoolManagerKeeper.GetOsmoRoutedMultihopTotalSwapFee(s.Ctx, route)
-		s.Require().NoError(err)
+		routeSwapFee, sumOfSwapFees, err := suite.App.PoolManagerKeeper.GetOsmoRoutedMultihopTotalSwapFee(suite.Ctx, route)
+		suite.Require().NoError(err)
 		nextTokenIn := tokenIn
+
 		for _, hop := range routes {
-			// extract the current pool's swap fee
-			hopPool, err := s.App.GAMMKeeper.GetPoolAndPoke(cacheCtx, hop.PoolId)
-			s.Require().NoError(err)
-			currentPoolSwapFee := hopPool.GetSwapFee(cacheCtx)
+			swapModule, err := suite.App.PoolManagerKeeper.GetPoolModule(cacheCtx, hop.PoolId)
+			suite.Require().NoError(err)
+
+			pool, err := swapModule.GetPool(suite.Ctx, hop.PoolId)
+			suite.Require().NoError(err)
+
 			// utilize the routeSwapFee, sumOfSwapFees, and current pool swap fee to calculate the new reduced swap fee
-			swapFee := routeSwapFee.Mul((currentPoolSwapFee.Quo(sumOfSwapFees)))
+			swapFee := routeSwapFee.Mul(pool.GetSwapFee(cacheCtx).Quo(sumOfSwapFees))
+
 			// we then do individual swaps until we reach the end of the swap route
-			tokenOut, err := s.App.GAMMKeeper.SwapExactAmountIn(cacheCtx, s.TestAccs[0], hopPool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), swapFee)
-			s.Require().NoError(err)
+			tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, suite.TestAccs[0], pool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), swapFee)
+			suite.Require().NoError(err)
+
 			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
 		}
 		return nextTokenIn
 	} else {
 		nextTokenIn := tokenIn
 		for _, hop := range routes {
-			hopPool, err := s.App.GAMMKeeper.GetPoolAndPoke(cacheCtx, hop.PoolId)
-			s.Require().NoError(err)
-			updatedPoolSwapFee := hopPool.GetSwapFee(cacheCtx)
-			tokenOut, err := s.App.GAMMKeeper.SwapExactAmountIn(cacheCtx, s.TestAccs[0], hopPool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), updatedPoolSwapFee)
-			s.Require().NoError(err)
+			swapModule, err := suite.App.PoolManagerKeeper.GetPoolModule(cacheCtx, hop.PoolId)
+			suite.Require().NoError(err)
+
+			pool, err := swapModule.GetPool(suite.Ctx, hop.PoolId)
+			suite.Require().NoError(err)
+
+			// utilize the routeSwapFee, sumOfSwapFees, and current pool swap fee to calculate the new reduced swap fee
+			swapFee := pool.GetSwapFee(cacheCtx)
+
+			// we then do individual swaps until we reach the end of the swap route
+			tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, suite.TestAccs[0], pool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), swapFee)
+			suite.Require().NoError(err)
+
 			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
+
 		}
 		return nextTokenIn
 	}
 }
 
-func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
+// TODO: abstract SwapAgainstBalancerPool and SwapAgainstConcentratedPool
+
+func (suite *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 	tests := []struct {
 		name                   string
 		poolId                 uint64
@@ -1327,24 +1400,24 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 	}
 
 	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			s.SetupTest()
-			poolmanagerKeeper := s.App.PoolManagerKeeper
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			poolmanagerKeeper := suite.App.PoolManagerKeeper
 
-			s.FundAcc(s.TestAccs[0], tc.poolCoins)
-			s.PrepareCustomBalancerPoolFromCoins(tc.poolCoins, balancer.PoolParams{
+			suite.FundAcc(suite.TestAccs[0], tc.poolCoins)
+			suite.PrepareCustomBalancerPoolFromCoins(tc.poolCoins, balancer.PoolParams{
 				SwapFee: tc.poolFee,
 				ExitFee: sdk.ZeroDec(),
 			})
 
 			// execute the swap
-			multihopTokenOutAmount, err := poolmanagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], tc.poolId, tc.tokenIn, tc.tokenOutDenom, tc.tokenOutMinAmount)
+			multihopTokenOutAmount, err := poolmanagerKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.poolId, tc.tokenIn, tc.tokenOutDenom, tc.tokenOutMinAmount)
 			if tc.expectError {
-				s.Require().Error(err)
+				suite.Require().Error(err)
 			} else {
 				// compare the expected tokenOut to the actual tokenOut
-				s.Require().NoError(err)
-				s.Require().Equal(tc.expectedTokenOutAmount.String(), multihopTokenOutAmount.String())
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.expectedTokenOutAmount.String(), multihopTokenOutAmount.String())
 			}
 		})
 	}
@@ -2064,6 +2137,306 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedResult, actual)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestIsOsmoRoutedMultihop() {
+	tests := map[string]struct {
+		route                  types.MultihopRoute
+		balancerPoolCoins      []sdk.Coins
+		concentratedPoolDenoms [][]string
+		incentivizedGauges     []uint64
+		inDenom                string
+		outDenom               string
+		expectIsRouted         bool
+	}{
+		"happy path: osmo routed (balancer)": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: bar,
+				},
+			}),
+			balancerPoolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(uosmo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)), // pool 2.
+			},
+			// Note that we incentivize all candidate gauges for the sake of test readability.
+			incentivizedGauges: []uint64{1, 2, 3, 4, 5, 6},
+			inDenom:            foo,
+			outDenom:           bar,
+
+			expectIsRouted: true,
+		},
+		"happy path: osmo routed (balancer, only one active gauge for each pool)": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: bar,
+				},
+			}),
+			balancerPoolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(uosmo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)), // pool 2.
+			},
+			incentivizedGauges: []uint64{1, 4},
+			inDenom:            foo,
+			outDenom:           bar,
+
+			expectIsRouted: true,
+		},
+		"osmo routed (concentrated)": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: bar,
+				},
+			}),
+			concentratedPoolDenoms: [][]string{
+				{foo, uosmo}, // pool 1.
+				{uosmo, baz}, // pool 2.
+			},
+			incentivizedGauges: []uint64{1, 2},
+			inDenom:            foo,
+			outDenom:           bar,
+
+			expectIsRouted: true,
+		},
+		"osmo routed (mixed concentrated and balancer)": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: bar,
+				},
+			}),
+			concentratedPoolDenoms: [][]string{
+				{foo, uosmo}, // pool 1.
+			},
+			balancerPoolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(uosmo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)), // pool 2.
+			},
+
+			incentivizedGauges: []uint64{1, 2},
+			inDenom:            foo,
+			outDenom:           bar,
+
+			expectIsRouted: true,
+		},
+		"not osmo routed (single pool)": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: bar,
+				},
+			}),
+			inDenom:  foo,
+			outDenom: bar,
+
+			expectIsRouted: false,
+		},
+		"not osmo routed (two pools)": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: bar,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: baz,
+				},
+			}),
+			inDenom:  foo,
+			outDenom: baz,
+
+			expectIsRouted: false,
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			suite.SetupTest()
+			poolManagerKeeper := suite.App.PoolManagerKeeper
+
+			// Create pools to route through
+			if tc.concentratedPoolDenoms != nil {
+				suite.CreateConcentratedPoolsAndFullRangePosition(tc.concentratedPoolDenoms)
+			}
+
+			if tc.balancerPoolCoins != nil {
+				suite.createBalancerPoolsFromCoins(tc.balancerPoolCoins)
+			}
+
+			// If test specifies incentivized gauges, set them here
+			if len(tc.incentivizedGauges) > 0 {
+				suite.makeGaugesIncentivized(tc.incentivizedGauges)
+			}
+
+			// System under test
+			isRouted := poolManagerKeeper.IsOsmoRoutedMultihop(suite.Ctx, tc.route, tc.inDenom, tc.outDenom)
+
+			// Check output
+			suite.Require().Equal(tc.expectIsRouted, isRouted)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGetOsmoRoutedMultihopTotalSwapFee() {
+	tests := map[string]struct {
+		route                  types.MultihopRoute
+		balancerPoolCoins      []sdk.Coins
+		concentratedPoolDenoms [][]string
+		poolFees               []sdk.Dec
+
+		expectedRouteFee sdk.Dec
+		expectedTotalFee sdk.Dec
+		expectedError    error
+	}{
+		"happy path: balancer route": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: bar,
+				},
+			}),
+			poolFees: []sdk.Dec{defaultPoolSwapFee, defaultPoolSwapFee},
+			balancerPoolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(uosmo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)), // pool 2.
+			},
+
+			expectedRouteFee: defaultPoolSwapFee,
+			expectedTotalFee: defaultPoolSwapFee.Add(defaultPoolSwapFee),
+		},
+		"concentrated route": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: bar,
+				},
+			}),
+			poolFees: []sdk.Dec{defaultPoolSwapFee, defaultPoolSwapFee},
+			concentratedPoolDenoms: [][]string{
+				{foo, uosmo}, // pool 1.
+				{uosmo, baz}, // pool 2.
+			},
+
+			expectedRouteFee: defaultPoolSwapFee,
+			expectedTotalFee: defaultPoolSwapFee.Add(defaultPoolSwapFee),
+		},
+		"mixed concentrated and balancer route": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: bar,
+				},
+			}),
+			poolFees: []sdk.Dec{defaultPoolSwapFee, defaultPoolSwapFee},
+			concentratedPoolDenoms: [][]string{
+				{foo, uosmo}, // pool 1.
+			},
+			balancerPoolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(uosmo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)), // pool 2.
+			},
+
+			expectedRouteFee: defaultPoolSwapFee,
+			expectedTotalFee: defaultPoolSwapFee.Add(defaultPoolSwapFee),
+		},
+		"edge case: average fee is lower than highest pool fee": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: bar,
+				},
+			}),
+			// Note that pool 2 has 5x the swap fee of pool 1
+			poolFees: []sdk.Dec{defaultPoolSwapFee, defaultPoolSwapFee.Mul(sdk.NewDec(5))},
+			concentratedPoolDenoms: [][]string{
+				{foo, uosmo}, // pool 1.
+				{uosmo, baz}, // pool 2.
+			},
+
+			expectedRouteFee: defaultPoolSwapFee.Mul(sdk.NewDec(5)),
+			expectedTotalFee: defaultPoolSwapFee.Mul(sdk.NewDec(6)),
+		},
+		"error: pool does not exist": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: bar,
+				},
+			}),
+			poolFees: []sdk.Dec{defaultPoolSwapFee, defaultPoolSwapFee},
+
+			expectedError: types.FailedToFindRouteError{PoolId: 1},
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			suite.SetupTest()
+			poolManagerKeeper := suite.App.PoolManagerKeeper
+
+			// Create pools for test route
+			if tc.concentratedPoolDenoms != nil {
+				suite.CreateConcentratedPoolsAndFullRangePositionWithSwapFee(tc.concentratedPoolDenoms, tc.poolFees)
+			}
+
+			if tc.balancerPoolCoins != nil {
+				suite.createBalancerPoolsFromCoinsWithSwapFee(tc.balancerPoolCoins, tc.poolFees)
+			}
+
+			// System under test
+			routeFee, totalFee, err := poolManagerKeeper.GetOsmoRoutedMultihopTotalSwapFee(suite.Ctx, tc.route)
+
+			// Assertions
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().Equal(tc.expectedError.Error(), err.Error())
+				suite.Require().Equal(sdk.Dec{}, routeFee)
+				suite.Require().Equal(sdk.Dec{}, totalFee)
+				return
+			}
+
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.expectedRouteFee, routeFee)
+			suite.Require().Equal(tc.expectedTotalFee, totalFee)
 		})
 	}
 }

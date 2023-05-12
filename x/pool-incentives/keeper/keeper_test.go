@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
@@ -11,6 +12,7 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
@@ -315,4 +317,44 @@ func (suite *KeeperTestSuite) TestGetLongestLockableDuration() {
 			suite.Require().Equal(tc.expectedDuration, result)
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestIsPoolIncentivized() {
+	testCases := []struct {
+		name                   string
+		poolId                 uint64
+		expectedIsIncentivized bool
+	}{
+		{
+			name:                   "Incentivized Pool",
+			poolId:                 1,
+			expectedIsIncentivized: true,
+		},
+		{
+			name:                   "Unincentivized Pool",
+			poolId:                 2,
+			expectedIsIncentivized: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			suite.PrepareConcentratedPool()
+
+			suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, poolincentivestypes.DistrInfo{
+				TotalWeight: sdk.NewInt(100),
+				Records: []poolincentivestypes.DistrRecord{
+					{
+						GaugeId: tc.poolId,
+						Weight:  sdk.NewInt(50),
+					},
+				},
+			})
+
+			actualIsIncentivized := suite.App.PoolIncentivesKeeper.IsPoolIncentivized(suite.Ctx, tc.poolId)
+			suite.Require().Equal(tc.expectedIsIncentivized, actualIsIncentivized)
+		})
+	}
+
 }

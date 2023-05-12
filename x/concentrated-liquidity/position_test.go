@@ -1186,6 +1186,10 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 	// Perform a swap to earn fees
 	swapAmountIn := sdk.NewCoin(ETH, sdk.NewInt(swapAmount))
 	expectedFee := swapAmountIn.Amount.ToDec().Mul(swapFee)
+	// We run expected fees through a cycle of divison and multiplication by liquidity to capture appropriate rounding behavior.
+	// Note that we truncate the int at the end since it is not possible to have a decimal fee amount collected (the QuoTruncate
+	// and MulTruncates are much smaller operations that round down for values past the 18th decimal place).
+	expectedFeeTruncated := expectedFee.QuoTruncate(totalLiquidity).MulTruncate(totalLiquidity).TruncateInt()
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(swapAmountIn))
 	s.swapAndTrackXTimesInARow(defaultPoolId, swapAmountIn, USDC, types.MinSpotPrice, 1)
 
@@ -1201,7 +1205,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 	s.Require().NoError(err)
 
 	// Validate that the correct fee amount was collected.
-	s.Require().Equal(expectedFee, collected.AmountOf(swapAmountIn.Denom).ToDec())
+	s.Require().Equal(expectedFeeTruncated, collected.AmountOf(swapAmountIn.Denom))
 
 	// Check that cannot claim again.
 	collected, err = s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, defaultAddress, newPositionId)
