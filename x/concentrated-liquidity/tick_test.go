@@ -1180,7 +1180,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			curTick, err := math.PriceToTick(curPrice)
 			s.Require().NoError(err)
 			if !test.currentPoolTick.IsNil() {
-				sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)
+				_, sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)
 				s.Require().NoError(err)
 
 				curTick = test.currentPoolTick

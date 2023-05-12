@@ -60,10 +60,25 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// Transform the provided ticks into their corresponding sqrtPrices.
-	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
+	priceLowerTick, priceUpperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
+
+	// If the provided tick represents a price that can't be represented by the precision we are working with, move it to the appropriate tick boundary.
+	//
+	// i.e. the provided tick is -161795100. With our precision, this tick correlates to a sqrtPrice of 0.000000001414213563
+	// the first tick (given our precision) that is able to represent this price is -161000000, so we use this tick instead.
+	// this really only applies to very small tick values, as the increment of a single tick continues to get smaller as the tick value gets smaller.
+	lowerTickInt, err := math.PriceToTickRoundDown(priceLowerTick, pool.GetTickSpacing())
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
+	}
+	upperTickInt, err := math.PriceToTickRoundDown(priceUpperTick, pool.GetTickSpacing())
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
+	}
+	lowerTick, upperTick = lowerTickInt.Int64(), upperTickInt.Int64()
 
 	positionId := k.getNextPositionIdAndIncrement(ctx)
 

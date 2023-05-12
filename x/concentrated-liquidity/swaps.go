@@ -329,7 +329,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		}
 
 		// utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
-		nextTickSqrtPrice, err := math.TickToSqrtPrice(nextTick)
+		_, nextTickSqrtPrice, err := math.TickToSqrtPrice(nextTick)
 		if err != nil {
 			return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
 		}
@@ -494,7 +494,7 @@ func (k Keeper) calcInAmtGivenOut(
 		}
 
 		// utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
-		sqrtPriceNextTick, err := math.TickToSqrtPrice(nextTick)
+		_, sqrtPriceNextTick, err := math.TickToSqrtPrice(nextTick)
 		if err != nil {
 			return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
 		}
