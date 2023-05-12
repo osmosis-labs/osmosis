@@ -1516,7 +1516,12 @@ func (s *KeeperTestSuite) TestFunctional_Fees_LP() {
 
 	// Collect fees.
 	feesCollected := s.collectFeesAndCheckInvariance(ctx, 0, DefaultMinTick, DefaultMaxTick, positionIdOne, sdk.NewCoins(), []string{USDC}, [][]sdk.Int{ticksActivatedAfterEachSwap})
-	s.Require().Equal(totalFeesExpected, feesCollected)
+	expectedFeesTruncated := totalFeesExpected
+	for i, feeToken := range totalFeesExpected {
+		// We run expected fees through a cycle of divison and multiplication by liquidity to capture appropriate rounding behavior
+		expectedFeesTruncated[i] = sdk.NewCoin(feeToken.Denom, feeToken.Amount.ToDec().QuoTruncate(liquidity).MulTruncate(liquidity).TruncateInt())
+	}
+	s.Require().Equal(expectedFeesTruncated, feesCollected)
 
 	// Unclaimed rewards should be emptied since fees were collected.
 	s.validatePositionFeeGrowth(pool.GetId(), positionIdOne, cl.EmptyCoins)

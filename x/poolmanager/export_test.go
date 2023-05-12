@@ -41,3 +41,7 @@ func (k Keeper) GetAllPoolRoutes(ctx sdk.Context) []types.ModuleRoute {
 func (k Keeper) ValidateCreatedPool(ctx sdk.Context, poolId uint64, pool types.PoolI) error {
 	return k.validateCreatedPool(ctx, poolId, pool)
 }
+
+func (k Keeper) IsOsmoRoutedMultihop(ctx sdk.Context, route types.MultihopRoute, inDenom, outDenom string) (isRouted bool) {
+	return k.isOsmoRoutedMultihop(ctx, route, inDenom, outDenom)
+}

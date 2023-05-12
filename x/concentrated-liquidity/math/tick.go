@@ -49,7 +49,7 @@ func TickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
 	return sqrtPrice, nil
 }
 
-// TickToSqrtPrice returns the sqrtPrice given a tickIndex
+// TickToPrice returns the price given a tickIndex
 // If tickIndex is zero, the function returns sdk.OneDec().
 func TickToPrice(tickIndex sdk.Int) (price sdk.Dec, err error) {
 	if tickIndex.IsZero() {
