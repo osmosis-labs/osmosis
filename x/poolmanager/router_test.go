@@ -613,12 +613,8 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 				suite.Require().Error(err)
 			} else {
 				// calculate the swap as separate swaps with either the reduced swap fee or normal fee
-				var expectedMultihopTokenOutAmount sdk.Coin
-				if tc.isConcentrated {
-					expectedMultihopTokenOutAmount = suite.calcInAmountAsSeparateConcentratedSwaps(tc.expectReducedFeeApplied, tc.routes, tc.tokenIn)
-				} else {
-					expectedMultihopTokenOutAmount = suite.calcInAmountAsSeparateBalancerSwaps(tc.expectReducedFeeApplied, tc.routes, tc.tokenIn)
-				}
+				expectedMultihopTokenOutAmount := suite.calcInAmountAsSeparatePoolSwaps(tc.expectReducedFeeApplied, tc.routes, tc.tokenIn)
+
 				// execute the swap
 				multihopTokenOutAmount, err := poolmanagerKeeper.RouteExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.routes, tc.tokenIn, tc.tokenOutMinAmount)
 				// compare the expected tokenOut to the actual tokenOut
@@ -1286,9 +1282,10 @@ func (suite *KeeperTestSuite) calcOutAmountAsSeparateSwaps(osmoFeeReduced bool, 
 	}
 }
 
-// calcInAmountAsSeparateBalancerSwaps calculates the output amount of a series of swaps on Balancer pools while factoring in reduces swap fee changes.
-// It uses GAMM functions directly to ensure the poolmanager functions route to the correct modules.
-func (suite *KeeperTestSuite) calcInAmountAsSeparateBalancerSwaps(osmoFeeReduced bool, routes []types.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
+// calcInAmountAsSeparatePoolSwaps calculates the output amount of a series of swaps on PoolManager pools while factoring in reduces swap fee changes.
+// If its GAMM pool functions directly to ensure the poolmanager functions route to the correct modules. It it's CL pool functions directly to ensure the
+// poolmanager functions route to the correct modules.
+func (suite *KeeperTestSuite) calcInAmountAsSeparatePoolSwaps(osmoFeeReduced bool, routes []types.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
 	cacheCtx, _ := suite.Ctx.CacheContext()
 	if osmoFeeReduced {
 		// extract route from swap
@@ -1299,68 +1296,42 @@ func (suite *KeeperTestSuite) calcInAmountAsSeparateBalancerSwaps(osmoFeeReduced
 		routeSwapFee, sumOfSwapFees, err := suite.App.PoolManagerKeeper.GetOsmoRoutedMultihopTotalSwapFee(suite.Ctx, route)
 		suite.Require().NoError(err)
 		nextTokenIn := tokenIn
-		for _, hop := range routes {
-			// extract the current pool's swap fee
-			hopPool, err := suite.App.GAMMKeeper.GetPoolAndPoke(cacheCtx, hop.PoolId)
-			suite.Require().NoError(err)
-			currentPoolSwapFee := hopPool.GetSwapFee(cacheCtx)
-			// utilize the routeSwapFee, sumOfSwapFees, and current pool swap fee to calculate the new reduced swap fee
-			swapFee := routeSwapFee.Mul((currentPoolSwapFee.Quo(sumOfSwapFees)))
-			// we then do individual swaps until we reach the end of the swap route
-			tokenOut, err := suite.App.GAMMKeeper.SwapExactAmountIn(cacheCtx, suite.TestAccs[0], hopPool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), swapFee)
-			suite.Require().NoError(err)
-			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
-		}
-		return nextTokenIn
-	} else {
-		nextTokenIn := tokenIn
-		for _, hop := range routes {
-			hopPool, err := suite.App.GAMMKeeper.GetPoolAndPoke(cacheCtx, hop.PoolId)
-			suite.Require().NoError(err)
-			updatedPoolSwapFee := hopPool.GetSwapFee(cacheCtx)
-			tokenOut, err := suite.App.GAMMKeeper.SwapExactAmountIn(cacheCtx, suite.TestAccs[0], hopPool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), updatedPoolSwapFee)
-			suite.Require().NoError(err)
-			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
-		}
-		return nextTokenIn
-	}
-}
 
-// calcInAmountAsSeparateBalancerSwaps calculates the output amount of a series of swaps on Concentrated pools while factoring in reduces swap fee changes.
-// It uses CL functions directly to ensure the poolmanager functions route to the correct modules.
-func (suite *KeeperTestSuite) calcInAmountAsSeparateConcentratedSwaps(osmoFeeReduced bool, routes []types.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
-	cacheCtx, _ := suite.Ctx.CacheContext()
-	if osmoFeeReduced {
-		// extract route from swap
-		route := types.SwapAmountInRoutes(routes)
-		// utilizing the extracted route, determine the routeSwapFee and sumOfSwapFees
-		// these two variables are used to calculate the overall swap fee utilizing the following formula
-		// swapFee = routeSwapFee * ((pool_fee) / (sumOfSwapFees))
-		routeSwapFee, sumOfSwapFees, err := suite.App.PoolManagerKeeper.GetOsmoRoutedMultihopTotalSwapFee(suite.Ctx, route)
-		suite.Require().NoError(err)
-		nextTokenIn := tokenIn
 		for _, hop := range routes {
-			// extract the current pool's swap fee
-			hopPool, err := suite.App.ConcentratedLiquidityKeeper.GetPool(cacheCtx, hop.PoolId)
+			swapModule, err := suite.App.PoolManagerKeeper.GetPoolModule(cacheCtx, hop.PoolId)
 			suite.Require().NoError(err)
-			currentPoolSwapFee := hopPool.GetSwapFee(cacheCtx)
+
+			pool, err := swapModule.GetPool(suite.Ctx, hop.PoolId)
+			suite.Require().NoError(err)
+
 			// utilize the routeSwapFee, sumOfSwapFees, and current pool swap fee to calculate the new reduced swap fee
-			swapFee := routeSwapFee.Mul((currentPoolSwapFee.Quo(sumOfSwapFees)))
+			swapFee := routeSwapFee.Mul(pool.GetSwapFee(cacheCtx).Quo(sumOfSwapFees))
+
 			// we then do individual swaps until we reach the end of the swap route
-			tokenOut, err := suite.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(cacheCtx, suite.TestAccs[0], hopPool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), swapFee)
+			tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, suite.TestAccs[0], pool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), swapFee)
 			suite.Require().NoError(err)
+
 			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
 		}
 		return nextTokenIn
 	} else {
 		nextTokenIn := tokenIn
 		for _, hop := range routes {
-			hopPool, err := suite.App.ConcentratedLiquidityKeeper.GetPool(cacheCtx, hop.PoolId)
+			swapModule, err := suite.App.PoolManagerKeeper.GetPoolModule(cacheCtx, hop.PoolId)
 			suite.Require().NoError(err)
-			updatedPoolSwapFee := hopPool.GetSwapFee(cacheCtx)
-			tokenOut, err := suite.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(cacheCtx, suite.TestAccs[0], hopPool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), updatedPoolSwapFee)
+
+			pool, err := swapModule.GetPool(suite.Ctx, hop.PoolId)
 			suite.Require().NoError(err)
+
+			// utilize the routeSwapFee, sumOfSwapFees, and current pool swap fee to calculate the new reduced swap fee
+			swapFee := pool.GetSwapFee(cacheCtx)
+
+			// we then do individual swaps until we reach the end of the swap route
+			tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, suite.TestAccs[0], pool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), swapFee)
+			suite.Require().NoError(err)
+
 			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
+
 		}
 		return nextTokenIn
 	}

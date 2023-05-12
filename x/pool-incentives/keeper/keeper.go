@@ -228,18 +228,18 @@ func (k Keeper) IsPoolIncentivized(ctx sdk.Context, poolId uint64) bool {
 	}
 	isCLPool := pool.GetType() == poolmanagertypes.Concentrated
 
-	var gaugeDurations []time.Duration
+	var lockableDurations []time.Duration
 	if isCLPool {
 		incParams := k.incentivesKeeper.GetEpochInfo(ctx)
-		gaugeDurations = []time.Duration{incParams.Duration}
+		lockableDurations = []time.Duration{incParams.Duration}
 	} else {
-		gaugeDurations = k.GetLockableDurations(ctx)
+		lockableDurations = k.GetLockableDurations(ctx)
 	}
 
 	distrInfo := k.GetDistrInfo(ctx)
 
 	candidateGaugeIds := []uint64{}
-	for _, gaugeDuration := range gaugeDurations {
+	for _, gaugeDuration := range lockableDurations {
 		gaugeId, err := k.GetPoolGaugeId(ctx, poolId, gaugeDuration)
 		if err == nil {
 			candidateGaugeIds = append(candidateGaugeIds, gaugeId)
