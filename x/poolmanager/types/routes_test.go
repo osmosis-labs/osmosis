@@ -15,27 +15,15 @@ const (
 )
 
 var (
-	defaultPoolInitAmount     = sdk.NewInt(10_000_000_000)
 	twentyFiveBaseUnitsAmount = sdk.NewInt(25_000_000)
-
-	fooCoin   = sdk.NewCoin(foo, defaultPoolInitAmount)
-	barCoin   = sdk.NewCoin(bar, defaultPoolInitAmount)
-	bazCoin   = sdk.NewCoin(baz, defaultPoolInitAmount)
-	uosmoCoin = sdk.NewCoin(uosmo, defaultPoolInitAmount)
 
 	// Note: These are iniialized in such a way as it makes
 	// it easier to reason about the test cases.
-	fooBarCoins    = sdk.NewCoins(fooCoin, barCoin)
 	fooBarPoolId   = uint64(1)
-	fooBazCoins    = sdk.NewCoins(fooCoin, bazCoin)
 	fooBazPoolId   = fooBarPoolId + 1
-	fooUosmoCoins  = sdk.NewCoins(fooCoin, uosmoCoin)
 	fooUosmoPoolId = fooBazPoolId + 1
-	barBazCoins    = sdk.NewCoins(barCoin, bazCoin)
 	barBazPoolId   = fooUosmoPoolId + 1
-	barUosmoCoins  = sdk.NewCoins(barCoin, uosmoCoin)
 	barUosmoPoolId = barBazPoolId + 1
-	bazUosmoCoins  = sdk.NewCoins(bazCoin, uosmoCoin)
 	bazUosmoPoolId = barUosmoPoolId + 1
 
 	// Amount in default routes

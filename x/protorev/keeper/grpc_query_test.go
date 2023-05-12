@@ -73,7 +73,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevProfitsByDenom() {
 	suite.Require().NoError(err)
 	suite.Commit()
 
-	res, err = suite.queryClient.GetProtoRevProfitsByDenom(sdk.WrapSDKContext(suite.Ctx), req)
+	_, err = suite.queryClient.GetProtoRevProfitsByDenom(sdk.WrapSDKContext(suite.Ctx), req)
 	suite.Require().NoError(err)
 	req = &types.QueryGetProtoRevProfitsByDenomRequest{
 		Denom: "Atom",
@@ -279,7 +279,6 @@ func (suite *KeeperTestSuite) TestGetProtoRevDeveloperAccount() {
 	res, err = suite.queryClient.GetProtoRevDeveloperAccount(sdk.WrapSDKContext(suite.Ctx), req)
 	suite.Require().NoError(err)
 	suite.Require().Equal(developerAccount.String(), res.DeveloperAccount)
-
 }
 
 // TestGetProtoRevPoolWeights tests the query to retrieve the pool weights
@@ -354,4 +353,26 @@ func (suite *KeeperTestSuite) TestGetProtoRevEnabledQuery() {
 	res, err = suite.queryClient.GetProtoRevEnabled(sdk.WrapSDKContext(suite.Ctx), req)
 	suite.Require().NoError(err)
 	suite.Require().Equal(enabled, res.Enabled)
+}
+
+// TestGetProtoRevPool tests the query for getting the highest liquidity pool stored
+func (suite *KeeperTestSuite) TestGetProtoRevPool() {
+	// Request without setting pool for the base denom and other denom should return an error
+	req := &types.QueryGetProtoRevPoolRequest{
+		BaseDenom:  "uosmo",
+		OtherDenom: "atom",
+	}
+	res, err := suite.queryClient.GetProtoRevPool(sdk.WrapSDKContext(suite.Ctx), req)
+	suite.Require().Error(err)
+	suite.Require().Nil(res)
+
+	// Request for a pool that is stored should return the pool id
+	// The pool is set at startup for the test suite
+	req = &types.QueryGetProtoRevPoolRequest{
+		BaseDenom:  "Atom",
+		OtherDenom: "akash",
+	}
+	res, err = suite.queryClient.GetProtoRevPool(sdk.WrapSDKContext(suite.Ctx), req)
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.PoolId, uint64(1))
 }

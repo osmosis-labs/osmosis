@@ -1,15 +1,14 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"log"
 	"os/user"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ignite/cli/ignite/pkg/cosmosaccount"
 	"github.com/ignite/cli/ignite/pkg/cosmosclient"
-
-	"context"
-	"fmt"
-	"log"
 )
 
 const (
@@ -57,7 +56,7 @@ func GetLocalKeyringAccounts() []sdk.AccAddress {
 		accounts[i-1] = account.Info.GetAddress()
 	}
 
-	fmt.Println("retrieved accounts\n")
+	fmt.Println("retrieved accounts")
 
 	return accounts
 }

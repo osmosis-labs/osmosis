@@ -279,7 +279,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	}
 
 	// set the swap strategy
-	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey, swapFee)
+	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey, swapFee, p.GetTickSpacing())
 
 	// get current sqrt price from pool
 	curSqrtPrice := p.GetCurrentSqrtPrice()
@@ -329,7 +329,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		}
 
 		// utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
-		nextTickSqrtPrice, err := math.TickToSqrtPrice(nextTick, p.GetExponentAtPriceOne())
+		nextTickSqrtPrice, err := math.TickToSqrtPrice(nextTick)
 		if err != nil {
 			return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
 		}
@@ -381,7 +381,8 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		} else if !sqrtPriceStart.Equal(sqrtPrice) {
 			// otherwise if the sqrtPrice calculated from computeSwapStep does not equal the sqrtPrice we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the sqrtPrice calculated from computeSwapStep
-			swapState.tick, err = math.PriceToTick(sqrtPrice.Power(2), p.GetExponentAtPriceOne())
+			price := sqrtPrice.Mul(sqrtPrice)
+			swapState.tick, err = math.PriceToTickRoundDown(price, p.GetTickSpacing())
 			if err != nil {
 				return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 			}
@@ -394,7 +395,8 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 
 	// coin amounts require int values
 	// round amountIn up to avoid under charging
-	amt0 := tokenAmountInSpecified.Sub(swapState.amountSpecifiedRemaining).RoundInt()
+	amt0 := tokenAmountInSpecified.Sub(swapState.amountSpecifiedRemaining).Ceil().TruncateInt()
+	// round amountOut down to avoid over refunding.
 	amt1 := swapState.amountCalculated.TruncateInt()
 
 	ctx.Logger().Debug("final amount in", amt0)
@@ -443,7 +445,7 @@ func (k Keeper) calcInAmtGivenOut(
 	}
 
 	// set the swap strategy
-	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey, swapFee)
+	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey, swapFee, p.GetTickSpacing())
 
 	// get current sqrt price from pool
 	curSqrtPrice := p.GetCurrentSqrtPrice()
@@ -492,7 +494,7 @@ func (k Keeper) calcInAmtGivenOut(
 		}
 
 		// utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
-		sqrtPriceNextTick, err := math.TickToSqrtPrice(nextTick, p.GetExponentAtPriceOne())
+		sqrtPriceNextTick, err := math.TickToSqrtPrice(nextTick)
 		if err != nil {
 			return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
 		}
@@ -541,7 +543,8 @@ func (k Keeper) calcInAmtGivenOut(
 		} else if !sqrtPriceStart.Equal(sqrtPrice) {
 			// otherwise if the sqrtPrice calculated from computeSwapStep does not equal the sqrtPrice we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the sqrtPrice calculated from computeSwapStep
-			swapState.tick, err = math.PriceToTick(sqrtPrice.Power(2), p.GetExponentAtPriceOne())
+			price := sqrtPrice.Mul(sqrtPrice)
+			swapState.tick, err = math.PriceToTickRoundDown(price, p.GetTickSpacing())
 			if err != nil {
 				return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 			}
@@ -554,8 +557,8 @@ func (k Keeper) calcInAmtGivenOut(
 
 	// coin amounts require int values
 	// Round amount in up to avoid under charging the user.
-	// Round amount out down to avoid over charging the pool.
 	amt0 := swapState.amountCalculated.Ceil().TruncateInt()
+	// Round amount out down to avoid over charging the pool.
 	amt1 := desiredTokenOut.Amount.ToDec().Sub(swapState.amountSpecifiedRemaining).TruncateInt()
 
 	ctx.Logger().Debug("final amount in", amt0)

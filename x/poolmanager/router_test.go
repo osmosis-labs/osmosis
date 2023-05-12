@@ -9,6 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v15/tests/mocks"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -17,7 +18,6 @@ import (
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 type poolSetup struct {
@@ -33,12 +33,11 @@ const (
 )
 
 var (
-	defaultInitPoolAmount     = sdk.NewInt(1000000000000)
-	DefaultExponentAtPriceOne = sdk.NewInt(-4)
-	defaultPoolSwapFee        = sdk.NewDecWithPrec(1, 2) // 1% pool swap fee default
-	defaultSwapAmount         = sdk.NewInt(1000000)
-	gammKeeperType            = reflect.TypeOf(&gamm.Keeper{})
-	concentratedKeeperType    = reflect.TypeOf(&cl.Keeper{})
+	defaultInitPoolAmount  = sdk.NewInt(1000000000000)
+	defaultPoolSwapFee     = sdk.NewDecWithPrec(1, 3) // 0.1% pool swap fee default
+	defaultSwapAmount      = sdk.NewInt(1000000)
+	gammKeeperType         = reflect.TypeOf(&gamm.Keeper{})
+	concentratedKeeperType = reflect.TypeOf(&cl.Keeper{})
 
 	defaultPoolInitAmount     = sdk.NewInt(10_000_000_000)
 	twentyFiveBaseUnitsAmount = sdk.NewInt(25_000_000)
@@ -298,18 +297,16 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 
 			// we manually set position for CL to set spot price to correct value
 			if tc.setPositionForCLPool {
-				coin0 := sdk.NewCoin("eth", sdk.NewInt(1000000))
-				coin1 := sdk.NewCoin("usdc", sdk.NewInt(5000000000))
-				suite.FundAcc(suite.TestAccs[0], sdk.NewCoins(coin0, coin1))
+				coins := sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000)), sdk.NewCoin("usdc", sdk.NewInt(5000000000)))
+				suite.FundAcc(suite.TestAccs[0], coins)
 
 				clMsgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
 				_, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(suite.Ctx), &cltypes.MsgCreatePosition{
 					PoolId:          1,
 					Sender:          suite.TestAccs[0].String(),
-					LowerTick:       int64(305450),
-					UpperTick:       int64(315000),
-					TokenDesired0:   coin0,
-					TokenDesired1:   coin1,
+					LowerTick:       int64(30545000),
+					UpperTick:       int64(31500000),
+					TokensProvided:  coins,
 					TokenMinAmount0: sdk.ZeroInt(),
 					TokenMinAmount1: sdk.ZeroInt(),
 				})
@@ -342,7 +339,7 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 		name                    string
 		poolCoins               []sdk.Coins
 		poolFee                 []sdk.Dec
-		routes                  []poolmanagertypes.SwapAmountInRoute
+		routes                  []types.SwapAmountInRoute
 		incentivizedGauges      []uint64
 		tokenIn                 sdk.Coin
 		tokenOutMinAmount       sdk.Int
@@ -354,7 +351,7 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			name:      "One route: Swap - [foo -> bar], 1 percent fee",
 			poolCoins: []sdk.Coins{sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount))},
 			poolFee:   []sdk.Dec{defaultPoolSwapFee},
-			routes: []poolmanagertypes.SwapAmountInRoute{
+			routes: []types.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: bar,
@@ -370,7 +367,7 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 				sdk.NewCoins(sdk.NewCoin(bar, defaultInitPoolAmount), sdk.NewCoin(baz, defaultInitPoolAmount)), // pool 2.
 			},
 			poolFee: []sdk.Dec{defaultPoolSwapFee, defaultPoolSwapFee},
-			routes: []poolmanagertypes.SwapAmountInRoute{
+			routes: []types.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: bar,
@@ -582,7 +579,7 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 		name                    string
 		poolCoins               []sdk.Coins
 		poolFee                 []sdk.Dec
-		routes                  []poolmanagertypes.SwapAmountOutRoute
+		routes                  []types.SwapAmountOutRoute
 		incentivizedGauges      []uint64
 		tokenOut                sdk.Coin
 		tokenInMaxAmount        sdk.Int
@@ -594,7 +591,7 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 			name:      "One route: Swap - [foo -> bar], 1 percent fee",
 			poolCoins: []sdk.Coins{sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount))},
 			poolFee:   []sdk.Dec{defaultPoolSwapFee},
-			routes: []poolmanagertypes.SwapAmountOutRoute{
+			routes: []types.SwapAmountOutRoute{
 				{
 					PoolId:       1,
 					TokenInDenom: bar,
@@ -1189,7 +1186,7 @@ func (suite *KeeperTestSuite) makeGaugesIncentivized(incentivizedGauges []uint64
 	suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, distInfo)
 }
 
-func (suite *KeeperTestSuite) calcOutAmountAsSeparateSwaps(osmoFeeReduced bool, routes []poolmanagertypes.SwapAmountOutRoute, tokenOut sdk.Coin) sdk.Coin {
+func (suite *KeeperTestSuite) calcOutAmountAsSeparateSwaps(osmoFeeReduced bool, routes []types.SwapAmountOutRoute, tokenOut sdk.Coin) sdk.Coin {
 	cacheCtx, _ := suite.Ctx.CacheContext()
 	if osmoFeeReduced {
 		// extract route from swap
@@ -1229,7 +1226,7 @@ func (suite *KeeperTestSuite) calcOutAmountAsSeparateSwaps(osmoFeeReduced bool, 
 	}
 }
 
-func (suite *KeeperTestSuite) calcInAmountAsSeparateSwaps(osmoFeeReduced bool, routes []poolmanagertypes.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
+func (suite *KeeperTestSuite) calcInAmountAsSeparateSwaps(osmoFeeReduced bool, routes []types.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
 	cacheCtx, _ := suite.Ctx.CacheContext()
 	if osmoFeeReduced {
 		// extract route from swap
@@ -1282,20 +1279,20 @@ func (suite *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 		// We have:
 		//  - foo: 1000000000000
 		//  - bar: 1000000000000
-		//  - swapFee: 1%
+		//  - swapFee: 0.1%
 		//  - foo in: 100000
 		//  - bar amount out will be calculated according to the formula
-		// 		https://www.wolframalpha.com/input?i=solve+%2810%5E12+%2B+10%5E5+x+0.99%29%2810%5E12+-+x%29+%3D+10%5E24
-		// We round down the token amount out, get the result is 98999
+		// 		https://www.wolframalpha.com/input?i=solve+%2810%5E12+%2B+10%5E5+x+0.999%29%2810%5E12+-+x%29+%3D+10%5E24
+		// We round down the token amount out, get the result is 99899
 		{
-			name:                   "Swap - [foo -> bar], 1 percent fee",
+			name:                   "Swap - [foo -> bar], 0.1 percent fee",
 			poolId:                 1,
 			poolCoins:              sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
 			poolFee:                defaultPoolSwapFee,
 			tokenIn:                sdk.NewCoin(foo, sdk.NewInt(100000)),
 			tokenOutMinAmount:      sdk.NewInt(1),
 			tokenOutDenom:          bar,
-			expectedTokenOutAmount: sdk.NewInt(98999),
+			expectedTokenOutAmount: sdk.NewInt(99899),
 		},
 		{
 			name:              "Wrong pool id",
@@ -1520,7 +1517,7 @@ func (suite *KeeperTestSuite) TestAllPools() {
 
 // TestAllPools_RealPools tests the AllPools function with real pools.
 func (suite *KeeperTestSuite) TestAllPools_RealPools() {
-	suite.Setup()
+	suite.SetupTest()
 
 	poolManagerKeeper := suite.App.PoolManagerKeeper
 
@@ -1709,7 +1706,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 		},
 		"error: duplicate split routes": {
 			routes: []types.SwapAmountInSplitRoute{
-
 				defaultSingleRouteTwoHops,
 				{
 					Pools: defaultSingleRouteTwoHops.Pools,
@@ -1776,7 +1772,7 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			// Note, we use a 1% error tolerance with rounding down
 			// because we initialize the reserves 1:1 so by performing
 			// the swap we don't expect the price to change significantly.
-			// As a result, we rougly expect the amount out to be the same
+			// As a result, we roughly expect the amount out to be the same
 			// as the amount in given in another token. However, the actual
 			// amount must be stricly less than the given due to price impact.
 			errTolerance := osmomath.ErrTolerance{
@@ -1911,7 +1907,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 
 		"error: duplicate split routes": {
 			routes: []types.SwapAmountOutSplitRoute{
-
 				defaultSingleRouteTwoHops,
 				{
 					Pools: defaultSingleRouteTwoHops.Pools,
@@ -1978,7 +1973,7 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			// Note, we use a 1% error tolerance with rounding up
 			// because we initialize the reserves 1:1 so by performing
 			// the swap we don't expect the price to change significantly.
-			// As a result, we rougly expect the amount in to be the same
+			// As a result, we roughly expect the amount in to be the same
 			// as the amount out given of another token. However, the actual
 			// amount must be stricly greater than the given due to price impact.
 			errTolerance := osmomath.ErrTolerance{
@@ -1987,6 +1982,88 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			}
 
 			suite.Require().Equal(0, errTolerance.Compare(tc.expectedTokenOutEstimate, tokenOut), fmt.Sprintf("expected %s, got %s", tc.expectedTokenOutEstimate, tokenOut))
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
+	var (
+		defaultPoolCoinOne = sdk.NewCoin("usdc", sdk.OneInt())
+		defaultPoolCoinTwo = sdk.NewCoin("eth", sdk.NewInt(2))
+		nonPoolCool        = sdk.NewCoin("uosmo", sdk.NewInt(3))
+
+		defaultCoins = sdk.NewCoins(defaultPoolCoinOne, defaultPoolCoinTwo)
+	)
+
+	tests := []struct {
+		name           string
+		poolId         uint64
+		poolLiquidity  sdk.Coins
+		expectedResult sdk.Coins
+		expectedErr    error
+	}{
+		{
+			name:           "CL Pool: valid with 2 coins",
+			poolId:         1,
+			poolLiquidity:  defaultCoins,
+			expectedResult: defaultCoins,
+		},
+		{
+			name:           "CL Pool: valid with 1 coin",
+			poolId:         1,
+			poolLiquidity:  sdk.NewCoins(defaultPoolCoinTwo),
+			expectedResult: sdk.NewCoins(defaultPoolCoinTwo),
+		},
+		{
+			// can only happen if someone sends extra tokens to pool
+			// address. Should not occur in practice.
+			name:           "CL Pool: valid with 3 coins",
+			poolId:         1,
+			poolLiquidity:  sdk.NewCoins(defaultPoolCoinTwo, defaultPoolCoinOne, nonPoolCool),
+			expectedResult: defaultCoins,
+		},
+		{
+			// this can happen if someone sends random dust to pool address.
+			name:           "CL Pool:only non-pool coin - does not show up in result",
+			poolId:         1,
+			poolLiquidity:  sdk.NewCoins(nonPoolCool),
+			expectedResult: sdk.Coins(nil),
+		},
+		{
+			name:           "Balancer Pool: with default pool assets",
+			poolId:         2,
+			poolLiquidity:  sdk.NewCoins(apptesting.DefaultPoolAssets[0].Token, apptesting.DefaultPoolAssets[1].Token, apptesting.DefaultPoolAssets[2].Token, apptesting.DefaultPoolAssets[3].Token),
+			expectedResult: sdk.NewCoins(apptesting.DefaultPoolAssets[0].Token, apptesting.DefaultPoolAssets[1].Token, apptesting.DefaultPoolAssets[2].Token, apptesting.DefaultPoolAssets[3].Token),
+		},
+		{
+			name:        "round not found because pool id doesnot exist",
+			poolId:      3,
+			expectedErr: types.FailedToFindRouteError{PoolId: 3},
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			// Create default CL pool
+			clPool := s.PrepareConcentratedPool()
+			s.PrepareBalancerPool()
+
+			s.FundAcc(clPool.GetAddress(), tc.poolLiquidity)
+
+			// Get pool defined in test case
+			actual, err := s.App.PoolManagerKeeper.GetTotalPoolLiquidity(s.Ctx, tc.poolId)
+			if tc.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectedErr)
+				s.Require().Nil(actual)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedResult, actual)
 		})
 	}
 }

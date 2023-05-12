@@ -1,11 +1,11 @@
 package gov_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper/gov"
@@ -49,15 +49,11 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	}
 	concentratedAsset := types.SuperfluidAsset{
-		Denom:     "cl/pool/1/",
-		AssetType: types.SuperfluidAssetTypeConcentratedShare,
-	}
-	concentratedAssetWrongFormat := types.SuperfluidAsset{
-		Denom:     "cl/pool/1",
+		Denom:     cltypes.GetConcentratedLockupDenomFromPoolId(2),
 		AssetType: types.SuperfluidAssetTypeConcentratedShare,
 	}
 	concentratedAssetWrongAssetType := types.SuperfluidAsset{
-		Denom:     "cl/pool/1/",
+		Denom:     cltypes.GetConcentratedLockupDenomFromPoolId(2),
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	}
 	nonExistentToken := types.SuperfluidAsset{
@@ -113,15 +109,6 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 			[]string{types.TypeEvtSetSuperfluidAsset, types.TypeEvtRemoveSuperfluidAsset},
 		},
 		{
-			"concentrated share not formatted correctly",
-			[]Action{
-				{
-					true, []types.SuperfluidAsset{concentratedAssetWrongFormat}, []types.SuperfluidAsset{}, true,
-				},
-			},
-			[]string{types.TypeEvtSetSuperfluidAsset},
-		},
-		{
 			"concentrated share must be of type ConcentratedShare",
 			[]Action{
 				{
@@ -144,7 +131,6 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 			suite.Require().Len(resp.Assets, 0)
 
 			for i, action := range tc.actions {
-
 				// here we set two different string arrays of denoms.
 				// The reason we do this is because native denom should be an asset within the pool,
 				// while we do not want native asset to be in gov proposals.
@@ -158,6 +144,7 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 
 				if action.isAdd {
 					suite.createGammPool(poolDenoms)
+					suite.PrepareConcentratedPoolWithCoinsAndFullRangePosition(apptesting.STAKE, apptesting.USDC)
 					// set superfluid assets via proposal
 					err = gov.HandleSetSuperfluidAssetsProposal(suite.Ctx, *suite.App.SuperfluidKeeper, *suite.App.EpochsKeeper, &types.SetSuperfluidAssetsProposal{
 						Title:       "title",
@@ -188,7 +175,6 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 
 				// check assets
 				resp, err = suite.querier.AllAssets(sdk.WrapSDKContext(suite.Ctx), &types.AllAssetsRequest{})
-				fmt.Println(resp)
 				suite.Require().NoError(err)
 				suite.Require().Equal(resp.Assets, action.expectedAssets)
 			}
@@ -202,9 +188,7 @@ func (suite *KeeperTestSuite) TestHandleUnpoolWhiteListChange() {
 		testDescription = "test description"
 	)
 
-	var (
-		basePoolIds = []uint64{1, 2, 3}
-	)
+	basePoolIds := []uint64{1, 2, 3}
 
 	tests := map[string]struct {
 		preCreatedPoolCount int

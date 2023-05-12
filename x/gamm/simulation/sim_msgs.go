@@ -3,7 +3,6 @@ package gammsimulation
 import (
 	"errors"
 	"fmt"
-	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -426,6 +425,8 @@ func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64
 	if numPools == 0 {
 		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", fmt.Errorf("no pools exist")
 	}
+
+	rand := sim.GetRand()
 
 	pool := pools[rand.Intn(numPools)]
 

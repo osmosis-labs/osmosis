@@ -3,12 +3,13 @@ package ibc_rate_limit
 import (
 	"encoding/json"
 
+	errorsmod "cosmossdk.io/errors"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
 	"github.com/cosmos/ibc-go/v4/modules/core/exported"
+
 	"github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
 )
 
@@ -36,7 +37,7 @@ func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.Permis
 	_, err = contractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
 
 	if err != nil {
-		return sdkerrors.Wrap(types.ErrRateLimitExceeded, err.Error())
+		return errorsmod.Wrap(types.ErrRateLimitExceeded, err.Error())
 	}
 
 	return nil
@@ -72,7 +73,7 @@ func UndoSendRateLimit(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedK
 
 	_, err = contractKeeper.Sudo(ctx, contractAddr, asJson)
 	if err != nil {
-		return sdkerrors.Wrap(types.ErrContractError, err.Error())
+		return errorsmod.Wrap(types.ErrContractError, err.Error())
 	}
 
 	return nil

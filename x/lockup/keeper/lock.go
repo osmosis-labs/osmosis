@@ -3,14 +3,18 @@ package keeper
 import (
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
@@ -55,7 +59,7 @@ func (k Keeper) AddToExistingLock(ctx sdk.Context, owner sdk.AccAddress, coin sd
 
 	// if no lock exists for the given owner + denom + duration, return an error
 	if len(locks) < 1 {
-		return 0, sdkerrors.Wrapf(types.ErrLockupNotFound, "lock with denom %s before duration %s does not exist", coin.Denom, duration.String())
+		return 0, errorsmod.Wrapf(types.ErrLockupNotFound, "lock with denom %s before duration %s does not exist", coin.Denom, duration.String())
 	}
 
 	// if existing lock with same duration and denom exists, add to the existing lock
@@ -63,7 +67,7 @@ func (k Keeper) AddToExistingLock(ctx sdk.Context, owner sdk.AccAddress, coin sd
 	lock := locks[0]
 	_, err := k.AddTokensToLockByID(ctx, lock.ID, owner, coin)
 	if err != nil {
-		return 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
+		return 0, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	return lock.ID, nil
@@ -377,9 +381,28 @@ func (k Keeper) unlockMaturedLockInternalLogic(ctx sdk.Context, lock types.Perio
 		return err
 	}
 
+	// If the lock contains CL liquidity tokens, we do not send them back to the owner.
+	coins := lock.Coins
+	finalCoinsToSendBackToUser := sdk.NewCoins()
+	for _, coin := range coins {
+		if strings.HasPrefix(coin.Denom, cltypes.ClTokenPrefix) {
+			// If the coin is a CL liquidity token, we do not add it to the finalCoinsToSendBackToUser and instead burn it
+			err := k.bk.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(coin))
+			if err != nil {
+				return err
+			}
+		} else {
+			// Otherwise, we add it to the finalCoinsToSendBackToUser
+			finalCoinsToSendBackToUser = finalCoinsToSendBackToUser.Add(coin)
+		}
+	}
+
 	// send coins back to owner
-	if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, lock.Coins); err != nil {
-		return err
+	// if the lock was made completely of CL liquidity tokens, this will be a no-op
+	if !finalCoinsToSendBackToUser.Empty() {
+		if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, finalCoinsToSendBackToUser); err != nil {
+			return err
+		}
 	}
 
 	k.deleteLock(ctx, lock.ID)
@@ -619,6 +642,41 @@ func (k Keeper) SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sd
 	}
 
 	k.hooks.OnTokenSlashed(ctx, lock.ID, coins)
+	return lock, nil
+}
+
+// SlashTokensFromLockByIDSendUnderlyingAndBurn performs the same logic as SlashTokensFromLockByID, but
+// 1. Sends the underlying tokens from the pool address to the community pool (instead of sending the liquidity shares from the module account to the community pool)
+// 2. Burns the liquidity shares from the module account (instead of sending them to the community pool)
+func (k Keeper) SlashTokensFromLockByIDSendUnderlyingAndBurn(ctx sdk.Context, lockID uint64, liquiditySharesToSlash, underlyingPositionAssets sdk.Coins, poolAddress sdk.AccAddress) (*types.PeriodLock, error) {
+	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Send the underlying assets of the concentrated liquidity position that the liquidity shares represent from the concentrated pool address to the community pool.
+	err = k.ck.FundCommunityPool(ctx, underlyingPositionAssets, poolAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	// Burn the liquidity shares of the concentrated liquidity position residing in the lockup module account.
+	err = k.bk.BurnCoins(ctx, types.ModuleName, liquiditySharesToSlash)
+	if err != nil {
+		return nil, err
+	}
+
+	// Also, remove these liquidity shares from the lock.
+	err = k.removeTokensFromLock(ctx, lock, liquiditySharesToSlash)
+	if err != nil {
+		return nil, err
+	}
+
+	if k.hooks == nil {
+		return lock, nil
+	}
+
+	k.hooks.OnTokenSlashed(ctx, lock.ID, liquiditySharesToSlash)
 	return lock, nil
 }
 

@@ -6,7 +6,7 @@ use swaprouter::msg::Slippage;
 /// Message type for `instantiate` entry_point
 #[cw_serde]
 pub struct InstantiateMsg {
-    /// The address that will be allowed to manage the channel registry
+    /// The address that will be allowed to manage which swap_contract to use
     pub governor: String,
 
     /// This should be an instance of the Osmosis swaprouter contract

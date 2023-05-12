@@ -16,7 +16,6 @@ import (
 	"github.com/ignite/cli/ignite/pkg/cosmosaccount"
 	"github.com/ignite/cli/ignite/pkg/cosmosclient"
 
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
@@ -28,8 +27,8 @@ const (
 	addressPrefix                   = "osmo"
 	localosmosisFromHomePath        = "/.osmosisd-local"
 	consensusFee                    = "1500uosmo"
-	denom0                          = "uosmo"
-	denom1                          = "uion"
+	denom0                          = "uusdc"
+	denom1                          = "uosmo"
 	accountNamePrefix               = "lo-test"
 	numPositions                    = 1_000
 	minAmountDeposited              = int64(1_000_000)
@@ -39,7 +38,6 @@ const (
 
 var (
 	defaultAccountName = fmt.Sprintf("%s%d", accountNamePrefix, 1)
-	exponentAtPriceOne = sdk.OneInt().Neg()
 	defaultMinAmount   = sdk.ZeroInt()
 	accountMutex       sync.Mutex
 )
@@ -72,11 +70,11 @@ func main() {
 	clQueryClient := poolmanagerqueryproto.NewQueryClient(igniteClient.Context())
 
 	// Print warnings with common problems
-	log.Println(fmt.Sprintf("\n\n\nWARNING 1: your localosmosis and client home are assummed to be %s. Run 'osmosisd get-env' and confirm it matches the path you see printed here\n\n\n", clientHome))
+	log.Printf("\n\n\nWARNING 1: your localosmosis and client home are assummed to be %s. Run 'osmosisd get-env' and confirm it matches the path you see printed here\n\n\n", clientHome)
 
-	log.Println(fmt.Sprintf("\n\n\nWARNING 2: you are attempting to interact with pool id %d.\nConfirm that the pool exists. if this is not the pool you want to interact with, please change the expectedPoolId variable in the code\n\n\n", expectedPoolId))
+	log.Printf("\n\n\nWARNING 2: you are attempting to interact with pool id %d.\nConfirm that the pool exists. if this is not the pool you want to interact with, please change the expectedPoolId variable in the code\n\n\n", expectedPoolId)
 
-	log.Println("\n\n\nWARNING 3: sometimes the script hangs when just started. In that case, kill it and restart\n\n\n")
+	log.Println("\n\n\nWARNING 3: sometimes the script hangs when just started. In that case, kill it and restart")
 
 	// Query pool with id 1 and create new if does not exist.
 	_, err = clQueryClient.Pool(ctx, &poolmanagerqueryproto.PoolRequest{PoolId: expectedPoolId})
@@ -90,7 +88,7 @@ func main() {
 		}
 	}
 
-	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
+	minTick, maxTick := cltypes.MinTick, cltypes.MaxTick
 	log.Println(minTick, " ", maxTick)
 
 	rand.Seed(randSeed)
@@ -110,13 +108,14 @@ func main() {
 
 			tokenDesired0 = sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
 			tokenDesired1 = sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
+			tokensDesired = sdk.NewCoins(tokenDesired0, tokenDesired1)
 		)
 
 		log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
 
 		maxRetries := 100
 		for j := 0; j < maxRetries; j++ {
-			amt0, amt1, liquidity := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokenDesired0, tokenDesired1, defaultMinAmount, defaultMinAmount)
+			amt0, amt1, liquidity := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokensDesired, defaultMinAmount, defaultMinAmount)
 			if err == nil {
 				log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
 				break
@@ -124,17 +123,15 @@ func main() {
 			time.Sleep(8 * time.Second)
 		}
 	}
-
 }
 
 func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 	msg := &model.MsgCreateConcentratedPool{
-		Sender:             getAccountAddressFromKeyring(igniteClient, accountName),
-		Denom1:             denom0,
-		Denom0:             denom1,
-		TickSpacing:        1,
-		ExponentAtPriceOne: exponentAtPriceOne,
-		SwapFee:            sdk.ZeroDec(),
+		Sender:      getAccountAddressFromKeyring(igniteClient, accountName),
+		Denom1:      denom0,
+		Denom0:      denom1,
+		TickSpacing: 1,
+		SwapFee:     sdk.ZeroDec(),
 	}
 	txResp, err := igniteClient.BroadcastTx(accountName, msg)
 	if err != nil {
@@ -147,7 +144,7 @@ func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 	return resp.PoolID
 }
 
-func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokenDesired0, tokenDesired1 sdk.Coin, tokenMinAmount0, tokenMinAmount1 sdk.Int) (amountCreated0, amountCreated1 sdk.Int, liquidityCreated sdk.Dec) {
+func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokensProvided sdk.Coins, tokenMinAmount0, tokenMinAmount1 sdk.Int) (amountCreated0, amountCreated1 sdk.Int, liquidityCreated sdk.Dec) {
 	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
 	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
 	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
@@ -157,13 +154,11 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 		Sender:          senderAddress,
 		LowerTick:       lowerTick,
 		UpperTick:       upperTick,
-		TokenDesired0:   tokenDesired0,
-		TokenDesired1:   tokenDesired1,
+		TokensProvided:  tokensProvided,
 		TokenMinAmount0: tokenMinAmount0,
 		TokenMinAmount1: tokenMinAmount1,
 	}
 	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
-
 	if err != nil {
 		log.Fatal(err)
 	}

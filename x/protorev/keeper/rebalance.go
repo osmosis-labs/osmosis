@@ -9,20 +9,20 @@ import (
 
 // IterateRoutes checks the profitability of every single route that is passed in
 // and returns the optimal route if there is one
-func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remainingPoolPoints *uint64) (sdk.Coin, sdk.Int, poolmanagertypes.SwapAmountInRoutes) {
+func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remainingTxPoolPoints, remainingBlockPoolPoints *uint64) (sdk.Coin, sdk.Int, poolmanagertypes.SwapAmountInRoutes) {
 	var optimalRoute poolmanagertypes.SwapAmountInRoutes
 	var maxProfitInputCoin sdk.Coin
 	maxProfit := sdk.ZeroInt()
 
 	// Iterate through the routes and find the optimal route for the given swap
-	for index := 0; index < len(routes) && *remainingPoolPoints > 0; index++ {
+	for index := 0; index < len(routes) && *remainingTxPoolPoints > 0; index++ {
 		// If the route consumes more pool points than we have remaining then we skip it
-		if routes[index].PoolPoints > *remainingPoolPoints {
+		if routes[index].PoolPoints > *remainingTxPoolPoints {
 			continue
 		}
 
 		// Find the max profit for the route if it exists
-		inputCoin, profit, err := k.FindMaxProfitForRoute(ctx, routes[index], remainingPoolPoints)
+		inputCoin, profit, err := k.FindMaxProfitForRoute(ctx, routes[index], remainingTxPoolPoints, remainingBlockPoolPoints)
 		if err != nil {
 			k.Logger(ctx).Error("Error finding max profit for route: ", err)
 			continue
@@ -60,20 +60,25 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit sdk.I
 	}
 
 	// Get the pool
-	conversionPool, err := k.gammKeeper.GetPoolAndPoke(ctx, conversionPoolID)
+	conversionPool, err := k.poolmanagerKeeper.GetPool(ctx, conversionPoolID)
+	if err != nil {
+		return profit, err
+	}
+
+	swapModule, err := k.poolmanagerKeeper.GetPoolModule(ctx, conversionPoolID)
 	if err != nil {
 		return profit, err
 	}
 
 	// Calculate the amount of uosmo that we can get if we swapped the
 	// profited amount of the orignal asset through the highest uosmo liquidity pool
-	conversionTokenOut, err := conversionPool.CalcOutAmtGivenIn(
+	conversionTokenOut, err := swapModule.CalcOutAmtGivenIn(
 		ctx,
-		sdk.NewCoins(sdk.NewCoin(inputCoin.Denom, profit)),
+		conversionPool,
+		sdk.NewCoin(inputCoin.Denom, profit),
 		types.OsmosisDenomination,
 		conversionPool.GetSwapFee(ctx),
 	)
-
 	if err != nil {
 		return profit, err
 	}
@@ -96,7 +101,7 @@ func (k Keeper) EstimateMultihopProfit(ctx sdk.Context, inputDenom string, amoun
 }
 
 // FindMaxProfitRoute runs a binary search to find the max profit for a given route
-func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, remainingPoolPoints *uint64) (sdk.Coin, sdk.Int, error) {
+func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, remainingTxPoolPoints, remainingBlockPoolPoints *uint64) (sdk.Coin, sdk.Int, error) {
 	// Track the tokenIn amount/denom and the profit
 	tokenIn := sdk.Coin{}
 	profit := sdk.ZeroInt()
@@ -119,7 +124,9 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, rema
 	}
 
 	// Decrement the number of pool points remaining since we know this route will be profitable
-	*remainingPoolPoints -= route.PoolPoints
+	*remainingTxPoolPoints -= route.PoolPoints
+	*remainingBlockPoolPoints -= route.PoolPoints
+
 	// Increment the number of pool points consumed since we know this route will be profitable
 	if err := k.IncrementPointCountForBlock(ctx, route.PoolPoints); err != nil {
 		return sdk.Coin{}, sdk.ZeroInt(), err
@@ -187,7 +194,7 @@ func (k Keeper) ExtendSearchRangeIfNeeded(ctx sdk.Context, route RouteMetaData, 
 }
 
 // ExecuteTrade inputs a route, amount in, and rebalances the pool
-func (k Keeper) ExecuteTrade(ctx sdk.Context, route poolmanagertypes.SwapAmountInRoutes, inputCoin sdk.Coin) error {
+func (k Keeper) ExecuteTrade(ctx sdk.Context, route poolmanagertypes.SwapAmountInRoutes, inputCoin sdk.Coin, pool SwapToBackrun, remainingTxPoolPoints, remainingBlockPoolPoints uint64) error {
 	// Get the module address which will execute the trade
 	protorevModuleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
 
@@ -220,37 +227,42 @@ func (k Keeper) ExecuteTrade(ctx sdk.Context, route poolmanagertypes.SwapAmountI
 		return err
 	}
 
+	// Create and emit the backrun event and add it to the context
+	EmitBackrunEvent(ctx, pool, inputCoin, profit, tokenOutAmount, remainingTxPoolPoints, remainingBlockPoolPoints)
+
 	return nil
 }
 
-// RemainingPoolPointsForTx calculates the number of pool points that can be consumed in the current transaction.
-func (k Keeper) RemainingPoolPointsForTx(ctx sdk.Context) (uint64, error) {
-	maxRoutesPerTx, err := k.GetMaxPointsPerTx(ctx)
+// RemainingPoolPointsForTx calculates the number of pool points that can be consumed in the transaction and block.
+// When the remaining pool points for the block is less than the remaining pool points for the transaction, then both
+// returned values will be the same, which will be the remaining pool points for the block.
+func (k Keeper) GetRemainingPoolPoints(ctx sdk.Context) (uint64, uint64, error) {
+	maxPoolPointsPerTx, err := k.GetMaxPointsPerTx(ctx)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
-	maxRoutesPerBlock, err := k.GetMaxPointsPerBlock(ctx)
+	maxPoolPointsPerBlock, err := k.GetMaxPointsPerBlock(ctx)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
-	currentRouteCount, err := k.GetPointCountForBlock(ctx)
+	currentPoolPointsUsedForBlock, err := k.GetPointCountForBlock(ctx)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
-	// Edge case where the number of routes consumed in the current block is greater than the max number of routes per block
+	// Edge case where the number of pool points consumed in the current block is greater than the max number of routes per block
 	// This should never happen, but we need to handle it just in case (deal with overflow)
-	if currentRouteCount >= maxRoutesPerBlock {
-		return 0, nil
+	if currentPoolPointsUsedForBlock >= maxPoolPointsPerBlock {
+		return 0, 0, nil
 	}
 
-	// Calculate the number of routes that can be iterated over
-	numberOfIterableRoutes := maxRoutesPerBlock - currentRouteCount
-	if numberOfIterableRoutes > maxRoutesPerTx {
-		return maxRoutesPerTx, nil
+	// Calculate the number of pool points that can be iterated over
+	numberOfAvailablePoolPointsForBlock := maxPoolPointsPerBlock - currentPoolPointsUsedForBlock
+	if numberOfAvailablePoolPointsForBlock > maxPoolPointsPerTx {
+		return maxPoolPointsPerTx, numberOfAvailablePoolPointsForBlock, nil
 	}
 
-	return numberOfIterableRoutes, nil
+	return numberOfAvailablePoolPointsForBlock, numberOfAvailablePoolPointsForBlock, nil
 }

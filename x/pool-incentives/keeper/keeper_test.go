@@ -112,7 +112,7 @@ func (suite *KeeperTestSuite) TestCreateLockablePoolGauges() {
 			name:                   "Create Gauge with valid PoolId",
 			poolId:                 uint64(1),
 			expectedGaugeDurations: durations,
-			expectedGaugeIds:       []uint64{4, 5, 6}, //note: it's not 1,2,3 because we create 3 gauges during setup of suite.PrepareBalancerPool()
+			expectedGaugeIds:       []uint64{4, 5, 6}, // note: it's not 1,2,3 because we create 3 gauges during setup of suite.PrepareBalancerPool()
 			expectedErr:            false,
 		},
 		{
@@ -266,6 +266,53 @@ func (suite *KeeperTestSuite) TestGetGaugesForCFMMPool() {
 				suite.Require().Equal(lockableDuration, gauges[i].DistributeTo.Duration)
 				suite.Require().True(gauges[i].IsActiveGauge(suite.Ctx.BlockTime()))
 			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGetLongestLockableDuration() {
+	testCases := []struct {
+		name              string
+		lockableDurations []time.Duration
+		expectedDuration  time.Duration
+		expectError       bool
+	}{
+		{
+			name:              "3 lockable Durations",
+			lockableDurations: []time.Duration{time.Hour, time.Minute, time.Second},
+			expectedDuration:  time.Hour,
+		},
+
+		{
+			name:              "2 lockable Durations",
+			lockableDurations: []time.Duration{time.Second, time.Minute},
+			expectedDuration:  time.Minute,
+		},
+		{
+			name:              "1 lockable Durations",
+			lockableDurations: []time.Duration{time.Minute},
+			expectedDuration:  time.Minute,
+		},
+		{
+			name:              "0 lockable Durations",
+			lockableDurations: []time.Duration{},
+			expectedDuration:  0,
+			expectError:       true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.App.PoolIncentivesKeeper.SetLockableDurations(suite.Ctx, tc.lockableDurations)
+
+			result, err := suite.App.PoolIncentivesKeeper.GetLongestLockableDuration(suite.Ctx)
+			if tc.expectError {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+			}
+
+			suite.Require().Equal(tc.expectedDuration, result)
 		})
 	}
 }

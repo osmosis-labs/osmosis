@@ -15,7 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
+	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
@@ -110,7 +110,7 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 		// lockQueryType as byTime. Although we do not need this check, we still cannot pass empty struct.
 		lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByTime,
-			Denom:         appparams.BaseCoinUnit,
+			Denom:         appParams.BaseCoinUnit,
 		},
 		ctx.BlockTime(),
 		1,
@@ -194,6 +194,22 @@ func (k Keeper) GetLockableDurations(ctx sdk.Context) []time.Duration {
 	info := types.LockableDurationsInfo{}
 	osmoutils.MustGet(store, types.LockableDurationsKey, &info)
 	return info.LockableDurations
+}
+
+func (k Keeper) GetLongestLockableDuration(ctx sdk.Context) (time.Duration, error) {
+	lockableDurations := k.GetLockableDurations(ctx)
+	if len(lockableDurations) == 0 {
+		return 0, fmt.Errorf("Lockable Durations doesnot exist")
+	}
+	longestDuration := time.Duration(0)
+
+	for _, duration := range lockableDurations {
+		if duration > longestDuration {
+			longestDuration = duration
+		}
+	}
+
+	return longestDuration, nil
 }
 
 func (k Keeper) GetAllGauges(ctx sdk.Context) []incentivestypes.Gauge {

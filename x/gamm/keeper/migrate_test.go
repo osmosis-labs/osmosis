@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -32,6 +33,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 		param                  param
 		expectedErr            error
 		sharesToCreate         sdk.Int
+		tokenOutMins           sdk.Coins
 		expectedLiquidity      sdk.Dec
 		setupPoolMigrationLink bool
 		errTolerance           osmomath.ErrTolerance
@@ -95,7 +97,53 @@ func (suite *KeeperTestSuite) TestMigrate() {
 			sharesToCreate:         defaultGammShares.Amount,
 			expectedLiquidity:      sdk.MustNewDecFromStr("100000000000.000000010000000000"),
 			setupPoolMigrationLink: true,
-			expectedErr:            sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", defaultGammShares, invalidGammShares)),
+			expectedErr:            errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", defaultGammShares, invalidGammShares)),
+		},
+		// test token out mins
+		{
+			name: "token out mins does not exceed actual token out",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount,
+			},
+			sharesToCreate:         defaultGammShares.Amount,
+			tokenOutMins:           sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(90000000000)), sdk.NewCoin(USDC, sdk.NewInt(90000000000))),
+			expectedLiquidity:      sdk.MustNewDecFromStr("100000000000.000000010000000000"),
+			setupPoolMigrationLink: true,
+			errTolerance:           defaultErrorTolerance,
+		},
+		{
+			name: "token out mins exceed actual token out",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount,
+			},
+			sharesToCreate:         defaultGammShares.Amount,
+			tokenOutMins:           sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(110000000000)), sdk.NewCoin(USDC, sdk.NewInt(110000000000))),
+			expectedLiquidity:      sdk.MustNewDecFromStr("100000000000.000000010000000000"),
+			setupPoolMigrationLink: true,
+			expectedErr: errorsmod.Wrapf(types.ErrLimitMinAmount,
+				"Exit pool returned %s , minimum tokens out specified as %s",
+				sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(100000000000)), sdk.NewCoin(USDC, sdk.NewInt(100000000000))), sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(110000000000)), sdk.NewCoin(USDC, sdk.NewInt(110000000000)))),
+			errTolerance: defaultErrorTolerance,
+		},
+		{
+			name: "one of the token out mins exceed tokens out",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount,
+			},
+			sharesToCreate:         defaultGammShares.Amount,
+			tokenOutMins:           sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(110000000000)), sdk.NewCoin(USDC, sdk.NewInt(100000000000))),
+			expectedLiquidity:      sdk.MustNewDecFromStr("100000000000.000000010000000000"),
+			setupPoolMigrationLink: true,
+			expectedErr: errorsmod.Wrapf(types.ErrLimitMinAmount,
+				"Exit pool returned %s , minimum tokens out specified as %s",
+				sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(100000000000)), sdk.NewCoin(USDC, sdk.NewInt(100000000000))), sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(110000000000)), sdk.NewCoin(USDC, sdk.NewInt(100000000000)))),
+			errTolerance: defaultErrorTolerance,
 		},
 	}
 
@@ -142,7 +190,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 
 		// Migrate the user's gamm shares to a full range concentrated liquidity position
 		userBalancesBeforeMigration := suite.App.BankKeeper.GetAllBalances(suite.Ctx, test.param.sender)
-		positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, err := keeper.MigrateFromBalancerToConcentrated(suite.Ctx, test.param.sender, sharesToMigrate)
+		positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, err := keeper.MigrateUnlockedPositionFromBalancerToConcentrated(suite.Ctx, test.param.sender, sharesToMigrate, test.tokenOutMins)
 		userBalancesAfterMigration := suite.App.BankKeeper.GetAllBalances(suite.Ctx, test.param.sender)
 		if test.expectedErr != nil {
 			suite.Require().Error(err)
@@ -362,7 +410,7 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 				suite.PrepareBalancerPoolWithCoins(poolCoins...)
 			}
 			for i := 0; i < 2; i++ {
-				suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, defaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+				suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, defaultTickSpacing, sdk.ZeroDec())
 			}
 			// Four asset balancer pool ID if created: 5
 			if test.createFourAssetBalancerPool {
@@ -375,7 +423,8 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			} else {
 				suite.Require().NoError(err)
 
-				migrationInfo := keeper.GetMigrationInfo(suite.Ctx)
+				migrationInfo, err := keeper.GetAllMigrationInfo(suite.Ctx)
+				suite.Require().NoError(err)
 				suite.Require().Equal(len(test.testingMigrationRecords), len(migrationInfo.BalancerToConcentratedPoolLinks))
 				for i, record := range test.testingMigrationRecords {
 					suite.Require().Equal(record.BalancerPoolId, migrationInfo.BalancerToConcentratedPoolLinks[i].BalancerPoolId)
@@ -620,7 +669,7 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 				suite.PrepareBalancerPoolWithCoins(poolCoins...)
 			}
 			for i := 0; i < 4; i++ {
-				suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, defaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+				suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, defaultTickSpacing, sdk.ZeroDec())
 			}
 			// Four asset balancer pool ID if created: 9
 			if test.createFourAssetBalancerPool {
@@ -653,7 +702,8 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			} else {
 				suite.Require().NoError(err)
 
-				migrationInfo := keeper.GetMigrationInfo(suite.Ctx)
+				migrationInfo, err := keeper.GetAllMigrationInfo(suite.Ctx)
+				suite.Require().NoError(err)
 				suite.Require().Equal(len(test.expectedResultingRecords), len(migrationInfo.BalancerToConcentratedPoolLinks))
 				for i, record := range test.expectedResultingRecords {
 					suite.Require().Equal(record.BalancerPoolId, migrationInfo.BalancerToConcentratedPoolLinks[i].BalancerPoolId)
@@ -669,23 +719,22 @@ func (suite *KeeperTestSuite) TestGetLinkedConcentratedPoolID() {
 		name                   string
 		poolIdLeaving          []uint64
 		expectedPoolIdEntering []uint64
-		expectErr              bool
+		expectedErr            error
 	}{
 		{
 			name:                   "Happy path",
 			poolIdLeaving:          []uint64{1, 2, 3},
 			expectedPoolIdEntering: []uint64{4, 5, 6},
-			expectErr:              false,
 		},
 		{
 			name:          "error: set poolIdLeaving to a concentrated pool ID",
 			poolIdLeaving: []uint64{4},
-			expectErr:     true,
+			expectedErr:   types.ConcentratedPoolMigrationLinkNotFoundError{PoolIdLeaving: 4},
 		},
 		{
 			name:          "error: set poolIdLeaving to a non existent pool ID",
 			poolIdLeaving: []uint64{7},
-			expectErr:     true,
+			expectedErr:   types.ConcentratedPoolMigrationLinkNotFoundError{PoolIdLeaving: 7},
 		},
 	}
 
@@ -701,12 +750,13 @@ func (suite *KeeperTestSuite) TestGetLinkedConcentratedPoolID() {
 			suite.PrepareMultipleBalancerPools(3)
 			suite.PrepareMultipleConcentratedPools(3)
 
-			keeper.SetMigrationInfo(suite.Ctx, DefaultMigrationRecords)
+			keeper.OverwriteMigrationRecords(suite.Ctx, DefaultMigrationRecords)
 
 			for i, poolIdLeaving := range test.poolIdLeaving {
 				poolIdEntering, err := keeper.GetLinkedConcentratedPoolID(suite.Ctx, poolIdLeaving)
-				if test.expectErr {
+				if test.expectedErr != nil {
 					suite.Require().Error(err)
+					suite.Require().ErrorIs(err, test.expectedErr)
 					suite.Require().Zero(poolIdEntering)
 				} else {
 					suite.Require().NoError(err)
@@ -724,30 +774,32 @@ func (suite *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 		expectedPoolIdLeaving []uint64
 
 		skipLinking bool
-		expectErr   bool
+		expectedErr []error
 	}{
 		{
 			name:                  "Happy path",
 			poolIdEntering:        []uint64{4, 5, 6},
 			expectedPoolIdLeaving: []uint64{1, 2, 3},
-			expectErr:             false,
 		},
 		{
 			name:           "error: set poolIdEntering to a balancer pool ID",
 			poolIdEntering: []uint64{3},
-			expectErr:      true,
+			expectedErr:    []error{types.BalancerPoolMigrationLinkNotFoundError{PoolIdEntering: 3}},
 		},
 		{
 			name:           "error: set poolIdEntering to a non existent pool ID",
 			poolIdEntering: []uint64{7},
-			expectErr:      true,
+			expectedErr:    []error{types.BalancerPoolMigrationLinkNotFoundError{PoolIdEntering: 7}},
 		},
 		{
 			name:                  "error: pools exist but link does not",
 			poolIdEntering:        []uint64{4, 5, 6},
 			expectedPoolIdLeaving: []uint64{1, 2, 3},
 			skipLinking:           true,
-			expectErr:             true,
+			expectedErr: []error{
+				types.BalancerPoolMigrationLinkNotFoundError{PoolIdEntering: 4},
+				types.BalancerPoolMigrationLinkNotFoundError{PoolIdEntering: 5},
+				types.BalancerPoolMigrationLinkNotFoundError{PoolIdEntering: 6}},
 		},
 	}
 
@@ -764,19 +816,61 @@ func (suite *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 			suite.PrepareMultipleConcentratedPools(3)
 
 			if !test.skipLinking {
-				keeper.SetMigrationInfo(suite.Ctx, DefaultMigrationRecords)
+				keeper.OverwriteMigrationRecords(suite.Ctx, DefaultMigrationRecords)
 			}
 
 			suite.Require().True(len(test.poolIdEntering) > 0)
 			for i, poolIdEntering := range test.poolIdEntering {
 				poolIdLeaving, err := keeper.GetLinkedBalancerPoolID(suite.Ctx, poolIdEntering)
-				if test.expectErr {
+				if test.expectedErr != nil {
 					suite.Require().Error(err)
+					suite.Require().ErrorIs(err, test.expectedErr[i])
 					suite.Require().Zero(poolIdLeaving)
 				} else {
 					suite.Require().NoError(err)
 					suite.Require().Equal(test.expectedPoolIdLeaving[i], poolIdLeaving)
 				}
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGetAllMigrationInfo() {
+	tests := []struct {
+		name        string
+		skipLinking bool
+	}{
+		{
+			name: "Happy path",
+		},
+		{
+			name:        "No record to get",
+			skipLinking: true,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+			keeper := suite.App.GAMMKeeper
+
+			// Our testing environment is as follows:
+			// Balancer pool IDs: 1, 2, 3
+			// Concentrated pool IDs: 3, 4, 5
+			suite.PrepareMultipleBalancerPools(3)
+			suite.PrepareMultipleConcentratedPools(3)
+
+			if !test.skipLinking {
+				keeper.OverwriteMigrationRecords(suite.Ctx, DefaultMigrationRecords)
+			}
+
+			migrationRecords, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
+			suite.Require().NoError(err)
+			if !test.skipLinking {
+				suite.Require().Equal(migrationRecords, DefaultMigrationRecords)
+			} else {
+				suite.Require().Equal(len(migrationRecords.BalancerToConcentratedPoolLinks), 0)
 			}
 		})
 	}

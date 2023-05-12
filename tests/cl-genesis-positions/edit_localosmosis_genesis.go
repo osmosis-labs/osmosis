@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/server"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -17,7 +18,7 @@ import (
 
 	osmosisApp "github.com/osmosis-labs/osmosis/v15/app"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	clgenesis "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
@@ -59,9 +60,13 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 	appState[poolmanagertypes.ModuleName] = cdc.MustMarshalJSON(&localOsmosisPoolManagerGenesis)
 
 	// Copy positions
-	for _, position := range updatedCLGenesis.Positions {
-		position.PoolId = nextPoolId
-		localOsmosisCLGenesis.Positions = append(localOsmosisCLGenesis.Positions, position)
+	largestPositionId := uint64(0)
+	for _, positionData := range updatedCLGenesis.PositionData {
+		positionData.Position.PoolId = nextPoolId
+		localOsmosisCLGenesis.PositionData = append(localOsmosisCLGenesis.PositionData, positionData)
+		if positionData.Position.PositionId > largestPositionId {
+			largestPositionId = positionData.Position.PositionId
+		}
 	}
 
 	// Create map of pool balances
@@ -83,7 +88,10 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 			panic(err)
 		}
 
-		clPool := clPoolExt.(*model.Pool)
+		clPool, error := clPoolExt.(*model.Pool)
+		if !error {
+			panic("Error converting pool")
+		}
 		clPool.Id = nextPoolId
 
 		any, err := codectypes.NewAnyWithValue(clPool)
@@ -101,7 +109,7 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 		}
 
 		for i := range pool.IncentivesAccumulators {
-			pool.IncentivesAccumulators[i].Name = types.KeyUptimeAccumulator(nextPoolId, uint64(i))
+			pool.IncentivesAccumulators[i].Name = cltypes.KeyUptimeAccumulator(nextPoolId, uint64(i))
 		}
 
 		updatedPoolData := clgenesis.PoolData{
@@ -110,7 +118,7 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 			IncentivesAccumulators: pool.IncentivesAccumulators,
 			IncentiveRecords:       pool.IncentiveRecords,
 			FeeAccumulator: clgenesis.AccumObject{
-				Name:         types.KeyFeePoolAccumulator(nextPoolId),
+				Name:         cltypes.KeyFeePoolAccumulator(nextPoolId),
 				AccumContent: pool.FeeAccumulator.AccumContent,
 			},
 		}
@@ -122,7 +130,7 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 		localOsmosisCLGenesis.PoolData = append(localOsmosisCLGenesis.PoolData, updatedPoolData)
 	}
 
-	localOsmosisCLGenesis.NextPositionId = uint64(len(localOsmosisCLGenesis.Positions) + 1)
+	localOsmosisCLGenesis.NextPositionId = largestPositionId + 1
 
 	appState[cltypes.ModuleName] = cdc.MustMarshalJSON(&localOsmosisCLGenesis)
 
@@ -142,9 +150,17 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 	}
 
 	fmt.Printf("Writing genesis file to %s", localOsmosisHomePath)
-	if err := WriteFile(filepath.Join(localOsmosisHomePath, "config", "genesis.json"), genesisJson); err != nil {
-		panic(err)
+	start := time.Now()
+	for time.Since(start) < 30*time.Second {
+		if err := WriteFile(filepath.Join(localOsmosisHomePath, "config", "genesis.json"), genesisJson); err == nil {
+			fmt.Println("Genesis file written successfully")
+			return
+		} else {
+			fmt.Printf("Error writing genesis file: %s\n", err.Error())
+			time.Sleep(1 * time.Second)
+		}
 	}
+	fmt.Println("Timed out after 30 seconds")
 }
 
 func WriteFile(path string, body []byte) error {
