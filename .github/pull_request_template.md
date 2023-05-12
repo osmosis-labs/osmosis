@@ -11,7 +11,7 @@ Closes: #XXX
 
 > Add a description of the overall background and high level changes that this PR introduces
 
-*(E.g.: This pull request improves documation of area A by adding ....*
+*(E.g.: This pull request improves documentation of area A by adding ....*
 
 ## Testing and Verifying
 
