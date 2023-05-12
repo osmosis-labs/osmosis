@@ -656,7 +656,8 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 			neededLpLiquidity, err := keeper.GetMaximalNoSwapLPAmount(suite.Ctx, pool, tc.shareOutAmount)
 			if tc.err != nil {
 				suite.Require().Error(err)
-				suite.Require().ErrorAs(tc.err, &err)
+				msgError := fmt.Sprintf("Too few shares out wanted. (debug: getMaximalNoSwapLPAmount share ratio is zero or negative): %s", tc.err)
+				suite.Require().EqualError(err, msgError)
 			} else {
 				suite.Require().NoError(err)
 				suite.Require().Equal(neededLpLiquidity, tc.expectedLpLiquidity)
