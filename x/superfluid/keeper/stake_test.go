@@ -980,7 +980,8 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 				lpTokenAmount := sdk.NewInt(1000000)
 				decAmt := multiplier.Mul(lpTokenAmount.ToDec())
 				denom := intermediaryAcc.Denom
-				suite.App.SuperfluidKeeper.GetSuperfluidAsset(suite.Ctx, denom)
+				_, err := suite.App.SuperfluidKeeper.GetSuperfluidAsset(suite.Ctx, denom)
+				suite.Require().NoError(err)
 				expAmount := suite.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(suite.Ctx, decAmt.RoundInt())
 
 				// check delegation changes

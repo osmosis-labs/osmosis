@@ -16,11 +16,14 @@ const (
 )
 
 var (
-	EmptyCoins           = emptyCoins
-	HundredFooCoins      = sdk.NewDecCoin("foo", sdk.NewInt(100))
-	HundredBarCoins      = sdk.NewDecCoin("bar", sdk.NewInt(100))
-	TwoHundredFooCoins   = sdk.NewDecCoin("foo", sdk.NewInt(200))
-	TwoHundredBarCoins   = sdk.NewDecCoin("bar", sdk.NewInt(200))
+	EmptyCoins         = emptyCoins
+	HundredFooCoins    = sdk.NewDecCoin("foo", sdk.NewInt(100))
+	HundredBarCoins    = sdk.NewDecCoin("bar", sdk.NewInt(100))
+	TwoHundredFooCoins = sdk.NewDecCoin("foo", sdk.NewInt(200))
+	TwoHundredBarCoins = sdk.NewDecCoin("bar", sdk.NewInt(200))
+	// TODO: this is incorrect. Should be grabbing from
+	// authorized params instead. Must verify that all tests still make sense.
+	// https://github.com/osmosis-labs/osmosis/issues/5039
 	FullyChargedDuration = types.SupportedUptimes[len(types.SupportedUptimes)-1]
 )
 
@@ -70,6 +73,10 @@ func (k Keeper) InitOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 
 func (k Keeper) InitOrUpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId uint64) (err error) {
 	return k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
+}
+
+func (k Keeper) GetNextPositionIdAndIncrement(ctx sdk.Context) uint64 {
+	return k.getNextPositionIdAndIncrement(ctx)
 }
 
 func (k Keeper) PoolExists(ctx sdk.Context, poolId uint64) bool {
@@ -141,8 +148,8 @@ func (k Keeper) CreateFeeAccumulator(ctx sdk.Context, poolId uint64) error {
 	return k.createFeeAccumulator(ctx, poolId)
 }
 
-func (k Keeper) InitOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidity sdk.Dec) error {
-	return k.initOrUpdateFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId, liquidity)
+func (k Keeper) InitOrUpdatePositionFeeAccumulator(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidity sdk.Dec) error {
+	return k.initOrUpdatePositionFeeAccumulator(ctx, poolId, lowerTick, upperTick, positionId, liquidity)
 }
 
 func (k Keeper) GetFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {
@@ -153,8 +160,8 @@ func CalculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, current
 	return calculateFeeGrowth(targetTick, feeGrowthOutside, currentTick, feesGrowthGlobal, isUpperTick)
 }
 
-func (k Keeper) GetInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
-	return k.getInitialFeeGrowthOutsideForTick(ctx, poolId, tick)
+func (k Keeper) GetInitialFeeGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
+	return k.getInitialFeeGrowthOppositeDirectionOfLastTraversalForTick(ctx, poolId, tick)
 }
 
 func (k Keeper) ChargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin) error {
@@ -169,8 +176,8 @@ func PreparePositionAccumulator(feeAccumulator accum.AccumulatorObject, position
 	return preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
 }
 
-func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (uint64, sdk.Int, sdk.Int, sdk.Dec, time.Time, error) {
-	return k.createPosition(ctx, poolId, owner, amount0Desired, amount1Desired, amount0Min, amount1Min, lowerTick, upperTick)
+func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (uint64, sdk.Int, sdk.Int, sdk.Dec, time.Time, error) {
+	return k.createPosition(ctx, poolId, owner, tokensProvided, amount0Min, amount1Min, lowerTick, upperTick)
 }
 
 func (k Keeper) AddToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added sdk.Int) (uint64, sdk.Int, sdk.Int, error) {
@@ -208,27 +215,27 @@ func CalcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 }
 
 func (k Keeper) UpdateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) error {
-	return k.updateUptimeAccumulatorsToNow(ctx, poolId)
+	return k.updatePoolUptimeAccumulatorsToNow(ctx, poolId)
 }
 
-func (k Keeper) SetIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) {
-	k.setIncentiveRecord(ctx, incentiveRecord)
+func (k Keeper) SetIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) error {
+	return k.setIncentiveRecord(ctx, incentiveRecord)
 }
 
 func (k Keeper) SetMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []types.IncentiveRecord) error {
 	return k.setMultipleIncentiveRecords(ctx, incentiveRecords)
 }
 
-func (k Keeper) GetInitialUptimeGrowthOutsidesForTick(ctx sdk.Context, poolId uint64, tick int64) ([]sdk.DecCoins, error) {
-	return k.getInitialUptimeGrowthOutsidesForTick(ctx, poolId, tick)
+func (k Keeper) GetInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, poolId uint64, tick int64) ([]sdk.DecCoins, error) {
+	return k.getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ctx, poolId, tick)
+}
+
+func (k Keeper) InitOrUpdatePositionUptimeAccumulators(ctx sdk.Context, poolId uint64, position sdk.Dec, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, positionId uint64) error {
+	return k.initOrUpdatePositionUptimeAccumulators(ctx, poolId, position, owner, lowerTick, upperTick, liquidityDelta, positionId)
 }
 
 func (k Keeper) GetAllIncentiveRecordsForUptime(ctx sdk.Context, poolId uint64, minUptime time.Duration) ([]types.IncentiveRecord, error) {
 	return k.getAllIncentiveRecordsForUptime(ctx, poolId, minUptime)
-}
-
-func (k Keeper) InitOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, position sdk.Dec, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId uint64) error {
-	return k.initOrUpdatePositionUptime(ctx, poolId, position, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
 }
 
 func (k Keeper) CollectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, sdk.Coins, error) {

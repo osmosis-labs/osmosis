@@ -32,12 +32,22 @@ func (msg MsgCreatePosition) ValidateBasic() error {
 		return InvalidLowerUpperTickError{LowerTick: msg.LowerTick, UpperTick: msg.UpperTick}
 	}
 
-	if !msg.TokenDesired0.IsValid() || msg.TokenDesired0.IsZero() {
-		return fmt.Errorf("Invalid coins (%s)", msg.TokenDesired0.String())
+	if msg.TokensProvided.Empty() {
+		return fmt.Errorf("Empty coins provided (%s)", msg.TokensProvided.String())
 	}
 
-	if !msg.TokenDesired1.IsValid() || msg.TokenDesired1.IsZero() {
-		return fmt.Errorf("Invalid coins (%s)", msg.TokenDesired1.String())
+	if !msg.TokensProvided.IsValid() {
+		return fmt.Errorf("Invalid coins (%s)", msg.TokensProvided.String())
+	}
+
+	if len(msg.TokensProvided) > 2 {
+		return CoinLengthError{Length: len(msg.TokensProvided), MaxLength: 2}
+	}
+
+	for _, coin := range msg.TokensProvided {
+		if coin.Amount.LTE(sdk.ZeroInt()) {
+			return NotPositiveRequireAmountError{Amount: coin.Amount.String()}
+		}
 	}
 
 	if msg.TokenMinAmount0.IsNegative() {
@@ -189,8 +199,8 @@ func (msg MsgCreateIncentive) ValidateBasic() error {
 		return fmt.Errorf("Invalid sender address (%s)", err)
 	}
 
-	if !msg.IncentiveAmount.IsPositive() {
-		return NonPositiveIncentiveAmountError{PoolId: msg.PoolId, IncentiveAmount: msg.IncentiveAmount.ToDec()}
+	if !msg.IncentiveCoin.IsValid() {
+		return InvalidIncentiveCoinError{PoolId: msg.PoolId, IncentiveCoin: msg.IncentiveCoin}
 	}
 
 	if !msg.EmissionRate.IsPositive() {

@@ -27,20 +27,20 @@ message MsgCreatePosition {
   string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   int64 lower_tick = 3 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
   int64 upper_tick = 4 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
-  cosmos.base.v1beta1.Coin token_desired0 = 5 [
-    (gogoproto.moretags) = "yaml:\"token_desired0\"",
-    (gogoproto.nullable) = false
+  // tokens_provided is the amount of tokens provided for the position.
+  // It must at a minimum be of length 1 (for a single sided position)
+  // and at a maximum be of length 2 (for a position that straddles the current
+  // tick).
+  repeated cosmos.base.v1beta1.Coin tokens_provided = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
-  cosmos.base.v1beta1.Coin token_desired1 = 6 [
-    (gogoproto.moretags) = "yaml:\"token_desired1\"",
-    (gogoproto.nullable) = false
-  ];
-  string token_min_amount0 = 7 [
+  string token_min_amount0 = 6 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_min_amount0\"",
     (gogoproto.nullable) = false
   ];
-  string token_min_amount1 = 8 [
+  string token_min_amount1 = 7 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_min_amount1\"",
     (gogoproto.nullable) = false
@@ -159,23 +159,21 @@ message MsgCollectIncentivesResponse {
 message MsgCreateIncentive {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  string incentive_denom = 3;
-  string incentive_amount = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"incentive_amount\"",
+  cosmos.base.v1beta1.Coin incentive_coin = 3 [
+    (gogoproto.moretags) = "yaml:\"incentive_coin\"",
     (gogoproto.nullable) = false
   ];
-  string emission_rate = 5 [
+  string emission_rate = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"emission_rate\"",
     (gogoproto.nullable) = false
   ];
-  google.protobuf.Timestamp start_time = 6 [
+  google.protobuf.Timestamp start_time = 5 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true,
     (gogoproto.moretags) = "yaml:\"start_time\""
   ];
-  google.protobuf.Duration min_uptime = 7 [
+  google.protobuf.Duration min_uptime = 6 [
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag) = "duration,omitempty",

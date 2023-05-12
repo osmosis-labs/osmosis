@@ -196,98 +196,75 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 		})
 	}
 }
-
 func (suite *ConcentratedMathTestSuite) TestTicksToSqrtPrice() {
 	testCases := map[string]struct {
-		tickIndexLower     int64
-		expectedPriceLower sdk.Dec
-		tickIndexUpper     int64
-		expectedPriceUpper sdk.Dec
+		lowerTickIndex     sdk.Int
+		upperTickIndex     sdk.Int
+		expectedLowerPrice sdk.Dec
+		expectedUpperPrice sdk.Dec
 		expectedError      error
 	}{
 		"Ten billionths cent increments at the millionths place": {
-			tickIndexLower:     -51630100,
-			expectedPriceLower: sdk.MustNewDecFromStr("0.0000033699"),
-			tickIndexUpper:     -51630000,
-			expectedPriceUpper: sdk.MustNewDecFromStr("0.0000033700"),
+			lowerTickIndex:     sdk.NewInt(-51630100),
+			upperTickIndex:     sdk.NewInt(-51630000),
+			expectedLowerPrice: sdk.MustNewDecFromStr("0.0000033699"),
+			expectedUpperPrice: sdk.MustNewDecFromStr("0.0000033700"),
 		},
-		"One millionths cent increments at the hundredths place": {
-			tickIndexLower:     -11999800,
-			expectedPriceLower: sdk.MustNewDecFromStr("0.070002"),
-			tickIndexUpper:     -11999700,
-			expectedPriceUpper: sdk.MustNewDecFromStr("0.070003"),
+		"One millionths cent increments at the hundredths place:": {
+			lowerTickIndex:     sdk.NewInt(-11999800),
+			upperTickIndex:     sdk.NewInt(-11999700),
+			expectedLowerPrice: sdk.MustNewDecFromStr("0.070002"),
+			expectedUpperPrice: sdk.MustNewDecFromStr("0.070003"),
 		},
 		"One hundred thousandth cent increments at the tenths place": {
-			tickIndexLower:     -999800,
-			expectedPriceLower: sdk.MustNewDecFromStr("0.90002"),
-			tickIndexUpper:     -999700,
-			expectedPriceUpper: sdk.MustNewDecFromStr("0.90003"),
-		},
-		"One ten thousandth cent increments at the ones place": {
-			tickIndexLower:     1000000,
-			expectedPriceLower: sdk.MustNewDecFromStr("2"),
-			tickIndexUpper:     1000100,
-			expectedPriceUpper: sdk.MustNewDecFromStr("2.0001"),
-		},
-		"One thousandth cent increments at the tens place": {
-			tickIndexLower:     9200100,
-			expectedPriceLower: sdk.MustNewDecFromStr("12.001"),
-			tickIndexUpper:     9200200,
-			expectedPriceUpper: sdk.MustNewDecFromStr("12.002"),
-		},
-		"One cent increments at the hundreds place": {
-			tickIndexLower:     18320100,
-			expectedPriceLower: sdk.MustNewDecFromStr("132.01"),
-			tickIndexUpper:     18320200,
-			expectedPriceUpper: sdk.MustNewDecFromStr("132.02"),
-		},
-		"Ten cent increments at the thousands place": {
-			tickIndexLower:     27732100,
-			expectedPriceLower: sdk.MustNewDecFromStr("1732.10"),
-			tickIndexUpper:     27732200,
-			expectedPriceUpper: sdk.MustNewDecFromStr("1732.20"),
+			lowerTickIndex:     sdk.NewInt(-999800),
+			upperTickIndex:     sdk.NewInt(-999700),
+			expectedLowerPrice: sdk.MustNewDecFromStr("0.90002"),
+			expectedUpperPrice: sdk.MustNewDecFromStr("0.90003"),
 		},
 		"Dollar increments at the ten thousands place": {
-			tickIndexLower:     36073200,
-			expectedPriceLower: sdk.MustNewDecFromStr("10732"),
-			tickIndexUpper:     36073300,
-			expectedPriceUpper: sdk.MustNewDecFromStr("10733"),
+			lowerTickIndex:     sdk.NewInt(36073200),
+			upperTickIndex:     sdk.NewInt(36073300),
+			expectedLowerPrice: sdk.MustNewDecFromStr("10732"),
+			expectedUpperPrice: sdk.MustNewDecFromStr("10733"),
 		},
-		"error: lower tick greater than upper tick": {
-			tickIndexUpper:     36073200,
-			expectedPriceUpper: sdk.MustNewDecFromStr("10732"),
-			tickIndexLower:     36073300,
-			expectedPriceLower: sdk.MustNewDecFromStr("10733"),
-			expectedError:      types.InvalidLowerUpperTickError{LowerTick: 36073300, UpperTick: 36073200},
+		"Max tick and min k": {
+			lowerTickIndex:     sdk.NewInt(-162000000),
+			upperTickIndex:     sdk.NewInt(342000000),
+			expectedUpperPrice: types.MaxSpotPrice,
+			expectedLowerPrice: types.MinSpotPrice,
 		},
-		"error: lower tick equal to upper tick": {
-			tickIndexUpper:     36073300,
-			expectedPriceUpper: sdk.MustNewDecFromStr("10733"),
-			tickIndexLower:     36073300,
-			expectedPriceLower: sdk.MustNewDecFromStr("10733"),
-			expectedError:      types.InvalidLowerUpperTickError{LowerTick: 36073300, UpperTick: 36073300},
+		"error: lowerTickIndex less than minimum": {
+			lowerTickIndex: sdk.NewInt(-162000000 - 1),
+			upperTickIndex: sdk.NewInt(36073300),
+			expectedError:  types.TickIndexMinimumError{MinTick: -162000000},
+		},
+		"error: upperTickIndex greater than maximum": {
+			lowerTickIndex: sdk.NewInt(-162000000),
+			upperTickIndex: sdk.NewInt(342000000 + 1),
+			expectedError:  types.TickIndexMaximumError{MaxTick: 342000000},
 		},
 	}
 
 	for name, tc := range testCases {
 		tc := tc
 		suite.Run(name, func() {
-			sqrtPriceLower, sqrtPriceUpper, err := math.TicksToSqrtPrice(tc.tickIndexLower, tc.tickIndexUpper)
+			lowerSqrtPrice, upperSqrtPrice, err := math.TicksToSqrtPrice(tc.lowerTickIndex.Int64(), tc.upperTickIndex.Int64())
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().Equal(tc.expectedError.Error(), err.Error())
 				return
 			}
 			suite.Require().NoError(err)
-			expectedSqrtPriceLower, err := tc.expectedPriceLower.ApproxSqrt()
+
+			// convert test case's prices to sqrt price
+			expectedLowerSqrtPrice, err := tc.expectedLowerPrice.ApproxSqrt()
+			suite.Require().NoError(err)
+			expectedUpperSqrtPrice, err := tc.expectedUpperPrice.ApproxSqrt()
 			suite.Require().NoError(err)
 
-			suite.Require().Equal(expectedSqrtPriceLower.String(), sqrtPriceLower.String())
-
-			expectedSqrtPriceUpper, err := tc.expectedPriceUpper.ApproxSqrt()
-			suite.Require().NoError(err)
-
-			suite.Require().Equal(expectedSqrtPriceUpper.String(), sqrtPriceUpper.String())
+			suite.Require().Equal(expectedLowerSqrtPrice.String(), lowerSqrtPrice.String())
+			suite.Require().Equal(expectedUpperSqrtPrice.String(), upperSqrtPrice.String())
 		})
 	}
 }
@@ -330,7 +307,6 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 			tickExpected: sdk.NewInt(types.MaxTick - 100).String(),
 		},
 		"max sqrt price, max tick neg six -> max spot price": {
-
 			price:        types.MaxSqrtPrice.Power(2),
 			tickExpected: sdk.NewInt(types.MaxTick).String(),
 		},
@@ -383,7 +359,7 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 	}
 }
 
-func (suite *ConcentratedMathTestSuite) TestPriceToTick_RoundDown() {
+func (suite *ConcentratedMathTestSuite) TestPriceToTickRoundDown() {
 	testCases := map[string]struct {
 		price        sdk.Dec
 		tickSpacing  uint64
@@ -444,7 +420,6 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick_RoundDown() {
 		tc := tc
 
 		suite.Run(name, func() {
-
 			tick, err := math.PriceToTickRoundDown(tc.price, tc.tickSpacing)
 
 			suite.Require().NoError(err)

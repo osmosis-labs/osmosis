@@ -71,6 +71,7 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 			}
 			suite.FundAcc(test.param.lockOwner, test.param.coinsToLock)
 			resp, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
+			suite.Require().NoError(err)
 
 			valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
@@ -120,6 +121,7 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegate() {
 		lockupMsgServer := lockupkeeper.NewMsgServerImpl(suite.App.LockupKeeper)
 		c := sdk.WrapSDKContext(suite.Ctx)
 		resp, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
+		suite.Require().NoError(err)
 
 		msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
 		_, err = msgServer.SuperfluidUndelegate(c, types.NewMsgSuperfluidUndelegate(test.param.lockOwner, resp.ID))
@@ -146,7 +148,6 @@ func (suite *KeeperTestSuite) TestMsgCreateFullRangePositionAndSuperfluidDelegat
 		expectedLockId     uint64
 		expectedPositionId uint64
 	}{
-
 		{
 			name:               "happy case",
 			param:              param{},
@@ -244,6 +245,7 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUnbondLock() {
 		lockupMsgServer := lockupkeeper.NewMsgServerImpl(suite.App.LockupKeeper)
 		c := sdk.WrapSDKContext(suite.Ctx)
 		resp, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
+		suite.Require().NoError(err)
 
 		msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
 		_, err = msgServer.SuperfluidUnbondLock(c, types.NewMsgSuperfluidUnbondLock(test.param.lockOwner, resp.ID))
@@ -291,6 +293,7 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegateAndUnbondLock() {
 		lockupMsgServer := lockupkeeper.NewMsgServerImpl(suite.App.LockupKeeper)
 		c := sdk.WrapSDKContext(suite.Ctx)
 		resp, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
+		suite.Require().NoError(err)
 
 		msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
 		_, err = msgServer.SuperfluidUndelegateAndUnbondLock(c, types.NewMsgSuperfluidUndelegateAndUnbondLock(test.param.lockOwner, resp.ID, test.param.amountToUnlock))
@@ -494,6 +497,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedP
 	balancerPooId, err := suite.App.PoolManagerKeeper.CreatePool(suite.Ctx, msg)
 	suite.Require().NoError(err)
 	balancerPool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, balancerPooId)
+	suite.Require().NoError(err)
 	poolDenom := gammtypes.GetPoolShareDenom(balancerPool.GetId())
 	err = suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
 		Denom:     poolDenom,

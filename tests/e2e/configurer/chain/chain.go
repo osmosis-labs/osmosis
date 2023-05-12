@@ -59,6 +59,7 @@ const (
 )
 
 func New(t *testing.T, containerManager *containers.Manager, id string, initValidatorConfigs []*initialization.NodeConfig) *Config {
+	t.Helper()
 	numVal := float32(len(initValidatorConfigs))
 	return &Config{
 		ChainMeta: initialization.ChainMeta{

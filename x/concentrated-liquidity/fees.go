@@ -46,7 +46,7 @@ func (k Keeper) chargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 	return nil
 }
 
-// initOrUpdateFeeAccumulatorPosition mutates the fee accumulator position by either creating or updating it
+// initOrUpdatePositionFeeAccumulator mutates the fee accumulator position by either creating or updating it
 // for the given pool id in the range specified by the given lower and upper ticks, position id and liquidityDelta.
 // If liquidityDelta is positive, it adds liquidity. If liquidityDelta is negative, it removes liquidity.
 // If this is a new position, liqudityDelta must be positive.
@@ -62,7 +62,7 @@ func (k Keeper) chargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 // - fails to create a new position.
 // - fails to prepare the accumulator for update.
 // - fails to update the position's accumulator.
-func (k Keeper) initOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidityDelta sdk.Dec) error {
+func (k Keeper) initOrUpdatePositionFeeAccumulator(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidityDelta sdk.Dec) error {
 	// Get the fee accumulator for the position's pool.
 	feeAccumulator, err := k.GetFeeAccumulator(ctx, poolId)
 	if err != nil {
@@ -90,7 +90,7 @@ func (k Keeper) initOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint6
 		}
 
 		// Initialize the position with the fee growth inside the tick range
-		if err := feeAccumulator.NewPositionCustomAcc(positionKey, liquidityDelta, feeGrowthInside, nil); err != nil {
+		if err := feeAccumulator.NewPositionIntervalAccumulation(positionKey, liquidityDelta, feeGrowthInside, nil); err != nil {
 			return err
 		}
 	} else {
@@ -111,7 +111,7 @@ func (k Keeper) initOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint6
 		// The move happens by subtracting the "fee growth inside from 0 to t + fee growth outside from 0 to t + 1" from the global
 		// fee accumulator growth at time t + 1. This yields the "fee growth inside from t to t + 1". That is, the unclaimed fee growth
 		// from the last time the position was either modified or created.
-		err = feeAccumulator.UpdatePositionCustomAcc(positionKey, liquidityDelta, feeGrowthInside)
+		err = feeAccumulator.UpdatePositionIntervalAccumulation(positionKey, liquidityDelta, feeGrowthInside)
 		if err != nil {
 			return err
 		}
@@ -121,6 +121,8 @@ func (k Keeper) initOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint6
 }
 
 // getFeeGrowthOutside returns the sum of fee growth above the upper tick and fee growth below the lower tick
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
+// Currently, Tte call to GetTickInfo() may mutate state.
 func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -144,22 +146,19 @@ func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 	}
 	poolFeeGrowth := poolFeeAccumulator.GetValue()
 
-	feeGrowthAboveUpperTick := calculateFeeGrowth(upperTick, upperTickInfo.FeeGrowthOutside, currentTick, poolFeeGrowth, true)
-	feeGrowthBelowLowerTick := calculateFeeGrowth(lowerTick, lowerTickInfo.FeeGrowthOutside, currentTick, poolFeeGrowth, false)
+	feeGrowthAboveUpperTick := calculateFeeGrowth(upperTick, upperTickInfo.FeeGrowthOppositeDirectionOfLastTraversal, currentTick, poolFeeGrowth, true)
+	feeGrowthBelowLowerTick := calculateFeeGrowth(lowerTick, lowerTickInfo.FeeGrowthOppositeDirectionOfLastTraversal, currentTick, poolFeeGrowth, false)
 
 	return feeGrowthAboveUpperTick.Add(feeGrowthBelowLowerTick...), nil
 }
 
-// getInitialFeeGrowthOutsideForTick returns the initial value of fee growth outside for a given tick.
-// This value depends on the tick's location relative to the current tick.
+// getInitialFeeGrowthOppositeDirectionOfLastTraversalForTick returns what the initial value of the fee growth opposite direction of last traversal field should be for a given tick.
+// This value depends on the provided tick's location relative to the current tick. If the provided tick is greater than the current tick,
+// then the value is zero. Otherwise, the value is the value of the current global fee growth.
 //
-// feeGrowthOutside =
-// { feeGrowthGlobal current tick >= tick }
-// { 0               current tick <  tick }
-//
-// The value is chosen as if all of the fees earned to date had occurrd below the tick.
+// The value is chosen as if all of the fees earned to date had occurred below the tick.
 // Returns error if the pool with the given id does exist or if fails to get the fee accumulator.
-func (k Keeper) getInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
+func (k Keeper) getInitialFeeGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.DecCoins{}, err
@@ -289,25 +288,33 @@ func (k Keeper) prepareClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Co
 // 1. currentTick >= upperTick: If current Tick is GTE than the upper Tick, the fee growth would be pool fee growth - uppertick's fee growth outside
 // 2. currentTick < upperTick: If current tick is smaller than upper tick, fee growth would be the upper tick's fee growth outside
 // this goes vice versa for calculating fee growth for lower tick.
-func calculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, currentTick int64, feesGrowthGlobal sdk.DecCoins, isUpperTick bool) sdk.DecCoins {
+func calculateFeeGrowth(targetTick int64, ticksFeeGrowthOppositeDirectionOfLastTraversal sdk.DecCoins, currentTick int64, feesGrowthGlobal sdk.DecCoins, isUpperTick bool) sdk.DecCoins {
 	if (isUpperTick && currentTick >= targetTick) || (!isUpperTick && currentTick < targetTick) {
-		return feesGrowthGlobal.Sub(feeGrowthOutside)
+		return feesGrowthGlobal.Sub(ticksFeeGrowthOppositeDirectionOfLastTraversal)
 	}
-	return feeGrowthOutside
+	return ticksFeeGrowthOppositeDirectionOfLastTraversal
 }
 
 // preparePositionAccumulator is called prior to updating unclaimed rewards,
 // as we must set the position's accumulator value to the sum of
 // - the fee/uptime growth inside at position creation time (position.InitAccumValue)
 // - fee/uptime growth outside at the current block time (feeGrowthOutside/uptimeGrowthOutside)
+// CONTRACT: position accumulator value prior to this call is equal to the growth inside the position at the time of last update.
 func preparePositionAccumulator(accumulator accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) error {
 	position, err := accum.GetPosition(accumulator, positionKey)
 	if err != nil {
 		return err
 	}
 
-	customAccumulatorValue := position.InitAccumValue.Add(growthOutside...)
-	err = accumulator.SetPositionCustomAcc(positionKey, customAccumulatorValue)
+	// The reason for adding the growth outside to the position's initial accumulator value per share is as follows:
+	// - At any time in-between position updates or claiming, a position must have its AccumValuePerShare be equal to growth_inside_at_{last time of update}.
+	// - Prior to claiming (the logic below), the position's accumulator is updated to:
+	//   growth_inside_at_{last time of update} + growth_outside_at_{current block time of update}
+	// - Then, during claiming in osmoutils.ClaimRewards, we perform the following computation:
+	// growth_global_at{current block time} - (growth_inside_at_{last time of update} + growth_outside_at_{current block time of update}})
+	// which ends up being equal to growth_inside_from_{last_time_of_update}_to_{current block time of update}}.
+	intervalAccumulationOutside := position.AccumValuePerShare.Add(growthOutside...)
+	err = accumulator.SetPositionIntervalAccumulation(positionKey, intervalAccumulationOutside)
 	if err != nil {
 		return err
 	}

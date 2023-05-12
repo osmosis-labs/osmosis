@@ -32,6 +32,7 @@ type NodeConfig struct {
 
 // NewNodeConfig returens new initialized NodeConfig.
 func NewNodeConfig(t *testing.T, initNode *initialization.Node, initConfig *initialization.NodeConfig, chainId string, containerManager *containers.Manager) *NodeConfig {
+	t.Helper()
 	return &NodeConfig{
 		Node:             *initNode,
 		SnapshotInterval: initConfig.SnapshotInterval,

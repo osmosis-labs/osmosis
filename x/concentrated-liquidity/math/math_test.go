@@ -80,6 +80,49 @@ func (suite *ConcentratedMathTestSuite) TestLiquidity0() {
 	}
 }
 
+func (suite *ConcentratedMathTestSuite) TestAddLiquidity() {
+	testCases := map[string]struct {
+		inputLiqA sdk.Dec
+		inputLiqB sdk.Dec
+
+		expectedOutout sdk.Dec
+	}{
+		"happy path": {
+			inputLiqA: sdk.MustNewDecFromStr("1000000000"),
+			inputLiqB: sdk.MustNewDecFromStr("300000999"),
+
+			expectedOutout: sdk.MustNewDecFromStr("1300000999"),
+		},
+		"second value negative": {
+			inputLiqA: sdk.MustNewDecFromStr("1000000000"),
+			inputLiqB: sdk.MustNewDecFromStr("-300000999"),
+
+			expectedOutout: sdk.MustNewDecFromStr("699999001"),
+		},
+		"first value negative": {
+			inputLiqA: sdk.MustNewDecFromStr("-1000000000"),
+			inputLiqB: sdk.MustNewDecFromStr("300000999"),
+
+			expectedOutout: sdk.MustNewDecFromStr("-699999001"),
+		},
+		"both values negative": {
+			inputLiqA: sdk.MustNewDecFromStr("-1000000000"),
+			inputLiqB: sdk.MustNewDecFromStr("-300000999"),
+
+			expectedOutout: sdk.MustNewDecFromStr("-1300000999"),
+		},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+
+		suite.Run(name, func() {
+			actualOutput := math.AddLiquidity(tc.inputLiqA, tc.inputLiqB)
+			suite.Require().Equal(tc.expectedOutout, actualOutput)
+		})
+	}
+}
+
 // TestGetNextSqrtPriceFromAmount0RoundingUp tests that getNextSqrtPriceFromAmount0RoundingUp utilizes
 // the current squareRootPrice, liquidity of denom0, and amount of denom0 that still needs
 // to be swapped in order to determine the next squareRootPrice
@@ -431,7 +474,6 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount0InRoundin
 	for name, tc := range tests {
 		tc := tc
 		suite.Run(name, func() {
-
 			sqrtPriceNext := math.GetNextSqrtPriceFromAmount0InRoundingUp(tc.sqrtPriceCurrent, tc.liquidity, tc.amountZeroRemaininIn)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext.String(), sqrtPriceNext.String())
@@ -468,7 +510,6 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount0OutRoundi
 	for name, tc := range tests {
 		tc := tc
 		suite.Run(name, func() {
-
 			sqrtPriceNext := math.GetNextSqrtPriceFromAmount0OutRoundingUp(tc.sqrtPriceCurrent, tc.liquidity, tc.amountZeroRemainingOut)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext.String(), sqrtPriceNext.String())
@@ -505,7 +546,6 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount1InRoundin
 	for name, tc := range tests {
 		tc := tc
 		suite.Run(name, func() {
-
 			sqrtPriceNext := math.GetNextSqrtPriceFromAmount1InRoundingDown(tc.sqrtPriceCurrent, tc.liquidity, tc.amountOneRemainingIn)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext.String(), sqrtPriceNext.String())
@@ -542,7 +582,6 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount1OutRoundi
 	for name, tc := range tests {
 		tc := tc
 		suite.Run(name, func() {
-
 			sqrtPriceNext := math.GetNextSqrtPriceFromAmount1OutRoundingDown(tc.sqrtPriceCurrent, tc.liquidity, tc.amountOneRemainingOut)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext.String(), sqrtPriceNext.String())

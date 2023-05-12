@@ -74,7 +74,7 @@ func (s *IntegrationTestSuite) TestProtoRev() {
 	s.Require().Len(hotRoutes, 0)
 
 	// The module should have no trades by default.
-	numTrades, err := chainANode.QueryProtoRevNumberOfTrades()
+	_, err = chainANode.QueryProtoRevNumberOfTrades()
 	s.T().Logf("checking that the protorev module has no trades on init: %s", err)
 	s.Require().Error(err)
 
@@ -140,7 +140,7 @@ func (s *IntegrationTestSuite) TestProtoRev() {
 	s.Require().Equal(supplyBefore, supplyAfter)
 
 	// Check that the number of trades executed by the protorev module is 1.
-	numTrades, err = chainANode.QueryProtoRevNumberOfTrades()
+	numTrades, err := chainANode.QueryProtoRevNumberOfTrades()
 	s.T().Logf("checking that the protorev module has executed 1 trade")
 	s.Require().NoError(err)
 	s.Require().NotNil(numTrades)
@@ -192,11 +192,11 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().NoError(err)
 
 	var (
-		denom0      string  = "uion"
-		denom1      string  = "uosmo"
-		tickSpacing uint64  = 100
-		swapFee             = "0.001" // 0.1%
-		swapFeeDec  sdk.Dec = sdk.MustNewDecFromStr("0.001")
+		denom0             = "uion"
+		denom1             = "uosmo"
+		tickSpacing uint64 = 100
+		swapFee            = "0.001" // 0.1%
+		swapFeeDec         = sdk.MustNewDecFromStr("0.001")
 	)
 
 	// Get the permisionless pool creation parameter.
@@ -206,7 +206,8 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	}
 
 	// Change the parameter to enable permisionless pool creation.
-	chainA.SubmitParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"))
+	err = chainA.SubmitParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"))
+	s.Require().NoError(err)
 
 	// Confirm that the parameter has been changed.
 	isPermisionlessCreationEnabledStr = chainANode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
@@ -241,15 +242,15 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	address3 := chainANode.CreateWalletAndFund("addr3", fundTokens)
 
 	// Create 2 positions for address1: overlap together, overlap with 2 address3 positions
-	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
-	chainANode.CreateConcentratedPosition(address1, "[-40000]", "120000", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
+	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
+	chainANode.CreateConcentratedPosition(address1, "[-40000]", "120000", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
 
 	// Create 1 position for address2: does not overlap with anything, ends at maximum
-	chainANode.CreateConcentratedPosition(address2, "220000", fmt.Sprintf("%d", cltypes.MaxTick), fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
+	chainANode.CreateConcentratedPosition(address2, "220000", fmt.Sprintf("%d", cltypes.MaxTick), fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
 
 	// Create 2 positions for address3: overlap together, overlap with 2 address1 positions, one position starts from minimum
-	chainANode.CreateConcentratedPosition(address3, "[-160000]", "[-20000]", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
-	chainANode.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", cltypes.MinTick), "140000", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
+	chainANode.CreateConcentratedPosition(address3, "[-160000]", "[-20000]", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
+	chainANode.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", cltypes.MinTick), "140000", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
 
 	// Get newly created positions
 	positionsAddress1 := chainANode.QueryConcentratedPositions(address1)
@@ -599,7 +600,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		addr1BalancesAfter.AmountOf("uion"),
 	)
 
-	// Assert position that was active thoughout the whole swap:
+	// Assert position that was active throughout the whole swap:
 
 	// Track balance of address3
 	addr3BalancesBefore = s.addrBalance(chainANode, address3)
@@ -728,7 +729,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	}
 
 	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
-	timeoutPeriod := time.Duration(2 * time.Minute)
+	timeoutPeriod := 2 * time.Minute
 	select {
 	case <-time.After(timeoutPeriod):
 		err := fmt.Errorf("go routine took longer than %s", timeoutPeriod)
@@ -770,7 +771,7 @@ func (s *IntegrationTestSuite) TestStableSwapPostUpgrade() {
 }
 
 // TestGeometricTwapMigration tests that the geometric twap record
-// migration runs succesfully. It does so by attempting to execute
+// migration runs successfully. It does so by attempting to execute
 // the swap on the pool created pre-upgrade. When a pool is created
 // pre-upgrade, twap records are initialized for a pool. By runnning
 // a swap post-upgrade, we confirm that the geometric twap was initialized
@@ -987,7 +988,6 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 			val := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
 			return strings.Contains(val, param)
 		}, time.Second*30, time.Millisecond*500)
-
 	}
 }
 
@@ -1053,12 +1053,34 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	var response map[string]interface{}
 	s.Require().Eventually(func() bool {
 		response, err = nodeA.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
-		totalFunds := response["total_funds"].([]interface{})[0]
-		amount := totalFunds.(map[string]interface{})["amount"].(string)
-		denom := totalFunds.(map[string]interface{})["denom"].(string)
+		if err != nil {
+			return false
+		}
+
+		totalFundsIface, ok := response["total_funds"].([]interface{})
+		if !ok || len(totalFundsIface) == 0 {
+			return false
+		}
+
+		totalFunds, ok := totalFundsIface[0].(map[string]interface{})
+		if !ok {
+			return false
+		}
+
+		amount, ok := totalFunds["amount"].(string)
+		if !ok {
+			return false
+		}
+
+		denom, ok := totalFunds["denom"].(string)
+		if !ok {
+			return false
+		}
+
 		// check if denom contains "uosmo"
-		return err == nil && amount == strconv.FormatInt(transferAmount, 10) && strings.Contains(denom, "ibc")
+		return amount == strconv.FormatInt(transferAmount, 10) && strings.Contains(denom, "ibc")
 	},
+
 		15*time.Second,
 		10*time.Millisecond,
 	)
@@ -1100,13 +1122,17 @@ func (s *IntegrationTestSuite) TestPacketForwarding() {
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
+	s.Require().NoError(err)
 	s.Require().Eventually(func() bool {
 		response, err := nodeA.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, senderBech32))
 		if err != nil {
 			return false
 		}
-		count := response["count"].(float64)
-		return err == nil && count == 0
+		countValue, ok := response["count"].(float64)
+		if !ok {
+			return false
+		}
+		return countValue == 0
 	},
 		15*time.Second,
 		10*time.Millisecond,
@@ -1154,7 +1180,7 @@ func (s *IntegrationTestSuite) TestAddToExistingLock() {
 // TestArithmeticTWAP tests TWAP by creating a pool, performing a swap.
 // These two operations should create TWAP records.
 // Then, we wait until the epoch for the records to be pruned.
-// The records are guranteed to be pruned at the next epoch
+// The records are guaranteed to be pruned at the next epoch
 // because twap keep time = epoch time / 4 and we use a timer
 // to wait for at least the twap keep time.
 func (s *IntegrationTestSuite) TestArithmeticTWAP() {
@@ -1434,7 +1460,7 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 	}
 	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
 	var elapsed time.Duration
-	timeoutPeriod := time.Duration(2 * time.Minute)
+	timeoutPeriod := 2 * time.Minute
 	select {
 	case elapsed = <-totalTimeChan:
 	case <-time.After(timeoutPeriod):
@@ -1469,8 +1495,6 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 		denomB = "stake" // 2_000_000 stake
 
 		minAmountOut = "1"
-
-		epochIdentifier = "day"
 	)
 
 	chainA := s.configurer.GetChainConfig(0)
@@ -1555,13 +1579,13 @@ func (s *IntegrationTestSuite) TestAConcentratedLiquidity_CanonicalPool_And_Para
 		s.T().Skip("Skipping v16 canonical pool creation test because upgrade is not enabled")
 	}
 
-	// Taken from: https://app.osmosis.zone/pool/674
 	expectedFee := sdk.MustNewDecFromStr("0.002")
 
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
 
+	// Taken from: https://app.osmosis.zone/pool/674
 	concentratedPoolId := chainANode.QueryConcentratedPooIdLinkFromCFMM(config.DaiOsmoPoolIdv16)
 
 	concentratedPool := s.updatedPool(chainANode, concentratedPoolId)

@@ -5,10 +5,6 @@ import (
 	"testing"
 	"time"
 
-	dbm "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/libs/log"
-	tmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
@@ -17,6 +13,7 @@ import (
 )
 
 func createTestPool(t *testing.T, swapFee, exitFee sdk.Dec, poolAssets ...balancer.PoolAsset) *balancer.Pool {
+	t.Helper()
 	pool, err := balancer.NewBalancerPool(
 		1,
 		balancer.NewPoolParams(swapFee, exitFee, nil),
@@ -29,16 +26,8 @@ func createTestPool(t *testing.T, swapFee, exitFee sdk.Dec, poolAssets ...balanc
 	return &pool
 }
 
-func createTestContext(t *testing.T) sdk.Context {
-	db := dbm.NewMemDB()
-	logger := log.NewNopLogger()
-
-	ms := rootmulti.NewStore(db, logger)
-
-	return sdk.NewContext(ms, tmtypes.Header{}, false, logger)
-}
-
 func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk.Int) {
+	t.Helper()
 	allowedErrRatioDec, err := sdk.NewDecFromStr(allowedErrRatio)
 	require.NoError(t, err)
 
@@ -54,12 +43,14 @@ func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk
 }
 
 func assertExpectedLiquidity(t *testing.T, tokensJoined, liquidity sdk.Coins) {
+	t.Helper()
 	require.Equal(t, tokensJoined, liquidity)
 }
 
 // assertPoolStateNotModified asserts that sut (system under test) does not modify
 // pool state.
 func assertPoolStateNotModified(t *testing.T, pool *balancer.Pool, sut func()) {
+	t.Helper()
 	// We need to make sure that this method does not mutate state.
 	oldPoolAssets := pool.GetAllPoolAssets()
 	oldLiquidity := pool.GetTotalPoolLiquidity(sdk.Context{})

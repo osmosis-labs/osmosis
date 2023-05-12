@@ -427,6 +427,36 @@ type MsgCollectFeesResponse struct {
 }
 ```
 
+### `MsgFungifyChargedPositions`
+
+This message allows fungifying the fully charged unlocked positions belonging to the same owner
+and located in the same tick range.
+MsgFungifyChargedPosition takes in a list of positionIds and combines them into a single position.
+It validates that all positions belong to the same owner, are in the same ticks and are fully charged.
+Fails if not. Otherwise, it creates a completely new position P. P's liquidity equals to the sum of all
+liquidities of positions given by positionIds. The uptime of the join time of the new position equals
+to current block time - max authorized uptime duration (to signify that it is fully charged).
+The previous positions are deleted from state. Prior to deleting, the rewards are claimed.
+The old position's unclaimed rewards are transferred to the new position.
+The new position ID is returned.
+
+```go
+type MsgFungifyChargedPositions struct {
+ PositionIds    []uint64
+ Sender         string
+}
+```
+
+- **Response**
+
+On successful response, the new position id is returned.
+
+```go
+type MsgFungifyChargedPositionsResponse struct {
+ NewPositionId uint64
+}
+```
+
 ## Relationship to Pool Manager Module
 
 ### Pool Creation
@@ -1033,13 +1063,19 @@ throughout its lifespan, named `FeeGrowthGlobal`.
 // Note that this is proto-generated.
 type TickInfo struct {
     ...
-   FeeGrowthOutside sdk.DecCoins
+   FeeGrowthOppositeDirectionOfLastTraversal sdk.DecCoins
 }
 ```
 
-TickInfo keeps a record of fees accumulated outside of the tick itself. This
-information is required for calculating the amount of fees that accrue between
-the range of two ticks.
+TickInfo keeps a record of fees accumulated opposite the direction the tick was last traversed.
+In other words, when traversing the tick from right to left, `FeeGrowthOppositeDirectionOfLastTraversal`
+represents the fees accumulated above that tick. When traversing the tick from left to right,
+`FeeGrowthOppositeDirectionOfLastTraversal` represents the fees accumulated below that tick.
+
+![Tick Updates](./img/TickUpdates.png)
+
+This information is required for calculating the amount of fees that accrue between
+a range of two ticks.
 
 Note that keeping track of the fee growth is only necessary for the ticks that
 have been initialized. In other words, at least one position must be referencing
@@ -1057,18 +1093,21 @@ if tickIndex <= currentTick {
     return err
   }
 
-  tickInfo.FeeGrowthOutside = accum.GetValue()
+  tickInfo.FeeGrowthBelow = accum.GetValue()
 }
 ```
 
-Essentially, setting the tick's `tickInfo.FeeGrowthOutside` to the pools accum value
-represents the amount of fees collected by the pool up until the tick was activated.
+Essentially, setting the tick's `tickInfo.FeeGrowthOppositeDirectionOfLastTraversal`
+to the pools accum value represents the amount of fees collected by the pool up until
+the tick was activated.
 
-Once a tick is activated again (crossed in either direction), `tickInfo.FeeGrowthOutside`
-is updated to add the difference between the pool's current accumulator value and
-the old value of `tickInfo.FeeGrowthOutside`.
+Once a tick is activated again (crossed in either direction),
+`tickInfo.FeeGrowthOppositeDirectionOfLastTraversal` is updated to add the difference
+between the pool's current accumulator value and the old value of
+`tickInfo.FeeGrowthOppositeDirectionOfLastTraversal`.
 
-Tracking how many fees are collected outside of a tick allows us to calculate the
+Tracking how many fees are collected below, in the case of a lower tick, and above,
+in the case of an upper tick, allows us to calculate the
 amount of fees inside a position (fee growth inside between two ticks) on demand.
 This is done by updating the activated tick with the amount of fees collected for
 every tick lower than the tick that is being crossed.
@@ -1092,6 +1131,8 @@ This process is vice versa for calculating fee growth below the lower tick.
 Now, by having the fee growth below the lower and above the upper tick of a range,
 we can calculate the fee growth inside the range by subtracting the two from the
 global per-unit-of-liquidity fee growth.
+
+![Fee Growth Outside Calculations](./img/FeeGrowthOutsideCalcuations.png)
 
 ```go
 feeGrowthInsideRange := FeeGrowthGlobalOutside - feeGrowthBelowLowerTick - feeGrowthAboveUpperTick
@@ -1216,43 +1257,91 @@ feeChargeTotal = amountIn.Mul(swapFee)
 
 ## Overview
 
-Due to the nonfungibility of positions and ticks, incentives for concentrated liquidity requires a slightly different mechanism for distributing incentives compared to Balancer and Stableswap pools. In general, the design space of incentive mechanisms for concentrated liquidity DEXs is extremely underexplored, so our implementation takes this as an opportunity to break some new ground in the broader design space of order-book-style AMMs.
+Due to the nonfungibility of positions and ticks, incentives for concentrated liquidity requires a
+slightly different mechanism for distributing incentives compared to Balancer and Stableswap pools.
+In general, the design space of incentive mechanisms for concentrated liquidity DEXs is extremely
+underexplored, so our implementation takes this as an opportunity to break some new ground in the
+broader design space of order-book-style AMMs.
 
-Below, we outline the approach for CL incentives that Osmosis will be implementing for its initial implementation of concentrated liquidity, as well as our baseline reasoning for why we are pursuing this design.
+Below, we outline the approach for CL incentives that Osmosis will be implementing for its initial
+implementation of concentrated liquidity, as well as our baseline reasoning for why we are pursuing
+this design.
 
 ## Target Properties
 
-As a starting point, it's important to understand the properties of a healthy liquidity pool. These are all, of course, properties that become self-sustaining once the positive feedback cycle between liquidity and volume kicks off, but for the sake of understanding what exactly it is that we are trying to bootstrap with incentives it helps to be explicit with our goals.
+As a starting point, it's important to understand the properties of a healthy liquidity pool.
+These are all, of course, properties that become self-sustaining once the positive feedback cycle
+between liquidity and volume kicks off, but for the sake of understanding what exactly it is that
+ we are trying to bootstrap with incentives it helps to be explicit with our goals.
 
-### Liquidity Depth 
-We want to ensure fees and incentives are being used to maximize liquidity depth at the active tick (i.e. the tick the current spot price is in), as this gives the best execution price for trades on the pool.
+### Liquidity Depth
+We want to ensure fees and incentives are being used to maximize liquidity depth at the active tick
+(i.e. the tick the current spot price is in), as this gives the best execution price for trades on
+the pool.
 
 ### Liquidity Breadth
-It is critical that as we roll out concentrated liquidity, there is an incentive for there to be width in the books for our major pools. This is to avoid the scenario where the liquidity in the active tick gets filled and liquidity falls off a cliff (e.g. when there is a large price move and active tick LPs get bulk arbed against). It is important for our liquidity base to be broad when it is low until our CL markets mature and active LPs begin participating.
+It is critical that as we roll out concentrated liquidity, there is an incentive for there to be
+width in the books for our major pools. This is to avoid the scenario where the liquidity in the
+active tick gets filled and liquidity falls off a cliff (e.g. when there is a large price move and
+active tick LPs get bulk arbed against). It is important for our liquidity base to be broad when it
+is low until our CL markets mature and active LPs begin participating.
 
 ### Liquidity Uptime
 
-We want to ensure that the active tick is not only liquid, but that it is _consistently_ liquid, meaning that liquidity providers are incentivized to keep their liquidity on the books while they trade. 
+We want to ensure that the active tick is not only liquid, but that it is _consistently_ liquid,
+meaning that liquidity providers are incentivized to keep their liquidity on the books while
+they trade.
 
-Specifically, we want to ensure that idle liquidity waiting for volume does not sit off the books with the goal of jumping in when a trade happens, as this makes Osmosis's liquidity look thinner than it is and risks driving volume to other exchanges.
+Specifically, we want to ensure that idle liquidity waiting for volume does not sit off the
+books with the goal of jumping in when a trade happens, as this makes Osmosis's liquidity
+look thinner than it is and risks driving volume to other exchanges.
 
-While just-in-time (JIT) liquidity technically benefits the trader on a first-degree basis (better price execution for that specific trade), it imposes a cost on the whole system by pushing LPs to an equilibrium that ultimately hurts the DEX (namely that liquidity stays off the books until a trade happens). This instance of [Braess's paradox](https://en.wikipedia.org/wiki/Braess%27s_paradox) can be remedied with mechanisms designed around rewarding liquidity uptime.
+While just-in-time (JIT) liquidity technically benefits the trader on a first-degree basis
+(better price execution for that specific trade), it imposes a cost on the whole system by
+pushing LPs to an equilibrium that ultimately hurts the DEX (namely that liquidity stays of
+the books until a trade happens). This instance of [Braess's paradox](https://en.wikipedia.org/wiki/Braess%27s_paradox)
+can be remedied with mechanisms designed around rewarding liquidity uptime.
 
 ## Current Standard: Pro-rata in Active Tick
 
-The current status quo for concentrated liquidity incentives is to distribute them pro-rata to all LPs providing liquidity in the active tick. With some [clever accumulator tricks](https://www.paradigm.xyz/2021/05/liquidity-mining-on-uniswap-v3), this can be designed to ensure that each LP only receives incentives for liquidity they contribute to the active tick. This approach is incredible for liquidity depth, which is arguably the most important property we need incentives to be able to accommodate. It is also a user flow that on-chain market makers are already somewhat familiar with and has enough live examples where we roughly know that it functions as intended.
+The current status quo for concentrated liquidity incentives is to distribute them pro-rata
+to all LPs providing liquidity in the active tick. With
+some [clever accumulator tricks](https://www.paradigm.xyz/2021/05/liquidity-mining-on-uniswap-v3),
+this can be designed to ensure that each LP only receives incentives for liquidity they contribute
+to the active tick. This approach is incredible for liquidity depth, which is arguably the most
+important property we need incentives to be able to accommodate. It is also a user flow that
+on-chain market makers are already somewhat familiar with and has enough live examples where
+we roughly know that it functions as intended.
 
 ## Our Implementation
 
-At launch, Osmosis's CL incentives will primarily be in the format described above while we iron out a mechanism that achieves the remaining two properties predictably and effectively. As a piece of foreshadowing, the primary problem space we will be tackling is the following: status quo incentives advantage LPs who keep their liquidity off the books until a trade happens, ultimately pushing liquidity off of the DEX and creating ambiguity around the "real" liquidity depth. This forces traders to make uninformed decisions about where to trade their assets (or worse, accept worse execution on an inferior venue).
+At launch, Osmosis's CL incentives will primarily be in the format described above while we
+iron out a mechanism that achieves the remaining two properties predictably and effectively.
+As a piece of foreshadowing, the primary problem space we will be tackling is the following:
+status quo incentives advantage LPs who keep their liquidity off the books until a trade
+happens, ultimately pushing liquidity off of the DEX and creating ambiguity around the "real"
+liquidity depth. This forces traders to make uninformed decisions about where to trade their
+assets (or worse, accept worse execution on an inferior venue).
 
-In other words, instead of having incentives go towards bootstrapping healthy liquidity pools, they risk going towards adversely pushing volume to other exchanges at the cost of the DEX, active LPs, and ultimately traders.
+In other words, instead of having incentives go towards bootstrapping healthy liquidity pools,
+they risk going towards adversely pushing volume to other exchanges at the cost of the DEX,
+active LPs, and ultimately traders.
 
 ### Note on supported and authorized uptimes
 
-If you dig through our incentives logic, you might find code dealing with notions of **Supported Uptimes** and **Authorized Uptimes**. These are for an uptime incentivization mechanism we are keeping off at launch while we refine a more sophisticated version. We leave the state-related parts in core logic to ensure that if we do decide to turn the feature on (even if just to experiment), it could be done by a simple governance proposal (to add more supported uptimes to the list of authorized uptimes) and not require a state migration for pools. At launch, only the 1ns uptime will be authorized, which is roughly equivalent to status quo CL incentives with the small difference that positions that are created and closed in the same block are not eligible for any incentives.
+If you dig through our incentives logic, you might find code dealing with notions of **Supported Uptimes**
+and **Authorized Uptimes**. These are for an uptime incentivization mechanism we are keeping off
+at launch while we refine a more sophisticated version. We leave the state-related parts
+in core logic to ensure that if we do decide to turn the feature on (even if just to
+experiment), it could be done by a simple governance proposal (to add more supported
+uptimes to the list of authorized uptimes) and not require a state migration for pools.
+At launch, only the 1ns uptime will be authorized, which is roughly equivalent to status
+quo CL incentives with the small difference that positions that are created and closed in
+the same block are not eligible for any incentives.
 
-For the sake of clarity, this mechanism functions very similarly to status quo incentives, but it has a separate accumulator for each supported uptime and ensures that only liquidity that has been in the pool for the required amount of time qualifies for claiming incentives.
+For the sake of clarity, this mechanism functions very similarly to status quo incentives,
+but it has a separate accumulator for each supported uptime and ensures that only liquidity
+that has been in the pool for the required amount of time qualifies for claiming incentives.
 
 ## TWAP Integration
 

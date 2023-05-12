@@ -50,7 +50,8 @@ type simState struct {
 	config Config
 }
 
-func newSimulatorState(simParams Params, initialHeader tmproto.Header, tb testing.TB, w io.Writer, validators mockValidators, config Config) *simState {
+func newSimulatorState(tb testing.TB, simParams Params, initialHeader tmproto.Header, w io.Writer, validators mockValidators, config Config) *simState {
+	tb.Helper()
 	return &simState{
 		simParams:      simParams,
 		header:         initialHeader,

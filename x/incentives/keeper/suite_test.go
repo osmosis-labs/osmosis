@@ -1,8 +1,8 @@
 package keeper_test
 
 import (
+	"crypto/rand"
 	"fmt"
-	"math/rand"
 	"time"
 
 	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"

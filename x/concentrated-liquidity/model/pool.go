@@ -185,7 +185,7 @@ func (p *Pool) SetLastLiquidityUpdate(newTime time.Time) {
 // updateLiquidityIfActivePosition updates the pool's liquidity if the position is active.
 // Returns true if updated, false otherwise.
 func (p *Pool) UpdateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta sdk.Dec) bool {
-	if p.isCurrentTickInRange(lowerTick, upperTick) {
+	if p.IsCurrentTickInRange(lowerTick, upperTick) {
 		p.CurrentTickLiquidity = p.CurrentTickLiquidity.Add(liquidityDelta)
 		return true
 	}
@@ -234,7 +234,7 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 	// in favor of the pool.
 	roundUp := liquidityDelta.IsPositive()
 
-	if p.isCurrentTickInRange(lowerTick, upperTick) {
+	if p.IsCurrentTickInRange(lowerTick, upperTick) {
 		// outcome one: the current price falls within the position
 		// if this is the case, we attempt to provide liquidity evenly between asset0 and asset1
 		// we also update the pool liquidity since the virtual liquidity is modified by this position's creation
@@ -258,9 +258,8 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 
 // isCurrentTickInRange returns true if pool's current tick is within
 // the range of the lower and upper ticks. False otherwise.
-// TODO: add tests.
-func (p Pool) isCurrentTickInRange(lowerTick, upperTick int64) bool {
-	return p.CurrentTick.GTE(sdk.NewInt(lowerTick)) && p.CurrentTick.LT(sdk.NewInt(upperTick))
+func (p Pool) IsCurrentTickInRange(lowerTick, upperTick int64) bool {
+	return p.CurrentTick.GTE(sdk.NewInt(lowerTick)) && p.CurrentTick.LTE(sdk.NewInt(upperTick))
 }
 
 // ApplySwap state of pool after swap.

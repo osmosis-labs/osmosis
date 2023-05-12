@@ -217,13 +217,30 @@ func (k Keeper) GetAllGauges(ctx sdk.Context) []incentivestypes.Gauge {
 	return gauges
 }
 
+// IsPoolIncentivized returns a boolean representing whether the given pool ID
+// corresponds to an incentivized pool. It fails quietly by returning false if
+// the pool does not exist or does not have any records, as this is technically
+// equivalent to the pool not being incentivized.
 func (k Keeper) IsPoolIncentivized(ctx sdk.Context, poolId uint64) bool {
-	lockableDurations := k.GetLockableDurations(ctx)
+	pool, err := k.poolmanagerKeeper.GetPool(ctx, poolId)
+	if err != nil {
+		return false
+	}
+	isCLPool := pool.GetType() == poolmanagertypes.Concentrated
+
+	var lockableDurations []time.Duration
+	if isCLPool {
+		incParams := k.incentivesKeeper.GetEpochInfo(ctx)
+		lockableDurations = []time.Duration{incParams.Duration}
+	} else {
+		lockableDurations = k.GetLockableDurations(ctx)
+	}
+
 	distrInfo := k.GetDistrInfo(ctx)
 
 	candidateGaugeIds := []uint64{}
-	for _, lockableDuration := range lockableDurations {
-		gaugeId, err := k.GetPoolGaugeId(ctx, poolId, lockableDuration)
+	for _, gaugeDuration := range lockableDurations {
+		gaugeId, err := k.GetPoolGaugeId(ctx, poolId, gaugeDuration)
 		if err == nil {
 			candidateGaugeIds = append(candidateGaugeIds, gaugeId)
 		}

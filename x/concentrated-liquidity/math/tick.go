@@ -14,10 +14,9 @@ var (
 	sdkTenDec  = sdk.NewDec(10)
 )
 
-// TicksToSqrtPrice returns the sqrtPrice for the lower and upper ticks.
-// Returns error if:
-// - lower tick is greater than or equal to the upper tick
-// - fails to calculate price.
+// TicksToSqrtPrice returns the sqrtPrice for the lower and upper ticks by
+// individually calling `TickToSqrtPrice` method.
+// Returns error if fails to calculate price.
 func TicksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, error) {
 	if lowerTick >= upperTick {
 		return sdk.Dec{}, sdk.Dec{}, types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
@@ -50,7 +49,7 @@ func TickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
 	return sqrtPrice, nil
 }
 
-// TickToSqrtPrice returns the sqrtPrice given a tickIndex
+// TickToPrice returns the price given a tickIndex
 // If tickIndex is zero, the function returns sdk.OneDec().
 func TickToPrice(tickIndex sdk.Int) (price sdk.Dec, err error) {
 	if tickIndex.IsZero() {

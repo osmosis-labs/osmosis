@@ -31,7 +31,8 @@ func Max(x, y int) int {
 	return y
 }
 
-func benchmarkResetLogic(numLockups int, b *testing.B) {
+func benchmarkResetLogic(b *testing.B, numLockups int) {
+	b.Helper()
 	// b.ReportAllocs()
 	b.StopTimer()
 
@@ -79,5 +80,5 @@ func benchmarkResetLogic(numLockups int, b *testing.B) {
 }
 
 func BenchmarkResetLogicMedium(b *testing.B) {
-	benchmarkResetLogic(50000, b)
+	benchmarkResetLogic(b, 50000)
 }

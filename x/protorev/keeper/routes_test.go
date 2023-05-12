@@ -361,7 +361,6 @@ func (suite *KeeperTestSuite) TestCalculateRoutePoolPoints() {
 			} else {
 				suite.Require().Error(err)
 			}
-
 		})
 	}
 }
