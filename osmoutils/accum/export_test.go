@@ -26,10 +26,10 @@ func MakeTestAccumulator(store store.KVStore, name string, value sdk.DecCoins, t
 	// because position operations still require GetAccumulator to work
 	_ = MakeAccumulator(store, name)
 	acc := AccumulatorObject{
-		store:       store,
-		name:        name,
-		value:       value,
-		totalShares: totalShares,
+		store:         store,
+		name:          name,
+		valuePerShare: value,
+		totalShares:   totalShares,
 	}
 	setAccumulator(&acc, value, totalShares)
 	return acc
@@ -54,10 +54,6 @@ func parseRecordFromBz(bz []byte) (record Record, err error) {
 	return record, nil
 }
 
-func ValidateAccumulatorValue(customAccumulatorValue, oldPositionAccumulatorValue sdk.DecCoins) error {
-	return validateAccumulatorValue(customAccumulatorValue, oldPositionAccumulatorValue)
-}
-
 // WithPosition is a decorator test function to append a position with the given name to the given accumulator.
 func WithPosition(accum AccumulatorObject, name string, position Record) AccumulatorObject {
 	osmoutils.MustSet(accum.store, FormatPositionPrefixKey(accum.name, name), &position)
@@ -67,7 +63,7 @@ func WithPosition(accum AccumulatorObject, name string, position Record) Accumul
 // SetValue is a convinience test helper for updatung the value of an accumulator object
 // in tests.
 func (accum *AccumulatorObject) SetValue(value sdk.DecCoins) {
-	accum.value = value
+	accum.valuePerShare = value
 }
 
 func (o *Options) Validate() error {
@@ -83,7 +79,7 @@ func (accum AccumulatorObject) GetTotalShareField() sdk.Dec {
 // WARNING: only used in tests to make sure that receiver is mutated.
 // Do not move out of export_test.go and do not use in production code.
 func (accum AccumulatorObject) GetValueField() sdk.DecCoins {
-	return accum.value
+	return accum.valuePerShare
 }
 
 func InitOrUpdatePosition(accum AccumulatorObject, accumulatorValue sdk.DecCoins, index string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {

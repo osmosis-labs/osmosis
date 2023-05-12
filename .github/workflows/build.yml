@@ -25,9 +25,9 @@ jobs:
 #            arch: amd64
     name: osmosis ${{ matrix.arch }} for ${{ matrix.targetos }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Get git diff
-        uses: technote-space/get-diff-action@v6.0.1
+        uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
             **/**.wasm
@@ -52,7 +52,7 @@ jobs:
           GOWRK=off go build .
         if: env.GIT_DIFF
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: osmosisd ${{ matrix.targetos }} ${{ matrix.arch }}
           path: cmd/osmosisd/osmosisd

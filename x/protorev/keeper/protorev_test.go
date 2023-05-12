@@ -103,9 +103,9 @@ func (suite *KeeperTestSuite) TestGetPoolForDenomPair() {
 
 	// Should be able to delete all pools for a base denom
 	suite.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(suite.Ctx, "Atom")
-	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, "Atom", types.OsmosisDenomination)
+	_, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, "Atom", types.OsmosisDenomination)
 	suite.Require().Error(err)
-	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, "Atom", "weth")
+	_, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, "Atom", "weth")
 	suite.Require().Error(err)
 
 	// Other denoms should still exist

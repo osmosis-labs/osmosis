@@ -41,9 +41,9 @@ var (
 	}
 	testCoins    = sdk.NewDecCoins(cl.HundredFooCoins)
 	testTickInfo = model.TickInfo{
-		LiquidityGross:   sdk.OneDec(),
-		LiquidityNet:     sdk.OneDec(),
-		FeeGrowthOutside: testCoins,
+		LiquidityGross: sdk.OneDec(),
+		LiquidityNet:   sdk.OneDec(),
+		FeeGrowthOppositeDirectionOfLastTraversal: testCoins,
 		UptimeTrackers: []model.UptimeTracker{
 			{
 				UptimeGrowthOutside: testCoins,
@@ -65,10 +65,10 @@ var (
 		JoinTime:   defaultBlockTime,
 	}
 	testFeeAccumRecord = accum.Record{
-		NumShares:        sdk.OneDec(),
-		InitAccumValue:   sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
-		UnclaimedRewards: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(5))),
-		Options:          nil,
+		NumShares:             sdk.OneDec(),
+		AccumValuePerShare:    sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+		UnclaimedRewardsTotal: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(5))),
+		Options:               nil,
 	}
 )
 

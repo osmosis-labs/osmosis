@@ -1477,7 +1477,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
 				s.Require().NoError(err)
 
-				_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
 				s.Require().NoError(err)
 			}
 
@@ -1627,7 +1627,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
 				s.Require().NoError(err)
 
-				_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
 				s.Require().NoError(err)
 			}
 
@@ -1647,11 +1647,11 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 			// check lower tick and upper tick fee growth
 			lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), DefaultLowerTick)
 			s.Require().NoError(err)
-			s.Require().Equal(test.expectedLowerTickFeeGrowth, lowerTickInfo.FeeGrowthOutside)
+			s.Require().Equal(test.expectedLowerTickFeeGrowth, lowerTickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
 
 			upperTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), DefaultLowerTick)
 			s.Require().NoError(err)
-			s.Require().Equal(test.expectedUpperTickFeeGrowth, upperTickInfo.FeeGrowthOutside)
+			s.Require().Equal(test.expectedUpperTickFeeGrowth, upperTickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
 
 			if test.expectedSecondLowerTickFeeGrowth.expectedFeeGrowth != nil {
 				newTickIndex := test.expectedSecondLowerTickFeeGrowth.tickIndex
@@ -1659,7 +1659,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 
 				newLowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), newTickIndex)
 				s.Require().NoError(err)
-				s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOutside)
+				s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
 			}
 
 			if test.expectedSecondUpperTickFeeGrowth.expectedFeeGrowth != nil {
@@ -1668,7 +1668,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 
 				newLowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), newTickIndex)
 				s.Require().NoError(err)
-				s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOutside)
+				s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
 			}
 		})
 	}
@@ -1709,7 +1709,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
 				s.Require().NoError(err)
 
-				_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
 				s.Require().NoError(err)
 			}
 
@@ -1873,7 +1873,7 @@ func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
 				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
 				s.Require().NoError(err)
 
-				_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
 				s.Require().NoError(err)
 			}
 
@@ -1892,11 +1892,11 @@ func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
 			// check lower tick and upper tick fee growth
 			lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), DefaultLowerTick)
 			s.Require().NoError(err)
-			s.Require().Equal(test.expectedLowerTickFeeGrowth, lowerTickInfo.FeeGrowthOutside)
+			s.Require().Equal(test.expectedLowerTickFeeGrowth, lowerTickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
 
 			upperTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), DefaultLowerTick)
 			s.Require().NoError(err)
-			s.Require().Equal(test.expectedUpperTickFeeGrowth, upperTickInfo.FeeGrowthOutside)
+			s.Require().Equal(test.expectedUpperTickFeeGrowth, upperTickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
 
 			if test.expectedSecondLowerTickFeeGrowth.expectedFeeGrowth != nil {
 				newTickIndex := test.expectedSecondLowerTickFeeGrowth.tickIndex
@@ -1904,7 +1904,7 @@ func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
 
 				newLowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), newTickIndex)
 				s.Require().NoError(err)
-				s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOutside)
+				s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
 			}
 
 			if test.expectedSecondUpperTickFeeGrowth.expectedFeeGrowth != nil {
@@ -1913,7 +1913,7 @@ func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
 
 				newLowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), newTickIndex)
 				s.Require().NoError(err)
-				s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOutside)
+				s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
 			}
 		})
 	}
@@ -2308,7 +2308,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenInWriteCtx() {
 				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
 				s.Require().NoError(err)
 
-				_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
 				s.Require().NoError(err)
 			}
 
@@ -2392,7 +2392,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOutWriteCtx() {
 				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
 				s.Require().NoError(err)
 
-				_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
 				s.Require().NoError(err)
 			}
 
@@ -2468,7 +2468,7 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
 				s.Require().NoError(err)
 
-				_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
 				s.Require().NoError(err)
 			}
 
@@ -2560,7 +2560,7 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapInAmtGivenOut() {
 				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
 				s.Require().NoError(err)
 
-				_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
 				s.Require().NoError(err)
 			}
 
