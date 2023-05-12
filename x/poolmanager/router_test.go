@@ -1329,7 +1329,6 @@ func (suite *KeeperTestSuite) calcInAmountAsSeparatePoolSwaps(osmoFeeReduced boo
 			suite.Require().NoError(err)
 
 			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
-
 		}
 		return nextTokenIn
 	}
