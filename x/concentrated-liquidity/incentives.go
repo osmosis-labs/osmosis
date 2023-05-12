@@ -689,7 +689,13 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liqui
 }
 
 // updateAccumAndClaimRewards claims and returns the rewards that `positionKey` is entitled to, updating the accumulator's value before
-// and after claiming to ensure that rewards are never over distributed.
+// and after claiming to ensure that rewards are never over-distributed.
+// The accumulator update before claiming exists to add the growth outside of the position
+// since pool inception to the current value of the position accumulator (which should
+// be the growth inside at the time of position creation).
+// The accumulator update after claiming exists to set the position's accumulator to growth
+// inside the position up until the current time.
+// This accumulator management strategy handles the accounting for rewards growth inside ranges.
 func updateAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) (sdk.Coins, sdk.DecCoins, error) {
 	// Set the position's accumulator value to it's initial value at creation time plus the growth outside at this moment.
 	err := updatePositionToInitValuePlusGrowthOutside(accum, positionKey, growthOutside)
