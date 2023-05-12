@@ -731,7 +731,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain) (sdk.AccAddre
 	ctx := chain.GetContext()
 
 	// Configuring two prefixes for the same channel here. This is so that we can test bad acks when the receiver can't handle the receiving addr
-	msg := `{
+	msg := `{  
 		"modify_bech32_prefixes": {
 		  "operations": [
 			{"operation": "set", "chain_name": "osmosis", "prefix": "osmo"},
@@ -1553,7 +1553,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCMultiHop() {
 	// C forwards to A
 	packet, err = ibctesting.ParsePacketFromEvents(res.GetEvents())
 	suite.Require().NoError(err)
-	_ = suite.RelayPacketNoAck(packet, CtoA)
+	res = suite.RelayPacketNoAck(packet, CtoA)
 
 	// Now the swwap can actually execute on A via the callback and generate a new packet with the swapped token to B
 	packet, err = ibctesting.ParsePacketFromEvents(res.GetEvents())
