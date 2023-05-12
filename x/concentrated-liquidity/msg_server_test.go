@@ -112,7 +112,6 @@ func (suite *KeeperTestSuite) TestCreatePositionMsg() {
 			ctx := suite.Ctx
 
 			baseConfigCopy := *baseCase
-			fmt.Println(baseConfigCopy.tokensProvided)
 			mergeConfigs(&baseConfigCopy, &tc)
 			tc = baseConfigCopy
 
