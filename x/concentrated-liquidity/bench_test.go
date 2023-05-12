@@ -121,20 +121,22 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 
 				// minTick <= lowerTick <= currentTick
 				lowerTick = rand.Int63n(currentTick.Int64()-types.MinTick+1) + types.MinTick
+				// Normalize lowerTick to be a multiple of tickSpacing
 				lowerTick = lowerTick + (tickSpacing - lowerTick%tickSpacing)
 				// lowerTick <= upperTick <= currentTick
 				upperTick = currentTick.Int64() - rand.Int63n(int64(math.Abs(float64(currentTick.Int64()-lowerTick))))
-				upperTick = upperTick - upperTick%tickSpacing
-
 			} else {
 				// Increasing price so want to be above current tick
 
 				// currentTick <= lowerTick <= upperTick
 				lowerTick := rand.Int63n(types.MaxTick-currentTick.Int64()+1) + currentTick.Int64()
+				// Normalize lowerTick to be a multiple of tickSpacing
+				lowerTick = lowerTick + (tickSpacing - lowerTick%tickSpacing)
 				// lowerTick <= upperTick <= maxTick
 				upperTick = types.MaxTick - rand.Int63n(int64(math.Abs(float64(types.MaxTick-lowerTick))))
-
 			}
+			// Normalize upperTick to be a multiple of tickSpacing
+			upperTick = upperTick - upperTick%tickSpacing
 
 			tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
 			tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
