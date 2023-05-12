@@ -65,6 +65,10 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
 
+	if sqrtPriceLowerTick.Equal(sqrtPriceUpperTick) {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, errors.New("sqrtPriceLowerTick and sqrtPriceUpperTick cannot be equal")
+	}
+
 	positionId := k.getNextPositionIdAndIncrement(ctx)
 
 	// If this is the first position created in this pool, ensure that the position includes both asset0 and asset1
