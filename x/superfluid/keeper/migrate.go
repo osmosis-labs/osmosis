@@ -292,8 +292,7 @@ func (k Keeper) validateSharesToMigrateUnlockAndExitBalancerPool(ctx sdk.Context
 
 	// Finish unlocking directly for locked or unlocking locks
 	if sharesToMigrate.Equal(gammSharesInLock) {
-		// If migrating the entire lock:
-
+		// If migrating the entire lock, force unlock.
 		// This breaks and deletes associated synthetic locks.
 		err = k.lk.ForceUnlock(ctx, *lock)
 		if err != nil {
