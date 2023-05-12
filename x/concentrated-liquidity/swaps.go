@@ -226,22 +226,6 @@ func (k Keeper) CalcOutAmtGivenIn(
 	return tokenOut, nil
 }
 
-// func (k Keeper) calcOutAmtGivenIn(
-// 	ctx sdk.Context,
-// 	poolId uint64,
-// 	tokenInMin sdk.Coin,
-// 	tokenOutDenom string,
-// 	swapFee sdk.Dec,
-// 	priceLimit sdk.Dec,
-// ) (tokenOut sdk.Coin, err error) {
-// 	cacheCtx, _ := ctx.CacheContext()
-// 	_, tokenOut, _, _, _, err = k.computeOutAmtGivenIn(cacheCtx, poolId, tokenInMin, tokenOutDenom, swapFee, priceLimit)
-// 	if err != nil {
-// 		return sdk.Coin{}, err
-// 	}
-// 	return tokenOut, nil
-// }
-
 func (k Keeper) CalcInAmtGivenOut(
 	ctx sdk.Context,
 	poolI poolmanagertypes.PoolI,
