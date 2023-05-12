@@ -64,7 +64,7 @@ type swapStrategy interface {
 	// and subtract from the upper tick to reflect that this new
 	// liquidity would be added when the price crosses the lower tick
 	// going up, and subtracted when the price crosses the upper tick
-	// going up. As a result, the sign depend on the direction we are moving.
+	// going up. As a result, the sign depends on the direction we are moving.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	SetLiquidityDeltaSign(liquidityDelta sdk.Dec) sdk.Dec
 	// ValidateSqrtPrice validates the given square root price

@@ -286,3 +286,66 @@ func TestValidateSwapAmountOutSplitRoute(t *testing.T) {
 		})
 	}
 }
+
+func TestIntermediateDenoms(t *testing.T) {
+
+	tests := map[string]struct {
+		route          SwapAmountInRoutes
+		expectedDenoms []string
+	}{
+		"happy path: one intermediate denom": {
+			route: SwapAmountInRoutes([]SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: bar,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: baz,
+				},
+			}),
+
+			expectedDenoms: []string{bar},
+		},
+		"multiple intermediate denoms": {
+			route: SwapAmountInRoutes([]SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: bar,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: baz,
+				},
+				{
+					PoolId:        5,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        3,
+					TokenOutDenom: foo,
+				},
+			}),
+
+			expectedDenoms: []string{bar, baz, uosmo},
+		},
+		"no intermediate denoms (single pool)": {
+			route: SwapAmountInRoutes([]SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: bar,
+				},
+			}),
+
+			// Note that we expect the function to fail quietly
+			expectedDenoms: nil,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actualIntermediateDenoms := tc.route.IntermediateDenoms()
+			require.Equal(t, tc.expectedDenoms, actualIntermediateDenoms)
+		})
+	}
+}
