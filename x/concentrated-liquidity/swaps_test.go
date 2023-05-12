@@ -2517,6 +2517,12 @@ func (suite *KeeperTestSuite) TestUpdateFeeGrowthGlobal() {
 			// 10 / 10 = 1
 			expectedFeeGrowthGlobal: sdk.OneDec(),
 		},
+		"rounding test: boundary fee growth": {
+			liquidity:      ten.Add(ten).Mul(sdk.NewDec(1e18)),
+			feeChargeTotal: ten,
+			// 10 / (20 * 10^18) = 5 * 10^-19, which we expect to truncate and leave 0.
+			expectedFeeGrowthGlobal: sdk.ZeroDec(),
+		},
 	}
 
 	for name, tc := range tests {
@@ -2615,6 +2621,15 @@ func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
 			newCurrentTick:       sdk.NewInt(2),
 			newLiquidity:         sdk.NewDec(2),
 			newSqrtPrice:         sdk.NewDec(2),
+		},
+		"success case with different/uneven numbers": {
+			senderInitialBalance: defaultInitialBalance.Add(defaultInitialBalance...),
+			poolInitialBalance:   defaultInitialBalance,
+			tokenIn:              oneHundredETH.Add(oneHundredETH),
+			tokenOut:             oneHundredUSDC,
+			newCurrentTick:       sdk.NewInt(8),
+			newLiquidity:         sdk.NewDec(37),
+			newSqrtPrice:         sdk.NewDec(91),
 		},
 		"sender does not have enough balance": {
 			senderInitialBalance: defaultInitialBalance,
