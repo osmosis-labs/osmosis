@@ -4,13 +4,13 @@ import (
 	"math/rand"
 	"testing"
 
+	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/store"
 	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/iavl"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	accumPackage "github.com/osmosis-labs/osmosis/osmoutils/accum"
@@ -1492,9 +1492,8 @@ func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
 	suite.SetupTest()
 
 	// Setup.
-	var (
-		accObject = accumPackage.MakeTestAccumulator(suite.store, testNameOne, initialCoinsDenomOne, emptyDec)
-	)
+
+	accObject := accumPackage.MakeTestAccumulator(suite.store, testNameOne, initialCoinsDenomOne, emptyDec)
 
 	tests := map[string]struct {
 		positionName           string
@@ -1517,7 +1516,6 @@ func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
 
 	for name, tc := range tests {
 		suite.Run(name, func() {
-
 			// Setup
 			err := accObject.NewPositionCustomAcc(validPositionName, sdk.OneDec(), initialCoinsDenomOne, nil)
 			suite.Require().NoError(err)
@@ -1655,9 +1653,8 @@ func (suite *AccumTestSuite) TestAddToUnclaimedRewards() {
 	suite.SetupTest()
 
 	// Setup.
-	var (
-		accObject = accumPackage.MakeTestAccumulator(suite.store, testNameOne, initialCoinsDenomOne, emptyDec)
-	)
+
+	accObject := accumPackage.MakeTestAccumulator(suite.store, testNameOne, initialCoinsDenomOne, emptyDec)
 
 	tests := map[string]struct {
 		positionName             string
@@ -1685,7 +1682,6 @@ func (suite *AccumTestSuite) TestAddToUnclaimedRewards() {
 
 	for name, tc := range tests {
 		suite.Run(name, func() {
-
 			// Setup
 			err := accObject.NewPositionCustomAcc(validPositionName, sdk.OneDec(), initialCoinsDenomOne, nil)
 			suite.Require().NoError(err)

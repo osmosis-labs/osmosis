@@ -4,16 +4,14 @@ import (
 	"errors"
 	"fmt"
 
+	db "github.com/cometbft/cometbft-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	db "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/gogo/protobuf/proto"
 )
 
-var (
-	ErrNoValuesInRange = errors.New("No values in range")
-)
+var ErrNoValuesInRange = errors.New("No values in range")
 
 func GatherAllKeysFromStore(storeObj store.KVStore) []string {
 	iterator := storeObj.Iterator(nil, nil)
@@ -85,7 +83,7 @@ func GetIterValuesWithStop[T any](
 
 // HasAnyAtPrefix returns true if there is at least one value in the given prefix.
 func HasAnyAtPrefix[T any](storeObj store.KVStore, prefix []byte, parseValue func([]byte) (T, error)) (bool, error) {
-	_, err := GetFirstValueInRange(storeObj, prefix, sdk.PrefixEndBytes(prefix),false,  parseValue)
+	_, err := GetFirstValueInRange(storeObj, prefix, sdk.PrefixEndBytes(prefix), false, parseValue)
 	if err != nil {
 		if err == ErrNoValuesInRange {
 			return false, nil

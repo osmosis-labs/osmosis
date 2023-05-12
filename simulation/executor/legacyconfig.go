@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"os"
 
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/v15/simulation/executor/internal/stats"
 	"github.com/osmosis-labs/osmosis/v15/simulation/simtypes/simlogger"

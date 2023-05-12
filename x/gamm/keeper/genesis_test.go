@@ -3,13 +3,13 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/cometbft/cometbft/crypto/ed25519"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	osmoapp "github.com/osmosis-labs/osmosis/v15/app"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm"
@@ -17,13 +17,11 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
-var (
-	DefaultMigrationRecords = types.MigrationRecords{BalancerToConcentratedPoolLinks: []types.BalancerToConcentratedPoolLink{
-		{BalancerPoolId: 1, ClPoolId: 4},
-		{BalancerPoolId: 2, ClPoolId: 5},
-		{BalancerPoolId: 3, ClPoolId: 6},
-	}}
-)
+var DefaultMigrationRecords = types.MigrationRecords{BalancerToConcentratedPoolLinks: []types.BalancerToConcentratedPoolLink{
+	{BalancerPoolId: 1, ClPoolId: 4},
+	{BalancerPoolId: 2, ClPoolId: 5},
+	{BalancerPoolId: 3, ClPoolId: 6},
+}}
 
 func TestGammInitGenesis(t *testing.T) {
 	app := osmoapp.Setup(false)

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	db "github.com/tendermint/tm-db"
+	db "github.com/cometbft/cometbft-db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -275,7 +275,6 @@ func (k Keeper) distributeConcentratedLiquidity(ctx sdk.Context, poolId uint64, 
 		startTime,
 		minUptime,
 	)
-
 	if err != nil {
 		return err
 	}

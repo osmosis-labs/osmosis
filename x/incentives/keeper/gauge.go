@@ -11,8 +11,8 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	db "github.com/cometbft/cometbft-db"
 	"github.com/gogo/protobuf/proto"
-	db "github.com/tendermint/tm-db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	tmjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -16,7 +17,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/gogo/protobuf/proto"
-	tmjson "github.com/tendermint/tendermint/libs/json"
 
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
@@ -477,7 +477,7 @@ func updateTWAPGenesis(appGenState map[string]json.RawMessage) func(twapGenState
 					Asset0Denom:                 denomPair.Denom0,
 					Asset1Denom:                 denomPair.Denom0,
 					Height:                      1,
-					Time:                        time.Date(2023, 02, 1, 0, 0, 0, 0, time.UTC), // some time in the past.
+					Time:                        time.Date(2023, 0o2, 1, 0, 0, 0, 0, time.UTC), // some time in the past.
 					P0LastSpotPrice:             sp0,
 					P1LastSpotPrice:             sp1,
 					P0ArithmeticTwapAccumulator: sdk.ZeroDec(),

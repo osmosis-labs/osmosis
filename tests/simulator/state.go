@@ -11,6 +11,7 @@ import (
 	osmosim "github.com/osmosis-labs/osmosis/v15/simulation/executor"
 	osmosimtypes "github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -18,7 +19,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // InitChainFn returns the initial application state using a genesis or the simulation parameters.

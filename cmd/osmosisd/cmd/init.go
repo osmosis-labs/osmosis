@@ -13,11 +13,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	tmcfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/libs/cli"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	tmrand "github.com/tendermint/tendermint/libs/rand"
-	"github.com/tendermint/tendermint/types"
+	tmcfg "github.com/cometbft/cometbft/config"
+	"github.com/cometbft/cometbft/libs/cli"
+	tmos "github.com/cometbft/cometbft/libs/os"
+	tmrand "github.com/cometbft/cometbft/libs/rand"
+	"github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -201,7 +201,7 @@ func CreateEnvFile(cmd *cobra.Command) error {
 			// Create ./osmosisd if not exist
 			if _, err = os.Stat(app.DefaultNodeHome); err != nil {
 				if os.IsNotExist(err) {
-					err = os.MkdirAll(app.DefaultNodeHome, 0777)
+					err = os.MkdirAll(app.DefaultNodeHome, 0o777)
 					if err != nil {
 						return err
 					}

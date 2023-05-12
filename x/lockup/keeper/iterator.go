@@ -3,7 +3,7 @@ package keeper
 import (
 	"time"
 
-	db "github.com/tendermint/tm-db"
+	db "github.com/cometbft/cometbft-db"
 
 	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 

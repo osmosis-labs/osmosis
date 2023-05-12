@@ -2,15 +2,16 @@ package v13_test
 
 import (
 	"fmt"
-	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 	"testing"
+
+	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 )
@@ -55,8 +56,8 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 			"Test that the upgrade succeeds",
 			func() {
 				// The module doesn't need an account anymore, but when the upgrade happened we did:
-				//acc := suite.App.AccountKeeper.GetAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
-				//suite.App.AccountKeeper.RemoveAccount(suite.Ctx, acc)
+				// acc := suite.App.AccountKeeper.GetAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
+				// suite.App.AccountKeeper.RemoveAccount(suite.Ctx, acc)
 
 				// Because of SDK version map bug, we can't do the following, and instaed do a massive hack
 				// vm := suite.App.UpgradeKeeper.GetModuleVersionMap(suite.Ctx)
@@ -70,15 +71,15 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				versionStore.Delete([]byte(ibchookstypes.ModuleName))
 
 				// Same comment as above: this was the case when the upgrade happened, but we don't have accounts anymore
-				//hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
-				//suite.Require().False(hasAcc)
+				// hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
+				// suite.Require().False(hasAcc)
 
 			},
 			func() { dummyUpgrade(suite) },
 			func() {
 				// Same comment as pre-upgrade. We had an account, but now we don't anymore
-				//hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
-				//suite.Require().True(hasAcc)
+				// hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
+				// suite.Require().True(hasAcc)
 			},
 		},
 		{
