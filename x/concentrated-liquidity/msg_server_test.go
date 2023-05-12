@@ -190,10 +190,10 @@ func (suite *KeeperTestSuite) TestAddToPosition_Events() {
 
 			suite.FundAcc(suite.TestAccs[0], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
 			msg := &types.MsgAddToPosition{
-				PositionId:    posId,
-				Sender:        suite.TestAccs[0].String(),
-				TokenDesired0: DefaultCoin0,
-				TokenDesired1: DefaultCoin1,
+				PositionId: posId,
+				Sender:     suite.TestAccs[0].String(),
+				Amount0:    DefaultCoin0.Amount,
+				Amount1:    DefaultCoin1.Amount,
 			}
 
 			response, err := msgServer.AddToPosition(sdk.WrapSDKContext(suite.Ctx), msg)

@@ -853,6 +853,40 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			amount0ToAdd: amount0PerfectRatio,
 			amount1ToAdd: amount1PerfectRatio,
 		},
+		"error: minimum amount 0 is less than actual amount": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			sutConfigOverwrite: &lpTest{
+				amount0Minimum: sdk.NewInt(1997960),
+				expectedError: types.InsufficientLiquidityCreatedError{
+					Actual:      sdk.NewInt(1997954),
+					Minimum:     sdk.NewInt(1997960),
+					IsTokenZero: true,
+				},
+			},
+			timeElapsed:  defaultTimeElapsed,
+			amount0ToAdd: amount0PerfectRatio,
+			amount1ToAdd: amount1PerfectRatio,
+		},
+		"error: minimum amount 1 is less than actual amount": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			sutConfigOverwrite: &lpTest{
+				amount1Minimum: sdk.NewInt(9999998916),
+				expectedError: types.InsufficientLiquidityCreatedError{
+					Actual:      sdk.NewInt(9999998816),
+					Minimum:     sdk.NewInt(9999998916),
+					IsTokenZero: false,
+				},
+			},
+			timeElapsed:  defaultTimeElapsed,
+			amount0ToAdd: amount0PerfectRatio,
+			amount1ToAdd: amount1PerfectRatio,
+		},
 	}
 
 	for name, tc := range tests {
@@ -915,10 +949,10 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			s.FundAcc(sender, sdk.NewCoins(sdk.NewCoin(ETH, tc.amount0ToAdd), sdk.NewCoin(USDC, tc.amount1ToAdd)))
 
 			// --- System under test ---
-			newPosId, newAmt0, newAmt1, err := concentratedLiquidityKeeper.AddToPosition(s.Ctx, sender, config.positionId, tc.amount0ToAdd, tc.amount1ToAdd)
+			newPosId, newAmt0, newAmt1, err := concentratedLiquidityKeeper.AddToPosition(s.Ctx, sender, config.positionId, tc.amount0ToAdd, tc.amount1ToAdd, config.amount0Minimum, config.amount1Minimum)
+			// config.amount0Minimum
 			if config.expectedError != nil {
 				s.Require().Error(err)
-				fmt.Println(err.Error())
 				s.Require().Equal(sdk.Int{}, newAmt0)
 				s.Require().Equal(sdk.Int{}, newAmt1)
 				s.Require().Equal(uint64(0), newPosId)
@@ -933,10 +967,10 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			// We expect the position ID to be 3 since we have two setup positions
 			s.Require().Equal(uint64(3), newPosId)
 
-			// Since we are funding exact amount of "tokensProvided" for creating positions and addToPosition,
-			// expected balance delta is equivalent to tokensProvided - actual amount out from addToPosition
 			expectedAmount1Delta := sdk.ZeroInt()
-			// if the actual amount from add to position is less then actual tokens provided, add to expected coins
+
+			// delta amount1 only exists if the actual amount from addToPosition is not equivilent to tokens provided.
+			// delta amount1 is calculated via (amount1 to create initial position) + (amount1 added to position) - (actual amount 1)
 			if fundCoins.AmountOf(pool.GetToken1()).Add(tc.amount1ToAdd).Sub(newAmt1).GT(sdk.ZeroInt()) {
 				expectedAmount1Delta = config.tokensProvided.AmountOf(pool.GetToken1()).Add(tc.amount1ToAdd).Sub(newAmt1)
 			}
