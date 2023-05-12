@@ -57,8 +57,6 @@ type CFMMPoolI interface {
 	// GetExitFee returns the pool's exit fee, based on the current state.
 	// Pools may choose to make their exit fees dependent upon state.
 	GetExitFee(ctx sdk.Context) sdk.Dec
-	// GetMaximalNoSwapLPAmount returns the coins(lp liquidity) needed to get the specified amount of shares in the pool.
-	GetMaximalNoSwapLPAmount(ctx sdk.Context, shareOutAmount sdk.Int) (neededLpLiquidity sdk.Coins, err error)
 }
 
 // PoolAmountOutExtension is an extension of the PoolI

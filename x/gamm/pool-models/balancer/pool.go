@@ -977,33 +977,3 @@ func (p *Pool) ExitSwapExactAmountOut(
 
 	return sharesIn, nil
 }
-
-// GetMaximalNoSwapLPAmount returns the coins(lp liquidity) needed to get the specified amount of shares in the pool.
-// Steps to getting the needed lp liquidity coins needed for the share of the pools are
-// 1. calculate how much percent of the pool does given share account for(# of input shares / # of current total shares)
-// 2. since we know how much % of the pool we want, iterate through all pool liquidity to calculate how much coins we need for
-// each pool asset.
-func (p Pool) GetMaximalNoSwapLPAmount(ctx sdk.Context, shareOutAmount sdk.Int) (neededLpLiquidity sdk.Coins, err error) {
-	totalSharesAmount := p.GetTotalShares()
-	// shareRatio is the desired number of shares, divided by the total number of
-	// shares currently in the pool. It is intended to be used in scenarios where you want
-	shareRatio := shareOutAmount.ToDec().QuoInt(totalSharesAmount)
-	if shareRatio.LTE(sdk.ZeroDec()) {
-		return sdk.Coins{}, errorsmod.Wrapf(types.ErrInvalidMathApprox, "Too few shares out wanted. "+
-			"(debug: getMaximalNoSwapLPAmount share ratio is zero or negative)")
-	}
-
-	poolLiquidity := p.GetTotalPoolLiquidity(ctx)
-	neededLpLiquidity = sdk.Coins{}
-
-	for _, coin := range poolLiquidity {
-		// (coin.Amt * shareRatio).Ceil()
-		neededAmt := coin.Amount.ToDec().Mul(shareRatio).Ceil().RoundInt()
-		if neededAmt.LTE(sdk.ZeroInt()) {
-			return sdk.Coins{}, errorsmod.Wrapf(types.ErrInvalidMathApprox, "Too few shares out wanted")
-		}
-		neededCoin := sdk.Coin{Denom: coin.Denom, Amount: neededAmt}
-		neededLpLiquidity = neededLpLiquidity.Add(neededCoin)
-	}
-	return neededLpLiquidity, nil
-}
