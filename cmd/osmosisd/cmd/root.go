@@ -43,6 +43,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/cosmos/cosmos-sdk/client/config"
+
 	osmosis "github.com/osmosis-labs/osmosis/v15/app"
 )
 
@@ -200,8 +201,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		txCommand(),
 		keys.Commands(osmosis.DefaultNodeHome),
 	)
-	// add rosetta
-	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
