@@ -35,6 +35,7 @@ import (
 	downtimemodule "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/module"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm"
 	gammclient "github.com/osmosis-labs/osmosis/v15/x/gamm/client"
+	ibc_hooks "github.com/osmosis-labs/osmosis/v15/x/ibc-hooks"
 	"github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/ibcratelimitmodule"
 	"github.com/osmosis-labs/osmosis/v15/x/incentives"
 	"github.com/osmosis-labs/osmosis/v15/x/lockup"
@@ -50,7 +51,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/txfees"
 	valsetprefmodule "github.com/osmosis-labs/osmosis/v15/x/valset-pref/valpref-module"
 	"github.com/osmosis-labs/osmosis/x/epochs"
-	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
 
 // AppModuleBasics returns ModuleBasics for the module BasicManager.

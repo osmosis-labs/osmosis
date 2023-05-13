@@ -15,7 +15,7 @@ import (
 	packetforward "github.com/strangelove-ventures/packepacket-forward-middleware/v7er"
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"
 
-	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
+	ibchookstypes "github.com/osmosis-labs/osmosis/v15/x/ibc-hooks/types"
 
 	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
@@ -25,7 +25,7 @@ import (
 	downtimemodule "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/module"
 	downtimetypes "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/types"
 
-	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
+	ibc_hooks "github.com/osmosis-labs/osmosis/v15/x/ibc-hooks"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
