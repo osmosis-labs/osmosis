@@ -143,6 +143,10 @@ func (k Keeper) SetPositionIdToLock(ctx sdk.Context, positionId, underlyingLockI
 	k.setPositionIdToLock(ctx, positionId, underlyingLockId)
 }
 
+func RoundTick(lowerTick, upperTick int64, priceTickLower, priceTickUpper sdk.Dec, tickSpacing uint64) (int64, int64, error) {
+	return roundTick(lowerTick, upperTick, priceTickLower, priceTickUpper, tickSpacing)
+}
+
 // fees methods
 func (k Keeper) CreateFeeAccumulator(ctx sdk.Context, poolId uint64) error {
 	return k.createFeeAccumulator(ctx, poolId)
