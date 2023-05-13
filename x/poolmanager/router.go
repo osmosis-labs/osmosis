@@ -301,13 +301,13 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		return sdk.Int{}, err
 	}
 
-	// ? removing defer function since we donot use panic anywhere now
-	// defer func() {
-	// 	if r := recover(); r != nil {
-	// 		tokenInAmount = sdk.Int{}
-	// 		err = fmt.Errorf("function RouteExactAmountOut failed due to internal reason: %v", r)
-	// 	}
-	// }()
+	// ? should we have defer in RouteExactAmountIn too?
+	defer func() {
+		if r := recover(); r != nil {
+			tokenInAmount = sdk.Int{}
+			err = fmt.Errorf("function RouteExactAmountOut failed due to internal reason: %v", r)
+		}
+	}()
 
 	// In this loop (isOsmoRoutedMultihop), we check if:
 	// - the routeStep is of length 2
