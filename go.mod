@@ -349,6 +349,7 @@ require (
 )
 
 replace (
+	// use cosmos-compatible gogo protobufs
 	github.com/gogo/protobuf v1.3.2 => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// use cosmos-compatible gogo protobufs
 	github.com/gogo/protobuf v1.3.3 => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
