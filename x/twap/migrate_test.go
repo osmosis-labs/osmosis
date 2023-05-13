@@ -73,24 +73,24 @@ func (s *TestSuite) TestMigrateExistingPoolsError() {
 // to initialize geometric twap accumulators are not required.
 // This is because proto marshalling will initialize the field to the zero value.
 // Zero value is the expected initialization value for the geometric twap accumulator.
-func (suite *TestSuite) TestTwapRecord_GeometricTwap_MarshalUnmarshal() {
+func (s *TestSuite) TestTwapRecord_GeometricTwap_MarshalUnmarshal() {
 	originalRecord := types.TwapRecord{
 		Asset0Denom: "uatom",
 		Asset1Denom: "uusd",
 	}
 
-	suite.Require().True(originalRecord.GeometricTwapAccumulator.IsNil())
+	s.Require().True(originalRecord.GeometricTwapAccumulator.IsNil())
 
 	bz, err := proto.Marshal(&originalRecord)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
 	var deserialized types.TwapRecord
 	err = proto.Unmarshal(bz, &deserialized)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
-	suite.Require().Equal(originalRecord, deserialized)
-	suite.Require().Equal(originalRecord.String(), deserialized.String())
+	s.Require().Equal(originalRecord, deserialized)
+	s.Require().Equal(originalRecord.String(), deserialized.String())
 
-	suite.Require().False(originalRecord.GeometricTwapAccumulator.IsNil())
-	suite.Require().Equal(sdk.ZeroDec(), originalRecord.GeometricTwapAccumulator)
+	s.Require().False(originalRecord.GeometricTwapAccumulator.IsNil())
+	s.Require().Equal(sdk.ZeroDec(), originalRecord.GeometricTwapAccumulator)
 }

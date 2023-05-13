@@ -26,7 +26,6 @@ var (
 	}
 	defaultTwoAssetScalingFactors   = []uint64{1, 1}
 	defaultThreeAssetScalingFactors = []uint64{1, 1, 1}
-	defaultFiveAssetScalingFactors  = []uint64{1, 1, 1, 1, 1}
 	defaultFutureGovernor           = ""
 
 	twoEvenStablePoolAssets = sdk.NewCoins(
@@ -47,13 +46,7 @@ var (
 		sdk.NewInt64Coin("asset/b", 2000000),
 		sdk.NewInt64Coin("asset/c", 3000000),
 	)
-	fiveEvenStablePoolAssets = sdk.NewCoins(
-		sdk.NewInt64Coin("asset/a", 1000000000),
-		sdk.NewInt64Coin("asset/b", 1000000000),
-		sdk.NewInt64Coin("asset/c", 1000000000),
-		sdk.NewInt64Coin("asset/d", 1000000000),
-		sdk.NewInt64Coin("asset/e", 1000000000),
-	)
+
 	fiveUnevenStablePoolAssets = sdk.NewCoins(
 		sdk.NewInt64Coin("asset/a", 1000000000),
 		sdk.NewInt64Coin("asset/b", 2000000000),
@@ -851,11 +844,10 @@ func TestInverseJoinPoolExitPool(t *testing.T) {
 	tenPercentOfTwoPoolRaw := int64(1000000000 / 10)
 	tenPercentOfTwoPoolCoins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(int64(1000000000/10))), sdk.NewCoin("bar", sdk.NewInt(int64(1000000000/10))))
 	type testcase struct {
-		tokensIn           sdk.Coins
-		poolAssets         sdk.Coins
-		unevenJoinedTokens sdk.Coins
-		scalingFactors     []uint64
-		swapFee            sdk.Dec
+		tokensIn       sdk.Coins
+		poolAssets     sdk.Coins
+		scalingFactors []uint64
+		swapFee        sdk.Dec
 	}
 
 	tests := map[string]testcase{
