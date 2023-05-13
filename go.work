@@ -13,3 +13,5 @@ use ./tests/cl-genesis-positions
 use .
 
 use ./x/epochs
+
+replace github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.26

@@ -5,22 +5,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	icq "github.com/strangelove-ventures/async-icq/v4"
+	icq "github.com/strangelove-ventures/async-icq/v7"
 
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibchost "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
-	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v4/router"
-	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
+	packetforward "github.com/strangelove-ventures/packepacket-forward-middleware/v7er"
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"
 
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
 	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 
-	icqtypes "github.com/strangelove-ventures/async-icq/v4/types"
+	icqtypes "github.com/strangelove-ventures/async-icq/v7/types"
 
 	downtimemodule "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/module"
 	downtimetypes "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/types"

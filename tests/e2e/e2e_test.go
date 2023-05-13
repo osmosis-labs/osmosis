@@ -15,7 +15,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/util"
 
-	packetforwardingtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
+	packetforwardingtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"
 
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 

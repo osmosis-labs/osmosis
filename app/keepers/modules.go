@@ -6,7 +6,7 @@ import (
 	transfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
-	"github.com/strangelove-ventures/packet-forward-middleware/v4/router"
+	"github.com/strangelove-ventures/packet-forward-middleware/v7/router"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -27,7 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
-	icq "github.com/strangelove-ventures/async-icq/v4"
+	icq "github.com/strangelove-ventures/async-icq/v"
 
 	_ "github.com/osmosis-labs/osmosis/v15/client/docs/statik"
 	clclient "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client"

@@ -33,8 +33,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	icq "github.com/strangelove-ventures/async-icq/v4"
-	icqtypes "github.com/strangelove-ventures/async-icq/v4/types"
+	icq "github.com/strangelove-ventures/async-icq/v7"
+	icqtypes "github.com/strangelove-ventures/async-icq/v7/types"
 
 	downtimedetector "github.com/osmosis-labs/osmosis/v15/x/downtime-detector"
 	downtimetypes "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/types"
@@ -58,11 +58,11 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
-	icqkeeper "github.com/strangelove-ventures/async-icq/v4/keeper"
+	icqkeeper "github.com/strangelove-ventures/async-icq/v7/keeper"
 
-	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v4/router"
-	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v4/router/keeper"
-	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
+	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v7/router"
+	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v7/router/keeper"
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"
 
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
