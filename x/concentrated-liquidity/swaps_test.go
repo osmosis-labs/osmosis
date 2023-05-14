@@ -1442,7 +1442,7 @@ var (
 	}
 )
 
-func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
+func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 	tests := make(map[string]SwapTest, len(swapOutGivenInCases)+len(swapOutGivenInFeeCases)+len(swapOutGivenInErrorCases))
 	for name, test := range swapOutGivenInCases {
 		tests[name] = test
@@ -2337,7 +2337,7 @@ func (s *KeeperTestSuite) TestComputeOutAmtGivenIn() {
 			s.Require().Equal(poolBeforeCalc.GetLiquidity(), poolAfterCalc.GetLiquidity())
 			s.Require().Equal(poolBeforeCalc.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
 
-			// check that fee accum has been correctly updated upon writeCtx
+			// check that fee accum has been correctly updated.
 			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
 
