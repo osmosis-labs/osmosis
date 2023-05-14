@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
 var (
@@ -50,7 +50,7 @@ func (k Keeper) AddToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, ow
 	return k.addToConcentratedLiquiditySuperfluidPosition(ctx, owner, positionId, amount0Added, amount1Added)
 }
 
-func (k Keeper) SuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, sender string, gammLockID uint64) (superfluidtypes.SuperfluidIntermediaryAccount, error) {
+func (k Keeper) SuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, sender string, gammLockID uint64) (types.SuperfluidIntermediaryAccount, error) {
 	return k.superfluidUndelegateToConcentratedPosition(ctx, sender, gammLockID)
 }
 
