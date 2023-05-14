@@ -507,6 +507,8 @@ func (k Keeper) computeInAmtGivenOut(
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
 	}
 
+	fmt.Println("Desired: ", desiredTokenOut.Denom, tokenInDenom, asset0, asset1)
+
 	// check that the specified tokenOut matches one of the assets in the specified pool
 	if desiredTokenOut.Denom != asset0 && desiredTokenOut.Denom != asset1 {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, types.TokenOutDenomNotInPoolError{TokenOutDenom: desiredTokenOut.Denom}

@@ -645,7 +645,6 @@ func (k Keeper) getOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.M
 // amount for this last pool and then chains that input as the output of the previous pool in the routeStep, repeating
 // until the first pool is reached. It returns an array of inputs, each of which correspond to a pool ID in the
 // routeStep of pools for the original multihop transaction.
-// TODO: test this.
 func (k Keeper) createMultihopExpectedSwapOuts(
 	ctx sdk.Context,
 	route []types.SwapAmountOutRoute,
@@ -711,6 +710,7 @@ func (k Keeper) createOsmoMultihopExpectedSwapOuts(
 	return insExpected, nil
 }
 
+// GetTotalPoolLiquidity gets the total liquidity for a given poolId.
 func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error) {
 	swapModule, err := k.GetPoolModule(ctx, poolId)
 	if err != nil {
