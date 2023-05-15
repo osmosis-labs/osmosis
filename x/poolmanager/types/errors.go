@@ -125,3 +125,11 @@ type IncorrectPoolAddressError struct {
 func (e IncorrectPoolAddressError) Error() string {
 	return fmt.Sprintf("Pool was attempted to be created with incorrect pool address. Expected (%s), actual (%s)", e.ExpectedPoolAddress, e.ActualPoolAddress)
 }
+
+type InactivePoolError struct {
+	PoolId uint64
+}
+
+func (e InactivePoolError) Error() string {
+	return fmt.Sprintf("Pool %d is not active.", e.PoolId)
+}

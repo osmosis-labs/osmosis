@@ -286,10 +286,9 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated(
 
 			// RouteMigration is called via the migration message router and is always run prior to the migration itself.
 			// We use it here just to retrieve the synthetic lock before the migration.
-			synthLockBeforeMigration, isSuperfluidBonded, isSuperfluidUnbonding, err := superfluidKeeper.RouteMigration(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
+			synthLockBeforeMigration, migrationType, err := superfluidKeeper.RouteMigration(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
 			suite.Require().NoError(err)
-			suite.Require().True(isSuperfluidBonded)
-			suite.Require().False(isSuperfluidUnbonding)
+			suite.Require().Equal(migrationType, keeper.SuperfluidBonded)
 
 			// Modify migration inputs if necessary
 
@@ -422,10 +421,9 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrat
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
 			// RouteMigration is called via the migration message router and is always run prior to the migration itself
-			synthLockBeforeMigration, isSuperfluidBonded, isSuperfluidUnbonding, err := superfluidKeeper.RouteMigration(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
+			synthLockBeforeMigration, migrationType, err := superfluidKeeper.RouteMigration(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
 			suite.Require().NoError(err)
-			suite.Require().False(isSuperfluidBonded)
-			suite.Require().True(isSuperfluidUnbonding)
+			suite.Require().Equal(migrationType, keeper.SuperfluidUnbonding)
 
 			// Modify migration inputs if necessary
 
@@ -514,11 +512,10 @@ func (suite *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
 			// RouteMigration is called via the migration message router and is always run prior to the migration itself
-			synthLockBeforeMigration, isSuperfluidBonded, isSuperfluidUnbonding, err := superfluidKeeper.RouteMigration(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
+			synthLockBeforeMigration, migrationType, err := superfluidKeeper.RouteMigration(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
 			suite.Require().NoError(err)
 			suite.Require().Equal(0, len(synthLockBeforeMigration))
-			suite.Require().False(isSuperfluidBonded)
-			suite.Require().False(isSuperfluidUnbonding)
+			suite.Require().Equal(migrationType, keeper.NonSuperfluid)
 
 			// System under test.
 			positionId, amount0, amount1, _, _, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateNonSuperfluidLockBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, tc.tokenOutMins)

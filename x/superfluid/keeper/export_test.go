@@ -7,7 +7,6 @@ import (
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
 var (
@@ -39,7 +38,7 @@ func (k Keeper) ValidateSharesToMigrateUnlockAndExitBalancerPool(ctx sdk.Context
 	return k.validateSharesToMigrateUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, lock, sharesToMigrate, tokenOutMins, remainingLockTime)
 }
 
-func (k Keeper) RouteMigration(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) (synthLocksBeforeMigration []lockuptypes.SyntheticLock, isSuperfluidBonded, isSuperfluidUnbonding bool, err error) {
+func (k Keeper) RouteMigration(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) (synthLocksBeforeMigration []lockuptypes.SyntheticLock, migrationType MigrationType, err error) {
 	return k.routeMigration(ctx, sender, lockId, sharesToMigrate)
 }
 
@@ -51,12 +50,12 @@ func (k Keeper) AddToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, ow
 	return k.addToConcentratedLiquiditySuperfluidPosition(ctx, owner, positionId, amount0Added, amount1Added)
 }
 
-func (k Keeper) SuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, sender string, gammLockID uint64) (superfluidtypes.SuperfluidIntermediaryAccount, error) {
+func (k Keeper) SuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, sender string, gammLockID uint64) (types.SuperfluidIntermediaryAccount, error) {
 	return k.superfluidUndelegateToConcentratedPosition(ctx, sender, gammLockID)
 }
 
-func (k Keeper) ValidateGammLockForSuperfluid(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, lockId uint64) (*lockuptypes.PeriodLock, error) {
-	return k.validateGammLockForSuperfluid(ctx, sender, poolId, lockId)
+func (k Keeper) ValidateGammLockForSuperfluidStaking(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, lockId uint64) (*lockuptypes.PeriodLock, error) {
+	return k.validateGammLockForSuperfluidStaking(ctx, sender, poolId, lockId)
 }
 
 func (k Keeper) GetExistingLockRemainingDuration(ctx sdk.Context, lock *lockuptypes.PeriodLock) (time.Duration, error) {

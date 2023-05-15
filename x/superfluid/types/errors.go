@@ -62,14 +62,6 @@ func (e SharesToMigrateDenomPrefixError) Error() string {
 	return fmt.Sprintf("shares to migrate denom %s does not have expected prefix %s.", e.Denom, e.ExpectedDenomPrefix)
 }
 
-type LockBothSuperfluidBondedAndUnbondingError struct {
-	LockId uint64
-}
-
-func (e LockBothSuperfluidBondedAndUnbondingError) Error() string {
-	return fmt.Sprintf("lock ID %d is both superfluid bonded and unbonding.", e.LockId)
-}
-
 type NegativeDurationError struct {
 	Duration time.Duration
 }
