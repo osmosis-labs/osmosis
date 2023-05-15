@@ -9,15 +9,13 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
-var (
-	sdkNineDec = sdk.NewDec(9)
-	sdkTenDec  = sdk.NewDec(10)
-)
-
-// TicksToSqrtPrice returns the sqrtPrice for the lower and upper ticks.
+// TicksToSqrtPrice returns the sqrtPrice for the lower and upper ticks by
+// individually calling `TickToSqrtPrice` method.
 // Returns error if fails to calculate price.
-// TODO: spec and tests
 func TicksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, error) {
+	if lowerTick >= upperTick {
+		return sdk.Dec{}, sdk.Dec{}, types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
+	}
 	sqrtPriceUpperTick, err := TickToSqrtPrice(sdk.NewInt(upperTick))
 	if err != nil {
 		return sdk.Dec{}, sdk.Dec{}, err
@@ -46,7 +44,7 @@ func TickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
 	return sqrtPrice, nil
 }
 
-// TickToSqrtPrice returns the sqrtPrice given a tickIndex
+// TickToPrice returns the price given a tickIndex
 // If tickIndex is zero, the function returns sdk.OneDec().
 func TickToPrice(tickIndex sdk.Int) (price sdk.Dec, err error) {
 	if tickIndex.IsZero() {
@@ -74,7 +72,7 @@ func TickToPrice(tickIndex sdk.Int) (price sdk.Dec, err error) {
 	if tickIndex.IsNegative() {
 		// We must decrement the exponentAtCurrentTick when entering the negative tick range in order to constantly step up in precision when going further down in ticks
 		// Otherwise, from tick 0 to tick -(geometricExponentIncrementDistanceInTicks), we would use the same exponent as the exponentAtPriceOne
-		exponentAtCurrentTick = exponentAtCurrentTick.Sub(sdk.OneInt())
+		exponentAtCurrentTick = exponentAtCurrentTick.Sub(sdkOneInt)
 	}
 
 	// Knowing what our exponentAtCurrentTick is, we can then figure out what power of 10 this exponent corresponds to
@@ -115,30 +113,6 @@ func PriceToTick(price sdk.Dec) (sdk.Int, error) {
 	return tickIndex, nil
 }
 
-// PriceToTickRoundUp takes a price and returns the corresponding tick index.
-// If tickSpacing is provided, the tick index will be rounded up to the nearest multiple of tickSpacing.
-func PriceToTickRoundUp(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
-	tickIndex, err := PriceToTick(price)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	// Round the tick index up to the nearest tick spacing if the tickIndex is in between authorized tick values
-	tickSpacingInt := sdk.NewIntFromUint64(tickSpacing)
-	tickIndexModulus := tickIndex.Mod(tickSpacingInt)
-	if !tickIndexModulus.Equal(sdk.ZeroInt()) {
-		tickIndex = tickIndex.Add(tickSpacingInt.Sub(tickIndexModulus))
-	}
-
-	// Defense-in-depth check to ensure that the tick index is within the authorized range
-	// Should never get here.
-	if tickIndex.GT(sdk.NewInt(types.MaxTick)) || tickIndex.LT(sdk.NewInt(types.MinTick)) {
-		return sdk.Int{}, types.TickIndexNotWithinBoundariesError{ActualTick: tickIndex.Int64(), MinTick: types.MinTick, MaxTick: types.MaxTick}
-	}
-
-	return tickIndex, nil
-}
-
 // PriceToTickRoundDown takes a price and returns the corresponding tick index.
 // If tickSpacing is provided, the tick index will be rounded down to the nearest multiple of tickSpacing.
 func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
@@ -163,54 +137,20 @@ func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
 	return tickIndex, nil
 }
 
-// PriceToTickRoundUp takes a price and returns the corresponding tick index.
-// If tickSpacing is provided, the tick index will be rounded to the nearest multiple of tickSpacing.
-// The "nearest" is determined by the bankers rounding logic in sdk.Dec.
-func PriceToTickRoundBankers(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
-	tickIndex, err := PriceToTick(price)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	// Round the tick index up to the nearest tick spacing if the tickIndex is in between authorized tick values
-	tickSpacingInt := sdk.NewIntFromUint64(tickSpacing)
-	tickIndexModulus := tickIndex.Abs().Mod(tickSpacingInt)
-
-	if tickIndex.IsZero() {
-		return tickIndex, nil
-	}
-
-	// We use this ratio to determine whether to round up or down using sdk.Dec's rounding logic.
-	roundingValue := tickIndexModulus.ToDec().Quo(tickSpacingInt.ToDec()).RoundInt()
-
-	// if tick index was negative and rounding value got rounded down to zero, we round up the tick index.
-	// if tick index was positive and rounding value got rounded up to one, we round up the tick index.
-	if tickIndex.IsNegative() && roundingValue.IsZero() || tickIndex.IsPositive() && roundingValue.Equal(sdk.OneInt()) {
-		return PriceToTickRoundUp(price, tickSpacing)
-
-		// if tick index was negative and rounding value got rounded up to one, we round down the tick index.
-		// if tick index was positive and rounding value got rounded down to zero, we round down the tick index.
-	} else if tickIndex.IsNegative() && roundingValue.Equal(sdk.OneInt()) || tickIndex.IsPositive() && roundingValue.IsZero() {
-		return PriceToTickRoundDown(price, tickSpacing)
-	}
-
-	return sdk.Int{}, fmt.Errorf("unexpected rounding ratio: %s", roundingValue)
-}
-
 // powTen treats negative exponents as 1/(10**|exponent|) instead of 10**-exponent
 // This is because the sdk.Dec.Power function does not support negative exponents
 func PowTenInternal(exponent sdk.Int) sdk.Dec {
 	if exponent.GTE(sdk.ZeroInt()) {
-		return sdkTenDec.Power(exponent.Uint64())
+		return powersOfTen[exponent.Int64()]
 	}
-	return sdk.OneDec().Quo(sdkTenDec.Power(exponent.Abs().Uint64()))
+	return negPowersOfTen[-exponent.Int64()]
 }
 
 func powTenBigDec(exponent sdk.Int) osmomath.BigDec {
 	if exponent.GTE(sdk.ZeroInt()) {
-		return osmomath.NewBigDec(10).PowerInteger(exponent.Uint64())
+		return bigPowersOfTen[exponent.Int64()]
 	}
-	return osmomath.OneDec().Quo(osmomath.NewBigDec(10).PowerInteger(exponent.Abs().Uint64()))
+	return bigNegPowersOfTen[-exponent.Int64()]
 }
 
 // CalculatePriceToTick takes in a price and returns the corresponding tick index.
@@ -235,23 +175,23 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex sdk.Int) {
 	// as well as how many ticks that corresponds to
 	// In the opposite direction (price < 1), we do the same thing (just decrement the geometric exponent instead of incrementing).
 	// The only difference is we must reduce the increment distance by a factor of 10.
-	if price.GT(sdk.OneDec()) {
+	if price.GT(sdkOneDec) {
 		for currentPrice.LT(price) {
 			currentAdditiveIncrementInTicks = powTenBigDec(exponentAtCurrentTick)
 			maxPriceForCurrentAdditiveIncrementInTicks := osmomath.BigDecFromSDKDec(geometricExponentIncrementDistanceInTicks).Mul(currentAdditiveIncrementInTicks)
-			currentPrice = currentPrice.Add(maxPriceForCurrentAdditiveIncrementInTicks.SDKDec())
-			exponentAtCurrentTick = exponentAtCurrentTick.Add(sdk.OneInt())
+			currentPrice.AddMut(maxPriceForCurrentAdditiveIncrementInTicks.SDKDec())
+			exponentAtCurrentTick = exponentAtCurrentTick.Add(sdkOneInt)
 			ticksPassed = ticksPassed.Add(geometricExponentIncrementDistanceInTicks.TruncateInt())
 		}
 	} else {
 		// We must decrement the exponentAtCurrentTick by one when traversing negative ticks in order to constantly step up in precision when going further down in ticks
 		// Otherwise, from tick 0 to tick -(geometricExponentIncrementDistanceInTicks), we would use the same exponent as the exponentAtPriceOne
-		exponentAtCurrentTick := exponentAtPriceOne.Sub(sdk.OneInt())
+		exponentAtCurrentTick := exponentAtPriceOne.Sub(sdkOneInt)
 		for currentPrice.GT(price) {
 			currentAdditiveIncrementInTicks = powTenBigDec(exponentAtCurrentTick)
 			maxPriceForCurrentAdditiveIncrementInTicks := osmomath.BigDecFromSDKDec(geometricExponentIncrementDistanceInTicks).Mul(currentAdditiveIncrementInTicks)
-			currentPrice = currentPrice.Sub(maxPriceForCurrentAdditiveIncrementInTicks.SDKDec())
-			exponentAtCurrentTick = exponentAtCurrentTick.Sub(sdk.OneInt())
+			currentPrice.SubMut(maxPriceForCurrentAdditiveIncrementInTicks.SDKDec())
+			exponentAtCurrentTick = exponentAtCurrentTick.Sub(sdkOneInt)
 			ticksPassed = ticksPassed.Sub(geometricExponentIncrementDistanceInTicks.TruncateInt())
 		}
 	}

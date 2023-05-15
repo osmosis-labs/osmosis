@@ -9,7 +9,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	stableswap "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
@@ -27,7 +26,7 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 	tests := []struct {
 		name            string
 		poolCreationFee sdk.Coins
-		msg             balancertypes.MsgCreateBalancerPool
+		msg             balancer.MsgCreateBalancerPool
 		expectPass      bool
 	}{
 		{
@@ -117,7 +116,6 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 
 // TestCreatePool tests that all possible pools are created correctly.
 func (suite *KeeperTestSuite) TestCreatePool() {
-
 	var (
 		validBalancerPoolMsg = balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil), []balancer.PoolAsset{
 			{
@@ -418,7 +416,7 @@ func (suite *KeeperTestSuite) TestGetNextPoolIdAndIncrement() {
 			nextPoolId := suite.App.PoolManagerKeeper.GetNextPoolId(suite.Ctx)
 			suite.Require().Equal(tc.expectedNextPoolId, nextPoolId)
 
-			// Sytem under test.
+			// System under test.
 			nextPoolId = suite.App.PoolManagerKeeper.GetNextPoolIdAndIncrement(suite.Ctx)
 			suite.Require().Equal(tc.expectedNextPoolId, nextPoolId)
 			suite.Require().Equal(tc.expectedNextPoolId+1, suite.App.PoolManagerKeeper.GetNextPoolId(suite.Ctx))
@@ -436,7 +434,7 @@ func (suite *KeeperTestSuite) TestValidateCreatedPool() {
 		{
 			name:   "pool ID 1",
 			poolId: 1,
-			pool: &balancertypes.Pool{
+			pool: &balancer.Pool{
 				Address: types.NewPoolAddress(1).String(),
 				Id:      1,
 			},
@@ -444,7 +442,7 @@ func (suite *KeeperTestSuite) TestValidateCreatedPool() {
 		{
 			name:   "pool ID 309",
 			poolId: 309,
-			pool: &balancertypes.Pool{
+			pool: &balancer.Pool{
 				Address: types.NewPoolAddress(309).String(),
 				Id:      309,
 			},
@@ -452,7 +450,7 @@ func (suite *KeeperTestSuite) TestValidateCreatedPool() {
 		{
 			name:   "error: unexpected ID",
 			poolId: 1,
-			pool: &balancertypes.Pool{
+			pool: &balancer.Pool{
 				Address: types.NewPoolAddress(1).String(),
 				Id:      2,
 			},
@@ -461,7 +459,7 @@ func (suite *KeeperTestSuite) TestValidateCreatedPool() {
 		{
 			name:   "error: unexpected address",
 			poolId: 2,
-			pool: &balancertypes.Pool{
+			pool: &balancer.Pool{
 				Address: types.NewPoolAddress(1).String(),
 				Id:      2,
 			},

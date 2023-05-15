@@ -35,6 +35,8 @@ message MsgCreateDenom {
 
 - Fund community pool with the denom creation fee from the creator address, set
   in `Params`.
+- Consume an amount of gas corresponding to the `DenomCreationGasConsume` parameter
+  specified in `Params`.
 - Set `DenomMetaData` via bank keeper.
 - Set `AuthorityMetadata` for the given denom to store the admin for the created
   denom `factory/{creator address}/{subdenom}`. Admin is automatically set as the

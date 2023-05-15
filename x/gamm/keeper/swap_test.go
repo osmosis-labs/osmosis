@@ -237,8 +237,6 @@ func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	}
 }
 
-// TestCalcInAmtGivenOut only tests that balancer and stableswap pools are type casted correctly while concentratedliquidity pools fail
-// TODO: add failing CL pool tests.
 func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
 	type param struct {
 		poolType     string
@@ -273,27 +271,33 @@ func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
 
 	for _, test := range tests {
 		suite.Run(test.name, func() {
-			// Init suite for each test.
 			suite.SetupTest()
 			keeper := suite.App.GAMMKeeper
 			ctx := suite.Ctx
 
 			var pool poolmanagertypes.PoolI
-			if test.param.poolType == "balancer" {
+			var err error
+
+			switch test.param.poolType {
+			case "balancer":
 				poolId := suite.PrepareBalancerPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				pool = poolExt.(poolmanagertypes.PoolI)
-			} else if test.param.poolType == "stableswap" {
+				pool, _ = poolExt.(poolmanagertypes.PoolI)
+			case "stableswap":
 				poolId := suite.PrepareBasicStableswapPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				pool = poolExt.(poolmanagertypes.PoolI)
+				pool, _ = poolExt.(poolmanagertypes.PoolI)
+			default:
+				suite.FailNow("unsupported pool type")
 			}
+
+			suite.Require().NotNil(pool)
 
 			swapFee := pool.GetSwapFee(suite.Ctx)
 
-			_, err := keeper.CalcInAmtGivenOut(ctx, pool, test.param.tokenOut, test.param.tokenInDenom, swapFee)
+			_, err = keeper.CalcInAmtGivenOut(ctx, pool, test.param.tokenOut, test.param.tokenInDenom, swapFee)
 
 			if test.expectPass {
 				suite.Require().NoError(err)
@@ -490,7 +494,8 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	// mock objects don't have interface functions implemented by default.
 	inactivePool.EXPECT().IsActive(suite.Ctx).Return(false).AnyTimes()
 	inactivePool.EXPECT().GetId().Return(inactivePoolId).AnyTimes()
-	gammKeeper.SetPool(suite.Ctx, inactivePool)
+	err = gammKeeper.SetPool(suite.Ctx, inactivePool)
+	suite.Require().NoError(err)
 
 	type testCase struct {
 		pool       poolmanagertypes.PoolI

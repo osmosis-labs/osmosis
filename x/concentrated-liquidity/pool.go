@@ -157,7 +157,7 @@ func (k Keeper) CalculateSpotPrice(
 		return sdk.Dec{}, err
 	}
 
-	hasPositions, err := k.hasAnyPositionForPool(ctx, poolId)
+	hasPositions, err := k.HasAnyPositionForPool(ctx, poolId)
 	if err != nil {
 		return sdk.Dec{}, err
 	}

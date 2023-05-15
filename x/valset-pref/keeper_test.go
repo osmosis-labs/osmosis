@@ -69,7 +69,8 @@ func (suite *KeeperTestSuite) GetDelegationRewards(ctx sdk.Context, valAddrStr s
 	return rewards, validator
 }
 
-func (suite *KeeperTestSuite) SetupDelegationReward(ctx sdk.Context, delegator sdk.AccAddress, preferences []types.ValidatorPreference, existingValAddrStr string, setValSetDel, setExistingdel bool) {
+func (suite *KeeperTestSuite) SetupDelegationReward(delegator sdk.AccAddress, preferences []types.ValidatorPreference, existingValAddrStr string, setValSetDel, setExistingdel bool) {
+	var ctx sdk.Context
 	// incrementing the blockheight by 1 for reward
 	ctx = suite.Ctx.WithBlockHeight(suite.Ctx.BlockHeight() + 1)
 

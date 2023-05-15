@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/server"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -59,9 +60,13 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 	appState[poolmanagertypes.ModuleName] = cdc.MustMarshalJSON(&localOsmosisPoolManagerGenesis)
 
 	// Copy positions
+	largestPositionId := uint64(0)
 	for _, positionData := range updatedCLGenesis.PositionData {
 		positionData.Position.PoolId = nextPoolId
 		localOsmosisCLGenesis.PositionData = append(localOsmosisCLGenesis.PositionData, positionData)
+		if positionData.Position.PositionId > largestPositionId {
+			largestPositionId = positionData.Position.PositionId
+		}
 	}
 
 	// Create map of pool balances
@@ -125,7 +130,7 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 		localOsmosisCLGenesis.PoolData = append(localOsmosisCLGenesis.PoolData, updatedPoolData)
 	}
 
-	localOsmosisCLGenesis.NextPositionId = uint64(len(localOsmosisCLGenesis.PositionData) + 1)
+	localOsmosisCLGenesis.NextPositionId = largestPositionId + 1
 
 	appState[cltypes.ModuleName] = cdc.MustMarshalJSON(&localOsmosisCLGenesis)
 
@@ -145,9 +150,17 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 	}
 
 	fmt.Printf("Writing genesis file to %s", localOsmosisHomePath)
-	if err := WriteFile(filepath.Join(localOsmosisHomePath, "config", "genesis.json"), genesisJson); err != nil {
-		panic(err)
+	start := time.Now()
+	for time.Since(start) < 30*time.Second {
+		if err := WriteFile(filepath.Join(localOsmosisHomePath, "config", "genesis.json"), genesisJson); err == nil {
+			fmt.Println("Genesis file written successfully")
+			return
+		} else {
+			fmt.Printf("Error writing genesis file: %s\n", err.Error())
+			time.Sleep(1 * time.Second)
+		}
 	}
+	fmt.Println("Timed out after 30 seconds")
 }
 
 func WriteFile(path string, body []byte) error {

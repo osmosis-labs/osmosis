@@ -64,7 +64,7 @@ type swapStrategy interface {
 	// and subtract from the upper tick to reflect that this new
 	// liquidity would be added when the price crosses the lower tick
 	// going up, and subtracted when the price crosses the upper tick
-	// going up. As a result, the sign depend on the direction we are moving.
+	// going up. As a result, the sign depends on the direction we are moving.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	SetLiquidityDeltaSign(liquidityDelta sdk.Dec) sdk.Dec
 	// ValidateSqrtPrice validates the given square root price
@@ -72,10 +72,6 @@ type swapStrategy interface {
 	// and the min/max sqrt price on the other side.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	ValidateSqrtPrice(sqrtPriceLimit, currentSqrtPrice sdk.Dec) error
-	// SqrtPriceToTick returns the tick from the square root price.
-	// Ensures desired rounding in favor of the pool during swap.
-	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	SqrtPriceToTick(sqrtPrice sdk.Dec) (sdk.Int, error)
 }
 
 // New returns a swap strategy based on the provided zeroForOne parameter

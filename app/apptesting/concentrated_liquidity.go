@@ -41,13 +41,38 @@ func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndFullRangePosition(
 	return clPool
 }
 
+// createConcentratedPoolsFromCoinsWithSwapFee creates CL pools from given sets of coins and respective swap fees.
+// Where element 1 of the input corresponds to the first pool created, element 2 to the second pool created etc.
+func (s *KeeperTestHelper) CreateConcentratedPoolsAndFullRangePositionWithSwapFee(poolDenoms [][]string, swapFee []sdk.Dec) {
+	for i, curPoolDenoms := range poolDenoms {
+		s.Require().Equal(2, len(curPoolDenoms))
+		var curSwapFee sdk.Dec
+		if len(swapFee) > i {
+			curSwapFee = swapFee[i]
+		} else {
+			curSwapFee = sdk.ZeroDec()
+		}
+
+		clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], curPoolDenoms[0], curPoolDenoms[1], DefaultTickSpacing, curSwapFee)
+		fundCoins := sdk.NewCoins(sdk.NewCoin(curPoolDenoms[0], DefaultCoinAmount), sdk.NewCoin(curPoolDenoms[1], DefaultCoinAmount))
+		s.FundAcc(s.TestAccs[0], fundCoins)
+		s.CreateFullRangePosition(clPool, fundCoins)
+	}
+}
+
+// createConcentratedPoolsFromCoins creates CL pools from given sets of coins (with zero swap fees).
+// Where element 1 of the input corresponds to the first pool created, element 2 to the second pool created etc.
+func (s *KeeperTestHelper) CreateConcentratedPoolsAndFullRangePosition(poolDenoms [][]string) {
+	s.CreateConcentratedPoolsAndFullRangePositionWithSwapFee(poolDenoms, []sdk.Dec{sdk.ZeroDec()})
+}
+
 // PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition sets up a concentrated liquidity pool with custom denoms.
 // It also creates a full range position and locks it for 14 days.
 func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition(denom1, denom2 string) (types.ConcentratedPoolExtension, uint64, uint64) {
 	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], denom1, denom2, DefaultTickSpacing, sdk.ZeroDec())
 	fundCoins := sdk.NewCoins(sdk.NewCoin(denom1, DefaultCoinAmount), sdk.NewCoin(denom2, DefaultCoinAmount))
 	s.FundAcc(s.TestAccs[0], fundCoins)
-	positionId, _, _, _, _, concentratedLockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool, s.TestAccs[0], fundCoins, time.Hour*24*14)
+	positionId, _, _, _, _, concentratedLockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool.GetId(), s.TestAccs[0], fundCoins, time.Hour*24*14)
 	s.Require().NoError(err)
 	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(s.Ctx, clPool.GetId())
 	s.Require().NoError(err)
@@ -88,7 +113,7 @@ func (s *KeeperTestHelper) PrepareMultipleConcentratedPools(poolsToCreate uint16
 // CreateFullRangePosition creates a full range position and returns position id and the liquidity created.
 func (s *KeeperTestHelper) CreateFullRangePosition(pool types.ConcentratedPoolExtension, coins sdk.Coins) (uint64, sdk.Dec) {
 	s.FundAcc(s.TestAccs[0], coins)
-	positionId, _, _, liquidity, _, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, pool, s.TestAccs[0], coins)
+	positionId, _, _, liquidity, _, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, pool.GetId(), s.TestAccs[0], coins)
 	s.Require().NoError(err)
 	return positionId, liquidity
 }
