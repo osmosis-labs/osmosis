@@ -223,6 +223,8 @@ func (q Querier) PoolAccumulatorRewards(ctx sdk.Context, req clquery.PoolAccumul
 	}
 
 	spreadRewardsAcc, err := q.Keeper.GetSpreadRewardAccumulator(ctx, req.PoolId)
+func (q Querier) IncentiveRecords(ctx sdk.Context, req clquery.IncentiveRecordsRequest) (*clquery.IncentiveRecordsResponse, error) {
+	incentiveRecords, err := q.Keeper.GetAllIncentiveRecordsForPool(ctx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -241,6 +243,7 @@ func (q Querier) PoolAccumulatorRewards(ctx sdk.Context, req clquery.PoolAccumul
 		SpreadRewardGrowthGlobal: spreadRewardsAcc.GetValue(),
 		UptimeGrowthGlobal:       uptimeGrowthTrackers,
 	}, nil
+	return &clquery.IncentiveRecordsResponse{IncentiveRecords: incentiveRecords}, nil
 }
 
 // TickAccumulatorTrackers returns tick accumulator trackers.

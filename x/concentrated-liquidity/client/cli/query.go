@@ -17,6 +17,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetPositionById)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetClaimableSpreadRewards)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetClaimableIncentives)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetIncentiveRecords)
 	cmd.AddCommand(
 		osmocli.GetParams[*queryproto.ParamsRequest](
 			types.ModuleName, queryproto.NewQueryClient),
@@ -71,4 +72,13 @@ func GetClaimableIncentives() (*osmocli.QueryDescriptor, *queryproto.ClaimableIn
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} claimable-incentives 53`,
 	}, &queryproto.ClaimableIncentivesRequest{}
+}
+
+func GetIncentiveRecords() (*osmocli.QueryDescriptor, *queryproto.IncentiveRecordsRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "incentive-records [poolId]",
+		Short: "Query incentive records for a given pool",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} incentive-records 1`,
+	}, &queryproto.IncentiveRecordsRequest{}
 }
