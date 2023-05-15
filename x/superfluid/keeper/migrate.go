@@ -316,7 +316,7 @@ func (k Keeper) validateMigration(ctx sdk.Context, sender sdk.AccAddress, lockId
 // 3. Ensures that the number of shares to migrate is less than or equal to the number of shares in the lock.
 // 4. Exits the position in the Balancer pool.
 // 5. Ensures that exactly two coins are returned.
-// 6. Any remaining shares that were not migrated are re-locked for the remaining time on the lock.
+// 6. Any remaining shares that were not migrated are re-locked as a new lock for the remaining time on the lock.
 func (k Keeper) validateSharesToMigrateUnlockAndExitBalancerPool(ctx sdk.Context, sender sdk.AccAddress, poolIdLeaving uint64, lock *lockuptypes.PeriodLock, sharesToMigrate sdk.Coin, tokenOutMins sdk.Coins, remainingLockTime time.Duration) (exitCoins sdk.Coins, remainingSharesLock lockuptypes.PeriodLock, err error) {
 	// validateMigration ensures that the preMigrationLock contains coins of length 1.
 	gammSharesInLock := lock.Coins[0]
