@@ -70,7 +70,7 @@ pub fn propose_pfm(
             // If sender is the contract governor, then they are authorized to do do this to any chain
             // Otherwise, they must be authorized to do manage the chain they are attempting to modify
             let user_permission =
-                check_is_authorized(deps.as_ref(), info.sender.clone(), Some(chain.clone()))?;
+                check_is_authorized(deps.as_ref(), info.sender, Some(chain.clone()))?;
             check_action_permission(FullOperation::Change, user_permission)?;
         } else {
             return Err(ContractError::PFMValidationAlreadyInProgress {
