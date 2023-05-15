@@ -16,6 +16,9 @@ use registry::Registry;
 const CONTRACT_NAME: &str = "crates.io:crosschain-registry";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
+// The name of the chain on which this contract is instantiated
+pub const CONTRACT_CHAIN: &str = "osmosis";
+
 #[cfg_attr(not(feature = "imported"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
@@ -32,7 +35,7 @@ pub fn instantiate(
 
     CHAIN_PFM_MAP.save(
         deps.storage,
-        "osmosis",
+        CONTRACT_CHAIN,
         &ChainPFM {
             acknowledged: true,
             validated: true,
@@ -245,7 +248,7 @@ mod test {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetChannelFromChainPair {
-                source_chain: "osmosis".to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "juno".to_string(),
             },
         )
@@ -258,7 +261,7 @@ mod test {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetDestinationChainFromSourceChainViaChannel {
-                on_chain: "osmosis".to_string(),
+                on_chain: CONTRACT_CHAIN.to_string(),
                 via_channel: "channel-42".to_string(),
             },
         )
@@ -271,7 +274,7 @@ mod test {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetChannelFromChainPair {
-                source_chain: "osmosis".to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "stargaze".to_string(),
             },
         )
@@ -284,7 +287,7 @@ mod test {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetDestinationChainFromSourceChainViaChannel {
-                on_chain: "osmosis".to_string(),
+                on_chain: CONTRACT_CHAIN.to_string(),
                 via_channel: "channel-75".to_string(),
             },
         )
@@ -298,7 +301,7 @@ mod test {
             mock_env(),
             QueryMsg::GetChannelFromChainPair {
                 source_chain: "stargaze".to_string(),
-                destination_chain: "osmosis".to_string(),
+                destination_chain: CONTRACT_CHAIN.to_string(),
             },
         )
         .unwrap();
@@ -316,14 +319,14 @@ mod test {
         )
         .unwrap();
         let destination_chain: String = from_binary(&destination_chain).unwrap();
-        assert_eq!("osmosis", destination_chain);
+        assert_eq!(CONTRACT_CHAIN, destination_chain);
 
         // Attempt to retrieve a link that doesn't exist and check that we get an error
         let channel_binary = query(
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetChannelFromChainPair {
-                source_chain: "osmosis".to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "cerberus".to_string(),
             },
         );
@@ -333,7 +336,7 @@ mod test {
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: execute::FullOperation::Disable,
-                source_chain: "OSMOSIS".to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "JUNO".to_string(),
                 channel_id: Some("CHANNEL-42".to_string()),
                 new_source_chain: None,
@@ -350,7 +353,7 @@ mod test {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetChannelFromChainPair {
-                source_chain: "osmosis".to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "juno".to_string(),
             },
         );
@@ -360,7 +363,7 @@ mod test {
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: execute::FullOperation::Enable,
-                source_chain: "OSMOSIS".to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "JUNO".to_string(),
                 channel_id: Some("CHANNEL-42".to_string()),
                 new_source_chain: None,
@@ -376,7 +379,7 @@ mod test {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetChannelFromChainPair {
-                source_chain: "osmosis".to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "juno".to_string(),
             },
         )

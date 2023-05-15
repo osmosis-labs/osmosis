@@ -1,7 +1,7 @@
 use cosmwasm_std::{DepsMut, Response};
 use registry::Registry;
 
-use crate::{state::CHAIN_PFM_MAP, ContractError};
+use crate::{contract::SOURCE_CHAIN, state::CHAIN_PFM_MAP, ContractError};
 
 pub fn receive_ack(
     deps: DepsMut,
@@ -11,7 +11,7 @@ pub fn receive_ack(
     success: bool,
 ) -> Result<Response, ContractError> {
     let registry = Registry::default(deps.as_ref());
-    let chain = registry.get_connected_chain("osmosis", source_channel.as_str())?;
+    let chain = registry.get_connected_chain(SOURCE_CHAIN, source_channel.as_str())?;
     let mut chain_pfm = CHAIN_PFM_MAP.load(deps.storage, &chain).map_err(|_| {
         ContractError::ValidationNotFound {
             chain: chain.clone(),
@@ -34,7 +34,7 @@ pub fn receive_timeout(
     _sequence: u64,
 ) -> Result<Response, ContractError> {
     let registry = Registry::default(deps.as_ref());
-    let chain = registry.get_connected_chain("osmosis", source_channel.as_str())?;
+    let chain = registry.get_connected_chain(SOURCE_CHAIN, source_channel.as_str())?;
     CHAIN_PFM_MAP.remove(deps.storage, &chain);
 
     Ok(Response::default())
