@@ -653,7 +653,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				positionIdBytes = store.Get(lockIdToPositionIdKey)
 				s.Require().Nil(positionIdBytes)
 
-				// ensrue that the lock is still there if there was lock that was existing before the withdraw process
+				// ensure that the lock is still there if there was lock that was existing before the withdraw process
 				if tc.createLockLocked || tc.createLockUnlocked || tc.createLockUnlocking {
 					_, err = s.App.LockupKeeper.GetLockByID(s.Ctx, 1)
 					s.Require().NoError(err)
