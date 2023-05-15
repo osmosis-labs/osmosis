@@ -85,12 +85,12 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 		s := BenchTestSuite{}
 		s.Setup()
 
-		// Full all accounts with max amounts they would need to consume.
+		// Fund all accounts with max amounts they would need to consume.
 		for _, acc := range s.TestAccs {
 			simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, sdk.NewCoins(sdk.NewCoin(denom0, maxAmountOfEachToken), sdk.NewCoin(denom1, maxAmountOfEachToken), sdk.NewCoin("uosmo", maxAmountOfEachToken)))
 		}
 
-		// Craete a pool
+		// Create a pool
 		poolId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], denom0, denom1, tickSpacing, sdk.MustNewDecFromStr("0.001")))
 		noError(err)
 
@@ -121,8 +121,6 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 
 				// minTick <= lowerTick <= currentTick
 				lowerTick = rand.Int63n(currentTick.Int64()-types.MinTick+1) + types.MinTick
-				// Normalize lowerTick to be a multiple of tickSpacing
-				lowerTick = lowerTick + (tickSpacing - lowerTick%tickSpacing)
 				// lowerTick <= upperTick <= currentTick
 				upperTick = currentTick.Int64() - rand.Int63n(int64(math.Abs(float64(currentTick.Int64()-lowerTick))))
 			} else {
@@ -130,11 +128,11 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 
 				// currentTick <= lowerTick <= upperTick
 				lowerTick := rand.Int63n(types.MaxTick-currentTick.Int64()+1) + currentTick.Int64()
-				// Normalize lowerTick to be a multiple of tickSpacing
-				lowerTick = lowerTick + (tickSpacing - lowerTick%tickSpacing)
 				// lowerTick <= upperTick <= maxTick
 				upperTick = types.MaxTick - rand.Int63n(int64(math.Abs(float64(types.MaxTick-lowerTick))))
 			}
+			// Normalize lowerTick to be a multiple of tickSpacing
+			lowerTick = lowerTick + (tickSpacing - lowerTick%tickSpacing)
 			// Normalize upperTick to be a multiple of tickSpacing
 			upperTick = upperTick - upperTick%tickSpacing
 
