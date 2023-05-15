@@ -7,17 +7,30 @@ The goal is to use this contract to provide *crosschain swaps*: sending an ICS20
 transfer on chain A, receiving it on osmosis, swapping for a different token,
 and forwarding to a different chain.
 
+## XCS v1 vs XCS v2
+
+There are two versions of the crosschain swaps contract. The first version allows users
+to swap via instructions in the memo as described above. This is enough to do swaps with
+arbitrary complexity but still requires users to build the memo manually, which implies
+knowing about the channels used to transfer the tokens in each intermediate hop, the canonical
+ibc denoms of tokens on osmosis, and when to use packet forward middleware vs callbacks.
+
+The second version of the contract simplifies this for users by keeping registries with the 
+necessary information and doing the token unwinding automatically. 
+
+This documentation is for the latest version of the contract. For v1, see the [previous docs](https://github.com/osmosis-labs/osmosis/tree/v15.x/cosmwasm/contracts/crosschain-swaps)
+
 ## Instantiation
 
 To instantiate the contract, you need to specify the following parameters:
 
  * swap_contract: the swaprouter contract to be used
- * channels: a list of (bech32 prefix, channel_id) that the contract will allow. 
+ * governor: The address that will be allowed to manage which swap_contract to use 
 
 ### Example instantiation message
 
 ``` json
-{"swap_contract": "osmo1thiscontract", "channels": [["cosmos", "channel-0"], ["juno", "channel-42"]]}
+{"swap_contract": "osmo1thiscontract", "governor": "osmo1..."}
 ```
 
 ## Usage
@@ -41,6 +54,8 @@ of an IBC transfer to do crosschain swaps would look as follows:
     }
 }}
 ```
+
+TODO: Expand documentation on how to specify receivers
 
 Channels are determined by the prefixes specified in the contract during
 instantiation, so the user needs to provide a receiver with the supported
@@ -88,6 +103,203 @@ or as json:
 ``` json
 {"sent_amount": "818", "denom": "token0", "channel_id": "channel-42", "receiver": "juno1receiver", "packet_sequence": 17}
 ```
+
+## Usage examples
+
+Here are some usage examples of sending tokens on the live versions of the contracts:
+
+### XCS v1
+
+#### Native to Native
+
+To swap from a chain's native token to another chain's native token. 
+
+For this example we will swap JUNO stored in the Juno, for ATOM and send it to Gaia. 
+
+To do that you can execute an IBC transfer on the first chain (juno) with a memo like the following:
+
+```json
+{
+  "wasm": {
+    "contract": "osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs",  // XCS contract
+    "msg": {
+      "osmosis_swap": {
+        "output_denom": "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",  // ATOM on osmosis
+        "slippage": {
+          "twap": {
+            "slippage_percentage": "20",
+            "window_seconds": 10
+          }
+        },
+        "receiver": "cosmos1tfu4j7nzfhtex2wyp946rm02748zxu8w0kvt87",  // Address on gaia
+        "on_failed_delivery": "do_nothing"
+      }
+    }
+  }
+}
+```
+
+The full command to execute this is:
+
+```bash
+junod  --node https://rpc.cosmos.directory:443/juno tx ibc-transfer transfer transfer channel-0 osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs 100ujuno   \
+--from testaccount -y --gas auto --gas-prices 0.1ujuno --gas-adjustment 1.3 \
+--memo '{"wasm":{"contract":"osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs","msg":{"osmosis_swap":{"output_denom":"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2","slippage":{"twap":{"slippage_percentage":"20","window_seconds":10}},"receiver":"cosmos1tfu4j7nzfhtex2wyp946rm02748zxu8w0kvt87","on_failed_delivery":"do_nothing"}}}}'
+```
+
+TODO: Add an example in TS
+
+#### Native to Osmosis native
+
+Similarly, if you wanted to swap for a token that is native to osmosis (osmo, ion, or tokenfactory tokens) you can use a 
+memo like the one above but with the appropriate valies for the token and receiver.
+
+```json
+{
+  "wasm": {
+    "contract": "osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs",
+    "msg": {
+      "osmosis_swap": {
+        "output_denom": "uosmo",  // Osmosis native token
+        "slippage": {
+          "twap": {
+            "slippage_percentage": "20",
+            "window_seconds": 10
+          }
+        },
+        "receiver": "juno1tfu4j7nzfhtex2wyp946rm02748zxu8wey0sqz",  // The receiver is now on juno
+        "on_failed_delivery": "do_nothing"
+      }
+    }
+  }
+}
+```
+
+
+```bash
+junod  --node https://rpc.cosmos.directory:443/juno tx ibc-transfer transfer transfer channel-0 osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs 100738ujuno   \
+--from testaccount -y --gas auto --gas-prices 0.1ujuno --gas-adjustment 1.3 \
+--memo '{"wasm":{"contract":"osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs","msg":{"osmosis_swap":{"output_denom":"uosmo","slippage":{"twap":{"slippage_percentage":"20","window_seconds":10}},"receiver":"juno1tfu4j7nzfhtex2wyp946rm02748zxu8wey0sqz","on_failed_delivery":"do_nothing"}}}}'
+```
+
+TODO: Add an example in TS
+
+
+#### Native to Non-Native
+
+Sometimes, the token you want to receive is neither native to the chain initiating the swap, nor to osmosis.
+
+In this case we will need to unwind the path of this token using the packet forward middleware (which needs
+to be supported by the intermediate chain).
+
+For this example, we will swap OSMO stored in juno to ATOM and send it back to juno. 
+
+If we did this like the previous examples we would end up with a token that isn't recognized 
+as ATOM on juno. This is because the pools on osmosis use ATOM sent directly from gaia
+and not via juno (i.e.: osmosis(ATOM) != osmosis(juno(ATOM))).
+
+To fix this, we will use the packet forward middleware to unwind the path of the token. The final memo would be:
+
+```json
+{
+    "wasm": {
+        "contract": "osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs",
+        "msg": {
+            "osmosis_swap": {
+                "output_denom": "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",  // ATOM on osmosis
+                "receiver": "cosmos1tfu4j7nzfhtex2wyp946rm02748zxu8w0kvt87",  // Intermediate receiver
+                "slippage": {
+                   "twap": {
+                      "slippage_percentage": "20",
+                      "window_seconds": 10
+                   }
+                },
+                "next_memo": {
+                    "forward": {
+                        "receiver": "juno1tfu4j7nzfhtex2wyp946rm02748zxu8wey0sqz",  // Final receiver
+                        "port": "transfer",
+                        "channel": "channel-207"  // Juno's channel on gaia
+                    }
+                },
+               "on_failed_delivery": "do_nothing"
+            }
+        }
+    }
+}
+```
+
+Note that in this example we are using OSMO stored in juno, so the token we send is 
+`ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518` and not `ujuno` like in previous examples.
+
+```bash
+junod  --node https://rpc.cosmos.directory:443/juno tx ibc-transfer transfer transfer channel-0 osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs 100ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518   \
+--from testaccount -y --gas auto --gas-prices 0.1ujuno --gas-adjustment 1.3 \
+--memo '{"wasm":{"contract":"osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs","msg":{"osmosis_swap":{"output_denom":"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2","receiver":"cosmos1tfu4j7nzfhtex2wyp946rm02748zxu8w0kvt87","slippage":{"twap":{"slippage_percentage":"20","window_seconds":10}},"next_memo":{"forward":{"receiver":"juno1tfu4j7nzfhtex2wyp946rm02748zxu8wey0sqz","port":"transfer","channel":"channel-207"}},"on_failed_delivery":"do_nothing"}}}}'
+```
+
+#### Non-Native to Non-Native
+
+Similarly to the above example, if the token we want to send send for swapping is not the native to the sender or 
+to osmosis, then we need to do the denom path unwinding as part of the IBC packet sent. 
+
+For this example, we will use ATOM stored on juno, swap it for JUNO and send it to gaia.
+
+
+```json
+{
+    "forward": {
+        "receiver": "osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs",  // XCS contract
+        "port": "transfer",
+        "channel": "channel-141",  // Osmosis channel on gaia
+        "next": {
+            "wasm": {
+                "contract": "osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs",  // XCS contract
+                "msg": {
+                    "osmosis_swap": {
+                        "output_denom": "ibc/46B44899322F3CD854D2D46DEEF881958467CDD4B3B10086DA49296BBED94BED",  // Juno denom on osmosis
+                        "receiver": "juno1tfu4j7nzfhtex2wyp946rm02748zxu8wey0sqz",  // temp receiver
+                        "slippage": {
+                           "twap": {
+                              "slippage_percentage": "20",
+                              "window_seconds": 10
+                           }
+                        },
+                        "next_memo": {
+                            "forward": {
+                                "receiver": "cosmos1tfu4j7nzfhtex2wyp946rm02748zxu8w0kvt87",  // final receiver
+                                "port": "transfer",
+                                "channel": "channel-1"  // gaia's channel on juno
+                            }
+                        },
+                       "on_failed_delivery": "do_nothing"
+                    }
+                }
+            }
+        }
+    }
+}
+```
+The full command is:
+
+```bash
+junod  --node https://rpc.cosmos.directory:443/juno tx ibc-transfer transfer transfer channel-1 cosmos1tfu4j7nzfhtex2wyp946rm02748zxu8w0kvt87 1ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9   \
+--from testaccount -y --gas auto --gas-prices 0.1ujuno --gas-adjustment 1.3 \
+--memo '{"forward":{"receiver":"osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs","port":"transfer","channel":"channel-141","next":{"wasm":{"contract":"osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs","msg":{"osmosis_swap":{"output_denom":"ibc/46B44899322F3CD854D2D46DEEF881958467CDD4B3B10086DA49296BBED94BED","receiver":"juno1tfu4j7nzfhtex2wyp946rm02748zxu8wey0sqz","slippage":{"twap":{"slippage_percentage":"20","window_seconds":10}},"next_memo":{"forward":{"receiver":"cosmos1tfu4j7nzfhtex2wyp946rm02748zxu8w0kvt87","port":"transfer","channel":"channel-1"}},"on_failed_delivery":"do_nothing"}}}}}}'
+```
+
+Note that as opposed to the previous example, we send the tokens to gaia first, so the channel we use 
+is channel-1 (gaia) and the  (temporary) receiver is a cosmos1 address. Similarly, the token we send is
+`ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9` which is 
+ATOM on juno.
+
+
+
+### XCS v2
+
+XCSv2 should take care of the complexities of unwrapping tokens and sending them to the correct chain. When that 
+is finished, we should document it here.
+
+TODO: Add examples when the contracts are ready and deployed
 
 
 ## Requirements

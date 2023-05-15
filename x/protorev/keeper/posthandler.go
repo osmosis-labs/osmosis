@@ -114,21 +114,22 @@ func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) (er
 	}()
 
 	// Get the total number of pool points that can be consumed in this transaction
-	remainingPoolPoints, err := k.RemainingPoolPointsForTx(ctx)
+	remainingTxPoolPoints, remainingBlockPoolPoints, err := k.GetRemainingPoolPoints(ctx)
 	if err != nil {
 		return err
 	}
+
 	// Iterate and build arbitrage routes for each pool that was swapped on
 	for _, pool := range swappedPools {
 		// Build the routes for the pool that was swapped on
 		routes := k.BuildRoutes(ctx, pool.TokenInDenom, pool.TokenOutDenom, pool.PoolId)
 
 		// Find optimal route (input coin, profit, route) for the given routes
-		maxProfitInputCoin, maxProfitAmount, optimalRoute := k.IterateRoutes(ctx, routes, &remainingPoolPoints)
+		maxProfitInputCoin, maxProfitAmount, optimalRoute := k.IterateRoutes(ctx, routes, &remainingTxPoolPoints, &remainingBlockPoolPoints)
 
 		// The error that returns here is particularly focused on the minting/burning of coins, and the execution of the MultiHopSwapExactAmountIn.
 		if maxProfitAmount.GT(sdk.ZeroInt()) {
-			if err := k.ExecuteTrade(ctx, optimalRoute, maxProfitInputCoin); err != nil {
+			if err := k.ExecuteTrade(ctx, optimalRoute, maxProfitInputCoin, pool, remainingTxPoolPoints, remainingBlockPoolPoints); err != nil {
 				return err
 			}
 		}
@@ -168,7 +169,8 @@ func extractSwapInPools(routes []poolmanagertypes.SwapAmountInRoute, tokenInDeno
 		swappedPools = append(swappedPools, SwapToBackrun{
 			PoolId:        route.PoolId,
 			TokenOutDenom: route.TokenOutDenom,
-			TokenInDenom:  prevTokenIn})
+			TokenInDenom:  prevTokenIn,
+		})
 
 		prevTokenIn = route.TokenOutDenom
 	}
@@ -186,7 +188,8 @@ func extractSwapOutPools(routes []poolmanagertypes.SwapAmountOutRoute, tokenOutD
 		swappedPools = append(swappedPools, SwapToBackrun{
 			PoolId:        route.PoolId,
 			TokenOutDenom: prevTokenOut,
-			TokenInDenom:  route.TokenInDenom})
+			TokenInDenom:  route.TokenInDenom,
+		})
 
 		prevTokenOut = route.TokenInDenom
 	}

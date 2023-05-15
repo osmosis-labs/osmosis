@@ -48,6 +48,13 @@ message PoolData {
       [ (gogoproto.nullable) = false ];
 }
 
+message PositionData {
+  Position position = 1;
+  uint64 lock_id = 2 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
+  osmosis.accum.v1beta1.Record fee_accum_record = 3
+      [ (gogoproto.nullable) = false ];
+}
+
 // GenesisState defines the concentrated liquidity module's genesis state.
 message GenesisState {
   // params are all the parameters of the module
@@ -55,7 +62,7 @@ message GenesisState {
   // pool data containining serialized pool struct and ticks.
   repeated PoolData pool_data = 2 [ (gogoproto.nullable) = false ];
 
-  repeated Position positions = 3 [ (gogoproto.nullable) = false ];
+  repeated PositionData position_data = 3 [ (gogoproto.nullable) = false ];
 
   uint64 next_position_id = 4
       [ (gogoproto.moretags) = "yaml:\"next_position_id\"" ];

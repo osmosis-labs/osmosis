@@ -1,6 +1,7 @@
 package osmoutils
 
 import (
+	"reflect"
 	"sort"
 
 	"golang.org/x/exp/constraints"
@@ -45,6 +46,19 @@ func ContainsDuplicate[T any](arr []T) bool {
 			return true
 		} else {
 			visited[arr[i]] = true
+		}
+	}
+	return false
+}
+
+// ContainsDuplicateDeepEqual returns true if there are duplicates
+// in the slice by performing deep comparison. This is useful
+// for comparing matrices or slices of pointers.
+// Returns false if there are no deep equal duplicates.
+func ContainsDuplicateDeepEqual[T any](multihops []T) bool {
+	for i := 0; i < len(multihops)-1; i++ {
+		if reflect.DeepEqual(multihops[i], multihops[i+1]) {
+			return true
 		}
 	}
 	return false

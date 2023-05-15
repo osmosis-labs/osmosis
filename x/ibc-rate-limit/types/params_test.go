@@ -59,18 +59,21 @@ func TestValidateParams(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
+			addr, ok := tc.addr.(string)
+			require.True(t, ok, "unexpected type of address")
+
 			params := Params{
-				ContractAddress: tc.addr.(string),
+				ContractAddress: addr,
 			}
+
 			err := params.Validate()
 
 			// Assertions.
 			if !tc.expected {
 				require.Error(t, err)
-				return
+			} else {
+				require.NoError(t, err)
 			}
-
-			require.NoError(t, err)
 		})
 	}
 }

@@ -147,9 +147,9 @@ func (suite *MiddlewareTestSuite) TestInvalidReceiver() {
 		0,
 	)
 	_, ack, _ := suite.FullSendBToA(msg)
-	suite.Require().Contains(string(ack), "error",
+	suite.Require().Contains(ack, "error",
 		"acknowledgment is not an error")
-	suite.Require().Contains(string(ack), fmt.Sprintf("ABCI code: %d", types.ErrBadMessage.ABCICode()),
+	suite.Require().Contains(ack, fmt.Sprintf("ABCI code: %d", types.ErrBadMessage.ABCICode()),
 		"acknowledgment error is not of the right type")
 }
 
@@ -167,6 +167,7 @@ func (suite *MiddlewareTestSuite) FullSendBToA(msg sdk.Msg) (*sdk.Result, string
 	suite.Require().NoError(err)
 
 	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
+	suite.Require().NoError(err)
 
 	err = suite.path.EndpointA.UpdateClient()
 	suite.Require().NoError(err)
@@ -218,12 +219,12 @@ func (suite *MiddlewareTestSuite) AssertReceive(success bool, msg sdk.Msg) (stri
 	_, ack, err := suite.FullSendBToA(msg)
 	if success {
 		suite.Require().NoError(err)
-		suite.Require().NotContains(string(ack), "error",
+		suite.Require().NotContains(ack, "error",
 			"acknowledgment is an error")
 	} else {
-		suite.Require().Contains(string(ack), "error",
+		suite.Require().Contains(ack, "error",
 			"acknowledgment is not an error")
-		suite.Require().Contains(string(ack), fmt.Sprintf("ABCI code: %d", types.ErrRateLimitExceeded.ABCICode()),
+		suite.Require().Contains(ack, fmt.Sprintf("ABCI code: %d", types.ErrRateLimitExceeded.ABCICode()),
 			"acknowledgment error is not of the right type")
 	}
 	return ack, err
@@ -240,10 +241,10 @@ func (suite *MiddlewareTestSuite) AssertSend(success bool, msg sdk.Msg) (*sdk.Re
 	return r, err
 }
 
-func (suite *MiddlewareTestSuite) BuildChannelQuota(name, channel, denom string, duration, send_precentage, recv_percentage uint32) string {
+func (suite *MiddlewareTestSuite) BuildChannelQuota(name, channel, denom string, duration, send_percentage, recv_percentage uint32) string {
 	return fmt.Sprintf(`
           {"channel_id": "%s", "denom": "%s", "quotas": [{"name":"%s", "duration": %d, "send_recv":[%d, %d]}] }
-    `, channel, denom, name, duration, send_precentage, recv_percentage)
+    `, channel, denom, name, duration, send_percentage, recv_percentage)
 }
 
 // Tests
@@ -251,13 +252,15 @@ func (suite *MiddlewareTestSuite) BuildChannelQuota(name, channel, denom string,
 // Test that Sending IBC messages works when the middleware isn't configured
 func (suite *MiddlewareTestSuite) TestSendTransferNoContract() {
 	one := sdk.NewInt(1)
-	suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, one))
+	_, err := suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, one))
+	suite.Require().NoError(err)
 }
 
 // Test that Receiving IBC messages works when the middleware isn't configured
 func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 	one := sdk.NewInt(1)
-	suite.AssertReceive(true, suite.MessageFromBToA(sdk.DefaultBondDenom, one))
+	_, err := suite.AssertReceive(true, suite.MessageFromBToA(sdk.DefaultBondDenom, one))
+	suite.Require().NoError(err)
 }
 
 func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed sdk.Int) {
@@ -315,7 +318,8 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 
 	// send 2.5% (quota is 5%)
 	fmt.Printf("Sending %s from A to B. Represented in chain A as wrapped? %v\n", denom, !native)
-	suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount))
+	_, err := suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount))
+	suite.Require().NoError(err)
 
 	// send 2.5% (quota is 5%)
 	fmt.Println("trying to send ", sendAmount)
@@ -330,7 +334,8 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	suite.Require().Equal(used, sendAmount.MulRaw(2))
 
 	// Sending above the quota should fail. We use 2 instead of 1 here to avoid rounding issues
-	suite.AssertSend(false, suite.MessageFromAToB(denom, sdk.NewInt(2)))
+	_, err = suite.AssertSend(false, suite.MessageFromAToB(denom, sdk.NewInt(2)))
+	suite.Require().Error(err)
 	return attrs
 }
 
@@ -361,14 +366,16 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 
 	// Move chainA forward one block
 	suite.chainA.NextBlock()
-	suite.chainA.SenderAccount.SetSequence(suite.chainA.SenderAccount.GetSequence() + 1)
+	err = suite.chainA.SenderAccount.SetSequence(suite.chainA.SenderAccount.GetSequence() + 1)
+	suite.Require().NoError(err)
 
 	// Reset time + one second
 	oneSecAfterReset := resetTime.Add(time.Second)
 	suite.coordinator.IncrementTimeBy(oneSecAfterReset.Sub(suite.coordinator.CurrentTime))
 
 	// Sending should succeed again
-	suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1)))
+	_, err = suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1)))
+	suite.Require().NoError(err)
 }
 
 // Test rate limiting on receives
@@ -405,13 +412,16 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 
 	// receive 2.5% (quota is 5%)
 	fmt.Printf("Sending %s from B to A. Represented in chain A as wrapped? %v\n", sendDenom, native)
-	suite.AssertReceive(true, suite.MessageFromBToA(sendDenom, sendAmount))
+	_, err := suite.AssertReceive(true, suite.MessageFromBToA(sendDenom, sendAmount))
+	suite.Require().NoError(err)
 
 	// receive 2.5% (quota is 5%)
-	suite.AssertReceive(true, suite.MessageFromBToA(sendDenom, sendAmount))
+	_, err = suite.AssertReceive(true, suite.MessageFromBToA(sendDenom, sendAmount))
+	suite.Require().NoError(err)
 
 	// Sending above the quota should fail. We send 2 instead of 1 to account for rounding errors
-	suite.AssertReceive(false, suite.MessageFromBToA(sendDenom, sdk.NewInt(2)))
+	_, err = suite.AssertReceive(false, suite.MessageFromBToA(sendDenom, sdk.NewInt(2)))
+	suite.Require().NoError(err)
 }
 
 func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimitingNative() {
@@ -437,7 +447,8 @@ func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 
 	// send 1 token.
 	// If the contract doesn't have a quota for the current channel, all transfers are allowed
-	suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1)))
+	_, err := suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1)))
+	suite.Require().NoError(err)
 }
 
 // Test rate limits are reverted if a "send" fails
@@ -473,11 +484,13 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	suite.Require().NoError(err)
 
 	// Sending again fails as the quota is filled
-	suite.AssertSend(false, suite.MessageFromAToB(sdk.DefaultBondDenom, quota))
+	_, err = suite.AssertSend(false, suite.MessageFromAToB(sdk.DefaultBondDenom, quota))
+	suite.Require().Error(err)
 
 	// Move forward one block
 	suite.chainA.NextBlock()
-	suite.chainA.SenderAccount.SetSequence(suite.chainA.SenderAccount.GetSequence() + 1)
+	err = suite.chainA.SenderAccount.SetSequence(suite.chainA.SenderAccount.GetSequence() + 1)
+	suite.Require().NoError(err)
 	suite.chainA.Coordinator.IncrementTime()
 
 	// Update both clients
@@ -494,6 +507,7 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 
 	// recv in chain b
 	res, err = suite.path.EndpointB.RecvPacketWithResult(packet)
+	suite.Require().NoError(err)
 
 	// get the ack from the chain b's response
 	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
@@ -504,7 +518,8 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	suite.Require().NoError(err)
 
 	// We should be able to send again because the packet that exceeded the quota failed and has been reverted
-	suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1)))
+	_, err = suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1)))
+	suite.Require().NoError(err)
 }
 
 func (suite *MiddlewareTestSuite) TestUnsetRateLimitingContract() {

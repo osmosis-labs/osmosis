@@ -20,9 +20,9 @@ import (
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
@@ -276,11 +276,12 @@ func (n *NodeConfig) QueryConcentratedPositions(address string) []model.Position
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
-	var positionsResponse query.QueryUserPositionsResponse
+	var positionsResponse queryproto.UserPositionsResponse
 	err = util.Cdc.UnmarshalJSON(bz, &positionsResponse)
 	require.NoError(n.t, err)
 	return positionsResponse.Positions
 }
+
 func (n *NodeConfig) QueryConcentratedPool(poolId uint64) (cltypes.ConcentratedPoolExtension, error) {
 	path := fmt.Sprintf("/osmosis/poolmanager/v1beta1/pools/%d", poolId)
 	bz, err := n.QueryGRPCGateway(path)
@@ -469,6 +470,19 @@ func (n *NodeConfig) QueryCurrentEpoch(identifier string) int64 {
 	err = util.Cdc.UnmarshalJSON(bz, &response)
 	require.NoError(n.t, err)
 	return response.CurrentEpoch
+}
+
+func (n *NodeConfig) QueryConcentratedPooIdLinkFromCFMM(cfmmPoolId uint64) uint64 {
+	path := fmt.Sprintf("/osmosis/gamm/v1beta1/concentrated_pool_id_link_from_cfmm/%d", cfmmPoolId)
+
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	//nolint:staticcheck
+	var response gammtypes.QueryConcentratedPoolIdLinkFromCFMMResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err)
+	return response.ConcentratedPoolId
 }
 
 func (n *NodeConfig) QueryArithmeticTwapToNow(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) (sdk.Dec, error) {

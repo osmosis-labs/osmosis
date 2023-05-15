@@ -22,7 +22,8 @@ func (suite *KeeperTestSuite) preparePool(denom string) (poolID uint64, pool poo
 	)
 	pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolID)
 	suite.Require().NoError(err)
-	suite.ExecuteUpgradeFeeTokenProposal(denom, poolID)
+	err = suite.ExecuteUpgradeFeeTokenProposal(denom, poolID)
+	suite.Require().NoError(err)
 	return poolID, pool
 }
 
@@ -88,8 +89,10 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 
 				// Deposit some fee amount (non-native-denom) to the fee module account
 				_, _, addr0 := testdata.KeyTestPubAddr()
-				simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, sdk.Coins{coin})
-				suite.App.BankKeeper.SendCoinsFromAccountToModule(suite.Ctx, addr0, types.NonNativeFeeCollectorName, sdk.Coins{coin})
+				err = simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, sdk.Coins{coin})
+				suite.NoError(err)
+				err = suite.App.BankKeeper.SendCoinsFromAccountToModule(suite.Ctx, addr0, types.NonNativeFeeCollectorName, sdk.Coins{coin})
+				suite.NoError(err)
 			}
 
 			// checks the balance of the non-native denom in module account
@@ -99,7 +102,8 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 			// End of epoch, so all the non-osmo fee amount should be swapped to osmo and transfer to fee module account
 			params := suite.App.IncentivesKeeper.GetParams(suite.Ctx)
 			futureCtx := suite.Ctx.WithBlockTime(time.Now().Add(time.Minute))
-			suite.App.TxFeesKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, int64(1))
+			err := suite.App.TxFeesKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, int64(1))
+			suite.NoError(err)
 
 			// check the balance of the native-basedenom in module
 			moduleAddrFee := suite.App.AccountKeeper.GetModuleAddress(types.FeeCollectorName)

@@ -20,6 +20,8 @@ import (
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
+var DefaultGammAsset = "gamm/pool/1"
+
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 

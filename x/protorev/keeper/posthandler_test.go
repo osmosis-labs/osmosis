@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"strconv"
 	"strings"
 	"testing"
 
@@ -442,8 +443,10 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 	}
 
 	// Ensure that the max points per tx is enough for the test suite
-	suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 18)
-	suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 100)
+	err := suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 18)
+	suite.Require().NoError(err)
+	err = suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 100)
+	suite.Require().NoError(err)
 	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2})
 
 	for _, tc := range tests {
@@ -467,18 +470,22 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				suite.clientCtx.TxConfig,
 				accSeqs[0],
 			)
-			simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, tc.params.txFee)
+			err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, tc.params.txFee)
+			suite.Require().NoError(err)
 
 			var tx authsigning.Tx
 			var msgs []sdk.Msg
 
 			// Lower the max points per tx and block if the test cases are doomsday testing
 			if strings.Contains(tc.name, "Tx Pool Points Limit") {
-				suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 5)
+				err := suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 5)
+				suite.Require().NoError(err)
 			} else if strings.Contains(tc.name, "Block Pool Points Limit - Within a tx") {
-				suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 35)
+				err := suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 35)
+				suite.Require().NoError(err)
 			} else if strings.Contains(tc.name, "Block Pool Points Limit Already Reached") {
-				suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 33)
+				err := suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 33)
+				suite.Require().NoError(err)
 			}
 
 			if strings.Contains(tc.name, "Doomsday") {
@@ -486,8 +493,10 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 					msgs = append(msgs, tc.params.msgs...)
 				}
 
-				txBuilder.SetMsgs(msgs...)
-				txBuilder.SetSignatures(sigV2)
+				err := txBuilder.SetMsgs(msgs...)
+				suite.Require().NoError(err)
+				err = txBuilder.SetSignatures(sigV2)
+				suite.Require().NoError(err)
 				txBuilder.SetMemo("")
 				txBuilder.SetFeeAmount(tc.params.txFee)
 				txBuilder.SetGasLimit(gasLimit)
@@ -507,7 +516,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 			gasBefore := suite.Ctx.GasMeter().GasConsumed()
 			gasLimitBefore := suite.Ctx.GasMeter().Limit()
 
-			_, err := posthandlerProtoRev(suite.Ctx, tx, false)
+			_, err = posthandlerProtoRev(suite.Ctx, tx, false)
 
 			gasAfter := suite.Ctx.GasMeter().GasConsumed()
 			gasLimitAfter := suite.Ctx.GasMeter().Limit()
@@ -534,17 +543,27 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				suite.Require().NoError(err)
 				suite.Require().Equal(tc.params.expectedPoolPoints, pointCount)
 
+				_, remainingBlockPoolPoints, err := suite.App.ProtoRevKeeper.GetRemainingPoolPoints(suite.Ctx)
+				suite.Require().NoError(err)
+
+				lastEvent := suite.Ctx.EventManager().Events()[len(suite.Ctx.EventManager().Events())-1]
+				for _, attr := range lastEvent.Attributes {
+					if string(attr.Key) == "block_pool_points_remaining" {
+						suite.Require().Equal(strconv.FormatUint(remainingBlockPoolPoints, 10), string(attr.Value))
+					}
+				}
 			} else {
 				suite.Require().Error(err)
 			}
 
 			// Reset the max points per tx and block
 			if strings.Contains(tc.name, "Tx Pool Points Limit") {
-				suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 18)
+				err = suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 18)
+				suite.Require().NoError(err)
 			} else if strings.Contains(tc.name, "Block Pool Points Limit") {
-				suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 100)
+				err = suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 100)
+				suite.Require().NoError(err)
 			}
-
 		})
 	}
 }
@@ -905,7 +924,6 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-
 			suite.Ctx = suite.Ctx.WithIsCheckTx(tc.params.isCheckTx)
 			suite.Ctx = suite.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 			suite.Ctx = suite.Ctx.WithMinGasPrices(tc.params.minGasPrices)
@@ -926,11 +944,14 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 				suite.clientCtx.TxConfig,
 				accSeqs[0],
 			)
-			simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, tc.params.txFee)
+			err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, tc.params.txFee)
+			suite.Require().NoError(err)
 
 			// Can't use test suite BuildTx because it doesn't allow for multiple msgs
-			txBuilder.SetMsgs(msgs...)
-			txBuilder.SetSignatures(sigV2)
+			err = txBuilder.SetMsgs(msgs...)
+			suite.Require().NoError(err)
+			err = txBuilder.SetSignatures(sigV2)
+			suite.Require().NoError(err)
 			txBuilder.SetMemo("")
 			txBuilder.SetFeeAmount(tc.params.txFee)
 			txBuilder.SetGasLimit(gasLimit)
@@ -950,6 +971,7 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 // messages to be sent, and the expected number of trades. It then runs the benchmark and checks the
 // number of trades after the post handler is run.
 func benchmarkWrapper(b *testing.B, msgs []sdk.Msg, expectedTrades int) {
+	b.Helper()
 	b.ReportAllocs()
 	b.ResetTimer()
 
@@ -957,7 +979,10 @@ func benchmarkWrapper(b *testing.B, msgs []sdk.Msg, expectedTrades int) {
 		suite, tx, postHandler := setUpBenchmarkSuite(msgs)
 
 		b.StartTimer()
-		postHandler(suite.Ctx, tx, false)
+		_, err := postHandler(suite.Ctx, tx, false)
+		if err != nil {
+			b.Fatal(err)
+		}
 		b.StopTimer()
 
 		numberTrades, err := suite.App.ProtoRevKeeper.GetNumberOfTrades(suite.Ctx)
@@ -982,14 +1007,16 @@ func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.
 
 	// Set up the app to the correct state to run the test
 	suite.Ctx = suite.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
-	suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 40)
+	err := suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 40)
+	suite.Require().NoError(err)
 	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2})
 
 	// Init a new account and fund it with tokens for gas fees
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
 	acc1 := suite.App.AccountKeeper.NewAccountWithAddress(suite.Ctx, addr0)
 	suite.App.AccountKeeper.SetAccount(suite.Ctx, acc1)
-	simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))))
+	err = simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))))
+	suite.Require().NoError(err)
 
 	// Build the tx
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}

@@ -7,7 +7,6 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestValidateLockForForceUnlock() {
-
 	locks := suite.SetupLocks(sdk.AccAddress([]byte("addr1---------------")))
 
 	tests := []struct {
@@ -211,7 +210,6 @@ func (suite *KeeperTestSuite) TestIsValidatorSetEqual() {
 			suite.Require().Equal(test.expectEqual, isEqual)
 		})
 	}
-
 }
 
 func (suite *KeeperTestSuite) TestIsPreferenceValid() {

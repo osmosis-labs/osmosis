@@ -435,6 +435,23 @@ osmosisd tx gamm swap-exact-amount-out 140530uosmo 407239 --swap-route-pool-ids 
 [comment]: <> (Other resources Creating a liquidity bootstrapping pool and Creating a pool with a pool file)
 :::
 
+### Migrate-position
+
+Migrate unlocked gamm shares to corresponding concentrated liquidity pool.
+
+
+```sh
+osmosisd tx gamm migrate-position [unlocked-shares] [flags]
+```
+
+::: details Example
+
+Migrate 10000000000000000000 unlocked gamm shares from pool 2 to the canonical CL pool:
+
+```sh
+ osmosisd tx gamm migrate-position 10000000000000000000gamm/pool/2 --min-amounts-out=100uosmo,100uusdc --from pool -b block --keyring-backend test --chain-id localosmosis --fees 1000000uosmo --gas 700000
+```
+:::
 ## Queries
 
 ## Queries
@@ -599,12 +616,11 @@ osmosisd query gamm total-share 1
 
 ## Events
 
-There are 5 types of events that exist in GAMM:
+There are 4 types of events that exist in GAMM:
 
 * `sdk.EventTypeMessage` - "message"
 * `types.TypeEvtPoolJoined` - "pool_joined"
 * `types.TypeEvtPoolExited` - "pool_exited"
-* `types.TypeEvtPoolCreated` - "pool_created"
 * `types.TypeEvtTokenSwapped` - "token_swapped"
 
 ### `sdk.EventTypeMessage`
@@ -642,11 +658,6 @@ It consists of the following attributes:
   * The value is the pool id of the pool where swap occurs.
 * `types.AttributeKeyTokensOut`
   * The value is the string representation of the tokens being swapped out.
-
-### `types.TypeEvtPoolCreated`
-
-This event is emitted after `CreatePool` completes creating
-the requested pool successfully.
 
 ### `types.TypeEvtTokenSwapped`
 

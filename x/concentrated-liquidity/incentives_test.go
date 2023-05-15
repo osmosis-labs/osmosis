@@ -4,14 +4,19 @@ import (
 	"fmt"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 )
 
 var (
@@ -22,8 +27,6 @@ var (
 	testAddressTwo   = sdk.MustAccAddressFromBech32("osmo18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv")
 	testAddressThree = sdk.MustAccAddressFromBech32("osmo1qwexv7c6sm95lwhzn9027vyu2ccneaqad4w8ka")
 	testAddressFour  = sdk.MustAccAddressFromBech32("osmo14hcxlnwlqtq75ttaxf674vk6mafspg8xwgnn53")
-
-	testAccumOne = "testAccumOne"
 
 	// Note: lexicographic order is denomFour, denomOne, denomThree, denomTwo
 	testDenomOne   = "denomOne"
@@ -107,9 +110,15 @@ var (
 		MinUptime: testUptimeFour,
 	}
 
-	testQualifyingDepositsOne   = sdk.NewInt(50)
-	testQualifyingDepositsTwo   = sdk.NewInt(100)
-	testQualifyingDepositsThree = sdk.NewInt(399)
+	testQualifyingDepositsOne = sdk.NewInt(50)
+
+	defaultBalancerAssets = []balancer.PoolAsset{
+		{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
+		{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(100))},
+	}
+	defaultConcentratedAssets = sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)))
+	defaultBalancerPoolParams = balancer.PoolParams{SwapFee: sdk.NewDec(0), ExitFee: sdk.NewDec(0)}
+	invalidPoolId             = uint64(10)
 )
 
 type ExpectedUptimes struct {
@@ -180,24 +189,20 @@ func expectedIncentivesFromRate(denom string, rate sdk.Dec, timeElapsed time.Dur
 // Returns value as truncated sdk.Coins as the primary use of this helper is testing higher level incentives functions such as claiming.
 func expectedIncentivesFromUptimeGrowth(uptimeGrowths []sdk.DecCoins, positionShares sdk.Dec, timeInPool time.Duration, multiplier sdk.Int) sdk.Coins {
 	// Sum up rewards from all inputs
-	totalRewards := sdk.DecCoins(nil)
+	totalRewards := sdk.Coins(nil)
 	for uptimeIndex, uptimeGrowth := range uptimeGrowths {
 		if timeInPool >= types.SupportedUptimes[uptimeIndex] {
-			totalRewards = totalRewards.Add(uptimeGrowth...)
+			curRewards := uptimeGrowth.MulDecTruncate(positionShares).MulDecTruncate(multiplier.ToDec())
+			totalRewards = totalRewards.Add(sdk.NormalizeCoins(curRewards)...)
 		}
 	}
 
-	// Calculate position's pro-rata share by multiplying growth by position's shares
-	positionRewards := sdk.Coins(nil)
-	for _, rewardToken := range totalRewards {
-		positionRewards = positionRewards.Add(sdk.NewCoin(rewardToken.Denom, rewardToken.Amount.Mul(positionShares).TruncateInt().Mul(multiplier)))
-	}
-
-	return positionRewards
+	return totalRewards
 }
 
 func chargeIncentive(incentiveRecord types.IncentiveRecord, timeElapsed time.Duration) types.IncentiveRecord {
-	incentivesEmitted := incentiveRecord.IncentiveRecordBody.EmissionRate.Mul(sdk.NewDec(int64(timeElapsed)).Quo(sdk.MustNewDecFromStr("1000000000")))
+	secToNanoSec := int64(1000000000)
+	incentivesEmitted := incentiveRecord.IncentiveRecordBody.EmissionRate.Mul(sdk.NewDec(int64(timeElapsed)).Quo(sdk.NewDec(secToNanoSec)))
 	incentiveRecord.IncentiveRecordBody.RemainingAmount = incentiveRecord.IncentiveRecordBody.RemainingAmount.Sub(incentivesEmitted)
 
 	return incentiveRecord
@@ -230,18 +235,6 @@ func addDecCoinsArray(decCoinsArrayA []sdk.DecCoins, decCoinsArrayB []sdk.DecCoi
 	}
 
 	return finalDecCoinArray, nil
-}
-
-func createIncentiveRecord(incentiveDenom string, remainingAmt, emissionRate sdk.Dec, startTime time.Time, minUpTime time.Duration) types.IncentiveRecord {
-	return types.IncentiveRecord{
-		IncentiveDenom: incentiveDenom,
-		IncentiveRecordBody: types.IncentiveRecordBody{
-			RemainingAmount: remainingAmt,
-			EmissionRate:    emissionRate,
-			StartTime:       startTime,
-		},
-		MinUptime: minUpTime,
-	}
 }
 
 func withDenom(record types.IncentiveRecord, denom string) types.IncentiveRecord {
@@ -353,17 +346,17 @@ func (s *KeeperTestSuite) TestGetUptimeAccumulatorName() {
 		"pool id 1, uptime id 0": {
 			poolId:            defaultPoolId,
 			uptimeIndex:       uint64(0),
-			expectedAccumName: string(types.KeyUptimeAccumulator(1, 0)),
+			expectedAccumName: types.KeyUptimeAccumulator(1, 0),
 		},
 		"pool id 1, uptime id 999": {
 			poolId:            defaultPoolId,
 			uptimeIndex:       uint64(999),
-			expectedAccumName: string(types.KeyUptimeAccumulator(1, 999)),
+			expectedAccumName: types.KeyUptimeAccumulator(1, 999),
 		},
 		"pool id 999, uptime id 1": {
 			poolId:            uint64(999),
 			uptimeIndex:       uint64(1),
-			expectedAccumName: string(types.KeyUptimeAccumulator(999, 1)),
+			expectedAccumName: types.KeyUptimeAccumulator(999, 1),
 		},
 	}
 
@@ -735,17 +728,17 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 // 4. Ensure uptime accumulators and incentive records behave as expected
 func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 	defaultTestUptime := types.SupportedUptimes[2]
+	lockableDurations := s.App.PoolIncentivesKeeper.GetLockableDurations(s.Ctx)
+	longestLockableDuration := lockableDurations[len(lockableDurations)-1]
 	type updateAccumToNow struct {
-		poolId               uint64
-		accumUptime          time.Duration
-		qualifyingLiquidity  sdk.Dec
-		timeElapsed          time.Duration
-		poolIncentiveRecords []types.IncentiveRecord
+		poolId                      uint64
+		timeElapsed                 time.Duration
+		poolIncentiveRecords        []types.IncentiveRecord
+		canonicalBalancerPoolAssets []balancer.PoolAsset
 
-		expectedResult           sdk.DecCoins
-		expectedUptimeDeltas     []sdk.DecCoins
+		isInvalidBalancerPool    bool
 		expectedIncentiveRecords []types.IncentiveRecord
-		expectedPass             bool
+		expectedError            error
 	}
 	tests := map[string]updateAccumToNow{
 		"one incentive record": {
@@ -757,7 +750,6 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				// We deduct incentives from the record for the period it emitted incentives
 				chargeIncentive(incentiveRecordOne, defaultTestUptime+time.Hour),
 			},
-			expectedPass: true,
 		},
 		"two incentive records, each with qualifying liquidity": {
 			poolId:               defaultPoolId,
@@ -769,7 +761,6 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				chargeIncentive(incentiveRecordOne, defaultTestUptime+time.Hour),
 				chargeIncentive(incentiveRecordTwo, defaultTestUptime+time.Hour),
 			},
-			expectedPass: true,
 		},
 		"three incentive records, each with qualifying liquidity": {
 			poolId:               defaultPoolId,
@@ -783,9 +774,8 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				chargeIncentive(incentiveRecordTwo, defaultTestUptime+time.Hour),
 				chargeIncentive(incentiveRecordThree, defaultTestUptime+time.Hour),
 			},
-			expectedPass: true,
 		},
-		"two incentive records, only one with qualifying liquidity": {
+		"four incentive records, only three with qualifying liquidity": {
 			poolId:               defaultPoolId,
 			timeElapsed:          time.Hour,
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour},
@@ -800,7 +790,109 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				// the accumulator.
 				chargeIncentive(incentiveRecordFour, defaultTestUptime+time.Hour),
 			},
-			expectedPass: true,
+		},
+		"[reward splitting] one incentive record with qualifying liquidity": {
+			poolId:               defaultPoolId,
+			timeElapsed:          time.Hour * 1000,
+			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
+			canonicalBalancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("eth", sdk.NewInt(100000000))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("usdc", sdk.NewInt(100000000))},
+			},
+
+			expectedIncentiveRecords: []types.IncentiveRecord{
+				// We deduct incentives from the record for the period it emitted incentives
+				chargeIncentive(incentiveRecordOne, defaultTestUptime+(time.Hour*1000)),
+			},
+		},
+		"[reward splitting] four incentive records, only three with qualifying liquidity": {
+			poolId:               defaultPoolId,
+			timeElapsed:          time.Hour * 1000,
+			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour},
+			canonicalBalancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("eth", sdk.NewInt(100000000))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("usdc", sdk.NewInt(100000000))},
+			},
+
+			expectedIncentiveRecords: []types.IncentiveRecord{
+				// We only deduct from the first three incentive records since the last doesn't emit anything
+				// Note that records are in ascending order by uptime index
+				chargeIncentive(incentiveRecordOne, defaultTestUptime+(time.Hour*1000)),
+				chargeIncentive(incentiveRecordTwo, defaultTestUptime+(time.Hour*1000)),
+				chargeIncentive(incentiveRecordThree, defaultTestUptime+(time.Hour*1000)),
+				// We charge even for uptimes the position has technically not qualified for since its liquidity is on
+				// the accumulator.
+				chargeIncentive(incentiveRecordFour, defaultTestUptime+(time.Hour*1000)),
+			},
+		},
+		"[reward splitting] three incentive records, each with qualifying liquidity and small amount of time elapsed": {
+			poolId:               defaultPoolId,
+			timeElapsed:          time.Hour,
+			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree},
+			canonicalBalancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("eth", sdk.NewInt(432218877))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("usdc", sdk.NewInt(19836275))},
+			},
+
+			expectedIncentiveRecords: []types.IncentiveRecord{
+				// We deduct incentives from each record since there are positions for all three
+				// Note that records are in ascending order by uptime index
+				chargeIncentive(incentiveRecordOne, defaultTestUptime+time.Hour),
+				chargeIncentive(incentiveRecordTwo, defaultTestUptime+time.Hour),
+				chargeIncentive(incentiveRecordThree, defaultTestUptime+time.Hour),
+			},
+		},
+
+		// Error catching
+
+		"invalid pool ID": {
+			poolId:               invalidPoolId,
+			timeElapsed:          time.Hour,
+			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
+
+			expectedIncentiveRecords: []types.IncentiveRecord{
+				// We deduct incentives from the record for the period it emitted incentives
+				chargeIncentive(incentiveRecordOne, defaultTestUptime+time.Hour),
+			},
+			expectedError: types.PoolNotFoundError{PoolId: invalidPoolId},
+		},
+		"invalid canonical balancer pool (incorrect denoms)": {
+			poolId:                      defaultPoolId,
+			timeElapsed:                 time.Hour,
+			poolIncentiveRecords:        []types.IncentiveRecord{incentiveRecordOne},
+			canonicalBalancerPoolAssets: defaultBalancerAssets,
+			isInvalidBalancerPool:       true,
+
+			expectedIncentiveRecords: []types.IncentiveRecord{
+				// We deduct incentives from the record for the period it emitted incentives
+				chargeIncentive(incentiveRecordOne, defaultTestUptime+time.Hour),
+			},
+			expectedError: types.ErrInvalidBalancerPoolLiquidityError{
+				ClPoolId:              1,
+				BalancerPoolId:        2,
+				BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(100)), sdk.NewCoin("foo", sdk.NewInt(100))),
+			},
+		},
+		"invalid canonical balancer pool (incorrect number of assets)": {
+			poolId:               defaultPoolId,
+			timeElapsed:          time.Hour,
+			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
+			canonicalBalancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(100))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("baz", sdk.NewInt(100))},
+			},
+			isInvalidBalancerPool: true,
+
+			expectedIncentiveRecords: []types.IncentiveRecord{
+				// We deduct incentives from the record for the period it emitted incentives
+				chargeIncentive(incentiveRecordOne, defaultTestUptime+time.Hour),
+			},
+			expectedError: types.ErrInvalidBalancerPoolLiquidityError{
+				ClPoolId:              1,
+				BalancerPoolId:        2,
+				BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(100)), sdk.NewCoin("baz", sdk.NewInt(100)), sdk.NewCoin("foo", sdk.NewInt(100))),
+			},
 		},
 	}
 
@@ -814,18 +906,56 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			// Set up test pool
 			clPool := s.PrepareConcentratedPool()
 
-			// Initialize test incentives on the pool
+			// If applicable, create and link a canonical balancer pool
+			balancerPoolId := uint64(0)
+			if tc.canonicalBalancerPoolAssets != nil {
+				balancerPoolId = s.PrepareCustomBalancerPool(tc.canonicalBalancerPoolAssets, defaultBalancerPoolParams)
+				s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx,
+					gammtypes.MigrationRecords{
+						BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
+							{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()},
+						},
+					},
+				)
+			}
+
+			// Initialize test incentives on the pool.
 			err := clKeeper.SetMultipleIncentiveRecords(s.Ctx, tc.poolIncentiveRecords)
 			s.Require().NoError(err)
 
+			// Since the canonical balancer pool automatically claims, ensure that the pool is properly funded if the pool exists.
+			if tc.canonicalBalancerPoolAssets != nil {
+				for _, incentive := range tc.poolIncentiveRecords {
+					s.FundAcc(clPool.GetIncentivesAddress(), sdk.NewCoins(sdk.NewCoin(incentive.IncentiveDenom, incentive.IncentiveRecordBody.RemainingAmount.TruncateInt())))
+				}
+			}
+
 			// Get initial uptime accum values for comparison
-			initUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, tc.poolId)
+			initUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, clPool.GetId())
 			s.Require().NoError(err)
 
 			// Add qualifying and non-qualifying liquidity to the pool
-			s.FundAcc(testAddressOne, sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), testQualifyingDepositsOne), sdk.NewCoin(clPool.GetToken1(), testQualifyingDepositsOne)))
-			_, _, _, qualifyingLiquidity, _, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressOne, testQualifyingDepositsOne, testQualifyingDepositsOne, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1)
-			s.Require().NoError(err)
+			qualifyingLiquidity := sdk.ZeroDec()
+			qualifyingBalancerLiquidity := sdk.ZeroDec()
+			if !tc.isInvalidBalancerPool {
+				depositedCoins := sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), testQualifyingDepositsOne), sdk.NewCoin(clPool.GetToken1(), testQualifyingDepositsOne))
+				s.FundAcc(testAddressOne, depositedCoins)
+				_, _, _, qualifyingLiquidity, _, err = clKeeper.CreatePosition(s.Ctx, clPool.GetId(), testAddressOne, depositedCoins, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-100, clPool.GetCurrentTick().Int64()+100)
+				s.Require().NoError(err)
+
+				// If a canonical balancer pool exists, we add its respective shares to the qualifying amount as well.
+				clPool, err = clKeeper.GetPoolById(s.Ctx, clPool.GetId())
+				s.Require().NoError(err)
+				if tc.canonicalBalancerPoolAssets != nil {
+					qualifyingBalancerLiquidityPreDiscount := math.GetLiquidityFromAmounts(clPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, tc.canonicalBalancerPoolAssets[0].Token.Amount, tc.canonicalBalancerPoolAssets[1].Token.Amount)
+					qualifyingBalancerLiquidity = (sdk.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingBalancerLiquidityPreDiscount)
+					qualifyingLiquidity = qualifyingLiquidity.Add(qualifyingBalancerLiquidity)
+
+					actualLiquidityAdded0, actualLiquidityAdded1, err := clPool.CalcActualAmounts(s.Ctx, types.MinTick, types.MaxTick, qualifyingBalancerLiquidity)
+					s.Require().NoError(err)
+					s.FundAcc(clPool.GetIncentivesAddress(), sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), actualLiquidityAdded0.TruncateInt()), sdk.NewCoin(clPool.GetToken1(), actualLiquidityAdded1.TruncateInt())))
+				}
+			}
 
 			// Let enough time elapse to qualify the position for the first three supported uptimes
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(defaultTestUptime))
@@ -836,46 +966,80 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			// System under test
 			err = clKeeper.UpdateUptimeAccumulatorsToNow(s.Ctx, tc.poolId)
 
-			if tc.expectedPass {
-				s.Require().NoError(err)
-
-				// Get updated pool for testing purposes
-				clPool, err := clKeeper.GetPoolById(s.Ctx, tc.poolId)
-				s.Require().NoError(err)
-
-				// Get new uptime accum values for comparison
-				newUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, tc.poolId)
-				s.Require().NoError(err)
-
-				// Calculate expected uptime deltas using qualifying liquidity deltas
-				expectedUptimeDeltas := []sdk.DecCoins{}
-				for uptimeIndex := range newUptimeAccumValues {
-					// Calculate expected incentives for the current uptime by emitting incentives from
-					// all incentive records for the it
-					curUptimeAccruedIncentives := cl.EmptyCoins
-					for _, poolRecord := range tc.poolIncentiveRecords {
-						if poolRecord.MinUptime == types.SupportedUptimes[uptimeIndex] {
-							// We set the expected accrued incentives based on the total time that has elapsed since position creation
-							curUptimeAccruedIncentives = curUptimeAccruedIncentives.Add(sdk.NewDecCoins(expectedIncentivesFromRate(poolRecord.IncentiveDenom, poolRecord.IncentiveRecordBody.EmissionRate, defaultTestUptime+tc.timeElapsed, qualifyingLiquidity))...)
-						}
-					}
-					expectedUptimeDeltas = append(expectedUptimeDeltas, curUptimeAccruedIncentives)
-				}
-
-				// Ensure that each accumulator value changes by the correct amount
-				for uptimeIndex := range newUptimeAccumValues {
-					uptimeDelta := newUptimeAccumValues[uptimeIndex].Sub(initUptimeAccumValues[uptimeIndex])
-					s.Require().Equal(expectedUptimeDeltas[uptimeIndex], uptimeDelta)
-				}
-
-				// Ensure that LastLiquidityUpdate field is updated for pool
-				s.Require().Equal(s.Ctx.BlockTime(), clPool.GetLastLiquidityUpdate())
-				// Ensure that pool's IncentiveRecords are updated to reflect emitted incentives
-				updatedIncentiveRecords, err := clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, tc.poolId)
-				s.Require().NoError(err)
-				s.Require().Equal(tc.expectedIncentiveRecords, updatedIncentiveRecords)
-			} else {
+			if tc.expectedError != nil {
 				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
+
+				// Ensure accumulators remain unchanged
+				newUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, clPool.GetId())
+				s.Require().NoError(err)
+				s.Require().Equal(initUptimeAccumValues, newUptimeAccumValues)
+
+				// Ensure incentive records remain unchanged
+				updatedIncentiveRecords, err := clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPool.GetId())
+				s.Require().NoError(err)
+				s.Require().Equal(tc.poolIncentiveRecords, updatedIncentiveRecords)
+
+				return
+			}
+
+			s.Require().NoError(err)
+
+			// Get updated pool for testing purposes
+			clPool, err = clKeeper.GetPoolById(s.Ctx, tc.poolId)
+			s.Require().NoError(err)
+
+			// Calculate expected uptime deltas using qualifying liquidity deltas.
+			// Recall that uptime accumulators track emitted incentives / qualifying liquidity.
+			expectedUptimeDeltas := []sdk.DecCoins{}
+			for _, curSupportedUptime := range types.SupportedUptimes {
+				// Calculate expected incentives for the current uptime by emitting incentives from
+				// all incentive records to their respective uptime accumulators in the pool.
+				// TODO: find a cleaner way to calculate this that does not involve iterating over all incentive records for each uptime accum.
+				curUptimeAccruedIncentives := cl.EmptyCoins
+				for _, poolRecord := range tc.poolIncentiveRecords {
+					if poolRecord.MinUptime == curSupportedUptime {
+						// We set the expected accrued incentives based on the total time that has elapsed since position creation
+						curUptimeAccruedIncentives = curUptimeAccruedIncentives.Add(sdk.NewDecCoins(expectedIncentivesFromRate(poolRecord.IncentiveDenom, poolRecord.IncentiveRecordBody.EmissionRate, defaultTestUptime+tc.timeElapsed, qualifyingLiquidity))...)
+					}
+				}
+				expectedUptimeDeltas = append(expectedUptimeDeltas, curUptimeAccruedIncentives)
+			}
+
+			// Get new uptime accum values for comparison
+			newUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, tc.poolId)
+			s.Require().NoError(err)
+
+			// Ensure that each accumulator value changes by the correct amount
+			totalUptimeDeltas := sdk.NewDecCoins()
+			for uptimeIndex := range newUptimeAccumValues {
+				uptimeDelta := newUptimeAccumValues[uptimeIndex].Sub(initUptimeAccumValues[uptimeIndex])
+				s.Require().Equal(expectedUptimeDeltas[uptimeIndex], uptimeDelta)
+
+				totalUptimeDeltas = totalUptimeDeltas.Add(uptimeDelta...)
+			}
+
+			// Ensure that LastLiquidityUpdate field is updated for pool
+			s.Require().Equal(s.Ctx.BlockTime(), clPool.GetLastLiquidityUpdate())
+
+			// Ensure that pool's IncentiveRecords are updated to reflect emitted incentives
+			updatedIncentiveRecords, err := clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, tc.poolId)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedIncentiveRecords, updatedIncentiveRecords)
+
+			// If applicable, get gauge for canonical balancer pool and ensure it increased by the appropriate amount.
+			if tc.canonicalBalancerPoolAssets != nil {
+				gaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerPoolId, longestLockableDuration)
+				s.Require().NoError(err)
+
+				gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
+				s.Require().NoError(err)
+
+				// Since balancer shares are added prior to actual emissions to the pool, they are already factored into the
+				// accumulator values ("totalUptimeDeltas"). We leverage this to find the expected amount of incentives emitted
+				// to the gauge.
+				expectedGaugeShares := sdk.NewCoins(sdk.NormalizeCoins(totalUptimeDeltas.MulDec(qualifyingBalancerLiquidity))...)
+				s.Require().Equal(expectedGaugeShares, gauge.Coins)
 			}
 		})
 	}
@@ -905,7 +1069,8 @@ func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
 	s.Require().Equal(emptyIncentiveRecords, poolTwoRecords)
 
 	// Ensure setting and getting a single record works with single Get and GetAll
-	clKeeper.SetIncentiveRecord(s.Ctx, incentiveRecordOne)
+	err = clKeeper.SetIncentiveRecord(s.Ctx, incentiveRecordOne)
+	s.Require().NoError(err)
 	poolOneRecord, err := clKeeper.GetIncentiveRecord(s.Ctx, clPoolOne.GetId(), incentiveRecordOne.IncentiveDenom, incentiveRecordOne.MinUptime, sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr))
 	s.Require().NoError(err)
 	s.Require().Equal(incentiveRecordOne, poolOneRecord)
@@ -923,7 +1088,8 @@ func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
 	s.Require().Equal(emptyIncentiveRecords, allRecordsPoolTwo)
 
 	// Ensure directly setting additional records don't overwrite previous ones
-	clKeeper.SetIncentiveRecord(s.Ctx, incentiveRecordTwo)
+	err = clKeeper.SetIncentiveRecord(s.Ctx, incentiveRecordTwo)
+	s.Require().NoError(err)
 	poolOneRecord, err = clKeeper.GetIncentiveRecord(s.Ctx, clPoolOne.GetId(), incentiveRecordTwo.IncentiveDenom, incentiveRecordTwo.MinUptime, sdk.MustAccAddressFromBech32(incentiveRecordTwo.IncentiveCreatorAddr))
 	s.Require().NoError(err)
 	s.Require().Equal(incentiveRecordTwo, poolOneRecord)
@@ -947,15 +1113,15 @@ func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
 	s.Require().Equal(emptyIncentiveRecords, allRecordsPoolTwo)
 }
 
-func (s *KeeperTestSuite) TestGetInitialUptimeGrowthOutsidesForTick() {
+func (s *KeeperTestSuite) TestGetInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick() {
 	expectedUptimes := getExpectedUptimes()
 
-	type getInitialUptimeGrowthOutsidesForTick struct {
+	type getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick struct {
 		poolId                          uint64
 		tick                            int64
 		expectedUptimeAccumulatorValues []sdk.DecCoins
 	}
-	tests := map[string]getInitialUptimeGrowthOutsidesForTick{
+	tests := map[string]getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick{
 		"uptime growth for tick <= currentTick": {
 			poolId:                          1,
 			tick:                            -2,
@@ -986,10 +1152,10 @@ func (s *KeeperTestSuite) TestGetInitialUptimeGrowthOutsidesForTick() {
 				uptimeAccum.AddToAccumulator(expectedUptimes.hundredTokensMultiDenom[uptimeId])
 			}
 
-			poolUptimeAccumulators, err = clKeeper.GetUptimeAccumulators(s.Ctx, tc.poolId)
+			_, err = clKeeper.GetUptimeAccumulators(s.Ctx, tc.poolId)
 			s.Require().NoError(err)
 
-			val, err := clKeeper.GetInitialUptimeGrowthOutsidesForTick(s.Ctx, tc.poolId, tc.tick)
+			val, err := clKeeper.GetInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(s.Ctx, tc.poolId, tc.tick)
 			s.Require().NoError(err)
 			s.Require().Equal(val, tc.expectedUptimeAccumulatorValues)
 		})
@@ -1012,7 +1178,6 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 		globalUptimeGrowth           []sdk.DecCoins
 
 		expectedUptimeGrowthInside []sdk.DecCoins
-		invalidTick                bool
 		expectedError              bool
 	}
 
@@ -1301,13 +1466,15 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 				currentTick := pool.GetCurrentTick().Int64()
 
 				// Update global uptime accums
-				addToUptimeAccums(s.Ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.globalUptimeGrowth)
+				err := addToUptimeAccums(s.Ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.globalUptimeGrowth)
+				s.Require().NoError(err)
 
 				// Update tick-level uptime trackers
 				s.initializeTick(s.Ctx, currentTick, tc.lowerTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.lowerTickUptimeGrowthOutside), true)
 				s.initializeTick(s.Ctx, currentTick, tc.upperTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.upperTickUptimeGrowthOutside), false)
 				pool.SetCurrentTick(sdk.NewInt(tc.currentTick))
-				s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+				err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+				s.Require().NoError(err)
 			}
 
 			// system under test
@@ -1340,7 +1507,6 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 		globalUptimeGrowth           []sdk.DecCoins
 
 		expectedUptimeGrowthOutside []sdk.DecCoins
-		invalidTick                 bool
 		expectedError               bool
 	}
 
@@ -1625,13 +1791,15 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 				currentTick := pool.GetCurrentTick().Int64()
 
 				// Update global uptime accums
-				addToUptimeAccums(s.Ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.globalUptimeGrowth)
+				err := addToUptimeAccums(s.Ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.globalUptimeGrowth)
+				s.Require().NoError(err)
 
 				// Update tick-level uptime trackers
 				s.initializeTick(s.Ctx, currentTick, tc.lowerTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.lowerTickUptimeGrowthOutside), true)
 				s.initializeTick(s.Ctx, currentTick, tc.upperTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.upperTickUptimeGrowthOutside), false)
 				pool.SetCurrentTick(sdk.NewInt(tc.currentTick))
-				s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+				err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+				s.Require().NoError(err)
 			}
 
 			// system under test
@@ -1648,7 +1816,7 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 	}
 }
 
-func (s *KeeperTestSuite) TestInitPositionUptime() {
+func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 	uptimeHelper := getExpectedUptimes()
 	type tick struct {
 		tickIndex      int64
@@ -1780,6 +1948,23 @@ func (s *KeeperTestSuite) TestInitPositionUptime() {
 			expectedInitAccumValue:   uptimeHelper.hundredTokensMultiDenom,
 			expectedUnclaimedRewards: uptimeHelper.emptyExpectedAccumValues,
 		},
+		{
+			name:              "error: negative liquidity for first position",
+			positionLiquidity: DefaultLiquidityAmt.Neg(),
+			lowerTick: tick{
+				tickIndex:      -50,
+				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
+			},
+			upperTick: tick{
+				tickIndex:      50,
+				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
+			},
+			positionId:              DefaultPositionId,
+			currentTickIndex:        sdk.ZeroInt(),
+			globalUptimeAccumValues: uptimeHelper.threeHundredTokensMultiDenom,
+
+			expectedErr: types.NonPositiveLiquidityForNewPositionError{PositionId: DefaultPositionId, LiquidityDelta: DefaultLiquidityAmt.Neg()},
+		},
 	}
 
 	for _, test := range tests {
@@ -1787,7 +1972,7 @@ func (s *KeeperTestSuite) TestInitPositionUptime() {
 			// --- Setup ---
 
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 
 			// Set blocktime to fixed UTC value for consistency
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
@@ -1798,28 +1983,33 @@ func (s *KeeperTestSuite) TestInitPositionUptime() {
 			s.initializeTick(s.Ctx, test.currentTickIndex.Int64(), test.lowerTick.tickIndex, sdk.ZeroDec(), cl.EmptyCoins, test.lowerTick.uptimeTrackers, true)
 			s.initializeTick(s.Ctx, test.currentTickIndex.Int64(), test.upperTick.tickIndex, sdk.ZeroDec(), cl.EmptyCoins, test.upperTick.uptimeTrackers, false)
 			clPool.SetCurrentTick(test.currentTickIndex)
-			s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, clPool)
+			err := s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, clPool)
+			s.Require().NoError(err)
 
 			// Initialize global uptime accums
-			addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.globalUptimeAccumValues)
+			err = addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.globalUptimeAccumValues)
+			s.Require().NoError(err)
 
 			// If applicable, set up existing position and update ticks & global accums
 			if test.existingPosition {
-				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptime(s.Ctx, clPool.GetId(), test.positionLiquidity, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultJoinTime, DefaultPositionId)
+				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptimeAccumulators(s.Ctx, clPool.GetId(), test.positionLiquidity, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultPositionId)
 				s.Require().NoError(err)
-				s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, clPool.GetId(), s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, DefaultJoinTime, test.positionLiquidity, DefaultPositionId)
+				err = s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, clPool.GetId(), s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, DefaultJoinTime, test.positionLiquidity, DefaultPositionId, DefaultUnderlyingLockId)
+				s.Require().NoError(err)
 
 				s.initializeTick(s.Ctx, test.currentTickIndex.Int64(), test.newLowerTick.tickIndex, sdk.ZeroDec(), cl.EmptyCoins, test.newLowerTick.uptimeTrackers, true)
 				s.initializeTick(s.Ctx, test.currentTickIndex.Int64(), test.newUpperTick.tickIndex, sdk.ZeroDec(), cl.EmptyCoins, test.newUpperTick.uptimeTrackers, false)
 				clPool.SetCurrentTick(test.currentTickIndex)
-				s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, clPool)
+				err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, clPool)
+				s.Require().NoError(err)
 
-				addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.addToGlobalAccums)
+				err = addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.addToGlobalAccums)
+				s.Require().NoError(err)
 			}
 
 			// --- System under test ---
 
-			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptime(s.Ctx, clPool.GetId(), test.positionLiquidity, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultJoinTime, DefaultPositionId)
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptimeAccumulators(s.Ctx, clPool.GetId(), test.positionLiquidity, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultPositionId)
 
 			// --- Error catching ---
 
@@ -1849,7 +2039,7 @@ func (s *KeeperTestSuite) TestInitPositionUptime() {
 				positionRecord, err := accum.GetPosition(uptimeAccums[uptimeIndex], positionName)
 				s.Require().NoError(err)
 
-				s.Require().Equal(test.expectedInitAccumValue[uptimeIndex], positionRecord.InitAccumValue)
+				s.Require().Equal(test.expectedInitAccumValue[uptimeIndex], positionRecord.AccumValuePerShare)
 
 				if test.existingPosition {
 					s.Require().Equal(sdk.NewDec(2).Mul(test.positionLiquidity), positionRecord.NumShares)
@@ -1858,13 +2048,13 @@ func (s *KeeperTestSuite) TestInitPositionUptime() {
 				}
 
 				// Note that the rewards only apply to the initial shares, not the new ones
-				s.Require().Equal(test.expectedUnclaimedRewards[uptimeIndex].MulDec(test.positionLiquidity), positionRecord.UnclaimedRewards)
+				s.Require().Equal(test.expectedUnclaimedRewards[uptimeIndex].MulDec(test.positionLiquidity), positionRecord.UnclaimedRewardsTotal)
 			}
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestCollectIncentives() {
+func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 	ownerWithValidPosition := s.TestAccs[0]
 	uptimeHelper := getExpectedUptimes()
 	oneDay := time.Hour * 24
@@ -1895,8 +2085,9 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 		timeInPosition time.Duration
 
 		// expectations
-		expectedIncentivesClaimed sdk.Coins
-		expectedError             error
+		expectedIncentivesClaimed   sdk.Coins
+		expectedForfeitedIncentives sdk.Coins
+		expectedError               error
 	}{
 		// ---Cases for lowerTick < currentTick < upperTick---
 
@@ -1911,9 +2102,10 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
-			numPositions:              1,
-			timeInPosition:            oneDay,
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			numPositions:                1,
+			timeInPosition:              oneDay,
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < curr < upper) uptime growth outside range but not inside, 1D time in position": {
 			currentTick:              1,
@@ -1930,7 +2122,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			numPositions:   1,
 			timeInPosition: oneDay,
 			// Since there was no growth inside the range, we expect no incentives to be claimed
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < curr < upper) uptime growth inside range but not outside, 1D time in position": {
 			currentTick:             1,
@@ -1948,7 +2141,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			timeInPosition: oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"(lower < curr < upper) uptime growth both inside and outside range, 1D time in position": {
 			currentTick:              1,
@@ -1967,7 +2161,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			timeInPosition: oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"(lower < curr < upper) no uptime growth inside or outside range, 1W time in position": {
 			currentTick: 1,
@@ -1980,9 +2175,10 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
-			numPositions:              1,
-			timeInPosition:            oneWeek,
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			numPositions:                1,
+			timeInPosition:              oneWeek,
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < curr < upper) uptime growth outside range but not inside, 1W time in position": {
 			currentTick:              1,
@@ -1999,7 +2195,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			numPositions:   1,
 			timeInPosition: oneWeek,
 			// Since there was no growth inside the range, we expect no incentives to be claimed
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < curr < upper) uptime growth inside range but not outside, 1W time in position": {
 			currentTick:             1,
@@ -2017,7 +2214,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			timeInPosition: oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < curr < upper) uptime growth both inside and outside range, 1W time in position": {
 			currentTick:              1,
@@ -2036,7 +2234,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			timeInPosition: oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < curr < upper) no uptime growth inside or outside range, no time in position": {
 			currentTick: 1,
@@ -2049,9 +2248,10 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
-			numPositions:              1,
-			timeInPosition:            0,
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			numPositions:                1,
+			timeInPosition:              0,
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < curr < upper) uptime growth outside range but not inside, no time in position": {
 			currentTick:              1,
@@ -2065,9 +2265,10 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
-			numPositions:              1,
-			timeInPosition:            0,
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			numPositions:                1,
+			timeInPosition:              0,
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < curr < upper) uptime growth inside range but not outside, no time in position": {
 			currentTick:             1,
@@ -2081,9 +2282,10 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
-			numPositions:              1,
-			timeInPosition:            0,
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			numPositions:                1,
+			timeInPosition:              0,
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 		},
 		"(lower < curr < upper) uptime growth both inside and outside range, no time in position": {
 			currentTick:              1,
@@ -2098,9 +2300,10 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
-			numPositions:              1,
-			timeInPosition:            0,
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			numPositions:                1,
+			timeInPosition:              0,
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 		},
 
 		// ---Cases for currentTick < lowerTick < upperTick---
@@ -2116,9 +2319,10 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
-			numPositions:              1,
-			timeInPosition:            oneDay,
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			numPositions:                1,
+			timeInPosition:              oneDay,
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(curr < lower < upper) uptime growth outside range but not inside, 1D time in position": {
 			currentTick:              0,
@@ -2135,7 +2339,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			numPositions:   1,
 			timeInPosition: oneDay,
 			// Since there was no growth inside the range, we expect no incentives to be claimed
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(curr < lower < upper) uptime growth inside range but not outside, 1D time in position": {
 			currentTick:             0,
@@ -2153,7 +2358,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			timeInPosition: oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"(curr < lower < upper) uptime growth both inside and outside range, 1D time in position": {
 			currentTick:              0,
@@ -2172,7 +2378,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			timeInPosition: oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"(curr < lower < upper) no uptime growth inside or outside range, 1W time in position": {
 			currentTick: 0,
@@ -2185,9 +2392,10 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
-			numPositions:              1,
-			timeInPosition:            oneWeek,
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			numPositions:                1,
+			timeInPosition:              oneWeek,
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(curr < lower < upper) uptime growth outside range but not inside, 1W time in position": {
 			currentTick:              0,
@@ -2204,7 +2412,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			numPositions:   1,
 			timeInPosition: oneWeek,
 			// Since there was no growth inside the range, we expect no incentives to be claimed
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(curr < lower < upper) uptime growth inside range but not outside, 1W time in position": {
 			currentTick:             0,
@@ -2222,7 +2431,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			timeInPosition: oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(curr < lower < upper) uptime growth both inside and outside range, 1W time in position": {
 			currentTick:              0,
@@ -2241,7 +2451,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			timeInPosition: oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(curr < lower < upper) no uptime growth inside or outside range, no time in position": {
 			currentTick: 0,
@@ -2254,9 +2465,10 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
-			numPositions:              1,
-			timeInPosition:            0,
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			numPositions:                1,
+			timeInPosition:              0,
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(curr < lower < upper) uptime growth outside range but not inside, no time in position": {
 			currentTick:              0,
@@ -2270,9 +2482,10 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
-			numPositions:              1,
-			timeInPosition:            0,
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			numPositions:                1,
+			timeInPosition:              0,
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(curr < lower < upper) uptime growth inside range but not outside, no time in position": {
 			currentTick:             0,
@@ -2286,9 +2499,10 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
-			numPositions:              1,
-			timeInPosition:            0,
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			numPositions:                1,
+			timeInPosition:              0,
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 		},
 		"(curr < lower < upper) uptime growth both inside and outside range, no time in position": {
 			currentTick:              0,
@@ -2303,9 +2517,10 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
-			numPositions:              1,
-			timeInPosition:            0,
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			numPositions:                1,
+			timeInPosition:              0,
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 		},
 
 		// ---Cases for lowerTick < upperTick < currentTick---
@@ -2321,9 +2536,10 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
-			numPositions:              1,
-			timeInPosition:            oneDay,
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			numPositions:                1,
+			timeInPosition:              oneDay,
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < upper < curr) uptime growth outside range but not inside, 1D time in position": {
 			currentTick:              3,
@@ -2340,7 +2556,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			numPositions:   1,
 			timeInPosition: oneDay,
 			// Since there was no growth inside the range, we expect no incentives to be claimed
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < upper < curr) uptime growth inside range but not outside, 1D time in position": {
 			currentTick:             3,
@@ -2358,7 +2575,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			timeInPosition: oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"(lower < upper < curr) uptime growth both inside and outside range, 1D time in position": {
 			currentTick:              3,
@@ -2377,7 +2595,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			timeInPosition: oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"(lower < upper < curr) no uptime growth inside or outside range, 1W time in position": {
 			currentTick: 3,
@@ -2390,9 +2609,10 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
-			numPositions:              1,
-			timeInPosition:            oneWeek,
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			numPositions:                1,
+			timeInPosition:              oneWeek,
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < upper < curr) uptime growth outside range but not inside, 1W time in position": {
 			currentTick:              3,
@@ -2409,7 +2629,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			numPositions:   1,
 			timeInPosition: oneWeek,
 			// Since there was no growth inside the range, we expect no incentives to be claimed
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < upper < curr) uptime growth inside range but not outside, 1W time in position": {
 			currentTick:             3,
@@ -2427,7 +2648,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			timeInPosition: oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < upper < curr) uptime growth both inside and outside range, 1W time in position": {
 			currentTick:              3,
@@ -2446,7 +2668,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			timeInPosition: oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < upper < curr) no uptime growth inside or outside range, no time in position": {
 			currentTick: 3,
@@ -2459,9 +2682,10 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
-			numPositions:              1,
-			timeInPosition:            0,
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			numPositions:                1,
+			timeInPosition:              0,
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < upper < curr) uptime growth outside range but not inside, no time in position": {
 			currentTick:              3,
@@ -2475,9 +2699,10 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
-			numPositions:              1,
-			timeInPosition:            0,
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			numPositions:                1,
+			timeInPosition:              0,
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < upper < curr) uptime growth inside range but not outside, no time in position": {
 			currentTick:             3,
@@ -2491,9 +2716,10 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
-			numPositions:              1,
-			timeInPosition:            0,
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			numPositions:                1,
+			timeInPosition:              0,
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 		},
 		"(lower < upper < curr) uptime growth both inside and outside range, no time in position": {
 			currentTick:              3,
@@ -2508,9 +2734,10 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
-			numPositions:              1,
-			timeInPosition:            0,
-			expectedIncentivesClaimed: sdk.Coins(nil),
+			numPositions:                1,
+			timeInPosition:              0,
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 		},
 
 		// Edge case tests
@@ -2531,7 +2758,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			numPositions:   1,
 			timeInPosition: oneDay,
 			// We expect this case to behave like (lower < curr < upper)
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"(curr = upper) uptime growth both inside and outside range, 1D time in position": {
 			currentTick:              2,
@@ -2549,7 +2777,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			numPositions:   1,
 			timeInPosition: oneDay,
 			// We expect this case to behave like (lower < upper < curr)
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"other liquidity on uptime accums: (lower < curr < upper) uptime growth both inside and outside range, 1D time in position": {
 			currentTick: 1,
@@ -2575,7 +2804,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			timeInPosition: oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"multiple positions in same range: (lower < curr < upper) uptime growth both inside and outside range, 1D time in position": {
 			currentTick: 1,
@@ -2601,7 +2831,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			timeInPosition: oneDay,
 			// Since we introduced positionIDs, despite these position having the same range and pool, only
 			// the position ID being claimed will be considered for the claim.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 
 		// Error catching
@@ -2611,8 +2842,9 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 
 			numPositions: 0,
 
-			expectedIncentivesClaimed: sdk.Coins{},
-			expectedError:             cltypes.PositionIdNotFoundError{PositionId: DefaultPositionId},
+			expectedIncentivesClaimed:   sdk.Coins{},
+			expectedForfeitedIncentives: sdk.Coins{},
+			expectedError:               types.PositionIdNotFoundError{PositionId: DefaultPositionId},
 		},
 	}
 
@@ -2660,7 +2892,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			}
 
 			validPool.SetCurrentTick(sdk.NewInt(tc.currentTick))
-			clKeeper.SetPool(ctx, validPool)
+			err := clKeeper.SetPool(ctx, validPool)
+			s.Require().NoError(err)
 
 			// Checkpoint starting balance to compare against later
 			poolBalanceBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetAddress())
@@ -2670,17 +2903,36 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			// Set up invalid pool ID for error-catching case(s)
 			sutPoolId := validPoolId
 			if tc.isInvalidPoolIdGiven {
-				sutPoolId = sutPoolId + 1
+				sutPoolId = sutPoolId + 1 //nolint:staticcheck,ineffassign
 			}
 
 			// System under test
-			actualIncentivesClaimed, err := clKeeper.CollectIncentives(ctx, ownerWithValidPosition, DefaultPositionId)
+			incentivesClaimedQuery, incentivesForfeitedQuery, err := clKeeper.GetClaimableIncentives(ctx, DefaultPositionId)
+
+			_ = s.App.BankKeeper.GetAllBalances(ctx, validPool.GetAddress())
+			incentivesBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetIncentivesAddress())
+			ownerBalancerAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, ownerWithValidPosition)
+
+			// Ensure balances are unchanged (since this is a query)
+			s.Require().Equal(incentivesBalanceBeforeCollect, incentivesBalanceAfterCollect)
+			s.Require().Equal(ownerBalancerAfterCollect, ownerBalancerBeforeCollect)
+
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
+				s.Require().Equal(tc.expectedIncentivesClaimed, incentivesClaimedQuery)
+				s.Require().Equal(tc.expectedForfeitedIncentives, incentivesForfeitedQuery)
+			}
+			actualIncentivesClaimed, actualIncetivesForfeited, err := clKeeper.CollectIncentives(ctx, ownerWithValidPosition, DefaultPositionId)
 
 			// Assertions
 
+			s.Require().Equal(incentivesClaimedQuery, actualIncentivesClaimed)
+			s.Require().Equal(incentivesForfeitedQuery, actualIncetivesForfeited)
+
 			poolBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetAddress())
-			incentivesBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetIncentivesAddress())
-			ownerBalancerAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, ownerWithValidPosition)
+			incentivesBalanceAfterCollect = s.App.BankKeeper.GetAllBalances(ctx, validPool.GetIncentivesAddress())
+			ownerBalancerAfterCollect = s.App.BankKeeper.GetAllBalances(ctx, ownerWithValidPosition)
 
 			// Ensure pool balances are unchanged independent of error.
 			s.Require().Equal(poolBalanceBeforeCollect, poolBalanceAfterCollect)
@@ -2689,6 +2941,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
 				s.Require().Equal(tc.expectedIncentivesClaimed, actualIncentivesClaimed)
+				s.Require().Equal(tc.expectedForfeitedIncentives, actualIncetivesForfeited)
 
 				// Ensure balances are unchanged
 				s.Require().Equal(incentivesBalanceBeforeCollect, incentivesBalanceAfterCollect)
@@ -2699,6 +2952,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			// Ensure claimed amount is correct
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedIncentivesClaimed.String(), actualIncentivesClaimed.String())
+			s.Require().Equal(tc.expectedForfeitedIncentives.String(), actualIncetivesForfeited.String())
 
 			// Ensure balances are updated by the correct amounts
 			s.Require().Equal(tc.expectedIncentivesClaimed.String(), (incentivesBalanceBeforeCollect.Sub(incentivesBalanceAfterCollect)).String())
@@ -2716,6 +2970,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 		recordToSet        types.IncentiveRecord
 		existingRecords    []types.IncentiveRecord
 		minimumGasConsumed uint64
+		authorizedUptimes  []time.Duration
 
 		expectedError error
 	}
@@ -2731,6 +2986,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			),
 			recordToSet:        incentiveRecordOne,
 			minimumGasConsumed: uint64(0),
+			authorizedUptimes:  types.SupportedUptimes,
 		},
 		"record with different denom, emission rate, and min uptime": {
 			poolId: defaultPoolId,
@@ -2743,6 +2999,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			),
 			recordToSet:        incentiveRecordTwo,
 			minimumGasConsumed: uint64(0),
+			authorizedUptimes:  types.SupportedUptimes,
 		},
 		"record with different start time": {
 			poolId: defaultPoolId,
@@ -2755,6 +3012,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			),
 			recordToSet:        withStartTime(incentiveRecordOne, defaultStartTime.Add(time.Hour)),
 			minimumGasConsumed: uint64(0),
+			authorizedUptimes:  types.SupportedUptimes,
 		},
 		"record with different incentive amount": {
 			poolId: defaultPoolId,
@@ -2767,6 +3025,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			),
 			recordToSet:        withAmount(incentiveRecordOne, sdk.NewDec(8)),
 			minimumGasConsumed: uint64(0),
+			authorizedUptimes:  types.SupportedUptimes,
 		},
 		"existing incentive records on different uptime accumulators": {
 			poolId: defaultPoolId,
@@ -2777,8 +3036,9 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet:     incentiveRecordOne,
-			existingRecords: []types.IncentiveRecord{incentiveRecordTwo, incentiveRecordThree},
+			recordToSet:       incentiveRecordOne,
+			existingRecords:   []types.IncentiveRecord{incentiveRecordTwo, incentiveRecordThree},
+			authorizedUptimes: types.SupportedUptimes,
 
 			// We still expect a minimum of 0 since the existing records are on other uptime accumulators
 			minimumGasConsumed: uint64(0),
@@ -2798,11 +3058,24 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 				withMinUptime(incentiveRecordThree, incentiveRecordOne.MinUptime),
 				withMinUptime(incentiveRecordFour, incentiveRecordOne.MinUptime),
 			},
+			authorizedUptimes: types.SupportedUptimes,
 
 			// We expect # existing records * BaseGasFeeForNewIncentive. Since there are
 			// three existing records on the uptime accum the new record is being added to,
 			// we charge `3 * types.BaseGasFeeForNewIncentive`
 			minimumGasConsumed: uint64(3 * types.BaseGasFeeForNewIncentive),
+		},
+		"valid incentive record on default authorized uptimes": {
+			poolId: defaultPoolId,
+			sender: sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr),
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
+				),
+			),
+			recordToSet:        incentiveRecordOne,
+			minimumGasConsumed: uint64(0),
 		},
 
 		// Error catching
@@ -2817,11 +3090,12 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet: incentiveRecordOne,
+			recordToSet:       incentiveRecordOne,
+			authorizedUptimes: types.SupportedUptimes,
 
 			expectedError: types.PoolNotFoundError{PoolId: 2},
 		},
-		"zero incentive amount": {
+		"invalid incentive coin": {
 			poolId: defaultPoolId,
 			sender: sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr),
 			senderBalance: sdk.NewCoins(
@@ -2830,22 +3104,10 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					sdk.ZeroInt(),
 				),
 			),
-			recordToSet: withAmount(incentiveRecordOne, sdk.ZeroDec()),
+			recordToSet:       withAmount(incentiveRecordOne, sdk.ZeroDec()),
+			authorizedUptimes: types.SupportedUptimes,
 
-			expectedError: types.NonPositiveIncentiveAmountError{PoolId: 1, IncentiveAmount: sdk.ZeroDec()},
-		},
-		"negative incentive amount": {
-			poolId: defaultPoolId,
-			sender: sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr),
-			senderBalance: sdk.NewCoins(
-				sdk.NewCoin(
-					incentiveRecordOne.IncentiveDenom,
-					sdk.ZeroInt(),
-				),
-			),
-			recordToSet: withAmount(incentiveRecordOne, sdk.NewDec(-1)),
-
-			expectedError: types.NonPositiveIncentiveAmountError{PoolId: 1, IncentiveAmount: sdk.NewDec(-1)},
+			expectedError: types.InvalidIncentiveCoinError{PoolId: 1, IncentiveCoin: sdk.NewCoin(incentiveRecordOne.IncentiveDenom, sdk.ZeroInt())},
 		},
 		"start time too early": {
 			poolId: defaultPoolId,
@@ -2856,7 +3118,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet: withStartTime(incentiveRecordOne, defaultBlockTime.Add(-1*time.Second)),
+			recordToSet:       withStartTime(incentiveRecordOne, defaultBlockTime.Add(-1*time.Second)),
+			authorizedUptimes: types.SupportedUptimes,
 
 			expectedError: types.StartTimeTooEarlyError{PoolId: 1, CurrentBlockTime: defaultBlockTime, StartTime: defaultBlockTime.Add(-1 * time.Second)},
 		},
@@ -2869,7 +3132,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet: withEmissionRate(incentiveRecordOne, sdk.ZeroDec()),
+			recordToSet:       withEmissionRate(incentiveRecordOne, sdk.ZeroDec()),
+			authorizedUptimes: types.SupportedUptimes,
 
 			expectedError: types.NonPositiveEmissionRateError{PoolId: 1, EmissionRate: sdk.ZeroDec()},
 		},
@@ -2882,9 +3146,24 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet: withEmissionRate(incentiveRecordOne, sdk.NewDec(-1)),
+			recordToSet:       withEmissionRate(incentiveRecordOne, sdk.NewDec(-1)),
+			authorizedUptimes: types.SupportedUptimes,
 
 			expectedError: types.NonPositiveEmissionRateError{PoolId: 1, EmissionRate: sdk.NewDec(-1)},
+		},
+		"supported but unauthorized min uptime": {
+			poolId: defaultPoolId,
+			sender: sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr),
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
+				),
+			),
+			recordToSet:       withMinUptime(incentiveRecordOne, time.Hour),
+			authorizedUptimes: []time.Duration{time.Nanosecond, time.Minute},
+
+			expectedError: types.InvalidMinUptimeError{PoolId: 1, MinUptime: time.Hour, AuthorizedUptimes: []time.Duration{time.Nanosecond, time.Minute}},
 		},
 		"unsupported min uptime": {
 			poolId: defaultPoolId,
@@ -2895,15 +3174,17 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet: withMinUptime(incentiveRecordOne, time.Hour*3),
+			recordToSet:       withMinUptime(incentiveRecordOne, time.Hour*3),
+			authorizedUptimes: types.SupportedUptimes,
 
-			expectedError: types.InvalidMinUptimeError{PoolId: 1, MinUptime: time.Hour * 3, SupportedUptimes: types.SupportedUptimes},
+			expectedError: types.InvalidMinUptimeError{PoolId: 1, MinUptime: time.Hour * 3, AuthorizedUptimes: types.SupportedUptimes},
 		},
 		"insufficient sender balance": {
-			poolId:        defaultPoolId,
-			sender:        sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr),
-			senderBalance: sdk.NewCoins(),
-			recordToSet:   incentiveRecordOne,
+			poolId:            defaultPoolId,
+			sender:            sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr),
+			senderBalance:     sdk.NewCoins(),
+			recordToSet:       incentiveRecordOne,
+			authorizedUptimes: types.SupportedUptimes,
 
 			expectedError: types.IncentiveInsufficientBalanceError{PoolId: 1, IncentiveDenom: incentiveRecordOne.IncentiveDenom, IncentiveAmount: incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt()},
 		},
@@ -2916,6 +3197,14 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 
 			// We fix blocktime to ensure tests are deterministic
 			s.Ctx = s.Ctx.WithBlockTime(defaultBlockTime)
+
+			// If specified by test case, set custom authorized uptimes (otherwise,
+			// default params apply)
+			if tc.authorizedUptimes != nil {
+				clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+				clParams.AuthorizedUptimes = tc.authorizedUptimes
+				s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
+			}
 
 			s.PrepareConcentratedPool()
 			clKeeper := s.App.ConcentratedLiquidityKeeper
@@ -2932,8 +3221,10 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 
 			existingGasConsumed := s.Ctx.GasMeter().GasConsumed()
 
+			incentiveCoin := sdk.NewCoin(tc.recordToSet.IncentiveDenom, tc.recordToSet.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt())
+
 			// system under test
-			incentiveRecord, err := clKeeper.CreateIncentive(s.Ctx, tc.poolId, tc.sender, tc.recordToSet.IncentiveDenom, tc.recordToSet.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(), tc.recordToSet.IncentiveRecordBody.EmissionRate, tc.recordToSet.IncentiveRecordBody.StartTime, tc.recordToSet.MinUptime)
+			incentiveRecord, err := clKeeper.CreateIncentive(s.Ctx, tc.poolId, tc.sender, incentiveCoin, tc.recordToSet.IncentiveRecordBody.EmissionRate, tc.recordToSet.IncentiveRecordBody.StartTime, tc.recordToSet.MinUptime)
 
 			// Assertions
 			if tc.expectedError != nil {
@@ -2951,6 +3242,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 
 			// Returned incentive record should equal both to what's in state and what we expect
 			recordInState, err := clKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, tc.recordToSet.IncentiveDenom, tc.recordToSet.MinUptime, tc.sender)
+			s.Require().NoError(err)
 			s.Require().Equal(tc.recordToSet, recordInState)
 			s.Require().Equal(tc.recordToSet, incentiveRecord)
 
@@ -2968,8 +3260,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 }
 
 func (s *KeeperTestSuite) TestPrepareAccumAndClaimRewards() {
-	validPositionKey := cltypes.KeyFeePositionAccumulator(1)
-	invalidPositionKey := cltypes.KeyFeePositionAccumulator(2)
+	validPositionKey := types.KeyFeePositionAccumulator(1)
+	invalidPositionKey := types.KeyFeePositionAccumulator(2)
 	tests := map[string]struct {
 		poolId             uint64
 		growthInside       sdk.DecCoins
@@ -3000,7 +3292,7 @@ func (s *KeeperTestSuite) TestPrepareAccumAndClaimRewards() {
 			positionKey := validPositionKey
 
 			// Initialize position accumulator.
-			err = poolFeeAccumulator.NewPositionCustomAcc(positionKey, sdk.OneDec(), sdk.DecCoins{}, nil)
+			err = poolFeeAccumulator.NewPosition(positionKey, sdk.OneDec(), nil)
 			s.Require().NoError(err)
 
 			// Record the initial position accumulator value.
@@ -3034,19 +3326,20 @@ func (s *KeeperTestSuite) TestPrepareAccumAndClaimRewards() {
 
 			// Check that the difference between the new and old position accumulator values is equal to the growth inside (since
 			// we recalibrate the position accum value after claiming).
-			positionAccumDelta := positionPost.InitAccumValue.Sub(positionPre.InitAccumValue)
+			positionAccumDelta := positionPost.AccumValuePerShare.Sub(positionPre.AccumValuePerShare)
 			s.Require().Equal(tc.growthInside, positionAccumDelta)
 		})
 	}
 }
 
 // Note that the non-forfeit cases are thoroughly tested in `TestCollectIncentives`
-func (s *KeeperTestSuite) TestClaimAllIncentives() {
+func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 	uptimeHelper := getExpectedUptimes()
 	defaultSender := s.TestAccs[0]
 	tests := map[string]struct {
 		name              string
 		poolId            uint64
+		numShares         sdk.Dec
 		positionIdCreate  uint64
 		positionIdClaim   uint64
 		defaultJoinTime   bool
@@ -3062,8 +3355,9 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			defaultJoinTime:  true,
 			growthInside:     uptimeHelper.hundredTokensMultiDenom,
 			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
+			numShares:        sdk.OneDec(),
 		},
-		"claim and forfeit rewards": {
+		"claim and forfeit rewards (2 shares)": {
 			poolId:            validPoolId,
 			positionIdCreate:  DefaultPositionId,
 			positionIdClaim:   DefaultPositionId,
@@ -3071,6 +3365,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			growthInside:      uptimeHelper.hundredTokensMultiDenom,
 			growthOutside:     uptimeHelper.twoHundredTokensMultiDenom,
 			forfeitIncentives: true,
+			numShares:         sdk.NewDec(2),
 		},
 		"claim and forfeit rewards when no rewards have accrued": {
 			poolId:            validPoolId,
@@ -3078,6 +3373,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			positionIdClaim:   DefaultPositionId,
 			defaultJoinTime:   true,
 			forfeitIncentives: true,
+			numShares:         sdk.OneDec(),
 		},
 		"claim and forfeit rewards with varying amounts and different denoms": {
 			poolId:            validPoolId,
@@ -3087,6 +3383,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			growthInside:      uptimeHelper.varyingTokensMultiDenom,
 			growthOutside:     uptimeHelper.varyingTokensSingleDenom,
 			forfeitIncentives: true,
+			numShares:         sdk.OneDec(),
 		},
 
 		// error catching
@@ -3098,8 +3395,9 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			defaultJoinTime:  true,
 			growthInside:     uptimeHelper.hundredTokensMultiDenom,
 			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
+			numShares:        sdk.OneDec(),
 
-			expectedError: cltypes.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
+			expectedError: types.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
 		},
 
 		"error: negative duration": {
@@ -3109,9 +3407,9 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			defaultJoinTime:  false,
 			growthInside:     uptimeHelper.hundredTokensMultiDenom,
 			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
+			numShares:        sdk.OneDec(),
 
-			expectedError: cltypes.NegativeDurationError{Duration: time.Hour * 504 * -1},
-
+			expectedError: types.NegativeDurationError{Duration: time.Hour * 504 * -1},
 		},
 	}
 	for _, tc := range tests {
@@ -3129,7 +3427,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			}
 
 			// Initialize position
-			err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, sdk.OneDec(), joinTime, tc.positionIdCreate)
+			err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, tc.numShares, joinTime, tc.positionIdCreate)
 			s.Require().NoError(err)
 
 			clPool.SetCurrentTick(DefaultCurrTick)
@@ -3158,14 +3456,32 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			}
 
 			// --- System under test ---
+			amountClaimedQuery, amountForfeitedQuery, err := clKeeper.GetClaimableIncentives(s.Ctx, tc.positionIdClaim)
+
+			// Pull new balances for comparison
+			newSenderBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, defaultSender)
+			newPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetAddress())
+
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectedError)
+			}
+
+			// Ensure balances have not been mutated (since this is a query)
+			s.Require().Equal(initSenderBalances, newSenderBalances)
+			s.Require().Equal(initPoolBalances, newPoolBalances)
 
 			amountClaimed, amountForfeited, err := clKeeper.ClaimAllIncentivesForPosition(s.Ctx, tc.positionIdClaim)
 
 			// --- Assertions ---
 
 			// Pull new balances for comparison
-			newSenderBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, defaultSender)
-			newPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetAddress())
+			newSenderBalances = s.App.BankKeeper.GetAllBalances(s.Ctx, defaultSender)
+			newPoolBalances = s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetAddress())
+
+			s.Require().Equal(amountClaimedQuery, amountClaimed)
+			s.Require().Equal(amountForfeitedQuery, amountForfeited)
 
 			if tc.expectedError != nil {
 				s.Require().Error(err)
@@ -3190,17 +3506,20 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 				// Convert DecCoins to Coins by truncation for comparison
 				normalizedUptimeAccumDelta := sdk.NewCoins()
 				for _, uptimeAccumDelta := range uptimeAccumDeltaValues {
-					normalizedUptimeAccumDelta = normalizedUptimeAccumDelta.Add(sdk.NormalizeCoins(uptimeAccumDelta)...)
+					// Multiply by the number of shares since the accumulators are per share amounts.
+					normalizedUptimeAccumDelta = normalizedUptimeAccumDelta.Add(sdk.NormalizeCoins(uptimeAccumDelta.MulDec(tc.numShares))...)
 				}
 
-				s.Require().Equal(normalizedUptimeAccumDelta.String(), amountClaimed.Add(amountForfeited...).String())
+				s.Require().Equal(normalizedUptimeAccumDelta.String(), amountForfeited.String())
+				s.Require().Equal(sdk.Coins{}, amountClaimed)
 			} else {
 				// We expect claimed rewards to be equal to growth inside
 				expectedCoins := sdk.Coins(nil)
 				for _, growthInside := range tc.growthInside {
 					expectedCoins = expectedCoins.Add(sdk.NormalizeCoins(growthInside)...)
 				}
-				s.Require().Equal(expectedCoins, amountClaimed.Add(amountForfeited...))
+				s.Require().Equal(expectedCoins, amountClaimed)
+				s.Require().Equal(sdk.Coins(nil), amountForfeited)
 			}
 
 			// Ensure balances have not been mutated
@@ -3210,7 +3529,101 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 	}
 }
 
-func (s *KeeperTestSuite) TestGetAllIncentivesForUptime() {
+// This functional test focuses on changing liquidity in the same range and collecting incentives
+// at different times.
+// This is important because the final amount of incentives claimed depends on the last time when the pool
+// was updated. We use this time to calculate the amount of incentives to emit into the uptime accumulators.
+func (s *KeeperTestSuite) TestFunctional_ClaimIncentices_LiquidityChange_VaryingTime() {
+	// Init suite for the test.
+	s.SetupTest()
+
+	const (
+		testFullChargeDuration = 24 * time.Hour
+	)
+
+	var (
+		defaultAddress   = s.TestAccs[0]
+		defaultBlockTime = time.Unix(1, 1).UTC()
+	)
+
+	s.Ctx = s.Ctx.WithBlockTime(defaultBlockTime)
+	requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1))
+
+	// Set test authorized uptime params.
+	params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+	params.AuthorizedUptimes = []time.Duration{time.Nanosecond, testFullChargeDuration}
+	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
+
+	// Fund accounts twice because two positions are created.
+	s.FundAcc(defaultAddress, requiredBalances)
+	s.FundAcc(defaultAddress, requiredBalances)
+
+	// Create CL pool
+	pool := s.PrepareConcentratedPool()
+
+	expectedAmount := sdk.NewInt(60 * 60 * 24) // 1 day in seconds * 1 per second
+
+	oneUUSDCCoin := sdk.NewCoin(USDC, sdk.OneInt())
+	// -1 for acceptable rounding error
+	expectedCoinsPerFullCharge := sdk.NewCoins(sdk.NewCoin(USDC, expectedAmount.Sub(sdk.OneInt())))
+	expectedHalfOfExpectedCoinsPerFullCharge := sdk.NewCoins(sdk.NewCoin(USDC, expectedAmount.QuoRaw(2).Sub(sdk.OneInt())))
+
+	// Multiplied by 3 because we change the block time 3 times and claim
+	// 1. by directly calling CollectIncentives
+	// 2. by calling WithdrawPosition
+	// 3. by calling CollectIncentives
+	s.FundAcc(pool.GetIncentivesAddress(), sdk.NewCoins(sdk.NewCoin(USDC, expectedAmount.Mul(sdk.NewInt(3)))))
+	// Set incentives for pool to ensure accumulators work correctly
+	testIncentiveRecord := types.IncentiveRecord{
+		PoolId:               1,
+		IncentiveDenom:       USDC,
+		IncentiveCreatorAddr: s.TestAccs[0].String(),
+		IncentiveRecordBody: types.IncentiveRecordBody{
+			RemainingAmount: sdk.NewDec(1000000000000000000),
+			EmissionRate:    sdk.NewDec(1), // 1 per second
+			StartTime:       defaultBlockTime,
+		},
+		MinUptime: time.Nanosecond,
+	}
+	err := s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, []types.IncentiveRecord{testIncentiveRecord})
+	s.Require().NoError(err)
+
+	// Set up position
+	positionIdOne, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	s.Require().NoError(err)
+
+	// Increase block time by the fully charged duration (first time)
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration))
+
+	// Claim incentives.
+	collected, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, positionIdOne)
+	s.Require().NoError(err)
+	s.Require().Equal(expectedCoinsPerFullCharge.String(), collected.String())
+
+	// Increase block time by the fully charged duration (second time)
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration))
+
+	// Create another position
+	positionIdTwo, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	s.Require().NoError(err)
+
+	// Increase block time by the fully charged duration (third time)
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration))
+
+	// Claim for second position. Must only claim half of the original expected amount since now there are 2 positions.
+	collected, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, positionIdTwo)
+	s.Require().NoError(err)
+	s.Require().Equal(expectedHalfOfExpectedCoinsPerFullCharge.String(), collected.String())
+
+	// Claim for first position and observe that claims full expected charge for the period between 1st claim and 2nd position creation
+	// and half of the full charge amount since the 2nd position was created.
+	collected, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, positionIdOne)
+	s.Require().NoError(err)
+	// Note, adding one since both expected amounts already subtract one (-2 in total)
+	s.Require().Equal(expectedCoinsPerFullCharge.Add(expectedHalfOfExpectedCoinsPerFullCharge.Add(oneUUSDCCoin)...).String(), collected.String())
+}
+
+func (s *KeeperTestSuite) TestGetAllIncentiveRecordsForUptime() {
 	invalidPoolId := uint64(2)
 	tests := map[string]struct {
 		poolIncentiveRecords []types.IncentiveRecord
@@ -3365,6 +3778,673 @@ func (s *KeeperTestSuite) TestFindUptimeIndex() {
 
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedUptimeIndex, retrievedUptimeIndex)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
+	invalidPoolId := uint64(10)
+	defaultBalancerAssets := []balancer.PoolAsset{
+		{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(1000000000))},
+		{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(1000000000))},
+	}
+	defaultConcentratedAssets := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)))
+	defaultBalancerPoolParams := balancer.PoolParams{SwapFee: sdk.NewDec(0), ExitFee: sdk.NewDec(0)}
+	tests := map[string]struct {
+		existingConcentratedLiquidity sdk.Coins
+		balancerPoolAssets            []balancer.PoolAsset
+
+		noCanonicalBalancerPool      bool
+		noBalancerPoolWithID         bool
+		invalidConcentratedPoolID    bool
+		invalidBalancerPoolID        bool
+		invalidBalancerPoolLiquidity bool
+
+		expectedError error
+	}{
+		"happy path: balancer and CL pool at same spot price": {
+			// 100 existing shares and 100 shares added from balancer
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets:            defaultBalancerAssets,
+		},
+		"same spot price, different total share amount": {
+			// 100 existing shares and 200 shares added from balancer
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(200))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(200))},
+			},
+		},
+		"different spot price between balancer and CL pools (excess asset0)": {
+			// 100 existing shares and 100 shares added from balancer. We expect only the even portion of
+			// the Balancer pool to be joined, with the remaining 50foo not qualifying.
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(150))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(100))},
+			},
+		},
+		"different spot price between balancer and CL pools (excess asset1)": {
+			// 100 existing shares and 100 shares added from balancer. We expect only the even portion of
+			// the Balancer pool to be joined, with the remaining 50bar not qualifying.
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(150))},
+			},
+		},
+		"no canonical balancer pool": {
+			// 100 existing shares and 100 shares added from balancer
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets:            defaultBalancerAssets,
+
+			// Note that we expect this to fail quietly, as most CL pools will not have linked Balancer pools
+			noCanonicalBalancerPool: true,
+		},
+
+		// Error catching
+
+		"canonical balancer pool ID exists but pool itself is not found": {
+			// 100 existing shares and 100 shares added from balancer
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets:            defaultBalancerAssets,
+			noBalancerPoolWithID:          true,
+
+			expectedError: gammtypes.PoolDoesNotExistError{PoolId: invalidPoolId},
+		},
+		"canonical balancer pool has invalid first denom": {
+			// 100 existing shares and 100 shares added from balancer
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("invalid", sdk.NewInt(100))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(100))},
+			},
+			invalidBalancerPoolLiquidity: true,
+
+			expectedError: types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("invalid", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)))},
+		},
+		"canonical balancer pool has invalid second denom": {
+			// 100 existing shares and 100 shares added from balancer
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("invalid", sdk.NewInt(100))},
+			},
+			invalidBalancerPoolLiquidity: true,
+
+			expectedError: types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("invalid", sdk.NewInt(100)))},
+		},
+		"canonical balancer pool has invalid both denoms": {
+			// 100 existing shares and 100 shares added from balancer
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("invalid1", sdk.NewInt(100))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("invalid2", sdk.NewInt(100))},
+			},
+			invalidBalancerPoolLiquidity: true,
+
+			expectedError: types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("invalid1", sdk.NewInt(100)), sdk.NewCoin("invalid2", sdk.NewInt(100)))},
+		},
+		"canonical balancer pool has invalid number of assets": {
+			// 100 existing shares and 100 shares added from balancer
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(100))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("baz", sdk.NewInt(100))},
+			},
+			invalidBalancerPoolLiquidity: true,
+
+			expectedError: types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)), sdk.NewCoin("baz", sdk.NewInt(100)))},
+		},
+		"invalid concentrated pool ID": {
+			// 100 existing shares and 100 shares added from balancer
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets:            defaultBalancerAssets,
+			invalidConcentratedPoolID:     true,
+
+			expectedError: types.PoolNotFoundError{PoolId: invalidPoolId + 1},
+		},
+	}
+	for name, tc := range tests {
+		s.Run(name, func() {
+			// --- Setup test env ---
+
+			s.SetupTest()
+			clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, sdk.ZeroDec())
+
+			// Set up an existing full range position. Note that the second return value is the position ID, not an error.
+			initialLiquidity, _ := s.SetupPosition(clPool.GetId(), s.TestAccs[0], tc.existingConcentratedLiquidity, DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime())
+
+			// If a canonical balancer pool exists, we create it and link it with the CL pool
+			balancerPoolId := s.PrepareCustomBalancerPool(tc.balancerPoolAssets, defaultBalancerPoolParams)
+			if tc.noBalancerPoolWithID {
+				balancerPoolId = invalidPoolId
+			} else if tc.noCanonicalBalancerPool {
+				balancerPoolId = 0
+			}
+
+			if !tc.noCanonicalBalancerPool {
+				s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx,
+					gammtypes.MigrationRecords{
+						BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
+							{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()},
+						},
+					},
+				)
+			}
+
+			// Calculate balancer share amount for full range
+			updatedClPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+			s.Require().NoError(err)
+			qualifyingSharesPreDiscount := math.GetLiquidityFromAmounts(updatedClPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, tc.balancerPoolAssets[1].Token.Amount, tc.balancerPoolAssets[0].Token.Amount)
+			qualifyingShares := (sdk.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingSharesPreDiscount)
+
+			clearOutQualifyingShares := tc.noBalancerPoolWithID || tc.invalidBalancerPoolLiquidity || tc.invalidConcentratedPoolID || tc.invalidBalancerPoolID || tc.noCanonicalBalancerPool
+			if clearOutQualifyingShares {
+				qualifyingShares = sdk.NewDec(0)
+			}
+
+			concentratedPoolId := clPool.GetId()
+			if tc.invalidConcentratedPoolID {
+				concentratedPoolId = invalidPoolId + 1
+			}
+
+			// --- System under test ---
+
+			retrievedBalancerPoolId, addedLiquidity, err := s.App.ConcentratedLiquidityKeeper.PrepareBalancerPoolAsFullRange(s.Ctx, concentratedPoolId)
+
+			// --- Assertions ---
+
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
+
+				// Ensure that returned balancer pool ID is correct
+				s.Require().Equal(uint64(0), retrievedBalancerPoolId)
+			} else {
+				s.Require().NoError(err)
+
+				// Ensure that returned balancer pool ID is correct
+				s.Require().Equal(balancerPoolId, retrievedBalancerPoolId)
+			}
+
+			// General assertions regardless of error
+			updatedClPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+			s.Require().NoError(err)
+
+			clPoolUptimeAccumulators, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
+			s.Require().NoError(err)
+
+			s.Require().True(len(clPoolUptimeAccumulators) > 0)
+			for _, uptimeAccum := range clPoolUptimeAccumulators {
+				currAccumShares, err := uptimeAccum.GetTotalShares()
+				s.Require().NoError(err)
+
+				// Ensure each accum has the correct number of final shares
+				s.Require().Equal(qualifyingShares.Add(initialLiquidity), currAccumShares)
+			}
+
+			// Ensure added liquidity is equal to the amount accum shares changed by
+			s.Require().Equal(qualifyingShares, addedLiquidity)
+
+			// Pool liquidity should remain unchanged
+			s.Require().Equal(initialLiquidity, updatedClPool.GetLiquidity())
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
+	lockableDurations := s.App.PoolIncentivesKeeper.GetLockableDurations(s.Ctx)
+	longestLockableDuration := lockableDurations[len(lockableDurations)-1]
+	uptimeHelper := getExpectedUptimes()
+
+	tests := map[string]struct {
+		existingConcentratedLiquidity sdk.Coins
+		balancerPoolAssets            []balancer.PoolAsset
+		uptimeGrowth                  []sdk.DecCoins
+
+		concentratedPoolDoesNotExist bool
+		balancerPoolDoesNotExist     bool
+		balSharesNotAddedToAccums    bool
+		insufficientPoolBalance      bool
+
+		expectedError error
+	}{
+		"happy path: valid CL and bal pool IDs": {
+			// 100 existing shares and 100 shares added from balancer
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
+		},
+		"valid pool IDs with no uptime growth": {
+			// 100 existing shares and 100 shares added from balancer
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.emptyExpectedAccumValues,
+		},
+		"valid pool IDs with uneven uptime growth": {
+			// 100 existing shares and 100 shares added from balancer
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.varyingTokensMultiDenom,
+		},
+		"different liquidity amounts between balancer and CL pools": {
+			// 100 existing shares and 200 shares added from balancer
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(200))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(200))},
+			},
+			uptimeGrowth: uptimeHelper.emptyExpectedAccumValues,
+		},
+		"balancer spot price different than CL spot price (foo higher)": {
+			// 100 existing shares and 200 shares added from balancer
+			// Note that only 200foo/200bar qualify, and the remaining 50bar is not counted
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(200))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(250))},
+			},
+			uptimeGrowth: uptimeHelper.emptyExpectedAccumValues,
+		},
+		"balancer spot price different than CL spot price (bar higher)": {
+			// 100 existing shares and 200 shares added from balancer
+			// Note that only 200foo/200bar qualify, and the remaining 50foo is not counted
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(250))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(200))},
+			},
+			uptimeGrowth: uptimeHelper.emptyExpectedAccumValues,
+		},
+		"rounding check: large and imbalanced CL amounts": {
+			existingConcentratedLiquidity: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(2<<60)), sdk.NewCoin("bar", sdk.NewInt(2<<61))),
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
+		},
+		"rounding check: large and imbalanced balancer amounts": {
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(2<<61))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(2<<60))},
+			},
+			uptimeGrowth: uptimeHelper.hundredTokensMultiDenom,
+		},
+
+		// Error catching
+
+		"CL pool does not exist": {
+			// 100 existing shares and 100 shares added from balancer
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
+
+			concentratedPoolDoesNotExist: true,
+			expectedError:                types.PoolNotFoundError{PoolId: invalidPoolId + 1},
+		},
+		"Balancer pool does not exist": {
+			// 100 existing shares and 100 shares added from balancer
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
+
+			balancerPoolDoesNotExist: true,
+			expectedError:            poolincentivestypes.NoGaugeAssociatedWithPoolError{PoolId: invalidPoolId, Duration: longestLockableDuration},
+		},
+		"Balancer shares not yet added to CL pool accums": {
+			// 100 existing shares and 100 shares added from balancer
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
+
+			balSharesNotAddedToAccums: true,
+			expectedError:             types.BalancerRecordNotFoundError{ClPoolId: 1, BalancerPoolId: 2, UptimeIndex: uint64(0)},
+		},
+		"insufficient pool balance for balancer distribution": {
+			// 100 existing shares and 100 shares added from balancer
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
+
+			insufficientPoolBalance: true,
+			expectedError:           errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.NewCoin("bar", sdk.ZeroInt()), sdk.NewCoin("bar", sdk.NewInt(47500))),
+		},
+	}
+	for name, tc := range tests {
+		s.Run(name, func() {
+			// --- Setup ---
+
+			// Set up CL pool with appropriate liquidity
+			s.SetupTest()
+			clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, sdk.ZeroDec())
+			clPoolId := clPool.GetId()
+
+			// Set up an existing full range position.
+			// Note that the second return value here is the position ID, not an error.
+			initialLiquidity, _ := s.SetupPosition(clPoolId, s.TestAccs[0], tc.existingConcentratedLiquidity, DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime())
+
+			// Create balancer pool to be linked with CL pool in happy path cases
+			balancerPoolId := s.PrepareCustomBalancerPool(tc.balancerPoolAssets, defaultBalancerPoolParams)
+
+			// Invalidate pool IDs if needed for error cases
+			if tc.balancerPoolDoesNotExist {
+				balancerPoolId = invalidPoolId
+			}
+			if tc.concentratedPoolDoesNotExist {
+				clPoolId = invalidPoolId + 1
+			}
+
+			// Link the balancer and CL pools
+			s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx,
+				gammtypes.MigrationRecords{
+					BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
+						{BalancerPoolId: balancerPoolId, ClPoolId: clPoolId},
+					},
+				})
+
+			// Add balancer shares to CL accumulatores
+			addedLiquidity := sdk.ZeroDec()
+			if !tc.balSharesNotAddedToAccums {
+				addedBalPool, qualifiedShares, err := s.App.ConcentratedLiquidityKeeper.PrepareBalancerPoolAsFullRange(s.Ctx, clPool.GetId())
+				addedLiquidity = addedLiquidity.Add(qualifiedShares)
+
+				// If a valid link exists, ensure no error and sanity check the output pool ID
+				if !tc.concentratedPoolDoesNotExist && !tc.balancerPoolDoesNotExist {
+					s.Require().NoError(err)
+					s.Require().Equal(addedBalPool, balancerPoolId)
+				}
+			}
+
+			// Emit incentives to the uptime accumulators
+			for _, growth := range tc.uptimeGrowth {
+				decEmissions := growth.MulDec(initialLiquidity.Add(addedLiquidity))
+				normalizedEmissions := sdk.NormalizeCoins(decEmissions)
+
+				if !tc.insufficientPoolBalance {
+					s.FundAcc(clPool.GetIncentivesAddress(), normalizedEmissions)
+				}
+			}
+			err := addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.uptimeGrowth)
+			s.Require().NoError(err)
+
+			// --- System under test ---
+
+			amountClaimed, err := s.App.ConcentratedLiquidityKeeper.ClaimAndResetFullRangeBalancerPool(s.Ctx, clPoolId, balancerPoolId)
+
+			// --- Assertions ---
+
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
+				s.Require().Equal(sdk.Coins{}, amountClaimed)
+
+				clPoolUptimeAccumulators, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
+				s.Require().NoError(err)
+
+				s.Require().True(len(clPoolUptimeAccumulators) > 0)
+				for _, uptimeAccum := range clPoolUptimeAccumulators {
+					currAccumShares, err := uptimeAccum.GetTotalShares()
+					s.Require().NoError(err)
+
+					// Since reversions for errors are done at a higher level of abstraction,
+					// we have to assume that any state updates that happened prior to the error
+					// persist for the sake of these unit tests. Thus, balancer full range shares
+					// are technically cleared even though in production this process would have been
+					// reverted.
+					if tc.insufficientPoolBalance {
+						addedLiquidity = sdk.ZeroDec()
+					}
+
+					// Ensure accum shares remain unchanged after error
+					s.Require().Equal(initialLiquidity.Add(addedLiquidity), currAccumShares)
+				}
+
+				// If gauge exists, ensure it remains empty after error
+				if !tc.balancerPoolDoesNotExist {
+					gaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerPoolId, longestLockableDuration)
+					s.Require().NoError(err)
+
+					gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
+					s.Require().NoError(err)
+
+					s.Require().Equal(sdk.Coins(nil), gauge.Coins)
+				}
+
+				// Ensure amount claimed is zero after error
+				s.Require().Equal(sdk.Coins{}, amountClaimed)
+
+				// Pool liquidity should remain unchanged
+				updatedClPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+				s.Require().NoError(err)
+				s.Require().Equal(initialLiquidity, updatedClPool.GetLiquidity())
+
+				return
+			}
+
+			s.Require().NoError(err)
+
+			clPoolUptimeAccumulators, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
+			s.Require().NoError(err)
+
+			s.Require().True(len(clPoolUptimeAccumulators) > 0)
+			for uptimeIndex, uptimeAccum := range clPoolUptimeAccumulators {
+				currAccumShares, err := uptimeAccum.GetTotalShares()
+				s.Require().NoError(err)
+
+				// Ensure each accum has been cleared of the balancer full range shares
+				balancerPositionName := string(types.KeyBalancerFullRange(clPoolId, balancerPoolId, uint64(uptimeIndex)))
+				fullRangeRecord, err := uptimeAccum.GetPosition(balancerPositionName)
+				s.Require().Error(err)
+				s.Require().Equal(accum.Record{}, fullRangeRecord)
+
+				// Ensure the full range shares were removed from accum total
+				s.Require().Equal(initialLiquidity, currAccumShares)
+			}
+
+			// Get balancer gauge corresponding to the longest lockable duration, as this is the one we would be distributing to
+			gaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerPoolId, longestLockableDuration)
+			s.Require().NoError(err)
+			gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
+			s.Require().NoError(err)
+
+			// Since balancer position bonding is a stronger constraint than CL charging, we never need to forfeit incentives
+			longestSupportedUptime := types.SupportedUptimes[len(types.SupportedUptimes)-1]
+
+			// Calculate the number of tokens we expect to see in the balancer gauge
+			expectedTokensInGauge := expectedIncentivesFromUptimeGrowth(tc.uptimeGrowth, addedLiquidity, longestSupportedUptime, defaultMultiplier)
+
+			// Ensure gauge coins and amountClaimed are correct
+			s.Require().Equal(expectedTokensInGauge, gauge.Coins)
+			s.Require().Equal(expectedTokensInGauge, amountClaimed)
+
+			// Pool liquidity should remain unchanged
+			updatedClPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+			s.Require().NoError(err)
+			s.Require().Equal(initialLiquidity, updatedClPool.GetLiquidity())
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetLargestAuthorizedUptime() {
+	tests := map[string]struct {
+		preSetAuthorizedParams []time.Duration
+		expected               time.Duration
+	}{
+		"all supported uptimes": {
+			preSetAuthorizedParams: types.SupportedUptimes,
+			expected:               types.SupportedUptimes[len(types.SupportedUptimes)-1],
+		},
+		"1 ns": {
+			preSetAuthorizedParams: []time.Duration{time.Nanosecond},
+			expected:               time.Nanosecond,
+		},
+		"unordered": {
+			preSetAuthorizedParams: []time.Duration{time.Hour * 24 * 7, time.Nanosecond, time.Hour * 24},
+			expected:               time.Hour * 24 * 7,
+		},
+		// note cannot have test case with empty authorized uptimes due to parameter validation.
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+			k := s.App.ConcentratedLiquidityKeeper
+
+			params := k.GetParams(s.Ctx)
+			params.AuthorizedUptimes = tc.preSetAuthorizedParams
+			k.SetParams(s.Ctx, params)
+
+			actual := k.GetLargestAuthorizedUptimeDuration(s.Ctx)
+
+			s.Require().Equal(tc.expected, actual)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestMoveRewardsToNewPositionAndDeleteOldAcc() {
+	const (
+		oldName = "old"
+		newName = "new"
+	)
+
+	var (
+		// 2 ETH.
+		defaultGlobalGrowth = sdk.NewDecCoins(oneEth.Add(oneEth))
+		emptyCoins          = sdk.DecCoins(nil)
+	)
+
+	tests := map[string]struct {
+		oldPositionName          string
+		newPositionName          string
+		growthOutside            sdk.DecCoins
+		expectedUnclaimedRewards sdk.DecCoins
+		numShares                int64
+		expectError              error
+	}{
+		"empty growth outside": {
+			oldPositionName:          oldName,
+			newPositionName:          newName,
+			growthOutside:            emptyCoins,
+			numShares:                1,
+			expectedUnclaimedRewards: defaultGlobalGrowth,
+		},
+		"default global growth equals growth outside": {
+			oldPositionName:          oldName,
+			newPositionName:          newName,
+			growthOutside:            defaultGlobalGrowth,
+			numShares:                1,
+			expectedUnclaimedRewards: emptyCoins,
+		},
+		"global growth outside half of global": {
+			oldPositionName:          oldName,
+			newPositionName:          newName,
+			growthOutside:            defaultGlobalGrowth.QuoDec(sdk.NewDec(2)),
+			numShares:                1,
+			expectedUnclaimedRewards: defaultGlobalGrowth.QuoDec(sdk.NewDec(2)),
+		},
+		"multiple shares, partial growth outside": {
+			oldPositionName:          oldName,
+			newPositionName:          newName,
+			growthOutside:            defaultGlobalGrowth.QuoDec(sdk.NewDec(2)),
+			numShares:                2,
+			expectedUnclaimedRewards: defaultGlobalGrowth,
+		},
+		"error: same name": {
+			oldPositionName: oldName,
+			newPositionName: oldName,
+			expectError:     types.ModifySamePositionAccumulatorError{PositionAccName: oldName},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+			k := s.App.ConcentratedLiquidityKeeper
+
+			// Get the fee accumulator. The fact that this is a fee accumulator is irrelevant for this test.
+			// It is created this way for setup convenience.
+			pool := s.PrepareConcentratedPool()
+			testAccumulator, err := k.GetFeeAccumulator(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+
+			err = testAccumulator.NewPosition(tc.oldPositionName, sdk.NewDec(tc.numShares), nil)
+			s.Require().NoError(err)
+
+			// 2 shares is chosen arbitrarily. It is not relevant for this test.
+			err = testAccumulator.NewPosition(tc.newPositionName, sdk.NewDec(2), nil)
+			s.Require().NoError(err)
+
+			// Grow the global rewards.
+			testAccumulator.AddToAccumulator(defaultGlobalGrowth)
+
+			err = cl.MoveRewardsToNewPositionAndDeleteOldAcc(s.Ctx, testAccumulator, tc.oldPositionName, tc.newPositionName, tc.growthOutside)
+
+			if tc.expectError != nil {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+
+			// Check the old accumulator is now deleted.
+			hasPosition, err := testAccumulator.HasPosition(oldName)
+			s.Require().NoError(err)
+			s.Require().False(hasPosition)
+
+			// Check that the new accumulator has the correct amount of rewards in unclaimed rewards.
+			newPositionAccumulator, err := testAccumulator.GetPosition(newName)
+			s.Require().NoError(err)
+
+			// Validate unclaimed rewards
+			s.Require().Equal(tc.expectedUnclaimedRewards, newPositionAccumulator.UnclaimedRewardsTotal)
+
+			// Validate that position accumulator equals to the growth inside.
+			s.Require().Equal(testAccumulator.GetValue().Sub(tc.growthOutside), newPositionAccumulator.AccumValuePerShare)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetUptimeTrackerValues() {
+	testCases := []struct {
+		name           string
+		input          []model.UptimeTracker
+		expectedOutput []sdk.DecCoins
+	}{
+		{
+			name:           "Empty uptime tracker",
+			input:          []model.UptimeTracker{},
+			expectedOutput: []sdk.DecCoins{},
+		},
+		{
+			name: "One uptime tracker",
+			input: []model.UptimeTracker{
+				{UptimeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(100)))},
+			},
+			expectedOutput: []sdk.DecCoins{
+				sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(100))),
+			},
+		},
+		{
+			name: "Multiple uptime trackers",
+			input: []model.UptimeTracker{
+				{UptimeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(100)))},
+				{UptimeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin("fooa", sdk.NewInt(100)))},
+				{UptimeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin("foob", sdk.NewInt(100)))},
+			},
+			expectedOutput: []sdk.DecCoins{
+				sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(100))),
+				sdk.NewDecCoins(sdk.NewDecCoin("fooa", sdk.NewInt(100))),
+				sdk.NewDecCoins(sdk.NewDecCoin("foob", sdk.NewInt(100))),
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			result := cl.GetUptimeTrackerValues(tc.input)
+			s.Require().Equal(tc.expectedOutput, result)
 		})
 	}
 }

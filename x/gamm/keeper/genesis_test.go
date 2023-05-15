@@ -17,13 +17,11 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
-var (
-	DefaultMigrationRecords = types.MigrationRecords{BalancerToConcentratedPoolLinks: []types.BalancerToConcentratedPoolLink{
-		{BalancerPoolId: 1, ClPoolId: 4},
-		{BalancerPoolId: 2, ClPoolId: 5},
-		{BalancerPoolId: 3, ClPoolId: 6},
-	}}
-)
+var DefaultMigrationRecords = types.MigrationRecords{BalancerToConcentratedPoolLinks: []types.BalancerToConcentratedPoolLink{
+	{BalancerPoolId: 1, ClPoolId: 4},
+	{BalancerPoolId: 2, ClPoolId: 5},
+	{BalancerPoolId: 3, ClPoolId: 6},
+}}
 
 func TestGammInitGenesis(t *testing.T) {
 	app := osmoapp.Setup(false)
@@ -74,7 +72,8 @@ func TestGammInitGenesis(t *testing.T) {
 	liquidity := app.GAMMKeeper.GetTotalLiquidity(ctx)
 	require.Equal(t, liquidity, sdk.Coins{sdk.NewInt64Coin("nodetoken", 10), sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)})
 
-	postInitGenMigrationRecords := app.GAMMKeeper.GetMigrationInfo(ctx)
+	postInitGenMigrationRecords, err := app.GAMMKeeper.GetAllMigrationInfo(ctx)
+	require.NoError(t, err)
 	require.Equal(t, DefaultMigrationRecords, postInitGenMigrationRecords)
 }
 
@@ -116,7 +115,7 @@ func TestGammExportGenesis(t *testing.T) {
 	_, err = app.PoolManagerKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
-	app.GAMMKeeper.SetMigrationInfo(ctx, DefaultMigrationRecords)
+	app.GAMMKeeper.OverwriteMigrationRecords(ctx, DefaultMigrationRecords)
 
 	genesis := app.GAMMKeeper.ExportGenesis(ctx)
 	// Note: the next pool number index has been migrated to
@@ -157,7 +156,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	_, err = app.PoolManagerKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
-	app.GAMMKeeper.SetMigrationInfo(ctx, DefaultMigrationRecords)
+	app.GAMMKeeper.OverwriteMigrationRecords(ctx, DefaultMigrationRecords)
 
 	genesis := am.ExportGenesis(ctx, appCodec)
 	assert.NotPanics(t, func() {

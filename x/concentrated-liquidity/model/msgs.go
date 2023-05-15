@@ -5,8 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
@@ -26,16 +24,14 @@ func NewMsgCreateConcentratedPool(
 	denom0 string,
 	denom1 string,
 	tickSpacing uint64,
-	exponentAtPriceOne sdk.Int,
 	swapFee sdk.Dec,
 ) MsgCreateConcentratedPool {
 	return MsgCreateConcentratedPool{
-		Sender:             sender.String(),
-		Denom0:             denom0,
-		Denom1:             denom1,
-		TickSpacing:        tickSpacing,
-		ExponentAtPriceOne: exponentAtPriceOne,
-		SwapFee:            swapFee,
+		Sender:      sender.String(),
+		Denom0:      denom0,
+		Denom1:      denom1,
+		TickSpacing: tickSpacing,
+		SwapFee:     swapFee,
 	}
 }
 
@@ -44,7 +40,7 @@ func (msg MsgCreateConcentratedPool) Type() string  { return TypeMsgCreateConcen
 func (msg MsgCreateConcentratedPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return fmt.Errorf("Invalid sender address (%s)", err)
 	}
 
 	if msg.TickSpacing <= 0 {
@@ -52,11 +48,7 @@ func (msg MsgCreateConcentratedPool) ValidateBasic() error {
 	}
 
 	if msg.Denom0 == msg.Denom1 {
-		return fmt.Errorf("denom0 and denom1 must be different")
-	}
-
-	if msg.ExponentAtPriceOne.GT(cltypes.ExponentAtPriceOneMax) || msg.ExponentAtPriceOne.LT(cltypes.ExponentAtPriceOneMin) {
-		return cltypes.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: msg.ExponentAtPriceOne, PrecisionValueAtPriceOneMin: cltypes.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: cltypes.ExponentAtPriceOneMax}
+		return cltypes.MatchingDenomError{Denom: msg.Denom0}
 	}
 
 	if sdk.ValidateDenom(msg.Denom0) != nil {
@@ -76,8 +68,7 @@ func (msg MsgCreateConcentratedPool) ValidateBasic() error {
 }
 
 func (msg MsgCreateConcentratedPool) GetSignBytes() []byte {
-	return nil
-	// return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgCreateConcentratedPool) GetSigners() []sdk.AccAddress {
@@ -107,7 +98,7 @@ func (msg MsgCreateConcentratedPool) InitialLiquidity() sdk.Coins {
 }
 
 func (msg MsgCreateConcentratedPool) CreatePool(ctx sdk.Context, poolID uint64) (poolmanagertypes.PoolI, error) {
-	poolI, err := NewConcentratedLiquidityPool(poolID, msg.Denom0, msg.Denom1, msg.TickSpacing, msg.ExponentAtPriceOne, msg.SwapFee)
+	poolI, err := NewConcentratedLiquidityPool(poolID, msg.Denom0, msg.Denom1, msg.TickSpacing, msg.SwapFee)
 	return &poolI, err
 }
 

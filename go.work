@@ -8,6 +8,8 @@ use ./x/ibc-hooks
 
 use ./tests/cl-go-client
 
+use ./tests/cl-genesis-positions
+
 use .
 
 use ./x/epochs

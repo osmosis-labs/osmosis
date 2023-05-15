@@ -10,9 +10,11 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/downtime-detector/types"
 )
 
-var baseTime = time.Unix(1257894000, 0).UTC()
-var sec = time.Second
-var min = time.Minute
+var (
+	baseTime = time.Unix(1257894000, 0).UTC()
+	sec      = time.Second
+	min      = time.Minute
+)
 
 type blocktimes []time.Duration
 
@@ -33,10 +35,12 @@ func (suite *KeeperTestSuite) runBlocktimes(times blocktimes) {
 	}
 }
 
-var abruptRecovery5minDowntime10min blocktimes = []time.Duration{sec, 10 * min, 5 * min}
-var smootherRecovery5minDowntime10min blocktimes = []time.Duration{sec, 10 * min, min, min, min, min, min}
-var fifteenMinEndtime = abruptRecovery5minDowntime10min.EndTime()
-var tenMinEndtime = abruptRecovery5minDowntime10min.EndTime().Add(-5 * min)
+var (
+	abruptRecovery5minDowntime10min   blocktimes = []time.Duration{sec, 10 * min, 5 * min}
+	smootherRecovery5minDowntime10min blocktimes = []time.Duration{sec, 10 * min, min, min, min, min, min}
+	fifteenMinEndtime                            = abruptRecovery5minDowntime10min.EndTime()
+	tenMinEndtime                                = abruptRecovery5minDowntime10min.EndTime().Add(-5 * min)
+)
 
 func (suite *KeeperTestSuite) TestBeginBlock() {
 	tests := map[string]struct {

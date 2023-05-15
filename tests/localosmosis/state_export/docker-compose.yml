@@ -1,15 +1,14 @@
 version: "3"
 
 services:
-
   osmosisd:
     image: local:osmosis
     build:
       context: ../../../
       dockerfile: Dockerfile
       args:
-        RUNNER_IMAGE: alpine:3.16
-        GO_VERSION: 1.19
+        RUNNER_IMAGE: alpine:3.17
+        GO_VERSION: "1.20"
     volumes:
       - ./scripts/start.sh:/osmosis/start.sh
       - ./scripts/testnetify.py:/osmosis/testnetify.py
@@ -25,3 +24,4 @@ services:
       - 1317:1317
       - 9090:9090
       - 9091:9091
+      - 6060:6060

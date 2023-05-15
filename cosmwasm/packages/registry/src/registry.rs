@@ -4,6 +4,7 @@ use itertools::Itertools;
 use sha2::Digest;
 use sha2::Sha256;
 
+use crate::msg::Callback;
 use crate::proto;
 use crate::utils::merge_json;
 use crate::{error::RegistryError, msg::QueryMsg};
@@ -61,6 +62,17 @@ impl AsRef<str> for Chain {
     }
 }
 
+enum CoinType {
+    Native,
+    Ibc,
+}
+
+impl CoinType {
+    fn is_native(&self) -> bool {
+        matches!(self, CoinType::Native)
+    }
+}
+
 #[cw_serde]
 pub struct ForwardingMemo {
     pub receiver: String,
@@ -72,7 +84,11 @@ pub struct ForwardingMemo {
 
 #[cw_serde]
 pub struct Memo {
-    forward: ForwardingMemo,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    forward: Option<ForwardingMemo>,
+    #[serde(rename = "wasm")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    callback: Option<Callback>,
 }
 
 // We will assume here that chains use the standard ibc-go formats. This is ok
@@ -111,6 +127,10 @@ impl<'a> Registry<'a> {
                 }
             },
         }
+    }
+
+    fn debug(&self, msg: String) {
+        self.deps.api.debug(&msg);
     }
 
     /// Get a contract address by its alias
@@ -197,9 +217,7 @@ impl<'a> Registry<'a> {
     /// Get the bech32 prefix for the given chain
     /// Example: get_bech32_prefix("osmosis") -> "osmo"
     pub fn get_bech32_prefix(&self, chain: &str) -> Result<String, RegistryError> {
-        self.deps
-            .api
-            .debug(&format!("Getting prefix for chain: {chain}"));
+        self.debug(format!("Getting prefix for chain: {chain}"));
         let prefix: String = self
             .deps
             .querier
@@ -210,7 +228,7 @@ impl<'a> Registry<'a> {
                 },
             )
             .map_err(|e| {
-                self.deps.api.debug(&format!("Got error: {e}"));
+                self.debug(format!("Got error: {e}"));
                 RegistryError::Bech32PrefixDoesNotExist {
                     chain: chain.into(),
                 }
@@ -242,7 +260,7 @@ impl<'a> Registry<'a> {
     /// Returns the IBC path the denom has taken to get to the current chain
     /// Example: unwrap_denom_path("ibc/0A...") -> [{"local_denom":"ibc/0A","on":"osmosis","via":"channel-17"},{"local_denom":"ibc/1B","on":"middle_chain","via":"channel-75"},{"local_denom":"token0","on":"source_chain","via":null}
     pub fn unwrap_denom_path(&self, denom: &str) -> Result<Vec<MultiHopDenom>, RegistryError> {
-        self.deps.api.debug(&format!("Unwrapping denom {denom}"));
+        self.debug(format!("Unwrapping denom {denom}"));
 
         let mut current_chain = "osmosis".to_string(); // The initial chain is always osmosis
 
@@ -259,7 +277,10 @@ impl<'a> Registry<'a> {
         let res = proto::QueryDenomTraceRequest {
             hash: denom.to_string(),
         }
-        .query(&self.deps.querier)?;
+        .query(&self.deps.querier)
+        .map_err(|_| RegistryError::InvalidDenomTrace {
+            error: format!("Cannot find denom trace for {denom}"),
+        })?;
 
         let proto::DenomTrace { path, base_denom } = match res.denom_trace {
             Some(denom_trace) => Ok(denom_trace),
@@ -323,43 +344,64 @@ impl<'a> Registry<'a> {
     ///
     /// `block_time` is the current block time. This is needed to calculate the
     /// timeout timestamp.
+    #[allow(clippy::too_many_arguments)]
     pub fn unwrap_coin_into(
         &self,
         coin: Coin,
-        receiver: String,
+        receiver_addr: String,
         into_chain: Option<&str>,
         own_addr: String,
         block_time: Timestamp,
-        with_memo: String,
+        first_transfer_memo: String,
+        receiver_callback: Option<Callback>,
     ) -> Result<proto::MsgTransfer, RegistryError> {
-        let path = self.unwrap_denom_path(&coin.denom)?;
+        // Calculate the path that this coin took to get to the current chain.
+        // Each element in the path is an IBC hop.
+        let path: Vec<MultiHopDenom> = self.unwrap_denom_path(&coin.denom)?;
         self.deps
             .api
             .debug(&format!("Generating unwrap transfer message for: {path:?}"));
 
-        let MultiHopDenom {
-            local_denom: _,
-            on: first_chain,
-            via: first_channel,
-        } = path
-            .first()
-            .ok_or_else(|| RegistryError::InvalidDenomTracePath {
-                path: format!("{:?}", path.clone()),
-                denom: coin.denom.clone(),
-            })?;
+        // Validate Path
+        if path.is_empty() {
+            return Err(RegistryError::InvalidDenomTracePath {
+                path: format!("{path:?}"),
+                denom: coin.denom,
+            });
+        }
 
-        // default the receiver chain to the first chain if it isn't provided
+        // Define useful variables
+        let current_chain = path[0].on.clone();
+        let first_channel = path[0].via.clone();
+
+        let coin_type = if path.len() == 1 {
+            CoinType::Native
+        } else {
+            CoinType::Ibc
+        };
+
+        if coin_type.is_native() && first_channel.is_some() {
+            // Validate that the first channel is None for paths of len() == 1
+            // This is a redundante safety check in case of a bug in unwrap_denom_path
+            return Err(RegistryError::InvalidDenomTracePath {
+                path: format!("{path:?}"),
+                denom: coin.denom,
+            });
+        };
+
+        // default the receiver chain to the current chain if it isn't provided
         let receiver_chain = match into_chain {
             Some(chain) => chain,
-            None => first_chain.as_ref(),
+            None => current_chain.as_ref(),
         };
+        // normalize it
         let receiver_chain: &str = &receiver_chain.to_lowercase();
 
         // If the token we're sending is native, we need the receiver to be
         // different than the origin chain. Otherwise, we will try to make an
         // ibc transfer to the same chain and it will fail. This may be possible
         // in the future when we have IBC localhost channels
-        if first_channel.is_none() && first_chain.as_ref() == receiver_chain {
+        if coin_type.is_native() && current_chain.as_ref() == receiver_chain {
             return Err(RegistryError::InvalidHopSameChain {
                 chain: receiver_chain.into(),
             });
@@ -367,22 +409,56 @@ impl<'a> Registry<'a> {
 
         // validate the receiver matches the chain
         let receiver_prefix = self.get_bech32_prefix(receiver_chain)?;
-        if receiver[..receiver_prefix.len()] != receiver_prefix {
+        if receiver_addr[..receiver_prefix.len()] != receiver_prefix {
             return Err(RegistryError::InvalidReceiverPrefix {
-                receiver,
+                receiver: receiver_addr,
                 chain: receiver_chain.into(),
             });
         }
 
-        let ts = block_time.plus_seconds(PACKET_LIFETIME);
+        // Define the data to be used in the IBC MsgTransfer.
+
+        // If the coin is native, the ibc transfer needs to be sent to the
+        // receiver. Otherwise, it needs to be sent to the channel we received
+        // it from
+        let first_transfer_chain = match coin_type {
+            CoinType::Native => receiver_chain,
+            CoinType::Ibc => path[1].on.as_ref(), // Non native coins always have a path of len > 1 per definition
+        };
+
+        // encode the receiver address for the first chain
+        let first_receiver = self.encode_addr_for_chain(&receiver_addr, first_transfer_chain)?;
+        let first_channel = match first_channel {
+            Some(channel) => Ok::<String, RegistryError>(channel.as_ref().to_string()),
+            None => {
+                // If there is no first channel (i.e. coin_type.is_native() ==
+                // True), we get the channel from the registry
+                assert!(coin_type.is_native());
+                assert!(first_transfer_chain == receiver_chain);
+                let channel = self.get_channel(current_chain.as_ref(), first_transfer_chain)?;
+                Ok(channel)
+            }
+        }?;
+
+        // Generate the memo with the forwarding chain.
+
+        // remove the first hop from the path as it is the current chain
         let path_iter = path.iter().skip(1);
 
+        // initialize mutable variables for the iteration
         let mut next: Option<Box<Memo>> = None;
         let mut prev_chain: &str = receiver_chain;
+        let mut callback = receiver_callback; // The last call should have the receiver callback
 
+        // Note that we iterate in reverse order. This is because the structure
+        // is nested and we build it from the inside out. We want the last hop
+        // to be the innermost memo.
         for hop in path_iter.rev() {
+            self.debug(format!("processing hop: {hop:?}"));
             // If the last hop is the same as the receiver chain, we don't need
-            // to forward anymore
+            // to forward anymore. The via.is_none() check is important because
+            // we could have a hop be the receiver chain without being the one
+            // the coin is native to.
             if hop.via.is_none() && hop.on.as_ref() == receiver_chain {
                 continue;
             }
@@ -394,42 +470,53 @@ impl<'a> Registry<'a> {
                 None => ChannelId(self.get_channel(prev_chain, hop.on.as_ref())?),
             };
 
+            // The next memo wraps the previous one
             next = Some(Box::new(Memo {
-                forward: ForwardingMemo {
-                    receiver: self.encode_addr_for_chain(&receiver, prev_chain)?,
+                forward: Some(ForwardingMemo {
+                    receiver: self.encode_addr_for_chain(&receiver_addr, prev_chain)?,
                     port: TRANSFER_PORT.to_string(),
                     channel,
-                    next,
-                },
+                    next: if next.is_none() && callback.is_some() {
+                        // If there is no next, this means we are on the last
+                        // forward. We can then default to a memo with only the
+                        // receiver callback.
+                        Some(Box::new(Memo {
+                            forward: None,
+                            callback, // The callback may be None
+                        }))
+                    } else {
+                        next
+                    },
+                }),
+                callback: None,
             }));
             prev_chain = hop.on.as_ref();
+            callback = None;
         }
 
-        let forward =
-            serde_json_wasm::to_string(&next).map_err(|e| RegistryError::SerialiaztionError {
-                error: e.to_string(),
-            })?;
-        // Use the provided memo as a base. Only the forward key would be overwritten
-        self.deps.api.debug(&format!("Forward memo: {forward}"));
-        self.deps.api.debug(&format!("With memo: {with_memo}"));
-        let memo = merge_json(&with_memo, &forward)?;
-        self.deps.api.debug(&format!("merge: {memo:?}"));
+        // If no memo was generated, we still want to include the user provided
+        // callback. This is not necessary if next.is_some() because the
+        // callback would already have been included.
+        if next.is_none() {
+            next = Some(Box::new(Memo {
+                forward: None,
+                callback, // The callback may also be None
+            }));
+        }
 
-        // encode the receiver address for the first chain
-        let first_receiver = self.encode_addr_for_chain(&receiver, first_chain.as_ref())?;
-        // If the
-        let first_channel = match first_channel {
-            Some(channel) => Ok::<String, RegistryError>(channel.as_ref().to_string()),
-            None => {
-                let channel = self.get_channel(receiver_chain, first_chain.as_ref())?;
-                Ok(channel)
-            }
-        }?;
+        // Serialize the memo
+        let forward = serde_json_wasm::to_string(&next)?;
 
-        // Cosmwasm's  IBCMsg::Transfer  does not support memo.
+        // If the user provided a memo to be included in the transfer, we merge
+        // it with the calculated one. By using the provided memo as a base,
+        // only its forward key would be overwritten if it existed
+        let memo = merge_json(&first_transfer_memo, &forward)?;
+        let ts = block_time.plus_seconds(PACKET_LIFETIME);
+
+        // Cosmwasm's IBCMsg::Transfer  does not support memo.
         // To build and send the packet properly, we need to send it using stargate messages.
         // See https://github.com/CosmWasm/cosmwasm/issues/1477
-        Ok(proto::MsgTransfer {
+        let ibc_transfer_msg = proto::MsgTransfer {
             source_port: TRANSFER_PORT.to_string(),
             source_channel: first_channel,
             token: Some(coin.into()),
@@ -438,7 +525,11 @@ impl<'a> Registry<'a> {
             timeout_height: None,
             timeout_timestamp: Some(ts.nanos()),
             memo,
-        })
+        };
+
+        self.debug(format!("MsgTransfer: {ibc_transfer_msg:?}"));
+
+        Ok(ibc_transfer_msg)
     }
 }
 
@@ -462,19 +553,21 @@ mod test {
     #[test]
     fn test_forwarding_memo() {
         let memo = Memo {
-            forward: ForwardingMemo {
+            forward: Some(ForwardingMemo {
                 receiver: "receiver".to_string(),
                 port: "port".to_string(),
                 channel: ChannelId::new("channel-0").unwrap(),
                 next: Some(Box::new(Memo {
-                    forward: ForwardingMemo {
+                    forward: Some(ForwardingMemo {
                         receiver: "receiver2".to_string(),
                         port: "port2".to_string(),
                         channel: ChannelId::new("channel-1").unwrap(),
                         next: None,
-                    },
+                    }),
+                    callback: None,
                 })),
-            },
+            }),
+            callback: None,
         };
         let encoded = serde_json_wasm::to_string(&memo).unwrap();
         let decoded: Memo = serde_json_wasm::from_str(&encoded).unwrap();

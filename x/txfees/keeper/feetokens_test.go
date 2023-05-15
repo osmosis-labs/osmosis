@@ -212,7 +212,8 @@ func (suite *KeeperTestSuite) TestFeeTokenConversions() {
 				tc.feeTokenPoolInput,
 			)
 
-			suite.ExecuteUpgradeFeeTokenProposal(tc.feeTokenPoolInput.Denom, poolId)
+			err := suite.ExecuteUpgradeFeeTokenProposal(tc.feeTokenPoolInput.Denom, poolId)
+			suite.Require().NoError(err)
 
 			converted, err := suite.App.TxFeesKeeper.ConvertToBaseToken(suite.Ctx, tc.inputFee)
 			if tc.expectedConvertable {

@@ -16,6 +16,28 @@ func (suite *KeeperTestSuite) TestGRPCParams() {
 	suite.Require().True(res.Params.MinimumRiskFactor.Equal(types.DefaultParams().MinimumRiskFactor))
 }
 
+func (suite *KeeperTestSuite) TestAllIntermediaryAccounts() {
+	suite.SetupTest()
+	// set account 1
+	valAddr1 := sdk.ValAddress([]byte("test1-AllIntermediaryAccounts"))
+	acc1 := types.NewSuperfluidIntermediaryAccount("test1", valAddr1.String(), 0)
+	suite.App.SuperfluidKeeper.SetIntermediaryAccount(suite.Ctx, acc1)
+
+	// set account 2
+	valAddr2 := sdk.ValAddress([]byte("test2-AllIntermediaryAccounts"))
+	acc2 := types.NewSuperfluidIntermediaryAccount("test2", valAddr2.String(), 0)
+	suite.App.SuperfluidKeeper.SetIntermediaryAccount(suite.Ctx, acc2)
+
+	// set account 3
+	valAddr3 := sdk.ValAddress([]byte("test3-AllIntermediaryAccounts"))
+	acc3 := types.NewSuperfluidIntermediaryAccount("test3", valAddr3.String(), 0)
+	suite.App.SuperfluidKeeper.SetIntermediaryAccount(suite.Ctx, acc3)
+
+	res, err := suite.querier.AllIntermediaryAccounts(sdk.WrapSDKContext(suite.Ctx), &types.AllIntermediaryAccountsRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(3, len(res.Accounts))
+	suite.Require().Equal(uint64(3), res.Pagination.Total)
+}
 func (suite *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 	suite.SetupTest()
 	ctx := suite.Ctx
@@ -43,7 +65,8 @@ func (suite *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 		for _, result := range res.Assets {
 			// check osmo equivalent is correct
 			actual_response_osmo := result.OsmoEquivalent
-			needed_response_osmo := suite.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(ctx, denom, sdk.NewInt(delegation_amount))
+			needed_response_osmo, err := suite.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(ctx, denom, sdk.NewInt(delegation_amount))
+			suite.Require().NoError(err)
 
 			suite.Require().Equal(actual_response_osmo, needed_response_osmo)
 
@@ -65,6 +88,7 @@ func (suite *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 		}
 	}
 }
+
 func (suite *KeeperTestSuite) TestGRPCSuperfluidAsset() {
 	suite.SetupTest()
 
@@ -74,12 +98,12 @@ func (suite *KeeperTestSuite) TestGRPCSuperfluidAsset() {
 
 	// set asset
 	suite.querier.SetSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
-		Denom:     "gamm/pool/1",
+		Denom:     DefaultGammAsset,
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	})
 
 	// get asset
-	res, err := suite.querier.AssetType(sdk.WrapSDKContext(suite.Ctx), &types.AssetTypeRequest{Denom: "gamm/pool/1"})
+	res, err := suite.querier.AssetType(sdk.WrapSDKContext(suite.Ctx), &types.AssetTypeRequest{Denom: DefaultGammAsset})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.AssetType, types.SuperfluidAssetTypeLPShare)
 
@@ -173,7 +197,6 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 		suite.Require().NotEqual("", connectedIntermediaryAccountRes.Account.Denom)
 		suite.Require().NotEqual("", connectedIntermediaryAccountRes.Account.Address)
 		suite.Require().NotEqual(uint64(0), connectedIntermediaryAccountRes.Account.GaugeId)
-
 	}
 	connectedIntermediaryAccountRes, err := suite.queryClient.ConnectedIntermediaryAccount(sdk.WrapSDKContext(suite.Ctx), &types.ConnectedIntermediaryAccountRequest{LockId: 123})
 	suite.Require().NoError(err)

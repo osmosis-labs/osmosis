@@ -28,20 +28,20 @@ jobs:
     steps:
       -
         name: Check out repository code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: ${{ inputs.target-branch }}
-      -
-        name: Setup Golang
-        uses: actions/setup-go@v2.1.4
+      - 
+        name: 🐿 Setup Golang
+        uses: actions/setup-go@v4
         with:
-          go-version: 1.18
+          go-version: '^1.20'
       -
         name: Display go version
         run: go version
       -
         name: Get data from build cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           # In order:
           # * Module download cache
@@ -60,7 +60,7 @@ jobs:
         name: Run find & replace script
         run: ./scripts/replace_import_paths.sh ${{ inputs.version }}
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v4
+        uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.COMMIT_TO_BRANCH }}
           title: "auto: update Go import paths to v${{ inputs.version }} on branch ${{ inputs.target-branch }}"
