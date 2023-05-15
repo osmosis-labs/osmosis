@@ -703,7 +703,7 @@ func (suite *KeeperTestSuite) TestHasLock() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestLock() {
+func (suite *KeeperTestSuite) TestLockNoSend() {
 	suite.SetupTest()
 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
@@ -717,9 +717,9 @@ func (suite *KeeperTestSuite) TestLock() {
 		Coins:    coins,
 	}
 
-	// test locking without balance
-	err := suite.App.LockupKeeper.Lock(suite.Ctx, lock, coins)
-	suite.Require().Error(err)
+	// test locking without balance (should work since we don't send the underlying balance)
+	err := suite.App.LockupKeeper.LockNoSend(suite.Ctx, lock, coins)
+	suite.Require().NoError(err)
 
 	// check accumulation store
 	accum := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
@@ -727,10 +727,10 @@ func (suite *KeeperTestSuite) TestLock() {
 		Denom:         "stake",
 		Duration:      time.Second,
 	})
-	suite.Require().Equal(accum.String(), "0")
+	suite.Require().Equal(accum.String(), "10")
 
 	suite.FundAcc(addr1, coins)
-	err = suite.App.LockupKeeper.Lock(suite.Ctx, lock, coins)
+	err = suite.App.LockupKeeper.LockNoSend(suite.Ctx, lock, coins)
 	suite.Require().NoError(err)
 
 	// check accumulation store
@@ -739,14 +739,15 @@ func (suite *KeeperTestSuite) TestLock() {
 		Denom:         "stake",
 		Duration:      time.Second,
 	})
-	suite.Require().Equal(accum.String(), "10")
+	suite.Require().Equal(accum.String(), "20")
 
+	// Since lockNoSend does not send the underlying coins, the account balance should be unchanged
 	balance := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, "stake")
-	suite.Require().Equal(sdk.ZeroInt(), balance.Amount)
+	suite.Require().Equal(sdk.NewInt(10).String(), balance.Amount.String())
 
 	acc := suite.App.AccountKeeper.GetModuleAccount(suite.Ctx, types.ModuleName)
 	balance = suite.App.BankKeeper.GetBalance(suite.Ctx, acc.GetAddress(), "stake")
-	suite.Require().Equal(sdk.NewInt(10), balance.Amount)
+	suite.Require().Equal(sdk.NewInt(0).String(), balance.Amount.String())
 }
 
 func (suite *KeeperTestSuite) AddTokensToLockForSynth() {

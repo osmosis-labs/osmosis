@@ -22,8 +22,8 @@ func (k Keeper) GetCoinsFromLocks(locks []types.PeriodLock) sdk.Coins {
 	return k.getCoinsFromLocks(locks)
 }
 
-func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Coins) error {
-	return k.lock(ctx, lock, tokensToLock)
+func (k Keeper) LockNoSend(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Coins) error {
+	return k.lockNoSend(ctx, lock, tokensToLock)
 }
 
 func (k Keeper) UnlockMaturedLockInternalLogic(ctx sdk.Context, lock types.PeriodLock) error {
