@@ -1461,9 +1461,11 @@ func (s *KeeperTestSuite) TestCreateFullRangePosition() {
 	}
 }
 
-func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
-	defaultAddress := s.TestAccs[0]
-	defaultPositionCoins := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
+func (s *KeeperTestSuite) TestMintSharesAndLock() {
+	var (
+		defaultPositionCoins = sdk.NewCoins(DefaultCoin0, DefaultCoin1)
+		defaultAddress       = s.TestAccs[0]
+	)
 
 	tests := []struct {
 		name                    string
@@ -1504,14 +1506,14 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 			clPool := s.PrepareConcentratedPool()
 
 			// Fund the owner account
-			s.FundAcc(test.owner, defaultPositionCoins)
+			s.FundAcc(test.owner, DefaultCoins)
 
 			// Create a position
 			positionId := uint64(0)
 			liquidity := sdk.ZeroDec()
 			if test.createFullRangePosition {
 				var err error
-				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), test.owner, defaultPositionCoins)
+				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), test.owner, DefaultCoins)
 				s.Require().NoError(err)
 			} else {
 				var err error
@@ -1522,7 +1524,7 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 			lockupModuleAccountBalancePre := s.App.LockupKeeper.GetModuleBalance(s.Ctx)
 
 			// System under test
-			concentratedLockId, underlyingLiquidityTokenized, err := s.App.ConcentratedLiquidityKeeper.MintSharesLockAndUpdate(s.Ctx, clPool.GetId(), positionId, test.owner, test.remainingLockDuration)
+			concentratedLockId, underlyingLiquidityTokenized, err := s.App.ConcentratedLiquidityKeeper.MintSharesAndLock(s.Ctx, clPool.GetId(), positionId, test.owner, test.remainingLockDuration)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, test.expectedErr)
@@ -1985,7 +1987,8 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 		s.Require().NoError(err)
 
 		// Get the full range liquidity for the pool.
-		expectedFullRangeLiquidity := s.App.ConcentratedLiquidityKeeper.MustGetFullRangeLiquidityInPool(s.Ctx, clPoolId)
+		expectedFullRangeLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetFullRangeLiquidityInPool(s.Ctx, clPoolId)
+		s.Require().NoError(err)
 		s.Require().Equal(expectedFullRangeLiquidity, actualFullRangeLiquidity)
 
 		// Create a new position that overlaps with the min tick, but is not full range and therefore should not count towards the full range liquidity.
@@ -1999,7 +2002,8 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 		// Test updating the full range liquidity.
 		err = s.App.ConcentratedLiquidityKeeper.UpdateFullRangeLiquidityInPool(s.Ctx, clPoolId, tc.updateLiquidity)
 		s.Require().NoError(err)
-		actualFullRangeLiquidity = s.App.ConcentratedLiquidityKeeper.MustGetFullRangeLiquidityInPool(s.Ctx, clPoolId)
+		actualFullRangeLiquidity, err = s.App.ConcentratedLiquidityKeeper.GetFullRangeLiquidityInPool(s.Ctx, clPoolId)
+		s.Require().NoError(err)
 		s.Require().Equal(expectedFullRangeLiquidity.Add(tc.updateLiquidity), actualFullRangeLiquidity)
 	}
 }

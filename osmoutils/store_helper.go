@@ -85,7 +85,7 @@ func GetIterValuesWithStop[T any](
 
 // HasAnyAtPrefix returns true if there is at least one value in the given prefix.
 func HasAnyAtPrefix[T any](storeObj store.KVStore, prefix []byte, parseValue func([]byte) (T, error)) (bool, error) {
-	_, err := GetFirstValueInRange(storeObj, prefix, sdk.PrefixEndBytes(prefix),false,  parseValue)
+	_, err := GetFirstValueInRange(storeObj, prefix, sdk.PrefixEndBytes(prefix), false, parseValue)
 	if err != nil {
 		if err == ErrNoValuesInRange {
 			return false, nil
@@ -178,6 +178,21 @@ func MustGetDec(store store.KVStore, key []byte) sdk.Dec {
 	result := &sdk.DecProto{}
 	MustGet(store, key, result)
 	return result.Dec
+}
+
+// GetDec gets dec value from store at key. Returns error if:
+// - database error occurs.
+// - no value at given key is found.
+func GetDec(store store.KVStore, key []byte) (sdk.Dec, error) {
+	result := &sdk.DecProto{}
+	isFound, err := Get(store, key, result)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	if !isFound {
+		return sdk.Dec{}, DecNotFoundError{Key: string(key)}
+	}
+	return result.Dec, nil
 }
 
 // Get returns a value at key by mutating the result parameter. Returns true if the value was found and the

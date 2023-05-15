@@ -45,6 +45,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	if err := validateTickRangeIsValid(pool.GetTickSpacing(), lowerTick, upperTick); err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
+
 	amount0Desired := tokensProvided.AmountOf(pool.GetToken0())
 	amount1Desired := tokensProvided.AmountOf(pool.GetToken1())
 	if amount0Desired.IsZero() && amount1Desired.IsZero() {
@@ -299,7 +300,7 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 	// Create new position with updated liquidity.
 	amount0Desired := amount0Withdrawn.Add(amount0Added)
 	amount1Desired := amount1Withdrawn.Add(amount1Added)
-	pool, err := k.GetPoolFromPoolIdAndConvertToConcentrated(ctx, position.PoolId)
+	pool, err := k.GetConcentratedPoolById(ctx, position.PoolId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
 	}

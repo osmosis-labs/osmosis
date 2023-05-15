@@ -301,8 +301,9 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 }
 
 // SuperfluidUndelegateToConcentratedPosition starts undelegating superfluid delegated position for the given lock. It behaves similarly to SuperfluidUndelegate,
-// however it does not create a new synthetic lockup representing the unstaking side. This is because at the time this function is called, the new concentrated liquidity side
-// lock has not yet been created. Once the new cl side lock is created, the synthetic lockup representing the unstaking side is created.
+// however it does not create a new synthetic lockup representing the unstaking side. This is because after the time this function is called, we might
+// want to perform more operations prior to creating a lock. Once the actual lock is created, the synthetic lockup representing the unstaking side
+// should eventually be created as well. Use thi function with caution to avoid accidentally missing synthetic lock creation.
 func (k Keeper) SuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, sender string, gammLockID uint64) (types.SuperfluidIntermediaryAccount, error) {
 	return k.undelegateCommon(ctx, sender, gammLockID)
 }

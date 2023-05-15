@@ -221,7 +221,7 @@ func parseSetSuperfluidAssetsArgsToContent(cmd *cobra.Command) (govtypes.Content
 		var assetType types.SuperfluidAssetType
 		if strings.HasPrefix(asset, gammtypes.GAMMTokenPrefix) {
 			assetType = types.SuperfluidAssetTypeLPShare
-		} else if strings.HasPrefix(asset, cltypes.ClTokenPrefix) {
+		} else if strings.HasPrefix(asset, cltypes.ConcentratedLiquidityTokenPrefix) {
 			assetType = types.SuperfluidAssetTypeConcentratedShare
 		} else {
 			return nil, fmt.Errorf("Invalid asset prefix: %s", asset)

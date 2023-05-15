@@ -225,7 +225,9 @@ func convertPoolInterfaceToConcentrated(poolI poolmanagertypes.PoolI) (types.Con
 	return concentratedPool, nil
 }
 
-func (k Keeper) GetPoolFromPoolIdAndConvertToConcentrated(ctx sdk.Context, poolId uint64) (types.ConcentratedPoolExtension, error) {
+// GetConcentratedPoolById returns a concentrated pool interface associated with the given id.
+// Returns error if fails to fetch the pool from the store.
+func (k Keeper) GetConcentratedPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedPoolExtension, error) {
 	poolI, err := k.GetPool(ctx, poolId)
 	if err != nil {
 		return nil, err
@@ -271,7 +273,7 @@ func (k Keeper) GetSerializedPools(ctx sdk.Context, pagination *query.PageReques
 // It returns an error if the tick spacing is not one of the authorized tick spacings or is not less than the current tick spacing of the respective pool.
 func (k Keeper) DecreaseConcentratedPoolTickSpacing(ctx sdk.Context, poolIdToTickSpacingRecord []types.PoolIdToTickSpacingRecord) error {
 	for _, poolIdToTickSpacingRecord := range poolIdToTickSpacingRecord {
-		pool, err := k.GetPoolFromPoolIdAndConvertToConcentrated(ctx, poolIdToTickSpacingRecord.PoolId)
+		pool, err := k.GetConcentratedPoolById(ctx, poolIdToTickSpacingRecord.PoolId)
 		if err != nil {
 			return err
 		}
