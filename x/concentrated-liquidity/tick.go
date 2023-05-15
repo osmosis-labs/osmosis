@@ -209,14 +209,17 @@ func roundTickToCanonicalPriceTick(lowerTick, upperTick int64, priceTickLower, p
 		return 0, 0, err
 	}
 
+	newLowerTickInt64 := newLowerTick.Int64()
+	newUpperTickInt64 := newUpperTick.Int64()
+
 	// If the lower or upper tick has changed, we need to re-validate the tick range.
-	if lowerTick != newLowerTick.Int64() || upperTick != newUpperTick.Int64() {
-		err := validateTickRangeIsValid(tickSpacing, newLowerTick.Int64(), newUpperTick.Int64())
+	if lowerTick != newLowerTickInt64 || upperTick != newUpperTickInt64 {
+		err := validateTickRangeIsValid(tickSpacing, newLowerTickInt64, newUpperTickInt64)
 		if err != nil {
 			return 0, 0, err
 		}
 	}
-	return newLowerTick.Int64(), newUpperTick.Int64(), nil
+	return newLowerTickInt64, newUpperTickInt64, nil
 }
 
 // GetTickLiquidityForFullRange returns an array of liquidity depth for all ticks existing from min tick ~ max tick.
