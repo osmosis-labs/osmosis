@@ -168,27 +168,33 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 		// liquidity.
 		if shouldConcentrate {
 			// Within 10 ticks of the current
-			for i := 0; i < numberOfPositions; i++ {
-				lowerTick := currentTick.Int64() - 10
-				upperTick := currentTick.Int64() + 10
+			if tickSpacing <= 10 {
+				for i := 0; i < numberOfPositions; i++ {
+					lowerTick := currentTick.Int64() - 10
+					upperTick := currentTick.Int64() + 10
 
-				tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(maxAmountDeposited).MulRaw(5))
-				tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(maxAmountDeposited).MulRaw(5))
-				tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
+					tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(maxAmountDeposited).MulRaw(5))
+					tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(maxAmountDeposited).MulRaw(5))
+					tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
 
-				accountIndex := rand.Intn(len(s.TestAccs))
+					accountIndex := rand.Intn(len(s.TestAccs))
 
-				account := s.TestAccs[accountIndex]
+					account := s.TestAccs[accountIndex]
 
-				simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
+					simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
 
-				s.createPosition(accountIndex, poolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
+					s.createPosition(accountIndex, poolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
+				}
 			}
 
 			// Within 100 ticks of the current
 			for i := 0; i < numberOfPositions; i++ {
 				lowerTick := currentTick.Int64() - 100
 				upperTick := currentTick.Int64() + 100
+				// Normalize lowerTick to be a multiple of tickSpacing
+				lowerTick = lowerTick + (tickSpacing - lowerTick%tickSpacing)
+				// Normalize upperTick to be a multiple of tickSpacing
+				upperTick = upperTick - upperTick%tickSpacing
 
 				tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(maxAmountDeposited).MulRaw(5))
 				tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(maxAmountDeposited).MulRaw(5))
