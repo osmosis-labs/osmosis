@@ -378,8 +378,6 @@ func (k Keeper) mintSharesAndLock(ctx sdk.Context, concentratedPoolId, positionI
 	}
 
 	// Create a coin object to represent the underlying liquidity for the cl position.
-	// Q: what is the impact of this on slashing or anything else. I think truncating liqudiity even slightly might cause the final token amount difference
-	// to end up being quite large. I think the risk of this is offset but superfluid risk factor but would like to confirm.
 	underlyingLiquidityTokenized = sdk.NewCoins(sdk.NewCoin(types.GetConcentratedLockupDenomFromPoolId(concentratedPoolId), position.Liquidity.TruncateInt()))
 
 	// Mint the underlying liquidity as a token and send to the owner.
