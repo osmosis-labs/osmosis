@@ -66,7 +66,7 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 
 	// Superfluid undelegate the superfluid delegated position.
 	// This deletes the connection between the lock and the intermediate account, deletes the synthetic lock, and burns the synthetic osmo.
-	intermediateAccount, err := k.superfluidUndelegateToConcentratedPosition(ctx, sender.String(), lockId)
+	intermediateAccount, err := k.SuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), lockId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
@@ -286,16 +286,13 @@ func (k Keeper) prepareMigration(ctx sdk.Context, sender sdk.AccAddress, lockId 
 	}
 
 	// Check that lockID corresponds to sender, and contains correct denomination of LP shares.
-	preMigrationLock, err = k.validateGammLockForSuperfluidStaking(ctx, sender, poolIdLeaving, lockId)
+	preMigrationLock, err = k.validateLockForUnpool(ctx, sender, poolIdLeaving, lockId)
 	if err != nil {
 		return 0, 0, nil, &lockuptypes.PeriodLock{}, 0, nil, false, false, err
 	}
 
 	// Before we break the lock, we must note the time remaining on the lock.
-	remainingLockTime, err = k.getExistingLockRemainingDuration(ctx, preMigrationLock)
-	if err != nil {
-		return 0, 0, nil, &lockuptypes.PeriodLock{}, 0, nil, false, false, err
-	}
+	remainingLockTime = k.getExistingLockRemainingDuration(ctx, preMigrationLock)
 
 	// Check if the lock has a corresponding synthetic lock.
 	// Synthetic lock existence implies that the lock is superfluid delegated or undelegating.
