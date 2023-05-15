@@ -193,7 +193,7 @@ func validateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int
 
 // roundTick takes a tick and determines if multiple ticks can represent the same price as the provided tick. If so, it
 // rounds that tick up to the largest tick that can represent the same price that the original tick corresponded to. If one of
-// the two ticks are modified, we re-validate the tick range to ensure that the tick range is still valid.
+// the two ticks happen to be rounded, we re-validate the tick range to ensure that the tick range is still valid.
 //
 // i.e. the provided tick is -161795100. With our precision, this tick correlates to a sqrtPrice of 0.000000001414213563
 // the first tick (given our precision) that is able to represent this price is -161000000, so we use this tick instead.
