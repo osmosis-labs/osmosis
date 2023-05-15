@@ -682,8 +682,6 @@ func (k Keeper) RemovePositionIdForLockId(ctx sdk.Context, positionId, underlyin
 // If lock is no longer active, returns false.
 func (k Keeper) PositionHasActiveUnderlyingLock(ctx sdk.Context, positionId uint64) (hasActiveUnderlyingLock bool, lockId uint64, err error) {
 	// Get the lock ID for the position.
-	// The only possible error retuned from `GetLockIdFromPositionId` is when position id to lock id mapping is not present.
-	// In this case, we silence the error and return false instead.
 	lockId, err = k.GetLockIdFromPositionId(ctx, positionId)
 	if err != nil {
 		return false, 0, nil

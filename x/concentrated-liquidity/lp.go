@@ -225,7 +225,7 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		if !anyPositionsRemainingInPool {
 			// Reset the current tick and current square root price to initial values of zero since there is no
 			// liquidity left.
-			if err := k.reinitializePool(ctx, pool.GetId()); err != nil {
+			if err := k.uninitializePool(ctx, pool.GetId()); err != nil {
 				return sdk.Int{}, sdk.Int{}, err
 			}
 
@@ -442,11 +442,11 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	return nil
 }
 
-// reinitializePool reinitializes a pool if it has no liquidity.
+// uninitializePool reinitializes a pool if it has no liquidity.
 // It does so by setting the current square root price and tick to zero.
 // This is necessary for the twap to correctly detect a spot price error
 // when there is no liquidity in the pool.
-func (k Keeper) reinitializePool(ctx sdk.Context, poolId uint64) error {
+func (k Keeper) uninitializePool(ctx sdk.Context, poolId uint64) error {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return err

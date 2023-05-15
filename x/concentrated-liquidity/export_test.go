@@ -278,8 +278,8 @@ func (k Keeper) ClaimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 	return k.claimAndResetFullRangeBalancerPool(ctx, clPoolId, balPoolId)
 }
 
-func (k Keeper) ReinitializePool(ctx sdk.Context, poolId uint64) error {
-	return k.reinitializePool(ctx, poolId)
+func (k Keeper) UninitializePool(ctx sdk.Context, poolId uint64) error {
+	return k.uninitializePool(ctx, poolId)
 }
 
 // SetListenersUnsafe sets the listeners of the module. It is only meant to be used in tests.

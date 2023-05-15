@@ -1629,7 +1629,7 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 	}
 }
 
-func (s *KeeperTestSuite) TestReinitializePool() {
+func (s *KeeperTestSuite) TestUninitializePool() {
 	tests := map[string]struct {
 		poolId       uint64
 		hasPositions bool
@@ -1664,7 +1664,7 @@ func (s *KeeperTestSuite) TestReinitializePool() {
 			err := clKeeper.InitializeInitialPositionForPool(s.Ctx, pool, DefaultAmt0, DefaultAmt1)
 			s.Require().NoError(err)
 
-			err = clKeeper.ReinitializePool(s.Ctx, tc.poolId)
+			err = clKeeper.UninitializePool(s.Ctx, tc.poolId)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)
