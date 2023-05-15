@@ -529,7 +529,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 				presupplyWithOffset := suite.App.BankKeeper.GetSupplyWithOffset(suite.Ctx, bondDenom)
 
 				// superfluid undelegate
-				_, err = suite.App.SuperfluidKeeper.SuperfluidForceUndelegate(suite.Ctx, lock.Owner, lockId)
+				_, err = suite.App.SuperfluidKeeper.SuperfluidUndelegateToConcentratedPosition(suite.Ctx, lock.Owner, lockId)
 				if tc.expSuperUnbondingErr[index] {
 					suite.Require().Error(err)
 					continue
@@ -584,7 +584,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 				lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockId)
 				suite.Require().NoError(err)
 
-				_, err = suite.App.SuperfluidKeeper.SuperfluidForceUndelegate(suite.Ctx, lock.Owner, lockId)
+				_, err = suite.App.SuperfluidKeeper.SuperfluidUndelegateToConcentratedPosition(suite.Ctx, lock.Owner, lockId)
 				suite.Require().Error(err)
 			}
 		})
