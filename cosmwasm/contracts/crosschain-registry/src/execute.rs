@@ -48,24 +48,11 @@ pub fn propose_pfm(
 ) -> Result<Response, ContractError> {
     let (deps, env, info) = ctx;
 
+    // enforce lowercase
     let chain = chain.to_lowercase();
 
-    // Store the chain to validate. If validation fails this will be reverted
-    if let Some(chain_pfm) = CHAIN_PFM_MAP.may_load(deps.storage, &chain)? {
-        if chain_pfm.is_validated() {
-            // Only authorized addresses can ask for a validated PFM to be re-checked
-            // If sender is the contract governor, then they are authorized to do do this to any chain
-            // Otherwise, they must be authorized to do manage the chain they are attempting to modify
-            let user_permission =
-                check_is_authorized(deps.as_ref(), info.sender.clone(), Some(chain.clone()))?;
-            check_action_permission(FullOperation::Change, user_permission)?;
-        }
-    };
-
-    CHAIN_PFM_MAP.save(deps.storage, &chain, &ChainPFM::default())?;
-
+    // validation
     let registry = Registry::default(deps.as_ref());
-
     let coin = cw_utils::one_coin(&info)?;
     let native_chain = registry.get_native_chain(&coin.denom)?;
 
@@ -76,8 +63,29 @@ pub fn propose_pfm(
         });
     }
 
+    // check if the chain is already registered or is in progress
+    if let Some(chain_pfm) = CHAIN_PFM_MAP.may_load(deps.storage, &chain)? {
+        if chain_pfm.is_validated() {
+            // Only authorized addresses can ask for a validated PFM to be re-checked
+            // If sender is the contract governor, then they are authorized to do do this to any chain
+            // Otherwise, they must be authorized to do manage the chain they are attempting to modify
+            let user_permission =
+                check_is_authorized(deps.as_ref(), info.sender.clone(), Some(chain.clone()))?;
+            check_action_permission(FullOperation::Change, user_permission)?;
+        } else {
+            return Err(ContractError::PFMValidationAlreadyInProgress {
+                chain: chain.clone(),
+            });
+        }
+    };
+
+    // Store the chain to validate
+    CHAIN_PFM_MAP.save(deps.storage, &chain, &ChainPFM::default())?;
+
     let own_addr = env.contract.address;
 
+    // redeclaring (shadowing) registry to avoid issues with the borrow checker
+    let registry = Registry::default(deps.as_ref());
     let ibc_transfer = registry.unwrap_coin_into(
         coin,
         own_addr.to_string(),
