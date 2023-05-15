@@ -1,6 +1,8 @@
 package math
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -44,6 +46,10 @@ func Liquidity1(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	sqrtPriceBBigDec := osmomath.BigDecFromSDKDec(sqrtPriceB)
 
 	diff := sqrtPriceBBigDec.Sub(sqrtPriceABigDec)
+	if diff.Equal(osmomath.ZeroDec()) {
+		panic(fmt.Sprintf("diff is zero: sqrtPriceA %s sqrtPriceB %s", sqrtPriceA, sqrtPriceB))
+	}
+
 	return amountBigDec.Quo(diff).SDKDec()
 }
 
