@@ -136,6 +136,9 @@ pub struct MultiHopDenom {
     pub via: Option<ChannelId>, // This is optional because native tokens have no channel
 }
 
+// The name of the chain on which the contract using this lib is instantiated
+pub const CONTRACT_CHAIN: &str = "osmosis";
+
 pub struct Registry<'a> {
     pub deps: Deps<'a>,
     pub registry_contract: String,
@@ -310,7 +313,7 @@ impl<'a> Registry<'a> {
     pub fn unwrap_denom_path(&self, denom: &str) -> Result<Vec<MultiHopDenom>, RegistryError> {
         self.debug(format!("Unwrapping denom {denom}"));
 
-        let mut current_chain = "osmosis".to_string(); // The initial chain is always osmosis
+        let mut current_chain = CONTRACT_CHAIN.to_string(); // The initial chain is always the contract chain
 
         // Check that the denom is an IBC denom
         if !denom.starts_with("ibc/") {
