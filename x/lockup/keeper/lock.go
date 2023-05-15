@@ -158,7 +158,7 @@ func (k Keeper) CreateLockNoSend(ctx sdk.Context, owner sdk.AccAddress, coins sd
 	return lock, nil
 }
 
-// lock is an internal utility to lock coins and set corresponding states.
+// lockNoSend is an internal utility to lock coins and set corresponding states.
 // This is only called by either of the two possible entry points to lock tokens.
 // 1. CreateLock
 // 2. AddTokensToLockByID
