@@ -9,39 +9,44 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
+var (
+	sdkNineDec = sdk.NewDec(9)
+	sdkTenDec  = sdk.NewDec(10)
+)
+
 // TicksToSqrtPrice returns the sqrtPrice for the lower and upper ticks by
 // individually calling `TickToSqrtPrice` method.
 // Returns error if fails to calculate price.
-func TicksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, error) {
+func TicksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec, error) {
 	if lowerTick >= upperTick {
-		return sdk.Dec{}, sdk.Dec{}, types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
+		return sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
 	}
-	sqrtPriceUpperTick, err := TickToSqrtPrice(sdk.NewInt(upperTick))
+	priceUpperTick, sqrtPriceUpperTick, err := TickToSqrtPrice(sdk.NewInt(upperTick))
 	if err != nil {
-		return sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
-	sqrtPriceLowerTick, err := TickToSqrtPrice(sdk.NewInt(lowerTick))
+	priceLowerTick, sqrtPriceLowerTick, err := TickToSqrtPrice(sdk.NewInt(lowerTick))
 	if err != nil {
-		return sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
-	return sqrtPriceLowerTick, sqrtPriceUpperTick, nil
+	return priceLowerTick, priceUpperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, nil
 }
 
 // TickToSqrtPrice returns the sqrtPrice given a tickIndex
 // If tickIndex is zero, the function returns sdk.OneDec().
 // It is the combination of calling TickToPrice followed by Sqrt.
-func TickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
+func TickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, sdk.Dec, error) {
 	price, err := TickToPrice(tickIndex)
 	if err != nil {
-		return sdk.Dec{}, err
+		return sdk.Dec{}, sdk.Dec{}, err
 	}
 
 	// Determine the sqrtPrice from the price
 	sqrtPrice, err := price.ApproxSqrt()
 	if err != nil {
-		return sdk.Dec{}, err
+		return sdk.Dec{}, sdk.Dec{}, err
 	}
-	return sqrtPrice, nil
+	return price, sqrtPrice, nil
 }
 
 // TickToPrice returns the price given a tickIndex
@@ -72,7 +77,7 @@ func TickToPrice(tickIndex sdk.Int) (price sdk.Dec, err error) {
 	if tickIndex.IsNegative() {
 		// We must decrement the exponentAtCurrentTick when entering the negative tick range in order to constantly step up in precision when going further down in ticks
 		// Otherwise, from tick 0 to tick -(geometricExponentIncrementDistanceInTicks), we would use the same exponent as the exponentAtPriceOne
-		exponentAtCurrentTick = exponentAtCurrentTick.Sub(sdkOneInt)
+		exponentAtCurrentTick = exponentAtCurrentTick.Sub(sdk.OneInt())
 	}
 
 	// Knowing what our exponentAtCurrentTick is, we can then figure out what power of 10 this exponent corresponds to
@@ -141,16 +146,16 @@ func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
 // This is because the sdk.Dec.Power function does not support negative exponents
 func PowTenInternal(exponent sdk.Int) sdk.Dec {
 	if exponent.GTE(sdk.ZeroInt()) {
-		return powersOfTen[exponent.Int64()]
+		return sdkTenDec.Power(exponent.Uint64())
 	}
-	return negPowersOfTen[-exponent.Int64()]
+	return sdk.OneDec().Quo(sdkTenDec.Power(exponent.Abs().Uint64()))
 }
 
 func powTenBigDec(exponent sdk.Int) osmomath.BigDec {
 	if exponent.GTE(sdk.ZeroInt()) {
-		return bigPowersOfTen[exponent.Int64()]
+		return osmomath.NewBigDec(10).PowerInteger(exponent.Uint64())
 	}
-	return bigNegPowersOfTen[-exponent.Int64()]
+	return osmomath.OneDec().Quo(osmomath.NewBigDec(10).PowerInteger(exponent.Abs().Uint64()))
 }
 
 // CalculatePriceToTick takes in a price and returns the corresponding tick index.
@@ -175,23 +180,23 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex sdk.Int) {
 	// as well as how many ticks that corresponds to
 	// In the opposite direction (price < 1), we do the same thing (just decrement the geometric exponent instead of incrementing).
 	// The only difference is we must reduce the increment distance by a factor of 10.
-	if price.GT(sdkOneDec) {
+	if price.GT(sdk.OneDec()) {
 		for currentPrice.LT(price) {
 			currentAdditiveIncrementInTicks = powTenBigDec(exponentAtCurrentTick)
 			maxPriceForCurrentAdditiveIncrementInTicks := osmomath.BigDecFromSDKDec(geometricExponentIncrementDistanceInTicks).Mul(currentAdditiveIncrementInTicks)
-			currentPrice.AddMut(maxPriceForCurrentAdditiveIncrementInTicks.SDKDec())
-			exponentAtCurrentTick = exponentAtCurrentTick.Add(sdkOneInt)
+			currentPrice = currentPrice.Add(maxPriceForCurrentAdditiveIncrementInTicks.SDKDec())
+			exponentAtCurrentTick = exponentAtCurrentTick.Add(sdk.OneInt())
 			ticksPassed = ticksPassed.Add(geometricExponentIncrementDistanceInTicks.TruncateInt())
 		}
 	} else {
 		// We must decrement the exponentAtCurrentTick by one when traversing negative ticks in order to constantly step up in precision when going further down in ticks
 		// Otherwise, from tick 0 to tick -(geometricExponentIncrementDistanceInTicks), we would use the same exponent as the exponentAtPriceOne
-		exponentAtCurrentTick := exponentAtPriceOne.Sub(sdkOneInt)
+		exponentAtCurrentTick := exponentAtPriceOne.Sub(sdk.OneInt())
 		for currentPrice.GT(price) {
 			currentAdditiveIncrementInTicks = powTenBigDec(exponentAtCurrentTick)
 			maxPriceForCurrentAdditiveIncrementInTicks := osmomath.BigDecFromSDKDec(geometricExponentIncrementDistanceInTicks).Mul(currentAdditiveIncrementInTicks)
-			currentPrice.SubMut(maxPriceForCurrentAdditiveIncrementInTicks.SDKDec())
-			exponentAtCurrentTick = exponentAtCurrentTick.Sub(sdkOneInt)
+			currentPrice = currentPrice.Sub(maxPriceForCurrentAdditiveIncrementInTicks.SDKDec())
+			exponentAtCurrentTick = exponentAtCurrentTick.Sub(sdk.OneInt())
 			ticksPassed = ticksPassed.Sub(geometricExponentIncrementDistanceInTicks.TruncateInt())
 		}
 	}
