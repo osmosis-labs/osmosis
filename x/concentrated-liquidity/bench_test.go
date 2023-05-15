@@ -126,7 +126,7 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 			} else {
 				// Increasing price so want to be above current tick
 
-				// currentTick <= lowerTick <= upperTick
+				// currentTick <= lowerTick <= maxTick
 				lowerTick := rand.Int63n(types.MaxTick-currentTick.Int64()+1) + currentTick.Int64()
 				// lowerTick <= upperTick <= maxTick
 				upperTick = types.MaxTick - rand.Int63n(int64(math.Abs(float64(types.MaxTick-lowerTick))))
@@ -150,8 +150,9 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 				lowerTick := types.MinTick
 				upperTick := types.MaxTick
 
-				tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(maxAmountDeposited).MulRaw(5))
-				tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(maxAmountDeposited).MulRaw(5))
+				maxAmountDepositedFullRange := sdk.NewInt(maxAmountDeposited).MulRaw(5)
+				tokenDesired0 := sdk.NewCoin(denom0, maxAmountDepositedFullRange)
+				tokenDesired1 := sdk.NewCoin(denom1, maxAmountDepositedFullRange)
 				tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
 
 				accountIndex := rand.Intn(len(s.TestAccs))
