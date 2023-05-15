@@ -959,9 +959,12 @@ func (m *MsgAddToConcentratedLiquiditySuperfluidPosition) GetTokenDesired1() typ
 }
 
 type MsgAddToConcentratedLiquiditySuperfluidPositionResponse struct {
-	PositionId   uint64                                 `protobuf:"varint,1,opt,name=position_id,json=positionId,proto3" json:"position_id,omitempty" yaml:"position_id"`
-	Amount0      github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=amount0,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount0" yaml:"amount0"`
-	Amount1      github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=amount1,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount1" yaml:"amount1"`
+	PositionId uint64                                 `protobuf:"varint,1,opt,name=position_id,json=positionId,proto3" json:"position_id,omitempty" yaml:"position_id"`
+	Amount0    github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=amount0,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount0" yaml:"amount0"`
+	Amount1    github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=amount1,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount1" yaml:"amount1"`
+	// new_liquidity is the final liquidity after the add.
+	// It includes the liquidity that existed before in the position
+	// and the new liquidity that was added to the position.
 	NewLiquidity github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=new_liquidity,json=newLiquidity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"new_liquidity" yaml:"new_liquidity"`
 	LockId       uint64                                 `protobuf:"varint,4,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty" yaml:"lock_id"`
 }
