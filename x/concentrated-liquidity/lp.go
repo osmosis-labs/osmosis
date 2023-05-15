@@ -66,7 +66,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// If multiple ticks can represent the same spot price, ensure we are using the largest of those ticks.
-	lowerTick, upperTick, err = roundTick(lowerTick, upperTick, priceLowerTick, priceUpperTick, pool.GetTickSpacing())
+	lowerTick, upperTick, err = roundTickToCanonicalPriceTick(lowerTick, upperTick, priceLowerTick, priceUpperTick, pool.GetTickSpacing())
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}

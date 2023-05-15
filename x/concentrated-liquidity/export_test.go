@@ -143,8 +143,8 @@ func (k Keeper) SetPositionIdToLock(ctx sdk.Context, positionId, underlyingLockI
 	k.setPositionIdToLock(ctx, positionId, underlyingLockId)
 }
 
-func RoundTick(lowerTick, upperTick int64, priceTickLower, priceTickUpper sdk.Dec, tickSpacing uint64) (int64, int64, error) {
-	return roundTick(lowerTick, upperTick, priceTickLower, priceTickUpper, tickSpacing)
+func RoundTickToCanonicalPriceTick(lowerTick, upperTick int64, priceTickLower, priceTickUpper sdk.Dec, tickSpacing uint64) (int64, int64, error) {
+	return roundTickToCanonicalPriceTick(lowerTick, upperTick, priceTickLower, priceTickUpper, tickSpacing)
 }
 
 // fees methods

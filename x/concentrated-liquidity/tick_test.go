@@ -1408,7 +1408,7 @@ func (s *KeeperTestSuite) TestGetAllInitializedTicksForPool() {
 	}
 }
 
-func (s *KeeperTestSuite) TestRoundTick() {
+func (s *KeeperTestSuite) TestRoundTickToCanonicalPriceTick() {
 	tests := []struct {
 		name                 string
 		lowerTick            int64
@@ -1480,7 +1480,7 @@ func (s *KeeperTestSuite) TestRoundTick() {
 			s.Require().NoError(err)
 
 			// System Under Test
-			newLowerTick, newUpperTick, err := cl.RoundTick(test.lowerTick, test.upperTick, priceTickLower, priceTickUpper, DefaultTickSpacing)
+			newLowerTick, newUpperTick, err := cl.RoundTickToCanonicalPriceTick(test.lowerTick, test.upperTick, priceTickLower, priceTickUpper, DefaultTickSpacing)
 
 			if test.expectedError != nil {
 				s.Require().Error(err)
