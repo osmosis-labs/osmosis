@@ -454,6 +454,20 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrat
 				amount0, amount1,
 			)
 
+			if tc.percentOfSharesToMigrate.Equal(sdk.OneDec()) {
+				// If we migrated all the shares:
+
+				// The synthetic lockup should be deleted.
+				_, err = lockupKeeper.GetSyntheticLockup(ctx, originalGammLockId, keeper.UnstakingSyntheticDenom(balancerLock.Coins[0].Denom, valAddr.String()))
+				suite.Require().Error(err)
+			} else if tc.percentOfSharesToMigrate.LT(sdk.OneDec()) {
+				// If we migrated part of the shares:
+
+				// The synthetic lockup should not be deleted.
+				_, err = lockupKeeper.GetSyntheticLockup(ctx, originalGammLockId, keeper.UnstakingSyntheticDenom(balancerLock.Coins[0].Denom, valAddr.String()))
+				suite.Require().NoError(err)
+			}
+
 			// Check if the new synthetic unbonding lockup was created.
 			concentratedLock, err := lockupKeeper.GetLockByID(ctx, concentratedLockId)
 			suite.Require().NoError(err)
@@ -809,6 +823,18 @@ func (suite *KeeperTestSuite) TestValidateSharesToMigrateUnlockAndExitBalancerPo
 			defaultErrorTolerance := osmomath.ErrTolerance{
 				AdditiveTolerance: sdk.NewDec(1),
 				RoundingDir:       osmomath.RoundDown,
+			}
+
+			if tc.percentOfSharesToMigrate.Equal(sdk.OneDec()) {
+				// If all of the shares were migrated, the original lock should be deleted
+				_, err := lockupKeeper.GetLockByID(ctx, originalGammLockId)
+				suite.Require().Error(err)
+			} else {
+				// If only a portion of the shares were migrated, the original lock should still exist (with the remaining shares)
+				lock, err := lockupKeeper.GetLockByID(ctx, originalGammLockId)
+				suite.Require().NoError(err)
+				expectedSharesStillInOldLock := balancerPoolShareOut.Amount.Sub(sharesToMigrate)
+				suite.Require().Equal(expectedSharesStillInOldLock.String(), lock.Coins[0].Amount.String())
 			}
 
 			for _, coin := range exitCoins {

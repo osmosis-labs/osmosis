@@ -300,6 +300,13 @@ func (k Keeper) validateSharesToMigrateUnlockAndExitBalancerPool(ctx sdk.Context
 		if err != nil {
 			return sdk.Coins{}, err
 		}
+	} else {
+		// Otherwise, we must split the lock and force unlock the partial shares to migrate.
+		// This breaks and deletes associated synthetic locks.
+		err = k.lk.PartialForceUnlock(ctx, *lock, sdk.NewCoins(sharesToMigrate))
+		if err != nil {
+			return sdk.Coins{}, err
+		}
 	}
 
 	// Exit the balancer pool position.
