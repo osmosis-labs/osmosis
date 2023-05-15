@@ -286,7 +286,7 @@ func (k Keeper) prepareMigration(ctx sdk.Context, sender sdk.AccAddress, lockId 
 	}
 
 	// Check that lockID corresponds to sender, and contains correct denomination of LP shares.
-	preMigrationLock, err = k.validateGammLockForSuperfluid(ctx, sender, poolIdLeaving, lockId)
+	preMigrationLock, err = k.validateGammLockForSuperfluidStaking(ctx, sender, poolIdLeaving, lockId)
 	if err != nil {
 		return 0, 0, nil, &lockuptypes.PeriodLock{}, 0, nil, false, false, err
 	}

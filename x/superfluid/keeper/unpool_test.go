@@ -351,7 +351,7 @@ func (suite *KeeperTestSuite) TestValidateGammLockForSuperfluid() {
 			suite.Require().NoError(err)
 
 			// System under test
-			_, err = superfluidKeeper.ValidateGammLockForSuperfluid(ctx, tc.accountToValidate, tc.poolIdToValidate, tc.lockIdToValidate)
+			_, err = superfluidKeeper.ValidateGammLockForSuperfluidStaking(ctx, tc.accountToValidate, tc.poolIdToValidate, tc.lockIdToValidate)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())

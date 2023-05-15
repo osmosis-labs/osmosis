@@ -51,8 +51,8 @@ func (k Keeper) SuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, send
 	return k.superfluidUndelegateToConcentratedPosition(ctx, sender, gammLockID)
 }
 
-func (k Keeper) ValidateGammLockForSuperfluid(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, lockId uint64) (*lockuptypes.PeriodLock, error) {
-	return k.validateGammLockForSuperfluid(ctx, sender, poolId, lockId)
+func (k Keeper) ValidateGammLockForSuperfluidStaking(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, lockId uint64) (*lockuptypes.PeriodLock, error) {
+	return k.validateGammLockForSuperfluidStaking(ctx, sender, poolId, lockId)
 }
 
 func (k Keeper) GetExistingLockRemainingDuration(ctx sdk.Context, lock *lockuptypes.PeriodLock) (time.Duration, error) {
