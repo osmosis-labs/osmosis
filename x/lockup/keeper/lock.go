@@ -159,17 +159,17 @@ func (k Keeper) CreateLockNoSend(ctx sdk.Context, owner sdk.AccAddress, coins sd
 	return lock, nil
 }
 
-// lock is an internal utility to lock coins and set corresponding states.
-// This is only called by either of the two possible entry points to lock tokens.
-// 1. CreateLock
-// 2. AddTokensToLockByID
-func (k Keeper) lock(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Coins) error {
+// lockCommon is the shared logic between lock and lockNoSend.
+func (k Keeper) lockCommon(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Coins, sendCoins bool) error {
 	owner, err := sdk.AccAddressFromBech32(lock.Owner)
 	if err != nil {
 		return err
 	}
-	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, tokensToLock); err != nil {
-		return err
+
+	if sendCoins {
+		if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, tokensToLock); err != nil {
+			return err
+		}
 	}
 
 	// store lock object into the store
@@ -187,26 +187,17 @@ func (k Keeper) lock(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Co
 	return nil
 }
 
+// lock is an internal utility to lock coins and set corresponding states.
+// This is only called by either of the two possible entry points to lock tokens.
+// 1. CreateLock
+// 2. AddTokensToLockByID
+func (k Keeper) lock(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Coins) error {
+	return k.lockCommon(ctx, lock, tokensToLock, true)
+}
+
 // lockNoSend behaves the same as lock, but does not send the coins to the lockup module account.
 func (k Keeper) lockNoSend(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Coins) error {
-	owner, err := sdk.AccAddressFromBech32(lock.Owner)
-	if err != nil {
-		return err
-	}
-
-	// store lock object into the store
-	err = k.setLock(ctx, lock)
-	if err != nil {
-		return err
-	}
-
-	// add to accumulation store
-	for _, coin := range tokensToLock {
-		k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
-	}
-
-	k.hooks.OnTokenLocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
-	return nil
+	return k.lockCommon(ctx, lock, tokensToLock, false)
 }
 
 // BeginUnlock is a utility to start unlocking coins from NotUnlocking queue.
