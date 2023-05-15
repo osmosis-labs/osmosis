@@ -51,8 +51,18 @@ pub fn propose_pfm(
     let chain = chain.to_lowercase();
 
     // Store the chain to validate. If validation fails this will be reverted
+    if let Some(chain_pfm) = CHAIN_PFM_MAP.may_load(deps.storage, &chain)? {
+        if chain_pfm.is_validated() {
+            // Only authorized addresses can ask for a validated PFM to be re-checked
+            // If sender is the contract governor, then they are authorized to do do this to any chain
+            // Otherwise, they must be authorized to do manage the chain they are attempting to modify
+            let user_permission =
+                check_is_authorized(deps.as_ref(), info.sender.clone(), Some(chain.clone()))?;
+            check_action_permission(FullOperation::Change, user_permission)?;
+        }
+    };
+
     CHAIN_PFM_MAP.save(deps.storage, &chain, &ChainPFM::default())?;
-    // TODO: Check if the chain exists and only allow override on certain conditions
 
     let registry = Registry::default(deps.as_ref());
 
