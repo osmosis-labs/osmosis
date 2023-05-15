@@ -76,7 +76,7 @@ func (ct arithmetic) ComputeTwap(startRecord types.TwapRecord, endRecord types.T
 	return ct.computeTwap(startRecord, endRecord, quoteAsset)
 }
 
-func (ct geometric) ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec { //nolint:stylecheck // it did not seem appropriate to have the same receiver name
+func (ct geometric) ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec { //nolint:stylecheck
 	return ct.computeTwap(startRecord, endRecord, quoteAsset)
 }
 
