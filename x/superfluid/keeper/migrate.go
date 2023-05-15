@@ -251,6 +251,9 @@ func (k Keeper) routeMigration(ctx sdk.Context, sender sdk.AccAddress, lockId ui
 		if strings.Contains(synthLockBeforeMigration.SynthDenom, "superunbonding") {
 			migrationType = SuperfluidUnbonding
 		}
+		if strings.Contains(synthLockBeforeMigration.SynthDenom, "superbonding") && strings.Contains(synthLockBeforeMigration.SynthDenom, "superunbonding") {
+			return nil, Unsupported, fmt.Errorf("lock %d contains both superfluid bonded and unbonded tokens", lockId)
+		}
 	}
 
 	return synthLocksBeforeMigration, migrationType, nil
