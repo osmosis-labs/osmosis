@@ -2,6 +2,7 @@ package types
 
 import (
 	fmt "fmt"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 )
@@ -50,4 +51,47 @@ type LockOwnerMismatchError struct {
 
 func (e LockOwnerMismatchError) Error() string {
 	return fmt.Sprintf("lock ID %d owner %s does not match provided owner %s.", e.LockId, e.LockOwner, e.ProvidedOwner)
+}
+
+type SharesToMigrateDenomPrefixError struct {
+	Denom               string
+	ExpectedDenomPrefix string
+}
+
+func (e SharesToMigrateDenomPrefixError) Error() string {
+	return fmt.Sprintf("shares to migrate denom %s does not have expected prefix %s.", e.Denom, e.ExpectedDenomPrefix)
+}
+
+type NegativeDurationError struct {
+	Duration time.Duration
+}
+
+func (e NegativeDurationError) Error() string {
+	return fmt.Sprintf("duration cannot be negative (%s)", e.Duration)
+}
+
+type MigrateMoreSharesThanLockHasError struct {
+	SharesToMigrate string
+	SharesInLock    string
+}
+
+func (e MigrateMoreSharesThanLockHasError) Error() string {
+	return fmt.Sprintf("cannot migrate more shares (%s) than lock has (%s)", e.SharesToMigrate, e.SharesInLock)
+}
+
+type TwoTokenBalancerPoolError struct {
+	NumberOfTokens int
+}
+
+func (e TwoTokenBalancerPoolError) Error() string {
+	return fmt.Sprintf("balancer pool must have two tokens, got %d tokens", e.NumberOfTokens)
+}
+
+type UnexpectedDenomError struct {
+	ExpectedDenom string
+	ProvidedDenom string
+}
+
+func (e UnexpectedDenomError) Error() string {
+	return fmt.Sprintf("provided denom (%s) was expected to be formatted as follows: %s", e.ProvidedDenom, e.ExpectedDenom)
 }

@@ -66,7 +66,7 @@ func (ss *SwapState) updateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
 		// We round down here since we want to avoid overdistributing (the "fee charge" refers to
 		// the total fees that will be accrued to the fee accumulator)
 		feesAccruedPerUnitOfLiquidity := feeChargeTotal.QuoTruncate(ss.liquidity)
-		ss.feeGrowthGlobal = ss.feeGrowthGlobal.Add(feesAccruedPerUnitOfLiquidity)
+		ss.feeGrowthGlobal.AddMut(feesAccruedPerUnitOfLiquidity)
 		return
 	}
 }

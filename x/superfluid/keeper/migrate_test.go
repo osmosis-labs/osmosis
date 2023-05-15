@@ -190,8 +190,6 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated(
 	type sendTest struct {
 		overwriteValidatorAddress bool
 		overwriteLockId           bool
-		overwriteShares           bool
-		overwritePool             bool
 		percentOfSharesToMigrate  sdk.Dec
 		tokenOutMins              sdk.Coins
 		expectedError             error
@@ -203,6 +201,10 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated(
 		"lock that is superfluid delegated, not unlocking (partial shares)": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.5"),
 		},
+		"error: migrate more shares than lock has": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1.1"),
+			expectedError:            types.MigrateMoreSharesThanLockHasError{SharesToMigrate: "55000000000000000000", SharesInLock: "50000000000000000000"},
+		},
 		"error: invalid validator address": {
 			overwriteValidatorAddress: true,
 			percentOfSharesToMigrate:  sdk.MustNewDecFromStr("1"),
@@ -212,16 +214,6 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated(
 			overwriteLockId:          true,
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 			expectedError:            lockuptypes.ErrLockupNotFound,
-		},
-		"error: attempt to migrate more shares than the lock has": {
-			overwriteShares:          true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			expectedError:            fmt.Errorf("shares to migrate must be less than or equal to shares in lock"),
-		},
-		"error: pool has more than two assets": {
-			overwritePool:            true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			expectedError:            fmt.Errorf("Balancer pool must have exactly two tokens"),
 		},
 		"error: lock that is superfluid delegated, not unlocking (full shares), token out mins is more than exit coins": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
@@ -247,9 +239,11 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated(
 			coinsToMigrate := balancerPoolShareOut
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
-			// PrepareMigration is called via the migration message router and is always run prior to the migration itself
-			poolIdLeaving, poolIdEntering, concentratedPool, preMigrationLock, remainingLockTime, synthLockBeforeMigration, _, _, err := superfluidKeeper.PrepareMigration(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
+			// RouteMigration is called via the migration message router and is always run prior to the migration itself.
+			// We use it here just to retrieve the synthetic lock before the migration.
+			synthLockBeforeMigration, migrationType, err := superfluidKeeper.RouteMigration(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
 			suite.Require().NoError(err)
+			suite.Require().Equal(migrationType, keeper.SuperfluidBonded)
 
 			// Modify migration inputs if necessary
 
@@ -264,20 +258,8 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated(
 				originalGammLockId = originalGammLockId + 1
 			}
 
-			if tc.overwriteShares {
-				coinsToMigrate.Amount = preMigrationLock.Coins[0].Amount.Add(sdk.NewInt(1))
-			}
-
-			if tc.overwritePool {
-				multiCoinBalancerPoolId := suite.PrepareBalancerPool()
-				poolIdLeaving = multiCoinBalancerPoolId
-				shareAmt := sdk.MustNewDecFromStr("50000000000000000000").TruncateInt()
-				newShares := sdk.NewCoin(fmt.Sprintf("gamm/pool/%d", multiCoinBalancerPoolId), shareAmt)
-				suite.FundAcc(poolJoinAcc, sdk.NewCoins(newShares))
-			}
-
 			// System under test.
-			positionId, amount0, amount1, _, _, newGammLockId, concentratedLockId, err := superfluidKeeper.MigrateSuperfluidBondedBalancerToConcentrated(ctx, poolJoinAcc, poolIdLeaving, poolIdEntering, preMigrationLock, originalGammLockId, coinsToMigrate, synthLockBeforeMigration[0].SynthDenom, concentratedPool, remainingLockTime, tc.tokenOutMins)
+			positionId, amount0, amount1, _, _, newGammLockId, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateSuperfluidBondedBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, synthLockBeforeMigration[0].SynthDenom, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
@@ -321,7 +303,7 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated(
 			}
 
 			// Run slashing logic and check if the new and old locks are slashed.
-			suite.SlashAndValidateResult(ctx, newGammLockId, concentratedLockId, poolIdEntering, tc.percentOfSharesToMigrate, valAddr, *balancerLock, true)
+			suite.SlashAndValidateResult(ctx, newGammLockId, concentratedLockId, clPoolId, tc.percentOfSharesToMigrate, valAddr, *balancerLock, true)
 		})
 	}
 }
@@ -331,9 +313,6 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrat
 	type sendTest struct {
 		unlocking                 bool
 		overwriteValidatorAddress bool
-		overwritePreMigrationLock bool
-		overwriteShares           bool
-		overwritePool             bool
 		percentOfSharesToMigrate  sdk.Dec
 		tokenOutMins              sdk.Coins
 		expectedError             error
@@ -358,21 +337,6 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrat
 			percentOfSharesToMigrate:  sdk.MustNewDecFromStr("1"),
 			expectedError:             fmt.Errorf("decoding bech32 failed: invalid checksum"),
 		},
-		"error: non-existent pre migration lock": {
-			overwritePreMigrationLock: true,
-			percentOfSharesToMigrate:  sdk.MustNewDecFromStr("1"),
-			expectedError:             lockuptypes.ErrLockupNotFound,
-		},
-		"error: attempt to migrate more shares than the lock has": {
-			overwriteShares:          true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			expectedError:            fmt.Errorf("shares to migrate must be less than or equal to shares in lock"),
-		},
-		"error: pool has more than two assets": {
-			overwritePool:            true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			expectedError:            fmt.Errorf("Balancer pool must have exactly two tokens"),
-		},
 		"error: lock that is superfluid undelegating, not unlocking (full shares), token out mins is more than exit coins": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 			tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100000))),
@@ -396,9 +360,10 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrat
 			coinsToMigrate := balancerPoolShareOut
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
-			// PrepareMigration is called via the migration message router and is always run prior to the migration itself
-			poolIdLeaving, poolIdEntering, concentratedPool, preMigrationLock, remainingLockTime, synthLockBeforeMigration, _, _, err := superfluidKeeper.PrepareMigration(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
+			// RouteMigration is called via the migration message router and is always run prior to the migration itself
+			synthLockBeforeMigration, migrationType, err := superfluidKeeper.RouteMigration(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
 			suite.Require().NoError(err)
+			suite.Require().Equal(migrationType, keeper.SuperfluidUnbonding)
 
 			// Modify migration inputs if necessary
 
@@ -409,24 +374,8 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrat
 				synthLockBeforeMigration[0].SynthDenom = newSynthDenom
 			}
 
-			if tc.overwritePreMigrationLock {
-				preMigrationLock.ID = preMigrationLock.ID + 1
-			}
-
-			if tc.overwriteShares {
-				coinsToMigrate.Amount = preMigrationLock.Coins[0].Amount.Add(sdk.NewInt(1))
-			}
-
-			if tc.overwritePool {
-				multiCoinBalancerPoolId := suite.PrepareBalancerPool()
-				poolIdLeaving = multiCoinBalancerPoolId
-				shareAmt := sdk.MustNewDecFromStr("50000000000000000000").TruncateInt()
-				newShares := sdk.NewCoin(fmt.Sprintf("gamm/pool/%d", multiCoinBalancerPoolId), shareAmt)
-				suite.FundAcc(poolJoinAcc, sdk.NewCoins(newShares))
-			}
-
 			// System under test.
-			positionId, amount0, amount1, _, _, newGammLockId, concentratedLockId, err := superfluidKeeper.MigrateSuperfluidUnbondingBalancerToConcentrated(ctx, poolJoinAcc, poolIdLeaving, poolIdEntering, preMigrationLock, coinsToMigrate, synthLockBeforeMigration[0].SynthDenom, concentratedPool, remainingLockTime, tc.tokenOutMins)
+			positionId, amount0, amount1, _, _, newGammLockId, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateSuperfluidUnbondingBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, synthLockBeforeMigration[0].SynthDenom, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
@@ -452,7 +401,7 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrat
 			suite.Require().NoError(err)
 
 			// Run slashing logic and check if the new and old locks are slashed.
-			suite.SlashAndValidateResult(ctx, newGammLockId, concentratedLockId, poolIdEntering, tc.percentOfSharesToMigrate, valAddr, *balancerLock, true)
+			suite.SlashAndValidateResult(ctx, newGammLockId, concentratedLockId, clPoolId, tc.percentOfSharesToMigrate, valAddr, *balancerLock, true)
 		})
 	}
 }
@@ -460,13 +409,10 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrat
 func (suite *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated() {
 	defaultJoinTime := suite.Ctx.BlockTime()
 	type sendTest struct {
-		unlocking                 bool
-		overwritePreMigrationLock bool
-		overwriteShares           bool
-		overwritePool             bool
-		percentOfSharesToMigrate  sdk.Dec
-		tokenOutMins              sdk.Coins
-		expectedError             error
+		unlocking                bool
+		percentOfSharesToMigrate sdk.Dec
+		tokenOutMins             sdk.Coins
+		expectedError            error
 	}
 	testCases := map[string]sendTest{
 		"lock that is not superfluid delegated, not unlocking (full shares)": {
@@ -482,21 +428,6 @@ func (suite *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated
 		"lock that is not superfluid delegated, unlocking (partial shares)": {
 			unlocking:                true,
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.6"),
-		},
-		"error: non-existent pre migration lock": {
-			overwritePreMigrationLock: true,
-			percentOfSharesToMigrate:  sdk.MustNewDecFromStr("1"),
-			expectedError:             lockuptypes.ErrLockupNotFound,
-		},
-		"error: attempt to migrate more shares than the lock has": {
-			overwriteShares:          true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			expectedError:            fmt.Errorf("shares to migrate must be less than or equal to shares in lock"),
-		},
-		"error: pool has more than two assets": {
-			overwritePool:            true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			expectedError:            fmt.Errorf("Balancer pool must have exactly two tokens"),
 		},
 		"error: lock that is not superfluid delegated, not unlocking (full shares), token out mins is more than exit coins": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
@@ -520,30 +451,14 @@ func (suite *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated
 			coinsToMigrate := balancerPoolShareOut
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
-			// PrepareMigration is called via the migration message router and is always run prior to the migration itself
-			poolIdLeaving, poolIdEntering, concentratedPool, preMigrationLock, remainingLockTime, _, _, _, err := superfluidKeeper.PrepareMigration(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
+			// RouteMigration is called via the migration message router and is always run prior to the migration itself
+			synthLockBeforeMigration, migrationType, err := superfluidKeeper.RouteMigration(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
 			suite.Require().NoError(err)
-
-			// Modify migration inputs if necessary
-
-			if tc.overwritePreMigrationLock {
-				preMigrationLock.ID = preMigrationLock.ID + 1
-			}
-
-			if tc.overwriteShares {
-				coinsToMigrate.Amount = preMigrationLock.Coins[0].Amount.Add(sdk.NewInt(1))
-			}
-
-			if tc.overwritePool {
-				multiCoinBalancerPoolId := suite.PrepareBalancerPool()
-				poolIdLeaving = multiCoinBalancerPoolId
-				shareAmt := sdk.MustNewDecFromStr("50000000000000000000").TruncateInt()
-				newShares := sdk.NewCoin(fmt.Sprintf("gamm/pool/%d", multiCoinBalancerPoolId), shareAmt)
-				suite.FundAcc(poolJoinAcc, sdk.NewCoins(newShares))
-			}
+			suite.Require().Equal(0, len(synthLockBeforeMigration))
+			suite.Require().Equal(migrationType, keeper.NonSuperfluid)
 
 			// System under test.
-			positionId, amount0, amount1, _, _, newGammLockId, concentratedLockId, err := superfluidKeeper.MigrateNonSuperfluidLockBalancerToConcentrated(ctx, poolJoinAcc, poolIdLeaving, poolIdEntering, preMigrationLock, coinsToMigrate, concentratedPool, remainingLockTime, tc.tokenOutMins)
+			positionId, amount0, amount1, _, _, newGammLockId, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateNonSuperfluidLockBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
@@ -563,7 +478,143 @@ func (suite *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated
 			)
 
 			// Run slashing logic and check if the new and old locks are not slashed.
-			suite.SlashAndValidateResult(ctx, newGammLockId, concentratedLockId, poolIdEntering, tc.percentOfSharesToMigrate, valAddr, *balancerLock, false)
+			suite.SlashAndValidateResult(ctx, newGammLockId, concentratedLockId, clPoolId, tc.percentOfSharesToMigrate, valAddr, *balancerLock, false)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestValidateMigration() {
+	defaultJoinTime := suite.Ctx.BlockTime()
+	type sendTest struct {
+		isSuperfluidDelegated     bool
+		isSuperfluidUndelegating  bool
+		unlocking                 bool
+		overwritePreMigrationLock bool
+		overwriteSender           bool
+		overwriteSharesDenomValue string
+		overwriteLockId           bool
+		percentOfSharesToMigrate  sdk.Dec
+		tokenOutMins              sdk.Coins
+		expectedError             error
+	}
+	testCases := map[string]sendTest{
+		"lock that is not superfluid delegated, not unlocking (full shares)": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			isSuperfluidDelegated:    false,
+			isSuperfluidUndelegating: false,
+		},
+		"lock that is not superfluid delegated, not unlocking (partial shares)": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.9"),
+			isSuperfluidDelegated:    false,
+			isSuperfluidUndelegating: false,
+		},
+		"lock that is not superfluid delegated, unlocking (full shares)": {
+			unlocking:                true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			isSuperfluidDelegated:    false,
+			isSuperfluidUndelegating: false,
+		},
+		"lock that is not superfluid delegated, unlocking (partial shares)": {
+			unlocking:                true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.6"),
+			isSuperfluidDelegated:    false,
+			isSuperfluidUndelegating: false,
+		},
+		"lock that is superfluid undelegating, not unlocking (full shares)": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			isSuperfluidDelegated:    true,
+			isSuperfluidUndelegating: true,
+		},
+		"lock that is superfluid undelegating, not unlocking (partial shares)": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.5"),
+			isSuperfluidDelegated:    true,
+			isSuperfluidUndelegating: true,
+		},
+		"lock that is superfluid undelegating, unlocking (full shares)": {
+			unlocking:                true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			isSuperfluidDelegated:    true,
+			isSuperfluidUndelegating: true,
+		},
+		"lock that is superfluid undelegating, unlocking (partial shares)": {
+			unlocking:                true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.3"),
+			isSuperfluidDelegated:    true,
+			isSuperfluidUndelegating: true,
+		},
+		"lock that is superfluid delegated, not unlocking (full shares)": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			isSuperfluidDelegated:    true,
+		},
+		"lock that is superfluid delegated, not unlocking (partial shares)": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.5"),
+			isSuperfluidDelegated:    true,
+		},
+		"error: denom prefix error": {
+			overwriteSharesDenomValue: "cl/pool/2",
+			percentOfSharesToMigrate:  sdk.MustNewDecFromStr("1"),
+			expectedError:             types.SharesToMigrateDenomPrefixError{Denom: "cl/pool/2", ExpectedDenomPrefix: gammtypes.GAMMTokenPrefix},
+		},
+		"error: no canonical link": {
+			overwriteSharesDenomValue: "gamm/pool/2",
+			percentOfSharesToMigrate:  sdk.MustNewDecFromStr("1"),
+			expectedError:             gammtypes.ConcentratedPoolMigrationLinkNotFoundError{PoolIdLeaving: 2},
+		},
+		"error: wrong sender": {
+			overwriteSender:          true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			expectedError:            lockuptypes.ErrNotLockOwner,
+		},
+		"error: wrong lock ID": {
+			overwriteLockId:          true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			expectedError:            lockuptypes.ErrLockupNotFound,
+		},
+	}
+
+	for name, tc := range testCases {
+		suite.Run(name, func() {
+			suite.SetupTest()
+			suite.Ctx = suite.Ctx.WithBlockTime(defaultJoinTime)
+			ctx := suite.Ctx
+			superfluidKeeper := suite.App.SuperfluidKeeper
+
+			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
+			// joinPoolAmt, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := suite.SetupMigrationTest(ctx, false, false, tc.unlocking, tc.percentOfSharesToMigrate)
+			_, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, _ := suite.SetupMigrationTest(ctx, tc.isSuperfluidDelegated, tc.isSuperfluidUndelegating, tc.unlocking, tc.percentOfSharesToMigrate)
+			originalGammLockId := balancerLock.GetID()
+
+			// Depending on the test case, we attempt to migrate a subset of the balancer LP tokens we originally created.
+			coinsToMigrate := balancerPoolShareOut
+			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
+
+			// Modify migration inputs if necessary
+			if tc.overwriteSender {
+				poolJoinAcc = suite.TestAccs[0]
+			}
+
+			if tc.overwriteLockId {
+				originalGammLockId = originalGammLockId + 10
+			}
+
+			if tc.overwriteSharesDenomValue != "" {
+				coinsToMigrate.Denom = tc.overwriteSharesDenomValue
+			}
+
+			// System under test.
+			poolIdLeaving, poolIdEntering, preMigrationLock, remainingLockTime, err := superfluidKeeper.ValidateMigration(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorContains(err, tc.expectedError.Error())
+				return
+			}
+
+			suite.Require().NoError(err)
+			suite.Require().Equal(poolIdLeaving, balancerPooId)
+			suite.Require().Equal(poolIdEntering, clPoolId)
+			suite.Require().Equal(preMigrationLock.GetID(), originalGammLockId)
+			suite.Require().Equal(preMigrationLock.GetCoins(), sdk.NewCoins(balancerPoolShareOut))
+			suite.Require().Equal(preMigrationLock.GetDuration(), remainingLockTime)
 		})
 	}
 }
@@ -594,7 +645,7 @@ func (suite *KeeperTestSuite) TestValidateSharesToMigrateUnlockAndExitBalancerPo
 		"error: attempt to migrate more than lock has": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 			overwriteShares:          true,
-			expectedError:            fmt.Errorf("shares to migrate must be less than or equal to shares in lock"),
+			expectedError:            types.MigrateMoreSharesThanLockHasError{SharesToMigrate: "50000000000000000001", SharesInLock: "50000000000000000000"},
 		},
 		"error: attempt to leave a pool that does not exist": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
@@ -604,7 +655,7 @@ func (suite *KeeperTestSuite) TestValidateSharesToMigrateUnlockAndExitBalancerPo
 		"error: attempt to leave a pool that has more than two denoms": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 			overwritePool:            true,
-			expectedError:            fmt.Errorf("Balancer pool must have exactly two tokens"),
+			expectedError:            types.TwoTokenBalancerPoolError{NumberOfTokens: 4},
 		},
 		"error: happy path (full shares), token out mins is more than exit coins": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
@@ -661,10 +712,11 @@ func (suite *KeeperTestSuite) TestValidateSharesToMigrateUnlockAndExitBalancerPo
 			unbondingDuration := stakingKeeper.GetParams(ctx).UnbondingTime
 
 			// Lock the LP tokens for the duration of the unbonding period.
-			originalGammLockId := suite.LockTokens(poolJoinAcc, sdk.NewCoins(coinsToMigrate), unbondingDuration)
+			originalGammLockId := suite.LockTokens(poolJoinAcc, sdk.NewCoins(balancerPoolShareOut), unbondingDuration)
 
 			lock, err := lockupKeeper.GetLockByID(ctx, originalGammLockId)
 			suite.Require().NoError(err)
+			preMigrationLock := *lock
 
 			if tc.overwritePreMigrationLock {
 				lock.ID = lock.ID + 1
@@ -687,13 +739,21 @@ func (suite *KeeperTestSuite) TestValidateSharesToMigrateUnlockAndExitBalancerPo
 			}
 
 			// System under test
-			exitCoins, err := superfluidKeeper.ValidateSharesToMigrateUnlockAndExitBalancerPool(ctx, poolJoinAcc, balancerPooId, lock, coinsToMigrate, tc.tokenOutMins)
+			exitCoins, remainingSharesLock, err := superfluidKeeper.ValidateSharesToMigrateUnlockAndExitBalancerPool(ctx, poolJoinAcc, balancerPooId, lock, coinsToMigrate, tc.tokenOutMins, lock.Duration)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
 				return
 			}
 			suite.Require().NoError(err)
+
+			if tc.percentOfSharesToMigrate.Equal(sdk.OneDec()) {
+				suite.Require().Equal(lockuptypes.PeriodLock{}, remainingSharesLock)
+			} else {
+				suite.Require().Equal(preMigrationLock.Coins[0].Amount.Sub(sharesToMigrate), remainingSharesLock.Coins[0].Amount)
+				suite.Require().Equal(preMigrationLock.Coins[0].Denom, remainingSharesLock.Coins[0].Denom)
+				suite.Require().Equal(preMigrationLock.Duration, remainingSharesLock.Duration)
+			}
 
 			defaultErrorTolerance := osmomath.ErrTolerance{
 				AdditiveTolerance: sdk.NewDec(1),
