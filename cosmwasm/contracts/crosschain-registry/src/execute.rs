@@ -1,4 +1,4 @@
-use crate::contract::SOURCE_CHAIN;
+use crate::contract::CONTRACT_CHAIN;
 use crate::helpers::*;
 use crate::state::{
     ChainPFM, CHAIN_ADMIN_MAP, CHAIN_MAINTAINER_MAP, CHAIN_PFM_MAP, CHAIN_TO_BECH32_PREFIX_MAP,
@@ -94,7 +94,7 @@ pub fn validate_pfm(
     let chain = chain.to_lowercase();
 
     let registry = Registry::default(deps.as_ref());
-    let channel = registry.get_channel(&chain, SOURCE_CHAIN)?;
+    let channel = registry.get_channel(&chain, CONTRACT_CHAIN)?;
     let own_addr = env.contract.address.as_str();
     let original_sender = registry.encode_addr_for_chain(own_addr, &chain)?;
     let expected_sender = registry::derive_wasmhooks_sender(&channel, &original_sender, "osmo")?;
@@ -932,7 +932,7 @@ mod tests {
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: FullOperation::Set,
-                source_chain: SOURCE_CHAIN.to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "COSMOS".to_string(),
                 channel_id: Some("CHANNEL-0".to_string()),
                 new_source_chain: None,
@@ -945,7 +945,7 @@ mod tests {
 
         assert_eq!(
             CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(&deps.storage, (SOURCE_CHAIN, "cosmos"))
+                .load(&deps.storage, (CONTRACT_CHAIN, "cosmos"))
                 .unwrap(),
             ("channel-0", true).into()
         );
@@ -953,7 +953,7 @@ mod tests {
         // Verify that channel-0 on osmosis is linked to cosmos
         assert_eq!(
             CHANNEL_ON_CHAIN_CHAIN_MAP
-                .load(&deps.storage, ("channel-0", SOURCE_CHAIN))
+                .load(&deps.storage, ("channel-0", CONTRACT_CHAIN))
                 .unwrap(),
             ("cosmos", true).into()
         );
@@ -963,7 +963,7 @@ mod tests {
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: FullOperation::Set,
-                source_chain: SOURCE_CHAIN.to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-150".to_string()),
                 new_source_chain: None,
@@ -976,19 +976,19 @@ mod tests {
         assert!(result.is_err());
 
         let expected_error = ContractError::ChainToChainChannelLinkAlreadyExists {
-            source_chain: SOURCE_CHAIN.to_string(),
+            source_chain: CONTRACT_CHAIN.to_string(),
             destination_chain: "cosmos".to_string(),
         };
         assert_eq!(result.unwrap_err(), expected_error);
         assert_eq!(
             CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(&deps.storage, (SOURCE_CHAIN, "cosmos"))
+                .load(&deps.storage, (CONTRACT_CHAIN, "cosmos"))
                 .unwrap(),
             ("channel-0", true).into()
         );
         assert_eq!(
             CHANNEL_ON_CHAIN_CHAIN_MAP
-                .load(&deps.storage, ("channel-0", SOURCE_CHAIN))
+                .load(&deps.storage, ("channel-0", CONTRACT_CHAIN))
                 .unwrap(),
             ("cosmos", true).into()
         );
@@ -998,7 +998,7 @@ mod tests {
             operations: vec![ConnectionInput {
                 operation: FullOperation::Set,
                 source_chain: "mars".to_string(),
-                destination_chain: SOURCE_CHAIN.to_string(),
+                destination_chain: CONTRACT_CHAIN.to_string(),
                 channel_id: Some("channel-1".to_string()),
                 new_source_chain: None,
                 new_destination_chain: None,
@@ -1011,14 +1011,14 @@ mod tests {
 
         let expected_error = ContractError::Unauthorized {};
         assert_eq!(result.unwrap_err(), expected_error);
-        assert!(!CHAIN_TO_CHAIN_CHANNEL_MAP.has(&deps.storage, ("mars", SOURCE_CHAIN)));
+        assert!(!CHAIN_TO_CHAIN_CHANNEL_MAP.has(&deps.storage, ("mars", CONTRACT_CHAIN)));
 
         // Set the canonical channel link between mars and osmosis to channel-1 with a mars chain admin address
         let chain_admin_info = mock_info(CHAIN_ADMIN, &[]);
         contract::execute(deps.as_mut(), mock_env(), chain_admin_info.clone(), msg).unwrap();
         assert_eq!(
             CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(&deps.storage, ("mars", SOURCE_CHAIN))
+                .load(&deps.storage, ("mars", CONTRACT_CHAIN))
                 .unwrap(),
             ("channel-1", true).into()
         );
@@ -1026,7 +1026,7 @@ mod tests {
             CHANNEL_ON_CHAIN_CHAIN_MAP
                 .load(&deps.storage, ("channel-1", "mars"))
                 .unwrap(),
-            (SOURCE_CHAIN, true).into()
+            (CONTRACT_CHAIN, true).into()
         );
 
         // Set the canonical channel link between juno and mars to channel-2 with a juno chain maintainer address
@@ -1118,7 +1118,7 @@ mod tests {
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: FullOperation::Set,
-                source_chain: SOURCE_CHAIN.to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "COSMOS".to_string(),
                 channel_id: Some("CHANNEL-0".to_string()),
                 new_source_chain: None,
@@ -1134,7 +1134,7 @@ mod tests {
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: FullOperation::Change,
-                source_chain: SOURCE_CHAIN.to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: None,
                 new_source_chain: None,
@@ -1148,7 +1148,7 @@ mod tests {
         // Verify that the channel between osmosis and cosmos has changed from channel-0 to channel-150
         assert_eq!(
             CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(&deps.storage, (SOURCE_CHAIN, "cosmos"))
+                .load(&deps.storage, (CONTRACT_CHAIN, "cosmos"))
                 .unwrap(),
             ("channel-150", true).into()
         );
@@ -1157,7 +1157,7 @@ mod tests {
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: FullOperation::Change,
-                source_chain: SOURCE_CHAIN.to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "regen".to_string(),
                 channel_id: None,
                 new_source_chain: None,
@@ -1169,7 +1169,7 @@ mod tests {
         assert!(result.is_err());
 
         let expected_error = ContractError::from(RegistryError::ChainChannelLinkDoesNotExist {
-            source_chain: SOURCE_CHAIN.to_string(),
+            source_chain: CONTRACT_CHAIN.to_string(),
             destination_chain: "regen".to_string(),
         });
         assert_eq!(result.unwrap_err(), expected_error);
@@ -1178,7 +1178,7 @@ mod tests {
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: FullOperation::Change,
-                source_chain: SOURCE_CHAIN.to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: None,
                 new_source_chain: None,
@@ -1192,7 +1192,7 @@ mod tests {
         // Verify that channel-150 on osmosis is linked to regen
         assert_eq!(
             CHANNEL_ON_CHAIN_CHAIN_MAP
-                .load(&deps.storage, ("channel-150", SOURCE_CHAIN))
+                .load(&deps.storage, ("channel-150", CONTRACT_CHAIN))
                 .unwrap(),
             ("regen", true).into()
         );
@@ -1201,7 +1201,7 @@ mod tests {
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: FullOperation::Change,
-                source_chain: SOURCE_CHAIN.to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "regen".to_string(),
                 channel_id: None,
                 new_source_chain: None,
@@ -1221,7 +1221,7 @@ mod tests {
         contract::execute(deps.as_mut(), mock_env(), info_chain_admin, msg).unwrap();
         assert_eq!(
             CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(&deps.storage, (SOURCE_CHAIN, "regen"))
+                .load(&deps.storage, (CONTRACT_CHAIN, "regen"))
                 .unwrap(),
             ("channel-2", true).into()
         );
@@ -1230,7 +1230,7 @@ mod tests {
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: FullOperation::Change,
-                source_chain: SOURCE_CHAIN.to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: None,
                 new_source_chain: None,
@@ -1242,7 +1242,7 @@ mod tests {
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
 
         let expected_error = ContractError::from(RegistryError::ChainChannelLinkDoesNotExist {
-            source_chain: SOURCE_CHAIN.to_string(),
+            source_chain: CONTRACT_CHAIN.to_string(),
             destination_chain: "cosmos".to_string(),
         });
         assert_eq!(result.unwrap_err(), expected_error);
@@ -1253,7 +1253,7 @@ mod tests {
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: FullOperation::Change,
-                source_chain: SOURCE_CHAIN.to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "regen".to_string(),
                 channel_id: None,
                 new_source_chain: None,
@@ -1278,7 +1278,7 @@ mod tests {
             operations: vec![
                 ConnectionInput {
                     operation: FullOperation::Set,
-                    source_chain: SOURCE_CHAIN.to_string(),
+                    source_chain: CONTRACT_CHAIN.to_string(),
                     destination_chain: "COSMOS".to_string(),
                     channel_id: Some("CHANNEL-0".to_string()),
                     new_source_chain: None,
@@ -1287,7 +1287,7 @@ mod tests {
                 },
                 ConnectionInput {
                     operation: FullOperation::Set,
-                    source_chain: SOURCE_CHAIN.to_string(),
+                    source_chain: CONTRACT_CHAIN.to_string(),
                     destination_chain: "REGEN".to_string(),
                     channel_id: Some("CHANNEL-1".to_string()),
                     new_source_chain: None,
@@ -1303,7 +1303,7 @@ mod tests {
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: FullOperation::Remove,
-                source_chain: SOURCE_CHAIN.to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: None,
                 new_source_chain: None,
@@ -1315,13 +1315,13 @@ mod tests {
         contract::execute(deps.as_mut(), mock_env(), info, msg.clone()).unwrap();
 
         // Verify that the link no longer exists
-        assert!(!CHAIN_TO_CHAIN_CHANNEL_MAP.has(&deps.storage, (SOURCE_CHAIN, "cosmos")));
+        assert!(!CHAIN_TO_CHAIN_CHANNEL_MAP.has(&deps.storage, (CONTRACT_CHAIN, "cosmos")));
 
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
 
         let expected_error = ContractError::from(RegistryError::ChainChannelLinkDoesNotExist {
-            source_chain: SOURCE_CHAIN.to_string(),
+            source_chain: CONTRACT_CHAIN.to_string(),
             destination_chain: "cosmos".to_string(),
         });
         assert_eq!(result.unwrap_err(), expected_error);
@@ -1332,7 +1332,7 @@ mod tests {
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: FullOperation::Remove,
-                source_chain: SOURCE_CHAIN.to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "regen".to_string(),
                 channel_id: None,
                 new_source_chain: None,
@@ -1356,7 +1356,7 @@ mod tests {
         let msg = ExecuteMsg::ModifyBech32Prefixes {
             operations: vec![ChainToBech32PrefixInput {
                 operation: FullOperation::Set,
-                chain_name: SOURCE_CHAIN.to_string(),
+                chain_name: CONTRACT_CHAIN.to_string(),
                 prefix: "OSMO".to_string(),
                 new_prefix: None,
             }],
@@ -1366,7 +1366,7 @@ mod tests {
 
         assert_eq!(
             CHAIN_TO_BECH32_PREFIX_MAP
-                .load(&deps.storage, SOURCE_CHAIN)
+                .load(&deps.storage, CONTRACT_CHAIN)
                 .unwrap(),
             ("osmo", true).into()
         );
@@ -1374,7 +1374,7 @@ mod tests {
             CHAIN_TO_BECH32_PREFIX_REVERSE_MAP
                 .load(&deps.storage, "osmo")
                 .unwrap(),
-            vec![SOURCE_CHAIN]
+            vec![CONTRACT_CHAIN]
         );
 
         // Set another chain with the same prefix
@@ -1398,14 +1398,14 @@ mod tests {
             CHAIN_TO_BECH32_PREFIX_REVERSE_MAP
                 .load(&deps.storage, "osmo")
                 .unwrap(),
-            vec![SOURCE_CHAIN, "ismisis"]
+            vec![CONTRACT_CHAIN, "ismisis"]
         );
 
         // Set another chain with the same prefix
         let msg = ExecuteMsg::ModifyBech32Prefixes {
             operations: vec![ChainToBech32PrefixInput {
                 operation: FullOperation::Disable,
-                chain_name: SOURCE_CHAIN.to_string(),
+                chain_name: CONTRACT_CHAIN.to_string(),
                 prefix: "OSMO".to_string(),
                 new_prefix: None,
             }],
@@ -1413,7 +1413,7 @@ mod tests {
         contract::execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
         assert_eq!(
             CHAIN_TO_BECH32_PREFIX_MAP
-                .load(&deps.storage, SOURCE_CHAIN)
+                .load(&deps.storage, CONTRACT_CHAIN)
                 .unwrap(),
             ("osmo", false).into()
         );
@@ -1428,7 +1428,7 @@ mod tests {
         let msg = ExecuteMsg::ModifyBech32Prefixes {
             operations: vec![ChainToBech32PrefixInput {
                 operation: FullOperation::Enable,
-                chain_name: SOURCE_CHAIN.to_string(),
+                chain_name: CONTRACT_CHAIN.to_string(),
                 prefix: "OSMO".to_string(),
                 new_prefix: None,
             }],
@@ -1436,7 +1436,7 @@ mod tests {
         contract::execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
         assert_eq!(
             CHAIN_TO_BECH32_PREFIX_MAP
-                .load(&deps.storage, SOURCE_CHAIN)
+                .load(&deps.storage, CONTRACT_CHAIN)
                 .unwrap(),
             ("osmo", true).into()
         );
@@ -1444,14 +1444,14 @@ mod tests {
             CHAIN_TO_BECH32_PREFIX_REVERSE_MAP
                 .load(&deps.storage, "osmo")
                 .unwrap(),
-            vec!["ismisis", SOURCE_CHAIN]
+            vec!["ismisis", CONTRACT_CHAIN]
         );
 
         // Set another chain with the same prefix
         let msg = ExecuteMsg::ModifyBech32Prefixes {
             operations: vec![ChainToBech32PrefixInput {
                 operation: FullOperation::Remove,
-                chain_name: SOURCE_CHAIN.to_string(),
+                chain_name: CONTRACT_CHAIN.to_string(),
                 prefix: "OSMO".to_string(),
                 new_prefix: None,
             }],
@@ -1471,7 +1471,7 @@ mod tests {
         );
 
         CHAIN_TO_BECH32_PREFIX_MAP
-            .load(&deps.storage, SOURCE_CHAIN)
+            .load(&deps.storage, CONTRACT_CHAIN)
             .unwrap_err();
     }
 }
