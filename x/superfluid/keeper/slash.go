@@ -110,8 +110,6 @@ func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptyp
 		return sdk.AccAddress{}, sdk.Coins{}, err
 	}
 
-	// Q: this would make the amounts calculated in alculateUnderlyingAssetsFromPosition
-	// be rounded down. Is this fine? I think yes, should be minimal impact.
 	slashAmtNeg := slashAmt.Neg()
 
 	// If slashAmt is not negative, return an error
