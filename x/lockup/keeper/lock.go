@@ -385,7 +385,7 @@ func (k Keeper) unlockMaturedLockInternalLogic(ctx sdk.Context, lock types.Perio
 	coins := lock.Coins
 	finalCoinsToSendBackToUser := sdk.NewCoins()
 	for _, coin := range coins {
-		if strings.HasPrefix(coin.Denom, cltypes.ClTokenPrefix) {
+		if strings.HasPrefix(coin.Denom, cltypes.ConcentratedLiquidityTokenPrefix) {
 			// If the coin is a CL liquidity token, we do not add it to the finalCoinsToSendBackToUser and instead burn it
 			err := k.bk.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(coin))
 			if err != nil {

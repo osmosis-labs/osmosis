@@ -204,5 +204,13 @@ message MsgAddToConcentratedLiquiditySuperfluidPositionResponse {
     (gogoproto.moretags) = "yaml:\"amount1\"",
     (gogoproto.nullable) = false
   ];
+  // new_liquidity is the final liquidity after the add.
+  // It includes the liquidity that existed before in the position
+  // and the new liquidity that was added to the position.
+  string new_liquidity = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"new_liquidity\"",
+    (gogoproto.nullable) = false
+  ];
   uint64 lock_id = 4 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
 }

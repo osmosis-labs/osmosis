@@ -237,10 +237,10 @@ func (server msgServer) AddToConcentratedLiquiditySuperfluidPosition(goCtx conte
 		return nil, err
 	}
 
-	newPositionId, actualAmount0, actualAmount1, _, newLockId, err := server.keeper.addToConcentratedLiquiditySuperfluidPosition(ctx, sender, msg.PositionId, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount)
+	newPositionId, actualAmount0, actualAmount1, newLiquidity, newLockId, err := server.keeper.addToConcentratedLiquiditySuperfluidPosition(ctx, sender, msg.PositionId, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgAddToConcentratedLiquiditySuperfluidPositionResponse{PositionId: newPositionId, Amount0: actualAmount0, Amount1: actualAmount1, LockId: newLockId}, nil
+	return &types.MsgAddToConcentratedLiquiditySuperfluidPositionResponse{PositionId: newPositionId, Amount0: actualAmount0, Amount1: actualAmount1, LockId: newLockId, NewLiquidity: newLiquidity}, nil
 }

@@ -115,7 +115,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 
 	fmt.Println("Created pool id of: ", poolId)
 
-	pool, err := osmosis.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(osmosis.Ctx, poolId)
+	pool, err := osmosis.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(osmosis.Ctx, poolId)
 	if err != nil {
 		panic(err)
 	}
