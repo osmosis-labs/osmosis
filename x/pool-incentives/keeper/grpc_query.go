@@ -87,6 +87,23 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 	lockableDurations := q.Keeper.GetLockableDurations(sdkCtx)
 	distrInfo := q.Keeper.GetDistrInfo(sdkCtx)
 
+	// Add epoch duration to lockable durations if not already present.
+	// This is to ensure that concentrated gauges (which run on epoch time) are
+	// always included in the query, even if the epoch duration changes in the future.
+	epochDuration := q.incentivesKeeper.GetEpochInfo(sdkCtx).Duration
+	epochAlreadyLockable := false
+	for _, lockableDuration := range lockableDurations {
+		if lockableDuration == epochDuration {
+			epochAlreadyLockable = true
+			break
+		}
+	}
+
+	// Ensure that we only add epoch duration if it does not already exist as a lockable duration.
+	if !epochAlreadyLockable {
+		lockableDurations = append(lockableDurations, epochDuration)
+	}
+
 	// While there are exceptions, typically the number of incentivizedPools
 	// equals to the number of incentivized gauges / number of lockable durations.
 	incentivizedPools := make([]types.IncentivizedPool, 0, len(distrInfo.Records)/len(lockableDurations))
