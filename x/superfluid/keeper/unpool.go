@@ -33,7 +33,7 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 	// 2) Consistency check that lockID corresponds to sender, and contains correct LP shares.
 	// These are expected to be true by the caller, but good to double check
 	// TODO: Try to minimize dependence on lock here
-	lock, err := k.validateLockForUnpool(ctx, sender, poolId, lockId)
+	lock, err := k.validateGammLockForSuperfluidStaking(ctx, sender, poolId, lockId)
 	if err != nil {
 		return []uint64{}, err
 	}
@@ -100,7 +100,7 @@ func (k Keeper) checkUnpoolWhitelisted(ctx sdk.Context, poolId uint64) error {
 }
 
 // check if pool is whitelisted for unpool
-func (k Keeper) validateLockForUnpool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, lockId uint64) (*lockuptypes.PeriodLock, error) {
+func (k Keeper) validateGammLockForSuperfluidStaking(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, lockId uint64) (*lockuptypes.PeriodLock, error) {
 	lock, err := k.lk.GetLockByID(ctx, lockId)
 	if err != nil {
 		return lock, err
