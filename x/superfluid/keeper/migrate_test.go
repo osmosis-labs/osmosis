@@ -323,7 +323,7 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated(
 			balancerDelegationPre, _ := stakingKeeper.GetDelegation(ctx, balancerIntermediaryAcc.GetAccAddress(), valAddr)
 
 			// System under test.
-			positionId, amount0, amount1, _, _, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateSuperfluidBondedBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, synthLockBeforeMigration[0].SynthDenom, tc.tokenOutMins)
+			positionId, amount0, amount1, liquidityMigrated, _, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateSuperfluidBondedBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, synthLockBeforeMigration[0].SynthDenom, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
@@ -389,9 +389,14 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated(
 			newConcentratedIntermediaryAccount := superfluidKeeper.GetLockIdIntermediaryAccountConnection(ctx, concentratedLockId)
 			suite.Require().NotEqual(newConcentratedIntermediaryAccount.String(), "")
 
-			// Check if the new synthetic bonded lockup was created.
+			// Check newly created concentrated lock.
 			concentratedLock, err := lockupKeeper.GetLockByID(ctx, concentratedLockId)
 			suite.Require().NoError(err)
+			suite.Require().Equal(liquidityMigrated.TruncateInt().String(), concentratedLock.Coins[0].Amount.String(), "expected %s shares, found %s shares", coinsToMigrate.Amount.String(), concentratedLock.Coins[0].Amount.String())
+			suite.Require().Equal(balancerLock.Duration, concentratedLock.Duration)
+			suite.Require().Equal(balancerLock.EndTime, concentratedLock.EndTime)
+
+			// Check if the new synthetic bonded lockup was created.
 			_, err = lockupKeeper.GetSyntheticLockup(ctx, concentratedLockId, keeper.StakingSyntheticDenom(concentratedLock.Coins[0].Denom, valAddr.String()))
 			suite.Require().NoError(err)
 
@@ -468,7 +473,7 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrat
 			}
 
 			// System under test.
-			positionId, amount0, amount1, _, _, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateSuperfluidUnbondingBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, synthLockBeforeMigration[0].SynthDenom, tc.tokenOutMins)
+			positionId, amount0, amount1, liquidityMigrated, _, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateSuperfluidUnbondingBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, synthLockBeforeMigration[0].SynthDenom, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
@@ -501,9 +506,14 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrat
 				suite.Require().NoError(err)
 			}
 
-			// Check if the new synthetic unbonding lockup was created.
+			// Check newly created concentrated lock.
 			concentratedLock, err := lockupKeeper.GetLockByID(ctx, concentratedLockId)
 			suite.Require().NoError(err)
+			suite.Require().Equal(liquidityMigrated.TruncateInt().String(), concentratedLock.Coins[0].Amount.String(), "expected %s shares, found %s shares", coinsToMigrate.Amount.String(), concentratedLock.Coins[0].Amount.String())
+			suite.Require().Equal(balancerLock.Duration, concentratedLock.Duration)
+			suite.Require().Equal(suite.Ctx.BlockTime().Add(balancerLock.Duration), concentratedLock.EndTime)
+
+			// Check if the new synthetic unbonding lockup was created.
 			_, err = lockupKeeper.GetSyntheticLockup(ctx, concentratedLockId, keeper.UnstakingSyntheticDenom(concentratedLock.Coins[0].Denom, valAddr.String()))
 			suite.Require().NoError(err)
 
@@ -549,6 +559,7 @@ func (suite *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated
 			suite.Ctx = suite.Ctx.WithBlockTime(defaultJoinTime)
 			ctx := suite.Ctx
 			superfluidKeeper := suite.App.SuperfluidKeeper
+			lockupKeeper := suite.App.LockupKeeper
 
 			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
 			joinPoolAmt, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := suite.SetupMigrationTest(ctx, false, false, tc.unlocking, tc.percentOfSharesToMigrate)
@@ -565,7 +576,7 @@ func (suite *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated
 			suite.Require().Equal(migrationType, keeper.NonSuperfluid)
 
 			// System under test.
-			positionId, amount0, amount1, _, _, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateNonSuperfluidLockBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, tc.tokenOutMins)
+			positionId, amount0, amount1, liquidityMigrated, _, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateNonSuperfluidLockBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
@@ -583,6 +594,13 @@ func (suite *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated
 				balancerPoolShareOut, coinsToMigrate,
 				amount0, amount1,
 			)
+
+			// Check newly created concentrated lock.
+			concentratedLock, err := lockupKeeper.GetLockByID(ctx, concentratedLockId)
+			suite.Require().NoError(err)
+			suite.Require().Equal(liquidityMigrated.TruncateInt().String(), concentratedLock.Coins[0].Amount.String(), "expected %s shares, found %s shares", coinsToMigrate.Amount.String(), concentratedLock.Coins[0].Amount.String())
+			suite.Require().Equal(balancerLock.Duration, concentratedLock.Duration)
+			suite.Require().Equal(suite.Ctx.BlockTime().Add(balancerLock.Duration), concentratedLock.EndTime)
 
 			// Run slashing logic and check if the new and old locks are not slashed.
 			suite.SlashAndValidateResult(ctx, originalGammLockId, concentratedLockId, clPoolId, tc.percentOfSharesToMigrate, valAddr, *balancerLock, false)
