@@ -76,7 +76,7 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 	// If all shares are being migrated, this deletes the connection between the gamm lock and the intermediate account, deletes the synthetic lock, and burns the synthetic osmo.
 	intermediateAccount := types.SuperfluidIntermediaryAccount{}
 	if isPartialMigration {
-		intermediateAccount, preMigrationLock, err = k.partialSuperfluidUndelegate(ctx, sender.String(), lockId, sharesToMigrate)
+		intermediateAccount, preMigrationLock, err = k.partialSuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), lockId, sharesToMigrate)
 		if err != nil {
 			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, err
 		}

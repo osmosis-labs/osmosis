@@ -1028,7 +1028,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestPartialSuperfluidUndelegate() {
+func (suite *KeeperTestSuite) TestPartialSuperfluidUndelegateToConcentratedPosition() {
 	testCases := []struct {
 		name                  string
 		validatorStats        []stakingtypes.BondStatus
@@ -1131,7 +1131,7 @@ func (suite *KeeperTestSuite) TestPartialSuperfluidUndelegate() {
 				presupplyWithOffset := suite.App.BankKeeper.GetSupplyWithOffset(suite.Ctx, bondDenom)
 
 				// superfluid undelegate
-				intermediaryAcc, newLock, err := suite.App.SuperfluidKeeper.PartialSuperfluidUndelegate(suite.Ctx, lock.Owner, lockId, tc.undelegateAmounts[index])
+				intermediaryAcc, newLock, err := suite.App.SuperfluidKeeper.PartialSuperfluidUndelegateToConcentratedPosition(suite.Ctx, lock.Owner, lockId, tc.undelegateAmounts[index])
 				if tc.expSuperUnbondingErr[index] {
 					suite.Require().Error(err)
 					continue

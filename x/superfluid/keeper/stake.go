@@ -287,10 +287,31 @@ func (k Keeper) undelegateCommon(ctx sdk.Context, sender string, lockID uint64) 
 	return intermediaryAcc, nil
 }
 
-// partialSuperfluidUndelegate acts similarly to undelegateCommon, but undelegates a partial amount of the lock's delegation rather than the full amount. The amount
+// SuperfluidUndelegate starts undelegating superfluid delegated position for the given lock.
+// Undelegation is done instantly and the equivalent amount is sent to the module account
+// where it is burnt. Note that this method does not include unbonding the lock
+// itself.
+func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64) error {
+	intermediaryAcc, err := k.undelegateCommon(ctx, sender, lockID)
+	if err != nil {
+		return err
+	}
+	// Create a new synthetic lockup representing the unstaking side.
+	return k.createSyntheticLockup(ctx, lockID, intermediaryAcc, unlockingStatus)
+}
+
+// SuperfluidUndelegateToConcentratedPosition starts undelegating superfluid delegated position for the given lock. It behaves similarly to SuperfluidUndelegate,
+// however it does not create a new synthetic lockup representing the unstaking side. This is because after the time this function is called, we might
+// want to perform more operations prior to creating a lock. Once the actual lock is created, the synthetic lockup representing the unstaking side
+// should eventually be created as well. Use this function with caution to avoid accidentally missing synthetic lock creation.
+func (k Keeper) SuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, sender string, gammLockID uint64) (types.SuperfluidIntermediaryAccount, error) {
+	return k.undelegateCommon(ctx, sender, gammLockID)
+}
+
+// partialUndelegateCommon acts similarly to undelegateCommon, but undelegates a partial amount of the lock's delegation rather than the full amount. The amount
 // that is undelegated is placed in a new lock. This function returns the intermediary account associated with the original lock ID as well as the new lock that was created.
 // An error is returned if the amount to undelegate is greater than the locked amount.
-func (k Keeper) partialSuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64, amountToUndelegate sdk.Coin) (intermediaryAcc types.SuperfluidIntermediaryAccount, newlock *lockuptypes.PeriodLock, err error) {
+func (k Keeper) partialUndelegateCommon(ctx sdk.Context, sender string, lockID uint64, amountToUndelegate sdk.Coin) (intermediaryAcc types.SuperfluidIntermediaryAccount, newlock *lockuptypes.PeriodLock, err error) {
 	lock, err := k.lk.GetLockByID(ctx, lockID)
 	if err != nil {
 		return types.SuperfluidIntermediaryAccount{}, &lockuptypes.PeriodLock{}, err
@@ -329,25 +350,26 @@ func (k Keeper) partialSuperfluidUndelegate(ctx sdk.Context, sender string, lock
 	return intermediaryAcc, &newLock, nil
 }
 
-// SuperfluidUndelegate starts undelegating superfluid delegated position for the given lock.
+// partialSuperfluidUndelegate starts undelegating a portion of a superfluid delegated position for the given lock.
 // Undelegation is done instantly and the equivalent amount is sent to the module account
 // where it is burnt. Note that this method does not include unbonding the lock
 // itself.
-func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64) error {
-	intermediaryAcc, err := k.undelegateCommon(ctx, sender, lockID)
+// nolint: unused
+func (k Keeper) partialSuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64, amountToUndelegate sdk.Coin) error {
+	intermediaryAcc, newLock, err := k.partialUndelegateCommon(ctx, sender, lockID, amountToUndelegate)
 	if err != nil {
 		return err
 	}
 	// Create a new synthetic lockup representing the unstaking side.
-	return k.createSyntheticLockup(ctx, lockID, intermediaryAcc, unlockingStatus)
+	return k.createSyntheticLockup(ctx, newLock.ID, intermediaryAcc, unlockingStatus)
 }
 
-// SuperfluidUndelegateToConcentratedPosition starts undelegating superfluid delegated position for the given lock. It behaves similarly to SuperfluidUndelegate,
+// partialSuperfluidUndelegateToConcentratedPosition starts undelegating a portion of a superfluid delegated position for the given lock. It behaves similarly to partialSuperfluidUndelegate,
 // however it does not create a new synthetic lockup representing the unstaking side. This is because after the time this function is called, we might
 // want to perform more operations prior to creating a lock. Once the actual lock is created, the synthetic lockup representing the unstaking side
-// should eventually be created as well. Use thi function with caution to avoid accidentally missing synthetic lock creation.
-func (k Keeper) SuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, sender string, gammLockID uint64) (types.SuperfluidIntermediaryAccount, error) {
-	return k.undelegateCommon(ctx, sender, gammLockID)
+// should eventually be created as well. Use this function with caution to avoid accidentally missing synthetic lock creation.
+func (k Keeper) partialSuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, sender string, gammLockID uint64, amountToUndelegate sdk.Coin) (types.SuperfluidIntermediaryAccount, *lockuptypes.PeriodLock, error) {
+	return k.partialUndelegateCommon(ctx, sender, gammLockID, amountToUndelegate)
 }
 
 // SuperfluidUnbondLock unbonds the lock that has been used for superfluid staking.
