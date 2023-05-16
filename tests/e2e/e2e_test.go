@@ -371,9 +371,9 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	nextInitTick := sdk.NewInt(40000) // address1 position1's upper tick
 
 	// Calculate sqrtPrice after and at the next initialized tick (upperTick of address1 position1 - 40000)
-	sqrtPriceAfterNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick.Add(tickOffset))
+	_, sqrtPriceAfterNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick.Add(tickOffset))
 	s.Require().NoError(err)
-	sqrtPriceAtNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick)
+	_, sqrtPriceAtNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick)
 	s.Require().NoError(err)
 
 	// Calculate Δ(sqrtPrice):
@@ -513,9 +513,9 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Using: CalcAmount0Delta = liquidity * ((sqrtPriceB - sqrtPriceA) / (sqrtPriceB * sqrtPriceA))
 
 	// Calculate sqrtPrice after and at the next initialized tick (which is upperTick of address1 position1 - 40000)
-	sqrtPricebBelowNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick.Sub(tickOffset))
+	_, sqrtPricebBelowNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick.Sub(tickOffset))
 	s.Require().NoError(err)
-	sqrtPriceAtNextInitializedTick, err = cl.TickToSqrtPrice(nextInitTick)
+	_, sqrtPriceAtNextInitializedTick, err = cl.TickToSqrtPrice(nextInitTick)
 	s.Require().NoError(err)
 
 	// Calculate numerators
