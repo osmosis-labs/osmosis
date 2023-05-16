@@ -145,21 +145,21 @@ func (s zeroForOneStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPric
 	return sqrtPriceNext, amountOneOut, amountZeroIn, feeChargeTotal
 }
 
-// InitializeTickIterator returns iterator that seeks to the given tickIndex.
-// If tick index does not exist in the store, it will return an invalid iterator.
+// InitializeNextTickIterator returns iterator that seeks to the next tick from the given tickIndex.
+// If nex tick relative to tickINdex does not exist in the store, it will return an invalid iterator.
 //
-// zeroForOneStrategy assumes moving to the left of the current square root price.
-// As a result, we use reverse iterator in NextInitializedTick to find the next
-// tick to the left of current. The end cursor for reverse iteration is non-inclusive
-// so the search starts from the tickIndex - 1. The caller must handle this case.
-// Returns an invalid iterator if tickIndex is not in the store.
+// oneForZeroStrategy assumes moving to the left of the current square root price.
+// As a result, we use a reverse iterator to seek to the next tick index relative to the currentTickIndexPlusOne.
+// Since end key of the reverse iterator is exclusive, we search from current + 1 tick index.
+// in decrasing lexicographic order until a tick one smaller than current is found.
+// Returns an invalid iterator if currentTickIndexPlusOne is not in the store.
 // Panics if fails to parse tick index from bytes.
 // The caller is responsible for closing the iterator on success.
-func (s zeroForOneStrategy) InitializeTickIterator(ctx sdk.Context, poolId uint64, tickIndex int64) dbm.Iterator {
+func (s zeroForOneStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId uint64, currentTickIndexPlusOne int64) dbm.Iterator {
 	store := ctx.KVStore(s.storeKey)
 	prefixBz := types.KeyTickPrefixByPoolId(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
-	startKey := types.TickIndexToBytes(tickIndex)
+	startKey := types.TickIndexToBytes(currentTickIndexPlusOne)
 
 	iter := prefixStore.ReverseIterator(nil, startKey)
 
@@ -171,7 +171,7 @@ func (s zeroForOneStrategy) InitializeTickIterator(ctx sdk.Context, poolId uint6
 			iter.Close()
 			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
 		}
-		if tick <= tickIndex {
+		if tick < currentTickIndexPlusOne {
 			break
 		}
 	}
@@ -182,7 +182,7 @@ func (s zeroForOneStrategy) InitializeTickIterator(ctx sdk.Context, poolId uint6
 // on the actual current tick.
 //
 // zeroForOneStrategy assumes moving to the left of the current square root price.
-// As a result, we use reverse iterator in InitializeTickIterator to find the next
+// As a result, we use reverse iterator in InitializeNextTickIterator to find the next
 // tick to the left of current. The end cursor for reverse iteration is non-inclusive
 // so must add one here to make sure that the current tick is included in the search.
 func (s zeroForOneStrategy) InitializeTickValue(currentTick sdk.Int) sdk.Int {

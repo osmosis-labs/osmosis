@@ -314,7 +314,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		feeGrowthGlobal: sdk.ZeroDec(),
 	}
 
-	nextTickIter := swapStrategy.InitializeTickIterator(ctx, poolId, swapState.tick.Int64())
+	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick.Int64())
 	defer nextTickIter.Close()
 	if !nextTickIter.Valid() {
 		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}

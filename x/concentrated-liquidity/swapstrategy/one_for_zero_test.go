@@ -270,7 +270,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 	}
 }
 
-func (suite *StrategyTestSuite) TestInitializeTickIterator_OneForZero() {
+func (suite *StrategyTestSuite) TestInitializeNextTickIterator_OneForZero() {
 	tests := map[string]struct {
 		currentTick     int64
 		preSetPositions []position
@@ -366,7 +366,7 @@ func (suite *StrategyTestSuite) TestInitializeTickIterator_OneForZero() {
 
 			tickIndex := strategy.InitializeTickValue(currentTick)
 
-			iter := strategy.InitializeTickIterator(suite.Ctx, defaultPoolId, tickIndex.Int64())
+			iter := strategy.InitializeNextTickIterator(suite.Ctx, defaultPoolId, tickIndex.Int64())
 			defer iter.Close()
 
 			suite.Require().Equal(tc.expectIsValid, iter.Valid())
