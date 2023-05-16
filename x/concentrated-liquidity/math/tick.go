@@ -131,6 +131,12 @@ func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (int64, error) {
 
 	// Round the tick index down to the nearest tick spacing if the tickIndex is in between authorized tick values
 	// Note that this is Euclidean modulus.
+	// The difference from default Go modulus is that Go default results
+	// in a negative remainder when the dividend is negative.
+	// Consider example tickIndex = -17, tickSpacing = 10
+	// tickIndexModulus = tickIndex % tickSpacing = -7
+	// tickIndexModulus = -7 + 10 = 3
+	// tickIndex = -17 - 3 = -20
 	tickIndexModulus := tickIndex % int64(tickSpacing)
 	if tickIndexModulus < 0 {
 		tickIndexModulus += int64(tickSpacing)
