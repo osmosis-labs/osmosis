@@ -60,35 +60,35 @@ func (suite *StrategyTestSuite) TestNextInitializedTick() {
 			swapStrategy := swapstrategy.New(false, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec(), defaultTickSpacing)
 
 			n, initd := swapStrategy.NextInitializedTick(ctx, 1, 78)
-			suite.Require().Equal(sdk.NewInt(84), n)
+			suite.Require().Equal(int64(84), n)
 			suite.Require().True(initd)
 		})
 		suite.Run("returns tick to right if at initialized tick", func() {
 			swapStrategy := swapstrategy.New(false, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec(), defaultTickSpacing)
 
 			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, -55)
-			suite.Require().Equal(sdk.NewInt(-4), n)
+			suite.Require().Equal(int64(-4), n)
 			suite.Require().True(initd)
 		})
 		suite.Run("returns the tick directly to the right", func() {
 			swapStrategy := swapstrategy.New(false, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec(), defaultTickSpacing)
 
 			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, 77)
-			suite.Require().Equal(sdk.NewInt(78), n)
+			suite.Require().Equal(int64(78), n)
 			suite.Require().True(initd)
 		})
 		suite.Run("returns the tick directly to the right", func() {
 			swapStrategy := swapstrategy.New(false, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec(), defaultTickSpacing)
 
 			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, -56)
-			suite.Require().Equal(sdk.NewInt(-55), n)
+			suite.Require().Equal(int64(-55), n)
 			suite.Require().True(initd)
 		})
 		suite.Run("returns the next words initialized tick if on the right boundary", func() {
 			swapStrategy := swapstrategy.New(false, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec(), defaultTickSpacing)
 
 			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, -257)
-			suite.Require().Equal(sdk.NewInt(-200), n)
+			suite.Require().Equal(int64(-200), n)
 			suite.Require().True(initd)
 		})
 		suite.Run("returns the next initialized tick from the next word", func() {
@@ -97,7 +97,7 @@ func (suite *StrategyTestSuite) TestNextInitializedTick() {
 			suite.App.ConcentratedLiquidityKeeper.SetTickInfo(suite.Ctx, 1, 340, model.TickInfo{})
 
 			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, 328)
-			suite.Require().Equal(sdk.NewInt(340), n)
+			suite.Require().Equal(int64(340), n)
 			suite.Require().True(initd)
 		})
 	})
@@ -107,21 +107,21 @@ func (suite *StrategyTestSuite) TestNextInitializedTick() {
 			swapStrategy := swapstrategy.New(true, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec(), defaultTickSpacing)
 
 			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, 79)
-			suite.Require().Equal(sdk.NewInt(78), n)
+			suite.Require().Equal(int64(78), n)
 			suite.Require().True(initd)
 		})
 		suite.Run("returns previous tick even though given is initialized", func() {
 			swapStrategy := swapstrategy.New(true, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec(), defaultTickSpacing)
 
 			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, 78)
-			suite.Require().Equal(sdk.NewInt(70), n)
+			suite.Require().Equal(int64(70), n)
 			suite.Require().True(initd)
 		})
 		suite.Run("returns next initialized tick far away", func() {
 			swapStrategy := swapstrategy.New(true, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec(), defaultTickSpacing)
 
 			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, 100)
-			suite.Require().Equal(sdk.NewInt(84), n)
+			suite.Require().Equal(int64(84), n)
 			suite.Require().True(initd)
 		})
 	})
