@@ -242,7 +242,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	return k.mintOsmoTokensAndDelegate(ctx, amount, acc)
 }
 
-// undelegateCommon is a helper function for SuperfluidUndelegate and superfluidUndelegateToConcentratedPosition.
+// undelegateCommon is a helper function for SuperfluidUndelegate and SuperfluidUndelegateToConcentratedPosition.
 // It performs the following tasks:
 // - checks that the lock is valid for superfluid staking
 // - gets the intermediary account associated with the lock id
@@ -342,10 +342,11 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 	return k.createSyntheticLockup(ctx, lockID, intermediaryAcc, unlockingStatus)
 }
 
-// superfluidUndelegateToConcentratedPosition starts undelegating superfluid delegated position for the given lock. It behaves similarly to SuperfluidUndelegate,
-// however it does not create a new synthetic lockup representing the unstaking side. This is because at the time this function is called, the new concentrated liquidity side
-// lock has not yet been created. Once the new cl side lock is created, the synthetic lockup representing the unstaking side is created.
-func (k Keeper) superfluidUndelegateToConcentratedPosition(ctx sdk.Context, sender string, gammLockID uint64) (types.SuperfluidIntermediaryAccount, error) {
+// SuperfluidUndelegateToConcentratedPosition starts undelegating superfluid delegated position for the given lock. It behaves similarly to SuperfluidUndelegate,
+// however it does not create a new synthetic lockup representing the unstaking side. This is because after the time this function is called, we might
+// want to perform more operations prior to creating a lock. Once the actual lock is created, the synthetic lockup representing the unstaking side
+// should eventually be created as well. Use thi function with caution to avoid accidentally missing synthetic lock creation.
+func (k Keeper) SuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, sender string, gammLockID uint64) (types.SuperfluidIntermediaryAccount, error) {
 	return k.undelegateCommon(ctx, sender, gammLockID)
 }
 

@@ -81,7 +81,7 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, err
 		}
 	} else {
-		intermediateAccount, err = k.superfluidUndelegateToConcentratedPosition(ctx, sender.String(), lockId)
+		intermediateAccount, err = k.SuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), lockId)
 		if err != nil {
 			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, err
 		}
@@ -259,10 +259,7 @@ func (k Keeper) validateMigration(ctx sdk.Context, sender sdk.AccAddress, lockId
 	}
 
 	// Before we break the lock, we must note the time remaining on the lock.
-	remainingLockTime, err = k.getExistingLockRemainingDuration(ctx, preMigrationLock)
-	if err != nil {
-		return 0, 0, &lockuptypes.PeriodLock{}, 0, err
-	}
+	remainingLockTime = k.getExistingLockRemainingDuration(ctx, preMigrationLock)
 
 	return poolIdLeaving, poolIdEntering, preMigrationLock, remainingLockTime, nil
 }

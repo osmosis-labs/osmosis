@@ -32,7 +32,7 @@ func (k Keeper) MigrateUnlockedPositionFromBalancerToConcentrated(ctx sdk.Contex
 	}
 
 	// Get the concentrated pool from the message and type cast it to ConcentratedPoolExtension.
-	concentratedPool, err := k.concentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, poolIdEntering)
+	concentratedPool, err := k.concentratedLiquidityKeeper.GetConcentratedPoolById(ctx, poolIdEntering)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
@@ -195,7 +195,7 @@ func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConce
 		var clPool cltypes.ConcentratedPoolExtension
 		if record.ClPoolId != 0 {
 			// Ensure the provided ClPoolId exists and that it is of type concentrated.
-			clPool, err = k.concentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, record.ClPoolId)
+			clPool, err = k.concentratedLiquidityKeeper.GetConcentratedPoolById(ctx, record.ClPoolId)
 			if err != nil {
 				return err
 			}

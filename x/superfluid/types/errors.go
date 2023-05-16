@@ -5,6 +5,8 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
+
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 // x/superfluid module errors.
@@ -87,11 +89,11 @@ func (e TwoTokenBalancerPoolError) Error() string {
 	return fmt.Sprintf("balancer pool must have two tokens, got %d tokens", e.NumberOfTokens)
 }
 
-type UnexpectedDenomError struct {
-	ExpectedDenom string
-	ProvidedDenom string
+type ConcentratedTickRangeNotFullError struct {
+	ActualLowerTick int64
+	ActualUpperTick int64
 }
 
-func (e UnexpectedDenomError) Error() string {
-	return fmt.Sprintf("provided denom (%s) was expected to be formatted as follows: %s", e.ProvidedDenom, e.ExpectedDenom)
+func (e ConcentratedTickRangeNotFullError) Error() string {
+	return fmt.Sprintf("position must be full range. Lower tick (%d) must be (%d). Upper tick (%d) must be (%d)", e.ActualLowerTick, e.ActualUpperTick, cltypes.MinTick, cltypes.MaxTick)
 }

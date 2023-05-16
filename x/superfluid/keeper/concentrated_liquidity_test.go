@@ -118,7 +118,7 @@ func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition()
 
 			// Run test setup logic.
 			positionId, lockId, amount0, amount1, valAddr, poolJoinAcc := suite.SetupSuperfluidConcentratedPosition(ctx, tc.superfluidDelegated, tc.superfluidUndelegating, tc.unlocking, owner)
-			clPool, err := concentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, 1)
+			clPool, err := concentratedLiquidityKeeper.GetConcentratedPoolById(ctx, 1)
 			suite.Require().NoError(err)
 			clPoolAddress := clPool.GetAddress()
 

@@ -33,11 +33,12 @@ var (
 )
 
 func MustGetPoolIdFromShareDenom(denom string) uint64 {
-	number, err := GetPoolIdFromShareDenom(denom)
+	numberStr := strings.TrimLeft(denom, GAMMTokenPrefix)
+	number, err := strconv.Atoi(numberStr)
 	if err != nil {
 		panic(err)
 	}
-	return number
+	return uint64(number)
 }
 
 func GetPoolIdFromShareDenom(denom string) (uint64, error) {

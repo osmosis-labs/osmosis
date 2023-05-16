@@ -376,40 +376,42 @@ It then mints concentrated liquidity shares and locks them up for the
 staking duration. From there, the normal superfluid delegation logic
 is executed.
 
-### Create Full Range Position and Superfluid Delegate
+## Add To Superfluid Concentrated Position
+
+This message allows a user to add liquidity to a concentrated liquidity superfluid position.
 
 ```{.go}
-type MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition struct {
- Sender string
- LockId uint64
- SharesToMigrate sdk.Coin
- TokenOutMins sdk.Coins
+type MsgAddToConcentratedLiquiditySuperfluidPosition struct {
+	PositionId    uint64
+	Sender        string
+	TokenDesired0 types.Coin
+	TokenDesired1 types.Coin
 }
 ```
 
-Upon completion, the following response is given:
+It does so by performing the following steps:
+- perform validation of the input parameters
+   * make sure that position is locked
+   * belongs to the sender
+   * lock duration is correct and belongs to the sender
+- superfluid undelegate without synthetic lock creation
+- withdraw old position
+- make sure position isn't the last one in pool. Fail if so
+- update tokens for a new position (added + withdrawn)
+- created locked SF position
+- SF delegate (also creates synth lock)
+
+Upon successful execution, the following response is given:
 
 ```{.go}
-type MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse struct {
- Amount0 string
- Amount1 string
- LiquidityCreated sdk.Dec
- JoinTime time.Time
+type MsgAddToConcentratedLiquiditySuperfluidPositionResponse struct {
+	PositionId   uint64
+	Amount0      github_com_cosmos_cosmos_sdk_types.Int
+	Amount1      github_com_cosmos_cosmos_sdk_types.Int
+	NewLiquidity github_com_cosmos_cosmos_sdk_types.Dec
+	LockId       uint64
 }
 ```
-
-The message starts by determining which migration method to use.
-- If underlying lock is superfluid bonded
-  - `migrateSuperfluidBondedBalancerToConcentrated`
-- If underlying lock is superfluid unbonding
-  - `migrateSuperfluidUnbondingBalancerToConcentrated`
-- If underlying lock is not superfluid bonded (vanilla lock)
-  - `migrateNonSuperfluidLockBalancerToConcentrated`
-
-It then routes to that migration message, which will migrate the gamm lock from
-the previous state it was in, to the same state but in the concentrated pool. If
-the sharesToMigrate is zero, then the entire lock is migrated. If only a subset
-of the shares are migrated, then the remaining shares are left in the gamm pool.
 
 ## Epochs
 

@@ -287,7 +287,7 @@ func (suite *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
 			upperTickInfoPostSlash, getTickErr := suite.App.ConcentratedLiquidityKeeper.GetTickInfo(suite.Ctx, clPoolId, positionPreSlash.UpperTick)
 			suite.Require().NoError(getTickErr)
 
-			clPool, getPoolErr := suite.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(suite.Ctx, clPoolId)
+			clPool, getPoolErr := suite.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(suite.Ctx, clPoolId)
 			suite.Require().NoError(getPoolErr)
 			liquidityPostSlash := clPool.GetLiquidity()
 			if tc.expectedErr {
