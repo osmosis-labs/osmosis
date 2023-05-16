@@ -6,6 +6,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 )
 
-func TickToSqrtPrice(tickIndex sdk.Int) (price sdk.Dec, sqrtPrice sdk.Dec, err error) {
+func TickToSqrtPrice(tickIndex sdk.Int) (price sdk.Dec, err error) {
 	return math.TickToSqrtPrice(tickIndex)
 }

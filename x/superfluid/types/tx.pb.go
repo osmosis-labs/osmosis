@@ -766,7 +766,7 @@ type MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition struct {
 	LockId          uint64     `protobuf:"varint,2,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty" yaml:"lock_id"`
 	SharesToMigrate types.Coin `protobuf:"bytes,3,opt,name=shares_to_migrate,json=sharesToMigrate,proto3" json:"shares_to_migrate" yaml:"shares_to_migrate"`
 	// token_out_mins indicates minimum token to exit Balancer pool with.
-	TokenOutMins []types.Coin `protobuf:"bytes,4,rep,name=token_out_mins,json=tokenOutMins,proto3" json:"token_out_mins" yaml:"token_out_min_amounts"`
+	TokenOutMins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=token_out_mins,json=tokenOutMins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"token_out_mins" yaml:"token_out_mins"`
 }
 
 func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) Reset() {
@@ -827,7 +827,7 @@ func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetSharesToMi
 	return types.Coin{}
 }
 
-func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetTokenOutMins() []types.Coin {
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetTokenOutMins() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.TokenOutMins
 	}

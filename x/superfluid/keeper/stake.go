@@ -242,7 +242,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	return k.mintOsmoTokensAndDelegate(ctx, amount, acc)
 }
 
-// undelegateCommon is a helper function for SuperfluidUndelegate and SuperfluidUndelegateToConcentratedPosition.
+// undelegateCommon is a helper function for SuperfluidUndelegate and superfluidUndelegateToConcentratedPosition.
 // It performs the following tasks:
 // - checks that the lock is valid for superfluid staking
 // - gets the intermediary account associated with the lock id

@@ -695,12 +695,10 @@ github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230326212251-7a2cf2993434 h1:RetE
 github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230326212251-7a2cf2993434/go.mod h1:ss3tUfPTwaa6NsoPZrCR7xOqLqCK0LwoNbc2Q8Zs5/Y=
 github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230503232557-ba905586c111 h1:1ahWbf9iF9sxDOjxrHWFaBGLE0nWFdpiX1pqObUaJO8=
 github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230503232557-ba905586c111/go.mod h1:a7lhiXRpn8QJ21OhFpaEnUNErTSIafaYpp02q6uI/Dk=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230504001814-1dbcc2079de1 h1:1yzJYsP1bWOX/8/aGA8Mk/UFiU9z/h6LRAr2OezyYQ8=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230504001814-1dbcc2079de1/go.mod h1:hk/o9/kmTSZmZqwXcSrPuwj/gpRMCqbE/d3vj6teL2A=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230510161551-8bf252f26bae h1:I1Cy+GpTPWbVi0lBw9+bS1w42YfQjvXNK9bW4YbHhcs=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230510161551-8bf252f26bae/go.mod h1:hk/o9/kmTSZmZqwXcSrPuwj/gpRMCqbE/d3vj6teL2A=
-github.com/osmosis-labs/osmosis/v15 v15.0.0-20230504143153-c7d6a52cd9f5 h1:M4fG/zxok1+9y5SWas1sBzDZWfSbGs7vezE1NF7niCk=
-github.com/osmosis-labs/osmosis/v15 v15.0.0-20230504143153-c7d6a52cd9f5/go.mod h1:NEoCQ+jkE0o6CUorEUhRdwdbvXYl5nt4oZeevaEz29o=
+github.com/osmosis-labs/osmosis/v15 v15.0.0-20230513050746-13c81d83ef0d h1:8lJNaOABRchMwMO+DoHEGrlrBXlhDloms1GKs/ti8HA=
+github.com/osmosis-labs/osmosis/v15 v15.0.0-20230513050746-13c81d83ef0d/go.mod h1:mdvXaHvcLi1Loo2sUF1FPV3RynReBpexO3g3ktEWQA4=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230328024000-175ec88e4304 h1:RIrWLzIiZN5Xd2JOfSOtGZaf6V3qEQYg6EaDTAkMnCo=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230328024000-175ec88e4304/go.mod h1:yPWoJTj5RKrXKUChAicp+G/4Ni/uVEpp27mi/FF/L9c=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230331072320-5d6f6cfa2627 h1:A0SwZgp4bmJFbivYJc8mmVhMjrr3EdUZluBYFke11+w=
@@ -744,8 +742,8 @@ github.com/prometheus/client_golang v1.0.0/go.mod h1:db9x61etRT2tGnBNRi70OPL5Fsn
 github.com/prometheus/client_golang v1.3.0/go.mod h1:hJaj2vgQTGQmVCsAACORcieXFeDPbaTKGT+JTgUa3og=
 github.com/prometheus/client_golang v1.4.0/go.mod h1:e9GMxYsXl05ICDXkRhurwBS4Q3OK1iX/F2sw+iXX5zU=
 github.com/prometheus/client_golang v1.7.1/go.mod h1:PY5Wy2awLA44sXw4AOSfFBetzPP4j5+D6mVACh+pe2M=
-github.com/prometheus/client_golang v1.15.0 h1:5fCgGYogn0hFdhyhLbw7hEsWxufKtY9klyvdNfFlFhM=
-github.com/prometheus/client_golang v1.15.0/go.mod h1:e9yaBhRPU2pPNsZwE+JdQl0KEt1N9XgF6zxWmaC0xOk=
+github.com/prometheus/client_golang v1.15.1 h1:8tXpTmJbyH5lydzFPoxSIJ0J46jdh3tylbvM1xCv0LI=
+github.com/prometheus/client_golang v1.15.1/go.mod h1:e9yaBhRPU2pPNsZwE+JdQl0KEt1N9XgF6zxWmaC0xOk=
 github.com/prometheus/client_model v0.0.0-20180712105110-5c3871d89910/go.mod h1:MbSGuTsp3dbXC40dX6PRTWyKYBIrTGTE9sqQNg2J8bo=
 github.com/prometheus/client_model v0.0.0-20190115171406-56726106282f/go.mod h1:MbSGuTsp3dbXC40dX6PRTWyKYBIrTGTE9sqQNg2J8bo=
 github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90/go.mod h1:xMI15A0UPsDsEKsMN9yxemIoYk6Tm2C1GtYGdfGttqA=
