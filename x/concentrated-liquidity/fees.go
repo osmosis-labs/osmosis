@@ -128,7 +128,7 @@ func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
-	currentTick := pool.GetCurrentTick().Int64()
+	currentTick := pool.GetCurrentTick()
 
 	// get lower, upper tick info
 	lowerTickInfo, err := k.GetTickInfo(ctx, poolId, lowerTick)
@@ -164,7 +164,7 @@ func (k Keeper) getInitialFeeGrowthOppositeDirectionOfLastTraversalForTick(ctx s
 		return sdk.DecCoins{}, err
 	}
 
-	currentTick := pool.GetCurrentTick().Int64()
+	currentTick := pool.GetCurrentTick()
 	if currentTick >= tick {
 		feeAccumulator, err := k.GetFeeAccumulator(ctx, poolId)
 		if err != nil {
