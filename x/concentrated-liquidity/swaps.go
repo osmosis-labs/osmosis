@@ -317,7 +317,7 @@ func (k Keeper) computeOutAmtGivenIn(
 	iter := swapStrategy.InitializeTickIterator(ctx, poolId, swapState.tick.Int64())
 	defer iter.Close()
 	if !iter.Valid() {
-		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("no ticks found for pool %d", poolId)
+		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
 	}
 
 	// Iterate and update swapState until we swap all tokenIn or we reach the specific sqrtPriceLimit
