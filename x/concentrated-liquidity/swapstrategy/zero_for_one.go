@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -142,6 +143,30 @@ func (s zeroForOneStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPric
 	feeChargeTotal := computeFeeChargeFromAmountIn(amountZeroIn, s.swapFee)
 
 	return sqrtPriceNext, amountOneOut, amountZeroIn, feeChargeTotal
+}
+
+// TODO: spec
+func (s zeroForOneStrategy) InitializeTickIterator(ctx sdk.Context, poolId uint64, tickIndex int64) dbm.Iterator {
+	store := ctx.KVStore(s.storeKey)
+	prefixBz := types.KeyTickPrefixByPoolId(poolId)
+	prefixStore := prefix.NewStore(store, prefixBz)
+	startKey := types.TickIndexToBytes(tickIndex)
+
+	iter := prefixStore.ReverseIterator(nil, startKey)
+
+	for ; iter.Valid(); iter.Next() {
+		// Since, we constructed our prefix store with <TickPrefix | poolID>, the
+		// key is the encoding of a tick index.
+		tick, err := types.TickIndexFromBytes(iter.Key())
+		if err != nil {
+			iter.Close()
+			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
+		}
+		if tick <= tickIndex {
+			break
+		}
+	}
+	return iter
 }
 
 // InitializeTickValue returns the initial tick value for computing swaps based
