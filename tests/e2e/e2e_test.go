@@ -222,7 +222,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	concentratedPool := s.updatedPool(chainANode, poolID)
 
 	// Sanity check that pool initialized with valid parameters (the ones that we haven't explicitly specified)
-	s.Require().Equal(concentratedPool.GetCurrentTick(), sdk.ZeroInt())
+	s.Require().Equal(concentratedPool.GetCurrentTick(), int64(0))
 	s.Require().Equal(concentratedPool.GetCurrentSqrtPrice(), sdk.ZeroDec())
 	s.Require().Equal(concentratedPool.GetLiquidity(), sdk.ZeroDec())
 
