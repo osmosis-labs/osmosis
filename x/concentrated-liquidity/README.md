@@ -284,15 +284,6 @@ a) Preventing trade at a desirable spot price or
 b) Having the front end round the tick's actual price to the nearest
   human readable/desirable spot price
 
-One side effect of increasing precision as we get closer to the minimum tick
-is that multiple ticks can represent the same price. For example, tick
--161795100 (along with the ticks surrounding it) correlate to a price
-of 0.000000000000000002. To get around any issues this may cause, when a
-position is created with a user defined lower and upper tick, we determine
-if a larger tick exists that represents the same price. If so, we use that tick
-instead of the user defined tick. In the above example, the tick would be
-changed to -161000000, which is the first tick that represents the same price.
-
 ## Concentrated Liquidity Module Messages
 
 ### `MsgCreatePosition`

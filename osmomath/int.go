@@ -435,6 +435,8 @@ func (i BigInt) MarshalAmino() ([]byte, error)   { return i.Marshal() }
 func (i *BigInt) UnmarshalAmino(bz []byte) error { return i.Unmarshal(bz) }
 
 // intended to be used with require/assert:  require.True(IntEq(...))
+//
+//nolint:thelper
 func IntEq(t *testing.T, exp, got BigInt) (*testing.T, bool, string, string, string) {
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }

@@ -406,7 +406,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 func (s *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 	var (
 		tickToSqrtPrice = func(tick int64) sdk.Dec {
-			_, sqrtPrice, err := clmath.TickToSqrtPrice(sdk.NewInt(tick))
+			sqrtPrice, err := clmath.TickToSqrtPrice(sdk.NewInt(tick))
 			s.Require().NoError(err)
 			return sqrtPrice
 		}
@@ -517,7 +517,7 @@ func (s *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			pool := model.Pool{
 				CurrentTick: sdk.NewInt(tc.currentTick),
 			}
-			_, pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick)
+			pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick)
 
 			actualAmount0, actualAmount1, err := pool.CalcActualAmounts(s.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
 
@@ -611,7 +611,7 @@ func (s *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 				CurrentTick:          sdk.NewInt(tc.currentTick),
 				CurrentTickLiquidity: defaultLiquidityAmt,
 			}
-			_, pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick)
+			pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick)
 
 			wasUpdated := pool.UpdateLiquidityIfActivePosition(s.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
 			if tc.lowerTick <= tc.currentTick && tc.currentTick <= tc.upperTick {
