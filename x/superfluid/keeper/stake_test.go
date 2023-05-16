@@ -1118,8 +1118,12 @@ func (suite *KeeperTestSuite) TestPartialSuperfluidUndelegate() {
 				valAddr := intermediaryAcc.ValAddr
 
 				lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockId)
-				if err != nil {
+				if tc.expSuperUnbondingErr[index] {
+					// manually set the lock to nil if we expect an error so we don't fail early
+					suite.Require().Error(err)
 					lock = &lockuptypes.PeriodLock{}
+				} else {
+					suite.Require().NoError(err)
 				}
 
 				// get pre-superfluid delgations osmo supply and supplyWithOffset
