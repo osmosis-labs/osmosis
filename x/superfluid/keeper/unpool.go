@@ -33,14 +33,17 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 	// 2) Consistency check that lockID corresponds to sender, and contains correct LP shares.
 	// These are expected to be true by the caller, but good to double check
 	// TODO: Try to minimize dependence on lock here
-	lock, err := k.validateLockForUnpool(ctx, sender, poolId, lockId)
+	lock, err := k.validateGammLockForSuperfluidStaking(ctx, sender, poolId, lockId)
 	if err != nil {
 		return []uint64{}, err
 	}
 	gammSharesInLock := lock.Coins[0]
 
 	// 3) Get remaining duration on the lock. Handle if the lock was unbonding.
-	lockRemainingDuration := k.getExistingLockRemainingDuration(ctx, lock)
+	lockRemainingDuration, err := k.getExistingLockRemainingDuration(ctx, lock)
+	if err != nil {
+		return []uint64{}, err
+	}
 
 	// 4) If superfluid delegated, superfluid undelegate
 	err = k.unbondSuperfluidIfExists(ctx, sender, lockId)
@@ -99,39 +102,48 @@ func (k Keeper) checkUnpoolWhitelisted(ctx sdk.Context, poolId uint64) error {
 	return types.ErrPoolNotWhitelisted
 }
 
-// check if pool is whitelisted for unpool
-func (k Keeper) validateLockForUnpool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, lockId uint64) (*lockuptypes.PeriodLock, error) {
+// validateGammLockForSuperfluidStaking checks if the provided lock:
+// 1) is owned by the provided sender
+// 2) contains only 1 coin
+// 3) contains the gamm LP shares associated with the provided poolId
+func (k Keeper) validateGammLockForSuperfluidStaking(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, lockId uint64) (*lockuptypes.PeriodLock, error) {
 	lock, err := k.lk.GetLockByID(ctx, lockId)
 	if err != nil {
-		return lock, err
+		return &lockuptypes.PeriodLock{}, err
 	}
 
-	// consistency check: validate lock owner
-	// However, we expect this to be guaranteed by caller though.
+	// Validate lock owner.
+	// We expect this to be guaranteed by caller, though.
 	if lock.Owner != sender.String() {
-		return lock, lockuptypes.ErrNotLockOwner
+		return &lockuptypes.PeriodLock{}, lockuptypes.ErrNotLockOwner
 	}
 
 	if lock.Coins.Len() != 1 {
-		return lock, types.ErrMultipleCoinsLockupNotSupported
+		return &lockuptypes.PeriodLock{}, types.ErrMultipleCoinsLockupNotSupported
 	}
 
 	gammShare := lock.Coins[0]
 	if gammShare.Denom != gammtypes.GetPoolShareDenom(poolId) {
-		return lock, types.ErrLockUnpoolNotAllowed
+		return &lockuptypes.PeriodLock{}, types.UnexpectedDenomError{ExpectedDenom: gammtypes.GetPoolShareDenom(poolId), ProvidedDenom: gammShare.Denom}
 	}
 
 	return lock, nil
 }
 
-func (k Keeper) getExistingLockRemainingDuration(ctx sdk.Context, lock *lockuptypes.PeriodLock) time.Duration {
+// getExistingLockRemainingDuration returns the time remaining until the lock is finished unlocking.
+// If the lock is not unlocking, then the duration field of the lock is returned.
+func (k Keeper) getExistingLockRemainingDuration(ctx sdk.Context, lock *lockuptypes.PeriodLock) (time.Duration, error) {
 	if lock.IsUnlocking() {
-		// lock is unlocking, so remaining duration equals lock.EndTime - ctx.BlockTime
+		// Lock is unlocking, so remaining duration equals lock.EndTime - ctx.BlockTime.
 		remainingDuration := lock.EndTime.Sub(ctx.BlockTime())
-		return remainingDuration
+		// Defense in depth, ensure the duration is not negative.
+		if remainingDuration < 0 {
+			return 0, types.NegativeDurationError{Duration: remainingDuration}
+		}
+		return remainingDuration, nil
 	}
-	// lock is bonded, thus the time it should take to unlock is lock.Duration
-	return lock.Duration
+	// Lock is not unlocking, thus the time it should take to unlock is the locks duration.
+	return lock.Duration, nil
 }
 
 // TODO: Review this in more depth

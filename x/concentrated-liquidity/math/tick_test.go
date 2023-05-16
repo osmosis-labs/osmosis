@@ -182,7 +182,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 	for name, tc := range testCases {
 		tc := tc
 		suite.Run(name, func() {
-			price, sqrtPrice, err := math.TickToSqrtPrice(tc.tickIndex)
+			sqrtPrice, err := math.TickToSqrtPrice(tc.tickIndex)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().Equal(tc.expectedError.Error(), err.Error())
@@ -192,7 +192,6 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 			expectedSqrtPrice, err := tc.expectedPrice.ApproxSqrt()
 			suite.Require().NoError(err)
 
-			suite.Require().Equal(tc.expectedPrice.String(), price.String())
 			suite.Require().Equal(expectedSqrtPrice.String(), sqrtPrice.String())
 		})
 	}
@@ -250,7 +249,7 @@ func (suite *ConcentratedMathTestSuite) TestTicksToSqrtPrice() {
 	for name, tc := range testCases {
 		tc := tc
 		suite.Run(name, func() {
-			priceLower, priceUpper, lowerSqrtPrice, upperSqrtPrice, err := math.TicksToSqrtPrice(tc.lowerTickIndex.Int64(), tc.upperTickIndex.Int64())
+			lowerSqrtPrice, upperSqrtPrice, err := math.TicksToSqrtPrice(tc.lowerTickIndex.Int64(), tc.upperTickIndex.Int64())
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().Equal(tc.expectedError.Error(), err.Error())
@@ -264,8 +263,6 @@ func (suite *ConcentratedMathTestSuite) TestTicksToSqrtPrice() {
 			expectedUpperSqrtPrice, err := tc.expectedUpperPrice.ApproxSqrt()
 			suite.Require().NoError(err)
 
-			suite.Require().Equal(tc.expectedLowerPrice.String(), priceLower.String())
-			suite.Require().Equal(tc.expectedUpperPrice.String(), priceUpper.String())
 			suite.Require().Equal(expectedLowerSqrtPrice.String(), lowerSqrtPrice.String())
 			suite.Require().Equal(expectedUpperSqrtPrice.String(), upperSqrtPrice.String())
 		})
@@ -580,7 +577,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			suite.Require().Equal(tickFromPrice.String(), inverseTickFromPrice.String())
 
 			// 4. Validate PriceToTick and TickToSqrtPrice functions
-			_, sqrtPrice, err := math.TickToSqrtPrice(tickFromPrice)
+			sqrtPrice, err := math.TickToSqrtPrice(tickFromPrice)
 			suite.Require().NoError(err)
 
 			priceFromSqrtPrice := sqrtPrice.Power(2)
