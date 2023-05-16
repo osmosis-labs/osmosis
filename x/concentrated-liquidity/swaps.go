@@ -329,7 +329,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		sqrtPriceStart := swapState.sqrtPrice
 
 		if !iter.Valid() {
-			return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("no more ticks found for pool %d", poolId)
+			return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
 		}
 
 		// We first check to see what the position of the nearest initialized tick is
@@ -338,7 +338,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		// if no ticks are initialized (no users have created liquidity positions) then we return an error
 		nextTick, err := types.TickIndexFromBytes(iter.Key())
 		if err != nil {
-			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
+			return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 		}
 
 		// Utilizing the next initialized tick, we find the corresponding nextPrice (the target price).
@@ -387,7 +387,7 @@ func (k Keeper) computeOutAmtGivenIn(
 			}
 
 			if !iter.Valid() {
-				return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("no more ticks found for pool %d", poolId)
+				return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
 			}
 
 			iter.Next()
