@@ -66,7 +66,7 @@ func (ss *SwapState) updateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
 		// We round down here since we want to avoid overdistributing (the "fee charge" refers to
 		// the total fees that will be accrued to the fee accumulator)
 		feesAccruedPerUnitOfLiquidity := feeChargeTotal.QuoTruncate(ss.liquidity)
-		ss.feeGrowthGlobal = ss.feeGrowthGlobal.Add(feesAccruedPerUnitOfLiquidity)
+		ss.feeGrowthGlobal.AddMut(feesAccruedPerUnitOfLiquidity)
 		return
 	}
 }
@@ -331,7 +331,7 @@ func (k Keeper) computeOutAmtGivenIn(
 			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
 		}
 
-		// Utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
+		// Utilizing the next initialized tick, we find the corresponding nextPrice (the target price).
 		_, nextTickSqrtPrice, err := math.TickToSqrtPrice(nextTick)
 		if err != nil {
 			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
