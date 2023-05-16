@@ -74,7 +74,7 @@ func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndLockedFullRangePos
 	s.FundAcc(s.TestAccs[0], fundCoins)
 	positionId, _, _, _, _, concentratedLockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool.GetId(), s.TestAccs[0], fundCoins, time.Hour*24*14)
 	s.Require().NoError(err)
-	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(s.Ctx, clPool.GetId())
+	clPool, err = s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, clPool.GetId())
 	s.Require().NoError(err)
 	return clPool, concentratedLockId, positionId
 }

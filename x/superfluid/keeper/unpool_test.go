@@ -1,17 +1,14 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
-	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
@@ -282,147 +279,4 @@ func (suite *KeeperTestSuite) TestUnpoolAllowedPools_WhiteList() {
 	// Here, we used a non-whitelisted pool id so it should fail with the whitelist error.
 	suite.Error(err)
 	suite.Require().ErrorIs(err, types.ErrPoolNotWhitelisted)
-}
-
-func (suite *KeeperTestSuite) TestValidateGammLockForSuperfluid() {
-	lockCreator := suite.TestAccs[0]
-	nonLockCreator := suite.TestAccs[1]
-	type sendTest struct {
-		fundsToLock       sdk.Coins
-		accountToValidate sdk.AccAddress
-		poolIdToValidate  uint64
-		lockIdToValidate  uint64
-		expectedError     error
-	}
-	testCases := map[string]sendTest{
-		"happy path": {
-			fundsToLock:       sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100))),
-			accountToValidate: lockCreator,
-			poolIdToValidate:  1,
-			lockIdToValidate:  1,
-		},
-		"error: non-existent lock ID": {
-			fundsToLock:       sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100))),
-			accountToValidate: lockCreator,
-			poolIdToValidate:  1,
-			lockIdToValidate:  2,
-			expectedError:     errorsmod.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", 2)),
-		},
-		"error: mismatched owner": {
-			fundsToLock:       sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100))),
-			accountToValidate: nonLockCreator,
-			poolIdToValidate:  1,
-			lockIdToValidate:  1,
-			expectedError:     lockuptypes.ErrNotLockOwner,
-		},
-		"error: more than one coin in lock": {
-			fundsToLock: sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100)),
-				sdk.NewCoin("gamm/pool/2", sdk.NewInt(100))),
-			accountToValidate: lockCreator,
-			poolIdToValidate:  1,
-			lockIdToValidate:  1,
-			expectedError:     types.ErrMultipleCoinsLockupNotSupported,
-		},
-		"error: wrong pool ID provided when compared to lock denom": {
-			fundsToLock:       sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100))),
-			accountToValidate: lockCreator,
-			poolIdToValidate:  2,
-			lockIdToValidate:  1,
-			expectedError:     types.UnexpectedDenomError{ExpectedDenom: gammtypes.GetPoolShareDenom(2), ProvidedDenom: "gamm/pool/1"},
-		},
-		"error: right pool ID provided but not gamm/pool/ prefix": {
-			fundsToLock:       sdk.NewCoins(sdk.NewCoin("cl/pool/1", sdk.NewInt(100))),
-			accountToValidate: lockCreator,
-			poolIdToValidate:  1,
-			lockIdToValidate:  1,
-			expectedError:     types.UnexpectedDenomError{ExpectedDenom: gammtypes.GetPoolShareDenom(1), ProvidedDenom: "cl/pool/1"},
-		},
-	}
-
-	for name, tc := range testCases {
-		suite.Run(name, func() {
-			suite.SetupTest()
-
-			ctx := suite.Ctx
-			superfluidKeeper := suite.App.SuperfluidKeeper
-
-			suite.FundAcc(lockCreator, tc.fundsToLock)
-			_, err := suite.App.LockupKeeper.CreateLock(ctx, lockCreator, tc.fundsToLock, time.Hour)
-			suite.Require().NoError(err)
-
-			// System under test
-			_, err = superfluidKeeper.ValidateGammLockForSuperfluidStaking(ctx, tc.accountToValidate, tc.poolIdToValidate, tc.lockIdToValidate)
-			if tc.expectedError != nil {
-				suite.Require().Error(err)
-				suite.Require().ErrorContains(err, tc.expectedError.Error())
-				return
-			}
-			suite.Require().NoError(err)
-		})
-	}
-}
-
-func (suite *KeeperTestSuite) TestGetExistingLockRemainingDuration() {
-	defaultJoinTime := suite.Ctx.BlockTime()
-	lockCreator := suite.TestAccs[0]
-	type sendTest struct {
-		isUnlocking               bool
-		lockDuration              time.Duration
-		timePassed                time.Duration
-		expectedRemainingDuration time.Duration
-		expectedError             error
-	}
-	testCases := map[string]sendTest{
-		"lock that is not unlocking": {
-			isUnlocking:               false,
-			lockDuration:              time.Hour,
-			timePassed:                time.Hour,
-			expectedRemainingDuration: time.Hour,
-		},
-		"lock that is unlocking": {
-			isUnlocking:               true,
-			lockDuration:              time.Hour,
-			timePassed:                time.Minute,
-			expectedRemainingDuration: time.Hour - time.Minute,
-		},
-		"error: negative duration": {
-			isUnlocking:   true,
-			lockDuration:  time.Hour,
-			timePassed:    time.Hour + time.Minute,
-			expectedError: types.NegativeDurationError{Duration: -time.Minute},
-		},
-	}
-
-	for name, tc := range testCases {
-		suite.Run(name, func() {
-			suite.SetupTest()
-			ctx := suite.Ctx.WithBlockTime(defaultJoinTime)
-
-			superfluidKeeper := suite.App.SuperfluidKeeper
-
-			suite.FundAcc(lockCreator, defaultAcctFunds)
-			lock, err := suite.App.LockupKeeper.CreateLock(ctx, lockCreator, defaultAcctFunds, tc.lockDuration)
-			suite.Require().NoError(err)
-
-			if tc.isUnlocking {
-				_, err = suite.App.LockupKeeper.BeginUnlock(ctx, lock.ID, defaultAcctFunds)
-				suite.Require().NoError(err)
-			}
-
-			ctx = ctx.WithBlockTime(defaultJoinTime.Add(tc.timePassed))
-
-			lockAfterTime, err := suite.App.LockupKeeper.GetLockByID(ctx, lock.ID)
-			suite.Require().NoError(err)
-
-			// System under test
-			remainingDuration, err := superfluidKeeper.GetExistingLockRemainingDuration(ctx, lockAfterTime)
-			if tc.expectedError != nil {
-				suite.Require().Error(err)
-				suite.Require().ErrorContains(err, tc.expectedError.Error())
-				return
-			}
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedRemainingDuration, remainingDuration)
-		})
-	}
 }

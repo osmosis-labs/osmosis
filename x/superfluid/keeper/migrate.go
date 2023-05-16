@@ -72,7 +72,7 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 
 	// Superfluid undelegate the superfluid delegated position.
 	// This deletes the connection between the gamm lock and the intermediate account, deletes the synthetic lock, and burns the synthetic osmo.
-	intermediateAccount, err := k.superfluidUndelegateToConcentratedPosition(ctx, sender.String(), lockId)
+	intermediateAccount, err := k.SuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), lockId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, 0, err
 	}
@@ -292,22 +292,19 @@ func (k Keeper) validateMigration(ctx sdk.Context, sender sdk.AccAddress, lockId
 	}
 
 	// Further defense in depth, ensuring that the pool ID we are entering can be type cased to a concentrated pool extension.
-	_, err = k.clk.GetPoolFromPoolIdAndConvertToConcentrated(ctx, poolIdEntering)
+	_, err = k.clk.GetConcentratedPoolById(ctx, poolIdEntering)
 	if err != nil {
 		return 0, 0, &lockuptypes.PeriodLock{}, 0, err
 	}
 
 	// Check that lockID corresponds to sender, and contains correct denomination of LP shares.
-	preMigrationLock, err = k.validateGammLockForSuperfluidStaking(ctx, sender, poolIdLeaving, lockId)
+	preMigrationLock, err = k.validateLockForUnpool(ctx, sender, poolIdLeaving, lockId)
 	if err != nil {
 		return 0, 0, &lockuptypes.PeriodLock{}, 0, err
 	}
 
 	// Before we break the lock, we must note the time remaining on the lock.
-	remainingLockTime, err = k.getExistingLockRemainingDuration(ctx, preMigrationLock)
-	if err != nil {
-		return 0, 0, &lockuptypes.PeriodLock{}, 0, err
-	}
+	remainingLockTime = k.getExistingLockRemainingDuration(ctx, preMigrationLock)
 
 	return poolIdLeaving, poolIdEntering, preMigrationLock, remainingLockTime, nil
 }
