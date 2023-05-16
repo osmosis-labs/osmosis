@@ -62,6 +62,6 @@ func (k Keeper) GetExistingLockRemainingDuration(ctx sdk.Context, lock *lockupty
 	return k.getExistingLockRemainingDuration(ctx, lock)
 }
 
-func (k Keeper) PartialSuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64, amountToUndelegate sdk.Coin) (types.SuperfluidIntermediaryAccount, *lockuptypes.PeriodLock, error) {
+func (k Keeper) PartialSuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64, amountToUndelegate sdk.Coin) (intermediaryAcc types.SuperfluidIntermediaryAccount, newlock *lockuptypes.PeriodLock, err error) {
 	return k.partialSuperfluidUndelegate(ctx, sender, lockID, amountToUndelegate)
 }
