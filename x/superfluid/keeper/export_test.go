@@ -7,6 +7,7 @@ import (
 
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
 var (
@@ -52,4 +53,8 @@ func (k Keeper) ValidateGammLockForSuperfluidStaking(ctx sdk.Context, sender sdk
 
 func (k Keeper) GetExistingLockRemainingDuration(ctx sdk.Context, lock *lockuptypes.PeriodLock) (time.Duration, error) {
 	return k.getExistingLockRemainingDuration(ctx, lock)
+}
+
+func (k Keeper) SuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, sender string, gammLockID uint64) (types.SuperfluidIntermediaryAccount, error) {
+	return k.superfluidUndelegateToConcentratedPosition(ctx, sender, gammLockID)
 }
