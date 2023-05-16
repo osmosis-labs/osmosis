@@ -286,13 +286,16 @@ func (k Keeper) prepareMigration(ctx sdk.Context, sender sdk.AccAddress, lockId 
 	}
 
 	// Check that lockID corresponds to sender, and contains correct denomination of LP shares.
-	preMigrationLock, err = k.validateLockForUnpool(ctx, sender, poolIdLeaving, lockId)
+	preMigrationLock, err = k.validateGammLockForSuperfluidStaking(ctx, sender, poolIdLeaving, lockId)
 	if err != nil {
 		return 0, 0, nil, &lockuptypes.PeriodLock{}, 0, nil, false, false, err
 	}
 
 	// Before we break the lock, we must note the time remaining on the lock.
-	remainingLockTime = k.getExistingLockRemainingDuration(ctx, preMigrationLock)
+	remainingLockTime, err = k.getExistingLockRemainingDuration(ctx, preMigrationLock)
+	if err != nil {
+		return 0, 0, nil, &lockuptypes.PeriodLock{}, 0, nil, false, false, err
+	}
 
 	// Check if the lock has a corresponding synthetic lock.
 	// Synthetic lock existence implies that the lock is superfluid delegated or undelegating.
