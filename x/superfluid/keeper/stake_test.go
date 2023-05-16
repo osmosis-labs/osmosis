@@ -1161,6 +1161,9 @@ func (suite *KeeperTestSuite) TestPartialSuperfluidUndelegateToConcentratedPosit
 				synthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockId, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 				suite.Require().Error(err)
 				suite.Require().Nil(synthLock)
+				synthLock, err = suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, newLock.ID, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
+				suite.Require().Error(err)
+				suite.Require().Nil(synthLock)
 			}
 
 			// check invariant is fine
