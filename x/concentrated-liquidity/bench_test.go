@@ -20,7 +20,7 @@ type BenchTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
-func (s BenchTestSuite) createPosition(accountIndex int, poolId uint64, coin0, coin1 sdk.Coin, lowerTick, upperTick int64) {
+func (s BenchTestSuite) createPosition(accountIndex int, poolId uint64, coin0, coin1 sdk.Coin, lowerTick, upperTick int64) { //nolint:govet
 	tokensDesired := sdk.NewCoins(coin0, coin1)
 
 	_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[accountIndex], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
@@ -35,7 +35,7 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 	// Notice we stop the timer to skip setup code.
 	b.StopTimer()
 
-	// We cannot use s.Require().NoError() becuase the suite context
+	// We cannot use s.Require().NoError() because the suite context
 	// is defined on the testing.T and not testing.B
 	noError := func(err error) {
 		require.NoError(b, err)
@@ -79,7 +79,7 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 		// Seed controlling determinism of the randomized positions.
 		seed = int64(1)
 	)
-	rand.Seed(seed)
+	rand.Seed(seed) //nolint:staticcheck
 
 	for i := 0; i < b.N; i++ {
 		s := BenchTestSuite{}
@@ -87,7 +87,8 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 
 		// Fund all accounts with max amounts they would need to consume.
 		for _, acc := range s.TestAccs {
-			simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, sdk.NewCoins(sdk.NewCoin(denom0, maxAmountOfEachToken), sdk.NewCoin(denom1, maxAmountOfEachToken), sdk.NewCoin("uosmo", maxAmountOfEachToken)))
+			err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, sdk.NewCoins(sdk.NewCoin(denom0, maxAmountOfEachToken), sdk.NewCoin(denom1, maxAmountOfEachToken), sdk.NewCoin("uosmo", maxAmountOfEachToken)))
+			noError(err)
 		}
 
 		// Create a pool
@@ -101,6 +102,7 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 		tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(100))
 		tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
 		_, _, _, _, _, err = clKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinTick, types.MaxTick)
+		noError(err)
 
 		pool, err := clKeeper.GetPoolById(s.Ctx, poolId)
 		noError(err)
@@ -110,7 +112,6 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 
 		// Setup numberOfPositions positions at random ranges
 		for i := 0; i < numberOfPositions; i++ {
-
 			var (
 				lowerTick int64
 				upperTick int64
@@ -159,7 +160,8 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 
 				account := s.TestAccs[accountIndex]
 
-				simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
+				err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
+				noError(err)
 
 				s.createPosition(accountIndex, poolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
 			}
@@ -182,7 +184,8 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 
 					account := s.TestAccs[accountIndex]
 
-					simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
+					err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
+					noError(err)
 
 					s.createPosition(accountIndex, poolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
 				}
@@ -205,7 +208,8 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 
 				account := s.TestAccs[accountIndex]
 
-				simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
+				err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
+				noError(err)
 
 				s.createPosition(accountIndex, poolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
 			}
@@ -225,7 +229,8 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 		s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second))
 
 		// Fund swap amount.
-		simapp.FundAccount(s.App.BankKeeper, s.Ctx, s.TestAccs[0], sdk.NewCoins(largeSwapInCoin))
+		err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, s.TestAccs[0], sdk.NewCoins(largeSwapInCoin))
+		noError(err)
 
 		// Notice that we start the timer as this is the system under test
 		b.StartTimer()

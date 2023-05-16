@@ -2327,6 +2327,7 @@ func (s *KeeperTestSuite) TestComputeOutAmtGivenIn() {
 				pool.GetId(),
 				test.tokenIn, test.tokenOutDenom,
 				test.swapFee, test.priceLimit)
+			s.Require().NoError(err)
 
 			// check that the pool has not been modified after performing calc
 			poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
