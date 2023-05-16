@@ -793,7 +793,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		// testing params
 		poolId          uint64
 		tokenIn         string
-		currentPoolTick sdk.Int
+		currentPoolTick int64
 		startTick       sdk.Int
 		boundTick       sdk.Int
 
@@ -998,7 +998,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:          defaultPoolId,
 			tokenIn:         ETH,
-			currentPoolTick: sdk.NewInt(10),
+			currentPoolTick: 10,
 			startTick:       sdk.NewInt(10),
 			boundTick:       sdk.NewInt(-15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
@@ -1017,7 +1017,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:          defaultPoolId,
 			tokenIn:         ETH,
-			currentPoolTick: sdk.NewInt(21),
+			currentPoolTick: 21,
 			startTick:       sdk.NewInt(10),
 			boundTick:       sdk.NewInt(-15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
@@ -1036,7 +1036,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:          defaultPoolId,
 			tokenIn:         USDC,
-			currentPoolTick: sdk.NewInt(5),
+			currentPoolTick: 5,
 			startTick:       sdk.NewInt(5),
 			boundTick:       sdk.NewInt(15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
@@ -1055,7 +1055,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:          defaultPoolId,
 			tokenIn:         USDC,
-			currentPoolTick: sdk.NewInt(-50),
+			currentPoolTick: -50,
 			startTick:       sdk.NewInt(5),
 			boundTick:       sdk.NewInt(15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
@@ -1138,7 +1138,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:          defaultPoolId,
 			tokenIn:         ETH,
-			currentPoolTick: sdk.NewInt(10),
+			currentPoolTick: 10,
 			startTick:       sdk.NewInt(21),
 			boundTick:       sdk.NewInt(-15),
 			expectedError:   true,
@@ -1152,7 +1152,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:          defaultPoolId,
 			tokenIn:         USDC,
-			currentPoolTick: sdk.NewInt(5),
+			currentPoolTick: 5,
 			startTick:       sdk.NewInt(-50),
 			boundTick:       sdk.NewInt(15),
 			expectedError:   true,
@@ -1179,7 +1179,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			// with tick spacing > 1, requiring price to tick conversion with rounding.
 			curTick, err := math.PriceToTick(curPrice)
 			s.Require().NoError(err)
-			if !test.currentPoolTick.IsNil() {
+			if test.currentPoolTick > 0 {
 				_, sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)
 				s.Require().NoError(err)
 
@@ -1187,7 +1187,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 				curPrice = sqrtPrice
 			}
 			pool.SetCurrentSqrtPrice(curPrice)
-			pool.SetCurrentTick(curTick)
+			pool.SetCurrentTick(sdk.NewInt(curTick))
 
 			err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
 			s.Require().NoError(err)
@@ -1474,9 +1474,9 @@ func (s *KeeperTestSuite) TestRoundTickToCanonicalPriceTick() {
 		s.Run(test.name, func() {
 			s.SetupTest()
 
-			priceTickLower, _, err := cl.TickToSqrtPrice(sdk.NewInt(test.lowerTick))
+			priceTickLower, _, err := math.TickToSqrtPrice(test.lowerTick)
 			s.Require().NoError(err)
-			priceTickUpper, _, err := cl.TickToSqrtPrice(sdk.NewInt(test.upperTick))
+			priceTickUpper, _, err := math.TickToSqrtPrice(test.upperTick)
 			s.Require().NoError(err)
 
 			// System Under Test

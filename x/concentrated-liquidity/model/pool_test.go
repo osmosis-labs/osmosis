@@ -271,7 +271,7 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 		s.Run(tt.name, func() {
 			// Create a concentrated liquidity pool struct instance
 			mock_pool := model.Pool{
-				ExponentAtPriceOne:   types.ExponentAtPriceOne,
+				ExponentAtPriceOne:   sdk.NewInt(types.ExponentAtPriceOne),
 				CurrentTickLiquidity: tt.currentLiquidity,
 				CurrentTick:          tt.currentTick,
 				CurrentSqrtPrice:     tt.currentSqrtPrice,
@@ -406,7 +406,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 	var (
 		tickToSqrtPrice = func(tick int64) sdk.Dec {
-			_, sqrtPrice, err := clmath.TickToSqrtPrice(sdk.NewInt(tick))
+			_, sqrtPrice, err := clmath.TickToSqrtPrice(tick)
 			suite.Require().NoError(err)
 			return sqrtPrice
 		}
@@ -517,7 +517,7 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			pool := model.Pool{
 				CurrentTick: sdk.NewInt(tc.currentTick),
 			}
-			_, pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick)
+			_, pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick.Int64())
 
 			actualAmount0, actualAmount1, err := pool.CalcActualAmounts(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
 
@@ -611,7 +611,7 @@ func (suite *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 				CurrentTick:          sdk.NewInt(tc.currentTick),
 				CurrentTickLiquidity: defaultLiquidityAmt,
 			}
-			_, pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick)
+			_, pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick.Int64())
 
 			wasUpdated := pool.UpdateLiquidityIfActivePosition(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
 			if tc.lowerTick <= tc.currentTick && tc.currentTick <= tc.upperTick {
