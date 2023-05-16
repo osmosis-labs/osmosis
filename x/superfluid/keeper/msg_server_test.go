@@ -473,15 +473,6 @@ func (suite *KeeperTestSuite) TestMsgUnPoolWhitelistedPool_Event() {
 func (suite *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedPosition_Event() {
 	suite.SetupTest()
 
-	const (
-		token0Denom = "token0"
-	)
-
-	// Update authorized quote denoms with the quote denom relied on by the test
-	concentratedLiquidityParams := suite.App.ConcentratedLiquidityKeeper.GetParams(suite.Ctx)
-	concentratedLiquidityParams.AuthorizedQuoteDenoms = append(concentratedLiquidityParams.AuthorizedQuoteDenoms, token0Denom)
-	suite.App.ConcentratedLiquidityKeeper.SetParams(suite.Ctx, concentratedLiquidityParams)
-
 	msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
 	suite.FundAcc(suite.TestAccs[0], defaultAcctFunds)
 	fullRangeCoins := sdk.NewCoins(defaultPoolAssets[0].Token, defaultPoolAssets[1].Token)
@@ -489,7 +480,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedP
 	// Set validators
 	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
-	// Set balancer pool and make its respective gamm share an authorized superfluid asset
+	// Set balancer pool (foo and stake) and make its respective gamm share an authorized superfluid asset
 	msg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDec(0),
@@ -505,7 +496,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedP
 	})
 	suite.Require().NoError(err)
 
-	// Set concentrated pool with the same denoms as the balancer pool
+	// Set concentrated pool with the same denoms as the balancer pool (foo and stake)
 	clPool := suite.PrepareCustomConcentratedPool(suite.TestAccs[0], defaultPoolAssets[0].Token.Denom, defaultPoolAssets[1].Token.Denom, 1, sdk.ZeroDec())
 
 	// Set migration link between the balancer and concentrated pool
@@ -529,7 +520,8 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedP
 	suite.Require().NoError(err)
 
 	// Execute UnlockAndMigrateSharesToFullRangeConcentratedPosition message
-	sender, _ := sdk.AccAddressFromBech32(locks[0].Owner)
+	sender, err := sdk.AccAddressFromBech32(locks[0].Owner)
+	suite.Require().NoError(err)
 	_, err = msgServer.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sdk.WrapSDKContext(suite.Ctx),
 		types.NewMsgUnlockAndMigrateSharesToFullRangeConcentratedPosition(sender, locks[0].ID, locks[0].Coins[0]))
 	suite.Require().NoError(err)

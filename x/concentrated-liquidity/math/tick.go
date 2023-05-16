@@ -9,11 +9,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
-var (
-	sdkNineDec = sdk.NewDec(9)
-	sdkTenDec  = sdk.NewDec(10)
-)
-
 // TicksToSqrtPrice returns the sqrtPrice for the lower and upper ticks by
 // individually calling `TickToSqrtPrice` method.
 // Returns error if fails to calculate price.
@@ -159,16 +154,16 @@ func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (int64, error) {
 // This is because the sdk.Dec.Power function does not support negative exponents
 func PowTenInternal(exponent int64) sdk.Dec {
 	if exponent >= 0 {
-		return sdkTenDec.Power(uint64(exponent))
+		return powersOfTen[exponent]
 	}
-	return sdk.OneDec().Quo(sdkTenDec.Power(uint64(exponent * -1)))
+	return negPowersOfTen[-exponent]
 }
 
 func powTenBigDec(exponent int64) osmomath.BigDec {
 	if exponent >= 0 {
-		return osmomath.NewBigDec(10).PowerInteger(uint64(exponent))
+		return bigPowersOfTen[exponent]
 	}
-	return osmomath.OneDec().Quo(osmomath.NewBigDec(10).PowerInteger(uint64(exponent * -1)))
+	return bigNegPowersOfTen[-exponent]
 }
 
 // CalculatePriceToTick takes in a price and returns the corresponding tick index.
@@ -193,7 +188,7 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
 	// as well as how many ticks that corresponds to
 	// In the opposite direction (price < 1), we do the same thing (just decrement the geometric exponent instead of incrementing).
 	// The only difference is we must reduce the increment distance by a factor of 10.
-	if price.GT(sdk.OneDec()) {
+	if price.GT(sdkOneDec) {
 		for currentPrice.LT(price) {
 			currentAdditiveIncrementInTicks = powTenBigDec(exponentAtCurrentTick)
 			maxPriceForCurrentAdditiveIncrementInTicks := osmomath.NewBigDec(geometricExponentIncrementDistanceInTicks).Mul(currentAdditiveIncrementInTicks)
