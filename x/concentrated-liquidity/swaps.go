@@ -328,6 +328,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		// Log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
 
+		// Iterator must be valid to be able to retrieve the next tick from it below.
 		if !nextTickIter.Valid() {
 			return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
 		}
