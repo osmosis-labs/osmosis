@@ -1680,7 +1680,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 	}
 }
 
-func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
+func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 	tests := make(map[string]SwapTest, len(swapInGivenOutTestCases)+len(swapInGivenOutFeeTestCases)+len(swapInGivenOutErrorTestCases))
 	for name, test := range swapInGivenOutTestCases {
 		tests[name] = test
@@ -1722,9 +1722,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
 
-			// perform calc
-			_, tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOutInternal(
-				s.Ctx,
+			// perform compute
+			cacheCtx, _ := s.Ctx.CacheContext()
+			tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, err := s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
+				cacheCtx,
 				test.tokenOut, test.tokenInDenom,
 				test.swapFee, test.priceLimit, pool.GetId())
 			if test.expectErr {
@@ -2421,9 +2422,77 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn_NonMutative() {
 	}
 }
 
-// TestCalcInAmtGivenOutWriteCtx tests that writeCtx successfully performs state changes as expected.
-// We expect writeCtx to only change fee accum state, since pool state change is not handled via writeCtx function.
-func (s *KeeperTestSuite) TestCalcInAmtGivenOutWriteCtx() {
+// TestCalcInAmtGivenOut_NonMutative tests that CalcInAmtGivenOut is non-mutative.
+func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
+	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
+	tests := make(map[string]SwapTest, len(swapOutGivenInFeeCases))
+
+	for name, test := range swapOutGivenInFeeCases {
+		tests[name] = test
+	}
+
+	for name, test := range tests {
+		test := test
+		s.Run(name, func() {
+			s.SetupTest()
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+
+			// Create default CL pool
+			pool := s.PrepareConcentratedPool()
+
+			// add default position
+			s.SetupDefaultPosition(pool.GetId())
+
+			// add second position depending on the test
+			if !test.secondPositionLowerPrice.IsNil() {
+				newLowerTick, err := math.PriceToTickRoundDown(test.secondPositionLowerPrice, pool.GetTickSpacing())
+				s.Require().NoError(err)
+				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
+				s.Require().NoError(err)
+
+				_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				s.Require().NoError(err)
+			}
+
+			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+
+			// perform calc
+			_, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(
+				s.Ctx,
+				poolBeforeCalc,
+				test.tokenIn, test.tokenOutDenom,
+				test.swapFee)
+			s.Require().NoError(err)
+
+			// check that the pool has not been modified after performing calc
+			poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+
+			s.Require().Equal(poolBeforeCalc.GetCurrentSqrtPrice(), poolAfterCalc.GetCurrentSqrtPrice())
+			s.Require().Equal(poolBeforeCalc.GetCurrentTick(), poolAfterCalc.GetCurrentTick())
+			s.Require().Equal(poolBeforeCalc.GetLiquidity(), poolAfterCalc.GetLiquidity())
+			s.Require().Equal(poolBeforeCalc.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
+
+			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			s.Require().NoError(err)
+
+			feeAccumValue := feeAccum.GetValue()
+			s.Require().Equal(0, feeAccumValue.Len())
+			s.Require().Equal(1,
+				additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
+					osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
+					osmomath.BigDecFromSDKDec(feeAccum.GetValue().AmountOf(test.tokenIn.Denom)),
+				),
+			)
+		})
+	}
+}
+
+// TestComputeInAmtGivenOut tests that ComputeInAmtGivenOut successfully performs state changes as expected.
+// We expect writeCtx to only change fee accum state, since pool state change is not handled by ComputeInAmtGivenOut.
+func (s *KeeperTestSuite) TestComputeInAmtGivenOut() {
 	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
 	tests := make(map[string]SwapTest, len(swapInGivenOutFeeTestCases))
 
@@ -2459,7 +2528,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOutWriteCtx() {
 			s.Require().NoError(err)
 
 			// perform calc
-			writeCtx, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOutInternal(
+			_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
 				s.Ctx,
 				test.tokenOut, test.tokenInDenom,
 				test.swapFee, test.priceLimit, pool.GetId())
@@ -2474,26 +2543,11 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOutWriteCtx() {
 			s.Require().Equal(poolBeforeCalc.GetLiquidity(), poolAfterCalc.GetLiquidity())
 			s.Require().Equal(poolBeforeCalc.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
 
+			// check that fee accum has been correctly updated.
 			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
 
 			feeAccumValue := feeAccum.GetValue()
-			s.Require().Equal(0, feeAccumValue.Len())
-			s.Require().Equal(1,
-				additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
-					osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
-					osmomath.BigDecFromSDKDec(feeAccum.GetValue().AmountOf(test.tokenInDenom)),
-				),
-			)
-
-			// System under test
-			writeCtx()
-
-			// now we check that fee accum has been correctly updated upon writeCtx
-			feeAccum, err = s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
-			s.Require().NoError(err)
-
-			feeAccumValue = feeAccum.GetValue()
 			s.Require().Equal(1, feeAccumValue.Len())
 			s.Require().Equal(0,
 				additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
