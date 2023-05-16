@@ -121,7 +121,7 @@ func PriceToTick(price sdk.Dec) (int64, error) {
 // PriceToTickRoundDown takes a price and returns the corresponding tick index.
 // If tickSpacing is provided, the tick index will be rounded down to the nearest multiple of tickSpacing.
 // CONTRACT: tickSpacing must be smaller or equal to the max of 1 << 63 - 1.
-// This is not a concern because we have authroized tick spacings that are smaller than this max,
+// This is not a concern because we have authorized tick spacings that are smaller than this max,
 // and we don't expect to ever require it to be this large.
 func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (int64, error) {
 	tickIndex, err := PriceToTick(price)
