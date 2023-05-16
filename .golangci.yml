@@ -2,11 +2,10 @@ run:
   tests: true
   timeout: 5m
   allow-parallel-runners: true
-  skip-files:  
+  skip-files:
     - x/gamm/keeper/grpc_query_test.go
     - x/gamm/client/cli/query_test.go
     - x/gamm/client/cli/cli_test.go
-    - x/gamm/keeper/swap_test.go
 
 output:
   sort: true
