@@ -12,36 +12,36 @@ import (
 // TicksToSqrtPrice returns the sqrtPrice for the lower and upper ticks by
 // individually calling `TickToSqrtPrice` method.
 // Returns error if fails to calculate price.
-func TicksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, error) {
+func TicksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec, error) {
 	if lowerTick >= upperTick {
-		return sdk.Dec{}, sdk.Dec{}, types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
+		return sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
 	}
-	sqrtPriceUpperTick, err := TickToSqrtPrice(sdk.NewInt(upperTick))
+	priceUpperTick, sqrtPriceUpperTick, err := TickToSqrtPrice(sdk.NewInt(upperTick))
 	if err != nil {
-		return sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
-	sqrtPriceLowerTick, err := TickToSqrtPrice(sdk.NewInt(lowerTick))
+	priceLowerTick, sqrtPriceLowerTick, err := TickToSqrtPrice(sdk.NewInt(lowerTick))
 	if err != nil {
-		return sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
-	return sqrtPriceLowerTick, sqrtPriceUpperTick, nil
+	return priceLowerTick, priceUpperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, nil
 }
 
 // TickToSqrtPrice returns the sqrtPrice given a tickIndex
 // If tickIndex is zero, the function returns sdk.OneDec().
 // It is the combination of calling TickToPrice followed by Sqrt.
-func TickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
+func TickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, sdk.Dec, error) {
 	price, err := TickToPrice(tickIndex)
 	if err != nil {
-		return sdk.Dec{}, err
+		return sdk.Dec{}, sdk.Dec{}, err
 	}
 
 	// Determine the sqrtPrice from the price
 	sqrtPrice, err := price.ApproxSqrt()
 	if err != nil {
-		return sdk.Dec{}, err
+		return sdk.Dec{}, sdk.Dec{}, err
 	}
-	return sqrtPrice, nil
+	return price, sqrtPrice, nil
 }
 
 // TickToPrice returns the price given a tickIndex
