@@ -175,7 +175,7 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
 	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(PowTenInternal(exponentAtPriceOne * -1)).TruncateInt64()
 
 	// Initialize the current price to 1, the current precision to exponentAtPriceOne, and the number of ticks passed to 0
-	currentPrice := sdk.OneDec()
+	currentPrice := sdkOneDec
 	ticksPassed := int64(0)
 
 	exponentAtCurrentTick := exponentAtPriceOne
