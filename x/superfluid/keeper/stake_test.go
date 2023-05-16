@@ -1127,18 +1127,22 @@ func (suite *KeeperTestSuite) TestPartialSuperfluidUndelegate() {
 				presupplyWithOffset := suite.App.BankKeeper.GetSupplyWithOffset(suite.Ctx, bondDenom)
 
 				// superfluid undelegate
-				intermediaryAcc, _, err = suite.App.SuperfluidKeeper.PartialSuperfluidUndelegate(suite.Ctx, lock.Owner, lockId, tc.undelegateAmounts[index])
+				intermediaryAcc, newLock, err := suite.App.SuperfluidKeeper.PartialSuperfluidUndelegate(suite.Ctx, lock.Owner, lockId, tc.undelegateAmounts[index])
 				if tc.expSuperUnbondingErr[index] {
 					suite.Require().Error(err)
 					continue
 				}
 				suite.Require().NoError(err)
 
+				// the new lock should be equal to the amount we partially undelegated
+				suite.Require().Equal(tc.undelegateAmounts[index].Amount.String(), newLock.Coins[0].Amount.String())
+
 				// ensure post-superfluid delegations osmo supplywithoffset is the same while supply is not
 				postsupply := suite.App.BankKeeper.GetSupply(suite.Ctx, bondDenom)
 				postsupplyWithOffset := suite.App.BankKeeper.GetSupplyWithOffset(suite.Ctx, bondDenom)
-				suite.Require().False(postsupply.IsEqual(presupply), "presupply: %s   postsupply: %s", presupply, postsupply)
-				suite.Require().True(postsupplyWithOffset.IsEqual(presupplyWithOffset))
+
+				suite.Require().Equal(presupply.Amount.Sub(tc.undelegateAmounts[index].Amount.Mul(sdk.NewInt(10))).String(), postsupply.Amount.String())
+				suite.Require().Equal(presupplyWithOffset, postsupplyWithOffset)
 
 				// check lockId and intermediary account connection is not deleted
 				addr := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lockId)
