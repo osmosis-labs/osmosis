@@ -59,7 +59,7 @@ func TickToPrice(tickIndex int64) (price sdk.Dec, err error) {
 	// The formula is as follows: geometricExponentIncrementDistanceInTicks = 9 * 10**(-exponentAtPriceOne)
 	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**exponentAtPriceOne)
 	exponentAtPriceOne := types.ExponentAtPriceOne
-	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(PowTenInternal(exponentAtPriceOne * -1)).TruncateInt64()
+	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(PowTenInternal(-exponentAtPriceOne)).TruncateInt64()
 
 	// Check that the tick index is between min and max value
 	if tickIndex < types.MinTick {
@@ -120,6 +120,9 @@ func PriceToTick(price sdk.Dec) (int64, error) {
 
 // PriceToTickRoundDown takes a price and returns the corresponding tick index.
 // If tickSpacing is provided, the tick index will be rounded down to the nearest multiple of tickSpacing.
+// CONTRACT: tickSpacing must be smaller or equal to the max of 1 << 63 - 1.
+// This is not a concern because we have authorized tick spacings that are smaller than this max,
+// and we don't expect to ever require it to be this large.
 func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (int64, error) {
 	tickIndex, err := PriceToTick(price)
 	if err != nil {
@@ -128,6 +131,12 @@ func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (int64, error) {
 
 	// Round the tick index down to the nearest tick spacing if the tickIndex is in between authorized tick values
 	// Note that this is Euclidean modulus.
+	// The difference from default Go modulus is that Go default results
+	// in a negative remainder when the dividend is negative.
+	// Consider example tickIndex = -17, tickSpacing = 10
+	// tickIndexModulus = tickIndex % tickSpacing = -7
+	// tickIndexModulus = -7 + 10 = 3
+	// tickIndex = -17 - 3 = -20
 	tickIndexModulus := tickIndex % int64(tickSpacing)
 	if tickIndexModulus < 0 {
 		tickIndexModulus += int64(tickSpacing)
@@ -149,14 +158,14 @@ func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (int64, error) {
 // powTen treats negative exponents as 1/(10**|exponent|) instead of 10**-exponent
 // This is because the sdk.Dec.Power function does not support negative exponents
 func PowTenInternal(exponent int64) sdk.Dec {
-	if exponent > 0 {
+	if exponent >= 0 {
 		return sdkTenDec.Power(uint64(exponent))
 	}
 	return sdk.OneDec().Quo(sdkTenDec.Power(uint64(exponent * -1)))
 }
 
 func powTenBigDec(exponent int64) osmomath.BigDec {
-	if exponent > 0 {
+	if exponent >= 0 {
 		return osmomath.NewBigDec(10).PowerInteger(uint64(exponent))
 	}
 	return osmomath.OneDec().Quo(osmomath.NewBigDec(10).PowerInteger(uint64(exponent * -1)))
