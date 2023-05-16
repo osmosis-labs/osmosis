@@ -27,6 +27,10 @@ func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 
 	product := sqrtPriceABigDec.Mul(sqrtPriceBBigDec)
 	diff := sqrtPriceBBigDec.Sub(sqrtPriceABigDec)
+	if diff.Equal(osmomath.ZeroDec()) {
+		panic(fmt.Sprintf("liquidity0 diff is zero: sqrtPriceA %s sqrtPriceB %s", sqrtPriceA, sqrtPriceB))
+	}
+
 	return amountBigDec.Mul(product).Quo(diff).SDKDec()
 }
 
@@ -47,7 +51,7 @@ func Liquidity1(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 
 	diff := sqrtPriceBBigDec.Sub(sqrtPriceABigDec)
 	if diff.Equal(osmomath.ZeroDec()) {
-		panic(fmt.Sprintf("diff is zero: sqrtPriceA %s sqrtPriceB %s", sqrtPriceA, sqrtPriceB))
+		panic(fmt.Sprintf("liquidity1 diff is zero: sqrtPriceA %s sqrtPriceB %s", sqrtPriceA, sqrtPriceB))
 	}
 
 	return amountBigDec.Quo(diff).SDKDec()
