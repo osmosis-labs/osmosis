@@ -158,14 +158,14 @@ func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (int64, error) {
 // powTen treats negative exponents as 1/(10**|exponent|) instead of 10**-exponent
 // This is because the sdk.Dec.Power function does not support negative exponents
 func PowTenInternal(exponent int64) sdk.Dec {
-	if exponent > 0 {
+	if exponent >= 0 {
 		return sdkTenDec.Power(uint64(exponent))
 	}
 	return sdk.OneDec().Quo(sdkTenDec.Power(uint64(exponent * -1)))
 }
 
 func powTenBigDec(exponent int64) osmomath.BigDec {
-	if exponent > 0 {
+	if exponent >= 0 {
 		return osmomath.NewBigDec(10).PowerInteger(uint64(exponent))
 	}
 	return osmomath.OneDec().Quo(osmomath.NewBigDec(10).PowerInteger(uint64(exponent * -1)))
