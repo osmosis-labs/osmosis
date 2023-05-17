@@ -185,10 +185,7 @@ func (k Keeper) collectFees(ctx sdk.Context, sender sdk.AccAddress, positionId u
 	}
 
 	// Fee collector must be the owner of the position.
-	isOwner, err := k.isPositionOwner(ctx, sender, position.PoolId, positionId)
-	if err != nil {
-		return sdk.Coins{}, err
-	}
+	isOwner := k.isPositionOwner(ctx, sender, position.PoolId, positionId)
 	if !isOwner {
 		return sdk.Coins{}, types.NotPositionOwnerError{Address: sender.String(), PositionId: positionId}
 	}

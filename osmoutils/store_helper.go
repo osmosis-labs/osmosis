@@ -1,6 +1,7 @@
 package osmoutils
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 
@@ -206,4 +207,56 @@ func Get(store store.KVStore, key []byte, result proto.Message) (found bool, err
 		return true, err
 	}
 	return true, nil
+}
+
+// Uint64SliceToBigEndian marshals a slice of uint64 to a bigendian byte slice
+func Uint64SliceToBigEndian(values []uint64) []byte {
+	b := make([]byte, 8*len(values))
+	for i, id := range values {
+		binary.BigEndian.PutUint64(b[i*8:(i+1)*8], id)
+	}
+	return b
+}
+
+// BigEndianToUint64Slice unmarshals a bigendian byte slice to a slice of uint64
+func BigEndianToUint64Slice(b []byte) []uint64 {
+	ids := make([]uint64, len(b)/8)
+	for i := 0; i < len(b); i += 8 {
+		ids[i/8] = binary.BigEndian.Uint64(b[i : i+8])
+	}
+	return ids
+}
+
+// RemoveFromSlice removes a uint64 value from a slice and returns the new slice.
+// It returns an error if the value is not found in the slice.
+func RemoveFromSlice(slice []uint64, value uint64) ([]uint64, error) {
+	index := -1
+
+	// Find the index of the value.
+	for i, v := range slice {
+		if v == value {
+			index = i
+			break
+		}
+	}
+
+	// If value is not found, return an error.
+	if index == -1 {
+		return nil, fmt.Errorf("Value %d not found in slice", value)
+	}
+
+	// Remove the value from the slice.
+	slice = append(slice[:index], slice[index+1:]...)
+
+	return slice, nil
+}
+
+// SliceContains returns true if the slice contains the value.
+func SliceContains(slice []uint64, value uint64) bool {
+	for _, v := range slice {
+		if v == value {
+			return true
+		}
+	}
+	return false
 }

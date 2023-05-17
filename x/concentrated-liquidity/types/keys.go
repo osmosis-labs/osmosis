@@ -157,10 +157,6 @@ func KeyPositionId(positionId uint64) []byte {
 
 // Position Prefix Keys
 
-func KeyAddressPoolIdPositionId(addr sdk.AccAddress, poolId uint64, positionId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%s%x%s%d%s%d", PositionPrefix, KeySeparator, addr.Bytes(), KeySeparator, poolId, KeySeparator, positionId))
-}
-
 func KeyAddressAndPoolId(addr sdk.AccAddress, poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%s%x%s%d", PositionPrefix, KeySeparator, addr.Bytes(), KeySeparator, poolId))
 }
@@ -171,17 +167,6 @@ func KeyUserPositions(addr sdk.AccAddress) []byte {
 
 // Pool Position Prefix Keys
 // Used to map a pool id to a position id
-
-func KeyPoolPositionPositionId(poolId uint64, positionId uint64) []byte {
-	poolIdBz := sdk.Uint64ToBigEndian(poolId)
-	positionIdBz := sdk.Uint64ToBigEndian(positionId)
-	key := make([]byte, 0, len(PoolPositionPrefix)+uint64ByteSize+uint64ByteSize+len(KeySeparator))
-	key = append(key, PoolPositionPrefix...)
-	key = append(key, poolIdBz...)
-	key = append(key, KeySeparator...)
-	key = append(key, positionIdBz...)
-	return key
-}
 
 func KeyPoolPosition(poolId uint64) []byte {
 	poolIdBz := sdk.Uint64ToBigEndian(poolId)

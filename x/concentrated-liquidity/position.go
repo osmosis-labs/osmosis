@@ -94,16 +94,22 @@ func (k Keeper) HasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, err
 }
 
 // isPositionOwner returns true if the given positionId is owned by the given sender inside the given pool.
-func (k Keeper) isPositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, positionId uint64) (bool, error) {
-	parse := func(bz []byte) (uint64, error) {
-		return sdk.BigEndianToUint64(bz), nil
+func (k Keeper) isPositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, positionId uint64) bool {
+	store := ctx.KVStore(k.storeKey)
+
+	positionIds := []uint64{}
+	addressPoolIdKey := types.KeyAddressAndPoolId(sender, poolId)
+	// Get the existing position IDs for the given address-pool ID.
+	positionIdsBytes := store.Get(addressPoolIdKey)
+	if len(positionIdsBytes) > 0 {
+		positionIds = osmoutils.BigEndianToUint64Slice(positionIdsBytes)
 	}
-	isOwner, err := osmoutils.HasAnyAtPrefix(ctx.KVStore(k.storeKey), types.KeyAddressPoolIdPositionId(sender, poolId, positionId), parse)
-	if err != nil {
-		return false, err
+	// Check if the given positionId is in the list of existing position IDs.
+	if osmoutils.SliceContains(positionIds, positionId) {
+		return true
 	}
 
-	return isOwner, nil
+	return false
 }
 
 // GetAllPositionsForPoolId gets all the position for a specific poolId.
@@ -204,12 +210,32 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 	osmoutils.MustSet(store, positionIdKey, &position)
 
 	// Set the address-pool-position ID to position mapping.
-	addressPoolIdPositionIdKey := types.KeyAddressPoolIdPositionId(owner, poolId, positionId)
-	store.Set(addressPoolIdPositionIdKey, sdk.Uint64ToBigEndian(positionId))
+	positionIds := []uint64{}
+	addressPoolIdKey := types.KeyAddressAndPoolId(owner, poolId)
+	// Get the existing position IDs for the given address-pool ID.
+	positionIdsBytes := store.Get(addressPoolIdKey)
+	if len(positionIdsBytes) > 0 {
+		positionIds = osmoutils.BigEndianToUint64Slice(positionIdsBytes)
+	}
+	// Add the new position ID to the existing position IDs only if it doesn't exist already.
+	if !osmoutils.SliceContains(positionIds, positionId) {
+		positionIds = append(positionIds, positionId)
+		store.Set(addressPoolIdKey, osmoutils.Uint64SliceToBigEndian(positionIds))
+	}
 
 	// Set the pool ID to position ID mapping.
-	poolIdKey := types.KeyPoolPositionPositionId(poolId, positionId)
-	store.Set(poolIdKey, sdk.Uint64ToBigEndian(positionId))
+	positionIds = []uint64{}
+	poolIdKey := types.KeyPoolPosition(poolId)
+	// Get the existing position IDs for the given pool ID.
+	positionIdsBytes = store.Get(poolIdKey)
+	if len(positionIdsBytes) > 0 {
+		positionIds = osmoutils.BigEndianToUint64Slice(positionIdsBytes)
+	}
+	// Add the new position ID to the existing position IDs only if it doesn't exist already.
+	if !osmoutils.SliceContains(positionIds, positionId) {
+		positionIds = append(positionIds, positionId)
+		store.Set(poolIdKey, osmoutils.Uint64SliceToBigEndian(positionIds))
+	}
 
 	// Set the position ID to underlying lock ID mapping if underlyingLockId is provided.
 	positionHasUnderlyingLock, _, err := k.positionHasActiveUnderlyingLockAndUpdate(ctx, positionId)
@@ -256,18 +282,44 @@ func (k Keeper) deletePosition(ctx sdk.Context,
 	store.Delete(positionIdKey)
 
 	// Remove the address-pool-position ID to position mapping.
-	addressPoolIdPositionIdKey := types.KeyAddressPoolIdPositionId(owner, poolId, positionId)
-	if !store.Has(addressPoolIdPositionIdKey) {
+	addressPoolIdKey := types.KeyAddressAndPoolId(owner, poolId)
+	if !store.Has(addressPoolIdKey) {
 		return types.AddressPoolPositionIdNotFoundError{Owner: owner.String(), PoolId: poolId, PositionId: positionId}
 	}
-	store.Delete(addressPoolIdPositionIdKey)
+	// Get the existing position IDs for the given address-pool ID.
+	positionIdsBytes := store.Get(addressPoolIdKey)
+	positionIds := osmoutils.BigEndianToUint64Slice(positionIdsBytes)
+	// If this is the only position ID for the given address-pool ID, delete the mapping.
+	if len(positionIds) == 1 {
+		store.Delete(addressPoolIdKey)
+	} else {
+		// Otherwise, remove the position ID from the existing position IDs and set.
+		newPositionIds, err := osmoutils.RemoveFromSlice(positionIds, positionId)
+		if err != nil {
+			return err
+		}
+		store.Set(addressPoolIdKey, osmoutils.Uint64SliceToBigEndian(newPositionIds))
+	}
 
 	// Remove the pool ID to position ID mapping.
-	poolIdKey := types.KeyPoolPositionPositionId(poolId, positionId)
+	poolIdKey := types.KeyPoolPosition(poolId)
 	if !store.Has(poolIdKey) {
 		return types.PoolPositionIdNotFoundError{PoolId: poolId, PositionId: positionId}
 	}
-	store.Delete(poolIdKey)
+	// Get the existing position IDs for the given pool ID.
+	positionIdsBytes = store.Get(poolIdKey)
+	positionIds = osmoutils.BigEndianToUint64Slice(positionIdsBytes)
+	// If this is the only position ID for the given pool ID, delete the mapping.
+	if len(positionIds) == 1 {
+		store.Delete(poolIdKey)
+	} else {
+		// Otherwise, remove the position ID from the existing position IDs and set.
+		newPositionIds, err := osmoutils.RemoveFromSlice(positionIds, positionId)
+		if err != nil {
+			return err
+		}
+		store.Set(poolIdKey, osmoutils.Uint64SliceToBigEndian(newPositionIds))
+	}
 
 	// Remove the position ID to underlying lock ID mapping (if it exists)
 	positionIdLockKey := types.KeyPositionIdForLock(positionId)
