@@ -3259,7 +3259,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 	}
 }
 
-func (s *KeeperTestSuite) TestPrepareAccumAndClaimRewards() {
+func (s *KeeperTestSuite) TestUpdateAccumAndClaimRewards() {
 	validPositionKey := types.KeyFeePositionAccumulator(1)
 	invalidPositionKey := types.KeyFeePositionAccumulator(2)
 	tests := map[string]struct {
@@ -3307,7 +3307,7 @@ func (s *KeeperTestSuite) TestPrepareAccumAndClaimRewards() {
 			poolFeeAccumulator.AddToAccumulator(tc.growthOutside.Add(tc.growthInside...))
 
 			// System under test.
-			amountClaimed, _, err := cl.PrepareAccumAndClaimRewards(poolFeeAccumulator, positionKey, tc.growthOutside)
+			amountClaimed, _, err := cl.UpdateAccumAndClaimRewards(poolFeeAccumulator, positionKey, tc.growthOutside)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)
