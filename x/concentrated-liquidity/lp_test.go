@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
@@ -646,8 +647,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				s.Require().ErrorAs(err, &types.PositionIdNotFoundError{PositionId: config.positionId})
 				s.Require().Equal(clmodel.Position{}, position)
 
-				isPositionOwner, err := concentratedLiquidityKeeper.IsPositionOwner(s.Ctx, owner, config.poolId, config.positionId)
-				s.Require().NoError(err)
+				isPositionOwner := concentratedLiquidityKeeper.IsPositionOwner(s.Ctx, owner, config.poolId, config.positionId)
 				s.Require().False(isPositionOwner)
 
 				// Since the positionLiquidity is deleted, retrieving it should return an error.
@@ -663,12 +663,12 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				s.Require().Equal(model.Position{}, emptyPositionStruct)
 
 				// Retrieve the position ID from the store via owner/poolId key and compare to expected values.
-				ownerPoolIdToPositionIdKey := types.KeyAddressPoolIdPositionId(s.TestAccs[0], defaultPoolId, DefaultPositionId)
+				ownerPoolIdToPositionIdKey := types.KeyAddressAndPoolId(s.TestAccs[0], defaultPoolId)
 				positionIdBytes := store.Get(ownerPoolIdToPositionIdKey)
 				s.Require().Nil(positionIdBytes)
 
 				// Retrieve the position ID from the store via poolId key and compare to expected values.
-				poolIdtoPositionIdKey := types.KeyPoolPositionPositionId(defaultPoolId, DefaultPositionId)
+				poolIdtoPositionIdKey := types.KeyPoolPosition(defaultPoolId)
 				positionIdBytes = store.Get(poolIdtoPositionIdKey)
 				s.Require().Nil(positionIdBytes)
 
