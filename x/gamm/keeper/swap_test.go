@@ -212,16 +212,22 @@ func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			ctx := suite.Ctx
 
 			var pool poolmanagertypes.PoolI
-			if test.param.poolType == "balancer" {
+			switch test.param.poolType {
+			case "balancer":
 				poolId := suite.PrepareBalancerPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				pool = poolExt.(poolmanagertypes.PoolI)
-			} else if test.param.poolType == "stableswap" {
+				pool, _ := poolExt.(poolmanagertypes.PoolI) //nolint:gosimple // we're checking the type here
+				suite.Require().NotNil(pool)
+
+			case "stableswap":
 				poolId := suite.PrepareBasicStableswapPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				pool = poolExt.(poolmanagertypes.PoolI)
+				pool, _ := poolExt.(poolmanagertypes.PoolI) //nolint:gosimple // we're checking the type here
+				suite.Require().NotNil(pool)
+			default:
+				suite.Fail("invalid pool type")
 			}
 
 			swapFee := pool.GetSwapFee(suite.Ctx)
@@ -283,12 +289,14 @@ func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
 				poolId := suite.PrepareBalancerPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				pool, _ = poolExt.(poolmanagertypes.PoolI)
+				pool, _ = poolExt.(poolmanagertypes.PoolI) //nolint:gosimple // we're checking the type here
+				suite.Require().NotNil(pool)
 			case "stableswap":
 				poolId := suite.PrepareBasicStableswapPool()
 				poolExt, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 				suite.NoError(err)
-				pool, _ = poolExt.(poolmanagertypes.PoolI)
+				pool, _ = poolExt.(poolmanagertypes.PoolI) //nolint:gosimple // we're checking the type here
+				suite.Require().NotNil(pool)
 			default:
 				suite.FailNow("unsupported pool type")
 			}

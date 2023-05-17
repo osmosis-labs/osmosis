@@ -102,6 +102,7 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 		tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(100))
 		tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
 		_, _, _, _, _, _, _, err = clKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinTick, types.MaxTick)
+		noError(err)
 
 		pool, err := clKeeper.GetPoolById(s.Ctx, poolId)
 		noError(err)
