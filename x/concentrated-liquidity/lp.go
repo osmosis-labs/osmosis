@@ -45,7 +45,6 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	if err := validateTickRangeIsValid(pool.GetTickSpacing(), lowerTick, upperTick); err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
-
 	amount0Desired := tokensProvided.AmountOf(pool.GetToken0())
 	amount1Desired := tokensProvided.AmountOf(pool.GetToken1())
 	if amount0Desired.IsZero() && amount1Desired.IsZero() {
@@ -438,7 +437,7 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	// In such a case, we do not want to round the sqrt price to 100_000_000 X/Y, but rather
 	// let it float within the possible tick range.
 	pool.SetCurrentSqrtPrice(initialCurSqrtPrice)
-	pool.SetCurrentTick(initialTick)
+	pool.SetCurrentTick(sdk.NewInt(initialTick))
 	err = k.setPool(ctx, pool)
 	if err != nil {
 		return err

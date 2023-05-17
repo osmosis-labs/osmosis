@@ -144,15 +144,15 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 			panic(err)
 		}
 
-		if lowerTickOsmosis.GT(upperTickOsmosis) {
-			fmt.Printf("lowerTickOsmosis (%s) > upperTickOsmosis (%s), skipping", lowerTickOsmosis, upperTickOsmosis)
+		if lowerTickOsmosis > upperTickOsmosis {
+			fmt.Printf("lowerTickOsmosis (%d) > upperTickOsmosis (%d), skipping", lowerTickOsmosis, upperTickOsmosis)
 			continue
 		}
 
-		if lowerTickOsmosis.Equal(upperTickOsmosis) {
+		if lowerTickOsmosis == upperTickOsmosis {
 			// bump up the upper tick by one. We don't care about having exactly the same tick range
 			// Just a roughly similar breakdown
-			upperTickOsmosis = upperTickOsmosis.Add(sdk.OneInt())
+			upperTickOsmosis = upperTickOsmosis + 1
 		}
 
 		depositedAmount0, failedParsing := parseStringToInt(uniV3Position.DepositedToken0)
@@ -174,20 +174,20 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 		position, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(osmosis.Ctx), &cltypes.MsgCreatePosition{
 			PoolId:          poolId,
 			Sender:          randomCreator.String(),
-			LowerTick:       lowerTickOsmosis.Int64(),
-			UpperTick:       upperTickOsmosis.Int64(),
+			LowerTick:       lowerTickOsmosis,
+			UpperTick:       upperTickOsmosis,
 			TokensProvided:  tokensProvided,
 			TokenMinAmount0: sdk.ZeroInt(),
 			TokenMinAmount1: sdk.ZeroInt(),
 		})
 		if err != nil {
 			fmt.Printf("\n\n\nWARNING: Failed to create position: %v\n\n\n", err)
-			fmt.Printf("attempted creation between ticks (%s) and (%s), desired amount 0: (%s), desired amount 1 (%s)\n", lowerTickOsmosis, upperTickOsmosis, depositedAmount0, depositedAmount1)
+			fmt.Printf("attempted creation between ticks (%d) and (%d), desired amount 0: (%s), desired amount 1 (%s)\n", lowerTickOsmosis, upperTickOsmosis, depositedAmount0, depositedAmount1)
 			fmt.Println()
 			continue
 		}
 
-		fmt.Printf("created position with liquidity (%s) between ticks (%s) and (%s)\n", position.LiquidityCreated, lowerTickOsmosis, upperTickOsmosis)
+		fmt.Printf("created position with liquidity (%s) between ticks (%d) and (%d)\n", position.LiquidityCreated, lowerTickOsmosis, upperTickOsmosis)
 		numberOfSuccesfulPositions++
 
 		bigBangPositions = append(bigBangPositions, clgenesis.PositionData{
@@ -197,8 +197,8 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 				JoinTime:   osmosis.Ctx.BlockTime(),
 				Liquidity:  position.LiquidityCreated,
 				PositionId: position.PositionId,
-				LowerTick:  lowerTickOsmosis.Int64(),
-				UpperTick:  upperTickOsmosis.Int64(),
+				LowerTick:  lowerTickOsmosis,
+				UpperTick:  upperTickOsmosis,
 			},
 			FeeAccumRecord: accum.Record{
 				NumShares: position.LiquidityCreated,

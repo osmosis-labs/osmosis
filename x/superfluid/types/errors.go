@@ -2,6 +2,7 @@ package types
 
 import (
 	fmt "fmt"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -61,4 +62,21 @@ type ConcentratedTickRangeNotFullError struct {
 
 func (e ConcentratedTickRangeNotFullError) Error() string {
 	return fmt.Sprintf("position must be full range. Lower tick (%d) must be (%d). Upper tick (%d) must be (%d)", e.ActualLowerTick, e.ActualUpperTick, cltypes.MinTick, cltypes.MaxTick)
+}
+
+type NegativeDurationError struct {
+	Duration time.Duration
+}
+
+func (e NegativeDurationError) Error() string {
+	return fmt.Sprintf("duration cannot be negative (%s)", e.Duration)
+}
+
+type UnexpectedDenomError struct {
+	ExpectedDenom string
+	ProvidedDenom string
+}
+
+func (e UnexpectedDenomError) Error() string {
+	return fmt.Sprintf("provided denom (%s) was expected to be formatted as follows: %s", e.ProvidedDenom, e.ExpectedDenom)
 }

@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/cosmos/cosmos-sdk v0.47.2
 	github.com/ignite/cli v0.23.0
-	github.com/osmosis-labs/osmosis/v15 v15.0.0-20230502194055-e465f0b40c14
+	github.com/osmosis-labs/osmosis/v15 v15.0.0-20230502194055-13c81d83ef0d
 
 )
 
