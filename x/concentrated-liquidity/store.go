@@ -27,14 +27,14 @@ func (k Keeper) getAllPositions(ctx sdk.Context) ([]model.Position, error) {
 		ctx.KVStore(k.storeKey), types.PositionIdPrefix, ParsePositionFromBz)
 }
 
-// ParsePositionIdFromBz parses and returns a position's id from a byte array.
+// ParsePositionIdsFromBz parses and returns position ids from a byte array.
 // Returns an error if the byte array is empty.
 // Returns an error if fails to parse.
-func ParsePositionIdFromBz(bz []byte) (uint64, error) {
+func ParsePositionIdsFromBz(bz []byte) ([]uint64, error) {
 	if len(bz) == 0 {
-		return 0, errors.New("position not found when parsing position id")
+		return []uint64{}, errors.New("position not found when parsing position ids")
 	}
-	return sdk.BigEndianToUint64(bz), nil
+	return osmoutils.BigEndianToUint64Slice(bz), nil
 }
 
 // ParsePositionFromBz parses and returns a position from a byte array.

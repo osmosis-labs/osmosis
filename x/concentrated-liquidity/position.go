@@ -166,18 +166,20 @@ func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId ui
 	positions := []model.Position{}
 
 	// Gather all position IDs for the given user and pool ID.
-	positionIds, err := osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), prefix, ParsePositionIdFromBz)
+	positionIds, err := osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), prefix, ParsePositionIdsFromBz)
 	if err != nil {
 		return nil, err
 	}
 
 	// Retrieve each position from the store using its ID and add it to the result slice.
-	for _, positionId := range positionIds {
-		position, err := k.GetPosition(ctx, positionId)
-		if err != nil {
-			return nil, err
+	for _, poolPositionIds := range positionIds {
+		for _, positionId := range poolPositionIds {
+			position, err := k.GetPosition(ctx, positionId)
+			if err != nil {
+				return nil, err
+			}
+			positions = append(positions, position)
 		}
-		positions = append(positions, position)
 	}
 
 	return positions, nil
