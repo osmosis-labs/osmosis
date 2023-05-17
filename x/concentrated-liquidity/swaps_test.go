@@ -2491,7 +2491,6 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
 }
 
 // TestComputeInAmtGivenOut tests that ComputeInAmtGivenOut successfully performs state changes as expected.
-// We expect writeCtx to only change fee accum state, since pool state change is not handled by ComputeInAmtGivenOut.
 func (s *KeeperTestSuite) TestComputeInAmtGivenOut() {
 	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
 	tests := make(map[string]SwapTest, len(swapInGivenOutFeeTestCases))
