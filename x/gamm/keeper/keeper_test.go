@@ -38,14 +38,16 @@ func (suite *KeeperTestSuite) prepareCustomBalancerPool(
 	balances sdk.Coins,
 	poolAssets []balancer.PoolAsset,
 	poolParams balancer.PoolParams,
-) (uint64, error) {
+) uint64 {
 	suite.fundAllAccountsWith(balances)
 
 	poolID, err := suite.App.PoolManagerKeeper.CreatePool(
 		suite.Ctx,
 		balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], poolParams, poolAssets, ""),
 	)
-	return poolID, err
+	suite.Require().NoError(err)
+
+	return poolID
 }
 
 func (suite *KeeperTestSuite) prepareCustomStableswapPool(

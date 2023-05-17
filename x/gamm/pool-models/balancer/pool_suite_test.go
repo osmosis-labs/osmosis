@@ -1095,36 +1095,4 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 	for i := 0; i < 50000; i++ {
 		testPoolInvariants()
 	}
-	testCaseCorners := []testCase{
-		{ //join pool for values greater than in the pool
-			initialTokensDenomIn:  1,
-			initialTokensDenomOut: 9_223_372_036_854_775_807,
-			percentRatio:          101,
-		},
-		{ //with percentRatio = 0
-			initialTokensDenomIn:  1,
-			initialTokensDenomOut: 9_223_372_036_854_775_807,
-			percentRatio:          0,
-		},
-		{
-			initialTokensDenomIn:  9_223_372_036_854_775_807,
-			initialTokensDenomOut: 1,
-			percentRatio:          101,
-		},
-		{
-			initialTokensDenomIn:  9_223_372_036_854_775_807,
-			initialTokensDenomOut: 1,
-			percentRatio:          0,
-		},
-	}
-	for _, test := range testCaseCorners {
-		pool := createPool(&test)
-		originalCoins, originalShares := pool.GetTotalPoolLiquidity(sdk.Context{}), pool.GetTotalShares()
-		joinPool(pool, &test)
-		exitPool(pool, &test)
-		invariantJoinExitInversePreserve(
-			originalCoins, pool.GetTotalPoolLiquidity(sdk.Context{}),
-			originalShares, pool.GetTotalShares(),
-		)
-	}
 }

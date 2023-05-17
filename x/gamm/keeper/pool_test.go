@@ -267,17 +267,6 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 			Token:  defaultPoolAssets[1].Token,
 		},
 	}
-	poolID, err := suite.prepareCustomBalancerPool(defaultAcctFunds, startPoolWeightAssets, balancer.PoolParams{
-		SwapFee: defaultSwapFee,
-		ExitFee: defaultZeroExitFee,
-		SmoothWeightChangeParams: &balancer.SmoothWeightChangeParams{
-			StartTime:          time.Unix(startTime, 0), // start time is before block time so the weights should change
-			Duration:           time.Hour,
-			InitialPoolWeights: startPoolWeightAssets,
-			TargetPoolWeights:  defaultPoolAssetsCopy,
-		},
-	})
-	suite.Require().NoError(err)
 
 	tests := map[string]struct {
 		isPokePool bool
@@ -285,7 +274,16 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 	}{
 		"weighted pool - change weights": {
 			isPokePool: true,
-			poolId:     poolID,
+			poolId: suite.prepareCustomBalancerPool(defaultAcctFunds, startPoolWeightAssets, balancer.PoolParams{
+				SwapFee: defaultSwapFee,
+				ExitFee: defaultZeroExitFee,
+				SmoothWeightChangeParams: &balancer.SmoothWeightChangeParams{
+					StartTime:          time.Unix(startTime, 0), // start time is before block time so the weights should change
+					Duration:           time.Hour,
+					InitialPoolWeights: startPoolWeightAssets,
+					TargetPoolWeights:  defaultPoolAssetsCopy,
+				},
+			}),
 		},
 		"non weighted pool": {
 			poolId: suite.prepareCustomStableswapPool(
@@ -504,11 +502,10 @@ func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
 				err := suite.App.GAMMKeeper.SetPool(suite.Ctx, stableswapPool)
 				suite.Require().NoError(err)
 			} else {
-				_, err := suite.prepareCustomBalancerPool(
+				suite.prepareCustomBalancerPool(
 					defaultAcctFunds,
 					defaultPoolAssets,
 					defaultPoolParams)
-				suite.Require().NoError(err)
 			}
 			err := suite.App.GAMMKeeper.SetStableSwapScalingFactors(suite.Ctx, tc.poolId, tc.scalingFactors, tc.sender.String())
 			if tc.expError != nil {
