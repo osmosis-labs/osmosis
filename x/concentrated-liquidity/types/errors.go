@@ -825,7 +825,7 @@ func (e SqrtRootCalculationError) Error() string {
 }
 
 type TickToSqrtPriceConversionError struct {
-	NextTick sdk.Int
+	NextTick int64
 }
 
 func (e TickToSqrtPriceConversionError) Error() string {
