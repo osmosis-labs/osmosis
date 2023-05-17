@@ -282,12 +282,12 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 	return tokenOutAmount, err
 }
 
-// RouteExactAmountIn processes a swap along the given route using the swap function corresponding
-// to poolID's pool type. This function is responsible for computing the optimal input amount
-// for a given output amount when swapping tokens, taking into account the current price of the
+// RouteExactAmountOut processes a swap along the given route using the swap function corresponding
+// to poolID's pool type. This function is responsible for computing the optimal output amount
+// for a given input amount when swapping tokens, taking into account the current price of the
 // tokens in the pool and any slippage.
-// Transaction succeeds if final amount out is greater than tokenOutMinAmount defined
-// and no errors are encountered along the way.
+// Transaction succeeds if the calculated tokenInAmount of the first pool is less than the defined
+// tokenInMaxAmount defined.
 func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	sender sdk.AccAddress,
 	route []types.SwapAmountOutRoute,
@@ -301,7 +301,6 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		return sdk.Int{}, err
 	}
 
-	// ? should we have defer in RouteExactAmountIn too?
 	defer func() {
 		if r := recover(); r != nil {
 			tokenInAmount = sdk.Int{}
