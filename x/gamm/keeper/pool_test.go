@@ -504,10 +504,11 @@ func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
 				err := suite.App.GAMMKeeper.SetPool(suite.Ctx, stableswapPool)
 				suite.Require().NoError(err)
 			} else {
-				suite.prepareCustomBalancerPool(
+				_, err := suite.prepareCustomBalancerPool(
 					defaultAcctFunds,
 					defaultPoolAssets,
 					defaultPoolParams)
+				suite.Require().NoError(err)
 			}
 			err := suite.App.GAMMKeeper.SetStableSwapScalingFactors(suite.Ctx, tc.poolId, tc.scalingFactors, tc.sender.String())
 			if tc.expError != nil {
