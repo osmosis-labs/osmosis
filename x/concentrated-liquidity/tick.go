@@ -325,13 +325,13 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 		return []queryproto.TickLiquidityNet{}, err
 	}
 
-	ctx.Logger().Debug(fmt.Sprintf("userGivenStartTick %s, boundTick %s, currentTick %s\n", userGivenStartTick, boundTick, p.GetCurrentTick()))
+	ctx.Logger().Debug(fmt.Sprintf("userGivenStartTick %s, boundTick %s, currentTick %d\n", userGivenStartTick, boundTick, p.GetCurrentTick()))
 
 	startTick := p.GetCurrentTick()
 	// If start tick is set, use it as the current tick for grabbing liquidities from.
 	if !userGivenStartTick.IsNil() {
-		startTick = userGivenStartTick
-		ctx.Logger().Debug(fmt.Sprintf("startTick %s set to user given\n", startTick))
+		startTick = userGivenStartTick.Int64()
+		ctx.Logger().Debug(fmt.Sprintf("startTick %d set to user given\n", startTick))
 	}
 
 	// sanity check that given tokenIn is an asset in pool.
@@ -361,12 +361,12 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec(), p.GetTickSpacing())
 
 	currentTick := p.GetCurrentTick()
-	_, currentTickSqrtPrice, err := math.TickToSqrtPrice(currentTick.Int64())
+	_, currentTickSqrtPrice, err := math.TickToSqrtPrice(currentTick)
 	if err != nil {
 		return []queryproto.TickLiquidityNet{}, err
 	}
 
-	ctx.Logger().Debug(fmt.Sprintf("currentTick %s; current tick's sqrt price%s\n", currentTick, currentTickSqrtPrice))
+	ctx.Logger().Debug(fmt.Sprintf("currentTick %d; current tick's sqrt price%s\n", currentTick, currentTickSqrtPrice))
 
 	// function to validate that start tick and bound tick are
 	// between current tick and the min/max tick depending on the swap direction.
@@ -390,15 +390,15 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	}
 
 	ctx.Logger().Debug("validating start tick")
-	if err := validateTickIsInValidRange(startTick); err != nil {
-		return []queryproto.TickLiquidityNet{}, fmt.Errorf("failed validating start tick (%s) with current sqrt price of (%s): %w", startTick, currentTickSqrtPrice, err)
+	if err := validateTickIsInValidRange(sdk.NewInt(startTick)); err != nil {
+		return []queryproto.TickLiquidityNet{}, fmt.Errorf("failed validating start tick (%d) with current sqrt price of (%s): %w", startTick, currentTickSqrtPrice, err)
 	}
 
 	// iterator assignments
 	store := ctx.KVStore(k.storeKey)
 	prefixBz := types.KeyTickPrefixByPoolId(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
-	startTickKey := types.TickIndexToBytes(startTick.Int64())
+	startTickKey := types.TickIndexToBytes(startTick)
 	boundTickKey := types.TickIndexToBytes(boundTick.Int64())
 
 	// define iterator depending on swap strategy

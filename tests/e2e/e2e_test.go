@@ -222,7 +222,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	concentratedPool := s.updatedPool(chainANode, poolID)
 
 	// Sanity check that pool initialized with valid parameters (the ones that we haven't explicitly specified)
-	s.Require().Equal(concentratedPool.GetCurrentTick().Int64(), int64(0))
+	s.Require().Equal(concentratedPool.GetCurrentTick(), int64(0))
 	s.Require().Equal(concentratedPool.GetCurrentSqrtPrice(), sdk.ZeroDec())
 	s.Require().Equal(concentratedPool.GetLiquidity(), sdk.ZeroDec())
 
@@ -231,7 +231,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().Equal(concentratedPool.GetToken0(), denom0)
 	s.Require().Equal(concentratedPool.GetToken1(), denom1)
 	s.Require().Equal(concentratedPool.GetTickSpacing(), tickSpacing)
-	s.Require().Equal(concentratedPool.GetExponentAtPriceOne().Int64(), cltypes.ExponentAtPriceOne)
+	s.Require().Equal(concentratedPool.GetExponentAtPriceOne(), cltypes.ExponentAtPriceOne)
 	s.Require().Equal(concentratedPool.GetSwapFee(sdk.Context{}), sdk.MustNewDecFromStr(swapFee))
 
 	fundTokens := []string{"100000000uosmo", "100000000uion", "100000000stake"}

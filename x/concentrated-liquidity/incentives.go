@@ -84,7 +84,7 @@ func (k Keeper) getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ct
 		return []sdk.DecCoins{}, err
 	}
 
-	currentTick := pool.GetCurrentTick().Int64()
+	currentTick := pool.GetCurrentTick()
 	if currentTick >= tick {
 		uptimeAccumulatorValues, err := k.getUptimeAccumulatorValues(ctx, poolId)
 		if err != nil {
@@ -566,7 +566,7 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 	}
 
 	// Get current, lower, and upper ticks
-	currentTick := pool.GetCurrentTick().Int64()
+	currentTick := pool.GetCurrentTick()
 	lowerTickInfo, err := k.GetTickInfo(ctx, poolId, lowerTick)
 	if err != nil {
 		return []sdk.DecCoins{}, err
