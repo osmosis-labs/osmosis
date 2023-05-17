@@ -703,16 +703,16 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 	}
 
 	tests := []struct {
-		name                       string
-		setupFullyChargedPositions []position
-		setupUnchargedPositions    []position
-		lockPositionIds            []uint64
-		positionIdsToMigrate       []uint64
-		accountCallingMigration    sdk.AccAddress
-		unlockBeforeBlockTimeMs    time.Duration
-		expectedNewPositionId      uint64
-		expectedErr                error
-		doesValidatePass           bool
+		name                              string
+		setupFullyChargedPositions        []position
+		setupUnchargedPositions           []position
+		lockPositionIds                   []uint64
+		positionIdsToMigrate              []uint64
+		accountCallingMigration           sdk.AccAddress
+		unlockBeforeBlockTimeMilliseconds time.Duration //nolint:stylecheck // writing out the unit of measure for the time makes this clearer
+		expectedNewPositionId             uint64
+		expectedErr                       error
+		doesValidatePass                  bool
 	}{
 		{
 			name: "Happy path: Fungify three fully charged positions",
@@ -813,8 +813,8 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			accountCallingMigration: defaultAddress,
 			// Subtracting one millisecond from the block time (when it's supposed to be unlocked
 			// by default, makes the lock mature)
-			unlockBeforeBlockTimeMs: time.Millisecond * -1,
-			expectedNewPositionId:   4,
+			unlockBeforeBlockTimeMilliseconds: time.Millisecond * -1,
+			expectedNewPositionId:             4,
 		},
 	}
 
@@ -848,7 +848,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			// See increases in the test below.
 			// The reason we double testFullChargeDurationis is because that is by how much we increase block time in total
 			// to set up the fully charged positions.
-			lockDuration := testFullChargeDuration + testFullChargeDuration + test.unlockBeforeBlockTimeMs
+			lockDuration := testFullChargeDuration + testFullChargeDuration + test.unlockBeforeBlockTimeMilliseconds
 			for _, pos := range test.setupFullyChargedPositions {
 				var (
 					liquidityCreated sdk.Dec
@@ -1186,7 +1186,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 	// Perform a swap to earn fees
 	swapAmountIn := sdk.NewCoin(ETH, sdk.NewInt(swapAmount))
 	expectedFee := swapAmountIn.Amount.ToDec().Mul(swapFee)
-	// We run expected fees through a cycle of divison and multiplication by liquidity to capture appropriate rounding behavior.
+	// We run expected fees through a cycle of division and multiplication by liquidity to capture appropriate rounding behavior.
 	// Note that we truncate the int at the end since it is not possible to have a decimal fee amount collected (the QuoTruncate
 	// and MulTruncates are much smaller operations that round down for values past the 18th decimal place).
 	expectedFeeTruncated := expectedFee.QuoTruncate(totalLiquidity).MulTruncate(totalLiquidity).TruncateInt()
@@ -1510,7 +1510,8 @@ func (s *KeeperTestSuite) TestMintSharesAndLock() {
 
 			// Create a position
 			positionId := uint64(0)
-			liquidity := sdk.ZeroDec()
+			var liquidity sdk.Dec
+
 			if test.createFullRangePosition {
 				var err error
 				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), test.owner, DefaultCoins)
@@ -1983,7 +1984,7 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 		s.Require().NoError(err)
 		actualFullRangeLiquidity = actualFullRangeLiquidity.Add(liquidity)
 
-		clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
+		_, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
 		s.Require().NoError(err)
 
 		// Get the full range liquidity for the pool.
@@ -1996,7 +1997,7 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 		_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPoolId, owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), tc.lowerTick, tc.upperTick)
 		s.Require().NoError(err)
 
-		clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
+		_, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
 		s.Require().NoError(err)
 
 		// Test updating the full range liquidity.
