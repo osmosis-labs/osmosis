@@ -151,8 +151,8 @@ func (s zeroForOneStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPric
 // As a result, we use reverse iterator in NextInitializedTick to find the next
 // tick to the left of current. The end cursor for reverse iteration is non-inclusive
 // so must add one here to make sure that the current tick is included in the search.
-func (s zeroForOneStrategy) InitializeTickValue(currentTick sdk.Int) sdk.Int {
-	return currentTick.Add(sdk.OneInt())
+func (s zeroForOneStrategy) InitializeTickValue(currentTick int64) int64 {
+	return currentTick + 1
 }
 
 // NextInitializedTick returns the next initialized tick index based on the
@@ -160,7 +160,7 @@ func (s zeroForOneStrategy) InitializeTickValue(currentTick sdk.Int) sdk.Int {
 // will be returned.
 //
 // zeroForOneStrategy searches for the next tick to the left of the current tickIndex.
-func (s zeroForOneStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64) (next sdk.Int, initialized bool) {
+func (s zeroForOneStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64) (next int64, initialized bool) {
 	store := ctx.KVStore(s.storeKey)
 
 	// Construct a prefix store with a prefix of <TickPrefix | poolID>, allowing
@@ -181,10 +181,10 @@ func (s zeroForOneStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, 
 			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
 		}
 		if tick <= tickIndex {
-			return sdk.NewInt(tick), true
+			return tick, true
 		}
 	}
-	return sdk.ZeroInt(), false
+	return 0, false
 }
 
 // SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.

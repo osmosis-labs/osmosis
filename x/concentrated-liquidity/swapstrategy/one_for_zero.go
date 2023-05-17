@@ -156,8 +156,8 @@ func (s oneForZeroStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPric
 // Therefore, this method is, essentially a no-op. The logic is reversed for
 // zeroForOneStrategy where we use reverse iterator and have to add one to
 // the input. Therefore, we define this method to account for different strategies.
-func (s oneForZeroStrategy) InitializeTickValue(currentTick sdk.Int) sdk.Int {
-	return currentTick
+func (s oneForZeroStrategy) InitializeTickValue(currentTick int64) int64 {
+	return currentTick + 1
 }
 
 // NextInitializedTick returns the next initialized tick index based on the
@@ -165,7 +165,7 @@ func (s oneForZeroStrategy) InitializeTickValue(currentTick sdk.Int) sdk.Int {
 // will be returned.
 //
 // oneForZerostrategy searches for the next tick to the right of the current tickIndex.
-func (s oneForZeroStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64) (next sdk.Int, initialized bool) {
+func (s oneForZeroStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64) (next int64, initialized bool) {
 	store := ctx.KVStore(s.storeKey)
 
 	// Construct a prefix store with a prefix of <TickPrefix | poolID>, allowing
@@ -186,10 +186,10 @@ func (s oneForZeroStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, 
 		}
 
 		if tick > tickIndex {
-			return sdk.NewInt(tick), true
+			return tick, true
 		}
 	}
-	return sdk.ZeroInt(), false
+	return 0, false
 }
 
 // SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.

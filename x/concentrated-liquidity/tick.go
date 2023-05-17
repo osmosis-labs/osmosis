@@ -209,17 +209,14 @@ func roundTickToCanonicalPriceTick(lowerTick, upperTick int64, priceTickLower, p
 		return 0, 0, err
 	}
 
-	newLowerTickInt64 := newLowerTick.Int64()
-	newUpperTickInt64 := newUpperTick.Int64()
-
 	// If the lower or upper tick has changed, we need to re-validate the tick range.
-	if lowerTick != newLowerTickInt64 || upperTick != newUpperTickInt64 {
-		err := validateTickRangeIsValid(tickSpacing, newLowerTickInt64, newUpperTickInt64)
+	if lowerTick != newLowerTick || upperTick != newUpperTick {
+		err := validateTickRangeIsValid(tickSpacing, newLowerTick, newUpperTick)
 		if err != nil {
 			return 0, 0, err
 		}
 	}
-	return newLowerTickInt64, newUpperTickInt64, nil
+	return newLowerTick, newUpperTick, nil
 }
 
 // GetTickLiquidityForFullRange returns an array of liquidity depth for all ticks existing from min tick ~ max tick.
@@ -251,7 +248,7 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 
 	// use the smallest tick initialized as the starting point for calculating liquidity.
 	currentLiquidity := tick.LiquidityNet
-	currentTick = nextTick.Int64()
+	currentTick = nextTick
 	totalLiquidityWithinRange := currentLiquidity
 
 	// iterator assignments
@@ -363,7 +360,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec(), p.GetTickSpacing())
 
 	currentTick := p.GetCurrentTick()
-	_, currentTickSqrtPrice, err := math.TickToSqrtPrice(currentTick)
+	_, currentTickSqrtPrice, err := math.TickToSqrtPrice(currentTick.Int64())
 	if err != nil {
 		return []queryproto.TickLiquidityNet{}, err
 	}
@@ -373,7 +370,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	// function to validate that start tick and bound tick are
 	// between current tick and the min/max tick depending on the swap direction.
 	validateTickIsInValidRange := func(validateTick sdk.Int) error {
-		_, validateSqrtPrice, err := math.TickToSqrtPrice(validateTick)
+		_, validateSqrtPrice, err := math.TickToSqrtPrice(validateTick.Int64())
 		if err != nil {
 			return err
 		}
@@ -434,16 +431,16 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	return liquidityDepths, nil
 }
 
-func (k Keeper) getTickByTickIndex(ctx sdk.Context, poolId uint64, tickIndex sdk.Int) (model.TickInfo, error) {
+func (k Keeper) getTickByTickIndex(ctx sdk.Context, poolId uint64, tickIndex int64) (model.TickInfo, error) {
 	store := ctx.KVStore(k.storeKey)
-	keyTick := types.KeyTick(poolId, tickIndex.Int64())
+	keyTick := types.KeyTick(poolId, tickIndex)
 	tickStruct := model.TickInfo{}
 	found, err := osmoutils.Get(store, keyTick, &tickStruct)
 	if err != nil {
 		return model.TickInfo{}, err
 	}
 	if !found {
-		return model.TickInfo{}, types.TickNotFoundError{Tick: tickIndex.Int64()}
+		return model.TickInfo{}, types.TickNotFoundError{Tick: tickIndex}
 	}
 	return tickStruct, nil
 }

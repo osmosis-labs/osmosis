@@ -793,7 +793,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		// testing params
 		poolId          uint64
 		tokenIn         string
-		currentPoolTick sdk.Int
+		currentPoolTick int64
 		startTick       sdk.Int
 		boundTick       sdk.Int
 
@@ -998,7 +998,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:          defaultPoolId,
 			tokenIn:         ETH,
-			currentPoolTick: sdk.NewInt(10),
+			currentPoolTick: 10,
 			startTick:       sdk.NewInt(10),
 			boundTick:       sdk.NewInt(-15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
@@ -1017,7 +1017,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:          defaultPoolId,
 			tokenIn:         ETH,
-			currentPoolTick: sdk.NewInt(21),
+			currentPoolTick: 21,
 			startTick:       sdk.NewInt(10),
 			boundTick:       sdk.NewInt(-15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
@@ -1036,7 +1036,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:          defaultPoolId,
 			tokenIn:         USDC,
-			currentPoolTick: sdk.NewInt(5),
+			currentPoolTick: 5,
 			startTick:       sdk.NewInt(5),
 			boundTick:       sdk.NewInt(15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
@@ -1055,7 +1055,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:          defaultPoolId,
 			tokenIn:         USDC,
-			currentPoolTick: sdk.NewInt(-50),
+			currentPoolTick: -50,
 			startTick:       sdk.NewInt(5),
 			boundTick:       sdk.NewInt(15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
@@ -1138,7 +1138,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:          defaultPoolId,
 			tokenIn:         ETH,
-			currentPoolTick: sdk.NewInt(10),
+			currentPoolTick: 10,
 			startTick:       sdk.NewInt(21),
 			boundTick:       sdk.NewInt(-15),
 			expectedError:   true,
@@ -1152,7 +1152,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:          defaultPoolId,
 			tokenIn:         USDC,
-			currentPoolTick: sdk.NewInt(5),
+			currentPoolTick: 5,
 			startTick:       sdk.NewInt(-50),
 			boundTick:       sdk.NewInt(15),
 			expectedError:   true,
@@ -1179,7 +1179,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			// with tick spacing > 1, requiring price to tick conversion with rounding.
 			curTick, err := math.PriceToTick(curPrice)
 			s.Require().NoError(err)
-			if !test.currentPoolTick.IsNil() {
+			if test.currentPoolTick > 0 {
 				_, sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)
 				s.Require().NoError(err)
 
@@ -1187,7 +1187,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 				curPrice = sqrtPrice
 			}
 			pool.SetCurrentSqrtPrice(curPrice)
-			pool.SetCurrentTick(curTick)
+			pool.SetCurrentTick(sdk.NewInt(curTick))
 
 			err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
 			s.Require().NoError(err)
@@ -1403,6 +1403,92 @@ func (s *KeeperTestSuite) TestGetAllInitializedTicksForPool() {
 			s.Require().Equal(len(expectedTicks), len(ticks))
 			for i, expectedTick := range expectedTicks {
 				s.Require().Equal(expectedTick, ticks[i], "expected tick %d to be %v, got %v", i, expectedTick, ticks[i])
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestRoundTickToCanonicalPriceTick() {
+	tests := []struct {
+		name                 string
+		lowerTick            int64
+		upperTick            int64
+		expectedNewLowerTick int64
+		expectedNewUpperTick int64
+		expectedError        error
+	}{
+		{
+			name:                 "exact upper tick for 0.000000000000000003 to exact lower tick for 0.000000000000000002",
+			lowerTick:            -161000000,
+			expectedNewLowerTick: -161000000,
+			upperTick:            -160000000,
+			expectedNewUpperTick: -160000000,
+		},
+		{
+			name:                 "exact upper tick for 0.000000000000000003 to inexact lower tick for 0.000000000000000002",
+			lowerTick:            -161001234,
+			expectedNewLowerTick: -161000000,
+			upperTick:            -160000000,
+			expectedNewUpperTick: -160000000,
+		},
+		{
+			name:                 "inexact upper tick for 0.000000000000000003 to exact lower tick for 0.000000000000000002",
+			lowerTick:            -161000000,
+			expectedNewLowerTick: -161000000,
+			upperTick:            -160001234,
+			expectedNewUpperTick: -160000000,
+		},
+		{
+			name:                 "inexact upper tick for 0.000000000000000003 to inexact lower tick for 0.000000000000000002",
+			lowerTick:            -161001234,
+			expectedNewLowerTick: -161000000,
+			upperTick:            -160001234,
+			expectedNewUpperTick: -160000000,
+		},
+		{
+			name:                 "upper tick one tick away from lower tick",
+			lowerTick:            -161001234,
+			expectedNewLowerTick: -161000000,
+			upperTick:            -160999999,
+			expectedNewUpperTick: -160000000,
+		},
+		{
+			name:                 "error: new upper tick is lower than new lower tick",
+			lowerTick:            -160001234,
+			expectedNewLowerTick: -160000000,
+			upperTick:            -161001234,
+			expectedNewUpperTick: -161000000,
+			expectedError:        types.InvalidLowerUpperTickError{LowerTick: -160000000, UpperTick: -161000000},
+		},
+		{
+			name:                 "error: new upper tick is the same as new lower tick",
+			lowerTick:            -160001234,
+			expectedNewLowerTick: -160000000,
+			upperTick:            -160000000,
+			expectedNewUpperTick: -160000000,
+			expectedError:        types.InvalidLowerUpperTickError{LowerTick: -160000000, UpperTick: -160000000},
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+
+			priceTickLower, _, err := math.TickToSqrtPrice(test.lowerTick)
+			s.Require().NoError(err)
+			priceTickUpper, _, err := math.TickToSqrtPrice(test.upperTick)
+			s.Require().NoError(err)
+
+			// System Under Test
+			newLowerTick, newUpperTick, err := cl.RoundTickToCanonicalPriceTick(test.lowerTick, test.upperTick, priceTickLower, priceTickUpper, DefaultTickSpacing)
+
+			if test.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, test.expectedError.Error())
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(test.expectedNewLowerTick, newLowerTick)
+				s.Require().Equal(test.expectedNewUpperTick, newUpperTick)
 			}
 		})
 	}

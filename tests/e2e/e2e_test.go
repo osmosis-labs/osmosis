@@ -30,7 +30,7 @@ import (
 	v16 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v16"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	clmath "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
@@ -222,7 +222,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	concentratedPool := s.updatedPool(chainANode, poolID)
 
 	// Sanity check that pool initialized with valid parameters (the ones that we haven't explicitly specified)
-	s.Require().Equal(concentratedPool.GetCurrentTick(), sdk.ZeroInt())
+	s.Require().Equal(concentratedPool.GetCurrentTick().Int64(), int64(0))
 	s.Require().Equal(concentratedPool.GetCurrentSqrtPrice(), sdk.ZeroDec())
 	s.Require().Equal(concentratedPool.GetLiquidity(), sdk.ZeroDec())
 
@@ -231,7 +231,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().Equal(concentratedPool.GetToken0(), denom0)
 	s.Require().Equal(concentratedPool.GetToken1(), denom1)
 	s.Require().Equal(concentratedPool.GetTickSpacing(), tickSpacing)
-	s.Require().Equal(concentratedPool.GetExponentAtPriceOne(), cltypes.ExponentAtPriceOne)
+	s.Require().Equal(concentratedPool.GetExponentAtPriceOne().Int64(), cltypes.ExponentAtPriceOne)
 	s.Require().Equal(concentratedPool.GetSwapFee(sdk.Context{}), sdk.MustNewDecFromStr(swapFee))
 
 	fundTokens := []string{"100000000uosmo", "100000000uion", "100000000stake"}
@@ -365,15 +365,15 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// * Uncollected fees from multiple swaps are correctly summed up and collected
 
 	// tickOffset is a tick index after the next initialized tick to which this swap needs to move the current price
-	tickOffset := sdk.NewInt(300)
+	tickOffset := int64(300)
 	sqrtPriceBeforeSwap = concentratedPool.GetCurrentSqrtPrice()
 	liquidityBeforeSwap = concentratedPool.GetLiquidity()
-	nextInitTick := sdk.NewInt(40000) // address1 position1's upper tick
+	nextInitTick := int64(40000) // address1 position1's upper tick
 
 	// Calculate sqrtPrice after and at the next initialized tick (upperTick of address1 position1 - 40000)
-	_, sqrtPriceAfterNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick.Add(tickOffset))
+	_, sqrtPriceAfterNextInitializedTick, err := clmath.TickToSqrtPrice(nextInitTick + tickOffset)
 	s.Require().NoError(err)
-	_, sqrtPriceAtNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick)
+	_, sqrtPriceAtNextInitializedTick, err := clmath.TickToSqrtPrice(nextInitTick)
 	s.Require().NoError(err)
 
 	// Calculate Δ(sqrtPrice):
@@ -502,10 +502,10 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// * liquidity of positions that come in range are correctly kicked in
 
 	// tickOffset is a tick index after the next initialized tick to which this swap needs to move the current price
-	tickOffset = sdk.NewInt(300)
+	tickOffset = 300
 	sqrtPriceBeforeSwap = concentratedPool.GetCurrentSqrtPrice()
 	liquidityBeforeSwap = concentratedPool.GetLiquidity()
-	nextInitTick = sdk.NewInt(40000)
+	nextInitTick = 40000
 
 	// Calculate amount required to get to
 	// 1) next initialized tick
@@ -513,9 +513,9 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Using: CalcAmount0Delta = liquidity * ((sqrtPriceB - sqrtPriceA) / (sqrtPriceB * sqrtPriceA))
 
 	// Calculate sqrtPrice after and at the next initialized tick (which is upperTick of address1 position1 - 40000)
-	_, sqrtPricebBelowNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick.Sub(tickOffset))
+	_, sqrtPricebBelowNextInitializedTick, err := clmath.TickToSqrtPrice(nextInitTick - tickOffset)
 	s.Require().NoError(err)
-	_, sqrtPriceAtNextInitializedTick, err = cl.TickToSqrtPrice(nextInitTick)
+	_, sqrtPriceAtNextInitializedTick, err = clmath.TickToSqrtPrice(nextInitTick)
 	s.Require().NoError(err)
 
 	// Calculate numerators
