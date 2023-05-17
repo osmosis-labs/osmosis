@@ -489,8 +489,7 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOppositeDirectionOfLastTrav
 		validPoolId = 1
 	)
 
-	initialPoolTickInt, err := math.PriceToTickRoundDown(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()), DefaultTickSpacing)
-	initialPoolTick := initialPoolTickInt.Int64()
+	initialPoolTick, err := math.PriceToTickRoundDown(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()), DefaultTickSpacing)
 	suite.Require().NoError(err)
 
 	tests := map[string]struct {
@@ -1580,12 +1579,12 @@ func (s *KeeperTestSuite) CollectAndAssertFees(ctx sdk.Context, poolId uint64, t
 
 	// Claim consecutive range position fees across two of four accounts
 	for i := 0; i < positions.numConsecutive; i++ {
-		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, i, DefaultExponentConsecutivePositionLowerTick.Int64(), DefaultExponentConsecutivePositionUpperTick.Int64(), positionIds[2][i], totalFeesCollected, expectedFeeDenoms[2], activeTicks)
+		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, i, DefaultExponentConsecutivePositionLowerTick, DefaultExponentConsecutivePositionUpperTick, positionIds[2][i], totalFeesCollected, expectedFeeDenoms[2], activeTicks)
 	}
 
 	// Claim overlapping range position fees on one of four accounts
 	for i := 0; i < positions.numOverlapping; i++ {
-		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, i, DefaultExponentOverlappingPositionLowerTick.Int64(), DefaultExponentOverlappingPositionUpperTick.Int64(), positionIds[3][i], totalFeesCollected, expectedFeeDenoms[3], activeTicks)
+		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, i, DefaultExponentOverlappingPositionLowerTick, DefaultExponentOverlappingPositionUpperTick, positionIds[3][i], totalFeesCollected, expectedFeeDenoms[3], activeTicks)
 	}
 
 	// Define error tolerance

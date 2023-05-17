@@ -156,15 +156,15 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 			panic(err)
 		}
 
-		if lowerTickOsmosis.GT(upperTickOsmosis) {
+		if lowerTickOsmosis > upperTickOsmosis {
 			fmt.Printf("lowerTickOsmosis (%s) > upperTickOsmosis (%s), skipping", lowerTickOsmosis, upperTickOsmosis)
 			continue
 		}
 
-		if lowerTickOsmosis.Equal(upperTickOsmosis) {
+		if lowerTickOsmosis == upperTickOsmosis {
 			// bump up the upper tick by one. We don't care about having exactly the same tick range
 			// Just a roughly similar breakdown
-			upperTickOsmosis = upperTickOsmosis.Add(sdk.OneInt())
+			upperTickOsmosis = upperTickOsmosis + 1
 		}
 
 		depositedAmount0, failedParsing := parseStringToInt(uniV3Position.DepositedToken0)
@@ -186,8 +186,8 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 		position, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(osmosis.Ctx), &cltypes.MsgCreatePosition{
 			PoolId:          poolId,
 			Sender:          randomCreator.String(),
-			LowerTick:       lowerTickOsmosis.Int64(),
-			UpperTick:       upperTickOsmosis.Int64(),
+			LowerTick:       lowerTickOsmosis,
+			UpperTick:       upperTickOsmosis,
 			TokensProvided:  tokensProvided,
 			TokenMinAmount0: sdk.ZeroInt(),
 			TokenMinAmount1: sdk.ZeroInt(),
@@ -208,8 +208,8 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 			JoinTime:   osmosis.Ctx.BlockTime().Format("2006-01-02T15:04:05Z"), // ISO 8601
 			Liquidity:  position.LiquidityCreated.String(),
 			PositionID: strconv.FormatUint(position.PositionId, 10),
-			LowerTick:  lowerTickOsmosis.String(),
-			UpperTick:  upperTickOsmosis.String(),
+			LowerTick:  strconv.FormatInt(lowerTickOsmosis, 10),
+			UpperTick:  strconv.FormatInt(upperTickOsmosis, 10),
 		})
 	}
 
