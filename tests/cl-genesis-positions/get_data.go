@@ -96,7 +96,7 @@ func GetUniV3SubgraphData(pathToSaveAt string) {
 		return
 	}
 
-	if err := os.WriteFile(pathToSaveAt, jsonData, 0644); err != nil {
+	if err := os.WriteFile(pathToSaveAt, jsonData, 0o644); err != nil {
 		fmt.Println("Error writing JSON file:", err)
 		return
 	}

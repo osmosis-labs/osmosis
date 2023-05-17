@@ -17,7 +17,7 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '^1.20'
-      - uses: technote-space/get-diff-action@v6.0.1
+      - uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
             **/**.go
@@ -26,7 +26,7 @@ jobs:
             .github/**
             Makefile
       - name: Get data from build cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           # In order:
           # * Module download cache
@@ -58,7 +58,7 @@ jobs:
           # Full git history is needed to get a proper list of changed files
           # within `super-linter`.
           fetch-depth: 0
-      - uses: technote-space/get-diff-action@v6.0.1
+      - uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
             **/**.md

@@ -269,13 +269,11 @@ func (k Keeper) distributeConcentratedLiquidity(ctx sdk.Context, poolId uint64, 
 	_, err := k.clk.CreateIncentive(ctx,
 		poolId,
 		sender,
-		incentiveCoin.Denom,
-		incentiveCoin.Amount,
+		incentiveCoin,
 		emissionRate,
 		startTime,
 		minUptime,
 	)
-
 	if err != nil {
 		return err
 	}
@@ -402,7 +400,9 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 					coin,
 					emissionRate,
 					gauge.GetStartTime(),
-					currentEpoch.Duration,
+					// Note that the minimum uptime does not affect the distribution of incentives from the gauge and
+					// thus can be any value authorized by the CL module.
+					types.DefaultConcentratedUptime,
 					gauge,
 				)
 				if err != nil {

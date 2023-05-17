@@ -2,8 +2,6 @@ package simulation
 
 import (
 	"fmt"
-	"math/rand"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -41,6 +39,8 @@ func RandomMsgDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, 
 		return nil, fmt.Errorf("%s is not present", sdk.DefaultBondDenom)
 	}
 
+	rand := sim.GetRand()
+
 	delegationCoin := rand.Intn(int(amount.Int64()))
 
 	return &types.MsgDelegateToValidatorSet{
@@ -59,6 +59,8 @@ func RandomMsgUnDelegateFromValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimC
 	if err != nil {
 		return nil, fmt.Errorf("no delegations found")
 	}
+
+	rand := sim.GetRand()
 
 	delegation := preferences.Preferences[rand.Intn(len(preferences.Preferences))]
 	val, err := sdk.ValAddressFromBech32(delegation.ValOperAddress)
@@ -152,7 +154,7 @@ func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx
 }
 
 func RandomValidator(ctx sdk.Context, sim *osmosimtypes.SimCtx) *stakingtypes.Validator {
-	rand.New(rand.NewSource(time.Now().UnixNano()))
+	rand := sim.GetRand()
 
 	validators := sim.StakingKeeper().GetAllValidators(ctx)
 	if len(validators) == 0 {

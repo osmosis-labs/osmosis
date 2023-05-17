@@ -58,7 +58,7 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 		if test.expectPass {
 			// creation of lock via LockTokens
 			msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
-			_, err = msgServer.LockTokens(sdk.WrapSDKContext(suite.Ctx), types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
+			_, _ = msgServer.LockTokens(sdk.WrapSDKContext(suite.Ctx), types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 
 			// Check Locks
 			locks, err := suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
@@ -93,7 +93,6 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 				Duration:      test.param.duration,
 			})
 			suite.Require().Equal(accum.String(), "20")
-
 		} else {
 			// Fail simple lock token
 			suite.Require().Error(err)

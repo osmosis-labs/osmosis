@@ -235,7 +235,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		ctx := suite.Ctx
 
 		addr1 := sdk.AccAddress([]byte("addr1---------------"))
-		lock := types.NewPeriodLock(1, addr1, time.Second, time.Time{}, tc.fundAcc)
+		_ = types.NewPeriodLock(1, addr1, time.Second, time.Time{}, tc.fundAcc)
 
 		// lock with balance
 		suite.FundAcc(addr1, tc.fundAcc)
@@ -276,7 +276,6 @@ func (suite *KeeperTestSuite) TestUnlock() {
 			// check lock state
 			suite.Require().Equal(ctx.BlockTime().Add(lock.Duration), lock.EndTime)
 			suite.Require().Equal(true, lock.IsUnlocking())
-
 		} else {
 			suite.Require().Error(err)
 
@@ -319,7 +318,6 @@ func (suite *KeeperTestSuite) TestUnlock() {
 }
 
 func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
-
 	testCases := []struct {
 		name                       string
 		coinsLocked, coinsBurned   sdk.Coins
@@ -417,7 +415,6 @@ func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
 					suite.Require().Equal(sdk.ZeroInt().String(), assetsSupplyAtLockEnd.AmountOf(coin.Denom).String())
 				}
 			}
-
 		})
 	}
 }
@@ -916,7 +913,7 @@ func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 	// We expect that only non-CL locks (i.e. locks that do not have the CL token prefix) send tokens back to the user's balance when mature. This is because CL tokens get burned after the lock matures.
 	expectedCoins := sdk.NewCoins()
 	for _, coin := range totalCoins {
-		if !strings.HasPrefix(coin.Denom, cltypes.ClTokenPrefix) {
+		if !strings.HasPrefix(coin.Denom, cltypes.ConcentratedLiquidityTokenPrefix) {
 			expectedCoins = expectedCoins.Add(coin)
 		}
 	}
@@ -1003,7 +1000,9 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByID() {
 	})
 	suite.Require().Equal(int64(10), acc.Int64())
 
-	suite.App.LockupKeeper.SlashTokensFromLockByID(suite.Ctx, 1, sdk.Coins{sdk.NewInt64Coin("stake", 1)})
+	_, err = suite.App.LockupKeeper.SlashTokensFromLockByID(suite.Ctx, 1, sdk.Coins{sdk.NewInt64Coin("stake", 1)})
+	suite.Require().NoError(err)
+
 	acc = suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
 		Denom:    "stake",
 		Duration: time.Second,
@@ -1065,10 +1064,11 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn()
 		// Create a cl pool and a locked full range position
 		clPool := suite.PrepareConcentratedPool()
 		clPoolId := clPool.GetId()
-		positionID, _, _, liquidity, _, concentratedLockId, err := suite.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(suite.Ctx, clPool, addr, tc.positionCoins, time.Hour)
+		positionID, _, _, liquidity, _, concentratedLockId, err := suite.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(suite.Ctx, clPoolId, addr, tc.positionCoins, time.Hour)
+		suite.Require().NoError(err)
 
 		// Refetch the cl pool post full range position creation
-		clPool, err = suite.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(suite.Ctx, clPoolId)
+		clPool, err = suite.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(suite.Ctx, clPoolId)
 		suite.Require().NoError(err)
 
 		clPoolPositionDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPoolId)
@@ -1096,7 +1096,7 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn()
 		position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, positionID)
 		suite.Require().NoError(err)
 
-		concentratedPool, err := suite.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(suite.Ctx, position.PoolId)
+		concentratedPool, err := suite.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(suite.Ctx, position.PoolId)
 		suite.Require().NoError(err)
 
 		tempPositionToCalculateUnderlyingAssets := position

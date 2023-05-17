@@ -224,11 +224,6 @@ func TestAuthzMsg(t *testing.T) {
 	coin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))
 	someDate := time.Date(1, 1, 1, 1, 1, 1, 1, time.UTC)
 
-	const (
-		mockGranter string = "cosmos1abc"
-		mockGrantee string = "cosmos1xyz"
-	)
-
 	testCases := []struct {
 		name          string
 		incentivesMsg sdk.Msg
