@@ -115,7 +115,7 @@ func (k Keeper) isPositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId u
 func (k Keeper) GetAllPositionIdsForPoolId(ctx sdk.Context, poolId uint64) []uint64 {
 	store := ctx.KVStore(k.storeKey)
 
-	// Set the pool ID to position ID mapping.
+	// Get the pool ID to position ID mapping.
 	positionIds := []uint64{}
 	poolIdKey := types.KeyPoolPosition(poolId)
 	// Get the existing position IDs for the given pool ID.
