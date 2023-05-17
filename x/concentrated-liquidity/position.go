@@ -112,12 +112,18 @@ func (k Keeper) isPositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId u
 }
 
 // GetAllPositionsForPoolId gets all the position for a specific poolId.
-func (k Keeper) GetAllPositionIdsForPoolId(ctx sdk.Context, poolId uint64) ([]uint64, error) {
-	parse := func(bz []byte) (uint64, error) {
-		return sdk.BigEndianToUint64(bz), nil
-	}
+func (k Keeper) GetAllPositionIdsForPoolId(ctx sdk.Context, poolId uint64) []uint64 {
+	store := ctx.KVStore(k.storeKey)
 
-	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyPoolPosition(poolId), parse)
+	// Set the pool ID to position ID mapping.
+	positionIds := []uint64{}
+	poolIdKey := types.KeyPoolPosition(poolId)
+	// Get the existing position IDs for the given pool ID.
+	positionIdsBytes := store.Get(poolIdKey)
+	if len(positionIdsBytes) > 0 {
+		positionIds = osmoutils.BigEndianToUint64Slice(positionIdsBytes)
+	}
+	return positionIds
 }
 
 // GetPositionLiquidity checks if the provided positionId exists. Returns position liquidity if found. Error otherwise.
