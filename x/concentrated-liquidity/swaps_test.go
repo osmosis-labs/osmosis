@@ -1825,7 +1825,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 				s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
 				s.Require().Equal(test.expectedSqrtPrice, sqrtPrice)
 				// also ensure the pool's currentTick and currentSqrtPrice was updated due to calling a mutative method
-				s.Require().Equal(test.expectedTick, pool.GetCurrentTick().Int64())
+				s.Require().Equal(test.expectedTick, pool.GetCurrentTick())
 
 				if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
 					test.newLowerPrice = DefaultLowerPrice
@@ -2811,7 +2811,7 @@ func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
 			suite.FundAcc(sender, tc.senderInitialBalance)
 
 			// Default pool values are initialized to one.
-			err := pool.ApplySwap(sdk.OneDec(), sdk.OneInt(), sdk.OneDec())
+			err := pool.ApplySwap(sdk.OneDec(), 1, sdk.OneDec())
 			suite.Require().NoError(err)
 
 			// Write default pool to state.
@@ -2837,7 +2837,7 @@ func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
 			}
 			suite.Require().NoError(err)
 
-			suite.Require().Equal(tc.newCurrentTick, poolAfterUpdate.GetCurrentTick().Int64())
+			suite.Require().Equal(tc.newCurrentTick, poolAfterUpdate.GetCurrentTick())
 			suite.Require().Equal(tc.newLiquidity, poolAfterUpdate.GetLiquidity())
 			suite.Require().Equal(tc.newSqrtPrice, poolAfterUpdate.GetCurrentSqrtPrice())
 
