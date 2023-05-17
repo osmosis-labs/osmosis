@@ -362,11 +362,11 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_OneForZero() {
 			suite.Require().NoError(err)
 
 			currentTick := pool.GetCurrentTick()
-			suite.Require().Equal(int64(0), currentTick.Int64())
+			suite.Require().Equal(int64(0), currentTick)
 
 			tickIndex := strategy.InitializeTickValue(currentTick)
 
-			iter := strategy.InitializeNextTickIterator(suite.Ctx, defaultPoolId, tickIndex.Int64())
+			iter := strategy.InitializeNextTickIterator(suite.Ctx, defaultPoolId, tickIndex)
 			defer iter.Close()
 
 			suite.Require().Equal(tc.expectIsValid, iter.Valid())
