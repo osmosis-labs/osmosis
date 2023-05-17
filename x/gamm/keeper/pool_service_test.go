@@ -920,7 +920,6 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 				swapFeeAdjustedAmount := oneMinusSwapFee.MulInt(tc.tokensIn[0].Amount).RoundInt()
 				suite.Require().True(tokenOutAmt.LTE(swapFeeAdjustedAmount))
 			}
-
 		})
 	}
 }
