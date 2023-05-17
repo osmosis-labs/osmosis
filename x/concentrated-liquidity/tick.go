@@ -22,10 +22,11 @@ import (
 // The given currentTick value is used to determine the strategy for updating the fee accumulator.
 // We update the tick's fee growth opposite direction of last traversal accumulator to the fee growth global when tick index is <= current tick.
 // Otherwise, it is set to zero.
+// Note that liquidityDelta can be either positive or negative depending on whether we are adding or removing liquidity.
 // if we are initializing or updating an upper tick, we subtract the liquidityIn from the LiquidityNet
 // if we are initializing or updating a lower tick, we add the liquidityIn from the LiquidityNet
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
-func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
+func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int64, tickIndex int64, liquidityDelta sdk.Dec, upper bool) (err error) {
 	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
 		return err
@@ -54,15 +55,15 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 
 	// note that liquidityIn can be either positive or negative.
 	// If negative, this would work as a subtraction from liquidityBefore
-	liquidityAfter := math.AddLiquidity(liquidityBefore, liquidityIn)
+	liquidityAfter := math.AddLiquidity(liquidityBefore, liquidityDelta)
 
 	tickInfo.LiquidityGross = liquidityAfter
 
 	// calculate liquidityNet, which we take into account and track depending on whether liquidityIn is positive or negative
 	if upper {
-		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Sub(liquidityIn)
+		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Sub(liquidityDelta)
 	} else {
-		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Add(liquidityIn)
+		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Add(liquidityDelta)
 	}
 
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)

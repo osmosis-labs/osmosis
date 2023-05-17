@@ -1335,7 +1335,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition_UpdatingPositio
 	}
 }
 
-func (s *KeeperTestSuite) TestPreparePositionAccumulator() {
+func (s *KeeperTestSuite) TestUpdatePosValueToInitValuePlusGrowthOutside() {
 	validPositionKey := types.KeyFeePositionAccumulator(1)
 	invalidPositionKey := types.KeyFeePositionAccumulator(2)
 	tests := []struct {
@@ -1382,7 +1382,7 @@ func (s *KeeperTestSuite) TestPreparePositionAccumulator() {
 			}
 
 			// System under test.
-			err = cl.PreparePositionAccumulator(poolFeeAccumulator, positionKey, tc.feeGrowthOutside)
+			err = cl.UpdatePosValueToInitValuePlusGrowthOutside(poolFeeAccumulator, positionKey, tc.feeGrowthOutside)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)
