@@ -191,6 +191,7 @@ func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0,
 	return liquidity
 }
 
+// AddLiquidity adds or subtracts liquidityB from liquidityA, depending on whether liquidityB is positive or negative.
 func AddLiquidity(liquidityA, liquidityB sdk.Dec) (finalLiquidity sdk.Dec) {
 	if liquidityB.LT(sdk.ZeroDec()) {
 		return liquidityA.Sub(liquidityB.Abs())

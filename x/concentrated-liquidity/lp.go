@@ -127,12 +127,13 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 // WithdrawPosition attempts to withdraw liquidityAmount from a position with the given pool id in the given tick range.
 // On success, returns a positive amount of each token withdrawn.
+// If we are attempting to withdraw all liquidity available in the position, we also collect fees and incentives for the position.
 // When the last position within a pool is removed, this function calls an AfterLastPoolPosistionRemoved listener
 // Currently, it creates twap records. Assumming that pool had all liqudity drained and then re-initialized,
 // the whole twap state is completely reset. This is because when there is no liquidity in pool, spot price
 // is undefined.
 // Additionally, when the last position is removed by calling this method, the current sqrt price and current
-// tick are set to zero.
+// tick of the pool are set to zero.
 // Returns error if
 // - the provided owner does not own the position being withdrawn
 // - there is no position in the given tick ranges
@@ -150,14 +151,20 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return sdk.Int{}, sdk.Int{}, types.NotPositionOwnerError{PositionId: positionId, Address: owner.String()}
 	}
 
+	// Defense in depth, requestedLiquidityAmountToWithdraw should always be a positive value.
+	if requestedLiquidityAmountToWithdraw.IsNegative() {
+		return sdk.Int{}, sdk.Int{}, types.InsufficientLiquidityError{Actual: requestedLiquidityAmountToWithdraw, Available: position.Liquidity}
+	}
+
 	// If underlying lock exists in state, validate unlocked conditions are met before withdrawing liquidity.
-	// If unlocked conditions are met, remove the link between the position and the underlying lock.
+	// If the underlying lock for the position has been matured, remove the link between the position and the underlying lock.
 	positionHasActiveUnderlyingLock, lockId, err := k.positionHasActiveUnderlyingLockAndUpdate(ctx, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
+
+	// If an underlying lock for the position exists, and the lock is not mature, return error.
 	if positionHasActiveUnderlyingLock {
-		// Lock is not mature, return error.
 		return sdk.Int{}, sdk.Int{}, types.LockNotMatureError{PositionId: position.PositionId, LockId: lockId}
 	}
 
@@ -167,13 +174,8 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	// Check if the provided tick range is valid according to the pool's tick spacing and module parameters.
-	if err := validateTickRangeIsValid(pool.GetTickSpacing(), position.LowerTick, position.UpperTick); err != nil {
-		return sdk.Int{}, sdk.Int{}, err
-	}
-
 	// Retrieve the position in the pool for the provided owner and tick range.
-	availableLiquidity, err := k.GetPositionLiquidity(ctx, positionId)
+	positionLiquidity, err := k.GetPositionLiquidity(ctx, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -185,8 +187,8 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 
 	// Check if the requested liquidity amount to withdraw is less than or equal to the available liquidity for the position.
 	// If it is greater than the available liquidity, return an error.
-	if requestedLiquidityAmountToWithdraw.GT(availableLiquidity) {
-		return sdk.Int{}, sdk.Int{}, types.InsufficientLiquidityError{Actual: requestedLiquidityAmountToWithdraw, Available: availableLiquidity}
+	if requestedLiquidityAmountToWithdraw.GT(positionLiquidity) {
+		return sdk.Int{}, sdk.Int{}, types.InsufficientLiquidityError{Actual: requestedLiquidityAmountToWithdraw, Available: positionLiquidity}
 	}
 
 	// Calculate the change in liquidity for the pool based on the requested amount to withdraw.
@@ -208,7 +210,7 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	// If the requested liquidity amount to withdraw is equal to the available liquidity, delete the position from state.
 	// Ensure we collect any outstanding fees and incentives prior to deleting the position from state. This claiming
 	// process also clears position records from fee and incentive accumulators.
-	if requestedLiquidityAmountToWithdraw.Equal(availableLiquidity) {
+	if requestedLiquidityAmountToWithdraw.Equal(positionLiquidity) {
 		if _, err := k.collectFees(ctx, owner, positionId); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
@@ -343,12 +345,13 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	currentTick := pool.GetCurrentTick().Int64()
 
-	// update tickInfo state for lower tick and upper tick
+	// update lower tickInfo state
 	err = k.initOrUpdateTick(ctx, poolId, currentTick, lowerTick, liquidityDelta, false)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
+	// update upper tickInfo state
 	err = k.initOrUpdateTick(ctx, poolId, currentTick, upperTick, liquidityDelta, true)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
@@ -445,7 +448,7 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	return nil
 }
 
-// uninitializePool uninitializes a pool if it has no liquidity.
+// uninitializePool reinitializes a pool if it has no liquidity.
 // It does so by setting the current square root price and tick to zero.
 // This is necessary for the twap to correctly detect a spot price error
 // when there is no liquidity in the pool.

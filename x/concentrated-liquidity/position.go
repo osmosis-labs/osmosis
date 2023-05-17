@@ -1,7 +1,6 @@
 package concentrated_liquidity
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -173,6 +172,11 @@ func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId ui
 }
 
 // SetPosition sets the position information for a given user in a given pool.
+// This includes creating state entries of:
+// - position id -> position object mapping
+// - address-pool-positionID -> position object mapping
+// - pool id -> position id mapping
+// - (if exists) position id <> lock id mapping.
 func (k Keeper) SetPosition(ctx sdk.Context,
 	poolId uint64,
 	owner sdk.AccAddress,
@@ -194,10 +198,6 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 		JoinTime:   joinTime,
 		Liquidity:  liquidity,
 	}
-
-	// TODO: The following state mappings are not properly implemented in genState.
-	// (i.e. if you state export, these mappings are not retained.)
-	// https://github.com/osmosis-labs/osmosis/issues/4875
 
 	// Set the position ID to position mapping.
 	positionIdKey := types.KeyPositionId(positionId)
@@ -666,8 +666,8 @@ func (k Keeper) setPositionIdToLock(ctx sdk.Context, positionId, underlyingLockI
 	store.Set(lockIdKey, sdk.Uint64ToBigEndian(positionId))
 }
 
-// RemovePositionIdToLock removes both the positionId to lock mapping and the lock to positionId mapping in state.
-func (k Keeper) RemovePositionIdToLock(ctx sdk.Context, positionId, underlyingLockId uint64) {
+// RemovePositionIdForLockId removes both the positionId to lock mapping and the lock to positionId mapping in state.
+func (k Keeper) RemovePositionIdForLockId(ctx sdk.Context, positionId, underlyingLockId uint64) {
 	store := ctx.KVStore(k.storeKey)
 
 	// Get the position ID to lock mappings.
@@ -685,10 +685,8 @@ func (k Keeper) RemovePositionIdToLock(ctx sdk.Context, positionId, underlyingLo
 func (k Keeper) PositionHasActiveUnderlyingLock(ctx sdk.Context, positionId uint64) (hasActiveUnderlyingLock bool, lockId uint64, err error) {
 	// Get the lock ID for the position.
 	lockId, err = k.GetLockIdFromPositionId(ctx, positionId)
-	if errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId}) {
+	if err != nil {
 		return false, 0, nil
-	} else if err != nil {
-		return false, 0, err
 	}
 
 	// Check if the underlying lock is mature.
@@ -715,10 +713,10 @@ func (k Keeper) positionHasActiveUnderlyingLockAndUpdate(ctx sdk.Context, positi
 		// Defense in depth check. If we have an active underlying lock but no lock ID, return an error.
 		return false, 0, types.PositionIdToLockNotFoundError{PositionId: positionId}
 	}
+	// If the position does not have an active underlying lock but still has a lock ID associated with it,
+	// remove the link between the position and the underlying lock since the lock is mature.
 	if !hasActiveUnderlyingLock && lockId != 0 {
-		// If the position does not have an active underlying lock but still has a lock ID associated with it,
-		// remove the link between the position and the underlying lock since the lock is mature.
-		k.RemovePositionIdToLock(ctx, positionId, lockId)
+		k.RemovePositionIdForLockId(ctx, positionId, lockId)
 		return false, 0, nil
 	}
 	return hasActiveUnderlyingLock, lockId, nil
