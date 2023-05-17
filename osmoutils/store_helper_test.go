@@ -1346,6 +1346,51 @@ func TestUint64SliceToBigEndianAndBigEndianToUint64Slice(t *testing.T) {
 	}
 }
 
+func TestRemoveFromSlice(t *testing.T) {
+	tests := []struct {
+		name    string
+		slice   []uint64
+		value   uint64
+		want    []uint64
+		wantErr bool
+	}{
+		{
+			name:    "Test with empty slice",
+			slice:   []uint64{},
+			value:   1,
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name:    "Test with slice that contains the value",
+			slice:   []uint64{1, 2, 3, 4},
+			value:   1,
+			want:    []uint64{2, 3, 4},
+			wantErr: false,
+		},
+		{
+			name:    "Test with slice that does not contain the value",
+			slice:   []uint64{1, 2, 3, 4},
+			value:   5,
+			want:    nil,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := osmoutils.RemoveFromSlice(tt.slice, tt.value)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("RemoveFromSlice() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("RemoveFromSlice() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestSliceContains(t *testing.T) {
 	tests := []struct {
 		name  string
