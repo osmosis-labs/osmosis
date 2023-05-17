@@ -23,6 +23,7 @@ pub enum FailedDeliveryAction {
     LocalRecoveryAddr(Addr),
     // Here we could potentially add new actions in the future
     // example: SendBackToSender, SwapBackAndReturn, etc
+    // TODO: Add other recovery actions: SendTo { chain: String, address: String, emergency_recovery_addr: String }
 }
 
 /// message type for `execute` entry_point

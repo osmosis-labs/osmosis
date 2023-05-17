@@ -17,6 +17,15 @@ use crate::utils::{build_memo, parse_swaprouter_reply};
 use crate::ContractError;
 use crate::{state, ExecuteMsg};
 
+use std::fmt::Debug;
+
+// Helper to add consistent events on ibc message submission
+fn ibc_message_event<T: Debug>(context: &str, message: T) -> cosmwasm_std::Event {
+    cosmwasm_std::Event::new("ibc_message_added")
+        .add_attribute("contxt", context)
+        .add_attribute("ibc_message", format!("{message:?}"))
+}
+
 /// This function takes any token. If it's already something we can work with
 /// (either native to osmosis or native to a chain connected to osmosis via a
 /// valid channel), it will just proceed to swap and forward. If it's not, then
@@ -71,7 +80,18 @@ pub fn unwrap_or_swap_and_forward(
             }),
             false,
         )?;
-        return Ok(Response::new().add_message(ibc_transfer));
+
+        // Here we should add a response for the sender with the packet
+        // sequence, but that would require habdling the reply. This will be
+        // unncecessary once async acks lands, so we should wait for that
+        return Ok(Response::new()
+            //.set_data(data)
+            .add_attribute("action", "unwrap_before_swap")
+            .add_event(ibc_message_event(
+                "pre-swap unwinding ibc message created",
+                &ibc_transfer,
+            ))
+            .add_message(ibc_transfer));
     }
 
     // If the denom is either native or only one hop, we swap it directly
@@ -166,7 +186,9 @@ pub fn swap_and_forward(
         },
     )?;
 
-    Ok(Response::new().add_submessage(SubMsg::reply_on_success(msg, MsgReplyID::Swap.repr())))
+    Ok(Response::new()
+        .add_attribute("action", "swap_and_forward")
+        .add_submessage(SubMsg::reply_on_success(msg, MsgReplyID::Swap.repr())))
 }
 
 // The swap has succeeded and we need to generate the forward IBC transfer
@@ -208,8 +230,11 @@ pub fn handle_swap_reply(
 
     // Base response
     let response = Response::new()
-        .add_attribute("status", "ibc_message_created")
-        .add_attribute("ibc_message", format!("{ibc_transfer:?}"));
+        .add_attribute("action", "handle_swap_reply")
+        .add_event(ibc_message_event(
+            "forward ibc message added",
+            &ibc_transfer,
+        ));
 
     // Check that there isn't anything stored in FORWARD_REPLY_STATES. If there
     // is, it means that the contract is already waiting for a reply and should
@@ -297,7 +322,9 @@ pub fn handle_forward_reply(
 
     Ok(Response::new()
         .set_data(to_binary(&response_data)?)
-        .add_attribute("status", "ibc_message_created")
+        .add_attribute("action", "handle_forward_reply")
+        .add_attribute("status", "forward_ibc_message_successfully_submitted")
+        .add_attribute("packet_sequence", format!("{:?}", response.sequence))
         .add_attribute("amount", amount.to_string())
         .add_attribute("denom", denom)
         .add_attribute("channel", channel_id)
@@ -313,7 +340,9 @@ pub fn recover(deps: DepsMut, sender: Addr) -> Result<Response, ContractError> {
         to_address: r.recovery_addr.into(),
         amount: coins(r.amount, r.denom),
     });
-    Ok(Response::new().add_messages(msgs))
+    Ok(Response::new()
+        .add_attribute("action", "recover")
+        .add_messages(msgs))
 }
 
 // Transfer ownership of this contract
@@ -354,7 +383,7 @@ pub fn set_swap_contract(
         },
     )?;
 
-    Ok(Response::new().add_attribute("method", "set_swaps_contract"))
+    Ok(Response::new().add_attribute("action", "set_swaps_contract"))
 }
 
 #[cfg(test)]
