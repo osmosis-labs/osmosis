@@ -437,7 +437,7 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	// In such a case, we do not want to round the sqrt price to 100_000_000 X/Y, but rather
 	// let it float within the possible tick range.
 	pool.SetCurrentSqrtPrice(initialCurSqrtPrice)
-	pool.SetCurrentTick(initialTick)
+	pool.SetCurrentTick(sdk.NewInt(initialTick))
 	err = k.setPool(ctx, pool)
 	if err != nil {
 		return err

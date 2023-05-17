@@ -113,12 +113,12 @@ func (s *KeeperTestSuite) SetupFullRangePositionAcc(poolId uint64, owner sdk.Acc
 }
 
 func (s *KeeperTestSuite) SetupConsecutiveRangePositionAcc(poolId uint64, owner sdk.AccAddress) uint64 {
-	_, positionId := s.SetupPosition(poolId, owner, DefaultCoins, DefaultExponentConsecutivePositionLowerTick.Int64(), DefaultExponentConsecutivePositionUpperTick.Int64(), s.Ctx.BlockTime())
+	_, positionId := s.SetupPosition(poolId, owner, DefaultCoins, DefaultExponentConsecutivePositionLowerTick, DefaultExponentConsecutivePositionUpperTick, s.Ctx.BlockTime())
 	return positionId
 }
 
 func (s *KeeperTestSuite) SetupOverlappingRangePositionAcc(poolId uint64, owner sdk.AccAddress) uint64 {
-	_, positionId := s.SetupPosition(poolId, owner, DefaultCoins, DefaultExponentOverlappingPositionLowerTick.Int64(), DefaultExponentOverlappingPositionUpperTick.Int64(), s.Ctx.BlockTime())
+	_, positionId := s.SetupPosition(poolId, owner, DefaultCoins, DefaultExponentOverlappingPositionLowerTick, DefaultExponentOverlappingPositionUpperTick, s.Ctx.BlockTime())
 	return positionId
 }
 
