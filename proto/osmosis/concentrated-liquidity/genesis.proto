@@ -53,7 +53,7 @@ message PositionData {
   uint64 lock_id = 2 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
   osmosis.accum.v1beta1.Record fee_accum_record = 3
       [ (gogoproto.nullable) = false ];
-  repeated osmosis.accum.v1beta1.Record uptime_accum_record = 4
+  repeated osmosis.accum.v1beta1.Record uptime_accum_records = 4
       [ (gogoproto.nullable) = false ];
 }
 

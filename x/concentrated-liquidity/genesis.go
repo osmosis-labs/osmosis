@@ -86,7 +86,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 			panic(err)
 		}
 
-		for uptimeIndex, uptimeRecord := range positionWrapper.UptimeAccumRecord {
+		for uptimeIndex, uptimeRecord := range positionWrapper.UptimeAccumRecords {
 			k.initOrUpdateAccumPosition(ctx, uptimeAccumulators[uptimeIndex], uptimeRecord.AccumValuePerShare, positionName, uptimeRecord.NumShares, uptimeRecord.UnclaimedRewardsTotal, uptimeRecord.Options)
 		}
 	}
@@ -173,6 +173,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 	}
 
 	positionData := make([]genesis.PositionData, 0, len(positions))
+
 	for _, position := range positions {
 		position, err := k.GetPosition(ctx, position.PositionId)
 		if err != nil {
@@ -218,10 +219,10 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		}
 
 		positionData = append(positionData, genesis.PositionData{
-			LockId:            lockId,
-			Position:          &position,
-			FeeAccumRecord:    feeAccumPositionRecord,
-			UptimeAccumRecord: uptimeAccumObject,
+			LockId:             lockId,
+			Position:           &position,
+			FeeAccumRecord:     feeAccumPositionRecord,
+			UptimeAccumRecords: uptimeAccumObject,
 		})
 
 	}
