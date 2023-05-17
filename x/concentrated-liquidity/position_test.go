@@ -1594,13 +1594,14 @@ func (s *KeeperTestSuite) TestPositionHasActiveUnderlyingLock() {
 	defaultPositionCoins := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
 
 	type testParams struct {
-		name                                 string
-		createPosition                       func(s *KeeperTestSuite) (uint64, uint64)
-		expectedHasActiveLock                bool
-		expectedHasActiveLockAfterTimeUpdate bool
-		expectedLockError                    bool
-		expectedPositionLockID               uint64
-		expectedGetPositionLockIdErr         bool
+		name                                       string
+		createPosition                             func(s *KeeperTestSuite) (uint64, uint64)
+		expectedHasActiveLock                      bool
+		expectedHasActiveLockAfterTimeUpdate       bool
+		expectedLockError                          bool
+		expectedPositionHasActiveUnderlyingLockErr bool
+		expectedPositionLockID                     uint64
+		expectedGetPositionLockIdErr               bool
 	}
 
 	tests := []testParams{
@@ -1648,6 +1649,18 @@ func (s *KeeperTestSuite) TestPositionHasActiveUnderlyingLock() {
 			expectedLockError:                    true,
 			expectedPositionLockID:               0,
 			expectedGetPositionLockIdErr:         true,
+		},
+		{
+			name: "invalid position, invalid lock: should return false",
+			createPosition: func(s *KeeperTestSuite) (uint64, uint64) {
+				return 100, 0
+			},
+			expectedHasActiveLock:                      false,
+			expectedHasActiveLockAfterTimeUpdate:       false,
+			expectedLockError:                          true,
+			expectedPositionHasActiveUnderlyingLockErr: true,
+			expectedPositionLockID:                     0,
+			expectedGetPositionLockIdErr:               true,
 		},
 	}
 
@@ -1706,15 +1719,16 @@ func (s *KeeperTestSuite) TestPositionHasActiveUnderlyingLockAndUpdate() {
 	defaultPositionCoins := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
 
 	type testParams struct {
-		name                                        string
-		createPosition                              func(s *KeeperTestSuite) (uint64, uint64)
-		expectedHasActiveLock                       bool
-		expectedHasActiveLockAfterTimeUpdate        bool
-		expectedLockError                           bool
-		expectedPositionLockID                      uint64
-		expectedPositionLockIDAfterTimeUpdate       uint64
-		expectedGetPositionLockIdErr                bool
-		expectedGetPositionLockIdErrAfterTimeUpdate bool
+		name                                             string
+		createPosition                                   func(s *KeeperTestSuite) (uint64, uint64)
+		expectedHasActiveLock                            bool
+		expectedHasActiveLockAfterTimeUpdate             bool
+		expectedLockError                                bool
+		expectedPositionLockID                           uint64
+		expectedPositionLockIDAfterTimeUpdate            uint64
+		expectedGetPositionLockIdErr                     bool
+		expectedGetPositionLockIdErrAfterTimeUpdate      bool
+		expectedPositionHasActiveUnderlyingLockAndUpdate bool
 	}
 
 	tests := []testParams{
@@ -1769,6 +1783,20 @@ func (s *KeeperTestSuite) TestPositionHasActiveUnderlyingLockAndUpdate() {
 			expectedGetPositionLockIdErr:                true,
 			expectedGetPositionLockIdErrAfterTimeUpdate: true,
 		},
+		{
+			name: "invalid position without lock ",
+			// we return invalid lock id with no-op to trigger error
+			createPosition: func(s *KeeperTestSuite) (uint64, uint64) {
+				return 10, 0
+			},
+			expectedHasActiveLock:                       false,
+			expectedHasActiveLockAfterTimeUpdate:        false,
+			expectedLockError:                           true,
+			expectedPositionLockID:                      0,
+			expectedPositionLockIDAfterTimeUpdate:       0,
+			expectedGetPositionLockIdErr:                true,
+			expectedGetPositionLockIdErrAfterTimeUpdate: true,
+		},
 	}
 
 	for _, tc := range tests {
@@ -1785,7 +1813,11 @@ func (s *KeeperTestSuite) TestPositionHasActiveUnderlyingLockAndUpdate() {
 
 			// System under test (mutative)
 			hasActiveLockInState, retrievedLockID, err := s.App.ConcentratedLiquidityKeeper.PositionHasActiveUnderlyingLockAndUpdate(s.Ctx, positionID)
-			s.Require().NoError(err)
+			if tc.expectedPositionHasActiveUnderlyingLockAndUpdate {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+			}
 			s.Require().Equal(tc.expectedHasActiveLock, hasActiveLockInState)
 			s.Require().Equal(tc.expectedPositionLockID, retrievedLockID)
 
@@ -1871,7 +1903,7 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	s.Require().Equal(positionId, retrievedPositionId)
 
 	// Remove the lockId from the position
-	s.App.ConcentratedLiquidityKeeper.RemovePositionIdToLock(s.Ctx, positionId, retrievedLockId)
+	s.App.ConcentratedLiquidityKeeper.RemovePositionIdForLockId(s.Ctx, positionId, retrievedLockId)
 
 	// Check if position has lock in state, should not
 	retrievedLockId, err = s.App.ConcentratedLiquidityKeeper.GetLockIdFromPositionId(s.Ctx, positionId)

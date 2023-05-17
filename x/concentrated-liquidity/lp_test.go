@@ -2,14 +2,14 @@ package concentrated_liquidity_test
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
@@ -482,6 +482,14 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			},
 			timeElapsed: defaultTimeElapsed,
 		},
+		"error: try withdrawing negative liquidity": {
+			setupConfig: baseCase,
+			sutConfigOverwrite: &lpTest{
+				liquidityAmount: baseCase.liquidityAmount.Sub(baseCase.liquidityAmount.Mul(sdk.NewDec(2))),
+				expectedError:   types.InsufficientLiquidityError{Actual: baseCase.liquidityAmount.Sub(baseCase.liquidityAmount.Mul(sdk.NewDec(2))), Available: baseCase.liquidityAmount},
+			},
+			timeElapsed: defaultTimeElapsed,
+		},
 		"error: attempt to withdraw a position that does not belong to the caller": {
 			setupConfig: baseCase,
 			sutConfigOverwrite: &lpTest{
@@ -490,7 +498,6 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			timeElapsed:          defaultTimeElapsed,
 			withdrawWithNonOwner: true,
 		},
-		// TODO: test with custom amounts that potentially lead to truncations.
 	}
 
 	for name, tc := range tests {
@@ -539,6 +546,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			s.setListenerMockOnConcentratedLiquidityKeeper()
 
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(tc.timeElapsed))
+			store := s.Ctx.KVStore(s.App.GetKey(types.StoreKey))
 
 			// Set global fee growth to 1 ETH and charge the fee to the pool.
 			globalFeeGrowth := sdk.NewDecCoin(ETH, sdk.NewInt(1))
@@ -570,10 +578,10 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			expectedFullIncentivesFromAllUptimes := expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, types.SupportedUptimes[len(types.SupportedUptimes)-1], defaultMultiplier)
 			s.FundAcc(pool.GetIncentivesAddress(), expectedFullIncentivesFromAllUptimes)
 
-			// Note the pool and owner balances before collecting fees.
-			poolBalanceBeforeCollect := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
-			incentivesBalanceBeforeCollect := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetIncentivesAddress())
-			ownerBalancerBeforeCollect := s.App.BankKeeper.GetAllBalances(s.Ctx, owner)
+			// Note the pool and owner balances before withdrawal of the position.
+			poolBalanceBeforeWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
+			incentivesBalanceBeforeWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetIncentivesAddress())
+			ownerBalancerBeforeWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, owner)
 
 			expectedPoolBalanceDelta := expectedFeesClaimed.Add(sdk.NewCoin(ETH, config.amount0Expected.Abs())).Add(sdk.NewCoin(USDC, config.amount1Expected.Abs()))
 
@@ -600,32 +608,24 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			// If the remaining liquidity is zero, all fees and incentives should be collected and the position should be deleted.
 			// Check if all fees and incentives were collected.
-			poolBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
-			incentivesBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetIncentivesAddress())
-			ownerBalancerAfterCollect := s.App.BankKeeper.GetAllBalances(s.Ctx, owner)
+			poolBalanceAfterWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
+			incentivesBalanceAfterWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetIncentivesAddress())
+			ownerBalancerAfterWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, owner)
 			communityPoolBalanceAfter := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
 
+			// owner should only have tokens equivilent to the delta balance of the pool
 			expectedOwnerBalanceDelta := expectedPoolBalanceDelta.Add(expectedIncentivesClaimed...)
-			actualOwnerBalancerDelta := ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect)
+			actualOwnerBalancerDelta := ownerBalancerAfterWithdraw.Sub(ownerBalancerBeforeWithdraw)
 
 			communityPoolBalanceDelta := communityPoolBalanceAfter.Sub(communityPoolBalanceBefore)
+			actualIncentivesClaimed := incentivesBalanceBeforeWithdraw.Sub(incentivesBalanceAfterWithdraw).Sub(communityPoolBalanceDelta)
 
-			actualIncentivesClaimed := incentivesBalanceBeforeCollect.Sub(incentivesBalanceAfterCollect).Sub(communityPoolBalanceDelta)
-
-			s.Require().Equal(expectedPoolBalanceDelta.String(), poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect).String())
-
-			// TODO: Investigate why full range liquidity positions are slightly under claiming incentives here
-			// https://github.com/osmosis-labs/osmosis/issues/4897
-			errTolerance := osmomath.ErrTolerance{
-				AdditiveTolerance: sdk.NewDec(3),
-				RoundingDir:       osmomath.RoundDown,
-			}
-
+			s.Require().Equal(expectedPoolBalanceDelta.String(), poolBalanceBeforeWithdraw.Sub(poolBalanceAfterWithdraw).String())
 			s.Require().NotEmpty(expectedOwnerBalanceDelta)
 			for _, coin := range expectedOwnerBalanceDelta {
 				expected := expectedOwnerBalanceDelta.AmountOf(coin.Denom)
 				actual := actualOwnerBalancerDelta.AmountOf(coin.Denom)
-				s.Require().Equal(0, errTolerance.Compare(expected, actual), fmt.Sprintf("expected %s, actual %s", expected, actual))
+				s.Require().True(expected.Equal(actual))
 			}
 
 			if tc.timeElapsed > 0 {
@@ -634,15 +634,59 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			for _, coin := range expectedIncentivesClaimed {
 				expected := expectedIncentivesClaimed.AmountOf(coin.Denom)
 				actual := actualIncentivesClaimed.AmountOf(coin.Denom)
-				s.Require().Equal(0, errTolerance.Compare(expected, actual), fmt.Sprintf("expected %s, actual %s", expected, actual))
+				s.Require().True(expected.Equal(actual))
 			}
 
+			// if the position's expected remaining liquidity is equal to zero, we check if all state
+			// have been correctly deleted.
 			if expectedRemainingLiquidity.IsZero() {
-				// Check that the positionLiquidity was deleted.
-				positionLiquidity, err := concentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, config.positionId)
+				// Check that the position was deleted.
+				position, err := concentratedLiquidityKeeper.GetPosition(s.Ctx, config.positionId)
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &types.PositionIdNotFoundError{PositionId: config.positionId})
+				s.Require().Equal(clmodel.Position{}, position)
+
+				isPositionOwner, err := concentratedLiquidityKeeper.IsPositionOwner(s.Ctx, owner, config.poolId, config.positionId)
+				s.Require().NoError(err)
+				s.Require().False(isPositionOwner)
+
+				// Since the positionLiquidity is deleted, retrieving it should return an error.
+				positionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, config.positionId)
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, types.PositionIdNotFoundError{PositionId: config.positionId})
 				s.Require().Equal(sdk.Dec{}, positionLiquidity)
+
+				// check underlying stores were correctly deleted
+				emptyPositionStruct := clmodel.Position{}
+				positionIdToPositionKey := types.KeyPositionId(config.positionId)
+				osmoutils.Get(store, positionIdToPositionKey, &position)
+				s.Require().Equal(model.Position{}, emptyPositionStruct)
+
+				// Retrieve the position ID from the store via owner/poolId key and compare to expected values.
+				ownerPoolIdToPositionIdKey := types.KeyAddressPoolIdPositionId(s.TestAccs[0], defaultPoolId, DefaultPositionId)
+				positionIdBytes := store.Get(ownerPoolIdToPositionIdKey)
+				s.Require().Nil(positionIdBytes)
+
+				// Retrieve the position ID from the store via poolId key and compare to expected values.
+				poolIdtoPositionIdKey := types.KeyPoolPositionPositionId(defaultPoolId, DefaultPositionId)
+				positionIdBytes = store.Get(poolIdtoPositionIdKey)
+				s.Require().Nil(positionIdBytes)
+
+				// Retrieve the position ID to underlying lock ID mapping from the store and compare to expected values.
+				positionIdToLockIdKey := types.KeyPositionIdForLock(DefaultPositionId)
+				underlyingLockIdBytes := store.Get(positionIdToLockIdKey)
+				s.Require().Nil(underlyingLockIdBytes)
+
+				// Retrieve the lock ID to position ID mapping from the store and compare to expected values.
+				lockIdToPositionIdKey := types.KeyLockIdForPositionId(config.underlyingLockId)
+				positionIdBytes = store.Get(lockIdToPositionIdKey)
+				s.Require().Nil(positionIdBytes)
+
+				// ensure that the lock is still there if there was lock that was existing before the withdraw process
+				if tc.createLockLocked || tc.createLockUnlocked || tc.createLockUnlocking {
+					_, err = s.App.LockupKeeper.GetLockByID(s.Ctx, 1)
+					s.Require().NoError(err)
+				}
 			} else {
 				// Check that the position was updated.
 				s.validatePositionUpdate(s.Ctx, config.positionId, expectedRemainingLiquidity)
