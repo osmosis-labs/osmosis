@@ -77,14 +77,14 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 		// - adding liquidity (request user to provide more tokens in in favor of the pool)
 		// The denominator is truncated to get a higher final amount.
 		denom := sqrtPriceA.MulTruncate(sqrtPriceB)
-		return liq.Mul(diff).Quo(denom).Ceil()
+		return liq.Mul(diff).QuoMut(denom).Ceil()
 	}
 	// These are truncated at precision end to round in favor of the pool when:
 	// - calculating amount out during swap
 	// - withdrawing liquidity
 	// The denominator is rounded up to get a smaller final amount.
 	denom := sqrtPriceA.MulRoundUp(sqrtPriceB)
-	return liq.MulTruncate(diff).QuoTruncate(denom)
+	return liq.MulTruncate(diff).QuoTruncateMut(denom)
 }
 
 // CalcAmount1 takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 1
@@ -129,8 +129,8 @@ func GetNextSqrtPriceFromAmount0InRoundingUp(sqrtPriceCurrent, liquidity, amount
 	}
 
 	product := amountZeroRemainingIn.Mul(sqrtPriceCurrent)
-	denominator := liquidity.Add(product)
-	return liquidity.Mul(sqrtPriceCurrent).QuoRoundUp(denominator)
+	denominator := product.AddMut(liquidity)
+	return liquidity.Mul(sqrtPriceCurrent).QuoRoundupMut(denominator)
 }
 
 // GetNextSqrtPriceFromAmount0OutRoundingUp utilizes sqrtPriceCurrent, liquidity, and amount of denom0 that still needs
@@ -145,7 +145,7 @@ func GetNextSqrtPriceFromAmount0OutRoundingUp(sqrtPriceCurrent, liquidity, amoun
 
 	product := amountZeroRemainingOut.Mul(sqrtPriceCurrent)
 	denominator := liquidity.Sub(product)
-	return liquidity.Mul(sqrtPriceCurrent).QuoRoundUp(denominator)
+	return liquidity.Mul(sqrtPriceCurrent).QuoRoundupMut(denominator)
 }
 
 // GetNextSqrtPriceFromAmount1InRoundingDown utilizes the current sqrtPriceCurrent, liquidity, and amount of denom1 that still needs
@@ -189,20 +189,6 @@ func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0,
 	}
 
 	return liquidity
-}
-
-// AddLiquidity adds or subtracts liquidityB from liquidityA, depending on whether liquidityB is positive or negative.
-func AddLiquidity(liquidityA, liquidityB sdk.Dec) (finalLiquidity sdk.Dec) {
-	if liquidityB.LT(sdk.ZeroDec()) {
-		return liquidityA.Sub(liquidityB.Abs())
-	}
-	return liquidityA.Add(liquidityB)
-}
-
-// MulRoundUp multiplies a by b and rounds up to the nearest integer
-// at precision end.
-func MulRoundUp(a, b sdk.Dec) sdk.Dec {
-	return a.MulTruncate(b).Add(smallestDec)
 }
 
 // SquareRoundUp squares and rounds up at precision end.
