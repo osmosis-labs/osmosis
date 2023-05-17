@@ -35,17 +35,17 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (s *KeeperTestSuite) SetupTest() {
-	s.Setup()
+func (suite *KeeperTestSuite) SetupTest() {
+	suite.Setup()
 }
 
 // createBalancerPoolsFromCoinsWithSwapFee creates balancer pools from given sets of coins and respective swap fees.
 // Where element 1 of the input corresponds to the first pool created,
 // element 2 to the second pool created, up until the last element.
-func (s *KeeperTestSuite) createBalancerPoolsFromCoinsWithSwapFee(poolCoins []sdk.Coins, swapFee []sdk.Dec) {
+func (suite *KeeperTestSuite) createBalancerPoolsFromCoinsWithSwapFee(poolCoins []sdk.Coins, swapFee []sdk.Dec) {
 	for i, curPoolCoins := range poolCoins {
-		s.FundAcc(s.TestAccs[0], curPoolCoins)
-		s.PrepareCustomBalancerPoolFromCoins(curPoolCoins, balancer.PoolParams{
+		suite.FundAcc(suite.TestAccs[0], curPoolCoins)
+		suite.PrepareCustomBalancerPoolFromCoins(curPoolCoins, balancer.PoolParams{
 			SwapFee: swapFee[i],
 			ExitFee: sdk.ZeroDec(),
 		})
@@ -55,20 +55,20 @@ func (s *KeeperTestSuite) createBalancerPoolsFromCoinsWithSwapFee(poolCoins []sd
 // createBalancerPoolsFromCoins creates balancer pools from given sets of coins and zero swap fees.
 // Where element 1 of the input corresponds to the first pool created,
 // element 2 to the second pool created, up until the last element.
-func (s *KeeperTestSuite) createBalancerPoolsFromCoins(poolCoins []sdk.Coins) {
+func (suite *KeeperTestSuite) createBalancerPoolsFromCoins(poolCoins []sdk.Coins) {
 	for _, curPoolCoins := range poolCoins {
-		s.FundAcc(s.TestAccs[0], curPoolCoins)
-		s.PrepareCustomBalancerPoolFromCoins(curPoolCoins, balancer.PoolParams{
+		suite.FundAcc(suite.TestAccs[0], curPoolCoins)
+		suite.PrepareCustomBalancerPoolFromCoins(curPoolCoins, balancer.PoolParams{
 			SwapFee: sdk.ZeroDec(),
 			ExitFee: sdk.ZeroDec(),
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestInitGenesis() {
-	s.Setup()
+func (suite *KeeperTestSuite) TestInitGenesis() {
+	suite.Setup()
 
-	s.App.PoolManagerKeeper.InitGenesis(s.Ctx, &types.GenesisState{
+	suite.App.PoolManagerKeeper.InitGenesis(suite.Ctx, &types.GenesisState{
 		Params: types.Params{
 			PoolCreationFee: testPoolCreationFee,
 		},
@@ -76,15 +76,15 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 		PoolRoutes: testPoolRoute,
 	})
 
-	s.Require().Equal(uint64(testExpectedPoolId), s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx))
-	s.Require().Equal(testPoolCreationFee, s.App.PoolManagerKeeper.GetParams(s.Ctx).PoolCreationFee)
-	s.Require().Equal(testPoolRoute, s.App.PoolManagerKeeper.GetAllPoolRoutes(s.Ctx))
+	suite.Require().Equal(uint64(testExpectedPoolId), suite.App.PoolManagerKeeper.GetNextPoolId(suite.Ctx))
+	suite.Require().Equal(testPoolCreationFee, suite.App.PoolManagerKeeper.GetParams(suite.Ctx).PoolCreationFee)
+	suite.Require().Equal(testPoolRoute, suite.App.PoolManagerKeeper.GetAllPoolRoutes(suite.Ctx))
 }
 
-func (s *KeeperTestSuite) TestExportGenesis() {
-	s.Setup()
+func (suite *KeeperTestSuite) TestExportGenesis() {
+	suite.Setup()
 
-	s.App.PoolManagerKeeper.InitGenesis(s.Ctx, &types.GenesisState{
+	suite.App.PoolManagerKeeper.InitGenesis(suite.Ctx, &types.GenesisState{
 		Params: types.Params{
 			PoolCreationFee: testPoolCreationFee,
 		},
@@ -92,8 +92,8 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 		PoolRoutes: testPoolRoute,
 	})
 
-	genesis := s.App.PoolManagerKeeper.ExportGenesis(s.Ctx)
-	s.Require().Equal(uint64(testExpectedPoolId), genesis.NextPoolId)
-	s.Require().Equal(testPoolCreationFee, genesis.Params.PoolCreationFee)
-	s.Require().Equal(testPoolRoute, genesis.PoolRoutes)
+	genesis := suite.App.PoolManagerKeeper.ExportGenesis(suite.Ctx)
+	suite.Require().Equal(uint64(testExpectedPoolId), genesis.NextPoolId)
+	suite.Require().Equal(testPoolCreationFee, genesis.Params.PoolCreationFee)
+	suite.Require().Equal(testPoolRoute, genesis.PoolRoutes)
 }

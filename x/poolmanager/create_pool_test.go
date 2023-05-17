@@ -14,8 +14,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
-func (s *KeeperTestSuite) TestPoolCreationFee() {
-	params := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+func (suite *KeeperTestSuite) TestPoolCreationFee() {
+	params := suite.App.PoolManagerKeeper.GetParams(suite.Ctx)
 
 	// get raw pool creation fee(s) as DecCoins
 	poolCreationFeeDecCoins := sdk.DecCoins{}
@@ -32,7 +32,7 @@ func (s *KeeperTestSuite) TestPoolCreationFee() {
 		{
 			name:            "no pool creation fee for default asset pool",
 			poolCreationFee: sdk.Coins{},
-			msg: balancer.NewMsgCreateBalancerPool(s.TestAccs[0], balancer.PoolParams{
+			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.ZeroDec(),
 			}, apptesting.DefaultPoolAssets, ""),
@@ -40,7 +40,7 @@ func (s *KeeperTestSuite) TestPoolCreationFee() {
 		}, {
 			name:            "nil pool creation fee on basic pool",
 			poolCreationFee: nil,
-			msg: balancer.NewMsgCreateBalancerPool(s.TestAccs[0], balancer.PoolParams{
+			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.ZeroDec(),
 			}, apptesting.DefaultPoolAssets, ""),
@@ -48,7 +48,7 @@ func (s *KeeperTestSuite) TestPoolCreationFee() {
 		}, {
 			name:            "attempt pool creation without sufficient funds for fees",
 			poolCreationFee: sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(10000))},
-			msg: balancer.NewMsgCreateBalancerPool(s.TestAccs[0], balancer.PoolParams{
+			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.ZeroDec(),
 			}, apptesting.DefaultPoolAssets, ""),
@@ -57,42 +57,42 @@ func (s *KeeperTestSuite) TestPoolCreationFee() {
 	}
 
 	for _, test := range tests {
-		s.SetupTest()
-		gammKeeper := s.App.GAMMKeeper
-		distributionKeeper := s.App.DistrKeeper
-		bankKeeper := s.App.BankKeeper
-		poolmanagerKeeper := s.App.PoolManagerKeeper
+		suite.SetupTest()
+		gammKeeper := suite.App.GAMMKeeper
+		distributionKeeper := suite.App.DistrKeeper
+		bankKeeper := suite.App.BankKeeper
+		poolmanagerKeeper := suite.App.PoolManagerKeeper
 
 		// set pool creation fee
-		poolmanagerKeeper.SetParams(s.Ctx, types.Params{
+		poolmanagerKeeper.SetParams(suite.Ctx, types.Params{
 			PoolCreationFee: test.poolCreationFee,
 		})
 
 		// fund sender test account
 		sender, err := sdk.AccAddressFromBech32(test.msg.Sender)
-		s.Require().NoError(err, "test: %v", test.name)
-		s.FundAcc(sender, apptesting.DefaultAcctFunds)
+		suite.Require().NoError(err, "test: %v", test.name)
+		suite.FundAcc(sender, apptesting.DefaultAcctFunds)
 
 		// note starting balances for community fee pool and pool creator account
-		feePoolBalBeforeNewPool := distributionKeeper.GetFeePoolCommunityCoins(s.Ctx)
-		senderBalBeforeNewPool := bankKeeper.GetAllBalances(s.Ctx, sender)
+		feePoolBalBeforeNewPool := distributionKeeper.GetFeePoolCommunityCoins(suite.Ctx)
+		senderBalBeforeNewPool := bankKeeper.GetAllBalances(suite.Ctx, sender)
 
 		// attempt to create a pool with the given NewMsgCreateBalancerPool message
-		poolId, err := poolmanagerKeeper.CreatePool(s.Ctx, test.msg)
+		poolId, err := poolmanagerKeeper.CreatePool(suite.Ctx, test.msg)
 
 		if test.expectPass {
-			s.Require().NoError(err, "test: %v", test.name)
+			suite.Require().NoError(err, "test: %v", test.name)
 
 			// check to make sure new pool exists and has minted the correct number of pool shares
-			pool, err := gammKeeper.GetPoolAndPoke(s.Ctx, poolId)
-			s.Require().NoError(err, "test: %v", test.name)
-			s.Require().Equal(gammtypes.InitPoolSharesSupply.String(), pool.GetTotalShares().String(),
+			pool, err := gammKeeper.GetPoolAndPoke(suite.Ctx, poolId)
+			suite.Require().NoError(err, "test: %v", test.name)
+			suite.Require().Equal(gammtypes.InitPoolSharesSupply.String(), pool.GetTotalShares().String(),
 				fmt.Sprintf("share token should be minted as %s initially", gammtypes.InitPoolSharesSupply.String()),
 			)
 
 			// make sure pool creation fee is correctly sent to community pool
-			feePool := distributionKeeper.GetFeePoolCommunityCoins(s.Ctx)
-			s.Require().Equal(feePool, feePoolBalBeforeNewPool.Add(sdk.NewDecCoinsFromCoins(test.poolCreationFee...)...))
+			feePool := distributionKeeper.GetFeePoolCommunityCoins(suite.Ctx)
+			suite.Require().Equal(feePool, feePoolBalBeforeNewPool.Add(sdk.NewDecCoinsFromCoins(test.poolCreationFee...)...))
 			// get expected tokens in new pool and corresponding pool shares
 			expectedPoolTokens := sdk.Coins{}
 			for _, asset := range test.msg.GetPoolAssets() {
@@ -101,23 +101,23 @@ func (s *KeeperTestSuite) TestPoolCreationFee() {
 			expectedPoolShares := sdk.NewCoin(gammtypes.GetPoolShareDenom(pool.GetId()), gammtypes.InitPoolSharesSupply)
 
 			// make sure sender's balance is updated correctly
-			senderBal := bankKeeper.GetAllBalances(s.Ctx, sender)
+			senderBal := bankKeeper.GetAllBalances(suite.Ctx, sender)
 			expectedSenderBal := senderBalBeforeNewPool.Sub(test.poolCreationFee).Sub(expectedPoolTokens).Add(expectedPoolShares)
-			s.Require().Equal(senderBal.String(), expectedSenderBal.String())
+			suite.Require().Equal(senderBal.String(), expectedSenderBal.String())
 
 			// check pool's liquidity is correctly increased
-			liquidity := gammKeeper.GetTotalLiquidity(s.Ctx)
-			s.Require().Equal(expectedPoolTokens.String(), liquidity.String())
+			liquidity := gammKeeper.GetTotalLiquidity(suite.Ctx)
+			suite.Require().Equal(expectedPoolTokens.String(), liquidity.String())
 		} else {
-			s.Require().Error(err, "test: %v", test.name)
+			suite.Require().Error(err, "test: %v", test.name)
 		}
 	}
 }
 
 // TestCreatePool tests that all possible pools are created correctly.
-func (s *KeeperTestSuite) TestCreatePool() {
+func (suite *KeeperTestSuite) TestCreatePool() {
 	var (
-		validBalancerPoolMsg = balancer.NewMsgCreateBalancerPool(s.TestAccs[0], balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil), []balancer.PoolAsset{
+		validBalancerPoolMsg = balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil), []balancer.PoolAsset{
 			{
 				Token:  sdk.NewCoin(foo, defaultInitPoolAmount),
 				Weight: sdk.NewInt(1),
@@ -128,7 +128,7 @@ func (s *KeeperTestSuite) TestCreatePool() {
 			},
 		}, "")
 
-		invalidBalancerPoolMsg = balancer.NewMsgCreateBalancerPool(s.TestAccs[0], balancer.NewPoolParams(sdk.ZeroDec(), sdk.NewDecWithPrec(1, 2), nil), []balancer.PoolAsset{
+		invalidBalancerPoolMsg = balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.NewPoolParams(sdk.ZeroDec(), sdk.NewDecWithPrec(1, 2), nil), []balancer.PoolAsset{
 			{
 				Token:  sdk.NewCoin(foo, defaultInitPoolAmount),
 				Weight: sdk.NewInt(1),
@@ -144,11 +144,11 @@ func (s *KeeperTestSuite) TestCreatePool() {
 			sdk.NewCoin(bar, defaultInitPoolAmount),
 		)
 
-		validStableswapPoolMsg = stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], stableswap.PoolParams{SwapFee: sdk.NewDec(0), ExitFee: sdk.NewDec(0)}, DefaultStableswapLiquidity, []uint64{}, "")
+		validStableswapPoolMsg = stableswap.NewMsgCreateStableswapPool(suite.TestAccs[0], stableswap.PoolParams{SwapFee: sdk.NewDec(0), ExitFee: sdk.NewDec(0)}, DefaultStableswapLiquidity, []uint64{}, "")
 
-		invalidStableswapPoolMsg = stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], stableswap.PoolParams{SwapFee: sdk.NewDec(0), ExitFee: sdk.NewDecWithPrec(1, 2)}, DefaultStableswapLiquidity, []uint64{}, "")
+		invalidStableswapPoolMsg = stableswap.NewMsgCreateStableswapPool(suite.TestAccs[0], stableswap.PoolParams{SwapFee: sdk.NewDec(0), ExitFee: sdk.NewDecWithPrec(1, 2)}, DefaultStableswapLiquidity, []uint64{}, "")
 
-		validConcentratedPoolMsg = clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], foo, bar, 1, defaultPoolSwapFee)
+		validConcentratedPoolMsg = clmodel.NewMsgCreateConcentratedPool(suite.TestAccs[0], foo, bar, 1, defaultPoolSwapFee)
 
 		defaultFundAmount = sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount.Mul(sdk.NewInt(2))), sdk.NewCoin(bar, defaultInitPoolAmount.Mul(sdk.NewInt(2))))
 	)
@@ -210,45 +210,45 @@ func (s *KeeperTestSuite) TestCreatePool() {
 	}
 
 	for i, tc := range tests {
-		s.Run(tc.name, func() {
+		suite.Run(tc.name, func() {
 			tc := tc
 
 			if tc.isPermissionlessPoolCreationDisabled {
-				params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+				params := suite.App.ConcentratedLiquidityKeeper.GetParams(suite.Ctx)
 				params.IsPermissionlessPoolCreationEnabled = false
-				s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
+				suite.App.ConcentratedLiquidityKeeper.SetParams(suite.Ctx, params)
 			}
 
-			poolmanagerKeeper := s.App.PoolManagerKeeper
-			ctx := s.Ctx
+			poolmanagerKeeper := suite.App.PoolManagerKeeper
+			ctx := suite.Ctx
 
-			poolCreationFee := poolmanagerKeeper.GetParams(s.Ctx).PoolCreationFee
-			s.FundAcc(s.TestAccs[0], append(tc.creatorFundAmount, poolCreationFee...))
+			poolCreationFee := poolmanagerKeeper.GetParams(suite.Ctx).PoolCreationFee
+			suite.FundAcc(suite.TestAccs[0], append(tc.creatorFundAmount, poolCreationFee...))
 
 			poolId, err := poolmanagerKeeper.CreatePool(ctx, tc.msg)
 
 			if tc.expectError {
-				s.Require().Error(err)
+				suite.Require().Error(err)
 				return
 			}
 
 			// Validate pool.
-			s.Require().NoError(err)
-			s.Require().Equal(uint64(i+1), poolId)
+			suite.Require().NoError(err)
+			suite.Require().Equal(uint64(i+1), poolId)
 
 			// Validate that mapping pool id -> module type has been persisted.
 			swapModule, err := poolmanagerKeeper.GetPoolModule(ctx, poolId)
-			s.Require().NoError(err)
-			s.Require().Equal(tc.expectedModuleType, reflect.TypeOf(swapModule))
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.expectedModuleType, reflect.TypeOf(swapModule))
 		})
 	}
 }
 
 // Tests that only poolmanager as a pool creator can create a pool via CreatePoolZeroLiquidityNoCreationFee
-func (s *KeeperTestSuite) TestCreatePoolZeroLiquidityNoCreationFee() {
-	s.SetupTest()
+func (suite *KeeperTestSuite) TestCreatePoolZeroLiquidityNoCreationFee() {
+	suite.SetupTest()
 
-	poolManagerModuleAcc := s.App.AccountKeeper.GetModuleAccount(s.Ctx, types.ModuleName)
+	poolManagerModuleAcc := suite.App.AccountKeeper.GetModuleAccount(suite.Ctx, types.ModuleName)
 
 	withCreator := func(msg clmodel.MsgCreateConcentratedPool, address sdk.AccAddress) clmodel.MsgCreateConcentratedPool {
 		msg.Sender = address.String()
@@ -281,8 +281,8 @@ func (s *KeeperTestSuite) TestCreatePoolZeroLiquidityNoCreationFee() {
 		},
 		{
 			name:        "creator is not pool manager - failure",
-			msg:         withCreator(concentratedPoolMsg, s.TestAccs[0]),
-			expectError: types.InvalidPoolCreatorError{CreatorAddresss: s.TestAccs[0].String()},
+			msg:         withCreator(concentratedPoolMsg, suite.TestAccs[0]),
+			expectError: types.InvalidPoolCreatorError{CreatorAddresss: suite.TestAccs[0].String()},
 		},
 		{
 			name:        "balancer pool with pool manager creator - error, wrong pool",
@@ -292,37 +292,37 @@ func (s *KeeperTestSuite) TestCreatePoolZeroLiquidityNoCreationFee() {
 	}
 
 	for i, tc := range tests {
-		s.Run(tc.name, func() {
+		suite.Run(tc.name, func() {
 			tc := tc
 
-			poolmanagerKeeper := s.App.PoolManagerKeeper
-			ctx := s.Ctx
+			poolmanagerKeeper := suite.App.PoolManagerKeeper
+			ctx := suite.Ctx
 
 			// Note: this is necessary for gauge creation in the after pool created hook.
 			// There is a check requiring positive supply existing on-chain.
-			s.MintCoins(sdk.NewCoins(sdk.NewCoin("uosmo", sdk.OneInt())))
+			suite.MintCoins(sdk.NewCoins(sdk.NewCoin("uosmo", sdk.OneInt())))
 
 			pool, err := poolmanagerKeeper.CreateConcentratedPoolAsPoolManager(ctx, tc.msg)
 
 			if tc.expectError != nil {
-				s.Require().Error(err)
-				s.Require().ErrorIs(err, tc.expectError)
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, tc.expectError)
 				return
 			}
 
 			// Validate pool.
-			s.Require().NoError(err)
-			s.Require().Equal(uint64(i+1), pool.GetId())
+			suite.Require().NoError(err)
+			suite.Require().Equal(uint64(i+1), pool.GetId())
 
 			// Validate that mapping pool id -> module type has been persisted.
 			swapModule, err := poolmanagerKeeper.GetPoolModule(ctx, pool.GetId())
-			s.Require().NoError(err)
-			s.Require().Equal(tc.expectedModuleType, reflect.TypeOf(swapModule))
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.expectedModuleType, reflect.TypeOf(swapModule))
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestSetAndGetAllPoolRoutes() {
+func (suite *KeeperTestSuite) TestSetAndGetAllPoolRoutes() {
 	tests := []struct {
 		name         string
 		preSetRoutes []types.ModuleRoute
@@ -373,26 +373,26 @@ func (s *KeeperTestSuite) TestSetAndGetAllPoolRoutes() {
 	}
 
 	for _, tc := range tests {
-		s.Run(tc.name, func() {
+		suite.Run(tc.name, func() {
 			tc := tc
 
-			s.Setup()
-			poolManagerKeeper := s.App.PoolManagerKeeper
+			suite.Setup()
+			poolManagerKeeper := suite.App.PoolManagerKeeper
 
 			for _, preSetRoute := range tc.preSetRoutes {
-				poolManagerKeeper.SetPoolRoute(s.Ctx, preSetRoute.PoolId, preSetRoute.PoolType)
+				poolManagerKeeper.SetPoolRoute(suite.Ctx, preSetRoute.PoolId, preSetRoute.PoolType)
 			}
 
-			moduleRoutes := poolManagerKeeper.GetAllPoolRoutes(s.Ctx)
+			moduleRoutes := poolManagerKeeper.GetAllPoolRoutes(suite.Ctx)
 
 			// Validate.
-			s.Require().Len(moduleRoutes, len(tc.preSetRoutes))
-			s.Require().EqualValues(tc.preSetRoutes, moduleRoutes)
+			suite.Require().Len(moduleRoutes, len(tc.preSetRoutes))
+			suite.Require().EqualValues(tc.preSetRoutes, moduleRoutes)
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestGetNextPoolIdAndIncrement() {
+func (suite *KeeperTestSuite) TestGetNextPoolIdAndIncrement() {
 	tests := []struct {
 		name               string
 		expectedNextPoolId uint64
@@ -408,23 +408,23 @@ func (s *KeeperTestSuite) TestGetNextPoolIdAndIncrement() {
 	}
 
 	for _, tc := range tests {
-		s.Run(tc.name, func() {
+		suite.Run(tc.name, func() {
 			tc := tc
-			s.Setup()
+			suite.Setup()
 
-			s.App.PoolManagerKeeper.SetNextPoolId(s.Ctx, tc.expectedNextPoolId)
-			nextPoolId := s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx)
-			s.Require().Equal(tc.expectedNextPoolId, nextPoolId)
+			suite.App.PoolManagerKeeper.SetNextPoolId(suite.Ctx, tc.expectedNextPoolId)
+			nextPoolId := suite.App.PoolManagerKeeper.GetNextPoolId(suite.Ctx)
+			suite.Require().Equal(tc.expectedNextPoolId, nextPoolId)
 
 			// System under test.
-			nextPoolId = s.App.PoolManagerKeeper.GetNextPoolIdAndIncrement(s.Ctx)
-			s.Require().Equal(tc.expectedNextPoolId, nextPoolId)
-			s.Require().Equal(tc.expectedNextPoolId+1, s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx))
+			nextPoolId = suite.App.PoolManagerKeeper.GetNextPoolIdAndIncrement(suite.Ctx)
+			suite.Require().Equal(tc.expectedNextPoolId, nextPoolId)
+			suite.Require().Equal(tc.expectedNextPoolId+1, suite.App.PoolManagerKeeper.GetNextPoolId(suite.Ctx))
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestValidateCreatedPool() {
+func (suite *KeeperTestSuite) TestValidateCreatedPool() {
 	tests := []struct {
 		name          string
 		poolId        uint64
@@ -468,18 +468,18 @@ func (s *KeeperTestSuite) TestValidateCreatedPool() {
 	}
 
 	for _, tc := range tests {
-		s.Run(tc.name, func() {
+		suite.Run(tc.name, func() {
 			tc := tc
-			s.Setup()
+			suite.Setup()
 
 			// System under test.
-			err := s.App.PoolManagerKeeper.ValidateCreatedPool(s.Ctx, tc.poolId, tc.pool)
+			err := suite.App.PoolManagerKeeper.ValidateCreatedPool(suite.Ctx, tc.poolId, tc.pool)
 			if tc.expectedError != nil {
-				s.Require().Error(err)
-				s.Require().ErrorContains(err, tc.expectedError.Error())
+				suite.Require().Error(err)
+				suite.Require().ErrorContains(err, tc.expectedError.Error())
 				return
 			}
-			s.Require().NoError(err)
+			suite.Require().NoError(err)
 		})
 	}
 }

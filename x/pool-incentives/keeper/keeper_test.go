@@ -12,6 +12,7 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
@@ -341,9 +342,9 @@ func (suite *KeeperTestSuite) TestIsPoolIncentivized() {
 			suite.SetupTest()
 			suite.PrepareConcentratedPool()
 
-			suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, types.DistrInfo{
+			suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, poolincentivestypes.DistrInfo{
 				TotalWeight: sdk.NewInt(100),
-				Records: []types.DistrRecord{
+				Records: []poolincentivestypes.DistrRecord{
 					{
 						GaugeId: tc.poolId,
 						Weight:  sdk.NewInt(50),
@@ -355,4 +356,5 @@ func (suite *KeeperTestSuite) TestIsPoolIncentivized() {
 			suite.Require().Equal(tc.expectedIsIncentivized, actualIsIncentivized)
 		})
 	}
+
 }

@@ -402,7 +402,7 @@ func (suite *KeeperTestSuite) TestMarshalUnmarshalPool() {
 			suite.SetupTest()
 
 			var poolI poolmanagertypes.PoolI = tc.pool
-			cfmmPoolI := tc.pool
+			var cfmmPoolI types.CFMMPoolI = tc.pool
 
 			// Marshal poolI as PoolI
 			bzPoolI, err := k.MarshalPool(poolI)

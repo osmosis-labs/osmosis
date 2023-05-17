@@ -27,11 +27,11 @@ func (suite *TestSuite) SetupTest() {
 	suite.Setup()
 }
 
-func (suite *TestSuite) TestSetScalingFactors() {
-	suite.SetupTest()
+func (s *TestSuite) TestSetScalingFactors() {
+	s.SetupTest()
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address())
-	nextPoolId := suite.App.GAMMKeeper.GetNextPoolId(suite.Ctx) //nolint:staticcheck // we're using the deprecated call for testing
+	nextPoolId := s.App.GAMMKeeper.GetNextPoolId(s.Ctx)
 	defaultCreatePoolMsg := *baseCreatePoolMsgGen(addr1)
 	defaultCreatePoolMsg.ScalingFactorController = defaultCreatePoolMsg.Sender
 	defaultAdjustSFMsg := stableswap.NewMsgStableSwapAdjustScalingFactors(defaultCreatePoolMsg.Sender, nextPoolId, []uint64{1, 1})
@@ -45,15 +45,15 @@ func (suite *TestSuite) TestSetScalingFactors() {
 	}
 
 	for name, tc := range tests {
-		suite.Run(name, func() {
-			suite.SetupTest()
+		s.Run(name, func() {
+			s.SetupTest()
 			sender := tc.createMsg.GetSigners()[0]
-			suite.FundAcc(sender, suite.App.GAMMKeeper.GetParams(suite.Ctx).PoolCreationFee)
-			suite.FundAcc(sender, tc.createMsg.InitialPoolLiquidity.Sort())
-			_, err := suite.RunMsg(&tc.createMsg)
-			suite.Require().NoError(err)
-			_, err = suite.RunMsg(&tc.setMsg)
-			suite.Require().NoError(err)
+			s.FundAcc(sender, s.App.GAMMKeeper.GetParams(s.Ctx).PoolCreationFee)
+			s.FundAcc(sender, tc.createMsg.InitialPoolLiquidity.Sort())
+			_, err := s.RunMsg(&tc.createMsg)
+			s.Require().NoError(err)
+			_, err = s.RunMsg(&tc.setMsg)
+			s.Require().NoError(err)
 		})
 	}
 }

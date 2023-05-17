@@ -662,7 +662,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Withdraw Position
 
 	// Withdraw Position parameters
-	defaultLiquidityRemoval := "1000"
+	var defaultLiquidityRemoval string = "1000"
 
 	chainA.WaitForNumHeights(2)
 

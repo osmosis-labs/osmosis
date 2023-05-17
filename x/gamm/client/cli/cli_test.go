@@ -333,10 +333,10 @@ func TestGetCmdPools(t *testing.T) {
 
 func TestGetCmdPool(t *testing.T) {
 	desc, _ := cli.GetCmdPool()
-	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryPoolRequest]{ //nolint:staticcheck
+	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryPoolRequest]{
 		"basic test": {
 			Cmd:           "1",
-			ExpectedQuery: &types.QueryPoolRequest{PoolId: 1}, //nolint:staticcheck
+			ExpectedQuery: &types.QueryPoolRequest{PoolId: 1},
 		},
 	}
 	osmocli.RunQueryTestCases(t, desc, tcs)
@@ -344,10 +344,10 @@ func TestGetCmdPool(t *testing.T) {
 
 func TestGetCmdSpotPrice(t *testing.T) {
 	desc, _ := cli.GetCmdSpotPrice()
-	tcs := map[string]osmocli.QueryCliTestCase[*types.QuerySpotPriceRequest]{ //nolint:staticcheck
+	tcs := map[string]osmocli.QueryCliTestCase[*types.QuerySpotPriceRequest]{
 		"basic test": {
 			Cmd: "1 uosmo ibc/111",
-			ExpectedQuery: &types.QuerySpotPriceRequest{ //nolint:staticcheck
+			ExpectedQuery: &types.QuerySpotPriceRequest{
 				PoolId:          1,
 				BaseAssetDenom:  "uosmo",
 				QuoteAssetDenom: "ibc/111",
@@ -359,10 +359,10 @@ func TestGetCmdSpotPrice(t *testing.T) {
 
 func TestGetCmdEstimateSwapExactAmountIn(t *testing.T) {
 	desc, _ := cli.GetCmdEstimateSwapExactAmountIn()
-	tcs := map[string]osmocli.QueryCliTestCase[*types.QuerySwapExactAmountInRequest]{ //nolint:staticcheck
+	tcs := map[string]osmocli.QueryCliTestCase[*types.QuerySwapExactAmountInRequest]{
 		"basic test": {
 			Cmd: "1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
-			ExpectedQuery: &types.QuerySwapExactAmountInRequest{ //nolint:staticcheck
+			ExpectedQuery: &types.QuerySwapExactAmountInRequest{
 				Sender:  "osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7",
 				PoolId:  1,
 				TokenIn: "10stake",
@@ -375,10 +375,10 @@ func TestGetCmdEstimateSwapExactAmountIn(t *testing.T) {
 
 func TestGetCmdEstimateSwapExactAmountOut(t *testing.T) {
 	desc, _ := cli.GetCmdEstimateSwapExactAmountOut()
-	tcs := map[string]osmocli.QueryCliTestCase[*types.QuerySwapExactAmountOutRequest]{ //nolint:staticcheck
+	tcs := map[string]osmocli.QueryCliTestCase[*types.QuerySwapExactAmountOutRequest]{
 		"basic test": {
 			Cmd: "1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
-			ExpectedQuery: &types.QuerySwapExactAmountOutRequest{ //nolint:staticcheck
+			ExpectedQuery: &types.QuerySwapExactAmountOutRequest{
 				Sender:   "osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7",
 				PoolId:   1,
 				TokenOut: "10stake",
