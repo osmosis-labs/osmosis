@@ -12,7 +12,7 @@ service Msg {
   rpc CreatePosition(MsgCreatePosition) returns (MsgCreatePositionResponse);
   rpc WithdrawPosition(MsgWithdrawPosition)
       returns (MsgWithdrawPositionResponse);
-  // AddToPosition attempts to add amount0Added and amount1Added to a position
+  // AddToPosition attempts to add amount0 and amount1 to a position
   // with the given position id.
   // To maintain backwards-compatibility with future implementations of charging, this
   // function deletes the old position and creates a new one with the resulting
