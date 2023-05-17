@@ -242,18 +242,18 @@ func (k Keeper) migrateNonSuperfluidLockBalancerToConcentrated(ctx sdk.Context,
 // It also returns the underlying synthetic locks of the provided lock, if any exist.
 func (k Keeper) routeMigration(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) (synthLocksBeforeMigration []lockuptypes.SyntheticLock, migrationType MigrationType, err error) {
 	synthLocksBeforeMigration = k.lk.GetAllSyntheticLockupsByLockup(ctx, lockId)
-	migrationType = NonSuperfluid
+	if len(synthLocksBeforeMigration) > 1 {
+		return nil, Unsupported, fmt.Errorf("lock %d contains more than one synthetic lock", lockId)
+	}
 
-	for _, synthLockBeforeMigration := range synthLocksBeforeMigration {
-		if strings.Contains(synthLockBeforeMigration.SynthDenom, "superbonding") {
-			migrationType = SuperfluidBonded
-		}
-		if strings.Contains(synthLockBeforeMigration.SynthDenom, "superunbonding") {
-			migrationType = SuperfluidUnbonding
-		}
-		if strings.Contains(synthLockBeforeMigration.SynthDenom, "superbonding") && strings.Contains(synthLockBeforeMigration.SynthDenom, "superunbonding") {
-			return nil, Unsupported, fmt.Errorf("lock %d contains both superfluid bonded and unbonded tokens", lockId)
-		}
+	if strings.Contains(synthLocksBeforeMigration[0].SynthDenom, "superbonding") {
+		migrationType = SuperfluidBonded
+	} else if strings.Contains(synthLocksBeforeMigration[0].SynthDenom, "superunbonding") {
+		migrationType = SuperfluidUnbonding
+	} else if len(synthLocksBeforeMigration) == 0 {
+		migrationType = NonSuperfluid
+	} else {
+		return nil, Unsupported, fmt.Errorf("lock %d contains an unsupported synthetic lock", lockId)
 	}
 
 	return synthLocksBeforeMigration, migrationType, nil
