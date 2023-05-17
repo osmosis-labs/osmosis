@@ -100,7 +100,7 @@ func (k Keeper) initOrUpdatePositionFeeAccumulator(ctx sdk.Context, poolId uint6
 		// At time t, we track fee growth inside from 0 to t.
 		// Then, the update happens at time t + 1. The call below makes the position's
 		// accumulator to be "fee growth inside from 0 to t + fee growth outside from 0 to t + 1".
-		err = preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
+		err = updatePositionToInitValuePlusGrowthOutside(feeAccumulator, positionKey, feeGrowthOutside)
 		if err != nil {
 			return err
 		}
@@ -275,7 +275,7 @@ func (k Keeper) prepareClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Co
 	}
 
 	// Claim rewards, set the unclaimed rewards to zero, and update the position's accumulator value to reflect the current accumulator value.
-	feesClaimed, _, err := prepareAccumAndClaimRewards(feeAccumulator, positionKey, feeGrowthOutside)
+	feesClaimed, _, err := updateAccumAndClaimRewards(feeAccumulator, positionKey, feeGrowthOutside)
 	if err != nil {
 		return nil, err
 	}
@@ -295,12 +295,11 @@ func calculateFeeGrowth(targetTick int64, ticksFeeGrowthOppositeDirectionOfLastT
 	return ticksFeeGrowthOppositeDirectionOfLastTraversal
 }
 
-// preparePositionAccumulator is called prior to updating unclaimed rewards,
+// updatePositionToInitValuePlusGrowthOutside is called prior to updating unclaimed rewards,
 // as we must set the position's accumulator value to the sum of
 // - the fee/uptime growth inside at position creation time (position.InitAccumValue)
 // - fee/uptime growth outside at the current block time (feeGrowthOutside/uptimeGrowthOutside)
-// CONTRACT: position accumulator value prior to this call is equal to the growth inside the position at the time of last update.
-func preparePositionAccumulator(accumulator accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) error {
+func updatePositionToInitValuePlusGrowthOutside(accumulator accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) error {
 	position, err := accum.GetPosition(accumulator, positionKey)
 	if err != nil {
 		return err
