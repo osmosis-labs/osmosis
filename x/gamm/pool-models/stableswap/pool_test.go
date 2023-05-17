@@ -719,10 +719,6 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 			swapFee:  sdk.ZeroDec(),
 			expError: false,
 		},
-		// TODO: Add test cases here, where they're off 1-1 ratio
-		// * (we just need to verify that the further off they are, further slippage is)
-		// * Add test cases with non-zero swap fee.
-		// looks like its really an error due to slippage at limit
 		"trade hits max pool capacity for asset": {
 			poolAssets: sdk.NewCoins(
 				sdk.NewInt64Coin("foo", 9_999_999_998),
@@ -752,6 +748,30 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 			),
 			swapFee:  sdk.ZeroDec(),
 			expError: true,
+		},
+		"non-zero swap fee": {
+			poolAssets:            twoEvenStablePoolAssets,
+			scalingFactors:        defaultTwoAssetScalingFactors,
+			tokenIn:               sdk.NewCoins(sdk.NewInt64Coin("foo", 100)),
+			expectedTokenOut:      sdk.NewInt64Coin("bar", 98),
+			expectedPoolLiquidity: twoEvenStablePoolAssets.Add(sdk.NewInt64Coin("foo", 100)).Sub(sdk.NewCoins(sdk.NewInt64Coin("bar", 98))),
+			swapFee:               sdk.NewDecWithPrec(1, 2),
+			expError:              false,
+		},
+		"100_000:1 scaling factor ratio, further slippage is": {
+			poolAssets: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 10_000_000_000),
+				sdk.NewInt64Coin("bar", 100_000),
+			),
+			scalingFactors:   []uint64{100_000, 1},
+			tokenIn:          sdk.NewCoins(sdk.NewInt64Coin("foo", 9_900_000_000)),
+			expectedTokenOut: sdk.NewInt64Coin("bar", 87_310),
+			expectedPoolLiquidity: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 10_000_000_000+9_900_000_000),
+				sdk.NewInt64Coin("bar", 100_000-87_310),
+			),
+			swapFee:  sdk.ZeroDec(),
+			expError: false,
 		},
 	}
 
@@ -1105,7 +1125,48 @@ func TestValidatePoolLiquidity(t *testing.T) {
 				ScalingFactorCount: 2,
 			},
 		},
-		// TODO: cover remaining edge cases by referring to the function implementation.
+		"pool should have at least 2 assets": {
+			liquidity: sdk.Coins{
+				coinA,
+			},
+			scalingFactors: []uint64{10},
+			expectError:    types.ErrTooFewPoolAssets,
+		},
+		"pool has too many assets": {
+			liquidity: sdk.Coins{
+				coinA,
+				coinB,
+				coinC,
+				coinD,
+				coinA,
+				coinB,
+				coinC,
+				coinD,
+				coinA,
+			},
+			scalingFactors: []uint64{10, 10, 10, 10, 10, 10, 10, 10, 10},
+			expectError:    types.ErrTooManyPoolAssets,
+		},
+		"pool assets too much": {
+			liquidity: sdk.Coins{
+				sdk.NewCoin(a, sdk.Int(sdk.MustNewDecFromStr("100000000000000000000000000000000000"))),
+				coinB,
+				coinC,
+				coinD,
+			},
+			scalingFactors: []uint64{10, 10, 10, 10},
+			expectError:    types.ErrHitMaxScaledAssets,
+		},
+		"pool assets are too small": {
+			liquidity: sdk.Coins{
+				sdk.NewCoin(a, sdk.NewIntFromUint64(1)),
+				coinB,
+				coinC,
+				coinD,
+			},
+			scalingFactors: []uint64{10, 10, 10, 10},
+			expectError:    types.ErrHitMinScaledAssets,
+		},
 	}
 
 	for name, tc := range tests {
