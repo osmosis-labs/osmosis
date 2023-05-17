@@ -159,6 +159,15 @@ func (k Keeper) SplitRouteExactAmountIn(
 		return sdk.Int{}, types.PriceImpactProtectionExactInError{Actual: totalOutAmount, MinAmount: tokenOutMinAmount}
 	}
 
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeMsgSplitRouteSwapExactAmountIn,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, totalOutAmount.String()),
+		),
+	})
+
 	return totalOutAmount, nil
 }
 
@@ -435,6 +444,15 @@ func (k Keeper) SplitRouteExactAmountOut(
 	if totalInAmount.GT(tokenInMaxAmount) {
 		return sdk.Int{}, types.PriceImpactProtectionExactOutError{Actual: totalInAmount, MaxAmount: tokenInMaxAmount}
 	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeMsgSplitRouteSwapExactAmountOut,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, totalInAmount.String()),
+		),
+	})
 
 	return totalInAmount, nil
 }
