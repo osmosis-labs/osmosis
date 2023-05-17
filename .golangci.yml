@@ -5,7 +5,6 @@ run:
   skip-files:
     - x/gamm/keeper/grpc_query_test.go
     - x/gamm/client/cli/query_test.go
-    - x/gamm/client/cli/cli_test.go
 
 output:
   sort: true
