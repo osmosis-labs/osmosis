@@ -2,6 +2,7 @@ package swapstrategy
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
@@ -49,6 +50,10 @@ type swapStrategy interface {
 	//   * feeChargeTotal is the total fee charge. The fee is charged on the amount of token in.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemainingOut sdk.Dec) (sqrtPriceNext, amountOutConsumed, amountInComputed, feeChargeTotal sdk.Dec)
+	// InitializeNextTickIterator returns iterator that seeks to the next tick from the given tickIndex.
+	// If nex tick relative to tickINdex does not exist in the store, it will return an invalid iterator.
+	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
+	InitializeNextTickIterator(ctx sdk.Context, poolId uint64, tickIndex int64) dbm.Iterator
 	// InitializeTickValue returns the initial tick value for computing swaps based
 	// on the actual current tick.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.

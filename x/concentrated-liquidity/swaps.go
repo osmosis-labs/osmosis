@@ -318,6 +318,12 @@ func (k Keeper) computeOutAmtGivenIn(
 		feeGrowthGlobal: sdk.ZeroDec(),
 	}
 
+	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
+	defer nextTickIter.Close()
+	if !nextTickIter.Valid() {
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
+	}
+
 	// Iterate and update swapState until we swap all tokenIn or we reach the specific sqrtPriceLimit
 	// TODO: for now, we check if amountSpecifiedRemaining is GT 0.0000001. This is because there are times when the remaining
 	// amount may be extremely small, and that small amount cannot generate and amountIn/amountOut and we are therefore left
@@ -326,13 +332,18 @@ func (k Keeper) computeOutAmtGivenIn(
 		// Log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
 
+		// Iterator must be valid to be able to retrieve the next tick from it below.
+		if !nextTickIter.Valid() {
+			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
+		}
+
 		// We first check to see what the position of the nearest initialized tick is
 		// if zeroForOneStrategy, we look to the left of the tick the current sqrt price is at
 		// if oneForZeroStrategy, we look to the right of the tick the current sqrt price is at
 		// if no ticks are initialized (no users have created liquidity positions) then we return an error
-		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, swapState.tick)
-		if !ok {
-			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
+		nextTick, err := types.TickIndexFromBytes(nextTickIter.Key())
+		if err != nil {
+			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
 		}
 
 		// Utilizing the next initialized tick, we find the corresponding nextPrice (the target price).
@@ -379,6 +390,13 @@ func (k Keeper) computeOutAmtGivenIn(
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
 			}
+
+			// Move next tick iterator to the next tick as the tick is crossed.
+			if !nextTickIter.Valid() {
+				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
+			}
+			nextTickIter.Next()
+
 			liquidityNet = swapStrategy.SetLiquidityDeltaSign(liquidityNet)
 			// Update the swapState's liquidity with the new tick's liquidity
 			newLiquidity := math.AddLiquidity(swapState.liquidity, liquidityNet)
