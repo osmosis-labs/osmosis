@@ -16,3 +16,5 @@ updates:
   schedule:
     interval: weekly
   open-pull-requests-limit: 10
+  allow:
+    - security
