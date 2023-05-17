@@ -97,7 +97,7 @@ func (msg MsgAddToPosition) ValidateBasic() error {
 		return fmt.Errorf("Amount 0 cannot be negative, given token min amount: %s", msg.TokenMinAmount0.String())
 	}
 	if msg.TokenMinAmount1.IsNegative() {
-		return fmt.Errorf("Amount 0 cannot be negative, given amount: %s", msg.TokenMinAmount1.String())
+		return fmt.Errorf("Amount 1 cannot be negative, given token min amount: %s", msg.TokenMinAmount1.String())
 	}
 
 	return nil

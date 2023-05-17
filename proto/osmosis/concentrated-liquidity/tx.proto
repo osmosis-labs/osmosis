@@ -14,9 +14,9 @@ service Msg {
       returns (MsgWithdrawPositionResponse);
   // AddToPosition attempts to add amount0 and amount1 to a position
   // with the given position id.
-  // To maintain backwards-compatibility with future implementations of charging, this
-  // function deletes the old position and creates a new one with the resulting
-  // amount after addition.
+  // To maintain backwards-compatibility with future implementations of
+  // charging, this function deletes the old position and creates a new one with
+  // the resulting amount after addition.
   rpc AddToPosition(MsgAddToPosition) returns (MsgAddToPositionResponse);
   rpc CollectFees(MsgCollectFees) returns (MsgCollectFeesResponse);
   rpc CollectIncentives(MsgCollectIncentives)

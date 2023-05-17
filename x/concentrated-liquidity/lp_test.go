@@ -781,6 +781,19 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			createLockLocked: true,
 		},
+		"error: attempt to add negative amounts for both assets to position": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			sutConfigOverwrite: &lpTest{
+				expectedError: types.NegativeAmountAddedError{PositionId: 1, Asset0Amount: amount0PerfectRatio.Neg(), Asset1Amount: amount1PerfectRatio.Neg()},
+			},
+			lastPositionInPool: true,
+			timeElapsed:        defaultTimeElapsed,
+			amount0ToAdd:       amount0PerfectRatio.Neg(),
+			amount1ToAdd:       amount1PerfectRatio.Neg(),
+		},
 		"error: attempt to add to a position with underlying lock that is unlocking": {
 			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
