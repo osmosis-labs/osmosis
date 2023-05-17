@@ -313,7 +313,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		amountCalculated:         sdk.ZeroDec(),          // tokenOut
 		sqrtPrice:                curSqrtPrice,
 		// Pad (or don't pad) current tick based on swap direction to avoid off-by-one errors
-		tick:            swapStrategy.InitializeTickValue(p.GetCurrentTick().Int64()),
+		tick:            swapStrategy.InitializeTickValue(p.GetCurrentTick()),
 		liquidity:       p.GetLiquidity(),
 		feeGrowthGlobal: sdk.ZeroDec(),
 	}
@@ -489,7 +489,7 @@ func (k Keeper) computeInAmtGivenOut(
 		amountSpecifiedRemaining: desiredTokenOut.Amount.ToDec(), // tokenOut
 		amountCalculated:         sdk.ZeroDec(),                  // tokenIn
 		sqrtPrice:                curSqrtPrice,
-		tick:                     swapStrategy.InitializeTickValue(p.GetCurrentTick().Int64()),
+		tick:                     swapStrategy.InitializeTickValue(p.GetCurrentTick()),
 		liquidity:                p.GetLiquidity(),
 		feeGrowthGlobal:          sdk.ZeroDec(),
 	}
@@ -629,7 +629,7 @@ func (k Keeper) updatePoolForSwap(
 		return types.InsufficientPoolBalanceError{Err: err}
 	}
 
-	err = pool.ApplySwap(newLiquidity, sdk.NewInt(newCurrentTick), newSqrtPrice)
+	err = pool.ApplySwap(newLiquidity, newCurrentTick, newSqrtPrice)
 	if err != nil {
 		return fmt.Errorf("error applying swap: %w", err)
 	}
