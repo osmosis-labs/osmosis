@@ -824,18 +824,10 @@ func (e SqrtRootCalculationError) Error() string {
 	return fmt.Sprintf("issue calculating square root of price limit %s", e.SqrtPriceLimit)
 }
 
-type UninitilizedTickError struct {
+type TickToSqrtPriceConversionError struct {
 	NextTick sdk.Int
 }
 
-func (e UninitilizedTickError) Error() string {
-	return fmt.Sprintf("there are no more ticks initialized to fill the swap %s", e.NextTick)
-}
-
-type TickToSqrtPriceConversionError struct {
-	SqrtPriceNextTick sdk.Dec
-}
-
 func (e TickToSqrtPriceConversionError) Error() string {
-	return fmt.Sprintf("could not convert next tick (%v) to nextSqrtPrice", e.SqrtPriceNextTick)
+	return fmt.Sprintf("could not convert next tick  to nextSqrtPrice (%v)", e.NextTick)
 }
