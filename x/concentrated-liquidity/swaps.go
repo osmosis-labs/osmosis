@@ -187,7 +187,7 @@ func (k *Keeper) swapInAmtGivenOut(
 	swapFee sdk.Dec,
 	priceLimit sdk.Dec,
 ) (calcTokenIn, calcTokenOut sdk.Coin, currentTick int64, liquidity, sqrtPrice sdk.Dec, err error) {
-	writeCtx, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, err := k.calcInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, swapFee, priceLimit, pool.GetId())
+	tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, err := k.computeInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, swapFee, priceLimit, pool.GetId())
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
 	}
@@ -196,11 +196,6 @@ func (k *Keeper) swapInAmtGivenOut(
 	if !tokenIn.Amount.IsPositive() {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, types.InvalidAmountCalculatedError{Amount: tokenIn.Amount}
 	}
-
-	// N.B. making the call below ensures that any mutations done inside calcInAmtGivenOut
-	// are written to store. If this call were skipped, calcInAmtGivenOut would be non-mutative.
-	// An example of a store write done in calcInAmtGivenOut is updating ticks as we cross them.
-	writeCtx()
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
 	// Also emits swap event and updates related liquidity metrics
@@ -234,7 +229,7 @@ func (k Keeper) CalcInAmtGivenOut(
 	swapFee sdk.Dec,
 ) (tokenIn sdk.Coin, err error) {
 	cacheCtx, _ := ctx.CacheContext()
-	_, tokenIn, _, _, _, _, err = k.calcInAmtGivenOut(cacheCtx, tokenOut, tokenInDenom, swapFee, sdk.ZeroDec(), poolI.GetId())
+	tokenIn, _, _, _, _, err = k.computeInAmtGivenOut(cacheCtx, tokenOut, tokenInDenom, swapFee, sdk.ZeroDec(), poolI.GetId())
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -412,22 +407,21 @@ func (k Keeper) computeOutAmtGivenIn(
 	return tokenIn, tokenOut, swapState.tick, swapState.liquidity, swapState.sqrtPrice, nil
 }
 
-// calcInAmtGivenOut calculates tokens to be swapped in given the desired token out and fee deducted. It also returns
+// computeInAmtGivenOut calculates tokens to be swapped in given the desired token out and fee deducted. It also returns
 // what the updated tick, liquidity, and currentSqrtPrice for the pool would be after this swap.
-// Note this method is non-mutative, so the values returned by calcInAmtGivenOut do not get stored
-// Instead, we return writeCtx function so that the caller of this method can decide to write the cached ctx to store or not.
-func (k Keeper) calcInAmtGivenOut(
+// Note this method is mutative, some of the tick and accumulator updates get written to store.
+// However, there are no token transfers or pool updates done in this method. These mutations are performed in swapOutAmtGivenIn.
+func (k Keeper) computeInAmtGivenOut(
 	ctx sdk.Context,
 	desiredTokenOut sdk.Coin,
 	tokenInDenom string,
 	swapFee sdk.Dec,
 	priceLimit sdk.Dec,
 	poolId uint64,
-) (writeCtx func(), tokenIn, tokenOut sdk.Coin, updatedTick int64, updatedLiquidity, updatedSqrtPrice sdk.Dec, err error) {
-	ctx, writeCtx = ctx.CacheContext()
+) (tokenIn, tokenOut sdk.Coin, updatedTick int64, updatedLiquidity, updatedSqrtPrice sdk.Dec, err error) {
 	p, err := k.getPoolById(ctx, poolId)
 	if err != nil {
-		return writeCtx, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
 	}
 	asset0 := p.GetToken0()
 	asset1 := p.GetToken1()
@@ -445,7 +439,7 @@ func (k Keeper) calcInAmtGivenOut(
 	// take provided price limit and turn this into a sqrt price limit since formulas use sqrtPrice
 	sqrtPriceLimit, err := priceLimit.ApproxSqrt()
 	if err != nil {
-		return writeCtx, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("issue calculating square root of price limit")
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("issue calculating square root of price limit")
 	}
 
 	// set the swap strategy
@@ -455,20 +449,20 @@ func (k Keeper) calcInAmtGivenOut(
 	curSqrtPrice := p.GetCurrentSqrtPrice()
 
 	if err := swapStrategy.ValidateSqrtPrice(sqrtPriceLimit, curSqrtPrice); err != nil {
-		return writeCtx, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
 	}
 
 	// check that the specified tokenOut matches one of the assets in the specified pool
 	if desiredTokenOut.Denom != asset0 && desiredTokenOut.Denom != asset1 {
-		return writeCtx, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, types.TokenOutDenomNotInPoolError{TokenOutDenom: desiredTokenOut.Denom}
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, types.TokenOutDenomNotInPoolError{TokenOutDenom: desiredTokenOut.Denom}
 	}
 	// check that the specified tokenIn matches one of the assets in the specified pool
 	if tokenInDenom != asset0 && tokenInDenom != asset1 {
-		return writeCtx, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, types.TokenInDenomNotInPoolError{TokenInDenom: tokenInDenom}
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, types.TokenInDenomNotInPoolError{TokenInDenom: tokenInDenom}
 	}
 	// check that token in and token out are different denominations
 	if desiredTokenOut.Denom == tokenInDenom {
-		return writeCtx, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, types.DenomDuplicatedError{TokenInDenom: tokenInDenom, TokenOutDenom: desiredTokenOut.Denom}
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, types.DenomDuplicatedError{TokenInDenom: tokenInDenom, TokenOutDenom: desiredTokenOut.Denom}
 	}
 
 	// initialize swap state with the following parameters:
@@ -494,13 +488,13 @@ func (k Keeper) calcInAmtGivenOut(
 		// if no ticks are initialized (no users have created liquidity positions) then we return an error
 		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, swapState.tick)
 		if !ok {
-			return writeCtx, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
+			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
 		}
 
 		// utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
 		_, sqrtPriceNextTick, err := math.TickToSqrtPrice(nextTick)
 		if err != nil {
-			return writeCtx, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
+			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
 		}
 
 		sqrtPriceTarget := swapStrategy.GetSqrtTargetPrice(sqrtPriceNextTick)
@@ -535,7 +529,7 @@ func (k Keeper) calcInAmtGivenOut(
 			// retrieve the liquidity held in the next closest initialized tick
 			liquidityNet, err := k.crossTick(ctx, p.GetId(), nextTick, sdk.NewDecCoinFromDec(desiredTokenOut.Denom, swapState.feeGrowthGlobal))
 			if err != nil {
-				return writeCtx, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
+				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
 			}
 			liquidityNet = swapStrategy.SetLiquidityDeltaSign(liquidityNet)
 			// update the swapState's liquidity with the new tick's liquidity
@@ -550,13 +544,13 @@ func (k Keeper) calcInAmtGivenOut(
 			price := sqrtPrice.Mul(sqrtPrice)
 			swapState.tick, err = math.PriceToTickRoundDown(price, p.GetTickSpacing())
 			if err != nil {
-				return writeCtx, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
+				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
 			}
 		}
 	}
 
 	if err := k.chargeFee(ctx, poolId, sdk.NewDecCoinFromDec(tokenInDenom, swapState.feeGrowthGlobal)); err != nil {
-		return writeCtx, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
 	}
 
 	// coin amounts require int values
@@ -571,7 +565,7 @@ func (k Keeper) calcInAmtGivenOut(
 	tokenIn = sdk.NewCoin(tokenInDenom, amt0)
 	tokenOut = sdk.NewCoin(desiredTokenOut.Denom, amt1)
 
-	return writeCtx, tokenIn, tokenOut, swapState.tick, swapState.liquidity, swapState.sqrtPrice, nil
+	return tokenIn, tokenOut, swapState.tick, swapState.liquidity, swapState.sqrtPrice, nil
 }
 
 // updatePoolForSwap updates the given pool object with the results of a swap operation.
