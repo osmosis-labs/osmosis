@@ -507,7 +507,7 @@ func (k Keeper) computeInAmtGivenOut(
 
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
-	for swapState.amountSpecifiedRemaining.GT(sdk.SmallestDec()) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
+	for swapState.amountSpecifiedRemaining.GT(smallestDec) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
 		// log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
 
