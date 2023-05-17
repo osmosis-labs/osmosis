@@ -3,6 +3,7 @@ package osmoutils_test
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1307,5 +1308,76 @@ func (s *TestSuite) TestGetDec() {
 			}
 		})
 
+	}
+}
+
+func TestUint64SliceToBigEndianAndBigEndianToUint64Slice(t *testing.T) {
+	tests := []struct {
+		name string
+		in   []uint64
+	}{
+		{
+			name: "Test with empty slice",
+			in:   []uint64{},
+		},
+		{
+			name: "Test with one element",
+			in:   []uint64{1},
+		},
+		{
+			name: "Test with multiple elements",
+			in:   []uint64{1, 2, 3, 4},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Convert the []uint64 to []byte
+			b := osmoutils.Uint64SliceToBigEndian(tt.in)
+
+			// Convert the []byte back to []uint64
+			out := osmoutils.BigEndianToUint64Slice(b)
+
+			// Check if the original []uint64 is recovered
+			if !reflect.DeepEqual(out, tt.in) {
+				t.Errorf("Uint64SliceToBigEndian and BigEndianToUint64Slice = %v, want %v", out, tt.in)
+			}
+		})
+	}
+}
+
+func TestSliceContains(t *testing.T) {
+	tests := []struct {
+		name  string
+		slice []uint64
+		value uint64
+		want  bool
+	}{
+		{
+			name:  "Test with empty slice",
+			slice: []uint64{},
+			value: 1,
+			want:  false,
+		},
+		{
+			name:  "Test with slice that contains the value",
+			slice: []uint64{1, 2, 3, 4},
+			value: 1,
+			want:  true,
+		},
+		{
+			name:  "Test with slice that does not contain the value",
+			slice: []uint64{1, 2, 3, 4},
+			value: 5,
+			want:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := osmoutils.SliceContains(tt.slice, tt.value); got != tt.want {
+				t.Errorf("SliceContains() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
