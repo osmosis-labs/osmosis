@@ -257,10 +257,10 @@ func (k Keeper) computeOutAmtGivenIn(
 
 	hasPositionInPool, err := k.HasAnyPositionForPool(ctx, poolId)
 	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
 	}
 	if !hasPositionInPool {
-		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId}
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId}
 	}
 
 	asset0 := p.GetToken0()
@@ -435,10 +435,10 @@ func (k Keeper) computeInAmtGivenOut(
 
 	hasPositionInPool, err := k.HasAnyPositionForPool(ctx, poolId)
 	if err != nil {
-		return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
 	}
 	if !hasPositionInPool {
-		return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId}
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId}
 	}
 
 	asset0 := p.GetToken0()
