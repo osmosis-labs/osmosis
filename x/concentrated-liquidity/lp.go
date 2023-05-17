@@ -343,7 +343,7 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	currentTick := pool.GetCurrentTick().Int64()
+	currentTick := pool.GetCurrentTick()
 
 	// update lower tickInfo state
 	err = k.initOrUpdateTick(ctx, poolId, currentTick, lowerTick, liquidityDelta, false)
@@ -440,7 +440,7 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	// In such a case, we do not want to round the sqrt price to 100_000_000 X/Y, but rather
 	// let it float within the possible tick range.
 	pool.SetCurrentSqrtPrice(initialCurSqrtPrice)
-	pool.SetCurrentTick(sdk.NewInt(initialTick))
+	pool.SetCurrentTick(initialTick)
 	err = k.setPool(ctx, pool)
 	if err != nil {
 		return err
@@ -468,7 +468,7 @@ func (k Keeper) uninitializePool(ctx sdk.Context, poolId uint64) error {
 	}
 
 	pool.SetCurrentSqrtPrice(sdk.ZeroDec())
-	pool.SetCurrentTick(sdk.ZeroInt())
+	pool.SetCurrentTick(0)
 
 	if err := k.setPool(ctx, pool); err != nil {
 		return err

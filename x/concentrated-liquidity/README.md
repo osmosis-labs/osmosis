@@ -47,7 +47,7 @@ calculated with:
 
 $$L = \sqrt {xy}$$
 
-$$\sqrt P = y / x$$
+$$\sqrt P = \sqrt {y / x}$$
 
 By rearranging the above, we obtain the following formulas to track virtual reserves:
 
@@ -129,10 +129,10 @@ increase as follows:
 For spot prices less than a dollar, the precision factor decreases
 (increasing the incremental precision) at every factor of 10:
 
-- $tick_{-100} = 0.9999$
-- $tick_{-200} = 0.9998$
-- $tick_{-500100} = 0.4999$
-- $tick_{-500200} = 0.4998$
+- $tick_{-100} = 0.99999$
+- $tick_{-200} = 0.99998$
+- $tick_{-500100} = 0.94999$
+- $tick_{-500200} = 0.94998$
 - $tick_{-9000100} = 0.099999$
 - $tick_{-9000200} = 0.099998$
 
@@ -508,11 +508,11 @@ This is a basic function that should allow LPs to provide liquidity in specific 
 to a pool.
 
 A pool's liquidity is consisted of two assets: asset0 and asset1. In all pools,
-asset0 will be the lexicographically smaller of the two assets. At the current
-tick, the bucket at this tick consists of a mix of both asset0 and asset1 and
-is called the virtual liquidity of the pool (or "L" for short). Any positions
-set below the current price are consisted solely of asset0 while positions above
-the current price only contain asset1.
+asset1 will be the quote asset and must be an approved denom listed in the module
+parameters. At the current tick, the bucket at this tick consists of a mix of both
+asset0 and asset1 and is called the virtual liquidity of the pool (or "L" for short).
+Any positions set below the current price are consisted solely of asset0 while
+positions above the current price only contain asset1.
 
 ### Adding Liquidity
 

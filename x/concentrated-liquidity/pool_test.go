@@ -347,9 +347,9 @@ func (s *KeeperTestSuite) TestSetPool() {
 		Token0:               ETH,
 		Token1:               USDC,
 		CurrentSqrtPrice:     sdk.OneDec(),
-		CurrentTick:          sdk.ZeroInt(),
+		CurrentTick:          0,
 		TickSpacing:          DefaultTickSpacing,
-		ExponentAtPriceOne:   sdk.NewInt(-6),
+		ExponentAtPriceOne:   -6,
 		SwapFee:              sdk.MustNewDecFromStr("0.003"),
 		LastLiquidityUpdate:  s.Ctx.BlockTime(),
 	}
