@@ -35,7 +35,7 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 	// Notice we stop the timer to skip setup code.
 	b.StopTimer()
 
-	// We cannot use s.Require().NoError() becuase the suite context
+	// We cannot use s.Require().NoError() because the suite context
 	// is defined on the testing.T and not testing.B
 	noError := func(err error) {
 		require.NoError(b, err)
@@ -110,7 +110,6 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 
 		// Setup numberOfPositions positions at random ranges
 		for i := 0; i < numberOfPositions; i++ {
-
 			var (
 				lowerTick int64
 				upperTick int64

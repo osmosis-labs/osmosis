@@ -1329,7 +1329,6 @@ func (suite *KeeperTestSuite) calcInAmountAsSeparatePoolSwaps(osmoFeeReduced boo
 			suite.Require().NoError(err)
 
 			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
-
 		}
 		return nextTokenIn
 	}
@@ -2298,7 +2297,6 @@ func (suite *KeeperTestSuite) TestIsOsmoRoutedMultihop() {
 }
 
 func (suite *KeeperTestSuite) TestGetOsmoRoutedMultihopTotalSwapFee() {
-
 	tests := map[string]struct {
 		route                  types.MultihopRoute
 		balancerPoolCoins      []sdk.Coins

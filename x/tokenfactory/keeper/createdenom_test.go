@@ -36,7 +36,7 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 	suite.Require().True(preCreateBalance.Sub(postCreateBalance).IsEqual(denomCreationFee[0]))
 
 	// Make sure that a second version of the same denom can't be recreated
-	res, err = suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
+	_, err = suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
 	suite.Require().Error(err)
 
 	// Creating a second denom should work
