@@ -9,43 +9,44 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
-func (suite *KeeperTestSuite) TestGRPCParams() {
-	suite.SetupTest()
-	res, err := suite.querier.Params(sdk.WrapSDKContext(suite.Ctx), &types.QueryParamsRequest{})
-	suite.Require().NoError(err)
-	suite.Require().True(res.Params.MinimumRiskFactor.Equal(types.DefaultParams().MinimumRiskFactor))
+func (s *KeeperTestSuite) TestGRPCParams() {
+	s.SetupTest()
+	res, err := s.querier.Params(sdk.WrapSDKContext(s.Ctx), &types.QueryParamsRequest{})
+	s.Require().NoError(err)
+	s.Require().True(res.Params.MinimumRiskFactor.Equal(types.DefaultParams().MinimumRiskFactor))
 }
 
-func (suite *KeeperTestSuite) TestAllIntermediaryAccounts() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestAllIntermediaryAccounts() {
+	s.SetupTest()
 	// set account 1
 	valAddr1 := sdk.ValAddress([]byte("test1-AllIntermediaryAccounts"))
 	acc1 := types.NewSuperfluidIntermediaryAccount("test1", valAddr1.String(), 0)
-	suite.App.SuperfluidKeeper.SetIntermediaryAccount(suite.Ctx, acc1)
+	s.App.SuperfluidKeeper.SetIntermediaryAccount(s.Ctx, acc1)
 
 	// set account 2
 	valAddr2 := sdk.ValAddress([]byte("test2-AllIntermediaryAccounts"))
 	acc2 := types.NewSuperfluidIntermediaryAccount("test2", valAddr2.String(), 0)
-	suite.App.SuperfluidKeeper.SetIntermediaryAccount(suite.Ctx, acc2)
+	s.App.SuperfluidKeeper.SetIntermediaryAccount(s.Ctx, acc2)
 
 	// set account 3
 	valAddr3 := sdk.ValAddress([]byte("test3-AllIntermediaryAccounts"))
 	acc3 := types.NewSuperfluidIntermediaryAccount("test3", valAddr3.String(), 0)
-	suite.App.SuperfluidKeeper.SetIntermediaryAccount(suite.Ctx, acc3)
+	s.App.SuperfluidKeeper.SetIntermediaryAccount(s.Ctx, acc3)
 
-	res, err := suite.querier.AllIntermediaryAccounts(sdk.WrapSDKContext(suite.Ctx), &types.AllIntermediaryAccountsRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(3, len(res.Accounts))
-	suite.Require().Equal(uint64(3), res.Pagination.Total)
+	res, err := s.querier.AllIntermediaryAccounts(sdk.WrapSDKContext(s.Ctx), &types.AllIntermediaryAccountsRequest{})
+	s.Require().NoError(err)
+	s.Require().Equal(3, len(res.Accounts))
+	s.Require().Equal(uint64(3), res.Pagination.Total)
 }
-func (suite *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
-	suite.SetupTest()
-	ctx := suite.Ctx
-	querier := suite.querier
+
+func (s *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
+	s.SetupTest()
+	ctx := s.Ctx
+	querier := s.querier
 	delegation_amount := int64(1000000)
 
-	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
-	denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
+	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 	superfluidDelegations := []superfluidDelegation{
 		{0, 0, 0, delegation_amount},
@@ -54,26 +55,26 @@ func (suite *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 		{1, 1, 0, delegation_amount},
 	}
 
-	suite.setupSuperfluidDelegations(valAddrs, superfluidDelegations, denoms)
+	s.setupSuperfluidDelegations(valAddrs, superfluidDelegations, denoms)
 
 	for _, denom := range denoms {
 		res, err := querier.TotalDelegationByValidatorForDenom(sdk.WrapSDKContext(ctx), &types.QueryTotalDelegationByValidatorForDenomRequest{Denom: denom})
 
-		suite.Require().NoError(err)
-		suite.Require().Equal(len(valAddrs), len(res.Assets))
+		s.Require().NoError(err)
+		s.Require().Equal(len(valAddrs), len(res.Assets))
 
 		for _, result := range res.Assets {
 			// check osmo equivalent is correct
 			actual_response_osmo := result.OsmoEquivalent
-			needed_response_osmo, err := suite.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(ctx, denom, sdk.NewInt(delegation_amount))
-			suite.Require().NoError(err)
+			needed_response_osmo, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(ctx, denom, sdk.NewInt(delegation_amount))
+			s.Require().NoError(err)
 
-			suite.Require().Equal(actual_response_osmo, needed_response_osmo)
+			s.Require().Equal(actual_response_osmo, needed_response_osmo)
 
 			// check sfs'd asset amount correct
 			actual_response_asset := result.AmountSfsd
 			needed_response_asset := sdk.NewInt(delegation_amount)
-			suite.Require().Equal(actual_response_asset, needed_response_asset)
+			s.Require().Equal(actual_response_asset, needed_response_asset)
 
 			// check validator addresses correct
 			actual_val := result.ValAddr
@@ -84,42 +85,42 @@ func (suite *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 					break
 				}
 			}
-			suite.Require().True(checks == 1)
+			s.Require().True(checks == 1)
 		}
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCSuperfluidAsset() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestGRPCSuperfluidAsset() {
+	s.SetupTest()
 
 	// initial check
-	assets := suite.querier.GetAllSuperfluidAssets(suite.Ctx)
-	suite.Require().Len(assets, 0)
+	assets := s.querier.GetAllSuperfluidAssets(s.Ctx)
+	s.Require().Len(assets, 0)
 
 	// set asset
-	suite.querier.SetSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
+	s.querier.SetSuperfluidAsset(s.Ctx, types.SuperfluidAsset{
 		Denom:     DefaultGammAsset,
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	})
 
 	// get asset
-	res, err := suite.querier.AssetType(sdk.WrapSDKContext(suite.Ctx), &types.AssetTypeRequest{Denom: DefaultGammAsset})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.AssetType, types.SuperfluidAssetTypeLPShare)
+	res, err := s.querier.AssetType(sdk.WrapSDKContext(s.Ctx), &types.AssetTypeRequest{Denom: DefaultGammAsset})
+	s.Require().NoError(err)
+	s.Require().Equal(res.AssetType, types.SuperfluidAssetTypeLPShare)
 
 	// check assets
-	resp, err := suite.querier.AllAssets(sdk.WrapSDKContext(suite.Ctx), &types.AllAssetsRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Len(resp.Assets, 1)
+	resp, err := s.querier.AllAssets(sdk.WrapSDKContext(s.Ctx), &types.AllAssetsRequest{})
+	s.Require().NoError(err)
+	s.Require().Len(resp.Assets, 1)
 }
 
-func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
+	s.SetupTest()
 
 	// setup 2 validators
-	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
+	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
 
-	denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 	// create a delegation of 1000000 for every combination of 2 delegations, 2 validators, and 2 superfluid denoms
 	superfluidDelegations := []superfluidDelegation{
@@ -130,87 +131,87 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 	}
 
 	// setup superfluid delegations
-	delegatorAddresses, _, locks := suite.setupSuperfluidDelegations(valAddrs, superfluidDelegations, denoms)
+	delegatorAddresses, _, locks := s.setupSuperfluidDelegations(valAddrs, superfluidDelegations, denoms)
 
 	// for each superfluid delegation, query the amount and make sure it is 1000000
 	for _, delegation := range superfluidDelegations {
 		lpDenom := denoms[delegation.lpIndex]
-		res, err := suite.queryClient.SuperfluidDelegationAmount(sdk.WrapSDKContext(suite.Ctx), &types.SuperfluidDelegationAmountRequest{
+		res, err := s.queryClient.SuperfluidDelegationAmount(sdk.WrapSDKContext(s.Ctx), &types.SuperfluidDelegationAmountRequest{
 			DelegatorAddress: delegatorAddresses[delegation.delIndex].String(),
 			ValidatorAddress: valAddrs[delegation.valIndex].String(),
 			Denom:            lpDenom,
 		})
-		suite.Require().NoError(err)
-		suite.Require().Equal(res.Amount.AmountOf(lpDenom).Int64(), delegation.lpAmount)
+		s.Require().NoError(err)
+		s.Require().Equal(res.Amount.AmountOf(lpDenom).Int64(), delegation.lpAmount)
 	}
 
 	// for each delegator, query all their superfluid delegations and make sure they have 2 delegations
 	for _, delegator := range delegatorAddresses {
-		res, err := suite.queryClient.SuperfluidDelegationsByDelegator(sdk.WrapSDKContext(suite.Ctx), &types.SuperfluidDelegationsByDelegatorRequest{
+		res, err := s.queryClient.SuperfluidDelegationsByDelegator(sdk.WrapSDKContext(s.Ctx), &types.SuperfluidDelegationsByDelegatorRequest{
 			DelegatorAddress: delegator.String(),
 		})
 
-		multiplier0 := suite.querier.Keeper.GetOsmoEquivalentMultiplier(suite.Ctx, denoms[0])
-		multiplier1 := suite.querier.Keeper.GetOsmoEquivalentMultiplier(suite.Ctx, denoms[1])
-		minRiskFactor := suite.querier.Keeper.GetParams(suite.Ctx).MinimumRiskFactor
+		multiplier0 := s.querier.Keeper.GetOsmoEquivalentMultiplier(s.Ctx, denoms[0])
+		multiplier1 := s.querier.Keeper.GetOsmoEquivalentMultiplier(s.Ctx, denoms[1])
+		minRiskFactor := s.querier.Keeper.GetParams(s.Ctx).MinimumRiskFactor
 
 		expectAmount0 := multiplier0.Mul(sdk.NewDec(1000000)).Sub(multiplier0.Mul(sdk.NewDec(1000000)).Mul(minRiskFactor))
 		expectAmount1 := multiplier1.Mul(sdk.NewDec(1000000)).Sub(multiplier1.Mul(sdk.NewDec(1000000)).Mul(minRiskFactor))
 
-		suite.Require().NoError(err)
-		suite.Require().Len(res.SuperfluidDelegationRecords, 2)
-		suite.Require().True(res.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
+		s.Require().NoError(err)
+		s.Require().Len(res.SuperfluidDelegationRecords, 2)
+		s.Require().True(res.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
 			sdk.NewInt64Coin(denoms[0], 1000000),
 			sdk.NewInt64Coin(denoms[1], 1000000),
 		)))
-		suite.Require().True(res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.IsEqual(sdk.NewCoin("uosmo", expectAmount0.RoundInt())))
-		suite.Require().True(res.SuperfluidDelegationRecords[1].EquivalentStakedAmount.IsEqual(sdk.NewCoin("uosmo", expectAmount1.RoundInt())))
+		s.Require().True(res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.IsEqual(sdk.NewCoin("uosmo", expectAmount0.RoundInt())))
+		s.Require().True(res.SuperfluidDelegationRecords[1].EquivalentStakedAmount.IsEqual(sdk.NewCoin("uosmo", expectAmount1.RoundInt())))
 	}
 
 	// for each validator denom pair, make sure they have 1 delegations
 	for _, validator := range valAddrs {
 		for _, denom := range denoms {
-			amountRes, err := suite.queryClient.EstimateSuperfluidDelegatedAmountByValidatorDenom(sdk.WrapSDKContext(suite.Ctx), &types.EstimateSuperfluidDelegatedAmountByValidatorDenomRequest{
+			amountRes, err := s.queryClient.EstimateSuperfluidDelegatedAmountByValidatorDenom(sdk.WrapSDKContext(s.Ctx), &types.EstimateSuperfluidDelegatedAmountByValidatorDenomRequest{
 				ValidatorAddress: validator.String(),
 				Denom:            denom,
 			})
 
-			suite.Require().NoError(err)
-			suite.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin(denom, 1000000)), amountRes.TotalDelegatedCoins)
+			s.Require().NoError(err)
+			s.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin(denom, 1000000)), amountRes.TotalDelegatedCoins)
 
-			delegationsRes, err := suite.queryClient.SuperfluidDelegationsByValidatorDenom(sdk.WrapSDKContext(suite.Ctx), &types.SuperfluidDelegationsByValidatorDenomRequest{
+			delegationsRes, err := s.queryClient.SuperfluidDelegationsByValidatorDenom(sdk.WrapSDKContext(s.Ctx), &types.SuperfluidDelegationsByValidatorDenomRequest{
 				ValidatorAddress: validator.String(),
 				Denom:            denom,
 			})
-			suite.Require().NoError(err)
-			suite.Require().Len(delegationsRes.SuperfluidDelegationRecords, 1)
+			s.Require().NoError(err)
+			s.Require().Len(delegationsRes.SuperfluidDelegationRecords, 1)
 		}
 	}
 
-	totalSuperfluidDelegationsRes, err := suite.queryClient.TotalSuperfluidDelegations(sdk.WrapSDKContext(suite.Ctx), &types.TotalSuperfluidDelegationsRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewInt(40000000), totalSuperfluidDelegationsRes.TotalDelegations)
+	totalSuperfluidDelegationsRes, err := s.queryClient.TotalSuperfluidDelegations(sdk.WrapSDKContext(s.Ctx), &types.TotalSuperfluidDelegationsRequest{})
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewInt(40000000), totalSuperfluidDelegationsRes.TotalDelegations)
 
 	for _, lockID := range locks {
-		connectedIntermediaryAccountRes, err := suite.queryClient.ConnectedIntermediaryAccount(sdk.WrapSDKContext(suite.Ctx), &types.ConnectedIntermediaryAccountRequest{LockId: lockID.ID})
-		suite.Require().NoError(err)
-		suite.Require().NotEqual("", connectedIntermediaryAccountRes.Account.Denom)
-		suite.Require().NotEqual("", connectedIntermediaryAccountRes.Account.Address)
-		suite.Require().NotEqual(uint64(0), connectedIntermediaryAccountRes.Account.GaugeId)
+		connectedIntermediaryAccountRes, err := s.queryClient.ConnectedIntermediaryAccount(sdk.WrapSDKContext(s.Ctx), &types.ConnectedIntermediaryAccountRequest{LockId: lockID.ID})
+		s.Require().NoError(err)
+		s.Require().NotEqual("", connectedIntermediaryAccountRes.Account.Denom)
+		s.Require().NotEqual("", connectedIntermediaryAccountRes.Account.Address)
+		s.Require().NotEqual(uint64(0), connectedIntermediaryAccountRes.Account.GaugeId)
 	}
-	connectedIntermediaryAccountRes, err := suite.queryClient.ConnectedIntermediaryAccount(sdk.WrapSDKContext(suite.Ctx), &types.ConnectedIntermediaryAccountRequest{LockId: 123})
-	suite.Require().NoError(err)
-	suite.Require().Equal("", connectedIntermediaryAccountRes.Account.Denom)
-	suite.Require().Equal("", connectedIntermediaryAccountRes.Account.ValAddr)
-	suite.Require().Equal(uint64(0), connectedIntermediaryAccountRes.Account.GaugeId)
+	connectedIntermediaryAccountRes, err := s.queryClient.ConnectedIntermediaryAccount(sdk.WrapSDKContext(s.Ctx), &types.ConnectedIntermediaryAccountRequest{LockId: 123})
+	s.Require().NoError(err)
+	s.Require().Equal("", connectedIntermediaryAccountRes.Account.Denom)
+	s.Require().Equal("", connectedIntermediaryAccountRes.Account.ValAddr)
+	s.Require().Equal(uint64(0), connectedIntermediaryAccountRes.Account.GaugeId)
 }
 
-func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbonding() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbonding() {
+	s.SetupTest()
 
 	// setup 2 validators
-	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
-	denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
+	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 	// create a delegation of 1000000 for every combination of 2 delegations, 2 validators, and 2 superfluid denoms
 	superfluidDelegations := []superfluidDelegation{
@@ -221,60 +222,60 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbon
 	}
 
 	// setup superfluid delegations
-	delegatorAddresses, _, locks := suite.setupSuperfluidDelegations(valAddrs, superfluidDelegations, denoms)
+	delegatorAddresses, _, locks := s.setupSuperfluidDelegations(valAddrs, superfluidDelegations, denoms)
 
 	// start unbonding the superfluid delegations of denom0 from delegator0 to validator0
-	err := suite.querier.SuperfluidUndelegate(suite.Ctx, locks[0].Owner, locks[0].ID)
-	suite.Require().NoError(err)
+	err := s.querier.SuperfluidUndelegate(s.Ctx, locks[0].Owner, locks[0].ID)
+	s.Require().NoError(err)
 
 	// query to make sure that the amount delegated for the now unbonding delegation is 0
-	res, err := suite.queryClient.SuperfluidDelegationAmount(sdk.WrapSDKContext(suite.Ctx), &types.SuperfluidDelegationAmountRequest{
+	res, err := s.queryClient.SuperfluidDelegationAmount(sdk.WrapSDKContext(s.Ctx), &types.SuperfluidDelegationAmountRequest{
 		DelegatorAddress: delegatorAddresses[0].String(),
 		ValidatorAddress: valAddrs[0].String(),
 		Denom:            denoms[0],
 	})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Amount.AmountOf(denoms[0]).Int64(), int64(0))
+	s.Require().NoError(err)
+	s.Require().Equal(res.Amount.AmountOf(denoms[0]).Int64(), int64(0))
 
 	// query to make sure that the unbonding delegation is not included in delegator query
-	res2, err := suite.queryClient.SuperfluidDelegationsByDelegator(sdk.WrapSDKContext(suite.Ctx), &types.SuperfluidDelegationsByDelegatorRequest{
+	res2, err := s.queryClient.SuperfluidDelegationsByDelegator(sdk.WrapSDKContext(s.Ctx), &types.SuperfluidDelegationsByDelegatorRequest{
 		DelegatorAddress: delegatorAddresses[0].String(),
 	})
-	suite.Require().NoError(err)
-	suite.Require().Len(res2.SuperfluidDelegationRecords, 1)
-	suite.Require().Equal(sdk.NewCoins(
+	s.Require().NoError(err)
+	s.Require().Len(res2.SuperfluidDelegationRecords, 1)
+	s.Require().Equal(sdk.NewCoins(
 		sdk.NewInt64Coin(denoms[1], 1000000)), res2.TotalDelegatedCoins)
 
 	// query to make sure that the unbonding delegation is not included in the validator denom pair query
-	amountRes, err := suite.queryClient.EstimateSuperfluidDelegatedAmountByValidatorDenom(sdk.WrapSDKContext(suite.Ctx), &types.EstimateSuperfluidDelegatedAmountByValidatorDenomRequest{
+	amountRes, err := s.queryClient.EstimateSuperfluidDelegatedAmountByValidatorDenom(sdk.WrapSDKContext(s.Ctx), &types.EstimateSuperfluidDelegatedAmountByValidatorDenomRequest{
 		ValidatorAddress: valAddrs[1].String(),
 		Denom:            denoms[0],
 	})
 
-	suite.Require().NoError(err)
-	suite.Require().True(amountRes.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
+	s.Require().NoError(err)
+	s.Require().True(amountRes.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
 		sdk.NewInt64Coin(denoms[0], 1000000),
 	)))
 
-	delegationsRes, err := suite.queryClient.SuperfluidDelegationsByValidatorDenom(sdk.WrapSDKContext(suite.Ctx), &types.SuperfluidDelegationsByValidatorDenomRequest{
+	delegationsRes, err := s.queryClient.SuperfluidDelegationsByValidatorDenom(sdk.WrapSDKContext(s.Ctx), &types.SuperfluidDelegationsByValidatorDenomRequest{
 		ValidatorAddress: valAddrs[1].String(),
 		Denom:            denoms[0],
 	})
-	suite.Require().NoError(err)
-	suite.Require().Len(delegationsRes.SuperfluidDelegationRecords, 1)
+	s.Require().NoError(err)
+	s.Require().Len(delegationsRes.SuperfluidDelegationRecords, 1)
 
-	totalSuperfluidDelegationsRes, err := suite.queryClient.TotalSuperfluidDelegations(sdk.WrapSDKContext(suite.Ctx), &types.TotalSuperfluidDelegationsRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(totalSuperfluidDelegationsRes.TotalDelegations, sdk.NewInt(30000000))
+	totalSuperfluidDelegationsRes, err := s.queryClient.TotalSuperfluidDelegations(sdk.WrapSDKContext(s.Ctx), &types.TotalSuperfluidDelegationsRequest{})
+	s.Require().NoError(err)
+	s.Require().Equal(totalSuperfluidDelegationsRes.TotalDelegations, sdk.NewInt(30000000))
 }
 
-func (suite *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
+	s.SetupTest()
 
 	// setup 2 validators
-	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
+	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
 
-	denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 	// create a delegation of 1000000 for every combination of 2 delegations, 2 validators, and 2 superfluid denoms
 	superfluidDelegations := []superfluidDelegation{
@@ -285,7 +286,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
 	}
 
 	// setup superfluid delegations
-	delegatorAddresses, _, _ := suite.setupSuperfluidDelegations(valAddrs, superfluidDelegations, denoms)
+	delegatorAddresses, _, _ := s.setupSuperfluidDelegations(valAddrs, superfluidDelegations, denoms)
 
 	// setup normal delegations
 	bond0to0 := stakingtypes.NewDelegation(delegatorAddresses[0], valAddrs[0], sdk.NewDec(9000000))
@@ -293,14 +294,14 @@ func (suite *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
 	bond1to0 := stakingtypes.NewDelegation(delegatorAddresses[1], valAddrs[0], sdk.NewDec(9000000))
 	bond1to1 := stakingtypes.NewDelegation(delegatorAddresses[1], valAddrs[1], sdk.NewDec(9000000))
 
-	suite.App.StakingKeeper.SetDelegation(suite.Ctx, bond0to0)
-	suite.App.StakingKeeper.SetDelegation(suite.Ctx, bond0to1)
-	suite.App.StakingKeeper.SetDelegation(suite.Ctx, bond1to0)
-	suite.App.StakingKeeper.SetDelegation(suite.Ctx, bond1to1)
+	s.App.StakingKeeper.SetDelegation(s.Ctx, bond0to0)
+	s.App.StakingKeeper.SetDelegation(s.Ctx, bond0to1)
+	s.App.StakingKeeper.SetDelegation(s.Ctx, bond1to0)
+	s.App.StakingKeeper.SetDelegation(s.Ctx, bond1to1)
 
-	multiplier0 := suite.querier.Keeper.GetOsmoEquivalentMultiplier(suite.Ctx, denoms[0])
-	multiplier1 := suite.querier.Keeper.GetOsmoEquivalentMultiplier(suite.Ctx, denoms[1])
-	minRiskFactor := suite.querier.Keeper.GetParams(suite.Ctx).MinimumRiskFactor
+	multiplier0 := s.querier.Keeper.GetOsmoEquivalentMultiplier(s.Ctx, denoms[0])
+	multiplier1 := s.querier.Keeper.GetOsmoEquivalentMultiplier(s.Ctx, denoms[1])
+	minRiskFactor := s.querier.Keeper.GetParams(s.Ctx).MinimumRiskFactor
 
 	expectAmount0 := multiplier0.Mul(sdk.NewDec(1000000)).Sub(multiplier0.Mul(sdk.NewDec(1000000)).Mul(minRiskFactor))
 	expectAmount1 := multiplier1.Mul(sdk.NewDec(1000000)).Sub(multiplier1.Mul(sdk.NewDec(1000000)).Mul(minRiskFactor))
@@ -308,16 +309,16 @@ func (suite *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
 	// for each delegator, query all their superfluid delegations and normal delegations. Making sure they have 4 delegations
 	// Making sure TotalEquivalentStakedAmount is equal to converted amount + normal delegations
 	for _, delegator := range delegatorAddresses {
-		res, err := suite.queryClient.TotalDelegationByDelegator(sdk.WrapSDKContext(suite.Ctx), &types.QueryTotalDelegationByDelegatorRequest{
+		res, err := s.queryClient.TotalDelegationByDelegator(sdk.WrapSDKContext(s.Ctx), &types.QueryTotalDelegationByDelegatorRequest{
 			DelegatorAddress: delegator.String(),
 		})
 
 		fmt.Printf("res = %v \n", res)
 
-		suite.Require().NoError(err)
-		suite.Require().Len(res.SuperfluidDelegationRecords, 2)
-		suite.Require().Len(res.DelegationResponse, 2)
-		suite.Require().True(res.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
+		s.Require().NoError(err)
+		s.Require().Len(res.SuperfluidDelegationRecords, 2)
+		s.Require().Len(res.DelegationResponse, 2)
+		s.Require().True(res.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
 			sdk.NewInt64Coin(denoms[0], 1000000),
 			sdk.NewInt64Coin(denoms[1], 1000000),
 			sdk.NewInt64Coin("uosmo", 18000000),
@@ -325,6 +326,6 @@ func (suite *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
 
 		total_osmo_equivalent := sdk.NewCoin("uosmo", expectAmount0.RoundInt().Add(expectAmount1.RoundInt()).Add(sdk.NewInt(18000000)))
 
-		suite.Require().True(res.TotalEquivalentStakedAmount.IsEqual(total_osmo_equivalent))
+		s.Require().True(res.TotalEquivalentStakedAmount.IsEqual(total_osmo_equivalent))
 	}
 }

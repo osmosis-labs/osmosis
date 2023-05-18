@@ -10,7 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
-func (suite *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
+func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 	testCases := []struct {
 		name               string
 		asset              types.SuperfluidAsset
@@ -56,14 +56,14 @@ func (suite *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 	}
 
 	for _, tc := range testCases {
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
+		s.Run(tc.name, func() {
+			s.SetupTest()
 
-			ctx := suite.Ctx
-			superfluidKeeper := suite.App.SuperfluidKeeper
+			ctx := s.Ctx
+			superfluidKeeper := s.App.SuperfluidKeeper
 
 			// Switch the default staking denom to something else if the test case requires it
-			stakeDenom := suite.App.StakingKeeper.BondDenom(ctx)
+			stakeDenom := s.App.StakingKeeper.BondDenom(ctx)
 			if tc.removeStakingAsset {
 				stakeDenom = "bar"
 			}
@@ -71,14 +71,14 @@ func (suite *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 
 			// Ensure that the multiplier is zero before the test
 			multiplier := superfluidKeeper.GetOsmoEquivalentMultiplier(ctx, tc.asset.Denom)
-			suite.Require().Equal(multiplier, sdk.ZeroDec())
+			s.Require().Equal(multiplier, sdk.ZeroDec())
 
 			// Create the respective pool if the test case requires it
 			if !tc.poolDoesNotExist {
 				if tc.asset.AssetType == types.SuperfluidAssetTypeLPShare {
-					suite.PrepareBalancerPoolWithCoins(poolCoins...)
+					s.PrepareBalancerPoolWithCoins(poolCoins...)
 				} else if tc.asset.AssetType == types.SuperfluidAssetTypeConcentratedShare {
-					suite.PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition(stakeDenom, "foo")
+					s.PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition(stakeDenom, "foo")
 				}
 			}
 
@@ -86,22 +86,22 @@ func (suite *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 			err := superfluidKeeper.UpdateOsmoEquivalentMultipliers(ctx, tc.asset, 1)
 
 			if tc.expectedError != nil {
-				suite.Require().Error(err)
-				suite.Require().ErrorContains(err, tc.expectedError.Error())
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
 
 				// Ensure unwind superfluid asset is called
 				// Check that multiplier was not set
 				multiplier := superfluidKeeper.GetOsmoEquivalentMultiplier(ctx, tc.asset.Denom)
-				suite.Require().Equal(multiplier, sdk.ZeroDec())
+				s.Require().Equal(multiplier, sdk.ZeroDec())
 				// Check that the asset was deleted
 				_, err := superfluidKeeper.GetSuperfluidAsset(ctx, tc.asset.Denom)
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			} else {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 
 				// Check that multiplier was set correctly
 				multiplier := superfluidKeeper.GetOsmoEquivalentMultiplier(ctx, tc.asset.Denom)
-				suite.Require().NotEqual(multiplier, sdk.ZeroDec())
+				s.Require().NotEqual(multiplier, sdk.ZeroDec())
 			}
 		})
 	}

@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *KeeperTestSuite) TestAllocateAsset() {
+func (s *KeeperTestSuite) TestAllocateAsset() {
 	tests := []struct {
 		name                   string
 		testingDistrRecord     []types.DistrRecord
@@ -86,45 +86,45 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	}
 
 	for _, test := range tests {
-		suite.Run(test.name, func() {
-			suite.Setup()
-			keeper := suite.App.PoolIncentivesKeeper
-			suite.FundModuleAcc(types.ModuleName, sdk.NewCoins(test.mintedCoins))
-			suite.PrepareBalancerPool()
+		s.Run(test.name, func() {
+			s.Setup()
+			keeper := s.App.PoolIncentivesKeeper
+			s.FundModuleAcc(types.ModuleName, sdk.NewCoins(test.mintedCoins))
+			s.PrepareBalancerPool()
 
 			// LockableDurations should be 1, 3, 7 hours from the default genesis state.
-			lockableDurations := keeper.GetLockableDurations(suite.Ctx)
-			suite.Equal(3, len(lockableDurations))
+			lockableDurations := keeper.GetLockableDurations(s.Ctx)
+			s.Equal(3, len(lockableDurations))
 
 			for i, duration := range lockableDurations {
-				suite.Equal(duration, types.DefaultGenesisState().GetLockableDurations()[i])
+				s.Equal(duration, types.DefaultGenesisState().GetLockableDurations()[i])
 			}
 
-			feePoolOrigin := suite.App.DistrKeeper.GetFeePool(suite.Ctx)
+			feePoolOrigin := s.App.DistrKeeper.GetFeePool(s.Ctx)
 
 			// Create record
-			err := keeper.ReplaceDistrRecords(suite.Ctx, test.testingDistrRecord...)
-			suite.Require().NoError(err)
+			err := keeper.ReplaceDistrRecords(s.Ctx, test.testingDistrRecord...)
+			s.Require().NoError(err)
 
-			err = keeper.AllocateAsset(suite.Ctx)
-			suite.Require().NoError(err)
+			err = keeper.AllocateAsset(s.Ctx)
+			s.Require().NoError(err)
 
 			for i := 0; i < len(test.testingDistrRecord); i++ {
 				if test.testingDistrRecord[i].GaugeId == 0 {
 					continue
 				}
-				gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, test.testingDistrRecord[i].GaugeId)
-				suite.Require().NoError(err)
-				suite.Require().Equal(test.expectedGaugesBalances[i], gauge.Coins)
+				gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, test.testingDistrRecord[i].GaugeId)
+				s.Require().NoError(err)
+				s.Require().Equal(test.expectedGaugesBalances[i], gauge.Coins)
 			}
 
-			feePoolNew := suite.App.DistrKeeper.GetFeePool(suite.Ctx)
-			suite.Require().Equal(feePoolOrigin.CommunityPool.Add(test.expectedCommunityPool), feePoolNew.CommunityPool)
+			feePoolNew := s.App.DistrKeeper.GetFeePool(s.Ctx)
+			s.Require().Equal(feePoolOrigin.CommunityPool.Add(test.expectedCommunityPool), feePoolNew.CommunityPool)
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
+func (s *KeeperTestSuite) TestReplaceDistrRecords() {
 	tests := []struct {
 		name               string
 		testingDistrRecord []types.DistrRecord
@@ -206,32 +206,32 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 	}
 
 	for _, test := range tests {
-		suite.Run(test.name, func() {
-			suite.SetupTest()
-			keeper := suite.App.PoolIncentivesKeeper
+		s.Run(test.name, func() {
+			s.SetupTest()
+			keeper := s.App.PoolIncentivesKeeper
 
 			if test.isPoolPrepared {
-				suite.PrepareBalancerPool()
+				s.PrepareBalancerPool()
 			}
 
-			err := keeper.ReplaceDistrRecords(suite.Ctx, test.testingDistrRecord...)
+			err := keeper.ReplaceDistrRecords(s.Ctx, test.testingDistrRecord...)
 			if test.expectErr {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			} else {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 
-				distrInfo := keeper.GetDistrInfo(suite.Ctx)
-				suite.Require().Equal(len(test.testingDistrRecord), len(distrInfo.Records))
+				distrInfo := keeper.GetDistrInfo(s.Ctx)
+				s.Require().Equal(len(test.testingDistrRecord), len(distrInfo.Records))
 				for i, record := range test.testingDistrRecord {
-					suite.Require().Equal(record.Weight, distrInfo.Records[i].Weight)
+					s.Require().Equal(record.Weight, distrInfo.Records[i].Weight)
 				}
-				suite.Require().Equal(test.expectTotalWeight, distrInfo.TotalWeight)
+				s.Require().Equal(test.expectTotalWeight, distrInfo.TotalWeight)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
+func (s *KeeperTestSuite) TestUpdateDistrRecords() {
 	tests := []struct {
 		name               string
 		testingDistrRecord []types.DistrRecord
@@ -313,26 +313,26 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
 	}
 
 	for _, test := range tests {
-		suite.Run(test.name, func() {
-			suite.SetupTest()
-			keeper := suite.App.PoolIncentivesKeeper
+		s.Run(test.name, func() {
+			s.SetupTest()
+			keeper := s.App.PoolIncentivesKeeper
 
 			if test.isPoolPrepared {
-				suite.PrepareBalancerPool()
+				s.PrepareBalancerPool()
 			}
 
-			err := keeper.UpdateDistrRecords(suite.Ctx, test.testingDistrRecord...)
+			err := keeper.UpdateDistrRecords(s.Ctx, test.testingDistrRecord...)
 			if test.expectErr {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			} else {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 
-				distrInfo := keeper.GetDistrInfo(suite.Ctx)
-				suite.Require().Equal(len(test.testingDistrRecord), len(distrInfo.Records))
+				distrInfo := keeper.GetDistrInfo(s.Ctx)
+				s.Require().Equal(len(test.testingDistrRecord), len(distrInfo.Records))
 				for i, record := range test.testingDistrRecord {
-					suite.Require().Equal(record.Weight, distrInfo.Records[i].Weight)
+					s.Require().Equal(record.Weight, distrInfo.Records[i].Weight)
 				}
-				suite.Require().Equal(test.expectTotalWeight, distrInfo.TotalWeight)
+				s.Require().Equal(test.expectTotalWeight, distrInfo.TotalWeight)
 			}
 		})
 	}

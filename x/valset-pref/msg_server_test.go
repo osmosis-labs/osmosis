@@ -8,11 +8,11 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/valset-pref/types"
 )
 
-func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestSetValidatorSetPreference() {
+	s.SetupTest()
 
 	// setup 6 validators
-	valAddrs := suite.SetupMultipleValidators(6)
+	valAddrs := s.SetupMultipleValidators(6)
 
 	tests := []struct {
 		name                   string
@@ -148,35 +148,35 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 	}
 
 	for _, test := range tests {
-		suite.Run(test.name, func() {
+		s.Run(test.name, func() {
 			// setup message server
-			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorSetPreferenceKeeper)
-			c := sdk.WrapSDKContext(suite.Ctx)
+			msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
+			c := sdk.WrapSDKContext(s.Ctx)
 
 			if test.setExistingDelegations {
 				amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)} // 100 osmo
-				suite.FundAcc(test.delegator, amountToFund)
+				s.FundAcc(test.delegator, amountToFund)
 
-				err := suite.PrepareExistingDelegations(suite.Ctx, valAddrs, test.delegator, test.amountToDelegate.Amount)
-				suite.Require().NoError(err)
+				err := s.PrepareExistingDelegations(s.Ctx, valAddrs, test.delegator, test.amountToDelegate.Amount)
+				s.Require().NoError(err)
 			}
 
 			// call the sets new validator set preference
 			_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, test.preferences))
 			if test.expectPass {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestDelegateToValidatorSet() {
+	s.SetupTest()
 
 	// valset test setup
-	valAddrs, preferences, amountToFund := suite.SetupValidatorsAndDelegations()
+	valAddrs, preferences, amountToFund := s.SetupValidatorsAndDelegations()
 
 	tests := []struct {
 		name                   string
@@ -236,47 +236,47 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 	}
 
 	for _, test := range tests {
-		suite.Run(test.name, func() {
+		s.Run(test.name, func() {
 			// setup message server
-			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorSetPreferenceKeeper)
-			c := sdk.WrapSDKContext(suite.Ctx)
+			msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
+			c := sdk.WrapSDKContext(s.Ctx)
 
-			suite.FundAcc(test.delegator, amountToFund)
+			s.FundAcc(test.delegator, amountToFund)
 
 			if test.setValSet {
 				_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 			}
 
 			if test.setExistingDelegations {
 				// we perform this operation len(valAddrs) times
-				err := suite.PrepareExistingDelegations(suite.Ctx, valAddrs, test.delegator, test.amountToDelegate.Amount)
-				suite.Require().NoError(err)
+				err := s.PrepareExistingDelegations(s.Ctx, valAddrs, test.delegator, test.amountToDelegate.Amount)
+				s.Require().NoError(err)
 			}
 
 			_, err := msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.amountToDelegate))
 			if test.expectPass {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 
 				// check if the user balance decreased
-				balance := suite.App.BankKeeper.GetBalance(suite.Ctx, test.delegator, sdk.DefaultBondDenom)
+				balance := s.App.BankKeeper.GetBalance(s.Ctx, test.delegator, sdk.DefaultBondDenom)
 				expectedBalance := amountToFund[0].Amount.Sub(test.amountToDelegate.Amount)
 				// valset has not been set so use the (expectedBalance = account balance)
 				if !test.setValSet {
 					expectedBalance = balance.Amount
 				}
 
-				suite.Require().Equal(expectedBalance, balance.Amount)
+				s.Require().Equal(expectedBalance, balance.Amount)
 
 				if test.setValSet {
 					// check if the expectedShares matches after delegation
 					for i, val := range preferences {
 						valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
-						suite.Require().NoError(err)
+						s.Require().NoError(err)
 
 						// guarantees that the delegator exists because we check it in DelegateToValidatorSet
-						del, _ := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
-						suite.Require().Equal(test.expectedShares[i], del.Shares)
+						del, _ := s.App.StakingKeeper.GetDelegation(s.Ctx, test.delegator, valAddr)
+						s.Require().Equal(test.expectedShares[i], del.Shares)
 					}
 				}
 
@@ -286,28 +286,28 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 
 					for i, val := range valAddrs {
 						valAddr, err := sdk.ValAddressFromBech32(val)
-						suite.Require().NoError(err)
+						s.Require().NoError(err)
 
 						// guarantees that the delegator exists because we check it in DelegateToValidatorSet
-						del, _ := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
+						del, _ := s.App.StakingKeeper.GetDelegation(s.Ctx, test.delegator, valAddr)
 						delSharesAmt = delSharesAmt.Add(del.Shares)
 						expectedAmt = expectedAmt.Add(test.expectedShares[i])
 					}
 
-					suite.Require().Equal(expectedAmt, delSharesAmt)
+					s.Require().Equal(expectedAmt, delSharesAmt)
 				}
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
+	s.SetupTest()
 
 	// valset test setup
-	valAddrs, preferences, amountToFund := suite.SetupValidatorsAndDelegations()
+	valAddrs, preferences, amountToFund := s.SetupValidatorsAndDelegations()
 
 	tests := []struct {
 		name                   string
@@ -383,57 +383,57 @@ func (suite *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 	}
 
 	for _, test := range tests {
-		suite.Run(test.name, func() {
-			suite.FundAcc(test.delegator, amountToFund) // 100 osmo
+		s.Run(test.name, func() {
+			s.FundAcc(test.delegator, amountToFund) // 100 osmo
 
 			// setup message server
-			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorSetPreferenceKeeper)
-			c := sdk.WrapSDKContext(suite.Ctx)
+			msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
+			c := sdk.WrapSDKContext(s.Ctx)
 
 			if test.setValSet {
 				// SetValidatorSetPreference sets a new list of val-set
 				_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 
 				// DelegateToValidatorSet delegate to existing val-set
 				_, err = msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.coinToStake))
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 			}
 
 			if test.setExistingDelegations {
-				err := suite.PrepareExistingDelegations(suite.Ctx, valAddrs, test.delegator, test.coinToStake.Amount)
-				suite.Require().NoError(err)
+				err := s.PrepareExistingDelegations(s.Ctx, valAddrs, test.delegator, test.coinToStake.Amount)
+				s.Require().NoError(err)
 			}
 
 			_, err := msgServer.UndelegateFromValidatorSet(c, types.NewMsgUndelegateFromValidatorSet(test.delegator, test.coinToUnStake))
 			if test.expectPass {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 
 				// check if the expectedShares matches after undelegation
 				for i, val := range preferences {
 					valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
-					suite.Require().NoError(err)
+					s.Require().NoError(err)
 
 					// guarantees that the delegator exists because we check it in UnDelegateToValidatorSet
-					del, found := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
+					del, found := s.App.StakingKeeper.GetDelegation(s.Ctx, test.delegator, valAddr)
 					if found {
-						suite.Require().Equal(test.expectedShares[i], del.GetShares())
+						s.Require().Equal(test.expectedShares[i], del.GetShares())
 					}
 				}
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestRedelegateToValidatorSet() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestRedelegateToValidatorSet() {
+	s.SetupTest()
 
 	// prepare validators to delegate to
-	preferences := suite.PrepareDelegateToValidatorSet()
+	preferences := s.PrepareDelegateToValidatorSet()
 
-	valAddrs := suite.SetupMultipleValidators(6)
+	valAddrs := s.SetupMultipleValidators(6)
 
 	tests := []struct {
 		name                        string
@@ -533,55 +533,55 @@ func (suite *KeeperTestSuite) TestRedelegateToValidatorSet() {
 	}
 
 	for _, test := range tests {
-		suite.Run(test.name, func() {
+		s.Run(test.name, func() {
 			// setup message server
-			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorSetPreferenceKeeper)
-			c := sdk.WrapSDKContext(suite.Ctx)
+			msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
+			c := sdk.WrapSDKContext(s.Ctx)
 
 			// fund the account that is trying to delegate
-			suite.FundAcc(test.delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)})
+			s.FundAcc(test.delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)})
 
 			if test.setExistingDelegation {
-				err := suite.PrepareExistingDelegations(suite.Ctx, []string{valAddrs[0]}, test.delegator, test.amountToDelegate.Amount)
-				suite.Require().NoError(err)
+				err := s.PrepareExistingDelegations(s.Ctx, []string{valAddrs[0]}, test.delegator, test.amountToDelegate.Amount)
+				s.Require().NoError(err)
 			}
 
 			if test.setExistingValSetDelegation {
 				// SetValidatorSetPreference sets a new list of val-set
 				_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 
 				// DelegateToValidatorSet delegate to existing val-set
 				_, err = msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.amountToDelegate))
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 			}
 
 			// RedelegateValidatorSet redelegates from an existing set to a new one
 			_, err := msgServer.RedelegateValidatorSet(c, types.NewMsgRedelegateValidatorSet(test.delegator, test.newPreferences))
 			if test.expectPass {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 
 				// check if the validator have received the correct amount of tokens
 				for i, val := range test.newPreferences {
 					valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
-					suite.Require().NoError(err)
+					s.Require().NoError(err)
 
 					// guarantees that the delegator exists because we check it in DelegateToValidatorSet
-					del, _ := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
-					suite.Require().Equal(test.expectedShares[i], del.Shares)
+					del, _ := s.App.StakingKeeper.GetDelegation(s.Ctx, test.delegator, valAddr)
+					s.Require().Equal(test.expectedShares[i], del.Shares)
 				}
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestWithdrawDelegationRewards() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestWithdrawDelegationRewards() {
+	s.SetupTest()
 
 	// valset test setup
-	valAddrs, preferences, amountToFund := suite.SetupValidatorsAndDelegations()
+	valAddrs, preferences, amountToFund := s.SetupValidatorsAndDelegations()
 
 	tests := []struct {
 		name                  string
@@ -608,62 +608,62 @@ func (suite *KeeperTestSuite) TestWithdrawDelegationRewards() {
 	}
 
 	for _, test := range tests {
-		suite.Run(test.name, func() {
-			suite.FundAcc(test.delegator, amountToFund) // 100 osmo
+		s.Run(test.name, func() {
+			s.FundAcc(test.delegator, amountToFund) // 100 osmo
 
 			// setup message server
-			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorSetPreferenceKeeper)
-			c := sdk.WrapSDKContext(suite.Ctx)
+			msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
+			c := sdk.WrapSDKContext(s.Ctx)
 
-			ctx := suite.Ctx
+			ctx := s.Ctx
 			// setup test for only valset delegation
 			if test.setValSetDelegation {
 				// delegators have to set val-set before delegating tokens
 				_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 
 				// call the delegate to validator set preference message
 				_, err = msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(test.delegator, test.coinsToDelegate))
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 
-				suite.SetupDelegationReward(test.delegator, preferences, "", test.setValSetDelegation, test.setExistingDelegation)
+				s.SetupDelegationReward(test.delegator, preferences, "", test.setValSetDelegation, test.setExistingDelegation)
 			}
 
 			// setup test for only existing staking position
 			if test.setExistingDelegation {
-				err := suite.PrepareExistingDelegations(suite.Ctx, valAddrs, test.delegator, test.coinsToDelegate.Amount)
-				suite.Require().NoError(err)
+				err := s.PrepareExistingDelegations(s.Ctx, valAddrs, test.delegator, test.coinsToDelegate.Amount)
+				s.Require().NoError(err)
 
-				suite.SetupDelegationReward(test.delegator, nil, valAddrs[0], test.setValSetDelegation, test.setExistingDelegation)
+				s.SetupDelegationReward(test.delegator, nil, valAddrs[0], test.setValSetDelegation, test.setExistingDelegation)
 			}
 
 			_, err := msgServer.WithdrawDelegationRewards(c, types.NewMsgWithdrawDelegationRewards(test.delegator))
 			if test.expectPass {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 
 				// the rewards for valset and existing delegations should be nil
 				if test.setValSetDelegation {
 					for _, val := range preferences {
-						rewardAfterWithdrawValSet, _ := suite.GetDelegationRewards(ctx, val.ValOperAddress, test.delegator)
-						suite.Require().Nil(rewardAfterWithdrawValSet)
+						rewardAfterWithdrawValSet, _ := s.GetDelegationRewards(ctx, val.ValOperAddress, test.delegator)
+						s.Require().Nil(rewardAfterWithdrawValSet)
 					}
 				}
 
 				if test.setExistingDelegation {
-					rewardAfterWithdrawExistingSet, _ := suite.GetDelegationRewards(ctx, valAddrs[0], test.delegator)
-					suite.Require().Nil(rewardAfterWithdrawExistingSet)
+					rewardAfterWithdrawExistingSet, _ := s.GetDelegationRewards(ctx, valAddrs[0], test.delegator)
+					s.Require().Nil(rewardAfterWithdrawExistingSet)
 				}
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestDelegateBondedTokens() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestDelegateBondedTokens() {
+	s.SetupTest()
 
-	testLock := suite.SetupLocks(sdk.AccAddress([]byte("addr1---------------")))
+	testLock := s.SetupLocks(sdk.AccAddress([]byte("addr1---------------")))
 
 	tests := []struct {
 		name                 string
@@ -728,45 +728,45 @@ func (suite *KeeperTestSuite) TestDelegateBondedTokens() {
 	}
 
 	for _, test := range tests {
-		suite.Run(test.name, func() {
+		s.Run(test.name, func() {
 			// setup message server
-			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorSetPreferenceKeeper)
-			c := sdk.WrapSDKContext(suite.Ctx)
+			msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
+			c := sdk.WrapSDKContext(s.Ctx)
 
 			// creates a validator preference list to delegate to
-			preferences := suite.PrepareDelegateToValidatorSet()
+			preferences := s.PrepareDelegateToValidatorSet()
 
 			if test.setValSet {
 				// SetValidatorSetPreference sets a new list of val-set
 				_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 			}
 
 			_, err := msgServer.DelegateBondedTokens(c, types.NewMsgDelegateBondedTokens(test.delegator, test.lockId))
 			if test.expectPass {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 
 				// check that the lock has been successfully unlocked
 				// existingLocks should not contain the current lock
-				existingLocks, err := suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
+				existingLocks, err := s.App.LockupKeeper.GetPeriodLocks(s.Ctx)
 
-				suite.Require().NoError(err)
-				suite.Require().Equal(len(existingLocks), len(testLock)-1)
+				s.Require().NoError(err)
+				s.Require().Equal(len(existingLocks), len(testLock)-1)
 
-				balance := suite.App.BankKeeper.GetBalance(suite.Ctx, test.delegator, appParams.BaseCoinUnit)
-				suite.Require().Equal(test.expectedUnlockedOsmo, balance)
+				balance := s.App.BankKeeper.GetBalance(s.Ctx, test.delegator, appParams.BaseCoinUnit)
+				s.Require().Equal(test.expectedUnlockedOsmo, balance)
 
 				// check if delegation has been done by checking if expectedDelegations matches after delegation
 				for i, val := range preferences {
 					valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
-					suite.Require().NoError(err)
+					s.Require().NoError(err)
 
 					// guarantees that the delegator exists because we check it in DelegateToValidatorSet
-					del, _ := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
-					suite.Require().Equal(test.expectedDelegations[i], del.Shares)
+					del, _ := s.App.StakingKeeper.GetDelegation(s.Ctx, test.delegator, valAddr)
+					s.Require().Equal(test.expectedDelegations[i], del.Shares)
 				}
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
