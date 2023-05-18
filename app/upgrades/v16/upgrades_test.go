@@ -70,6 +70,9 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				suite.PrepareBalancerPoolWithCoins(sdk.NewCoin(v16.DAIIBCDenom, desiredDenom0Coin.Amount), desiredDenom0Coin)
 			},
 			func() {
+				stakingParams := suite.App.StakingKeeper.GetParams(suite.Ctx)
+				stakingParams.BondDenom = "uosmo"
+				suite.App.StakingKeeper.SetParams(suite.Ctx, stakingParams)
 				dummyUpgrade(suite)
 				suite.Require().NotPanics(func() {
 					suite.App.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{})
