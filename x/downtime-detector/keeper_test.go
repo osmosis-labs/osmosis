@@ -26,7 +26,7 @@ func (b blocktimes) EndTime() time.Time {
 	return endTime
 }
 
-func (suite *KeeperTestSuite) runBlocktimes(times blocktimes) {
+func (s *KeeperTestSuite) runBlocktimes(times blocktimes) {
 	suite.Ctx = suite.Ctx.WithBlockTime(baseTime)
 	suite.App.DowntimeKeeper.BeginBlock(suite.Ctx)
 	for _, duration := range times {
@@ -42,7 +42,7 @@ var (
 	tenMinEndtime                                = abruptRecovery5minDowntime10min.EndTime().Add(-5 * min)
 )
 
-func (suite *KeeperTestSuite) TestBeginBlock() {
+func (s *KeeperTestSuite) TestBeginBlock() {
 	tests := map[string]struct {
 		times     blocktimes
 		downtimes []types.GenesisDowntimeEntry
@@ -79,7 +79,7 @@ func (suite *KeeperTestSuite) TestBeginBlock() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestRecoveryQuery() {
+func (s *KeeperTestSuite) TestRecoveryQuery() {
 	type queryTestcase struct {
 		downtime        types.Downtime
 		recovTime       time.Duration
@@ -123,7 +123,7 @@ func (suite *KeeperTestSuite) TestRecoveryQuery() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestRecoveryQueryErrors() {
+func (s *KeeperTestSuite) TestRecoveryQueryErrors() {
 	tests := map[string]struct {
 		times     blocktimes
 		downtime  types.Downtime
@@ -154,7 +154,7 @@ type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (s *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 }
 

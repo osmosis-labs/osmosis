@@ -16,7 +16,7 @@ import (
 var _ = suite.TestingSuite(nil)
 
 // TestGRPCGaugeByID tests querying gauges via gRPC returns the correct response.
-func (suite *KeeperTestSuite) TestGRPCGaugeByID() {
+func (s *KeeperTestSuite) TestGRPCGaugeByID() {
 	suite.SetupTest()
 
 	// create a gauge
@@ -49,7 +49,7 @@ func (suite *KeeperTestSuite) TestGRPCGaugeByID() {
 }
 
 // TestGRPCGauges tests querying upcoming and active gauges via gRPC returns the correct response.
-func (suite *KeeperTestSuite) TestGRPCGauges() {
+func (s *KeeperTestSuite) TestGRPCGauges() {
 	suite.SetupTest()
 
 	// ensure initially querying gauges returns no gauges
@@ -94,7 +94,7 @@ func (suite *KeeperTestSuite) TestGRPCGauges() {
 }
 
 // TestGRPCActiveGauges tests querying active gauges via gRPC returns the correct response.
-func (suite *KeeperTestSuite) TestGRPCActiveGauges() {
+func (s *KeeperTestSuite) TestGRPCActiveGauges() {
 	suite.SetupTest()
 
 	// ensure initially querying active gauges returns no gauges
@@ -152,7 +152,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGauges() {
 }
 
 // TestGRPCActiveGaugesPerDenom tests querying active gauges by denom via gRPC returns the correct response.
-func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
+func (s *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	suite.SetupTest()
 
 	// ensure initially querying gauges by denom returns no gauges
@@ -215,7 +215,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 }
 
 // TestGRPCUpcomingGauges tests querying upcoming gauges via gRPC returns the correct response.
-func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
+func (s *KeeperTestSuite) TestGRPCUpcomingGauges() {
 	suite.SetupTest()
 
 	// ensure initially querying upcoming gauges returns no gauges
@@ -271,7 +271,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
 }
 
 // TestGRPCUpcomingGaugesPerDenom tests querying upcoming gauges by denom via gRPC returns the correct response.
-func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
+func (s *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 	suite.SetupTest()
 
 	// ensure initially querying upcoming gauges by denom returns no gauges
@@ -342,7 +342,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 }
 
 // TestGRPCRewardsEst tests querying rewards estimation at a future specific time (by epoch) via gRPC returns the correct response.
-func (suite *KeeperTestSuite) TestGRPCRewardsEst() {
+func (s *KeeperTestSuite) TestGRPCRewardsEst() {
 	suite.SetupTest()
 
 	// create an address with no locks
@@ -369,7 +369,7 @@ func (suite *KeeperTestSuite) TestGRPCRewardsEst() {
 
 // TestRewardsEstWithPoolIncentives tests querying rewards estimation at a future specific time (by epoch) via gRPC returns the correct response.
 // Also changes distribution records for the pool incentives to distribute to the respective lock owner.
-func (suite *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
+func (s *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
 	suite.SetupTest()
 
 	// create an address with no locks
@@ -420,7 +420,7 @@ func (suite *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
 }
 
 // TestGRPCToDistributeCoins tests querying coins that are going to be distributed via gRPC returns the correct response.
-func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
+func (s *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	suite.SetupTest()
 
 	// ensure initially querying to distribute coins returns no coins
@@ -485,7 +485,7 @@ func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 }
 
 // TestGRPCDistributedCoins tests querying coins that have been distributed via gRPC returns the correct response.
-func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
+func (s *KeeperTestSuite) TestGRPCDistributedCoins() {
 	suite.SetupTest()
 
 	// create two locks with different durations

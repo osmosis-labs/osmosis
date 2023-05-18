@@ -22,7 +22,7 @@ type superfluidDelegation struct {
 	lpAmount int64
 }
 
-func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
+func (s *KeeperTestSuite) TestSuperfluidDelegate() {
 	testCases := []struct {
 		name               string
 		validatorStats     []stakingtypes.BondStatus
@@ -150,7 +150,7 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestValidateLockForSFDelegate() {
+func (s *KeeperTestSuite) TestValidateLockForSFDelegate() {
 	lockOwner := suite.TestAccs[0]
 
 	tests := []struct {
@@ -256,7 +256,7 @@ func (suite *KeeperTestSuite) TestValidateLockForSFDelegate() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
+func (s *KeeperTestSuite) TestSuperfluidUndelegate() {
 	testCases := []struct {
 		name                  string
 		validatorStats        []stakingtypes.BondStatus
@@ -429,7 +429,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
+func (s *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 	testCases := []struct {
 		name                  string
 		validatorStats        []stakingtypes.BondStatus
@@ -596,7 +596,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 //  2. test SuperfluidUnbondLock makes underlying lock start unlocking
 //  3. test that synthetic lockup being finished does not mean underlying lock is finished
 //  4. test after SuperfluidUnbondLock + lockup time, the underlying lock is finished
-func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
+func (s *KeeperTestSuite) TestSuperfluidUnbondLock() {
 	suite.SetupTest()
 
 	// setup validators
@@ -678,7 +678,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
+func (s *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 	var lockAmount int64 = 1000000
 	testCases := []struct {
 		name            string
@@ -888,7 +888,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
+func (s *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 	testCases := []struct {
 		name             string
 		validatorStats   []stakingtypes.BondStatus
@@ -1034,7 +1034,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 // 	newValIndex int64
 // }
 
-// func (suite *KeeperTestSuite) TestSuperfluidRedelegate() {
+// func (s *KeeperTestSuite) TestSuperfluidRedelegate() {
 // 	testCases := []struct {
 // 		name                    string
 // 		validatorStats          []stakingtypes.BondStatus

@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *KeeperTestSuite) TestBaseDenom() {
+func (s *KeeperTestSuite) TestBaseDenom() {
 	suite.SetupTest(false)
 
 	// Test getting basedenom (should be default from genesis)
@@ -19,7 +19,7 @@ func (suite *KeeperTestSuite) TestBaseDenom() {
 	suite.Require().NoError(err)
 }
 
-func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
+func (s *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 	suite.SetupTest(false)
 
 	uionPoolId := suite.PrepareBalancerPoolWithCoins(
@@ -153,7 +153,7 @@ func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestFeeTokenConversions() {
+func (s *KeeperTestSuite) TestFeeTokenConversions() {
 	suite.SetupTest(false)
 
 	baseDenom, _ := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)

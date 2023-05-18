@@ -28,13 +28,13 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (s *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 
 	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
 }
 
-func (suite *KeeperTestSuite) prepareCustomBalancerPool(
+func (s *KeeperTestSuite) prepareCustomBalancerPool(
 	balances sdk.Coins,
 	poolAssets []balancer.PoolAsset,
 	poolParams balancer.PoolParams,
@@ -50,7 +50,7 @@ func (suite *KeeperTestSuite) prepareCustomBalancerPool(
 	return poolID
 }
 
-func (suite *KeeperTestSuite) prepareCustomStableswapPool(
+func (s *KeeperTestSuite) prepareCustomStableswapPool(
 	balances sdk.Coins,
 	poolParams stableswap.PoolParams,
 	initialLiquidity sdk.Coins,
@@ -67,7 +67,7 @@ func (suite *KeeperTestSuite) prepareCustomStableswapPool(
 	return poolID
 }
 
-func (suite *KeeperTestSuite) fundAllAccountsWith(balances sdk.Coins) {
+func (s *KeeperTestSuite) fundAllAccountsWith(balances sdk.Coins) {
 	for _, acc := range suite.TestAccs {
 		suite.FundAcc(acc, balances)
 	}

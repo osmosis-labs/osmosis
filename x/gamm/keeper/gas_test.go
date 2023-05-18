@@ -16,7 +16,7 @@ var (
 	minShareOutAmount sdk.Int        = types.OneShare.MulRaw(50)
 )
 
-func (suite *KeeperTestSuite) measureJoinPoolGas(
+func (s *KeeperTestSuite) measureJoinPoolGas(
 	addr sdk.AccAddress,
 	poolID uint64,
 	shareOutAmountMax sdk.Int, maxCoins sdk.Coins,
@@ -31,7 +31,7 @@ func (suite *KeeperTestSuite) measureJoinPoolGas(
 
 // measureAvgAndMaxJoinPoolGas iterates JoinPool over designated amount of times
 // to acquire average gas spent
-func (suite *KeeperTestSuite) measureAvgAndMaxJoinPoolGas(
+func (s *KeeperTestSuite) measureAvgAndMaxJoinPoolGas(
 	numIterations int,
 	addr sdk.AccAddress,
 	poolIDFn func(int) uint64,
@@ -53,7 +53,7 @@ func (suite *KeeperTestSuite) measureAvgAndMaxJoinPoolGas(
 
 // This maintains hard coded gas test vector changes,
 // so we can easily track changes
-func (suite *KeeperTestSuite) TestJoinPoolGas() {
+func (s *KeeperTestSuite) TestJoinPoolGas() {
 	suite.SetupTest()
 	poolId := suite.PrepareBalancerPool()
 
@@ -85,7 +85,7 @@ func (suite *KeeperTestSuite) TestJoinPoolGas() {
 	suite.Assert().LessOrEqual(int(maxGas), 101000, "max gas / join pool")
 }
 
-func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
+func (s *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 	suite.SetupTest()
 
 	// mint some usomo to account

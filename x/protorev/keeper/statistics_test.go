@@ -8,7 +8,7 @@ import (
 )
 
 // TestGetNumberOfTrades tests GetNumberOfTrades and IncrementNumberOfTrades
-func (suite *KeeperTestSuite) TestGetNumberOfTrades() {
+func (s *KeeperTestSuite) TestGetNumberOfTrades() {
 	// Should be zero by default
 	numberOfTrades, err := suite.App.ProtoRevKeeper.GetNumberOfTrades(suite.Ctx)
 	suite.Require().Error(err)
@@ -25,7 +25,7 @@ func (suite *KeeperTestSuite) TestGetNumberOfTrades() {
 }
 
 // TestGetProfitsByDenom tests GetProfitsByDenom, UpdateProfitsByDenom, and GetAllProfits
-func (suite *KeeperTestSuite) TestGetProfitsByDenom() {
+func (s *KeeperTestSuite) TestGetProfitsByDenom() {
 	// Should be zero by default
 	profits, err := suite.App.ProtoRevKeeper.GetProfitsByDenom(suite.Ctx, types.OsmosisDenomination)
 	suite.Require().Error(err)
@@ -63,7 +63,7 @@ func (suite *KeeperTestSuite) TestGetProfitsByDenom() {
 }
 
 // TestGetTradesByRoute tests GetTradesByRoute, IncrementTradesByRoute, and GetAllRoutes
-func (suite *KeeperTestSuite) TestGetTradesByRoute() {
+func (s *KeeperTestSuite) TestGetTradesByRoute() {
 	// There should be no routes that have been executed by default
 	routes, err := suite.App.ProtoRevKeeper.GetAllRoutes(suite.Ctx)
 	suite.Require().NoError(err)
@@ -107,7 +107,7 @@ func (suite *KeeperTestSuite) TestGetTradesByRoute() {
 }
 
 // TestGetProfitsByRoute tests GetProfitsByRoute, UpdateProfitsByRoute, and GetAllProfitsByRoute
-func (suite *KeeperTestSuite) TestGetProfitsByRoute() {
+func (s *KeeperTestSuite) TestGetProfitsByRoute() {
 	// There should be no profits that have been executed by default
 	profits := suite.App.ProtoRevKeeper.GetAllProfitsByRoute(suite.Ctx, []uint64{1, 2, 3})
 	suite.Require().Equal([]sdk.Coin{}, profits)
@@ -147,7 +147,7 @@ func (suite *KeeperTestSuite) TestGetProfitsByRoute() {
 
 // TestUpdateStatistics tests UpdateStatistics which is a wrapper for much of the statistics keeper
 // functionality.
-func (suite *KeeperTestSuite) TestUpdateStatistics() {
+func (s *KeeperTestSuite) TestUpdateStatistics() {
 	// Pseudo execute a trade
 	err := suite.App.ProtoRevKeeper.UpdateStatistics(suite.Ctx,
 		poolmanagertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}},

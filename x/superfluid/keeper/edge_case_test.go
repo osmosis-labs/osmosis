@@ -10,7 +10,7 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
-func (suite *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {
+func (s *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {
 	testCases := []struct {
 		name                 string
 		validatorStats       []stakingtypes.BondStatus
@@ -91,7 +91,7 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestTryUnbondingSuperfluidLockupDirectly() {
+func (s *KeeperTestSuite) TestTryUnbondingSuperfluidLockupDirectly() {
 	testCases := []struct {
 		name               string
 		validatorStats     []stakingtypes.BondStatus

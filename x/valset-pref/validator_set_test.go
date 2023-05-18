@@ -6,7 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/valset-pref/types"
 )
 
-func (suite *KeeperTestSuite) TestValidateLockForForceUnlock() {
+func (s *KeeperTestSuite) TestValidateLockForForceUnlock() {
 	locks := suite.SetupLocks(sdk.AccAddress([]byte("addr1---------------")))
 
 	tests := []struct {
@@ -65,7 +65,7 @@ func (suite *KeeperTestSuite) TestValidateLockForForceUnlock() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestCheckUndelegateTotalAmount() {
+func (s *KeeperTestSuite) TestCheckUndelegateTotalAmount() {
 	valAddrs := suite.SetupMultipleValidators(3)
 	tests := []struct {
 		name        string
@@ -137,7 +137,7 @@ func (suite *KeeperTestSuite) TestCheckUndelegateTotalAmount() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestIsValidatorSetEqual() {
+func (s *KeeperTestSuite) TestIsValidatorSetEqual() {
 	valAddrs := suite.SetupMultipleValidators(3)
 	valSetOne := []types.ValidatorPreference{
 		{
@@ -212,7 +212,7 @@ func (suite *KeeperTestSuite) TestIsValidatorSetEqual() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestIsPreferenceValid() {
+func (s *KeeperTestSuite) TestIsPreferenceValid() {
 	valAddrs := suite.SetupMultipleValidators(4)
 
 	tests := []struct {

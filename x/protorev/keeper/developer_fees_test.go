@@ -8,7 +8,7 @@ import (
 )
 
 // TestSendDeveloperFeesToDeveloperAccount tests the SendDeveloperFeesToDeveloperAccount function
-func (suite *KeeperTestSuite) TestSendDeveloperFeesToDeveloperAccount() {
+func (s *KeeperTestSuite) TestSendDeveloperFeesToDeveloperAccount() {
 	cases := []struct {
 		description   string
 		alterState    func()
@@ -101,7 +101,7 @@ func (suite *KeeperTestSuite) TestSendDeveloperFeesToDeveloperAccount() {
 }
 
 // TestUpdateDeveloperFees tests the UpdateDeveloperFees function
-func (suite *KeeperTestSuite) TestUpdateDeveloperFees() {
+func (s *KeeperTestSuite) TestUpdateDeveloperFees() {
 	cases := []struct {
 		description string
 		denom       string
@@ -161,7 +161,7 @@ func (suite *KeeperTestSuite) TestUpdateDeveloperFees() {
 }
 
 // pseudoExecuteTrade is a helper function to execute a trade given denom of profit, profit, and days since genesis
-func (suite *KeeperTestSuite) pseudoExecuteTrade(denom string, profit sdk.Int, daysSinceGenesis uint64) error {
+func (s *KeeperTestSuite) pseudoExecuteTrade(denom string, profit sdk.Int, daysSinceGenesis uint64) error {
 	// Initialize the number of days since genesis
 	suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, daysSinceGenesis)
 	// Mint the profit to the module account (which will be sent to the developer account later)

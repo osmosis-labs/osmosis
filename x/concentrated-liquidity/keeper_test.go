@@ -64,7 +64,7 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (s *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 }
 

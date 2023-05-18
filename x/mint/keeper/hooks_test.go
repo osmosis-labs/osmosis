@@ -42,7 +42,7 @@ func TestHooksTestSuite(t *testing.T) {
 
 // TestAfterEpochEnd tests that the after epoch end hook correctly
 // distributes the rewards depending on what epoch it is in.
-func (suite *KeeperTestSuite) TestAfterEpochEnd() {
+func (s *KeeperTestSuite) TestAfterEpochEnd() {
 	var (
 		testWeightedAddresses = []types.WeightedAddress{
 			{
@@ -430,7 +430,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 // supply for correctness.
 //
 // Ref: https://github.com/osmosis-labs/osmosis/issues/1917
-func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParameters() {
+func (s *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParameters() {
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	mintKeeper := app.MintKeeper

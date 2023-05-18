@@ -2642,7 +2642,7 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestUpdateFeeGrowthGlobal() {
+func (s *KeeperTestSuite) TestUpdateFeeGrowthGlobal() {
 	ten := sdk.NewDec(10)
 
 	tests := map[string]struct {
@@ -2740,7 +2740,7 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapInAmtGivenOut() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
+func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 	var (
 		oneHundredETH         = sdk.NewCoin(ETH, sdk.NewInt(100_000_000))
 		oneHundredUSDC        = sdk.NewCoin(USDC, sdk.NewInt(100_000_000))

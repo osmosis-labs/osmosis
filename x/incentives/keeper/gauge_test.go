@@ -15,7 +15,7 @@ import (
 var _ = suite.TestingSuite(nil)
 
 // TestInvalidDurationGaugeCreationValidation tests error handling for creating a gauge with an invalid duration.
-func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
+func (s *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 	suite.SetupTest()
 
 	addrs := suite.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
@@ -33,7 +33,7 @@ func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 }
 
 // TestNonExistentDenomGaugeCreation tests error handling for creating a gauge with an invalid denom.
-func (suite *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
+func (s *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
 	suite.SetupTest()
 
 	addrNoSupply := sdk.AccAddress([]byte("Gauge_Creation_Addr_"))
@@ -51,7 +51,7 @@ func (suite *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
 }
 
 // TestGaugeOperations tests perpetual and non-perpetual gauge distribution logic using the gauges by denom keeper.
-func (suite *KeeperTestSuite) TestGaugeOperations() {
+func (s *KeeperTestSuite) TestGaugeOperations() {
 	testCases := []struct {
 		isPerpetual bool
 		numLocks    int
@@ -237,7 +237,7 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
+func (s *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 	const baseFee = int64(100)
 
 	testcases := map[string]struct {
@@ -332,7 +332,7 @@ func (suite *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestAddToGaugeRewards() {
+func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 	testCases := []struct {
 		name               string
 		owner              sdk.AccAddress

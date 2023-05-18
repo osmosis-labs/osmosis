@@ -22,7 +22,7 @@ type KeeperTestSuite struct {
 	queryClient types.QueryClient
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (s *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 
 	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
@@ -32,7 +32,7 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
+func (s *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 	suite.SetupTest()
 
 	keeper := suite.App.PoolIncentivesKeeper
@@ -78,7 +78,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestCreateConcentratePoolGauges() {
+func (s *KeeperTestSuite) TestCreateConcentratePoolGauges() {
 	suite.SetupTest()
 
 	keeper := suite.App.PoolIncentivesKeeper
@@ -100,7 +100,7 @@ func (suite *KeeperTestSuite) TestCreateConcentratePoolGauges() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestCreateLockablePoolGauges() {
+func (s *KeeperTestSuite) TestCreateLockablePoolGauges() {
 	durations := suite.App.PoolIncentivesKeeper.GetLockableDurations(suite.Ctx)
 
 	tests := []struct {
@@ -160,7 +160,7 @@ func (suite *KeeperTestSuite) TestCreateLockablePoolGauges() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestCreateConcentratedLiquidityPoolGauge() {
+func (s *KeeperTestSuite) TestCreateConcentratedLiquidityPoolGauge() {
 	tests := []struct {
 		name            string
 		poolId          uint64
@@ -227,7 +227,7 @@ func (suite *KeeperTestSuite) TestCreateConcentratedLiquidityPoolGauge() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGetGaugesForCFMMPool() {
+func (s *KeeperTestSuite) TestGetGaugesForCFMMPool() {
 	const validPoolId = 1
 
 	tests := map[string]struct {
@@ -272,7 +272,7 @@ func (suite *KeeperTestSuite) TestGetGaugesForCFMMPool() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGetLongestLockableDuration() {
+func (s *KeeperTestSuite) TestGetLongestLockableDuration() {
 	testCases := []struct {
 		name              string
 		lockableDurations []time.Duration
@@ -319,7 +319,7 @@ func (suite *KeeperTestSuite) TestGetLongestLockableDuration() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestIsPoolIncentivized() {
+func (s *KeeperTestSuite) TestIsPoolIncentivized() {
 	testCases := []struct {
 		name                   string
 		poolId                 uint64
@@ -356,5 +356,4 @@ func (suite *KeeperTestSuite) TestIsPoolIncentivized() {
 			suite.Require().Equal(tc.expectedIsIncentivized, actualIsIncentivized)
 		})
 	}
-
 }

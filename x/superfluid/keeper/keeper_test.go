@@ -29,7 +29,7 @@ type KeeperTestSuite struct {
 	querier     keeper.Querier
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (s *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
 	suite.querier = keeper.NewQuerier(*suite.App.SuperfluidKeeper)
@@ -79,7 +79,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.App.DistrKeeper.SetParams(suite.Ctx, distributionParams)
 }
 
-func (suite *KeeperTestSuite) SetupDefaultPool() {
+func (s *KeeperTestSuite) SetupDefaultPool() {
 	bondDenom := suite.App.StakingKeeper.BondDenom(suite.Ctx)
 	poolId := suite.createGammPool([]string{bondDenom, "foo"})
 	suite.Require().Equal(poolId, uint64(1))
@@ -96,7 +96,7 @@ func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
 	return testAddrs
 }
 
-func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
+func (s *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	coins := suite.App.GAMMKeeper.GetParams(suite.Ctx).PoolCreationFee
 	poolAssets := []balancer.PoolAsset{}
 	for _, denom := range denoms {
@@ -120,7 +120,7 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	return poolId
 }
 
-func (suite *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondStatus) []sdk.ValAddress {
+func (s *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondStatus) []sdk.ValAddress {
 	valAddrs := []sdk.ValAddress{}
 	for _, status := range bondStatuses {
 		valAddr := suite.SetupValidator(status)
@@ -129,7 +129,7 @@ func (suite *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondSt
 	return valAddrs
 }
 
-func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sdk.Dec) ([]string, []uint64) {
+func (s *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sdk.Dec) ([]string, []uint64) {
 	pools := suite.SetupGammPoolsWithBondDenomMultiplier(multipliers)
 
 	denoms := []string{}
@@ -157,7 +157,7 @@ func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sd
 	return denoms, poolIds
 }
 
-func (suite *KeeperTestSuite) setupSuperfluidDelegations(valAddrs []sdk.ValAddress, superDelegations []superfluidDelegation, denoms []string) ([]sdk.AccAddress, []types.SuperfluidIntermediaryAccount, []lockuptypes.PeriodLock) {
+func (s *KeeperTestSuite) setupSuperfluidDelegations(valAddrs []sdk.ValAddress, superDelegations []superfluidDelegation, denoms []string) ([]sdk.AccAddress, []types.SuperfluidIntermediaryAccount, []lockuptypes.PeriodLock) {
 	flagIntermediaryAcc := make(map[string]bool)
 	intermediaryAccs := []types.SuperfluidIntermediaryAccount{}
 	locks := []lockuptypes.PeriodLock{}
@@ -195,7 +195,7 @@ func (suite *KeeperTestSuite) setupSuperfluidDelegations(valAddrs []sdk.ValAddre
 	return delAddrs, intermediaryAccs, locks
 }
 
-func (suite *KeeperTestSuite) checkIntermediaryAccountDelegations(intermediaryAccs []types.SuperfluidIntermediaryAccount) {
+func (s *KeeperTestSuite) checkIntermediaryAccountDelegations(intermediaryAccs []types.SuperfluidIntermediaryAccount) {
 	for _, acc := range intermediaryAccs {
 		valAddr, err := sdk.ValAddressFromBech32(acc.ValAddr)
 		suite.Require().NoError(err)
@@ -213,7 +213,7 @@ func (suite *KeeperTestSuite) checkIntermediaryAccountDelegations(intermediaryAc
 	}
 }
 
-func (suite *KeeperTestSuite) setupSuperfluidDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, denom string, amount int64) lockuptypes.PeriodLock {
+func (s *KeeperTestSuite) setupSuperfluidDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, denom string, amount int64) lockuptypes.PeriodLock {
 	unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
 
 	// create lockup of LP token

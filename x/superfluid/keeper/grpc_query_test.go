@@ -9,14 +9,14 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
-func (suite *KeeperTestSuite) TestGRPCParams() {
+func (s *KeeperTestSuite) TestGRPCParams() {
 	suite.SetupTest()
 	res, err := suite.querier.Params(sdk.WrapSDKContext(suite.Ctx), &types.QueryParamsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().True(res.Params.MinimumRiskFactor.Equal(types.DefaultParams().MinimumRiskFactor))
 }
 
-func (suite *KeeperTestSuite) TestAllIntermediaryAccounts() {
+func (s *KeeperTestSuite) TestAllIntermediaryAccounts() {
 	suite.SetupTest()
 	// set account 1
 	valAddr1 := sdk.ValAddress([]byte("test1-AllIntermediaryAccounts"))
@@ -38,7 +38,8 @@ func (suite *KeeperTestSuite) TestAllIntermediaryAccounts() {
 	suite.Require().Equal(3, len(res.Accounts))
 	suite.Require().Equal(uint64(3), res.Pagination.Total)
 }
-func (suite *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
+
+func (s *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 	suite.SetupTest()
 	ctx := suite.Ctx
 	querier := suite.querier
@@ -89,7 +90,7 @@ func (suite *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCSuperfluidAsset() {
+func (s *KeeperTestSuite) TestGRPCSuperfluidAsset() {
 	suite.SetupTest()
 
 	// initial check
@@ -113,7 +114,7 @@ func (suite *KeeperTestSuite) TestGRPCSuperfluidAsset() {
 	suite.Require().Len(resp.Assets, 1)
 }
 
-func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
+func (s *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 	suite.SetupTest()
 
 	// setup 2 validators
@@ -205,7 +206,7 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 	suite.Require().Equal(uint64(0), connectedIntermediaryAccountRes.Account.GaugeId)
 }
 
-func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbonding() {
+func (s *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbonding() {
 	suite.SetupTest()
 
 	// setup 2 validators
@@ -268,7 +269,7 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbon
 	suite.Require().Equal(totalSuperfluidDelegationsRes.TotalDelegations, sdk.NewInt(30000000))
 }
 
-func (suite *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
+func (s *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
 	suite.SetupTest()
 
 	// setup 2 validators

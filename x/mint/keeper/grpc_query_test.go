@@ -6,7 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/mint/types"
 )
 
-func (suite *KeeperTestSuite) TestGRPCParams() {
+func (s *KeeperTestSuite) TestGRPCParams() {
 	_, _, queryClient := suite.App, suite.Ctx, suite.queryClient
 
 	_, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})

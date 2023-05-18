@@ -72,7 +72,7 @@ func BenchmarkFourHopHotRouteArb(b *testing.B) {
 	benchmarkWrapper(b, msgs, 1)
 }
 
-func (suite *KeeperTestSuite) TestAnteHandle() {
+func (s *KeeperTestSuite) TestAnteHandle() {
 	type param struct {
 		msgs                []sdk.Msg
 		txFee               sdk.Coins
@@ -568,7 +568,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestExtractSwappedPools() {
+func (s *KeeperTestSuite) TestExtractSwappedPools() {
 	type param struct {
 		msgs                 []sdk.Msg
 		txFee                sdk.Coins

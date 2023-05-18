@@ -7,7 +7,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
 )
 
-func (suite *KeeperTestSuite) TestGenesis() {
+func (s *KeeperTestSuite) TestGenesis() {
 	genesisState := types.GenesisState{
 		FactoryDenoms: []types.GenesisDenom{
 			{

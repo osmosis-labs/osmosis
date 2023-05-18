@@ -21,7 +21,7 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (s *KeeperTestSuite) SetupTest() {
 	suite.Ctx = testutil.DefaultContext(sdk.NewKVStoreKey(types.StoreKey), sdk.NewTransientStoreKey("transient_test"))
 }
 
@@ -83,7 +83,7 @@ func (hook *dummyEpochHook) Clone() *dummyEpochHook {
 
 var _ types.EpochHooks = &dummyEpochHook{}
 
-func (suite *KeeperTestSuite) TestHooksPanicRecovery() {
+func (s *KeeperTestSuite) TestHooksPanicRecovery() {
 	panicHook := dummyEpochHook{shouldPanic: true}
 	noPanicHook := dummyEpochHook{shouldPanic: false}
 	errorHook := dummyEpochHook{shouldError: true}

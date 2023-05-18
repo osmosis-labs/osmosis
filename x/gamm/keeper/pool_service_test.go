@@ -50,7 +50,7 @@ var (
 	defaultTickSpacing = uint64(100)
 )
 
-func (suite *KeeperTestSuite) TestCreateBalancerPool() {
+func (s *KeeperTestSuite) TestCreateBalancerPool() {
 	params := suite.App.GAMMKeeper.GetParams(suite.Ctx)
 	testAccount := suite.TestAccs[0]
 
@@ -241,7 +241,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestInitializePool() {
+func (s *KeeperTestSuite) TestInitializePool() {
 	testAccount := suite.TestAccs[0]
 
 	tests := []struct {
@@ -388,7 +388,7 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 // This test creates several pools, and tests that:
 // the condition is in a case where the balancer return value returns an overflowing value
 // the SpotPrice query does not
-func (suite *KeeperTestSuite) TestSpotPriceOverflow() {
+func (s *KeeperTestSuite) TestSpotPriceOverflow() {
 	denomA := "denomA"
 	denomB := "denomB"
 	tests := map[string]struct {
@@ -447,7 +447,7 @@ func (suite *KeeperTestSuite) TestSpotPriceOverflow() {
 }
 
 // TODO: Add more edge cases around TokenInMaxs not containing every token in pool.
-func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
+func (s *KeeperTestSuite) TestJoinPoolNoSwap() {
 	fiveKFooAndBar := sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(5000)), sdk.NewCoin("foo", sdk.NewInt(5000)))
 	tests := []struct {
 		name            string
@@ -562,7 +562,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestExitPool() {
+func (s *KeeperTestSuite) TestExitPool() {
 	fiveKFooAndBar := sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(5000)), sdk.NewCoin("foo", sdk.NewInt(5000)))
 	tests := []struct {
 		name         string
@@ -678,7 +678,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 
 // TestJoinPoolExitPool_InverseRelationship tests that joining pool and exiting pool
 // guarantees same amount in and out
-func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
+func (s *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 	testCases := []struct {
 		name             string
 		pool             balancer.MsgCreateBalancerPool
@@ -765,7 +765,7 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestActiveBalancerPool() {
+func (s *KeeperTestSuite) TestActiveBalancerPool() {
 	type testCase struct {
 		blockTime  time.Time
 		expectPass bool
@@ -828,7 +828,7 @@ func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
+func (s *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 	testCases := []struct {
 		name              string
 		poolSwapFee       sdk.Dec
@@ -918,7 +918,7 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGetPoolDenom() {
+func (s *KeeperTestSuite) TestGetPoolDenom() {
 	// setup pool with denoms
 	suite.FundAcc(suite.TestAccs[0], defaultAcctFunds)
 	poolCreateMsg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], defaultPoolParams, defaultPoolAssets, defaultFutureGovernor)

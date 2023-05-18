@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *KeeperTestSuite) TestRelock() {
+func (s *KeeperTestSuite) TestRelock() {
 	suite.SetupTest()
 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
@@ -31,7 +31,7 @@ func (suite *KeeperTestSuite) TestRelock() {
 	suite.Require().Equal(storedLock.Coins, coins2)
 }
 
-func (suite *KeeperTestSuite) BreakLock() {
+func (s *KeeperTestSuite) BreakLock() {
 	suite.SetupTest()
 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))

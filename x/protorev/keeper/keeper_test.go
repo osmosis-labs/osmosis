@@ -54,7 +54,7 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (s *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 
 	// Genesis on init should be the same as the default genesis
@@ -165,7 +165,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 // bitcoin <-> types.OsmosisDenomination
 // canto <-> types.OsmosisDenomination
 // and so on....
-func (suite *KeeperTestSuite) setUpPools() {
+func (s *KeeperTestSuite) setUpPools() {
 	// Create any necessary sdk.Ints that require string conversion
 	pool28Amount1, ok := sdk.NewIntFromString("6170367464346955818920")
 	suite.Require().True(ok)
@@ -901,7 +901,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 }
 
 // createStableswapPool creates a stableswap pool with the given pool assets and params
-func (suite *KeeperTestSuite) createStableswapPool(initialLiquidity sdk.Coins, poolParams stableswap.PoolParams, scalingFactors []uint64) {
+func (s *KeeperTestSuite) createStableswapPool(initialLiquidity sdk.Coins, poolParams stableswap.PoolParams, scalingFactors []uint64) {
 	_, err := suite.App.PoolManagerKeeper.CreatePool(
 		suite.Ctx,
 		stableswap.NewMsgCreateStableswapPool(suite.TestAccs[1], poolParams, initialLiquidity, scalingFactors, ""))
@@ -909,7 +909,7 @@ func (suite *KeeperTestSuite) createStableswapPool(initialLiquidity sdk.Coins, p
 }
 
 // createGAMMPool creates a balancer pool with the given pool assets and params
-func (suite *KeeperTestSuite) createGAMMPool(poolAssets []balancer.PoolAsset, swapFee, exitFee sdk.Dec) uint64 {
+func (s *KeeperTestSuite) createGAMMPool(poolAssets []balancer.PoolAsset, swapFee, exitFee sdk.Dec) uint64 {
 	poolParams := balancer.PoolParams{
 		SwapFee: swapFee,
 		ExitFee: exitFee,
@@ -919,7 +919,7 @@ func (suite *KeeperTestSuite) createGAMMPool(poolAssets []balancer.PoolAsset, sw
 }
 
 // prepareCustomBalancerPool creates a custom balancer pool with the given pool assets and params
-func (suite *KeeperTestSuite) prepareCustomBalancerPool(
+func (s *KeeperTestSuite) prepareCustomBalancerPool(
 	poolAssets []balancer.PoolAsset,
 	poolParams balancer.PoolParams,
 ) uint64 {
@@ -933,14 +933,14 @@ func (suite *KeeperTestSuite) prepareCustomBalancerPool(
 }
 
 // fundAllAccountsWith funds all the test accounts with the same amount of tokens
-func (suite *KeeperTestSuite) fundAllAccountsWith() {
+func (s *KeeperTestSuite) fundAllAccountsWith() {
 	for _, acc := range suite.TestAccs {
 		suite.FundAcc(acc, suite.balances)
 	}
 }
 
 // setUpTokenPairRoutes sets up the searcher routes for testing
-func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
+func (s *KeeperTestSuite) setUpTokenPairRoutes() {
 	// General Test Route
 	atomAkash := types.NewTrade(0, "Atom", "akash")
 	akashBitcoin := types.NewTrade(14, "akash", "bitcoin")

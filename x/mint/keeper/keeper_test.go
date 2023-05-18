@@ -47,7 +47,7 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (s *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 
 	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
@@ -61,7 +61,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 // Specifically, it removes the developer vesting module account
 // from account keeper if isDeveloperModuleAccountCreated is true.
 // Additionally, it initializes suite's Ctx with blockHeight
-func (suite *KeeperTestSuite) setupDeveloperVestingModuleAccountTest(blockHeight int64, isDeveloperModuleAccountCreated bool) {
+func (s *KeeperTestSuite) setupDeveloperVestingModuleAccountTest(blockHeight int64, isDeveloperModuleAccountCreated bool) {
 	suite.Setup()
 	// Reset height to the desired value since test suite setup initialized
 	// it to 1.
@@ -88,7 +88,7 @@ func (suite *KeeperTestSuite) setupDeveloperVestingModuleAccountTest(blockHeight
 }
 
 // TestGetProportions tests that mint allocations are computed as expected.
-func (suite *KeeperTestSuite) TestGetProportions() {
+func (s *KeeperTestSuite) TestGetProportions() {
 	complexRatioDec := sdk.NewDecWithPrec(131, 3).Quo(sdk.NewDecWithPrec(273, 3))
 
 	tests := []struct {
@@ -155,7 +155,7 @@ func (suite *KeeperTestSuite) TestGetProportions() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestDistributeMintedCoin() {
+func (s *KeeperTestSuite) TestDistributeMintedCoin() {
 	const (
 		mintAmount = 10000
 	)
@@ -266,7 +266,7 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
+func (s *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 	testcases := map[string]struct {
 		blockHeight                     int64
 		amount                          sdk.Coin
@@ -315,7 +315,7 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 
 // TestDistributeToModule tests that distribution from mint module to another module helper
 // function is working as expected.
-func (suite *KeeperTestSuite) TestDistributeToModule() {
+func (s *KeeperTestSuite) TestDistributeToModule() {
 	const (
 		denomDoesNotExist         = "denomDoesNotExist"
 		moduleAccountDoesNotExist = "moduleAccountDoesNotExist"
@@ -433,7 +433,7 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 // - all developer addressed are updated with correct proportions.
 // - mint module account balance is updated - burn over allocations.
 // - if recipients are empty - community pool us updated.
-func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
+func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 	const (
 		invalidAddress = "invalid"
 	)

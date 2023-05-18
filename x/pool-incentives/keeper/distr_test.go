@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *KeeperTestSuite) TestAllocateAsset() {
+func (s *KeeperTestSuite) TestAllocateAsset() {
 	tests := []struct {
 		name                   string
 		testingDistrRecord     []types.DistrRecord
@@ -124,7 +124,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
+func (s *KeeperTestSuite) TestReplaceDistrRecords() {
 	tests := []struct {
 		name               string
 		testingDistrRecord []types.DistrRecord
@@ -231,7 +231,7 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
+func (s *KeeperTestSuite) TestUpdateDistrRecords() {
 	tests := []struct {
 		name               string
 		testingDistrRecord []types.DistrRecord

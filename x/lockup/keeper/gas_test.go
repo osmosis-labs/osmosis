@@ -12,7 +12,7 @@ var (
 	defaultCoins sdk.Coins      = sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 )
 
-func (suite *KeeperTestSuite) measureLockGas(addr sdk.AccAddress, coins sdk.Coins, dur time.Duration) uint64 {
+func (s *KeeperTestSuite) measureLockGas(addr sdk.AccAddress, coins sdk.Coins, dur time.Duration) uint64 {
 	// fundAccount outside of gas measurement
 	suite.FundAcc(addr, coins)
 	// start measuring gas
@@ -24,7 +24,7 @@ func (suite *KeeperTestSuite) measureLockGas(addr sdk.AccAddress, coins sdk.Coin
 	return spentNow
 }
 
-func (suite *KeeperTestSuite) measureAvgAndMaxLockGas(
+func (s *KeeperTestSuite) measureAvgAndMaxLockGas(
 	numIterations int,
 	addr sdk.AccAddress,
 	coinsFn func(int) sdk.Coins,
@@ -46,7 +46,7 @@ func (suite *KeeperTestSuite) measureAvgAndMaxLockGas(
 
 // This maintains hard coded gas test vector changes,
 // so we can easily track changes
-func (suite *KeeperTestSuite) TestRepeatedLockTokensGas() {
+func (s *KeeperTestSuite) TestRepeatedLockTokensGas() {
 	suite.SetupTest()
 
 	coinsFn := func(int) sdk.Coins { return defaultCoins }
@@ -66,7 +66,7 @@ func (suite *KeeperTestSuite) TestRepeatedLockTokensGas() {
 	suite.Assert().LessOrEqual(int(maxGas), 100000, "max gas / lock")
 }
 
-func (suite *KeeperTestSuite) TestRepeatedLockTokensDistinctDurationGas() {
+func (s *KeeperTestSuite) TestRepeatedLockTokensDistinctDurationGas() {
 	suite.SetupTest()
 
 	coinsFn := func(int) sdk.Coins { return defaultCoins }

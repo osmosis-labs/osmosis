@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *KeeperTestSuite) TestSyntheticLockupCreation() {
+func (s *KeeperTestSuite) TestSyntheticLockupCreation() {
 	suite.SetupTest()
 
 	// lock coins
@@ -39,7 +39,7 @@ func (suite *KeeperTestSuite) TestSyntheticLockupCreation() {
 	suite.Require().Error(err)
 }
 
-func (suite *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
+func (s *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 	suite.SetupTest()
 
 	// lock coins
@@ -209,7 +209,7 @@ func (suite *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 	suite.Require().Equal(accum.String(), "0")
 }
 
-func (suite *KeeperTestSuite) TestSyntheticLockupDeleteAllMaturedSyntheticLocks() {
+func (s *KeeperTestSuite) TestSyntheticLockupDeleteAllMaturedSyntheticLocks() {
 	suite.SetupTest()
 
 	// lock coins
@@ -262,7 +262,7 @@ func (suite *KeeperTestSuite) TestSyntheticLockupDeleteAllMaturedSyntheticLocks(
 	suite.Require().Error(err)
 }
 
-func (suite *KeeperTestSuite) TestResetAllSyntheticLocks() {
+func (s *KeeperTestSuite) TestResetAllSyntheticLocks() {
 	suite.SetupTest()
 
 	// lock coins

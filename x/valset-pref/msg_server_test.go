@@ -8,7 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/valset-pref/types"
 )
 
-func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
+func (s *KeeperTestSuite) TestSetValidatorSetPreference() {
 	suite.SetupTest()
 
 	// setup 6 validators
@@ -172,7 +172,7 @@ func (suite *KeeperTestSuite) TestSetValidatorSetPreference() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
+func (s *KeeperTestSuite) TestDelegateToValidatorSet() {
 	suite.SetupTest()
 
 	// valset test setup
@@ -303,7 +303,7 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
+func (s *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 	suite.SetupTest()
 
 	// valset test setup
@@ -427,7 +427,7 @@ func (suite *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestRedelegateToValidatorSet() {
+func (s *KeeperTestSuite) TestRedelegateToValidatorSet() {
 	suite.SetupTest()
 
 	// prepare validators to delegate to
@@ -577,7 +577,7 @@ func (suite *KeeperTestSuite) TestRedelegateToValidatorSet() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestWithdrawDelegationRewards() {
+func (s *KeeperTestSuite) TestWithdrawDelegationRewards() {
 	suite.SetupTest()
 
 	// valset test setup
@@ -660,7 +660,7 @@ func (suite *KeeperTestSuite) TestWithdrawDelegationRewards() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestDelegateBondedTokens() {
+func (s *KeeperTestSuite) TestDelegateBondedTokens() {
 	suite.SetupTest()
 
 	testLock := suite.SetupLocks(sdk.AccAddress([]byte("addr1---------------")))

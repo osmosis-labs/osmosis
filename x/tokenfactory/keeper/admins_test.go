@@ -9,7 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
 )
 
-func (suite *KeeperTestSuite) TestAdminMsgs() {
+func (s *KeeperTestSuite) TestAdminMsgs() {
 	addr0bal := int64(0)
 	addr1bal := int64(0)
 
@@ -81,7 +81,7 @@ func (suite *KeeperTestSuite) TestAdminMsgs() {
 // * Noone can mint tokens for a denom that doesn't exist
 // * Only the admin of a denom can mint tokens for it
 // * The admin of a denom can mint tokens for it
-func (suite *KeeperTestSuite) TestMintDenom() {
+func (s *KeeperTestSuite) TestMintDenom() {
 	balances := make(map[string]int64)
 	for _, acc := range suite.TestAccs {
 		balances[acc.String()] = 0
@@ -146,7 +146,7 @@ func (suite *KeeperTestSuite) TestMintDenom() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestBurnDenom() {
+func (s *KeeperTestSuite) TestBurnDenom() {
 	// Create a denom.
 	suite.CreateDefaultDenom()
 
@@ -234,7 +234,7 @@ func (suite *KeeperTestSuite) TestBurnDenom() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestForceTransferDenom() {
+func (s *KeeperTestSuite) TestForceTransferDenom() {
 	// Create a denom.
 	suite.CreateDefaultDenom()
 
@@ -316,7 +316,7 @@ func (suite *KeeperTestSuite) TestForceTransferDenom() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestChangeAdminDenom() {
+func (s *KeeperTestSuite) TestChangeAdminDenom() {
 	for _, tc := range []struct {
 		desc                    string
 		msgChangeAdmin          func(denom string) *types.MsgChangeAdmin
@@ -404,7 +404,7 @@ func (suite *KeeperTestSuite) TestChangeAdminDenom() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestSetDenomMetaData() {
+func (s *KeeperTestSuite) TestSetDenomMetaData() {
 	// setup test
 	suite.SetupTest()
 	suite.CreateDefaultDenom()

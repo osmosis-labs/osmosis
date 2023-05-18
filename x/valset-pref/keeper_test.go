@@ -22,13 +22,13 @@ type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (s *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 }
 
 // PrepareDelegateToValidatorSet generates 4 validators for the valsetpref.
 // We self assign weights and round up to 2 decimal places in validateBasic.
-func (suite *KeeperTestSuite) PrepareDelegateToValidatorSet() []types.ValidatorPreference {
+func (s *KeeperTestSuite) PrepareDelegateToValidatorSet() []types.ValidatorPreference {
 	valAddrs := suite.SetupMultipleValidators(4)
 	valPreferences := []types.ValidatorPreference{
 		{
@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) PrepareDelegateToValidatorSet() []types.ValidatorP
 	return valPreferences
 }
 
-func (suite *KeeperTestSuite) GetDelegationRewards(ctx sdk.Context, valAddrStr string, delegator sdk.AccAddress) (sdk.DecCoins, stakingtypes.Validator) {
+func (s *KeeperTestSuite) GetDelegationRewards(ctx sdk.Context, valAddrStr string, delegator sdk.AccAddress) (sdk.DecCoins, stakingtypes.Validator) {
 	valAddr, err := sdk.ValAddressFromBech32(valAddrStr)
 	suite.Require().NoError(err)
 
@@ -69,7 +69,7 @@ func (suite *KeeperTestSuite) GetDelegationRewards(ctx sdk.Context, valAddrStr s
 	return rewards, validator
 }
 
-func (suite *KeeperTestSuite) SetupDelegationReward(delegator sdk.AccAddress, preferences []types.ValidatorPreference, existingValAddrStr string, setValSetDel, setExistingdel bool) {
+func (s *KeeperTestSuite) SetupDelegationReward(delegator sdk.AccAddress, preferences []types.ValidatorPreference, existingValAddrStr string, setValSetDel, setExistingdel bool) {
 	var ctx sdk.Context
 	// incrementing the blockheight by 1 for reward
 	ctx = suite.Ctx.WithBlockHeight(suite.Ctx.BlockHeight() + 1)
@@ -85,7 +85,7 @@ func (suite *KeeperTestSuite) SetupDelegationReward(delegator sdk.AccAddress, pr
 		suite.AllocateRewards(ctx, delegator, existingValAddrStr)
 	}
 }
-
+s *KeeperTestSuite
 func (suite *KeeperTestSuite) AllocateRewards(ctx sdk.Context, delegator sdk.AccAddress, valAddrStr string) {
 	// check that there is enough reward to withdraw
 	_, validator := suite.GetDelegationRewards(ctx, valAddrStr, delegator)
@@ -99,7 +99,7 @@ func (suite *KeeperTestSuite) AllocateRewards(ctx sdk.Context, delegator sdk.Acc
 	suite.Require().NotZero(rewardsAfterAllocation[0].Amount)
 }
 
-// PrepareExistingDelegations sets up existing delegation by creating a certain number of validators and delegating tokenAmt to them.
+// Pres *KeeperTestSuites sets up existing delegation by creating a certain number of validators and delegating tokenAmt to them.
 func (suite *KeeperTestSuite) PrepareExistingDelegations(ctx sdk.Context, valAddrs []string, delegator sdk.AccAddress, tokenAmt sdk.Int) error {
 	for i := 0; i < len(valAddrs); i++ {
 		valAddr, err := sdk.ValAddressFromBech32(valAddrs[i])
@@ -121,7 +121,7 @@ func (suite *KeeperTestSuite) PrepareExistingDelegations(ctx sdk.Context, valAdd
 
 	return nil
 }
-
+s *KeeperTestSuite
 func (suite *KeeperTestSuite) TestGetDelegationPreference() {
 	suite.SetupTest()
 
@@ -192,7 +192,7 @@ func (suite *KeeperTestSuite) TestGetDelegationPreference() {
 		})
 	}
 }
-
+s *KeeperTestSuite
 func (suite *KeeperTestSuite) SetupValidatorsAndDelegations() ([]string, []types.ValidatorPreference, sdk.Coins) {
 	// prepare existing delegations validators
 	valAddrs := suite.SetupMultipleValidators(3)
@@ -204,7 +204,7 @@ func (suite *KeeperTestSuite) SetupValidatorsAndDelegations() ([]string, []types
 
 	return valAddrs, preferences, amountToFund
 }
-
+s *KeeperTestSuite
 func (suite *KeeperTestSuite) SetupLocks(delegator sdk.AccAddress) []lockuptypes.PeriodLock {
 	// create a pool with uosmo
 	locks := []lockuptypes.PeriodLock{}

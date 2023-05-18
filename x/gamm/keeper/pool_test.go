@@ -33,7 +33,7 @@ var (
 // 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 // )
 
-// func (suite *KeeperTestSuite) TestCleanupPool() {
+// func (s *KeeperTestSuite) TestCleanupPool() {
 // 	// Mint some assets to the accounts.
 // 	for _, acc := range suite.TestAccs {
 // 		suite.FundAcc(
@@ -99,7 +99,7 @@ var (
 // 	}
 // }
 
-// func (suite *KeeperTestSuite) TestCleanupPoolRandomized() {
+// func (s *KeeperTestSuite) TestCleanupPoolRandomized() {
 // 	// address => deposited coins
 // 	coinOf := make(map[string]sdk.Coins)
 // 	denoms := []string{"foo", "bar", "baz"}
@@ -153,7 +153,7 @@ var (
 // 	}
 // }
 
-// func (suite *KeeperTestSuite) TestCleanupPoolErrorOnSwap() {
+// func (s *KeeperTestSuite) TestCleanupPoolErrorOnSwap() {
 // 	suite.Ctx = suite.Ctx.WithBlockTime(time.Unix(1000, 1000))
 // 	suite.FundAcc(
 // 		suite.App.BankKeeper,
@@ -193,7 +193,7 @@ var (
 // 	suite.Error(err)
 // }
 
-// func (suite *KeeperTestSuite) TestCleanupPoolWithLockup() {
+// func (s *KeeperTestSuite) TestCleanupPoolWithLockup() {
 // 	suite.Ctx = suite.Ctx.WithBlockTime(time.Unix(1000, 1000))
 // 	suite.FundAcc(
 // 		suite.App.BankKeeper,
@@ -246,7 +246,7 @@ var (
 
 // TestGetPoolAndPoke tests that the right pools is returned from GetPoolAndPoke.
 // For the pools implementing the weighted extension, asserts that PokePool is called.
-func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
+func (s *KeeperTestSuite) TestGetPoolAndPoke() {
 	const (
 		startTime = 1000
 		blockTime = startTime + 100
@@ -329,7 +329,7 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestConvertToCFMMPool() {
+func (s *KeeperTestSuite) TestConvertToCFMMPool() {
 	ctrl := gomock.NewController(suite.T())
 
 	tests := map[string]struct {
@@ -368,7 +368,7 @@ func (suite *KeeperTestSuite) TestConvertToCFMMPool() {
 // that we marshal to and unmarshal from store, we do not
 // change the underlying bytes. This shows that migrations are
 // not necessary.
-func (suite *KeeperTestSuite) TestMarshalUnmarshalPool() {
+func (s *KeeperTestSuite) TestMarshalUnmarshalPool() {
 	suite.SetupTest()
 	k := suite.App.GAMMKeeper
 
@@ -439,7 +439,7 @@ func (suite *KeeperTestSuite) TestMarshalUnmarshalPool() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
+func (s *KeeperTestSuite) TestSetStableSwapScalingFactors() {
 	controllerAddr := suite.TestAccs[0]
 	failAddr := suite.TestAccs[1]
 

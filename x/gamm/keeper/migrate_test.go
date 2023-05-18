@@ -11,7 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
-func (suite *KeeperTestSuite) TestMigrate() {
+func (s *KeeperTestSuite) TestMigrate() {
 	defaultAccount := suite.TestAccs[0]
 	defaultGammShares := sdk.NewCoin("gamm/pool/1", sdk.MustNewDecFromStr("100000000000000000000").RoundInt())
 	invalidGammShares := sdk.NewCoin("gamm/pool/1", sdk.MustNewDecFromStr("190000000000000000001").RoundInt())
@@ -260,7 +260,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
+func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 	tests := []struct {
 		name                        string
 		testingMigrationRecords     []types.BalancerToConcentratedPoolLink
@@ -435,7 +435,7 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
+func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 	tests := []struct {
 		name                        string
 		testingMigrationRecords     []types.BalancerToConcentratedPoolLink
@@ -714,7 +714,7 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGetLinkedConcentratedPoolID() {
+func (s *KeeperTestSuite) TestGetLinkedConcentratedPoolID() {
 	tests := []struct {
 		name                   string
 		poolIdLeaving          []uint64
@@ -767,7 +767,7 @@ func (suite *KeeperTestSuite) TestGetLinkedConcentratedPoolID() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
+func (s *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 	tests := []struct {
 		name                  string
 		poolIdEntering        []uint64
@@ -799,7 +799,8 @@ func (suite *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 			expectedErr: []error{
 				types.BalancerPoolMigrationLinkNotFoundError{PoolIdEntering: 4},
 				types.BalancerPoolMigrationLinkNotFoundError{PoolIdEntering: 5},
-				types.BalancerPoolMigrationLinkNotFoundError{PoolIdEntering: 6}},
+				types.BalancerPoolMigrationLinkNotFoundError{PoolIdEntering: 6},
+			},
 		},
 	}
 
@@ -835,7 +836,7 @@ func (suite *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGetAllMigrationInfo() {
+func (s *KeeperTestSuite) TestGetAllMigrationInfo() {
 	tests := []struct {
 		name        string
 		skipLinking bool

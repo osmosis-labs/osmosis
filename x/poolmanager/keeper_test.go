@@ -35,14 +35,14 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (s *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 }
 
 // createBalancerPoolsFromCoinsWithSwapFee creates balancer pools from given sets of coins and respective swap fees.
 // Where element 1 of the input corresponds to the first pool created,
 // element 2 to the second pool created, up until the last element.
-func (suite *KeeperTestSuite) createBalancerPoolsFromCoinsWithSwapFee(poolCoins []sdk.Coins, swapFee []sdk.Dec) {
+func (s *KeeperTestSuite) createBalancerPoolsFromCoinsWithSwapFee(poolCoins []sdk.Coins, swapFee []sdk.Dec) {
 	for i, curPoolCoins := range poolCoins {
 		suite.FundAcc(suite.TestAccs[0], curPoolCoins)
 		suite.PrepareCustomBalancerPoolFromCoins(curPoolCoins, balancer.PoolParams{
@@ -55,7 +55,7 @@ func (suite *KeeperTestSuite) createBalancerPoolsFromCoinsWithSwapFee(poolCoins 
 // createBalancerPoolsFromCoins creates balancer pools from given sets of coins and zero swap fees.
 // Where element 1 of the input corresponds to the first pool created,
 // element 2 to the second pool created, up until the last element.
-func (suite *KeeperTestSuite) createBalancerPoolsFromCoins(poolCoins []sdk.Coins) {
+func (s *KeeperTestSuite) createBalancerPoolsFromCoins(poolCoins []sdk.Coins) {
 	for _, curPoolCoins := range poolCoins {
 		suite.FundAcc(suite.TestAccs[0], curPoolCoins)
 		suite.PrepareCustomBalancerPoolFromCoins(curPoolCoins, balancer.PoolParams{
@@ -65,7 +65,7 @@ func (suite *KeeperTestSuite) createBalancerPoolsFromCoins(poolCoins []sdk.Coins
 	}
 }
 
-func (suite *KeeperTestSuite) TestInitGenesis() {
+func (s *KeeperTestSuite) TestInitGenesis() {
 	suite.Setup()
 
 	suite.App.PoolManagerKeeper.InitGenesis(suite.Ctx, &types.GenesisState{
@@ -81,7 +81,7 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	suite.Require().Equal(testPoolRoute, suite.App.PoolManagerKeeper.GetAllPoolRoutes(suite.Ctx))
 }
 
-func (suite *KeeperTestSuite) TestExportGenesis() {
+func (s *KeeperTestSuite) TestExportGenesis() {
 	suite.Setup()
 
 	suite.App.PoolManagerKeeper.InitGenesis(suite.Ctx, &types.GenesisState{

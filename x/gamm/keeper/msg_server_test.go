@@ -17,7 +17,7 @@ const (
 
 // TestSwapExactAmountIn_Events tests that events are correctly emitted
 // when calling SwapExactAmountIn.
-func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
+func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 	const (
 		tokenInMinAmount = 1
 		tokenIn          = 5
@@ -116,7 +116,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 
 // TestSwapExactAmountOut_Events tests that events are correctly emitted
 // when calling SwapExactAmountOut.
-func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
+func (s *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 	const (
 		tokenInMaxAmount = int64Max
 		tokenOut         = 5
@@ -215,7 +215,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 
 // TestJoinPool_Events tests that events are correctly emitted
 // when calling JoinPool.
-func (suite *KeeperTestSuite) TestJoinPool_Events() {
+func (s *KeeperTestSuite) TestJoinPool_Events() {
 	const (
 		tokenInMaxAmount = int64Max
 		shareOut         = 110
@@ -282,7 +282,7 @@ func (suite *KeeperTestSuite) TestJoinPool_Events() {
 
 // TestExitPool_Events tests that events are correctly emitted
 // when calling ExitPool.
-func (suite *KeeperTestSuite) TestExitPool_Events() {
+func (s *KeeperTestSuite) TestExitPool_Events() {
 	const (
 		tokenOutMinAmount = 1
 		shareIn           = 110
@@ -358,7 +358,7 @@ func (suite *KeeperTestSuite) TestExitPool_Events() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestMsgMigrateShares_Events() {
+func (s *KeeperTestSuite) TestMsgMigrateShares_Events() {
 	defaultAccount := suite.TestAccs[0]
 	defaultGammShares := sdk.NewCoin("gamm/pool/1", sdk.MustNewDecFromStr("100000000000000000000").RoundInt())
 	defaultAccountFunds := sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(200000000000)), sdk.NewCoin("usdc", sdk.NewInt(200000000000)))

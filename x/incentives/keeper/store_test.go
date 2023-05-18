@@ -2,7 +2,7 @@ package keeper_test
 
 import "github.com/stretchr/testify/suite"
 
-func (suite *KeeperTestSuite) TestGaugeReferencesManagement() {
+func (s *KeeperTestSuite) TestGaugeReferencesManagement() {
 	key1 := []byte{0x11}
 	key2 := []byte{0x12}
 

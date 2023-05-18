@@ -22,7 +22,7 @@ type KeeperTestSuite struct {
 	queryClient  types.QueryClient
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (s *KeeperTestSuite) SetupTest() {
 	ctx, epochsKeeper := Setup()
 	suite.Ctx = ctx
 	suite.EpochsKeeper = epochsKeeper

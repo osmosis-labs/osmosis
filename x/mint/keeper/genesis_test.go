@@ -38,7 +38,7 @@ var customGenesis = types.NewGenesisState(
 
 // TestMintInitGenesis tests that genesis is initialized correctly
 // with different parameters and state.
-func (suite *KeeperTestSuite) TestMintInitGenesis() {
+func (s *KeeperTestSuite) TestMintInitGenesis() {
 	testCases := map[string]struct {
 		mintGenesis                     *types.GenesisState
 		mintDenom                       string
@@ -144,7 +144,7 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 // TestMintExportGenesis tests that genesis is exported correctly.
 // It first initializes genesis to the expected value. Then, attempts
 // to export it. Lastly, compares exported to the expected.
-func (suite *KeeperTestSuite) TestMintExportGenesis() {
+func (s *KeeperTestSuite) TestMintExportGenesis() {
 	testCases := map[string]struct {
 		expectedGenesis *types.GenesisState
 	}{

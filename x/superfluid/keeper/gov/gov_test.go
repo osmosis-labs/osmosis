@@ -12,7 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
-func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
+func (s *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	coins := suite.App.GAMMKeeper.GetParams(suite.Ctx).PoolCreationFee
 	poolAssets := []balancer.PoolAsset{}
 	for _, denom := range denoms {
@@ -39,7 +39,7 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	return poolId
 }
 
-func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
+func (s *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 	nativeAsset := types.SuperfluidAsset{
 		Denom:     "stake",
 		AssetType: types.SuperfluidAssetTypeNative,
@@ -182,7 +182,7 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestHandleUnpoolWhiteListChange() {
+func (s *KeeperTestSuite) TestHandleUnpoolWhiteListChange() {
 	const (
 		testTitle       = "test title"
 		testDescription = "test description"

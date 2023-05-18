@@ -1,7 +1,7 @@
 package keeper_test
 
 // TestInitGenesis tests the initialization and export of the module's genesis state.
-func (suite *KeeperTestSuite) TestInitGenesis() {
+func (s *KeeperTestSuite) TestInitGenesis() {
 	// Export the genesis state
 	exportedGenesis := suite.App.ProtoRevKeeper.ExportGenesis(suite.Ctx)
 

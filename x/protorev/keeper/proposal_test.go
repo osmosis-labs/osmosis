@@ -7,7 +7,7 @@ import (
 )
 
 // TestSetProtoRevAdminAccount tests that the admin account can be set through a proposal
-func (suite *KeeperTestSuite) TestSetProtoRevAdminAccount() {
+func (s *KeeperTestSuite) TestSetProtoRevAdminAccount() {
 	// Should be initialized to begin with
 	account := suite.App.ProtoRevKeeper.GetAdminAccount(suite.Ctx)
 	suite.Require().Equal(account, suite.adminAccount)
@@ -35,7 +35,7 @@ func (suite *KeeperTestSuite) TestSetProtoRevAdminAccount() {
 }
 
 // TestSetProtoRevEnabledProposal tests that the enabled status can be set through a proposal
-func (suite *KeeperTestSuite) TestSetProtoRevEnabledProposal() {
+func (s *KeeperTestSuite) TestSetProtoRevEnabledProposal() {
 	// Should be enabled by default
 	enabled := suite.App.ProtoRevKeeper.GetProtoRevEnabled(suite.Ctx)
 	suite.Require().True(enabled)

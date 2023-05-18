@@ -7,7 +7,7 @@ import (
 )
 
 // TestGetTokenPairArbRoutes tests the GetTokenPairArbRoutes function.
-func (suite *KeeperTestSuite) TestGetTokenPairArbRoutes() {
+func (s *KeeperTestSuite) TestGetTokenPairArbRoutes() {
 	// Tests that we can properly retrieve all of the routes that were set up
 	for _, tokenPair := range suite.tokenPairArbRoutes {
 		tokenPairArbRoutes, err := suite.App.ProtoRevKeeper.GetTokenPairArbRoutes(suite.Ctx, tokenPair.TokenIn, tokenPair.TokenOut)
@@ -22,7 +22,7 @@ func (suite *KeeperTestSuite) TestGetTokenPairArbRoutes() {
 }
 
 // TestGetAllTokenPairArbRoutes tests the GetAllTokenPairArbRoutes function.
-func (suite *KeeperTestSuite) TestGetAllTokenPairArbRoutes() {
+func (s *KeeperTestSuite) TestGetAllTokenPairArbRoutes() {
 	// Tests that we can properly retrieve all of the routes that were set up
 	tokenPairArbRoutes, err := suite.App.ProtoRevKeeper.GetAllTokenPairArbRoutes(suite.Ctx)
 
@@ -35,7 +35,7 @@ func (suite *KeeperTestSuite) TestGetAllTokenPairArbRoutes() {
 }
 
 // TestDeleteAllTokenPairArbRoutes tests the DeleteAllTokenPairArbRoutes function.
-func (suite *KeeperTestSuite) TestDeleteAllTokenPairArbRoutes() {
+func (s *KeeperTestSuite) TestDeleteAllTokenPairArbRoutes() {
 	// Tests that we can properly retrieve all of the routes that were set up
 	tokenPairArbRoutes, err := suite.App.ProtoRevKeeper.GetAllTokenPairArbRoutes(suite.Ctx)
 
@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) TestDeleteAllTokenPairArbRoutes() {
 }
 
 // TestGetAllBaseDenoms tests the GetAllBaseDenoms, SetBaseDenoms, and DeleteBaseDenoms functions.
-func (suite *KeeperTestSuite) TestGetAllBaseDenoms() {
+func (s *KeeperTestSuite) TestGetAllBaseDenoms() {
 	// Should be initialized on genesis
 	baseDenoms, err := suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
 	suite.Require().NoError(err)
@@ -83,7 +83,7 @@ func (suite *KeeperTestSuite) TestGetAllBaseDenoms() {
 }
 
 // TestGetPoolForDenomPair tests the GetPoolForDenomPair, SetPoolForDenomPair, and DeleteAllPoolsForBaseDenom functions.
-func (suite *KeeperTestSuite) TestGetPoolForDenomPair() {
+func (s *KeeperTestSuite) TestGetPoolForDenomPair() {
 	// Should be able to set a pool for a denom pair
 	suite.App.ProtoRevKeeper.SetPoolForDenomPair(suite.Ctx, "Atom", types.OsmosisDenomination, 1000)
 	pool, err := suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, "Atom", types.OsmosisDenomination)
@@ -115,7 +115,7 @@ func (suite *KeeperTestSuite) TestGetPoolForDenomPair() {
 }
 
 // TestGetDaysSinceModuleGenesis tests the GetDaysSinceModuleGenesis and SetDaysSinceModuleGenesis functions.
-func (suite *KeeperTestSuite) TestGetDaysSinceModuleGenesis() {
+func (s *KeeperTestSuite) TestGetDaysSinceModuleGenesis() {
 	// Should be initialized to 0 on genesis
 	daysSinceGenesis, err := suite.App.ProtoRevKeeper.GetDaysSinceModuleGenesis(suite.Ctx)
 	suite.Require().NoError(err)
@@ -129,7 +129,7 @@ func (suite *KeeperTestSuite) TestGetDaysSinceModuleGenesis() {
 }
 
 // TestGetDeveloperFees tests the GetDeveloperFees, SetDeveloperFees, and GetAllDeveloperFees functions.
-func (suite *KeeperTestSuite) TestGetDeveloperFees() {
+func (s *KeeperTestSuite) TestGetDeveloperFees() {
 	// Should be initialized to [] on genesis
 	fees, err := suite.App.ProtoRevKeeper.GetAllDeveloperFees(suite.Ctx)
 	suite.Require().NoError(err)
@@ -172,7 +172,7 @@ func (suite *KeeperTestSuite) TestGetDeveloperFees() {
 }
 
 // TestDeleteDeveloperFees tests the DeleteDeveloperFees function.
-func (suite *KeeperTestSuite) TestDeleteDeveloperFees() {
+func (s *KeeperTestSuite) TestDeleteDeveloperFees() {
 	err := suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)))
 	suite.Require().NoError(err)
 
@@ -191,7 +191,7 @@ func (suite *KeeperTestSuite) TestDeleteDeveloperFees() {
 }
 
 // TestGetProtoRevEnabled tests the GetProtoRevEnabled and SetProtoRevEnabled functions.
-func (suite *KeeperTestSuite) TestGetProtoRevEnabled() {
+func (s *KeeperTestSuite) TestGetProtoRevEnabled() {
 	// Should be initialized to true on genesis
 	protoRevEnabled := suite.App.ProtoRevKeeper.GetProtoRevEnabled(suite.Ctx)
 	suite.Require().Equal(true, protoRevEnabled)
@@ -203,7 +203,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevEnabled() {
 }
 
 // TestGetAdminAccount tests the GetAdminAccount and SetAdminAccount functions.
-func (suite *KeeperTestSuite) TestGetAdminAccount() {
+func (s *KeeperTestSuite) TestGetAdminAccount() {
 	// Should be initialized (look at keeper_test.go)
 	adminAccount := suite.App.ProtoRevKeeper.GetAdminAccount(suite.Ctx)
 	suite.Require().Equal(suite.adminAccount, adminAccount)
@@ -215,7 +215,7 @@ func (suite *KeeperTestSuite) TestGetAdminAccount() {
 }
 
 // TestGetDeveloperAccount tests the GetDeveloperAccount and SetDeveloperAccount functions.
-func (suite *KeeperTestSuite) TestGetDeveloperAccount() {
+func (s *KeeperTestSuite) TestGetDeveloperAccount() {
 	// Should be null on genesis
 	developerAccount, err := suite.App.ProtoRevKeeper.GetDeveloperAccount(suite.Ctx)
 	suite.Require().Error(err)
@@ -229,7 +229,7 @@ func (suite *KeeperTestSuite) TestGetDeveloperAccount() {
 }
 
 // TestGetMaxPointsPerTx tests the GetMaxPointsPerTx and SetMaxPointsPerTx functions.
-func (suite *KeeperTestSuite) TestGetMaxPointsPerTx() {
+func (s *KeeperTestSuite) TestGetMaxPointsPerTx() {
 	// Should be initialized on genesis
 	maxPoints, err := suite.App.ProtoRevKeeper.GetMaxPointsPerTx(suite.Ctx)
 	suite.Require().NoError(err)
@@ -250,7 +250,7 @@ func (suite *KeeperTestSuite) TestGetMaxPointsPerTx() {
 }
 
 // TestGetPointCountForBlock tests the GetPointCountForBlock, IncrementPointCountForBlock and SetPointCountForBlock functions.
-func (suite *KeeperTestSuite) TestGetPointCountForBlock() {
+func (s *KeeperTestSuite) TestGetPointCountForBlock() {
 	// Should be initialized to 0 on genesis
 	pointCount, err := suite.App.ProtoRevKeeper.GetPointCountForBlock(suite.Ctx)
 	suite.Require().NoError(err)
@@ -271,7 +271,7 @@ func (suite *KeeperTestSuite) TestGetPointCountForBlock() {
 }
 
 // TestGetLatestBlockHeight tests the GetLatestBlockHeight and SetLatestBlockHeight functions.
-func (suite *KeeperTestSuite) TestGetLatestBlockHeight() {
+func (s *KeeperTestSuite) TestGetLatestBlockHeight() {
 	// Should be initialized on genesis
 	blockHeight, err := suite.App.ProtoRevKeeper.GetLatestBlockHeight(suite.Ctx)
 	suite.Require().NoError(err)
@@ -285,7 +285,7 @@ func (suite *KeeperTestSuite) TestGetLatestBlockHeight() {
 }
 
 // TestGetMaxPointsPerBlock tests the GetMaxPointsPerBlock and SetMaxPointsPerBlock functions.
-func (suite *KeeperTestSuite) TestGetMaxPointsPerBlock() {
+func (s *KeeperTestSuite) TestGetMaxPointsPerBlock() {
 	// Should be initialized on genesis
 	maxPoints, err := suite.App.ProtoRevKeeper.GetMaxPointsPerBlock(suite.Ctx)
 	suite.Require().NoError(err)
@@ -306,7 +306,7 @@ func (suite *KeeperTestSuite) TestGetMaxPointsPerBlock() {
 }
 
 // TestGetPoolWeights tests the GetPoolWeights and SetPoolWeights functions.
-func (suite *KeeperTestSuite) TestGetPoolWeights() {
+func (s *KeeperTestSuite) TestGetPoolWeights() {
 	// Should be initialized on genesis
 	poolWeights := suite.App.ProtoRevKeeper.GetPoolWeights(suite.Ctx)
 	suite.Require().Equal(types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2}, poolWeights)

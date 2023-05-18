@@ -7,7 +7,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
-func (suite *KeeperTestSuite) TestIntermediaryAccountCreation() {
+func (s *KeeperTestSuite) TestIntermediaryAccountCreation() {
 	testCases := []struct {
 		name             string
 		validatorStats   []stakingtypes.BondStatus
@@ -85,7 +85,7 @@ func (suite *KeeperTestSuite) TestIntermediaryAccountCreation() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestIntermediaryAccountsSetGetDeleteFlow() {
+func (s *KeeperTestSuite) TestIntermediaryAccountsSetGetDeleteFlow() {
 	suite.SetupTest()
 
 	// initial check
@@ -121,7 +121,7 @@ func (suite *KeeperTestSuite) TestIntermediaryAccountsSetGetDeleteFlow() {
 	suite.Require().Len(accs, 0)
 }
 
-func (suite *KeeperTestSuite) TestLockIdIntermediaryAccountConnection() {
+func (s *KeeperTestSuite) TestLockIdIntermediaryAccountConnection() {
 	suite.SetupTest()
 
 	// get account

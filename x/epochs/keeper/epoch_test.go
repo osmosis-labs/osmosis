@@ -6,7 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
-func (suite *KeeperTestSuite) TestAddEpochInfo() {
+func (s *KeeperTestSuite) TestAddEpochInfo() {
 	defaultIdentifier := "default_add_epoch_info_id"
 	defaultDuration := time.Hour
 	startBlockHeight := int64(100)
@@ -66,7 +66,7 @@ func (suite *KeeperTestSuite) TestAddEpochInfo() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestDuplicateAddEpochInfo() {
+func (s *KeeperTestSuite) TestDuplicateAddEpochInfo() {
 	identifier := "duplicate_add_epoch_info"
 	epochInfo := types.NewGenesisEpochInfo(identifier, time.Hour*24*30)
 	err := suite.EpochsKeeper.AddEpochInfo(suite.Ctx, epochInfo)
@@ -75,7 +75,7 @@ func (suite *KeeperTestSuite) TestDuplicateAddEpochInfo() {
 	suite.Require().Error(err)
 }
 
-func (suite *KeeperTestSuite) TestEpochLifeCycle() {
+func (s *KeeperTestSuite) TestEpochLifeCycle() {
 	suite.SetupTest()
 
 	epochInfo := types.NewGenesisEpochInfo("monthly", time.Hour*24*30)

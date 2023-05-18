@@ -14,7 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
-func (suite *KeeperTestSuite) TestPoolCreationFee() {
+func (s *KeeperTestSuite) TestPoolCreationFee() {
 	params := suite.App.PoolManagerKeeper.GetParams(suite.Ctx)
 
 	// get raw pool creation fee(s) as DecCoins
@@ -115,7 +115,7 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 }
 
 // TestCreatePool tests that all possible pools are created correctly.
-func (suite *KeeperTestSuite) TestCreatePool() {
+func (s *KeeperTestSuite) TestCreatePool() {
 	var (
 		validBalancerPoolMsg = balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil), []balancer.PoolAsset{
 			{
@@ -245,7 +245,7 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 }
 
 // Tests that only poolmanager as a pool creator can create a pool via CreatePoolZeroLiquidityNoCreationFee
-func (suite *KeeperTestSuite) TestCreatePoolZeroLiquidityNoCreationFee() {
+func (s *KeeperTestSuite) TestCreatePoolZeroLiquidityNoCreationFee() {
 	suite.SetupTest()
 
 	poolManagerModuleAcc := suite.App.AccountKeeper.GetModuleAccount(suite.Ctx, types.ModuleName)
@@ -322,7 +322,7 @@ func (suite *KeeperTestSuite) TestCreatePoolZeroLiquidityNoCreationFee() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestSetAndGetAllPoolRoutes() {
+func (s *KeeperTestSuite) TestSetAndGetAllPoolRoutes() {
 	tests := []struct {
 		name         string
 		preSetRoutes []types.ModuleRoute
@@ -392,7 +392,7 @@ func (suite *KeeperTestSuite) TestSetAndGetAllPoolRoutes() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGetNextPoolIdAndIncrement() {
+func (s *KeeperTestSuite) TestGetNextPoolIdAndIncrement() {
 	tests := []struct {
 		name               string
 		expectedNextPoolId uint64
@@ -424,7 +424,7 @@ func (suite *KeeperTestSuite) TestGetNextPoolIdAndIncrement() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestValidateCreatedPool() {
+func (s *KeeperTestSuite) TestValidateCreatedPool() {
 	tests := []struct {
 		name          string
 		poolId        uint64

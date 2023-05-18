@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *KeeperTestSuite) TestOsmoEquivalentMultiplierSetGetDeleteFlow() {
+func (s *KeeperTestSuite) TestOsmoEquivalentMultiplierSetGetDeleteFlow() {
 	suite.SetupTest()
 
 	// initial check
@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) TestOsmoEquivalentMultiplierSetGetDeleteFlow() {
 	suite.Require().Equal(multiplier, sdk.NewDec(0))
 }
 
-func (suite *KeeperTestSuite) TestGetSuperfluidOSMOTokens() {
+func (s *KeeperTestSuite) TestGetSuperfluidOSMOTokens() {
 	suite.SetupTest()
 	minRiskFactor := suite.App.SuperfluidKeeper.GetParams(suite.Ctx).MinimumRiskFactor
 	poolCoins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000000000000000000)), sdk.NewCoin("foo", sdk.NewInt(1000000000000000000)))

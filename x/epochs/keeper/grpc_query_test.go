@@ -6,7 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
-func (suite *KeeperTestSuite) TestQueryEpochInfos() {
+func (s *KeeperTestSuite) TestQueryEpochInfos() {
 	suite.SetupTest()
 	queryClient := suite.queryClient
 

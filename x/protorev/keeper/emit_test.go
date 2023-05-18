@@ -12,7 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
-func (suite *KeeperTestSuite) TestBackRunEvent() {
+func (s *KeeperTestSuite) TestBackRunEvent() {
 	testcases := map[string]struct {
 		pool                     keeper.SwapToBackrun
 		remainingTxPoolPoints    uint64

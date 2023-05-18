@@ -19,7 +19,7 @@ type KeeperTestSuite struct {
 	cleanup func()
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (s *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 	suite.querier = keeper.NewQuerier(*suite.App.LockupKeeper)
 	unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
@@ -32,12 +32,12 @@ func (suite *KeeperTestSuite) SetupTest() {
 	})
 }
 
-func (suite *KeeperTestSuite) SetupTestWithLevelDb() {
+func (s *KeeperTestSuite) SetupTestWithLevelDb() {
 	suite.App, suite.cleanup = app.SetupTestingAppWithLevelDb(false)
 	suite.Ctx = suite.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
 }
 
-func (suite *KeeperTestSuite) Cleanup() {
+func (s *KeeperTestSuite) Cleanup() {
 	suite.cleanup()
 }
 

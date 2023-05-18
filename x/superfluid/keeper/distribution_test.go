@@ -8,7 +8,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
+func (s *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 	type gaugeChecker struct {
 		intermediaryAccIndex uint64
 		valIndex             int64

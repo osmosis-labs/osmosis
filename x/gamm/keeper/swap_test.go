@@ -15,7 +15,7 @@ import (
 
 var _ = suite.TestingSuite(nil)
 
-func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
+func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 	type param struct {
 		tokenIn           sdk.Coin
 		tokenOutDenom     string
@@ -172,7 +172,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 
 // TestCalcOutAmtGivenIn only tests that balancer and stableswap pools are type casted correctly while concentratedliquidity pools fail
 // TODO: add failing CL pool tests.
-func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
+func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	type param struct {
 		poolType      string
 		tokenIn       sdk.Coin
@@ -237,7 +237,7 @@ func (suite *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
+func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 	type param struct {
 		poolType     string
 		tokenOut     sdk.Coin
@@ -308,7 +308,7 @@ func (suite *KeeperTestSuite) TestCalcInAmtGivenOut() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
+func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 	type param struct {
 		tokenInDenom          string
 		tokenInMaxAmount      sdk.Int
@@ -422,7 +422,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
+func (s *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 	type testCase struct {
 		blockTime  time.Time
 		expectPass bool
@@ -473,7 +473,7 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 // `mocks.NewMockPool()`, then adding `EXPECT` statements to
 // match argument calls, add return values, and more.
 // More info at https://github.com/golang/mock
-func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
+func (s *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	// Setup test
 	suite.SetupTest()
 	testCoin := sdk.NewCoin("foo", sdk.NewInt(10))

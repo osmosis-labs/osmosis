@@ -242,7 +242,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 	}
 }
 
-func (suite *KeeperTestSuite) TestMsgCreateBalancerPool() {
+func (s *KeeperTestSuite) TestMsgCreateBalancerPool() {
 	suite.SetupTest()
 	tests := map[string]struct {
 		msg         balancer.MsgCreateBalancerPool

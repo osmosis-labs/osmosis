@@ -10,7 +10,7 @@ import (
 )
 
 // TestParams tests the query for params
-func (suite *KeeperTestSuite) TestParams() {
+func (s *KeeperTestSuite) TestParams() {
 	ctx := sdk.WrapSDKContext(suite.Ctx)
 	expectedParams := suite.App.ProtoRevKeeper.GetParams(suite.Ctx)
 
@@ -20,7 +20,7 @@ func (suite *KeeperTestSuite) TestParams() {
 }
 
 // TestGetProtoRevNumberOfTrades tests the query for number of trades
-func (suite *KeeperTestSuite) TestGetProtoRevNumberOfTrades() {
+func (s *KeeperTestSuite) TestGetProtoRevNumberOfTrades() {
 	// Initially should throw an error
 	_, err := suite.queryClient.GetProtoRevNumberOfTrades(sdk.WrapSDKContext(suite.Ctx), &types.QueryGetProtoRevNumberOfTradesRequest{})
 	suite.Require().Error(err)
@@ -50,7 +50,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevNumberOfTrades() {
 }
 
 // TestGetProtoRevProfitsByDenom tests the query for profits by denom
-func (suite *KeeperTestSuite) TestGetProtoRevProfitsByDenom() {
+func (s *KeeperTestSuite) TestGetProtoRevProfitsByDenom() {
 	req := &types.QueryGetProtoRevProfitsByDenomRequest{
 		Denom: types.OsmosisDenomination,
 	}
@@ -85,7 +85,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevProfitsByDenom() {
 }
 
 // TestGetProtoRevAllProfits tests the query for all profits
-func (suite *KeeperTestSuite) TestGetProtoRevAllProfits() {
+func (s *KeeperTestSuite) TestGetProtoRevAllProfits() {
 	req := &types.QueryGetProtoRevAllProfitsRequest{}
 	res, err := suite.queryClient.GetProtoRevAllProfits(sdk.WrapSDKContext(suite.Ctx), req)
 	suite.Require().NoError(err)
@@ -119,7 +119,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevAllProfits() {
 }
 
 // TestGetProtoRevStatisticsByRoute tests the query for statistics by route
-func (suite *KeeperTestSuite) TestGetProtoRevStatisticsByRoute() {
+func (s *KeeperTestSuite) TestGetProtoRevStatisticsByRoute() {
 	// Request with no trades should return an error
 	req := &types.QueryGetProtoRevStatisticsByRouteRequest{
 		Route: []uint64{1, 2, 3},
@@ -169,7 +169,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevStatisticsByRoute() {
 }
 
 // TestGetProtoRevAllRouteStatistics tests the query for all route statistics
-func (suite *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
+func (s *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 	req := &types.QueryGetProtoRevAllRouteStatisticsRequest{}
 
 	res, err := suite.queryClient.GetProtoRevAllRouteStatistics(sdk.WrapSDKContext(suite.Ctx), req)
@@ -244,7 +244,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 }
 
 // TestGetProtoRevTokenPairArbRoutes tests the query to retrieve all token pair arb routes
-func (suite *KeeperTestSuite) TestGetProtoRevTokenPairArbRoutes() {
+func (s *KeeperTestSuite) TestGetProtoRevTokenPairArbRoutes() {
 	req := &types.QueryGetProtoRevTokenPairArbRoutesRequest{}
 	res, err := suite.queryClient.GetProtoRevTokenPairArbRoutes(sdk.WrapSDKContext(suite.Ctx), req)
 	suite.Require().NoError(err)
@@ -256,7 +256,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevTokenPairArbRoutes() {
 }
 
 // TestGetProtoRevAdminAccount tests the query to retrieve the admin account
-func (suite *KeeperTestSuite) TestGetProtoRevAdminAccount() {
+func (s *KeeperTestSuite) TestGetProtoRevAdminAccount() {
 	req := &types.QueryGetProtoRevAdminAccountRequest{}
 	res, err := suite.queryClient.GetProtoRevAdminAccount(sdk.WrapSDKContext(suite.Ctx), req)
 	suite.Require().NoError(err)
@@ -264,7 +264,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevAdminAccount() {
 }
 
 // TestGetProtoRevDeveloperAccount tests the query to retrieve the developer account
-func (suite *KeeperTestSuite) TestGetProtoRevDeveloperAccount() {
+func (s *KeeperTestSuite) TestGetProtoRevDeveloperAccount() {
 	// By default it should be empty
 	req := &types.QueryGetProtoRevDeveloperAccountRequest{}
 	res, err := suite.queryClient.GetProtoRevDeveloperAccount(sdk.WrapSDKContext(suite.Ctx), req)
@@ -282,7 +282,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevDeveloperAccount() {
 }
 
 // TestGetProtoRevPoolWeights tests the query to retrieve the pool weights
-func (suite *KeeperTestSuite) TestGetProtoRevPoolWeights() {
+func (s *KeeperTestSuite) TestGetProtoRevPoolWeights() {
 	// Set the pool weights
 	poolWeights := types.PoolWeights{
 		StableWeight:       5,
@@ -298,7 +298,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevPoolWeights() {
 }
 
 // TestGetProtoRevMaxPoolPointsPerTx tests the query to retrieve the max pool points per tx
-func (suite *KeeperTestSuite) TestGetProtoRevMaxPoolPointsPerTx() {
+func (s *KeeperTestSuite) TestGetProtoRevMaxPoolPointsPerTx() {
 	// Set the max pool points per tx
 	maxPoolPointsPerTx := types.MaxPoolPointsPerTx - 1
 	err := suite.App.AppKeepers.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, maxPoolPointsPerTx)
@@ -311,7 +311,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevMaxPoolPointsPerTx() {
 }
 
 // TestGetProtoRevMaxPoolPointsPerBlock tests the query to retrieve the max pool points per block
-func (suite *KeeperTestSuite) TestGetProtoRevMaxPoolPointsPerBlock() {
+func (s *KeeperTestSuite) TestGetProtoRevMaxPoolPointsPerBlock() {
 	// Set the max pool points per block
 	maxPoolPointsPerBlock := types.MaxPoolPointsPerBlock - 1
 	err := suite.App.AppKeepers.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, maxPoolPointsPerBlock)
@@ -324,7 +324,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevMaxPoolPointsPerBlock() {
 }
 
 // TestGetProtoRevBaseDenoms tests the query to retrieve the base denoms
-func (suite *KeeperTestSuite) TestGetProtoRevBaseDenoms() {
+func (s *KeeperTestSuite) TestGetProtoRevBaseDenoms() {
 	// base denoms already set in setup
 	baseDenoms, err := suite.App.AppKeepers.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
 	suite.Require().NoError(err)
@@ -336,7 +336,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevBaseDenoms() {
 }
 
 // TestGetProtoRevEnabled tests the query to retrieve the enabled status of protorev
-func (suite *KeeperTestSuite) TestGetProtoRevEnabledQuery() {
+func (s *KeeperTestSuite) TestGetProtoRevEnabledQuery() {
 	// Set the enabled status
 	enabled := false
 	suite.App.AppKeepers.ProtoRevKeeper.SetProtoRevEnabled(suite.Ctx, enabled)
@@ -356,7 +356,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevEnabledQuery() {
 }
 
 // TestGetProtoRevPool tests the query for getting the highest liquidity pool stored
-func (suite *KeeperTestSuite) TestGetProtoRevPool() {
+func (s *KeeperTestSuite) TestGetProtoRevPool() {
 	// Request without setting pool for the base denom and other denom should return an error
 	req := &types.QueryGetProtoRevPoolRequest{
 		BaseDenom:  "uosmo",

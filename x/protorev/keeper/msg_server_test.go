@@ -9,7 +9,7 @@ import (
 )
 
 // TestMsgSetHotRoutes tests the MsgSetHotRoutes message.
-func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
+func (s *KeeperTestSuite) TestMsgSetHotRoutes() {
 	validStepSize := sdk.NewInt(1_000_000)
 	invalidStepSize := sdk.NewInt(0)
 
@@ -227,7 +227,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 }
 
 // TestMsgSetDeveloperAccount tests the MsgSetDeveloperAccount message.
-func (suite *KeeperTestSuite) TestMsgSetDeveloperAccount() {
+func (s *KeeperTestSuite) TestMsgSetDeveloperAccount() {
 	cases := []struct {
 		description       string
 		admin             string
@@ -295,7 +295,7 @@ func (suite *KeeperTestSuite) TestMsgSetDeveloperAccount() {
 }
 
 // TestMsgSetMaxPoolPointsPerTx tests the MsgSetMaxPoolPointsPerTx message.
-func (suite *KeeperTestSuite) TestMsgSetMaxPoolPointsPerTx() {
+func (s *KeeperTestSuite) TestMsgSetMaxPoolPointsPerTx() {
 	cases := []struct {
 		description        string
 		admin              string
@@ -377,7 +377,7 @@ func (suite *KeeperTestSuite) TestMsgSetMaxPoolPointsPerTx() {
 }
 
 // TestMsgSetMaxPoolPointsPerBlock tests the MsgSetMaxPoolPointsPerBlock message.
-func (suite *KeeperTestSuite) TestMsgSetMaxPoolPointsPerBlock() {
+func (s *KeeperTestSuite) TestMsgSetMaxPoolPointsPerBlock() {
 	cases := []struct {
 		description           string
 		admin                 string
@@ -466,7 +466,7 @@ func (suite *KeeperTestSuite) TestMsgSetMaxPoolPointsPerBlock() {
 }
 
 // TestMsgSetPoolWeights tests the MsgSetPoolWeights message.
-func (suite *KeeperTestSuite) TestMsgSetPoolWeights() {
+func (s *KeeperTestSuite) TestMsgSetPoolWeights() {
 	cases := []struct {
 		description       string
 		admin             string
@@ -559,7 +559,7 @@ func (suite *KeeperTestSuite) TestMsgSetPoolWeights() {
 }
 
 // TestMsgSetBaseDenoms tests the MsgSetBaseDenoms message.
-func (suite *KeeperTestSuite) TestMsgSetBaseDenoms() {
+func (s *KeeperTestSuite) TestMsgSetBaseDenoms() {
 	cases := []struct {
 		description       string
 		admin             string

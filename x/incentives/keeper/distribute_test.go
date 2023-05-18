@@ -18,7 +18,7 @@ var _ = suite.TestingSuite(nil)
 
 // TestDistribute tests that when the distribute command is executed on a provided gauge
 // that the correct amount of rewards is sent to the correct lock owners.
-func (suite *KeeperTestSuite) TestDistribute() {
+func (s *KeeperTestSuite) TestDistribute() {
 	defaultGauge := perpGaugeDesc{
 		lockDenom:    defaultLPDenom,
 		lockDuration: defaultLockDuration,
@@ -95,7 +95,7 @@ func (suite *KeeperTestSuite) TestDistribute() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
+func (s *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 	defaultGauge := perpGaugeDesc{
 		lockDenom:    defaultLPDenom,
 		lockDuration: defaultLockDuration,
@@ -325,7 +325,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 
 // TestSyntheticDistribute tests that when the distribute command is executed on a provided gauge
 // the correct amount of rewards is sent to the correct synthetic lock owners.
-func (suite *KeeperTestSuite) TestSyntheticDistribute() {
+func (s *KeeperTestSuite) TestSyntheticDistribute() {
 	defaultGauge := perpGaugeDesc{
 		lockDenom:    defaultLPSyntheticDenom,
 		lockDuration: defaultLockDuration,
@@ -408,7 +408,7 @@ func (suite *KeeperTestSuite) TestSyntheticDistribute() {
 }
 
 // TestGetModuleToDistributeCoins tests the sum of coins yet to be distributed for all of the module is correct.
-func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
+func (s *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 	suite.SetupTest()
 
 	// check that the sum of coins yet to be distributed is nil
@@ -452,7 +452,7 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 }
 
 // TestGetModuleDistributedCoins tests that the sum of coins that have been distributed so far for all of the module is correct.
-func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
+func (s *KeeperTestSuite) TestGetModuleDistributedCoins() {
 	suite.SetupTest()
 
 	// check that the sum of coins yet to be distributed is nil
@@ -484,7 +484,7 @@ func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
 }
 
 // TestNoLockPerpetualGaugeDistribution tests that the creation of a perp gauge that has no locks associated does not distribute any tokens.
-func (suite *KeeperTestSuite) TestNoLockPerpetualGaugeDistribution() {
+func (s *KeeperTestSuite) TestNoLockPerpetualGaugeDistribution() {
 	suite.SetupTest()
 
 	// setup a perpetual gauge with no associated locks
@@ -531,7 +531,7 @@ func (suite *KeeperTestSuite) TestNoLockPerpetualGaugeDistribution() {
 }
 
 // TestNoLockNonPerpetualGaugeDistribution tests that the creation of a non perp gauge that has no locks associated does not distribute any tokens.
-func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
+func (s *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 	suite.SetupTest()
 
 	// setup non-perpetual gauge with no associated locks
@@ -577,7 +577,7 @@ func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 	suite.Require().Equal(gauges[0].String(), expectedGauge.String())
 }
 
-func (suite *KeeperTestSuite) TestGetPoolFromGaugeId() {
+func (s *KeeperTestSuite) TestGetPoolFromGaugeId() {
 	const (
 		poolIdOne   = uint64(1)
 		validPoolId = poolIdOne
@@ -667,7 +667,7 @@ func (suite *KeeperTestSuite) TestGetPoolFromGaugeId() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidity() {
+func (s *KeeperTestSuite) TestDistributeConcentratedLiquidity() {
 	var (
 		timeBeforeBlock   = time.Unix(0, 0)
 		defaultBlockTime  = timeBeforeBlock.Add(10 * time.Second)

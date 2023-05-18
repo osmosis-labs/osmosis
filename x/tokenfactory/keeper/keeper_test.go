@@ -52,7 +52,7 @@ func (p SudoAuthorizationPolicy) CanModifyCodeAccessConfig(creator, actor sdk.Ac
 	return true
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (s *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 	// Fund every TestAcc with two denoms, one of which is the denom creation fee
 	fundAccsAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)), sdk.NewCoin(apptesting.SecondaryDenom, apptesting.SecondaryAmount))
@@ -65,12 +65,12 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.bankMsgServer = bankkeeper.NewMsgServerImpl(suite.App.BankKeeper)
 }
 
-func (suite *KeeperTestSuite) CreateDefaultDenom() {
+func (s *KeeperTestSuite) CreateDefaultDenom() {
 	res, _ := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
 	suite.defaultDenom = res.GetNewTokenDenom()
 }
 
-func (suite *KeeperTestSuite) TestCreateModuleAccount() {
+func (s *KeeperTestSuite) TestCreateModuleAccount() {
 	app := suite.App
 
 	// remove module account

@@ -17,7 +17,7 @@ type SendMsgTestCase struct {
 	expectPass bool
 }
 
-func (suite *KeeperTestSuite) TestBeforeSendHook() {
+func (s *KeeperTestSuite) TestBeforeSendHook() {
 	for _, tc := range []struct {
 		desc     string
 		wasmFile string

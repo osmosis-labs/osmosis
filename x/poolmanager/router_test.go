@@ -92,7 +92,7 @@ var (
 
 // TestGetPoolModule tests that the correct pool module is returned for a given pool id.
 // Additionally, validates that the expected errors are produced when expected.
-func (suite *KeeperTestSuite) TestGetPoolModule() {
+func (s *KeeperTestSuite) TestGetPoolModule() {
 	tests := map[string]struct {
 		poolId            uint64
 		preCreatePoolType types.PoolType
@@ -163,7 +163,7 @@ func (suite *KeeperTestSuite) TestGetPoolModule() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestRouteGetPoolDenoms() {
+func (s *KeeperTestSuite) TestRouteGetPoolDenoms() {
 	tests := map[string]struct {
 		poolId            uint64
 		preCreatePoolType types.PoolType
@@ -229,7 +229,7 @@ func (suite *KeeperTestSuite) TestRouteGetPoolDenoms() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
+func (s *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 	tests := map[string]struct {
 		poolId               uint64
 		preCreatePoolType    types.PoolType
@@ -338,7 +338,7 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 // - to the correct module (concentrated-liquidity or gamm)
 // - over the right routes (hops)
 // - fee reduction is applied correctly
-func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
+func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 	tests := []struct {
 		name                    string
 		poolCoins               []sdk.Coins
@@ -628,7 +628,7 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 // - to the correct module (concentrated-liquidity or gamm)
 // - over the right routes (hops)
 // - fee reduction is applied correctly
-func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
+func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 	tests := []struct {
 		name                    string
 		poolCoins               []sdk.Coins
@@ -866,7 +866,7 @@ func (suite *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 
 // TestEstimateMultihopSwapExactAmountIn tests that the estimation done via `EstimateSwapExactAmountIn`
 // results in the same amount of token out as the actual swap.
-func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
+func (s *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 	type param struct {
 		routes            []types.SwapAmountInRoute
 		estimateRoutes    []types.SwapAmountInRoute
@@ -1048,7 +1048,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 
 // TestEstimateMultihopSwapExactAmountOut tests that the estimation done via `EstimateSwapExactAmountOut`
 // results in the same amount of token in as the actual swap.
-func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
+func (s *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 	type param struct {
 		routes           []types.SwapAmountOutRoute
 		estimateRoutes   []types.SwapAmountOutRoute
@@ -1227,7 +1227,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 	}
 }
 
-func (suite *KeeperTestSuite) makeGaugesIncentivized(incentivizedGauges []uint64) {
+func (s *KeeperTestSuite) makeGaugesIncentivized(incentivizedGauges []uint64) {
 	var records []poolincentivestypes.DistrRecord
 	totalWeight := sdk.NewInt(int64(len(incentivizedGauges)))
 	for _, gauge := range incentivizedGauges {
@@ -1240,7 +1240,7 @@ func (suite *KeeperTestSuite) makeGaugesIncentivized(incentivizedGauges []uint64
 	suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, distInfo)
 }
 
-func (suite *KeeperTestSuite) calcOutAmountAsSeparateSwaps(osmoFeeReduced bool, routes []types.SwapAmountOutRoute, tokenOut sdk.Coin) sdk.Coin {
+func (s *KeeperTestSuite) calcOutAmountAsSeparateSwaps(osmoFeeReduced bool, routes []types.SwapAmountOutRoute, tokenOut sdk.Coin) sdk.Coin {
 	cacheCtx, _ := suite.Ctx.CacheContext()
 	if osmoFeeReduced {
 		// extract route from swap
@@ -1283,7 +1283,7 @@ func (suite *KeeperTestSuite) calcOutAmountAsSeparateSwaps(osmoFeeReduced bool, 
 // calcInAmountAsSeparatePoolSwaps calculates the output amount of a series of swaps on PoolManager pools while factoring in reduces swap fee changes.
 // If its GAMM pool functions directly to ensure the poolmanager functions route to the correct modules. It it's CL pool functions directly to ensure the
 // poolmanager functions route to the correct modules.
-func (suite *KeeperTestSuite) calcInAmountAsSeparatePoolSwaps(osmoFeeReduced bool, routes []types.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
+func (s *KeeperTestSuite) calcInAmountAsSeparatePoolSwaps(osmoFeeReduced bool, routes []types.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
 	cacheCtx, _ := suite.Ctx.CacheContext()
 	if osmoFeeReduced {
 		// extract route from swap
@@ -1336,7 +1336,7 @@ func (suite *KeeperTestSuite) calcInAmountAsSeparatePoolSwaps(osmoFeeReduced boo
 }
 
 // TODO: abstract SwapAgainstBalancerPool and SwapAgainstConcentratedPool
-
+s *KeeperTestSuite
 func (suite *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 	tests := []struct {
 		name                   string
@@ -1436,7 +1436,7 @@ func (m *MockPoolModule) GetPools(ctx sdk.Context) ([]types.PoolI, error) {
 // and overlapping and duplicate pool ids. The expected results and potential errors are defined for each test case.
 // The test suite sets up mock pool modules and configures their behavior for the GetPools method, injecting them into the pool manager for testing.
 // The actual results of the AllPools function are then compared to the expected results, ensuring the function behaves as intended in each scenario.
-// Note that in this test we only test with Balancer Pools, as we're focusing on testing via different modules
+// Nots *KeeperTestSuite only test with Balancer Pools, as we're focusing on testing via different modules
 func (suite *KeeperTestSuite) TestAllPools() {
 	suite.Setup()
 
@@ -1588,7 +1588,7 @@ func (suite *KeeperTestSuite) TestAllPools() {
 	}
 }
 
-// TestAllPools_RealPools tests the AllPools function with real pools.
+// Tess *KeeperTestSuitests the AllPools function with real pools.
 func (suite *KeeperTestSuite) TestAllPools_RealPools() {
 	suite.SetupTest()
 
@@ -1619,7 +1619,7 @@ func (suite *KeeperTestSuite) TestAllPools_RealPools() {
 	suite.Require().Equal(expectedResult, actualResult)
 }
 
-// setupPools creates pools of desired type and returns their IDs
+// sets *KeeperTestSuiteof desired type and returns their IDs
 func (suite *KeeperTestSuite) setupPools(poolType types.PoolType, poolDefaultSwapFee sdk.Dec) (firstEstimatePoolId, secondEstimatePoolId uint64) {
 	switch poolType {
 	case types.Stableswap:
@@ -1658,7 +1658,7 @@ func (suite *KeeperTestSuite) setupPools(poolType types.PoolType, poolDefaultSwa
 		return
 	}
 }
-
+s *KeeperTestSuite
 func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 	var (
 		defaultSingleRouteOneHop = []types.SwapAmountInSplitRoute{
@@ -1857,7 +1857,7 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 		})
 	}
 }
-
+s *KeeperTestSuite
 func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 	var (
 		defaultSingleRouteOneHop = []types.SwapAmountOutSplitRoute{
@@ -2140,7 +2140,7 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 		})
 	}
 }
-
+s *KeeperTestSuite
 func (suite *KeeperTestSuite) TestIsOsmoRoutedMultihop() {
 	tests := map[string]struct {
 		route                  types.MultihopRoute
@@ -2296,7 +2296,7 @@ func (suite *KeeperTestSuite) TestIsOsmoRoutedMultihop() {
 		})
 	}
 }
-
+s *KeeperTestSuite
 func (suite *KeeperTestSuite) TestGetOsmoRoutedMultihopTotalSwapFee() {
 
 	tests := map[string]struct {

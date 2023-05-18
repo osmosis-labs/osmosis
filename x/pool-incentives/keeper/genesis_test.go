@@ -93,7 +93,7 @@ func TestInitGenesis(t *testing.T) {
 	require.Equal(t, distrInfo, *genesis.DistrInfo)
 }
 
-func (suite *KeeperTestSuite) TestExportGenesis() {
+func (s *KeeperTestSuite) TestExportGenesis() {
 	ctx := suite.App.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis

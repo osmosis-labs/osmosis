@@ -14,7 +14,7 @@ type TestRoute struct {
 }
 
 // TestBuildRoutes tests the BuildRoutes function
-func (suite *KeeperTestSuite) TestBuildRoutes() {
+func (s *KeeperTestSuite) TestBuildRoutes() {
 	cases := []struct {
 		description    string
 		inputDenom     string
@@ -108,7 +108,7 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 }
 
 // TestBuildHighestLiquidityRoute tests the BuildHighestLiquidityRoute function
-func (suite *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
+func (s *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 	cases := []struct {
 		description              string
 		swapDenom                string
@@ -226,7 +226,7 @@ func (suite *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 }
 
 // TestBuildHotRoutes tests the BuildHotRoutes function
-func (suite *KeeperTestSuite) TestBuildHotRoutes() {
+func (s *KeeperTestSuite) TestBuildHotRoutes() {
 	cases := []struct {
 		description             string
 		swapIn                  string
@@ -310,7 +310,7 @@ func (suite *KeeperTestSuite) TestBuildHotRoutes() {
 }
 
 // TestCalculateRoutePoolPoints tests the CalculateRoutePoolPoints function
-func (suite *KeeperTestSuite) TestCalculateRoutePoolPoints() {
+func (s *KeeperTestSuite) TestCalculateRoutePoolPoints() {
 	cases := []struct {
 		description             string
 		route                   poolmanagertypes.SwapAmountInRoutes

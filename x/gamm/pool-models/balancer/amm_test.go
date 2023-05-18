@@ -62,7 +62,7 @@ func TestBalancerPoolParams(t *testing.T) {
 	}
 }
 
-func (suite *KeeperTestSuite) TestEnsureDenomInPool() {
+func (s *KeeperTestSuite) TestEnsureDenomInPool() {
 	tests := map[string]struct {
 		poolAssets  []balancer.PoolAsset
 		tokensIn    sdk.Coins

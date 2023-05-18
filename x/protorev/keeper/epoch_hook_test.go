@@ -37,7 +37,7 @@ func BenchmarkEpochHook(b *testing.B) {
 // function, the pools are filtered to only include the pools that have at least one base denom as an asset. The pools are then filtered
 // again to only include the pools that have the highest liquidity. The pools are then checked to see if the pool IDs are correctly set in the
 // DenomPairToPool stores.
-func (suite *KeeperTestSuite) TestEpochHook() {
+func (s *KeeperTestSuite) TestEpochHook() {
 	// All of the pools initialized in the setup function are available in keeper_test.go
 	// akash <-> types.OsmosisDenomination
 	// juno <-> types.OsmosisDenomination
@@ -125,7 +125,7 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 // given specific base denoms as input. The pools this test uses are created in the SetupTest function in keeper_test.go.
 // This test uses pools with denoms prefixed with "epoch" which are only used for this test, so that pools created for
 // other tests do not change the results of this test.
-func (suite *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
+func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 	testCases := []struct {
 		name                   string
 		inputBaseDenomPools    map[string]map[string]keeper.LiquidityPoolStruct

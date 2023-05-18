@@ -11,7 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
-func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
+func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 	testCases := []struct {
 		name             string
 		validatorStats   []stakingtypes.BondStatus
@@ -103,7 +103,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 	}
 }
 
-// func (suite *KeeperTestSuite) TestOnStartUnlock() {
+// func (s *KeeperTestSuite) TestOnStartUnlock() {
 // 	testCases := []struct {
 // 		name             string
 // 		validatorStats   []stakingtypes.BondStatus
@@ -211,7 +211,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 // 	}
 // }
 
-func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
+func (s *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 	testCases := []struct {
 		name                  string
 		validatorStats        []stakingtypes.BondStatus
@@ -339,7 +339,7 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 
 // TestAfterAddTokensToLock_Event tests that events are correctly emitted
 // when calling AfterAddTokensToLock.
-func (suite *KeeperTestSuite) TestAfterAddTokensToLock_Event() {
+func (s *KeeperTestSuite) TestAfterAddTokensToLock_Event() {
 	suite.SetupTest()
 
 	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})

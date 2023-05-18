@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *KeeperTestSuite) TestMsgLockTokens() {
+func (s *KeeperTestSuite) TestMsgLockTokens() {
 	type param struct {
 		coinsToLock         sdk.Coins
 		lockOwner           sdk.AccAddress
@@ -100,7 +100,7 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
+func (s *KeeperTestSuite) TestMsgBeginUnlocking() {
 	type param struct {
 		coinsToLock         sdk.Coins
 		isSyntheticLockup   bool
@@ -201,7 +201,7 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestMsgBeginUnlockingAll() {
+func (s *KeeperTestSuite) TestMsgBeginUnlockingAll() {
 	type param struct {
 		coinsToLock         sdk.Coins
 		isSyntheticLockup   bool
@@ -264,7 +264,7 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlockingAll() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestMsgEditLockup() {
+func (s *KeeperTestSuite) TestMsgEditLockup() {
 	type param struct {
 		coinsToLock       sdk.Coins
 		isSyntheticLockup bool
@@ -339,7 +339,7 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestMsgForceUnlock() {
+func (s *KeeperTestSuite) TestMsgForceUnlock() {
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
 	defaultPoolID, defaultLockID := uint64(1), uint64(1)

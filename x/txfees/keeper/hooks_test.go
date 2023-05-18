@@ -14,7 +14,7 @@ import (
 
 var defaultPooledAssetAmount = int64(500)
 
-func (suite *KeeperTestSuite) preparePool(denom string) (poolID uint64, pool poolmanagertypes.PoolI) {
+func (s *KeeperTestSuite) preparePool(denom string) (poolID uint64, pool poolmanagertypes.PoolI) {
 	baseDenom, _ := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
 	poolID = suite.PrepareBalancerPoolWithCoins(
 		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
@@ -27,7 +27,7 @@ func (suite *KeeperTestSuite) preparePool(denom string) (poolID uint64, pool poo
 	return poolID, pool
 }
 
-func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
+func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 	suite.SetupTest(false)
 	baseDenom, _ := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
 

@@ -612,7 +612,7 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (s *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
 	// be post-bug
@@ -621,7 +621,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 // This test sets up 2 asset pools, and then checks the spot price on them.
 // It uses the pools spot price method, rather than the Gamm keepers spot price method.
-func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
+func (s *KeeperTestSuite) TestBalancerSpotPrice() {
 	baseDenom := "uosmo"
 	quoteDenom := "uion"
 
@@ -706,7 +706,7 @@ func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
 
 // This test sets up 2 asset pools, and then checks the spot price on them.
 // It uses the pools spot price method, rather than the Gamm keepers spot price method.
-func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
+func (s *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 	baseDenom := "uosmo"
 	quoteDenom := "uion"
 	defaultFutureGovernor = ""
@@ -821,7 +821,7 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
+func (s *KeeperTestSuite) TestCalcJoinPoolShares() {
 	// We append shared calcSingleAssetJoinTestCases with multi-asset and edge
 	// test cases defined in multiAssetExactInputTestCases and multiAssetUneverInputTestCases.
 	//
@@ -857,7 +857,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestJoinPool() {
+func (s *KeeperTestSuite) TestJoinPool() {
 	// We append shared calcSingleAssetJoinTestCases with multi-asset and edge
 	// test cases defined in multiAssetInputTestCases.
 	//
@@ -895,7 +895,7 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
+func (s *KeeperTestSuite) TestJoinPoolNoSwap() {
 	// We append shared calcSingleAssetJoinTestCases with multi-asset and edge
 	// test cases defined in multiAssetInputTestCases.
 	//
@@ -992,7 +992,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 
 // Tests selecting a random amount of coins to LP, and then that ExitPool(JoinPool(tokens))
 // preserves the pools number of LP shares, and returns fewer coins to the acter than they started with.
-func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
+func (s *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 	type testCase struct {
 		initialTokensDenomIn  int64
 		initialTokensDenomOut int64

@@ -10,7 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
-func (suite *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
+func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 	testCases := []struct {
 		name               string
 		asset              types.SuperfluidAsset

@@ -8,22 +8,22 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
-func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
+func (s *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
 	suite.FundAcc(addr, coins)
 	_, err := suite.querier.CreateLock(suite.Ctx, addr, coins, duration)
 	suite.Require().NoError(err)
 }
 
-func (suite *KeeperTestSuite) BeginUnlocking(addr sdk.AccAddress) {
+func (s *KeeperTestSuite) BeginUnlocking(addr sdk.AccAddress) {
 	_, err := suite.querier.BeginUnlockAllNotUnlockings(suite.Ctx, addr)
 	suite.Require().NoError(err)
 }
 
-func (suite *KeeperTestSuite) WithdrawAllMaturedLocks() {
+func (s *KeeperTestSuite) WithdrawAllMaturedLocks() {
 	suite.querier.WithdrawAllMaturedLocks(suite.Ctx)
 }
 
-func (suite *KeeperTestSuite) TestModuleBalance() {
+func (s *KeeperTestSuite) TestModuleBalance() {
 	suite.SetupTest()
 
 	// initial check
@@ -42,7 +42,7 @@ func (suite *KeeperTestSuite) TestModuleBalance() {
 	suite.Require().Equal(res.Coins, coins)
 }
 
-func (suite *KeeperTestSuite) TestModuleLockedAmount() {
+func (s *KeeperTestSuite) TestModuleLockedAmount() {
 	// test for module locked balance check
 	suite.SetupTest()
 
@@ -74,7 +74,7 @@ func (suite *KeeperTestSuite) TestModuleLockedAmount() {
 	suite.Require().Equal(res.Coins, sdk.Coins(nil))
 }
 
-func (suite *KeeperTestSuite) TestAccountUnlockableCoins() {
+func (s *KeeperTestSuite) TestAccountUnlockableCoins() {
 	suite.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
@@ -115,7 +115,7 @@ func (suite *KeeperTestSuite) TestAccountUnlockableCoins() {
 	suite.Require().Equal(res.Coins, coins)
 }
 
-func (suite *KeeperTestSuite) TestAccountUnlockingCoins() {
+func (s *KeeperTestSuite) TestAccountUnlockingCoins() {
 	suite.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
@@ -156,7 +156,7 @@ func (suite *KeeperTestSuite) TestAccountUnlockingCoins() {
 	suite.Require().Equal(res.Coins, sdk.Coins{})
 }
 
-func (suite *KeeperTestSuite) TestAccountLockedCoins() {
+func (s *KeeperTestSuite) TestAccountLockedCoins() {
 	suite.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
@@ -191,7 +191,7 @@ func (suite *KeeperTestSuite) TestAccountLockedCoins() {
 	suite.Require().Equal(res.Coins, sdk.Coins(nil))
 }
 
-func (suite *KeeperTestSuite) TestAccountLockedPastTime() {
+func (s *KeeperTestSuite) TestAccountLockedPastTime() {
 	suite.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	now := suite.Ctx.BlockTime()
@@ -226,7 +226,7 @@ func (suite *KeeperTestSuite) TestAccountLockedPastTime() {
 	suite.Require().Len(res.Locks, 0)
 }
 
-func (suite *KeeperTestSuite) TestAccountLockedPastTimeNotUnlockingOnly() {
+func (s *KeeperTestSuite) TestAccountLockedPastTimeNotUnlockingOnly() {
 	suite.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	now := suite.Ctx.BlockTime()
@@ -258,7 +258,7 @@ func (suite *KeeperTestSuite) TestAccountLockedPastTimeNotUnlockingOnly() {
 	suite.Require().Len(res.Locks, 0)
 }
 
-func (suite *KeeperTestSuite) TestAccountUnlockedBeforeTime() {
+func (s *KeeperTestSuite) TestAccountUnlockedBeforeTime() {
 	suite.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	now := suite.Ctx.BlockTime()
@@ -293,7 +293,7 @@ func (suite *KeeperTestSuite) TestAccountUnlockedBeforeTime() {
 	suite.Require().Len(res.Locks, 1)
 }
 
-func (suite *KeeperTestSuite) TestAccountLockedPastTimeDenom() {
+func (s *KeeperTestSuite) TestAccountLockedPastTimeDenom() {
 	suite.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	now := suite.Ctx.BlockTime()
@@ -338,7 +338,7 @@ func (suite *KeeperTestSuite) TestAccountLockedPastTimeDenom() {
 	suite.Require().Len(res.Locks, 0)
 }
 
-func (suite *KeeperTestSuite) TestLockedByID() {
+func (s *KeeperTestSuite) TestLockedByID() {
 	suite.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
@@ -361,7 +361,7 @@ func (suite *KeeperTestSuite) TestLockedByID() {
 	suite.Require().Equal(res.Lock.IsUnlocking(), false)
 }
 
-func (suite *KeeperTestSuite) TestNextLockID() {
+func (s *KeeperTestSuite) TestNextLockID() {
 	suite.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
@@ -384,7 +384,7 @@ func (suite *KeeperTestSuite) TestNextLockID() {
 	suite.Require().Equal(res.LockId, uint64(4))
 }
 
-func (suite *KeeperTestSuite) TestAccountLockedLongerDuration() {
+func (s *KeeperTestSuite) TestAccountLockedLongerDuration() {
 	suite.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
@@ -418,7 +418,7 @@ func (suite *KeeperTestSuite) TestAccountLockedLongerDuration() {
 	suite.Require().Len(res.Locks, 0)
 }
 
-func (suite *KeeperTestSuite) TestAccountLockedLongerDurationNotUnlockingOnly() {
+func (s *KeeperTestSuite) TestAccountLockedLongerDurationNotUnlockingOnly() {
 	suite.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
@@ -448,7 +448,7 @@ func (suite *KeeperTestSuite) TestAccountLockedLongerDurationNotUnlockingOnly() 
 	suite.Require().Len(res.Locks, 0)
 }
 
-func (suite *KeeperTestSuite) TestAccountLockedLongerDurationDenom() {
+func (s *KeeperTestSuite) TestAccountLockedLongerDurationDenom() {
 	suite.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
@@ -492,7 +492,7 @@ func (suite *KeeperTestSuite) TestAccountLockedLongerDurationDenom() {
 	suite.Require().Len(res.Locks, 0)
 }
 
-func (suite *KeeperTestSuite) TestLockedDenom() {
+func (s *KeeperTestSuite) TestLockedDenom() {
 	suite.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
@@ -537,7 +537,7 @@ func (suite *KeeperTestSuite) TestLockedDenom() {
 	testTotalLockedDuration("1h", 10)
 }
 
-func (suite *KeeperTestSuite) TestParams() {
+func (s *KeeperTestSuite) TestParams() {
 	suite.SetupTest()
 
 	// Query default params

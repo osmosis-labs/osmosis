@@ -14,7 +14,7 @@ import (
 
 // TestCreateConcentratedPool_Events tests that events are correctly emitted
 // when calling CreateConcentratedPool.
-func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
+func (s *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 	testcases := map[string]struct {
 		sender                   string
 		denom0                   string
@@ -86,7 +86,7 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 
 // TestCreatePositionMsg tests that create position msg validate basic have been correctly implemented.
 // Also checks correct assertion of events of CreatePosition.
-func (suite *KeeperTestSuite) TestCreatePositionMsg() {
+func (s *KeeperTestSuite) TestCreatePositionMsg() {
 	testcases := map[string]lpTest{
 		"happy case": {},
 		"error: lower tick is equal to upper tick": {
@@ -150,7 +150,7 @@ func (suite *KeeperTestSuite) TestCreatePositionMsg() {
 
 // TestAddToPosition_Events tests that events are correctly emitted
 // when calling AddToPosition.
-func (suite *KeeperTestSuite) TestAddToPosition_Events() {
+func (s *KeeperTestSuite) TestAddToPosition_Events() {
 	testcases := map[string]struct {
 		lastPositionInPool           bool
 		expectedAddedToPositionEvent int
@@ -218,7 +218,7 @@ func (suite *KeeperTestSuite) TestAddToPosition_Events() {
 
 // TestCollectFees_Events tests that events are correctly emitted
 // when calling CollectFees.
-func (suite *KeeperTestSuite) TestCollectFees_Events() {
+func (s *KeeperTestSuite) TestCollectFees_Events() {
 	testcases := map[string]struct {
 		upperTick                     int64
 		lowerTick                     int64
@@ -314,7 +314,7 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 
 // TestCollectIncentives_Events tests that events are correctly emitted
 // when calling CollectIncentives.
-func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
+func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 	uptimeHelper := getExpectedUptimes()
 	testcases := map[string]struct {
 		upperTick                           int64
@@ -428,7 +428,7 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestFungify_Events() {
+func (s *KeeperTestSuite) TestFungify_Events() {
 	testcases := map[string]struct {
 		positionIdsToFungify       []uint64
 		numPositionsToCreate       int

@@ -16,7 +16,7 @@ var (
 	notPerpetual = false
 )
 
-func (suite *KeeperTestSuite) TestGaugeIds() {
+func (s *KeeperTestSuite) TestGaugeIds() {
 	for _, tc := range []struct {
 		desc    string
 		request *types.QueryGaugeIdsRequest
@@ -67,7 +67,7 @@ func (suite *KeeperTestSuite) TestGaugeIds() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestDistrInfo() {
+func (s *KeeperTestSuite) TestDistrInfo() {
 	for _, tc := range []struct {
 		desc                 string
 		poolCreated          bool
@@ -127,7 +127,7 @@ func (suite *KeeperTestSuite) TestDistrInfo() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestParams() {
+func (s *KeeperTestSuite) TestParams() {
 	suite.SetupTest()
 
 	queryClient := suite.queryClient
@@ -139,7 +139,7 @@ func (suite *KeeperTestSuite) TestParams() {
 	suite.Require().Equal("stake", res.Params.MintedDenom)
 }
 
-func (suite *KeeperTestSuite) TestLockableDurations() {
+func (s *KeeperTestSuite) TestLockableDurations() {
 	suite.SetupTest()
 
 	queryClient := suite.queryClient
@@ -154,7 +154,7 @@ func (suite *KeeperTestSuite) TestLockableDurations() {
 	suite.Require().Equal(time.Hour*7, res.LockableDurations[2])
 }
 
-func (suite *KeeperTestSuite) TestIncentivizedPools() {
+func (s *KeeperTestSuite) TestIncentivizedPools() {
 	for _, tc := range []struct {
 		desc                 string
 		poolCreated          bool
@@ -248,7 +248,7 @@ func (suite *KeeperTestSuite) TestIncentivizedPools() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGaugeIncentivePercentage() {
+func (s *KeeperTestSuite) TestGaugeIncentivePercentage() {
 	suite.SetupTest()
 
 	keeper := suite.App.PoolIncentivesKeeper

@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *KeeperTestSuite) TestBeginUnlocking() { // test for all unlockable coins
+func (s *KeeperTestSuite) TestBeginUnlocking() { // test for all unlockable coins
 	suite.SetupTest()
 
 	// initial check
@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) TestBeginUnlocking() { // test for all unlockable 
 	suite.Require().NotEqual(locks[0].IsUnlocking(), false)
 }
 
-func (suite *KeeperTestSuite) TestBeginForceUnlock() {
+func (s *KeeperTestSuite) TestBeginForceUnlock() {
 	// coins to lock
 	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
 
@@ -112,7 +112,7 @@ func (suite *KeeperTestSuite) TestBeginForceUnlock() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGetPeriodLocks() {
+func (s *KeeperTestSuite) TestGetPeriodLocks() {
 	suite.SetupTest()
 
 	// initial check
@@ -131,7 +131,7 @@ func (suite *KeeperTestSuite) TestGetPeriodLocks() {
 	suite.Require().Len(locks, 1)
 }
 
-func (suite *KeeperTestSuite) TestUnlock() {
+func (s *KeeperTestSuite) TestUnlock() {
 	suite.SetupTest()
 	initialLockCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 	concentratedShareCoins := sdk.NewCoins(sdk.NewCoin(cltypes.GetConcentratedLockupDenomFromPoolId(1), sdk.NewInt(10)))
@@ -317,7 +317,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
+func (s *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
 	testCases := []struct {
 		name                       string
 		coinsLocked, coinsBurned   sdk.Coins
@@ -419,7 +419,7 @@ func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestModuleLockedCoins() {
+func (s *KeeperTestSuite) TestModuleLockedCoins() {
 	suite.SetupTest()
 
 	// initial check
@@ -436,7 +436,7 @@ func (suite *KeeperTestSuite) TestModuleLockedCoins() {
 	suite.Require().Equal(lockedCoins, coins)
 }
 
-func (suite *KeeperTestSuite) TestLocksPastTimeDenom() {
+func (s *KeeperTestSuite) TestLocksPastTimeDenom() {
 	suite.SetupTest()
 
 	now := time.Now()
@@ -456,7 +456,7 @@ func (suite *KeeperTestSuite) TestLocksPastTimeDenom() {
 	suite.Require().Len(locks, 1)
 }
 
-func (suite *KeeperTestSuite) TestLocksLongerThanDurationDenom() {
+func (s *KeeperTestSuite) TestLocksLongerThanDurationDenom() {
 	suite.SetupTest()
 
 	// initial check
@@ -474,7 +474,7 @@ func (suite *KeeperTestSuite) TestLocksLongerThanDurationDenom() {
 	suite.Require().Len(locks, 1)
 }
 
-func (suite *KeeperTestSuite) TestCreateLock() {
+func (s *KeeperTestSuite) TestCreateLock() {
 	suite.SetupTest()
 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
@@ -533,7 +533,7 @@ func (suite *KeeperTestSuite) TestCreateLock() {
 	suite.Require().Equal(sdk.NewInt(30), balance.Amount)
 }
 
-func (suite *KeeperTestSuite) TestAddTokensToLock() {
+func (s *KeeperTestSuite) TestAddTokensToLock() {
 	initialLockCoin := sdk.NewInt64Coin("stake", 10)
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
@@ -632,7 +632,7 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestHasLock() {
+func (s *KeeperTestSuite) TestHasLock() {
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
 
@@ -703,7 +703,7 @@ func (suite *KeeperTestSuite) TestHasLock() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestLock() {
+func (s *KeeperTestSuite) TestLock() {
 	suite.SetupTest()
 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
@@ -749,7 +749,7 @@ func (suite *KeeperTestSuite) TestLock() {
 	suite.Require().Equal(sdk.NewInt(10), balance.Amount)
 }
 
-func (suite *KeeperTestSuite) AddTokensToLockForSynth() {
+func (s *KeeperTestSuite) AddTokensToLockForSynth() {
 	suite.SetupTest()
 
 	// lock coins
@@ -841,7 +841,7 @@ func (suite *KeeperTestSuite) AddTokensToLockForSynth() {
 	checkSynthlocks([]uint64{20, 40, 60})
 }
 
-func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
+func (s *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 	suite.SetupTest()
 	clPoolDenom := cltypes.GetConcentratedLockupDenomFromPoolId(1)
 
@@ -927,7 +927,7 @@ func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 	suite.Require().Len(locks, 0)
 }
 
-func (suite *KeeperTestSuite) TestLockAccumulationStore() {
+func (s *KeeperTestSuite) TestLockAccumulationStore() {
 	suite.SetupTest()
 
 	// initial check
@@ -978,7 +978,7 @@ func (suite *KeeperTestSuite) TestLockAccumulationStore() {
 	suite.Require().Equal(int64(0), acc.Int64())
 }
 
-func (suite *KeeperTestSuite) TestSlashTokensFromLockByID() {
+func (s *KeeperTestSuite) TestSlashTokensFromLockByID() {
 	suite.SetupTest()
 
 	// initial check
@@ -1020,7 +1020,7 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByID() {
 	suite.Require().Error(err)
 }
 
-func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn() {
+func (s *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn() {
 	testCases := []struct {
 		name             string
 		positionCoins    sdk.Coins
@@ -1145,7 +1145,7 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn()
 	}
 }
 
-func (suite *KeeperTestSuite) TestEditLockup() {
+func (s *KeeperTestSuite) TestEditLockup() {
 	suite.SetupTest()
 
 	// initial check
@@ -1210,7 +1210,7 @@ func (suite *KeeperTestSuite) TestEditLockup() {
 	suite.Require().Equal(int64(0), acc.Int64())
 }
 
-func (suite *KeeperTestSuite) TestForceUnlock() {
+func (s *KeeperTestSuite) TestForceUnlock() {
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
 	testCases := []struct {
@@ -1267,7 +1267,7 @@ func (suite *KeeperTestSuite) TestForceUnlock() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestPartialForceUnlock() {
+func (s *KeeperTestSuite) TestPartialForceUnlock() {
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
 	defaultDenomToLock := "stake"

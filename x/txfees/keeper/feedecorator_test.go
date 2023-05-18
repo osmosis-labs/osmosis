@@ -15,7 +15,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 )
 
-func (suite *KeeperTestSuite) TestFeeDecorator() {
+func (s *KeeperTestSuite) TestFeeDecorator() {
 	suite.SetupTest(false)
 
 	mempoolFeeOpts := types.NewDefaultMempoolFeeOptions()

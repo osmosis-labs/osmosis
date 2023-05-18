@@ -25,7 +25,7 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest(isCheckTx bool) {
+func (s *KeeperTestSuite) SetupTest(isCheckTx bool) {
 	suite.Setup()
 	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
 
@@ -51,7 +51,7 @@ func (suite *KeeperTestSuite) SetupTest(isCheckTx bool) {
 	}
 }
 
-func (suite *KeeperTestSuite) ExecuteUpgradeFeeTokenProposal(feeToken string, poolId uint64) error {
+func (s *KeeperTestSuite) ExecuteUpgradeFeeTokenProposal(feeToken string, poolId uint64) error {
 	upgradeProp := types.NewUpdateFeeTokenProposal(
 		"Test Proposal",
 		"test",

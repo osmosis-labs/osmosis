@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *KeeperTestSuite) TestLockupMergeMigration() {
+func (s *KeeperTestSuite) TestLockupMergeMigration() {
 	suite.SetupTest()
 
 	m := make(map[string]int64)

@@ -9,7 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
 )
 
-func (suite *KeeperTestSuite) TestMsgCreateDenom() {
+func (s *KeeperTestSuite) TestMsgCreateDenom() {
 	var (
 		tokenFactoryKeeper = suite.App.TokenFactoryKeeper
 		bankKeeper         = suite.App.BankKeeper
@@ -61,7 +61,7 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 	suite.Require().Error(err)
 }
 
-func (suite *KeeperTestSuite) TestCreateDenom() {
+func (s *KeeperTestSuite) TestCreateDenom() {
 	var (
 		primaryDenom            = types.DefaultParams().DenomCreationFee[0].Denom
 		secondaryDenom          = apptesting.SecondaryDenom
@@ -161,7 +161,7 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGasConsume() {
+func (s *KeeperTestSuite) TestGasConsume() {
 	// It's hard to estimate exactly how much gas will be consumed when creating a
 	// denom, because besides consuming the gas specified by the params, the keeper
 	// also does a bunch of other things that consume gas.

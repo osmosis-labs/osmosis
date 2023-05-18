@@ -6,7 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/downtime-detector/types"
 )
 
-func (suite *KeeperTestSuite) TestImportExport() {
+func (s *KeeperTestSuite) TestImportExport() {
 	tests := map[string]struct {
 		Downtimes     []types.GenesisDowntimeEntry
 		LastBlockTime time.Time

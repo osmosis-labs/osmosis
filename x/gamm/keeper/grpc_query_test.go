@@ -15,7 +15,7 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
-func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
+func (s *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 	queryClient := suite.queryClient
 	ctx := suite.Ctx
 	poolId := suite.PrepareBalancerPool()
@@ -91,7 +91,7 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
+func (s *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
 	queryClient := suite.queryClient
 	ctx := suite.Ctx
 	poolId := suite.PrepareBalancerPool()
@@ -168,7 +168,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestPoolsWithFilter() {
+func (s *KeeperTestSuite) TestPoolsWithFilter() {
 	var (
 		defaultAcctFunds sdk.Coins = sdk.NewCoins(
 			sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
@@ -355,7 +355,7 @@ func (suite *KeeperTestSuite) TestPoolsWithFilter() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
+func (s *KeeperTestSuite) TestCalcJoinPoolShares() {
 	queryClient := suite.queryClient
 	ctx := suite.Ctx
 	poolId := suite.PrepareBalancerPool()
@@ -432,7 +432,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestQueryPool() {
+func (s *KeeperTestSuite) TestQueryPool() {
 	queryClient := suite.queryClient
 
 	// Invalid param
@@ -459,7 +459,7 @@ func (suite *KeeperTestSuite) TestQueryPool() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestQueryPools() {
+func (s *KeeperTestSuite) TestQueryPools() {
 	queryClient := suite.queryClient
 
 	for i := 0; i < 10; i++ {
@@ -510,7 +510,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestPoolType() {
+func (s *KeeperTestSuite) TestPoolType() {
 	poolIdBalancer := suite.PrepareBalancerPool()
 	poolIdStableswap := suite.PrepareBasicStableswapPool()
 
@@ -528,13 +528,13 @@ func (suite *KeeperTestSuite) TestPoolType() {
 	suite.Require().Equal(stableswap.PoolTypeName, res.PoolType)
 }
 
-func (suite *KeeperTestSuite) TestQueryNumPools1() {
+func (s *KeeperTestSuite) TestQueryNumPools1() {
 	res, err := suite.queryClient.NumPools(gocontext.Background(), &types.QueryNumPoolsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(0), res.NumPools)
 }
 
-func (suite *KeeperTestSuite) TestQueryNumPools2() {
+func (s *KeeperTestSuite) TestQueryNumPools2() {
 	for i := 0; i < 10; i++ {
 		suite.PrepareBalancerPool()
 	}
@@ -544,7 +544,7 @@ func (suite *KeeperTestSuite) TestQueryNumPools2() {
 	suite.Require().Equal(uint64(10), res.NumPools)
 }
 
-func (suite *KeeperTestSuite) TestQueryTotalPoolLiquidity() {
+func (s *KeeperTestSuite) TestQueryTotalPoolLiquidity() {
 	queryClient := suite.queryClient
 
 	// Pool not exist
@@ -559,7 +559,7 @@ func (suite *KeeperTestSuite) TestQueryTotalPoolLiquidity() {
 	suite.Require().Equal(res.Liquidity, expectedCoins)
 }
 
-func (suite *KeeperTestSuite) TestQueryTotalShares() {
+func (s *KeeperTestSuite) TestQueryTotalShares() {
 	queryClient := suite.queryClient
 
 	// Pool not exist
@@ -586,7 +586,7 @@ func (suite *KeeperTestSuite) TestQueryTotalShares() {
 	// suite.Require().Equal(types.InitPoolSharesSupply.Add(types.OneShare.MulRaw(10)).String(), res.TotalShares.Amount.String())
 }
 
-func (suite *KeeperTestSuite) TestQueryBalancerPoolTotalLiquidity() {
+func (s *KeeperTestSuite) TestQueryBalancerPoolTotalLiquidity() {
 	queryClient := suite.queryClient
 
 	// Pool not exist
@@ -603,7 +603,7 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolTotalLiquidity() {
 }
 
 // TODO: Come fix
-// func (suite *KeeperTestSuite) TestQueryBalancerPoolPoolAssets() {
+// func (s *KeeperTestSuite) TestQueryBalancerPoolPoolAssets() {
 // 	queryClient := suite.queryClient
 
 // 	// Pool not exist
@@ -641,7 +641,7 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolTotalLiquidity() {
 // 	suite.Require().Equal("5000000foo", PoolAssets[2].Token.String())
 // }
 
-func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
+func (s *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 	queryClient := suite.queryClient
 	poolID := suite.PrepareBalancerPool()
 
@@ -725,7 +725,7 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestV2QueryBalancerPoolSpotPrice() {
+func (s *KeeperTestSuite) TestV2QueryBalancerPoolSpotPrice() {
 	v2queryClient := v2types.NewQueryClient(suite.QueryHelper)
 	coins := sdk.NewCoins(
 		sdk.NewInt64Coin("tokenA", 1000),
@@ -825,7 +825,7 @@ func (suite *KeeperTestSuite) TestV2QueryBalancerPoolSpotPrice() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestQueryStableswapPoolSpotPrice() {
+func (s *KeeperTestSuite) TestQueryStableswapPoolSpotPrice() {
 	queryClient := suite.queryClient
 	poolIDEven := suite.PrepareBasicStableswapPool()
 	poolIDUneven := suite.PrepareImbalancedStableswapPool()
@@ -907,7 +907,7 @@ func (suite *KeeperTestSuite) TestQueryStableswapPoolSpotPrice() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestV2QueryStableswapPoolSpotPrice() {
+func (s *KeeperTestSuite) TestV2QueryStableswapPoolSpotPrice() {
 	v2queryClient := v2types.NewQueryClient(suite.QueryHelper)
 	poolIDEven := suite.PrepareBasicStableswapPool()
 	poolIDUneven := suite.PrepareImbalancedStableswapPool()

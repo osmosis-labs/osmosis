@@ -44,7 +44,7 @@ var (
 // 3. test unpooling lock that is superfluid delegated, not unlocking
 // 4. test unpooling lock that is superfluid undelegating, not unlocking
 // 5. test unpooling lock that is superfluid undelegating, unlocking
-func (suite *KeeperTestSuite) TestUnpool() {
+func (s *KeeperTestSuite) TestUnpool() {
 	testCases := []struct {
 		name                   string
 		superfluidDelegated    bool
@@ -252,7 +252,7 @@ func (suite *KeeperTestSuite) TestUnpool() {
 
 // TestUnpoolAllowedPools_WhiteList tests that unpooling does not work for pools not in a whitelist.
 // Should fail immediately if pool is not in whitelist.
-func (suite *KeeperTestSuite) TestUnpoolAllowedPools_WhiteList() {
+func (s *KeeperTestSuite) TestUnpoolAllowedPools_WhiteList() {
 	// lock id does not matter in the context of this test.
 	const (
 		testLockId        = 1
@@ -284,7 +284,7 @@ func (suite *KeeperTestSuite) TestUnpoolAllowedPools_WhiteList() {
 	suite.Require().ErrorIs(err, types.ErrPoolNotWhitelisted)
 }
 
-func (suite *KeeperTestSuite) TestValidateGammLockForSuperfluid() {
+func (s *KeeperTestSuite) TestValidateGammLockForSuperfluid() {
 	lockCreator := suite.TestAccs[0]
 	nonLockCreator := suite.TestAccs[1]
 	type sendTest struct {
@@ -362,7 +362,7 @@ func (suite *KeeperTestSuite) TestValidateGammLockForSuperfluid() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGetExistingLockRemainingDuration() {
+func (s *KeeperTestSuite) TestGetExistingLockRemainingDuration() {
 	defaultJoinTime := suite.Ctx.BlockTime()
 	lockCreator := suite.TestAccs[0]
 	type sendTest struct {

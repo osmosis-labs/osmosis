@@ -176,7 +176,7 @@ var panicRoute = poolmanagertypes.SwapAmountInRoutes{
 	},
 }
 
-func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
+func (s *KeeperTestSuite) TestFindMaxProfitRoute() {
 	type param struct {
 		route           poolmanagertypes.SwapAmountInRoutes
 		expectedAmtIn   sdk.Int
@@ -323,7 +323,7 @@ func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestExecuteTrade() {
+func (s *KeeperTestSuite) TestExecuteTrade() {
 	type param struct {
 		route          poolmanagertypes.SwapAmountInRoutes
 		inputCoin      sdk.Coin
@@ -432,7 +432,7 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestIterateRoutes() {
+func (s *KeeperTestSuite) TestIterateRoutes() {
 	type paramm struct {
 		routes                     []poolmanagertypes.SwapAmountInRoutes
 		expectedMaxProfitAmount    sdk.Int
@@ -540,7 +540,7 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 }
 
 // Test logic that compares proftability of routes with different assets
-func (suite *KeeperTestSuite) TestConvertProfits() {
+func (s *KeeperTestSuite) TestConvertProfits() {
 	type param struct {
 		inputCoin           sdk.Coin
 		profit              sdk.Int
@@ -594,7 +594,7 @@ func (suite *KeeperTestSuite) TestConvertProfits() {
 }
 
 // TestRemainingPoolPointsForTx tests the RemainingPoolPointsForTx function.
-func (suite *KeeperTestSuite) TestRemainingPoolPointsForTx() {
+func (s *KeeperTestSuite) TestRemainingPoolPointsForTx() {
 	cases := []struct {
 		description        string
 		maxRoutesPerTx     uint64

@@ -13,7 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
-func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
+func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 	defaultJoinTime := suite.Ctx.BlockTime()
 	owner := suite.TestAccs[0]
 	nonOwner := suite.TestAccs[1]
@@ -225,7 +225,7 @@ func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition()
 	}
 }
 
-func (suite *KeeperTestSuite) SetupSuperfluidConcentratedPosition(ctx sdk.Context, superfluidDelegated, superfluidUndelegating, unlocking bool, owner sdk.AccAddress) (positionId, lockId uint64, amount0, amount1 sdk.Int, valAddr sdk.ValAddress, poolJoinAcc sdk.AccAddress) {
+func (s *KeeperTestSuite) SetupSuperfluidConcentratedPosition(ctx sdk.Context, superfluidDelegated, superfluidUndelegating, unlocking bool, owner sdk.AccAddress) (positionId, lockId uint64, amount0, amount1 sdk.Int, valAddr sdk.ValAddress, poolJoinAcc sdk.AccAddress) {
 	bankKeeper := suite.App.BankKeeper
 	superfluidKeeper := suite.App.SuperfluidKeeper
 	lockupKeeper := suite.App.LockupKeeper

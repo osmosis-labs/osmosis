@@ -22,7 +22,7 @@ var (
 	tenTokens     = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000)))
 )
 
-func (suite *KeeperTestSuite) TestCreateGauge_Fee() {
+func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 	tests := []struct {
 		name                 string
 		accountBalanceToFund sdk.Coins
@@ -138,7 +138,7 @@ func (suite *KeeperTestSuite) TestCreateGauge_Fee() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestAddToGauge_Fee() {
+func (s *KeeperTestSuite) TestAddToGauge_Fee() {
 	tests := []struct {
 		name                 string
 		accountBalanceToFund sdk.Coins
@@ -256,7 +256,7 @@ func (suite *KeeperTestSuite) TestAddToGauge_Fee() {
 	}
 }
 
-func (suite *KeeperTestSuite) completeGauge(gauge *types.Gauge, sendingAddress sdk.AccAddress) {
+func (s *KeeperTestSuite) completeGauge(gauge *types.Gauge, sendingAddress sdk.AccAddress) {
 	lockCoins := sdk.NewCoin(gauge.DistributeTo.Denom, sdk.NewInt(1000))
 	suite.FundAcc(sendingAddress, sdk.NewCoins(lockCoins))
 	suite.LockTokens(sendingAddress, sdk.NewCoins(lockCoins), gauge.DistributeTo.Duration)
