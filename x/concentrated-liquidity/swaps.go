@@ -316,6 +316,9 @@ func (k Keeper) computeOutAmtGivenIn(
 	// initialize swap state with the following parameters:
 	// as we iterate through the following for loop, this swap state will get updated after each required iteration
 	swapState := SwapState{
+		// N.B. We clone tokenAmountInSpecified because swapState.amountSpecifiedRemaining will get
+		// mutated during the compute swap step loop. However, we still need the original
+		// value of tokenAmountInSpecified to calculate the amount of tokenOut to return.
 		amountSpecifiedRemaining: tokenAmountInSpecified.Clone(), // tokenIn
 		amountCalculated:         sdk.ZeroDec(),                  // tokenOut
 		sqrtPrice:                curSqrtPrice,
