@@ -62,12 +62,9 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 		ctx.Logger().Error("ProtoRevTrade failed with error", err)
 	}
 
-	// Reset swaps to backrun for next transaction
+	// Delete swaps to backrun for next transaction
 	// TODO: Should this be placed before we attempt to execute trades?
-	if err := protoRevDec.ProtoRevKeeper.ResetSwapsToBackrun(ctx); err != nil {
-		ctx.Logger().Error("ResetSwapsToBackrun failed with error", err)
-		return next(ctx, tx, simulate)
-	}
+	protoRevDec.ProtoRevKeeper.DeleteSwapsToBackrun(ctx)
 
 	return next(ctx, tx, simulate)
 }

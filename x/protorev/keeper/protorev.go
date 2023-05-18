@@ -174,21 +174,6 @@ func (k Keeper) GetSwapsToBackrun(ctx sdk.Context) (types.Route, error) {
 	return swapsToBackrun, nil
 }
 
-// InitSwapsToBackrun initializes the swaps to backrun store
-func (k Keeper) ResetSwapsToBackrun(ctx sdk.Context) error {
-	swapsToBackrun := types.Route{
-		Trades:   []types.Trade{},
-		StepSize: sdk.NewInt(1),
-	}
-
-	err := k.SetSwapsToBackrun(ctx, swapsToBackrun)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // DeleteSwapsToBackrun deletes the swaps to backrun
 func (k Keeper) DeleteSwapsToBackrun(ctx sdk.Context) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSwapsToBackrun)
