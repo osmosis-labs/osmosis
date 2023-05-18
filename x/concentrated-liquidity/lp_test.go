@@ -387,6 +387,216 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 	}
 }
 
+func (s *KeeperTestSuite) TestCreatePositionNoSendUnsafe() {
+	tests := map[string]lpTest{
+		"error: non-existent pool": {
+			poolId:        2,
+			expectedError: types.PoolNotFoundError{PoolId: 2},
+		},
+		"error: lower tick out of bounds": {
+			lowerTick:     DefaultMinTick - 100,
+			expectedError: types.InvalidTickError{Tick: DefaultMinTick - 100, IsLower: true, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
+		},
+		"error: upper tick out of bounds": {
+			upperTick:     DefaultMaxTick + 100,
+			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 100, IsLower: false, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
+		},
+		"error: upper tick is below the lower tick, but both are in bounds": {
+			lowerTick:     500,
+			upperTick:     400,
+			expectedError: types.InvalidLowerUpperTickError{LowerTick: 500, UpperTick: 400},
+		},
+		"error: amount0 min is negative": {
+			amount0Minimum: sdk.NewInt(-1),
+			expectedError:  types.NotPositiveRequireAmountError{Amount: sdk.NewInt(-1).String()},
+		},
+		"error: amount1 min is negative": {
+			amount1Minimum: sdk.NewInt(-1),
+			expectedError:  types.NotPositiveRequireAmountError{Amount: sdk.NewInt(-1).String()},
+		},
+		"error: amount of token 0 is smaller than minimum; should fail and not update state": {
+			amount0Minimum: baseCase.amount0Expected.Mul(sdk.NewInt(2)),
+			// Add one since rounding up in favor of the pool.
+			expectedError: types.InsufficientLiquidityCreatedError{Actual: baseCase.amount0Expected.Add(roundingError), Minimum: baseCase.amount0Expected.Mul(sdk.NewInt(2)), IsTokenZero: true},
+		},
+		"error: amount of token 1 is smaller than minimum; should fail and not update state": {
+			amount1Minimum: baseCase.amount1Expected.Mul(sdk.NewInt(2)),
+
+			expectedError: types.InsufficientLiquidityCreatedError{Actual: baseCase.amount1Expected, Minimum: baseCase.amount1Expected.Mul(sdk.NewInt(2))},
+		},
+		"error: a non first position with zero amount desired for both denoms should fail liquidity delta check": {
+			isNotFirstPosition:   true,
+			customTokensProvided: true,
+			tokensProvided:       sdk.Coins{},
+			expectedError:        errors.New("cannot create a position with zero amounts of both pool tokens"),
+		},
+		"error: attempt to use and upper and lower tick that are not divisible by tick spacing": {
+			lowerTick:     int64(305451),
+			upperTick:     int64(315001),
+			tickSpacing:   10,
+			expectedError: types.TickSpacingError{TickSpacing: 10, LowerTick: int64(305451), UpperTick: int64(315001)},
+		},
+		"error: first position cannot have a zero amount for denom0": {
+			customTokensProvided: true,
+			tokensProvided:       sdk.NewCoins(DefaultCoin1),
+			expectedError:        types.InitialLiquidityZeroError{Amount0: sdk.ZeroInt(), Amount1: DefaultAmt1},
+		},
+		"error: first position cannot have a zero amount for denom1": {
+			customTokensProvided: true,
+			tokensProvided:       sdk.NewCoins(DefaultCoin0),
+			expectedError:        types.InitialLiquidityZeroError{Amount0: DefaultAmt0, Amount1: sdk.ZeroInt()},
+		},
+		"error: first position cannot have a zero amount for both denom0 and denom1": {
+			customTokensProvided: true,
+			tokensProvided:       sdk.Coins{},
+			expectedError:        errors.New("cannot create a position with zero amounts of both pool tokens"),
+		},
+		// TODO: add more tests
+		// - custom hand-picked values
+		// - think of overflows
+		// - think of truncations
+	}
+
+	// add test cases for different positions
+	for name, test := range positionCases {
+		tests[name] = test
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
+			clKeeper := s.App.ConcentratedLiquidityKeeper
+
+			// Merge tc with baseCase and update tc to the merged result. This is done to reduce the amount of boilerplate in test cases.
+			baseConfigCopy := *baseCase
+			mergeConfigs(&baseConfigCopy, &tc)
+			tc = baseConfigCopy
+
+			// Fund account to pay for the pool creation fee.
+			s.FundAcc(s.TestAccs[0], PoolCreationFee)
+
+			// Create a CL pool with custom tickSpacing
+			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, sdk.ZeroDec()))
+			s.Require().NoError(err)
+
+			// Set mock listener to make sure that is is called when desired.
+			s.setListenerMockOnConcentratedLiquidityKeeper()
+
+			pool, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, poolID)
+			s.Require().NoError(err)
+
+			// Pre-set fee growth accumulator
+			if !tc.preSetChargeFee.IsZero() {
+				err = clKeeper.ChargeFee(s.Ctx, 1, tc.preSetChargeFee)
+				s.Require().NoError(err)
+			}
+
+			expectedNumCreatePositionEvents := 1
+
+			// If we want to test a non-first position, we create a first position with a separate account
+			if tc.isNotFirstPosition {
+				s.SetupPosition(1, s.TestAccs[1], DefaultCoins, tc.lowerTick, tc.upperTick, DefaultJoinTime)
+				expectedNumCreatePositionEvents += 1
+			}
+
+			expectedLiquidityCreated := tc.liquidityAmount
+			if tc.isNotFirstPositionWithSameAccount {
+				// Since this is a second position with the same parameters,
+				// we expect to create half of the final liquidity amount.
+				expectedLiquidityCreated = tc.liquidityAmount.QuoInt64(2)
+
+				s.SetupPosition(1, s.TestAccs[0], DefaultCoins, tc.lowerTick, tc.upperTick, DefaultJoinTime)
+				expectedNumCreatePositionEvents += 1
+			}
+
+			// Fund test account and create the desired position
+			s.FundAcc(s.TestAccs[0], DefaultCoins)
+
+			// Note user and pool account balances before create position is called
+			userBalancePrePositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
+			poolBalancePrePositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
+
+			// System under test.
+			positionId, asset0, asset1, liquidityCreated, joinTime, newLowerTick, newUpperTick, err := clKeeper.CreatePositionNoSendUnsafe(s.Ctx, tc.poolId, s.TestAccs[0], tc.tokensProvided, tc.amount0Minimum, tc.amount1Minimum, tc.lowerTick, tc.upperTick)
+
+			// Note user and pool account balances to compare after create position is called
+			userBalancePostPositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
+			poolBalancePostPositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
+
+			// If we expect an error, make sure:
+			// - some error was emitted
+			// - asset0 and asset1 that were calculated from create position is nil
+			// - the error emitted was the expected error
+			// - account balances are untouched
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().Equal(asset0, sdk.Int{})
+				s.Require().Equal(asset1, sdk.Int{})
+				s.Require().ErrorContains(err, tc.expectedError.Error())
+
+				// Check account balances
+				s.Require().Equal(userBalancePrePositionCreation.String(), userBalancePostPositionCreation.String())
+				s.Require().Equal(poolBalancePrePositionCreation.String(), poolBalancePostPositionCreation.String())
+
+				// Redundantly ensure that liquidity was not created
+				liquidity, err := clKeeper.GetPositionLiquidity(s.Ctx, positionId)
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &types.PositionIdNotFoundError{PositionId: positionId})
+				s.Require().Equal(sdk.Dec{}, liquidity)
+				return
+			}
+
+			// Else, check that we had no error from creating the position, and that the liquidity and assets that were returned are expected
+			s.Require().NoError(err)
+			s.Require().Equal(tc.positionId, positionId)
+			s.Require().Equal(tc.amount0Expected.String(), asset0.String())
+			s.Require().Equal(tc.amount1Expected.String(), asset1.String())
+			s.Require().Equal(expectedLiquidityCreated.String(), liquidityCreated.String())
+			s.Require().Equal(s.Ctx.BlockTime(), joinTime)
+			if tc.expectedLowerTick != 0 {
+				s.Require().Equal(tc.expectedLowerTick, newLowerTick)
+				tc.lowerTick = newLowerTick
+			}
+			if tc.expectedUpperTick != 0 {
+				s.Require().Equal(tc.expectedUpperTick, newUpperTick)
+				tc.upperTick = newUpperTick
+			}
+
+			// Check account balances (should not have changed since this is the no send method)
+			s.Require().Equal(userBalancePrePositionCreation.String(), userBalancePostPositionCreation.String())
+			s.Require().Equal(poolBalancePrePositionCreation.String(), poolBalancePostPositionCreation.String())
+
+			hasPosition := clKeeper.HasPosition(s.Ctx, tc.positionId)
+			s.Require().True(hasPosition)
+
+			// Check position state
+			s.validatePositionUpdate(s.Ctx, positionId, expectedLiquidityCreated)
+
+			s.validatePositionFeeAccUpdate(s.Ctx, tc.poolId, positionId, expectedLiquidityCreated)
+
+			// Check tick state
+			s.validateTickUpdates(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, tc.liquidityAmount, tc.expectedFeeGrowthOutsideLower, tc.expectedFeeGrowthOutsideUpper)
+
+			// Validate events emitted.
+			s.AssertEventEmitted(s.Ctx, types.TypeEvtCreatePosition, expectedNumCreatePositionEvents)
+
+			// Validate that listeners were called the desired number of times
+			expectedAfterInitialPoolPositionCreatedCallCount := 0
+			if !tc.isNotFirstPosition {
+				// We want the hook to be called only for the very first position in the pool.
+				// Such position initializes current sqrt price and tick. As a result,
+				// we want the hook to run for the purposes of creating twap records.
+				// On any subsequent update, adding liquidity does not change the price.
+				// Therefore, we do not have to call this hook.
+				expectedAfterInitialPoolPositionCreatedCallCount = 1
+			}
+			s.validateListenerCallCount(0, expectedAfterInitialPoolPositionCreatedCallCount, 0, 0)
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestWithdrawPosition() {
 	defaultTimeElapsed := time.Hour * 24
 	uptimeHelper := getExpectedUptimes()

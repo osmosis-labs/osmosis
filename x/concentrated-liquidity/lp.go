@@ -576,7 +576,9 @@ func (k Keeper) validatePositionUpdateById(ctx sdk.Context, positionId uint64, u
 	return nil
 }
 
-// CreatePositionNoSendUnsafe
+// CreatePositionNoSendUnsafe creates a new position without sending any coins to the pool. This is an unsafe method and should only be used in the upgrade handler.
+// The purpose for this method's existence is that the concentrated liquidity pool needs to have a spot price prior to us adding the cl denom as a superfluid asset.
+// We therefore have to create the position without sending any coins to the pool.
 func (k Keeper) CreatePositionNoSendUnsafe(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (positionId uint64, actualAmount0 sdk.Int, actualAmount1 sdk.Int, liquidityDelta sdk.Dec, joinTime time.Time, lowerTickResult int64, upperTickResult int64, err error) {
 	// Use the current blockTime as the position's join time.
 	joinTime = ctx.BlockTime()
