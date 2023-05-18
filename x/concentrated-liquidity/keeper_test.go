@@ -21,39 +21,39 @@ import (
 )
 
 var (
-	DefaultMinTick, DefaultMaxTick                 = types.MinTick, types.MaxTick
-	DefaultLowerPrice                              = sdk.NewDec(4545)
-	DefaultLowerTick                               = int64(30545000)
-	DefaultUpperPrice                              = sdk.NewDec(5500)
-	DefaultUpperTick                               = int64(31500000)
-	DefaultCurrPrice                               = sdk.NewDec(5000)
-	DefaultCurrTick                                = sdk.NewInt(31000000)
-	DefaultCurrSqrtPrice, _                        = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
-	DefaultZeroSwapFee                             = sdk.ZeroDec()
-	DefaultFeeAccumCoins                           = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
-	DefaultPositionId                              = uint64(1)
-	DefaultUnderlyingLockId                        = uint64(0)
-	DefaultJoinTime                                = time.Unix(0, 0).UTC()
-	ETH                                            = "eth"
-	DefaultAmt0                                    = sdk.NewInt(1000000)
-	DefaultAmt0Expected                            = sdk.NewInt(998976)
-	DefaultCoin0                                   = sdk.NewCoin(ETH, DefaultAmt0)
-	USDC                                           = "usdc"
-	DefaultAmt1                                    = sdk.NewInt(5000000000)
-	DefaultAmt1Expected                            = sdk.NewInt(5000000000)
-	DefaultCoin1                                   = sdk.NewCoin(USDC, DefaultAmt1)
-	DefaultCoins                                   = sdk.NewCoins(DefaultCoin0, DefaultCoin1)
-	DefaultLiquidityAmt                            = sdk.MustNewDecFromStr("1517882343.751510418088349649")
-	FullRangeLiquidityAmt                          = sdk.MustNewDecFromStr("70710678.118654752940000000")
-	DefaultTickSpacing                             = uint64(100)
-	PoolCreationFee                                = poolmanagertypes.DefaultParams().PoolCreationFee
-	DefaultExponentConsecutivePositionLowerTick, _ = math.PriceToTickRoundDown(sdk.NewDec(5500), DefaultTickSpacing)
-	DefaultExponentConsecutivePositionUpperTick, _ = math.PriceToTickRoundDown(sdk.NewDec(6250), DefaultTickSpacing)
-	DefaultExponentOverlappingPositionLowerTick, _ = math.PriceToTickRoundDown(sdk.NewDec(4000), DefaultTickSpacing)
-	DefaultExponentOverlappingPositionUpperTick, _ = math.PriceToTickRoundDown(sdk.NewDec(4999), DefaultTickSpacing)
-	BAR                                            = "bar"
-	FOO                                            = "foo"
-	InsufficientFundsError                         = fmt.Errorf("insufficient funds")
+	DefaultMinTick, DefaultMaxTick                       = types.MinTick, types.MaxTick
+	DefaultLowerPrice                                    = sdk.NewDec(4545)
+	DefaultLowerTick                                     = int64(30545000)
+	DefaultUpperPrice                                    = sdk.NewDec(5500)
+	DefaultUpperTick                                     = int64(31500000)
+	DefaultCurrPrice                                     = sdk.NewDec(5000)
+	DefaultCurrTick                                int64 = 31000000
+	DefaultCurrSqrtPrice, _                              = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
+	DefaultZeroSwapFee                                   = sdk.ZeroDec()
+	DefaultFeeAccumCoins                                 = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
+	DefaultPositionId                                    = uint64(1)
+	DefaultUnderlyingLockId                              = uint64(0)
+	DefaultJoinTime                                      = time.Unix(0, 0).UTC()
+	ETH                                                  = "eth"
+	DefaultAmt0                                          = sdk.NewInt(1000000)
+	DefaultAmt0Expected                                  = sdk.NewInt(998976)
+	DefaultCoin0                                         = sdk.NewCoin(ETH, DefaultAmt0)
+	USDC                                                 = "usdc"
+	DefaultAmt1                                          = sdk.NewInt(5000000000)
+	DefaultAmt1Expected                                  = sdk.NewInt(5000000000)
+	DefaultCoin1                                         = sdk.NewCoin(USDC, DefaultAmt1)
+	DefaultCoins                                         = sdk.NewCoins(DefaultCoin0, DefaultCoin1)
+	DefaultLiquidityAmt                                  = sdk.MustNewDecFromStr("1517882343.751510418088349649")
+	FullRangeLiquidityAmt                                = sdk.MustNewDecFromStr("70710678.118654752940000000")
+	DefaultTickSpacing                                   = uint64(100)
+	PoolCreationFee                                      = poolmanagertypes.DefaultParams().PoolCreationFee
+	DefaultExponentConsecutivePositionLowerTick, _       = math.PriceToTickRoundDown(sdk.NewDec(5500), DefaultTickSpacing)
+	DefaultExponentConsecutivePositionUpperTick, _       = math.PriceToTickRoundDown(sdk.NewDec(6250), DefaultTickSpacing)
+	DefaultExponentOverlappingPositionLowerTick, _       = math.PriceToTickRoundDown(sdk.NewDec(4000), DefaultTickSpacing)
+	DefaultExponentOverlappingPositionUpperTick, _       = math.PriceToTickRoundDown(sdk.NewDec(4999), DefaultTickSpacing)
+	BAR                                                  = "bar"
+	FOO                                                  = "foo"
+	InsufficientFundsError                               = fmt.Errorf("insufficient funds")
 )
 
 type KeeperTestSuite struct {

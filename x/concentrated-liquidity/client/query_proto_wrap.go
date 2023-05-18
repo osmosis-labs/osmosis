@@ -153,7 +153,7 @@ func (q Querier) LiquidityNetInDirection(ctx sdk.Context, req clquery.LiquidityN
 		return nil, err
 	}
 
-	return &clquery.LiquidityNetInDirectionResponse{LiquidityDepths: liquidityDepths, CurrentLiquidity: pool.GetLiquidity(), CurrentTick: pool.GetCurrentTick().Int64()}, nil
+	return &clquery.LiquidityNetInDirectionResponse{LiquidityDepths: liquidityDepths, CurrentLiquidity: pool.GetLiquidity(), CurrentTick: pool.GetCurrentTick()}, nil
 }
 
 func (q Querier) ClaimableFees(ctx sdk.Context, req clquery.ClaimableFeesRequest) (*clquery.ClaimableFeesResponse, error) {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -144,11 +145,44 @@ func (s zeroForOneStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPric
 	return sqrtPriceNext, amountOneOut, amountZeroIn, feeChargeTotal
 }
 
+// InitializeNextTickIterator returns iterator that seeks to the next tick from the given tickIndex.
+// If nex tick relative to tickINdex does not exist in the store, it will return an invalid iterator.
+//
+// oneForZeroStrategy assumes moving to the left of the current square root price.
+// As a result, we use a reverse iterator to seek to the next tick index relative to the currentTickIndexPlusOne.
+// Since end key of the reverse iterator is exclusive, we search from current + 1 tick index.
+// in decrasing lexicographic order until a tick one smaller than current is found.
+// Returns an invalid iterator if currentTickIndexPlusOne is not in the store.
+// Panics if fails to parse tick index from bytes.
+// The caller is responsible for closing the iterator on success.
+func (s zeroForOneStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId uint64, currentTickIndexPlusOne int64) dbm.Iterator {
+	store := ctx.KVStore(s.storeKey)
+	prefixBz := types.KeyTickPrefixByPoolId(poolId)
+	prefixStore := prefix.NewStore(store, prefixBz)
+	startKey := types.TickIndexToBytes(currentTickIndexPlusOne)
+
+	iter := prefixStore.ReverseIterator(nil, startKey)
+
+	for ; iter.Valid(); iter.Next() {
+		// Since, we constructed our prefix store with <TickPrefix | poolID>, the
+		// key is the encoding of a tick index.
+		tick, err := types.TickIndexFromBytes(iter.Key())
+		if err != nil {
+			iter.Close()
+			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
+		}
+		if tick < currentTickIndexPlusOne {
+			break
+		}
+	}
+	return iter
+}
+
 // InitializeTickValue returns the initial tick value for computing swaps based
 // on the actual current tick.
 //
 // zeroForOneStrategy assumes moving to the left of the current square root price.
-// As a result, we use reverse iterator in NextInitializedTick to find the next
+// As a result, we use reverse iterator in InitializeNextTickIterator to find the next
 // tick to the left of current. The end cursor for reverse iteration is non-inclusive
 // so must add one here to make sure that the current tick is included in the search.
 func (s zeroForOneStrategy) InitializeTickValue(currentTick int64) int64 {

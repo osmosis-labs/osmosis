@@ -17,7 +17,7 @@ import (
 
 type lpTest struct {
 	poolId                            uint64
-	currentTick                       sdk.Int
+	currentTick                       int64
 	lowerTick                         int64
 	expectedLowerTick                 int64
 	upperTick                         int64
@@ -94,7 +94,7 @@ var (
 		"lower tick < upper tick < current tick -> both tick's fee accumulators are updated with one eth": {
 			lowerTick:   DefaultLowerTick,
 			upperTick:   DefaultUpperTick,
-			currentTick: sdk.NewInt(DefaultUpperTick + 100),
+			currentTick: DefaultUpperTick + 100,
 
 			preSetChargeFee:               oneEth,
 			expectedFeeGrowthOutsideLower: oneEthCoins,
@@ -106,7 +106,7 @@ var (
 		"lower tick < upper tick < current tick -> the fee is not charged so tick accumulators are unset": {
 			lowerTick:   DefaultLowerTick,
 			upperTick:   DefaultUpperTick,
-			currentTick: sdk.NewInt(DefaultUpperTick + 100),
+			currentTick: DefaultUpperTick + 100,
 
 			preSetChargeFee:               sdk.NewDecCoin(ETH, sdk.ZeroInt()), // zero fee
 			expectedFeeGrowthOutsideLower: oneEthCoins,
@@ -118,7 +118,7 @@ var (
 		"current tick < lower tick < upper tick -> both tick's fee accumulators are unitilialized": {
 			lowerTick:   DefaultLowerTick,
 			upperTick:   DefaultUpperTick,
-			currentTick: sdk.NewInt(DefaultLowerTick - 100),
+			currentTick: DefaultLowerTick - 100,
 
 			preSetChargeFee:               oneEth,
 			expectedFeeGrowthOutsideLower: oneEthCoins,
@@ -130,7 +130,7 @@ var (
 		"lower tick < upper tick == current tick -> both tick's fee accumulators are updated with one eth": {
 			lowerTick:   DefaultLowerTick,
 			upperTick:   DefaultUpperTick,
-			currentTick: sdk.NewInt(DefaultUpperTick),
+			currentTick: DefaultUpperTick,
 
 			preSetChargeFee:               oneEth,
 			expectedFeeGrowthOutsideLower: oneEthCoins,
@@ -142,7 +142,7 @@ var (
 		"second position: lower tick < upper tick == current tick -> both tick's fee accumulators are updated with one eth": {
 			lowerTick:   DefaultLowerTick,
 			upperTick:   DefaultUpperTick,
-			currentTick: sdk.NewInt(DefaultUpperTick),
+			currentTick: DefaultUpperTick,
 
 			isNotFirstPositionWithSameAccount: true,
 			positionId:                        2,
@@ -160,7 +160,7 @@ var (
 			expectedLowerTick: -161000000,
 			upperTick:         -160009800,
 			expectedUpperTick: -160000000,
-			currentTick:       sdk.NewInt(DefaultUpperTick),
+			currentTick:       DefaultUpperTick,
 
 			isNotFirstPositionWithSameAccount: true,
 			positionId:                        2,
@@ -1489,7 +1489,7 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 		amount1Desired        sdk.Int
 		tickSpacing           uint64
 		expectedCurrSqrtPrice sdk.Dec
-		expectedTick          sdk.Int
+		expectedTick          int64
 		expectedError         error
 	}
 	tests := map[string]sendTest{
@@ -1505,21 +1505,21 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 			amount1Desired:        sdk.NewInt(100_000_050),
 			tickSpacing:           DefaultTickSpacing,
 			expectedCurrSqrtPrice: sqrt(100_000_050),
-			expectedTick:          sdk.NewInt(72000000),
+			expectedTick:          72000000,
 		},
 		"100_000_051 and tick spacing 100, price level where curr sqrt price does not translate to allowed tick (assumes exponent at price one of -6 and tick spacing of 100)": {
 			amount0Desired:        sdk.OneInt(),
 			amount1Desired:        sdk.NewInt(100_000_051),
 			tickSpacing:           DefaultTickSpacing,
 			expectedCurrSqrtPrice: sqrt(100_000_051),
-			expectedTick:          sdk.NewInt(72000000),
+			expectedTick:          72000000,
 		},
 		"100_000_051 and tick spacing 1, price level where curr sqrt price translates to allowed tick (assumes exponent at price one of -6 and tick spacing of 1)": {
 			amount0Desired:        sdk.OneInt(),
 			amount1Desired:        sdk.NewInt(100_000_051),
 			tickSpacing:           1,
 			expectedCurrSqrtPrice: sqrt(100_000_051),
-			expectedTick:          sdk.NewInt(72000001),
+			expectedTick:          72000001,
 		},
 		"error: amount0Desired is zero": {
 			amount0Desired: sdk.ZeroInt(),
@@ -1562,7 +1562,7 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 				s.Require().NoError(err)
 
 				s.Require().Equal(tc.expectedCurrSqrtPrice.String(), pool.GetCurrentSqrtPrice().String())
-				s.Require().Equal(tc.expectedTick.String(), pool.GetCurrentTick().String())
+				s.Require().Equal(tc.expectedTick, pool.GetCurrentTick())
 			}
 		})
 	}
@@ -1736,7 +1736,7 @@ func (s *KeeperTestSuite) TestUninitializePool() {
 			actualSqrtPrice := pool.GetCurrentSqrtPrice()
 			actualTick := pool.GetCurrentTick()
 			s.Require().Equal(sdk.ZeroDec(), actualSqrtPrice)
-			s.Require().Equal(sdk.ZeroInt(), actualTick)
+			s.Require().Equal(int64(0), actualTick)
 		})
 	}
 }

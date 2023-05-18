@@ -807,3 +807,11 @@ type CoinLengthError struct {
 func (e CoinLengthError) Error() string {
 	return fmt.Sprintf("coin length (%d) must be less than or equal to max length (%d)", e.Length, e.MaxLength)
 }
+
+type RanOutOfTicksForPoolError struct {
+	PoolId uint64
+}
+
+func (e RanOutOfTicksForPoolError) Error() string {
+	return fmt.Sprintf("ran out of ticks for pool (%d) during swap", e.PoolId)
+}
