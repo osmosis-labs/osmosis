@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
@@ -59,12 +57,10 @@ func (h Hooks) AfterConcentratedPoolCreated(ctx sdk.Context, sender sdk.AccAddre
 
 // AfterInitialPoolPositionCreated is a noop.
 func (h Hooks) AfterInitialPoolPositionCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
-	fmt.Println("AfterInitialPoolPositionCreated hook is a noop in Protorev.")
 }
 
 // AfterLastPoolPositionRemoved is a noop.
 func (h Hooks) AfterLastPoolPositionRemoved(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
-	fmt.Println("AfterLastPoolPositionRemoved hook is a noop in Protorev.")
 }
 
 // AfterConcentratedPoolSwap stores swaps to be checked by protorev given the coins swapped in the pool.
@@ -79,6 +75,7 @@ func (h Hooks) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress,
 // ----------------------------------------------------------------------------
 
 // afterPoolCreated checks if the new pool should be stored as the highest liquidity pool
+// for any of the base denoms, and stores it if so.
 func (k Keeper) afterPoolCreated(ctx sdk.Context, poolId uint64) {
 	baseDenoms, err := k.GetAllBaseDenoms(ctx)
 	if err != nil {
