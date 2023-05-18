@@ -11,7 +11,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
@@ -268,7 +267,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			s.FundAcc(s.TestAccs[0], PoolCreationFee)
 
 			// Create a CL pool with custom tickSpacing
-			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, sdk.ZeroDec()))
+			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, model.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, sdk.ZeroDec()))
 			s.Require().NoError(err)
 
 			// Set mock listener to make sure that is is called when desired.
@@ -614,7 +613,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			ownerBalancerAfterWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, owner)
 			communityPoolBalanceAfter := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
 
-			// owner should only have tokens equivilent to the delta balance of the pool
+			// owner should only have tokens equivalent to the delta balance of the pool
 			expectedOwnerBalanceDelta := expectedPoolBalanceDelta.Add(expectedIncentivesClaimed...)
 			actualOwnerBalancerDelta := ownerBalancerAfterWithdraw.Sub(ownerBalancerBeforeWithdraw)
 
@@ -645,7 +644,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				position, err := concentratedLiquidityKeeper.GetPosition(s.Ctx, config.positionId)
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &types.PositionIdNotFoundError{PositionId: config.positionId})
-				s.Require().Equal(clmodel.Position{}, position)
+				s.Require().Equal(model.Position{}, position)
 
 				isPositionOwner, err := concentratedLiquidityKeeper.IsPositionOwner(s.Ctx, owner, config.poolId, config.positionId)
 				s.Require().NoError(err)
@@ -658,7 +657,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				s.Require().Equal(sdk.Dec{}, positionLiquidity)
 
 				// check underlying stores were correctly deleted
-				emptyPositionStruct := clmodel.Position{}
+				emptyPositionStruct := model.Position{}
 				positionIdToPositionKey := types.KeyPositionId(config.positionId)
 				osmoutils.Get(store, positionIdToPositionKey, &position)
 				s.Require().Equal(model.Position{}, emptyPositionStruct)
@@ -1470,7 +1469,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				}
 				s.Require().Equal(tc.expectedPoolLiquidity, concentratedPool.GetLiquidity())
 
-				// Test that liquidity update time was succesfully changed.
+				// Test that liquidity update time was successfully changed.
 				s.Require().Equal(expectedUpdateTime, poolI.GetLastLiquidityUpdate())
 			}
 		})
@@ -1603,7 +1602,7 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			s.FundAcc(s.TestAccs[0], PoolCreationFee)
 
 			// Create a CL pool with custom tickSpacing
-			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, sdk.ZeroDec()))
+			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, model.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, sdk.ZeroDec()))
 			s.Require().NoError(err)
 			poolBefore, err := clKeeper.GetPool(s.Ctx, poolID)
 			s.Require().NoError(err)
