@@ -2,9 +2,7 @@ package concentrated_liquidity
 
 import (
 	"context"
-	"fmt"
 	"strconv"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -33,9 +31,8 @@ var (
 	_ clmodel.MsgCreatorServer = msgServer{}
 )
 
-// CreateConcentratedPool attempts to create a pool returning a MsgCreateConcentratedPoolResponse or an error upon failure.
-// The pool creation fee is used to fund the community pool.
-// It will create a dedicated module account for the pool and sends the initial liquidity to the created module account.
+// CreateConcentratedPool attempts to create a concentrated liquidity pool via the poolmanager module, returning a MsgCreateConcentratedPoolResponse or an error upon failure.
+// The pool creation fee is used to fund the community pool. It will also create a dedicated module account for the pool.
 func (server msgServer) CreateConcentratedPool(goCtx context.Context, msg *clmodel.MsgCreateConcentratedPool) (*clmodel.MsgCreateConcentratedPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -56,7 +53,7 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 		return nil, err
 	}
 
-	positionId, actualAmount0, actualAmount1, liquidityCreated, joinTime, err := server.keeper.createPosition(ctx, msg.PoolId, sender, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick)
+	positionId, actualAmount0, actualAmount1, liquidityCreated, joinTime, lowerTick, upperTick, err := server.keeper.createPosition(ctx, msg.PoolId, sender, msg.TokensProvided, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +68,31 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 
 	// Note: create position event is emitted in keeper.createPosition(...)
 
-	return &types.MsgCreatePositionResponse{PositionId: positionId, Amount0: actualAmount0, Amount1: actualAmount1, JoinTime: joinTime, LiquidityCreated: liquidityCreated}, nil
+	return &types.MsgCreatePositionResponse{PositionId: positionId, Amount0: actualAmount0, Amount1: actualAmount1, JoinTime: joinTime, LiquidityCreated: liquidityCreated, LowerTick: lowerTick, UpperTick: upperTick}, nil
+}
+
+func (server msgServer) AddToPosition(goCtx context.Context, msg *types.MsgAddToPosition) (*types.MsgAddToPositionResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	positionId, actualAmount0, actualAmount1, err := server.keeper.addToPosition(ctx, sender, msg.PositionId, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+		),
+	})
+
+	return &types.MsgAddToPositionResponse{PositionId: positionId, Amount0: actualAmount0, Amount1: actualAmount1}, nil
 }
 
 // TODO: tests, including events
@@ -83,7 +104,7 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 		return nil, err
 	}
 
-	amount0, amount1, err := server.keeper.withdrawPosition(ctx, sender, msg.PositionId, msg.LiquidityAmount)
+	amount0, amount1, err := server.keeper.WithdrawPosition(ctx, sender, msg.PositionId, msg.LiquidityAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -101,6 +122,8 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 	return &types.MsgWithdrawPositionResponse{Amount0: amount0, Amount1: amount1}, nil
 }
 
+// CollectFees collects the fees earned by each position ID provided and sends them to the owner's account.
+// Returns error if one of the provided position IDs do not exist or if the function fails to get the fee accumulator.
 func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollectFees) (*types.MsgCollectFeesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -180,7 +203,7 @@ func (server msgServer) CreateIncentive(goCtx context.Context, msg *types.MsgCre
 		return nil, err
 	}
 
-	incentiveRecord, err := server.keeper.CreateIncentive(ctx, msg.PoolId, sender, msg.IncentiveDenom, msg.IncentiveAmount, msg.EmissionRate, msg.StartTime, msg.MinUptime)
+	incentiveRecord, err := server.keeper.CreateIncentive(ctx, msg.PoolId, sender, msg.IncentiveCoin, msg.EmissionRate, msg.StartTime, msg.MinUptime)
 	if err != nil {
 		return nil, err
 	}
@@ -196,8 +219,7 @@ func (server msgServer) CreateIncentive(goCtx context.Context, msg *types.MsgCre
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
-			sdk.NewAttribute(types.AttributeIncentiveDenom, msg.IncentiveDenom),
-			sdk.NewAttribute(types.AttributeIncentiveAmount, msg.IncentiveAmount.String()),
+			sdk.NewAttribute(types.AttributeIncentiveCoin, msg.IncentiveCoin.String()),
 			sdk.NewAttribute(types.AttributeIncentiveEmissionRate, msg.EmissionRate.String()),
 			sdk.NewAttribute(types.AttributeIncentiveStartTime, msg.StartTime.String()),
 			sdk.NewAttribute(types.AttributeIncentiveMinUptime, msg.MinUptime.String()),
@@ -231,13 +253,6 @@ func (server msgServer) FungifyChargedPositions(goCtx context.Context, msg *type
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-		),
-		sdk.NewEvent(
-			types.TypeEvtFungifyChargedPosition,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeInputPositionIds, strings.Trim(strings.Join(strings.Fields(fmt.Sprint(msg.PositionIds)), ","), "[]")),
-			sdk.NewAttribute(types.AttributeOutputPositionId, strconv.FormatUint(newPositionId, 10)),
 		),
 	})
 

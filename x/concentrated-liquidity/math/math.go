@@ -1,14 +1,14 @@
 package math
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
-var (
-	smallestDec = sdk.SmallestDec()
-)
+var smallestDec = sdk.SmallestDec()
 
 // liquidity0 takes an amount of asset0 in the pool as well as the sqrtpCur and the nextPrice
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
@@ -27,6 +27,10 @@ func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 
 	product := sqrtPriceABigDec.Mul(sqrtPriceBBigDec)
 	diff := sqrtPriceBBigDec.Sub(sqrtPriceABigDec)
+	if diff.Equal(osmomath.ZeroDec()) {
+		panic(fmt.Sprintf("liquidity0 diff is zero: sqrtPriceA %s sqrtPriceB %s", sqrtPriceA, sqrtPriceB))
+	}
+
 	return amountBigDec.Mul(product).Quo(diff).SDKDec()
 }
 
@@ -46,6 +50,10 @@ func Liquidity1(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	sqrtPriceBBigDec := osmomath.BigDecFromSDKDec(sqrtPriceB)
 
 	diff := sqrtPriceBBigDec.Sub(sqrtPriceABigDec)
+	if diff.Equal(osmomath.ZeroDec()) {
+		panic(fmt.Sprintf("liquidity1 diff is zero: sqrtPriceA %s sqrtPriceB %s", sqrtPriceA, sqrtPriceB))
+	}
+
 	return amountBigDec.Quo(diff).SDKDec()
 }
 
@@ -58,19 +66,29 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
 	diff := sqrtPriceB.Sub(sqrtPriceA)
-	denom := sqrtPriceA.Mul(sqrtPriceB)
 	// if calculating for amountIn, we round up
-	// if calculating for amountOut, we don't round at all
+	// if calculating for amountOut, we round down at precision end
 	// this is to prevent removing more from the pool than expected due to rounding
 	// example: we calculate 1000000.9999999 uusdc (~$1) amountIn and 2000000.999999 uosmo amountOut
 	// we would want the user to put in 1000001 uusdc rather than 1000000 uusdc to ensure we are charging enough for the amount they are removing
 	// additionally, without rounding, there exists cases where the swapState.amountSpecifiedRemaining.GT(sdk.ZeroDec()) for loop within
 	// the CalcOut/In functions never actually reach zero due to dust that would have never gotten counted towards the amount (numbers after the 10^6 place)
 	if roundUp {
+		// Note that we do MulTruncate so that the denominator is smaller as this is
+		// the case where we want to round up to favor the pool.
+		// Examples include:
+		// - calculating amountIn during swap
+		// - adding liquidity (request user to provide more tokens in in favor of the pool)
+		// The denominator is truncated to get a higher final amount.
+		denom := sqrtPriceA.MulTruncate(sqrtPriceB)
 		return liq.Mul(diff).Quo(denom).Ceil()
 	}
-	// Investigate if this should be a QuoTruncate: https://github.com/osmosis-labs/osmosis/issues/4646
-	return liq.Mul(diff).Quo(denom)
+	// These are truncated at precision end to round in favor of the pool when:
+	// - calculating amount out during swap
+	// - withdrawing liquidity
+	// The denominator is rounded up to get a smaller final amount.
+	denom := sqrtPriceA.MulRoundUp(sqrtPriceB)
+	return liq.MulTruncate(diff).QuoTruncate(denom)
 }
 
 // CalcAmount1 takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 1
@@ -90,9 +108,18 @@ func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	// additionally, without rounding, there exists cases where the swapState.amountSpecifiedRemaining.GT(sdk.ZeroDec()) for loop within
 	// the CalcOut/In functions never actually reach zero due to dust that would have never gotten counted towards the amount (numbers after the 10^6 place)
 	if roundUp {
-		return liq.Mul(diff).Ceil()
+		// Note that we do MulRoundUp so that the end result is larger as this is
+		// the case where we want to round up to favor the pool.
+		// Examples include:
+		// - calculating amountIn during swap
+		// - adding liquidity (request user to provide more tokens in in favor of the pool)
+		return liq.MulRoundUp(diff).Ceil()
 	}
-	return liq.Mul(diff)
+	// This is truncated at precision end to round in favor of the pool when:
+	// - calculating amount out during swap
+	// - withdrawing liquidity
+	// The denominator is rounded up to get a higher final amount.
+	return liq.MulTruncate(diff)
 }
 
 // GetNextSqrtPriceFromAmount0InRoundingUp utilizes sqrtPriceCurrent, liquidity, and amount of denom0 that still needs
@@ -143,24 +170,32 @@ func GetNextSqrtPriceFromAmount1OutRoundingDown(sqrtPriceCurrent, liquidity, amo
 	return sqrtPriceCurrent.Sub(amountOneRemainingOut.QuoRoundUp(liquidity))
 }
 
-// getLiquidityFromAmounts takes the current sqrtPrice and the sqrtPrice for the upper and lower ticks as well as the amounts of asset0 and asset1
-// in return, liquidity is calculated from these inputs
+// GetLiquidityFromAmounts takes the current sqrtPrice and the sqrtPrice for the upper and lower ticks as well as the amounts of asset0 and asset1
+// and returns the resulting liquidity from these inputs.
 func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0, amount1 sdk.Int) (liquidity sdk.Dec) {
+	// Reorder the prices so that sqrtPriceA is the smaller of the two.
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
+
 	if sqrtPrice.LTE(sqrtPriceA) {
+		// If the current price is less than or equal to the lower tick, then we use the liquidity0 formula.
 		liquidity = Liquidity0(amount0, sqrtPriceA, sqrtPriceB)
 	} else if sqrtPrice.LTE(sqrtPriceB) {
+		// If the current price is between the lower and upper ticks (inclusive of the lower tick but not the upper tick),
+		// then we use the minimum of the liquidity0 and liquidity1 formulas.
 		liquidity0 := Liquidity0(amount0, sqrtPrice, sqrtPriceB)
 		liquidity1 := Liquidity1(amount1, sqrtPrice, sqrtPriceA)
 		liquidity = sdk.MinDec(liquidity0, liquidity1)
 	} else {
+		// If the current price is greater than the upper tick, then we use the liquidity1 formula.
 		liquidity = Liquidity1(amount1, sqrtPriceB, sqrtPriceA)
 	}
+
 	return liquidity
 }
 
+// AddLiquidity adds or subtracts liquidityB from liquidityA, depending on whether liquidityB is positive or negative.
 func AddLiquidity(liquidityA, liquidityB sdk.Dec) (finalLiquidity sdk.Dec) {
 	if liquidityB.LT(sdk.ZeroDec()) {
 		return liquidityA.Sub(liquidityB.Abs())

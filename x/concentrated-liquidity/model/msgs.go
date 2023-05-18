@@ -5,8 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
@@ -42,7 +40,7 @@ func (msg MsgCreateConcentratedPool) Type() string  { return TypeMsgCreateConcen
 func (msg MsgCreateConcentratedPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return fmt.Errorf("Invalid sender address (%s)", err)
 	}
 
 	if msg.TickSpacing <= 0 {
@@ -50,7 +48,7 @@ func (msg MsgCreateConcentratedPool) ValidateBasic() error {
 	}
 
 	if msg.Denom0 == msg.Denom1 {
-		return fmt.Errorf("denom0 and denom1 must be different")
+		return cltypes.MatchingDenomError{Denom: msg.Denom0}
 	}
 
 	if sdk.ValidateDenom(msg.Denom0) != nil {
@@ -70,8 +68,7 @@ func (msg MsgCreateConcentratedPool) ValidateBasic() error {
 }
 
 func (msg MsgCreateConcentratedPool) GetSignBytes() []byte {
-	return nil
-	// return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgCreateConcentratedPool) GetSigners() []sdk.AccAddress {

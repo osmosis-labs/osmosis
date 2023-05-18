@@ -222,16 +222,38 @@ func TestTWAPRecord_Validate(t *testing.T) {
 
 			expectedErr: true,
 		},
-		"invalid last spot price with error": {
+		"one of the last spot prices is zero when last error time is not nil": {
 			twapRecord: func() TwapRecord {
 				r := baseRecord
 				r.LastErrorTime = r.Time
-				r.P0LastSpotPrice = sdk.NewDec(5) // has to be distinct to be symmetric
-				r.P1LastSpotPrice = sdk.ZeroDec() // need this to be 0, to test the other case on error
+				r.P0LastSpotPrice = sdk.NewDec(5)
+				r.P1LastSpotPrice = sdk.ZeroDec() // note that this one is zero due to spot price error.
 				return r
 			}(),
 
-			expectedErr: true,
+			expectedErr: false, // not expecting an error since one of the spot prices is zero.
+		},
+		"both of the last spot prices are zero when last error time is not nil": {
+			twapRecord: func() TwapRecord {
+				r := baseRecord
+				r.LastErrorTime = r.Time
+				r.P0LastSpotPrice = sdk.ZeroDec() // note that this one is zero due to spot price error.
+				r.P1LastSpotPrice = sdk.ZeroDec() // note that this one is zero due to spot price error.
+				return r
+			}(),
+
+			expectedErr: false, // not expecting an error since both of the spot prices are zero.
+		},
+		"error: both of the last spot prices non-zero when last error time is not nil": {
+			twapRecord: func() TwapRecord {
+				r := baseRecord
+				r.LastErrorTime = r.Time
+				r.P0LastSpotPrice = sdk.NewDec(5)
+				r.P1LastSpotPrice = sdk.NewDecWithPrec(2, 1)
+				return r
+			}(),
+
+			expectedErr: true, // expecting an error since both of the spot prices are non-zero.
 		},
 		"invalid p0 last spot price: nil": {
 			twapRecord: func() TwapRecord {

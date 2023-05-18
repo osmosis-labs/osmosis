@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper/gov"
@@ -131,7 +131,6 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 			suite.Require().Len(resp.Assets, 0)
 
 			for i, action := range tc.actions {
-
 				// here we set two different string arrays of denoms.
 				// The reason we do this is because native denom should be an asset within the pool,
 				// while we do not want native asset to be in gov proposals.
@@ -189,9 +188,7 @@ func (suite *KeeperTestSuite) TestHandleUnpoolWhiteListChange() {
 		testDescription = "test description"
 	)
 
-	var (
-		basePoolIds = []uint64{1, 2, 3}
-	)
+	basePoolIds := []uint64{1, 2, 3}
 
 	tests := map[string]struct {
 		preCreatedPoolCount int

@@ -18,6 +18,16 @@ import (
 	types "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
+var (
+	cubeRootTwo, _        = osmomath.NewBigDec(2).ApproxRoot(3)
+	threeRootTwo, _       = osmomath.NewBigDec(3).ApproxRoot(2)
+	cubeRootThree, _      = osmomath.NewBigDec(3).ApproxRoot(3)
+	threeCubeRootTwo      = cubeRootTwo.MulInt64(3)
+	cubeRootSixSquared, _ = (osmomath.NewBigDec(6).MulInt64(6)).ApproxRoot(3)
+	twoCubeRootThree      = cubeRootThree.MulInt64(2)
+	twentySevenRootTwo, _ = osmomath.NewBigDec(27).ApproxRoot(2)
+)
+
 // CFMMTestCase defines a testcase for stableswap pools
 type CFMMTestCase struct {
 	xReserve    osmomath.BigDec
@@ -453,6 +463,95 @@ func TestCFMMInvariantTwoAssetsDirect(t *testing.T) {
 	}
 }
 
+// solidly CFMM is xy(x^2 + y^2) = k
+// So we want to solve for a given addition of `b` units of y into the pool,
+// how many units `a` of x do we get out.
+// Let y' = y + b
+// we solve k = (x'y')(x'^2 + y^2) for x', using the following equation: https://www.wolframalpha.com/input?i2d=true&i=solve+for+y%5C%2844%29+x*y*%5C%2840%29Power%5Bx%2C2%5D%2BPower%5By%2C2%5D%5C%2841%29%3Dk
+// which we simplify to be the following: https://www.desmos.com/calculator/bx5m5wpind
+// Then we use that to derive the change in x as x_out = x' - x
+//
+// Since original reserves, y' and k are known and remain constant throughout the calculation,
+// deriving x' and then finding x_out is equivalent to finding x_out directly.
+func solveCfmmDirect(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
+	if !xReserve.IsPositive() || !yReserve.IsPositive() || !yIn.IsPositive() {
+		panic("invalid input: reserves and input must be positive")
+	}
+
+	if yIn.GT(yReserve) {
+		panic("invalid input: cannot trade greater than reserve amount into CFMM")
+	}
+
+	// find k using existing reserves
+	k := cfmmConstant(xReserve, yReserve)
+
+	// find new yReserve after join
+	y_new := yReserve.Add(yIn)
+
+	// store powers to simplify calculations
+	y2 := y_new.Mul(y_new)
+	y3 := y2.Mul(y_new)
+	y4 := y3.Mul(y_new)
+
+	// We then solve for new xReserve using new yReserve and old k using a solver derived from xy(x^2 + y^2) = k
+	// Full equation: x' = [((2^(1/3)) * ([y^2 * 9k) * ((sqrt(1 + ((2 / sqrt(27)) * (y^4 / k))^2)) + 1)]^(1/3)) / y')
+	// 													 	- (2 * (3^(1/3)) * y^3 / ([y^2 * 9k) * ((sqrt(1 + ((2 / sqrt(27)) * (y^4 / k))^2)) + 1)]^(1/3)))
+	// 						] / (6^(2/3))
+	//
+	// To simplify, we make the following abstractions:
+	// 1. scaled_y4_quo_k = (2 / sqrt(27)) * (y^4 / k)
+	// 2. sqrt_term = sqrt(1 + scaled_y4_quo_k2)
+	// 3. common_factor = [y^2 * 9k) * (sqrt_term + 1)]^(1/3)
+	// 4. term1 = (2^(1/3)) * common_factor / y'
+	// 5. term2 = 2 * (3^(1/3)) * y^3 / common_factor
+	//
+	// With these, the final equation becomes: x' = (term1 - term2) / (6^(2/3))
+
+	// let scaled_y4_quo_k = (2 / sqrt(27)) * (y^4 / k)
+	scaled_y4_quo_k := (y4.Quo(k)).Mul(osmomath.NewBigDec(2).Quo(twentySevenRootTwo))
+	scaled_y4_quo_k2 := scaled_y4_quo_k.Mul(scaled_y4_quo_k)
+
+	// let sqrt_term = sqrt(1 + scaled_y4_quo_k2)
+	sqrt_term, err := (osmomath.OneDec().Add(scaled_y4_quo_k2)).ApproxRoot(2)
+	if err != nil {
+		panic(err)
+	}
+
+	// let common_factor = [y^2 * 9k) * (sqrt_term + 1)]^(1/3)
+	common_factor, err := (y2.MulInt64(9).Mul(k).Mul((sqrt_term.Add(osmomath.OneDec())))).ApproxRoot(3)
+	if err != nil {
+		panic(err)
+	}
+
+	// term1 = (2^(1/3)) * common_factor / y'
+	term1 := cubeRootTwo.Mul(common_factor).Quo(y_new)
+	// term2 = 2 * (3^(1/3)) * y^3 / common_factor
+	term2 := twoCubeRootThree.Mul(y3).Quo(common_factor)
+
+	// finally, x' = (term1 - term2) / (6^(2/3))
+	x_new := (term1.Sub(term2)).Quo(cubeRootSixSquared)
+
+	// find amount of x to output using initial and final xReserve values
+	xOut := xReserve.Sub(x_new)
+
+	if xOut.GTE(xReserve) {
+		panic("invalid output: greater than full pool reserves")
+	}
+
+	return xOut
+}
+
+// solidly CFMM is xy(x^2 + y^2) = k
+func cfmmConstant(xReserve, yReserve osmomath.BigDec) osmomath.BigDec {
+	if !xReserve.IsPositive() || !yReserve.IsPositive() {
+		panic("invalid input: reserves must be positive")
+	}
+	xy := xReserve.Mul(yReserve)
+	x2 := xReserve.Mul(xReserve)
+	y2 := yReserve.Mul(yReserve)
+	return xy.Mul(x2.Add(y2))
+}
+
 func TestCFMMInvariantMultiAssets(t *testing.T) {
 	kErrTolerance := osmomath.OneDec()
 
@@ -477,6 +576,17 @@ func TestCFMMInvariantMultiAssets(t *testing.T) {
 	}
 }
 
+// full multi-asset CFMM is xyu(x^2 + y^2 + w) = k,
+// where u is the product of asset reserves (e.g. u = m * n)
+// and w is the sum of the squares of their squares (e.g. w = m^2 + n^2).
+// When u = 1 and w = 0, this is equivalent to solidly's CFMM
+func cfmmConstantMulti(xReserve, yReserve, u, v osmomath.BigDec) osmomath.BigDec {
+	if !u.IsPositive() {
+		panic("invalid input: reserves must be positive")
+	}
+	return cfmmConstantMultiNoV(xReserve, yReserve, v).Mul(u)
+}
+
 func TestCFMMInvariantMultiAssetsDirect(t *testing.T) {
 	kErrTolerance := osmomath.OneDec()
 
@@ -498,6 +608,84 @@ func TestCFMMInvariantMultiAssetsDirect(t *testing.T) {
 			osmoassert.ConditionalPanic(t, test.expectPanic, sut)
 		})
 	}
+}
+
+// multi-asset CFMM is xyu(x^2 + y^2 + w) = k
+// As described in our spec, we can ignore the u term and simply solve within the bounds of k' = k / u
+// since u remains constant throughout any independent operation this solver would be used for.
+// We want to solve for a given addition of `b` units of y into the pool,
+// how many units `a` of x do we get out.
+// Let y' = y + b
+// we solve k = (x'y')(x'^2 + y^2 + w) for x', using the following equation: https://www.wolframalpha.com/input?i2d=true&i=solve+for+y%5C%2844%29+x*y*%5C%2840%29Power%5Bx%2C2%5D+%2B+Power%5By%2C2%5D+%2B+w%5C%2841%29%3Dk
+// which we simplify to be the following: https://www.desmos.com/calculator/zx2qslqndl
+// Then we use that to derive the change in x as x_out = x' - x
+//
+// Since original reserves, y' and k are known and remain constant throughout the calculation,
+// deriving x' and then finding x_out is equivalent to finding x_out directly.
+func solveCFMMMultiDirect(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) osmomath.BigDec {
+	if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() || !yIn.IsPositive() {
+		panic("invalid input: reserves and input must be positive")
+	} else if yIn.GTE(yReserve) {
+		panic("cannot input more than pool reserves")
+	}
+
+	// find k' using existing reserves (k' = k / v term)
+	k := cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares)
+	k2 := k.Mul(k)
+
+	// find new yReserve after join
+	y_new := yReserve.Add(yIn)
+
+	// store powers to simplify calculations
+	y2 := y_new.Mul(y_new)
+	y3 := y2.Mul(y_new)
+	y4 := y3.Mul(y_new)
+
+	// We then solve for new xReserve using new yReserve and old k using a solver derived from xy(x^2 + y^2 + w) = k
+	// Full equation: x' = (sqrt(729 k^2 y^4 + 108 y^3 (w y + y^3)^3) + 27 k y^2)^(1/3) / (3 2^(1/3) y)
+	// 								- (2^(1/3) (w y + y^3))/(sqrt(729 k^2 y^4 + 108 y^3 (w y + y^3)^3) + 27 k y^2)^(1/3)
+	//
+	//
+	// To simplify, we make the following abstractions:
+	// 1. sqrt_term = sqrt(729 k^2 y^4 + 108 y^3 (w y + y^3)^3)
+	// 2. cube_root_term = (sqrt_term + 27 k y^2)^(1/3)
+	// 3. term1 = cube_root_term / (3 2^(1/3) y)
+	// 4. term2 = (2^(1/3) (w y + y^3)) / cube_root_term
+	//
+	// With these, the final equation becomes: x' = term1 - term2
+
+	// let sqrt_term = sqrt(729 k^2 y^4 + 108 y^3 (w y + y^3)^3)
+	wypy3 := (wSumSquares.Mul(y_new)).Add(y3)
+	wypy3pow3 := wypy3.Mul(wypy3).Mul(wypy3)
+
+	sqrt_term, err := ((k2.Mul(y4).MulInt64(729)).Add(y3.MulInt64(108).Mul(wypy3pow3))).ApproxRoot(2)
+	if err != nil {
+		panic(err)
+	}
+
+	// let cube_root_term = (sqrt_term + 27 k y^2)^(1/3)
+	cube_root_term, err := (sqrt_term.Add(k.Mul(y2).MulInt64(27))).ApproxRoot(3)
+	if err != nil {
+		panic(err)
+	}
+
+	// let term1 = cube_root_term / (3 2^(1/3) y)
+	term1 := cube_root_term.Quo(cubeRootTwo.MulInt64(3).Mul(y_new))
+
+	// let term2 = cube_root_term * (2^(1/3) (w y + y^3))
+	term2 := (cubeRootTwo.Mul(wypy3)).Quo(cube_root_term)
+
+	// finally, let x' = term1 - term2
+	x_new := term1.Sub(term2)
+
+	// find amount of x to output using initial and final xReserve values
+	xOut := xReserve.Sub(x_new)
+
+	if xOut.GTE(xReserve) {
+		panic("invalid output: greater than full pool reserves")
+	}
+
+	return xOut
 }
 
 func TestCFMMInvariantMultiAssetsBinarySearch(t *testing.T) {
@@ -726,7 +914,8 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 				pool := createTestPool(suite.T(), tc.poolLiquidity, swapFeeDec, exitFeeDec, tc.scalingFactors)
 				suite.Require().NotNil(pool)
 				errTolerance := osmomath.ErrTolerance{
-					AdditiveTolerance: sdk.Dec{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12)}
+					AdditiveTolerance: sdk.Dec{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12),
+				}
 				test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, tc.denomIn, tc.denomOut, tc.initialCalcOut, swapFeeDec, errTolerance)
 			})
 		}
@@ -881,6 +1070,7 @@ func TestCalcSingleAssetJoinShares(t *testing.T) {
 			correctnessThreshold := sdk.OneInt().Mul(sdk.NewInt(int64(len(p.PoolLiquidity))))
 
 			tokenOutAmount, err := cfmm_common.SwapAllCoinsToSingleAsset(&p, ctx, exitTokens, tc.tokenIn.Denom, sdk.ZeroDec())
+			require.NoError(t, err, "test: %s", name)
 			require.True(t, tokenOutAmount.LTE(tc.tokenIn.Amount))
 			require.True(t, tc.expectedOut.Sub(tokenOutAmount).Abs().LTE(correctnessThreshold))
 		})
