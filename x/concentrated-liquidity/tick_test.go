@@ -38,7 +38,7 @@ func (s *KeeperTestSuite) TestTickOrdering() {
 	storeKey := sdk.NewKVStoreKey("concentrated_liquidity")
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	s.Ctx = testutil.DefaultContext(storeKey, tKey)
-	s.App.ConcentratedLiquidityKeeper = cl.NewKeeper(s.App.AppCodec(), storeKey, s.App.BankKeeper, s.App.GAMMKeeper, s.App.PoolIncentivesKeeper, s.App.IncentivesKeeper, s.App.LockupKeeper, s.App.GetSubspace(types.ModuleName))
+	s.App.ConcentratedLiquidityKeeper = cl.NewKeeper(s.App.AppCodec(), storeKey, s.App.AccountKeeper, s.App.BankKeeper, s.App.GAMMKeeper, s.App.PoolIncentivesKeeper, s.App.IncentivesKeeper, s.App.LockupKeeper, s.App.DistrKeeper, s.App.GetSubspace(types.ModuleName))
 
 	liquidityTicks := []int64{-200, -55, -4, 70, 78, 84, 139, 240, 535}
 	for _, t := range liquidityTicks {
@@ -96,6 +96,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		tickExists             bool
 		expectedLiquidityNet   sdk.Dec
 		expectedLiquidityGross sdk.Dec
+		minimumGasConsumed     uint64
 		expectedErr            error
 	}{
 		{
@@ -109,6 +110,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             false,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Neg(),
 			expectedLiquidityGross: DefaultLiquidityAmt,
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Init tick 50 with DefaultLiquidityAmt liquidity, lower",
@@ -121,6 +123,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             false,
 			expectedLiquidityNet:   DefaultLiquidityAmt,
 			expectedLiquidityGross: DefaultLiquidityAmt,
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Update tick 50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity, upper",
@@ -133,6 +136,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             true,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(sdk.NewDec(2)).Neg(),
 			expectedLiquidityGross: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Update tick 50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity, lower",
@@ -145,6 +149,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             true,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
 			expectedLiquidityGross: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Init tick -50 with DefaultLiquidityAmt liquidity, upper",
@@ -157,6 +162,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             false,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Neg(),
 			expectedLiquidityGross: DefaultLiquidityAmt,
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Init tick -50 with DefaultLiquidityAmt liquidity, lower",
@@ -169,6 +175,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             false,
 			expectedLiquidityNet:   DefaultLiquidityAmt,
 			expectedLiquidityGross: DefaultLiquidityAmt,
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Update tick -50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity, upper",
@@ -181,6 +188,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             true,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(sdk.NewDec(2)).Neg(),
 			expectedLiquidityGross: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Update tick -50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity, lower",
@@ -193,6 +201,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             true,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
 			expectedLiquidityGross: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Init tick 50 with Negative DefaultLiquidityAmt liquidity, upper",
@@ -205,6 +214,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             false,
 			expectedLiquidityNet:   DefaultLiquidityAmt,
 			expectedLiquidityGross: DefaultLiquidityAmt.Neg(),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Update tick 50 that already contains DefaultLiquidityAmt liquidity with -DefaultLiquidityAmt liquidity, upper",
@@ -217,6 +227,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             true,
 			expectedLiquidityNet:   sdk.ZeroDec(),
 			expectedLiquidityGross: sdk.ZeroDec(),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Update tick -50 that already contains DefaultLiquidityAmt liquidity with negative DefaultLiquidityAmt liquidity, lower",
@@ -229,6 +240,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             true,
 			expectedLiquidityNet:   sdk.ZeroDec(),
 			expectedLiquidityGross: sdk.ZeroDec(),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Init tick for non-existing pool",
@@ -250,7 +262,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 
 			// Create a default CL pool
 			pool := s.PrepareConcentratedPool()
-			currentTick := pool.GetCurrentTick().Int64()
+			currentTick := pool.GetCurrentTick()
 
 			_, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
@@ -261,6 +273,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			defaultAccumCoins := sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
 			feeAccum.AddToAccumulator(defaultAccumCoins)
 
+			existingGasConsumed := s.Ctx.GasMeter().GasConsumed()
+
 			// If tickExists set, initialize the specified tick with defaultLiquidityAmt
 			preexistingLiquidity := sdk.ZeroDec()
 			if test.tickExists {
@@ -268,10 +282,10 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 				s.Require().NoError(err)
 				err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, currentTick, test.param.tickIndex, DefaultLiquidityAmt, test.param.upper)
 				s.Require().NoError(err)
-				if tickInfoBefore.LiquidityGross.IsZero() && test.param.tickIndex <= pool.GetCurrentTick().Int64() {
+				if tickInfoBefore.LiquidityGross.IsZero() && test.param.tickIndex <= pool.GetCurrentTick() {
 					tickInfoAfter, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, test.param.tickIndex)
 					s.Require().NoError(err)
-					s.Require().Equal(tickInfoAfter.FeeGrowthOutside, feeAccum.GetValue())
+					s.Require().Equal(tickInfoAfter.FeeGrowthOppositeDirectionOfLastTraversal, feeAccum.GetValue())
 				}
 				preexistingLiquidity = DefaultLiquidityAmt
 			}
@@ -285,10 +299,10 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 
 			// Initialize or update the tick according to the test case
 			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, currentTick, test.param.tickIndex, test.param.liquidityIn, test.param.upper)
-			if tickInfoAfter.LiquidityGross.IsZero() && test.param.tickIndex <= pool.GetCurrentTick().Int64() {
+			if tickInfoAfter.LiquidityGross.IsZero() && test.param.tickIndex <= pool.GetCurrentTick() {
 				tickInfoAfter, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, test.param.tickIndex)
 				s.Require().NoError(err)
-				s.Require().Equal(tickInfoAfter.FeeGrowthOutside, feeAccum.GetValue())
+				s.Require().Equal(tickInfoAfter.FeeGrowthOppositeDirectionOfLastTraversal, feeAccum.GetValue())
 			}
 			if test.expectedErr != nil {
 				s.Require().ErrorIs(err, test.expectedErr)
@@ -305,17 +319,21 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			s.Require().Equal(test.expectedLiquidityGross, tickInfoAfter.LiquidityGross)
 
 			if test.param.tickIndex <= 0 {
-				s.Require().Equal(defaultAccumCoins, tickInfoAfter.FeeGrowthOutside)
+				s.Require().Equal(defaultAccumCoins, tickInfoAfter.FeeGrowthOppositeDirectionOfLastTraversal)
 			} else {
-				s.Require().Equal(sdk.DecCoins(nil), tickInfoAfter.FeeGrowthOutside)
+				s.Require().Equal(sdk.DecCoins(nil), tickInfoAfter.FeeGrowthOppositeDirectionOfLastTraversal)
 			}
+
+			// Ensure that at least the minimum amount of gas was charged
+			gasConsumed := s.Ctx.GasMeter().GasConsumed() - existingGasConsumed
+			s.Require().True(gasConsumed >= test.minimumGasConsumed)
 		})
 	}
 }
 
 func (s *KeeperTestSuite) TestGetTickInfo() {
 	var (
-		preInitializedTickIndex = DefaultCurrTick.Int64() + 2
+		preInitializedTickIndex = DefaultCurrTick + 2
 		expectedUptimes         = getExpectedUptimes()
 		emptyUptimeTrackers     = wrapUptimeTrackers(expectedUptimes.emptyExpectedAccumValues)
 		varyingTokensAndDenoms  = wrapUptimeTrackers(expectedUptimes.varyingTokensMultiDenom)
@@ -352,34 +370,34 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
 			// Note that both FeeGrowthOutside and UptimeGrowthOutsides are updated.
 			// We expect uptime trackers to be initialized to global accums since tick <= active tick
-			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenoms},
+			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenoms},
 		},
 		{
 			name:                     "Get tick info for active tick on existing pool with existing tick",
 			poolToGet:                validPoolId,
-			tickToGet:                DefaultCurrTick.Int64(),
+			tickToGet:                DefaultCurrTick,
 			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
 			// Both fee growth and uptime trackers are set to global since tickToGet <= current tick
-			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenoms},
+			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenoms},
 		},
 		{
 			name:      "Get tick info on existing pool with no existing tick (cur pool tick > tick)",
 			poolToGet: validPoolId,
-			tickToGet: DefaultCurrTick.Int64() + 1,
+			tickToGet: DefaultCurrTick + 1,
 			// Note that FeeGrowthOutside and UptimeGrowthOutside(s) are not initialized.
 			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), UptimeTrackers: emptyUptimeTrackers},
 		},
 		{
 			name:      "Get tick info on existing pool with no existing tick (cur pool tick == tick), initialized fee growth outside",
 			poolToGet: validPoolId,
-			tickToGet: DefaultCurrTick.Int64(),
+			tickToGet: DefaultCurrTick,
 			// Note that FeeGrowthOutside and UptimeGrowthOutside(s) are initialized.
-			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: sdk.NewDecCoins(oneEth), UptimeTrackers: emptyUptimeTrackers},
+			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth), UptimeTrackers: emptyUptimeTrackers},
 		},
 		{
 			name:        "Get tick info on a non-existing pool with no existing tick",
 			poolToGet:   2,
-			tickToGet:   DefaultCurrTick.Int64() + 1,
+			tickToGet:   DefaultCurrTick + 1,
 			expectedErr: types.PoolNotFoundError{PoolId: 2},
 		},
 	}
@@ -394,11 +412,12 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 
 			if test.preInitUptimeAccumValues != nil {
-				addToUptimeAccums(s.Ctx, clPool.GetId(), clKeeper, test.preInitUptimeAccumValues)
+				err := addToUptimeAccums(s.Ctx, clPool.GetId(), clKeeper, test.preInitUptimeAccumValues)
+				s.Require().NoError(err)
 			}
 
 			// Set up an initialized tick
-			err := clKeeper.InitOrUpdateTick(s.Ctx, validPoolId, DefaultCurrTick.Int64(), preInitializedTickIndex, DefaultLiquidityAmt, true)
+			err := clKeeper.InitOrUpdateTick(s.Ctx, validPoolId, DefaultCurrTick, preInitializedTickIndex, DefaultLiquidityAmt, true)
 			s.Require().NoError(err)
 
 			// Charge fee to make sure that the global fee accumulator is always updated.
@@ -418,6 +437,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			} else {
 				s.Require().NoError(err)
 				clPool, err = clKeeper.GetPoolById(s.Ctx, validPoolId)
+				s.Require().NoError(err)
 				s.Require().Equal(test.expectedTickInfo, tickInfo)
 			}
 		})
@@ -426,24 +446,24 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 
 func (s *KeeperTestSuite) TestCrossTick() {
 	var (
-		preInitializedTickIndex = DefaultCurrTick.Int64() - 2
+		preInitializedTickIndex = DefaultCurrTick - 2
 		expectedUptimes         = getExpectedUptimes()
 		emptyUptimeTrackers     = wrapUptimeTrackers(expectedUptimes.emptyExpectedAccumValues)
 		defaultAdditiveFee      = sdk.NewDecCoinFromDec(USDC, sdk.NewDec(1000))
 	)
 
 	tests := []struct {
-		name                         string
-		poolToGet                    uint64
-		preInitializedTickIndex      int64
-		tickToGet                    int64
-		initGlobalUptimeAccumValues  []sdk.DecCoins
-		globalUptimeAccumDelta       []sdk.DecCoins
-		expectedUptimeTrackers       []model.UptimeTracker
-		additiveFee                  sdk.DecCoin
-		expectedLiquidityDelta       sdk.Dec
-		expectedTickFeeGrowthOutside sdk.DecCoins
-		expectedErr                  bool
+		name                                                  string
+		poolToGet                                             uint64
+		preInitializedTickIndex                               int64
+		tickToGet                                             int64
+		initGlobalUptimeAccumValues                           []sdk.DecCoins
+		globalUptimeAccumDelta                                []sdk.DecCoins
+		expectedUptimeTrackers                                []model.UptimeTracker
+		additiveFee                                           sdk.DecCoin
+		expectedLiquidityDelta                                sdk.Dec
+		expectedTickFeeGrowthOppositeDirectionOfLastTraversal sdk.DecCoins
+		expectedErr                                           bool
 	}{
 		{
 			name:                    "Get tick info of existing tick below current tick (nonzero uptime trackers)",
@@ -457,25 +477,25 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			// We expect new uptime trackers to be new global - init global
 			// This is because we init them to twoHundredTokensMultiDenom and then add hundredTokensMultiDenom,
 			// so when we cross the tick and "flip" it, we expect threeHundredTokensMultiDenom - twoHundredTokensMultiDenom
-			expectedUptimeTrackers:       wrapUptimeTrackers(expectedUptimes.hundredTokensMultiDenom),
-			expectedLiquidityDelta:       DefaultLiquidityAmt.Neg(),
-			expectedTickFeeGrowthOutside: DefaultFeeAccumCoins.Add(defaultAdditiveFee),
+			expectedUptimeTrackers:                                wrapUptimeTrackers(expectedUptimes.hundredTokensMultiDenom),
+			expectedLiquidityDelta:                                DefaultLiquidityAmt.Neg(),
+			expectedTickFeeGrowthOppositeDirectionOfLastTraversal: DefaultFeeAccumCoins.Add(defaultAdditiveFee),
 		},
 		{
-			name:                         "Get tick info of existing tick below current tick (nil uptime trackers)",
-			poolToGet:                    validPoolId,
-			preInitializedTickIndex:      preInitializedTickIndex,
-			tickToGet:                    preInitializedTickIndex,
-			additiveFee:                  defaultAdditiveFee,
-			expectedUptimeTrackers:       emptyUptimeTrackers,
-			expectedLiquidityDelta:       DefaultLiquidityAmt.Neg(),
-			expectedTickFeeGrowthOutside: DefaultFeeAccumCoins.Add(defaultAdditiveFee),
+			name:                    "Get tick info of existing tick below current tick (nil uptime trackers)",
+			poolToGet:               validPoolId,
+			preInitializedTickIndex: preInitializedTickIndex,
+			tickToGet:               preInitializedTickIndex,
+			additiveFee:             defaultAdditiveFee,
+			expectedUptimeTrackers:  emptyUptimeTrackers,
+			expectedLiquidityDelta:  DefaultLiquidityAmt.Neg(),
+			expectedTickFeeGrowthOppositeDirectionOfLastTraversal: DefaultFeeAccumCoins.Add(defaultAdditiveFee),
 		},
 		{
 			name:                    "Get tick info of an existing tick above current tick (nonzero uptime trackers)",
 			poolToGet:               validPoolId,
-			preInitializedTickIndex: DefaultCurrTick.Int64() + 1,
-			tickToGet:               DefaultCurrTick.Int64() + 1,
+			preInitializedTickIndex: DefaultCurrTick + 1,
+			tickToGet:               DefaultCurrTick + 1,
 			additiveFee:             defaultAdditiveFee,
 			// Global uptime accums remain unchanged after tick init
 			initGlobalUptimeAccumValues: expectedUptimes.twoHundredTokensMultiDenom,
@@ -483,15 +503,15 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			// We expect new uptime trackers to be equal to new global
 			// This is because we init them to zero (since target tick is above current tick),
 			// so when we cross the tick and "flip" it, we expect it to be the global value - 0 = global value.
-			expectedUptimeTrackers:       wrapUptimeTrackers(expectedUptimes.threeHundredTokensMultiDenom),
-			expectedLiquidityDelta:       DefaultLiquidityAmt.Neg(),
-			expectedTickFeeGrowthOutside: DefaultFeeAccumCoins.Add(defaultAdditiveFee).Add(DefaultFeeAccumCoins...),
+			expectedUptimeTrackers:                                wrapUptimeTrackers(expectedUptimes.threeHundredTokensMultiDenom),
+			expectedLiquidityDelta:                                DefaultLiquidityAmt.Neg(),
+			expectedTickFeeGrowthOppositeDirectionOfLastTraversal: DefaultFeeAccumCoins.Add(defaultAdditiveFee).Add(DefaultFeeAccumCoins...),
 		},
 		{
 			name:                    "Get tick info of new tick with a separate existing tick below current tick (nonzero uptime trackers)",
 			poolToGet:               validPoolId,
 			preInitializedTickIndex: preInitializedTickIndex,
-			tickToGet:               DefaultCurrTick.Int64() + 1,
+			tickToGet:               DefaultCurrTick + 1,
 			additiveFee:             defaultAdditiveFee,
 			// Global uptime accums remain unchanged after tick init
 			initGlobalUptimeAccumValues: expectedUptimes.twoHundredTokensMultiDenom,
@@ -499,16 +519,16 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			// We expect new uptime trackers to be equal to new global
 			// This is because we init them to zero (since target tick is above current tick),
 			// so when we cross the tick and "flip" it, we expect it to be the global value - 0 = global value.
-			expectedUptimeTrackers:       wrapUptimeTrackers(expectedUptimes.threeHundredTokensMultiDenom),
-			expectedLiquidityDelta:       sdk.ZeroDec(),
-			expectedTickFeeGrowthOutside: DefaultFeeAccumCoins.Add(defaultAdditiveFee).Add(DefaultFeeAccumCoins...),
+			expectedUptimeTrackers:                                wrapUptimeTrackers(expectedUptimes.threeHundredTokensMultiDenom),
+			expectedLiquidityDelta:                                sdk.ZeroDec(),
+			expectedTickFeeGrowthOppositeDirectionOfLastTraversal: DefaultFeeAccumCoins.Add(defaultAdditiveFee).Add(DefaultFeeAccumCoins...),
 		},
 		{
 			// Note that this test case covers technically undefined behavior (crossing into the current tick).
 			name:                    "Get tick info of existing tick at current tick (nonzero uptime trackers)",
 			poolToGet:               validPoolId,
-			preInitializedTickIndex: DefaultCurrTick.Int64(),
-			tickToGet:               DefaultCurrTick.Int64(),
+			preInitializedTickIndex: DefaultCurrTick,
+			tickToGet:               DefaultCurrTick,
 			additiveFee:             defaultAdditiveFee,
 			// Global uptime accums remain unchanged after tick init
 			initGlobalUptimeAccumValues: expectedUptimes.twoHundredTokensMultiDenom,
@@ -516,19 +536,19 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			// We expect new uptime trackers to be new global - init global
 			// This is because we init them to twoHundredTokensMultiDenom and then add hundredTokensMultiDenom,
 			// so when we cross the tick and "flip" it, we expect threeHundredTokensMultiDenom - twoHundredTokensMultiDenom
-			expectedUptimeTrackers:       wrapUptimeTrackers(expectedUptimes.hundredTokensMultiDenom),
-			expectedLiquidityDelta:       DefaultLiquidityAmt.Neg(),
-			expectedTickFeeGrowthOutside: DefaultFeeAccumCoins.Add(defaultAdditiveFee),
+			expectedUptimeTrackers:                                wrapUptimeTrackers(expectedUptimes.hundredTokensMultiDenom),
+			expectedLiquidityDelta:                                DefaultLiquidityAmt.Neg(),
+			expectedTickFeeGrowthOppositeDirectionOfLastTraversal: DefaultFeeAccumCoins.Add(defaultAdditiveFee),
 		},
 		{
-			name:                         "Twice the default additive fee",
-			poolToGet:                    validPoolId,
-			preInitializedTickIndex:      preInitializedTickIndex,
-			tickToGet:                    preInitializedTickIndex,
-			additiveFee:                  defaultAdditiveFee.Add(defaultAdditiveFee),
-			expectedUptimeTrackers:       emptyUptimeTrackers,
-			expectedLiquidityDelta:       DefaultLiquidityAmt.Neg(),
-			expectedTickFeeGrowthOutside: DefaultFeeAccumCoins.Add(defaultAdditiveFee.Add(defaultAdditiveFee)),
+			name:                    "Twice the default additive fee",
+			poolToGet:               validPoolId,
+			preInitializedTickIndex: preInitializedTickIndex,
+			tickToGet:               preInitializedTickIndex,
+			additiveFee:             defaultAdditiveFee.Add(defaultAdditiveFee),
+			expectedUptimeTrackers:  emptyUptimeTrackers,
+			expectedLiquidityDelta:  DefaultLiquidityAmt.Neg(),
+			expectedTickFeeGrowthOppositeDirectionOfLastTraversal: DefaultFeeAccumCoins.Add(defaultAdditiveFee.Add(defaultAdditiveFee)),
 		},
 		{
 			name:                    "Try invalid tick",
@@ -551,7 +571,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 
 			if test.poolToGet == validPoolId {
 				s.FundAcc(s.TestAccs[0], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
-				_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, test.poolToGet, s.TestAccs[0], DefaultCoin0.Amount, DefaultCoin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				_, _, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, test.poolToGet, s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 				s.Require().NoError(err)
 			}
 
@@ -563,16 +583,18 @@ func (s *KeeperTestSuite) TestCrossTick() {
 
 			// Initialize global uptime accums
 			if test.initGlobalUptimeAccumValues != nil {
-				addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.initGlobalUptimeAccumValues)
+				err = addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.initGlobalUptimeAccumValues)
+				s.Require().NoError(err)
 			}
 
 			// Set up an initialized tick
-			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, validPoolId, DefaultCurrTick.Int64(), test.preInitializedTickIndex, DefaultLiquidityAmt, true)
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, validPoolId, DefaultCurrTick, test.preInitializedTickIndex, DefaultLiquidityAmt, true)
 			s.Require().NoError(err)
 
 			// Update global uptime accums for edge case testing
 			if test.globalUptimeAccumDelta != nil {
-				addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.globalUptimeAccumDelta)
+				err = addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.globalUptimeAccumDelta)
+				s.Require().NoError(err)
 			}
 
 			// update the fee accumulator so that we have accum value > tick fee growth value
@@ -598,7 +620,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 				// check if the tick fee growth outside has been correctly subtracted
 				tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, test.tickToGet)
 				s.Require().NoError(err)
-				s.Require().Equal(test.expectedTickFeeGrowthOutside, tickInfo.FeeGrowthOutside)
+				s.Require().Equal(test.expectedTickFeeGrowthOppositeDirectionOfLastTraversal, tickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
 
 				// ensure tick being entered has properly updated uptime trackers
 				s.Require().Equal(test.expectedUptimeTrackers, tickInfo.UptimeTrackers)
@@ -771,7 +793,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		// testing params
 		poolId          uint64
 		tokenIn         string
-		currentPoolTick sdk.Int
+		currentPoolTick int64
 		startTick       sdk.Int
 		boundTick       sdk.Int
 
@@ -976,7 +998,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:          defaultPoolId,
 			tokenIn:         ETH,
-			currentPoolTick: sdk.NewInt(10),
+			currentPoolTick: 10,
 			startTick:       sdk.NewInt(10),
 			boundTick:       sdk.NewInt(-15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
@@ -995,7 +1017,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:          defaultPoolId,
 			tokenIn:         ETH,
-			currentPoolTick: sdk.NewInt(21),
+			currentPoolTick: 21,
 			startTick:       sdk.NewInt(10),
 			boundTick:       sdk.NewInt(-15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
@@ -1014,7 +1036,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:          defaultPoolId,
 			tokenIn:         USDC,
-			currentPoolTick: sdk.NewInt(5),
+			currentPoolTick: 5,
 			startTick:       sdk.NewInt(5),
 			boundTick:       sdk.NewInt(15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
@@ -1033,7 +1055,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:          defaultPoolId,
 			tokenIn:         USDC,
-			currentPoolTick: sdk.NewInt(-50),
+			currentPoolTick: -50,
 			startTick:       sdk.NewInt(5),
 			boundTick:       sdk.NewInt(15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
@@ -1116,7 +1138,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:          defaultPoolId,
 			tokenIn:         ETH,
-			currentPoolTick: sdk.NewInt(10),
+			currentPoolTick: 10,
 			startTick:       sdk.NewInt(21),
 			boundTick:       sdk.NewInt(-15),
 			expectedError:   true,
@@ -1130,7 +1152,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:          defaultPoolId,
 			tokenIn:         USDC,
-			currentPoolTick: sdk.NewInt(5),
+			currentPoolTick: 5,
 			startTick:       sdk.NewInt(-50),
 			boundTick:       sdk.NewInt(15),
 			expectedError:   true,
@@ -1153,10 +1175,12 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			// Normally, initialized during position creation.
 			// We only initialize ticks in this test for simplicity.
 			curPrice := sdk.OneDec()
-			curTick, err := math.PriceToTick(curPrice, pool.GetTickSpacing())
+			// TODO: consider adding tests for GetTickLiquidityNetInDirection
+			// with tick spacing > 1, requiring price to tick conversion with rounding.
+			curTick, err := math.PriceToTick(curPrice)
 			s.Require().NoError(err)
-			if !test.currentPoolTick.IsNil() {
-				sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)
+			if test.currentPoolTick > 0 {
+				_, sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)
 				s.Require().NoError(err)
 
 				curTick = test.currentPoolTick
@@ -1165,7 +1189,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			pool.SetCurrentSqrtPrice(curPrice)
 			pool.SetCurrentTick(curTick)
 
-			s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+			err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+			s.Require().NoError(err)
 
 			// system under test
 			liquidityForRange, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityNetInDirection(s.Ctx, test.poolId, test.tokenIn, test.startTick, test.boundTick)
@@ -1192,7 +1217,18 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 		expectedError error
 	}{
 		{
-			name:          "lower tick is not divisible by deafult tick spacing",
+			name:      "happy path with default tick spacing",
+			lowerTick: 2,
+			upperTick: 4,
+		},
+		{
+			name:        "happy path with non default tick spacing",
+			tickSpacing: 3,
+			lowerTick:   3,
+			upperTick:   6,
+		},
+		{
+			name:          "lower tick is not divisible by default tick spacing",
 			lowerTick:     3,
 			upperTick:     2,
 			expectedError: types.TickSpacingError{LowerTick: 3, UpperTick: 2, TickSpacing: defaultTickSpacing},
@@ -1248,17 +1284,6 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 
 			expectedError: types.InvalidLowerUpperTickError{LowerTick: 2, UpperTick: 0},
 		},
-		{
-			name:      "happy path with default tick spacing",
-			lowerTick: 2,
-			upperTick: 4,
-		},
-		{
-			name:        "happy path with non default tick spacing",
-			tickSpacing: 3,
-			lowerTick:   3,
-			upperTick:   6,
-		},
 	}
 
 	for _, test := range tests {
@@ -1271,7 +1296,7 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 			}
 
 			// System Under Test
-			err := cl.ValidateTickInRangeIsValid(tickSpacing, test.lowerTick, test.upperTick)
+			err := cl.ValidateTickRangeIsValid(tickSpacing, test.lowerTick, test.upperTick)
 
 			if test.expectedError != nil {
 				s.Require().Error(err)
@@ -1378,6 +1403,92 @@ func (s *KeeperTestSuite) TestGetAllInitializedTicksForPool() {
 			s.Require().Equal(len(expectedTicks), len(ticks))
 			for i, expectedTick := range expectedTicks {
 				s.Require().Equal(expectedTick, ticks[i], "expected tick %d to be %v, got %v", i, expectedTick, ticks[i])
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestRoundTickToCanonicalPriceTick() {
+	tests := []struct {
+		name                 string
+		lowerTick            int64
+		upperTick            int64
+		expectedNewLowerTick int64
+		expectedNewUpperTick int64
+		expectedError        error
+	}{
+		{
+			name:                 "exact upper tick for 0.000000000000000003 to exact lower tick for 0.000000000000000002",
+			lowerTick:            -161000000,
+			expectedNewLowerTick: -161000000,
+			upperTick:            -160000000,
+			expectedNewUpperTick: -160000000,
+		},
+		{
+			name:                 "exact upper tick for 0.000000000000000003 to inexact lower tick for 0.000000000000000002",
+			lowerTick:            -161001234,
+			expectedNewLowerTick: -161000000,
+			upperTick:            -160000000,
+			expectedNewUpperTick: -160000000,
+		},
+		{
+			name:                 "inexact upper tick for 0.000000000000000003 to exact lower tick for 0.000000000000000002",
+			lowerTick:            -161000000,
+			expectedNewLowerTick: -161000000,
+			upperTick:            -160001234,
+			expectedNewUpperTick: -160000000,
+		},
+		{
+			name:                 "inexact upper tick for 0.000000000000000003 to inexact lower tick for 0.000000000000000002",
+			lowerTick:            -161001234,
+			expectedNewLowerTick: -161000000,
+			upperTick:            -160001234,
+			expectedNewUpperTick: -160000000,
+		},
+		{
+			name:                 "upper tick one tick away from lower tick",
+			lowerTick:            -161001234,
+			expectedNewLowerTick: -161000000,
+			upperTick:            -160999999,
+			expectedNewUpperTick: -160000000,
+		},
+		{
+			name:                 "error: new upper tick is lower than new lower tick",
+			lowerTick:            -160001234,
+			expectedNewLowerTick: -160000000,
+			upperTick:            -161001234,
+			expectedNewUpperTick: -161000000,
+			expectedError:        types.InvalidLowerUpperTickError{LowerTick: -160000000, UpperTick: -161000000},
+		},
+		{
+			name:                 "error: new upper tick is the same as new lower tick",
+			lowerTick:            -160001234,
+			expectedNewLowerTick: -160000000,
+			upperTick:            -160000000,
+			expectedNewUpperTick: -160000000,
+			expectedError:        types.InvalidLowerUpperTickError{LowerTick: -160000000, UpperTick: -160000000},
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+
+			priceTickLower, _, err := math.TickToSqrtPrice(test.lowerTick)
+			s.Require().NoError(err)
+			priceTickUpper, _, err := math.TickToSqrtPrice(test.upperTick)
+			s.Require().NoError(err)
+
+			// System Under Test
+			newLowerTick, newUpperTick, err := cl.RoundTickToCanonicalPriceTick(test.lowerTick, test.upperTick, priceTickLower, priceTickUpper, DefaultTickSpacing)
+
+			if test.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, test.expectedError.Error())
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(test.expectedNewLowerTick, newLowerTick)
+				s.Require().Equal(test.expectedNewUpperTick, newUpperTick)
 			}
 		})
 	}

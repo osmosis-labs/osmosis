@@ -62,7 +62,7 @@ func TestBalancerPoolParams(t *testing.T) {
 	}
 }
 
-func (suite *KeeperTestSuite) TestEnsureDenomInPool() {
+func (s *KeeperTestSuite) TestEnsureDenomInPool() {
 	tests := map[string]struct {
 		poolAssets  []balancer.PoolAsset
 		tokensIn    sdk.Coins
@@ -90,18 +90,18 @@ func (suite *KeeperTestSuite) TestEnsureDenomInPool() {
 	}
 
 	for name, tc := range tests {
-		suite.Run(name, func() {
-			suite.SetupTest()
+		s.Run(name, func() {
+			s.SetupTest()
 
 			poolAssetsByDenom, err := balancer.GetPoolAssetsByDenom(tc.poolAssets)
-			suite.Require().NoError(err, "test: %s", name)
+			s.Require().NoError(err, "test: %s", name)
 
 			err = balancer.EnsureDenomInPool(poolAssetsByDenom, tc.tokensIn)
 
 			if tc.expectPass {
-				suite.Require().NoError(err, "test: %s", name)
+				s.Require().NoError(err, "test: %s", name)
 			} else {
-				suite.Require().ErrorIs(err, tc.expectedErr, "test: %s", name)
+				s.Require().ErrorIs(err, tc.expectedErr, "test: %s", name)
 			}
 		})
 	}

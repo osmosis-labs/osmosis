@@ -55,7 +55,8 @@ func GetCmdPool() (*osmocli.QueryDescriptor, *types.QueryPoolRequest) {
 		// Deprecated: use x/poolmanager's Pool query.
 		// nolint: staticcheck
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} pool 1`}, &types.QueryPoolRequest{}
+{{.CommandPrefix}} pool 1`,
+	}, &types.QueryPoolRequest{}
 }
 
 // TODO: Push this to the SDK.
@@ -85,7 +86,8 @@ func GetCmdPools() (*osmocli.QueryDescriptor, *types.QueryPoolsRequest) {
 		Use:   "pools",
 		Short: "Query pools",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} pools`}, &types.QueryPoolsRequest{}
+{{.CommandPrefix}} pools`,
+	}, &types.QueryPoolsRequest{}
 }
 
 // nolint: staticcheck
@@ -158,18 +160,6 @@ $ %s query gamm pool-params 1
 	return cmd
 }
 
-func GetCmdTotalPoolLiquidity() *cobra.Command {
-	return osmocli.SimpleQueryCmd[*types.QueryTotalPoolLiquidityRequest](
-		"total-pool-liquidity [poolID]",
-		"Query total-pool-liquidity",
-		`Query total-pool-liquidity.
-Example:
-{{.CommandPrefix}} total-pool-liquidity 1
-`,
-		types.ModuleName, types.NewQueryClient,
-	)
-}
-
 func GetCmdTotalShares() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.QueryTotalSharesRequest](
 		"total-share [poolID]",
@@ -201,7 +191,8 @@ func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *types.QuerySpotPriceRequest) 
 		Short: "Query spot-price (LEGACY, arguments are reversed!!)",
 		Long: `Query spot price (Legacy).{{.ExampleHeader}}
 {{.CommandPrefix}} spot-price 1 uosmo ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
-`}, &types.QuerySpotPriceRequest{}
+`,
+	}, &types.QuerySpotPriceRequest{}
 }
 
 // Deprecated: use alternate in x/poolmanager.
@@ -329,6 +320,21 @@ func GetCmdPoolType() *cobra.Command {
 		`Query pool type
 Example:
 {{.CommandPrefix}} pool-type <pool_id>
+`,
+		types.ModuleName, types.NewQueryClient,
+	)
+}
+
+// GetCmdTotalPoolLiquidity returns total liquidity in pool.
+// Deprecated: please use the alternative in x/poolmanager
+// nolint: staticcheck
+func GetCmdTotalPoolLiquidity() *cobra.Command {
+	return osmocli.SimpleQueryCmd[*types.QueryTotalPoolLiquidityRequest](
+		"total-pool-liquidity [poolID]",
+		"Query total-pool-liquidity",
+		`Query total-pool-liquidity.
+Example:
+{{.CommandPrefix}} total-pool-liquidity 1
 `,
 		types.ModuleName, types.NewQueryClient,
 	)

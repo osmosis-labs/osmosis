@@ -31,6 +31,7 @@ type UpgradeConfigurer struct {
 var _ Configurer = (*UpgradeConfigurer)(nil)
 
 func NewUpgradeConfigurer(t *testing.T, chainConfigs []*chain.Config, setupTests setupFn, containerManager *containers.Manager, upgradeVersion string, forkHeight int64) Configurer {
+	t.Helper()
 	return &UpgradeConfigurer{
 		baseConfigurer: baseConfigurer{
 			chainConfigs:     chainConfigs,

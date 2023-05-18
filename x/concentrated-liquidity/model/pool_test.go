@@ -2,13 +2,14 @@ package model_test
 
 import (
 	fmt "fmt"
-	math "math"
+	"math"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	clmath "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
@@ -22,14 +23,14 @@ const (
 )
 
 var (
-	DefaultSpotPrice        = sdk.MustNewDecFromStr("0.2")
-	DefaultReverseSpotPrice = sdk.NewDec(1).Quo(DefaultSpotPrice)
-	DefaultSqrtSpotPrice, _ = DefaultSpotPrice.ApproxSqrt()
-	DefaultLiquidityAmt     = sdk.MustNewDecFromStr("1517882343.751510418088349649")
-	DefaultCurrTick         = sdk.NewInt(310000)
-	DefaultCurrPrice        = sdk.NewDec(5000)
-	DefaultCurrSqrtPrice, _ = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
-	DefaultSwapFee          = sdk.MustNewDecFromStr("0.01")
+	DefaultSpotPrice              = sdk.MustNewDecFromStr("0.2")
+	DefaultReverseSpotPrice       = sdk.NewDec(1).Quo(DefaultSpotPrice)
+	DefaultSqrtSpotPrice, _       = DefaultSpotPrice.ApproxSqrt()
+	DefaultLiquidityAmt           = sdk.MustNewDecFromStr("1517882343.751510418088349649")
+	DefaultCurrTick         int64 = 310000
+	DefaultCurrPrice              = sdk.NewDec(5000)
+	DefaultCurrSqrtPrice, _       = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
+	DefaultSwapFee                = sdk.MustNewDecFromStr("0.01")
 )
 
 type ConcentratedPoolTestSuite struct {
@@ -137,6 +138,60 @@ func (s *ConcentratedPoolTestSuite) TestUpdateLiquidity() {
 	s.Require().Equal(DefaultLiquidityAmt.Add(sdk.NewDec(10)), mock_pool.CurrentTickLiquidity)
 }
 
+func (s *ConcentratedPoolTestSuite) TestIsCurrentTickInRange() {
+	s.Setup()
+	currentTick := DefaultCurrTick
+
+	tests := []struct {
+		name           string
+		lowerTick      int64
+		upperTick      int64
+		expectedResult bool
+	}{
+		{
+			"given lower tick tick is within range of pool tick",
+			DefaultCurrTick - 1,
+			DefaultCurrTick + 1,
+			true,
+		},
+		{
+			"lower tick and upper tick are equal to pool tick",
+			DefaultCurrTick,
+			DefaultCurrTick,
+			true,
+		},
+		{
+			"lower tick is greater then pool tick",
+			DefaultCurrTick + 1,
+			DefaultCurrTick + 3,
+			false,
+		},
+		{
+			"upper tick is lower then pool tick",
+			DefaultCurrTick - 3,
+			DefaultCurrTick - 1,
+			false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// Create a concentrated liquidity pool struct instance
+			mock_pool := model.Pool{
+				CurrentTick: currentTick,
+			}
+
+			// System under test
+			iscurrentTickInRange := mock_pool.IsCurrentTickInRange(tc.lowerTick, tc.upperTick)
+			if tc.expectedResult {
+				s.Require().True(iscurrentTickInRange)
+			} else {
+				s.Require().False(iscurrentTickInRange)
+			}
+		})
+	}
+}
+
 func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 	// Set up the test suite.
 	s.Setup()
@@ -145,10 +200,10 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 	tests := []struct {
 		name             string
 		currentLiquidity sdk.Dec
-		currentTick      sdk.Int
+		currentTick      int64
 		currentSqrtPrice sdk.Dec
 		newLiquidity     sdk.Dec
-		newTick          sdk.Int
+		newTick          int64
 		newSqrtPrice     sdk.Dec
 		expectErr        error
 	}{
@@ -158,7 +213,7 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			currentTick:      DefaultCurrTick,
 			currentSqrtPrice: DefaultCurrSqrtPrice,
 			newLiquidity:     DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
-			newTick:          DefaultCurrTick.Mul(sdk.NewInt(2)),
+			newTick:          DefaultCurrTick * 2,
 			newSqrtPrice:     DefaultCurrSqrtPrice.Mul(sdk.NewDec(2)),
 			expectErr:        nil,
 		},
@@ -185,29 +240,29 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 		{
 			name:             "upper tick too big",
 			currentLiquidity: DefaultLiquidityAmt,
-			currentTick:      sdk.NewInt(1),
+			currentTick:      1,
 			currentSqrtPrice: DefaultCurrSqrtPrice,
 			newLiquidity:     DefaultLiquidityAmt,
-			newTick:          sdk.NewInt(math.MaxInt64),
+			newTick:          math.MaxInt64,
 			newSqrtPrice:     DefaultCurrSqrtPrice,
 			expectErr: types.TickIndexNotWithinBoundariesError{
-				MaxTick:  types.MaxTick,
-				MinTick:  types.MinTick,
-				WantTick: math.MaxInt64,
+				MaxTick:    types.MaxTick,
+				MinTick:    types.MinTick,
+				ActualTick: math.MaxInt64,
 			},
 		},
 		{
 			name:             "lower tick too small",
 			currentLiquidity: DefaultLiquidityAmt,
-			currentTick:      sdk.NewInt(1),
+			currentTick:      1,
 			currentSqrtPrice: DefaultCurrSqrtPrice,
 			newLiquidity:     DefaultLiquidityAmt,
-			newTick:          sdk.NewInt(math.MinInt64),
+			newTick:          math.MinInt64,
 			newSqrtPrice:     DefaultCurrSqrtPrice,
 			expectErr: types.TickIndexNotWithinBoundariesError{
-				MaxTick:  types.MaxTick,
-				MinTick:  types.MinTick,
-				WantTick: math.MinInt64,
+				MaxTick:    types.MaxTick,
+				MinTick:    types.MinTick,
+				ActualTick: math.MinInt64,
 			},
 		},
 	}
@@ -343,6 +398,229 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 				s.Require().Equal(test.expectedDenom1, pool.Token1)
 				s.Require().Equal(test.expectedTickSpacing, pool.TickSpacing)
 				s.Require().Equal(test.param.swapFee, pool.SwapFee)
+			}
+		})
+	}
+}
+
+func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
+	var (
+		tickToSqrtPrice = func(tick int64) sdk.Dec {
+			_, sqrtPrice, err := clmath.TickToSqrtPrice(tick)
+			suite.Require().NoError(err)
+			return sqrtPrice
+		}
+
+		defaultLiquidityDelta = sdk.NewDec(1000)
+
+		lowerTick      = int64(-99)
+		lowerSqrtPrice = tickToSqrtPrice(lowerTick)
+
+		midtick      = int64(2)
+		midSqrtPrice = tickToSqrtPrice(midtick)
+
+		uppertick      = int64(74)
+		upperSqrtPrice = tickToSqrtPrice(uppertick)
+	)
+
+	tests := map[string]struct {
+		currentTick                 int64
+		lowerTick                   int64
+		upperTick                   int64
+		liquidityDelta              sdk.Dec
+		shouldTestRoundingInvariant bool
+		expectError                 error
+
+		expectedAmount0 sdk.Dec
+		expectedAmount1 sdk.Dec
+	}{
+		"current in range, positive liquidity": {
+			currentTick:                 midtick,
+			lowerTick:                   lowerTick,
+			upperTick:                   uppertick,
+			liquidityDelta:              defaultLiquidityDelta,
+			shouldTestRoundingInvariant: true,
+
+			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDelta, midSqrtPrice, upperSqrtPrice, true),
+			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDelta, midSqrtPrice, lowerSqrtPrice, true),
+		},
+		"current in range, negative liquidity": {
+			currentTick:    midtick,
+			lowerTick:      lowerTick,
+			upperTick:      uppertick,
+			liquidityDelta: defaultLiquidityDelta.Neg(),
+
+			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDelta.Neg(), midSqrtPrice, upperSqrtPrice, false),
+			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDelta.Neg(), midSqrtPrice, lowerSqrtPrice, false),
+		},
+		"current below range, positive liquidity": {
+			currentTick:    lowerTick,
+			lowerTick:      midtick,
+			upperTick:      uppertick,
+			liquidityDelta: defaultLiquidityDelta,
+
+			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDelta, midSqrtPrice, upperSqrtPrice, true),
+			expectedAmount1: sdk.ZeroDec(),
+		},
+		"current below range, negative liquidity": {
+			currentTick:    lowerTick,
+			lowerTick:      midtick,
+			upperTick:      uppertick,
+			liquidityDelta: defaultLiquidityDelta.Neg(),
+
+			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDelta.Neg(), midSqrtPrice, upperSqrtPrice, false),
+			expectedAmount1: sdk.ZeroDec(),
+		},
+		"current above range, positive liquidity": {
+			currentTick:    uppertick,
+			lowerTick:      lowerTick,
+			upperTick:      midtick,
+			liquidityDelta: defaultLiquidityDelta,
+
+			expectedAmount0: sdk.ZeroDec(),
+			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDelta, lowerSqrtPrice, midSqrtPrice, true),
+		},
+		"current above range, negative liquidity": {
+			currentTick:    uppertick,
+			lowerTick:      lowerTick,
+			upperTick:      midtick,
+			liquidityDelta: defaultLiquidityDelta.Neg(),
+
+			expectedAmount0: sdk.ZeroDec(),
+			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDelta.Neg(), tickToSqrtPrice(lowerTick), midSqrtPrice, false),
+		},
+
+		// errors
+		"error: zero liqudiity": {
+			currentTick:    midtick,
+			lowerTick:      lowerTick,
+			upperTick:      uppertick,
+			liquidityDelta: sdk.ZeroDec(),
+
+			expectError: types.ErrZeroLiquidity,
+		},
+		"error: lower tick equals upper tick": {
+			currentTick:    lowerTick,
+			lowerTick:      lowerTick,
+			upperTick:      lowerTick,
+			liquidityDelta: defaultLiquidityDelta,
+
+			expectError: types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: lowerTick},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.Setup()
+
+			pool := model.Pool{
+				CurrentTick: tc.currentTick,
+			}
+			_, pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick)
+
+			actualAmount0, actualAmount1, err := pool.CalcActualAmounts(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
+
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, tc.expectError)
+				return
+			}
+			suite.Require().NoError(err)
+
+			suite.Require().Equal(tc.expectedAmount0, actualAmount0)
+			suite.Require().Equal(tc.expectedAmount1, actualAmount1)
+
+			// Note: to test rounding invariants around positive and negative liquidity.
+			if tc.shouldTestRoundingInvariant {
+				actualAmount0Neg, actualAmount1Neg, err := pool.CalcActualAmounts(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta.Neg())
+				suite.Require().NoError(err)
+
+				amt0Diff := actualAmount0.Sub(actualAmount0Neg.Neg())
+				amt1Diff := actualAmount1.Sub(actualAmount1Neg.Neg())
+
+				// Difference is between 0 and 1 due to positive liquidity rounding up and negative liquidity performing math normally.
+				suite.Require().True(amt0Diff.GT(sdk.ZeroDec()) && amt0Diff.LT(sdk.OneDec()))
+				suite.Require().True(amt1Diff.GT(sdk.ZeroDec()) && amt1Diff.LT(sdk.OneDec()))
+			}
+		})
+	}
+}
+
+func (suite *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
+	var (
+		defaultLiquidityDelta = sdk.NewDec(1000)
+		defaultLiquidityAmt   = sdk.NewDec(1000)
+
+		lowerTick = int64(-99)
+		midtick   = int64(2)
+		uppertick = int64(74)
+	)
+
+	tests := map[string]struct {
+		currentTick    int64
+		lowerTick      int64
+		upperTick      int64
+		liquidityDelta sdk.Dec
+		expectError    error
+	}{
+		"current in range, positive liquidity": {
+			currentTick:    midtick,
+			lowerTick:      lowerTick,
+			upperTick:      uppertick,
+			liquidityDelta: defaultLiquidityDelta,
+		},
+		"current in range, negative liquidity": {
+			currentTick:    midtick,
+			lowerTick:      lowerTick,
+			upperTick:      uppertick,
+			liquidityDelta: defaultLiquidityDelta.Neg(),
+		},
+		"current below range, positive liquidity": {
+			currentTick:    lowerTick,
+			lowerTick:      midtick,
+			upperTick:      uppertick,
+			liquidityDelta: defaultLiquidityDelta,
+		},
+		"current below range, negative liquidity": {
+			currentTick:    lowerTick,
+			lowerTick:      midtick,
+			upperTick:      uppertick,
+			liquidityDelta: defaultLiquidityDelta.Neg(),
+		},
+		"current above range, positive liquidity": {
+			currentTick:    uppertick,
+			lowerTick:      lowerTick,
+			upperTick:      midtick,
+			liquidityDelta: defaultLiquidityDelta,
+		},
+		"current above range, negative liquidity": {
+			currentTick:    uppertick,
+			lowerTick:      lowerTick,
+			upperTick:      midtick,
+			liquidityDelta: defaultLiquidityDelta.Neg(),
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.Setup()
+
+			pool := model.Pool{
+				CurrentTick:          tc.currentTick,
+				CurrentTickLiquidity: defaultLiquidityAmt,
+			}
+			_, pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick)
+
+			wasUpdated := pool.UpdateLiquidityIfActivePosition(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
+			if tc.lowerTick <= tc.currentTick && tc.currentTick <= tc.upperTick {
+				suite.Require().True(wasUpdated)
+				expectedCurrentTickLiquidity := defaultLiquidityAmt.Add(tc.liquidityDelta)
+				suite.Require().Equal(expectedCurrentTickLiquidity, pool.CurrentTickLiquidity)
+			} else {
+				suite.Require().False(wasUpdated)
+				suite.Require().Equal(defaultLiquidityAmt, pool.CurrentTickLiquidity)
 			}
 		})
 	}

@@ -1,6 +1,8 @@
 package v16
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -8,6 +10,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/app/keepers"
 	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
 	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/types"
+
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
 )
 
 const (
@@ -45,6 +50,12 @@ var (
 		DAIIBCDenom,
 		USDCIBCDenom,
 	}
+
+	// authorizedUptimes is the list of uptimes that are allowed to be
+	// incentivized. It is a subset of SupportedUptimes (which can be
+	// found under CL types) and is set initially to be 1ns, which is
+	// equivalent to a 1 block required uptime to qualify for claiming incentives.
+	authorizedUptimes []time.Duration = []time.Duration{time.Nanosecond}
 )
 
 func CreateUpgradeHandler(
@@ -69,6 +80,8 @@ func CreateUpgradeHandler(
 		// for visibility of the final configuration.
 		defaultConcentratedLiquidityParams := keepers.ConcentratedLiquidityKeeper.GetParams(ctx)
 		defaultConcentratedLiquidityParams.AuthorizedQuoteDenoms = authorizedQuoteDenoms
+		defaultConcentratedLiquidityParams.AuthorizedQuoteDenoms = authorizedQuoteDenoms
+		defaultConcentratedLiquidityParams.AuthorizedUptimes = authorizedUptimes
 		defaultConcentratedLiquidityParams.IsPermissionlessPoolCreationEnabled = IsPermissionlessPoolCreationEnabledCL
 		keepers.ConcentratedLiquidityKeeper.SetParams(ctx, defaultConcentratedLiquidityParams)
 
@@ -76,6 +89,12 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		updateTokenFactoryParams(ctx, keepers.TokenFactoryKeeper)
+
 		return migrations, nil
 	}
+}
+
+func updateTokenFactoryParams(ctx sdk.Context, tokenFactoryKeeper *tokenfactorykeeper.Keeper) {
+	tokenFactoryKeeper.SetParams(ctx, tokenfactorytypes.NewParams(nil, NewDenomCreationGasConsume))
 }
