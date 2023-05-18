@@ -888,7 +888,8 @@ func (s *KeeperTestSuite) setUpPools() {
 	}
 
 	// Create a concentrated liquidity pool for epoch_hook testing
-	clPoolOne := s.PrepareConcentratedPoolWithCoins("epochTwo", "uosmo")
+	// Pool 49
+	clPoolOne := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("epochTwo", "uosmo")
 
 	// Provide liquidity to the concentrated liquidity pool
 	clPoolOneLiquidity := sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(1000)), sdk.NewCoin("uosmo", sdk.NewInt(2000)))
