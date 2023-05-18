@@ -108,7 +108,7 @@ func (server msgServer) SplitRouteSwapExactAmountOut(goCtx context.Context, msg 
 		return nil, err
 	}
 
-	// Swap event is handled elsewhere
+	// Swap event is handled in each pool module's SwapExactAmountOut
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
