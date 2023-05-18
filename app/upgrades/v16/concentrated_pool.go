@@ -1,11 +1,15 @@
 package v16
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	"github.com/osmosis-labs/osmosis/v15/app/keepers"
+	clkeeper "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"
@@ -64,20 +68,20 @@ func createConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLinkWith uint64
 // Returns error if fails to create concentrated liquidity pool from CFMM pool.
 // Returns error if fails to get gauges for CFMM pool.
 // Returns error if fails to get gauge for the concentrated liquidity pool.
-func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, cfmmPoolId uint64, desiredDenom0 string, keepers *keepers.AppKeepers) error {
+func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, cfmmPoolId uint64, desiredDenom0 string, keepers *keepers.AppKeepers) (poolmanagertypes.PoolI, error) {
 	concentratedPool, err := createConcentratedPoolFromCFMM(ctx, cfmmPoolId, desiredDenom0, *keepers.AccountKeeper, *keepers.GAMMKeeper, *keepers.PoolManagerKeeper)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Get CFMM gauges
 	cfmmGauges, err := keepers.PoolIncentivesKeeper.GetGaugesForCFMMPool(ctx, cfmmPoolId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if len(cfmmGauges) == 0 {
-		return ErrNoGaugeToRedirect
+		return nil, ErrNoGaugeToRedirect
 	}
 
 	// Get longest gauge duration from balancer.
@@ -94,7 +98,7 @@ func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, c
 	// Get concentrated gauge correspondng to the distribution epoch duration.
 	concentratedGaugeId, err := keepers.PoolIncentivesKeeper.GetPoolGaugeId(ctx, concentratedPool.GetId(), distributionEpochDuration)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Iterate through all the distr records, and redirect the old balancer gauge to the new concentrated gauge.
@@ -118,5 +122,36 @@ func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, c
 		},
 	})
 
-	return nil
+	return concentratedPool, nil
+}
+
+func createFullRangePositionNoSend(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, coins sdk.Coins, clKeeper clkeeper.Keeper) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, err error) {
+	// Check that exactly two coins are provided.
+	if len(coins) != 2 {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, types.NumCoinsError{NumCoins: len(coins)}
+	}
+
+	concentratedPool, err := clKeeper.GetConcentratedPoolById(ctx, poolId)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
+	}
+
+	// Defense in depth, ensure coins provided match the pool's token denominations.
+	if coins.AmountOf(concentratedPool.GetToken0()).LTE(sdk.ZeroInt()) {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, types.Amount0IsNegativeError{Amount0: coins.AmountOf(concentratedPool.GetToken0())}
+	}
+	if coins.AmountOf(concentratedPool.GetToken1()).LTE(sdk.ZeroInt()) {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, types.Amount1IsNegativeError{Amount1: coins.AmountOf(concentratedPool.GetToken1())}
+	}
+	if len(coins) != 2 {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, types.NumCoinsError{NumCoins: len(coins)}
+	}
+
+	// Create a full range (min to max tick) concentrated liquidity position.
+	positionId, amount0, amount1, liquidity, joinTime, _, _, err = clKeeper.CreatePositionNoSendUnsafe(ctx, concentratedPool.GetId(), owner, coins, sdk.ZeroInt(), sdk.ZeroInt(), types.MinTick, types.MaxTick)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
+	}
+
+	return positionId, amount0, amount1, liquidity, joinTime, nil
 }

@@ -10,6 +10,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/app/keepers"
 	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
 
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
 )
@@ -80,7 +82,44 @@ func CreateUpgradeHandler(
 		defaultConcentratedLiquidityParams.IsPermissionlessPoolCreationEnabled = IsPermissionlessPoolCreationEnabledCL
 		keepers.ConcentratedLiquidityKeeper.SetParams(ctx, defaultConcentratedLiquidityParams)
 
-		if err := createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, DaiOsmoPoolId, DesiredDenom0, keepers); err != nil {
+		// Create a concentrated liquidity pool for DAI/OSMO.
+		// Link the DAI/OSMO balancer pool to the cl pool.
+		clPool, err := createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, DaiOsmoPoolId, DesiredDenom0, keepers)
+		if err != nil {
+			return nil, err
+		}
+		clPoolId := clPool.GetId()
+		clPoolDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPoolId)
+
+		// Create a position to initialize the balancerPool.
+
+		// Get the address of the balancerPool.
+		balancerPool, err := keepers.PoolManagerKeeper.GetPool(ctx, DaiOsmoPoolId)
+		if err != nil {
+			return nil, err
+		}
+
+		// Retrieve the spot price of the OSMO/DAI pool at the time of the upgrade.
+		// This is used to initialize the balancerPool's spot price.
+		spotPrice, err := balancerPool.SpotPrice(ctx, DAIIBCDenom, DesiredDenom0)
+		if err != nil {
+			return nil, err
+		}
+		quoteAssetAmount := spotPrice.Mul(sdk.NewDec(1000000)).TruncateInt()
+
+		coins := sdk.NewCoins(sdk.NewCoin(DesiredDenom0, sdk.NewInt(1000000)), sdk.NewCoin(DAIIBCDenom, quoteAssetAmount))
+		_, _, _, _, _, err = createFullRangePositionNoSend(ctx, clPoolId, balancerPool.GetAddress(), coins, *keepers.ConcentratedLiquidityKeeper)
+		if err != nil {
+			return nil, err
+		}
+
+		// Add the cl pool's full range denom as an authorized superfluid asset.
+		superfluidAsset := superfluidtypes.SuperfluidAsset{
+			Denom:     clPoolDenom,
+			AssetType: superfluidtypes.SuperfluidAssetTypeConcentratedShare,
+		}
+		err = keepers.SuperfluidKeeper.AddNewSuperfluidAsset(ctx, superfluidAsset)
+		if err != nil {
 			return nil, err
 		}
 

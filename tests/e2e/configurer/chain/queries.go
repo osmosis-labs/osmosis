@@ -606,3 +606,17 @@ func (n *NodeConfig) QueryListSnapshots() ([]*tmabcitypes.Snapshot, error) {
 
 	return listSnapshots.Snapshots, nil
 }
+
+// QueryAllSuperfluidAssets returns all authorized superfluid assets.
+func (n *NodeConfig) QueryAllSuperfluidAssets() []superfluidtypes.SuperfluidAsset {
+	path := "/osmosis/superfluid/v1beta1/all_assets"
+
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	//nolint:staticcheck
+	var response superfluidtypes.AllAssetsResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err)
+	return response.Assets
+}

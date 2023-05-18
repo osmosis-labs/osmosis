@@ -1601,4 +1601,22 @@ func (s *IntegrationTestSuite) TestAConcentratedLiquidity_CanonicalPool_And_Para
 	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "false") {
 		s.T().Fatal("concentrated liquidity pool creation is enabled when should not have been after v16 upgrade")
 	}
+
+	// Check that the cl pool denom is now an authorized superfluid denom.
+	superfluidAssets := chainANode.QueryAllSuperfluidAssets()
+
+	found := false
+	for _, superfluidAsset := range superfluidAssets {
+		if superfluidAsset.Denom == cltypes.GetConcentratedLockupDenomFromPoolId(concentratedPoolId) {
+			found = true
+			break
+		}
+	}
+
+	s.Require().True(found, "concentrated liquidity pool denom not found in superfluid assets")
+
+	// This spot price is taken from the balancer pool that was initiated pre upgrade.
+	expectedSpotPrice, err := sdk.MustNewDecFromStr("0.73").ApproxSqrt()
+	s.Require().NoError(err)
+	osmoassert.DecApproxEq(s.T(), expectedSpotPrice, concentratedPool.GetCurrentSqrtPrice(), sdk.NewDecWithPrec(1, 3))
 }

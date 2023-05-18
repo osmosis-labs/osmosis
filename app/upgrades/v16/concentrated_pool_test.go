@@ -200,7 +200,7 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiuqid
 			}
 			suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, originalDistrInfo)
 
-			err = v16.CreateCanonicalConcentratedLiuqidityPoolAndMigrationLink(suite.Ctx, tc.cfmmPoolIdToLinkWith, tc.desiredDenom0, &suite.App.AppKeepers)
+			clPool, err := v16.CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(suite.Ctx, tc.cfmmPoolIdToLinkWith, tc.desiredDenom0, &suite.App.AppKeepers)
 
 			if tc.expectError != nil {
 				suite.Require().Error(err)
@@ -212,6 +212,7 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiuqid
 			// Note, + 2 becuse we create 2 balancer pools during test setup, and 1 concentrated pool during migration.
 			clPoolInState, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, validPoolId+2)
 			suite.Require().NoError(err)
+			suite.Require().Equal(clPool, clPoolInState)
 
 			// Validate that CL and balancer pools have the same denoms
 			balancerDenoms, err := suite.App.PoolManagerKeeper.RouteGetPoolDenoms(suite.Ctx, balancerPool.GetId())
