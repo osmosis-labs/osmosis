@@ -18,6 +18,7 @@ type SendMsgTestCase struct {
 }
 
 func (s *KeeperTestSuite) TestBeforeSendHook() {
+	s.SkipIfWSL()
 	for _, tc := range []struct {
 		desc     string
 		wasmFile string
