@@ -464,7 +464,7 @@ func (k Keeper) setIncentiveRecord(ctx sdk.Context, incentiveRecord types.Incent
 		return err
 	}
 
-	key := types.KeyIncentiveRecord(incentiveRecord.PoolId, uptimeIndex, incentiveRecord.IncentiveDenom, incentiveCreator)
+	key := types.KeyIncentiveRecord(incentiveRecord.PoolId, uint64(uptimeIndex), incentiveRecord.IncentiveDenom, incentiveCreator)
 	incentiveRecordBody := types.IncentiveRecordBody{
 		RemainingAmount: incentiveRecord.IncentiveRecordBody.RemainingAmount,
 		EmissionRate:    incentiveRecord.IncentiveRecordBody.EmissionRate,
@@ -504,7 +504,7 @@ func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, denom string,
 		return types.IncentiveRecord{}, err
 	}
 
-	key := types.KeyIncentiveRecord(poolId, uptimeIndex, denom, incentiveCreator)
+	key := types.KeyIncentiveRecord(poolId, uint64(uptimeIndex), denom, incentiveCreator)
 
 	found, err := osmoutils.Get(store, key, &incentiveBodyStruct)
 	if err != nil {
@@ -544,7 +544,7 @@ func (k Keeper) getAllIncentiveRecordsForUptime(ctx sdk.Context, poolId uint64, 
 		return []types.IncentiveRecord{}, err
 	}
 
-	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyUptimeIncentiveRecords(poolId, uptimeIndex), ParseFullIncentiveRecordFromBz)
+	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyUptimeIncentiveRecords(poolId, uint64(uptimeIndex)), ParseFullIncentiveRecordFromBz)
 }
 
 // GetUptimeGrowthInsideRange returns the uptime growth within the given tick range for all supported uptimes.

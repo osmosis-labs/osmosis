@@ -152,7 +152,16 @@ func KeyPoolIdForLiquidity(poolId uint64) []byte {
 // PositionId Prefix Keys
 
 func KeyPositionId(positionId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%s%d", PositionIdPrefix, KeySeparator, positionId))
+	positionIDBytes := sdk.Uint64ToBigEndian(positionId)
+
+	keyLen := len(PositionIdPrefix) + len(KeySeparator) + len(positionIDBytes)
+	key := make([]byte, 0, keyLen)
+
+	key = append(key, PositionIdPrefix...)
+	key = append(key, KeySeparator...)
+	key = append(key, positionIDBytes...)
+
+	return key
 }
 
 // Position Prefix Keys
@@ -195,21 +204,70 @@ func KeyPoolPosition(poolId uint64) []byte {
 // Used to map a pool id to a pool struct
 
 func KeyPool(poolId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%d", PoolPrefix, poolId))
+	poolIDBytes := sdk.Uint64ToBigEndian(poolId)
+
+	keyLen := len(PoolPrefix) + len(poolIDBytes)
+	key := make([]byte, 0, keyLen)
+
+	key = append(key, PoolPrefix...)
+	key = append(key, poolIDBytes...)
+
+	return key
 }
 
 // Incentive Prefix Keys
 
-func KeyIncentiveRecord(poolId uint64, minUptimeIndex int, denom string, addr sdk.AccAddress) []byte {
-	return []byte(fmt.Sprintf("%s%s%d%s%d%s%s%s%s", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex, KeySeparator, denom, KeySeparator, addr))
+func KeyIncentiveRecord(poolId uint64, minUptimeIndex uint64, denom string, addr sdk.AccAddress) []byte {
+
+	keyLen := len(IncentivePrefix) + len(KeySeparator) + uint64ByteSize + len(KeySeparator) +
+		uint64ByteSize + len(KeySeparator) + len(denom) + len(KeySeparator) + len(addr.Bytes())
+
+	key := make([]byte, 0, keyLen)
+
+	key = append(key, IncentivePrefix...)
+	key = append(key, KeySeparator...)
+	key = append(key, sdk.Uint64ToBigEndian(poolId)...)
+	key = append(key, KeySeparator...)
+	key = append(key, sdk.Uint64ToBigEndian(minUptimeIndex)...)
+	key = append(key, KeySeparator...)
+	key = append(key, denom...)
+	key = append(key, KeySeparator...)
+	// Note that the address below must be bech32 encoded
+	// This is because we split the key on KeySeparator
+	// Therefore, the address must not contain any KeySeparator which may happen with raw bytes
+	// This is not an issue with bech32 encoded addresses
+	key = append(key, []byte(addr.String())...)
+
+	return key
 }
 
-func KeyUptimeIncentiveRecords(poolId uint64, minUptimeIndex int) []byte {
-	return []byte(fmt.Sprintf("%s%s%d%s%d", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex))
+func KeyUptimeIncentiveRecords(poolId uint64, minUptimeIndex uint64) []byte {
+	poolIDBytes := sdk.Uint64ToBigEndian(poolId)
+	minUptimeIndexBytes := sdk.Uint64ToBigEndian(minUptimeIndex)
+
+	keyLen := len(IncentivePrefix) + len(KeySeparator) + len(poolIDBytes) + len(KeySeparator) + len(minUptimeIndexBytes)
+	key := make([]byte, 0, keyLen)
+
+	key = append(key, IncentivePrefix...)
+	key = append(key, KeySeparator...)
+	key = append(key, poolIDBytes...)
+	key = append(key, KeySeparator...)
+	key = append(key, minUptimeIndexBytes...)
+
+	return key
 }
 
 func KeyPoolIncentiveRecords(poolId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%s%d", IncentivePrefix, KeySeparator, poolId))
+	poolIDBytes := sdk.Uint64ToBigEndian(poolId)
+
+	keyLen := len(IncentivePrefix) + len(KeySeparator) + len(poolIDBytes)
+	key := make([]byte, 0, keyLen)
+
+	key = append(key, IncentivePrefix...)
+	key = append(key, KeySeparator...)
+	key = append(key, poolIDBytes...)
+
+	return key
 }
 
 // Fee Accumulator Prefix Keys
@@ -234,7 +292,23 @@ func KeyUptimeAccumulator(poolId uint64, uptimeIndex uint64) string {
 // Balancer Full Range Prefix Keys
 
 func KeyBalancerFullRange(clPoolId, balancerPoolId, uptimeIndex uint64) []byte {
-	return []byte(fmt.Sprintf("%s%s%d%s%d%s%d", BalancerFullRangePrefix, KeySeparator, clPoolId, KeySeparator, balancerPoolId, KeySeparator, uptimeIndex))
+	clPoolIDBytes := sdk.Uint64ToBigEndian(clPoolId)
+	balancerPoolIDBytes := sdk.Uint64ToBigEndian(balancerPoolId)
+	uptimeIndexBytes := sdk.Uint64ToBigEndian(uptimeIndex)
+
+	keyLen := len(BalancerFullRangePrefix) + len(KeySeparator) + len(clPoolIDBytes) + len(KeySeparator) +
+		len(balancerPoolIDBytes) + len(KeySeparator) + len(uptimeIndexBytes)
+	key := make([]byte, 0, keyLen)
+
+	key = append(key, BalancerFullRangePrefix...)
+	key = append(key, KeySeparator...)
+	key = append(key, clPoolIDBytes...)
+	key = append(key, KeySeparator...)
+	key = append(key, balancerPoolIDBytes...)
+	key = append(key, KeySeparator...)
+	key = append(key, uptimeIndexBytes...)
+
+	return key
 }
 
 // Helper Functions

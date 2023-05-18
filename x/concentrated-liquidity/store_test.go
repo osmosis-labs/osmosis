@@ -159,7 +159,7 @@ func (s *KeeperTestSuite) TestParseIncentiveRecordFromBytes_KeySeparatorInAddres
 	uptimeIndex, err := cl.FindUptimeIndex(expectedIncentiveRecord.MinUptime)
 	s.Require().NoError(err)
 
-	incentiveRecordKey := types.KeyIncentiveRecord(expectedIncentiveRecord.PoolId, uptimeIndex, expectedIncentiveRecord.IncentiveDenom, s.TestAccs[0])
+	incentiveRecordKey := types.KeyIncentiveRecord(expectedIncentiveRecord.PoolId, uint64(uptimeIndex), expectedIncentiveRecord.IncentiveDenom, s.TestAccs[0])
 
 	// System under test with basic valid record.
 	record, err := cl.ParseFullIncentiveRecordFromBz(incentiveRecordKey, validValueBz)
@@ -172,7 +172,7 @@ func (s *KeeperTestSuite) TestParseIncentiveRecordFromBytes_KeySeparatorInAddres
 	keySeparatorAddress := sdk.AccAddress(addrStr)
 
 	expectedIncentiveRecord.IncentiveCreatorAddr = keySeparatorAddress.String()
-	incentiveRecordKey = types.KeyIncentiveRecord(expectedIncentiveRecord.PoolId, uptimeIndex, expectedIncentiveRecord.IncentiveDenom, keySeparatorAddress)
+	incentiveRecordKey = types.KeyIncentiveRecord(expectedIncentiveRecord.PoolId, uint64(uptimeIndex), expectedIncentiveRecord.IncentiveDenom, keySeparatorAddress)
 
 	// System under test with address containing a key separator.
 	record, err = cl.ParseFullIncentiveRecordFromBz(incentiveRecordKey, validValueBz)
