@@ -1,3 +1,5 @@
+THIS COMMIT: https://github.com/osmosis-labs/osmosis/pull/5228/commits/d89f8a7b187d66b32faecc34b7491c22969e17c5
+
 goos: linux
 goarch: amd64
 pkg: github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity

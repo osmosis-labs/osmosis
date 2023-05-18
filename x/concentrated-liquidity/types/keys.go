@@ -152,7 +152,7 @@ func KeyPoolIdForLiquidity(poolId uint64) []byte {
 // PositionId Prefix Keys
 
 func KeyPositionId(positionId uint64) []byte {
-	positionIDBytes := sdk.Uint64ToBigEndian(positionId)
+	positionIDBytes := []byte(fmt.Sprintf("%d", positionId))
 
 	keyLen := len(PositionIdPrefix) + len(KeySeparator) + len(positionIDBytes)
 	key := make([]byte, 0, keyLen)
@@ -204,7 +204,7 @@ func KeyPoolPosition(poolId uint64) []byte {
 // Used to map a pool id to a pool struct
 
 func KeyPool(poolId uint64) []byte {
-	poolIDBytes := sdk.Uint64ToBigEndian(poolId)
+	poolIDBytes := []byte(fmt.Sprintf("%d", poolId))
 
 	keyLen := len(PoolPrefix) + len(poolIDBytes)
 	key := make([]byte, 0, keyLen)
@@ -218,17 +218,19 @@ func KeyPool(poolId uint64) []byte {
 // Incentive Prefix Keys
 
 func KeyIncentiveRecord(poolId uint64, minUptimeIndex uint64, denom string, addr sdk.AccAddress) []byte {
+	poolIDBytes := []byte(strconv.FormatUint(poolId, uintBase))
+	minUptimeIndexBytes := []byte(strconv.FormatUint(minUptimeIndex, uintBase))
 
-	keyLen := len(IncentivePrefix) + len(KeySeparator) + uint64ByteSize + len(KeySeparator) +
-		uint64ByteSize + len(KeySeparator) + len(denom) + len(KeySeparator) + len(addr.Bytes())
+	keyLen := len(IncentivePrefix) + len(KeySeparator) + len(poolIDBytes) + len(KeySeparator) +
+		len(minUptimeIndexBytes) + len(KeySeparator) + len(denom) + len(KeySeparator) + len(addr.Bytes())
 
 	key := make([]byte, 0, keyLen)
 
 	key = append(key, IncentivePrefix...)
 	key = append(key, KeySeparator...)
-	key = append(key, sdk.Uint64ToBigEndian(poolId)...)
+	key = append(key, poolIDBytes...)
 	key = append(key, KeySeparator...)
-	key = append(key, sdk.Uint64ToBigEndian(minUptimeIndex)...)
+	key = append(key, minUptimeIndexBytes...)
 	key = append(key, KeySeparator...)
 	key = append(key, denom...)
 	key = append(key, KeySeparator...)
@@ -242,8 +244,8 @@ func KeyIncentiveRecord(poolId uint64, minUptimeIndex uint64, denom string, addr
 }
 
 func KeyUptimeIncentiveRecords(poolId uint64, minUptimeIndex uint64) []byte {
-	poolIDBytes := sdk.Uint64ToBigEndian(poolId)
-	minUptimeIndexBytes := sdk.Uint64ToBigEndian(minUptimeIndex)
+	poolIDBytes := []byte(strconv.FormatUint(poolId, uintBase))
+	minUptimeIndexBytes := []byte(strconv.FormatUint(minUptimeIndex, uintBase))
 
 	keyLen := len(IncentivePrefix) + len(KeySeparator) + len(poolIDBytes) + len(KeySeparator) + len(minUptimeIndexBytes)
 	key := make([]byte, 0, keyLen)
@@ -258,7 +260,7 @@ func KeyUptimeIncentiveRecords(poolId uint64, minUptimeIndex uint64) []byte {
 }
 
 func KeyPoolIncentiveRecords(poolId uint64) []byte {
-	poolIDBytes := sdk.Uint64ToBigEndian(poolId)
+	poolIDBytes := strconv.FormatUint(poolId, uintBase)
 
 	keyLen := len(IncentivePrefix) + len(KeySeparator) + len(poolIDBytes)
 	key := make([]byte, 0, keyLen)
@@ -292,9 +294,9 @@ func KeyUptimeAccumulator(poolId uint64, uptimeIndex uint64) string {
 // Balancer Full Range Prefix Keys
 
 func KeyBalancerFullRange(clPoolId, balancerPoolId, uptimeIndex uint64) []byte {
-	clPoolIDBytes := sdk.Uint64ToBigEndian(clPoolId)
-	balancerPoolIDBytes := sdk.Uint64ToBigEndian(balancerPoolId)
-	uptimeIndexBytes := sdk.Uint64ToBigEndian(uptimeIndex)
+	clPoolIDBytes := []byte(strconv.FormatUint(clPoolId, uintBase))
+	balancerPoolIDBytes := []byte(strconv.FormatUint(balancerPoolId, uintBase))
+	uptimeIndexBytes := []byte(strconv.FormatUint(uptimeIndex, uintBase))
 
 	keyLen := len(BalancerFullRangePrefix) + len(KeySeparator) + len(clPoolIDBytes) + len(KeySeparator) +
 		len(balancerPoolIDBytes) + len(KeySeparator) + len(uptimeIndexBytes)

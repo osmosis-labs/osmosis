@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -173,9 +174,12 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 		return types.IncentiveRecord{}, fmt.Errorf("Wrong incentive prefix, got: %v, required %v", []byte(incentivePrefix), types.IncentivePrefix)
 	}
 
-	poolId := sdk.BigEndianToUint64([]byte(relevantIncentiveKeyComponents[0]))
+	poolId, err := strconv.ParseUint(relevantIncentiveKeyComponents[0], 10, 64)
+	if err != nil {
+		return types.IncentiveRecord{}, err
+	}
 
-	minUptimeIndex := sdk.BigEndianToUint64([]byte(relevantIncentiveKeyComponents[1]))
+	minUptimeIndex, err := strconv.ParseUint(relevantIncentiveKeyComponents[1], 10, 64)
 	if err != nil {
 		return types.IncentiveRecord{}, err
 	}
