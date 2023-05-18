@@ -388,7 +388,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		// Update the swapState with the new sqrtPrice from the above swap
 		swapState.sqrtPrice = sqrtPrice
 		// We deduct the amount of tokens we input in the computeSwapStep above from the user's defined tokenIn amount
-		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.SubMut(amountIn.Add(feeCharge))
+		swapState.amountSpecifiedRemaining.SubMut(amountIn.Add(feeCharge))
 		// We add the amount of tokens we received (amountOut) from the computeSwapStep above to the amountCalculated accumulator
 		swapState.amountCalculated = swapState.amountCalculated.AddMut(amountOut)
 
