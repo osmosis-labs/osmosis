@@ -398,6 +398,7 @@ func (s *KeeperTestHelper) SkipIfWSL() {
 // on WSL without failures. The failures are stemming from trying to upload
 // wasm code. An OS permissioning issue.
 func SkipIfWSL(t *testing.T) {
+	t.Helper()
 	skip := os.Getenv("SKIP_WASM_WSL_TESTS")
 	fmt.Println("SKIP_WASM_WSL_TESTS", skip)
 	if skip == "true" {
