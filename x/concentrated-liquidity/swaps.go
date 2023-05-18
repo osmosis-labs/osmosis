@@ -390,7 +390,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		// We deduct the amount of tokens we input in the computeSwapStep above from the user's defined tokenIn amount
 		swapState.amountSpecifiedRemaining.SubMut(amountIn.Add(feeCharge))
 		// We add the amount of tokens we received (amountOut) from the computeSwapStep above to the amountCalculated accumulator
-		swapState.amountCalculated = swapState.amountCalculated.AddMut(amountOut)
+		swapState.amountCalculated.AddMut(amountOut)
 
 		// If the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
 		// tick has been consumed and we must move on to the next tick to complete the swap
