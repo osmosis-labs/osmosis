@@ -356,4 +356,5 @@ func (suite *KeeperTestSuite) TestIsPoolIncentivized() {
 			suite.Require().Equal(tc.expectedIsIncentivized, actualIsIncentivized)
 		})
 	}
+
 }

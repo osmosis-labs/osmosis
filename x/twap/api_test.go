@@ -474,7 +474,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 		accumBeforeKeepThreshold0, accumBeforeKeepThreshold1 = sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10), sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10)
 		geomAccumBeforeKeepThreshold                         = sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold).Mul(logTen)
 		// recordBeforeKeepThreshold is a record with t=baseTime+keepPeriod-1h, sp0=30(sp1=0.3) accumulators set relative to baseRecord
-		recordBeforeKeepThreshold = newTwoAssetPoolTwapRecordWithDefaults(oneHourBeforeKeepThreshold, sdk.NewDec(30), accumBeforeKeepThreshold0, accumBeforeKeepThreshold1, geomAccumBeforeKeepThreshold)
+		recordBeforeKeepThreshold types.TwapRecord = newTwoAssetPoolTwapRecordWithDefaults(oneHourBeforeKeepThreshold, sdk.NewDec(30), accumBeforeKeepThreshold0, accumBeforeKeepThreshold1, geomAccumBeforeKeepThreshold)
 	)
 
 	// N.B.: when ctxTime = end time, we trigger the "TWAP to now path".

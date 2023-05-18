@@ -1186,7 +1186,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 	// Perform a swap to earn fees
 	swapAmountIn := sdk.NewCoin(ETH, sdk.NewInt(swapAmount))
 	expectedFee := swapAmountIn.Amount.ToDec().Mul(swapFee)
-	// We run expected fees through a cycle of division and multiplication by liquidity to capture appropriate rounding behavior.
+	// We run expected fees through a cycle of divison and multiplication by liquidity to capture appropriate rounding behavior.
 	// Note that we truncate the int at the end since it is not possible to have a decimal fee amount collected (the QuoTruncate
 	// and MulTruncates are much smaller operations that round down for values past the 18th decimal place).
 	expectedFeeTruncated := expectedFee.QuoTruncate(totalLiquidity).MulTruncate(totalLiquidity).TruncateInt()
@@ -1510,7 +1510,7 @@ func (s *KeeperTestSuite) TestMintSharesAndLock() {
 
 			// Create a position
 			positionId := uint64(0)
-			liquidity := sdk.ZeroDec() //nolint:staticcheck
+			liquidity := sdk.ZeroDec()
 			if test.createFullRangePosition {
 				var err error
 				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), test.owner, DefaultCoins)
@@ -2015,7 +2015,7 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 		s.Require().NoError(err)
 		actualFullRangeLiquidity = actualFullRangeLiquidity.Add(liquidity)
 
-		_, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
+		clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
 		s.Require().NoError(err)
 
 		// Get the full range liquidity for the pool.
@@ -2028,7 +2028,7 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 		_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPoolId, owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), tc.lowerTick, tc.upperTick)
 		s.Require().NoError(err)
 
-		_, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
+		clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
 		s.Require().NoError(err)
 
 		// Test updating the full range liquidity.

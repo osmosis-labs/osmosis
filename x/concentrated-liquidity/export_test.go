@@ -58,8 +58,7 @@ func (k Keeper) SwapOutAmtGivenIn(
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	swapFee sdk.Dec,
-	priceLimit sdk.Dec,
-) (calcTokenIn, calcTokenOut sdk.Coin, currentTick int64, liquidity, sqrtPrice sdk.Dec, err error) {
+	priceLimit sdk.Dec) (calcTokenIn, calcTokenOut sdk.Coin, currentTick int64, liquidity, sqrtPrice sdk.Dec, err error) {
 	return k.swapOutAmtGivenIn(ctx, sender, pool, tokenIn, tokenOutDenom, swapFee, priceLimit)
 }
 
@@ -70,6 +69,7 @@ func (k Keeper) ComputeOutAmtGivenIn(
 	tokenOutDenom string,
 	swapFee sdk.Dec,
 	priceLimit sdk.Dec,
+
 ) (calcTokenIn, calcTokenOut sdk.Coin, currentTick int64, liquidity, sqrtPrice sdk.Dec, err error) {
 	return k.computeOutAmtGivenIn(ctx, poolId, tokenInMin, tokenOutDenom, swapFee, priceLimit)
 }
@@ -81,8 +81,7 @@ func (k Keeper) SwapInAmtGivenOut(
 	desiredTokenOut sdk.Coin,
 	tokenInDenom string,
 	swapFee sdk.Dec,
-	priceLimit sdk.Dec,
-) (calcTokenIn, calcTokenOut sdk.Coin, currentTick int64, liquidity, sqrtPrice sdk.Dec, err error) {
+	priceLimit sdk.Dec) (calcTokenIn, calcTokenOut sdk.Coin, currentTick int64, liquidity, sqrtPrice sdk.Dec, err error) {
 	return k.swapInAmtGivenOut(ctx, sender, pool, desiredTokenOut, tokenInDenom, swapFee, priceLimit)
 }
 
@@ -93,6 +92,7 @@ func (k Keeper) ComputeInAmtGivenOut(
 	swapFee sdk.Dec,
 	priceLimit sdk.Dec,
 	poolId uint64,
+
 ) (calcTokenIn, calcTokenOut sdk.Coin, currentTick int64, liquidity, sqrtPrice sdk.Dec, err error) {
 	return k.computeInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, swapFee, priceLimit, poolId)
 }
