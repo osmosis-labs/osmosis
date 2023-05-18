@@ -1,6 +1,8 @@
 run:
   tests: true
   timeout: 5m
+  skip-files:
+    - x/gamm/keeper/grpc_query_test.go
 
 linters:
   disable-all: true

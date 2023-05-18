@@ -84,7 +84,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				suite.NoError(err)
 			},
 			requestData: func() []byte {
-				queryrequest := gammv2types.QuerySpotPriceRequest{
+				queryrequest := gammv2types.QuerySpotPriceRequest{ //nolint:staticcheck
 					PoolId:          1,
 					BaseAssetDenom:  "bar",
 					QuoteAssetDenom: "uosmo",
@@ -94,7 +94,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				return bz
 			},
 			checkResponseStruct: true,
-			responseProtoStruct: &gammv2types.QuerySpotPriceResponse{
+			responseProtoStruct: &gammv2types.QuerySpotPriceResponse{ //nolint:staticcheck
 				SpotPrice: sdk.NewDecWithPrec(5, 1).String(),
 			},
 		},

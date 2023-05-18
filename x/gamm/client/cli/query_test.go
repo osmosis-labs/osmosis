@@ -53,14 +53,14 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		{
 			"Query single pool",
 			"/osmosis.gamm.v1beta1.Query/Pool",
-			&types.QueryPoolRequest{PoolId: 1},
+			&types.QueryPoolRequest{PoolId: 1}, //nolint:staticcheck
 			&types.QueryPoolsResponse{},
 		},
 		{
 			"Query num pools",
 			"/osmosis.gamm.v1beta1.Query/NumPools",
-			&types.QueryNumPoolsRequest{},
-			&types.QueryNumPoolsResponse{},
+			&types.QueryNumPoolsRequest{},  //nolint:staticcheck
+			&types.QueryNumPoolsResponse{}, //nolint:staticcheck
 		},
 		{
 			"Query pool params",
@@ -77,8 +77,8 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		{
 			"Query spot price",
 			"/osmosis.gamm.v1beta1.Query/SpotPrice",
-			&types.QuerySpotPriceRequest{PoolId: 1, BaseAssetDenom: fooDenom, QuoteAssetDenom: barDenom},
-			&types.QuerySpotPriceResponse{},
+			&types.QuerySpotPriceRequest{PoolId: 1, BaseAssetDenom: fooDenom, QuoteAssetDenom: barDenom}, //nolint:staticcheck
+			&types.QuerySpotPriceResponse{}, //nolint:staticcheck
 		},
 		{
 			"Query total liquidity",
@@ -89,8 +89,8 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		{
 			"Query pool total liquidity",
 			"/osmosis.gamm.v1beta1.Query/TotalPoolLiquidity",
-			&types.QueryTotalPoolLiquidityRequest{PoolId: 1},
-			&types.QueryTotalPoolLiquidityResponse{},
+			&types.QueryTotalPoolLiquidityRequest{PoolId: 1}, //nolint:staticcheck
+			&types.QueryTotalPoolLiquidityResponse{},         //nolint:staticcheck
 		},
 		{
 			"Query total shares",

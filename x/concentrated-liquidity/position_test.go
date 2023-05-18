@@ -2028,7 +2028,7 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 		_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPoolId, owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), tc.lowerTick, tc.upperTick)
 		s.Require().NoError(err)
 
-		clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
+		_, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
 		s.Require().NoError(err)
 
 		// Test updating the full range liquidity.

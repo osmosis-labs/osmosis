@@ -53,7 +53,7 @@ var (
 	DefaultExponentOverlappingPositionUpperTick, _       = math.PriceToTickRoundDown(sdk.NewDec(4999), DefaultTickSpacing)
 	BAR                                                  = "bar"
 	FOO                                                  = "foo"
-	InsufficientFundsError                               = fmt.Errorf("insufficient funds")
+	ErrInsufficentFunds                                  = fmt.Errorf("insufficient funds")
 )
 
 type KeeperTestSuite struct {
