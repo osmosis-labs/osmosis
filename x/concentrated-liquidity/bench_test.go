@@ -219,8 +219,7 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 		fmt.Println("num_ticks_traversed", len(liquidityNet))
 		fmt.Println("current_tick", currentTick)
 
-		// Increase block time so that some incentives uptime accumulator update logic
-		// isn't a no-op.
+		// Commit the block so that position updates are propagated to IAVL.
 		s.Commit()
 
 		// Fund swap amount.
