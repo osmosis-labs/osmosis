@@ -26,7 +26,6 @@ var (
 	}
 	defaultTwoAssetScalingFactors   = []uint64{1, 1}
 	defaultThreeAssetScalingFactors = []uint64{1, 1, 1}
-	defaultFiveAssetScalingFactors  = []uint64{1, 1, 1, 1, 1}
 	defaultFutureGovernor           = ""
 
 	twoEvenStablePoolAssets = sdk.NewCoins(
