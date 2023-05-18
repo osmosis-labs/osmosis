@@ -93,7 +93,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 
 	// Set protorev developer account
 	devAccount := apptesting.CreateRandomAccounts(1)[0]
-	suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, devAccount)
+	s.App.ProtoRevKeeper.SetDeveloperAccount(s.Ctx, devAccount)
 
 	// Keep testing order consistent to make adding tests easier
 	// Add all tests that are not expected to execute a trade first

@@ -333,7 +333,7 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 
 	// Set protorev developer account
 	devAccount := apptesting.CreateRandomAccounts(1)[0]
-	suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, devAccount)
+	s.App.ProtoRevKeeper.SetDeveloperAccount(s.Ctx, devAccount)
 
 	tests := []struct {
 		name                string
