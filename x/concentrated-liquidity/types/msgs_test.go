@@ -137,7 +137,63 @@ func TestMsgCreatePosition(t *testing.T) {
 		if test.expectPass {
 			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
 			require.Equal(t, msg.Route(), types.RouterKey)
-			require.Equal(t, msg.Type(), "create-position")
+			require.Equal(t, msg.Type(), types.TypeMsgCreatePosition)
+			signers := msg.GetSigners()
+			require.Equal(t, len(signers), 1)
+			require.Equal(t, signers[0].String(), addr1)
+		} else {
+			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+		}
+	}
+}
+
+func TestMsgFungifyChargedPositions(t *testing.T) {
+	appParams.SetAddressPrefixes()
+	var (
+		pk1              = ed25519.GenPrivKey().PubKey()
+		addr1            = sdk.AccAddress(pk1.Address()).String()
+		invalidAddr      = sdk.AccAddress("invalid")
+		validPositionIds = []uint64{1, 2}
+	)
+
+	tests := []struct {
+		name       string
+		msg        types.MsgFungifyChargedPositions
+		expectPass bool
+	}{
+		{
+			name: "proper msg",
+			msg: types.MsgFungifyChargedPositions{
+				Sender:      addr1,
+				PositionIds: validPositionIds,
+			},
+			expectPass: true,
+		},
+		{
+			name: "error: invalid sender",
+			msg: types.MsgFungifyChargedPositions{
+				Sender:      invalidAddr.String(),
+				PositionIds: validPositionIds,
+			},
+			expectPass: false,
+		},
+		{
+			name: "error: only one id given, must have at least 2",
+			msg: types.MsgFungifyChargedPositions{
+				Sender:      addr1,
+				PositionIds: []uint64{1},
+			},
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		msg := test.msg
+
+		if test.expectPass {
+			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			require.Equal(t, msg.Route(), types.RouterKey)
+			require.Equal(t, msg.Type(), types.TypeMsgFungifyChargedPositions)
 			signers := msg.GetSigners()
 			require.Equal(t, len(signers), 1)
 			require.Equal(t, signers[0].String(), addr1)
@@ -184,7 +240,7 @@ func TestMsgWithdrawPosition(t *testing.T) {
 		if test.expectPass {
 			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
 			require.Equal(t, msg.Route(), types.RouterKey)
-			require.Equal(t, msg.Type(), "withdraw-position")
+			require.Equal(t, msg.Type(), types.TypeMsgWithdrawPosition)
 			signers := msg.GetSigners()
 			require.Equal(t, len(signers), 1)
 			require.Equal(t, signers[0].String(), addr1)
@@ -230,6 +286,13 @@ func TestConcentratedLiquiditySerialization(t *testing.T) {
 				TokensProvided:  sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000)), sdk.NewCoin("bar", sdk.NewInt(1000))),
 				TokenMinAmount0: sdk.OneInt(),
 				TokenMinAmount1: sdk.OneInt(),
+			},
+		},
+		{
+			name: "MsgFungifyChargedPositions",
+			clMsg: &types.MsgFungifyChargedPositions{
+				Sender:      addr1,
+				PositionIds: []uint64{1, 2},
 			},
 		},
 	}

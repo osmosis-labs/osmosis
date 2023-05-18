@@ -1,6 +1,8 @@
 package math
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -25,6 +27,10 @@ func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 
 	product := sqrtPriceABigDec.Mul(sqrtPriceBBigDec)
 	diff := sqrtPriceBBigDec.Sub(sqrtPriceABigDec)
+	if diff.Equal(osmomath.ZeroDec()) {
+		panic(fmt.Sprintf("liquidity0 diff is zero: sqrtPriceA %s sqrtPriceB %s", sqrtPriceA, sqrtPriceB))
+	}
+
 	return amountBigDec.Mul(product).Quo(diff).SDKDec()
 }
 
@@ -44,6 +50,10 @@ func Liquidity1(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	sqrtPriceBBigDec := osmomath.BigDecFromSDKDec(sqrtPriceB)
 
 	diff := sqrtPriceBBigDec.Sub(sqrtPriceABigDec)
+	if diff.Equal(osmomath.ZeroDec()) {
+		panic(fmt.Sprintf("liquidity1 diff is zero: sqrtPriceA %s sqrtPriceB %s", sqrtPriceA, sqrtPriceB))
+	}
+
 	return amountBigDec.Quo(diff).SDKDec()
 }
 
@@ -186,6 +196,7 @@ func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0,
 	return liquidity
 }
 
+// AddLiquidity adds or subtracts liquidityB from liquidityA, depending on whether liquidityB is positive or negative.
 func AddLiquidity(liquidityA, liquidityB sdk.Dec) (finalLiquidity sdk.Dec) {
 	if liquidityB.LT(sdk.ZeroDec()) {
 		return liquidityA.Sub(liquidityB.Abs())

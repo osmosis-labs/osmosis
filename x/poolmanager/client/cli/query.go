@@ -27,6 +27,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdEstimateSinglePoolSwapExactAmountOut)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdSpotPrice)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTotalPoolLiquidity)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdAllPools)
 
 	return cmd
 }
@@ -66,6 +67,15 @@ func GetCmdNumPools() (*osmocli.QueryDescriptor, *queryproto.NumPoolsRequest) {
 		Short: "Query number of pools",
 		Long:  "{{.Short}}",
 	}, &queryproto.NumPoolsRequest{}
+}
+
+// GetCmdAllPools return all pools available across Osmosis modules.
+func GetCmdAllPools() (*osmocli.QueryDescriptor, *queryproto.AllPoolsRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "all-pools",
+		Short: "Query all pools on the Osmosis chain",
+		Long:  "{{.Short}}",
+	}, &queryproto.AllPoolsRequest{}
 }
 
 // GetCmdPool returns pool information.

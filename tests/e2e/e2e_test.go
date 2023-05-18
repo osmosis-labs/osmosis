@@ -30,7 +30,7 @@ import (
 	v16 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v16"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	clmath "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
@@ -192,11 +192,11 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().NoError(err)
 
 	var (
-		denom0      string  = "uion"
-		denom1      string  = "uosmo"
-		tickSpacing uint64  = 100
-		swapFee             = "0.001" // 0.1%
-		swapFeeDec  sdk.Dec = sdk.MustNewDecFromStr("0.001")
+		denom0             = "uion"
+		denom1             = "uosmo"
+		tickSpacing uint64 = 100
+		swapFee            = "0.001" // 0.1%
+		swapFeeDec         = sdk.MustNewDecFromStr("0.001")
 	)
 
 	// Get the permisionless pool creation parameter.
@@ -222,7 +222,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	concentratedPool := s.updatedPool(chainANode, poolID)
 
 	// Sanity check that pool initialized with valid parameters (the ones that we haven't explicitly specified)
-	s.Require().Equal(concentratedPool.GetCurrentTick(), sdk.ZeroInt())
+	s.Require().Equal(concentratedPool.GetCurrentTick(), int64(0))
 	s.Require().Equal(concentratedPool.GetCurrentSqrtPrice(), sdk.ZeroDec())
 	s.Require().Equal(concentratedPool.GetLiquidity(), sdk.ZeroDec())
 
@@ -365,15 +365,15 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// * Uncollected fees from multiple swaps are correctly summed up and collected
 
 	// tickOffset is a tick index after the next initialized tick to which this swap needs to move the current price
-	tickOffset := sdk.NewInt(300)
+	tickOffset := int64(300)
 	sqrtPriceBeforeSwap = concentratedPool.GetCurrentSqrtPrice()
 	liquidityBeforeSwap = concentratedPool.GetLiquidity()
-	nextInitTick := sdk.NewInt(40000) // address1 position1's upper tick
+	nextInitTick := int64(40000) // address1 position1's upper tick
 
 	// Calculate sqrtPrice after and at the next initialized tick (upperTick of address1 position1 - 40000)
-	sqrtPriceAfterNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick.Add(tickOffset))
+	_, sqrtPriceAfterNextInitializedTick, err := clmath.TickToSqrtPrice(nextInitTick + tickOffset)
 	s.Require().NoError(err)
-	sqrtPriceAtNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick)
+	_, sqrtPriceAtNextInitializedTick, err := clmath.TickToSqrtPrice(nextInitTick)
 	s.Require().NoError(err)
 
 	// Calculate Δ(sqrtPrice):
@@ -502,10 +502,10 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// * liquidity of positions that come in range are correctly kicked in
 
 	// tickOffset is a tick index after the next initialized tick to which this swap needs to move the current price
-	tickOffset = sdk.NewInt(300)
+	tickOffset = 300
 	sqrtPriceBeforeSwap = concentratedPool.GetCurrentSqrtPrice()
 	liquidityBeforeSwap = concentratedPool.GetLiquidity()
-	nextInitTick = sdk.NewInt(40000)
+	nextInitTick = 40000
 
 	// Calculate amount required to get to
 	// 1) next initialized tick
@@ -513,9 +513,9 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Using: CalcAmount0Delta = liquidity * ((sqrtPriceB - sqrtPriceA) / (sqrtPriceB * sqrtPriceA))
 
 	// Calculate sqrtPrice after and at the next initialized tick (which is upperTick of address1 position1 - 40000)
-	sqrtPricebBelowNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick.Sub(tickOffset))
+	_, sqrtPricebBelowNextInitializedTick, err := clmath.TickToSqrtPrice(nextInitTick - tickOffset)
 	s.Require().NoError(err)
-	sqrtPriceAtNextInitializedTick, err = cl.TickToSqrtPrice(nextInitTick)
+	_, sqrtPriceAtNextInitializedTick, err = clmath.TickToSqrtPrice(nextInitTick)
 	s.Require().NoError(err)
 
 	// Calculate numerators
@@ -1053,12 +1053,34 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	var response map[string]interface{}
 	s.Require().Eventually(func() bool {
 		response, err = nodeA.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
-		totalFunds := response["total_funds"].([]interface{})[0]
-		amount := totalFunds.(map[string]interface{})["amount"].(string)
-		denom := totalFunds.(map[string]interface{})["denom"].(string)
+		if err != nil {
+			return false
+		}
+
+		totalFundsIface, ok := response["total_funds"].([]interface{})
+		if !ok || len(totalFundsIface) == 0 {
+			return false
+		}
+
+		totalFunds, ok := totalFundsIface[0].(map[string]interface{})
+		if !ok {
+			return false
+		}
+
+		amount, ok := totalFunds["amount"].(string)
+		if !ok {
+			return false
+		}
+
+		denom, ok := totalFunds["denom"].(string)
+		if !ok {
+			return false
+		}
+
 		// check if denom contains "uosmo"
-		return err == nil && amount == strconv.FormatInt(transferAmount, 10) && strings.Contains(denom, "ibc")
+		return amount == strconv.FormatInt(transferAmount, 10) && strings.Contains(denom, "ibc")
 	},
+
 		15*time.Second,
 		10*time.Millisecond,
 	)
@@ -1106,8 +1128,11 @@ func (s *IntegrationTestSuite) TestPacketForwarding() {
 		if err != nil {
 			return false
 		}
-		count := response["count"].(float64)
-		return err == nil && count == 0
+		countValue, ok := response["count"].(float64)
+		if !ok {
+			return false
+		}
+		return countValue == 0
 	},
 		15*time.Second,
 		10*time.Millisecond,
@@ -1554,13 +1579,13 @@ func (s *IntegrationTestSuite) TestAConcentratedLiquidity_CanonicalPool_And_Para
 		s.T().Skip("Skipping v16 canonical pool creation test because upgrade is not enabled")
 	}
 
-	// Taken from: https://app.osmosis.zone/pool/674
 	expectedFee := sdk.MustNewDecFromStr("0.002")
 
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
 
+	// Taken from: https://app.osmosis.zone/pool/674
 	concentratedPoolId := chainANode.QueryConcentratedPooIdLinkFromCFMM(config.DaiOsmoPoolIdv16)
 
 	concentratedPool := s.updatedPool(chainANode, concentratedPoolId)
