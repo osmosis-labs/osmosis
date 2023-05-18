@@ -562,6 +562,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			expectedRemainingLiquidity := liquidityCreated.Sub(config.liquidityAmount)
 
 			expectedFeesClaimed := sdk.NewCoins()
+			expectedIncentivesClaimed := sdk.NewCoins()
 			// Set the expected fees claimed to the amount of liquidity created since the global fee growth is 1.
 			// Fund the pool account with the expected fees claimed.
 			if expectedRemainingLiquidity.IsZero() {
@@ -572,7 +573,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			communityPoolBalanceBefore := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
 
 			// Set expected incentives and fund pool with appropriate amount
-			expectedIncentivesClaimed := expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, tc.timeElapsed, defaultMultiplier)
+			expectedIncentivesClaimed = expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, tc.timeElapsed, defaultMultiplier)
 
 			// Fund full amount since forfeited incentives for the last position are sent to the community pool.
 			expectedFullIncentivesFromAllUptimes := expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, types.SupportedUptimes[len(types.SupportedUptimes)-1], defaultMultiplier)
@@ -1164,12 +1165,12 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 		"only asset0 is greater than sender has, position creation (user to pool)": {
 			coin0:       sdk.NewCoin("eth", sdk.NewInt(100000000000000)),
 			coin1:       sdk.NewCoin("usdc", sdk.NewInt(1000000)),
-			expectedErr: ErrInsufficientFunds,
+			expectedErr: InsufficientFundsError,
 		},
 		"only asset1 is greater than sender has, position creation (user to pool)": {
 			coin0:       sdk.NewCoin("eth", sdk.NewInt(1000000)),
 			coin1:       sdk.NewCoin("usdc", sdk.NewInt(100000000000000)),
-			expectedErr: ErrInsufficientFunds,
+			expectedErr: InsufficientFundsError,
 		},
 		"asset0 and asset1 are positive, withdraw (pool to user)": {
 			coin0:      sdk.NewCoin("eth", sdk.NewInt(1000000)),
@@ -1190,13 +1191,13 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 			coin0:       sdk.NewCoin("eth", sdk.NewInt(100000000000000)),
 			coin1:       sdk.NewCoin("usdc", sdk.NewInt(1000000)),
 			poolToUser:  true,
-			expectedErr: ErrInsufficientFunds,
+			expectedErr: InsufficientFundsError,
 		},
 		"only asset1 is greater than sender has, withdraw (pool to user)": {
 			coin0:       sdk.NewCoin("eth", sdk.NewInt(1000000)),
 			coin1:       sdk.NewCoin("usdc", sdk.NewInt(100000000000000)),
 			poolToUser:  true,
-			expectedErr: ErrInsufficientFunds,
+			expectedErr: InsufficientFundsError,
 		},
 		"asset0 is negative - error": {
 			coin0: sdk.Coin{Denom: "eth", Amount: sdk.NewInt(1000000).Neg()},
@@ -1231,9 +1232,9 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 			// store pool interface
 			poolI, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, 1)
 			s.Require().NoError(err)
-			concentratedPool, ok := poolI.(types.ConcentratedPoolExtension) //nolint:gosimple // need to check if poolI is a ConcentratedPoolExtension
+			concentratedPool, ok := poolI.(types.ConcentratedPoolExtension)
 			if !ok {
-				s.FailNow("poolI is not a *ConcentratedPoolExtension")
+				s.FailNow("poolI is not a ConcentratedPoolExtension")
 			}
 
 			// fund pool address and user address
@@ -1463,13 +1464,13 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				// validate if pool liquidity has been updated properly
 				poolI, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, tc.poolId)
 				s.Require().NoError(err)
-				concentratedPool, ok := poolI.(types.ConcentratedPoolExtension) //nolint:gosimple // need to check if poolI is a ConcentratedPoolExtension
+				concentratedPool, ok := poolI.(types.ConcentratedPoolExtension)
 				if !ok {
 					s.FailNow("poolI is not a ConcentratedPoolExtension")
 				}
 				s.Require().Equal(tc.expectedPoolLiquidity, concentratedPool.GetLiquidity())
 
-				// Test that liquidity update time was successfully changed.
+				// Test that liquidity update time was succesfully changed.
 				s.Require().Equal(expectedUpdateTime, poolI.GetLastLiquidityUpdate())
 			}
 		})
