@@ -2642,7 +2642,7 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestUpdateFeeGrowthGlobal() {
+func (s *KeeperTestSuite) TestUpdateFeeGrowthGlobal() {
 	ten := sdk.NewDec(10)
 
 	tests := map[string]struct {
@@ -2671,8 +2671,8 @@ func (suite *KeeperTestSuite) TestUpdateFeeGrowthGlobal() {
 
 	for name, tc := range tests {
 		tc := tc
-		suite.Run(name, func() {
-			suite.SetupTest()
+		s.Run(name, func() {
+			s.SetupTest()
 
 			// Setup.
 			swapState := cl.SwapState{}
@@ -2683,7 +2683,7 @@ func (suite *KeeperTestSuite) TestUpdateFeeGrowthGlobal() {
 			swapState.UpdateFeeGrowthGlobal(tc.feeChargeTotal)
 
 			// Assertion.
-			suite.Require().Equal(tc.expectedFeeGrowthGlobal, swapState.GetFeeGrowthGlobal())
+			s.Require().Equal(tc.expectedFeeGrowthGlobal, swapState.GetFeeGrowthGlobal())
 		})
 	}
 }
@@ -2740,7 +2740,7 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapInAmtGivenOut() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
+func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 	var (
 		oneHundredETH         = sdk.NewCoin(ETH, sdk.NewInt(100_000_000))
 		oneHundredUSDC        = sdk.NewCoin(USDC, sdk.NewInt(100_000_000))
@@ -2799,62 +2799,62 @@ func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
 
 	for name, tc := range tests {
 		tc := tc
-		suite.Run(name, func() {
-			suite.SetupTest()
-			concentratedLiquidityKeeper := suite.App.ConcentratedLiquidityKeeper
+		s.Run(name, func() {
+			s.SetupTest()
+			concentratedLiquidityKeeper := s.App.ConcentratedLiquidityKeeper
 
 			// Create pool with initial balance
-			pool := suite.PrepareConcentratedPool()
-			suite.FundAcc(pool.GetAddress(), tc.poolInitialBalance)
+			pool := s.PrepareConcentratedPool()
+			s.FundAcc(pool.GetAddress(), tc.poolInitialBalance)
 			// Create account with empty balance and fund with initial balance
 			sender := apptesting.CreateRandomAccounts(1)[0]
-			suite.FundAcc(sender, tc.senderInitialBalance)
+			s.FundAcc(sender, tc.senderInitialBalance)
 
 			// Default pool values are initialized to one.
 			err := pool.ApplySwap(sdk.OneDec(), 1, sdk.OneDec())
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
 			// Write default pool to state.
-			err = concentratedLiquidityKeeper.SetPool(suite.Ctx, pool)
-			suite.Require().NoError(err)
+			err = concentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+			s.Require().NoError(err)
 
 			// Set mock listener to make sure that is is called when desired.
-			suite.setListenerMockOnConcentratedLiquidityKeeper()
+			s.setListenerMockOnConcentratedLiquidityKeeper()
 
-			err = concentratedLiquidityKeeper.UpdatePoolForSwap(suite.Ctx, pool, sender, tc.tokenIn, tc.tokenOut, tc.newCurrentTick, tc.newLiquidity, tc.newSqrtPrice)
+			err = concentratedLiquidityKeeper.UpdatePoolForSwap(s.Ctx, pool, sender, tc.tokenIn, tc.tokenOut, tc.newCurrentTick, tc.newLiquidity, tc.newSqrtPrice)
 
 			// Test that pool is updated
-			poolAfterUpdate, err2 := concentratedLiquidityKeeper.GetPoolById(suite.Ctx, pool.GetId())
-			suite.Require().NoError(err2)
+			poolAfterUpdate, err2 := concentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err2)
 
 			if tc.expectError != nil {
-				suite.Require().Error(err)
-				suite.Require().ErrorAs(err, &tc.expectError)
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &tc.expectError)
 
 				// Test that pool is not updated
-				suite.Require().Equal(pool.String(), poolAfterUpdate.String())
+				s.Require().Equal(pool.String(), poolAfterUpdate.String())
 				return
 			}
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
-			suite.Require().Equal(tc.newCurrentTick, poolAfterUpdate.GetCurrentTick())
-			suite.Require().Equal(tc.newLiquidity, poolAfterUpdate.GetLiquidity())
-			suite.Require().Equal(tc.newSqrtPrice, poolAfterUpdate.GetCurrentSqrtPrice())
+			s.Require().Equal(tc.newCurrentTick, poolAfterUpdate.GetCurrentTick())
+			s.Require().Equal(tc.newLiquidity, poolAfterUpdate.GetLiquidity())
+			s.Require().Equal(tc.newSqrtPrice, poolAfterUpdate.GetCurrentSqrtPrice())
 
 			// Estimate expected final balances from inputs.
 			expectedSenderFinalBalance := tc.senderInitialBalance.Sub(sdk.NewCoins(tc.tokenIn)).Add(tc.tokenOut)
 			expectedPoolFinalBalance := tc.poolInitialBalance.Add(tc.tokenIn).Sub(sdk.NewCoins(tc.tokenOut))
 
 			// Test that token out is sent from pool to sender.
-			senderBalanceAfterSwap := suite.App.BankKeeper.GetAllBalances(suite.Ctx, sender)
-			suite.Require().Equal(expectedSenderFinalBalance.String(), senderBalanceAfterSwap.String())
+			senderBalanceAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, sender)
+			s.Require().Equal(expectedSenderFinalBalance.String(), senderBalanceAfterSwap.String())
 
 			// Test that token in is sent from sender to pool.
-			poolBalanceAfterSwap := suite.App.BankKeeper.GetAllBalances(suite.Ctx, pool.GetAddress())
-			suite.Require().Equal(expectedPoolFinalBalance.String(), poolBalanceAfterSwap.String())
+			poolBalanceAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
+			s.Require().Equal(expectedPoolFinalBalance.String(), poolBalanceAfterSwap.String())
 
 			// Validate that listeners were called the desired number of times
-			suite.validateListenerCallCount(0, 0, 0, 1)
+			s.validateListenerCallCount(0, 0, 0, 1)
 		})
 	}
 }
@@ -2937,7 +2937,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 		numConsecutive: 2,
 		numOverlapping: 1,
 	}
-	// Init suite.
+	// Init s.
 	s.SetupTest()
 
 	// Determine amount of ETH and USDC to swap per swap.

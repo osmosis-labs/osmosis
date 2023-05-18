@@ -1186,7 +1186,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 	// Perform a swap to earn fees
 	swapAmountIn := sdk.NewCoin(ETH, sdk.NewInt(swapAmount))
 	expectedFee := swapAmountIn.Amount.ToDec().Mul(swapFee)
-	// We run expected fees through a cycle of division and multiplication by liquidity to capture appropriate rounding behavior.
+	// We run expected fees through a cycle of divison and multiplication by liquidity to capture appropriate rounding behavior.
 	// Note that we truncate the int at the end since it is not possible to have a decimal fee amount collected (the QuoTruncate
 	// and MulTruncates are much smaller operations that round down for values past the 18th decimal place).
 	expectedFeeTruncated := expectedFee.QuoTruncate(totalLiquidity).MulTruncate(totalLiquidity).TruncateInt()

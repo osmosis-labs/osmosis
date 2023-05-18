@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
 
 	"github.com/stretchr/testify/require"
@@ -18,6 +19,7 @@ import (
 )
 
 func TestCreateDenomMsg(t *testing.T) {
+	apptesting.SkipIfWSL(t)
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
 
@@ -49,6 +51,7 @@ func TestCreateDenomMsg(t *testing.T) {
 }
 
 func TestMintMsg(t *testing.T) {
+	apptesting.SkipIfWSL(t)
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
 
@@ -177,6 +180,7 @@ func TestMintMsg(t *testing.T) {
 }
 
 func TestBurnMsg(t *testing.T) {
+	apptesting.SkipIfWSL(t)
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
 

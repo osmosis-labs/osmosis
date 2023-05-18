@@ -26,6 +26,7 @@ var (
 	}
 	defaultTwoAssetScalingFactors   = []uint64{1, 1}
 	defaultThreeAssetScalingFactors = []uint64{1, 1, 1}
+	defaultFiveAssetScalingFactors  = []uint64{1, 1, 1, 1, 1}
 	defaultFutureGovernor           = ""
 
 	twoEvenStablePoolAssets = sdk.NewCoins(
@@ -45,6 +46,13 @@ var (
 		sdk.NewInt64Coin("asset/a", 1000000),
 		sdk.NewInt64Coin("asset/b", 2000000),
 		sdk.NewInt64Coin("asset/c", 3000000),
+	)
+	fiveEvenStablePoolAssets = sdk.NewCoins(
+		sdk.NewInt64Coin("asset/a", 1000000000),
+		sdk.NewInt64Coin("asset/b", 1000000000),
+		sdk.NewInt64Coin("asset/c", 1000000000),
+		sdk.NewInt64Coin("asset/d", 1000000000),
+		sdk.NewInt64Coin("asset/e", 1000000000),
 	)
 	fiveUnevenStablePoolAssets = sdk.NewCoins(
 		sdk.NewInt64Coin("asset/a", 1000000000),
