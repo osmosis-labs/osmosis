@@ -614,7 +614,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			ownerBalancerAfterWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, owner)
 			communityPoolBalanceAfter := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
 
-			// owner should only have tokens equivilent to the delta balance of the pool
+			// owner should only have tokens equivalent to the delta balance of the pool
 			expectedOwnerBalanceDelta := expectedPoolBalanceDelta.Add(expectedIncentivesClaimed...)
 			actualOwnerBalancerDelta := ownerBalancerAfterWithdraw.Sub(ownerBalancerBeforeWithdraw)
 
@@ -1470,7 +1470,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				}
 				s.Require().Equal(tc.expectedPoolLiquidity, concentratedPool.GetLiquidity())
 
-				// Test that liquidity update time was succesfully changed.
+				// Test that liquidity update time was successfully changed.
 				s.Require().Equal(expectedUpdateTime, poolI.GetLastLiquidityUpdate())
 			}
 		})

@@ -108,7 +108,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
-		WithJSONCodec(encodingConfig.Marshaler)
+		WithCodec(encodingConfig.Marshaler)
 
 	// Set default configuration for testing
 	suite.balances = sdk.NewCoins(

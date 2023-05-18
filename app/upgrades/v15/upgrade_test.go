@@ -56,7 +56,7 @@ func (suite *UpgradeTestSuite) TestMigrateNextPoolIdAndCreatePool() {
 	gammKeeper := suite.App.GAMMKeeper
 	poolmanagerKeeper := suite.App.PoolManagerKeeper
 
-	nextPoolId := gammKeeper.GetNextPoolId(ctx)
+	nextPoolId := gammKeeper.GetNextPoolId(ctx) //nolint:staticcheck
 	suite.Require().Equal(expectedNextPoolId, nextPoolId)
 
 	// system under test.
