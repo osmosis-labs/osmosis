@@ -265,8 +265,13 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 		return 0, sdk.Int{}, sdk.Int{}, types.NotPositionOwnerError{PositionId: positionId, Address: owner.String()}
 	}
 
-	if amount0Added.IsNegative() || amount1Added.IsNegative() || (amount0Added.IsZero() && amount1Added.IsZero()) {
+	// if one of the liquidity is negative, or both liquidity being added is zero, error
+	if amount0Added.IsNegative() || amount1Added.IsNegative() {
 		return 0, sdk.Int{}, sdk.Int{}, types.NegativeAmountAddedError{PositionId: position.PositionId, Asset0Amount: amount0Added, Asset1Amount: amount1Added}
+	}
+
+	if amount0Added.IsZero() && amount1Added.IsZero() {
+		return 0, sdk.Int{}, sdk.Int{}, types.ErrZeroLiquidity
 	}
 
 	// If the position is superfluid staked, return error.

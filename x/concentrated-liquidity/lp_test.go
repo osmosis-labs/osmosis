@@ -742,7 +742,6 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			amount0ToAdd: amount0PerfectRatio.QuoRaw(2).Add(roundingError),
 			amount1ToAdd: amount1PerfectRatio.QuoRaw(2),
 		},
-
 		"Add to a position with underlying lock that has finished unlocking": {
 			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
@@ -751,7 +750,8 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			sutConfigOverwrite: &lpTest{
 				// 1998976eth (amount withdrawn with rounded down amounts) + 998977(token amount in)
 				amount0Expected: sdk.NewInt(2997953),
-				// tokens Provided for token1 is 9999999999 (amount withdrawn) + 5000000000 = 14999999999usdc, then liquidity needed is calculated internally
+				// tokens Provided for token1 is 9999999999 (amount withdrawn) + 5000000000 = 14999999999usdc.
+				// we calcualte calc amount1 by using: https://www.wolframalpha.com/input?i=70.728769315114743567+*+212041526.154556192320661969
 				amount1Expected: sdk.NewInt(14997436189),
 			},
 			timeElapsed:  defaultTimeElapsed,
@@ -794,6 +794,45 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			amount0ToAdd:       amount0PerfectRatio.Neg(),
 			amount1ToAdd:       amount1PerfectRatio.Neg(),
 		},
+		"error: attempt to add negative amounts for amount0": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			sutConfigOverwrite: &lpTest{
+				expectedError: types.NegativeAmountAddedError{PositionId: 1, Asset0Amount: amount0PerfectRatio.Neg(), Asset1Amount: amount1PerfectRatio},
+			},
+			lastPositionInPool: true,
+			timeElapsed:        defaultTimeElapsed,
+			amount0ToAdd:       amount0PerfectRatio.Neg(),
+			amount1ToAdd:       amount1PerfectRatio,
+		},
+		"error: attempt to add negative amounts for amount1": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			sutConfigOverwrite: &lpTest{
+				expectedError: types.NegativeAmountAddedError{PositionId: 1, Asset0Amount: amount0PerfectRatio, Asset1Amount: amount1PerfectRatio.Neg()},
+			},
+			lastPositionInPool: true,
+			timeElapsed:        defaultTimeElapsed,
+			amount0ToAdd:       amount0PerfectRatio,
+			amount1ToAdd:       amount1PerfectRatio.Neg(),
+		},
+		"error: both amounts are zero": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			sutConfigOverwrite: &lpTest{
+				expectedError: types.ErrZeroLiquidity,
+			},
+			lastPositionInPool: true,
+			timeElapsed:        defaultTimeElapsed,
+			amount0ToAdd:       sdk.ZeroInt(),
+			amount1ToAdd:       sdk.ZeroInt(),
+		},
 		"error: attempt to add to a position with underlying lock that is unlocking": {
 			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
@@ -814,17 +853,6 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			amount1ToAdd: amount1PerfectRatio,
 
 			createLockUnlocking: true,
-		},
-		"error: final amount less than original amount": {
-			setupConfig: baseCase,
-
-			// system under test parameters
-			sutConfigOverwrite: &lpTest{
-				expectedError: types.NegativeAmountAddedError{PositionId: 1, Asset0Amount: sdk.ZeroInt(), Asset1Amount: sdk.ZeroInt()},
-			},
-			timeElapsed:  defaultTimeElapsed,
-			amount0ToAdd: sdk.ZeroInt(),
-			amount1ToAdd: sdk.ZeroInt(),
 		},
 		"error: no position created": {
 			// setup parameters for creation a pool and position.
@@ -931,17 +959,18 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			s.FundAcc(owner, fundCoins)
 
 			// Create a position from the parameters in the test case.
+			var positionId uint64
 			if tc.createLockLocked {
-				_, _, _, _, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, pool.GetId(), owner, fundCoins, tc.timeElapsed)
+				positionId, _, _, _, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, pool.GetId(), owner, fundCoins, tc.timeElapsed)
 				s.Require().NoError(err)
 			} else if tc.createLockUnlocking {
-				_, _, _, _, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pool.GetId(), owner, fundCoins, tc.timeElapsed+time.Hour)
+				positionId, _, _, _, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pool.GetId(), owner, fundCoins, tc.timeElapsed+time.Hour)
 				s.Require().NoError(err)
 			} else if tc.createLockUnlocked {
-				_, _, _, _, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pool.GetId(), owner, fundCoins, tc.timeElapsed-time.Hour)
+				positionId, _, _, _, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pool.GetId(), owner, fundCoins, tc.timeElapsed-time.Hour)
 				s.Require().NoError(err)
 			} else {
-				_, _, _, _, _, err = concentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), owner, config.tokensProvided, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				positionId, _, _, _, _, err = concentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), owner, config.tokensProvided, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 				s.Require().NoError(err)
 			}
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(tc.timeElapsed))
@@ -959,7 +988,13 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			}
 
 			// now we fund the sender account again for the amount0ToAdd and amount1ToAdd coins.
-			s.FundAcc(sender, sdk.NewCoins(sdk.NewCoin(ETH, tc.amount0ToAdd), sdk.NewCoin(USDC, tc.amount1ToAdd)))
+			// only fund coins if the amount is non-negative or else test would panic here
+			if !tc.amount0ToAdd.IsNegative() {
+				s.FundAcc(sender, sdk.NewCoins(sdk.NewCoin(ETH, tc.amount0ToAdd)))
+			}
+			if !tc.amount1ToAdd.IsNegative() {
+				s.FundAcc(sender, sdk.NewCoins(sdk.NewCoin(USDC, tc.amount1ToAdd)))
+			}
 
 			// --- System under test ---
 			newPosId, newAmt0, newAmt1, err := concentratedLiquidityKeeper.AddToPosition(s.Ctx, sender, config.positionId, tc.amount0ToAdd, tc.amount1ToAdd, config.amount0Minimum, config.amount1Minimum)
@@ -997,6 +1032,10 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			s.Require().Equal(0, errTolerance.Compare(preBalanceToken0.Amount, postBalanceToken0.Amount))
 			s.Require().Equal(0, errTolerance.Compare(expectedAmount1Delta, postBalanceToken1.Amount.Sub(tc.amount1ToAdd)))
+
+			// now check that old position id has been succesfully deleted
+			_, err = s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+			s.Require().Error(err)
 		})
 	}
 }
