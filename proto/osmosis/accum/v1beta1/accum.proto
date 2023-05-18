@@ -6,6 +6,9 @@ import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/osmoutils/accum";
 
+// AccumulatorContent is the state-entry for the global accumulator.
+// It contains the name of the global accumulator and the total value of
+// shares belonging to it from all positions.
 message AccumulatorContent {
   repeated cosmos.base.v1beta1.DecCoin accum_value = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
@@ -19,16 +22,42 @@ message AccumulatorContent {
 
 message Options {}
 
+// Record corresponds to an individual position value belonging to the
+// global accumulator.
 message Record {
+  // num_shares is the number of shares belonging to the position associated
+  // with this record.
   string num_shares = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  repeated cosmos.base.v1beta1.DecCoin init_accum_value = 2 [
+  // accum_value_per_share is the subset of coins per shar of the global
+  // accumulator value that allows to infer how much a position is entitled to
+  // per share that it owns.
+  //
+  // In the default case with no intervals, this value equals to the global
+  // accumulator value at the time of the position creation, the last update or
+  // reward claim.
+  //
+  // In the interval case such as concentrated liquidity, this value equals to
+  // the global growth of rewards inside the interval during one of: the time of
+  // the position creation, the last update or reward claim. Note, that
+  // immediately prior to claiming or updating rewards, this value must be
+  // updated to "the growth inside at the time of last update + the growth
+  // outside at the time of the current block". This is so that the claiming
+  // logic can subtract this updated value from the global accumulator value to
+  // get the growth inside the interval from the time of last update up until
+  // the current block time.
+  repeated cosmos.base.v1beta1.DecCoin accum_value_per_share = 2 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable) = false
   ];
-  repeated cosmos.base.v1beta1.DecCoin unclaimed_rewards = 3 [
+  // unclaimed_rewards_total is the total amount of unclaimed rewards that the
+  // position is entitled to. This value is updated whenever shares are added or
+  // removed from an existing position. We also expose API for manually updating
+  // this value for some custom use cases such as merging pre-existing positions
+  // into a single one.
+  repeated cosmos.base.v1beta1.DecCoin unclaimed_rewards_total = 3 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable) = false
   ];

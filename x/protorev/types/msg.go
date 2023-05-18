@@ -1,8 +1,8 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var (
@@ -46,7 +46,7 @@ func (msg MsgSetHotRoutes) Type() string {
 func (msg MsgSetHotRoutes) ValidateBasic() error {
 	// Account must be a valid bech32 address
 	if _, err := sdk.AccAddressFromBech32(msg.Admin); err != nil {
-		return sdkerrors.Wrap(err, "invalid admin address (must be bech32)")
+		return errorsmod.Wrap(err, "invalid admin address (must be bech32)")
 	}
 
 	// Validate the hot routes
@@ -92,13 +92,13 @@ func (msg MsgSetDeveloperAccount) ValidateBasic() error {
 	// Account must be a valid bech32 address
 	_, err := sdk.AccAddressFromBech32(msg.Admin)
 	if err != nil {
-		return sdkerrors.Wrap(err, "invalid admin address (must be bech32)")
+		return errorsmod.Wrap(err, "invalid admin address (must be bech32)")
 	}
 
 	// Account must be a valid bech32 address
 	_, err = sdk.AccAddressFromBech32(msg.DeveloperAccount)
 	if err != nil {
-		return sdkerrors.Wrap(err, "invalid developer account address (must be bech32)")
+		return errorsmod.Wrap(err, "invalid developer account address (must be bech32)")
 	}
 
 	return nil
@@ -138,7 +138,7 @@ func (msg MsgSetMaxPoolPointsPerTx) Type() string {
 func (msg MsgSetMaxPoolPointsPerTx) ValidateBasic() error {
 	// Account must be a valid bech32 address
 	if _, err := sdk.AccAddressFromBech32(msg.Admin); err != nil {
-		return sdkerrors.Wrap(err, "invalid admin address (must be bech32)")
+		return errorsmod.Wrap(err, "invalid admin address (must be bech32)")
 	}
 
 	// Max pool points per tx must be in the valid range
@@ -183,7 +183,7 @@ func (msg MsgSetMaxPoolPointsPerBlock) Type() string {
 func (msg MsgSetMaxPoolPointsPerBlock) ValidateBasic() error {
 	// Account must be a valid bech32 address
 	if _, err := sdk.AccAddressFromBech32(msg.Admin); err != nil {
-		return sdkerrors.Wrap(err, "invalid admin address (must be bech32)")
+		return errorsmod.Wrap(err, "invalid admin address (must be bech32)")
 	}
 
 	// Max pool points per block must be in the valid range
@@ -228,7 +228,7 @@ func (msg MsgSetPoolWeights) Type() string {
 func (msg MsgSetPoolWeights) ValidateBasic() error {
 	// Account must be a valid bech32 address
 	if _, err := sdk.AccAddressFromBech32(msg.Admin); err != nil {
-		return sdkerrors.Wrap(err, "invalid admin address (must be bech32)")
+		return errorsmod.Wrap(err, "invalid admin address (must be bech32)")
 	}
 
 	if err := msg.PoolWeights.Validate(); err != nil {
@@ -272,7 +272,7 @@ func (msg MsgSetBaseDenoms) Type() string {
 func (msg MsgSetBaseDenoms) ValidateBasic() error {
 	// Account must be a valid bech32 address
 	if _, err := sdk.AccAddressFromBech32(msg.Admin); err != nil {
-		return sdkerrors.Wrap(err, "invalid admin address (must be bech32)")
+		return errorsmod.Wrap(err, "invalid admin address (must be bech32)")
 	}
 
 	// Check that there is at least one base denom and that first denom is osmo

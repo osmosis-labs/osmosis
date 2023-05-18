@@ -7,9 +7,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/swapstrategy"
 )
 
-var (
-	onePercentFee = sdk.NewDecWithPrec(1, 2)
-)
+var onePercentFee = sdk.NewDecWithPrec(1, 2)
 
 func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
 	tests := map[string]struct {

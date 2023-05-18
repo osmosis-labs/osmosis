@@ -42,6 +42,8 @@ cloud.google.com/go/storage v1.8.0/go.mod h1:Wv1Oy7z6Yz3DshWRJFhqM/UCfaWIRTdp0RX
 cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9ullr3+Kg0=
 cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3fOKtUw0Xmo=
 collectd.org v0.3.0/go.mod h1:A/8DzQBkF6abtvrT2j/AU/4tiBgJWYyh0y/oB/4MlWE=
+cosmossdk.io/errors v1.0.0-beta.7 h1:gypHW76pTQGVnHKo6QBkb4yFOJjC+sUGRc5Al3Odj1w=
+cosmossdk.io/errors v1.0.0-beta.7/go.mod h1:mz6FQMJRku4bY7aqS/Gwfcmr/ue91roMEKAmDUDpBfE=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.0.0-rc.1 h1:m0VOOB23frXZvAOK44usCgLWvtsxIoMCTBGJZlpmGfU=
 filippo.io/edwards25519 v1.0.0-rc.1/go.mod h1:N1IkdkCkiLB6tki+MYJoSx2JTY9NUlxZE7eHn5EwJns=
@@ -934,10 +936,10 @@ github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230326212251-7a2cf2993434 h1:RetE
 github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230326212251-7a2cf2993434/go.mod h1:ss3tUfPTwaa6NsoPZrCR7xOqLqCK0LwoNbc2Q8Zs5/Y=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
-github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230425121701-4d427b673864 h1:UhkJ67kx4NP7FEEQ+ybpDLIiS0Rl8vX8G55FKZux98I=
-github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230425121701-4d427b673864/go.mod h1:Hu4OHAvKtnCaqA4GlodNf89JZ+2TFtH7IDNxNi6Vue8=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230411200859-ae3065d0ca05 h1:fqVGxZPgUWuYWxVcMxHz5vrDV/aoxGJ7Kt0J4Vu/bsY=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230411200859-ae3065d0ca05/go.mod h1:zyBrzl2rsZWGbOU+/1hzA+xoQlCshzZuHe/5mzdb/zo=
+github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230516205127-c213fddde069 h1:ZgDrTJ2GCH4CJGbV6rudw4O9rPMAuwWoLVZnG6cUr+A=
+github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230516205127-c213fddde069/go.mod h1:a7lhiXRpn8QJ21OhFpaEnUNErTSIafaYpp02q6uI/Dk=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230516205127-c213fddde069 h1:9C/n+Nx5rre/AHPMlPsQrk1isgydrCNB68aqer86ygE=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230516205127-c213fddde069/go.mod h1:hk/o9/kmTSZmZqwXcSrPuwj/gpRMCqbE/d3vj6teL2A=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230328024000-175ec88e4304 h1:RIrWLzIiZN5Xd2JOfSOtGZaf6V3qEQYg6EaDTAkMnCo=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230328024000-175ec88e4304/go.mod h1:yPWoJTj5RKrXKUChAicp+G/4Ni/uVEpp27mi/FF/L9c=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230331072320-5d6f6cfa2627 h1:A0SwZgp4bmJFbivYJc8mmVhMjrr3EdUZluBYFke11+w=
@@ -988,8 +990,8 @@ github.com/prometheus/client_golang v1.4.0/go.mod h1:e9GMxYsXl05ICDXkRhurwBS4Q3O
 github.com/prometheus/client_golang v1.7.1/go.mod h1:PY5Wy2awLA44sXw4AOSfFBetzPP4j5+D6mVACh+pe2M=
 github.com/prometheus/client_golang v1.11.0/go.mod h1:Z6t4BnS23TR94PD6BsDNk8yVqroYurpAkEiz0P2BEV0=
 github.com/prometheus/client_golang v1.12.1/go.mod h1:3Z9XVyYiZYEO+YQWt3RD2R3jrbd179Rt297l4aS6nDY=
-github.com/prometheus/client_golang v1.15.0 h1:5fCgGYogn0hFdhyhLbw7hEsWxufKtY9klyvdNfFlFhM=
-github.com/prometheus/client_golang v1.15.0/go.mod h1:e9yaBhRPU2pPNsZwE+JdQl0KEt1N9XgF6zxWmaC0xOk=
+github.com/prometheus/client_golang v1.15.1 h1:8tXpTmJbyH5lydzFPoxSIJ0J46jdh3tylbvM1xCv0LI=
+github.com/prometheus/client_golang v1.15.1/go.mod h1:e9yaBhRPU2pPNsZwE+JdQl0KEt1N9XgF6zxWmaC0xOk=
 github.com/prometheus/client_model v0.0.0-20180712105110-5c3871d89910/go.mod h1:MbSGuTsp3dbXC40dX6PRTWyKYBIrTGTE9sqQNg2J8bo=
 github.com/prometheus/client_model v0.0.0-20190115171406-56726106282f/go.mod h1:MbSGuTsp3dbXC40dX6PRTWyKYBIrTGTE9sqQNg2J8bo=
 github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90/go.mod h1:xMI15A0UPsDsEKsMN9yxemIoYk6Tm2C1GtYGdfGttqA=

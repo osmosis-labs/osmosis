@@ -311,6 +311,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.PoolIncentivesKeeper,
 		appKeepers.IncentivesKeeper,
 		appKeepers.LockupKeeper,
+		appKeepers.DistrKeeper,
 		appKeepers.GetSubspace(concentratedliquiditytypes.ModuleName),
 	)
 

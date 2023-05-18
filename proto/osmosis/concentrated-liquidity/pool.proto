@@ -40,19 +40,12 @@ message Pool {
     (gogoproto.moretags) = "yaml:\"spot_price\"",
     (gogoproto.nullable) = false
   ];
-  string current_tick = 8 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"current_tick\"",
-    (gogoproto.nullable) = false
-  ];
+  int64 current_tick = 8 [ (gogoproto.moretags) = "yaml:\"current_tick\"" ];
   // tick_spacing must be one of the authorized_tick_spacing values set in the
   // concentrated-liquidity parameters
   uint64 tick_spacing = 9 [ (gogoproto.moretags) = "yaml:\"tick_spacing\"" ];
-  string exponent_at_price_one = 10 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"exponent_at_price_one\"",
-    (gogoproto.nullable) = false
-  ];
+  int64 exponent_at_price_one = 10
+      [ (gogoproto.moretags) = "yaml:\"exponent_at_price_one\"" ];
 
   // swap_fee is the ratio that is charged on the amount of token in.
   string swap_fee = 11 [

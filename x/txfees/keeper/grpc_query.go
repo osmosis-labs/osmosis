@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"google.golang.org/grpc/codes"
@@ -35,7 +36,7 @@ func (q Querier) DenomSpotPrice(ctx context.Context, req *types.QueryDenomSpotPr
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Denom) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -58,7 +59,7 @@ func (q Querier) DenomPoolId(ctx context.Context, req *types.QueryDenomPoolIdReq
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Denom) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)

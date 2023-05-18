@@ -53,7 +53,8 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 	synthDenomBeforeMigration string,
 	concentratedPool cltypes.ConcentratedPoolExtension,
 	remainingLockTime time.Duration,
-	tokenOutMins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, gammLockId, concentratedLockId uint64, err error) {
+	tokenOutMins sdk.Coins,
+) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, gammLockId, concentratedLockId uint64, err error) {
 	// Get the validator address from the synth denom and ensure it is a valid address.
 	valAddr := strings.Split(synthDenomBeforeMigration, "/")[4]
 	_, err = sdk.ValAddressFromBech32(valAddr)
@@ -120,7 +121,8 @@ func (k Keeper) migrateSuperfluidUnbondingBalancerToConcentrated(ctx sdk.Context
 	synthDenomBeforeMigration string,
 	concentratedPool cltypes.ConcentratedPoolExtension,
 	remainingLockTime time.Duration,
-	tokenOutMins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, gammLockId, concentratedLockId uint64, err error) {
+	tokenOutMins sdk.Coins,
+) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, gammLockId, concentratedLockId uint64, err error) {
 	// Get the validator address from the synth denom and ensure it is a valid address.
 	valAddr := strings.Split(synthDenomBeforeMigration, "/")[4]
 	_, err = sdk.ValAddressFromBech32(valAddr)
@@ -204,7 +206,8 @@ func (k Keeper) migrateNonSuperfluidLockBalancerToConcentrated(ctx sdk.Context,
 	sharesToMigrate sdk.Coin,
 	concentratedPool cltypes.ConcentratedPoolExtension,
 	remainingLockTime time.Duration,
-	tokenOutMins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, gammLockId, concentratedLockId uint64, err error) {
+	tokenOutMins sdk.Coins,
+) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, gammLockId, concentratedLockId uint64, err error) {
 	// Save unlocking state of lock before force unlocking
 	wasUnlocking := preMigrationLock.IsUnlocking()
 
@@ -277,19 +280,22 @@ func (k Keeper) prepareMigration(ctx sdk.Context, sender sdk.AccAddress, lockId 
 	}
 
 	// Get the concentrated pool from the provided ID and type cast it to ConcentratedPoolExtension.
-	concentratedPool, err = k.clk.GetPoolFromPoolIdAndConvertToConcentrated(ctx, poolIdEntering)
+	concentratedPool, err = k.clk.GetConcentratedPoolById(ctx, poolIdEntering)
 	if err != nil {
 		return 0, 0, nil, &lockuptypes.PeriodLock{}, 0, nil, false, false, err
 	}
 
 	// Check that lockID corresponds to sender, and contains correct denomination of LP shares.
-	preMigrationLock, err = k.validateLockForUnpool(ctx, sender, poolIdLeaving, lockId)
+	preMigrationLock, err = k.validateGammLockForSuperfluidStaking(ctx, sender, poolIdLeaving, lockId)
 	if err != nil {
 		return 0, 0, nil, &lockuptypes.PeriodLock{}, 0, nil, false, false, err
 	}
 
 	// Before we break the lock, we must note the time remaining on the lock.
-	remainingLockTime = k.getExistingLockRemainingDuration(ctx, preMigrationLock)
+	remainingLockTime, err = k.getExistingLockRemainingDuration(ctx, preMigrationLock)
+	if err != nil {
+		return 0, 0, nil, &lockuptypes.PeriodLock{}, 0, nil, false, false, err
+	}
 
 	// Check if the lock has a corresponding synthetic lock.
 	// Synthetic lock existence implies that the lock is superfluid delegated or undelegating.

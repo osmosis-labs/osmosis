@@ -71,12 +71,10 @@ func (h Hooks) AfterConcentratedPoolCreated(ctx sdk.Context, sender sdk.AccAddre
 
 // AfterInitialPoolPositionCreated is a noop.
 func (h Hooks) AfterInitialPoolPositionCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
-
 }
 
 // AfterLastPoolPositionRemoved is a noop.
 func (h Hooks) AfterLastPoolPositionRemoved(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
-
 }
 
 // AfterConcentratedPoolSwap is a noop.
