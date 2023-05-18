@@ -403,11 +403,11 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 	}
 }
 
-func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
+func (s *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 	var (
 		tickToSqrtPrice = func(tick int64) sdk.Dec {
 			_, sqrtPrice, err := clmath.TickToSqrtPrice(tick)
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 			return sqrtPrice
 		}
 
@@ -511,43 +511,43 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 
 	for name, tc := range tests {
 		tc := tc
-		suite.Run(name, func() {
-			suite.Setup()
+		s.Run(name, func() {
+			s.Setup()
 
 			pool := model.Pool{
 				CurrentTick: tc.currentTick,
 			}
 			_, pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick)
 
-			actualAmount0, actualAmount1, err := pool.CalcActualAmounts(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
+			actualAmount0, actualAmount1, err := pool.CalcActualAmounts(s.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
 
 			if tc.expectError != nil {
-				suite.Require().Error(err)
-				suite.Require().ErrorIs(err, tc.expectError)
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectError)
 				return
 			}
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
-			suite.Require().Equal(tc.expectedAmount0, actualAmount0)
-			suite.Require().Equal(tc.expectedAmount1, actualAmount1)
+			s.Require().Equal(tc.expectedAmount0, actualAmount0)
+			s.Require().Equal(tc.expectedAmount1, actualAmount1)
 
 			// Note: to test rounding invariants around positive and negative liquidity.
 			if tc.shouldTestRoundingInvariant {
-				actualAmount0Neg, actualAmount1Neg, err := pool.CalcActualAmounts(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta.Neg())
-				suite.Require().NoError(err)
+				actualAmount0Neg, actualAmount1Neg, err := pool.CalcActualAmounts(s.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta.Neg())
+				s.Require().NoError(err)
 
 				amt0Diff := actualAmount0.Sub(actualAmount0Neg.Neg())
 				amt1Diff := actualAmount1.Sub(actualAmount1Neg.Neg())
 
 				// Difference is between 0 and 1 due to positive liquidity rounding up and negative liquidity performing math normally.
-				suite.Require().True(amt0Diff.GT(sdk.ZeroDec()) && amt0Diff.LT(sdk.OneDec()))
-				suite.Require().True(amt1Diff.GT(sdk.ZeroDec()) && amt1Diff.LT(sdk.OneDec()))
+				s.Require().True(amt0Diff.GT(sdk.ZeroDec()) && amt0Diff.LT(sdk.OneDec()))
+				s.Require().True(amt1Diff.GT(sdk.ZeroDec()) && amt1Diff.LT(sdk.OneDec()))
 			}
 		})
 	}
 }
 
-func (suite *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
+func (s *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 	var (
 		defaultLiquidityDelta = sdk.NewDec(1000)
 		defaultLiquidityAmt   = sdk.NewDec(1000)
@@ -604,8 +604,8 @@ func (suite *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 
 	for name, tc := range tests {
 		tc := tc
-		suite.Run(name, func() {
-			suite.Setup()
+		s.Run(name, func() {
+			s.Setup()
 
 			pool := model.Pool{
 				CurrentTick:          tc.currentTick,
@@ -613,14 +613,14 @@ func (suite *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 			}
 			_, pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick)
 
-			wasUpdated := pool.UpdateLiquidityIfActivePosition(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
+			wasUpdated := pool.UpdateLiquidityIfActivePosition(s.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
 			if tc.lowerTick <= tc.currentTick && tc.currentTick <= tc.upperTick {
-				suite.Require().True(wasUpdated)
+				s.Require().True(wasUpdated)
 				expectedCurrentTickLiquidity := defaultLiquidityAmt.Add(tc.liquidityDelta)
-				suite.Require().Equal(expectedCurrentTickLiquidity, pool.CurrentTickLiquidity)
+				s.Require().Equal(expectedCurrentTickLiquidity, pool.CurrentTickLiquidity)
 			} else {
-				suite.Require().False(wasUpdated)
-				suite.Require().Equal(defaultLiquidityAmt, pool.CurrentTickLiquidity)
+				s.Require().False(wasUpdated)
+				s.Require().Equal(defaultLiquidityAmt, pool.CurrentTickLiquidity)
 			}
 		})
 	}

@@ -80,7 +80,7 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 		// Seed controlling determinism of the randomized positions.
 		seed = int64(1)
 	)
-	rand.Seed(seed)
+	rand.Seed(seed) //nolint:staticcheck
 
 	for i := 0; i < b.N; i++ {
 		s := BenchTestSuite{}
