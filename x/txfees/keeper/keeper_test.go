@@ -26,19 +26,19 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest(isCheckTx bool) {
-	suite.Setup()
-	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
+	s.Setup()
+	s.queryClient = types.NewQueryClient(s.QueryHelper)
 
 	encodingConfig := osmosisapp.MakeEncodingConfig()
-	suite.clientCtx = client.Context{}.
+	s.clientCtx = client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
 		WithCodec(encodingConfig.Marshaler)
 
 	// Mint some assets to the accounts.
-	for _, acc := range suite.TestAccs {
-		suite.FundAcc(acc,
+	for _, acc := range s.TestAccs {
+		s.FundAcc(acc,
 			sdk.NewCoins(
 				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000000)),
 				sdk.NewCoin("uosmo", sdk.NewInt(100000000000000000)), // Needed for pool creation fee
@@ -60,5 +60,5 @@ func (s *KeeperTestSuite) ExecuteUpgradeFeeTokenProposal(feeToken string, poolId
 			PoolID: poolId,
 		},
 	)
-	return suite.App.TxFeesKeeper.HandleUpdateFeeTokenProposal(suite.Ctx, &upgradeProp)
+	return s.App.TxFeesKeeper.HandleUpdateFeeTokenProposal(s.Ctx, &upgradeProp)
 }

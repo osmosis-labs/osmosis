@@ -22,7 +22,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	suite.Ctx = testutil.DefaultContext(sdk.NewKVStoreKey(types.StoreKey), sdk.NewTransientStoreKey("transient_test"))
+	s.Ctx = testutil.DefaultContext(sdk.NewKVStoreKey(types.StoreKey), sdk.NewTransientStoreKey("transient_test"))
 }
 
 func dummyAfterEpochEndEvent(epochIdentifier string, epochNumber int64) sdk.Event {
@@ -103,7 +103,7 @@ func (s *KeeperTestSuite) TestHooksPanicRecovery() {
 
 	for tcIndex, tc := range tests {
 		for epochActionSelector := 0; epochActionSelector < 2; epochActionSelector++ {
-			suite.SetupTest()
+			s.SetupTest()
 			hookRefs := []types.EpochHooks{}
 
 			for _, hook := range tc.hooks {
@@ -120,21 +120,21 @@ func (s *KeeperTestSuite) TestHooksPanicRecovery() {
 				return evts
 			}
 
-			suite.NotPanics(func() {
+			s.NotPanics(func() {
 				if epochActionSelector == 0 {
-					hooks.BeforeEpochStart(suite.Ctx, "id", 0)
-					suite.Require().Equal(events("id", 0, dummyBeforeEpochStartEvent), suite.Ctx.EventManager().Events(),
+					hooks.BeforeEpochStart(s.Ctx, "id", 0)
+					s.Require().Equal(events("id", 0, dummyBeforeEpochStartEvent), s.Ctx.EventManager().Events(),
 						"test case index %d, before epoch event check", tcIndex)
 				} else if epochActionSelector == 1 {
-					hooks.AfterEpochEnd(suite.Ctx, "id", 0)
-					suite.Require().Equal(events("id", 0, dummyAfterEpochEndEvent), suite.Ctx.EventManager().Events(),
+					hooks.AfterEpochEnd(s.Ctx, "id", 0)
+					s.Require().Equal(events("id", 0, dummyAfterEpochEndEvent), s.Ctx.EventManager().Events(),
 						"test case index %d, after epoch event check", tcIndex)
 				}
 			})
 
 			for i := 0; i < len(hooks); i++ {
 				epochHook := hookRefs[i].(*dummyEpochHook)
-				suite.Require().Equal(tc.expectedCounterValues[i], epochHook.successCounter, "test case index %d", tcIndex)
+				s.Require().Equal(tc.expectedCounterValues[i], epochHook.successCounter, "test case index %d", tcIndex)
 			}
 		}
 	}

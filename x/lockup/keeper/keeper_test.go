@@ -20,10 +20,10 @@ type KeeperTestSuite struct {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	suite.Setup()
-	suite.querier = keeper.NewQuerier(*suite.App.LockupKeeper)
-	unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
-	suite.App.IncentivesKeeper.SetLockableDurations(suite.Ctx, []time.Duration{
+	s.Setup()
+	s.querier = keeper.NewQuerier(*s.App.LockupKeeper)
+	unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
+	s.App.IncentivesKeeper.SetLockableDurations(s.Ctx, []time.Duration{
 		time.Hour * 24 * 14,
 		time.Hour,
 		time.Hour * 3,
@@ -33,12 +33,12 @@ func (s *KeeperTestSuite) SetupTest() {
 }
 
 func (s *KeeperTestSuite) SetupTestWithLevelDb() {
-	suite.App, suite.cleanup = app.SetupTestingAppWithLevelDb(false)
-	suite.Ctx = suite.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	s.App, s.cleanup = app.SetupTestingAppWithLevelDb(false)
+	s.Ctx = s.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
 }
 
 func (s *KeeperTestSuite) Cleanup() {
-	suite.cleanup()
+	s.cleanup()
 }
 
 func TestKeeperTestSuite(t *testing.T) {

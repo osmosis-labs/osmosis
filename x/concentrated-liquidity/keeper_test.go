@@ -65,7 +65,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	suite.Setup()
+	s.Setup()
 }
 
 func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {

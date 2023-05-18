@@ -24,14 +24,14 @@ type KeeperTestSuite struct {
 
 func (s *KeeperTestSuite) SetupTest() {
 	ctx, epochsKeeper := Setup()
-	suite.Ctx = ctx
-	suite.EpochsKeeper = epochsKeeper
+	s.Ctx = ctx
+	s.EpochsKeeper = epochsKeeper
 	queryRouter := baseapp.NewGRPCQueryRouter()
 	cfg := module.NewConfigurator(nil, nil, queryRouter)
-	types.RegisterQueryServer(cfg.QueryServer(), epochskeeper.NewQuerier(*suite.EpochsKeeper))
-	suite.queryClient = types.NewQueryClient(&baseapp.QueryServiceTestHelper{
+	types.RegisterQueryServer(cfg.QueryServer(), epochskeeper.NewQuerier(*s.EpochsKeeper))
+	s.queryClient = types.NewQueryClient(&baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: queryRouter,
-		Ctx:             suite.Ctx,
+		Ctx:             s.Ctx,
 	})
 }
 

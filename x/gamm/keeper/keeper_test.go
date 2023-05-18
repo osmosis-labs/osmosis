@@ -29,9 +29,9 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	suite.Setup()
+	s.Setup()
 
-	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
+	s.queryClient = types.NewQueryClient(s.QueryHelper)
 }
 
 func (s *KeeperTestSuite) prepareCustomBalancerPool(
@@ -39,13 +39,13 @@ func (s *KeeperTestSuite) prepareCustomBalancerPool(
 	poolAssets []balancer.PoolAsset,
 	poolParams balancer.PoolParams,
 ) uint64 {
-	suite.fundAllAccountsWith(balances)
+	s.fundAllAccountsWith(balances)
 
-	poolID, err := suite.App.PoolManagerKeeper.CreatePool(
-		suite.Ctx,
-		balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], poolParams, poolAssets, ""),
+	poolID, err := s.App.PoolManagerKeeper.CreatePool(
+		s.Ctx,
+		balancer.NewMsgCreateBalancerPool(s.TestAccs[0], poolParams, poolAssets, ""),
 	)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
 	return poolID
 }
@@ -56,19 +56,19 @@ func (s *KeeperTestSuite) prepareCustomStableswapPool(
 	initialLiquidity sdk.Coins,
 	scalingFactors []uint64,
 ) uint64 {
-	suite.fundAllAccountsWith(balances)
+	s.fundAllAccountsWith(balances)
 
-	poolID, err := suite.App.PoolManagerKeeper.CreatePool(
-		suite.Ctx,
-		stableswap.NewMsgCreateStableswapPool(suite.TestAccs[0], poolParams, initialLiquidity, scalingFactors, ""),
+	poolID, err := s.App.PoolManagerKeeper.CreatePool(
+		s.Ctx,
+		stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], poolParams, initialLiquidity, scalingFactors, ""),
 	)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
 	return poolID
 }
 
 func (s *KeeperTestSuite) fundAllAccountsWith(balances sdk.Coins) {
-	for _, acc := range suite.TestAccs {
-		suite.FundAcc(acc, balances)
+	for _, acc := range s.TestAccs {
+		s.FundAcc(acc, balances)
 	}
 }

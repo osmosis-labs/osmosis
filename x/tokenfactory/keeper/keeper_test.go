@@ -53,39 +53,39 @@ func (p SudoAuthorizationPolicy) CanModifyCodeAccessConfig(creator, actor sdk.Ac
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	suite.Setup()
+	s.Setup()
 	// Fund every TestAcc with two denoms, one of which is the denom creation fee
 	fundAccsAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)), sdk.NewCoin(apptesting.SecondaryDenom, apptesting.SecondaryAmount))
-	for _, acc := range suite.TestAccs {
-		suite.FundAcc(acc, fundAccsAmount)
+	for _, acc := range s.TestAccs {
+		s.FundAcc(acc, fundAccsAmount)
 	}
-	suite.contractKeeper = wasmkeeper.NewGovPermissionKeeper(suite.App.WasmKeeper)
-	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
-	suite.msgServer = keeper.NewMsgServerImpl(*suite.App.TokenFactoryKeeper)
-	suite.bankMsgServer = bankkeeper.NewMsgServerImpl(suite.App.BankKeeper)
+	s.contractKeeper = wasmkeeper.NewGovPermissionKeeper(s.App.WasmKeeper)
+	s.queryClient = types.NewQueryClient(s.QueryHelper)
+	s.msgServer = keeper.NewMsgServerImpl(*s.App.TokenFactoryKeeper)
+	s.bankMsgServer = bankkeeper.NewMsgServerImpl(s.App.BankKeeper)
 }
 
 func (s *KeeperTestSuite) CreateDefaultDenom() {
-	res, _ := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
-	suite.defaultDenom = res.GetNewTokenDenom()
+	res, _ := s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), "bitcoin"))
+	s.defaultDenom = res.GetNewTokenDenom()
 }
 
 func (s *KeeperTestSuite) TestCreateModuleAccount() {
-	app := suite.App
+	app := s.App
 
 	// remove module account
-	tokenfactoryModuleAccount := app.AccountKeeper.GetAccount(suite.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
-	app.AccountKeeper.RemoveAccount(suite.Ctx, tokenfactoryModuleAccount)
+	tokenfactoryModuleAccount := app.AccountKeeper.GetAccount(s.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
+	app.AccountKeeper.RemoveAccount(s.Ctx, tokenfactoryModuleAccount)
 
 	// ensure module account was removed
-	suite.Ctx = app.BaseApp.NewContext(false, tmproto.Header{})
-	tokenfactoryModuleAccount = app.AccountKeeper.GetAccount(suite.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
-	suite.Require().Nil(tokenfactoryModuleAccount)
+	s.Ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	tokenfactoryModuleAccount = app.AccountKeeper.GetAccount(s.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
+	s.Require().Nil(tokenfactoryModuleAccount)
 
 	// create module account
-	app.TokenFactoryKeeper.CreateModuleAccount(suite.Ctx)
+	app.TokenFactoryKeeper.CreateModuleAccount(s.Ctx)
 
 	// check that the module account is now initialized
-	tokenfactoryModuleAccount = app.AccountKeeper.GetAccount(suite.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
-	suite.Require().NotNil(tokenfactoryModuleAccount)
+	tokenfactoryModuleAccount = app.AccountKeeper.GetAccount(s.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
+	s.Require().NotNil(tokenfactoryModuleAccount)
 }
