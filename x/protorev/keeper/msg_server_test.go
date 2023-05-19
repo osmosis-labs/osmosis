@@ -9,7 +9,7 @@ import (
 )
 
 // TestMsgSetHotRoutes tests the MsgSetHotRoutes message.
-func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
+func (s *KeeperTestSuite) TestMsgSetHotRoutes() {
 	validStepSize := sdk.NewInt(1_000_000)
 	invalidStepSize := sdk.NewInt(0)
 
@@ -36,7 +36,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 		},
 		{
 			"Valid message (with proper hot routes)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			[]types.TokenPairArbRoutes{
 				{
 					ArbRoutes: []types.Route{
@@ -70,7 +70,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 		},
 		{
 			"Invalid message (with duplicate hot routes)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			[]types.TokenPairArbRoutes{
 				{
 					ArbRoutes: []types.Route{
@@ -130,7 +130,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 		},
 		{
 			"Invalid message (with proper hot routes)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			[]types.TokenPairArbRoutes{
 				{
 					ArbRoutes: []types.Route{
@@ -164,7 +164,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 		},
 		{
 			"Invalid message with nil step size (with proper hot routes)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			[]types.TokenPairArbRoutes{
 				{
 					ArbRoutes: []types.Route{
@@ -198,36 +198,36 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 	}
 
 	for _, tc := range testCases {
-		suite.Run(tc.description, func() {
+		s.Run(tc.description, func() {
 			msg := types.NewMsgSetHotRoutes(tc.admin, tc.hotRoutes)
 
 			err := msg.ValidateBasic()
 			if tc.passValidateBasic {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 				return
 			}
 
-			server := keeper.NewMsgServer(*suite.App.AppKeepers.ProtoRevKeeper)
-			wrappedCtx := sdk.WrapSDKContext(suite.Ctx)
+			server := keeper.NewMsgServer(*s.App.AppKeepers.ProtoRevKeeper)
+			wrappedCtx := sdk.WrapSDKContext(s.Ctx)
 			response, err := server.SetHotRoutes(wrappedCtx, msg)
 			if tc.pass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(response, &types.MsgSetHotRoutesResponse{})
+				s.Require().NoError(err)
+				s.Require().Equal(response, &types.MsgSetHotRoutesResponse{})
 
-				hotRoutes, err := suite.App.AppKeepers.ProtoRevKeeper.GetAllTokenPairArbRoutes(suite.Ctx)
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.hotRoutes, hotRoutes)
+				hotRoutes, err := s.App.AppKeepers.ProtoRevKeeper.GetAllTokenPairArbRoutes(s.Ctx)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.hotRoutes, hotRoutes)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
 // TestMsgSetDeveloperAccount tests the MsgSetDeveloperAccount message.
-func (suite *KeeperTestSuite) TestMsgSetDeveloperAccount() {
+func (s *KeeperTestSuite) TestMsgSetDeveloperAccount() {
 	cases := []struct {
 		description       string
 		admin             string
@@ -244,7 +244,7 @@ func (suite *KeeperTestSuite) TestMsgSetDeveloperAccount() {
 		},
 		{
 			"Invalid message (invalid developer account)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			"developer",
 			false,
 			false,
@@ -258,7 +258,7 @@ func (suite *KeeperTestSuite) TestMsgSetDeveloperAccount() {
 		},
 		{
 			"Valid message (correct admin)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			apptesting.CreateRandomAccounts(1)[0].String(),
 			true,
 			true,
@@ -266,36 +266,36 @@ func (suite *KeeperTestSuite) TestMsgSetDeveloperAccount() {
 	}
 
 	for _, testCase := range cases {
-		suite.Run(testCase.description, func() {
+		s.Run(testCase.description, func() {
 			msg := types.NewMsgSetDeveloperAccount(testCase.admin, testCase.developerAccount)
 
 			err := msg.ValidateBasic()
 			if testCase.passValidateBasic {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 				return
 			}
 
-			server := keeper.NewMsgServer(*suite.App.AppKeepers.ProtoRevKeeper)
-			wrappedCtx := sdk.WrapSDKContext(suite.Ctx)
+			server := keeper.NewMsgServer(*s.App.AppKeepers.ProtoRevKeeper)
+			wrappedCtx := sdk.WrapSDKContext(s.Ctx)
 			response, err := server.SetDeveloperAccount(wrappedCtx, msg)
 			if testCase.pass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(response, &types.MsgSetDeveloperAccountResponse{})
+				s.Require().NoError(err)
+				s.Require().Equal(response, &types.MsgSetDeveloperAccountResponse{})
 
-				developerAccount, err := suite.App.AppKeepers.ProtoRevKeeper.GetDeveloperAccount(suite.Ctx)
-				suite.Require().NoError(err)
-				suite.Require().Equal(sdk.MustAccAddressFromBech32(testCase.developerAccount), developerAccount)
+				developerAccount, err := s.App.AppKeepers.ProtoRevKeeper.GetDeveloperAccount(s.Ctx)
+				s.Require().NoError(err)
+				s.Require().Equal(sdk.MustAccAddressFromBech32(testCase.developerAccount), developerAccount)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
 // TestMsgSetMaxPoolPointsPerTx tests the MsgSetMaxPoolPointsPerTx message.
-func (suite *KeeperTestSuite) TestMsgSetMaxPoolPointsPerTx() {
+func (s *KeeperTestSuite) TestMsgSetMaxPoolPointsPerTx() {
 	cases := []struct {
 		description        string
 		admin              string
@@ -312,7 +312,7 @@ func (suite *KeeperTestSuite) TestMsgSetMaxPoolPointsPerTx() {
 		},
 		{
 			"Invalid message (invalid max pool points per tx)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			0,
 			false,
 			false,
@@ -326,21 +326,21 @@ func (suite *KeeperTestSuite) TestMsgSetMaxPoolPointsPerTx() {
 		},
 		{
 			"Valid message (correct admin)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			1,
 			true,
 			true,
 		},
 		{
 			"Valid message (correct admin, valid max pool points per tx)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			types.MaxPoolPointsPerTx - 1,
 			true,
 			true,
 		},
 		{
 			"Invalid message (correct admin, too many max pool points per tx)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			types.MaxPoolPointsPerTx + 1,
 			false,
 			false,
@@ -348,36 +348,36 @@ func (suite *KeeperTestSuite) TestMsgSetMaxPoolPointsPerTx() {
 	}
 
 	for _, testCase := range cases {
-		suite.Run(testCase.description, func() {
+		s.Run(testCase.description, func() {
 			msg := types.NewMsgSetMaxPoolPointsPerTx(testCase.admin, testCase.maxPoolPointsPerTx)
 
 			err := msg.ValidateBasic()
 			if testCase.passValidateBasic {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 				return
 			}
 
-			server := keeper.NewMsgServer(*suite.App.AppKeepers.ProtoRevKeeper)
-			wrappedCtx := sdk.WrapSDKContext(suite.Ctx)
+			server := keeper.NewMsgServer(*s.App.AppKeepers.ProtoRevKeeper)
+			wrappedCtx := sdk.WrapSDKContext(s.Ctx)
 			response, err := server.SetMaxPoolPointsPerTx(wrappedCtx, msg)
 			if testCase.pass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(response, &types.MsgSetMaxPoolPointsPerTxResponse{})
+				s.Require().NoError(err)
+				s.Require().Equal(response, &types.MsgSetMaxPoolPointsPerTxResponse{})
 
-				maxRoutesPerTx, err := suite.App.AppKeepers.ProtoRevKeeper.GetMaxPointsPerTx(suite.Ctx)
-				suite.Require().NoError(err)
-				suite.Require().Equal(testCase.maxPoolPointsPerTx, maxRoutesPerTx)
+				maxRoutesPerTx, err := s.App.AppKeepers.ProtoRevKeeper.GetMaxPointsPerTx(s.Ctx)
+				s.Require().NoError(err)
+				s.Require().Equal(testCase.maxPoolPointsPerTx, maxRoutesPerTx)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
 // TestMsgSetMaxPoolPointsPerBlock tests the MsgSetMaxPoolPointsPerBlock message.
-func (suite *KeeperTestSuite) TestMsgSetMaxPoolPointsPerBlock() {
+func (s *KeeperTestSuite) TestMsgSetMaxPoolPointsPerBlock() {
 	cases := []struct {
 		description           string
 		admin                 string
@@ -394,7 +394,7 @@ func (suite *KeeperTestSuite) TestMsgSetMaxPoolPointsPerBlock() {
 		},
 		{
 			"Invalid message (invalid max pool points per block)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			0,
 			false,
 			false,
@@ -408,28 +408,28 @@ func (suite *KeeperTestSuite) TestMsgSetMaxPoolPointsPerBlock() {
 		},
 		{
 			"Valid message (correct admin)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			50,
 			true,
 			true,
 		},
 		{
 			"Invalid message (correct admin but less points than max pool points per tx)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			17,
 			true,
 			false,
 		},
 		{
 			"Valid message (correct admin, valid max pool points per block)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			types.MaxPoolPointsPerBlock - 1,
 			true,
 			true,
 		},
 		{
 			"Invalid message (correct admin, too many max routes per block)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			types.MaxPoolPointsPerBlock + 1,
 			false,
 			false,
@@ -437,36 +437,36 @@ func (suite *KeeperTestSuite) TestMsgSetMaxPoolPointsPerBlock() {
 	}
 
 	for _, testCase := range cases {
-		suite.Run(testCase.description, func() {
+		s.Run(testCase.description, func() {
 			msg := types.NewMsgSetMaxPoolPointsPerBlock(testCase.admin, testCase.maxPoolPointsPerBlock)
 
 			err := msg.ValidateBasic()
 			if testCase.passValidateBasic {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 				return
 			}
 
-			server := keeper.NewMsgServer(*suite.App.AppKeepers.ProtoRevKeeper)
-			wrappedCtx := sdk.WrapSDKContext(suite.Ctx)
+			server := keeper.NewMsgServer(*s.App.AppKeepers.ProtoRevKeeper)
+			wrappedCtx := sdk.WrapSDKContext(s.Ctx)
 			response, err := server.SetMaxPoolPointsPerBlock(wrappedCtx, msg)
 			if testCase.pass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(response, &types.MsgSetMaxPoolPointsPerBlockResponse{})
+				s.Require().NoError(err)
+				s.Require().Equal(response, &types.MsgSetMaxPoolPointsPerBlockResponse{})
 
-				maxRoutesPerBlock, err := suite.App.AppKeepers.ProtoRevKeeper.GetMaxPointsPerBlock(suite.Ctx)
-				suite.Require().NoError(err)
-				suite.Require().Equal(testCase.maxPoolPointsPerBlock, maxRoutesPerBlock)
+				maxRoutesPerBlock, err := s.App.AppKeepers.ProtoRevKeeper.GetMaxPointsPerBlock(s.Ctx)
+				s.Require().NoError(err)
+				s.Require().Equal(testCase.maxPoolPointsPerBlock, maxRoutesPerBlock)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
 // TestMsgSetPoolWeights tests the MsgSetPoolWeights message.
-func (suite *KeeperTestSuite) TestMsgSetPoolWeights() {
+func (s *KeeperTestSuite) TestMsgSetPoolWeights() {
 	cases := []struct {
 		description       string
 		admin             string
@@ -487,7 +487,7 @@ func (suite *KeeperTestSuite) TestMsgSetPoolWeights() {
 		},
 		{
 			"Invalid message (invalid pool weight)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			types.PoolWeights{
 				StableWeight:       0,
 				BalancerWeight:     2,
@@ -498,7 +498,7 @@ func (suite *KeeperTestSuite) TestMsgSetPoolWeights() {
 		},
 		{
 			"Invalid message (unset pool weight)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			types.PoolWeights{
 				StableWeight: 1,
 			},
@@ -518,7 +518,7 @@ func (suite *KeeperTestSuite) TestMsgSetPoolWeights() {
 		},
 		{
 			"Valid message (correct admin)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			types.PoolWeights{
 				StableWeight:       1,
 				BalancerWeight:     2,
@@ -530,36 +530,36 @@ func (suite *KeeperTestSuite) TestMsgSetPoolWeights() {
 	}
 
 	for _, testCase := range cases {
-		suite.Run(testCase.description, func() {
+		s.Run(testCase.description, func() {
 			msg := types.NewMsgSetPoolWeights(testCase.admin, testCase.poolWeights)
 
 			err := msg.ValidateBasic()
 			if testCase.passValidateBasic {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 				return
 			}
 
-			server := keeper.NewMsgServer(*suite.App.AppKeepers.ProtoRevKeeper)
-			wrappedCtx := sdk.WrapSDKContext(suite.Ctx)
+			server := keeper.NewMsgServer(*s.App.AppKeepers.ProtoRevKeeper)
+			wrappedCtx := sdk.WrapSDKContext(s.Ctx)
 			response, err := server.SetPoolWeights(wrappedCtx, msg)
 			if testCase.pass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(response, &types.MsgSetPoolWeightsResponse{})
+				s.Require().NoError(err)
+				s.Require().Equal(response, &types.MsgSetPoolWeightsResponse{})
 
-				poolWeights := suite.App.AppKeepers.ProtoRevKeeper.GetPoolWeights(suite.Ctx)
-				suite.Require().NoError(err)
-				suite.Require().Equal(testCase.poolWeights, poolWeights)
+				poolWeights := s.App.AppKeepers.ProtoRevKeeper.GetPoolWeights(s.Ctx)
+				s.Require().NoError(err)
+				s.Require().Equal(testCase.poolWeights, poolWeights)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
 // TestMsgSetBaseDenoms tests the MsgSetBaseDenoms message.
-func (suite *KeeperTestSuite) TestMsgSetBaseDenoms() {
+func (s *KeeperTestSuite) TestMsgSetBaseDenoms() {
 	cases := []struct {
 		description       string
 		admin             string
@@ -581,7 +581,7 @@ func (suite *KeeperTestSuite) TestMsgSetBaseDenoms() {
 		},
 		{
 			"Invalid message (invalid base denoms must start with osmo)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			[]types.BaseDenom{
 				{
 					Denom:    "Atom",
@@ -593,7 +593,7 @@ func (suite *KeeperTestSuite) TestMsgSetBaseDenoms() {
 		},
 		{
 			"Invalid message (invalid step size)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			[]types.BaseDenom{
 				{
 					Denom:    types.OsmosisDenomination,
@@ -617,7 +617,7 @@ func (suite *KeeperTestSuite) TestMsgSetBaseDenoms() {
 		},
 		{
 			"Valid message (correct admin)",
-			suite.adminAccount.String(),
+			s.adminAccount.String(),
 			[]types.BaseDenom{
 				{
 					Denom:    types.OsmosisDenomination,
@@ -630,29 +630,29 @@ func (suite *KeeperTestSuite) TestMsgSetBaseDenoms() {
 	}
 
 	for _, testCase := range cases {
-		suite.Run(testCase.description, func() {
+		s.Run(testCase.description, func() {
 			msg := types.NewMsgSetBaseDenoms(testCase.admin, testCase.baseDenoms)
 
 			err := msg.ValidateBasic()
 			if testCase.passValidateBasic {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 				return
 			}
 
-			server := keeper.NewMsgServer(*suite.App.AppKeepers.ProtoRevKeeper)
-			wrappedCtx := sdk.WrapSDKContext(suite.Ctx)
+			server := keeper.NewMsgServer(*s.App.AppKeepers.ProtoRevKeeper)
+			wrappedCtx := sdk.WrapSDKContext(s.Ctx)
 			response, err := server.SetBaseDenoms(wrappedCtx, msg)
 			if testCase.pass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(response, &types.MsgSetBaseDenomsResponse{})
+				s.Require().NoError(err)
+				s.Require().Equal(response, &types.MsgSetBaseDenomsResponse{})
 
-				baseDenoms, err := suite.App.AppKeepers.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
-				suite.Require().NoError(err)
-				suite.Require().Equal(testCase.baseDenoms, baseDenoms)
+				baseDenoms, err := s.App.AppKeepers.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
+				s.Require().NoError(err)
+				s.Require().Equal(testCase.baseDenoms, baseDenoms)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}

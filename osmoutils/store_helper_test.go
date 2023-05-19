@@ -1243,3 +1243,69 @@ func (s *TestSuite) TestHasAnyAtPrefix() {
 		})
 	}
 }
+
+func (s *TestSuite) TestGetDec() {
+	tests := map[string]struct {
+		// keys and values to preset
+		preSetKeyValues map[string]sdk.Dec
+
+		// keys and values to attempt to get and validate
+		expectedGetKeyValues map[string]sdk.Dec
+
+		expectError error
+	}{
+		"valid get": {
+			preSetKeyValues: map[string]sdk.Dec{
+				keyA: sdk.OneDec(),
+				keyB: sdk.OneDec().Add(sdk.OneDec()),
+				keyC: sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
+			},
+
+			expectedGetKeyValues: map[string]sdk.Dec{
+				keyA: sdk.OneDec(),
+				keyB: sdk.OneDec().Add(sdk.OneDec()),
+				keyC: sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
+			},
+		},
+		"error: attempt to get non-existent key": {
+			preSetKeyValues: map[string]sdk.Dec{
+				keyA: sdk.OneDec(),
+				keyC: sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
+			},
+
+			expectedGetKeyValues: map[string]sdk.Dec{
+				keyA: sdk.OneDec(),
+				keyB: {}, // this one errors
+			},
+
+			expectError: osmoutils.DecNotFoundError{Key: keyB},
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			// Setup
+			for key, value := range tc.preSetKeyValues {
+				osmoutils.MustSetDec(s.store, []byte(key), value)
+			}
+
+			for key, expectedValue := range tc.expectedGetKeyValues {
+				// System under test.
+				actualDec, err := osmoutils.GetDec(s.store, []byte(key))
+
+				// Assertions.
+
+				if tc.expectError != nil {
+					s.Require().Error(err)
+					s.Require().ErrorIs(err, tc.expectError)
+					return
+				}
+
+				s.Require().NoError(err)
+				s.Require().Equal(expectedValue.String(), actualDec.String())
+			}
+		})
+
+	}
+}

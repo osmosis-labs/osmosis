@@ -54,27 +54,27 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
-	suite.Setup()
+func (s *KeeperTestSuite) SetupTest() {
+	s.Setup()
 
 	// Genesis on init should be the same as the default genesis
-	exportDefaultGenesis := suite.App.ProtoRevKeeper.ExportGenesis(suite.Ctx)
-	suite.Require().Equal(exportDefaultGenesis, types.DefaultGenesis())
+	exportDefaultGenesis := s.App.ProtoRevKeeper.ExportGenesis(s.Ctx)
+	s.Require().Equal(exportDefaultGenesis, types.DefaultGenesis())
 
 	// Init module state for testing (params may differ from default params)
-	suite.App.ProtoRevKeeper.SetProtoRevEnabled(suite.Ctx, true)
-	suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 0)
-	suite.App.ProtoRevKeeper.SetLatestBlockHeight(suite.Ctx, uint64(suite.Ctx.BlockHeight()))
-	suite.App.ProtoRevKeeper.SetPointCountForBlock(suite.Ctx, 0)
+	s.App.ProtoRevKeeper.SetProtoRevEnabled(s.Ctx, true)
+	s.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(s.Ctx, 0)
+	s.App.ProtoRevKeeper.SetLatestBlockHeight(s.Ctx, uint64(s.Ctx.BlockHeight()))
+	s.App.ProtoRevKeeper.SetPointCountForBlock(s.Ctx, 0)
 
 	// Configure max pool points per block. This roughly correlates to the ms of execution time protorev will
 	// take per block
-	if err := suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 100); err != nil {
+	if err := s.App.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, 100); err != nil {
 		panic(err)
 	}
 	// Configure max pool points per tx. This roughly correlates to the ms of execution time protorev will take
 	// per tx
-	if err := suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 18); err != nil {
+	if err := s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, 18); err != nil {
 		panic(err)
 	}
 
@@ -83,7 +83,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		BalancerWeight:     2, // it takes around 2 ms to simulate and execute a balancer swap
 		ConcentratedWeight: 2, // it takes around 2 ms to simulate and execute a concentrated swap
 	}
-	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, poolWeights)
+	s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, poolWeights)
 
 	// Configure the initial base denoms used for cyclic route building
 	baseDenomPriorities := []types.BaseDenom{
@@ -100,18 +100,18 @@ func (suite *KeeperTestSuite) SetupTest() {
 			StepSize: sdk.NewInt(1_000_000),
 		},
 	}
-	err := suite.App.ProtoRevKeeper.SetBaseDenoms(suite.Ctx, baseDenomPriorities)
-	suite.Require().NoError(err)
+	err := s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, baseDenomPriorities)
+	s.Require().NoError(err)
 
 	encodingConfig := osmosisapp.MakeEncodingConfig()
-	suite.clientCtx = client.Context{}.
+	s.clientCtx = client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
 		WithJSONCodec(encodingConfig.Marshaler)
 
 	// Set default configuration for testing
-	suite.balances = sdk.NewCoins(
+	s.balances = sdk.NewCoins(
 		sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("Atom", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("akash", sdk.NewInt(9000000000000000000)),
@@ -136,25 +136,25 @@ func (suite *KeeperTestSuite) SetupTest() {
 		sdk.NewCoin("epochOne", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("epochTwo", sdk.NewInt(9000000000000000000)),
 	)
-	suite.fundAllAccountsWith()
-	suite.Commit()
+	s.fundAllAccountsWith()
+	s.Commit()
 
 	// Init pools
-	suite.setUpPools()
-	suite.Commit()
+	s.setUpPools()
+	s.Commit()
 
 	// Init search routes
-	suite.setUpTokenPairRoutes()
-	suite.Commit()
+	s.setUpTokenPairRoutes()
+	s.Commit()
 
 	// Set the Admin Account
-	suite.adminAccount = apptesting.CreateRandomAccounts(1)[0]
-	err = protorev.HandleSetProtoRevAdminAccount(suite.Ctx, *suite.App.ProtoRevKeeper, &types.SetProtoRevAdminAccountProposal{Account: suite.adminAccount.String()})
-	suite.Require().NoError(err)
+	s.adminAccount = apptesting.CreateRandomAccounts(1)[0]
+	err = protorev.HandleSetProtoRevAdminAccount(s.Ctx, *s.App.ProtoRevKeeper, &types.SetProtoRevAdminAccountProposal{Account: s.adminAccount.String()})
+	s.Require().NoError(err)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.Ctx, suite.App.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, protorevkeeper.NewQuerier(*suite.App.AppKeepers.ProtoRevKeeper))
-	suite.queryClient = types.NewQueryClient(queryHelper)
+	queryHelper := baseapp.NewQueryServerTestHelper(s.Ctx, s.App.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, protorevkeeper.NewQuerier(*s.App.AppKeepers.ProtoRevKeeper))
+	s.queryClient = types.NewQueryClient(queryHelper)
 }
 
 // setUpPools sets up the pools needed for testing
@@ -165,13 +165,13 @@ func (suite *KeeperTestSuite) SetupTest() {
 // bitcoin <-> types.OsmosisDenomination
 // canto <-> types.OsmosisDenomination
 // and so on....
-func (suite *KeeperTestSuite) setUpPools() {
+func (s *KeeperTestSuite) setUpPools() {
 	// Create any necessary sdk.Ints that require string conversion
 	pool28Amount1, ok := sdk.NewIntFromString("6170367464346955818920")
-	suite.Require().True(ok)
+	s.Require().True(ok)
 
 	// Init pools
-	suite.pools = []Pool{
+	s.pools = []Pool{
 		{ // Pool 1
 			PoolAssets: []balancer.PoolAsset{
 				{
@@ -775,11 +775,11 @@ func (suite *KeeperTestSuite) setUpPools() {
 		},
 	}
 
-	for _, pool := range suite.pools {
-		suite.createGAMMPool(pool.PoolAssets, pool.SwapFee, pool.ExitFee)
+	for _, pool := range s.pools {
+		s.createGAMMPool(pool.PoolAssets, pool.SwapFee, pool.ExitFee)
 	}
 
-	suite.stableSwapPools = []StableSwapPool{
+	s.stableSwapPools = []StableSwapPool{
 		{ // Pool 40
 			initialLiquidity: sdk.NewCoins(
 				sdk.NewCoin("usdc", sdk.NewInt(1000000000000000)),
@@ -883,64 +883,64 @@ func (suite *KeeperTestSuite) setUpPools() {
 		},
 	}
 
-	for _, pool := range suite.stableSwapPools {
-		suite.createStableswapPool(pool.initialLiquidity, pool.poolParams, pool.scalingFactors)
+	for _, pool := range s.stableSwapPools {
+		s.createStableswapPool(pool.initialLiquidity, pool.poolParams, pool.scalingFactors)
 	}
 
 	// Create a concentrated liquidity pool for epoch_hook testing
-	clPoolOne := suite.PrepareConcentratedPoolWithCoins("epochTwo", "uosmo")
+	clPoolOne := s.PrepareConcentratedPoolWithCoins("epochTwo", "uosmo")
 
 	// Provide liquidity to the concentrated liquidity pool
 	clPoolOneLiquidity := sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(1000)), sdk.NewCoin("uosmo", sdk.NewInt(2000)))
-	err := suite.App.BankKeeper.SendCoins(suite.Ctx, suite.TestAccs[0], clPoolOne.GetAddress(), clPoolOneLiquidity)
-	suite.Require().NoError(err)
+	err := s.App.BankKeeper.SendCoins(s.Ctx, s.TestAccs[0], clPoolOne.GetAddress(), clPoolOneLiquidity)
+	s.Require().NoError(err)
 
 	// Set all of the pool info into the stores
-	err = suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
-	suite.Require().NoError(err)
+	err = s.App.ProtoRevKeeper.UpdatePools(s.Ctx)
+	s.Require().NoError(err)
 }
 
 // createStableswapPool creates a stableswap pool with the given pool assets and params
-func (suite *KeeperTestSuite) createStableswapPool(initialLiquidity sdk.Coins, poolParams stableswap.PoolParams, scalingFactors []uint64) {
-	_, err := suite.App.PoolManagerKeeper.CreatePool(
-		suite.Ctx,
-		stableswap.NewMsgCreateStableswapPool(suite.TestAccs[1], poolParams, initialLiquidity, scalingFactors, ""))
-	suite.Require().NoError(err)
+func (s *KeeperTestSuite) createStableswapPool(initialLiquidity sdk.Coins, poolParams stableswap.PoolParams, scalingFactors []uint64) {
+	_, err := s.App.PoolManagerKeeper.CreatePool(
+		s.Ctx,
+		stableswap.NewMsgCreateStableswapPool(s.TestAccs[1], poolParams, initialLiquidity, scalingFactors, ""))
+	s.Require().NoError(err)
 }
 
 // createGAMMPool creates a balancer pool with the given pool assets and params
-func (suite *KeeperTestSuite) createGAMMPool(poolAssets []balancer.PoolAsset, swapFee, exitFee sdk.Dec) uint64 {
+func (s *KeeperTestSuite) createGAMMPool(poolAssets []balancer.PoolAsset, swapFee, exitFee sdk.Dec) uint64 {
 	poolParams := balancer.PoolParams{
 		SwapFee: swapFee,
 		ExitFee: exitFee,
 	}
 
-	return suite.prepareCustomBalancerPool(poolAssets, poolParams)
+	return s.prepareCustomBalancerPool(poolAssets, poolParams)
 }
 
 // prepareCustomBalancerPool creates a custom balancer pool with the given pool assets and params
-func (suite *KeeperTestSuite) prepareCustomBalancerPool(
+func (s *KeeperTestSuite) prepareCustomBalancerPool(
 	poolAssets []balancer.PoolAsset,
 	poolParams balancer.PoolParams,
 ) uint64 {
-	poolID, err := suite.App.PoolManagerKeeper.CreatePool(
-		suite.Ctx,
-		balancer.NewMsgCreateBalancerPool(suite.TestAccs[1], poolParams, poolAssets, ""),
+	poolID, err := s.App.PoolManagerKeeper.CreatePool(
+		s.Ctx,
+		balancer.NewMsgCreateBalancerPool(s.TestAccs[1], poolParams, poolAssets, ""),
 	)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
 	return poolID
 }
 
 // fundAllAccountsWith funds all the test accounts with the same amount of tokens
-func (suite *KeeperTestSuite) fundAllAccountsWith() {
-	for _, acc := range suite.TestAccs {
-		suite.FundAcc(acc, suite.balances)
+func (s *KeeperTestSuite) fundAllAccountsWith() {
+	for _, acc := range s.TestAccs {
+		s.FundAcc(acc, s.balances)
 	}
 }
 
 // setUpTokenPairRoutes sets up the searcher routes for testing
-func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
+func (s *KeeperTestSuite) setUpTokenPairRoutes() {
 	// General Test Route
 	atomAkash := types.NewTrade(0, "Atom", "akash")
 	akashBitcoin := types.NewTrade(14, "akash", "bitcoin")
@@ -973,7 +973,7 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 
 	standardStepSize := sdk.NewInt(1_000_000)
 
-	suite.tokenPairArbRoutes = []types.TokenPairArbRoutes{
+	s.tokenPairArbRoutes = []types.TokenPairArbRoutes{
 		{
 			TokenIn:  "akash",
 			TokenOut: "Atom",
@@ -1036,10 +1036,10 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 		},
 	}
 
-	for _, tokenPair := range suite.tokenPairArbRoutes {
+	for _, tokenPair := range s.tokenPairArbRoutes {
 		err := tokenPair.Validate()
-		suite.Require().NoError(err)
-		err = suite.App.ProtoRevKeeper.SetTokenPairArbRoutes(suite.Ctx, tokenPair.TokenIn, tokenPair.TokenOut, tokenPair)
-		suite.Require().NoError(err)
+		s.Require().NoError(err)
+		err = s.App.ProtoRevKeeper.SetTokenPairArbRoutes(s.Ctx, tokenPair.TokenIn, tokenPair.TokenOut, tokenPair)
+		s.Require().NoError(err)
 	}
 }

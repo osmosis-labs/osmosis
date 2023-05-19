@@ -7,7 +7,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
-func (suite *KeeperTestSuite) TestIntermediaryAccountCreation() {
+func (s *KeeperTestSuite) TestIntermediaryAccountCreation() {
 	testCases := []struct {
 		name             string
 		validatorStats   []stakingtypes.BondStatus
@@ -42,13 +42,13 @@ func (suite *KeeperTestSuite) TestIntermediaryAccountCreation() {
 	}
 
 	for _, tc := range testCases {
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
-			valAddrs := suite.SetupValidators(tc.validatorStats)
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			valAddrs := s.SetupValidators(tc.validatorStats)
 			delAddrs := CreateRandomAccounts(int(tc.delegatorNumber))
 
 			// we create two additional pools: total three pools, 10 gauges
-			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			var interAccs []types.SuperfluidIntermediaryAccount
 
@@ -59,92 +59,92 @@ func (suite *KeeperTestSuite) TestIntermediaryAccountCreation() {
 
 				// check intermediary Account prior to superfluid delegation, should have nil Intermediary Account
 				expAcc := types.NewSuperfluidIntermediaryAccount(denom, valAddr.String(), 0)
-				interAcc := suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, expAcc.GetAccAddress())
-				suite.Require().NotEqual(expAcc.GetAccAddress(), interAcc.GetAccAddress())
-				suite.Require().Equal("", interAcc.Denom)
-				suite.Require().Equal(uint64(0), interAcc.GaugeId)
-				suite.Require().Equal("", interAcc.ValAddr)
+				interAcc := s.App.SuperfluidKeeper.GetIntermediaryAccount(s.Ctx, expAcc.GetAccAddress())
+				s.Require().NotEqual(expAcc.GetAccAddress(), interAcc.GetAccAddress())
+				s.Require().Equal("", interAcc.Denom)
+				s.Require().Equal(uint64(0), interAcc.GaugeId)
+				s.Require().Equal("", interAcc.ValAddr)
 
-				lock := suite.setupSuperfluidDelegate(delAddr, valAddr, denom, superDelegation.lpAmount)
+				lock := s.setupSuperfluidDelegate(delAddr, valAddr, denom, superDelegation.lpAmount)
 
 				// check that intermediary Account connection is established
-				interAccConnection := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lock.ID)
-				suite.Require().Equal(expAcc.GetAccAddress(), interAccConnection)
+				interAccConnection := s.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, lock.ID)
+				s.Require().Equal(expAcc.GetAccAddress(), interAccConnection)
 
-				interAcc = suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, interAccConnection)
-				suite.Require().Equal(expAcc.GetAccAddress(), interAcc.GetAccAddress())
+				interAcc = s.App.SuperfluidKeeper.GetIntermediaryAccount(s.Ctx, interAccConnection)
+				s.Require().Equal(expAcc.GetAccAddress(), interAcc.GetAccAddress())
 
 				// check on interAcc that has been created
-				suite.Require().Equal(denom, interAcc.Denom)
-				suite.Require().Equal(valAddr.String(), interAcc.ValAddr)
+				s.Require().Equal(denom, interAcc.Denom)
+				s.Require().Equal(valAddr.String(), interAcc.ValAddr)
 
 				interAccs = append(interAccs, interAcc)
 			}
-			suite.checkIntermediaryAccountDelegations(interAccs)
+			s.checkIntermediaryAccountDelegations(interAccs)
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestIntermediaryAccountsSetGetDeleteFlow() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestIntermediaryAccountsSetGetDeleteFlow() {
+	s.SetupTest()
 
 	// initial check
-	accs := suite.App.SuperfluidKeeper.GetAllIntermediaryAccounts(suite.Ctx)
-	suite.Require().Len(accs, 0)
+	accs := s.App.SuperfluidKeeper.GetAllIntermediaryAccounts(s.Ctx)
+	s.Require().Len(accs, 0)
 
 	// set account
 	valAddr := sdk.ValAddress([]byte("addr1---------------"))
 	acc := types.NewSuperfluidIntermediaryAccount(DefaultGammAsset, valAddr.String(), 1)
-	suite.App.SuperfluidKeeper.SetIntermediaryAccount(suite.Ctx, acc)
+	s.App.SuperfluidKeeper.SetIntermediaryAccount(s.Ctx, acc)
 
 	// get account
-	gacc := suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, acc.GetAccAddress())
-	suite.Require().Equal(gacc.Denom, DefaultGammAsset)
-	suite.Require().Equal(gacc.ValAddr, valAddr.String())
-	suite.Require().Equal(gacc.GaugeId, uint64(1))
+	gacc := s.App.SuperfluidKeeper.GetIntermediaryAccount(s.Ctx, acc.GetAccAddress())
+	s.Require().Equal(gacc.Denom, DefaultGammAsset)
+	s.Require().Equal(gacc.ValAddr, valAddr.String())
+	s.Require().Equal(gacc.GaugeId, uint64(1))
 
 	// check accounts
-	accs = suite.App.SuperfluidKeeper.GetAllIntermediaryAccounts(suite.Ctx)
-	suite.Require().Equal(accs, []types.SuperfluidIntermediaryAccount{acc})
+	accs = s.App.SuperfluidKeeper.GetAllIntermediaryAccounts(s.Ctx)
+	s.Require().Equal(accs, []types.SuperfluidIntermediaryAccount{acc})
 
 	// delete asset
-	suite.App.SuperfluidKeeper.DeleteIntermediaryAccount(suite.Ctx, acc.GetAccAddress())
+	s.App.SuperfluidKeeper.DeleteIntermediaryAccount(s.Ctx, acc.GetAccAddress())
 
 	// get account
-	gacc = suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, acc.GetAccAddress())
-	suite.Require().Equal(gacc.Denom, "")
-	suite.Require().Equal(gacc.ValAddr, "")
-	suite.Require().Equal(gacc.GaugeId, uint64(0))
+	gacc = s.App.SuperfluidKeeper.GetIntermediaryAccount(s.Ctx, acc.GetAccAddress())
+	s.Require().Equal(gacc.Denom, "")
+	s.Require().Equal(gacc.ValAddr, "")
+	s.Require().Equal(gacc.GaugeId, uint64(0))
 
 	// check accounts
-	accs = suite.App.SuperfluidKeeper.GetAllIntermediaryAccounts(suite.Ctx)
-	suite.Require().Len(accs, 0)
+	accs = s.App.SuperfluidKeeper.GetAllIntermediaryAccounts(s.Ctx)
+	s.Require().Len(accs, 0)
 }
 
-func (suite *KeeperTestSuite) TestLockIdIntermediaryAccountConnection() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestLockIdIntermediaryAccountConnection() {
+	s.SetupTest()
 
 	// get account
-	addr := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, 1)
-	suite.Require().Equal(addr.String(), "")
+	addr := s.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, 1)
+	s.Require().Equal(addr.String(), "")
 
 	// set account
 	valAddr := sdk.ValAddress([]byte("addr1---------------"))
 	acc := types.NewSuperfluidIntermediaryAccount(DefaultGammAsset, valAddr.String(), 1)
-	suite.App.SuperfluidKeeper.SetLockIdIntermediaryAccountConnection(suite.Ctx, 1, acc)
+	s.App.SuperfluidKeeper.SetLockIdIntermediaryAccountConnection(s.Ctx, 1, acc)
 
 	// get account
-	addr = suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, 1)
-	suite.Require().Equal(addr.String(), acc.GetAccAddress().String())
+	addr = s.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, 1)
+	s.Require().Equal(addr.String(), acc.GetAccAddress().String())
 
 	// check get all
-	conns := suite.App.SuperfluidKeeper.GetAllLockIdIntermediaryAccountConnections(suite.Ctx)
-	suite.Require().Len(conns, 1)
+	conns := s.App.SuperfluidKeeper.GetAllLockIdIntermediaryAccountConnections(s.Ctx)
+	s.Require().Len(conns, 1)
 
 	// delete account
-	suite.App.SuperfluidKeeper.DeleteLockIdIntermediaryAccountConnection(suite.Ctx, 1)
+	s.App.SuperfluidKeeper.DeleteLockIdIntermediaryAccountConnection(s.Ctx, 1)
 
 	// get account
-	addr = suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, 1)
-	suite.Require().Equal(addr.String(), "")
+	addr = s.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, 1)
+	s.Require().Equal(addr.String(), "")
 }

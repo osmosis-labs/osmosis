@@ -176,7 +176,7 @@ var panicRoute = poolmanagertypes.SwapAmountInRoutes{
 	},
 }
 
-func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
+func (s *KeeperTestSuite) TestFindMaxProfitRoute() {
 	type param struct {
 		route           poolmanagertypes.SwapAmountInRoutes
 		expectedAmtIn   sdk.Int
@@ -292,7 +292,7 @@ func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 	}
 
 	for _, test := range tests {
-		suite.Run(test.name, func() {
+		s.Run(test.name, func() {
 			// init the route
 			remainingPoolPoints := uint64(1000)
 			remainingBlockPoolPoints := uint64(1000)
@@ -302,28 +302,28 @@ func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 				StepSize:   sdk.NewInt(1_000_000),
 			}
 
-			amtIn, profit, err := suite.App.ProtoRevKeeper.FindMaxProfitForRoute(
-				suite.Ctx,
+			amtIn, profit, err := s.App.ProtoRevKeeper.FindMaxProfitForRoute(
+				s.Ctx,
 				route,
 				&remainingPoolPoints,
 				&remainingBlockPoolPoints,
 			)
 
 			if test.expectPass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(test.param.expectedAmtIn, amtIn.Amount)
-				suite.Require().Equal(test.param.expectedProfit, profit)
+				s.Require().NoError(err)
+				s.Require().Equal(test.param.expectedAmtIn, amtIn.Amount)
+				s.Require().Equal(test.param.expectedProfit, profit)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 
 			// check that the remaining pool points is correct
-			suite.Require().Equal(uint64(1000), remainingPoolPoints+test.param.routePoolPoints)
+			s.Require().Equal(uint64(1000), remainingPoolPoints+test.param.routePoolPoints)
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestExecuteTrade() {
+func (s *KeeperTestSuite) TestExecuteTrade() {
 	type param struct {
 		route          poolmanagertypes.SwapAmountInRoutes
 		inputCoin      sdk.Coin
@@ -398,8 +398,8 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 		txPoolPointsRemaining := uint64(100)
 		blockPoolPointsRemaining := uint64(100)
 
-		err := suite.App.ProtoRevKeeper.ExecuteTrade(
-			suite.Ctx,
+		err := s.App.ProtoRevKeeper.ExecuteTrade(
+			s.Ctx,
 			test.param.route,
 			test.param.inputCoin,
 			pool,
@@ -408,31 +408,31 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 		)
 
 		if test.expectPass {
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
 			// Check the protorev statistics
-			numberOfTrades, err := suite.App.ProtoRevKeeper.GetTradesByRoute(suite.Ctx, test.param.route.PoolIds())
-			suite.Require().NoError(err)
-			suite.Require().Equal(sdk.OneInt(), numberOfTrades)
+			numberOfTrades, err := s.App.ProtoRevKeeper.GetTradesByRoute(s.Ctx, test.param.route.PoolIds())
+			s.Require().NoError(err)
+			s.Require().Equal(sdk.OneInt(), numberOfTrades)
 
-			routeProfit, err := suite.App.ProtoRevKeeper.GetProfitsByRoute(suite.Ctx, test.param.route.PoolIds(), test.arbDenom)
-			suite.Require().NoError(err)
-			suite.Require().Equal(test.param.expectedProfit, routeProfit.Amount)
+			routeProfit, err := s.App.ProtoRevKeeper.GetProfitsByRoute(s.Ctx, test.param.route.PoolIds(), test.arbDenom)
+			s.Require().NoError(err)
+			s.Require().Equal(test.param.expectedProfit, routeProfit.Amount)
 
-			profit, err := suite.App.ProtoRevKeeper.GetProfitsByDenom(suite.Ctx, test.arbDenom)
-			suite.Require().NoError(err)
-			suite.Require().Equal(test.param.expectedProfit, profit.Amount)
+			profit, err := s.App.ProtoRevKeeper.GetProfitsByDenom(s.Ctx, test.arbDenom)
+			s.Require().NoError(err)
+			s.Require().Equal(test.param.expectedProfit, profit.Amount)
 
-			totalNumberOfTrades, err := suite.App.ProtoRevKeeper.GetNumberOfTrades(suite.Ctx)
-			suite.Require().NoError(err)
-			suite.Require().Equal(test.expectedNumOfTrades, totalNumberOfTrades)
+			totalNumberOfTrades, err := s.App.ProtoRevKeeper.GetNumberOfTrades(s.Ctx)
+			s.Require().NoError(err)
+			s.Require().Equal(test.expectedNumOfTrades, totalNumberOfTrades)
 		} else {
-			suite.Require().Error(err)
+			s.Require().Error(err)
 		}
 	}
 }
 
-func (suite *KeeperTestSuite) TestIterateRoutes() {
+func (s *KeeperTestSuite) TestIterateRoutes() {
 	type paramm struct {
 		routes                     []poolmanagertypes.SwapAmountInRoutes
 		expectedMaxProfitAmount    sdk.Int
@@ -516,7 +516,7 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 	}
 
 	for _, test := range tests {
-		suite.Run(test.name, func() {
+		s.Run(test.name, func() {
 			routes := make([]protorevtypes.RouteMetaData, len(test.params.routes))
 			for i, route := range test.params.routes {
 				routes[i] = protorevtypes.RouteMetaData{
@@ -529,18 +529,18 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 			remainingPoolPoints := uint64(40)
 			remainingBlockPoolPoints := uint64(40)
 
-			maxProfitInputCoin, maxProfitAmount, optimalRoute := suite.App.ProtoRevKeeper.IterateRoutes(suite.Ctx, routes, &remainingPoolPoints, &remainingBlockPoolPoints)
+			maxProfitInputCoin, maxProfitAmount, optimalRoute := s.App.ProtoRevKeeper.IterateRoutes(s.Ctx, routes, &remainingPoolPoints, &remainingBlockPoolPoints)
 			if test.expectPass {
-				suite.Require().Equal(test.params.expectedMaxProfitAmount, maxProfitAmount)
-				suite.Require().Equal(test.params.expectedMaxProfitInputCoin, maxProfitInputCoin)
-				suite.Require().Equal(test.params.expectedOptimalRoute, optimalRoute)
+				s.Require().Equal(test.params.expectedMaxProfitAmount, maxProfitAmount)
+				s.Require().Equal(test.params.expectedMaxProfitInputCoin, maxProfitInputCoin)
+				s.Require().Equal(test.params.expectedOptimalRoute, optimalRoute)
 			}
 		})
 	}
 }
 
 // Test logic that compares proftability of routes with different assets
-func (suite *KeeperTestSuite) TestConvertProfits() {
+func (s *KeeperTestSuite) TestConvertProfits() {
 	type param struct {
 		inputCoin           sdk.Coin
 		profit              sdk.Int
@@ -582,19 +582,19 @@ func (suite *KeeperTestSuite) TestConvertProfits() {
 	}
 
 	for _, test := range tests {
-		profit, err := suite.App.ProtoRevKeeper.ConvertProfits(suite.Ctx, test.param.inputCoin, test.param.profit)
+		profit, err := s.App.ProtoRevKeeper.ConvertProfits(s.Ctx, test.param.inputCoin, test.param.profit)
 
 		if test.expectPass {
-			suite.Require().NoError(err)
-			suite.Require().Equal(test.param.expectedUosmoProfit, profit)
+			s.Require().NoError(err)
+			s.Require().Equal(test.param.expectedUosmoProfit, profit)
 		} else {
-			suite.Require().Error(err)
+			s.Require().Error(err)
 		}
 	}
 }
 
 // TestRemainingPoolPointsForTx tests the RemainingPoolPointsForTx function.
-func (suite *KeeperTestSuite) TestRemainingPoolPointsForTx() {
+func (s *KeeperTestSuite) TestRemainingPoolPointsForTx() {
 	cases := []struct {
 		description        string
 		maxRoutesPerTx     uint64
@@ -640,20 +640,20 @@ func (suite *KeeperTestSuite) TestRemainingPoolPointsForTx() {
 	}
 
 	for _, tc := range cases {
-		suite.Run(tc.description, func() {
-			suite.SetupTest()
+		s.Run(tc.description, func() {
+			s.SetupTest()
 
-			err := suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, tc.maxRoutesPerTx)
-			suite.Require().NoError(err)
+			err := s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, tc.maxRoutesPerTx)
+			s.Require().NoError(err)
 
-			err = suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, tc.maxRoutesPerBlock)
-			suite.Require().NoError(err)
+			err = s.App.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, tc.maxRoutesPerBlock)
+			s.Require().NoError(err)
 
-			suite.App.ProtoRevKeeper.SetPointCountForBlock(suite.Ctx, tc.currentRouteCount)
+			s.App.ProtoRevKeeper.SetPointCountForBlock(s.Ctx, tc.currentRouteCount)
 
-			points, _, err := suite.App.ProtoRevKeeper.GetRemainingPoolPoints(suite.Ctx)
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedPointCount, points)
+			points, _, err := s.App.ProtoRevKeeper.GetRemainingPoolPoints(s.Ctx)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedPointCount, points)
 		})
 	}
 }

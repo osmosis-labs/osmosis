@@ -47,7 +47,7 @@ calculated with:
 
 $$L = \sqrt {xy}$$
 
-$$\sqrt P = y / x$$
+$$\sqrt P = \sqrt {y / x}$$
 
 By rearranging the above, we obtain the following formulas to track virtual reserves:
 
@@ -129,10 +129,10 @@ increase as follows:
 For spot prices less than a dollar, the precision factor decreases
 (increasing the incremental precision) at every factor of 10:
 
-- $tick_{-100} = 0.9999$
-- $tick_{-200} = 0.9998$
-- $tick_{-500100} = 0.4999$
-- $tick_{-500200} = 0.4998$
+- $tick_{-100} = 0.99999$
+- $tick_{-200} = 0.99998$
+- $tick_{-500100} = 0.94999$
+- $tick_{-500200} = 0.94998$
 - $tick_{-9000100} = 0.099999$
 - $tick_{-9000200} = 0.099998$
 
@@ -273,20 +273,19 @@ $$tickIndex = ticksPassed + ticksToBeFulfilledByExponentAtCurrentTick =
 
 Bob set his limit order at tick 36650010
 
-### Consequences
-
-This decision allows us to define ticks at spot prices that users actually
-desire to trade on, rather than arbitrarily defining ticks at .01% distance
-between each other. This will also make integration with UX seamless,
-instead of either:
-
-a) Preventing trade at a desirable spot price or
-b) Having the front end round the tick's actual price to the nearest
-  human readable/desirable spot price
-
 ## Chosing an Exponent At Price One Value
 
-The creator of a pool is required to choose an exponenetAtPriceOne as one of the input parameters. As explained previously, this value determines how much the spot price increases or decreases when traversing ticks. The following equation will assist in selecting this value:
+The creator of a pool cannot choose an exponenetAtPriceOne as one of the input
+parameters since it is hard coded to -6. The number can be psedo-controlled by
+choosing the tick spacing a pool is initialized with. For example, if a pool
+is desired to have an exponentAtPriceOne of -6, the pool creator can choose a
+tick spacing of 1. If a pool is desired to have an exponentAtPriceOne of -4,
+this is two factors of 10 greater than -6, so the pool creator can choose a
+tick spacing of 100 to achieve this level of precision.
+
+As explained previously, the exponent at price one determines how much the spot
+price increases or decreases when traversing ticks. The following equation will
+assist in selecting this value:
 
 $$exponentAtPriceOne=log_{10}(\frac{D}{P})$$
 
@@ -299,7 +298,9 @@ $$D=P-(\frac{baseAssetInUSD}{quoteAssetInUSD+desiredIncrementOfQuoteInUSD})$$
 SHIB is trading at $0.00001070 per SHIB
 BTC is trading at $28,000 per BTC
 
-We want to create a SHIB/BTC concentrated liquidity pool where SHIB is the baseAsset (asset0) and BTC is the quoteAsset (asset1). In terms of the quoteAsset, we want to increment in 10 cent values.
+We want to create a SHIB/BTC concentrated liquidity pool where SHIB is the
+baseAsset (asset0) and BTC is the quoteAsset (asset1). In terms of the quoteAsset,
+we want to increment in 10 cent values.
 
 $$P=(\frac{0.00001070}{28,000})=0.000000000382142857$$
 
@@ -307,11 +308,16 @@ $$D=(0.000000000382142857)-(\frac{0.00001070}{28,000+0.10})=0.000000000000001364
 
 $$exponentAtPriceOne=log_{10}(\frac{0.0000000000000013647910441136}{0.000000000382142857})=-5.447159582$$
 
-We can therefore conclude that we can use an exponent at price one of -5 (slightly under precise) or -6 (slightly over precise) for this base/quote pair and desired price granularity.
+We can therefore conclude that we can use an exponent at price one of -5
+(slightly under precise) or -6 (slightly over precise) for this base/quote pair
+and desired price granularity. This means we would either want a tick spacing of 1
+(to have an exponent at price one of -6) or 10 (to have an exponent at price one of -5).
 
 ### Example 2
 
-Flipping the quoteAsset/baseAsset, for BTC/SHIB, lets determine what the exponentAtPriceOne should be. For SHIB as a quote, centralized exchanges list prices at the 10^-8, so we will set our desired increment to this value.
+Flipping the quoteAsset/baseAsset, for BTC/SHIB, lets determine what the
+exponentAtPriceOne should be. For SHIB as a quote, centralized exchanges
+list prices at the 10^-8, so we will set our desired increment to this value.
 
 $$P=(\frac{28,000}{0.00001070})=2616822429$$
 
@@ -319,7 +325,29 @@ $$D=(2616822429)-(\frac{28,000}{0.00001070+0.00000001})=2443345$$
 
 $$exponentAtPriceOne=-log_{10}(\frac{2443345}{2616822429})=-3.0297894598783$$
 
-We can therefore conclude that we can use an exponent at price one of -3 for this base/quote pair and desired price granularity.
+We can therefore conclude that we can use an exponent at price one of -3
+for this base/quote pair and desired price granularity. This means we would
+want a tick spacing of 1000 (to have an exponent at price one of -3).
+
+### Consequences
+
+This decision allows us to define ticks at spot prices that users actually
+desire to trade on, rather than arbitrarily defining ticks at .01% distance
+between each other. This will also make integration with UX seamless,
+instead of either:
+
+a) Preventing trade at a desirable spot price or
+b) Having the front end round the tick's actual price to the nearest
+  human readable/desirable spot price
+
+One side effect of increasing precision as we get closer to the minimum tick
+is that multiple ticks can represent the same price. For example, tick
+-161795100 (along with the ticks surrounding it) correlate to a price
+of 0.000000000000000002. To get around any issues this may cause, when a
+position is created with a user defined lower and upper tick, we determine
+if a larger tick exists that represents the same price. If so, we use that tick
+instead of the user defined tick. In the above example, the tick would be
+changed to -161000000, which is the first tick that represents the same price.
 
 ## Concentrated Liquidity Module Messages
 
@@ -536,11 +564,11 @@ This is a basic function that should allow LPs to provide liquidity in specific 
 to a pool.
 
 A pool's liquidity is consisted of two assets: asset0 and asset1. In all pools,
-asset0 will be the lexicographically smaller of the two assets. At the current
-tick, the bucket at this tick consists of a mix of both asset0 and asset1 and
-is called the virtual liquidity of the pool (or "L" for short). Any positions
-set below the current price are consisted solely of asset0 while positions above
-the current price only contain asset1.
+asset1 will be the quote asset and must be an approved denom listed in the module
+parameters. At the current tick, the bucket at this tick consists of a mix of both
+asset0 and asset1 and is called the virtual liquidity of the pool (or "L" for short).
+Any positions set below the current price are consisted solely of asset0 while
+positions above the current price only contain asset1.
 
 ### Adding Liquidity
 
