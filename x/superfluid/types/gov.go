@@ -71,7 +71,7 @@ func (p *SetSuperfluidAssetsProposal) ValidateBasic() error {
 				return err
 			}
 			// Denom must be from CL
-			if !strings.HasPrefix(asset.Denom, cltypes.ClTokenPrefix) {
+			if !strings.HasPrefix(asset.Denom, cltypes.ConcentratedLiquidityTokenPrefix) {
 				return fmt.Errorf("denom %s must be from CL", asset.Denom)
 			}
 		default:

@@ -45,3 +45,11 @@ func (k Keeper) PrepareMigration(ctx sdk.Context, sender sdk.AccAddress, lockId 
 func (k Keeper) AddToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added sdk.Int) (uint64, sdk.Int, sdk.Int, sdk.Dec, uint64, error) {
 	return k.addToConcentratedLiquiditySuperfluidPosition(ctx, owner, positionId, amount0Added, amount1Added)
 }
+
+func (k Keeper) ValidateGammLockForSuperfluidStaking(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, lockId uint64) (*lockuptypes.PeriodLock, error) {
+	return k.validateGammLockForSuperfluidStaking(ctx, sender, poolId, lockId)
+}
+
+func (k Keeper) GetExistingLockRemainingDuration(ctx sdk.Context, lock *lockuptypes.PeriodLock) (time.Duration, error) {
+	return k.getExistingLockRemainingDuration(ctx, lock)
+}

@@ -16,17 +16,17 @@ func TestGetConcentratedLockupDenomFromPoolId(t *testing.T) {
 		{
 			name:          "poolId 1",
 			poolId:        1,
-			expectedDenom: fmt.Sprintf("%s/%d", types.ClTokenPrefix, 1),
+			expectedDenom: fmt.Sprintf("%s/%d", types.ConcentratedLiquidityTokenPrefix, 1),
 		},
 		{
 			name:          "poolId 0",
 			poolId:        0,
-			expectedDenom: fmt.Sprintf("%s/%d", types.ClTokenPrefix, 0),
+			expectedDenom: fmt.Sprintf("%s/%d", types.ConcentratedLiquidityTokenPrefix, 0),
 		},
 		{
 			name:          "poolId 1000",
 			poolId:        1000,
-			expectedDenom: fmt.Sprintf("%s/%d", types.ClTokenPrefix, 1000),
+			expectedDenom: fmt.Sprintf("%s/%d", types.ConcentratedLiquidityTokenPrefix, 1000),
 		},
 	}
 
