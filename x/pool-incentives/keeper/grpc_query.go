@@ -80,7 +80,7 @@ func (q Querier) LockableDurations(ctx context.Context, _ *types.QueryLockableDu
 	return &types.QueryLockableDurationsResponse{LockableDurations: q.Keeper.GetLockableDurations(sdkCtx)}, nil
 }
 
-// IncentivizedPools iterates over all gauges, returns default gauges created with pool.
+// IncentivizedPools iterates over all internally incentivized gauges and returns their corresponding pools.
 func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentivizedPoolsRequest) (*types.QueryIncentivizedPoolsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -128,8 +128,7 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 	}, nil
 }
 
-// ExternalIncentiveGauges iterates over all gauges, returns gauges externally
-// incentivized, excluding default gauges created with pool.
+// ExternalIncentiveGauges iterates over all gauges and returns gauges externally incentivized by excluding default (internal) gauges.
 func (q Querier) ExternalIncentiveGauges(ctx context.Context, req *types.QueryExternalIncentiveGaugesRequest) (*types.QueryExternalIncentiveGaugesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
