@@ -49,8 +49,8 @@ func (k Keeper) RouteLockedBalancerToConcentratedMigration(ctx sdk.Context, send
 
 // migrateSuperfluidBondedBalancerToConcentrated migrates a user's superfluid bonded balancer position to a superfluid bonded concentrated liquidity position.
 // The function first undelegates the superfluid delegated position, force unlocks and exits the balancer pool, creates a full range concentrated liquidity position, locks it, then superfluid delegates it.
-// If there are any remaining gamm shares, they are re-locked back in the gamm pool and superfluid delegated as normal. The function returns the concentrated liquidity position ID, amounts of
-// tokens in the position, the liquidity amount, join time, and IDs of the involved pools and locks.
+// Any remaining gamm shares stay locked in the original gamm pool (utilizing the same lock and lockID that the shares originated from) and remain superfluid delegated / undelegating / vanilla locked as they
+// were  when the migration was initiated. The function returns the concentrated liquidity position ID, amounts of tokens in the position, the liquidity amount, join time, and IDs of the involved pools and locks.
 func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 	sender sdk.AccAddress,
 	originalLockId uint64,
