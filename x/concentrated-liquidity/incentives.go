@@ -152,7 +152,7 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64)
 	// Calculate rough number of assets in Balancer pool that are bonded
 	balancerPoolLiquidity := sdk.NewCoins()
 	for _, liquidityToken := range totalBalancerPoolLiquidity {
-		// Rounding behavior is not critical here, but for clarity we do bankers multiplication then truncate.
+		// Rounding behavior is not critical here, but for simplicity we do bankers multiplication then truncate.
 		bondedLiquidityAmount := liquidityToken.Amount.ToDec().Mul(bondedShareRatio).TruncateInt()
 		balancerPoolLiquidity = balancerPoolLiquidity.Add(sdk.NewCoin(liquidityToken.Denom, bondedLiquidityAmount))
 	}

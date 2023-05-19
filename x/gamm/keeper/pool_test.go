@@ -569,7 +569,6 @@ func (suite *KeeperTestSuite) TestGetTotalPoolShares() {
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
-
 				return
 			}
 
