@@ -1,7 +1,9 @@
 package concentrated_liquidity
 
 import (
+	"bytes"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -86,16 +88,22 @@ func (k Keeper) hasPosition(ctx sdk.Context, positionId uint64) bool {
 func (k Keeper) HasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, error) {
 	store := ctx.KVStore(k.storeKey)
 	poolPositionKey := types.KeyPoolPosition(poolId)
-	parse := func(bz []byte) (uint64, error) {
-		return sdk.BigEndianToUint64(bz), nil
+	parse := func(bz []byte) (bool, error) {
+		if len(bz) < 1 {
+			return false, fmt.Errorf("insufficient data for parsing boolean")
+		}
+		return bz[0] != 0, nil
 	}
 	return osmoutils.HasAnyAtPrefix(store, poolPositionKey, parse)
 }
 
 // isPositionOwner returns true if the given positionId is owned by the given sender inside the given pool.
 func (k Keeper) isPositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, positionId uint64) (bool, error) {
-	parse := func(bz []byte) (uint64, error) {
-		return sdk.BigEndianToUint64(bz), nil
+	parse := func(bz []byte) (bool, error) {
+		if len(bz) < 1 {
+			return false, fmt.Errorf("insufficient data for parsing boolean")
+		}
+		return bz[0] != 0, nil
 	}
 	isOwner, err := osmoutils.HasAnyAtPrefix(ctx.KVStore(k.storeKey), types.KeyAddressPoolIdPositionId(sender, poolId, positionId), parse)
 	if err != nil {
@@ -105,13 +113,46 @@ func (k Keeper) isPositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId u
 	return isOwner, nil
 }
 
-// GetAllPositionsForPoolId gets all the position for a specific poolId.
-func (k Keeper) GetAllPositionIdsForPoolId(ctx sdk.Context, poolId uint64) ([]uint64, error) {
-	parse := func(bz []byte) (uint64, error) {
-		return sdk.BigEndianToUint64(bz), nil
+// GetAllPositionsForPoolId gets all the position for a specific poolId and store prefix.
+func (k Keeper) GetAllPositionIdsForPoolId(ctx sdk.Context, prefix []byte, poolId uint64) ([]uint64, error) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, prefix)
+	defer iterator.Close()
+
+	var positionIds []uint64
+
+	for ; iterator.Valid(); iterator.Next() {
+		key := iterator.Key()
+
+		// Extract the components from the key
+		parts := bytes.Split(key, []byte(types.KeySeparator))
+		if len(parts) != 4 {
+			return nil, fmt.Errorf("invalid key format: %s", key)
+		}
+
+		// Parse the poolId and positionId from the key
+		keyPoolId, err := strconv.ParseUint(string(parts[2]), 16, 64)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse poolId: %w", err)
+		}
+		positionId, err := strconv.ParseUint(string(parts[3]), 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse positionId: %w", err)
+		}
+
+		// Check if the parsed poolId matches the desired poolId
+		if keyPoolId == poolId || poolId == 0 {
+			// If it matches, add the positionId to the result
+			positionIds = append(positionIds, positionId)
+		}
 	}
 
-	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyPoolPosition(poolId), parse)
+	// Sort the positionIds in ascending order
+	sort.Slice(positionIds, func(i, j int) bool {
+		return positionIds[i] < positionIds[j]
+	})
+
+	return positionIds, nil
 }
 
 // GetPositionLiquidity checks if the provided positionId exists. Returns position liquidity if found. Error otherwise.
@@ -154,7 +195,7 @@ func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId ui
 	positions := []model.Position{}
 
 	// Gather all position IDs for the given user and pool ID.
-	positionIds, err := osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), prefix, ParsePositionIdFromBz)
+	positionIds, err := k.GetAllPositionIdsForPoolId(ctx, prefix, poolId)
 	if err != nil {
 		return nil, err
 	}
@@ -203,13 +244,13 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 	positionIdKey := types.KeyPositionId(positionId)
 	osmoutils.MustSet(store, positionIdKey, &position)
 
-	// Set the address-pool-position ID to position mapping.
+	// Set the address-pool-position ID mapping (value set to true).
 	addressPoolIdPositionIdKey := types.KeyAddressPoolIdPositionId(owner, poolId, positionId)
-	store.Set(addressPoolIdPositionIdKey, sdk.Uint64ToBigEndian(positionId))
+	store.Set(addressPoolIdPositionIdKey, []byte{1})
 
-	// Set the pool ID to position ID mapping.
+	// Set the pool-position ID mapping (value set to true).
 	poolIdKey := types.KeyPoolPositionPositionId(poolId, positionId)
-	store.Set(poolIdKey, sdk.Uint64ToBigEndian(positionId))
+	store.Set(poolIdKey, []byte{1})
 
 	// Set the position ID to underlying lock ID mapping if underlyingLockId is provided.
 	positionHasUnderlyingLock, _, err := k.positionHasActiveUnderlyingLockAndUpdate(ctx, positionId)
@@ -262,7 +303,7 @@ func (k Keeper) deletePosition(ctx sdk.Context,
 	}
 	store.Delete(addressPoolIdPositionIdKey)
 
-	// Remove the pool ID to position ID mapping.
+	// Remove the pool-position ID mapping.
 	poolIdKey := types.KeyPoolPositionPositionId(poolId, positionId)
 	if !store.Has(poolIdKey) {
 		return types.PoolPositionIdNotFoundError{PoolId: poolId, PositionId: positionId}

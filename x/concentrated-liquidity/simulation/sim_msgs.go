@@ -92,7 +92,7 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	}
 
 	// Utilize the PoolId to PositionId mapping
-	positionIds, err := k.GetAllPositionIdsForPoolId(ctx, clPool.GetId())
+	positionIds, err := k.GetAllPositionIdsForPoolId(ctx, cltypes.PositionPrefix, clPool.GetId())
 	if err != nil {
 		return nil, err
 	}
