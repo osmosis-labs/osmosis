@@ -159,6 +159,8 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 		desc                 string
 		poolCreated          bool
 		weights              []sdk.Int
+		clPoolWithGauge      bool
+		clGaugeWeight        sdk.Int
 		perpetual            bool
 		nonPerpetual         bool
 		expectedRecordLength int
@@ -189,6 +191,14 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 			nonPerpetual:         true,
 			expectedRecordLength: 0,
 		},
+		{
+			desc:                 "Concentrated case",
+			poolCreated:          true,
+			clPoolWithGauge:      true,
+			clGaugeWeight:        sdk.NewInt(400),
+			weights:              []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+			expectedRecordLength: 4,
+		},
 	} {
 		tc := tc
 		s.Run(tc.desc, func() {
@@ -206,6 +216,21 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 				s.Require().Equal(3, len(lockableDurations))
 
 				var distRecords []types.DistrRecord
+
+				// If appropriate, create a concentrated pool with a gauge.
+				// Recall that concentrated pool gauges are created on epoch duration, which
+				// is set in default genesis to be 168 hours (1 week). Since this is not included
+				// in the set of lockable durations, creating this gauge serves as a way to ensure
+				// CL gauges are captured by the IncentivizedPools query.
+				if tc.clPoolWithGauge {
+					clPool := s.PrepareConcentratedPool()
+					epochDuration := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration
+
+					clGaugeId, err := keeper.GetPoolGaugeId(s.Ctx, clPool.GetId(), epochDuration)
+					s.Require().NoError(err)
+					distRecords = append(distRecords, types.DistrRecord{GaugeId: clGaugeId, Weight: tc.clGaugeWeight})
+				}
+
 				for i := 0; i < len(lockableDurations); i++ {
 					gaugeId, err := keeper.GetPoolGaugeId(s.Ctx, poolId, lockableDurations[i])
 					s.Require().NoError(err)
