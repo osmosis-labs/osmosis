@@ -366,9 +366,11 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated(
 				addr := superfluidKeeper.GetLockIdIntermediaryAccountConnection(ctx, originalGammLockId)
 				suite.Require().Equal(balancerIntermediaryAcc.GetAccAddress().String(), addr.String())
 
-				// Check if migration deleted synthetic lockup.
-				_, err = lockupKeeper.GetSyntheticLockup(ctx, originalGammLockId, keeper.StakingSyntheticDenom(balancerLock.Coins[0].Denom, valAddr.String()))
+				// Confirm that migration did not delete synthetic lockup.
+				gammSynthLock, err := lockupKeeper.GetSyntheticLockup(ctx, originalGammLockId, keeper.StakingSyntheticDenom(balancerLock.Coins[0].Denom, valAddr.String()))
 				suite.Require().NoError(err)
+
+				suite.Require().Equal(originalGammLockId, gammSynthLock.UnderlyingLockId)
 
 				// The delegation from the intermediary account holder should still exist.
 				_, found := stakingKeeper.GetDelegation(ctx, balancerIntermediaryAcc.GetAccAddress(), valAddr)
@@ -397,8 +399,10 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated(
 			suite.Require().Equal(balancerLock.EndTime, concentratedLock.EndTime)
 
 			// Check if the new synthetic bonded lockup was created.
-			_, err = lockupKeeper.GetSyntheticLockup(ctx, concentratedLockId, keeper.StakingSyntheticDenom(concentratedLock.Coins[0].Denom, valAddr.String()))
+			clSynthLock, err := lockupKeeper.GetSyntheticLockup(ctx, concentratedLockId, keeper.StakingSyntheticDenom(concentratedLock.Coins[0].Denom, valAddr.String()))
 			suite.Require().NoError(err)
+
+			suite.Require().Equal(concentratedLockId, clSynthLock.UnderlyingLockId)
 
 			// Run slashing logic and check if the new and old locks are slashed.
 			suite.SlashAndValidateResult(ctx, originalGammLockId, concentratedLockId, clPoolId, tc.percentOfSharesToMigrate, valAddr, *balancerLock, true)
@@ -502,8 +506,10 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrat
 				// If we migrated part of the shares:
 
 				// The synthetic lockup should not be deleted.
-				_, err = lockupKeeper.GetSyntheticLockup(ctx, originalGammLockId, keeper.UnstakingSyntheticDenom(balancerLock.Coins[0].Denom, valAddr.String()))
+				gammSynthLock, err := lockupKeeper.GetSyntheticLockup(ctx, originalGammLockId, keeper.UnstakingSyntheticDenom(balancerLock.Coins[0].Denom, valAddr.String()))
 				suite.Require().NoError(err)
+
+				suite.Require().Equal(originalGammLockId, gammSynthLock.UnderlyingLockId)
 			}
 
 			// Check newly created concentrated lock.
@@ -514,8 +520,10 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrat
 			suite.Require().Equal(suite.Ctx.BlockTime().Add(balancerLock.Duration), concentratedLock.EndTime)
 
 			// Check if the new synthetic unbonding lockup was created.
-			_, err = lockupKeeper.GetSyntheticLockup(ctx, concentratedLockId, keeper.UnstakingSyntheticDenom(concentratedLock.Coins[0].Denom, valAddr.String()))
+			clSynthLock, err := lockupKeeper.GetSyntheticLockup(ctx, concentratedLockId, keeper.UnstakingSyntheticDenom(concentratedLock.Coins[0].Denom, valAddr.String()))
 			suite.Require().NoError(err)
+
+			suite.Require().Equal(concentratedLockId, clSynthLock.UnderlyingLockId)
 
 			// Run slashing logic and check if the new and old locks are slashed.
 			suite.SlashAndValidateResult(ctx, originalGammLockId, concentratedLockId, clPoolId, tc.percentOfSharesToMigrate, valAddr, *balancerLock, true)

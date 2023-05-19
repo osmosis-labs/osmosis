@@ -1111,6 +1111,7 @@ func (suite *KeeperTestSuite) TestPartialSuperfluidUndelegateToConcentratedPosit
 			_, intermediaryAccs, _ := suite.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
+			suite.Greater(len(tc.superUnbondingLockIds), 0)
 			for index, lockId := range tc.superUnbondingLockIds {
 				// get intermediary account
 				accAddr := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lockId)
