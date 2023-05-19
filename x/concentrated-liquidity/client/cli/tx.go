@@ -47,9 +47,9 @@ func NewCreateConcentratedPoolCmd() (*osmocli.TxCliDesc, *clmodel.MsgCreateConce
 
 func NewCreatePositionCmd() (*osmocli.TxCliDesc, *types.MsgCreatePosition) {
 	return &osmocli.TxCliDesc{
-		Use:     "create-position [pool-id] [lower-tick] [upper-tick] [coins] [token-0-min-amount] [token-1-min-amount]",
+		Use:     "create-position [pool-id] [lower-tick] [upper-tick] [tokensProvided] [token-0-min-amount] [token-1-min-amount]",
 		Short:   "create or add to existing concentrated liquidity position",
-		Example: "create-position 1 \"[-69082]\" 69082 1000000000uosmo,10000000uion 0 0 --from val --chain-id osmosis-1",
+		Example: "create-position 1 \"[-69082]\" 69082 10000uosmo,10000uion 0 0 --from val --chain-id osmosis-1",
 	}, &types.MsgCreatePosition{}
 }
 

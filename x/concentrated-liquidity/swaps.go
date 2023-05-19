@@ -114,6 +114,8 @@ func (k Keeper) SwapExactAmountIn(
 	return tokenOutAmount, nil
 }
 
+// SwapExactAmountOut allows users to specify the output token amount they want to receive from a swap and get the exact
+// input token amount they need to provide based on the current pool prices and any applicable fees.
 func (k Keeper) SwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -138,6 +140,7 @@ func (k Keeper) SwapExactAmountOut(
 	zeroForOne := tokenOut.Denom == asset1
 
 	// change priceLimit based on which direction we are swapping
+	// if zeroForOne == true, use MinSpotPrice else use MaxSpotPrice
 	priceLimit := swapstrategy.GetPriceLimit(zeroForOne)
 	tokenIn, tokenOut, _, _, _, err := k.swapInAmtGivenOut(ctx, sender, pool, tokenOut, tokenInDenom, swapFee, priceLimit)
 	if err != nil {
@@ -153,7 +156,7 @@ func (k Keeper) SwapExactAmountOut(
 	return tokenInAmount, nil
 }
 
-// SwapOutAmtGivenIn is the internal mutative method for CalcOutAmtGivenIn. Utilizing CalcOutAmtGivenIn's output, this function applies the
+// swapOutAmtGivenIn is the internal mutative method for CalcOutAmtGivenIn. Utilizing CalcOutAmtGivenIn's output, this function applies the
 // new tick, liquidity, and sqrtPrice to the respective pool
 func (k Keeper) swapOutAmtGivenIn(
 	ctx sdk.Context,
@@ -182,6 +185,8 @@ func (k Keeper) swapOutAmtGivenIn(
 	return tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, nil
 }
 
+// swapInAmtGivenOut is the internal mutative method for calcInAmtGivenOut. Utilizing calcInAmtGivenOut's output, this function applies the
+// new tick, liquidity, and sqrtPrice to the respective pool.
 func (k *Keeper) swapInAmtGivenOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -491,7 +496,7 @@ func (k Keeper) computeInAmtGivenOut(
 	// take provided price limit and turn this into a sqrt price limit since formulas use sqrtPrice
 	sqrtPriceLimit, err := priceLimit.ApproxSqrt()
 	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("issue calculating square root of price limit")
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.SqrtRootCalculationError{SqrtPriceLimit: sqrtPriceLimit}
 	}
 
 	// set the swap strategy
@@ -542,13 +547,13 @@ func (k Keeper) computeInAmtGivenOut(
 		// if no ticks are initialized (no users have created liquidity positions) then we return an error
 		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, swapState.tick)
 		if !ok {
-			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("there are no more ticks initialized to fill the swap")
+			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.InvalidTickError{}
 		}
 
 		// utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
 		_, sqrtPriceNextTick, err := math.TickToSqrtPrice(nextTick)
 		if err != nil {
-			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
+			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.TickToSqrtPriceConversionError{NextTick: nextTick}
 		}
 
 		sqrtPriceTarget := swapStrategy.GetSqrtTargetPrice(sqrtPriceNextTick)

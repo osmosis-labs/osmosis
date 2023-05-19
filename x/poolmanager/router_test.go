@@ -2442,3 +2442,143 @@ func (s *KeeperTestSuite) TestGetOsmoRoutedMultihopTotalSwapFee() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestCreateMultihopExpectedSwapOuts() {
+	tests := map[string]struct {
+		route                  []types.SwapAmountOutRoute
+		tokenOut               sdk.Coin
+		balancerPoolCoins      []sdk.Coins
+		concentratedPoolDenoms [][]string
+		poolCoins              []sdk.Coins
+		cumulativeRouteSwapFee sdk.Dec
+		sumOfSwapFees          sdk.Dec
+
+		expectedSwapIns []sdk.Int
+		expectedError   bool
+	}{
+		"happy path: one route": {
+			route: []types.SwapAmountOutRoute{
+				{
+					PoolId:       1,
+					TokenInDenom: bar,
+				},
+			},
+			poolCoins: []sdk.Coins{sdk.NewCoins(sdk.NewCoin(foo, sdk.NewInt(100)), sdk.NewCoin(bar, sdk.NewInt(100)))},
+
+			tokenOut: sdk.NewCoin(foo, sdk.NewInt(10)),
+			// expectedSwapIns = (tokenOut * (poolTokenOutBalance / poolPostSwapOutBalance)).ceil()
+			// foo token = 10 * (100 / 90) ~ 12
+			expectedSwapIns: []sdk.Int{sdk.NewInt(12)},
+		},
+		"happy path: two route": {
+			route: []types.SwapAmountOutRoute{
+				{
+					PoolId:       1,
+					TokenInDenom: foo,
+				},
+				{
+					PoolId:       2,
+					TokenInDenom: bar,
+				},
+			},
+
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(foo, sdk.NewInt(100)), sdk.NewCoin(bar, sdk.NewInt(100))), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(bar, sdk.NewInt(100)), sdk.NewCoin(baz, sdk.NewInt(100))), // pool 2.
+			},
+			tokenOut: sdk.NewCoin(baz, sdk.NewInt(10)),
+			// expectedSwapIns = (tokenOut * (poolTokenOutBalance / poolPostSwapOutBalance)).ceil()
+			// foo token = 10 * (100 / 90) ~ 12
+			// bar token = 12 * (100 / 88) ~ 14
+			expectedSwapIns: []sdk.Int{sdk.NewInt(14), sdk.NewInt(12)},
+		},
+		"happy path: one route with swap Fee": {
+			route: []types.SwapAmountOutRoute{
+				{
+					PoolId:       1,
+					TokenInDenom: bar,
+				},
+			},
+			poolCoins:              []sdk.Coins{sdk.NewCoins(sdk.NewCoin(uosmo, sdk.NewInt(100)), sdk.NewCoin(bar, sdk.NewInt(100)))},
+			cumulativeRouteSwapFee: sdk.NewDec(100),
+			sumOfSwapFees:          sdk.NewDec(500),
+
+			tokenOut:        sdk.NewCoin(uosmo, sdk.NewInt(10)),
+			expectedSwapIns: []sdk.Int{sdk.NewInt(12)},
+		},
+		"happy path: two route with swap Fee": {
+			route: []types.SwapAmountOutRoute{
+				{
+					PoolId:       1,
+					TokenInDenom: foo,
+				},
+				{
+					PoolId:       2,
+					TokenInDenom: bar,
+				},
+			},
+
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(foo, sdk.NewInt(100)), sdk.NewCoin(bar, sdk.NewInt(100))),   // pool 1.
+				sdk.NewCoins(sdk.NewCoin(bar, sdk.NewInt(100)), sdk.NewCoin(uosmo, sdk.NewInt(100))), // pool 2.
+			},
+			cumulativeRouteSwapFee: sdk.NewDec(100),
+			sumOfSwapFees:          sdk.NewDec(500),
+
+			tokenOut:        sdk.NewCoin(uosmo, sdk.NewInt(10)),
+			expectedSwapIns: []sdk.Int{sdk.NewInt(14), sdk.NewInt(12)},
+		},
+		"error: Invalid Pool": {
+			route: []types.SwapAmountOutRoute{
+				{
+					PoolId:       100,
+					TokenInDenom: foo,
+				},
+			},
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(foo, sdk.NewInt(100)), sdk.NewCoin(bar, sdk.NewInt(100))), // pool 1.
+			},
+			tokenOut:      sdk.NewCoin(baz, sdk.NewInt(10)),
+			expectedError: true,
+		},
+		"error: calculating in given out": {
+			route: []types.SwapAmountOutRoute{
+				{
+					PoolId:       1,
+					TokenInDenom: uosmo,
+				},
+			},
+
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(foo, sdk.NewInt(100)), sdk.NewCoin(bar, sdk.NewInt(100))), // pool 1.
+			},
+			tokenOut:        sdk.NewCoin(baz, sdk.NewInt(10)),
+			expectedSwapIns: []sdk.Int{},
+
+			expectedError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			suite.SetupTest()
+
+			suite.createBalancerPoolsFromCoins(tc.poolCoins)
+
+			var actualSwapOuts []sdk.Int
+			var err error
+
+			if !tc.sumOfSwapFees.IsNil() && !tc.cumulativeRouteSwapFee.IsNil() {
+				actualSwapOuts, err = suite.App.PoolManagerKeeper.CreateOsmoMultihopExpectedSwapOuts(suite.Ctx, tc.route, tc.tokenOut, tc.cumulativeRouteSwapFee, tc.sumOfSwapFees)
+			} else {
+				actualSwapOuts, err = suite.App.PoolManagerKeeper.CreateMultihopExpectedSwapOuts(suite.Ctx, tc.route, tc.tokenOut)
+			}
+			if tc.expectedError {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.expectedSwapIns, actualSwapOuts)
+			}
+		})
+	}
+}
