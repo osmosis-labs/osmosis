@@ -5,7 +5,6 @@ import (
 	"math"
 	"math/rand"
 	"testing"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -224,9 +223,8 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 		fmt.Println("num_ticks_traversed", len(liquidityNet))
 		fmt.Println("current_tick", currentTick)
 
-		// Increase block time so that some incentives uptime accumulator update logic
-		// isn't a no-op.
-		s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second))
+		// Commit the block so that position updates are propagated to IAVL.
+		s.Commit()
 
 		// Fund swap amount.
 		err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, s.TestAccs[0], sdk.NewCoins(largeSwapInCoin))
