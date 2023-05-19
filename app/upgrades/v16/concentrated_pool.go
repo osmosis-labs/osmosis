@@ -1,15 +1,11 @@
 package v16
 
 import (
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	"github.com/osmosis-labs/osmosis/v15/app/keepers"
-	clkeeper "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"
@@ -123,35 +119,4 @@ func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, c
 	})
 
 	return concentratedPool, nil
-}
-
-func createFullRangePositionNoSend(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, coins sdk.Coins, clKeeper clkeeper.Keeper) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, err error) {
-	// Check that exactly two coins are provided.
-	if len(coins) != 2 {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, types.NumCoinsError{NumCoins: len(coins)}
-	}
-
-	concentratedPool, err := clKeeper.GetConcentratedPoolById(ctx, poolId)
-	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
-	}
-
-	// Defense in depth, ensure coins provided match the pool's token denominations.
-	if coins.AmountOf(concentratedPool.GetToken0()).LTE(sdk.ZeroInt()) {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, types.Amount0IsNegativeError{Amount0: coins.AmountOf(concentratedPool.GetToken0())}
-	}
-	if coins.AmountOf(concentratedPool.GetToken1()).LTE(sdk.ZeroInt()) {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, types.Amount1IsNegativeError{Amount1: coins.AmountOf(concentratedPool.GetToken1())}
-	}
-	if len(coins) != 2 {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, types.NumCoinsError{NumCoins: len(coins)}
-	}
-
-	// Create a full range (min to max tick) concentrated liquidity position.
-	positionId, amount0, amount1, liquidity, joinTime, _, _, err = clKeeper.CreatePositionNoSendUnsafe(ctx, concentratedPool.GetId(), owner, coins, sdk.ZeroInt(), sdk.ZeroInt(), types.MinTick, types.MaxTick)
-	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
-	}
-
-	return positionId, amount0, amount1, liquidity, joinTime, nil
 }

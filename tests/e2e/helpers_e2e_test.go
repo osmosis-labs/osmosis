@@ -6,6 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 var defaultFeePerTx = sdk.NewInt(1000)
@@ -73,10 +74,16 @@ func calculateUncollectedFees(positionLiquidity, feeGrowthBelow, feeGrowthAbove,
 }
 
 // Get current (updated) pool
-func (s *IntegrationTestSuite) updatedPool(node *chain.NodeConfig, poolId uint64) types.ConcentratedPoolExtension {
+func (s *IntegrationTestSuite) updatedConcentratedPool(node *chain.NodeConfig, poolId uint64) types.ConcentratedPoolExtension {
 	concentratedPool, err := node.QueryConcentratedPool(poolId)
 	s.Require().NoError(err)
 	return concentratedPool
+}
+
+func (s *IntegrationTestSuite) updatedCFMMPool(node *chain.NodeConfig, poolId uint64) gammtypes.CFMMPoolI {
+	cfmmPool, err := node.QueryCFMMPool(poolId)
+	s.Require().NoError(err)
+	return cfmmPool
 }
 
 // Assert returned positions:

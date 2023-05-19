@@ -9,7 +9,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	v16 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v16"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 )
@@ -23,11 +22,12 @@ const (
 )
 
 var (
-	defaultAmount     = sdk.NewInt(100)
-	desiredDenom0     = v16.DesiredDenom0
-	desiredDenom0Coin = sdk.NewCoin(desiredDenom0, defaultAmount)
-	daiCoin           = sdk.NewCoin(v16.DAIIBCDenom, defaultAmount)
-	usdcCoin          = sdk.NewCoin(v16.USDCIBCDenom, defaultAmount)
+	defaultDaiAmount   = sdk.NewInt(7300000000)
+	defaultDenom0mount = sdk.NewInt(10000000000)
+	desiredDenom0      = v16.DesiredDenom0
+	desiredDenom0Coin  = sdk.NewCoin(desiredDenom0, defaultDenom0mount)
+	daiCoin            = sdk.NewCoin(v16.DAIIBCDenom, defaultDaiAmount)
+	usdcCoin           = sdk.NewCoin(v16.USDCIBCDenom, defaultDaiAmount)
 )
 
 func (suite *ConcentratedUpgradeTestSuite) SetupTest() {
@@ -256,85 +256,6 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiquid
 			// Validate that old gauge still exist
 			_, err = suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeToRedirect)
 			suite.Require().NoError(err)
-		})
-	}
-}
-
-func (suite *ConcentratedUpgradeTestSuite) TestCreateFullRangePositionNoSend() {
-	tests := []struct {
-		name          string
-		poolId        uint64
-		owner         sdk.AccAddress
-		coins         sdk.Coins
-		expectedError error
-	}{
-		{
-			name:   "success",
-			poolId: 1,
-			owner:  sdk.AccAddress{},
-			coins:  sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("uosmo", sdk.NewInt(100))),
-		},
-		{
-			name:          "error: invalid number of coins",
-			poolId:        1,
-			owner:         sdk.AccAddress{},
-			coins:         sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100))),
-			expectedError: cltypes.NumCoinsError{NumCoins: 1},
-		},
-		{
-			name:          "error: invalid pool id",
-			poolId:        2,
-			owner:         sdk.AccAddress{},
-			coins:         sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("uosmo", sdk.NewInt(100))),
-			expectedError: cltypes.PoolNotFoundError{PoolId: 2},
-		},
-		{
-			name:          "error: amount0 is negative",
-			poolId:        1,
-			owner:         sdk.AccAddress{},
-			coins:         sdk.Coins{sdk.Coin{Denom: "foo", Amount: sdk.NewInt(-100)}, sdk.NewCoin("uosmo", sdk.NewInt(100))},
-			expectedError: cltypes.Amount0IsNegativeError{Amount0: sdk.NewInt(-100)},
-		},
-		{
-			name:          "error: amount1 is negative",
-			poolId:        1,
-			owner:         sdk.AccAddress{},
-			coins:         sdk.Coins{sdk.NewCoin("foo", sdk.NewInt(100)), sdk.Coin{Denom: "uosmo", Amount: sdk.NewInt(-100)}},
-			expectedError: cltypes.Amount1IsNegativeError{Amount1: sdk.NewInt(-100)},
-		},
-		{
-			name:          "error: invalid number of coins",
-			poolId:        1,
-			owner:         sdk.AccAddress{},
-			coins:         sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("uosmo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100))),
-			expectedError: cltypes.NumCoinsError{NumCoins: 3},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
-			clPool := suite.PrepareConcentratedPoolWithCoins("foo", "uosmo")
-
-			// Note user and pool account balances before create position is called
-			userBalancePrePositionCreation := suite.App.BankKeeper.GetAllBalances(suite.Ctx, tc.owner)
-			poolBalancePrePositionCreation := suite.App.BankKeeper.GetAllBalances(suite.Ctx, clPool.GetAddress())
-
-			_, _, _, _, _, err := v16.CreateFullRangePositionNoSend(suite.Ctx, tc.poolId, tc.owner, tc.coins, *suite.App.ConcentratedLiquidityKeeper)
-			if tc.expectedError != nil {
-				suite.Require().Error(err)
-				suite.Require().IsType(tc.expectedError, err)
-			} else {
-				suite.Require().NoError(err)
-			}
-
-			// Note user and pool account balances before create position is called
-			userBalancePostPositionCreation := suite.App.BankKeeper.GetAllBalances(suite.Ctx, tc.owner)
-			poolBalancePostPositionCreation := suite.App.BankKeeper.GetAllBalances(suite.Ctx, clPool.GetAddress())
-
-			// Balances should not have changed
-			suite.Require().Equal(userBalancePrePositionCreation.String(), userBalancePostPositionCreation.String())
-			suite.Require().Equal(poolBalancePrePositionCreation.String(), poolBalancePostPositionCreation.String())
 		})
 	}
 }

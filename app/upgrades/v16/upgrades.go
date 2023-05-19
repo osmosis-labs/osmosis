@@ -10,6 +10,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/app/keepers"
 	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
 
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/keeper"
@@ -93,22 +95,23 @@ func CreateUpgradeHandler(
 
 		// Create a position to initialize the balancerPool.
 
-		// Get the address of the balancerPool.
-		balancerPool, err := keepers.PoolManagerKeeper.GetPool(ctx, DaiOsmoPoolId)
+		// Get community pool and DAI/OSMO pool address.
+		communityPoolAddress := keepers.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName)
+		daiOsmoPool, err := keepers.PoolManagerKeeper.GetPool(ctx, DaiOsmoPoolId)
 		if err != nil {
 			return nil, err
 		}
 
-		// Retrieve the spot price of the OSMO/DAI pool at the time of the upgrade.
-		// This is used to initialize the balancerPool's spot price.
-		spotPrice, err := balancerPool.SpotPrice(ctx, DAIIBCDenom, DesiredDenom0)
+		// Swap one DAI for OSMO from the community pool.
+		oneDai := sdk.NewCoin(DAIIBCDenom, sdk.NewInt(1000000))
+		tokenInAmt, err := keepers.GAMMKeeper.SwapExactAmountOut(ctx, communityPoolAddress, daiOsmoPool, DesiredDenom0, sdk.NewInt(10000000), oneDai, sdk.ZeroDec())
 		if err != nil {
 			return nil, err
 		}
-		quoteAssetAmount := spotPrice.Mul(sdk.NewDec(1000000)).TruncateInt()
 
-		coins := sdk.NewCoins(sdk.NewCoin(DesiredDenom0, sdk.NewInt(1000000)), sdk.NewCoin(DAIIBCDenom, quoteAssetAmount))
-		_, _, _, _, _, err = createFullRangePositionNoSend(ctx, clPoolId, balancerPool.GetAddress(), coins, *keepers.ConcentratedLiquidityKeeper)
+		// Create a full range position via the community pool with the funds that were swapped.
+		fullRangeOsmoDaiCoins := sdk.NewCoins(sdk.NewCoin(DesiredDenom0, tokenInAmt), oneDai)
+		_, _, _, _, _, err = keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeOsmoDaiCoins)
 		if err != nil {
 			return nil, err
 		}
