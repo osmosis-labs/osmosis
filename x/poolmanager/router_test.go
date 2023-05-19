@@ -2573,7 +2573,6 @@ func (suite *KeeperTestSuite) TestCreateMultihopExpectedSwapOuts() {
 			} else {
 				actualSwapOuts, err = suite.App.PoolManagerKeeper.CreateMultihopExpectedSwapOuts(suite.Ctx, tc.route, tc.tokenOut)
 			}
-			fmt.Println("SISHIR", actualSwapOuts)
 			if tc.expectedError {
 				suite.Require().Error(err)
 			} else {
