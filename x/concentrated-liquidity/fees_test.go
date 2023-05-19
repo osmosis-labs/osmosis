@@ -901,7 +901,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			validPool := s.PrepareConcentratedPool()
 			validPoolId := validPool.GetId()
 
-			s.FundAcc(validPool.GetAddress(), tc.expectedFeesClaimed)
+			s.FundAcc(validPool.GetFeesAddress(), tc.expectedFeesClaimed)
 
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 			ctx := s.Ctx
@@ -923,7 +923,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			err = clKeeper.ChargeFee(ctx, validPoolId, tc.globalFeeGrowth[0])
 			s.Require().NoError(err)
 
-			poolBalanceBeforeCollect := s.App.BankKeeper.GetBalance(ctx, validPool.GetAddress(), ETH)
+			poolBalanceBeforeCollect := s.App.BankKeeper.GetBalance(ctx, validPool.GetFeesAddress(), ETH)
 			ownerBalancerBeforeCollect := s.App.BankKeeper.GetBalance(ctx, tc.owner, ETH)
 
 			var preQueryPosition accum.Record
@@ -949,7 +949,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 
 			// Assertions.
 
-			poolBalanceAfterCollect := s.App.BankKeeper.GetBalance(ctx, validPool.GetAddress(), ETH)
+			poolBalanceAfterCollect := s.App.BankKeeper.GetBalance(ctx, validPool.GetFeesAddress(), ETH)
 			ownerBalancerAfterCollect := s.App.BankKeeper.GetBalance(ctx, tc.owner, ETH)
 
 			if tc.expectedError != nil {
