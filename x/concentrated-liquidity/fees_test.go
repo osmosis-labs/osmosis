@@ -484,13 +484,13 @@ func (s *KeeperTestSuite) TestCalculateFeeGrowth() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOppositeDirectionOfLastTraversalForTick() {
+func (s *KeeperTestSuite) TestGetInitialFeeGrowthOppositeDirectionOfLastTraversalForTick() {
 	const (
 		validPoolId = 1
 	)
 
 	initialPoolTick, err := math.PriceToTickRoundDown(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()), DefaultTickSpacing)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
 	tests := map[string]struct {
 		poolId                   uint64
@@ -541,13 +541,13 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOppositeDirectionOfLastTrav
 
 	for name, tc := range tests {
 		tc := tc
-		suite.Run(name, func() {
-			suite.SetupTest()
-			ctx := suite.Ctx
-			clKeeper := suite.App.ConcentratedLiquidityKeeper
+		s.Run(name, func() {
+			s.SetupTest()
+			ctx := s.Ctx
+			clKeeper := s.App.ConcentratedLiquidityKeeper
 
 			pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, ETH, USDC, DefaultTickSpacing, DefaultZeroSwapFee)
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
 			// N.B.: we set the listener mock because we would like to avoid
 			// utilizing the production listeners. The production listeners
@@ -555,51 +555,51 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOppositeDirectionOfLastTrav
 			// setting them up would require compromising being able to set up other
 			// edge case tests. For example, the test case where fee accumulator
 			// is not initialized.
-			suite.setListenerMockOnConcentratedLiquidityKeeper()
+			s.setListenerMockOnConcentratedLiquidityKeeper()
 
 			err = clKeeper.SetPool(ctx, &pool)
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
 			if !tc.shouldAvoidCreatingAccum {
 				err = clKeeper.CreateFeeAccumulator(ctx, validPoolId)
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 
 				// Setup test position to make sure that tick is initialized
 				// We also set up uptime accums to ensure position creation works as intended
 				err = clKeeper.CreateUptimeAccumulators(ctx, validPoolId)
-				suite.Require().NoError(err)
-				suite.SetupDefaultPosition(validPoolId)
+				s.Require().NoError(err)
+				s.SetupDefaultPosition(validPoolId)
 
 				err = clKeeper.ChargeFee(ctx, validPoolId, tc.initialGlobalFeeGrowth)
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 			}
 
 			// System under test.
 			initialFeeGrowthOppositeDirectionOfLastTraversal, err := clKeeper.GetInitialFeeGrowthOppositeDirectionOfLastTraversalForTick(ctx, tc.poolId, tc.tick)
 
 			if tc.expectError != nil {
-				suite.Require().Error(err)
-				suite.Require().ErrorIs(err, tc.expectError)
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectError)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedInitialFeeGrowthOppositeDirectionOfLastTraversal, initialFeeGrowthOppositeDirectionOfLastTraversal)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedInitialFeeGrowthOppositeDirectionOfLastTraversal, initialFeeGrowthOppositeDirectionOfLastTraversal)
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestChargeFee() {
+func (s *KeeperTestSuite) TestChargeFee() {
 	// setup once at the beginning.
-	suite.SetupTest()
+	s.SetupTest()
 
-	ctx := suite.Ctx
-	clKeeper := suite.App.ConcentratedLiquidityKeeper
+	ctx := s.Ctx
+	clKeeper := s.App.ConcentratedLiquidityKeeper
 
 	// create fee accumulators with ids 1 and 2 but not 3.
 	err := clKeeper.CreateFeeAccumulator(ctx, 1)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 	err = clKeeper.CreateFeeAccumulator(ctx, 2)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
 	tests := []struct {
 		name      string
@@ -641,20 +641,20 @@ func (suite *KeeperTestSuite) TestChargeFee() {
 
 	for _, tc := range tests {
 		tc := tc
-		suite.Run(tc.name, func() {
+		s.Run(tc.name, func() {
 			// System under test.
 			err := clKeeper.ChargeFee(ctx, tc.poolId, tc.feeUpdate)
 
 			if tc.expectError != nil {
-				suite.Require().Error(err)
-				suite.Require().ErrorIs(err, tc.expectError)
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectError)
 				return
 			}
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
 			feeAcumulator, err := clKeeper.GetFeeAccumulator(ctx, tc.poolId)
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedGlobalGrowth, feeAcumulator.GetValue())
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedGlobalGrowth, feeAcumulator.GetValue())
 		})
 	}
 }

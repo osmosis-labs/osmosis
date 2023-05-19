@@ -612,16 +612,16 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
-	suite.Setup()
-	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
+func (s *KeeperTestSuite) SetupTest() {
+	s.Setup()
+	s.queryClient = types.NewQueryClient(s.QueryHelper)
 	// be post-bug
-	suite.Ctx = suite.Ctx.WithBlockHeight(v10.ForkHeight)
+	s.Ctx = s.Ctx.WithBlockHeight(v10.ForkHeight)
 }
 
 // This test sets up 2 asset pools, and then checks the spot price on them.
 // It uses the pools spot price method, rather than the Gamm keepers spot price method.
-func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
+func (s *KeeperTestSuite) TestBalancerSpotPrice() {
 	baseDenom := "uosmo"
 	quoteDenom := "uion"
 
@@ -677,36 +677,36 @@ func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
 	}
 
 	for _, tc := range tests {
-		suite.SetupTest()
-		suite.Run(tc.name, func() {
-			poolId := suite.PrepareBalancerPoolWithCoins(tc.baseDenomPoolInput, tc.quoteDenomPoolInput)
+		s.SetupTest()
+		s.Run(tc.name, func() {
+			poolId := s.PrepareBalancerPoolWithCoins(tc.baseDenomPoolInput, tc.quoteDenomPoolInput)
 
-			pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
-			suite.Require().NoError(err, "test: %s", tc.name)
+			pool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
+			s.Require().NoError(err, "test: %s", tc.name)
 			balancerPool, isPool := pool.(*balancer.Pool)
-			suite.Require().True(isPool, "test: %s", tc.name)
+			s.Require().True(isPool, "test: %s", tc.name)
 
 			sut := func() {
-				spotPrice, err := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx,
+				spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx,
 					poolId, tc.baseDenomPoolInput.Denom, tc.quoteDenomPoolInput.Denom)
 
 				if tc.expectError {
-					suite.Require().Error(err, "test: %s", tc.name)
+					s.Require().Error(err, "test: %s", tc.name)
 				} else {
-					suite.Require().NoError(err, "test: %s", tc.name)
-					suite.Require().True(spotPrice.Equal(tc.expectedOutput),
+					s.Require().NoError(err, "test: %s", tc.name)
+					s.Require().True(spotPrice.Equal(tc.expectedOutput),
 						"test: %s\nSpot price wrong, got %s, expected %s\n", tc.name,
 						spotPrice, tc.expectedOutput)
 				}
 			}
-			assertPoolStateNotModified(suite.T(), balancerPool, sut)
+			assertPoolStateNotModified(s.T(), balancerPool, sut)
 		})
 	}
 }
 
 // This test sets up 2 asset pools, and then checks the spot price on them.
 // It uses the pools spot price method, rather than the Gamm keepers spot price method.
-func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
+func (s *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 	baseDenom := "uosmo"
 	quoteDenom := "uion"
 	defaultFutureGovernor = ""
@@ -785,8 +785,8 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 	}
 
 	for _, tc := range tests {
-		suite.SetupTest()
-		suite.Run(tc.name, func() {
+		s.SetupTest()
+		s.Run(tc.name, func() {
 			// pool assets
 			defaultBaseAsset := balancer.PoolAsset{
 				Weight: tc.baseDenomWeight,
@@ -798,30 +798,30 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 			}
 
 			poolAssets := []balancer.PoolAsset{defaultBaseAsset, defaultQuoteAsset}
-			poolId := suite.PrepareCustomBalancerPool(poolAssets, balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()})
+			poolId := s.PrepareCustomBalancerPool(poolAssets, balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()})
 
-			pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
-			suite.Require().NoError(err, "test: %s", tc.name)
+			pool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
+			s.Require().NoError(err, "test: %s", tc.name)
 			balancerPool, _ := pool.(*balancer.Pool)
 
 			sut := func() {
-				spotPrice, err := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx,
+				spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx,
 					poolId, tc.quoteDenomPoolInput.Denom, tc.baseDenomPoolInput.Denom)
 				if tc.expectError {
-					suite.Require().Error(err, "test: %s", tc.name)
+					s.Require().Error(err, "test: %s", tc.name)
 				} else {
-					suite.Require().NoError(err, "test: %s", tc.name)
-					suite.Require().True(spotPrice.Equal(tc.expectedOutput),
+					s.Require().NoError(err, "test: %s", tc.name)
+					s.Require().True(spotPrice.Equal(tc.expectedOutput),
 						"test: %s\nSpot price wrong, got %s, expected %s\n", tc.name,
 						spotPrice, tc.expectedOutput)
 				}
 			}
-			assertPoolStateNotModified(suite.T(), balancerPool, sut)
+			assertPoolStateNotModified(s.T(), balancerPool, sut)
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
+func (s *KeeperTestSuite) TestCalcJoinPoolShares() {
 	// We append shared calcSingleAssetJoinTestCases with multi-asset and edge
 	// test cases defined in multiAssetExactInputTestCases and multiAssetUneverInputTestCases.
 	//
@@ -832,12 +832,12 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 	for _, tc := range testCases {
 		tc := tc
 
-		suite.T().Run(tc.name, func(t *testing.T) {
+		s.T().Run(tc.name, func(t *testing.T) {
 			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
 
 			// system under test
 			sut := func() {
-				shares, liquidity, err := pool.CalcJoinPoolShares(suite.Ctx, tc.tokensIn, tc.swapFee)
+				shares, liquidity, err := pool.CalcJoinPoolShares(s.Ctx, tc.tokensIn, tc.swapFee)
 				if tc.expErr != nil {
 					require.Error(t, err)
 					require.ErrorAs(t, tc.expErr, &err)
@@ -857,7 +857,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestJoinPool() {
+func (s *KeeperTestSuite) TestJoinPool() {
 	// We append shared calcSingleAssetJoinTestCases with multi-asset and edge
 	// test cases defined in multiAssetInputTestCases.
 	//
@@ -869,14 +869,14 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 	for _, tc := range testCases {
 		tc := tc
 
-		suite.T().Run(tc.name, func(t *testing.T) {
+		s.T().Run(tc.name, func(t *testing.T) {
 			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
 
 			// system under test
 			sut := func() {
-				preJoinAssets := pool.GetTotalPoolLiquidity(suite.Ctx)
-				shares, err := pool.JoinPool(suite.Ctx, tc.tokensIn, tc.swapFee)
-				postJoinAssets := pool.GetTotalPoolLiquidity(suite.Ctx)
+				preJoinAssets := pool.GetTotalPoolLiquidity(s.Ctx)
+				shares, err := pool.JoinPool(s.Ctx, tc.tokensIn, tc.swapFee)
+				postJoinAssets := pool.GetTotalPoolLiquidity(s.Ctx)
 
 				if tc.expErr != nil {
 					require.Error(t, err)
@@ -895,7 +895,7 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
+func (s *KeeperTestSuite) TestJoinPoolNoSwap() {
 	// We append shared calcSingleAssetJoinTestCases with multi-asset and edge
 	// test cases defined in multiAssetInputTestCases.
 	//
@@ -964,14 +964,14 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 	for _, tc := range testCases {
 		tc := tc
 
-		suite.T().Run(tc.name, func(t *testing.T) {
+		s.T().Run(tc.name, func(t *testing.T) {
 			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
 
 			// system under test
 			sut := func() {
-				preJoinAssets := pool.GetTotalPoolLiquidity(suite.Ctx)
-				shares, err := pool.JoinPoolNoSwap(suite.Ctx, tc.tokensIn, tc.swapFee)
-				postJoinAssets := pool.GetTotalPoolLiquidity(suite.Ctx)
+				preJoinAssets := pool.GetTotalPoolLiquidity(s.Ctx)
+				shares, err := pool.JoinPoolNoSwap(s.Ctx, tc.tokensIn, tc.swapFee)
+				postJoinAssets := pool.GetTotalPoolLiquidity(s.Ctx)
 
 				if tc.expErr != nil {
 					require.Error(t, err)
@@ -992,7 +992,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 
 // Tests selecting a random amount of coins to LP, and then that ExitPool(JoinPool(tokens))
 // preserves the pools number of LP shares, and returns fewer coins to the acter than they started with.
-func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
+func (s *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 	type testCase struct {
 		initialTokensDenomIn  int64
 		initialTokensDenomOut int64
@@ -1009,7 +1009,7 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 
 	now := time.Now().Unix()
 	rng := rand.NewSource(now)
-	suite.T().Logf("Using random source of %d\n", now)
+	s.T().Logf("Using random source of %d\n", now)
 
 	// generate test case with randomized initial assets and join/exit ratio
 	newCase := func() (tc *testCase) {
@@ -1039,8 +1039,8 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 			Weight: sdk.NewInt(5),
 		}
 
-		pool = createTestPool(suite.T(), swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
-		suite.Require().NotNil(pool)
+		pool = createTestPool(s.T(), swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
+		s.Require().NotNil(pool)
 
 		return pool
 	}
@@ -1051,15 +1051,15 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 			sdk.NewCoin(denomIn, sdk.NewInt(tc.initialTokensDenomIn).MulRaw(tc.percentRatio).QuoRaw(100)),
 			sdk.NewCoin(denomOut, sdk.NewInt(tc.initialTokensDenomOut).MulRaw(tc.percentRatio).QuoRaw(100)),
 		}
-		numShares, err := pool.JoinPool(suite.Ctx, tokensIn, swapFeeDec)
-		suite.Require().NoError(err)
+		numShares, err := pool.JoinPool(s.Ctx, tokensIn, swapFeeDec)
+		s.Require().NoError(err)
 		tc.numShares = numShares
 	}
 
 	// exits for same amount of shares minted
 	exitPool := func(pool types.CFMMPoolI, tc *testCase) {
-		_, err := pool.ExitPool(suite.Ctx, tc.numShares, exitFeeDec)
-		suite.Require().NoError(err)
+		_, err := pool.ExitPool(s.Ctx, tc.numShares, exitFeeDec)
+		s.Require().NoError(err)
 	}
 
 	invariantJoinExitInversePreserve := func(
@@ -1067,13 +1067,13 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 		beforeShares, afterShares sdk.Int,
 	) {
 		// test token amount has been preserved
-		suite.Require().True(
+		s.Require().True(
 			!beforeCoins.IsAnyGT(afterCoins),
 			"Coins has not been preserved before and after join-exit\nbefore:\t%s\nafter:\t%s",
 			beforeCoins, afterCoins,
 		)
 		// test share amount has been preserved
-		suite.Require().True(
+		s.Require().True(
 			beforeShares.Equal(afterShares),
 			"Shares has not been preserved before and after join-exit\nbefore:\t%s\nafter:\t%s",
 			beforeShares, afterShares,

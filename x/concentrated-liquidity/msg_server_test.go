@@ -14,7 +14,7 @@ import (
 
 // TestCreateConcentratedPool_Events tests that events are correctly emitted
 // when calling CreateConcentratedPool.
-func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
+func (s *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 	testcases := map[string]struct {
 		sender                   string
 		denom0                   string
@@ -41,29 +41,29 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			denom0:        ETH,
 			denom1:        USDC,
 			tickSpacing:   DefaultTickSpacing + 1,
-			expectedError: types.UnauthorizedTickSpacingError{ProvidedTickSpacing: DefaultTickSpacing + 1, AuthorizedTickSpacings: suite.App.ConcentratedLiquidityKeeper.GetParams(suite.Ctx).AuthorizedTickSpacing},
+			expectedError: types.UnauthorizedTickSpacingError{ProvidedTickSpacing: DefaultTickSpacing + 1, AuthorizedTickSpacings: s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx).AuthorizedTickSpacing},
 		},
 	}
 
 	for name, tc := range testcases {
-		suite.Run(name, func() {
-			suite.SetupTest()
-			ctx := suite.Ctx
+		s.Run(name, func() {
+			s.SetupTest()
+			ctx := s.Ctx
 
 			// Retrieve the pool creation fee from poolmanager params.
 			poolmanagerParams := poolmanagertypes.DefaultParams()
 
 			// Fund account to pay for the pool creation fee.
-			suite.FundAcc(suite.TestAccs[0], poolmanagerParams.PoolCreationFee)
+			s.FundAcc(s.TestAccs[0], poolmanagerParams.PoolCreationFee)
 
-			msgServer := cl.NewMsgCreatorServerImpl(suite.App.ConcentratedLiquidityKeeper)
+			msgServer := cl.NewMsgCreatorServerImpl(s.App.ConcentratedLiquidityKeeper)
 
 			// Reset event counts to 0 by creating a new manager.
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
-			suite.Equal(0, len(ctx.EventManager().Events()))
+			s.Equal(0, len(ctx.EventManager().Events()))
 
 			response, err := msgServer.CreateConcentratedPool(sdk.WrapSDKContext(ctx), &clmodel.MsgCreateConcentratedPool{
-				Sender:      suite.TestAccs[0].String(),
+				Sender:      s.TestAccs[0].String(),
 				Denom0:      tc.denom0,
 				Denom1:      tc.denom1,
 				TickSpacing: tc.tickSpacing,
@@ -71,14 +71,14 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			})
 
 			if tc.expectedError == nil {
-				suite.NoError(err)
-				suite.NotNil(response)
-				suite.AssertEventEmitted(ctx, poolmanagertypes.TypeEvtPoolCreated, tc.expectedPoolCreatedEvent)
-				suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+				s.NoError(err)
+				s.NotNil(response)
+				s.AssertEventEmitted(ctx, poolmanagertypes.TypeEvtPoolCreated, tc.expectedPoolCreatedEvent)
+				s.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 			} else {
-				suite.Require().Error(err)
-				suite.Require().ErrorContains(err, tc.expectedError.Error())
-				suite.Require().Nil(response)
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
+				s.Require().Nil(response)
 			}
 		})
 	}
@@ -86,7 +86,7 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 
 // TestCreatePositionMsg tests that create position msg validate basic have been correctly implemented.
 // Also checks correct assertion of events of CreatePosition.
-func (suite *KeeperTestSuite) TestCreatePositionMsg() {
+func (s *KeeperTestSuite) TestCreatePositionMsg() {
 	testcases := map[string]lpTest{
 		"happy case": {},
 		"error: lower tick is equal to upper tick": {
@@ -107,9 +107,9 @@ func (suite *KeeperTestSuite) TestCreatePositionMsg() {
 		},
 	}
 	for name, tc := range testcases {
-		suite.Run(name, func() {
-			suite.SetupTest()
-			ctx := suite.Ctx
+		s.Run(name, func() {
+			s.SetupTest()
+			ctx := s.Ctx
 
 			baseConfigCopy := *baseCase
 			fmt.Println(baseConfigCopy.tokensProvided)
@@ -118,17 +118,17 @@ func (suite *KeeperTestSuite) TestCreatePositionMsg() {
 
 			// Reset event counts to 0 by creating a new manager.
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
-			suite.Equal(0, len(ctx.EventManager().Events()))
+			s.Equal(0, len(ctx.EventManager().Events()))
 
-			suite.PrepareConcentratedPool()
-			msgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
+			s.PrepareConcentratedPool()
+			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 
 			// fund sender to create position
-			suite.FundAcc(suite.TestAccs[0], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
 
 			msg := &types.MsgCreatePosition{
 				PoolId:          tc.poolId,
-				Sender:          suite.TestAccs[0].String(),
+				Sender:          s.TestAccs[0].String(),
 				LowerTick:       tc.lowerTick,
 				UpperTick:       tc.upperTick,
 				TokensProvided:  tc.tokensProvided,
@@ -138,11 +138,11 @@ func (suite *KeeperTestSuite) TestCreatePositionMsg() {
 
 			if tc.expectedError == nil {
 				response, err := msgServer.CreatePosition(sdk.WrapSDKContext(ctx), msg)
-				suite.NoError(err)
-				suite.NotNil(response)
-				suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, 2)
+				s.NoError(err)
+				s.NotNil(response)
+				s.AssertEventEmitted(ctx, sdk.EventTypeMessage, 2)
 			} else {
-				suite.Require().ErrorContains(msg.ValidateBasic(), tc.expectedError.Error())
+				s.Require().ErrorContains(msg.ValidateBasic(), tc.expectedError.Error())
 			}
 		})
 	}
@@ -150,7 +150,7 @@ func (suite *KeeperTestSuite) TestCreatePositionMsg() {
 
 // TestAddToPosition_Events tests that events are correctly emitted
 // when calling AddToPosition.
-func (suite *KeeperTestSuite) TestAddToPosition_Events() {
+func (s *KeeperTestSuite) TestAddToPosition_Events() {
 	testcases := map[string]struct {
 		lastPositionInPool           bool
 		expectedAddedToPositionEvent int
@@ -169,46 +169,46 @@ func (suite *KeeperTestSuite) TestAddToPosition_Events() {
 	}
 
 	for name, tc := range testcases {
-		suite.Run(name, func() {
-			suite.SetupTest()
+		s.Run(name, func() {
+			s.SetupTest()
 
-			msgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
+			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 
 			// Create a cl pool with a default position
-			pool := suite.PrepareConcentratedPool()
+			pool := s.PrepareConcentratedPool()
 
 			// Position from current account.
-			posId := suite.SetupDefaultPositionAcc(pool.GetId(), suite.TestAccs[0])
+			posId := s.SetupDefaultPositionAcc(pool.GetId(), s.TestAccs[0])
 
 			if !tc.lastPositionInPool {
 				// Position from another account.
-				suite.SetupDefaultPositionAcc(pool.GetId(), suite.TestAccs[1])
+				s.SetupDefaultPositionAcc(pool.GetId(), s.TestAccs[1])
 			}
 
 			// Reset event counts to 0 by creating a new manager.
-			suite.Ctx = suite.Ctx.WithEventManager(sdk.NewEventManager())
-			suite.Equal(0, len(suite.Ctx.EventManager().Events()))
+			s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
+			s.Equal(0, len(s.Ctx.EventManager().Events()))
 
-			suite.FundAcc(suite.TestAccs[0], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
 			msg := &types.MsgAddToPosition{
 				PositionId:    posId,
-				Sender:        suite.TestAccs[0].String(),
+				Sender:        s.TestAccs[0].String(),
 				TokenDesired0: DefaultCoin0,
 				TokenDesired1: DefaultCoin1,
 			}
 
-			response, err := msgServer.AddToPosition(sdk.WrapSDKContext(suite.Ctx), msg)
+			response, err := msgServer.AddToPosition(sdk.WrapSDKContext(s.Ctx), msg)
 
 			if tc.expectedError == nil {
-				suite.NoError(err)
-				suite.NotNil(response)
-				suite.AssertEventEmitted(suite.Ctx, types.TypeEvtAddToPosition, tc.expectedAddedToPositionEvent)
-				suite.AssertEventEmitted(suite.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+				s.NoError(err)
+				s.NotNil(response)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtAddToPosition, tc.expectedAddedToPositionEvent)
+				s.AssertEventEmitted(s.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 			} else {
-				suite.Require().Error(err)
-				suite.Require().ErrorContains(err, tc.expectedError.Error())
-				suite.Require().Nil(response)
-				suite.AssertEventEmitted(suite.Ctx, types.TypeEvtAddToPosition, tc.expectedAddedToPositionEvent)
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
+				s.Require().Nil(response)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtAddToPosition, tc.expectedAddedToPositionEvent)
 			}
 		})
 	}
@@ -218,7 +218,7 @@ func (suite *KeeperTestSuite) TestAddToPosition_Events() {
 
 // TestCollectFees_Events tests that events are correctly emitted
 // when calling CollectFees.
-func (suite *KeeperTestSuite) TestCollectFees_Events() {
+func (s *KeeperTestSuite) TestCollectFees_Events() {
 	testcases := map[string]struct {
 		upperTick                     int64
 		lowerTick                     int64
@@ -270,43 +270,43 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 	}
 
 	for name, tc := range testcases {
-		suite.Run(name, func() {
-			suite.SetupTest()
+		s.Run(name, func() {
+			s.SetupTest()
 
-			msgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
+			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 
 			// Create a cl pool with a default position
-			pool := suite.PrepareConcentratedPool()
+			pool := s.PrepareConcentratedPool()
 			for i := 0; i < tc.numPositionsToCreate; i++ {
-				suite.SetupDefaultPosition(pool.GetId())
+				s.SetupDefaultPosition(pool.GetId())
 			}
 
 			if tc.shouldSetupUnownedPosition {
 				// Position from another account.
-				suite.SetupDefaultPositionAcc(pool.GetId(), suite.TestAccs[1])
+				s.SetupDefaultPositionAcc(pool.GetId(), s.TestAccs[1])
 			}
 
 			// Reset event counts to 0 by creating a new manager.
-			suite.Ctx = suite.Ctx.WithEventManager(sdk.NewEventManager())
-			suite.Equal(0, len(suite.Ctx.EventManager().Events()))
+			s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
+			s.Equal(0, len(s.Ctx.EventManager().Events()))
 
 			msg := &types.MsgCollectFees{
-				Sender:      suite.TestAccs[0].String(),
+				Sender:      s.TestAccs[0].String(),
 				PositionIds: tc.positionIds,
 			}
 
-			response, err := msgServer.CollectFees(sdk.WrapSDKContext(suite.Ctx), msg)
+			response, err := msgServer.CollectFees(sdk.WrapSDKContext(s.Ctx), msg)
 
 			if tc.expectedError == nil {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(response)
-				suite.AssertEventEmitted(suite.Ctx, types.TypeEvtTotalCollectFees, tc.expectedTotalCollectFeesEvent)
-				suite.AssertEventEmitted(suite.Ctx, types.TypeEvtCollectFees, tc.expectedCollectFeesEvent)
-				suite.AssertEventEmitted(suite.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+				s.Require().NoError(err)
+				s.Require().NotNil(response)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtTotalCollectFees, tc.expectedTotalCollectFeesEvent)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtCollectFees, tc.expectedCollectFeesEvent)
+				s.AssertEventEmitted(s.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 			} else {
-				suite.Require().Error(err)
-				suite.Require().ErrorAs(err, &tc.expectedError)
-				suite.Require().Nil(response)
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &tc.expectedError)
+				s.Require().Nil(response)
 			}
 		})
 	}
@@ -314,7 +314,7 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 
 // TestCollectIncentives_Events tests that events are correctly emitted
 // when calling CollectIncentives.
-func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
+func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 	uptimeHelper := getExpectedUptimes()
 	testcases := map[string]struct {
 		upperTick                           int64
@@ -374,39 +374,39 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 	}
 
 	for name, tc := range testcases {
-		suite.Run(name, func() {
-			suite.SetupTest()
-			ctx := suite.Ctx
+		s.Run(name, func() {
+			s.SetupTest()
+			ctx := s.Ctx
 
 			// Create a cl pool with a default position
-			pool := suite.PrepareConcentratedPool()
+			pool := s.PrepareConcentratedPool()
 			for i := 0; i < tc.numPositionsToCreate; i++ {
-				suite.SetupDefaultPosition(pool.GetId())
+				s.SetupDefaultPosition(pool.GetId())
 			}
 
 			if tc.shouldSetupUnownedPosition {
 				// Position from another account.
-				suite.SetupDefaultPositionAcc(pool.GetId(), suite.TestAccs[1])
+				s.SetupDefaultPositionAcc(pool.GetId(), s.TestAccs[1])
 			}
 
-			position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(ctx, tc.positionIds[0])
-			suite.Require().NoError(err)
+			position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(ctx, tc.positionIds[0])
+			s.Require().NoError(err)
 			ctx = ctx.WithBlockTime(position.JoinTime.Add(time.Hour * 24 * 7))
 			positionAge := ctx.BlockTime().Sub(position.JoinTime)
 
 			// Set up accrued incentives
-			err = addToUptimeAccums(ctx, pool.GetId(), suite.App.ConcentratedLiquidityKeeper, uptimeHelper.hundredTokensMultiDenom)
-			suite.Require().NoError(err)
-			suite.FundAcc(pool.GetIncentivesAddress(), expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, positionAge, sdk.NewInt(int64(len(tc.positionIds)))))
+			err = addToUptimeAccums(ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, uptimeHelper.hundredTokensMultiDenom)
+			s.Require().NoError(err)
+			s.FundAcc(pool.GetIncentivesAddress(), expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, positionAge, sdk.NewInt(int64(len(tc.positionIds)))))
 
-			msgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
+			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 
 			// Reset event counts to 0 by creating a new manager.
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
-			suite.Equal(0, len(ctx.EventManager().Events()))
+			s.Equal(0, len(ctx.EventManager().Events()))
 
 			msg := &types.MsgCollectIncentives{
-				Sender:      suite.TestAccs[0].String(),
+				Sender:      s.TestAccs[0].String(),
 				PositionIds: tc.positionIds,
 			}
 
@@ -414,21 +414,21 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 			response, err := msgServer.CollectIncentives(sdk.WrapSDKContext(ctx), msg)
 
 			if tc.expectedError == nil {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(response)
-				suite.AssertEventEmitted(ctx, types.TypeEvtTotalCollectIncentives, tc.expectedTotalCollectIncentivesEvent)
-				suite.AssertEventEmitted(ctx, types.TypeEvtCollectIncentives, tc.expectedCollectIncentivesEvent)
-				suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+				s.Require().NoError(err)
+				s.Require().NotNil(response)
+				s.AssertEventEmitted(ctx, types.TypeEvtTotalCollectIncentives, tc.expectedTotalCollectIncentivesEvent)
+				s.AssertEventEmitted(ctx, types.TypeEvtCollectIncentives, tc.expectedCollectIncentivesEvent)
+				s.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 			} else {
-				suite.Require().Error(err)
-				suite.Require().ErrorAs(err, &tc.expectedError)
-				suite.Require().Nil(response)
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &tc.expectedError)
+				s.Require().Nil(response)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestFungify_Events() {
+func (s *KeeperTestSuite) TestFungify_Events() {
 	testcases := map[string]struct {
 		positionIdsToFungify       []uint64
 		numPositionsToCreate       int
@@ -465,49 +465,49 @@ func (suite *KeeperTestSuite) TestFungify_Events() {
 	}
 
 	for name, tc := range testcases {
-		suite.Run(name, func() {
-			suite.SetupTest()
+		s.Run(name, func() {
+			s.SetupTest()
 
-			msgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
+			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 
 			// Create a cl pool with a default position
-			pool := suite.PrepareConcentratedPool()
+			pool := s.PrepareConcentratedPool()
 			for i := 0; i < tc.numPositionsToCreate; i++ {
-				suite.SetupDefaultPosition(pool.GetId())
+				s.SetupDefaultPosition(pool.GetId())
 			}
 
 			if tc.shouldSetupUnownedPosition {
 				// Position from another account.
-				suite.SetupDefaultPositionAcc(pool.GetId(), suite.TestAccs[1])
+				s.SetupDefaultPositionAcc(pool.GetId(), s.TestAccs[1])
 			}
 
-			fullChargeDuration := suite.App.ConcentratedLiquidityKeeper.GetLargestAuthorizedUptimeDuration(suite.Ctx)
-			suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(fullChargeDuration))
+			fullChargeDuration := s.App.ConcentratedLiquidityKeeper.GetLargestAuthorizedUptimeDuration(s.Ctx)
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(fullChargeDuration))
 
 			if tc.shouldSetupUncharged {
-				suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(-time.Millisecond))
+				s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(-time.Millisecond))
 			}
 
 			// Reset event counts to 0 by creating a new manager.
-			suite.Ctx = suite.Ctx.WithEventManager(sdk.NewEventManager())
-			suite.Equal(0, len(suite.Ctx.EventManager().Events()))
+			s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
+			s.Equal(0, len(s.Ctx.EventManager().Events()))
 
 			msg := &types.MsgFungifyChargedPositions{
-				Sender:      suite.TestAccs[0].String(),
+				Sender:      s.TestAccs[0].String(),
 				PositionIds: tc.positionIdsToFungify,
 			}
 
-			response, err := msgServer.FungifyChargedPositions(sdk.WrapSDKContext(suite.Ctx), msg)
+			response, err := msgServer.FungifyChargedPositions(sdk.WrapSDKContext(s.Ctx), msg)
 
 			if tc.expectedError == nil {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(response)
-				suite.AssertEventEmitted(suite.Ctx, types.TypeEvtFungifyChargedPosition, tc.expectedFungifyEvents)
-				suite.AssertEventEmitted(suite.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+				s.Require().NoError(err)
+				s.Require().NotNil(response)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtFungifyChargedPosition, tc.expectedFungifyEvents)
+				s.AssertEventEmitted(s.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 			} else {
-				suite.Require().Error(err)
-				suite.Require().ErrorAs(err, &tc.expectedError)
-				suite.Require().Nil(response)
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &tc.expectedError)
+				s.Require().Nil(response)
 			}
 		})
 	}

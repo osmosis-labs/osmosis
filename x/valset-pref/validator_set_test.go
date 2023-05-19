@@ -6,8 +6,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/valset-pref/types"
 )
 
-func (suite *KeeperTestSuite) TestValidateLockForForceUnlock() {
-	locks := suite.SetupLocks(sdk.AccAddress([]byte("addr1---------------")))
+func (s *KeeperTestSuite) TestValidateLockForForceUnlock() {
+	locks := s.SetupLocks(sdk.AccAddress([]byte("addr1---------------")))
 
 	tests := []struct {
 		name          string
@@ -54,19 +54,19 @@ func (suite *KeeperTestSuite) TestValidateLockForForceUnlock() {
 	}
 
 	for _, test := range tests {
-		suite.Run(test.name, func() {
-			_, _, err := suite.App.ValidatorSetPreferenceKeeper.ValidateLockForForceUnlock(suite.Ctx, test.lockID, test.delegatorAddr)
+		s.Run(test.name, func() {
+			_, _, err := s.App.ValidatorSetPreferenceKeeper.ValidateLockForForceUnlock(s.Ctx, test.lockID, test.delegatorAddr)
 			if test.expectPass {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestCheckUndelegateTotalAmount() {
-	valAddrs := suite.SetupMultipleValidators(3)
+func (s *KeeperTestSuite) TestCheckUndelegateTotalAmount() {
+	valAddrs := s.SetupMultipleValidators(3)
 	tests := []struct {
 		name        string
 		tokenAmt    sdk.Dec
@@ -126,19 +126,19 @@ func (suite *KeeperTestSuite) TestCheckUndelegateTotalAmount() {
 	}
 
 	for _, test := range tests {
-		suite.Run(test.name, func() {
-			err := suite.App.ValidatorSetPreferenceKeeper.CheckUndelegateTotalAmount(test.tokenAmt, test.existingSet)
+		s.Run(test.name, func() {
+			err := s.App.ValidatorSetPreferenceKeeper.CheckUndelegateTotalAmount(test.tokenAmt, test.existingSet)
 			if test.expectPass {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestIsValidatorSetEqual() {
-	valAddrs := suite.SetupMultipleValidators(3)
+func (s *KeeperTestSuite) TestIsValidatorSetEqual() {
+	valAddrs := s.SetupMultipleValidators(3)
 	valSetOne := []types.ValidatorPreference{
 		{
 			ValOperAddress: valAddrs[0],
@@ -205,15 +205,15 @@ func (suite *KeeperTestSuite) TestIsValidatorSetEqual() {
 	}
 
 	for _, test := range tests {
-		suite.Run(test.name, func() {
-			isEqual := suite.App.ValidatorSetPreferenceKeeper.IsValidatorSetEqual(test.newValPreference, test.existingPreference)
-			suite.Require().Equal(test.expectEqual, isEqual)
+		s.Run(test.name, func() {
+			isEqual := s.App.ValidatorSetPreferenceKeeper.IsValidatorSetEqual(test.newValPreference, test.existingPreference)
+			s.Require().Equal(test.expectEqual, isEqual)
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestIsPreferenceValid() {
-	valAddrs := suite.SetupMultipleValidators(4)
+func (s *KeeperTestSuite) TestIsPreferenceValid() {
+	valAddrs := s.SetupMultipleValidators(4)
 
 	tests := []struct {
 		name             string
@@ -261,15 +261,15 @@ func (suite *KeeperTestSuite) TestIsPreferenceValid() {
 	}
 
 	for _, test := range tests {
-		suite.Run(test.name, func() {
-			valSet, err := suite.App.ValidatorSetPreferenceKeeper.IsPreferenceValid(suite.Ctx, test.valSetPreference)
+		s.Run(test.name, func() {
+			valSet, err := s.App.ValidatorSetPreferenceKeeper.IsPreferenceValid(s.Ctx, test.valSetPreference)
 			if test.expectPass {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 				for i, vals := range valSet {
-					suite.Require().Equal(test.expectedWeights[i], vals.Weight)
+					s.Require().Equal(test.expectedWeights[i], vals.Weight)
 				}
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}

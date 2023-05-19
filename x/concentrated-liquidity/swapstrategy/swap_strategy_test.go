@@ -18,6 +18,18 @@ type StrategyTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
+type position struct {
+	lowerTick int64
+	upperTick int64
+}
+
+const (
+	defaultPoolId      = uint64(1)
+	initialCurrentTick = int64(0)
+	ETH                = "eth"
+	USDC               = "usdc"
+)
+
 var (
 	two                   = sdk.NewDec(2)
 	three                 = sdk.NewDec(2)
@@ -30,6 +42,8 @@ var (
 	defaultLiquidity      = sdk.MustNewDecFromStr("3035764687.503020836176699298")
 	defaultFee            = sdk.MustNewDecFromStr("0.03")
 	defaultTickSpacing    = uint64(100)
+	defaultAmountReserves = sdk.NewInt(1_000_000_000)
+	DefaultCoins          = sdk.NewCoins(sdk.NewCoin(ETH, defaultAmountReserves), sdk.NewCoin(USDC, defaultAmountReserves))
 )
 
 func TestStrategyTestSuite(t *testing.T) {

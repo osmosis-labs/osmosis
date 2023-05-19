@@ -67,6 +67,7 @@ func TestIBCHooksTestSuite(t *testing.T) {
 }
 
 func (suite *HooksTestSuite) SetupTest() {
+	suite.SkipIfWSL()
 	// TODO: This needs to get removed. Waiting on https://github.com/cosmos/ibc-go/issues/3123
 	txfeetypes.ConsensusMinFee = sdk.ZeroDec()
 	suite.Setup()
