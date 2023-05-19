@@ -561,7 +561,8 @@ func (suite *KeeperTestSuite) TestCreateLockNoSend() {
 	suite.Require().Equal(accum.String(), "10")
 
 	// create new lock (this time with a balance)
-	coins = sdk.Coins{sdk.NewInt64Coin("stake", 20)}
+	originalLockBalance := int64(20)
+	coins = sdk.Coins{sdk.NewInt64Coin("stake", originalLockBalance)}
 	suite.FundAcc(addr1, coins)
 
 	lock, err = suite.App.LockupKeeper.CreateLockNoSend(suite.Ctx, addr1, coins, time.Second)
@@ -580,7 +581,7 @@ func (suite *KeeperTestSuite) TestCreateLockNoSend() {
 
 	// check balance
 	balance := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, "stake")
-	suite.Require().Equal(sdk.NewInt(20).String(), balance.Amount.String())
+	suite.Require().Equal(sdk.NewInt(originalLockBalance).String(), balance.Amount.String())
 
 	acc := suite.App.AccountKeeper.GetModuleAccount(suite.Ctx, types.ModuleName)
 	balance = suite.App.BankKeeper.GetBalance(suite.Ctx, acc.GetAddress(), "stake")
