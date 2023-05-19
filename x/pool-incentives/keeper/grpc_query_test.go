@@ -223,11 +223,11 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 				// in the set of lockable durations, creating this gauge serves as a way to ensure
 				// CL gauges are captured by the IncentivizedPools query.
 				if tc.clPoolWithGauge {
-					clPool := suite.PrepareConcentratedPool()
-					epochDuration := suite.App.IncentivesKeeper.GetEpochInfo(suite.Ctx).Duration
+					clPool := s.PrepareConcentratedPool()
+					epochDuration := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration
 
-					clGaugeId, err := keeper.GetPoolGaugeId(suite.Ctx, clPool.GetId(), epochDuration)
-					suite.Require().NoError(err)
+					clGaugeId, err := keeper.GetPoolGaugeId(s.Ctx, clPool.GetId(), epochDuration)
+					s.Require().NoError(err)
 					distRecords = append(distRecords, types.DistrRecord{GaugeId: clGaugeId, Weight: tc.clGaugeWeight})
 				}
 
