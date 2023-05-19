@@ -70,9 +70,8 @@ func (s *KeeperTestSuite) GetDelegationRewards(ctx sdk.Context, valAddrStr strin
 }
 
 func (s *KeeperTestSuite) SetupDelegationReward(delegator sdk.AccAddress, preferences []types.ValidatorPreference, existingValAddrStr string, setValSetDel, setExistingdel bool) {
-	var ctx sdk.Context
 	// incrementing the blockheight by 1 for reward
-	ctx = s.Ctx.WithBlockHeight(s.Ctx.BlockHeight() + 1)
+	ctx := s.Ctx.WithBlockHeight(s.Ctx.BlockHeight() + 1)
 
 	if setValSetDel {
 		// only necessary if there are tokens delegated
