@@ -365,7 +365,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 			return sdk.Int{}, poolErr
 		}
 
-		// check if pool has swaps enabled
+		// check if pool is active, if not error
 		if !pool.IsActive(ctx) {
 			return sdk.Int{}, types.InactivePoolError{PoolId: pool.GetId()}
 		}
