@@ -12,6 +12,10 @@ service Msg {
       returns (MsgSwapExactAmountInResponse);
   rpc SwapExactAmountOut(MsgSwapExactAmountOut)
       returns (MsgSwapExactAmountOutResponse);
+  rpc SplitRouteSwapExactAmountIn(MsgSplitRouteSwapExactAmountIn)
+      returns (MsgSplitRouteSwapExactAmountInResponse);
+  rpc SplitRouteSwapExactAmountOut(MsgSplitRouteSwapExactAmountOut)
+      returns (MsgSplitRouteSwapExactAmountOutResponse);
 }
 
 // ===================== MsgSwapExactAmountIn

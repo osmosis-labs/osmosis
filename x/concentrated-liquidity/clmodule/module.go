@@ -162,6 +162,5 @@ func (am AppModule) Actions() []simtypes.Action {
 		simtypes.NewMsgBasedAction("WithdrawPosition", am.keeper, simulation.RandMsgWithdrawPosition),
 		simtypes.NewMsgBasedAction("CollectFees", am.keeper, simulation.RandMsgCollectFees),
 		simtypes.NewMsgBasedAction("CollectIncentives", am.keeper, simulation.RandMsgCollectIncentives),
-		simtypes.NewMsgBasedAction("CreateIncentives", am.keeper, simulation.RandMsgCreateIncentives),
 	}
 }

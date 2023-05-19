@@ -55,7 +55,7 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 
 	// note that liquidityIn can be either positive or negative.
 	// If negative, this would work as a subtraction from liquidityBefore
-	liquidityAfter := math.AddLiquidity(liquidityBefore, liquidityDelta)
+	liquidityAfter := liquidityBefore.Add(liquidityDelta)
 
 	tickInfo.LiquidityGross = liquidityAfter
 

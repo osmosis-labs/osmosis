@@ -15,6 +15,7 @@ import (
 
 const (
 	incentivesAddressPrefix = "incentives"
+	feesAddressPrefix       = "fees"
 )
 
 var (
@@ -39,6 +40,7 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 	pool := Pool{
 		Address:              poolmanagertypes.NewPoolAddress(poolId).String(),
 		IncentivesAddress:    osmoutils.NewModuleAddressWithPrefix(types.ModuleName, incentivesAddressPrefix, sdk.Uint64ToBigEndian(poolId)).String(),
+		FeesAddress:          osmoutils.NewModuleAddressWithPrefix(types.ModuleName, feesAddressPrefix, sdk.Uint64ToBigEndian(poolId)).String(),
 		Id:                   poolId,
 		CurrentSqrtPrice:     sdk.ZeroDec(),
 		CurrentTick:          0,
@@ -65,7 +67,15 @@ func (p Pool) GetAddress() sdk.AccAddress {
 func (p Pool) GetIncentivesAddress() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(p.IncentivesAddress)
 	if err != nil {
-		panic(fmt.Sprintf("could not bech32 decode address of pool with id: %d", p.GetId()))
+		panic(fmt.Sprintf("could not bech32 decode incentive address of pool with id: %d", p.GetId()))
+	}
+	return addr
+}
+
+func (p Pool) GetFeesAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(p.FeesAddress)
+	if err != nil {
+		panic(fmt.Sprintf("could not bech32 decode fee address of pool with id: %d", p.GetId()))
 	}
 	return addr
 }

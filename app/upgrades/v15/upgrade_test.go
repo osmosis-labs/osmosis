@@ -37,6 +37,7 @@ var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
 
 func (suite *UpgradeTestSuite) SetupTest() {
 	suite.Setup()
+	suite.SkipIfWSL()
 }
 
 func TestUpgradeTestSuite(t *testing.T) {
@@ -56,7 +57,7 @@ func (suite *UpgradeTestSuite) TestMigrateNextPoolIdAndCreatePool() {
 	gammKeeper := suite.App.GAMMKeeper
 	poolmanagerKeeper := suite.App.PoolManagerKeeper
 
-	nextPoolId := gammKeeper.GetNextPoolId(ctx)
+	nextPoolId := gammKeeper.GetNextPoolId(ctx) //nolint:staticcheck // we're using the deprecated version for testing.
 	suite.Require().Equal(expectedNextPoolId, nextPoolId)
 
 	// system under test.

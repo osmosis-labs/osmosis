@@ -815,3 +815,19 @@ type RanOutOfTicksForPoolError struct {
 func (e RanOutOfTicksForPoolError) Error() string {
 	return fmt.Sprintf("ran out of ticks for pool (%d) during swap", e.PoolId)
 }
+
+type SqrtRootCalculationError struct {
+	SqrtPriceLimit sdk.Dec
+}
+
+func (e SqrtRootCalculationError) Error() string {
+	return fmt.Sprintf("issue calculating square root of price limit %s", e.SqrtPriceLimit)
+}
+
+type TickToSqrtPriceConversionError struct {
+	NextTick int64
+}
+
+func (e TickToSqrtPriceConversionError) Error() string {
+	return fmt.Sprintf("could not convert next tick  to nextSqrtPrice (%v)", e.NextTick)
+}

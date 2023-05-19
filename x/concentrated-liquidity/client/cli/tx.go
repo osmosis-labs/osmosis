@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	flag "github.com/spf13/pflag"
 
 	"github.com/spf13/cobra"
 
@@ -29,7 +28,6 @@ func NewTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, NewCreateConcentratedPoolCmd)
 	osmocli.AddTxCmd(txCmd, NewCollectFeesCmd)
 	osmocli.AddTxCmd(txCmd, NewCollectIncentivesCmd)
-	osmocli.AddTxCmd(txCmd, NewCreateIncentiveCmd)
 	osmocli.AddTxCmd(txCmd, NewFungifyChargedPositionsCmd)
 	return txCmd
 }
@@ -49,9 +47,9 @@ func NewCreateConcentratedPoolCmd() (*osmocli.TxCliDesc, *clmodel.MsgCreateConce
 
 func NewCreatePositionCmd() (*osmocli.TxCliDesc, *types.MsgCreatePosition) {
 	return &osmocli.TxCliDesc{
-		Use:     "create-position [pool-id] [lower-tick] [upper-tick] [coins] [token-0-min-amount] [token-1-min-amount]",
+		Use:     "create-position [pool-id] [lower-tick] [upper-tick] [tokensProvided] [token-0-min-amount] [token-1-min-amount]",
 		Short:   "create or add to existing concentrated liquidity position",
-		Example: "create-position 1 \"[-69082]\" 69082 1000000000uosmo,10000000uion 0 0 --from val --chain-id osmosis-1",
+		Example: "create-position 1 \"[-69082]\" 69082 10000uosmo,10000uion 0 0 --from val --chain-id osmosis-1",
 	}, &types.MsgCreatePosition{}
 }
 
@@ -85,16 +83,6 @@ func NewCollectIncentivesCmd() (*osmocli.TxCliDesc, *types.MsgCollectIncentives)
 		Short:   "collect incentives from liquidity position(s)",
 		Example: "collect-incentives 1,5,7 --from val --chain-id osmosis-1",
 	}, &types.MsgCollectIncentives{}
-}
-
-func NewCreateIncentiveCmd() (*osmocli.TxCliDesc, *types.MsgCreateIncentive) {
-	return &osmocli.TxCliDesc{
-		Use:                 "create-incentive [incentive-coin] [emission-rate] [start-time] [min-uptime]",
-		Short:               "create an incentive record to emit incentives (per second) to a given pool",
-		Example:             "create-incentive 69082uosmo 0.02 \"2023-03-03T03:20:35.419543805\" 24h --pool-id 1 --from val --chain-id osmosis-1 --fees 875uosmo",
-		CustomFlagOverrides: poolIdFlagOverride,
-		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
-	}, &types.MsgCreateIncentive{}
 }
 
 func NewFungifyChargedPositionsCmd() (*osmocli.TxCliDesc, *types.MsgFungifyChargedPositions) {

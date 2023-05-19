@@ -273,6 +273,62 @@ $$tickIndex = ticksPassed + ticksToBeFulfilledByExponentAtCurrentTick =
 
 Bob set his limit order at tick 36650010
 
+## Chosing an Exponent At Price One Value
+
+The creator of a pool cannot choose an exponenetAtPriceOne as one of the input
+parameters since it is hard coded to -6. The number can be psedo-controlled by
+choosing the tick spacing a pool is initialized with. For example, if a pool
+is desired to have an exponentAtPriceOne of -6, the pool creator can choose a
+tick spacing of 1. If a pool is desired to have an exponentAtPriceOne of -4,
+this is two factors of 10 greater than -6, so the pool creator can choose a
+tick spacing of 100 to achieve this level of precision.
+
+As explained previously, the exponent at price one determines how much the spot
+price increases or decreases when traversing ticks. The following equation will
+assist in selecting this value:
+
+$$exponentAtPriceOne=log_{10}(\frac{D}{P})$$
+
+$$P=(\frac{baseAssetInUSD}{quoteAssetInUSD})$$
+
+$$D=P-(\frac{baseAssetInUSD}{quoteAssetInUSD+desiredIncrementOfQuoteInUSD})$$
+
+### Example 1
+
+SHIB is trading at $0.00001070 per SHIB
+BTC is trading at $28,000 per BTC
+
+We want to create a SHIB/BTC concentrated liquidity pool where SHIB is the
+baseAsset (asset0) and BTC is the quoteAsset (asset1). In terms of the quoteAsset,
+we want to increment in 10 cent values.
+
+$$P=(\frac{0.00001070}{28,000})=0.000000000382142857$$
+
+$$D=(0.000000000382142857)-(\frac{0.00001070}{28,000+0.10})=0.0000000000000013647910441136$$
+
+$$exponentAtPriceOne=log_{10}(\frac{0.0000000000000013647910441136}{0.000000000382142857})=-5.447159582$$
+
+We can therefore conclude that we can use an exponent at price one of -5
+(slightly under precise) or -6 (slightly over precise) for this base/quote pair
+and desired price granularity. This means we would either want a tick spacing of 1
+(to have an exponent at price one of -6) or 10 (to have an exponent at price one of -5).
+
+### Example 2
+
+Flipping the quoteAsset/baseAsset, for BTC/SHIB, lets determine what the
+exponentAtPriceOne should be. For SHIB as a quote, centralized exchanges
+list prices at the 10^-8, so we will set our desired increment to this value.
+
+$$P=(\frac{28,000}{0.00001070})=2616822429$$
+
+$$D=(2616822429)-(\frac{28,000}{0.00001070+0.00000001})=2443345$$
+
+$$exponentAtPriceOne=-log_{10}(\frac{2443345}{2616822429})=-3.0297894598783$$
+
+We can therefore conclude that we can use an exponent at price one of -3
+for this base/quote pair and desired price granularity. This means we would
+want a tick spacing of 1000 (to have an exponent at price one of -3).
+
 ### Consequences
 
 This decision allows us to define ticks at spot prices that users actually
@@ -499,7 +555,7 @@ is associated with the `concentrated-liquidity` pool, the swap is routed
 into the relevant module. The routing is done via the mapping from state that was
 discussed in the "Pool Creation" section.
 
-### Liquidity Provision
+## Liquidity Provision
 
 > As an LP, I want to provide liquidity in ranges so that I can achieve greater
 capital efficiency
@@ -600,7 +656,7 @@ func (k Keeper) withdrawPosition(
 }
 ```
 
-### Swapping
+## Swapping
 
 > As a trader, I want to be able to swap over a concentrated liquidity pool so
 that my trades incur lower slippage
@@ -1471,15 +1527,13 @@ This listener executes after a swap in a concentrated liquidity pool.
 
 At the time of this writing, it is only utilized by the `x/twap` module.
 
-### State
+## State
 
 - global (per-pool)
 
 - per-tick
 
 - per-position
-
-### Placeholder
 
 ## Terminology
 

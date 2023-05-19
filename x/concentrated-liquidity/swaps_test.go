@@ -1465,7 +1465,10 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 
 			// Create default CL pool
-			pool := s.PrepareConcentratedPool()
+			clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+			clParams.AuthorizedSwapFees = append(clParams.AuthorizedSwapFees, test.swapFee)
+			s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
+			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "usdc", DefaultTickSpacing, test.swapFee)
 
 			// add default position
 			s.SetupDefaultPosition(pool.GetId())
@@ -1490,7 +1493,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 
 			// perform compute
 			cacheCtx, _ := s.Ctx.CacheContext()
-			tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, err := s.App.ConcentratedLiquidityKeeper.ComputeOutAmtGivenIn(
+			tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, totalFees, err := s.App.ConcentratedLiquidityKeeper.ComputeOutAmtGivenIn(
 				cacheCtx,
 				pool.GetId(),
 				test.tokenIn, test.tokenOutDenom,
@@ -1506,6 +1509,9 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 				s.Require().Equal(test.expectedTokenIn.String(), tokenIn.String())
 				s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
 				s.Require().Equal(test.expectedSqrtPrice, sqrtPrice)
+
+				expectedFees := tokenIn.Amount.ToDec().Mul(pool.GetSwapFee(s.Ctx)).TruncateInt()
+				s.Require().Equal(expectedFees.String(), totalFees.TruncateInt().String())
 
 				if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
 					test.newLowerPrice = DefaultLowerPrice
@@ -1735,7 +1741,10 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 
 			// Create default CL pool
-			pool := s.PrepareConcentratedPool()
+			clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+			clParams.AuthorizedSwapFees = append(clParams.AuthorizedSwapFees, test.swapFee)
+			s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
+			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "usdc", DefaultTickSpacing, test.swapFee)
 
 			// add default position
 			s.SetupDefaultPosition(pool.GetId())
@@ -1756,7 +1765,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 
 			// perform compute
 			cacheCtx, _ := s.Ctx.CacheContext()
-			tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, err := s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
+			tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, totalFees, err := s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
 				cacheCtx,
 				test.tokenOut, test.tokenInDenom,
 				test.swapFee, test.priceLimit, pool.GetId())
@@ -1770,6 +1779,9 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 				s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
 				s.Require().Equal(test.expectedTokenIn.String(), tokenIn.String())
 				s.Require().Equal(test.expectedTick, updatedTick)
+
+				expectedFees := tokenIn.Amount.ToDec().Mul(pool.GetSwapFee(s.Ctx)).TruncateInt()
+				s.Require().Equal(expectedFees.String(), totalFees.TruncateInt().String())
 
 				if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
 					test.newLowerPrice = DefaultLowerPrice
@@ -2354,7 +2366,7 @@ func (s *KeeperTestSuite) TestComputeOutAmtGivenIn() {
 			s.Require().NoError(err)
 
 			// perform calc
-			_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.ComputeOutAmtGivenIn(
+			_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.ComputeOutAmtGivenIn(
 				s.Ctx,
 				pool.GetId(),
 				test.tokenIn, test.tokenOutDenom,
@@ -2558,7 +2570,7 @@ func (s *KeeperTestSuite) TestComputeInAmtGivenOut() {
 			s.Require().NoError(err)
 
 			// perform calc
-			_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
+			_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
 				s.Ctx,
 				test.tokenOut, test.tokenInDenom,
 				test.swapFee, test.priceLimit, pool.GetId())
@@ -2641,7 +2653,7 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestUpdateFeeGrowthGlobal() {
+func (s *KeeperTestSuite) TestUpdateFeeGrowthGlobal() {
 	ten := sdk.NewDec(10)
 
 	tests := map[string]struct {
@@ -2670,8 +2682,8 @@ func (suite *KeeperTestSuite) TestUpdateFeeGrowthGlobal() {
 
 	for name, tc := range tests {
 		tc := tc
-		suite.Run(name, func() {
-			suite.SetupTest()
+		s.Run(name, func() {
+			s.SetupTest()
 
 			// Setup.
 			swapState := cl.SwapState{}
@@ -2682,7 +2694,7 @@ func (suite *KeeperTestSuite) TestUpdateFeeGrowthGlobal() {
 			swapState.UpdateFeeGrowthGlobal(tc.feeChargeTotal)
 
 			// Assertion.
-			suite.Require().Equal(tc.expectedFeeGrowthGlobal, swapState.GetFeeGrowthGlobal())
+			s.Require().Equal(tc.expectedFeeGrowthGlobal, swapState.GetFeeGrowthGlobal())
 		})
 	}
 }
@@ -2739,7 +2751,7 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapInAmtGivenOut() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
+func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 	var (
 		oneHundredETH         = sdk.NewCoin(ETH, sdk.NewInt(100_000_000))
 		oneHundredUSDC        = sdk.NewCoin(USDC, sdk.NewInt(100_000_000))
@@ -2751,6 +2763,7 @@ func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
 		poolInitialBalance   sdk.Coins
 		tokenIn              sdk.Coin
 		tokenOut             sdk.Coin
+		swapFee              sdk.Dec
 		newCurrentTick       int64
 		newLiquidity         sdk.Dec
 		newSqrtPrice         sdk.Dec
@@ -2761,6 +2774,7 @@ func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
 			poolInitialBalance:   defaultInitialBalance,
 			tokenIn:              oneHundredETH,
 			tokenOut:             oneHundredUSDC,
+			swapFee:              sdk.MustNewDecFromStr("0.003"), // 0.3%
 			newCurrentTick:       2,
 			newLiquidity:         sdk.NewDec(2),
 			newSqrtPrice:         sdk.NewDec(2),
@@ -2770,6 +2784,7 @@ func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
 			poolInitialBalance:   defaultInitialBalance,
 			tokenIn:              oneHundredETH.Add(oneHundredETH),
 			tokenOut:             oneHundredUSDC,
+			swapFee:              sdk.MustNewDecFromStr("0.002"), // 0.2%
 			newCurrentTick:       8,
 			newLiquidity:         sdk.NewDec(37),
 			newSqrtPrice:         sdk.NewDec(91),
@@ -2779,6 +2794,7 @@ func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
 			poolInitialBalance:   defaultInitialBalance,
 			tokenIn:              oneHundredETH.Add(oneHundredETH),
 			tokenOut:             oneHundredUSDC,
+			swapFee:              sdk.MustNewDecFromStr("0.003"),
 			newCurrentTick:       2,
 			newLiquidity:         sdk.NewDec(2),
 			newSqrtPrice:         sdk.NewDec(2),
@@ -2789,6 +2805,7 @@ func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
 			poolInitialBalance:   defaultInitialBalance,
 			tokenIn:              oneHundredETH,
 			tokenOut:             oneHundredUSDC.Add(oneHundredUSDC),
+			swapFee:              sdk.MustNewDecFromStr("0.003"),
 			newCurrentTick:       2,
 			newLiquidity:         sdk.NewDec(2),
 			newSqrtPrice:         sdk.NewDec(2),
@@ -2798,62 +2815,71 @@ func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
 
 	for name, tc := range tests {
 		tc := tc
-		suite.Run(name, func() {
-			suite.SetupTest()
-			concentratedLiquidityKeeper := suite.App.ConcentratedLiquidityKeeper
+		s.Run(name, func() {
+			s.SetupTest()
+			concentratedLiquidityKeeper := s.App.ConcentratedLiquidityKeeper
 
 			// Create pool with initial balance
-			pool := suite.PrepareConcentratedPool()
-			suite.FundAcc(pool.GetAddress(), tc.poolInitialBalance)
+			clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+			clParams.AuthorizedSwapFees = append(clParams.AuthorizedSwapFees, tc.swapFee)
+			s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
+			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "usdc", DefaultTickSpacing, tc.swapFee)
+
+			s.FundAcc(pool.GetAddress(), tc.poolInitialBalance)
 			// Create account with empty balance and fund with initial balance
 			sender := apptesting.CreateRandomAccounts(1)[0]
-			suite.FundAcc(sender, tc.senderInitialBalance)
+			s.FundAcc(sender, tc.senderInitialBalance)
 
 			// Default pool values are initialized to one.
 			err := pool.ApplySwap(sdk.OneDec(), 1, sdk.OneDec())
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
 			// Write default pool to state.
-			err = concentratedLiquidityKeeper.SetPool(suite.Ctx, pool)
-			suite.Require().NoError(err)
+			err = concentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+			s.Require().NoError(err)
 
 			// Set mock listener to make sure that is is called when desired.
-			suite.setListenerMockOnConcentratedLiquidityKeeper()
+			s.setListenerMockOnConcentratedLiquidityKeeper()
 
-			err = concentratedLiquidityKeeper.UpdatePoolForSwap(suite.Ctx, pool, sender, tc.tokenIn, tc.tokenOut, tc.newCurrentTick, tc.newLiquidity, tc.newSqrtPrice)
+			expectedFees := tc.tokenIn.Amount.ToDec().Mul(pool.GetSwapFee(s.Ctx)).Ceil()
+			expectedFeesCoins := sdk.NewCoins(sdk.NewCoin(tc.tokenIn.Denom, expectedFees.TruncateInt()))
+			err = concentratedLiquidityKeeper.UpdatePoolForSwap(s.Ctx, pool, sender, tc.tokenIn, tc.tokenOut, tc.newCurrentTick, tc.newLiquidity, tc.newSqrtPrice, expectedFees)
 
 			// Test that pool is updated
-			poolAfterUpdate, err2 := concentratedLiquidityKeeper.GetPoolById(suite.Ctx, pool.GetId())
-			suite.Require().NoError(err2)
+			poolAfterUpdate, err2 := concentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err2)
 
 			if tc.expectError != nil {
-				suite.Require().Error(err)
-				suite.Require().ErrorAs(err, &tc.expectError)
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &tc.expectError)
 
 				// Test that pool is not updated
-				suite.Require().Equal(pool.String(), poolAfterUpdate.String())
+				s.Require().Equal(pool.String(), poolAfterUpdate.String())
 				return
 			}
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
-			suite.Require().Equal(tc.newCurrentTick, poolAfterUpdate.GetCurrentTick())
-			suite.Require().Equal(tc.newLiquidity, poolAfterUpdate.GetLiquidity())
-			suite.Require().Equal(tc.newSqrtPrice, poolAfterUpdate.GetCurrentSqrtPrice())
+			s.Require().Equal(tc.newCurrentTick, poolAfterUpdate.GetCurrentTick())
+			s.Require().Equal(tc.newLiquidity, poolAfterUpdate.GetLiquidity())
+			s.Require().Equal(tc.newSqrtPrice, poolAfterUpdate.GetCurrentSqrtPrice())
 
 			// Estimate expected final balances from inputs.
 			expectedSenderFinalBalance := tc.senderInitialBalance.Sub(sdk.NewCoins(tc.tokenIn)).Add(tc.tokenOut)
-			expectedPoolFinalBalance := tc.poolInitialBalance.Add(tc.tokenIn).Sub(sdk.NewCoins(tc.tokenOut))
+			expectedPoolFinalBalance := tc.poolInitialBalance.Add(tc.tokenIn).Sub(sdk.NewCoins(tc.tokenOut)).Sub(expectedFeesCoins)
 
 			// Test that token out is sent from pool to sender.
-			senderBalanceAfterSwap := suite.App.BankKeeper.GetAllBalances(suite.Ctx, sender)
-			suite.Require().Equal(expectedSenderFinalBalance.String(), senderBalanceAfterSwap.String())
+			senderBalanceAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, sender)
+			s.Require().Equal(expectedSenderFinalBalance.String(), senderBalanceAfterSwap.String())
 
 			// Test that token in is sent from sender to pool.
-			poolBalanceAfterSwap := suite.App.BankKeeper.GetAllBalances(suite.Ctx, pool.GetAddress())
-			suite.Require().Equal(expectedPoolFinalBalance.String(), poolBalanceAfterSwap.String())
+			poolBalanceAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
+			s.Require().Equal(expectedPoolFinalBalance.String(), poolBalanceAfterSwap.String())
+
+			feeBalanceAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetFeesAddress())
+			s.Require().Equal(expectedFeesCoins.String(), feeBalanceAfterSwap.String())
 
 			// Validate that listeners were called the desired number of times
-			suite.validateListenerCallCount(0, 0, 0, 1)
+			s.validateListenerCallCount(0, 0, 0, 1)
 		})
 	}
 }
@@ -2936,7 +2962,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 		numConsecutive: 2,
 		numOverlapping: 1,
 	}
-	// Init suite.
+	// Init s.
 	s.SetupTest()
 
 	// Determine amount of ETH and USDC to swap per swap.
@@ -2948,7 +2974,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	s.TestAccs = apptesting.CreateRandomAccounts(positions.numAccounts)
 
 	// Create a default CL pool, but with a 0.3 percent swap fee.
-	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, sdk.MustNewDecFromStr("0.002"))
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, sdk.MustNewDecFromStr("0.003"))
 
 	positionIds := make([][]uint64, 4)
 	// Setup full range position across all four accounts
@@ -3016,7 +3042,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	expectedSqrtPrice := osmomath.MustNewDecFromStr("71.74138432587113364823838192")
 	actualSqrtPrice := osmomath.BigDecFromSDKDec(clPool.GetCurrentSqrtPrice())
 	expectedTokenIn := swapCoin1.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
-	expectedTokenOut := sdk.NewInt(983645)
+	expectedTokenOut := sdk.NewInt(982676)
 
 	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
 	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice), "expected sqrt price: %s, actual sqrt price: %s", expectedSqrtPrice, actualSqrtPrice)
@@ -3076,7 +3102,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	expectedSqrtPrice = osmomath.MustNewDecFromStr("70.64112736841825140176332377")
 	actualSqrtPrice = osmomath.BigDecFromSDKDec(clPool.GetCurrentSqrtPrice())
 	expectedTokenIn = swapCoin0.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
-	expectedTokenOut = sdk.NewInt(5057205729)
+	expectedTokenOut = sdk.NewInt(5052068983)
 
 	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
 	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice))
@@ -3136,7 +3162,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	expectedSqrtPrice = osmomath.MustNewDecFromStr("76.22545423006231767390422658")
 	actualSqrtPrice = osmomath.BigDecFromSDKDec(clPool.GetCurrentSqrtPrice())
 	expectedTokenIn = swapCoin1.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
-	expectedTokenOut = sdk.NewInt(883663)
+	expectedTokenOut = sdk.NewInt(882804)
 
 	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
 	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice))
@@ -3182,7 +3208,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	expectedSqrtPrice = osmomath.MustNewDecFromStr("63.97671895942244949922335999")
 	actualSqrtPrice = osmomath.BigDecFromSDKDec(clPool.GetCurrentSqrtPrice())
 	expectedTokenIn = swapCoin0.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
-	expectedTokenOut = sdk.NewInt(4513904710)
+	expectedTokenOut = sdk.NewInt(4509814620)
 
 	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
 	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice))
