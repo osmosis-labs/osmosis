@@ -901,7 +901,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			validPool := s.PrepareConcentratedPool()
 			validPoolId := validPool.GetId()
 
-			s.FundAcc(validPool.GetAddress(), tc.expectedFeesClaimed)
+			s.FundAcc(validPool.GetFeesAddress(), tc.expectedFeesClaimed)
 
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 			ctx := s.Ctx
@@ -923,7 +923,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			err = clKeeper.ChargeFee(ctx, validPoolId, tc.globalFeeGrowth[0])
 			s.Require().NoError(err)
 
-			poolBalanceBeforeCollect := s.App.BankKeeper.GetBalance(ctx, validPool.GetAddress(), ETH)
+			poolFeeBalanceBeforeCollect := s.App.BankKeeper.GetBalance(ctx, validPool.GetFeesAddress(), ETH)
 			ownerBalancerBeforeCollect := s.App.BankKeeper.GetBalance(ctx, tc.owner, ETH)
 
 			var preQueryPosition accum.Record
@@ -949,7 +949,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 
 			// Assertions.
 
-			poolBalanceAfterCollect := s.App.BankKeeper.GetBalance(ctx, validPool.GetAddress(), ETH)
+			poolFeeBalanceAfterCollect := s.App.BankKeeper.GetBalance(ctx, validPool.GetFeesAddress(), ETH)
 			ownerBalancerAfterCollect := s.App.BankKeeper.GetBalance(ctx, tc.owner, ETH)
 
 			if tc.expectedError != nil {
@@ -958,7 +958,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 				s.Require().Equal(sdk.Coins{}, actualFeesClaimed)
 
 				// balances are unchanged
-				s.Require().Equal(poolBalanceBeforeCollect, poolBalanceAfterCollect)
+				s.Require().Equal(poolFeeBalanceAfterCollect, poolFeeBalanceBeforeCollect)
 				s.Require().Equal(ownerBalancerAfterCollect, ownerBalancerBeforeCollect)
 				return
 			}
@@ -969,7 +969,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			s.Require().Equal(feeQueryAmount.String(), actualFeesClaimed.String())
 
 			expectedETHAmount := tc.expectedFeesClaimed.AmountOf(ETH)
-			s.Require().Equal(expectedETHAmount.String(), poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect).Amount.String())
+			s.Require().Equal(expectedETHAmount.String(), poolFeeBalanceBeforeCollect.Sub(poolFeeBalanceAfterCollect).Amount.String())
 			s.Require().Equal(expectedETHAmount.String(), ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect).Amount.String())
 		})
 	}
