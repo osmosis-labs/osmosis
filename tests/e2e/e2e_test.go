@@ -219,7 +219,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	poolID, err := chainANode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, swapFee)
 	s.Require().NoError(err)
 
-	concentratedPool := s.updatedPool(chainANode, poolID)
+	concentratedPool := s.updatedConcentratedPool(chainANode, poolID)
 
 	// Sanity check that pool initialized with valid parameters (the ones that we haven't explicitly specified)
 	s.Require().Equal(concentratedPool.GetCurrentTick(), int64(0))
@@ -257,7 +257,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	positionsAddress2 := chainANode.QueryConcentratedPositions(address2)
 	positionsAddress3 := chainANode.QueryConcentratedPositions(address3)
 
-	concentratedPool = s.updatedPool(chainANode, poolID)
+	concentratedPool = s.updatedConcentratedPool(chainANode, poolID)
 
 	// Assert number of positions per address
 	s.Require().Equal(len(positionsAddress1), 2)
@@ -311,7 +311,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	liquidityBeforeSwap := concentratedPool.GetLiquidity()
 	sqrtPriceBeforeSwap := concentratedPool.GetCurrentSqrtPrice()
 
-	concentratedPool = s.updatedPool(chainANode, poolID)
+	concentratedPool = s.updatedConcentratedPool(chainANode, poolID)
 
 	liquidityAfterSwap := concentratedPool.GetLiquidity()
 	sqrtPriceAfterSwap := concentratedPool.GetCurrentSqrtPrice()
@@ -407,7 +407,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	liquidityOfKickedOutPosition := positionsAddress1[0].Position.Liquidity
 
 	// Update pool and track pool's liquidity
-	concentratedPool = s.updatedPool(chainANode, poolID)
+	concentratedPool = s.updatedConcentratedPool(chainANode, poolID)
 
 	liquidityAfterSwap = concentratedPool.GetLiquidity()
 
@@ -551,7 +551,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	chainANode.SwapExactAmountIn(uionIn_Swap3, outMinAmt, fmt.Sprintf("%d", poolID), denom1, initialization.ValidatorWalletName)
 
 	// Assert liquidity of kicked in position was successfully added to the pool
-	concentratedPool = s.updatedPool(chainANode, poolID)
+	concentratedPool = s.updatedConcentratedPool(chainANode, poolID)
 
 	liquidityAfterSwap = concentratedPool.GetLiquidity()
 	s.Require().Equal(liquidityBeforeSwap.Add(positionsAddress1[0].Position.Liquidity), liquidityAfterSwap)
@@ -739,7 +739,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	}
 
 	// Check that the tick spacing was reduced to the expected new tick spacing
-	concentratedPool = s.updatedPool(chainANode, poolID)
+	concentratedPool = s.updatedConcentratedPool(chainANode, poolID)
 	s.Require().Equal(newTickSpacing, concentratedPool.GetTickSpacing())
 }
 
@@ -914,7 +914,7 @@ func (s *IntegrationTestSuite) TestCreateConcentratedLiquidityPoolVoting() {
 	poolId := chainANode.QueryNumPools()
 	s.Eventually(
 		func() bool {
-			concentratedPool := s.updatedPool(chainANode, poolId)
+			concentratedPool := s.updatedConcentratedPool(chainANode, poolId)
 			s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
 			s.Require().Equal(expectedDenom0, concentratedPool.GetToken0())
 			s.Require().Equal(expectedDenom1, concentratedPool.GetToken1())
@@ -1588,7 +1588,7 @@ func (s *IntegrationTestSuite) TestAConcentratedLiquidity_CanonicalPool_And_Para
 	// Taken from: https://app.osmosis.zone/pool/674
 	concentratedPoolId := chainANode.QueryConcentratedPooIdLinkFromCFMM(config.DaiOsmoPoolIdv16)
 
-	concentratedPool := s.updatedPool(chainANode, concentratedPoolId)
+	concentratedPool := s.updatedConcentratedPool(chainANode, concentratedPoolId)
 
 	s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
 	s.Require().Equal(v16.DesiredDenom0, concentratedPool.GetToken0())
@@ -1601,4 +1601,23 @@ func (s *IntegrationTestSuite) TestAConcentratedLiquidity_CanonicalPool_And_Para
 	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "false") {
 		s.T().Fatal("concentrated liquidity pool creation is enabled when should not have been after v16 upgrade")
 	}
+
+	// Check that the cl pool denom is now an authorized superfluid denom.
+	superfluidAssets := chainANode.QueryAllSuperfluidAssets()
+
+	found := false
+	for _, superfluidAsset := range superfluidAssets {
+		if superfluidAsset.Denom == cltypes.GetConcentratedLockupDenomFromPoolId(concentratedPoolId) {
+			found = true
+			break
+		}
+	}
+
+	s.Require().True(found, "concentrated liquidity pool denom not found in superfluid assets")
+
+	// This spot price is taken from the balancer pool that was initiated pre upgrade.
+	balancerDaiOsmoPool := s.updatedCFMMPool(chainANode, config.DaiOsmoPoolIdv16)
+	expectedSpotPrice, err := balancerDaiOsmoPool.SpotPrice(sdk.Context{}, v16.DAIIBCDenom, v16.DesiredDenom0)
+	s.Require().NoError(err)
+	osmoassert.DecApproxEq(s.T(), expectedSpotPrice, concentratedPool.GetCurrentSqrtPrice().Power(2), sdk.NewDecWithPrec(1, 3))
 }
