@@ -1231,7 +1231,7 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 			// store pool interface
 			poolI, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, 1)
 			s.Require().NoError(err)
-			concentratedPool, ok := poolI.(types.ConcentratedPoolExtension)
+			concentratedPool, ok := poolI.(types.ConcentratedPoolExtension) //nolint:gosimple
 			if !ok {
 				s.FailNow("poolI is not a ConcentratedPoolExtension")
 			}
@@ -1463,7 +1463,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				// validate if pool liquidity has been updated properly
 				poolI, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, tc.poolId)
 				s.Require().NoError(err)
-				concentratedPool, ok := poolI.(types.ConcentratedPoolExtension)
+				concentratedPool, ok := poolI.(types.ConcentratedPoolExtension) //nolint:gosimple
 				if !ok {
 					s.FailNow("poolI is not a ConcentratedPoolExtension")
 				}
