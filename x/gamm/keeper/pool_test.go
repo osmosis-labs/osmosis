@@ -46,16 +46,6 @@ func (s *KeeperTestSuite) TestGetPoolAndPoke() {
 			Token:  defaultPoolAssets[1].Token,
 		},
 	}
-	_ = s.prepareCustomBalancerPool(defaultAcctFunds, startPoolWeightAssets, balancer.PoolParams{
-		SwapFee: defaultSwapFee,
-		ExitFee: defaultZeroExitFee,
-		SmoothWeightChangeParams: &balancer.SmoothWeightChangeParams{
-			StartTime:          time.Unix(startTime, 0), // start time is before block time so the weights should change
-			Duration:           time.Hour,
-			InitialPoolWeights: startPoolWeightAssets,
-			TargetPoolWeights:  defaultPoolAssetsCopy,
-		},
-	})
 
 	tests := map[string]struct {
 		isPokePool bool
