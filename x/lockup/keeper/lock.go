@@ -100,7 +100,7 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.Ac
 		return nil, err
 	}
 
-	err = k.lockNoSend(ctx, *lock, sdk.NewCoins(tokensToAdd))
+	err = k.lock(ctx, *lock, sdk.NewCoins(tokensToAdd))
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func (k Keeper) CreateLockNoSend(ctx sdk.Context, owner sdk.AccAddress, coins sd
 	lock := types.NewPeriodLock(ID, owner, duration, time.Time{}, coins)
 
 	// lock the coins without sending them to the lockup module account
-	err := k.lockNoSend(ctx, lock, lock.Coins)
+	err := k.lock(ctx, lock, lock.Coins)
 	if err != nil {
 		return lock, err
 	}
@@ -162,13 +162,13 @@ func (k Keeper) CreateLockNoSend(ctx sdk.Context, owner sdk.AccAddress, coins sd
 	return lock, nil
 }
 
-// lockNoSend is an internal utility to lock coins and set corresponding states.
+// lock is an internal utility to lock coins and set corresponding states.
 // This is only called by either of the two possible entry points to lock tokens.
 // 1. CreateLock
 // 2. AddTokensToLockByID
 // WARNING: this method does not send the underlying coins to the lockup module account.
 // This must be done by the caller.
-func (k Keeper) lockNoSend(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Coins) error {
+func (k Keeper) lock(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Coins) error {
 	owner, err := sdk.AccAddressFromBech32(lock.Owner)
 	if err != nil {
 		return err

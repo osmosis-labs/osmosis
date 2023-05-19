@@ -773,7 +773,7 @@ func (suite *KeeperTestSuite) TestLockNoSend() {
 	}
 
 	// test locking without balance (should work since we don't send the underlying balance)
-	err := suite.App.LockupKeeper.LockNoSend(suite.Ctx, lock, coins)
+	err := suite.App.LockupKeeper.Lock(suite.Ctx, lock, coins)
 	suite.Require().NoError(err)
 
 	// check accumulation store
@@ -785,7 +785,7 @@ func (suite *KeeperTestSuite) TestLockNoSend() {
 	suite.Require().Equal(accum.String(), "10")
 
 	suite.FundAcc(addr1, coins)
-	err = suite.App.LockupKeeper.LockNoSend(suite.Ctx, lock, coins)
+	err = suite.App.LockupKeeper.Lock(suite.Ctx, lock, coins)
 	suite.Require().NoError(err)
 
 	// check accumulation store
