@@ -1517,7 +1517,7 @@ func (s *KeeperTestSuite) TestFunctional_Fees_LP() {
 	feesCollected := s.collectFeesAndCheckInvariance(ctx, 0, DefaultMinTick, DefaultMaxTick, positionIdOne, sdk.NewCoins(), []string{USDC}, [][]int64{ticksActivatedAfterEachSwap})
 	expectedFeesTruncated := totalFeesExpected
 	for i, feeToken := range totalFeesExpected {
-		// We run expected fees through a cycle of divison and multiplication by liquidity to capture appropriate rounding behavior
+		// We run expected fees through a cycle of division and multiplication by liquidity to capture appropriate rounding behavior
 		expectedFeesTruncated[i] = sdk.NewCoin(feeToken.Denom, feeToken.Amount.ToDec().QuoTruncate(liquidity).MulTruncate(liquidity).TruncateInt())
 	}
 	s.Require().Equal(expectedFeesTruncated, feesCollected)
