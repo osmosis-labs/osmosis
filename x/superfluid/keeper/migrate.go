@@ -213,12 +213,12 @@ func (k Keeper) routeMigration(ctx sdk.Context, sender sdk.AccAddress, lockId ui
 		return nil, Unsupported, fmt.Errorf("lock %d contains more than one synthetic lock", lockId)
 	}
 
-	if strings.Contains(synthLocksBeforeMigration[0].SynthDenom, "superbonding") {
+	if len(synthLocksBeforeMigration) == 0 {
+		migrationType = NonSuperfluid
+	} else if strings.Contains(synthLocksBeforeMigration[0].SynthDenom, "superbonding") {
 		migrationType = SuperfluidBonded
 	} else if strings.Contains(synthLocksBeforeMigration[0].SynthDenom, "superunbonding") {
 		migrationType = SuperfluidUnbonding
-	} else if len(synthLocksBeforeMigration) == 0 {
-		migrationType = NonSuperfluid
 	} else {
 		return nil, Unsupported, fmt.Errorf("lock %d contains an unsupported synthetic lock", lockId)
 	}
