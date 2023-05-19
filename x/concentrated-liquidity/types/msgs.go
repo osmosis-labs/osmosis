@@ -14,7 +14,6 @@ const (
 	TypeMsgWithdrawPosition        = "withdraw-position"
 	TypeMsgCollectFees             = "collect-fees"
 	TypeMsgCollectIncentives       = "collect-incentives"
-	TypeMsgCreateIncentive         = "create-incentive"
 	TypeMsgFungifyChargedPositions = "fungify-charged-positions"
 )
 
@@ -182,39 +181,6 @@ func (msg MsgCollectIncentives) GetSignBytes() []byte {
 }
 
 func (msg MsgCollectIncentives) GetSigners() []sdk.AccAddress {
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{sender}
-}
-
-var _ sdk.Msg = &MsgCreateIncentive{}
-
-func (msg MsgCreateIncentive) Route() string { return RouterKey }
-func (msg MsgCreateIncentive) Type() string  { return TypeMsgCreateIncentive }
-func (msg MsgCreateIncentive) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return fmt.Errorf("Invalid sender address (%s)", err)
-	}
-
-	if !msg.IncentiveCoin.IsValid() {
-		return InvalidIncentiveCoinError{PoolId: msg.PoolId, IncentiveCoin: msg.IncentiveCoin}
-	}
-
-	if !msg.EmissionRate.IsPositive() {
-		return NonPositiveEmissionRateError{PoolId: msg.PoolId, EmissionRate: msg.EmissionRate}
-	}
-
-	return nil
-}
-
-func (msg MsgCreateIncentive) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-func (msg MsgCreateIncentive) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)

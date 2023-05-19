@@ -2,7 +2,6 @@ package concentrated_liquidity
 
 import (
 	"context"
-	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -193,46 +192,6 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 	})
 
 	return &types.MsgCollectIncentivesResponse{CollectedIncentives: totalCollectedIncentives, ForfeitedIncentives: totalForefeitedIncentives}, nil
-}
-
-func (server msgServer) CreateIncentive(goCtx context.Context, msg *types.MsgCreateIncentive) (*types.MsgCreateIncentiveResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return nil, err
-	}
-
-	incentiveRecord, err := server.keeper.CreateIncentive(ctx, msg.PoolId, sender, msg.IncentiveCoin, msg.EmissionRate, msg.StartTime, msg.MinUptime)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-		),
-		sdk.NewEvent(
-			types.TypeEvtCreateIncentive,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
-			sdk.NewAttribute(types.AttributeIncentiveCoin, msg.IncentiveCoin.String()),
-			sdk.NewAttribute(types.AttributeIncentiveEmissionRate, msg.EmissionRate.String()),
-			sdk.NewAttribute(types.AttributeIncentiveStartTime, msg.StartTime.String()),
-			sdk.NewAttribute(types.AttributeIncentiveMinUptime, msg.MinUptime.String()),
-		),
-	})
-
-	return &types.MsgCreateIncentiveResponse{
-		IncentiveDenom:  incentiveRecord.IncentiveDenom,
-		IncentiveAmount: incentiveRecord.IncentiveRecordBody.RemainingAmount,
-		EmissionRate:    incentiveRecord.IncentiveRecordBody.EmissionRate,
-		StartTime:       incentiveRecord.IncentiveRecordBody.StartTime,
-		MinUptime:       incentiveRecord.MinUptime,
-	}, nil
 }
 
 func (server msgServer) FungifyChargedPositions(goCtx context.Context, msg *types.MsgFungifyChargedPositions) (*types.MsgFungifyChargedPositionsResponse, error) {
