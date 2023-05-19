@@ -20,7 +20,7 @@ type BenchTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
-func (s BenchTestSuite) createPosition(accountIndex int, poolId uint64, coin0, coin1 sdk.Coin, lowerTick, upperTick int64) {
+func (s BenchTestSuite) createPosition(accountIndex int, poolId uint64, coin0, coin1 sdk.Coin, lowerTick, upperTick int64) { //nolint:govet
 	tokensDesired := sdk.NewCoins(coin0, coin1)
 
 	_, _, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[accountIndex], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
@@ -87,7 +87,8 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 
 		// Fund all accounts with max amounts they would need to consume.
 		for _, acc := range s.TestAccs {
-			simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, sdk.NewCoins(sdk.NewCoin(denom0, maxAmountOfEachToken), sdk.NewCoin(denom1, maxAmountOfEachToken), sdk.NewCoin("uosmo", maxAmountOfEachToken)))
+			err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, sdk.NewCoins(sdk.NewCoin(denom0, maxAmountOfEachToken), sdk.NewCoin(denom1, maxAmountOfEachToken), sdk.NewCoin("uosmo", maxAmountOfEachToken)))
+			noError(err)
 		}
 
 		// Create a pool
@@ -101,6 +102,7 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 		tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(100))
 		tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
 		_, _, _, _, _, _, _, err = clKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinTick, types.MaxTick)
+		noError(err)
 
 		pool, err := clKeeper.GetPoolById(s.Ctx, poolId)
 		noError(err)
@@ -158,7 +160,8 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 
 				account := s.TestAccs[accountIndex]
 
-				simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
+				err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
+				noError(err)
 
 				s.createPosition(accountIndex, poolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
 			}
@@ -181,7 +184,8 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 
 					account := s.TestAccs[accountIndex]
 
-					simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
+					err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
+					noError(err)
 
 					s.createPosition(accountIndex, poolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
 				}
@@ -204,7 +208,8 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 
 				account := s.TestAccs[accountIndex]
 
-				simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
+				err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
+				noError(err)
 
 				s.createPosition(accountIndex, poolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
 			}
@@ -224,7 +229,8 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 		s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second))
 
 		// Fund swap amount.
-		simapp.FundAccount(s.App.BankKeeper, s.Ctx, s.TestAccs[0], sdk.NewCoins(largeSwapInCoin))
+		err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, s.TestAccs[0], sdk.NewCoins(largeSwapInCoin))
+		noError(err)
 
 		// Notice that we start the timer as this is the system under test
 		b.StartTimer()
