@@ -261,7 +261,6 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 // - Creating new position with added liquidity fails
 // - Position with `positionId` is the last position in the pool
 // - Position is superfluid staked
-// TODO: handle adding to SFS positions
 func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added, amount0MinGiven, amount1MinGiven sdk.Int) (uint64, sdk.Int, sdk.Int, error) {
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
