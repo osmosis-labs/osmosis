@@ -33,12 +33,12 @@ var (
 // 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 // )
 
-// func (suite *KeeperTestSuite) TestCleanupPool() {
+// func (s *KeeperTestSuite) TestCleanupPool() {
 // 	// Mint some assets to the accounts.
-// 	for _, acc := range suite.TestAccs {
-// 		suite.FundAcc(
-// 			suite.App.BankKeeper,
-// 			suite.Ctx,
+// 	for _, acc := range s.TestAccs {
+// 		s.FundAcc(
+// 			s.App.BankKeeper,
+// 			s.Ctx,
 // 			acc,
 // 			sdk.NewCoins(
 // 				sdk.NewCoin("uosmo", sdk.NewInt(1000000000)),
@@ -52,7 +52,7 @@ var (
 // 		}
 // 	}
 
-// 	poolId, err := suite.App.GAMMKeeper.CreateBalancerPool(suite.Ctx, acc1, defaultPoolParams, []types.PoolAsset{
+// 	poolId, err := s.App.GAMMKeeper.CreateBalancerPool(s.Ctx, acc1, defaultPoolParams, []types.PoolAsset{
 // 		{
 // 			Weight: sdk.NewInt(100),
 // 			Token:  sdk.NewCoin("foo", sdk.NewInt(1000)),
@@ -66,46 +66,46 @@ var (
 // 			Token:  sdk.NewCoin("baz", sdk.NewInt(1000)),
 // 		},
 // 	}, "")
-// 	suite.NoError(err)
+// 	s.NoError(err)
 
 // 	for _, acc := range []sdk.AccAddress{acc2, acc3} {
-// 		err = suite.App.GAMMKeeper.JoinPool(suite.Ctx, acc, poolId, types.OneShare.MulRaw(100), sdk.NewCoins(
+// 		err = s.App.GAMMKeeper.JoinPool(s.Ctx, acc, poolId, types.OneShare.MulRaw(100), sdk.NewCoins(
 // 			sdk.NewCoin("foo", sdk.NewInt(1000)),
 // 			sdk.NewCoin("bar", sdk.NewInt(1000)),
 // 			sdk.NewCoin("baz", sdk.NewInt(1000)),
 // 		))
-// 		suite.NoError(err)
+// 		s.NoError(err)
 // 	}
 
-// 	pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
-// 	suite.NoError(err)
+// 	pool, err := s.App.GAMMKeeper.GetPool(s.Ctx, poolId)
+// 	s.NoError(err)
 // 	denom := pool.GetTotalShares().Denom
 // 	totalAmount := sdk.ZeroInt()
-// 	for _, acc := range suite.TestAccs {
-// 		coin := suite.App.BankKeeper.GetBalance(suite.Ctx, acc, denom)
-// 		suite.True(coin.Amount.Equal(types.OneShare.MulRaw(100)))
+// 	for _, acc := range s.TestAccs {
+// 		coin := s.App.BankKeeper.GetBalance(s.Ctx, acc, denom)
+// 		s.True(coin.Amount.Equal(types.OneShare.MulRaw(100)))
 // 		totalAmount = totalAmount.Add(coin.Amount)
 // 	}
-// 	suite.True(totalAmount.Equal(types.OneShare.MulRaw(300)))
+// 	s.True(totalAmount.Equal(types.OneShare.MulRaw(300)))
 
-// 	err = suite.App.GAMMKeeper.CleanupBalancerPool(suite.Ctx, []uint64{poolId}, []string{})
-// 	suite.NoError(err)
-// 	for _, acc := range suite.TestAccs {
+// 	err = s.App.GAMMKeeper.CleanupBalancerPool(s.Ctx, []uint64{poolId}, []string{})
+// 	s.NoError(err)
+// 	for _, acc := range s.TestAccs {
 // 		for _, denom := range []string{"foo", "bar", "baz"} {
-// 			amt := suite.App.BankKeeper.GetBalance(suite.Ctx, acc, denom)
-// 			suite.True(amt.Amount.Equal(sdk.NewInt(1000)),
+// 			amt := s.App.BankKeeper.GetBalance(s.Ctx, acc, denom)
+// 			s.True(amt.Amount.Equal(sdk.NewInt(1000)),
 // 				"Expected equal %s: %d, %d", amt.Denom, amt.Amount.Int64(), 1000)
 // 		}
 // 	}
 // }
 
-// func (suite *KeeperTestSuite) TestCleanupPoolRandomized() {
+// func (s *KeeperTestSuite) TestCleanupPoolRandomized() {
 // 	// address => deposited coins
 // 	coinOf := make(map[string]sdk.Coins)
 // 	denoms := []string{"foo", "bar", "baz"}
 
 // 	// Mint some assets to the accounts.
-// 	for _, acc := range suite.TestAccs {
+// 	for _, acc := range s.TestAccs {
 // 		coins := make(sdk.Coins, 3)
 // 		for i := range coins {
 // 			amount := sdk.NewInt(rand.Int63n(1000))
@@ -118,9 +118,9 @@ var (
 // 		coinOf[acc.String()] = coins
 // 		coins = append(coins, sdk.NewCoin("uosmo", sdk.NewInt(1000000000)))
 
-// 		suite.FundAcc(
-// 			suite.App.BankKeeper,
-// 			suite.Ctx,
+// 		s.FundAcc(
+// 			s.App.BankKeeper,
+// 			s.Ctx,
 // 			acc,
 // 			coins.Sort(),
 // 		)
@@ -133,31 +133,31 @@ var (
 // 	for _, coin := range coinOf[acc1.String()] {
 // 		initialAssets = append(initialAssets, types.PoolAsset{Weight: types.OneShare.MulRaw(100), Token: coin})
 // 	}
-// 	poolId, err := suite.App.GAMMKeeper.CreateBalancerPool(suite.Ctx, acc1, defaultPoolParams, initialAssets, "")
-// 	suite.NoError(err)
+// 	poolId, err := s.App.GAMMKeeper.CreateBalancerPool(s.Ctx, acc1, defaultPoolParams, initialAssets, "")
+// 	s.NoError(err)
 
 // 	for _, acc := range []sdk.AccAddress{acc2, acc3} {
-// 		err = suite.App.GAMMKeeper.JoinPool(suite.Ctx, acc, poolId, types.OneShare, coinOf[acc.String()])
-// 		suite.NoError(err)
+// 		err = s.App.GAMMKeeper.JoinPool(s.Ctx, acc, poolId, types.OneShare, coinOf[acc.String()])
+// 		s.NoError(err)
 // 	}
 
-// 	err = suite.App.GAMMKeeper.CleanupBalancerPool(suite.Ctx, []uint64{poolId}, []string{})
-// 	suite.NoError(err)
-// 	for _, acc := range suite.TestAccs {
+// 	err = s.App.GAMMKeeper.CleanupBalancerPool(s.Ctx, []uint64{poolId}, []string{})
+// 	s.NoError(err)
+// 	for _, acc := range s.TestAccs {
 // 		for _, coin := range coinOf[acc.String()] {
-// 			amt := suite.App.BankKeeper.GetBalance(suite.Ctx, acc, coin.Denom)
+// 			amt := s.App.BankKeeper.GetBalance(s.Ctx, acc, coin.Denom)
 // 			// the refund could have rounding error
-// 			suite.True(amt.Amount.Sub(coin.Amount).Abs().LTE(sdk.NewInt(2)),
+// 			s.True(amt.Amount.Sub(coin.Amount).Abs().LTE(sdk.NewInt(2)),
 // 				"Expected equal %s: %d, %d", amt.Denom, amt.Amount.Int64(), coin.Amount.Int64())
 // 		}
 // 	}
 // }
 
-// func (suite *KeeperTestSuite) TestCleanupPoolErrorOnSwap() {
-// 	suite.Ctx = suite.Ctx.WithBlockTime(time.Unix(1000, 1000))
-// 	suite.FundAcc(
-// 		suite.App.BankKeeper,
-// 		suite.Ctx,
+// func (s *KeeperTestSuite) TestCleanupPoolErrorOnSwap() {
+// 	s.Ctx = s.Ctx.WithBlockTime(time.Unix(1000, 1000))
+// 	s.FundAcc(
+// 		s.App.BankKeeper,
+// 		s.Ctx,
 // 		acc1,
 // 		sdk.NewCoins(
 // 			sdk.NewCoin("uosmo", sdk.NewInt(1000000000)),
@@ -170,7 +170,7 @@ var (
 // 		panic(err)
 // 	}
 
-// 	poolId, err := suite.App.GAMMKeeper.CreateBalancerPool(suite.Ctx, acc1, defaultPoolParams, []types.PoolAsset{
+// 	poolId, err := s.App.GAMMKeeper.CreateBalancerPool(s.Ctx, acc1, defaultPoolParams, []types.PoolAsset{
 // 		{
 // 			Weight: sdk.NewInt(100),
 // 			Token:  sdk.NewCoin("foo", sdk.NewInt(1000)),
@@ -184,20 +184,20 @@ var (
 // 			Token:  sdk.NewCoin("baz", sdk.NewInt(1000)),
 // 		},
 // 	}, "")
-// 	suite.NoError(err)
+// 	s.NoError(err)
 
-// 	err = suite.App.GAMMKeeper.CleanupBalancerPool(suite.Ctx, []uint64{poolId}, []string{})
-// 	suite.NoError(err)
+// 	err = s.App.GAMMKeeper.CleanupBalancerPool(s.Ctx, []uint64{poolId}, []string{})
+// 	s.NoError(err)
 
-// 	_, _, err = suite.App.GAMMKeeper.SwapExactAmountIn(suite.Ctx, acc1, poolId, sdk.NewCoin("foo", sdk.NewInt(1)), "bar", sdk.NewInt(1))
-// 	suite.Error(err)
+// 	_, _, err = s.App.GAMMKeeper.SwapExactAmountIn(s.Ctx, acc1, poolId, sdk.NewCoin("foo", sdk.NewInt(1)), "bar", sdk.NewInt(1))
+// 	s.Error(err)
 // }
 
-// func (suite *KeeperTestSuite) TestCleanupPoolWithLockup() {
-// 	suite.Ctx = suite.Ctx.WithBlockTime(time.Unix(1000, 1000))
-// 	suite.FundAcc(
-// 		suite.App.BankKeeper,
-// 		suite.Ctx,
+// func (s *KeeperTestSuite) TestCleanupPoolWithLockup() {
+// 	s.Ctx = s.Ctx.WithBlockTime(time.Unix(1000, 1000))
+// 	s.FundAcc(
+// 		s.App.BankKeeper,
+// 		s.Ctx,
 // 		acc1,
 // 		sdk.NewCoins(
 // 			sdk.NewCoin("uosmo", sdk.NewInt(1000000000)),
@@ -210,7 +210,7 @@ var (
 // 		panic(err)
 // 	}
 
-// 	poolId, err := suite.App.GAMMKeeper.CreateBalancerPool(suite.Ctx, acc1, defaultPoolParams, []types.PoolAsset{
+// 	poolId, err := s.App.GAMMKeeper.CreateBalancerPool(s.Ctx, acc1, defaultPoolParams, []types.PoolAsset{
 // 		{
 // 			Weight: sdk.NewInt(100),
 // 			Token:  sdk.NewCoin("foo", sdk.NewInt(1000)),
@@ -224,29 +224,29 @@ var (
 // 			Token:  sdk.NewCoin("baz", sdk.NewInt(1000)),
 // 		},
 // 	}, "")
-// 	suite.NoError(err)
+// 	s.NoError(err)
 
-// 	_, err = suite.App.LockupKeeper.LockTokens(suite.Ctx, acc1, sdk.Coins{sdk.NewCoin(types.GetPoolShareDenom(poolId), types.InitPoolSharesSupply)}, time.Hour)
-// 	suite.NoError(err)
+// 	_, err = s.App.LockupKeeper.LockTokens(s.Ctx, acc1, sdk.Coins{sdk.NewCoin(types.GetPoolShareDenom(poolId), types.InitPoolSharesSupply)}, time.Hour)
+// 	s.NoError(err)
 
-// 	for _, lock := range suite.App.LockupKeeper.GetLocksDenom(suite.Ctx, types.GetPoolShareDenom(poolId)) {
-// 		err = suite.App.LockupKeeper.ForceUnlock(suite.Ctx, lock)
-// 		suite.NoError(err)
+// 	for _, lock := range s.App.LockupKeeper.GetLocksDenom(s.Ctx, types.GetPoolShareDenom(poolId)) {
+// 		err = s.App.LockupKeeper.ForceUnlock(s.Ctx, lock)
+// 		s.NoError(err)
 // 	}
 
-// 	err = suite.App.GAMMKeeper.CleanupBalancerPool(suite.Ctx, []uint64{poolId}, []string{})
-// 	suite.NoError(err)
+// 	err = s.App.GAMMKeeper.CleanupBalancerPool(s.Ctx, []uint64{poolId}, []string{})
+// 	s.NoError(err)
 // 	for _, coin := range []string{"foo", "bar", "baz"} {
-// 		amt := suite.App.BankKeeper.GetBalance(suite.Ctx, acc1, coin)
+// 		amt := s.App.BankKeeper.GetBalance(s.Ctx, acc1, coin)
 // 		// the refund could have rounding error
-// 		suite.True(amt.Amount.Equal(sdk.NewInt(1000)) || amt.Amount.Equal(sdk.NewInt(1000).SubRaw(1)),
+// 		s.True(amt.Amount.Equal(sdk.NewInt(1000)) || amt.Amount.Equal(sdk.NewInt(1000).SubRaw(1)),
 // 			"Expected equal %s: %d, %d", amt.Denom, amt.Amount.Int64(), sdk.NewInt(1000).Int64())
 // 	}
 // }
 
 // TestGetPoolAndPoke tests that the right pools is returned from GetPoolAndPoke.
 // For the pools implementing the weighted extension, asserts that PokePool is called.
-func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
+func (s *KeeperTestSuite) TestGetPoolAndPoke() {
 	const (
 		startTime = 1000
 		blockTime = startTime + 100
@@ -274,7 +274,7 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 	}{
 		"weighted pool - change weights": {
 			isPokePool: true,
-			poolId: suite.prepareCustomBalancerPool(defaultAcctFunds, startPoolWeightAssets, balancer.PoolParams{
+			poolId: s.prepareCustomBalancerPool(defaultAcctFunds, startPoolWeightAssets, balancer.PoolParams{
 				SwapFee: defaultSwapFee,
 				ExitFee: defaultZeroExitFee,
 				SmoothWeightChangeParams: &balancer.SmoothWeightChangeParams{
@@ -286,7 +286,7 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 			}),
 		},
 		"non weighted pool": {
-			poolId: suite.prepareCustomStableswapPool(
+			poolId: s.prepareCustomStableswapPool(
 				defaultAcctFunds,
 				stableswap.PoolParams{
 					SwapFee: defaultSwapFee,
@@ -299,38 +299,38 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 	}
 
 	for name, tc := range tests {
-		suite.Run(name, func() {
-			k := suite.App.GAMMKeeper
-			ctx := suite.Ctx.WithBlockTime(time.Unix(blockTime, 0))
+		s.Run(name, func() {
+			k := s.App.GAMMKeeper
+			ctx := s.Ctx.WithBlockTime(time.Unix(blockTime, 0))
 
 			pool, err := k.GetPoolAndPoke(ctx, tc.poolId)
 
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.poolId, pool.GetId())
+			s.Require().NoError(err)
+			s.Require().Equal(tc.poolId, pool.GetId())
 
 			if tc.isPokePool {
 				pokePool, ok := pool.(types.WeightedPoolExtension)
-				suite.Require().True(ok)
+				s.Require().True(ok)
 
 				poolAssetWeight0, err := pokePool.GetTokenWeight(startPoolWeightAssets[0].Token.Denom)
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 
 				poolAssetWeight1, err := pokePool.GetTokenWeight(startPoolWeightAssets[1].Token.Denom)
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 
-				suite.Require().NotEqual(startPoolWeightAssets[0].Weight, poolAssetWeight0)
-				suite.Require().NotEqual(startPoolWeightAssets[1].Weight, poolAssetWeight1)
+				s.Require().NotEqual(startPoolWeightAssets[0].Weight, poolAssetWeight0)
+				s.Require().NotEqual(startPoolWeightAssets[1].Weight, poolAssetWeight1)
 				return
 			}
 
 			_, ok := pool.(types.WeightedPoolExtension)
-			suite.Require().False(ok)
+			s.Require().False(ok)
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestConvertToCFMMPool() {
-	ctrl := gomock.NewController(suite.T())
+func (s *KeeperTestSuite) TestConvertToCFMMPool() {
+	ctrl := gomock.NewController(s.T())
 
 	tests := map[string]struct {
 		pool        poolmanagertypes.PoolI
@@ -346,20 +346,20 @@ func (suite *KeeperTestSuite) TestConvertToCFMMPool() {
 	}
 
 	for name, tc := range tests {
-		suite.Run(name, func() {
-			suite.SetupTest()
+		s.Run(name, func() {
+			s.SetupTest()
 
 			pool, err := keeper.ConvertToCFMMPool(tc.pool)
 
 			if tc.expectError {
-				suite.Require().Error(err)
-				suite.Require().Nil(pool)
+				s.Require().Error(err)
+				s.Require().Nil(pool)
 				return
 			}
 
-			suite.Require().NoError(err)
-			suite.Require().NotNil(pool)
-			suite.Require().Equal(tc.pool, pool)
+			s.Require().NoError(err)
+			s.Require().NotNil(pool)
+			s.Require().Equal(tc.pool, pool)
 		})
 	}
 }
@@ -368,17 +368,17 @@ func (suite *KeeperTestSuite) TestConvertToCFMMPool() {
 // that we marshal to and unmarshal from store, we do not
 // change the underlying bytes. This shows that migrations are
 // not necessary.
-func (suite *KeeperTestSuite) TestMarshalUnmarshalPool() {
-	suite.SetupTest()
-	k := suite.App.GAMMKeeper
+func (s *KeeperTestSuite) TestMarshalUnmarshalPool() {
+	s.SetupTest()
+	k := s.App.GAMMKeeper
 
-	balancerPoolId := suite.PrepareBalancerPool()
-	balancerPool, err := k.GetPoolAndPoke(suite.Ctx, balancerPoolId)
-	suite.Require().NoError(err)
+	balancerPoolId := s.PrepareBalancerPool()
+	balancerPool, err := k.GetPoolAndPoke(s.Ctx, balancerPoolId)
+	s.Require().NoError(err)
 
-	stableswapPoolId := suite.PrepareBasicStableswapPool()
-	stableswapPool, err := k.GetPoolAndPoke(suite.Ctx, stableswapPoolId)
-	suite.Require().NoError(err)
+	stableswapPoolId := s.PrepareBasicStableswapPool()
+	stableswapPool, err := k.GetPoolAndPoke(s.Ctx, stableswapPoolId)
+	s.Require().NoError(err)
 
 	tests := []struct {
 		name string
@@ -396,52 +396,52 @@ func (suite *KeeperTestSuite) TestMarshalUnmarshalPool() {
 
 	for _, tc := range tests {
 		tc := tc
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
+		s.Run(tc.name, func() {
+			s.SetupTest()
 
 			var poolI poolmanagertypes.PoolI = tc.pool
 			var cfmmPoolI types.CFMMPoolI = tc.pool
 
 			// Marshal poolI as PoolI
 			bzPoolI, err := k.MarshalPool(poolI)
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
 			// Marshal cfmmPoolI as PoolI
 			bzCfmmPoolI, err := k.MarshalPool(cfmmPoolI)
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
-			suite.Require().Equal(bzPoolI, bzCfmmPoolI)
+			s.Require().Equal(bzPoolI, bzCfmmPoolI)
 
 			// Unmarshal bzPoolI as CFMMPoolI
 			unmarshalBzPoolIAsCfmmPoolI, err := k.UnmarshalPool(bzPoolI)
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
 			// Unmarshal bzPoolI as PoolI
 			unmarshalBzPoolIAsPoolI, err := k.UnmarshalPoolLegacy(bzPoolI)
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
-			suite.Require().Equal(unmarshalBzPoolIAsCfmmPoolI, unmarshalBzPoolIAsPoolI)
+			s.Require().Equal(unmarshalBzPoolIAsCfmmPoolI, unmarshalBzPoolIAsPoolI)
 
 			// Unmarshal bzCfmmPoolI as CFMMPoolI
 			unmarshalBzCfmmPoolIAsCfmmPoolI, err := k.UnmarshalPool(bzCfmmPoolI)
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
 			// Unmarshal bzCfmmPoolI as PoolI
 			unmarshalBzCfmmPoolIAsPoolI, err := k.UnmarshalPoolLegacy(bzCfmmPoolI)
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
 			// bzCfmmPoolI as CFMMPoolI equals bzCfmmPoolI as PoolI
-			suite.Require().Equal(unmarshalBzCfmmPoolIAsCfmmPoolI, unmarshalBzCfmmPoolIAsPoolI)
+			s.Require().Equal(unmarshalBzCfmmPoolIAsCfmmPoolI, unmarshalBzCfmmPoolIAsPoolI)
 
 			// All unmarshalled combinations are equal.
-			suite.Require().Equal(unmarshalBzPoolIAsCfmmPoolI, unmarshalBzCfmmPoolIAsCfmmPoolI)
+			s.Require().Equal(unmarshalBzPoolIAsCfmmPoolI, unmarshalBzCfmmPoolIAsCfmmPoolI)
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
-	controllerAddr := suite.TestAccs[0]
-	failAddr := suite.TestAccs[1]
+func (s *KeeperTestSuite) TestSetStableSwapScalingFactors() {
+	controllerAddr := s.TestAccs[0]
+	failAddr := s.TestAccs[1]
 
 	testcases := []struct {
 		name             string
@@ -484,10 +484,10 @@ func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
 		},
 	}
 	for _, tc := range testcases {
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
+		s.Run(tc.name, func() {
+			s.SetupTest()
 			if tc.isStableSwapPool == true {
-				poolId := suite.prepareCustomStableswapPool(
+				poolId := s.prepareCustomStableswapPool(
 					defaultAcctFunds,
 					stableswap.PoolParams{
 						SwapFee: defaultSwapFee,
@@ -496,23 +496,23 @@ func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
 					sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[0].Denom, defaultAcctFunds[0].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2))),
 					tc.scalingFactors,
 				)
-				pool, _ := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
+				pool, _ := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
 				stableswapPool, _ := pool.(*stableswap.Pool)
 				stableswapPool.ScalingFactorController = controllerAddr.String()
-				err := suite.App.GAMMKeeper.SetPool(suite.Ctx, stableswapPool)
-				suite.Require().NoError(err)
+				err := s.App.GAMMKeeper.SetPool(s.Ctx, stableswapPool)
+				s.Require().NoError(err)
 			} else {
-				suite.prepareCustomBalancerPool(
+				s.prepareCustomBalancerPool(
 					defaultAcctFunds,
 					defaultPoolAssets,
 					defaultPoolParams)
 			}
-			err := suite.App.GAMMKeeper.SetStableSwapScalingFactors(suite.Ctx, tc.poolId, tc.scalingFactors, tc.sender.String())
+			err := s.App.GAMMKeeper.SetStableSwapScalingFactors(s.Ctx, tc.poolId, tc.scalingFactors, tc.sender.String())
 			if tc.expError != nil {
-				suite.Require().Error(err)
-				suite.Require().EqualError(err, tc.expError.Error())
+				s.Require().Error(err)
+				s.Require().EqualError(err, tc.expError.Error())
 			} else {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 			}
 		})
 	}

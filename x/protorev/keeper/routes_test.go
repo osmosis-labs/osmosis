@@ -14,7 +14,7 @@ type TestRoute struct {
 }
 
 // TestBuildRoutes tests the BuildRoutes function
-func (suite *KeeperTestSuite) TestBuildRoutes() {
+func (s *KeeperTestSuite) TestBuildRoutes() {
 	cases := []struct {
 		description    string
 		inputDenom     string
@@ -94,13 +94,13 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 	}
 
 	for _, tc := range cases {
-		suite.Run(tc.description, func() {
-			routes := suite.App.ProtoRevKeeper.BuildRoutes(suite.Ctx, tc.inputDenom, tc.outputDenom, tc.poolID)
-			suite.Require().Equal(len(tc.expectedRoutes), len(routes))
+		s.Run(tc.description, func() {
+			routes := s.App.ProtoRevKeeper.BuildRoutes(s.Ctx, tc.inputDenom, tc.outputDenom, tc.poolID)
+			s.Require().Equal(len(tc.expectedRoutes), len(routes))
 
 			for routeIndex, route := range routes {
 				for tradeIndex, poolID := range route.Route.PoolIds() {
-					suite.Require().Equal(tc.expectedRoutes[routeIndex][tradeIndex].PoolId, poolID)
+					s.Require().Equal(tc.expectedRoutes[routeIndex][tradeIndex].PoolId, poolID)
 				}
 			}
 		})
@@ -108,7 +108,7 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 }
 
 // TestBuildHighestLiquidityRoute tests the BuildHighestLiquidityRoute function
-func (suite *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
+func (s *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 	cases := []struct {
 		description              string
 		swapDenom                string
@@ -198,8 +198,8 @@ func (suite *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 	}
 
 	for _, tc := range cases {
-		suite.Run(tc.description, func() {
-			suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{
+		s.Run(tc.description, func() {
+			s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, types.PoolWeights{
 				StableWeight:       5,
 				BalancerWeight:     2,
 				ConcentratedWeight: 2,
@@ -209,24 +209,24 @@ func (suite *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 				Denom:    tc.swapDenom,
 				StepSize: sdk.NewInt(1_000_000),
 			}
-			routeMetaData, err := suite.App.ProtoRevKeeper.BuildHighestLiquidityRoute(suite.Ctx, baseDenom, tc.swapIn, tc.swapOut, tc.poolId)
+			routeMetaData, err := s.App.ProtoRevKeeper.BuildHighestLiquidityRoute(s.Ctx, baseDenom, tc.swapIn, tc.swapOut, tc.poolId)
 
 			if tc.hasRoute {
-				suite.Require().NoError(err)
-				suite.Require().Equal(len(tc.expectedRoute), len(routeMetaData.Route.PoolIds()))
+				s.Require().NoError(err)
+				s.Require().Equal(len(tc.expectedRoute), len(routeMetaData.Route.PoolIds()))
 
 				for index, trade := range tc.expectedRoute {
-					suite.Require().Equal(trade.PoolId, routeMetaData.Route.PoolIds()[index])
+					s.Require().Equal(trade.PoolId, routeMetaData.Route.PoolIds()[index])
 				}
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
 // TestBuildHotRoutes tests the BuildHotRoutes function
-func (suite *KeeperTestSuite) TestBuildHotRoutes() {
+func (s *KeeperTestSuite) TestBuildHotRoutes() {
 	cases := []struct {
 		description             string
 		swapIn                  string
@@ -273,44 +273,44 @@ func (suite *KeeperTestSuite) TestBuildHotRoutes() {
 	}
 
 	for _, tc := range cases {
-		suite.Run(tc.description, func() {
-			suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{
+		s.Run(tc.description, func() {
+			s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, types.PoolWeights{
 				StableWeight:       5,
 				BalancerWeight:     2,
 				ConcentratedWeight: 2,
 			})
 
-			routes, err := suite.App.ProtoRevKeeper.BuildHotRoutes(suite.Ctx, tc.swapIn, tc.swapOut, tc.poolId)
+			routes, err := s.App.ProtoRevKeeper.BuildHotRoutes(s.Ctx, tc.swapIn, tc.swapOut, tc.poolId)
 
 			if tc.hasRoutes {
-				suite.Require().NoError(err)
-				suite.Require().Equal(len(tc.expectedRoutes), len(routes))
+				s.Require().NoError(err)
+				s.Require().Equal(len(tc.expectedRoutes), len(routes))
 
 				for routeIndex, routeMetaData := range routes {
 					expectedHops := len(tc.expectedRoutes[routeIndex])
-					suite.Require().Equal(expectedHops, len(routeMetaData.Route.PoolIds()))
+					s.Require().Equal(expectedHops, len(routeMetaData.Route.PoolIds()))
 
 					expectedStepSize := tc.expectedStepSize[routeIndex]
-					suite.Require().Equal(expectedStepSize, routeMetaData.StepSize)
+					s.Require().Equal(expectedStepSize, routeMetaData.StepSize)
 
 					expectedPoolPoints := tc.expectedRoutePoolPoints[routeIndex]
-					suite.Require().Equal(expectedPoolPoints, routeMetaData.PoolPoints)
+					s.Require().Equal(expectedPoolPoints, routeMetaData.PoolPoints)
 
 					expectedRoutes := tc.expectedRoutes[routeIndex]
 
 					for tradeIndex, trade := range expectedRoutes {
-						suite.Require().Equal(trade.PoolId, routeMetaData.Route.PoolIds()[tradeIndex])
+						s.Require().Equal(trade.PoolId, routeMetaData.Route.PoolIds()[tradeIndex])
 					}
 				}
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
 // TestCalculateRoutePoolPoints tests the CalculateRoutePoolPoints function
-func (suite *KeeperTestSuite) TestCalculateRoutePoolPoints() {
+func (s *KeeperTestSuite) TestCalculateRoutePoolPoints() {
 	cases := []struct {
 		description             string
 		route                   poolmanagertypes.SwapAmountInRoutes
@@ -350,16 +350,16 @@ func (suite *KeeperTestSuite) TestCalculateRoutePoolPoints() {
 	}
 
 	for _, tc := range cases {
-		suite.Run(tc.description, func() {
-			suite.SetupTest()
-			suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{StableWeight: 3, BalancerWeight: 2, ConcentratedWeight: 1})
+		s.Run(tc.description, func() {
+			s.SetupTest()
+			s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, types.PoolWeights{StableWeight: 3, BalancerWeight: 2, ConcentratedWeight: 1})
 
-			routePoolPoints, err := suite.App.ProtoRevKeeper.CalculateRoutePoolPoints(suite.Ctx, tc.route)
+			routePoolPoints, err := s.App.ProtoRevKeeper.CalculateRoutePoolPoints(s.Ctx, tc.route)
 			if tc.expectedPass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.expectedRoutePoolPoints, routePoolPoints)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expectedRoutePoolPoints, routePoolPoints)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}

@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *KeeperTestSuite) TestMsgLockTokens() {
+func (s *KeeperTestSuite) TestMsgLockTokens() {
 	type param struct {
 		coinsToLock         sdk.Coins
 		lockOwner           sdk.AccAddress
@@ -47,60 +47,60 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 	}
 
 	for _, test := range tests {
-		suite.SetupTest()
+		s.SetupTest()
 
-		suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
+		s.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
-		msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
-		c := sdk.WrapSDKContext(suite.Ctx)
+		msgServer := keeper.NewMsgServerImpl(s.App.LockupKeeper)
+		c := sdk.WrapSDKContext(s.Ctx)
 		_, err := msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 
 		if test.expectPass {
 			// creation of lock via LockTokens
-			msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
-			_, _ = msgServer.LockTokens(sdk.WrapSDKContext(suite.Ctx), types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
+			msgServer := keeper.NewMsgServerImpl(s.App.LockupKeeper)
+			_, _ = msgServer.LockTokens(sdk.WrapSDKContext(s.Ctx), types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 
 			// Check Locks
-			locks, err := suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
-			suite.Require().NoError(err)
-			suite.Require().Len(locks, 1)
-			suite.Require().Equal(locks[0].Coins, test.param.coinsToLock)
+			locks, err := s.App.LockupKeeper.GetPeriodLocks(s.Ctx)
+			s.Require().NoError(err)
+			s.Require().Len(locks, 1)
+			s.Require().Equal(locks[0].Coins, test.param.coinsToLock)
 
 			// check accumulation store is correctly updated
-			accum := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
+			accum := s.App.LockupKeeper.GetPeriodLocksAccumulation(s.Ctx, types.QueryCondition{
 				LockQueryType: types.ByDuration,
 				Denom:         "stake",
 				Duration:      test.param.duration,
 			})
-			suite.Require().Equal(accum.String(), "10")
+			s.Require().Equal(accum.String(), "10")
 
 			// add more tokens to lock via LockTokens
-			suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
+			s.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
-			_, err = msgServer.LockTokens(sdk.WrapSDKContext(suite.Ctx), types.NewMsgLockTokens(test.param.lockOwner, locks[0].Duration, test.param.coinsToLock))
-			suite.Require().NoError(err)
+			_, err = msgServer.LockTokens(sdk.WrapSDKContext(s.Ctx), types.NewMsgLockTokens(test.param.lockOwner, locks[0].Duration, test.param.coinsToLock))
+			s.Require().NoError(err)
 
 			// check locks after adding tokens to lock
-			locks, err = suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
-			suite.Require().NoError(err)
-			suite.Require().Len(locks, 1)
-			suite.Require().Equal(locks[0].Coins, test.param.coinsToLock.Add(test.param.coinsToLock...))
+			locks, err = s.App.LockupKeeper.GetPeriodLocks(s.Ctx)
+			s.Require().NoError(err)
+			s.Require().Len(locks, 1)
+			s.Require().Equal(locks[0].Coins, test.param.coinsToLock.Add(test.param.coinsToLock...))
 
 			// check accumulation store is correctly updated
-			accum = suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
+			accum = s.App.LockupKeeper.GetPeriodLocksAccumulation(s.Ctx, types.QueryCondition{
 				LockQueryType: types.ByDuration,
 				Denom:         "stake",
 				Duration:      test.param.duration,
 			})
-			suite.Require().Equal(accum.String(), "20")
+			s.Require().Equal(accum.String(), "20")
 		} else {
 			// Fail simple lock token
-			suite.Require().Error(err)
+			s.Require().Error(err)
 		}
 	}
 }
 
-func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
+func (s *KeeperTestSuite) TestMsgBeginUnlocking() {
 	type param struct {
 		coinsToLock         sdk.Coins
 		isSyntheticLockup   bool
@@ -169,39 +169,39 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 	}
 
 	for _, test := range tests {
-		suite.SetupTest()
+		s.SetupTest()
 
-		suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
+		s.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
-		msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
-		goCtx := sdk.WrapSDKContext(suite.Ctx)
+		msgServer := keeper.NewMsgServerImpl(s.App.LockupKeeper)
+		goCtx := sdk.WrapSDKContext(s.Ctx)
 		resp, err := msgServer.LockTokens(goCtx, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
-		suite.Require().NoError(err)
+		s.Require().NoError(err)
 
 		if test.param.isSyntheticLockup {
-			err = suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, resp.ID, "synthetic", time.Second, false)
-			suite.Require().NoError(err)
+			err = s.App.LockupKeeper.CreateSyntheticLockup(s.Ctx, resp.ID, "synthetic", time.Second, false)
+			s.Require().NoError(err)
 		}
 
 		unlockingResponse, err := msgServer.BeginUnlocking(goCtx, types.NewMsgBeginUnlocking(test.param.lockOwner, resp.ID, test.param.coinsToUnlock))
 
 		if test.expectPass {
-			suite.Require().NoError(err)
-			suite.AssertEventEmitted(suite.Ctx, types.TypeEvtBeginUnlock, 1)
-			suite.Require().True(unlockingResponse.Success)
+			s.Require().NoError(err)
+			s.AssertEventEmitted(s.Ctx, types.TypeEvtBeginUnlock, 1)
+			s.Require().True(unlockingResponse.Success)
 			if test.isPartial {
-				suite.Require().Equal(unlockingResponse.UnlockingLockID, resp.ID+1)
+				s.Require().Equal(unlockingResponse.UnlockingLockID, resp.ID+1)
 			} else {
-				suite.Require().Equal(unlockingResponse.UnlockingLockID, resp.ID)
+				s.Require().Equal(unlockingResponse.UnlockingLockID, resp.ID)
 			}
 		} else {
-			suite.Require().Error(err)
-			suite.AssertEventEmitted(suite.Ctx, types.TypeEvtBeginUnlock, 0)
+			s.Require().Error(err)
+			s.AssertEventEmitted(s.Ctx, types.TypeEvtBeginUnlock, 0)
 		}
 	}
 }
 
-func (suite *KeeperTestSuite) TestMsgBeginUnlockingAll() {
+func (s *KeeperTestSuite) TestMsgBeginUnlockingAll() {
 	type param struct {
 		coinsToLock         sdk.Coins
 		isSyntheticLockup   bool
@@ -240,31 +240,31 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlockingAll() {
 	}
 
 	for _, test := range tests {
-		suite.SetupTest()
+		s.SetupTest()
 
-		suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
+		s.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
-		msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
-		c := sdk.WrapSDKContext(suite.Ctx)
+		msgServer := keeper.NewMsgServerImpl(s.App.LockupKeeper)
+		c := sdk.WrapSDKContext(s.Ctx)
 		resp, err := msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
-		suite.Require().NoError(err)
+		s.Require().NoError(err)
 
 		if test.param.isSyntheticLockup {
-			err = suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, resp.ID, "synthetic", time.Second, false)
-			suite.Require().NoError(err)
+			err = s.App.LockupKeeper.CreateSyntheticLockup(s.Ctx, resp.ID, "synthetic", time.Second, false)
+			s.Require().NoError(err)
 		}
 
 		_, err = msgServer.BeginUnlockingAll(c, types.NewMsgBeginUnlockingAll(test.param.lockOwner))
 
 		if test.expectPass {
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 		} else {
-			suite.Require().Error(err)
+			s.Require().Error(err)
 		}
 	}
 }
 
-func (suite *KeeperTestSuite) TestMsgEditLockup() {
+func (s *KeeperTestSuite) TestMsgEditLockup() {
 	type param struct {
 		coinsToLock       sdk.Coins
 		isSyntheticLockup bool
@@ -314,32 +314,32 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 	}
 
 	for _, test := range tests {
-		suite.SetupTest()
+		s.SetupTest()
 
-		err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, test.param.lockOwner, test.param.coinsToLock)
-		suite.Require().NoError(err)
+		err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, test.param.lockOwner, test.param.coinsToLock)
+		s.Require().NoError(err)
 
-		msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
-		c := sdk.WrapSDKContext(suite.Ctx)
+		msgServer := keeper.NewMsgServerImpl(s.App.LockupKeeper)
+		c := sdk.WrapSDKContext(s.Ctx)
 		resp, err := msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
-		suite.Require().NoError(err)
+		s.Require().NoError(err)
 
 		if test.param.isSyntheticLockup {
-			err = suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, resp.ID, "synthetic", time.Second, false)
-			suite.Require().NoError(err)
+			err = s.App.LockupKeeper.CreateSyntheticLockup(s.Ctx, resp.ID, "synthetic", time.Second, false)
+			s.Require().NoError(err)
 		}
 
 		_, err = msgServer.ExtendLockup(c, types.NewMsgExtendLockup(test.param.lockOwner, resp.ID, test.param.newDuration))
 
 		if test.expectPass {
-			suite.Require().NoError(err, test.name)
+			s.Require().NoError(err, test.name)
 		} else {
-			suite.Require().Error(err, test.name)
+			s.Require().Error(err, test.name)
 		}
 	}
 }
 
-func (suite *KeeperTestSuite) TestMsgForceUnlock() {
+func (s *KeeperTestSuite) TestMsgForceUnlock() {
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
 	defaultPoolID, defaultLockID := uint64(1), uint64(1)
@@ -363,8 +363,8 @@ func (suite *KeeperTestSuite) TestMsgForceUnlock() {
 			"force unlock superfluid delegated lock",
 			types.Params{ForceUnlockAllowedAddresses: []string{addr1.String()}},
 			func() {
-				err := suite.SuperfluidDelegateToDefaultVal(addr1, defaultPoolID, defaultLockID)
-				suite.Require().NoError(err)
+				err := s.SuperfluidDelegateToDefaultVal(addr1, defaultPoolID, defaultLockID)
+				s.Require().NoError(err)
 			},
 			defaultLockAmount,
 			false,
@@ -373,11 +373,11 @@ func (suite *KeeperTestSuite) TestMsgForceUnlock() {
 			"superfluid undelegating lock",
 			types.Params{ForceUnlockAllowedAddresses: []string{addr1.String()}},
 			func() {
-				err := suite.SuperfluidDelegateToDefaultVal(addr1, defaultPoolID, defaultLockID)
-				suite.Require().NoError(err)
+				err := s.SuperfluidDelegateToDefaultVal(addr1, defaultPoolID, defaultLockID)
+				s.Require().NoError(err)
 
-				err = suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, addr1.String(), defaultLockID)
-				suite.Require().NoError(err)
+				err = s.App.SuperfluidKeeper.SuperfluidUndelegate(s.Ctx, addr1.String(), defaultLockID)
+				s.Require().NoError(err)
 			},
 			defaultLockAmount,
 			false,
@@ -416,23 +416,23 @@ func (suite *KeeperTestSuite) TestMsgForceUnlock() {
 
 	for _, test := range tests {
 		// set up test
-		suite.SetupTest()
-		suite.App.LockupKeeper.SetParams(suite.Ctx, test.forceUnlockAllowedAddress)
+		s.SetupTest()
+		s.App.LockupKeeper.SetParams(s.Ctx, test.forceUnlockAllowedAddress)
 
 		// prepare pool for superfluid staking cases
-		poolId := suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("stake", sdk.NewInt(1000000000000)), sdk.NewCoin("foo", sdk.NewInt(5000)))
+		poolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("stake", sdk.NewInt(1000000000000)), sdk.NewCoin("foo", sdk.NewInt(5000)))
 
 		// lock tokens
-		msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
-		c := sdk.WrapSDKContext(suite.Ctx)
+		msgServer := keeper.NewMsgServerImpl(s.App.LockupKeeper)
+		c := sdk.WrapSDKContext(s.Ctx)
 
 		poolDenom := gammtypes.GetPoolShareDenom(poolId)
 		coinsToLock := sdk.Coins{sdk.NewCoin(poolDenom, defaultLockAmount)}
-		suite.FundAcc(addr1, coinsToLock)
+		s.FundAcc(addr1, coinsToLock)
 
-		unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
+		unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
 		resp, err := msgServer.LockTokens(c, types.NewMsgLockTokens(addr1, unbondingDuration, coinsToLock))
-		suite.Require().NoError(err)
+		s.Require().NoError(err)
 
 		// setup env after lock tokens
 		test.postLockSetup()
@@ -440,17 +440,17 @@ func (suite *KeeperTestSuite) TestMsgForceUnlock() {
 		// test force unlock
 		_, err = msgServer.ForceUnlock(c, types.NewMsgForceUnlock(addr1, resp.ID, sdk.Coins{sdk.NewCoin(poolDenom, test.forceUnlockAmount)}))
 		if test.expectPass {
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
 			// check that we have successfully force unlocked
-			balanceAfterForceUnlock := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, poolDenom)
-			suite.Require().Equal(test.forceUnlockAmount, balanceAfterForceUnlock.Amount)
+			balanceAfterForceUnlock := s.App.BankKeeper.GetBalance(s.Ctx, addr1, poolDenom)
+			s.Require().Equal(test.forceUnlockAmount, balanceAfterForceUnlock.Amount)
 		} else {
-			suite.Require().Error(err)
+			s.Require().Error(err)
 
 			// check that we have successfully force unlocked
-			balanceAfterForceUnlock := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, poolDenom)
-			suite.Require().NotEqual(test.forceUnlockAmount, balanceAfterForceUnlock.Amount)
+			balanceAfterForceUnlock := s.App.BankKeeper.GetBalance(s.Ctx, addr1, poolDenom)
+			s.Require().NotEqual(test.forceUnlockAmount, balanceAfterForceUnlock.Amount)
 			return
 		}
 	}

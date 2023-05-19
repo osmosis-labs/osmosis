@@ -37,6 +37,7 @@ var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
 
 func (suite *UpgradeTestSuite) SetupTest() {
 	suite.Setup()
+	suite.SkipIfWSL()
 }
 
 func TestUpgradeTestSuite(t *testing.T) {
