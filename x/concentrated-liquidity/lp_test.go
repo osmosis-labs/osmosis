@@ -567,7 +567,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// Fund the pool account with the expected fees claimed.
 			if expectedRemainingLiquidity.IsZero() {
 				expectedFeesClaimed = expectedFeesClaimed.Add(sdk.NewCoin(ETH, liquidityCreated.TruncateInt()))
-				s.FundAcc(pool.GetAddress(), expectedFeesClaimed)
+				s.FundAcc(pool.GetFeesAddress(), expectedFeesClaimed)
 			}
 
 			communityPoolBalanceBefore := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
@@ -581,10 +581,11 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			// Note the pool and owner balances before withdrawal of the position.
 			poolBalanceBeforeWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
+			poolFeeBalanceBeforeWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetFeesAddress())
 			incentivesBalanceBeforeWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetIncentivesAddress())
 			ownerBalancerBeforeWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, owner)
 
-			expectedPoolBalanceDelta := expectedFeesClaimed.Add(sdk.NewCoin(ETH, config.amount0Expected.Abs())).Add(sdk.NewCoin(USDC, config.amount1Expected.Abs()))
+			expectedPoolBalanceDelta := sdk.NewCoins(sdk.NewCoin(ETH, config.amount0Expected.Abs()), sdk.NewCoin(USDC, config.amount1Expected.Abs()))
 
 			var withdrawAccount sdk.AccAddress
 			if tc.withdrawWithNonOwner {
@@ -610,12 +611,13 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// If the remaining liquidity is zero, all fees and incentives should be collected and the position should be deleted.
 			// Check if all fees and incentives were collected.
 			poolBalanceAfterWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
+			poolFeeBalanceAfterWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetFeesAddress())
 			incentivesBalanceAfterWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetIncentivesAddress())
 			ownerBalancerAfterWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, owner)
 			communityPoolBalanceAfter := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
 
 			// owner should only have tokens equivilent to the delta balance of the pool
-			expectedOwnerBalanceDelta := expectedPoolBalanceDelta.Add(expectedIncentivesClaimed...)
+			expectedOwnerBalanceDelta := expectedPoolBalanceDelta.Add(expectedIncentivesClaimed...).Add(expectedFeesClaimed...)
 			actualOwnerBalancerDelta := ownerBalancerAfterWithdraw.Sub(ownerBalancerBeforeWithdraw)
 
 			communityPoolBalanceDelta := communityPoolBalanceAfter.Sub(communityPoolBalanceBefore)
@@ -637,6 +639,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				actual := actualIncentivesClaimed.AmountOf(coin.Denom)
 				s.Require().True(expected.Equal(actual))
 			}
+
+			s.Require().Equal(poolFeeBalanceBeforeWithdraw.Sub(poolFeeBalanceAfterWithdraw).String(), expectedFeesClaimed.String())
 
 			// if the position's expected remaining liquidity is equal to zero, we check if all state
 			// have been correctly deleted.
