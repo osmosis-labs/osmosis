@@ -29,13 +29,23 @@ func (h Hooks) AfterCFMMPoolCreated(ctx sdk.Context, sender sdk.AccAddress, pool
 
 // AfterJoinPool stores swaps to be checked by protorev given the coins entered into the pool.
 func (h Hooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount sdk.Int) {
-	// TODO: Probably generalize to allow for more join denoms
+	if len(enterCoins) != 1 {
+		return
+	}
+
 	h.k.storeJoinExitPoolMsgs(ctx, sender, poolId, enterCoins[0].Denom, true)
 }
 
 // AfterExitPool stores swaps to be checked by protorev given the coins exited from the pool.
 func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins) {
-	// TODO: Probably generalize to allow for more exit denoms
+	// Added due to ExitSwapShareAmountIn both calling
+	// ExitPoolHook with all denoms of the pool and then also
+	// Swapping which triggers the after swap hook.
+	// So this filters out the exit pool hook call with all denoms
+	if len(exitCoins) != 1 {
+		return
+	}
+
 	h.k.storeJoinExitPoolMsgs(ctx, sender, poolId, exitCoins[0].Denom, false)
 }
 

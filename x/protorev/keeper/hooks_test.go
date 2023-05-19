@@ -7,7 +7,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
-func (s *KeeperTestSuite) TestSwaps() {
+func (s *KeeperTestSuite) TestSwapping() {
 	type param struct {
 		expectedTrades []types.Trade
 		executeSwap    func()
@@ -125,6 +125,111 @@ func (s *KeeperTestSuite) TestSwaps() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			tc.param.executeSwap()
+
+			routes, err := s.App.ProtoRevKeeper.GetSwapsToBackrun(s.Ctx)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.param.expectedTrades, routes.Trades)
+
+			s.App.ProtoRevKeeper.DeleteSwapsToBackrun(s.Ctx)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestLiquidityProviding() {
+	type param struct {
+		expectedTrades            []types.Trade
+		executeLiquidityProviding func()
+	}
+
+	tests := []struct {
+		name       string
+		param      param
+		expectPass bool
+	}{
+		{
+			name: "GAMM - Join Swap Exact Amount In",
+			param: param{
+				expectedTrades: []types.Trade{
+					{
+						Pool:     1,
+						TokenIn:  "akash",
+						TokenOut: "Atom",
+					},
+				},
+				executeLiquidityProviding: func() {
+					_, err := s.App.GAMMKeeper.JoinSwapExactAmountIn(s.Ctx, s.TestAccs[0], 1, sdk.NewCoins(sdk.NewCoin("akash", sdk.NewInt(100))), sdk.NewInt(1))
+					s.Require().NoError(err)
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name: "GAMM - Join Swap Share Amount Out",
+			param: param{
+				expectedTrades: []types.Trade{
+					{
+						Pool:     1,
+						TokenIn:  "akash",
+						TokenOut: "Atom",
+					},
+				},
+				executeLiquidityProviding: func() {
+					_, err := s.App.GAMMKeeper.JoinSwapShareAmountOut(s.Ctx, s.TestAccs[0], 1, "akash", sdk.NewInt(1000), sdk.NewInt(10000))
+					s.Require().NoError(err)
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name: "GAMM - Exit Swap Exact Amount Out",
+			param: param{
+				expectedTrades: []types.Trade{
+					{
+						Pool:     1,
+						TokenIn:  "akash",
+						TokenOut: "Atom",
+					},
+				},
+				executeLiquidityProviding: func() {
+					_, err := s.App.GAMMKeeper.ExitSwapExactAmountOut(s.Ctx, s.TestAccs[0], 1, sdk.NewCoin("Atom", sdk.NewInt(1)), sdk.NewInt(1002141106353159235))
+					s.Require().NoError(err)
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name: "GAMM - Exit Swap Share Amount In",
+			param: param{
+				expectedTrades: []types.Trade{
+					{
+						Pool:     1,
+						TokenIn:  "akash",
+						TokenOut: "Atom",
+					},
+				},
+				executeLiquidityProviding: func() {
+					_, err := s.App.GAMMKeeper.ExitSwapShareAmountIn(s.Ctx, s.TestAccs[0], 1, "Atom", sdk.NewInt(1000000000000000000), sdk.NewInt(1))
+					s.Require().NoError(err)
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name: "GAMM - Exit Swap Share Amount In - Low Shares",
+			param: param{
+				expectedTrades: []types.Trade(nil),
+				executeLiquidityProviding: func() {
+					_, err := s.App.GAMMKeeper.ExitSwapShareAmountIn(s.Ctx, s.TestAccs[0], 1, "Atom", sdk.NewInt(1000), sdk.NewInt(0))
+					s.Require().NoError(err)
+				},
+			},
+			expectPass: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.param.executeLiquidityProviding()
 
 			routes, err := s.App.ProtoRevKeeper.GetSwapsToBackrun(s.Ctx)
 			s.Require().NoError(err)
