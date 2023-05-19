@@ -104,7 +104,10 @@ pub fn unwrap_or_swap_and_forward(
                 "pre-swap unwinding ibc message created",
                 &ibc_transfer,
             ))
-            .add_message(ibc_transfer));
+            .add_submessage(SubMsg::reply_on_success(
+                ibc_transfer,
+                MsgReplyID::Forward.repr(),
+            )));
     }
 
     // If the denom is either native or only one hop, we swap it directly
