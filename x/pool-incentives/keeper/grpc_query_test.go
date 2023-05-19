@@ -278,8 +278,7 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges() {
 		isPerpetual bool
 	}
 
-	for _, tc := range []struct {
-		desc                 string
+	tests := map[string]struct {
 		poolCreated          bool
 		internalGaugeWeights []sdk.Int
 		externalGauges       []externalGauge
@@ -289,22 +288,19 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges() {
 		expectedNumExternalGauges int
 		expectedGaugeIDs          []uint64
 	}{
-		{
-			desc:                 "No pool exist",
+		"No pool exist": {
 			poolCreated:          false,
 			internalGaugeWeights: []sdk.Int{},
 
 			expectedNumExternalGauges: 0,
 		},
-		{
-			desc:                 "All gauges are internal (no external gauges)",
+		"All gauges are internal (no external gauges)": {
 			poolCreated:          true,
 			internalGaugeWeights: []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
 
 			expectedNumExternalGauges: 0,
 		},
-		{
-			desc:                 "Mixed internal and external gauges",
+		"Mixed internal and external gauges": {
 			poolCreated:          true,
 			internalGaugeWeights: []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
 			externalGauges:       []externalGauge{{isPerpetual: true}, {isPerpetual: false}},
@@ -313,8 +309,7 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges() {
 			expectedGaugeIDs:          []uint64{4, 5},
 			expectedNumExternalGauges: 2,
 		},
-		{
-			desc:                 "More external gauges than internal gauges",
+		"More external gauges than internal gauges": {
 			poolCreated:          true,
 			internalGaugeWeights: []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
 			externalGauges:       []externalGauge{{isPerpetual: true}, {isPerpetual: false}, {isPerpetual: true}, {isPerpetual: true}, {isPerpetual: false}},
@@ -323,8 +318,7 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges() {
 			expectedGaugeIDs:          []uint64{4, 5, 6, 7, 8},
 			expectedNumExternalGauges: 5,
 		},
-		{
-			desc:                 "Same number of external gauges as internal gauges",
+		"Same number of external gauges as internal gauges": {
 			poolCreated:          true,
 			internalGaugeWeights: []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
 			externalGauges:       []externalGauge{{isPerpetual: true}, {isPerpetual: false}, {isPerpetual: true}},
@@ -333,8 +327,7 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges() {
 			expectedGaugeIDs:          []uint64{4, 5, 6},
 			expectedNumExternalGauges: 3,
 		},
-		{
-			desc:                 "Internal gauge for concentrated pool exists",
+		"Internal gauge for concentrated pool exists": {
 			poolCreated:          true,
 			clPoolWithGauge:      true,
 			clGaugeWeight:        sdk.NewInt(100),
@@ -346,9 +339,9 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges() {
 			expectedGaugeIDs:          []uint64{5, 6, 7, 8, 9},
 			expectedNumExternalGauges: 5,
 		},
-	} {
-		tc := tc
-		s.Run(tc.desc, func() {
+	}
+	for name, tc := range tests {
+		s.Run(name, func() {
 			s.SetupTest()
 			keeper := s.App.PoolIncentivesKeeper
 			queryClient := s.queryClient
