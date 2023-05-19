@@ -136,6 +136,10 @@ func (k Keeper) CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coin
 }
 
 // CreateLockNoSend behaves the same as CreateLock, but does not send the coins to the lockup module account.
+// This method is used in the concentrated liquidity module since we mint coins directly to the lockup module account.
+// We do not want to mint the coins to send to the user just to send them back to the lockup module account for two reasons:
+//   - it is gas inefficient
+//   - users should not be able to have cl shares in their account, so this is an extra safety measure
 func (k Keeper) CreateLockNoSend(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
 	ID := k.GetLastLockID(ctx) + 1
 	// unlock time is initially set without a value, gets set as unlock start time + duration
