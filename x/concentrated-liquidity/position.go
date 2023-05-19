@@ -141,7 +141,7 @@ func (k Keeper) GetAllPositionIdsForPoolId(ctx sdk.Context, poolId uint64) ([]ui
 		}
 
 		// Check if the parsed poolId matches the desired poolId
-		if keyPoolId == poolId {
+		if keyPoolId == poolId || poolId == 0 {
 			// If it matches, add the positionId to the result
 			positionIds = append(positionIds, positionId)
 		}
@@ -151,42 +151,6 @@ func (k Keeper) GetAllPositionIdsForPoolId(ctx sdk.Context, poolId uint64) ([]ui
 	sort.Slice(positionIds, func(i, j int) bool {
 		return positionIds[i] < positionIds[j]
 	})
-
-	return positionIds, nil
-}
-
-func (k Keeper) GetPositionIdsFromKeyPrefix(ctx sdk.Context, prefix []byte, poolId uint64) ([]uint64, error) {
-	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, prefix)
-	defer iterator.Close()
-
-	var positionIds []uint64
-
-	for ; iterator.Valid(); iterator.Next() {
-		key := iterator.Key()
-
-		// Extract the components from the key
-		parts := bytes.Split(key, []byte(types.KeySeparator))
-		if len(parts) != 4 {
-			return nil, fmt.Errorf("invalid key format: %s", key)
-		}
-
-		// Parse the poolId and positionId from the key
-		keyPoolId, err := strconv.ParseUint(string(parts[2]), 16, 64)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse poolId: %w", err)
-		}
-		positionId, err := strconv.ParseUint(string(parts[3]), 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse positionId: %w", err)
-		}
-
-		// Check if the parsed poolId matches the desired poolId
-		if keyPoolId == poolId || poolId == 0 {
-			// If it matches, add the positionId to the result
-			positionIds = append(positionIds, positionId)
-		}
-	}
 
 	return positionIds, nil
 }
@@ -221,17 +185,10 @@ func (k Keeper) GetPosition(ctx sdk.Context, positionId uint64) (model.Position,
 
 // GetUserPositions gets all the existing user positions, with the option to filter by a specific pool.
 func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId uint64) ([]model.Position, error) {
-	var prefix []byte
-	if poolId == 0 {
-		prefix = types.KeyUserPositions(addr)
-	} else {
-		prefix = types.KeyAddressAndPoolId(addr, poolId)
-	}
-
 	positions := []model.Position{}
 
 	// Gather all position IDs for the given user and pool ID.
-	positionIds, err := k.GetPositionIdsFromKeyPrefix(ctx, prefix, poolId)
+	positionIds, err := k.GetAllPositionIdsForPoolId(ctx, poolId)
 	if err != nil {
 		return nil, err
 	}
