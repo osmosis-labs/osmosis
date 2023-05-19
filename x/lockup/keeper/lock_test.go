@@ -578,7 +578,7 @@ func (suite *KeeperTestSuite) TestCreateLockNoSend() {
 	})
 	suite.Require().Equal(accum.String(), "30")
 
-	// check balance
+	// check that send did not occur and balances are unchanged
 	balance := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, "stake")
 	suite.Require().Equal(sdk.NewInt(20).String(), balance.Amount.String())
 
