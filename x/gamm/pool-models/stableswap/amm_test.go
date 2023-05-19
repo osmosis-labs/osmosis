@@ -20,9 +20,7 @@ import (
 
 var (
 	cubeRootTwo, _        = osmomath.NewBigDec(2).ApproxRoot(3)
-	threeRootTwo, _       = osmomath.NewBigDec(3).ApproxRoot(2)
 	cubeRootThree, _      = osmomath.NewBigDec(3).ApproxRoot(3)
-	threeCubeRootTwo      = cubeRootTwo.MulInt64(3)
 	cubeRootSixSquared, _ = (osmomath.NewBigDec(6).MulInt64(6)).ApproxRoot(3)
 	twoCubeRootThree      = cubeRootThree.MulInt64(2)
 	twentySevenRootTwo, _ = osmomath.NewBigDec(27).ApproxRoot(2)

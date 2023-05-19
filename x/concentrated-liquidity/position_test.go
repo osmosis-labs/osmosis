@@ -709,7 +709,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		lockPositionIds            []uint64
 		positionIdsToMigrate       []uint64
 		accountCallingMigration    sdk.AccAddress
-		unlockBeforeBlockTimeMs    time.Duration
+		unlockBeforeBlockTimeMs    time.Duration //nolint:stylecheck
 		expectedNewPositionId      uint64
 		expectedErr                error
 		doesValidatePass           bool

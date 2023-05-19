@@ -216,12 +216,12 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				poolId := s.PrepareBalancerPool()
 				poolExt, err := s.App.GAMMKeeper.GetPool(s.Ctx, poolId)
 				s.NoError(err)
-				pool = poolExt.(poolmanagertypes.PoolI)
+				pool = poolExt
 			} else if test.param.poolType == "stableswap" {
 				poolId := s.PrepareBasicStableswapPool()
 				poolExt, err := s.App.GAMMKeeper.GetPool(s.Ctx, poolId)
 				s.NoError(err)
-				pool = poolExt.(poolmanagertypes.PoolI)
+				pool = poolExt
 			}
 
 			swapFee := pool.GetSwapFee(s.Ctx)
@@ -281,14 +281,12 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 			switch test.param.poolType {
 			case "balancer":
 				poolId := s.PrepareBalancerPool()
-				poolExt, err := s.App.GAMMKeeper.GetPool(s.Ctx, poolId)
+				pool, err = s.App.GAMMKeeper.GetPool(s.Ctx, poolId)
 				s.NoError(err)
-				pool, _ = poolExt.(poolmanagertypes.PoolI)
 			case "stableswap":
 				poolId := s.PrepareBasicStableswapPool()
-				poolExt, err := s.App.GAMMKeeper.GetPool(s.Ctx, poolId)
+				pool, err = s.App.GAMMKeeper.GetPool(s.Ctx, poolId)
 				s.NoError(err)
-				pool, _ = poolExt.(poolmanagertypes.PoolI)
 			default:
 				s.FailNow("unsupported pool type")
 			}
