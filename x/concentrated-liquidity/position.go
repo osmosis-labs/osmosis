@@ -114,9 +114,9 @@ func (k Keeper) isPositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId u
 }
 
 // GetAllPositionsForPoolId gets all the position for a specific poolId.
-func (k Keeper) GetAllPositionIdsForPoolId(ctx sdk.Context, poolId uint64) ([]uint64, error) {
+func (k Keeper) GetAllPositionIdsForPoolId(ctx sdk.Context, prefix []byte, poolId uint64) ([]uint64, error) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.PositionPrefix)
+	iterator := sdk.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
 
 	var positionIds []uint64
@@ -185,10 +185,17 @@ func (k Keeper) GetPosition(ctx sdk.Context, positionId uint64) (model.Position,
 
 // GetUserPositions gets all the existing user positions, with the option to filter by a specific pool.
 func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId uint64) ([]model.Position, error) {
+	var prefix []byte
+	if poolId == 0 {
+		prefix = types.KeyUserPositions(addr)
+	} else {
+		prefix = types.KeyAddressAndPoolId(addr, poolId)
+	}
+
 	positions := []model.Position{}
 
 	// Gather all position IDs for the given user and pool ID.
-	positionIds, err := k.GetAllPositionIdsForPoolId(ctx, poolId)
+	positionIds, err := k.GetAllPositionIdsForPoolId(ctx, prefix, poolId)
 	if err != nil {
 		return nil, err
 	}

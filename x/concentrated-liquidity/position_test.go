@@ -2061,10 +2061,10 @@ func (s *KeeperTestSuite) TestGetAllPositionIdsForPoolId() {
 	expectedPositionOneIds := []uint64{1, 2, 3}
 	expectedPositionTwoIds := []uint64{4, 5, 6}
 
-	positionOne, err := clKeeper.GetAllPositionIdsForPoolId(s.Ctx, clPoolOne.GetId())
+	positionOne, err := clKeeper.GetAllPositionIdsForPoolId(s.Ctx, types.PositionPrefix, clPoolOne.GetId())
 	s.Require().NoError(err)
 
-	positionTwo, err := clKeeper.GetAllPositionIdsForPoolId(s.Ctx, clPooltwo.GetId())
+	positionTwo, err := clKeeper.GetAllPositionIdsForPoolId(s.Ctx, types.PositionPrefix, clPooltwo.GetId())
 	s.Require().NoError(err)
 
 	s.Require().Equal(expectedPositionOneIds, positionOne)
