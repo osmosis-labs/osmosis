@@ -38,6 +38,7 @@ type PoolManagerKeeper interface {
 type GAMMKeeper interface {
 	GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error)
 	GetLinkedBalancerPoolID(ctx sdk.Context, poolIdEntering uint64) (uint64, error)
+	GetTotalPoolShares(ctx sdk.Context, poolId uint64) (sdk.Int, error)
 }
 
 type PoolIncentivesKeeper interface {
@@ -58,6 +59,7 @@ type LockupKeeper interface {
 	ForceUnlock(ctx sdk.Context, lock lockuptypes.PeriodLock) error
 	CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockuptypes.PeriodLock, error)
 	SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*lockuptypes.PeriodLock, error)
+	GetLockedDenom(ctx sdk.Context, denom string, duration time.Duration) sdk.Int
 }
 
 // CommunityPoolKeeper defines the contract needed to be fulfilled for distribution keeper.
