@@ -3,6 +3,7 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
@@ -135,7 +136,7 @@ func (s *KeeperTestSuite) TestSwapping() {
 	}
 }
 
-func (s *KeeperTestSuite) TestLiquidityProviding() {
+func (s *KeeperTestSuite) TestLiquidityChanging() {
 	type param struct {
 		expectedTrades            []types.Trade
 		executeLiquidityProviding func()
@@ -236,6 +237,58 @@ func (s *KeeperTestSuite) TestLiquidityProviding() {
 			s.Require().Equal(tc.param.expectedTrades, routes.Trades)
 
 			s.App.ProtoRevKeeper.DeleteSwapsToBackrun(s.Ctx)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestPoolCreation() {
+	type param struct {
+		expectedTrades      []types.Trade
+		executePoolCreation func() uint64
+	}
+
+	tests := []struct {
+		name       string
+		param      param
+		expectPass bool
+	}{
+		{
+			name: "GAMM - Create Pool",
+			param: param{
+				expectedTrades: []types.Trade{
+					{
+						Pool:     1,
+						TokenIn:  "akash",
+						TokenOut: "Atom",
+					},
+				},
+				executePoolCreation: func() uint64 {
+					poolId := s.createGAMMPool([]balancer.PoolAsset{
+						{
+							Token:  sdk.NewCoin("hook", sdk.NewInt(1000000000)),
+							Weight: sdk.NewInt(1),
+						},
+						{
+							Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(1000000000)),
+							Weight: sdk.NewInt(1),
+						},
+					},
+						sdk.NewDecWithPrec(2, 3),
+						sdk.NewDecWithPrec(0, 2))
+
+					return poolId
+				},
+			},
+			expectPass: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			poolId := tc.param.executePoolCreation()
+			setPoolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, types.OsmosisDenomination, "hook")
+			s.Require().NoError(err)
+			s.Require().Equal(poolId, setPoolId)
 		})
 	}
 }
