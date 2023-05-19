@@ -35,6 +35,7 @@ pub struct ForwardMsgReplyState {
     pub amount: u128,
     pub denom: String,
     pub on_failed_delivery: FailedDeliveryAction,
+    pub is_swap: bool,
 }
 
 pub mod ibc {

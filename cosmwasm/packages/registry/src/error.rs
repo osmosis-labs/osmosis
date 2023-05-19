@@ -75,20 +75,14 @@ pub enum RegistryError {
     #[error("no authorized address found for source chain: {source_chain:?}")]
     ChainAuthorizedAddressDoesNotExist { source_chain: String },
 
-    #[error("chain channel link does not exist: {source_chain:?} -> {destination_chain:?}")]
+    #[error("channel between chains not registered: {source_chain:?} -> {destination_chain:?}")]
     ChainChannelLinkDoesNotExist {
         source_chain: String,
         destination_chain: String,
     },
 
-    #[error("channel chain link does not exist: {channel_id:?} on {source_chain:?} -> chain")]
-    ChannelChainLinkDoesNotExist {
-        channel_id: String,
-        source_chain: String,
-    },
-
-    #[error("channel chain link does not exist: {channel_id:?} on {source_chain:?} -> chain")]
-    ChannelToChainChainLinkDoesNotExist {
+    #[error("channel to chain link not registered: {channel_id:?} on {source_chain:?}")]
+    ChannelDoesNotExistOnChain {
         channel_id: String,
         source_chain: String,
     },

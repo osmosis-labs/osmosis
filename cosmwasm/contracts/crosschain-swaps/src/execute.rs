@@ -39,8 +39,8 @@ pub fn unwrap_or_swap_and_forward(
     next_memo: Option<SerializableJson>,
     failed_delivery_action: FailedDeliveryAction,
 ) -> Result<Response, ContractError> {
-    let (ref deps, ref env, ref info) = ctx;
-    let swap_coin = cw_utils::one_coin(info)?;
+    let (deps, env, info) = ctx;
+    let swap_coin = cw_utils::one_coin(&info)?;
 
     deps.api
         .debug(&format!("executing unwrap or swap and forward"));
@@ -74,11 +74,24 @@ pub fn unwrap_or_swap_and_forward(
                     receiver: receiver.to_string(),
                     slippage,
                     next_memo,
-                    on_failed_delivery: failed_delivery_action,
+                    on_failed_delivery: failed_delivery_action.clone(),
                 })?
                 .into(),
             }),
             false,
+        )?;
+
+        // Ensure the state is properly setup to handle a reply from the ibc_message
+        save_forward_reply_state(
+            deps,
+            ForwardMsgReplyState {
+                channel_id: ibc_transfer.source_channel.clone(),
+                to_address: env.contract.address.to_string(),
+                amount: 0,
+                denom: String::new(),
+                on_failed_delivery: failed_delivery_action,
+                is_swap: false,
+            },
         )?;
 
         // Here we should add a response for the sender with the packet
@@ -96,7 +109,7 @@ pub fn unwrap_or_swap_and_forward(
 
     // If the denom is either native or only one hop, we swap it directly
     swap_and_forward(
-        ctx,
+        (deps, env, info),
         swap_coin,
         output_denom,
         slippage,
@@ -191,6 +204,26 @@ pub fn swap_and_forward(
         .add_submessage(SubMsg::reply_on_success(msg, MsgReplyID::Swap.repr())))
 }
 
+fn save_forward_reply_state(
+    deps: DepsMut,
+    forward_reply_state: ForwardMsgReplyState,
+) -> Result<(), ContractError> {
+    // Check that there isn't anything stored in FORWARD_REPLY_STATES. If there
+    // is, it means that the contract is already waiting for a reply and should
+    // not override the stored state. This should never happen here, but adding
+    // the check for safety. If this happens there is likely a malicious attempt
+    // modify the contract's state before it has replied.
+    if FORWARD_REPLY_STATE.may_load(deps.storage)?.is_some() {
+        return Err(ContractError::ContractLocked {
+            msg: "Already waiting for a reply".to_string(),
+        });
+    }
+    // Store the ibc send information and the user's failed delivery preference
+    // so that it can be handled by the response
+    FORWARD_REPLY_STATE.save(deps.storage, &forward_reply_state)?;
+    Ok(())
+}
+
 // The swap has succeeded and we need to generate the forward IBC transfer
 pub fn handle_swap_reply(
     deps: DepsMut,
@@ -236,26 +269,16 @@ pub fn handle_swap_reply(
             &ibc_transfer,
         ));
 
-    // Check that there isn't anything stored in FORWARD_REPLY_STATES. If there
-    // is, it means that the contract is already waiting for a reply and should
-    // not override the stored state. This should never happen here, but adding
-    // the check for safety. If this happens there is likely a malicious attempt
-    // modify the contract's state before it has replied.
-    if FORWARD_REPLY_STATE.may_load(deps.storage)?.is_some() {
-        return Err(ContractError::ContractLocked {
-            msg: "Already waiting for a reply".to_string(),
-        });
-    }
-    // Store the ibc send information and the user's failed delivery preference
-    // so that it can be handled by the response
-    FORWARD_REPLY_STATE.save(
-        deps.storage,
-        &ForwardMsgReplyState {
+    // Ensure the state is properly setup to handle a reply from the ibc_message
+    save_forward_reply_state(
+        deps,
+        ForwardMsgReplyState {
             channel_id: ibc_transfer.source_channel.clone(),
             to_address: swap_msg_state.forward_to.receiver.into(),
             amount: swap_response.amount.into(),
             denom: swap_response.token_out_denom,
             on_failed_delivery: swap_msg_state.forward_to.on_failed_delivery,
+            is_swap: true,
         },
     )?;
 
@@ -283,7 +306,7 @@ pub fn handle_forward_reply(
     // The response contains the packet sequence. This is needed to be able to
     // ensure that, if there is a delivery failure, the packet that failed is
     // the same one that we stored recovery information for
-    let response =
+    let transfer_response =
         MsgTransferResponse::decode(&b[..]).map_err(|_e| ContractError::FailedIBCTransfer {
             msg: format!("could not decode response: {b}"),
         })?;
@@ -294,6 +317,7 @@ pub fn handle_forward_reply(
         amount,
         denom,
         on_failed_delivery: failed_delivery_action,
+        is_swap,
     } = FORWARD_REPLY_STATE.load(deps.storage)?;
     FORWARD_REPLY_STATE.remove(deps.storage);
 
@@ -305,30 +329,48 @@ pub fn handle_forward_reply(
             let recovery = state::ibc::IBCTransfer {
                 recovery_addr,
                 channel_id: channel_id.clone(),
-                sequence: response.sequence,
+                sequence: transfer_response.sequence,
                 amount,
                 denom: denom.clone(),
                 status: state::ibc::PacketLifecycleStatus::Sent,
             };
 
             // Save as in-flight to be able to manipulate when the ack/timeout is received
-            INFLIGHT_PACKETS.save(deps.storage, (&channel_id, response.sequence), &recovery)?;
+            INFLIGHT_PACKETS.save(
+                deps.storage,
+                (&channel_id, transfer_response.sequence),
+                &recovery,
+            )?;
         }
     }
 
-    // The response data
-    let response_data =
-        CrosschainSwapResponse::new(amount, &denom, &channel_id, &to_address, response.sequence);
-
-    Ok(Response::new()
-        .set_data(to_binary(&response_data)?)
+    let response = Response::new()
         .add_attribute("action", "handle_forward_reply")
-        .add_attribute("status", "forward_ibc_message_successfully_submitted")
-        .add_attribute("packet_sequence", format!("{:?}", response.sequence))
+        .add_attribute("status", "ibc_message_successfully_submitted")
+        .add_attribute("channel", &channel_id)
+        .add_attribute("receiver", &to_address)
+        .add_attribute(
+            "packet_sequence",
+            format!("{:?}", transfer_response.sequence),
+        );
+
+    if !is_swap {
+        return Ok(response);
+    }
+
+    // Add the information about the swap
+    let response_data = CrosschainSwapResponse::new(
+        amount,
+        &denom,
+        &channel_id,
+        &to_address,
+        transfer_response.sequence,
+    );
+
+    Ok(response
+        .set_data(to_binary(&response_data)?)
         .add_attribute("amount", amount.to_string())
-        .add_attribute("denom", denom)
-        .add_attribute("channel", channel_id)
-        .add_attribute("receiver", to_address))
+        .add_attribute("denom", denom))
 }
 
 /// Transfers any tokens stored in RECOVERY_STATES[sender] to the sender.
@@ -336,9 +378,11 @@ pub fn recover(deps: DepsMut, sender: Addr) -> Result<Response, ContractError> {
     let recoveries = RECOVERY_STATES.load(deps.storage, &sender)?;
     // Remove the recoveries from the store. If the sends fail, the whole tx should be reverted.
     RECOVERY_STATES.remove(deps.storage, &sender);
-    let msgs = recoveries.into_iter().map(|r| BankMsg::Send {
-        to_address: r.recovery_addr.into(),
-        amount: coins(r.amount, r.denom),
+    let msgs = recoveries.into_iter().filter_map(|r| {
+        Some(BankMsg::Send {
+            to_address: r.recovery_addr.into_string(),
+            amount: coins(r.amount, r.denom),
+        })
     });
     Ok(Response::new()
         .add_attribute("action", "recover")

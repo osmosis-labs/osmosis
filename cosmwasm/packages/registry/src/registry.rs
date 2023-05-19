@@ -200,7 +200,7 @@ impl<'a> Registry<'a> {
                     via_channel: via_channel.to_string(),
                 },
             )
-            .map_err(|_e| RegistryError::ChannelToChainChainLinkDoesNotExist {
+            .map_err(|_e| RegistryError::ChannelDoesNotExistOnChain {
                 channel_id: via_channel.to_string(),
                 source_chain: on_chain.to_string(),
             })

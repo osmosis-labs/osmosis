@@ -272,7 +272,7 @@ pub fn connection_operations(
                     })?;
                 let channel_on_chain_map = CHANNEL_ON_CHAIN_CHAIN_MAP
                     .load(deps.storage, (&chain_to_chain_map.value, &source_chain))
-                    .map_err(|_| RegistryError::ChannelChainLinkDoesNotExist {
+                    .map_err(|_| RegistryError::ChannelDoesNotExistOnChain {
                         channel_id: chain_to_chain_map.value.clone(),
                         source_chain: source_chain.clone(),
                     })?;
@@ -369,7 +369,7 @@ pub fn connection_operations(
                     })?;
                 let channel_on_chain_map = CHANNEL_ON_CHAIN_CHAIN_MAP
                     .load(deps.storage, (&chain_to_chain_map.value, &source_chain))
-                    .map_err(|_| RegistryError::ChannelChainLinkDoesNotExist {
+                    .map_err(|_| RegistryError::ChannelDoesNotExistOnChain {
                         channel_id: chain_to_chain_map.value.clone(),
                         source_chain: source_chain.clone(),
                     })?;
@@ -397,7 +397,7 @@ pub fn connection_operations(
                     })?;
                 let channel_on_chain_map = CHANNEL_ON_CHAIN_CHAIN_MAP
                     .load(deps.storage, (&chain_to_chain_map.value, &source_chain))
-                    .map_err(|_| RegistryError::ChannelChainLinkDoesNotExist {
+                    .map_err(|_| RegistryError::ChannelDoesNotExistOnChain {
                         channel_id: chain_to_chain_map.value.clone(),
                         source_chain: source_chain.clone(),
                     })?;

@@ -6,10 +6,15 @@ use crate::{consts::CALLBACK_KEY, ContractError};
 
 /// Extract the relevant response from the swaprouter reply
 pub fn parse_swaprouter_reply(msg: Reply) -> Result<SwapResponse, ContractError> {
-    // If the swaprouter swap failed, return an error
+    // If the swaprouter faiuled with a known error, return that
+    if let SubMsgResult::Err(e) = msg.result {
+        return Err(ContractError::FailedSwap { msg: e });
+    };
+
+    // If the swaprouter swap failed otherwise (no data), return an error
     let SubMsgResult::Ok(SubMsgResponse { data: Some(b), .. }) = msg.result else {
         return Err(ContractError::FailedSwap {
-            msg: format!("No data"),
+            msg: format!("No data in swaprouter reply"),
         })
     };
 
