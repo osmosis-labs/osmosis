@@ -334,7 +334,7 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges() {
 			internalGaugeWeights: []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
 			externalGauges:       []externalGauge{{isPerpetual: true}, {isPerpetual: false}, {isPerpetual: true}, {isPerpetual: true}, {isPerpetual: false}},
 
-			// Since there is no concentrated pool, there are 4 internal gauges, one for each lockup duration and one for the epoch duration
+			// Since there is a concentrated pool, there are 4 internal gauges, one for each lockup duration and one for the epoch duration
 			// (Note that in our test defaults, the epoch duration does not overlap with any lockup durations)
 			expectedGaugeIDs:          []uint64{5, 6, 7, 8, 9},
 			expectedNumExternalGauges: 5,
