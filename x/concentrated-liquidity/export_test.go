@@ -218,8 +218,8 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	return k.createPosition(ctx, poolId, owner, tokensProvided, amount0Min, amount1Min, lowerTick, upperTick)
 }
 
-func (k Keeper) AddToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added sdk.Int) (uint64, sdk.Int, sdk.Int, error) {
-	return k.addToPosition(ctx, owner, positionId, amount0Added, amount1Added)
+func (k Keeper) AddToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added, amount0Min, amount1Min sdk.Int) (uint64, sdk.Int, sdk.Int, error) {
+	return k.addToPosition(ctx, owner, positionId, amount0Added, amount1Added, amount0Min, amount1Min)
 }
 
 func (ss *SwapState) UpdateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {

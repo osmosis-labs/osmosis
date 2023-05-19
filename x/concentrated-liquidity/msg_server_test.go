@@ -112,7 +112,6 @@ func (s *KeeperTestSuite) TestCreatePositionMsg() {
 			ctx := s.Ctx
 
 			baseConfigCopy := *baseCase
-			fmt.Println(baseConfigCopy.tokensProvided)
 			mergeConfigs(&baseConfigCopy, &tc)
 			tc = baseConfigCopy
 
@@ -191,10 +190,10 @@ func (s *KeeperTestSuite) TestAddToPosition_Events() {
 
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
 			msg := &types.MsgAddToPosition{
-				PositionId:    posId,
-				Sender:        s.TestAccs[0].String(),
-				TokenDesired0: DefaultCoin0,
-				TokenDesired1: DefaultCoin1,
+				PositionId: posId,
+				Sender:     s.TestAccs[0].String(),
+				Amount0:    DefaultCoin0.Amount,
+				Amount1:    DefaultCoin1.Amount,
 			}
 
 			response, err := msgServer.AddToPosition(sdk.WrapSDKContext(s.Ctx), msg)

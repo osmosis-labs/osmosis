@@ -1822,7 +1822,6 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 				s.Ctx, s.TestAccs[0], pool,
 				test.tokenOut, test.tokenInDenom,
 				test.swapFee, test.priceLimit)
-			fmt.Println(name, sqrtPrice)
 			if test.expectErr {
 				s.Require().Error(err)
 			} else {

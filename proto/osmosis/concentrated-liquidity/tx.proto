@@ -12,6 +12,11 @@ service Msg {
   rpc CreatePosition(MsgCreatePosition) returns (MsgCreatePositionResponse);
   rpc WithdrawPosition(MsgWithdrawPosition)
       returns (MsgWithdrawPositionResponse);
+  // AddToPosition attempts to add amount0 and amount1 to a position
+  // with the given position id.
+  // To maintain backwards-compatibility with future implementations of
+  // charging, this function deletes the old position and creates a new one with
+  // the resulting amount after addition.
   rpc AddToPosition(MsgAddToPosition) returns (MsgAddToPositionResponse);
   rpc CollectFees(MsgCollectFees) returns (MsgCollectFeesResponse);
   rpc CollectIncentives(MsgCollectIncentives)
@@ -80,12 +85,34 @@ message MsgCreatePositionResponse {
 message MsgAddToPosition {
   uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
   string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  cosmos.base.v1beta1.Coin token_desired0 = 3 [
-    (gogoproto.moretags) = "yaml:\"token_desired0\"",
+  // amount0 represents the amount of token0 willing to put in.
+  string amount0 = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"amount_0\"",
     (gogoproto.nullable) = false
   ];
-  cosmos.base.v1beta1.Coin token_desired1 = 4 [
-    (gogoproto.moretags) = "yaml:\"token_desired1\"",
+  // amount1 represents the amount of token1 willing to put in.
+  string amount1 = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"amount1\"",
+    (gogoproto.nullable) = false
+  ];
+  // token_min_amount0 represents the minimum amount of token0 desired from the
+  // new position being created. Note that this field indicates the min amount0
+  // corresponding to the total liquidity of the position, not just the
+  // liquidity that is being added.
+  string token_min_amount0 = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_min_amount0\"",
+    (gogoproto.nullable) = false
+  ];
+  // token_min_amount1 represents the minimum amount of token1 desired from the
+  // new position being created. Note that this field indicates the min amount1
+  // corresponding to the total liquidity of the position, not just the
+  // liquidity that is being added.
+  string token_min_amount1 = 6 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_min_amount1\"",
     (gogoproto.nullable) = false
   ];
 }

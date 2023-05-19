@@ -697,6 +697,8 @@ func (k Keeper) PositionHasActiveUnderlyingLock(ctx sdk.Context, positionId uint
 	if lockIsMature {
 		return false, lockId, nil
 	}
+
+	// if the lock id <> position id mapping exists, but the lock is not matured, we consider the lock to have active underlying lock.
 	return true, lockId, nil
 }
 
@@ -709,8 +711,9 @@ func (k Keeper) positionHasActiveUnderlyingLockAndUpdate(ctx sdk.Context, positi
 	if err != nil {
 		return false, 0, err
 	}
+
+	// Defense in depth check. If we have an active underlying lock but no lock ID, return an error.
 	if hasActiveUnderlyingLock && lockId == 0 {
-		// Defense in depth check. If we have an active underlying lock but no lock ID, return an error.
 		return false, 0, types.PositionIdToLockNotFoundError{PositionId: positionId}
 	}
 	// If the position does not have an active underlying lock but still has a lock ID associated with it,

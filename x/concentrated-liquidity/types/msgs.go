@@ -86,12 +86,17 @@ func (msg MsgAddToPosition) ValidateBasic() error {
 		return fmt.Errorf("Invalid position id (%s)", strconv.FormatUint(msg.PositionId, 10))
 	}
 
-	if !msg.TokenDesired0.IsValid() || !msg.TokenDesired0.IsPositive() {
-		return fmt.Errorf("Invalid coins (%s)", msg.TokenDesired0.String())
+	if msg.Amount0.IsNegative() {
+		return fmt.Errorf("Amount 0 cannot be negative, given amount: %s", msg.Amount0.String())
 	}
-
-	if !msg.TokenDesired1.IsValid() || !msg.TokenDesired1.IsPositive() {
-		return fmt.Errorf("Invalid coins (%s)", msg.TokenDesired1.String())
+	if msg.Amount1.IsNegative() {
+		return fmt.Errorf("Amount 1 cannot be negative, given amount: %s", msg.Amount1.String())
+	}
+	if msg.TokenMinAmount0.IsNegative() {
+		return fmt.Errorf("Amount 0 cannot be negative, given token min amount: %s", msg.TokenMinAmount0.String())
+	}
+	if msg.TokenMinAmount1.IsNegative() {
+		return fmt.Errorf("Amount 1 cannot be negative, given token min amount: %s", msg.TokenMinAmount1.String())
 	}
 
 	return nil

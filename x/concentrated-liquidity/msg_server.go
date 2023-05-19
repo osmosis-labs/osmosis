@@ -78,7 +78,14 @@ func (server msgServer) AddToPosition(goCtx context.Context, msg *types.MsgAddTo
 		return nil, err
 	}
 
-	positionId, actualAmount0, actualAmount1, err := server.keeper.addToPosition(ctx, sender, msg.PositionId, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount)
+	if msg.TokenMinAmount0.IsNil() {
+		msg.TokenMinAmount0 = sdk.ZeroInt()
+	}
+	if msg.TokenMinAmount1.IsNil() {
+		msg.TokenMinAmount1 = sdk.ZeroInt()
+	}
+
+	positionId, actualAmount0, actualAmount1, err := server.keeper.addToPosition(ctx, sender, msg.PositionId, msg.Amount0, msg.Amount1, msg.TokenMinAmount0, msg.TokenMinAmount1)
 	if err != nil {
 		return nil, err
 	}
