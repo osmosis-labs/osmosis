@@ -296,8 +296,8 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 	}
 }
 
-func (suite *TestSuite) TestMsgCreateStableswapPool() {
-	suite.SetupTest()
+func (s *TestSuite) TestMsgCreateStableswapPool() {
+	s.SetupTest()
 
 	var (
 		validParams           = &stableswap.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2), ExitFee: sdk.ZeroDec()}
@@ -313,7 +313,7 @@ func (suite *TestSuite) TestMsgCreateStableswapPool() {
 	}{
 		"basic success test": {
 			msg: stableswap.MsgCreateStableswapPool{
-				Sender:                  suite.TestAccs[0].String(),
+				Sender:                  s.TestAccs[0].String(),
 				PoolParams:              validParams,
 				InitialPoolLiquidity:    validInitialLiquidity,
 				ScalingFactors:          validScalingFactors,
@@ -324,7 +324,7 @@ func (suite *TestSuite) TestMsgCreateStableswapPool() {
 		},
 		"error test - more scaling factors than initial liquidity": {
 			msg: stableswap.MsgCreateStableswapPool{
-				Sender:                  suite.TestAccs[0].String(),
+				Sender:                  s.TestAccs[0].String(),
 				PoolParams:              validParams,
 				InitialPoolLiquidity:    validInitialLiquidity,
 				ScalingFactors:          invalidScalingFactors,
@@ -337,22 +337,22 @@ func (suite *TestSuite) TestMsgCreateStableswapPool() {
 	}
 
 	for name, tc := range tests {
-		suite.Run(name, func() {
-			pool, err := tc.msg.CreatePool(suite.Ctx, 1)
+		s.Run(name, func() {
+			pool, err := tc.msg.CreatePool(s.Ctx, 1)
 
 			if tc.expectError {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 				return
 			}
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
-			suite.Require().Equal(tc.poolId, pool.GetId())
+			s.Require().Equal(tc.poolId, pool.GetId())
 
 			cfmmPool, ok := pool.(types.CFMMPoolI)
-			suite.Require().True(ok)
+			s.Require().True(ok)
 
-			suite.Require().Equal(tc.msg.InitialPoolLiquidity, cfmmPool.GetTotalPoolLiquidity(suite.Ctx))
-			suite.Require().Equal(types.InitPoolSharesSupply, cfmmPool.GetTotalShares())
+			s.Require().Equal(tc.msg.InitialPoolLiquidity, cfmmPool.GetTotalPoolLiquidity(s.Ctx))
+			s.Require().Equal(types.InitPoolSharesSupply, cfmmPool.GetTotalShares())
 		})
 	}
 }

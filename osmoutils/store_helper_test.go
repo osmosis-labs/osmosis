@@ -34,17 +34,17 @@ type TestSuite struct {
 	accountKeeper authkeeper.AccountKeeperI
 }
 
-func (suite *TestSuite) SetupTest() {
+func (s *TestSuite) SetupTest() {
 	// For the test suite, we manually wire a custom store "customStoreKey"
 	// Auth module (for module_account_test.go) which requires params module as well.
 	customStoreKey := sdk.NewKVStoreKey("osmoutil_store_test")
-	suite.authStoreKey = sdk.NewKVStoreKey(authtypes.StoreKey)
+	s.authStoreKey = sdk.NewKVStoreKey(authtypes.StoreKey)
 	// setup ctx + stores
 	paramsKey := sdk.NewKVStoreKey(paramstypes.StoreKey)
 	paramsTKey := sdk.NewKVStoreKey(paramstypes.TStoreKey)
-	suite.ctx = noapptest.DefaultCtxWithStoreKeys(
-		[]sdk.StoreKey{customStoreKey, suite.authStoreKey, paramsKey, paramsTKey})
-	suite.store = suite.ctx.KVStore(customStoreKey)
+	s.ctx = noapptest.DefaultCtxWithStoreKeys(
+		[]sdk.StoreKey{customStoreKey, s.authStoreKey, paramsKey, paramsTKey})
+	s.store = s.ctx.KVStore(customStoreKey)
 	// setup params (needed for auth)
 	encConfig := noapptest.MakeTestEncodingConfig(auth.AppModuleBasic{}, params.AppModuleBasic{})
 	paramsKeeper := paramskeeper.NewKeeper(encConfig.Codec, encConfig.Amino, paramsKey, paramsTKey)
@@ -56,9 +56,9 @@ func (suite *TestSuite) SetupTest() {
 		"mint":          {"minter"},
 	}
 	authsubspace, _ := paramsKeeper.GetSubspace(authtypes.ModuleName)
-	suite.accountKeeper = authkeeper.NewAccountKeeper(
+	s.accountKeeper = authkeeper.NewAccountKeeper(
 		encConfig.Codec,
-		suite.authStoreKey,
+		s.authStoreKey,
 		authsubspace,
 		authtypes.ProtoBaseAccount, maccPerms)
 }
@@ -1306,6 +1306,5 @@ func (s *TestSuite) TestGetDec() {
 				s.Require().Equal(expectedValue.String(), actualDec.String())
 			}
 		})
-
 	}
 }

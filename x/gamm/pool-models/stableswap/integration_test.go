@@ -23,8 +23,8 @@ func TestTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }
 
-func (suite *TestSuite) SetupTest() {
-	suite.Setup()
+func (s *TestSuite) SetupTest() {
+	s.Setup()
 }
 
 func (s *TestSuite) TestSetScalingFactors() {
