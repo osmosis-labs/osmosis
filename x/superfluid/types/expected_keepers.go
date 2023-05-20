@@ -28,6 +28,8 @@ type LockupKeeper interface {
 	// TODO: Fix this in future code update
 	BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) (uint64, error)
 	ForceUnlock(ctx sdk.Context, lock lockuptypes.PeriodLock) error
+	PartialForceUnlock(ctx sdk.Context, lock lockuptypes.PeriodLock, coins sdk.Coins) error
+	SplitLock(ctx sdk.Context, lock lockuptypes.PeriodLock, coins sdk.Coins, forceUnlock bool) (lockuptypes.PeriodLock, error)
 
 	CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockuptypes.PeriodLock, error)
 

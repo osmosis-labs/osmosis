@@ -533,6 +533,61 @@ func (suite *KeeperTestSuite) TestCreateLock() {
 	suite.Require().Equal(sdk.NewInt(30), balance.Amount)
 }
 
+func (suite *KeeperTestSuite) TestCreateLockNoSend() {
+	suite.SetupTest()
+
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+
+	// test locking without balance
+	lock, err := suite.App.LockupKeeper.CreateLockNoSend(suite.Ctx, addr1, coins, time.Second)
+	suite.Require().NoError(err)
+
+	// check new lock
+	suite.Require().Equal(coins, lock.Coins)
+	suite.Require().Equal(time.Second, lock.Duration)
+	suite.Require().Equal(time.Time{}, lock.EndTime)
+	suite.Require().Equal(uint64(1), lock.ID)
+
+	lockID := suite.App.LockupKeeper.GetLastLockID(suite.Ctx)
+	suite.Require().Equal(uint64(1), lockID)
+
+	// check accumulation store
+	accum := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "stake",
+		Duration:      time.Second,
+	})
+	suite.Require().Equal(accum.String(), "10")
+
+	// create new lock (this time with a balance)
+	originalLockBalance := int64(20)
+	coins = sdk.Coins{sdk.NewInt64Coin("stake", originalLockBalance)}
+	suite.FundAcc(addr1, coins)
+
+	lock, err = suite.App.LockupKeeper.CreateLockNoSend(suite.Ctx, addr1, coins, time.Second)
+	suite.Require().NoError(err)
+
+	lockID = suite.App.LockupKeeper.GetLastLockID(suite.Ctx)
+	suite.Require().Equal(uint64(2), lockID)
+
+	// check accumulation store
+	accum = suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "stake",
+		Duration:      time.Second,
+	})
+	suite.Require().Equal(accum.String(), "30")
+
+	// check that send did not occur and balances are unchanged
+	balance := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, "stake")
+	suite.Require().Equal(sdk.NewInt(originalLockBalance).String(), balance.Amount.String())
+
+	acc := suite.App.AccountKeeper.GetModuleAccount(suite.Ctx, types.ModuleName)
+	balance = suite.App.BankKeeper.GetBalance(suite.Ctx, acc.GetAddress(), "stake")
+	suite.Require().Equal(sdk.ZeroInt().String(), balance.Amount.String())
+}
+
 func (suite *KeeperTestSuite) TestAddTokensToLock() {
 	initialLockCoin := sdk.NewInt64Coin("stake", 10)
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
@@ -703,7 +758,7 @@ func (suite *KeeperTestSuite) TestHasLock() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestLock() {
+func (suite *KeeperTestSuite) TestLockNoSend() {
 	suite.SetupTest()
 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
@@ -717,9 +772,9 @@ func (suite *KeeperTestSuite) TestLock() {
 		Coins:    coins,
 	}
 
-	// test locking without balance
+	// test locking without balance (should work since we don't send the underlying balance)
 	err := suite.App.LockupKeeper.Lock(suite.Ctx, lock, coins)
-	suite.Require().Error(err)
+	suite.Require().NoError(err)
 
 	// check accumulation store
 	accum := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
@@ -727,7 +782,7 @@ func (suite *KeeperTestSuite) TestLock() {
 		Denom:         "stake",
 		Duration:      time.Second,
 	})
-	suite.Require().Equal(accum.String(), "0")
+	suite.Require().Equal(accum.String(), "10")
 
 	suite.FundAcc(addr1, coins)
 	err = suite.App.LockupKeeper.Lock(suite.Ctx, lock, coins)
@@ -739,14 +794,15 @@ func (suite *KeeperTestSuite) TestLock() {
 		Denom:         "stake",
 		Duration:      time.Second,
 	})
-	suite.Require().Equal(accum.String(), "10")
+	suite.Require().Equal(accum.String(), "20")
 
+	// Since lockNoSend does not send the underlying coins, the account balance should be unchanged
 	balance := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, "stake")
-	suite.Require().Equal(sdk.ZeroInt(), balance.Amount)
+	suite.Require().Equal(sdk.NewInt(10).String(), balance.Amount.String())
 
 	acc := suite.App.AccountKeeper.GetModuleAccount(suite.Ctx, types.ModuleName)
 	balance = suite.App.BankKeeper.GetBalance(suite.Ctx, acc.GetAddress(), "stake")
-	suite.Require().Equal(sdk.NewInt(10), balance.Amount)
+	suite.Require().Equal(sdk.NewInt(0).String(), balance.Amount.String())
 }
 
 func (suite *KeeperTestSuite) AddTokensToLockForSynth() {
@@ -1272,6 +1328,7 @@ func (suite *KeeperTestSuite) TestPartialForceUnlock() {
 
 	defaultDenomToLock := "stake"
 	defaultAmountToLock := sdk.NewInt(10000000)
+	coinsToLock := sdk.NewCoins(sdk.NewCoin("stake", defaultAmountToLock))
 
 	testCases := []struct {
 		name               string
@@ -1280,7 +1337,7 @@ func (suite *KeeperTestSuite) TestPartialForceUnlock() {
 	}{
 		{
 			name:               "unlock full amount",
-			coinsToForceUnlock: sdk.Coins{sdk.NewCoin(defaultDenomToLock, defaultAmountToLock)},
+			coinsToForceUnlock: coinsToLock,
 			expectedPass:       true,
 		},
 		{
@@ -1302,9 +1359,9 @@ func (suite *KeeperTestSuite) TestPartialForceUnlock() {
 	for _, tc := range testCases {
 		// set up test and create default lock
 		suite.SetupTest()
-		coinsToLock := sdk.NewCoins(sdk.NewCoin("stake", defaultAmountToLock))
+
 		suite.FundAcc(addr1, sdk.NewCoins(coinsToLock...))
-		// balanceBeforeLock := suite.App.BankKeeper.GetAllBalances(suite.Ctx, addr1)
+
 		lock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, addr1, coinsToLock, time.Minute)
 		suite.Require().NoError(err)
 
