@@ -289,7 +289,18 @@ func (k Keeper) prepareClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Co
 			return nil, err
 		}
 
-		feeAccumulator.AddToAccumulator(forfeitedDust)
+		totalSharesRemaining, err := feeAccumulator.GetTotalShares()
+		if err != nil {
+			return nil, err
+		}
+
+		// if there are no shares remaining, the dust is ignored. Otherwise, it is added back to the global accumulator.
+		// Total shares remaining can be zero if we claim in withdrawPosition for the last position in the pool.
+		// The shares are decremented in osmoutils/accum.ClaimRewards.
+		if !totalSharesRemaining.IsZero() {
+			forfeitedDustPerShare := forfeitedDust.QuoDecTruncate(totalSharesRemaining)
+			feeAccumulator.AddToAccumulator(forfeitedDustPerShare)
+		}
 	}
 
 	return feesClaimed, nil
