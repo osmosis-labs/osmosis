@@ -237,7 +237,8 @@ func (k Keeper) GetClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins,
 // prepareClaimableFees returns the amount of fees that a position is eligible to claim.
 // Note that it mutates the internal state of the fee accumulator by setting the position's
 // unclaimed rewards to zero and update the position's accumulator value to reflect the
-// current pool fee accumulator value.
+// current pool fee accumulator value. If there is any dust left over, it is added back to the
+// global accumulator.
 //
 // Returns error if:
 // - pool with the given id does not exist
@@ -275,9 +276,20 @@ func (k Keeper) prepareClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Co
 	}
 
 	// Claim rewards, set the unclaimed rewards to zero, and update the position's accumulator value to reflect the current accumulator value.
-	feesClaimed, _, err := updateAccumAndClaimRewards(feeAccumulator, positionKey, feeGrowthOutside)
+	feesClaimed, forfeitedDust, err := updateAccumAndClaimRewards(feeAccumulator, positionKey, feeGrowthOutside)
 	if err != nil {
 		return nil, err
+	}
+
+	// add foreited dust back to the global accumulator
+	if !forfeitedDust.IsZero() {
+		// Refetch the fee accumulator as the number of shares has changed after claiming.
+		feeAccumulator, err := k.GetFeeAccumulator(ctx, position.PoolId)
+		if err != nil {
+			return nil, err
+		}
+
+		feeAccumulator.AddToAccumulator(forfeitedDust)
 	}
 
 	return feesClaimed, nil
