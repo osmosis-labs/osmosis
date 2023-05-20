@@ -58,11 +58,6 @@ type swapStrategy interface {
 	// on the actual current tick.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	InitializeTickValue(currentTick int64) int64
-	// NextInitializedTick returns the next initialized tick index based on the
-	// provided tickindex. If no initialized tick exists, <0, false>
-	// will be returned.
-	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64) (next int64, initialized bool)
 	// SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.
 	// This is called when consuming all liquidity.
 	// When a position is created, we add liquidity to lower tick
