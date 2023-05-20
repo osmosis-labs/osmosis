@@ -1118,10 +1118,10 @@ var (
 			// liq = Decimal("1517882343.751510418088349649")
 			// sqrt_cur = Decimal("5000").sqrt()
 			// sqrt_next = sqrt_cur - token_out / liq
-			// swap_fee = Decimal("0.01")
+			// spread_factor = Decimal("0.01")
 
 			// token_in = ceil(liq * abs(sqrt_cur - sqrt_next) / (sqrt_cur * sqrt_next))
-			// fee = token_in *  swap_fee / (1 - swap_fee)
+			// fee = token_in *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
 			// token_in = ceil(token_in + fee)
@@ -1150,10 +1150,10 @@ var (
 			// liq = Decimal("1517882343.751510418088349649") * 2
 			// sqrt_cur = Decimal("5000").sqrt()
 			// sqrt_next = liq * sqrt_cur / (liq - token_out * sqrt_cur)
-			// swap_fee = Decimal("0.03")
+			// spread_factor = Decimal("0.03")
 
 			// token_in = ceil(liq * abs(sqrt_cur - sqrt_next))
-			// fee = token_in *  swap_fee / (1 - swap_fee)
+			// fee = token_in *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
 			// token_in = ceil(token_in + fee)
@@ -1186,11 +1186,11 @@ var (
 			// liq_1 = Decimal("1517882343.751510418088349649")
 			// sqrt_cur = Decimal("5000").sqrt()
 			// sqrt_next_1 = Decimal("5500").sqrt()
-			// swap_fee = Decimal("0.001")
+			// spread_factor = Decimal("0.001")
 
 			// token_out_1 = liq_1 * (sqrt_next_1 - sqrt_cur ) / (sqrt_next_1 * sqrt_cur)
 			// token_in_1 = ceil(liq_1 * abs(sqrt_cur - sqrt_next_1 ))
-			// fee_1 = token_in_1 *  swap_fee / (1 - swap_fee)
+			// fee_1 = token_in_1 *  spread_factor / (1 - spread_factor)
 
 			// token_out = token_out - token_out_1
 
@@ -1200,7 +1200,7 @@ var (
 
 			// token_out_2 = liq_2 * (sqrt_next_2 - sqrt_next_1 ) / (sqrt_next_1 * sqrt_next_2)
 			// token_in_2 = ceil(liq_2 * (sqrt_next_2 - sqrt_next_1 ))
-			// fee_2 = token_in_2 *  swap_fee / (1 - swap_fee)
+			// fee_2 = token_in_2 *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
 			// token_in = ceil(token_in_1 + fee_1 + token_in_2 + fee_2)
@@ -1234,11 +1234,11 @@ var (
 			// liq_1 = Decimal("1517882343.751510418088349649")
 			// sqrt_cur = Decimal("5000").sqrt()
 			// sqrt_next_1 = Decimal("4999").sqrt()
-			// swap_fee = Decimal("0.1")
+			// spread_factor = Decimal("0.1")
 
 			// token_out_1 = liq_1 * (sqrt_cur - sqrt_next_1 )
 			// token_in_1 = ceil(liq_1 * (sqrt_cur - sqrt_next_1 ) / (sqrt_next_1 * sqrt_cur))
-			// fee_1 = token_in_1 *  swap_fee / (1 - swap_fee)
+			// fee_1 = token_in_1 *  spread_factor / (1 - spread_factor)
 
 			// token_out = token_out - token_out_1
 
@@ -1248,7 +1248,7 @@ var (
 
 			// token_out_2 = liq_2 * (sqrt_next_1 - sqrt_next_2 )
 			// token_in_2 = ceil(liq_2 * (sqrt_next_1 - sqrt_next_2 ) / (sqrt_next_2 * sqrt_next_1))
-			// fee_2 = token_in_2 *  swap_fee / (1 - swap_fee)
+			// fee_2 = token_in_2 *  spread_factor / (1 - spread_factor)
 
 			// token_out = token_out - token_out_2
 
@@ -1258,7 +1258,7 @@ var (
 
 			// token_out_3 = liq_3 * (sqrt_next_2 - sqrt_next_3 )
 			// token_in_3 = ceil(liq_3 * (sqrt_next_2 - sqrt_next_3 ) / (sqrt_next_3 * sqrt_next_2))
-			// fee_3 = token_in_3 *  swap_fee / (1 - swap_fee)
+			// fee_3 = token_in_3 *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
 			// token_in = token_in_1 + token_in_2 + token_in_3 + fee_1 + fee_2 + fee_3
@@ -1294,11 +1294,11 @@ var (
 			// liq_1 = Decimal("1517882343.751510418088349649")
 			// sqrt_cur = Decimal("5000").sqrt()
 			// sqrt_next_1 = Decimal("5001").sqrt()
-			// swap_fee = Decimal("0.05")
+			// spread_factor = Decimal("0.05")
 
 			// token_out_1 = liq_1 * (sqrt_next_1 - sqrt_cur ) / (sqrt_next_1 * sqrt_cur)
 			// token_in_1 = ceil(liq_1 * (sqrt_next_1 - sqrt_cur ))
-			// fee_1 = token_in_1 *  swap_fee / (1 - swap_fee)
+			// fee_1 = token_in_1 *  spread_factor / (1 - spread_factor)
 
 			// token_out = token_out - token_out_1
 
@@ -1308,7 +1308,7 @@ var (
 
 			// token_out_2 = liq_2 * (sqrt_next_2 - sqrt_next_1 ) / (sqrt_next_1 * sqrt_next_2)
 			// token_in_2 = ceil(liq_2 * (sqrt_next_2 - sqrt_next_1 ))
-			// fee_2 = token_in_2 *  swap_fee / (1 - swap_fee)
+			// fee_2 = token_in_2 *  spread_factor / (1 - spread_factor)
 
 			// token_out = token_out - token_out_2
 
@@ -1318,7 +1318,7 @@ var (
 
 			// token_out_3 = liq_3 * (sqrt_next_3 - sqrt_next_2 ) / (sqrt_next_3 * sqrt_next_2)
 			// token_in_3 = ceil(liq_3 * (sqrt_next_3 - sqrt_next_2 ))
-			// fee_3 = token_in_3 *  swap_fee / (1 - swap_fee)
+			// fee_3 = token_in_3 *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
 			// token_in = token_in_1 + token_in_2 +token_in_3 + fee_1 + fee_2 + fee_3
@@ -1352,11 +1352,11 @@ var (
 			// liq_1 = Decimal("1517882343.751510418088349649")
 			// sqrt_cur = Decimal("5000").sqrt()
 			// sqrt_next_1 = Decimal("5500").sqrt()
-			// swap_fee = Decimal("0.0003")
+			// spread_factor = Decimal("0.0003")
 
 			// token_out_1 = liq_1 * (sqrt_next_1 - sqrt_cur ) / (sqrt_next_1 * sqrt_cur)
 			// token_in_1 = ceil(liq_1 * (sqrt_next_1 - sqrt_cur ))
-			// fee_1 = token_in_1 *  swap_fee / (1 - swap_fee)
+			// fee_1 = token_in_1 *  spread_factor / (1 - spread_factor)
 			// token_out = token_out - token_out_1
 
 			// # Range 2: from 5501 till end
@@ -1365,7 +1365,7 @@ var (
 			// sqrt_next_2 = liq_2 * sqrt_cur_2 / (liq_2 - token_out * sqrt_cur_2)
 			// token_out_2 = liq_2 * (sqrt_next_2 - sqrt_cur_2 ) / (sqrt_cur_2 * sqrt_next_2)
 			// token_in_2 = ceil(liq_2 * (sqrt_next_2 - sqrt_cur_2 ))
-			// fee_2 = token_in_2 *  swap_fee / (1 - swap_fee)
+			// fee_2 = token_in_2 *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
 			// token_in = token_in_1 + token_in_2 + fee_1 + fee_2
@@ -1397,11 +1397,11 @@ var (
 			// liq_1 = Decimal("1517882343.751510418088349649")
 			// sqrt_cur = Decimal("5000").sqrt()
 			// sqrt_next_1 = Decimal("5002").sqrt()
-			// swap_fee = Decimal("0.01")
+			// spread_factor = Decimal("0.01")
 
 			// token_out_1 = liq_1 * (sqrt_next_1 - sqrt_cur ) / (sqrt_next_1 * sqrt_cur)
 			// token_in_1 = ceil(liq_1 * (sqrt_next_1 - sqrt_cur ))
-			// fee_1 = token_in_1 *  swap_fee / (1 - swap_fee)
+			// fee_1 = token_in_1 *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
 			// token_in = ceil(token_in_1 + fee_1)
@@ -3029,8 +3029,8 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// liq = Decimal("4836489743.729150266025048947")
 	// sqrt_cur = Decimal("5000").sqrt()
 	// token_in = Decimal("5000000000")
-	// swap_fee = Decimal("0.003")
-	// token_in_after_fee = token_in * (Decimal("1") - swap_fee)
+	// spread_factor = Decimal("0.003")
+	// token_in_after_fee = token_in * (Decimal("1") - spread_factor)
 	// sqrt_next = sqrt_cur + token_in_after_fee / liq
 	// token_out = liq * (sqrt_next - sqrt_cur) / (sqrt_cur * sqrt_next)
 
@@ -3075,8 +3075,8 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// from decimal import *
 	// # Range 1: From 5146 to 4999
 	// token_in = Decimal("1000000")
-	// swap_fee = Decimal("0.003")
-	// token_in_after_fee = token_in - (token_in * swap_fee)
+	// spread_factor = Decimal("0.003")
+	// token_in_after_fee = token_in - (token_in * spread_factor)
 	// liq_1 = Decimal("4553647031.254531254265048947")
 	// sqrt_cur = Decimal("71.741384325871133645")
 	// sqrt_next_1 = Decimal("4999").sqrt()
@@ -3134,8 +3134,8 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// from decimal import *
 	// # Range 1: From 4990.16... to 4999
 	// token_in = Decimal("5000000000")
-	// swap_fee = Decimal("0.003")
-	// token_in_after_fee = token_in - (token_in * swap_fee)
+	// spread_factor = Decimal("0.003")
+	// token_in_after_fee = token_in - (token_in * spread_factor)
 	// liq_1 = Decimal("670416215.718827443660400593")
 	// sqrt_cur = Decimal("70.641127368418251403")
 	// sqrt_next_1 = Decimal("4999").sqrt()
@@ -3195,8 +3195,8 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// liq = Decimal("670416215.718827443660400593")
 	// sqrt_cur = Decimal("4999").sqrt()
 	// token_in = Decimal("1000000")
-	// swap_fee = Decimal("0.003")
-	// token_in_after_fee = token_in * (Decimal("1") - swap_fee)
+	// spread_factor = Decimal("0.003")
+	// token_in_after_fee = token_in * (Decimal("1") - spread_factor)
 	// sqrt_next = liq / ((liq / sqrt_cur) + token_in_after_fee)
 	// token_out = liq * (sqrt_cur - sqrt_next)
 

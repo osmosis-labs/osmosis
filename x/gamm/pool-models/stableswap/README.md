@@ -279,10 +279,10 @@ Then we simply call `solve_y` with the input reserves, and `amm_in`.
 <!-- TODO: Maybe we just use normal pseudocode syntax -->
 
 ```python
-def CalcOutAmountGivenExactAmountIn(pool, in_coin, out_denom, swap_fee):
+def CalcOutAmountGivenExactAmountIn(pool, in_coin, out_denom, spread_factor):
   in_reserve, out_reserve, rem_reserves = pool.ScaledLiquidity(in_coin, out_denom, RoundingMode.RoundDown)
   in_amt_scaled = pool.ScaleToken(in_coin, RoundingMode.RoundDown)
-  amm_in = in_amt_scaled * (1 - swap_fee)
+  amm_in = in_amt_scaled * (1 - spread_factor)
   out_amt_scaled = solve_y(in_reserve, out_reserve, remReserves, amm_in)
   out_amt = pool.DescaleToken(out_amt_scaled, out_denom)
   return out_amt
@@ -302,7 +302,7 @@ We do this by having `token_in = amm_in / (1 - spread factor)`.
 <!-- TODO: Maybe we just use normal pseudocode syntax -->
 
 ```python
-def CalcInAmountGivenExactAmountOut(pool, out_coin, in_denom, swap_fee):
+def CalcInAmountGivenExactAmountOut(pool, out_coin, in_denom, spread_factor):
   in_reserve, out_reserve, rem_reserves = pool.ScaledLiquidity(in_denom, out_coin, RoundingMode.RoundDown)
   out_amt_scaled = pool.ScaleToken(out_coin, RoundingMode.RoundUp)
 

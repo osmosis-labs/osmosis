@@ -87,7 +87,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
-		// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
+		// P_issued = P_supply * ((1 + (A_t * spreadFactorRatio  / B_t))^W_t - 1)
 		//
 		// 2_487_500_000_000 = 1e20 * (( 1 + (50,000 * (1 - (1 - 0.5) * 0.01) / 1e12))^0.5 - 1)
 		//
@@ -96,7 +96,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		//	A_t = amount of deposited asset = 50,000
 		//	B_t = existing balance of deposited asset in the pool prior to deposit = 1,000,000,000,000
 		//	W_t = normalized weight of deposited asset in pool = 0.5 (equally weighted two-asset pool)
-		// 	swapFeeRatio = (1 - (1 - W_t) * spreadFactor)
+		// 	spreadFactorRatio = (1 - (1 - W_t) * spreadFactor)
 		// Plugging all of this in, we get:
 		// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%2850000*%281+-+%281-0.5%29+*+0.01%29%2F1000000000000%29%29%5E0.5+-+1%29
 		// 	Simplified:  P_issued = 2_487_500_000_000
@@ -108,7 +108,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
-		// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
+		// P_issued = P_supply * ((1 + (A_t * spreadFactorRatio  / B_t))^W_t - 1)
 		//
 		// 1_262_500_000_000 = 1e20 * (( 1 + (50,000 * (1 - (1 - 0.5) * 0.99) / 1e12))^0.5 - 1)
 		//
@@ -117,7 +117,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		//	A_t = amount of deposited asset = 50,000
 		//	B_t = existing balance of deposited asset in the pool prior to deposit = 1,000,000,000,000
 		//	W_t = normalized weight of deposited asset in pool = 0.5 (equal weights)
-		// 	swapFeeRatio = (1 - (1 - W_t) * spreadFactor)
+		// 	spreadFactorRatio = (1 - (1 - W_t) * spreadFactor)
 		// Plugging all of this in, we get:
 		// 	Full solution: https://www.wolframalpha.com/input?i=%28100+*+10%5E18+%29*+%28%28+1+%2B+%2850%2C000+*+%281+-+%281+-+0.5%29+*+0.99%29+%2F+1000000000000%29%29%5E0.5+-+1%29
 		// 	Simplified:  P_issued = 1_262_500_000_000
@@ -129,7 +129,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
-		// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
+		// P_issued = P_supply * ((1 + (A_t * spreadFactorRatio  / B_t))^W_t - 1)
 		//
 		// 321_875_000_000 = 1e20 * (( 1 + (50,000 * (1 - (1 - 0.25) * 0.99) / 1e12))^0.25 - 1)
 		//
@@ -138,7 +138,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		//	A_t = amount of deposited asset = 50,000
 		//	B_t = existing balance of deposited asset in the pool prior to deposit = 1,000,000,000,000
 		//	W_t = normalized weight of deposited asset in pool = 0.25 (asset A, uosmo, has weight 1/4 of uatom)
-		// 	swapFeeRatio = (1 - (1 - W_t) * spreadFactor)
+		// 	spreadFactorRatio = (1 - (1 - W_t) * spreadFactor)
 		// Plugging all of this in, we get:
 		// 	Full solution: https://www.wolframalpha.com/input?i=%28100+*+10%5E18+%29*+%28%28+1+%2B+%2850%2C000+*+%281+-+%281+-+0.25%29+*+0.99%29+%2F+1000000000000%29%29%5E0.25+-+1%29
 		// 	Simplified:  P_issued = 321_875_000_000
@@ -516,7 +516,7 @@ var multiAssetUnevenInputTestCases = []calcJoinSharesTestCase{
 		// join pool is first done to the extent where the ratio can be preserved, which is 25,000 uosmo and 25,000 uatom
 		// then we perfrom single asset deposit for the remaining 25,000 uatom with the equation below
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
-		// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
+		// P_issued = P_supply * ((1 + (A_t * spreadFactorRatio  / B_t))^W_t - 1)
 		// 1_249_999_960_937 = (1e20 + 2.5e12) * (( 1 + (25000 * 1 / 1000000025000))^0.5 - 1) (without fee)
 		//
 		// where:
@@ -524,7 +524,7 @@ var multiAssetUnevenInputTestCases = []calcJoinSharesTestCase{
 		//	A_t = amount of deposited asset = 25,000
 		//	B_t = existing balance of deposited asset in the pool prior to deposit = 1,000,000,025,000
 		//	W_t = normalized weight of deposited asset in pool = 0.5 (equally weighted two-asset pool)
-		// 	swapFeeRatio = (1 - (1 - W_t) * spreadFactor)
+		// 	spreadFactorRatio = (1 - (1 - W_t) * spreadFactor)
 		// Plugging all of this in, we get:
 		// 	Full Solution without fees: https://www.wolframalpha.com/input?i=%28100+*+10%5E18+%2B+2.5e12+%29*+%28%28+1%2B+++++%2825000+*+%281%29+%2F+1000000025000%29%29%5E0.5+-+1%29
 		// 	Simplified:  P_issued = 2_500_000_000_000 + 1_249_999_960_937
@@ -544,7 +544,7 @@ var multiAssetUnevenInputTestCases = []calcJoinSharesTestCase{
 		// join pool is first done to the extent where the ratio can be preserved, which is 25,000 uosmo and 25,000 uatom
 		// then we perfrom single asset deposit for the remaining 25,000 uatom with the equation below
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
-		// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
+		// P_issued = P_supply * ((1 + (A_t * spreadFactorRatio  / B_t))^W_t - 1)
 		// 1_243_750_000_000 = (1e20 + 2.5e12)*  (( 1 + (25000 * (1 - (1 - 0.5) * 0.01) / 1000000025000))^0.5 - 1)
 		//
 		// where:
@@ -552,7 +552,7 @@ var multiAssetUnevenInputTestCases = []calcJoinSharesTestCase{
 		//	A_t = amount of deposited asset = 25,000
 		//	B_t = existing balance of deposited asset in the pool prior to deposit = 1,000,000,025,000
 		//	W_t = normalized weight of deposited asset in pool = 0.5 (equally weighted two-asset pool)
-		// 	swapFeeRatio = (1 - (1 - W_t) * spreadFactor)
+		// 	spreadFactorRatio = (1 - (1 - W_t) * spreadFactor)
 		// Plugging all of this in, we get:
 		// 	Full solution with fees: https://www.wolframalpha.com/input?i=%28100+*10%5E18%2B2.5e12%29*%28%281%2B+++%2825000*%281+-+%281-0.5%29+*+0.01%29%2F1000000000000%29%29%5E0.5+-+1%29
 		// 	Simplified:  P_issued = 2_500_000_000_000 + 1_243_750_000_000
@@ -573,7 +573,7 @@ var multiAssetUnevenInputTestCases = []calcJoinSharesTestCase{
 		//
 		// For uatom:
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
-		// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
+		// P_issued = P_supply * ((1 + (A_t * spreadFactorRatio  / B_t))^W_t - 1)
 		// 609,374,990,000 = (1e20 + 1,250,000,000,000) *  (( 1 + (37,500 * (1 - (1 - 1/6) * 0.03) / 10,000,00,025,000))^1/6 - 1)
 		//
 		// where:
@@ -581,7 +581,7 @@ var multiAssetUnevenInputTestCases = []calcJoinSharesTestCase{
 		//	A_t = amount of deposited asset = 37,500
 		//	B_t = existing balance of deposited asset in the pool prior to deposit = 1,000,000,025,000
 		//	W_t = normalized weight of deposited asset in pool = 0.5 (equally weighted two-asset pool)
-		// 	swapFeeRatio = (1 - (1 - W_t) * spreadFactor)
+		// 	spreadFactorRatio = (1 - (1 - W_t) * spreadFactor)
 		// Plugging all of this in, we get:
 		// 	Full solution with fees: https://www.wolframalpha.com/input?i=%28100+*10%5E18+%2B+1250000000000%29*%28%281%2B++++%2837500*%281+-+%281-1%2F6%29+*+0.03%29%2F1000000012500%29%29%5E%281%2F6%29+-+1%29
 		// 	Simplified:  P_issued = 1,250,000,000,000 + 609,374,990,000
@@ -1023,7 +1023,7 @@ func (s *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 		return tc
 	}
 
-	swapFeeDec := sdk.ZeroDec()
+	spreadFactorDec := sdk.ZeroDec()
 	exitFeeDec := sdk.ZeroDec()
 
 	// create pool with randomized initial token amounts
@@ -1039,7 +1039,7 @@ func (s *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 			Weight: sdk.NewInt(5),
 		}
 
-		pool = createTestPool(s.T(), swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
+		pool = createTestPool(s.T(), spreadFactorDec, exitFeeDec, poolAssetOut, poolAssetIn)
 		s.Require().NotNil(pool)
 
 		return pool
@@ -1051,7 +1051,7 @@ func (s *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 			sdk.NewCoin(denomIn, sdk.NewInt(tc.initialTokensDenomIn).MulRaw(tc.percentRatio).QuoRaw(100)),
 			sdk.NewCoin(denomOut, sdk.NewInt(tc.initialTokensDenomOut).MulRaw(tc.percentRatio).QuoRaw(100)),
 		}
-		numShares, err := pool.JoinPool(s.Ctx, tokensIn, swapFeeDec)
+		numShares, err := pool.JoinPool(s.Ctx, tokensIn, spreadFactorDec)
 		s.Require().NoError(err)
 		tc.numShares = numShares
 	}

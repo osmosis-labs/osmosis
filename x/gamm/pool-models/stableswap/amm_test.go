@@ -722,7 +722,7 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 		scalingFactors []uint64
 	}
 
-	// For every test case in testcases, apply a spread factor in swapFeeCases.
+	// For every test case in testcases, apply a spread factor in spreadFactorCases.
 	testcases := map[string]testcase{
 		// two-asset pools
 		"even pool": {
@@ -889,34 +889,34 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 		}
 	}
 
-	swapFeeCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
+	spreadFactorCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
 
-	getTestCaseName := func(name string, tc testcase, swapFeeCase string) string {
+	getTestCaseName := func(name string, tc testcase, spreadFactorCase string) string {
 		return fmt.Sprintf("%s: initialOut: %d, spreadFactor: %s",
 			name,
 			tc.initialCalcOut,
-			swapFeeCase,
+			spreadFactorCase,
 		)
 	}
 
 	for name, tc := range testcases {
-		for _, spreadFactor := range swapFeeCases {
+		for _, spreadFactor := range spreadFactorCases {
 			suite.Run(getTestCaseName(name, tc, spreadFactor), func() {
 				ctx := suite.CreateTestContext()
 
-				swapFeeDec, err := sdk.NewDecFromStr(spreadFactor)
+				spreadFactorDec, err := sdk.NewDecFromStr(spreadFactor)
 				suite.Require().NoError(err)
 
 				exitFeeDec, err := sdk.NewDecFromStr("0")
 				suite.Require().NoError(err)
 
 				// TODO: add scaling factors into inverse relationship tests
-				pool := createTestPool(suite.T(), tc.poolLiquidity, swapFeeDec, exitFeeDec, tc.scalingFactors)
+				pool := createTestPool(suite.T(), tc.poolLiquidity, spreadFactorDec, exitFeeDec, tc.scalingFactors)
 				suite.Require().NotNil(pool)
 				errTolerance := osmomath.ErrTolerance{
 					AdditiveTolerance: sdk.Dec{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12),
 				}
-				test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, tc.denomIn, tc.denomOut, tc.initialCalcOut, swapFeeDec, errTolerance)
+				test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, tc.denomIn, tc.denomOut, tc.initialCalcOut, spreadFactorDec, errTolerance)
 			})
 		}
 	}
@@ -941,9 +941,9 @@ func (suite *StableSwapTestSuite) Test_StableSwap_Slippage_LiquidityRelation() {
 			scalingFactors:   []uint64{3, 2},
 		},
 	}
-	swapFeeCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
+	spreadFactorCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
 	for name, tc := range testcases {
-		for _, spreadFactor := range swapFeeCases {
+		for _, spreadFactor := range spreadFactorCases {
 			createPoolFn := func(ctx sdk.Context, liq sdk.Coins) types.CFMMPoolI {
 				return createTestPool(suite.T(), liq, sdk.MustNewDecFromStr(spreadFactor), sdk.ZeroDec(), tc.scalingFactors)
 			}

@@ -227,8 +227,8 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 		},
 		{
 			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) with on page 10
-			// with swapFeeRatio added:
-			// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
+			// with spreadFactorRatio added:
+			// P_issued = P_supply * ((1 + (A_t * spreadFactorRatio  / B_t))^W_t - 1)
 			//
 			// 2_487_500_000_000 = 1e20 * (( 1 + (50,000 * (1 - (1 - 0.5) * 0.01) / 1e12))^0.5 - 1)
 			//
@@ -237,7 +237,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			//	A_t = amount of deposited asset = 50,000
 			//	B_t = existing balance of deposited asset in the pool prior to deposit = 1,000,000,000,000
 			//	W_t = normalized weight of deposited asset in pool = 0.5 (equally weighted two-asset pool)
-			// 	swapFeeRatio = (1 - (1 - W_t) * spreadFactor)
+			// 	spreadFactorRatio = (1 - (1 - W_t) * spreadFactor)
 			// Plugging all of this in, we get:
 			// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%2850000*%281+-+%281-0.5%29+*+0.01%29%2F1000000000000%29%29%5E0.5+-+1%29
 			// 	Simplified:  P_issued = 2_487_500_000_000
@@ -249,8 +249,8 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 		},
 		{
 			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) with on page 10
-			// with swapFeeRatio added:
-			// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
+			// with spreadFactorRatio added:
+			// P_issued = P_supply * ((1 + (A_t * spreadFactorRatio  / B_t))^W_t - 1)
 			//
 			// 2_487_500_000_000 = 1e20 * (( 1 + (50,000 * (1 - (1 - 0.5) * 0.01) / 1e12))^0.5 - 1)
 			//
@@ -259,7 +259,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			//	A_t = amount of deposited asset = 50,000
 			//	B_t = existing balance of deposited asset in the pool prior to deposit = 1,000,000,000,000
 			//	W_t = normalized weight of deposited asset in pool = 0.5 (equally weighted two-asset pool)
-			// 	swapFeeRatio = (1 - (1 - W_t) * spreadFactor)
+			// 	spreadFactorRatio = (1 - (1 - W_t) * spreadFactor)
 			// Plugging all of this in, we get:
 			// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%2850000*%281+-+%281-0.5%29+*+0.01%29%2F1000000000000%29%29%5E0.5+-+1%29
 			// 	Simplified:  P_issued = 2_487_500_000_000
@@ -273,8 +273,8 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			// For uosmo:
 			//
 			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) with on page 10
-			// with swapFeeRatio added:
-			// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
+			// with spreadFactorRatio added:
+			// P_issued = P_supply * ((1 + (A_t * spreadFactorRatio  / B_t))^W_t - 1)
 			//
 			// 2_072_912_400_000_000 = 1e20 * (( 1 + (50,000 * (1 - (1 - 0.83) * 0.03) / 2_000_000_000))^0.83 - 1)
 			//
@@ -283,7 +283,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			//	A_t = amount of deposited asset = 50,000
 			//	B_t = existing balance of deposited asset in the pool prior to deposit = 2_000_000_000
 			//	W_t = normalized weight of deposited asset in pool = 500 / 500 + 100 = 0.83
-			// 	swapFeeRatio = (1 - (1 - W_t) * spreadFactor)
+			// 	spreadFactorRatio = (1 - (1 - W_t) * spreadFactor)
 			// Plugging all of this in, we get:
 			// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%2850000*%281+-+%281-%28500+%2F+%28500+%2B+100%29%29%29+*+0.03%29%2F2000000000%29%29%5E%28500+%2F+%28500+%2B+100%29%29+-+1%29
 			// 	Simplified:  P_issued = 2_072_912_400_000_000
@@ -292,8 +292,8 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			// For uatom:
 			//
 			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) with on page 10
-			// with swapFeeRatio added:
-			// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
+			// with spreadFactorRatio added:
+			// P_issued = P_supply * ((1 + (A_t * spreadFactorRatio  / B_t))^W_t - 1)
 			//
 			// 1_624_999_900_000 = 1e20 * (( 1 + (100_000 * (1 - (1 - 0.167) * 0.03) / 1e12))^0.167 - 1)
 			//
@@ -302,7 +302,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			//	A_t = amount of deposited asset = 50,000
 			//	B_t = existing balance of deposited asset in the pool prior to deposit = 1,000,000,000,000
 			//	W_t = normalized weight of deposited asset in pool = 100 / 500 + 100 = 0.167
-			// 	swapFeeRatio = (1 - (1 - W_t) * spreadFactor)
+			// 	spreadFactorRatio = (1 - (1 - W_t) * spreadFactor)
 			// Plugging all of this in, we get:
 			// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%28100000*%281+-+%281-%28100+%2F+%28500+%2B+100%29%29%29+*+0.03%29%2F1000000000000%29%29%5E%28100+%2F+%28500+%2B+100%29%29+-+1%29
 			// 	Simplified:  P_issued = 1_624_999_900_000
@@ -480,7 +480,7 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 		initialWeightIn int64
 	}
 
-	// For every test case in testcases, apply a spread factor in swapFeeCases.
+	// For every test case in testcases, apply a spread factor in spreadFactorCases.
 	testcases := []testcase{
 		{
 			denomOut:         "uosmo",
@@ -534,19 +534,19 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 		},
 	}
 
-	swapFeeCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
+	spreadFactorCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
 
-	getTestCaseName := func(tc testcase, swapFeeCase string) string {
+	getTestCaseName := func(tc testcase, spreadFactorCase string) string {
 		return fmt.Sprintf("tokenOutInitial: %d, tokenInInitial: %d, initialOut: %d, spreadFactor: %s",
 			tc.initialPoolOut,
 			tc.initialPoolIn,
 			tc.initialCalcOut,
-			swapFeeCase,
+			spreadFactorCase,
 		)
 	}
 
 	for _, tc := range testcases {
-		for _, spreadFactor := range swapFeeCases {
+		for _, spreadFactor := range spreadFactorCases {
 			suite.Run(getTestCaseName(tc, spreadFactor), func() {
 				ctx := suite.CreateTestContext()
 
@@ -560,20 +560,20 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 					Weight: sdk.NewInt(tc.initialWeightIn),
 				}
 
-				swapFeeDec, err := sdk.NewDecFromStr(spreadFactor)
+				spreadFactorDec, err := sdk.NewDecFromStr(spreadFactor)
 				suite.Require().NoError(err)
 
 				exitFeeDec, err := sdk.NewDecFromStr("0")
 				suite.Require().NoError(err)
 
-				pool := createTestPool(suite.T(), swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
+				pool := createTestPool(suite.T(), spreadFactorDec, exitFeeDec, poolAssetOut, poolAssetIn)
 				suite.Require().NotNil(pool)
 
 				errTolerance := osmomath.ErrTolerance{
 					AdditiveTolerance: sdk.OneDec(), MultiplicativeTolerance: sdk.Dec{},
 				}
 				sut := func() {
-					test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, poolAssetIn.Token.Denom, poolAssetOut.Token.Denom, tc.initialCalcOut, swapFeeDec, errTolerance)
+					test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, poolAssetIn.Token.Denom, poolAssetOut.Token.Denom, tc.initialCalcOut, spreadFactorDec, errTolerance)
 				}
 
 				assertPoolStateNotModified(suite.T(), pool, sut)
@@ -590,7 +590,7 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 		initialWeightIn  int64
 	}
 
-	// For every test case in testcases, apply a spread factor in swapFeeCases.
+	// For every test case in testcases, apply a spread factor in spreadFactorCases.
 	testcases := []testcase{
 		{
 			initialPoolOut:   1_000_000_000_000,
@@ -642,22 +642,22 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 		},
 	}
 
-	swapFeeCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
+	spreadFactorCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
 
-	getTestCaseName := func(tc testcase, swapFeeCase string) string {
+	getTestCaseName := func(tc testcase, spreadFactorDec string) string {
 		return fmt.Sprintf("initialPoolOut: %d, initialCalcOut: %d, initialWeightOut: %d, initialWeightIn: %d, spreadFactor: %s",
 			tc.initialPoolOut,
 			tc.tokenOut,
 			tc.initialWeightOut,
 			tc.initialWeightIn,
-			swapFeeCase,
+			spreadFactorDec,
 		)
 	}
 
 	for _, tc := range testcases {
-		for _, spreadFactor := range swapFeeCases {
+		for _, spreadFactor := range spreadFactorCases {
 			t.Run(getTestCaseName(tc, spreadFactor), func(t *testing.T) {
-				swapFeeDec, err := sdk.NewDecFromStr(spreadFactor)
+				spreadFactorDec, err := sdk.NewDecFromStr(spreadFactor)
 				require.NoError(t, err)
 
 				initialPoolBalanceOut := sdk.NewInt(tc.initialPoolOut)
@@ -673,7 +673,7 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 					initialWeightOut.ToDec().Quo(initialWeightOut.Add(initialWeightIn).ToDec()),
 					initialTotalShares,
 					initialCalcTokenOut.ToDec(),
-					swapFeeDec,
+					spreadFactorDec,
 				)
 
 				inverseCalcTokenOut := balancer.CalcSingleAssetInGivenPoolSharesOut(
@@ -681,7 +681,7 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 					initialWeightOut.ToDec().Quo(initialWeightOut.Add(initialWeightIn).ToDec()),
 					initialTotalShares.Add(actualSharesOut),
 					actualSharesOut,
-					swapFeeDec,
+					spreadFactorDec,
 				)
 
 				tol := sdk.NewDec(1)

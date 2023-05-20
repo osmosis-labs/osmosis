@@ -41,19 +41,19 @@ func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndFullRangePosition(
 	return clPool
 }
 
-// createConcentratedPoolsFromCoinsWithSwapFee creates CL pools from given sets of coins and respective swap fees.
+// createConcentratedPoolsFromCoinsWithSpreadFactor creates CL pools from given sets of coins and respective swap fees.
 // Where element 1 of the input corresponds to the first pool created, element 2 to the second pool created etc.
-func (s *KeeperTestHelper) CreateConcentratedPoolsAndFullRangePositionWithSpreadFactor(poolDenoms [][]string, swapFee []sdk.Dec) {
+func (s *KeeperTestHelper) CreateConcentratedPoolsAndFullRangePositionWithSpreadFactor(poolDenoms [][]string, spreadFactor []sdk.Dec) {
 	for i, curPoolDenoms := range poolDenoms {
 		s.Require().Equal(2, len(curPoolDenoms))
-		var curSwapFee sdk.Dec
-		if len(swapFee) > i {
-			curSwapFee = swapFee[i]
+		var curSpreadFactor sdk.Dec
+		if len(spreadFactor) > i {
+			curSpreadFactor = spreadFactor[i]
 		} else {
-			curSwapFee = sdk.ZeroDec()
+			curSpreadFactor = sdk.ZeroDec()
 		}
 
-		clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], curPoolDenoms[0], curPoolDenoms[1], DefaultTickSpacing, curSwapFee)
+		clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], curPoolDenoms[0], curPoolDenoms[1], DefaultTickSpacing, curSpreadFactor)
 		fundCoins := sdk.NewCoins(sdk.NewCoin(curPoolDenoms[0], DefaultCoinAmount), sdk.NewCoin(curPoolDenoms[1], DefaultCoinAmount))
 		s.FundAcc(s.TestAccs[0], fundCoins)
 		s.CreateFullRangePosition(clPool, fundCoins)

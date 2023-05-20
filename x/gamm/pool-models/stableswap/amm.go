@@ -240,13 +240,13 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, spreadFactor sdk.Dec)
 	// We apply the spread factor by multiplying by:
 	// 1) getting what % of the input the spread factor should apply to
 	// 2) multiplying that by spread factor
-	// 3) oneMinusSpreadFactor := (1 - swap_fee * swap_fee_applicable_percent)
+	// 3) oneMinusSpreadFactor := (1 - spread_factor * spread_factor_applicable_percent)
 	// 4) Multiplying token in by one minus spread factor.
-	swapFeeApplicableRatio, err := p.singleAssetJoinSpreadFactorRatio(tokenIn.Denom)
+	spreadFactorApplicableRatio, err := p.singleAssetJoinSpreadFactorRatio(tokenIn.Denom)
 	if err != nil {
 		return sdk.Int{}, err
 	}
-	oneMinusSpreadFactor := sdk.OneDec().Sub(spreadFactor.Mul(swapFeeApplicableRatio))
+	oneMinusSpreadFactor := sdk.OneDec().Sub(spreadFactor.Mul(spreadFactorApplicableRatio))
 	tokenInAmtAfterFee := tokenIn.Amount.ToDec().Mul(oneMinusSpreadFactor).TruncateInt()
 
 	return cfmm_common.BinarySearchSingleAssetJoin(p, sdk.NewCoin(tokenIn.Denom, tokenInAmtAfterFee), poolWithAddedLiquidityAndShares)

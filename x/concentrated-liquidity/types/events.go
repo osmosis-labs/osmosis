@@ -17,7 +17,7 @@ const (
 	AttributeKeyPoolId             = "pool_id"
 	AttributeAmount0               = "amount0"
 	AttributeAmount1               = "amount1"
-	AttributeKeySpreadFactor       = "swap_fee"
+	AttributeKeySpreadFactor       = "spread_factor"
 	AttributeKeyTokensIn           = "tokens_in"
 	AttributeKeyTokensOut          = "tokens_out"
 	AttributeKeyForfeitedTokens    = "forfeited_tokens"
