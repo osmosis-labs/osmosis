@@ -1124,7 +1124,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableFees() {
 
 			currentTick: 1,
 
-			// expected = global - below lower - above upper = 10 - 0 3.3 = 6.7
+			// expected = global - below lower - above upper = 10 - 3.3 = 6.7
 			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, sdk.MustNewDecFromStr("6.7"))),
 			// expected reinvested dust = (6.7 * 2 % floor(6.7 * 2)) / 2
 			// This can be thought of as the diffence between the non-truncated total amount of fees and the truncated toal amount of fees
