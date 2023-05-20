@@ -2,6 +2,7 @@ syntax = "proto3";
 package osmosis.superfluid;
 
 import "gogoproto/gogo.proto";
+import "amino/amino.proto";
 import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
@@ -54,6 +55,8 @@ service Msg {
 }
 
 message MsgSuperfluidDelegate {
+  option (amino.name) = "osmosis/superfluid-delegate";
+
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 lock_id = 2;
   string val_addr = 3;
@@ -61,12 +64,16 @@ message MsgSuperfluidDelegate {
 message MsgSuperfluidDelegateResponse {}
 
 message MsgSuperfluidUndelegate {
+  option (amino.name) = "osmosis/superfluid-undelegate";
+
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 lock_id = 2;
 }
 message MsgSuperfluidUndelegateResponse {}
 
 message MsgSuperfluidUnbondLock {
+  option (amino.name) = "osmosis/superfluid-unbond-lock";
+
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 lock_id = 2;
 }
@@ -97,6 +104,8 @@ message MsgSuperfluidUndelegateAndUnbondLockResponse {
 // and then does a superfluid lock from the newly created lockup, to the
 // specified validator addr.
 message MsgLockAndSuperfluidDelegate {
+  option (amino.name) = "osmosis/lock-and-superfluid-delegate";
+
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   repeated cosmos.base.v1beta1.Coin coins = 2 [
     (gogoproto.nullable) = false,
@@ -131,6 +140,8 @@ message MsgCreateFullRangePositionAndSuperfluidDelegateResponse {
 // If the lock was unbonding, the new lockup durations should be the time left
 // until unbond completion.
 message MsgUnPoolWhitelistedPool {
+  option (amino.name) = "osmosis/unpool-whitelisted-pool";
+
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
