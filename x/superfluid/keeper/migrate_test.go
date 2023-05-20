@@ -713,7 +713,6 @@ func (suite *KeeperTestSuite) TestValidateMigration() {
 			superfluidKeeper := suite.App.SuperfluidKeeper
 
 			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
-			// joinPoolAmt, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := suite.SetupMigrationTest(ctx, false, false, tc.unlocking, tc.percentOfSharesToMigrate)
 			_, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, _ := suite.SetupMigrationTest(ctx, tc.isSuperfluidDelegated, tc.isSuperfluidUndelegating, tc.unlocking, tc.percentOfSharesToMigrate)
 			originalGammLockId := balancerLock.GetID()
 
