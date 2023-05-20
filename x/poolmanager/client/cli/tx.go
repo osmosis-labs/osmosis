@@ -27,6 +27,8 @@ func NewTxCmd() *cobra.Command {
 
 	osmocli.AddTxCmd(txCmd, NewSwapExactAmountInCmd)
 	osmocli.AddTxCmd(txCmd, NewSwapExactAmountOutCmd)
+	osmocli.AddTxCmd(txCmd, NewSplitRouteSwapExactAmountIn)
+	osmocli.AddTxCmd(txCmd, NewSplitRouteSwapExactAmountOut)
 
 	txCmd.AddCommand(
 		NewCreatePoolCmd(),
@@ -55,6 +57,28 @@ func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOu
 		ParseAndBuildMsg: NewBuildSwapExactAmountOutMsg,
 		Flags:            osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
 	}, &types.MsgSwapExactAmountOut{}
+}
+
+func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteSwapExactAmountIn) {
+	return &osmocli.TxCliDesc{
+		Use:   "split-route-swap-exact-amount-in [token-in-denom] [token-out-min-amount]",
+		Short: "split route swap exact amount in",
+		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
+			"Routes": osmocli.FlagOnlyParser(swapAmountInRoutes),
+		},
+		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
+	}, &types.MsgSplitRouteSwapExactAmountIn{}
+}
+
+func NewSplitRouteSwapExactAmountOut() (*osmocli.TxCliDesc, *types.MsgSplitRouteSwapExactAmountOut) {
+	return &osmocli.TxCliDesc{
+		Use:   "split-route-swap-exact-amount-out [token-out-denom] [token-in-max-amount]",
+		Short: "split route swap exact amount out",
+		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
+			"Routes": osmocli.FlagOnlyParser(swapAmountInRoutes),
+		},
+		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
+	}, &types.MsgSplitRouteSwapExactAmountOut{}
 }
 
 func NewBuildSwapExactAmountInMsg(clientCtx client.Context, tokenInStr, tokenOutMinAmtStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
