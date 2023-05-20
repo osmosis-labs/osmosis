@@ -517,3 +517,63 @@ func (s *KeeperTestSuite) TestSetStableSwapScalingFactors() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestGetTotalPoolShares() {
+	tests := map[string]struct {
+		sharesJoined   sdk.Int
+		poolNotCreated bool
+
+		expectedError error
+	}{
+		"happy path: default balancer pool": {
+			sharesJoined: sdk.ZeroInt(),
+		},
+		"Multiple LPs with shares exist": {
+			sharesJoined: types.OneShare,
+		},
+		"error: pool does not exist": {
+			sharesJoined:   sdk.ZeroInt(),
+			poolNotCreated: true,
+			expectedError:  types.PoolDoesNotExistError{PoolId: uint64(0)},
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			suite.SetupTest()
+			gammKeeper := suite.App.GAMMKeeper
+			testAccount := suite.TestAccs[0]
+
+			// --- Setup ---
+
+			// Mint some assets to the accounts.
+			balancerPoolId := uint64(0)
+			if !tc.poolNotCreated {
+				balancerPoolId = suite.PrepareBalancerPool()
+			}
+
+			sharesJoined := sdk.ZeroInt()
+			if !tc.sharesJoined.Equal(sdk.ZeroInt()) {
+				suite.FundAcc(testAccount, defaultAcctFunds)
+				_, sharesActualJoined, err := gammKeeper.JoinPoolNoSwap(suite.Ctx, testAccount, balancerPoolId, tc.sharesJoined, sdk.Coins{})
+				suite.Require().NoError(err)
+				sharesJoined = sharesActualJoined
+			}
+
+			// --- System under test ---
+
+			totalShares, err := gammKeeper.GetTotalPoolShares(suite.Ctx, balancerPoolId)
+
+			// --- Assertions ---
+
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorContains(err, tc.expectedError.Error())
+				return
+			}
+
+			suite.Require().NoError(err)
+			suite.Require().Equal(types.InitPoolSharesSupply.Add(sharesJoined), totalShares)
+		})
+	}
+}
