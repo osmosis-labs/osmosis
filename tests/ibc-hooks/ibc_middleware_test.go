@@ -67,6 +67,7 @@ func TestIBCHooksTestSuite(t *testing.T) {
 }
 
 func (suite *HooksTestSuite) SetupTest() {
+	suite.SkipIfWSL()
 	// TODO: This needs to get removed. Waiting on https://github.com/cosmos/ibc-go/issues/3123
 	txfeetypes.ConsensusMinFee = sdk.ZeroDec()
 	suite.Setup()
@@ -731,7 +732,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain) (sdk.AccAddre
 	ctx := chain.GetContext()
 
 	// Configuring two prefixes for the same channel here. This is so that we can test bad acks when the receiver can't handle the receiving addr
-	msg := fmt.Sprintf(`{
+	msg := `{  
 		"modify_bech32_prefixes": {
 		  "operations": [
 			{"operation": "set", "chain_name": "osmosis", "prefix": "osmo"},
@@ -741,7 +742,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain) (sdk.AccAddre
 		  ]
 		}
 	  }
-	  `)
+	  `
 	_, err = contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins())
 	suite.Require().NoError(err)
 
@@ -957,7 +958,7 @@ func (suite *HooksTestSuite) TestUnwrapToken() {
 
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
 
-	msg := fmt.Sprintf(`{
+	msg := `{
 		"modify_bech32_prefixes": {
 		  "operations": [
 			{"operation": "set", "chain_name": "osmosis", "prefix": "osmo"},
@@ -967,7 +968,7 @@ func (suite *HooksTestSuite) TestUnwrapToken() {
 		  ]
 		}
 	  }
-	  `)
+	  `
 	_, err := contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins())
 	suite.Require().NoError(err)
 
@@ -1051,11 +1052,25 @@ func (suite *HooksTestSuite) TestCrosschainSwaps() {
 	var responseJson map[string]interface{}
 	err = json.Unmarshal(res, &responseJson)
 	suite.Require().NoError(err)
-	suite.Require().Len(responseJson["sent_amount"].(string), 3) // Not using exact amount in case calculations change
-	suite.Require().Equal(responseJson["denom"].(string), "token1")
-	suite.Require().Equal(responseJson["channel_id"].(string), "channel-0")
-	suite.Require().Equal(responseJson["receiver"].(string), suite.chainB.SenderAccount.GetAddress().String())
-	suite.Require().Equal(responseJson["packet_sequence"].(float64), 1.0)
+	sentAmount, ok := responseJson["sent_amount"].(string)
+	suite.Require().True(ok)
+	suite.Require().Len(sentAmount, 3) // Not using exact amount in case calculations change
+
+	denom, ok := responseJson["denom"].(string)
+	suite.Require().True(ok)
+	suite.Require().Equal(denom, "token1")
+
+	channelID, ok := responseJson["channel_id"].(string)
+	suite.Require().True(ok)
+	suite.Require().Equal(channelID, "channel-0")
+
+	receiver, ok := responseJson["receiver"].(string)
+	suite.Require().True(ok)
+	suite.Require().Equal(receiver, suite.chainB.SenderAccount.GetAddress().String())
+
+	packetSequence, ok := responseJson["packet_sequence"].(float64)
+	suite.Require().True(ok)
+	suite.Require().Equal(packetSequence, 1.0)
 
 	balanceSender2 := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), owner, "token0")
 	suite.Require().Equal(int64(1000), balanceSender.Amount.Sub(balanceSender2.Amount).Int64())
@@ -1544,7 +1559,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCMultiHop() {
 	// Now the swwap can actually execute on A via the callback and generate a new packet with the swapped token to B
 	packet, err = ibctesting.ParsePacketFromEvents(res.GetEvents())
 	suite.Require().NoError(err)
-	res = suite.RelayPacketNoAck(packet, AtoB)
+	_ = suite.RelayPacketNoAck(packet, AtoB)
 
 	balanceToken0After := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), accountB, token0ACB)
 	suite.Require().Equal(int64(1000), balanceToken0.Amount.Sub(balanceToken0After.Amount).Int64())

@@ -46,6 +46,7 @@ func dummyUpgrade(suite *UpgradeTestSuite) {
 }
 
 func (suite *UpgradeTestSuite) TestUpgrade() {
+	suite.SkipIfWSL()
 	testCases := []struct {
 		name         string
 		pre_upgrade  func()

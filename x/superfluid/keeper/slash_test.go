@@ -13,7 +13,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
+func (s *KeeperTestSuite) TestBeforeValidatorSlashed() {
 	testCases := []struct {
 		name                  string
 		validatorStats        []stakingtypes.BondStatus
@@ -51,16 +51,16 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 	for _, tc := range testCases {
 		tc := tc
 
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
+		s.Run(tc.name, func() {
+			s.SetupTest()
 
 			// Generate delegator addresses
 			delAddrs := CreateRandomAccounts(tc.delegatorNumber)
 
 			// setup validators
-			valAddrs := suite.SetupValidators(tc.validatorStats)
+			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			locks := []lockuptypes.PeriodLock{}
 			slashFactor := sdk.NewDecWithPrec(5, 2)
@@ -69,7 +69,7 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 			for _, del := range tc.superDelegations {
 				valAddr := valAddrs[del.valIndex]
 				delAddr := delAddrs[del.delIndex]
-				lock := suite.setupSuperfluidDelegate(delAddr, valAddr, denoms[del.lpIndex], del.lpAmount)
+				lock := s.setupSuperfluidDelegate(delAddr, valAddr, denoms[del.lpIndex], del.lpAmount)
 
 				// save accounts and locks for future use
 				locks = append(locks, lock)
@@ -77,33 +77,33 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 
 			// slash validator
 			for _, valIndex := range tc.slashedValIndexes {
-				validator, found := suite.App.StakingKeeper.GetValidator(suite.Ctx, valAddrs[valIndex])
-				suite.Require().True(found)
-				suite.Ctx = suite.Ctx.WithBlockHeight(100)
+				validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[valIndex])
+				s.Require().True(found)
+				s.Ctx = s.Ctx.WithBlockHeight(100)
 				consAddr, err := validator.GetConsAddr()
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 				// slash by slash factor
 				power := sdk.TokensToConsensusPower(validator.Tokens, sdk.DefaultPowerReduction)
 
 				// should not be slashing unbonded validator
 				defer func() {
 					if r := recover(); r != nil {
-						suite.Require().Equal(true, validator.IsUnbonded())
+						s.Require().Equal(true, validator.IsUnbonded())
 					}
 				}()
-				suite.App.StakingKeeper.Slash(suite.Ctx, consAddr, 80, power, slashFactor)
+				s.App.StakingKeeper.Slash(s.Ctx, consAddr, 80, power, slashFactor)
 				// Note: this calls BeforeValidatorSlashed hook
 			}
 
 			// check invariant is fine
-			reason, broken := keeper.AllInvariants(*suite.App.SuperfluidKeeper)(suite.Ctx)
-			suite.Require().False(broken, reason)
+			reason, broken := keeper.AllInvariants(*s.App.SuperfluidKeeper)(s.Ctx)
+			s.Require().False(broken, reason)
 
 			// check lock changes after validator & lockups slashing
 			for _, lockIndex := range tc.expSlashedLockIndexes {
-				gotLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, locks[lockIndex].ID)
-				suite.Require().NoError(err)
-				suite.Require().Equal(
+				gotLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, locks[lockIndex].ID)
+				s.Require().NoError(err)
+				s.Require().Equal(
 					gotLock.Coins.AmountOf(denoms[0]).String(),
 					sdk.NewDec(1000000).Mul(sdk.OneDec().Sub(slashFactor)).TruncateInt().String(),
 				)
@@ -112,7 +112,7 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
+func (s *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 	testCases := []struct {
 		name                  string
 		validatorStats        []stakingtypes.BondStatus
@@ -160,51 +160,51 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 	for _, tc := range testCases {
 		tc := tc
 
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
+		s.Run(tc.name, func() {
+			s.SetupTest()
 
 			// setup validators
-			valAddrs := suite.SetupValidators(tc.validatorStats)
+			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			// setup superfluid delegations
-			_, intermediaryAccs, _ := suite.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
-			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
+			_, intermediaryAccs, _ := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
+			s.checkIntermediaryAccountDelegations(intermediaryAccs)
 
 			for _, lockId := range tc.superUnbondingLockIds {
-				lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockId)
-				suite.Require().NoError(err)
+				lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lockId)
+				s.Require().NoError(err)
 				// superfluid undelegate
-				err = suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, lock.Owner, lockId)
-				suite.Require().NoError(err)
+				err = s.App.SuperfluidKeeper.SuperfluidUndelegate(s.Ctx, lock.Owner, lockId)
+				s.Require().NoError(err)
 			}
 
 			// slash unbonding lockups for all intermediary accounts
 			slashFactor := sdk.NewDecWithPrec(5, 2)
 			for i := 0; i < len(valAddrs); i++ {
-				suite.App.SuperfluidKeeper.SlashLockupsForValidatorSlash(
-					suite.Ctx,
+				s.App.SuperfluidKeeper.SlashLockupsForValidatorSlash(
+					s.Ctx,
 					valAddrs[i],
-					suite.Ctx.BlockHeight(),
+					s.Ctx.BlockHeight(),
 					slashFactor)
 			}
 
 			// check invariant is fine
-			reason, broken := keeper.AllInvariants(*suite.App.SuperfluidKeeper)(suite.Ctx)
-			suite.Require().False(broken, reason)
+			reason, broken := keeper.AllInvariants(*s.App.SuperfluidKeeper)(s.Ctx)
+			s.Require().False(broken, reason)
 
 			// check check unbonding lockup changes
 			for _, lockId := range tc.superUnbondingLockIds {
-				gotLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockId)
-				suite.Require().NoError(err)
-				suite.Require().Equal(gotLock.Coins[0].Amount.String(), sdk.NewInt(950000).String())
+				gotLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lockId)
+				s.Require().NoError(err)
+				s.Require().Equal(gotLock.Coins[0].Amount.String(), sdk.NewInt(950000).String())
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
+func (s *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
 	type prepareConcentratedLockTestCase struct {
 		name         string
 		slashPercent sdk.Dec
@@ -235,97 +235,97 @@ func (suite *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
 	}
 
 	for _, tc := range testCases {
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
+		s.Run(tc.name, func() {
+			s.SetupTest()
 
-			clPool, concentratedLockId, positionId := suite.PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition("uosmo", apptesting.USDC)
+			clPool, concentratedLockId, positionId := s.PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition("uosmo", apptesting.USDC)
 			clPoolId := clPool.GetId()
 
-			lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, concentratedLockId)
-			suite.Require().NoError(err)
+			lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, concentratedLockId)
+			s.Require().NoError(err)
 
 			// Get position state entry
-			positionPreSlash, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, positionId)
-			suite.Require().NoError(err)
+			positionPreSlash, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+			s.Require().NoError(err)
 
 			// Get tick info for lower and upper tick
-			lowerTickInfoPreSlash, err := suite.App.ConcentratedLiquidityKeeper.GetTickInfo(suite.Ctx, clPoolId, positionPreSlash.LowerTick)
-			suite.Require().NoError(err)
-			upperTickInfoPreSlash, err := suite.App.ConcentratedLiquidityKeeper.GetTickInfo(suite.Ctx, clPoolId, positionPreSlash.UpperTick)
-			suite.Require().NoError(err)
+			lowerTickInfoPreSlash, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, clPoolId, positionPreSlash.LowerTick)
+			s.Require().NoError(err)
+			upperTickInfoPreSlash, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, clPoolId, positionPreSlash.UpperTick)
+			s.Require().NoError(err)
 			liquidityPreSlash := clPool.GetLiquidity()
 
 			// Calculate underlying assets from liquidity getting slashed
-			asset0PreSlash, asset1PreSlash, err := cl.CalculateUnderlyingAssetsFromPosition(suite.Ctx, positionPreSlash, clPool)
-			suite.Require().NoError(err)
+			asset0PreSlash, asset1PreSlash, err := cl.CalculateUnderlyingAssetsFromPosition(s.Ctx, positionPreSlash, clPool)
+			s.Require().NoError(err)
 
 			slashAmt := positionPreSlash.Liquidity.Mul(tc.slashPercent)
 
 			// Note the value of the fee accumulator before the slash for the position.
-			feeAccumPreSlash, err := suite.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(suite.Ctx, clPoolId)
-			suite.Require().NoError(err)
+			feeAccumPreSlash, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, clPoolId)
+			s.Require().NoError(err)
 			feePositionKey := cltypes.KeyFeePositionAccumulator(positionId)
 			positionSizePreSlash, err := feeAccumPreSlash.GetPositionSize(feePositionKey)
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
 			// Note the numShares value of the position at each of the uptime accumulators.
-			uptimeAccums, err := suite.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(suite.Ctx, clPoolId)
+			uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPoolId)
 			uptimePositionKey := string(cltypes.KeyPositionId(positionId))
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 			numShares := make([]sdk.Dec, len(uptimeAccums))
 			for i, uptimeAccum := range uptimeAccums {
 				position, err := accum.GetPosition(uptimeAccum, uptimePositionKey)
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 				numShares[i] = position.NumShares
 			}
 
 			// System under test
-			clPoolAddress, underlyingAssetsToSlash, err := suite.App.SuperfluidKeeper.PrepareConcentratedLockForSlash(suite.Ctx, lock, slashAmt)
+			clPoolAddress, underlyingAssetsToSlash, err := s.App.SuperfluidKeeper.PrepareConcentratedLockForSlash(s.Ctx, lock, slashAmt)
 
-			lowerTickInfoPostSlash, getTickErr := suite.App.ConcentratedLiquidityKeeper.GetTickInfo(suite.Ctx, clPoolId, positionPreSlash.LowerTick)
-			suite.Require().NoError(getTickErr)
-			upperTickInfoPostSlash, getTickErr := suite.App.ConcentratedLiquidityKeeper.GetTickInfo(suite.Ctx, clPoolId, positionPreSlash.UpperTick)
-			suite.Require().NoError(getTickErr)
+			lowerTickInfoPostSlash, getTickErr := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, clPoolId, positionPreSlash.LowerTick)
+			s.Require().NoError(getTickErr)
+			upperTickInfoPostSlash, getTickErr := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, clPoolId, positionPreSlash.UpperTick)
+			s.Require().NoError(getTickErr)
 
-			clPool, getPoolErr := suite.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(suite.Ctx, clPoolId)
-			suite.Require().NoError(getPoolErr)
+			clPool, getPoolErr := s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, clPoolId)
+			s.Require().NoError(getPoolErr)
 			liquidityPostSlash := clPool.GetLiquidity()
 			if tc.expectedErr {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 
 				// Check that the position's fee accumulator has not changed.
-				feeAccumPostSlash, err := suite.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(suite.Ctx, clPoolId)
-				suite.Require().NoError(err)
+				feeAccumPostSlash, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, clPoolId)
+				s.Require().NoError(err)
 				positionSizePostSlash, err := feeAccumPostSlash.GetPositionSize(feePositionKey)
-				suite.Require().NoError(err)
-				suite.Require().Equal(positionSizePreSlash.String(), positionSizePostSlash.String())
+				s.Require().NoError(err)
+				s.Require().Equal(positionSizePreSlash.String(), positionSizePostSlash.String())
 
 				// Check that the numShares value of the position has not been updated in each of the uptime accumulators.
-				uptimeAccums, err := suite.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(suite.Ctx, clPoolId)
-				suite.Require().NoError(err)
+				uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPoolId)
+				s.Require().NoError(err)
 				for i, uptimeAccum := range uptimeAccums {
 					position, err := accum.GetPosition(uptimeAccum, uptimePositionKey)
-					suite.Require().NoError(err)
-					suite.Require().Equal(numShares[i].String(), position.NumShares.String())
+					s.Require().NoError(err)
+					s.Require().Equal(numShares[i].String(), position.NumShares.String())
 				}
 			} else {
-				suite.Require().NoError(err)
-				suite.Require().Equal(clPool.GetAddress(), clPoolAddress)
+				s.Require().NoError(err)
+				s.Require().Equal(clPool.GetAddress(), clPoolAddress)
 
-				suite.Require().Equal(lowerTickInfoPreSlash.LiquidityGross.Sub(slashAmt).String(), lowerTickInfoPostSlash.LiquidityGross.String())
-				suite.Require().Equal(upperTickInfoPreSlash.LiquidityGross.Sub(slashAmt).String(), upperTickInfoPostSlash.LiquidityGross.String())
+				s.Require().Equal(lowerTickInfoPreSlash.LiquidityGross.Sub(slashAmt).String(), lowerTickInfoPostSlash.LiquidityGross.String())
+				s.Require().Equal(upperTickInfoPreSlash.LiquidityGross.Sub(slashAmt).String(), upperTickInfoPostSlash.LiquidityGross.String())
 
-				suite.Require().Equal(lowerTickInfoPreSlash.LiquidityNet.Sub(slashAmt).String(), lowerTickInfoPostSlash.LiquidityNet.String())
-				suite.Require().Equal(upperTickInfoPreSlash.LiquidityNet.Add(slashAmt).String(), upperTickInfoPostSlash.LiquidityNet.String())
+				s.Require().Equal(lowerTickInfoPreSlash.LiquidityNet.Sub(slashAmt).String(), lowerTickInfoPostSlash.LiquidityNet.String())
+				s.Require().Equal(upperTickInfoPreSlash.LiquidityNet.Add(slashAmt).String(), upperTickInfoPostSlash.LiquidityNet.String())
 
-				suite.Require().Equal(liquidityPreSlash.Sub(slashAmt).String(), liquidityPostSlash.String())
+				s.Require().Equal(liquidityPreSlash.Sub(slashAmt).String(), liquidityPostSlash.String())
 
-				positionPostSlash, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, positionId)
-				suite.Require().NoError(err)
-				suite.Require().Equal(positionPreSlash.Liquidity.Sub(slashAmt).String(), positionPostSlash.Liquidity.String())
+				positionPostSlash, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+				s.Require().NoError(err)
+				s.Require().Equal(positionPreSlash.Liquidity.Sub(slashAmt).String(), positionPostSlash.Liquidity.String())
 
-				asset0PostSlash, asset1PostSlash, err := cl.CalculateUnderlyingAssetsFromPosition(suite.Ctx, positionPostSlash, clPool)
-				suite.Require().NoError(err)
+				asset0PostSlash, asset1PostSlash, err := cl.CalculateUnderlyingAssetsFromPosition(s.Ctx, positionPostSlash, clPool)
+				s.Require().NoError(err)
 
 				errTolerance := osmomath.ErrTolerance{
 					AdditiveTolerance: sdk.NewDec(1),
@@ -333,23 +333,23 @@ func (suite *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
 					RoundingDir: osmomath.RoundUp,
 				}
 
-				suite.Require().Equal(0, errTolerance.Compare(asset0PreSlash.Sub(asset0PostSlash).Amount, underlyingAssetsToSlash[0].Amount))
-				suite.Require().Equal(0, errTolerance.Compare(asset1PreSlash.Sub(asset1PostSlash).Amount, underlyingAssetsToSlash[1].Amount))
+				s.Require().Equal(0, errTolerance.Compare(asset0PreSlash.Sub(asset0PostSlash).Amount, underlyingAssetsToSlash[0].Amount))
+				s.Require().Equal(0, errTolerance.Compare(asset1PreSlash.Sub(asset1PostSlash).Amount, underlyingAssetsToSlash[1].Amount))
 
 				// Check that the fee accumulator has been updated by the amount it was slashed.
-				feeAccumPostSlash, err := suite.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(suite.Ctx, clPoolId)
-				suite.Require().NoError(err)
+				feeAccumPostSlash, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, clPoolId)
+				s.Require().NoError(err)
 				positionSizePostSlash, err := feeAccumPostSlash.GetPositionSize(feePositionKey)
-				suite.Require().NoError(err)
-				suite.Require().Equal(positionSizePreSlash.Sub(slashAmt).String(), positionSizePostSlash.String())
+				s.Require().NoError(err)
+				s.Require().Equal(positionSizePreSlash.Sub(slashAmt).String(), positionSizePostSlash.String())
 
 				// Check that the numShares value of the position has been updated in each of the uptime accumulators.
-				uptimeAccums, err := suite.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(suite.Ctx, clPoolId)
-				suite.Require().NoError(err)
+				uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPoolId)
+				s.Require().NoError(err)
 				for i, uptimeAccum := range uptimeAccums {
 					position, err := accum.GetPosition(uptimeAccum, uptimePositionKey)
-					suite.Require().NoError(err)
-					suite.Require().Equal(numShares[i].Sub(slashAmt).String(), position.NumShares.String())
+					s.Require().NoError(err)
+					s.Require().Equal(numShares[i].Sub(slashAmt).String(), position.NumShares.String())
 				}
 			}
 		})

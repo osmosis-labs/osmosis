@@ -37,7 +37,7 @@ func (q Querier) UserPositions(ctx sdk.Context, req clquery.UserPositionsRequest
 
 	for _, position := range userPositions {
 		// get the pool from the position
-		pool, err := q.Keeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, position.PoolId)
+		pool, err := q.Keeper.GetConcentratedPoolById(ctx, position.PoolId)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
@@ -67,7 +67,7 @@ func (q Querier) PositionById(ctx sdk.Context, req clquery.PositionByIdRequest) 
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	positionPool, err := q.Keeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, position.PoolId)
+	positionPool, err := q.Keeper.GetConcentratedPoolById(ctx, position.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -148,12 +148,12 @@ func (q Querier) LiquidityNetInDirection(ctx sdk.Context, req clquery.LiquidityN
 		return nil, err
 	}
 
-	pool, err := q.Keeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, req.PoolId)
+	pool, err := q.Keeper.GetConcentratedPoolById(ctx, req.PoolId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &clquery.LiquidityNetInDirectionResponse{LiquidityDepths: liquidityDepths, CurrentLiquidity: pool.GetLiquidity(), CurrentTick: pool.GetCurrentTick().Int64()}, nil
+	return &clquery.LiquidityNetInDirectionResponse{LiquidityDepths: liquidityDepths, CurrentLiquidity: pool.GetLiquidity(), CurrentTick: pool.GetCurrentTick()}, nil
 }
 
 func (q Querier) ClaimableFees(ctx sdk.Context, req clquery.ClaimableFeesRequest) (*clquery.ClaimableFeesResponse, error) {

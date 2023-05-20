@@ -798,3 +798,36 @@ type NumCoinsError struct {
 func (e NumCoinsError) Error() string {
 	return fmt.Sprintf("num coins provided (%d) must be 2 for a full range position", e.NumCoins)
 }
+
+type CoinLengthError struct {
+	MaxLength int
+	Length    int
+}
+
+func (e CoinLengthError) Error() string {
+	return fmt.Sprintf("coin length (%d) must be less than or equal to max length (%d)", e.Length, e.MaxLength)
+}
+
+type RanOutOfTicksForPoolError struct {
+	PoolId uint64
+}
+
+func (e RanOutOfTicksForPoolError) Error() string {
+	return fmt.Sprintf("ran out of ticks for pool (%d) during swap", e.PoolId)
+}
+
+type SqrtRootCalculationError struct {
+	SqrtPriceLimit sdk.Dec
+}
+
+func (e SqrtRootCalculationError) Error() string {
+	return fmt.Sprintf("issue calculating square root of price limit %s", e.SqrtPriceLimit)
+}
+
+type TickToSqrtPriceConversionError struct {
+	NextTick int64
+}
+
+func (e TickToSqrtPriceConversionError) Error() string {
+	return fmt.Sprintf("could not convert next tick  to nextSqrtPrice (%v)", e.NextTick)
+}

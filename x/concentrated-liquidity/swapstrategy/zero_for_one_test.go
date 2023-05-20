@@ -3,6 +3,7 @@ package swapstrategy_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
@@ -251,6 +252,111 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 			suite.Require().Equal(tc.amountOneOutConsumed, amountOneOut)
 			suite.Require().Equal(tc.expectedAmountInZero, amountZeroIn)
 			suite.Require().Equal(tc.expectedFeeChargeTotal.String(), feeChargeTotal.String())
+		})
+	}
+}
+
+func (suite *StrategyTestSuite) TestInitializeNextTickIterator_ZeroForOne() {
+	tests := map[string]struct {
+		currentTick     int64
+		preSetPositions []position
+
+		expectIsValid  bool
+		expectNextTick int64
+		expectError    error
+	}{
+		"1 position, zero for one": {
+			preSetPositions: []position{
+				{
+					lowerTick: -100,
+					upperTick: 100,
+				},
+			},
+			expectIsValid:  true,
+			expectNextTick: -100,
+		},
+		"2 positions, zero for one": {
+			preSetPositions: []position{
+				{
+					lowerTick: -400,
+					upperTick: 300,
+				},
+				{
+					lowerTick: -200,
+					upperTick: 200,
+				},
+			},
+			expectIsValid:  true,
+			expectNextTick: -200,
+		},
+		"lower tick lands on current tick, zero for one": {
+			preSetPositions: []position{
+				{
+					lowerTick: 0,
+					upperTick: 100,
+				},
+			},
+			expectIsValid:  true,
+			expectNextTick: 0,
+		},
+		"upper tick lands on current tick, zero for one": {
+			preSetPositions: []position{
+				{
+					lowerTick: -100,
+					upperTick: 0,
+				},
+			},
+			expectIsValid:  true,
+			expectNextTick: 0,
+		},
+		"no ticks, zero for one": {
+			preSetPositions: []position{},
+			expectIsValid:   false,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+			strategy := swapstrategy.New(true, types.MaxSqrtPrice, suite.App.GetKey(types.ModuleName), sdk.ZeroDec(), defaultTickSpacing)
+
+			pool := suite.PrepareConcentratedPool()
+
+			clMsgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
+
+			for _, pos := range tc.preSetPositions {
+				suite.FundAcc(suite.TestAccs[0], DefaultCoins.Add(DefaultCoins...))
+				_, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(suite.Ctx), &types.MsgCreatePosition{
+					PoolId:          pool.GetId(),
+					Sender:          suite.TestAccs[0].String(),
+					LowerTick:       pos.lowerTick,
+					UpperTick:       pos.upperTick,
+					TokensProvided:  DefaultCoins.Add(sdk.NewCoin(USDC, sdk.OneInt())),
+					TokenMinAmount0: sdk.ZeroInt(),
+					TokenMinAmount1: sdk.ZeroInt(),
+				})
+				suite.Require().NoError(err)
+			}
+
+			// refetch pool
+			pool, err := suite.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(suite.Ctx, pool.GetId())
+			suite.Require().NoError(err)
+
+			currentTick := pool.GetCurrentTick()
+			suite.Require().Equal(int64(0), currentTick)
+
+			tickIndex := strategy.InitializeTickValue(currentTick)
+
+			iter := strategy.InitializeNextTickIterator(suite.Ctx, defaultPoolId, tickIndex)
+			defer iter.Close()
+
+			suite.Require().Equal(tc.expectIsValid, iter.Valid())
+			if tc.expectIsValid {
+				actualNextTick, err := types.TickIndexFromBytes(iter.Key())
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.expectNextTick, actualNextTick)
+			}
 		})
 	}
 }

@@ -3,7 +3,6 @@ package simulation
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -78,8 +77,7 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 		Sender:          positionCreator.String(),
 		LowerTick:       lowerTick,
 		UpperTick:       upperTick,
-		TokenDesired0:   tokens[0],
-		TokenDesired1:   tokens[1],
+		TokensProvided:  tokens,
 		TokenMinAmount0: sdk.NewInt(0),
 		TokenMinAmount1: sdk.NewInt(0),
 	}, nil
@@ -94,7 +92,7 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	}
 
 	// Utilize the PoolId to PositionId mapping
-	positionIds, err := k.GetAllPositionIdsForPoolId(ctx, clPool.GetId())
+	positionIds, err := k.GetAllPositionIdsForPoolId(ctx, cltypes.PositionPrefix, clPool.GetId())
 	if err != nil {
 		return nil, err
 	}
@@ -221,43 +219,6 @@ func RandMsgCollectIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx s
 	return &cltypes.MsgCollectIncentives{
 		PositionIds: []uint64{randPositionId.PositionId},
 		Sender:      sender.Address.String(),
-	}, nil
-}
-
-func RandMsgCreateIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCreateIncentive, error) {
-	rand := sim.GetRand()
-	// get random pool
-	clPool, poolDenoms, err := getRandCLPool(k, sim, ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// incentiveCreator creates the incentives by supplying tokens
-	incentiveCreator, incentivesTokens, senderExists := sim.SelAddrWithDenoms(ctx, poolDenoms)
-	if !senderExists {
-		return nil, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
-	}
-
-	// emission rate is nonzero and nonnegative from 1 to 1million
-	randEmissionVal := sim.RandomDecAmount(sdk.MustNewDecFromStr("1000000"))
-
-	startTimeSecs := rand.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
-	startTime := ctx.BlockTime().Add(time.Duration(startTimeSecs) * time.Second)
-
-	durations := cltypes.DefaultParams().AuthorizedUptimes
-	randomDurationIndex := rand.Intn(len(durations))
-
-	// Get the duration value at the random index
-	randomDuration := durations[randomDurationIndex]
-	incentiveCoin := sdk.NewCoin(incentivesTokens[0].Denom, incentivesTokens[0].Amount)
-
-	return &cltypes.MsgCreateIncentive{
-		PoolId:        clPool.GetId(),
-		Sender:        incentiveCreator.Address.String(),
-		IncentiveCoin: incentiveCoin,
-		EmissionRate:  randEmissionVal,
-		StartTime:     startTime,
-		MinUptime:     randomDuration,
 	}, nil
 }
 

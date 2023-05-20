@@ -15,43 +15,43 @@ import (
 var _ = suite.TestingSuite(nil)
 
 // TestInvalidDurationGaugeCreationValidation tests error handling for creating a gauge with an invalid duration.
-func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
+	s.SetupTest()
 
-	addrs := suite.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
+	addrs := s.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         defaultLPDenom,
 		Duration:      defaultLockDuration / 2, // 0.5 second, invalid duration
 	}
-	_, err := suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
-	suite.Require().Error(err)
+	_, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
+	s.Require().Error(err)
 
 	distrTo.Duration = defaultLockDuration
-	_, err = suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
-	suite.Require().NoError(err)
+	_, err = s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
+	s.Require().NoError(err)
 }
 
 // TestNonExistentDenomGaugeCreation tests error handling for creating a gauge with an invalid denom.
-func (suite *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
+	s.SetupTest()
 
 	addrNoSupply := sdk.AccAddress([]byte("Gauge_Creation_Addr_"))
-	addrs := suite.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
+	addrs := s.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         defaultLPDenom,
 		Duration:      defaultLockDuration,
 	}
-	_, err := suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, false, addrNoSupply, defaultLiquidTokens, distrTo, time.Time{}, 1)
-	suite.Require().Error(err)
+	_, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, addrNoSupply, defaultLiquidTokens, distrTo, time.Time{}, 1)
+	s.Require().Error(err)
 
-	_, err = suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
-	suite.Require().NoError(err)
+	_, err = s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
+	s.Require().NoError(err)
 }
 
 // TestGaugeOperations tests perpetual and non-perpetual gauge distribution logic using the gauges by denom keeper.
-func (suite *KeeperTestSuite) TestGaugeOperations() {
+func (s *KeeperTestSuite) TestGaugeOperations() {
 	testCases := []struct {
 		isPerpetual bool
 		numLocks    int
@@ -75,17 +75,17 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 	}
 	for _, tc := range testCases {
 		// test for module get gauges
-		suite.SetupTest()
+		s.SetupTest()
 
 		// initial module gauges check
-		gauges := suite.App.IncentivesKeeper.GetNotFinishedGauges(suite.Ctx)
-		suite.Require().Len(gauges, 0)
-		gaugeIdsByDenom := suite.App.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.Ctx, "lptoken")
-		suite.Require().Len(gaugeIdsByDenom, 0)
+		gauges := s.App.IncentivesKeeper.GetNotFinishedGauges(s.Ctx)
+		s.Require().Len(gauges, 0)
+		gaugeIdsByDenom := s.App.IncentivesKeeper.GetAllGaugeIDsByDenom(s.Ctx, "lptoken")
+		s.Require().Len(gaugeIdsByDenom, 0)
 
 		// setup lock and gauge
-		lockOwners := suite.SetupManyLocks(tc.numLocks, defaultLiquidTokens, defaultLPTokens, time.Second)
-		gaugeID, _, coins, startTime := suite.SetupNewGauge(tc.isPerpetual, sdk.Coins{sdk.NewInt64Coin("stake", 12)})
+		lockOwners := s.SetupManyLocks(tc.numLocks, defaultLiquidTokens, defaultLPTokens, time.Second)
+		gaugeID, _, coins, startTime := s.SetupNewGauge(tc.isPerpetual, sdk.Coins{sdk.NewInt64Coin("stake", 12)})
 		// evenly distributed per lock
 		expectedCoinsPerLock := sdk.Coins{sdk.NewInt64Coin("stake", 12/int64(tc.numLocks))}
 		// set expected epochs
@@ -97,8 +97,8 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 		}
 
 		// check gauges
-		gauges = suite.App.IncentivesKeeper.GetNotFinishedGauges(suite.Ctx)
-		suite.Require().Len(gauges, 1)
+		gauges = s.App.IncentivesKeeper.GetNotFinishedGauges(s.Ctx)
+		s.Require().Len(gauges, 1)
 		expectedGauge := types.Gauge{
 			Id:          gaugeID,
 			IsPerpetual: tc.isPerpetual,
@@ -113,131 +113,131 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 			DistributedCoins:  sdk.Coins{},
 			StartTime:         startTime,
 		}
-		suite.Require().Equal(expectedGauge.String(), gauges[0].String())
+		s.Require().Equal(expectedGauge.String(), gauges[0].String())
 
 		// check gauge ids by denom
-		gaugeIdsByDenom = suite.App.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.Ctx, "lptoken")
-		suite.Require().Len(gaugeIdsByDenom, 1)
-		suite.Require().Equal(gaugeID, gaugeIdsByDenom[0])
+		gaugeIdsByDenom = s.App.IncentivesKeeper.GetAllGaugeIDsByDenom(s.Ctx, "lptoken")
+		s.Require().Len(gaugeIdsByDenom, 1)
+		s.Require().Equal(gaugeID, gaugeIdsByDenom[0])
 
 		// check rewards estimation
-		rewardsEst := suite.App.IncentivesKeeper.GetRewardsEst(suite.Ctx, lockOwners[0], []lockuptypes.PeriodLock{}, 100)
-		suite.Require().Equal(expectedCoinsPerLock.String(), rewardsEst.String())
+		rewardsEst := s.App.IncentivesKeeper.GetRewardsEst(s.Ctx, lockOwners[0], []lockuptypes.PeriodLock{}, 100)
+		s.Require().Equal(expectedCoinsPerLock.String(), rewardsEst.String())
 
 		// check gauges
-		gauges = suite.App.IncentivesKeeper.GetNotFinishedGauges(suite.Ctx)
-		suite.Require().Len(gauges, 1)
-		suite.Require().Equal(expectedGauge.String(), gauges[0].String())
+		gauges = s.App.IncentivesKeeper.GetNotFinishedGauges(s.Ctx)
+		s.Require().Len(gauges, 1)
+		s.Require().Equal(expectedGauge.String(), gauges[0].String())
 
 		// check upcoming gauges
-		gauges = suite.App.IncentivesKeeper.GetUpcomingGauges(suite.Ctx)
-		suite.Require().Len(gauges, 1)
+		gauges = s.App.IncentivesKeeper.GetUpcomingGauges(s.Ctx)
+		s.Require().Len(gauges, 1)
 
 		// start distribution
-		suite.Ctx = suite.Ctx.WithBlockTime(startTime)
-		gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID)
-		suite.Require().NoError(err)
-		err = suite.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
-		suite.Require().NoError(err)
+		s.Ctx = s.Ctx.WithBlockTime(startTime)
+		gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeID)
+		s.Require().NoError(err)
+		err = s.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(s.Ctx, *gauge)
+		s.Require().NoError(err)
 
 		// check active gauges
-		gauges = suite.App.IncentivesKeeper.GetActiveGauges(suite.Ctx)
-		suite.Require().Len(gauges, 1)
+		gauges = s.App.IncentivesKeeper.GetActiveGauges(s.Ctx)
+		s.Require().Len(gauges, 1)
 
 		// check upcoming gauges
-		gauges = suite.App.IncentivesKeeper.GetUpcomingGauges(suite.Ctx)
-		suite.Require().Len(gauges, 0)
+		gauges = s.App.IncentivesKeeper.GetUpcomingGauges(s.Ctx)
+		s.Require().Len(gauges, 0)
 
 		// check gauge ids by denom
-		gaugeIdsByDenom = suite.App.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.Ctx, "lptoken")
-		suite.Require().Len(gaugeIdsByDenom, 1)
+		gaugeIdsByDenom = s.App.IncentivesKeeper.GetAllGaugeIDsByDenom(s.Ctx, "lptoken")
+		s.Require().Len(gaugeIdsByDenom, 1)
 
 		// check gauge ids by other denom
-		gaugeIdsByDenom = suite.App.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.Ctx, "lpt")
-		suite.Require().Len(gaugeIdsByDenom, 0)
+		gaugeIdsByDenom = s.App.IncentivesKeeper.GetAllGaugeIDsByDenom(s.Ctx, "lpt")
+		s.Require().Len(gaugeIdsByDenom, 0)
 
 		// distribute coins to stakers
-		distrCoins, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, []types.Gauge{*gauge})
-		suite.Require().NoError(err)
+		distrCoins, err := s.App.IncentivesKeeper.Distribute(s.Ctx, []types.Gauge{*gauge})
+		s.Require().NoError(err)
 		// We hardcoded 12 "stake" tokens when initializing gauge
-		suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", int64(12/expectedNumEpochsPaidOver))}, distrCoins)
+		s.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", int64(12/expectedNumEpochsPaidOver))}, distrCoins)
 
 		if tc.isPerpetual {
 			// distributing twice without adding more for perpetual gauge
-			gauge, err = suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID)
-			suite.Require().NoError(err)
-			distrCoins, err = suite.App.IncentivesKeeper.Distribute(suite.Ctx, []types.Gauge{*gauge})
-			suite.Require().NoError(err)
-			suite.Require().True(distrCoins.Empty())
+			gauge, err = s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeID)
+			s.Require().NoError(err)
+			distrCoins, err = s.App.IncentivesKeeper.Distribute(s.Ctx, []types.Gauge{*gauge})
+			s.Require().NoError(err)
+			s.Require().True(distrCoins.Empty())
 
 			// add to gauge
 			addCoins := sdk.Coins{sdk.NewInt64Coin("stake", 200)}
-			suite.AddToGauge(addCoins, gaugeID)
+			s.AddToGauge(addCoins, gaugeID)
 
 			// distributing twice with adding more for perpetual gauge
-			gauge, err = suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID)
-			suite.Require().NoError(err)
-			distrCoins, err = suite.App.IncentivesKeeper.Distribute(suite.Ctx, []types.Gauge{*gauge})
-			suite.Require().NoError(err)
-			suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", 200)}, distrCoins)
+			gauge, err = s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeID)
+			s.Require().NoError(err)
+			distrCoins, err = s.App.IncentivesKeeper.Distribute(s.Ctx, []types.Gauge{*gauge})
+			s.Require().NoError(err)
+			s.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", 200)}, distrCoins)
 		} else {
 			// add to gauge
 			addCoins := sdk.Coins{sdk.NewInt64Coin("stake", 200)}
-			suite.AddToGauge(addCoins, gaugeID)
+			s.AddToGauge(addCoins, gaugeID)
 		}
 
 		// check active gauges
-		gauges = suite.App.IncentivesKeeper.GetActiveGauges(suite.Ctx)
-		suite.Require().Len(gauges, 1)
+		gauges = s.App.IncentivesKeeper.GetActiveGauges(s.Ctx)
+		s.Require().Len(gauges, 1)
 
 		// check gauge ids by denom
-		gaugeIdsByDenom = suite.App.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.Ctx, "lptoken")
-		suite.Require().Len(gaugeIdsByDenom, 1)
+		gaugeIdsByDenom = s.App.IncentivesKeeper.GetAllGaugeIDsByDenom(s.Ctx, "lptoken")
+		s.Require().Len(gaugeIdsByDenom, 1)
 
 		// finish distribution for non perpetual gauge
 		if !tc.isPerpetual {
-			err = suite.App.IncentivesKeeper.MoveActiveGaugeToFinishedGauge(suite.Ctx, *gauge)
-			suite.Require().NoError(err)
+			err = s.App.IncentivesKeeper.MoveActiveGaugeToFinishedGauge(s.Ctx, *gauge)
+			s.Require().NoError(err)
 		}
 
 		// check non-perpetual gauges (finished + rewards estimate empty)
 		if !tc.isPerpetual {
 			// check finished gauges
-			gauges = suite.App.IncentivesKeeper.GetFinishedGauges(suite.Ctx)
-			suite.Require().Len(gauges, 1)
+			gauges = s.App.IncentivesKeeper.GetFinishedGauges(s.Ctx)
+			s.Require().Len(gauges, 1)
 
 			// check gauge by ID
-			gauge, err = suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID)
-			suite.Require().NoError(err)
-			suite.Require().NotNil(gauge)
-			suite.Require().Equal(gauges[0], *gauge)
+			gauge, err = s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeID)
+			s.Require().NoError(err)
+			s.Require().NotNil(gauge)
+			s.Require().Equal(gauges[0], *gauge)
 
 			// check invalid gauge ID
-			_, err = suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID+1000)
-			suite.Require().Error(err)
-			rewardsEst = suite.App.IncentivesKeeper.GetRewardsEst(suite.Ctx, lockOwners[0], []lockuptypes.PeriodLock{}, 100)
-			suite.Require().Equal(sdk.Coins{}, rewardsEst)
+			_, err = s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeID+1000)
+			s.Require().Error(err)
+			rewardsEst = s.App.IncentivesKeeper.GetRewardsEst(s.Ctx, lockOwners[0], []lockuptypes.PeriodLock{}, 100)
+			s.Require().Equal(sdk.Coins{}, rewardsEst)
 
 			// check gauge ids by denom
-			gaugeIdsByDenom = suite.App.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.Ctx, "lptoken")
-			suite.Require().Len(gaugeIdsByDenom, 0)
+			gaugeIdsByDenom = s.App.IncentivesKeeper.GetAllGaugeIDsByDenom(s.Ctx, "lptoken")
+			s.Require().Len(gaugeIdsByDenom, 0)
 		} else { // check perpetual gauges (not finished + rewards estimate empty)
 			// check finished gauges
-			gauges = suite.App.IncentivesKeeper.GetFinishedGauges(suite.Ctx)
-			suite.Require().Len(gauges, 0)
+			gauges = s.App.IncentivesKeeper.GetFinishedGauges(s.Ctx)
+			s.Require().Len(gauges, 0)
 
 			// check rewards estimation
-			rewardsEst = suite.App.IncentivesKeeper.GetRewardsEst(suite.Ctx, lockOwners[0], []lockuptypes.PeriodLock{}, 100)
-			suite.Require().Equal(sdk.Coins(nil), rewardsEst)
+			rewardsEst = s.App.IncentivesKeeper.GetRewardsEst(s.Ctx, lockOwners[0], []lockuptypes.PeriodLock{}, 100)
+			s.Require().Equal(sdk.Coins(nil), rewardsEst)
 
 			// check gauge ids by denom
-			gaugeIdsByDenom = suite.App.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.Ctx, "lptoken")
-			suite.Require().Len(gaugeIdsByDenom, 1)
+			gaugeIdsByDenom = s.App.IncentivesKeeper.GetAllGaugeIDsByDenom(s.Ctx, "lptoken")
+			s.Require().Len(gaugeIdsByDenom, 1)
 		}
 	}
 }
 
-func (suite *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
+func (s *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 	const baseFee = int64(100)
 
 	testcases := map[string]struct {
@@ -297,17 +297,17 @@ func (suite *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 	}
 
 	for name, tc := range testcases {
-		suite.Run(name, func() {
-			suite.SetupTest()
+		s.Run(name, func() {
+			s.SetupTest()
 
-			testAccount := suite.TestAccs[0]
+			testAccount := s.TestAccs[0]
 
-			ctx := suite.Ctx
-			incentivesKeepers := suite.App.IncentivesKeeper
-			bankKeeper := suite.App.BankKeeper
+			ctx := s.Ctx
+			incentivesKeepers := s.App.IncentivesKeeper
+			bankKeeper := s.App.BankKeeper
 
 			// Pre-fund account.
-			suite.FundAcc(testAccount, sdk.NewCoins(tc.accountBalanceToFund))
+			s.FundAcc(testAccount, sdk.NewCoins(tc.accountBalanceToFund))
 
 			oldBalanceAmount := bankKeeper.GetBalance(ctx, testAccount, sdk.DefaultBondDenom).Amount
 
@@ -317,22 +317,22 @@ func (suite *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 			// Assertions.
 			newBalanceAmount := bankKeeper.GetBalance(ctx, testAccount, sdk.DefaultBondDenom).Amount
 			if tc.expectError {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 
 				// check account balance unchanged
-				suite.Require().Equal(oldBalanceAmount, newBalanceAmount)
+				s.Require().Equal(oldBalanceAmount, newBalanceAmount)
 			} else {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 
 				// check account balance changed.
 				expectedNewBalanceAmount := oldBalanceAmount.Sub(sdk.NewInt(tc.feeToCharge))
-				suite.Require().Equal(expectedNewBalanceAmount.String(), newBalanceAmount.String())
+				s.Require().Equal(expectedNewBalanceAmount.String(), newBalanceAmount.String())
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestAddToGaugeRewards() {
+func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 	testCases := []struct {
 		name               string
 		owner              sdk.AccAddress
@@ -344,7 +344,7 @@ func (suite *KeeperTestSuite) TestAddToGaugeRewards() {
 	}{
 		{
 			name:  "valid case: valid gauge",
-			owner: suite.TestAccs[0],
+			owner: s.TestAccs[0],
 			coinsToAdd: sdk.NewCoins(
 				sdk.NewCoin("uosmo", sdk.NewInt(100000)),
 				sdk.NewCoin("atom", sdk.NewInt(99999)),
@@ -356,7 +356,7 @@ func (suite *KeeperTestSuite) TestAddToGaugeRewards() {
 		},
 		{
 			name:  "valid case: valid gauge with >4 denoms",
-			owner: suite.TestAccs[0],
+			owner: s.TestAccs[0],
 			coinsToAdd: sdk.NewCoins(
 				sdk.NewCoin("uosmo", sdk.NewInt(100000)),
 				sdk.NewCoin("atom", sdk.NewInt(99999)),
@@ -374,7 +374,7 @@ func (suite *KeeperTestSuite) TestAddToGaugeRewards() {
 		},
 		{
 			name:  "invalid case: gauge Id is not valid",
-			owner: suite.TestAccs[0],
+			owner: s.TestAccs[0],
 			coinsToAdd: sdk.NewCoins(
 				sdk.NewCoin("uosmo", sdk.NewInt(100000)),
 				sdk.NewCoin("atom", sdk.NewInt(99999)),
@@ -387,41 +387,41 @@ func (suite *KeeperTestSuite) TestAddToGaugeRewards() {
 	}
 
 	for _, tc := range testCases {
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
-			_, _, existingGaugeCoins, _ := suite.SetupNewGauge(true, sdk.Coins{sdk.NewInt64Coin("stake", 12)})
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			_, _, existingGaugeCoins, _ := s.SetupNewGauge(true, sdk.Coins{sdk.NewInt64Coin("stake", 12)})
 
-			suite.FundAcc(tc.owner, tc.coinsToAdd)
+			s.FundAcc(tc.owner, tc.coinsToAdd)
 
-			existingGasConsumed := suite.Ctx.GasMeter().GasConsumed()
+			existingGasConsumed := s.Ctx.GasMeter().GasConsumed()
 
-			err := suite.App.IncentivesKeeper.AddToGaugeRewards(suite.Ctx, tc.owner, tc.coinsToAdd, tc.gaugeId)
+			err := s.App.IncentivesKeeper.AddToGaugeRewards(s.Ctx, tc.owner, tc.coinsToAdd, tc.gaugeId)
 			if tc.expectErr {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 
 				// balance shouldn't change in the module
-				balance := suite.App.BankKeeper.GetAllBalances(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
-				suite.Require().Equal(existingGaugeCoins, balance)
+				balance := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+				s.Require().Equal(existingGaugeCoins, balance)
 			} else {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 
 				// Ensure that at least the minimum amount of gas was charged (based on number of additional gauge coins)
-				gasConsumed := suite.Ctx.GasMeter().GasConsumed() - existingGasConsumed
+				gasConsumed := s.Ctx.GasMeter().GasConsumed() - existingGasConsumed
 				fmt.Println(gasConsumed, tc.minimumGasConsumed)
-				suite.Require().True(gasConsumed >= tc.minimumGasConsumed)
+				s.Require().True(gasConsumed >= tc.minimumGasConsumed)
 
 				// existing coins gets added to the module when we create gauge and add to gauge
 				expectedCoins := existingGaugeCoins.Add(tc.coinsToAdd...)
 
 				// check module account balance, should go up
-				balance := suite.App.BankKeeper.GetAllBalances(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
-				suite.Require().Equal(expectedCoins, balance)
+				balance := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+				s.Require().Equal(expectedCoins, balance)
 
 				// check gauge coins should go up
-				gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, tc.gaugeId)
-				suite.Require().NoError(err)
+				gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, tc.gaugeId)
+				s.Require().NoError(err)
 
-				suite.Require().Equal(expectedCoins, gauge.Coins)
+				s.Require().Equal(expectedCoins, gauge.Coins)
 			}
 		})
 	}

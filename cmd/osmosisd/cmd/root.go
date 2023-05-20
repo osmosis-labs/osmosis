@@ -19,7 +19,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -43,6 +42,7 @@ import (
 
 	"github.com/joho/godotenv"
 
+	"github.com/cosmos/cosmos-sdk/client/config"
 	osmosis "github.com/osmosis-labs/osmosis/v15/app"
 )
 
@@ -67,6 +67,10 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithBroadcastMode(flags.BroadcastBlock).
 		WithHomeDir(homeDir).
 		WithViper("OSMOSIS")
+
+	// Allows you to add extra params to your client.toml
+	// gas, gas-price, gas-adjustment
+	SetCustomEnvVariablesFromClientToml(initClientCtx)
 
 	rootCmd := &cobra.Command{
 		Use:   "osmosisd",
@@ -182,7 +186,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		testnetCmd(osmosis.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		tmcmds.RollbackStateCmd,
 		debugCmd,
-		config.Cmd(),
+		ConfigCmd(),
 		ChangeEnvironmentCmd(),
 		PrintEnvironmentCmd(),
 	)

@@ -18,7 +18,7 @@ const (
 	uint64ByteSize = 8
 	uintBase       = 10
 
-	ClTokenPrefix = "cl/pool"
+	ConcentratedLiquidityTokenPrefix = "cl/pool"
 )
 
 // Key prefixes
@@ -239,7 +239,7 @@ func KeyBalancerFullRange(clPoolId, balancerPoolId, uptimeIndex uint64) []byte {
 
 // Helper Functions
 func GetPoolIdFromShareDenom(denom string) (uint64, error) {
-	if !strings.HasPrefix(denom, ClTokenPrefix) {
+	if !strings.HasPrefix(denom, ConcentratedLiquidityTokenPrefix) {
 		return 0, fmt.Errorf("denom does not start with the cl token prefix")
 	}
 	parts := strings.Split(denom, "/")
