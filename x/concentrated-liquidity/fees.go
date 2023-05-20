@@ -238,7 +238,8 @@ func (k Keeper) GetClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins,
 // Note that it mutates the internal state of the fee accumulator by setting the position's
 // unclaimed rewards to zero and update the position's accumulator value to reflect the
 // current pool fee accumulator value. If there is any dust left over, it is added back to the
-// global accumulator.
+// global accumulator as long as there are shares remaining in the accumulator. If not, the dust
+// is ignored.
 //
 // Returns error if:
 // - pool with the given id does not exist

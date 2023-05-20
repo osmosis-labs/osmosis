@@ -1131,25 +1131,6 @@ func (s *KeeperTestSuite) TestPrepareClaimableFees() {
 			// divided by the number of shares.
 			expectedReinvestedDustAmount: sdk.MustNewDecFromStr("0.2"),
 		},
-		// "dust not reinvested (no liquidity left after claim): single swap right -> left: 2 ticks, two shares, current tick in between lower and upper tick": {
-		// 	initialLiquidity: sdk.ZeroDec(),
-
-		// 	lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
-		// 	upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, sdk.MustNewDecFromStr("3.3"))),
-
-		// 	globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
-
-		// 	lowerTick:           0,
-		// 	upperTick:           2,
-		// 	positionIdToPrepare: DefaultPositionId,
-
-		// 	currentTick: 1,
-
-		// 	// expected = global - below lower - above upper = 10 - 0 3.3 = 6.7
-		// 	expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, sdk.MustNewDecFromStr("6.7"))),
-
-		// 	expectedReinvestedDustAmount: sdk.ZeroDec(),
-		// },
 		"swap occurs above the position, current tick > upper tick": {
 			initialLiquidity: sdk.OneDec(),
 
