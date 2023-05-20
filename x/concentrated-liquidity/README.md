@@ -1408,6 +1408,10 @@ For the sake of clarity, this mechanism functions very similarly to status quo i
 but it has a separate accumulator for each supported uptime and ensures that only liquidity
 that has been in the pool for the required amount of time qualifies for claiming incentives.
 
+### Incentive Creation and Querying
+
+While it is technically possible for Osmosis to enable the creation of incentive records directly in the CL module, incentive creation is currently funneled through existing gauge infrastructure in the `x/incentives` module. This simplifies UX drastically for frontends, external incentive creators, and governance, while making CL incentives fully backwards-compatible with incentive creation and querying flows that everyone is already used to. As of the initial version of Osmosis's CL, all incentive creation and querying logic will be handled by respective gauge functions (e.g. the `IncentivizedPools` query in the `x/incentives` module will include CL pools that have internal incentives on them).
+
 ## TWAP Integration
 
 In the context of twap, concentrated liquidity pools function differently from
