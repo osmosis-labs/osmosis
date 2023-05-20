@@ -241,7 +241,7 @@ github.com/dgryski/go-sip13 v0.0.0-20181026042036-e10d5fee7954/go.mod h1:vAd38F8
 github.com/dlclark/regexp2 v1.4.1-0.20201116162257-a2a8dda75c91/go.mod h1:2pZnwuY/m+8K6iRw6wQdMtk+rH5tNGR1i55kozfMjCc=
 github.com/dnaeon/go-vcr v1.1.0/go.mod h1:M7tiix8f0r6mKKJ3Yq/kqU1OYf3MnfmBWVbPx/yU9ko=
 github.com/dnaeon/go-vcr v1.2.0/go.mod h1:R4UdLID7HZT3taECzJs4YgbbH6PIGXB6W/sc5OLb6RQ=
-github.com/docker/distribution v2.8.1+incompatible h1:Q50tZOPR6T/hjNsyc9g8/syEs6bk8XXApsHjKukMl68=
+github.com/docker/distribution v2.8.2+incompatible h1:T3de5rq0dB1j30rp0sA2rER+m322EBzniBPB6ZIzuh8=
 github.com/docker/docker v1.4.2-0.20180625184442-8e610b2b55bf/go.mod h1:eEKB0N0r5NX/I1kEveEz05bcu8tLC/8azJZsviup8Sk=
 github.com/docker/go-connections v0.4.0 h1:El9xVISelRB7BuFusrZozjnkIM5YnzCViNKohAFqRJQ=
 github.com/docker/go-units v0.5.0 h1:69rxXcBk27SvSaaxTtLh/8llcHD8vYHT7WSdRZ/jvr4=
@@ -684,8 +684,7 @@ github.com/openzipkin/zipkin-go v0.1.6/go.mod h1:QgAqvLzwWbR/WpD4A3cGpPtJrZXNIiJ
 github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
-github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230326212251-7a2cf2993434 h1:RetElHdhDl6f00Tjj7ii2r+HX2aa/u+dhgwQb5hKv8Y=
-github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230326212251-7a2cf2993434/go.mod h1:ss3tUfPTwaa6NsoPZrCR7xOqLqCK0LwoNbc2Q8Zs5/Y=
+github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230520034638-c0dc0ad310ea h1:rPb+I+m9xdPkLelk3lB4ND9jTM1lwALMPDnskrMvPv8=
 github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230516205127-c213fddde069 h1:ZgDrTJ2GCH4CJGbV6rudw4O9rPMAuwWoLVZnG6cUr+A=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230516205127-c213fddde069 h1:9C/n+Nx5rre/AHPMlPsQrk1isgydrCNB68aqer86ygE=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230328024000-175ec88e4304 h1:RIrWLzIiZN5Xd2JOfSOtGZaf6V3qEQYg6EaDTAkMnCo=
