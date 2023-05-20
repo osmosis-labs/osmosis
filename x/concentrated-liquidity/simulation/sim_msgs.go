@@ -19,7 +19,7 @@ import (
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
 
 func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*clmodeltypes.MsgCreateConcentratedPool, error) {
-	poolCreator, coin0, coin1, tickSpacing, swapFee, err := RandomPreparePoolFunc(sim, ctx, k)
+	poolCreator, coin0, coin1, tickSpacing, spreadFactor, err := RandomPreparePoolFunc(sim, ctx, k)
 	if err != nil {
 		return nil, err
 	}
@@ -46,11 +46,11 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 	}
 
 	return &clmodeltypes.MsgCreateConcentratedPool{
-		Sender:      poolCreator.String(),
-		Denom0:      coin0.Denom,
-		Denom1:      coin1.Denom,
-		TickSpacing: tickSpacing,
-		SwapFee:     swapFee,
+		Sender:       poolCreator.String(),
+		Denom0:       coin0.Denom,
+		Denom1:       coin1.Denom,
+		TickSpacing:  tickSpacing,
+		SpreadFactor: spreadFactor,
 	}, nil
 }
 
@@ -308,7 +308,7 @@ func RandomPreparePoolFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, k clkeeper
 	rand := sim.GetRand()
 
 	authorizedTickSpacing := cltypes.AuthorizedTickSpacing
-	authorizedSwapFee := cltypes.AuthorizedSwapFees
+	authorizedSpreadFactor := cltypes.AuthorizedSpreadFactors
 
 	// find an address with two or more distinct denoms in their wallet
 	sender, senderExists := sim.RandomSimAccountWithConstraint(createPoolRestriction(k, sim, ctx))
@@ -334,9 +334,9 @@ func RandomPreparePoolFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, k clkeeper
 	coin0 := poolCoins[0]
 	coin1 := poolCoins[1]
 	tickSpacing := authorizedTickSpacing[rand.Intn(len(authorizedTickSpacing))]
-	swapFee := authorizedSwapFee[rand.Intn(len(authorizedSwapFee))]
+	spreadFactor := authorizedSpreadFactor[rand.Intn(len(authorizedSpreadFactor))]
 
-	return sender.Address, coin0, coin1, tickSpacing, swapFee, nil
+	return sender.Address, coin0, coin1, tickSpacing, spreadFactor, nil
 }
 
 func RandomPrepareCreatePositionFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, clPool cltypes.ConcentratedPoolExtension, poolDenoms []string) (sdk.AccAddress, sdk.Coins, int64, int64, error) {

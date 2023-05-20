@@ -14,11 +14,11 @@ type PoolI interface {
 	GetAddress() sdk.AccAddress
 	String() string
 	GetId() uint64
-	// GetSwapFee returns the pool's swap fee, based on the current state.
-	// Pools may choose to make their swap fees dependent upon state
+	// GetSpreadFactor returns the pool's spread factor, based on the current state.
+	// Pools may choose to make their spread factors dependent upon state
 	// (prior TWAPs, network downtime, other pool states, etc.)
 	// hence Context is provided as an argument.
-	GetSwapFee(ctx sdk.Context) sdk.Dec
+	GetSpreadFactor(ctx sdk.Context) sdk.Dec
 	// Returns whether the pool has swaps enabled at the moment
 	IsActive(ctx sdk.Context) bool
 

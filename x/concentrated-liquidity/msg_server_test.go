@@ -63,11 +63,11 @@ func (s *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			s.Equal(0, len(ctx.EventManager().Events()))
 
 			response, err := msgServer.CreateConcentratedPool(sdk.WrapSDKContext(ctx), &clmodel.MsgCreateConcentratedPool{
-				Sender:      s.TestAccs[0].String(),
-				Denom0:      tc.denom0,
-				Denom1:      tc.denom1,
-				TickSpacing: tc.tickSpacing,
-				SwapFee:     DefaultZeroSwapFee,
+				Sender:       s.TestAccs[0].String(),
+				Denom0:       tc.denom0,
+				Denom1:       tc.denom1,
+				TickSpacing:  tc.tickSpacing,
+				SpreadFactor: DefaultZeroSpreadFactor,
 			})
 
 			if tc.expectedError == nil {

@@ -50,10 +50,10 @@ message Pool {
   int64 exponent_at_price_one = 11
       [ (gogoproto.moretags) = "yaml:\"exponent_at_price_one\"" ];
 
-  // swap_fee is the ratio that is charged on the amount of token in.
-  string swap_fee = 12 [
+  // spread_factor is the ratio that is charged on the amount of token in.
+  string spread_factor = 12 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"swap_fee\"",
+    (gogoproto.moretags) = "yaml:\"spread_factor\"",
     (gogoproto.nullable) = false
   ];
 

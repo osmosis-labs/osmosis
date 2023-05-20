@@ -13,11 +13,11 @@ var defaultFeePerTx = sdk.NewInt(1000)
 
 // calculateFeeGrowthGlobal calculates fee growth global per unit of virtual liquidity based on swap parameters:
 // amountIn - amount being swapped
-// swapFee - pool's swap fee
+// spreadFactor - pool's spread factor
 // poolLiquidity - current pool liquidity
-func calculateFeeGrowthGlobal(amountIn, swapFee, poolLiquidity sdk.Dec) sdk.Dec {
-	// First we get total fee charge for the swap (ΔY * swapFee)
-	feeChargeTotal := amountIn.Mul(swapFee)
+func calculateFeeGrowthGlobal(amountIn, spreadFactor, poolLiquidity sdk.Dec) sdk.Dec {
+	// First we get total fee charge for the swap (ΔY * spreadFactor)
+	feeChargeTotal := amountIn.Mul(spreadFactor)
 
 	// Calculating fee growth global (dividing by pool liquidity to find fee growth per unit of virtual liquidity)
 	feeGrowthGlobal := feeChargeTotal.Quo(poolLiquidity)

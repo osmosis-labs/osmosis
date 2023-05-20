@@ -164,7 +164,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 		amountIn         sdk.Dec
 		amountOut        sdk.Dec
 		zeroForOne       bool
-		swapFee          sdk.Dec
+		spreadFactor     sdk.Dec
 
 		expectedSqrtPriceNextOutGivenIn sdk.Dec
 		expectedSqrtPriceNextInGivenOut sdk.Dec
@@ -178,7 +178,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			amountIn:         sdk.NewDec(42000000),
 			amountOut:        sdk.NewDec(8398),
 			zeroForOne:       false,
-			swapFee:          sdk.ZeroDec(),
+			spreadFactor:     sdk.ZeroDec(),
 
 			// from token_in:   sqrt_next = sqrt_cur + token_in / liq2 = 70.72451318306962507883763621
 			expectedSqrtPriceNextOutGivenIn: sdk.MustNewDecFromStr("70.724513183069625078"), // approx 5001.96
@@ -195,7 +195,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			amountIn:         sdk.NewDec(13370),
 			amountOut:        sdk.NewDec(66829187),
 			zeroForOne:       true,
-			swapFee:          sdk.ZeroDec(),
+			spreadFactor:     sdk.ZeroDec(),
 
 			// from amount in: sqrt_next = liq2 * sqrt_cur / (liq2 + token_in * sqrt_cur) quo round up = 70.68866416340883631930670240
 			expectedSqrtPriceNextOutGivenIn: sdk.MustNewDecFromStr("70.688664163408836320"), // approx 4996.89
@@ -212,7 +212,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
 			amountIn:         sdk.NewDec(42000000),
 			amountOut:        sdk.NewDec(8398),
-			swapFee:          sdk.ZeroDec(),
+			spreadFactor:     sdk.ZeroDec(),
 
 			zeroForOne: false,
 			// from token_in:   sqrt_next = sqrt_cur + token_in / liq2 = 70.72451318306962507883763621
@@ -230,7 +230,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			amountIn:         sdk.NewDec(13370),
 			amountOut:        sdk.NewDec(66829187),
 			zeroForOne:       true,
-			swapFee:          sdk.ZeroDec(),
+			spreadFactor:     sdk.ZeroDec(),
 
 			// from amount in: sqrt_next = liq2 * sqrt_cur / (liq2 + token_in * sqrt_cur) = 70.68866416340883631930670240
 			expectedSqrtPriceNextOutGivenIn: sdk.MustNewDecFromStr("70.688664163408836320"), // approx 4996.89

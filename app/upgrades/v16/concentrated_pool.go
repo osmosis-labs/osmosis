@@ -46,10 +46,10 @@ func createConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLinkWith uint64
 		return nil, NoDesiredDenomInPoolError{desiredDenom0}
 	}
 
-	// Swap fee is 0.2%, which is an authorized swap fee.
-	swapFee := cfmmPool.GetSwapFee(ctx)
+	// Swap fee is 0.2%, which is an authorized spread factor.
+	spreadFactor := cfmmPool.GetSpreadFactor(ctx)
 
-	createPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolCreatorAddress, desiredDenom0, denom1, TickSpacing, swapFee)
+	createPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolCreatorAddress, desiredDenom0, denom1, TickSpacing, spreadFactor)
 	concentratedPool, err := poolmanagerKeeper.CreateConcentratedPoolAsPoolManager(ctx, createPoolMsg)
 	if err != nil {
 		return nil, err

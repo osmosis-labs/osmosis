@@ -40,29 +40,29 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 	_, ustPool := s.preparePool(ust)
 
 	tests := []struct {
-		name       string
-		coins      sdk.Coins
-		baseDenom  string
-		denoms     []string
-		poolTypes  []poolmanagertypes.PoolI
-		swapFee    sdk.Dec
-		expectPass bool
+		name         string
+		coins        sdk.Coins
+		baseDenom    string
+		denoms       []string
+		poolTypes    []poolmanagertypes.PoolI
+		spreadFactor sdk.Dec
+		expectPass   bool
 	}{
 		{
-			name:      "One non-osmo fee token (uion): TxFees AfterEpochEnd",
-			coins:     sdk.Coins{sdk.NewInt64Coin(uion, 10)},
-			baseDenom: baseDenom,
-			denoms:    []string{uion},
-			poolTypes: []poolmanagertypes.PoolI{uionPool},
-			swapFee:   sdk.MustNewDecFromStr("0"),
+			name:         "One non-osmo fee token (uion): TxFees AfterEpochEnd",
+			coins:        sdk.Coins{sdk.NewInt64Coin(uion, 10)},
+			baseDenom:    baseDenom,
+			denoms:       []string{uion},
+			poolTypes:    []poolmanagertypes.PoolI{uionPool},
+			spreadFactor: sdk.MustNewDecFromStr("0"),
 		},
 		{
-			name:      "Multiple non-osmo fee token: TxFees AfterEpochEnd",
-			coins:     sdk.Coins{sdk.NewInt64Coin(atom, 20), sdk.NewInt64Coin(ust, 30)},
-			baseDenom: baseDenom,
-			denoms:    []string{atom, ust},
-			poolTypes: []poolmanagertypes.PoolI{atomPool, ustPool},
-			swapFee:   sdk.MustNewDecFromStr("0"),
+			name:         "Multiple non-osmo fee token: TxFees AfterEpochEnd",
+			coins:        sdk.Coins{sdk.NewInt64Coin(atom, 20), sdk.NewInt64Coin(ust, 30)},
+			baseDenom:    baseDenom,
+			denoms:       []string{atom, ust},
+			poolTypes:    []poolmanagertypes.PoolI{atomPool, ustPool},
+			spreadFactor: sdk.MustNewDecFromStr("0"),
 		},
 	}
 
@@ -80,7 +80,7 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 				expectedOutput, err := pool.CalcOutAmtGivenIn(s.Ctx,
 					sdk.Coins{sdk.Coin{Denom: tc.denoms[i], Amount: coin.Amount}},
 					tc.baseDenom,
-					tc.swapFee)
+					tc.spreadFactor)
 				s.NoError(err)
 				// sanity check for the expectedAmount
 				s.True(coin.Amount.GTE(expectedOutput.Amount))

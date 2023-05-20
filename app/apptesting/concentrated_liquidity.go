@@ -21,7 +21,7 @@ var (
 )
 
 // PrepareConcentratedPool sets up an eth usdc concentrated liquidity pool with pool ID 1, tick spacing of 100,
-// no liquidity and zero swap fee.
+// no liquidity and zero spread factor.
 func (s *KeeperTestHelper) PrepareConcentratedPool() types.ConcentratedPoolExtension {
 	return s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, sdk.ZeroDec())
 }
@@ -41,19 +41,19 @@ func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndFullRangePosition(
 	return clPool
 }
 
-// createConcentratedPoolsFromCoinsWithSwapFee creates CL pools from given sets of coins and respective swap fees.
+// createConcentratedPoolsFromCoinsWithSpreadFactor creates CL pools from given sets of coins and respective swap fees.
 // Where element 1 of the input corresponds to the first pool created, element 2 to the second pool created etc.
-func (s *KeeperTestHelper) CreateConcentratedPoolsAndFullRangePositionWithSwapFee(poolDenoms [][]string, swapFee []sdk.Dec) {
+func (s *KeeperTestHelper) CreateConcentratedPoolsAndFullRangePositionWithSpreadFactor(poolDenoms [][]string, spreadFactor []sdk.Dec) {
 	for i, curPoolDenoms := range poolDenoms {
 		s.Require().Equal(2, len(curPoolDenoms))
-		var curSwapFee sdk.Dec
-		if len(swapFee) > i {
-			curSwapFee = swapFee[i]
+		var curSpreadFactor sdk.Dec
+		if len(spreadFactor) > i {
+			curSpreadFactor = spreadFactor[i]
 		} else {
-			curSwapFee = sdk.ZeroDec()
+			curSpreadFactor = sdk.ZeroDec()
 		}
 
-		clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], curPoolDenoms[0], curPoolDenoms[1], DefaultTickSpacing, curSwapFee)
+		clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], curPoolDenoms[0], curPoolDenoms[1], DefaultTickSpacing, curSpreadFactor)
 		fundCoins := sdk.NewCoins(sdk.NewCoin(curPoolDenoms[0], DefaultCoinAmount), sdk.NewCoin(curPoolDenoms[1], DefaultCoinAmount))
 		s.FundAcc(s.TestAccs[0], fundCoins)
 		s.CreateFullRangePosition(clPool, fundCoins)
@@ -63,7 +63,7 @@ func (s *KeeperTestHelper) CreateConcentratedPoolsAndFullRangePositionWithSwapFe
 // createConcentratedPoolsFromCoins creates CL pools from given sets of coins (with zero swap fees).
 // Where element 1 of the input corresponds to the first pool created, element 2 to the second pool created etc.
 func (s *KeeperTestHelper) CreateConcentratedPoolsAndFullRangePosition(poolDenoms [][]string) {
-	s.CreateConcentratedPoolsAndFullRangePositionWithSwapFee(poolDenoms, []sdk.Dec{sdk.ZeroDec()})
+	s.CreateConcentratedPoolsAndFullRangePositionWithSpreadFactor(poolDenoms, []sdk.Dec{sdk.ZeroDec()})
 }
 
 // PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition sets up a concentrated liquidity pool with custom denoms.
@@ -80,12 +80,12 @@ func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndLockedFullRangePos
 }
 
 // PrepareCustomConcentratedPool sets up a concentrated liquidity pool with the custom parameters.
-func (s *KeeperTestHelper) PrepareCustomConcentratedPool(owner sdk.AccAddress, denom0, denom1 string, tickSpacing uint64, swapFee sdk.Dec) types.ConcentratedPoolExtension {
+func (s *KeeperTestHelper) PrepareCustomConcentratedPool(owner sdk.AccAddress, denom0, denom1 string, tickSpacing uint64, spreadFactor sdk.Dec) types.ConcentratedPoolExtension {
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
 
 	// Create a concentrated pool via the poolmanager
-	poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(owner, denom0, denom1, tickSpacing, swapFee))
+	poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(owner, denom0, denom1, tickSpacing, spreadFactor))
 	s.Require().NoError(err)
 
 	// Retrieve the poolInterface via the poolID

@@ -452,7 +452,7 @@ type MsgCreateConcentratedPool struct {
  Denom0                    string
  Denom1                    string
  TickSpacing               uint64
- SwapFee                   github_com_cosmos_cosmos_sdk_types.Dec
+ SpreadFactor                   github_com_cosmos_cosmos_sdk_types.Dec
 }
 ```
 
@@ -981,7 +981,7 @@ Note, that the numbers used in this example are not realistic. They are used to
 illustrate the concepts on the high level.
 
 Imagine a tick range from min tick -1000 to max tick 1000 in a pool with a 1%
-swap fee.
+spread factor.
 
 Assume that user A created a full range position from ticks -1000 to 1000 for
 `10_000` liquidity units.
@@ -1049,7 +1049,7 @@ Now, we update the swap state as follows:
 of the crossed tick 0 (1_000) = 11_000.
 
 - `feeGrowthGlobal` is set to 2_500 \* 0.01 / 10_000 = 0.0025 because we assumed
-1% swap fee.
+1% spread factor.
 
 Now, we proceed by getting the next initialized tick in the direction of
 the swap (100).
@@ -1073,7 +1073,7 @@ Now, we update the swap state as follows:
 - `liquidity` is set kept the same as we did not cross any initialized tick.
 
 - `feeGrowthGlobal` is updated to 0.0025 + (2_500 \* 0.01 / 10_000) = 0.005
-  because we assumed 1% swap fee.
+  because we assumed 1% spread factor.
 
 As a result, we complete the swap having swapped 5_000 tokens one in for 22_500
 tokens zero out. The tick is now at 70 and the current liquidity at the active
@@ -1114,11 +1114,11 @@ layers of state:
 // Note that this is proto-generated.
 type Pool struct {
     ...
-    SwapFee sdk.Dec
+    SpreadFactor sdk.Dec
 }
 ```
 
-Each pool is initialized with a static fee value `SwapFee` to be paid by swappers.
+Each pool is initialized with a static fee value `SpreadFactor` to be paid by swappers.
 Additionally, each pool's fee accumulator tracks and stores the total fees accrued
 throughout its lifespan, named `FeeGrowthGlobal`.
 
@@ -1253,15 +1253,15 @@ swapped in.
 
 Then, to calculate the fee within a single tick, we perform the following steps:
 
-1. Calculate an updated `tokenInAmtAfterFee` by charging the `pool.SwapFee` on `tokenInAmt`.
+1. Calculate an updated `tokenInAmtAfterFee` by charging the `pool.SpreadFactor` on `tokenInAmt`.
 
 ```go
 // Update global fee accumulator tracking fees for denom of tokenInAmt.
 // TODO: revisit to make sure if truncations need to happen.
-pool.FeeGrowthGlobalOutside.TokenX = pool.FeeGrowthGlobalOutside.TokenX.Add(tokenInAmt.Mul(pool.SwapFee))
+pool.FeeGrowthGlobalOutside.TokenX = pool.FeeGrowthGlobalOutside.TokenX.Add(tokenInAmt.Mul(pool.SpreadFactor))
 
 // Update tokenInAmt to account for fees.
-fee = tokenInAmt.Mul(pool.SwapFee).Ceil()
+fee = tokenInAmt.Mul(pool.SpreadFactor).Ceil()
 tokenInAmtAfterFee = tokenInAmt.Sub(fee)
 
 k.bankKeeper.SendCoins(ctx, swapper, pool.GetAddress(), ...) // send tokenInAmtAfterFee
@@ -1306,7 +1306,7 @@ feeChargeTotal = amountSpecifiedRemaining.Sub(amountIn)
 The fee is charged on the amount actually consumed during a swap step.
 
 ```go
-feeChargeTotal = amountIn.Mul(swapFee)
+feeChargeTotal = amountIn.Mul(spreadFactor)
 ```
 
 3. Price impact protection makes it exit before consuming all amount remaining.
@@ -1315,7 +1315,7 @@ The fee is charged on the amount in actually consumed before price impact
 protection got trigerred.
 
 ```go
-feeChargeTotal = amountIn.Mul(swapFee)
+feeChargeTotal = amountIn.Mul(spreadFactor)
 ```
 
 ## Incentive/Liquidity Mining Mechanism

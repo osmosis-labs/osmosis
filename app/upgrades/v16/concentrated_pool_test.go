@@ -91,8 +91,8 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateConcentratedPoolFromCFMM() 
 			suite.Require().NoError(err)
 			suite.Require().Equal(clPoolReturned, clPoolInState)
 
-			// Validate CL and balancer pools have the same swap fee.
-			suite.Require().Equal(balancerPool.GetSwapFee(suite.Ctx), clPoolReturned.GetSwapFee(suite.Ctx))
+			// Validate CL and balancer pools have the same spread factor.
+			suite.Require().Equal(balancerPool.GetSpreadFactor(suite.Ctx), clPoolReturned.GetSpreadFactor(suite.Ctx))
 
 			// Validate that CL and balancer pools have the same denoms
 			balancerDenoms, err := suite.App.PoolManagerKeeper.RouteGetPoolDenoms(suite.Ctx, balancerPool.GetId())

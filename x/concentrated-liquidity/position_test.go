@@ -1147,7 +1147,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 	var (
 		defaultAddress   = s.TestAccs[0]
 		defaultBlockTime = time.Unix(1, 1).UTC()
-		swapFee          = sdk.NewDecWithPrec(2, 3)
+		spreadFactor     = sdk.NewDecWithPrec(2, 3)
 	)
 
 	expectedPositionIds := make([]uint64, numPositions)
@@ -1169,7 +1169,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 	s.FundAcc(defaultAddress, requiredBalances)
 
 	// Create CL pool
-	s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, swapFee)
+	s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, spreadFactor)
 
 	// Set incentives for pool to ensure accumulators work correctly
 	err := s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, DefaultIncentiveRecords)
@@ -1185,7 +1185,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 
 	// Perform a swap to earn fees
 	swapAmountIn := sdk.NewCoin(ETH, sdk.NewInt(swapAmount))
-	expectedFee := swapAmountIn.Amount.ToDec().Mul(swapFee)
+	expectedFee := swapAmountIn.Amount.ToDec().Mul(spreadFactor)
 	// We run expected fees through a cycle of divison and multiplication by liquidity to capture appropriate rounding behavior.
 	// Note that we truncate the int at the end since it is not possible to have a decimal fee amount collected (the QuoTruncate
 	// and MulTruncates are much smaller operations that round down for values past the 18th decimal place).
@@ -1242,7 +1242,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 	var (
 		defaultAddress   = s.TestAccs[0]
 		defaultBlockTime = time.Unix(1, 1).UTC()
-		swapFee          = sdk.NewDecWithPrec(2, 3)
+		spreadFactor     = sdk.NewDecWithPrec(2, 3)
 	)
 
 	expectedPositionIds := make([]uint64, numPositions)
@@ -1264,7 +1264,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 	s.FundAcc(defaultAddress, requiredBalances)
 
 	// Create CL pool
-	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, swapFee)
+	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, spreadFactor)
 
 	// an error of 1 for each position
 	roundingError := int64(numPositions)

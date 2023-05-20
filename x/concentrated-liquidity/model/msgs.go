@@ -24,14 +24,14 @@ func NewMsgCreateConcentratedPool(
 	denom0 string,
 	denom1 string,
 	tickSpacing uint64,
-	swapFee sdk.Dec,
+	spreadFactor sdk.Dec,
 ) MsgCreateConcentratedPool {
 	return MsgCreateConcentratedPool{
-		Sender:      sender.String(),
-		Denom0:      denom0,
-		Denom1:      denom1,
-		TickSpacing: tickSpacing,
-		SwapFee:     swapFee,
+		Sender:       sender.String(),
+		Denom0:       denom0,
+		Denom1:       denom1,
+		TickSpacing:  tickSpacing,
+		SpreadFactor: spreadFactor,
 	}
 }
 
@@ -59,9 +59,9 @@ func (msg MsgCreateConcentratedPool) ValidateBasic() error {
 		return fmt.Errorf("denom1 is invalid: %s", sdk.ValidateDenom(msg.Denom1))
 	}
 
-	swapFee := msg.SwapFee
-	if swapFee.IsNegative() || swapFee.GTE(one) {
-		return cltypes.InvalidSwapFeeError{ActualFee: swapFee}
+	spreadFactor := msg.SpreadFactor
+	if spreadFactor.IsNegative() || spreadFactor.GTE(one) {
+		return cltypes.InvalidSpreadFactorError{ActualFee: spreadFactor}
 	}
 
 	return nil
@@ -98,7 +98,7 @@ func (msg MsgCreateConcentratedPool) InitialLiquidity() sdk.Coins {
 }
 
 func (msg MsgCreateConcentratedPool) CreatePool(ctx sdk.Context, poolID uint64) (poolmanagertypes.PoolI, error) {
-	poolI, err := NewConcentratedLiquidityPool(poolID, msg.Denom0, msg.Denom1, msg.TickSpacing, msg.SwapFee)
+	poolI, err := NewConcentratedLiquidityPool(poolID, msg.Denom0, msg.Denom1, msg.TickSpacing, msg.SpreadFactor)
 	return &poolI, err
 }
 

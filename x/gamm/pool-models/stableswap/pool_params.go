@@ -16,11 +16,11 @@ func (params PoolParams) Validate() error {
 	}
 
 	if params.SwapFee.IsNegative() {
-		return types.ErrNegativeSwapFee
+		return types.ErrNegativeSpreadFactor
 	}
 
 	if params.SwapFee.GTE(sdk.OneDec()) {
-		return types.ErrTooMuchSwapFee
+		return types.ErrTooMuchSpreadFactor
 	}
 	return nil
 }

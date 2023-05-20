@@ -25,15 +25,15 @@ var (
 
 // NewConcentratedLiquidityPool creates a new ConcentratedLiquidity pool with the specified parameters.
 // The two provided denoms are ordered so that denom0 is lexicographically smaller than denom1.
-func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpacing uint64, swapFee sdk.Dec) (Pool, error) {
+func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpacing uint64, spreadFactor sdk.Dec) (Pool, error) {
 	// Ensure that the two denoms are different
 	if denom0 == denom1 {
 		return Pool{}, types.MatchingDenomError{Denom: denom0}
 	}
 
 	// Swap fee must be [0,1)
-	if swapFee.IsNegative() || swapFee.GTE(one) {
-		return Pool{}, types.InvalidSwapFeeError{ActualFee: swapFee}
+	if spreadFactor.IsNegative() || spreadFactor.GTE(one) {
+		return Pool{}, types.InvalidSpreadFactorError{ActualFee: spreadFactor}
 	}
 
 	// Create a new pool struct with the specified parameters
@@ -49,7 +49,7 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 		Token1:               denom1,
 		TickSpacing:          tickSpacing,
 		ExponentAtPriceOne:   types.ExponentAtPriceOne,
-		SwapFee:              swapFee,
+		SpreadFactor:         spreadFactor,
 	}
 	return pool, nil
 }
@@ -94,9 +94,9 @@ func (p Pool) String() string {
 	return string(out)
 }
 
-// GetSwapFee returns the swap fee of the pool
-func (p Pool) GetSwapFee(ctx sdk.Context) sdk.Dec {
-	return p.SwapFee
+// GetSpreadFactor returns the spread factor of the pool
+func (p Pool) GetSpreadFactor(ctx sdk.Context) sdk.Dec {
+	return p.SpreadFactor
 }
 
 // IsActive returns true if the pool is active

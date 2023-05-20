@@ -17,9 +17,9 @@ message MsgCreateConcentratedPool {
   string denom0 = 2 [ (gogoproto.moretags) = "yaml:\"denom0\"" ];
   string denom1 = 3 [ (gogoproto.moretags) = "yaml:\"denom1\"" ];
   uint64 tick_spacing = 4 [ (gogoproto.moretags) = "yaml:\"tick_spacing\"" ];
-  string swap_fee = 5 [
+  string spread_factor = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"swap_fee\"",
+    (gogoproto.moretags) = "yaml:\"spread_factor\"",
     (gogoproto.nullable) = false
   ];
 }

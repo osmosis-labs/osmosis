@@ -32,7 +32,7 @@ type SwapTest struct {
 
 	// Shared.
 	priceLimit               sdk.Dec
-	swapFee                  sdk.Dec
+	spreadFactor             sdk.Dec
 	secondPositionLowerPrice sdk.Dec
 	secondPositionUpperPrice sdk.Dec
 
@@ -73,7 +73,7 @@ var (
 			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(42000000)),
 			tokenOutDenom: "eth",
 			priceLimit:    sdk.NewDec(5004),
-			swapFee:       sdk.ZeroDec(),
+			spreadFactor:  sdk.ZeroDec(),
 			// params
 			// liquidity: 		 1517882343.751510418088349649
 			// sqrtPriceNext:    70.738348247484497717 which is 5003.9139127823931095409 https://www.wolframalpha.com/input?i=70.710678118654752440+%2B+42000000+%2F+1517882343.751510418088349649
@@ -92,7 +92,7 @@ var (
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
 			tokenOutDenom: "usdc",
 			priceLimit:    sdk.NewDec(4993),
-			swapFee:       sdk.ZeroDec(),
+			spreadFactor:  sdk.ZeroDec(),
 			// params
 			// liquidity: 		 1517882343.751510418088349649
 			// sqrtPriceNext:    70.6666639108571443311 which is 4993.7773882900395488 https://www.wolframalpha.com/input?i=%28%281517882343.751510418088349649%29%29+%2F+%28%28%281517882343.751510418088349649%29+%2F+%2870.710678118654752440%29%29+%2B+%2813370%29%29
@@ -115,7 +115,7 @@ var (
 			tokenIn:                  sdk.NewCoin("usdc", sdk.NewInt(42000000)),
 			tokenOutDenom:            "eth",
 			priceLimit:               sdk.NewDec(5002),
-			swapFee:                  sdk.ZeroDec(),
+			spreadFactor:             sdk.ZeroDec(),
 			secondPositionLowerPrice: DefaultLowerPrice,
 			secondPositionUpperPrice: DefaultUpperPrice,
 			// params
@@ -138,7 +138,7 @@ var (
 			tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(13370)),
 			tokenOutDenom:            "usdc",
 			priceLimit:               sdk.NewDec(4996),
-			swapFee:                  sdk.ZeroDec(),
+			spreadFactor:             sdk.ZeroDec(),
 			secondPositionLowerPrice: DefaultLowerPrice,
 			secondPositionUpperPrice: DefaultUpperPrice,
 			// params
@@ -167,7 +167,7 @@ var (
 			tokenIn:                  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			tokenOutDenom:            "eth",
 			priceLimit:               sdk.NewDec(6255),
-			swapFee:                  sdk.ZeroDec(),
+			spreadFactor:             sdk.ZeroDec(),
 			secondPositionLowerPrice: sdk.NewDec(5500),
 			secondPositionUpperPrice: sdk.NewDec(6250),
 			// params
@@ -206,7 +206,7 @@ var (
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(2000000)),
 			tokenOutDenom: "usdc",
 			priceLimit:    sdk.NewDec(3900),
-			swapFee:       sdk.ZeroDec(),
+			spreadFactor:  sdk.ZeroDec(),
 			// params
 			// liquidity (1st):  1517882343.751510418088349649
 			// sqrtPriceNext:    67.416615162732695594 which is 4545
@@ -241,7 +241,7 @@ var (
 			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			tokenOutDenom: "eth",
 			priceLimit:    sdk.NewDec(6056),
-			swapFee:       sdk.ZeroDec(),
+			spreadFactor:  sdk.ZeroDec(),
 			// params
 			// liquidity (1st):  1517882343.751510418088349649
 			// sqrtPriceNext:    74.161984870956629487 which is 5500
@@ -272,7 +272,7 @@ var (
 			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(8500000000)),
 			tokenOutDenom: "eth",
 			priceLimit:    sdk.NewDec(6056),
-			swapFee:       sdk.ZeroDec(),
+			spreadFactor:  sdk.ZeroDec(),
 			// params
 			// liquidity (1st):  1517882343.751510418088349649
 			// sqrtPriceNext:    74.161984870956629487 which is 5500
@@ -309,7 +309,7 @@ var (
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(2000000)),
 			tokenOutDenom: "usdc",
 			priceLimit:    sdk.NewDec(4128),
-			swapFee:       sdk.ZeroDec(),
+			spreadFactor:  sdk.ZeroDec(),
 			// params
 			// liquidity (1st):  1517882343.751510418088349649
 			// sqrtPriceNext:    67.416615162732695594 which is 4545
@@ -339,7 +339,7 @@ var (
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(1800000)),
 			tokenOutDenom: "usdc",
 			priceLimit:    sdk.NewDec(4128),
-			swapFee:       sdk.ZeroDec(),
+			spreadFactor:  sdk.ZeroDec(),
 			// params
 			// liquidity (1st):  1517882343.751510418088349649
 			// sqrtPriceNext:    67.416615162732695594 which is 4545
@@ -372,7 +372,7 @@ var (
 			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			tokenOutDenom: "eth",
 			priceLimit:    sdk.NewDec(6106),
-			swapFee:       sdk.ZeroDec(),
+			spreadFactor:  sdk.ZeroDec(),
 			// params
 			// liquidity (1st):  1517882343.751510418088349649
 			// sqrtPriceNext:    74.161984870956629487 which is 5500
@@ -406,7 +406,7 @@ var (
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
 			tokenOutDenom: "usdc",
 			priceLimit:    sdk.NewDec(4994),
-			swapFee:       sdk.ZeroDec(),
+			spreadFactor:  sdk.ZeroDec(),
 			// params
 			// liquidity: 		 1517882343.751510418088349649
 			// sqrtPriceNext:    70.668238976219012614 which is 4994 https://www.wolframalpha.com/input?i=70.710678118654752440+%2B+42000000+%2F+1517882343.751510418088349649
@@ -434,7 +434,7 @@ var (
 			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(42000000)),
 			tokenOutDenom: "eth",
 			priceLimit:    sdk.NewDec(5004),
-			swapFee:       sdk.MustNewDecFromStr("0.01"),
+			spreadFactor:  sdk.MustNewDecFromStr("0.01"),
 			// params
 			// liquidity:                         1517882343.751510418088349649
 			// sqrtPriceNext:                     70.738071546196200264 which is 5003.9139127814610432508
@@ -458,7 +458,7 @@ var (
 			tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(13370)),
 			tokenOutDenom:            "usdc",
 			priceLimit:               sdk.NewDec(4990),
-			swapFee:                  sdk.MustNewDecFromStr("0.03"),
+			spreadFactor:             sdk.MustNewDecFromStr("0.03"),
 			secondPositionLowerPrice: DefaultLowerPrice,
 			secondPositionUpperPrice: DefaultUpperPrice,
 			// params
@@ -486,7 +486,7 @@ var (
 			tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(2000000)),
 			tokenOutDenom:            "usdc",
 			priceLimit:               sdk.NewDec(4094),
-			swapFee:                  sdk.MustNewDecFromStr("0.05"),
+			spreadFactor:             sdk.MustNewDecFromStr("0.05"),
 			secondPositionLowerPrice: sdk.NewDec(4000),
 			secondPositionUpperPrice: sdk.NewDec(4545),
 			// params
@@ -510,7 +510,7 @@ var (
 			tokenIn:                  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			tokenOutDenom:            "eth",
 			priceLimit:               sdk.NewDec(6056),
-			swapFee:                  sdk.MustNewDecFromStr("0.1"),
+			spreadFactor:             sdk.MustNewDecFromStr("0.1"),
 			secondPositionLowerPrice: sdk.NewDec(5001),
 			secondPositionUpperPrice: sdk.NewDec(6250),
 			// expectedTokenIn:  5762545340.40832543134898983723 + 4237454659.59167456865101016277 = 10000000000.0000 = 10000.00 usdc
@@ -533,7 +533,7 @@ var (
 			tokenIn:                           sdk.NewCoin("eth", sdk.NewInt(1800000)),
 			tokenOutDenom:                     "usdc",
 			priceLimit:                        sdk.NewDec(4128),
-			swapFee:                           sdk.MustNewDecFromStr("0.005"),
+			spreadFactor:                      sdk.MustNewDecFromStr("0.005"),
 			secondPositionLowerPrice:          sdk.NewDec(4000),
 			secondPositionUpperPrice:          sdk.NewDec(4999),
 			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(1800000)),
@@ -555,7 +555,7 @@ var (
 			priceLimit:                        sdk.NewDec(6106),
 			secondPositionLowerPrice:          sdk.NewDec(5501),
 			secondPositionUpperPrice:          sdk.NewDec(6250),
-			swapFee:                           sdk.MustNewDecFromStr("0.03"),
+			spreadFactor:                      sdk.MustNewDecFromStr("0.03"),
 			expectedTokenIn:                   sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(1771252)),
 			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.221769187794051751"),
@@ -572,7 +572,7 @@ var (
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
 			tokenOutDenom: "usdc",
 			priceLimit:    sdk.NewDec(4994),
-			swapFee:       sdk.MustNewDecFromStr("0.01"),
+			spreadFactor:  sdk.MustNewDecFromStr("0.01"),
 			// params
 			// liquidity: 		 1517882343.751510418088349649
 			// sqrtPriceNext:    70.668238976219012614 which is 4994
@@ -593,14 +593,14 @@ var (
 			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(5300000000)),
 			tokenOutDenom: "eth",
 			priceLimit:    sdk.NewDec(6000),
-			swapFee:       sdk.ZeroDec(),
+			spreadFactor:  sdk.ZeroDec(),
 			expectErr:     true,
 		},
 		"single position within one tick, trade does not complete due to lack of liquidity: eth -> usdc": {
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(1100000)),
 			tokenOutDenom: "usdc",
 			priceLimit:    sdk.NewDec(4000),
-			swapFee:       sdk.ZeroDec(),
+			spreadFactor:  sdk.ZeroDec(),
 			expectErr:     true,
 		},
 	}
@@ -615,7 +615,7 @@ var (
 			tokenOut:     sdk.NewCoin(USDC, sdk.NewInt(42000000)),
 			tokenInDenom: ETH,
 			priceLimit:   sdk.NewDec(4993),
-			swapFee:      sdk.ZeroDec(),
+			spreadFactor: sdk.ZeroDec(),
 			// from math import *
 			// from decimal import *
 			// liq = Decimal("1517882343.751510418088349649")
@@ -636,7 +636,7 @@ var (
 			tokenOut:     sdk.NewCoin(ETH, sdk.NewInt(13370)),
 			tokenInDenom: USDC,
 			priceLimit:   sdk.NewDec(5010),
-			swapFee:      sdk.ZeroDec(),
+			spreadFactor: sdk.ZeroDec(),
 			// from math import *
 			// from decimal import *
 			// liq = Decimal("1517882343.751510418088349649")
@@ -662,7 +662,7 @@ var (
 			tokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(66829187)),
 			tokenInDenom:             "eth",
 			priceLimit:               sdk.NewDec(4990),
-			swapFee:                  sdk.ZeroDec(),
+			spreadFactor:             sdk.ZeroDec(),
 			secondPositionLowerPrice: DefaultLowerPrice,
 			secondPositionUpperPrice: DefaultUpperPrice,
 			// from math import *
@@ -688,7 +688,7 @@ var (
 			tokenOut:                 sdk.NewCoin("eth", sdk.NewInt(8398)),
 			tokenInDenom:             "usdc",
 			priceLimit:               sdk.NewDec(5020),
-			swapFee:                  sdk.ZeroDec(),
+			spreadFactor:             sdk.ZeroDec(),
 			secondPositionLowerPrice: DefaultLowerPrice,
 			secondPositionUpperPrice: DefaultUpperPrice,
 			// from math import *
@@ -719,7 +719,7 @@ var (
 			tokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(9103422788)),
 			tokenInDenom:             "eth",
 			priceLimit:               sdk.NewDec(3900),
-			swapFee:                  sdk.ZeroDec(),
+			spreadFactor:             sdk.ZeroDec(),
 			secondPositionLowerPrice: sdk.NewDec(4000),
 			secondPositionUpperPrice: sdk.NewDec(4545),
 			// from math import *
@@ -767,7 +767,7 @@ var (
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1820630)),
 			tokenInDenom:             USDC,
 			priceLimit:               sdk.NewDec(6106),
-			swapFee:                  sdk.ZeroDec(),
+			spreadFactor:             sdk.ZeroDec(),
 			secondPositionLowerPrice: sdk.NewDec(5500), // 315000
 			secondPositionUpperPrice: sdk.NewDec(6250), // 322500
 			// from math import *
@@ -815,7 +815,7 @@ var (
 			tokenOut:                 sdk.NewCoin(USDC, sdk.NewInt(9321276930)),
 			tokenInDenom:             ETH,
 			priceLimit:               sdk.NewDec(4128),
-			swapFee:                  sdk.ZeroDec(),
+			spreadFactor:             sdk.ZeroDec(),
 			secondPositionLowerPrice: sdk.NewDec(4000),
 			secondPositionUpperPrice: sdk.NewDec(4999),
 			// from math import *
@@ -871,7 +871,7 @@ var (
 			tokenOut:                 sdk.NewCoin(USDC, sdk.NewInt(8479320318)),
 			tokenInDenom:             ETH,
 			priceLimit:               sdk.NewDec(4128),
-			swapFee:                  sdk.ZeroDec(),
+			spreadFactor:             sdk.ZeroDec(),
 			secondPositionLowerPrice: sdk.NewDec(4000),
 			secondPositionUpperPrice: sdk.NewDec(4999),
 			// from math import *
@@ -930,7 +930,7 @@ var (
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1864161)),
 			tokenInDenom:             USDC,
 			priceLimit:               sdk.NewDec(6056),
-			swapFee:                  sdk.ZeroDec(),
+			spreadFactor:             sdk.ZeroDec(),
 			secondPositionLowerPrice: sdk.NewDec(5001),
 			secondPositionUpperPrice: sdk.NewDec(6250),
 			// from math import *
@@ -981,7 +981,7 @@ var (
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1609138)),
 			tokenInDenom:             USDC,
 			priceLimit:               sdk.NewDec(6056),
-			swapFee:                  sdk.ZeroDec(),
+			spreadFactor:             sdk.ZeroDec(),
 			secondPositionLowerPrice: sdk.NewDec(5001),
 			secondPositionUpperPrice: sdk.NewDec(6250),
 			// from math import *
@@ -1038,7 +1038,7 @@ var (
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1820545)),
 			tokenInDenom:             USDC,
 			priceLimit:               sdk.NewDec(6106),
-			swapFee:                  sdk.ZeroDec(),
+			spreadFactor:             sdk.ZeroDec(),
 			secondPositionLowerPrice: sdk.NewDec(5501), // 315010
 			secondPositionUpperPrice: sdk.NewDec(6250), // 322500
 			// from math import *
@@ -1082,7 +1082,7 @@ var (
 			tokenOut:     sdk.NewCoin(ETH, sdk.NewInt(1820545)),
 			tokenInDenom: USDC,
 			priceLimit:   sdk.NewDec(5002),
-			swapFee:      sdk.ZeroDec(),
+			spreadFactor: sdk.ZeroDec(),
 			// from math import *
 			// from decimal import *
 			// # Range 1: From 5000 to 5002
@@ -1111,17 +1111,17 @@ var (
 			tokenOut:     sdk.NewCoin(USDC, sdk.NewInt(42000000)),
 			tokenInDenom: ETH,
 			priceLimit:   sdk.NewDec(4993),
-			swapFee:      sdk.MustNewDecFromStr("0.01"),
+			spreadFactor: sdk.MustNewDecFromStr("0.01"),
 			// from math import *
 			// from decimal import *
 			// token_out = Decimal("42000000")
 			// liq = Decimal("1517882343.751510418088349649")
 			// sqrt_cur = Decimal("5000").sqrt()
 			// sqrt_next = sqrt_cur - token_out / liq
-			// swap_fee = Decimal("0.01")
+			// spread_factor = Decimal("0.01")
 
 			// token_in = ceil(liq * abs(sqrt_cur - sqrt_next) / (sqrt_cur * sqrt_next))
-			// fee = token_in *  swap_fee / (1 - swap_fee)
+			// fee = token_in *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
 			// token_in = ceil(token_in + fee)
@@ -1141,7 +1141,7 @@ var (
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(8398)),
 			tokenInDenom:             USDC,
 			priceLimit:               sdk.NewDec(5020),
-			swapFee:                  sdk.MustNewDecFromStr("0.03"),
+			spreadFactor:             sdk.MustNewDecFromStr("0.03"),
 			secondPositionLowerPrice: DefaultLowerPrice,
 			secondPositionUpperPrice: DefaultUpperPrice,
 			// from math import *
@@ -1150,10 +1150,10 @@ var (
 			// liq = Decimal("1517882343.751510418088349649") * 2
 			// sqrt_cur = Decimal("5000").sqrt()
 			// sqrt_next = liq * sqrt_cur / (liq - token_out * sqrt_cur)
-			// swap_fee = Decimal("0.03")
+			// spread_factor = Decimal("0.03")
 
 			// token_in = ceil(liq * abs(sqrt_cur - sqrt_next))
-			// fee = token_in *  swap_fee / (1 - swap_fee)
+			// fee = token_in *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
 			// token_in = ceil(token_in + fee)
@@ -1176,7 +1176,7 @@ var (
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1820630)),
 			tokenInDenom:             USDC,
 			priceLimit:               sdk.NewDec(6106),
-			swapFee:                  sdk.MustNewDecFromStr("0.001"),
+			spreadFactor:             sdk.MustNewDecFromStr("0.001"),
 			secondPositionLowerPrice: sdk.NewDec(5500), // 315000
 			secondPositionUpperPrice: sdk.NewDec(6250), // 322500
 			// from math import *
@@ -1186,11 +1186,11 @@ var (
 			// liq_1 = Decimal("1517882343.751510418088349649")
 			// sqrt_cur = Decimal("5000").sqrt()
 			// sqrt_next_1 = Decimal("5500").sqrt()
-			// swap_fee = Decimal("0.001")
+			// spread_factor = Decimal("0.001")
 
 			// token_out_1 = liq_1 * (sqrt_next_1 - sqrt_cur ) / (sqrt_next_1 * sqrt_cur)
 			// token_in_1 = ceil(liq_1 * abs(sqrt_cur - sqrt_next_1 ))
-			// fee_1 = token_in_1 *  swap_fee / (1 - swap_fee)
+			// fee_1 = token_in_1 *  spread_factor / (1 - spread_factor)
 
 			// token_out = token_out - token_out_1
 
@@ -1200,7 +1200,7 @@ var (
 
 			// token_out_2 = liq_2 * (sqrt_next_2 - sqrt_next_1 ) / (sqrt_next_1 * sqrt_next_2)
 			// token_in_2 = ceil(liq_2 * (sqrt_next_2 - sqrt_next_1 ))
-			// fee_2 = token_in_2 *  swap_fee / (1 - swap_fee)
+			// fee_2 = token_in_2 *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
 			// token_in = ceil(token_in_1 + fee_1 + token_in_2 + fee_2)
@@ -1224,7 +1224,7 @@ var (
 			tokenOut:                 sdk.NewCoin(USDC, sdk.NewInt(9321276930)),
 			tokenInDenom:             ETH,
 			priceLimit:               sdk.NewDec(4128),
-			swapFee:                  sdk.MustNewDecFromStr("0.1"),
+			spreadFactor:             sdk.MustNewDecFromStr("0.1"),
 			secondPositionLowerPrice: sdk.NewDec(4000),
 			secondPositionUpperPrice: sdk.NewDec(4999),
 			// from math import *
@@ -1234,11 +1234,11 @@ var (
 			// liq_1 = Decimal("1517882343.751510418088349649")
 			// sqrt_cur = Decimal("5000").sqrt()
 			// sqrt_next_1 = Decimal("4999").sqrt()
-			// swap_fee = Decimal("0.1")
+			// spread_factor = Decimal("0.1")
 
 			// token_out_1 = liq_1 * (sqrt_cur - sqrt_next_1 )
 			// token_in_1 = ceil(liq_1 * (sqrt_cur - sqrt_next_1 ) / (sqrt_next_1 * sqrt_cur))
-			// fee_1 = token_in_1 *  swap_fee / (1 - swap_fee)
+			// fee_1 = token_in_1 *  spread_factor / (1 - spread_factor)
 
 			// token_out = token_out - token_out_1
 
@@ -1248,7 +1248,7 @@ var (
 
 			// token_out_2 = liq_2 * (sqrt_next_1 - sqrt_next_2 )
 			// token_in_2 = ceil(liq_2 * (sqrt_next_1 - sqrt_next_2 ) / (sqrt_next_2 * sqrt_next_1))
-			// fee_2 = token_in_2 *  swap_fee / (1 - swap_fee)
+			// fee_2 = token_in_2 *  spread_factor / (1 - spread_factor)
 
 			// token_out = token_out - token_out_2
 
@@ -1258,7 +1258,7 @@ var (
 
 			// token_out_3 = liq_3 * (sqrt_next_2 - sqrt_next_3 )
 			// token_in_3 = ceil(liq_3 * (sqrt_next_2 - sqrt_next_3 ) / (sqrt_next_3 * sqrt_next_2))
-			// fee_3 = token_in_3 *  swap_fee / (1 - swap_fee)
+			// fee_3 = token_in_3 *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
 			// token_in = token_in_1 + token_in_2 + token_in_3 + fee_1 + fee_2 + fee_3
@@ -1284,7 +1284,7 @@ var (
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1609138)),
 			tokenInDenom:             USDC,
 			priceLimit:               sdk.NewDec(6056),
-			swapFee:                  sdk.MustNewDecFromStr("0.05"),
+			spreadFactor:             sdk.MustNewDecFromStr("0.05"),
 			secondPositionLowerPrice: sdk.NewDec(5001),
 			secondPositionUpperPrice: sdk.NewDec(6250),
 			// from math import *
@@ -1294,11 +1294,11 @@ var (
 			// liq_1 = Decimal("1517882343.751510418088349649")
 			// sqrt_cur = Decimal("5000").sqrt()
 			// sqrt_next_1 = Decimal("5001").sqrt()
-			// swap_fee = Decimal("0.05")
+			// spread_factor = Decimal("0.05")
 
 			// token_out_1 = liq_1 * (sqrt_next_1 - sqrt_cur ) / (sqrt_next_1 * sqrt_cur)
 			// token_in_1 = ceil(liq_1 * (sqrt_next_1 - sqrt_cur ))
-			// fee_1 = token_in_1 *  swap_fee / (1 - swap_fee)
+			// fee_1 = token_in_1 *  spread_factor / (1 - spread_factor)
 
 			// token_out = token_out - token_out_1
 
@@ -1308,7 +1308,7 @@ var (
 
 			// token_out_2 = liq_2 * (sqrt_next_2 - sqrt_next_1 ) / (sqrt_next_1 * sqrt_next_2)
 			// token_in_2 = ceil(liq_2 * (sqrt_next_2 - sqrt_next_1 ))
-			// fee_2 = token_in_2 *  swap_fee / (1 - swap_fee)
+			// fee_2 = token_in_2 *  spread_factor / (1 - spread_factor)
 
 			// token_out = token_out - token_out_2
 
@@ -1318,7 +1318,7 @@ var (
 
 			// token_out_3 = liq_3 * (sqrt_next_3 - sqrt_next_2 ) / (sqrt_next_3 * sqrt_next_2)
 			// token_in_3 = ceil(liq_3 * (sqrt_next_3 - sqrt_next_2 ))
-			// fee_3 = token_in_3 *  swap_fee / (1 - swap_fee)
+			// fee_3 = token_in_3 *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
 			// token_in = token_in_1 + token_in_2 +token_in_3 + fee_1 + fee_2 + fee_3
@@ -1342,7 +1342,7 @@ var (
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1820545)),
 			tokenInDenom:             USDC,
 			priceLimit:               sdk.NewDec(6106),
-			swapFee:                  sdk.MustNewDecFromStr("0.0003"),
+			spreadFactor:             sdk.MustNewDecFromStr("0.0003"),
 			secondPositionLowerPrice: sdk.NewDec(5501), // 315010
 			secondPositionUpperPrice: sdk.NewDec(6250), // 322500
 			// from math import *
@@ -1352,11 +1352,11 @@ var (
 			// liq_1 = Decimal("1517882343.751510418088349649")
 			// sqrt_cur = Decimal("5000").sqrt()
 			// sqrt_next_1 = Decimal("5500").sqrt()
-			// swap_fee = Decimal("0.0003")
+			// spread_factor = Decimal("0.0003")
 
 			// token_out_1 = liq_1 * (sqrt_next_1 - sqrt_cur ) / (sqrt_next_1 * sqrt_cur)
 			// token_in_1 = ceil(liq_1 * (sqrt_next_1 - sqrt_cur ))
-			// fee_1 = token_in_1 *  swap_fee / (1 - swap_fee)
+			// fee_1 = token_in_1 *  spread_factor / (1 - spread_factor)
 			// token_out = token_out - token_out_1
 
 			// # Range 2: from 5501 till end
@@ -1365,7 +1365,7 @@ var (
 			// sqrt_next_2 = liq_2 * sqrt_cur_2 / (liq_2 - token_out * sqrt_cur_2)
 			// token_out_2 = liq_2 * (sqrt_next_2 - sqrt_cur_2 ) / (sqrt_cur_2 * sqrt_next_2)
 			// token_in_2 = ceil(liq_2 * (sqrt_next_2 - sqrt_cur_2 ))
-			// fee_2 = token_in_2 *  swap_fee / (1 - swap_fee)
+			// fee_2 = token_in_2 *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
 			// token_in = token_in_1 + token_in_2 + fee_1 + fee_2
@@ -1389,7 +1389,7 @@ var (
 			tokenOut:     sdk.NewCoin(ETH, sdk.NewInt(1820545)),
 			tokenInDenom: USDC,
 			priceLimit:   sdk.NewDec(5002),
-			swapFee:      sdk.MustNewDecFromStr("0.01"),
+			spreadFactor: sdk.MustNewDecFromStr("0.01"),
 			// from math import *
 			// from decimal import *
 			// # Range 1: From 5000 to 5002
@@ -1397,11 +1397,11 @@ var (
 			// liq_1 = Decimal("1517882343.751510418088349649")
 			// sqrt_cur = Decimal("5000").sqrt()
 			// sqrt_next_1 = Decimal("5002").sqrt()
-			// swap_fee = Decimal("0.01")
+			// spread_factor = Decimal("0.01")
 
 			// token_out_1 = liq_1 * (sqrt_next_1 - sqrt_cur ) / (sqrt_next_1 * sqrt_cur)
 			// token_in_1 = ceil(liq_1 * (sqrt_next_1 - sqrt_cur ))
-			// fee_1 = token_in_1 *  swap_fee / (1 - swap_fee)
+			// fee_1 = token_in_1 *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
 			// token_in = ceil(token_in_1 + fee_1)
@@ -1424,14 +1424,14 @@ var (
 			tokenOut:     sdk.NewCoin("usdc", sdk.NewInt(5300000000)),
 			tokenInDenom: "eth",
 			priceLimit:   sdk.NewDec(6000),
-			swapFee:      sdk.ZeroDec(),
+			spreadFactor: sdk.ZeroDec(),
 			expectErr:    true,
 		},
 		"single position within one tick, trade does not complete due to lack of liquidity: eth -> usdc ": {
 			tokenOut:     sdk.NewCoin("eth", sdk.NewInt(1100000)),
 			tokenInDenom: "usdc",
 			priceLimit:   sdk.NewDec(4000),
-			swapFee:      sdk.ZeroDec(),
+			spreadFactor: sdk.ZeroDec(),
 			expectErr:    true,
 		},
 	}
@@ -1466,9 +1466,9 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 
 			// Create default CL pool
 			clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-			clParams.AuthorizedSwapFees = append(clParams.AuthorizedSwapFees, test.swapFee)
+			clParams.AuthorizedSpreadFactors = append(clParams.AuthorizedSpreadFactors, test.spreadFactor)
 			s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
-			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "usdc", DefaultTickSpacing, test.swapFee)
+			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "usdc", DefaultTickSpacing, test.spreadFactor)
 
 			// add default position
 			s.SetupDefaultPosition(pool.GetId())
@@ -1497,7 +1497,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 				cacheCtx,
 				pool.GetId(),
 				test.tokenIn, test.tokenOutDenom,
-				test.swapFee, test.priceLimit)
+				test.spreadFactor, test.priceLimit)
 
 			if test.expectErr {
 				s.Require().Error(err)
@@ -1510,7 +1510,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 				s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
 				s.Require().Equal(test.expectedSqrtPrice, sqrtPrice)
 
-				expectedFees := tokenIn.Amount.ToDec().Mul(pool.GetSwapFee(s.Ctx)).TruncateInt()
+				expectedFees := tokenIn.Amount.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).TruncateInt()
 				s.Require().Equal(expectedFees.String(), totalFees.TruncateInt().String())
 
 				if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
@@ -1551,7 +1551,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 			tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
 				s.Ctx, s.TestAccs[0], pool,
 				test.tokenIn, test.tokenOutDenom,
-				test.swapFee, test.priceLimit,
+				test.spreadFactor, test.priceLimit,
 			)
 
 			if test.expectErr {
@@ -1684,7 +1684,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 			_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
 				s.Ctx, s.TestAccs[0], pool,
 				test.tokenIn, test.tokenOutDenom,
-				test.swapFee, test.priceLimit)
+				test.spreadFactor, test.priceLimit)
 
 			s.Require().NoError(err)
 
@@ -1742,9 +1742,9 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 
 			// Create default CL pool
 			clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-			clParams.AuthorizedSwapFees = append(clParams.AuthorizedSwapFees, test.swapFee)
+			clParams.AuthorizedSpreadFactors = append(clParams.AuthorizedSpreadFactors, test.spreadFactor)
 			s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
-			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "usdc", DefaultTickSpacing, test.swapFee)
+			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "usdc", DefaultTickSpacing, test.spreadFactor)
 
 			// add default position
 			s.SetupDefaultPosition(pool.GetId())
@@ -1768,7 +1768,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 			tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, totalFees, err := s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
 				cacheCtx,
 				test.tokenOut, test.tokenInDenom,
-				test.swapFee, test.priceLimit, pool.GetId())
+				test.spreadFactor, test.priceLimit, pool.GetId())
 			if test.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -1780,7 +1780,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 				s.Require().Equal(test.expectedTokenIn.String(), tokenIn.String())
 				s.Require().Equal(test.expectedTick, updatedTick)
 
-				expectedFees := tokenIn.Amount.ToDec().Mul(pool.GetSwapFee(s.Ctx)).TruncateInt()
+				expectedFees := tokenIn.Amount.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).TruncateInt()
 				s.Require().Equal(expectedFees.String(), totalFees.TruncateInt().String())
 
 				if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
@@ -1821,7 +1821,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 			tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, err = s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
 				s.Ctx, s.TestAccs[0], pool,
 				test.tokenOut, test.tokenInDenom,
-				test.swapFee, test.priceLimit)
+				test.spreadFactor, test.priceLimit)
 			if test.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -1870,7 +1870,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 				feeAccValue := feeAcc.GetValue()
 				actualValue := feeAccValue.AmountOf(test.tokenInDenom)
 
-				if test.swapFee.IsZero() {
+				if test.spreadFactor.IsZero() {
 					s.Require().Equal(sdk.ZeroDec(), actualValue)
 					return
 				}
@@ -1936,7 +1936,7 @@ func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
 			_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
 				s.Ctx, s.TestAccs[0], pool,
 				test.tokenOut, test.tokenInDenom,
-				test.swapFee, test.priceLimit)
+				test.spreadFactor, test.priceLimit)
 			s.Require().NoError(err)
 
 			// check lower tick and upper tick fee growth
@@ -2108,7 +2108,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			prevGasConsumed := s.Ctx.GasMeter().GasConsumed()
 
 			// Execute the swap directed in the test case
-			tokenOutAmount, err := s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool.(poolmanagertypes.PoolI), test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, DefaultZeroSwapFee)
+			tokenOutAmount, err := s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool.(poolmanagertypes.PoolI), test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, DefaultZeroSpreadFactor)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, test.expectedErr)
@@ -2284,7 +2284,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			prevGasConsumed := s.Ctx.GasMeter().GasConsumed()
 
 			// Execute the swap directed in the test case
-			tokenIn, err := s.App.ConcentratedLiquidityKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool.(poolmanagertypes.PoolI), test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut, DefaultZeroSwapFee)
+			tokenIn, err := s.App.ConcentratedLiquidityKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool.(poolmanagertypes.PoolI), test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut, DefaultZeroSpreadFactor)
 
 			if test.expectedErr != nil {
 				s.Require().Error(err)
@@ -2370,7 +2370,7 @@ func (s *KeeperTestSuite) TestComputeOutAmtGivenIn() {
 				s.Ctx,
 				pool.GetId(),
 				test.tokenIn, test.tokenOutDenom,
-				test.swapFee, test.priceLimit)
+				test.spreadFactor, test.priceLimit)
 
 			// check that the pool has not been modified after performing calc
 			poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
@@ -2438,7 +2438,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn_NonMutative() {
 				s.Ctx,
 				poolBeforeCalc,
 				test.tokenIn, test.tokenOutDenom,
-				test.swapFee)
+				test.spreadFactor)
 			s.Require().NoError(err)
 
 			// check that the pool has not been modified after performing calc
@@ -2506,7 +2506,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
 				s.Ctx,
 				poolBeforeCalc,
 				test.tokenIn, test.tokenOutDenom,
-				test.swapFee)
+				test.spreadFactor)
 			s.Require().NoError(err)
 
 			// check that the pool has not been modified after performing calc
@@ -2573,7 +2573,7 @@ func (s *KeeperTestSuite) TestComputeInAmtGivenOut() {
 			_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
 				s.Ctx,
 				test.tokenOut, test.tokenInDenom,
-				test.swapFee, test.priceLimit, pool.GetId())
+				test.spreadFactor, test.priceLimit, pool.GetId())
 			s.Require().NoError(err)
 
 			// check that the pool has not been modified after performing calc
@@ -2637,13 +2637,13 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 			firstTokenIn, firstTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
 				s.Ctx, s.TestAccs[0], pool,
 				test.tokenIn, test.tokenOutDenom,
-				DefaultZeroSwapFee, test.priceLimit)
+				DefaultZeroSpreadFactor, test.priceLimit)
 			s.Require().NoError(err)
 
 			secondTokenIn, secondTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
 				s.Ctx, s.TestAccs[0], pool,
 				firstTokenOut, firstTokenIn.Denom,
-				DefaultZeroSwapFee, sdk.ZeroDec(),
+				DefaultZeroSpreadFactor, sdk.ZeroDec(),
 			)
 			s.Require().NoError(err)
 
@@ -2735,13 +2735,13 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapInAmtGivenOut() {
 			firstTokenIn, firstTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
 				s.Ctx, s.TestAccs[0], pool,
 				test.tokenOut, test.tokenInDenom,
-				DefaultZeroSwapFee, test.priceLimit)
+				DefaultZeroSpreadFactor, test.priceLimit)
 			s.Require().NoError(err)
 
 			secondTokenIn, secondTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
 				s.Ctx, s.TestAccs[0], pool,
 				firstTokenIn, firstTokenOut.Denom,
-				DefaultZeroSwapFee, sdk.ZeroDec(),
+				DefaultZeroSpreadFactor, sdk.ZeroDec(),
 			)
 			s.Require().NoError(err)
 
@@ -2763,7 +2763,7 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 		poolInitialBalance   sdk.Coins
 		tokenIn              sdk.Coin
 		tokenOut             sdk.Coin
-		swapFee              sdk.Dec
+		spreadFactor         sdk.Dec
 		newCurrentTick       int64
 		newLiquidity         sdk.Dec
 		newSqrtPrice         sdk.Dec
@@ -2774,7 +2774,7 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			poolInitialBalance:   defaultInitialBalance,
 			tokenIn:              oneHundredETH,
 			tokenOut:             oneHundredUSDC,
-			swapFee:              sdk.MustNewDecFromStr("0.003"), // 0.3%
+			spreadFactor:         sdk.MustNewDecFromStr("0.003"), // 0.3%
 			newCurrentTick:       2,
 			newLiquidity:         sdk.NewDec(2),
 			newSqrtPrice:         sdk.NewDec(2),
@@ -2784,7 +2784,7 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			poolInitialBalance:   defaultInitialBalance,
 			tokenIn:              oneHundredETH.Add(oneHundredETH),
 			tokenOut:             oneHundredUSDC,
-			swapFee:              sdk.MustNewDecFromStr("0.002"), // 0.2%
+			spreadFactor:         sdk.MustNewDecFromStr("0.002"), // 0.2%
 			newCurrentTick:       8,
 			newLiquidity:         sdk.NewDec(37),
 			newSqrtPrice:         sdk.NewDec(91),
@@ -2794,7 +2794,7 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			poolInitialBalance:   defaultInitialBalance,
 			tokenIn:              oneHundredETH.Add(oneHundredETH),
 			tokenOut:             oneHundredUSDC,
-			swapFee:              sdk.MustNewDecFromStr("0.003"),
+			spreadFactor:         sdk.MustNewDecFromStr("0.003"),
 			newCurrentTick:       2,
 			newLiquidity:         sdk.NewDec(2),
 			newSqrtPrice:         sdk.NewDec(2),
@@ -2805,7 +2805,7 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			poolInitialBalance:   defaultInitialBalance,
 			tokenIn:              oneHundredETH,
 			tokenOut:             oneHundredUSDC.Add(oneHundredUSDC),
-			swapFee:              sdk.MustNewDecFromStr("0.003"),
+			spreadFactor:         sdk.MustNewDecFromStr("0.003"),
 			newCurrentTick:       2,
 			newLiquidity:         sdk.NewDec(2),
 			newSqrtPrice:         sdk.NewDec(2),
@@ -2821,9 +2821,9 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 
 			// Create pool with initial balance
 			clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-			clParams.AuthorizedSwapFees = append(clParams.AuthorizedSwapFees, tc.swapFee)
+			clParams.AuthorizedSpreadFactors = append(clParams.AuthorizedSpreadFactors, tc.spreadFactor)
 			s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
-			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "usdc", DefaultTickSpacing, tc.swapFee)
+			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "usdc", DefaultTickSpacing, tc.spreadFactor)
 
 			s.FundAcc(pool.GetAddress(), tc.poolInitialBalance)
 			// Create account with empty balance and fund with initial balance
@@ -2841,7 +2841,7 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			// Set mock listener to make sure that is is called when desired.
 			s.setListenerMockOnConcentratedLiquidityKeeper()
 
-			expectedFees := tc.tokenIn.Amount.ToDec().Mul(pool.GetSwapFee(s.Ctx)).Ceil()
+			expectedFees := tc.tokenIn.Amount.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).Ceil()
 			expectedFeesCoins := sdk.NewCoins(sdk.NewCoin(tc.tokenIn.Denom, expectedFees.TruncateInt()))
 			err = concentratedLiquidityKeeper.UpdatePoolForSwap(s.Ctx, pool, sender, tc.tokenIn, tc.tokenOut, tc.newCurrentTick, tc.newLiquidity, tc.newSqrtPrice, expectedFees)
 
@@ -3029,8 +3029,8 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// liq = Decimal("4836489743.729150266025048947")
 	// sqrt_cur = Decimal("5000").sqrt()
 	// token_in = Decimal("5000000000")
-	// swap_fee = Decimal("0.003")
-	// token_in_after_fee = token_in * (Decimal("1") - swap_fee)
+	// spread_factor = Decimal("0.003")
+	// token_in_after_fee = token_in * (Decimal("1") - spread_factor)
 	// sqrt_next = sqrt_cur + token_in_after_fee / liq
 	// token_out = liq * (sqrt_next - sqrt_cur) / (sqrt_cur * sqrt_next)
 
@@ -3075,8 +3075,8 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// from decimal import *
 	// # Range 1: From 5146 to 4999
 	// token_in = Decimal("1000000")
-	// swap_fee = Decimal("0.003")
-	// token_in_after_fee = token_in - (token_in * swap_fee)
+	// spread_factor = Decimal("0.003")
+	// token_in_after_fee = token_in - (token_in * spread_factor)
 	// liq_1 = Decimal("4553647031.254531254265048947")
 	// sqrt_cur = Decimal("71.741384325871133645")
 	// sqrt_next_1 = Decimal("4999").sqrt()
@@ -3134,8 +3134,8 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// from decimal import *
 	// # Range 1: From 4990.16... to 4999
 	// token_in = Decimal("5000000000")
-	// swap_fee = Decimal("0.003")
-	// token_in_after_fee = token_in - (token_in * swap_fee)
+	// spread_factor = Decimal("0.003")
+	// token_in_after_fee = token_in - (token_in * spread_factor)
 	// liq_1 = Decimal("670416215.718827443660400593")
 	// sqrt_cur = Decimal("70.641127368418251403")
 	// sqrt_next_1 = Decimal("4999").sqrt()
@@ -3195,8 +3195,8 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// liq = Decimal("670416215.718827443660400593")
 	// sqrt_cur = Decimal("4999").sqrt()
 	// token_in = Decimal("1000000")
-	// swap_fee = Decimal("0.003")
-	// token_in_after_fee = token_in * (Decimal("1") - swap_fee)
+	// spread_factor = Decimal("0.003")
+	// token_in_after_fee = token_in * (Decimal("1") - spread_factor)
 	// sqrt_next = liq / ((liq / sqrt_cur) + token_in_after_fee)
 	// token_out = liq * (sqrt_cur - sqrt_next)
 

@@ -22,7 +22,7 @@ const (
 	// DAI/OSMO pool ID
 	// https://app.osmosis.zone/pool/674
 	// Note, new concentrated liquidity pool
-	// swap fee is initialized to be the same as the balancers pool swap fee of 0.2%.
+	// spread factor is initialized to be the same as the balancers pool spread factor of 0.2%.
 	DaiOsmoPoolId = uint64(674)
 	// Denom0 translates to a base asset while denom1 to a quote asset
 	// We want quote asset to be DAI so that when the limit orders on ticks

@@ -229,7 +229,7 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 		b.StartTimer()
 
 		// System under test
-		_, err = clKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, largeSwapInCoin, denom1, sdk.NewInt(1), pool.GetSwapFee(s.Ctx))
+		_, err = clKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, largeSwapInCoin, denom1, sdk.NewInt(1), pool.GetSpreadFactor(s.Ctx))
 		noError(err)
 
 		// Notice that we stop the timer again in case there are multiple iterations.

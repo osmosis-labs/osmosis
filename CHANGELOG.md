@@ -78,6 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#4868](https://github.com/osmosis-labs/osmosis/pull/4868) Remove wasmEnabledProposals []wasm.ProposalType from NewOsmosisApp
 * [#4983](https://github.com/osmosis-labs/osmosis/pull/4983) Consume a gas when creating a new token using tokenfactory as a spam deterrence mechanism.
 * [#4951](https://github.com/osmosis-labs/osmosis/pull/4951) Implement pool liquidity query in pool manager, deprecate the one in gamm
+* [#5138](https://github.com/osmosis-labs/osmosis/pull/5138) Rename swap fee to spread factor. Broke PoolI interface. Did not break CLI, message, pool models, queries or events.
 
 
 ## v15.1.0
@@ -209,7 +210,7 @@ This release includes stableswap, and expands the IBC safety & composability fun
 
 * Gamm:
   * Introduction of the stableswap pool type
-  * Multi-hop swapfee reduction
+  * Multi-hop spread factor reduction
   * Filtered queries to help front-ends
   * Adding a spot price v2 query
     * spotprice v1beta1 had baseassetdenom and quoteassetdenom backwards.

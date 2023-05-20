@@ -95,7 +95,7 @@ func (s *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
 	queryClient := s.queryClient
 	ctx := s.Ctx
 	poolId := s.PrepareBalancerPool()
-	swapFee := sdk.ZeroDec()
+	spreadFactor := sdk.ZeroDec()
 
 	testCases := []struct {
 		name        string
@@ -157,7 +157,7 @@ func (s *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
 				err = s.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 				s.Require().NoError(err)
 
-				numShares, numLiquidity, err := pool.CalcJoinPoolNoSwapShares(ctx, tc.tokensIn, swapFee)
+				numShares, numLiquidity, err := pool.CalcJoinPoolNoSwapShares(ctx, tc.tokensIn, spreadFactor)
 				s.Require().NoError(err)
 				s.Require().Equal(numShares, out.SharesOut)
 				s.Require().Equal(numLiquidity, out.TokensOut)
@@ -359,7 +359,7 @@ func (s *KeeperTestSuite) TestCalcJoinPoolShares() {
 	queryClient := s.queryClient
 	ctx := s.Ctx
 	poolId := s.PrepareBalancerPool()
-	swapFee := sdk.ZeroDec()
+	spreadFactor := sdk.ZeroDec()
 
 	testCases := []struct {
 		name        string
@@ -421,7 +421,7 @@ func (s *KeeperTestSuite) TestCalcJoinPoolShares() {
 				err = s.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 				s.Require().NoError(err)
 
-				numShares, numLiquidity, err := pool.CalcJoinPoolShares(ctx, tc.tokensIn, swapFee)
+				numShares, numLiquidity, err := pool.CalcJoinPoolShares(ctx, tc.tokensIn, spreadFactor)
 				s.Require().NoError(err)
 				s.Require().Equal(numShares, out.ShareOutAmount)
 				s.Require().Equal(numLiquidity, out.TokensOut)

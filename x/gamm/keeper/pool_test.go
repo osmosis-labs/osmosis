@@ -275,7 +275,7 @@ func (s *KeeperTestSuite) TestGetPoolAndPoke() {
 		"weighted pool - change weights": {
 			isPokePool: true,
 			poolId: s.prepareCustomBalancerPool(defaultAcctFunds, startPoolWeightAssets, balancer.PoolParams{
-				SwapFee: defaultSwapFee,
+				SwapFee: defaultSpreadFactor,
 				ExitFee: defaultZeroExitFee,
 				SmoothWeightChangeParams: &balancer.SmoothWeightChangeParams{
 					StartTime:          time.Unix(startTime, 0), // start time is before block time so the weights should change
@@ -289,7 +289,7 @@ func (s *KeeperTestSuite) TestGetPoolAndPoke() {
 			poolId: s.prepareCustomStableswapPool(
 				defaultAcctFunds,
 				stableswap.PoolParams{
-					SwapFee: defaultSwapFee,
+					SwapFee: defaultSpreadFactor,
 					ExitFee: defaultZeroExitFee,
 				},
 				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[0].Denom, defaultAcctFunds[0].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2))),
@@ -490,7 +490,7 @@ func (s *KeeperTestSuite) TestSetStableSwapScalingFactors() {
 				poolId := s.prepareCustomStableswapPool(
 					defaultAcctFunds,
 					stableswap.PoolParams{
-						SwapFee: defaultSwapFee,
+						SwapFee: defaultSpreadFactor,
 						ExitFee: defaultZeroExitFee,
 					},
 					sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[0].Denom, defaultAcctFunds[0].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2))),
