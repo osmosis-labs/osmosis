@@ -796,7 +796,7 @@ func (s *KeeperTestSuite) TestLock() {
 	})
 	s.Require().Equal(accum.String(), "20")
 
-	// Since lockNoSend does not send the underlying coins, the account balance should be unchanged
+	// Since lock method no longer sends the underlying coins, the account balance should be unchanged
 	balance := s.App.BankKeeper.GetBalance(s.Ctx, addr1, "stake")
 	s.Require().Equal(sdk.NewInt(10).String(), balance.Amount.String())
 
