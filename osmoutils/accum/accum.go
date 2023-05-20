@@ -398,6 +398,7 @@ func (accum AccumulatorObject) GetValue() sdk.DecCoins {
 // ClaimRewards claims the rewards for the given address, and returns the amount of rewards claimed.
 // Upon claiming the rewards, the position at the current address is reset to have no
 // unclaimed rewards. The position's accumulator is also set to the current accumulator value.
+// The position state is removed if the position shares is equal to zero.
 //
 // Returns error if
 // - no position exists for the given address

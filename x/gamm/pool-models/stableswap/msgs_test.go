@@ -118,7 +118,7 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "negative swap fee with zero exit fee",
+			name: "negative spread factor with zero exit fee",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.PoolParams = &stableswap.PoolParams{
 					SwapFee: sdk.NewDecWithPrec(-1, 2),
@@ -193,7 +193,7 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 			expectPass: true,
 		},
 		{
-			name: "zero swap fee, zero exit fee",
+			name: "zero spread factor, zero exit fee",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.PoolParams = &stableswap.PoolParams{
 					ExitFee: sdk.NewDecWithPrec(0, 0),

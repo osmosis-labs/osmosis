@@ -30,7 +30,7 @@ import (
 	v16 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v16"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	clmath "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
@@ -192,11 +192,11 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().NoError(err)
 
 	var (
-		denom0             = "uion"
-		denom1             = "uosmo"
-		tickSpacing uint64 = 100
-		swapFee            = "0.001" // 0.1%
-		swapFeeDec         = sdk.MustNewDecFromStr("0.001")
+		denom0                 = "uion"
+		denom1                 = "uosmo"
+		tickSpacing     uint64 = 100
+		spreadFactor           = "0.001" // 0.1%
+		spreadFactorDec        = sdk.MustNewDecFromStr("0.001")
 	)
 
 	// Get the permisionless pool creation parameter.
@@ -216,13 +216,13 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	}
 
 	// Create concentrated liquidity pool when permisionless pool creation is enabled.
-	poolID, err := chainANode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, swapFee)
+	poolID, err := chainANode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
 	s.Require().NoError(err)
 
-	concentratedPool := s.updatedPool(chainANode, poolID)
+	concentratedPool := s.updatedConcentratedPool(chainANode, poolID)
 
 	// Sanity check that pool initialized with valid parameters (the ones that we haven't explicitly specified)
-	s.Require().Equal(concentratedPool.GetCurrentTick(), sdk.ZeroInt())
+	s.Require().Equal(concentratedPool.GetCurrentTick(), int64(0))
 	s.Require().Equal(concentratedPool.GetCurrentSqrtPrice(), sdk.ZeroDec())
 	s.Require().Equal(concentratedPool.GetLiquidity(), sdk.ZeroDec())
 
@@ -232,7 +232,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().Equal(concentratedPool.GetToken1(), denom1)
 	s.Require().Equal(concentratedPool.GetTickSpacing(), tickSpacing)
 	s.Require().Equal(concentratedPool.GetExponentAtPriceOne(), cltypes.ExponentAtPriceOne)
-	s.Require().Equal(concentratedPool.GetSwapFee(sdk.Context{}), sdk.MustNewDecFromStr(swapFee))
+	s.Require().Equal(concentratedPool.GetSpreadFactor(sdk.Context{}), sdk.MustNewDecFromStr(spreadFactor))
 
 	fundTokens := []string{"100000000uosmo", "100000000uion", "100000000stake"}
 
@@ -257,7 +257,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	positionsAddress2 := chainANode.QueryConcentratedPositions(address2)
 	positionsAddress3 := chainANode.QueryConcentratedPositions(address3)
 
-	concentratedPool = s.updatedPool(chainANode, poolID)
+	concentratedPool = s.updatedConcentratedPool(chainANode, poolID)
 
 	// Assert number of positions per address
 	s.Require().Equal(len(positionsAddress1), 2)
@@ -305,13 +305,13 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Perform swap (not crossing initialized ticks)
 	chainANode.SwapExactAmountIn(uosmoIn_Swap1, outMinAmt, fmt.Sprintf("%d", poolID), denom0, initialization.ValidatorWalletName)
 	// Calculate and track global fee growth for swap 1
-	feeGrowthGlobal.AddMut(calculateFeeGrowthGlobal(uosmoInDec_Swap1, swapFeeDec, concentratedPool.GetLiquidity()))
+	feeGrowthGlobal.AddMut(calculateFeeGrowthGlobal(uosmoInDec_Swap1, spreadFactorDec, concentratedPool.GetLiquidity()))
 
 	// Update pool and track liquidity and sqrt price
 	liquidityBeforeSwap := concentratedPool.GetLiquidity()
 	sqrtPriceBeforeSwap := concentratedPool.GetCurrentSqrtPrice()
 
-	concentratedPool = s.updatedPool(chainANode, poolID)
+	concentratedPool = s.updatedConcentratedPool(chainANode, poolID)
 
 	liquidityAfterSwap := concentratedPool.GetLiquidity()
 	sqrtPriceAfterSwap := concentratedPool.GetCurrentSqrtPrice()
@@ -320,7 +320,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().Equal(liquidityAfterSwap.String(), liquidityBeforeSwap.String())
 
 	// Assert current sqrt price
-	inAmountSubFee := uosmoInDec_Swap1.Mul(sdk.OneDec().Sub(swapFeeDec))
+	inAmountSubFee := uosmoInDec_Swap1.Mul(sdk.OneDec().Sub(spreadFactorDec))
 	expectedSqrtPriceDelta := inAmountSubFee.QuoTruncate(concentratedPool.GetLiquidity()) // Δ(sqrtPrice) = Δy / L
 	expectedSqrtPrice := sqrtPriceBeforeSwap.Add(expectedSqrtPriceDelta)
 
@@ -365,15 +365,15 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// * Uncollected fees from multiple swaps are correctly summed up and collected
 
 	// tickOffset is a tick index after the next initialized tick to which this swap needs to move the current price
-	tickOffset := sdk.NewInt(300)
+	tickOffset := int64(300)
 	sqrtPriceBeforeSwap = concentratedPool.GetCurrentSqrtPrice()
 	liquidityBeforeSwap = concentratedPool.GetLiquidity()
-	nextInitTick := sdk.NewInt(40000) // address1 position1's upper tick
+	nextInitTick := int64(40000) // address1 position1's upper tick
 
 	// Calculate sqrtPrice after and at the next initialized tick (upperTick of address1 position1 - 40000)
-	_, sqrtPriceAfterNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick.Add(tickOffset))
+	_, sqrtPriceAfterNextInitializedTick, err := clmath.TickToSqrtPrice(nextInitTick + tickOffset)
 	s.Require().NoError(err)
-	_, sqrtPriceAtNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick)
+	_, sqrtPriceAtNextInitializedTick, err := clmath.TickToSqrtPrice(nextInitTick)
 	s.Require().NoError(err)
 
 	// Calculate Δ(sqrtPrice):
@@ -395,7 +395,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 		// uosmoInDec_Swap2_NoFee is calculated such that swapping this amount (not considering fee) moves the price over the next initialized tick
 		uosmoInDec_Swap2_NoFee = amountInToGetToNextInitTick.Add(amountInToGetToTickAfterInitialized)
-		uosmoInDec_Swap2       = uosmoInDec_Swap2_NoFee.Quo(sdk.OneDec().Sub(swapFeeDec)).TruncateDec() // account for swap fee of 1%
+		uosmoInDec_Swap2       = uosmoInDec_Swap2_NoFee.Quo(sdk.OneDec().Sub(spreadFactorDec)).TruncateDec() // account for spread factor of 1%
 		uosmoIn_Swap2          = fmt.Sprintf("%suosmo", uosmoInDec_Swap2.String())
 
 		feeGrowthGlobal_Swap1 = feeGrowthGlobal.Clone()
@@ -407,7 +407,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	liquidityOfKickedOutPosition := positionsAddress1[0].Position.Liquidity
 
 	// Update pool and track pool's liquidity
-	concentratedPool = s.updatedPool(chainANode, poolID)
+	concentratedPool = s.updatedConcentratedPool(chainANode, poolID)
 
 	liquidityAfterSwap = concentratedPool.GetLiquidity()
 
@@ -420,8 +420,8 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Step1: amountIn is uosmo tokens that are swapped + uosmo tokens that are paid for fee
 	// hasReachedTarget in SwapStep is true, hence, to find fees, calculate:
-	// feeCharge = amountIn * swapFee / (1 - swapFee)
-	feeCharge_Swap2_Step1 := amountInToGetToNextInitTick.Mul(swapFeeDec).Quo(sdk.OneDec().Sub(swapFeeDec))
+	// feeCharge = amountIn * spreadFactor / (1 - spreadFactor)
+	feeCharge_Swap2_Step1 := amountInToGetToNextInitTick.Mul(spreadFactorDec).Quo(sdk.OneDec().Sub(spreadFactorDec))
 
 	// Step2: hasReachedTarget in SwapStep is false (nextTick is 120000), hence, to find fees, calculate:
 	// feeCharge = amountRemaining - amountOne
@@ -502,10 +502,10 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// * liquidity of positions that come in range are correctly kicked in
 
 	// tickOffset is a tick index after the next initialized tick to which this swap needs to move the current price
-	tickOffset = sdk.NewInt(300)
+	tickOffset = 300
 	sqrtPriceBeforeSwap = concentratedPool.GetCurrentSqrtPrice()
 	liquidityBeforeSwap = concentratedPool.GetLiquidity()
-	nextInitTick = sdk.NewInt(40000)
+	nextInitTick = 40000
 
 	// Calculate amount required to get to
 	// 1) next initialized tick
@@ -513,9 +513,9 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Using: CalcAmount0Delta = liquidity * ((sqrtPriceB - sqrtPriceA) / (sqrtPriceB * sqrtPriceA))
 
 	// Calculate sqrtPrice after and at the next initialized tick (which is upperTick of address1 position1 - 40000)
-	_, sqrtPricebBelowNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick.Sub(tickOffset))
+	_, sqrtPricebBelowNextInitializedTick, err := clmath.TickToSqrtPrice(nextInitTick - tickOffset)
 	s.Require().NoError(err)
-	_, sqrtPriceAtNextInitializedTick, err = cl.TickToSqrtPrice(nextInitTick)
+	_, sqrtPriceAtNextInitializedTick, err = clmath.TickToSqrtPrice(nextInitTick)
 	s.Require().NoError(err)
 
 	// Calculate numerators
@@ -536,8 +536,8 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	var (
 		// Swap parameters
-		uionInDec_Swap3_NoFee = amountInToGetToNextInitTick.Add(amountInToGetToTickBelowInitialized)  // amount of uion to move price from current to desired (not considering swapFee)
-		uionInDec_Swap3       = uionInDec_Swap3_NoFee.Quo(sdk.OneDec().Sub(swapFeeDec)).TruncateDec() // consider swapFee
+		uionInDec_Swap3_NoFee = amountInToGetToNextInitTick.Add(amountInToGetToTickBelowInitialized)       // amount of uion to move price from current to desired (not considering spreadFactor)
+		uionInDec_Swap3       = uionInDec_Swap3_NoFee.Quo(sdk.OneDec().Sub(spreadFactorDec)).TruncateDec() // consider spreadFactor
 		uionIn_Swap3          = fmt.Sprintf("%suion", uionInDec_Swap3.String())
 
 		// Save variables from previous swaps
@@ -551,7 +551,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	chainANode.SwapExactAmountIn(uionIn_Swap3, outMinAmt, fmt.Sprintf("%d", poolID), denom1, initialization.ValidatorWalletName)
 
 	// Assert liquidity of kicked in position was successfully added to the pool
-	concentratedPool = s.updatedPool(chainANode, poolID)
+	concentratedPool = s.updatedConcentratedPool(chainANode, poolID)
 
 	liquidityAfterSwap = concentratedPool.GetLiquidity()
 	s.Require().Equal(liquidityBeforeSwap.Add(positionsAddress1[0].Position.Liquidity), liquidityAfterSwap)
@@ -568,8 +568,8 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Step1: amountIn is uion tokens that are swapped + uion tokens that are paid for fee
 	// hasReachedTarget in SwapStep is true, hence, to find fees, calculate:
-	// feeCharge = amountIn * swapFee / (1 - swapFee)
-	feeCharge_Swap3_Step1 := amountInToGetToNextInitTick.Mul(swapFeeDec).Quo(sdk.OneDec().Sub(swapFeeDec))
+	// feeCharge = amountIn * spreadFactor / (1 - spreadFactor)
+	feeCharge_Swap3_Step1 := amountInToGetToNextInitTick.Mul(spreadFactorDec).Quo(sdk.OneDec().Sub(spreadFactorDec))
 
 	// Step2: hasReachedTarget in SwapStep is false (next initialized tick is -20000), hence, to find fees, calculate:
 	// feeCharge = amountRemaining - amountZero
@@ -662,7 +662,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Withdraw Position
 
 	// Withdraw Position parameters
-	var defaultLiquidityRemoval string = "1000"
+	defaultLiquidityRemoval := "1000"
 
 	chainA.WaitForNumHeights(2)
 
@@ -739,7 +739,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	}
 
 	// Check that the tick spacing was reduced to the expected new tick spacing
-	concentratedPool = s.updatedPool(chainANode, poolID)
+	concentratedPool = s.updatedConcentratedPool(chainANode, poolID)
 	s.Require().Equal(newTickSpacing, concentratedPool.GetTickSpacing())
 }
 
@@ -905,21 +905,21 @@ func (s *IntegrationTestSuite) TestCreateConcentratedLiquidityPoolVoting() {
 	s.NoError(err)
 
 	var (
-		expectedDenom0      = "stake"
-		expectedDenom1      = "uosmo"
-		expectedTickspacing = uint64(100)
-		expectedSwapFee     = "0.001000000000000000"
+		expectedDenom0       = "stake"
+		expectedDenom1       = "uosmo"
+		expectedTickspacing  = uint64(100)
+		expectedSpreadFactor = "0.001000000000000000"
 	)
 
 	poolId := chainANode.QueryNumPools()
 	s.Eventually(
 		func() bool {
-			concentratedPool := s.updatedPool(chainANode, poolId)
+			concentratedPool := s.updatedConcentratedPool(chainANode, poolId)
 			s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
 			s.Require().Equal(expectedDenom0, concentratedPool.GetToken0())
 			s.Require().Equal(expectedDenom1, concentratedPool.GetToken1())
 			s.Require().Equal(expectedTickspacing, concentratedPool.GetTickSpacing())
-			s.Require().Equal(expectedSwapFee, concentratedPool.GetSwapFee(sdk.Context{}).String())
+			s.Require().Equal(expectedSpreadFactor, concentratedPool.GetSpreadFactor(sdk.Context{}).String())
 
 			return true
 		},
@@ -1588,17 +1588,36 @@ func (s *IntegrationTestSuite) TestAConcentratedLiquidity_CanonicalPool_And_Para
 	// Taken from: https://app.osmosis.zone/pool/674
 	concentratedPoolId := chainANode.QueryConcentratedPooIdLinkFromCFMM(config.DaiOsmoPoolIdv16)
 
-	concentratedPool := s.updatedPool(chainANode, concentratedPoolId)
+	concentratedPool := s.updatedConcentratedPool(chainANode, concentratedPoolId)
 
 	s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
 	s.Require().Equal(v16.DesiredDenom0, concentratedPool.GetToken0())
 	s.Require().Equal(v16.DAIIBCDenom, concentratedPool.GetToken1())
 	s.Require().Equal(uint64(v16.TickSpacing), concentratedPool.GetTickSpacing())
-	s.Require().Equal(expectedFee.String(), concentratedPool.GetSwapFee(sdk.Context{}).String())
+	s.Require().Equal(expectedFee.String(), concentratedPool.GetSpreadFactor(sdk.Context{}).String())
 
 	// Get the permisionless pool creation parameter.
 	isPermisionlessCreationEnabledStr := chainANode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
 	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "false") {
 		s.T().Fatal("concentrated liquidity pool creation is enabled when should not have been after v16 upgrade")
 	}
+
+	// Check that the cl pool denom is now an authorized superfluid denom.
+	superfluidAssets := chainANode.QueryAllSuperfluidAssets()
+
+	found := false
+	for _, superfluidAsset := range superfluidAssets {
+		if superfluidAsset.Denom == cltypes.GetConcentratedLockupDenomFromPoolId(concentratedPoolId) {
+			found = true
+			break
+		}
+	}
+
+	s.Require().True(found, "concentrated liquidity pool denom not found in superfluid assets")
+
+	// This spot price is taken from the balancer pool that was initiated pre upgrade.
+	balancerDaiOsmoPool := s.updatedCFMMPool(chainANode, config.DaiOsmoPoolIdv16)
+	expectedSpotPrice, err := balancerDaiOsmoPool.SpotPrice(sdk.Context{}, v16.DAIIBCDenom, v16.DesiredDenom0)
+	s.Require().NoError(err)
+	osmoassert.DecApproxEq(s.T(), expectedSpotPrice, concentratedPool.GetCurrentSqrtPrice().Power(2), sdk.NewDecWithPrec(1, 3))
 }

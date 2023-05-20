@@ -54,7 +54,7 @@ func (k Keeper) ValidateGammLockForSuperfluidStaking(ctx sdk.Context, sender sdk
 	return k.validateGammLockForSuperfluidStaking(ctx, sender, poolId, lockId)
 }
 
-func (k Keeper) GetExistingLockRemainingDuration(ctx sdk.Context, lock *lockuptypes.PeriodLock) time.Duration {
+func (k Keeper) GetExistingLockRemainingDuration(ctx sdk.Context, lock *lockuptypes.PeriodLock) (time.Duration, error) {
 	return k.getExistingLockRemainingDuration(ctx, lock)
 }
 

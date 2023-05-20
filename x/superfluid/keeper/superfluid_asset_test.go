@@ -6,49 +6,49 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *KeeperTestSuite) TestSuperfluidAssetSetGetDeleteFlow() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestSuperfluidAssetSetGetDeleteFlow() {
+	s.SetupTest()
 
 	// initial check
-	assets := suite.App.SuperfluidKeeper.GetAllSuperfluidAssets(suite.Ctx)
-	suite.Require().Len(assets, 0)
+	assets := s.App.SuperfluidKeeper.GetAllSuperfluidAssets(s.Ctx)
+	s.Require().Len(assets, 0)
 
 	// set asset
-	suite.App.SuperfluidKeeper.SetSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
+	s.App.SuperfluidKeeper.SetSuperfluidAsset(s.Ctx, types.SuperfluidAsset{
 		Denom:     DefaultGammAsset,
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	})
 
 	// get asset
-	asset, err := suite.App.SuperfluidKeeper.GetSuperfluidAsset(suite.Ctx, DefaultGammAsset)
-	suite.Require().NoError(err)
-	suite.Require().Equal(asset.Denom, DefaultGammAsset)
-	suite.Require().Equal(asset.AssetType, types.SuperfluidAssetTypeLPShare)
+	asset, err := s.App.SuperfluidKeeper.GetSuperfluidAsset(s.Ctx, DefaultGammAsset)
+	s.Require().NoError(err)
+	s.Require().Equal(asset.Denom, DefaultGammAsset)
+	s.Require().Equal(asset.AssetType, types.SuperfluidAssetTypeLPShare)
 
 	// check assets
-	assets = suite.App.SuperfluidKeeper.GetAllSuperfluidAssets(suite.Ctx)
-	suite.Require().Equal(assets, []types.SuperfluidAsset{asset})
+	assets = s.App.SuperfluidKeeper.GetAllSuperfluidAssets(s.Ctx)
+	s.Require().Equal(assets, []types.SuperfluidAsset{asset})
 
 	// delete asset
-	suite.App.SuperfluidKeeper.DeleteSuperfluidAsset(suite.Ctx, DefaultGammAsset)
+	s.App.SuperfluidKeeper.DeleteSuperfluidAsset(s.Ctx, DefaultGammAsset)
 
 	// get asset
-	asset, err = suite.App.SuperfluidKeeper.GetSuperfluidAsset(suite.Ctx, DefaultGammAsset)
-	suite.Require().Error(err)
-	suite.Require().Equal(asset.Denom, "")
-	suite.Require().Equal(asset.AssetType, types.SuperfluidAssetTypeNative)
+	asset, err = s.App.SuperfluidKeeper.GetSuperfluidAsset(s.Ctx, DefaultGammAsset)
+	s.Require().Error(err)
+	s.Require().Equal(asset.Denom, "")
+	s.Require().Equal(asset.AssetType, types.SuperfluidAssetTypeNative)
 
 	// check assets
-	assets = suite.App.SuperfluidKeeper.GetAllSuperfluidAssets(suite.Ctx)
-	suite.Require().Len(assets, 0)
+	assets = s.App.SuperfluidKeeper.GetAllSuperfluidAssets(s.Ctx)
+	s.Require().Len(assets, 0)
 }
 
-func (suite *KeeperTestSuite) TestGetRiskAdjustedOsmoValue() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestGetRiskAdjustedOsmoValue() {
+	s.SetupTest()
 
-	adjustedValue := suite.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(
-		suite.Ctx,
+	adjustedValue := s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(
+		s.Ctx,
 		sdk.NewInt(100),
 	)
-	suite.Require().Equal(sdk.NewInt(50), adjustedValue)
+	s.Require().Equal(sdk.NewInt(50), adjustedValue)
 }

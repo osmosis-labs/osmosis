@@ -51,19 +51,15 @@ func (k Keeper) SendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 stri
 	return k.sendCoinsBetweenPoolAndUser(ctx, denom0, denom1, amount0, amount1, sender, receiver)
 }
 
-func (k Keeper) CalcInAmtGivenOutInternal(ctx sdk.Context, desiredTokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec, priceLimit sdk.Dec, poolId uint64) (writeCtx func(), tokenIn, tokenOut sdk.Coin, updatedTick sdk.Int, updatedLiquidity, updatedSqrtPrice sdk.Dec, err error) {
-	return k.calcInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, swapFee, priceLimit, poolId)
-}
-
 func (k Keeper) SwapOutAmtGivenIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
 	pool types.ConcentratedPoolExtension,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
-	swapFee sdk.Dec,
-	priceLimit sdk.Dec) (calcTokenIn, calcTokenOut sdk.Coin, currentTick sdk.Int, liquidity, sqrtPrice sdk.Dec, err error) {
-	return k.swapOutAmtGivenIn(ctx, sender, pool, tokenIn, tokenOutDenom, swapFee, priceLimit)
+	spreadFactor sdk.Dec,
+	priceLimit sdk.Dec) (calcTokenIn, calcTokenOut sdk.Coin, currentTick int64, liquidity, sqrtPrice sdk.Dec, err error) {
+	return k.swapOutAmtGivenIn(ctx, sender, pool, tokenIn, tokenOutDenom, spreadFactor, priceLimit)
 }
 
 func (k Keeper) ComputeOutAmtGivenIn(
@@ -71,15 +67,34 @@ func (k Keeper) ComputeOutAmtGivenIn(
 	poolId uint64,
 	tokenInMin sdk.Coin,
 	tokenOutDenom string,
-	swapFee sdk.Dec,
+	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
 
-) (calcTokenIn, calcTokenOut sdk.Coin, currentTick sdk.Int, liquidity, sqrtPrice sdk.Dec, err error) {
-	return k.computeOutAmtGivenIn(ctx, poolId, tokenInMin, tokenOutDenom, swapFee, priceLimit)
+) (calcTokenIn, calcTokenOut sdk.Coin, currentTick int64, liquidity, sqrtPrice sdk.Dec, totalFees sdk.Dec, err error) {
+	return k.computeOutAmtGivenIn(ctx, poolId, tokenInMin, tokenOutDenom, spreadFactor, priceLimit)
 }
 
-func (k *Keeper) SwapInAmtGivenOut(ctx sdk.Context, sender sdk.AccAddress, pool types.ConcentratedPoolExtension, desiredTokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec, priceLimit sdk.Dec) (calcTokenIn, calcTokenOut sdk.Coin, currentTick sdk.Int, liquidity, sqrtPrice sdk.Dec, err error) {
-	return k.swapInAmtGivenOut(ctx, sender, pool, desiredTokenOut, tokenInDenom, swapFee, priceLimit)
+func (k Keeper) SwapInAmtGivenOut(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	pool types.ConcentratedPoolExtension,
+	desiredTokenOut sdk.Coin,
+	tokenInDenom string,
+	spreadFactor sdk.Dec,
+	priceLimit sdk.Dec) (calcTokenIn, calcTokenOut sdk.Coin, currentTick int64, liquidity, sqrtPrice sdk.Dec, err error) {
+	return k.swapInAmtGivenOut(ctx, sender, pool, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit)
+}
+
+func (k Keeper) ComputeInAmtGivenOut(
+	ctx sdk.Context,
+	desiredTokenOut sdk.Coin,
+	tokenInDenom string,
+	spreadFactor sdk.Dec,
+	priceLimit sdk.Dec,
+	poolId uint64,
+
+) (calcTokenIn, calcTokenOut sdk.Coin, currentTick int64, liquidity, sqrtPrice sdk.Dec, totalFees sdk.Dec, err error) {
+	return k.computeInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit, poolId)
 }
 
 func (k Keeper) InitOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
@@ -122,8 +137,8 @@ func ConvertPoolInterfaceToConcentrated(poolI poolmanagertypes.PoolI) (types.Con
 	return convertPoolInterfaceToConcentrated(poolI)
 }
 
-func (k Keeper) ValidateSwapFee(ctx sdk.Context, params types.Params, swapFee sdk.Dec) bool {
-	return k.validateSwapFee(ctx, params, swapFee)
+func (k Keeper) ValidateSpreadFactor(ctx sdk.Context, params types.Params, spreadFactor sdk.Dec) bool {
+	return k.validateSpreadFactor(ctx, params, spreadFactor)
 }
 
 func (k Keeper) ValidateTickSpacing(ctx sdk.Context, params types.Params, tickSpacing uint64) bool {
@@ -191,16 +206,20 @@ func ValidateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int
 	return validateTickRangeIsValid(tickSpacing, lowerTick, upperTick)
 }
 
-func PreparePositionAccumulator(feeAccumulator accum.AccumulatorObject, positionKey string, feeGrowthOutside sdk.DecCoins) error {
-	return preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
+func UpdatePosValueToInitValuePlusGrowthOutside(feeAccumulator accum.AccumulatorObject, positionKey string, feeGrowthOutside sdk.DecCoins) error {
+	return updatePositionToInitValuePlusGrowthOutside(feeAccumulator, positionKey, feeGrowthOutside)
+}
+
+func UpdatePositionToInitValuePlusGrowthOutside(accumulator accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) error {
+	return updatePositionToInitValuePlusGrowthOutside(accumulator, positionKey, growthOutside)
 }
 
 func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (positionId uint64, actualAmount0 sdk.Int, actualAmount1 sdk.Int, liquidityDelta sdk.Dec, joinTime time.Time, lowerTickResult int64, upperTickResult int64, err error) {
 	return k.createPosition(ctx, poolId, owner, tokensProvided, amount0Min, amount1Min, lowerTick, upperTick)
 }
 
-func (k Keeper) AddToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added sdk.Int) (uint64, sdk.Int, sdk.Int, error) {
-	return k.addToPosition(ctx, owner, positionId, amount0Added, amount1Added)
+func (k Keeper) AddToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added, amount0Min, amount1Min sdk.Int) (uint64, sdk.Int, sdk.Int, error) {
+	return k.addToPosition(ctx, owner, positionId, amount0Added, amount1Added, amount0Min, amount1Min)
 }
 
 func (ss *SwapState) UpdateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
@@ -265,8 +284,8 @@ func GetUptimeTrackerValues(uptimeTrackers []model.UptimeTracker) []sdk.DecCoins
 	return getUptimeTrackerValues(uptimeTrackers)
 }
 
-func PrepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) (sdk.Coins, sdk.DecCoins, error) {
-	return prepareAccumAndClaimRewards(accum, positionKey, growthOutside)
+func UpdateAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) (sdk.Coins, sdk.DecCoins, error) {
+	return updateAccumAndClaimRewards(accum, positionKey, growthOutside)
 }
 
 func (k Keeper) ClaimAllIncentivesForPosition(ctx sdk.Context, positionId uint64) (sdk.Coins, sdk.Coins, error) {
@@ -281,8 +300,8 @@ func (k Keeper) GetAllPositions(ctx sdk.Context) ([]model.Position, error) {
 	return k.getAllPositions(ctx)
 }
 
-func (k Keeper) UpdatePoolForSwap(ctx sdk.Context, pool types.ConcentratedPoolExtension, sender sdk.AccAddress, tokenIn sdk.Coin, tokenOut sdk.Coin, newCurrentTick sdk.Int, newLiquidity sdk.Dec, newSqrtPrice sdk.Dec) error {
-	return k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice)
+func (k Keeper) UpdatePoolForSwap(ctx sdk.Context, pool types.ConcentratedPoolExtension, sender sdk.AccAddress, tokenIn sdk.Coin, tokenOut sdk.Coin, newCurrentTick int64, newLiquidity sdk.Dec, newSqrtPrice sdk.Dec, totalFees sdk.Dec) error {
+	return k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, totalFees)
 }
 
 func (k Keeper) PrepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64) (uint64, sdk.Dec, error) {

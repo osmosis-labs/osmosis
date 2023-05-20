@@ -17,13 +17,13 @@ func BenchmarkEpochHook(b *testing.B) {
 	b.ResetTimer()
 
 	// Setup the test suite
-	suite := new(KeeperTestSuite)
-	suite.SetT(&testing.T{})
-	suite.SetupTest()
+	s := new(KeeperTestSuite)
+	s.SetT(&testing.T{})
+	s.SetupTest()
 
 	for i := 0; i < b.N; i++ {
 		b.StartTimer()
-		err := suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
+		err := s.App.ProtoRevKeeper.UpdatePools(s.Ctx)
 		if err != nil {
 			panic(fmt.Sprintf("error updating pools in protorev epoch hook benchmark: %s", err))
 		}
@@ -33,11 +33,11 @@ func BenchmarkEpochHook(b *testing.B) {
 
 // TestEpochHook tests that the epoch hook is correctly setting the pool IDs for all base denoms. Base denoms are the denoms that will
 // be used for cyclic arbitrage and must be stored in the keeper. The epoch hook is run after the pools are set and committed in keeper_test.go.
-// All of the pools are initialized in the setup function in keeper_test.go and are available in the suite.pools variable. In this test
+// All of the pools are initialized in the setup function in keeper_test.go and are available in the s.pools variable. In this test
 // function, the pools are filtered to only include the pools that have at least one base denom as an asset. The pools are then filtered
 // again to only include the pools that have the highest liquidity. The pools are then checked to see if the pool IDs are correctly set in the
 // DenomPairToPool stores.
-func (suite *KeeperTestSuite) TestEpochHook() {
+func (s *KeeperTestSuite) TestEpochHook() {
 	// All of the pools initialized in the setup function are available in keeper_test.go
 	// akash <-> types.OsmosisDenomination
 	// juno <-> types.OsmosisDenomination
@@ -48,9 +48,9 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 
 	totalNumberExpected := 0
 	expectedToSee := make(map[string]Pool)
-	baseDenoms, err := suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
-	suite.Require().NoError(err)
-	for _, pool := range suite.pools {
+	baseDenoms, err := s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
+	s.Require().NoError(err)
+	for _, pool := range s.pools {
 		// Module currently limited to two asset pools
 		// Instantiate asset and amounts for the pool
 		if len(pool.PoolAssets) == 2 {
@@ -87,30 +87,30 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 		// split the key and check if it contains a base denom
 		denoms := strings.Split(key, "-")
 		if contains(baseDenoms, denoms[0]) {
-			poolId, err := suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, denoms[0], denoms[1])
-			suite.Require().NoError(err)
-			suite.Require().Equal(pool.PoolId, poolId)
+			poolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, denoms[0], denoms[1])
+			s.Require().NoError(err)
+			s.Require().Equal(pool.PoolId, poolId)
 			poolVisited = true
 		}
 
 		if contains(baseDenoms, denoms[1]) {
-			poolId, err := suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, denoms[1], denoms[0])
-			suite.Require().NoError(err)
-			suite.Require().Equal(pool.PoolId, poolId)
+			poolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, denoms[1], denoms[0])
+			s.Require().NoError(err)
+			s.Require().Equal(pool.PoolId, poolId)
 			poolVisited = true
 		}
 
 		// In the case where the pool contains two base denoms, make sure that they both store the same pool ID
 		if contains(baseDenoms, denoms[0]) && contains(baseDenoms, denoms[1]) {
-			poolId, err := suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, denoms[0], denoms[1])
-			suite.Require().NoError(err)
-			suite.Require().Equal(pool.PoolId, poolId)
+			poolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, denoms[0], denoms[1])
+			s.Require().NoError(err)
+			s.Require().Equal(pool.PoolId, poolId)
 
-			otherPoolId, err := suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, denoms[1], denoms[0])
-			suite.Require().NoError(err)
-			suite.Require().Equal(pool.PoolId, otherPoolId)
+			otherPoolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, denoms[1], denoms[0])
+			s.Require().NoError(err)
+			s.Require().Equal(pool.PoolId, otherPoolId)
 
-			suite.Require().Equal(poolId, otherPoolId)
+			s.Require().Equal(poolId, otherPoolId)
 		}
 
 		if poolVisited {
@@ -118,14 +118,14 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 		}
 	}
 
-	suite.Require().Equal(totalNumberExpected, totalActuallySeen)
+	s.Require().Equal(totalNumberExpected, totalActuallySeen)
 }
 
 // TestUpdateHighestLiquidityPools tests that UpdateHighestLiquidityPools correctly returns the pools with the highest liquidity
 // given specific base denoms as input. The pools this test uses are created in the SetupTest function in keeper_test.go.
 // This test uses pools with denoms prefixed with "epoch" which are only used for this test, so that pools created for
 // other tests do not change the results of this test.
-func (suite *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
+func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 	testCases := []struct {
 		name                   string
 		inputBaseDenomPools    map[string]map[string]keeper.LiquidityPoolStruct
@@ -170,14 +170,14 @@ func (suite *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 
 	for _, tc := range testCases {
 		tc := tc
-		suite.Run(tc.name, func() {
+		s.Run(tc.name, func() {
 			// SetupTest creates all the pools used in the ProtoRev test suite,
 			// including the pools with "epoch" prefixed denoms used in this test
-			suite.SetupTest()
+			s.SetupTest()
 
-			err := suite.App.ProtoRevKeeper.UpdateHighestLiquidityPools(suite.Ctx, tc.inputBaseDenomPools)
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.inputBaseDenomPools, tc.expectedBaseDenomPools)
+			err := s.App.ProtoRevKeeper.UpdateHighestLiquidityPools(s.Ctx, tc.inputBaseDenomPools)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.inputBaseDenomPools, tc.expectedBaseDenomPools)
 		})
 	}
 }

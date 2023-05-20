@@ -34,14 +34,14 @@ type KeeperTestSuite struct {
 }
 
 type Pool struct {
-	PoolAssets []balancer.PoolAsset
-	Asset1     string
-	Asset2     string
-	Amount1    sdk.Int
-	Amount2    sdk.Int
-	SwapFee    sdk.Dec
-	ExitFee    sdk.Dec
-	PoolId     uint64
+	PoolAssets   []balancer.PoolAsset
+	Asset1       string
+	Asset2       string
+	Amount1      sdk.Int
+	Amount2      sdk.Int
+	SpreadFactor sdk.Dec
+	ExitFee      sdk.Dec
+	PoolId       uint64
 }
 
 type StableSwapPool struct {
@@ -54,27 +54,27 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
-	suite.Setup()
+func (s *KeeperTestSuite) SetupTest() {
+	s.Setup()
 
 	// Genesis on init should be the same as the default genesis
-	exportDefaultGenesis := suite.App.ProtoRevKeeper.ExportGenesis(suite.Ctx)
-	suite.Require().Equal(exportDefaultGenesis, types.DefaultGenesis())
+	exportDefaultGenesis := s.App.ProtoRevKeeper.ExportGenesis(s.Ctx)
+	s.Require().Equal(exportDefaultGenesis, types.DefaultGenesis())
 
 	// Init module state for testing (params may differ from default params)
-	suite.App.ProtoRevKeeper.SetProtoRevEnabled(suite.Ctx, true)
-	suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 0)
-	suite.App.ProtoRevKeeper.SetLatestBlockHeight(suite.Ctx, uint64(suite.Ctx.BlockHeight()))
-	suite.App.ProtoRevKeeper.SetPointCountForBlock(suite.Ctx, 0)
+	s.App.ProtoRevKeeper.SetProtoRevEnabled(s.Ctx, true)
+	s.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(s.Ctx, 0)
+	s.App.ProtoRevKeeper.SetLatestBlockHeight(s.Ctx, uint64(s.Ctx.BlockHeight()))
+	s.App.ProtoRevKeeper.SetPointCountForBlock(s.Ctx, 0)
 
 	// Configure max pool points per block. This roughly correlates to the ms of execution time protorev will
 	// take per block
-	if err := suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 100); err != nil {
+	if err := s.App.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, 100); err != nil {
 		panic(err)
 	}
 	// Configure max pool points per tx. This roughly correlates to the ms of execution time protorev will take
 	// per tx
-	if err := suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 18); err != nil {
+	if err := s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, 18); err != nil {
 		panic(err)
 	}
 
@@ -83,7 +83,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		BalancerWeight:     2, // it takes around 2 ms to simulate and execute a balancer swap
 		ConcentratedWeight: 2, // it takes around 2 ms to simulate and execute a concentrated swap
 	}
-	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, poolWeights)
+	s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, poolWeights)
 
 	// Configure the initial base denoms used for cyclic route building
 	baseDenomPriorities := []types.BaseDenom{
@@ -100,18 +100,18 @@ func (suite *KeeperTestSuite) SetupTest() {
 			StepSize: sdk.NewInt(1_000_000),
 		},
 	}
-	err := suite.App.ProtoRevKeeper.SetBaseDenoms(suite.Ctx, baseDenomPriorities)
-	suite.Require().NoError(err)
+	err := s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, baseDenomPriorities)
+	s.Require().NoError(err)
 
 	encodingConfig := osmosisapp.MakeEncodingConfig()
-	suite.clientCtx = client.Context{}.
+	s.clientCtx = client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
 		WithJSONCodec(encodingConfig.Marshaler)
 
 	// Set default configuration for testing
-	suite.balances = sdk.NewCoins(
+	s.balances = sdk.NewCoins(
 		sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("Atom", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("akash", sdk.NewInt(9000000000000000000)),
@@ -136,25 +136,25 @@ func (suite *KeeperTestSuite) SetupTest() {
 		sdk.NewCoin("epochOne", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("epochTwo", sdk.NewInt(9000000000000000000)),
 	)
-	suite.fundAllAccountsWith()
-	suite.Commit()
+	s.fundAllAccountsWith()
+	s.Commit()
 
 	// Init pools
-	suite.setUpPools()
-	suite.Commit()
+	s.setUpPools()
+	s.Commit()
 
 	// Init search routes
-	suite.setUpTokenPairRoutes()
-	suite.Commit()
+	s.setUpTokenPairRoutes()
+	s.Commit()
 
 	// Set the Admin Account
-	suite.adminAccount = apptesting.CreateRandomAccounts(1)[0]
-	err = protorev.HandleSetProtoRevAdminAccount(suite.Ctx, *suite.App.ProtoRevKeeper, &types.SetProtoRevAdminAccountProposal{Account: suite.adminAccount.String()})
-	suite.Require().NoError(err)
+	s.adminAccount = apptesting.CreateRandomAccounts(1)[0]
+	err = protorev.HandleSetProtoRevAdminAccount(s.Ctx, *s.App.ProtoRevKeeper, &types.SetProtoRevAdminAccountProposal{Account: s.adminAccount.String()})
+	s.Require().NoError(err)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.Ctx, suite.App.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, protorevkeeper.NewQuerier(*suite.App.AppKeepers.ProtoRevKeeper))
-	suite.queryClient = types.NewQueryClient(queryHelper)
+	queryHelper := baseapp.NewQueryServerTestHelper(s.Ctx, s.App.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, protorevkeeper.NewQuerier(*s.App.AppKeepers.ProtoRevKeeper))
+	s.queryClient = types.NewQueryClient(queryHelper)
 }
 
 // setUpPools sets up the pools needed for testing
@@ -165,13 +165,13 @@ func (suite *KeeperTestSuite) SetupTest() {
 // bitcoin <-> types.OsmosisDenomination
 // canto <-> types.OsmosisDenomination
 // and so on....
-func (suite *KeeperTestSuite) setUpPools() {
+func (s *KeeperTestSuite) setUpPools() {
 	// Create any necessary sdk.Ints that require string conversion
 	pool28Amount1, ok := sdk.NewIntFromString("6170367464346955818920")
-	suite.Require().True(ok)
+	s.Require().True(ok)
 
 	// Init pools
-	suite.pools = []Pool{
+	s.pools = []Pool{
 		{ // Pool 1
 			PoolAssets: []balancer.PoolAsset{
 				{
@@ -183,9 +183,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  1,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       1,
 		},
 		{ // Pool 2
 			PoolAssets: []balancer.PoolAsset{
@@ -198,9 +198,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  2,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       2,
 		},
 		{ // Pool 3
 			PoolAssets: []balancer.PoolAsset{
@@ -213,9 +213,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  3,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       3,
 		},
 		{ // Pool 4
 			PoolAssets: []balancer.PoolAsset{
@@ -228,9 +228,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  4,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       4,
 		},
 		{ // Pool 5
 			PoolAssets: []balancer.PoolAsset{
@@ -243,9 +243,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  5,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       5,
 		},
 		{ // Pool 6
 			PoolAssets: []balancer.PoolAsset{
@@ -258,9 +258,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  6,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       6,
 		},
 		{ // Pool 7
 			PoolAssets: []balancer.PoolAsset{
@@ -273,9 +273,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  7,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       7,
 		},
 		{ // Pool 8
 			PoolAssets: []balancer.PoolAsset{
@@ -288,9 +288,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  8,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       8,
 		},
 		{ // Pool 9
 			PoolAssets: []balancer.PoolAsset{
@@ -303,9 +303,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  9,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       9,
 		},
 		{ // Pool 10
 			PoolAssets: []balancer.PoolAsset{
@@ -318,9 +318,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  10,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       10,
 		},
 		{ // Pool 11
 			PoolAssets: []balancer.PoolAsset{
@@ -333,9 +333,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  11,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       11,
 		},
 		{ // Pool 12
 			PoolAssets: []balancer.PoolAsset{
@@ -348,9 +348,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  12,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       12,
 		},
 		{ // Pool 13
 			PoolAssets: []balancer.PoolAsset{
@@ -363,9 +363,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  13,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       13,
 		},
 		{ // Pool 14
 			PoolAssets: []balancer.PoolAsset{
@@ -378,9 +378,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  14,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       14,
 		},
 		{ // Pool 15
 			PoolAssets: []balancer.PoolAsset{
@@ -393,9 +393,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  15,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       15,
 		},
 		{ // Pool 16
 			PoolAssets: []balancer.PoolAsset{
@@ -408,9 +408,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  16,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       16,
 		},
 		{ // Pool 17
 			PoolAssets: []balancer.PoolAsset{
@@ -423,9 +423,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  17,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       17,
 		},
 		{ // Pool 18
 			PoolAssets: []balancer.PoolAsset{
@@ -438,9 +438,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  18,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       18,
 		},
 		{ // Pool 19
 			PoolAssets: []balancer.PoolAsset{
@@ -453,9 +453,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  19,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       19,
 		},
 		{ // Pool 20
 			PoolAssets: []balancer.PoolAsset{
@@ -468,9 +468,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  20,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       20,
 		},
 		{ // Pool 21
 			PoolAssets: []balancer.PoolAsset{
@@ -483,9 +483,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  21,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       21,
 		},
 		{ // Pool 22
 			PoolAssets: []balancer.PoolAsset{
@@ -498,9 +498,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  22,
+			SpreadFactor: sdk.NewDecWithPrec(2, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       22,
 		},
 		{ // Pool 23
 			PoolAssets: []balancer.PoolAsset{
@@ -513,9 +513,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(535, 5),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  23,
+			SpreadFactor: sdk.NewDecWithPrec(535, 5),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       23,
 		},
 		{ // Pool 24
 			PoolAssets: []balancer.PoolAsset{
@@ -528,9 +528,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  24,
+			SpreadFactor: sdk.NewDecWithPrec(2, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       24,
 		},
 		{ // Pool 25
 			PoolAssets: []balancer.PoolAsset{
@@ -543,9 +543,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  25,
+			SpreadFactor: sdk.NewDecWithPrec(2, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       25,
 		},
 		{ // Pool 26
 			PoolAssets: []balancer.PoolAsset{
@@ -558,9 +558,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(50),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  26,
+			SpreadFactor: sdk.NewDecWithPrec(2, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       26,
 		},
 		{ // Pool 27
 			PoolAssets: []balancer.PoolAsset{
@@ -573,9 +573,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(50),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  27,
+			SpreadFactor: sdk.NewDecWithPrec(2, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       27,
 		},
 		{ // Pool 28
 			PoolAssets: []balancer.PoolAsset{
@@ -596,9 +596,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(25),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(4, 4),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  28,
+			SpreadFactor: sdk.NewDecWithPrec(4, 4),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       28,
 		},
 		{ // Pool 29
 			PoolAssets: []balancer.PoolAsset{
@@ -611,9 +611,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  29,
+			SpreadFactor: sdk.NewDecWithPrec(2, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       29,
 		},
 		{ // Pool 30
 			PoolAssets: []balancer.PoolAsset{
@@ -626,9 +626,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  30,
+			SpreadFactor: sdk.NewDecWithPrec(2, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       30,
 		},
 		{ // Pool 31
 			PoolAssets: []balancer.PoolAsset{
@@ -649,9 +649,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(25),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(4, 4),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  31,
+			SpreadFactor: sdk.NewDecWithPrec(4, 4),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       31,
 		},
 		{ // Pool 32
 			PoolAssets: []balancer.PoolAsset{
@@ -664,9 +664,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(30),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(3, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  32,
+			SpreadFactor: sdk.NewDecWithPrec(3, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       32,
 		},
 		{ // Pool 33
 			PoolAssets: []balancer.PoolAsset{
@@ -679,9 +679,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(30),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(3, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  33,
+			SpreadFactor: sdk.NewDecWithPrec(3, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       33,
 		},
 		{ // Pool 34
 			PoolAssets: []balancer.PoolAsset{
@@ -694,9 +694,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(3, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  34,
+			SpreadFactor: sdk.NewDecWithPrec(3, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       34,
 		},
 		{ // Pool 35
 			PoolAssets: []balancer.PoolAsset{
@@ -709,9 +709,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  35,
+			SpreadFactor: sdk.NewDecWithPrec(2, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       35,
 		},
 		{ // Pool 36
 			PoolAssets: []balancer.PoolAsset{
@@ -724,9 +724,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(3, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  36,
+			SpreadFactor: sdk.NewDecWithPrec(3, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       36,
 		},
 		{ // Pool 37
 			PoolAssets: []balancer.PoolAsset{
@@ -739,9 +739,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(3, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  37,
+			SpreadFactor: sdk.NewDecWithPrec(3, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       37,
 		},
 		{ // Pool 38
 			PoolAssets: []balancer.PoolAsset{
@@ -754,9 +754,9 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  38,
+			SpreadFactor: sdk.NewDecWithPrec(2, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       38,
 		},
 		{ // Pool 39
 			PoolAssets: []balancer.PoolAsset{
@@ -769,17 +769,17 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  39,
+			SpreadFactor: sdk.NewDecWithPrec(2, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       39,
 		},
 	}
 
-	for _, pool := range suite.pools {
-		suite.createGAMMPool(pool.PoolAssets, pool.SwapFee, pool.ExitFee)
+	for _, pool := range s.pools {
+		s.createGAMMPool(pool.PoolAssets, pool.SpreadFactor, pool.ExitFee)
 	}
 
-	suite.stableSwapPools = []StableSwapPool{
+	s.stableSwapPools = []StableSwapPool{
 		{ // Pool 40
 			initialLiquidity: sdk.NewCoins(
 				sdk.NewCoin("usdc", sdk.NewInt(1000000000000000)),
@@ -883,64 +883,64 @@ func (suite *KeeperTestSuite) setUpPools() {
 		},
 	}
 
-	for _, pool := range suite.stableSwapPools {
-		suite.createStableswapPool(pool.initialLiquidity, pool.poolParams, pool.scalingFactors)
+	for _, pool := range s.stableSwapPools {
+		s.createStableswapPool(pool.initialLiquidity, pool.poolParams, pool.scalingFactors)
 	}
 
 	// Create a concentrated liquidity pool for epoch_hook testing
-	clPoolOne := suite.PrepareConcentratedPoolWithCoins("epochTwo", "uosmo")
+	clPoolOne := s.PrepareConcentratedPoolWithCoins("epochTwo", "uosmo")
 
 	// Provide liquidity to the concentrated liquidity pool
 	clPoolOneLiquidity := sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(1000)), sdk.NewCoin("uosmo", sdk.NewInt(2000)))
-	err := suite.App.BankKeeper.SendCoins(suite.Ctx, suite.TestAccs[0], clPoolOne.GetAddress(), clPoolOneLiquidity)
-	suite.Require().NoError(err)
+	err := s.App.BankKeeper.SendCoins(s.Ctx, s.TestAccs[0], clPoolOne.GetAddress(), clPoolOneLiquidity)
+	s.Require().NoError(err)
 
 	// Set all of the pool info into the stores
-	err = suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
-	suite.Require().NoError(err)
+	err = s.App.ProtoRevKeeper.UpdatePools(s.Ctx)
+	s.Require().NoError(err)
 }
 
 // createStableswapPool creates a stableswap pool with the given pool assets and params
-func (suite *KeeperTestSuite) createStableswapPool(initialLiquidity sdk.Coins, poolParams stableswap.PoolParams, scalingFactors []uint64) {
-	_, err := suite.App.PoolManagerKeeper.CreatePool(
-		suite.Ctx,
-		stableswap.NewMsgCreateStableswapPool(suite.TestAccs[1], poolParams, initialLiquidity, scalingFactors, ""))
-	suite.Require().NoError(err)
+func (s *KeeperTestSuite) createStableswapPool(initialLiquidity sdk.Coins, poolParams stableswap.PoolParams, scalingFactors []uint64) {
+	_, err := s.App.PoolManagerKeeper.CreatePool(
+		s.Ctx,
+		stableswap.NewMsgCreateStableswapPool(s.TestAccs[1], poolParams, initialLiquidity, scalingFactors, ""))
+	s.Require().NoError(err)
 }
 
 // createGAMMPool creates a balancer pool with the given pool assets and params
-func (suite *KeeperTestSuite) createGAMMPool(poolAssets []balancer.PoolAsset, swapFee, exitFee sdk.Dec) uint64 {
+func (s *KeeperTestSuite) createGAMMPool(poolAssets []balancer.PoolAsset, spreadFactor, exitFee sdk.Dec) uint64 {
 	poolParams := balancer.PoolParams{
-		SwapFee: swapFee,
+		SwapFee: spreadFactor,
 		ExitFee: exitFee,
 	}
 
-	return suite.prepareCustomBalancerPool(poolAssets, poolParams)
+	return s.prepareCustomBalancerPool(poolAssets, poolParams)
 }
 
 // prepareCustomBalancerPool creates a custom balancer pool with the given pool assets and params
-func (suite *KeeperTestSuite) prepareCustomBalancerPool(
+func (s *KeeperTestSuite) prepareCustomBalancerPool(
 	poolAssets []balancer.PoolAsset,
 	poolParams balancer.PoolParams,
 ) uint64 {
-	poolID, err := suite.App.PoolManagerKeeper.CreatePool(
-		suite.Ctx,
-		balancer.NewMsgCreateBalancerPool(suite.TestAccs[1], poolParams, poolAssets, ""),
+	poolID, err := s.App.PoolManagerKeeper.CreatePool(
+		s.Ctx,
+		balancer.NewMsgCreateBalancerPool(s.TestAccs[1], poolParams, poolAssets, ""),
 	)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
 	return poolID
 }
 
 // fundAllAccountsWith funds all the test accounts with the same amount of tokens
-func (suite *KeeperTestSuite) fundAllAccountsWith() {
-	for _, acc := range suite.TestAccs {
-		suite.FundAcc(acc, suite.balances)
+func (s *KeeperTestSuite) fundAllAccountsWith() {
+	for _, acc := range s.TestAccs {
+		s.FundAcc(acc, s.balances)
 	}
 }
 
 // setUpTokenPairRoutes sets up the searcher routes for testing
-func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
+func (s *KeeperTestSuite) setUpTokenPairRoutes() {
 	// General Test Route
 	atomAkash := types.NewTrade(0, "Atom", "akash")
 	akashBitcoin := types.NewTrade(14, "akash", "bitcoin")
@@ -973,7 +973,7 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 
 	standardStepSize := sdk.NewInt(1_000_000)
 
-	suite.tokenPairArbRoutes = []types.TokenPairArbRoutes{
+	s.tokenPairArbRoutes = []types.TokenPairArbRoutes{
 		{
 			TokenIn:  "akash",
 			TokenOut: "Atom",
@@ -1036,10 +1036,10 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 		},
 	}
 
-	for _, tokenPair := range suite.tokenPairArbRoutes {
+	for _, tokenPair := range s.tokenPairArbRoutes {
 		err := tokenPair.Validate()
-		suite.Require().NoError(err)
-		err = suite.App.ProtoRevKeeper.SetTokenPairArbRoutes(suite.Ctx, tokenPair.TokenIn, tokenPair.TokenOut, tokenPair)
-		suite.Require().NoError(err)
+		s.Require().NoError(err)
+		err = s.App.ProtoRevKeeper.SetTokenPairArbRoutes(s.Ctx, tokenPair.TokenIn, tokenPair.TokenOut, tokenPair)
+		s.Require().NoError(err)
 	}
 }

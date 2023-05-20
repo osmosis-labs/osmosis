@@ -5,7 +5,6 @@ import (
 	"math"
 	"math/rand"
 	"testing"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -120,14 +119,14 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 				// Decreasing price so want to be below current tick
 
 				// minTick <= lowerTick <= currentTick
-				lowerTick = rand.Int63n(currentTick.Int64()-types.MinTick+1) + types.MinTick
+				lowerTick = rand.Int63n(currentTick-types.MinTick+1) + types.MinTick
 				// lowerTick <= upperTick <= currentTick
-				upperTick = currentTick.Int64() - rand.Int63n(int64(math.Abs(float64(currentTick.Int64()-lowerTick))))
+				upperTick = currentTick - rand.Int63n(int64(math.Abs(float64(currentTick-lowerTick))))
 			} else {
 				// Increasing price so want to be above current tick
 
 				// currentTick <= lowerTick <= maxTick
-				lowerTick := rand.Int63n(types.MaxTick-currentTick.Int64()+1) + currentTick.Int64()
+				lowerTick := rand.Int63n(types.MaxTick-currentTick+1) + currentTick
 				// lowerTick <= upperTick <= maxTick
 				upperTick = types.MaxTick - rand.Int63n(int64(math.Abs(float64(types.MaxTick-lowerTick))))
 			}
@@ -171,8 +170,8 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 			// Within 10 ticks of the current
 			if tickSpacing <= 10 {
 				for i := 0; i < numberOfPositions; i++ {
-					lowerTick := currentTick.Int64() - 10
-					upperTick := currentTick.Int64() + 10
+					lowerTick := currentTick - 10
+					upperTick := currentTick + 10
 
 					tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(maxAmountDeposited).MulRaw(5))
 					tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(maxAmountDeposited).MulRaw(5))
@@ -190,8 +189,8 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 
 			// Within 100 ticks of the current
 			for i := 0; i < numberOfPositions; i++ {
-				lowerTick := currentTick.Int64() - 100
-				upperTick := currentTick.Int64() + 100
+				lowerTick := currentTick - 100
+				upperTick := currentTick + 100
 				// Normalize lowerTick to be a multiple of tickSpacing
 				lowerTick = lowerTick + (tickSpacing - lowerTick%tickSpacing)
 				// Normalize upperTick to be a multiple of tickSpacing
@@ -214,15 +213,14 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 		swapAmountIn := sdk.MustNewDecFromStr(amountIn).TruncateInt()
 		largeSwapInCoin := sdk.NewCoin(denomIn, swapAmountIn)
 
-		liquidityNet, err := clKeeper.GetTickLiquidityNetInDirection(s.Ctx, pool.GetId(), largeSwapInCoin.Denom, currentTick, sdk.Int{})
+		liquidityNet, err := clKeeper.GetTickLiquidityNetInDirection(s.Ctx, pool.GetId(), largeSwapInCoin.Denom, sdk.NewInt(currentTick), sdk.Int{})
 		noError(err)
 
 		fmt.Println("num_ticks_traversed", len(liquidityNet))
 		fmt.Println("current_tick", currentTick)
 
-		// Increase block time so that some incentives uptime accumulator update logic
-		// isn't a no-op.
-		s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second))
+		// Commit the block so that position updates are propagated to IAVL.
+		s.Commit()
 
 		// Fund swap amount.
 		simapp.FundAccount(s.App.BankKeeper, s.Ctx, s.TestAccs[0], sdk.NewCoins(largeSwapInCoin))
@@ -231,7 +229,7 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 		b.StartTimer()
 
 		// System under test
-		_, err = clKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, largeSwapInCoin, denom1, sdk.NewInt(1), pool.GetSwapFee(s.Ctx))
+		_, err = clKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, largeSwapInCoin, denom1, sdk.NewInt(1), pool.GetSpreadFactor(s.Ctx))
 		noError(err)
 
 		// Notice that we stop the timer again in case there are multiple iterations.

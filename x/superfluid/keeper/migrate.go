@@ -265,7 +265,10 @@ func (k Keeper) validateMigration(ctx sdk.Context, sender sdk.AccAddress, lockId
 	}
 
 	// Before we break the lock, we must note the time remaining on the lock.
-	remainingLockTime = k.getExistingLockRemainingDuration(ctx, preMigrationLock)
+	remainingLockTime, err = k.getExistingLockRemainingDuration(ctx, preMigrationLock)
+	if err != nil {
+		return 0, 0, &lockuptypes.PeriodLock{}, 0, err
+	}
 
 	return poolIdLeaving, poolIdEntering, preMigrationLock, remainingLockTime, nil
 }

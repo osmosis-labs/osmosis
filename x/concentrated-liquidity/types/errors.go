@@ -285,12 +285,12 @@ func (e SqrtPriceNegativeError) Error() string {
 	return fmt.Sprintf("provided sqrt price (%s) must be positive", e.ProvidedSqrtPrice)
 }
 
-type InvalidSwapFeeError struct {
+type InvalidSpreadFactorError struct {
 	ActualFee sdk.Dec
 }
 
-func (e InvalidSwapFeeError) Error() string {
-	return fmt.Sprintf("invalid swap fee(%s), must be in [0, 1) range", e.ActualFee)
+func (e InvalidSpreadFactorError) Error() string {
+	return fmt.Sprintf("invalid spread factor(%s), must be in [0, 1) range", e.ActualFee)
 }
 
 type PositionAlreadyExistsError struct {
@@ -681,13 +681,13 @@ func (e UnauthorizedQuoteDenomError) Error() string {
 	return fmt.Sprintf("attempted to create pool with unauthorized quote denom (%s), must be one of the following: (%s)", e.ProvidedQuoteDenom, e.AuthorizedQuoteDenoms)
 }
 
-type UnauthorizedSwapFeeError struct {
-	ProvidedSwapFee    sdk.Dec
-	AuthorizedSwapFees []sdk.Dec
+type UnauthorizedSpreadFactorError struct {
+	ProvidedSpreadFactor    sdk.Dec
+	AuthorizedSpreadFactors []sdk.Dec
 }
 
-func (e UnauthorizedSwapFeeError) Error() string {
-	return fmt.Sprintf("attempted to create pool with unauthorized swap fee (%s), must be one of the following: (%s)", e.ProvidedSwapFee, e.AuthorizedSwapFees)
+func (e UnauthorizedSpreadFactorError) Error() string {
+	return fmt.Sprintf("attempted to create pool with unauthorized spread factor (%s), must be one of the following: (%s)", e.ProvidedSpreadFactor, e.AuthorizedSpreadFactors)
 }
 
 type UnauthorizedTickSpacingError struct {
@@ -806,4 +806,28 @@ type CoinLengthError struct {
 
 func (e CoinLengthError) Error() string {
 	return fmt.Sprintf("coin length (%d) must be less than or equal to max length (%d)", e.Length, e.MaxLength)
+}
+
+type RanOutOfTicksForPoolError struct {
+	PoolId uint64
+}
+
+func (e RanOutOfTicksForPoolError) Error() string {
+	return fmt.Sprintf("ran out of ticks for pool (%d) during swap", e.PoolId)
+}
+
+type SqrtRootCalculationError struct {
+	SqrtPriceLimit sdk.Dec
+}
+
+func (e SqrtRootCalculationError) Error() string {
+	return fmt.Sprintf("issue calculating square root of price limit %s", e.SqrtPriceLimit)
+}
+
+type TickToSqrtPriceConversionError struct {
+	NextTick int64
+}
+
+func (e TickToSqrtPriceConversionError) Error() string {
+	return fmt.Sprintf("could not convert next tick  to nextSqrtPrice (%v)", e.NextTick)
 }

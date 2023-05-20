@@ -132,38 +132,6 @@ func (server msgServer) LockAndSuperfluidDelegate(goCtx context.Context, msg *ty
 	}, err
 }
 
-func (server msgServer) CreateFullRangePositionAndSuperfluidDelegate(goCtx context.Context, msg *types.MsgCreateFullRangePositionAndSuperfluidDelegate) (*types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	address, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
-	}
-	positionId, _, _, _, _, lockId, err := server.keeper.clk.CreateFullRangePositionLocked(ctx, msg.PoolId, address, msg.Coins, server.keeper.sk.GetParams(ctx).UnbondingTime)
-	if err != nil {
-		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
-	}
-
-	superfluidDelegateMsg := types.MsgSuperfluidDelegate{
-		Sender:  msg.Sender,
-		LockId:  lockId,
-		ValAddr: msg.ValAddr,
-	}
-
-	_, err = server.SuperfluidDelegate(goCtx, &superfluidDelegateMsg)
-
-	if err != nil {
-		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
-	}
-
-	events.EmitCreateFullRangePositionAndSuperfluidDelegateEvent(ctx, lockId, positionId, msg.ValAddr)
-
-	return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{
-		LockID:     lockId,
-		PositionID: positionId,
-	}, nil
-}
-
 func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.MsgUnPoolWhitelistedPool) (*types.MsgUnPoolWhitelistedPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -195,6 +163,38 @@ func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.
 	events.EmitUnpoolIdEvent(ctx, msg.Sender, lpShareDenom, allExitedLockIDsSerialized)
 
 	return &types.MsgUnPoolWhitelistedPoolResponse{ExitedLockIds: allExitedLockIDs}, nil
+}
+
+func (server msgServer) CreateFullRangePositionAndSuperfluidDelegate(goCtx context.Context, msg *types.MsgCreateFullRangePositionAndSuperfluidDelegate) (*types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	address, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
+	}
+	positionId, _, _, _, _, lockId, err := server.keeper.clk.CreateFullRangePositionLocked(ctx, msg.PoolId, address, msg.Coins, server.keeper.sk.GetParams(ctx).UnbondingTime)
+	if err != nil {
+		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
+	}
+
+	superfluidDelegateMsg := types.MsgSuperfluidDelegate{
+		Sender:  msg.Sender,
+		LockId:  lockId,
+		ValAddr: msg.ValAddr,
+	}
+
+	_, err = server.SuperfluidDelegate(goCtx, &superfluidDelegateMsg)
+
+	if err != nil {
+		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
+	}
+
+	events.EmitCreateFullRangePositionAndSuperfluidDelegateEvent(ctx, lockId, positionId, msg.ValAddr)
+
+	return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{
+		LockID:     lockId,
+		PositionID: positionId,
+	}, nil
 }
 
 func (server msgServer) UnlockAndMigrateSharesToFullRangeConcentratedPosition(goCtx context.Context, msg *types.MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) (*types.MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse, error) {
