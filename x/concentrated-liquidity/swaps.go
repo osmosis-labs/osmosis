@@ -335,9 +335,6 @@ func (k Keeper) computeOutAmtGivenIn(
 
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
 	defer nextTickIter.Close()
-	if !nextTickIter.Valid() {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
-	}
 
 	totalFees = sdk.ZeroDec()
 	// Iterate and update swapState until we swap all tokenIn or we reach the specific sqrtPriceLimit
@@ -409,9 +406,6 @@ func (k Keeper) computeOutAmtGivenIn(
 			}
 
 			// Move next tick iterator to the next tick as the tick is crossed.
-			if !nextTickIter.Valid() {
-				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
-			}
 			nextTickIter.Next()
 
 			liquidityNet = swapStrategy.SetLiquidityDeltaSign(liquidityNet)
@@ -537,9 +531,6 @@ func (k Keeper) computeInAmtGivenOut(
 
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
 	defer nextTickIter.Close()
-	if !nextTickIter.Valid() {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
-	}
 
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
@@ -604,9 +595,6 @@ func (k Keeper) computeInAmtGivenOut(
 			}
 
 			// Move next tick iterator to the next tick as the tick is crossed.
-			if !nextTickIter.Valid() {
-				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
-			}
 			nextTickIter.Next()
 
 			liquidityNet = swapStrategy.SetLiquidityDeltaSign(liquidityNet)
