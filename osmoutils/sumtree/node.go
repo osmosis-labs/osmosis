@@ -138,6 +138,21 @@ func (ptr *ptr) updateAccumulation_withoutchangingparent(c *Child) {
 	ptr.set(node)
 }
 
+func (ptr *ptr) updateAccumulation_changingparent(c *Child, parentLevel uint16) {
+	if !ptr.exists() || ptr.level > parentLevel+1 {
+		return // reached at the root
+	}
+
+	node := ptr.node()
+	idx, match := node.find(c.Index)
+	if !match {
+		panic("non existing key pushed from the child")
+	}
+	node = node.setAcc(idx, c.Accumulation)
+	ptr.set(node)
+	ptr.parent().updateAccumulation_changingparent(&Child{ptr.key, node.accumulate()}, parentLevel)
+}
+
 func (ptr *ptr) push(c *Child) {
 	if !ptr.exists() {
 		ptr.create(NewNode(c))

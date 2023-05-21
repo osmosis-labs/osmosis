@@ -123,7 +123,7 @@ func (t Tree) leafKey(key []byte) []byte {
 	return t.nodeKey(0, key)
 }
 
-func (t Tree) root() *ptr {
+func (t Tree) Root() *ptr {
 	iter := stypes.KVStoreReversePrefixIterator(t.store, nodeKeyPrefix)
 	defer iter.Close()
 	if !iter.Valid() {
@@ -268,8 +268,8 @@ func (t Tree) GetWithAccumulatedRange(key []byte) (int64, int64) {
 func (t Tree) SubsetAccumulation(start []byte, end []byte) sdk.Int {
 
 	if start == nil && end == nil {
-		left, exactStart, _ := t.root().accumulationSplit(end)
-		_, exactEnd, right := t.root().accumulationSplit(start)
+		left, exactStart, _ := t.Root().accumulationSplit(end)
+		_, exactEnd, right := t.Root().accumulationSplit(start)
 
 		startSum := left.Add(exactStart)
 		endSum := exactEnd.Add(right)
@@ -278,20 +278,20 @@ func (t Tree) SubsetAccumulation(start []byte, end []byte) sdk.Int {
 	}
 
 	if start == nil {
-		left, exact, _ := t.root().accumulationSplit(end)
+		left, exact, _ := t.Root().accumulationSplit(end)
 		return left.Add(exact)
 	}
 	if end == nil {
-		_, exact, right := t.root().accumulationSplit(start)
+		_, exact, right := t.Root().accumulationSplit(start)
 		return exact.Add(right)
 	}
-	_, leftexact, leftrest := t.root().accumulationSplit(start)
-	_, _, rightest := t.root().accumulationSplit(end)
+	_, leftexact, leftrest := t.Root().accumulationSplit(start)
+	_, _, rightest := t.Root().accumulationSplit(end)
 	return leftexact.Add(leftrest).Sub(rightest)
 }
 
 func (t Tree) SplitAcc(key []byte) (sdk.Int, sdk.Int, sdk.Int) {
-	return t.root().accumulationSplit(key)
+	return t.Root().accumulationSplit(key)
 }
 
 func (ptr *ptr) visualize(depth int, acc sdk.Int) {
@@ -312,7 +312,7 @@ func (ptr *ptr) visualize(depth int, acc sdk.Int) {
 
 // DebugVisualize prints the entire tree to stdout.
 func (t Tree) DebugVisualize() {
-	t.root().visualize(0, sdk.Int{})
+	t.Root().visualize(0, sdk.Int{})
 }
 
 // ClaimLeafRoutine claims all the value from the leaf and sets the leave value to sentinel value  "-1"
@@ -357,8 +357,7 @@ func (ptr *ptr) ClaimLeafRoutine(key []byte) {
 		ptr.tree.store.Set(ptr.tree.nodeKey(parentLevel, parentKey), bzSetParent)
 
 		// update the accumulation value for the pointer
-		// TODO: Check if this is the actual parent node, because parent and its left child share same key
-		ptr.parent().updateAccumulation_withoutchangingparent(&Child{parentKey, sdk.NewInt(0)})
+		ptr.parent().updateAccumulation_changingparent(&Child{parentKey, sdk.NewInt(0)}, parentLevel)
 	}
 }
 
