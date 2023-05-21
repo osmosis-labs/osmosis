@@ -14,7 +14,6 @@ updates:
     interval: weekly
   labels:
     - "A:no-changelog"
-    - "V:state/compatible/no_backport"  
   ignore:
     - dependency-name: "github.com/tendermint/tendermint"
       update-types: ["version-update:semver-major", "version-update:semver-minor"]
