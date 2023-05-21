@@ -11,17 +11,7 @@ Closes: #XXX
 
 > Add a description of the overall background and high level changes that this PR introduces
 
-*(E.g.: This pull request improves documation of area A by adding ....*
-
-
-## Brief Changelog
-
-*(for example:)*
- 
-  - *The metadata is stored in the blob store on job creation time as a persistent artifact*
-  - *Deployments RPC transmits only the blob storage reference*
-  - *Daemons retrieve the RPC data from the blob cache*
-
+*(E.g.: This pull request improves documentation of area A by adding ....*
 
 ## Testing and Verifying
 
@@ -45,6 +35,11 @@ This change added tests and can be verified as follows:
 
 ## Documentation and Release Note
 
-  - Does this pull request introduce a new feature or user-facing behavior changes? (yes / no)
-  - Is a relevant changelog entry added to the `Unreleased` section in `CHANGELOG.md`? (yes / no)
-  - How is the feature or change documented? (not applicable   /   specification (`x/<module>/spec/`)  /  [Osmosis docs repo](https://github.com/osmosis-labs/docs)   /   not documented)
+  - [ ] Does this pull request introduce a new feature or user-facing behavior changes?
+  - [ ] Changelog entry added to `Unreleased` section of `CHANGELOG.md`?
+
+Where is the change documented? 
+  - [ ] Specification (`x/{module}/README.md`)
+  - [ ] Osmosis documentation site
+  - [ ] Code comments?
+  - [ ] N/A

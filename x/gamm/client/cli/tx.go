@@ -350,7 +350,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (
 		return nil, errors.New("deposit tokens and token weights should have same length")
 	}
 
-	swapFee, err := sdk.NewDecFromStr(pool.SwapFee)
+	spreadFactor, err := sdk.NewDecFromStr(pool.SwapFee)
 	if err != nil {
 		return nil, err
 	}
@@ -373,7 +373,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (
 	}
 
 	poolParams := &balancer.PoolParams{
-		SwapFee: swapFee,
+		SwapFee: spreadFactor,
 		ExitFee: exitFee,
 	}
 
@@ -445,7 +445,7 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, fs *flag.FlagSet)
 		return nil, err
 	}
 
-	swapFee, err := sdk.NewDecFromStr(flags.SwapFee)
+	spreadFactor, err := sdk.NewDecFromStr(flags.SwapFee)
 	if err != nil {
 		return nil, err
 	}
@@ -456,7 +456,7 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, fs *flag.FlagSet)
 	}
 
 	poolParams := &stableswap.PoolParams{
-		SwapFee: swapFee,
+		SwapFee: spreadFactor,
 		ExitFee: exitFee,
 	}
 

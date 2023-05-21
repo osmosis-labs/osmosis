@@ -15,7 +15,7 @@ func handleCreateConcentratedLiquidityPoolProposal(ctx sdk.Context, k Keeper, p 
 func (k Keeper) HandleCreateConcentratedLiquidityPoolProposal(ctx sdk.Context, p *types.CreateConcentratedLiquidityPoolProposal) error {
 	poolmanagerModuleAcc := k.accountKeeper.GetModuleAccount(ctx, poolmanagertypes.ModuleName)
 	poolCreatorAddress := poolmanagerModuleAcc.GetAddress()
-	createPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolCreatorAddress, p.Denom0, p.Denom1, p.TickSpacing, p.SwapFee)
+	createPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolCreatorAddress, p.Denom0, p.Denom1, p.TickSpacing, p.SpreadFactor)
 	_, err := k.poolmanagerKeeper.CreateConcentratedPoolAsPoolManager(ctx, createPoolMsg)
 	return err
 }

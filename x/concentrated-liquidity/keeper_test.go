@@ -21,39 +21,39 @@ import (
 )
 
 var (
-	DefaultMinTick, DefaultMaxTick                 = types.MinTick, types.MaxTick
-	DefaultLowerPrice                              = sdk.NewDec(4545)
-	DefaultLowerTick                               = int64(30545000)
-	DefaultUpperPrice                              = sdk.NewDec(5500)
-	DefaultUpperTick                               = int64(31500000)
-	DefaultCurrPrice                               = sdk.NewDec(5000)
-	DefaultCurrTick                                = sdk.NewInt(31000000)
-	DefaultCurrSqrtPrice, _                        = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
-	DefaultZeroSwapFee                             = sdk.ZeroDec()
-	DefaultFeeAccumCoins                           = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
-	DefaultPositionId                              = uint64(1)
-	DefaultUnderlyingLockId                        = uint64(0)
-	DefaultJoinTime                                = time.Unix(0, 0).UTC()
-	ETH                                            = "eth"
-	DefaultAmt0                                    = sdk.NewInt(1000000)
-	DefaultAmt0Expected                            = sdk.NewInt(998976)
-	DefaultCoin0                                   = sdk.NewCoin(ETH, DefaultAmt0)
-	USDC                                           = "usdc"
-	DefaultAmt1                                    = sdk.NewInt(5000000000)
-	DefaultAmt1Expected                            = sdk.NewInt(5000000000)
-	DefaultCoin1                                   = sdk.NewCoin(USDC, DefaultAmt1)
-	DefaultCoins                                   = sdk.NewCoins(DefaultCoin0, DefaultCoin1)
-	DefaultLiquidityAmt                            = sdk.MustNewDecFromStr("1517882343.751510418088349649")
-	FullRangeLiquidityAmt                          = sdk.MustNewDecFromStr("70710678.118654752940000000")
-	DefaultTickSpacing                             = uint64(100)
-	PoolCreationFee                                = poolmanagertypes.DefaultParams().PoolCreationFee
-	DefaultExponentConsecutivePositionLowerTick, _ = math.PriceToTickRoundDown(sdk.NewDec(5500), DefaultTickSpacing)
-	DefaultExponentConsecutivePositionUpperTick, _ = math.PriceToTickRoundDown(sdk.NewDec(6250), DefaultTickSpacing)
-	DefaultExponentOverlappingPositionLowerTick, _ = math.PriceToTickRoundDown(sdk.NewDec(4000), DefaultTickSpacing)
-	DefaultExponentOverlappingPositionUpperTick, _ = math.PriceToTickRoundDown(sdk.NewDec(4999), DefaultTickSpacing)
-	BAR                                            = "bar"
-	FOO                                            = "foo"
-	InsufficientFundsError                         = fmt.Errorf("insufficient funds")
+	DefaultMinTick, DefaultMaxTick                       = types.MinTick, types.MaxTick
+	DefaultLowerPrice                                    = sdk.NewDec(4545)
+	DefaultLowerTick                                     = int64(30545000)
+	DefaultUpperPrice                                    = sdk.NewDec(5500)
+	DefaultUpperTick                                     = int64(31500000)
+	DefaultCurrPrice                                     = sdk.NewDec(5000)
+	DefaultCurrTick                                int64 = 31000000
+	DefaultCurrSqrtPrice, _                              = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
+	DefaultZeroSpreadFactor                              = sdk.ZeroDec()
+	DefaultFeeAccumCoins                                 = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
+	DefaultPositionId                                    = uint64(1)
+	DefaultUnderlyingLockId                              = uint64(0)
+	DefaultJoinTime                                      = time.Unix(0, 0).UTC()
+	ETH                                                  = "eth"
+	DefaultAmt0                                          = sdk.NewInt(1000000)
+	DefaultAmt0Expected                                  = sdk.NewInt(998976)
+	DefaultCoin0                                         = sdk.NewCoin(ETH, DefaultAmt0)
+	USDC                                                 = "usdc"
+	DefaultAmt1                                          = sdk.NewInt(5000000000)
+	DefaultAmt1Expected                                  = sdk.NewInt(5000000000)
+	DefaultCoin1                                         = sdk.NewCoin(USDC, DefaultAmt1)
+	DefaultCoins                                         = sdk.NewCoins(DefaultCoin0, DefaultCoin1)
+	DefaultLiquidityAmt                                  = sdk.MustNewDecFromStr("1517882343.751510418088349649")
+	FullRangeLiquidityAmt                                = sdk.MustNewDecFromStr("70710678.118654752940000000")
+	DefaultTickSpacing                                   = uint64(100)
+	PoolCreationFee                                      = poolmanagertypes.DefaultParams().PoolCreationFee
+	DefaultExponentConsecutivePositionLowerTick, _       = math.PriceToTickRoundDown(sdk.NewDec(5500), DefaultTickSpacing)
+	DefaultExponentConsecutivePositionUpperTick, _       = math.PriceToTickRoundDown(sdk.NewDec(6250), DefaultTickSpacing)
+	DefaultExponentOverlappingPositionLowerTick, _       = math.PriceToTickRoundDown(sdk.NewDec(4000), DefaultTickSpacing)
+	DefaultExponentOverlappingPositionUpperTick, _       = math.PriceToTickRoundDown(sdk.NewDec(4999), DefaultTickSpacing)
+	BAR                                                  = "bar"
+	FOO                                                  = "foo"
+	InsufficientFundsError                               = fmt.Errorf("insufficient funds")
 )
 
 type KeeperTestSuite struct {
@@ -64,8 +64,8 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
-	suite.Setup()
+func (s *KeeperTestSuite) SetupTest() {
+	s.Setup()
 }
 
 func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {
@@ -74,7 +74,7 @@ func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {
 
 func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, providedCoins sdk.Coins, lowerTick, upperTick int64, joinTime time.Time) (sdk.Dec, uint64) {
 	s.FundAcc(owner, providedCoins)
-	positionId, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, providedCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+	positionId, _, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, providedCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
 	s.Require().NoError(err)
 	liquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, positionId)
 	s.Require().NoError(err)
@@ -113,12 +113,12 @@ func (s *KeeperTestSuite) SetupFullRangePositionAcc(poolId uint64, owner sdk.Acc
 }
 
 func (s *KeeperTestSuite) SetupConsecutiveRangePositionAcc(poolId uint64, owner sdk.AccAddress) uint64 {
-	_, positionId := s.SetupPosition(poolId, owner, DefaultCoins, DefaultExponentConsecutivePositionLowerTick.Int64(), DefaultExponentConsecutivePositionUpperTick.Int64(), s.Ctx.BlockTime())
+	_, positionId := s.SetupPosition(poolId, owner, DefaultCoins, DefaultExponentConsecutivePositionLowerTick, DefaultExponentConsecutivePositionUpperTick, s.Ctx.BlockTime())
 	return positionId
 }
 
 func (s *KeeperTestSuite) SetupOverlappingRangePositionAcc(poolId uint64, owner sdk.AccAddress) uint64 {
-	_, positionId := s.SetupPosition(poolId, owner, DefaultCoins, DefaultExponentOverlappingPositionLowerTick.Int64(), DefaultExponentOverlappingPositionUpperTick.Int64(), s.Ctx.BlockTime())
+	_, positionId := s.SetupPosition(poolId, owner, DefaultCoins, DefaultExponentOverlappingPositionLowerTick, DefaultExponentOverlappingPositionUpperTick, s.Ctx.BlockTime())
 	return positionId
 }
 
@@ -136,13 +136,13 @@ func (s *KeeperTestSuite) validateTickUpdates(ctx sdk.Context, poolId uint64, ow
 	s.Require().NoError(err)
 	s.Require().Equal(expectedRemainingLiquidity.String(), lowerTickInfo.LiquidityGross.String())
 	s.Require().Equal(expectedRemainingLiquidity.String(), lowerTickInfo.LiquidityNet.String())
-	s.Require().Equal(lowerTickInfo.FeeGrowthOppositeDirectionOfLastTraversal.String(), expectedLowerFeeGrowthOppositeDirectionOfLastTraversal.String())
+	s.Require().Equal(expectedLowerFeeGrowthOppositeDirectionOfLastTraversal.String(), lowerTickInfo.FeeGrowthOppositeDirectionOfLastTraversal.String())
 
 	upperTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, poolId, upperTick)
 	s.Require().NoError(err)
 	s.Require().Equal(expectedRemainingLiquidity.String(), upperTickInfo.LiquidityGross.String())
 	s.Require().Equal(expectedRemainingLiquidity.Neg().String(), upperTickInfo.LiquidityNet.String())
-	s.Require().Equal(upperTickInfo.FeeGrowthOppositeDirectionOfLastTraversal.String(), expectedUpperFeeGrowthOppositeDirectionOfLastTraversal.String())
+	s.Require().Equal(expectedUpperFeeGrowthOppositeDirectionOfLastTraversal.String(), upperTickInfo.FeeGrowthOppositeDirectionOfLastTraversal.String())
 }
 
 func (s *KeeperTestSuite) initializeTick(ctx sdk.Context, currentTick int64, tickIndex int64, initialLiquidity sdk.Dec, feeGrowthOppositeDirectionOfTraversal sdk.DecCoins, uptimeTrackers []model.UptimeTracker, isLower bool) {

@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	flag "github.com/spf13/pflag"
 
 	"github.com/spf13/cobra"
 
@@ -29,7 +28,6 @@ func NewTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, NewCreateConcentratedPoolCmd)
 	osmocli.AddTxCmd(txCmd, NewCollectFeesCmd)
 	osmocli.AddTxCmd(txCmd, NewCollectIncentivesCmd)
-	osmocli.AddTxCmd(txCmd, NewCreateIncentiveCmd)
 	osmocli.AddTxCmd(txCmd, NewFungifyChargedPositionsCmd)
 	return txCmd
 }
@@ -40,8 +38,8 @@ var poolIdFlagOverride = map[string]string{
 
 func NewCreateConcentratedPoolCmd() (*osmocli.TxCliDesc, *clmodel.MsgCreateConcentratedPool) {
 	return &osmocli.TxCliDesc{
-		Use:     "create-pool [denom-0] [denom-1] [tick-spacing] [swap-fee]",
-		Short:   "create a concentrated liquidity pool with the given denom pair, tick spacing, and swap fee",
+		Use:     "create-pool [denom-0] [denom-1] [tick-spacing] [spread-factor]",
+		Short:   "create a concentrated liquidity pool with the given denom pair, tick spacing, and spread factor",
 		Long:    "denom-1 (the quote denom), tick spacing, and swap fees must all be authorized by the concentrated liquidity module",
 		Example: "create-pool uion uosmo 100 0.01 --from val --chain-id osmosis-1",
 	}, &clmodel.MsgCreateConcentratedPool{}
@@ -49,9 +47,9 @@ func NewCreateConcentratedPoolCmd() (*osmocli.TxCliDesc, *clmodel.MsgCreateConce
 
 func NewCreatePositionCmd() (*osmocli.TxCliDesc, *types.MsgCreatePosition) {
 	return &osmocli.TxCliDesc{
-		Use:     "create-position [pool-id] [lower-tick] [upper-tick] [token-0-amount] [token-1-amount] [token-0-min-amount] [token-1-min-amount]",
+		Use:     "create-position [pool-id] [lower-tick] [upper-tick] [tokensProvided] [token-0-min-amount] [token-1-min-amount]",
 		Short:   "create or add to existing concentrated liquidity position",
-		Example: "create-position 1 \"[-69082]\" 69082 1000000000 10000000 0 0 --from val --chain-id osmosis-1",
+		Example: "create-position 1 \"[-69082]\" 69082 10000uosmo,10000uion 0 0 --from val --chain-id osmosis-1",
 	}, &types.MsgCreatePosition{}
 }
 
@@ -87,16 +85,6 @@ func NewCollectIncentivesCmd() (*osmocli.TxCliDesc, *types.MsgCollectIncentives)
 	}, &types.MsgCollectIncentives{}
 }
 
-func NewCreateIncentiveCmd() (*osmocli.TxCliDesc, *types.MsgCreateIncentive) {
-	return &osmocli.TxCliDesc{
-		Use:                 "create-incentive [incentive-coin] [emission-rate] [start-time] [min-uptime]",
-		Short:               "create an incentive record to emit incentives (per second) to a given pool",
-		Example:             "create-incentive 69082uosmo 0.02 \"2023-03-03T03:20:35.419543805\" 24h --pool-id 1 --from val --chain-id osmosis-1 --fees 875uosmo",
-		CustomFlagOverrides: poolIdFlagOverride,
-		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
-	}, &types.MsgCreateIncentive{}
-}
-
 func NewFungifyChargedPositionsCmd() (*osmocli.TxCliDesc, *types.MsgFungifyChargedPositions) {
 	return &osmocli.TxCliDesc{
 		Use:     "fungify-positions [position-ids]",
@@ -108,7 +96,7 @@ func NewFungifyChargedPositionsCmd() (*osmocli.TxCliDesc, *types.MsgFungifyCharg
 // NewCmdCreateConcentratedLiquidityPoolProposal implements a command handler for create concentrated liquidity pool proposal
 func NewCmdCreateConcentratedLiquidityPoolProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-concentratedliquidity-pool-proposal [denom0] [denom1] [tick-spacing] [swap-fee] [flags]",
+		Use:   "create-concentratedliquidity-pool-proposal [denom0] [denom1] [tick-spacing] [spread-factor] [flags]",
 		Args:  cobra.ExactArgs(4),
 		Short: "Submit a create concentrated liquidity pool proposal",
 		Long: strings.TrimSpace(`Submit a create concentrated liquidity pool proposal.
@@ -125,12 +113,12 @@ func NewCmdCreateConcentratedLiquidityPoolProposal() *cobra.Command {
 				return err
 			}
 
-			swapFee, err := sdk.NewDecFromStr(args[3])
+			spreadFactor, err := sdk.NewDecFromStr(args[3])
 			if err != nil {
 				return err
 			}
 
-			content, err := parseCreateConcentratedLiquidityPoolArgsToContent(cmd, args[0], args[1], tickSpacing, swapFee)
+			content, err := parseCreateConcentratedLiquidityPoolArgsToContent(cmd, args[0], args[1], tickSpacing, spreadFactor)
 			if err != nil {
 				return err
 			}
@@ -223,7 +211,7 @@ Note: The new tick spacing value must be less than the current tick spacing valu
 	return cmd
 }
 
-func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command, denom0, denom1 string, tickSpacing uint64, swapFee sdk.Dec) (govtypes.Content, error) {
+func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command, denom0, denom1 string, tickSpacing uint64, spreadFactor sdk.Dec) (govtypes.Content, error) {
 	title, err := cmd.Flags().GetString(govcli.FlagTitle)
 	if err != nil {
 		return nil, err
@@ -234,12 +222,12 @@ func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command, denom
 		return nil, err
 	}
 	content := &types.CreateConcentratedLiquidityPoolProposal{
-		Title:       title,
-		Description: description,
-		Denom0:      denom0,
-		Denom1:      denom1,
-		TickSpacing: tickSpacing,
-		SwapFee:     swapFee,
+		Title:        title,
+		Description:  description,
+		Denom0:       denom0,
+		Denom1:       denom1,
+		TickSpacing:  tickSpacing,
+		SpreadFactor: spreadFactor,
 	}
 
 	return content, nil

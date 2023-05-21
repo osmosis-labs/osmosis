@@ -12,10 +12,10 @@ func (k Keeper) GetNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 	return k.getNextPoolIdAndIncrement(ctx)
 }
 
-func (k Keeper) GetOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.MultihopRoute) (
-	totalPathSwapFee sdk.Dec, sumOfSwapFees sdk.Dec, err error,
+func (k Keeper) GetOsmoRoutedMultihopTotalSpreadFactor(ctx sdk.Context, route types.MultihopRoute) (
+	totalPathSpreadFactor sdk.Dec, sumOfSpreadFactors sdk.Dec, err error,
 ) {
-	return k.getOsmoRoutedMultihopTotalSwapFee(ctx, route)
+	return k.getOsmoRoutedMultihopTotalSpreadFactor(ctx, route)
 }
 
 // SetPoolRoutesUnsafe sets the given routes to the poolmanager keeper
@@ -40,4 +40,25 @@ func (k Keeper) GetAllPoolRoutes(ctx sdk.Context) []types.ModuleRoute {
 
 func (k Keeper) ValidateCreatedPool(ctx sdk.Context, poolId uint64, pool types.PoolI) error {
 	return k.validateCreatedPool(ctx, poolId, pool)
+}
+
+func (k Keeper) IsOsmoRoutedMultihop(ctx sdk.Context, route types.MultihopRoute, inDenom, outDenom string) (isRouted bool) {
+	return k.isOsmoRoutedMultihop(ctx, route, inDenom, outDenom)
+}
+
+func (k Keeper) CreateMultihopExpectedSwapOuts(
+	ctx sdk.Context,
+	route []types.SwapAmountOutRoute,
+	tokenOut sdk.Coin,
+) ([]sdk.Int, error) {
+	return k.createMultihopExpectedSwapOuts(ctx, route, tokenOut)
+}
+
+func (k Keeper) CreateOsmoMultihopExpectedSwapOuts(
+	ctx sdk.Context,
+	route []types.SwapAmountOutRoute,
+	tokenOut sdk.Coin,
+	cumulativeRouteSwapFee, sumOfSwapFees sdk.Dec,
+) ([]sdk.Int, error) {
+	return k.createOsmoMultihopExpectedSwapOuts(ctx, route, tokenOut, cumulativeRouteSwapFee, sumOfSwapFees)
 }

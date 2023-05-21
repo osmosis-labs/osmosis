@@ -12,6 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 // createUptimeAccumulators creates accumulator objects in store for each supported uptime for the given poolId.
@@ -84,7 +85,7 @@ func (k Keeper) getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ct
 		return []sdk.DecCoins{}, err
 	}
 
-	currentTick := pool.GetCurrentTick().Int64()
+	currentTick := pool.GetCurrentTick()
 	if currentTick >= tick {
 		uptimeAccumulatorValues, err := k.getUptimeAccumulatorValues(ctx, poolId)
 		if err != nil {
@@ -126,10 +127,34 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64)
 		return 0, sdk.ZeroDec(), nil
 	}
 
-	// Get Balancer pool liquidity
-	balancerPoolLiquidity, err := k.gammKeeper.GetTotalPoolLiquidity(ctx, canonicalBalancerPoolId)
+	// Get total balancer pool liquidity (denominated in pool coins)
+	totalBalancerPoolLiquidity, err := k.gammKeeper.GetTotalPoolLiquidity(ctx, canonicalBalancerPoolId)
 	if err != nil {
 		return 0, sdk.ZeroDec(), err
+	}
+
+	// Get total balancer shares for Balancer pool
+	totalBalancerPoolShares, err := k.gammKeeper.GetTotalPoolShares(ctx, canonicalBalancerPoolId)
+	if err != nil {
+		return 0, sdk.ZeroDec(), err
+	}
+
+	// Get total shares bonded on the longest lockup duration for Balancer pool
+	longestDuration, err := k.poolIncentivesKeeper.GetLongestLockableDuration(ctx)
+	if err != nil {
+		return 0, sdk.ZeroDec(), err
+	}
+	bondedShares := k.lockupKeeper.GetLockedDenom(ctx, gammtypes.GetPoolShareDenom(canonicalBalancerPoolId), longestDuration)
+
+	// Calculate portion of Balancer pool shares that are bonded
+	bondedShareRatio := bondedShares.ToDec().Quo(totalBalancerPoolShares.ToDec())
+
+	// Calculate rough number of assets in Balancer pool that are bonded
+	balancerPoolLiquidity := sdk.NewCoins()
+	for _, liquidityToken := range totalBalancerPoolLiquidity {
+		// Rounding behavior is not critical here, but for simplicity we do bankers multiplication then truncate.
+		bondedLiquidityAmount := liquidityToken.Amount.ToDec().Mul(bondedShareRatio).TruncateInt()
+		balancerPoolLiquidity = balancerPoolLiquidity.Add(sdk.NewCoin(liquidityToken.Denom, bondedLiquidityAmount))
 	}
 
 	// Validate Balancer pool liquidity. These properties should already be guaranteed by the caller,
@@ -566,7 +591,7 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 	}
 
 	// Get current, lower, and upper ticks
-	currentTick := pool.GetCurrentTick().Int64()
+	currentTick := pool.GetCurrentTick()
 	lowerTickInfo, err := k.GetTickInfo(ctx, poolId, lowerTick)
 	if err != nil {
 		return []sdk.DecCoins{}, err
@@ -677,7 +702,7 @@ func (k Keeper) initOrUpdatePositionUptimeAccumulators(ctx sdk.Context, poolId u
 			}
 		} else {
 			// Prep accum since we claim rewards first under the hood before any update (otherwise we would overpay)
-			err = preparePositionAccumulator(curUptimeAccum, positionName, globalUptimeGrowthOutsideRange[uptimeIndex])
+			err = updatePositionToInitValuePlusGrowthOutside(curUptimeAccum, positionName, globalUptimeGrowthOutsideRange[uptimeIndex])
 			if err != nil {
 				return err
 			}
@@ -694,7 +719,7 @@ func (k Keeper) initOrUpdatePositionUptimeAccumulators(ctx sdk.Context, poolId u
 	return nil
 }
 
-// prepareAccumAndClaimRewards claims and returns the rewards that `positionKey` is entitled to, updating the accumulator's value before
+// updateAccumAndClaimRewards claims and returns the rewards that `positionKey` is entitled to, updating the accumulator's value before
 // and after claiming to ensure that rewards are never overdistributed.
 // CONTRACT: position accumulator value prior to this call is equal to the growth inside the position at the time of last update.
 // Returns error if:
@@ -702,14 +727,15 @@ func (k Keeper) initOrUpdatePositionUptimeAccumulators(ctx sdk.Context, poolId u
 // - fails to claim rewards
 // - fails to check if position record exists
 // - fails to update position accumulator with the current growth inside the position
-func prepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) (sdk.Coins, sdk.DecCoins, error) {
+func updateAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) (sdk.Coins, sdk.DecCoins, error) {
 	// Set the position's accumulator value to it's initial value at creation time plus the growth outside at this moment.
-	err := preparePositionAccumulator(accum, positionKey, growthOutside)
+	err := updatePositionToInitValuePlusGrowthOutside(accum, positionKey, growthOutside)
 	if err != nil {
 		return sdk.Coins{}, sdk.DecCoins{}, err
 	}
 
 	// Claim rewards, set the unclaimed rewards to zero, and update the position's accumulator value to reflect the current accumulator value.
+	// Removes the position state from accum if remaining liquidity is zero for the position.
 	incentivesClaimedCurrAccum, dust, err := accum.ClaimRewards(positionKey)
 	if err != nil {
 		return sdk.Coins{}, sdk.DecCoins{}, err
@@ -747,7 +773,7 @@ func moveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum accum.Accumu
 		return types.ModifySamePositionAccumulatorError{PositionAccName: oldPositionName}
 	}
 
-	if err := preparePositionAccumulator(accum, oldPositionName, growthOutside); err != nil {
+	if err := updatePositionToInitValuePlusGrowthOutside(accum, oldPositionName, growthOutside); err != nil {
 		return err
 	}
 
@@ -826,7 +852,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 
 		// If the accumulator contains the position, claim the position's incentives.
 		if hasPosition {
-			collectedIncentivesForUptime, dust, err := prepareAccumAndClaimRewards(uptimeAccum, positionName, uptimeGrowthOutside[uptimeIndex])
+			collectedIncentivesForUptime, dust, err := updateAccumAndClaimRewards(uptimeAccum, positionName, uptimeGrowthOutside[uptimeIndex])
 			if err != nil {
 				return sdk.Coins{}, sdk.Coins{}, err
 			}

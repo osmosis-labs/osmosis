@@ -21,33 +21,33 @@ func TestBalancerTestSuite(t *testing.T) {
 }
 
 func TestBalancerPoolParams(t *testing.T) {
-	// Tests that creating a pool with the given pair of swapfee and exit fee
+	// Tests that creating a pool with the given pair of spread factor and exit fee
 	// errors or succeeds as intended. Furthermore, it checks that
 	// NewPool panics in the error case.
 	tests := []struct {
-		SwapFee   sdk.Dec
-		ExitFee   sdk.Dec
-		shouldErr bool
+		SpreadFactor sdk.Dec
+		ExitFee      sdk.Dec
+		shouldErr    bool
 	}{
 		// Should work
-		{defaultSwapFee, defaultZeroExitFee, noErr},
-		// Can't set the swap fee as negative
+		{defaultSpreadFactor, defaultZeroExitFee, noErr},
+		// Can't set the spread factor as negative
 		{sdk.NewDecWithPrec(-1, 2), defaultZeroExitFee, wantErr},
-		// Can't set the swap fee as 1
+		// Can't set the spread factor as 1
 		{sdk.NewDec(1), defaultZeroExitFee, wantErr},
-		// Can't set the swap fee above 1
+		// Can't set the spread factor above 1
 		{sdk.NewDecWithPrec(15, 1), defaultZeroExitFee, wantErr},
 		// Can't set the exit fee as negative
-		{defaultSwapFee, sdk.NewDecWithPrec(-1, 2), wantErr},
+		{defaultSpreadFactor, sdk.NewDecWithPrec(-1, 2), wantErr},
 		// Can't set the exit fee as 1
-		{defaultSwapFee, sdk.NewDec(1), wantErr},
+		{defaultSpreadFactor, sdk.NewDec(1), wantErr},
 		// Can't set the exit fee above 1
-		{defaultSwapFee, sdk.NewDecWithPrec(15, 1), wantErr},
+		{defaultSpreadFactor, sdk.NewDecWithPrec(15, 1), wantErr},
 	}
 
 	for i, params := range tests {
 		PoolParams := balancer.PoolParams{
-			SwapFee: params.SwapFee,
+			SwapFee: params.SpreadFactor,
 			ExitFee: params.ExitFee,
 		}
 		err := PoolParams.Validate(dummyPoolAssets)
@@ -62,7 +62,7 @@ func TestBalancerPoolParams(t *testing.T) {
 	}
 }
 
-func (suite *KeeperTestSuite) TestEnsureDenomInPool() {
+func (s *KeeperTestSuite) TestEnsureDenomInPool() {
 	tests := map[string]struct {
 		poolAssets  []balancer.PoolAsset
 		tokensIn    sdk.Coins
@@ -90,18 +90,18 @@ func (suite *KeeperTestSuite) TestEnsureDenomInPool() {
 	}
 
 	for name, tc := range tests {
-		suite.Run(name, func() {
-			suite.SetupTest()
+		s.Run(name, func() {
+			s.SetupTest()
 
 			poolAssetsByDenom, err := balancer.GetPoolAssetsByDenom(tc.poolAssets)
-			suite.Require().NoError(err, "test: %s", name)
+			s.Require().NoError(err, "test: %s", name)
 
 			err = balancer.EnsureDenomInPool(poolAssetsByDenom, tc.tokensIn)
 
 			if tc.expectPass {
-				suite.Require().NoError(err, "test: %s", name)
+				s.Require().NoError(err, "test: %s", name)
 			} else {
-				suite.Require().ErrorIs(err, tc.expectedErr, "test: %s", name)
+				s.Require().ErrorIs(err, tc.expectedErr, "test: %s", name)
 			}
 		})
 	}

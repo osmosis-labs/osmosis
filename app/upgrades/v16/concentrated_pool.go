@@ -46,10 +46,10 @@ func createConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLinkWith uint64
 		return nil, NoDesiredDenomInPoolError{desiredDenom0}
 	}
 
-	// Swap fee is 0.2%, which is an authorized swap fee.
-	swapFee := cfmmPool.GetSwapFee(ctx)
+	// Swap fee is 0.2%, which is an authorized spread factor.
+	spreadFactor := cfmmPool.GetSpreadFactor(ctx)
 
-	createPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolCreatorAddress, desiredDenom0, denom1, TickSpacing, swapFee)
+	createPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolCreatorAddress, desiredDenom0, denom1, TickSpacing, spreadFactor)
 	concentratedPool, err := poolmanagerKeeper.CreateConcentratedPoolAsPoolManager(ctx, createPoolMsg)
 	if err != nil {
 		return nil, err
@@ -64,20 +64,20 @@ func createConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLinkWith uint64
 // Returns error if fails to create concentrated liquidity pool from CFMM pool.
 // Returns error if fails to get gauges for CFMM pool.
 // Returns error if fails to get gauge for the concentrated liquidity pool.
-func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, cfmmPoolId uint64, desiredDenom0 string, keepers *keepers.AppKeepers) error {
+func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, cfmmPoolId uint64, desiredDenom0 string, keepers *keepers.AppKeepers) (poolmanagertypes.PoolI, error) {
 	concentratedPool, err := createConcentratedPoolFromCFMM(ctx, cfmmPoolId, desiredDenom0, *keepers.AccountKeeper, *keepers.GAMMKeeper, *keepers.PoolManagerKeeper)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Get CFMM gauges
 	cfmmGauges, err := keepers.PoolIncentivesKeeper.GetGaugesForCFMMPool(ctx, cfmmPoolId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if len(cfmmGauges) == 0 {
-		return ErrNoGaugeToRedirect
+		return nil, ErrNoGaugeToRedirect
 	}
 
 	// Get longest gauge duration from balancer.
@@ -94,7 +94,7 @@ func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, c
 	// Get concentrated gauge correspondng to the distribution epoch duration.
 	concentratedGaugeId, err := keepers.PoolIncentivesKeeper.GetPoolGaugeId(ctx, concentratedPool.GetId(), distributionEpochDuration)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Iterate through all the distr records, and redirect the old balancer gauge to the new concentrated gauge.
@@ -118,5 +118,5 @@ func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, c
 		},
 	})
 
-	return nil
+	return concentratedPool, nil
 }

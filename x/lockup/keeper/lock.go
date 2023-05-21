@@ -94,6 +94,12 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.Ac
 	}
 
 	lock.Coins = lock.Coins.Add(tokensToAdd)
+
+	// Send the tokens we are about to add to lock to the lockup module account.
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, sdk.NewCoins(tokensToAdd)); err != nil {
+		return nil, err
+	}
+
 	err = k.lock(ctx, *lock, sdk.NewCoins(tokensToAdd))
 	if err != nil {
 		return nil, err
@@ -116,10 +122,31 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.Ac
 // Returns an error in the following conditions:
 //   - account does not have enough balance
 func (k Keeper) CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
+	// Send the coins we are about to lock to the lockup module account.
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, coins); err != nil {
+		return types.PeriodLock{}, err
+	}
+
+	// Run the createLock logic without the send since we sent the coins above.
+	lock, err := k.CreateLockNoSend(ctx, owner, coins, duration)
+	if err != nil {
+		return types.PeriodLock{}, err
+	}
+	return lock, nil
+}
+
+// CreateLockNoSend behaves the same as CreateLock, but does not send the coins to the lockup module account.
+// This method is used in the concentrated liquidity module since we mint coins directly to the lockup module account.
+// We do not want to mint the coins to send to the user just to send them back to the lockup module account for two reasons:
+//   - it is gas inefficient
+//   - users should not be able to have cl shares in their account, so this is an extra safety measure
+func (k Keeper) CreateLockNoSend(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
 	ID := k.GetLastLockID(ctx) + 1
 	// unlock time is initially set without a value, gets set as unlock start time + duration
 	// when unlocking starts.
 	lock := types.NewPeriodLock(ID, owner, duration, time.Time{}, coins)
+
+	// lock the coins without sending them to the lockup module account
 	err := k.lock(ctx, lock, lock.Coins)
 	if err != nil {
 		return lock, err
@@ -139,12 +166,11 @@ func (k Keeper) CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coin
 // This is only called by either of the two possible entry points to lock tokens.
 // 1. CreateLock
 // 2. AddTokensToLockByID
+// WARNING: this method does not send the underlying coins to the lockup module account.
+// This must be done by the caller.
 func (k Keeper) lock(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Coins) error {
 	owner, err := sdk.AccAddressFromBech32(lock.Owner)
 	if err != nil {
-		return err
-	}
-	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, tokensToLock); err != nil {
 		return err
 	}
 
@@ -218,7 +244,7 @@ func (k Keeper) beginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Co
 	// Otherwise, split the lock into two locks, and fully unlock the newly created lock.
 	// (By virtue, the newly created lock we split into should have the unlock amount)
 	if len(coins) != 0 && !coins.IsEqual(lock.Coins) {
-		splitLock, err := k.splitLock(ctx, lock, coins, false)
+		splitLock, err := k.SplitLock(ctx, lock, coins, false)
 		if err != nil {
 			return 0, err
 		}
@@ -336,7 +362,7 @@ func (k Keeper) PartialForceUnlock(ctx sdk.Context, lock types.PeriodLock, coins
 	// split lock to support partial force unlock.
 	// (By virtue, the newly created lock we split into should have the unlock amount)
 	if len(coins) != 0 && !coins.IsEqual(lock.Coins) {
-		splitLock, err := k.splitLock(ctx, lock, coins, true)
+		splitLock, err := k.SplitLock(ctx, lock, coins, true)
 		if err != nil {
 			return err
 		}
@@ -385,7 +411,7 @@ func (k Keeper) unlockMaturedLockInternalLogic(ctx sdk.Context, lock types.Perio
 	coins := lock.Coins
 	finalCoinsToSendBackToUser := sdk.NewCoins()
 	for _, coin := range coins {
-		if strings.HasPrefix(coin.Denom, cltypes.ClTokenPrefix) {
+		if strings.HasPrefix(coin.Denom, cltypes.ConcentratedLiquidityTokenPrefix) {
 			// If the coin is a CL liquidity token, we do not add it to the finalCoinsToSendBackToUser and instead burn it
 			err := k.bk.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(coin))
 			if err != nil {
@@ -750,9 +776,9 @@ func (k Keeper) deleteLock(ctx sdk.Context, id uint64) {
 	store.Delete(lockStoreKey(id))
 }
 
-// splitLock splits a lock with the given amount, and stores split new lock to the state.
+// SplitLock splits a lock with the given amount, and stores split new lock to the state.
 // Returns the new lock after modifying the state of the old lock.
-func (k Keeper) splitLock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins, forceUnlock bool) (types.PeriodLock, error) {
+func (k Keeper) SplitLock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins, forceUnlock bool) (types.PeriodLock, error) {
 	if !forceUnlock && lock.IsUnlocking() {
 		return types.PeriodLock{}, fmt.Errorf("cannot split unlocking lock")
 	}

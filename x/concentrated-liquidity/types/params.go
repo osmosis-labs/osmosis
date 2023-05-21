@@ -11,7 +11,7 @@ import (
 // Parameter store keys.
 var (
 	KeyAuthorizedTickSpacing              = []byte("AuthorizedTickSpacing")
-	KeyAuthorizedSwapFees                 = []byte("AuthorizedSwapFees")
+	KeyAuthorizedSpreadFactors            = []byte("AuthorizedSpreadFactors")
 	KeyDiscountRate                       = []byte("DiscountRate")
 	KeyAuthorizedQuoteDenoms              = []byte("AuthorizedQuoteDenoms")
 	KeyAuthorizedUptimes                  = []byte("AuthorizedUptimes")
@@ -25,10 +25,10 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(authorizedTickSpacing []uint64, authorizedSwapFees []sdk.Dec, discountRate sdk.Dec, authorizedQuoteDenoms []string, authorizedUptimes []time.Duration, isPermissionlessPoolCreationEnabled bool) Params {
+func NewParams(authorizedTickSpacing []uint64, authorizedSpreadFactors []sdk.Dec, discountRate sdk.Dec, authorizedQuoteDenoms []string, authorizedUptimes []time.Duration, isPermissionlessPoolCreationEnabled bool) Params {
 	return Params{
 		AuthorizedTickSpacing:               authorizedTickSpacing,
-		AuthorizedSwapFees:                  authorizedSwapFees,
+		AuthorizedSpreadFactors:             authorizedSpreadFactors,
 		AuthorizedQuoteDenoms:               authorizedQuoteDenoms,
 		BalancerSharesRewardDiscount:        discountRate,
 		AuthorizedUptimes:                   authorizedUptimes,
@@ -39,8 +39,8 @@ func NewParams(authorizedTickSpacing []uint64, authorizedSwapFees []sdk.Dec, dis
 // DefaultParams returns default concentrated-liquidity module parameters.
 func DefaultParams() Params {
 	return Params{
-		AuthorizedTickSpacing: AuthorizedTickSpacing,
-		AuthorizedSwapFees:    AuthorizedSwapFees,
+		AuthorizedTickSpacing:   AuthorizedTickSpacing,
+		AuthorizedSpreadFactors: AuthorizedSpreadFactors,
 		AuthorizedQuoteDenoms: []string{
 			"uosmo",
 			"ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", // DAI
@@ -57,7 +57,7 @@ func (p Params) Validate() error {
 	if err := validateTicks(p.AuthorizedTickSpacing); err != nil {
 		return err
 	}
-	if err := validateSwapFees(p.AuthorizedSwapFees); err != nil {
+	if err := validateSpreadFactors(p.AuthorizedSpreadFactors); err != nil {
 		return err
 	}
 	if err := validateAuthorizedQuoteDenoms(p.AuthorizedQuoteDenoms); err != nil {
@@ -79,7 +79,7 @@ func (p Params) Validate() error {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyAuthorizedTickSpacing, &p.AuthorizedTickSpacing, validateTicks),
-		paramtypes.NewParamSetPair(KeyAuthorizedSwapFees, &p.AuthorizedSwapFees, validateSwapFees),
+		paramtypes.NewParamSetPair(KeyAuthorizedSpreadFactors, &p.AuthorizedSpreadFactors, validateSpreadFactors),
 		paramtypes.NewParamSetPair(KeyAuthorizedQuoteDenoms, &p.AuthorizedQuoteDenoms, validateAuthorizedQuoteDenoms),
 		paramtypes.NewParamSetPair(KeyIsPermisionlessPoolCreationEnabled, &p.IsPermissionlessPoolCreationEnabled, validateIsPermissionLessPoolCreationEnabled),
 		paramtypes.NewParamSetPair(KeyDiscountRate, &p.BalancerSharesRewardDiscount, validateBalancerSharesDiscount),
@@ -125,9 +125,9 @@ func validateTicks(i interface{}) error {
 	return nil
 }
 
-// validateSwapFees validates that the given parameter is a slice of strings that can be converted to sdk.Decs.
+// validateSpreadFactors validates that the given parameter is a slice of strings that can be converted to sdk.Decs.
 // If the parameter is not of the correct type or any of the strings cannot be converted, an error is returned.
-func validateSwapFees(i interface{}) error {
+func validateSpreadFactors(i interface{}) error {
 	// Convert the given parameter to a slice of sdk.Decs.
 	_, ok := i.([]sdk.Dec)
 	if !ok {

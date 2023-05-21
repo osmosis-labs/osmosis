@@ -3,6 +3,7 @@ package swapstrategy_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
@@ -68,7 +69,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 		sqrtPriceTarget       sdk.Dec
 		liquidity             sdk.Dec
 		amountZeroInRemaining sdk.Dec
-		swapFee               sdk.Dec
+		spreadFactor          sdk.Dec
 
 		expectedSqrtPriceNext  sdk.Dec
 		amountZeroInConsumed   sdk.Dec
@@ -83,7 +84,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 			liquidity:        defaultLiquidity,
 			// add 100 more
 			amountZeroInRemaining: defaultAmountZero.Add(sdk.NewDec(100)),
-			swapFee:               sdk.ZeroDec(),
+			spreadFactor:          sdk.ZeroDec(),
 
 			expectedSqrtPriceNext: sqrtPriceNext,
 			// consumed without 100 since reached target.
@@ -97,7 +98,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 			sqrtPriceTarget:       sqrtPriceNext,
 			liquidity:             defaultLiquidity,
 			amountZeroInRemaining: defaultAmountZero.Sub(sdk.NewDec(100)),
-			swapFee:               sdk.ZeroDec(),
+			spreadFactor:          sdk.ZeroDec(),
 
 			expectedSqrtPriceNext: sqrtPriceTargetNotReached,
 			amountZeroInConsumed:  defaultAmountZero.Sub(sdk.NewDec(100)).Ceil(),
@@ -111,7 +112,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 			liquidity:        defaultLiquidity,
 			// add 100 more
 			amountZeroInRemaining: defaultAmountZero.Add(sdk.NewDec(100)).Quo(sdk.OneDec().Sub(defaultFee)),
-			swapFee:               defaultFee,
+			spreadFactor:          defaultFee,
 
 			expectedSqrtPriceNext: sqrtPriceNext,
 			// Consumes without 100 since reached target and fee is applied.
@@ -125,7 +126,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 			sqrtPriceTarget:       sqrtPriceNext,
 			liquidity:             defaultLiquidity,
 			amountZeroInRemaining: defaultAmountZero.Sub(sdk.NewDec(100)).Quo(sdk.OneDec().Sub(defaultFee)),
-			swapFee:               defaultFee,
+			spreadFactor:          defaultFee,
 
 			expectedSqrtPriceNext: sqrtPriceTargetNotReached,
 			amountZeroInConsumed:  defaultAmountZero.Sub(sdk.NewDec(100)).Ceil(),
@@ -139,7 +140,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 		tc := tc
 		suite.Run(name, func() {
 			suite.SetupTest()
-			strategy := swapstrategy.New(true, types.MaxSqrtPrice, suite.App.GetKey(types.ModuleName), tc.swapFee, defaultTickSpacing)
+			strategy := swapstrategy.New(true, types.MaxSqrtPrice, suite.App.GetKey(types.ModuleName), tc.spreadFactor, defaultTickSpacing)
 
 			sqrtPriceNext, amountZeroIn, amountOneOut, feeChargeTotal := strategy.ComputeSwapStepOutGivenIn(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, tc.amountZeroInRemaining)
 
@@ -172,7 +173,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 		sqrtPriceTarget       sdk.Dec
 		liquidity             sdk.Dec
 		amountOneOutRemaining sdk.Dec
-		swapFee               sdk.Dec
+		spreadFactor          sdk.Dec
 
 		expectedSqrtPriceNext  sdk.Dec
 		amountOneOutConsumed   sdk.Dec
@@ -187,7 +188,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 			liquidity:        defaultLiquidity,
 			// Add 100.
 			amountOneOutRemaining: defaultAmountOne.Add(sdk.NewDec(100)),
-			swapFee:               sdk.ZeroDec(),
+			spreadFactor:          sdk.ZeroDec(),
 
 			expectedSqrtPriceNext: sqrtPriceNext,
 			// Consumes without 100 since reaches target.
@@ -200,7 +201,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 			sqrtPriceTarget:       sqrtPriceNext,
 			liquidity:             defaultLiquidity,
 			amountOneOutRemaining: defaultAmountOne.Sub(sdk.NewDec(10000)),
-			swapFee:               sdk.ZeroDec(),
+			spreadFactor:          sdk.ZeroDec(),
 
 			// sqrt_cur - amt_one / liq quo round up
 			expectedSqrtPriceNext: sqrtPriceTargetNotReached,
@@ -215,7 +216,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 			liquidity:        defaultLiquidity,
 			// Add 100.
 			amountOneOutRemaining: defaultAmountOne.Quo(sdk.OneDec().Sub(defaultFee)),
-			swapFee:               defaultFee,
+			spreadFactor:          defaultFee,
 
 			expectedSqrtPriceNext: sqrtPriceNext,
 			// Consumes without 100 since reaches target.
@@ -229,7 +230,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 			sqrtPriceTarget:       sqrtPriceNext,
 			liquidity:             defaultLiquidity,
 			amountOneOutRemaining: defaultAmountOne.Sub(sdk.NewDec(10000)),
-			swapFee:               defaultFee,
+			spreadFactor:          defaultFee,
 
 			expectedSqrtPriceNext: sqrtPriceTargetNotReached,
 			// subtracting 1 * smallest dec to account for truncations in favor of the pool.
@@ -243,7 +244,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 		tc := tc
 		suite.Run(name, func() {
 			suite.SetupTest()
-			strategy := swapstrategy.New(true, types.MaxSqrtPrice, suite.App.GetKey(types.ModuleName), tc.swapFee, defaultTickSpacing)
+			strategy := swapstrategy.New(true, types.MaxSqrtPrice, suite.App.GetKey(types.ModuleName), tc.spreadFactor, defaultTickSpacing)
 
 			sqrtPriceNext, amountOneOut, amountZeroIn, feeChargeTotal := strategy.ComputeSwapStepInGivenOut(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, tc.amountOneOutRemaining)
 
@@ -251,6 +252,111 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 			suite.Require().Equal(tc.amountOneOutConsumed, amountOneOut)
 			suite.Require().Equal(tc.expectedAmountInZero, amountZeroIn)
 			suite.Require().Equal(tc.expectedFeeChargeTotal.String(), feeChargeTotal.String())
+		})
+	}
+}
+
+func (suite *StrategyTestSuite) TestInitializeNextTickIterator_ZeroForOne() {
+	tests := map[string]struct {
+		currentTick     int64
+		preSetPositions []position
+
+		expectIsValid  bool
+		expectNextTick int64
+		expectError    error
+	}{
+		"1 position, zero for one": {
+			preSetPositions: []position{
+				{
+					lowerTick: -100,
+					upperTick: 100,
+				},
+			},
+			expectIsValid:  true,
+			expectNextTick: -100,
+		},
+		"2 positions, zero for one": {
+			preSetPositions: []position{
+				{
+					lowerTick: -400,
+					upperTick: 300,
+				},
+				{
+					lowerTick: -200,
+					upperTick: 200,
+				},
+			},
+			expectIsValid:  true,
+			expectNextTick: -200,
+		},
+		"lower tick lands on current tick, zero for one": {
+			preSetPositions: []position{
+				{
+					lowerTick: 0,
+					upperTick: 100,
+				},
+			},
+			expectIsValid:  true,
+			expectNextTick: 0,
+		},
+		"upper tick lands on current tick, zero for one": {
+			preSetPositions: []position{
+				{
+					lowerTick: -100,
+					upperTick: 0,
+				},
+			},
+			expectIsValid:  true,
+			expectNextTick: 0,
+		},
+		"no ticks, zero for one": {
+			preSetPositions: []position{},
+			expectIsValid:   false,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+			strategy := swapstrategy.New(true, types.MaxSqrtPrice, suite.App.GetKey(types.ModuleName), sdk.ZeroDec(), defaultTickSpacing)
+
+			pool := suite.PrepareConcentratedPool()
+
+			clMsgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
+
+			for _, pos := range tc.preSetPositions {
+				suite.FundAcc(suite.TestAccs[0], DefaultCoins.Add(DefaultCoins...))
+				_, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(suite.Ctx), &types.MsgCreatePosition{
+					PoolId:          pool.GetId(),
+					Sender:          suite.TestAccs[0].String(),
+					LowerTick:       pos.lowerTick,
+					UpperTick:       pos.upperTick,
+					TokensProvided:  DefaultCoins.Add(sdk.NewCoin(USDC, sdk.OneInt())),
+					TokenMinAmount0: sdk.ZeroInt(),
+					TokenMinAmount1: sdk.ZeroInt(),
+				})
+				suite.Require().NoError(err)
+			}
+
+			// refetch pool
+			pool, err := suite.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(suite.Ctx, pool.GetId())
+			suite.Require().NoError(err)
+
+			currentTick := pool.GetCurrentTick()
+			suite.Require().Equal(int64(0), currentTick)
+
+			tickIndex := strategy.InitializeTickValue(currentTick)
+
+			iter := strategy.InitializeNextTickIterator(suite.Ctx, defaultPoolId, tickIndex)
+			defer iter.Close()
+
+			suite.Require().Equal(tc.expectIsValid, iter.Valid())
+			if tc.expectIsValid {
+				actualNextTick, err := types.TickIndexFromBytes(iter.Key())
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.expectNextTick, actualNextTick)
+			}
 		})
 	}
 }

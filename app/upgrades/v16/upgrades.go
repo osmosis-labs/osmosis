@@ -10,6 +10,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/app/keepers"
 	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
 
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
 )
@@ -18,7 +22,7 @@ const (
 	// DAI/OSMO pool ID
 	// https://app.osmosis.zone/pool/674
 	// Note, new concentrated liquidity pool
-	// swap fee is initialized to be the same as the balancers pool swap fee of 0.2%.
+	// spread factor is initialized to be the same as the balancers pool spread factor of 0.2%.
 	DaiOsmoPoolId = uint64(674)
 	// Denom0 translates to a base asset while denom1 to a quote asset
 	// We want quote asset to be DAI so that when the limit orders on ticks
@@ -80,7 +84,45 @@ func CreateUpgradeHandler(
 		defaultConcentratedLiquidityParams.IsPermissionlessPoolCreationEnabled = IsPermissionlessPoolCreationEnabledCL
 		keepers.ConcentratedLiquidityKeeper.SetParams(ctx, defaultConcentratedLiquidityParams)
 
-		if err := createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, DaiOsmoPoolId, DesiredDenom0, keepers); err != nil {
+		// Create a concentrated liquidity pool for DAI/OSMO.
+		// Link the DAI/OSMO balancer pool to the cl pool.
+		clPool, err := createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, DaiOsmoPoolId, DesiredDenom0, keepers)
+		if err != nil {
+			return nil, err
+		}
+		clPoolId := clPool.GetId()
+		clPoolDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPoolId)
+
+		// Create a position to initialize the balancerPool.
+
+		// Get community pool and DAI/OSMO pool address.
+		communityPoolAddress := keepers.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName)
+		daiOsmoPool, err := keepers.PoolManagerKeeper.GetPool(ctx, DaiOsmoPoolId)
+		if err != nil {
+			return nil, err
+		}
+
+		// Swap one DAI for OSMO from the community pool.
+		oneDai := sdk.NewCoin(DAIIBCDenom, sdk.NewInt(1000000))
+		tokenInAmt, err := keepers.GAMMKeeper.SwapExactAmountOut(ctx, communityPoolAddress, daiOsmoPool, DesiredDenom0, sdk.NewInt(10000000), oneDai, sdk.ZeroDec())
+		if err != nil {
+			return nil, err
+		}
+
+		// Create a full range position via the community pool with the funds that were swapped.
+		fullRangeOsmoDaiCoins := sdk.NewCoins(sdk.NewCoin(DesiredDenom0, tokenInAmt), oneDai)
+		_, _, _, _, _, err = keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeOsmoDaiCoins)
+		if err != nil {
+			return nil, err
+		}
+
+		// Add the cl pool's full range denom as an authorized superfluid asset.
+		superfluidAsset := superfluidtypes.SuperfluidAsset{
+			Denom:     clPoolDenom,
+			AssetType: superfluidtypes.SuperfluidAssetTypeConcentratedShare,
+		}
+		err = keepers.SuperfluidKeeper.AddNewSuperfluidAsset(ctx, superfluidAsset)
+		if err != nil {
 			return nil, err
 		}
 
