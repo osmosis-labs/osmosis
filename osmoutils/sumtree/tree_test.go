@@ -2,7 +2,6 @@ package sumtree_test
 
 import (
 	"bytes"
-	"fmt"
 	"math/rand"
 	"sort"
 	"testing"
@@ -120,15 +119,15 @@ func (suite *TreeTestSuite) TestTreeLOOT() {
 
 	*/
 
-	// check that sum is still the original sum
-	sumAfterClaiming := suite.tree.SubsetAccumulation(nil, []byte("6"))
-	fmt.Println(sumAfterClaiming)
-
 	//suite.Require().Equal(originalSum, sumAfterClaiming)
 
-	//suite.tree.Set([]byte("7"), sdk.NewIntFromUint64(2))
+	// suite.tree.Set([]byte("7"), sdk.NewIntFromUint64(6))
 
-	//suite.tree.DebugVisualize()
+	// check that sum is still the original sum
+	// sumAfterClaiming := suite.tree.SubsetAccumulation(nil, []byte("7"))
+	// fmt.Println(sumAfterClaiming)
+
+	// suite.tree.DebugVisualize()
 
 }
 

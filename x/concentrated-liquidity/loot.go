@@ -1,4 +1,4 @@
-package main
+package concentrated_liquidity
 
 import (
 	"fmt"
@@ -12,49 +12,49 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func main() {
-	tree, err := CreateLootTree()
-	if err != nil {
-		fmt.Println("ERROR OCCOURED: ", err)
-		return
-	}
+// func main() {
+// 	tree, err := CreateLootTree()
+// 	if err != nil {
+// 		fmt.Println("ERROR OCCOURED: ", err)
+// 		return
+// 	}
 
-	orders := []int64{7, 3, 2, 5, 6, 11, 1, 8}
-	AddOrders(tree, orders)
+// 	orders := []int64{7, 3, 2, 5, 6, 11, 1, 8}
+// 	AddOrders(tree, orders)
 
-	/************* STARTING TO FILL ORDERS **********/
-	totalExistingOrders := getOrdersTotal(orders)
+// 	/************* STARTING TO FILL ORDERS **********/
+// 	totalExistingOrders := getOrdersTotal(orders)
 
-	// swap with 3 osmo happens
-	newTotal, orderFilled, err := FillOrder(tree, totalExistingOrders, 3)
-	if err != nil {
-		fmt.Println("ERROR OCCOURED WHILE FILLING ORDER: ", err)
-		return
-	}
+// 	// swap with 3 osmo happens
+// 	newTotal, orderFilled, err := FillOrder(tree, totalExistingOrders, 3)
+// 	if err != nil {
+// 		fmt.Println("ERROR OCCOURED WHILE FILLING ORDER: ", err)
+// 		return
+// 	}
 
-	fmt.Println(newTotal, orderFilled)
+// 	fmt.Println(newTotal, orderFilled)
 
-	// swap with 32 osmo happens
-	newTotal, orderFilled, err = FillOrder(tree, newTotal, 32)
-	if err != nil {
-		fmt.Println("ERROR OCCOURED WHILE FILLING ORDER: ", err)
-		return
-	}
+// 	// swap with 32 osmo happens
+// 	newTotal, orderFilled, err = FillOrder(tree, newTotal, 32)
+// 	if err != nil {
+// 		fmt.Println("ERROR OCCOURED WHILE FILLING ORDER: ", err)
+// 		return
+// 	}
 
-	// swap with 8 osmo happens
-	newTotal, orderFilled, err = FillOrder(tree, newTotal, 8)
-	if err != nil {
-		fmt.Println("ERROR OCCOURED WHILE FILLING ORDER: ", err)
-		return
-	}
+// 	// swap with 8 osmo happens
+// 	newTotal, orderFilled, err = FillOrder(tree, newTotal, 8)
+// 	if err != nil {
+// 		fmt.Println("ERROR OCCOURED WHILE FILLING ORDER: ", err)
+// 		return
+// 	}
 
-	fmt.Println(newTotal, orderFilled)
+// 	fmt.Println(newTotal, orderFilled)
 
-	/************* ORDER COMPLETELY FILLED **********/
+// 	/************* ORDER COMPLETELY FILLED **********/
 
-	tree.DebugVisualize()
+// 	tree.DebugVisualize()
 
-}
+// }
 
 func CreateLootTree() (sumtree.Tree, error) {
 	db := dbm.NewMemDB()

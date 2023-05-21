@@ -1,0 +1,15 @@
+syntax = "proto3";
+package osmosis.concentratedliquidity.v1beta1;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types";
+
+message Loot {
+  string filled_total = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"filled_total\"",
+    (gogoproto.nullable) = false
+  ];
+}
