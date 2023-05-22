@@ -58,11 +58,6 @@ type swapStrategy interface {
 	// on the actual current tick.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	InitializeTickValue(currentTick int64) int64
-	// NextInitializedTick returns the next initialized tick index based on the
-	// provided tickindex. If no initialized tick exists, <0, false>
-	// will be returned.
-	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64) (next int64, initialized bool)
 	// SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.
 	// This is called when consuming all liquidity.
 	// When a position is created, we add liquidity to lower tick
@@ -82,11 +77,11 @@ type swapStrategy interface {
 // New returns a swap strategy based on the provided zeroForOne parameter
 // with sqrtPriceLimit for the maximum square root price until which to perform
 // the swap and the stor key of the module that stores swap data.
-func New(zeroForOne bool, sqrtPriceLimit sdk.Dec, storeKey sdk.StoreKey, swapFee sdk.Dec, tickSpacing uint64) swapStrategy {
+func New(zeroForOne bool, sqrtPriceLimit sdk.Dec, storeKey sdk.StoreKey, spreadFactor sdk.Dec, tickSpacing uint64) swapStrategy {
 	if zeroForOne {
-		return &zeroForOneStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, swapFee: swapFee, tickSpacing: tickSpacing}
+		return &zeroForOneStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, spreadFactor: spreadFactor, tickSpacing: tickSpacing}
 	}
-	return &oneForZeroStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, swapFee: swapFee, tickSpacing: tickSpacing}
+	return &oneForZeroStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, spreadFactor: spreadFactor, tickSpacing: tickSpacing}
 }
 
 // GetPriceLimit returns the price limit based on which token is being swapped in.

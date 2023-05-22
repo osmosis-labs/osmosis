@@ -94,6 +94,7 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // CalcAmount1Delta = liq * (sqrtPriceB - sqrtPriceA)
 func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec {
+	// make sqrtPriceA the smaller value amongst sqrtPriceA and sqrtPriceB
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}

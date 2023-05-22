@@ -34,14 +34,14 @@ type KeeperTestSuite struct {
 }
 
 type Pool struct {
-	PoolAssets []balancer.PoolAsset
-	Asset1     string
-	Asset2     string
-	Amount1    sdk.Int
-	Amount2    sdk.Int
-	SwapFee    sdk.Dec
-	ExitFee    sdk.Dec
-	PoolId     uint64
+	PoolAssets   []balancer.PoolAsset
+	Asset1       string
+	Asset2       string
+	Amount1      sdk.Int
+	Amount2      sdk.Int
+	SpreadFactor sdk.Dec
+	ExitFee      sdk.Dec
+	PoolId       uint64
 }
 
 type StableSwapPool struct {
@@ -185,9 +185,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  1,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       1,
 		},
 		{ // Pool 2
 			PoolAssets: []balancer.PoolAsset{
@@ -200,9 +200,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  2,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       2,
 		},
 		{ // Pool 3
 			PoolAssets: []balancer.PoolAsset{
@@ -215,9 +215,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  3,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       3,
 		},
 		{ // Pool 4
 			PoolAssets: []balancer.PoolAsset{
@@ -230,9 +230,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  4,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       4,
 		},
 		{ // Pool 5
 			PoolAssets: []balancer.PoolAsset{
@@ -245,9 +245,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  5,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       5,
 		},
 		{ // Pool 6
 			PoolAssets: []balancer.PoolAsset{
@@ -260,9 +260,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  6,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       6,
 		},
 		{ // Pool 7
 			PoolAssets: []balancer.PoolAsset{
@@ -275,9 +275,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  7,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       7,
 		},
 		{ // Pool 8
 			PoolAssets: []balancer.PoolAsset{
@@ -290,9 +290,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  8,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       8,
 		},
 		{ // Pool 9
 			PoolAssets: []balancer.PoolAsset{
@@ -305,9 +305,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  9,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       9,
 		},
 		{ // Pool 10
 			PoolAssets: []balancer.PoolAsset{
@@ -320,9 +320,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  10,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       10,
 		},
 		{ // Pool 11
 			PoolAssets: []balancer.PoolAsset{
@@ -335,9 +335,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  11,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       11,
 		},
 		{ // Pool 12
 			PoolAssets: []balancer.PoolAsset{
@@ -350,9 +350,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  12,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       12,
 		},
 		{ // Pool 13
 			PoolAssets: []balancer.PoolAsset{
@@ -365,9 +365,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  13,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       13,
 		},
 		{ // Pool 14
 			PoolAssets: []balancer.PoolAsset{
@@ -380,9 +380,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  14,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       14,
 		},
 		{ // Pool 15
 			PoolAssets: []balancer.PoolAsset{
@@ -395,9 +395,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  15,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       15,
 		},
 		{ // Pool 16
 			PoolAssets: []balancer.PoolAsset{
@@ -410,9 +410,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  16,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       16,
 		},
 		{ // Pool 17
 			PoolAssets: []balancer.PoolAsset{
@@ -425,9 +425,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  17,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       17,
 		},
 		{ // Pool 18
 			PoolAssets: []balancer.PoolAsset{
@@ -440,9 +440,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  18,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       18,
 		},
 		{ // Pool 19
 			PoolAssets: []balancer.PoolAsset{
@@ -455,9 +455,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  19,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       19,
 		},
 		{ // Pool 20
 			PoolAssets: []balancer.PoolAsset{
@@ -470,9 +470,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  20,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       20,
 		},
 		{ // Pool 21
 			PoolAssets: []balancer.PoolAsset{
@@ -485,9 +485,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  21,
+			SpreadFactor: sdk.NewDecWithPrec(0, 2),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       21,
 		},
 		{ // Pool 22
 			PoolAssets: []balancer.PoolAsset{
@@ -500,9 +500,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  22,
+			SpreadFactor: sdk.NewDecWithPrec(2, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       22,
 		},
 		{ // Pool 23
 			PoolAssets: []balancer.PoolAsset{
@@ -515,9 +515,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(535, 5),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  23,
+			SpreadFactor: sdk.NewDecWithPrec(535, 5),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       23,
 		},
 		{ // Pool 24
 			PoolAssets: []balancer.PoolAsset{
@@ -530,9 +530,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  24,
+			SpreadFactor: sdk.NewDecWithPrec(2, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       24,
 		},
 		{ // Pool 25
 			PoolAssets: []balancer.PoolAsset{
@@ -545,9 +545,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  25,
+			SpreadFactor: sdk.NewDecWithPrec(2, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       25,
 		},
 		{ // Pool 26
 			PoolAssets: []balancer.PoolAsset{
@@ -560,9 +560,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(50),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  26,
+			SpreadFactor: sdk.NewDecWithPrec(2, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       26,
 		},
 		{ // Pool 27
 			PoolAssets: []balancer.PoolAsset{
@@ -575,9 +575,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(50),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  27,
+			SpreadFactor: sdk.NewDecWithPrec(2, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       27,
 		},
 		{ // Pool 28
 			PoolAssets: []balancer.PoolAsset{
@@ -598,9 +598,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(25),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(4, 4),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  28,
+			SpreadFactor: sdk.NewDecWithPrec(4, 4),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       28,
 		},
 		{ // Pool 29
 			PoolAssets: []balancer.PoolAsset{
@@ -613,9 +613,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  29,
+			SpreadFactor: sdk.NewDecWithPrec(2, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       29,
 		},
 		{ // Pool 30
 			PoolAssets: []balancer.PoolAsset{
@@ -628,9 +628,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  30,
+			SpreadFactor: sdk.NewDecWithPrec(2, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       30,
 		},
 		{ // Pool 31
 			PoolAssets: []balancer.PoolAsset{
@@ -651,9 +651,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(25),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(4, 4),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  31,
+			SpreadFactor: sdk.NewDecWithPrec(4, 4),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       31,
 		},
 		{ // Pool 32
 			PoolAssets: []balancer.PoolAsset{
@@ -666,9 +666,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(30),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(3, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  32,
+			SpreadFactor: sdk.NewDecWithPrec(3, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       32,
 		},
 		{ // Pool 33
 			PoolAssets: []balancer.PoolAsset{
@@ -681,9 +681,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(30),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(3, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  33,
+			SpreadFactor: sdk.NewDecWithPrec(3, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       33,
 		},
 		{ // Pool 34
 			PoolAssets: []balancer.PoolAsset{
@@ -696,9 +696,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(3, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  34,
+			SpreadFactor: sdk.NewDecWithPrec(3, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       34,
 		},
 		{ // Pool 35
 			PoolAssets: []balancer.PoolAsset{
@@ -711,9 +711,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  35,
+			SpreadFactor: sdk.NewDecWithPrec(2, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       35,
 		},
 		{ // Pool 36
 			PoolAssets: []balancer.PoolAsset{
@@ -726,9 +726,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(3, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  36,
+			SpreadFactor: sdk.NewDecWithPrec(3, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       36,
 		},
 		{ // Pool 37
 			PoolAssets: []balancer.PoolAsset{
@@ -741,9 +741,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(3, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  37,
+			SpreadFactor: sdk.NewDecWithPrec(3, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       37,
 		},
 		{ // Pool 38
 			PoolAssets: []balancer.PoolAsset{
@@ -756,9 +756,9 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  38,
+			SpreadFactor: sdk.NewDecWithPrec(2, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       38,
 		},
 		{ // Pool 39
 			PoolAssets: []balancer.PoolAsset{
@@ -771,14 +771,14 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 			},
-			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
-			PoolId:  39,
+			SpreadFactor: sdk.NewDecWithPrec(2, 3),
+			ExitFee:      sdk.NewDecWithPrec(0, 2),
+			PoolId:       39,
 		},
 	}
 
 	for _, pool := range s.pools {
-		s.createGAMMPool(pool.PoolAssets, pool.SwapFee, pool.ExitFee)
+		s.createGAMMPool(pool.PoolAssets, pool.SpreadFactor, pool.ExitFee)
 	}
 
 	s.stableSwapPools = []StableSwapPool{
@@ -907,9 +907,9 @@ func (s *KeeperTestSuite) createStableswapPool(initialLiquidity sdk.Coins, poolP
 }
 
 // createGAMMPool creates a balancer pool with the given pool assets and params
-func (s *KeeperTestSuite) createGAMMPool(poolAssets []balancer.PoolAsset, swapFee, exitFee sdk.Dec) uint64 {
+func (s *KeeperTestSuite) createGAMMPool(poolAssets []balancer.PoolAsset, spreadFactor, exitFee sdk.Dec) uint64 {
 	poolParams := balancer.PoolParams{
-		SwapFee: swapFee,
+		SwapFee: spreadFactor,
 		ExitFee: exitFee,
 	}
 

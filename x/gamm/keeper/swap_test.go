@@ -26,14 +26,14 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 	tests := []struct {
 		name  string
 		param param
-		// Note: by default swap fee is zero in all tests
+		// Note: by default spread factor is zero in all tests
 		// It is only set to non-zero when this overwrite is non-nil
-		swapFeeOverwrite sdk.Dec
-		// Note: this is the value by which the original swap fee is divided
+		spreadFactorOverwrite sdk.Dec
+		// Note: this is the value by which the original spread factor is divided
 		// by if it is non-nil. This is done to test the case where the given
-		// parameter swap fee is reduced by more than allowed (max factor of 0.5)
-		swapFeeOverwriteQuotient sdk.Dec
-		expectPass               bool
+		// parameter spread factor is reduced by more than allowed (max factor of 0.5)
+		spreadFactorOverwriteQuotient sdk.Dec
+		expectPass                    bool
 	}{
 		{
 			name: "Proper swap",
@@ -56,28 +56,28 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 			expectPass: true,
 		},
 		{
-			name: "boundary valid swap fee given (= 0.5 pool swap fee)",
+			name: "boundary valid spread factor given (= 0.5 pool spread factor)",
 			param: param{
 				tokenIn:           sdk.NewCoin("foo", sdk.NewInt(100000)),
 				tokenOutDenom:     "bar",
 				tokenOutMinAmount: sdk.NewInt(1),
 				expectedTokenOut:  sdk.NewInt(46833),
 			},
-			swapFeeOverwrite:         sdk.MustNewDecFromStr("0.1"),
-			swapFeeOverwriteQuotient: sdk.MustNewDecFromStr("2"),
-			expectPass:               true,
+			spreadFactorOverwrite:         sdk.MustNewDecFromStr("0.1"),
+			spreadFactorOverwriteQuotient: sdk.MustNewDecFromStr("2"),
+			expectPass:                    true,
 		},
 		{
-			name: "invalid swap fee given (< 0.5 pool swap fee)",
+			name: "invalid spread factor given (< 0.5 pool spread factor)",
 			param: param{
 				tokenIn:           sdk.NewCoin("foo", sdk.NewInt(100000)),
 				tokenOutDenom:     "bar",
 				tokenOutMinAmount: sdk.NewInt(1),
 				expectedTokenOut:  sdk.NewInt(49262),
 			},
-			swapFeeOverwrite:         sdk.MustNewDecFromStr("0.1"),
-			swapFeeOverwriteQuotient: sdk.MustNewDecFromStr("3"),
-			expectPass:               false,
+			spreadFactorOverwrite:         sdk.MustNewDecFromStr("0.1"),
+			spreadFactorOverwriteQuotient: sdk.MustNewDecFromStr("3"),
+			expectPass:                    false,
 		},
 		{
 			name: "out is lesser than min amount",
@@ -122,16 +122,16 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 		s.Run(test.name, func() {
 			// Init suite for each test.
 			s.SetupTest()
-			swapFee := sdk.ZeroDec()
-			if !test.swapFeeOverwrite.IsNil() {
-				swapFee = test.swapFeeOverwrite
+			spreadFactor := sdk.ZeroDec()
+			if !test.spreadFactorOverwrite.IsNil() {
+				spreadFactor = test.spreadFactorOverwrite
 			}
 			poolId := s.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-				SwapFee: swapFee,
+				SwapFee: spreadFactor,
 				ExitFee: sdk.ZeroDec(),
 			})
-			if !test.swapFeeOverwriteQuotient.IsNil() {
-				swapFee = swapFee.Quo(test.swapFeeOverwriteQuotient)
+			if !test.spreadFactorOverwriteQuotient.IsNil() {
+				spreadFactor = spreadFactor.Quo(test.spreadFactorOverwriteQuotient)
 			}
 			keeper := s.App.GAMMKeeper
 			ctx := s.Ctx
@@ -143,7 +143,7 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				s.NoError(err, "test: %v", test.name)
 
 				prevGasConsumed := s.Ctx.GasMeter().GasConsumed()
-				tokenOutAmount, err := keeper.SwapExactAmountIn(ctx, s.TestAccs[0], pool, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, swapFee)
+				tokenOutAmount, err := keeper.SwapExactAmountIn(ctx, s.TestAccs[0], pool, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, spreadFactor)
 				s.NoError(err, "test: %v", test.name)
 				s.Require().Equal(test.param.expectedTokenOut.String(), tokenOutAmount.String())
 				gasConsumedForSwap := s.Ctx.GasMeter().GasConsumed() - prevGasConsumed
@@ -155,7 +155,7 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				spotPriceAfter, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
 				s.NoError(err, "test: %v", test.name)
 
-				if !test.swapFeeOverwrite.IsNil() {
+				if !test.spreadFactorOverwrite.IsNil() {
 					return
 				}
 
@@ -163,7 +163,7 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				tradeAvgPrice := test.param.tokenIn.Amount.ToDec().Quo(tokenOutAmount.ToDec())
 				s.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
 			} else {
-				_, err := keeper.SwapExactAmountIn(ctx, s.TestAccs[0], pool, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, swapFee)
+				_, err := keeper.SwapExactAmountIn(ctx, s.TestAccs[0], pool, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, spreadFactor)
 				s.Error(err, "test: %v", test.name)
 			}
 		})
@@ -224,9 +224,9 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 				pool = poolExt.(poolmanagertypes.PoolI)
 			}
 
-			swapFee := pool.GetSwapFee(s.Ctx)
+			spreadFactor := pool.GetSpreadFactor(s.Ctx)
 
-			_, err := keeper.CalcOutAmtGivenIn(ctx, pool, test.param.tokenIn, test.param.tokenOutDenom, swapFee)
+			_, err := keeper.CalcOutAmtGivenIn(ctx, pool, test.param.tokenIn, test.param.tokenOutDenom, spreadFactor)
 
 			if test.expectPass {
 				s.Require().NoError(err)
@@ -295,9 +295,9 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 
 			s.Require().NotNil(pool)
 
-			swapFee := pool.GetSwapFee(s.Ctx)
+			spreadFactor := pool.GetSpreadFactor(s.Ctx)
 
-			_, err = keeper.CalcInAmtGivenOut(ctx, pool, test.param.tokenOut, test.param.tokenInDenom, swapFee)
+			_, err = keeper.CalcInAmtGivenOut(ctx, pool, test.param.tokenOut, test.param.tokenInDenom, spreadFactor)
 
 			if test.expectPass {
 				s.Require().NoError(err)
@@ -389,7 +389,7 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 			ctx := s.Ctx
 			pool, err := s.App.GAMMKeeper.GetPool(s.Ctx, poolId)
 			s.Require().NoError(err)
-			swapFee := pool.GetSwapFee(s.Ctx)
+			spreadFactor := pool.GetSpreadFactor(s.Ctx)
 
 			if test.expectPass {
 				spotPriceBefore, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
@@ -397,7 +397,7 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 
 				prevGasConsumed := s.Ctx.GasMeter().GasConsumed()
 
-				tokenInAmount, err := keeper.SwapExactAmountOut(ctx, s.TestAccs[0], pool, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut, swapFee)
+				tokenInAmount, err := keeper.SwapExactAmountOut(ctx, s.TestAccs[0], pool, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut, spreadFactor)
 				s.NoError(err, "test: %v", test.name)
 				s.True(tokenInAmount.Equal(test.param.expectedTokenInAmount),
 					"test: %v\n expect_eq actual: %s, expected: %s",
@@ -415,7 +415,7 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 				tradeAvgPrice := tokenInAmount.ToDec().Quo(test.param.tokenOut.Amount.ToDec())
 				s.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
 			} else {
-				_, err := keeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut, swapFee)
+				_, err := keeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut, spreadFactor)
 				s.Error(err, "test: %v", test.name)
 			}
 		})
@@ -448,19 +448,19 @@ func (s *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 			s.Ctx = s.Ctx.WithBlockTime(tc.blockTime)
 			pool, err := s.App.GAMMKeeper.GetPool(s.Ctx, poolId)
 			s.Require().NoError(err)
-			swapFee := pool.GetSwapFee(s.Ctx)
+			spreadFactor := pool.GetSpreadFactor(s.Ctx)
 
 			foocoin := sdk.NewCoin("foo", sdk.NewInt(10))
 
 			if tc.expectPass {
-				_, err := s.App.GAMMKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, foocoin, "bar", sdk.ZeroInt(), swapFee)
+				_, err := s.App.GAMMKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, foocoin, "bar", sdk.ZeroInt(), spreadFactor)
 				s.Require().NoError(err)
-				_, err = s.App.GAMMKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, "bar", sdk.NewInt(1000000000000000000), foocoin, swapFee)
+				_, err = s.App.GAMMKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, "bar", sdk.NewInt(1000000000000000000), foocoin, spreadFactor)
 				s.Require().NoError(err)
 			} else {
-				_, err := s.App.GAMMKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, foocoin, "bar", sdk.ZeroInt(), swapFee)
+				_, err := s.App.GAMMKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, foocoin, "bar", sdk.ZeroInt(), spreadFactor)
 				s.Require().Error(err)
-				_, err = s.App.GAMMKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, "bar", sdk.NewInt(1000000000000000000), foocoin, swapFee)
+				_, err = s.App.GAMMKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, "bar", sdk.NewInt(1000000000000000000), foocoin, spreadFactor)
 				s.Require().Error(err)
 			}
 		}

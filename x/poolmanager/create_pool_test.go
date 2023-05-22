@@ -148,7 +148,7 @@ func (s *KeeperTestSuite) TestCreatePool() {
 
 		invalidStableswapPoolMsg = stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], stableswap.PoolParams{SwapFee: sdk.NewDec(0), ExitFee: sdk.NewDecWithPrec(1, 2)}, DefaultStableswapLiquidity, []uint64{}, "")
 
-		validConcentratedPoolMsg = clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], foo, bar, 1, defaultPoolSwapFee)
+		validConcentratedPoolMsg = clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], foo, bar, 1, defaultPoolSpreadFactor)
 
 		defaultFundAmount = sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount.Mul(sdk.NewInt(2))), sdk.NewCoin(bar, defaultInitPoolAmount.Mul(sdk.NewInt(2))))
 	)
@@ -266,7 +266,7 @@ func (s *KeeperTestSuite) TestCreatePoolZeroLiquidityNoCreationFee() {
 		},
 	}, "")
 
-	concentratedPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolManagerModuleAcc.GetAddress(), foo, bar, 1, defaultPoolSwapFee)
+	concentratedPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolManagerModuleAcc.GetAddress(), foo, bar, 1, defaultPoolSpreadFactor)
 
 	tests := []struct {
 		name               string

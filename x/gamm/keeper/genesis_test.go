@@ -59,7 +59,7 @@ func TestGammInitGenesis(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, balancerPool.GetId(), poolStored.GetId())
 	require.Equal(t, balancerPool.GetAddress(), poolStored.GetAddress())
-	require.Equal(t, balancerPool.GetSwapFee(ctx), poolStored.GetSwapFee(ctx))
+	require.Equal(t, balancerPool.GetSpreadFactor(ctx), poolStored.GetSpreadFactor(ctx))
 	require.Equal(t, balancerPool.GetExitFee(ctx), poolStored.GetExitFee(ctx))
 	// require.Equal(t, balancerPool.GetTotalWeight(), sdk.Nw)
 	require.Equal(t, balancerPool.GetTotalShares(), poolStored.GetTotalShares())

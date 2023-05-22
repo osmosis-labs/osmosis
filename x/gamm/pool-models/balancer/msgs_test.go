@@ -149,7 +149,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "negative swap fee with zero exit fee",
+			name: "negative spread factor with zero exit fee",
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.PoolParams = &balancer.PoolParams{
 					SwapFee: sdk.NewDecWithPrec(-1, 2),
@@ -192,7 +192,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 			expectPass: true,
 		},
 		{
-			name: "zero swap fee, zero exit fee",
+			name: "zero spread factor, zero exit fee",
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.PoolParams = &balancer.PoolParams{
 					ExitFee: sdk.NewDecWithPrec(0, 0),
@@ -258,7 +258,7 @@ func (s *KeeperTestSuite) TestMsgCreateBalancerPool() {
 			},
 			poolId: 1,
 		},
-		"error due to negative swap fee": {
+		"error due to negative spread factor": {
 			msg: balancer.MsgCreateBalancerPool{
 				Sender:             s.TestAccs[0].String(),
 				PoolParams:         &balancer.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2).Neg(), ExitFee: sdk.ZeroDec()},

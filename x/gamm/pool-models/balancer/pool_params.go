@@ -8,9 +8,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
-func NewPoolParams(swapFee, exitFee sdk.Dec, params *SmoothWeightChangeParams) PoolParams {
+func NewPoolParams(spreadFactor, exitFee sdk.Dec, params *SmoothWeightChangeParams) PoolParams {
 	return PoolParams{
-		SwapFee:                  swapFee,
+		SwapFee:                  spreadFactor,
 		ExitFee:                  exitFee,
 		SmoothWeightChangeParams: params,
 	}
@@ -26,11 +26,11 @@ func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 	}
 
 	if params.SwapFee.IsNegative() {
-		return types.ErrNegativeSwapFee
+		return types.ErrNegativeSpreadFactor
 	}
 
 	if params.SwapFee.GTE(sdk.OneDec()) {
-		return types.ErrTooMuchSwapFee
+		return types.ErrTooMuchSpreadFactor
 	}
 
 	if params.SmoothWeightChangeParams != nil {
@@ -69,7 +69,7 @@ func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 	return nil
 }
 
-func (params PoolParams) GetPoolSwapFee() sdk.Dec {
+func (params PoolParams) GetPoolSpreadFactor() sdk.Dec {
 	return params.SwapFee
 }
 
