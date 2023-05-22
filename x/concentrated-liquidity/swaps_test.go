@@ -1470,11 +1470,30 @@ func makeSwapTests(tests ...map[string]SwapTest) map[string]SwapTest {
 	return retTests
 }
 
-func (s *KeeperTestSuite) testPoolsEqualAsideFromFees(poolBeforeCalc, poolAfterCalc types.ConcentratedPoolExtension) {
+func (s *KeeperTestSuite) assertSpotPriceEqual(poolBeforeCalc, poolAfterCalc types.ConcentratedPoolExtension) {
 	s.Require().Equal(poolBeforeCalc.GetCurrentSqrtPrice(), poolAfterCalc.GetCurrentSqrtPrice())
 	s.Require().Equal(poolBeforeCalc.GetCurrentTick(), poolAfterCalc.GetCurrentTick())
 	s.Require().Equal(poolBeforeCalc.GetLiquidity(), poolAfterCalc.GetLiquidity())
 	s.Require().Equal(poolBeforeCalc.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
+}
+
+func (s *KeeperTestSuite) assertFeeAccum(test SwapTest, poolId uint64) {
+	feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	feeAccumValue := feeAccum.GetValue()
+	if test.expectedFeeGrowthAccumulatorValue.IsNil() {
+		s.Require().Equal(0, feeAccumValue.Len())
+		return
+	}
+	s.Require().Equal(1, feeAccumValue.Len())
+	s.Require().Equal(0,
+		additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
+			osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
+			osmomath.BigDecFromSDKDec(feeAccum.GetValue().AmountOf(test.tokenIn.Denom)),
+		),
+		fmt.Sprintf("expected %s, got %s", test.expectedFeeGrowthAccumulatorValue.String(), feeAccum.GetValue().AmountOf(test.tokenIn.Denom).String()),
+	)
 }
 
 func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
@@ -1563,7 +1582,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 				poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 				s.Require().NoError(err)
 
-				s.testPoolsEqualAsideFromFees(poolBeforeCalc, poolAfterCalc)
+				s.assertSpotPriceEqual(poolBeforeCalc, poolAfterCalc)
 			}
 
 			// perform swap
@@ -1606,22 +1625,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 				expectedLiquidity := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
 				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
 
-				feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
-				s.Require().NoError(err)
-
-				feeAccumValue := feeAccum.GetValue()
-				if test.expectedFeeGrowthAccumulatorValue.IsNil() {
-					s.Require().Equal(0, feeAccumValue.Len())
-					return
-				}
-				s.Require().Equal(1, feeAccumValue.Len())
-				s.Require().Equal(0,
-					additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
-						osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
-						osmomath.BigDecFromSDKDec(feeAccum.GetValue().AmountOf(test.tokenIn.Denom)),
-					),
-					fmt.Sprintf("expected %s, got %s", test.expectedFeeGrowthAccumulatorValue.String(), feeAccum.GetValue().AmountOf(test.tokenIn.Denom).String()),
-				)
+				s.assertFeeAccum(test, pool.GetId())
 			}
 		})
 	}
@@ -1799,8 +1803,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 				// check that the pool has not been modified after performing calc
 				poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 				s.Require().NoError(err)
-
-				s.testPoolsEqualAsideFromFees(poolBeforeCalc, poolAfterCalc)
+				s.assertSpotPriceEqual(poolBeforeCalc, poolAfterCalc)
 			}
 
 			// perform swap
@@ -2325,20 +2328,8 @@ func (s *KeeperTestSuite) TestComputeOutAmtGivenIn() {
 			poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
 
-			s.testPoolsEqualAsideFromFees(poolBeforeCalc, poolAfterCalc)
-
-			// check that fee accum has been correctly updated.
-			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
-			s.Require().NoError(err)
-
-			feeAccumValue := feeAccum.GetValue()
-			s.Require().Equal(1, feeAccumValue.Len())
-			s.Require().Equal(0,
-				additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
-					osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
-					osmomath.BigDecFromSDKDec(feeAccum.GetValue().AmountOf(test.tokenIn.Denom)),
-				),
-			)
+			s.assertSpotPriceEqual(poolBeforeCalc, poolAfterCalc)
+			s.assertFeeAccum(test, pool.GetId())
 		})
 	}
 }
@@ -2369,7 +2360,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn_NonMutative() {
 			poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
 
-			s.testPoolsEqualAsideFromFees(poolBeforeCalc, poolAfterCalc)
+			s.assertSpotPriceEqual(poolBeforeCalc, poolAfterCalc)
 
 			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
@@ -2425,7 +2416,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
 			poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
 
-			s.testPoolsEqualAsideFromFees(poolBeforeCalc, poolAfterCalc)
+			s.assertSpotPriceEqual(poolBeforeCalc, poolAfterCalc)
 
 			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
@@ -2468,7 +2459,7 @@ func (s *KeeperTestSuite) TestComputeInAmtGivenOut() {
 			poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
 
-			s.testPoolsEqualAsideFromFees(poolBeforeCalc, poolAfterCalc)
+			s.assertSpotPriceEqual(poolBeforeCalc, poolAfterCalc)
 
 			// check that fee accum has been correctly updated.
 			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
