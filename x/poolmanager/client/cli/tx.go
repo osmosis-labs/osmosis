@@ -165,7 +165,7 @@ func NewMsgNewSplitRouteSwapExactAmountOut(fs *flag.FlagSet) ([]types.SwapAmount
 	}
 
 	var splitRouteJSONdata RoutesOut
-	err = json.Unmarshal([]byte(contents), &splitRouteJSONdata)
+	err = json.Unmarshal(contents, &splitRouteJSONdata)
 	if err != nil {
 		return nil, err
 	}
