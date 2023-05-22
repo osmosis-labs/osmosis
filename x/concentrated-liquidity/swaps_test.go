@@ -55,6 +55,8 @@ type SwapTest struct {
 }
 
 var (
+	swapFundCoins = sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000)))
+
 	// Allow 0.01% margin of error.
 	multiplicativeTolerance = osmomath.ErrTolerance{
 		MultiplicativeTolerance: sdk.MustNewDecFromStr("0.0001"),
@@ -1442,6 +1444,18 @@ var (
 	}
 )
 
+func (s *KeeperTestSuite) setupAndFundSwapTest() {
+	s.SetupTest()
+	s.FundAcc(s.TestAccs[0], swapFundCoins)
+	s.FundAcc(s.TestAccs[1], swapFundCoins)
+}
+
+func (s *KeeperTestSuite) preparePoolAndDefaultPosition() types.ConcentratedPoolExtension {
+	pool := s.PrepareConcentratedPool()
+	s.SetupDefaultPosition(pool.GetId())
+	return pool
+}
+
 func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 	tests := make(map[string]SwapTest, len(swapOutGivenInCases)+len(swapOutGivenInFeeCases)+len(swapOutGivenInErrorCases))
 	for name, test := range swapOutGivenInCases {
@@ -1460,9 +1474,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			s.setupAndFundSwapTest()
 
 			// Create default CL pool
 			clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
@@ -1649,9 +1661,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			s.setupAndFundSwapTest()
 
 			// Create default CL pool
 			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, sdk.ZeroDec())
@@ -1736,9 +1746,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			s.setupAndFundSwapTest()
 
 			// Create default CL pool
 			clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
@@ -1901,9 +1909,7 @@ func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
 
 	for name, test := range tests {
 		s.Run(name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			s.setupAndFundSwapTest()
 
 			// Create default CL pool
 			pool := s.PrepareConcentratedPool()
@@ -2341,15 +2347,8 @@ func (s *KeeperTestSuite) TestComputeOutAmtGivenIn() {
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-
-			// Create default CL pool
+			s.setupAndFundSwapTest()
 			pool := s.PrepareConcentratedPool()
-
-			// add default position
-			s.SetupDefaultPosition(pool.GetId())
 
 			// add second position depending on the test
 			if !test.secondPositionLowerPrice.IsNil() {
@@ -2409,26 +2408,9 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn_NonMutative() {
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-
-			// Create default CL pool
-			pool := s.PrepareConcentratedPool()
-
-			// add default position
-			s.SetupDefaultPosition(pool.GetId())
-
-			// add second position depending on the test
-			if !test.secondPositionLowerPrice.IsNil() {
-				newLowerTick, err := math.PriceToTickRoundDown(test.secondPositionLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
-				s.Require().NoError(err)
-			}
+			s.setupAndFundSwapTest()
+			pool := s.preparePoolAndDefaultPosition()
+			s.setupSecondPosition(test, pool)
 
 			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
@@ -2465,6 +2447,18 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn_NonMutative() {
 	}
 }
 
+func (s *KeeperTestSuite) setupSecondPosition(test SwapTest, pool types.ConcentratedPoolExtension) {
+	if !test.secondPositionLowerPrice.IsNil() {
+		newLowerTick, err := math.PriceToTickRoundDown(test.secondPositionLowerPrice, pool.GetTickSpacing())
+		s.Require().NoError(err)
+		newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
+		s.Require().NoError(err)
+
+		_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
+		s.Require().NoError(err)
+	}
+}
+
 // TestCalcInAmtGivenOut_NonMutative tests that CalcInAmtGivenOut is non-mutative.
 func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
 	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
@@ -2477,26 +2471,9 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-
-			// Create default CL pool
-			pool := s.PrepareConcentratedPool()
-
-			// add default position
-			s.SetupDefaultPosition(pool.GetId())
-
-			// add second position depending on the test
-			if !test.secondPositionLowerPrice.IsNil() {
-				newLowerTick, err := math.PriceToTickRoundDown(test.secondPositionLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
-				s.Require().NoError(err)
-			}
+			s.setupAndFundSwapTest()
+			pool := s.preparePoolAndDefaultPosition()
+			s.setupSecondPosition(test, pool)
 
 			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
@@ -2545,9 +2522,7 @@ func (s *KeeperTestSuite) TestComputeInAmtGivenOut() {
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(10000000000000)), sdk.NewCoin(USDC, sdk.NewInt(1000000000000))))
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(10000000000000)), sdk.NewCoin(USDC, sdk.NewInt(1000000000000))))
+			s.setupAndFundSwapTest()
 
 			// Create default CL pool
 			pool := s.PrepareConcentratedPool()
@@ -2606,9 +2581,7 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 
 	for name, test := range tests {
 		s.Run(name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			s.setupAndFundSwapTest()
 
 			// Create default CL pool
 			pool := s.PrepareConcentratedPool()
@@ -2704,9 +2677,7 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapInAmtGivenOut() {
 
 	for name, test := range tests {
 		s.Run(name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			s.setupAndFundSwapTest()
 
 			// Create default CL pool
 			pool := s.PrepareConcentratedPool()
