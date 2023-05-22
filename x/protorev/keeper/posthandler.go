@@ -49,7 +49,7 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	}
 
 	// Extract all of the pools that were swapped in the tx
-	swappedPools := protoRevDec.ProtoRevKeeper.ExtractSwappedPools(cacheCtx, tx)
+	swappedPools := protoRevDec.ProtoRevKeeper.ExtractSwappedPools(cacheCtx)
 	if len(swappedPools) == 0 {
 		return next(ctx, tx, simulate)
 	}
@@ -143,7 +143,7 @@ func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) (er
 
 // ExtractSwappedPools checks if there were any swaps made on pools and if so returns a list of all the pools that were
 // swapped on and metadata about the swap
-func (k Keeper) ExtractSwappedPools(ctx sdk.Context, tx sdk.Tx) []SwapToBackrun {
+func (k Keeper) ExtractSwappedPools(ctx sdk.Context) []SwapToBackrun {
 	swappedPools := make([]SwapToBackrun, 0)
 
 	swapsToBackrun, err := k.GetSwapsToBackrun(ctx)
