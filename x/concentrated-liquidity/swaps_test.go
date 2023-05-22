@@ -1496,6 +1496,24 @@ func (s *KeeperTestSuite) assertFeeAccum(test SwapTest, poolId uint64) {
 	)
 }
 
+func (s *KeeperTestSuite) testLimitsToSqrtPrice(test SwapTest, pool types.ConcentratedPoolExtension) (lowerSqrtPrice, upperSqrtPrice sdk.Dec) {
+	if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
+		test.newLowerPrice = DefaultLowerPrice
+		test.newUpperPrice = DefaultUpperPrice
+	}
+
+	newLowerTick, err := math.PriceToTickRoundDown(test.newLowerPrice, pool.GetTickSpacing())
+	s.Require().NoError(err)
+	newUpperTick, err := math.PriceToTickRoundDown(test.newUpperPrice, pool.GetTickSpacing())
+	s.Require().NoError(err)
+
+	_, lowerSqrtPrice, err = math.TickToSqrtPrice(newLowerTick)
+	s.Require().NoError(err)
+	_, upperSqrtPrice, err = math.TickToSqrtPrice(newUpperTick)
+	s.Require().NoError(err)
+	return
+}
+
 func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 	// add error cases as well
 	tests := makeSwapTests(swapOutGivenInCases, swapOutGivenInCases, swapOutGivenInErrorCases)
@@ -1602,21 +1620,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 				s.Require().Equal(test.expectedTick, updatedTick)
 				s.Require().Equal(test.expectedSqrtPrice, sqrtPrice)
 
-				if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
-					test.newLowerPrice = DefaultLowerPrice
-					test.newUpperPrice = DefaultUpperPrice
-				}
-
-				newLowerTick, err := math.PriceToTickRoundDown(test.newLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.newUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick)
-				s.Require().NoError(err)
-				_, upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick)
-				s.Require().NoError(err)
-
+				lowerSqrtPrice, upperSqrtPrice := s.testLimitsToSqrtPrice(test, pool)
 				if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
 					test.poolLiqAmount0 = DefaultAmt0
 					test.poolLiqAmount1 = DefaultAmt1
@@ -1680,17 +1684,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 
 			// add default position
 			s.SetupDefaultPosition(pool.GetId())
-
-			// add second position depending on the test
-			if !test.secondPositionLowerPrice.IsNil() {
-				newLowerTick, err := math.PriceToTickRoundDown(test.secondPositionLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
-				s.Require().NoError(err)
-			}
+			s.setupSecondPosition(test, pool)
 
 			// add 2*DefaultFeeAccumCoins to fee accumulator, now fee accumulator has 3*DefaultFeeAccumCoins as its value
 			feeAccum, err = s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
@@ -1776,21 +1770,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 				expectedFees := tokenIn.Amount.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).TruncateInt()
 				s.Require().Equal(expectedFees.String(), totalFees.TruncateInt().String())
 
-				if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
-					test.newLowerPrice = DefaultLowerPrice
-					test.newUpperPrice = DefaultUpperPrice
-				}
-
-				newLowerTick, err := math.PriceToTickRoundDown(test.newLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.newUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick)
-				s.Require().NoError(err)
-				_, upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick)
-				s.Require().NoError(err)
-
+				lowerSqrtPrice, upperSqrtPrice := s.testLimitsToSqrtPrice(test, pool)
 				if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
 					test.poolLiqAmount0 = DefaultAmt0
 					test.poolLiqAmount1 = DefaultAmt1
@@ -1827,21 +1807,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 				// also ensure the pool's currentTick and currentSqrtPrice was updated due to calling a mutative method
 				s.Require().Equal(test.expectedTick, pool.GetCurrentTick())
 
-				if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
-					test.newLowerPrice = DefaultLowerPrice
-					test.newUpperPrice = DefaultUpperPrice
-				}
-
-				newLowerTick, err := math.PriceToTickRoundDown(test.newLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.newUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick)
-				s.Require().NoError(err)
-				_, upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick)
-				s.Require().NoError(err)
-
+				lowerSqrtPrice, upperSqrtPrice := s.testLimitsToSqrtPrice(test, pool)
 				if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
 					test.poolLiqAmount0 = DefaultAmt0
 					test.poolLiqAmount1 = DefaultAmt1
