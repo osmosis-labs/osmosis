@@ -92,10 +92,10 @@ pub fn propose_pfm(
         None,
         own_addr.to_string(),
         env.block.time,
-        format!(r#"{{"ibc_callback":"{}"}}"#, own_addr),
+        format!(r#"{{"ibc_callback":"{own_addr}"}}"#),
         Some(Callback {
             contract: own_addr,
-            msg: format!(r#"{{"validate_pfm": {{"chain": "{}"}} }}"#, chain).try_into()?,
+            msg: format!(r#"{{"validate_pfm": {{"chain": "{chain}"}} }}"#).try_into()?,
         }),
         true,
     )?;
@@ -924,7 +924,7 @@ mod tests {
         let unauthorized_remove_msg = ExecuteMsg::ModifyContractAlias {
             operations: vec![ContractAliasInput {
                 operation: Operation::Remove,
-                alias: alias,
+                alias,
                 address: Some(address),
                 new_alias: None,
             }],

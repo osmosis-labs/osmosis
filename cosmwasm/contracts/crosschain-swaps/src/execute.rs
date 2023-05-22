@@ -383,11 +383,9 @@ pub fn recover(deps: DepsMut, sender: Addr) -> Result<Response, ContractError> {
     let recoveries = RECOVERY_STATES.load(deps.storage, &sender)?;
     // Remove the recoveries from the store. If the sends fail, the whole tx should be reverted.
     RECOVERY_STATES.remove(deps.storage, &sender);
-    let msgs = recoveries.into_iter().filter_map(|r| {
-        Some(BankMsg::Send {
-            to_address: r.recovery_addr.into_string(),
-            amount: coins(r.amount, r.denom),
-        })
+    let msgs = recoveries.into_iter().map(|r| BankMsg::Send {
+        to_address: r.recovery_addr.into_string(),
+        amount: coins(r.amount, r.denom),
     });
     Ok(Response::new()
         .add_attribute("action", "recover")
