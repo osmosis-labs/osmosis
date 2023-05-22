@@ -1456,6 +1456,13 @@ func (s *KeeperTestSuite) preparePoolAndDefaultPosition() types.ConcentratedPool
 	return pool
 }
 
+func (s *KeeperTestSuite) preparePoolWithCustSpread(spread sdk.Dec) types.ConcentratedPoolExtension {
+	clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+	clParams.AuthorizedSpreadFactors = append(clParams.AuthorizedSpreadFactors, spread)
+	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
+	return s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "usdc", DefaultTickSpacing, spread)
+}
+
 func makeSwapTests(tests ...map[string]SwapTest) map[string]SwapTest {
 	length := 0
 	for i := range tests {
@@ -1542,13 +1549,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 		test := test
 		s.Run(name, func() {
 			s.setupAndFundSwapTest()
-
-			// Create default CL pool
-			clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-			clParams.AuthorizedSpreadFactors = append(clParams.AuthorizedSpreadFactors, test.spreadFactor)
-			s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
-			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "usdc", DefaultTickSpacing, test.spreadFactor)
-
+			pool := s.preparePoolWithCustSpread(test.spreadFactor)
 			// add default position
 			s.SetupDefaultPosition(pool.GetId())
 			s.setupSecondPosition(test, pool)
@@ -1701,13 +1702,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 		test := test
 		s.Run(name, func() {
 			s.setupAndFundSwapTest()
-
-			// Create default CL pool
-			clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-			clParams.AuthorizedSpreadFactors = append(clParams.AuthorizedSpreadFactors, test.spreadFactor)
-			s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
-			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "usdc", DefaultTickSpacing, test.spreadFactor)
-
+			pool := s.preparePoolWithCustSpread(test.spreadFactor)
 			// add default position
 			s.SetupDefaultPosition(pool.GetId())
 			s.setupSecondPosition(test, pool)
@@ -2486,12 +2481,7 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 		s.Run(name, func() {
 			s.SetupTest()
 			concentratedLiquidityKeeper := s.App.ConcentratedLiquidityKeeper
-
-			// Create pool with initial balance
-			clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-			clParams.AuthorizedSpreadFactors = append(clParams.AuthorizedSpreadFactors, tc.spreadFactor)
-			s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
-			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "usdc", DefaultTickSpacing, tc.spreadFactor)
+			pool := s.preparePoolWithCustSpread(tc.spreadFactor)
 
 			s.FundAcc(pool.GetAddress(), tc.poolInitialBalance)
 			// Create account with empty balance and fund with initial balance
