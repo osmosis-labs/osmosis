@@ -41,7 +41,8 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	//
 	// 50M is chosen as a large enough number to ensure that the posthandler will not run out of gas,
 	// but will eventually terminate in event of an accidental infinite loop with some gas usage.
-	cacheCtx = cacheCtx.WithGasMeter(sdk.NewGasMeter(sdk.Gas(50_000_000)))
+	upperGasLimitMeter := sdk.NewGasMeter(sdk.Gas(50_000_000))
+	cacheCtx = cacheCtx.WithGasMeter(upperGasLimitMeter)
 
 	// Check if the protorev posthandler can be executed
 	if err := protoRevDec.ProtoRevKeeper.AnteHandleCheck(cacheCtx); err != nil {
@@ -62,9 +63,10 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 		ctx.Logger().Error("ProtoRevTrade failed with error", err)
 	}
 
-	// Delete swaps to backrun for next transaction
-	// TODO: Should this be placed before we attempt to execute trades?
-	protoRevDec.ProtoRevKeeper.DeleteSwapsToBackrun(ctx)
+	// Delete swaps to backrun for next transaction without consuming gas
+	originalGasMeter := ctx.GasMeter()
+	protoRevDec.ProtoRevKeeper.DeleteSwapsToBackrun(ctx.WithGasMeter(upperGasLimitMeter))
+	ctx = ctx.WithGasMeter(originalGasMeter)
 
 	return next(ctx, tx, simulate)
 }
