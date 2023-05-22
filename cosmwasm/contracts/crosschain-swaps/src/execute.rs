@@ -22,7 +22,7 @@ use std::fmt::Debug;
 // Helper to add consistent events on ibc message submission
 fn ibc_message_event<T: Debug>(context: &str, message: T) -> cosmwasm_std::Event {
     cosmwasm_std::Event::new("ibc_message_added")
-        .add_attribute("contxt", context)
+        .add_attribute("context", context)
         .add_attribute("ibc_message", format!("{message:?}"))
 }
 
@@ -57,6 +57,8 @@ pub fn unwrap_or_swap_and_forward(
         .into());
     }
 
+    let amount: u128 = swap_coin.amount.into();
+
     // If the path is larger than 2, we need to unwrap this token first
     if path.len() > 2 {
         let registry = Registry::default(deps.as_ref());
@@ -66,7 +68,7 @@ pub fn unwrap_or_swap_and_forward(
             None,
             env.contract.address.to_string(),
             env.block.time,
-            String::new(),
+            build_memo(None, env.contract.address.as_str())?,
             Some(Callback {
                 contract: env.contract.address.clone(),
                 msg: serde_cw_value::to_value(&ExecuteMsg::OsmosisSwap {
@@ -87,7 +89,7 @@ pub fn unwrap_or_swap_and_forward(
             ForwardMsgReplyState {
                 channel_id: ibc_transfer.source_channel.clone(),
                 to_address: env.contract.address.to_string(),
-                amount: 0,
+                amount,
                 denom: String::new(),
                 on_failed_delivery: failed_delivery_action,
                 is_swap: false,
@@ -233,7 +235,6 @@ pub fn handle_swap_reply(
     env: Env,
     msg: cosmwasm_std::Reply,
 ) -> Result<Response, ContractError> {
-    deps.api.debug(&format!("handle_swap_reply"));
     let swap_msg_state = SWAP_REPLY_STATE.load(deps.storage)?;
     SWAP_REPLY_STATE.remove(deps.storage);
 
@@ -301,6 +302,7 @@ pub fn handle_forward_reply(
     deps: DepsMut,
     msg: cosmwasm_std::Reply,
 ) -> Result<Response, ContractError> {
+    deps.api.debug(&format!("handle_forward_reply"));
     // Parse the result from the underlying chain call (IBC send)
     let SubMsgResult::Ok(SubMsgResponse { data: Some(b), .. }) = msg.result else {
         return Err(ContractError::FailedIBCTransfer { msg: format!("failed reply: {:?}", msg.result) })

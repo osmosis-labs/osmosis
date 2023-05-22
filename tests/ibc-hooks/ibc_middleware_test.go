@@ -1858,7 +1858,54 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 	}
 }
 
-func (suite *HooksTestSuite) TestSwapErrorAfterUnwind() {
+// This sends a packet (setup to use PFM) through a path and ensures acks are returned to the sender
+func (suite *HooksTestSuite) SendAndAckPacketThroughPath(packetPath []Direction, initialPacket channeltypes.Packet) {
+	var res *sdk.Result
+	var err error
+
+	packetStack := make([]channeltypes.Packet, 0)
+	packet := initialPacket
+
+	for i, direction := range packetPath {
+		packetStack = append(packetStack, packet)
+		suite.Require().NoError(err)
+		res = suite.RelayPacketNoAck(packet, direction)
+		if i != len(packetPath)-1 {
+			packet, err = ibctesting.ParsePacketFromEvents(res.GetEvents())
+			suite.Require().NoError(err)
+		}
+
+		senderEndpoint, receiverEndpoint := suite.GetEndpoints(direction)
+		receiverEndpoint.Chain.NextBlock()
+		err = receiverEndpoint.UpdateClient()
+		suite.Require().NoError(err)
+		senderEndpoint.Chain.NextBlock()
+		err = senderEndpoint.UpdateClient()
+		suite.Require().NoError(err)
+	}
+	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
+	suite.Require().NoError(err)
+
+	for i, _ := range packetPath {
+		packet = packetStack[len(packetStack)-i-1]
+		direction := packetPath[len(packetPath)-i-1]
+		// sender Acknowledges
+		senderEndpoint, receiverEndpoint := suite.GetEndpoints(direction)
+
+		senderEndpoint.Chain.NextBlock()
+		err = senderEndpoint.UpdateClient()
+		suite.Require().NoError(err)
+		receiverEndpoint.Chain.NextBlock()
+		err = receiverEndpoint.UpdateClient()
+		suite.Require().NoError(err)
+		err = senderEndpoint.AcknowledgePacket(packet, ack)
+		suite.Require().NoError(err)
+	}
+
+}
+
+func (suite *HooksTestSuite) TestSwapErrorAfterPreSwapUnwind() {
+	// setup
 	accountB := suite.chainB.SenderAccount.GetAddress()
 
 	swapRouterAddr, crosschainAddr := suite.SetupCrosschainSwaps(ChainA, true)
@@ -1893,10 +1940,12 @@ func (suite *HooksTestSuite) TestSwapErrorAfterUnwind() {
 	initialToken := token0CB
 
 	// execute
+	// In this test, we will send chainC's native from chain B to chain A. The XCS contract will then send it back
+	// for unwinding before executing the swap. The swap is setup to fail at this step. The contract should then
+	// allow users to recover these tokens when the ack of the unwind is received.
 	senderChain := suite.GetChain(sender.Chain)
 
 	sentTokenBalance := senderChain.GetOsmosisApp().BankKeeper.GetBalance(senderChain.GetContext(), sender.address, initialToken)
-	fmt.Println("sentTokenBalance", sentTokenBalance)
 	suite.Require().True(sentTokenBalance.Amount.GTE(sendAmount))
 
 	// Generate swap instructions for the contract
@@ -1912,23 +1961,14 @@ func (suite *HooksTestSuite) TestSwapErrorAfterUnwind() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
-	var packet channeltypes.Packet
-	for _, direction := range []Direction{AtoB, BtoC, CtoA} {
-		packet, err = ibctesting.ParsePacketFromEvents(res.GetEvents())
-		suite.Require().NoError(err)
-		res = suite.RelayPacketNoAck(packet, direction)
-	}
-	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
-	suite.Require().NoError(err)
-
-	// sender Acknowledges
-	senderEndpoint, _ := suite.GetEndpoints(CtoA)
-	err = senderEndpoint.AcknowledgePacket(packet, ack)
-	suite.Require().NoError(err)
+	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
+	suite.SendAndAckPacketThroughPath([]Direction{AtoB, BtoC, CtoA}, packet)
 
 	recoverableQuery := fmt.Sprintf(`{"recoverable": {"addr": "%s"}}`, sender.address)
 	recoverableQueryResponse := suite.chainA.QueryContractJson(&suite.Suite, crosschainAddr, []byte(recoverableQuery))
-	suite.Require().Equal("test0", recoverableQueryResponse.Array())
+	suite.Require().Equal(1, len(recoverableQueryResponse.Array()))
+	suite.Require().Equal(sender.address.String(), recoverableQueryResponse.Get("0.recovery_addr").String())
+	suite.Require().Equal(sendAmount.String(), recoverableQueryResponse.Get("0.amount").String())
 
 }
 
