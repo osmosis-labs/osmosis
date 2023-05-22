@@ -12,7 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
@@ -570,20 +569,9 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 
 func (s *KeeperTestSuite) TestExtractSwappedPools() {
 	type param struct {
-		msgs                 []sdk.Msg
-		txFee                sdk.Coins
-		minGasPrices         sdk.DecCoins
-		gasLimit             uint64
-		isCheckTx            bool
-		baseDenomGas         bool
-		expectedNumOfPools   int
 		expectedSwappedPools []keeper.SwapToBackrun
+		expectedNumOfPools   int
 	}
-
-	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
-	priv0, _, addr0 := testdata.KeyTestPubAddr()
-	acc1 := s.App.AccountKeeper.NewAccountWithAddress(s.Ctx, addr0)
-	s.App.AccountKeeper.SetAccount(s.Ctx, acc1)
 
 	tests := []struct {
 		name       string
@@ -593,24 +581,6 @@ func (s *KeeperTestSuite) TestExtractSwappedPools() {
 		{
 			name: "Single Swap",
 			params: param{
-				msgs: []sdk.Msg{
-					&poolmanagertypes.MsgSwapExactAmountIn{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountInRoute{
-							{
-								PoolId:        28,
-								TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
-							},
-						},
-						TokenIn:           sdk.NewCoin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", sdk.NewInt(10000)),
-						TokenOutMinAmount: sdk.NewInt(10000),
-					},
-				},
-				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
-				minGasPrices:       sdk.NewDecCoins(),
-				gasLimit:           500000,
-				isCheckTx:          false,
-				baseDenomGas:       true,
 				expectedNumOfPools: 1,
 				expectedSwappedPools: []keeper.SwapToBackrun{
 					{
@@ -625,35 +595,6 @@ func (s *KeeperTestSuite) TestExtractSwappedPools() {
 		{
 			name: "Two Swaps",
 			params: param{
-				msgs: []sdk.Msg{
-					&poolmanagertypes.MsgSwapExactAmountIn{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountInRoute{
-							{
-								PoolId:        28,
-								TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
-							},
-						},
-						TokenIn:           sdk.NewCoin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", sdk.NewInt(10000)),
-						TokenOutMinAmount: sdk.NewInt(10000),
-					},
-					&poolmanagertypes.MsgSwapExactAmountIn{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountInRoute{
-							{
-								PoolId:        22,
-								TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
-							},
-						},
-						TokenIn:           sdk.NewCoin("uosmo", sdk.NewInt(10000)),
-						TokenOutMinAmount: sdk.NewInt(10000),
-					},
-				},
-				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
-				minGasPrices:       sdk.NewDecCoins(),
-				gasLimit:           500000,
-				isCheckTx:          false,
-				baseDenomGas:       true,
 				expectedNumOfPools: 2,
 				expectedSwappedPools: []keeper.SwapToBackrun{
 					{
@@ -673,24 +614,6 @@ func (s *KeeperTestSuite) TestExtractSwappedPools() {
 		{
 			name: "Single Swap Amount Out Test",
 			params: param{
-				msgs: []sdk.Msg{
-					&poolmanagertypes.MsgSwapExactAmountOut{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountOutRoute{
-							{
-								PoolId:       28,
-								TokenInDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
-							},
-						},
-						TokenOut:         sdk.NewCoin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", sdk.NewInt(10000)),
-						TokenInMaxAmount: sdk.NewInt(10000),
-					},
-				},
-				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
-				minGasPrices:       sdk.NewDecCoins(),
-				gasLimit:           500000,
-				isCheckTx:          false,
-				baseDenomGas:       true,
 				expectedNumOfPools: 1,
 				expectedSwappedPools: []keeper.SwapToBackrun{
 					{
@@ -705,32 +628,6 @@ func (s *KeeperTestSuite) TestExtractSwappedPools() {
 		{
 			name: "Single Swap with multiple hops (swapOut)",
 			params: param{
-				msgs: []sdk.Msg{
-					&poolmanagertypes.MsgSwapExactAmountOut{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountOutRoute{
-							{
-								PoolId:       28,
-								TokenInDenom: "atom",
-							},
-							{
-								PoolId:       30,
-								TokenInDenom: "weth",
-							},
-							{
-								PoolId:       35,
-								TokenInDenom: "bitcoin",
-							},
-						},
-						TokenOut:         sdk.NewCoin("akash", sdk.NewInt(10000)),
-						TokenInMaxAmount: sdk.NewInt(10000),
-					},
-				},
-				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
-				minGasPrices:       sdk.NewDecCoins(),
-				gasLimit:           500000,
-				isCheckTx:          false,
-				baseDenomGas:       true,
 				expectedNumOfPools: 3,
 				expectedSwappedPools: []keeper.SwapToBackrun{
 					{
@@ -755,36 +652,6 @@ func (s *KeeperTestSuite) TestExtractSwappedPools() {
 		{
 			name: "Single Swap with multiple hops (swapIn)",
 			params: param{
-				msgs: []sdk.Msg{
-					&poolmanagertypes.MsgSwapExactAmountIn{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountInRoute{
-							{
-								PoolId:        28,
-								TokenOutDenom: "atom",
-							},
-							{
-								PoolId:        30,
-								TokenOutDenom: "weth",
-							},
-							{
-								PoolId:        35,
-								TokenOutDenom: "bitcoin",
-							},
-							{
-								PoolId:        36,
-								TokenOutDenom: "juno",
-							},
-						},
-						TokenIn:           sdk.NewCoin("akash", sdk.NewInt(10000)),
-						TokenOutMinAmount: sdk.NewInt(1),
-					},
-				},
-				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
-				minGasPrices:       sdk.NewDecCoins(),
-				gasLimit:           500000,
-				isCheckTx:          false,
-				baseDenomGas:       true,
 				expectedNumOfPools: 4,
 				expectedSwappedPools: []keeper.SwapToBackrun{
 					{
@@ -814,32 +681,6 @@ func (s *KeeperTestSuite) TestExtractSwappedPools() {
 		{
 			name: "Single Swap with multiple hops (gamm msg swapOut)",
 			params: param{
-				msgs: []sdk.Msg{
-					&gammtypes.MsgSwapExactAmountOut{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountOutRoute{
-							{
-								PoolId:       28,
-								TokenInDenom: "atom",
-							},
-							{
-								PoolId:       30,
-								TokenInDenom: "weth",
-							},
-							{
-								PoolId:       35,
-								TokenInDenom: "bitcoin",
-							},
-						},
-						TokenOut:         sdk.NewCoin("akash", sdk.NewInt(10000)),
-						TokenInMaxAmount: sdk.NewInt(10000),
-					},
-				},
-				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
-				minGasPrices:       sdk.NewDecCoins(),
-				gasLimit:           500000,
-				isCheckTx:          false,
-				baseDenomGas:       true,
 				expectedNumOfPools: 3,
 				expectedSwappedPools: []keeper.SwapToBackrun{
 					{
@@ -864,36 +705,6 @@ func (s *KeeperTestSuite) TestExtractSwappedPools() {
 		{
 			name: "Single Swap with multiple hops (gamm swapIn)",
 			params: param{
-				msgs: []sdk.Msg{
-					&gammtypes.MsgSwapExactAmountIn{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountInRoute{
-							{
-								PoolId:        28,
-								TokenOutDenom: "atom",
-							},
-							{
-								PoolId:        30,
-								TokenOutDenom: "weth",
-							},
-							{
-								PoolId:        35,
-								TokenOutDenom: "bitcoin",
-							},
-							{
-								PoolId:        36,
-								TokenOutDenom: "juno",
-							},
-						},
-						TokenIn:           sdk.NewCoin("akash", sdk.NewInt(10000)),
-						TokenOutMinAmount: sdk.NewInt(1),
-					},
-				},
-				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
-				minGasPrices:       sdk.NewDecCoins(),
-				gasLimit:           500000,
-				isCheckTx:          false,
-				baseDenomGas:       true,
 				expectedNumOfPools: 4,
 				expectedSwappedPools: []keeper.SwapToBackrun{
 					{
@@ -924,45 +735,18 @@ func (s *KeeperTestSuite) TestExtractSwappedPools() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.Ctx = s.Ctx.WithIsCheckTx(tc.params.isCheckTx)
-			s.Ctx = s.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
-			s.Ctx = s.Ctx.WithMinGasPrices(tc.params.minGasPrices)
-			msgs := tc.params.msgs
 
-			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
-			signerData := authsigning.SignerData{
-				ChainID:       s.Ctx.ChainID(),
-				AccountNumber: accNums[0],
-				Sequence:      accSeqs[0],
+			for _, swap := range tc.params.expectedSwappedPools {
+				s.App.ProtoRevKeeper.AddSwapsToSwapsToBackrun(s.Ctx, []types.Trade{{Pool: swap.PoolId, TokenIn: swap.TokenInDenom, TokenOut: swap.TokenOutDenom}})
 			}
-			gasLimit := tc.params.gasLimit
-			sigV2, _ := clienttx.SignWithPrivKey(
-				1,
-				signerData,
-				txBuilder,
-				privs[0],
-				s.clientCtx.TxConfig,
-				accSeqs[0],
-			)
-			err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, addr0, tc.params.txFee)
-			s.Require().NoError(err)
 
-			// Can't use test suite BuildTx because it doesn't allow for multiple msgs
-			err = txBuilder.SetMsgs(msgs...)
-			s.Require().NoError(err)
-			err = txBuilder.SetSignatures(sigV2)
-			s.Require().NoError(err)
-			txBuilder.SetMemo("")
-			txBuilder.SetFeeAmount(tc.params.txFee)
-			txBuilder.SetGasLimit(gasLimit)
-
-			tx := txBuilder.GetTx()
-
-			swappedPools := keeper.ExtractSwappedPools(tx)
+			swappedPools := s.App.ProtoRevKeeper.ExtractSwappedPools(s.Ctx)
 			if tc.expectPass {
 				s.Require().Equal(tc.params.expectedNumOfPools, len(swappedPools))
 				s.Require().Equal(tc.params.expectedSwappedPools, swappedPools)
 			}
+
+			s.App.ProtoRevKeeper.DeleteSwapsToBackrun(s.Ctx)
 		})
 	}
 }
