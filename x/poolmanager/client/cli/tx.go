@@ -189,31 +189,6 @@ func NewMsgNewSplitRouteSwapExactAmountIn(clientCtx client.Context, args []strin
 	}, nil
 }
 
-func NewBuildSwapExactAmountInMsg(clientCtx client.Context, tokenInStr, tokenOutMinAmtStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	routes, err := swapAmountInRoutes(fs)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	tokenIn, err := sdk.ParseCoinNormalized(tokenInStr)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	tokenOutMinAmt, ok := sdk.NewIntFromString(tokenOutMinAmtStr)
-	if !ok {
-		return txf, nil, fmt.Errorf("invalid token out min amount, %s", tokenOutMinAmtStr)
-	}
-	msg := &types.MsgSwapExactAmountIn{
-		Sender:            clientCtx.GetFromAddress().String(),
-		Routes:            routes,
-		TokenIn:           tokenIn,
-		TokenOutMinAmount: tokenOutMinAmt,
-	}
-
-	return txf, msg, nil
-}
-
 func NewBuildSwapExactAmountOutMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
 	tokenOutStr, tokenInMaxAmountStr := args[0], args[1]
 	routes, err := swapAmountOutRoutes(fs)
