@@ -31,6 +31,7 @@ func (h Hooks) AfterCFMMPoolCreated(ctx sdk.Context, sender sdk.AccAddress, pool
 
 // AfterJoinPool stores swaps to be checked by protorev given the coins entered into the pool.
 func (h Hooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount sdk.Int) {
+	// Checked to avoid future unintended behavior based on how the hook is called
 	if len(enterCoins) != 1 {
 		return
 	}
@@ -53,8 +54,11 @@ func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint
 
 // AfterCFMMSwap stores swaps to be checked by protorev given the coins swapped in the pool.
 func (h Hooks) AfterCFMMSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
-	// As of v15, it is safe to assume only one input token and one output token
-	// TODO: Probably generalize to allow for more swap denoms
+	// Checked to avoid future unintended behavior based on how the hook is called
+	if len(input) != 1 || len(output) != 1 {
+		return
+	}
+
 	h.k.storeSwap(ctx, poolId, input[0].Denom, output[0].Denom)
 }
 
@@ -77,8 +81,11 @@ func (h Hooks) AfterLastPoolPositionRemoved(ctx sdk.Context, sender sdk.AccAddre
 
 // AfterConcentratedPoolSwap stores swaps to be checked by protorev given the coins swapped in the pool.
 func (h Hooks) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
-	// As of v15, it is safe to assume only one input token and one output token
-	// TODO: Probably generalize to allow for more swap denoms
+	// Checked to avoid future unintended behavior based on how the hook is called
+	if len(input) != 1 || len(output) != 1 {
+		return
+	}
+
 	h.k.storeSwap(ctx, poolId, input[0].Denom, output[0].Denom)
 }
 
