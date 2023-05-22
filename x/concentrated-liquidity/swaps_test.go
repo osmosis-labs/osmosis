@@ -1597,29 +1597,19 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 	}
 }
 
-func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_NoPositions() {
+func (s *KeeperTestSuite) TestSwap_NoPositions() {
 	s.SetupTest()
-
 	pool := s.PrepareConcentratedPool()
-
 	// perform swap
-	_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
+	_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
 		s.Ctx, s.TestAccs[0], pool,
 		DefaultCoin0, DefaultCoin1.Denom,
 		sdk.ZeroDec(), sdk.ZeroDec(),
 	)
-
 	s.Require().Error(err)
 	s.Require().ErrorIs(err, types.NoSpotPriceWhenNoLiquidityError{PoolId: pool.GetId()})
-}
 
-func (s *KeeperTestSuite) TestSwapInAmtGivenOut_NoPositions() {
-	s.SetupTest()
-
-	pool := s.PrepareConcentratedPool()
-
-	// perform swap
-	_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
+	_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
 		s.Ctx, s.TestAccs[0], pool,
 		DefaultCoin0, DefaultCoin1.Denom,
 		sdk.ZeroDec(), sdk.ZeroDec(),
