@@ -2288,15 +2288,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn_NonMutative() {
 
 			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
-
-			feeAccumValue := feeAccum.GetValue()
-			s.Require().Equal(0, feeAccumValue.Len())
-			s.Require().Equal(1,
-				additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
-					osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
-					osmomath.BigDecFromSDKDec(feeAccum.GetValue().AmountOf(test.tokenIn.Denom)),
-				),
-			)
+			s.Require().Equal(0, feeAccum.GetValue().Len())
 		})
 	}
 }
@@ -2344,15 +2336,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
 
 			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
-
-			feeAccumValue := feeAccum.GetValue()
-			s.Require().Equal(0, feeAccumValue.Len())
-			s.Require().Equal(1,
-				additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
-					osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
-					osmomath.BigDecFromSDKDec(feeAccum.GetValue().AmountOf(test.tokenIn.Denom)),
-				),
-			)
+			s.Require().Equal(0, feeAccum.GetValue().Len())
 		})
 	}
 }
