@@ -891,15 +891,10 @@ func (s *KeeperTestSuite) setUpPools() {
 
 	// Create a concentrated liquidity pool for epoch_hook testing
 	// Pool 49
-	clPoolOne := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("epochTwo", "uosmo")
-
-	// Provide liquidity to the concentrated liquidity pool
-	clPoolOneLiquidity := sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(1000)), sdk.NewCoin("uosmo", sdk.NewInt(2000)))
-	err := s.App.BankKeeper.SendCoins(s.Ctx, s.TestAccs[0], clPoolOne.GetAddress(), clPoolOneLiquidity)
-	s.Require().NoError(err)
+	s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("epochTwo", "uosmo")
 
 	// Set all of the pool info into the stores
-	err = s.App.ProtoRevKeeper.UpdatePools(s.Ctx)
+	err := s.App.ProtoRevKeeper.UpdatePools(s.Ctx)
 	s.Require().NoError(err)
 }
 
