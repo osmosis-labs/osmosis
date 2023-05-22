@@ -1456,6 +1456,13 @@ func (s *KeeperTestSuite) preparePoolAndDefaultPosition() types.ConcentratedPool
 	return pool
 }
 
+func (s *KeeperTestSuite) preparePoolAndDefaultPositions(test SwapTest) types.ConcentratedPoolExtension {
+	pool := s.preparePoolAndDefaultPosition()
+	s.setupSecondPosition(test, pool)
+	pool, _ = s.clk.GetConcentratedPoolById(s.Ctx, pool.GetId())
+	return pool
+}
+
 func (s *KeeperTestSuite) preparePoolWithCustSpread(spread sdk.Dec) types.ConcentratedPoolExtension {
 	clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
 	clParams.AuthorizedSpreadFactors = append(clParams.AuthorizedSpreadFactors, spread)
@@ -2177,23 +2184,19 @@ func (s *KeeperTestSuite) TestComputeOutAmtGivenIn() {
 		test := test
 		s.Run(name, func() {
 			s.setupAndFundSwapTest()
-			pool := s.PrepareConcentratedPool()
-			s.SetupDefaultPosition(pool.GetId())
-			s.setupSecondPosition(test, pool)
-
-			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
+			poolBeforeCalc := s.preparePoolAndDefaultPositions(test)
 
 			// perform calc
-			_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.ComputeOutAmtGivenIn(
+			_, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.ComputeOutAmtGivenIn(
 				s.Ctx,
-				pool.GetId(),
+				poolBeforeCalc.GetId(),
 				test.tokenIn, test.tokenOutDenom,
 				test.spreadFactor, test.priceLimit)
+			s.Require().NoError(err)
 
 			// check that the pool has not been modified after performing calc
 			s.assertPoolNotModified(poolBeforeCalc)
-			s.assertFeeAccum(test, pool.GetId())
+			s.assertFeeAccum(test, poolBeforeCalc.GetId())
 		})
 	}
 }
@@ -2206,14 +2209,10 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn_NonMutative() {
 		test := test
 		s.Run(name, func() {
 			s.setupAndFundSwapTest()
-			pool := s.preparePoolAndDefaultPosition()
-			s.setupSecondPosition(test, pool)
-
-			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
+			poolBeforeCalc := s.preparePoolAndDefaultPositions(test)
 
 			// perform calc
-			_, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(
+			_, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(
 				s.Ctx,
 				poolBeforeCalc,
 				test.tokenIn, test.tokenOutDenom,
@@ -2222,7 +2221,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn_NonMutative() {
 
 			// check that the pool has not been modified after performing calc
 			s.assertPoolNotModified(poolBeforeCalc)
-			s.assertZeroFees(pool.GetId())
+			s.assertZeroFees(poolBeforeCalc.GetId())
 		})
 	}
 }
@@ -2248,14 +2247,10 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
 		test := test
 		s.Run(name, func() {
 			s.setupAndFundSwapTest()
-			pool := s.preparePoolAndDefaultPosition()
-			s.setupSecondPosition(test, pool)
-
-			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
+			poolBeforeCalc := s.preparePoolAndDefaultPositions(test)
 
 			// perform calc
-			_, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(
+			_, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(
 				s.Ctx,
 				poolBeforeCalc,
 				test.tokenIn, test.tokenOutDenom,
@@ -2264,7 +2259,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
 
 			// check that the pool has not been modified after performing calc
 			s.assertPoolNotModified(poolBeforeCalc)
-			s.assertZeroFees(pool.GetId())
+			s.assertZeroFees(poolBeforeCalc.GetId())
 		})
 	}
 }
@@ -2278,22 +2273,18 @@ func (s *KeeperTestSuite) TestComputeInAmtGivenOut() {
 		test := test
 		s.Run(name, func() {
 			s.setupAndFundSwapTest()
-			pool := s.preparePoolAndDefaultPosition()
-			s.setupSecondPosition(test, pool)
-
-			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
+			poolBeforeCalc := s.preparePoolAndDefaultPositions(test)
 
 			// perform calc
-			_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
+			_, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
 				s.Ctx,
 				test.tokenOut, test.tokenInDenom,
-				test.spreadFactor, test.priceLimit, pool.GetId())
+				test.spreadFactor, test.priceLimit, poolBeforeCalc.GetId())
 			s.Require().NoError(err)
 
 			// check that the pool has not been modified after performing calc
 			s.assertPoolNotModified(poolBeforeCalc)
-			s.assertFeeAccum(test, pool.GetId())
+			s.assertFeeAccum(test, poolBeforeCalc.GetId())
 		})
 	}
 }
@@ -2304,24 +2295,19 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 	for name, test := range tests {
 		s.Run(name, func() {
 			s.setupAndFundSwapTest()
-			pool := s.preparePoolAndDefaultPosition()
-			s.setupSecondPosition(test, pool)
-
-			// mark pool state and user balance before swap
-			poolBefore, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
+			poolBefore := s.preparePoolAndDefaultPositions(test)
 			userBalanceBeforeSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
 			poolBalanceBeforeSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, poolBefore.GetAddress())
 
 			// system under test
 			firstTokenIn, firstTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
-				s.Ctx, s.TestAccs[0], pool,
+				s.Ctx, s.TestAccs[0], poolBefore,
 				test.tokenIn, test.tokenOutDenom,
 				DefaultZeroSpreadFactor, test.priceLimit)
 			s.Require().NoError(err)
 
 			secondTokenIn, secondTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
-				s.Ctx, s.TestAccs[0], pool,
+				s.Ctx, s.TestAccs[0], poolBefore,
 				firstTokenOut, firstTokenIn.Denom,
 				DefaultZeroSpreadFactor, sdk.ZeroDec(),
 			)
@@ -2385,24 +2371,19 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapInAmtGivenOut() {
 	for name, test := range tests {
 		s.Run(name, func() {
 			s.setupAndFundSwapTest()
-			pool := s.preparePoolAndDefaultPosition()
-			s.setupSecondPosition(test, pool)
-
-			// mark pool state and user balance before swap
-			poolBefore, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
+			poolBefore := s.preparePoolAndDefaultPositions(test)
 			userBalanceBeforeSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
 			poolBalanceBeforeSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, poolBefore.GetAddress())
 
 			// system under test
 			firstTokenIn, firstTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
-				s.Ctx, s.TestAccs[0], pool,
+				s.Ctx, s.TestAccs[0], poolBefore,
 				test.tokenOut, test.tokenInDenom,
 				DefaultZeroSpreadFactor, test.priceLimit)
 			s.Require().NoError(err)
 
 			secondTokenIn, secondTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
-				s.Ctx, s.TestAccs[0], pool,
+				s.Ctx, s.TestAccs[0], poolBefore,
 				firstTokenIn, firstTokenOut.Denom,
 				DefaultZeroSpreadFactor, sdk.ZeroDec(),
 			)
