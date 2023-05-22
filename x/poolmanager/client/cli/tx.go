@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -21,6 +22,20 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
+
+type Routes struct {
+	Route []SwapAmountInSplitRoute `json:"Route"`
+}
+
+type SwapAmountInSplitRoute struct {
+	Pools         []SwapAmountInRoute `json:"SwapAmountInRoute"`
+	TokenInAmount int64               `json:"TokenInAmount"`
+}
+
+type SwapAmountInRoute struct {
+	PoolID        string `json:"poolId"`
+	TokenOutDenom string `json:"TokenOutDenom"`
+}
 
 func NewTxCmd() *cobra.Command {
 	txCmd := osmocli.TxIndexCmd(types.ModuleName)
@@ -61,12 +76,9 @@ func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOu
 
 func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteSwapExactAmountIn) {
 	return &osmocli.TxCliDesc{
-		Use:   "split-route-swap-exact-amount-in [token-in-denom] [token-out-min-amount]",
-		Short: "split route swap exact amount in",
-		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
-			"Routes": osmocli.FlagOnlyParser(swapAmountInRoutes),
-		},
-		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
+		Use:              "split-route-swap-exact-amount-in [token-in-denom] [token-out-min-amount] [routes]",
+		Short:            "split route swap exact amount in",
+		ParseAndBuildMsg: NewMsgNewSplitRouteSwapExactAmountIn,
 	}, &types.MsgSplitRouteSwapExactAmountIn{}
 }
 
@@ -79,6 +91,47 @@ func NewSplitRouteSwapExactAmountOut() (*osmocli.TxCliDesc, *types.MsgSplitRoute
 		},
 		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
 	}, &types.MsgSplitRouteSwapExactAmountOut{}
+}
+
+func NewMsgNewSplitRouteSwapExactAmountIn(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
+	tokenInDenomStr, tokenOutMinAmountStr := args[0], args[1]
+
+	tokenOutMinAmount, ok := sdk.NewIntFromString(tokenOutMinAmountStr)
+	if !ok {
+		return nil, errors.New("invalid token in max amount")
+	}
+
+	inputJSON := args[2]
+
+	var splitRoute Routes
+	err := json.Unmarshal([]byte(inputJSON), &splitRoute)
+	if err != nil {
+		return nil, err
+	}
+
+	var splitRouteProto []types.SwapAmountInSplitRoute
+	for _, route := range splitRoute.Route {
+		protoRoute := types.SwapAmountInSplitRoute{
+			TokenInAmount: sdk.NewInt(route.TokenInAmount),
+		}
+		for _, pool := range route.Pools {
+			poolId, _ := strconv.ParseUint(pool.PoolID, 10, 64)
+
+			protoPool := types.SwapAmountInRoute{
+				PoolId:        poolId,
+				TokenOutDenom: pool.TokenOutDenom,
+			}
+			protoRoute.Pools = append(protoRoute.Pools, protoPool)
+		}
+		splitRouteProto = append(splitRouteProto, protoRoute)
+	}
+
+	return &types.MsgSplitRouteSwapExactAmountIn{
+		Sender:            clientCtx.GetFromAddress().String(),
+		TokenInDenom:      tokenInDenomStr,
+		TokenOutMinAmount: tokenOutMinAmount,
+		Routes:            splitRouteProto,
+	}, nil
 }
 
 func NewBuildSwapExactAmountInMsg(clientCtx client.Context, tokenInStr, tokenOutMinAmtStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
