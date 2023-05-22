@@ -73,6 +73,7 @@ func BenchmarkFourHopHotRouteArb(b *testing.B) {
 
 func (s *KeeperTestSuite) TestAnteHandle() {
 	type param struct {
+		trades              []types.Trade
 		msgs                []sdk.Msg
 		txFee               sdk.Coins
 		minGasPrices        sdk.DecCoins
@@ -100,6 +101,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 		{
 			name: "Random Msg - Expect Nothing to Happen",
 			params: param{
+				trades:              []types.Trade{},
 				msgs:                []sdk.Msg{testdata.NewTestMsg(addr0)},
 				txFee:               sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
 				minGasPrices:        sdk.NewDecCoins(),
@@ -115,6 +117,13 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 		{
 			name: "No Arb",
 			params: param{
+				trades: []types.Trade{
+					{
+						Pool:     12,
+						TokenOut: "akash",
+						TokenIn:  "juno",
+					},
+				},
 				msgs: []sdk.Msg{
 					&poolmanagertypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
@@ -142,6 +151,13 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 		{
 			name: "Mainnet Arb (Block: 5905150) - Highest Liquidity Pool Build",
 			params: param{
+				trades: []types.Trade{
+					{
+						Pool:     23,
+						TokenOut: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
+						TokenIn:  "ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0",
+					},
+				},
 				msgs: []sdk.Msg{
 					&poolmanagertypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
@@ -174,6 +190,13 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 		{
 			name: "Mainnet Arb Route - Multi Asset, Same Weights (Block: 6906570) - Hot Route Build - Atom Arb",
 			params: param{
+				trades: []types.Trade{
+					{
+						Pool:     33,
+						TokenOut: "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293",
+						TokenIn:  "Atom",
+					},
+				},
 				msgs: []sdk.Msg{
 					&poolmanagertypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
@@ -210,6 +233,13 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 		{
 			name: "Stableswap Test Arb Route - Hot Route Build",
 			params: param{
+				trades: []types.Trade{
+					{
+						Pool:     29,
+						TokenOut: types.OsmosisDenomination,
+						TokenIn:  "usdc",
+					},
+				},
 				msgs: []sdk.Msg{
 					&poolmanagertypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
@@ -246,6 +276,13 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 		{
 			name: "Four Pool Arb Route - Hot Route Build",
 			params: param{
+				trades: []types.Trade{
+					{
+						Pool:     37,
+						TokenOut: "test/2",
+						TokenIn:  "Atom",
+					},
+				},
 				msgs: []sdk.Msg{
 					&poolmanagertypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
@@ -282,6 +319,13 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 		{
 			name: "Two Pool Arb Route - Hot Route Build",
 			params: param{
+				trades: []types.Trade{
+					{
+						Pool:     38,
+						TokenOut: "test/3",
+						TokenIn:  types.OsmosisDenomination,
+					},
+				},
 				msgs: []sdk.Msg{
 					&poolmanagertypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
@@ -322,6 +366,13 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 		{ // This test the tx pool points limit caps the number of iterations
 			name: "Doomsday Test - Stableswap - Tx Pool Points Limit",
 			params: param{
+				trades: []types.Trade{
+					{
+						Pool:     41,
+						TokenOut: "usdc",
+						TokenIn:  "busd",
+					},
+				},
 				msgs: []sdk.Msg{
 					&poolmanagertypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
@@ -362,6 +413,13 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 		{ // This test the block pool points limit caps the number of iterations within a tx
 			name: "Doomsday Test - Stableswap - Block Pool Points Limit - Within a tx",
 			params: param{
+				trades: []types.Trade{
+					{
+						Pool:     41,
+						TokenOut: "usdc",
+						TokenIn:  "busd",
+					},
+				},
 				msgs: []sdk.Msg{
 					&poolmanagertypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
@@ -402,6 +460,13 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 		{ // This test the block pool points limit caps the number of txs processed if already reached the limit
 			name: "Doomsday Test - Stableswap - Block Pool Points Limit Already Reached - New tx",
 			params: param{
+				trades: []types.Trade{
+					{
+						Pool:     41,
+						TokenOut: "usdc",
+						TokenIn:  "busd",
+					},
+				},
 				msgs: []sdk.Msg{
 					&poolmanagertypes.MsgSwapExactAmountIn{
 						Sender: addr0.String(),
@@ -488,8 +553,11 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 			}
 
 			if strings.Contains(tc.name, "Doomsday") {
+				singleMsg := tc.params.msgs[0]
+				singleTrade := tc.params.trades[0]
 				for i := 0; i < 100; i++ {
-					msgs = append(msgs, tc.params.msgs...)
+					msgs = append(msgs, singleMsg)
+					tc.params.trades = append(tc.params.trades, singleTrade)
 				}
 
 				err := txBuilder.SetMsgs(msgs...)
@@ -512,6 +580,10 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 			s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(tc.params.gasLimit))
 			halfGas := tc.params.gasLimit / 2
 			s.Ctx.GasMeter().ConsumeGas(halfGas, "consume half gas")
+
+			// Set pools to backrun
+			s.App.AppKeepers.ProtoRevKeeper.AddSwapsToSwapsToBackrun(s.Ctx, tc.params.trades)
+
 			gasBefore := s.Ctx.GasMeter().GasConsumed()
 			gasLimitBefore := s.Ctx.GasMeter().Limit()
 
@@ -554,6 +626,8 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 			} else {
 				s.Require().Error(err)
 			}
+
+			s.App.AppKeepers.ProtoRevKeeper.DeleteSwapsToBackrun(s.Ctx)
 
 			// Reset the max points per tx and block
 			if strings.Contains(tc.name, "Tx Pool Points Limit") {
