@@ -285,12 +285,12 @@ func (e SqrtPriceNegativeError) Error() string {
 	return fmt.Sprintf("provided sqrt price (%s) must be positive", e.ProvidedSqrtPrice)
 }
 
-type InvalidSwapFeeError struct {
+type InvalidSpreadFactorError struct {
 	ActualFee sdk.Dec
 }
 
-func (e InvalidSwapFeeError) Error() string {
-	return fmt.Sprintf("invalid swap fee(%s), must be in [0, 1) range", e.ActualFee)
+func (e InvalidSpreadFactorError) Error() string {
+	return fmt.Sprintf("invalid spread factor(%s), must be in [0, 1) range", e.ActualFee)
 }
 
 type PositionAlreadyExistsError struct {
@@ -365,13 +365,13 @@ func (e BalancerRecordNotClearedError) Error() string {
 	return fmt.Sprintf("balancer record was not cleared after reward claiming. CL pool id (%d), Balancer pool ID (%d), Uptime index (%d)", e.ClPoolId, e.BalancerPoolId, e.UptimeIndex)
 }
 
-type NonPositiveIncentiveAmountError struct {
-	PoolId          uint64
-	IncentiveAmount sdk.Dec
+type InvalidIncentiveCoinError struct {
+	PoolId        uint64
+	IncentiveCoin sdk.Coin
 }
 
-func (e NonPositiveIncentiveAmountError) Error() string {
-	return fmt.Sprintf("incentive amount must be position (nonzero and nonnegative). Pool id (%d), incentive amount (%s)", e.PoolId, e.IncentiveAmount)
+func (e InvalidIncentiveCoinError) Error() string {
+	return fmt.Sprintf("incentive coin denom must be valid and have non negative amount Pool id (%d), incentive coin (%s)", e.PoolId, e.IncentiveCoin)
 }
 
 type NonPositiveEmissionRateError struct {
@@ -681,13 +681,13 @@ func (e UnauthorizedQuoteDenomError) Error() string {
 	return fmt.Sprintf("attempted to create pool with unauthorized quote denom (%s), must be one of the following: (%s)", e.ProvidedQuoteDenom, e.AuthorizedQuoteDenoms)
 }
 
-type UnauthorizedSwapFeeError struct {
-	ProvidedSwapFee    sdk.Dec
-	AuthorizedSwapFees []sdk.Dec
+type UnauthorizedSpreadFactorError struct {
+	ProvidedSpreadFactor    sdk.Dec
+	AuthorizedSpreadFactors []sdk.Dec
 }
 
-func (e UnauthorizedSwapFeeError) Error() string {
-	return fmt.Sprintf("attempted to create pool with unauthorized swap fee (%s), must be one of the following: (%s)", e.ProvidedSwapFee, e.AuthorizedSwapFees)
+func (e UnauthorizedSpreadFactorError) Error() string {
+	return fmt.Sprintf("attempted to create pool with unauthorized spread factor (%s), must be one of the following: (%s)", e.ProvidedSpreadFactor, e.AuthorizedSpreadFactors)
 }
 
 type UnauthorizedTickSpacingError struct {
@@ -797,4 +797,37 @@ type NumCoinsError struct {
 
 func (e NumCoinsError) Error() string {
 	return fmt.Sprintf("num coins provided (%d) must be 2 for a full range position", e.NumCoins)
+}
+
+type CoinLengthError struct {
+	MaxLength int
+	Length    int
+}
+
+func (e CoinLengthError) Error() string {
+	return fmt.Sprintf("coin length (%d) must be less than or equal to max length (%d)", e.Length, e.MaxLength)
+}
+
+type RanOutOfTicksForPoolError struct {
+	PoolId uint64
+}
+
+func (e RanOutOfTicksForPoolError) Error() string {
+	return fmt.Sprintf("ran out of ticks for pool (%d) during swap", e.PoolId)
+}
+
+type SqrtRootCalculationError struct {
+	SqrtPriceLimit sdk.Dec
+}
+
+func (e SqrtRootCalculationError) Error() string {
+	return fmt.Sprintf("issue calculating square root of price limit %s", e.SqrtPriceLimit)
+}
+
+type TickToSqrtPriceConversionError struct {
+	NextTick int64
+}
+
+func (e TickToSqrtPriceConversionError) Error() string {
+	return fmt.Sprintf("could not convert next tick  to nextSqrtPrice (%v)", e.NextTick)
 }

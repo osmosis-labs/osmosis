@@ -17,7 +17,8 @@ import (
 // Fails if the lp tokens are locked (must instead utilize UnlockAndMigrate function in the superfluid module)
 func (k Keeper) MigrateUnlockedPositionFromBalancerToConcentrated(ctx sdk.Context,
 	sender sdk.AccAddress, sharesToMigrate sdk.Coin,
-	tokenOutMins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, poolIdLeaving, poolIdEntering uint64, err error) {
+	tokenOutMins sdk.Coins,
+) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, poolIdLeaving, poolIdEntering uint64, err error) {
 	// Get the balancer poolId by parsing the gamm share denom.
 	poolIdLeaving, err = types.GetPoolIdFromShareDenom(sharesToMigrate.Denom)
 	if err != nil {
@@ -31,7 +32,7 @@ func (k Keeper) MigrateUnlockedPositionFromBalancerToConcentrated(ctx sdk.Contex
 	}
 
 	// Get the concentrated pool from the message and type cast it to ConcentratedPoolExtension.
-	concentratedPool, err := k.concentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, poolIdEntering)
+	concentratedPool, err := k.concentratedLiquidityKeeper.GetConcentratedPoolById(ctx, poolIdEntering)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
@@ -194,7 +195,7 @@ func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConce
 		var clPool cltypes.ConcentratedPoolExtension
 		if record.ClPoolId != 0 {
 			// Ensure the provided ClPoolId exists and that it is of type concentrated.
-			clPool, err = k.concentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, record.ClPoolId)
+			clPool, err = k.concentratedLiquidityKeeper.GetConcentratedPoolById(ctx, record.ClPoolId)
 			if err != nil {
 				return err
 			}

@@ -32,7 +32,7 @@ var (
 	baseGenesis = genesis.GenesisState{
 		Params: types.Params{
 			AuthorizedTickSpacing:        []uint64{1, 10, 100, 1000},
-			AuthorizedSwapFees:           []sdk.Dec{sdk.MustNewDecFromStr("0.0001"), sdk.MustNewDecFromStr("0.0003"), sdk.MustNewDecFromStr("0.0005")},
+			AuthorizedSpreadFactors:      []sdk.Dec{sdk.MustNewDecFromStr("0.0001"), sdk.MustNewDecFromStr("0.0003"), sdk.MustNewDecFromStr("0.0005")},
 			AuthorizedQuoteDenoms:        []string{ETH, USDC},
 			BalancerSharesRewardDiscount: types.DefaultBalancerSharesDiscount,
 			AuthorizedUptimes:            types.DefaultAuthorizedUptimes,
@@ -41,9 +41,9 @@ var (
 	}
 	testCoins    = sdk.NewDecCoins(cl.HundredFooCoins)
 	testTickInfo = model.TickInfo{
-		LiquidityGross:   sdk.OneDec(),
-		LiquidityNet:     sdk.OneDec(),
-		FeeGrowthOutside: testCoins,
+		LiquidityGross: sdk.OneDec(),
+		LiquidityNet:   sdk.OneDec(),
+		FeeGrowthOppositeDirectionOfLastTraversal: testCoins,
 		UptimeTrackers: []model.UptimeTracker{
 			{
 				UptimeGrowthOutside: testCoins,
@@ -65,10 +65,10 @@ var (
 		JoinTime:   defaultBlockTime,
 	}
 	testFeeAccumRecord = accum.Record{
-		NumShares:        sdk.OneDec(),
-		InitAccumValue:   sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
-		UnclaimedRewards: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(5))),
-		Options:          nil,
+		NumShares:             sdk.OneDec(),
+		AccumValuePerShare:    sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+		UnclaimedRewardsTotal: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(5))),
+		Options:               nil,
 	}
 )
 
@@ -741,7 +741,6 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 					s.Require().Equal(incentiveRecord.IncentiveRecordBody.RemainingAmount.String(), expectedPoolData.IncentiveRecords[i].IncentiveRecordBody.RemainingAmount.String())
 					s.Require().True(incentiveRecord.IncentiveRecordBody.StartTime.Equal(expectedPoolData.IncentiveRecords[i].IncentiveRecordBody.StartTime))
 				}
-
 			}
 
 			// Validate positions.

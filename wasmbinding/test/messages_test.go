@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v15/wasmbinding"
 	"github.com/osmosis-labs/osmosis/v15/wasmbinding/bindings"
 	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
@@ -14,6 +15,7 @@ import (
 )
 
 func TestCreateDenom(t *testing.T) {
+	apptesting.SkipIfWSL(t)
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
 
@@ -62,6 +64,7 @@ func TestCreateDenom(t *testing.T) {
 }
 
 func TestChangeAdmin(t *testing.T) {
+	apptesting.SkipIfWSL(t)
 	const validDenom = "validdenom"
 
 	tokenCreator := RandomAccountAddress()
@@ -166,6 +169,7 @@ func TestChangeAdmin(t *testing.T) {
 }
 
 func TestMint(t *testing.T) {
+	apptesting.SkipIfWSL(t)
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
 
@@ -285,6 +289,7 @@ func TestMint(t *testing.T) {
 }
 
 func TestBurn(t *testing.T) {
+	apptesting.SkipIfWSL(t)
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
 

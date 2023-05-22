@@ -83,6 +83,19 @@ ifeq (,$(findstring nostrip,$(OSMOSIS_BUILD_OPTIONS)))
   BUILD_FLAGS += -trimpath
 endif
 
+# Note that this skips certain tests that are not supported on WSL
+# This is a workaround to enable quickly running full unit test suite locally
+# on WSL without failures. The failures are stemming from trying to upload
+# wasm code. An OS permissioning issue.
+is_wsl := $(shell uname -a | grep -i Microsoft)
+ifeq ($(is_wsl),)
+    # Not in WSL
+    SKIP_WASM_WSL_TESTS := "false"
+else
+    # In WSL
+    SKIP_WASM_WSL_TESTS := "true"
+endif
+
 ###############################################################################
 ###                                  Build                                  ###
 ###############################################################################
@@ -252,7 +265,7 @@ test: test-unit test-build
 test-all: test-race test-cover
 
 test-unit:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock norace' $(PACKAGES_UNIT)
+	@VERSION=$(VERSION) SKIP_WASM_WSL_TESTS=$(SKIP_WASM_WSL_TESTS) go test -mod=readonly -tags='ledger test_ledger_mock norace' $(PACKAGES_UNIT)
 
 test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' $(PACKAGES_UNIT)
@@ -462,8 +475,9 @@ cl-create-bigbang-config:
 ###                                Go Mock                                  ###
 ###############################################################################
 
-go-mock-update-pool-module:
+go-mock-update:
 	mockgen -source=x/poolmanager/types/routes.go -destination=tests/mocks/pool_module.go -package=mocks
+	mockgen -source=x/poolmanager/types/pool.go -destination=tests/mocks/pool.go -package=mocks
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \

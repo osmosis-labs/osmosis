@@ -281,6 +281,7 @@ func (n *NodeConfig) QueryConcentratedPositions(address string) []model.Position
 	require.NoError(n.t, err)
 	return positionsResponse.Positions
 }
+
 func (n *NodeConfig) QueryConcentratedPool(poolId uint64) (cltypes.ConcentratedPoolExtension, error) {
 	path := fmt.Sprintf("/osmosis/poolmanager/v1beta1/pools/%d", poolId)
 	bz, err := n.QueryGRPCGateway(path)
@@ -303,7 +304,7 @@ func (n *NodeConfig) QueryConcentratedPool(poolId uint64) (cltypes.ConcentratedP
 	return poolCLextension, nil
 }
 
-func (n *NodeConfig) QueryCFMMPoolI(poolId uint64) (gammtypes.CFMMPoolI, error) {
+func (n *NodeConfig) QueryCFMMPool(poolId uint64) (gammtypes.CFMMPoolI, error) {
 	path := fmt.Sprintf("/osmosis/poolmanager/v1beta1/pools/%d", poolId)
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
@@ -316,13 +317,13 @@ func (n *NodeConfig) QueryCFMMPoolI(poolId uint64) (gammtypes.CFMMPoolI, error) 
 	err = util.Cdc.UnpackAny(poolResponse.Pool, &pool)
 	require.NoError(n.t, err)
 
-	poolCLextension, ok := pool.(gammtypes.CFMMPoolI)
+	cfmmPool, ok := pool.(gammtypes.CFMMPoolI)
 
 	if !ok {
 		return nil, fmt.Errorf("invalid pool type: %T", pool)
 	}
 
-	return poolCLextension, nil
+	return cfmmPool, nil
 }
 
 // QueryBalancer returns balances at the address.
@@ -626,4 +627,18 @@ func (n *NodeConfig) QueryListSnapshots() ([]*tmabcitypes.Snapshot, error) {
 	}
 
 	return listSnapshots.Snapshots, nil
+}
+
+// QueryAllSuperfluidAssets returns all authorized superfluid assets.
+func (n *NodeConfig) QueryAllSuperfluidAssets() []superfluidtypes.SuperfluidAsset {
+	path := "/osmosis/superfluid/v1beta1/all_assets"
+
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	//nolint:staticcheck
+	var response superfluidtypes.AllAssetsResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err)
+	return response.Assets
 }

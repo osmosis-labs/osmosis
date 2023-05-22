@@ -9,7 +9,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
@@ -21,55 +20,55 @@ type KeeperTestSuite struct {
 }
 
 var (
-	defaultSwapFee     = sdk.MustNewDecFromStr("0.025")
-	defaultZeroExitFee = sdk.ZeroDec()
+	defaultSpreadFactor = sdk.MustNewDecFromStr("0.025")
+	defaultZeroExitFee  = sdk.ZeroDec()
 )
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
-	suite.Setup()
+func (s *KeeperTestSuite) SetupTest() {
+	s.Setup()
 
-	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
+	s.queryClient = types.NewQueryClient(s.QueryHelper)
 }
 
-func (suite *KeeperTestSuite) prepareCustomBalancerPool(
+func (s *KeeperTestSuite) prepareCustomBalancerPool(
 	balances sdk.Coins,
-	poolAssets []balancertypes.PoolAsset,
+	poolAssets []balancer.PoolAsset,
 	poolParams balancer.PoolParams,
 ) uint64 {
-	suite.fundAllAccountsWith(balances)
+	s.fundAllAccountsWith(balances)
 
-	poolID, err := suite.App.PoolManagerKeeper.CreatePool(
-		suite.Ctx,
-		balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], poolParams, poolAssets, ""),
+	poolID, err := s.App.PoolManagerKeeper.CreatePool(
+		s.Ctx,
+		balancer.NewMsgCreateBalancerPool(s.TestAccs[0], poolParams, poolAssets, ""),
 	)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
 	return poolID
 }
 
-func (suite *KeeperTestSuite) prepareCustomStableswapPool(
+func (s *KeeperTestSuite) prepareCustomStableswapPool(
 	balances sdk.Coins,
 	poolParams stableswap.PoolParams,
 	initialLiquidity sdk.Coins,
 	scalingFactors []uint64,
 ) uint64 {
-	suite.fundAllAccountsWith(balances)
+	s.fundAllAccountsWith(balances)
 
-	poolID, err := suite.App.PoolManagerKeeper.CreatePool(
-		suite.Ctx,
-		stableswap.NewMsgCreateStableswapPool(suite.TestAccs[0], poolParams, initialLiquidity, scalingFactors, ""),
+	poolID, err := s.App.PoolManagerKeeper.CreatePool(
+		s.Ctx,
+		stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], poolParams, initialLiquidity, scalingFactors, ""),
 	)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
 	return poolID
 }
 
-func (suite *KeeperTestSuite) fundAllAccountsWith(balances sdk.Coins) {
-	for _, acc := range suite.TestAccs {
-		suite.FundAcc(acc, balances)
+func (s *KeeperTestSuite) fundAllAccountsWith(balances sdk.Coins) {
+	for _, acc := range s.TestAccs {
+		s.FundAcc(acc, balances)
 	}
 }

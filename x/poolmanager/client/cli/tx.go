@@ -56,6 +56,7 @@ func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOu
 		Flags:            osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
 	}, &types.MsgSwapExactAmountOut{}
 }
+
 func NewBuildSwapExactAmountInMsg(clientCtx client.Context, tokenInStr, tokenOutMinAmtStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
 	routes, err := swapAmountInRoutes(fs)
 	if err != nil {
@@ -165,7 +166,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 		return txf, nil, errors.New("deposit tokens and token weights should have same length")
 	}
 
-	swapFee, err := sdk.NewDecFromStr(pool.SwapFee)
+	spreadFactor, err := sdk.NewDecFromStr(pool.SwapFee)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -188,7 +189,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 	}
 
 	poolParams := &balancer.PoolParams{
-		SwapFee: swapFee,
+		SwapFee: spreadFactor,
 		ExitFee: exitFee,
 	}
 
@@ -256,7 +257,7 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, f
 		return txf, nil, err
 	}
 
-	swapFee, err := sdk.NewDecFromStr(flags.SwapFee)
+	spreadFactor, err := sdk.NewDecFromStr(flags.SwapFee)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -267,7 +268,7 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, f
 	}
 
 	poolParams := &stableswap.PoolParams{
-		SwapFee: swapFee,
+		SwapFee: spreadFactor,
 		ExitFee: exitFee,
 	}
 

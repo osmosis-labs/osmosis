@@ -23,14 +23,14 @@ const (
 )
 
 var (
-	DefaultSpotPrice        = sdk.MustNewDecFromStr("0.2")
-	DefaultReverseSpotPrice = sdk.NewDec(1).Quo(DefaultSpotPrice)
-	DefaultSqrtSpotPrice, _ = DefaultSpotPrice.ApproxSqrt()
-	DefaultLiquidityAmt     = sdk.MustNewDecFromStr("1517882343.751510418088349649")
-	DefaultCurrTick         = sdk.NewInt(310000)
-	DefaultCurrPrice        = sdk.NewDec(5000)
-	DefaultCurrSqrtPrice, _ = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
-	DefaultSwapFee          = sdk.MustNewDecFromStr("0.01")
+	DefaultSpotPrice              = sdk.MustNewDecFromStr("0.2")
+	DefaultReverseSpotPrice       = sdk.NewDec(1).Quo(DefaultSpotPrice)
+	DefaultSqrtSpotPrice, _       = DefaultSpotPrice.ApproxSqrt()
+	DefaultLiquidityAmt           = sdk.MustNewDecFromStr("1517882343.751510418088349649")
+	DefaultCurrTick         int64 = 310000
+	DefaultCurrPrice              = sdk.NewDec(5000)
+	DefaultCurrSqrtPrice, _       = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
+	DefaultSpreadFactor           = sdk.MustNewDecFromStr("0.01")
 )
 
 type ConcentratedPoolTestSuite struct {
@@ -138,6 +138,60 @@ func (s *ConcentratedPoolTestSuite) TestUpdateLiquidity() {
 	s.Require().Equal(DefaultLiquidityAmt.Add(sdk.NewDec(10)), mock_pool.CurrentTickLiquidity)
 }
 
+func (s *ConcentratedPoolTestSuite) TestIsCurrentTickInRange() {
+	s.Setup()
+	currentTick := DefaultCurrTick
+
+	tests := []struct {
+		name           string
+		lowerTick      int64
+		upperTick      int64
+		expectedResult bool
+	}{
+		{
+			"given lower tick tick is within range of pool tick",
+			DefaultCurrTick - 1,
+			DefaultCurrTick + 1,
+			true,
+		},
+		{
+			"lower tick and upper tick are equal to pool tick",
+			DefaultCurrTick,
+			DefaultCurrTick,
+			true,
+		},
+		{
+			"lower tick is greater then pool tick",
+			DefaultCurrTick + 1,
+			DefaultCurrTick + 3,
+			false,
+		},
+		{
+			"upper tick is lower then pool tick",
+			DefaultCurrTick - 3,
+			DefaultCurrTick - 1,
+			false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// Create a concentrated liquidity pool struct instance
+			mock_pool := model.Pool{
+				CurrentTick: currentTick,
+			}
+
+			// System under test
+			iscurrentTickInRange := mock_pool.IsCurrentTickInRange(tc.lowerTick, tc.upperTick)
+			if tc.expectedResult {
+				s.Require().True(iscurrentTickInRange)
+			} else {
+				s.Require().False(iscurrentTickInRange)
+			}
+		})
+	}
+}
+
 func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 	// Set up the test suite.
 	s.Setup()
@@ -146,10 +200,10 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 	tests := []struct {
 		name             string
 		currentLiquidity sdk.Dec
-		currentTick      sdk.Int
+		currentTick      int64
 		currentSqrtPrice sdk.Dec
 		newLiquidity     sdk.Dec
-		newTick          sdk.Int
+		newTick          int64
 		newSqrtPrice     sdk.Dec
 		expectErr        error
 	}{
@@ -159,7 +213,7 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			currentTick:      DefaultCurrTick,
 			currentSqrtPrice: DefaultCurrSqrtPrice,
 			newLiquidity:     DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
-			newTick:          DefaultCurrTick.Mul(sdk.NewInt(2)),
+			newTick:          DefaultCurrTick * 2,
 			newSqrtPrice:     DefaultCurrSqrtPrice.Mul(sdk.NewDec(2)),
 			expectErr:        nil,
 		},
@@ -186,10 +240,10 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 		{
 			name:             "upper tick too big",
 			currentLiquidity: DefaultLiquidityAmt,
-			currentTick:      sdk.NewInt(1),
+			currentTick:      1,
 			currentSqrtPrice: DefaultCurrSqrtPrice,
 			newLiquidity:     DefaultLiquidityAmt,
-			newTick:          sdk.NewInt(math.MaxInt64),
+			newTick:          math.MaxInt64,
 			newSqrtPrice:     DefaultCurrSqrtPrice,
 			expectErr: types.TickIndexNotWithinBoundariesError{
 				MaxTick:    types.MaxTick,
@@ -200,10 +254,10 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 		{
 			name:             "lower tick too small",
 			currentLiquidity: DefaultLiquidityAmt,
-			currentTick:      sdk.NewInt(1),
+			currentTick:      1,
 			currentSqrtPrice: DefaultCurrSqrtPrice,
 			newLiquidity:     DefaultLiquidityAmt,
-			newTick:          sdk.NewInt(math.MinInt64),
+			newTick:          math.MinInt64,
 			newSqrtPrice:     DefaultCurrSqrtPrice,
 			expectErr: types.TickIndexNotWithinBoundariesError{
 				MaxTick:    types.MaxTick,
@@ -242,11 +296,11 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 // TestNewConcentratedLiquidityPool is a test suite that tests the NewConcentratedLiquidityPool function.
 func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 	type param struct {
-		poolId      uint64
-		denom0      string
-		denom1      string
-		tickSpacing uint64
-		swapFee     sdk.Dec
+		poolId       uint64
+		denom0       string
+		denom1       string
+		tickSpacing  uint64
+		spreadFactor sdk.Dec
 	}
 
 	tests := []struct {
@@ -261,11 +315,11 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 		{
 			name: "Happy path",
 			param: param{
-				poolId:      DefaultValidPoolID,
-				denom0:      ETH,
-				denom1:      USDC,
-				tickSpacing: DefaultTickSpacing,
-				swapFee:     DefaultSwapFee,
+				poolId:       DefaultValidPoolID,
+				denom0:       ETH,
+				denom1:       USDC,
+				tickSpacing:  DefaultTickSpacing,
+				spreadFactor: DefaultSpreadFactor,
 			},
 			expectedPoolId:      DefaultValidPoolID,
 			expectedDenom0:      ETH,
@@ -275,11 +329,11 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 		{
 			name: "Non lexicographical order of denoms should not get reordered",
 			param: param{
-				poolId:      DefaultValidPoolID,
-				denom0:      USDC,
-				denom1:      ETH,
-				tickSpacing: DefaultTickSpacing,
-				swapFee:     sdk.ZeroDec(),
+				poolId:       DefaultValidPoolID,
+				denom0:       USDC,
+				denom1:       ETH,
+				tickSpacing:  DefaultTickSpacing,
+				spreadFactor: sdk.ZeroDec(),
 			},
 			expectedPoolId:      DefaultValidPoolID,
 			expectedDenom0:      USDC,
@@ -290,35 +344,35 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 		{
 			name: "Error: same denom not allowed",
 			param: param{
-				poolId:      DefaultValidPoolID,
-				denom0:      USDC,
-				denom1:      USDC,
-				tickSpacing: DefaultTickSpacing,
-				swapFee:     DefaultSwapFee,
+				poolId:       DefaultValidPoolID,
+				denom0:       USDC,
+				denom1:       USDC,
+				tickSpacing:  DefaultTickSpacing,
+				spreadFactor: DefaultSpreadFactor,
 			},
 			expectedErr: types.MatchingDenomError{Denom: USDC},
 		},
 		{
-			name: "Error: negative swap fee",
+			name: "Error: negative spread factor",
 			param: param{
-				poolId:      DefaultValidPoolID,
-				denom0:      ETH,
-				denom1:      USDC,
-				tickSpacing: DefaultTickSpacing,
-				swapFee:     sdk.ZeroDec().Sub(sdk.SmallestDec()),
+				poolId:       DefaultValidPoolID,
+				denom0:       ETH,
+				denom1:       USDC,
+				tickSpacing:  DefaultTickSpacing,
+				spreadFactor: sdk.ZeroDec().Sub(sdk.SmallestDec()),
 			},
-			expectedErr: types.InvalidSwapFeeError{ActualFee: sdk.ZeroDec().Sub(sdk.SmallestDec())},
+			expectedErr: types.InvalidSpreadFactorError{ActualFee: sdk.ZeroDec().Sub(sdk.SmallestDec())},
 		},
 		{
-			name: "Error: swap fee == 1",
+			name: "Error: spread factor == 1",
 			param: param{
-				poolId:      DefaultValidPoolID,
-				denom0:      ETH,
-				denom1:      USDC,
-				tickSpacing: DefaultTickSpacing,
-				swapFee:     sdk.OneDec(),
+				poolId:       DefaultValidPoolID,
+				denom0:       ETH,
+				denom1:       USDC,
+				tickSpacing:  DefaultTickSpacing,
+				spreadFactor: sdk.OneDec(),
 			},
-			expectedErr: types.InvalidSwapFeeError{ActualFee: sdk.OneDec()},
+			expectedErr: types.InvalidSpreadFactorError{ActualFee: sdk.OneDec()},
 		},
 	}
 
@@ -328,7 +382,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 			s.Setup()
 
 			// Call NewConcentratedLiquidityPool with the parameters from the current test.
-			pool, err := model.NewConcentratedLiquidityPool(test.param.poolId, test.param.denom0, test.param.denom1, test.param.tickSpacing, test.param.swapFee)
+			pool, err := model.NewConcentratedLiquidityPool(test.param.poolId, test.param.denom0, test.param.denom1, test.param.tickSpacing, test.param.spreadFactor)
 
 			if test.expectedErr != nil {
 				// If the test is expected to produce an error, check if it does.
@@ -343,7 +397,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 				s.Require().Equal(test.expectedDenom0, pool.Token0)
 				s.Require().Equal(test.expectedDenom1, pool.Token1)
 				s.Require().Equal(test.expectedTickSpacing, pool.TickSpacing)
-				s.Require().Equal(test.param.swapFee, pool.SwapFee)
+				s.Require().Equal(test.param.spreadFactor, pool.SpreadFactor)
 			}
 		})
 	}
@@ -352,7 +406,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 	var (
 		tickToSqrtPrice = func(tick int64) sdk.Dec {
-			sqrtPrice, err := clmath.TickToSqrtPrice(sdk.NewInt(tick))
+			_, sqrtPrice, err := clmath.TickToSqrtPrice(tick)
 			suite.Require().NoError(err)
 			return sqrtPrice
 		}
@@ -461,9 +515,9 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			suite.Setup()
 
 			pool := model.Pool{
-				CurrentTick: sdk.NewInt(tc.currentTick),
+				CurrentTick: tc.currentTick,
 			}
-			pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick)
+			_, pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick)
 
 			actualAmount0, actualAmount1, err := pool.CalcActualAmounts(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
 
@@ -554,10 +608,10 @@ func (suite *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 			suite.Setup()
 
 			pool := model.Pool{
-				CurrentTick:          sdk.NewInt(tc.currentTick),
+				CurrentTick:          tc.currentTick,
 				CurrentTickLiquidity: defaultLiquidityAmt,
 			}
-			pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick)
+			_, pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick)
 
 			wasUpdated := pool.UpdateLiquidityIfActivePosition(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
 			if tc.lowerTick <= tc.currentTick && tc.currentTick <= tc.upperTick {

@@ -15,6 +15,7 @@ import (
 
 const (
 	incentivesAddressPrefix = "incentives"
+	feesAddressPrefix       = "fees"
 )
 
 var (
@@ -24,30 +25,31 @@ var (
 
 // NewConcentratedLiquidityPool creates a new ConcentratedLiquidity pool with the specified parameters.
 // The two provided denoms are ordered so that denom0 is lexicographically smaller than denom1.
-func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpacing uint64, swapFee sdk.Dec) (Pool, error) {
+func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpacing uint64, spreadFactor sdk.Dec) (Pool, error) {
 	// Ensure that the two denoms are different
 	if denom0 == denom1 {
 		return Pool{}, types.MatchingDenomError{Denom: denom0}
 	}
 
 	// Swap fee must be [0,1)
-	if swapFee.IsNegative() || swapFee.GTE(one) {
-		return Pool{}, types.InvalidSwapFeeError{ActualFee: swapFee}
+	if spreadFactor.IsNegative() || spreadFactor.GTE(one) {
+		return Pool{}, types.InvalidSpreadFactorError{ActualFee: spreadFactor}
 	}
 
 	// Create a new pool struct with the specified parameters
 	pool := Pool{
 		Address:              poolmanagertypes.NewPoolAddress(poolId).String(),
 		IncentivesAddress:    osmoutils.NewModuleAddressWithPrefix(types.ModuleName, incentivesAddressPrefix, sdk.Uint64ToBigEndian(poolId)).String(),
+		FeesAddress:          osmoutils.NewModuleAddressWithPrefix(types.ModuleName, feesAddressPrefix, sdk.Uint64ToBigEndian(poolId)).String(),
 		Id:                   poolId,
 		CurrentSqrtPrice:     sdk.ZeroDec(),
-		CurrentTick:          sdk.ZeroInt(),
+		CurrentTick:          0,
 		CurrentTickLiquidity: sdk.ZeroDec(),
 		Token0:               denom0,
 		Token1:               denom1,
 		TickSpacing:          tickSpacing,
 		ExponentAtPriceOne:   types.ExponentAtPriceOne,
-		SwapFee:              swapFee,
+		SpreadFactor:         spreadFactor,
 	}
 	return pool, nil
 }
@@ -65,7 +67,15 @@ func (p Pool) GetAddress() sdk.AccAddress {
 func (p Pool) GetIncentivesAddress() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(p.IncentivesAddress)
 	if err != nil {
-		panic(fmt.Sprintf("could not bech32 decode address of pool with id: %d", p.GetId()))
+		panic(fmt.Sprintf("could not bech32 decode incentive address of pool with id: %d", p.GetId()))
+	}
+	return addr
+}
+
+func (p Pool) GetFeesAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(p.FeesAddress)
+	if err != nil {
+		panic(fmt.Sprintf("could not bech32 decode fee address of pool with id: %d", p.GetId()))
 	}
 	return addr
 }
@@ -84,9 +94,9 @@ func (p Pool) String() string {
 	return string(out)
 }
 
-// GetSwapFee returns the swap fee of the pool
-func (p Pool) GetSwapFee(ctx sdk.Context) sdk.Dec {
-	return p.SwapFee
+// GetSpreadFactor returns the spread factor of the pool
+func (p Pool) GetSpreadFactor(ctx sdk.Context) sdk.Dec {
+	return p.SpreadFactor
 }
 
 // IsActive returns true if the pool is active
@@ -129,7 +139,7 @@ func (p Pool) GetCurrentSqrtPrice() sdk.Dec {
 }
 
 // GetCurrentTick returns the current tick of the pool
-func (p Pool) GetCurrentTick() sdk.Int {
+func (p Pool) GetCurrentTick() int64 {
 	return p.CurrentTick
 }
 
@@ -139,7 +149,7 @@ func (p Pool) GetTickSpacing() uint64 {
 }
 
 // GetExponentAtPriceOne returns the precision factor at price one of the pool
-func (p Pool) GetExponentAtPriceOne() sdk.Int {
+func (p Pool) GetExponentAtPriceOne() int64 {
 	return p.ExponentAtPriceOne
 }
 
@@ -168,7 +178,7 @@ func (p *Pool) SetCurrentSqrtPrice(newSqrtPrice sdk.Dec) {
 }
 
 // SetCurrentTick updates the current tick of the pool when the first position is created.
-func (p *Pool) SetCurrentTick(newTick sdk.Int) {
+func (p *Pool) SetCurrentTick(newTick int64) {
 	p.CurrentTick = newTick
 }
 
@@ -185,7 +195,7 @@ func (p *Pool) SetLastLiquidityUpdate(newTime time.Time) {
 // updateLiquidityIfActivePosition updates the pool's liquidity if the position is active.
 // Returns true if updated, false otherwise.
 func (p *Pool) UpdateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta sdk.Dec) bool {
-	if p.isCurrentTickInRange(lowerTick, upperTick) {
+	if p.IsCurrentTickInRange(lowerTick, upperTick) {
 		p.CurrentTickLiquidity = p.CurrentTickLiquidity.Add(liquidityDelta)
 		return true
 	}
@@ -221,7 +231,7 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 	}
 
 	// Transform the provided ticks into their corresponding sqrtPrices.
-	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
+	_, _, sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
 	if err != nil {
 		return sdk.Dec{}, sdk.Dec{}, err
 	}
@@ -234,14 +244,14 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 	// in favor of the pool.
 	roundUp := liquidityDelta.IsPositive()
 
-	if p.isCurrentTickInRange(lowerTick, upperTick) {
+	if p.IsCurrentTickInRange(lowerTick, upperTick) {
 		// outcome one: the current price falls within the position
 		// if this is the case, we attempt to provide liquidity evenly between asset0 and asset1
 		// we also update the pool liquidity since the virtual liquidity is modified by this position's creation
 		currentSqrtPrice := p.CurrentSqrtPrice
 		actualAmountDenom0 = math.CalcAmount0Delta(liquidityDelta, currentSqrtPrice, sqrtPriceUpperTick, roundUp)
 		actualAmountDenom1 = math.CalcAmount1Delta(liquidityDelta, currentSqrtPrice, sqrtPriceLowerTick, roundUp)
-	} else if p.CurrentTick.LT(sdk.NewInt(lowerTick)) {
+	} else if p.CurrentTick < lowerTick {
 		// outcome two: position is below current price
 		// this means position is solely made up of asset0
 		actualAmountDenom1 = sdk.ZeroDec()
@@ -258,14 +268,13 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 
 // isCurrentTickInRange returns true if pool's current tick is within
 // the range of the lower and upper ticks. False otherwise.
-// TODO: add tests.
-func (p Pool) isCurrentTickInRange(lowerTick, upperTick int64) bool {
-	return p.CurrentTick.GTE(sdk.NewInt(lowerTick)) && p.CurrentTick.LT(sdk.NewInt(upperTick))
+func (p Pool) IsCurrentTickInRange(lowerTick, upperTick int64) bool {
+	return p.CurrentTick >= lowerTick && p.CurrentTick <= upperTick
 }
 
 // ApplySwap state of pool after swap.
 // It specifically overwrites the pool's liquidity, curr tick and the curr sqrt price
-func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) error {
+func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick int64, newCurrentSqrtPrice sdk.Dec) error {
 	// Check if the new liquidity provided is not negative.
 	if newLiquidity.IsNegative() {
 		return types.NegativeLiquidityError{Liquidity: newLiquidity}
@@ -277,11 +286,11 @@ func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurren
 	}
 
 	// Check if the new tick provided is within boundaries of the pool's precision factor.
-	if newCurrentTick.LT(sdk.NewInt(types.MinTick)) || newCurrentTick.GT(sdk.NewInt(types.MaxTick)) {
+	if newCurrentTick < types.MinTick || newCurrentTick > types.MaxTick {
 		return types.TickIndexNotWithinBoundariesError{
 			MaxTick:    types.MaxTick,
 			MinTick:    types.MinTick,
-			ActualTick: newCurrentTick.Int64(),
+			ActualTick: newCurrentTick,
 		}
 	}
 
