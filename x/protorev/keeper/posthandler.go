@@ -4,8 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 type SwapToBackrun struct {
@@ -159,43 +157,6 @@ func (k Keeper) ExtractSwappedPools(ctx sdk.Context) []SwapToBackrun {
 			TokenInDenom:  swap.TokenIn,
 			TokenOutDenom: swap.TokenOut,
 		})
-	}
-
-	return swappedPools
-}
-
-// extractSwapInPools extracts the pools that were swapped on for a MsgSwapExactAmountIn
-func extractSwapInPools(routes []poolmanagertypes.SwapAmountInRoute, tokenInDenom string) []SwapToBackrun {
-	swappedPools := make([]SwapToBackrun, 0)
-
-	prevTokenIn := tokenInDenom
-	for _, route := range routes {
-		swappedPools = append(swappedPools, SwapToBackrun{
-			PoolId:        route.PoolId,
-			TokenOutDenom: route.TokenOutDenom,
-			TokenInDenom:  prevTokenIn,
-		})
-
-		prevTokenIn = route.TokenOutDenom
-	}
-
-	return swappedPools
-}
-
-// extractSwapOutPools extracts the pools that were swapped on for a MsgSwapExactAmountOut
-func extractSwapOutPools(routes []poolmanagertypes.SwapAmountOutRoute, tokenOutDenom string) []SwapToBackrun {
-	swappedPools := make([]SwapToBackrun, 0)
-
-	prevTokenOut := tokenOutDenom
-	for i := len(routes) - 1; i >= 0; i-- {
-		route := routes[i]
-		swappedPools = append(swappedPools, SwapToBackrun{
-			PoolId:        route.PoolId,
-			TokenOutDenom: prevTokenOut,
-			TokenInDenom:  route.TokenInDenom,
-		})
-
-		prevTokenOut = route.TokenInDenom
 	}
 
 	return swappedPools
