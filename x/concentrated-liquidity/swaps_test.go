@@ -1456,20 +1456,23 @@ func (s *KeeperTestSuite) preparePoolAndDefaultPosition() types.ConcentratedPool
 	return pool
 }
 
+func makeSwapTests(tests ...map[string]SwapTest) map[string]SwapTest {
+	length := 0
+	for i := range tests {
+		length += len(tests[i])
+	}
+	retTests := make(map[string]SwapTest, length)
+	for _, tt := range tests {
+		for name, test := range tt {
+			retTests[name] = test
+		}
+	}
+	return retTests
+}
+
 func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
-	tests := make(map[string]SwapTest, len(swapOutGivenInCases)+len(swapOutGivenInFeeCases)+len(swapOutGivenInErrorCases))
-	for name, test := range swapOutGivenInCases {
-		tests[name] = test
-	}
-
-	for name, test := range swapOutGivenInFeeCases {
-		tests[name] = test
-	}
-
 	// add error cases as well
-	for name, test := range swapOutGivenInErrorCases {
-		tests[name] = test
-	}
+	tests := makeSwapTests(swapOutGivenInCases, swapOutGivenInCases, swapOutGivenInErrorCases)
 
 	for name, test := range tests {
 		test := test
@@ -1653,11 +1656,7 @@ func (s *KeeperTestSuite) TestSwapInAmtGivenOut_NoPositions() {
 }
 
 func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
-	tests := make(map[string]SwapTest)
-	for name, test := range swapOutGivenInCases {
-		tests[name] = test
-	}
-
+	tests := makeSwapTests(swapOutGivenInCases)
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
@@ -1729,20 +1728,8 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 }
 
 func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
-	tests := make(map[string]SwapTest, len(swapInGivenOutTestCases)+len(swapInGivenOutFeeTestCases)+len(swapInGivenOutErrorTestCases))
-	for name, test := range swapInGivenOutTestCases {
-		tests[name] = test
-	}
-
-	for name, test := range swapInGivenOutFeeTestCases {
-		tests[name] = test
-	}
-
 	// add error cases as well
-	for name, test := range swapInGivenOutErrorTestCases {
-		tests[name] = test
-	}
-
+	tests := makeSwapTests(swapInGivenOutTestCases, swapInGivenOutFeeTestCases, swapInGivenOutErrorTestCases)
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
@@ -1892,11 +1879,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 }
 
 func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
-	tests := make(map[string]SwapTest)
-	for name, test := range swapInGivenOutTestCases {
-		tests[name] = test
-	}
-
+	tests := makeSwapTests(swapInGivenOutTestCases)
 	for name, test := range tests {
 		s.Run(name, func() {
 			s.setupAndFundSwapTest()
@@ -2365,12 +2348,7 @@ func (s *KeeperTestSuite) TestComputeOutAmtGivenIn() {
 // TestCalcOutAmtGivenIn_NonMutative tests that CalcOutAmtGivenIn is non-mutative.
 func (s *KeeperTestSuite) TestCalcOutAmtGivenIn_NonMutative() {
 	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
-	tests := make(map[string]SwapTest, len(swapOutGivenInFeeCases))
-
-	for name, test := range swapOutGivenInFeeCases {
-		tests[name] = test
-	}
-
+	tests := makeSwapTests(swapOutGivenInFeeCases)
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
@@ -2428,11 +2406,7 @@ func (s *KeeperTestSuite) setupSecondPosition(test SwapTest, pool types.Concentr
 // TestCalcInAmtGivenOut_NonMutative tests that CalcInAmtGivenOut is non-mutative.
 func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
 	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
-	tests := make(map[string]SwapTest, len(swapOutGivenInFeeCases))
-
-	for name, test := range swapOutGivenInFeeCases {
-		tests[name] = test
-	}
+	tests := makeSwapTests(swapOutGivenInFeeCases)
 
 	for name, test := range tests {
 		test := test
@@ -2479,11 +2453,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
 // TestComputeInAmtGivenOut tests that ComputeInAmtGivenOut successfully performs state changes as expected.
 func (s *KeeperTestSuite) TestComputeInAmtGivenOut() {
 	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
-	tests := make(map[string]SwapTest, len(swapInGivenOutFeeTestCases))
-
-	for name, test := range swapInGivenOutFeeTestCases {
-		tests[name] = test
-	}
+	tests := makeSwapTests(swapInGivenOutFeeTestCases)
 
 	for name, test := range tests {
 		test := test
