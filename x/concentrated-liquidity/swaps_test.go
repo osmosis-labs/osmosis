@@ -1753,39 +1753,39 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 				test.spreadFactor, test.priceLimit)
 			if test.expectErr {
 				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-
-				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-				s.Require().NoError(err)
-
-				// check that tokenIn, tokenOut, tick, and sqrtPrice from SwapOut are all what we expected
-				s.Require().Equal(test.expectedTick, updatedTick)
-				s.Require().Equal(test.expectedTokenIn.String(), tokenIn.String())
-				s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
-				s.Require().Equal(test.expectedSqrtPrice, sqrtPrice)
-				// also ensure the pool's currentTick and currentSqrtPrice was updated due to calling a mutative method
-				s.Require().Equal(test.expectedTick, pool.GetCurrentTick())
-
-				expectedLiquidity := s.getExpectedLiquidity(test, pool)
-				// check that liquidity is what we expected
-				s.Require().Equal(expectedLiquidity.String(), pool.GetLiquidity().String())
-				// also ensure the pool's currentLiquidity was updated due to calling a mutative method
-				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
-
-				feeAcc, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
-				s.Require().NoError(err)
-
-				feeAccValue := feeAcc.GetValue()
-				actualValue := feeAccValue.AmountOf(test.tokenInDenom)
-
-				if test.spreadFactor.IsZero() {
-					s.Require().Equal(sdk.ZeroDec(), actualValue)
-					return
-				}
-
-				s.assertFeeAccum(test, pool.GetId())
+				return
 			}
+			s.Require().NoError(err)
+
+			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+
+			// check that tokenIn, tokenOut, tick, and sqrtPrice from SwapOut are all what we expected
+			s.Require().Equal(test.expectedTick, updatedTick)
+			s.Require().Equal(test.expectedTokenIn.String(), tokenIn.String())
+			s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
+			s.Require().Equal(test.expectedSqrtPrice, sqrtPrice)
+			// also ensure the pool's currentTick and currentSqrtPrice was updated due to calling a mutative method
+			s.Require().Equal(test.expectedTick, pool.GetCurrentTick())
+
+			expectedLiquidity := s.getExpectedLiquidity(test, pool)
+			// check that liquidity is what we expected
+			s.Require().Equal(expectedLiquidity.String(), pool.GetLiquidity().String())
+			// also ensure the pool's currentLiquidity was updated due to calling a mutative method
+			s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
+
+			feeAcc, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			s.Require().NoError(err)
+
+			feeAccValue := feeAcc.GetValue()
+			actualValue := feeAccValue.AmountOf(test.tokenInDenom)
+
+			if test.spreadFactor.IsZero() {
+				s.Require().Equal(sdk.ZeroDec(), actualValue)
+				return
+			}
+
+			s.assertFeeAccum(test, pool.GetId())
 		})
 	}
 }
@@ -1859,6 +1859,9 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 		expectedTokenOut  sdk.Int
 	}
 
+	// liquidity and sqrtPriceCurrent for all tests are:
+	// liquidity: 		 1517882343.751510418088349649
+	// sqrtPriceCurrent: 70.710678118654752440 which is sqrt(5000)
 	tests := []struct {
 		name        string
 		param       param
@@ -1867,9 +1870,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 		{
 			name: "Proper swap usdc > eth",
 			// params
-			// liquidity: 		 1517882343.751510418088349649
 			// sqrtPriceNext:    70.738348247484497717 which is 5003.91391278239310954 https://www.wolframalpha.com/input?i=70.710678118654752440+%2B+42000000+%2F+1517882343.751510418088349649
-			// sqrtPriceCurrent: 70.710678118654752440 which is 5000
 			// expectedTokenIn:  41999999.999 rounded up https://www.wolframalpha.com/input?i=1517882343.751510418088349649+*+%2870.738348247484497717+-+70.710678118654752440%29
 			// expectedTokenOut: 8396.7142421 rounded down https://www.wolframalpha.com/input?i=%281517882343.751510418088349649+*+%2870.738348247484497717+-+70.710678118654752440+%29%29+%2F+%2870.710678118654752440+*+70.738348247484497717%29
 			param: param{
@@ -1882,9 +1883,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 		{
 			name: "Proper swap eth > usdc",
 			// params
-			// liquidity: 		 1517882343.751510418088349649
 			// sqrtPriceNext:    70.66666391085714433 which is 4993.77738829003954884402 https://www.wolframalpha.com/input?i=%28%281517882343.751510418088349649%29%29+%2F+%28%28%281517882343.751510418088349649%29+%2F+%2870.710678118654752440%29%29+%2B+%2813370%29%29
-			// sqrtPriceCurrent: 70.710678118654752440 which is 5000
 			// expectedTokenIn:  13370.0000 rounded up https://www.wolframalpha.com/input?i=%281517882343.751510418088349649+*+%2870.710678118654752440+-+70.66666391085714433+%29%29+%2F+%2870.66666391085714433+*+70.710678118654752440%29
 			// expectedTokenOut: 66808388.890 rounded down https://www.wolframalpha.com/input?i=1517882343.751510418088349649+*+%2870.710678118654752440+-+70.66666391085714433%29
 			param: param{
@@ -1956,16 +1955,11 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 		s.Run(test.name, func() {
 			// Init suite for each test.
 			s.SetupTest()
-
-			// Create a default CL pool
-			pool := s.PrepareConcentratedPool()
+			pool := s.preparePoolAndDefaultPosition()
 
 			// Check the test case to see if we are swapping asset0 for asset1 or vice versa
 			asset0 := pool.GetToken0()
 			zeroForOne := test.param.tokenIn.Denom == asset0
-
-			// Create a default position to the pool created earlier
-			s.SetupDefaultPosition(1)
 
 			// Set mock listener to make sure that is is called when desired.
 			s.setListenerMockOnConcentratedLiquidityKeeper()
@@ -1993,40 +1987,40 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, test.expectedErr)
-			} else {
-				s.Require().NoError(err)
-				s.Require().Equal(test.param.expectedTokenOut.String(), tokenOutAmount.String())
-
-				gasConsumedForSwap := s.Ctx.GasMeter().GasConsumed() - prevGasConsumed
-
-				// Check that we consume enough gas that a CL pool swap warrants
-				// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
-				s.Require().Greater(gasConsumedForSwap, uint64(types.ConcentratedGasFeeForSwap))
-
-				// Assert events
-				s.AssertEventEmitted(s.Ctx, types.TypeEvtTokenSwapped, 1)
-
-				// Retrieve pool again post swap
-				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-				s.Require().NoError(err)
-
-				spotPriceAfter := pool.GetCurrentSqrtPrice().Power(2)
-
-				// Ratio of the token out should be between the before spot price and after spot price.
-				tradeAvgPrice := tokenOutAmount.ToDec().Quo(test.param.tokenIn.Amount.ToDec())
-
-				if zeroForOne {
-					s.Require().True(tradeAvgPrice.LT(spotPriceBefore))
-					s.Require().True(tradeAvgPrice.GT(spotPriceAfter))
-				} else {
-					tradeAvgPrice = sdk.OneDec().Quo(tradeAvgPrice)
-					s.Require().True(tradeAvgPrice.GT(spotPriceBefore))
-					s.Require().True(tradeAvgPrice.LT(spotPriceAfter))
-				}
-
-				// Validate that listeners were called the desired number of times
-				s.validateListenerCallCount(0, 0, 0, 1)
+				return
 			}
+			s.Require().NoError(err)
+			s.Require().Equal(test.param.expectedTokenOut.String(), tokenOutAmount.String())
+
+			gasConsumedForSwap := s.Ctx.GasMeter().GasConsumed() - prevGasConsumed
+
+			// Check that we consume enough gas that a CL pool swap warrants
+			// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
+			s.Require().Greater(gasConsumedForSwap, uint64(types.ConcentratedGasFeeForSwap))
+
+			// Assert events
+			s.AssertEventEmitted(s.Ctx, types.TypeEvtTokenSwapped, 1)
+
+			// Retrieve pool again post swap
+			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+
+			spotPriceAfter := pool.GetCurrentSqrtPrice().Power(2)
+
+			// Ratio of the token out should be between the before spot price and after spot price.
+			tradeAvgPrice := tokenOutAmount.ToDec().Quo(test.param.tokenIn.Amount.ToDec())
+
+			if zeroForOne {
+				s.Require().True(tradeAvgPrice.LT(spotPriceBefore))
+				s.Require().True(tradeAvgPrice.GT(spotPriceAfter))
+			} else {
+				tradeAvgPrice = sdk.OneDec().Quo(tradeAvgPrice)
+				s.Require().True(tradeAvgPrice.GT(spotPriceBefore))
+				s.Require().True(tradeAvgPrice.LT(spotPriceAfter))
+			}
+
+			// Validate that listeners were called the desired number of times
+			s.validateListenerCallCount(0, 0, 0, 1)
 		})
 	}
 }
@@ -2165,41 +2159,41 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, test.expectedErr)
-			} else {
-				s.Require().NoError(err)
-				s.Require().Equal(test.param.expectedTokenIn.String(), tokenIn.String())
-
-				gasConsumedForSwap := s.Ctx.GasMeter().GasConsumed() - prevGasConsumed
-				// Check that we consume enough gas that a CL pool swap warrants
-				// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
-				s.Require().Greater(gasConsumedForSwap, uint64(types.ConcentratedGasFeeForSwap))
-
-				// Assert events
-				s.AssertEventEmitted(s.Ctx, types.TypeEvtTokenSwapped, 1)
-
-				// Retrieve pool again post swap
-				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-				s.Require().NoError(err)
-
-				spotPriceAfter := pool.GetCurrentSqrtPrice().Power(2)
-
-				// Ratio of the token out should be between the before spot price and after spot price.
-				tradeAvgPrice := tokenIn.ToDec().Quo(test.param.tokenOut.Amount.ToDec())
-
-				if zeroForOne {
-					// token in is token zero, token out is token one
-					tradeAvgPrice = sdk.OneDec().Quo(tradeAvgPrice)
-					s.Require().True(tradeAvgPrice.LT(spotPriceBefore), fmt.Sprintf("tradeAvgPrice: %s, spotPriceBefore: %s", tradeAvgPrice, spotPriceBefore))
-					s.Require().True(tradeAvgPrice.GT(spotPriceAfter), fmt.Sprintf("tradeAvgPrice: %s, spotPriceAfter: %s", tradeAvgPrice, spotPriceAfter))
-				} else {
-					// token in is token one, token out is token zero
-					s.Require().True(tradeAvgPrice.GT(spotPriceBefore), fmt.Sprintf("tradeAvgPrice: %s, spotPriceBefore: %s", tradeAvgPrice, spotPriceBefore))
-					s.Require().True(tradeAvgPrice.LT(spotPriceAfter), fmt.Sprintf("tradeAvgPrice: %s, spotPriceAfter: %s", tradeAvgPrice, spotPriceAfter))
-				}
-
-				// Validate that listeners were called the desired number of times
-				s.validateListenerCallCount(0, 0, 0, 1)
+				return
 			}
+			s.Require().NoError(err)
+			s.Require().Equal(test.param.expectedTokenIn.String(), tokenIn.String())
+
+			gasConsumedForSwap := s.Ctx.GasMeter().GasConsumed() - prevGasConsumed
+			// Check that we consume enough gas that a CL pool swap warrants
+			// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
+			s.Require().Greater(gasConsumedForSwap, uint64(types.ConcentratedGasFeeForSwap))
+
+			// Assert events
+			s.AssertEventEmitted(s.Ctx, types.TypeEvtTokenSwapped, 1)
+
+			// Retrieve pool again post swap
+			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+
+			spotPriceAfter := pool.GetCurrentSqrtPrice().Power(2)
+
+			// Ratio of the token out should be between the before spot price and after spot price.
+			tradeAvgPrice := tokenIn.ToDec().Quo(test.param.tokenOut.Amount.ToDec())
+
+			if zeroForOne {
+				// token in is token zero, token out is token one
+				tradeAvgPrice = sdk.OneDec().Quo(tradeAvgPrice)
+				s.Require().True(tradeAvgPrice.LT(spotPriceBefore), fmt.Sprintf("tradeAvgPrice: %s, spotPriceBefore: %s", tradeAvgPrice, spotPriceBefore))
+				s.Require().True(tradeAvgPrice.GT(spotPriceAfter), fmt.Sprintf("tradeAvgPrice: %s, spotPriceAfter: %s", tradeAvgPrice, spotPriceAfter))
+			} else {
+				// token in is token one, token out is token zero
+				s.Require().True(tradeAvgPrice.GT(spotPriceBefore), fmt.Sprintf("tradeAvgPrice: %s, spotPriceBefore: %s", tradeAvgPrice, spotPriceBefore))
+				s.Require().True(tradeAvgPrice.LT(spotPriceAfter), fmt.Sprintf("tradeAvgPrice: %s, spotPriceAfter: %s", tradeAvgPrice, spotPriceAfter))
+			}
+
+			// Validate that listeners were called the desired number of times
+			s.validateListenerCallCount(0, 0, 0, 1)
 		})
 	}
 }
