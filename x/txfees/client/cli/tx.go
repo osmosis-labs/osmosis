@@ -30,9 +30,10 @@ func NewTxCmd() *cobra.Command {
 
 func NewCmdSubmitUpdateFeeTokenProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-fee-token [flags]",
-		Args:  cobra.ExactArgs(0),
-		Short: "Submit a update fee token record proposal",
+		Use:     "update-fee-token [flags]",
+		Args:    cobra.ExactArgs(0),
+		Example: "update-fee-token --fee-tokens uosmo,1,uion,2,ufoo,0 --from val --chain-id osmosis-1",
+		Short:   "Submit a update fee token record proposal",
 		Long: strings.TrimSpace(`Submit a update fee token record proposal.
 
 Passing in denom,poolID pairs separated by commas would be parsed automatically to pairs of fee token records.
