@@ -2523,23 +2523,8 @@ func (s *KeeperTestSuite) TestComputeInAmtGivenOut() {
 		test := test
 		s.Run(name, func() {
 			s.setupAndFundSwapTest()
-
-			// Create default CL pool
-			pool := s.PrepareConcentratedPool()
-
-			// add default position
-			s.SetupDefaultPosition(pool.GetId())
-
-			// add second position depending on the test
-			if !test.secondPositionLowerPrice.IsNil() {
-				newLowerTick, err := math.PriceToTickRoundDown(test.secondPositionLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
-				s.Require().NoError(err)
-			}
+			pool := s.preparePoolAndDefaultPosition()
+			s.setupSecondPosition(test, pool)
 
 			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
@@ -2582,23 +2567,8 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 	for name, test := range tests {
 		s.Run(name, func() {
 			s.setupAndFundSwapTest()
-
-			// Create default CL pool
-			pool := s.PrepareConcentratedPool()
-
-			// add default position
-			s.SetupDefaultPosition(pool.GetId())
-
-			// add second position depending on the test
-			if !test.secondPositionLowerPrice.IsNil() {
-				newLowerTick, err := math.PriceToTickRoundDown(test.secondPositionLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
-				s.Require().NoError(err)
-			}
+			pool := s.preparePoolAndDefaultPosition()
+			s.setupSecondPosition(test, pool)
 
 			// mark pool state and user balance before swap
 			poolBefore, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, pool.GetId())
@@ -2678,23 +2648,8 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapInAmtGivenOut() {
 	for name, test := range tests {
 		s.Run(name, func() {
 			s.setupAndFundSwapTest()
-
-			// Create default CL pool
-			pool := s.PrepareConcentratedPool()
-
-			// add default position
-			s.SetupDefaultPosition(pool.GetId())
-
-			// add second position depending on the test
-			if !test.secondPositionLowerPrice.IsNil() {
-				newLowerTick, err := math.PriceToTickRoundDown(test.secondPositionLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
-				s.Require().NoError(err)
-			}
+			pool := s.preparePoolAndDefaultPosition()
+			s.setupSecondPosition(test, pool)
 
 			// mark pool state and user balance before swap
 			poolBefore, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, pool.GetId())
