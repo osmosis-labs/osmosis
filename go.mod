@@ -31,7 +31,7 @@ require (
 	github.com/spf13/viper v1.15.0
 	github.com/strangelove-ventures/async-icq/v4 v4.0.0-rc0
 	github.com/strangelove-ventures/packet-forward-middleware/v4 v4.0.5
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.3
 	github.com/tendermint/tendermint v0.34.26
 	github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b
 	github.com/tidwall/btree v1.6.0
