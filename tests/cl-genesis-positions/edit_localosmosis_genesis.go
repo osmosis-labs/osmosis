@@ -78,7 +78,7 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 		balancesMap[balance.Address] = append(balancesMap[balance.Address], balance)
 	}
 
-	// Copy pool state, including ticks, incentive accums, records, and fee accumulators
+	// Copy pool state, including ticks, incentive accums, records, and spread reward accumulators
 	for _, pool := range updatedCLGenesis.PoolData {
 		poolAny := pool.Pool
 

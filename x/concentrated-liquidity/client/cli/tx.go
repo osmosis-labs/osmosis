@@ -26,7 +26,7 @@ func NewTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, NewAddToPositionCmd)
 	osmocli.AddTxCmd(txCmd, NewWithdrawPositionCmd)
 	osmocli.AddTxCmd(txCmd, NewCreateConcentratedPoolCmd)
-	osmocli.AddTxCmd(txCmd, NewCollectFeesCmd)
+	osmocli.AddTxCmd(txCmd, NewCollectSpreadRewardsCmd)
 	osmocli.AddTxCmd(txCmd, NewCollectIncentivesCmd)
 	osmocli.AddTxCmd(txCmd, NewFungifyChargedPositionsCmd)
 	return txCmd
@@ -69,12 +69,12 @@ func NewWithdrawPositionCmd() (*osmocli.TxCliDesc, *types.MsgWithdrawPosition) {
 	}, &types.MsgWithdrawPosition{}
 }
 
-func NewCollectFeesCmd() (*osmocli.TxCliDesc, *types.MsgCollectFees) {
+func NewCollectSpreadRewardsCmd() (*osmocli.TxCliDesc, *types.MsgCollectSpreadRewards) {
 	return &osmocli.TxCliDesc{
 		Use:     "collect-fees [position-ids]",
 		Short:   "collect fees from liquidity position(s)",
 		Example: "collect-fees 1,5,7 --from val --chain-id osmosis-1",
-	}, &types.MsgCollectFees{}
+	}, &types.MsgCollectSpreadRewards{}
 }
 
 func NewCollectIncentivesCmd() (*osmocli.TxCliDesc, *types.MsgCollectIncentives) {

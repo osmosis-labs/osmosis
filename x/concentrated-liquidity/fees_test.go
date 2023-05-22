@@ -659,7 +659,7 @@ func (s *KeeperTestSuite) TestChargeFee() {
 	}
 }
 
-func (s *KeeperTestSuite) TestQueryAndCollectFees() {
+func (s *KeeperTestSuite) TestQueryAndCollectSpreadRewards() {
 	ownerWithValidPosition := s.TestAccs[0]
 	emptyUptimeTrackers := wrapUptimeTrackers(getExpectedUptimes().emptyExpectedAccumValues)
 
@@ -945,7 +945,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 				s.Require().Equal(preQueryPosition, postQueryPosition)
 			}
 
-			actualFeesClaimed, err := clKeeper.CollectFees(ctx, tc.owner, tc.positionIdToCollectAndQuery)
+			actualFeesClaimed, err := clKeeper.CollectSpreadRewards(ctx, tc.owner, tc.positionIdToCollectAndQuery)
 
 			// Assertions.
 
@@ -1544,7 +1544,7 @@ func (s *KeeperTestSuite) TestFunctional_Fees_LP() {
 	s.Require().Equal(expectedPositionToWithdraw.String(), balanceAfterWithdraw.Sub(balanceBeforeWithdraw).Amount.Sub(amtDenom0).String())
 
 	// Validate cannot claim for withdrawn position.
-	_, err = s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, owner, positionIdTwo)
+	_, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(ctx, owner, positionIdTwo)
 	s.Require().Error(err)
 
 	feesCollected = s.collectFeesAndCheckInvariance(ctx, 0, DefaultMinTick, DefaultMaxTick, positionIdOne, sdk.NewCoins(), []string{ETH}, [][]int64{ticksActivatedAfterEachSwap})
@@ -1557,7 +1557,7 @@ func (s *KeeperTestSuite) TestFunctional_Fees_LP() {
 	positionIdThree, _, _, fullLiquidity, _, _, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 	s.Require().NoError(err)
 
-	collectedThree, err := s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, owner, positionIdThree)
+	collectedThree, err := s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(ctx, owner, positionIdThree)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.Coins(nil), collectedThree)
 }
@@ -1657,7 +1657,7 @@ func (s *KeeperTestSuite) swapAndTrackXTimesInARow(poolId uint64, coinIn sdk.Coi
 
 // collectFeesAndCheckInvariance collects fees from the concentrated liquidity pool and checks the resulting tick status invariance.
 func (s *KeeperTestSuite) collectFeesAndCheckInvariance(ctx sdk.Context, accountIndex int, minTick, maxTick int64, positionId uint64, feesCollected sdk.Coins, expectedFeeDenoms []string, activeTicks [][]int64) (totalFeesCollected sdk.Coins) {
-	coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, s.TestAccs[accountIndex], positionId)
+	coins, err := s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(ctx, s.TestAccs[accountIndex], positionId)
 	s.Require().NoError(err)
 	totalFeesCollected = feesCollected.Add(coins...)
 	s.tickStatusInvariance(activeTicks, minTick, maxTick, coins, expectedFeeDenoms)

@@ -330,7 +330,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Track balances for address1 position1
 	addr1BalancesBefore := s.addrBalance(chainANode, address1)
-	chainANode.CollectFees(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
+	chainANode.CollectSpreadRewards(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
 	addr1BalancesAfter := s.addrBalance(chainANode, address1)
 
 	// Assert that the balance changed only for tokenIn (uosmo)
@@ -441,7 +441,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Track balances for address1 position1
 	addr1BalancesBefore = s.addrBalance(chainANode, address1)
-	chainANode.CollectFees(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
+	chainANode.CollectSpreadRewards(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
 	addr1BalancesAfter = s.addrBalance(chainANode, address1)
 
 	// Assert that the balance changed only for tokenIn (uosmo)
@@ -466,7 +466,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Track balance off address3 position2: check that position that has not been kicked out earned full rewards
 	addr3BalancesBefore := s.addrBalance(chainANode, address3)
-	chainANode.CollectFees(address3, fmt.Sprint(positionsAddress3[1].Position.PositionId))
+	chainANode.CollectSpreadRewards(address3, fmt.Sprint(positionsAddress3[1].Position.PositionId))
 	addr3BalancesAfter := s.addrBalance(chainANode, address3)
 
 	// Calculate uncollected fees for address3 position2 earned from Swap 1
@@ -545,7 +545,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		feeGrowthInsideAddress1Position1Last = feeGrowthGlobal_Swap1.Add(feeCharge_Swap2_Step1)
 	)
 	// Collect fees for address1 position1 to avoid overhead computations (swap2 already asserted fees are aggregated correctly from multiple swaps)
-	chainANode.CollectFees(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
+	chainANode.CollectSpreadRewards(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
 
 	// Perform a swap
 	chainANode.SwapExactAmountIn(uionIn_Swap3, outMinAmt, fmt.Sprintf("%d", poolID), denom1, initialization.ValidatorWalletName)
@@ -558,7 +558,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Track balance of address1
 	addr1BalancesBefore = s.addrBalance(chainANode, address1)
-	chainANode.CollectFees(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
+	chainANode.CollectSpreadRewards(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
 	addr1BalancesAfter = s.addrBalance(chainANode, address1)
 
 	// Assert that the balance changed only for tokenIn (uion)
@@ -604,7 +604,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Track balance of address3
 	addr3BalancesBefore = s.addrBalance(chainANode, address3)
-	chainANode.CollectFees(address3, fmt.Sprint(positionsAddress3[1].Position.PositionId))
+	chainANode.CollectSpreadRewards(address3, fmt.Sprint(positionsAddress3[1].Position.PositionId))
 	addr3BalancesAfter = s.addrBalance(chainANode, address3)
 
 	// Assert that the balance changed only for tokenIn (uion)
@@ -645,7 +645,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Address3 Position1: [-160000; -20000]
 	addr3BalancesBefore = s.addrBalance(chainANode, address3)
-	chainANode.CollectFees(address3, fmt.Sprint(positionsAddress3[0].Position.PositionId))
+	chainANode.CollectSpreadRewards(address3, fmt.Sprint(positionsAddress3[0].Position.PositionId))
 	addr3BalancesAfter = s.addrBalance(chainANode, address3)
 
 	// Assert that balances did not change for any token
@@ -653,7 +653,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Address2's only position: [220000; 342000]
 	addr2BalancesBefore := s.addrBalance(chainANode, address2)
-	chainANode.CollectFees(address2, fmt.Sprint(positionsAddress2[0].Position.PositionId))
+	chainANode.CollectSpreadRewards(address2, fmt.Sprint(positionsAddress2[0].Position.PositionId))
 	addr2BalancesAfter := s.addrBalance(chainANode, address2)
 
 	// Assert the balances did not change for every token

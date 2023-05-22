@@ -117,7 +117,7 @@ func (k Keeper) InitializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	return k.initializeInitialPositionForPool(ctx, pool, amount0Desired, amount1Desired)
 }
 
-func (k Keeper) CollectFees(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
+func (k Keeper) CollectSpreadRewards(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
 	return k.collectFees(ctx, owner, positionId)
 }
 

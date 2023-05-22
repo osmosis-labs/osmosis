@@ -1201,14 +1201,14 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 	s.Require().NoError(err)
 
 	// Claim fees
-	collected, err := s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, defaultAddress, newPositionId)
+	collected, err := s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, defaultAddress, newPositionId)
 	s.Require().NoError(err)
 
 	// Validate that the correct fee amount was collected.
 	s.Require().Equal(expectedFeeTruncated, collected.AmountOf(swapAmountIn.Denom))
 
 	// Check that cannot claim again.
-	collected, err = s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, defaultAddress, newPositionId)
+	collected, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, defaultAddress, newPositionId)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.Coins(nil), collected)
 
@@ -1217,7 +1217,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 
 	// Check that cannot claim old positions
 	for _, oldPositionId := range expectedPositionIds {
-		collected, err = s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, defaultAddress, oldPositionId)
+		collected, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, defaultAddress, oldPositionId)
 		s.Require().Error(err)
 		s.Require().Equal(sdk.Coins{}, collected)
 

@@ -57,14 +57,14 @@ func (n *NodeConfig) CreateStableswapPool(poolFile, from string) uint64 {
 	return poolID
 }
 
-// CollectFees collects fees earned by concentrated position in range of [lowerTick; upperTick] in pool with id of poolId
-func (n *NodeConfig) CollectFees(from, positionIds string) {
-	n.LogActionF("collecting fees from concentrated position")
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "collect-fees", positionIds, fmt.Sprintf("--from=%s", from)}
+// CollectSpreadRewards collects spread rewards earned by concentrated position in range of [lowerTick; upperTick] in pool with id of poolId
+func (n *NodeConfig) CollectSpreadRewards(from, positionIds string) {
+	n.LogActionF("collecting spread rewards from concentrated position")
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "collect-spread-rewards", positionIds, fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	n.LogActionF("successfully collected fees for account %s", from)
+	n.LogActionF("successfully collected spread rewards for account %s", from)
 }
 
 // CreateConcentratedPool creates a concentrated pool.
@@ -88,8 +88,8 @@ func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpa
 func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, tokens string, token0MinAmt, token1MinAmt int64, poolId uint64) uint64 {
 	n.LogActionF("creating concentrated position")
 	// gas = 50,000 because e2e  default to 40,000, we hardcoded extra 10k gas to initialize tick
-	// fees = 1250 (because 50,000 * 0.0025 = 1250)
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", fmt.Sprint(poolId), lowerTick, upperTick, tokens, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), "--gas=500000", "--fees=1250uosmo", "-o json"}
+	// spread rewards = 1250 (because 50,000 * 0.0025 = 1250)
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", fmt.Sprint(poolId), lowerTick, upperTick, tokens, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), "--gas=500000", "--spread-rewards=1250uosmo", "-o json"}
 	outJson, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "code\":0")
 	require.NoError(n.t, err)
 
@@ -118,7 +118,7 @@ func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 
 func (n *NodeConfig) WithdrawPosition(from, liquidityOut string, positionId uint64) {
 	n.LogActionF("withdrawing liquidity from position")
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", fmt.Sprint(positionId), liquidityOut, fmt.Sprintf("--from=%s", from), "--gas=650000", "--fees=5000uosmo"}
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", fmt.Sprint(positionId), liquidityOut, fmt.Sprintf("--from=%s", from), "--gas=650000", "--spread-rewards=5000uosmo"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully withdrew %s liquidity from position %d", liquidityOut, positionId)
@@ -391,8 +391,8 @@ func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress 
 	n.LogActionF("successfully sent bank sent %s from address %s to %s", amount, sendAddress, receiveAddress)
 }
 
-// This method also funds fee tokens from the `initialization.ValidatorWalletName` account.
-// TODO: Abstract this to be a fee token provider account.
+// This method also funds spread reward tokens from the `initialization.ValidatorWalletName` account.
+// TODO: Abstract this to be a spread reward token provider account.
 func (n *NodeConfig) CreateWallet(walletName string) string {
 	n.LogActionF("creating wallet %s", walletName)
 	cmd := []string{"osmosisd", "keys", "add", walletName, "--keyring-backend=test"}
@@ -403,7 +403,7 @@ func (n *NodeConfig) CreateWallet(walletName string) string {
 	walletAddr = strings.TrimSuffix(walletAddr, "\n")
 	n.LogActionF("created wallet %s, wallet address - %s", walletName, walletAddr)
 	n.BankSend(initialization.WalletFeeTokens.String(), initialization.ValidatorWalletName, walletAddr)
-	n.LogActionF("Sent fee tokens from %s", initialization.ValidatorWalletName)
+	n.LogActionF("Sent spread rewards tokens from %s", initialization.ValidatorWalletName)
 	return walletAddr
 }
 

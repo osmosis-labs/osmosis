@@ -466,7 +466,7 @@ type MsgCreateConcentratedPoolResponse struct {
 }
 ```
 
-### `MsgCollectFees`
+### `MsgCollectSpreadRewards`
 
 This message allows collecting fees allocated multiple position IDs from a
 single owner.
@@ -474,7 +474,7 @@ single owner.
 The fee collection is discussed in more detail in the "Fees" section of this document.
 
 ```go
-type MsgCollectFees struct {
+type MsgCollectSpreadRewards struct {
  PositionIds    []uint64
  Sender         string
 }
@@ -487,7 +487,7 @@ The sender should also see their balance increase by the returned
 amounts.
 
 ```go
-type MsgCollectFeesResponse struct {
+type MsgCollectSpreadRewardsResponse struct {
  CollectedFees []types.Coin
 }
 ```
@@ -1228,7 +1228,7 @@ for the position, the amount of fees allocated to the position must also change 
 Once calculated, collecting fees is a straightforward process of transferring the
 calculated amount from the pool address to the position owner.
 
-To collect fees, users call `MsgCollectFees` with the ID corresponding to
+To collect fees, users call `MsgCollectSpreadRewards` with the ID corresponding to
 their position. The function `collectFees` in the keeper is responsible for
 executing the fee collection and returning the amount collected, given the owner's
 address and the position ID:
