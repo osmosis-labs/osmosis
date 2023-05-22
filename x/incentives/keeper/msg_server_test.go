@@ -22,7 +22,7 @@ var (
 	tenTokens     = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000)))
 )
 
-func (suite *KeeperTestSuite) TestCreateGauge_Fee() {
+func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 	tests := []struct {
 		name                 string
 		accountBalanceToFund sdk.Coins
@@ -81,17 +81,17 @@ func (suite *KeeperTestSuite) TestCreateGauge_Fee() {
 	}
 
 	for _, tc := range tests {
-		suite.SetupTest()
+		s.SetupTest()
 
 		testAccountPubkey := secp256k1.GenPrivKeyFromSecret([]byte("acc")).PubKey()
 		testAccountAddress := sdk.AccAddress(testAccountPubkey.Address())
 
-		ctx := suite.Ctx
-		bankKeeper := suite.App.BankKeeper
-		accountKeeper := suite.App.AccountKeeper
-		msgServer := keeper.NewMsgServerImpl(suite.App.IncentivesKeeper)
+		ctx := s.Ctx
+		bankKeeper := s.App.BankKeeper
+		accountKeeper := s.App.AccountKeeper
+		msgServer := keeper.NewMsgServerImpl(s.App.IncentivesKeeper)
 
-		suite.FundAcc(testAccountAddress, tc.accountBalanceToFund)
+		s.FundAcc(testAccountAddress, tc.accountBalanceToFund)
 
 		if tc.isModuleAccount {
 			modAcc := authtypes.NewModuleAccount(authtypes.NewBaseAccount(testAccountAddress, testAccountPubkey, 1, 0),
@@ -101,7 +101,7 @@ func (suite *KeeperTestSuite) TestCreateGauge_Fee() {
 			accountKeeper.SetModuleAccount(ctx, modAcc)
 		}
 
-		suite.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
+		s.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
 		distrTo := lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         defaultLPDenom,
@@ -120,25 +120,25 @@ func (suite *KeeperTestSuite) TestCreateGauge_Fee() {
 		_, err := msgServer.CreateGauge(sdk.WrapSDKContext(ctx), msg)
 
 		if tc.expectErr {
-			suite.Require().Error(err)
+			s.Require().Error(err)
 		} else {
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 		}
 
 		balanceAmount := bankKeeper.GetAllBalances(ctx, testAccountAddress)
 
 		if tc.expectErr {
-			suite.Require().Equal(tc.accountBalanceToFund.String(), balanceAmount.String(), "test: %v", tc.name)
+			s.Require().Equal(tc.accountBalanceToFund.String(), balanceAmount.String(), "test: %v", tc.name)
 		} else {
 			fee := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, types.CreateGaugeFee))
 			accountBalance := tc.accountBalanceToFund.Sub(tc.gaugeAddition)
 			finalAccountBalance := accountBalance.Sub(fee)
-			suite.Require().Equal(finalAccountBalance.String(), balanceAmount.String(), "test: %v", tc.name)
+			s.Require().Equal(finalAccountBalance.String(), balanceAmount.String(), "test: %v", tc.name)
 		}
 	}
 }
 
-func (suite *KeeperTestSuite) TestAddToGauge_Fee() {
+func (s *KeeperTestSuite) TestAddToGauge_Fee() {
 	tests := []struct {
 		name                 string
 		accountBalanceToFund sdk.Coins
@@ -199,35 +199,35 @@ func (suite *KeeperTestSuite) TestAddToGauge_Fee() {
 	}
 
 	for _, tc := range tests {
-		suite.SetupTest()
+		s.SetupTest()
 
 		testAccountPubkey := secp256k1.GenPrivKeyFromSecret([]byte("acc")).PubKey()
 		testAccountAddress := sdk.AccAddress(testAccountPubkey.Address())
 
-		bankKeeper := suite.App.BankKeeper
-		incentivesKeeper := suite.App.IncentivesKeeper
-		accountKeeper := suite.App.AccountKeeper
+		bankKeeper := s.App.BankKeeper
+		incentivesKeeper := s.App.IncentivesKeeper
+		accountKeeper := s.App.AccountKeeper
 		msgServer := keeper.NewMsgServerImpl(incentivesKeeper)
 
-		suite.FundAcc(testAccountAddress, tc.accountBalanceToFund)
+		s.FundAcc(testAccountAddress, tc.accountBalanceToFund)
 
 		if tc.isModuleAccount {
 			modAcc := authtypes.NewModuleAccount(authtypes.NewBaseAccount(testAccountAddress, testAccountPubkey, 1, 0),
 				"module",
 				"permission",
 			)
-			accountKeeper.SetModuleAccount(suite.Ctx, modAcc)
+			accountKeeper.SetModuleAccount(s.Ctx, modAcc)
 		}
 
 		// System under test.
 		coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500000000)))
-		gaugeID, gauge, _, _ := suite.SetupNewGauge(tc.isPerpetual, coins)
+		gaugeID, gauge, _, _ := s.SetupNewGauge(tc.isPerpetual, coins)
 		if tc.nonexistentGauge {
-			gaugeID = incentivesKeeper.GetLastGaugeID(suite.Ctx) + 1
+			gaugeID = incentivesKeeper.GetLastGaugeID(s.Ctx) + 1
 		}
 		// simulate times to complete the gauge.
 		if tc.isGaugeComplete {
-			suite.completeGauge(gauge, sdk.AccAddress([]byte("a___________________")))
+			s.completeGauge(gauge, sdk.AccAddress([]byte("a___________________")))
 		}
 		msg := &types.MsgAddToGauge{
 			Owner:   testAccountAddress.String(),
@@ -235,44 +235,44 @@ func (suite *KeeperTestSuite) TestAddToGauge_Fee() {
 			Rewards: tc.gaugeAddition,
 		}
 
-		_, err := msgServer.AddToGauge(sdk.WrapSDKContext(suite.Ctx), msg)
+		_, err := msgServer.AddToGauge(sdk.WrapSDKContext(s.Ctx), msg)
 
 		if tc.expectErr {
-			suite.Require().Error(err, tc.name)
+			s.Require().Error(err, tc.name)
 		} else {
-			suite.Require().NoError(err, tc.name)
+			s.Require().NoError(err, tc.name)
 		}
 
-		bal := bankKeeper.GetAllBalances(suite.Ctx, testAccountAddress)
+		bal := bankKeeper.GetAllBalances(s.Ctx, testAccountAddress)
 
 		if !tc.expectErr {
 			fee := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, types.AddToGaugeFee))
 			accountBalance := tc.accountBalanceToFund.Sub(tc.gaugeAddition)
 			finalAccountBalance := accountBalance.Sub(fee)
-			suite.Require().Equal(finalAccountBalance.String(), bal.String(), "test: %v", tc.name)
+			s.Require().Equal(finalAccountBalance.String(), bal.String(), "test: %v", tc.name)
 		} else if tc.expectErr && !tc.isGaugeComplete {
-			suite.Require().Equal(tc.accountBalanceToFund.String(), bal.String(), "test: %v", tc.name)
+			s.Require().Equal(tc.accountBalanceToFund.String(), bal.String(), "test: %v", tc.name)
 		}
 	}
 }
 
-func (suite *KeeperTestSuite) completeGauge(gauge *types.Gauge, sendingAddress sdk.AccAddress) {
+func (s *KeeperTestSuite) completeGauge(gauge *types.Gauge, sendingAddress sdk.AccAddress) {
 	lockCoins := sdk.NewCoin(gauge.DistributeTo.Denom, sdk.NewInt(1000))
-	suite.FundAcc(sendingAddress, sdk.NewCoins(lockCoins))
-	suite.LockTokens(sendingAddress, sdk.NewCoins(lockCoins), gauge.DistributeTo.Duration)
-	epochId := suite.App.IncentivesKeeper.GetEpochInfo(suite.Ctx).Identifier
-	if suite.Ctx.BlockTime().Before(gauge.StartTime) {
-		suite.Ctx = suite.Ctx.WithBlockTime(gauge.StartTime.Add(time.Hour))
+	s.FundAcc(sendingAddress, sdk.NewCoins(lockCoins))
+	s.LockTokens(sendingAddress, sdk.NewCoins(lockCoins), gauge.DistributeTo.Duration)
+	epochId := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Identifier
+	if s.Ctx.BlockTime().Before(gauge.StartTime) {
+		s.Ctx = s.Ctx.WithBlockTime(gauge.StartTime.Add(time.Hour))
 	}
-	suite.BeginNewBlock(false)
+	s.BeginNewBlock(false)
 	for i := 0; i < int(gauge.NumEpochsPaidOver); i++ {
-		err := suite.App.IncentivesKeeper.BeforeEpochStart(suite.Ctx, epochId, int64(i))
-		suite.Require().NoError(err)
-		err = suite.App.IncentivesKeeper.AfterEpochEnd(suite.Ctx, epochId, int64(i))
-		suite.Require().NoError(err)
+		err := s.App.IncentivesKeeper.BeforeEpochStart(s.Ctx, epochId, int64(i))
+		s.Require().NoError(err)
+		err = s.App.IncentivesKeeper.AfterEpochEnd(s.Ctx, epochId, int64(i))
+		s.Require().NoError(err)
 	}
-	suite.BeginNewBlock(false)
-	gauge2, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gauge.Id)
-	suite.Require().NoError(err)
-	suite.Require().True(gauge2.IsFinishedGauge(suite.Ctx.BlockTime()))
+	s.BeginNewBlock(false)
+	gauge2, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gauge.Id)
+	s.Require().NoError(err)
+	s.Require().True(gauge2.IsFinishedGauge(s.Ctx.BlockTime()))
 }

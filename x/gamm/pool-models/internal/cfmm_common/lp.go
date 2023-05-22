@@ -116,7 +116,7 @@ func MaximalExactRatioJoin(p types.CFMMPoolI, ctx sdk.Context, tokensIn sdk.Coin
 }
 
 // We binary search a number of LP shares, s.t. if we exited the pool with the updated liquidity,
-// and swapped all the tokens back to the input denom, we'd get the same amount. (under 0 swap fee)
+// and swapped all the tokens back to the input denom, we'd get the same amount. (under 0 spread factor)
 // Thanks to CFMM path-independence, we can estimate slippage with these swaps to be sure to get the right numbers here.
 // (by path-independence, swap all of B -> A, and then swap all of C -> A will yield same amount of A, regardless
 // of order and interleaving)
@@ -169,14 +169,14 @@ func BinarySearchSingleAssetJoin(
 
 // SwapAllCoinsToSingleAsset iterates through each token in the input set and trades it against the same pool sequentially
 func SwapAllCoinsToSingleAsset(pool types.CFMMPoolI, ctx sdk.Context, inTokens sdk.Coins, swapToDenom string,
-	swapFee sdk.Dec,
+	spreadFactor sdk.Dec,
 ) (sdk.Int, error) {
 	tokenOutAmt := inTokens.AmountOfNoDenomValidation(swapToDenom)
 	for _, coin := range inTokens {
 		if coin.Denom == swapToDenom {
 			continue
 		}
-		tokenOut, err := pool.SwapOutAmtGivenIn(ctx, sdk.NewCoins(coin), swapToDenom, swapFee)
+		tokenOut, err := pool.SwapOutAmtGivenIn(ctx, sdk.NewCoins(coin), swapToDenom, spreadFactor)
 		if err != nil {
 			return sdk.Int{}, err
 		}

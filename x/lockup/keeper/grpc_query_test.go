@@ -8,506 +8,506 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
-func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
-	suite.FundAcc(addr, coins)
-	_, err := suite.querier.CreateLock(suite.Ctx, addr, coins, duration)
-	suite.Require().NoError(err)
+func (s *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
+	s.FundAcc(addr, coins)
+	_, err := s.querier.CreateLock(s.Ctx, addr, coins, duration)
+	s.Require().NoError(err)
 }
 
-func (suite *KeeperTestSuite) BeginUnlocking(addr sdk.AccAddress) {
-	_, err := suite.querier.BeginUnlockAllNotUnlockings(suite.Ctx, addr)
-	suite.Require().NoError(err)
+func (s *KeeperTestSuite) BeginUnlocking(addr sdk.AccAddress) {
+	_, err := s.querier.BeginUnlockAllNotUnlockings(s.Ctx, addr)
+	s.Require().NoError(err)
 }
 
-func (suite *KeeperTestSuite) WithdrawAllMaturedLocks() {
-	suite.querier.WithdrawAllMaturedLocks(suite.Ctx)
+func (s *KeeperTestSuite) WithdrawAllMaturedLocks() {
+	s.querier.WithdrawAllMaturedLocks(s.Ctx)
 }
 
-func (suite *KeeperTestSuite) TestModuleBalance() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestModuleBalance() {
+	s.SetupTest()
 
 	// initial check
-	res, err := suite.querier.ModuleBalance(sdk.WrapSDKContext(suite.Ctx), &types.ModuleBalanceRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins{})
+	res, err := s.querier.ModuleBalance(sdk.WrapSDKContext(s.Ctx), &types.ModuleBalanceRequest{})
+	s.Require().NoError(err)
+	s.Require().Equal(res.Coins, sdk.Coins{})
 
 	// lock coins
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
+	s.LockTokens(addr1, coins, time.Second)
 
 	// final check
-	res, err = suite.querier.ModuleBalance(sdk.WrapSDKContext(suite.Ctx), &types.ModuleBalanceRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, coins)
+	res, err = s.querier.ModuleBalance(sdk.WrapSDKContext(s.Ctx), &types.ModuleBalanceRequest{})
+	s.Require().NoError(err)
+	s.Require().Equal(res.Coins, coins)
 }
 
-func (suite *KeeperTestSuite) TestModuleLockedAmount() {
+func (s *KeeperTestSuite) TestModuleLockedAmount() {
 	// test for module locked balance check
-	suite.SetupTest()
+	s.SetupTest()
 
 	// initial check
-	res, err := suite.querier.ModuleLockedAmount(sdk.WrapSDKContext(suite.Ctx), &types.ModuleLockedAmountRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins(nil))
+	res, err := s.querier.ModuleLockedAmount(sdk.WrapSDKContext(s.Ctx), &types.ModuleLockedAmountRequest{})
+	s.Require().NoError(err)
+	s.Require().Equal(res.Coins, sdk.Coins(nil))
 
 	// lock coins
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
-	suite.BeginUnlocking(addr1)
+	s.LockTokens(addr1, coins, time.Second)
+	s.BeginUnlocking(addr1)
 
 	// current module locked balance check = unlockTime - 1s
-	res, err = suite.querier.ModuleLockedAmount(sdk.WrapSDKContext(suite.Ctx), &types.ModuleLockedAmountRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, coins)
+	res, err = s.querier.ModuleLockedAmount(sdk.WrapSDKContext(s.Ctx), &types.ModuleLockedAmountRequest{})
+	s.Require().NoError(err)
+	s.Require().Equal(res.Coins, coins)
 
 	// module locked balance after 1 second = unlockTime
-	now := suite.Ctx.BlockTime()
-	res, err = suite.querier.ModuleLockedAmount(sdk.WrapSDKContext(suite.Ctx.WithBlockTime(now.Add(time.Second))), &types.ModuleLockedAmountRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins(nil))
+	now := s.Ctx.BlockTime()
+	res, err = s.querier.ModuleLockedAmount(sdk.WrapSDKContext(s.Ctx.WithBlockTime(now.Add(time.Second))), &types.ModuleLockedAmountRequest{})
+	s.Require().NoError(err)
+	s.Require().Equal(res.Coins, sdk.Coins(nil))
 
 	// module locked balance after 2 second = unlockTime + 1s
-	res, err = suite.querier.ModuleLockedAmount(sdk.WrapSDKContext(suite.Ctx.WithBlockTime(now.Add(2*time.Second))), &types.ModuleLockedAmountRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins(nil))
+	res, err = s.querier.ModuleLockedAmount(sdk.WrapSDKContext(s.Ctx.WithBlockTime(now.Add(2*time.Second))), &types.ModuleLockedAmountRequest{})
+	s.Require().NoError(err)
+	s.Require().Equal(res.Coins, sdk.Coins(nil))
 }
 
-func (suite *KeeperTestSuite) TestAccountUnlockableCoins() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestAccountUnlockableCoins() {
+	s.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
 	// empty address unlockable coins check
-	_, err := suite.querier.AccountUnlockableCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockableCoinsRequest{Owner: ""})
-	suite.Require().Error(err)
+	_, err := s.querier.AccountUnlockableCoins(sdk.WrapSDKContext(s.Ctx), &types.AccountUnlockableCoinsRequest{Owner: ""})
+	s.Require().Error(err)
 
 	// initial check
-	res, err := suite.querier.AccountUnlockableCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockableCoinsRequest{Owner: addr1.String()})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins{})
+	res, err := s.querier.AccountUnlockableCoins(sdk.WrapSDKContext(s.Ctx), &types.AccountUnlockableCoinsRequest{Owner: addr1.String()})
+	s.Require().NoError(err)
+	s.Require().Equal(res.Coins, sdk.Coins{})
 
 	// lock coins
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
+	s.LockTokens(addr1, coins, time.Second)
 
 	// check before start unlocking
-	res, err = suite.querier.AccountUnlockableCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockableCoinsRequest{Owner: addr1.String()})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins{})
+	res, err = s.querier.AccountUnlockableCoins(sdk.WrapSDKContext(s.Ctx), &types.AccountUnlockableCoinsRequest{Owner: addr1.String()})
+	s.Require().NoError(err)
+	s.Require().Equal(res.Coins, sdk.Coins{})
 
-	suite.BeginUnlocking(addr1)
+	s.BeginUnlocking(addr1)
 
 	// check = unlockTime - 1s
-	res, err = suite.querier.AccountUnlockableCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockableCoinsRequest{Owner: addr1.String()})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins{})
+	res, err = s.querier.AccountUnlockableCoins(sdk.WrapSDKContext(s.Ctx), &types.AccountUnlockableCoinsRequest{Owner: addr1.String()})
+	s.Require().NoError(err)
+	s.Require().Equal(res.Coins, sdk.Coins{})
 
 	// check after 1 second = unlockTime
-	now := suite.Ctx.BlockTime()
-	res, err = suite.querier.AccountUnlockableCoins(sdk.WrapSDKContext(suite.Ctx.WithBlockTime(now.Add(time.Second))), &types.AccountUnlockableCoinsRequest{Owner: addr1.String()})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, coins)
+	now := s.Ctx.BlockTime()
+	res, err = s.querier.AccountUnlockableCoins(sdk.WrapSDKContext(s.Ctx.WithBlockTime(now.Add(time.Second))), &types.AccountUnlockableCoinsRequest{Owner: addr1.String()})
+	s.Require().NoError(err)
+	s.Require().Equal(res.Coins, coins)
 
 	// check after 2 second = unlockTime + 1s
-	res, err = suite.querier.AccountUnlockableCoins(sdk.WrapSDKContext(suite.Ctx.WithBlockTime(now.Add(2*time.Second))), &types.AccountUnlockableCoinsRequest{Owner: addr1.String()})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, coins)
+	res, err = s.querier.AccountUnlockableCoins(sdk.WrapSDKContext(s.Ctx.WithBlockTime(now.Add(2*time.Second))), &types.AccountUnlockableCoinsRequest{Owner: addr1.String()})
+	s.Require().NoError(err)
+	s.Require().Equal(res.Coins, coins)
 }
 
-func (suite *KeeperTestSuite) TestAccountUnlockingCoins() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestAccountUnlockingCoins() {
+	s.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
 	// empty address unlockable coins check
-	_, err := suite.querier.AccountUnlockingCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockingCoinsRequest{Owner: ""})
-	suite.Require().Error(err)
+	_, err := s.querier.AccountUnlockingCoins(sdk.WrapSDKContext(s.Ctx), &types.AccountUnlockingCoinsRequest{Owner: ""})
+	s.Require().Error(err)
 
 	// initial check
-	res, err := suite.querier.AccountUnlockingCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockingCoinsRequest{Owner: addr1.String()})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins{})
+	res, err := s.querier.AccountUnlockingCoins(sdk.WrapSDKContext(s.Ctx), &types.AccountUnlockingCoinsRequest{Owner: addr1.String()})
+	s.Require().NoError(err)
+	s.Require().Equal(res.Coins, sdk.Coins{})
 
 	// lock coins
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
+	s.LockTokens(addr1, coins, time.Second)
 
 	// check before start unlocking
-	res, err = suite.querier.AccountUnlockingCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockingCoinsRequest{Owner: addr1.String()})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins{})
+	res, err = s.querier.AccountUnlockingCoins(sdk.WrapSDKContext(s.Ctx), &types.AccountUnlockingCoinsRequest{Owner: addr1.String()})
+	s.Require().NoError(err)
+	s.Require().Equal(res.Coins, sdk.Coins{})
 
-	suite.BeginUnlocking(addr1)
+	s.BeginUnlocking(addr1)
 
 	// check at unlockTime - 1s
-	res, err = suite.querier.AccountUnlockingCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockingCoinsRequest{Owner: addr1.String()})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	res, err = s.querier.AccountUnlockingCoins(sdk.WrapSDKContext(s.Ctx), &types.AccountUnlockingCoinsRequest{Owner: addr1.String()})
+	s.Require().NoError(err)
+	s.Require().Equal(res.Coins, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 
 	// check after 1 second = unlockTime
-	now := suite.Ctx.BlockTime()
-	res, err = suite.querier.AccountUnlockingCoins(sdk.WrapSDKContext(suite.Ctx.WithBlockTime(now.Add(time.Second))), &types.AccountUnlockingCoinsRequest{Owner: addr1.String()})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins{})
+	now := s.Ctx.BlockTime()
+	res, err = s.querier.AccountUnlockingCoins(sdk.WrapSDKContext(s.Ctx.WithBlockTime(now.Add(time.Second))), &types.AccountUnlockingCoinsRequest{Owner: addr1.String()})
+	s.Require().NoError(err)
+	s.Require().Equal(res.Coins, sdk.Coins{})
 
 	// check after 2 second = unlockTime + 1s
-	res, err = suite.querier.AccountUnlockingCoins(sdk.WrapSDKContext(suite.Ctx.WithBlockTime(now.Add(2*time.Second))), &types.AccountUnlockingCoinsRequest{Owner: addr1.String()})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins{})
+	res, err = s.querier.AccountUnlockingCoins(sdk.WrapSDKContext(s.Ctx.WithBlockTime(now.Add(2*time.Second))), &types.AccountUnlockingCoinsRequest{Owner: addr1.String()})
+	s.Require().NoError(err)
+	s.Require().Equal(res.Coins, sdk.Coins{})
 }
 
-func (suite *KeeperTestSuite) TestAccountLockedCoins() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestAccountLockedCoins() {
+	s.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
 	// empty address locked coins check
-	_, err := suite.querier.AccountLockedCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedCoinsRequest{})
-	suite.Require().Error(err)
+	_, err := s.querier.AccountLockedCoins(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedCoinsRequest{})
+	s.Require().Error(err)
 
 	// initial check
-	res, err := suite.querier.AccountLockedCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedCoinsRequest{Owner: addr1.String()})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins(nil))
+	res, err := s.querier.AccountLockedCoins(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedCoinsRequest{Owner: addr1.String()})
+	s.Require().NoError(err)
+	s.Require().Equal(res.Coins, sdk.Coins(nil))
 
 	// lock coins
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
-	suite.BeginUnlocking(addr1)
+	s.LockTokens(addr1, coins, time.Second)
+	s.BeginUnlocking(addr1)
 
 	// check = unlockTime - 1s
-	res, err = suite.querier.AccountLockedCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedCoinsRequest{Owner: addr1.String()})
-	suite.Require().NoError(err)
-	suite.Require().Equal(coins, res.Coins)
+	res, err = s.querier.AccountLockedCoins(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedCoinsRequest{Owner: addr1.String()})
+	s.Require().NoError(err)
+	s.Require().Equal(coins, res.Coins)
 
 	// check after 1 second = unlockTime
-	now := suite.Ctx.BlockTime()
-	res, err = suite.querier.AccountLockedCoins(sdk.WrapSDKContext(suite.Ctx.WithBlockTime(now.Add(time.Second))), &types.AccountLockedCoinsRequest{Owner: addr1.String()})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins(nil))
+	now := s.Ctx.BlockTime()
+	res, err = s.querier.AccountLockedCoins(sdk.WrapSDKContext(s.Ctx.WithBlockTime(now.Add(time.Second))), &types.AccountLockedCoinsRequest{Owner: addr1.String()})
+	s.Require().NoError(err)
+	s.Require().Equal(res.Coins, sdk.Coins(nil))
 
 	// check after 2 second = unlockTime + 1s
-	res, err = suite.querier.AccountLockedCoins(sdk.WrapSDKContext(suite.Ctx.WithBlockTime(now.Add(2*time.Second))), &types.AccountLockedCoinsRequest{Owner: addr1.String()})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins(nil))
+	res, err = s.querier.AccountLockedCoins(sdk.WrapSDKContext(s.Ctx.WithBlockTime(now.Add(2*time.Second))), &types.AccountLockedCoinsRequest{Owner: addr1.String()})
+	s.Require().NoError(err)
+	s.Require().Equal(res.Coins, sdk.Coins(nil))
 }
 
-func (suite *KeeperTestSuite) TestAccountLockedPastTime() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestAccountLockedPastTime() {
+	s.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	now := suite.Ctx.BlockTime()
+	now := s.Ctx.BlockTime()
 
 	// empty address locks check
-	_, err := suite.querier.AccountLockedPastTime(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeRequest{Owner: "", Timestamp: now})
-	suite.Require().Error(err)
+	_, err := s.querier.AccountLockedPastTime(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedPastTimeRequest{Owner: "", Timestamp: now})
+	s.Require().Error(err)
 
 	// initial check
-	res, err := suite.querier.AccountLockedPastTime(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeRequest{Owner: addr1.String(), Timestamp: now})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 0)
+	res, err := s.querier.AccountLockedPastTime(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedPastTimeRequest{Owner: addr1.String(), Timestamp: now})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 0)
 
 	// lock coins
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
-	suite.BeginUnlocking(addr1)
+	s.LockTokens(addr1, coins, time.Second)
+	s.BeginUnlocking(addr1)
 
 	// check = unlockTime - 1s
-	res, err = suite.querier.AccountLockedPastTime(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeRequest{Owner: addr1.String(), Timestamp: now})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 1)
+	res, err = s.querier.AccountLockedPastTime(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedPastTimeRequest{Owner: addr1.String(), Timestamp: now})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 1)
 
 	// check after 1 second = unlockTime
-	res, err = suite.querier.AccountLockedPastTime(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeRequest{Owner: addr1.String(), Timestamp: now.Add(time.Second)})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 0)
+	res, err = s.querier.AccountLockedPastTime(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedPastTimeRequest{Owner: addr1.String(), Timestamp: now.Add(time.Second)})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 0)
 
 	// check after 2 second = unlockTime + 1s
-	res, err = suite.querier.AccountLockedPastTime(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeRequest{Owner: addr1.String(), Timestamp: now.Add(2 * time.Second)})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 0)
+	res, err = s.querier.AccountLockedPastTime(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedPastTimeRequest{Owner: addr1.String(), Timestamp: now.Add(2 * time.Second)})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 0)
 }
 
-func (suite *KeeperTestSuite) TestAccountLockedPastTimeNotUnlockingOnly() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestAccountLockedPastTimeNotUnlockingOnly() {
+	s.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	now := suite.Ctx.BlockTime()
+	now := s.Ctx.BlockTime()
 
 	// empty address locks check
-	_, err := suite.querier.AccountLockedPastTimeNotUnlockingOnly(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeNotUnlockingOnlyRequest{Owner: "", Timestamp: now})
-	suite.Require().Error(err)
+	_, err := s.querier.AccountLockedPastTimeNotUnlockingOnly(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedPastTimeNotUnlockingOnlyRequest{Owner: "", Timestamp: now})
+	s.Require().Error(err)
 
 	// initial check
-	res, err := suite.querier.AccountLockedPastTimeNotUnlockingOnly(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeNotUnlockingOnlyRequest{Owner: addr1.String(), Timestamp: now})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 0)
+	res, err := s.querier.AccountLockedPastTimeNotUnlockingOnly(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedPastTimeNotUnlockingOnlyRequest{Owner: addr1.String(), Timestamp: now})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 0)
 
 	// lock coins
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
+	s.LockTokens(addr1, coins, time.Second)
 
 	// check when not start unlocking
-	res, err = suite.querier.AccountLockedPastTimeNotUnlockingOnly(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeNotUnlockingOnlyRequest{Owner: addr1.String(), Timestamp: now})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 1)
+	res, err = s.querier.AccountLockedPastTimeNotUnlockingOnly(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedPastTimeNotUnlockingOnlyRequest{Owner: addr1.String(), Timestamp: now})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 1)
 
 	// begin unlocking
-	suite.BeginUnlocking(addr1)
+	s.BeginUnlocking(addr1)
 
 	// check after start unlocking
-	res, err = suite.querier.AccountLockedPastTimeNotUnlockingOnly(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeNotUnlockingOnlyRequest{Owner: addr1.String(), Timestamp: now})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 0)
+	res, err = s.querier.AccountLockedPastTimeNotUnlockingOnly(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedPastTimeNotUnlockingOnlyRequest{Owner: addr1.String(), Timestamp: now})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 0)
 }
 
-func (suite *KeeperTestSuite) TestAccountUnlockedBeforeTime() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestAccountUnlockedBeforeTime() {
+	s.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	now := suite.Ctx.BlockTime()
+	now := s.Ctx.BlockTime()
 
 	// empty address unlockables check
-	_, err := suite.querier.AccountUnlockedBeforeTime(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockedBeforeTimeRequest{Owner: "", Timestamp: now})
-	suite.Require().Error(err)
+	_, err := s.querier.AccountUnlockedBeforeTime(sdk.WrapSDKContext(s.Ctx), &types.AccountUnlockedBeforeTimeRequest{Owner: "", Timestamp: now})
+	s.Require().Error(err)
 
 	// initial check
-	res, err := suite.querier.AccountUnlockedBeforeTime(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockedBeforeTimeRequest{Owner: addr1.String(), Timestamp: now})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 0)
+	res, err := s.querier.AccountUnlockedBeforeTime(sdk.WrapSDKContext(s.Ctx), &types.AccountUnlockedBeforeTimeRequest{Owner: addr1.String(), Timestamp: now})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 0)
 
 	// lock coins
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
-	suite.BeginUnlocking(addr1)
+	s.LockTokens(addr1, coins, time.Second)
+	s.BeginUnlocking(addr1)
 
 	// check = unlockTime - 1s
-	res, err = suite.querier.AccountUnlockedBeforeTime(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockedBeforeTimeRequest{Owner: addr1.String(), Timestamp: now})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 0)
+	res, err = s.querier.AccountUnlockedBeforeTime(sdk.WrapSDKContext(s.Ctx), &types.AccountUnlockedBeforeTimeRequest{Owner: addr1.String(), Timestamp: now})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 0)
 
 	// check after 1 second = unlockTime
-	res, err = suite.querier.AccountUnlockedBeforeTime(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockedBeforeTimeRequest{Owner: addr1.String(), Timestamp: now.Add(time.Second)})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 1)
+	res, err = s.querier.AccountUnlockedBeforeTime(sdk.WrapSDKContext(s.Ctx), &types.AccountUnlockedBeforeTimeRequest{Owner: addr1.String(), Timestamp: now.Add(time.Second)})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 1)
 
 	// check after 2 second = unlockTime + 1s
-	res, err = suite.querier.AccountUnlockedBeforeTime(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockedBeforeTimeRequest{Owner: addr1.String(), Timestamp: now.Add(2 * time.Second)})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 1)
+	res, err = s.querier.AccountUnlockedBeforeTime(sdk.WrapSDKContext(s.Ctx), &types.AccountUnlockedBeforeTimeRequest{Owner: addr1.String(), Timestamp: now.Add(2 * time.Second)})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 1)
 }
 
-func (suite *KeeperTestSuite) TestAccountLockedPastTimeDenom() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestAccountLockedPastTimeDenom() {
+	s.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	now := suite.Ctx.BlockTime()
+	now := s.Ctx.BlockTime()
 
 	// empty address locks by denom check
-	_, err := suite.querier.AccountLockedPastTimeDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeDenomRequest{Owner: "", Denom: "stake", Timestamp: now})
-	suite.Require().Error(err)
+	_, err := s.querier.AccountLockedPastTimeDenom(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedPastTimeDenomRequest{Owner: "", Denom: "stake", Timestamp: now})
+	s.Require().Error(err)
 
 	// initial check
-	res, err := suite.querier.AccountLockedPastTimeDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeDenomRequest{Owner: addr1.String(), Denom: "stake", Timestamp: now})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 0)
+	res, err := s.querier.AccountLockedPastTimeDenom(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedPastTimeDenomRequest{Owner: addr1.String(), Denom: "stake", Timestamp: now})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 0)
 
 	// lock coins
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
-	suite.BeginUnlocking(addr1)
+	s.LockTokens(addr1, coins, time.Second)
+	s.BeginUnlocking(addr1)
 
 	// check = unlockTime - 1s
-	res, err = suite.querier.AccountLockedPastTimeDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeDenomRequest{Owner: addr1.String(), Denom: "stake", Timestamp: now})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 1)
+	res, err = s.querier.AccountLockedPastTimeDenom(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedPastTimeDenomRequest{Owner: addr1.String(), Denom: "stake", Timestamp: now})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 1)
 
 	// account locks by not available denom
-	res, err = suite.querier.AccountLockedPastTimeDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeDenomRequest{Owner: addr1.String(), Denom: "stake2", Timestamp: now})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 0)
+	res, err = s.querier.AccountLockedPastTimeDenom(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedPastTimeDenomRequest{Owner: addr1.String(), Denom: "stake2", Timestamp: now})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 0)
 
 	// account locks by denom after 1 second = unlockTime
-	res, err = suite.querier.AccountLockedPastTimeDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeDenomRequest{Owner: addr1.String(), Denom: "stake", Timestamp: now.Add(time.Second)})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 0)
+	res, err = s.querier.AccountLockedPastTimeDenom(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedPastTimeDenomRequest{Owner: addr1.String(), Denom: "stake", Timestamp: now.Add(time.Second)})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 0)
 
 	// account locks by denom after 2 second = unlockTime + 1s
-	res, err = suite.querier.AccountLockedPastTimeDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeDenomRequest{Owner: addr1.String(), Denom: "stake", Timestamp: now.Add(2 * time.Second)})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 0)
+	res, err = s.querier.AccountLockedPastTimeDenom(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedPastTimeDenomRequest{Owner: addr1.String(), Denom: "stake", Timestamp: now.Add(2 * time.Second)})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 0)
 
 	// try querying with prefix coins like "stak" for potential attack
-	res, err = suite.querier.AccountLockedPastTimeDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedPastTimeDenomRequest{Owner: addr1.String(), Denom: "stak", Timestamp: now})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 0)
+	res, err = s.querier.AccountLockedPastTimeDenom(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedPastTimeDenomRequest{Owner: addr1.String(), Denom: "stak", Timestamp: now})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 0)
 }
 
-func (suite *KeeperTestSuite) TestLockedByID() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestLockedByID() {
+	s.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
 	// lock by not available id check
-	_, err := suite.querier.LockedByID(sdk.WrapSDKContext(suite.Ctx), &types.LockedRequest{LockId: 0})
-	suite.Require().Error(err)
+	_, err := s.querier.LockedByID(sdk.WrapSDKContext(s.Ctx), &types.LockedRequest{LockId: 0})
+	s.Require().Error(err)
 
 	// lock coins
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
+	s.LockTokens(addr1, coins, time.Second)
 
 	// lock by available available id check
-	res, err := suite.querier.LockedByID(sdk.WrapSDKContext(suite.Ctx), &types.LockedRequest{LockId: 1})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Lock.ID, uint64(1))
-	suite.Require().Equal(res.Lock.Owner, addr1.String())
-	suite.Require().Equal(res.Lock.Coins, coins)
-	suite.Require().Equal(res.Lock.Duration, time.Second)
-	suite.Require().Equal(res.Lock.EndTime, time.Time{})
-	suite.Require().Equal(res.Lock.IsUnlocking(), false)
+	res, err := s.querier.LockedByID(sdk.WrapSDKContext(s.Ctx), &types.LockedRequest{LockId: 1})
+	s.Require().NoError(err)
+	s.Require().Equal(res.Lock.ID, uint64(1))
+	s.Require().Equal(res.Lock.Owner, addr1.String())
+	s.Require().Equal(res.Lock.Coins, coins)
+	s.Require().Equal(res.Lock.Duration, time.Second)
+	s.Require().Equal(res.Lock.EndTime, time.Time{})
+	s.Require().Equal(res.Lock.IsUnlocking(), false)
 }
 
-func (suite *KeeperTestSuite) TestNextLockID() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestNextLockID() {
+	s.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
 	// lock coins
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
+	s.LockTokens(addr1, coins, time.Second)
 
 	// lock by available available id check
-	res, err := suite.querier.NextLockID(sdk.WrapSDKContext(suite.Ctx), &types.NextLockIDRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.LockId, uint64(2))
+	res, err := s.querier.NextLockID(sdk.WrapSDKContext(s.Ctx), &types.NextLockIDRequest{})
+	s.Require().NoError(err)
+	s.Require().Equal(res.LockId, uint64(2))
 
 	// create 2 more locks
 	coins = sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
+	s.LockTokens(addr1, coins, time.Second)
 	coins = sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
-	res, err = suite.querier.NextLockID(sdk.WrapSDKContext(suite.Ctx), &types.NextLockIDRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.LockId, uint64(4))
+	s.LockTokens(addr1, coins, time.Second)
+	res, err = s.querier.NextLockID(sdk.WrapSDKContext(s.Ctx), &types.NextLockIDRequest{})
+	s.Require().NoError(err)
+	s.Require().Equal(res.LockId, uint64(4))
 }
 
-func (suite *KeeperTestSuite) TestAccountLockedLongerDuration() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestAccountLockedLongerDuration() {
+	s.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
 	// empty address locks longer than duration check
-	_, err := suite.querier.AccountLockedLongerDuration(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationRequest{Owner: "", Duration: time.Second})
-	suite.Require().Error(err)
+	_, err := s.querier.AccountLockedLongerDuration(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedLongerDurationRequest{Owner: "", Duration: time.Second})
+	s.Require().Error(err)
 
 	// initial check
-	res, err := suite.querier.AccountLockedLongerDuration(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationRequest{Owner: addr1.String(), Duration: time.Second})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 0)
+	res, err := s.querier.AccountLockedLongerDuration(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedLongerDurationRequest{Owner: addr1.String(), Duration: time.Second})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 0)
 
 	// lock coins
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
-	suite.BeginUnlocking(addr1)
+	s.LockTokens(addr1, coins, time.Second)
+	s.BeginUnlocking(addr1)
 
 	// account locks longer than duration check, duration = 0s
-	res, err = suite.querier.AccountLockedLongerDuration(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationRequest{Owner: addr1.String(), Duration: 0})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 1)
+	res, err = s.querier.AccountLockedLongerDuration(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedLongerDurationRequest{Owner: addr1.String(), Duration: 0})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 1)
 
 	// account locks longer than duration check, duration = 1s
-	res, err = suite.querier.AccountLockedLongerDuration(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationRequest{Owner: addr1.String(), Duration: time.Second})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 1)
+	res, err = s.querier.AccountLockedLongerDuration(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedLongerDurationRequest{Owner: addr1.String(), Duration: time.Second})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 1)
 
 	// account locks longer than duration check, duration = 2s
-	res, err = suite.querier.AccountLockedLongerDuration(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationRequest{Owner: addr1.String(), Duration: 2 * time.Second})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 0)
+	res, err = s.querier.AccountLockedLongerDuration(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedLongerDurationRequest{Owner: addr1.String(), Duration: 2 * time.Second})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 0)
 }
 
-func (suite *KeeperTestSuite) TestAccountLockedLongerDurationNotUnlockingOnly() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestAccountLockedLongerDurationNotUnlockingOnly() {
+	s.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
 	// empty address locks longer than duration check
-	_, err := suite.querier.AccountLockedLongerDurationNotUnlockingOnly(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: "", Duration: time.Second})
-	suite.Require().Error(err)
+	_, err := s.querier.AccountLockedLongerDurationNotUnlockingOnly(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: "", Duration: time.Second})
+	s.Require().Error(err)
 
 	// initial check
-	res, err := suite.querier.AccountLockedLongerDurationNotUnlockingOnly(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: addr1.String(), Duration: time.Second})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 0)
+	res, err := s.querier.AccountLockedLongerDurationNotUnlockingOnly(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: addr1.String(), Duration: time.Second})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 0)
 
 	// lock coins
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
+	s.LockTokens(addr1, coins, time.Second)
 
 	// account locks longer than duration check before start unlocking, duration = 1s
-	res, err = suite.querier.AccountLockedLongerDurationNotUnlockingOnly(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: addr1.String(), Duration: time.Second})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 1)
+	res, err = s.querier.AccountLockedLongerDurationNotUnlockingOnly(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: addr1.String(), Duration: time.Second})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 1)
 
-	suite.BeginUnlocking(addr1)
+	s.BeginUnlocking(addr1)
 
 	// account locks longer than duration check after start unlocking, duration = 1s
-	res, err = suite.querier.AccountLockedLongerDurationNotUnlockingOnly(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: addr1.String(), Duration: time.Second})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 0)
+	res, err = s.querier.AccountLockedLongerDurationNotUnlockingOnly(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedLongerDurationNotUnlockingOnlyRequest{Owner: addr1.String(), Duration: time.Second})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 0)
 }
 
-func (suite *KeeperTestSuite) TestAccountLockedLongerDurationDenom() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestAccountLockedLongerDurationDenom() {
+	s.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
 	// empty address locks longer than duration by denom check
-	_, err := suite.querier.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: "", Duration: time.Second, Denom: "stake"})
-	suite.Require().Error(err)
+	_, err := s.querier.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: "", Duration: time.Second, Denom: "stake"})
+	s.Require().Error(err)
 
 	// initial check
-	res, err := suite.querier.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: addr1.String(), Duration: time.Second, Denom: "stake"})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 0)
+	res, err := s.querier.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: addr1.String(), Duration: time.Second, Denom: "stake"})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 0)
 
 	// lock coins
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
-	suite.BeginUnlocking(addr1)
+	s.LockTokens(addr1, coins, time.Second)
+	s.BeginUnlocking(addr1)
 
 	// account locks longer than duration check by denom, duration = 0s
-	res, err = suite.querier.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: addr1.String(), Duration: 0, Denom: "stake"})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 1)
+	res, err = s.querier.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: addr1.String(), Duration: 0, Denom: "stake"})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 1)
 
 	// account locks longer than duration check by denom, duration = 1s
-	res, err = suite.querier.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: addr1.String(), Duration: time.Second, Denom: "stake"})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 1)
+	res, err = s.querier.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: addr1.String(), Duration: time.Second, Denom: "stake"})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 1)
 
 	// account locks longer than duration check by not available denom, duration = 1s
-	res, err = suite.querier.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: addr1.String(), Duration: time.Second, Denom: "stake2"})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 0)
+	res, err = s.querier.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: addr1.String(), Duration: time.Second, Denom: "stake2"})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 0)
 
 	// account locks longer than duration check by denom, duration = 2s
-	res, err = suite.querier.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: addr1.String(), Duration: 2 * time.Second, Denom: "stake"})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 0)
+	res, err = s.querier.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: addr1.String(), Duration: 2 * time.Second, Denom: "stake"})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 0)
 
 	// try querying with prefix coins like "stak" for potential attack
-	res, err = suite.querier.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(suite.Ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: addr1.String(), Duration: 0, Denom: "sta"})
-	suite.Require().NoError(err)
-	suite.Require().Len(res.Locks, 0)
+	res, err = s.querier.AccountLockedLongerDurationDenom(sdk.WrapSDKContext(s.Ctx), &types.AccountLockedLongerDurationDenomRequest{Owner: addr1.String(), Duration: 0, Denom: "sta"})
+	s.Require().NoError(err)
+	s.Require().Len(res.Locks, 0)
 }
 
-func (suite *KeeperTestSuite) TestLockedDenom() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestLockedDenom() {
+	s.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
 	testTotalLockedDuration := func(durationStr string, expectedAmount int64) {
 		duration, _ := time.ParseDuration(durationStr)
-		res, err := suite.querier.LockedDenom(
-			sdk.WrapSDKContext(suite.Ctx),
+		res, err := s.querier.LockedDenom(
+			sdk.WrapSDKContext(s.Ctx),
 			&types.LockedDenomRequest{Denom: "stake", Duration: duration})
-		suite.Require().NoError(err)
-		suite.Require().Equal(res.Amount, sdk.NewInt(expectedAmount))
+		s.Require().NoError(err)
+		s.Require().Equal(res.Amount, sdk.NewInt(expectedAmount))
 	}
 
 	// lock coins
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Hour)
+	s.LockTokens(addr1, coins, time.Hour)
 
 	// test with single lockup
 	testTotalLockedDuration("0s", 10)
@@ -519,35 +519,35 @@ func (suite *KeeperTestSuite) TestLockedDenom() {
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
 
 	coins = sdk.Coins{sdk.NewInt64Coin("stake", 20)}
-	suite.LockTokens(addr2, coins, time.Hour*2)
+	s.LockTokens(addr2, coins, time.Hour*2)
 
 	testTotalLockedDuration("30m", 30)
 	testTotalLockedDuration("1h", 30)
 	testTotalLockedDuration("2h", 20)
 
 	// test unlocking
-	suite.BeginUnlocking(addr2)
+	s.BeginUnlocking(addr2)
 	testTotalLockedDuration("2h", 20)
 
 	// finish unlocking
 	duration, _ := time.ParseDuration("2h")
-	suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(duration))
-	suite.WithdrawAllMaturedLocks()
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(duration))
+	s.WithdrawAllMaturedLocks()
 	testTotalLockedDuration("2h", 0)
 	testTotalLockedDuration("1h", 10)
 }
 
-func (suite *KeeperTestSuite) TestParams() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestParams() {
+	s.SetupTest()
 
 	// Query default params
-	res, err := suite.querier.Params(sdk.WrapSDKContext(suite.Ctx), &types.QueryParamsRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal([]string(nil), res.Params.ForceUnlockAllowedAddresses)
+	res, err := s.querier.Params(sdk.WrapSDKContext(s.Ctx), &types.QueryParamsRequest{})
+	s.Require().NoError(err)
+	s.Require().Equal([]string(nil), res.Params.ForceUnlockAllowedAddresses)
 
 	// Set new params & query
-	suite.App.LockupKeeper.SetParams(suite.Ctx, types.NewParams([]string{suite.TestAccs[0].String()}))
-	res, err = suite.querier.Params(sdk.WrapSDKContext(suite.Ctx), &types.QueryParamsRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal([]string{suite.TestAccs[0].String()}, res.Params.ForceUnlockAllowedAddresses)
+	s.App.LockupKeeper.SetParams(s.Ctx, types.NewParams([]string{s.TestAccs[0].String()}))
+	res, err = s.querier.Params(sdk.WrapSDKContext(s.Ctx), &types.QueryParamsRequest{})
+	s.Require().NoError(err)
+	s.Require().Equal([]string{s.TestAccs[0].String()}, res.Params.ForceUnlockAllowedAddresses)
 }

@@ -16,9 +16,9 @@ type KeeperTestSuite struct {
 	querier types.QueryServer
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
-	suite.Setup()
-	suite.querier = keeper.NewQuerier(*suite.App.SuperfluidKeeper)
+func (s *KeeperTestSuite) SetupTest() {
+	s.Setup()
+	s.querier = keeper.NewQuerier(*s.App.SuperfluidKeeper)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

@@ -16,14 +16,14 @@ import (
 )
 
 // InitializePool initializes a new concentrated liquidity pool with the given PoolI interface and creator address.
-// It validates tick spacing, swap fee, and authorized quote denominations before creating and setting
+// It validates tick spacing, spread factor, and authorized quote denominations before creating and setting
 // the pool's fee and uptime accumulators. If the pool is successfully created, it calls the AfterConcentratedPoolCreated
 // listener function.
 //
 // Returns an error if any of the following conditions are met:
 // - The poolI cannot be converted to a ConcentratedPool.
 // - The tick spacing is invalid.
-// - The swap fee is invalid.
+// - The spread factor is invalid.
 // - The quote denomination is unauthorized.
 // - There is an error creating the fee or uptime accumulator.
 // - There is an error setting the pool in the keeper's state.
@@ -35,7 +35,7 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 
 	params := k.GetParams(ctx)
 	tickSpacing := concentratedPool.GetTickSpacing()
-	swapFee := concentratedPool.GetSwapFee(ctx)
+	spreadFactor := concentratedPool.GetSpreadFactor(ctx)
 	poolId := concentratedPool.GetId()
 	quoteAsset := concentratedPool.GetToken1()
 
@@ -43,8 +43,8 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		return types.UnauthorizedTickSpacingError{ProvidedTickSpacing: tickSpacing, AuthorizedTickSpacings: params.AuthorizedTickSpacing}
 	}
 
-	if !k.validateSwapFee(ctx, params, swapFee) {
-		return types.UnauthorizedSwapFeeError{ProvidedSwapFee: swapFee, AuthorizedSwapFees: params.AuthorizedSwapFees}
+	if !k.validateSpreadFactor(ctx, params, spreadFactor) {
+		return types.UnauthorizedSpreadFactorError{ProvidedSpreadFactor: spreadFactor, AuthorizedSpreadFactors: params.AuthorizedSpreadFactors}
 	}
 
 	if !validateAuthorizedQuoteDenoms(ctx, quoteAsset, params.AuthorizedQuoteDenoms) {
@@ -225,7 +225,9 @@ func convertPoolInterfaceToConcentrated(poolI poolmanagertypes.PoolI) (types.Con
 	return concentratedPool, nil
 }
 
-func (k Keeper) GetPoolFromPoolIdAndConvertToConcentrated(ctx sdk.Context, poolId uint64) (types.ConcentratedPoolExtension, error) {
+// GetConcentratedPoolById returns a concentrated pool interface associated with the given id.
+// Returns error if fails to fetch the pool from the store.
+func (k Keeper) GetConcentratedPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedPoolExtension, error) {
 	poolI, err := k.GetPool(ctx, poolId)
 	if err != nil {
 		return nil, err
@@ -271,7 +273,7 @@ func (k Keeper) GetSerializedPools(ctx sdk.Context, pagination *query.PageReques
 // It returns an error if the tick spacing is not one of the authorized tick spacings or is not less than the current tick spacing of the respective pool.
 func (k Keeper) DecreaseConcentratedPoolTickSpacing(ctx sdk.Context, poolIdToTickSpacingRecord []types.PoolIdToTickSpacingRecord) error {
 	for _, poolIdToTickSpacingRecord := range poolIdToTickSpacingRecord {
-		pool, err := k.GetPoolFromPoolIdAndConvertToConcentrated(ctx, poolIdToTickSpacingRecord.PoolId)
+		pool, err := k.GetConcentratedPoolById(ctx, poolIdToTickSpacingRecord.PoolId)
 		if err != nil {
 			return err
 		}
@@ -314,11 +316,11 @@ func (k Keeper) validateTickSpacingUpdate(ctx sdk.Context, pool types.Concentrat
 	return false
 }
 
-// validateSwapFee returns true if the given swap fee is one of the authorized swap fees set in the
+// validateSpreadFactor returns true if the given spread factor is one of the authorized spread factors set in the
 // params. False otherwise.
-func (k Keeper) validateSwapFee(ctx sdk.Context, params types.Params, swapFee sdk.Dec) bool {
-	for _, authorizedSwapFee := range params.AuthorizedSwapFees {
-		if swapFee.Equal(authorizedSwapFee) {
+func (k Keeper) validateSpreadFactor(ctx sdk.Context, params types.Params, spreadFactor sdk.Dec) bool {
+	for _, authorizedSpreadFactor := range params.AuthorizedSpreadFactors {
+		if spreadFactor.Equal(authorizedSpreadFactor) {
 			return true
 		}
 	}

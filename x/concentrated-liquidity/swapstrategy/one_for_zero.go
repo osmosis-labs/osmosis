@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -19,7 +20,7 @@ import (
 type oneForZeroStrategy struct {
 	sqrtPriceLimit sdk.Dec
 	storeKey       sdk.StoreKey
-	swapFee        sdk.Dec
+	spreadFactor   sdk.Dec
 	tickSpacing    uint64
 }
 
@@ -59,7 +60,7 @@ func (s oneForZeroStrategy) ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPric
 	amountOneIn := math.CalcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
 
 	// Calculate sqrtPriceNext on the amount of token remaining after fee.
-	amountOneInRemainingLessFee := amountOneInRemaining.Mul(sdk.OneDec().Sub(s.swapFee))
+	amountOneInRemainingLessFee := amountOneInRemaining.Mul(sdk.OneDec().Sub(s.spreadFactor))
 
 	var sqrtPriceNext sdk.Dec
 	// If have more of the amount remaining after fee than estimated until target,
@@ -85,7 +86,7 @@ func (s oneForZeroStrategy) ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPric
 
 	// Handle fees.
 	// Note that fee is always charged on the amount in.
-	feeChargeTotal := computeFeeChargePerSwapStepOutGivenIn(hasReachedTarget, amountOneIn, amountOneInRemaining, s.swapFee)
+	feeChargeTotal := computeFeeChargePerSwapStepOutGivenIn(hasReachedTarget, amountOneIn, amountOneInRemaining, s.spreadFactor)
 
 	return sqrtPriceNext, amountOneIn, amountZeroOut, feeChargeTotal
 }
@@ -142,54 +143,55 @@ func (s oneForZeroStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPric
 
 	// Handle fees.
 	// Note that fee is always charged on the amount in.
-	feeChargeTotal := computeFeeChargeFromAmountIn(amountOneIn, s.swapFee)
+	feeChargeTotal := computeFeeChargeFromAmountIn(amountOneIn, s.spreadFactor)
 
 	return sqrtPriceNext, amountZeroOut, amountOneIn, feeChargeTotal
+}
+
+// InitializeNextTickIterator returns iterator that seeks to the next tick from the given tickIndex.
+// If nex tick relative to tickINdex does not exist in the store, it will return an invalid iterator.
+//
+// oneForZeroStrategy assumes moving to the right of the current square root price.
+// As a result, we use forward iterator to seek to the next tick index relative to the currentTickIndex.
+// Since start key of the forward iterator is inclusive, we search directly from the tickIndex
+// forwards in increasing lexicographic order until a tick greater than currentTickIndex is found.
+// Returns an invalid iterator if tickIndex is not in the store.
+// Panics if fails to parse tick index from bytes.
+// The caller is responsible for closing the iterator on success.
+func (s oneForZeroStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId uint64, currentTickIndex int64) dbm.Iterator {
+	store := ctx.KVStore(s.storeKey)
+	prefixBz := types.KeyTickPrefixByPoolId(poolId)
+	prefixStore := prefix.NewStore(store, prefixBz)
+	startKey := types.TickIndexToBytes(currentTickIndex)
+	iter := prefixStore.Iterator(startKey, nil)
+
+	for ; iter.Valid(); iter.Next() {
+		// Since, we constructed our prefix store with <TickPrefix | poolID>, the
+		// key is the encoding of a tick index.
+		tick, err := types.TickIndexFromBytes(iter.Key())
+		if err != nil {
+			iter.Close()
+			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
+		}
+
+		if tick > currentTickIndex {
+			break
+		}
+	}
+	return iter
 }
 
 // InitializeTickValue returns the initial tick value for computing swaps based
 // on the actual current tick.
 //
 // oneForZeroStrategy assumes moving to the right of the current square root price.
-// As a result, we use forward iterator in NextInitializedTick to find the next
+// As a result, we use forward iterator in InitializeNextTickIterator to find the next
 // tick to the left of current. The end cursor for forward iteration is inclusive.
 // Therefore, this method is, essentially a no-op. The logic is reversed for
 // zeroForOneStrategy where we use reverse iterator and have to add one to
 // the input. Therefore, we define this method to account for different strategies.
-func (s oneForZeroStrategy) InitializeTickValue(currentTick sdk.Int) sdk.Int {
-	return currentTick
-}
-
-// NextInitializedTick returns the next initialized tick index based on the
-// provided tickindex. If no initialized tick exists, <0, false>
-// will be returned.
-//
-// oneForZerostrategy searches for the next tick to the right of the current tickIndex.
-func (s oneForZeroStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64) (next sdk.Int, initialized bool) {
-	store := ctx.KVStore(s.storeKey)
-
-	// Construct a prefix store with a prefix of <TickPrefix | poolID>, allowing
-	// us to retrieve the next initialized tick without having to scan all ticks.
-	prefixBz := types.KeyTickPrefixByPoolId(poolId)
-	prefixStore := prefix.NewStore(store, prefixBz)
-
-	startKey := types.TickIndexToBytes(tickIndex)
-
-	iter := prefixStore.Iterator(startKey, nil)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		// Since, we constructed our prefix store with <TickPrefix | poolID>, the
-		// key is the encoding of a tick index.
-		tick, err := types.TickIndexFromBytes(iter.Key())
-		if err != nil {
-			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
-		}
-
-		if tick > tickIndex {
-			return sdk.NewInt(tick), true
-		}
-	}
-	return sdk.ZeroInt(), false
+func (s oneForZeroStrategy) InitializeTickValue(currentTick int64) int64 {
+	return currentTick + 1
 }
 
 // SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.

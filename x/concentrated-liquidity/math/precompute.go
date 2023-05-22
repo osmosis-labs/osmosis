@@ -7,8 +7,7 @@ import (
 )
 
 var (
-	sdkOneInt      = sdk.OneInt()
-	sdkOneDec      = sdk.NewDec(1)
+	sdkOneDec      = sdk.OneDec()
 	sdkNineDec     = sdk.NewDec(9)
 	sdkTenDec      = sdk.NewDec(10)
 	powersOfTen    []sdk.Dec

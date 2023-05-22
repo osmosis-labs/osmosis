@@ -16,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v15/app"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v15/wasmbinding/bindings"
 )
 
@@ -34,6 +35,7 @@ func SetupCustomApp(t *testing.T, addr sdk.AccAddress) (*app.OsmosisApp, sdk.Con
 }
 
 func TestQueryFullDenom(t *testing.T) {
+	apptesting.SkipIfWSL(t)
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
 
