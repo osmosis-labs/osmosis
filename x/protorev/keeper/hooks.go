@@ -114,7 +114,7 @@ func (k Keeper) afterPoolCreated(ctx sdk.Context, poolId uint64) {
 	}
 
 	// Handle concentrated pools differently since they can have 0 liquidity
-	coins := sdk.Coins{}
+	var coins sdk.Coins
 	if pool.GetType() == poolmanagertypes.Concentrated {
 		clPool, ok := pool.(cltypes.ConcentratedPoolExtension)
 		if !ok {
