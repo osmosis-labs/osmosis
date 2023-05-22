@@ -469,11 +469,14 @@ func (k Keeper) unbondLock(ctx sdk.Context, underlyingLockId uint64, sender stri
 	if err != nil {
 		return 0, err
 	}
-	synthLocks := k.lk.GetAllSyntheticLockupsByLockup(ctx, underlyingLockId)
-	if len(synthLocks) != 1 {
+	synthLock, err := k.lk.GetSyntheticLockupByUnderlyingLockId(ctx, underlyingLockId)
+	if err != nil {
+		return 0, err
+	}
+	if synthLock == (lockuptypes.SyntheticLock{}) {
 		return 0, types.ErrNotSuperfluidUsedLockup
 	}
-	if !synthLocks[0].IsUnlocking() {
+	if !synthLock.IsUnlocking() {
 		return 0, types.ErrBondingLockupNotSupported
 	}
 	return k.lk.BeginForceUnlock(ctx, underlyingLockId, coins)
@@ -493,8 +496,11 @@ func (k Keeper) alreadySuperfluidStaking(ctx sdk.Context, lockID uint64) bool {
 		return true
 	}
 
-	synthLocks := k.lk.GetAllSyntheticLockupsByLockup(ctx, lockID)
-	return len(synthLocks) > 0
+	synthLock, err := k.lk.GetSyntheticLockupByUnderlyingLockId(ctx, lockID)
+	if err != nil {
+		return false
+	}
+	return synthLock != (lockuptypes.SyntheticLock{})
 }
 
 // mintOsmoTokensAndDelegate mints osmoAmount of OSMO tokens, and immediately delegate them to validator on behalf of intermediary account.
