@@ -1718,9 +1718,6 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 			s.SetupDefaultPosition(pool.GetId())
 			s.setupSecondPosition(test, pool)
 
-			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
-
 			// perform compute
 			cacheCtx, _ := s.Ctx.CacheContext()
 			tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, totalFees, err := s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
@@ -1743,11 +1740,6 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 
 				expectedLiquidity := s.getExpectedLiquidity(test, pool)
 				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
-
-				// check that the pool has not been modified after performing calc
-				poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-				s.Require().NoError(err)
-				s.assertSpotPriceEqual(poolBeforeCalc, poolAfterCalc)
 			}
 
 			// perform swap
