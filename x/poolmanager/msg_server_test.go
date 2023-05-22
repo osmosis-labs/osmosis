@@ -100,7 +100,6 @@ func (s *KeeperTestSuite) TestSplitRouteSwapExactAmountIn() {
 				s.Require().Error(err)
 				s.Require().Nil(response)
 			} else {
-
 				s.Require().NoError(err)
 				s.AssertEventEmitted(ctx, types.TypeMsgSplitRouteSwapExactAmountIn, tc.expectedSplitRouteSwapEvent)
 				s.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
