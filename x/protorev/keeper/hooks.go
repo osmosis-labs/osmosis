@@ -3,7 +3,9 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
@@ -104,10 +106,30 @@ func (k Keeper) afterPoolCreated(ctx sdk.Context, poolId uint64) {
 		return
 	}
 
-	coins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
-	if err != nil {
-		ctx.Logger().Error("Protorev error getting total pool liquidity in after swap hook", err)
-		return
+	// Handle concentrated pools differently since they can have 0 liquidity
+	coins := sdk.Coins{}
+	if pool.GetType() == poolmanagertypes.Concentrated {
+		clPool, ok := pool.(cltypes.ConcentratedPoolExtension)
+		if !ok {
+			ctx.Logger().Error("Protorev error casting pool to concentrated pool in AfterCFMMPoolCreated hook")
+			return
+		}
+
+		coins, err = k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
+		if err != nil {
+			ctx.Logger().Error("Protorev error getting total pool liquidity in after swap hook", err)
+			return
+		}
+
+		if coins == nil {
+			coins = sdk.Coins{sdk.NewCoin(clPool.GetToken0(), sdk.NewInt(0)), sdk.NewCoin(clPool.GetToken1(), sdk.NewInt(0))}
+		}
+	} else {
+		coins, err = k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
+		if err != nil {
+			ctx.Logger().Error("Protorev error getting total pool liquidity in after pool created hook", err)
+			return
+		}
 	}
 
 	// Pool must be active and the number of coins must be 2

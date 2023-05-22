@@ -243,7 +243,7 @@ func (s *KeeperTestSuite) TestLiquidityChanging() {
 
 func (s *KeeperTestSuite) TestPoolCreation() {
 	type param struct {
-		expectedTrades      []types.Trade
+		matchDenom          string
 		executePoolCreation func() uint64
 	}
 
@@ -255,17 +255,11 @@ func (s *KeeperTestSuite) TestPoolCreation() {
 		{
 			name: "GAMM - Create Pool",
 			param: param{
-				expectedTrades: []types.Trade{
-					{
-						Pool:     1,
-						TokenIn:  "akash",
-						TokenOut: "Atom",
-					},
-				},
+				matchDenom: "hookGamm",
 				executePoolCreation: func() uint64 {
 					poolId := s.createGAMMPool([]balancer.PoolAsset{
 						{
-							Token:  sdk.NewCoin("hook", sdk.NewInt(1000000000)),
+							Token:  sdk.NewCoin("hookGamm", sdk.NewInt(1000000000)),
 							Weight: sdk.NewInt(1),
 						},
 						{
@@ -281,12 +275,23 @@ func (s *KeeperTestSuite) TestPoolCreation() {
 			},
 			expectPass: true,
 		},
+		{
+			name: "Concentrated Liquidity - Create Pool",
+			param: param{
+				matchDenom: "hookCL",
+				executePoolCreation: func() uint64 {
+					clPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("hookCL", "uosmo")
+					return clPool.GetId()
+				},
+			},
+			expectPass: true,
+		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			poolId := tc.param.executePoolCreation()
-			setPoolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, types.OsmosisDenomination, "hook")
+			setPoolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, types.OsmosisDenomination, tc.param.matchDenom)
 			s.Require().NoError(err)
 			s.Require().Equal(poolId, setPoolId)
 		})
