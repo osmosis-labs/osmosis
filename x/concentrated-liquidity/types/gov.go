@@ -82,6 +82,21 @@ func (p *CreateConcentratedLiquidityPoolProposal) ValidateBasic() error {
 	return nil
 }
 
+// String returns a string containing the pool incentives proposal.
+func (p CreateConcentratedLiquidityPoolProposal) String() string {
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf(`Create Concentrated Liquidity Pool Proposal:
+  Title:                 %s
+  Description:           %s
+  Denom0:                %s
+  Denom1:                %s
+  Tick Spacing:          %d
+  ExponentAtPriceOne     %s
+  Swap Fee:              %s
+`, p.Title, p.Description, p.Denom0, p.Denom1, p.TickSpacing, p.ExponentAtPriceOne.String(), p.SwapFee.String()))
+	return b.String()
+}
+
 func NewTickSpacingDecreaseProposal(title, description string, records []PoolIdToTickSpacingRecord) govtypes.Content {
 	return &TickSpacingDecreaseProposal{
 		Title:                      title,
@@ -114,22 +129,16 @@ func (p *TickSpacingDecreaseProposal) ValidateBasic() error {
 		return fmt.Errorf("empty proposal records")
 	}
 
-	return nil
-}
+	for _, poolIdToTickSpacingRecord := range p.PoolIdToTickSpacingRecords {
+		if poolIdToTickSpacingRecord.PoolId <= uint64(0) {
+			return fmt.Errorf("Pool Id cannot be negative")
+		}
 
-// String returns a string containing the pool incentives proposal.
-func (p CreateConcentratedLiquidityPoolProposal) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Create Concentrated Liquidity Pool Proposal:
-  Title:                 %s
-  Description:           %s
-  Denom0:                %s
-  Denom1:                %s
-  Tick Spacing:          %d
-  ExponentAtPriceOne     %s
-  Swap Fee:              %s
-`, p.Title, p.Description, p.Denom0, p.Denom1, p.TickSpacing, p.ExponentAtPriceOne.String(), p.SwapFee.String()))
-	return b.String()
+		if poolIdToTickSpacingRecord.NewTickSpacing <= uint64(0) {
+			return fmt.Errorf("tick spacing must be positive")
+		}
+	}
+	return nil
 }
 
 // String returns a string containing the decrease tick spacing proposal.

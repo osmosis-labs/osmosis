@@ -58,6 +58,22 @@ make_proposal() {
         --yes \
         -o json"
 
+    OSMOSIS_CMD="osmosisd tx gov submit-proposal software-upgrade \
+        $UPGRADE_VERSION \
+        --upgrade-height $UPGRADE_HEIGHT \
+        --upgrade-info \"$UPGRADE_INFO\" \
+        --chain-id osmo-test-5 \
+        --deposit $PROPOSAL_DEPOSIT \
+        --from $KEY \
+        --fees $TX_FEES \
+        --keyring-backend test \
+        -b block \
+        --node $RPC_NODE \
+        --home $OSMOSIS_HOME \
+        --yes \
+        -o json"
+
+
     PROPOSAL_JSON=$(eval "$OSMOSIS_CMD")
     PROPOSAL_ID=$(echo "$PROPOSAL_JSON" | jq -r '.logs[0].events[] | select(.type == "submit_proposal") | .attributes[] | select(.key == "proposal_id") | .value')
 }

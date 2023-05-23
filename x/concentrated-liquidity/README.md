@@ -1479,7 +1479,16 @@ At the time of this writing, it is only utilized by the `x/twap` module.
 
 - per-position
 
-### Placeholder
+### State entries and KV store management
+
+#### Ticks
+Ticks are stored with 9 bytes, first byte being reserved for the Negative / Positive prefix, and the remaining 8 bytes being reserved for the tick itself, which is of uint64. Although we directly store signed integers as values, we use the first byte to indicate and re-arrange tick indexes from negative to positive.
+
+#### Keytick 
+Key tick is composed of tick prefix + pool id + tick negative / positive prefix + tick index in bytes. This is used to store each tick's information for each pool, each tick.
+#### KeyTickPrefixByPoolId
+KeyTickPrefixByPoolId is composed of tick prefix + pool Id. Using this prefix bytes allows us to iterate over ticks within the given pool id. 
+
 
 ## Terminology
 
