@@ -34,7 +34,7 @@ func TestCreateConcentratedLiquidityPoolProposalMarshalUnmarshal(t *testing.T) {
 				Denom1:             "denom1",
 				TickSpacing:        uint64(1),
 				ExponentAtPriceOne: sdk.NewInt(-1),
-				SwapFee:            sdk.MustNewDecFromStr("0.01"),
+				SpreadFactor:       sdk.MustNewDecFromStr("0.01"),
 			},
 		},
 	}

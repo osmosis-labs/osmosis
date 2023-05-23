@@ -31,7 +31,7 @@ var (
 	DefaultCurrTick         int64 = 310000
 	DefaultCurrPrice              = sdk.NewDec(5000)
 	DefaultCurrSqrtPrice, _       = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
-	DefaultSwapFee                = sdk.MustNewDecFromStr("0.01")
+	DefaultSpreadFactor           = sdk.MustNewDecFromStr("0.01")
 )
 
 type ConcentratedPoolTestSuite struct {
@@ -130,10 +130,10 @@ func (s *ConcentratedPoolTestSuite) TestGetIncentivesAddress() {
 func (s *ConcentratedPoolTestSuite) TestString() {
 	s.Setup()
 
-	pool, err := model.NewConcentratedLiquidityPool(1, "foo", "bar", DefaultTickSpacing, DefaultSwapFee)
+	pool, err := model.NewConcentratedLiquidityPool(1, "foo", "bar", DefaultTickSpacing, DefaultSpreadFactor)
 	s.Require().NoError(err)
 	poolString := pool.String()
-	s.Require().Equal(poolString, "{\"address\":\"osmo19e2mf7cywkv7zaug6nk5f87d07fxrdgrladvymh2gwv5crvm3vnsuewhh7\",\"incentives_address\":\"osmo156gncm3w2hdvuxxaejue8nejxgdgsrvdf7jftntuhxnaarhxcuas4ywjxf\",\"id\":1,\"current_tick_liquidity\":\"0.000000000000000000\",\"token0\":\"foo\",\"token1\":\"bar\",\"current_sqrt_price\":\"0.000000000000000000\",\"tick_spacing\":1,\"exponent_at_price_one\":-6,\"swap_fee\":\"0.010000000000000000\",\"last_liquidity_update\":\"0001-01-01T00:00:00Z\"}")
+	s.Require().Equal(poolString, "{\"address\":\"osmo19e2mf7cywkv7zaug6nk5f87d07fxrdgrladvymh2gwv5crvm3vnsuewhh7\",\"incentives_address\":\"osmo156gncm3w2hdvuxxaejue8nejxgdgsrvdf7jftntuhxnaarhxcuas4ywjxf\",\"fees_address\":\"osmo1nsz03mrk6krk5p86f4qr48kden2pt39afw35qzvgqp8m09jwafzqdl8nsk\",\"id\":1,\"current_tick_liquidity\":\"0.000000000000000000\",\"token0\":\"foo\",\"token1\":\"bar\",\"current_sqrt_price\":\"0.000000000000000000\",\"tick_spacing\":1,\"exponent_at_price_one\":-6,\"spread_factor\":\"0.010000000000000000\",\"last_liquidity_update\":\"0001-01-01T00:00:00Z\"}")
 }
 
 // TestSpotPrice tests the SpotPrice method of the ConcentratedPoolTestSuite.
@@ -403,11 +403,11 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 // TestNewConcentratedLiquidityPool is a test suite that tests the NewConcentratedLiquidityPool function.
 func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 	type param struct {
-		poolId      uint64
-		denom0      string
-		denom1      string
-		tickSpacing uint64
-		swapFee     sdk.Dec
+		poolId       uint64
+		denom0       string
+		denom1       string
+		tickSpacing  uint64
+		spreadFactor sdk.Dec
 	}
 
 	tests := []struct {
@@ -422,11 +422,11 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 		{
 			name: "Happy path",
 			param: param{
-				poolId:      DefaultValidPoolID,
-				denom0:      ETH,
-				denom1:      USDC,
-				tickSpacing: DefaultTickSpacing,
-				swapFee:     DefaultSwapFee,
+				poolId:       DefaultValidPoolID,
+				denom0:       ETH,
+				denom1:       USDC,
+				tickSpacing:  DefaultTickSpacing,
+				spreadFactor: DefaultSpreadFactor,
 			},
 			expectedPoolId:      DefaultValidPoolID,
 			expectedDenom0:      ETH,
@@ -436,11 +436,11 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 		{
 			name: "Non lexicographical order of denoms should not get reordered",
 			param: param{
-				poolId:      DefaultValidPoolID,
-				denom0:      USDC,
-				denom1:      ETH,
-				tickSpacing: DefaultTickSpacing,
-				swapFee:     sdk.ZeroDec(),
+				poolId:       DefaultValidPoolID,
+				denom0:       USDC,
+				denom1:       ETH,
+				tickSpacing:  DefaultTickSpacing,
+				spreadFactor: sdk.ZeroDec(),
 			},
 			expectedPoolId:      DefaultValidPoolID,
 			expectedDenom0:      USDC,
@@ -451,35 +451,35 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 		{
 			name: "Error: same denom not allowed",
 			param: param{
-				poolId:      DefaultValidPoolID,
-				denom0:      USDC,
-				denom1:      USDC,
-				tickSpacing: DefaultTickSpacing,
-				swapFee:     DefaultSwapFee,
+				poolId:       DefaultValidPoolID,
+				denom0:       USDC,
+				denom1:       USDC,
+				tickSpacing:  DefaultTickSpacing,
+				spreadFactor: DefaultSpreadFactor,
 			},
 			expectedErr: types.MatchingDenomError{Denom: USDC},
 		},
 		{
-			name: "Error: negative swap fee",
+			name: "Error: negative spread factor",
 			param: param{
-				poolId:      DefaultValidPoolID,
-				denom0:      ETH,
-				denom1:      USDC,
-				tickSpacing: DefaultTickSpacing,
-				swapFee:     sdk.ZeroDec().Sub(sdk.SmallestDec()),
+				poolId:       DefaultValidPoolID,
+				denom0:       ETH,
+				denom1:       USDC,
+				tickSpacing:  DefaultTickSpacing,
+				spreadFactor: sdk.ZeroDec().Sub(sdk.SmallestDec()),
 			},
-			expectedErr: types.InvalidSwapFeeError{ActualFee: sdk.ZeroDec().Sub(sdk.SmallestDec())},
+			expectedErr: types.InvalidSpreadFactorError{ActualFee: sdk.ZeroDec().Sub(sdk.SmallestDec())},
 		},
 		{
-			name: "Error: swap fee == 1",
+			name: "Error: spread factor == 1",
 			param: param{
-				poolId:      DefaultValidPoolID,
-				denom0:      ETH,
-				denom1:      USDC,
-				tickSpacing: DefaultTickSpacing,
-				swapFee:     sdk.OneDec(),
+				poolId:       DefaultValidPoolID,
+				denom0:       ETH,
+				denom1:       USDC,
+				tickSpacing:  DefaultTickSpacing,
+				spreadFactor: sdk.OneDec(),
 			},
-			expectedErr: types.InvalidSwapFeeError{ActualFee: sdk.OneDec()},
+			expectedErr: types.InvalidSpreadFactorError{ActualFee: sdk.OneDec()},
 		},
 	}
 
@@ -489,7 +489,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 			s.Setup()
 
 			// Call NewConcentratedLiquidityPool with the parameters from the current test.
-			pool, err := model.NewConcentratedLiquidityPool(test.param.poolId, test.param.denom0, test.param.denom1, test.param.tickSpacing, test.param.swapFee)
+			pool, err := model.NewConcentratedLiquidityPool(test.param.poolId, test.param.denom0, test.param.denom1, test.param.tickSpacing, test.param.spreadFactor)
 
 			if test.expectedErr != nil {
 				// If the test is expected to produce an error, check if it does.
@@ -504,7 +504,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 				s.Require().Equal(test.expectedDenom0, pool.Token0)
 				s.Require().Equal(test.expectedDenom1, pool.Token1)
 				s.Require().Equal(test.expectedTickSpacing, pool.TickSpacing)
-				s.Require().Equal(test.param.swapFee, pool.SwapFee)
+				s.Require().Equal(test.param.spreadFactor, pool.SpreadFactor)
 			}
 		})
 	}

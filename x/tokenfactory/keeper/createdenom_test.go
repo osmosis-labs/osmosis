@@ -9,59 +9,59 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
 )
 
-func (suite *KeeperTestSuite) TestMsgCreateDenom() {
+func (s *KeeperTestSuite) TestMsgCreateDenom() {
 	var (
-		tokenFactoryKeeper = suite.App.TokenFactoryKeeper
-		bankKeeper         = suite.App.BankKeeper
-		denomCreationFee   = tokenFactoryKeeper.GetParams(suite.Ctx).DenomCreationFee
+		tokenFactoryKeeper = s.App.TokenFactoryKeeper
+		bankKeeper         = s.App.BankKeeper
+		denomCreationFee   = tokenFactoryKeeper.GetParams(s.Ctx).DenomCreationFee
 	)
 
 	// Get balance of acc 0 before creating a denom
-	preCreateBalance := bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], denomCreationFee[0].Denom)
+	preCreateBalance := bankKeeper.GetBalance(s.Ctx, s.TestAccs[0], denomCreationFee[0].Denom)
 
 	// Creating a denom should work
-	res, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
-	suite.Require().NoError(err)
-	suite.Require().NotEmpty(res.GetNewTokenDenom())
+	res, err := s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), "bitcoin"))
+	s.Require().NoError(err)
+	s.Require().NotEmpty(res.GetNewTokenDenom())
 
 	// Make sure that the admin is set correctly
-	queryRes, err := suite.queryClient.DenomAuthorityMetadata(suite.Ctx.Context(), &types.QueryDenomAuthorityMetadataRequest{
+	queryRes, err := s.queryClient.DenomAuthorityMetadata(s.Ctx.Context(), &types.QueryDenomAuthorityMetadataRequest{
 		Denom: res.GetNewTokenDenom(),
 	})
-	suite.Require().NoError(err)
-	suite.Require().Equal(suite.TestAccs[0].String(), queryRes.AuthorityMetadata.Admin)
+	s.Require().NoError(err)
+	s.Require().Equal(s.TestAccs[0].String(), queryRes.AuthorityMetadata.Admin)
 
 	// Make sure that creation fee was deducted
-	postCreateBalance := bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], tokenFactoryKeeper.GetParams(suite.Ctx).DenomCreationFee[0].Denom)
-	suite.Require().True(preCreateBalance.Sub(postCreateBalance).IsEqual(denomCreationFee[0]))
+	postCreateBalance := bankKeeper.GetBalance(s.Ctx, s.TestAccs[0], tokenFactoryKeeper.GetParams(s.Ctx).DenomCreationFee[0].Denom)
+	s.Require().True(preCreateBalance.Sub(postCreateBalance).IsEqual(denomCreationFee[0]))
 
 	// Make sure that a second version of the same denom can't be recreated
-	res, err = suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
-	suite.Require().Error(err)
+	res, err = s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), "bitcoin"))
+	s.Require().Error(err)
 
 	// Creating a second denom should work
-	res, err = suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "litecoin"))
-	suite.Require().NoError(err)
-	suite.Require().NotEmpty(res.GetNewTokenDenom())
+	res, err = s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), "litecoin"))
+	s.Require().NoError(err)
+	s.Require().NotEmpty(res.GetNewTokenDenom())
 
-	// Try querying all the denoms created by suite.TestAccs[0]
-	queryRes2, err := suite.queryClient.DenomsFromCreator(suite.Ctx.Context(), &types.QueryDenomsFromCreatorRequest{
-		Creator: suite.TestAccs[0].String(),
+	// Try querying all the denoms created by s.TestAccs[0]
+	queryRes2, err := s.queryClient.DenomsFromCreator(s.Ctx.Context(), &types.QueryDenomsFromCreatorRequest{
+		Creator: s.TestAccs[0].String(),
 	})
-	suite.Require().NoError(err)
-	suite.Require().Len(queryRes2.Denoms, 2)
+	s.Require().NoError(err)
+	s.Require().Len(queryRes2.Denoms, 2)
 
 	// Make sure that a second account can create a denom with the same subdenom
-	res, err = suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[1].String(), "bitcoin"))
-	suite.Require().NoError(err)
-	suite.Require().NotEmpty(res.GetNewTokenDenom())
+	res, err = s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom(s.TestAccs[1].String(), "bitcoin"))
+	s.Require().NoError(err)
+	s.Require().NotEmpty(res.GetNewTokenDenom())
 
 	// Make sure that an address with a "/" in it can't create denoms
-	res, err = suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom("osmosis.eth/creator", "bitcoin"))
-	suite.Require().Error(err)
+	res, err = s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom("osmosis.eth/creator", "bitcoin"))
+	s.Require().Error(err)
 }
 
-func (suite *KeeperTestSuite) TestCreateDenom() {
+func (s *KeeperTestSuite) TestCreateDenom() {
 	var (
 		primaryDenom            = types.DefaultParams().DenomCreationFee[0].Denom
 		secondaryDenom          = apptesting.SecondaryDenom
@@ -88,8 +88,8 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 			desc:             "subdenom and creator pair already exists",
 			denomCreationFee: defaultDenomCreationFee,
 			setup: func() {
-				_, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
-				suite.Require().NoError(err)
+				_, err := s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), "bitcoin"))
+				s.Require().NoError(err)
 			},
 			subdenom: "bitcoin",
 			valid:    false,
@@ -125,43 +125,43 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 			valid:            false,
 		},
 	} {
-		suite.SetupTest()
-		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+		s.SetupTest()
+		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			if tc.setup != nil {
 				tc.setup()
 			}
-			tokenFactoryKeeper := suite.App.TokenFactoryKeeper
-			bankKeeper := suite.App.BankKeeper
+			tokenFactoryKeeper := s.App.TokenFactoryKeeper
+			bankKeeper := s.App.BankKeeper
 			// Set denom creation fee in params
-			tokenFactoryKeeper.SetParams(suite.Ctx, tc.denomCreationFee)
-			denomCreationFee := tokenFactoryKeeper.GetParams(suite.Ctx).DenomCreationFee
-			suite.Require().Equal(tc.denomCreationFee.DenomCreationFee, denomCreationFee)
+			tokenFactoryKeeper.SetParams(s.Ctx, tc.denomCreationFee)
+			denomCreationFee := tokenFactoryKeeper.GetParams(s.Ctx).DenomCreationFee
+			s.Require().Equal(tc.denomCreationFee.DenomCreationFee, denomCreationFee)
 
 			// note balance, create a tokenfactory denom, then note balance again
-			preCreateBalance := bankKeeper.GetAllBalances(suite.Ctx, suite.TestAccs[0])
-			res, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), tc.subdenom))
-			postCreateBalance := bankKeeper.GetAllBalances(suite.Ctx, suite.TestAccs[0])
+			preCreateBalance := bankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
+			res, err := s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), tc.subdenom))
+			postCreateBalance := bankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
 			if tc.valid {
-				suite.Require().NoError(err)
-				suite.Require().True(preCreateBalance.Sub(postCreateBalance).IsEqual(denomCreationFee))
+				s.Require().NoError(err)
+				s.Require().True(preCreateBalance.Sub(postCreateBalance).IsEqual(denomCreationFee))
 
 				// Make sure that the admin is set correctly
-				queryRes, err := suite.queryClient.DenomAuthorityMetadata(suite.Ctx.Context(), &types.QueryDenomAuthorityMetadataRequest{
+				queryRes, err := s.queryClient.DenomAuthorityMetadata(s.Ctx.Context(), &types.QueryDenomAuthorityMetadataRequest{
 					Denom: res.GetNewTokenDenom(),
 				})
 
-				suite.Require().NoError(err)
-				suite.Require().Equal(suite.TestAccs[0].String(), queryRes.AuthorityMetadata.Admin)
+				s.Require().NoError(err)
+				s.Require().Equal(s.TestAccs[0].String(), queryRes.AuthorityMetadata.Admin)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 				// Ensure we don't charge if we expect an error
-				suite.Require().True(preCreateBalance.IsEqual(postCreateBalance))
+				s.Require().True(preCreateBalance.IsEqual(postCreateBalance))
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestGasConsume() {
+func (s *KeeperTestSuite) TestGasConsume() {
 	// It's hard to estimate exactly how much gas will be consumed when creating a
 	// denom, because besides consuming the gas specified by the params, the keeper
 	// also does a bunch of other things that consume gas.
@@ -203,25 +203,25 @@ func (suite *KeeperTestSuite) TestGasConsume() {
 			gasConsume: 200_000_000,
 		},
 	} {
-		suite.SetupTest()
-		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+		s.SetupTest()
+		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			// set params with the gas consume amount
-			suite.App.TokenFactoryKeeper.SetParams(suite.Ctx, types.NewParams(nil, tc.gasConsume))
+			s.App.TokenFactoryKeeper.SetParams(s.Ctx, types.NewParams(nil, tc.gasConsume))
 
 			// amount of gas consumed prior to the denom creation
-			gasConsumedBefore := suite.Ctx.GasMeter().GasConsumed()
+			gasConsumedBefore := s.Ctx.GasMeter().GasConsumed()
 
 			// create a denom
-			_, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "larry"))
-			suite.Require().NoError(err)
+			_, err := s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), "larry"))
+			s.Require().NoError(err)
 
 			// amount of gas consumed after the denom creation
-			gasConsumedAfter := suite.Ctx.GasMeter().GasConsumed()
+			gasConsumedAfter := s.Ctx.GasMeter().GasConsumed()
 
 			// the amount of gas consumed must be within the range
 			gasConsumed := gasConsumedAfter - gasConsumedBefore
-			suite.Require().Greater(gasConsumed, tc.gasConsume)
-			suite.Require().Less(gasConsumed, tc.gasConsume+offset)
+			s.Require().Greater(gasConsumed, tc.gasConsume)
+			s.Require().Less(gasConsumed, tc.gasConsume+offset)
 		})
 	}
 }

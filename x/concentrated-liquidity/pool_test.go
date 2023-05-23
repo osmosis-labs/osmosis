@@ -20,12 +20,12 @@ func (s *KeeperTestSuite) TestInitializePool() {
 
 	// Create a concentrated liquidity pool with unauthorized tick spacing
 	invalidTickSpacing := uint64(25)
-	invalidTickSpacingConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(2, ETH, USDC, invalidTickSpacing, DefaultZeroSwapFee)
+	invalidTickSpacingConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(2, ETH, USDC, invalidTickSpacing, DefaultZeroSpreadFactor)
 	s.Require().NoError(err)
 
-	// Create a concentrated liquidity pool with unauthorized swap fee
-	invalidSwapFee := sdk.MustNewDecFromStr("0.1")
-	invalidSwapFeeConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(3, ETH, USDC, DefaultTickSpacing, invalidSwapFee)
+	// Create a concentrated liquidity pool with unauthorized spread factor
+	invalidSpreadFactor := sdk.MustNewDecFromStr("0.1")
+	invalidSpreadFactorConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(3, ETH, USDC, DefaultTickSpacing, invalidSpreadFactor)
 	s.Require().NoError(err)
 
 	// Create an invalid PoolI that doesn't implement ConcentratedPoolExtension
@@ -60,10 +60,10 @@ func (s *KeeperTestSuite) TestInitializePool() {
 			expectedErr:    types.UnauthorizedTickSpacingError{ProvidedTickSpacing: invalidTickSpacing, AuthorizedTickSpacings: s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx).AuthorizedTickSpacing},
 		},
 		{
-			name:           "Invalid swap fee",
-			poolI:          &invalidSwapFeeConcentratedPool,
+			name:           "Invalid spread factor",
+			poolI:          &invalidSpreadFactorConcentratedPool,
 			creatorAddress: validCreatorAddress,
-			expectedErr:    types.UnauthorizedSwapFeeError{ProvidedSwapFee: invalidSwapFee, AuthorizedSwapFees: s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx).AuthorizedSwapFees},
+			expectedErr:    types.UnauthorizedSpreadFactorError{ProvidedSpreadFactor: invalidSpreadFactor, AuthorizedSpreadFactors: s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx).AuthorizedSpreadFactors},
 		},
 		{
 			name:  "unauthorized quote denom",
@@ -277,30 +277,30 @@ func (s *KeeperTestSuite) TestCalculateSpotPrice() {
 	s.Require().True(spotPrice.IsNil())
 }
 
-func (s *KeeperTestSuite) TestValidateSwapFee() {
+func (s *KeeperTestSuite) TestValidateSpreadFactor() {
 	s.SetupTest()
 	params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
 	tests := []struct {
-		name        string
-		swapFee     sdk.Dec
-		expectValid bool
+		name         string
+		spreadFactor sdk.Dec
+		expectValid  bool
 	}{
 		{
-			name:        "Valid swap fee",
-			swapFee:     params.AuthorizedSwapFees[0],
-			expectValid: true,
+			name:         "Valid spread factor",
+			spreadFactor: params.AuthorizedSpreadFactors[0],
+			expectValid:  true,
 		},
 		{
-			name:        "Invalid swap fee",
-			swapFee:     params.AuthorizedSwapFees[0].Add(sdk.SmallestDec()),
-			expectValid: false,
+			name:         "Invalid spread factor",
+			spreadFactor: params.AuthorizedSpreadFactors[0].Add(sdk.SmallestDec()),
+			expectValid:  false,
 		},
 	}
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Method under test.
-			isValid := s.App.ConcentratedLiquidityKeeper.ValidateSwapFee(s.Ctx, params, test.swapFee)
+			isValid := s.App.ConcentratedLiquidityKeeper.ValidateSpreadFactor(s.Ctx, params, test.spreadFactor)
 
 			s.Require().Equal(test.expectValid, isValid)
 		})
@@ -350,7 +350,7 @@ func (s *KeeperTestSuite) TestSetPool() {
 		CurrentTick:          0,
 		TickSpacing:          DefaultTickSpacing,
 		ExponentAtPriceOne:   -6,
-		SwapFee:              sdk.MustNewDecFromStr("0.003"),
+		SpreadFactor:         sdk.MustNewDecFromStr("0.003"),
 		LastLiquidityUpdate:  s.Ctx.BlockTime(),
 	}
 	tests := []struct {

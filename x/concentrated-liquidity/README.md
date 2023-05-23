@@ -84,7 +84,7 @@ in a concentrated liquidity pool.
 
 The price [p] corresponding to a tick [t] is defined by the equation:
 
-$$ p(i) = 1.0001^t $$
+$$ p(t) = 1.0001^t $$
 
 This results in a .01% difference between adjacent tick prices. This does not,
 however, allow for control over the specific prices that the ticks correspond
@@ -273,6 +273,62 @@ $$tickIndex = ticksPassed + ticksToBeFulfilledByExponentAtCurrentTick =
 
 Bob set his limit order at tick 36650010
 
+## Chosing an Exponent At Price One Value
+
+The creator of a pool cannot choose an exponenetAtPriceOne as one of the input
+parameters since it is hard coded to -6. The number can be psedo-controlled by
+choosing the tick spacing a pool is initialized with. For example, if a pool
+is desired to have an exponentAtPriceOne of -6, the pool creator can choose a
+tick spacing of 1. If a pool is desired to have an exponentAtPriceOne of -4,
+this is two factors of 10 greater than -6, so the pool creator can choose a
+tick spacing of 100 to achieve this level of precision.
+
+As explained previously, the exponent at price one determines how much the spot
+price increases or decreases when traversing ticks. The following equation will
+assist in selecting this value:
+
+$$exponentAtPriceOne=log_{10}(\frac{D}{P})$$
+
+$$P=(\frac{baseAssetInUSD}{quoteAssetInUSD})$$
+
+$$D=P-(\frac{baseAssetInUSD}{quoteAssetInUSD+desiredIncrementOfQuoteInUSD})$$
+
+### Example 1
+
+SHIB is trading at $0.00001070 per SHIB
+BTC is trading at $28,000 per BTC
+
+We want to create a SHIB/BTC concentrated liquidity pool where SHIB is the
+baseAsset (asset0) and BTC is the quoteAsset (asset1). In terms of the quoteAsset,
+we want to increment in 10 cent values.
+
+$$P=(\frac{0.00001070}{28,000})=0.000000000382142857$$
+
+$$D=(0.000000000382142857)-(\frac{0.00001070}{28,000+0.10})=0.0000000000000013647910441136$$
+
+$$exponentAtPriceOne=log_{10}(\frac{0.0000000000000013647910441136}{0.000000000382142857})=-5.447159582$$
+
+We can therefore conclude that we can use an exponent at price one of -5
+(slightly under precise) or -6 (slightly over precise) for this base/quote pair
+and desired price granularity. This means we would either want a tick spacing of 1
+(to have an exponent at price one of -6) or 10 (to have an exponent at price one of -5).
+
+### Example 2
+
+Flipping the quoteAsset/baseAsset, for BTC/SHIB, lets determine what the
+exponentAtPriceOne should be. For SHIB as a quote, centralized exchanges
+list prices at the 10^-8, so we will set our desired increment to this value.
+
+$$P=(\frac{28,000}{0.00001070})=2616822429$$
+
+$$D=(2616822429)-(\frac{28,000}{0.00001070+0.00000001})=2443345$$
+
+$$exponentAtPriceOne=-log_{10}(\frac{2443345}{2616822429})=-3.0297894598783$$
+
+We can therefore conclude that we can use an exponent at price one of -3
+for this base/quote pair and desired price granularity. This means we would
+want a tick spacing of 1000 (to have an exponent at price one of -3).
+
 ### Consequences
 
 This decision allows us to define ticks at spot prices that users actually
@@ -396,7 +452,7 @@ type MsgCreateConcentratedPool struct {
  Denom0                    string
  Denom1                    string
  TickSpacing               uint64
- SwapFee                   github_com_cosmos_cosmos_sdk_types.Dec
+ SpreadFactor                   github_com_cosmos_cosmos_sdk_types.Dec
 }
 ```
 
@@ -499,7 +555,7 @@ is associated with the `concentrated-liquidity` pool, the swap is routed
 into the relevant module. The routing is done via the mapping from state that was
 discussed in the "Pool Creation" section.
 
-### Liquidity Provision
+## Liquidity Provision
 
 > As an LP, I want to provide liquidity in ranges so that I can achieve greater
 capital efficiency
@@ -600,7 +656,7 @@ func (k Keeper) withdrawPosition(
 }
 ```
 
-### Swapping
+## Swapping
 
 > As a trader, I want to be able to swap over a concentrated liquidity pool so
 that my trades incur lower slippage
@@ -925,7 +981,7 @@ Note, that the numbers used in this example are not realistic. They are used to
 illustrate the concepts on the high level.
 
 Imagine a tick range from min tick -1000 to max tick 1000 in a pool with a 1%
-swap fee.
+spread factor.
 
 Assume that user A created a full range position from ticks -1000 to 1000 for
 `10_000` liquidity units.
@@ -993,7 +1049,7 @@ Now, we update the swap state as follows:
 of the crossed tick 0 (1_000) = 11_000.
 
 - `feeGrowthGlobal` is set to 2_500 \* 0.01 / 10_000 = 0.0025 because we assumed
-1% swap fee.
+1% spread factor.
 
 Now, we proceed by getting the next initialized tick in the direction of
 the swap (100).
@@ -1017,7 +1073,7 @@ Now, we update the swap state as follows:
 - `liquidity` is set kept the same as we did not cross any initialized tick.
 
 - `feeGrowthGlobal` is updated to 0.0025 + (2_500 \* 0.01 / 10_000) = 0.005
-  because we assumed 1% swap fee.
+  because we assumed 1% spread factor.
 
 As a result, we complete the swap having swapped 5_000 tokens one in for 22_500
 tokens zero out. The tick is now at 70 and the current liquidity at the active
@@ -1058,11 +1114,11 @@ layers of state:
 // Note that this is proto-generated.
 type Pool struct {
     ...
-    SwapFee sdk.Dec
+    SpreadFactor sdk.Dec
 }
 ```
 
-Each pool is initialized with a static fee value `SwapFee` to be paid by swappers.
+Each pool is initialized with a static fee value `SpreadFactor` to be paid by swappers.
 Additionally, each pool's fee accumulator tracks and stores the total fees accrued
 throughout its lifespan, named `FeeGrowthGlobal`.
 
@@ -1197,15 +1253,15 @@ swapped in.
 
 Then, to calculate the fee within a single tick, we perform the following steps:
 
-1. Calculate an updated `tokenInAmtAfterFee` by charging the `pool.SwapFee` on `tokenInAmt`.
+1. Calculate an updated `tokenInAmtAfterFee` by charging the `pool.SpreadFactor` on `tokenInAmt`.
 
 ```go
 // Update global fee accumulator tracking fees for denom of tokenInAmt.
 // TODO: revisit to make sure if truncations need to happen.
-pool.FeeGrowthGlobalOutside.TokenX = pool.FeeGrowthGlobalOutside.TokenX.Add(tokenInAmt.Mul(pool.SwapFee))
+pool.FeeGrowthGlobalOutside.TokenX = pool.FeeGrowthGlobalOutside.TokenX.Add(tokenInAmt.Mul(pool.SpreadFactor))
 
 // Update tokenInAmt to account for fees.
-fee = tokenInAmt.Mul(pool.SwapFee).Ceil()
+fee = tokenInAmt.Mul(pool.SpreadFactor).Ceil()
 tokenInAmtAfterFee = tokenInAmt.Sub(fee)
 
 k.bankKeeper.SendCoins(ctx, swapper, pool.GetAddress(), ...) // send tokenInAmtAfterFee
@@ -1250,7 +1306,7 @@ feeChargeTotal = amountSpecifiedRemaining.Sub(amountIn)
 The fee is charged on the amount actually consumed during a swap step.
 
 ```go
-feeChargeTotal = amountIn.Mul(swapFee)
+feeChargeTotal = amountIn.Mul(spreadFactor)
 ```
 
 3. Price impact protection makes it exit before consuming all amount remaining.
@@ -1259,7 +1315,7 @@ The fee is charged on the amount in actually consumed before price impact
 protection got trigerred.
 
 ```go
-feeChargeTotal = amountIn.Mul(swapFee)
+feeChargeTotal = amountIn.Mul(spreadFactor)
 ```
 
 ## Incentive/Liquidity Mining Mechanism
@@ -1351,6 +1407,20 @@ the same block are not eligible for any incentives.
 For the sake of clarity, this mechanism functions very similarly to status quo incentives,
 but it has a separate accumulator for each supported uptime and ensures that only liquidity
 that has been in the pool for the required amount of time qualifies for claiming incentives.
+
+### Incentive Creation and Querying
+
+While it is technically possible for Osmosis to enable the creation of incentive records directly in the CL module, incentive creation is currently funneled through existing gauge infrastructure in the `x/incentives` module. This simplifies UX drastically for frontends, external incentive creators, and governance, while making CL incentives fully backwards-compatible with incentive creation and querying flows that everyone is already used to. As of the initial version of Osmosis's CL, all incentive creation and querying logic will be handled by respective gauge functions (e.g. the `IncentivizedPools` query in the `x/incentives` module will include CL pools that have internal incentives on them).
+
+### Reward Splitting Between Classic and CL pools
+
+While we want to nudge Classic pool LPs to transition to CL pools, we also want to ensure that we do not have a hard cutoff for incentives where past a certain point it is no longer worth it to provide liquidity to Classic pools. This is because we want to ensure that we have a healthy transition period where liquidity is not split between Classic and CL pools, but rather that liquidity is added to CL pools while Classic pools are slowly drained of liquidity.
+
+To achieve this in a way that is difficult to game and efficient for the chain to process, we will be using a **reward-splitting** mechanism that treats _bonded_ liquidity in a Classic pool that is paired by governance to a CL pool (e.g. for the purpose of migration) as a single full-range position on the CL pool for the purpose of calculating incentives. Note that this _does not affect fee distribution_ and only applies to the flow of incentives through a CL pool.
+
+One implication of this mechanism is that it moves the incentivization process to a higher level of abstraction (incentivizing _pairs_ instead of _pools_). For internal incentives (which are governance managed), this is in line with the goal of continuing to push governance to require less frequent actions, which this change ultimately does.
+
+To keep a small but meaningful incentive for LPs to still migrate their positions, we have added a **discount rate** to incentives that are redirected to Classic pools. This is initialized to 5% by default but is a governance-upgradable parameter that can be increased in the future. A discount rate of 100% is functionally equivalent to all the incentives staying in the CL pool.
 
 ## TWAP Integration
 
@@ -1471,7 +1541,7 @@ This listener executes after a swap in a concentrated liquidity pool.
 
 At the time of this writing, it is only utilized by the `x/twap` module.
 
-### State
+## State
 
 - global (per-pool)
 
@@ -1479,6 +1549,7 @@ At the time of this writing, it is only utilized by the `x/twap` module.
 
 - per-position
 
+<<<<<<< HEAD
 ### State entries and KV store management
 
 #### Ticks
@@ -1490,6 +1561,8 @@ Key tick is composed of tick prefix + pool id + tick negative / positive prefix 
 KeyTickPrefixByPoolId is composed of tick prefix + pool Id. Using this prefix bytes allows us to iterate over ticks within the given pool id. 
 
 
+=======
+>>>>>>> main
 ## Terminology
 
 We will use the following terms throughout the document:

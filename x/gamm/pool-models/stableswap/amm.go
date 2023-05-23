@@ -157,7 +157,7 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 
 func (p Pool) spotPrice(quoteDenom, baseDenom string) (spotPrice sdk.Dec, err error) {
 	// Define f_{y -> x}(a) as the function that outputs the amount of tokens X you'd get by
-	// trading "a" units of Y against the pool, assuming 0 swap fee, at the current liquidity.
+	// trading "a" units of Y against the pool, assuming 0 spread factor, at the current liquidity.
 	// The spot price of the pool is then lim a -> 0, f_{y -> x}(a) / a
 	// For uniswap f_{y -> x}(a) = x - xy/(y + a),
 	// The spot price equation of y in terms of x is X_SUPPLY/Y_SUPPLY.
@@ -176,12 +176,12 @@ func (p Pool) spotPrice(quoteDenom, baseDenom string) (spotPrice sdk.Dec, err er
 	return res, err
 }
 
-func oneMinus(swapFee sdk.Dec) osmomath.BigDec {
-	return osmomath.BigDecFromSDKDec(sdk.OneDec().Sub(swapFee))
+func oneMinus(spreadFactor sdk.Dec) osmomath.BigDec {
+	return osmomath.BigDecFromSDKDec(sdk.OneDec().Sub(spreadFactor))
 }
 
 // calcOutAmtGivenIn calculate amount of specified denom to output from a pool in sdk.Dec given the input `tokenIn`
-func (p Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
+func (p Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, spreadFactor sdk.Dec) (sdk.Dec, error) {
 	// round liquidity down, and round token in down
 	reserves, err := p.scaledSortedPoolReserves(tokenIn.Denom, tokenOutDenom, osmomath.RoundDown)
 	if err != nil {
@@ -193,8 +193,8 @@ func (p Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee 
 		return sdk.Dec{}, err
 	}
 
-	// amm input = tokenIn * (1 - swap fee)
-	ammIn := tokenInDec.Mul(oneMinus(swapFee))
+	// amm input = tokenIn * (1 - spread factor)
+	ammIn := tokenInDec.Mul(oneMinus(spreadFactor))
 	// We are solving for the amount of token out, hence x = tokenOutSupply, y = tokenInSupply
 	// fmt.Printf("outSupply %s, inSupply %s, remReservs %s, ammIn %s\n ", tokenOutSupply, tokenInSupply, remReserves, ammIn)
 	cfmmOut := solveCfmm(tokenOutSupply, tokenInSupply, remReserves, ammIn)
@@ -204,7 +204,7 @@ func (p Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee 
 }
 
 // calcInAmtGivenOut calculates exact input amount given the desired output and return as a decimal
-func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
+func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, spreadFactor sdk.Dec) (sdk.Dec, error) {
 	// round liquidity down, and round token out up
 	reserves, err := p.scaledSortedPoolReserves(tokenInDenom, tokenOut.Denom, osmomath.RoundDown)
 	if err != nil {
@@ -222,43 +222,43 @@ func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee
 	// returned cfmmIn is negative, representing we need to add this many tokens to pool.
 	// We invert that negative here.
 	cfmmIn = cfmmIn.Neg()
-	// divide by (1 - swapfee) to force a corresponding increase in input asset
-	inAmt := cfmmIn.QuoRoundUp(oneMinus(swapFee))
+	// divide by (1 - spread factor) to force a corresponding increase in input asset
+	inAmt := cfmmIn.QuoRoundUp(oneMinus(spreadFactor))
 	inCoinAmt := p.getDescaledPoolAmt(tokenInDenom, inAmt)
 	return inCoinAmt, nil
 }
 
 // calcSingleAssetJoinShares calculates the number of LP shares that
 // should be granted given the passed in single-token input (non-mutative)
-func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk.Int, error) {
+func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, spreadFactor sdk.Dec) (sdk.Int, error) {
 	poolWithAddedLiquidityAndShares := func(newLiquidity sdk.Coin, newShares sdk.Int) types.CFMMPoolI {
 		paCopy := p.Copy()
 		paCopy.updatePoolForJoin(sdk.NewCoins(newLiquidity), newShares)
 		return &paCopy
 	}
 
-	// We apply the swap fee by multiplying by:
-	// 1) getting what % of the input the swap fee should apply to
-	// 2) multiplying that by swap fee
-	// 3) oneMinusSwapFee := (1 - swap_fee * swap_fee_applicable_percent)
-	// 4) Multiplying token in by one minus swap fee.
-	swapFeeApplicableRatio, err := p.singleAssetJoinSwapFeeRatio(tokenIn.Denom)
+	// We apply the spread factor by multiplying by:
+	// 1) getting what % of the input the spread factor should apply to
+	// 2) multiplying that by spread factor
+	// 3) oneMinusSpreadFactor := (1 - spread_factor * spread_factor_applicable_percent)
+	// 4) Multiplying token in by one minus spread factor.
+	spreadFactorApplicableRatio, err := p.singleAssetJoinSpreadFactorRatio(tokenIn.Denom)
 	if err != nil {
 		return sdk.Int{}, err
 	}
-	oneMinusSwapFee := sdk.OneDec().Sub(swapFee.Mul(swapFeeApplicableRatio))
-	tokenInAmtAfterFee := tokenIn.Amount.ToDec().Mul(oneMinusSwapFee).TruncateInt()
+	oneMinusSpreadFactor := sdk.OneDec().Sub(spreadFactor.Mul(spreadFactorApplicableRatio))
+	tokenInAmtAfterFee := tokenIn.Amount.ToDec().Mul(oneMinusSpreadFactor).TruncateInt()
 
 	return cfmm_common.BinarySearchSingleAssetJoin(p, sdk.NewCoin(tokenIn.Denom, tokenInAmtAfterFee), poolWithAddedLiquidityAndShares)
 }
 
 // returns the ratio of input asset liquidity, to total liquidity in pool, post-scaling.
-// We use this as the portion of input liquidity to apply a swap fee too, for single asset joins.
+// We use this as the portion of input liquidity to apply a spread factor too, for single asset joins.
 // So if a pool is currently comprised of 80% of asset A, and 20% of asset B (post-scaling),
 // and we input asset A, this function will return 20%.
-// Note that this will over-estimate swap fee for single asset joins slightly,
+// Note that this will over-estimate spread factor for single asset joins slightly,
 // as in the swapping process into the pool, the A to B ratio would decrease the relative supply of B.
-func (p *Pool) singleAssetJoinSwapFeeRatio(tokenInDenom string) (sdk.Dec, error) {
+func (p *Pool) singleAssetJoinSpreadFactorRatio(tokenInDenom string) (sdk.Dec, error) {
 	// get a second denom in pool
 	tokenOut := p.PoolLiquidity[0]
 	if tokenOut.Denom == tokenInDenom {
@@ -282,13 +282,13 @@ func (p *Pool) singleAssetJoinSwapFeeRatio(tokenInDenom string) (sdk.Dec, error)
 
 // Route a pool join attempt to either a single-asset join or all-asset join (mutates pool state)
 // Eventually, we intend to switch this to a COW wrapped pa for better performance
-func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
+func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, spreadFactor sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
 	if !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("attempted joining pool with assets that do not exist in pool")
 	}
 
 	if len(tokensIn) == 1 && tokensIn[0].Amount.GT(sdk.OneInt()) {
-		numShares, err = p.calcSingleAssetJoinShares(tokensIn[0], swapFee)
+		numShares, err = p.calcSingleAssetJoinShares(tokensIn[0], spreadFactor)
 		if err != nil {
 			return sdk.ZeroInt(), sdk.NewCoins(), err
 		}

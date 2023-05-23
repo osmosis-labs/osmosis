@@ -252,13 +252,16 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 // For the sake of backwards-compatibility with future implementations of charging, this function deletes the old position and creates
 // a new one with the resulting amount after addition. Note that due to truncation after `withdrawPosition`, there is some rounding error
 // that is upper bounded by 1 unit of the more valuable token.
+// Uses the amount0MinGiven,amount1MinGiven as the minimum token out for creating the new position.
+// Note that these field indicates the min amount corresponding to the total liquidity of the position,
+// not only for the liquidity amount that is being added.
+// Uses amounts withdrawn from the original position if provided min amount is zero.
 // Returns error if
 // - Withdrawing full position fails
 // - Creating new position with added liquidity fails
 // - Position with `positionId` is the last position in the pool
 // - Position is superfluid staked
-// TODO: handle adding to SFS positions
-func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added sdk.Int) (uint64, sdk.Int, sdk.Int, error) {
+func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added, amount0MinGiven, amount1MinGiven sdk.Int) (uint64, sdk.Int, sdk.Int, error) {
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
@@ -269,8 +272,13 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 		return 0, sdk.Int{}, sdk.Int{}, types.NotPositionOwnerError{PositionId: positionId, Address: owner.String()}
 	}
 
+	// if one of the liquidity is negative, or both liquidity being added is zero, error
 	if amount0Added.IsNegative() || amount1Added.IsNegative() {
 		return 0, sdk.Int{}, sdk.Int{}, types.NegativeAmountAddedError{PositionId: position.PositionId, Asset0Amount: amount0Added, Asset1Amount: amount1Added}
+	}
+
+	if amount0Added.IsZero() && amount1Added.IsZero() {
+		return 0, sdk.Int{}, sdk.Int{}, types.ErrZeroLiquidity
 	}
 
 	// If the position is superfluid staked, return error.
@@ -306,7 +314,16 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 		return 0, sdk.Int{}, sdk.Int{}, err
 	}
 	tokensProvided := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), amount0Desired), sdk.NewCoin(pool.GetToken1(), amount1Desired))
-	newPositionId, actualAmount0, actualAmount1, _, _, _, _, err := k.createPosition(ctx, position.PoolId, owner, tokensProvided, amount0Withdrawn, amount1Withdrawn, position.LowerTick, position.UpperTick)
+	minimumAmount0 := amount0Withdrawn
+	minimumAmount1 := amount1Withdrawn
+
+	if !amount0MinGiven.IsZero() {
+		minimumAmount0 = amount0MinGiven
+	}
+	if !amount1MinGiven.IsZero() {
+		minimumAmount1 = amount1MinGiven
+	}
+	newPositionId, actualAmount0, actualAmount1, _, _, _, _, err := k.createPosition(ctx, position.PoolId, owner, tokensProvided, minimumAmount0, minimumAmount1, position.LowerTick, position.UpperTick)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
 	}

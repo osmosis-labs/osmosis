@@ -76,7 +76,7 @@ or positive number of LP shares.
 Otherwise transaction will be aborted and user will not be able to exit a pool.
 Therefore, it is not possible to "drain out" a pool.
 
-When exiting a pool with a swap, both exit and swap fees are paid.
+When exiting a pool with a swap, both exit and spread factors are paid.
 
 Existing Exit types:
 - ExitPool
@@ -98,7 +98,7 @@ after the swap is denoted as `tokenOut` throughout the module.
 Given a `tokenIn`, the following calculations are done to calculate how
 many tokens are to be swapped into and removed from the pool:
 
-`tokenBalanceOut * [1 - { tokenBalanceIn / (tokenBalanceIn + (1 - swapFee) * tokenAmountIn)} ^ (tokenWeightIn / tokenWeightOut)]`
+`tokenBalanceOut * [1 - { tokenBalanceIn / (tokenBalanceIn + (1 - spreadFactor) * tokenAmountIn)} ^ (tokenWeightIn / tokenWeightOut)]`
 
 The calculation is also able to be reversed, the case where user
 provides `tokenOut`. The calculation for the amount of tokens that the
@@ -112,10 +112,10 @@ Existing Swap types:
 
 #### Spot Price
 
-Meanwhile, calculation of the spot price with a swap fee is done using
+Meanwhile, calculation of the spot price with a spread factor is done using
 the following formula:
 
-`spotPrice / (1 - swapFee)`, where `spotPrice` is defined as:
+`spotPrice / (1 - spreadFactor)`, where `spotPrice` is defined as:
 
 `(tokenBalanceIn / tokenWeightIn) / (tokenBalanceOut / tokenWeightOut)`
 
@@ -160,15 +160,15 @@ Pools have the following parameters:
 
 |  Key                       | Type                        |
 |  --------------------------| ----------------------------|
-|  SwapFee                   | sdk.Dec                     |
+|  SpreadFactor                   | sdk.Dec                     |
 |  ExitFee                   | sdk.Dec                     |
 |  FutureGovernor            | \*FutureGovernor            |
 |  Weights                   | \*Weights                   |
 |  SmoothWeightChangeParams  | \*SmoothWeightChangeParams  |
 |  PoolCreationFee           | sdk.Coins                   |
 
-1. **SwapFee** -
-    The swap fee is the cut of all swaps that goes to the Liquidity Providers (LPs) for a pool. Suppose a pool has a swap fee `s`. Then if a user wants to swap `T` tokens in the pool, `sT` tokens go to the LP's, and then `(1 - s)T` tokens are swapped according to the AMM swap function.
+1. **SpreadFactor** -
+    The spread factor is the cut of all swaps that goes to the Liquidity Providers (LPs) for a pool. Suppose a pool has a spread factor `s`. Then if a user wants to swap `T` tokens in the pool, `sT` tokens go to the LP's, and then `(1 - s)T` tokens are swapped according to the AMM swap function.
 2. **ExitFee** -
     The exit fee is a fee that is applied to LP's that want to remove their liquidity from the pool. Suppose a pool has an exit fee `e`. If they currently have `S` LP shares, then when they remove their liquidity they get tokens worth `(1 - e)S` shares back. The remaining `eS` shares are then burned, and the tokens corresponding to these shares are kept as liquidity.
 3. **FutureGovernor** -
@@ -256,7 +256,7 @@ The JSON [config-file] must specify the following parameters:
 {
  "weights": [list weighted denoms],
  "initial-deposit": [list of denoms with initial deposit amount],
- "swap-fee": [swap fee in percentage],
+ "swap-fee": [spread factor in percentage],
  "exit-fee": [exit fee in percentage],
  "future-governor": [see options in pool parameters section above]
 }

@@ -22,11 +22,12 @@ const (
 )
 
 var (
-	defaultAmount     = sdk.NewInt(100)
-	desiredDenom0     = v16.DesiredDenom0
-	desiredDenom0Coin = sdk.NewCoin(desiredDenom0, defaultAmount)
-	daiCoin           = sdk.NewCoin(v16.DAIIBCDenom, defaultAmount)
-	usdcCoin          = sdk.NewCoin(v16.USDCIBCDenom, defaultAmount)
+	defaultDaiAmount   = sdk.NewInt(7300000000)
+	defaultDenom0mount = sdk.NewInt(10000000000)
+	desiredDenom0      = v16.DesiredDenom0
+	desiredDenom0Coin  = sdk.NewCoin(desiredDenom0, defaultDenom0mount)
+	daiCoin            = sdk.NewCoin(v16.DAIIBCDenom, defaultDaiAmount)
+	usdcCoin           = sdk.NewCoin(v16.USDCIBCDenom, defaultDaiAmount)
 )
 
 func (suite *ConcentratedUpgradeTestSuite) SetupTest() {
@@ -90,8 +91,8 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateConcentratedPoolFromCFMM() 
 			suite.Require().NoError(err)
 			suite.Require().Equal(clPoolReturned, clPoolInState)
 
-			// Validate CL and balancer pools have the same swap fee.
-			suite.Require().Equal(balancerPool.GetSwapFee(suite.Ctx), clPoolReturned.GetSwapFee(suite.Ctx))
+			// Validate CL and balancer pools have the same spread factor.
+			suite.Require().Equal(balancerPool.GetSpreadFactor(suite.Ctx), clPoolReturned.GetSpreadFactor(suite.Ctx))
 
 			// Validate that CL and balancer pools have the same denoms
 			balancerDenoms, err := suite.App.PoolManagerKeeper.RouteGetPoolDenoms(suite.Ctx, balancerPool.GetId())
@@ -108,7 +109,7 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateConcentratedPoolFromCFMM() 
 	}
 }
 
-func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiuqidityPoolAndMigrationLink() {
+func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrationLink() {
 	suite.Setup()
 
 	lockableDurations := suite.App.PoolIncentivesKeeper.GetLockableDurations(suite.Ctx)
@@ -200,7 +201,7 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiuqid
 			}
 			suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, originalDistrInfo)
 
-			err = v16.CreateCanonicalConcentratedLiuqidityPoolAndMigrationLink(suite.Ctx, tc.cfmmPoolIdToLinkWith, tc.desiredDenom0, &suite.App.AppKeepers)
+			clPool, err := v16.CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(suite.Ctx, tc.cfmmPoolIdToLinkWith, tc.desiredDenom0, &suite.App.AppKeepers)
 
 			if tc.expectError != nil {
 				suite.Require().Error(err)
@@ -212,6 +213,7 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiuqid
 			// Note, + 2 becuse we create 2 balancer pools during test setup, and 1 concentrated pool during migration.
 			clPoolInState, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, validPoolId+2)
 			suite.Require().NoError(err)
+			suite.Require().Equal(clPool, clPoolInState)
 
 			// Validate that CL and balancer pools have the same denoms
 			balancerDenoms, err := suite.App.PoolManagerKeeper.RouteGetPoolDenoms(suite.Ctx, balancerPool.GetId())

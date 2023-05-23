@@ -12,6 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 // createUptimeAccumulators creates accumulator objects in store for each supported uptime for the given poolId.
@@ -126,10 +127,34 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64)
 		return 0, sdk.ZeroDec(), nil
 	}
 
-	// Get Balancer pool liquidity
-	balancerPoolLiquidity, err := k.gammKeeper.GetTotalPoolLiquidity(ctx, canonicalBalancerPoolId)
+	// Get total balancer pool liquidity (denominated in pool coins)
+	totalBalancerPoolLiquidity, err := k.gammKeeper.GetTotalPoolLiquidity(ctx, canonicalBalancerPoolId)
 	if err != nil {
 		return 0, sdk.ZeroDec(), err
+	}
+
+	// Get total balancer shares for Balancer pool
+	totalBalancerPoolShares, err := k.gammKeeper.GetTotalPoolShares(ctx, canonicalBalancerPoolId)
+	if err != nil {
+		return 0, sdk.ZeroDec(), err
+	}
+
+	// Get total shares bonded on the longest lockup duration for Balancer pool
+	longestDuration, err := k.poolIncentivesKeeper.GetLongestLockableDuration(ctx)
+	if err != nil {
+		return 0, sdk.ZeroDec(), err
+	}
+	bondedShares := k.lockupKeeper.GetLockedDenom(ctx, gammtypes.GetPoolShareDenom(canonicalBalancerPoolId), longestDuration)
+
+	// Calculate portion of Balancer pool shares that are bonded
+	bondedShareRatio := bondedShares.ToDec().Quo(totalBalancerPoolShares.ToDec())
+
+	// Calculate rough number of assets in Balancer pool that are bonded
+	balancerPoolLiquidity := sdk.NewCoins()
+	for _, liquidityToken := range totalBalancerPoolLiquidity {
+		// Rounding behavior is not critical here, but for simplicity we do bankers multiplication then truncate.
+		bondedLiquidityAmount := liquidityToken.Amount.ToDec().Mul(bondedShareRatio).TruncateInt()
+		balancerPoolLiquidity = balancerPoolLiquidity.Add(sdk.NewCoin(liquidityToken.Denom, bondedLiquidityAmount))
 	}
 
 	// Validate Balancer pool liquidity. These properties should already be guaranteed by the caller,

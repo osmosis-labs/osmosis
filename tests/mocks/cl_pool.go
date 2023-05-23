@@ -162,18 +162,18 @@ func (mr *MockConcentratedPoolExtensionMockRecorder) GetExponentAtPriceOne() *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExponentAtPriceOne", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).GetExponentAtPriceOne))
 }
 
-// GetSwapFee mocks base method.
-func (m *MockConcentratedPoolExtension) GetSwapFee(ctx types.Context) types.Dec {
+// GetSpreadFactor mocks base method.
+func (m *MockConcentratedPoolExtension) GetSpreadFactor(ctx types.Context) types.Dec {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSwapFee", ctx)
+	ret := m.ctrl.Call(m, "GetSpreadFactor", ctx)
 	ret0, _ := ret[0].(types.Dec)
 	return ret0
 }
 
-// GetSwapFee indicates an expected call of GetSwapFee.
-func (mr *MockConcentratedPoolExtensionMockRecorder) GetSwapFee(ctx interface{}) *gomock.Call {
+// GetSpreadFactor indicates an expected call of GetSpreadFactor.
+func (mr *MockConcentratedPoolExtensionMockRecorder) GetSpreadFactor(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSwapFee", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).GetSwapFee), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpreadFactor", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).GetSpreadFactor), ctx)
 }
 
 // GetTickSpacing mocks base method.
