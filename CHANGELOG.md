@@ -69,8 +69,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * [#5129](https://github.com/osmosis-labs/osmosis/pull/5129) Relax twap record validation in init genesis to allow one of the spot prices to be non-zero when twap error is observed.
   * [#5165](https://github.com/osmosis-labs/osmosis/pull/5165) Improve error message when fully exiting from a pool.
   * [#5187](https://github.com/osmosis-labs/osmosis/pull/5187) Expand `IncentivizedPools` query to include internally incentivized CL pools.
-  * [#5239](https://github.com/osmosis-labs/osmosis/pull/5239) Implement `GetTotalPoolShares` public keeper function for GAMM. 
-
+  * [#5239](https://github.com/osmosis-labs/osmosis/pull/5239) Implement `GetTotalPoolShares` public keeper function for GAMM.
+  * [#5261](https://github.com/osmosis-labs/osmosis/pull/5261) Allows `UpdateFeeTokenProposal` to take in multiple fee tokens instead of just one.
+  
 ### API breaks
 
 * [#4336](https://github.com/osmosis-labs/osmosis/pull/4336) Move epochs module into its own go.mod
