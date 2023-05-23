@@ -232,3 +232,23 @@ func BenchmarkGetTickLiquidityNetInDirection(b *testing.B) {
 		fmt.Println("num_ticks_traversed", len(liquidityNet))
 	})
 }
+
+func BenchmarkGetTickLiquidityForFullRange(b *testing.B) {
+	runBenchmark(b, func(b *testing.B, s *BenchTestSuite, pool types.ConcentratedPoolExtension, largeSwapInCoin sdk.Coin, currentTick int64) {
+		clKeeper := s.App.ConcentratedLiquidityKeeper
+		noError := func(err error) {
+			require.NoError(b, err)
+		}
+
+		b.StartTimer()
+
+		// System under test
+		liquidityNet, err := clKeeper.GetTickLiquidityForFullRange(s.Ctx, pool.GetId())
+		noError(err)
+
+		b.StopTimer()
+
+		fmt.Println("current_tick", currentTick)
+		fmt.Println("num_ticks_traversed", len(liquidityNet))
+	})
+}
