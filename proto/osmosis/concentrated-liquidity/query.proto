@@ -249,6 +249,7 @@ message TickAccumulatorTrackersResponse {
 // ===================== QueryIncentiveRecords
 message IncentiveRecordsRequest {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 message IncentiveRecordsResponse {

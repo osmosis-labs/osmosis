@@ -223,11 +223,6 @@ func (q Querier) PoolAccumulatorRewards(ctx sdk.Context, req clquery.PoolAccumul
 	}
 
 	spreadRewardsAcc, err := q.Keeper.GetSpreadRewardAccumulator(ctx, req.PoolId)
-func (q Querier) IncentiveRecords(ctx sdk.Context, req clquery.IncentiveRecordsRequest) (*clquery.IncentiveRecordsResponse, error) {
-	incentiveRecords, err := q.Keeper.GetAllIncentiveRecordsForPool(ctx, req.PoolId)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
 
 	uptimeAccValues, err := q.Keeper.GetUptimeAccumulatorValues(ctx, req.PoolId)
 	if err != nil {
@@ -244,6 +239,18 @@ func (q Querier) IncentiveRecords(ctx sdk.Context, req clquery.IncentiveRecordsR
 		UptimeGrowthGlobal:       uptimeGrowthTrackers,
 	}, nil
 	return &clquery.IncentiveRecordsResponse{IncentiveRecords: incentiveRecords}, nil
+
+}
+
+func (q Querier) IncentiveRecords(ctx sdk.Context, req clquery.IncentiveRecordsRequest) (*clquery.IncentiveRecordsResponse, error) {
+	anys, pageRes, err := q.Keeper.GetIncentiveRecordSerialized(ctx, req.PoolId, req.Pagination)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &clquery.IncentiveRecordsResponse{
+		IncentiveRecords: anys,
+		Pagination:       pageRes,
+	}, nil
 }
 
 // TickAccumulatorTrackers returns tick accumulator trackers.
