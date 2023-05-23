@@ -51,6 +51,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 	var (
 		sqrtPriceCurrent = defaultSqrtPriceUpper
 		sqrtPriceNext    = defaultSqrtPriceLower
+		sqrtPriceTarget  = sqrtPriceNext
 
 		// liquidity * sqrtPriceCurrent / (liquidity + amount in * sqrtPriceCurrent)
 		sqrtPriceTargetNotReached = sdk.MustNewDecFromStr("70.688828764403676330")
@@ -58,10 +59,8 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 		amountOneTargetNotReached = sdk.MustNewDecFromStr("66329498.080160866932624794")
 	)
 
+	// sqrtPriceCurrent, sqrtPriceTarget, liquidity are all set to defaults defined above.
 	tests := map[string]struct {
-		sqrtPriceCurrent      sdk.Dec
-		sqrtPriceTarget       sdk.Dec
-		liquidity             sdk.Dec
 		amountZeroInRemaining sdk.Dec
 		spreadFactor          sdk.Dec
 
@@ -73,9 +72,6 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 		expectError error
 	}{
 		"1: no fee - reach target": {
-			sqrtPriceCurrent: sqrtPriceCurrent,
-			sqrtPriceTarget:  sqrtPriceNext,
-			liquidity:        defaultLiquidity,
 			// add 100 more
 			amountZeroInRemaining: defaultAmountZero.Add(sdk.NewDec(100)),
 			spreadFactor:          sdk.ZeroDec(),
@@ -88,9 +84,6 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 			expectedFeeChargeTotal: sdk.ZeroDec(),
 		},
 		"2: no fee - do not reach target": {
-			sqrtPriceCurrent:      sqrtPriceCurrent,
-			sqrtPriceTarget:       sqrtPriceNext,
-			liquidity:             defaultLiquidity,
 			amountZeroInRemaining: defaultAmountZero.Sub(sdk.NewDec(100)),
 			spreadFactor:          sdk.ZeroDec(),
 
@@ -101,9 +94,6 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 			expectedFeeChargeTotal: sdk.ZeroDec(),
 		},
 		"3: 3% fee - reach target": {
-			sqrtPriceCurrent: sqrtPriceCurrent,
-			sqrtPriceTarget:  sqrtPriceNext,
-			liquidity:        defaultLiquidity,
 			// add 100 more
 			amountZeroInRemaining: defaultAmountZero.Add(sdk.NewDec(100)).Quo(sdk.OneDec().Sub(defaultFee)),
 			spreadFactor:          defaultFee,
@@ -116,9 +106,6 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 			expectedFeeChargeTotal: defaultAmountZero.Ceil().Quo(sdk.OneDec().Sub(defaultFee)).Mul(defaultFee),
 		},
 		"4: 3% fee - do not reach target": {
-			sqrtPriceCurrent:      sqrtPriceCurrent,
-			sqrtPriceTarget:       sqrtPriceNext,
-			liquidity:             defaultLiquidity,
 			amountZeroInRemaining: defaultAmountZero.Sub(sdk.NewDec(100)).Quo(sdk.OneDec().Sub(defaultFee)),
 			spreadFactor:          defaultFee,
 
@@ -132,10 +119,8 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 
 	for name, tc := range tests {
 		suite.Run(name, func() {
-			suite.SetupTest()
-			strategy := swapstrategy.New(true, types.MaxSqrtPrice, suite.App.GetKey(types.ModuleName), tc.spreadFactor, defaultTickSpacing)
-
-			sqrtPriceNext, amountZeroIn, amountOneOut, feeChargeTotal := strategy.ComputeSwapStepOutGivenIn(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, tc.amountZeroInRemaining)
+			strategy := suite.setupNewZeroForOneSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
+			sqrtPriceNext, amountZeroIn, amountOneOut, feeChargeTotal := strategy.ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget, defaultLiquidity, tc.amountZeroInRemaining)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
 			suite.Require().Equal(tc.amountZeroInConsumed, amountZeroIn)
@@ -224,7 +209,6 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 		tc := tc
 		suite.Run(name, func() {
 			strategy := suite.setupNewZeroForOneSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
-
 			sqrtPriceNext, amountOneOut, amountZeroIn, feeChargeTotal := strategy.ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, defaultLiquidity, tc.amountOneOutRemaining)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
@@ -289,8 +273,7 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_ZeroForOne() {
 			expectNextTick: 0,
 		},
 		"no ticks, zero for one": {
-			preSetPositions: []position{},
-			expectIsValid:   false,
+			expectIsValid: false,
 		},
 	}
 

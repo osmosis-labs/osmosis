@@ -9,6 +9,11 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
+func (suite *StrategyTestSuite) setupNewOneForZeroSwapStrategy(sqrtPriceLimit sdk.Dec, spread sdk.Dec) swapstrategy.SwapStrategy {
+	suite.SetupTest()
+	return swapstrategy.New(false, sqrtPriceLimit, suite.App.GetKey(types.ModuleName), spread, defaultTickSpacing)
+}
+
 func (suite *StrategyTestSuite) TestGetSqrtTargetPrice_OneForZero() {
 	tests := map[string]struct {
 		sqrtPriceLimit    sdk.Dec
@@ -33,14 +38,9 @@ func (suite *StrategyTestSuite) TestGetSqrtTargetPrice_OneForZero() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		suite.Run(name, func() {
-			suite.SetupTest()
-
-			strategy := swapstrategy.New(false, tc.sqrtPriceLimit, suite.App.GetKey(types.ModuleName), sdk.ZeroDec(), defaultTickSpacing)
-
+			strategy := suite.setupNewOneForZeroSwapStrategy(tc.sqrtPriceLimit, zero)
 			actualSqrtTargetPrice := strategy.GetSqrtTargetPrice(tc.nextTickSqrtPrice)
-
 			suite.Require().Equal(tc.expectedResult, actualSqrtTargetPrice)
 		})
 	}
@@ -153,9 +153,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 	for name, tc := range tests {
 		tc := tc
 		suite.Run(name, func() {
-			suite.SetupTest()
-			strategy := swapstrategy.New(false, types.MaxSqrtPrice, suite.App.GetKey(types.ModuleName), tc.spreadFactor, defaultTickSpacing)
-
+			strategy := suite.setupNewOneForZeroSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
 			sqrtPriceNext, amountInConsumed, amountZeroOut, feeChargeTotal := strategy.ComputeSwapStepOutGivenIn(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, tc.amountOneInRemaining)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
@@ -255,11 +253,8 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		suite.Run(name, func() {
-			suite.SetupTest()
-			strategy := swapstrategy.New(false, types.MaxSqrtPrice, suite.App.GetKey(types.ModuleName), tc.spreadFactor, defaultTickSpacing)
-
+			strategy := suite.setupNewOneForZeroSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
 			sqrtPriceNext, amountZeroOutConsumed, amountOneIn, feeChargeTotal := strategy.ComputeSwapStepInGivenOut(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, tc.amountZeroOutRemaining)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
@@ -328,19 +323,15 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_OneForZero() {
 			expectNextTick: 100,
 		},
 		"no ticks, one for zero": {
-			preSetPositions: []position{},
-			expectIsValid:   false,
+			expectIsValid: false,
 		},
 	}
 
 	for name, tc := range tests {
 		tc := tc
 		suite.Run(name, func() {
-			suite.SetupTest()
-			strategy := swapstrategy.New(false, types.MaxSqrtPrice, suite.App.GetKey(types.ModuleName), sdk.ZeroDec(), defaultTickSpacing)
-
+			strategy := suite.setupNewOneForZeroSwapStrategy(types.MaxSqrtPrice, zero)
 			pool := suite.PrepareConcentratedPool()
-
 			clMsgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
 
 			for _, pos := range tc.preSetPositions {
