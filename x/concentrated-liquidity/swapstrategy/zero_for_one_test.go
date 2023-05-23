@@ -3,7 +3,6 @@ package swapstrategy_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
@@ -206,7 +205,6 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		suite.Run(name, func() {
 			strategy := suite.setupNewZeroForOneSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
 			sqrtPriceNext, amountOneOut, amountZeroIn, feeChargeTotal := strategy.ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, defaultLiquidity, tc.amountOneOutRemaining)
@@ -282,21 +280,7 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_ZeroForOne() {
 		suite.Run(name, func() {
 			strategy := suite.setupNewZeroForOneSwapStrategy(types.MaxSqrtPrice, zero)
 			pool := suite.PrepareConcentratedPool()
-			clMsgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
-
-			for _, pos := range tc.preSetPositions {
-				suite.FundAcc(suite.TestAccs[0], DefaultCoins.Add(DefaultCoins...))
-				_, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(suite.Ctx), &types.MsgCreatePosition{
-					PoolId:          pool.GetId(),
-					Sender:          suite.TestAccs[0].String(),
-					LowerTick:       pos.lowerTick,
-					UpperTick:       pos.upperTick,
-					TokensProvided:  DefaultCoins.Add(sdk.NewCoin(USDC, sdk.OneInt())),
-					TokenMinAmount0: sdk.ZeroInt(),
-					TokenMinAmount1: sdk.ZeroInt(),
-				})
-				suite.Require().NoError(err)
-			}
+			suite.setupPresetPositions(pool.GetId(), tc.preSetPositions)
 
 			// refetch pool
 			pool, err := suite.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(suite.Ctx, pool.GetId())

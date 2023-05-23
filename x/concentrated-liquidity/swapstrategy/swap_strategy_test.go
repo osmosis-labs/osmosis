@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
@@ -54,6 +55,23 @@ func TestStrategyTestSuite(t *testing.T) {
 
 func (suite *StrategyTestSuite) SetupTest() {
 	suite.Setup()
+}
+
+func (suite *StrategyTestSuite) setupPresetPositions(poolId uint64, positions []position) {
+	clMsgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
+	for _, pos := range positions {
+		suite.FundAcc(suite.TestAccs[0], DefaultCoins.Add(DefaultCoins...))
+		_, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(suite.Ctx), &types.MsgCreatePosition{
+			PoolId:          poolId,
+			Sender:          suite.TestAccs[0].String(),
+			LowerTick:       pos.lowerTick,
+			UpperTick:       pos.upperTick,
+			TokensProvided:  DefaultCoins.Add(sdk.NewCoin(USDC, sdk.OneInt())),
+			TokenMinAmount0: sdk.ZeroInt(),
+			TokenMinAmount1: sdk.ZeroInt(),
+		})
+		suite.Require().NoError(err)
+	}
 }
 
 // TestComputeSwapState_Inverse validates that out given in and in given out compute swap steps
