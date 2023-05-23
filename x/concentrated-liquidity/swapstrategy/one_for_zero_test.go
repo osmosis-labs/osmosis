@@ -252,14 +252,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 }
 
 func (suite *StrategyTestSuite) TestInitializeNextTickIterator_OneForZero() {
-	tests := map[string]struct {
-		currentTick     int64
-		preSetPositions []position
-
-		expectIsValid  bool
-		expectNextTick int64
-		expectError    error
-	}{
+	tests := map[string]tickIteratorTest{
 		"1 position, one for zero": {
 			preSetPositions: []position{
 				{
@@ -316,27 +309,7 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_OneForZero() {
 	for name, tc := range tests {
 		suite.Run(name, func() {
 			strategy := suite.setupNewOneForZeroSwapStrategy(types.MaxSqrtPrice, zero)
-			pool := suite.PrepareConcentratedPool()
-			suite.setupPresetPositions(pool.GetId(), tc.preSetPositions)
-
-			// refetch pool
-			pool, err := suite.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(suite.Ctx, pool.GetId())
-			suite.Require().NoError(err)
-
-			currentTick := pool.GetCurrentTick()
-			suite.Require().Equal(int64(0), currentTick)
-
-			tickIndex := strategy.InitializeTickValue(currentTick)
-
-			iter := strategy.InitializeNextTickIterator(suite.Ctx, defaultPoolId, tickIndex)
-			defer iter.Close()
-
-			suite.Require().Equal(tc.expectIsValid, iter.Valid())
-			if tc.expectIsValid {
-				actualNextTick, err := types.TickIndexFromBytes(iter.Key())
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.expectNextTick, actualNextTick)
-			}
+			suite.runTickIteratorTest(strategy, tc)
 		})
 	}
 }

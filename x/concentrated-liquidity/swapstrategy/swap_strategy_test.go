@@ -57,6 +57,39 @@ func (suite *StrategyTestSuite) SetupTest() {
 	suite.Setup()
 }
 
+type tickIteratorTest struct {
+	currentTick     int64
+	preSetPositions []position
+
+	expectIsValid  bool
+	expectNextTick int64
+	expectError    error
+}
+
+func (suite *StrategyTestSuite) runTickIteratorTest(strategy swapstrategy.SwapStrategy, tc tickIteratorTest) {
+	pool := suite.PrepareConcentratedPool()
+	suite.setupPresetPositions(pool.GetId(), tc.preSetPositions)
+
+	// refetch pool
+	pool, err := suite.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(suite.Ctx, pool.GetId())
+	suite.Require().NoError(err)
+
+	currentTick := pool.GetCurrentTick()
+	suite.Require().Equal(int64(0), currentTick)
+
+	tickIndex := strategy.InitializeTickValue(currentTick)
+
+	iter := strategy.InitializeNextTickIterator(suite.Ctx, defaultPoolId, tickIndex)
+	defer iter.Close()
+
+	suite.Require().Equal(tc.expectIsValid, iter.Valid())
+	if tc.expectIsValid {
+		actualNextTick, err := types.TickIndexFromBytes(iter.Key())
+		suite.Require().NoError(err)
+		suite.Require().Equal(tc.expectNextTick, actualNextTick)
+	}
+}
+
 func (suite *StrategyTestSuite) setupPresetPositions(poolId uint64, positions []position) {
 	clMsgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
 	for _, pos := range positions {
