@@ -1315,7 +1315,7 @@ func (s *KeeperTestSuite) TestForceUnlock() {
 		s.Require().Equal(balances, coinsToLock)
 
 		// if it was superfluid delegated lock,
-		// confirm that we don't have associated synth locks
+		// confirm that we don't have associated synth lock
 		synthLock, err := s.App.LockupKeeper.GetSyntheticLockupByUnderlyingLockId(s.Ctx, lock.ID)
 		s.Require().NoError(err)
 		s.Require().Equal((lockuptypes.SyntheticLock{}), synthLock)

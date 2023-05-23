@@ -11,21 +11,22 @@ import (
 
 func (s *KeeperTestSuite) TestSyntheticLockupCreation() {
 	s.SetupTest()
+	numLocks := 3
 
 	// lock coins
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	s.LockTokens(addr1, coins, time.Second)
-	s.LockTokens(addr1, coins, time.Second)
-	s.LockTokens(addr1, coins, time.Second)
+	for i := 0; i < numLocks; i++ {
+		s.LockTokens(addr1, coins, time.Second)
+	}
 
 	// check locks
 	locks, err := s.App.LockupKeeper.GetPeriodLocks(s.Ctx)
 	s.Require().NoError(err)
-	s.Require().Len(locks, 3)
-	s.Require().Equal(locks[0].Coins, coins)
-	s.Require().Equal(locks[1].Coins, coins)
-	s.Require().Equal(locks[2].Coins, coins)
+	s.Require().Len(locks, numLocks)
+	for i := 0; i < numLocks; i++ {
+		s.Require().Equal(locks[i].Coins, coins)
+	}
 
 	// create not unbonding synthetic lockup
 	err = s.App.LockupKeeper.CreateSyntheticLockup(s.Ctx, 1, "suffix1", time.Second, false)
@@ -221,19 +222,22 @@ func (s *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 
 func (s *KeeperTestSuite) TestSyntheticLockupDeleteAllMaturedSyntheticLocks() {
 	s.SetupTest()
+	numLocks := 2
 
 	// lock coins
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	s.LockTokens(addr1, coins, time.Second)
-	s.LockTokens(addr1, coins, time.Second)
+	for i := 0; i < numLocks; i++ {
+		s.LockTokens(addr1, coins, time.Second)
+	}
 
 	// check locks
 	locks, err := s.App.LockupKeeper.GetPeriodLocks(s.Ctx)
 	s.Require().NoError(err)
-	s.Require().Len(locks, 2)
-	s.Require().Equal(locks[0].Coins, coins)
-	s.Require().Equal(locks[1].Coins, coins)
+	s.Require().Len(locks, numLocks)
+	for i := 0; i < numLocks; i++ {
+		s.Require().Equal(locks[i].Coins, coins)
+	}
 
 	err = s.App.LockupKeeper.CreateSyntheticLockup(s.Ctx, 1, "synthstakestakedtovalidator1", time.Second, false)
 	s.Require().NoError(err)
