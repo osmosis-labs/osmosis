@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	fmt "fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -26,7 +25,6 @@ func TestReverseRelationTickIndexToBytes(t *testing.T) {
 	for name, tc := range tests {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			fmt.Println("starting")
 			tickIndexBytes := types.TickIndexToBytes(tc.tickIndex)
 
 			// now we convert it back to tick index from bytes

@@ -132,29 +132,29 @@ func keyTickPrefixByPoolIdPrealloc(poolId uint64, preAllocBytes int) []byte {
 
 // PositionId<>LockId and LockId<>PositionId Prefix Keys
 func PositionIdForLockIdKeys(positionId, lockId uint64) (positionIdToLockIdKey []byte, lockIdToPositionIdKey []byte) {
-	positionIdToLockIdKey = []byte(fmt.Sprintf("%s%s%d", PositionToLockPrefix, KeySeparator, positionId))
-	lockIdToPositionIdKey = []byte(fmt.Sprintf("%s%s%d", LockToPositionPrefix, KeySeparator, lockId))
+	positionIdToLockIdKey = []byte(fmt.Sprintf("%s%d", PositionToLockPrefix, positionId))
+	lockIdToPositionIdKey = []byte(fmt.Sprintf("%s%d", LockToPositionPrefix, lockId))
 	return positionIdToLockIdKey, lockIdToPositionIdKey
 }
 
 // KeyPositionIdForLock returns the key consisted of (PositionToLockPrefix | position Id)
 func KeyPositionIdForLock(positionId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%s%d", PositionToLockPrefix, KeySeparator, positionId))
+	return []byte(fmt.Sprintf("%s%d", PositionToLockPrefix, positionId))
 }
 
 // KeyLockIdForPositionId returns the key consisted of (KeyLockIdForPositionId | lockId)
 func KeyLockIdForPositionId(lockId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%s%d", LockToPositionPrefix, KeySeparator, lockId))
+	return []byte(fmt.Sprintf("%s%d", LockToPositionPrefix, lockId))
 }
 
 // KeyFullRangeLiquidityPrefix returns the prefix used to keep track of full range liquidity for each pool.
 func KeyFullRangeLiquidityPrefix(poolId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%s%d", FullRangeLiquidityPrefix, KeySeparator, poolId))
+	return []byte(fmt.Sprintf("%s%d", FullRangeLiquidityPrefix, poolId))
 }
 
 // KeyPositionId returns the prefix the key consisted of (PositionIdPrefix | position Id) and is used to store position info.
 func KeyPositionId(positionId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%s%d", PositionIdPrefix, KeySeparator, positionId))
+	return []byte(fmt.Sprintf("%s%d", PositionIdPrefix, positionId))
 }
 
 // Position Prefix Keys
@@ -224,11 +224,12 @@ func KeyPoolIncentiveRecords(poolId uint64) []byte {
 }
 
 // Fee Accumulator Prefix Keys
-
+// KeyFeePositionAccumulator returns the prefix key for the accumulator for the given position id.
 func KeyFeePositionAccumulator(positionId uint64) string {
 	return strings.Join([]string{string(FeePositionAccumulatorPrefix), strconv.FormatUint(positionId, 10)}, KeySeparator)
 }
 
+// KeyFeePoolAccumulator returns the prefix key for the accumulator for the given pool id.
 func KeyFeePoolAccumulator(poolId uint64) string {
 	poolIdStr := strconv.FormatUint(poolId, uintBase)
 	return strings.Join([]string{string(PoolFeeAccumulatorPrefix), poolIdStr}, "/")
