@@ -981,7 +981,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 				amount0Minimum: sdk.NewInt(1997960),
 				expectedError: types.InsufficientLiquidityCreatedError{
 					Actual:      sdk.NewInt(1997954),
-					Minimum:     sdk.NewInt(1997960),
+					Minimum:     sdk.NewInt(2996936),
 					IsTokenZero: true,
 				},
 			},
@@ -998,7 +998,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 				amount1Minimum: sdk.NewInt(9999998916),
 				expectedError: types.InsufficientLiquidityCreatedError{
 					Actual:      sdk.NewInt(9999998816),
-					Minimum:     sdk.NewInt(9999998916),
+					Minimum:     sdk.NewInt(14999998915),
 					IsTokenZero: false,
 				},
 			},
