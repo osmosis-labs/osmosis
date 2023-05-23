@@ -3154,10 +3154,14 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 	}
 	defaultConcentratedAssets := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)))
 	defaultBalancerPoolParams := balancer.PoolParams{SwapFee: sdk.NewDec(0), ExitFee: sdk.NewDec(0)}
-	tests := map[string]struct {
+
+	type testcase struct {
+		// defaults to defaultConcentratedAssets
 		existingConcentratedLiquidity sdk.Coins
-		balancerPoolAssets            []balancer.PoolAsset
-		portionOfSharesBonded         sdk.Dec
+		// defaults to defaultBalancerAssets
+		balancerPoolAssets []balancer.PoolAsset
+		// defaults sdk.OneDec()
+		portionOfSharesBonded sdk.Dec
 
 		noCanonicalBalancerPool      bool
 		noBalancerPoolWithID         bool
@@ -3166,45 +3170,53 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		invalidBalancerPoolLiquidity bool
 
 		expectedError error
-	}{
+	}
+	initTestCase := func(tc testcase) testcase {
+		if tc.existingConcentratedLiquidity.Empty() {
+			tc.existingConcentratedLiquidity = defaultConcentratedAssets
+		}
+		if len(tc.balancerPoolAssets) == 0 {
+			tc.balancerPoolAssets = defaultBalancerAssets
+		}
+		if (tc.portionOfSharesBonded == sdk.Dec{}) {
+			tc.portionOfSharesBonded = sdk.NewDec(1)
+		}
+		return tc
+	}
+
+	tests := map[string]testcase{
 		"happy path: balancer and CL pool at same spot price": {
 			// 100 existing shares and 100 shares added from balancer
+			// no other test will show defaults.
 			existingConcentratedLiquidity: defaultConcentratedAssets,
 			balancerPoolAssets:            defaultBalancerAssets,
 			portionOfSharesBonded:         sdk.NewDec(1),
 		},
 		"same spot price, different total share amount": {
 			// 100 existing shares and 200 shares added from balancer
-			existingConcentratedLiquidity: defaultConcentratedAssets,
 			balancerPoolAssets: []balancer.PoolAsset{
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(200))},
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(200))},
 			},
-			portionOfSharesBonded: sdk.NewDec(1),
 		},
 		"different spot price between balancer and CL pools (excess asset0)": {
 			// 100 existing shares and 100 shares added from balancer. We expect only the even portion of
 			// the Balancer pool to be joined, with the remaining 50foo not qualifying.
-			existingConcentratedLiquidity: defaultConcentratedAssets,
 			balancerPoolAssets: []balancer.PoolAsset{
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(150))},
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(100))},
 			},
-			portionOfSharesBonded: sdk.NewDec(1),
 		},
 		"different spot price between balancer and CL pools (excess asset1)": {
 			// 100 existing shares and 100 shares added from balancer. We expect only the even portion of
 			// the Balancer pool to be joined, with the remaining 50bar not qualifying.
-			existingConcentratedLiquidity: defaultConcentratedAssets,
 			balancerPoolAssets: []balancer.PoolAsset{
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(150))},
 			},
-			portionOfSharesBonded: sdk.NewDec(1),
 		},
 		"same spot price, different total share amount, only half bonded": {
 			// 100 existing shares and 200 shares added from balancer
-			existingConcentratedLiquidity: defaultConcentratedAssets,
 			balancerPoolAssets: []balancer.PoolAsset{
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(200))},
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(200))},
@@ -3214,7 +3226,6 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		"different spot price between balancer and CL pools (excess asset1), only partially bonded": {
 			// 100 existing shares and 100 shares added from balancer. We expect only the even portion of
 			// the Balancer pool to be joined, with the remaining 50bar not qualifying.
-			existingConcentratedLiquidity: defaultConcentratedAssets,
 			balancerPoolAssets: []balancer.PoolAsset{
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(150))},
@@ -3223,10 +3234,6 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		},
 		"no canonical balancer pool": {
 			// 100 existing shares and 100 shares added from balancer
-			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:            defaultBalancerAssets,
-			portionOfSharesBonded:         sdk.NewDec(1),
-
 			// Note that we expect this to fail quietly, as most CL pools will not have linked Balancer pools
 			noCanonicalBalancerPool: true,
 		},
@@ -3235,77 +3242,46 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 
 		"canonical balancer pool ID exists but pool itself is not found": {
 			// 100 existing shares and 100 shares added from balancer
-			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:            defaultBalancerAssets,
-			portionOfSharesBonded:         sdk.NewDec(1),
-			noBalancerPoolWithID:          true,
-
-			expectedError: gammtypes.PoolDoesNotExistError{PoolId: invalidPoolId},
-		},
-		"canonical balancer pool has invalid first denom": {
-			// 100 existing shares and 100 shares added from balancer
-			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("invalid", sdk.NewInt(100))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(100))},
-			},
-			portionOfSharesBonded:        sdk.NewDec(1),
-			invalidBalancerPoolLiquidity: true,
-
-			expectedError: types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("invalid", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)))},
-		},
-		"canonical balancer pool has invalid second denom": {
-			// 100 existing shares and 100 shares added from balancer
-			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("invalid", sdk.NewInt(100))},
-			},
-			portionOfSharesBonded:        sdk.NewDec(1),
-			invalidBalancerPoolLiquidity: true,
-
-			expectedError: types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("invalid", sdk.NewInt(100)))},
-		},
-		"canonical balancer pool has invalid both denoms": {
-			// 100 existing shares and 100 shares added from balancer
-			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("invalid1", sdk.NewInt(100))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("invalid2", sdk.NewInt(100))},
-			},
-			portionOfSharesBonded:        sdk.NewDec(1),
-			invalidBalancerPoolLiquidity: true,
-
-			expectedError: types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("invalid1", sdk.NewInt(100)), sdk.NewCoin("invalid2", sdk.NewInt(100)))},
+			noBalancerPoolWithID: true,
+			expectedError:        gammtypes.PoolDoesNotExistError{PoolId: invalidPoolId},
 		},
 		"canonical balancer pool has invalid number of assets": {
 			// 100 existing shares and 100 shares added from balancer
-			existingConcentratedLiquidity: defaultConcentratedAssets,
 			balancerPoolAssets: []balancer.PoolAsset{
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(100))},
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("baz", sdk.NewInt(100))},
 			},
-			portionOfSharesBonded:        sdk.NewDec(1),
 			invalidBalancerPoolLiquidity: true,
-
-			expectedError: types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)), sdk.NewCoin("baz", sdk.NewInt(100)))},
+			expectedError:                types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)), sdk.NewCoin("baz", sdk.NewInt(100)))},
 		},
 		"invalid concentrated pool ID": {
 			// 100 existing shares and 100 shares added from balancer
-			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:            defaultBalancerAssets,
-			portionOfSharesBonded:         sdk.NewDec(1),
-			invalidConcentratedPoolID:     true,
-
-			expectedError: types.PoolNotFoundError{PoolId: invalidPoolId + 1},
+			invalidConcentratedPoolID: true,
+			expectedError:             types.PoolNotFoundError{PoolId: invalidPoolId + 1},
 		},
 	}
+	// create invalid denom test cases. Either denom1, denom2 or both are invalid
+	denomSelector := [][]string{{"foo", "invalid1"}, {"bar", "invalid2"}}
+	for i := 0; i < 2; i++ {
+		pa1 := balancer.PoolAsset{Weight: sdk.NewInt(1), Token: sdk.NewCoin(denomSelector[0][i], sdk.NewInt(100))}
+		for j := 1 - i; j < 2; j++ {
+			pa2 := balancer.PoolAsset{Weight: sdk.NewInt(1), Token: sdk.NewCoin(denomSelector[1][j], sdk.NewInt(100))}
+			testname := fmt.Sprintf("canonical balancer pool; denom1_invalid=%v; denom2_invalid=%v", i == 1, j == 1)
+			tests[testname] = testcase{
+				balancerPoolAssets:           []balancer.PoolAsset{pa1, pa2},
+				invalidBalancerPoolLiquidity: true,
+				expectedError:                types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(pa1.Token, pa2.Token)},
+			}
+		}
+	}
+
 	for name, tc := range tests {
 		s.Run(name, func() {
 			// --- Setup test env ---
-
 			s.SetupTest()
+			tc = initTestCase(tc)
+
 			clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, sdk.ZeroDec())
 
 			// Set up an existing full range position. Note that the second return value is the position ID, not an error.
