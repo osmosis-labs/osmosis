@@ -138,13 +138,13 @@ func (server msgServer) CollectSpreadRewards(goCtx context.Context, msg *types.M
 		return nil, err
 	}
 
-	totalCollectedFees := sdk.NewCoins()
+	totalCollectedSpreadRewards := sdk.NewCoins()
 	for _, positionId := range msg.PositionIds {
-		collectedFees, err := server.keeper.collectFees(ctx, sender, positionId)
+		collectedFees, err := server.keeper.collectSpreadRewards(ctx, sender, positionId)
 		if err != nil {
 			return nil, err
 		}
-		totalCollectedFees = totalCollectedFees.Add(collectedFees...)
+		totalCollectedSpreadRewards = totalCollectedSpreadRewards.Add(collectedFees...)
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -157,11 +157,11 @@ func (server msgServer) CollectSpreadRewards(goCtx context.Context, msg *types.M
 			types.TypeEvtTotalCollectSpreadRewards,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeKeyTokensOut, totalCollectedFees.String()),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, totalCollectedSpreadRewards.String()),
 		),
 	})
 
-	return &types.MsgCollectSpreadRewardsResponse{CollectedFees: totalCollectedFees}, nil
+	return &types.MsgCollectSpreadRewardsResponse{CollectedSpreadRewards: totalCollectedSpreadRewards}, nil
 }
 
 // CollectIncentives collects incentives for all positions in given range that belong to sender

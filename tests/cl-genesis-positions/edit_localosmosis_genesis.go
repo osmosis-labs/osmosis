@@ -117,9 +117,9 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 			Ticks:                  pool.Ticks,
 			IncentivesAccumulators: pool.IncentivesAccumulators,
 			IncentiveRecords:       pool.IncentiveRecords,
-			FeeAccumulator: clgenesis.AccumObject{
-				Name:         cltypes.KeyFeePoolAccumulator(nextPoolId),
-				AccumContent: pool.FeeAccumulator.AccumContent,
+			SpreadRewardAccumulator: clgenesis.AccumObject{
+				Name:         cltypes.KeySpreadFactorPoolAccumulator(nextPoolId),
+				AccumContent: pool.SpreadRewardAccumulator.AccumContent,
 			},
 		}
 

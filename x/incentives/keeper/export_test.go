@@ -38,9 +38,9 @@ func (k Keeper) MoveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gaug
 	return k.moveActiveGaugeToFinishedGauge(ctx, gauge)
 }
 
-// ChargeFeeIfSufficientFeeDenomBalance see chargeFeeIfSufficientFeeDenomBalance spec.
-func (k Keeper) ChargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee sdk.Int, gaugeCoins sdk.Coins) error {
-	return k.chargeFeeIfSufficientFeeDenomBalance(ctx, address, fee, gaugeCoins)
+// ChargeSpreadRewardsIfSufficientFeeDenomBalance see chargeSpreadRewardsIfSufficientFeeDenomBalance spec.
+func (k Keeper) ChargeSpreadRewardsIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee sdk.Int, gaugeCoins sdk.Coins) error {
+	return k.chargeSpreadRewardsIfSufficientFeeDenomBalance(ctx, address, fee, gaugeCoins)
 }
 
 func (k Keeper) DistributeConcentratedLiquidity(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveCoin sdk.Coin, emissionRate sdk.Dec, startTime time.Time, minUptime time.Duration, gauge types.Gauge) error {

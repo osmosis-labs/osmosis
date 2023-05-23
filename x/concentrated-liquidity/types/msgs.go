@@ -12,7 +12,7 @@ const (
 	TypeMsgCreatePosition          = "create-position"
 	TypeAddToPosition              = "add-to-position"
 	TypeMsgWithdrawPosition        = "withdraw-position"
-	TypeMsgCollectSpreadRewards    = "collect-fees"
+	TypeMsgCollectSpreadRewards    = "collect-spread-rewards"
 	TypeMsgCollectIncentives       = "collect-incentives"
 	TypeMsgFungifyChargedPositions = "fungify-charged-positions"
 )

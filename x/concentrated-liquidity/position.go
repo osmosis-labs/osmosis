@@ -517,7 +517,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	}
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
-	// This also initializes the fee accumulator and the uptime accumulators for the new position.
+	// This also initializes the spread factor accumulator and the uptime accumulators for the new position.
 	_, _, err = k.UpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, newPositionId)
 	if err != nil {
 		return 0, err
@@ -530,9 +530,9 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 		return 0, err
 	}
 
-	// Get the new position's name in the pool's fee accumulator.
-	newPositionFeeAccName := types.KeyFeePositionAccumulator(newPositionId)
-	feeAccumulator, err := k.GetFeeAccumulator(ctx, poolId)
+	// Get the new position's name in the pool's spread factor accumulator.
+	newPositionSpreadFactorAccName := types.KeySpreadFactorPositionAccumulator(newPositionId)
+	spreadRewardAccumulator, err := k.GetSpreadRewardsAccumulator(ctx, poolId)
 	if err != nil {
 		return 0, err
 	}
@@ -543,8 +543,8 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 		return 0, err
 	}
 
-	// Compute the fee growth outside of the range between lower tick and upper tick
-	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
+	// Compute the spread reward growth outside of the range between lower tick and upper tick
+	spreadRewardGrowthOutside, err := k.getSpreadRewardGrowthOutside(ctx, poolId, lowerTick, upperTick)
 	if err != nil {
 		return 0, err
 	}
@@ -571,9 +571,9 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 			}
 		}
 
-		// Move fees into the new fee accumulator and delete the old accumulator.
-		oldPositionFeeName := types.KeyFeePositionAccumulator(oldPositionId)
-		if err := moveRewardsToNewPositionAndDeleteOldAcc(ctx, feeAccumulator, oldPositionFeeName, newPositionFeeAccName, feeGrowthOutside); err != nil {
+		// Move spread factors into the new spread factor accumulator and delete the old accumulator.
+		oldPositionSpreadFactorName := types.KeySpreadFactorPositionAccumulator(oldPositionId)
+		if err := moveRewardsToNewPositionAndDeleteOldAcc(ctx, spreadRewardAccumulator, oldPositionSpreadFactorName, newPositionSpreadFactorAccName, spreadRewardGrowthOutside); err != nil {
 			return 0, err
 		}
 

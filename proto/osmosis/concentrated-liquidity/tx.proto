@@ -164,8 +164,8 @@ message MsgCollectSpreadRewards {
 }
 
 message MsgCollectSpreadRewardsResponse {
-  repeated cosmos.base.v1beta1.Coin collected_fees = 1 [
-    (gogoproto.moretags) = "yaml:\"collected_fees\"",
+  repeated cosmos.base.v1beta1.Coin collected_spread_rewards = 1 [
+    (gogoproto.moretags) = "yaml:\"collected_spread_rewards\"",
     (gogoproto.nullable) = false
   ];
 }

@@ -114,13 +114,13 @@ func (suite *AccumTestSuite) TestMakeAndGetAccum() {
 	tests := []testcase{
 		{
 			testName:   "create valid accumulator",
-			accumName:  "fee-accumulator",
+			accumName:  "spread-reward-accumulator",
 			expSetPass: true,
 			expGetPass: true,
 		},
 		{
 			testName:   "create duplicate accumulator",
-			accumName:  "fee-accumulator",
+			accumName:  "spread-reward-accumulator",
 			expSetPass: false,
 			expGetPass: true,
 		},
@@ -167,7 +167,7 @@ func (suite *AccumTestSuite) TestMakeAccumulatorWithValueAndShares() {
 	tests := []testcase{
 		{
 			testName:    "create valid accumulator",
-			accumName:   "fee-accumulator",
+			accumName:   "spread-reward-accumulator",
 			accumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10)), sdk.NewDecCoin("bar", sdk.NewInt(20))),
 			totalShares: sdk.NewDec(30),
 			expSetPass:  true,
@@ -175,7 +175,7 @@ func (suite *AccumTestSuite) TestMakeAccumulatorWithValueAndShares() {
 		},
 		{
 			testName:    "create duplicate accumulator",
-			accumName:   "fee-accumulator",
+			accumName:   "spread-reward-accumulator",
 			accumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10)), sdk.NewDecCoin("bar", sdk.NewInt(20))),
 			totalShares: sdk.NewDec(30),
 			expSetPass:  false,

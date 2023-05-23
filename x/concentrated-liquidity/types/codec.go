@@ -14,7 +14,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCreatePosition{}, "osmosis/cl-create-position", nil)
 	cdc.RegisterConcrete(&MsgAddToPosition{}, "osmosis/cl-add-to-position", nil)
 	cdc.RegisterConcrete(&MsgWithdrawPosition{}, "osmosis/cl-withdraw-position", nil)
-	cdc.RegisterConcrete(&MsgCollectSpreadRewards{}, "osmosis/cl-collect-fees", nil)
+	cdc.RegisterConcrete(&MsgCollectSpreadRewards{}, "osmosis/cl-collect-spread-rewards", nil)
 	cdc.RegisterConcrete(&MsgCollectIncentives{}, "osmosis/cl-collect-incentives", nil)
 	cdc.RegisterConcrete(&MsgFungifyChargedPositions{}, "osmosis/cl-fungify-charged-positions", nil)
 	cdc.RegisterConcrete(&CreateConcentratedLiquidityPoolProposal{}, "osmosis/cretae-concentrated-liquidity-pool-proposal", nil)
