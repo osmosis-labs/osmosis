@@ -113,31 +113,7 @@ func (k Keeper) afterPoolCreated(ctx sdk.Context, poolId uint64) {
 		return
 	}
 
-	// Handle concentrated pools differently since they can have 0 liquidity
-	var coins sdk.Coins
-	if pool.GetType() == poolmanagertypes.Concentrated {
-		clPool, ok := pool.(cltypes.ConcentratedPoolExtension)
-		if !ok {
-			ctx.Logger().Error("Protorev error casting pool to concentrated pool in AfterCFMMPoolCreated hook")
-			return
-		}
-
-		coins, err = k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
-		if err != nil {
-			ctx.Logger().Error("Protorev error getting total pool liquidity in after swap hook", err)
-			return
-		}
-
-		if coins == nil {
-			coins = sdk.Coins{sdk.NewCoin(clPool.GetToken0(), sdk.NewInt(0)), sdk.NewCoin(clPool.GetToken1(), sdk.NewInt(0))}
-		}
-	} else {
-		coins, err = k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
-		if err != nil {
-			ctx.Logger().Error("Protorev error getting total pool liquidity in after pool created hook", err)
-			return
-		}
-	}
+	coins := k.getCoinsFromPool(ctx, pool, poolId)
 
 	// Pool must be active and the number of coins must be 2
 	if pool.IsActive(ctx) && len(coins) == 2 {
@@ -151,6 +127,36 @@ func (k Keeper) afterPoolCreated(ctx sdk.Context, poolId uint64) {
 			k.compareAndStorePool(ctx, poolId, tokenB, tokenA)
 		}
 	}
+}
+
+// getCoinsFromPool gets the coins from the pool, handling concentrated pools differently since they can have 0 liquidity.
+func (k Keeper) getCoinsFromPool(ctx sdk.Context, pool poolmanagertypes.PoolI, poolId uint64) sdk.Coins {
+	var coins sdk.Coins
+	if pool.GetType() == poolmanagertypes.Concentrated {
+		clPool, ok := pool.(cltypes.ConcentratedPoolExtension)
+		if !ok {
+			ctx.Logger().Error("Protorev error casting pool to concentrated pool in AfterCFMMPoolCreated hook")
+			return coins
+		}
+
+		coins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
+		if err != nil {
+			ctx.Logger().Error("Protorev error getting total pool liquidity in after swap hook", err)
+			return coins
+		}
+
+		if coins == nil {
+			coins = sdk.Coins{sdk.NewCoin(clPool.GetToken0(), sdk.NewInt(0)), sdk.NewCoin(clPool.GetToken1(), sdk.NewInt(0))}
+		}
+	} else {
+		coins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
+		if err != nil {
+			ctx.Logger().Error("Protorev error getting total pool liquidity in after pool created hook", err)
+			return coins
+		}
+	}
+
+	return coins
 }
 
 // storeSwap stores a swap to be checked by protorev when attempting backruns.
