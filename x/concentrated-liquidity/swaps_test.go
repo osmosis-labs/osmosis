@@ -1470,12 +1470,12 @@ func (s *KeeperTestSuite) preparePoolWithCustSpread(spread sdk.Dec) types.Concen
 	return s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "usdc", DefaultTickSpacing, spread)
 }
 
-func makeSwapTests(tests ...map[string]SwapTest) map[string]SwapTest {
+func makeTests[T any](tests ...map[string]T) map[string]T {
 	length := 0
 	for i := range tests {
 		length += len(tests[i])
 	}
-	retTests := make(map[string]SwapTest, length)
+	retTests := make(map[string]T, length)
 	for _, tt := range tests {
 		for name, test := range tt {
 			retTests[name] = test
@@ -1550,7 +1550,7 @@ func (s *KeeperTestSuite) getExpectedLiquidity(test SwapTest, pool types.Concent
 
 func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 	// add error cases as well
-	tests := makeSwapTests(swapOutGivenInCases, swapOutGivenInCases, swapOutGivenInErrorCases)
+	tests := makeTests(swapOutGivenInCases, swapOutGivenInCases, swapOutGivenInErrorCases)
 
 	for name, test := range tests {
 		test := test
@@ -1628,7 +1628,7 @@ func (s *KeeperTestSuite) TestSwap_NoPositions() {
 }
 
 func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
-	tests := makeSwapTests(swapOutGivenInCases)
+	tests := makeTests(swapOutGivenInCases)
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
@@ -1704,7 +1704,7 @@ func (s *KeeperTestSuite) testSwapResult(test SwapTest, pool types.ConcentratedP
 
 func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 	// add error cases as well
-	tests := makeSwapTests(swapInGivenOutTestCases, swapInGivenOutFeeTestCases, swapInGivenOutErrorTestCases)
+	tests := makeTests(swapInGivenOutTestCases, swapInGivenOutFeeTestCases, swapInGivenOutErrorTestCases)
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
@@ -1763,7 +1763,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 }
 
 func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
-	tests := makeSwapTests(swapInGivenOutTestCases)
+	tests := makeTests(swapInGivenOutTestCases)
 	for name, test := range tests {
 		s.Run(name, func() {
 			s.setupAndFundSwapTest()
@@ -2204,7 +2204,7 @@ func (s *KeeperTestSuite) TestComputeOutAmtGivenIn() {
 // TestCalcOutAmtGivenIn_NonMutative tests that CalcOutAmtGivenIn is non-mutative.
 func (s *KeeperTestSuite) TestCalcOutAmtGivenIn_NonMutative() {
 	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
-	tests := makeSwapTests(swapOutGivenInFeeCases)
+	tests := makeTests(swapOutGivenInFeeCases)
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
@@ -2241,7 +2241,7 @@ func (s *KeeperTestSuite) setupSecondPosition(test SwapTest, pool types.Concentr
 // TestCalcInAmtGivenOut_NonMutative tests that CalcInAmtGivenOut is non-mutative.
 func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
 	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
-	tests := makeSwapTests(swapOutGivenInFeeCases)
+	tests := makeTests(swapOutGivenInFeeCases)
 
 	for name, test := range tests {
 		test := test
@@ -2267,7 +2267,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
 // TestComputeInAmtGivenOut tests that ComputeInAmtGivenOut successfully performs state changes as expected.
 func (s *KeeperTestSuite) TestComputeInAmtGivenOut() {
 	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
-	tests := makeSwapTests(swapInGivenOutFeeTestCases)
+	tests := makeTests(swapInGivenOutFeeTestCases)
 
 	for name, test := range tests {
 		test := test

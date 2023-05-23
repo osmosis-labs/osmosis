@@ -1625,12 +1625,7 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			RoundingDir:       osmomath.RoundUp,
 		}
 	)
-	tests := map[string]lpTest{}
-
-	// add test cases for different positions
-	for name, test := range positionCases {
-		tests[name] = test
-	}
+	tests := makeTests(positionCases)
 
 	for name, tc := range tests {
 		tc := tc
@@ -1719,8 +1714,6 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			// 4. Check that pool has come back to original state
 
 			liquidityAfter, err := s.App.ConcentratedLiquidityKeeper.GetTotalPoolLiquidity(s.Ctx, poolID)
-			s.Require().NoError(err)
-
 			s.Require().NoError(err)
 
 			// Note: one ends up remaining due to rounding in favor of the pool.
