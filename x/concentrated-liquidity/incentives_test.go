@@ -2332,7 +2332,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 		senderBalance      sdk.Coins
 		recordToSet        types.IncentiveRecord
 		existingRecords    []types.IncentiveRecord
-		minimumGasConsumed uint64
+		minimumGasConsumed uint64 // default 0
 		authorizedUptimes  []time.Duration
 
 		expectedError error
@@ -2347,9 +2347,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet:        incentiveRecordOne,
-			minimumGasConsumed: uint64(0),
-			authorizedUptimes:  types.SupportedUptimes,
+			recordToSet:       incentiveRecordOne,
+			authorizedUptimes: types.SupportedUptimes,
 		},
 		"record with different denom, emission rate, and min uptime": {
 			poolId: defaultPoolId,
@@ -2360,9 +2359,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordTwo.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet:        incentiveRecordTwo,
-			minimumGasConsumed: uint64(0),
-			authorizedUptimes:  types.SupportedUptimes,
+			recordToSet:       incentiveRecordTwo,
+			authorizedUptimes: types.SupportedUptimes,
 		},
 		"record with different start time": {
 			poolId: defaultPoolId,
@@ -2373,9 +2371,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet:        withStartTime(incentiveRecordOne, defaultStartTime.Add(time.Hour)),
-			minimumGasConsumed: uint64(0),
-			authorizedUptimes:  types.SupportedUptimes,
+			recordToSet:       withStartTime(incentiveRecordOne, defaultStartTime.Add(time.Hour)),
+			authorizedUptimes: types.SupportedUptimes,
 		},
 		"record with different incentive amount": {
 			poolId: defaultPoolId,
@@ -2386,9 +2383,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					sdk.NewInt(8),
 				),
 			),
-			recordToSet:        withAmount(incentiveRecordOne, sdk.NewDec(8)),
-			minimumGasConsumed: uint64(0),
-			authorizedUptimes:  types.SupportedUptimes,
+			recordToSet:       withAmount(incentiveRecordOne, sdk.NewDec(8)),
+			authorizedUptimes: types.SupportedUptimes,
 		},
 		"existing incentive records on different uptime accumulators": {
 			poolId: defaultPoolId,
@@ -2437,8 +2433,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet:        incentiveRecordOne,
-			minimumGasConsumed: uint64(0),
+			recordToSet: incentiveRecordOne,
 		},
 
 		// Error catching
