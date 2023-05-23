@@ -73,6 +73,11 @@ var (
 		expectedFeeGrowthOutsideUpper: cl.EmptyCoins,
 	}
 
+	errToleranceOneRoundDown = osmomath.ErrTolerance{
+		AdditiveTolerance: sdk.OneDec(),
+		RoundingDir:       osmomath.RoundDown,
+	}
+
 	roundingError = sdk.OneInt()
 
 	positionCases = map[string]lpTest{
@@ -536,14 +541,12 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				concentratedLiquidityKeeper = s.App.ConcentratedLiquidityKeeper
 				liquidityCreated            = sdk.ZeroDec()
 				owner                       = s.TestAccs[0]
-				tc                          = tc
 				config                      = *tc.setupConfig
-				sutConfigOverwrite          = *tc.sutConfigOverwrite
 				err                         error
 			)
 
 			// If specific configs are provided in the test case, overwrite the config with those values.
-			mergeConfigs(&config, &sutConfigOverwrite)
+			mergeConfigs(&config, tc.sutConfigOverwrite)
 
 			// If a setupConfig is provided, use it to create a pool and position.
 			pool := s.PrepareConcentratedPool()
@@ -1027,14 +1030,12 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			var (
 				concentratedLiquidityKeeper = s.App.ConcentratedLiquidityKeeper
 				owner                       = s.TestAccs[0]
-				tc                          = tc
 				config                      = *tc.setupConfig
-				sutConfigOverwrite          = *tc.sutConfigOverwrite
 				err                         error
 			)
 
 			// If specific configs are provided in the test case, overwrite the config with those values.
-			mergeConfigs(&config, &sutConfigOverwrite)
+			mergeConfigs(&config, tc.sutConfigOverwrite)
 
 			// If a setupConfig is provided, use it to create a pool and position.
 			pool := s.PrepareConcentratedPool()
@@ -1104,12 +1105,8 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			postBalanceToken0 := s.App.BankKeeper.GetBalance(s.Ctx, sender, pool.GetToken0())
 			postBalanceToken1 := s.App.BankKeeper.GetBalance(s.Ctx, sender, pool.GetToken1())
 
-			var errTolerance osmomath.ErrTolerance
-			errTolerance.AdditiveTolerance = sdk.OneDec()
-			errTolerance.RoundingDir = osmomath.RoundDown
-
-			s.Require().Equal(0, errTolerance.Compare(preBalanceToken0.Amount, postBalanceToken0.Amount))
-			s.Require().Equal(0, errTolerance.Compare(expectedAmount1Delta, postBalanceToken1.Amount.Sub(tc.amount1ToAdd)))
+			s.Require().Equal(0, errToleranceOneRoundDown.Compare(preBalanceToken0.Amount, postBalanceToken0.Amount))
+			s.Require().Equal(0, errToleranceOneRoundDown.Compare(expectedAmount1Delta, postBalanceToken1.Amount.Sub(tc.amount1ToAdd)))
 
 			// now check that old position id has been succesfully deleted
 			_, err = s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
@@ -1623,11 +1620,6 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 
 func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() {
 	var (
-		errToleranceOneRoundDown = osmomath.ErrTolerance{
-			AdditiveTolerance: sdk.OneDec(),
-			RoundingDir:       osmomath.RoundDown,
-		}
-
 		errToleranceOneRoundUp = osmomath.ErrTolerance{
 			AdditiveTolerance: sdk.OneDec(),
 			RoundingDir:       osmomath.RoundUp,
