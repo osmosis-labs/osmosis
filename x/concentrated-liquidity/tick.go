@@ -235,9 +235,15 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 	// we do -1 to make min tick inclusive.
 	currentTick := types.MinTick - 1
 
-	nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
-	if !ok {
-		return []queryproto.LiquidityDepthWithRange{}, types.InvalidTickError{Tick: currentTick, IsLower: false, MinTick: types.MinTick, MaxTick: types.MaxTick}
+	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, currentTick)
+	defer nextTickIter.Close()
+	if !nextTickIter.Valid() {
+		return []queryproto.LiquidityDepthWithRange{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
+	}
+
+	nextTick, err := types.TickIndexFromBytes(nextTickIter.Key())
+	if err != nil {
+		return []queryproto.LiquidityDepthWithRange{}, err
 	}
 
 	tick, err := k.getTickByTickIndex(ctx, poolId, nextTick)
@@ -252,26 +258,18 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 	currentTick = nextTick
 	totalLiquidityWithinRange := currentLiquidity
 
-	// iterator assignments
-	store := ctx.KVStore(k.storeKey)
-	prefixBz := types.KeyTickPrefixByPoolId(poolId)
-	prefixStore := prefix.NewStore(store, prefixBz)
-	currentTickKey := types.TickIndexToBytes(currentTick)
-	maxTickKey := types.TickIndexToBytes(types.MaxTick)
-	iterator := prefixStore.Iterator(currentTickKey, storetypes.InclusiveEndBytes(maxTickKey))
-	defer iterator.Close()
 	previousTickIndex := currentTick
 
 	// start from the next index so that the current tick can become lower tick.
-	iterator.Next()
-	for ; iterator.Valid(); iterator.Next() {
-		tickIndex, err := types.TickIndexFromBytes(iterator.Key())
+	nextTickIter.Next()
+	for ; nextTickIter.Valid(); nextTickIter.Next() {
+		tickIndex, err := types.TickIndexFromBytes(nextTickIter.Key())
 		if err != nil {
 			return []queryproto.LiquidityDepthWithRange{}, err
 		}
 
 		tickStruct := model.TickInfo{}
-		err = proto.Unmarshal(iterator.Value(), &tickStruct)
+		err = proto.Unmarshal(nextTickIter.Value(), &tickStruct)
 		if err != nil {
 			return []queryproto.LiquidityDepthWithRange{}, err
 		}

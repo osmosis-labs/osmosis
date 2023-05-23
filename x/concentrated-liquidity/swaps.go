@@ -335,9 +335,6 @@ func (k Keeper) computeOutAmtGivenIn(
 
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
 	defer nextTickIter.Close()
-	if !nextTickIter.Valid() {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
-	}
 
 	totalFees = sdk.ZeroDec()
 	// Iterate and update swapState until we swap all tokenIn or we reach the specific sqrtPriceLimit
@@ -409,9 +406,6 @@ func (k Keeper) computeOutAmtGivenIn(
 			}
 
 			// Move next tick iterator to the next tick as the tick is crossed.
-			if !nextTickIter.Valid() {
-				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
-			}
 			nextTickIter.Next()
 
 			liquidityNet = swapStrategy.SetLiquidityDeltaSign(liquidityNet)
@@ -535,19 +529,27 @@ func (k Keeper) computeInAmtGivenOut(
 
 	totalFees = sdk.ZeroDec()
 
+	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
+	defer nextTickIter.Close()
+
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
 	for swapState.amountSpecifiedRemaining.GT(smallestDec) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
 		// log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
 
+		// Iterator must be valid to be able to retrieve the next tick from it below.
+		if !nextTickIter.Valid() {
+			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
+		}
+
 		// we first check to see what the position of the nearest initialized tick is
 		// if zeroForOne is false, we look to the left of the tick the current sqrt price is at
 		// if zeroForOne is true, we look to the right of the tick the current sqrt price is at
 		// if no ticks are initialized (no users have created liquidity positions) then we return an error
-		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, swapState.tick)
-		if !ok {
-			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.InvalidTickError{}
+		nextTick, err := types.TickIndexFromBytes(nextTickIter.Key())
+		if err != nil {
+			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 		}
 
 		// utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
@@ -591,6 +593,10 @@ func (k Keeper) computeInAmtGivenOut(
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 			}
+
+			// Move next tick iterator to the next tick as the tick is crossed.
+			nextTickIter.Next()
+
 			liquidityNet = swapStrategy.SetLiquidityDeltaSign(liquidityNet)
 			// update the swapState's liquidity with the new tick's liquidity
 			swapState.liquidity = swapState.liquidity.AddMut(liquidityNet)

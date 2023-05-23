@@ -194,38 +194,6 @@ func (s oneForZeroStrategy) InitializeTickValue(currentTick int64) int64 {
 	return currentTick + 1
 }
 
-// NextInitializedTick returns the next initialized tick index based on the
-// provided tickindex. If no initialized tick exists, <0, false>
-// will be returned.
-//
-// oneForZerostrategy searches for the next tick to the right of the current tickIndex.
-func (s oneForZeroStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64) (next int64, initialized bool) {
-	store := ctx.KVStore(s.storeKey)
-
-	// Construct a prefix store with a prefix of <TickPrefix | poolID>, allowing
-	// us to retrieve the next initialized tick without having to scan all ticks.
-	prefixBz := types.KeyTickPrefixByPoolId(poolId)
-	prefixStore := prefix.NewStore(store, prefixBz)
-
-	startKey := types.TickIndexToBytes(tickIndex)
-
-	iter := prefixStore.Iterator(startKey, nil)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		// Since, we constructed our prefix store with <TickPrefix | poolID>, the
-		// key is the encoding of a tick index.
-		tick, err := types.TickIndexFromBytes(iter.Key())
-		if err != nil {
-			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
-		}
-
-		if tick > tickIndex {
-			return tick, true
-		}
-	}
-	return 0, false
-}
-
 // SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.
 // This is called when consuming all liquidity.
 // When a position is created, we add liquidity to lower tick

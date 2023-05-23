@@ -980,12 +980,13 @@ func (s *KeeperTestSuite) TestPrepareClaimableFees() {
 
 	tests := map[string]struct {
 		// setup parameters.
-		initialLiquidity          sdk.Dec
-		lowerTickFeeGrowthOutside sdk.DecCoins
-		upperTickFeeGrowthOutside sdk.DecCoins
-		globalFeeGrowth           sdk.DecCoins
-		currentTick               int64
-		isInvalidPoolIdGiven      bool
+		initialLiquidity             sdk.Dec
+		lowerTickFeeGrowthOutside    sdk.DecCoins
+		upperTickFeeGrowthOutside    sdk.DecCoins
+		globalFeeGrowth              sdk.DecCoins
+		expectedReinvestedDustAmount sdk.Dec
+		currentTick                  int64
+		isInvalidPoolIdGiven         bool
 
 		// inputs parameters.
 		lowerTick           int64
@@ -1109,6 +1110,27 @@ func (s *KeeperTestSuite) TestPrepareClaimableFees() {
 
 			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 		},
+		"dust reinvested: single swap right -> left: 2 ticks, two shares, current tick in between lower and upper tick": {
+			initialLiquidity: sdk.NewDec(2),
+
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, sdk.MustNewDecFromStr("3.3"))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			lowerTick:           0,
+			upperTick:           2,
+			positionIdToPrepare: DefaultPositionId,
+
+			currentTick: 1,
+
+			// expected = global - below lower - above upper = 10 - 3.3 = 6.7
+			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, sdk.MustNewDecFromStr("6.7"))),
+			// expected reinvested dust = (6.7 * 2 % floor(6.7 * 2)) / 2
+			// This can be thought of as the diffence between the non-truncated total amount of fees and the truncated toal amount of fees
+			// divided by the number of shares.
+			expectedReinvestedDustAmount: sdk.MustNewDecFromStr("0.2"),
+		},
 		"swap occurs above the position, current tick > upper tick": {
 			initialLiquidity: sdk.OneDec(),
 
@@ -1189,8 +1211,10 @@ func (s *KeeperTestSuite) TestPrepareClaimableFees() {
 			positionKey := types.KeyFeePositionAccumulator(DefaultPositionId)
 
 			// Note the position accumulator before calling prepare
-			_, err = s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, validPoolId)
+			originalAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, validPoolId)
 			s.Require().NoError(err)
+
+			originalAccumValue := originalAccum.GetValue()
 
 			// System under test
 			actualFeesClaimed, err := clKeeper.PrepareClaimableFees(ctx, tc.positionIdToPrepare)
@@ -1211,8 +1235,15 @@ func (s *KeeperTestSuite) TestPrepareClaimableFees() {
 			s.Require().Equal(tc.expectedInitAccumValue, postPreparePosition.AccumValuePerShare)
 			s.Require().Equal(tc.initialLiquidity, postPreparePosition.NumShares)
 
-			expectedFeeClaimAmount := tc.expectedInitAccumValue.AmountOf(ETH).Mul(tc.initialLiquidity).TruncateInt()
+			expectedClaimedAmountDec := tc.expectedInitAccumValue.AmountOf(ETH).Mul(tc.initialLiquidity)
+			expectedFeeClaimAmount := expectedClaimedAmountDec.TruncateInt()
 			s.Require().Equal(expectedFeeClaimAmount, actualFeesClaimed.AmountOf(ETH))
+
+			// validate that truncated dust amount is reinvested back into the global accumulator
+			if expectedClaimedAmountDec.GT(expectedFeeClaimAmount.ToDec()) {
+				accumDelta, _ := accum.GetValue().SafeSub(originalAccumValue)
+				s.Require().Equal(tc.expectedReinvestedDustAmount, accumDelta.AmountOf(ETH))
+			}
 		})
 	}
 }

@@ -518,6 +518,227 @@ func (s *KeeperTestSuite) TestSetStableSwapScalingFactors() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
+	tests := map[string]struct {
+		poolId              uint64
+		shareOutAmount      sdk.Int
+		expectedLpLiquidity sdk.Coins
+		err				error
+	}{
+		"Balancer pool: Share ratio is zero": {
+			poolId: suite.prepareCustomBalancerPool(defaultAcctFunds, defaultPoolAssets, balancer.PoolParams{
+				SwapFee: defaultSpreadFactor,
+				ExitFee: defaultZeroExitFee,
+			}),
+			shareOutAmount: sdk.ZeroInt(),
+			err: types.ErrInvalidMathApprox,
+		},
+
+		"Balancer pool: Share ratio is negative": {
+			poolId: suite.prepareCustomBalancerPool(defaultAcctFunds, defaultPoolAssets, balancer.PoolParams{
+				SwapFee: defaultSpreadFactor,
+				ExitFee: defaultZeroExitFee,
+			}),
+			shareOutAmount: sdk.NewInt(-1),
+			err: types.ErrInvalidMathApprox,
+		},
+
+		"Balancer pool: Pass": {
+			poolId: suite.prepareCustomBalancerPool(defaultAcctFunds, defaultPoolAssets, balancer.PoolParams{
+				SwapFee: defaultSpreadFactor,
+				ExitFee: defaultZeroExitFee,
+			}),
+
+			// totalShare:   100_000_000_000_000_000_000
+			// shareOutAmount: 8_000_000_000_000_000_000
+			// shareRatio = shareOutAmount/totalShare = 0.08
+			// Amount of tokens in poolAssets:
+			// 		- defaultPoolAssets[1].Token.Amount: 10000
+			//  	- defaultPoolAssets[0].Token.Amount: 10000
+			shareOutAmount: sdk.NewInt(8_000_000_000_000_000_000),
+			expectedLpLiquidity: sdk.Coins{
+				sdk.NewInt64Coin(defaultPoolAssets[1].Token.Denom, 800),
+				sdk.NewInt64Coin(defaultPoolAssets[0].Token.Denom, 800),
+			},
+		},
+
+		"Balancer pool: Pass with ceiling result": {
+			poolId: suite.prepareCustomBalancerPool(defaultAcctFunds, defaultPoolAssets, balancer.PoolParams{
+				SwapFee: defaultSpreadFactor,
+				ExitFee: defaultZeroExitFee,
+			}),
+
+			// totalShare:   100_000_000_000_000_000_000
+			// shareOutAmount: 8_888_000_000_000_000_000
+			// shareRatio = shareOutAmount/totalShare = 0.08888
+			// Amount of tokens in poolAssets:
+			// 		- defaultPoolAssets[1].Token.Amount: 10000
+			//  	- defaultPoolAssets[0].Token.Amount: 10000
+			shareOutAmount: sdk.NewInt(8_888_000_000_000_000_000),
+			expectedLpLiquidity: sdk.Coins{
+				sdk.NewInt64Coin(defaultPoolAssets[1].Token.Denom, 889),
+				sdk.NewInt64Coin(defaultPoolAssets[0].Token.Denom, 889),
+			},
+		},
+
+		"Stableswap pool: Share ratio is zero with even two-asset": {
+			poolId: suite.prepareCustomStableswapPool(
+				defaultAcctFunds, 
+				stableswap.PoolParams{
+					SwapFee: defaultSpreadFactor,
+					ExitFee: defaultZeroExitFee,
+				}, 
+				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
+				[]uint64{1, 1},
+			),
+			shareOutAmount: sdk.ZeroInt(),
+			err: types.ErrInvalidMathApprox,
+		},
+
+		"Stableswap pool: Share ratio is zero with uneven two-asset": {
+			poolId: suite.prepareCustomStableswapPool(
+				defaultAcctFunds, 
+				stableswap.PoolParams{
+					SwapFee: defaultSpreadFactor,
+					ExitFee: defaultZeroExitFee,
+				}, 
+				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
+				[]uint64{1, 1},
+			),
+			shareOutAmount: sdk.ZeroInt(),
+			err: types.ErrInvalidMathApprox,
+		},
+
+		"Stableswap pool: Share ratio is negative with even two-asset": {
+			poolId: suite.prepareCustomStableswapPool(
+				defaultAcctFunds, 
+				stableswap.PoolParams{
+					SwapFee: defaultSpreadFactor,
+					ExitFee: defaultZeroExitFee,
+				}, 
+				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
+				[]uint64{1, 1},
+			),
+			shareOutAmount: sdk.NewInt(-1),
+			err: types.ErrInvalidMathApprox,
+		},
+
+		"Stableswap pool: Share ratio is negative with uneven two-asset": {
+			poolId: suite.prepareCustomStableswapPool(
+				defaultAcctFunds, 
+				stableswap.PoolParams{
+					SwapFee: defaultSpreadFactor,
+					ExitFee: defaultZeroExitFee,
+				}, 
+				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
+				[]uint64{1, 1},
+			),
+			shareOutAmount: sdk.NewInt(-1),
+			err: types.ErrInvalidMathApprox,
+		},
+
+		"Stableswap pool: Pass with even two-asset": {
+			poolId: suite.prepareCustomStableswapPool(
+				defaultAcctFunds, 
+				stableswap.PoolParams{
+					SwapFee: defaultSpreadFactor,
+					ExitFee: defaultZeroExitFee,
+				}, 
+				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
+				[]uint64{1, 1},
+			),
+			shareOutAmount: sdk.NewInt(8_000_000_000_000_000_000),
+			expectedLpLiquidity: sdk.Coins{
+				sdk.NewInt64Coin(defaultAcctFunds[1].Denom, 800000),
+				sdk.NewInt64Coin(defaultAcctFunds[2].Denom, 800000),
+			},
+		},
+
+		"Stableswap pool: Pass with even two-asset, ceiling result": {
+			poolId: suite.prepareCustomStableswapPool(
+				defaultAcctFunds, 
+				stableswap.PoolParams{
+					SwapFee: defaultSpreadFactor,
+					ExitFee: defaultZeroExitFee,
+				}, 
+				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
+				[]uint64{1, 1},
+			),
+			// totalShare:   100_000_000_000_000_000_000
+			// shareOutAmount: 8_888_888_000_000_000_000
+			// shareRatio = shareOutAmount/totalShare = 0.08888888
+			// Amount of tokens in liquidity:
+			// 		- defaultAcctFunds[1].Amount: 10000000
+			//  	- defaultAcctFunds[2].Amount: 10000000
+			shareOutAmount: sdk.NewInt(8_888_888_000_000_000_000),
+			expectedLpLiquidity: sdk.Coins{
+				sdk.NewInt64Coin(defaultAcctFunds[1].Denom, 888889),
+				sdk.NewInt64Coin(defaultAcctFunds[2].Denom, 888889),
+			},
+		},
+
+		"Stableswap pool: Pass with uneven two-asset": {
+			poolId: suite.prepareCustomStableswapPool(
+				defaultAcctFunds, 
+				stableswap.PoolParams{
+					SwapFee: defaultSpreadFactor,
+					ExitFee: defaultZeroExitFee,
+				}, 
+				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
+				[]uint64{1, 1},
+			),
+			shareOutAmount: sdk.NewInt(8_000_000_000_000_000_000),
+			expectedLpLiquidity: sdk.Coins{
+				sdk.NewInt64Coin(defaultAcctFunds[1].Denom, 400000),
+				sdk.NewInt64Coin(defaultAcctFunds[2].Denom, 800000),
+			},
+		},
+
+		"Stableswap pool: Pass with uneven two-asset, ceiling result": {
+			poolId: suite.prepareCustomStableswapPool(
+				defaultAcctFunds, 
+				stableswap.PoolParams{
+					SwapFee: defaultSpreadFactor,
+					ExitFee: defaultZeroExitFee,
+				}, 
+				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
+				[]uint64{1, 1},
+			),
+			// totalShare:   100_000_000_000_000_000_000
+			// shareOutAmount: 8_888_888_000_000_000_000
+			// shareRatio = shareOutAmount/totalShare = 0.08888888
+			// Amount of tokens in liquidity:
+			// 		- defaultAcctFunds[1].Amount: 10000000
+			//  	- defaultAcctFunds[2].Amount: 5000000
+			shareOutAmount: sdk.NewInt(8_888_888_000_000_000_000),
+			expectedLpLiquidity: sdk.Coins{
+				sdk.NewInt64Coin(defaultAcctFunds[1].Denom, 444445),
+				sdk.NewInt64Coin(defaultAcctFunds[2].Denom, 888889),
+			},
+		},
+	}
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			k := suite.App.GAMMKeeper
+
+			pool, err := k.GetPoolAndPoke(suite.Ctx, tc.poolId)
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.poolId, pool.GetId())
+
+			neededLpLiquidity, err := keeper.GetMaximalNoSwapLPAmount(suite.Ctx, pool, tc.shareOutAmount)
+			if tc.err != nil {
+				suite.Require().Error(err)
+				msgError := fmt.Sprintf("Too few shares out wanted. (debug: getMaximalNoSwapLPAmount share ratio is zero or negative): %s", tc.err)
+				suite.Require().EqualError(err, msgError)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().Equal(neededLpLiquidity, tc.expectedLpLiquidity)
+			}
+
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestGetTotalPoolShares() {
 	tests := map[string]struct {
 		sharesJoined   sdk.Int

@@ -55,6 +55,8 @@ type SwapTest struct {
 }
 
 var (
+	swapFundCoins = sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000)))
+
 	// Allow 0.01% margin of error.
 	multiplicativeTolerance = osmomath.ErrTolerance{
 		MultiplicativeTolerance: sdk.MustNewDecFromStr("0.0001"),
@@ -1442,47 +1444,122 @@ var (
 	}
 )
 
+func (s *KeeperTestSuite) setupAndFundSwapTest() {
+	s.SetupTest()
+	s.FundAcc(s.TestAccs[0], swapFundCoins)
+	s.FundAcc(s.TestAccs[1], swapFundCoins)
+}
+
+func (s *KeeperTestSuite) preparePoolAndDefaultPosition() types.ConcentratedPoolExtension {
+	pool := s.PrepareConcentratedPool()
+	s.SetupDefaultPosition(pool.GetId())
+	return pool
+}
+
+func (s *KeeperTestSuite) preparePoolAndDefaultPositions(test SwapTest) types.ConcentratedPoolExtension {
+	pool := s.preparePoolAndDefaultPosition()
+	s.setupSecondPosition(test, pool)
+	pool, _ = s.clk.GetConcentratedPoolById(s.Ctx, pool.GetId())
+	return pool
+}
+
+func (s *KeeperTestSuite) preparePoolWithCustSpread(spread sdk.Dec) types.ConcentratedPoolExtension {
+	clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+	clParams.AuthorizedSpreadFactors = append(clParams.AuthorizedSpreadFactors, spread)
+	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
+	return s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "usdc", DefaultTickSpacing, spread)
+}
+
+func makeSwapTests(tests ...map[string]SwapTest) map[string]SwapTest {
+	length := 0
+	for i := range tests {
+		length += len(tests[i])
+	}
+	retTests := make(map[string]SwapTest, length)
+	for _, tt := range tests {
+		for name, test := range tt {
+			retTests[name] = test
+		}
+	}
+	return retTests
+}
+
+func (s *KeeperTestSuite) assertPoolNotModified(poolBeforeCalc types.ConcentratedPoolExtension) {
+	poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, poolBeforeCalc.GetId())
+	s.Require().NoError(err)
+	s.Require().Equal(poolBeforeCalc.GetCurrentSqrtPrice(), poolAfterCalc.GetCurrentSqrtPrice())
+	s.Require().Equal(poolBeforeCalc.GetCurrentTick(), poolAfterCalc.GetCurrentTick())
+	s.Require().Equal(poolBeforeCalc.GetLiquidity(), poolAfterCalc.GetLiquidity())
+	s.Require().Equal(poolBeforeCalc.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
+}
+
+func (s *KeeperTestSuite) assertFeeAccum(test SwapTest, poolId uint64) {
+	feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	feeAccumValue := feeAccum.GetValue()
+	if test.expectedFeeGrowthAccumulatorValue.IsNil() {
+		s.Require().Equal(0, feeAccumValue.Len())
+		return
+	}
+	amountOfDenom := test.tokenIn.Denom
+	if amountOfDenom == "" {
+		amountOfDenom = test.tokenInDenom
+	}
+	feeVal := feeAccumValue.AmountOf(amountOfDenom)
+	s.Require().Equal(1, feeAccumValue.Len(), "fee accumulator should only have one denom, was (%s)", feeAccumValue)
+	s.Require().Equal(0,
+		additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
+			osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
+			osmomath.BigDecFromSDKDec(feeVal),
+		),
+		fmt.Sprintf("expected %s, got %s", test.expectedFeeGrowthAccumulatorValue.String(), feeVal.String()),
+	)
+}
+
+func (s *KeeperTestSuite) assertZeroFees(poolId uint64) {
+	feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, poolId)
+	s.Require().NoError(err)
+	s.Require().Equal(0, feeAccum.GetValue().Len())
+}
+
+func (s *KeeperTestSuite) getExpectedLiquidity(test SwapTest, pool types.ConcentratedPoolExtension) sdk.Dec {
+	if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
+		test.newLowerPrice = DefaultLowerPrice
+		test.newUpperPrice = DefaultUpperPrice
+	}
+
+	newLowerTick, err := math.PriceToTickRoundDown(test.newLowerPrice, pool.GetTickSpacing())
+	s.Require().NoError(err)
+	newUpperTick, err := math.PriceToTickRoundDown(test.newUpperPrice, pool.GetTickSpacing())
+	s.Require().NoError(err)
+
+	_, lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick)
+	s.Require().NoError(err)
+	_, upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick)
+	s.Require().NoError(err)
+
+	if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
+		test.poolLiqAmount0 = DefaultAmt0
+		test.poolLiqAmount1 = DefaultAmt1
+	}
+
+	expectedLiquidity := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
+	return expectedLiquidity
+}
+
 func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
-	tests := make(map[string]SwapTest, len(swapOutGivenInCases)+len(swapOutGivenInFeeCases)+len(swapOutGivenInErrorCases))
-	for name, test := range swapOutGivenInCases {
-		tests[name] = test
-	}
-
-	for name, test := range swapOutGivenInFeeCases {
-		tests[name] = test
-	}
-
 	// add error cases as well
-	for name, test := range swapOutGivenInErrorCases {
-		tests[name] = test
-	}
+	tests := makeSwapTests(swapOutGivenInCases, swapOutGivenInCases, swapOutGivenInErrorCases)
 
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-
-			// Create default CL pool
-			clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-			clParams.AuthorizedSpreadFactors = append(clParams.AuthorizedSpreadFactors, test.spreadFactor)
-			s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
-			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "usdc", DefaultTickSpacing, test.spreadFactor)
-
+			s.setupAndFundSwapTest()
+			pool := s.preparePoolWithCustSpread(test.spreadFactor)
 			// add default position
 			s.SetupDefaultPosition(pool.GetId())
-
-			// add second position depending on the test
-			if !test.secondPositionLowerPrice.IsNil() {
-				newLowerTick, err := math.PriceToTickRoundDown(test.secondPositionLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
-				s.Require().NoError(err)
-			}
+			s.setupSecondPosition(test, pool)
 
 			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
@@ -1502,49 +1579,13 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 			if test.expectErr {
 				s.Require().Error(err)
 			} else {
-				s.Require().NoError(err)
-
-				// check that tokenIn, tokenOut, tick, and sqrtPrice from CalcOut are all what we expected
-				s.Require().Equal(test.expectedTick, updatedTick)
-				s.Require().Equal(test.expectedTokenIn.String(), tokenIn.String())
-				s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
-				s.Require().Equal(test.expectedSqrtPrice, sqrtPrice)
+				s.testSwapResult(test, pool, tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, err)
 
 				expectedFees := tokenIn.Amount.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).TruncateInt()
 				s.Require().Equal(expectedFees.String(), totalFees.TruncateInt().String())
 
-				if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
-					test.newLowerPrice = DefaultLowerPrice
-					test.newUpperPrice = DefaultUpperPrice
-				}
-
-				newLowerTick, err := math.PriceToTickRoundDown(test.newLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.newUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick)
-				s.Require().NoError(err)
-				_, upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick)
-				s.Require().NoError(err)
-
-				if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
-					test.poolLiqAmount0 = DefaultAmt0
-					test.poolLiqAmount1 = DefaultAmt1
-				}
-
-				// check that liquidity is what we expected
-				expectedLiquidity := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
-				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
-
 				// check that the pool has not been modified after performing calc
-				poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-				s.Require().NoError(err)
-
-				s.Require().Equal(poolBeforeCalc.GetCurrentSqrtPrice(), poolAfterCalc.GetCurrentSqrtPrice())
-				s.Require().Equal(poolBeforeCalc.GetCurrentTick(), poolAfterCalc.GetCurrentTick())
-				s.Require().Equal(poolBeforeCalc.GetLiquidity(), poolAfterCalc.GetLiquidity())
-				s.Require().Equal(poolBeforeCalc.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
+				s.assertPoolNotModified(poolBeforeCalc)
 			}
 
 			// perform swap
@@ -1557,80 +1598,26 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 			if test.expectErr {
 				s.Require().Error(err)
 			} else {
-				s.Require().NoError(err)
-
-				s.Require().Equal(test.expectedTokenIn.String(), tokenIn.String())
-				s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
-				s.Require().Equal(test.expectedTick, updatedTick)
-				s.Require().Equal(test.expectedSqrtPrice, sqrtPrice)
-
-				if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
-					test.newLowerPrice = DefaultLowerPrice
-					test.newUpperPrice = DefaultUpperPrice
-				}
-
-				newLowerTick, err := math.PriceToTickRoundDown(test.newLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.newUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick)
-				s.Require().NoError(err)
-				_, upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick)
-				s.Require().NoError(err)
-
-				if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
-					test.poolLiqAmount0 = DefaultAmt0
-					test.poolLiqAmount1 = DefaultAmt1
-				}
-
-				expectedLiquidity := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
-				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
-
-				feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
-				s.Require().NoError(err)
-
-				feeAccumValue := feeAccum.GetValue()
-				if test.expectedFeeGrowthAccumulatorValue.IsNil() {
-					s.Require().Equal(0, feeAccumValue.Len())
-					return
-				}
-				s.Require().Equal(1, feeAccumValue.Len())
-				s.Require().Equal(0,
-					additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
-						osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
-						osmomath.BigDecFromSDKDec(feeAccum.GetValue().AmountOf(test.tokenIn.Denom)),
-					),
-					fmt.Sprintf("expected %s, got %s", test.expectedFeeGrowthAccumulatorValue.String(), feeAccum.GetValue().AmountOf(test.tokenIn.Denom).String()),
-				)
+				s.testSwapResult(test, pool, tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, err)
+				s.assertFeeAccum(test, pool.GetId())
 			}
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_NoPositions() {
+func (s *KeeperTestSuite) TestSwap_NoPositions() {
 	s.SetupTest()
-
 	pool := s.PrepareConcentratedPool()
-
 	// perform swap
-	_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
+	_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
 		s.Ctx, s.TestAccs[0], pool,
 		DefaultCoin0, DefaultCoin1.Denom,
 		sdk.ZeroDec(), sdk.ZeroDec(),
 	)
-
 	s.Require().Error(err)
 	s.Require().ErrorIs(err, types.NoSpotPriceWhenNoLiquidityError{PoolId: pool.GetId()})
-}
 
-func (s *KeeperTestSuite) TestSwapInAmtGivenOut_NoPositions() {
-	s.SetupTest()
-
-	pool := s.PrepareConcentratedPool()
-
-	// perform swap
-	_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
+	_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
 		s.Ctx, s.TestAccs[0], pool,
 		DefaultCoin0, DefaultCoin1.Denom,
 		sdk.ZeroDec(), sdk.ZeroDec(),
@@ -1641,17 +1628,11 @@ func (s *KeeperTestSuite) TestSwapInAmtGivenOut_NoPositions() {
 }
 
 func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
-	tests := make(map[string]SwapTest)
-	for name, test := range swapOutGivenInCases {
-		tests[name] = test
-	}
-
+	tests := makeSwapTests(swapOutGivenInCases)
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			s.setupAndFundSwapTest()
 
 			// Create default CL pool
 			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, sdk.ZeroDec())
@@ -1663,17 +1644,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 
 			// add default position
 			s.SetupDefaultPosition(pool.GetId())
-
-			// add second position depending on the test
-			if !test.secondPositionLowerPrice.IsNil() {
-				newLowerTick, err := math.PriceToTickRoundDown(test.secondPositionLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
-				s.Require().NoError(err)
-			}
+			s.setupSecondPosition(test, pool)
 
 			// add 2*DefaultFeeAccumCoins to fee accumulator, now fee accumulator has 3*DefaultFeeAccumCoins as its value
 			feeAccum, err = s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
@@ -1718,50 +1689,30 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 	}
 }
 
+func (s *KeeperTestSuite) testSwapResult(test SwapTest, pool types.ConcentratedPoolExtension, tokenIn, tokenOut sdk.Coin, updatedTick int64, updatedLiquidity sdk.Dec, sqrtPrice sdk.Dec, err error) {
+	s.Require().NoError(err)
+
+	// check that tokenIn, tokenOut, tick, and sqrtPrice from CalcOut are all what we expected
+	s.Require().Equal(test.expectedSqrtPrice, sqrtPrice)
+	s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
+	s.Require().Equal(test.expectedTokenIn.String(), tokenIn.String())
+	s.Require().Equal(test.expectedTick, updatedTick)
+
+	expectedLiquidity := s.getExpectedLiquidity(test, pool)
+	s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
+}
+
 func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
-	tests := make(map[string]SwapTest, len(swapInGivenOutTestCases)+len(swapInGivenOutFeeTestCases)+len(swapInGivenOutErrorTestCases))
-	for name, test := range swapInGivenOutTestCases {
-		tests[name] = test
-	}
-
-	for name, test := range swapInGivenOutFeeTestCases {
-		tests[name] = test
-	}
-
 	// add error cases as well
-	for name, test := range swapInGivenOutErrorTestCases {
-		tests[name] = test
-	}
-
+	tests := makeSwapTests(swapInGivenOutTestCases, swapInGivenOutFeeTestCases, swapInGivenOutErrorTestCases)
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-
-			// Create default CL pool
-			clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-			clParams.AuthorizedSpreadFactors = append(clParams.AuthorizedSpreadFactors, test.spreadFactor)
-			s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
-			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "usdc", DefaultTickSpacing, test.spreadFactor)
-
+			s.setupAndFundSwapTest()
+			pool := s.preparePoolWithCustSpread(test.spreadFactor)
 			// add default position
 			s.SetupDefaultPosition(pool.GetId())
-
-			// add second position depending on the test
-			if !test.secondPositionLowerPrice.IsNil() {
-				newLowerTick, err := math.PriceToTickRoundDown(test.secondPositionLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
-				s.Require().NoError(err)
-			}
-
-			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
+			s.setupSecondPosition(test, pool)
 
 			// perform compute
 			cacheCtx, _ := s.Ctx.CacheContext()
@@ -1772,49 +1723,10 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 			if test.expectErr {
 				s.Require().Error(err)
 			} else {
-				s.Require().NoError(err)
-
-				// check that tokenIn, tokenOut, tick, and sqrtPrice from CalcOut are all what we expected
-				s.Require().Equal(test.expectedSqrtPrice, sqrtPrice)
-				s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
-				s.Require().Equal(test.expectedTokenIn.String(), tokenIn.String())
-				s.Require().Equal(test.expectedTick, updatedTick)
+				s.testSwapResult(test, pool, tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, err)
 
 				expectedFees := tokenIn.Amount.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).TruncateInt()
 				s.Require().Equal(expectedFees.String(), totalFees.TruncateInt().String())
-
-				if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
-					test.newLowerPrice = DefaultLowerPrice
-					test.newUpperPrice = DefaultUpperPrice
-				}
-
-				newLowerTick, err := math.PriceToTickRoundDown(test.newLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.newUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick)
-				s.Require().NoError(err)
-				_, upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick)
-				s.Require().NoError(err)
-
-				if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
-					test.poolLiqAmount0 = DefaultAmt0
-					test.poolLiqAmount1 = DefaultAmt1
-				}
-
-				// check that liquidity is what we expected
-				expectedLiquidity := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
-				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
-
-				// check that the pool has not been modified after performing calc
-				poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-				s.Require().NoError(err)
-
-				s.Require().Equal(poolBeforeCalc.GetCurrentSqrtPrice(), poolAfterCalc.GetCurrentSqrtPrice())
-				s.Require().Equal(poolBeforeCalc.GetCurrentTick(), poolAfterCalc.GetCurrentTick())
-				s.Require().Equal(poolBeforeCalc.GetLiquidity(), poolAfterCalc.GetLiquidity())
-				s.Require().Equal(poolBeforeCalc.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
 			}
 
 			// perform swap
@@ -1824,86 +1736,37 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 				test.spreadFactor, test.priceLimit)
 			if test.expectErr {
 				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-
-				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-				s.Require().NoError(err)
-
-				// check that tokenIn, tokenOut, tick, and sqrtPrice from SwapOut are all what we expected
-				s.Require().Equal(test.expectedTick, updatedTick)
-				s.Require().Equal(test.expectedTokenIn.String(), tokenIn.String())
-				s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
-				s.Require().Equal(test.expectedSqrtPrice, sqrtPrice)
-				// also ensure the pool's currentTick and currentSqrtPrice was updated due to calling a mutative method
-				s.Require().Equal(test.expectedTick, pool.GetCurrentTick())
-
-				if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
-					test.newLowerPrice = DefaultLowerPrice
-					test.newUpperPrice = DefaultUpperPrice
-				}
-
-				newLowerTick, err := math.PriceToTickRoundDown(test.newLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.newUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick)
-				s.Require().NoError(err)
-				_, upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick)
-				s.Require().NoError(err)
-
-				if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
-					test.poolLiqAmount0 = DefaultAmt0
-					test.poolLiqAmount1 = DefaultAmt1
-				}
-
-				expectedLiquidity := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
-				// check that liquidity is what we expected
-				s.Require().Equal(expectedLiquidity.String(), pool.GetLiquidity().String())
-				// also ensure the pool's currentLiquidity was updated due to calling a mutative method
-				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
-
-				feeAcc, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
-				s.Require().NoError(err)
-
-				feeAccValue := feeAcc.GetValue()
-				actualValue := feeAccValue.AmountOf(test.tokenInDenom)
-
-				if test.spreadFactor.IsZero() {
-					s.Require().Equal(sdk.ZeroDec(), actualValue)
-					return
-				}
-
-				if test.expectedFeeGrowthAccumulatorValue.IsNil() {
-					s.Require().Equal(0, feeAccValue.Len())
-					return
-				}
-
-				s.Require().Equal(1, feeAccValue.Len(), fmt.Sprintf("fee accumulator should only have one denom, was (%s)", feeAccValue))
-				s.Require().Equal(0,
-					additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
-						osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
-						osmomath.BigDecFromSDKDec(actualValue),
-					),
-					fmt.Sprintf("expected fee growth accumulator value: %s, got: %s", test.expectedFeeGrowthAccumulatorValue, actualValue),
-				)
+				return
 			}
+			s.Require().NoError(err)
+
+			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+
+			// check that tokenIn, tokenOut, tick, and sqrtPrice from SwapOut are all what we expected
+			s.testSwapResult(test, pool, tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, err)
+
+			// Check variables on pool were set correctly
+			// - ensure the pool's currentTick and currentSqrtPrice was updated due to calling a mutative method
+			s.Require().Equal(test.expectedTick, pool.GetCurrentTick())
+			// check that liquidity is what we expected
+			expectedLiquidity := s.getExpectedLiquidity(test, pool)
+			s.Require().Equal(expectedLiquidity.String(), pool.GetLiquidity().String())
+
+			if test.spreadFactor.IsZero() {
+				s.assertZeroFees(pool.GetId())
+				return
+			}
+			s.assertFeeAccum(test, pool.GetId())
 		})
 	}
 }
 
 func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
-	tests := make(map[string]SwapTest)
-	for name, test := range swapInGivenOutTestCases {
-		tests[name] = test
-	}
-
+	tests := makeSwapTests(swapInGivenOutTestCases)
 	for name, test := range tests {
 		s.Run(name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			s.setupAndFundSwapTest()
 
 			// Create default CL pool
 			pool := s.PrepareConcentratedPool()
@@ -1915,17 +1778,7 @@ func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
 
 			// add default position
 			s.SetupDefaultPosition(pool.GetId())
-
-			// add second position depending on the test
-			if !test.secondPositionLowerPrice.IsNil() {
-				newLowerTick, err := math.PriceToTickRoundDown(test.secondPositionLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
-				s.Require().NoError(err)
-			}
+			s.setupSecondPosition(test, pool)
 
 			// add 2*DefaultFeeAccumCoins to fee accumulator, now fee accumulator has 3*DefaultFeeAccumCoins as its value
 			feeAccum, err = s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
@@ -1978,6 +1831,9 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 		expectedTokenOut  sdk.Int
 	}
 
+	// liquidity and sqrtPriceCurrent for all tests are:
+	// liquidity: 		 1517882343.751510418088349649
+	// sqrtPriceCurrent: 70.710678118654752440 which is sqrt(5000)
 	tests := []struct {
 		name        string
 		param       param
@@ -1986,9 +1842,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 		{
 			name: "Proper swap usdc > eth",
 			// params
-			// liquidity: 		 1517882343.751510418088349649
 			// sqrtPriceNext:    70.738348247484497717 which is 5003.91391278239310954 https://www.wolframalpha.com/input?i=70.710678118654752440+%2B+42000000+%2F+1517882343.751510418088349649
-			// sqrtPriceCurrent: 70.710678118654752440 which is 5000
 			// expectedTokenIn:  41999999.999 rounded up https://www.wolframalpha.com/input?i=1517882343.751510418088349649+*+%2870.738348247484497717+-+70.710678118654752440%29
 			// expectedTokenOut: 8396.7142421 rounded down https://www.wolframalpha.com/input?i=%281517882343.751510418088349649+*+%2870.738348247484497717+-+70.710678118654752440+%29%29+%2F+%2870.710678118654752440+*+70.738348247484497717%29
 			param: param{
@@ -2001,9 +1855,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 		{
 			name: "Proper swap eth > usdc",
 			// params
-			// liquidity: 		 1517882343.751510418088349649
 			// sqrtPriceNext:    70.66666391085714433 which is 4993.77738829003954884402 https://www.wolframalpha.com/input?i=%28%281517882343.751510418088349649%29%29+%2F+%28%28%281517882343.751510418088349649%29+%2F+%2870.710678118654752440%29%29+%2B+%2813370%29%29
-			// sqrtPriceCurrent: 70.710678118654752440 which is 5000
 			// expectedTokenIn:  13370.0000 rounded up https://www.wolframalpha.com/input?i=%281517882343.751510418088349649+*+%2870.710678118654752440+-+70.66666391085714433+%29%29+%2F+%2870.66666391085714433+*+70.710678118654752440%29
 			// expectedTokenOut: 66808388.890 rounded down https://www.wolframalpha.com/input?i=1517882343.751510418088349649+*+%2870.710678118654752440+-+70.66666391085714433%29
 			param: param{
@@ -2075,16 +1927,11 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 		s.Run(test.name, func() {
 			// Init suite for each test.
 			s.SetupTest()
-
-			// Create a default CL pool
-			pool := s.PrepareConcentratedPool()
+			pool := s.preparePoolAndDefaultPosition()
 
 			// Check the test case to see if we are swapping asset0 for asset1 or vice versa
 			asset0 := pool.GetToken0()
 			zeroForOne := test.param.tokenIn.Denom == asset0
-
-			// Create a default position to the pool created earlier
-			s.SetupDefaultPosition(1)
 
 			// Set mock listener to make sure that is is called when desired.
 			s.setListenerMockOnConcentratedLiquidityKeeper()
@@ -2112,40 +1959,40 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, test.expectedErr)
-			} else {
-				s.Require().NoError(err)
-				s.Require().Equal(test.param.expectedTokenOut.String(), tokenOutAmount.String())
-
-				gasConsumedForSwap := s.Ctx.GasMeter().GasConsumed() - prevGasConsumed
-
-				// Check that we consume enough gas that a CL pool swap warrants
-				// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
-				s.Require().Greater(gasConsumedForSwap, uint64(types.ConcentratedGasFeeForSwap))
-
-				// Assert events
-				s.AssertEventEmitted(s.Ctx, types.TypeEvtTokenSwapped, 1)
-
-				// Retrieve pool again post swap
-				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-				s.Require().NoError(err)
-
-				spotPriceAfter := pool.GetCurrentSqrtPrice().Power(2)
-
-				// Ratio of the token out should be between the before spot price and after spot price.
-				tradeAvgPrice := tokenOutAmount.ToDec().Quo(test.param.tokenIn.Amount.ToDec())
-
-				if zeroForOne {
-					s.Require().True(tradeAvgPrice.LT(spotPriceBefore))
-					s.Require().True(tradeAvgPrice.GT(spotPriceAfter))
-				} else {
-					tradeAvgPrice = sdk.OneDec().Quo(tradeAvgPrice)
-					s.Require().True(tradeAvgPrice.GT(spotPriceBefore))
-					s.Require().True(tradeAvgPrice.LT(spotPriceAfter))
-				}
-
-				// Validate that listeners were called the desired number of times
-				s.validateListenerCallCount(0, 0, 0, 1)
+				return
 			}
+			s.Require().NoError(err)
+			s.Require().Equal(test.param.expectedTokenOut.String(), tokenOutAmount.String())
+
+			gasConsumedForSwap := s.Ctx.GasMeter().GasConsumed() - prevGasConsumed
+
+			// Check that we consume enough gas that a CL pool swap warrants
+			// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
+			s.Require().Greater(gasConsumedForSwap, uint64(types.ConcentratedGasFeeForSwap))
+
+			// Assert events
+			s.AssertEventEmitted(s.Ctx, types.TypeEvtTokenSwapped, 1)
+
+			// Retrieve pool again post swap
+			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+
+			spotPriceAfter := pool.GetCurrentSqrtPrice().Power(2)
+
+			// Ratio of the token out should be between the before spot price and after spot price.
+			tradeAvgPrice := tokenOutAmount.ToDec().Quo(test.param.tokenIn.Amount.ToDec())
+
+			if zeroForOne {
+				s.Require().True(tradeAvgPrice.LT(spotPriceBefore))
+				s.Require().True(tradeAvgPrice.GT(spotPriceAfter))
+			} else {
+				tradeAvgPrice = sdk.OneDec().Quo(tradeAvgPrice)
+				s.Require().True(tradeAvgPrice.GT(spotPriceBefore))
+				s.Require().True(tradeAvgPrice.LT(spotPriceAfter))
+			}
+
+			// Validate that listeners were called the desired number of times
+			s.validateListenerCallCount(0, 0, 0, 1)
 		})
 	}
 }
@@ -2255,16 +2102,11 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 		s.Run(test.name, func() {
 			// Init suite for each test.
 			s.SetupTest()
-
-			// Create a default CL pool
-			pool := s.PrepareConcentratedPool()
+			pool := s.preparePoolAndDefaultPosition()
 
 			// Check the test case to see if we are swapping asset0 for asset1 or vice versa
 			asset1 := pool.GetToken1()
 			zeroForOne := test.param.tokenOut.Denom == asset1
-
-			// Then create a default position to the pool created earlier
-			s.SetupDefaultPosition(1)
 
 			// Set mock listener to make sure that is is called when desired.
 			s.setListenerMockOnConcentratedLiquidityKeeper()
@@ -2289,41 +2131,41 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, test.expectedErr)
-			} else {
-				s.Require().NoError(err)
-				s.Require().Equal(test.param.expectedTokenIn.String(), tokenIn.String())
-
-				gasConsumedForSwap := s.Ctx.GasMeter().GasConsumed() - prevGasConsumed
-				// Check that we consume enough gas that a CL pool swap warrants
-				// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
-				s.Require().Greater(gasConsumedForSwap, uint64(types.ConcentratedGasFeeForSwap))
-
-				// Assert events
-				s.AssertEventEmitted(s.Ctx, types.TypeEvtTokenSwapped, 1)
-
-				// Retrieve pool again post swap
-				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-				s.Require().NoError(err)
-
-				spotPriceAfter := pool.GetCurrentSqrtPrice().Power(2)
-
-				// Ratio of the token out should be between the before spot price and after spot price.
-				tradeAvgPrice := tokenIn.ToDec().Quo(test.param.tokenOut.Amount.ToDec())
-
-				if zeroForOne {
-					// token in is token zero, token out is token one
-					tradeAvgPrice = sdk.OneDec().Quo(tradeAvgPrice)
-					s.Require().True(tradeAvgPrice.LT(spotPriceBefore), fmt.Sprintf("tradeAvgPrice: %s, spotPriceBefore: %s", tradeAvgPrice, spotPriceBefore))
-					s.Require().True(tradeAvgPrice.GT(spotPriceAfter), fmt.Sprintf("tradeAvgPrice: %s, spotPriceAfter: %s", tradeAvgPrice, spotPriceAfter))
-				} else {
-					// token in is token one, token out is token zero
-					s.Require().True(tradeAvgPrice.GT(spotPriceBefore), fmt.Sprintf("tradeAvgPrice: %s, spotPriceBefore: %s", tradeAvgPrice, spotPriceBefore))
-					s.Require().True(tradeAvgPrice.LT(spotPriceAfter), fmt.Sprintf("tradeAvgPrice: %s, spotPriceAfter: %s", tradeAvgPrice, spotPriceAfter))
-				}
-
-				// Validate that listeners were called the desired number of times
-				s.validateListenerCallCount(0, 0, 0, 1)
+				return
 			}
+			s.Require().NoError(err)
+			s.Require().Equal(test.param.expectedTokenIn.String(), tokenIn.String())
+
+			gasConsumedForSwap := s.Ctx.GasMeter().GasConsumed() - prevGasConsumed
+			// Check that we consume enough gas that a CL pool swap warrants
+			// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
+			s.Require().Greater(gasConsumedForSwap, uint64(types.ConcentratedGasFeeForSwap))
+
+			// Assert events
+			s.AssertEventEmitted(s.Ctx, types.TypeEvtTokenSwapped, 1)
+
+			// Retrieve pool again post swap
+			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+
+			spotPriceAfter := pool.GetCurrentSqrtPrice().Power(2)
+
+			// Ratio of the token out should be between the before spot price and after spot price.
+			tradeAvgPrice := tokenIn.ToDec().Quo(test.param.tokenOut.Amount.ToDec())
+
+			if zeroForOne {
+				// token in is token zero, token out is token one
+				tradeAvgPrice = sdk.OneDec().Quo(tradeAvgPrice)
+				s.Require().True(tradeAvgPrice.LT(spotPriceBefore), fmt.Sprintf("tradeAvgPrice: %s, spotPriceBefore: %s", tradeAvgPrice, spotPriceBefore))
+				s.Require().True(tradeAvgPrice.GT(spotPriceAfter), fmt.Sprintf("tradeAvgPrice: %s, spotPriceAfter: %s", tradeAvgPrice, spotPriceAfter))
+			} else {
+				// token in is token one, token out is token zero
+				s.Require().True(tradeAvgPrice.GT(spotPriceBefore), fmt.Sprintf("tradeAvgPrice: %s, spotPriceBefore: %s", tradeAvgPrice, spotPriceBefore))
+				s.Require().True(tradeAvgPrice.LT(spotPriceAfter), fmt.Sprintf("tradeAvgPrice: %s, spotPriceAfter: %s", tradeAvgPrice, spotPriceAfter))
+			}
+
+			// Validate that listeners were called the desired number of times
+			s.validateListenerCallCount(0, 0, 0, 1)
 		})
 	}
 }
@@ -2341,58 +2183,20 @@ func (s *KeeperTestSuite) TestComputeOutAmtGivenIn() {
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-
-			// Create default CL pool
-			pool := s.PrepareConcentratedPool()
-
-			// add default position
-			s.SetupDefaultPosition(pool.GetId())
-
-			// add second position depending on the test
-			if !test.secondPositionLowerPrice.IsNil() {
-				newLowerTick, err := math.PriceToTickRoundDown(test.secondPositionLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
-				s.Require().NoError(err)
-			}
-
-			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
+			s.setupAndFundSwapTest()
+			poolBeforeCalc := s.preparePoolAndDefaultPositions(test)
 
 			// perform calc
-			_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.ComputeOutAmtGivenIn(
+			_, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.ComputeOutAmtGivenIn(
 				s.Ctx,
-				pool.GetId(),
+				poolBeforeCalc.GetId(),
 				test.tokenIn, test.tokenOutDenom,
 				test.spreadFactor, test.priceLimit)
+			s.Require().NoError(err)
 
 			// check that the pool has not been modified after performing calc
-			poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
-
-			s.Require().Equal(poolBeforeCalc.GetCurrentSqrtPrice(), poolAfterCalc.GetCurrentSqrtPrice())
-			s.Require().Equal(poolBeforeCalc.GetCurrentTick(), poolAfterCalc.GetCurrentTick())
-			s.Require().Equal(poolBeforeCalc.GetLiquidity(), poolAfterCalc.GetLiquidity())
-			s.Require().Equal(poolBeforeCalc.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
-
-			// check that fee accum has been correctly updated.
-			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
-			s.Require().NoError(err)
-
-			feeAccumValue := feeAccum.GetValue()
-			s.Require().Equal(1, feeAccumValue.Len())
-			s.Require().Equal(0,
-				additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
-					osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
-					osmomath.BigDecFromSDKDec(feeAccum.GetValue().AmountOf(test.tokenIn.Denom)),
-				),
-			)
+			s.assertPoolNotModified(poolBeforeCalc)
+			s.assertFeeAccum(test, poolBeforeCalc.GetId())
 		})
 	}
 }
@@ -2400,41 +2204,15 @@ func (s *KeeperTestSuite) TestComputeOutAmtGivenIn() {
 // TestCalcOutAmtGivenIn_NonMutative tests that CalcOutAmtGivenIn is non-mutative.
 func (s *KeeperTestSuite) TestCalcOutAmtGivenIn_NonMutative() {
 	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
-	tests := make(map[string]SwapTest, len(swapOutGivenInFeeCases))
-
-	for name, test := range swapOutGivenInFeeCases {
-		tests[name] = test
-	}
-
+	tests := makeSwapTests(swapOutGivenInFeeCases)
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-
-			// Create default CL pool
-			pool := s.PrepareConcentratedPool()
-
-			// add default position
-			s.SetupDefaultPosition(pool.GetId())
-
-			// add second position depending on the test
-			if !test.secondPositionLowerPrice.IsNil() {
-				newLowerTick, err := math.PriceToTickRoundDown(test.secondPositionLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
-				s.Require().NoError(err)
-			}
-
-			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
+			s.setupAndFundSwapTest()
+			poolBeforeCalc := s.preparePoolAndDefaultPositions(test)
 
 			// perform calc
-			_, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(
+			_, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(
 				s.Ctx,
 				poolBeforeCalc,
 				test.tokenIn, test.tokenOutDenom,
@@ -2442,67 +2220,37 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn_NonMutative() {
 			s.Require().NoError(err)
 
 			// check that the pool has not been modified after performing calc
-			poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
-
-			s.Require().Equal(poolBeforeCalc.GetCurrentSqrtPrice(), poolAfterCalc.GetCurrentSqrtPrice())
-			s.Require().Equal(poolBeforeCalc.GetCurrentTick(), poolAfterCalc.GetCurrentTick())
-			s.Require().Equal(poolBeforeCalc.GetLiquidity(), poolAfterCalc.GetLiquidity())
-			s.Require().Equal(poolBeforeCalc.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
-
-			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
-			s.Require().NoError(err)
-
-			feeAccumValue := feeAccum.GetValue()
-			s.Require().Equal(0, feeAccumValue.Len())
-			s.Require().Equal(1,
-				additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
-					osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
-					osmomath.BigDecFromSDKDec(feeAccum.GetValue().AmountOf(test.tokenIn.Denom)),
-				),
-			)
+			s.assertPoolNotModified(poolBeforeCalc)
+			s.assertZeroFees(poolBeforeCalc.GetId())
 		})
+	}
+}
+
+func (s *KeeperTestSuite) setupSecondPosition(test SwapTest, pool types.ConcentratedPoolExtension) {
+	if !test.secondPositionLowerPrice.IsNil() {
+		newLowerTick, err := math.PriceToTickRoundDown(test.secondPositionLowerPrice, pool.GetTickSpacing())
+		s.Require().NoError(err)
+		newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
+		s.Require().NoError(err)
+
+		_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
+		s.Require().NoError(err)
 	}
 }
 
 // TestCalcInAmtGivenOut_NonMutative tests that CalcInAmtGivenOut is non-mutative.
 func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
 	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
-	tests := make(map[string]SwapTest, len(swapOutGivenInFeeCases))
-
-	for name, test := range swapOutGivenInFeeCases {
-		tests[name] = test
-	}
+	tests := makeSwapTests(swapOutGivenInFeeCases)
 
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-
-			// Create default CL pool
-			pool := s.PrepareConcentratedPool()
-
-			// add default position
-			s.SetupDefaultPosition(pool.GetId())
-
-			// add second position depending on the test
-			if !test.secondPositionLowerPrice.IsNil() {
-				newLowerTick, err := math.PriceToTickRoundDown(test.secondPositionLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
-				s.Require().NoError(err)
-			}
-
-			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
+			s.setupAndFundSwapTest()
+			poolBeforeCalc := s.preparePoolAndDefaultPositions(test)
 
 			// perform calc
-			_, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(
+			_, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(
 				s.Ctx,
 				poolBeforeCalc,
 				test.tokenIn, test.tokenOutDenom,
@@ -2510,25 +2258,8 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
 			s.Require().NoError(err)
 
 			// check that the pool has not been modified after performing calc
-			poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
-
-			s.Require().Equal(poolBeforeCalc.GetCurrentSqrtPrice(), poolAfterCalc.GetCurrentSqrtPrice())
-			s.Require().Equal(poolBeforeCalc.GetCurrentTick(), poolAfterCalc.GetCurrentTick())
-			s.Require().Equal(poolBeforeCalc.GetLiquidity(), poolAfterCalc.GetLiquidity())
-			s.Require().Equal(poolBeforeCalc.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
-
-			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
-			s.Require().NoError(err)
-
-			feeAccumValue := feeAccum.GetValue()
-			s.Require().Equal(0, feeAccumValue.Len())
-			s.Require().Equal(1,
-				additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
-					osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
-					osmomath.BigDecFromSDKDec(feeAccum.GetValue().AmountOf(test.tokenIn.Denom)),
-				),
-			)
+			s.assertPoolNotModified(poolBeforeCalc)
+			s.assertZeroFees(poolBeforeCalc.GetId())
 		})
 	}
 }
@@ -2536,67 +2267,24 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
 // TestComputeInAmtGivenOut tests that ComputeInAmtGivenOut successfully performs state changes as expected.
 func (s *KeeperTestSuite) TestComputeInAmtGivenOut() {
 	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
-	tests := make(map[string]SwapTest, len(swapInGivenOutFeeTestCases))
-
-	for name, test := range swapInGivenOutFeeTestCases {
-		tests[name] = test
-	}
+	tests := makeSwapTests(swapInGivenOutFeeTestCases)
 
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(10000000000000)), sdk.NewCoin(USDC, sdk.NewInt(1000000000000))))
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(10000000000000)), sdk.NewCoin(USDC, sdk.NewInt(1000000000000))))
-
-			// Create default CL pool
-			pool := s.PrepareConcentratedPool()
-
-			// add default position
-			s.SetupDefaultPosition(pool.GetId())
-
-			// add second position depending on the test
-			if !test.secondPositionLowerPrice.IsNil() {
-				newLowerTick, err := math.PriceToTickRoundDown(test.secondPositionLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
-				s.Require().NoError(err)
-			}
-
-			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
+			s.setupAndFundSwapTest()
+			poolBeforeCalc := s.preparePoolAndDefaultPositions(test)
 
 			// perform calc
-			_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
+			_, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
 				s.Ctx,
 				test.tokenOut, test.tokenInDenom,
-				test.spreadFactor, test.priceLimit, pool.GetId())
+				test.spreadFactor, test.priceLimit, poolBeforeCalc.GetId())
 			s.Require().NoError(err)
 
 			// check that the pool has not been modified after performing calc
-			poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
-
-			s.Require().Equal(poolBeforeCalc.GetCurrentSqrtPrice(), poolAfterCalc.GetCurrentSqrtPrice())
-			s.Require().Equal(poolBeforeCalc.GetCurrentTick(), poolAfterCalc.GetCurrentTick())
-			s.Require().Equal(poolBeforeCalc.GetLiquidity(), poolAfterCalc.GetLiquidity())
-			s.Require().Equal(poolBeforeCalc.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
-
-			// check that fee accum has been correctly updated.
-			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
-			s.Require().NoError(err)
-
-			feeAccumValue := feeAccum.GetValue()
-			s.Require().Equal(1, feeAccumValue.Len())
-			s.Require().Equal(0,
-				additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
-					osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
-					osmomath.BigDecFromSDKDec(feeAccum.GetValue().AmountOf(test.tokenInDenom)),
-				),
-			)
+			s.assertPoolNotModified(poolBeforeCalc)
+			s.assertFeeAccum(test, poolBeforeCalc.GetId())
 		})
 	}
 }
@@ -2606,42 +2294,20 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 
 	for name, test := range tests {
 		s.Run(name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-
-			// Create default CL pool
-			pool := s.PrepareConcentratedPool()
-
-			// add default position
-			s.SetupDefaultPosition(pool.GetId())
-
-			// add second position depending on the test
-			if !test.secondPositionLowerPrice.IsNil() {
-				newLowerTick, err := math.PriceToTickRoundDown(test.secondPositionLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
-				s.Require().NoError(err)
-			}
-
-			// mark pool state and user balance before swap
-			poolBefore, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
+			s.setupAndFundSwapTest()
+			poolBefore := s.preparePoolAndDefaultPositions(test)
 			userBalanceBeforeSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
 			poolBalanceBeforeSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, poolBefore.GetAddress())
 
 			// system under test
 			firstTokenIn, firstTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
-				s.Ctx, s.TestAccs[0], pool,
+				s.Ctx, s.TestAccs[0], poolBefore,
 				test.tokenIn, test.tokenOutDenom,
 				DefaultZeroSpreadFactor, test.priceLimit)
 			s.Require().NoError(err)
 
 			secondTokenIn, secondTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
-				s.Ctx, s.TestAccs[0], pool,
+				s.Ctx, s.TestAccs[0], poolBefore,
 				firstTokenOut, firstTokenIn.Denom,
 				DefaultZeroSpreadFactor, sdk.ZeroDec(),
 			)
@@ -2704,42 +2370,20 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapInAmtGivenOut() {
 
 	for name, test := range tests {
 		s.Run(name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
-
-			// Create default CL pool
-			pool := s.PrepareConcentratedPool()
-
-			// add default position
-			s.SetupDefaultPosition(pool.GetId())
-
-			// add second position depending on the test
-			if !test.secondPositionLowerPrice.IsNil() {
-				newLowerTick, err := math.PriceToTickRoundDown(test.secondPositionLowerPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTickRoundDown(test.secondPositionUpperPrice, pool.GetTickSpacing())
-				s.Require().NoError(err)
-
-				_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
-				s.Require().NoError(err)
-			}
-
-			// mark pool state and user balance before swap
-			poolBefore, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
+			s.setupAndFundSwapTest()
+			poolBefore := s.preparePoolAndDefaultPositions(test)
 			userBalanceBeforeSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
 			poolBalanceBeforeSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, poolBefore.GetAddress())
 
 			// system under test
 			firstTokenIn, firstTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
-				s.Ctx, s.TestAccs[0], pool,
+				s.Ctx, s.TestAccs[0], poolBefore,
 				test.tokenOut, test.tokenInDenom,
 				DefaultZeroSpreadFactor, test.priceLimit)
 			s.Require().NoError(err)
 
 			secondTokenIn, secondTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
-				s.Ctx, s.TestAccs[0], pool,
+				s.Ctx, s.TestAccs[0], poolBefore,
 				firstTokenIn, firstTokenOut.Denom,
 				DefaultZeroSpreadFactor, sdk.ZeroDec(),
 			)
@@ -2818,12 +2462,7 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 		s.Run(name, func() {
 			s.SetupTest()
 			concentratedLiquidityKeeper := s.App.ConcentratedLiquidityKeeper
-
-			// Create pool with initial balance
-			clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-			clParams.AuthorizedSpreadFactors = append(clParams.AuthorizedSpreadFactors, tc.spreadFactor)
-			s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
-			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "usdc", DefaultTickSpacing, tc.spreadFactor)
+			pool := s.preparePoolWithCustSpread(tc.spreadFactor)
 
 			s.FundAcc(pool.GetAddress(), tc.poolInitialBalance)
 			// Create account with empty balance and fund with initial balance
