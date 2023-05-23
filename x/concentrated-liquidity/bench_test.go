@@ -74,6 +74,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 			))
 		}
 
+		// Create a pool
 		poolId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(
 			s.TestAccs[0], denom0, denom1, tickSpacing, sdk.MustNewDecFromStr("0.001"),
 		))
@@ -81,6 +82,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 
 		clKeeper := s.App.ConcentratedLiquidityKeeper
 
+		// Create first position to set a price of 1 and tick of zero.
 		tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(100))
 		tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(100))
 		tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
@@ -90,8 +92,10 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 		pool, err := clKeeper.GetPoolById(s.Ctx, poolId)
 		noError(err)
 
+		// Zero by default, can configure by setting a specific position.
 		currentTick := pool.GetCurrentTick()
 
+		// Setup numberOfPositions positions at random ranges
 		setupPositions := func() {
 			for i := 0; i < numberOfPositions; i++ {
 				var (
@@ -100,14 +104,22 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 				)
 
 				if denomIn == denom0 {
+					// Decreasing price so want to be below current tick
+					// minTick <= lowerTick <= currentTick
 					lowerTick = rand.Int63n(currentTick-types.MinTick+1) + types.MinTick
+					// lowerTick <= upperTick <= currentTick
 					upperTick = currentTick - rand.Int63n(int64(math.Abs(float64(currentTick-lowerTick))))
 				} else {
+					// Increasing price so want to be above current tick
+					// currentTick <= lowerTick <= maxTick
 					lowerTick = rand.Int63n(types.MaxTick-currentTick+1) + currentTick
+					// lowerTick <= upperTick <= maxTick
 					upperTick = types.MaxTick - rand.Int63n(int64(math.Abs(float64(types.MaxTick-lowerTick))))
 				}
 
+				// Normalize lowerTick to be a multiple of tickSpacing
 				lowerTick = lowerTick + (tickSpacing - lowerTick%tickSpacing)
+				// Normalize upperTick to be a multiple of tickSpacing
 				upperTick = upperTick - upperTick%tickSpacing
 
 				priceLowerTick, priceUpperTick, _, _, err := clmath.TicksToSqrtPrice(lowerTick, upperTick)
@@ -128,6 +140,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 			}
 		}
 
+		// Setup numberOfPositions full range positions for deeper liquidity.
 		setupFullRangePositions := func() {
 			for i := 0; i < numberOfPositions; i++ {
 				lowerTick := types.MinTick
@@ -143,7 +156,10 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 			}
 		}
 
+		// Setup numberOfPositions * 2 positions at random ranges around the current tick for deeper
+		// liquidity.
 		setupConcentratedPositions := func() {
+			// Within 10 ticks of the current
 			if tickSpacing <= 10 {
 				for i := 0; i < numberOfPositions; i++ {
 					lowerTick := currentTick - 10
@@ -158,6 +174,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 				}
 			}
 
+			// Within 100 ticks of the current
 			for i := 0; i < numberOfPositions; i++ {
 				lowerTick := currentTick - 100
 				upperTick := currentTick + 100
