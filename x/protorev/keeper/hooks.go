@@ -134,7 +134,7 @@ func (k Keeper) getCoinsFromPool(ctx sdk.Context, pool poolmanagertypes.PoolI, p
 	coins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
 	if err != nil {
 		ctx.Logger().Error("Protorev error getting pool liquidity in AfterCFMMPoolCreated hook", err)
-		return nil
+		return sdk.Coins{}
 	}
 
 	if coins == nil {
@@ -142,9 +142,12 @@ func (k Keeper) getCoinsFromPool(ctx sdk.Context, pool poolmanagertypes.PoolI, p
 			clPool, ok := pool.(cltypes.ConcentratedPoolExtension)
 			if !ok {
 				ctx.Logger().Error("Protorev error casting pool to concentrated pool in AfterCFMMPoolCreated hook")
-				return nil
+				return sdk.Coins{}
 			}
 			coins = sdk.Coins{sdk.NewCoin(clPool.GetToken0(), sdk.NewInt(0)), sdk.NewCoin(clPool.GetToken1(), sdk.NewInt(0))}
+		} else {
+			ctx.Logger().Error("Protorev error getting pool liquidity in AfterCFMMPoolCreated hook")
+			return sdk.Coins{}
 		}
 	}
 
