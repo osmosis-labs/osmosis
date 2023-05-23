@@ -144,13 +144,11 @@ func (k Keeper) afterPoolCreated(ctx sdk.Context, poolId uint64) {
 		tokenA := coins[0]
 		tokenB := coins[1]
 
-		liquidity := tokenA.Amount.Mul(tokenB.Amount)
-
 		if baseDenomMap[tokenA.Denom] {
-			k.compareAndStorePool(ctx, poolId, liquidity, tokenA.Denom, tokenB.Denom)
+			k.compareAndStorePool(ctx, poolId, tokenA, tokenB)
 		}
 		if baseDenomMap[tokenB.Denom] {
-			k.compareAndStorePool(ctx, poolId, liquidity, tokenB.Denom, tokenA.Denom)
+			k.compareAndStorePool(ctx, poolId, tokenB, tokenA)
 		}
 	}
 }
@@ -169,13 +167,21 @@ func (k Keeper) storeSwap(ctx sdk.Context, poolId uint64, tokenIn, tokenOut stri
 }
 
 // compareAndStorePool compares the liquidity of the new pool with the liquidity of the stored pool, and stores the new pool if it has more liquidity.
-func (k Keeper) compareAndStorePool(ctx sdk.Context, poolId uint64, liquidity sdk.Int, baseDenom, otherDenom string) {
-	storedPoolId, err := k.GetPoolForDenomPair(ctx, baseDenom, otherDenom)
+func (k Keeper) compareAndStorePool(ctx sdk.Context, poolId uint64, baseToken, otherToken sdk.Coin) {
+	storedPoolId, err := k.GetPoolForDenomPair(ctx, baseToken.Denom, otherToken.Denom)
 	if err != nil {
 		// Error means no pool exists for this pair, so we set it
-		k.SetPoolForDenomPair(ctx, baseDenom, otherDenom, poolId)
+		k.SetPoolForDenomPair(ctx, baseToken.Denom, otherToken.Denom, poolId)
 		return
 	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			ctx.Logger().Error("Protorev error recovering from panic in AfterCFMMPoolCreated hook, likely an overflow error", r)
+		}
+	}()
+
+	liquidity := baseToken.Amount.Mul(otherToken.Amount)
 
 	storedPool, err := k.gammKeeper.GetPoolAndPoke(ctx, storedPoolId)
 	if err != nil {
@@ -188,7 +194,7 @@ func (k Keeper) compareAndStorePool(ctx sdk.Context, poolId uint64, liquidity sd
 
 	// If the new pool has more liquidity, we set it
 	if liquidity.GT(storedPoolLiquidity) {
-		k.SetPoolForDenomPair(ctx, baseDenom, otherDenom, poolId)
+		k.SetPoolForDenomPair(ctx, baseToken.Denom, otherToken.Denom, poolId)
 	}
 }
 
