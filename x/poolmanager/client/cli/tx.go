@@ -72,11 +72,11 @@ func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteS
 			  {
 				"SwapAmountInRoute": [
 				  {
-					"poolId": "1",
+					"poolId": 1,
 					"TokenOutDenom": "uion"
 				  },
 				  {
-					"poolId": "2",
+					"poolId": 2,
 					"TokenOutDenom": "uosmo"
 				  }
 				],
@@ -85,11 +85,11 @@ func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteS
 			  {
 				"SwapAmountInRoute": [
 				  {
-					"poolId": "3",
+					"poolId": 3,
 					"TokenOutDenom": "bar"
 				  },
 				  {
-					"poolId": "4",
+					"poolId": 4,
 					"TokenOutDenom": "uosmo"
 				  }
 				],
@@ -118,11 +118,11 @@ func NewSplitRouteSwapExactAmountOut() (*osmocli.TxCliDesc, *types.MsgSplitRoute
 				{
 				"SwapAmountOutRoute": [
 					{
-					"poolId": "1",
+					"poolId": 1,
 					"TokenInDenom": "uion"
 					},
 					{
-					"poolId": "2",
+					"poolId": 2,
 					"TokenInDenom": "uosmo"
 					}
 				],
@@ -131,11 +131,11 @@ func NewSplitRouteSwapExactAmountOut() (*osmocli.TxCliDesc, *types.MsgSplitRoute
 				{
 				"SwapAmountOutRoute": [
 					{
-					"poolId": "3",
+					"poolId": 3,
 					"TokenInDenom": "uion"
 					},
 					{
-					"poolId": "4",
+					"poolId": 4,
 					"TokenInDenom": "uosmo"
 					}
 				],
@@ -175,18 +175,7 @@ func NewMsgNewSplitRouteSwapExactAmountOut(fs *flag.FlagSet) ([]types.SwapAmount
 		protoRoute := types.SwapAmountOutSplitRoute{
 			TokenOutAmount: sdk.NewInt(route.TokenOutAmount),
 		}
-		for _, pool := range route.Pools {
-			poolId, err := strconv.ParseUint(pool.PoolID, 10, 64)
-			if err != nil {
-				return nil, err
-			}
-
-			protoPool := types.SwapAmountOutRoute{
-				PoolId:       poolId,
-				TokenInDenom: pool.TokenInDenom,
-			}
-			protoRoute.Pools = append(protoRoute.Pools, protoPool)
-		}
+		protoRoute.Pools = append(protoRoute.Pools, route.Pools...)
 		splitRouteProto = append(splitRouteProto, protoRoute)
 	}
 
@@ -215,18 +204,7 @@ func NewMsgNewSplitRouteSwapExactAmountIn(fs *flag.FlagSet) ([]types.SwapAmountI
 		protoRoute := types.SwapAmountInSplitRoute{
 			TokenInAmount: sdk.NewInt(route.TokenInAmount),
 		}
-		for _, pool := range route.Pools {
-			poolId, err := strconv.ParseUint(pool.PoolID, 10, 64)
-			if err != nil {
-				return nil, err
-			}
-
-			protoPool := types.SwapAmountInRoute{
-				PoolId:        poolId,
-				TokenOutDenom: pool.TokenOutDenom,
-			}
-			protoRoute.Pools = append(protoRoute.Pools, protoPool)
-		}
+		protoRoute.Pools = append(protoRoute.Pools, route.Pools...)
 		splitRouteProto = append(splitRouteProto, protoRoute)
 	}
 

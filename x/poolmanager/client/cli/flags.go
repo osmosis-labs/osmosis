@@ -2,6 +2,8 @@ package cli
 
 import (
 	flag "github.com/spf13/pflag"
+
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 const (
@@ -59,23 +61,13 @@ type RoutesOut struct {
 }
 
 type SwapAmountInSplitRoute struct {
-	Pools         []SwapAmountInRoute `json:"SwapAmountInRoute"`
-	TokenInAmount int64               `json:"TokenInAmount"`
+	Pools         []types.SwapAmountInRoute `json:"SwapAmountInRoute"`
+	TokenInAmount int64                     `json:"TokenInAmount"`
 }
 
 type SwapAmountOutSplitRoute struct {
-	Pools          []SwapAmountOutRoute `json:"SwapAmountOutRoute"`
-	TokenOutAmount int64                `json:"TokenOutAmount"`
-}
-
-type SwapAmountOutRoute struct {
-	PoolID       string `json:"poolId"`
-	TokenInDenom string `json:"TokenInDenom"`
-}
-
-type SwapAmountInRoute struct {
-	PoolID        string `json:"poolId"`
-	TokenOutDenom string `json:"TokenOutDenom"`
+	Pools          []types.SwapAmountOutRoute `json:"SwapAmountOutRoute"`
+	TokenOutAmount int64                      `json:"TokenOutAmount"`
 }
 
 func FlagSetMultihopSwapRoutes() *flag.FlagSet {
