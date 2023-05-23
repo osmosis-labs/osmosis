@@ -31,11 +31,12 @@ const (
 
 var (
 	two                   = sdk.NewDec(2)
-	three                 = sdk.NewDec(2)
+	three                 = sdk.NewDec(3)
 	four                  = sdk.NewDec(4)
 	five                  = sdk.NewDec(5)
+	sqrt5000              = sdk.MustNewDecFromStr("70.710678118654752440") // 5000
 	defaultSqrtPriceLower = sdk.MustNewDecFromStr("70.688664163408836321") // approx 4996.89
-	defaultSqrtPriceUpper = sdk.MustNewDecFromStr("70.710678118654752440") // 5000
+	defaultSqrtPriceUpper = sqrt5000
 	defaultAmountOne      = sdk.MustNewDecFromStr("66829187.967824033199646915")
 	defaultAmountZero     = sdk.MustNewDecFromStr("13369.999999999998920002")
 	defaultLiquidity      = sdk.MustNewDecFromStr("3035764687.503020836176699298")
@@ -84,7 +85,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 		expectedAmountOut               sdk.Dec
 	}{
 		"1: one_for_zero__not_equal_target__no_fee": {
-			sqrtPriceCurrent: sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			sqrtPriceCurrent: sqrt5000,                                       // 5000
 			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.724818840347693039"), // 5002
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
 			amountIn:         sdk.NewDec(42000000),
@@ -101,7 +102,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			expectedAmountOut: sdk.NewDec(8398),
 		},
 		"2: zero_for_one__not_equal_target__no_fee": {
-			sqrtPriceCurrent: sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			sqrtPriceCurrent: sqrt5000,                                       // 5000
 			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.682388188289167342"), // 4996
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
 			amountIn:         sdk.NewDec(13370),
@@ -119,7 +120,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			expectedAmountOut: sdk.NewDec(66829187),
 		},
 		"3: one_for_zero__equal_target__no_fee": {
-			sqrtPriceCurrent: sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			sqrtPriceCurrent: sqrt5000,                                       // 5000
 			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.724513183069625078"), // approx 5001.96
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
 			amountIn:         sdk.NewDec(42000000),
@@ -136,7 +137,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			expectedAmountOut: sdk.NewDec(8398),
 		},
 		"4: zero_for_one__equal_target__no_fee": {
-			sqrtPriceCurrent: sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			sqrtPriceCurrent: sqrt5000,                                       // 5000
 			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.688664163408836320"), // approx 4996.89
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
 			amountIn:         sdk.NewDec(13370),
@@ -198,7 +199,6 @@ func (suite *StrategyTestSuite) TestGetPriceLimit() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		suite.Run(name, func() {
 			priceLimit := swapstrategy.GetPriceLimit(tc.zeroForOne)
 			suite.Require().Equal(tc.expected, priceLimit)

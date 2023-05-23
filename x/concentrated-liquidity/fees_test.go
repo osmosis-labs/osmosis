@@ -131,6 +131,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionFeeAccumulator() {
 	}
 
 	clKeeper := s.App.ConcentratedLiquidityKeeper
+	secondPosition := withPositionId(withLowerTick(defaultPositionFields, DefaultLowerTick+1), DefaultPositionId+1)
 
 	type initFeeAccumTest struct {
 		name           string
@@ -152,7 +153,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionFeeAccumulator() {
 		},
 		{
 			name:              "second position",
-			positionFields:    withPositionId(withLowerTick(defaultPositionFields, DefaultLowerTick+1), DefaultPositionId+1),
+			positionFields:    secondPosition,
 			expectedLiquidity: defaultPositionFields.liquidity,
 		},
 		{
@@ -167,7 +168,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionFeeAccumulator() {
 		},
 		{
 			name:              "adding to second position",
-			positionFields:    withPositionId(withLowerTick(defaultPositionFields, DefaultLowerTick+1), DefaultPositionId+1),
+			positionFields:    secondPosition,
 			expectedLiquidity: defaultPositionFields.liquidity.MulInt64(2),
 		},
 		{

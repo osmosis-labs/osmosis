@@ -9,13 +9,6 @@ import (
 )
 
 func (suite *StrategyTestSuite) TestGetSqrtTargetPrice_ZeroForOne() {
-	var (
-		two   = sdk.NewDec(2)
-		three = sdk.NewDec(2)
-		four  = sdk.NewDec(4)
-		five  = sdk.NewDec(5)
-	)
-
 	tests := map[string]struct {
 		isZeroForOne      bool
 		sqrtPriceLimit    sdk.Dec
@@ -137,7 +130,6 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		suite.Run(name, func() {
 			suite.SetupTest()
 			strategy := swapstrategy.New(true, types.MaxSqrtPrice, suite.App.GetKey(types.ModuleName), tc.spreadFactor, defaultTickSpacing)

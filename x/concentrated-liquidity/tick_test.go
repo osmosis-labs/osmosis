@@ -1397,7 +1397,6 @@ func (s *KeeperTestSuite) TestGetAllInitializedTicksForPool() {
 
 			// System Under Test
 			ticks, err := s.App.ConcentratedLiquidityKeeper.GetAllInitializedTicksForPool(s.Ctx, defaultPoolId)
-
 			s.Require().NoError(err)
 
 			s.Require().Equal(len(expectedTicks), len(ticks))
