@@ -1173,7 +1173,7 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthRange() {
 	defaultInitialLiquidity := sdk.OneDec()
 	uptimeHelper := getExpectedUptimes()
 
-	type uptimeGrowthOutsideTest struct {
+	type uptimeGrowthTest struct {
 		lowerTick                    int64
 		upperTick                    int64
 		currentTick                  int64
@@ -1181,12 +1181,11 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthRange() {
 		upperTickUptimeGrowthOutside []sdk.DecCoins
 		globalUptimeGrowth           []sdk.DecCoins
 
-		// Only one of these two should be set
 		expectedUptimeGrowthInside  []sdk.DecCoins
 		expectedUptimeGrowthOutside []sdk.DecCoins
 	}
 
-	tests := map[string]uptimeGrowthOutsideTest{
+	tests := map[string]uptimeGrowthTest{
 		// current tick above range
 		"current tick > upper tick, nonzero uptime growth inside": {
 			lowerTick:                    0,
