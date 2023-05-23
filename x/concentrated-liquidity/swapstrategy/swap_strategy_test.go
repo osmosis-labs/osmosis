@@ -30,6 +30,8 @@ const (
 )
 
 var (
+	zero                  = sdk.NewDec(0)
+	one                   = sdk.NewDec(1)
 	two                   = sdk.NewDec(2)
 	three                 = sdk.NewDec(3)
 	four                  = sdk.NewDec(4)
