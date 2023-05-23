@@ -1168,297 +1168,291 @@ func (s *KeeperTestSuite) TestGetInitialUptimeGrowthOppositeDirectionOfLastTrave
 	}
 }
 
-type uptimeGrowthOutsideTest struct {
-	lowerTick                    int64
-	upperTick                    int64
-	currentTick                  int64
-	lowerTickUptimeGrowthOutside []sdk.DecCoins
-	upperTickUptimeGrowthOutside []sdk.DecCoins
-	globalUptimeGrowth           []sdk.DecCoins
-
-	// Only one of these two should be set
-	expectedUptimeGrowthInside  []sdk.DecCoins
-	expectedUptimeGrowthOutside []sdk.DecCoins
-}
-
-var defaultGrowthOutsidePoolId = uint64(1)
-var defaultGrowthOutsideInitialLiquidity = sdk.OneDec()
-var uptimeHelper = getExpectedUptimes()
-
-var uptimeGrowthOutsideTests = map[string]uptimeGrowthOutsideTest{
-	// current tick above range
-	"current tick > upper tick, nonzero uptime growth inside": {
-		lowerTick:                    0,
-		upperTick:                    1,
-		currentTick:                  2,
-		lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		upperTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-		globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
-
-		// Since current tick is above range, we expect upper - lower
-		expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-		// Since current tick is above range, we expect global - (upper - lower)
-		expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-	},
-	"current tick > upper tick, nonzero uptime growth inside (wider range)": {
-		lowerTick:                    12444,
-		upperTick:                    15013,
-		currentTick:                  50320,
-		lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		upperTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-		globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
-
-		// Since current tick is above range, we expect upper - lower
-		expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-		// Since current tick is above range, we expect global - (upper - lower)
-		expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-	},
-	"current tick > upper tick, zero uptime growth inside (nonempty trackers)": {
-		lowerTick:                    0,
-		upperTick:                    1,
-		currentTick:                  2,
-		lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
-
-		// Since current tick is above range, we expect upper - lower
-		expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-		// Since the range is empty, we expect growth outside to be equal to global
-		expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
-	},
-	"current tick > upper tick, zero uptime growth inside (empty trackers)": {
-		lowerTick:                    0,
-		upperTick:                    1,
-		currentTick:                  2,
-		lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-		upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-		globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
-
-		// Since current tick is above range, we expect upper - lower
-		expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-		// Since the range is empty, we expect growth outside to be equal to global
-		expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-	},
-	"current tick > upper tick, zero uptime growth inside with extraneous uptime growth": {
-		lowerTick:                    0,
-		upperTick:                    1,
-		currentTick:                  2,
-		lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
-
-		// Since current tick is above range, we expect upper - lower
-		expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-		// Since the range is empty, we expect growth outside to be equal to global
-		expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-	},
-
-	// current tick within range
-
-	"upper tick > current tick > lower tick, nonzero uptime growth inside": {
-		lowerTick:                    0,
-		upperTick:                    2,
-		currentTick:                  1,
-		lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
-
-		// Since current tick is within range, we expect global - upper - lower
-		expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-		// Since current tick is within range, we expect global - (global - upper - lower)
-		expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-	},
-	"upper tick > current tick > lower tick, nonzero uptime growth inside (wider range)": {
-		lowerTick:                    -19753,
-		upperTick:                    8921,
-		currentTick:                  -97,
-		lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
-
-		// Since current tick is within range, we expect global - upper - lower
-		expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-		// Since current tick is within range, we expect global - (global - upper - lower)
-		expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-	},
-	"upper tick > current tick > lower tick, zero uptime growth inside (nonempty trackers)": {
-		lowerTick:                    0,
-		upperTick:                    2,
-		currentTick:                  1,
-		lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
-
-		// Since current tick is within range, we expect global - upper - lower
-		expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-		// Since the range is empty, we expect growth outside to be equal to global
-		expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-	},
-	"upper tick > current tick > lower tick, zero uptime growth inside (empty trackers)": {
-		lowerTick:                    0,
-		upperTick:                    2,
-		currentTick:                  1,
-		lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-		upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-		globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
-
-		// Since current tick is within range, we expect global - upper - lower
-		expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-		// Since the range is empty, we expect growth outside to be equal to global
-		expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-	},
-
-	// current tick below range
-
-	"current tick < lower tick, nonzero uptime growth inside": {
-		lowerTick:                    0,
-		upperTick:                    1,
-		currentTick:                  -1,
-		lowerTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-		upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
-
-		// Since current tick is below range, we expect lower - upper
-		expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-		// Since current tick is below range, we expect global - (lower - upper)
-		expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-	},
-	"current tick < lower tick, nonzero uptime growth inside (wider range)": {
-		lowerTick:                    328,
-		upperTick:                    726,
-		currentTick:                  189,
-		lowerTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-		upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
-
-		// Since current tick is below range, we expect lower - upper
-		expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-		// Since current tick is below range, we expect global - (lower - upper)
-		expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-	},
-	"current tick < lower tick, zero uptime growth inside (nonempty trackers)": {
-		lowerTick:                    0,
-		upperTick:                    1,
-		currentTick:                  -1,
-		lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
-
-		// Since current tick is below range, we expect lower - upper
-		expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-		// Since the range is empty, we expect growth outside to be equal to global
-		expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
-	},
-	"current tick < lower tick, zero uptime growth inside (empty trackers)": {
-		lowerTick:                    0,
-		upperTick:                    1,
-		currentTick:                  -1,
-		lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-		upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-		globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
-
-		// Since current tick is below range, we expect lower - upper
-		expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-		// Since the range is empty, we expect growth outside to be equal to global
-		expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-	},
-
-	// current tick on range boundary
-
-	"current tick = lower tick, nonzero uptime growth inside": {
-		lowerTick:                    0,
-		upperTick:                    1,
-		currentTick:                  0,
-		lowerTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-		upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		globalUptimeGrowth:           uptimeHelper.fourHundredTokensMultiDenom,
-
-		// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
-		// this case is equivalent to the current tick being within the range (global - upper - lower)
-		expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-		// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
-		// this case is equivalent to the current tick being within the range (global - (global - upper - lower))
-		expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
-	},
-	"current tick = lower tick, zero uptime growth inside (nonempty trackers)": {
-		lowerTick:                    0,
-		upperTick:                    1,
-		currentTick:                  0,
-		lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
-
-		// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
-		// this case is equivalent to the current tick being within the range (global - upper - lower)
-		expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-		// Since the range is empty, we expect growth outside to be equal to global
-		expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-	},
-	"current tick = lower tick, zero uptime growth inside (empty trackers)": {
-		lowerTick:                    0,
-		upperTick:                    1,
-		currentTick:                  0,
-		lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-		upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-		globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
-
-		// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
-		// this case is equivalent to the current tick being within the range (global - upper - lower)
-		expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-		// Since the range is empty, we expect growth outside to be equal to global
-		expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-	},
-	"current tick = upper tick, nonzero uptime growth inside": {
-		lowerTick:                    0,
-		upperTick:                    1,
-		currentTick:                  1,
-		lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		upperTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-		globalUptimeGrowth:           uptimeHelper.fourHundredTokensMultiDenom,
-
-		// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
-		// this case is equivalent to the current tick being above the range (upper - lower)
-		expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-		// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
-		// this case is equivalent to the current tick being above the range (global - (upper - lower))
-		expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
-	},
-	"current tick = upper tick, zero uptime growth inside (nonempty trackers)": {
-		lowerTick:                    0,
-		upperTick:                    1,
-		currentTick:                  1,
-		lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-		globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
-
-		// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
-		// this case is equivalent to the current tick being above the range (upper - lower)
-		expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-		// Since the range is empty, we expect growth outside to be equal to global
-		expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-	},
-	"current tick = upper tick, zero uptime growth inside (empty trackers)": {
-		lowerTick:                    0,
-		upperTick:                    1,
-		currentTick:                  1,
-		lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-		upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-		globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
-
-		// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
-		// this case is equivalent to the current tick being above the range (upper - lower)
-		expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-		// Since the range is empty, we expect growth outside to be equal to global
-		expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-	},
-}
-
 // Test uptime growth inside and outside range.
 func (s *KeeperTestSuite) TestGetUptimeGrowthRange() {
-	defaultPoolId := uint64(1)
 	defaultInitialLiquidity := sdk.OneDec()
+	uptimeHelper := getExpectedUptimes()
 
-	tests := uptimeGrowthOutsideTests
+	type uptimeGrowthOutsideTest struct {
+		lowerTick                    int64
+		upperTick                    int64
+		currentTick                  int64
+		lowerTickUptimeGrowthOutside []sdk.DecCoins
+		upperTickUptimeGrowthOutside []sdk.DecCoins
+		globalUptimeGrowth           []sdk.DecCoins
+
+		// Only one of these two should be set
+		expectedUptimeGrowthInside  []sdk.DecCoins
+		expectedUptimeGrowthOutside []sdk.DecCoins
+	}
+
+	tests := map[string]uptimeGrowthOutsideTest{
+		// current tick above range
+		"current tick > upper tick, nonzero uptime growth inside": {
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  2,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is above range, we expect upper - lower
+			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+			// Since current tick is above range, we expect global - (upper - lower)
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+		},
+		"current tick > upper tick, nonzero uptime growth inside (wider range)": {
+			lowerTick:                    12444,
+			upperTick:                    15013,
+			currentTick:                  50320,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is above range, we expect upper - lower
+			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+			// Since current tick is above range, we expect global - (upper - lower)
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+		},
+		"current tick > upper tick, zero uptime growth inside (nonempty trackers)": {
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  2,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is above range, we expect upper - lower
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
+		},
+		"current tick > upper tick, zero uptime growth inside (empty trackers)": {
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  2,
+			lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
+
+			// Since current tick is above range, we expect upper - lower
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+		},
+		"current tick > upper tick, zero uptime growth inside with extraneous uptime growth": {
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  2,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
+
+			// Since current tick is above range, we expect upper - lower
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+		},
+
+		// current tick within range
+
+		"upper tick > current tick > lower tick, nonzero uptime growth inside": {
+			lowerTick:                    0,
+			upperTick:                    2,
+			currentTick:                  1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is within range, we expect global - upper - lower
+			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+			// Since current tick is within range, we expect global - (global - upper - lower)
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+		},
+		"upper tick > current tick > lower tick, nonzero uptime growth inside (wider range)": {
+			lowerTick:                    -19753,
+			upperTick:                    8921,
+			currentTick:                  -97,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is within range, we expect global - upper - lower
+			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+			// Since current tick is within range, we expect global - (global - upper - lower)
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+		},
+		"upper tick > current tick > lower tick, zero uptime growth inside (nonempty trackers)": {
+			lowerTick:                    0,
+			upperTick:                    2,
+			currentTick:                  1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
+
+			// Since current tick is within range, we expect global - upper - lower
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+		},
+		"upper tick > current tick > lower tick, zero uptime growth inside (empty trackers)": {
+			lowerTick:                    0,
+			upperTick:                    2,
+			currentTick:                  1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
+
+			// Since current tick is within range, we expect global - upper - lower
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+		},
+
+		// current tick below range
+
+		"current tick < lower tick, nonzero uptime growth inside": {
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  -1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is below range, we expect lower - upper
+			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+			// Since current tick is below range, we expect global - (lower - upper)
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+		},
+		"current tick < lower tick, nonzero uptime growth inside (wider range)": {
+			lowerTick:                    328,
+			upperTick:                    726,
+			currentTick:                  189,
+			lowerTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is below range, we expect lower - upper
+			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+			// Since current tick is below range, we expect global - (lower - upper)
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+		},
+		"current tick < lower tick, zero uptime growth inside (nonempty trackers)": {
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  -1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is below range, we expect lower - upper
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
+		},
+		"current tick < lower tick, zero uptime growth inside (empty trackers)": {
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  -1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
+
+			// Since current tick is below range, we expect lower - upper
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+		},
+
+		// current tick on range boundary
+
+		"current tick = lower tick, nonzero uptime growth inside": {
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  0,
+			lowerTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.fourHundredTokensMultiDenom,
+
+			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
+			// this case is equivalent to the current tick being within the range (global - upper - lower)
+			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
+			// this case is equivalent to the current tick being within the range (global - (global - upper - lower))
+			expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
+		},
+		"current tick = lower tick, zero uptime growth inside (nonempty trackers)": {
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  0,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
+
+			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
+			// this case is equivalent to the current tick being within the range (global - upper - lower)
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+		},
+		"current tick = lower tick, zero uptime growth inside (empty trackers)": {
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  0,
+			lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
+
+			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
+			// this case is equivalent to the current tick being within the range (global - upper - lower)
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+		},
+		"current tick = upper tick, nonzero uptime growth inside": {
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.fourHundredTokensMultiDenom,
+
+			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
+			// this case is equivalent to the current tick being above the range (upper - lower)
+			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
+			// this case is equivalent to the current tick being above the range (global - (upper - lower))
+			expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
+		},
+		"current tick = upper tick, zero uptime growth inside (nonempty trackers)": {
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
+
+			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
+			// this case is equivalent to the current tick being above the range (upper - lower)
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+		},
+		"current tick = upper tick, zero uptime growth inside (empty trackers)": {
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
+
+			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
+			// this case is equivalent to the current tick being above the range (upper - lower)
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+		},
+	}
 
 	for name, tc := range tests {
 		s.Run(name, func() {
@@ -1479,13 +1473,13 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthRange() {
 			s.Require().NoError(err)
 
 			// system under test
-			uptimeGrowthInside, err := s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthInsideRange(s.Ctx, defaultPoolId, tc.lowerTick, tc.upperTick)
+			uptimeGrowthInside, err := s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthInsideRange(s.Ctx, pool.GetId(), tc.lowerTick, tc.upperTick)
 			s.Require().NoError(err)
 
 			// check if returned uptime growth inside has correct value
 			s.Require().Equal(tc.expectedUptimeGrowthInside, uptimeGrowthInside)
 
-			uptimeGrowthOutside, err := s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthOutsideRange(s.Ctx, defaultPoolId, tc.lowerTick, tc.upperTick)
+			uptimeGrowthOutside, err := s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthOutsideRange(s.Ctx, pool.GetId(), tc.lowerTick, tc.upperTick)
 			s.Require().NoError(err)
 
 			// check if returned uptime growth inside has correct value
