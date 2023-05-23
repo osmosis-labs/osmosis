@@ -306,6 +306,12 @@ pub enum CreatePoolGauges {
 }
 ```
 
+---
+## Appendix
+
+### TWAP
+`x/twap` is not implemented for cosmwasm pools but can be in the future if there is a need.
+
 ### Rust de/serialization
 
 Contract read these msg as JSON format. Here are some examples of how it is being de/serialized:
