@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -27,6 +29,8 @@ func NewTxCmd() *cobra.Command {
 
 	osmocli.AddTxCmd(txCmd, NewSwapExactAmountInCmd)
 	osmocli.AddTxCmd(txCmd, NewSwapExactAmountOutCmd)
+	osmocli.AddTxCmd(txCmd, NewSplitRouteSwapExactAmountIn)
+	osmocli.AddTxCmd(txCmd, NewSplitRouteSwapExactAmountOut)
 
 	txCmd.AddCommand(
 		NewCreatePoolCmd(),
@@ -57,29 +61,154 @@ func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOu
 	}, &types.MsgSwapExactAmountOut{}
 }
 
-func NewBuildSwapExactAmountInMsg(clientCtx client.Context, tokenInStr, tokenOutMinAmtStr string, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	routes, err := swapAmountInRoutes(fs)
+func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteSwapExactAmountIn) {
+	return &osmocli.TxCliDesc{
+		Use:   "split-route-swap-exact-amount-in [token-in-denom] [token-out-min-amount] [flags]",
+		Short: "split route swap exact amount in",
+		Example: `osmosisd tx poolmanager split-route-swap-exact-amount-in uosmo 1 --routes-file="./routes.json" --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo
+		- routes.json
+		{
+			"Route": [
+			  {
+			  "swap_amount_in_route": [
+				{
+				"pool_id": 1,
+				"token_out_denom": "uion"
+				},
+				{
+				"pool_id": 2,
+				"token_out_denom": "uosmo"
+				}
+			  ],
+			  "token_in_amount": 1000
+			  },
+			  {
+			  "swap_amount_in_route": [
+				{
+				"pool_id": 3,
+				"token_out_denom": "bar"
+				},
+				{
+				"pool_id": 4,
+				"token_out_denom": "uosmo"
+				}
+			  ],
+			  "token_in_amount": 999
+			  }
+			]
+		}
+		`,
+		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
+			"Routes": osmocli.FlagOnlyParser(NewMsgNewSplitRouteSwapExactAmountIn),
+		},
+		Flags: osmocli.FlagDesc{
+			RequiredFlags: []*flag.FlagSet{FlagSetCreateRoutes()},
+		},
+	}, &types.MsgSplitRouteSwapExactAmountIn{}
+}
+
+func NewSplitRouteSwapExactAmountOut() (*osmocli.TxCliDesc, *types.MsgSplitRouteSwapExactAmountOut) {
+	return &osmocli.TxCliDesc{
+		Use:   "split-route-swap-exact-amount-out [token-out-denom] [token-in-max-amount] [flags]",
+		Short: "split route swap exact amount out",
+		Example: `osmosisd tx poolmanager split-route-swap-exact-amount-out uosmo 1 --routes-file="./routes.json" --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo
+		- routes.json
+		{
+			"route": [
+				{
+				"swap_amount_out_route": [
+					{
+					"pool_id": 1,
+					"token_in_denom": "uion"
+					},
+					{
+					"pool_id": 2,
+					"token_in_denom": "uosmo"
+					}
+				],
+				"token_out_amount": 1000
+				},
+				{
+				"swap_amount_out_route": [
+					{
+					"pool_id": 3,
+					"token_in_denom": "uion"
+					},
+					{
+					"pool_id": 4,
+					"token_in_denom": "uosmo"
+					}
+				],
+				"token_out_amount": 999
+				}
+			]
+			}
+		`,
+		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
+			"Routes": osmocli.FlagOnlyParser(NewMsgNewSplitRouteSwapExactAmountOut),
+		},
+		Flags: osmocli.FlagDesc{
+			RequiredFlags: []*flag.FlagSet{FlagSetCreateRoutes()},
+		},
+	}, &types.MsgSplitRouteSwapExactAmountOut{}
+}
+
+func NewMsgNewSplitRouteSwapExactAmountOut(fs *flag.FlagSet) ([]types.SwapAmountOutSplitRoute, error) {
+	routesFile, _ := fs.GetString(FlagRoutesFile)
+	if routesFile == "" {
+		return nil, fmt.Errorf("must pass in a routes json using the --%s flag", FlagRoutesFile)
+	}
+
+	contents, err := os.ReadFile(routesFile)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
-	tokenIn, err := sdk.ParseCoinNormalized(tokenInStr)
+	var splitRouteJSONdata RoutesOut
+	err = json.Unmarshal(contents, &splitRouteJSONdata)
 	if err != nil {
-		return txf, nil, err
+		return nil, err
 	}
 
-	tokenOutMinAmt, ok := sdk.NewIntFromString(tokenOutMinAmtStr)
-	if !ok {
-		return txf, nil, fmt.Errorf("invalid token out min amount, %s", tokenOutMinAmtStr)
-	}
-	msg := &types.MsgSwapExactAmountIn{
-		Sender:            clientCtx.GetFromAddress().String(),
-		Routes:            routes,
-		TokenIn:           tokenIn,
-		TokenOutMinAmount: tokenOutMinAmt,
+	var splitRouteProto []types.SwapAmountOutSplitRoute
+	for _, route := range splitRouteJSONdata.Route {
+		protoRoute := types.SwapAmountOutSplitRoute{
+			TokenOutAmount: sdk.NewInt(route.TokenOutAmount),
+		}
+		protoRoute.Pools = append(protoRoute.Pools, route.Pools...)
+		splitRouteProto = append(splitRouteProto, protoRoute)
 	}
 
-	return txf, msg, nil
+	return splitRouteProto, nil
+}
+
+func NewMsgNewSplitRouteSwapExactAmountIn(fs *flag.FlagSet) ([]types.SwapAmountInSplitRoute, error) {
+	routesFile, _ := fs.GetString(FlagRoutesFile)
+	if routesFile == "" {
+		return nil, fmt.Errorf("must pass in a routes json using the --%s flag", FlagRoutesFile)
+	}
+
+	contents, err := os.ReadFile(routesFile)
+	if err != nil {
+		return nil, err
+	}
+
+	var splitRouteJSONdata RoutesIn
+	err = json.Unmarshal(contents, &splitRouteJSONdata)
+	if err != nil {
+		return nil, err
+	}
+
+	var splitRouteProto []types.SwapAmountInSplitRoute
+	for _, route := range splitRouteJSONdata.Route {
+		protoRoute := types.SwapAmountInSplitRoute{
+			TokenInAmount: sdk.NewInt(route.TokenInAmount),
+		}
+		protoRoute.Pools = append(protoRoute.Pools, route.Pools...)
+		splitRouteProto = append(splitRouteProto, protoRoute)
+	}
+
+	return splitRouteProto, nil
 }
 
 func NewBuildSwapExactAmountOutMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
