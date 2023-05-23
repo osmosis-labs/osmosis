@@ -229,8 +229,6 @@ func TestMsgWithdrawPosition(t *testing.T) {
 }
 
 func TestConcentratedLiquiditySerialization(t *testing.T) {
-	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pk1.Address()).String()
 	defaultPoolId := uint64(1)
 
 	testCases := []struct {
