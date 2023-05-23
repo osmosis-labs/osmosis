@@ -199,8 +199,6 @@ func NewMsgNewSplitRouteSwapExactAmountIn(fs *flag.FlagSet) ([]types.SwapAmountI
 		return nil, err
 	}
 
-	fmt.Println(splitRouteJSONdata)
-
 	var splitRouteProto []types.SwapAmountInSplitRoute
 	for _, route := range splitRouteJSONdata.Route {
 		protoRoute := types.SwapAmountInSplitRoute{
