@@ -1168,30 +1168,28 @@ func (s *KeeperTestSuite) TestGetInitialUptimeGrowthOppositeDirectionOfLastTrave
 	}
 }
 
+type uptimeGrowthOutsideTest struct {
+	lowerTick                    int64
+	upperTick                    int64
+	currentTick                  int64
+	lowerTickUptimeGrowthOutside []sdk.DecCoins
+	upperTickUptimeGrowthOutside []sdk.DecCoins
+	globalUptimeGrowth           []sdk.DecCoins
+
+	// Only one of these two should be set
+	expectedUptimeGrowthInside  []sdk.DecCoins
+	expectedUptimeGrowthOutside []sdk.DecCoins
+}
+
 func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 	defaultPoolId := uint64(1)
 	defaultInitialLiquidity := sdk.OneDec()
 	uptimeHelper := getExpectedUptimes()
 
-	type uptimeGrowthOutsideTest struct {
-		poolSetup bool
-
-		lowerTick                    int64
-		upperTick                    int64
-		currentTick                  int64
-		lowerTickUptimeGrowthOutside []sdk.DecCoins
-		upperTickUptimeGrowthOutside []sdk.DecCoins
-		globalUptimeGrowth           []sdk.DecCoins
-
-		expectedUptimeGrowthInside []sdk.DecCoins
-		expectedError              bool
-	}
-
 	tests := map[string]uptimeGrowthOutsideTest{
 		// current tick above range
 
 		"current tick > upper tick, nonzero uptime growth inside": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  2,
@@ -1201,10 +1199,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is above range, we expect upper - lower
 			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			expectedError:              false,
 		},
 		"current tick > upper tick, nonzero uptime growth inside (wider range)": {
-			poolSetup:                    true,
 			lowerTick:                    12444,
 			upperTick:                    15013,
 			currentTick:                  50320,
@@ -1214,10 +1210,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is above range, we expect upper - lower
 			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			expectedError:              false,
 		},
 		"current tick > upper tick, zero uptime growth inside (nonempty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  2,
@@ -1227,10 +1221,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is above range, we expect upper - lower
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
 		},
 		"current tick > upper tick, zero uptime growth inside (empty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  2,
@@ -1240,10 +1232,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is above range, we expect upper - lower
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
 		},
 		"current tick > upper tick, zero uptime growth inside with extraneous uptime growth": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  2,
@@ -1253,13 +1243,11 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is above range, we expect upper - lower
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
 		},
 
 		// current tick within range
 
 		"upper tick > current tick > lower tick, nonzero uptime growth inside": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    2,
 			currentTick:                  1,
@@ -1269,10 +1257,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is within range, we expect global - upper - lower
 			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			expectedError:              false,
 		},
 		"upper tick > current tick > lower tick, nonzero uptime growth inside (wider range)": {
-			poolSetup:                    true,
 			lowerTick:                    -19753,
 			upperTick:                    8921,
 			currentTick:                  -97,
@@ -1282,10 +1268,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is within range, we expect global - upper - lower
 			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			expectedError:              false,
 		},
 		"upper tick > current tick > lower tick, zero uptime growth inside (nonempty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    2,
 			currentTick:                  1,
@@ -1295,10 +1279,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is within range, we expect global - upper - lower
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
 		},
 		"upper tick > current tick > lower tick, zero uptime growth inside (empty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    2,
 			currentTick:                  1,
@@ -1308,13 +1290,11 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is within range, we expect global - upper - lower
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
 		},
 
 		// current tick below range
 
 		"current tick < lower tick, nonzero uptime growth inside": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  -1,
@@ -1324,10 +1304,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is below range, we expect lower - upper
 			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			expectedError:              false,
 		},
 		"current tick < lower tick, nonzero uptime growth inside (wider range)": {
-			poolSetup:                    true,
 			lowerTick:                    328,
 			upperTick:                    726,
 			currentTick:                  189,
@@ -1337,10 +1315,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is below range, we expect lower - upper
 			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			expectedError:              false,
 		},
 		"current tick < lower tick, zero uptime growth inside (nonempty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  -1,
@@ -1350,10 +1326,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is below range, we expect lower - upper
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
 		},
 		"current tick < lower tick, zero uptime growth inside (empty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  -1,
@@ -1363,13 +1337,11 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is below range, we expect lower - upper
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
 		},
 
 		// current tick on range boundary
 
 		"current tick = lower tick, nonzero uptime growth inside": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  0,
@@ -1380,10 +1352,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
 			// this case is equivalent to the current tick being within the range (global - upper - lower)
 			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			expectedError:              false,
 		},
 		"current tick = lower tick, zero uptime growth inside (nonempty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  0,
@@ -1394,10 +1364,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
 			// this case is equivalent to the current tick being within the range (global - upper - lower)
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
 		},
 		"current tick = lower tick, zero uptime growth inside (empty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  0,
@@ -1408,10 +1376,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
 			// this case is equivalent to the current tick being within the range (global - upper - lower)
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
 		},
 		"current tick = upper tick, nonzero uptime growth inside": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  1,
@@ -1422,10 +1388,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
 			// this case is equivalent to the current tick being above the range (upper - lower)
 			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			expectedError:              false,
 		},
 		"current tick = upper tick, zero uptime growth inside (nonempty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  1,
@@ -1436,10 +1400,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
 			// this case is equivalent to the current tick being above the range (upper - lower)
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
 		},
 		"current tick = upper tick, zero uptime growth inside (empty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  1,
@@ -1450,14 +1412,6 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
 			// this case is equivalent to the current tick being above the range (upper - lower)
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
-		},
-
-		// error catching
-
-		"error: pool has not been setup": {
-			poolSetup:     false,
-			expectedError: true,
 		},
 	}
 
@@ -1465,36 +1419,35 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 		s.Run(name, func() {
 			s.SetupTest()
 
-			// if pool set up true, set up default pool
-			var pool types.ConcentratedPoolExtension
-			if tc.poolSetup {
-				pool = s.PrepareConcentratedPool()
-				currentTick := pool.GetCurrentTick()
+			pool := s.PrepareConcentratedPool()
+			currentTick := pool.GetCurrentTick()
 
-				// Update global uptime accums
-				err := addToUptimeAccums(s.Ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.globalUptimeGrowth)
-				s.Require().NoError(err)
+			// Update global uptime accums
+			err := addToUptimeAccums(s.Ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.globalUptimeGrowth)
+			s.Require().NoError(err)
 
-				// Update tick-level uptime trackers
-				s.initializeTick(s.Ctx, currentTick, tc.lowerTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.lowerTickUptimeGrowthOutside), true)
-				s.initializeTick(s.Ctx, currentTick, tc.upperTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.upperTickUptimeGrowthOutside), false)
-				pool.SetCurrentTick(tc.currentTick)
-				err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
-				s.Require().NoError(err)
-			}
+			// Update tick-level uptime trackers
+			s.initializeTick(s.Ctx, currentTick, tc.lowerTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.lowerTickUptimeGrowthOutside), true)
+			s.initializeTick(s.Ctx, currentTick, tc.upperTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.upperTickUptimeGrowthOutside), false)
+			pool.SetCurrentTick(tc.currentTick)
+			err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+			s.Require().NoError(err)
 
 			// system under test
 			uptimeGrowthInside, err := s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthInsideRange(s.Ctx, defaultPoolId, tc.lowerTick, tc.upperTick)
-			if tc.expectedError {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
+			s.Require().NoError(err)
 
-				// check if returned uptime growth inside has correct value
-				s.Require().Equal(tc.expectedUptimeGrowthInside, uptimeGrowthInside)
-			}
+			// check if returned uptime growth inside has correct value
+			s.Require().Equal(tc.expectedUptimeGrowthInside, uptimeGrowthInside)
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestGetUptimeGrowthErrors() {
+	_, err := s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthInsideRange(s.Ctx, defaultPoolId, 0, 0)
+	s.Require().Error(err)
+	_, err = s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthOutsideRange(s.Ctx, defaultPoolId, 0, 0)
+	s.Require().Error(err)
 }
 
 func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
@@ -1502,25 +1455,10 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 	defaultInitialLiquidity := sdk.OneDec()
 	uptimeHelper := getExpectedUptimes()
 
-	type uptimeGrowthOutsideTest struct {
-		poolSetup bool
-
-		lowerTick                    int64
-		upperTick                    int64
-		currentTick                  int64
-		lowerTickUptimeGrowthOutside []sdk.DecCoins
-		upperTickUptimeGrowthOutside []sdk.DecCoins
-		globalUptimeGrowth           []sdk.DecCoins
-
-		expectedUptimeGrowthOutside []sdk.DecCoins
-		expectedError               bool
-	}
-
 	tests := map[string]uptimeGrowthOutsideTest{
 		// current tick above range
 
 		"current tick > upper tick, nonzero uptime growth inside": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  2,
@@ -1530,10 +1468,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 
 			// Since current tick is above range, we expect global - (upper - lower)
 			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:               false,
 		},
 		"current tick > upper tick, nonzero uptime growth inside (wider range)": {
-			poolSetup:                    true,
 			lowerTick:                    12444,
 			upperTick:                    15013,
 			currentTick:                  50320,
@@ -1543,10 +1479,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 
 			// Since current tick is above range, we expect global - (upper - lower)
 			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:               false,
 		},
 		"current tick > upper tick, zero uptime growth inside (nonempty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  2,
@@ -1556,10 +1490,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 
 			// Since the range is empty, we expect growth outside to be equal to global
 			expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
-			expectedError:               false,
 		},
 		"current tick > upper tick, zero uptime growth inside (empty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  2,
@@ -1569,10 +1501,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 
 			// Since the range is empty, we expect growth outside to be equal to global
 			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:               false,
 		},
 		"current tick > upper tick, zero uptime growth inside with extraneous uptime growth": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  2,
@@ -1582,13 +1512,11 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 
 			// Since the range is empty, we expect growth outside to be equal to global
 			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:               false,
 		},
 
 		// current tick within range
 
 		"upper tick > current tick > lower tick, nonzero uptime growth inside": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    2,
 			currentTick:                  1,
@@ -1598,10 +1526,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 
 			// Since current tick is within range, we expect global - (global - upper - lower)
 			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:               false,
 		},
 		"upper tick > current tick > lower tick, nonzero uptime growth inside (wider range)": {
-			poolSetup:                    true,
 			lowerTick:                    -19753,
 			upperTick:                    8921,
 			currentTick:                  -97,
@@ -1611,10 +1537,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 
 			// Since current tick is within range, we expect global - (global - upper - lower)
 			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:               false,
 		},
 		"upper tick > current tick > lower tick, zero uptime growth inside (nonempty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    2,
 			currentTick:                  1,
@@ -1624,10 +1548,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 
 			// Since the range is empty, we expect growth outside to be equal to global
 			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:               false,
 		},
 		"upper tick > current tick > lower tick, zero uptime growth inside (empty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    2,
 			currentTick:                  1,
@@ -1637,13 +1559,11 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 
 			// Since the range is empty, we expect growth outside to be equal to global
 			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:               false,
 		},
 
 		// current tick below range
 
 		"current tick < lower tick, nonzero uptime growth inside": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  -1,
@@ -1653,10 +1573,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 
 			// Since current tick is below range, we expect global - (lower - upper)
 			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:               false,
 		},
 		"current tick < lower tick, nonzero uptime growth inside (wider range)": {
-			poolSetup:                    true,
 			lowerTick:                    328,
 			upperTick:                    726,
 			currentTick:                  189,
@@ -1666,10 +1584,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 
 			// Since current tick is below range, we expect global - (lower - upper)
 			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:               false,
 		},
 		"current tick < lower tick, zero uptime growth inside (nonempty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  -1,
@@ -1679,10 +1595,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 
 			// Since the range is empty, we expect growth outside to be equal to global
 			expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
-			expectedError:               false,
 		},
 		"current tick < lower tick, zero uptime growth inside (empty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  -1,
@@ -1692,13 +1606,11 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 
 			// Since the range is empty, we expect growth outside to be equal to global
 			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:               false,
 		},
 
 		// current tick on range boundary
 
 		"current tick = lower tick, nonzero uptime growth inside": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  0,
@@ -1709,10 +1621,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
 			// this case is equivalent to the current tick being within the range (global - (global - upper - lower))
 			expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
-			expectedError:               false,
 		},
 		"current tick = lower tick, zero uptime growth inside (nonempty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  0,
@@ -1722,10 +1632,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 
 			// Since the range is empty, we expect growth outside to be equal to global
 			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:               false,
 		},
 		"current tick = lower tick, zero uptime growth inside (empty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  0,
@@ -1735,10 +1643,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 
 			// Since the range is empty, we expect growth outside to be equal to global
 			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:               false,
 		},
 		"current tick = upper tick, nonzero uptime growth inside": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  1,
@@ -1749,10 +1655,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
 			// this case is equivalent to the current tick being above the range (global - (upper - lower))
 			expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
-			expectedError:               false,
 		},
 		"current tick = upper tick, zero uptime growth inside (nonempty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  1,
@@ -1762,10 +1666,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 
 			// Since the range is empty, we expect growth outside to be equal to global
 			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:               false,
 		},
 		"current tick = upper tick, zero uptime growth inside (empty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  1,
@@ -1775,14 +1677,6 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 
 			// Since the range is empty, we expect growth outside to be equal to global
 			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:               false,
-		},
-
-		// error catching
-
-		"error: pool has not been setup": {
-			poolSetup:     false,
-			expectedError: true,
 		},
 	}
 
@@ -1790,34 +1684,26 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 		s.Run(name, func() {
 			s.SetupTest()
 
-			// if pool set up true, set up default pool
-			var pool types.ConcentratedPoolExtension
-			if tc.poolSetup {
-				pool = s.PrepareConcentratedPool()
-				currentTick := pool.GetCurrentTick()
+			pool := s.PrepareConcentratedPool()
+			currentTick := pool.GetCurrentTick()
 
-				// Update global uptime accums
-				err := addToUptimeAccums(s.Ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.globalUptimeGrowth)
-				s.Require().NoError(err)
+			// Update global uptime accums
+			err := addToUptimeAccums(s.Ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.globalUptimeGrowth)
+			s.Require().NoError(err)
 
-				// Update tick-level uptime trackers
-				s.initializeTick(s.Ctx, currentTick, tc.lowerTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.lowerTickUptimeGrowthOutside), true)
-				s.initializeTick(s.Ctx, currentTick, tc.upperTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.upperTickUptimeGrowthOutside), false)
-				pool.SetCurrentTick(tc.currentTick)
-				err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
-				s.Require().NoError(err)
-			}
+			// Update tick-level uptime trackers
+			s.initializeTick(s.Ctx, currentTick, tc.lowerTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.lowerTickUptimeGrowthOutside), true)
+			s.initializeTick(s.Ctx, currentTick, tc.upperTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.upperTickUptimeGrowthOutside), false)
+			pool.SetCurrentTick(tc.currentTick)
+			err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+			s.Require().NoError(err)
 
 			// system under test
 			uptimeGrowthOutside, err := s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthOutsideRange(s.Ctx, defaultPoolId, tc.lowerTick, tc.upperTick)
-			if tc.expectedError {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
+			s.Require().NoError(err)
 
-				// check if returned uptime growth inside has correct value
-				s.Require().Equal(tc.expectedUptimeGrowthOutside, uptimeGrowthOutside)
-			}
+			// check if returned uptime growth inside has correct value
+			s.Require().Equal(tc.expectedUptimeGrowthOutside, uptimeGrowthOutside)
 		})
 	}
 }
