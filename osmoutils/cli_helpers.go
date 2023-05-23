@@ -11,7 +11,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
-func DefaultSpreadRewardString(cfg network.Config) string {
+func DefaultFeeString(cfg network.Config) string {
 	feeCoins := sdk.NewCoins(sdk.NewCoin(cfg.BondDenom, sdk.NewInt(10)))
 	return fmt.Sprintf("--%s=%s", flags.FlagFees, feeCoins.String())
 }

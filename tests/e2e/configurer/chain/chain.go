@@ -151,11 +151,11 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	dstNode, err := dstChain.GetDefaultNode()
 	require.NoError(c.t, err)
 
-	// removes the spread reward token from balances for calculating the difference in other tokens
+	// removes the fee token from balances for calculating the difference in other tokens
 	// before and after the IBC send.
 	removeFeeTokenFromBalance := func(balance sdk.Coins) sdk.Coins {
-		spreadRewardTokenBalance := balance.FilterDenoms([]string{initialization.E2EFeeToken})
-		return balance.Sub(spreadRewardTokenBalance)
+		feeRewardTokenBalance := balance.FilterDenoms([]string{initialization.E2EFeeToken})
+		return balance.Sub(feeRewardTokenBalance)
 	}
 
 	balancesDstPreWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
