@@ -72,28 +72,28 @@ func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteS
 			  {
 				"SwapAmountInRoute": [
 				  {
-					"poolId": 1,
-					"TokenOutDenom": "uion"
+					"pool_id": 1,
+					"token_out_denom": "uion"
 				  },
 				  {
-					"poolId": 2,
-					"TokenOutDenom": "uosmo"
+					"pool_id": 2,
+					"token_out_denom": "uosmo"
 				  }
 				],
-				"TokenInAmount": 1000
+				"token_in_amount": 1000
 			  },
 			  {
 				"SwapAmountInRoute": [
 				  {
-					"poolId": 3,
-					"TokenOutDenom": "bar"
+					"pool_id": 3,
+					"token_out_denom": "bar"
 				  },
 				  {
-					"poolId": 4,
-					"TokenOutDenom": "uosmo"
+					"pool_id": 4,
+					"token_out_denom": "uosmo"
 				  }
 				],
-				"TokenInAmount": 999
+				"token_in_amount": 999
 			  }
 			]
 		  }
@@ -114,32 +114,32 @@ func NewSplitRouteSwapExactAmountOut() (*osmocli.TxCliDesc, *types.MsgSplitRoute
 		Example: `osmosisd tx poolmanager split-route-swap-exact-amount-out uosmo 1 --routes-file="./routes.json" --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo
 		- routes.json
 		{
-			"Route": [
+			"route": [
 				{
-				"SwapAmountOutRoute": [
+				"swap_amount_out_route": [
 					{
-					"poolId": 1,
-					"TokenInDenom": "uion"
+					"pool_id": 1,
+					"token_in_denom": "uion"
 					},
 					{
-					"poolId": 2,
-					"TokenInDenom": "uosmo"
+					"pool_id": 2,
+					"token_in_denom": "uosmo"
 					}
 				],
-				"TokenOutAmount": 1000
+				"token_out_amount": 1000
 				},
 				{
-				"SwapAmountOutRoute": [
+				"swap_amount_out_route": [
 					{
-					"poolId": 3,
-					"TokenInDenom": "uion"
+					"pool_id": 3,
+					"token_in_denom": "uion"
 					},
 					{
-					"poolId": 4,
-					"TokenInDenom": "uosmo"
+					"pool_id": 4,
+					"token_in_denom": "uosmo"
 					}
 				],
-				"TokenOutAmount": 999
+				"token_out_amount": 999
 				}
 			]
 			}

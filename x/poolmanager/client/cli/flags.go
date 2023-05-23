@@ -54,20 +54,20 @@ type smoothWeightChangeParamsInputs struct {
 }
 
 type RoutesIn struct {
-	Route []SwapAmountInSplitRoute `json:"Route"`
+	Route []SwapAmountInSplitRoute `json:"route"`
 }
 type RoutesOut struct {
-	Route []SwapAmountOutSplitRoute `json:"Route"`
+	Route []SwapAmountOutSplitRoute `json:"route"`
 }
 
 type SwapAmountInSplitRoute struct {
-	Pools         []types.SwapAmountInRoute `json:"SwapAmountInRoute"`
-	TokenInAmount int64                     `json:"TokenInAmount"`
+	Pools         []types.SwapAmountInRoute `json:"swap_amount_in_route"`
+	TokenInAmount int64                     `json:"token_in_amount"`
 }
 
 type SwapAmountOutSplitRoute struct {
-	Pools          []types.SwapAmountOutRoute `json:"SwapAmountOutRoute"`
-	TokenOutAmount int64                      `json:"TokenOutAmount"`
+	Pools          []types.SwapAmountOutRoute `json:"swap_amount_out_route"`
+	TokenOutAmount int64                      `json:"token_out_amount"`
 }
 
 func FlagSetMultihopSwapRoutes() *flag.FlagSet {
