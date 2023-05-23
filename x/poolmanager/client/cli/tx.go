@@ -65,38 +65,38 @@ func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteS
 	return &osmocli.TxCliDesc{
 		Use:   "split-route-swap-exact-amount-in [token-in-denom] [token-out-min-amount] [flags]",
 		Short: "split route swap exact amount in",
-		Example: `osmosisd tx poolmanager split-route-swap-exact-amount-out uosmo 1 --routes-file="./routes.json" --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo
+		Example: `osmosisd tx poolmanager split-route-swap-exact-amount-in uosmo 1 --routes-file="./routes.json" --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo
 		- routes.json
 		{
 			"Route": [
 			  {
-				"SwapAmountInRoute": [
-				  {
-					"pool_id": 1,
-					"token_out_denom": "uion"
-				  },
-				  {
-					"pool_id": 2,
-					"token_out_denom": "uosmo"
-				  }
-				],
-				"token_in_amount": 1000
+			  "swap_amount_in_route": [
+				{
+				"pool_id": 1,
+				"token_out_denom": "uion"
+				},
+				{
+				"pool_id": 2,
+				"token_out_denom": "uosmo"
+				}
+			  ],
+			  "token_in_amount": 1000
 			  },
 			  {
-				"SwapAmountInRoute": [
-				  {
-					"pool_id": 3,
-					"token_out_denom": "bar"
-				  },
-				  {
-					"pool_id": 4,
-					"token_out_denom": "uosmo"
-				  }
-				],
-				"token_in_amount": 999
+			  "swap_amount_in_route": [
+				{
+				"pool_id": 3,
+				"token_out_denom": "bar"
+				},
+				{
+				"pool_id": 4,
+				"token_out_denom": "uosmo"
+				}
+			  ],
+			  "token_in_amount": 999
 			  }
 			]
-		  }
+		}
 		`,
 		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
 			"Routes": osmocli.FlagOnlyParser(NewMsgNewSplitRouteSwapExactAmountIn),
@@ -198,6 +198,8 @@ func NewMsgNewSplitRouteSwapExactAmountIn(fs *flag.FlagSet) ([]types.SwapAmountI
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println(splitRouteJSONdata)
 
 	var splitRouteProto []types.SwapAmountInSplitRoute
 	for _, route := range splitRouteJSONdata.Route {

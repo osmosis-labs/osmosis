@@ -1,0 +1,30 @@
+{
+  "Route": [
+    {
+    "swap_amount_in_route": [
+      {
+      "pool_id": 1,
+      "token_out_denom": "uion"
+      },
+      {
+      "pool_id": 2,
+      "token_out_denom": "uosmo"
+      }
+    ],
+    "token_in_amount": 1000
+    },
+    {
+    "swap_amount_in_route": [
+      {
+      "pool_id": 3,
+      "token_out_denom": "bar"
+      },
+      {
+      "pool_id": 4,
+      "token_out_denom": "uosmo"
+      }
+    ],
+    "token_in_amount": 999
+    }
+  ]
+  }
