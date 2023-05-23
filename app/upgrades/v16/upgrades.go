@@ -9,7 +9,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/app/keepers"
 	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
-	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
@@ -67,7 +66,7 @@ func CreateUpgradeHandler(
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// Added since when testing the fromVersion was set to 2
 		// and therefore did not run the migration for protorev
-		fromVM[protorevtypes.ModuleName] = 1
+		//		fromVM[protorevtypes.ModuleName] = 1
 
 		// Run migrations before applying any other state changes.
 		// NOTE: DO NOT PUT ANY STATE CHANGES BEFORE RunMigrations().
@@ -90,6 +89,10 @@ func CreateUpgradeHandler(
 		}
 
 		updateTokenFactoryParams(ctx, keepers.TokenFactoryKeeper)
+
+		if err := keepers.ProtoRevKeeper.SendDeveloperFeesToDeveloperAccount(ctx); err != nil {
+			return nil, err
+		}
 
 		return migrations, nil
 	}
