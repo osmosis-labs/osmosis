@@ -32,15 +32,13 @@ func (s BenchTestSuite) createPosition(accountIndex int, poolId uint64, coin0, c
 	}
 }
 
+func noError(b *testing.B, err error) {
+	require.NoError(b, err)
+}
+
 func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, pool types.ConcentratedPoolExtension, largeSwapInCoin sdk.Coin, currentTick int64)) {
 	// Notice we stop the timer to skip setup code.
 	b.StopTimer()
-
-	// We cannot use s.Require().NoError() because the suite context
-	// is defined on the testing.T and not testing.B
-	noError := func(err error) {
-		require.NoError(b, err)
-	}
 
 	const (
 		numberOfPositions              = 10000
@@ -78,7 +76,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 		poolId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(
 			s.TestAccs[0], denom0, denom1, tickSpacing, sdk.MustNewDecFromStr("0.001"),
 		))
-		noError(err)
+		noError(b, err)
 
 		clKeeper := s.App.ConcentratedLiquidityKeeper
 
@@ -87,10 +85,10 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 		tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(100))
 		tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
 		_, _, _, _, _, _, _, err = clKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinTick, types.MaxTick)
-		noError(err)
+		noError(b, err)
 
 		pool, err := clKeeper.GetPoolById(s.Ctx, poolId)
-		noError(err)
+		noError(b, err)
 
 		// Zero by default, can configure by setting a specific position.
 		currentTick := pool.GetCurrentTick()
@@ -123,7 +121,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 				upperTick = upperTick - upperTick%tickSpacing
 
 				priceLowerTick, priceUpperTick, _, _, err := clmath.TicksToSqrtPrice(lowerTick, upperTick)
-				noError(err)
+				noError(b, err)
 
 				lowerTick, upperTick, err = cl.RoundTickToCanonicalPriceTick(
 					lowerTick, upperTick, priceLowerTick, priceUpperTick, tickSpacing,
@@ -209,21 +207,17 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 func BenchmarkSwapExactAmountIn(b *testing.B) {
 	runBenchmark(b, func(b *testing.B, s *BenchTestSuite, pool types.ConcentratedPoolExtension, largeSwapInCoin sdk.Coin, currentTick int64) {
 		clKeeper := s.App.ConcentratedLiquidityKeeper
-		noError := func(err error) {
-			require.NoError(b, err)
-		}
 
 		liquidityNet, err := clKeeper.GetTickLiquidityNetInDirection(s.Ctx, pool.GetId(), largeSwapInCoin.Denom, sdk.NewInt(currentTick), sdk.Int{})
-		noError(err)
+		noError(b, err)
 		simapp.FundAccount(s.App.BankKeeper, s.Ctx, s.TestAccs[0], sdk.NewCoins(largeSwapInCoin))
 
 		b.StartTimer()
 
 		// System under test
 		_, err = clKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, largeSwapInCoin, DefaultCoin1.Denom, sdk.NewInt(1), pool.GetSpreadFactor(s.Ctx))
-		noError(err)
-
 		b.StopTimer()
+		noError(b, err)
 
 		fmt.Println("current_tick", currentTick)
 		fmt.Println("num_ticks_traversed", len(liquidityNet))
@@ -233,17 +227,13 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 func BenchmarkGetTickLiquidityNetInDirection(b *testing.B) {
 	runBenchmark(b, func(b *testing.B, s *BenchTestSuite, pool types.ConcentratedPoolExtension, largeSwapInCoin sdk.Coin, currentTick int64) {
 		clKeeper := s.App.ConcentratedLiquidityKeeper
-		noError := func(err error) {
-			require.NoError(b, err)
-		}
 
 		b.StartTimer()
 
 		// System under test
 		liquidityNet, err := clKeeper.GetTickLiquidityNetInDirection(s.Ctx, pool.GetId(), largeSwapInCoin.Denom, sdk.NewInt(currentTick), sdk.Int{})
-		noError(err)
-
 		b.StopTimer()
+		noError(b, err)
 
 		fmt.Println("current_tick", currentTick)
 		fmt.Println("num_ticks_traversed", len(liquidityNet))
@@ -253,17 +243,13 @@ func BenchmarkGetTickLiquidityNetInDirection(b *testing.B) {
 func BenchmarkGetTickLiquidityForFullRange(b *testing.B) {
 	runBenchmark(b, func(b *testing.B, s *BenchTestSuite, pool types.ConcentratedPoolExtension, largeSwapInCoin sdk.Coin, currentTick int64) {
 		clKeeper := s.App.ConcentratedLiquidityKeeper
-		noError := func(err error) {
-			require.NoError(b, err)
-		}
 
 		b.StartTimer()
 
 		// System under test
 		liquidityNet, err := clKeeper.GetTickLiquidityForFullRange(s.Ctx, pool.GetId())
-		noError(err)
-
 		b.StopTimer()
+		noError(b, err)
 
 		fmt.Println("current_tick", currentTick)
 		fmt.Println("num_ticks_traversed", len(liquidityNet))
