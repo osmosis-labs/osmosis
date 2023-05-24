@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	concentrated_liquidity "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/clmocks"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
@@ -58,6 +59,7 @@ var (
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
+	clk *concentrated_liquidity.Keeper
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -66,6 +68,7 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (s *KeeperTestSuite) SetupTest() {
 	s.Setup()
+	s.clk = s.App.ConcentratedLiquidityKeeper
 }
 
 func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {
