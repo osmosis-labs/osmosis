@@ -60,6 +60,8 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 
 	rand.Seed(seed)
 
+	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
 		s := BenchTestSuite{}
 		cleanup := s.SetupWithLevelDb()
@@ -198,6 +200,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 
 		swapAmountIn := sdk.MustNewDecFromStr(amountIn).TruncateInt()
 		largeSwapInCoin := sdk.NewCoin(denomIn, swapAmountIn)
+		// Commit so that the changes are propagated to IAVL.
 		s.Commit()
 
 		testFunc(b, &s, pool, largeSwapInCoin, currentTick)

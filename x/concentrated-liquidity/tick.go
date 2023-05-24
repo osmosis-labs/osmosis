@@ -109,14 +109,12 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapS
 
 // GetTickInfo gets the tickInfo given a poolId and tickIndex. If the tick has not been initialized, it will initialize it.
 // If the tick has been initialized, it will return the tickInfo. If the pool does not exist, it will return an error.
+// CONTRACT: The caller must check that the pool with given id exists.
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo model.TickInfo, err error) {
 	store := ctx.KVStore(k.storeKey)
 	tickStruct := model.TickInfo{}
 	key := types.KeyTick(poolId, tickIndex)
-	if !k.poolExists(ctx, poolId) {
-		return model.TickInfo{}, types.PoolNotFoundError{PoolId: poolId}
-	}
 
 	found, err := osmoutils.Get(store, key, &tickStruct)
 	// return 0 values if key has not been initialized
