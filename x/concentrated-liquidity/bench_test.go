@@ -202,7 +202,6 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 		largeSwapInCoin := sdk.NewCoin(denomIn, swapAmountIn)
 		// Commit so that the changes are propagated to IAVL.
 		s.Commit()
-		noError(b, err)
 
 		testFunc(b, &s, pool, largeSwapInCoin, currentTick)
 		cleanup()
