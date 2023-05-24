@@ -109,10 +109,6 @@ func (k Keeper) GetNextPositionIdAndIncrement(ctx sdk.Context) uint64 {
 	return k.getNextPositionIdAndIncrement(ctx)
 }
 
-func (k Keeper) PoolExists(ctx sdk.Context, poolId uint64) bool {
-	return k.poolExists(ctx, poolId)
-}
-
 func (k Keeper) InitializeInitialPositionForPool(ctx sdk.Context, pool types.ConcentratedPoolExtension, amount0Desired, amount1Desired sdk.Int) error {
 	return k.initializeInitialPositionForPool(ctx, pool, amount0Desired, amount1Desired)
 }
