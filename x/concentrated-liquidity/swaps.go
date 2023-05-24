@@ -318,6 +318,13 @@ func (k Keeper) computeOutAmtGivenIn(
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.DenomDuplicatedError{TokenInDenom: tokenInMin.Denom, TokenOutDenom: tokenOutDenom}
 	}
 
+	// Update global accums to now. This might be necessary as we cross ticks.
+	// We do it here to avoid performing it in the loop for performance reasons.
+	// The performance concern stems from repeated pool proto unmarshalling.
+	if err := k.updatePoolUptimeAccumulatorsToNow(ctx, poolId); err != nil {
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.DenomDuplicatedError{TokenInDenom: tokenInMin.Denom, TokenOutDenom: tokenOutDenom}
+	}
+
 	// initialize swap state with the following parameters:
 	// as we iterate through the following for loop, this swap state will get updated after each required iteration
 	swapState := SwapState{
@@ -519,6 +526,13 @@ func (k Keeper) computeInAmtGivenOut(
 	// check that token in and token out are different denominations
 	if desiredTokenOut.Denom == tokenInDenom {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.DenomDuplicatedError{TokenInDenom: tokenInDenom, TokenOutDenom: desiredTokenOut.Denom}
+	}
+
+	// Update global accums to now. This might be necessary as we cross ticks.
+	// We do it here to avoid performing it in the loop for performance reasons.
+	// The performance concern stems from repeated pool proto unmarshalling.
+	if err := k.updatePoolUptimeAccumulatorsToNow(ctx, poolId); err != nil {
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
 	// initialize swap state with the following parameters:
