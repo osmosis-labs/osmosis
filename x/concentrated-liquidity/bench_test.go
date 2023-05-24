@@ -200,12 +200,8 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 
 		swapAmountIn := sdk.MustNewDecFromStr(amountIn).TruncateInt()
 		largeSwapInCoin := sdk.NewCoin(denomIn, swapAmountIn)
-		s.Commit()
-
 		// Commit so that the changes are propagated to IAVL.
-		s.App.Commit()
-		// Reload latest store version
-		err = s.App.LoadLatestVersion()
+		s.Commit()
 		noError(b, err)
 
 		testFunc(b, &s, pool, largeSwapInCoin, currentTick)
