@@ -2711,8 +2711,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 	uptimeHelper := getExpectedUptimes()
 	defaultSender := s.TestAccs[0]
 	tests := map[string]struct {
-		name              string
-		poolId            uint64
 		numShares         sdk.Dec
 		positionIdCreate  uint64
 		positionIdClaim   uint64
@@ -2723,7 +2721,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 		expectedError     error
 	}{
 		"happy path: claim rewards without forfeiting": {
-			poolId:           validPoolId,
 			positionIdCreate: DefaultPositionId,
 			positionIdClaim:  DefaultPositionId,
 			defaultJoinTime:  true,
@@ -2732,7 +2729,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			numShares:        sdk.OneDec(),
 		},
 		"claim and forfeit rewards (2 shares)": {
-			poolId:            validPoolId,
 			positionIdCreate:  DefaultPositionId,
 			positionIdClaim:   DefaultPositionId,
 			defaultJoinTime:   true,
@@ -2742,7 +2738,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			numShares:         sdk.NewDec(2),
 		},
 		"claim and forfeit rewards when no rewards have accrued": {
-			poolId:            validPoolId,
 			positionIdCreate:  DefaultPositionId,
 			positionIdClaim:   DefaultPositionId,
 			defaultJoinTime:   true,
@@ -2750,7 +2745,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			numShares:         sdk.OneDec(),
 		},
 		"claim and forfeit rewards with varying amounts and different denoms": {
-			poolId:            validPoolId,
 			positionIdCreate:  DefaultPositionId,
 			positionIdClaim:   DefaultPositionId,
 			defaultJoinTime:   true,
@@ -2763,8 +2757,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 		// error catching
 
 		"error: non existent position": {
-			poolId:           validPoolId + 1,
-			positionIdCreate: DefaultPositionId,
+			positionIdCreate: DefaultPositionId + 2,
 			positionIdClaim:  DefaultPositionId + 1, // non existent position
 			defaultJoinTime:  true,
 			growthInside:     uptimeHelper.hundredTokensMultiDenom,
@@ -2775,7 +2768,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 		},
 
 		"error: negative duration": {
-			poolId:           validPoolId,
 			positionIdCreate: DefaultPositionId,
 			positionIdClaim:  DefaultPositionId,
 			defaultJoinTime:  false,
@@ -2786,14 +2778,15 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			expectedError: types.NegativeDurationError{Duration: time.Hour * 504 * -1},
 		},
 	}
-	for _, tc := range tests {
+	for name, tc := range tests {
 		tc := tc
-		s.Run(tc.name, func() {
+		s.Run(name, func() {
 			// --- Setup test env ---
 
 			s.SetupTest()
 			clPool := s.PrepareConcentratedPool()
 			clKeeper := s.App.ConcentratedLiquidityKeeper
+			clPool.SetCurrentTick(DefaultCurrTick)
 
 			joinTime := s.Ctx.BlockTime()
 			if !tc.defaultJoinTime {
@@ -2804,7 +2797,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, tc.numShares, joinTime, tc.positionIdCreate)
 			s.Require().NoError(err)
 
-			clPool.SetCurrentTick(DefaultCurrTick)
 			if tc.growthOutside != nil {
 				s.addUptimeGrowthOutsideRange(s.Ctx, validPoolId, defaultSender, DefaultCurrTick, DefaultLowerTick, DefaultUpperTick, tc.growthOutside)
 			}
@@ -2866,10 +2858,11 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			}
 			s.Require().NoError(err)
 
+			newUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, validPoolId)
+			s.Require().NoError(err)
+
 			// Ensure that forfeited incentives were properly added to their respective accumulators
 			if tc.forfeitIncentives {
-				newUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, validPoolId)
-				s.Require().NoError(err)
 
 				// Subtract the initial accum values to get the delta
 				uptimeAccumDeltaValues, err := osmoutils.SubDecCoinArrays(newUptimeAccumValues, initUptimeAccumValues)
@@ -2892,6 +2885,29 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 				}
 				s.Require().Equal(expectedCoins, amountClaimed)
 				s.Require().Equal(sdk.Coins(nil), amountForfeited)
+
+				// Sum of growthInside
+				totalGrowthInside := sdk.NewDecCoins()
+				for _, coin := range tc.growthInside {
+					totalGrowthInside = totalGrowthInside.Add(coin...)
+				}
+
+				// sum of  growthOutside
+				totalGrowthOutside := sdk.NewDecCoins()
+				for _, coin := range tc.growthOutside {
+					totalGrowthOutside = totalGrowthOutside.Add(coin...)
+				}
+
+				// sum of uptimeAccumulatorGrowth
+				uptimeAccumulatorGrowth := sdk.NewDecCoins()
+				for _, coin := range newUptimeAccumValues {
+					uptimeAccumulatorGrowth = uptimeAccumulatorGrowth.Add(coin...)
+				}
+
+				// Calculate the totalSum, should be tc.growthInside + tc.growthOutside
+				expectedTotal := totalGrowthInside.Add(totalGrowthOutside...)
+
+				s.Require().Equal(expectedTotal, uptimeAccumulatorGrowth)
 			}
 
 			// Ensure balances have not been mutated
