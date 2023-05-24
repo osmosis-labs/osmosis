@@ -1,0 +1,13 @@
+goos: linux
+goarch: amd64
+pkg: github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity
+cpu: Intel(R) Xeon(R) Gold 6248 CPU @ 2.50GHz
+BenchmarkSwapExactAmountIn
+BenchmarkSwapExactAmountIn-4           6         203337340 ns/op
+BenchmarkSwapExactAmountIn-4           6         196893293 ns/op
+BenchmarkSwapExactAmountIn-4           6         206144711 ns/op
+BenchmarkSwapExactAmountIn-4           5         223723342 ns/op
+BenchmarkSwapExactAmountIn-4           6         226831269 ns/op
+BenchmarkSwapExactAmountIn-4           6         192564816 ns/op
+PASS
+ok      github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity    1401.920s

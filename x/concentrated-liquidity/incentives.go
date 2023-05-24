@@ -414,6 +414,94 @@ func (k Keeper) updatePoolUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64
 	return nil
 }
 
+func (k Keeper) updatePoolUptimeAccumulatorsToNowWithAccs(ctx sdk.Context, poolId uint64, uptimeAccums []accum.AccumulatorObject) error {
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	// Since our base unit of time is nanoseconds, we divide with truncation by 10^9 (10e8) to get
+	// time elapsed in seconds
+	timeElapsedNanoSec := sdk.NewDec(int64(ctx.BlockTime().Sub(pool.GetLastLiquidityUpdate())))
+	timeElapsedSec := timeElapsedNanoSec.Quo(sdk.NewDec(10e8))
+
+	// If no time has elapsed, this function is a no-op
+	if timeElapsedSec.Equal(sdk.ZeroDec()) {
+		return nil
+	}
+
+	if timeElapsedSec.LT(sdk.ZeroDec()) {
+		return types.TimeElapsedNotPositiveError{TimeElapsed: timeElapsedSec}
+	}
+
+	// Set up canonical balancer pool as a full range position for the purposes of incentives.
+	// Note that this function fails quietly if no canonical balancer pool exists and only errors
+	// if it does exist and there is a lower level inconsistency.
+	balancerPoolId, _, err := k.prepareBalancerPoolAsFullRange(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	// Get relevant pool-level values
+	poolIncentiveRecords, err := k.GetAllIncentiveRecordsForPool(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	for uptimeIndex, uptimeAccum := range uptimeAccums {
+		// Get relevant uptime-level values
+		curUptimeDuration := types.SupportedUptimes[uptimeIndex]
+
+		// Qualifying liquidity is the amount of liquidity that satisfies uptime requirements
+		qualifyingLiquidity, err := uptimeAccum.GetTotalShares()
+		if err != nil {
+			return err
+		}
+
+		// If there is no share to be incentivized for the current uptime accumulator, we leave it unchanged
+		if qualifyingLiquidity.LT(sdk.OneDec()) {
+			continue
+		}
+
+		incentivesToAddToCurAccum, updatedPoolRecords, err := calcAccruedIncentivesForAccum(ctx, curUptimeDuration, qualifyingLiquidity, timeElapsedSec, poolIncentiveRecords)
+		if err != nil {
+			return err
+		}
+
+		// Emit incentives to current uptime accumulator
+		uptimeAccum.AddToAccumulator(incentivesToAddToCurAccum)
+
+		// Update pool records (stored in state after loop)
+		poolIncentiveRecords = updatedPoolRecords
+	}
+
+	// Update pool incentive records and LastLiquidityUpdate time in state to reflect emitted incentives
+	err = k.setMultipleIncentiveRecords(ctx, poolIncentiveRecords)
+	if err != nil {
+		return err
+	}
+
+	pool.SetLastLiquidityUpdate(ctx.BlockTime())
+	err = k.setPool(ctx, pool)
+	if err != nil {
+		return err
+	}
+
+	// Claim and clear the balancer full range shares from the current pool's uptime accumulators.
+	// This is to avoid having to update accumulators every time the canonical balancer pool changes state.
+	// Even though this exposes CL LPs to getting immediately diluted by a large Balancer position, this would
+	// require a lot of capital to be tied up in a two week bond, which is a viable tradeoff given the relative
+	// simplicity of this approach.
+	if balancerPoolId != 0 {
+		_, err := k.claimAndResetFullRangeBalancerPool(ctx, poolId, balancerPoolId)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // calcAccruedIncentivesForAccum calculates IncentivesPerLiquidity to be added to an accum.
 // Returns the IncentivesPerLiquidity value and an updated list of IncentiveRecords that
 // reflect emitted incentives

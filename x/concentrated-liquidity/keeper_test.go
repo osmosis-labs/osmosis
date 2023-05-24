@@ -158,7 +158,7 @@ func (s *KeeperTestSuite) initializeTick(ctx sdk.Context, currentTick int64, tic
 	tickInfo.FeeGrowthOppositeDirectionOfLastTraversal = feeGrowthOppositeDirectionOfTraversal
 	tickInfo.UptimeTrackers = uptimeTrackers
 
-	s.App.ConcentratedLiquidityKeeper.SetTickInfo(ctx, validPoolId, tickIndex, tickInfo)
+	s.App.ConcentratedLiquidityKeeper.SetTickInfo(ctx, validPoolId, tickIndex, &tickInfo)
 }
 
 // initializeFeeAccumulatorPositionWithLiquidity initializes fee accumulator position with given parameters and updates it with given liquidity.

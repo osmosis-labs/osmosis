@@ -42,7 +42,7 @@ func (s *KeeperTestSuite) TestTickOrdering() {
 
 	liquidityTicks := []int64{-200, -55, -4, 70, 78, 84, 139, 240, 535}
 	for _, t := range liquidityTicks {
-		s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, 1, t, model.TickInfo{})
+		s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, 1, t, &model.TickInfo{})
 	}
 
 	store := s.Ctx.KVStore(storeKey)
@@ -773,7 +773,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 			// Create a default CL pool
 			s.PrepareConcentratedPool()
 			for _, tick := range test.presetTicks {
-				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, tick.Info)
+				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, &tick.Info)
 			}
 
 			liquidityForRange, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityForFullRange(s.Ctx, defaultPoolId)
@@ -1168,7 +1168,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			// Create a default CL pool
 			pool := s.PrepareConcentratedPool()
 			for _, tick := range test.presetTicks {
-				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, tick.Info)
+				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, &tick.Info)
 			}
 
 			// Force initialize current sqrt price to 1.
@@ -1386,7 +1386,7 @@ func (s *KeeperTestSuite) TestGetAllInitializedTicksForPool() {
 			s.SetupTest()
 
 			for _, tick := range test.preSetTicks {
-				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, tick.Info)
+				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, &tick.Info)
 			}
 
 			// If overwrite is not specified, we expect the pre-set ticks to be returned.

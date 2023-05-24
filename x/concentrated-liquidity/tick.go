@@ -10,6 +10,7 @@ import (
 	db "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
@@ -66,7 +67,7 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Add(liquidityDelta)
 	}
 
-	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
+	k.SetTickInfo(ctx, poolId, tickIndex, &tickInfo)
 	return nil
 }
 
@@ -102,9 +103,31 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapS
 		updatedUptimeTrackers[uptimeId].UptimeGrowthOutside = uptimeAccum.GetValue().Sub(updatedUptimeTrackers[uptimeId].UptimeGrowthOutside)
 	}
 
-	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
+	k.SetTickInfo(ctx, poolId, tickIndex, &tickInfo)
 
 	return tickInfo.LiquidityNet, nil
+}
+
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
+func (k Keeper) crossTickAccs(ctx sdk.Context, poolId uint64, tickIndex int64, nextTickInfo *model.TickInfo, swapStateFeeGrowth sdk.DecCoin, feeAccum accum.AccumulatorObject, uptimeAccums []accum.AccumulatorObject) (liquidityDelta sdk.Dec, err error) {
+	// subtract tick's fee growth opposite direction of last traversal from current fee growth global, including the fee growth of the current swap.
+	nextTickInfo.FeeGrowthOppositeDirectionOfLastTraversal = feeAccum.GetValue().Add(swapStateFeeGrowth).Sub(nextTickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
+
+	// Update global accums to now before uptime outside changes
+	if err := k.updatePoolUptimeAccumulatorsToNowWithAccs(ctx, poolId, uptimeAccums); err != nil {
+		return sdk.Dec{}, err
+	}
+
+	// For each supported uptime, subtract tick's uptime growth outside from the respective uptime accumulator
+	// This is functionally equivalent to "flipping" the trackers once the tick is crossed
+	updatedUptimeTrackers := nextTickInfo.UptimeTrackers
+	for uptimeId, uptimeAccum := range uptimeAccums {
+		updatedUptimeTrackers[uptimeId].UptimeGrowthOutside = uptimeAccum.GetValue().Sub(updatedUptimeTrackers[uptimeId].UptimeGrowthOutside)
+	}
+
+	k.SetTickInfo(ctx, poolId, tickIndex, nextTickInfo)
+
+	return nextTickInfo.LiquidityNet, nil
 }
 
 // GetTickInfo gets the tickInfo given a poolId and tickIndex. If the tick has not been initialized, it will initialize it.
@@ -151,10 +174,10 @@ func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	return tickStruct, nil
 }
 
-func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo model.TickInfo) {
+func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo *model.TickInfo) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyTick(poolId, tickIndex)
-	osmoutils.MustSet(store, key, &tickInfo)
+	osmoutils.MustSet(store, key, tickInfo)
 }
 
 func (k Keeper) GetAllInitializedTicksForPool(ctx sdk.Context, poolId uint64) ([]genesis.FullTick, error) {
