@@ -64,7 +64,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 
 	for i := 0; i < b.N; i++ {
 		s := BenchTestSuite{}
-		s.Setup()
+		cleanup := s.SetupWithLevelDb()
 
 		for _, acc := range s.TestAccs {
 			simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, sdk.NewCoins(
@@ -200,6 +200,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 
 		swapAmountIn := sdk.MustNewDecFromStr(amountIn).TruncateInt()
 		largeSwapInCoin := sdk.NewCoin(denomIn, swapAmountIn)
+		s.Commit()
 
 		// Commit so that the changes are propagated to IAVL.
 		s.App.Commit()
@@ -208,7 +209,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 		noError(b, err)
 
 		testFunc(b, &s, pool, largeSwapInCoin, currentTick)
-
+		cleanup()
 	}
 }
 
