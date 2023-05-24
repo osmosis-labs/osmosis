@@ -1125,7 +1125,6 @@ func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
 
 	// Ensure records for other pool remain unchanged
 	poolTwoRecord, err := clKeeper.GetIncentiveRecord(s.Ctx, clPoolTwo.GetId(), incentiveRecordOne.IncentiveDenom, incentiveRecordOne.MinUptime, sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr))
-	s.Require().Error(err)
 	s.Require().ErrorIs(err, types.IncentiveRecordNotFoundError{PoolId: clPoolTwo.GetId(), IncentiveDenom: incentiveRecordOne.IncentiveDenom, MinUptime: incentiveRecordOne.MinUptime, IncentiveCreatorStr: incentiveRecordOne.IncentiveCreatorAddr})
 	s.Require().Equal(types.IncentiveRecord{}, poolTwoRecord)
 	allRecordsPoolTwo, err := clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolTwo.GetId())
@@ -1731,7 +1730,6 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 			// --- Error catching ---
 
 			if test.expectedErr != nil {
-				s.Require().Error(err)
 				s.Require().ErrorContains(err, test.expectedErr.Error())
 				return
 			}
@@ -2320,7 +2318,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			s.Require().Equal(ownerBalancerAfterCollect, ownerBalancerBeforeCollect)
 
 			if tc.expectedError != nil {
-				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
 				s.Require().Equal(tc.expectedIncentivesClaimed, incentivesClaimedQuery)
 				s.Require().Equal(tc.expectedForfeitedIncentives, incentivesForfeitedQuery)
@@ -2340,7 +2337,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			s.Require().Equal(poolBalanceBeforeCollect, poolBalanceAfterCollect)
 
 			if tc.expectedError != nil {
-				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
 				s.Require().Equal(tc.expectedIncentivesClaimed, actualIncentivesClaimed)
 				s.Require().Equal(tc.expectedForfeitedIncentives, actualIncetivesForfeited)
@@ -2625,7 +2621,6 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 
 			// Assertions
 			if tc.expectedError != nil {
-				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
 
 				// Ensure nothing was placed in state
@@ -2679,17 +2674,12 @@ func (s *KeeperTestSuite) TestUpdateAccumAndClaimRewards() {
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-			// Setup test env.
 			s.SetupTest()
-			s.PrepareConcentratedPool()
-			clKeeper := s.App.ConcentratedLiquidityKeeper
-
-			poolFeeAccumulator, err := clKeeper.GetFeeAccumulator(s.Ctx, defaultPoolId)
-			s.Require().NoError(err)
+			poolFeeAccumulator := s.prepareFeeAccumulator()
 			positionKey := validPositionKey
 
 			// Initialize position accumulator.
-			err = poolFeeAccumulator.NewPosition(positionKey, sdk.OneDec(), nil)
+			err := poolFeeAccumulator.NewPosition(positionKey, sdk.OneDec(), nil)
 			s.Require().NoError(err)
 
 			// Record the initial position accumulator value.
@@ -2707,7 +2697,6 @@ func (s *KeeperTestSuite) TestUpdateAccumAndClaimRewards() {
 			amountClaimed, _, err := cl.UpdateAccumAndClaimRewards(poolFeeAccumulator, positionKey, tc.growthOutside)
 
 			if tc.expectError != nil {
-				s.Require().Error(err)
 				s.Require().ErrorIs(err, tc.expectError)
 				return
 			}
@@ -2860,8 +2849,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			newPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetAddress())
 
 			if tc.expectedError != nil {
-				s.Require().Error(err)
-				s.Require().Error(err)
 				s.Require().ErrorIs(err, tc.expectedError)
 			}
 
@@ -2881,7 +2868,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			s.Require().Equal(amountForfeitedQuery, amountForfeited)
 
 			if tc.expectedError != nil {
-				s.Require().Error(err)
 				s.Require().ErrorIs(err, tc.expectedError)
 
 				// Ensure balances have not been mutated
@@ -3116,9 +3102,7 @@ func (s *KeeperTestSuite) TestGetAllIncentiveRecordsForUptime() {
 			// --- Assertions ---
 
 			if tc.expectedError != nil {
-				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
-
 				s.Require().Equal(tc.expectedRecords, retrievedRecords)
 				return
 			}
@@ -3166,7 +3150,6 @@ func (s *KeeperTestSuite) TestFindUptimeIndex() {
 			retrievedUptimeIndex, err := cl.FindUptimeIndex(tc.requestedUptime)
 
 			if tc.expectedError != nil {
-				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
 				s.Require().Equal(tc.expectedUptimeIndex, retrievedUptimeIndex)
 
@@ -3377,7 +3360,6 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			// --- Assertions ---
 
 			if tc.expectedError != nil {
-				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
 
 				// Ensure that returned balancer pool ID is correct
@@ -3612,7 +3594,6 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			// --- Assertions ---
 
 			if tc.expectedError != nil {
-				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
 				s.Require().Equal(sdk.Coins{}, amountClaimed)
 
@@ -3746,58 +3727,45 @@ func (s *KeeperTestSuite) TestGetLargestAuthorizedUptime() {
 	}
 }
 
-func (s *KeeperTestSuite) TestMoveRewardsToNewPositionAndDeleteOldAcc() {
-	const (
-		oldName = "old"
-		newName = "new"
-	)
+// 2ETH
+var defaultGlobalRewardGrowth = sdk.NewDecCoins(oneEth.Add(oneEth))
 
-	var (
-		// 2 ETH.
-		defaultGlobalGrowth = sdk.NewDecCoins(oneEth.Add(oneEth))
-		emptyCoins          = sdk.DecCoins(nil)
-	)
+func (s *KeeperTestSuite) prepareFeeAccumulator() accum.AccumulatorObject {
+	pool := s.PrepareConcentratedPool()
+	testAccumulator, err := s.clk.GetFeeAccumulator(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+	return testAccumulator
+}
+
+func (s *KeeperTestSuite) TestMoveRewardsToNewPositionAndDeleteOldAcc() {
+	oldPos := "old"
+	newPos := "new"
+	emptyCoins := sdk.DecCoins(nil)
 
 	tests := map[string]struct {
-		oldPositionName          string
-		newPositionName          string
 		growthOutside            sdk.DecCoins
 		expectedUnclaimedRewards sdk.DecCoins
 		numShares                int64
-		expectError              error
 	}{
 		"empty growth outside": {
-			oldPositionName:          oldName,
-			newPositionName:          newName,
 			growthOutside:            emptyCoins,
 			numShares:                1,
-			expectedUnclaimedRewards: defaultGlobalGrowth,
+			expectedUnclaimedRewards: defaultGlobalRewardGrowth,
 		},
 		"default global growth equals growth outside": {
-			oldPositionName:          oldName,
-			newPositionName:          newName,
-			growthOutside:            defaultGlobalGrowth,
+			growthOutside:            defaultGlobalRewardGrowth,
 			numShares:                1,
 			expectedUnclaimedRewards: emptyCoins,
 		},
 		"global growth outside half of global": {
-			oldPositionName:          oldName,
-			newPositionName:          newName,
-			growthOutside:            defaultGlobalGrowth.QuoDec(sdk.NewDec(2)),
+			growthOutside:            defaultGlobalRewardGrowth.QuoDec(sdk.NewDec(2)),
 			numShares:                1,
-			expectedUnclaimedRewards: defaultGlobalGrowth.QuoDec(sdk.NewDec(2)),
+			expectedUnclaimedRewards: defaultGlobalRewardGrowth.QuoDec(sdk.NewDec(2)),
 		},
 		"multiple shares, partial growth outside": {
-			oldPositionName:          oldName,
-			newPositionName:          newName,
-			growthOutside:            defaultGlobalGrowth.QuoDec(sdk.NewDec(2)),
+			growthOutside:            defaultGlobalRewardGrowth.QuoDec(sdk.NewDec(2)),
 			numShares:                2,
-			expectedUnclaimedRewards: defaultGlobalGrowth,
-		},
-		"error: same name": {
-			oldPositionName: oldName,
-			newPositionName: oldName,
-			expectError:     types.ModifySamePositionAccumulatorError{PositionAccName: oldName},
+			expectedUnclaimedRewards: defaultGlobalRewardGrowth,
 		},
 	}
 
@@ -3805,39 +3773,30 @@ func (s *KeeperTestSuite) TestMoveRewardsToNewPositionAndDeleteOldAcc() {
 		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
-			k := s.App.ConcentratedLiquidityKeeper
 
-			// Get the fee accumulator. The fact that this is a fee accumulator is irrelevant for this test.
-			// It is created this way for setup convenience.
-			pool := s.PrepareConcentratedPool()
-			testAccumulator, err := k.GetFeeAccumulator(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
+			// Get accumulator. The fact that its a fee accumulator is irrelevant for this test.
+			testAccumulator := s.prepareFeeAccumulator()
 
-			err = testAccumulator.NewPosition(tc.oldPositionName, sdk.NewDec(tc.numShares), nil)
+			err := testAccumulator.NewPosition(oldPos, sdk.NewDec(tc.numShares), nil)
 			s.Require().NoError(err)
 
 			// 2 shares is chosen arbitrarily. It is not relevant for this test.
-			err = testAccumulator.NewPosition(tc.newPositionName, sdk.NewDec(2), nil)
+			err = testAccumulator.NewPosition(newPos, sdk.NewDec(2), nil)
 			s.Require().NoError(err)
 
 			// Grow the global rewards.
-			testAccumulator.AddToAccumulator(defaultGlobalGrowth)
+			testAccumulator.AddToAccumulator(defaultGlobalRewardGrowth)
 
-			err = cl.MoveRewardsToNewPositionAndDeleteOldAcc(s.Ctx, testAccumulator, tc.oldPositionName, tc.newPositionName, tc.growthOutside)
-
-			if tc.expectError != nil {
-				s.Require().Error(err)
-				return
-			}
+			err = cl.MoveRewardsToNewPositionAndDeleteOldAcc(s.Ctx, testAccumulator, oldPos, newPos, tc.growthOutside)
 			s.Require().NoError(err)
 
 			// Check the old accumulator is now deleted.
-			hasPosition, err := testAccumulator.HasPosition(oldName)
+			hasPosition, err := testAccumulator.HasPosition(oldPos)
 			s.Require().NoError(err)
 			s.Require().False(hasPosition)
 
 			// Check that the new accumulator has the correct amount of rewards in unclaimed rewards.
-			newPositionAccumulator, err := testAccumulator.GetPosition(newName)
+			newPositionAccumulator, err := testAccumulator.GetPosition(newPos)
 			s.Require().NoError(err)
 
 			// Validate unclaimed rewards
@@ -3849,7 +3808,18 @@ func (s *KeeperTestSuite) TestMoveRewardsToNewPositionAndDeleteOldAcc() {
 	}
 }
 
+// This should fail because the old position does not exist.
+func (s *KeeperTestSuite) TestMoveRewardsToSamePositionAndDeleteOldAcc() {
+	posName := "pos name"
+	expectedError := types.ModifySamePositionAccumulatorError{PositionAccName: posName}
+
+	testAccumulator := s.prepareFeeAccumulator()
+	err := cl.MoveRewardsToNewPositionAndDeleteOldAcc(s.Ctx, testAccumulator, posName, posName, defaultGlobalRewardGrowth)
+	s.Require().ErrorIs(err, expectedError)
+}
+
 func (s *KeeperTestSuite) TestGetUptimeTrackerValues() {
+	foo100 := sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(100)))
 	testCases := []struct {
 		name           string
 		input          []model.UptimeTracker
@@ -3861,23 +3831,19 @@ func (s *KeeperTestSuite) TestGetUptimeTrackerValues() {
 			expectedOutput: []sdk.DecCoins{},
 		},
 		{
-			name: "One uptime tracker",
-			input: []model.UptimeTracker{
-				{UptimeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(100)))},
-			},
-			expectedOutput: []sdk.DecCoins{
-				sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(100))),
-			},
+			name:           "One uptime tracker",
+			input:          []model.UptimeTracker{{UptimeGrowthOutside: foo100}},
+			expectedOutput: []sdk.DecCoins{foo100},
 		},
 		{
 			name: "Multiple uptime trackers",
 			input: []model.UptimeTracker{
-				{UptimeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(100)))},
+				{UptimeGrowthOutside: foo100},
 				{UptimeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin("fooa", sdk.NewInt(100)))},
 				{UptimeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin("foob", sdk.NewInt(100)))},
 			},
 			expectedOutput: []sdk.DecCoins{
-				sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(100))),
+				foo100,
 				sdk.NewDecCoins(sdk.NewDecCoin("fooa", sdk.NewInt(100))),
 				sdk.NewDecCoins(sdk.NewDecCoin("foob", sdk.NewInt(100))),
 			},
