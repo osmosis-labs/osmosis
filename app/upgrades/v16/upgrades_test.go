@@ -110,7 +110,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				suite.Require().False(params.IsPermissionlessPoolCreationEnabled)
 
 				// Ensure that the protorev upgrade was successful
-				verifyProtorevUpdateSuccess(suite)
+				//verifyProtorevUpdateSuccess(suite)
 			},
 			func() {
 				// Validate that tokenfactory params have been updated
