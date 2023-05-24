@@ -48,6 +48,7 @@ type KeeperTestHelper struct {
 	Ctx         sdk.Context
 	QueryHelper *baseapp.QueryServiceTestHelper
 	TestAccs    []sdk.AccAddress
+	b           *testing.B
 }
 
 var (
@@ -58,6 +59,44 @@ var (
 // Setup sets up basic environment for suite (App, Ctx, and test accounts)
 func (s *KeeperTestHelper) Setup() {
 	s.App = app.Setup(false)
+	s.setupGeneral()
+}
+
+func (s *KeeperTestHelper) SetupLevelDb() (cleanup func(), reloadApp func() (cleanup func())) {
+	app, reloadFn, cleanupFn := app.SetupTestingAppWithLevelDb(false)
+	s.App = app
+	s.setupGeneral()
+	fmt.Println("begin new block")
+	s.Ctx = s.Ctx.WithBlockHeight(s.Ctx.BlockHeight() - 1)
+	s.BeginNewBlock(false)
+	s.EndBlock()
+	s.Commit()
+	fmt.Println("finish new block")
+	validators := s.App.StakingKeeper.GetAllValidators(s.Ctx)
+	valAddrBech, _ := validators[0].GetConsAddr()
+	valAddr := valAddrBech.Bytes()
+	reloadApp = func() (cleanup func()) {
+		app, cleanup := reloadFn()
+		s.App = app
+		height := s.App.LastBlockHeight() + 1
+		t := time.Now().UTC().Add(time.Duration(height) * time.Minute)
+		newHeader := tmtypes.Header{Height: height, ChainID: "osmosis-1", Time: t}
+		lastCommitInfo := abci.LastCommitInfo{
+			Votes: []abci.VoteInfo{{
+				Validator:       abci.Validator{Address: valAddr, Power: 1000},
+				SignedLastBlock: true,
+			}},
+		}
+		beginBlockReq := abci.RequestBeginBlock{Header: newHeader, LastCommitInfo: lastCommitInfo}
+		s.App.BeginBlock(beginBlockReq)
+		s.Ctx = s.App.BaseApp.NewContext(false, newHeader)
+		return cleanup
+	}
+	return cleanupFn, reloadApp
+}
+
+// precondition: assumes app already setup by caller
+func (s *KeeperTestHelper) setupGeneral() {
 	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
 	s.QueryHelper = &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: s.App.GRPCQueryRouter(),
@@ -67,6 +106,7 @@ func (s *KeeperTestHelper) Setup() {
 	s.SetEpochStartTime()
 	s.TestAccs = CreateRandomAccounts(3)
 	s.SetupConcentratedLiquidityDenomsAndPoolCreation()
+
 }
 
 func (s *KeeperTestHelper) SetupTestForInitGenesis() {
@@ -117,18 +157,18 @@ func (s *KeeperTestHelper) Commit() {
 // FundAcc funds target address with specified amount.
 func (s *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
 	err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, amounts)
-	s.Require().NoError(err)
+	s.RNoError(err)
 }
 
 // FundModuleAcc funds target modules with specified amount.
 func (s *KeeperTestHelper) FundModuleAcc(moduleName string, amounts sdk.Coins) {
 	err := simapp.FundModuleAccount(s.App.BankKeeper, s.Ctx, moduleName, amounts)
-	s.Require().NoError(err)
+	s.RNoError(err)
 }
 
 func (s *KeeperTestHelper) MintCoins(coins sdk.Coins) {
 	err := s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, coins)
-	s.Require().NoError(err)
+	s.RNoError(err)
 }
 
 // SetupValidator sets up a validator and returns the ValAddress.
@@ -144,19 +184,19 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 	stakingCoin := sdk.NewCoin(sdk.DefaultBondDenom, selfBond[0].Amount)
 	ZeroCommission := stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	msg, err := stakingtypes.NewMsgCreateValidator(valAddr, valPub, stakingCoin, stakingtypes.Description{}, ZeroCommission, sdk.OneInt())
-	s.Require().NoError(err)
+	s.RNoError(err)
 	res, err := stakingHandler(s.Ctx, msg)
-	s.Require().NoError(err)
-	s.Require().NotNil(res)
+	s.RNoError(err)
+	s.RNotNil(res)
 
 	val, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
-	s.Require().True(found)
+	s.RTrue(found)
 
 	val = val.UpdateStatus(bondStatus)
 	s.App.StakingKeeper.SetValidator(s.Ctx, val)
 
 	consAddr, err := val.GetConsAddr()
-	s.Suite.Require().NoError(err)
+	s.RNoError(err)
 
 	signingInfo := slashingtypes.NewValidatorSigningInfo(
 		consAddr,
@@ -188,7 +228,7 @@ func (s *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 	validators := s.App.StakingKeeper.GetAllValidators(s.Ctx)
 	if len(validators) >= 1 {
 		valAddrFancy, err := validators[0].GetConsAddr()
-		s.Require().NoError(err)
+		s.RNoError(err)
 		valAddr = valAddrFancy.Bytes()
 	} else {
 		valAddrFancy := s.SetupValidator(stakingtypes.Bonded)
@@ -203,10 +243,10 @@ func (s *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 // BeginNewBlockWithProposer begins a new block with a proposer.
 func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, proposer sdk.ValAddress) {
 	validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, proposer)
-	s.Assert().True(found)
+	s.RTrue(found)
 
 	valConsAddr, err := validator.GetConsAddr()
-	s.Require().NoError(err)
+	s.RNoError(err)
 
 	valAddr := valConsAddr.Bytes()
 
@@ -253,12 +293,12 @@ func (s *KeeperTestHelper) RunMsg(msg sdk.Msg) (*sdk.Result, error) {
 // AllocateRewardsToValidator allocates reward tokens to a distribution module then allocates rewards to the validator address.
 func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, rewardAmt sdk.Int) {
 	validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
-	s.Require().True(found)
+	s.RTrue(found)
 
 	// allocate reward tokens to distribution module
 	coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, rewardAmt)}
 	err := simapp.FundModuleAccount(s.App.BankKeeper, s.Ctx, distrtypes.ModuleName, coins)
-	s.Require().NoError(err)
+	s.RNoError(err)
 
 	// allocate rewards to validator
 	s.Ctx = s.Ctx.WithBlockHeight(s.Ctx.BlockHeight() + 1)

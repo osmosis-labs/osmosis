@@ -36,12 +36,11 @@ func noError(b *testing.B, err error) {
 	require.NoError(b, err)
 }
 
-func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, pool types.ConcentratedPoolExtension, largeSwapInCoin sdk.Coin, currentTick int64)) {
-	// Notice we stop the timer to skip setup code.
-	b.StopTimer()
+func setupBenchState(b *testing.B, s *BenchTestSuite, dbCleanup func()) (pool types.ConcentratedPoolExtension, largeSwapInCoin sdk.Coin, currentTick int64) {
+	defer dbCleanup()
 
 	const (
-		numberOfPositions              = 10000
+		numberOfPositions              = 1000
 		maxAmountDeposited             = int64(1_000_000_000_000)
 		amountIn                       = "9999999999999999999"
 		shouldCreateFullRangePositions = true
@@ -59,125 +58,104 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 	)
 
 	rand.Seed(seed)
-
-	for i := 0; i < b.N; i++ {
-		s := BenchTestSuite{}
-		s.Setup()
-
-		for _, acc := range s.TestAccs {
-			simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, sdk.NewCoins(
-				sdk.NewCoin(denom0, maxAmountOfEachToken),
-				sdk.NewCoin(denom1, maxAmountOfEachToken),
-				sdk.NewCoin("uosmo", maxAmountOfEachToken),
-			))
-		}
-
-		// Create a pool
-		poolId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(
-			s.TestAccs[0], denom0, denom1, tickSpacing, sdk.MustNewDecFromStr("0.001"),
+	for _, acc := range s.TestAccs {
+		simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, sdk.NewCoins(
+			sdk.NewCoin(denom0, maxAmountOfEachToken),
+			sdk.NewCoin(denom1, maxAmountOfEachToken),
+			sdk.NewCoin("uosmo", maxAmountOfEachToken),
 		))
-		noError(b, err)
+	}
 
-		clKeeper := s.App.ConcentratedLiquidityKeeper
+	// Create a pool
+	poolId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(
+		s.TestAccs[0], denom0, denom1, tickSpacing, sdk.MustNewDecFromStr("0.001"),
+	))
+	noError(b, err)
 
-		// Create first position to set a price of 1 and tick of zero.
-		tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(100))
-		tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(100))
-		tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
-		_, _, _, _, _, _, _, err = clKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinTick, types.MaxTick)
-		noError(b, err)
+	clKeeper := s.App.ConcentratedLiquidityKeeper
 
-		pool, err := clKeeper.GetPoolById(s.Ctx, poolId)
-		noError(b, err)
+	// Create first position to set a price of 1 and tick of zero.
+	tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(100))
+	tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(100))
+	tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
+	_, _, _, _, _, _, _, err = clKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinTick, types.MaxTick)
+	noError(b, err)
 
-		// Zero by default, can configure by setting a specific position.
-		currentTick := pool.GetCurrentTick()
+	pool, err = clKeeper.GetPoolById(s.Ctx, poolId)
+	noError(b, err)
 
-		// Setup numberOfPositions positions at random ranges
-		setupPositions := func() {
-			for i := 0; i < numberOfPositions; i++ {
-				var (
-					lowerTick int64
-					upperTick int64
-				)
+	// Zero by default, can configure by setting a specific position.
+	currentTick = pool.GetCurrentTick()
 
-				if denomIn == denom0 {
-					// Decreasing price so want to be below current tick
-					// minTick <= lowerTick <= currentTick
-					lowerTick = rand.Int63n(currentTick-types.MinTick+1) + types.MinTick
-					// lowerTick <= upperTick <= currentTick
-					upperTick = currentTick - rand.Int63n(int64(math.Abs(float64(currentTick-lowerTick))))
-				} else {
-					// Increasing price so want to be above current tick
-					// currentTick <= lowerTick <= maxTick
-					lowerTick = rand.Int63n(types.MaxTick-currentTick+1) + currentTick
-					// lowerTick <= upperTick <= maxTick
-					upperTick = types.MaxTick - rand.Int63n(int64(math.Abs(float64(types.MaxTick-lowerTick))))
-				}
+	// Setup numberOfPositions positions at random ranges
+	setupPositions := func() {
+		for i := 0; i < numberOfPositions; i++ {
+			var (
+				lowerTick int64
+				upperTick int64
+			)
 
-				// Normalize lowerTick to be a multiple of tickSpacing
-				lowerTick = lowerTick + (tickSpacing - lowerTick%tickSpacing)
-				// Normalize upperTick to be a multiple of tickSpacing
-				upperTick = upperTick - upperTick%tickSpacing
-
-				priceLowerTick, priceUpperTick, _, _, err := clmath.TicksToSqrtPrice(lowerTick, upperTick)
-				noError(b, err)
-
-				lowerTick, upperTick, err = cl.RoundTickToCanonicalPriceTick(
-					lowerTick, upperTick, priceLowerTick, priceUpperTick, tickSpacing,
-				)
-				if err != nil {
-					continue
-				}
-
-				tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
-				tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
-
-				accountIndex := rand.Intn(len(s.TestAccs))
-				s.createPosition(accountIndex, poolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
+			if denomIn == denom0 {
+				// Decreasing price so want to be below current tick
+				// minTick <= lowerTick <= currentTick
+				lowerTick = rand.Int63n(currentTick-types.MinTick+1) + types.MinTick
+				// lowerTick <= upperTick <= currentTick
+				upperTick = currentTick - rand.Int63n(int64(math.Abs(float64(currentTick-lowerTick))))
+			} else {
+				// Increasing price so want to be above current tick
+				// currentTick <= lowerTick <= maxTick
+				lowerTick = rand.Int63n(types.MaxTick-currentTick+1) + currentTick
+				// lowerTick <= upperTick <= maxTick
+				upperTick = types.MaxTick - rand.Int63n(int64(math.Abs(float64(types.MaxTick-lowerTick))))
 			}
+
+			// Normalize lowerTick to be a multiple of tickSpacing
+			lowerTick = lowerTick + (tickSpacing - lowerTick%tickSpacing)
+			// Normalize upperTick to be a multiple of tickSpacing
+			upperTick = upperTick - upperTick%tickSpacing
+
+			priceLowerTick, priceUpperTick, _, _, err := clmath.TicksToSqrtPrice(lowerTick, upperTick)
+			noError(b, err)
+
+			lowerTick, upperTick, err = cl.RoundTickToCanonicalPriceTick(
+				lowerTick, upperTick, priceLowerTick, priceUpperTick, tickSpacing,
+			)
+			if err != nil {
+				continue
+			}
+
+			tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
+			tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
+
+			accountIndex := rand.Intn(len(s.TestAccs))
+			s.createPosition(accountIndex, poolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
 		}
+	}
 
-		// Setup numberOfPositions full range positions for deeper liquidity.
-		setupFullRangePositions := func() {
-			for i := 0; i < numberOfPositions; i++ {
-				lowerTick := types.MinTick
-				upperTick := types.MaxTick
-				maxAmountDepositedFullRange := sdk.NewInt(maxAmountDeposited).MulRaw(5)
-				tokenDesired0 := sdk.NewCoin(denom0, maxAmountDepositedFullRange)
-				tokenDesired1 := sdk.NewCoin(denom1, maxAmountDepositedFullRange)
-				tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
-				accountIndex := rand.Intn(len(s.TestAccs))
-				account := s.TestAccs[accountIndex]
-				simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
-				s.createPosition(accountIndex, poolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
-			}
+	// Setup numberOfPositions full range positions for deeper liquidity.
+	setupFullRangePositions := func() {
+		for i := 0; i < numberOfPositions; i++ {
+			lowerTick := types.MinTick
+			upperTick := types.MaxTick
+			maxAmountDepositedFullRange := sdk.NewInt(maxAmountDeposited).MulRaw(5)
+			tokenDesired0 := sdk.NewCoin(denom0, maxAmountDepositedFullRange)
+			tokenDesired1 := sdk.NewCoin(denom1, maxAmountDepositedFullRange)
+			tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
+			accountIndex := rand.Intn(len(s.TestAccs))
+			account := s.TestAccs[accountIndex]
+			simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
+			s.createPosition(accountIndex, poolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
 		}
+	}
 
-		// Setup numberOfPositions * 2 positions at random ranges around the current tick for deeper
-		// liquidity.
-		setupConcentratedPositions := func() {
-			// Within 10 ticks of the current
-			if tickSpacing <= 10 {
-				for i := 0; i < numberOfPositions; i++ {
-					lowerTick := currentTick - 10
-					upperTick := currentTick + 10
-					tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(maxAmountDeposited).MulRaw(5))
-					tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(maxAmountDeposited).MulRaw(5))
-					tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
-					accountIndex := rand.Intn(len(s.TestAccs))
-					account := s.TestAccs[accountIndex]
-					simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
-					s.createPosition(accountIndex, poolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
-				}
-			}
-
-			// Within 100 ticks of the current
+	// Setup numberOfPositions * 2 positions at random ranges around the current tick for deeper
+	// liquidity.
+	setupConcentratedPositions := func() {
+		// Within 10 ticks of the current
+		if tickSpacing <= 10 {
 			for i := 0; i < numberOfPositions; i++ {
-				lowerTick := currentTick - 100
-				upperTick := currentTick + 100
-				lowerTick = lowerTick + (tickSpacing - lowerTick%tickSpacing)
-				upperTick = upperTick - upperTick%tickSpacing
+				lowerTick := currentTick - 10
+				upperTick := currentTick + 10
 				tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(maxAmountDeposited).MulRaw(5))
 				tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(maxAmountDeposited).MulRaw(5))
 				tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
@@ -188,19 +166,58 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 			}
 		}
 
-		setupPositions()
-		if shouldCreateFullRangePositions {
-			setupFullRangePositions()
+		// Within 100 ticks of the current
+		for i := 0; i < numberOfPositions; i++ {
+			lowerTick := currentTick - 100
+			upperTick := currentTick + 100
+			lowerTick = lowerTick + (tickSpacing - lowerTick%tickSpacing)
+			upperTick = upperTick - upperTick%tickSpacing
+			tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(maxAmountDeposited).MulRaw(5))
+			tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(maxAmountDeposited).MulRaw(5))
+			tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
+			accountIndex := rand.Intn(len(s.TestAccs))
+			account := s.TestAccs[accountIndex]
+			simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
+			s.createPosition(accountIndex, poolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
 		}
-		if shouldConcentrate {
-			setupConcentratedPositions()
-		}
+	}
 
-		swapAmountIn := sdk.MustNewDecFromStr(amountIn).TruncateInt()
-		largeSwapInCoin := sdk.NewCoin(denomIn, swapAmountIn)
+	fmt.Println("begin setup")
+	setupPositions()
+	fmt.Println("begin setup 2")
+	if shouldCreateFullRangePositions {
+		setupFullRangePositions()
+	}
+	fmt.Println("begin setup 3")
+	if shouldConcentrate {
+		setupConcentratedPositions()
+	}
 
+	swapAmountIn := sdk.MustNewDecFromStr(amountIn).TruncateInt()
+	largeSwapInCoin = sdk.NewCoin(denomIn, swapAmountIn)
+
+	fmt.Println("Committing")
+	s.Commit()
+	fmt.Println("Committed")
+	return pool, largeSwapInCoin, currentTick
+}
+
+func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, pool types.ConcentratedPoolExtension, largeSwapInCoin sdk.Coin, currentTick int64)) {
+	fmt.Println("sanity check")
+	// Notice we stop the timer to skip setup code.
+	b.StopTimer()
+
+	s := BenchTestSuite{}
+	s.OverrideErrorCheck(b)
+	cleanup, reloadFn := s.SetupLevelDb()
+	fmt.Println("db setup")
+	pool, largeSwapInCoin, currentTick := setupBenchState(b, &s, cleanup)
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		reloadFn()
+		b.StartTimer()
 		testFunc(b, &s, pool, largeSwapInCoin, currentTick)
-
 	}
 }
 
@@ -219,7 +236,6 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 		b.StopTimer()
 		noError(b, err)
 
-		fmt.Println("current_tick", currentTick)
 		fmt.Println("num_ticks_traversed", len(liquidityNet))
 	})
 }

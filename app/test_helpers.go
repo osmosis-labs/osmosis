@@ -13,6 +13,7 @@ import (
 )
 
 var defaultGenesisBz []byte
+var DefaultValidatorStr = sdk.MustAccAddressFromBech32("osmovalcons1yhauul02y90hamrq3yuu59mvkcn0a24xdnkc33")
 
 func getDefaultGenesisStateBytes() []byte {
 	if len(defaultGenesisBz) == 0 {
@@ -47,16 +48,27 @@ func Setup(isCheckTx bool) *OsmosisApp {
 
 // SetupTestingAppWithLevelDb initializes a new OsmosisApp intended for testing,
 // with LevelDB as a db.
-func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func()) {
+func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, reloadApp func() (app *OsmosisApp, cleanupFn func()), cleanupFn func()) {
 	dir, err := os.MkdirTemp(os.TempDir(), "osmosis_leveldb_testing")
 	if err != nil {
 		panic(err)
 	}
-	db, err := sdk.NewLevelDB("osmosis_leveldb_testing", dir)
-	if err != nil {
-		panic(err)
+	reloadApp = func() (app *OsmosisApp, cleanupFn func()) {
+		newDb, err := sdk.NewLevelDB("osmosis_leveldb_testing", dir)
+		if err != nil {
+			panic(err)
+		}
+		newApp := NewOsmosisApp(log.NewNopLogger(), newDb, nil, true, map[int64]bool{}, DefaultNodeHome, 5, simapp.EmptyAppOptions{}, EmptyWasmOpts)
+		cleanupFn = func() {
+			newDb.Close()
+			err = os.RemoveAll(dir)
+			if err != nil {
+				panic(err)
+			}
+		}
+		return newApp, cleanupFn
 	}
-	app = NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, simapp.EmptyAppOptions{}, EmptyWasmOpts)
+	app, cleanupFn = reloadApp()
 	if !isCheckTx {
 		genesisState := NewDefaultGenesisState()
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
@@ -66,20 +78,14 @@ func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func
 
 		app.InitChain(
 			abci.RequestInitChain{
-				Validators:      []abci.ValidatorUpdate{},
+				Validators: []abci.ValidatorUpdate{
+					{Address: DefaultValidatorStr.Bytes(), Power: 100},
+				},
 				ConsensusParams: simapp.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
 			},
 		)
 	}
 
-	cleanupFn = func() {
-		db.Close()
-		err = os.RemoveAll(dir)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	return app, cleanupFn
+	return app, reloadApp, cleanupFn
 }
