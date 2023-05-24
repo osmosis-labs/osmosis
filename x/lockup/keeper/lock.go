@@ -144,7 +144,8 @@ func (k Keeper) CreateLockNoSend(ctx sdk.Context, owner sdk.AccAddress, coins sd
 	ID := k.GetLastLockID(ctx) + 1
 	// unlock time is initially set without a value, gets set as unlock start time + duration
 	// when unlocking starts.
-	lock := types.NewPeriodLock(ID, owner, duration, time.Time{}, coins)
+	// the reward receiver is set as the owner by default when creating a lock.
+	lock := types.NewPeriodLock(ID, owner, owner, duration, time.Time{}, coins)
 
 	// lock the coins without sending them to the lockup module account
 	err := k.lock(ctx, lock, lock.Coins)
@@ -445,6 +446,32 @@ func (k Keeper) unlockMaturedLockInternalLogic(ctx sdk.Context, lock types.Perio
 	}
 
 	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+	return nil
+}
+
+// SetLockReceiver changes the reward recipient address to the given address.
+func (k Keeper) SetLockRewardReceiverAddress(ctx sdk.Context, lockID uint64, owner, newRecepientAddress sdk.AccAddress) error {
+	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
+
+	// check if the lock owner is the method caller.
+	if lock.GetOwner() != owner.String() {
+		return types.ErrNotLockOwner
+	}
+
+	if lock.RewardReceiverAddress == newRecepientAddress.String() {
+		return types.ErrRewardReceiverIsSame
+	}
+
+	lock.RewardReceiverAddress = newRecepientAddress.String()
+
+	err = k.setLock(ctx, *lock)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -793,7 +820,7 @@ func (k Keeper) SplitLock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coin
 	splitLockID := k.GetLastLockID(ctx) + 1
 	k.SetLastLockID(ctx, splitLockID)
 
-	splitLock := types.NewPeriodLock(splitLockID, lock.OwnerAddress(), lock.Duration, lock.EndTime, coins)
+	splitLock := types.NewPeriodLock(splitLockID, lock.OwnerAddress(), lock.OwnerAddress(), lock.Duration, lock.EndTime, coins)
 
 	err = k.setLock(ctx, splitLock)
 	return splitLock, err

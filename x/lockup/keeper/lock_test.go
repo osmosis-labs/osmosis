@@ -235,7 +235,7 @@ func (s *KeeperTestSuite) TestUnlock() {
 		ctx := s.Ctx
 
 		addr1 := sdk.AccAddress([]byte("addr1---------------"))
-		_ = types.NewPeriodLock(1, addr1, time.Second, time.Time{}, tc.fundAcc)
+		_ = types.NewPeriodLock(1, addr1, addr1, time.Second, time.Time{}, tc.fundAcc)
 
 		// lock with balance
 		s.FundAcc(addr1, tc.fundAcc)
@@ -494,6 +494,7 @@ func (s *KeeperTestSuite) TestCreateLock() {
 	s.Require().Equal(time.Second, lock.Duration)
 	s.Require().Equal(time.Time{}, lock.EndTime)
 	s.Require().Equal(uint64(1), lock.ID)
+	s.Require().Equal(addr1.String(), lock.RewardReceiverAddress)
 
 	lockID := s.App.LockupKeeper.GetLastLockID(s.Ctx)
 	s.Require().Equal(uint64(1), lockID)
@@ -531,6 +532,88 @@ func (s *KeeperTestSuite) TestCreateLock() {
 	acc := s.App.AccountKeeper.GetModuleAccount(s.Ctx, types.ModuleName)
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, acc.GetAddress(), "stake")
 	s.Require().Equal(sdk.NewInt(30), balance.Amount)
+}
+
+func (s *KeeperTestSuite) TestSetLockRewardReceiverAddress() {
+	testCases := []struct {
+		name                  string
+		isnotOwner            bool
+		lockID                uint64
+		useNewReceiverAddress bool
+		expectedError         bool
+	}{
+		{
+			name:                  "happy case",
+			isnotOwner:            false,
+			lockID:                1,
+			useNewReceiverAddress: true,
+			expectedError:         false,
+		},
+		{
+			name:                  "error: caller of the function is not the owner",
+			isnotOwner:            true,
+			lockID:                1,
+			useNewReceiverAddress: true,
+			expectedError:         true,
+		},
+		{
+			name:                  "error: lock id is invalid",
+			isnotOwner:            false,
+			lockID:                2,
+			useNewReceiverAddress: true,
+			expectedError:         true,
+		},
+		{
+			name:                  "error: new receiver address is same as old",
+			isnotOwner:            false,
+			lockID:                1,
+			useNewReceiverAddress: false,
+			expectedError:         true,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			addr1 := s.TestAccs[0]
+			coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+
+			s.FundAcc(addr1, coins)
+
+			// create an account first
+			lock, err := s.App.LockupKeeper.CreateLock(s.Ctx, addr1, coins, time.Second)
+			s.Require().NoError(err)
+
+			// check that the reward receiver is the lock owner by default
+			s.Require().Equal(lock.RewardReceiverAddress, addr1.String())
+
+			owner := addr1
+			if tc.isnotOwner {
+				owner = s.TestAccs[1]
+			}
+
+			newReceiver := addr1
+			// if this field is set to true, use different account as input
+			if tc.useNewReceiverAddress {
+				newReceiver = s.TestAccs[1]
+			}
+
+			// System under test
+			// now change the reward receiver state
+			err = s.App.LockupKeeper.SetLockRewardReceiverAddress(s.Ctx, tc.lockID, owner, newReceiver)
+			if tc.expectedError {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
+				s.Require().NoError(err)
+				s.Require().Equal(lock.RewardReceiverAddress, newReceiver.String())
+			}
+
+		})
+	}
+
 }
 
 func (s *KeeperTestSuite) TestCreateLockNoSend() {

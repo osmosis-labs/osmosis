@@ -158,38 +158,38 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge,
 // distributionInfo stores all of the information for pent up sends for rewards distributions.
 // This enables us to lower the number of events and calls to back.
 type distributionInfo struct {
-	nextID            int
-	lockOwnerAddrToID map[string]int
-	idToBech32Addr    []string
-	idToDecodedAddr   []sdk.AccAddress
-	idToDistrCoins    []sdk.Coins
+	nextID                 int
+	rewardRecevierAddrToID map[string]int
+	idToBech32Addr         []string
+	idToDecodedAddr        []sdk.AccAddress
+	idToDistrCoins         []sdk.Coins
 }
 
 // newDistributionInfo creates a new distributionInfo struct
 func newDistributionInfo() distributionInfo {
 	return distributionInfo{
-		nextID:            0,
-		lockOwnerAddrToID: make(map[string]int),
-		idToBech32Addr:    []string{},
-		idToDecodedAddr:   []sdk.AccAddress{},
-		idToDistrCoins:    []sdk.Coins{},
+		nextID:                 0,
+		rewardRecevierAddrToID: make(map[string]int),
+		idToBech32Addr:         []string{},
+		idToDecodedAddr:        []sdk.AccAddress{},
+		idToDistrCoins:         []sdk.Coins{},
 	}
 }
 
 // addLockRewards adds the provided rewards to the lockID mapped to the provided owner address.
-func (d *distributionInfo) addLockRewards(owner string, rewards sdk.Coins) error {
-	if id, ok := d.lockOwnerAddrToID[owner]; ok {
+func (d *distributionInfo) addLockRewards(rewardReceiver string, rewards sdk.Coins) error {
+	if id, ok := d.rewardRecevierAddrToID[rewardReceiver]; ok {
 		oldDistrCoins := d.idToDistrCoins[id]
 		d.idToDistrCoins[id] = rewards.Add(oldDistrCoins...)
 	} else {
 		id := d.nextID
 		d.nextID += 1
-		d.lockOwnerAddrToID[owner] = id
-		decodedOwnerAddr, err := sdk.AccAddressFromBech32(owner)
+		d.rewardRecevierAddrToID[rewardReceiver] = id
+		decodedOwnerAddr, err := sdk.AccAddressFromBech32(rewardReceiver)
 		if err != nil {
 			return err
 		}
-		d.idToBech32Addr = append(d.idToBech32Addr, owner)
+		d.idToBech32Addr = append(d.idToBech32Addr, rewardReceiver)
 		d.idToDecodedAddr = append(d.idToDecodedAddr, decodedOwnerAddr)
 		d.idToDistrCoins = append(d.idToDistrCoins, rewards)
 	}
@@ -324,7 +324,7 @@ func (k Keeper) distributeInternal(
 			continue
 		}
 		// update the amount for that address
-		err := distrInfo.addLockRewards(lock.Owner, distrCoins)
+		err := distrInfo.addLockRewards(lock.RewardReceiverAddress, distrCoins)
 		if err != nil {
 			return nil, err
 		}
