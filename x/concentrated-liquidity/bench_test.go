@@ -41,7 +41,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 	b.StopTimer()
 
 	const (
-		numberOfPositions              = 100000
+		numberOfPositions              = 10000
 		maxAmountDeposited             = int64(1_000_000_000_000)
 		amountIn                       = "9999999999999999999"
 		shouldCreateFullRangePositions = true
