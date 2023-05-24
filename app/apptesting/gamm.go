@@ -218,8 +218,8 @@ func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice sdk.De
 		s.Require().NoError(err)
 	} else {
 		swapOut := sdk.NewCoins(sdk.NewCoin(quoteDenom, sdk.NewInt(amountTrade.RoundInt64()).Abs()))
-		swapFee := pool.GetSwapFee(s.Ctx)
-		tokenIn, err := pool.CalcInAmtGivenOut(s.Ctx, swapOut, baseDenom, swapFee)
+		spreadFactor := pool.GetSpreadFactor(s.Ctx)
+		tokenIn, err := pool.CalcInAmtGivenOut(s.Ctx, swapOut, baseDenom, spreadFactor)
 		s.Require().NoError(err)
 		s.FundAcc(s.TestAccs[0], sdk.NewCoins(tokenIn))
 		msg := gammtypes.MsgSwapExactAmountOut{

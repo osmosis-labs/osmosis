@@ -2,6 +2,7 @@ syntax = "proto3";
 package osmosis.superfluid;
 
 import "gogoproto/gogo.proto";
+import "amino/amino.proto";
 import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
@@ -36,6 +37,10 @@ service Msg {
   rpc LockAndSuperfluidDelegate(MsgLockAndSuperfluidDelegate)
       returns (MsgLockAndSuperfluidDelegateResponse);
 
+  rpc CreateFullRangePositionAndSuperfluidDelegate(
+      MsgCreateFullRangePositionAndSuperfluidDelegate)
+      returns (MsgCreateFullRangePositionAndSuperfluidDelegateResponse);
+
   rpc UnPoolWhitelistedPool(MsgUnPoolWhitelistedPool)
       returns (MsgUnPoolWhitelistedPoolResponse);
 
@@ -43,9 +48,15 @@ service Msg {
       MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition)
       returns (
           MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse);
+
+  rpc AddToConcentratedLiquiditySuperfluidPosition(
+      MsgAddToConcentratedLiquiditySuperfluidPosition)
+      returns (MsgAddToConcentratedLiquiditySuperfluidPositionResponse);
 }
 
 message MsgSuperfluidDelegate {
+  option (amino.name) = "osmosis/superfluid-delegate";
+
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 lock_id = 2;
   string val_addr = 3;
@@ -53,12 +64,16 @@ message MsgSuperfluidDelegate {
 message MsgSuperfluidDelegateResponse {}
 
 message MsgSuperfluidUndelegate {
+  option (amino.name) = "osmosis/superfluid-undelegate";
+
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 lock_id = 2;
 }
 message MsgSuperfluidUndelegateResponse {}
 
 message MsgSuperfluidUnbondLock {
+  option (amino.name) = "osmosis/superfluid-unbond-lock";
+
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 lock_id = 2;
 }
@@ -89,6 +104,8 @@ message MsgSuperfluidUndelegateAndUnbondLockResponse {
 // and then does a superfluid lock from the newly created lockup, to the
 // specified validator addr.
 message MsgLockAndSuperfluidDelegate {
+  option (amino.name) = "osmosis/lock-and-superfluid-delegate";
+
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   repeated cosmos.base.v1beta1.Coin coins = 2 [
     (gogoproto.nullable) = false,
@@ -97,6 +114,22 @@ message MsgLockAndSuperfluidDelegate {
   string val_addr = 3;
 }
 message MsgLockAndSuperfluidDelegateResponse { uint64 ID = 1; }
+
+// MsgCreateFullRangePositionAndSuperfluidDelegate creates a full range position
+// in a concentrated liquidity pool, then superfluid delegates.
+message MsgCreateFullRangePositionAndSuperfluidDelegate {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  repeated cosmos.base.v1beta1.Coin coins = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  string val_addr = 3;
+  uint64 pool_id = 4 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+message MsgCreateFullRangePositionAndSuperfluidDelegateResponse {
+  uint64 lockID = 1;
+  uint64 positionID = 2;
+}
 
 // MsgUnPoolWhitelistedPool Unpools every lock the sender has, that is
 // associated with pool pool_id. If pool_id is not approved for unpooling by
@@ -107,6 +140,8 @@ message MsgLockAndSuperfluidDelegateResponse { uint64 ID = 1; }
 // If the lock was unbonding, the new lockup durations should be the time left
 // until unbond completion.
 message MsgUnPoolWhitelistedPool {
+  option (amino.name) = "osmosis/unpool-whitelisted-pool";
+
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
@@ -123,6 +158,12 @@ message MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition {
   cosmos.base.v1beta1.Coin shares_to_migrate = 3 [
     (gogoproto.moretags) = "yaml:\"shares_to_migrate\"",
     (gogoproto.nullable) = false
+  ];
+  // token_out_mins indicates minimum token to exit Balancer pool with.
+  repeated cosmos.base.v1beta1.Coin token_out_mins = 4 [
+    (gogoproto.moretags) = "yaml:\"token_out_mins\"",
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
 
@@ -147,4 +188,41 @@ message MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse {
     (gogoproto.stdtime) = true,
     (gogoproto.moretags) = "yaml:\"join_time\""
   ];
+}
+
+// ===================== MsgAddToConcentratedLiquiditySuperfluidPosition
+message MsgAddToConcentratedLiquiditySuperfluidPosition {
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  cosmos.base.v1beta1.Coin token_desired0 = 3 [
+    (gogoproto.moretags) = "yaml:\"token_desired0\"",
+    (gogoproto.nullable) = false
+  ];
+  cosmos.base.v1beta1.Coin token_desired1 = 4 [
+    (gogoproto.moretags) = "yaml:\"token_desired1\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgAddToConcentratedLiquiditySuperfluidPositionResponse {
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  string amount0 = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"amount0\"",
+    (gogoproto.nullable) = false
+  ];
+  string amount1 = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"amount1\"",
+    (gogoproto.nullable) = false
+  ];
+  // new_liquidity is the final liquidity after the add.
+  // It includes the liquidity that existed before in the position
+  // and the new liquidity that was added to the position.
+  string new_liquidity = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"new_liquidity\"",
+    (gogoproto.nullable) = false
+  ];
+  uint64 lock_id = 4 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
 }

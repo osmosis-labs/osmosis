@@ -12,7 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
-func (suite *KeeperTestSuite) TestBackRunEvent() {
+func (s *KeeperTestSuite) TestBackRunEvent() {
 	testcases := map[string]struct {
 		pool                     keeper.SwapToBackrun
 		remainingTxPoolPoints    uint64
@@ -36,11 +36,11 @@ func (suite *KeeperTestSuite) TestBackRunEvent() {
 	}
 
 	for name, tc := range testcases {
-		suite.Run(name, func() {
+		s.Run(name, func() {
 			expectedEvent := sdk.NewEvent(
 				types.TypeEvtBackrun,
 				sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-				sdk.NewAttribute(types.AttributeKeyTxHash, strings.ToUpper(hex.EncodeToString(tmhash.Sum(suite.Ctx.TxBytes())))),
+				sdk.NewAttribute(types.AttributeKeyTxHash, strings.ToUpper(hex.EncodeToString(tmhash.Sum(s.Ctx.TxBytes())))),
 				sdk.NewAttribute(types.AttributeKeyUserPoolId, strconv.FormatUint(tc.pool.PoolId, 10)),
 				sdk.NewAttribute(types.AttributeKeyUserDenomIn, tc.pool.TokenInDenom),
 				sdk.NewAttribute(types.AttributeKeyUserDenomOut, tc.pool.TokenOutDenom),
@@ -52,11 +52,11 @@ func (suite *KeeperTestSuite) TestBackRunEvent() {
 				sdk.NewAttribute(types.AttributeKeyProtorevArbDenom, tc.inputCoin.Denom),
 			)
 
-			keeper.EmitBackrunEvent(suite.Ctx, tc.pool, tc.inputCoin, tc.profit, tc.tokenOutAmount, tc.remainingTxPoolPoints, tc.remainingBlockPoolPoints)
+			keeper.EmitBackrunEvent(s.Ctx, tc.pool, tc.inputCoin, tc.profit, tc.tokenOutAmount, tc.remainingTxPoolPoints, tc.remainingBlockPoolPoints)
 
 			// Get last event emitted and ensure it is the expected event
-			actualEvent := suite.Ctx.EventManager().Events()[len(suite.Ctx.EventManager().Events())-1]
-			suite.Equal(expectedEvent, actualEvent)
+			actualEvent := s.Ctx.EventManager().Events()[len(s.Ctx.EventManager().Events())-1]
+			s.Equal(expectedEvent, actualEvent)
 		})
 	}
 }

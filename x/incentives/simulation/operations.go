@@ -31,7 +31,7 @@ const (
 // WeightedOperations returns all the operations from the module with their respective weights.
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak stakingTypes.AccountKeeper,
-	bk stakingTypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper,
+	bk osmosimtypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
 		weightMsgCreateGauge int
@@ -120,7 +120,7 @@ func Max(x, y int) int {
 }
 
 // SimulateMsgCreateGauge generates and executes a MsgCreateGauge with random parameters
-func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk osmosimtypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -159,7 +159,7 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankK
 }
 
 // SimulateMsgAddToGauge generates and executes a MsgAddToGauge with random parameters
-func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk osmosimtypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {

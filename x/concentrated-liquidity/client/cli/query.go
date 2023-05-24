@@ -15,6 +15,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdPools)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetUserPositions)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetClaimableFees)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetClaimableIncentives)
 	cmd.AddCommand(
 		osmocli.GetParams[*queryproto.ParamsRequest](
 			types.ModuleName, queryproto.NewQueryClient),
@@ -29,7 +30,8 @@ func GetUserPositions() (*osmocli.QueryDescriptor, *queryproto.UserPositionsRequ
 			Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} user-positions osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj`,
 			Flags:               osmocli.FlagDesc{OptionalFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
-			CustomFlagOverrides: poolIdFlagOverride},
+			CustomFlagOverrides: poolIdFlagOverride,
+		},
 		&queryproto.UserPositionsRequest{}
 }
 
@@ -38,13 +40,24 @@ func GetCmdPools() (*osmocli.QueryDescriptor, *queryproto.PoolsRequest) {
 		Use:   "pools",
 		Short: "Query pools",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} pools`}, &queryproto.PoolsRequest{}
+{{.CommandPrefix}} pools`,
+	}, &queryproto.PoolsRequest{}
 }
 
 func GetClaimableFees() (*osmocli.QueryDescriptor, *queryproto.ClaimableFeesRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "claimable-fees [poolID] [address] [lowerTick] [upperTick]",
+		Use:   "claimable-fees [positionID]",
 		Short: "Query claimable fees",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} claimable-fees 1 osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj [-100] 100`}, &queryproto.ClaimableFeesRequest{}
+{{.CommandPrefix}} claimable-fees 53`,
+	}, &queryproto.ClaimableFeesRequest{}
+}
+
+func GetClaimableIncentives() (*osmocli.QueryDescriptor, *queryproto.ClaimableIncentivesRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "claimable-incentives [positionID]",
+		Short: "Query claimable incentives",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} claimable-fees 53`,
+	}, &queryproto.ClaimableIncentivesRequest{}
 }

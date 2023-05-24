@@ -80,12 +80,29 @@ func (q Querier) LockableDurations(ctx context.Context, _ *types.QueryLockableDu
 	return &types.QueryLockableDurationsResponse{LockableDurations: q.Keeper.GetLockableDurations(sdkCtx)}, nil
 }
 
-// IncentivizedPools iterates over all gauges, returns default gauges created with pool.
+// IncentivizedPools iterates over all internally incentivized gauges and returns their corresponding pools.
 func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentivizedPoolsRequest) (*types.QueryIncentivizedPoolsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	lockableDurations := q.Keeper.GetLockableDurations(sdkCtx)
 	distrInfo := q.Keeper.GetDistrInfo(sdkCtx)
+
+	// Add epoch duration to lockable durations if not already present.
+	// This is to ensure that concentrated gauges (which run on epoch time) are
+	// always included in the query, even if the epoch duration changes in the future.
+	epochDuration := q.incentivesKeeper.GetEpochInfo(sdkCtx).Duration
+	epochAlreadyLockable := false
+	for _, lockableDuration := range lockableDurations {
+		if lockableDuration == epochDuration {
+			epochAlreadyLockable = true
+			break
+		}
+	}
+
+	// Ensure that we only add epoch duration if it does not already exist as a lockable duration.
+	if !epochAlreadyLockable {
+		lockableDurations = append(lockableDurations, epochDuration)
+	}
 
 	// While there are exceptions, typically the number of incentivizedPools
 	// equals to the number of incentivized gauges / number of lockable durations.
@@ -111,8 +128,7 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 	}, nil
 }
 
-// ExternalIncentiveGauges iterates over all gauges, returns gauges externally
-// incentivized, excluding default gauges created with pool.
+// ExternalIncentiveGauges iterates over all gauges and returns gauges externally incentivized by excluding default (internal) gauges.
 func (q Querier) ExternalIncentiveGauges(ctx context.Context, req *types.QueryExternalIncentiveGaugesRequest) (*types.QueryExternalIncentiveGaugesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

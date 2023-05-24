@@ -14,7 +14,7 @@ Apache-2.0](https://img.shields.io/github/license/osmosis-labs/osmosis.svg?style
 [![Lines Of
 Code](https://img.shields.io/tokei/lines/github/osmosis-labs/osmosis?style=flat-square)](https://github.com/osmosis-labs/osmosis)
 [![GitHub
-Super-Linter](https://img.shields.io/github/workflow/status/osmosis-labs/osmosis/Lint?style=flat-square&label=Lint)](https://github.com/marketplace/actions/super-linter)
+Super-Linter](https://img.shields.io/github/actions/workflow/status/osmosis-labs/osmosis/lint.yml?style=flat-square&label=Lint)](https://github.com/marketplace/actions/super-linter)
 [![Discord](https://badgen.net/badge/icon/discord?icon=discord&label)](https://discord.gg/osmosis)
 
 Osmosis is a fair-launched, customizable automated market maker for
@@ -31,7 +31,7 @@ swap-type use cases. Bonding curves, while have found its primary use
 case in decentralized exchange mechanisms, its potential use case can be
 further extended through the customizability that Osmosis offers.
 Through the customizability offered by Osmosis such as custom-curve AMMs,
-dynamic adjustments of swap fees, multi-token liquidity pools--the AMM
+dynamic adjustments of spread factors, multi-token liquidity pools--the AMM
 can offer decentralized formation of token fundraisers, interchain
 staking, options market, and more for the Cosmos ecosystem.
 

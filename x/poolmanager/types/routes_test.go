@@ -15,27 +15,15 @@ const (
 )
 
 var (
-	defaultPoolInitAmount     = sdk.NewInt(10_000_000_000)
 	twentyFiveBaseUnitsAmount = sdk.NewInt(25_000_000)
-
-	fooCoin   = sdk.NewCoin(foo, defaultPoolInitAmount)
-	barCoin   = sdk.NewCoin(bar, defaultPoolInitAmount)
-	bazCoin   = sdk.NewCoin(baz, defaultPoolInitAmount)
-	uosmoCoin = sdk.NewCoin(uosmo, defaultPoolInitAmount)
 
 	// Note: These are iniialized in such a way as it makes
 	// it easier to reason about the test cases.
-	fooBarCoins    = sdk.NewCoins(fooCoin, barCoin)
 	fooBarPoolId   = uint64(1)
-	fooBazCoins    = sdk.NewCoins(fooCoin, bazCoin)
 	fooBazPoolId   = fooBarPoolId + 1
-	fooUosmoCoins  = sdk.NewCoins(fooCoin, uosmoCoin)
 	fooUosmoPoolId = fooBazPoolId + 1
-	barBazCoins    = sdk.NewCoins(barCoin, bazCoin)
 	barBazPoolId   = fooUosmoPoolId + 1
-	barUosmoCoins  = sdk.NewCoins(barCoin, uosmoCoin)
 	barUosmoPoolId = barBazPoolId + 1
-	bazUosmoCoins  = sdk.NewCoins(bazCoin, uosmoCoin)
 	bazUosmoPoolId = barUosmoPoolId + 1
 
 	// Amount in default routes
@@ -295,6 +283,69 @@ func TestValidateSwapAmountOutSplitRoute(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
+		})
+	}
+}
+
+func TestIntermediateDenoms(t *testing.T) {
+
+	tests := map[string]struct {
+		route          SwapAmountInRoutes
+		expectedDenoms []string
+	}{
+		"happy path: one intermediate denom": {
+			route: SwapAmountInRoutes([]SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: bar,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: baz,
+				},
+			}),
+
+			expectedDenoms: []string{bar},
+		},
+		"multiple intermediate denoms": {
+			route: SwapAmountInRoutes([]SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: bar,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: baz,
+				},
+				{
+					PoolId:        5,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        3,
+					TokenOutDenom: foo,
+				},
+			}),
+
+			expectedDenoms: []string{bar, baz, uosmo},
+		},
+		"no intermediate denoms (single pool)": {
+			route: SwapAmountInRoutes([]SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: bar,
+				},
+			}),
+
+			// Note that we expect the function to fail quietly
+			expectedDenoms: nil,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actualIntermediateDenoms := tc.route.IntermediateDenoms()
+			require.Equal(t, tc.expectedDenoms, actualIntermediateDenoms)
 		})
 	}
 }

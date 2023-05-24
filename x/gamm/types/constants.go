@@ -38,8 +38,8 @@ var (
 	// It is limited by sdk.Dec's precision.
 	MinSpotPrice = sdk.SmallestDec()
 
-	// MultihopSwapFeeMultiplierForOsmoPools if a swap fees multiplier for trades consists of just two OSMO pools during a single transaction.
-	MultihopSwapFeeMultiplierForOsmoPools = sdk.NewDecWithPrec(5, 1) // 0.5
+	// MultihopSpreadFactorMultiplierForOsmoPools if a spread factor multiplier for trades consists of just two OSMO pools during a single transaction.
+	MultihopSpreadFactorMultiplierForOsmoPools = sdk.NewDecWithPrec(5, 1) // 0.5
 
 	// Maximum amount per asset after the application of scaling factors should be 10e34.
 	StableswapMaxScaledAmtPerAsset = sdk.NewDec(10).Power(34).TruncateInt()

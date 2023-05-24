@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -75,7 +76,7 @@ func validateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 	}
 
 	if len(assets) > types.MaxNumOfAssetsInPool {
-		return sdkerrors.Wrapf(types.ErrTooManyPoolAssets, "%d", len(assets))
+		return errorsmod.Wrapf(types.ErrTooManyPoolAssets, "%d", len(assets))
 	}
 
 	assetExistsMap := map[string]bool{}
@@ -86,10 +87,10 @@ func validateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 		}
 
 		if !asset.Token.IsValid() || !asset.Token.IsPositive() {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, asset.Token.String())
+			return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, asset.Token.String())
 		}
 		if _, exists := assetExistsMap[asset.Token.Denom]; exists {
-			return sdkerrors.Wrapf(types.ErrTooFewPoolAssets, "pool asset %s already exists", asset.Token.Denom)
+			return errorsmod.Wrapf(types.ErrTooFewPoolAssets, "pool asset %s already exists", asset.Token.Denom)
 		}
 		assetExistsMap[asset.Token.Denom] = true
 	}

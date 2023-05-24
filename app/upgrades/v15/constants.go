@@ -15,9 +15,11 @@ import (
 const UpgradeName = "v15"
 
 // pool ids to migrate
-const stOSMO_OSMOPoolId = 833
-const stJUNO_JUNOPoolId = 817
-const stSTARS_STARSPoolId = 810
+const (
+	stOSMO_OSMOPoolId   = 833
+	stJUNO_JUNOPoolId   = 817
+	stSTARS_STARSPoolId = 810
+)
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,

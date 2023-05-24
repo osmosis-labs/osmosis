@@ -70,8 +70,10 @@ service Query {
         "/osmosis/gamm/v1beta1/pools/{pool_id}/params";
   }
 
+  // Deprecated: please use the alternative in x/poolmanager
   rpc TotalPoolLiquidity(QueryTotalPoolLiquidityRequest)
       returns (QueryTotalPoolLiquidityResponse) {
+    option deprecated = true;
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{pool_id}/total_pool_liquidity";
   }
@@ -197,11 +199,15 @@ message QueryPoolParamsRequest {
 message QueryPoolParamsResponse { google.protobuf.Any params = 1; }
 
 //=============================== PoolLiquidity
+// Deprecated: please use the alternative in x/poolmanager
 message QueryTotalPoolLiquidityRequest {
+  option deprecated = true;
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
 
+// Deprecated: please use the alternative in x/poolmanager
 message QueryTotalPoolLiquidityResponse {
+  option deprecated = true;
   repeated cosmos.base.v1beta1.Coin liquidity = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"liquidity\"",

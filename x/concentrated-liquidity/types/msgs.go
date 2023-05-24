@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -9,6 +10,7 @@ import (
 // constants.
 const (
 	TypeMsgCreatePosition          = "create-position"
+	TypeAddToPosition              = "add-to-position"
 	TypeMsgWithdrawPosition        = "withdraw-position"
 	TypeMsgCollectFees             = "collect-fees"
 	TypeMsgCollectIncentives       = "collect-incentives"
@@ -29,12 +31,22 @@ func (msg MsgCreatePosition) ValidateBasic() error {
 		return InvalidLowerUpperTickError{LowerTick: msg.LowerTick, UpperTick: msg.UpperTick}
 	}
 
-	if !msg.TokenDesired0.IsValid() || msg.TokenDesired0.IsZero() {
-		return fmt.Errorf("Invalid coins (%s)", msg.TokenDesired0.String())
+	if msg.TokensProvided.Empty() {
+		return fmt.Errorf("Empty coins provided (%s)", msg.TokensProvided.String())
 	}
 
-	if !msg.TokenDesired1.IsValid() || msg.TokenDesired1.IsZero() {
-		return fmt.Errorf("Invalid coins (%s)", msg.TokenDesired1.String())
+	if !msg.TokensProvided.IsValid() {
+		return fmt.Errorf("Invalid coins (%s)", msg.TokensProvided.String())
+	}
+
+	if len(msg.TokensProvided) > 2 {
+		return CoinLengthError{Length: len(msg.TokensProvided), MaxLength: 2}
+	}
+
+	for _, coin := range msg.TokensProvided {
+		if coin.Amount.LTE(sdk.ZeroInt()) {
+			return NotPositiveRequireAmountError{Amount: coin.Amount.String()}
+		}
 	}
 
 	if msg.TokenMinAmount0.IsNegative() {
@@ -53,6 +65,48 @@ func (msg MsgCreatePosition) GetSignBytes() []byte {
 }
 
 func (msg MsgCreatePosition) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgAddToPosition{}
+
+func (msg MsgAddToPosition) Route() string { return RouterKey }
+func (msg MsgAddToPosition) Type() string  { return TypeAddToPosition }
+func (msg MsgAddToPosition) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return fmt.Errorf("Invalid sender address (%s)", err)
+	}
+
+	if msg.PositionId <= 0 {
+		return fmt.Errorf("Invalid position id (%s)", strconv.FormatUint(msg.PositionId, 10))
+	}
+
+	if msg.Amount0.IsNegative() {
+		return fmt.Errorf("Amount 0 cannot be negative, given amount: %s", msg.Amount0.String())
+	}
+	if msg.Amount1.IsNegative() {
+		return fmt.Errorf("Amount 1 cannot be negative, given amount: %s", msg.Amount1.String())
+	}
+	if msg.TokenMinAmount0.IsNegative() {
+		return fmt.Errorf("Amount 0 cannot be negative, given token min amount: %s", msg.TokenMinAmount0.String())
+	}
+	if msg.TokenMinAmount1.IsNegative() {
+		return fmt.Errorf("Amount 1 cannot be negative, given token min amount: %s", msg.TokenMinAmount1.String())
+	}
+
+	return nil
+}
+
+func (msg MsgAddToPosition) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgAddToPosition) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)
@@ -132,39 +186,6 @@ func (msg MsgCollectIncentives) GetSignBytes() []byte {
 }
 
 func (msg MsgCollectIncentives) GetSigners() []sdk.AccAddress {
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{sender}
-}
-
-var _ sdk.Msg = &MsgCreateIncentive{}
-
-func (msg MsgCreateIncentive) Route() string { return RouterKey }
-func (msg MsgCreateIncentive) Type() string  { return TypeMsgCollectIncentives }
-func (msg MsgCreateIncentive) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return fmt.Errorf("Invalid sender address (%s)", err)
-	}
-
-	if !msg.IncentiveAmount.IsPositive() {
-		return NonPositiveIncentiveAmountError{PoolId: msg.PoolId, IncentiveAmount: msg.IncentiveAmount.ToDec()}
-	}
-
-	if !msg.EmissionRate.IsPositive() {
-		return NonPositiveEmissionRateError{PoolId: msg.PoolId, EmissionRate: msg.EmissionRate}
-	}
-
-	return nil
-}
-
-func (msg MsgCreateIncentive) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-func (msg MsgCreateIncentive) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)

@@ -14,7 +14,6 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
@@ -23,9 +22,6 @@ var testAddresses = osmoutils.CreateRandomAccounts(3)
 
 type IntegrationTestSuite struct {
 	suite.Suite
-
-	cfg     network.Config
-	network *network.Network
 }
 
 func TestNewCreatePoolCmd(t *testing.T) {
@@ -301,6 +297,21 @@ func TestNewExitSwapShareAmountInCmd(t *testing.T) {
 				TokenOutDenom:     "stake",
 				ShareInAmount:     sdk.NewIntFromUint64(10),
 				TokenOutMinAmount: sdk.NewIntFromUint64(1),
+			},
+		},
+	}
+	osmocli.RunTxTestCases(t, desc, tcs)
+}
+
+func TestNewMigrateSharesToFullRangeConcentratedPosition(t *testing.T) {
+	desc, _ := cli.NewMigrateSharesToFullRangeConcentratedPosition()
+	tcs := map[string]osmocli.TxCliTestCase[*balancer.MsgMigrateSharesToFullRangeConcentratedPosition]{
+		"migrate shares to full range concentrated position": {
+			Cmd: "1000stake --min-amounts-out=100stake,1000uosmo --from=" + testAddresses[0].String(),
+			ExpectedMsg: &balancer.MsgMigrateSharesToFullRangeConcentratedPosition{
+				Sender:          testAddresses[0].String(),
+				SharesToMigrate: sdk.NewCoin("stake", sdk.NewInt(1000)),
+				TokenOutMins:    sdk.NewCoins(sdk.NewInt64Coin("stake", 100), sdk.NewInt64Coin("uosmo", 1000)),
 			},
 		},
 	}

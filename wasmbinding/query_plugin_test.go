@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	proto "github.com/golang/protobuf/proto"
+	proto "github.com/golang/protobuf/proto" //nolint:staticcheck // we're intentionally using this deprecated package to be compatible with cosmos protos
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -84,7 +84,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				suite.NoError(err)
 			},
 			requestData: func() []byte {
-				queryrequest := gammv2types.QuerySpotPriceRequest{
+				queryrequest := gammv2types.QuerySpotPriceRequest{ //nolint:staticcheck // we're intentionally using this deprecated package for testing
 					PoolId:          1,
 					BaseAssetDenom:  "bar",
 					QuoteAssetDenom: "uosmo",
@@ -94,7 +94,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				return bz
 			},
 			checkResponseStruct: true,
-			responseProtoStruct: &gammv2types.QuerySpotPriceResponse{
+			responseProtoStruct: &gammv2types.QuerySpotPriceResponse{ //nolint:staticcheck // we're intentionally using this deprecated package for testing
 				SpotPrice: sdk.NewDecWithPrec(5, 1).String(),
 			},
 		},
@@ -115,8 +115,9 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				accAddr, err := sdk.AccAddressFromBech32("osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44")
 				suite.Require().NoError(err)
 
-				// fund account to recieve non-empty response
-				simapp.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(10))})
+				// fund account to receive non-empty response
+				err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(10))})
+				suite.Require().NoError(err)
 
 				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
 			},
@@ -137,8 +138,9 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				accAddr, err := sdk.AccAddressFromBech32("osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44")
 				suite.Require().NoError(err)
 
-				// fund account to recieve non-empty response
-				simapp.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(10))})
+				// fund account to receive non-empty response
+				err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(10))})
+				suite.Require().NoError(err)
 
 				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
 			},

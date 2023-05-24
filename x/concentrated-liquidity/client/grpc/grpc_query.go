@@ -80,6 +80,16 @@ func (q Querier) LiquidityNetInDirection(grpcCtx context.Context,
 	return q.Q.LiquidityNetInDirection(ctx, *req)
 }
 
+func (q Querier) ClaimableIncentives(grpcCtx context.Context,
+	req *queryproto.ClaimableIncentivesRequest,
+) (*queryproto.ClaimableIncentivesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.ClaimableIncentives(ctx, *req)
+}
+
 func (q Querier) ClaimableFees(grpcCtx context.Context,
 	req *queryproto.ClaimableFeesRequest,
 ) (*queryproto.ClaimableFeesResponse, error) {

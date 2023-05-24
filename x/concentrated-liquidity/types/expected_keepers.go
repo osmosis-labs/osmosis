@@ -4,11 +4,16 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
+
+type AccountKeeper interface {
+	GetModuleAccount(ctx sdk.Context, moduleName string) authtypes.ModuleAccountI
+}
 
 // BankKeeper defines the banking contract that must be fulfilled when
 // creating a x/concentrated-liquidity keeper.
@@ -27,11 +32,13 @@ type BankKeeper interface {
 type PoolManagerKeeper interface {
 	CreatePool(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (uint64, error)
 	GetNextPoolId(ctx sdk.Context) uint64
+	CreateConcentratedPoolAsPoolManager(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (poolmanagertypes.PoolI, error)
 }
 
 type GAMMKeeper interface {
 	GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error)
 	GetLinkedBalancerPoolID(ctx sdk.Context, poolIdEntering uint64) (uint64, error)
+	GetTotalPoolShares(ctx sdk.Context, poolId uint64) (sdk.Int, error)
 }
 
 type PoolIncentivesKeeper interface {
@@ -51,5 +58,12 @@ type LockupKeeper interface {
 	BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) (uint64, error)
 	ForceUnlock(ctx sdk.Context, lock lockuptypes.PeriodLock) error
 	CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockuptypes.PeriodLock, error)
+	CreateLockNoSend(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockuptypes.PeriodLock, error)
 	SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*lockuptypes.PeriodLock, error)
+	GetLockedDenom(ctx sdk.Context, denom string, duration time.Duration) sdk.Int
+}
+
+// CommunityPoolKeeper defines the contract needed to be fulfilled for distribution keeper.
+type CommunityPoolKeeper interface {
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }

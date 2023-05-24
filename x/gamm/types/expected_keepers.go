@@ -49,8 +49,8 @@ type CommunityPoolKeeper interface {
 
 // ConcentratedLiquidityKeeper defines the contract needed to be fulfilled for the concentrated liquidity keeper.
 type ConcentratedLiquidityKeeper interface {
-	GetPoolFromPoolIdAndConvertToConcentrated(ctx sdk.Context, poolId uint64) (cltypes.ConcentratedPoolExtension, error)
-	CreateFullRangePosition(ctx sdk.Context, concentratedPool cltypes.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, err error)
+	GetConcentratedPoolById(ctx sdk.Context, poolId uint64) (cltypes.ConcentratedPoolExtension, error)
+	CreateFullRangePosition(ctx sdk.Context, clPoolId uint64, owner sdk.AccAddress, coins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, err error)
 }
 
 // PoolManager defines the interface needed to be fulfilled for

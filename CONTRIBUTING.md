@@ -105,7 +105,7 @@ On the function you want to generate a unit test for, right click the function n
 This type of test is mainly for functions that would be triggered by incoming messages (we interact directly with the message server since all other metadata is stripped from a message by the time it hits the msg_server):
 
 ```go
-func(suite *KeeperTestSuite) TestCreateDenom() {
+func(s *KeeperTestSuite) TestCreateDenom() {
     testCases := map[string] struct {
         subdenom            string
         expectError         bool
@@ -157,7 +157,7 @@ This type of test is mainly for functions that would be triggered by other modul
 // TestMintExportGenesis tests that genesis is exported correctly.
 // It first initializes genesis to the expected value. Then, attempts
 // to export it. Lastly, compares exported to the expected.
-func(suite *KeeperTestSuite) TestMintExportGenesis() {
+func(s *KeeperTestSuite) TestMintExportGenesis() {
     testCases := map[string] struct {
         expectedGenesis *types.GenesisState
     } {

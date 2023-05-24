@@ -29,8 +29,8 @@ func (suite *UpgradeTestSuite) TestProp214() {
 	suite.Require().NoError(err)
 
 	// Kept as comments for recordkeeping. Since SetPool is now private, the changes being tested for can no longer be made:
-	// 		swapFee := pool.GetSwapFee(suite.Ctx)
-	//  	expectedSwapFee := sdk.MustNewDecFromStr("0.002")
+	// 		spreadFactor := pool.GetSpreadFactor(suite.Ctx)
+	//  	expectedSpreadFactor := sdk.MustNewDecFromStr("0.002")
 	//
-	//  	suite.Require().Equal(expectedSwapFee, swapFee)
+	//  	suite.Require().Equal(expectedSpreadFactor, spreadFactor)
 }
