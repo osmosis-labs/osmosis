@@ -256,8 +256,12 @@ message LockedResponse { PeriodLock lock = 1; };
 message NextLockIDRequest {};
 message NextLockIDResponse { uint64 lock_id = 1; };
 
-message SyntheticLockupsByLockupIDRequest { uint64 lock_id = 1; }
+message SyntheticLockupsByLockupIDRequest {
+  option deprecated = true;
+  uint64 lock_id = 1;
+}
 message SyntheticLockupsByLockupIDResponse {
+  option deprecated = true;
   repeated SyntheticLock synthetic_locks = 1 [ (gogoproto.nullable) = false ];
 }
 
