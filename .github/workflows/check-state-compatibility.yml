@@ -34,7 +34,6 @@ on:
       - 'v[0-9]+.x'
 
 env:
-  GOLANG_VERSION: 1.19
   GENESIS_URL: https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
   ADDRBOOK_URL: https://dl2.quicksync.io/json/addrbook.osmosis.json
   SNAPSHOT_BUCKET: https://snapshots.osmosis.zone
@@ -94,7 +93,7 @@ jobs:
         name: 🐿 Setup Golang
         uses: actions/setup-go@v4
         with:
-          go-version: '^${{ env.GOLANG_VERSION }}'
+          go-version: '1.19'
       -
         name: 🔨 Build the osmosisd binary
         run: |
