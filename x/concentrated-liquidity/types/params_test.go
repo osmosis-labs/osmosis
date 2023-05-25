@@ -65,12 +65,23 @@ func TestValidateBalancerSharesDiscount(t *testing.T) {
 		"happy path": {
 			i: types.DefaultBalancerSharesDiscount,
 		},
+		"zero discount rate": {
+			i: sdk.NewDec(0),
+		},
 		"error: negative discount rate": {
 			i:           sdk.NewDec(-1),
 			expectError: true,
 		},
+		"error: negative discount rate on boundary": {
+			i:           sdk.NewDecWithPrec(-1, 18),
+			expectError: true,
+		},
 		"error: discount rate > 1": {
 			i:           sdk.NewDec(2),
+			expectError: true,
+		},
+		"error: discount rate > 1 on boundary": {
+			i:           sdk.NewDec(1).Add(sdk.NewDecWithPrec(1, 18)),
 			expectError: true,
 		},
 	}
