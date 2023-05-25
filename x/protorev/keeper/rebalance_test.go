@@ -3,6 +3,7 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
@@ -329,6 +330,10 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 		inputCoin      sdk.Coin
 		expectedProfit sdk.Int
 	}
+
+	// Set protorev developer account
+	devAccount := apptesting.CreateRandomAccounts(1)[0]
+	s.App.ProtoRevKeeper.SetDeveloperAccount(s.Ctx, devAccount)
 
 	tests := []struct {
 		name                string
