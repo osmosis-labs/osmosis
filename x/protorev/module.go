@@ -137,10 +137,6 @@ func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
-
-	// if err := cfg.RegisterMigration(types.ModuleName, 1, am.Upgrade1to2); err != nil {
-	// 	panic(fmt.Sprintf("failed to migrate x/protorev from version 1 to 2: %v", err))
-	// }
 }
 
 func (a AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
@@ -176,16 +172,3 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
-
-// ----------------------------------------------------------------------------
-// Upgrades
-// ----------------------------------------------------------------------------
-
-// func (am AppModule) Upgrade1to2(ctx sdk.Context) error {
-// 	err := am.keeper.SendDeveloperFeesToDeveloperAccount(ctx)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
