@@ -43,8 +43,8 @@ func (k Keeper) GetPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedP
 	return k.getPoolById(ctx, poolId)
 }
 
-func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapStateFeeGrowth sdk.DecCoin) (liquidityDelta sdk.Dec, err error) {
-	return k.crossTick(ctx, poolId, tickIndex, swapStateFeeGrowth)
+func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64, nextTickInfo *model.TickInfo, swapStateFeeGrowth sdk.DecCoin) (liquidityDelta sdk.Dec, err error) {
+	return k.crossTick(ctx, poolId, tickIndex, nextTickInfo, swapStateFeeGrowth)
 }
 
 func (k Keeper) SendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 string, amount0, amount1 sdk.Int, sender, receiver sdk.AccAddress) error {
@@ -107,10 +107,6 @@ func (k Keeper) InitOrUpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.A
 
 func (k Keeper) GetNextPositionIdAndIncrement(ctx sdk.Context) uint64 {
 	return k.getNextPositionIdAndIncrement(ctx)
-}
-
-func (k Keeper) PoolExists(ctx sdk.Context, poolId uint64) bool {
-	return k.poolExists(ctx, poolId)
 }
 
 func (k Keeper) InitializeInitialPositionForPool(ctx sdk.Context, pool types.ConcentratedPoolExtension, amount0Desired, amount1Desired sdk.Int) error {

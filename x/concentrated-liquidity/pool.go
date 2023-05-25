@@ -111,18 +111,6 @@ func (k Keeper) GetPools(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
 	)
 }
 
-// poolExists returns true if a pool with the given id exists. False otherwise.
-func (k Keeper) poolExists(ctx sdk.Context, poolId uint64) bool {
-	store := ctx.KVStore(k.storeKey)
-	pool := model.Pool{}
-	key := types.KeyPool(poolId)
-	found, err := osmoutils.Get(store, key, &pool)
-	if err != nil {
-		panic(err)
-	}
-	return found
-}
-
 // setPool stores a ConcentratedPoolExtension in the Keeper's KVStore.
 // It returns an error if the provided pool is not of type *model.Pool.
 func (k Keeper) setPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {

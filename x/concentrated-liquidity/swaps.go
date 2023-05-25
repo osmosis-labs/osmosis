@@ -399,8 +399,13 @@ func (k Keeper) computeOutAmtGivenIn(
 		// If the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
 		// tick has been consumed and we must move on to the next tick to complete the swap
 		if nextTickSqrtPrice.Equal(sqrtPrice) {
+			nextTickInfo, err := ParseTickFromBz(nextTickIter.Value())
+			if err != nil {
+				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+			}
+
 			// Retrieve the liquidity held in the next closest initialized tick
-			liquidityNet, err := k.crossTick(ctx, poolId, nextTick, sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.feeGrowthGlobal))
+			liquidityNet, err := k.crossTick(ctx, poolId, nextTick, &nextTickInfo, sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.feeGrowthGlobal))
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 			}
@@ -588,8 +593,13 @@ func (k Keeper) computeInAmtGivenOut(
 		// if the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
 		// tick has been consumed and we must move on to the next tick to complete the swap
 		if sqrtPriceNextTick.Equal(sqrtPrice) {
+			nextTickInfo, err := ParseTickFromBz(nextTickIter.Value())
+			if err != nil {
+				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+			}
+
 			// retrieve the liquidity held in the next closest initialized tick
-			liquidityNet, err := k.crossTick(ctx, poolId, nextTick, sdk.NewDecCoinFromDec(desiredTokenOut.Denom, swapState.feeGrowthGlobal))
+			liquidityNet, err := k.crossTick(ctx, poolId, nextTick, &nextTickInfo, sdk.NewDecCoinFromDec(desiredTokenOut.Denom, swapState.feeGrowthGlobal))
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 			}
