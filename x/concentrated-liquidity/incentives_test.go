@@ -1070,7 +1070,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			uptimeAccs, err := clKeeper.GetUptimeAccumulators(s.Ctx, tc.poolId)
 			s.Require().NoError(err)
 
-			err = clKeeper.UpdatePoolGivenUptimeAccumulatorsToNow(s.Ctx, clPool, uptimeAccs)
+			err = clKeeper.UpdateGivenPoolUptimeAccumulatorsToNow(s.Ctx, clPool, uptimeAccs)
 
 			validateResult(s.Ctx, err, tc, balancerPoolId, clPool.GetId(), initUptimeAccumValues, qualifyingBalancerLiquidity, qualifyingLiquidity)
 		})

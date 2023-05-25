@@ -409,7 +409,7 @@ func (k Keeper) computeOutAmtGivenIn(
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 			}
 
-			if err := k.updatePoolGivenUptimeAccumulatorsToNow(ctx, p, uptimeAccums); err != nil {
+			if err := k.updateGivenPoolUptimeAccumulatorsToNow(ctx, p, uptimeAccums); err != nil {
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 			}
 
@@ -612,7 +612,7 @@ func (k Keeper) computeInAmtGivenOut(
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 			}
 
-			if err := k.updatePoolGivenUptimeAccumulatorsToNow(ctx, p, uptimeAccums); err != nil {
+			if err := k.updateGivenPoolUptimeAccumulatorsToNow(ctx, p, uptimeAccums); err != nil {
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 			}
 

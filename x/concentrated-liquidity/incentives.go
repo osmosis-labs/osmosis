@@ -319,11 +319,10 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 // by the qualifying liquidity for each uptime. It then adds this value to the
 // respective accumulator and updates relevant time trackers accordingly.
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
-// Note: the following are the differences of this function from updatePoolUptimeAccumulatorsToNow:
+// Note: the following are the differences of this function from updateGivenPoolUptimeAccumulatorsToNow:
 // * this function fetches the uptime accumulators from state.
-// * this function fetches a pool twice. Once to determine "last liquidity update" time and once to
-// update the pool in state, if applicable.
-// updatePoolGivenUptimeAccumulatorsToNow is used in swaps for performance reasons to minimize state reads.
+// * this function fetches a pool from state by id.
+// updateGivenPoolUptimeAccumulatorsToNow is used in swaps for performance reasons to minimize state reads.
 // updatePoolUptimeAccumulatorsToNow is used in all other cases.
 func (k Keeper) updatePoolUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) error {
 	pool, err := k.getPoolById(ctx, poolId)
@@ -336,14 +335,14 @@ func (k Keeper) updatePoolUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64
 		return err
 	}
 
-	if err := k.updatePoolGivenUptimeAccumulatorsToNow(ctx, pool, uptimeAccums); err != nil {
+	if err := k.updateGivenPoolUptimeAccumulatorsToNow(ctx, pool, uptimeAccums); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// updatePoolGivenUptimeAccumulatorsToNow syncs all given uptime accumulators for a given pool id
+// updateGivenPoolUptimeAccumulatorsToNow syncs all given uptime accumulators for a given pool id
 // Updates the pool last liquidity update time with the current block time and writes the updated pool to state.
 // If last liquidity update hapenned in the current block, this function is a no-op.
 // Specifically, it gets the time elapsed since the last update and divides it
@@ -355,9 +354,9 @@ func (k Keeper) updatePoolUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 // Note: the following are the differences of this function from updatePoolUptimeAccumulatorsToNow:
 // * this function does not refetch the uptime accumulators from state.
-// * this function only attempts to fetch a pool after validating lastLiquidityUpdate time is not in the current block.
+// * this function operates on the given pool directly, instead of fetching it from state.
 // This is to avoid unnecessary state reads during swaps for performance reasons.
-func (k Keeper) updatePoolGivenUptimeAccumulatorsToNow(ctx sdk.Context, pool types.ConcentratedPoolExtension, uptimeAccums []accum.AccumulatorObject) error {
+func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool types.ConcentratedPoolExtension, uptimeAccums []accum.AccumulatorObject) error {
 	if pool == nil {
 		return types.ErrPoolNil
 	}

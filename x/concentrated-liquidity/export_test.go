@@ -252,8 +252,8 @@ func (k Keeper) UpdateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 	return k.updatePoolUptimeAccumulatorsToNow(ctx, poolId)
 }
 
-func (k Keeper) UpdatePoolGivenUptimeAccumulatorsToNow(ctx sdk.Context, pool types.ConcentratedPoolExtension, uptimeAccums []accum.AccumulatorObject) error {
-	return k.updatePoolGivenUptimeAccumulatorsToNow(ctx, pool, uptimeAccums)
+func (k Keeper) UpdateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool types.ConcentratedPoolExtension, uptimeAccums []accum.AccumulatorObject) error {
+	return k.updateGivenPoolUptimeAccumulatorsToNow(ctx, pool, uptimeAccums)
 }
 
 func (k Keeper) SetIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) error {
