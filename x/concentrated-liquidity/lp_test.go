@@ -73,6 +73,11 @@ var (
 		expectedFeeGrowthOutsideUpper: cl.EmptyCoins,
 	}
 
+	errToleranceOneRoundDown = osmomath.ErrTolerance{
+		AdditiveTolerance: sdk.OneDec(),
+		RoundingDir:       osmomath.RoundDown,
+	}
+
 	roundingError = sdk.OneInt()
 
 	positionCases = map[string]lpTest{
@@ -387,6 +392,32 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 	}
 }
 
+type lockState int
+
+const (
+	nolock lockState = iota
+	locked
+	unlocking
+	unlocked
+)
+
+func (s *KeeperTestSuite) createPositionWithLockState(ls lockState, poolId uint64, owner sdk.AccAddress, providedCoins sdk.Coins, dur time.Duration) (uint64, sdk.Dec) {
+	var liquidityCreated sdk.Dec
+	var positionId uint64
+	var err error
+	if ls == locked {
+		positionId, _, _, liquidityCreated, _, _, err = s.clk.CreateFullRangePositionLocked(s.Ctx, poolId, owner, providedCoins, dur)
+	} else if ls == unlocking {
+		positionId, _, _, liquidityCreated, _, _, err = s.clk.CreateFullRangePositionUnlocking(s.Ctx, poolId, owner, providedCoins, dur+time.Hour)
+	} else if ls == unlocked {
+		positionId, _, _, liquidityCreated, _, _, err = s.clk.CreateFullRangePositionUnlocking(s.Ctx, poolId, owner, providedCoins, dur-time.Hour)
+	} else {
+		positionId, _, _, liquidityCreated, _, _, _, err = s.clk.CreatePosition(s.Ctx, poolId, owner, providedCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	}
+	s.Require().NoError(err)
+	return positionId, liquidityCreated
+}
+
 func (s *KeeperTestSuite) TestWithdrawPosition() {
 	defaultTimeElapsed := time.Hour * 24
 	uptimeHelper := getExpectedUptimes()
@@ -402,9 +433,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		sutConfigOverwrite      *lpTest
 		createPositionOverwrite bool
 		timeElapsed             time.Duration
-		createLockLocked        bool
-		createLockUnlocking     bool
-		createLockUnlocked      bool
+		createLockState         lockState
 		withdrawWithNonOwner    bool
 	}{
 		"base case: withdraw full liquidity amount": {
@@ -425,8 +454,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				liquidityAmount:  FullRangeLiquidityAmt,
 				underlyingLockId: 1,
 			},
-			createLockUnlocked: true,
-			timeElapsed:        defaultTimeElapsed,
+			createLockState: unlocked,
+			timeElapsed:     defaultTimeElapsed,
 		},
 		"error: withdraw full liquidity amount but still locked": {
 			setupConfig: baseCase,
@@ -435,8 +464,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				underlyingLockId: 1,
 				expectedError:    types.LockNotMatureError{PositionId: 1, LockId: 1},
 			},
-			createLockLocked: true,
-			timeElapsed:      defaultTimeElapsed,
+			createLockState: locked,
+			timeElapsed:     defaultTimeElapsed,
 		},
 		"error: withdraw full liquidity amount but still unlocking": {
 			setupConfig: baseCase,
@@ -445,8 +474,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				underlyingLockId: 1,
 				expectedError:    types.LockNotMatureError{PositionId: 1, LockId: 1},
 			},
-			createLockUnlocking: true,
-			timeElapsed:         defaultTimeElapsed,
+			createLockState: unlocking,
+			timeElapsed:     defaultTimeElapsed,
 		},
 		"withdraw partial liquidity amount": {
 			setupConfig: baseCase,
@@ -512,34 +541,19 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				concentratedLiquidityKeeper = s.App.ConcentratedLiquidityKeeper
 				liquidityCreated            = sdk.ZeroDec()
 				owner                       = s.TestAccs[0]
-				tc                          = tc
 				config                      = *tc.setupConfig
-				sutConfigOverwrite          = *tc.sutConfigOverwrite
 				err                         error
 			)
 
 			// If specific configs are provided in the test case, overwrite the config with those values.
-			mergeConfigs(&config, &sutConfigOverwrite)
+			mergeConfigs(&config, tc.sutConfigOverwrite)
 
 			// If a setupConfig is provided, use it to create a pool and position.
 			pool := s.PrepareConcentratedPool()
 			fundCoins := config.tokensProvided
 			s.FundAcc(owner, fundCoins)
 
-			// Create a position from the parameters in the test case.
-			if tc.createLockLocked {
-				_, _, _, liquidityCreated, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, pool.GetId(), owner, fundCoins, tc.timeElapsed)
-				s.Require().NoError(err)
-			} else if tc.createLockUnlocking {
-				_, _, _, liquidityCreated, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pool.GetId(), owner, fundCoins, tc.timeElapsed+time.Hour)
-				s.Require().NoError(err)
-			} else if tc.createLockUnlocked {
-				_, _, _, liquidityCreated, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pool.GetId(), owner, fundCoins, tc.timeElapsed-time.Hour)
-				s.Require().NoError(err)
-			} else {
-				_, _, _, liquidityCreated, _, _, _, err = concentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), owner, config.tokensProvided, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				s.Require().NoError(err)
-			}
+			_, liquidityCreated = s.createPositionWithLockState(tc.createLockState, pool.GetId(), owner, fundCoins, tc.timeElapsed)
 
 			// Set mock listener to make sure that is is called when desired.
 			// It must be set after test position creation so that we do not record the call
@@ -688,7 +702,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				s.Require().Nil(positionIdBytes)
 
 				// ensure that the lock is still there if there was lock that was existing before the withdraw process
-				if tc.createLockLocked || tc.createLockUnlocked || tc.createLockUnlocking {
+				if tc.createLockState != nolock {
 					_, err = s.App.LockupKeeper.GetLockByID(s.Ctx, 1)
 					s.Require().NoError(err)
 				}
@@ -745,9 +759,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 		sutConfigOverwrite      *lpTest
 		timeElapsed             time.Duration
 		createPositionOverwrite bool
-		createLockLocked        bool
-		createLockUnlocking     bool
-		createLockUnlocked      bool
+		createLockState         lockState
 		lastPositionInPool      bool
 		senderNotOwner          bool
 
@@ -836,7 +848,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			amount0ToAdd: amount0PerfectRatio,
 			amount1ToAdd: amount1PerfectRatio,
 
-			createLockUnlocked: true,
+			createLockState: unlocked,
 		},
 		"error: attempt to add to a position with underlying lock that is still locked": {
 			// setup parameters for creating a pool and position.
@@ -857,7 +869,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			amount0ToAdd: amount0PerfectRatio,
 			amount1ToAdd: amount1PerfectRatio,
 
-			createLockLocked: true,
+			createLockState: locked,
 		},
 		"error: attempt to add negative amounts for both assets to position": {
 			// setup parameters for creating a pool and position.
@@ -930,7 +942,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			amount0ToAdd: amount0PerfectRatio,
 			amount1ToAdd: amount1PerfectRatio,
 
-			createLockUnlocking: true,
+			createLockState: unlocking,
 		},
 		"error: no position created": {
 			// setup parameters for creation a pool and position.
@@ -1018,39 +1030,28 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			var (
 				concentratedLiquidityKeeper = s.App.ConcentratedLiquidityKeeper
 				owner                       = s.TestAccs[0]
-				tc                          = tc
 				config                      = *tc.setupConfig
-				sutConfigOverwrite          = *tc.sutConfigOverwrite
 				err                         error
 			)
 
 			// If specific configs are provided in the test case, overwrite the config with those values.
-			mergeConfigs(&config, &sutConfigOverwrite)
+			mergeConfigs(&config, tc.sutConfigOverwrite)
 
 			// If a setupConfig is provided, use it to create a pool and position.
 			pool := s.PrepareConcentratedPool()
-			fundCoins := config.tokensProvided
+			fundCoins, lockCoins := config.tokensProvided, config.tokensProvided
 			// Fund tokens that is used to create initial position
 			if tc.amount0ToAdd.IsPositive() && tc.amount1ToAdd.IsPositive() {
 				fundCoins = fundCoins.Add(sdk.NewCoins(sdk.NewCoin(ETH, tc.amount0ToAdd), sdk.NewCoin(USDC, tc.amount1ToAdd))...)
+				if tc.createLockState != nolock {
+					lockCoins = fundCoins
+				}
 			}
 			s.FundAcc(owner, fundCoins)
 
 			// Create a position from the parameters in the test case.
-			var positionId uint64
-			if tc.createLockLocked {
-				positionId, _, _, _, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, pool.GetId(), owner, fundCoins, tc.timeElapsed)
-				s.Require().NoError(err)
-			} else if tc.createLockUnlocking {
-				positionId, _, _, _, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pool.GetId(), owner, fundCoins, tc.timeElapsed+time.Hour)
-				s.Require().NoError(err)
-			} else if tc.createLockUnlocked {
-				positionId, _, _, _, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pool.GetId(), owner, fundCoins, tc.timeElapsed-time.Hour)
-				s.Require().NoError(err)
-			} else {
-				positionId, _, _, _, _, _, _, err = concentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), owner, config.tokensProvided, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				s.Require().NoError(err)
-			}
+			positionId, _ := s.createPositionWithLockState(tc.createLockState, pool.GetId(), owner, lockCoins, tc.timeElapsed)
+
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(tc.timeElapsed))
 			preBalanceToken0 := s.App.BankKeeper.GetBalance(s.Ctx, owner, pool.GetToken0())
 
@@ -1104,12 +1105,8 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			postBalanceToken0 := s.App.BankKeeper.GetBalance(s.Ctx, sender, pool.GetToken0())
 			postBalanceToken1 := s.App.BankKeeper.GetBalance(s.Ctx, sender, pool.GetToken1())
 
-			var errTolerance osmomath.ErrTolerance
-			errTolerance.AdditiveTolerance = sdk.OneDec()
-			errTolerance.RoundingDir = osmomath.RoundDown
-
-			s.Require().Equal(0, errTolerance.Compare(preBalanceToken0.Amount, postBalanceToken0.Amount))
-			s.Require().Equal(0, errTolerance.Compare(expectedAmount1Delta, postBalanceToken1.Amount.Sub(tc.amount1ToAdd)))
+			s.Require().Equal(0, errToleranceOneRoundDown.Compare(preBalanceToken0.Amount, postBalanceToken0.Amount))
+			s.Require().Equal(0, errToleranceOneRoundDown.Compare(expectedAmount1Delta, postBalanceToken1.Amount.Sub(tc.amount1ToAdd)))
 
 			// now check that old position id has been succesfully deleted
 			_, err = s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
@@ -1623,22 +1620,12 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 
 func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() {
 	var (
-		errToleranceOneRoundDown = osmomath.ErrTolerance{
-			AdditiveTolerance: sdk.OneDec(),
-			RoundingDir:       osmomath.RoundDown,
-		}
-
 		errToleranceOneRoundUp = osmomath.ErrTolerance{
 			AdditiveTolerance: sdk.OneDec(),
 			RoundingDir:       osmomath.RoundUp,
 		}
 	)
-	tests := map[string]lpTest{}
-
-	// add test cases for different positions
-	for name, test := range positionCases {
-		tests[name] = test
-	}
+	tests := makeTests(positionCases)
 
 	for name, tc := range tests {
 		tc := tc
@@ -1727,8 +1714,6 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			// 4. Check that pool has come back to original state
 
 			liquidityAfter, err := s.App.ConcentratedLiquidityKeeper.GetTotalPoolLiquidity(s.Ctx, poolID)
-			s.Require().NoError(err)
-
 			s.Require().NoError(err)
 
 			// Note: one ends up remaining due to rounding in favor of the pool.
