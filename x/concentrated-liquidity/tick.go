@@ -414,15 +414,14 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 			return []queryproto.TickLiquidityNet{}, err
 		}
 
-		tickStruct := model.TickInfo{}
-		err = proto.Unmarshal(iterator.Value(), &tickStruct)
+		tickStruct, err := ParseTickFromBz(iterator.Value())
 		if err != nil {
 			return []queryproto.TickLiquidityNet{}, err
 		}
 
 		liquidityDepth := queryproto.TickLiquidityNet{
 			LiquidityNet: tickStruct.LiquidityNet,
-			TickIndex:    sdk.NewInt(tickIndex),
+			TickIndex:    tickIndex,
 		}
 		liquidityDepths = append(liquidityDepths, liquidityDepth)
 	}
