@@ -344,7 +344,7 @@ func (k Keeper) updatePoolUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64
 
 // updateGivenPoolUptimeAccumulatorsToNow syncs all given uptime accumulators for a given pool id
 // Updates the pool last liquidity update time with the current block time and writes the updated pool to state.
-// If last liquidity update hapenned in the current block, this function is a no-op.
+// If last liquidity update happened in the current block, this function is a no-op.
 // Specifically, it gets the time elapsed since the last update and divides it
 // by the qualifying liquidity for each uptime. It then adds this value to the
 // respective accumulator and updates relevant time trackers accordingly.
