@@ -43,8 +43,8 @@ func (k Keeper) GetPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedP
 	return k.getPoolById(ctx, poolId)
 }
 
-func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64, nextTickInfo *model.TickInfo, swapStateFeeGrowth sdk.DecCoin, uptimeAccums []accum.AccumulatorObject) (liquidityDelta sdk.Dec, err error) {
-	return k.crossTick(ctx, poolId, tickIndex, nextTickInfo, swapStateFeeGrowth, uptimeAccums)
+func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64, nextTickInfo *model.TickInfo, swapStateFeeGrowth sdk.DecCoin, feeAccumValue sdk.DecCoins, uptimeAccums []accum.AccumulatorObject) (liquidityDelta sdk.Dec, err error) {
+	return k.crossTick(ctx, poolId, tickIndex, nextTickInfo, swapStateFeeGrowth, feeAccumValue, uptimeAccums)
 }
 
 func (k Keeper) SendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 string, amount0, amount1 sdk.Int, sender, receiver sdk.AccAddress) error {
@@ -192,10 +192,6 @@ func CalculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, current
 
 func (k Keeper) GetInitialFeeGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
 	return k.getInitialFeeGrowthOppositeDirectionOfLastTraversalForTick(ctx, poolId, tick)
-}
-
-func (k Keeper) ChargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin) error {
-	return k.chargeFee(ctx, poolId, feeUpdate)
 }
 
 func ValidateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int64) error {
