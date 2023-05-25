@@ -32,20 +32,6 @@ func (k Keeper) GetFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.Accumul
 	return acc, nil
 }
 
-// chargeFee charges the given fee on the pool with the given id by updating
-// the internal per-pool accumulator that tracks fee growth per one unit of
-// liquidity. Returns error if fails to get accumulator.
-func (k Keeper) chargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin) error {
-	feeAccumulator, err := k.GetFeeAccumulator(ctx, poolId)
-	if err != nil {
-		return err
-	}
-
-	feeAccumulator.AddToAccumulator(sdk.NewDecCoins(feeUpdate))
-
-	return nil
-}
-
 // initOrUpdatePositionFeeAccumulator mutates the fee accumulator position by either creating or updating it
 // for the given pool id in the range specified by the given lower and upper ticks, position id and liquidityDelta.
 // If liquidityDelta is positive, it adds liquidity. If liquidityDelta is negative, it removes liquidity.

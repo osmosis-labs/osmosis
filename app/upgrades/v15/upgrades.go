@@ -12,8 +12,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	icqkeeper "github.com/strangelove-ventures/async-icq/v4/keeper"
-	icqtypes "github.com/strangelove-ventures/async-icq/v4/types"
+	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v4/keeper"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v4/types"
 
 	"github.com/osmosis-labs/osmosis/v15/wasmbinding"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit"

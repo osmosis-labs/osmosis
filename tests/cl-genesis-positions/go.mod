@@ -5,10 +5,10 @@ go 1.20
 require (
 	github.com/cosmos/cosmos-sdk v0.47.2
 	github.com/ignite/cli v0.23.0
-	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230503232557-ba905586c111
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230511015306-615fa4fcbe56
+	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230516205127-c213fddde069
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230516205127-c213fddde069
 	// this commit points to https://github.com/osmosis-labs/osmosis/commit/6e8fbee70d9067b69a900cfc7441b5c4185ec495
-	github.com/osmosis-labs/osmosis/v15 v15.0.0-20230516091847-6e8fbee70d90
+	github.com/osmosis-labs/osmosis/v15 v15.0.0-20230524174100-7f0441ab1da0
 	github.com/tendermint/tendermint v0.34.26
 )
 
@@ -118,7 +118,6 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.15.0 // indirect
-	github.com/strangelove-ventures/async-icq/v4 v4.0.0-rc0 // indirect
 	github.com/strangelove-ventures/packet-forward-middleware/v4 v4.0.5 // indirect
 	github.com/stretchr/testify v1.8.3 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
