@@ -1,6 +1,7 @@
 package concentrated_liquidity_test
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -740,6 +741,89 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 		expectedIncentiveRecords []types.IncentiveRecord
 		expectedError            error
 	}
+
+	validateResult := func(ctx sdk.Context, err error, tc updateAccumToNow, balancerPoolId, poolId uint64, initUptimeAccumValues []sdk.DecCoins, qualifyingBalancerLiquidity sdk.Dec, qualifyingLiquidity sdk.Dec) []sdk.DecCoins {
+		clKeeper := s.App.ConcentratedLiquidityKeeper
+
+		if tc.expectedError != nil {
+			s.Require().Error(err)
+			s.Require().ErrorContains(err, tc.expectedError.Error())
+
+			// Ensure accumulators remain unchanged
+			newUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(ctx, poolId)
+			s.Require().NoError(err)
+			s.Require().Equal(initUptimeAccumValues, newUptimeAccumValues)
+
+			// Ensure incentive records remain unchanged
+			updatedIncentiveRecords, err := clKeeper.GetAllIncentiveRecordsForPool(ctx, poolId)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.poolIncentiveRecords, updatedIncentiveRecords)
+
+			return nil
+		}
+
+		s.Require().NoError(err)
+
+		// Get updated pool for testing purposes
+		clPool, err := clKeeper.GetPoolById(ctx, tc.poolId)
+		s.Require().NoError(err)
+
+		// Calculate expected uptime deltas using qualifying liquidity deltas.
+		// Recall that uptime accumulators track emitted incentives / qualifying liquidity.
+		expectedUptimeDeltas := []sdk.DecCoins{}
+		for _, curSupportedUptime := range types.SupportedUptimes {
+			// Calculate expected incentives for the current uptime by emitting incentives from
+			// all incentive records to their respective uptime accumulators in the pool.
+			// TODO: find a cleaner way to calculate this that does not involve iterating over all incentive records for each uptime accum.
+			curUptimeAccruedIncentives := cl.EmptyCoins
+			for _, poolRecord := range tc.poolIncentiveRecords {
+				if poolRecord.MinUptime == curSupportedUptime {
+					// We set the expected accrued incentives based on the total time that has elapsed since position creation
+					curUptimeAccruedIncentives = curUptimeAccruedIncentives.Add(sdk.NewDecCoins(expectedIncentivesFromRate(poolRecord.IncentiveDenom, poolRecord.IncentiveRecordBody.EmissionRate, defaultTestUptime+tc.timeElapsed, qualifyingLiquidity))...)
+				}
+			}
+			expectedUptimeDeltas = append(expectedUptimeDeltas, curUptimeAccruedIncentives)
+		}
+
+		// Get new uptime accum values for comparison
+		newUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(ctx, tc.poolId)
+		s.Require().NoError(err)
+
+		// Ensure that each accumulator value changes by the correct amount
+		totalUptimeDeltas := sdk.NewDecCoins()
+		for uptimeIndex := range newUptimeAccumValues {
+			uptimeDelta := newUptimeAccumValues[uptimeIndex].Sub(initUptimeAccumValues[uptimeIndex])
+			s.Require().Equal(expectedUptimeDeltas[uptimeIndex], uptimeDelta)
+
+			totalUptimeDeltas = totalUptimeDeltas.Add(uptimeDelta...)
+		}
+
+		// Ensure that LastLiquidityUpdate field is updated for pool
+		s.Require().Equal(ctx.BlockTime(), clPool.GetLastLiquidityUpdate())
+
+		// Ensure that pool's IncentiveRecords are updated to reflect emitted incentives
+		updatedIncentiveRecords, err := clKeeper.GetAllIncentiveRecordsForPool(ctx, tc.poolId)
+		s.Require().NoError(err)
+		s.Require().Equal(tc.expectedIncentiveRecords, updatedIncentiveRecords)
+
+		// If applicable, get gauge for canonical balancer pool and ensure it increased by the appropriate amount.
+		if tc.canonicalBalancerPoolAssets != nil {
+			gaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(ctx, balancerPoolId, longestLockableDuration)
+			s.Require().NoError(err)
+
+			gauge, err := s.App.IncentivesKeeper.GetGaugeByID(ctx, gaugeId)
+			s.Require().NoError(err)
+
+			// Since balancer shares are added prior to actual emissions to the pool, they are already factored into the
+			// accumulator values ("totalUptimeDeltas"). We leverage this to find the expected amount of incentives emitted
+			// to the gauge.
+			expectedGaugeShares := sdk.NewCoins(sdk.NormalizeCoins(totalUptimeDeltas.MulDec(qualifyingBalancerLiquidity))...)
+			s.Require().Equal(expectedGaugeShares, gauge.Coins)
+		}
+
+		return expectedUptimeDeltas
+	}
+
 	tests := map[string]updateAccumToNow{
 		"one incentive record": {
 			poolId:               defaultPoolId,
@@ -969,83 +1053,38 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			// Let `timeElapsed` time pass to test incentive distribution
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(tc.timeElapsed))
 
-			// System under test
-			err = clKeeper.UpdateUptimeAccumulatorsToNow(s.Ctx, tc.poolId)
+			// System under test 1
+			// Use cache context to avoud persisting updates for the next function
+			// that relies on the same test cases and setup.
+			cacheCtx, _ := s.Ctx.CacheContext()
+			err = clKeeper.UpdateUptimeAccumulatorsToNow(cacheCtx, tc.poolId)
 
-			if tc.expectedError != nil {
-				s.Require().Error(err)
-				s.Require().ErrorContains(err, tc.expectedError.Error())
+			validateResult(cacheCtx, err, tc, balancerPoolId, clPool.GetId(), initUptimeAccumValues, qualifyingBalancerLiquidity, qualifyingLiquidity)
 
-				// Ensure accumulators remain unchanged
-				newUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, clPool.GetId())
-				s.Require().NoError(err)
-				s.Require().Equal(initUptimeAccumValues, newUptimeAccumValues)
+			// Now test a similar method with different parameters
 
-				// Ensure incentive records remain unchanged
-				updatedIncentiveRecords, err := clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPool.GetId())
-				s.Require().NoError(err)
-				s.Require().Equal(tc.poolIncentiveRecords, updatedIncentiveRecords)
-
+			// Skip this test case as UpdatePoolGivenUptimeAccumulatorsToNow relies
+			// on this check to be done by the caller.
+			if errors.Is(tc.expectedError, types.PoolNotFoundError{PoolId: invalidPoolId}) {
 				return
 			}
 
+			uptimeAccs, err := clKeeper.GetUptimeAccumulators(s.Ctx, tc.poolId)
 			s.Require().NoError(err)
 
-			// Get updated pool for testing purposes
-			clPool, err = clKeeper.GetPoolById(s.Ctx, tc.poolId)
-			s.Require().NoError(err)
+			// System under test 2
+			err = clKeeper.UpdateGivenPoolUptimeAccumulatorsToNow(s.Ctx, clPool, uptimeAccs)
 
-			// Calculate expected uptime deltas using qualifying liquidity deltas.
-			// Recall that uptime accumulators track emitted incentives / qualifying liquidity.
-			expectedUptimeDeltas := []sdk.DecCoins{}
-			for _, curSupportedUptime := range types.SupportedUptimes {
-				// Calculate expected incentives for the current uptime by emitting incentives from
-				// all incentive records to their respective uptime accumulators in the pool.
-				// TODO: find a cleaner way to calculate this that does not involve iterating over all incentive records for each uptime accum.
-				curUptimeAccruedIncentives := cl.EmptyCoins
-				for _, poolRecord := range tc.poolIncentiveRecords {
-					if poolRecord.MinUptime == curSupportedUptime {
-						// We set the expected accrued incentives based on the total time that has elapsed since position creation
-						curUptimeAccruedIncentives = curUptimeAccruedIncentives.Add(sdk.NewDecCoins(expectedIncentivesFromRate(poolRecord.IncentiveDenom, poolRecord.IncentiveRecordBody.EmissionRate, defaultTestUptime+tc.timeElapsed, qualifyingLiquidity))...)
-					}
-				}
-				expectedUptimeDeltas = append(expectedUptimeDeltas, curUptimeAccruedIncentives)
+			expectedUptimeDeltas := validateResult(s.Ctx, err, tc, balancerPoolId, clPool.GetId(), initUptimeAccumValues, qualifyingBalancerLiquidity, qualifyingLiquidity)
+
+			if tc.expectedError != nil {
+				return
 			}
 
-			// Get new uptime accum values for comparison
-			newUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, tc.poolId)
-			s.Require().NoError(err)
-
-			// Ensure that each accumulator value changes by the correct amount
-			totalUptimeDeltas := sdk.NewDecCoins()
-			for uptimeIndex := range newUptimeAccumValues {
-				uptimeDelta := newUptimeAccumValues[uptimeIndex].Sub(initUptimeAccumValues[uptimeIndex])
-				s.Require().Equal(expectedUptimeDeltas[uptimeIndex], uptimeDelta)
-
-				totalUptimeDeltas = totalUptimeDeltas.Add(uptimeDelta...)
-			}
-
-			// Ensure that LastLiquidityUpdate field is updated for pool
-			s.Require().Equal(s.Ctx.BlockTime(), clPool.GetLastLiquidityUpdate())
-
-			// Ensure that pool's IncentiveRecords are updated to reflect emitted incentives
-			updatedIncentiveRecords, err := clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, tc.poolId)
-			s.Require().NoError(err)
-			s.Require().Equal(tc.expectedIncentiveRecords, updatedIncentiveRecords)
-
-			// If applicable, get gauge for canonical balancer pool and ensure it increased by the appropriate amount.
-			if tc.canonicalBalancerPoolAssets != nil {
-				gaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerPoolId, longestLockableDuration)
-				s.Require().NoError(err)
-
-				gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
-				s.Require().NoError(err)
-
-				// Since balancer shares are added prior to actual emissions to the pool, they are already factored into the
-				// accumulator values ("totalUptimeDeltas"). We leverage this to find the expected amount of incentives emitted
-				// to the gauge.
-				expectedGaugeShares := sdk.NewCoins(sdk.NormalizeCoins(totalUptimeDeltas.MulDec(qualifyingBalancerLiquidity))...)
-				s.Require().Equal(expectedGaugeShares, gauge.Coins)
+			// Ensure that each uptime accumulater value that was passed in as an argument changes by the correct amount.
+			for uptimeIndex := range uptimeAccs {
+				expectedValue := initUptimeAccumValues[uptimeIndex].Add(expectedUptimeDeltas[uptimeIndex]...)
+				s.Require().Equal(expectedValue, uptimeAccs[uptimeIndex].GetValue())
 			}
 		})
 	}
@@ -3327,7 +3366,11 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 
 			// --- System under test ---
 
-			retrievedBalancerPoolId, addedLiquidity, err := s.App.ConcentratedLiquidityKeeper.PrepareBalancerPoolAsFullRange(s.Ctx, concentratedPoolId)
+			// Get uptime accums for the cl pool.
+			uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
+			s.Require().NoError(err)
+
+			retrievedBalancerPoolId, addedLiquidity, err := s.App.ConcentratedLiquidityKeeper.PrepareBalancerPoolAsFullRange(s.Ctx, concentratedPoolId, uptimeAccums)
 
 			// --- Assertions ---
 
@@ -3348,16 +3391,21 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			updatedClPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 			s.Require().NoError(err)
 
-			clPoolUptimeAccumulators, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
+			clPoolUptimeAccumulatorsFromState, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
 			s.Require().NoError(err)
 
-			s.Require().True(len(clPoolUptimeAccumulators) > 0)
-			for _, uptimeAccum := range clPoolUptimeAccumulators {
+			s.Require().True(len(clPoolUptimeAccumulatorsFromState) > 0)
+			expectedShares := qualifyingShares.Add(initialLiquidity)
+			for uptimeIdx, uptimeAccum := range clPoolUptimeAccumulatorsFromState {
 				currAccumShares, err := uptimeAccum.GetTotalShares()
 				s.Require().NoError(err)
 
 				// Ensure each accum has the correct number of final shares
-				s.Require().Equal(qualifyingShares.Add(initialLiquidity), currAccumShares)
+				s.Require().Equal(expectedShares, currAccumShares)
+
+				// Also validate uptime accumulators passed in as parameter.
+				currAccumShares, err = uptimeAccums[uptimeIdx].GetTotalShares()
+				s.Require().Equal(expectedShares, currAccumShares)
 			}
 
 			// Ensure added liquidity is equal to the amount accum shares changed by
@@ -3525,7 +3573,11 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			// Add balancer shares to CL accumulatores
 			addedLiquidity := sdk.ZeroDec()
 			if !tc.balSharesNotAddedToAccums {
-				addedBalPool, qualifiedShares, err := s.App.ConcentratedLiquidityKeeper.PrepareBalancerPoolAsFullRange(s.Ctx, clPool.GetId())
+				// Get uptime accums for the cl pool.
+				uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
+				s.Require().NoError(err)
+
+				addedBalPool, qualifiedShares, err := s.App.ConcentratedLiquidityKeeper.PrepareBalancerPoolAsFullRange(s.Ctx, clPool.GetId(), uptimeAccums)
 				addedLiquidity = addedLiquidity.Add(qualifiedShares)
 
 				// If a valid link exists, ensure no error and sanity check the output pool ID
@@ -3549,7 +3601,11 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 
 			// --- System under test ---
 
-			amountClaimed, err := s.App.ConcentratedLiquidityKeeper.ClaimAndResetFullRangeBalancerPool(s.Ctx, clPoolId, balancerPoolId)
+			// Get uptime accums for the cl pool.
+			uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
+			s.Require().NoError(err)
+
+			amountClaimed, err := s.App.ConcentratedLiquidityKeeper.ClaimAndResetFullRangeBalancerPool(s.Ctx, clPoolId, balancerPoolId, uptimeAccums)
 
 			// --- Assertions ---
 
@@ -3558,11 +3614,11 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 				s.Require().ErrorContains(err, tc.expectedError.Error())
 				s.Require().Equal(sdk.Coins{}, amountClaimed)
 
-				clPoolUptimeAccumulators, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
+				clPoolUptimeAccumulatorsFromState, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
 				s.Require().NoError(err)
 
-				s.Require().True(len(clPoolUptimeAccumulators) > 0)
-				for _, uptimeAccum := range clPoolUptimeAccumulators {
+				s.Require().True(len(clPoolUptimeAccumulatorsFromState) > 0)
+				for uptimeIdx, uptimeAccum := range clPoolUptimeAccumulatorsFromState {
 					currAccumShares, err := uptimeAccum.GetTotalShares()
 					s.Require().NoError(err)
 
@@ -3575,8 +3631,14 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 						addedLiquidity = sdk.ZeroDec()
 					}
 
+					expectedLiquidity := initialLiquidity.Add(addedLiquidity)
+
 					// Ensure accum shares remain unchanged after error
-					s.Require().Equal(initialLiquidity.Add(addedLiquidity), currAccumShares)
+					s.Require().Equal(expectedLiquidity, currAccumShares)
+
+					// Also validate uptime accumulators passed in as parameter.
+					currAccumShares, err = uptimeAccums[uptimeIdx].GetTotalShares()
+					s.Require().Equal(expectedLiquidity, currAccumShares)
 				}
 
 				// If gauge exists, ensure it remains empty after error

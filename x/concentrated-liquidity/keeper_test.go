@@ -324,11 +324,25 @@ func (s *KeeperTestSuite) crossTickAndChargeFee(poolId uint64, tickIndexToCross 
 	nextTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, poolId, tickIndexToCross)
 	s.Require().NoError(err)
 
+	uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, poolId)
+	s.Require().NoError(err)
+
 	// Cross the tick to update it.
-	_, err = s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, poolId, tickIndexToCross, &nextTickInfo, DefaultFeeAccumCoins[0])
+	_, err = s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, poolId, tickIndexToCross, &nextTickInfo, DefaultFeeAccumCoins[0], feeAccum.GetValue(), uptimeAccums)
 	s.Require().NoError(err)
-	err = s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, poolId, DefaultFeeAccumCoins[0])
+	s.AddToFeeAccumulator(poolId, DefaultFeeAccumCoins[0])
+}
+
+// AddToFeeAccumulator adds the given fee to pool by updating
+// the internal per-pool accumulator that tracks fee growth per one unit of
+// liquidity.
+func (s *KeeperTestSuite) AddToFeeAccumulator(poolId uint64, feeUpdate sdk.DecCoin) {
+	feeAccumulator, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, poolId)
 	s.Require().NoError(err)
+	feeAccumulator.AddToAccumulator(sdk.NewDecCoins(feeUpdate))
 }
 
 func (s *KeeperTestSuite) validatePositionFeeGrowth(poolId uint64, positionId uint64, expectedUnclaimedRewards sdk.DecCoins) {
