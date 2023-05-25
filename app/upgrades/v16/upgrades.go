@@ -129,9 +129,8 @@ func CreateUpgradeHandler(
 		updateTokenFactoryParams(ctx, keepers.TokenFactoryKeeper)
 
 		// Transfers out all the dev fees in kvstore to dev account during upgrade
-		// Expected to error during e2e test due to dev account not being set
 		if err := keepers.ProtoRevKeeper.SendDeveloperFeesToDeveloperAccount(ctx); err != nil {
-			ctx.Logger().Error("error sending developer fees to developer account during upgrade, expected in testing, not in prod", "error", err)
+			return nil, err
 		}
 
 		return migrations, nil
