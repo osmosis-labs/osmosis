@@ -3201,6 +3201,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		invalidConcentratedPoolID    bool
 		invalidBalancerPoolID        bool
 		invalidBalancerPoolLiquidity bool
+		invalidDiscountRate          bool
 
 		expectedError error
 	}
@@ -3293,6 +3294,10 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			invalidConcentratedPoolID: true,
 			expectedError:             types.PoolNotFoundError{PoolId: invalidPoolId + 1},
 		},
+		"invalid discount rate": {
+			invalidDiscountRate: true,
+			expectedError:       types.InvalidDiscountRateError{DiscountRate: sdk.NewDec(2)},
+		},
 	}
 	// create invalid denom test cases. Either denom1, denom2 or both are invalid
 	denomSelector := [][]string{{"foo", "invalid1"}, {"bar", "invalid2"}}
@@ -3314,6 +3319,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			// --- Setup test env ---
 			s.SetupTest()
 			tc = initTestCase(tc)
+			clk := s.App.ConcentratedLiquidityKeeper
 
 			clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, sdk.ZeroDec())
 
@@ -3347,14 +3353,15 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			}
 
 			// Calculate balancer share amount for full range
-			updatedClPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+			updatedClPool, err := clk.GetPoolById(s.Ctx, clPool.GetId())
 			s.Require().NoError(err)
 			asset0BalancerAmount := tc.balancerPoolAssets[0].Token.Amount.ToDec().Mul(tc.portionOfSharesBonded).TruncateInt()
 			asset1BalancerAmount := tc.balancerPoolAssets[1].Token.Amount.ToDec().Mul(tc.portionOfSharesBonded).TruncateInt()
 			qualifyingSharesPreDiscount := math.GetLiquidityFromAmounts(updatedClPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, asset1BalancerAmount, asset0BalancerAmount)
 			qualifyingShares := (sdk.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingSharesPreDiscount)
 
-			clearOutQualifyingShares := tc.noBalancerPoolWithID || tc.invalidBalancerPoolLiquidity || tc.invalidConcentratedPoolID || tc.invalidBalancerPoolID || tc.noCanonicalBalancerPool
+			// TODO: clean this check up (will likely require refactoring the whole test)
+			clearOutQualifyingShares := tc.noBalancerPoolWithID || tc.invalidBalancerPoolLiquidity || tc.invalidConcentratedPoolID || tc.invalidBalancerPoolID || tc.noCanonicalBalancerPool || tc.invalidDiscountRate
 			if clearOutQualifyingShares {
 				qualifyingShares = sdk.NewDec(0)
 			}
@@ -3364,13 +3371,19 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 				concentratedPoolId = invalidPoolId + 1
 			}
 
+			if tc.invalidDiscountRate {
+				params := clk.GetParams(s.Ctx)
+				params.BalancerSharesRewardDiscount = sdk.NewDec(2)
+				clk.SetParams(s.Ctx, params)
+			}
+
 			// --- System under test ---
 
 			// Get uptime accums for the cl pool.
-			uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
+			uptimeAccums, err := clk.GetUptimeAccumulators(s.Ctx, clPool.GetId())
 			s.Require().NoError(err)
 
-			retrievedBalancerPoolId, addedLiquidity, err := s.App.ConcentratedLiquidityKeeper.PrepareBalancerPoolAsFullRange(s.Ctx, concentratedPoolId, uptimeAccums)
+			retrievedBalancerPoolId, addedLiquidity, err := clk.PrepareBalancerPoolAsFullRange(s.Ctx, concentratedPoolId, uptimeAccums)
 
 			// --- Assertions ---
 
@@ -3388,10 +3401,10 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			}
 
 			// General assertions regardless of error
-			updatedClPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+			updatedClPool, err = clk.GetPoolById(s.Ctx, clPool.GetId())
 			s.Require().NoError(err)
 
-			clPoolUptimeAccumulatorsFromState, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
+			clPoolUptimeAccumulatorsFromState, err := clk.GetUptimeAccumulators(s.Ctx, clPool.GetId())
 			s.Require().NoError(err)
 
 			s.Require().True(len(clPoolUptimeAccumulatorsFromState) > 0)
