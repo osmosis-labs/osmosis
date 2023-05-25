@@ -100,7 +100,7 @@ func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, synthDenom
 	if err != nil {
 		return err
 	}
-	if synthLock != (types.SyntheticLock{}) {
+	if !synthLock.IsNil() {
 		return types.ErrSyntheticLockupAlreadyExists
 	}
 

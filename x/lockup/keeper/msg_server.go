@@ -212,7 +212,7 @@ func (server msgServer) ForceUnlock(goCtx context.Context, msg *types.MsgForceUn
 	if err != nil {
 		return &types.MsgForceUnlockResponse{Success: false}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	if synthLock != (types.SyntheticLock{}) {
+	if !synthLock.IsNil() {
 		return &types.MsgForceUnlockResponse{Success: false}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "superfluid delegation exists for lock")
 	}
 
