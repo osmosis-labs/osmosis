@@ -18,7 +18,7 @@ import (
 
 var (
 	defaultPoolParams = balancer.PoolParams{
-		SwapFee: defaultSwapFee,
+		SwapFee: defaultSpreadFactor,
 		ExitFee: defaultZeroExitFee,
 	}
 
@@ -78,7 +78,7 @@ func (s *KeeperTestSuite) TestCreateBalancerPool() {
 			emptySender: true,
 			expectPass:  false,
 		}, {
-			name: "create a pool with negative swap fee",
+			name: "create a pool with negative spread factor",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(-1, 2),
 				ExitFee: defaultZeroExitFee,
@@ -293,7 +293,7 @@ func (s *KeeperTestSuite) TestInitializePool() {
 				balancerPool, err := balancer.NewBalancerPool(
 					defaultPoolId,
 					balancer.PoolParams{
-						SwapFee: defaultSwapFee,
+						SwapFee: defaultSpreadFactor,
 						ExitFee: sdk.NewDecWithPrec(5, 1),
 					},
 					defaultPoolAssets,
@@ -831,7 +831,7 @@ func (s *KeeperTestSuite) TestActiveBalancerPool() {
 func (s *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 	testCases := []struct {
 		name              string
-		poolSwapFee       sdk.Dec
+		poolSpreadFactor  sdk.Dec
 		poolExitFee       sdk.Dec
 		tokensIn          sdk.Coins
 		shareOutMinAmount sdk.Int
@@ -840,7 +840,7 @@ func (s *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 	}{
 		{
 			name:              "single coin with zero swap and exit fees",
-			poolSwapFee:       sdk.ZeroDec(),
+			poolSpreadFactor:  sdk.ZeroDec(),
 			poolExitFee:       sdk.ZeroDec(),
 			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000000))),
 			shareOutMinAmount: sdk.ZeroInt(),
@@ -852,8 +852,8 @@ func (s *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 		//
 		// Ref: https://github.com/osmosis-labs/osmosis/issues/1196
 		// {
-		// 	name:              "single coin with positive swap fee and zero exit fee",
-		// 	poolSwapFee:       sdk.NewDecWithPrec(1, 2),
+		// 	name:              "single coin with positive spread factor and zero exit fee",
+		// 	poolSpreadFactor:       sdk.NewDecWithPrec(1, 2),
 		// 	poolExitFee:       sdk.ZeroDec(),
 		// 	tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000000))),
 		// 	shareOutMinAmount: sdk.ZeroInt(),
@@ -884,7 +884,7 @@ func (s *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 					},
 				},
 				balancer.PoolParams{
-					SwapFee: tc.poolSwapFee,
+					SwapFee: tc.poolSpreadFactor,
 					ExitFee: tc.poolExitFee,
 				},
 			)
@@ -903,16 +903,16 @@ func (s *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 			)
 			s.Require().NoError(err)
 
-			// require swapTokenOutAmt <= (tokenInAmt * (1 - tc.poolSwapFee))
-			oneMinusSwapFee := sdk.OneDec().Sub(tc.poolSwapFee)
-			swapFeeAdjustedAmount := oneMinusSwapFee.MulInt(tc.tokensIn[0].Amount).RoundInt()
-			s.Require().True(tokenOutAmt.LTE(swapFeeAdjustedAmount))
+			// require swapTokenOutAmt <= (tokenInAmt * (1 - tc.poolSpreadFactor))
+			oneMinusSwapFee := sdk.OneDec().Sub(tc.poolSpreadFactor)
+			spreadFactorAdjustedAmount := oneMinusSwapFee.MulInt(tc.tokensIn[0].Amount).RoundInt()
+			s.Require().True(tokenOutAmt.LTE(spreadFactorAdjustedAmount))
 
 			// require swapTokenOutAmt + 10 > input
 			s.Require().True(
-				swapFeeAdjustedAmount.Sub(tokenOutAmt).LTE(sdk.NewInt(10)),
+				spreadFactorAdjustedAmount.Sub(tokenOutAmt).LTE(sdk.NewInt(10)),
 				"expected out amount %s, actual out amount %s",
-				swapFeeAdjustedAmount, tokenOutAmt,
+				spreadFactorAdjustedAmount, tokenOutAmt,
 			)
 		})
 	}

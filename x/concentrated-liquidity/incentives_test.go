@@ -909,7 +909,13 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			// If applicable, create and link a canonical balancer pool
 			balancerPoolId := uint64(0)
 			if tc.canonicalBalancerPoolAssets != nil {
+				// Create balancer pool and bond its shares
 				balancerPoolId = s.PrepareCustomBalancerPool(tc.canonicalBalancerPoolAssets, defaultBalancerPoolParams)
+				longestDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
+				s.Require().NoError(err)
+				_, err = s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(gammtypes.GetPoolShareDenom(balancerPoolId), gammtypes.InitPoolSharesSupply)), longestDuration)
+				s.Require().NoError(err)
+
 				s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx,
 					gammtypes.MigrationRecords{
 						BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
@@ -1162,14 +1168,12 @@ func (s *KeeperTestSuite) TestGetInitialUptimeGrowthOppositeDirectionOfLastTrave
 	}
 }
 
-func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
-	defaultPoolId := uint64(1)
+// Test uptime growth inside and outside range.
+func (s *KeeperTestSuite) TestGetUptimeGrowthRange() {
 	defaultInitialLiquidity := sdk.OneDec()
 	uptimeHelper := getExpectedUptimes()
 
-	type uptimeGrowthOutsideTest struct {
-		poolSetup bool
-
+	type uptimeGrowthTest struct {
 		lowerTick                    int64
 		upperTick                    int64
 		currentTick                  int64
@@ -1177,15 +1181,13 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 		upperTickUptimeGrowthOutside []sdk.DecCoins
 		globalUptimeGrowth           []sdk.DecCoins
 
-		expectedUptimeGrowthInside []sdk.DecCoins
-		expectedError              bool
+		expectedUptimeGrowthInside  []sdk.DecCoins
+		expectedUptimeGrowthOutside []sdk.DecCoins
 	}
 
-	tests := map[string]uptimeGrowthOutsideTest{
+	tests := map[string]uptimeGrowthTest{
 		// current tick above range
-
 		"current tick > upper tick, nonzero uptime growth inside": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  2,
@@ -1195,10 +1197,10 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is above range, we expect upper - lower
 			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			expectedError:              false,
+			// Since current tick is above range, we expect global - (upper - lower)
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
 		},
 		"current tick > upper tick, nonzero uptime growth inside (wider range)": {
-			poolSetup:                    true,
 			lowerTick:                    12444,
 			upperTick:                    15013,
 			currentTick:                  50320,
@@ -1208,10 +1210,10 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is above range, we expect upper - lower
 			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			expectedError:              false,
+			// Since current tick is above range, we expect global - (upper - lower)
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
 		},
 		"current tick > upper tick, zero uptime growth inside (nonempty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  2,
@@ -1221,10 +1223,10 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is above range, we expect upper - lower
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
 		},
 		"current tick > upper tick, zero uptime growth inside (empty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  2,
@@ -1234,10 +1236,10 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is above range, we expect upper - lower
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
 		},
 		"current tick > upper tick, zero uptime growth inside with extraneous uptime growth": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  2,
@@ -1247,13 +1249,13 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is above range, we expect upper - lower
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
 		},
 
 		// current tick within range
 
 		"upper tick > current tick > lower tick, nonzero uptime growth inside": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    2,
 			currentTick:                  1,
@@ -1263,10 +1265,10 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is within range, we expect global - upper - lower
 			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			expectedError:              false,
+			// Since current tick is within range, we expect global - (global - upper - lower)
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
 		},
 		"upper tick > current tick > lower tick, nonzero uptime growth inside (wider range)": {
-			poolSetup:                    true,
 			lowerTick:                    -19753,
 			upperTick:                    8921,
 			currentTick:                  -97,
@@ -1276,10 +1278,10 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is within range, we expect global - upper - lower
 			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			expectedError:              false,
+			// Since current tick is within range, we expect global - (global - upper - lower)
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
 		},
 		"upper tick > current tick > lower tick, zero uptime growth inside (nonempty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    2,
 			currentTick:                  1,
@@ -1289,10 +1291,10 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is within range, we expect global - upper - lower
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
 		},
 		"upper tick > current tick > lower tick, zero uptime growth inside (empty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    2,
 			currentTick:                  1,
@@ -1302,13 +1304,13 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is within range, we expect global - upper - lower
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
 		},
 
 		// current tick below range
 
 		"current tick < lower tick, nonzero uptime growth inside": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  -1,
@@ -1318,10 +1320,10 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is below range, we expect lower - upper
 			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			expectedError:              false,
+			// Since current tick is below range, we expect global - (lower - upper)
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
 		},
 		"current tick < lower tick, nonzero uptime growth inside (wider range)": {
-			poolSetup:                    true,
 			lowerTick:                    328,
 			upperTick:                    726,
 			currentTick:                  189,
@@ -1331,10 +1333,10 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is below range, we expect lower - upper
 			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			expectedError:              false,
+			// Since current tick is below range, we expect global - (lower - upper)
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
 		},
 		"current tick < lower tick, zero uptime growth inside (nonempty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  -1,
@@ -1344,10 +1346,10 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is below range, we expect lower - upper
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
 		},
 		"current tick < lower tick, zero uptime growth inside (empty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  -1,
@@ -1357,13 +1359,13 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 
 			// Since current tick is below range, we expect lower - upper
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
 		},
 
 		// current tick on range boundary
 
 		"current tick = lower tick, nonzero uptime growth inside": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  0,
@@ -1374,10 +1376,11 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
 			// this case is equivalent to the current tick being within the range (global - upper - lower)
 			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			expectedError:              false,
+			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
+			// this case is equivalent to the current tick being within the range (global - (global - upper - lower))
+			expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
 		},
 		"current tick = lower tick, zero uptime growth inside (nonempty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  0,
@@ -1388,10 +1391,10 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
 			// this case is equivalent to the current tick being within the range (global - upper - lower)
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
 		},
 		"current tick = lower tick, zero uptime growth inside (empty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  0,
@@ -1402,10 +1405,10 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
 			// this case is equivalent to the current tick being within the range (global - upper - lower)
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
 		},
 		"current tick = upper tick, nonzero uptime growth inside": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  1,
@@ -1416,10 +1419,11 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
 			// this case is equivalent to the current tick being above the range (upper - lower)
 			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			expectedError:              false,
+			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
+			// this case is equivalent to the current tick being above the range (global - (upper - lower))
+			expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
 		},
 		"current tick = upper tick, zero uptime growth inside (nonempty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  1,
@@ -1430,10 +1434,10 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
 			// this case is equivalent to the current tick being above the range (upper - lower)
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
 		},
 		"current tick = upper tick, zero uptime growth inside (empty trackers)": {
-			poolSetup:                    true,
 			lowerTick:                    0,
 			upperTick:                    1,
 			currentTick:                  1,
@@ -1444,14 +1448,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
 			// this case is equivalent to the current tick being above the range (upper - lower)
 			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:              false,
-		},
-
-		// error catching
-
-		"error: pool has not been setup": {
-			poolSetup:     false,
-			expectedError: true,
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
 		},
 	}
 
@@ -1459,361 +1457,41 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 		s.Run(name, func() {
 			s.SetupTest()
 
-			// if pool set up true, set up default pool
-			var pool types.ConcentratedPoolExtension
-			if tc.poolSetup {
-				pool = s.PrepareConcentratedPool()
-				currentTick := pool.GetCurrentTick()
+			pool := s.PrepareConcentratedPool()
+			currentTick := pool.GetCurrentTick()
 
-				// Update global uptime accums
-				err := addToUptimeAccums(s.Ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.globalUptimeGrowth)
-				s.Require().NoError(err)
+			// Update global uptime accums
+			err := addToUptimeAccums(s.Ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.globalUptimeGrowth)
+			s.Require().NoError(err)
 
-				// Update tick-level uptime trackers
-				s.initializeTick(s.Ctx, currentTick, tc.lowerTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.lowerTickUptimeGrowthOutside), true)
-				s.initializeTick(s.Ctx, currentTick, tc.upperTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.upperTickUptimeGrowthOutside), false)
-				pool.SetCurrentTick(tc.currentTick)
-				err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
-				s.Require().NoError(err)
-			}
+			// Update tick-level uptime trackers
+			s.initializeTick(s.Ctx, currentTick, tc.lowerTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.lowerTickUptimeGrowthOutside), true)
+			s.initializeTick(s.Ctx, currentTick, tc.upperTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.upperTickUptimeGrowthOutside), false)
+			pool.SetCurrentTick(tc.currentTick)
+			err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+			s.Require().NoError(err)
 
 			// system under test
-			uptimeGrowthInside, err := s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthInsideRange(s.Ctx, defaultPoolId, tc.lowerTick, tc.upperTick)
-			if tc.expectedError {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
+			uptimeGrowthInside, err := s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthInsideRange(s.Ctx, pool.GetId(), tc.lowerTick, tc.upperTick)
+			s.Require().NoError(err)
 
-				// check if returned uptime growth inside has correct value
-				s.Require().Equal(tc.expectedUptimeGrowthInside, uptimeGrowthInside)
-			}
+			// check if returned uptime growth inside has correct value
+			s.Require().Equal(tc.expectedUptimeGrowthInside, uptimeGrowthInside)
+
+			uptimeGrowthOutside, err := s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthOutsideRange(s.Ctx, pool.GetId(), tc.lowerTick, tc.upperTick)
+			s.Require().NoError(err)
+
+			// check if returned uptime growth inside has correct value
+			s.Require().Equal(tc.expectedUptimeGrowthOutside, uptimeGrowthOutside)
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
-	defaultPoolId := uint64(1)
-	defaultInitialLiquidity := sdk.OneDec()
-	uptimeHelper := getExpectedUptimes()
-
-	type uptimeGrowthOutsideTest struct {
-		poolSetup bool
-
-		lowerTick                    int64
-		upperTick                    int64
-		currentTick                  int64
-		lowerTickUptimeGrowthOutside []sdk.DecCoins
-		upperTickUptimeGrowthOutside []sdk.DecCoins
-		globalUptimeGrowth           []sdk.DecCoins
-
-		expectedUptimeGrowthOutside []sdk.DecCoins
-		expectedError               bool
-	}
-
-	tests := map[string]uptimeGrowthOutsideTest{
-		// current tick above range
-
-		"current tick > upper tick, nonzero uptime growth inside": {
-			poolSetup:                    true,
-			lowerTick:                    0,
-			upperTick:                    1,
-			currentTick:                  2,
-			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			upperTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
-
-			// Since current tick is above range, we expect global - (upper - lower)
-			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:               false,
-		},
-		"current tick > upper tick, nonzero uptime growth inside (wider range)": {
-			poolSetup:                    true,
-			lowerTick:                    12444,
-			upperTick:                    15013,
-			currentTick:                  50320,
-			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			upperTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
-
-			// Since current tick is above range, we expect global - (upper - lower)
-			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:               false,
-		},
-		"current tick > upper tick, zero uptime growth inside (nonempty trackers)": {
-			poolSetup:                    true,
-			lowerTick:                    0,
-			upperTick:                    1,
-			currentTick:                  2,
-			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
-
-			// Since the range is empty, we expect growth outside to be equal to global
-			expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
-			expectedError:               false,
-		},
-		"current tick > upper tick, zero uptime growth inside (empty trackers)": {
-			poolSetup:                    true,
-			lowerTick:                    0,
-			upperTick:                    1,
-			currentTick:                  2,
-			lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-			upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-			globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
-
-			// Since the range is empty, we expect growth outside to be equal to global
-			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:               false,
-		},
-		"current tick > upper tick, zero uptime growth inside with extraneous uptime growth": {
-			poolSetup:                    true,
-			lowerTick:                    0,
-			upperTick:                    1,
-			currentTick:                  2,
-			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
-
-			// Since the range is empty, we expect growth outside to be equal to global
-			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:               false,
-		},
-
-		// current tick within range
-
-		"upper tick > current tick > lower tick, nonzero uptime growth inside": {
-			poolSetup:                    true,
-			lowerTick:                    0,
-			upperTick:                    2,
-			currentTick:                  1,
-			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
-
-			// Since current tick is within range, we expect global - (global - upper - lower)
-			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:               false,
-		},
-		"upper tick > current tick > lower tick, nonzero uptime growth inside (wider range)": {
-			poolSetup:                    true,
-			lowerTick:                    -19753,
-			upperTick:                    8921,
-			currentTick:                  -97,
-			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
-
-			// Since current tick is within range, we expect global - (global - upper - lower)
-			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:               false,
-		},
-		"upper tick > current tick > lower tick, zero uptime growth inside (nonempty trackers)": {
-			poolSetup:                    true,
-			lowerTick:                    0,
-			upperTick:                    2,
-			currentTick:                  1,
-			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
-
-			// Since the range is empty, we expect growth outside to be equal to global
-			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:               false,
-		},
-		"upper tick > current tick > lower tick, zero uptime growth inside (empty trackers)": {
-			poolSetup:                    true,
-			lowerTick:                    0,
-			upperTick:                    2,
-			currentTick:                  1,
-			lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-			upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-			globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
-
-			// Since the range is empty, we expect growth outside to be equal to global
-			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:               false,
-		},
-
-		// current tick below range
-
-		"current tick < lower tick, nonzero uptime growth inside": {
-			poolSetup:                    true,
-			lowerTick:                    0,
-			upperTick:                    1,
-			currentTick:                  -1,
-			lowerTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
-
-			// Since current tick is below range, we expect global - (lower - upper)
-			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:               false,
-		},
-		"current tick < lower tick, nonzero uptime growth inside (wider range)": {
-			poolSetup:                    true,
-			lowerTick:                    328,
-			upperTick:                    726,
-			currentTick:                  189,
-			lowerTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
-
-			// Since current tick is below range, we expect global - (lower - upper)
-			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:               false,
-		},
-		"current tick < lower tick, zero uptime growth inside (nonempty trackers)": {
-			poolSetup:                    true,
-			lowerTick:                    0,
-			upperTick:                    1,
-			currentTick:                  -1,
-			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
-
-			// Since the range is empty, we expect growth outside to be equal to global
-			expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
-			expectedError:               false,
-		},
-		"current tick < lower tick, zero uptime growth inside (empty trackers)": {
-			poolSetup:                    true,
-			lowerTick:                    0,
-			upperTick:                    1,
-			currentTick:                  -1,
-			lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-			upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-			globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
-
-			// Since the range is empty, we expect growth outside to be equal to global
-			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:               false,
-		},
-
-		// current tick on range boundary
-
-		"current tick = lower tick, nonzero uptime growth inside": {
-			poolSetup:                    true,
-			lowerTick:                    0,
-			upperTick:                    1,
-			currentTick:                  0,
-			lowerTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			globalUptimeGrowth:           uptimeHelper.fourHundredTokensMultiDenom,
-
-			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
-			// this case is equivalent to the current tick being within the range (global - (global - upper - lower))
-			expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
-			expectedError:               false,
-		},
-		"current tick = lower tick, zero uptime growth inside (nonempty trackers)": {
-			poolSetup:                    true,
-			lowerTick:                    0,
-			upperTick:                    1,
-			currentTick:                  0,
-			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
-
-			// Since the range is empty, we expect growth outside to be equal to global
-			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:               false,
-		},
-		"current tick = lower tick, zero uptime growth inside (empty trackers)": {
-			poolSetup:                    true,
-			lowerTick:                    0,
-			upperTick:                    1,
-			currentTick:                  0,
-			lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-			upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-			globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
-
-			// Since the range is empty, we expect growth outside to be equal to global
-			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:               false,
-		},
-		"current tick = upper tick, nonzero uptime growth inside": {
-			poolSetup:                    true,
-			lowerTick:                    0,
-			upperTick:                    1,
-			currentTick:                  1,
-			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			upperTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			globalUptimeGrowth:           uptimeHelper.fourHundredTokensMultiDenom,
-
-			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
-			// this case is equivalent to the current tick being above the range (global - (upper - lower))
-			expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
-			expectedError:               false,
-		},
-		"current tick = upper tick, zero uptime growth inside (nonempty trackers)": {
-			poolSetup:                    true,
-			lowerTick:                    0,
-			upperTick:                    1,
-			currentTick:                  1,
-			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
-
-			// Since the range is empty, we expect growth outside to be equal to global
-			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:               false,
-		},
-		"current tick = upper tick, zero uptime growth inside (empty trackers)": {
-			poolSetup:                    true,
-			lowerTick:                    0,
-			upperTick:                    1,
-			currentTick:                  1,
-			lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-			upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-			globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
-
-			// Since the range is empty, we expect growth outside to be equal to global
-			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
-			expectedError:               false,
-		},
-
-		// error catching
-
-		"error: pool has not been setup": {
-			poolSetup:     false,
-			expectedError: true,
-		},
-	}
-
-	for name, tc := range tests {
-		s.Run(name, func() {
-			s.SetupTest()
-
-			// if pool set up true, set up default pool
-			var pool types.ConcentratedPoolExtension
-			if tc.poolSetup {
-				pool = s.PrepareConcentratedPool()
-				currentTick := pool.GetCurrentTick()
-
-				// Update global uptime accums
-				err := addToUptimeAccums(s.Ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.globalUptimeGrowth)
-				s.Require().NoError(err)
-
-				// Update tick-level uptime trackers
-				s.initializeTick(s.Ctx, currentTick, tc.lowerTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.lowerTickUptimeGrowthOutside), true)
-				s.initializeTick(s.Ctx, currentTick, tc.upperTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.upperTickUptimeGrowthOutside), false)
-				pool.SetCurrentTick(tc.currentTick)
-				err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
-				s.Require().NoError(err)
-			}
-
-			// system under test
-			uptimeGrowthOutside, err := s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthOutsideRange(s.Ctx, defaultPoolId, tc.lowerTick, tc.upperTick)
-			if tc.expectedError {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-
-				// check if returned uptime growth inside has correct value
-				s.Require().Equal(tc.expectedUptimeGrowthOutside, uptimeGrowthOutside)
-			}
-		})
-	}
+func (s *KeeperTestSuite) TestGetUptimeGrowthErrors() {
+	_, err := s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthInsideRange(s.Ctx, defaultPoolId, 0, 0)
+	s.Require().Error(err)
+	_, err = s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthOutsideRange(s.Ctx, defaultPoolId, 0, 0)
+	s.Require().Error(err)
 }
 
 func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
@@ -2071,13 +1749,24 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		positionId  uint64
 	}
 
+	default0To2PosParam := positionParameters{
+		owner:       ownerWithValidPosition,
+		lowerTick:   0,
+		upperTick:   2,
+		liquidity:   DefaultLiquidityAmt,
+		joinTime:    defaultJoinTime,
+		positionId:  DefaultPositionId,
+		collectTime: defaultJoinTime.Add(100),
+	}
+	default1To2PosParam := default0To2PosParam
+	default1To2PosParam.lowerTick = 1
+
 	tests := map[string]struct {
 		// setup parameters
 		existingAccumLiquidity   []sdk.Dec
 		addedUptimeGrowthInside  []sdk.DecCoins
 		addedUptimeGrowthOutside []sdk.DecCoins
 		currentTick              int64
-		isInvalidPoolIdGiven     bool
 		numPositions             int
 
 		// inputs parameters
@@ -2092,16 +1781,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		// ---Cases for lowerTick < currentTick < upperTick---
 
 		"(lower < curr < upper) no uptime growth inside or outside range, 1D time in position": {
-			currentTick: 1,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   0,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
+			currentTick:                 1,
+			positionParams:              default0To2PosParam,
 			numPositions:                1,
 			timeInPosition:              oneDay,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
@@ -2110,17 +1791,9 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		"(lower < curr < upper) uptime growth outside range but not inside, 1D time in position": {
 			currentTick:              1,
 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   0,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneDay,
+			positionParams:           default0To2PosParam,
+			numPositions:             1,
+			timeInPosition:           oneDay,
 			// Since there was no growth inside the range, we expect no incentives to be claimed
 			expectedIncentivesClaimed:   sdk.Coins(nil),
 			expectedForfeitedIncentives: sdk.Coins(nil),
@@ -2128,17 +1801,9 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		"(lower < curr < upper) uptime growth inside range but not outside, 1D time in position": {
 			currentTick:             1,
 			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   0,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneDay,
+			positionParams:          default0To2PosParam,
+			numPositions:            1,
+			timeInPosition:          oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
 			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
@@ -2148,33 +1813,17 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			currentTick:              1,
 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   0,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneDay,
+			positionParams:           default0To2PosParam,
+			numPositions:             1,
+			timeInPosition:           oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
 			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
 			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"(lower < curr < upper) no uptime growth inside or outside range, 1W time in position": {
-			currentTick: 1,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   0,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
+			currentTick:                 1,
+			positionParams:              default0To2PosParam,
 			numPositions:                1,
 			timeInPosition:              oneWeek,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
@@ -2183,17 +1832,9 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		"(lower < curr < upper) uptime growth outside range but not inside, 1W time in position": {
 			currentTick:              1,
 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   0,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneWeek,
+			positionParams:           default0To2PosParam,
+			numPositions:             1,
+			timeInPosition:           oneWeek,
 			// Since there was no growth inside the range, we expect no incentives to be claimed
 			expectedIncentivesClaimed:   sdk.Coins(nil),
 			expectedForfeitedIncentives: sdk.Coins(nil),
@@ -2201,17 +1842,9 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		"(lower < curr < upper) uptime growth inside range but not outside, 1W time in position": {
 			currentTick:             1,
 			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   0,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneWeek,
+			positionParams:          default0To2PosParam,
+			numPositions:            1,
+			timeInPosition:          oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
 			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
@@ -2221,85 +1854,45 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			currentTick:              1,
 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   0,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneWeek,
+			positionParams:           default0To2PosParam,
+			numPositions:             1,
+			timeInPosition:           oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
 			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < curr < upper) no uptime growth inside or outside range, no time in position": {
-			currentTick: 1,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   0,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
+			currentTick:                 1,
+			positionParams:              default0To2PosParam,
 			numPositions:                1,
 			timeInPosition:              0,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
 			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < curr < upper) uptime growth outside range but not inside, no time in position": {
-			currentTick:              1,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   0,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
+			currentTick:                 1,
+			addedUptimeGrowthOutside:    uptimeHelper.hundredTokensMultiDenom,
+			positionParams:              default0To2PosParam,
 			numPositions:                1,
 			timeInPosition:              0,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
 			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < curr < upper) uptime growth inside range but not outside, no time in position": {
-			currentTick:             1,
-			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   0,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
+			currentTick:                 1,
+			addedUptimeGrowthInside:     uptimeHelper.hundredTokensMultiDenom,
+			positionParams:              default0To2PosParam,
 			numPositions:                1,
 			timeInPosition:              0,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
 			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 		},
 		"(lower < curr < upper) uptime growth both inside and outside range, no time in position": {
-			currentTick:              1,
-			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   0,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
+			currentTick:                 1,
+			addedUptimeGrowthInside:     uptimeHelper.hundredTokensMultiDenom,
+			addedUptimeGrowthOutside:    uptimeHelper.hundredTokensMultiDenom,
+			positionParams:              default0To2PosParam,
 			numPositions:                1,
 			timeInPosition:              0,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
@@ -2309,16 +1902,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		// ---Cases for currentTick < lowerTick < upperTick---
 
 		"(curr < lower < upper) no uptime growth inside or outside range, 1D time in position": {
-			currentTick: 0,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
+			currentTick:                 0,
+			positionParams:              default1To2PosParam,
 			numPositions:                1,
 			timeInPosition:              oneDay,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
@@ -2327,17 +1912,9 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		"(curr < lower < upper) uptime growth outside range but not inside, 1D time in position": {
 			currentTick:              0,
 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneDay,
+			positionParams:           default1To2PosParam,
+			numPositions:             1,
+			timeInPosition:           oneDay,
 			// Since there was no growth inside the range, we expect no incentives to be claimed
 			expectedIncentivesClaimed:   sdk.Coins(nil),
 			expectedForfeitedIncentives: sdk.Coins(nil),
@@ -2345,17 +1922,9 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		"(curr < lower < upper) uptime growth inside range but not outside, 1D time in position": {
 			currentTick:             0,
 			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneDay,
+			positionParams:          default1To2PosParam,
+			numPositions:            1,
+			timeInPosition:          oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
 			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
@@ -2365,33 +1934,17 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			currentTick:              0,
 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneDay,
+			positionParams:           default1To2PosParam,
+			numPositions:             1,
+			timeInPosition:           oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
 			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
 			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"(curr < lower < upper) no uptime growth inside or outside range, 1W time in position": {
-			currentTick: 0,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
+			currentTick:                 0,
+			positionParams:              default1To2PosParam,
 			numPositions:                1,
 			timeInPosition:              oneWeek,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
@@ -2400,17 +1953,9 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		"(curr < lower < upper) uptime growth outside range but not inside, 1W time in position": {
 			currentTick:              0,
 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneWeek,
+			positionParams:           default1To2PosParam,
+			numPositions:             1,
+			timeInPosition:           oneWeek,
 			// Since there was no growth inside the range, we expect no incentives to be claimed
 			expectedIncentivesClaimed:   sdk.Coins(nil),
 			expectedForfeitedIncentives: sdk.Coins(nil),
@@ -2418,17 +1963,9 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		"(curr < lower < upper) uptime growth inside range but not outside, 1W time in position": {
 			currentTick:             0,
 			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneWeek,
+			positionParams:          default1To2PosParam,
+			numPositions:            1,
+			timeInPosition:          oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
 			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
@@ -2438,85 +1975,45 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			currentTick:              0,
 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneWeek,
+			positionParams:           default1To2PosParam,
+			numPositions:             1,
+			timeInPosition:           oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
 			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(curr < lower < upper) no uptime growth inside or outside range, no time in position": {
-			currentTick: 0,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
+			currentTick:                 0,
+			positionParams:              default1To2PosParam,
 			numPositions:                1,
 			timeInPosition:              0,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
 			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(curr < lower < upper) uptime growth outside range but not inside, no time in position": {
-			currentTick:              0,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
+			currentTick:                 0,
+			addedUptimeGrowthOutside:    uptimeHelper.hundredTokensMultiDenom,
+			positionParams:              default1To2PosParam,
 			numPositions:                1,
 			timeInPosition:              0,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
 			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(curr < lower < upper) uptime growth inside range but not outside, no time in position": {
-			currentTick:             0,
-			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
+			currentTick:                 0,
+			addedUptimeGrowthInside:     uptimeHelper.hundredTokensMultiDenom,
+			positionParams:              default1To2PosParam,
 			numPositions:                1,
 			timeInPosition:              0,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
 			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 		},
 		"(curr < lower < upper) uptime growth both inside and outside range, no time in position": {
-			currentTick:              0,
-			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
+			currentTick:                 0,
+			addedUptimeGrowthInside:     uptimeHelper.hundredTokensMultiDenom,
+			addedUptimeGrowthOutside:    uptimeHelper.hundredTokensMultiDenom,
+			positionParams:              default1To2PosParam,
 			numPositions:                1,
 			timeInPosition:              0,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
@@ -2526,16 +2023,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		// ---Cases for lowerTick < upperTick < currentTick---
 
 		"(lower < upper < curr) no uptime growth inside or outside range, 1D time in position": {
-			currentTick: 3,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
+			currentTick:                 3,
+			positionParams:              default1To2PosParam,
 			numPositions:                1,
 			timeInPosition:              oneDay,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
@@ -2544,17 +2033,9 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		"(lower < upper < curr) uptime growth outside range but not inside, 1D time in position": {
 			currentTick:              3,
 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneDay,
+			positionParams:           default1To2PosParam,
+			numPositions:             1,
+			timeInPosition:           oneDay,
 			// Since there was no growth inside the range, we expect no incentives to be claimed
 			expectedIncentivesClaimed:   sdk.Coins(nil),
 			expectedForfeitedIncentives: sdk.Coins(nil),
@@ -2562,17 +2043,9 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		"(lower < upper < curr) uptime growth inside range but not outside, 1D time in position": {
 			currentTick:             3,
 			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneDay,
+			positionParams:          default1To2PosParam,
+			numPositions:            1,
+			timeInPosition:          oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
 			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
@@ -2582,33 +2055,17 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			currentTick:              3,
 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneDay,
+			positionParams:           default1To2PosParam,
+			numPositions:             1,
+			timeInPosition:           oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
 			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
 			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"(lower < upper < curr) no uptime growth inside or outside range, 1W time in position": {
-			currentTick: 3,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
+			currentTick:                 3,
+			positionParams:              default1To2PosParam,
 			numPositions:                1,
 			timeInPosition:              oneWeek,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
@@ -2617,17 +2074,9 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		"(lower < upper < curr) uptime growth outside range but not inside, 1W time in position": {
 			currentTick:              3,
 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneWeek,
+			positionParams:           default1To2PosParam,
+			numPositions:             1,
+			timeInPosition:           oneWeek,
 			// Since there was no growth inside the range, we expect no incentives to be claimed
 			expectedIncentivesClaimed:   sdk.Coins(nil),
 			expectedForfeitedIncentives: sdk.Coins(nil),
@@ -2635,17 +2084,9 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		"(lower < upper < curr) uptime growth inside range but not outside, 1W time in position": {
 			currentTick:             3,
 			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneWeek,
+			positionParams:          default1To2PosParam,
+			numPositions:            1,
+			timeInPosition:          oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
 			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
@@ -2655,85 +2096,45 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			currentTick:              3,
 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneWeek,
+			positionParams:           default1To2PosParam,
+			numPositions:             1,
+			timeInPosition:           oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
 			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < upper < curr) no uptime growth inside or outside range, no time in position": {
-			currentTick: 3,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
+			currentTick:                 3,
+			positionParams:              default1To2PosParam,
 			numPositions:                1,
 			timeInPosition:              0,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
 			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < upper < curr) uptime growth outside range but not inside, no time in position": {
-			currentTick:              3,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
+			currentTick:                 3,
+			addedUptimeGrowthOutside:    uptimeHelper.hundredTokensMultiDenom,
+			positionParams:              default1To2PosParam,
 			numPositions:                1,
 			timeInPosition:              0,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
 			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < upper < curr) uptime growth inside range but not outside, no time in position": {
-			currentTick:             3,
-			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
+			currentTick:                 3,
+			addedUptimeGrowthInside:     uptimeHelper.hundredTokensMultiDenom,
+			positionParams:              default1To2PosParam,
 			numPositions:                1,
 			timeInPosition:              0,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
 			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 		},
 		"(lower < upper < curr) uptime growth both inside and outside range, no time in position": {
-			currentTick:              3,
-			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
+			currentTick:                 3,
+			addedUptimeGrowthInside:     uptimeHelper.hundredTokensMultiDenom,
+			addedUptimeGrowthOutside:    uptimeHelper.hundredTokensMultiDenom,
+			positionParams:              default1To2PosParam,
 			numPositions:                1,
 			timeInPosition:              0,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
@@ -2746,17 +2147,9 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			currentTick:              0,
 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   0,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneDay,
+			positionParams:           default0To2PosParam,
+			numPositions:             1,
+			timeInPosition:           oneDay,
 			// We expect this case to behave like (lower < curr < upper)
 			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
 			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
@@ -2765,17 +2158,9 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			currentTick:              2,
 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   1,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneDay,
+			positionParams:           default1To2PosParam,
+			numPositions:             1,
+			timeInPosition:           oneDay,
 			// We expect this case to behave like (lower < upper < curr)
 			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
 			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
@@ -2791,17 +2176,9 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			},
 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   0,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   1,
-			timeInPosition: oneDay,
+			positionParams:           default0To2PosParam,
+			numPositions:             1,
+			timeInPosition:           oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
 			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
@@ -2818,17 +2195,9 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			},
 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:       ownerWithValidPosition,
-				lowerTick:   0,
-				upperTick:   2,
-				liquidity:   DefaultLiquidityAmt,
-				joinTime:    defaultJoinTime,
-				positionId:  DefaultPositionId,
-				collectTime: defaultJoinTime.Add(100),
-			},
-			numPositions:   3,
-			timeInPosition: oneDay,
+			positionParams:           default0To2PosParam,
+			numPositions:             3,
+			timeInPosition:           oneDay,
 			// Since we introduced positionIDs, despite these position having the same range and pool, only
 			// the position ID being claimed will be considered for the claim.
 			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
@@ -2900,12 +2269,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			incentivesBalanceBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetIncentivesAddress())
 			ownerBalancerBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, ownerWithValidPosition)
 
-			// Set up invalid pool ID for error-catching case(s)
-			sutPoolId := validPoolId
-			if tc.isInvalidPoolIdGiven {
-				sutPoolId = sutPoolId + 1 //nolint:staticcheck,ineffassign
-			}
-
 			// System under test
 			incentivesClaimedQuery, incentivesForfeitedQuery, err := clKeeper.GetClaimableIncentives(ctx, DefaultPositionId)
 
@@ -2969,7 +2332,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 		senderBalance      sdk.Coins
 		recordToSet        types.IncentiveRecord
 		existingRecords    []types.IncentiveRecord
-		minimumGasConsumed uint64
+		minimumGasConsumed uint64 // default 0
 		authorizedUptimes  []time.Duration
 
 		expectedError error
@@ -2984,9 +2347,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet:        incentiveRecordOne,
-			minimumGasConsumed: uint64(0),
-			authorizedUptimes:  types.SupportedUptimes,
+			recordToSet:       incentiveRecordOne,
+			authorizedUptimes: types.SupportedUptimes,
 		},
 		"record with different denom, emission rate, and min uptime": {
 			poolId: defaultPoolId,
@@ -2997,9 +2359,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordTwo.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet:        incentiveRecordTwo,
-			minimumGasConsumed: uint64(0),
-			authorizedUptimes:  types.SupportedUptimes,
+			recordToSet:       incentiveRecordTwo,
+			authorizedUptimes: types.SupportedUptimes,
 		},
 		"record with different start time": {
 			poolId: defaultPoolId,
@@ -3010,9 +2371,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet:        withStartTime(incentiveRecordOne, defaultStartTime.Add(time.Hour)),
-			minimumGasConsumed: uint64(0),
-			authorizedUptimes:  types.SupportedUptimes,
+			recordToSet:       withStartTime(incentiveRecordOne, defaultStartTime.Add(time.Hour)),
+			authorizedUptimes: types.SupportedUptimes,
 		},
 		"record with different incentive amount": {
 			poolId: defaultPoolId,
@@ -3023,9 +2383,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					sdk.NewInt(8),
 				),
 			),
-			recordToSet:        withAmount(incentiveRecordOne, sdk.NewDec(8)),
-			minimumGasConsumed: uint64(0),
-			authorizedUptimes:  types.SupportedUptimes,
+			recordToSet:       withAmount(incentiveRecordOne, sdk.NewDec(8)),
+			authorizedUptimes: types.SupportedUptimes,
 		},
 		"existing incentive records on different uptime accumulators": {
 			poolId: defaultPoolId,
@@ -3074,8 +2433,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet:        incentiveRecordOne,
-			minimumGasConsumed: uint64(0),
+			recordToSet: incentiveRecordOne,
 		},
 
 		// Error catching
@@ -3790,9 +3148,14 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 	}
 	defaultConcentratedAssets := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)))
 	defaultBalancerPoolParams := balancer.PoolParams{SwapFee: sdk.NewDec(0), ExitFee: sdk.NewDec(0)}
-	tests := map[string]struct {
+
+	type testcase struct {
+		// defaults to defaultConcentratedAssets
 		existingConcentratedLiquidity sdk.Coins
-		balancerPoolAssets            []balancer.PoolAsset
+		// defaults to defaultBalancerAssets
+		balancerPoolAssets []balancer.PoolAsset
+		// defaults sdk.OneDec()
+		portionOfSharesBonded sdk.Dec
 
 		noCanonicalBalancerPool      bool
 		noBalancerPoolWithID         bool
@@ -3801,15 +3164,30 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		invalidBalancerPoolLiquidity bool
 
 		expectedError error
-	}{
+	}
+	initTestCase := func(tc testcase) testcase {
+		if tc.existingConcentratedLiquidity.Empty() {
+			tc.existingConcentratedLiquidity = defaultConcentratedAssets
+		}
+		if len(tc.balancerPoolAssets) == 0 {
+			tc.balancerPoolAssets = defaultBalancerAssets
+		}
+		if (tc.portionOfSharesBonded == sdk.Dec{}) {
+			tc.portionOfSharesBonded = sdk.NewDec(1)
+		}
+		return tc
+	}
+
+	tests := map[string]testcase{
 		"happy path: balancer and CL pool at same spot price": {
 			// 100 existing shares and 100 shares added from balancer
+			// no other test will show defaults.
 			existingConcentratedLiquidity: defaultConcentratedAssets,
 			balancerPoolAssets:            defaultBalancerAssets,
+			portionOfSharesBonded:         sdk.NewDec(1),
 		},
 		"same spot price, different total share amount": {
 			// 100 existing shares and 200 shares added from balancer
-			existingConcentratedLiquidity: defaultConcentratedAssets,
 			balancerPoolAssets: []balancer.PoolAsset{
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(200))},
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(200))},
@@ -3818,7 +3196,6 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		"different spot price between balancer and CL pools (excess asset0)": {
 			// 100 existing shares and 100 shares added from balancer. We expect only the even portion of
 			// the Balancer pool to be joined, with the remaining 50foo not qualifying.
-			existingConcentratedLiquidity: defaultConcentratedAssets,
 			balancerPoolAssets: []balancer.PoolAsset{
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(150))},
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(100))},
@@ -3827,17 +3204,30 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		"different spot price between balancer and CL pools (excess asset1)": {
 			// 100 existing shares and 100 shares added from balancer. We expect only the even portion of
 			// the Balancer pool to be joined, with the remaining 50bar not qualifying.
-			existingConcentratedLiquidity: defaultConcentratedAssets,
 			balancerPoolAssets: []balancer.PoolAsset{
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(150))},
 			},
 		},
+		"same spot price, different total share amount, only half bonded": {
+			// 100 existing shares and 200 shares added from balancer
+			balancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(200))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(200))},
+			},
+			portionOfSharesBonded: sdk.MustNewDecFromStr("0.5"),
+		},
+		"different spot price between balancer and CL pools (excess asset1), only partially bonded": {
+			// 100 existing shares and 100 shares added from balancer. We expect only the even portion of
+			// the Balancer pool to be joined, with the remaining 50bar not qualifying.
+			balancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(150))},
+			},
+			portionOfSharesBonded: sdk.MustNewDecFromStr("0.1"),
+		},
 		"no canonical balancer pool": {
 			// 100 existing shares and 100 shares added from balancer
-			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:            defaultBalancerAssets,
-
 			// Note that we expect this to fail quietly, as most CL pools will not have linked Balancer pools
 			noCanonicalBalancerPool: true,
 		},
@@ -3846,71 +3236,46 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 
 		"canonical balancer pool ID exists but pool itself is not found": {
 			// 100 existing shares and 100 shares added from balancer
-			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:            defaultBalancerAssets,
-			noBalancerPoolWithID:          true,
-
-			expectedError: gammtypes.PoolDoesNotExistError{PoolId: invalidPoolId},
-		},
-		"canonical balancer pool has invalid first denom": {
-			// 100 existing shares and 100 shares added from balancer
-			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("invalid", sdk.NewInt(100))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(100))},
-			},
-			invalidBalancerPoolLiquidity: true,
-
-			expectedError: types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("invalid", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)))},
-		},
-		"canonical balancer pool has invalid second denom": {
-			// 100 existing shares and 100 shares added from balancer
-			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("invalid", sdk.NewInt(100))},
-			},
-			invalidBalancerPoolLiquidity: true,
-
-			expectedError: types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("invalid", sdk.NewInt(100)))},
-		},
-		"canonical balancer pool has invalid both denoms": {
-			// 100 existing shares and 100 shares added from balancer
-			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("invalid1", sdk.NewInt(100))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("invalid2", sdk.NewInt(100))},
-			},
-			invalidBalancerPoolLiquidity: true,
-
-			expectedError: types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("invalid1", sdk.NewInt(100)), sdk.NewCoin("invalid2", sdk.NewInt(100)))},
+			noBalancerPoolWithID: true,
+			expectedError:        gammtypes.PoolDoesNotExistError{PoolId: invalidPoolId},
 		},
 		"canonical balancer pool has invalid number of assets": {
 			// 100 existing shares and 100 shares added from balancer
-			existingConcentratedLiquidity: defaultConcentratedAssets,
 			balancerPoolAssets: []balancer.PoolAsset{
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(100))},
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("baz", sdk.NewInt(100))},
 			},
 			invalidBalancerPoolLiquidity: true,
-
-			expectedError: types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)), sdk.NewCoin("baz", sdk.NewInt(100)))},
+			expectedError:                types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)), sdk.NewCoin("baz", sdk.NewInt(100)))},
 		},
 		"invalid concentrated pool ID": {
 			// 100 existing shares and 100 shares added from balancer
-			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:            defaultBalancerAssets,
-			invalidConcentratedPoolID:     true,
-
-			expectedError: types.PoolNotFoundError{PoolId: invalidPoolId + 1},
+			invalidConcentratedPoolID: true,
+			expectedError:             types.PoolNotFoundError{PoolId: invalidPoolId + 1},
 		},
 	}
+	// create invalid denom test cases. Either denom1, denom2 or both are invalid
+	denomSelector := [][]string{{"foo", "invalid1"}, {"bar", "invalid2"}}
+	for i := 0; i < 2; i++ {
+		pa1 := balancer.PoolAsset{Weight: sdk.NewInt(1), Token: sdk.NewCoin(denomSelector[0][i], sdk.NewInt(100))}
+		for j := 1 - i; j < 2; j++ {
+			pa2 := balancer.PoolAsset{Weight: sdk.NewInt(1), Token: sdk.NewCoin(denomSelector[1][j], sdk.NewInt(100))}
+			testname := fmt.Sprintf("canonical balancer pool; denom1_invalid=%v; denom2_invalid=%v", i == 1, j == 1)
+			tests[testname] = testcase{
+				balancerPoolAssets:           []balancer.PoolAsset{pa1, pa2},
+				invalidBalancerPoolLiquidity: true,
+				expectedError:                types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(pa1.Token, pa2.Token)},
+			}
+		}
+	}
+
 	for name, tc := range tests {
 		s.Run(name, func() {
 			// --- Setup test env ---
-
 			s.SetupTest()
+			tc = initTestCase(tc)
+
 			clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, sdk.ZeroDec())
 
 			// Set up an existing full range position. Note that the second return value is the position ID, not an error.
@@ -3918,6 +3283,14 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 
 			// If a canonical balancer pool exists, we create it and link it with the CL pool
 			balancerPoolId := s.PrepareCustomBalancerPool(tc.balancerPoolAssets, defaultBalancerPoolParams)
+
+			// Bond the appropriate portion of total Balancer shares as defined by the current test case
+			longestDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
+			s.Require().NoError(err)
+			bondedShares := gammtypes.InitPoolSharesSupply.ToDec().Mul(tc.portionOfSharesBonded).TruncateInt()
+			_, err = s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(gammtypes.GetPoolShareDenom(balancerPoolId), bondedShares)), longestDuration)
+			s.Require().NoError(err)
+
 			if tc.noBalancerPoolWithID {
 				balancerPoolId = invalidPoolId
 			} else if tc.noCanonicalBalancerPool {
@@ -3937,7 +3310,9 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			// Calculate balancer share amount for full range
 			updatedClPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 			s.Require().NoError(err)
-			qualifyingSharesPreDiscount := math.GetLiquidityFromAmounts(updatedClPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, tc.balancerPoolAssets[1].Token.Amount, tc.balancerPoolAssets[0].Token.Amount)
+			asset0BalancerAmount := tc.balancerPoolAssets[0].Token.Amount.ToDec().Mul(tc.portionOfSharesBonded).TruncateInt()
+			asset1BalancerAmount := tc.balancerPoolAssets[1].Token.Amount.ToDec().Mul(tc.portionOfSharesBonded).TruncateInt()
+			qualifyingSharesPreDiscount := math.GetLiquidityFromAmounts(updatedClPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, asset1BalancerAmount, asset0BalancerAmount)
 			qualifyingShares := (sdk.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingSharesPreDiscount)
 
 			clearOutQualifyingShares := tc.noBalancerPoolWithID || tc.invalidBalancerPoolLiquidity || tc.invalidConcentratedPoolID || tc.invalidBalancerPoolID || tc.noCanonicalBalancerPool
@@ -4124,8 +3499,12 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			// Note that the second return value here is the position ID, not an error.
 			initialLiquidity, _ := s.SetupPosition(clPoolId, s.TestAccs[0], tc.existingConcentratedLiquidity, DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime())
 
-			// Create balancer pool to be linked with CL pool in happy path cases
+			// Create and bond shares for balancer pool to be linked with CL pool in happy path cases
 			balancerPoolId := s.PrepareCustomBalancerPool(tc.balancerPoolAssets, defaultBalancerPoolParams)
+			longestDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
+			s.Require().NoError(err)
+			_, err = s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(gammtypes.GetPoolShareDenom(balancerPoolId), gammtypes.InitPoolSharesSupply)), longestDuration)
+			s.Require().NoError(err)
 
 			// Invalidate pool IDs if needed for error cases
 			if tc.balancerPoolDoesNotExist {
@@ -4165,7 +3544,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 					s.FundAcc(clPool.GetIncentivesAddress(), normalizedEmissions)
 				}
 			}
-			err := addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.uptimeGrowth)
+			err = addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.uptimeGrowth)
 			s.Require().NoError(err)
 
 			// --- System under test ---

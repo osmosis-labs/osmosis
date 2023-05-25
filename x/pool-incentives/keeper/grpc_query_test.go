@@ -159,6 +159,8 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 		desc                 string
 		poolCreated          bool
 		weights              []sdk.Int
+		clPoolWithGauge      bool
+		clGaugeWeight        sdk.Int
 		perpetual            bool
 		nonPerpetual         bool
 		expectedRecordLength int
@@ -189,6 +191,14 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 			nonPerpetual:         true,
 			expectedRecordLength: 0,
 		},
+		{
+			desc:                 "Concentrated case",
+			poolCreated:          true,
+			clPoolWithGauge:      true,
+			clGaugeWeight:        sdk.NewInt(400),
+			weights:              []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+			expectedRecordLength: 4,
+		},
 	} {
 		tc := tc
 		s.Run(tc.desc, func() {
@@ -206,6 +216,21 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 				s.Require().Equal(3, len(lockableDurations))
 
 				var distRecords []types.DistrRecord
+
+				// If appropriate, create a concentrated pool with a gauge.
+				// Recall that concentrated pool gauges are created on epoch duration, which
+				// is set in default genesis to be 168 hours (1 week). Since this is not included
+				// in the set of lockable durations, creating this gauge serves as a way to ensure
+				// CL gauges are captured by the IncentivizedPools query.
+				if tc.clPoolWithGauge {
+					clPool := s.PrepareConcentratedPool()
+					epochDuration := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration
+
+					clGaugeId, err := keeper.GetPoolGaugeId(s.Ctx, clPool.GetId(), epochDuration)
+					s.Require().NoError(err)
+					distRecords = append(distRecords, types.DistrRecord{GaugeId: clGaugeId, Weight: tc.clGaugeWeight})
+				}
+
 				for i := 0; i < len(lockableDurations); i++ {
 					gaugeId, err := keeper.GetPoolGaugeId(s.Ctx, poolId, lockableDurations[i])
 					s.Require().NoError(err)
@@ -243,6 +268,157 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 				res, err := queryClient.IncentivizedPools(context.Background(), &types.QueryIncentivizedPoolsRequest{})
 				s.Require().NoError(err)
 				s.Require().Equal(tc.expectedRecordLength, len(res.IncentivizedPools))
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestExternalIncentiveGauges() {
+	type externalGauge struct {
+		isPerpetual bool
+	}
+
+	tests := map[string]struct {
+		poolCreated          bool
+		internalGaugeWeights []sdk.Int
+		externalGauges       []externalGauge
+		clPoolWithGauge      bool
+		clGaugeWeight        sdk.Int
+
+		expectedNumExternalGauges int
+		expectedGaugeIDs          []uint64
+	}{
+		"No pool exist": {
+			poolCreated:          false,
+			internalGaugeWeights: []sdk.Int{},
+
+			expectedNumExternalGauges: 0,
+		},
+		"All gauges are internal (no external gauges)": {
+			poolCreated:          true,
+			internalGaugeWeights: []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+
+			expectedNumExternalGauges: 0,
+		},
+		"Mixed internal and external gauges": {
+			poolCreated:          true,
+			internalGaugeWeights: []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+			externalGauges:       []externalGauge{{isPerpetual: true}, {isPerpetual: false}},
+
+			// Since there is no concentrated pool, there are only 3 internal gauges, one for each lockup duration
+			expectedGaugeIDs:          []uint64{4, 5},
+			expectedNumExternalGauges: 2,
+		},
+		"More external gauges than internal gauges": {
+			poolCreated:          true,
+			internalGaugeWeights: []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+			externalGauges:       []externalGauge{{isPerpetual: true}, {isPerpetual: false}, {isPerpetual: true}, {isPerpetual: true}, {isPerpetual: false}},
+
+			// Since there is no concentrated pool, there are only 3 internal gauges, one for each lockup duration
+			expectedGaugeIDs:          []uint64{4, 5, 6, 7, 8},
+			expectedNumExternalGauges: 5,
+		},
+		"Same number of external gauges as internal gauges": {
+			poolCreated:          true,
+			internalGaugeWeights: []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+			externalGauges:       []externalGauge{{isPerpetual: true}, {isPerpetual: false}, {isPerpetual: true}},
+
+			// Since there is no concentrated pool, there are only 3 internal gauges, one for each lockup duration
+			expectedGaugeIDs:          []uint64{4, 5, 6},
+			expectedNumExternalGauges: 3,
+		},
+		"Internal gauge for concentrated pool exists": {
+			poolCreated:          true,
+			clPoolWithGauge:      true,
+			clGaugeWeight:        sdk.NewInt(100),
+			internalGaugeWeights: []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+			externalGauges:       []externalGauge{{isPerpetual: true}, {isPerpetual: false}, {isPerpetual: true}, {isPerpetual: true}, {isPerpetual: false}},
+
+			// Since there is a concentrated pool, there are 4 internal gauges, one for each lockup duration and one for the epoch duration
+			// (Note that in our test defaults, the epoch duration does not overlap with any lockup durations)
+			expectedGaugeIDs:          []uint64{5, 6, 7, 8, 9},
+			expectedNumExternalGauges: 5,
+		},
+	}
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			keeper := s.App.PoolIncentivesKeeper
+			queryClient := s.queryClient
+			var poolId uint64
+
+			var lockableDurations []time.Duration
+			if tc.poolCreated {
+				// prepare a balancer pool
+				poolId = s.PrepareBalancerPool()
+				// LockableDurations should be 1, 3, 7 hours from the default genesis state.
+				lockableDurations = keeper.GetLockableDurations(s.Ctx)
+				s.Require().Equal(3, len(lockableDurations))
+
+				// --- Internal Gauge Setup ---
+
+				var distRecords []types.DistrRecord
+
+				// If appropriate, create a concentrated pool with an internal gauge.
+				// Recall that concentrated pool gauges are created on epoch duration, which
+				// is set in default genesis to be 168 hours (1 week).
+				if tc.clPoolWithGauge {
+					clPool := s.PrepareConcentratedPool()
+					epochDuration := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration
+
+					clGaugeId, err := keeper.GetPoolGaugeId(s.Ctx, clPool.GetId(), epochDuration)
+					s.Require().NoError(err)
+					distRecords = append(distRecords, types.DistrRecord{GaugeId: clGaugeId, Weight: tc.clGaugeWeight})
+				}
+
+				for i := 0; i < len(lockableDurations); i++ {
+					gaugeId, err := keeper.GetPoolGaugeId(s.Ctx, poolId, lockableDurations[i])
+					s.Require().NoError(err)
+					distRecords = append(distRecords, types.DistrRecord{GaugeId: gaugeId, Weight: tc.internalGaugeWeights[i]})
+
+					// Sort in ascending order of gaugeId
+					sort.Slice(distRecords[:], func(i, j int) bool {
+						return distRecords[i].GaugeId < distRecords[j].GaugeId
+					})
+				}
+
+				// --- External Gauge Setup ---
+
+				// Create external gauges if appropriate.
+				// Note that we do not add these gauges to distrRecords, which is how we
+				// ensure they are classified as external
+				if tc.externalGauges != nil {
+					for _, externalBalGauge := range tc.externalGauges {
+						_, err := s.App.IncentivesKeeper.CreateGauge(
+							s.Ctx, externalBalGauge.isPerpetual, sdk.AccAddress{}, sdk.Coins{}, lockuptypes.QueryCondition{
+								LockQueryType: lockuptypes.ByDuration,
+								Denom:         "stake",
+								Duration:      time.Hour,
+							}, time.Now(), 1)
+						s.Require().NoError(err)
+					}
+				}
+
+				// update records and ensure that non-perpetuals cannot get rewards.
+				_ = keeper.UpdateDistrRecords(s.Ctx, distRecords...)
+
+				// --- System under test ---
+
+				res, err := queryClient.ExternalIncentiveGauges(context.Background(), &types.QueryExternalIncentiveGaugesRequest{})
+
+				// --- Assertions ---
+
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expectedNumExternalGauges, len(res.Data))
+
+				// Ensure retrieved gauge IDs are correct
+				if tc.expectedGaugeIDs != nil {
+					s.Require().Equal(tc.expectedNumExternalGauges, len(tc.expectedGaugeIDs))
+
+					for i, gaugeId := range tc.expectedGaugeIDs {
+						s.Require().Equal(gaugeId, res.Data[i].Id)
+					}
+				}
 			}
 		})
 	}

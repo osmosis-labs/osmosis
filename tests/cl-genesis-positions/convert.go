@@ -84,11 +84,11 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 	}
 
 	msgCreatePool := model.MsgCreateConcentratedPool{
-		Sender:      osmosis.TestAccs[0].String(),
-		Denom0:      denom0,
-		Denom1:      denom1,
-		TickSpacing: 100,
-		SwapFee:     sdk.MustNewDecFromStr("0.0005"),
+		Sender:       osmosis.TestAccs[0].String(),
+		Denom0:       denom0,
+		Denom1:       denom1,
+		TickSpacing:  100,
+		SpreadFactor: sdk.MustNewDecFromStr("0.0005"),
 	}
 
 	err := msgCreatePool.ValidateBasic()
