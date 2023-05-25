@@ -252,12 +252,6 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 		return sdk.Coins{}, err
 	}
 
-	// Get all uptime accumulators for CL pool
-	uptimeAccums, err = k.GetUptimeAccumulators(ctx, clPoolId)
-	if err != nil {
-		return sdk.Coins{}, err
-	}
-
 	// Claim rewards on each uptime accumulator. Delete each record after claiming.
 	totalRewards := sdk.NewCoins()
 	for uptimeIndex := range uptimeAccums {
