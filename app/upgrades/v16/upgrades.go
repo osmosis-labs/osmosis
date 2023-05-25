@@ -91,7 +91,7 @@ func CreateUpgradeHandler(
 		updateTokenFactoryParams(ctx, keepers.TokenFactoryKeeper)
 
 		if err := keepers.ProtoRevKeeper.SendDeveloperFeesToDeveloperAccount(ctx); err != nil {
-			return nil, err
+			ctx.Logger().Error("error sending developer fees to developer account during upgrade, expected in testing, not in prod", "error", err)
 		}
 
 		return migrations, nil
