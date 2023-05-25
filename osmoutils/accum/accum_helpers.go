@@ -44,5 +44,7 @@ func GetTotalRewards(accum AccumulatorObject, position Record) sdk.DecCoins {
 	accumulatorRewards := accum.valuePerShare.Sub(position.AccumValuePerShare).MulDec(position.NumShares)
 	totalRewards = totalRewards.Add(accumulatorRewards...)
 
+	//fmt.Println("one", accum.valuePerShare, "two", position.AccumValuePerShare, "three", position.NumShares, "four", accumulatorRewards)
+
 	return totalRewards
 }

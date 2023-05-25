@@ -938,7 +938,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 			collectedIncentivesForPosition = collectedIncentivesForPosition.Add(collectedIncentivesForUptime...)
 		}
 	}
-
+	fmt.Println("forfeited value: ", forfeitedIncentivesForPosition)
 	totalForfeited, _ := forfeitedIncentivesForPosition.TruncateDecimal()
 	return collectedIncentivesForPosition, totalForfeited, nil
 }
