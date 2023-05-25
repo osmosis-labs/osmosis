@@ -128,6 +128,10 @@ func CreateUpgradeHandler(
 
 		updateTokenFactoryParams(ctx, keepers.TokenFactoryKeeper)
 
+		if err := keepers.ProtoRevKeeper.SendDeveloperFeesToDeveloperAccount(ctx); err != nil {
+			return nil, err
+		}
+
 		return migrations, nil
 	}
 }
