@@ -1274,8 +1274,7 @@ func (s *TestSuite) TestGetDec() {
 			},
 
 			expectedGetKeyValues: map[string]sdk.Dec{
-				keyA: sdk.OneDec(),
-				keyB: {}, // this one errors
+				keyB: {},
 			},
 
 			expectError: osmoutils.DecNotFoundError{Key: keyB},
@@ -1283,6 +1282,7 @@ func (s *TestSuite) TestGetDec() {
 	}
 
 	for name, tc := range tests {
+		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 			// Setup

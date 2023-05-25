@@ -185,7 +185,9 @@ func (routes SwapAmountOutRoutes) Length() int {
 	return len(routes)
 }
 
-// ValidateSwapAmountInSplitRoute validates a slice of SwapAmountInSplitRoute and returns an error if any of the following are true:
+// ValidateSwapAmountInSplitRoute validates a slice of SwapAmountInSplitRoute.
+//
+// returns an error if any of the following are true:
 // - the slice is empty
 // - any SwapAmountInRoute in the slice is invalid
 // - the last TokenOutDenom of any SwapAmountInRoute in the slice does not match the TokenOutDenom of the previous SwapAmountInRoute in the slice

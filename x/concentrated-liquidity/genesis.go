@@ -34,7 +34,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		poolId := pool.GetId()
 		poolTicks := poolData.Ticks
 		for _, tick := range poolTicks {
-			k.SetTickInfo(ctx, poolId, tick.TickIndex, tick.Info)
+			k.SetTickInfo(ctx, poolId, tick.TickIndex, &tick.Info)
 		}
 		seenPoolIds[poolId] = struct{}{}
 
