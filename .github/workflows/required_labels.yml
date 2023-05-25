@@ -5,6 +5,8 @@ on:
     types: [opened, labeled, unlabeled, synchronize]
     branches:
       - 'main'
+    paths-ignore:
+      - '**/*.md'
 jobs:
   state_compatability_labels:
     runs-on: ubuntu-latest
