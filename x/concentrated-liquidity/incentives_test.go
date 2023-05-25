@@ -742,7 +742,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 		expectedError            error
 	}
 
-	validateResult := func(ctx sdk.Context, err error, tc updateAccumToNow, balancerPoolId, poolId uint64, initUptimeAccumValues []sdk.DecCoins, qualifyingBalancerLiquidity sdk.Dec, qualifyingLiquidity sdk.Dec) {
+	validateResult := func(ctx sdk.Context, err error, tc updateAccumToNow, balancerPoolId, poolId uint64, initUptimeAccumValues []sdk.DecCoins, qualifyingBalancerLiquidity sdk.Dec, qualifyingLiquidity sdk.Dec) []sdk.DecCoins {
 		clKeeper := s.App.ConcentratedLiquidityKeeper
 
 		if tc.expectedError != nil {
@@ -759,7 +759,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			s.Require().NoError(err)
 			s.Require().Equal(tc.poolIncentiveRecords, updatedIncentiveRecords)
 
-			return
+			return nil
 		}
 
 		s.Require().NoError(err)
@@ -820,6 +820,8 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			expectedGaugeShares := sdk.NewCoins(sdk.NormalizeCoins(totalUptimeDeltas.MulDec(qualifyingBalancerLiquidity))...)
 			s.Require().Equal(expectedGaugeShares, gauge.Coins)
 		}
+
+		return expectedUptimeDeltas
 	}
 
 	tests := map[string]updateAccumToNow{
@@ -1072,7 +1074,17 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 			err = clKeeper.UpdateGivenPoolUptimeAccumulatorsToNow(s.Ctx, clPool, uptimeAccs)
 
-			validateResult(s.Ctx, err, tc, balancerPoolId, clPool.GetId(), initUptimeAccumValues, qualifyingBalancerLiquidity, qualifyingLiquidity)
+			expectedUptimeDeltas := validateResult(s.Ctx, err, tc, balancerPoolId, clPool.GetId(), initUptimeAccumValues, qualifyingBalancerLiquidity, qualifyingLiquidity)
+
+			if tc.expectedError != nil {
+				return
+			}
+
+			// Ensure that each uptime accumulater value that was passed in as an argument changes by the correct amount.
+			for uptimeIndex := range uptimeAccs {
+				expectedValue := initUptimeAccumValues[uptimeIndex].Add(expectedUptimeDeltas[uptimeIndex]...)
+				s.Require().Equal(expectedValue, uptimeAccs[uptimeIndex].GetValue())
+			}
 		})
 	}
 }
