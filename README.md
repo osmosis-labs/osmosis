@@ -31,7 +31,7 @@ swap-type use cases. Bonding curves, while have found its primary use
 case in decentralized exchange mechanisms, its potential use case can be
 further extended through the customizability that Osmosis offers.
 Through the customizability offered by Osmosis such as custom-curve AMMs,
-dynamic adjustments of swap fees, multi-token liquidity pools--the AMM
+dynamic adjustments of spread factors, multi-token liquidity pools--the AMM
 can offer decentralized formation of token fundraisers, interchain
 staking, options market, and more for the Cosmos ecosystem.
 

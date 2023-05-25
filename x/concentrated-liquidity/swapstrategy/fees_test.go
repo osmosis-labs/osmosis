@@ -15,7 +15,7 @@ func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
 		hasReachedTarget         bool
 		amountIn                 sdk.Dec
 		amountSpecifiedRemaining sdk.Dec
-		swapFee                  sdk.Dec
+		spreadFactor             sdk.Dec
 
 		expectedFeeCharge sdk.Dec
 		expectPanic       bool
@@ -24,32 +24,32 @@ func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
 			hasReachedTarget:         true,
 			amountIn:                 sdk.NewDec(100),
 			amountSpecifiedRemaining: five,
-			swapFee:                  onePercentFee,
+			spreadFactor:             onePercentFee,
 
-			// amount in * swap fee / (1 - swap fee)
+			// amount in * spread factor / (1 - spread factor)
 			expectedFeeCharge: swapstrategy.ComputeFeeChargeFromAmountIn(sdk.NewDec(100), onePercentFee),
 		},
 		"did not reach target -> charge fee on the difference between amount remaining and amount in": {
 			hasReachedTarget:         false,
 			amountIn:                 five,
 			amountSpecifiedRemaining: sdk.NewDec(100),
-			swapFee:                  onePercentFee,
+			spreadFactor:             onePercentFee,
 
 			expectedFeeCharge: sdk.MustNewDecFromStr("95"),
 		},
-		"zero swap fee": {
+		"zero spread factor": {
 			hasReachedTarget:         true,
 			amountIn:                 five,
 			amountSpecifiedRemaining: sdk.NewDec(100),
-			swapFee:                  sdk.ZeroDec(),
+			spreadFactor:             sdk.ZeroDec(),
 
 			expectedFeeCharge: sdk.ZeroDec(),
 		},
-		"negative swap fee - panic": {
+		"negative spread factor - panic": {
 			hasReachedTarget:         false,
 			amountIn:                 sdk.NewDec(100),
 			amountSpecifiedRemaining: five,
-			swapFee:                  sdk.OneDec().Neg(),
+			spreadFactor:             sdk.OneDec().Neg(),
 
 			expectPanic: true,
 		},
@@ -57,7 +57,7 @@ func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
 			hasReachedTarget:         false,
 			amountIn:                 sdk.NewDec(102),
 			amountSpecifiedRemaining: sdk.NewDec(101),
-			swapFee:                  onePercentFee,
+			spreadFactor:             onePercentFee,
 
 			// 101 - 102 = -1 -> panic
 			expectPanic: true,
@@ -70,7 +70,7 @@ func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
 			suite.SetupTest()
 
 			osmoassert.ConditionalPanic(suite.T(), tc.expectPanic, func() {
-				actualFeeCharge := swapstrategy.ComputeFeeChargePerSwapStepOutGivenIn(tc.hasReachedTarget, tc.amountIn, tc.amountSpecifiedRemaining, tc.swapFee)
+				actualFeeCharge := swapstrategy.ComputeFeeChargePerSwapStepOutGivenIn(tc.hasReachedTarget, tc.amountIn, tc.amountSpecifiedRemaining, tc.spreadFactor)
 
 				suite.Require().Equal(tc.expectedFeeCharge, actualFeeCharge)
 			})

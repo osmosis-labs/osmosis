@@ -5,7 +5,7 @@ COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
-GO_MODULE := $(shell cat go.mod | grep module | cut -d ' ' -f 2)
+GO_MODULE := $(shell cat go.mod | grep "module " | cut -d ' ' -f 2)
 BUILDDIR ?= $(CURDIR)/build
 DOCKER := $(shell which docker)
 E2E_UPGRADE_VERSION := "v16"
@@ -475,8 +475,9 @@ cl-create-bigbang-config:
 ###                                Go Mock                                  ###
 ###############################################################################
 
-go-mock-update-pool-module:
+go-mock-update:
 	mockgen -source=x/poolmanager/types/routes.go -destination=tests/mocks/pool_module.go -package=mocks
+	mockgen -source=x/poolmanager/types/pool.go -destination=tests/mocks/pool.go -package=mocks
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \

@@ -77,7 +77,7 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit sdk.I
 		conversionPool,
 		sdk.NewCoin(inputCoin.Denom, profit),
 		types.OsmosisDenomination,
-		conversionPool.GetSwapFee(ctx),
+		conversionPool.GetSpreadFactor(ctx),
 	)
 	if err != nil {
 		return profit, err

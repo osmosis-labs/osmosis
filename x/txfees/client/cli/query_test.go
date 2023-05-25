@@ -32,9 +32,11 @@ func (s *QueryTestSuite) SetupSuite() {
 	upgradeProp := types.NewUpdateFeeTokenProposal(
 		"Test Proposal",
 		"test",
-		types.FeeToken{
-			Denom:  "uosmo",
-			PoolID: 1,
+		[]types.FeeToken{
+			{
+				Denom:  "uosmo",
+				PoolID: 1,
+			},
 		},
 	)
 	err := s.App.TxFeesKeeper.HandleUpdateFeeTokenProposal(s.Ctx, &upgradeProp)

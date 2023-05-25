@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	concentrated_liquidity "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/clmocks"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
@@ -29,7 +30,7 @@ var (
 	DefaultCurrPrice                                     = sdk.NewDec(5000)
 	DefaultCurrTick                                int64 = 31000000
 	DefaultCurrSqrtPrice, _                              = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
-	DefaultZeroSwapFee                                   = sdk.ZeroDec()
+	DefaultZeroSpreadFactor                              = sdk.ZeroDec()
 	DefaultFeeAccumCoins                                 = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
 	DefaultPositionId                                    = uint64(1)
 	DefaultUnderlyingLockId                              = uint64(0)
@@ -58,6 +59,7 @@ var (
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
+	clk *concentrated_liquidity.Keeper
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -66,6 +68,7 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (s *KeeperTestSuite) SetupTest() {
 	s.Setup()
+	s.clk = s.App.ConcentratedLiquidityKeeper
 }
 
 func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {
@@ -155,7 +158,7 @@ func (s *KeeperTestSuite) initializeTick(ctx sdk.Context, currentTick int64, tic
 	tickInfo.FeeGrowthOppositeDirectionOfLastTraversal = feeGrowthOppositeDirectionOfTraversal
 	tickInfo.UptimeTrackers = uptimeTrackers
 
-	s.App.ConcentratedLiquidityKeeper.SetTickInfo(ctx, validPoolId, tickIndex, tickInfo)
+	s.App.ConcentratedLiquidityKeeper.SetTickInfo(ctx, validPoolId, tickIndex, &tickInfo)
 }
 
 // initializeFeeAccumulatorPositionWithLiquidity initializes fee accumulator position with given parameters and updates it with given liquidity.
@@ -318,8 +321,11 @@ func (s *KeeperTestSuite) setListenerMockOnConcentratedLiquidityKeeper() {
 // Crosses the tick and charges the fee on the global fee accumulator.
 // This mimics crossing an initialized tick during a swap and charging the fee on swap completion.
 func (s *KeeperTestSuite) crossTickAndChargeFee(poolId uint64, tickIndexToCross int64) {
+	nextTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, poolId, tickIndexToCross)
+	s.Require().NoError(err)
+
 	// Cross the tick to update it.
-	_, err := s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, poolId, tickIndexToCross, DefaultFeeAccumCoins[0])
+	_, err = s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, poolId, tickIndexToCross, &nextTickInfo, DefaultFeeAccumCoins[0])
 	s.Require().NoError(err)
 	err = s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, poolId, DefaultFeeAccumCoins[0])
 	s.Require().NoError(err)

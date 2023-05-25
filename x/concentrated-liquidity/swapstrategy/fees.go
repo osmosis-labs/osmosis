@@ -18,19 +18,19 @@ import (
 //
 // - amountSpecifiedRemaining is the total remaining amount of token in that needs to be consumed to complete the swap.
 
-// - swapFee the swap fee to be charged.
+// - spreadFactor the spread factor to be charged.
 //
-// If swap fee is negative, it panics.
-// If swap fee is 0, returns 0. Otherwise, computes and returns the fee charge per step.
-func computeFeeChargePerSwapStepOutGivenIn(hasReachedTarget bool, amountIn, amountSpecifiedRemaining, swapFee sdk.Dec) sdk.Dec {
+// If spread factor is negative, it panics.
+// If spread factor is 0, returns 0. Otherwise, computes and returns the fee charge per step.
+func computeFeeChargePerSwapStepOutGivenIn(hasReachedTarget bool, amountIn, amountSpecifiedRemaining, spreadFactor sdk.Dec) sdk.Dec {
 	feeChargeTotal := sdk.ZeroDec()
 
-	if swapFee.IsNegative() {
+	if spreadFactor.IsNegative() {
 		// This should never happen but is added as a defense-in-depth measure.
-		panic(fmt.Errorf("swap fee must be non-negative, was (%s)", swapFee))
+		panic(fmt.Errorf("spread factor must be non-negative, was (%s)", spreadFactor))
 	}
 
-	if swapFee.IsZero() {
+	if spreadFactor.IsZero() {
 		return feeChargeTotal
 	}
 
@@ -40,7 +40,7 @@ func computeFeeChargePerSwapStepOutGivenIn(hasReachedTarget bool, amountIn, amou
 		// 2) or sqrtPriceLimit is reached
 		// In both cases, we charge the fee on the amount in actually consumed before
 		// hitting the target.
-		feeChargeTotal = computeFeeChargeFromAmountIn(amountIn, swapFee)
+		feeChargeTotal = computeFeeChargeFromAmountIn(amountIn, spreadFactor)
 	} else {
 		// Otherwise, the current tick had enough liquidity to fulfill the swap
 		// and we ran out of amount remaining before reaching either the next tick or the limit.
@@ -57,10 +57,10 @@ func computeFeeChargePerSwapStepOutGivenIn(hasReachedTarget bool, amountIn, amou
 	return feeChargeTotal
 }
 
-// computeFeeChargeFromAmountIn returns the fee charge given the amount in and swap fee.
-// Computes amountIn * swapFee / (1 - swapFee) where math operations round up
+// computeFeeChargeFromAmountIn returns the fee charge given the amount in and spread factor.
+// Computes amountIn * spreadFactor / (1 - spreadFactor) where math operations round up
 // at precision end. This is necessary to ensure that the fee charge is always
 // rounded in favor of the pool.
-func computeFeeChargeFromAmountIn(amountIn sdk.Dec, swapFee sdk.Dec) sdk.Dec {
-	return amountIn.MulRoundUp(swapFee).QuoRoundupMut(sdk.OneDec().SubMut(swapFee))
+func computeFeeChargeFromAmountIn(amountIn sdk.Dec, spreadFactor sdk.Dec) sdk.Dec {
+	return amountIn.MulRoundUp(spreadFactor).QuoRoundupMut(sdk.OneDec().SubMut(spreadFactor))
 }
