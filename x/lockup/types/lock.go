@@ -10,6 +10,10 @@ import (
 
 // NewPeriodLock returns a new instance of period lock.
 func NewPeriodLock(ID uint64, owner sdk.AccAddress, reward_address string, duration time.Duration, endTime time.Time, coins sdk.Coins) PeriodLock {
+	// sanity check once more to ensure if reward_address == owner, we store empty string
+	if owner.String() == reward_address {
+		reward_address = ""
+	}
 	return PeriodLock{
 		ID:                    ID,
 		Owner:                 owner.String(),
