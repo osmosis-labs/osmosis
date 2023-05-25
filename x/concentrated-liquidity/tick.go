@@ -66,15 +66,17 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Add(liquidityDelta)
 	}
 
-	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
+	k.SetTickInfo(ctx, poolId, tickIndex, &tickInfo)
 	return nil
 }
 
+// crossTick crosses the given tick. The tick is specified by its index and tick info.
+// It updates the given tick's uptime and fee accumulators and writes it back to state.
+// Prior to updating the tick info and writing it to state, it updates the pool uptime accumulators until the current block time.
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
-func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapStateFeeGrowth sdk.DecCoin) (liquidityDelta sdk.Dec, err error) {
-	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
-	if err != nil {
-		return sdk.Dec{}, err
+func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo *model.TickInfo, swapStateFeeGrowth sdk.DecCoin) (liquidityDelta sdk.Dec, err error) {
+	if tickInfo == nil {
+		return sdk.Dec{}, types.ErrNextTickInfoNil
 	}
 
 	feeAccum, err := k.GetFeeAccumulator(ctx, poolId)
@@ -151,10 +153,10 @@ func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	return tickStruct, nil
 }
 
-func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo model.TickInfo) {
+func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo *model.TickInfo) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyTick(poolId, tickIndex)
-	osmoutils.MustSet(store, key, &tickInfo)
+	osmoutils.MustSet(store, key, tickInfo)
 }
 
 func (k Keeper) GetAllInitializedTicksForPool(ctx sdk.Context, poolId uint64) ([]genesis.FullTick, error) {

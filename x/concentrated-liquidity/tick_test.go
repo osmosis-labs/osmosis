@@ -1,10 +1,13 @@
 package concentrated_liquidity_test
 
 import (
+	"errors"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
@@ -42,7 +45,7 @@ func (s *KeeperTestSuite) TestTickOrdering() {
 
 	liquidityTicks := []int64{-200, -55, -4, 70, 78, 84, 139, 240, 535}
 	for _, t := range liquidityTicks {
-		s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, 1, t, model.TickInfo{})
+		s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, 1, t, &model.TickInfo{})
 	}
 
 	store := s.Ctx.KVStore(storeKey)
@@ -463,7 +466,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 		additiveFee                                           sdk.DecCoin
 		expectedLiquidityDelta                                sdk.Dec
 		expectedTickFeeGrowthOppositeDirectionOfLastTraversal sdk.DecCoins
-		expectedErr                                           bool
+		expectedErr                                           error
 	}{
 		{
 			name:                    "Get tick info of existing tick below current tick (nonzero uptime trackers)",
@@ -551,12 +554,20 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			expectedTickFeeGrowthOppositeDirectionOfLastTraversal: DefaultFeeAccumCoins.Add(defaultAdditiveFee.Add(defaultAdditiveFee)),
 		},
 		{
-			name:                    "Try invalid tick",
+			name:                    "error: Try invalid tick",
 			poolToGet:               2,
 			preInitializedTickIndex: preInitializedTickIndex,
 			tickToGet:               preInitializedTickIndex,
 			additiveFee:             defaultAdditiveFee,
-			expectedErr:             true,
+			expectedErr:             accum.AccumDoesNotExistError{},
+		},
+		{
+			name:                    "error: Nil tick",
+			poolToGet:               validPoolId,
+			preInitializedTickIndex: preInitializedTickIndex,
+			tickToGet:               preInitializedTickIndex,
+			additiveFee:             defaultAdditiveFee,
+			expectedErr:             types.ErrNextTickInfoNil,
 		},
 	}
 
@@ -602,10 +613,27 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			err = s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, defaultAccumCoins)
 			s.Require().NoError(err)
 
+			var nextTickInfo *model.TickInfo
+
+			// Initialize next tick info based on test case
+			if test.expectedErr == nil {
+				// If no error expected, pre-fetch from state.
+				tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, test.tickToGet)
+				s.Require().NoError(err)
+				nextTickInfo = &tickInfo
+			} else if errors.Is(test.expectedErr, types.ErrNextTickInfoNil) {
+				// If expecting nil tick error, set to nil
+				nextTickInfo = nil
+			} else {
+				// If expecting other error, set to empty tick info
+				nextTickInfo = &model.TickInfo{}
+			}
+
 			// System under test
-			liquidityDelta, err := s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, test.poolToGet, test.tickToGet, test.additiveFee)
-			if test.expectedErr {
+			liquidityDelta, err := s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, test.poolToGet, test.tickToGet, nextTickInfo, test.additiveFee)
+			if test.expectedErr != nil {
 				s.Require().Error(err)
+				s.Require().ErrorAs(err, &test.expectedErr)
 			} else {
 				s.Require().NoError(err)
 				s.Require().Equal(test.expectedLiquidityDelta, liquidityDelta)
@@ -773,7 +801,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 			// Create a default CL pool
 			s.PrepareConcentratedPool()
 			for _, tick := range test.presetTicks {
-				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, tick.Info)
+				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, &tick.Info)
 			}
 
 			liquidityForRange, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityForFullRange(s.Ctx, defaultPoolId)
@@ -1168,7 +1196,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			// Create a default CL pool
 			pool := s.PrepareConcentratedPool()
 			for _, tick := range test.presetTicks {
-				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, tick.Info)
+				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, &tick.Info)
 			}
 
 			// Force initialize current sqrt price to 1.
@@ -1386,7 +1414,7 @@ func (s *KeeperTestSuite) TestGetAllInitializedTicksForPool() {
 			s.SetupTest()
 
 			for _, tick := range test.preSetTicks {
-				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, tick.Info)
+				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, &tick.Info)
 			}
 
 			// If overwrite is not specified, we expect the pre-set ticks to be returned.
