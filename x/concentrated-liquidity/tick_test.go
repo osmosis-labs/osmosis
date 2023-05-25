@@ -842,7 +842,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(10),
-					TickIndex:    sdk.NewInt(DefaultMinTick),
+					TickIndex:    DefaultMinTick,
 				},
 			},
 		},
@@ -859,7 +859,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(-10),
-					TickIndex:    sdk.NewInt(DefaultMaxTick),
+					TickIndex:    DefaultMaxTick,
 				},
 			},
 		},
@@ -878,7 +878,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(10),
-					TickIndex:    sdk.NewInt(DefaultMinTick),
+					TickIndex:    DefaultMinTick,
 				},
 			},
 		},
@@ -897,15 +897,15 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(20),
-					TickIndex:    sdk.NewInt(5),
+					TickIndex:    5,
 				},
 				{
 					LiquidityNet: sdk.NewDec(-20),
-					TickIndex:    sdk.NewInt(10),
+					TickIndex:    10,
 				},
 				{
 					LiquidityNet: sdk.NewDec(-10),
-					TickIndex:    sdk.NewInt(DefaultMaxTick),
+					TickIndex:    DefaultMaxTick,
 				},
 			},
 		},
@@ -924,7 +924,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(20),
-					TickIndex:    sdk.NewInt(-10),
+					TickIndex:    -10,
 				},
 			},
 		},
@@ -955,7 +955,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(-20),
-					TickIndex:    sdk.NewInt(10),
+					TickIndex:    10,
 				},
 			},
 		},
@@ -976,11 +976,11 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(20),
-					TickIndex:    sdk.NewInt(-5),
+					TickIndex:    -5,
 				},
 				{
 					LiquidityNet: sdk.NewDec(10),
-					TickIndex:    sdk.NewInt(DefaultMinTick),
+					TickIndex:    DefaultMinTick,
 				},
 			},
 		},
@@ -1001,19 +1001,19 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(40),
-					TickIndex:    sdk.NewInt(2),
+					TickIndex:    2,
 				},
 				{
 					LiquidityNet: sdk.NewDec(-20),
-					TickIndex:    sdk.NewInt(5),
+					TickIndex:    5,
 				},
 				{
 					LiquidityNet: sdk.NewDec(-40),
-					TickIndex:    sdk.NewInt(10),
+					TickIndex:    10,
 				},
 				{
 					LiquidityNet: sdk.NewDec(-10),
-					TickIndex:    sdk.NewInt(DefaultMaxTick),
+					TickIndex:    DefaultMaxTick,
 				},
 			},
 		},
@@ -1032,7 +1032,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(20),
-					TickIndex:    sdk.NewInt(-10),
+					TickIndex:    -10,
 				},
 			},
 		},
@@ -1051,7 +1051,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(20),
-					TickIndex:    sdk.NewInt(-10),
+					TickIndex:    -10,
 				},
 			},
 		},
@@ -1070,7 +1070,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(-20),
-					TickIndex:    sdk.NewInt(10),
+					TickIndex:    10,
 				},
 			},
 		},
@@ -1089,7 +1089,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(-20),
-					TickIndex:    sdk.NewInt(10),
+					TickIndex:    10,
 				},
 			},
 		},
