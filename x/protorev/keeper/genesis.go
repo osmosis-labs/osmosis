@@ -48,7 +48,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		k.SetDeveloperAccount(ctx, account)
 	}
 
-	// TODO: Figure out if this can be removed in v16
 	// Set the developer fees that have been collected.
 	for _, fee := range genState.DeveloperFees {
 		if err := k.SetDeveloperFees(ctx, fee); err != nil {
@@ -102,7 +101,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	}
 	genesis.TokenPairArbRoutes = routes
 
-	// TODO: Figure out of this function needs to be in the v16 version of the module.
 	// Export the base denoms used for cyclic route building.
 	baseDenoms, err := k.GetAllBaseDenoms(ctx)
 	if err != nil {
