@@ -52,6 +52,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   * [#5134](https://github.com/osmosis-labs/osmosis/pull/5134) Update sdk fork with the change for correct block time in historical queries (#5134)
 
+## v15.1.1
+
+Same changes included in `v15.1.2` but redacted as tagged commit was not part of `v15.x` branch.
+
 ## v15.1.0
 
 ### Security
