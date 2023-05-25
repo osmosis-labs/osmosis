@@ -71,7 +71,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * [#5187](https://github.com/osmosis-labs/osmosis/pull/5187) Expand `IncentivizedPools` query to include internally incentivized CL pools.
   * [#5239](https://github.com/osmosis-labs/osmosis/pull/5239) Implement `GetTotalPoolShares` public keeper function for GAMM.
   * [#5261](https://github.com/osmosis-labs/osmosis/pull/5261) Allows `UpdateFeeTokenProposal` to take in multiple fee tokens instead of just one.
-  * [#5297](https://github.com/osmosis-labs/osmosis/pull/5297) Do not require changelog and state machine labels for markdown only changes.
   
 ### API breaks
 
