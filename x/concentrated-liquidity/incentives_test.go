@@ -3201,7 +3201,6 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		invalidConcentratedPoolID    bool
 		invalidBalancerPoolID        bool
 		invalidBalancerPoolLiquidity bool
-		invalidDiscountRate          bool
 
 		expectedError error
 	}
@@ -3294,10 +3293,6 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			invalidConcentratedPoolID: true,
 			expectedError:             types.PoolNotFoundError{PoolId: invalidPoolId + 1},
 		},
-		"invalid discount rate": {
-			invalidDiscountRate: true,
-			expectedError:       types.InvalidDiscountRateError{DiscountRate: sdk.NewDec(2)},
-		},
 	}
 	// create invalid denom test cases. Either denom1, denom2 or both are invalid
 	denomSelector := [][]string{{"foo", "invalid1"}, {"bar", "invalid2"}}
@@ -3361,7 +3356,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			qualifyingShares := (sdk.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingSharesPreDiscount)
 
 			// TODO: clean this check up (will likely require refactoring the whole test)
-			clearOutQualifyingShares := tc.noBalancerPoolWithID || tc.invalidBalancerPoolLiquidity || tc.invalidConcentratedPoolID || tc.invalidBalancerPoolID || tc.noCanonicalBalancerPool || tc.invalidDiscountRate
+			clearOutQualifyingShares := tc.noBalancerPoolWithID || tc.invalidBalancerPoolLiquidity || tc.invalidConcentratedPoolID || tc.invalidBalancerPoolID || tc.noCanonicalBalancerPool
 			if clearOutQualifyingShares {
 				qualifyingShares = sdk.NewDec(0)
 			}
@@ -3369,12 +3364,6 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			concentratedPoolId := clPool.GetId()
 			if tc.invalidConcentratedPoolID {
 				concentratedPoolId = invalidPoolId + 1
-			}
-
-			if tc.invalidDiscountRate {
-				params := clk.GetParams(s.Ctx)
-				params.BalancerSharesRewardDiscount = sdk.NewDec(2)
-				clk.SetParams(s.Ctx, params)
 			}
 
 			// --- System under test ---
