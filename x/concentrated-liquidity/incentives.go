@@ -107,8 +107,7 @@ func (k Keeper) getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ct
 // if it exists, adds the number of full range shares it qualifies for to the CL pool uptime accumulators.
 // This is functionally equivalent to treating the Balancer pool shares as a single full range position on the CL pool,
 // but just for the purposes of incentives. The Balancer pool liquidity is not actually traded against in CL pool swaps.
-// The given uptime accumulators are mutated to reflect the added full range shares. The caller is responsible
-// for ensuring that uptimeAccums are up-to-date and refetched when needed.
+// The given uptime accumulators are mutated to reflect the added full range shares.
 //
 // If no canonical Balancer pool exists, this function is a no-op.
 //
@@ -116,7 +115,9 @@ func (k Keeper) getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ct
 // Returns error if a canonical pool ID exists but there is an issue when retrieving the pool assets for this pool.
 //
 // CONTRACT: canonical Balancer pool has the same denoms as the CL pool and is an even-weighted 2-asset pool.
-// CONTRACT: uptimeAccums are associated with the given CL pool id.
+// CONTRACT: the caller validates that the pool with the given id exists.
+// CONTRACT: caller is responsible for the uptimeAccums to be up-to-date.
+// CONTRACT: uptimeAccums are associated with the given pool id.
 func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64, uptimeAccums []accum.AccumulatorObject) (uint64, sdk.Dec, error) {
 	// Get CL pool from ID
 	clPool, err := k.getPoolById(ctx, clPoolId)
@@ -224,12 +225,13 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64,
 // claimAndResetFullRangeBalancerPool claims rewards for the "full range" shares corresponding to the given Balancer pool, and
 // then deletes the record from the uptime accumulators. It adds the claimed rewards to the gauge corresponding to the longest duration
 // lock on the Balancer pool. Importantly, this is a dynamic check such that if a longer duration lock is added in the future, it will
-// begin using that lock. The given uptime accumulators are mutated to reflect the claimed rewards. The caller is responsible
-// for ensuring that uptimeAccums are up-to-date and refetched when needed.
+// begin using that lock. The given uptime accumulators are mutated to reflect the claimed rewards.
 //
 // Returns the number of coins that were claimed and distrbuted.
 // Returns error if either reward claiming, record deletion or adding to the gauge fails.
-// CONTRACT: uptimeAccums are associated with the given CL pool id.
+// CONTRACT: the caller validates that the pool with the given id exists.
+// CONTRACT: caller is responsible for the uptimeAccums to be up-to-date.
+// CONTRACT: uptimeAccums are associated with the given pool id.
 func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uint64, balPoolId uint64, uptimeAccums []accum.AccumulatorObject) (sdk.Coins, error) {
 	// Get CL pool from ID. This also serves as an early pool existence check.
 	clPool, err := k.getPoolById(ctx, clPoolId)
