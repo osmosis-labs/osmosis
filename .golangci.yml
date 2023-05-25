@@ -1,6 +1,6 @@
 run:
   tests: true
-  timeout: 5m
+  timeout: 10m
   skip-files:
     - x/gamm/keeper/grpc_query_test.go
     - x/gamm/keeper/grpc_query.go

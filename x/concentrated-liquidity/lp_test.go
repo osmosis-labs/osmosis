@@ -628,7 +628,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			ownerBalancerAfterWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, owner)
 			communityPoolBalanceAfter := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
 
-			// owner should only have tokens equivilent to the delta balance of the pool
+			// owner should only have tokens equivalent to the delta balance of the pool
 			expectedOwnerBalanceDelta := expectedPoolBalanceDelta.Add(expectedIncentivesClaimed...).Add(expectedFeesClaimed...)
 			actualOwnerBalancerDelta := ownerBalancerAfterWithdraw.Sub(ownerBalancerBeforeWithdraw)
 
@@ -840,7 +840,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 				// 1998976eth (amount withdrawn with rounded down amounts) + 998977(token amount in)
 				amount0Expected: sdk.NewInt(2997953),
 				// tokens Provided for token1 is 9999999999 (amount withdrawn) + 5000000000 = 14999999999usdc.
-				// we calcualte calc amount1 by using: https://www.wolframalpha.com/input?i=70.728769315114743567+*+212041526.154556192320661969
+				// we calculate calc amount1 by using: https://www.wolframalpha.com/input?i=70.728769315114743567+*+212041526.154556192320661969
 				amount1Expected: sdk.NewInt(14997436189),
 			},
 			timeElapsed:  defaultTimeElapsed,
@@ -1095,7 +1095,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			expectedAmount1Delta := sdk.ZeroInt()
 
-			// delta amount1 only exists if the actual amount from addToPosition is not equivilent to tokens provided.
+			// delta amount1 only exists if the actual amount from addToPosition is not equivalent to tokens provided.
 			// delta amount1 is calculated via (amount1 to create initial position) + (amount1 added to position) - (actual amount 1)
 			if fundCoins.AmountOf(pool.GetToken1()).Add(tc.amount1ToAdd).Sub(newAmt1).GT(sdk.ZeroInt()) {
 				expectedAmount1Delta = config.tokensProvided.AmountOf(pool.GetToken1()).Add(tc.amount1ToAdd).Sub(newAmt1)
@@ -1107,7 +1107,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			s.Require().Equal(0, errToleranceOneRoundDown.Compare(preBalanceToken0.Amount, postBalanceToken0.Amount))
 			s.Require().Equal(0, errToleranceOneRoundDown.Compare(expectedAmount1Delta, postBalanceToken1.Amount.Sub(tc.amount1ToAdd)))
 
-			// now check that old position id has been succesfully deleted
+			// now check that old position id has been successfully deleted
 			_, err = s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
 			s.Require().Error(err)
 		})
