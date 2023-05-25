@@ -179,6 +179,7 @@ func (q Querier) NextLockID(goCtx context.Context, req *types.NextLockIDRequest)
 
 // SyntheticLockupsByLockupID returns synthetic lockups by native lockup id.
 // Deprecated: use SyntheticLockupByLockupID instead.
+// nolint: staticcheck
 func (q Querier) SyntheticLockupsByLockupID(goCtx context.Context, req *types.SyntheticLockupsByLockupIDRequest) (*types.SyntheticLockupsByLockupIDResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

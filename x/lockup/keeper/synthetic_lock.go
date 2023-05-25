@@ -37,30 +37,17 @@ func (k Keeper) GetSyntheticLockup(ctx sdk.Context, lockID uint64, synthdenom st
 }
 
 // GetSyntheticLockupByUnderlyingLockId gets the synthetic lockup object connected to the underlying lock ID.
-// Error is returned if:
-// - there are more than one synthetic lockup objects with the same underlying lock ID.
-// - there is no synthetic lockup object with the given underlying lock ID.
+// Error is returned if there is no synthetic lockup object with the given underlying lock ID.
 func (k Keeper) GetSyntheticLockupByUnderlyingLockId(ctx sdk.Context, lockID uint64) (types.SyntheticLock, error) {
+	synthLock := types.SyntheticLock{}
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, combineKeys(types.KeyPrefixSyntheticLockup, sdk.Uint64ToBigEndian(lockID)))
-	defer iterator.Close()
-
-	synthLocks := []types.SyntheticLock{}
-	for ; iterator.Valid(); iterator.Next() {
-		synthLock := types.SyntheticLock{}
-		err := proto.Unmarshal(iterator.Value(), &synthLock)
-		if err != nil {
-			return types.SyntheticLock{}, err
-		}
-		synthLocks = append(synthLocks, synthLock)
+	synthLockKey := combineKeys(types.KeyPrefixSyntheticLockup, sdk.Uint64ToBigEndian(lockID))
+	if !store.Has(synthLockKey) {
+		return types.SyntheticLock{}, fmt.Errorf("synthetic lock with ID %d does not exist", lockID)
 	}
-	if len(synthLocks) > 1 {
-		return types.SyntheticLock{}, fmt.Errorf("synthetic lockup with same lock id should not exist")
-	}
-	if len(synthLocks) == 0 {
-		return types.SyntheticLock{}, nil
-	}
-	return synthLocks[0], nil
+	bz := store.Get(synthLockKey)
+	err := proto.Unmarshal(bz, &synthLock)
+	return synthLock, err
 }
 
 // GetAllSyntheticLockupsByAddr gets all the synthetic lockups from all the locks owned by the given address.
