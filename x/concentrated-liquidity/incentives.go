@@ -251,8 +251,6 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 		return sdk.Coins{}, err
 	}
 
-	// Create a temporary position record on all uptime accumulators with this amount. We expect this to be cleared later
-	// with `claimAndResetFullRangeBalancerPool`
 	// Claim rewards on each uptime accumulator. Delete each record after claiming.
 	totalRewards := sdk.NewCoins()
 	for uptimeIndex := range uptimeAccums {
