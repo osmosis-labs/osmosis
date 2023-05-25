@@ -114,7 +114,8 @@ func (k Keeper) getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ct
 // Returns error if a canonical pool ID exists but there is an issue when retrieving the pool assets for this pool.
 //
 // CONTRACT: canonical Balancer pool has the same denoms as the CL pool and is an even-weighted 2-asset pool.
-func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64) (uint64, sdk.Dec, error) {
+// TODO: add test that uptimeAccums are mutated.
+func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64, uptimeAccums []accum.AccumulatorObject) (uint64, sdk.Dec, error) {
 	// Get CL pool from ID
 	clPool, err := k.getPoolById(ctx, clPoolId)
 	if err != nil {
@@ -204,17 +205,12 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64)
 
 	// Create a temporary position record on all uptime accumulators with this amount. We expect this to be cleared later
 	// with `claimAndResetFullRangeBalancerPool`
-	uptimeAccums, err := k.GetUptimeAccumulators(ctx, clPoolId)
-	if err != nil {
-		return 0, sdk.ZeroDec(), err
-	}
-
 	// Add full range equivalent shares to each uptime accumulator.
 	// Note that we expect spot price divergence between the CL and balancer pools to be handled by `GetLiquidityFromAmounts`
 	// returning a lower bound on qualifying liquidity.
-	for uptimeIndex, uptimeAccum := range uptimeAccums {
+	for uptimeIndex := range uptimeAccums {
 		balancerPositionName := string(types.KeyBalancerFullRange(clPoolId, canonicalBalancerPoolId, uint64(uptimeIndex)))
-		err := uptimeAccum.NewPosition(balancerPositionName, qualifyingFullRangeShares, nil)
+		err := uptimeAccums[uptimeIndex].NewPosition(balancerPositionName, qualifyingFullRangeShares, nil)
 		if err != nil {
 			return 0, sdk.ZeroDec(), err
 		}
@@ -230,7 +226,8 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64)
 //
 // Returns the number of coins that were claimed and distrbuted.
 // Returns error if either reward claiming, record deletion or adding to the gauge fails.
-func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uint64, balPoolId uint64) (sdk.Coins, error) {
+// TODO: add test that uptimeAccums are mutated.
+func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uint64, balPoolId uint64, uptimeAccums []accum.AccumulatorObject) (sdk.Coins, error) {
 	// Get CL pool from ID. This also serves as an early pool existence check.
 	clPool, err := k.getPoolById(ctx, clPoolId)
 	if err != nil {
@@ -249,24 +246,18 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 		return sdk.Coins{}, err
 	}
 
-	// Get all uptime accumulators for CL pool
 	// Create a temporary position record on all uptime accumulators with this amount. We expect this to be cleared later
 	// with `claimAndResetFullRangeBalancerPool`
-	uptimeAccums, err := k.GetUptimeAccumulators(ctx, clPoolId)
-	if err != nil {
-		return sdk.Coins{}, err
-	}
-
 	// Claim rewards on each uptime accumulator. Delete each record after claiming.
 	totalRewards := sdk.NewCoins()
-	for uptimeIndex, uptimeAccum := range uptimeAccums {
+	for uptimeIndex := range uptimeAccums {
 		// Generate key for the record on the the current uptime accumulator
 		balancerPositionName := string(types.KeyBalancerFullRange(clPoolId, balPoolId, uint64(uptimeIndex)))
 
 		// Ensure that the given balancer pool has a record on the given uptime accumulator.
 		// We expect this to have been set in a prior call to `prepareBalancerAsFullRange`, which
 		// should precede all calls of `claimAndResetFullRangeBalancerPool`
-		recordExists, err := uptimeAccum.HasPosition(balancerPositionName)
+		recordExists, err := uptimeAccums[uptimeIndex].HasPosition(balancerPositionName)
 		if err != nil {
 			return sdk.Coins{}, err
 		}
@@ -276,25 +267,25 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 
 		// Remove shares from record so it gets cleared when rewards are claimed.
 		// Note that we expect these shares to be correctly updated in a prior call to `prepareBalancerAsFullRange`.
-		numShares, err := uptimeAccum.GetPositionSize(balancerPositionName)
+		numShares, err := uptimeAccums[uptimeIndex].GetPositionSize(balancerPositionName)
 		if err != nil {
 			return sdk.Coins{}, err
 		}
 
-		err = uptimeAccum.RemoveFromPosition(balancerPositionName, numShares)
+		err = uptimeAccums[uptimeIndex].RemoveFromPosition(balancerPositionName, numShares)
 		if err != nil {
 			return sdk.Coins{}, err
 		}
 
 		// Claim rewards and log the amount claimed to be added to the relevant gauge later
-		claimedRewards, _, err := uptimeAccum.ClaimRewards(balancerPositionName)
+		claimedRewards, _, err := uptimeAccums[uptimeIndex].ClaimRewards(balancerPositionName)
 		if err != nil {
 			return sdk.Coins{}, err
 		}
 		totalRewards = totalRewards.Add(claimedRewards...)
 
 		// Ensure record was deleted
-		recordExists, err = uptimeAccum.HasPosition(balancerPositionName)
+		recordExists, err = uptimeAccums[uptimeIndex].HasPosition(balancerPositionName)
 		if err != nil {
 			return sdk.Coins{}, err
 		}
@@ -316,17 +307,52 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 	return totalRewards, nil
 }
 
-// updatePoolUptimeAccumulatorsToNow syncs all uptime accumulators to be up to date for the given pool.
+// updatePoolUptimeAccumulatorsToNow syncs all uptime accumulators that are refetched from state for the given
+// poold id to be up to date for the given pool. Updated the pool last liquidity update time with
+// the current block time and writes the updated pool to state.
 // Specifically, it gets the time elapsed since the last update and divides it
 // by the qualifying liquidity for each uptime. It then adds this value to the
 // respective accumulator and updates relevant time trackers accordingly.
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
+// Note: the following are the differences of this function from updatePoolUptimeAccumulatorsToNow:
+// * this function fetches the uptime accumulators from state.
+// * this function fetches a pool twice. Once to determine "last liquidity update" time and once to
+// update the pool in state, if applicable.
+// updatePoolGivenUptimeAccumulatorsToNow is used in swaps for performance reasons to minimize state reads.
+// updatePoolUptimeAccumulatorsToNow is used in all other cases.
 func (k Keeper) updatePoolUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) error {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return err
 	}
 
+	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	if err := k.updatePoolGivenUptimeAccumulatorsToNow(ctx, pool, uptimeAccums); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// updatePoolGivenUptimeAccumulatorsToNow syncs all given uptime accumulators for a given pool id
+// Updates the pool last liquidity update time with the current block time and writes the updated pool to state.
+// If last liquidity update hapenned in the current block, this function is a no-op.
+// Specifically, it gets the time elapsed since the last update and divides it
+// by the qualifying liquidity for each uptime. It then adds this value to the
+// respective accumulator and updates relevant time trackers accordingly.
+// CONTRACT: the caller validates that the pool with the given id exists.
+// CONTRACT: given uptimeAccums are associated with the given pool id.
+// CONTRACT: caller is responsible for the uptimeAccums to be up-to-date.
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
+// Note: the following are the differences of this function from updatePoolUptimeAccumulatorsToNow:
+// * this function does not refetch the uptime accumulators from state.
+// * this function only attempts to fetch a pool after validating lastLiquidityUpdate time is not in the current block.
+// This is to avoid unnecessary state reads during swaps for performance reasons.
+func (k Keeper) updatePoolGivenUptimeAccumulatorsToNow(ctx sdk.Context, pool types.ConcentratedPoolExtension, uptimeAccums []accum.AccumulatorObject) error {
 	// Since our base unit of time is nanoseconds, we divide with truncation by 10^9 (10e8) to get
 	// time elapsed in seconds
 	timeElapsedNanoSec := sdk.NewDec(int64(ctx.BlockTime().Sub(pool.GetLastLiquidityUpdate())))
@@ -341,10 +367,12 @@ func (k Keeper) updatePoolUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64
 		return types.TimeElapsedNotPositiveError{TimeElapsed: timeElapsedSec}
 	}
 
+	poolId := pool.GetId()
+
 	// Set up canonical balancer pool as a full range position for the purposes of incentives.
 	// Note that this function fails quietly if no canonical balancer pool exists and only errors
 	// if it does exist and there is a lower level inconsistency.
-	balancerPoolId, _, err := k.prepareBalancerPoolAsFullRange(ctx, poolId)
+	balancerPoolId, _, err := k.prepareBalancerPoolAsFullRange(ctx, poolId, uptimeAccums)
 	if err != nil {
 		return err
 	}
@@ -355,17 +383,12 @@ func (k Keeper) updatePoolUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64
 		return err
 	}
 
-	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
-	if err != nil {
-		return err
-	}
-
-	for uptimeIndex, uptimeAccum := range uptimeAccums {
+	for uptimeIndex := range uptimeAccums {
 		// Get relevant uptime-level values
 		curUptimeDuration := types.SupportedUptimes[uptimeIndex]
 
 		// Qualifying liquidity is the amount of liquidity that satisfies uptime requirements
-		qualifyingLiquidity, err := uptimeAccum.GetTotalShares()
+		qualifyingLiquidity, err := uptimeAccums[uptimeIndex].GetTotalShares()
 		if err != nil {
 			return err
 		}
@@ -381,7 +404,7 @@ func (k Keeper) updatePoolUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64
 		}
 
 		// Emit incentives to current uptime accumulator
-		uptimeAccum.AddToAccumulator(incentivesToAddToCurAccum)
+		uptimeAccums[uptimeIndex].AddToAccumulator(incentivesToAddToCurAccum)
 
 		// Update pool records (stored in state after loop)
 		poolIncentiveRecords = updatedPoolRecords
@@ -405,7 +428,7 @@ func (k Keeper) updatePoolUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64
 	// require a lot of capital to be tied up in a two week bond, which is a viable tradeoff given the relative
 	// simplicity of this approach.
 	if balancerPoolId != 0 {
-		_, err := k.claimAndResetFullRangeBalancerPool(ctx, poolId, balancerPoolId)
+		_, err := k.claimAndResetFullRangeBalancerPool(ctx, poolId, balancerPoolId, uptimeAccums)
 		if err != nil {
 			return err
 		}

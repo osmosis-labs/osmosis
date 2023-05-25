@@ -43,8 +43,8 @@ func (k Keeper) GetPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedP
 	return k.getPoolById(ctx, poolId)
 }
 
-func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64, nextTickInfo *model.TickInfo, swapStateFeeGrowth sdk.DecCoin) (liquidityDelta sdk.Dec, err error) {
-	return k.crossTick(ctx, poolId, tickIndex, nextTickInfo, swapStateFeeGrowth)
+func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64, nextTickInfo *model.TickInfo, swapStateFeeGrowth sdk.DecCoin, uptimeAccums []accum.AccumulatorObject) (liquidityDelta sdk.Dec, err error) {
+	return k.crossTick(ctx, poolId, tickIndex, nextTickInfo, swapStateFeeGrowth, uptimeAccums)
 }
 
 func (k Keeper) SendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 string, amount0, amount1 sdk.Int, sender, receiver sdk.AccAddress) error {
@@ -252,6 +252,10 @@ func (k Keeper) UpdateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 	return k.updatePoolUptimeAccumulatorsToNow(ctx, poolId)
 }
 
+func (k Keeper) UpdatePoolGivenUptimeAccumulatorsToNow(ctx sdk.Context, pool types.ConcentratedPoolExtension, uptimeAccums []accum.AccumulatorObject) error {
+	return k.updatePoolGivenUptimeAccumulatorsToNow(ctx, pool, uptimeAccums)
+}
+
 func (k Keeper) SetIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) error {
 	return k.setIncentiveRecord(ctx, incentiveRecord)
 }
@@ -300,12 +304,12 @@ func (k Keeper) UpdatePoolForSwap(ctx sdk.Context, pool types.ConcentratedPoolEx
 	return k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, totalFees)
 }
 
-func (k Keeper) PrepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64) (uint64, sdk.Dec, error) {
-	return k.prepareBalancerPoolAsFullRange(ctx, clPoolId)
+func (k Keeper) PrepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64, uptimeAccums []accum.AccumulatorObject) (uint64, sdk.Dec, error) {
+	return k.prepareBalancerPoolAsFullRange(ctx, clPoolId, uptimeAccums)
 }
 
-func (k Keeper) ClaimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uint64, balPoolId uint64) (sdk.Coins, error) {
-	return k.claimAndResetFullRangeBalancerPool(ctx, clPoolId, balPoolId)
+func (k Keeper) ClaimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uint64, balPoolId uint64, uptimeAccums []accum.AccumulatorObject) (sdk.Coins, error) {
+	return k.claimAndResetFullRangeBalancerPool(ctx, clPoolId, balPoolId, uptimeAccums)
 }
 
 func (k Keeper) UninitializePool(ctx sdk.Context, poolId uint64) error {

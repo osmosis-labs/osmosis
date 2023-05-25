@@ -629,8 +629,14 @@ func (s *KeeperTestSuite) TestCrossTick() {
 				nextTickInfo = &model.TickInfo{}
 			}
 
+			var uptimeAccums []accum.AccumulatorObject
+			if test.poolToGet == validPoolId {
+				uptimeAccums, err = s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, test.poolToGet)
+				s.Require().NoError(err)
+			}
+
 			// System under test
-			liquidityDelta, err := s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, test.poolToGet, test.tickToGet, nextTickInfo, test.additiveFee)
+			liquidityDelta, err := s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, test.poolToGet, test.tickToGet, nextTickInfo, test.additiveFee, uptimeAccums)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &test.expectedErr)
