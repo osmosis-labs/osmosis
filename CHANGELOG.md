@@ -42,6 +42,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## v15.1.1
+
+### Security
+
+* Upgraded ibc-go to 4.3.1 in response to [IBC huckleberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-huckleberry/10731)
+
 ## v15.1.0
 
 ### Security
