@@ -127,16 +127,8 @@ message LiquidityDepthWithRange {
     (gogoproto.moretags) = "yaml:\"liquidity_net\"",
     (gogoproto.nullable) = false
   ];
-  string lower_tick = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"tick\"",
-    (gogoproto.nullable) = false
-  ];
-  string upper_tick = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"tick\"",
-    (gogoproto.nullable) = false
-  ];
+  int64 lower_tick = 2 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
+  int64 upper_tick = 3 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
 }
 
 //=============================== LiquidityNetInDirection
