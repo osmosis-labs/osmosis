@@ -358,6 +358,10 @@ func (k Keeper) updatePoolUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64
 // * this function only attempts to fetch a pool after validating lastLiquidityUpdate time is not in the current block.
 // This is to avoid unnecessary state reads during swaps for performance reasons.
 func (k Keeper) updatePoolGivenUptimeAccumulatorsToNow(ctx sdk.Context, pool types.ConcentratedPoolExtension, uptimeAccums []accum.AccumulatorObject) error {
+	if pool == nil {
+		return types.ErrPoolNil
+	}
+
 	// Since our base unit of time is nanoseconds, we divide with truncation by 10^9 (10e8) to get
 	// time elapsed in seconds
 	timeElapsedNanoSec := sdk.NewDec(int64(ctx.BlockTime().Sub(pool.GetLastLiquidityUpdate())))
