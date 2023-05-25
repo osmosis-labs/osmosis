@@ -81,8 +81,7 @@ message UserPositionsRequest {
 }
 
 message UserPositionsResponse {
-  repeated PositionWithUnderlyingAssetBreakdown positions = 1
-      [ (gogoproto.nullable) = false ];
+  repeated FullPositionBreakdown positions = 1 [ (gogoproto.nullable) = false ];
 }
 
 //=============================== PositionById
@@ -91,8 +90,7 @@ message PositionByIdRequest {
 }
 
 message PositionByIdResponse {
-  PositionWithUnderlyingAssetBreakdown position = 1
-      [ (gogoproto.nullable) = false ];
+  FullPositionBreakdown position = 1 [ (gogoproto.nullable) = false ];
 }
 
 //=============================== Pools
