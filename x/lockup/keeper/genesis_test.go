@@ -26,7 +26,7 @@ var (
 			{
 				ID:                    1,
 				Owner:                 acc1.String(),
-				RewardReceiverAddress: acc1.String(),
+				RewardReceiverAddress: "",
 				Duration:              time.Second,
 				EndTime:               time.Time{},
 				Coins:                 sdk.Coins{sdk.NewInt64Coin("foo", 10000000)},
@@ -95,7 +95,7 @@ func TestExportGenesis(t *testing.T) {
 		{
 			ID:                    1,
 			Owner:                 acc1.String(),
-			RewardReceiverAddress: acc1.String(),
+			RewardReceiverAddress: "",
 			Duration:              time.Second,
 			EndTime:               time.Time{},
 			Coins:                 sdk.Coins{sdk.NewInt64Coin("foo", 10000000)},
@@ -103,7 +103,7 @@ func TestExportGenesis(t *testing.T) {
 		{
 			ID:                    11,
 			Owner:                 acc2.String(),
-			RewardReceiverAddress: acc2.String(),
+			RewardReceiverAddress: "",
 			Duration:              time.Second * 5,
 			EndTime:               time.Time{},
 			Coins:                 sdk.Coins{sdk.NewInt64Coin("foo", 5000000)},

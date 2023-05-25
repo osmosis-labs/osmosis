@@ -235,7 +235,7 @@ func (s *KeeperTestSuite) TestUnlock() {
 		ctx := s.Ctx
 
 		addr1 := sdk.AccAddress([]byte("addr1---------------"))
-		_ = types.NewPeriodLock(1, addr1, addr1, time.Second, time.Time{}, tc.fundAcc)
+		_ = types.NewPeriodLock(1, addr1, addr1.String(), time.Second, time.Time{}, tc.fundAcc)
 
 		// lock with balance
 		s.FundAcc(addr1, tc.fundAcc)
@@ -494,7 +494,7 @@ func (s *KeeperTestSuite) TestCreateLock() {
 	s.Require().Equal(time.Second, lock.Duration)
 	s.Require().Equal(time.Time{}, lock.EndTime)
 	s.Require().Equal(uint64(1), lock.ID)
-	s.Require().Equal(addr1.String(), lock.RewardReceiverAddress)
+	s.Require().Equal("", lock.RewardReceiverAddress)
 
 	lockID := s.App.LockupKeeper.GetLastLockID(s.Ctx)
 	s.Require().Equal(uint64(1), lockID)
@@ -586,7 +586,7 @@ func (s *KeeperTestSuite) TestSetLockRewardReceiverAddress() {
 			s.Require().NoError(err)
 
 			// check that the reward receiver is the lock owner by default
-			s.Require().Equal(lock.RewardReceiverAddress, addr1.String())
+			s.Require().Equal(lock.RewardReceiverAddress, "")
 
 			owner := addr1
 			if tc.isnotOwner {
@@ -601,7 +601,7 @@ func (s *KeeperTestSuite) TestSetLockRewardReceiverAddress() {
 
 			// System under test
 			// now change the reward receiver state
-			err = s.App.LockupKeeper.SetLockRewardReceiverAddress(s.Ctx, tc.lockID, owner, newReceiver)
+			err = s.App.LockupKeeper.SetLockRewardReceiverAddress(s.Ctx, tc.lockID, owner, newReceiver.String())
 			if tc.expectedError {
 				s.Require().Error(err)
 			} else {

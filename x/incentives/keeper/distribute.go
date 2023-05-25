@@ -324,7 +324,13 @@ func (k Keeper) distributeInternal(
 			continue
 		}
 		// update the amount for that address
-		err := distrInfo.addLockRewards(lock.RewardReceiverAddress, distrCoins)
+		rewardReceiver := lock.RewardReceiverAddress
+
+		// if the reward receiver stored in state is an empty string, it indicates that the owner is the reward receiver.
+		if rewardReceiver == "" {
+			rewardReceiver = lock.Owner
+		}
+		err := distrInfo.addLockRewards(rewardReceiver, distrCoins)
 		if err != nil {
 			return nil, err
 		}

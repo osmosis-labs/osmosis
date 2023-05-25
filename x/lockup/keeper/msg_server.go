@@ -237,7 +237,7 @@ func (server msgServer) SetRewardReceiverAddress(goCtx context.Context, msg *typ
 		return nil, err
 	}
 
-	err = server.keeper.SetLockRewardReceiverAddress(ctx, msg.LockID, owner, newRewardRecepient)
+	err = server.keeper.SetLockRewardReceiverAddress(ctx, msg.LockID, owner, newRewardRecepient.String())
 	if err != nil {
 		return &types.MsgSetRewardReceiverAddressResponse{Success: false}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}

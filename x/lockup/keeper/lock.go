@@ -144,8 +144,8 @@ func (k Keeper) CreateLockNoSend(ctx sdk.Context, owner sdk.AccAddress, coins sd
 	ID := k.GetLastLockID(ctx) + 1
 	// unlock time is initially set without a value, gets set as unlock start time + duration
 	// when unlocking starts.
-	// the reward receiver is set as the owner by default when creating a lock.
-	lock := types.NewPeriodLock(ID, owner, owner, duration, time.Time{}, coins)
+	// the reward receiver is set as the owner by default when creating a lock, and we indicate this by using an empty string.
+	lock := types.NewPeriodLock(ID, owner, "", duration, time.Time{}, coins)
 
 	// lock the coins without sending them to the lockup module account
 	err := k.lock(ctx, lock, lock.Coins)
@@ -450,7 +450,8 @@ func (k Keeper) unlockMaturedLockInternalLogic(ctx sdk.Context, lock types.Perio
 }
 
 // SetLockReceiver changes the reward recipient address to the given address.
-func (k Keeper) SetLockRewardReceiverAddress(ctx sdk.Context, lockID uint64, owner, newRecepientAddress sdk.AccAddress) error {
+// Storing an empty string for reward receiver would indicate the owner being reward receiver.
+func (k Keeper) SetLockRewardReceiverAddress(ctx sdk.Context, lockID uint64, owner sdk.AccAddress, newReceiverAddress string) error {
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
 		return err
@@ -461,11 +462,16 @@ func (k Keeper) SetLockRewardReceiverAddress(ctx sdk.Context, lockID uint64, own
 		return types.ErrNotLockOwner
 	}
 
-	if lock.RewardReceiverAddress == newRecepientAddress.String() {
+	// if the given receiver address is same as the lock owner, we store an empty string instead.
+	if lock.Owner == newReceiverAddress {
+		newReceiverAddress = ""
+	}
+
+	if lock.RewardReceiverAddress == newReceiverAddress {
 		return types.ErrRewardReceiverIsSame
 	}
 
-	lock.RewardReceiverAddress = newRecepientAddress.String()
+	lock.RewardReceiverAddress = newReceiverAddress
 
 	err = k.setLock(ctx, *lock)
 	if err != nil {
@@ -820,7 +826,7 @@ func (k Keeper) SplitLock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coin
 	splitLockID := k.GetLastLockID(ctx) + 1
 	k.SetLastLockID(ctx, splitLockID)
 
-	splitLock := types.NewPeriodLock(splitLockID, lock.OwnerAddress(), lock.OwnerAddress(), lock.Duration, lock.EndTime, coins)
+	splitLock := types.NewPeriodLock(splitLockID, lock.OwnerAddress(), lock.OwnerAddress().String(), lock.Duration, lock.EndTime, coins)
 
 	err = k.setLock(ctx, splitLock)
 	return splitLock, err

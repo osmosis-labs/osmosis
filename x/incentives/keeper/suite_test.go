@@ -93,7 +93,7 @@ func (s *KeeperTestSuite) SetupChangeRewardReceiver(changeRewardReceivers []chan
 		lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, changeRewardReceiver.lockId)
 		s.Require().NoError(err)
 
-		err = s.App.LockupKeeper.SetLockRewardReceiverAddress(s.Ctx, changeRewardReceiver.lockId, lock.OwnerAddress(), accs[changeRewardReceiver.newReceiverAccIndex])
+		err = s.App.LockupKeeper.SetLockRewardReceiverAddress(s.Ctx, changeRewardReceiver.lockId, lock.OwnerAddress(), accs[changeRewardReceiver.newReceiverAccIndex].String())
 		s.Require().NoError(err)
 	}
 }

@@ -51,7 +51,7 @@ func (s *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 		{
 			ID:                    1,
 			Owner:                 addr1.String(),
-			RewardReceiverAddress: addr1.String(),
+			RewardReceiverAddress: "",
 			Duration:              time.Second,
 			EndTime:               time.Time{},
 			Coins:                 coins,
