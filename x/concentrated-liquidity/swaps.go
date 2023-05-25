@@ -258,7 +258,7 @@ func (k Keeper) computeOutAmtGivenIn(
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
 ) (tokenIn, tokenOut sdk.Coin, updatedTick int64, updatedLiquidity, updatedSqrtPrice sdk.Dec, totalFees sdk.Dec, err error) {
-	// Get p and asset info
+	// Get pool and asset info
 	p, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
@@ -414,7 +414,7 @@ func (k Keeper) computeOutAmtGivenIn(
 			}
 
 			// Retrieve the liquidity held in the next closest initialized tick
-			liquidityNet, err := k.crossTick(ctx, p.GetId(), nextTick, &nextTickInfo, sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.feeGrowthGlobal), uptimeAccums)
+			liquidityNet, err := k.crossTick(ctx, poolId, nextTick, &nextTickInfo, sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.feeGrowthGlobal), uptimeAccums)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 			}
