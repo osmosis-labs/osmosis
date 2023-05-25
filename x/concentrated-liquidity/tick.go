@@ -75,7 +75,6 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 // It updates the given tick's uptime and fee accumulators and writes it back to state.
 // Prior to updating the tick info and writing it to state, it updates the pool uptime accumulators until the current block time.
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
-// TODO: add test that uptimeAccums are not mutated.
 func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo *model.TickInfo, swapStateFeeGrowth sdk.DecCoin, uptimeAccums []accum.AccumulatorObject) (liquidityDelta sdk.Dec, err error) {
 	if tickInfo == nil {
 		return sdk.Dec{}, types.ErrNextTickInfoNil

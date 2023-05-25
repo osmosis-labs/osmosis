@@ -3378,16 +3378,21 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			updatedClPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 			s.Require().NoError(err)
 
-			clPoolUptimeAccumulators, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
+			clPoolUptimeAccumulatorsFromState, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
 			s.Require().NoError(err)
 
-			s.Require().True(len(clPoolUptimeAccumulators) > 0)
-			for _, uptimeAccum := range clPoolUptimeAccumulators {
+			s.Require().True(len(clPoolUptimeAccumulatorsFromState) > 0)
+			expectedShares := qualifyingShares.Add(initialLiquidity)
+			for uptimeIdx, uptimeAccum := range clPoolUptimeAccumulatorsFromState {
 				currAccumShares, err := uptimeAccum.GetTotalShares()
 				s.Require().NoError(err)
 
 				// Ensure each accum has the correct number of final shares
-				s.Require().Equal(qualifyingShares.Add(initialLiquidity), currAccumShares)
+				s.Require().Equal(expectedShares, currAccumShares)
+
+				// Also validate uptime accumulators passed in as parameter.
+				currAccumShares, err = uptimeAccums[uptimeIdx].GetTotalShares()
+				s.Require().Equal(expectedShares, currAccumShares)
 			}
 
 			// Ensure added liquidity is equal to the amount accum shares changed by

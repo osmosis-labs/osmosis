@@ -107,6 +107,8 @@ func (k Keeper) getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ct
 // if it exists, adds the number of full range shares it qualifies for to the CL pool uptime accumulators.
 // This is functionally equivalent to treating the Balancer pool shares as a single full range position on the CL pool,
 // but just for the purposes of incentives. The Balancer pool liquidity is not actually traded against in CL pool swaps.
+// The given uptime accumulators are mutated to reflect the added full range shares. The caller is responsible
+// for ensuring that uptimeAccums are up-to-date and refetched when needed.
 //
 // If no canonical Balancer pool exists, this function is a no-op.
 //
@@ -114,7 +116,7 @@ func (k Keeper) getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ct
 // Returns error if a canonical pool ID exists but there is an issue when retrieving the pool assets for this pool.
 //
 // CONTRACT: canonical Balancer pool has the same denoms as the CL pool and is an even-weighted 2-asset pool.
-// TODO: add test that uptimeAccums are mutated.
+// CONTRACT: uptimeAccums are associated with the given CL pool id.
 func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64, uptimeAccums []accum.AccumulatorObject) (uint64, sdk.Dec, error) {
 	// Get CL pool from ID
 	clPool, err := k.getPoolById(ctx, clPoolId)
