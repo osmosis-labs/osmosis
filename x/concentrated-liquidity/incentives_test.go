@@ -3601,11 +3601,11 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 				s.Require().ErrorContains(err, tc.expectedError.Error())
 				s.Require().Equal(sdk.Coins{}, amountClaimed)
 
-				clPoolUptimeAccumulators, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
+				clPoolUptimeAccumulatorsFromState, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
 				s.Require().NoError(err)
 
-				s.Require().True(len(clPoolUptimeAccumulators) > 0)
-				for _, uptimeAccum := range clPoolUptimeAccumulators {
+				s.Require().True(len(clPoolUptimeAccumulatorsFromState) > 0)
+				for uptimeIdx, uptimeAccum := range clPoolUptimeAccumulatorsFromState {
 					currAccumShares, err := uptimeAccum.GetTotalShares()
 					s.Require().NoError(err)
 
@@ -3618,8 +3618,14 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 						addedLiquidity = sdk.ZeroDec()
 					}
 
+					expectedLiquidity := initialLiquidity.Add(addedLiquidity)
+
 					// Ensure accum shares remain unchanged after error
-					s.Require().Equal(initialLiquidity.Add(addedLiquidity), currAccumShares)
+					s.Require().Equal(expectedLiquidity, currAccumShares)
+
+					// Also validate uptime accumulators passed in as parameter.
+					currAccumShares, err = uptimeAccums[uptimeIdx].GetTotalShares()
+					s.Require().Equal(expectedLiquidity, currAccumShares)
 				}
 
 				// If gauge exists, ensure it remains empty after error
