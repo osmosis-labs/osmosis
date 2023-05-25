@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -228,7 +229,7 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64)
 // lock on the Balancer pool. Importantly, this is a dynamic check such that if a longer duration lock is added in the future, it will
 // begin using that lock.
 //
-// Returns the number of coins that were claimed and distrbuted.
+// Returns the number of coins that were claimed and distributed.
 // Returns error if either reward claiming, record deletion or adding to the gauge fails.
 func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uint64, balPoolId uint64) (sdk.Coins, error) {
 	// Get CL pool from ID. This also serves as an early pool existence check.
@@ -250,8 +251,6 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 	}
 
 	// Get all uptime accumulators for CL pool
-	// Create a temporary position record on all uptime accumulators with this amount. We expect this to be cleared later
-	// with `claimAndResetFullRangeBalancerPool`
 	uptimeAccums, err := k.GetUptimeAccumulators(ctx, clPoolId)
 	if err != nil {
 		return sdk.Coins{}, err
@@ -771,6 +770,14 @@ func updateAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey strin
 func moveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum accum.AccumulatorObject, oldPositionName, newPositionName string, growthOutside sdk.DecCoins) error {
 	if oldPositionName == newPositionName {
 		return types.ModifySamePositionAccumulatorError{PositionAccName: oldPositionName}
+	}
+
+	hasPosition, err := accum.HasPosition(oldPositionName)
+	if err != nil {
+		return err
+	}
+	if !hasPosition {
+		return fmt.Errorf("position %s does not exist", oldPositionName)
 	}
 
 	if err := updatePositionToInitValuePlusGrowthOutside(accum, oldPositionName, growthOutside); err != nil {

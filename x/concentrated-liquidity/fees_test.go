@@ -420,7 +420,7 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 				s.Require().NoError(err)
 
 				// check if returned fee growth outside has correct value
-				s.Require().Equal(feeGrowthOutside, tc.expectedFeeGrowthOutside)
+				s.Require().Equal(tc.expectedFeeGrowthOutside, feeGrowthOutside)
 			}
 		})
 	}
