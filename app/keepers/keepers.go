@@ -276,7 +276,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.ScopedICQKeeper,
-		NewQuerierWrapper(bApp),
+		bApp.GRPCQueryRouter(),
 	)
 	appKeepers.ICQKeeper = &icqKeeper
 

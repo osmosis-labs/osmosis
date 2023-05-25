@@ -1,10 +1,10 @@
-package grpc 
+package grpc
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
 // SOURCE AT `proto/osmosis/twap/v1beta1/query.yml`
 
 import (
-	context "context"
+	"context"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -69,4 +69,3 @@ func (q Querier) ArithmeticTwap(grpcCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.ArithmeticTwap(ctx, *req)
 }
-
