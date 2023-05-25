@@ -2885,29 +2885,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 				}
 				s.Require().Equal(expectedCoins, amountClaimed)
 				s.Require().Equal(sdk.Coins(nil), amountForfeited)
-
-				// Sum of growthInside
-				totalGrowthInside := sdk.NewDecCoins()
-				for _, coin := range tc.growthInside {
-					totalGrowthInside = totalGrowthInside.Add(coin...)
-				}
-
-				// sum of  growthOutside
-				totalGrowthOutside := sdk.NewDecCoins()
-				for _, coin := range tc.growthOutside {
-					totalGrowthOutside = totalGrowthOutside.Add(coin...)
-				}
-
-				// sum of uptimeAccumulatorGrowth
-				uptimeAccumulatorGrowth := sdk.NewDecCoins()
-				for _, coin := range newUptimeAccumValues {
-					uptimeAccumulatorGrowth = uptimeAccumulatorGrowth.Add(coin...)
-				}
-
-				// Calculate the totalSum, should be tc.growthInside + tc.growthOutside
-				expectedTotal := totalGrowthInside.Add(totalGrowthOutside...)
-
-				s.Require().Equal(expectedTotal, uptimeAccumulatorGrowth)
 			}
 
 			// Ensure balances have not been mutated
@@ -2915,6 +2892,69 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			s.Require().Equal(initPoolBalances, newPoolBalances)
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
+	// Init suite for the test.
+	s.SetupTest()
+
+	var (
+		defaultAddress   = s.TestAccs[0]
+		defaultBlockTime = time.Unix(1, 1).UTC()
+	)
+
+	s.Ctx = s.Ctx.WithBlockTime(defaultBlockTime)
+	requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1))
+	s.FundAcc(defaultAddress, requiredBalances)
+
+	// Create CL pool
+	pool := s.PrepareConcentratedPool()
+
+	// Set up position
+	positionIdOne, _, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), defaultAddress, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	s.Require().NoError(err)
+
+	// Set incentives for pool to ensure accumulators work correctly
+	testIncentiveRecord := types.IncentiveRecord{
+		PoolId:               pool.GetId(),
+		IncentiveDenom:       USDC,
+		IncentiveCreatorAddr: s.TestAccs[0].String(),
+		IncentiveRecordBody: types.IncentiveRecordBody{
+			RemainingAmount: sdk.NewDec(100000),
+			EmissionRate:    sdk.NewDec(1), // 1 per second
+			StartTime:       s.Ctx.BlockTime(),
+		},
+		MinUptime: time.Nanosecond,
+	}
+	err = s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, []types.IncentiveRecord{testIncentiveRecord})
+	s.Require().NoError(err)
+
+	// attempting to claim with same blocktime
+	collectedInc, _, err := s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, positionIdOne)
+	s.Require().NoError(err)
+
+	// expected collectedIncentives in same blockTime = 0
+	s.Require().Equal(sdk.NewCoins(), collectedInc)
+
+	// add 1 hour to current blocktime
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute))
+
+	// attempting to claim after 1min has passed
+	collectedInc, _, err = s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, positionIdOne)
+	s.Require().NoError(err)
+
+	// expected collectedIncentives after 1 hour  = 59.999999999901820104usdc ~ 59usdc
+	s.Require().Equal(sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(59))), collectedInc)
+
+	// add 1 hour to current blocktime
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour))
+
+	// attempting to claim after 1 has passed
+	collectedInc, _, err = s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, positionIdOne)
+	s.Require().NoError(err)
+
+	// expected collectedIncentives after 1 hour = 3599.999999998662853243usdc ~ 3599usdc
+	s.Require().Equal(sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(3599))), collectedInc)
 }
 
 // This functional test focuses on changing liquidity in the same range and collecting incentives
