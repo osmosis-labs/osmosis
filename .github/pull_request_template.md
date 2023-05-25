@@ -43,5 +43,3 @@ Where is the change documented?
   - [ ] Osmosis documentation site
   - [ ] Code comments?
   - [ ] N/A
-
-Test
