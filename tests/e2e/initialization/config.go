@@ -25,6 +25,7 @@ import (
 	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
 	poolitypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 	twaptypes "github.com/osmosis-labs/osmosis/v15/x/twap/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 
@@ -298,6 +299,11 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 		return err
 	}
 
+	err = updateModuleGenesis(appGenState, protorevtypes.ModuleName, &protorevtypes.GenesisState{}, updateProtorevGenesis)
+	if err != nil {
+		return err
+	}
+
 	bz, err := json.MarshalIndent(appGenState, "", "  ")
 	if err != nil {
 		return err
@@ -538,6 +544,10 @@ func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {
 		}
 		genUtilGenState.GenTxs = genTxs
 	}
+}
+
+func updateProtorevGenesis(protorevGenState *protorevtypes.GenesisState) {
+	protorevGenState.DeveloperAddress = "osmo1qs9akhf0s05hqskmu9gdnzz3e6u4xc7aaya0u0"
 }
 
 func setDenomMetadata(genState *banktypes.GenesisState, denom string) {
