@@ -675,8 +675,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 			expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
 				{
 					LiquidityAmount: sdk.NewDec(10),
-					LowerTick:       sdk.NewInt(DefaultMinTick),
-					UpperTick:       sdk.NewInt(DefaultMaxTick),
+					LowerTick:       DefaultMinTick,
+					UpperTick:       DefaultMaxTick,
 				},
 			},
 		},
@@ -689,8 +689,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 			expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
 				{
 					LiquidityAmount: sdk.NewDec(10),
-					LowerTick:       sdk.NewInt(DefaultMinTick),
-					UpperTick:       sdk.NewInt(5),
+					LowerTick:       DefaultMinTick,
+					UpperTick:       5,
 				},
 			},
 		},
@@ -707,18 +707,18 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 			expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
 				{
 					LiquidityAmount: sdk.NewDec(10),
-					LowerTick:       sdk.NewInt(-20),
-					UpperTick:       sdk.NewInt(10),
+					LowerTick:       -20,
+					UpperTick:       10,
 				},
 				{
 					LiquidityAmount: sdk.NewDec(60),
-					LowerTick:       sdk.NewInt(10),
-					UpperTick:       sdk.NewInt(20),
+					LowerTick:       10,
+					UpperTick:       20,
 				},
 				{
 					LiquidityAmount: sdk.NewDec(50),
-					LowerTick:       sdk.NewInt(20),
-					UpperTick:       sdk.NewInt(30),
+					LowerTick:       20,
+					UpperTick:       30,
 				},
 			},
 		},
@@ -735,18 +735,18 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 			expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
 				{
 					LiquidityAmount: sdk.NewDec(10),
-					LowerTick:       sdk.NewInt(DefaultMinTick),
-					UpperTick:       sdk.NewInt(10),
+					LowerTick:       DefaultMinTick,
+					UpperTick:       10,
 				},
 				{
 					LiquidityAmount: sdk.NewDec(60),
-					LowerTick:       sdk.NewInt(10),
-					UpperTick:       sdk.NewInt(30),
+					LowerTick:       10,
+					UpperTick:       30,
 				},
 				{
 					LiquidityAmount: sdk.NewDec(10),
-					LowerTick:       sdk.NewInt(30),
-					UpperTick:       sdk.NewInt(DefaultMaxTick),
+					LowerTick:       30,
+					UpperTick:       DefaultMaxTick,
 				},
 			},
 		},
@@ -766,28 +766,28 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 			expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
 				{
 					LiquidityAmount: sdk.NewDec(10),
-					LowerTick:       sdk.NewInt(-20),
-					UpperTick:       sdk.NewInt(10),
+					LowerTick:       -20,
+					UpperTick:       10,
 				},
 				{
 					LiquidityAmount: sdk.NewDec(60),
-					LowerTick:       sdk.NewInt(10),
-					UpperTick:       sdk.NewInt(11),
+					LowerTick:       10,
+					UpperTick:       11,
 				},
 				{
 					LiquidityAmount: sdk.NewDec(160),
-					LowerTick:       sdk.NewInt(11),
-					UpperTick:       sdk.NewInt(13),
+					LowerTick:       11,
+					UpperTick:       13,
 				},
 				{
 					LiquidityAmount: sdk.NewDec(60),
-					LowerTick:       sdk.NewInt(13),
-					UpperTick:       sdk.NewInt(20),
+					LowerTick:       13,
+					UpperTick:       20,
 				},
 				{
 					LiquidityAmount: sdk.NewDec(50),
-					LowerTick:       sdk.NewInt(20),
-					UpperTick:       sdk.NewInt(30),
+					LowerTick:       20,
+					UpperTick:       30,
 				},
 			},
 		},

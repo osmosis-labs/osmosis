@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
 	db "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -268,15 +267,14 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 			return []queryproto.LiquidityDepthWithRange{}, err
 		}
 
-		tickStruct := model.TickInfo{}
-		err = proto.Unmarshal(nextTickIter.Value(), &tickStruct)
+		tickStruct, err := ParseTickFromBz(nextTickIter.Value())
 		if err != nil {
 			return []queryproto.LiquidityDepthWithRange{}, err
 		}
 
 		liquidityDepthForRange := queryproto.LiquidityDepthWithRange{
-			LowerTick:       sdk.NewInt(previousTickIndex),
-			UpperTick:       sdk.NewInt(tickIndex),
+			LowerTick:       previousTickIndex,
+			UpperTick:       tickIndex,
 			LiquidityAmount: totalLiquidityWithinRange,
 		}
 		liquidityDepthsForRange = append(liquidityDepthsForRange, liquidityDepthForRange)
