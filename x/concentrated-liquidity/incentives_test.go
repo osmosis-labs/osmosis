@@ -2949,7 +2949,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
 	// add 1 hour to current blocktime
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour))
 
-	// attempting to claim after 1 has passed
+	// attempting to claim after 1hr has passed
 	collectedInc, _, err = s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, positionIdOne)
 	s.Require().NoError(err)
 
