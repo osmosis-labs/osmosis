@@ -21,7 +21,12 @@ func NewQuerier(k cl.Keeper) Querier {
 	return Querier{Keeper: k}
 }
 
-// UserPositions returns positions of a specified address
+// UserPositions returns positions of a specified address. Each position is broken down by:
+// - the position itself
+// - the underlying assets
+// - the claimable fees
+// - the claimable incentives
+// - the incentives that would be forfeited if the position was closed now
 func (q Querier) UserPositions(ctx sdk.Context, req clquery.UserPositionsRequest) (*clquery.UserPositionsResponse, error) {
 	sdkAddr, err := sdk.AccAddressFromBech32(req.Address)
 	if err != nil {
@@ -33,7 +38,7 @@ func (q Querier) UserPositions(ctx sdk.Context, req clquery.UserPositionsRequest
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	positions := make([]model.PositionWithUnderlyingAssetBreakdown, 0, len(userPositions))
+	positions := make([]model.FullPositionBreakdown, 0, len(userPositions))
 
 	for _, position := range userPositions {
 		// get the pool from the position
@@ -47,11 +52,24 @@ func (q Querier) UserPositions(ctx sdk.Context, req clquery.UserPositionsRequest
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
+		claimableFees, err := q.Keeper.GetClaimableFees(ctx, position.PositionId)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		claimableIncentives, forfeitedIncentives, err := q.Keeper.GetClaimableIncentives(ctx, position.PositionId)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
 		// Append the position and underlying assets to the positions slice
-		positions = append(positions, model.PositionWithUnderlyingAssetBreakdown{
-			Position: position,
-			Asset0:   asset0,
-			Asset1:   asset1,
+		positions = append(positions, model.FullPositionBreakdown{
+			Position:            position,
+			Asset0:              asset0,
+			Asset1:              asset1,
+			ClaimableFees:       claimableFees,
+			ClaimableIncentives: claimableIncentives,
+			ForfeitedIncentives: forfeitedIncentives,
 		})
 	}
 
@@ -60,7 +78,12 @@ func (q Querier) UserPositions(ctx sdk.Context, req clquery.UserPositionsRequest
 	}, nil
 }
 
-// PositionById returns a position with the specified id.
+// PositionById returns a position with the specified id. The position is broken down by:
+// - the position itself
+// - the underlying assets
+// - the claimable fees
+// - the claimable incentives
+// - the incentives that would be forfeited if the position was closed now
 func (q Querier) PositionById(ctx sdk.Context, req clquery.PositionByIdRequest) (*clquery.PositionByIdResponse, error) {
 	position, err := q.Keeper.GetPosition(ctx, req.PositionId)
 	if err != nil {
@@ -77,11 +100,24 @@ func (q Querier) PositionById(ctx sdk.Context, req clquery.PositionByIdRequest) 
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	claimableFees, err := q.Keeper.GetClaimableFees(ctx, position.PositionId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	claimableIncentives, forfeitedIncentives, err := q.Keeper.GetClaimableIncentives(ctx, position.PositionId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
 	return &clquery.PositionByIdResponse{
-		Position: model.PositionWithUnderlyingAssetBreakdown{
-			Position: position,
-			Asset0:   asset0,
-			Asset1:   asset1,
+		Position: model.FullPositionBreakdown{
+			Position:            position,
+			Asset0:              asset0,
+			Asset1:              asset1,
+			ClaimableFees:       claimableFees,
+			ClaimableIncentives: claimableIncentives,
+			ForfeitedIncentives: forfeitedIncentives,
 		},
 	}, nil
 }
