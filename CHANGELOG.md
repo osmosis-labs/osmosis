@@ -40,15 +40,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-  * [#5129](https://github.com/osmosis-labs/osmosis/pull/5129) Relax twap record validation in init genesis to allow one of the spot prices to be non-zero when twap error is observed.
-
-## v15.1.1
+## v15.1.2
 
 ### Security
 
 * Upgraded ibc-go to 4.3.1 in response to [IBC huckleberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-huckleberry/10731)
+
+### Misc Improvements
+
+  * [#5129](https://github.com/osmosis-labs/osmosis/pull/5129) Relax twap record validation in init genesis to allow one of the spot prices to be non-zero when twap error is observed.
+
+  * [#5134](https://github.com/osmosis-labs/osmosis/pull/5134) Update sdk fork with the change for correct block time in historical queries (#5134)
 
 ## v15.1.0
 
