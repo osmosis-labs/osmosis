@@ -313,7 +313,7 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 }
 
 // updatePoolUptimeAccumulatorsToNow syncs all uptime accumulators that are refetched from state for the given
-// poold id to be up to date for the given pool. Updated the pool last liquidity update time with
+// poold id to be up to date for the given pool. Updates the pool last liquidity update time with
 // the current block time and writes the updated pool to state.
 // Specifically, it gets the time elapsed since the last update and divides it
 // by the qualifying liquidity for each uptime. It then adds this value to the
