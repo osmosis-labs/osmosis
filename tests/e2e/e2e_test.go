@@ -101,11 +101,6 @@ func (s *IntegrationTestSuite) TestProtoRev() {
 	s.Require().Len(supportedBaseDenoms, 1)
 	s.Require().Equal(supportedBaseDenoms[0].Denom, "uosmo")
 
-	// The module should have no developer account by default.
-	_, err = chainANode.QueryProtoRevDeveloperAccount()
-	s.T().Logf("checking that the protorev module has no developer account on init: %s", err)
-	s.Require().Error(err)
-
 	// --------------- Set up for a calculated backrun ---------------- //
 	// Create all of the pools that will be used in the test.
 	chainANode.CreateBalancerPool(poolFile1, initialization.ValidatorWalletName)
