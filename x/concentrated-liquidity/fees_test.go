@@ -409,8 +409,7 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 				pool.SetCurrentTick(tc.currentTick)
 				err := s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
 				s.Require().NoError(err)
-				err = s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, tc.globalFeeGrowth)
-				s.Require().NoError(err)
+				s.AddToFeeAccumulator(validPoolId, tc.globalFeeGrowth)
 			}
 
 			// system under test
@@ -571,8 +570,7 @@ func (s *KeeperTestSuite) TestGetInitialFeeGrowthOppositeDirectionOfLastTraversa
 				s.Require().NoError(err)
 				s.SetupDefaultPosition(validPoolId)
 
-				err = clKeeper.ChargeFee(ctx, validPoolId, tc.initialGlobalFeeGrowth)
-				s.Require().NoError(err)
+				s.AddToFeeAccumulator(validPoolId, tc.initialGlobalFeeGrowth)
 			}
 
 			// System under test.
@@ -585,77 +583,6 @@ func (s *KeeperTestSuite) TestGetInitialFeeGrowthOppositeDirectionOfLastTraversa
 			}
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedInitialFeeGrowthOppositeDirectionOfLastTraversal, initialFeeGrowthOppositeDirectionOfLastTraversal)
-		})
-	}
-}
-
-func (s *KeeperTestSuite) TestChargeFee() {
-	// setup once at the beginning.
-	s.SetupTest()
-
-	ctx := s.Ctx
-	clKeeper := s.App.ConcentratedLiquidityKeeper
-
-	// create fee accumulators with ids 1 and 2 but not 3.
-	err := clKeeper.CreateFeeAccumulator(ctx, 1)
-	s.Require().NoError(err)
-	err = clKeeper.CreateFeeAccumulator(ctx, 2)
-	s.Require().NoError(err)
-
-	tests := []struct {
-		name      string
-		poolId    uint64
-		feeUpdate sdk.DecCoin
-
-		expectedGlobalGrowth sdk.DecCoins
-		expectError          error
-	}{
-		{
-			name:      "pool id 1 - one eth",
-			poolId:    1,
-			feeUpdate: oneEth,
-
-			expectedGlobalGrowth: sdk.NewDecCoins(oneEth),
-		},
-		{
-			name:      "pool id 1 - 2 usdc",
-			poolId:    1,
-			feeUpdate: sdk.NewDecCoin(USDC, sdk.NewInt(2)),
-
-			expectedGlobalGrowth: sdk.NewDecCoins(oneEth).Add(sdk.NewDecCoin(USDC, sdk.NewInt(2))),
-		},
-		{
-			name:      "pool id 2 - 1 usdc",
-			poolId:    2,
-			feeUpdate: oneEth,
-
-			expectedGlobalGrowth: sdk.NewDecCoins(oneEth),
-		},
-		{
-			name:      "accumulator does not exist",
-			poolId:    3,
-			feeUpdate: oneEth,
-
-			expectError: accum.AccumDoesNotExistError{AccumName: types.KeyFeePoolAccumulator(3)},
-		},
-	}
-
-	for _, tc := range tests {
-		tc := tc
-		s.Run(tc.name, func() {
-			// System under test.
-			err := clKeeper.ChargeFee(ctx, tc.poolId, tc.feeUpdate)
-
-			if tc.expectError != nil {
-				s.Require().Error(err)
-				s.Require().ErrorIs(err, tc.expectError)
-				return
-			}
-			s.Require().NoError(err)
-
-			feeAcumulator, err := clKeeper.GetFeeAccumulator(ctx, tc.poolId)
-			s.Require().NoError(err)
-			s.Require().Equal(tc.expectedGlobalGrowth, feeAcumulator.GetValue())
 		})
 	}
 }
@@ -921,8 +848,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			err = clKeeper.SetPool(ctx, validPool)
 			s.Require().NoError(err)
 
-			err = clKeeper.ChargeFee(ctx, validPoolId, tc.globalFeeGrowth[0])
-			s.Require().NoError(err)
+			s.AddToFeeAccumulator(validPoolId, tc.globalFeeGrowth[0])
 
 			poolFeeBalanceBeforeCollect := s.App.BankKeeper.GetBalance(ctx, validPool.GetFeesAddress(), ETH)
 			ownerBalancerBeforeCollect := s.App.BankKeeper.GetBalance(ctx, tc.owner, ETH)
@@ -1206,8 +1132,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableFees() {
 
 			_ = clKeeper.SetPool(ctx, validPool)
 
-			err = clKeeper.ChargeFee(ctx, validPoolId, tc.globalFeeGrowth[0])
-			s.Require().NoError(err)
+			s.AddToFeeAccumulator(validPoolId, tc.globalFeeGrowth[0])
 
 			positionKey := types.KeyFeePositionAccumulator(DefaultPositionId)
 
