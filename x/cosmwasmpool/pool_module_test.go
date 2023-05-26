@@ -29,6 +29,12 @@ type PoolModuleSuite struct {
 	apptesting.KeeperTestHelper
 }
 
+var (
+	defaultAmount       = sdk.NewInt(100)
+	initalDefaultSupply = sdk.NewCoins(sdk.NewCoin(denomA, defaultAmount), sdk.NewCoin(denomB, defaultAmount))
+	nonZeroFeeStr       = "0.01"
+)
+
 func TestPoolModuleSuite(t *testing.T) {
 	suite.Run(t, new(PoolModuleSuite))
 }
@@ -205,12 +211,6 @@ func (s *PoolModuleSuite) TestGetPoolDenoms() {
 }
 
 func (s *PoolModuleSuite) TestCalcOutAmtGivenIn_SwapOutAmtGivenIn() {
-	var (
-		defaultAmount       = sdk.NewInt(100)
-		initalDefaultSupply = sdk.NewCoins(sdk.NewCoin(denomA, defaultAmount), sdk.NewCoin(denomB, defaultAmount))
-		nonZeroFeeStr       = "0.01"
-	)
-
 	tests := map[string]struct {
 		initialCoins      sdk.Coins
 		tokenIn           sdk.Coin
@@ -335,12 +335,6 @@ func (s *PoolModuleSuite) TestCalcOutAmtGivenIn_SwapOutAmtGivenIn() {
 }
 
 func (s *PoolModuleSuite) TestCalcInAmtGivenOut_SwapInAmtGivenOut() {
-	var (
-		defaultAmount       = sdk.NewInt(100)
-		initalDefaultSupply = sdk.NewCoins(sdk.NewCoin(denomA, defaultAmount), sdk.NewCoin(denomB, defaultAmount))
-		nonZeroFeeStr       = "0.01"
-	)
-
 	tests := map[string]struct {
 		initialCoins     sdk.Coins
 		tokenOut         sdk.Coin
