@@ -15,7 +15,28 @@ One key concept, is that the pool has a native concept of
 
 ### Scaling factor handling
 
-An important concept thats up to now, not been mentioned is how do we set the expected price ratio.
+Scaling factors are the stableswap analogue of asset weights in the pool, meaning that changing them affects
+the way that assets are valued in the pool. We added the ability for a governor to change these values in
+the rare case where the assets are not pegged to a specific ratio of each other but are instead varying in
+some predictable way (e.g. non-rebasing LSTs, which get more valuable relative to their base asset, meaning
+that having fixed scaling factors eventually keeps the pool "stable" around the wrong price)
+
+It should be relatively infrequent in practice, scaling factors can be changed on demand by the scaling factor governor.
+(by default, pools should not have a governor set, as for most use cases like stablecoin to stablecoin pools, a
+single fixed ratio of assets (e.g. 1:1) is sufficient)
+
+For stablecoin pools, they should be even amounts. For other ratios, TODO: add more details here
+
+In terms of impermanent loss, it changes the price of the assets, so it depends on when the LP joined.
+It does not necessarily increase IL, which would depend entirely on the direction of the price change relative to the LP's original entry.
+
+Technically you can change scaling factors in both directions but the use cases for needing this are sparse.
+
+We don't currently have rate limits for scaling factor changes. Again, majority of pools should not have a governor,
+and for pools that do, LPs should be informed of the risks.
+
+Scaling factors help to set the expected price ratio.
+
 In the choice of curve section, we see that its the case that when `x_reserves ~= y_reserves`, that spot price is very close to `1`. However, there are a couple issues with just this in practice:
 
 1. Precision of pegged coins may differ. Suppose `1 Foo = 10^12 base units`, whereas `1 WrappedFoo = 10^6 base units`, but `1 Foo` is expected to trade near the price of `1 Wrapped Foo`.
@@ -41,20 +62,19 @@ for cases where the scaling factor doesn't perfectly divide into the liquidity.
 We detail rounding modes and scaling details as pseudocode in the relevant sections of the spec.
 (And rounding modes for 'descaling' from AMM eq output to real liquidity amounts, via multiplying by the respective scaling factor)
 
-<!-- TODO come back and revise the scaling factor section for clarity -->
 
 ## Algorithm details
 
 The AMM pool interfaces requires implementing the following stateful methods:
 
 ```golang
-	SwapOutAmtGivenIn(tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error)
-	SwapInAmtGivenOut(tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error)
+	SwapOutAmtGivenIn(tokenIn sdk.Coins, tokenOutDenom string, spreadFactor sdk.Dec) (tokenOut sdk.Coin, err error)
+	SwapInAmtGivenOut(tokenOut sdk.Coins, tokenInDenom string, spreadFactor sdk.Dec) (tokenIn sdk.Coin, err error)
 
 	SpotPrice(baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error)
 
-	JoinPool(tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error)
-	JoinPoolNoSwap(tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error)
+	JoinPool(tokensIn sdk.Coins, spreadFactor sdk.Dec) (numShares sdk.Int, err error)
+	JoinPoolNoSwap(tokensIn sdk.Coins, spreadFactor sdk.Dec) (numShares sdk.Int, err error)
 	ExitPool(numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error)
 ```
 
@@ -109,7 +129,7 @@ First we note the direct way of solving this, its limitation, and then an iterat
 
 #### Direct swap solution
 
-The method to compute this under 0 swap fee is implied by the CFMM equation itself, since the constant refers to:
+The method to compute this under 0 spread factor is implied by the CFMM equation itself, since the constant refers to:
 $g(x_0, y_0, v, w) = k = g(x_0 + a, y_0 - b, v, w)$. As $k$ is linearly related to $v$, and $v$ is unchanged throughout the swap, we can simplify the equation to be reasoning about $k' = \frac{k}{v}$ as the constant, and $h$ instead of $g$
 
 We then model the solution by finding a function $\text{solve cfmm}(x, w, k') = y\text{ s.t. }h(x, y, w) = k'$.
@@ -241,7 +261,7 @@ def binary_search(lowerbound, upperbound, approximation_fn, target, max_iteratio
 What remains is setting the error tolerance. We need two properties:
 
 - The returned value to be within some correctness threshold of the true value
-- The returned value to be rounded correctly (always ending with the user having fewer funds to avoid pool drain attacks). Mitigated by swap fees for normal swaps, but needed for 0-fee to be safe.
+- The returned value to be rounded correctly (always ending with the user having fewer funds to avoid pool drain attacks). Mitigated by spread factors for normal swaps, but needed for 0-fee to be safe.
 
 The error tolerance we set is defined in terms of error in `k`, which itself implies some error in `y`.
 An error of `e_k` in `k`, implies an error `e_y` in `y` that is less than `e_k`. We prove this [here](#err_proof) (and show that `e_y` is actually much less than the error in `e_k`, but for simplicity ignore this fact). We want `y` to be within a factor of `10^(-12)` of its true value.
@@ -272,17 +292,17 @@ When we scale liquidity, we round down, as lower reserves -> higher slippage.
 Similarly when we scale the token in, we round down as well.
 These both ensure no risk of over payment.
 
-The amount of tokens that we treat as going into the "0-swap fee" pool we defined equations off of is: `amm_in = in_amt_scaled * (1 - swapfee)`. (With `swapfee * in_amt_scaled` just being added to pool liquidity)
+The amount of tokens that we treat as going into the "0-spread factor" pool we defined equations off of is: `amm_in = in_amt_scaled * (1 - spread factor)`. (With `spread factor * in_amt_scaled` just being added to pool liquidity)
 
 Then we simply call `solve_y` with the input reserves, and `amm_in`.
 
 <!-- TODO: Maybe we just use normal pseudocode syntax -->
 
 ```python
-def CalcOutAmountGivenExactAmountIn(pool, in_coin, out_denom, swap_fee):
+def CalcOutAmountGivenExactAmountIn(pool, in_coin, out_denom, spread_factor):
   in_reserve, out_reserve, rem_reserves = pool.ScaledLiquidity(in_coin, out_denom, RoundingMode.RoundDown)
   in_amt_scaled = pool.ScaleToken(in_coin, RoundingMode.RoundDown)
-  amm_in = in_amt_scaled * (1 - swap_fee)
+  amm_in = in_amt_scaled * (1 - spread_factor)
   out_amt_scaled = solve_y(in_reserve, out_reserve, remReserves, amm_in)
   out_amt = pool.DescaleToken(out_amt_scaled, out_denom)
   return out_amt
@@ -296,23 +316,23 @@ When we scale liquidity, we round down, as lower reserves -> higher slippage.
 Similarly when we scale the exact token out, we round up to increase required token in.
 
 We model the `solve_y` call as we are doing a known change to the `out_reserve`, and solving for the implied unknown change to `in_reserve`.
-To handle the swapfee, we apply the swapfee on the resultant needed input amount.
-We do this by having `token_in = amm_in / (1 - swapfee)`.
+To handle the spread factor, we apply the spread factor on the resultant needed input amount.
+We do this by having `token_in = amm_in / (1 - spread factor)`.
 
 <!-- TODO: Maybe we just use normal pseudocode syntax -->
 
 ```python
-def CalcInAmountGivenExactAmountOut(pool, out_coin, in_denom, swap_fee):
+def CalcInAmountGivenExactAmountOut(pool, out_coin, in_denom, spread_factor):
   in_reserve, out_reserve, rem_reserves = pool.ScaledLiquidity(in_denom, out_coin, RoundingMode.RoundDown)
   out_amt_scaled = pool.ScaleToken(out_coin, RoundingMode.RoundUp)
 
   amm_in_scaled = solve_y(out_reserve, in_reserve, remReserves, -out_amt_scaled)
-  swap_in_scaled = ceil(amm_in_scaled / (1 - swapfee))
+  swap_in_scaled = ceil(amm_in_scaled / (1 - spread factor))
   in_amt = pool.DescaleToken(swap_in_scaled, in_denom)
   return in_amt
 ```
 
-We see correctness of the swap fee, by imagining what happens if we took this resultant input amount, and ran `SwapExactAmountIn (seai)`. Namely, that `seai_amm_in = amm_in * (1 - swapfee) = amm_in`, as desired!
+We see correctness of the spread factor, by imagining what happens if we took this resultant input amount, and ran `SwapExactAmountIn (seai)`. Namely, that `seai_amm_in = amm_in * (1 - spread factor) = amm_in`, as desired!
 
 #### Precision handling
 
@@ -398,24 +418,24 @@ The JoinPool API only supports JoinPoolNoSwap if
 
 #### Join pool single asset in
 
-There are a couple ways to define `JoinPoolSingleAssetIn`. The simplest way is to define it from its intended relation from the CFMM, with Exit pool. We describe this below under the zero swap fee case.
+There are a couple ways to define `JoinPoolSingleAssetIn`. The simplest way is to define it from its intended relation from the CFMM, with Exit pool. We describe this below under the zero spread factor case.
 
 Let `pool_{L, S}` represent a pool with liquidity `L`, and `S` total LP shares.
 If we call `pool_{L, S}.JoinPoolSingleAssetIn(tokensIn) -> (N, pool_{L + tokensIn, S + N})`, or in others we get out `N` new LP shares, and a pool with with tokensIn added to liquidity. 
 It must then be the case that `pool_{L+tokensIn, S+N}.ExitPool(N) -> (tokensExited, pool_{L + tokensIn - tokensExited, S})`.
-Then if we swap all of `tokensExited` back to tokensIn, under 0 swap fee, we should get back to `pool_{L, S}` under the CFMM property.
+Then if we swap all of `tokensExited` back to tokensIn, under 0 spread factor, we should get back to `pool_{L, S}` under the CFMM property.
 
-In other words, if we single asset join pool, and then exit pool, we should return back to the same CFMM `k` value we started with. Then if we swap back to go entirely back into our input asset, we should have exactly many tokens as we started with, under 0 swap fee.
+In other words, if we single asset join pool, and then exit pool, we should return back to the same CFMM `k` value we started with. Then if we swap back to go entirely back into our input asset, we should have exactly many tokens as we started with, under 0 spread factor.
 
 We can solve this relation with a binary search over the amount of LP shares to give!
 
-Thus we are left with how to account swap fee. We currently account for swap fee, by considering the asset ratio in the pool. If post scaling factors, the pool liquidity is say 60:20:20, where 60 is the asset were bringing in, then we consider "only (1 - 60%) = 40%" of the input as getting swapped. So we charge the swap fee on 40% of our single asset join in input. So the pseudocode for this is roughly:
+Thus we are left with how to account spread factor. We currently account for spread factor, by considering the asset ratio in the pool. If post scaling factors, the pool liquidity is say 60:20:20, where 60 is the asset were bringing in, then we consider "only (1 - 60%) = 40%" of the input as getting swapped. So we charge the spread factor on 40% of our single asset join in input. So the pseudocode for this is roughly:
 
 ```python
 def JoinPoolSingleAssetIn(pool, tokenIn):
-  swapFeeApplicableFraction = 1 - (pool.ScaledLiquidityOf(tokenIn.Denom) / pool.SumOfAllScaledLiquidity())
-  effectiveSwapFee = pool.SwapFee * swapFeeApplicableFraction
-  effectiveTokenIn = RoundDown(tokenIn * (1 - effectiveSwapFee))
+  spreadFactorApplicableFraction = 1 - (pool.ScaledLiquidityOf(tokenIn.Denom) / pool.SumOfAllScaledLiquidity())
+  effectiveSpreadFactor = pool.SwapFee * spreadFactorApplicableFraction
+  effectiveTokenIn = RoundDown(tokenIn * (1 - effectiveSpreadFactor))
   return BinarySearchSingleJoinLpShares(pool, effectiveTokenIn)
 ```
 

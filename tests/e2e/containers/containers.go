@@ -72,6 +72,7 @@ func NewManager(isUpgrade bool, isFork bool, isDebugLogEnabled bool) (docker *Ma
 
 // ExecTxCmd Runs ExecTxCmdWithSuccessString searching for `code: 0`
 func (m *Manager) ExecTxCmd(t *testing.T, chainId string, containerName string, command []string) (bytes.Buffer, bytes.Buffer, error) {
+	t.Helper()
 	return m.ExecTxCmdWithSuccessString(t, chainId, containerName, command, "code: 0")
 }
 
@@ -79,6 +80,7 @@ func (m *Manager) ExecTxCmd(t *testing.T, chainId string, containerName string, 
 // namely adding flags `--chain-id={chain-id} -b=block --yes --keyring-backend=test "--log_format=json" --gas=400000`,
 // and searching for `successStr`
 func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainId string, containerName string, command []string, successStr string) (bytes.Buffer, bytes.Buffer, error) {
+	t.Helper()
 	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainId)}
 	allTxArgs = append(allTxArgs, txArgs...)
 	// parse to see if command has gas flags. If not, add default gas flags.
@@ -97,6 +99,7 @@ func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainId string, conta
 
 // ExecHermesCmd executes command on the hermes relaer container.
 func (m *Manager) ExecHermesCmd(t *testing.T, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
+	t.Helper()
 	return m.ExecCmd(t, hermesContainerName, command, success)
 }
 
@@ -106,6 +109,7 @@ func (m *Manager) ExecHermesCmd(t *testing.T, command []string, success string) 
 // returns container std out, container std err, and error if any.
 // An error is returned if the command fails to execute or if the success string is not found in the output.
 func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
+	t.Helper()
 	if _, ok := m.resources[containerName]; !ok {
 		return bytes.Buffer{}, bytes.Buffer{}, fmt.Errorf("no resource %s found", containerName)
 	}

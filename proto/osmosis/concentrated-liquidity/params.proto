@@ -14,9 +14,9 @@ message Params {
   // to be created with tick spacing of 1, 10, or 30.
   repeated uint64 authorized_tick_spacing = 1
       [ (gogoproto.moretags) = "yaml:\"authorized_tick_spacing\"" ];
-  repeated string authorized_swap_fees = 2 [
+  repeated string authorized_spread_factors = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"authorized_swap_fees\"",
+    (gogoproto.moretags) = "yaml:\"authorized_spread_factors\"",
     (gogoproto.nullable) = false
   ];
   // balancer_shares_reward_discount is the rate by which incentives flowing

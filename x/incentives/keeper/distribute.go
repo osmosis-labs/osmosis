@@ -269,13 +269,11 @@ func (k Keeper) distributeConcentratedLiquidity(ctx sdk.Context, poolId uint64, 
 	_, err := k.clk.CreateIncentive(ctx,
 		poolId,
 		sender,
-		incentiveCoin.Denom,
-		incentiveCoin.Amount,
+		incentiveCoin,
 		emissionRate,
 		startTime,
 		minUptime,
 	)
-
 	if err != nil {
 		return err
 	}

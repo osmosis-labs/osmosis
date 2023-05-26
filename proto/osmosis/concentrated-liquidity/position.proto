@@ -33,7 +33,14 @@ message Position {
   ];
 }
 
-message PositionWithUnderlyingAssetBreakdown {
+// FullPositionBreakdown returns:
+// - the position itself
+// - the amount the position translates in terms of asset0 and asset1
+// - the amount of claimable fees
+// - the amount of claimable incentives
+// - the amount of incentives that would be forfeited if the position was closed
+// now
+message FullPositionBreakdown {
   Position position = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.v1beta1.Coin asset0 = 2 [
     (gogoproto.nullable) = false,
@@ -42,5 +49,17 @@ message PositionWithUnderlyingAssetBreakdown {
   cosmos.base.v1beta1.Coin asset1 = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+  repeated cosmos.base.v1beta1.Coin claimable_fees = 4 [
+    (gogoproto.moretags) = "yaml:\"claimable_fees\"",
+    (gogoproto.nullable) = false
+  ];
+  repeated cosmos.base.v1beta1.Coin claimable_incentives = 5 [
+    (gogoproto.moretags) = "yaml:\"claimable_incentives\"",
+    (gogoproto.nullable) = false
+  ];
+  repeated cosmos.base.v1beta1.Coin forfeited_incentives = 6 [
+    (gogoproto.moretags) = "yaml:\"forfeited_incentives\"",
+    (gogoproto.nullable) = false
   ];
 }

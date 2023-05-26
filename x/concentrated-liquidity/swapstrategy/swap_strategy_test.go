@@ -9,7 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
@@ -18,18 +18,35 @@ type StrategyTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
+type position struct {
+	lowerTick int64
+	upperTick int64
+}
+
+const (
+	defaultPoolId      = uint64(1)
+	initialCurrentTick = int64(0)
+	ETH                = "eth"
+	USDC               = "usdc"
+)
+
 var (
+	zero                  = sdk.NewDec(0)
+	one                   = sdk.NewDec(1)
 	two                   = sdk.NewDec(2)
-	three                 = sdk.NewDec(2)
+	three                 = sdk.NewDec(3)
 	four                  = sdk.NewDec(4)
 	five                  = sdk.NewDec(5)
+	sqrt5000              = sdk.MustNewDecFromStr("70.710678118654752440") // 5000
 	defaultSqrtPriceLower = sdk.MustNewDecFromStr("70.688664163408836321") // approx 4996.89
-	defaultSqrtPriceUpper = sdk.MustNewDecFromStr("70.710678118654752440") // 5000
+	defaultSqrtPriceUpper = sqrt5000
 	defaultAmountOne      = sdk.MustNewDecFromStr("66829187.967824033199646915")
 	defaultAmountZero     = sdk.MustNewDecFromStr("13369.999999999998920002")
 	defaultLiquidity      = sdk.MustNewDecFromStr("3035764687.503020836176699298")
 	defaultFee            = sdk.MustNewDecFromStr("0.03")
 	defaultTickSpacing    = uint64(100)
+	defaultAmountReserves = sdk.NewInt(1_000_000_000)
+	DefaultCoins          = sdk.NewCoins(sdk.NewCoin(ETH, defaultAmountReserves), sdk.NewCoin(USDC, defaultAmountReserves))
 )
 
 func TestStrategyTestSuite(t *testing.T) {
@@ -40,92 +57,54 @@ func (suite *StrategyTestSuite) SetupTest() {
 	suite.Setup()
 }
 
-// TODO: split up this test case to be separate for each strategy.
-func (suite *StrategyTestSuite) TestNextInitializedTick() {
-	suite.SetupTest()
-	ctx := suite.Ctx
+type tickIteratorTest struct {
+	currentTick     int64
+	preSetPositions []position
 
-	liquidityTicks := []int64{-200, -55, -4, 70, 78, 84, 139, 240, 535}
-	for _, t := range liquidityTicks {
-		suite.App.ConcentratedLiquidityKeeper.SetTickInfo(ctx, 1, t, model.TickInfo{})
-	}
+	expectIsValid  bool
+	expectNextTick int64
+	expectError    error
+}
 
-	_, err := suite.App.ConcentratedLiquidityKeeper.GetAllInitializedTicksForPool(ctx, 1)
+func (suite *StrategyTestSuite) runTickIteratorTest(strategy swapstrategy.SwapStrategy, tc tickIteratorTest) {
+	pool := suite.PrepareConcentratedPool()
+	suite.setupPresetPositions(pool.GetId(), tc.preSetPositions)
+
+	// refetch pool
+	pool, err := suite.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(suite.Ctx, pool.GetId())
 	suite.Require().NoError(err)
 
-	clStoreKey := suite.App.GetKey(types.ModuleName)
+	currentTick := pool.GetCurrentTick()
+	suite.Require().Equal(int64(0), currentTick)
 
-	suite.Run("lte=true", func() {
-		suite.Run("returns tick to right if at initialized tick", func() {
+	tickIndex := strategy.InitializeTickValue(currentTick)
 
-			swapStrategy := swapstrategy.New(false, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec(), defaultTickSpacing)
+	iter := strategy.InitializeNextTickIterator(suite.Ctx, defaultPoolId, tickIndex)
+	defer iter.Close()
 
-			n, initd := swapStrategy.NextInitializedTick(ctx, 1, 78)
-			suite.Require().Equal(sdk.NewInt(84), n)
-			suite.Require().True(initd)
+	suite.Require().Equal(tc.expectIsValid, iter.Valid())
+	if tc.expectIsValid {
+		actualNextTick, err := types.TickIndexFromBytes(iter.Key())
+		suite.Require().NoError(err)
+		suite.Require().Equal(tc.expectNextTick, actualNextTick)
+	}
+}
+
+func (suite *StrategyTestSuite) setupPresetPositions(poolId uint64, positions []position) {
+	clMsgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
+	for _, pos := range positions {
+		suite.FundAcc(suite.TestAccs[0], DefaultCoins.Add(DefaultCoins...))
+		_, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(suite.Ctx), &types.MsgCreatePosition{
+			PoolId:          poolId,
+			Sender:          suite.TestAccs[0].String(),
+			LowerTick:       pos.lowerTick,
+			UpperTick:       pos.upperTick,
+			TokensProvided:  DefaultCoins.Add(sdk.NewCoin(USDC, sdk.OneInt())),
+			TokenMinAmount0: sdk.ZeroInt(),
+			TokenMinAmount1: sdk.ZeroInt(),
 		})
-		suite.Run("returns tick to right if at initialized tick", func() {
-			swapStrategy := swapstrategy.New(false, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec(), defaultTickSpacing)
-
-			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, -55)
-			suite.Require().Equal(sdk.NewInt(-4), n)
-			suite.Require().True(initd)
-		})
-		suite.Run("returns the tick directly to the right", func() {
-			swapStrategy := swapstrategy.New(false, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec(), defaultTickSpacing)
-
-			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, 77)
-			suite.Require().Equal(sdk.NewInt(78), n)
-			suite.Require().True(initd)
-		})
-		suite.Run("returns the tick directly to the right", func() {
-			swapStrategy := swapstrategy.New(false, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec(), defaultTickSpacing)
-
-			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, -56)
-			suite.Require().Equal(sdk.NewInt(-55), n)
-			suite.Require().True(initd)
-		})
-		suite.Run("returns the next words initialized tick if on the right boundary", func() {
-			swapStrategy := swapstrategy.New(false, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec(), defaultTickSpacing)
-
-			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, -257)
-			suite.Require().Equal(sdk.NewInt(-200), n)
-			suite.Require().True(initd)
-		})
-		suite.Run("returns the next initialized tick from the next word", func() {
-			swapStrategy := swapstrategy.New(false, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec(), defaultTickSpacing)
-
-			suite.App.ConcentratedLiquidityKeeper.SetTickInfo(suite.Ctx, 1, 340, model.TickInfo{})
-
-			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, 328)
-			suite.Require().Equal(sdk.NewInt(340), n)
-			suite.Require().True(initd)
-		})
-	})
-
-	suite.Run("lte=false", func() {
-		suite.Run("returns tick directly to the left of input tick if not initialized", func() {
-			swapStrategy := swapstrategy.New(true, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec(), defaultTickSpacing)
-
-			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, 79)
-			suite.Require().Equal(sdk.NewInt(78), n)
-			suite.Require().True(initd)
-		})
-		suite.Run("returns previous tick even though given is initialized", func() {
-			swapStrategy := swapstrategy.New(true, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec(), defaultTickSpacing)
-
-			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, 78)
-			suite.Require().Equal(sdk.NewInt(70), n)
-			suite.Require().True(initd)
-		})
-		suite.Run("returns next initialized tick far away", func() {
-			swapStrategy := swapstrategy.New(true, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec(), defaultTickSpacing)
-
-			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, 100)
-			suite.Require().Equal(sdk.NewInt(84), n)
-			suite.Require().True(initd)
-		})
-	})
+		suite.Require().NoError(err)
+	}
 }
 
 // TestComputeSwapState_Inverse validates that out given in and in given out compute swap steps
@@ -151,7 +130,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 		amountIn         sdk.Dec
 		amountOut        sdk.Dec
 		zeroForOne       bool
-		swapFee          sdk.Dec
+		spreadFactor     sdk.Dec
 
 		expectedSqrtPriceNextOutGivenIn sdk.Dec
 		expectedSqrtPriceNextInGivenOut sdk.Dec
@@ -159,13 +138,13 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 		expectedAmountOut               sdk.Dec
 	}{
 		"1: one_for_zero__not_equal_target__no_fee": {
-			sqrtPriceCurrent: sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			sqrtPriceCurrent: sqrt5000,                                       // 5000
 			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.724818840347693039"), // 5002
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
 			amountIn:         sdk.NewDec(42000000),
 			amountOut:        sdk.NewDec(8398),
 			zeroForOne:       false,
-			swapFee:          sdk.ZeroDec(),
+			spreadFactor:     sdk.ZeroDec(),
 
 			// from token_in:   sqrt_next = sqrt_cur + token_in / liq2 = 70.72451318306962507883763621
 			expectedSqrtPriceNextOutGivenIn: sdk.MustNewDecFromStr("70.724513183069625078"), // approx 5001.96
@@ -176,13 +155,13 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			expectedAmountOut: sdk.NewDec(8398),
 		},
 		"2: zero_for_one__not_equal_target__no_fee": {
-			sqrtPriceCurrent: sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			sqrtPriceCurrent: sqrt5000,                                       // 5000
 			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.682388188289167342"), // 4996
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
 			amountIn:         sdk.NewDec(13370),
 			amountOut:        sdk.NewDec(66829187),
 			zeroForOne:       true,
-			swapFee:          sdk.ZeroDec(),
+			spreadFactor:     sdk.ZeroDec(),
 
 			// from amount in: sqrt_next = liq2 * sqrt_cur / (liq2 + token_in * sqrt_cur) quo round up = 70.68866416340883631930670240
 			expectedSqrtPriceNextOutGivenIn: sdk.MustNewDecFromStr("70.688664163408836320"), // approx 4996.89
@@ -194,12 +173,12 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			expectedAmountOut: sdk.NewDec(66829187),
 		},
 		"3: one_for_zero__equal_target__no_fee": {
-			sqrtPriceCurrent: sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			sqrtPriceCurrent: sqrt5000,                                       // 5000
 			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.724513183069625078"), // approx 5001.96
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
 			amountIn:         sdk.NewDec(42000000),
 			amountOut:        sdk.NewDec(8398),
-			swapFee:          sdk.ZeroDec(),
+			spreadFactor:     sdk.ZeroDec(),
 
 			zeroForOne: false,
 			// from token_in:   sqrt_next = sqrt_cur + token_in / liq2 = 70.72451318306962507883763621
@@ -211,13 +190,13 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			expectedAmountOut: sdk.NewDec(8398),
 		},
 		"4: zero_for_one__equal_target__no_fee": {
-			sqrtPriceCurrent: sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			sqrtPriceCurrent: sqrt5000,                                       // 5000
 			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.688664163408836320"), // approx 4996.89
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
 			amountIn:         sdk.NewDec(13370),
 			amountOut:        sdk.NewDec(66829187),
 			zeroForOne:       true,
-			swapFee:          sdk.ZeroDec(),
+			spreadFactor:     sdk.ZeroDec(),
 
 			// from amount in: sqrt_next = liq2 * sqrt_cur / (liq2 + token_in * sqrt_cur) = 70.68866416340883631930670240
 			expectedSqrtPriceNextOutGivenIn: sdk.MustNewDecFromStr("70.688664163408836320"), // approx 4996.89
@@ -273,7 +252,6 @@ func (suite *StrategyTestSuite) TestGetPriceLimit() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		suite.Run(name, func() {
 			priceLimit := swapstrategy.GetPriceLimit(tc.zeroForOne)
 			suite.Require().Equal(tc.expected, priceLimit)

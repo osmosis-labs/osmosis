@@ -25,20 +25,20 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest(isCheckTx bool) {
-	suite.Setup()
-	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
+func (s *KeeperTestSuite) SetupTest(isCheckTx bool) {
+	s.Setup()
+	s.queryClient = types.NewQueryClient(s.QueryHelper)
 
 	encodingConfig := osmosisapp.MakeEncodingConfig()
-	suite.clientCtx = client.Context{}.
+	s.clientCtx = client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
-		WithJSONCodec(encodingConfig.Marshaler)
+		WithCodec(encodingConfig.Marshaler)
 
 	// Mint some assets to the accounts.
-	for _, acc := range suite.TestAccs {
-		suite.FundAcc(acc,
+	for _, acc := range s.TestAccs {
+		s.FundAcc(acc,
 			sdk.NewCoins(
 				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000000)),
 				sdk.NewCoin("uosmo", sdk.NewInt(100000000000000000)), // Needed for pool creation fee
@@ -51,14 +51,16 @@ func (suite *KeeperTestSuite) SetupTest(isCheckTx bool) {
 	}
 }
 
-func (suite *KeeperTestSuite) ExecuteUpgradeFeeTokenProposal(feeToken string, poolId uint64) error {
+func (s *KeeperTestSuite) ExecuteUpgradeFeeTokenProposal(feeToken string, poolId uint64) error {
 	upgradeProp := types.NewUpdateFeeTokenProposal(
 		"Test Proposal",
 		"test",
-		types.FeeToken{
-			Denom:  feeToken,
-			PoolID: poolId,
+		[]types.FeeToken{
+			{
+				Denom:  feeToken,
+				PoolID: poolId,
+			},
 		},
 	)
-	return suite.App.TxFeesKeeper.HandleUpdateFeeTokenProposal(suite.Ctx, &upgradeProp)
+	return s.App.TxFeesKeeper.HandleUpdateFeeTokenProposal(s.Ctx, &upgradeProp)
 }

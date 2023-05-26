@@ -247,7 +247,7 @@ type SwapI interface {
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		tokenOutMinAmount sdk.Int,
-		swapFee sdk.Dec,
+		spreadFactor sdk.Dec,
 	) (sdk.Int, error)
 }
 ```
@@ -261,7 +261,7 @@ For example, in the context of balancer pools, given a `tokenIn`, the
 following calculations are done to calculate how many tokens are to be
 swapped into and removed from the pool:
 
-`tokenBalanceOut * [1 - { tokenBalanceIn / (tokenBalanceIn + (1 - swapFee) * tokenAmountIn)} ^ (tokenWeightIn / tokenWeightOut)]`
+`tokenBalanceOut * [1 - { tokenBalanceIn / (tokenBalanceIn + (1 - spreadFactor) * tokenAmountIn)} ^ (tokenWeightIn / tokenWeightOut)]`
 
 The calculation is also able to be reversed, the case where user
 provides `tokenOut`. The calculation for the amount of tokens that the
@@ -300,9 +300,9 @@ The most cost-efficient route is determined offline and the list of the pools is
 At the moment of execution, the provided route may not be the most cost-efficient one anymore.
 
 When a trade consists of just two OSMO-included routes during a single transaction,
-the swap fees on each hop would be automatically halved.
-Example: for converting `ATOM -> OSMO -> LUNA` using two pools with swap fees `0.3% + 0.2%`,
-instead `0.15% + 0.1%` fees will be applied.
+the spread factors on each hop would be automatically halved.
+Example: for converting `ATOM -> OSMO -> LUNA` using two pools with spread factors `0.3% + 0.2%`,
+instead `0.15% + 0.1%` spread factors will be applied.
 
 [Multi-Hop](https://github.com/osmosis-labs/osmosis/blob/f26ceb958adaaf31510e17ed88f5eab47e2bac03/x/poolmanager/router.go#L16)
 
@@ -311,7 +311,7 @@ instead `0.15% + 0.1%` fees will be applied.
 Each route can be thought of as a separate multi-hop swap.
 
 Splitting swaps across multiple pools for the same token pair can be beneficial for several reasons,
-primarily relating to reduced slippage, price impact, and potentially lower fees.
+primarily relating to reduced slippage, price impact, and potentially lower spreads.
 
 Here's a detailed explanation of these advantages:
 
@@ -320,12 +320,12 @@ Here's a detailed explanation of these advantages:
 - **Lower price impact**: When executing a large trade in a single pool, the price impact can be substantial, leading to a less favorable exchange rate for the trader.
 By splitting the swap across multiple pools, the price impact in each pool is minimized, resulting in a better overall exchange rate.
 
-- **Improved liquidity utilization**: Different pools may have varying levels of liquidity, fees, and price curves. By splitting swaps across multiple pools,
+- **Improved liquidity utilization**: Different pools may have varying levels of liquidity, spreads, and price curves. By splitting swaps across multiple pools,
 the router can utilize liquidity from various sources, allowing for more efficient execution of trades. This is particularly useful when the liquidity in
 a single pool is not sufficient to handle a large trade or when the price curve of one pool becomes less favorable as the trade size increases.
 
-- **Potentially lower fees**: In some cases, splitting swaps across multiple pools may result in lower overall fees. This can happen when different pools
-have different fee structures, or when the total fee paid across multiple pools is lower than the fee for executing the entire trade in a single pool with
+- **Potentially lower spreads**: In some cases, splitting swaps across multiple pools may result in lower overall spreads. This can happen when different pools
+have different spread structures, or when the total spread paid across multiple pools is lower than the spread for executing the entire trade in a single pool with
 higher slippage.
 
 Note, that the actual split happens off-chain. The router is only responsible for executing the swaps in the order and quantities of token in provided

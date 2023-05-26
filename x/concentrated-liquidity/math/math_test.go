@@ -9,6 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 type ConcentratedMathTestSuite struct {
@@ -18,6 +19,8 @@ type ConcentratedMathTestSuite struct {
 func TestConcentratedTestSuite(t *testing.T) {
 	suite.Run(t, new(ConcentratedMathTestSuite))
 }
+
+var sqrt5000 = sdk.MustNewDecFromStr("70.710678118654752440")
 
 // liquidity1 takes an amount of asset1 in the pool as well as the sqrtpCur and the nextPrice
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
@@ -31,7 +34,7 @@ func (suite *ConcentratedMathTestSuite) TestLiquidity1() {
 		expectedLiquidity string
 	}{
 		"happy path": {
-			currentSqrtP:      sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			currentSqrtP:      sqrt5000,                                       // 5000
 			sqrtPLow:          sdk.MustNewDecFromStr("67.416615162732695594"), // 4545
 			amount1Desired:    sdk.NewInt(5000000000),
 			expectedLiquidity: "1517882343.751510418088349649",
@@ -61,7 +64,7 @@ func (suite *ConcentratedMathTestSuite) TestLiquidity0() {
 		expectedLiquidity string
 	}{
 		"happy path": {
-			currentSqrtP:      sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			currentSqrtP:      sqrt5000,                                       // 5000
 			sqrtPHigh:         sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
 			amount0Desired:    sdk.NewInt(1000000),
 			expectedLiquidity: "1519437308.014768571720923239",
@@ -97,7 +100,7 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount0RoundingU
 	}{
 		"happy path": {
 			liquidity:             sdk.MustNewDecFromStr("1517882343.751510418088349649"), // liquidity0 calculated above
-			sqrtPCurrent:          sdk.MustNewDecFromStr("70.710678118654752440"),
+			sqrtPCurrent:          sqrt5000,
 			amount0Remaining:      sdk.NewDec(13370),
 			sqrtPriceNextExpected: "70.666663910857144332",
 			// https://www.wolframalpha.com/input?i=%28%281517882343.751510418088349649%29%29+%2F+%28%28%281517882343.751510418088349649%29+%2F+%2870.710678118654752440%29%29+%2B+%2813370%29%29
@@ -127,7 +130,7 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount1RoundingD
 	}{
 		"happy path": {
 			liquidity:             sdk.MustNewDecFromStr("1519437308.014768571721000000"), // liquidity1 calculated above
-			sqrtPCurrent:          sdk.MustNewDecFromStr("70.710678118654752440"),         // 5000000000
+			sqrtPCurrent:          sqrt5000,                                               // 5000000000
 			amount1Remaining:      sdk.NewDec(42000000),
 			sqrtPriceNextExpected: "70.738319930382329008",
 			// https://www.wolframalpha.com/input?i=70.710678118654752440+%2B++++%2842000000+%2F+1519437308.014768571721000000%29
@@ -159,7 +162,7 @@ func (suite *ConcentratedMathTestSuite) TestCalcAmount0Delta() {
 	}{
 		"happy path": {
 			liquidity:       sdk.MustNewDecFromStr("1517882343.751510418088349649"), // we use the smaller liquidity between liq0 and liq1
-			sqrtPA:          sdk.MustNewDecFromStr("70.710678118654752440"),         // 5000
+			sqrtPA:          sqrt5000,                                               // 5000
 			sqrtPB:          sdk.MustNewDecFromStr("74.161984870956629487"),         // 5500
 			roundUp:         false,
 			amount0Expected: "998976.618347426388356619", // truncated at precision end.
@@ -251,7 +254,7 @@ func (suite *ConcentratedMathTestSuite) TestCalcAmount1Delta() {
 	}{
 		"round down": {
 			liquidity:       sdk.MustNewDecFromStr("1517882343.751510418088349649"), // we use the smaller liquidity between liq0 and liq1
-			sqrtPA:          sdk.MustNewDecFromStr("70.710678118654752440"),         // 5000
+			sqrtPA:          sqrt5000,                                               // 5000
 			sqrtPB:          sdk.MustNewDecFromStr("67.416615162732695594"),         // 4545
 			roundUp:         false,
 			amount1Expected: sdk.MustNewDecFromStr("5000000000.000000000000000000").Sub(sdk.SmallestDec()).String(),
@@ -307,21 +310,83 @@ func (suite *ConcentratedMathTestSuite) TestCalcAmount1Delta() {
 }
 
 func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
+	sqrt := func(x sdk.Dec) sdk.Dec {
+		sqrt, err := x.ApproxSqrt()
+		suite.Require().NoError(err)
+		return sqrt
+	}
+
 	testCases := map[string]struct {
-		currentSqrtP      sdk.Dec
-		sqrtPHigh         sdk.Dec
-		sqrtPLow          sdk.Dec
-		amount0Desired    sdk.Int
+		currentSqrtP sdk.Dec
+		sqrtPHigh    sdk.Dec
+		sqrtPLow     sdk.Dec
+		// the amount of token0 that will need to be sold to move the price from P_cur to P_low
+		amount0Desired sdk.Int
+		// the amount of token 1 that will need to be sold to move the price from P_cur to P_high.
 		amount1Desired    sdk.Int
 		expectedLiquidity string
+		// liq0 = rate of change of reserves of token 1 for a change between sqrt(P_cur) and sqrt(P_low)
+		// liq1 = rate of change of reserves of token 1 for a change between sqrt(P_cur) and sqrt(P_high)
+		// price of x in terms of y
+		expectedLiquidity0 sdk.Dec
+		expectedLiquidity1 sdk.Dec
 	}{
-		"happy path": {
-			currentSqrtP:      sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+		"happy path (case A)": {
+			currentSqrtP:      sdk.MustNewDecFromStr("67"),                    // 4489
+			sqrtPHigh:         sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
+			sqrtPLow:          sdk.MustNewDecFromStr("67.416615162732695594"), // 4545
+			amount0Desired:    sdk.NewInt(1000000),
+			amount1Desired:    sdk.ZeroInt(),
+			expectedLiquidity: "741212151.448720111852782017",
+		},
+		"happy path (case B)": {
+			currentSqrtP:      sqrt5000,                                       // 5000
 			sqrtPHigh:         sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
 			sqrtPLow:          sdk.MustNewDecFromStr("67.416615162732695594"), // 4545
 			amount0Desired:    sdk.NewInt(1000000),
 			amount1Desired:    sdk.NewInt(5000000000),
 			expectedLiquidity: "1517882343.751510418088349649",
+		},
+		"happy path (case C)": {
+			currentSqrtP:      sdk.MustNewDecFromStr("75"),                    // 5625
+			sqrtPHigh:         sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
+			sqrtPLow:          sdk.MustNewDecFromStr("67.416615162732695594"), // 4545
+			amount0Desired:    sdk.ZeroInt(),
+			amount1Desired:    sdk.NewInt(5000000000),
+			expectedLiquidity: "741249214.836069764856625637",
+		},
+		"full range, price proportional to amounts, equal liquidities (some rounding error) price of 4": {
+			currentSqrtP:   sqrt(sdk.NewDec(4)),
+			sqrtPHigh:      cltypes.MaxSqrtPrice,
+			sqrtPLow:       cltypes.MinSqrtPrice,
+			amount0Desired: sdk.NewInt(4),
+			amount1Desired: sdk.NewInt(16),
+
+			expectedLiquidity:  sdk.MustNewDecFromStr("8.000000000000000001").String(),
+			expectedLiquidity0: sdk.MustNewDecFromStr("8.000000000000000001"),
+			expectedLiquidity1: sdk.MustNewDecFromStr("8.000000004000000002"),
+		},
+		"full range, price proportional to amounts, equal liquidities (some rounding error) price of 2": {
+			currentSqrtP:   sqrt(sdk.NewDec(2)),
+			sqrtPHigh:      cltypes.MaxSqrtPrice,
+			sqrtPLow:       cltypes.MinSqrtPrice,
+			amount0Desired: sdk.NewInt(1),
+			amount1Desired: sdk.NewInt(2),
+
+			expectedLiquidity:  sdk.MustNewDecFromStr("1.414213562373095049").String(),
+			expectedLiquidity0: sdk.MustNewDecFromStr("1.414213562373095049"),
+			expectedLiquidity1: sdk.MustNewDecFromStr("1.414213563373095049"),
+		},
+		"not full range, price proportional to amounts, non equal liquidities": {
+			currentSqrtP:   sqrt(sdk.NewDec(2)),
+			sqrtPHigh:      sqrt(sdk.NewDec(3)),
+			sqrtPLow:       sqrt(sdk.NewDec(1)),
+			amount0Desired: sdk.NewInt(1),
+			amount1Desired: sdk.NewInt(2),
+
+			expectedLiquidity:  sdk.MustNewDecFromStr("4.828427124746190095").String(),
+			expectedLiquidity0: sdk.MustNewDecFromStr("7.706742302257039729"),
+			expectedLiquidity1: sdk.MustNewDecFromStr("4.828427124746190095"),
 		},
 	}
 
@@ -335,160 +400,107 @@ func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
 			// CASE C: if the currentSqrtP is greater than the sqrtPHigh, all the liquidity is in asset1, so GetLiquidityFromAmounts returns the liquidity of asset1
 			liquidity := math.GetLiquidityFromAmounts(tc.currentSqrtP, tc.sqrtPLow, tc.sqrtPHigh, tc.amount0Desired, tc.amount1Desired)
 			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
-			// TODO: this check works for CASE B but needs to get reworked when CASE A and CASE C are tested
-			liq0 := math.Liquidity0(tc.amount0Desired, tc.currentSqrtP, tc.sqrtPHigh)
-			liq1 := math.Liquidity1(tc.amount1Desired, tc.currentSqrtP, tc.sqrtPLow)
-			liq := sdk.MinDec(liq0, liq1)
-			suite.Require().Equal(liq.String(), liquidity.String())
+		})
+	}
+}
 
+type sqrtRoundingTestCase struct {
+	sqrtPriceCurrent sdk.Dec
+	liquidity        sdk.Dec
+	amountRemaining  sdk.Dec
+	expected         sdk.Dec
+}
+
+func (suite *ConcentratedMathTestSuite) runSqrtRoundingTestCase(
+	name string,
+	fn func(sdk.Dec, sdk.Dec, sdk.Dec) sdk.Dec,
+	cases map[string]sqrtRoundingTestCase,
+) {
+	for name, tc := range cases {
+		tc := tc
+		suite.Run(name, func() {
+			sqrtPriceNext := fn(tc.sqrtPriceCurrent, tc.liquidity, tc.amountRemaining)
+			suite.Require().Equal(tc.expected.String(), sqrtPriceNext.String())
 		})
 	}
 }
 
 func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount0InRoundingUp() {
-	tests := map[string]struct {
-		sqrtPriceCurrent     sdk.Dec
-		liquidity            sdk.Dec
-		amountZeroRemaininIn sdk.Dec
-
-		expectedSqrtPriceNext sdk.Dec
-	}{
+	tests := map[string]sqrtRoundingTestCase{
 		"rounded up at precision end": {
-			sqrtPriceCurrent:     sdk.MustNewDecFromStr("70.710678118654752440"),
-			liquidity:            sdk.MustNewDecFromStr("3035764687.503020836176699298"),
-			amountZeroRemaininIn: sdk.MustNewDecFromStr("8398"),
-
+			sqrtPriceCurrent: sqrt5000,
+			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
+			amountRemaining:  sdk.MustNewDecFromStr("8398"),
 			// liq * sqrt_cur / (liq + token_in * sqrt_cur) = 70.69684905341696614869539245
-			expectedSqrtPriceNext: sdk.MustNewDecFromStr("70.696849053416966149"),
+			expected: sdk.MustNewDecFromStr("70.696849053416966149"),
 		},
 		"no round up due zeroes at precision end": {
-			sqrtPriceCurrent:     sdk.MustNewDecFromStr("2"),
-			liquidity:            sdk.MustNewDecFromStr("10"),
-			amountZeroRemaininIn: sdk.MustNewDecFromStr("15"),
-
+			sqrtPriceCurrent: sdk.MustNewDecFromStr("2"),
+			liquidity:        sdk.MustNewDecFromStr("10"),
+			amountRemaining:  sdk.MustNewDecFromStr("15"),
 			// liq * sqrt_cur / (liq + token_in * sqrt_cur) = 0.5
-			expectedSqrtPriceNext: sdk.MustNewDecFromStr("0.5"),
+			expected: sdk.MustNewDecFromStr("0.5"),
 		},
 	}
-
-	for name, tc := range tests {
-		tc := tc
-		suite.Run(name, func() {
-
-			sqrtPriceNext := math.GetNextSqrtPriceFromAmount0InRoundingUp(tc.sqrtPriceCurrent, tc.liquidity, tc.amountZeroRemaininIn)
-
-			suite.Require().Equal(tc.expectedSqrtPriceNext.String(), sqrtPriceNext.String())
-		})
-	}
+	suite.runSqrtRoundingTestCase("TestGetNextSqrtPriceFromAmount0InRoundingUp", math.GetNextSqrtPriceFromAmount0InRoundingUp, tests)
 }
 
 func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount0OutRoundingUp() {
-	tests := map[string]struct {
-		sqrtPriceCurrent       sdk.Dec
-		liquidity              sdk.Dec
-		amountZeroRemainingOut sdk.Dec
-
-		expectedSqrtPriceNext sdk.Dec
-	}{
+	tests := map[string]sqrtRoundingTestCase{
 		"rounded up at precision end": {
-			sqrtPriceCurrent:       sdk.MustNewDecFromStr("70.710678118654752440"),
-			liquidity:              sdk.MustNewDecFromStr("3035764687.503020836176699298"),
-			amountZeroRemainingOut: sdk.MustNewDecFromStr("8398"),
-
+			sqrtPriceCurrent: sqrt5000,
+			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
+			amountRemaining:  sdk.MustNewDecFromStr("8398"),
 			// liq * sqrt_cur / (liq - token_out * sqrt_cur) = 70.72451259517930556540769876
-			expectedSqrtPriceNext: sdk.MustNewDecFromStr("70.724512595179305566"),
+			expected: sdk.MustNewDecFromStr("70.724512595179305566"),
 		},
 		"no round up due zeroes at precision end": {
-			sqrtPriceCurrent:       sdk.MustNewDecFromStr("2"),
-			liquidity:              sdk.MustNewDecFromStr("10"),
-			amountZeroRemainingOut: sdk.MustNewDecFromStr("1"),
-
+			sqrtPriceCurrent: sdk.MustNewDecFromStr("2"),
+			liquidity:        sdk.MustNewDecFromStr("10"),
+			amountRemaining:  sdk.MustNewDecFromStr("1"),
 			// liq * sqrt_cur / (liq + token_out * sqrt_cur) = 2.5
-			expectedSqrtPriceNext: sdk.MustNewDecFromStr("2.5"),
+			expected: sdk.MustNewDecFromStr("2.5"),
 		},
 	}
-
-	for name, tc := range tests {
-		tc := tc
-		suite.Run(name, func() {
-
-			sqrtPriceNext := math.GetNextSqrtPriceFromAmount0OutRoundingUp(tc.sqrtPriceCurrent, tc.liquidity, tc.amountZeroRemainingOut)
-
-			suite.Require().Equal(tc.expectedSqrtPriceNext.String(), sqrtPriceNext.String())
-		})
-	}
+	suite.runSqrtRoundingTestCase("TestGetNextSqrtPriceFromAmount0OutRoundingUp", math.GetNextSqrtPriceFromAmount0OutRoundingUp, tests)
 }
 
 func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount1InRoundingDown() {
-	tests := map[string]struct {
-		sqrtPriceCurrent     sdk.Dec
-		liquidity            sdk.Dec
-		amountOneRemainingIn sdk.Dec
-
-		expectedSqrtPriceNext sdk.Dec
-	}{
+	tests := map[string]sqrtRoundingTestCase{
 		"rounded down at precision end": {
-			sqrtPriceCurrent:     sdk.MustNewDecFromStr("70.710678118654752440"),
-			liquidity:            sdk.MustNewDecFromStr("3035764687.503020836176699298"),
-			amountOneRemainingIn: sdk.MustNewDecFromStr("8398"),
-
+			sqrtPriceCurrent: sqrt5000,
+			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
+			amountRemaining:  sdk.MustNewDecFromStr("8398"),
 			// sqrt_next = sqrt_cur + token_in / liq = 70.71068088500882282334333927
-			expectedSqrtPriceNext: sdk.MustNewDecFromStr("70.710680885008822823"),
+			expected: sdk.MustNewDecFromStr("70.710680885008822823"),
 		},
 		"no round up due zeroes at precision end": {
-			sqrtPriceCurrent:     sdk.MustNewDecFromStr("2.5"),
-			liquidity:            sdk.MustNewDecFromStr("1"),
-			amountOneRemainingIn: sdk.MustNewDecFromStr("10"),
-
+			sqrtPriceCurrent: sdk.MustNewDecFromStr("2.5"),
+			liquidity:        sdk.MustNewDecFromStr("1"),
+			amountRemaining:  sdk.MustNewDecFromStr("10"),
 			// sqrt_next = sqrt_cur + token_in / liq
-			expectedSqrtPriceNext: sdk.MustNewDecFromStr("12.5"),
+			expected: sdk.MustNewDecFromStr("12.5"),
 		},
 	}
-
-	for name, tc := range tests {
-		tc := tc
-		suite.Run(name, func() {
-
-			sqrtPriceNext := math.GetNextSqrtPriceFromAmount1InRoundingDown(tc.sqrtPriceCurrent, tc.liquidity, tc.amountOneRemainingIn)
-
-			suite.Require().Equal(tc.expectedSqrtPriceNext.String(), sqrtPriceNext.String())
-		})
-	}
+	suite.runSqrtRoundingTestCase("TestGetNextSqrtPriceFromAmount1InRoundingDown", math.GetNextSqrtPriceFromAmount1InRoundingDown, tests)
 }
 
 func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount1OutRoundingDown() {
-	tests := map[string]struct {
-		sqrtPriceCurrent      sdk.Dec
-		liquidity             sdk.Dec
-		amountOneRemainingOut sdk.Dec
-
-		expectedSqrtPriceNext sdk.Dec
-	}{
+	tests := map[string]sqrtRoundingTestCase{
 		"rounded down at precision end": {
-			sqrtPriceCurrent:      sdk.MustNewDecFromStr("70.710678118654752440"),
-			liquidity:             sdk.MustNewDecFromStr("3035764687.503020836176699298"),
-			amountOneRemainingOut: sdk.MustNewDecFromStr("8398"),
-
+			sqrtPriceCurrent: sqrt5000,
+			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
+			amountRemaining:  sdk.MustNewDecFromStr("8398"),
 			// sqrt_next = sqrt_cur - token_out / liq = 70.71067535230068205665666073
-			expectedSqrtPriceNext: sdk.MustNewDecFromStr("70.710675352300682056"),
+			expected: sdk.MustNewDecFromStr("70.710675352300682056"),
 		},
 		"no round up due zeroes at precision end": {
-			sqrtPriceCurrent:      sdk.MustNewDecFromStr("12.5"),
-			liquidity:             sdk.MustNewDecFromStr("1"),
-			amountOneRemainingOut: sdk.MustNewDecFromStr("10"),
-
+			sqrtPriceCurrent: sdk.MustNewDecFromStr("12.5"),
+			liquidity:        sdk.MustNewDecFromStr("1"),
+			amountRemaining:  sdk.MustNewDecFromStr("10"),
 			// sqrt_next = sqrt_cur - token_out / liq
-			expectedSqrtPriceNext: sdk.MustNewDecFromStr("2.5"),
+			expected: sdk.MustNewDecFromStr("2.5"),
 		},
 	}
-
-	for name, tc := range tests {
-		tc := tc
-		suite.Run(name, func() {
-
-			sqrtPriceNext := math.GetNextSqrtPriceFromAmount1OutRoundingDown(tc.sqrtPriceCurrent, tc.liquidity, tc.amountOneRemainingOut)
-
-			suite.Require().Equal(tc.expectedSqrtPriceNext.String(), sqrtPriceNext.String())
-		})
-	}
+	suite.runSqrtRoundingTestCase("TestGetNextSqrtPriceFromAmount1OutRoundingDown", math.GetNextSqrtPriceFromAmount1OutRoundingDown, tests)
 }

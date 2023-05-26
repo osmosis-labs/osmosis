@@ -14,6 +14,7 @@ func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdPools)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetUserPositions)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetPositionById)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetClaimableFees)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetClaimableIncentives)
 	cmd.AddCommand(
@@ -30,8 +31,19 @@ func GetUserPositions() (*osmocli.QueryDescriptor, *queryproto.UserPositionsRequ
 			Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} user-positions osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj`,
 			Flags:               osmocli.FlagDesc{OptionalFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
-			CustomFlagOverrides: poolIdFlagOverride},
+			CustomFlagOverrides: poolIdFlagOverride,
+		},
 		&queryproto.UserPositionsRequest{}
+}
+
+func GetPositionById() (*osmocli.QueryDescriptor, *queryproto.PositionByIdRequest) {
+	return &osmocli.QueryDescriptor{
+			Use:   "position-by-id [positionID]",
+			Short: "Query position by ID",
+			Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} position-by-id 53`,
+		},
+		&queryproto.PositionByIdRequest{}
 }
 
 func GetCmdPools() (*osmocli.QueryDescriptor, *queryproto.PoolsRequest) {
@@ -39,7 +51,8 @@ func GetCmdPools() (*osmocli.QueryDescriptor, *queryproto.PoolsRequest) {
 		Use:   "pools",
 		Short: "Query pools",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} pools`}, &queryproto.PoolsRequest{}
+{{.CommandPrefix}} pools`,
+	}, &queryproto.PoolsRequest{}
 }
 
 func GetClaimableFees() (*osmocli.QueryDescriptor, *queryproto.ClaimableFeesRequest) {
@@ -47,7 +60,8 @@ func GetClaimableFees() (*osmocli.QueryDescriptor, *queryproto.ClaimableFeesRequ
 		Use:   "claimable-fees [positionID]",
 		Short: "Query claimable fees",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} claimable-fees 53`}, &queryproto.ClaimableFeesRequest{}
+{{.CommandPrefix}} claimable-fees 53`,
+	}, &queryproto.ClaimableFeesRequest{}
 }
 
 func GetClaimableIncentives() (*osmocli.QueryDescriptor, *queryproto.ClaimableIncentivesRequest) {
@@ -55,5 +69,6 @@ func GetClaimableIncentives() (*osmocli.QueryDescriptor, *queryproto.ClaimableIn
 		Use:   "claimable-incentives [positionID]",
 		Short: "Query claimable incentives",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} claimable-fees 53`}, &queryproto.ClaimableIncentivesRequest{}
+{{.CommandPrefix}} claimable-fees 53`,
+	}, &queryproto.ClaimableIncentivesRequest{}
 }

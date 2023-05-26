@@ -1,6 +1,10 @@
 package cli
 
-import flag "github.com/spf13/pflag"
+import (
+	flag "github.com/spf13/pflag"
+
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+)
 
 const (
 	// Names of fields in pool json file.
@@ -21,6 +25,8 @@ const (
 	FlagSwapRoutePoolIds = "swap-route-pool-ids"
 	// Will be parsed to []string.
 	FlagSwapRouteDenoms = "swap-route-denoms"
+	// Will be parsed to string.
+	FlagRoutesFile = "routes-file"
 )
 
 type createBalancerPoolInputs struct {
@@ -45,6 +51,23 @@ type smoothWeightChangeParamsInputs struct {
 	StartTime         string `json:"start-time"`
 	Duration          string `json:"duration"`
 	TargetPoolWeights string `json:"target-pool-weights"`
+}
+
+type RoutesIn struct {
+	Route []SwapAmountInSplitRoute `json:"route"`
+}
+type RoutesOut struct {
+	Route []SwapAmountOutSplitRoute `json:"route"`
+}
+
+type SwapAmountInSplitRoute struct {
+	Pools         []types.SwapAmountInRoute `json:"swap_amount_in_route"`
+	TokenInAmount int64                     `json:"token_in_amount"`
+}
+
+type SwapAmountOutSplitRoute struct {
+	Pools          []types.SwapAmountOutRoute `json:"swap_amount_out_route"`
+	TokenOutAmount int64                      `json:"token_out_amount"`
 }
 
 func FlagSetMultihopSwapRoutes() *flag.FlagSet {
@@ -74,5 +97,12 @@ func FlagSetCreatePool() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
 	fs.String(FlagPoolFile, "", "Pool json file path (if this path is given, other create pool flags should not be used)")
+	return fs
+}
+
+func FlagSetCreateRoutes() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+
+	fs.String(FlagRoutesFile, "", "Routes json file path (if this path is given, other routes flags should not be used)")
 	return fs
 }
