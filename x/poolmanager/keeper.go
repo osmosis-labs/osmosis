@@ -20,8 +20,6 @@ type Keeper struct {
 	accountKeeper        types.AccountI
 	communityPoolKeeper  types.CommunityPoolI
 
-	poolCreationListeners types.PoolCreationListeners
-
 	// routes is a map to get the pool module by id.
 	routes map[types.PoolType]types.PoolModuleI
 
@@ -104,17 +102,6 @@ func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 	nextPoolId := gogotypes.UInt64Value{}
 	osmoutils.MustGet(store, types.KeyNextGlobalPoolId, &nextPoolId)
 	return nextPoolId.Value
-}
-
-// SetPoolCreationListeners sets the pool creation listeners.
-func (k *Keeper) SetPoolCreationListeners(listeners types.PoolCreationListeners) *Keeper {
-	if k.poolCreationListeners != nil {
-		panic("cannot set pool creation listeners twice")
-	}
-
-	k.poolCreationListeners = listeners
-
-	return k
 }
 
 // SetNextPoolId sets next pool Id.

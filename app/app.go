@@ -179,7 +179,6 @@ func NewOsmosisApp(
 	homePath string,
 	invCheckPeriod uint,
 	appOpts servertypes.AppOptions,
-	wasmEnabledProposals []wasm.ProposalType,
 	wasmOpts []wasm.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
@@ -189,6 +188,7 @@ func NewOsmosisApp(
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
+	wasmEnabledProposals := GetWasmEnabledProposals()
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)

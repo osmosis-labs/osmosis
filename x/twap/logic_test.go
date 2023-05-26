@@ -136,7 +136,7 @@ func (s *TestSuite) TestNewTwapRecord() {
 	for i := 0; i < 2; i++ {
 		for name, test := range tests {
 			s.Run(name, func() {
-				s.Setup()
+				s.SetupTest()
 				if i == 0 {
 					s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
 				} else {
@@ -245,7 +245,8 @@ func (s *TestSuite) TestUpdateRecord() {
 				defaultTwoAssetCoins[1].Denom, defaultTwoAssetCoins[0].Denom,
 				test.spotPriceResult1.Sp, test.spotPriceResult1.Err)
 
-			newRecord := s.twapkeeper.UpdateRecord(s.Ctx, test.record)
+			newRecord, err := s.twapkeeper.UpdateRecord(s.Ctx, test.record)
+			s.Require().NoError(err)
 			s.Equal(test.expRecord, newRecord)
 		})
 	}
@@ -640,7 +641,6 @@ func (s *TestSuite) TestPruneRecords() {
 // older records or set to current block time in case error occurred.
 func (s *TestSuite) TestUpdateRecords() {
 	type spOverride struct {
-		poolId      uint64
 		baseDenom   string
 		quoteDenom  string
 		overrideSp  sdk.Dec
@@ -672,7 +672,8 @@ func (s *TestSuite) TestUpdateRecords() {
 		spOverrides       []spOverride
 		poolDenomOverride []string
 
-		blockTime time.Time
+		blockTime   time.Time
+		blockHeight int64
 
 		expectedHistoricalRecords []expectedResults
 		expectError               error
@@ -922,9 +923,8 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 		},
-		// This case should never happen in-practice since ctx.BlockTime
 		// should always be greater than the last record's time.
-		"two-asset; pre-set at t and t + 1, new record inserted between existing": {
+		"new record can't be inserted prior to the last record's update time": {
 			preSetRecords: []types.TwapRecord{baseRecord, tPlus10sp5Record},
 			poolId:        baseRecord.PoolId,
 
@@ -943,26 +943,95 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 
-			expectedHistoricalRecords: []expectedResults{
-				// The original record at t.
+			expectError: types.InvalidUpdateRecordError{
+				RecordBlockHeight: tPlus10sp5Record.Height,
+				RecordTime:        tPlus10sp5Record.Time,
+				ActualBlockHeight: (baseRecord.Height + 1),
+				ActualTime:        baseRecord.Time.Add(time.Second * 5),
+			},
+		},
+		// should always be greater than the last record's block.
+		"new record can't be inserted before the last record's update block": {
+			preSetRecords: []types.TwapRecord{mostRecentRecordPoolOne},
+			poolId:        baseRecord.PoolId,
+
+			// Even if lastRecord.Time < ctx.Time,
+			// lastRecord.Height >= ctx.BlockHeight also throws error
+			blockTime:   mostRecentRecordPoolOne.Time.Add(time.Second),
+			blockHeight: mostRecentRecordPoolOne.Height - 1,
+
+			spOverrides: []spOverride{
 				{
-					spotPriceA: baseRecord.P0LastSpotPrice,
-					spotPriceB: baseRecord.P1LastSpotPrice,
+					baseDenom:  mostRecentRecordPoolOne.Asset0Denom,
+					quoteDenom: mostRecentRecordPoolOne.Asset1Denom,
+					overrideSp: sdk.OneDec(),
 				},
-				// The new record added.
-				// TODO: it should not be possible to add a record between existing records.
-				// https://github.com/osmosis-labs/osmosis/issues/2686
+				{
+					baseDenom:  mostRecentRecordPoolOne.Asset1Denom,
+					quoteDenom: mostRecentRecordPoolOne.Asset0Denom,
+					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+				},
+			},
+
+			expectError: types.InvalidUpdateRecordError{
+				RecordBlockHeight: mostRecentRecordPoolOne.Height,
+				RecordTime:        mostRecentRecordPoolOne.Time,
+				ActualBlockHeight: mostRecentRecordPoolOne.Height - 1,
+				ActualTime:        mostRecentRecordPoolOne.Time.Add(time.Second),
+			},
+		},
+		"new record can be update in same block with last record if accumulators are zero (afterPoolCreate hook called)": {
+			preSetRecords: []types.TwapRecord{baseRecord},
+			poolId:        baseRecord.PoolId,
+
+			// Even if lastRecord.Time < ctx.Time,
+			// lastRecord.Height >= ctx.BlockHeight also throws error
+			blockTime: baseRecord.Time,
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:  baseRecord.Asset0Denom,
+					quoteDenom: baseRecord.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:  baseRecord.Asset1Denom,
+					quoteDenom: baseRecord.Asset0Denom,
+					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+				},
+			},
+
+			expectedHistoricalRecords: []expectedResults{
 				{
 					spotPriceA:   sdk.OneDec(),
 					spotPriceB:   sdk.OneDec().Add(sdk.OneDec()),
 					isMostRecent: true,
 				},
-				// The original record at t + 1.
+			},
+
+			expectError: nil,
+		},
+		"new record can't be updated in same block with last record if accumulators not equal to zero": {
+			preSetRecords: []types.TwapRecord{mostRecentRecordPoolOne},
+			poolId:        mostRecentRecordPoolOne.PoolId,
+
+			// Even if lastRecord.Time < ctx.Time,
+			// lastRecord.Height >= ctx.BlockHeight also throws error
+			blockTime: mostRecentRecordPoolOne.Time,
+
+			spOverrides: []spOverride{
 				{
-					spotPriceA: tPlus10sp5Record.P0LastSpotPrice,
-					spotPriceB: tPlus10sp5Record.P1LastSpotPrice,
+					baseDenom:  mostRecentRecordPoolOne.Asset0Denom,
+					quoteDenom: mostRecentRecordPoolOne.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:  mostRecentRecordPoolOne.Asset1Denom,
+					quoteDenom: mostRecentRecordPoolOne.Asset0Denom,
+					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
 				},
 			},
+			expectError: types.InvalidUpdateRecordError{},
 		},
 		"multi-asset pool; pre-set at t and t + 1; creates new records": {
 			preSetRecords: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC, tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC},
@@ -1151,6 +1220,9 @@ func (s *TestSuite) TestUpdateRecords() {
 			s.SetupTest()
 			twapKeeper := s.App.TwapKeeper
 			ctx := s.Ctx.WithBlockTime(tc.blockTime)
+			if tc.blockHeight != 0 {
+				ctx = s.Ctx.WithBlockTime(tc.blockTime).WithBlockHeight(tc.blockHeight)
+			}
 
 			if len(tc.spOverrides) > 0 {
 				ammMock := twapmock.NewProgrammedAmmInterface(s.App.PoolManagerKeeper)
@@ -1171,7 +1243,7 @@ func (s *TestSuite) TestUpdateRecords() {
 			err := twapKeeper.UpdateRecords(ctx, tc.poolId)
 
 			if tc.expectError != nil {
-				s.Require().ErrorIs(err, tc.expectError)
+				s.Require().ErrorAs(err, &tc.expectError)
 				return
 			}
 

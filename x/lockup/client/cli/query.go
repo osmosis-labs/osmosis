@@ -43,6 +43,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdAccountLockedLongerDurationDenom(),
 		GetCmdOutputLocksJson(),
 		GetCmdSyntheticLockupsByLockupID(),
+		GetCmdSyntheticLockupByLockupID(),
 		GetCmdAccountLockedDuration(),
 		GetCmdNextLockID(),
 		osmocli.GetParams[*types.QueryParamsRequest](
@@ -59,7 +60,8 @@ func GetCmdModuleBalance() (*osmocli.QueryDescriptor, *types.ModuleBalanceReques
 	return &osmocli.QueryDescriptor{
 		Use:   "module-balance",
 		Short: "Query module balance",
-		Long:  `{{.Short}}`}, &types.ModuleBalanceRequest{}
+		Long:  `{{.Short}}`,
+	}, &types.ModuleBalanceRequest{}
 }
 
 // GetCmdModuleLockedAmount returns locked balance of the module,
@@ -68,7 +70,8 @@ func GetCmdModuleLockedAmount() (*osmocli.QueryDescriptor, *types.ModuleLockedAm
 	return &osmocli.QueryDescriptor{
 		Use:   "module-locked-amount",
 		Short: "Query locked amount",
-		Long:  `{{.Short}}`}, &types.ModuleLockedAmountRequest{}
+		Long:  `{{.Short}}`,
+	}, &types.ModuleLockedAmountRequest{}
 }
 
 // GetCmdAccountUnlockableCoins returns unlockable coins which has finsihed unlocking.
@@ -115,7 +118,8 @@ func GetCmdAccountUnlockingCoins() (*osmocli.QueryDescriptor, *types.AccountUnlo
 		Use:   "account-unlocking-coins <address>",
 		Short: "Query account's unlocking coins",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} account-unlocking-coins <address>`}, &types.AccountUnlockingCoinsRequest{}
+{{.CommandPrefix}} account-unlocking-coins <address>`,
+	}, &types.AccountUnlockingCoinsRequest{}
 }
 
 // GetCmdAccountLockedCoins returns locked coins that that are still in a locked state from the specified account.
@@ -135,7 +139,8 @@ func GetCmdAccountLockedPastTime() (*osmocli.QueryDescriptor, *types.AccountLock
 		Short: "Query locked records of an account with unlock time beyond timestamp",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} account-locked-pastime <address> <timestamp>
-`}, &types.AccountLockedPastTimeRequest{}
+`,
+	}, &types.AccountLockedPastTimeRequest{}
 }
 
 // GetCmdAccountLockedPastTimeNotUnlockingOnly returns locks of an account with unlock time beyond provided timestamp
@@ -147,7 +152,8 @@ func GetCmdAccountLockedPastTimeNotUnlockingOnly() (*osmocli.QueryDescriptor, *t
 		Long: `{{.Short}}
 Timestamp is UNIX time in seconds.{{.ExampleHeader}}
 {{.CommandPrefix}} account-locked-pastime-not-unlocking <address> <timestamp>
-`}, &types.AccountLockedPastTimeNotUnlockingOnlyRequest{}
+`,
+	}, &types.AccountLockedPastTimeNotUnlockingOnlyRequest{}
 }
 
 // GetCmdAccountUnlockedBeforeTime returns locks with unlock time before the provided timestamp.
@@ -195,10 +201,19 @@ func GetCmdNextLockID() *cobra.Command {
 }
 
 // GetCmdSyntheticLockupsByLockupID returns synthetic lockups by lockup id.
+// nolint: staticcheck
 func GetCmdSyntheticLockupsByLockupID() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.SyntheticLockupsByLockupIDRequest](
 		"synthetic-lockups-by-lock-id <id>",
-		"Query synthetic lockups by lockup id",
+		"Query synthetic lockups by lockup id (is deprecated for synthetic-lockup-by-lock-id)",
+		`{{.Short}}`, types.ModuleName, types.NewQueryClient)
+}
+
+// GetCmdSyntheticLockupByLockupID returns synthetic lockup by lockup id.
+func GetCmdSyntheticLockupByLockupID() *cobra.Command {
+	return osmocli.SimpleQueryCmd[*types.SyntheticLockupByLockupIDRequest](
+		"synthetic-lockup-by-lock-id <id>",
+		"Query synthetic lock by underlying lockup id",
 		`{{.Short}}`, types.ModuleName, types.NewQueryClient)
 }
 

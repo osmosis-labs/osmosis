@@ -23,7 +23,7 @@ on:
     - v[0-9]+.x
   
 env:
-  RUNNER_BASE_IMAGE_ALPINE: alpine:3.16
+  RUNNER_BASE_IMAGE_ALPINE: alpine:3.17
   OSMOSIS_DEV_IMAGE_REPOSITORY: osmolabs/osmosis-dev
   OSMOSIS_INIT_CHAIN_IMAGE_REPOSITORY: osmolabs/osmosis-e2e-init-chain
 
@@ -66,7 +66,7 @@ jobs:
         echo "OSMOSIS_VERSION=${{ github.ref_name }}-$SHORT_SHA" >> $GITHUB_ENV
     - 
       name: Build and Push Docker Images
-      uses: docker/build-push-action@v3
+      uses: docker/build-push-action@v4
       with:
         file: Dockerfile
         context: .
@@ -81,7 +81,7 @@ jobs:
           ${{ env.OSMOSIS_DEV_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
     - 
       name: Build and Push E2E Init Docker Images
-      uses: docker/build-push-action@v3
+      uses: docker/build-push-action@v4
       with:
         file: tests/e2e/initialization/init.Dockerfile
         context: .

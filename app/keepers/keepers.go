@@ -33,8 +33,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	icq "github.com/strangelove-ventures/async-icq/v4"
-	icqtypes "github.com/strangelove-ventures/async-icq/v4/types"
+	icq "github.com/cosmos/ibc-apps/modules/async-icq/v4"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v4/types"
 
 	downtimedetector "github.com/osmosis-labs/osmosis/v15/x/downtime-detector"
 	downtimetypes "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/types"
@@ -48,6 +48,7 @@ import (
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
+	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v4/keeper"
 	icahost "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/keeper"
 	icahosttypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/types"
@@ -58,7 +59,6 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
-	icqkeeper "github.com/strangelove-ventures/async-icq/v4/keeper"
 
 	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v4/router"
 	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v4/router/keeper"
@@ -276,7 +276,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.ScopedICQKeeper,
-		NewQuerierWrapper(bApp),
+		bApp.GRPCQueryRouter(),
 	)
 	appKeepers.ICQKeeper = &icqKeeper
 
@@ -296,10 +296,22 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.SlashingKeeper,
 	)
 
+	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
+		appKeepers.keys[lockuptypes.StoreKey],
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.DistrKeeper, appKeepers.GetSubspace(lockuptypes.ModuleName))
+
 	appKeepers.ConcentratedLiquidityKeeper = concentratedliquidity.NewKeeper(
 		appCodec,
 		appKeepers.keys[concentratedliquiditytypes.StoreKey],
+		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
+		appKeepers.GAMMKeeper,
+		appKeepers.PoolIncentivesKeeper,
+		appKeepers.IncentivesKeeper,
+		appKeepers.LockupKeeper,
+		appKeepers.DistrKeeper,
 		appKeepers.GetSubspace(concentratedliquiditytypes.ModuleName),
 	)
 
@@ -310,6 +322,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		// TODO: Add a mintcoins restriction
 		appKeepers.BankKeeper, appKeepers.DistrKeeper, appKeepers.ConcentratedLiquidityKeeper)
 	appKeepers.GAMMKeeper = &gammKeeper
+	appKeepers.ConcentratedLiquidityKeeper.SetGammKeeper(appKeepers.GAMMKeeper)
 
 	appKeepers.PoolManagerKeeper = poolmanager.NewKeeper(
 		appKeepers.keys[poolmanagertypes.StoreKey],
@@ -328,13 +341,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.tkeys[twaptypes.TransientStoreKey],
 		appKeepers.GetSubspace(twaptypes.ModuleName),
 		appKeepers.PoolManagerKeeper)
-
-	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
-		appKeepers.keys[lockuptypes.StoreKey],
-		// TODO: Visit why this needs to be deref'd
-		*appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.DistrKeeper, appKeepers.GetSubspace(lockuptypes.ModuleName))
 
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appKeepers.keys[epochstypes.StoreKey])
 
@@ -356,12 +362,17 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.IncentivesKeeper = incentiveskeeper.NewKeeper(
 		appKeepers.keys[incentivestypes.StoreKey],
 		appKeepers.GetSubspace(incentivestypes.ModuleName),
+		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.LockupKeeper,
 		appKeepers.EpochsKeeper,
 		appKeepers.DistrKeeper,
 		appKeepers.TxFeesKeeper,
+		appKeepers.ConcentratedLiquidityKeeper,
+		appKeepers.PoolManagerKeeper,
+		appKeepers.PoolIncentivesKeeper,
 	)
+	appKeepers.ConcentratedLiquidityKeeper.SetIncentivesKeeper(appKeepers.IncentivesKeeper)
 
 	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
 		appKeepers.keys[superfluidtypes.StoreKey], appKeepers.GetSubspace(superfluidtypes.ModuleName),
@@ -387,10 +398,12 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.IncentivesKeeper,
 		appKeepers.DistrKeeper,
 		appKeepers.PoolManagerKeeper,
+		appKeepers.EpochsKeeper,
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
 	appKeepers.PoolManagerKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
-	appKeepers.PoolManagerKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
+	appKeepers.IncentivesKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
+	appKeepers.ConcentratedLiquidityKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
 
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
 		appKeepers.keys[tokenfactorytypes.StoreKey],
@@ -413,7 +426,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
-	supportedFeatures := "iterator,staking,stargate,osmosis,cosmwasm_1_1"
+	supportedFeatures := "iterator,staking,stargate,osmosis,cosmwasm_1_1,cosmwasm_1_2"
 
 	wasmOpts = append(owasm.RegisterCustomPlugins(appKeepers.BankKeeper, appKeepers.TokenFactoryKeeper), wasmOpts...)
 	wasmOpts = append(owasm.RegisterStargateQueries(*bApp.GRPCQueryRouter(), appCodec), wasmOpts...)
@@ -462,7 +475,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*appKeepers.TxFeesKeeper)).
 		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*appKeepers.SuperfluidKeeper, *appKeepers.EpochsKeeper, *appKeepers.GAMMKeeper)).
 		AddRoute(protorevtypes.RouterKey, protorev.NewProtoRevProposalHandler(*appKeepers.ProtoRevKeeper)).
-		AddRoute(gammtypes.RouterKey, gamm.NewMigrationRecordHandler(*appKeepers.GAMMKeeper))
+		AddRoute(gammtypes.RouterKey, gamm.NewMigrationRecordHandler(*appKeepers.GAMMKeeper)).
+		AddRoute(concentratedliquiditytypes.RouterKey, concentratedliquidity.NewConcentratedLiquidityProposalHandler(*appKeepers.ConcentratedLiquidityKeeper))
 
 	// The gov proposal types can be individually enabled
 	if len(wasmEnabledProposals) != 0 {
@@ -661,6 +675,13 @@ func (appKeepers *AppKeepers) SetupHooks() {
 			// insert gamm hooks receivers here
 			appKeepers.PoolIncentivesKeeper.Hooks(),
 			appKeepers.TwapKeeper.GammHooks(),
+		),
+	)
+
+	appKeepers.ConcentratedLiquidityKeeper.SetListeners(
+		concentratedliquiditytypes.NewConcentratedLiquidityListeners(
+			appKeepers.TwapKeeper.ConcentratedLiquidityListener(),
+			appKeepers.PoolIncentivesKeeper.Hooks(),
 		),
 	)
 

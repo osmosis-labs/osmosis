@@ -1,15 +1,18 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	db "github.com/tendermint/tm-db"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 // getDistributedCoinsFromGauges returns coins that have been distributed already from the provided gauges
@@ -196,26 +199,28 @@ func (d *distributionInfo) addLockRewards(owner string, rewards sdk.Coins) error
 // doDistributionSends utilizes provided distributionInfo to send coins from the module account to various recipients.
 func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) error {
 	numIDs := len(distrs.idToDecodedAddr)
-	ctx.Logger().Debug(fmt.Sprintf("Beginning distribution to %d users", numIDs))
-	err := k.bk.SendCoinsFromModuleToManyAccounts(
-		ctx,
-		types.ModuleName,
-		distrs.idToDecodedAddr,
-		distrs.idToDistrCoins)
-	if err != nil {
-		return err
+	if numIDs > 0 {
+		ctx.Logger().Debug(fmt.Sprintf("Beginning distribution to %d users", numIDs))
+		err := k.bk.SendCoinsFromModuleToManyAccounts(
+			ctx,
+			types.ModuleName,
+			distrs.idToDecodedAddr,
+			distrs.idToDistrCoins)
+		if err != nil {
+			return err
+		}
+		ctx.Logger().Debug("Finished sending, now creating liquidity add events")
+		for id := 0; id < numIDs; id++ {
+			ctx.EventManager().EmitEvents(sdk.Events{
+				sdk.NewEvent(
+					types.TypeEvtDistribution,
+					sdk.NewAttribute(types.AttributeReceiver, distrs.idToBech32Addr[id]),
+					sdk.NewAttribute(types.AttributeAmount, distrs.idToDistrCoins[id].String()),
+				),
+			})
+		}
+		ctx.Logger().Debug(fmt.Sprintf("Finished Distributing to %d users", numIDs))
 	}
-	ctx.Logger().Debug("Finished sending, now creating liquidity add events")
-	for id := 0; id < numIDs; id++ {
-		ctx.EventManager().EmitEvents(sdk.Events{
-			sdk.NewEvent(
-				types.TypeEvtDistribution,
-				sdk.NewAttribute(types.AttributeReceiver, distrs.idToBech32Addr[id]),
-				sdk.NewAttribute(types.AttributeAmount, distrs.idToDistrCoins[id].String()),
-			),
-		})
-	}
-	ctx.Logger().Debug(fmt.Sprintf("Finished Distributing to %d users", numIDs))
 	return nil
 }
 
@@ -256,6 +261,29 @@ func (k Keeper) distributeSyntheticInternal(
 	}
 
 	return k.distributeInternal(ctx, gauge, sortedAndTrimmedQualifiedLocks, distrInfo)
+}
+
+// distributeConcentratedLiquidity runs the distribution logic for CL pools only. It creates new incentive record with osmo incentives
+// and distributes all the tokens to the dedicated pool
+func (k Keeper) distributeConcentratedLiquidity(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveCoin sdk.Coin, emissionRate sdk.Dec, startTime time.Time, minUptime time.Duration, gauge types.Gauge) error {
+	_, err := k.clk.CreateIncentive(ctx,
+		poolId,
+		sender,
+		incentiveCoin,
+		emissionRate,
+		startTime,
+		minUptime,
+	)
+	if err != nil {
+		return err
+	}
+
+	// updateGaugePostDistribute adds the coins that were just distributed to the gauge's distributed coins field.
+	err = k.updateGaugePostDistribute(ctx, gauge, sdk.NewCoins(incentiveCoin))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
@@ -343,31 +371,91 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	distrInfo := newDistributionInfo()
 
 	locksByDenomCache := make(map[string][]lockuptypes.PeriodLock)
-	totalDistributedCoins := sdk.Coins{}
+	totalDistributedCoins := sdk.NewCoins()
+
+	// get pool Id corresponding to the gaugeId
+	incentiveParams := k.GetParams(ctx).DistrEpochIdentifier
+	currentEpoch := k.ek.GetEpochInfo(ctx, incentiveParams)
+
 	for _, gauge := range gauges {
-		filteredLocks := k.getDistributeToBaseLocks(ctx, gauge, locksByDenomCache)
-		// send based on synthetic lockup coins if it's distributing to synthetic lockups
 		var gaugeDistributedCoins sdk.Coins
-		var err error
-		if lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom) {
-			gaugeDistributedCoins, err = k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
-		} else {
-			gaugeDistributedCoins, err = k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
-		}
-		if err != nil {
+		pool, err := k.GetPoolFromGaugeId(ctx, gauge.Id, currentEpoch.Duration)
+		// Note: getting NoPoolAssociatedWithGaugeError implies that there is no pool associated with the gauge but we still want to distribute.
+		// This happens with superfluid gauges which are not connected to any specific pool directly but, instead,
+		// via an intermediary account.
+		if err != nil && !errors.Is(err, poolincentivestypes.NoPoolAssociatedWithGaugeError{GaugeId: gauge.Id, Duration: currentEpoch.Duration}) {
+			// TODO: add test case to cover this
 			return nil, err
+		} else if pool != nil && pool.GetType() == poolmanagertypes.Concentrated {
+			// only want to run this logic if the gaugeId is associated with CL PoolId
+			for _, coin := range gauge.Coins {
+				// emissionRate calculates amount of tokens to emit per second
+				// for ex: 10000tokens to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
+				// Note: reason why we do millisecond conversion is because floats are non-deterministic so if someone refactors this and accidentally
+				// uses the return of currEpoch.Duration.Seconds() in math operations, this will lead to an app hash.
+				emissionRate := sdk.NewDecFromInt(coin.Amount).QuoTruncate(sdk.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(sdk.NewInt(1000)))
+				err := k.distributeConcentratedLiquidity(ctx,
+					pool.GetId(),
+					k.ak.GetModuleAddress(types.ModuleName),
+					coin,
+					emissionRate,
+					gauge.GetStartTime(),
+					// Note that the minimum uptime does not affect the distribution of incentives from the gauge and
+					// thus can be any value authorized by the CL module.
+					types.DefaultConcentratedUptime,
+					gauge,
+				)
+				if err != nil {
+					return nil, err
+				}
+				gaugeDistributedCoins = gaugeDistributedCoins.Add(coin)
+			}
+		} else {
+			// Assume that there is no pool associated with the gauge and attempt to distribute to base locks
+			filteredLocks := k.getDistributeToBaseLocks(ctx, gauge, locksByDenomCache)
+			// send based on synthetic lockup coins if it's distributing to synthetic lockups
+			var err error
+			if lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom) {
+				// TODO: add test case to cover this
+				gaugeDistributedCoins, err = k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
+			} else {
+				gaugeDistributedCoins, err = k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
+			}
+			if err != nil {
+				// TODO: add test case to cover this
+				return nil, err
+			}
 		}
 		totalDistributedCoins = totalDistributedCoins.Add(gaugeDistributedCoins...)
 	}
 
 	err := k.doDistributionSends(ctx, &distrInfo)
 	if err != nil {
+		// TODO: add test case to cover this
 		return nil, err
 	}
+
 	k.hooks.AfterEpochDistribution(ctx)
 
 	k.checkFinishDistribution(ctx, gauges)
 	return totalDistributedCoins, nil
+}
+
+// GetPoolFromGaugeId returns a pool associated with the given gauge id.
+// Returns error if there is no link between pool id and gauge id.
+// Returns error if pool is not saved in state.
+func (k Keeper) GetPoolFromGaugeId(ctx sdk.Context, gaugeId uint64, duration time.Duration) (poolmanagertypes.PoolI, error) {
+	poolId, err := k.pik.GetPoolIdFromGaugeId(ctx, gaugeId, duration)
+	if err != nil {
+		return nil, err
+	}
+
+	pool, err := k.pmk.GetPool(ctx, poolId)
+	if err != nil {
+		return nil, err
+	}
+
+	return pool, nil
 }
 
 // checkFinishDistribution checks if all non perpetual gauges provided have completed their required distributions.

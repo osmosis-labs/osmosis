@@ -8,7 +8,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
+func (s *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 	type gaugeChecker struct {
 		intermediaryAccIndex uint64
 		valIndex             int64
@@ -71,51 +71,51 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 	for _, tc := range testCases {
 		tc := tc
 
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
+		s.Run(tc.name, func() {
+			s.SetupTest()
 
 			// setup validators
-			valAddrs := suite.SetupValidators(tc.validatorStats)
+			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			// setup superfluid delegations
-			_, intermediaryAccs, _ := suite.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
-			unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
+			_, intermediaryAccs, _ := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
+			unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
 
 			// allocate rewards to first validator
 			for _, valIndex := range tc.rewardedVals {
-				suite.AllocateRewardsToValidator(valAddrs[valIndex], sdk.NewInt(20000))
+				s.AllocateRewardsToValidator(valAddrs[valIndex], sdk.NewInt(20000))
 			}
 
 			// move intermediary account delegation rewards to gauges
-			suite.App.SuperfluidKeeper.MoveSuperfluidDelegationRewardToGauges(suite.Ctx)
+			s.App.SuperfluidKeeper.MoveSuperfluidDelegationRewardToGauges(s.Ctx)
 
 			// check invariant is fine
-			reason, broken := keeper.AllInvariants(*suite.App.SuperfluidKeeper)(suite.Ctx)
-			suite.Require().False(broken, reason)
+			reason, broken := keeper.AllInvariants(*s.App.SuperfluidKeeper)(s.Ctx)
+			s.Require().False(broken, reason)
 
 			// check gauge balance
 			for _, gaugeCheck := range tc.gaugeChecks {
 				gaugeId := intermediaryAccs[gaugeCheck.intermediaryAccIndex].GaugeId
-				gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeId)
-				suite.Require().NoError(err)
-				suite.Require().Equal(gauge.Id, gaugeId)
-				suite.Require().Equal(gauge.IsPerpetual, true)
-				suite.Require().Equal(lockuptypes.QueryCondition{
+				gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
+				s.Require().NoError(err)
+				s.Require().Equal(gauge.Id, gaugeId)
+				s.Require().Equal(gauge.IsPerpetual, true)
+				s.Require().Equal(lockuptypes.QueryCondition{
 					LockQueryType: lockuptypes.ByDuration,
 					Denom:         keeper.StakingSyntheticDenom(denoms[gaugeCheck.lpIndex], valAddrs[gaugeCheck.valIndex].String()),
 					Duration:      unbondingDuration,
 				}, gauge.DistributeTo)
 				if gaugeCheck.rewarded {
-					suite.Require().True(gauge.Coins.AmountOf(sdk.DefaultBondDenom).IsPositive())
+					s.Require().True(gauge.Coins.AmountOf(sdk.DefaultBondDenom).IsPositive())
 				} else {
-					suite.Require().True(gauge.Coins.AmountOf(sdk.DefaultBondDenom).IsZero())
+					s.Require().True(gauge.Coins.AmountOf(sdk.DefaultBondDenom).IsZero())
 				}
-				suite.Require().Equal(gauge.StartTime, suite.Ctx.BlockTime())
-				suite.Require().Equal(gauge.NumEpochsPaidOver, uint64(1))
-				suite.Require().Equal(gauge.FilledEpochs, uint64(0))
-				suite.Require().Equal(gauge.DistributedCoins, sdk.Coins(nil))
+				s.Require().Equal(gauge.StartTime, s.Ctx.BlockTime())
+				s.Require().Equal(gauge.NumEpochsPaidOver, uint64(1))
+				s.Require().Equal(gauge.FilledEpochs, uint64(0))
+				s.Require().Equal(gauge.DistributedCoins, sdk.Coins(nil))
 			}
 		})
 	}

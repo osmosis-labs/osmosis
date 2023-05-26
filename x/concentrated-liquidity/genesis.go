@@ -1,11 +1,13 @@
 package concentrated_liquidity
 
 import (
+	"errors"
 	"fmt"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
@@ -32,7 +34,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		poolId := pool.GetId()
 		poolTicks := poolData.Ticks
 		for _, tick := range poolTicks {
-			k.SetTickInfo(ctx, poolId, tick.TickIndex, tick.Info)
+			k.SetTickInfo(ctx, poolId, tick.TickIndex, &tick.Info)
 		}
 		seenPoolIds[poolId] = struct{}{}
 
@@ -59,11 +61,24 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 	}
 
 	// set positions for pool
-	for _, position := range genState.Positions {
-		if _, ok := seenPoolIds[position.PoolId]; !ok {
-			panic(fmt.Sprintf("found position with pool id (%d) but there is no pool with such id that exists", position.PoolId))
+	for _, positionWrapper := range genState.PositionData {
+		if _, ok := seenPoolIds[positionWrapper.Position.PoolId]; !ok {
+			panic(fmt.Sprintf("found position with pool id (%d) but there is no pool with such id that exists", positionWrapper.Position.PoolId))
 		}
-		k.setPosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, position.JoinTime, position.FreezeDuration, position.Liquidity, position.PositionId)
+
+		err := k.SetPosition(ctx, positionWrapper.Position.PoolId, sdk.MustAccAddressFromBech32(positionWrapper.Position.Address), positionWrapper.Position.LowerTick, positionWrapper.Position.UpperTick, positionWrapper.Position.JoinTime, positionWrapper.Position.Liquidity, positionWrapper.Position.PositionId, positionWrapper.LockId)
+		if err != nil {
+			panic(err)
+		}
+
+		// set individual fee accumulator state position
+		feeAccumObject, err := k.GetFeeAccumulator(ctx, positionWrapper.Position.PoolId)
+		if err != nil {
+			panic(err)
+		}
+		feePositionKey := types.KeyFeePositionAccumulator(positionWrapper.Position.PositionId)
+
+		k.initOrUpdateAccumPosition(ctx, feeAccumObject, positionWrapper.FeeAccumRecord.AccumValuePerShare, feePositionKey, positionWrapper.FeeAccumRecord.NumShares, positionWrapper.FeeAccumRecord.UnclaimedRewardsTotal, positionWrapper.FeeAccumRecord.Options)
 	}
 }
 
@@ -88,7 +103,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		if err != nil {
 			panic(err)
 		}
-		accumObject, err := k.getFeeAccumulator(ctx, poolI.GetId())
+		accumObject, err := k.GetFeeAccumulator(ctx, poolI.GetId())
 		if err != nil {
 			panic(err)
 		}
@@ -112,7 +127,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 			panic(err)
 		}
 
-		incentivesAccum, err := k.getUptimeAccumulators(ctx, poolId)
+		incentivesAccum, err := k.GetUptimeAccumulators(ctx, poolId)
 		if err != nil {
 			panic(err)
 		}
@@ -147,10 +162,57 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		panic(err)
 	}
 
+	positionData := make([]genesis.PositionData, 0, len(positions))
+	for _, position := range positions {
+		position, err := k.GetPosition(ctx, position.PositionId)
+		if err != nil {
+			panic(err)
+		}
+
+		lockId, err := k.GetLockIdFromPositionId(ctx, position.PositionId)
+		if err != nil {
+			if errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: position.PositionId}) {
+				lockId = 0
+			} else {
+				panic(err)
+			}
+		}
+
+		// Retrieve fee accumulator state for position
+		feePositionKey := types.KeyFeePositionAccumulator(position.PositionId)
+		feeAccumObject, err := k.GetFeeAccumulator(ctx, position.PoolId)
+		if err != nil {
+			panic(err)
+		}
+		feeAccumPositionRecord, err := feeAccumObject.GetPosition(feePositionKey)
+		if err != nil {
+			panic(err)
+		}
+
+		positionData = append(positionData, genesis.PositionData{
+			LockId:         lockId,
+			Position:       &position,
+			FeeAccumRecord: feeAccumPositionRecord,
+		})
+	}
+
 	return &genesis.GenesisState{
 		Params:         k.GetParams(ctx),
 		PoolData:       poolData,
-		Positions:      positions,
+		PositionData:   positionData,
 		NextPositionId: k.GetNextPositionId(ctx),
 	}
+}
+
+// initOrUpdateAccumPosition creates a new position or override an existing position
+// at accumulator's current value with a specific number of shares and unclaimed rewards
+func (k Keeper) initOrUpdateAccumPosition(ctx sdk.Context, accumumulator accum.AccumulatorObject, accumulatorValuePerShare sdk.DecCoins, index string, numShareUnits sdk.Dec, unclaimedRewardsTotal sdk.DecCoins, options *accum.Options) {
+	position := accum.Record{
+		NumShares:             numShareUnits,
+		AccumValuePerShare:    accumulatorValuePerShare,
+		UnclaimedRewardsTotal: unclaimedRewardsTotal,
+		Options:               options,
+	}
+
+	osmoutils.MustSet(ctx.KVStore(k.storeKey), accum.FormatPositionPrefixKey(accumumulator.GetName(), index), &position)
 }

@@ -35,7 +35,7 @@ const (
 // WeightedOperations returns all the operations from the module with their respective weights.
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak stakingtypes.AccountKeeper,
-	bk stakingtypes.BankKeeper, sk types.StakingKeeper, lk types.LockupKeeper, k keeper.Keeper,
+	bk osmosimtypes.BankKeeper, sk types.StakingKeeper, lk types.LockupKeeper, k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
 		weightMsgSuperfluidDelegate   int
@@ -78,7 +78,7 @@ func WeightedOperations(
 }
 
 // SimulateMsgSuperfluidDelegate generates a MsgSuperfluidDelegate with random values.
-func SimulateMsgSuperfluidDelegate(ak stakingtypes.AccountKeeper, bk stakingtypes.BankKeeper, sk types.StakingKeeper, lk types.LockupKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgSuperfluidDelegate(ak stakingtypes.AccountKeeper, bk osmosimtypes.BankKeeper, sk types.StakingKeeper, lk types.LockupKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -119,7 +119,7 @@ func SimulateMsgSuperfluidDelegate(ak stakingtypes.AccountKeeper, bk stakingtype
 	}
 }
 
-func SimulateMsgSuperfluidUndelegate(ak stakingtypes.AccountKeeper, bk stakingtypes.BankKeeper, lk types.LockupKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgSuperfluidUndelegate(ak stakingtypes.AccountKeeper, bk osmosimtypes.BankKeeper, lk types.LockupKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -145,7 +145,7 @@ func SimulateMsgSuperfluidUndelegate(ak stakingtypes.AccountKeeper, bk stakingty
 	}
 }
 
-// func SimulateMsgSuperfluidRedelegate(ak stakingtypes.AccountKeeper, bk stakingtypes.BankKeeper, sk types.StakingKeeper, lk types.LockupKeeper, k keeper.Keeper) simtypes.Operation {
+// func SimulateMsgSuperfluidRedelegate(ak stakingtypes.AccountKeeper, bk osmosimtypes.BankKeeper, sk types.StakingKeeper, lk types.LockupKeeper, k keeper.Keeper) simtypes.Operation {
 // 	return func(
 // 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 // 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {

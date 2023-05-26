@@ -1,4 +1,4 @@
-keeper: 
+keeper:
   path: "github.com/osmosis-labs/osmosis/v15/x/poolmanager"
   struct: "Keeper"
 client_path: "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client"
@@ -50,3 +50,8 @@ queries:
       query_func: "k.RouteCalculateSpotPrice"
     cli:
       cmd: "SpotPrice"
+  TotalPoolLiquidity:
+    proto_wrapper:
+      query_func: "k.TotalPoolLiquidity"
+    cli:
+      cmd: "TotalPoolLiquidity"

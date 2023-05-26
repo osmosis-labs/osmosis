@@ -1,14 +1,14 @@
 package keeper_test
 
 import (
-	// "fmt"
-
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	v8constants "github.com/osmosis-labs/osmosis/v15/app/upgrades/v8/constants"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v15/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
@@ -16,7 +16,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
-func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {
+var defaultFunds = sdk.NewCoins(defaultPoolAssets[0].Token, sdk.NewCoin("stake", sdk.NewInt(5000000000)))
+
+func (s *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 	type param struct {
 		coinsToLock sdk.Coins
 		lockOwner   sdk.AccAddress
@@ -56,36 +58,37 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 	}
 
 	for _, test := range tests {
-		suite.Run(test.name, func() {
-			suite.SetupTest()
-			lockupMsgServer := lockupkeeper.NewMsgServerImpl(suite.App.LockupKeeper)
-			c := sdk.WrapSDKContext(suite.Ctx)
+		s.Run(test.name, func() {
+			s.SetupTest()
+			lockupMsgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
+			c := sdk.WrapSDKContext(s.Ctx)
 
-			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			// If there is no coinsToLock in the param, use pool denom
 			if test.param.coinsToLock.Empty() {
 				test.param.coinsToLock = sdk.NewCoins(sdk.NewCoin(denoms[0], sdk.NewInt(20)))
 			}
-			suite.FundAcc(test.param.lockOwner, test.param.coinsToLock)
+			s.FundAcc(test.param.lockOwner, test.param.coinsToLock)
 			resp, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
+			s.Require().NoError(err)
 
-			valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
+			valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
-			msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
+			msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
 			_, err = msgServer.SuperfluidDelegate(c, types.NewMsgSuperfluidDelegate(test.param.lockOwner, resp.ID, valAddrs[0]))
 
 			if test.expectPass {
-				suite.Require().NoError(err)
-				suite.AssertEventEmitted(suite.Ctx, types.TypeEvtSuperfluidDelegate, 1)
+				s.Require().NoError(err)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtSuperfluidDelegate, 1)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegate() {
+func (s *KeeperTestSuite) TestMsgSuperfluidUndelegate() {
 	type param struct {
 		coinsToLock         sdk.Coins
 		lockOwner           sdk.AccAddress
@@ -111,26 +114,105 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegate() {
 	}
 
 	for _, test := range tests {
-		suite.SetupTest()
+		s.SetupTest()
 
-		suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
+		s.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
-		lockupMsgServer := lockupkeeper.NewMsgServerImpl(suite.App.LockupKeeper)
-		c := sdk.WrapSDKContext(suite.Ctx)
+		lockupMsgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
+		c := sdk.WrapSDKContext(s.Ctx)
 		resp, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
+		s.Require().NoError(err)
 
-		msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
+		msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
 		_, err = msgServer.SuperfluidUndelegate(c, types.NewMsgSuperfluidUndelegate(test.param.lockOwner, resp.ID))
 
 		if test.expectPass {
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 		} else {
-			suite.Require().Error(err)
+			s.Require().Error(err)
 		}
 	}
 }
 
-func (suite *KeeperTestSuite) TestMsgSuperfluidUnbondLock() {
+func (s *KeeperTestSuite) TestMsgCreateFullRangePositionAndSuperfluidDelegate() {
+	defaultSender := s.TestAccs[0]
+	type param struct {
+		coinsToLock sdk.Coins
+		poolId      uint64
+	}
+
+	tests := []struct {
+		name               string
+		param              param
+		expectPass         bool
+		expectedLockId     uint64
+		expectedPositionId uint64
+	}{
+		{
+			name:               "happy case",
+			param:              param{},
+			expectPass:         true,
+			expectedLockId:     1,
+			expectedPositionId: 2,
+		},
+		{
+			name: "superfluid delegation for not allowed asset",
+			param: param{
+				coinsToLock: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
+			},
+			expectPass: false,
+		},
+		{
+			name: "invalid pool id",
+			param: param{
+				poolId: 3,
+			},
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+
+			ctx := sdk.WrapSDKContext(s.Ctx)
+
+			clPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(defaultFunds[0].Denom, defaultFunds[1].Denom)
+			clLockupDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPool.GetId())
+			err := s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{
+				Denom:     clLockupDenom,
+				AssetType: types.SuperfluidAssetTypeConcentratedShare,
+			})
+			s.Require().NoError(err)
+
+			// If there is no coinsToLock in the param, use pool denom
+			if test.param.coinsToLock.Empty() {
+				test.param.coinsToLock = defaultFunds
+			}
+			if test.param.poolId == 0 {
+				test.param.poolId = clPool.GetId()
+			}
+
+			s.FundAcc(defaultSender, test.param.coinsToLock)
+
+			valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
+
+			msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
+			resp, err := msgServer.CreateFullRangePositionAndSuperfluidDelegate(ctx, types.NewMsgCreateFullRangePositionAndSuperfluidDelegate(defaultSender, test.param.coinsToLock, valAddrs[0].String(), test.param.poolId))
+
+			if test.expectPass {
+				s.Require().NoError(err)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtCreateFullRangePositionAndSFDelegate, 1)
+				s.Require().Equal(resp.LockID, test.expectedLockId)
+				s.Require().Equal(resp.PositionID, test.expectedPositionId)
+			} else {
+				s.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestMsgSuperfluidUnbondLock() {
 	type param struct {
 		coinsToLock         sdk.Coins
 		lockOwner           sdk.AccAddress
@@ -156,26 +238,27 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUnbondLock() {
 	}
 
 	for _, test := range tests {
-		suite.SetupTest()
+		s.SetupTest()
 
-		suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
+		s.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
-		lockupMsgServer := lockupkeeper.NewMsgServerImpl(suite.App.LockupKeeper)
-		c := sdk.WrapSDKContext(suite.Ctx)
+		lockupMsgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
+		c := sdk.WrapSDKContext(s.Ctx)
 		resp, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
+		s.Require().NoError(err)
 
-		msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
+		msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
 		_, err = msgServer.SuperfluidUnbondLock(c, types.NewMsgSuperfluidUnbondLock(test.param.lockOwner, resp.ID))
 
 		if test.expectPass {
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 		} else {
-			suite.Require().Error(err)
+			s.Require().Error(err)
 		}
 	}
 }
 
-func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegateAndUnbondLock() {
+func (s *KeeperTestSuite) TestMsgSuperfluidUndelegateAndUnbondLock() {
 	type param struct {
 		coinsToLock         sdk.Coins
 		amountToUnlock      sdk.Coin
@@ -203,26 +286,27 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegateAndUnbondLock() {
 	}
 
 	for _, test := range tests {
-		suite.SetupTest()
+		s.SetupTest()
 
-		suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
+		s.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
-		lockupMsgServer := lockupkeeper.NewMsgServerImpl(suite.App.LockupKeeper)
-		c := sdk.WrapSDKContext(suite.Ctx)
+		lockupMsgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
+		c := sdk.WrapSDKContext(s.Ctx)
 		resp, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
+		s.Require().NoError(err)
 
-		msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
+		msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
 		_, err = msgServer.SuperfluidUndelegateAndUnbondLock(c, types.NewMsgSuperfluidUndelegateAndUnbondLock(test.param.lockOwner, resp.ID, test.param.amountToUnlock))
 
 		if test.expectPass {
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 		} else {
-			suite.Require().Error(err)
+			s.Require().Error(err)
 		}
 	}
 }
 
-func (suite *KeeperTestSuite) TestMsgLockAndSuperfluidDelegate() {
+func (s *KeeperTestSuite) TestMsgLockAndSuperfluidDelegate() {
 	type param struct {
 		coinsToLock         sdk.Coins
 		lockOwner           sdk.AccAddress
@@ -248,27 +332,27 @@ func (suite *KeeperTestSuite) TestMsgLockAndSuperfluidDelegate() {
 	}
 
 	for _, test := range tests {
-		suite.SetupTest()
+		s.SetupTest()
 
-		suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
+		s.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
-		c := sdk.WrapSDKContext(suite.Ctx)
-		valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
+		c := sdk.WrapSDKContext(s.Ctx)
+		valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
-		msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
+		msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
 		_, err := msgServer.LockAndSuperfluidDelegate(c, types.NewMsgLockAndSuperfluidDelegate(test.param.lockOwner, test.param.coinsToLock, valAddrs[0]))
 
 		if test.expectPass {
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 		} else {
-			suite.Require().Error(err)
+			s.Require().Error(err)
 		}
 	}
 }
 
 // TestMsgSuperfluidUndelegate_Event tests that events are correctly emitted
 // when calling SuperfluidUndelegate.
-func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegate_Event() {
+func (s *KeeperTestSuite) TestMsgSuperfluidUndelegate_Event() {
 	testCases := []struct {
 		name                  string
 		validatorStats        []stakingtypes.BondStatus
@@ -294,19 +378,19 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegate_Event() {
 	}
 
 	for _, test := range testCases {
-		suite.SetupTest()
-		msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
-		c := sdk.WrapSDKContext(suite.Ctx)
+		s.SetupTest()
+		msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
+		c := sdk.WrapSDKContext(s.Ctx)
 
 		// setup validators
-		valAddrs := suite.SetupValidators(test.validatorStats)
+		valAddrs := s.SetupValidators(test.validatorStats)
 
-		denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
+		denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
 
 		// setup superfluid delegations
-		suite.setupSuperfluidDelegations(valAddrs, test.superDelegations, denoms)
+		s.setupSuperfluidDelegations(valAddrs, test.superDelegations, denoms)
 		for index, lockId := range test.superUnbondingLockIds {
-			lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockId)
+			lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lockId)
 			if err != nil {
 				lock = &lockuptypes.PeriodLock{}
 			}
@@ -315,11 +399,11 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegate_Event() {
 			sender, _ := sdk.AccAddressFromBech32(lock.Owner)
 			_, err = msgServer.SuperfluidUndelegate(c, types.NewMsgSuperfluidUndelegate(sender, lockId))
 			if test.expSuperUnbondingErr[index] {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 				continue
 			} else {
-				suite.Require().NoError(err)
-				suite.AssertEventEmitted(suite.Ctx, types.TypeEvtSuperfluidUndelegate, 1)
+				s.Require().NoError(err)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtSuperfluidUndelegate, 1)
 			}
 		}
 	}
@@ -327,95 +411,186 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegate_Event() {
 
 // TestMsgSuperfluidUnbondLock_Event tests that events are correctly emitted
 // when calling SuperfluidUnbondLock.
-func (suite *KeeperTestSuite) TestMsgSuperfluidUnbondLock_Event() {
-	suite.SetupTest()
-	msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
+func (s *KeeperTestSuite) TestMsgSuperfluidUnbondLock_Event() {
+	s.SetupTest()
+	msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
 
 	// setup validators
-	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
+	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
-	denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 	// setup superfluid delegations
-	_, _, locks := suite.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 1000000}}, denoms)
+	_, _, locks := s.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 1000000}}, denoms)
 
 	for _, lock := range locks {
 		startTime := time.Now()
 		sender, _ := sdk.AccAddressFromBech32(lock.Owner)
 
 		// first we test that SuperfluidUnbondLock would cause error before undelegating
-		_, err := msgServer.SuperfluidUnbondLock(sdk.WrapSDKContext(suite.Ctx), types.NewMsgSuperfluidUnbondLock(sender, lock.ID))
-		suite.Require().Error(err)
+		_, err := msgServer.SuperfluidUnbondLock(sdk.WrapSDKContext(s.Ctx), types.NewMsgSuperfluidUnbondLock(sender, lock.ID))
+		s.Require().Error(err)
 
 		// undelegation needs to happen prior to SuperfluidUnbondLock
-		err = suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, lock.Owner, lock.ID)
-		suite.Require().NoError(err)
+		err = s.App.SuperfluidKeeper.SuperfluidUndelegate(s.Ctx, lock.Owner, lock.ID)
+		s.Require().NoError(err)
 
 		// test SuperfluidUnbondLock
 		unbondLockStartTime := startTime.Add(time.Hour)
-		suite.Ctx = suite.Ctx.WithBlockTime(unbondLockStartTime)
-		_, err = msgServer.SuperfluidUnbondLock(sdk.WrapSDKContext(suite.Ctx), types.NewMsgSuperfluidUnbondLock(sender, lock.ID))
-		suite.Require().NoError(err)
-		suite.AssertEventEmitted(suite.Ctx, types.TypeEvtSuperfluidUnbondLock, 1)
+		s.Ctx = s.Ctx.WithBlockTime(unbondLockStartTime)
+		_, err = msgServer.SuperfluidUnbondLock(sdk.WrapSDKContext(s.Ctx), types.NewMsgSuperfluidUnbondLock(sender, lock.ID))
+		s.Require().NoError(err)
+		s.AssertEventEmitted(s.Ctx, types.TypeEvtSuperfluidUnbondLock, 1)
 	}
 }
 
 // TestMsgUnPoolWhitelistedPool_Event tests that events are correctly emitted
 // when calling UnPoolWhitelistedPool.
-func (suite *KeeperTestSuite) TestMsgUnPoolWhitelistedPool_Event() {
-	suite.SetupTest()
-	msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
+func (s *KeeperTestSuite) TestMsgUnPoolWhitelistedPool_Event() {
+	s.SetupTest()
+	msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
 
 	// setup validators
-	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
+	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
-	denoms, poolIds := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
+	denoms, poolIds := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
 
 	// whitelist designated pools
-	suite.App.SuperfluidKeeper.SetUnpoolAllowedPools(suite.Ctx, poolIds)
+	s.App.SuperfluidKeeper.SetUnpoolAllowedPools(s.Ctx, poolIds)
 
 	// setup superfluid delegations
-	_, _, locks := suite.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 1000000}}, denoms)
+	_, _, locks := s.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 1000000}}, denoms)
 
 	for index, poolId := range poolIds {
 		sender, _ := sdk.AccAddressFromBech32(locks[index].Owner)
-		suite.Ctx = suite.Ctx.WithBlockHeight(v8constants.UpgradeHeight)
-		_, err := msgServer.UnPoolWhitelistedPool(sdk.WrapSDKContext(suite.Ctx), types.NewMsgUnPoolWhitelistedPool(sender, poolId))
-		suite.Require().NoError(err)
-		suite.AssertEventEmitted(suite.Ctx, types.TypeEvtUnpoolId, 1)
+		s.Ctx = s.Ctx.WithBlockHeight(v8constants.UpgradeHeight)
+		_, err := msgServer.UnPoolWhitelistedPool(sdk.WrapSDKContext(s.Ctx), types.NewMsgUnPoolWhitelistedPool(sender, poolId))
+		s.Require().NoError(err)
+		s.AssertEventEmitted(s.Ctx, types.TypeEvtUnpoolId, 1)
 	}
 }
 
-func (suite *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedPosition_Event() {
-	suite.SetupTest()
-	msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
+func (s *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedPosition_Event() {
+	s.SetupTest()
+
+	msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
+	s.FundAcc(s.TestAccs[0], defaultAcctFunds)
+	fullRangeCoins := sdk.NewCoins(defaultPoolAssets[0].Token, defaultPoolAssets[1].Token)
 
 	// Set validators
-	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
+	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
-	// Set balancer pool and make its respective gamm share an authorized superfluid asset
-	denoms, poolIds := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
-	balancerPool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolIds[0])
-	suite.Require().NoError(err)
+	// Set balancer pool (foo and stake) and make its respective gamm share an authorized superfluid asset
+	msg := balancer.NewMsgCreateBalancerPool(s.TestAccs[0], balancer.PoolParams{
+		SwapFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.NewDec(0),
+	}, defaultPoolAssets, defaultFutureGovernor)
+	balancerPooId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, msg)
+	s.Require().NoError(err)
+	balancerPool, err := s.App.GAMMKeeper.GetPool(s.Ctx, balancerPooId)
+	s.Require().NoError(err)
+	poolDenom := gammtypes.GetPoolShareDenom(balancerPool.GetId())
+	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{
+		Denom:     poolDenom,
+		AssetType: types.SuperfluidAssetTypeLPShare,
+	})
+	s.Require().NoError(err)
 
-	// Set concentrated pool with the same denoms as the balancer pool
-	clPool := suite.PrepareCustomConcentratedPool(suite.TestAccs[0], "stake", "token0", 1, sdk.NewInt(-6), sdk.ZeroDec())
+	// Set concentrated pool with the same denoms as the balancer pool (foo and stake)
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], defaultPoolAssets[0].Token.Denom, defaultPoolAssets[1].Token.Denom, 1, sdk.ZeroDec())
 
 	// Set migration link between the balancer and concentrated pool
 	migrationRecord := gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 		{BalancerPoolId: balancerPool.GetId(), ClPoolId: clPool.GetId()},
 	}}
-	suite.App.GAMMKeeper.SetMigrationInfo(suite.Ctx, migrationRecord)
+	s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx, migrationRecord)
 
 	// Superfluid delegate the balancer pool shares
-	_, _, locks := suite.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 9000000000000000000}}, denoms)
+	_, _, locks := s.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 9000000000000000000}}, []string{poolDenom})
+
+	// Create full range concentrated position (needed to give the pool an initial spot price and liquidity value)
+	s.CreateFullRangePosition(clPool, fullRangeCoins)
+
+	// Add new superfluid asset
+	denom := cltypes.GetConcentratedLockupDenomFromPoolId(clPool.GetId())
+	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{
+		Denom:     denom,
+		AssetType: types.SuperfluidAssetTypeConcentratedShare,
+	})
+	s.Require().NoError(err)
 
 	// Execute UnlockAndMigrateSharesToFullRangeConcentratedPosition message
-	sender, _ := sdk.AccAddressFromBech32(locks[0].Owner)
-	_, err = msgServer.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sdk.WrapSDKContext(suite.Ctx),
+	sender, err := sdk.AccAddressFromBech32(locks[0].Owner)
+	s.Require().NoError(err)
+	_, err = msgServer.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sdk.WrapSDKContext(s.Ctx),
 		types.NewMsgUnlockAndMigrateSharesToFullRangeConcentratedPosition(sender, locks[0].ID, locks[0].Coins[0]))
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
 	// Asset event emitted
-	suite.AssertEventEmitted(suite.Ctx, types.TypeEvtUnlockAndMigrateShares, 1)
+	s.AssertEventEmitted(s.Ctx, types.TypeEvtUnlockAndMigrateShares, 1)
+}
+
+// TestAddToConcentratedLiquiditySuperfluidPosition_Events tests that events are correctly emitted
+// when calling addToConcentratedLiquiditySuperfluidPosition.
+func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition_Events() {
+	testcases := map[string]struct {
+		isLastPositionInPool         bool
+		expectedAddedToPositionEvent int
+		expectedMessageEvents        int
+		expectedError                error
+	}{
+		"happy path": {
+			isLastPositionInPool:         false,
+			expectedAddedToPositionEvent: 1,
+		},
+		"error: last position in pool": {
+			isLastPositionInPool:         true,
+			expectedAddedToPositionEvent: 0,
+			expectedError:                cltypes.AddToLastPositionInPoolError{PoolId: 1, PositionId: 1},
+		},
+	}
+
+	for name, tc := range testcases {
+		s.Run(name, func() {
+			s.SetupTest()
+
+			msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
+			concentratedLiquidityKeeper := s.App.ConcentratedLiquidityKeeper
+			owner := s.TestAccs[0]
+
+			// Position from current account.
+			posId, _, _, _, _, poolJoinAcc := s.SetupSuperfluidConcentratedPosition(s.Ctx, true, false, false, owner)
+
+			if !tc.isLastPositionInPool {
+				s.FundAcc(s.TestAccs[1], defaultFunds)
+				_, _, _, _, _, err := concentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, 1, s.TestAccs[1], defaultFunds)
+				s.Require().NoError(err)
+			}
+
+			// Reset event counts to 0 by creating a new manager.
+			s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
+			s.Equal(0, len(s.Ctx.EventManager().Events()))
+
+			s.FundAcc(poolJoinAcc, defaultFunds)
+			msg := &types.MsgAddToConcentratedLiquiditySuperfluidPosition{
+				PositionId:    posId,
+				Sender:        poolJoinAcc.String(),
+				TokenDesired0: defaultFunds[0],
+				TokenDesired1: defaultFunds[1],
+			}
+
+			response, err := msgServer.AddToConcentratedLiquiditySuperfluidPosition(sdk.WrapSDKContext(s.Ctx), msg)
+
+			if tc.expectedError == nil {
+				s.NoError(err)
+				s.NotNil(response)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtAddToConcentratedLiquiditySuperfluidPosition, tc.expectedAddedToPositionEvent)
+			} else {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
+				s.Require().Nil(response)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtAddToConcentratedLiquiditySuperfluidPosition, tc.expectedAddedToPositionEvent)
+			}
+		})
+	}
 }
