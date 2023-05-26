@@ -41,7 +41,7 @@ func NewCreateConcentratedPoolCmd() (*osmocli.TxCliDesc, *clmodel.MsgCreateConce
 		Use:     "create-pool [denom-0] [denom-1] [tick-spacing] [spread-factor]",
 		Short:   "create a concentrated liquidity pool with the given denom pair, tick spacing, and spread factor",
 		Long:    "denom-1 (the quote denom), tick spacing, and swap fees must all be authorized by the concentrated liquidity module",
-		Example: "create-pool uion uosmo 100 0.01 --from val --chain-id osmosis-1",
+		Example: "osmosisd tx concentratedliquidity create-pool uion uosmo 100 0.01 --from val --chain-id osmosis-1 -b block --keyring-backend test --fees 1000uosmo",
 	}, &clmodel.MsgCreateConcentratedPool{}
 }
 
@@ -49,7 +49,7 @@ func NewCreatePositionCmd() (*osmocli.TxCliDesc, *types.MsgCreatePosition) {
 	return &osmocli.TxCliDesc{
 		Use:     "create-position [pool-id] [lower-tick] [upper-tick] [tokensProvided] [token-0-min-amount] [token-1-min-amount]",
 		Short:   "create or add to existing concentrated liquidity position",
-		Example: "create-position 1 \"[-69082]\" 69082 10000uosmo,10000uion 0 0 --from val --chain-id osmosis-1",
+		Example: "osmosisd tx concentratedliquidity create-position 1 \"[-69082]\" 69082 10000uosmo,10000uion 0 0 --from val --chain-id osmosis-1 -b block --keyring-backend test --fees 1000uosmo",
 	}, &types.MsgCreatePosition{}
 }
 
@@ -57,7 +57,7 @@ func NewAddToPositionCmd() (*osmocli.TxCliDesc, *types.MsgAddToPosition) {
 	return &osmocli.TxCliDesc{
 		Use:     "add-to-position [position-id] [token-0] [token-1]",
 		Short:   "add to an existing concentrated liquidity position",
-		Example: "add-to-position 10 1000000000uosmo 10000000uion",
+		Example: "osmosisd tx concentratedliquidity add-to-position 10 1000000000uosmo 10000000uion --from val --chain-id localosmosis -b block --keyring-backend test --fees 1000000uosmo",
 	}, &types.MsgAddToPosition{}
 }
 
@@ -65,7 +65,7 @@ func NewWithdrawPositionCmd() (*osmocli.TxCliDesc, *types.MsgWithdrawPosition) {
 	return &osmocli.TxCliDesc{
 		Use:     "withdraw-position [position-id] [liquidity]",
 		Short:   "withdraw from an existing concentrated liquidity position",
-		Example: "withdraw-position 1 100317215 --from val --chain-id osmosis-1",
+		Example: "osmosisd tx concentratedliquidity withdraw-position 1 1000 --from val --chain-id localosmosis --keyring-backend=test --fees=1000uosmo",
 	}, &types.MsgWithdrawPosition{}
 }
 
@@ -73,7 +73,7 @@ func NewCollectFeesCmd() (*osmocli.TxCliDesc, *types.MsgCollectFees) {
 	return &osmocli.TxCliDesc{
 		Use:     "collect-fees [position-ids]",
 		Short:   "collect fees from liquidity position(s)",
-		Example: "collect-fees 1,5,7 --from val --chain-id osmosis-1",
+		Example: "osmosisd tx concentratedliquidity collect-fees 998 --from val --chain-id localosmosis -b block --keyring-backend test --fees 1000000uosmo",
 	}, &types.MsgCollectFees{}
 }
 
@@ -81,7 +81,7 @@ func NewCollectIncentivesCmd() (*osmocli.TxCliDesc, *types.MsgCollectIncentives)
 	return &osmocli.TxCliDesc{
 		Use:     "collect-incentives [position-ids]",
 		Short:   "collect incentives from liquidity position(s)",
-		Example: "collect-incentives 1,5,7 --from val --chain-id osmosis-1",
+		Example: "osmosisd tx concentratedliquidity collect-incentives 1 --from val --chain-id localosmosis -b block --keyring-backend test --fees 10000uosmo",
 	}, &types.MsgCollectIncentives{}
 }
 
@@ -89,7 +89,7 @@ func NewFungifyChargedPositionsCmd() (*osmocli.TxCliDesc, *types.MsgFungifyCharg
 	return &osmocli.TxCliDesc{
 		Use:     "fungify-positions [position-ids]",
 		Short:   "Combine fully charged positions within the same range into a new single fully charged position",
-		Example: "fungify-positions 1,5,7 --from val --chain-id osmosis-1",
+		Example: "osmosisd tx concentratedliquidity fungify-positions 1,2 --from val --keyring-backend test -b=block --chain-id=localosmosis --gas=1000000 --fees 20000uosmo",
 	}, &types.MsgFungifyChargedPositions{}
 }
 

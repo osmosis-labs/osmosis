@@ -16,6 +16,7 @@ import (
 	v16 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v16"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 type UpgradeTestSuite struct {
@@ -50,6 +51,10 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 		store := suite.Ctx.KVStore(upgradeStoreKey)
 		versionStore := prefix.NewStore(store, []byte{upgradetypes.VersionMapByte})
 		versionStore.Delete([]byte(cltypes.ModuleName))
+
+		// Ensure proper setup for ProtoRev upgrade testing
+		err := upgradeProtorevSetup(suite)
+		suite.Require().NoError(err)
 	}
 
 	testCases := []struct {
@@ -115,6 +120,9 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 				// Permissionless pool creation is disabled.
 				suite.Require().False(params.IsPermissionlessPoolCreationEnabled)
+
+				// Ensure that the protorev upgrade was successful
+				verifyProtorevUpdateSuccess(suite)
 			},
 			func() {
 				// Validate that tokenfactory params have been updated
@@ -148,4 +156,34 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 			tc.post_upgrade()
 		})
 	}
+}
+
+func upgradeProtorevSetup(suite *UpgradeTestSuite) error {
+	account := apptesting.CreateRandomAccounts(1)[0]
+	suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
+
+	devFee := sdk.NewCoin("uosmo", sdk.NewInt(1000000))
+	if err := suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, devFee); err != nil {
+		return err
+	}
+
+	fundCoin := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000)))
+
+	if err := suite.App.AppKeepers.BankKeeper.MintCoins(suite.Ctx, protorevtypes.ModuleName, fundCoin); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func verifyProtorevUpdateSuccess(suite *UpgradeTestSuite) {
+	// Ensure balance was transferred to the developer account
+	devAcc, err := suite.App.ProtoRevKeeper.GetDeveloperAccount(suite.Ctx)
+	suite.Require().NoError(err)
+	suite.Require().Equal(suite.App.BankKeeper.GetBalance(suite.Ctx, devAcc, "uosmo"), sdk.NewCoin("uosmo", sdk.NewInt(1000000)))
+
+	// Ensure developer fees are empty
+	coins, err := suite.App.ProtoRevKeeper.GetAllDeveloperFees(suite.Ctx)
+	suite.Require().NoError(err)
+	suite.Require().Equal(coins, []sdk.Coin{})
 }
