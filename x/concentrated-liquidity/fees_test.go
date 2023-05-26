@@ -1553,6 +1553,7 @@ func (s *KeeperTestSuite) CollectAndAssertFees(ctx sdk.Context, poolId uint64, t
 	for _, coin := range totalFeesCollected {
 		expected := totalFees.AmountOf(coin.Denom)
 		actual := coin.Amount
+		fmt.Println("expected", expected, "actual", actual)
 		s.Require().Equal(0, errTolerance.Compare(expected, actual), fmt.Sprintf("expected (%s), actual (%s)", expected, actual))
 	}
 }

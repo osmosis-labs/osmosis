@@ -330,6 +330,8 @@ func (s *KeeperTestSuite) crossTickAndChargeFee(poolId uint64, tickIndexToCross 
 	feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, poolId)
 	s.Require().NoError(err)
 
+	feeAccum.AddToAccumulator(sdk.NewDecCoins())
+
 	// Cross the tick to update it.
 	_, err = s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, poolId, tickIndexToCross, &nextTickInfo, DefaultFeeAccumCoins[0], feeAccum.GetValue(), uptimeAccums)
 	s.Require().NoError(err)

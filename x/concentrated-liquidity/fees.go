@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -68,6 +69,8 @@ func (k Keeper) initOrUpdatePositionFeeAccumulator(ctx sdk.Context, poolId uint6
 		return err
 	}
 
+	fmt.Printf("hasPosition %v fee accum %s fee growth outside %s\n", hasPosition, feeAccumulator.GetValue().String(), feeGrowthOutside.String())
+	fmt.Println()
 	feeGrowthInside := feeAccumulator.GetValue().Sub(feeGrowthOutside)
 
 	if !hasPosition {
@@ -134,6 +137,8 @@ func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 
 	feeGrowthAboveUpperTick := calculateFeeGrowth(upperTick, upperTickInfo.FeeGrowthOppositeDirectionOfLastTraversal, currentTick, poolFeeGrowth, true)
 	feeGrowthBelowLowerTick := calculateFeeGrowth(lowerTick, lowerTickInfo.FeeGrowthOppositeDirectionOfLastTraversal, currentTick, poolFeeGrowth, false)
+
+	fmt.Printf("pool fee growth %s, feeGrowthAboveUpperTick %s, feeGrowthBelowLowerTick %s\n", poolFeeGrowth.String(), feeGrowthAboveUpperTick, feeGrowthBelowLowerTick)
 
 	return feeGrowthAboveUpperTick.Add(feeGrowthBelowLowerTick...), nil
 }

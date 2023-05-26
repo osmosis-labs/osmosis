@@ -82,8 +82,18 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, tickI
 		return sdk.Dec{}, types.ErrNextTickInfoNil
 	}
 
+	// Update fee accum
+	feeAccumulator, err := k.GetFeeAccumulator(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, types.ErrNextTickInfoNil
+	}
+	feeAccumulator.AddToAccumulator(sdk.NewDecCoins(swapStateFeeGrowth))
+
 	// subtract tick's fee growth opposite direction of last traversal from current fee growth global, including the fee growth of the current swap.
-	tickInfo.FeeGrowthOppositeDirectionOfLastTraversal = feeAccumValue.Add(swapStateFeeGrowth).Sub(tickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
+	fmt.Println("cross tick before FeeGrowthOppositeDirectionOfLastTraversal", tickInfo.FeeGrowthOppositeDirectionOfLastTraversal.String())
+	tickInfo.FeeGrowthOppositeDirectionOfLastTraversal = feeAccumulator.GetValue().Sub(tickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
+	//tickInfo.FeeGrowthOppositeDirectionOfLastTraversal = feeAccumValue.Add(swapStateFeeGrowth).Sub(tickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
+	fmt.Printf("cross tick after FeeGrowthOppositeDirectionOfLastTraversal %s, feeaccumval %s \n", tickInfo.FeeGrowthOppositeDirectionOfLastTraversal.String(), feeAccumValue)
 
 	// For each supported uptime, subtract tick's uptime growth outside from the respective uptime accumulator
 	// This is functionally equivalent to "flipping" the trackers once the tick is crossed

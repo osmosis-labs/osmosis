@@ -641,8 +641,8 @@ func (s *KeeperTestSuite) TestCrossTick() {
 				accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, test.poolToGet)
 				s.Require().NoError(err)
 
-				// accum value should not have changed
-				s.Require().Equal(accum.GetValue(), sdk.NewDecCoins(defaultAccumCoins).MulDec(sdk.NewDec(2)))
+				// accum value should have changed
+				s.Require().Equal(accum.GetValue(), sdk.NewDecCoins(defaultAccumCoins).MulDec(sdk.NewDec(2)).Add(test.additiveFee))
 
 				// check if the tick fee growth outside has been correctly subtracted
 				tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, test.tickToGet)
