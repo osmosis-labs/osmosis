@@ -722,6 +722,17 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 	}
 }
 
+func (s *KeeperTestSuite) setupBalancerPoolWithFractionLocked(pa []balancer.PoolAsset, fraction sdk.Dec) uint64 {
+	balancerPoolId := s.PrepareCustomBalancerPool(pa, defaultBalancerPoolParams)
+	longestDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
+	s.Require().NoError(err)
+	lockAmt := gammtypes.InitPoolSharesSupply.ToDec().Mul(fraction).TruncateInt()
+	lockCoins := sdk.NewCoins(sdk.NewCoin(gammtypes.GetPoolShareDenom(balancerPoolId), lockAmt))
+	_, err = s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[0], lockCoins, longestDuration)
+	s.Require().NoError(err)
+	return balancerPoolId
+}
+
 // Testing strategy:
 // 1. Create a position
 // 2. Let a fixed amount of time pass, enough to qualify it for some (but not all) uptimes
@@ -991,12 +1002,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			balancerPoolId := uint64(0)
 			if tc.canonicalBalancerPoolAssets != nil {
 				// Create balancer pool and bond its shares
-				balancerPoolId = s.PrepareCustomBalancerPool(tc.canonicalBalancerPoolAssets, defaultBalancerPoolParams)
-				longestDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
-				s.Require().NoError(err)
-				_, err = s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(gammtypes.GetPoolShareDenom(balancerPoolId), gammtypes.InitPoolSharesSupply)), longestDuration)
-				s.Require().NoError(err)
-
+				balancerPoolId = s.setupBalancerPoolWithFractionLocked(tc.canonicalBalancerPoolAssets, sdk.OneDec())
 				s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx,
 					gammtypes.MigrationRecords{
 						BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
@@ -2913,7 +2919,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 // at different times.
 // This is important because the final amount of incentives claimed depends on the last time when the pool
 // was updated. We use this time to calculate the amount of incentives to emit into the uptime accumulators.
-func (s *KeeperTestSuite) TestFunctional_ClaimIncentices_LiquidityChange_VaryingTime() {
+func (s *KeeperTestSuite) TestFunctional_ClaimIncentives_LiquidityChange_VaryingTime() {
 	// Init suite for the test.
 	s.SetupTest()
 
@@ -3160,7 +3166,6 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(1000000000))},
 	}
 	defaultConcentratedAssets := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)))
-	defaultBalancerPoolParams := balancer.PoolParams{SwapFee: sdk.NewDec(0), ExitFee: sdk.NewDec(0)}
 
 	type testcase struct {
 		// defaults to defaultConcentratedAssets
@@ -3252,14 +3257,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			initialLiquidity, _ := s.SetupPosition(clPool.GetId(), s.TestAccs[0], tc.existingConcentratedLiquidity, DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime())
 
 			// If a canonical balancer pool exists, we create it and link it with the CL pool
-			balancerPoolId := s.PrepareCustomBalancerPool(tc.balancerPoolAssets, defaultBalancerPoolParams)
-
-			// Bond the appropriate portion of total Balancer shares as defined by the current test case
-			longestDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
-			s.Require().NoError(err)
-			bondedShares := gammtypes.InitPoolSharesSupply.ToDec().Mul(tc.portionOfSharesBonded).TruncateInt()
-			_, err = s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(gammtypes.GetPoolShareDenom(balancerPoolId), bondedShares)), longestDuration)
-			s.Require().NoError(err)
+			balancerPoolId := s.setupBalancerPoolWithFractionLocked(tc.balancerPoolAssets, tc.portionOfSharesBonded)
 
 			if tc.noCanonicalBalancerPool {
 				balancerPoolId = 0
@@ -3333,8 +3331,6 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 
 func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRangeWithNonExistentPools() {
 	existingConcentratedAssets := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)))
-	defaultBalancerPoolParams := balancer.PoolParams{SwapFee: sdk.NewDec(0), ExitFee: sdk.NewDec(0)}
-	percentSharesBonded := sdk.OneDec()
 
 	type testcase struct {
 		// defaults to defaultBalancerAssets
@@ -3392,14 +3388,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRangeWithNonExistentPools
 			s.SetupPosition(clPool.GetId(), s.TestAccs[0], existingConcentratedAssets, DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime())
 
 			// If a canonical balancer pool exists, we create it and link it with the CL pool
-			balancerPoolId := s.PrepareCustomBalancerPool(tc.balancerPoolAssets, defaultBalancerPoolParams)
-
-			// Bond the appropriate portion of total Balancer shares as defined by the current test case
-			longestDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
-			s.Require().NoError(err)
-			bondedShares := gammtypes.InitPoolSharesSupply.ToDec().Mul(percentSharesBonded).TruncateInt()
-			_, err = s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(gammtypes.GetPoolShareDenom(balancerPoolId), bondedShares)), longestDuration)
-			s.Require().NoError(err)
+			balancerPoolId := s.setupBalancerPoolWithFractionLocked(tc.balancerPoolAssets, sdk.OneDec())
 
 			if tc.noBalancerPoolWithID {
 				balancerPoolId = invalidPoolId
@@ -3560,11 +3549,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			initialLiquidity, _ := s.SetupPosition(clPoolId, s.TestAccs[0], tc.existingConcentratedLiquidity, DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime())
 
 			// Create and bond shares for balancer pool to be linked with CL pool in happy path cases
-			balancerPoolId := s.PrepareCustomBalancerPool(tc.balancerPoolAssets, defaultBalancerPoolParams)
-			longestDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
-			s.Require().NoError(err)
-			_, err = s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(gammtypes.GetPoolShareDenom(balancerPoolId), gammtypes.InitPoolSharesSupply)), longestDuration)
-			s.Require().NoError(err)
+			balancerPoolId := s.setupBalancerPoolWithFractionLocked(tc.balancerPoolAssets, sdk.OneDec())
 
 			// Invalidate pool IDs if needed for error cases
 			if tc.balancerPoolDoesNotExist {
@@ -3608,7 +3593,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 					s.FundAcc(clPool.GetIncentivesAddress(), normalizedEmissions)
 				}
 			}
-			err = addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.uptimeGrowth)
+			err := addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.uptimeGrowth)
 			s.Require().NoError(err)
 
 			// --- System under test ---
