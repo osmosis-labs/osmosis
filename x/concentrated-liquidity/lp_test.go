@@ -284,8 +284,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 
 			// Pre-set fee growth accumulator
 			if !tc.preSetChargeFee.IsZero() {
-				err = clKeeper.ChargeFee(s.Ctx, 1, tc.preSetChargeFee)
-				s.Require().NoError(err)
+				s.AddToFeeAccumulator(poolID, tc.preSetChargeFee)
 			}
 
 			expectedNumCreatePositionEvents := 1
@@ -565,8 +564,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			// Set global fee growth to 1 ETH and charge the fee to the pool.
 			globalFeeGrowth := sdk.NewDecCoin(ETH, sdk.NewInt(1))
-			err = concentratedLiquidityKeeper.ChargeFee(s.Ctx, pool.GetId(), globalFeeGrowth)
-			s.Require().NoError(err)
+			s.AddToFeeAccumulator(pool.GetId(), globalFeeGrowth)
 
 			// Add global uptime growth
 			err = addToUptimeAccums(s.Ctx, pool.GetId(), concentratedLiquidityKeeper, defaultUptimeGrowth)
@@ -1653,8 +1651,7 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 
 			// Pre-set fee growth accumulator
 			if !tc.preSetChargeFee.IsZero() {
-				err = clKeeper.ChargeFee(s.Ctx, 1, tc.preSetChargeFee)
-				s.Require().NoError(err)
+				s.AddToFeeAccumulator(1, tc.preSetChargeFee)
 			}
 
 			// If we want to test a non-first position, we create a first position with a separate account

@@ -16,6 +16,7 @@ var (
 	ErrPermissionlessPoolCreationDisabled = errors.New("permissionless pool creation is disabled for the concentrated liquidity module")
 	ErrZeroLiquidity                      = errors.New("liquidity cannot be 0")
 	ErrNextTickInfoNil                    = errors.New("next tick info cannot be nil")
+	ErrPoolNil                            = errors.New("pool cannot be nil")
 )
 
 // x/concentrated-liquidity module sentinel errors.

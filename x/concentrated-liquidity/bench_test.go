@@ -15,6 +15,8 @@ import (
 	clmath "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 type BenchTestSuite struct {
@@ -56,6 +58,15 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 		numberOfPositionsInt = sdk.NewInt(numberOfPositions)
 		maxAmountOfEachToken = sdk.NewInt(maxAmountDeposited).Mul(numberOfPositionsInt)
 		seed                 = int64(1)
+		defaultDenom0Asset   = balancer.PoolAsset{
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin(denom0, sdk.NewInt(1000000000)),
+		}
+		defaultDenom1Asset = balancer.PoolAsset{
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin(denom1, sdk.NewInt(1000000000)),
+		}
+		defaultPoolAssets = []balancer.PoolAsset{defaultDenom0Asset, defaultDenom1Asset}
 	)
 
 	rand.Seed(seed)
@@ -74,22 +85,38 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 			))
 		}
 
-		// Create a pool
-		poolId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(
+		// Create a balancer pool
+		gammPoolId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, balancer.NewMsgCreateBalancerPool(s.TestAccs[0], balancer.PoolParams{
+			SwapFee: sdk.MustNewDecFromStr("0.001"),
+			ExitFee: sdk.ZeroDec(),
+		}, defaultPoolAssets, ""))
+		noError(b, err)
+
+		// Create a cl pool.
+		clPoolId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(
 			s.TestAccs[0], denom0, denom1, tickSpacing, sdk.MustNewDecFromStr("0.001"),
 		))
 		noError(b, err)
 
 		clKeeper := s.App.ConcentratedLiquidityKeeper
+		gammKeeper := s.App.GAMMKeeper
+
+		// Create a link between the balancer and cl pool.
+		record := gammtypes.BalancerToConcentratedPoolLink{BalancerPoolId: gammPoolId, ClPoolId: clPoolId}
+		err = gammKeeper.ReplaceMigrationRecords(s.Ctx, []gammtypes.BalancerToConcentratedPoolLink{record})
+		s.Require().NoError(err)
+
+		_, err = gammKeeper.GetLinkedConcentratedPoolID(s.Ctx, gammPoolId)
+		s.Require().NoError(err)
 
 		// Create first position to set a price of 1 and tick of zero.
 		tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(100))
 		tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(100))
 		tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
-		_, _, _, _, _, _, _, err = clKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinTick, types.MaxTick)
+		_, _, _, _, _, _, _, err = clKeeper.CreatePosition(s.Ctx, clPoolId, s.TestAccs[0], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinTick, types.MaxTick)
 		noError(b, err)
 
-		pool, err := clKeeper.GetPoolById(s.Ctx, poolId)
+		pool, err := clKeeper.GetPoolById(s.Ctx, clPoolId)
 		noError(b, err)
 
 		// Zero by default, can configure by setting a specific position.
@@ -136,7 +163,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 				tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
 
 				accountIndex := rand.Intn(len(s.TestAccs))
-				s.createPosition(accountIndex, poolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
+				s.createPosition(accountIndex, clPoolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
 			}
 		}
 
@@ -152,7 +179,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 				accountIndex := rand.Intn(len(s.TestAccs))
 				account := s.TestAccs[accountIndex]
 				simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
-				s.createPosition(accountIndex, poolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
+				s.createPosition(accountIndex, clPoolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
 			}
 		}
 
@@ -170,7 +197,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 					accountIndex := rand.Intn(len(s.TestAccs))
 					account := s.TestAccs[accountIndex]
 					simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
-					s.createPosition(accountIndex, poolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
+					s.createPosition(accountIndex, clPoolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
 				}
 			}
 
@@ -186,7 +213,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 				accountIndex := rand.Intn(len(s.TestAccs))
 				account := s.TestAccs[accountIndex]
 				simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
-				s.createPosition(accountIndex, poolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
+				s.createPosition(accountIndex, clPoolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
 			}
 		}
 
