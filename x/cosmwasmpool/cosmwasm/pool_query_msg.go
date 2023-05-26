@@ -4,8 +4,8 @@ package cosmwasm
 
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
-// GetSwapFee
-type GetSwapFee struct {
+// GetSpreadFactor
+type GetSpreadFactor struct {
 	GetSwapFee struct{} `json:"get_swap_fee"`
 }
 

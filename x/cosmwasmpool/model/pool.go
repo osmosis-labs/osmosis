@@ -8,7 +8,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/cosmwasm"
 	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
@@ -26,7 +25,7 @@ var (
 func NewCosmWasmPool(poolId uint64, codeId uint64, instantiateMsg []byte) Pool {
 	pool := Pool{
 		PoolStoreModel: PoolStoreModel{
-			PoolAddress:     gammtypes.NewPoolAddress(poolId).String(),
+			PoolAddress:     poolmanagertypes.NewPoolAddress(poolId).String(),
 			ContractAddress: "", // N.B. This is to be set in InitializePool()
 			PoolId:          poolId,
 			CodeId:          codeId,
@@ -60,9 +59,9 @@ func (p Pool) String() string {
 }
 
 // GetSwapFee returns the swap fee of the pool.
-func (p Pool) GetSwapFee(ctx sdk.Context) sdk.Dec {
-	request := cosmwasm.GetSwapFee{}
-	response := cosmwasm.MustQuery[cosmwasm.GetSwapFee, cosmwasm.GetSwapFeeResponse](ctx, p.WasmKeeper, p.ContractAddress, request)
+func (p Pool) GetSpreadFactor(ctx sdk.Context) sdk.Dec {
+	request := cosmwasm.GetSpreadFactor{}
+	response := cosmwasm.MustQuery[cosmwasm.GetSpreadFactor, cosmwasm.GetSwapFeeResponse](ctx, p.WasmKeeper, p.ContractAddress, request)
 	return response.SwapFee
 }
 

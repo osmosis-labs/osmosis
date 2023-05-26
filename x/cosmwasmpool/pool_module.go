@@ -65,6 +65,11 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI,
 	return concentratedPool, nil
 }
 
+// TODO: implement this method
+func (k Keeper) GetPools(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
+	return []poolmanagertypes.PoolI{}, nil
+}
+
 // GetPoolDenoms retrieves the list of asset denoms in a CosmWasm-based liquidity pool given its ID.
 //
 // Parameters:
@@ -252,4 +257,15 @@ func (k Keeper) CalcInAmtGivenOut(
 	}
 
 	return response.TokenIn, nil
+}
+
+// ValidatePermissionlessPoolCreationEnabled returns nil if permissionless pool creation in the module is enabled.
+// Otherwise, returns an error.
+func (k Keeper) ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error {
+	return nil
+}
+
+// TODO: implement me
+func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error) {
+	panic("not implemented")
 }

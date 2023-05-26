@@ -28,7 +28,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgCreateCosmWasmPool{},
 	)
 
-	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(registry, &_MsgCreator_serviceDesc)
 }
 
 // TODO: re-enable this when CL state-breakage PR is merged.

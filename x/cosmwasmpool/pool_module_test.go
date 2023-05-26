@@ -11,7 +11,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/mocks"
 	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/model"
 	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
@@ -32,7 +31,7 @@ func (s *PoolModuleSuite) TestInitializePool() {
 		defaultPoolId = uint64(1)
 		validTestPool = &model.Pool{
 			PoolStoreModel: model.PoolStoreModel{
-				PoolAddress:     gammtypes.NewPoolAddress(defaultPoolId).String(),
+				PoolAddress:     poolmanagertypes.NewPoolAddress(defaultPoolId).String(),
 				ContractAddress: "", // N.B.: to be set in InitializePool()
 				PoolId:          defaultPoolId,
 				CodeId:          1,

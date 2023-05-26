@@ -14,8 +14,8 @@ type msgServer struct {
 }
 
 var (
-	_ types.MsgServer = msgServer{}
-	_ model.MsgServer = msgServer{}
+	_ types.MsgServer        = msgServer{}
+	_ model.MsgCreatorServer = msgServer{}
 )
 
 func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
