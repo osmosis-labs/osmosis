@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/cosmwasm"
 	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/cosmwasm/msg"
 	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
@@ -63,8 +62,8 @@ func (p Pool) String() string {
 
 // GetSwapFee returns the swap fee of the pool.
 func (p Pool) GetSpreadFactor(ctx sdk.Context) sdk.Dec {
-	request := cosmwasm.GetSpreadFactor{}
-	response := cosmwasmutils.MustQuery[cosmwasm.GetSpreadFactor, cosmwasm.GetSwapFeeResponse](ctx, p.WasmKeeper, p.ContractAddress, request)
+	request := msg.GetSwapFeeQueryMsg{}
+	response := cosmwasmutils.MustQuery[msg.GetSwapFeeQueryMsg, msg.GetSwapFeeQueryMsgResponse](ctx, p.WasmKeeper, p.ContractAddress, request)
 	return response.SwapFee
 }
 
