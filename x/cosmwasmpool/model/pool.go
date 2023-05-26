@@ -10,6 +10,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/cosmwasm/msg"
 	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+
+	cosmwasmutils "github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 )
 
 type Pool struct {
@@ -62,7 +64,7 @@ func (p Pool) String() string {
 // GetSwapFee returns the swap fee of the pool.
 func (p Pool) GetSpreadFactor(ctx sdk.Context) sdk.Dec {
 	request := cosmwasm.GetSpreadFactor{}
-	response := cosmwasm.MustQuery[cosmwasm.GetSpreadFactor, cosmwasm.GetSwapFeeResponse](ctx, p.WasmKeeper, p.ContractAddress, request)
+	response := cosmwasmutils.MustQuery[cosmwasm.GetSpreadFactor, cosmwasm.GetSwapFeeResponse](ctx, p.WasmKeeper, p.ContractAddress, request)
 	return response.SwapFee
 }
 
@@ -79,7 +81,7 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom 
 			BaseAssetDenom:  baseAssetDenom,
 		},
 	}
-	response, err := cosmwasm.Query[msg.SpotPriceQueryMsg, msg.SpotPriceQueryMsgResponse](ctx, p.WasmKeeper, p.ContractAddress, request)
+	response, err := cosmwasmutils.Query[msg.SpotPriceQueryMsg, msg.SpotPriceQueryMsgResponse](ctx, p.WasmKeeper, p.ContractAddress, request)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -99,7 +101,7 @@ func (p Pool) GetType() poolmanagertypes.PoolType {
 // GetTotalPoolLiquidity returns the total pool liquidity
 func (p Pool) GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins {
 	request := msg.GetTotalPoolLiquidityQueryMsg{}
-	response := cosmwasm.MustQuery[msg.GetTotalPoolLiquidityQueryMsg, msg.GetTotalPoolLiquidityQueryMsgResponse](ctx, p.WasmKeeper, p.ContractAddress, request)
+	response := cosmwasmutils.MustQuery[msg.GetTotalPoolLiquidityQueryMsg, msg.GetTotalPoolLiquidityQueryMsgResponse](ctx, p.WasmKeeper, p.ContractAddress, request)
 	return response.TotalPoolLiquidity
 }
 
