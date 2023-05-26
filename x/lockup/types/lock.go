@@ -29,6 +29,11 @@ func (p SyntheticLock) IsUnlocking() bool {
 	return !p.EndTime.Equal(time.Time{})
 }
 
+// IsNil returns if the synthetic lock is nil.
+func (p SyntheticLock) IsNil() bool {
+	return p == (SyntheticLock{})
+}
+
 // OwnerAddress returns locks owner address.
 func (p PeriodLock) OwnerAddress() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(p.Owner)

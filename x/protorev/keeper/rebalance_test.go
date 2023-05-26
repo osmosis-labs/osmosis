@@ -3,6 +3,7 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
@@ -330,6 +331,10 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 		expectedProfit sdk.Int
 	}
 
+	// Set protorev developer account
+	devAccount := apptesting.CreateRandomAccounts(1)[0]
+	s.App.ProtoRevKeeper.SetDeveloperAccount(s.Ctx, devAccount)
+
 	tests := []struct {
 		name                string
 		param               param
@@ -426,6 +431,11 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 			totalNumberOfTrades, err := s.App.ProtoRevKeeper.GetNumberOfTrades(s.Ctx)
 			s.Require().NoError(err)
 			s.Require().Equal(test.expectedNumOfTrades, totalNumberOfTrades)
+
+			// Check the dev account was paid the correct amount
+			developerAccBalance := s.App.AppKeepers.BankKeeper.GetBalance(s.Ctx, devAccount, test.arbDenom)
+			s.Require().Equal(test.param.expectedProfit.MulRaw(types.ProfitSplitPhase1).QuoRaw(100), developerAccBalance.Amount)
+
 		} else {
 			s.Require().Error(err)
 		}

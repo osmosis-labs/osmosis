@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
@@ -30,12 +31,15 @@ const (
 )
 
 var (
+	zero                  = sdk.NewDec(0)
+	one                   = sdk.NewDec(1)
 	two                   = sdk.NewDec(2)
-	three                 = sdk.NewDec(2)
+	three                 = sdk.NewDec(3)
 	four                  = sdk.NewDec(4)
 	five                  = sdk.NewDec(5)
+	sqrt5000              = sdk.MustNewDecFromStr("70.710678118654752440") // 5000
 	defaultSqrtPriceLower = sdk.MustNewDecFromStr("70.688664163408836321") // approx 4996.89
-	defaultSqrtPriceUpper = sdk.MustNewDecFromStr("70.710678118654752440") // 5000
+	defaultSqrtPriceUpper = sqrt5000
 	defaultAmountOne      = sdk.MustNewDecFromStr("66829187.967824033199646915")
 	defaultAmountZero     = sdk.MustNewDecFromStr("13369.999999999998920002")
 	defaultLiquidity      = sdk.MustNewDecFromStr("3035764687.503020836176699298")
@@ -51,6 +55,56 @@ func TestStrategyTestSuite(t *testing.T) {
 
 func (suite *StrategyTestSuite) SetupTest() {
 	suite.Setup()
+}
+
+type tickIteratorTest struct {
+	currentTick     int64
+	preSetPositions []position
+
+	expectIsValid  bool
+	expectNextTick int64
+	expectError    error
+}
+
+func (suite *StrategyTestSuite) runTickIteratorTest(strategy swapstrategy.SwapStrategy, tc tickIteratorTest) {
+	pool := suite.PrepareConcentratedPool()
+	suite.setupPresetPositions(pool.GetId(), tc.preSetPositions)
+
+	// refetch pool
+	pool, err := suite.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(suite.Ctx, pool.GetId())
+	suite.Require().NoError(err)
+
+	currentTick := pool.GetCurrentTick()
+	suite.Require().Equal(int64(0), currentTick)
+
+	tickIndex := strategy.InitializeTickValue(currentTick)
+
+	iter := strategy.InitializeNextTickIterator(suite.Ctx, defaultPoolId, tickIndex)
+	defer iter.Close()
+
+	suite.Require().Equal(tc.expectIsValid, iter.Valid())
+	if tc.expectIsValid {
+		actualNextTick, err := types.TickIndexFromBytes(iter.Key())
+		suite.Require().NoError(err)
+		suite.Require().Equal(tc.expectNextTick, actualNextTick)
+	}
+}
+
+func (suite *StrategyTestSuite) setupPresetPositions(poolId uint64, positions []position) {
+	clMsgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
+	for _, pos := range positions {
+		suite.FundAcc(suite.TestAccs[0], DefaultCoins.Add(DefaultCoins...))
+		_, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(suite.Ctx), &types.MsgCreatePosition{
+			PoolId:          poolId,
+			Sender:          suite.TestAccs[0].String(),
+			LowerTick:       pos.lowerTick,
+			UpperTick:       pos.upperTick,
+			TokensProvided:  DefaultCoins.Add(sdk.NewCoin(USDC, sdk.OneInt())),
+			TokenMinAmount0: sdk.ZeroInt(),
+			TokenMinAmount1: sdk.ZeroInt(),
+		})
+		suite.Require().NoError(err)
+	}
 }
 
 // TestComputeSwapState_Inverse validates that out given in and in given out compute swap steps
@@ -84,7 +138,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 		expectedAmountOut               sdk.Dec
 	}{
 		"1: one_for_zero__not_equal_target__no_fee": {
-			sqrtPriceCurrent: sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			sqrtPriceCurrent: sqrt5000,                                       // 5000
 			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.724818840347693039"), // 5002
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
 			amountIn:         sdk.NewDec(42000000),
@@ -101,7 +155,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			expectedAmountOut: sdk.NewDec(8398),
 		},
 		"2: zero_for_one__not_equal_target__no_fee": {
-			sqrtPriceCurrent: sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			sqrtPriceCurrent: sqrt5000,                                       // 5000
 			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.682388188289167342"), // 4996
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
 			amountIn:         sdk.NewDec(13370),
@@ -119,7 +173,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			expectedAmountOut: sdk.NewDec(66829187),
 		},
 		"3: one_for_zero__equal_target__no_fee": {
-			sqrtPriceCurrent: sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			sqrtPriceCurrent: sqrt5000,                                       // 5000
 			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.724513183069625078"), // approx 5001.96
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
 			amountIn:         sdk.NewDec(42000000),
@@ -136,7 +190,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			expectedAmountOut: sdk.NewDec(8398),
 		},
 		"4: zero_for_one__equal_target__no_fee": {
-			sqrtPriceCurrent: sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
+			sqrtPriceCurrent: sqrt5000,                                       // 5000
 			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.688664163408836320"), // approx 4996.89
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
 			amountIn:         sdk.NewDec(13370),
@@ -198,7 +252,6 @@ func (suite *StrategyTestSuite) TestGetPriceLimit() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		suite.Run(name, func() {
 			priceLimit := swapstrategy.GetPriceLimit(tc.zeroForOne)
 			suite.Require().Equal(tc.expected, priceLimit)

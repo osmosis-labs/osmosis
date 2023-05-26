@@ -23,7 +23,7 @@ The module uses time basis epochs supported by the `epochs` module.
 The `x/mint` module is designed to handle the regular printing of new
 tokens within a chain. The design taken within Osmosis is to
 
-- Mint new tokens once per epoch (default one week)
+- Mint new tokens once per epoch (default one day)
 - To have a "Reductioning factor" every period, which reduces the number of
   rewards per epoch. (default: period is 3 years, where a
   year is 52 epochs. The next period's rewards are 2/3 of the prior

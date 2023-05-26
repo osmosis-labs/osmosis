@@ -178,14 +178,33 @@ func (q Querier) NextLockID(goCtx context.Context, req *types.NextLockIDRequest)
 }
 
 // SyntheticLockupsByLockupID returns synthetic lockups by native lockup id.
+// Deprecated: use SyntheticLockupByLockupID instead.
+// nolint: staticcheck
 func (q Querier) SyntheticLockupsByLockupID(goCtx context.Context, req *types.SyntheticLockupsByLockupIDRequest) (*types.SyntheticLockupsByLockupIDResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	synthLocks := q.Keeper.GetAllSyntheticLockupsByLockup(ctx, req.LockId)
-	return &types.SyntheticLockupsByLockupIDResponse{SyntheticLocks: synthLocks}, nil
+	synthLock, err := q.Keeper.GetSyntheticLockupByUnderlyingLockId(ctx, req.LockId)
+	if err != nil {
+		return nil, err
+	}
+	return &types.SyntheticLockupsByLockupIDResponse{SyntheticLocks: []types.SyntheticLock{synthLock}}, nil
+}
+
+// SyntheticLockupByLockupID returns synthetic lockup by native lockup id.
+func (q Querier) SyntheticLockupByLockupID(goCtx context.Context, req *types.SyntheticLockupByLockupIDRequest) (*types.SyntheticLockupByLockupIDResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	synthLock, err := q.Keeper.GetSyntheticLockupByUnderlyingLockId(ctx, req.LockId)
+	if err != nil {
+		return nil, err
+	}
+	return &types.SyntheticLockupByLockupIDResponse{SyntheticLock: synthLock}, nil
 }
 
 // AccountLockedLongerDuration returns locks of an account with duration longer than specified.
