@@ -464,3 +464,60 @@ func (s *PoolModuleSuite) TestCalcInAmtGivenOut_SwapInAmtGivenOut() {
 		})
 	}
 }
+
+func (s *PoolModuleSuite) TestGetTotalPoolLiquidity() {
+	tests := map[string]struct {
+		poolId               uint64
+		initialCoins         sdk.Coins
+		expectedErrorMessage string
+	}{
+		"happy path": {
+			poolId:       defaultPoolId,
+			initialCoins: initalDefaultSupply,
+		},
+		"unhappy path: invalid pool id": {
+			poolId:       defaultPoolId + 1,
+			initialCoins: initalDefaultSupply,
+
+			expectedErrorMessage: types.PoolNotFoundError{
+				PoolId: defaultPoolId + 1,
+			}.Error(),
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+
+			cosmwasmPoolKeeper := s.App.CosmwasmPoolKeeper
+
+			// fund pool joiner
+			s.FundAcc(s.TestAccs[0], tc.initialCoins)
+
+			// get initial denom from coins specified in the test case
+			initialDenoms := []string{}
+			for _, coin := range tc.initialCoins {
+				initialDenoms = append(initialDenoms, coin.Denom)
+			}
+
+			// create pool
+			pool := s.PrepareCustomTransmuterPool(s.TestAccs[0], initialDenoms, 1)
+
+			// add liquidity by joining the pool
+			request := transmuter.JoinPoolExecuteMsgRequest{}
+			cosmwasm.MustExecute[transmuter.JoinPoolExecuteMsgRequest, msg.EmptyStruct](s.Ctx, s.App.ContractKeeper, pool.GetContractAddress(), s.TestAccs[0], tc.initialCoins, request)
+
+			// system under test non-mutative.
+			actualSwapTokenIn, err := cosmwasmPoolKeeper.GetTotalPoolLiquidity(s.Ctx, tc.poolId)
+			if tc.expectedErrorMessage != "" {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedErrorMessage)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().Equal(tc.initialCoins, actualSwapTokenIn)
+		})
+	}
+}

@@ -23,6 +23,5 @@ type CosmWasmExtension interface {
 
 	SetWasmKeeper(wasmKeeper WasmKeeper)
 
-	// TODO: revisit removing from model.
 	GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins
 }
