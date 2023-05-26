@@ -456,7 +456,7 @@ func (k Keeper) unlockMaturedLockInternalLogic(ctx sdk.Context, lock types.Perio
 	return nil
 }
 
-// SetLockReceiver changes the reward recipient address to the given address.
+// SetLockRewardReceiverAddress changes the reward recipient address to the given address.
 // Storing an empty string for reward receiver would indicate the owner being reward receiver.
 func (k Keeper) SetLockRewardReceiverAddress(ctx sdk.Context, lockID uint64, owner sdk.AccAddress, newReceiverAddress string) error {
 	lock, err := k.GetLockByID(ctx, lockID)
