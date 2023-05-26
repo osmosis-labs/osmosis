@@ -508,8 +508,8 @@ func (s *PoolModuleSuite) TestGetTotalPoolLiquidity() {
 			request := transmuter.JoinPoolExecuteMsgRequest{}
 			cosmwasm.MustExecute[transmuter.JoinPoolExecuteMsgRequest, msg.EmptyStruct](s.Ctx, s.App.ContractKeeper, pool.GetContractAddress(), s.TestAccs[0], tc.initialCoins, request)
 
-			// system under test non-mutative.
-			actualSwapTokenIn, err := cosmwasmPoolKeeper.GetTotalPoolLiquidity(s.Ctx, tc.poolId)
+			// system under test.
+			actualLiquidity, err := cosmwasmPoolKeeper.GetTotalPoolLiquidity(s.Ctx, tc.poolId)
 			if tc.expectedErrorMessage != "" {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedErrorMessage)
@@ -517,7 +517,7 @@ func (s *PoolModuleSuite) TestGetTotalPoolLiquidity() {
 			}
 
 			s.Require().NoError(err)
-			s.Require().Equal(tc.initialCoins, actualSwapTokenIn)
+			s.Require().Equal(tc.initialCoins, actualLiquidity)
 		})
 	}
 }
