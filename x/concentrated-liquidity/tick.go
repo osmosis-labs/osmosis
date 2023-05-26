@@ -77,21 +77,14 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 // CONTRACT: the caller validates that the pool with the given id exists.
 // CONTRACT: caller is responsible for the uptimeAccums to be up-to-date.
 // CONTRACT: uptimeAccums are associated with the given pool id.
-func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo *model.TickInfo, swapStateFeeGrowth sdk.DecCoin, feeAccumValue sdk.DecCoins, uptimeAccums []accum.AccumulatorObject) (liquidityDelta sdk.Dec, err error) {
+func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo *model.TickInfo, feeAccumValue sdk.DecCoins, uptimeAccums []accum.AccumulatorObject) (liquidityDelta sdk.Dec, err error) {
 	if tickInfo == nil {
 		return sdk.Dec{}, types.ErrNextTickInfoNil
 	}
 
-	// Update fee accum
-	feeAccumulator, err := k.GetFeeAccumulator(ctx, poolId)
-	if err != nil {
-		return sdk.Dec{}, types.ErrNextTickInfoNil
-	}
-	feeAccumulator.AddToAccumulator(sdk.NewDecCoins(swapStateFeeGrowth))
-
 	// subtract tick's fee growth opposite direction of last traversal from current fee growth global, including the fee growth of the current swap.
 	fmt.Println("cross tick before FeeGrowthOppositeDirectionOfLastTraversal", tickInfo.FeeGrowthOppositeDirectionOfLastTraversal.String())
-	tickInfo.FeeGrowthOppositeDirectionOfLastTraversal = feeAccumulator.GetValue().Sub(tickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
+	tickInfo.FeeGrowthOppositeDirectionOfLastTraversal = feeAccumValue.Sub(tickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
 	//tickInfo.FeeGrowthOppositeDirectionOfLastTraversal = feeAccumValue.Add(swapStateFeeGrowth).Sub(tickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
 	fmt.Printf("cross tick after FeeGrowthOppositeDirectionOfLastTraversal %s, feeaccumval %s \n", tickInfo.FeeGrowthOppositeDirectionOfLastTraversal.String(), feeAccumValue)
 

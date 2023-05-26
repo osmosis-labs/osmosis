@@ -628,8 +628,10 @@ func (s *KeeperTestSuite) TestCrossTick() {
 				s.Require().NoError(err)
 			}
 
+			feeAccum.AddToAccumulator(sdk.NewDecCoins(test.additiveFee))
+
 			// System under test
-			liquidityDelta, err := s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, test.poolToGet, test.tickToGet, nextTickInfo, test.additiveFee, feeAccum.GetValue(), uptimeAccums)
+			liquidityDelta, err := s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, test.poolToGet, test.tickToGet, nextTickInfo, feeAccum.GetValue(), uptimeAccums)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &test.expectedErr)
