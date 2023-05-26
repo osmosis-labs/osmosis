@@ -8,6 +8,7 @@ import (
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -852,11 +853,12 @@ func (s *KeeperTestSuite) AddTokensToLockForSynth() {
 		for i, synthlock := range s.App.LockupKeeper.GetAllSyntheticLockups(s.Ctx) {
 			s.Require().Equal(synthlock, synthlocks[i])
 		}
-		// by GetAllSyntheticLockupsByLockup
+		// by GetSyntheticLockupByUnderlyingLockId
 		for i := uint64(1); i <= 3; i++ {
-			for j, synthlockByLockup := range s.App.LockupKeeper.GetAllSyntheticLockupsByLockup(s.Ctx, i) {
-				s.Require().Equal(synthlockByLockup, synthlocks[(int(i)-1)*3+j])
-			}
+			synthlockByLockup, err := s.App.LockupKeeper.GetSyntheticLockupByUnderlyingLockId(s.Ctx, i)
+			s.Require().NoError(err)
+			s.Require().Equal(synthlockByLockup, synthlocks[(int(i)-1)*3+int(i)])
+
 		}
 		// by GetAllSyntheticLockupsByAddr
 		for i, synthlock := range s.App.LockupKeeper.GetAllSyntheticLockupsByAddr(s.Ctx, addr1) {
@@ -1313,9 +1315,10 @@ func (s *KeeperTestSuite) TestForceUnlock() {
 		s.Require().Equal(balances, coinsToLock)
 
 		// if it was superfluid delegated lock,
-		//  confirm that we don't have associated synth locks
-		synthLocks := s.App.LockupKeeper.GetAllSyntheticLockupsByLockup(s.Ctx, lock.ID)
-		s.Require().Equal(0, len(synthLocks))
+		// confirm that we don't have associated synth lock
+		synthLock, err := s.App.LockupKeeper.GetSyntheticLockupByUnderlyingLockId(s.Ctx, lock.ID)
+		s.Require().NoError(err)
+		s.Require().Equal((lockuptypes.SyntheticLock{}), synthLock)
 
 		// check if lock is deleted by checking trying to get lock ID
 		_, err = s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)

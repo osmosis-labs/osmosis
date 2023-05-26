@@ -55,9 +55,11 @@ func (s *KeeperTestSuite) ExecuteUpgradeFeeTokenProposal(feeToken string, poolId
 	upgradeProp := types.NewUpdateFeeTokenProposal(
 		"Test Proposal",
 		"test",
-		types.FeeToken{
-			Denom:  feeToken,
-			PoolID: poolId,
+		[]types.FeeToken{
+			{
+				Denom:  feeToken,
+				PoolID: poolId,
+			},
 		},
 	)
 	return s.App.TxFeesKeeper.HandleUpdateFeeTokenProposal(s.Ctx, &upgradeProp)

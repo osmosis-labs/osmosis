@@ -173,7 +173,7 @@ The developer account is set through a MsgSetDeveloperAccount tx. This is the ac
 
 `x/protorev` will distribute 20% of profits to the developer account in year 1, 10% of profits in year 2, and 5% thereafter. To track how much profit can be distributed to the developer account at any given moment, we store the amount of days since module genesis.
 
-### DeveloperFees
+### DeveloperFees (DEPRECATED IN v16)
 
 DeveloperFees tracks the total amount of profit that can be withdrawn by the developer account. These fees are sent to the developer account, if set, every week through the `epoch` hook. If unset, the funds are held in the module account. All `x/protorev` profits are going to be stored on the module account.
 
@@ -237,7 +237,7 @@ There are two primary methods for route generation: **Highest Liquidity Pools** 
 
 The highest liquidity pool method will always create cyclic arbitrage routes that have three pools. The routes that are created will always start and end with one of the denominations that are stored in BaseDenoms. The pool swapped against that the `postHandler` processes will always be the 2nd pool in the three-pool cyclic arbitrage route. 
 
-**Highest Liquidity Pools:** Updated via the weekly epoch, the module iterates through all the pools and stores the highest liquidity pool for every asset that pairs with any of the base denominations the module stores (for example, the osmo/juno key will have a single pool id stored, that pool id having the most liquidity out of all the osmo/juno pools). New base denominations can be added or removed on an as needed basis by the admin account. A base denomination is just another way of describing the denomination we want to use for cyclic arbitrage. This store is then used to create routes at runtime after analyzing a swap. This store is updated through the `epoch` hook and when the admin account submits a `MsgSetBaseDenoms` tx.
+**Highest Liquidity Pools:** Updated via the daily epoch, the module iterates through all the pools and stores the highest liquidity pool for every asset that pairs with any of the base denominations the module stores (for example, the osmo/juno key will have a single pool id stored, that pool id having the most liquidity out of all the osmo/juno pools). New base denominations can be added or removed on an as needed basis by the admin account. A base denomination is just another way of describing the denomination we want to use for cyclic arbitrage. This store is then used to create routes at runtime after analyzing a swap. This store is updated through the `epoch` hook and when the admin account submits a `MsgSetBaseDenoms` tx.
 
 The simplest way to conceptualize how the route is generated is by the following example. Assume we have two base denominations that `x/protorev` is currently tracking.
 
@@ -338,11 +338,11 @@ The `x/protorev` module implements epoch hooks in order to trigger the recalcula
 
 ## Epoch Hook
 
-The Epoch hook allows the module to update the information listed above using the epoch identifiers `week` and `day`. 
+The Epoch hook allows the module to update the information listed above using the epoch identifier `day`. 
 
 ### Highest Liquidity Pools
 
-As described above, one method of determining cyclic arbitrage opportunities is to use the highest liquidity pools paired with any base denomination. While this calculation is done on genesis (with only Osmo configured), the pools may restructure over time and new tokens may end up being traded heavily with the base denominations. As such, it is necessary to update this over time so that the module’s logic in determining cyclic arbitrage opportunities is most optimal and updated. Using the `AfterEpochEnd` hook in combination with the `week` epoch identifier, we are able to successfully update the pool information every week. At runtime, `UpdatePools` will be executed and all of the internal pool info will be updated.
+As described above, one method of determining cyclic arbitrage opportunities is to use the highest liquidity pools paired with any base denomination. While this calculation is done on genesis (with only Osmo configured), the pools may restructure over time and new tokens may end up being traded heavily with the base denominations. As such, it is necessary to update this over time so that the module’s logic in determining cyclic arbitrage opportunities is most optimal and updated. Using the `AfterEpochEnd` hook in combination with the `day` epoch identifier, we are able to successfully update the pool information every day. At runtime, `UpdatePools` will be executed and all of the internal pool info will be updated.
 
 ### Profit Distribution
 
@@ -350,7 +350,7 @@ Profits accumulated by the module will be partially distributed to the developer
 
 In order to track how much profit the developers can withdraw at any given moment, the module tracks the number of days since module genesis. This gets incremented in the epoch hook after every day. When a trade gets executed by the module, the module will determine how much of the profit from the trade the developers can receive by using `daysSinceModuleGenesis` in a simple calculation. 
 
-If the developer account is not set (which it is not on genesis), all funds are held in the module account. Once the developer address is set by the admin account, the developer address will start to automatically receive a share of profits every week through the epoch hook. The distribution of funds from the module account is done through `SendDeveloperFeesToDeveloperAccount`. Once the funds are distributed, the amount of profit developers can withdraw gets reset to 0 and profits will start to be accumulated and distributed on a week to week basis.
+If the developer account is not set (which it is not on genesis), all funds are held in the module account. Once the developer address is set by the admin account, the developer address will start to automatically receive a share of profits after every trade. The distribution of funds from the module account is done through `SendDeveloperFees`.
 
 # Governance Proposals
 

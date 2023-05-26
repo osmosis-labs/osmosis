@@ -155,10 +155,22 @@ func (s *ConcentratedPoolTestSuite) TestIsCurrentTickInRange() {
 			true,
 		},
 		{
+			"range only includes current tick",
+			DefaultCurrTick,
+			DefaultCurrTick + 1,
+			true,
+		},
+		{
+			"current tick is on upper tick",
+			DefaultCurrTick - 3,
+			DefaultCurrTick,
+			false,
+		},
+		{
 			"lower tick and upper tick are equal to pool tick",
 			DefaultCurrTick,
 			DefaultCurrTick,
-			true,
+			false,
 		},
 		{
 			"lower tick is greater then pool tick",

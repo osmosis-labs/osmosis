@@ -105,9 +105,11 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.Ac
 		return nil, err
 	}
 
-	for _, synthlock := range k.GetAllSyntheticLockupsByLockup(ctx, lock.ID) {
-		k.accumulationStore(ctx, synthlock.SynthDenom).Increase(accumulationKey(synthlock.Duration), tokensToAdd.Amount)
+	synthlock, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
+	if err != nil {
+		return nil, err
 	}
+	k.accumulationStore(ctx, synthlock.SynthDenom).Increase(accumulationKey(synthlock.Duration), tokensToAdd.Amount)
 
 	if k.hooks == nil {
 		return lock, nil
@@ -375,14 +377,19 @@ func (k Keeper) PartialForceUnlock(ctx sdk.Context, lock types.PeriodLock, coins
 // ForceUnlock ignores unlock duration and immediately unlocks the lock and refunds tokens to lock owner.
 func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	// Steps:
-	// 1) Break associated synthetic locks. (Superfluid data)
+	// 1) Break associated synthetic lock. (Superfluid data)
 	// 2) If lock is bonded, move it to unlocking
 	// 3) Run logic to delete unlocking metadata, and send tokens to owner.
 
-	synthLocks := k.GetAllSyntheticLockupsByLockup(ctx, lock.ID)
-	err := k.DeleteAllSyntheticLocks(ctx, lock, synthLocks)
+	synthLock, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
 	if err != nil {
 		return err
+	}
+	if !synthLock.IsNil() {
+		err = k.DeleteSyntheticLockup(ctx, lock.ID, synthLock.SynthDenom)
+		if err != nil {
+			return err
+		}
 	}
 
 	if !lock.IsUnlocking() {
@@ -727,13 +734,14 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 	}
 
 	// increase synthetic lockup's accumulation store
-	synthLocks := k.GetAllSyntheticLockupsByLockup(ctx, lock.ID)
+	synthLock, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
+	if err != nil {
+		return err
+	}
 
 	// Note: since synthetic lockup deletion is using native lockup's coins to reduce accumulation store
 	// all the synthetic lockups' accumulation should be decreased
-	for _, synthlock := range synthLocks {
-		k.accumulationStore(ctx, synthlock.SynthDenom).Decrease(accumulationKey(synthlock.Duration), coins[0].Amount)
-	}
+	k.accumulationStore(ctx, synthLock.SynthDenom).Decrease(accumulationKey(synthLock.Duration), coins[0].Amount)
 	return nil
 }
 
