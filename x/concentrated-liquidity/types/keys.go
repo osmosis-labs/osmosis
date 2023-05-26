@@ -28,7 +28,7 @@ var (
 	PoolPrefix      = []byte{0x03}
 	IncentivePrefix = []byte{0x04}
 
-	// n.b. we negative prefix must be less than the positive prefix for proper iteration
+	// n.b. negative prefix must be less than the positive prefix for proper iteration
 	TickNegativePrefix = []byte{0x05}
 	TickPositivePrefix = []byte{0x06}
 
