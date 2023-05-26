@@ -156,6 +156,11 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, err
 	}
 
+	// Send token in from sender to the pool
+	if err := k.bankKeeper.SendCoins(ctx, sender, sdk.MustAccAddressFromBech32(cosmwasmPool.GetContractAddress()), sdk.NewCoins(tokenIn)); err != nil {
+		return sdk.Int{}, err
+	}
+
 	request := msg.NewSwapExactAmountInSudoMsg(sender.String(), tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
 	response, err := cosmwasm.Sudo[msg.SwapExactAmountInSudoMsg, msg.SwapExactAmountInSudoMsgResponse](ctx, k.contractKeeper, cosmwasmPool.GetContractAddress(), request)
 	if err != nil {

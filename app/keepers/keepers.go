@@ -327,9 +327,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.GAMMKeeper = &gammKeeper
 	appKeepers.ConcentratedLiquidityKeeper.SetGammKeeper(appKeepers.GAMMKeeper)
 
-	appKeepers.CosmwasmPoolKeeper = cosmwasmpool.NewKeeper(appKeepers.keys[cosmwasmpooltypes.StoreKey], appKeepers.GetSubspace(cosmwasmpooltypes.ModuleName))
-
-	appKeepers.CosmwasmPoolKeeper = cosmwasmpool.NewKeeper(appKeepers.keys[cosmwasmpooltypes.StoreKey], appKeepers.GetSubspace(cosmwasmpooltypes.ModuleName))
+	appKeepers.CosmwasmPoolKeeper = cosmwasmpool.NewKeeper(appKeepers.keys[cosmwasmpooltypes.StoreKey], appKeepers.GetSubspace(cosmwasmpooltypes.ModuleName), appKeepers.BankKeeper)
 
 	appKeepers.PoolManagerKeeper = poolmanager.NewKeeper(
 		appKeepers.keys[poolmanagertypes.StoreKey],

@@ -14,24 +14,19 @@ type Keeper struct {
 	paramSpace paramtypes.Subspace
 
 	// keepers
-	// TODO: remove nolint once added.
-	// nolint: unused
+	bankKeeper        types.BankKeeper
 	poolmanagerKeeper types.PoolManagerKeeper
-	// TODO: remove nolint once added.
-	// nolint: unused
-	contractKeeper types.ContractKeeper
-	// TODO: remove nolint once added.
-	// nolint: unused
-	wasmKeeper types.WasmKeeper
+	contractKeeper    types.ContractKeeper
+	wasmKeeper        types.WasmKeeper
 }
 
-func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace) *Keeper {
+func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, bankKeeper types.BankKeeper) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return &Keeper{storeKey: storeKey, paramSpace: paramSpace}
+	return &Keeper{storeKey: storeKey, paramSpace: paramSpace, bankKeeper: bankKeeper}
 }
 
 // GetParams returns the total set of cosmwasmpool parameters.

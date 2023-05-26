@@ -284,7 +284,7 @@ func (s *PoolModuleSuite) TestCalcOutAmtGivenIn_SwapOutAmtGivenIn() {
 			request := transmuter.JoinPoolExecuteMsgRequest{}
 			cosmwasm.MustExecute[transmuter.JoinPoolExecuteMsgRequest, msg.EmptyStruct](s.Ctx, s.App.ContractKeeper, pool.GetContractAddress(), s.TestAccs[0], tc.initialCoins, request)
 
-			originalPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, sdk.AccAddress(pool.GetContractAddress()))
+			originalPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, sdk.MustAccAddressFromBech32(pool.GetContractAddress()))
 
 			var poolIn poolmanagertypes.PoolI = pool
 			if tc.isInvalidPool {
@@ -302,7 +302,7 @@ func (s *PoolModuleSuite) TestCalcOutAmtGivenIn_SwapOutAmtGivenIn() {
 			}
 
 			// Assert that pool balances are unchanged
-			afterCalcPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, sdk.AccAddress(pool.GetContractAddress()))
+			afterCalcPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, sdk.MustAccAddressFromBech32(pool.GetContractAddress()))
 
 			s.Require().Equal(originalPoolBalances.String(), afterCalcPoolBalances.String())
 
@@ -324,14 +324,15 @@ func (s *PoolModuleSuite) TestCalcOutAmtGivenIn_SwapOutAmtGivenIn() {
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedTokenOut.Amount, actualSwapTokenOut)
 
-			// Assert that pool and swapper balances are changes
-			// TODO / Question for Boss: this check is failint because the originalPoolBalance is empty.
-			// I would expect it to equal to coins that were added to the pool in the beginning of the test
-			// via the join pool message (tc.initialCoins).
+			// Assert that pool balance is updated correctly
 			expectedPoolBalances := originalPoolBalances.Add(tc.tokenIn).Sub(sdk.NewCoins(tc.expectedTokenOut))
-			afterSwapPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, sdk.AccAddress(pool.GetContractAddress()))
-
+			afterSwapPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, sdk.MustAccAddressFromBech32(pool.GetContractAddress()))
 			s.Require().Equal(expectedPoolBalances.String(), afterSwapPoolBalances.String())
+
+			// Assert that swapper balance is updated correctly
+			expectedSwapperBalances := sdk.NewCoins(tc.expectedTokenOut)
+			afterSwapSwapperBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, swapper)
+			s.Require().Equal(expectedSwapperBalances.String(), afterSwapSwapperBalances.String())
 		})
 	}
 }
