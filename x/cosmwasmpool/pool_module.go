@@ -315,7 +315,16 @@ func (k Keeper) ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error
 	return nil
 }
 
-// TODO: implement me
+// GetTotalPoolLiquidity retrieves the total liquidity of a specific pool identified by poolId.
+//
+// Parameters:
+// - ctx: The current SDK Context used for executing store operations.
+// - poolId: The unique identifier of the pool whose total liquidity is to be fetched.
+//
+// Returns:
+//   - the total liquidity of the specified pool,
+//     if the operations are successful.
+//   - An error if the pool retrieval operation fails. In this case, an empty sdk.Coins object will be returned.
 func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
