@@ -13,7 +13,6 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
