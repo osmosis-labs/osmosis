@@ -4,7 +4,7 @@ use cosmwasm_schema::cw_serde;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_binary, DepsMut, Env, MessageInfo, Response, StdError};
-use ibc::{ContractAck, IBCAckResponse, IBCAsync, Packet};
+use ibc::{ContractAck, IBCAckResponse, IBCAsyncOptions, OnRecvPacketAsyncResponse, Packet};
 use osmosis_std_derive::CosmwasmExt;
 use state::INFLIGHT_PACKETS;
 
@@ -31,7 +31,7 @@ pub enum ExecuteMsg {
 #[cw_serde]
 pub enum SudoMsg {
     #[serde(rename = "ibc_async")]
-    IBCAsync(IBCAsync),
+    IBCAsync(IBCAsyncOptions),
 }
 
 // Instantiate
@@ -83,7 +83,8 @@ pub fn execute(
         ExecuteMsg::Echo { msg } => Ok(simple_response(msg)),
         ExecuteMsg::Async { use_async } => {
             if use_async {
-                Ok(Response::new().add_attribute("ibc_async_ack", "true"))
+                let response_data = OnRecvPacketAsyncResponse { is_async_ack: true };
+                Ok(Response::new().set_data(to_binary(&response_data)?))
             } else {
                 Ok(Response::default())
             }
@@ -107,11 +108,11 @@ pub fn execute(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, StdError> {
     match msg {
-        SudoMsg::IBCAsync(IBCAsync::RequestAck {
-            channel,
+        SudoMsg::IBCAsync(IBCAsyncOptions::RequestAck {
+            source_channel,
             packet_sequence,
         }) => Ok(Response::new().set_data(to_binary(&IBCAckResponse {
-            packet: INFLIGHT_PACKETS.load(deps.storage, (&channel, packet_sequence))?,
+            packet: INFLIGHT_PACKETS.load(deps.storage, (&source_channel, packet_sequence))?,
             contract_ack: ContractAck {
                 contract_result: base64::encode("success"),
                 ibc_ack: base64::encode("ack"),

@@ -180,6 +180,104 @@ pub enum SudoMsg {
 }
 ```
 
+### Async Acks
+
+IBC supports the ability to send an ack back to the sender of the packet asynchronously. This is useful for
+cases where the packet is received, but the ack is not immediately known. For example, if the packet is being
+forwarded to another chain, the ack may not be known until the packet is received on the other chain.
+
+#### Making contract Acks async
+
+To support this, we allow contracts to return an `IBCAsync` response from the function being executed when the
+packet is received. That response specifies that the ack should be handled asynchronously. 
+
+Concretely the contract should return:
+
+```rust
+#[cw_serde]
+pub struct OnRecvPacketAsyncResponse {
+    pub is_async_ack: bool,
+}
+```
+
+if `is_async_ack` is set to true, `OnRecvPacket` will return `nil` and the ack will not be written. Instead, the
+contract wil be stored as the "ack actor" for the packet so that only that contract is allowed to send an ack 
+for it.
+
+It is up to the contract developers to decide which conditions will trigger the ack to be sent. 
+
+#### Sending an async ack
+
+To send the async ack, the contract needs to send the MsgEmitIBCAck message to the chain. This message will 
+then make a sudo call to the contract requesting the ack and write the ack to state. 
+
+That message can be specified in the contract as: 
+
+```rust
+#[derive(
+    Clone,
+    PartialEq,
+    Eq,
+    ::prost::Message,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+    CosmwasmExt,
+)]
+#[proto_message(type_url = "/osmosis.ibchooks.MsgEmitIBCAck")]
+pub struct MsgEmitIBCAck {
+    #[prost(string, tag = "1")]
+    pub sender: ::prost::alloc::string::String,
+    #[prost(uint64, tag = "2")]
+    pub packet_sequence: u64,
+    #[prost(string, tag = "3")]
+    pub channel: ::prost::alloc::string::String,
+}
+```
+
+The contract is expected to implement the following sudo message handler:
+
+```rust
+#[cw_serde]
+pub enum IBCAsyncOptions {
+    #[serde(rename = "request_ack")]
+    RequestAck {
+        /// The source channel (osmosis side) of the IBC packet
+        source_channel: String,
+        /// The sequence number that the packet was sent with
+        packet_sequence: u64,
+    },
+}
+
+#[cw_serde]
+pub enum SudoMsg {
+    #[serde(rename = "ibc_async")]
+    IBCAsync(IBCAsyncOptions),
+}
+```
+
+and that sudo call should return an `IBCAckResponse`:
+
+```rust
+#[cw_serde]
+pub struct IBCAckResponse {
+    pub packet: Packet,
+    pub contract_ack: ContractAck,
+}
+```
+
+---
+
+TODO: I think this is overcomplicated and I can't remember why I wrote it like this. 
+
+I think the idea was that the message could be sent by anyone and the sudo message then is only sent to the proper 
+contract, but since we only allow the contract to send the message, we could just include the packet and response 
+and have the chain verify and write the ack directly instead of doing the sudo round trip.
+
+Alternatively, we keep the sudo message but allow anyone to call MsgEmitIBCAck. 
+
+Feedback?
+
 # Testing strategy
 
 See go tests.

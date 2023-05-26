@@ -33,15 +33,21 @@ pub struct Packet {
     pub timeout_timestamp: Option<u64>,
 }
 
+// The following are part of the wasm_hooks interface
 #[cw_serde]
-pub enum IBCAsync {
+pub enum IBCAsyncOptions {
     #[serde(rename = "request_ack")]
     RequestAck {
         /// The source channel (osmosis side) of the IBC packet
-        channel: String,
+        source_channel: String,
         /// The sequence number that the packet was sent with
         packet_sequence: u64,
     },
+}
+
+#[cw_serde]
+pub struct OnRecvPacketAsyncResponse {
+    pub is_async_ack: bool,
 }
 
 #[cw_serde]

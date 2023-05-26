@@ -119,9 +119,9 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 	}
 
 	msg := types.IBCAsync{
-		RequestAck: types.RequestAck{RequestIBCAckI: types.RequestIBCAckI{
+		RequestAck: types.RequestAck{RequestAckI: types.RequestAckI{
 			PacketSequence: packetSequence,
-			Channel:        channel,
+			SourceChannel:  channel,
 		}},
 	}
 	msgBytes, err := json.Marshal(msg)

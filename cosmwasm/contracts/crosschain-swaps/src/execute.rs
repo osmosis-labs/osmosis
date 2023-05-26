@@ -6,7 +6,7 @@ use swaprouter::msg::ExecuteMsg as SwapRouterExecute;
 
 use crate::checks::{check_is_contract_governor, ensure_key_missing, validate_receiver};
 use crate::consts::{MsgReplyID, CALLBACK_KEY};
-use crate::msg::{CrosschainSwapResponse, FailedDeliveryAction};
+use crate::msg::{AsyncResponse, CrosschainSwapResponse, FailedDeliveryAction};
 use registry::proto::MsgTransferResponse;
 
 use crate::state::{
