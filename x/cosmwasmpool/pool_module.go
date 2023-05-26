@@ -4,7 +4,9 @@ package cosmwasmpool
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/cosmwasm/msg"
+	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/model"
 	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
@@ -67,9 +69,32 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI,
 	return concentratedPool, nil
 }
 
-// TODO: implement this method
+// GetPools retrieves all pool objects stored in the keeper.
+//
+// It fetches values from the store associated with the PoolsKey prefix. For each value retrieved,
+// it attempts to unmarshal the value into a Pool object. If this operation succeeds,
+// the Pool object is added to the returned slice. If an error occurs during unmarshalling,
+// the function will return immediately with the encountered error.
+//
+// Parameters:
+// - ctx: The current SDK Context used to access the store.
+//
+// Returns:
+//   - A slice of PoolI interfaces if the operation is successful. Each element in the slice
+//     represents a pool that was stored in the keeper.
+//   - An error if unmarshalling fails for any of the values fetched from the store.
+//     In this case, the slice of PoolI interfaces will be nil.
 func (k Keeper) GetPools(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
-	return []poolmanagertypes.PoolI{}, nil
+	return osmoutils.GatherValuesFromStorePrefix(
+		ctx.KVStore(k.storeKey), types.PoolsKey, func(value []byte) (poolmanagertypes.PoolI, error) {
+			pool := model.Pool{}
+			err := k.cdc.Unmarshal(value, &pool)
+			if err != nil {
+				return nil, err
+			}
+			return &pool, nil
+		},
+	)
 }
 
 // GetPoolDenoms retrieves the list of asset denoms in a CosmWasm-based liquidity pool given its ID.

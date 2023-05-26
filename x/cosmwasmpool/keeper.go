@@ -1,6 +1,7 @@
 package cosmwasmpool
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/types"
@@ -10,6 +11,7 @@ import (
 )
 
 type Keeper struct {
+	cdc        codec.BinaryCodec
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
 
@@ -20,13 +22,13 @@ type Keeper struct {
 	wasmKeeper        types.WasmKeeper
 }
 
-func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, bankKeeper types.BankKeeper) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, bankKeeper types.BankKeeper) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return &Keeper{storeKey: storeKey, paramSpace: paramSpace, bankKeeper: bankKeeper}
+	return &Keeper{cdc: cdc, storeKey: storeKey, paramSpace: paramSpace, bankKeeper: bankKeeper}
 }
 
 // GetParams returns the total set of cosmwasmpool parameters.
