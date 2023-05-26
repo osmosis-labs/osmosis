@@ -17,12 +17,12 @@ type KeeperTestSuite struct {
 }
 
 // SetupTest sets incentives parameters from the suite's context
-func (suite *KeeperTestSuite) SetupTest() {
-	suite.Setup()
-	suite.querier = keeper.NewQuerier(*suite.App.IncentivesKeeper)
-	lockableDurations := suite.App.IncentivesKeeper.GetLockableDurations(suite.Ctx)
+func (s *KeeperTestSuite) SetupTest() {
+	s.Setup()
+	s.querier = keeper.NewQuerier(*s.App.IncentivesKeeper)
+	lockableDurations := s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)
 	lockableDurations = append(lockableDurations, 2*time.Second)
-	suite.App.IncentivesKeeper.SetLockableDurations(suite.Ctx, lockableDurations)
+	s.App.IncentivesKeeper.SetLockableDurations(s.Ctx, lockableDurations)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

@@ -50,7 +50,7 @@ func (suite *HooksTestSuite) TestWasmHooksAsyncAcks() {
 
 	_, err = suite.forceContractToEmitAckForPacket(osmosisApp, contractAddr, alreadyAckedPacket)
 	suite.Require().Error(err)
-	suite.Require().Contains(err.Error(), "no ack actor set for channel-0 packet 1")
+	suite.Require().Contains(err.Error(), "no ack actor set for channel channel-0 packet 1")
 
 	// Calls that specify async Acks work and no Acks are sent
 	memo = fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"async": {"use_async": true}}}}`, contractAddr)

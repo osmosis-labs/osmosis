@@ -2,8 +2,9 @@ package cli_test
 
 import (
 	gocontext "context"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 	"testing"
+
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
 	"github.com/stretchr/testify/suite"
 

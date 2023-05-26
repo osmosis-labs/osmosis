@@ -15,6 +15,8 @@ var (
 	ErrZeroPositionId                     = errors.New("invalid position id, cannot be 0")
 	ErrPermissionlessPoolCreationDisabled = errors.New("permissionless pool creation is disabled for the concentrated liquidity module")
 	ErrZeroLiquidity                      = errors.New("liquidity cannot be 0")
+	ErrNextTickInfoNil                    = errors.New("next tick info cannot be nil")
+	ErrPoolNil                            = errors.New("pool cannot be nil")
 )
 
 // x/concentrated-liquidity module sentinel errors.
@@ -45,6 +47,23 @@ func (e NotPositiveRequireAmountError) Error() string {
 	return fmt.Sprintf("Required amount should be positive. Got: %s", e.Amount)
 }
 
+type QualifyingLiquidityOrTimeElapsedNotPositiveError struct {
+	QualifyingLiquidity sdk.Dec
+	TimeElapsed         sdk.Dec
+}
+
+func (e QualifyingLiquidityOrTimeElapsedNotPositiveError) Error() string {
+	return fmt.Sprintf("Qualifying liquidity and time elapsed must both be positive. Got: QualifyingLiquidity (%s), timeElapsed (%s)", e.QualifyingLiquidity, e.TimeElapsed)
+}
+
+type TimeElapsedNotPositiveError struct {
+	TimeElapsed sdk.Dec
+}
+
+func (e TimeElapsedNotPositiveError) Error() string {
+	return fmt.Sprintf("Time elapsed must both be positive. Got: timeElapsed (%s)", e.TimeElapsed)
+}
+
 type PositionNotFoundError struct {
 	PoolId    uint64
 	LowerTick int64
@@ -62,6 +81,14 @@ type PositionIdNotFoundError struct {
 
 func (e PositionIdNotFoundError) Error() string {
 	return fmt.Sprintf("position not found. position id (%d)", e.PositionId)
+}
+
+type FeePositionNotFoundError struct {
+	PositionId uint64
+}
+
+func (e FeePositionNotFoundError) Error() string {
+	return fmt.Sprintf("position not found in fee accumulator. position id (%d)", e.PositionId)
 }
 
 type PoolNotFoundError struct {
@@ -260,12 +287,12 @@ func (e SqrtPriceNegativeError) Error() string {
 	return fmt.Sprintf("provided sqrt price (%s) must be positive", e.ProvidedSqrtPrice)
 }
 
-type InvalidSwapFeeError struct {
+type InvalidSpreadFactorError struct {
 	ActualFee sdk.Dec
 }
 
-func (e InvalidSwapFeeError) Error() string {
-	return fmt.Sprintf("invalid swap fee(%s), must be in [0, 1) range", e.ActualFee)
+func (e InvalidSpreadFactorError) Error() string {
+	return fmt.Sprintf("invalid spread factor(%s), must be in [0, 1) range", e.ActualFee)
 }
 
 type PositionAlreadyExistsError struct {
@@ -340,13 +367,13 @@ func (e BalancerRecordNotClearedError) Error() string {
 	return fmt.Sprintf("balancer record was not cleared after reward claiming. CL pool id (%d), Balancer pool ID (%d), Uptime index (%d)", e.ClPoolId, e.BalancerPoolId, e.UptimeIndex)
 }
 
-type NonPositiveIncentiveAmountError struct {
-	PoolId          uint64
-	IncentiveAmount sdk.Dec
+type InvalidIncentiveCoinError struct {
+	PoolId        uint64
+	IncentiveCoin sdk.Coin
 }
 
-func (e NonPositiveIncentiveAmountError) Error() string {
-	return fmt.Sprintf("incentive amount must be position (nonzero and nonnegative). Pool id (%d), incentive amount (%s)", e.PoolId, e.IncentiveAmount)
+func (e InvalidIncentiveCoinError) Error() string {
+	return fmt.Sprintf("incentive coin denom must be valid and have non negative amount Pool id (%d), incentive coin (%s)", e.PoolId, e.IncentiveCoin)
 }
 
 type NonPositiveEmissionRateError struct {
@@ -612,6 +639,33 @@ func (e LockNotMatureError) Error() string {
 	return fmt.Sprintf("position ID %d's lock (%d) is not mature, must wait till unlocking is complete to withdraw the position", e.PositionId, e.LockId)
 }
 
+type PositionSuperfluidStakedError struct {
+	PositionId uint64
+}
+
+func (e PositionSuperfluidStakedError) Error() string {
+	return fmt.Sprintf("Cannot add to position ID %d as it is superfluid staked.", e.PositionId)
+}
+
+type AddToLastPositionInPoolError struct {
+	PoolId     uint64
+	PositionId uint64
+}
+
+func (e AddToLastPositionInPoolError) Error() string {
+	return fmt.Sprintf("Cannot add to a position if it is the last position in the pool. Pool id (%d), position ID (%d).", e.PoolId, e.PositionId)
+}
+
+type NegativeAmountAddedError struct {
+	PositionId   uint64
+	Asset0Amount sdk.Int
+	Asset1Amount sdk.Int
+}
+
+func (e NegativeAmountAddedError) Error() string {
+	return fmt.Sprintf("Cannot add negative amounts of assets to a position. Position ID (%d), asset0 amount (%s), asset1 amount(%s).", e.PositionId, e.Asset0Amount, e.Asset1Amount)
+}
+
 type MatchingDenomError struct {
 	Denom string
 }
@@ -629,13 +683,13 @@ func (e UnauthorizedQuoteDenomError) Error() string {
 	return fmt.Sprintf("attempted to create pool with unauthorized quote denom (%s), must be one of the following: (%s)", e.ProvidedQuoteDenom, e.AuthorizedQuoteDenoms)
 }
 
-type UnauthorizedSwapFeeError struct {
-	ProvidedSwapFee    sdk.Dec
-	AuthorizedSwapFees []sdk.Dec
+type UnauthorizedSpreadFactorError struct {
+	ProvidedSpreadFactor    sdk.Dec
+	AuthorizedSpreadFactors []sdk.Dec
 }
 
-func (e UnauthorizedSwapFeeError) Error() string {
-	return fmt.Sprintf("attempted to create pool with unauthorized swap fee (%s), must be one of the following: (%s)", e.ProvidedSwapFee, e.AuthorizedSwapFees)
+func (e UnauthorizedSpreadFactorError) Error() string {
+	return fmt.Sprintf("attempted to create pool with unauthorized spread factor (%s), must be one of the following: (%s)", e.ProvidedSpreadFactor, e.AuthorizedSpreadFactors)
 }
 
 type UnauthorizedTickSpacingError struct {
@@ -703,4 +757,79 @@ type NotPositionOwnerError struct {
 
 func (e NotPositionOwnerError) Error() string {
 	return fmt.Sprintf("address (%s) is not the owner of position ID (%d)", e.Address, e.PositionId)
+}
+
+type PositionNotFullRangeError struct {
+	PositionId uint64
+	LowerTick  int64
+	UpperTick  int64
+}
+
+func (e PositionNotFullRangeError) Error() string {
+	return fmt.Sprintf("position ID (%d) is not a full range position, lower tick (%d), upper tick (%d)", e.PositionId, e.LowerTick, e.UpperTick)
+}
+
+type Amount0IsNegativeError struct {
+	Amount0 sdk.Int
+}
+
+func (e Amount0IsNegativeError) Error() string {
+	return fmt.Sprintf("amount0 (%s) is negative", e.Amount0)
+}
+
+type Amount1IsNegativeError struct {
+	Amount1 sdk.Int
+}
+
+func (e Amount1IsNegativeError) Error() string {
+	return fmt.Sprintf("amount1 (%s) is negative", e.Amount1)
+}
+
+type ModifySamePositionAccumulatorError struct {
+	PositionAccName string
+}
+
+func (e ModifySamePositionAccumulatorError) Error() string {
+	return fmt.Sprintf("attempted to modify the same accumulator with name %s", e.PositionAccName)
+}
+
+type NumCoinsError struct {
+	NumCoins int
+}
+
+func (e NumCoinsError) Error() string {
+	return fmt.Sprintf("num coins provided (%d) must be 2 for a full range position", e.NumCoins)
+}
+
+type CoinLengthError struct {
+	MaxLength int
+	Length    int
+}
+
+func (e CoinLengthError) Error() string {
+	return fmt.Sprintf("coin length (%d) must be less than or equal to max length (%d)", e.Length, e.MaxLength)
+}
+
+type RanOutOfTicksForPoolError struct {
+	PoolId uint64
+}
+
+func (e RanOutOfTicksForPoolError) Error() string {
+	return fmt.Sprintf("ran out of ticks for pool (%d) during swap", e.PoolId)
+}
+
+type SqrtRootCalculationError struct {
+	SqrtPriceLimit sdk.Dec
+}
+
+func (e SqrtRootCalculationError) Error() string {
+	return fmt.Sprintf("issue calculating square root of price limit %s", e.SqrtPriceLimit)
+}
+
+type TickToSqrtPriceConversionError struct {
+	NextTick int64
+}
+
+func (e TickToSqrtPriceConversionError) Error() string {
+	return fmt.Sprintf("could not convert next tick  to nextSqrtPrice (%v)", e.NextTick)
 }

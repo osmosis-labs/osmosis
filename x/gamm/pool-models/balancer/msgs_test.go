@@ -149,7 +149,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "negative swap fee with zero exit fee",
+			name: "negative spread factor with zero exit fee",
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.PoolParams = &balancer.PoolParams{
 					SwapFee: sdk.NewDecWithPrec(-1, 2),
@@ -192,7 +192,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 			expectPass: true,
 		},
 		{
-			name: "zero swap fee, zero exit fee",
+			name: "zero spread factor, zero exit fee",
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.PoolParams = &balancer.PoolParams{
 					ExitFee: sdk.NewDecWithPrec(0, 0),
@@ -242,8 +242,8 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 	}
 }
 
-func (suite *KeeperTestSuite) TestMsgCreateBalancerPool() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestMsgCreateBalancerPool() {
+	s.SetupTest()
 	tests := map[string]struct {
 		msg         balancer.MsgCreateBalancerPool
 		poolId      uint64
@@ -251,16 +251,16 @@ func (suite *KeeperTestSuite) TestMsgCreateBalancerPool() {
 	}{
 		"basic success test": {
 			msg: balancer.MsgCreateBalancerPool{
-				Sender:             suite.TestAccs[0].String(),
+				Sender:             s.TestAccs[0].String(),
 				PoolParams:         &balancer.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2), ExitFee: sdk.ZeroDec()},
 				PoolAssets:         apptesting.DefaultPoolAssets,
 				FuturePoolGovernor: "",
 			},
 			poolId: 1,
 		},
-		"error due to negative swap fee": {
+		"error due to negative spread factor": {
 			msg: balancer.MsgCreateBalancerPool{
-				Sender:             suite.TestAccs[0].String(),
+				Sender:             s.TestAccs[0].String(),
 				PoolParams:         &balancer.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2).Neg(), ExitFee: sdk.ZeroDec()},
 				PoolAssets:         apptesting.DefaultPoolAssets,
 				FuturePoolGovernor: "",
@@ -271,26 +271,26 @@ func (suite *KeeperTestSuite) TestMsgCreateBalancerPool() {
 	}
 
 	for name, tc := range tests {
-		suite.Run(name, func() {
-			pool, err := tc.msg.CreatePool(suite.Ctx, 1)
+		s.Run(name, func() {
+			pool, err := tc.msg.CreatePool(s.Ctx, 1)
 
 			if tc.expectError {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 				return
 			}
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
-			suite.Require().Equal(tc.poolId, pool.GetId())
+			s.Require().Equal(tc.poolId, pool.GetId())
 			expectedPoolLiquidity := sdk.NewCoins()
 			for _, asset := range tc.msg.PoolAssets {
 				expectedPoolLiquidity = expectedPoolLiquidity.Add(asset.Token)
 			}
 
 			cfmmPool, ok := pool.(types.CFMMPoolI)
-			suite.Require().True(ok)
+			s.Require().True(ok)
 
-			suite.Require().Equal(expectedPoolLiquidity, cfmmPool.GetTotalPoolLiquidity(suite.Ctx))
-			suite.Require().Equal(types.InitPoolSharesSupply, cfmmPool.GetTotalShares())
+			s.Require().Equal(expectedPoolLiquidity, cfmmPool.GetTotalPoolLiquidity(s.Ctx))
+			s.Require().Equal(types.InitPoolSharesSupply, cfmmPool.GetTotalShares())
 		})
 	}
 }

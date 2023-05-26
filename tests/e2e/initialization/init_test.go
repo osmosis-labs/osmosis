@@ -47,6 +47,7 @@ func TestChainInit(t *testing.T) {
 		}
 		dataDir, err = os.MkdirTemp("", "osmosis-e2e-testnet-test")
 	)
+	require.NoError(t, err)
 
 	chain, err := initialization.InitChain(id, dataDir, nodeConfigs, time.Second*3, time.Second, forkHeight)
 	require.NoError(t, err)
@@ -104,6 +105,7 @@ func TestSingleNodeInit(t *testing.T) {
 		}
 		dataDir, err = os.MkdirTemp("", "osmosis-e2e-testnet-test")
 	)
+	require.NoError(t, err)
 
 	// Setup
 	existingChain, err := initialization.InitChain(id, dataDir, existingChainNodeConfigs, time.Second*3, time.Second, forkHeight)
@@ -116,6 +118,7 @@ func TestSingleNodeInit(t *testing.T) {
 }
 
 func validateNode(t *testing.T, chainId string, dataDir string, expectedConfig *initialization.NodeConfig, actualNode *initialization.Node) {
+	t.Helper()
 	require.Equal(t, fmt.Sprintf("%s-node-%s", chainId, expectedConfig.Name), actualNode.Name)
 	require.Equal(t, expectedConfig.IsValidator, actualNode.IsValidator)
 

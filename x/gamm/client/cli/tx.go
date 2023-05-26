@@ -33,6 +33,7 @@ func NewTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, NewJoinSwapShareAmountOut)
 	osmocli.AddTxCmd(txCmd, NewExitSwapExternAmountOut)
 	osmocli.AddTxCmd(txCmd, NewExitSwapShareAmountIn)
+	osmocli.AddTxCmd(txCmd, NewMigrateSharesToFullRangeConcentratedPosition)
 	txCmd.AddCommand(
 		NewCreatePoolCmd().BuildCommandCustomFn(),
 		NewStableSwapAdjustScalingFactorsCmd(),
@@ -163,6 +164,19 @@ func NewExitSwapShareAmountIn() (*osmocli.TxCliDesc, *types.MsgExitSwapShareAmou
 		CustomFlagOverrides: poolIdFlagOverride,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
 	}, &types.MsgExitSwapShareAmountIn{}
+}
+
+func NewMigrateSharesToFullRangeConcentratedPosition() (*osmocli.TxCliDesc, *balancer.MsgMigrateSharesToFullRangeConcentratedPosition) {
+	cmd := &osmocli.TxCliDesc{
+		Use:     "migrate-position [unlocked-shares]",
+		Short:   "migrate shares to full range concentrated position",
+		Example: "migrate-position 1000gamm/pool/1 --min-amounts-out=100stake,100uosmo --from=val --chain-id osmosis-1",
+		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
+			"TokenOutMins": osmocli.FlagOnlyParser(minAmountsOutParser),
+		},
+		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMigratePosition()}},
+	}
+	return cmd, &balancer.MsgMigrateSharesToFullRangeConcentratedPosition{}
 }
 
 // TODO: Change these flags to args. Required flags don't make that much sense.
@@ -336,7 +350,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (
 		return nil, errors.New("deposit tokens and token weights should have same length")
 	}
 
-	swapFee, err := sdk.NewDecFromStr(pool.SwapFee)
+	spreadFactor, err := sdk.NewDecFromStr(pool.SwapFee)
 	if err != nil {
 		return nil, err
 	}
@@ -359,7 +373,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (
 	}
 
 	poolParams := &balancer.PoolParams{
-		SwapFee: swapFee,
+		SwapFee: spreadFactor,
 		ExitFee: exitFee,
 	}
 
@@ -431,7 +445,7 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, fs *flag.FlagSet)
 		return nil, err
 	}
 
-	swapFee, err := sdk.NewDecFromStr(flags.SwapFee)
+	spreadFactor, err := sdk.NewDecFromStr(flags.SwapFee)
 	if err != nil {
 		return nil, err
 	}
@@ -442,7 +456,7 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, fs *flag.FlagSet)
 	}
 
 	poolParams := &stableswap.PoolParams{
-		SwapFee: swapFee,
+		SwapFee: spreadFactor,
 		ExitFee: exitFee,
 	}
 

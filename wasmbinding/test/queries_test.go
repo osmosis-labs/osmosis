@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v15/wasmbinding"
 )
 
@@ -63,6 +64,7 @@ func TestFullDenom(t *testing.T) {
 }
 
 func TestDenomAdmin(t *testing.T) {
+	apptesting.SkipIfWSL(t)
 	addr := RandomAccountAddress()
 	app, ctx := SetupCustomApp(t, addr)
 

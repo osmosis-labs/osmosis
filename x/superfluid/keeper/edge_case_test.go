@@ -10,7 +10,7 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
-func (suite *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {
+func (s *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {
 	testCases := []struct {
 		name                 string
 		validatorStats       []stakingtypes.BondStatus
@@ -32,25 +32,25 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {
 	for _, tc := range testCases {
 		tc := tc
 
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
+		s.Run(tc.name, func() {
+			s.SetupTest()
 
 			// Generate delegator addresses
 			delAddrs := CreateRandomAccounts(tc.delegatorNumber)
 
 			// setup validators
-			valAddrs := suite.SetupValidators(tc.validatorStats)
+			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			locks := []lockuptypes.PeriodLock{}
-			slashFactor := suite.App.SlashingKeeper.SlashFractionDoubleSign(suite.Ctx)
+			slashFactor := s.App.SlashingKeeper.SlashFractionDoubleSign(s.Ctx)
 
 			// setup superfluid delegations
 			for _, del := range tc.superDelegations {
 				valAddr := valAddrs[del.valIndex]
 				delAddr := delAddrs[del.delIndex]
-				lock := suite.setupSuperfluidDelegate(delAddr, valAddr, denoms[del.lpIndex], del.lpAmount)
+				lock := s.setupSuperfluidDelegate(delAddr, valAddr, denoms[del.lpIndex], del.lpAmount)
 
 				// save accounts and locks for future use
 				locks = append(locks, lock)
@@ -58,31 +58,31 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {
 
 			// slash validator
 			for _, valIndex := range tc.jailedValIndexes {
-				validator, found := suite.App.StakingKeeper.GetValidator(suite.Ctx, valAddrs[valIndex])
-				suite.Require().True(found)
-				suite.Ctx = suite.Ctx.WithBlockHeight(100)
+				validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[valIndex])
+				s.Require().True(found)
+				s.Ctx = s.Ctx.WithBlockHeight(100)
 				consAddr, err := validator.GetConsAddr()
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 				// slash by slash factor
 				power := sdk.TokensToConsensusPower(validator.Tokens, sdk.DefaultPowerReduction)
 
 				// Note: this calls BeforeValidatorSlashed hook
-				suite.App.EvidenceKeeper.HandleEquivocationEvidence(suite.Ctx, &evidencetypes.Equivocation{
+				s.App.EvidenceKeeper.HandleEquivocationEvidence(s.Ctx, &evidencetypes.Equivocation{
 					Height:           80,
 					Time:             time.Time{},
 					Power:            power,
 					ConsensusAddress: consAddr.String(),
 				})
-				val, found := suite.App.StakingKeeper.GetValidatorByConsAddr(suite.Ctx, consAddr)
-				suite.Require().True(found)
-				suite.Require().Equal(val.Jailed, true)
+				val, found := s.App.StakingKeeper.GetValidatorByConsAddr(s.Ctx, consAddr)
+				s.Require().True(found)
+				s.Require().Equal(val.Jailed, true)
 			}
 
 			// check lock changes after validator & lockups slashing
 			for _, lockIndex := range tc.expJailedLockIndexes {
-				gotLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, locks[lockIndex].ID)
-				suite.Require().NoError(err)
-				suite.Require().Equal(
+				gotLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, locks[lockIndex].ID)
+				s.Require().NoError(err)
+				s.Require().Equal(
 					gotLock.Coins.AmountOf(denoms[0]).String(),
 					sdk.NewDec(1000000).Mul(sdk.OneDec().Sub(slashFactor)).TruncateInt().String(),
 				)
@@ -91,7 +91,7 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestTryUnbondingSuperfluidLockupDirectly() {
+func (s *KeeperTestSuite) TestTryUnbondingSuperfluidLockupDirectly() {
 	testCases := []struct {
 		name               string
 		validatorStats     []stakingtypes.BondStatus
@@ -124,20 +124,20 @@ func (suite *KeeperTestSuite) TestTryUnbondingSuperfluidLockupDirectly() {
 
 	for _, tc := range testCases {
 		tc := tc
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
+		s.Run(tc.name, func() {
+			s.SetupTest()
 
 			// setup validators
-			valAddrs := suite.SetupValidators(tc.validatorStats)
+			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			// setup superfluid delegations
-			_, _, locks := suite.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
+			_, _, locks := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
 
 			for _, lock := range locks {
-				_, err := suite.App.LockupKeeper.BeginUnlock(suite.Ctx, lock.ID, sdk.Coins{})
-				suite.Require().Error(err)
+				_, err := s.App.LockupKeeper.BeginUnlock(s.Ctx, lock.ID, sdk.Coins{})
+				s.Require().Error(err)
 			}
 		})
 	}

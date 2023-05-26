@@ -14,12 +14,36 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
-func TestMsgCreatePosition(t *testing.T) {
+type extMsg interface {
+	sdk.Msg
+	Route() string
+	Type() string
+}
+
+var addr1 string
+var invalidAddr sdk.AccAddress
+
+func init() {
 	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pk1.Address()).String()
-	invalidAddr := sdk.AccAddress("invalid")
+	addr1 = sdk.AccAddress(pk1.Address()).String()
+	invalidAddr = sdk.AccAddress("invalid")
+}
 
+func runValidateBasicTest(t *testing.T, name string, msg extMsg, expectPass bool, expType string) {
+	if expectPass {
+		require.NoError(t, msg.ValidateBasic(), "test: %v", name)
+		require.Equal(t, msg.Route(), types.RouterKey)
+		require.Equal(t, msg.Type(), expType)
+		signers := msg.GetSigners()
+		require.Equal(t, len(signers), 1)
+		require.Equal(t, signers[0].String(), addr1)
+	} else {
+		require.Error(t, msg.ValidateBasic(), "test: %v", name)
+	}
+}
+
+func TestMsgCreatePosition(t *testing.T) {
 	tests := []struct {
 		name       string
 		msg        types.MsgCreatePosition
@@ -32,8 +56,7 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       1,
 				UpperTick:       10,
-				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
+				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()), sdk.NewCoin("osmo", sdk.OneInt())),
 				TokenMinAmount0: sdk.OneInt(),
 				TokenMinAmount1: sdk.OneInt(),
 			},
@@ -46,8 +69,7 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          invalidAddr.String(),
 				LowerTick:       1,
 				UpperTick:       10,
-				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
+				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()), sdk.NewCoin("osmo", sdk.OneInt())),
 				TokenMinAmount0: sdk.OneInt(),
 				TokenMinAmount1: sdk.OneInt(),
 			},
@@ -60,8 +82,7 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       10,
 				UpperTick:       1,
-				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
+				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()), sdk.NewCoin("osmo", sdk.OneInt())),
 				TokenMinAmount0: sdk.OneInt(),
 				TokenMinAmount1: sdk.OneInt(),
 			},
@@ -74,8 +95,7 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       1,
 				UpperTick:       10,
-				TokenDesired0:   sdk.Coin{Denom: "stake", Amount: sdk.NewInt(-10)},
-				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
+				TokensProvided:  sdk.Coins{sdk.Coin{Denom: "stake", Amount: sdk.NewInt(-10)}, sdk.NewCoin("osmo", sdk.OneInt())},
 				TokenMinAmount0: sdk.OneInt(),
 				TokenMinAmount1: sdk.OneInt(),
 			},
@@ -88,8 +108,7 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       1,
 				UpperTick:       10,
-				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1:   sdk.Coin{Denom: "osmo", Amount: sdk.NewInt(-10)},
+				TokensProvided:  sdk.Coins{sdk.NewCoin("stake", sdk.OneInt()), sdk.Coin{Denom: "osmo", Amount: sdk.NewInt(-10)}},
 				TokenMinAmount0: sdk.OneInt(),
 				TokenMinAmount1: sdk.OneInt(),
 			},
@@ -102,8 +121,7 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       1,
 				UpperTick:       10,
-				TokenDesired0:   sdk.NewCoin("stake", sdk.ZeroInt()),
-				TokenDesired1:   sdk.NewCoin("osmo", sdk.ZeroInt()),
+				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", sdk.ZeroInt()), sdk.NewCoin("osmo", sdk.ZeroInt())),
 				TokenMinAmount0: sdk.OneInt(),
 				TokenMinAmount1: sdk.OneInt(),
 			},
@@ -116,8 +134,7 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       1,
 				UpperTick:       10,
-				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
+				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()), sdk.NewCoin("osmo", sdk.OneInt())),
 				TokenMinAmount0: sdk.NewInt(-1),
 				TokenMinAmount1: sdk.NewInt(-1),
 			},
@@ -130,8 +147,7 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       1,
 				UpperTick:       10,
-				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
+				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()), sdk.NewCoin("osmo", sdk.OneInt())),
 				TokenMinAmount0: sdk.ZeroInt(),
 				TokenMinAmount1: sdk.ZeroInt(),
 			},
@@ -140,27 +156,49 @@ func TestMsgCreatePosition(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		msg := test.msg
+		runValidateBasicTest(t, test.name, &test.msg, test.expectPass, types.TypeMsgCreatePosition)
+	}
+}
 
-		if test.expectPass {
-			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
-			require.Equal(t, msg.Route(), types.RouterKey)
-			require.Equal(t, msg.Type(), "create-position")
-			signers := msg.GetSigners()
-			require.Equal(t, len(signers), 1)
-			require.Equal(t, signers[0].String(), addr1)
-		} else {
-			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
-		}
+func TestMsgFungifyChargedPositions(t *testing.T) {
+	var validPositionIds = []uint64{1, 2}
+
+	tests := []struct {
+		name       string
+		msg        types.MsgFungifyChargedPositions
+		expectPass bool
+	}{
+		{
+			name: "proper msg",
+			msg: types.MsgFungifyChargedPositions{
+				Sender:      addr1,
+				PositionIds: validPositionIds,
+			},
+			expectPass: true,
+		},
+		{
+			name: "error: invalid sender",
+			msg: types.MsgFungifyChargedPositions{
+				Sender:      invalidAddr.String(),
+				PositionIds: validPositionIds,
+			},
+			expectPass: false,
+		},
+		{
+			name: "error: only one id given, must have at least 2",
+			msg: types.MsgFungifyChargedPositions{
+				Sender:      addr1,
+				PositionIds: []uint64{1},
+			},
+			expectPass: false,
+		},
+	}
+	for _, test := range tests {
+		runValidateBasicTest(t, test.name, &test.msg, test.expectPass, types.TypeMsgFungifyChargedPositions)
 	}
 }
 
 func TestMsgWithdrawPosition(t *testing.T) {
-	appParams.SetAddressPrefixes()
-	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pk1.Address()).String()
-	invalidAddr := sdk.AccAddress("invalid")
-
 	tests := []struct {
 		name       string
 		msg        types.MsgWithdrawPosition
@@ -185,26 +223,12 @@ func TestMsgWithdrawPosition(t *testing.T) {
 			expectPass: false,
 		},
 	}
-
 	for _, test := range tests {
-		msg := test.msg
-
-		if test.expectPass {
-			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
-			require.Equal(t, msg.Route(), types.RouterKey)
-			require.Equal(t, msg.Type(), "withdraw-position")
-			signers := msg.GetSigners()
-			require.Equal(t, len(signers), 1)
-			require.Equal(t, signers[0].String(), addr1)
-		} else {
-			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
-		}
+		runValidateBasicTest(t, test.name, &test.msg, test.expectPass, types.TypeMsgWithdrawPosition)
 	}
 }
 
 func TestConcentratedLiquiditySerialization(t *testing.T) {
-	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pk1.Address()).String()
 	defaultPoolId := uint64(1)
 
 	testCases := []struct {
@@ -235,10 +259,16 @@ func TestConcentratedLiquiditySerialization(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       int64(10000),
 				UpperTick:       int64(20000),
-				TokenDesired0:   sdk.NewCoin("foo", sdk.NewInt(1000)),
-				TokenDesired1:   sdk.NewCoin("bar", sdk.NewInt(1000)),
+				TokensProvided:  sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000)), sdk.NewCoin("bar", sdk.NewInt(1000))),
 				TokenMinAmount0: sdk.OneInt(),
 				TokenMinAmount1: sdk.OneInt(),
+			},
+		},
+		{
+			name: "MsgFungifyChargedPositions",
+			clMsg: &types.MsgFungifyChargedPositions{
+				Sender:      addr1,
+				PositionIds: []uint64{1, 2},
 			},
 		},
 	}

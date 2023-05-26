@@ -17,13 +17,11 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
-var (
-	DefaultMigrationRecords = types.MigrationRecords{BalancerToConcentratedPoolLinks: []types.BalancerToConcentratedPoolLink{
-		{BalancerPoolId: 1, ClPoolId: 4},
-		{BalancerPoolId: 2, ClPoolId: 5},
-		{BalancerPoolId: 3, ClPoolId: 6},
-	}}
-)
+var DefaultMigrationRecords = types.MigrationRecords{BalancerToConcentratedPoolLinks: []types.BalancerToConcentratedPoolLink{
+	{BalancerPoolId: 1, ClPoolId: 4},
+	{BalancerPoolId: 2, ClPoolId: 5},
+	{BalancerPoolId: 3, ClPoolId: 6},
+}}
 
 func TestGammInitGenesis(t *testing.T) {
 	app := osmoapp.Setup(false)
@@ -61,7 +59,7 @@ func TestGammInitGenesis(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, balancerPool.GetId(), poolStored.GetId())
 	require.Equal(t, balancerPool.GetAddress(), poolStored.GetAddress())
-	require.Equal(t, balancerPool.GetSwapFee(ctx), poolStored.GetSwapFee(ctx))
+	require.Equal(t, balancerPool.GetSpreadFactor(ctx), poolStored.GetSpreadFactor(ctx))
 	require.Equal(t, balancerPool.GetExitFee(ctx), poolStored.GetExitFee(ctx))
 	// require.Equal(t, balancerPool.GetTotalWeight(), sdk.Nw)
 	require.Equal(t, balancerPool.GetTotalShares(), poolStored.GetTotalShares())

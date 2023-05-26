@@ -10,8 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *KeeperTestSuite) TestLockupMergeMigration() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestLockupMergeMigration() {
+	s.SetupTest()
 
 	m := make(map[string]int64)
 	key := func(addr sdk.AccAddress, denom string, duration time.Duration) string {
@@ -44,13 +44,13 @@ func (suite *KeeperTestSuite) TestLockupMergeMigration() {
 			}
 			amount := rand.Int63n(100000)
 			add(addr, denom, baseDuration, amount)
-			suite.LockTokens(addr, sdk.Coins{sdk.NewInt64Coin(denom, amount)}, duration)
+			s.LockTokens(addr, sdk.Coins{sdk.NewInt64Coin(denom, amount)}, duration)
 		}
 	}
 
-	suite.Require().NotPanics(func() {
+	s.Require().NotPanics(func() {
 		keeper.MergeLockupsForSimilarDurations(
-			suite.Ctx, *suite.App.LockupKeeper, suite.App.AccountKeeper,
+			s.Ctx, *s.App.LockupKeeper, s.App.AccountKeeper,
 			keeper.BaselineDurations, keeper.HourDuration,
 		)
 	})
@@ -58,10 +58,10 @@ func (suite *KeeperTestSuite) TestLockupMergeMigration() {
 	for i := 0; i < 5; i++ {
 		for j := 0; j < 5; j++ {
 			for _, duration := range keeper.BaselineDurations {
-				locks := suite.App.LockupKeeper.GetAccountLockedDurationNotUnlockingOnly(suite.Ctx, addr(i), denom(j), duration)
-				suite.Require().True(len(locks) <= 1)
+				locks := s.App.LockupKeeper.GetAccountLockedDurationNotUnlockingOnly(s.Ctx, addr(i), denom(j), duration)
+				s.Require().True(len(locks) <= 1)
 				if len(locks) == 1 {
-					suite.Require().Equal(locks[0].Coins[0].Amount.Int64(), get(addr(i), denom(j), duration),
+					s.Require().Equal(locks[0].Coins[0].Amount.Int64(), get(addr(i), denom(j), duration),
 						"amount not equal on %s", locks[0],
 					)
 				}
