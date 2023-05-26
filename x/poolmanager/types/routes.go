@@ -30,8 +30,7 @@ type CommunityPoolI interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
 
-// PoolModuleI is the interface that must be fulfillled by the module
-// storing and containing the pools.
+// PoolModuleI defines an interface that every module containing a pool must implement.
 type PoolModuleI interface {
 	InitializePool(ctx sdk.Context, pool PoolI, creatorAddress sdk.AccAddress) error
 

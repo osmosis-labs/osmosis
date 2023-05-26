@@ -63,6 +63,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/clmodule"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/types"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/ibcratelimitmodule"
@@ -119,6 +120,7 @@ var moduleAccountPermissions = map[string][]string{
 	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
 	valsetpreftypes.ModuleName:               {authtypes.Staking},
 	poolmanagertypes.ModuleName:              nil,
+	cosmwasmpooltypes.ModuleName:             nil,
 }
 
 // appModules return modules to initialize module manager.

@@ -329,6 +329,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	appKeepers.CosmwasmPoolKeeper = cosmwasmpool.NewKeeper(appKeepers.keys[cosmwasmpooltypes.StoreKey], appKeepers.GetSubspace(cosmwasmpooltypes.ModuleName))
 
+	appKeepers.CosmwasmPoolKeeper = cosmwasmpool.NewKeeper(appKeepers.keys[cosmwasmpooltypes.StoreKey], appKeepers.GetSubspace(cosmwasmpooltypes.ModuleName))
+
 	appKeepers.PoolManagerKeeper = poolmanager.NewKeeper(
 		appKeepers.keys[poolmanagertypes.StoreKey],
 		appKeepers.GetSubspace(poolmanagertypes.ModuleName),

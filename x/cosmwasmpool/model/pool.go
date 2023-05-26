@@ -7,12 +7,13 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/cosmwasm"
+	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/cosmwasm/msg"
 	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 type Pool struct {
-	PoolStoreModel
+	CosmWasmPool
 	WasmKeeper types.WasmKeeper
 }
 
@@ -24,7 +25,7 @@ var (
 // NewCosmWasmPool creates a new CosmWasm pool with the specified parameters.
 func NewCosmWasmPool(poolId uint64, codeId uint64, instantiateMsg []byte) Pool {
 	pool := Pool{
-		PoolStoreModel: PoolStoreModel{
+		CosmWasmPool: CosmWasmPool{
 			PoolAddress:     poolmanagertypes.NewPoolAddress(poolId).String(),
 			ContractAddress: "", // N.B. This is to be set in InitializePool()
 			PoolId:          poolId,
@@ -55,7 +56,7 @@ func (p Pool) GetId() uint64 {
 
 // String returns the json marshalled string of the pool
 func (p Pool) String() string {
-	return p.PoolStoreModel.String()
+	return p.CosmWasmPool.String()
 }
 
 // GetSwapFee returns the swap fee of the pool.
@@ -65,13 +66,6 @@ func (p Pool) GetSpreadFactor(ctx sdk.Context) sdk.Dec {
 	return response.SwapFee
 }
 
-// GetExitFee returns the exit fee of the pool
-func (p Pool) GetExitFee(ctx sdk.Context) sdk.Dec {
-	request := cosmwasm.GetExitFee{}
-	response := cosmwasm.MustQuery[cosmwasm.GetExitFee, cosmwasm.GetExitFeeResponse](ctx, p.WasmKeeper, p.ContractAddress, request)
-	return response.ExitFee
-}
-
 // IsActive returns true if the pool is active
 func (p Pool) IsActive(ctx sdk.Context) bool {
 	return true
@@ -79,8 +73,13 @@ func (p Pool) IsActive(ctx sdk.Context) bool {
 
 // SpotPrice returns the spot price of the pool.
 func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error) {
-	request := cosmwasm.SpotPrice{}
-	response, err := cosmwasm.Query[cosmwasm.SpotPrice, cosmwasm.SpotPriceResponse](ctx, p.WasmKeeper, p.ContractAddress, request)
+	request := msg.SpotPriceQueryMsg{
+		SpotPrice: msg.SpotPrice{
+			QuoteAssetDenom: quoteAssetDenom,
+			BaseAssetDenom:  baseAssetDenom,
+		},
+	}
+	response, err := cosmwasm.Query[msg.SpotPriceQueryMsg, msg.SpotPriceQueryMsgResponse](ctx, p.WasmKeeper, p.ContractAddress, request)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -99,8 +98,8 @@ func (p Pool) GetType() poolmanagertypes.PoolType {
 
 // GetTotalPoolLiquidity returns the total pool liquidity
 func (p Pool) GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins {
-	request := cosmwasm.GetTotalPoolLiquidity{}
-	response := cosmwasm.MustQuery[cosmwasm.GetTotalPoolLiquidity, cosmwasm.GetTotalPoolLiquidityResponse](ctx, p.WasmKeeper, p.ContractAddress, request)
+	request := msg.GetTotalPoolLiquidityQueryMsg{}
+	response := cosmwasm.MustQuery[msg.GetTotalPoolLiquidityQueryMsg, msg.GetTotalPoolLiquidityQueryMsgResponse](ctx, p.WasmKeeper, p.ContractAddress, request)
 	return response.TotalPoolLiquidity
 }
 
@@ -118,12 +117,12 @@ func (p Pool) GetContractAddress() string {
 	return p.ContractAddress
 }
 
-func (p Pool) SetContractAddress(contractAddress string) {
+func (p *Pool) SetContractAddress(contractAddress string) {
 	p.ContractAddress = contractAddress
 }
 
 func (p Pool) GetStoreModel() proto.Message {
-	return &p.PoolStoreModel
+	return &p.CosmWasmPool
 }
 
 // Set the wasm keeper.

@@ -8,7 +8,7 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/model";
 
-message PoolStoreModel {
+message CosmWasmPool {
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.goproto_stringer) = false;
   option (cosmos_proto.implements_interface) = "PoolI";

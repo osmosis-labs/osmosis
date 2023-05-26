@@ -42,9 +42,7 @@ func (msg MsgCreateCosmWasmPool) ValidateBasic() error {
 }
 
 func (msg MsgCreateCosmWasmPool) GetSignBytes() []byte {
-	// TODO: uncomment once merging state-breaks.
-	// return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-	return nil
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgCreateCosmWasmPool) GetSigners() []sdk.AccAddress {

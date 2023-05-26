@@ -8,7 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/types"
 )
 
-func (k Keeper) setPool(ctx sdk.Context, pool types.CosmWasmExtension) {
+func (k Keeper) SetPool(ctx sdk.Context, pool types.CosmWasmExtension) {
 	store := ctx.KVStore(k.storeKey)
 	osmoutils.MustSet(store, types.FormatPoolsPrefix(pool.GetId()), pool.GetStoreModel())
 }
@@ -16,7 +16,7 @@ func (k Keeper) setPool(ctx sdk.Context, pool types.CosmWasmExtension) {
 // getPoolById returns a concentratedPoolExtension that corresponds to the requested pool id. Returns error if pool id is not found.
 func (k Keeper) getPoolById(ctx sdk.Context, poolId uint64) (types.CosmWasmExtension, error) {
 	store := ctx.KVStore(k.storeKey)
-	pool := model.PoolStoreModel{}
+	pool := model.CosmWasmPool{}
 	key := types.FormatPoolsPrefix(poolId)
 	found, err := osmoutils.Get(store, key, &pool)
 	if err != nil {
@@ -26,7 +26,7 @@ func (k Keeper) getPoolById(ctx sdk.Context, poolId uint64) (types.CosmWasmExten
 		return nil, types.PoolNotFoundError{PoolId: poolId}
 	}
 	return &model.Pool{
-		PoolStoreModel: pool,
-		WasmKeeper:     k.wasmKeeper,
+		CosmWasmPool: pool,
+		WasmKeeper:   k.wasmKeeper,
 	}, nil
 }

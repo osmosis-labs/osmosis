@@ -8,19 +8,25 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 
+	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&PoolStoreModel{}, "osmosis/cosmwasm-pool", nil)
+	cdc.RegisterConcrete(&CosmWasmPool{}, "osmosis/cosmwasm-pool", nil)
 	cdc.RegisterConcrete(&MsgCreateCosmWasmPool{}, "osmosis/cosmwasm-create-pool", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterInterface(
-		"osmosis.swaprouter.v1beta1.PoolI",
+		"osmosis.poolmanager.v1beta1.PoolI",
 		(*poolmanagertypes.PoolI)(nil),
-		&Pool{},
+		&CosmWasmPool{},
+	)
+	registry.RegisterInterface(
+		"osmosis.cosmwasmpool.v1beta1.CosmWasmExtension",
+		(*types.CosmWasmExtension)(nil),
+		&CosmWasmPool{},
 	)
 
 	registry.RegisterImplementations(
