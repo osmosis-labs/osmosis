@@ -252,6 +252,14 @@ func (n *NodeConfig) ExitPool(from, minAmountsOut string, poolId uint64, shareAm
 	n.LogActionF("successfully exited pool %d, minAmountsOut %s, shareAmountIn %s", poolId, minAmountsOut, shareAmountIn)
 }
 
+func (n *NodeConfig) MigrateSharesToFullRangeConcentratedPosition(from, minAmountsOut string, sharesToMigrate string) {
+	n.LogActionF("Migrate shares to full range Concentrated position")
+	cmd := []string{"osmosisd", "tx", "gamm", "migrate-position", sharesToMigrate, fmt.Sprintf("--min-amounts-out=%s", minAmountsOut), fmt.Sprintf("--from=%s", from)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully migrate shares")
+}
+
 func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight int64, initialDeposit sdk.Coin) {
 	n.LogActionF("submitting upgrade proposal %s for height %d", upgradeVersion, upgradeHeight)
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%d", upgradeHeight), "--upgrade-info=\"\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
@@ -290,6 +298,14 @@ func (n *NodeConfig) SubmitTextProposal(text string, initialDeposit sdk.Coin, is
 func (n *NodeConfig) SubmitUpdateMigrationRecordsProposal(records string, initialDeposit sdk.Coin) {
 	n.LogActionF("submit update migration record")
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "update-migration-records-proposal", fmt.Sprintf("--migration-records=%s", records), fmt.Sprintf("--title=\"%s migration-records\"", records), fmt.Sprintf("--description=\"%s update migration records\"", records), "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully submitted update migration records proposal for record %s", records)
+}
+
+func (n *NodeConfig) SubmitReplaceMigrationRecordsProposal(records string, initialDeposit sdk.Coin) {
+	n.LogActionF("submit replace migration record")
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "replace-migration-records-proposal", fmt.Sprintf("--migration-records=%s", records), fmt.Sprintf("--title=\"%s migration-records\"", records), fmt.Sprintf("--description=\"%s replace migration records\"", records), "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully submitted update migration records proposal for record %s", records)

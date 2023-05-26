@@ -37,6 +37,8 @@ func NewTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		NewCreatePoolCmd().BuildCommandCustomFn(),
 		NewStableSwapAdjustScalingFactorsCmd(),
+		NewCmdSubmitReplaceMigrationRecordsProposal(),
+		NewCmdSubmitUpdateMigrationRecordsProposal(),
 	)
 	return txCmd
 }

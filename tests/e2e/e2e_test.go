@@ -32,6 +32,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
 	clmath "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 // Reusable Checks
@@ -1628,20 +1629,30 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 	s.NoError(err)
 
 	var (
-		denom0      string = "uosmo"
-		denom1      string = "stake"
-		tickSpacing uint64 = 1
-		swapFee            = "0.01"
+		denom0       string = "stake"
+		denom1       string = "uosmo"
+		tickSpacing  uint64 = 100
+		spreadFactor        = "0.001" // 0.1%
 	)
 
+	// Get the permisionless pool creation parameter.
+	isPermisionlessCreationEnabledStr := node.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
+	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "false") {
+		s.T().Fatal("concentrated liquidity pool creation is enabled when should not have been")
+	}
+
+	// Change the parameter to enable permisionless pool creation.
+	err = chainA.SubmitParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"))
+	s.Require().NoError(err)
+
+	// Confirm that the parameter has been changed.
+	isPermisionlessCreationEnabledStr = node.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
+	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
+		s.T().Fatal("concentrated liquidity pool creation is not enabled")
+	}
+
+	tokenOutMins := sdk.NewCoins(sdk.NewCoin("uosmos", sdk.NewInt(499000)), sdk.NewCoin("stake", sdk.NewInt(490000)))
 	// helpers
-	// var (
-	// 	getBalancerPoolFromId = func(poolId uint64) gammtypes.CFMMPoolI {
-	// 		balancerPool, err := node.QueryCFMMPoolI(poolId)
-	// 		s.Require().NoError(err)
-	// 		return balancerPool
-	// 	}
-	// )
 	// var (
 	// 	getConcentratePoolFromId = func(poolId uint64) types.ConcentratedPoolExtension {
 	// 		concentratedPool, err := node.QueryConcentratedPool(poolId)
@@ -1652,23 +1663,29 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 
 	// create balancer pool
 	balancePoolId := node.CreateBalancerPool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
-	// balancerPool := getBalancerPoolFromId(balancePoolId)
+	balancerPool := s.updatedCFMMPool(node, balancePoolId)
 	// create CL pool
-	clPoolId, err := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, swapFee)
+	clPoolId, err := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
 	// clPool := getConcentratePoolFromId(clPoolId)
 
 	record := strconv.FormatUint(balancePoolId, 10) + "," + strconv.FormatUint(clPoolId, 10)
-	node.SubmitUpdateMigrationRecordsProposal(record, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+	node.SubmitReplaceMigrationRecordsProposal(record, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 	chainA.LatestProposalNumber += 1
 	node.DepositProposal(chainA.LatestProposalNumber, false)
 	for _, node := range chainA.NodeConfigs {
 		node.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
 	}
-	// sharesToMigrate := sdk.NewCoin(gammtypes.GetPoolShareDenom(balancePoolId), balancerPool.GetTotalShares())
+	sharesToMigrate := sdk.NewCoin(gammtypes.GetPoolShareDenom(balancePoolId), balancerPool.GetTotalShares())
 	// // Note gamm and cl pool addresses
 	// balancerPoolAddress := balancerPool.GetAddress()
 	// clPoolAddress := clPool.GetAddress()
 	// minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetPrecisionFactorAtPriceOne())
 
 	// Note balancer pool balance after joining balancer pool
+	sender, err := sdk.AccAddressFromBech32(chainA.NodeConfigs[0].PublicAddress)
+	node.MigrateSharesToFullRangeConcentratedPosition(sender.String(), tokenOutMins.String(), sharesToMigrate.String())
+
+	position := node.QueryConcentratedPositions(sender.String()) 
+
+	s.Require().Equal(len(position), 1)
 }
