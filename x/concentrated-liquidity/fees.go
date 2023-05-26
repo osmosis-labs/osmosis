@@ -108,7 +108,7 @@ func (k Keeper) initOrUpdatePositionFeeAccumulator(ctx sdk.Context, poolId uint6
 
 // getFeeGrowthOutside returns the sum of fee growth above the upper tick and fee growth below the lower tick
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
-// Currently, Tte call to GetTickInfo() may mutate state.
+// Currently, the call to GetTickInfo() may mutate state.
 func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {

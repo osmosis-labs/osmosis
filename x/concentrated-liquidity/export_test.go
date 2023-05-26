@@ -145,8 +145,8 @@ func (k Keeper) FungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	return k.fungifyChargedPosition(ctx, owner, positionIds)
 }
 
-func (k Keeper) ValidatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, int64, int64, sdk.Dec, error) {
-	return k.validatePositionsAndGetTotalLiquidity(ctx, owner, positionIds)
+func (k Keeper) ValidatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64, fullyChargedDuration time.Duration) (uint64, int64, int64, sdk.Dec, error) {
+	return k.validatePositionsAndGetTotalLiquidity(ctx, owner, positionIds, fullyChargedDuration)
 }
 
 func (k Keeper) IsLockMature(ctx sdk.Context, underlyingLockId uint64) (bool, error) {
