@@ -3,6 +3,7 @@ package apptesting
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -57,6 +58,17 @@ var (
 // Setup sets up basic environment for suite (App, Ctx, and test accounts)
 func (s *KeeperTestHelper) Setup() {
 	s.App = app.Setup(false)
+	s.setupGeneral()
+}
+
+func (s *KeeperTestHelper) SetupWithLevelDb() func() {
+	app, cleanup := app.SetupTestingAppWithLevelDb(false)
+	s.App = app
+	s.setupGeneral()
+	return cleanup
+}
+
+func (s *KeeperTestHelper) setupGeneral() {
 	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
 	s.QueryHelper = &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: s.App.GRPCQueryRouter(),
@@ -386,6 +398,23 @@ func (s *KeeperTestHelper) StateNotAltered() {
 	s.App.Commit()
 	newState := s.App.ExportState(s.Ctx)
 	s.Require().Equal(oldState, newState)
+}
+
+func (s *KeeperTestHelper) SkipIfWSL() {
+	SkipIfWSL(s.T())
+}
+
+// SkipIfWSL skips tests if running on WSL
+// This is a workaround to enable quickly running full unit test suite locally
+// on WSL without failures. The failures are stemming from trying to upload
+// wasm code. An OS permissioning issue.
+func SkipIfWSL(t *testing.T) {
+	t.Helper()
+	skip := os.Getenv("SKIP_WASM_WSL_TESTS")
+	fmt.Println("SKIP_WASM_WSL_TESTS", skip)
+	if skip == "true" {
+		t.Skip("Skipping Wasm tests")
+	}
 }
 
 // CreateRandomAccounts is a function return a list of randomly generated AccAddresses

@@ -22,14 +22,14 @@ type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
-	suite.Setup()
+func (s *KeeperTestSuite) SetupTest() {
+	s.Setup()
 }
 
 // PrepareDelegateToValidatorSet generates 4 validators for the valsetpref.
 // We self assign weights and round up to 2 decimal places in validateBasic.
-func (suite *KeeperTestSuite) PrepareDelegateToValidatorSet() []types.ValidatorPreference {
-	valAddrs := suite.SetupMultipleValidators(4)
+func (s *KeeperTestSuite) PrepareDelegateToValidatorSet() []types.ValidatorPreference {
+	valAddrs := s.SetupMultipleValidators(4)
 	valPreferences := []types.ValidatorPreference{
 		{
 			ValOperAddress: valAddrs[0],
@@ -52,68 +52,69 @@ func (suite *KeeperTestSuite) PrepareDelegateToValidatorSet() []types.ValidatorP
 	return valPreferences
 }
 
-func (suite *KeeperTestSuite) GetDelegationRewards(ctx sdk.Context, valAddrStr string, delegator sdk.AccAddress) (sdk.DecCoins, stakingtypes.Validator) {
+func (s *KeeperTestSuite) GetDelegationRewards(ctx sdk.Context, valAddrStr string, delegator sdk.AccAddress) (sdk.DecCoins, stakingtypes.Validator) {
 	valAddr, err := sdk.ValAddressFromBech32(valAddrStr)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
-	validator, found := suite.App.StakingKeeper.GetValidator(ctx, valAddr)
-	suite.Require().True(found)
+	validator, found := s.App.StakingKeeper.GetValidator(ctx, valAddr)
+	s.Require().True(found)
 
-	endingPeriod := suite.App.DistrKeeper.IncrementValidatorPeriod(ctx, validator)
+	endingPeriod := s.App.DistrKeeper.IncrementValidatorPeriod(ctx, validator)
 
-	delegation, found := suite.App.StakingKeeper.GetDelegation(ctx, delegator, valAddr)
-	suite.Require().True(found)
+	delegation, found := s.App.StakingKeeper.GetDelegation(ctx, delegator, valAddr)
+	s.Require().True(found)
 
-	rewards := suite.App.DistrKeeper.CalculateDelegationRewards(ctx, validator, delegation, endingPeriod)
+	rewards := s.App.DistrKeeper.CalculateDelegationRewards(ctx, validator, delegation, endingPeriod)
 
 	return rewards, validator
 }
 
-func (suite *KeeperTestSuite) SetupDelegationReward(delegator sdk.AccAddress, preferences []types.ValidatorPreference, existingValAddrStr string, setValSetDel, setExistingdel bool) {
+func (s *KeeperTestSuite) SetupDelegationReward(delegator sdk.AccAddress, preferences []types.ValidatorPreference, existingValAddrStr string, setValSetDel, setExistingdel bool) {
 	var ctx sdk.Context
 	// incrementing the blockheight by 1 for reward
-	ctx = suite.Ctx.WithBlockHeight(suite.Ctx.BlockHeight() + 1)
+	ctx = s.Ctx.WithBlockHeight(s.Ctx.BlockHeight() + 1)
 
 	if setValSetDel {
 		// only necessary if there are tokens delegated
 		for _, val := range preferences {
-			suite.AllocateRewards(ctx, delegator, val.ValOperAddress)
+			s.AllocateRewards(ctx, delegator, val.ValOperAddress)
 		}
 	}
 
 	if setExistingdel {
-		suite.AllocateRewards(ctx, delegator, existingValAddrStr)
+		s.AllocateRewards(ctx, delegator, existingValAddrStr)
 	}
 }
 
-func (suite *KeeperTestSuite) AllocateRewards(ctx sdk.Context, delegator sdk.AccAddress, valAddrStr string) {
+// AllocateRewards allocates rewards to a delegator
+func (s *KeeperTestSuite) AllocateRewards(ctx sdk.Context, delegator sdk.AccAddress, valAddrStr string) {
 	// check that there is enough reward to withdraw
-	_, validator := suite.GetDelegationRewards(ctx, valAddrStr, delegator)
+	_, validator := s.GetDelegationRewards(ctx, valAddrStr, delegator)
 
 	// allocate some rewards
 	tokens := sdk.NewDecCoins(sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 10))
-	suite.App.DistrKeeper.AllocateTokensToValidator(ctx, validator, tokens)
+	s.App.DistrKeeper.AllocateTokensToValidator(ctx, validator, tokens)
 
-	rewardsAfterAllocation, _ := suite.GetDelegationRewards(ctx, valAddrStr, delegator)
-	suite.Require().NotNil(rewardsAfterAllocation)
-	suite.Require().NotZero(rewardsAfterAllocation[0].Amount)
+	rewardsAfterAllocation, _ := s.GetDelegationRewards(ctx, valAddrStr, delegator)
+	s.Require().NotNil(rewardsAfterAllocation)
+	s.Require().NotZero(rewardsAfterAllocation[0].Amount)
 }
 
-// PrepareExistingDelegations sets up existing delegation by creating a certain number of validators and delegating tokenAmt to them.
-func (suite *KeeperTestSuite) PrepareExistingDelegations(ctx sdk.Context, valAddrs []string, delegator sdk.AccAddress, tokenAmt sdk.Int) error {
+// Pres *KeeperTestSuites sets up existing delegation by creating a certain number of validators and delegating tokenAmt to them.
+func (s *KeeperTestSuite) PrepareExistingDelegations(ctx sdk.Context, valAddrs []string, delegator sdk.AccAddress, tokenAmt sdk.Int) error {
 	for i := 0; i < len(valAddrs); i++ {
 		valAddr, err := sdk.ValAddressFromBech32(valAddrs[i])
 		if err != nil {
 			return fmt.Errorf("validator address not formatted")
 		}
 
-		validator, found := suite.App.StakingKeeper.GetValidator(ctx, valAddr)
+		validator, found := s.App.StakingKeeper.GetValidator(ctx, valAddr)
 		if !found {
 			return fmt.Errorf("validator not found %s", validator)
 		}
 
 		// Delegate the unbonded tokens
-		_, err = suite.App.StakingKeeper.Delegate(ctx, delegator, tokenAmt, stakingtypes.Unbonded, validator, true)
+		_, err = s.App.StakingKeeper.Delegate(ctx, delegator, tokenAmt, stakingtypes.Unbonded, validator, true)
 		if err != nil {
 			return err
 		}
@@ -122,14 +123,15 @@ func (suite *KeeperTestSuite) PrepareExistingDelegations(ctx sdk.Context, valAdd
 	return nil
 }
 
-func (suite *KeeperTestSuite) TestGetDelegationPreference() {
-	suite.SetupTest()
+// TestGetDelegationPreference tests the GetDelegationPreference function
+func (s *KeeperTestSuite) TestGetDelegationPreference() {
+	s.SetupTest()
 
 	// prepare existing delegations validators
-	valAddrs := suite.SetupMultipleValidators(3)
+	valAddrs := s.SetupMultipleValidators(3)
 
 	// prepare validators to delegate to valset
-	preferences := suite.PrepareDelegateToValidatorSet()
+	preferences := s.PrepareDelegateToValidatorSet()
 
 	tests := []struct {
 		name                   string
@@ -165,105 +167,107 @@ func (suite *KeeperTestSuite) TestGetDelegationPreference() {
 	}
 
 	for _, test := range tests {
-		suite.Run(test.name, func() {
-			msgServer := valPref.NewMsgServerImpl(suite.App.ValidatorSetPreferenceKeeper)
-			c := sdk.WrapSDKContext(suite.Ctx)
+		s.Run(test.name, func() {
+			msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
+			c := sdk.WrapSDKContext(s.Ctx)
 
 			amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)} // 100 osmo
 
-			suite.FundAcc(test.delegator, amountToFund)
+			s.FundAcc(test.delegator, amountToFund)
 
 			if test.setValSet {
 				_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(test.delegator, preferences))
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 			}
 
 			if test.setExistingDelegations {
-				err := suite.PrepareExistingDelegations(suite.Ctx, valAddrs, test.delegator, sdk.NewInt(10_000_000))
-				suite.Require().NoError(err)
+				err := s.PrepareExistingDelegations(s.Ctx, valAddrs, test.delegator, sdk.NewInt(10_000_000))
+				s.Require().NoError(err)
 			}
 
-			_, err := suite.App.ValidatorSetPreferenceKeeper.GetDelegationPreferences(suite.Ctx, test.delegator.String())
+			_, err := s.App.ValidatorSetPreferenceKeeper.GetDelegationPreferences(s.Ctx, test.delegator.String())
 			if test.expectPass {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) SetupValidatorsAndDelegations() ([]string, []types.ValidatorPreference, sdk.Coins) {
+// SetupValidatorsAndDelegations sets up existing delegation by creating a certain number of validators and delegating tokenAmt to them.
+func (s *KeeperTestSuite) SetupValidatorsAndDelegations() ([]string, []types.ValidatorPreference, sdk.Coins) {
 	// prepare existing delegations validators
-	valAddrs := suite.SetupMultipleValidators(3)
+	valAddrs := s.SetupMultipleValidators(3)
 
 	// prepare validators to delegate to valset
-	preferences := suite.PrepareDelegateToValidatorSet()
+	preferences := s.PrepareDelegateToValidatorSet()
 
 	amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)}
 
 	return valAddrs, preferences, amountToFund
 }
 
-func (suite *KeeperTestSuite) SetupLocks(delegator sdk.AccAddress) []lockuptypes.PeriodLock {
+// SetupLocks sets up locks for a delegator
+func (s *KeeperTestSuite) SetupLocks(delegator sdk.AccAddress) []lockuptypes.PeriodLock {
 	// create a pool with uosmo
 	locks := []lockuptypes.PeriodLock{}
 	// Setup lock
 	coinsToLock := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10_000_000)}
 	osmoToLock := sdk.Coins{sdk.NewInt64Coin(appParams.BaseCoinUnit, 10_000_000)}
 	multipleCoinsToLock := sdk.Coins{coinsToLock[0], osmoToLock[0]}
-	suite.FundAcc(delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000), sdk.NewInt64Coin(appParams.BaseCoinUnit, 100_000_000)})
+	s.FundAcc(delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000), sdk.NewInt64Coin(appParams.BaseCoinUnit, 100_000_000)})
 
 	// lock with osmo
 	twoWeekDuration, err := time.ParseDuration("336h")
-	suite.Require().NoError(err)
-	workingLock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, delegator, osmoToLock, twoWeekDuration)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
+	workingLock, err := s.App.LockupKeeper.CreateLock(s.Ctx, delegator, osmoToLock, twoWeekDuration)
+	s.Require().NoError(err)
 
 	locks = append(locks, workingLock)
 
 	// locking with stake denom instead of osmo denom
-	stakeDenomLock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, delegator, coinsToLock, twoWeekDuration)
-	suite.Require().NoError(err)
+	stakeDenomLock, err := s.App.LockupKeeper.CreateLock(s.Ctx, delegator, coinsToLock, twoWeekDuration)
+	s.Require().NoError(err)
 
 	locks = append(locks, stakeDenomLock)
 
 	// lock case where lock owner != delegator
-	suite.FundAcc(sdk.AccAddress([]byte("addr5---------------")), osmoToLock)
-	lockWithDifferentOwner, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, sdk.AccAddress([]byte("addr5---------------")), osmoToLock, twoWeekDuration)
-	suite.Require().NoError(err)
+	s.FundAcc(sdk.AccAddress([]byte("addr5---------------")), osmoToLock)
+	lockWithDifferentOwner, err := s.App.LockupKeeper.CreateLock(s.Ctx, sdk.AccAddress([]byte("addr5---------------")), osmoToLock, twoWeekDuration)
+	s.Require().NoError(err)
 
 	locks = append(locks, lockWithDifferentOwner)
 
 	// lock case where the duration != <= 2 weeks
 	morethanTwoWeekDuration, err := time.ParseDuration("337h")
-	suite.Require().NoError(err)
-	maxDurationLock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, delegator, osmoToLock, morethanTwoWeekDuration)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
+	maxDurationLock, err := s.App.LockupKeeper.CreateLock(s.Ctx, delegator, osmoToLock, morethanTwoWeekDuration)
+	s.Require().NoError(err)
 
 	locks = append(locks, maxDurationLock)
 
 	// unbonding locks
-	unbondingLocks, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, delegator, osmoToLock, twoWeekDuration)
-	suite.Require().NoError(err)
+	unbondingLocks, err := s.App.LockupKeeper.CreateLock(s.Ctx, delegator, osmoToLock, twoWeekDuration)
+	s.Require().NoError(err)
 
-	_, err = suite.App.LockupKeeper.BeginUnlock(suite.Ctx, unbondingLocks.ID, nil)
-	suite.Require().NoError(err)
+	_, err = s.App.LockupKeeper.BeginUnlock(s.Ctx, unbondingLocks.ID, nil)
+	s.Require().NoError(err)
 
 	locks = append(locks, unbondingLocks)
 
 	// synthetic locks
-	syntheticLocks, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, delegator, osmoToLock, twoWeekDuration)
-	suite.Require().NoError(err)
+	syntheticLocks, err := s.App.LockupKeeper.CreateLock(s.Ctx, delegator, osmoToLock, twoWeekDuration)
+	s.Require().NoError(err)
 
-	err = suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, syntheticLocks.ID, "uosmo", time.Minute, true)
-	suite.Require().NoError(err)
+	err = s.App.LockupKeeper.CreateSyntheticLockup(s.Ctx, syntheticLocks.ID, "uosmo", time.Minute, true)
+	s.Require().NoError(err)
 
 	locks = append(locks, syntheticLocks)
 
 	// multiple asset lock
-	multiassetLock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, delegator, multipleCoinsToLock, twoWeekDuration)
-	suite.Require().NoError(err)
+	multiassetLock, err := s.App.LockupKeeper.CreateLock(s.Ctx, delegator, multipleCoinsToLock, twoWeekDuration)
+	s.Require().NoError(err)
 
 	locks = append(locks, multiassetLock)
 

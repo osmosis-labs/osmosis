@@ -15,12 +15,12 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 )
 
-func (suite *KeeperTestSuite) TestFeeDecorator() {
-	suite.SetupTest(false)
+func (s *KeeperTestSuite) TestFeeDecorator() {
+	s.SetupTest(false)
 
 	mempoolFeeOpts := types.NewDefaultMempoolFeeOptions()
 	mempoolFeeOpts.MinGasPriceForHighGasTx = sdk.MustNewDecFromStr("0.0025")
-	baseDenom, _ := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
+	baseDenom, _ := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
 	baseGas := uint64(10000)
 	consensusMinFeeAmt := int64(25)
 	point1BaseDenomMinGasPrices := sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
@@ -151,15 +151,15 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 
 	for _, tc := range tests {
 		// reset pool and accounts for each test
-		suite.SetupTest(false)
-		suite.Run(tc.name, func() {
+		s.SetupTest(false)
+		s.Run(tc.name, func() {
 			// setup uion with 1:1 fee
-			uionPoolId := suite.PrepareBalancerPoolWithCoins(
+			uionPoolId := s.PrepareBalancerPoolWithCoins(
 				sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 				sdk.NewInt64Coin(uion, 500),
 			)
-			err := suite.ExecuteUpgradeFeeTokenProposal(uion, uionPoolId)
-			suite.Require().NoError(err)
+			err := s.ExecuteUpgradeFeeTokenProposal(uion, uionPoolId)
+			s.Require().NoError(err)
 
 			if tc.minGasPrices == nil {
 				tc.minGasPrices = sdk.NewDecCoins()
@@ -167,18 +167,18 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			if tc.gasRequested == 0 {
 				tc.gasRequested = baseGas
 			}
-			suite.Ctx = suite.Ctx.WithIsCheckTx(tc.isCheckTx).WithMinGasPrices(tc.minGasPrices)
+			s.Ctx = s.Ctx.WithIsCheckTx(tc.isCheckTx).WithMinGasPrices(tc.minGasPrices)
 
 			// TODO: Cleanup this code.
 			// TxBuilder components reset for every test case
-			txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
+			txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 			priv0, _, addr0 := testdata.KeyTestPubAddr()
-			acc1 := suite.App.AccountKeeper.NewAccountWithAddress(suite.Ctx, addr0)
-			suite.App.AccountKeeper.SetAccount(suite.Ctx, acc1)
+			acc1 := s.App.AccountKeeper.NewAccountWithAddress(s.Ctx, addr0)
+			s.App.AccountKeeper.SetAccount(s.Ctx, acc1)
 			msgs := []sdk.Msg{testdata.NewTestMsg(addr0)}
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
 			signerData := authsigning.SignerData{
-				ChainID:       suite.Ctx.ChainID(),
+				ChainID:       s.Ctx.ChainID(),
 				AccountNumber: accNums[0],
 				Sequence:      accSeqs[0],
 			}
@@ -189,19 +189,19 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 				signerData,
 				txBuilder,
 				privs[0],
-				suite.clientCtx.TxConfig,
+				s.clientCtx.TxConfig,
 				accSeqs[0],
 			)
 
-			err = simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, tc.txFee)
-			suite.Require().NoError(err)
+			err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, addr0, tc.txFee)
+			s.Require().NoError(err)
 
-			tx := suite.BuildTx(txBuilder, msgs, sigV2, "", tc.txFee, gasLimit)
+			tx := s.BuildTx(txBuilder, msgs, sigV2, "", tc.txFee, gasLimit)
 
-			mfd := keeper.NewMempoolFeeDecorator(*suite.App.TxFeesKeeper, mempoolFeeOpts)
-			dfd := keeper.NewDeductFeeDecorator(*suite.App.TxFeesKeeper, *suite.App.AccountKeeper, *suite.App.BankKeeper, nil)
+			mfd := keeper.NewMempoolFeeDecorator(*s.App.TxFeesKeeper, mempoolFeeOpts)
+			dfd := keeper.NewDeductFeeDecorator(*s.App.TxFeesKeeper, *s.App.AccountKeeper, *s.App.BankKeeper, nil)
 			antehandlerMFD := sdk.ChainAnteDecorators(mfd, dfd)
-			_, err = antehandlerMFD(suite.Ctx, tx, tc.isSimulate)
+			_, err = antehandlerMFD(s.Ctx, tx, tc.isSimulate)
 
 			if tc.expectPass {
 				// ensure fee was collected
@@ -210,12 +210,12 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 					if tc.txFee[0].Denom != baseDenom {
 						moduleName = types.NonNativeFeeCollectorName
 					}
-					moduleAddr := suite.App.AccountKeeper.GetModuleAddress(moduleName)
-					suite.Require().Equal(tc.txFee[0], suite.App.BankKeeper.GetBalance(suite.Ctx, moduleAddr, tc.txFee[0].Denom), tc.name)
+					moduleAddr := s.App.AccountKeeper.GetModuleAddress(moduleName)
+					s.Require().Equal(tc.txFee[0], s.App.BankKeeper.GetBalance(s.Ctx, moduleAddr, tc.txFee[0].Denom), tc.name)
 				}
-				suite.Require().NoError(err, "test: %s", tc.name)
+				s.Require().NoError(err, "test: %s", tc.name)
 			} else {
-				suite.Require().Error(err, "test: %s", tc.name)
+				s.Require().Error(err, "test: %s", tc.name)
 			}
 		})
 	}

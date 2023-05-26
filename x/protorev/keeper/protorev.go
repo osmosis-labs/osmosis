@@ -179,6 +179,7 @@ func (k Keeper) SetDaysSinceModuleGenesis(ctx sdk.Context, daysSinceGenesis uint
 	store.Set(types.KeyPrefixDaysSinceGenesis, sdk.Uint64ToBigEndian(daysSinceGenesis))
 }
 
+// Deprecated: Can be removed in v16
 // GetDeveloperFees returns the fees the developers can withdraw from the module account
 func (k Keeper) GetDeveloperFees(ctx sdk.Context, denom string) (sdk.Coin, error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDeveloperFees)
@@ -198,6 +199,7 @@ func (k Keeper) GetDeveloperFees(ctx sdk.Context, denom string) (sdk.Coin, error
 	return developerFees, nil
 }
 
+// Deprecated: Used in v16 upgrade, can be removed in v17
 // GetAllDeveloperFees returns all the developer fees the developer account can withdraw
 func (k Keeper) GetAllDeveloperFees(ctx sdk.Context) ([]sdk.Coin, error) {
 	fees := make([]sdk.Coin, 0)
@@ -218,6 +220,7 @@ func (k Keeper) GetAllDeveloperFees(ctx sdk.Context) ([]sdk.Coin, error) {
 	return fees, nil
 }
 
+// Deprecated: Can be removed in v16
 // SetDeveloperFees sets the fees the developers can withdraw from the module account
 func (k Keeper) SetDeveloperFees(ctx sdk.Context, developerFees sdk.Coin) error {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDeveloperFees)
@@ -233,6 +236,7 @@ func (k Keeper) SetDeveloperFees(ctx sdk.Context, developerFees sdk.Coin) error 
 	return nil
 }
 
+// Deprecated: Used in v16 upgrade, can be removed in v17
 // DeleteDeveloperFees deletes the developer fees given a denom
 func (k Keeper) DeleteDeveloperFees(ctx sdk.Context, denom string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDeveloperFees)

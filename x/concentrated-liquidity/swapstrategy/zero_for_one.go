@@ -20,7 +20,7 @@ import (
 type zeroForOneStrategy struct {
 	sqrtPriceLimit sdk.Dec
 	storeKey       sdk.StoreKey
-	swapFee        sdk.Dec
+	spreadFactor   sdk.Dec
 	tickSpacing    uint64
 }
 
@@ -60,7 +60,7 @@ func (s zeroForOneStrategy) ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPric
 	amountZeroIn := math.CalcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
 
 	// Calculate sqrtPriceNext on the amount of token remaining after fee.
-	amountZeroInRemainingLessFee := amountZeroInRemaining.Mul(sdk.OneDec().Sub(s.swapFee))
+	amountZeroInRemainingLessFee := amountZeroInRemaining.Mul(sdk.OneDec().Sub(s.spreadFactor))
 	var sqrtPriceNext sdk.Dec
 	// If have more of the amount remaining after fee than estimated until target,
 	// bound the next sqrtPriceNext by the target sqrt price.
@@ -85,7 +85,7 @@ func (s zeroForOneStrategy) ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPric
 
 	// Handle fees.
 	// Note that fee is always charged on the amount in.
-	feeChargeTotal := computeFeeChargePerSwapStepOutGivenIn(hasReachedTarget, amountZeroIn, amountZeroInRemaining, s.swapFee)
+	feeChargeTotal := computeFeeChargePerSwapStepOutGivenIn(hasReachedTarget, amountZeroIn, amountZeroInRemaining, s.spreadFactor)
 
 	return sqrtPriceNext, amountZeroIn, amountOneOut, feeChargeTotal
 }
@@ -140,7 +140,7 @@ func (s zeroForOneStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPric
 
 	// Handle fees.
 	// Note that fee is always charged on the amount in.
-	feeChargeTotal := computeFeeChargeFromAmountIn(amountZeroIn, s.swapFee)
+	feeChargeTotal := computeFeeChargeFromAmountIn(amountZeroIn, s.spreadFactor)
 
 	return sqrtPriceNext, amountOneOut, amountZeroIn, feeChargeTotal
 }
@@ -187,38 +187,6 @@ func (s zeroForOneStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId u
 // so must add one here to make sure that the current tick is included in the search.
 func (s zeroForOneStrategy) InitializeTickValue(currentTick int64) int64 {
 	return currentTick + 1
-}
-
-// NextInitializedTick returns the next initialized tick index based on the
-// provided tickindex. If no initialized tick exists, <0, false>
-// will be returned.
-//
-// zeroForOneStrategy searches for the next tick to the left of the current tickIndex.
-func (s zeroForOneStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64) (next int64, initialized bool) {
-	store := ctx.KVStore(s.storeKey)
-
-	// Construct a prefix store with a prefix of <TickPrefix | poolID>, allowing
-	// us to retrieve the next initialized tick without having to scan all ticks.
-	prefixBz := types.KeyTickPrefixByPoolId(poolId)
-	prefixStore := prefix.NewStore(store, prefixBz)
-
-	startKey := types.TickIndexToBytes(tickIndex)
-
-	iter := prefixStore.ReverseIterator(nil, startKey)
-	defer iter.Close()
-
-	for ; iter.Valid(); iter.Next() {
-		// Since, we constructed our prefix store with <TickPrefix | poolID>, the
-		// key is the encoding of a tick index.
-		tick, err := types.TickIndexFromBytes(iter.Key())
-		if err != nil {
-			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
-		}
-		if tick <= tickIndex {
-			return tick, true
-		}
-	}
-	return 0, false
 }
 
 // SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.

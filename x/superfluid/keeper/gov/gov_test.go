@@ -12,8 +12,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
-func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
-	coins := suite.App.GAMMKeeper.GetParams(suite.Ctx).PoolCreationFee
+func (s *KeeperTestSuite) createGammPool(denoms []string) uint64 {
+	coins := s.App.GAMMKeeper.GetParams(s.Ctx).PoolCreationFee
 	poolAssets := []balancer.PoolAsset{}
 	for _, denom := range denoms {
 		coins = coins.Add(sdk.NewInt64Coin(denom, 1000000000000000000))
@@ -24,22 +24,22 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	}
 
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-	err := suite.App.BankKeeper.MintCoins(suite.Ctx, minttypes.ModuleName, coins)
-	suite.Require().NoError(err)
-	err = suite.App.BankKeeper.SendCoinsFromModuleToAccount(suite.Ctx, minttypes.ModuleName, acc1, coins)
-	suite.Require().NoError(err)
+	err := s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, coins)
+	s.Require().NoError(err)
+	err = s.App.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, minttypes.ModuleName, acc1, coins)
+	s.Require().NoError(err)
 
 	msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.ZeroDec(),
 	}, poolAssets, "")
-	poolId, err := suite.App.PoolManagerKeeper.CreatePool(suite.Ctx, msg)
-	suite.Require().NoError(err)
+	poolId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, msg)
+	s.Require().NoError(err)
 
 	return poolId
 }
 
-func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
+func (s *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 	nativeAsset := types.SuperfluidAsset{
 		Denom:     "stake",
 		AssetType: types.SuperfluidAssetTypeNative,
@@ -122,13 +122,13 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 	for _, tc := range testCases {
 		tc := tc
 
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
+		s.Run(tc.name, func() {
+			s.SetupTest()
 
 			// initial check
-			resp, err := suite.querier.AllAssets(sdk.WrapSDKContext(suite.Ctx), &types.AllAssetsRequest{})
-			suite.Require().NoError(err)
-			suite.Require().Len(resp.Assets, 0)
+			resp, err := s.querier.AllAssets(sdk.WrapSDKContext(s.Ctx), &types.AllAssetsRequest{})
+			s.Require().NoError(err)
+			s.Require().Len(resp.Assets, 0)
 
 			for i, action := range tc.actions {
 				// here we set two different string arrays of denoms.
@@ -143,46 +143,46 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 				}
 
 				if action.isAdd {
-					suite.createGammPool(poolDenoms)
-					suite.PrepareConcentratedPoolWithCoinsAndFullRangePosition(apptesting.STAKE, apptesting.USDC)
+					s.createGammPool(poolDenoms)
+					s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(apptesting.STAKE, apptesting.USDC)
 					// set superfluid assets via proposal
-					err = gov.HandleSetSuperfluidAssetsProposal(suite.Ctx, *suite.App.SuperfluidKeeper, *suite.App.EpochsKeeper, &types.SetSuperfluidAssetsProposal{
+					err = gov.HandleSetSuperfluidAssetsProposal(s.Ctx, *s.App.SuperfluidKeeper, *s.App.EpochsKeeper, &types.SetSuperfluidAssetsProposal{
 						Title:       "title",
 						Description: "description",
 						Assets:      action.assets,
 					})
 				} else {
 					// remove existing superfluid asset via proposal
-					err = gov.HandleRemoveSuperfluidAssetsProposal(suite.Ctx, *suite.App.SuperfluidKeeper, &types.RemoveSuperfluidAssetsProposal{
+					err = gov.HandleRemoveSuperfluidAssetsProposal(s.Ctx, *s.App.SuperfluidKeeper, &types.RemoveSuperfluidAssetsProposal{
 						Title:                 "title",
 						Description:           "description",
 						SuperfluidAssetDenoms: govDenoms,
 					})
 				}
 				if action.expectErr {
-					suite.Require().Error(err)
+					s.Require().Error(err)
 				} else {
-					suite.Require().NoError(err)
-					suite.AssertEventEmitted(suite.Ctx, tc.expectedEvent[i], 1)
+					s.Require().NoError(err)
+					s.AssertEventEmitted(s.Ctx, tc.expectedEvent[i], 1)
 				}
 
 				// check assets individually
 				for _, asset := range action.expectedAssets {
-					res, err := suite.querier.AssetType(sdk.WrapSDKContext(suite.Ctx), &types.AssetTypeRequest{Denom: asset.Denom})
-					suite.Require().NoError(err)
-					suite.Require().Equal(res.AssetType, asset.AssetType, "tcname %s, action num %d", tc.name, i)
+					res, err := s.querier.AssetType(sdk.WrapSDKContext(s.Ctx), &types.AssetTypeRequest{Denom: asset.Denom})
+					s.Require().NoError(err)
+					s.Require().Equal(res.AssetType, asset.AssetType, "tcname %s, action num %d", tc.name, i)
 				}
 
 				// check assets
-				resp, err = suite.querier.AllAssets(sdk.WrapSDKContext(suite.Ctx), &types.AllAssetsRequest{})
-				suite.Require().NoError(err)
-				suite.Require().Equal(resp.Assets, action.expectedAssets)
+				resp, err = s.querier.AllAssets(sdk.WrapSDKContext(s.Ctx), &types.AllAssetsRequest{})
+				s.Require().NoError(err)
+				s.Require().Equal(resp.Assets, action.expectedAssets)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestHandleUnpoolWhiteListChange() {
+func (s *KeeperTestSuite) TestHandleUnpoolWhiteListChange() {
 	const (
 		testTitle       = "test title"
 		testDescription = "test description"
@@ -327,16 +327,16 @@ func (suite *KeeperTestSuite) TestHandleUnpoolWhiteListChange() {
 
 	for name, tc := range tests {
 		tc := tc
-		suite.Run(name, func() {
-			suite.SetupTest()
+		s.Run(name, func() {
+			s.SetupTest()
 
-			ctx := suite.Ctx
-			superfluidKeeper := suite.App.SuperfluidKeeper
-			gammKeeper := suite.App.GAMMKeeper
+			ctx := s.Ctx
+			superfluidKeeper := s.App.SuperfluidKeeper
+			gammKeeper := s.App.GAMMKeeper
 
 			// Setup.
 			for i := 0; i < tc.preCreatedPoolCount; i++ {
-				suite.PrepareBalancerPool()
+				s.PrepareBalancerPool()
 			}
 
 			superfluidKeeper.SetUnpoolAllowedPools(ctx, tc.preSetWhiteList)
@@ -345,15 +345,15 @@ func (suite *KeeperTestSuite) TestHandleUnpoolWhiteListChange() {
 			err := gov.HandleUnpoolWhiteListChange(ctx, *superfluidKeeper, gammKeeper, &tc.p)
 
 			if tc.expectError {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 				return
 			}
 
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
 			// Validate that whitelist is set correctly.
 			actualAllowedPools := superfluidKeeper.GetUnpoolAllowedPools(ctx)
-			suite.Require().Equal(tc.expectedPoolIds, actualAllowedPools)
+			s.Require().Equal(tc.expectedPoolIds, actualAllowedPools)
 		})
 	}
 }

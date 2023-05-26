@@ -201,33 +201,33 @@ func (m *MockPoolModuleI) EXPECT() *MockPoolModuleIMockRecorder {
 }
 
 // CalcInAmtGivenOut mocks base method.
-func (m *MockPoolModuleI) CalcInAmtGivenOut(ctx types.Context, poolI types2.PoolI, tokenOut types.Coin, tokenInDenom string, swapFee types.Dec) (types.Coin, error) {
+func (m *MockPoolModuleI) CalcInAmtGivenOut(ctx types.Context, poolI types2.PoolI, tokenOut types.Coin, tokenInDenom string, spreadFactor types.Dec) (types.Coin, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CalcInAmtGivenOut", ctx, poolI, tokenOut, tokenInDenom, swapFee)
+	ret := m.ctrl.Call(m, "CalcInAmtGivenOut", ctx, poolI, tokenOut, tokenInDenom, spreadFactor)
 	ret0, _ := ret[0].(types.Coin)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CalcInAmtGivenOut indicates an expected call of CalcInAmtGivenOut.
-func (mr *MockPoolModuleIMockRecorder) CalcInAmtGivenOut(ctx, poolI, tokenOut, tokenInDenom, swapFee interface{}) *gomock.Call {
+func (mr *MockPoolModuleIMockRecorder) CalcInAmtGivenOut(ctx, poolI, tokenOut, tokenInDenom, spreadFactor interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcInAmtGivenOut", reflect.TypeOf((*MockPoolModuleI)(nil).CalcInAmtGivenOut), ctx, poolI, tokenOut, tokenInDenom, swapFee)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcInAmtGivenOut", reflect.TypeOf((*MockPoolModuleI)(nil).CalcInAmtGivenOut), ctx, poolI, tokenOut, tokenInDenom, spreadFactor)
 }
 
 // CalcOutAmtGivenIn mocks base method.
-func (m *MockPoolModuleI) CalcOutAmtGivenIn(ctx types.Context, poolI types2.PoolI, tokenIn types.Coin, tokenOutDenom string, swapFee types.Dec) (types.Coin, error) {
+func (m *MockPoolModuleI) CalcOutAmtGivenIn(ctx types.Context, poolI types2.PoolI, tokenIn types.Coin, tokenOutDenom string, spreadFactor types.Dec) (types.Coin, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CalcOutAmtGivenIn", ctx, poolI, tokenIn, tokenOutDenom, swapFee)
+	ret := m.ctrl.Call(m, "CalcOutAmtGivenIn", ctx, poolI, tokenIn, tokenOutDenom, spreadFactor)
 	ret0, _ := ret[0].(types.Coin)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CalcOutAmtGivenIn indicates an expected call of CalcOutAmtGivenIn.
-func (mr *MockPoolModuleIMockRecorder) CalcOutAmtGivenIn(ctx, poolI, tokenIn, tokenOutDenom, swapFee interface{}) *gomock.Call {
+func (mr *MockPoolModuleIMockRecorder) CalcOutAmtGivenIn(ctx, poolI, tokenIn, tokenOutDenom, spreadFactor interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcOutAmtGivenIn", reflect.TypeOf((*MockPoolModuleI)(nil).CalcOutAmtGivenIn), ctx, poolI, tokenIn, tokenOutDenom, swapFee)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcOutAmtGivenIn", reflect.TypeOf((*MockPoolModuleI)(nil).CalcOutAmtGivenIn), ctx, poolI, tokenIn, tokenOutDenom, spreadFactor)
 }
 
 // CalculateSpotPrice mocks base method.
@@ -320,33 +320,33 @@ func (mr *MockPoolModuleIMockRecorder) InitializePool(ctx, pool, creatorAddress 
 }
 
 // SwapExactAmountIn mocks base method.
-func (m *MockPoolModuleI) SwapExactAmountIn(ctx types.Context, sender types.AccAddress, pool types2.PoolI, tokenIn types.Coin, tokenOutDenom string, tokenOutMinAmount types.Int, swapFee types.Dec) (types.Int, error) {
+func (m *MockPoolModuleI) SwapExactAmountIn(ctx types.Context, sender types.AccAddress, pool types2.PoolI, tokenIn types.Coin, tokenOutDenom string, tokenOutMinAmount types.Int, spreadFactor types.Dec) (types.Int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SwapExactAmountIn", ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
+	ret := m.ctrl.Call(m, "SwapExactAmountIn", ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, spreadFactor)
 	ret0, _ := ret[0].(types.Int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SwapExactAmountIn indicates an expected call of SwapExactAmountIn.
-func (mr *MockPoolModuleIMockRecorder) SwapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee interface{}) *gomock.Call {
+func (mr *MockPoolModuleIMockRecorder) SwapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, spreadFactor interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SwapExactAmountIn", reflect.TypeOf((*MockPoolModuleI)(nil).SwapExactAmountIn), ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SwapExactAmountIn", reflect.TypeOf((*MockPoolModuleI)(nil).SwapExactAmountIn), ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, spreadFactor)
 }
 
 // SwapExactAmountOut mocks base method.
-func (m *MockPoolModuleI) SwapExactAmountOut(ctx types.Context, sender types.AccAddress, pool types2.PoolI, tokenInDenom string, tokenInMaxAmount types.Int, tokenOut types.Coin, swapFee types.Dec) (types.Int, error) {
+func (m *MockPoolModuleI) SwapExactAmountOut(ctx types.Context, sender types.AccAddress, pool types2.PoolI, tokenInDenom string, tokenInMaxAmount types.Int, tokenOut types.Coin, spreadFactor types.Dec) (types.Int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SwapExactAmountOut", ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
+	ret := m.ctrl.Call(m, "SwapExactAmountOut", ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, spreadFactor)
 	ret0, _ := ret[0].(types.Int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SwapExactAmountOut indicates an expected call of SwapExactAmountOut.
-func (mr *MockPoolModuleIMockRecorder) SwapExactAmountOut(ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee interface{}) *gomock.Call {
+func (mr *MockPoolModuleIMockRecorder) SwapExactAmountOut(ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, spreadFactor interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SwapExactAmountOut", reflect.TypeOf((*MockPoolModuleI)(nil).SwapExactAmountOut), ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SwapExactAmountOut", reflect.TypeOf((*MockPoolModuleI)(nil).SwapExactAmountOut), ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, spreadFactor)
 }
 
 // ValidatePermissionlessPoolCreationEnabled mocks base method.

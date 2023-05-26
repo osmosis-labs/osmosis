@@ -42,7 +42,7 @@ func TestHooksTestSuite(t *testing.T) {
 
 // TestAfterEpochEnd tests that the after epoch end hook correctly
 // distributes the rewards depending on what epoch it is in.
-func (suite *KeeperTestSuite) TestAfterEpochEnd() {
+func (s *KeeperTestSuite) TestAfterEpochEnd() {
 	var (
 		testWeightedAddresses = []types.WeightedAddress{
 			{
@@ -67,13 +67,13 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 		expectedSupply           = sdk.NewDec(keeper.DeveloperVestingAmount)
 	)
 
-	suite.assertAddressWeightsAddUpToOne(testWeightedAddresses)
+	s.assertAddressWeightsAddUpToOne(testWeightedAddresses)
 
 	defaultGenesisEpochProvisionsDec, err := sdk.NewDecFromStr(defaultGenesisEpochProvisions)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
 	defaultMainnetThirdenedProvisionsDec, err := sdk.NewDecFromStr(defaultMainnetThirdenedProvisions)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
 	testcases := map[string]struct {
 		// Args.
@@ -351,7 +351,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 	}
 
 	for name, tc := range testcases {
-		suite.Run(name, func() {
+		s.Run(name, func() {
 			mintParams := types.Params{
 				MintDenom:                            tc.mintDenom,
 				GenesisEpochProvisions:               tc.genesisEpochProvisions,
@@ -385,18 +385,18 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			if tc.expectedError {
 				// If panic is expected, burn developer module account balance so that it causes an error that leads to a
 				// panic in the hook.
-				suite.Require().NoError(distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(developerAccountBalanceBeforeHook), accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)))
+				s.Require().NoError(distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(developerAccountBalanceBeforeHook), accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)))
 				developerAccountBalanceBeforeHook.Amount = sdk.ZeroInt()
 			}
 
 			// Old supply
 			oldSupply := app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount
-			suite.Require().Equal(sdk.NewInt(keeper.DeveloperVestingAmount), oldSupply)
+			s.Require().Equal(sdk.NewInt(keeper.DeveloperVestingAmount), oldSupply)
 
 			if tc.expectedError {
-				suite.Require().Error(mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum))
+				s.Require().Error(mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum))
 			} else {
-				suite.Require().NoError(mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum))
+				s.Require().NoError(mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum))
 			}
 
 			// If panics, the behavior is undefined.
@@ -406,20 +406,20 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 
 			// Validate developer account balance.
 			developerAccountBalanceAfterHook := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
-			osmoassert.DecApproxEq(suite.T(), developerAccountBalanceBeforeHook.Amount.Sub(expectedDevRewards.TruncateInt()).ToDec(), developerAccountBalanceAfterHook.Amount.ToDec(), maxArithmeticTolerance)
+			osmoassert.DecApproxEq(s.T(), developerAccountBalanceBeforeHook.Amount.Sub(expectedDevRewards.TruncateInt()).ToDec(), developerAccountBalanceAfterHook.Amount.ToDec(), maxArithmeticTolerance)
 
 			// Validate supply.
-			osmoassert.DecApproxEq(suite.T(), expectedSupply.Add(tc.expectedDistribution).Sub(expectedDevRewards), app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount.ToDec(), maxArithmeticTolerance)
+			osmoassert.DecApproxEq(s.T(), expectedSupply.Add(tc.expectedDistribution).Sub(expectedDevRewards), app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount.ToDec(), maxArithmeticTolerance)
 
 			// Validate supply with offset.
-			osmoassert.DecApproxEq(suite.T(), expectedSupplyWithOffset.Add(tc.expectedDistribution), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToDec(), maxArithmeticTolerance)
+			osmoassert.DecApproxEq(s.T(), expectedSupplyWithOffset.Add(tc.expectedDistribution), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToDec(), maxArithmeticTolerance)
 
 			// Validate epoch provisions.
-			suite.Require().Equal(tc.expectedLastReductionEpochNum, mintKeeper.GetLastReductionEpochNum(ctx))
+			s.Require().Equal(tc.expectedLastReductionEpochNum, mintKeeper.GetLastReductionEpochNum(ctx))
 
 			if !tc.expectedDistribution.IsZero() {
 				// Validate distribution.
-				osmoassert.DecApproxEq(suite.T(), tc.expectedDistribution, mintKeeper.GetMinter(ctx).EpochProvisions, sdk.NewDecWithPrec(1, 6))
+				osmoassert.DecApproxEq(s.T(), tc.expectedDistribution, mintKeeper.GetMinter(ctx).EpochProvisions, sdk.NewDecWithPrec(1, 6))
 			}
 		})
 	}
@@ -430,14 +430,14 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 // supply for correctness.
 //
 // Ref: https://github.com/osmosis-labs/osmosis/issues/1917
-func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParameters() {
+func (s *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParameters() {
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	mintKeeper := app.MintKeeper
 	accountKeeper := app.AccountKeeper
 
 	genesisEpochProvisionsDec, err := sdk.NewDecFromStr(defaultGenesisEpochProvisions)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
 	mintParams := types.Params{
 		MintDenom:               sdk.DefaultBondDenom,
@@ -516,7 +516,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 		MintingRewardsDistributionStartEpoch: defaultMintingRewardsDistributionStartEpoch,
 	}
 
-	suite.assertAddressWeightsAddUpToOne(mintParams.WeightedDeveloperRewardsReceivers)
+	s.assertAddressWeightsAddUpToOne(mintParams.WeightedDeveloperRewardsReceivers)
 
 	// Test setup parameters are not identical with mainnet.
 	// Therfore, we set them here to the desired mainnet values.
@@ -530,10 +530,10 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 	expectedSupply := sdk.NewDec(keeper.DeveloperVestingAmount)
 
 	supplyWithOffset := app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom)
-	suite.Require().Equal(expectedSupplyWithOffset.TruncateInt64(), supplyWithOffset.Amount.Int64())
+	s.Require().Equal(expectedSupplyWithOffset.TruncateInt64(), supplyWithOffset.Amount.Int64())
 
 	supply := app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom)
-	suite.Require().Equal(expectedSupply.TruncateInt64(), supply.Amount.Int64())
+	s.Require().Equal(expectedSupply.TruncateInt64(), supply.Amount.Int64())
 
 	devRewardsDelta := sdk.ZeroDec()
 	epochProvisionsDelta := genesisEpochProvisionsDec.Sub(genesisEpochProvisionsDec.TruncateInt().ToDec()).Mul(sdk.NewDec(defaultReductionPeriodInEpochs))
@@ -544,7 +544,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 
 		// System under test.
 		err = mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, i)
-		suite.Require().NoError(err)
+		s.Require().NoError(err)
 
 		// System truncates EpochProvisions because bank takes an Int.
 		// This causes rounding errors. Let's refer to this source as #1.
@@ -572,20 +572,20 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 			actualDeveloperAccountBalanceAfterHook := developerAccountBalance.Amount.ToDec()
 
 			// This is supposed to be equal but is failing due to the rounding errors from devRewards.
-			suite.Require().NotEqual(expectedDeveloperAccountBalanceAfterHook, actualDeveloperAccountBalanceAfterHook)
+			s.Require().NotEqual(expectedDeveloperAccountBalanceAfterHook, actualDeveloperAccountBalanceAfterHook)
 
 			devRewardsDelta = devRewardsDelta.Add(actualDeveloperAccountBalanceAfterHook.Sub(expectedDeveloperAccountBalanceAfterHook))
 		}
 
 		expectedSupply = expectedSupply.Add(truncatedEpochProvisions).Sub(devRewards)
-		suite.Require().Equal(expectedSupply.RoundInt(), app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount)
+		s.Require().Equal(expectedSupply.RoundInt(), app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount)
 
 		expectedSupplyWithOffset = expectedSupply.Sub(developerAccountBalance.Amount.ToDec())
-		suite.Require().Equal(expectedSupplyWithOffset.RoundInt(), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
+		s.Require().Equal(expectedSupplyWithOffset.RoundInt(), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
 
 		// Validate that the epoch provisions have not been reduced.
-		suite.Require().Equal(defaultMintingRewardsDistributionStartEpoch, mintKeeper.GetLastReductionEpochNum(ctx))
-		suite.Require().Equal(defaultGenesisEpochProvisions, mintKeeper.GetMinter(ctx).EpochProvisions.String())
+		s.Require().Equal(defaultMintingRewardsDistributionStartEpoch, mintKeeper.GetLastReductionEpochNum(ctx))
+		s.Require().Equal(defaultGenesisEpochProvisions, mintKeeper.GetMinter(ctx).EpochProvisions.String())
 	}
 
 	// Validate total supply.
@@ -601,26 +601,26 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 	actualTotalProvisionedSupply := app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToDec()
 
 	// 299_999_999_999_999.999999999999999705 == 299_999_999_997_380 + 2555 + 64.999999999999999705
-	suite.Require().Equal(expectedTotalProvisionedSupply, actualTotalProvisionedSupply.Add(devRewardsDelta).Add(epochProvisionsDelta))
+	s.Require().Equal(expectedTotalProvisionedSupply, actualTotalProvisionedSupply.Add(devRewardsDelta).Add(epochProvisionsDelta))
 
 	// This end of epoch should trigger thirdening. It will utilize the updated
 	// (reduced) provisions.
 	err = mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, defaultThirdeningEpochNum)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
-	suite.Require().Equal(defaultThirdeningEpochNum, mintKeeper.GetLastReductionEpochNum(ctx))
+	s.Require().Equal(defaultThirdeningEpochNum, mintKeeper.GetLastReductionEpochNum(ctx))
 
 	expectedThirdenedProvisions := mintParams.ReductionFactor.Mul(genesisEpochProvisionsDec)
 	// Sanity check with the actual value on mainnet.
-	suite.Require().Equal(defaultMainnetThirdenedProvisions, expectedThirdenedProvisions.String())
-	suite.Require().Equal(expectedThirdenedProvisions, mintKeeper.GetMinter(ctx).EpochProvisions)
+	s.Require().Equal(defaultMainnetThirdenedProvisions, expectedThirdenedProvisions.String())
+	s.Require().Equal(expectedThirdenedProvisions, mintKeeper.GetMinter(ctx).EpochProvisions)
 }
 
-func (suite KeeperTestSuite) assertAddressWeightsAddUpToOne(receivers []types.WeightedAddress) { //nolint:govet // this is a test and we can copy locks here.
+func (s *KeeperTestSuite) assertAddressWeightsAddUpToOne(receivers []types.WeightedAddress) { //nolint:govet // this is a test and we can copy locks here.
 	sumOfWeights := sdk.ZeroDec()
 	// As a sanity check, ensure developer reward receivers add up to 1.
 	for _, w := range receivers {
 		sumOfWeights = sumOfWeights.Add(w.Weight)
 	}
-	suite.Require().Equal(sdk.OneDec(), sumOfWeights)
+	s.Require().Equal(sdk.OneDec(), sumOfWeights)
 }

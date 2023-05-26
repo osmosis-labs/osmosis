@@ -167,7 +167,7 @@ func (k Keeper) JoinPoolNoSwap(
 		}
 	}
 
-	sharesOut, err = pool.JoinPoolNoSwap(ctx, neededLpLiquidity, pool.GetSwapFee(ctx))
+	sharesOut, err = pool.JoinPoolNoSwap(ctx, neededLpLiquidity, pool.GetSpreadFactor(ctx))
 	if err != nil {
 		return nil, sdk.ZeroInt(), err
 	}
@@ -236,7 +236,7 @@ func (k Keeper) JoinSwapExactAmountIn(
 		return sdk.Int{}, err
 	}
 
-	sharesOut, err = pool.JoinPool(ctx, tokensIn, pool.GetSwapFee(ctx))
+	sharesOut, err = pool.JoinPool(ctx, tokensIn, pool.GetSpreadFactor(ctx))
 	switch {
 	case err != nil:
 		return sdk.ZeroInt(), err
@@ -285,7 +285,7 @@ func (k Keeper) JoinSwapShareAmountOut(
 		return sdk.Int{}, fmt.Errorf("pool with id %d does not support this kind of join", poolId)
 	}
 
-	tokenInAmount, err = extendedPool.CalcTokenInShareAmountOut(ctx, tokenInDenom, shareOutAmount, pool.GetSwapFee(ctx))
+	tokenInAmount, err = extendedPool.CalcTokenInShareAmountOut(ctx, tokenInDenom, shareOutAmount, pool.GetSpreadFactor(ctx))
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -362,14 +362,14 @@ func (k Keeper) ExitSwapShareAmountIn(
 	if err != nil {
 		return sdk.Int{}, err
 	}
-	swapFee := pool.GetSwapFee(ctx)
+	spreadFactor := pool.GetSpreadFactor(ctx)
 
 	tokenOutAmount = exitCoins.AmountOf(tokenOutDenom)
 	for _, coin := range exitCoins {
 		if coin.Denom == tokenOutDenom {
 			continue
 		}
-		swapOut, err := k.SwapExactAmountIn(ctx, sender, pool, coin, tokenOutDenom, sdk.ZeroInt(), swapFee)
+		swapOut, err := k.SwapExactAmountIn(ctx, sender, pool, coin, tokenOutDenom, sdk.ZeroInt(), spreadFactor)
 		if err != nil {
 			return sdk.Int{}, err
 		}

@@ -6,17 +6,18 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 var defaultFeePerTx = sdk.NewInt(1000)
 
 // calculateFeeGrowthGlobal calculates fee growth global per unit of virtual liquidity based on swap parameters:
 // amountIn - amount being swapped
-// swapFee - pool's swap fee
+// spreadFactor - pool's spread factor
 // poolLiquidity - current pool liquidity
-func calculateFeeGrowthGlobal(amountIn, swapFee, poolLiquidity sdk.Dec) sdk.Dec {
-	// First we get total fee charge for the swap (ΔY * swapFee)
-	feeChargeTotal := amountIn.Mul(swapFee)
+func calculateFeeGrowthGlobal(amountIn, spreadFactor, poolLiquidity sdk.Dec) sdk.Dec {
+	// First we get total fee charge for the swap (ΔY * spreadFactor)
+	feeChargeTotal := amountIn.Mul(spreadFactor)
 
 	// Calculating fee growth global (dividing by pool liquidity to find fee growth per unit of virtual liquidity)
 	feeGrowthGlobal := feeChargeTotal.Quo(poolLiquidity)
@@ -73,10 +74,16 @@ func calculateUncollectedFees(positionLiquidity, feeGrowthBelow, feeGrowthAbove,
 }
 
 // Get current (updated) pool
-func (s *IntegrationTestSuite) updatedPool(node *chain.NodeConfig, poolId uint64) types.ConcentratedPoolExtension {
+func (s *IntegrationTestSuite) updatedConcentratedPool(node *chain.NodeConfig, poolId uint64) types.ConcentratedPoolExtension {
 	concentratedPool, err := node.QueryConcentratedPool(poolId)
 	s.Require().NoError(err)
 	return concentratedPool
+}
+
+func (s *IntegrationTestSuite) updatedCFMMPool(node *chain.NodeConfig, poolId uint64) gammtypes.CFMMPoolI {
+	cfmmPool, err := node.QueryCFMMPool(poolId)
+	s.Require().NoError(err)
+	return cfmmPool
 }
 
 // Assert returned positions:

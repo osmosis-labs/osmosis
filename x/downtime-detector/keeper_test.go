@@ -26,12 +26,12 @@ func (b blocktimes) EndTime() time.Time {
 	return endTime
 }
 
-func (suite *KeeperTestSuite) runBlocktimes(times blocktimes) {
-	suite.Ctx = suite.Ctx.WithBlockTime(baseTime)
-	suite.App.DowntimeKeeper.BeginBlock(suite.Ctx)
+func (s *KeeperTestSuite) runBlocktimes(times blocktimes) {
+	s.Ctx = s.Ctx.WithBlockTime(baseTime)
+	s.App.DowntimeKeeper.BeginBlock(s.Ctx)
 	for _, duration := range times {
-		suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(duration))
-		suite.App.DowntimeKeeper.BeginBlock(suite.Ctx)
+		s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(duration))
+		s.App.DowntimeKeeper.BeginBlock(s.Ctx)
 	}
 }
 
@@ -42,7 +42,7 @@ var (
 	tenMinEndtime                                = abruptRecovery5minDowntime10min.EndTime().Add(-5 * min)
 )
 
-func (suite *KeeperTestSuite) TestBeginBlock() {
+func (s *KeeperTestSuite) TestBeginBlock() {
 	tests := map[string]struct {
 		times     blocktimes
 		downtimes []types.GenesisDowntimeEntry
@@ -67,19 +67,19 @@ func (suite *KeeperTestSuite) TestBeginBlock() {
 		},
 	}
 	for name, test := range tests {
-		suite.Run(name, func() {
-			suite.runBlocktimes(test.times)
-			suite.Require().Equal(test.times.EndTime(), suite.Ctx.BlockTime())
+		s.Run(name, func() {
+			s.runBlocktimes(test.times)
+			s.Require().Equal(test.times.EndTime(), s.Ctx.BlockTime())
 			for _, downtime := range test.downtimes {
-				lastDowntime, err := suite.App.DowntimeKeeper.GetLastDowntimeOfLength(suite.Ctx, downtime.Duration)
-				suite.Require().NoError(err)
-				suite.Require().Equal(downtime.LastDowntime, lastDowntime)
+				lastDowntime, err := s.App.DowntimeKeeper.GetLastDowntimeOfLength(s.Ctx, downtime.Duration)
+				s.Require().NoError(err)
+				s.Require().Equal(downtime.LastDowntime, lastDowntime)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestRecoveryQuery() {
+func (s *KeeperTestSuite) TestRecoveryQuery() {
 	type queryTestcase struct {
 		downtime        types.Downtime
 		recovTime       time.Duration
@@ -110,20 +110,20 @@ func (suite *KeeperTestSuite) TestRecoveryQuery() {
 		},
 	}
 	for name, test := range tests {
-		suite.Run(name, func() {
-			suite.runBlocktimes(test.times)
-			suite.Require().Equal(test.times.EndTime(), suite.Ctx.BlockTime())
+		s.Run(name, func() {
+			s.runBlocktimes(test.times)
+			s.Require().Equal(test.times.EndTime(), s.Ctx.BlockTime())
 			for _, query := range test.cases {
-				recovered, err := suite.App.DowntimeKeeper.RecoveredSinceDowntimeOfLength(
-					suite.Ctx, query.downtime, query.recovTime)
-				suite.Require().NoError(err)
-				suite.Require().Equal(query.expectRecovered, recovered)
+				recovered, err := s.App.DowntimeKeeper.RecoveredSinceDowntimeOfLength(
+					s.Ctx, query.downtime, query.recovTime)
+				s.Require().NoError(err)
+				s.Require().Equal(query.expectRecovered, recovered)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestRecoveryQueryErrors() {
+func (s *KeeperTestSuite) TestRecoveryQueryErrors() {
 	tests := map[string]struct {
 		times     blocktimes
 		downtime  types.Downtime
@@ -141,11 +141,11 @@ func (suite *KeeperTestSuite) TestRecoveryQueryErrors() {
 		},
 	}
 	for name, test := range tests {
-		suite.Run(name, func() {
-			suite.runBlocktimes(test.times)
-			_, err := suite.App.DowntimeKeeper.RecoveredSinceDowntimeOfLength(
-				suite.Ctx, test.downtime, test.recovTime)
-			suite.Require().Error(err)
+		s.Run(name, func() {
+			s.runBlocktimes(test.times)
+			_, err := s.App.DowntimeKeeper.RecoveredSinceDowntimeOfLength(
+				s.Ctx, test.downtime, test.recovTime)
+			s.Require().Error(err)
 		})
 	}
 }
@@ -154,8 +154,8 @@ type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
-	suite.Setup()
+func (s *KeeperTestSuite) SetupTest() {
+	s.Setup()
 }
 
 func TestKeeperTestSuite(t *testing.T) {
