@@ -8,6 +8,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
@@ -3975,4 +3976,39 @@ func (s *KeeperTestSuite) TestGetUptimeTrackerValues() {
 			})
 		}
 	})
+}
+
+func (s *KeeperTestSuite) TestGetIncentiveRecordSerialized() {
+	s.SetupTest()
+	k := s.App.ConcentratedLiquidityKeeper
+
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1)))
+
+	pool := s.PrepareConcentratedPool()
+
+	testIncentiveRecord := types.IncentiveRecord{
+		PoolId:               pool.GetId(),
+		IncentiveDenom:       USDC,
+		IncentiveCreatorAddr: s.TestAccs[0].String(),
+		IncentiveRecordBody: types.IncentiveRecordBody{
+			RemainingAmount: sdk.NewDec(1000000000000000000),
+			EmissionRate:    sdk.NewDec(1), // 1 per second
+			StartTime:       defaultBlockTime,
+		},
+		MinUptime: time.Nanosecond,
+	}
+	err := s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, []types.IncentiveRecord{testIncentiveRecord})
+	s.Require().NoError(err)
+
+	paginationReq := &query.PageRequest{
+		Limit:      7,
+		CountTotal: true,
+	}
+
+	incentiveRec, pageResponse, err := k.GetIncentiveRecordSerialized(s.Ctx, pool.GetId(), paginationReq)
+	s.Require().NoError(err)
+
+	fmt.Println(incentiveRec)
+	fmt.Println(pageResponse)
+
 }
