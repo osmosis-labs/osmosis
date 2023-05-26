@@ -315,9 +315,6 @@ func (s *PoolModuleSuite) TestCalcOutAmtGivenIn_SwapOutAmtGivenIn() {
 			if tc.expectedErrorMessage != "" {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedErrorMessage)
-
-				// TODO: check that pool balances are unchanged
-
 				return
 			}
 
@@ -331,6 +328,146 @@ func (s *PoolModuleSuite) TestCalcOutAmtGivenIn_SwapOutAmtGivenIn() {
 
 			// Assert that swapper balance is updated correctly
 			expectedSwapperBalances := sdk.NewCoins(tc.expectedTokenOut)
+			afterSwapSwapperBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, swapper)
+			s.Require().Equal(expectedSwapperBalances.String(), afterSwapSwapperBalances.String())
+		})
+	}
+}
+
+func (s *PoolModuleSuite) TestCalcInAmtGivenOut_SwapInAmtGivenOut() {
+	var (
+		defaultAmount       = sdk.NewInt(100)
+		initalDefaultSupply = sdk.NewCoins(sdk.NewCoin(denomA, defaultAmount), sdk.NewCoin(denomB, defaultAmount))
+		nonZeroFeeStr       = "0.01"
+	)
+
+	tests := map[string]struct {
+		initialCoins     sdk.Coins
+		tokenOut         sdk.Coin
+		tokenInDenom     string
+		tokenInMaxAmount sdk.Int
+		swapFee          sdk.Dec
+		isInvalidPool    bool
+
+		expectedTokenIn      sdk.Coin
+		expectedErrorMessage string
+	}{
+		"calc amount less than supply": {
+			initialCoins:     initalDefaultSupply,
+			tokenOut:         sdk.NewCoin(denomA, defaultAmount.Sub(sdk.OneInt())),
+			tokenInDenom:     denomB,
+			expectedTokenIn:  sdk.NewCoin(denomB, defaultAmount.Sub(sdk.OneInt())),
+			tokenInMaxAmount: defaultAmount,
+			swapFee:          sdk.ZeroDec(),
+		},
+		"calc amount equal to supply": {
+			initialCoins:    initalDefaultSupply,
+			tokenOut:        sdk.NewCoin(denomA, defaultAmount),
+			tokenInDenom:    denomB,
+			expectedTokenIn: sdk.NewCoin(denomB, defaultAmount),
+			swapFee:         sdk.ZeroDec(),
+		},
+		"calc amount greater than supply": {
+			initialCoins:         initalDefaultSupply,
+			tokenOut:             sdk.NewCoin(denomA, defaultAmount.Add(sdk.OneInt())),
+			tokenInDenom:         denomB,
+			expectedErrorMessage: fmt.Sprintf("Insufficient fund: required: %s, available: %s", sdk.NewCoin(denomB, defaultAmount.Add(sdk.OneInt())), sdk.NewCoin(denomB, defaultAmount)),
+		},
+		"non-zero swap fee": {
+			initialCoins:         initalDefaultSupply,
+			tokenOut:             sdk.NewCoin(denomA, defaultAmount.Sub(sdk.OneInt())),
+			tokenInDenom:         denomB,
+			swapFee:              sdk.MustNewDecFromStr(nonZeroFeeStr),
+			expectedErrorMessage: fmt.Sprintf("Invalid swap fee: expected: %s, actual: %s", sdk.ZeroInt(), nonZeroFeeStr),
+		},
+		"invalid pool given": {
+			initialCoins:  sdk.NewCoins(sdk.NewCoin(denomA, defaultAmount), sdk.NewCoin(denomB, defaultAmount)),
+			tokenOut:      sdk.NewCoin(denomA, defaultAmount.Sub(sdk.OneInt())),
+			tokenInDenom:  denomB,
+			isInvalidPool: true,
+
+			expectedErrorMessage: types.InvalidPoolTypeError{
+				ActualPool: &clmodel.Pool{},
+			}.Error(),
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+
+			cosmwasmPoolKeeper := s.App.CosmwasmPoolKeeper
+
+			// fund pool joiner
+			s.FundAcc(s.TestAccs[0], tc.initialCoins)
+
+			// get initial denom from coins specified in the test case
+			initialDenoms := []string{}
+			for _, coin := range tc.initialCoins {
+				initialDenoms = append(initialDenoms, coin.Denom)
+			}
+
+			// create pool
+			pool := s.PrepareCustomTransmuterPool(s.TestAccs[0], initialDenoms, 1)
+
+			// add liquidity by joining the pool
+			request := transmuter.JoinPoolExecuteMsgRequest{}
+			cosmwasm.MustExecute[transmuter.JoinPoolExecuteMsgRequest, msg.EmptyStruct](s.Ctx, s.App.ContractKeeper, pool.GetContractAddress(), s.TestAccs[0], tc.initialCoins, request)
+
+			originalPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, sdk.MustAccAddressFromBech32(pool.GetContractAddress()))
+
+			var poolIn poolmanagertypes.PoolI = pool
+			if tc.isInvalidPool {
+				poolIn = s.PrepareConcentratedPool()
+			}
+
+			// system under test non-mutative.
+			actualCalcTokenOut, err := cosmwasmPoolKeeper.CalcInAmtGivenOut(s.Ctx, poolIn, tc.tokenOut, tc.tokenInDenom, tc.swapFee)
+			if tc.expectedErrorMessage != "" {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedErrorMessage)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expectedTokenIn, actualCalcTokenOut)
+			}
+
+			// Assert that pool balances are unchanged
+			afterCalcPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, sdk.MustAccAddressFromBech32(pool.GetContractAddress()))
+
+			s.Require().Equal(originalPoolBalances.String(), afterCalcPoolBalances.String())
+
+			swapper := s.TestAccs[1]
+			// fund swapper
+			if !tc.expectedTokenIn.IsNil() {
+				// Fund with expected token in
+				s.FundAcc(swapper, sdk.NewCoins(tc.expectedTokenIn))
+			} else {
+				// Fund with pool reserve of token in denom
+				// This case happens in the error case, and we want
+				// to make sure that the error that we get is not
+				// due to insufficient funds.
+				s.FundAcc(swapper, sdk.NewCoins(sdk.NewCoin(tc.tokenInDenom, defaultAmount)))
+			}
+
+			// system under test non-mutative.
+			actualSwapTokenIn, err := cosmwasmPoolKeeper.SwapExactAmountOut(s.Ctx, swapper, poolIn, tc.tokenInDenom, tc.tokenInMaxAmount, tc.tokenOut, tc.swapFee)
+			if tc.expectedErrorMessage != "" {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedErrorMessage)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedTokenIn.Amount, actualSwapTokenIn)
+
+			// Assert that pool balance is updated correctly
+			expectedPoolBalances := originalPoolBalances.Add(tc.expectedTokenIn).Sub(sdk.NewCoins(tc.tokenOut))
+			afterSwapPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, sdk.MustAccAddressFromBech32(pool.GetContractAddress()))
+			s.Require().Equal(expectedPoolBalances.String(), afterSwapPoolBalances.String())
+
+			// Assert that swapper balance is updated correctly
+			expectedSwapperBalances := sdk.NewCoins(tc.tokenOut)
 			afterSwapSwapperBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, swapper)
 			s.Require().Equal(expectedSwapperBalances.String(), afterSwapSwapperBalances.String())
 		})

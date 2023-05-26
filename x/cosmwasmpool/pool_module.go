@@ -157,6 +157,9 @@ func (k Keeper) SwapExactAmountIn(
 	}
 
 	// Send token in from sender to the pool
+	// We do this because sudo message does not support sending coins from the sender
+	// However, note that the contract sends the token back to the sender after the swap
+	// As a result, we do not need to worry about sending it back here.
 	if err := k.bankKeeper.SendCoins(ctx, sender, sdk.MustAccAddressFromBech32(cosmwasmPool.GetContractAddress()), sdk.NewCoins(tokenIn)); err != nil {
 		return sdk.Int{}, err
 	}
@@ -234,6 +237,14 @@ func (k Keeper) SwapExactAmountOut(
 	request := msg.NewSwapExactAmountOutSudoMsg(sender.String(), tokenInDenom, tokenOut, tokenInMaxAmount, swapFee)
 	response, err := cosmwasm.Sudo[msg.SwapExactAmountOutSudoMsg, msg.SwapExactAmountOutSudoMsgResponse](ctx, k.contractKeeper, cosmwasmPool.GetContractAddress(), request)
 	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	// Send token in from sender to the pool
+	// We do this because sudo message does not support sending coins from the sender
+	// However, note that the contract sends the token back to the sender after the swap
+	// As a result, we do not need to worry about sending it back here.
+	if err := k.bankKeeper.SendCoins(ctx, sender, sdk.MustAccAddressFromBech32(cosmwasmPool.GetContractAddress()), sdk.NewCoins(sdk.NewCoin(tokenInDenom, response.TokenInAmount))); err != nil {
 		return sdk.Int{}, err
 	}
 
