@@ -230,6 +230,7 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 func (k Keeper) distributeSyntheticInternal(
 	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {
+	ctx.Logger().Error("HERE")
 	qualifiedLocks := k.lk.GetLocksLongerThanDurationDenom(ctx, gauge.DistributeTo.Denom, gauge.DistributeTo.Duration)
 
 	// map from lockID to present index in resultant list
@@ -422,7 +423,9 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 			// send based on synthetic lockup coins if it's distributing to synthetic lockups
 			var err error
 			if lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom) {
+				ctx.Logger().Error(fmt.Sprintf("gauge is %s", gauge.DistributeTo.Duration.String()))
 				// TODO: add test case to cover this
+				ctx.Logger().Error("here")
 				gaugeDistributedCoins, err = k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
 			} else {
 				gaugeDistributedCoins, err = k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
