@@ -740,7 +740,7 @@ func (k Keeper) updatePoolForSwap(
 		return err
 	}
 
-	k.listeners.AfterConcentratedPoolSwap(ctx, sender, poolId)
+	k.listeners.AfterConcentratedPoolSwap(ctx, sender, poolId, sdk.Coins{tokenIn}, sdk.Coins{tokenOut})
 
 	// TODO: move this to poolmanager and remove from here.
 	// Also, remove from gamm.
