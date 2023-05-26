@@ -21,9 +21,14 @@ message PeriodLock {
   // Owner is the account address of the lock owner.
   // Only the owner can modify the state of the lock.
   string owner = 2 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  // Reward Receiver Address is the address that would be receiving rewards for
+  // the incentives for the lock. This is set to owner by default and can be
+  // changed via separate msg.
+  string reward_receiver_address = 3
+      [ (gogoproto.moretags) = "yaml:\"reward_address\"" ];
   // Duration is the time needed for a lock to mature after unlocking has
   // started.
-  google.protobuf.Duration duration = 3 [
+  google.protobuf.Duration duration = 4 [
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag) = "duration,omitempty",
@@ -32,13 +37,13 @@ message PeriodLock {
   // EndTime refers to the time at which the lock would mature and get deleted.
   // This value is first initialized when an unlock has started for the lock,
   // end time being block time + duration.
-  google.protobuf.Timestamp end_time = 4 [
+  google.protobuf.Timestamp end_time = 5 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"end_time\""
   ];
   // Coins are the tokens locked within the lock, kept in the module account.
-  repeated cosmos.base.v1beta1.Coin coins = 5 [
+  repeated cosmos.base.v1beta1.Coin coins = 6 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
