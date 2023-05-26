@@ -67,7 +67,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * [#4912](https://github.com/osmosis-labs/osmosis/pull/4912) Export Position_lock_id mappings to GenesisState
   * [#4974](https://github.com/osmosis-labs/osmosis/pull/4974) Add lock id to `MsgSuperfluidUndelegateAndUnbondLockResponse`
   * [#2741](https://github.com/osmosis-labs/osmosis/pull/2741) Prevent updating the twap record if `ctx.BlockTime <= record.Time` or `ctx.BlockHeight <= record.Height`. Exception, can update the record created when creating the pool in the same block.
-  * [#5129](https://github.com/osmosis-labs/osmosis/pull/5129) Relax twap record validation in init genesis to allow one of the spot prices to be non-zero when twap error is observed.
   * [#5165](https://github.com/osmosis-labs/osmosis/pull/5165) Improve error message when fully exiting from a pool.
   * [#5187](https://github.com/osmosis-labs/osmosis/pull/5187) Expand `IncentivizedPools` query to include internally incentivized CL pools.
   * [#5239](https://github.com/osmosis-labs/osmosis/pull/5239) Implement `GetTotalPoolShares` public keeper function for GAMM.
@@ -84,6 +83,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#4951](https://github.com/osmosis-labs/osmosis/pull/4951) Implement pool liquidity query in pool manager, deprecate the one in gamm
 * [#5138](https://github.com/osmosis-labs/osmosis/pull/5138) Rename swap fee to spread factor. Broke PoolI interface. Did not break CLI, message, pool models, queries or events.
 
+## v15.1.2
+
+### Security
+
+* Upgraded ibc-go to 4.3.1 in response to [IBC huckleberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-huckleberry/10731)
+
+### Misc Improvements
+
+  * [#5129](https://github.com/osmosis-labs/osmosis/pull/5129) Relax twap record validation in init genesis to allow one of the spot prices to be non-zero when twap error is observed.
+
+  * [#5134](https://github.com/osmosis-labs/osmosis/pull/5134) Update sdk fork with the change for correct block time in historical queries (#5134)
+
+## v15.1.1
+
+Same changes included in `v15.1.2` but redacted as tagged commit was not part of `v15.x` branch.
 
 ## v15.1.0
 
