@@ -551,6 +551,7 @@ func (k Keeper) ExtendLockup(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 // them all correctly. This utilizes batch optimizations to improve efficiency,
 // as this becomes a bottleneck at chain initialization & upgrades.
 func (k Keeper) InitializeAllLocks(ctx sdk.Context, locks []types.PeriodLock) error {
+	ctx.Logger().Error("INITIALIZING ALL LOCKS")
 	// index by coin.Denom, them duration -> amt
 	// We accumulate the accumulation store entries separately,
 	// to avoid hitting the myriad of slowdowns in the SDK iterator creation process.
