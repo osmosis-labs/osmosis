@@ -36,6 +36,7 @@ We don't currently have rate limits for scaling factor changes. Again, majority 
 and for pools that do, LPs should be informed of the risks.
 
 Scaling factors help to set the expected price ratio.
+
 In the choice of curve section, we see that its the case that when `x_reserves ~= y_reserves`, that spot price is very close to `1`. However, there are a couple issues with just this in practice:
 
 1. Precision of pegged coins may differ. Suppose `1 Foo = 10^12 base units`, whereas `1 WrappedFoo = 10^6 base units`, but `1 Foo` is expected to trade near the price of `1 Wrapped Foo`.
