@@ -30,6 +30,7 @@ type PoolModuleSuite struct {
 }
 
 var (
+	defaultPoolId       = uint64(1)
 	defaultAmount       = sdk.NewInt(100)
 	initalDefaultSupply = sdk.NewCoins(sdk.NewCoin(denomA, defaultAmount), sdk.NewCoin(denomB, defaultAmount))
 	nonZeroFeeStr       = "0.01"
@@ -45,7 +46,6 @@ func (suite *PoolModuleSuite) SetupTest() {
 
 func (s *PoolModuleSuite) TestInitializePool() {
 	var (
-		defaultPoolId = uint64(1)
 		validTestPool = &model.Pool{
 			CosmWasmPool: model.CosmWasmPool{
 				PoolAddress:     poolmanagertypes.NewPoolAddress(defaultPoolId).String(),
@@ -122,10 +122,6 @@ func (s *PoolModuleSuite) TestInitializePool() {
 }
 
 func (s *PoolModuleSuite) TestGetPoolDenoms() {
-	var (
-		defaultPoolId = uint64(1)
-	)
-
 	tests := map[string]struct {
 		denoms          []string
 		poolId          uint64
