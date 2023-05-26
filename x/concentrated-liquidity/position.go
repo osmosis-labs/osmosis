@@ -472,7 +472,7 @@ func (k Keeper) getNextPositionIdAndIncrement(ctx sdk.Context) uint64 {
 // Otherwise, it creates a completely new position P. P's liquidity equals to the sum of all
 // liquidities of positions given by positionIds. The uptime of the join time of the new position equals
 // to current block time - max authorized uptime duration (to signify that it is fully charged).
-// The previous positions are deleted from state. Prior to deleting, he old position's unclaimed rewards are transferred to the new position.
+// The previous positions are deleted from state. Prior to deleting, the old position's unclaimed rewards are transferred to the new position.
 // The new position ID is returned.
 // An error is returned if:
 // - the caller does not own all the positions
