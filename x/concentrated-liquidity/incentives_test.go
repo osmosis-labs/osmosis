@@ -743,19 +743,16 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 	}
 
 	validateResult := func(ctx sdk.Context, err error, tc updateAccumToNow, balancerPoolId, poolId uint64, initUptimeAccumValues []sdk.DecCoins, qualifyingBalancerLiquidity sdk.Dec, qualifyingLiquidity sdk.Dec) []sdk.DecCoins {
-		clKeeper := s.App.ConcentratedLiquidityKeeper
-
 		if tc.expectedError != nil {
-			s.Require().Error(err)
 			s.Require().ErrorContains(err, tc.expectedError.Error())
 
 			// Ensure accumulators remain unchanged
-			newUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(ctx, poolId)
+			newUptimeAccumValues, err := s.clk.GetUptimeAccumulatorValues(ctx, poolId)
 			s.Require().NoError(err)
 			s.Require().Equal(initUptimeAccumValues, newUptimeAccumValues)
 
 			// Ensure incentive records remain unchanged
-			updatedIncentiveRecords, err := clKeeper.GetAllIncentiveRecordsForPool(ctx, poolId)
+			updatedIncentiveRecords, err := s.clk.GetAllIncentiveRecordsForPool(ctx, poolId)
 			s.Require().NoError(err)
 			s.Require().Equal(tc.poolIncentiveRecords, updatedIncentiveRecords)
 
@@ -765,7 +762,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 		s.Require().NoError(err)
 
 		// Get updated pool for testing purposes
-		clPool, err := clKeeper.GetPoolById(ctx, tc.poolId)
+		clPool, err := s.clk.GetPoolById(ctx, tc.poolId)
 		s.Require().NoError(err)
 
 		// Calculate expected uptime deltas using qualifying liquidity deltas.
@@ -786,7 +783,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 		}
 
 		// Get new uptime accum values for comparison
-		newUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(ctx, tc.poolId)
+		newUptimeAccumValues, err := s.clk.GetUptimeAccumulatorValues(ctx, tc.poolId)
 		s.Require().NoError(err)
 
 		// Ensure that each accumulator value changes by the correct amount
@@ -802,7 +799,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 		s.Require().Equal(ctx.BlockTime(), clPool.GetLastLiquidityUpdate())
 
 		// Ensure that pool's IncentiveRecords are updated to reflect emitted incentives
-		updatedIncentiveRecords, err := clKeeper.GetAllIncentiveRecordsForPool(ctx, tc.poolId)
+		updatedIncentiveRecords, err := s.clk.GetAllIncentiveRecordsForPool(ctx, tc.poolId)
 		s.Require().NoError(err)
 		s.Require().Equal(tc.expectedIncentiveRecords, updatedIncentiveRecords)
 
@@ -2938,8 +2935,7 @@ func (s *KeeperTestSuite) TestFunctional_ClaimIncentices_LiquidityChange_Varying
 	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
 
 	// Fund accounts twice because two positions are created.
-	s.FundAcc(defaultAddress, requiredBalances)
-	s.FundAcc(defaultAddress, requiredBalances)
+	s.FundAcc(defaultAddress, requiredBalances.Add(requiredBalances...))
 
 	// Create CL pool
 	pool := s.PrepareConcentratedPool()
@@ -3101,14 +3097,13 @@ func (s *KeeperTestSuite) TestGetAllIncentiveRecordsForUptime() {
 
 			// --- Assertions ---
 
+			s.Require().Equal(tc.expectedRecords, retrievedRecords)
+
 			if tc.expectedError != nil {
 				s.Require().ErrorContains(err, tc.expectedError.Error())
-				s.Require().Equal(tc.expectedRecords, retrievedRecords)
 				return
 			}
-
 			s.Require().NoError(err)
-			s.Require().Equal(tc.expectedRecords, retrievedRecords)
 
 			// --- Invariant testing ---
 
@@ -3149,21 +3144,17 @@ func (s *KeeperTestSuite) TestFindUptimeIndex() {
 		s.Run(name, func() {
 			retrievedUptimeIndex, err := cl.FindUptimeIndex(tc.requestedUptime)
 
+			s.Require().Equal(tc.expectedUptimeIndex, retrievedUptimeIndex)
 			if tc.expectedError != nil {
 				s.Require().ErrorContains(err, tc.expectedError.Error())
-				s.Require().Equal(tc.expectedUptimeIndex, retrievedUptimeIndex)
-
 				return
 			}
-
 			s.Require().NoError(err)
-			s.Require().Equal(tc.expectedUptimeIndex, retrievedUptimeIndex)
 		})
 	}
 }
 
 func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
-	invalidPoolId := uint64(10)
 	defaultBalancerAssets := []balancer.PoolAsset{
 		{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(1000000000))},
 		{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(1000000000))},
@@ -3179,13 +3170,8 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		// defaults sdk.OneDec()
 		portionOfSharesBonded sdk.Dec
 
-		noCanonicalBalancerPool      bool
-		noBalancerPoolWithID         bool
-		invalidConcentratedPoolID    bool
-		invalidBalancerPoolID        bool
-		invalidBalancerPoolLiquidity bool
-
-		expectedError error
+		noCanonicalBalancerPool bool
+		expectedError           error
 	}
 	initTestCase := func(tc testcase) testcase {
 		if tc.existingConcentratedLiquidity.Empty() {
@@ -3253,43 +3239,6 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			// Note that we expect this to fail quietly, as most CL pools will not have linked Balancer pools
 			noCanonicalBalancerPool: true,
 		},
-
-		// Error catching
-
-		"canonical balancer pool ID exists but pool itself is not found": {
-			// 100 existing shares and 100 shares added from balancer
-			noBalancerPoolWithID: true,
-			expectedError:        gammtypes.PoolDoesNotExistError{PoolId: invalidPoolId},
-		},
-		"canonical balancer pool has invalid number of assets": {
-			// 100 existing shares and 100 shares added from balancer
-			balancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(100))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("baz", sdk.NewInt(100))},
-			},
-			invalidBalancerPoolLiquidity: true,
-			expectedError:                types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)), sdk.NewCoin("baz", sdk.NewInt(100)))},
-		},
-		"invalid concentrated pool ID": {
-			// 100 existing shares and 100 shares added from balancer
-			invalidConcentratedPoolID: true,
-			expectedError:             types.PoolNotFoundError{PoolId: invalidPoolId + 1},
-		},
-	}
-	// create invalid denom test cases. Either denom1, denom2 or both are invalid
-	denomSelector := [][]string{{"foo", "invalid1"}, {"bar", "invalid2"}}
-	for i := 0; i < 2; i++ {
-		pa1 := balancer.PoolAsset{Weight: sdk.NewInt(1), Token: sdk.NewCoin(denomSelector[0][i], sdk.NewInt(100))}
-		for j := 1 - i; j < 2; j++ {
-			pa2 := balancer.PoolAsset{Weight: sdk.NewInt(1), Token: sdk.NewCoin(denomSelector[1][j], sdk.NewInt(100))}
-			testname := fmt.Sprintf("canonical balancer pool; denom1_invalid=%v; denom2_invalid=%v", i == 1, j == 1)
-			tests[testname] = testcase{
-				balancerPoolAssets:           []balancer.PoolAsset{pa1, pa2},
-				invalidBalancerPoolLiquidity: true,
-				expectedError:                types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(pa1.Token, pa2.Token)},
-			}
-		}
 	}
 
 	for name, tc := range tests {
@@ -3297,8 +3246,6 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			// --- Setup test env ---
 			s.SetupTest()
 			tc = initTestCase(tc)
-			clk := s.App.ConcentratedLiquidityKeeper
-
 			clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, sdk.ZeroDec())
 
 			// Set up an existing full range position. Note that the second return value is the position ID, not an error.
@@ -3314,13 +3261,9 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			_, err = s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(gammtypes.GetPoolShareDenom(balancerPoolId), bondedShares)), longestDuration)
 			s.Require().NoError(err)
 
-			if tc.noBalancerPoolWithID {
-				balancerPoolId = invalidPoolId
-			} else if tc.noCanonicalBalancerPool {
+			if tc.noCanonicalBalancerPool {
 				balancerPoolId = 0
-			}
-
-			if !tc.noCanonicalBalancerPool {
+			} else {
 				s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx,
 					gammtypes.MigrationRecords{
 						BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
@@ -3331,7 +3274,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			}
 
 			// Calculate balancer share amount for full range
-			updatedClPool, err := clk.GetPoolById(s.Ctx, clPool.GetId())
+			updatedClPool, err := s.clk.GetPoolById(s.Ctx, clPool.GetId())
 			s.Require().NoError(err)
 			asset0BalancerAmount := tc.balancerPoolAssets[0].Token.Amount.ToDec().Mul(tc.portionOfSharesBonded).TruncateInt()
 			asset1BalancerAmount := tc.balancerPoolAssets[1].Token.Amount.ToDec().Mul(tc.portionOfSharesBonded).TruncateInt()
@@ -3339,43 +3282,30 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			qualifyingShares := (sdk.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingSharesPreDiscount)
 
 			// TODO: clean this check up (will likely require refactoring the whole test)
-			clearOutQualifyingShares := tc.noBalancerPoolWithID || tc.invalidBalancerPoolLiquidity || tc.invalidConcentratedPoolID || tc.invalidBalancerPoolID || tc.noCanonicalBalancerPool
+			clearOutQualifyingShares := tc.noCanonicalBalancerPool
 			if clearOutQualifyingShares {
 				qualifyingShares = sdk.NewDec(0)
-			}
-
-			concentratedPoolId := clPool.GetId()
-			if tc.invalidConcentratedPoolID {
-				concentratedPoolId = invalidPoolId + 1
 			}
 
 			// --- System under test ---
 
 			// Get uptime accums for the cl pool.
-			uptimeAccums, err := clk.GetUptimeAccumulators(s.Ctx, clPool.GetId())
+			uptimeAccums, err := s.clk.GetUptimeAccumulators(s.Ctx, clPool.GetId())
 			s.Require().NoError(err)
 
-			retrievedBalancerPoolId, addedLiquidity, err := clk.PrepareBalancerPoolAsFullRange(s.Ctx, concentratedPoolId, uptimeAccums)
+			retrievedBalancerPoolId, addedLiquidity, err := s.clk.PrepareBalancerPoolAsFullRange(s.Ctx, clPool.GetId(), uptimeAccums)
 
 			// --- Assertions ---
 
-			if tc.expectedError != nil {
-				s.Require().ErrorContains(err, tc.expectedError.Error())
-
-				// Ensure that returned balancer pool ID is correct
-				s.Require().Equal(uint64(0), retrievedBalancerPoolId)
-			} else {
-				s.Require().NoError(err)
-
-				// Ensure that returned balancer pool ID is correct
-				s.Require().Equal(balancerPoolId, retrievedBalancerPoolId)
-			}
+			s.Require().NoError(err)
+			// Ensure that returned balancer pool ID is correct
+			s.Require().Equal(balancerPoolId, retrievedBalancerPoolId)
 
 			// General assertions regardless of error
-			updatedClPool, err = clk.GetPoolById(s.Ctx, clPool.GetId())
+			updatedClPool, err = s.clk.GetPoolById(s.Ctx, clPool.GetId())
 			s.Require().NoError(err)
 
-			clPoolUptimeAccumulatorsFromState, err := clk.GetUptimeAccumulators(s.Ctx, clPool.GetId())
+			clPoolUptimeAccumulatorsFromState, err := s.clk.GetUptimeAccumulators(s.Ctx, clPool.GetId())
 			s.Require().NoError(err)
 
 			s.Require().True(len(clPoolUptimeAccumulatorsFromState) > 0)
@@ -3397,6 +3327,104 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 
 			// Pool liquidity should remain unchanged
 			s.Require().Equal(initialLiquidity, updatedClPool.GetLiquidity())
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRangeWithNonExistentPools() {
+	existingConcentratedAssets := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)))
+	defaultBalancerPoolParams := balancer.PoolParams{SwapFee: sdk.NewDec(0), ExitFee: sdk.NewDec(0)}
+	percentSharesBonded := sdk.OneDec()
+
+	type testcase struct {
+		// defaults to defaultBalancerAssets
+		balancerPoolAssets []balancer.PoolAsset
+
+		noBalancerPoolWithID      bool
+		invalidConcentratedPoolID bool
+
+		expectedError error
+	}
+	tests := map[string]testcase{
+		// Error catching
+		"canonical balancer pool ID exists but pool itself is not found": {
+			// 100 existing shares and 100 shares added from balancer
+			noBalancerPoolWithID: true,
+			expectedError:        gammtypes.PoolDoesNotExistError{PoolId: invalidPoolId},
+		},
+		"canonical balancer pool has invalid number of assets": {
+			// 100 existing shares and 100 shares added from balancer
+			balancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(100))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("baz", sdk.NewInt(100))},
+			},
+			expectedError: types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)), sdk.NewCoin("baz", sdk.NewInt(100)))},
+		},
+		"invalid concentrated pool ID": {
+			// 100 existing shares and 100 shares added from balancer
+			invalidConcentratedPoolID: true,
+			expectedError:             types.PoolNotFoundError{PoolId: invalidPoolId + 1},
+		},
+	}
+	// create invalid denom test cases. Either denom1, denom2 or both are invalid
+	denomSelector := [][]string{{"foo", "invalid1"}, {"bar", "invalid2"}}
+	for i := 0; i < 2; i++ {
+		pa1 := balancer.PoolAsset{Weight: sdk.NewInt(1), Token: sdk.NewCoin(denomSelector[0][i], sdk.NewInt(100))}
+		for j := 1 - i; j < 2; j++ {
+			pa2 := balancer.PoolAsset{Weight: sdk.NewInt(1), Token: sdk.NewCoin(denomSelector[1][j], sdk.NewInt(100))}
+			testname := fmt.Sprintf("canonical balancer pool; denom1_invalid=%v; denom2_invalid=%v", i == 1, j == 1)
+			tests[testname] = testcase{
+				balancerPoolAssets: []balancer.PoolAsset{pa1, pa2},
+				expectedError:      types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(pa1.Token, pa2.Token)},
+			}
+		}
+	}
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			if len(tc.balancerPoolAssets) == 0 {
+				tc.balancerPoolAssets = defaultBalancerAssets
+			}
+			clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], existingConcentratedAssets[0].Denom, existingConcentratedAssets[1].Denom, DefaultTickSpacing, sdk.ZeroDec())
+
+			// Set up an existing full range position. Note that the second return value is the position ID, not an error.
+			s.SetupPosition(clPool.GetId(), s.TestAccs[0], existingConcentratedAssets, DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime())
+
+			// If a canonical balancer pool exists, we create it and link it with the CL pool
+			balancerPoolId := s.PrepareCustomBalancerPool(tc.balancerPoolAssets, defaultBalancerPoolParams)
+
+			// Bond the appropriate portion of total Balancer shares as defined by the current test case
+			longestDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
+			s.Require().NoError(err)
+			bondedShares := gammtypes.InitPoolSharesSupply.ToDec().Mul(percentSharesBonded).TruncateInt()
+			_, err = s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(gammtypes.GetPoolShareDenom(balancerPoolId), bondedShares)), longestDuration)
+			s.Require().NoError(err)
+
+			if tc.noBalancerPoolWithID {
+				balancerPoolId = invalidPoolId
+			}
+
+			s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx,
+				gammtypes.MigrationRecords{
+					BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
+						{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()},
+					},
+				},
+			)
+
+			concentratedPoolId := clPool.GetId()
+			if tc.invalidConcentratedPoolID {
+				concentratedPoolId = invalidPoolId + 1
+			}
+
+			// Get uptime accums for the cl pool.
+			uptimeAccums, err := s.clk.GetUptimeAccumulators(s.Ctx, clPool.GetId())
+			s.Require().NoError(err)
+
+			retrievedBalancerPoolId, _, err := s.clk.PrepareBalancerPoolAsFullRange(s.Ctx, concentratedPoolId, uptimeAccums)
+			s.Require().ErrorContains(err, tc.expectedError.Error())
+			s.Require().Equal(uint64(0), retrievedBalancerPoolId)
 		})
 	}
 }
