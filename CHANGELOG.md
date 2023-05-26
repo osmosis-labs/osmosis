@@ -72,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * [#5239](https://github.com/osmosis-labs/osmosis/pull/5239) Implement `GetTotalPoolShares` public keeper function for GAMM.
   * [#5261](https://github.com/osmosis-labs/osmosis/pull/5261) Allows `UpdateFeeTokenProposal` to take in multiple fee tokens instead of just one.
   * [#5265](https://github.com/osmosis-labs/osmosis/pull/5265) Ensure a lock cannot point to multiple synthetic locks. Deprecates `SyntheticLockupsByLockupID` in favor of `SyntheticLockupByLockupID`.
+  * [#4950] (https://github.com/osmosis-labs/osmosis/pull/4950) Add in/out tokens to Concentrated Liquidity's AfterConcentratedPoolSwap hook
 
 ### API breaks
 
