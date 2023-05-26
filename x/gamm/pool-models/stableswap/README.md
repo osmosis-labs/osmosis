@@ -21,7 +21,7 @@ the rare case where the assets are not pegged to a specific ratio of each other 
 some predictable way (e.g. non-rebasing LSTs, which get more valuable relative to their base asset, meaning
 that having fixed scaling factors eventually keeps the pool "stable" around the wrong price)
 
-It should be relatively infrequent but scaling factors can be changed whenever the scaling factor governor wants
+It should be relatively infrequent in practice, scaling factors can be changed on demand by the scaling factor governor.
 (by default, pools should not have a governor set, as for most use cases like stablecoin to stablecoin pools, a
 single fixed ratio of assets (e.g. 1:1) is sufficient)
 
