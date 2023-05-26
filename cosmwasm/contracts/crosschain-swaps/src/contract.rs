@@ -8,7 +8,7 @@ use cw2::set_contract_version;
 use crate::consts::MsgReplyID;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, IBCLifecycleComplete, InstantiateMsg, MigrateMsg, QueryMsg, SudoMsg};
-use crate::state::{Config, CHANNEL_MAP, CONFIG, RECOVERY_STATES};
+use crate::state::{Config, CONFIG, RECOVERY_STATES};
 use crate::{execute, ibc_lifecycle};
 
 // version info for migration info
@@ -33,9 +33,6 @@ pub fn instantiate(
         governor,
     };
     CONFIG.save(deps.storage, &state)?;
-    for (prefix, channel) in msg.channels.into_iter() {
-        CHANNEL_MAP.save(deps.storage, &prefix, &channel)?;
-    }
 
     Ok(Response::new().add_attribute("method", "instantiate"))
 }
@@ -61,28 +58,15 @@ pub fn execute(
             slippage,
             next_memo,
             on_failed_delivery,
-        } => {
-            let swap_coin = cw_utils::one_coin(&info)?;
-            execute::swap_and_forward(
-                deps,
-                env.block.time,
-                env.contract.address,
-                swap_coin,
-                output_denom,
-                slippage,
-                &receiver,
-                next_memo,
-                on_failed_delivery,
-            )
-        }
+        } => execute::unwrap_or_swap_and_forward(
+            (deps, env, info),
+            output_denom,
+            slippage,
+            &receiver,
+            next_memo,
+            on_failed_delivery,
+        ),
         ExecuteMsg::Recover {} => execute::recover(deps, info.sender),
-        ExecuteMsg::SetChannel { prefix, channel } => {
-            execute::set_channel(deps, info.sender, prefix, channel)
-        }
-        ExecuteMsg::DisablePrefix { prefix } => execute::disable_prefix(deps, info.sender, prefix),
-        ExecuteMsg::ReEnablePrefix { prefix } => {
-            execute::re_enable_prefix(deps, info.sender, prefix)
-        }
         ExecuteMsg::TransferOwnership { new_governor } => {
             execute::transfer_ownership(deps, info.sender, new_governor)
         }
@@ -120,11 +104,11 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, Contract
 }
 
 #[cfg_attr(not(feature = "imported"), entry_point)]
-pub fn reply(deps: DepsMut, _env: Env, reply: Reply) -> Result<Response, ContractError> {
+pub fn reply(deps: DepsMut, env: Env, reply: Reply) -> Result<Response, ContractError> {
     deps.api
         .debug(&format!("executing crosschain reply: {reply:?}"));
     match MsgReplyID::from_repr(reply.id) {
-        Some(MsgReplyID::Swap) => execute::handle_swap_reply(deps, reply),
+        Some(MsgReplyID::Swap) => execute::handle_swap_reply(deps, env, reply),
         Some(MsgReplyID::Forward) => execute::handle_forward_reply(deps, reply),
         None => Err(ContractError::InvalidReplyID { id: reply.id }),
     }

@@ -3,6 +3,7 @@ package model
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/types"
@@ -11,7 +12,7 @@ import (
 
 // constants.
 const (
-	TypeMsgCreateCosmWasmPool = "create_concentrated_pool"
+	TypeMsgCreateCosmWasmPool = "create_cosmwasm_pool"
 )
 
 var (
@@ -34,14 +35,16 @@ func (msg MsgCreateCosmWasmPool) ValidateBasic() error {
 
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	return nil
 }
 
 func (msg MsgCreateCosmWasmPool) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	// TODO: uncomment once merging state-breaks.
+	// return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	return nil
 }
 
 func (msg MsgCreateCosmWasmPool) GetSigners() []sdk.AccAddress {
@@ -52,7 +55,7 @@ func (msg MsgCreateCosmWasmPool) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sender}
 }
 
-// / Implement the CreatePoolMsg interface
+// Implement the CreatePoolMsg interface
 func (msg MsgCreateCosmWasmPool) PoolCreator() sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {

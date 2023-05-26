@@ -1,9 +1,10 @@
 use crate::{
-    msg::{Callback, ExecuteMsg, Wasm, WasmHookExecute},
+    msg::{ExecuteMsg, Wasm, WasmHookExecute},
     state::CONFIG,
     ContractError,
 };
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, Timestamp};
+use registry::msg::{Callback, SerializableJson};
 
 // IBC timeout
 pub const PACKET_LIFETIME: u64 = 604_800u64; // One week in seconds
@@ -11,7 +12,7 @@ pub const PACKET_LIFETIME: u64 = 604_800u64; // One week in seconds
 //#[cfg(feature = "callbacks")]
 fn build_callback_memo(
     callback: Option<Callback>,
-) -> Result<Option<crosschain_swaps::msg::SerializableJson>, ContractError> {
+) -> Result<Option<SerializableJson>, ContractError> {
     match callback {
         Some(callback) => Ok(Some(callback.to_json()?)),
         None => Ok(None),
@@ -63,7 +64,7 @@ pub fn execute_swap(
         error: e.to_string(),
     })?;
 
-    let ibc_transfer_msg = crosschain_swaps::ibc::MsgTransfer {
+    let ibc_transfer_msg = registry::proto::MsgTransfer {
         source_port: "transfer".to_string(),
         source_channel: "channel-0".to_string(),
         token: Some(Coin::new(coin.amount.into(), coin.denom).into()),

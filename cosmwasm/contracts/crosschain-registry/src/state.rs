@@ -8,6 +8,7 @@ enum StorageKey {
     ChainToChainChannelMap,
     ChannelOnChainChainMap,
     ChainToBech32PrefixMap,
+    ChainToBech32PrefixReverseMap,
     Config,
     GlobalAdminMap,
     ChainAdminMap,
@@ -22,6 +23,7 @@ impl StorageKey {
             StorageKey::ChainToChainChannelMap => "ctccm",
             StorageKey::ChannelOnChainChainMap => "cotccm",
             StorageKey::ChainToBech32PrefixMap => "ctbpm",
+            StorageKey::ChainToBech32PrefixReverseMap => "ctbprm",
             StorageKey::Config => "cfg",
             StorageKey::GlobalAdminMap => "gam",
             StorageKey::ChainAdminMap => "cam",
@@ -66,6 +68,12 @@ pub const CHANNEL_ON_CHAIN_CHAIN_MAP: Map<(&str, &str), RegistryValue> =
 // CHAIN_ID -> (BECH32_PREFIX, ENABLED)
 pub const CHAIN_TO_BECH32_PREFIX_MAP: Map<&str, RegistryValue> =
     Map::new(StorageKey::ChainToBech32PrefixMap.to_string());
+
+// CHAIN_TO_BECH32_PREFIX_MAP is a map from a chain id to its respective bech32 prefix.
+// The boolean value indicates whether the mapping is enabled or not.
+// CHAIN_ID -> (BECH32_PREFIX, ENABLED)
+pub const CHAIN_TO_BECH32_PREFIX_REVERSE_MAP: Map<&str, Vec<String>> =
+    Map::new(StorageKey::ChainToBech32PrefixReverseMap.to_string());
 
 // CONFIG stores the contract owner
 pub const CONFIG: Item<Config> = Item::new(StorageKey::Config.to_string());

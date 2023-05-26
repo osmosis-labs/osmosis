@@ -32,6 +32,7 @@ func (s *TestSuite) TestMigrateExistingPools() {
 	// iterate through all pools, check that all state entries have been correctly updated
 	for poolId := 1; poolId <= int(latestPoolId); poolId++ {
 		recentTwapRecords, err := s.twapkeeper.GetAllMostRecentRecordsForPool(s.Ctx, uint64(poolId))
+		s.Require().NoError(err)
 		poolDenoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, uint64(poolId))
 		s.Require().NoError(err)
 		denomPairs := types.GetAllUniqueDenomPairs(poolDenoms)

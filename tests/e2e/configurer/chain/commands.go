@@ -11,7 +11,6 @@ import (
 
 	"github.com/tendermint/tendermint/libs/bytes"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
@@ -58,26 +57,55 @@ func (n *NodeConfig) CreateStableswapPool(poolFile, from string) uint64 {
 	return poolID
 }
 
-func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpacing uint64, exponentAtPriceOne int64, swapFee string) uint64 {
-	n.LogActionF("creating concentrated pool")
-
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-concentrated-pool", denom1, denom2, fmt.Sprintf("%d", tickSpacing), fmt.Sprintf("[%d]", exponentAtPriceOne), swapFee, fmt.Sprintf("--from=%s", from)}
+// CollectFees collects fees earned by concentrated position in range of [lowerTick; upperTick] in pool with id of poolId
+func (n *NodeConfig) CollectFees(from, positionIds string) {
+	n.LogActionF("collecting fees from concentrated position")
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "collect-fees", positionIds, fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
+
+	n.LogActionF("successfully collected fees for account %s", from)
+}
+
+// CreateConcentratedPool creates a concentrated pool.
+// Returns pool id of newly created pool on success
+func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpacing uint64, spreadFactor string) (uint64, error) {
+	n.LogActionF("creating concentrated pool")
+
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-pool", denom1, denom2, fmt.Sprintf("%d", tickSpacing), spreadFactor, fmt.Sprintf("--from=%s", from)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	if err != nil {
+		return 0, err
+	}
 
 	poolID := n.QueryNumPools()
 	n.LogActionF("successfully created concentrated pool with ID %d", poolID)
-	return poolID
+	return poolID, nil
 }
 
-func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, token0, token1 string, token0MinAmt, token1MinAmt int64, freezeDuration string, poolId uint64) {
+// CreateConcentratedPosition creates a concentrated position from [lowerTick; upperTick] in pool with id of poolId
+// token{0,1} - liquidity to create position with
+func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, tokens string, token0MinAmt, token1MinAmt int64, poolId uint64) uint64 {
 	n.LogActionF("creating concentrated position")
+	// gas = 50,000 because e2e  default to 40,000, we hardcoded extra 10k gas to initialize tick
+	// fees = 1250 (because 50,000 * 0.0025 = 1250)
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", fmt.Sprint(poolId), lowerTick, upperTick, tokens, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), "--gas=500000", "--fees=1250uosmo", "-o json"}
+	outJson, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "code\":0")
+	require.NoError(n.t, err)
 
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", lowerTick, upperTick, token0, token1, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), freezeDuration, fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId)}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	var txResponse map[string]interface{}
+	err = json.Unmarshal(outJson.Bytes(), &txResponse)
+	require.NoError(n.t, err)
+
+	positionIDString, err := GetPositionID(txResponse)
+	require.NoError(n.t, err)
+
+	positionID, err := strconv.ParseUint(positionIDString, 10, 64)
 	require.NoError(n.t, err)
 
 	n.LogActionF("successfully created concentrated position from %s to %s", lowerTick, upperTick)
+
+	return positionID
 }
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
@@ -88,12 +116,12 @@ func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 	n.LogActionF("successfully stored")
 }
 
-func (n *NodeConfig) WithdrawPosition(from, lowerTick, upperTick string, liquidityOut string, poolId uint64, joinTime time.Time, freezeDuration string) {
+func (n *NodeConfig) WithdrawPosition(from, liquidityOut string, positionId uint64) {
 	n.LogActionF("withdrawing liquidity from position")
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", lowerTick, upperTick, liquidityOut, osmoutils.FormatTimeString(joinTime), freezeDuration, fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId)}
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", fmt.Sprint(positionId), liquidityOut, fmt.Sprintf("--from=%s", from), "--gas=650000", "--fees=5000uosmo"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
-	n.LogActionF("successfully withdrew position from lowerTick %s to upperTick %s", lowerTick, upperTick)
+	n.LogActionF("successfully withdrew %s liquidity from position %d", liquidityOut, positionId)
 }
 
 func (n *NodeConfig) InstantiateWasmContract(codeId, initMsg, from string) {
@@ -240,6 +268,14 @@ func (n *NodeConfig) SubmitSuperfluidProposal(asset string, initialDeposit sdk.C
 	n.LogActionF("successfully submitted superfluid proposal for asset %s", asset)
 }
 
+func (n *NodeConfig) SubmitCreateConcentratedPoolProposal(initialDeposit sdk.Coin) {
+	n.LogActionF("Cretaing concentrated liquidity pool")
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "create-concentratedliquidity-pool-proposal", "stake", "uosmo", "100", "0.001", "--title=\"create concentrated pool\"", "--description=\"create concentrated pool", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully created a create concentrated liquidity pool proposal")
+}
+
 func (n *NodeConfig) SubmitTextProposal(text string, initialDeposit sdk.Coin, isExpedited bool) {
 	n.LogActionF("submitting text gov proposal")
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "--type=text", fmt.Sprintf("--title=\"%s\"", text), "--description=\"test text proposal\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
@@ -249,6 +285,17 @@ func (n *NodeConfig) SubmitTextProposal(text string, initialDeposit sdk.Coin, is
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully submitted text gov proposal")
+}
+
+func (n *NodeConfig) SubmitTickSpacingReductionProposal(poolTickSpacingRecords string, initialDeposit sdk.Coin, isExpedited bool) {
+	n.LogActionF("submitting tick spacing reduction gov proposal")
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "tick-spacing-decrease-proposal", "--title=\"test tick spacing reduction proposal title\"", "--description=\"test tick spacing reduction proposal\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit), fmt.Sprintf("--pool-tick-spacing-records=%s", poolTickSpacingRecords)}
+	if isExpedited {
+		cmd = append(cmd, "--is-expedited=true")
+	}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully submitted tick spacing reduction gov proposal")
 }
 
 func (n *NodeConfig) DepositProposal(proposalNumber int, isExpedited bool) {
@@ -439,4 +486,49 @@ func (n *NodeConfig) Status() (resultStatus, error) {
 		return resultStatus{}, err
 	}
 	return result, nil
+}
+
+func GetPositionID(responseJson map[string]interface{}) (string, error) {
+	logs, ok := responseJson["logs"].([]interface{})
+	if !ok {
+		return "", fmt.Errorf("logs field not found in response")
+	}
+
+	if len(logs) == 0 {
+		return "", fmt.Errorf("empty logs field in response")
+	}
+
+	log, ok := logs[0].(map[string]interface{})
+	if !ok {
+		return "", fmt.Errorf("invalid format of logs field")
+	}
+
+	events, ok := log["events"].([]interface{})
+	if !ok {
+		return "", fmt.Errorf("events field not found in logs")
+	}
+
+	for _, event := range events {
+		attributes, ok := event.(map[string]interface{})["attributes"].([]interface{})
+		if !ok {
+			return "", fmt.Errorf("attributes field not found in event")
+		}
+
+		for _, attr := range attributes {
+			switch v := attr.(type) {
+			case map[string]interface{}:
+				if v["key"] == "position_id" {
+					positionID, ok := v["value"].(string)
+					if !ok {
+						return "", fmt.Errorf("invalid format of position_id field")
+					}
+					return positionID, nil
+				}
+			default:
+				return "", fmt.Errorf("invalid type for attributes field")
+			}
+		}
+	}
+
+	return "", fmt.Errorf("position_id field not found in response")
 }

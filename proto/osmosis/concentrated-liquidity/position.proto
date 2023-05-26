@@ -9,26 +9,22 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model";
 
-// Position contains position's pool id, lower tick, upper tick
-// liquidity, join time and freeze duration.
+// Position contains position's id, address, pool id, lower tick, upper tick
+// join time, and liquidity.
 message Position {
-  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
-  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  int64 lower_tick = 3;
-  int64 upper_tick = 4;
-  google.protobuf.Timestamp join_time = 5 [
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  string address = 2 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+  uint64 pool_id = 3 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  int64 lower_tick = 4;
+  int64 upper_tick = 5;
+  google.protobuf.Timestamp join_time = 6 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true,
     (gogoproto.moretags) = "yaml:\"join_time\""
-  ];
-  google.protobuf.Duration freeze_duration = 6 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.jsontag) = "duration,omitempty",
-    (gogoproto.moretags) = "yaml:\"freeze_duration\""
   ];
   string liquidity = 7 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
@@ -37,14 +33,33 @@ message Position {
   ];
 }
 
-message PositionWithUnderlyingAssetBreakdown {
+// FullPositionBreakdown returns:
+// - the position itself
+// - the amount the position translates in terms of asset0 and asset1
+// - the amount of claimable fees
+// - the amount of claimable incentives
+// - the amount of incentives that would be forfeited if the position was closed
+// now
+message FullPositionBreakdown {
   Position position = 1 [ (gogoproto.nullable) = false ];
-  string asset0 = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+  cosmos.base.v1beta1.Coin asset0 = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+  cosmos.base.v1beta1.Coin asset1 = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+  repeated cosmos.base.v1beta1.Coin claimable_fees = 4 [
+    (gogoproto.moretags) = "yaml:\"claimable_fees\"",
     (gogoproto.nullable) = false
   ];
-  string asset1 = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+  repeated cosmos.base.v1beta1.Coin claimable_incentives = 5 [
+    (gogoproto.moretags) = "yaml:\"claimable_incentives\"",
+    (gogoproto.nullable) = false
+  ];
+  repeated cosmos.base.v1beta1.Coin forfeited_incentives = 6 [
+    (gogoproto.moretags) = "yaml:\"forfeited_incentives\"",
     (gogoproto.nullable) = false
   ];
 }

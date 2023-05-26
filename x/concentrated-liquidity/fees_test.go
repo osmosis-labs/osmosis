@@ -10,10 +10,9 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 const (
@@ -22,12 +21,13 @@ const (
 )
 
 // fields used to identify a fee position.
-type positionIdentifiers struct {
-	poolId         uint64
-	owner          sdk.AccAddress
-	lowerTick      int64
-	upperTick      int64
-	freezeDuration time.Duration
+type positionFields struct {
+	poolId     uint64
+	owner      sdk.AccAddress
+	lowerTick  int64
+	upperTick  int64
+	positionId uint64
+	liquidity  sdk.Dec
 }
 
 var (
@@ -37,121 +37,206 @@ var (
 	onlyETH     = [][]string{{ETH}, {ETH}, {ETH}, {ETH}}
 )
 
-func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
+func (s *KeeperTestSuite) TestCreateAndGetFeeAccumulator() {
+	type initFeeAccumTest struct {
+		poolId              uint64
+		initializePoolAccum bool
+
+		expectError bool
+	}
+	tests := map[string]initFeeAccumTest{
+		"default pool setup": {
+			poolId:              defaultPoolId,
+			initializePoolAccum: true,
+		},
+		"setup with different poolId": {
+			poolId:              defaultPoolId + 1,
+			initializePoolAccum: true,
+		},
+		"pool not initialized": {
+			initializePoolAccum: false,
+			poolId:              defaultPoolId,
+			expectError:         true,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+			clKeeper := s.App.ConcentratedLiquidityKeeper
+
+			// system under test
+			if tc.initializePoolAccum {
+				err := clKeeper.CreateFeeAccumulator(s.Ctx, tc.poolId)
+				s.Require().NoError(err)
+			}
+			poolFeeAccumulator, err := clKeeper.GetFeeAccumulator(s.Ctx, tc.poolId)
+
+			if !tc.expectError {
+				s.Require().NoError(err)
+			} else {
+				s.Require().Error(err)
+				s.Require().Equal(accum.AccumulatorObject{}, poolFeeAccumulator)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestInitOrUpdatePositionFeeAccumulator() {
 	// Setup is done once so that we test
 	// the relationship between test cases.
 	// For example, that positions with non-zero liquidity
-	// cannot be overriden.
+	// cannot be overridden.
 	s.SetupTest()
 	s.PrepareConcentratedPool()
 
 	defaultAccount := s.TestAccs[0]
 
 	var (
-		defaultPoolId     = uint64(1)
-		defaultPositionId = positionIdentifiers{
+		defaultPoolId         = uint64(1)
+		defaultPositionFields = positionFields{
 			defaultPoolId,
 			defaultAccount,
 			DefaultLowerTick,
 			DefaultUpperTick,
-			DefaultFreezeDuration,
+			DefaultPositionId,
+			DefaultLiquidityAmt,
 		}
 	)
 
-	withOwner := func(posId positionIdentifiers, owner sdk.AccAddress) positionIdentifiers {
-		posId.owner = owner
-		return posId
+	withOwner := func(posFields positionFields, owner sdk.AccAddress) positionFields {
+		posFields.owner = owner
+		return posFields
 	}
 
-	withUpperTick := func(posId positionIdentifiers, upperTick int64) positionIdentifiers {
-		posId.upperTick = upperTick
-		return posId
+	withUpperTick := func(posFields positionFields, upperTick int64) positionFields {
+		posFields.upperTick = upperTick
+		return posFields
 	}
 
-	withLowerTick := func(posId positionIdentifiers, lowerTick int64) positionIdentifiers {
-		posId.lowerTick = lowerTick
-		return posId
+	withLowerTick := func(posFields positionFields, lowerTick int64) positionFields {
+		posFields.lowerTick = lowerTick
+		return posFields
+	}
+
+	withPositionId := func(posFields positionFields, positionId uint64) positionFields {
+		posFields.positionId = positionId
+		return posFields
+	}
+
+	withLiquidity := func(posFields positionFields, liquidity sdk.Dec) positionFields {
+		posFields.liquidity = liquidity
+		return posFields
 	}
 
 	clKeeper := s.App.ConcentratedLiquidityKeeper
+	secondPosition := withPositionId(withLowerTick(defaultPositionFields, DefaultLowerTick+1), DefaultPositionId+1)
 
 	type initFeeAccumTest struct {
-		name       string
-		positionId positionIdentifiers
+		name           string
+		positionFields positionFields
 
-		expectedPass bool
+		expectedLiquidity sdk.Dec
+		expectedError     error
 	}
 	tests := []initFeeAccumTest{
 		{
-			name:         "first position",
-			positionId:   defaultPositionId,
-			expectedPass: true,
+			name:           "error: negative liquidity for the first position",
+			positionFields: withLiquidity(defaultPositionFields, DefaultLiquidityAmt.Neg()),
+			expectedError:  types.NonPositiveLiquidityForNewPositionError{LiquidityDelta: DefaultLiquidityAmt.Neg(), PositionId: DefaultPositionId},
 		},
 		{
-			name:         "second position",
-			positionId:   withLowerTick(defaultPositionId, DefaultLowerTick+1),
-			expectedPass: true,
+			name:              "first position",
+			positionFields:    defaultPositionFields,
+			expectedLiquidity: defaultPositionFields.liquidity,
 		},
 		{
-			name:       "overriding first position - error",
-			positionId: defaultPositionId,
-			// Does not get overwritten by the next test case.
-			expectedPass: false,
+			name:              "second position",
+			positionFields:    secondPosition,
+			expectedLiquidity: defaultPositionFields.liquidity,
 		},
 		{
-			name:       "overriding second position - error",
-			positionId: withLowerTick(defaultPositionId, DefaultLowerTick+1),
-			// Does not get overwritten by the next test case.
-			expectedPass: false,
+			name:              "adding to first position",
+			positionFields:    defaultPositionFields,
+			expectedLiquidity: defaultPositionFields.liquidity.MulInt64(2),
+		},
+		{
+			name:              "removing from first position",
+			positionFields:    withLiquidity(defaultPositionFields, defaultPositionFields.liquidity.Neg()),
+			expectedLiquidity: defaultPositionFields.liquidity,
+		},
+		{
+			name:              "adding to second position",
+			positionFields:    secondPosition,
+			expectedLiquidity: defaultPositionFields.liquidity.MulInt64(2),
 		},
 		{
 			name: "error: non-existing accumulator (wrong pool)",
-			positionId: positionIdentifiers{
+			positionFields: positionFields{
 				defaultPoolId + 1, // non-existing pool
 				defaultAccount,
 				DefaultLowerTick,
 				DefaultUpperTick,
-				DefaultFreezeDuration,
+				DefaultPositionId,
+				DefaultLiquidityAmt,
 			},
-			expectedPass: false,
+			expectedError: accum.AccumDoesNotExistError{AccumName: types.KeyFeePoolAccumulator(defaultPoolId + 1)},
 		},
 		{
-			name:         "existing accumulator, different owner - different position",
-			positionId:   withOwner(defaultPositionId, s.TestAccs[1]),
-			expectedPass: true,
+			name:              "existing accumulator, different owner - different position",
+			positionFields:    withPositionId(withOwner(defaultPositionFields, s.TestAccs[1]), DefaultPositionId+2),
+			expectedLiquidity: defaultPositionFields.liquidity,
 		},
 		{
-			name:         "existing accumulator, different upper tick - different position",
-			positionId:   withUpperTick(defaultPositionId, DefaultUpperTick+1),
-			expectedPass: true,
+			name:              "existing accumulator, different upper tick - different position",
+			positionFields:    withPositionId(withUpperTick(defaultPositionFields, DefaultUpperTick+1), DefaultPositionId+3),
+			expectedLiquidity: defaultPositionFields.liquidity,
 		},
 		{
-			name:         "existing accumulator, different lower tick - different position",
-			positionId:   withLowerTick(defaultPositionId, DefaultUpperTick+1),
-			expectedPass: true,
+			name:              "existing accumulator, different lower tick - different position",
+			positionFields:    withPositionId(withLowerTick(defaultPositionFields, DefaultUpperTick+1), DefaultPositionId+4),
+			expectedLiquidity: defaultPositionFields.liquidity,
 		},
 	}
 
 	for _, tc := range tests {
 		tc := tc
 		s.Run(tc.name, func() {
-			// system under test
-			err := clKeeper.InitializeFeeAccumulatorPosition(s.Ctx, tc.positionId.poolId, tc.positionId.owner, tc.positionId.lowerTick, tc.positionId.upperTick)
-			if tc.expectedPass {
+			// System under test
+			err := clKeeper.InitOrUpdatePositionFeeAccumulator(s.Ctx, tc.positionFields.poolId, tc.positionFields.lowerTick, tc.positionFields.upperTick, tc.positionFields.positionId, tc.positionFields.liquidity)
+			if tc.expectedError == nil {
 				s.Require().NoError(err)
 
 				// get fee accum and see if position size has been properly initialized
 				poolFeeAccumulator, err := clKeeper.GetFeeAccumulator(s.Ctx, defaultPoolId)
 				s.Require().NoError(err)
 
-				positionKey := cl.FormatPositionAccumulatorKey(tc.positionId.poolId, tc.positionId.owner, tc.positionId.lowerTick, tc.positionId.upperTick)
+				positionKey := types.KeyFeePositionAccumulator(tc.positionFields.positionId)
 
 				positionSize, err := poolFeeAccumulator.GetPositionSize(positionKey)
 				s.Require().NoError(err)
-				// position should have been properly initialized to zero
-				s.Require().Equal(positionSize, sdk.ZeroDec())
+				s.Require().Equal(tc.expectedLiquidity, positionSize)
+
+				positionRecord, err := poolFeeAccumulator.GetPosition(positionKey)
+				s.Require().NoError(err)
+
+				feeGrowthOutside, err := clKeeper.GetFeeGrowthOutside(s.Ctx, tc.positionFields.poolId, tc.positionFields.lowerTick, tc.positionFields.upperTick)
+				s.Require().NoError(err)
+
+				feeGrowthInside := poolFeeAccumulator.GetValue().Sub(feeGrowthOutside)
+
+				// Position's accumulator must always equal to the fee growth inside the position.
+				s.Require().Equal(feeGrowthInside, positionRecord.AccumValuePerShare)
+
+				// Position's fee growth must be zero. Note, that on position update,
+				// the unclaimed rewards are updated if there was fee growth. However,
+				// this test case does not set up this condition.
+				// It is tested in TestInitOrUpdateFeeAccumulatorPosition_UpdatingPosition.
+				s.Require().Equal(cl.EmptyCoins, positionRecord.UnclaimedRewardsTotal)
 			} else {
 				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
 			}
 		})
 	}
@@ -169,7 +254,6 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 		globalFeeGrowth           sdk.DecCoin
 
 		expectedFeeGrowthOutside sdk.DecCoins
-		invalidTick              bool
 		expectedError            bool
 	}
 
@@ -318,14 +402,14 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 			var pool types.ConcentratedPoolExtension
 			if tc.poolSetup {
 				pool = s.PrepareConcentratedPool()
-				currentTick := pool.GetCurrentTick().Int64()
+				currentTick := pool.GetCurrentTick()
 
 				s.initializeTick(s.Ctx, currentTick, tc.lowerTick, defaultInitialLiquidity, tc.lowerTickFeeGrowthOutside, emptyUptimeTrackers, false)
 				s.initializeTick(s.Ctx, currentTick, tc.upperTick, defaultInitialLiquidity, tc.upperTickFeeGrowthOutside, emptyUptimeTrackers, true)
-				pool.SetCurrentTick(sdk.NewInt(tc.currentTick))
-				s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
-				err := s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, tc.globalFeeGrowth)
+				pool.SetCurrentTick(tc.currentTick)
+				err := s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
 				s.Require().NoError(err)
+				s.AddToFeeAccumulator(validPoolId, tc.globalFeeGrowth)
 			}
 
 			// system under test
@@ -400,14 +484,13 @@ func (s *KeeperTestSuite) TestCalculateFeeGrowth() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
+func (s *KeeperTestSuite) TestGetInitialFeeGrowthOppositeDirectionOfLastTraversalForTick() {
 	const (
 		validPoolId = 1
 	)
 
-	initialPoolTickInt, err := math.PriceToTick(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()), DefaultExponentAtPriceOne)
-	initialPoolTick := initialPoolTickInt.Int64()
-	suite.Require().NoError(err)
+	initialPoolTick, err := math.PriceToTickRoundDown(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()), DefaultTickSpacing)
+	s.Require().NoError(err)
 
 	tests := map[string]struct {
 		poolId                   uint64
@@ -415,29 +498,29 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 		initialGlobalFeeGrowth   sdk.DecCoin
 		shouldAvoidCreatingAccum bool
 
-		expectedInitialFeeGrowthOutside sdk.DecCoins
-		expectError                     error
+		expectedInitialFeeGrowthOppositeDirectionOfLastTraversal sdk.DecCoins
+		expectError                                              error
 	}{
 		"current tick > tick -> fee growth global": {
 			poolId:                 validPoolId,
 			tick:                   initialPoolTick - 1,
 			initialGlobalFeeGrowth: oneEth,
 
-			expectedInitialFeeGrowthOutside: sdk.NewDecCoins(oneEth),
+			expectedInitialFeeGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth),
 		},
 		"current tick == tick -> fee growth global": {
 			poolId:                 validPoolId,
 			tick:                   initialPoolTick,
 			initialGlobalFeeGrowth: oneEth,
 
-			expectedInitialFeeGrowthOutside: sdk.NewDecCoins(oneEth),
+			expectedInitialFeeGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth),
 		},
 		"current tick < tick -> empty coins": {
 			poolId:                 validPoolId,
 			tick:                   initialPoolTick + 1,
 			initialGlobalFeeGrowth: oneEth,
 
-			expectedInitialFeeGrowthOutside: cl.EmptyCoins,
+			expectedInitialFeeGrowthOppositeDirectionOfLastTraversal: cl.EmptyCoins,
 		},
 		"pool does not exist": {
 			poolId:                 validPoolId + 1,
@@ -452,118 +535,54 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 			initialGlobalFeeGrowth:   oneEth,
 			shouldAvoidCreatingAccum: true,
 
-			expectError: accum.AccumDoesNotExistError{AccumName: cl.GetFeeAccumulatorName(validPoolId)},
+			expectError: accum.AccumDoesNotExistError{AccumName: types.KeyFeePoolAccumulator(validPoolId)},
 		},
 	}
 
 	for name, tc := range tests {
 		tc := tc
-		suite.Run(name, func() {
-			suite.SetupTest()
-			ctx := suite.Ctx
-			clKeeper := suite.App.ConcentratedLiquidityKeeper
+		s.Run(name, func() {
+			s.SetupTest()
+			ctx := s.Ctx
+			clKeeper := s.App.ConcentratedLiquidityKeeper
 
-			pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, USDC, ETH, DefaultTickSpacing, DefaultExponentAtPriceOne, DefaultZeroSwapFee)
-			suite.Require().NoError(err)
+			pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, ETH, USDC, DefaultTickSpacing, DefaultZeroSpreadFactor)
+			s.Require().NoError(err)
+
+			// N.B.: we set the listener mock because we would like to avoid
+			// utilizing the production listeners. The production listeners
+			// are irrelevant in the context of the system under test. However,
+			// setting them up would require compromising being able to set up other
+			// edge case tests. For example, the test case where fee accumulator
+			// is not initialized.
+			s.setListenerMockOnConcentratedLiquidityKeeper()
 
 			err = clKeeper.SetPool(ctx, &pool)
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
 			if !tc.shouldAvoidCreatingAccum {
 				err = clKeeper.CreateFeeAccumulator(ctx, validPoolId)
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 
 				// Setup test position to make sure that tick is initialized
 				// We also set up uptime accums to ensure position creation works as intended
 				err = clKeeper.CreateUptimeAccumulators(ctx, validPoolId)
-				suite.Require().NoError(err)
-				suite.SetupDefaultPosition(validPoolId)
+				s.Require().NoError(err)
+				s.SetupDefaultPosition(validPoolId)
 
-				err = clKeeper.ChargeFee(ctx, validPoolId, tc.initialGlobalFeeGrowth)
-				suite.Require().NoError(err)
+				s.AddToFeeAccumulator(validPoolId, tc.initialGlobalFeeGrowth)
 			}
 
 			// System under test.
-			initialFeeGrowthOutside, err := clKeeper.GetInitialFeeGrowthOutsideForTick(ctx, tc.poolId, tc.tick)
+			initialFeeGrowthOppositeDirectionOfLastTraversal, err := clKeeper.GetInitialFeeGrowthOppositeDirectionOfLastTraversalForTick(ctx, tc.poolId, tc.tick)
 
 			if tc.expectError != nil {
-				suite.Require().Error(err)
-				suite.Require().ErrorIs(err, tc.expectError)
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectError)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedInitialFeeGrowthOutside, initialFeeGrowthOutside)
-		})
-	}
-}
-
-func (suite *KeeperTestSuite) TestChargeFee() {
-	// setup once at the beginning.
-	suite.SetupTest()
-
-	ctx := suite.Ctx
-	clKeeper := suite.App.ConcentratedLiquidityKeeper
-
-	// create fee accumulators with ids 1 and 2 but not 3.
-	err := clKeeper.CreateFeeAccumulator(ctx, 1)
-	suite.Require().NoError(err)
-	err = clKeeper.CreateFeeAccumulator(ctx, 2)
-	suite.Require().NoError(err)
-
-	tests := []struct {
-		name      string
-		poolId    uint64
-		feeUpdate sdk.DecCoin
-
-		expectedGlobalGrowth sdk.DecCoins
-		expectError          error
-	}{
-		{
-			name:      "pool id 1 - one eth",
-			poolId:    1,
-			feeUpdate: oneEth,
-
-			expectedGlobalGrowth: sdk.NewDecCoins(oneEth),
-		},
-		{
-			name:      "pool id 1 - 2 usdc",
-			poolId:    1,
-			feeUpdate: sdk.NewDecCoin(USDC, sdk.NewInt(2)),
-
-			expectedGlobalGrowth: sdk.NewDecCoins(oneEth).Add(sdk.NewDecCoin(USDC, sdk.NewInt(2))),
-		},
-		{
-			name:      "pool id 2 - 1 usdc",
-			poolId:    2,
-			feeUpdate: oneEth,
-
-			expectedGlobalGrowth: sdk.NewDecCoins(oneEth),
-		},
-		{
-			name:      "accumulator does not exist",
-			poolId:    3,
-			feeUpdate: oneEth,
-
-			expectError: accum.AccumDoesNotExistError{AccumName: cl.GetFeeAccumulatorName(3)},
-		},
-	}
-
-	for _, tc := range tests {
-		tc := tc
-		suite.Run(tc.name, func() {
-			// System under test.
-			err := clKeeper.ChargeFee(ctx, tc.poolId, tc.feeUpdate)
-
-			if tc.expectError != nil {
-				suite.Require().Error(err)
-				suite.Require().ErrorIs(err, tc.expectError)
-				return
-			}
-			suite.Require().NoError(err)
-
-			feeAcumulator, err := clKeeper.GetFeeAccumulator(ctx, tc.poolId)
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedGlobalGrowth, feeAcumulator.GetValue())
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedInitialFeeGrowthOppositeDirectionOfLastTraversal, initialFeeGrowthOppositeDirectionOfLastTraversal)
 		})
 	}
 }
@@ -582,10 +601,10 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 		isInvalidPoolIdGiven      bool
 
 		// inputs parameters.
-		owner          sdk.AccAddress
-		lowerTick      int64
-		upperTick      int64
-		freezeDuration time.Duration
+		owner                       sdk.AccAddress
+		lowerTick                   int64
+		upperTick                   int64
+		positionIdToCollectAndQuery uint64
 
 		// expectations.
 		expectedFeesClaimed sdk.Coins
@@ -605,10 +624,10 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:          ownerWithValidPosition,
-			lowerTick:      0,
-			upperTick:      1,
-			freezeDuration: DefaultFreezeDuration,
+			owner:                       ownerWithValidPosition,
+			lowerTick:                   0,
+			upperTick:                   1,
+			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: 2,
 
@@ -622,12 +641,29 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:          ownerWithValidPosition,
-			lowerTick:      0,
-			upperTick:      2,
-			freezeDuration: DefaultFreezeDuration,
+			owner:                       ownerWithValidPosition,
+			lowerTick:                   0,
+			upperTick:                   2,
+			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: 3,
+
+			expectedFeesClaimed: sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(20))),
+		},
+		"single swap left -> right: 3 ticks, two shares, current tick is in between lower and upper tick": {
+			initialLiquidity: sdk.NewDec(2),
+
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			owner:                       ownerWithValidPosition,
+			lowerTick:                   0,
+			upperTick:                   2,
+			positionIdToCollectAndQuery: DefaultPositionId,
+
+			currentTick: 1,
 
 			expectedFeesClaimed: sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(20))),
 		},
@@ -639,10 +675,10 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:          ownerWithValidPosition,
-			lowerTick:      0,
-			upperTick:      1,
-			freezeDuration: DefaultFreezeDuration,
+			owner:                       ownerWithValidPosition,
+			lowerTick:                   0,
+			upperTick:                   1,
+			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: 1,
 
@@ -663,10 +699,10 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:          ownerWithValidPosition,
-			lowerTick:      0,
-			upperTick:      1,
-			freezeDuration: DefaultFreezeDuration,
+			owner:                       ownerWithValidPosition,
+			lowerTick:                   0,
+			upperTick:                   1,
+			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: 0,
 
@@ -681,14 +717,31 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:          ownerWithValidPosition,
-			lowerTick:      0,
-			upperTick:      1,
-			freezeDuration: DefaultFreezeDuration,
+			owner:                       ownerWithValidPosition,
+			lowerTick:                   0,
+			upperTick:                   1,
+			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: -1,
 
 			expectedFeesClaimed: sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(10))),
+		},
+		"single swap right -> left: 2 ticks, two shares, current tick is in between lower and upper tick": {
+			initialLiquidity: sdk.NewDec(2),
+
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			owner:                       ownerWithValidPosition,
+			lowerTick:                   0,
+			upperTick:                   2,
+			positionIdToCollectAndQuery: DefaultPositionId,
+
+			currentTick: 1,
+
+			expectedFeesClaimed: sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(20))),
 		},
 
 		// imagine swap occurring outside of the position
@@ -702,10 +755,10 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:          ownerWithValidPosition,
-			lowerTick:      0,
-			upperTick:      1,
-			freezeDuration: DefaultFreezeDuration,
+			owner:                       ownerWithValidPosition,
+			lowerTick:                   0,
+			upperTick:                   1,
+			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: 5,
 
@@ -720,10 +773,10 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:          ownerWithValidPosition,
-			lowerTick:      -10,
-			upperTick:      -4,
-			freezeDuration: DefaultFreezeDuration,
+			owner:                       ownerWithValidPosition,
+			lowerTick:                   -10,
+			upperTick:                   -4,
+			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: -13,
 
@@ -732,24 +785,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 
 		// error cases.
 
-		"accumulator does not exist": {
-			initialLiquidity: sdk.OneDec(),
-
-			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
-			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
-
-			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
-
-			owner:          ownerWithValidPosition,
-			lowerTick:      0,
-			upperTick:      1,
-			freezeDuration: DefaultFreezeDuration,
-
-			currentTick: 2,
-
-			isInvalidPoolIdGiven: true,
-			expectedError:        accum.AccumDoesNotExistError{AccumName: "fee/2"},
-		},
 		"position does not exist": {
 			initialLiquidity: sdk.OneDec(),
 
@@ -758,14 +793,31 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:          s.TestAccs[1], // different owner from the one who initialized the position.
-			lowerTick:      0,
-			upperTick:      1,
-			freezeDuration: DefaultFreezeDuration,
+			owner:                       ownerWithValidPosition,
+			lowerTick:                   0,
+			upperTick:                   1,
+			positionIdToCollectAndQuery: DefaultPositionId + 1, // position id does not exist.
 
 			currentTick: 2,
 
-			expectedError: cltypes.PositionNotFoundError{PoolId: 1, LowerTick: 0, UpperTick: 1},
+			expectedError: types.PositionIdNotFoundError{PositionId: 2},
+		},
+		"non owner attempts to collect": {
+			initialLiquidity: sdk.OneDec(),
+
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			owner:                       s.TestAccs[1], // different owner from the one who initialized the position.
+			lowerTick:                   0,
+			upperTick:                   1,
+			positionIdToCollectAndQuery: DefaultPositionId,
+
+			currentTick: 2,
+
+			expectedError: types.NotPositionOwnerError{Address: s.TestAccs[1].String(), PositionId: DefaultPositionId},
 		},
 	}
 
@@ -777,33 +829,32 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			validPool := s.PrepareConcentratedPool()
 			validPoolId := validPool.GetId()
 
-			s.FundAcc(validPool.GetAddress(), tc.expectedFeesClaimed)
+			s.FundAcc(validPool.GetFeesAddress(), tc.expectedFeesClaimed)
 
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 			ctx := s.Ctx
 
-			s.initializeFeeAccumulatorPositionWithLiquidity(ctx, validPoolId, ownerWithValidPosition, tc.lowerTick, tc.upperTick, tc.initialLiquidity)
+			// Set the position in store, otherwise querying via position id will fail.
+			err := clKeeper.SetPosition(ctx, validPoolId, ownerWithValidPosition, tc.lowerTick, tc.upperTick, time.Now().UTC(), tc.initialLiquidity, DefaultPositionId, DefaultUnderlyingLockId)
+			s.Require().NoError(err)
+
+			s.initializeFeeAccumulatorPositionWithLiquidity(ctx, validPoolId, tc.lowerTick, tc.upperTick, DefaultPositionId, tc.initialLiquidity)
 
 			s.initializeTick(ctx, tc.currentTick, tc.lowerTick, tc.initialLiquidity, tc.lowerTickFeeGrowthOutside, emptyUptimeTrackers, false)
 
 			s.initializeTick(ctx, tc.currentTick, tc.upperTick, tc.initialLiquidity, tc.upperTickFeeGrowthOutside, emptyUptimeTrackers, true)
 
-			validPool.SetCurrentTick(sdk.NewInt(tc.currentTick))
-			clKeeper.SetPool(ctx, validPool)
-
-			err := clKeeper.ChargeFee(ctx, validPoolId, tc.globalFeeGrowth[0])
+			validPool.SetCurrentTick(tc.currentTick)
+			err = clKeeper.SetPool(ctx, validPool)
 			s.Require().NoError(err)
 
-			poolBalanceBeforeCollect := s.App.BankKeeper.GetBalance(ctx, validPool.GetAddress(), ETH)
+			s.AddToFeeAccumulator(validPoolId, tc.globalFeeGrowth[0])
+
+			poolFeeBalanceBeforeCollect := s.App.BankKeeper.GetBalance(ctx, validPool.GetFeesAddress(), ETH)
 			ownerBalancerBeforeCollect := s.App.BankKeeper.GetBalance(ctx, tc.owner, ETH)
 
-			sutPoolId := validPoolId
-			if tc.isInvalidPoolIdGiven {
-				sutPoolId = sutPoolId + 1
-			}
-
 			var preQueryPosition accum.Record
-			positionKey := cl.FormatPositionAccumulatorKey(validPoolId, tc.owner, tc.lowerTick, tc.upperTick)
+			positionKey := types.KeyFeePositionAccumulator(DefaultPositionId)
 
 			// Note the position accumulator before the query to ensure the query in non-mutating.
 			accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, validPoolId)
@@ -811,7 +862,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			preQueryPosition, _ = accum.GetPosition(positionKey)
 
 			// System under test
-			feeQueryAmount, queryErr := clKeeper.QueryClaimableFees(ctx, sutPoolId, tc.owner, tc.lowerTick, tc.upperTick)
+			feeQueryAmount, queryErr := clKeeper.GetClaimableFees(ctx, tc.positionIdToCollectAndQuery)
 
 			// If the query succeeds, the position should not be updated.
 			if queryErr == nil {
@@ -821,21 +872,20 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 				s.Require().Equal(preQueryPosition, postQueryPosition)
 			}
 
-			actualFeesClaimed, err := clKeeper.CollectFees(ctx, sutPoolId, tc.owner, tc.lowerTick, tc.upperTick)
+			actualFeesClaimed, err := clKeeper.CollectFees(ctx, tc.owner, tc.positionIdToCollectAndQuery)
 
 			// Assertions.
 
-			poolBalanceAfterCollect := s.App.BankKeeper.GetBalance(ctx, validPool.GetAddress(), ETH)
+			poolFeeBalanceAfterCollect := s.App.BankKeeper.GetBalance(ctx, validPool.GetFeesAddress(), ETH)
 			ownerBalancerAfterCollect := s.App.BankKeeper.GetBalance(ctx, tc.owner, ETH)
 
 			if tc.expectedError != nil {
 				s.Require().Error(err)
-				s.Require().Error(queryErr)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
 				s.Require().Equal(sdk.Coins{}, actualFeesClaimed)
 
 				// balances are unchanged
-				s.Require().Equal(poolBalanceBeforeCollect, poolBalanceAfterCollect)
+				s.Require().Equal(poolFeeBalanceAfterCollect, poolFeeBalanceBeforeCollect)
 				s.Require().Equal(ownerBalancerAfterCollect, ownerBalancerBeforeCollect)
 				return
 			}
@@ -846,82 +896,337 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			s.Require().Equal(feeQueryAmount.String(), actualFeesClaimed.String())
 
 			expectedETHAmount := tc.expectedFeesClaimed.AmountOf(ETH)
-			s.Require().Equal(expectedETHAmount, poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect).Amount)
-			s.Require().Equal(expectedETHAmount, ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect).Amount)
+			s.Require().Equal(expectedETHAmount.String(), poolFeeBalanceBeforeCollect.Sub(poolFeeBalanceAfterCollect).Amount.String())
+			s.Require().Equal(expectedETHAmount.String(), ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect).Amount.String())
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
-	var (
-		ownerOne = s.TestAccs[0]
-		ownerTwo = s.TestAccs[1]
-	)
+func (s *KeeperTestSuite) TestPrepareClaimableFees() {
+	emptyUptimeTrackers := wrapUptimeTrackers(getExpectedUptimes().emptyExpectedAccumValues)
 
-	type updateFeeAccumPositionTest struct {
-		poolId        uint64
-		owner         sdk.AccAddress
-		liquidity     sdk.Dec
-		lowerTick     int64
-		upperTick     int64
-		expectedError error
+	tests := map[string]struct {
+		// setup parameters.
+		initialLiquidity             sdk.Dec
+		lowerTickFeeGrowthOutside    sdk.DecCoins
+		upperTickFeeGrowthOutside    sdk.DecCoins
+		globalFeeGrowth              sdk.DecCoins
+		expectedReinvestedDustAmount sdk.Dec
+		currentTick                  int64
+		isInvalidPoolIdGiven         bool
+
+		// inputs parameters.
+		lowerTick           int64
+		upperTick           int64
+		positionIdToPrepare uint64
+
+		// expectations.
+		expectedInitAccumValue sdk.DecCoins
+		expectedError          error
+	}{
+		"single swap left -> right: 2 ticks, one share, current tick > upper tick": {
+			initialLiquidity: sdk.OneDec(),
+
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			lowerTick:           0,
+			upperTick:           1,
+			positionIdToPrepare: DefaultPositionId,
+
+			currentTick: 2,
+
+			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+		},
+		"single swap left -> right: 3 ticks, two shares, current tick > upper tick": {
+			initialLiquidity: sdk.NewDec(2),
+
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			lowerTick:           0,
+			upperTick:           2,
+			positionIdToPrepare: DefaultPositionId,
+
+			currentTick: 3,
+
+			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+		},
+		"single swap left -> right: 3 ticks, two shares, current tick in between lower and upper tick": {
+			initialLiquidity: sdk.NewDec(2),
+
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			lowerTick:           0,
+			upperTick:           2,
+			positionIdToPrepare: DefaultPositionId,
+
+			currentTick: 1,
+
+			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+		},
+		"single swap left -> right: 2 ticks, one share, current tick == upper tick": {
+			initialLiquidity: sdk.OneDec(),
+
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			lowerTick:           0,
+			upperTick:           1,
+			positionIdToPrepare: DefaultPositionId,
+
+			currentTick: 1,
+
+			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+		},
+		"single swap right -> left: 2 ticks, one share, current tick == lower tick": {
+			initialLiquidity: sdk.OneDec(),
+
+			// lower tick accumulator is not updated yet.
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			lowerTick:           0,
+			upperTick:           1,
+			positionIdToPrepare: DefaultPositionId,
+
+			currentTick: 0,
+
+			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+		},
+		"single swap right -> left: 2 ticks, one share, current tick < lower tick": {
+			initialLiquidity: sdk.OneDec(),
+
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			lowerTick:           0,
+			upperTick:           1,
+			positionIdToPrepare: DefaultPositionId,
+
+			currentTick: -1,
+
+			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+		},
+		"single swap right -> left: 2 ticks, two shares, current tick in between lower and upper tick": {
+			initialLiquidity: sdk.NewDec(2),
+
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			lowerTick:           0,
+			upperTick:           2,
+			positionIdToPrepare: DefaultPositionId,
+
+			currentTick: 1,
+
+			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+		},
+		"dust reinvested: single swap right -> left: 2 ticks, two shares, current tick in between lower and upper tick": {
+			initialLiquidity: sdk.NewDec(2),
+
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, sdk.MustNewDecFromStr("3.3"))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			lowerTick:           0,
+			upperTick:           2,
+			positionIdToPrepare: DefaultPositionId,
+
+			currentTick: 1,
+
+			// expected = global - below lower - above upper = 10 - 3.3 = 6.7
+			expectedInitAccumValue: sdk.NewDecCoins(sdk.NewDecCoinFromDec(ETH, sdk.MustNewDecFromStr("6.7"))),
+			// expected reinvested dust = (6.7 * 2 % floor(6.7 * 2)) / 2
+			// This can be thought of as the diffence between the non-truncated total amount of fees and the truncated toal amount of fees
+			// divided by the number of shares.
+			expectedReinvestedDustAmount: sdk.MustNewDecFromStr("0.2"),
+		},
+		"swap occurs above the position, current tick > upper tick": {
+			initialLiquidity: sdk.OneDec(),
+
+			lowerTickFeeGrowthOutside: cl.EmptyCoins,
+			upperTickFeeGrowthOutside: cl.EmptyCoins,
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			lowerTick:           0,
+			upperTick:           1,
+			positionIdToPrepare: DefaultPositionId,
+
+			currentTick: 5,
+
+			expectedInitAccumValue: sdk.DecCoins(nil),
+		},
+		"swap occurs below the position, current tick < lower tick": {
+			initialLiquidity: sdk.OneDec(),
+
+			lowerTickFeeGrowthOutside: cl.EmptyCoins,
+			upperTickFeeGrowthOutside: cl.EmptyCoins,
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			lowerTick:           -10,
+			upperTick:           -4,
+			positionIdToPrepare: DefaultPositionId,
+
+			currentTick: -13,
+
+			expectedInitAccumValue: sdk.DecCoins(nil),
+		},
+
+		// error cases.
+		"position does not exist": {
+			initialLiquidity: sdk.OneDec(),
+
+			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
+			upperTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
+
+			lowerTick:           0,
+			upperTick:           1,
+			positionIdToPrepare: DefaultPositionId + 1, // position id does not exist.
+
+			currentTick: 2,
+
+			expectedError: types.PositionIdNotFoundError{PositionId: 2},
+		},
 	}
 
-	positions := map[int]updateFeeAccumPositionTest{
-		1: {
-			lowerTick: DefaultLowerTick,
-			upperTick: DefaultUpperTick,
-		},
-		2: {
-			lowerTick: DefaultLowerTick + 1,
-			upperTick: DefaultUpperTick,
-		},
-		3: {
-			lowerTick: DefaultLowerTick,
-			upperTick: DefaultUpperTick + 1,
-		},
+	for name, tc := range tests {
+		s.Run(name, func() {
+			tc := tc
+			s.SetupTest()
+
+			validPool := s.PrepareConcentratedPool()
+			validPoolId := validPool.GetId()
+
+			clKeeper := s.App.ConcentratedLiquidityKeeper
+			ctx := s.Ctx
+
+			// Set the position in store.
+			err := clKeeper.SetPosition(ctx, validPoolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, time.Now().UTC(), tc.initialLiquidity, DefaultPositionId, DefaultUnderlyingLockId)
+			s.Require().NoError(err)
+
+			s.initializeFeeAccumulatorPositionWithLiquidity(ctx, validPoolId, tc.lowerTick, tc.upperTick, DefaultPositionId, tc.initialLiquidity)
+			s.initializeTick(ctx, tc.currentTick, tc.lowerTick, tc.initialLiquidity, tc.lowerTickFeeGrowthOutside, emptyUptimeTrackers, false)
+			s.initializeTick(ctx, tc.currentTick, tc.upperTick, tc.initialLiquidity, tc.upperTickFeeGrowthOutside, emptyUptimeTrackers, true)
+			validPool.SetCurrentTick(tc.currentTick)
+
+			_ = clKeeper.SetPool(ctx, validPool)
+
+			s.AddToFeeAccumulator(validPoolId, tc.globalFeeGrowth[0])
+
+			positionKey := types.KeyFeePositionAccumulator(DefaultPositionId)
+
+			// Note the position accumulator before calling prepare
+			originalAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, validPoolId)
+			s.Require().NoError(err)
+
+			originalAccumValue := originalAccum.GetValue()
+
+			// System under test
+			actualFeesClaimed, err := clKeeper.PrepareClaimableFees(ctx, tc.positionIdToPrepare)
+
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
+				s.Require().Equal(sdk.Coins(nil), actualFeesClaimed)
+				return
+			}
+			s.Require().NoError(err)
+
+			accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, validPoolId)
+			s.Require().NoError(err)
+
+			postPreparePosition, err := accum.GetPosition(positionKey)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedInitAccumValue, postPreparePosition.AccumValuePerShare)
+			s.Require().Equal(tc.initialLiquidity, postPreparePosition.NumShares)
+
+			expectedClaimedAmountDec := tc.expectedInitAccumValue.AmountOf(ETH).Mul(tc.initialLiquidity)
+			expectedFeeClaimAmount := expectedClaimedAmountDec.TruncateInt()
+			s.Require().Equal(expectedFeeClaimAmount, actualFeesClaimed.AmountOf(ETH))
+
+			// validate that truncated dust amount is reinvested back into the global accumulator
+			if expectedClaimedAmountDec.GT(expectedFeeClaimAmount.ToDec()) {
+				accumDelta, _ := accum.GetValue().SafeSub(originalAccumValue)
+				s.Require().Equal(tc.expectedReinvestedDustAmount, accumDelta.AmountOf(ETH))
+			}
+		})
+	}
+}
+
+// This test ensures that the position's fee accumulator is updated correctly when the fee grows.
+// It validates that another position within the same tick does not affect the current position.
+// It also validates that the position's changes are applied at the right time relative to position's
+// fee accumulator creation or update.
+func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition_UpdatingPosition() {
+	type updateFeeAccumPositionTest struct {
+		doesFeeGrowBeforeFirstCall           bool
+		doesFeeGrowBetweenFirstAndSecondCall bool
+		doesFeeGrowBetweenSecondAndThirdCall bool
+		doesFeeGrowAfterThirdCall            bool
+
+		expectedUnclaimedRewardsPositionOne sdk.DecCoins
+		expectedUnclaimedRewardsPositionTwo sdk.DecCoins
 	}
 
 	tests := map[string]updateFeeAccumPositionTest{
-		"update position with a different pool ID": {
-			poolId:    2,
-			owner:     ownerOne,
-			liquidity: DefaultLiquidityAmt,
-			lowerTick: DefaultLowerTick,
-			upperTick: DefaultUpperTick,
+		"1: fee charged prior to first call to InitOrUpdateFeeAccumulatorPosition with position one": {
+			doesFeeGrowBeforeFirstCall: true,
+
+			// Growing fee before first position has no effect on the unclaimed rewards
+			// of either position because they are not initialized at that point.
+			expectedUnclaimedRewardsPositionOne: cl.EmptyCoins,
+			// For position two, growing fee has no effect on the unclaimed rewards
+			// because we never update it, only create it.
+			expectedUnclaimedRewardsPositionTwo: cl.EmptyCoins,
 		},
-		"update position with a different owner": {
-			poolId:    1,
-			owner:     ownerTwo,
-			liquidity: DefaultLiquidityAmt,
-			lowerTick: DefaultLowerTick,
-			upperTick: DefaultUpperTick,
+		"2: fee charged between first and second call to InitOrUpdateFeeAccumulatorPosition, after position one is created and before position two is created": {
+			doesFeeGrowBetweenFirstAndSecondCall: true,
+
+			// Position one's unclaimed rewards increase.
+			expectedUnclaimedRewardsPositionOne: DefaultFeeAccumCoins,
+			// For position two, growing fee has no effect on the unclaimed rewards
+			// because we never update it, only create it.
+			expectedUnclaimedRewardsPositionTwo: cl.EmptyCoins,
 		},
-		"update position with a different lower tick": {
-			poolId:    1,
-			owner:     ownerOne,
-			liquidity: DefaultLiquidityAmt,
-			lowerTick: DefaultLowerTick + 1,
-			upperTick: DefaultUpperTick,
+		"3: fee charged between second and third call to InitOrUpdateFeeAccumulatorPosition, after position two is created and before position 1 is updated": {
+			doesFeeGrowBetweenSecondAndThirdCall: true,
+
+			// fee charged because it grows between the second and third position being created.
+			// when third position is created, the rewards are moved to unclaimed.
+			expectedUnclaimedRewardsPositionOne: DefaultFeeAccumCoins,
+			// For position two, growing fee has no effect on the unclaimed rewards
+			// because we never update it, only create it.
+			expectedUnclaimedRewardsPositionTwo: cl.EmptyCoins,
 		},
-		"update position with a different upper tick": {
-			poolId:    1,
-			owner:     ownerOne,
-			liquidity: DefaultLiquidityAmt,
-			lowerTick: DefaultLowerTick,
-			upperTick: DefaultUpperTick + 1,
-		},
-		"err: pool does not exist": {
-			poolId:        3,
-			expectedError: cltypes.PoolNotFoundError{PoolId: 3},
-		},
-		"err: position does not exist": {
-			poolId:        1,
-			owner:         ownerOne,
-			liquidity:     DefaultLiquidityAmt,
-			lowerTick:     DefaultLowerTick - 1,
-			upperTick:     DefaultUpperTick,
-			expectedError: accum.NoPositionError{Name: cl.FormatPositionAccumulatorKey(1, ownerOne, DefaultLowerTick-1, DefaultUpperTick)},
+		"4: fee charged after third call to InitOrUpdateFeeAccumulatorPosition, after position 1 is updated": {
+			doesFeeGrowAfterThirdCall: true,
+
+			// no fee charged because it grows after the position is updated and the rewards are moved to unclaimed.
+			expectedUnclaimedRewardsPositionOne: cl.EmptyCoins,
+			// For position two, growing fee has no effect on the unclaimed rewards
+			// because we never update it, only create it.
+			expectedUnclaimedRewardsPositionTwo: cl.EmptyCoins,
 		},
 	}
 
@@ -929,53 +1234,67 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 		s.Run(name, func() {
 			s.SetupTest()
 
-			// Setup two cl pools
-			poolOne := s.PrepareConcentratedPool()
-			poolTwo := s.PrepareConcentratedPool()
+			pool := s.PrepareConcentratedPool()
+			poolId := pool.GetId()
 
-			pools := []cltypes.ConcentratedPoolExtension{poolOne, poolTwo}
-			owners := []sdk.AccAddress{ownerOne, ownerTwo}
+			pool.SetCurrentTick(DefaultCurrTick)
 
-			// Initialize three base positions in each pool for each owner (total of 12 positions)
-			for _, pos := range positions {
-				for _, pool := range pools {
-					for _, owner := range owners {
-						s.initializeFeeAccumulatorPositionWithLiquidity(s.Ctx, pool.GetId(), owner, pos.lowerTick, pos.upperTick, DefaultLiquidityAmt)
-					}
-				}
+			// Imaginary fee charge #1.
+			if tc.doesFeeGrowBeforeFirstCall {
+				s.crossTickAndChargeFee(poolId, DefaultLowerTick)
 			}
 
-			// System under test
-			// Update one of the positions as per the test case
-			err := s.App.ConcentratedLiquidityKeeper.UpdateFeeAccumulatorPosition(s.Ctx, tc.poolId, tc.owner, tc.liquidity, tc.lowerTick, tc.upperTick)
-
-			if tc.expectedError != nil {
-				s.Require().Error(err)
-				s.Require().ErrorAs(err, &tc.expectedError)
-				return
-			}
-
+			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, poolId, pool.GetCurrentTick(), DefaultLowerTick, DefaultLiquidityAmt, false)
 			s.Require().NoError(err)
 
-			// Validate the test case position was updated and all other positions did not change
-			for _, pos := range positions {
-				for _, pool := range pools {
-					for _, owner := range owners {
-						liq := DefaultLiquidityAmt
-						if pool.GetId() == tc.poolId && owner.Equals(tc.owner) && pos.lowerTick == tc.lowerTick && pos.upperTick == tc.upperTick {
-							liq = DefaultLiquidityAmt.Mul(sdk.NewDec(2))
-						}
-						s.validatePositionFeeAccUpdate(s.Ctx, pool.GetId(), owner, pos.lowerTick, pos.upperTick, liq)
-					}
-				}
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, poolId, pool.GetCurrentTick(), DefaultUpperTick, DefaultLiquidityAmt, true)
+			s.Require().NoError(err)
+
+			// InitOrUpdateFeeAccumulatorPosition #1 lower tick to upper tick
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionFeeAccumulator(s.Ctx, poolId, DefaultLowerTick, DefaultUpperTick, DefaultPositionId, DefaultLiquidityAmt)
+			s.Require().NoError(err)
+
+			// Imaginary fee charge #2.
+			if tc.doesFeeGrowBetweenFirstAndSecondCall {
+				s.crossTickAndChargeFee(poolId, DefaultLowerTick)
 			}
+
+			// InitOrUpdateFeeAccumulatorPosition # 2 lower tick to upper tick with a different position id.
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionFeeAccumulator(s.Ctx, poolId, DefaultLowerTick, DefaultUpperTick, DefaultPositionId+1, DefaultLiquidityAmt)
+			s.Require().NoError(err)
+
+			// Imaginary fee charge #3.
+			if tc.doesFeeGrowBetweenSecondAndThirdCall {
+				s.crossTickAndChargeFee(poolId, DefaultLowerTick)
+			}
+
+			// InitOrUpdateFeeAccumulatorPosition # 3 lower tick to upper tick with the original position id.
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionFeeAccumulator(s.Ctx, poolId, DefaultLowerTick, DefaultUpperTick, DefaultPositionId, DefaultLiquidityAmt)
+			s.Require().NoError(err)
+
+			// Imaginary fee charge #4.
+			if tc.doesFeeGrowAfterThirdCall {
+				s.crossTickAndChargeFee(poolId, DefaultLowerTick)
+			}
+
+			// Validate original position's fee growth.
+			s.validatePositionFeeGrowth(poolId, DefaultPositionId, tc.expectedUnclaimedRewardsPositionOne)
+
+			// Validate second position's fee growth.
+			s.validatePositionFeeGrowth(poolId, DefaultPositionId+1, tc.expectedUnclaimedRewardsPositionTwo)
+
+			// Validate position one was updated with default liquidity twice.
+			s.validatePositionFeeAccUpdate(s.Ctx, poolId, DefaultPositionId, DefaultLiquidityAmt.MulInt64(2))
+
+			// Validate position two was updated with default liquidity once.
+			s.validatePositionFeeAccUpdate(s.Ctx, poolId, DefaultPositionId+1, DefaultLiquidityAmt)
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestPreparePositionAccumulator() {
-	validPositionKey := cl.FormatPositionAccumulatorKey(defaultPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick)
-	invalidPositionKey := cl.FormatPositionAccumulatorKey(defaultPoolId+1, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick+1)
+func (s *KeeperTestSuite) TestUpdatePosValueToInitValuePlusGrowthOutside() {
+	validPositionKey := types.KeyFeePositionAccumulator(1)
+	invalidPositionKey := types.KeyFeePositionAccumulator(2)
 	tests := []struct {
 		name               string
 		poolId             uint64
@@ -1007,7 +1326,7 @@ func (s *KeeperTestSuite) TestPreparePositionAccumulator() {
 			positionKey := validPositionKey
 
 			// Initialize position accumulator.
-			err = poolFeeAccumulator.NewPositionCustomAcc(positionKey, sdk.OneDec(), sdk.DecCoins{}, nil)
+			err = poolFeeAccumulator.NewPosition(positionKey, sdk.OneDec(), nil)
 			s.Require().NoError(err)
 
 			// Record the initial position accumulator value.
@@ -1020,7 +1339,7 @@ func (s *KeeperTestSuite) TestPreparePositionAccumulator() {
 			}
 
 			// System under test.
-			err = cl.PreparePositionAccumulator(poolFeeAccumulator, positionKey, tc.feeGrowthOutside)
+			err = cl.UpdatePosValueToInitValuePlusGrowthOutside(poolFeeAccumulator, positionKey, tc.feeGrowthOutside)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)
@@ -1034,7 +1353,7 @@ func (s *KeeperTestSuite) TestPreparePositionAccumulator() {
 			s.Require().NoError(err)
 
 			// Check that the difference between the new and old position accumulator values is equal to the fee growth outside.
-			positionAccumDelta := positionPost.InitAccumValue.Sub(positionPre.InitAccumValue)
+			positionAccumDelta := positionPost.AccumValuePerShare.Sub(positionPre.AccumValuePerShare)
 			s.Require().Equal(tc.feeGrowthOutside, positionAccumDelta)
 		})
 	}
@@ -1049,7 +1368,7 @@ type Positions struct {
 	numOverlapping int
 }
 
-func (s *KeeperTestSuite) TestFunctionalFees() {
+func (s *KeeperTestSuite) TestFunctional_Fees_Swaps() {
 	positions := Positions{
 		numSwaps:       7,
 		numAccounts:    5,
@@ -1059,78 +1378,170 @@ func (s *KeeperTestSuite) TestFunctionalFees() {
 		numOverlapping: 1,
 	}
 	// Init suite.
-	s.Setup()
+	s.SetupTest()
 
 	// Default setup only creates 3 accounts, but we need 5 for this test.
 	s.TestAccs = apptesting.CreateRandomAccounts(positions.numAccounts)
 
-	// Create a default CL pool, but with a 0.3 percent swap fee.
-	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.MustNewDecFromStr("0.003"))
+	// Create a default CL pool, but with a 0.3 percent spread factor.
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, sdk.MustNewDecFromStr("0.002"))
 
+	positionIds := make([][]uint64, 4)
 	// Setup full range position across all four accounts
 	for i := 0; i < positions.numFullRange; i++ {
-		s.SetupFullRangePositionAcc(clPool.GetId(), s.TestAccs[i])
+		positionId := s.SetupFullRangePositionAcc(clPool.GetId(), s.TestAccs[i])
+		positionIds[0] = append(positionIds[0], positionId)
 	}
 
 	// Setup narrow range position across three of four accounts
 	for i := 0; i < positions.numNarrowRange; i++ {
-		s.SetupDefaultPositionAcc(clPool.GetId(), s.TestAccs[i])
+		positionId := s.SetupDefaultPositionAcc(clPool.GetId(), s.TestAccs[i])
+		positionIds[1] = append(positionIds[1], positionId)
 	}
 
 	// Setup consecutive range position (in relation to narrow range position) across two of four accounts
 	for i := 0; i < positions.numConsecutive; i++ {
-		s.SetupConsecutiveRangePositionAcc(clPool.GetId(), s.TestAccs[i])
+		positionId := s.SetupConsecutiveRangePositionAcc(clPool.GetId(), s.TestAccs[i])
+		positionIds[2] = append(positionIds[2], positionId)
 	}
 
 	// Setup overlapping range position (in relation to narrow range position) on one of four accounts
 	for i := 0; i < positions.numOverlapping; i++ {
-		s.SetupOverlappingRangePositionAcc(clPool.GetId(), s.TestAccs[i])
+		positionId := s.SetupOverlappingRangePositionAcc(clPool.GetId(), s.TestAccs[i])
+		positionIds[3] = append(positionIds[3], positionId)
 	}
 
 	// Swap multiple times USDC for ETH, therefore increasing the spot price
-	ticksActivatedAfterEachSwap, totalFeesExpected := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, cltypes.MaxSpotPrice, positions.numSwaps)
-	s.CollectAndAssertFees(s.Ctx, clPool.GetId(), totalFeesExpected, [][]sdk.Int{ticksActivatedAfterEachSwap}, onlyUSDC, positions)
+	ticksActivatedAfterEachSwap, totalFeesExpected, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, types.MaxSpotPrice, positions.numSwaps)
+	s.CollectAndAssertFees(s.Ctx, clPool.GetId(), totalFeesExpected, positionIds, [][]int64{ticksActivatedAfterEachSwap}, onlyUSDC, positions)
 
 	// Swap multiple times ETH for USDC, therefore decreasing the spot price
-	ticksActivatedAfterEachSwap, totalFeesExpected = s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, cltypes.MinSpotPrice, positions.numSwaps)
-	s.CollectAndAssertFees(s.Ctx, clPool.GetId(), totalFeesExpected, [][]sdk.Int{ticksActivatedAfterEachSwap}, onlyETH, positions)
+	ticksActivatedAfterEachSwap, totalFeesExpected, _, _ = s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, types.MinSpotPrice, positions.numSwaps)
+	s.CollectAndAssertFees(s.Ctx, clPool.GetId(), totalFeesExpected, positionIds, [][]int64{ticksActivatedAfterEachSwap}, onlyETH, positions)
 
 	// Do the same swaps as before, however this time we collect fees after both swap directions are complete.
-	ticksActivatedAfterEachSwapUp, totalFeesExpectedUp := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, cltypes.MaxSpotPrice, positions.numSwaps)
-	ticksActivatedAfterEachSwapDown, totalFeesExpectedDown := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, cltypes.MinSpotPrice, positions.numSwaps)
+	ticksActivatedAfterEachSwapUp, totalFeesExpectedUp, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, types.MaxSpotPrice, positions.numSwaps)
+	ticksActivatedAfterEachSwapDown, totalFeesExpectedDown, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, types.MinSpotPrice, positions.numSwaps)
 	totalFeesExpected = totalFeesExpectedUp.Add(totalFeesExpectedDown...)
 
 	// We expect all positions to have both denoms in their fee accumulators except USDC for the overlapping range position since
 	// it was not activated during the USDC -> ETH swap direction but was activated during the ETH -> USDC swap direction.
-	ticksActivatedAfterEachSwapTest := [][]sdk.Int{ticksActivatedAfterEachSwapUp, ticksActivatedAfterEachSwapDown}
+	ticksActivatedAfterEachSwapTest := [][]int64{ticksActivatedAfterEachSwapUp, ticksActivatedAfterEachSwapDown}
 	denomsExpected := [][]string{{USDC, ETH}, {USDC, ETH}, {USDC, ETH}, {NoUSDCExpected, ETH}}
 
-	s.CollectAndAssertFees(s.Ctx, clPool.GetId(), totalFeesExpected, ticksActivatedAfterEachSwapTest, denomsExpected, positions)
+	s.CollectAndAssertFees(s.Ctx, clPool.GetId(), totalFeesExpected, positionIds, ticksActivatedAfterEachSwapTest, denomsExpected, positions)
+}
+
+// This test focuses on various functional testing around fees and LP logic.
+// It tests invariants such as the following:
+// - can create positions in the same range, swap between them and yet collect the correct fees.
+// - correct proportions of fees for overlapping positions are withdrawn.
+// - withdrawing full liquidity claims correctly under the hood.
+// - withdrawing partial liquidity does not withdraw but still lets fee claim as desired.
+func (s *KeeperTestSuite) TestFunctional_Fees_LP() {
+	// Setup.
+	s.SetupTest()
+	s.TestAccs = apptesting.CreateRandomAccounts(5)
+
+	var (
+		ctx                         = s.Ctx
+		concentratedLiquidityKeeper = s.App.ConcentratedLiquidityKeeper
+		owner                       = s.TestAccs[0]
+	)
+
+	// Create pool with 0.2% spread factor.
+	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, sdk.MustNewDecFromStr("0.002"))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0.MulRaw(2)), sdk.NewCoin(USDC, DefaultAmt1.MulRaw(2)))
+	s.FundAcc(owner, fundCoins)
+
+	// Errors since no position.
+	_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, owner, pool, sdk.NewCoin(ETH, sdk.OneInt()), USDC, pool.GetSpreadFactor(s.Ctx), types.MaxSpotPrice)
+	s.Require().Error(err)
+
+	// Create position in the default range 1.
+	positionIdOne, _, _, liquidity, _, _, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	s.Require().NoError(err)
+
+	// Swap once.
+	ticksActivatedAfterEachSwap, totalFeesExpected, _, _ := s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin1, ETH, types.MaxSpotPrice, 1)
+
+	// Withdraw half.
+	halfLiquidity := liquidity.Mul(sdk.NewDecWithPrec(5, 1))
+	_, _, err = concentratedLiquidityKeeper.WithdrawPosition(ctx, owner, positionIdOne, halfLiquidity)
+	s.Require().NoError(err)
+
+	// Collect fees.
+	feesCollected := s.collectFeesAndCheckInvariance(ctx, 0, DefaultMinTick, DefaultMaxTick, positionIdOne, sdk.NewCoins(), []string{USDC}, [][]int64{ticksActivatedAfterEachSwap})
+	expectedFeesTruncated := totalFeesExpected
+	for i, feeToken := range totalFeesExpected {
+		// We run expected fees through a cycle of divison and multiplication by liquidity to capture appropriate rounding behavior
+		expectedFeesTruncated[i] = sdk.NewCoin(feeToken.Denom, feeToken.Amount.ToDec().QuoTruncate(liquidity).MulTruncate(liquidity).TruncateInt())
+	}
+	s.Require().Equal(expectedFeesTruncated, feesCollected)
+
+	// Unclaimed rewards should be emptied since fees were collected.
+	s.validatePositionFeeGrowth(pool.GetId(), positionIdOne, cl.EmptyCoins)
+
+	// Create position in the default range 2.
+	positionIdTwo, _, _, fullLiquidity, _, _, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	s.Require().NoError(err)
+
+	// Swap once in the other direction.
+	ticksActivatedAfterEachSwap, totalFeesExpected, _, _ = s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin0, USDC, types.MinSpotPrice, 1)
+
+	// This should claim under the hood for position 2 since full liquidity is removed.
+	balanceBeforeWithdraw := s.App.BankKeeper.GetBalance(ctx, owner, ETH)
+	amtDenom0, _, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, owner, positionIdTwo, fullLiquidity)
+	s.Require().NoError(err)
+	balanceAfterWithdraw := s.App.BankKeeper.GetBalance(ctx, owner, ETH)
+
+	// Validate that the correct amount of ETH was collected in withdraw for position two.
+	// total fees * full liquidity / (full liquidity + half liquidity)
+	expectedPositionToWithdraw := totalFeesExpected.AmountOf(ETH).ToDec().Mul(fullLiquidity.Quo(fullLiquidity.Add(halfLiquidity))).TruncateInt()
+	s.Require().Equal(expectedPositionToWithdraw.String(), balanceAfterWithdraw.Sub(balanceBeforeWithdraw).Amount.Sub(amtDenom0).String())
+
+	// Validate cannot claim for withdrawn position.
+	_, err = s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, owner, positionIdTwo)
+	s.Require().Error(err)
+
+	feesCollected = s.collectFeesAndCheckInvariance(ctx, 0, DefaultMinTick, DefaultMaxTick, positionIdOne, sdk.NewCoins(), []string{ETH}, [][]int64{ticksActivatedAfterEachSwap})
+
+	// total fees * half liquidity / (full liquidity + half liquidity)
+	expectesFeesCollected := totalFeesExpected.AmountOf(ETH).ToDec().Mul(halfLiquidity.Quo(fullLiquidity.Add(halfLiquidity))).TruncateInt()
+	s.Require().Equal(expectesFeesCollected.String(), feesCollected.AmountOf(ETH).String())
+
+	// Create position in the default range 3.
+	positionIdThree, _, _, fullLiquidity, _, _, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	s.Require().NoError(err)
+
+	collectedThree, err := s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, owner, positionIdThree)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.Coins(nil), collectedThree)
 }
 
 // CollectAndAssertFees collects fees from a given pool for all positions and verifies that the total fees collected match the expected total fees.
 // The method also checks that if the ticks that were active during the swap lie within the range of a position, then the position's fee accumulators
 // are not empty. The total fees collected are compared to the expected total fees within an additive tolerance defined by an error tolerance struct.
-func (s *KeeperTestSuite) CollectAndAssertFees(ctx sdk.Context, poolId uint64, totalFees sdk.Coins, activeTicks [][]sdk.Int, expectedFeeDenoms [][]string, positions Positions) {
+func (s *KeeperTestSuite) CollectAndAssertFees(ctx sdk.Context, poolId uint64, totalFees sdk.Coins, positionIds [][]uint64, activeTicks [][]int64, expectedFeeDenoms [][]string, positions Positions) {
 	var totalFeesCollected sdk.Coins
 	// Claim full range position fees across all four accounts
 	for i := 0; i < positions.numFullRange; i++ {
-		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, poolId, i, DefaultMinTick, DefaultMaxTick, totalFeesCollected, expectedFeeDenoms[0], activeTicks)
+		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, i, DefaultMinTick, DefaultMaxTick, positionIds[0][i], totalFeesCollected, expectedFeeDenoms[0], activeTicks)
 	}
 
 	// Claim narrow range position fees across three of four accounts
 	for i := 0; i < positions.numNarrowRange; i++ {
-		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, poolId, i, DefaultLowerTick, DefaultUpperTick, totalFeesCollected, expectedFeeDenoms[1], activeTicks)
+		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, i, DefaultLowerTick, DefaultUpperTick, positionIds[1][i], totalFeesCollected, expectedFeeDenoms[1], activeTicks)
 	}
 
 	// Claim consecutive range position fees across two of four accounts
 	for i := 0; i < positions.numConsecutive; i++ {
-		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, poolId, i, DefaultExponentConsecutivePositionLowerTick.Int64(), DefaultExponentConsecutivePositionUpperTick.Int64(), totalFeesCollected, expectedFeeDenoms[2], activeTicks)
+		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, i, DefaultExponentConsecutivePositionLowerTick, DefaultExponentConsecutivePositionUpperTick, positionIds[2][i], totalFeesCollected, expectedFeeDenoms[2], activeTicks)
 	}
 
 	// Claim overlapping range position fees on one of four accounts
 	for i := 0; i < positions.numOverlapping; i++ {
-		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, poolId, i, DefaultExponentOverlappingPositionLowerTick.Int64(), DefaultExponentOverlappingPositionUpperTick.Int64(), totalFeesCollected, expectedFeeDenoms[3], activeTicks)
+		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, i, DefaultExponentOverlappingPositionLowerTick, DefaultExponentOverlappingPositionUpperTick, positionIds[3][i], totalFeesCollected, expectedFeeDenoms[3], activeTicks)
 	}
 
 	// Define error tolerance
@@ -1148,12 +1559,12 @@ func (s *KeeperTestSuite) CollectAndAssertFees(ctx sdk.Context, poolId uint64, t
 
 // tickStatusInvariance tests if the swap position was active during the given tick range and
 // checks that the fees collected are non-zero if the position was active, or zero otherwise.
-func (s *KeeperTestSuite) tickStatusInvariance(ticksActivatedAfterEachSwap [][]sdk.Int, lowerTick, upperTick int64, coins sdk.Coins, expectedFeeDenoms []string) {
+func (s *KeeperTestSuite) tickStatusInvariance(ticksActivatedAfterEachSwap [][]int64, lowerTick, upperTick int64, coins sdk.Coins, expectedFeeDenoms []string) {
 	var positionWasActive bool
 	// Check if the position was active during the swap
 	for i, ticks := range ticksActivatedAfterEachSwap {
 		for _, tick := range ticks {
-			if tick.GTE(sdk.NewInt(lowerTick)) && tick.LTE(sdk.NewInt(upperTick)) {
+			if tick >= lowerTick && tick <= upperTick {
 				positionWasActive = true
 				break
 			}
@@ -1161,7 +1572,7 @@ func (s *KeeperTestSuite) tickStatusInvariance(ticksActivatedAfterEachSwap [][]s
 		if positionWasActive {
 			// If the position was active, check that the fees collected are non-zero
 			if expectedFeeDenoms[i] != NoUSDCExpected && expectedFeeDenoms[i] != NoETHExpected {
-				s.Require().True(coins.AmountOf(expectedFeeDenoms[i]).GT(sdk.ZeroInt()))
+				s.Require().True(coins.AmountOf(expectedFeeDenoms[i]).GT(sdk.ZeroInt()), "denom: %s", expectedFeeDenoms[i])
 			}
 		} else {
 			// If the position was not active, check that the fees collected are zero
@@ -1171,8 +1582,8 @@ func (s *KeeperTestSuite) tickStatusInvariance(ticksActivatedAfterEachSwap [][]s
 }
 
 // swapAndTrackXTimesInARow performs `numSwaps` swaps and tracks the tick activated after each swap.
-// It also returns the total fees collected.
-func (s *KeeperTestSuite) swapAndTrackXTimesInARow(poolId uint64, coinIn sdk.Coin, coinOutDenom string, priceLimit sdk.Dec, numSwaps int) (ticksActivatedAfterEachSwap []sdk.Int, totalFees sdk.Coins) {
+// It also returns the total fees collected, the total token in, and the total token out.
+func (s *KeeperTestSuite) swapAndTrackXTimesInARow(poolId uint64, coinIn sdk.Coin, coinOutDenom string, priceLimit sdk.Dec, numSwaps int) (ticksActivatedAfterEachSwap []int64, totalFees sdk.Coins, totalTokenIn sdk.Coin, totalTokenOut sdk.Coin) {
 	// Retrieve pool
 	clPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
@@ -1185,21 +1596,25 @@ func (s *KeeperTestSuite) swapAndTrackXTimesInARow(poolId uint64, coinIn sdk.Coi
 	ticksActivatedAfterEachSwap = append(ticksActivatedAfterEachSwap, clPool.GetCurrentTick())
 	totalFees = sdk.NewCoins(sdk.NewCoin(USDC, sdk.ZeroInt()), sdk.NewCoin(ETH, sdk.ZeroInt()))
 	// Swap numSwaps times, recording the tick activated after and swap and fees we expect to collect based on the amount in
+	totalTokenIn = sdk.NewCoin(coinIn.Denom, sdk.ZeroInt())
+	totalTokenOut = sdk.NewCoin(coinOutDenom, sdk.ZeroInt())
 	for i := 0; i < numSwaps; i++ {
-		coinIn, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, s.TestAccs[4], clPool, coinIn, coinOutDenom, clPool.GetSwapFee(s.Ctx), priceLimit)
+		coinIn, coinOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, s.TestAccs[4], clPool, coinIn, coinOutDenom, clPool.GetSpreadFactor(s.Ctx), priceLimit)
 		s.Require().NoError(err)
-		fee := coinIn.Amount.ToDec().Mul(clPool.GetSwapFee(s.Ctx))
+		fee := coinIn.Amount.ToDec().Mul(clPool.GetSpreadFactor(s.Ctx))
 		totalFees = totalFees.Add(sdk.NewCoin(coinIn.Denom, fee.TruncateInt()))
 		clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 		s.Require().NoError(err)
 		ticksActivatedAfterEachSwap = append(ticksActivatedAfterEachSwap, clPool.GetCurrentTick())
+		totalTokenIn = totalTokenIn.Add(coinIn)
+		totalTokenOut = totalTokenOut.Add(coinOut)
 	}
-	return ticksActivatedAfterEachSwap, totalFees
+	return ticksActivatedAfterEachSwap, totalFees, totalTokenIn, totalTokenOut
 }
 
 // collectFeesAndCheckInvariance collects fees from the concentrated liquidity pool and checks the resulting tick status invariance.
-func (s *KeeperTestSuite) collectFeesAndCheckInvariance(ctx sdk.Context, poolId uint64, accountIndex int, minTick, maxTick int64, feesCollected sdk.Coins, expectedFeeDenoms []string, activeTicks [][]sdk.Int) (totalFeesCollected sdk.Coins) {
-	coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, poolId, s.TestAccs[accountIndex], minTick, maxTick)
+func (s *KeeperTestSuite) collectFeesAndCheckInvariance(ctx sdk.Context, accountIndex int, minTick, maxTick int64, positionId uint64, feesCollected sdk.Coins, expectedFeeDenoms []string, activeTicks [][]int64) (totalFeesCollected sdk.Coins) {
+	coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, s.TestAccs[accountIndex], positionId)
 	s.Require().NoError(err)
 	totalFeesCollected = feesCollected.Add(coins...)
 	s.tickStatusInvariance(activeTicks, minTick, maxTick, coins, expectedFeeDenoms)

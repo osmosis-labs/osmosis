@@ -43,7 +43,7 @@ account_prefix = 'osmo'
 key_name = 'val01-osmosis-a'
 store_prefix = 'ibc'
 max_gas = 6000000
-gas_multiplier = 1.2
+gas_multiplier = 1.5
 default_gas = 400000
 gas_price = { price = 0.0025, denom = 'e2e-default-feetoken' }
 clock_drift = '1m' # to accomdate docker containers
@@ -59,7 +59,7 @@ account_prefix = 'osmo'
 key_name = 'val01-osmosis-b'
 store_prefix = 'ibc'
 max_gas = 6000000
-gas_multiplier = 1.2
+gas_multiplier = 1.5
 default_gas = 400000
 gas_price = { price = 0.0025, denom = 'e2e-default-feetoken' }
 clock_drift = '1m' # to accomdate docker containers

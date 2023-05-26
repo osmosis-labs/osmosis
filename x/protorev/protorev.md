@@ -173,7 +173,7 @@ The developer account is set through a MsgSetDeveloperAccount tx. This is the ac
 
 `x/protorev` will distribute 20% of profits to the developer account in year 1, 10% of profits in year 2, and 5% thereafter. To track how much profit can be distributed to the developer account at any given moment, we store the amount of days since module genesis.
 
-### DeveloperFees
+### DeveloperFees (DEPRECATED IN v16)
 
 DeveloperFees tracks the total amount of profit that can be withdrawn by the developer account. These fees are sent to the developer account, if set, every week through the `epoch` hook. If unset, the funds are held in the module account. All `x/protorev` profits are going to be stored on the module account.
 
@@ -237,7 +237,7 @@ There are two primary methods for route generation: **Highest Liquidity Pools** 
 
 The highest liquidity pool method will always create cyclic arbitrage routes that have three pools. The routes that are created will always start and end with one of the denominations that are stored in BaseDenoms. The pool swapped against that the `postHandler` processes will always be the 2nd pool in the three-pool cyclic arbitrage route. 
 
-**Highest Liquidity Pools:** Updated via the weekly epoch, the module iterates through all the pools and stores the highest liquidity pool for every asset that pairs with any of the base denominations the module stores (for example, the osmo/juno key will have a single pool id stored, that pool id having the most liquidity out of all the osmo/juno pools). New base denominations can be added or removed on an as needed basis by the admin account. A base denomination is just another way of describing the denomination we want to use for cyclic arbitrage. This store is then used to create routes at runtime after analyzing a swap. This store is updated through the `epoch` hook and when the admin account submits a `MsgSetBaseDenoms` tx.
+**Highest Liquidity Pools:** Updated via the daily epoch, the module iterates through all the pools and stores the highest liquidity pool for every asset that pairs with any of the base denominations the module stores (for example, the osmo/juno key will have a single pool id stored, that pool id having the most liquidity out of all the osmo/juno pools). New base denominations can be added or removed on an as needed basis by the admin account. A base denomination is just another way of describing the denomination we want to use for cyclic arbitrage. This store is then used to create routes at runtime after analyzing a swap. This store is updated through the `epoch` hook and when the admin account submits a `MsgSetBaseDenoms` tx.
 
 The simplest way to conceptualize how the route is generated is by the following example. Assume we have two base denominations that `x/protorev` is currently tracking.
 
@@ -338,11 +338,11 @@ The `x/protorev` module implements epoch hooks in order to trigger the recalcula
 
 ## Epoch Hook
 
-The Epoch hook allows the module to update the information listed above using the epoch identifiers `week` and `day`. 
+The Epoch hook allows the module to update the information listed above using the epoch identifier `day`. 
 
 ### Highest Liquidity Pools
 
-As described above, one method of determining cyclic arbitrage opportunities is to use the highest liquidity pools paired with any base denomination. While this calculation is done on genesis (with only Osmo configured), the pools may restructure over time and new tokens may end up being traded heavily with the base denominations. As such, it is necessary to update this over time so that the module’s logic in determining cyclic arbitrage opportunities is most optimal and updated. Using the `AfterEpochEnd` hook in combination with the `week` epoch identifier, we are able to successfully update the pool information every week. At runtime, `UpdatePools` will be executed and all of the internal pool info will be updated.
+As described above, one method of determining cyclic arbitrage opportunities is to use the highest liquidity pools paired with any base denomination. While this calculation is done on genesis (with only Osmo configured), the pools may restructure over time and new tokens may end up being traded heavily with the base denominations. As such, it is necessary to update this over time so that the module’s logic in determining cyclic arbitrage opportunities is most optimal and updated. Using the `AfterEpochEnd` hook in combination with the `day` epoch identifier, we are able to successfully update the pool information every day. At runtime, `UpdatePools` will be executed and all of the internal pool info will be updated.
 
 ### Profit Distribution
 
@@ -350,7 +350,7 @@ Profits accumulated by the module will be partially distributed to the developer
 
 In order to track how much profit the developers can withdraw at any given moment, the module tracks the number of days since module genesis. This gets incremented in the epoch hook after every day. When a trade gets executed by the module, the module will determine how much of the profit from the trade the developers can receive by using `daysSinceModuleGenesis` in a simple calculation. 
 
-If the developer account is not set (which it is not on genesis), all funds are held in the module account. Once the developer address is set by the admin account, the developer address will start to automatically receive a share of profits every week through the epoch hook. The distribution of funds from the module account is done through `SendDeveloperFeesToDeveloperAccount`. Once the funds are distributed, the amount of profit developers can withdraw gets reset to 0 and profits will start to be accumulated and distributed on a week to week basis.
+If the developer account is not set (which it is not on genesis), all funds are held in the module account. Once the developer address is set by the admin account, the developer address will start to automatically receive a share of profits after every trade. The distribution of funds from the module account is done through `SendDeveloperFees`.
 
 # Governance Proposals
 
@@ -627,20 +627,28 @@ osmosisd query protorev params
 | query protorev | all-profits | Queries all ProtoRev profits |
 | query protorev | statistics-by-route [route] where route is the list of pool ids i.e. [1,2,3] | Queries ProtoRev statistics by route |
 | query protorev | all-statistics | Queries all ProtoRev statistics |
-| query protorev | token-pair-arb-routes | Queries the ProtoRev token pair arb routes |
+| query protorev | hot-routes | Queries the ProtoRev token pair arb routes |
 | query protorev | admin-account | Queries the ProtoRev admin account |
 | query protorev | developer-account | Queries the ProtoRev developer account |
 | query protorev | max-pool-points-per-tx | Queries the ProtoRev max pool points per transaction |
 | query protorev | max-pool-points-per-block | Queries the ProtoRev max pool points per block |
 | query protorev | base-denoms | Queries the ProtoRev base denoms used to create cyclic arbitrage routes |
 | query protorev | enabled | Queries whether the ProtoRev module is currently enabled |
+| query protorev | pool-weights | Queries the pool weights used to determine how computationally expensive a route is |
+| query protorev | pool | Queries the pool id for a given denom pair stored in ProtoRev |
 
 ### Proposals
 
 | Command | Subcommand | Description |
 | --- | --- | --- |
-| tx protorev | set-protorev-admin-account-proposal [sdk.AccAddress] | Submit a proposal to set the admin account for ProtoRev |
-| tx protorev | set-protorev-enabled-proposal [boolean] | Submit a proposal to disable/enable the ProtoRev module |
+| tx protorev | set-pool-weights [path/to/file.json] | Submit a tx to set the pool weights for ProtoRev |
+| tx protorev | set-hot-routes [path/to/file.json] | Submit a tx to set the hot routes for ProtoRev |
+| tx protorev | set-base-denoms [path/to/file.json] | Submit a tx to set the base denoms for ProtoRev |
+| tx protorev | set-max-pool-points-per-block [uint64] | Submit a tx to set the max pool points per block for ProtoRev |
+| tx protorev | set-max-pool-points-per-tx [uint64] | Submit a tx to set the max pool points per transaction for ProtoRev |
+| tx protorev | set-developer-account [sdk.AccAddress] | Submit a tx to set the developer account for ProtoRev |
+| tx protorev | set-admin-account-proposal [sdk.AccAddress] | Submit a proposal to set the admin account for ProtoRev |
+| tx protorev | set-enabled-proposal [boolean] | Submit a proposal to disable/enable the ProtoRev module |
 
 ## gRPC & REST
 
@@ -662,6 +670,7 @@ osmosisd query protorev params
 | gRPC | osmosis.v14.protorev.Query/GetProtoRevBaseDenoms | Queries the ProtoRev base denoms used to create cyclic arbitrage routes |
 | gRPC | osmosis.v14.protorev.Query/GetProtoRevEnabled | Queries whether the ProtoRev module is currently enabled |
 | gRPC | osmosis.14.protorev.Query/GetProtoRevPoolWeights | Queries the number of pool points each pool type will consume when executing and simulating trades |
+| gRPC | osmosis.14.protorev.Query/GetProtoRevPool | Queries the pool id for a given denom pair stored in ProtoRev |
 | GET | /osmosis/v14/protorev/params | Queries the parameters of the module |
 | GET | /osmosis/v14/protorev/number_of_trades | Queries the number of arbitrage trades the module has executed |
 | GET | /osmosis/v14/protorev/profits_by_denom | Queries the profits of the module by denom |
@@ -676,6 +685,7 @@ osmosisd query protorev params
 | GET | /osmosis/v14/protorev/base_denoms | Queries the base denominations ProtoRev is currently using to create cyclic arbitrage routes |
 | GET | /osmosis/v14/protorev/enabled | Queries whether the ProtoRev module is currently enabled |
 | GET | /osmosis/v14/protorev/pool_weights | Queries the number of pool points each pool type will consume when executing and simulating trades |
+| GET | /osmosis/v14/protorev/pool | Queries the pool id for a given denom pair stored in ProtoRev |
 
 ### Transactions
 
@@ -693,3 +703,38 @@ osmosisd query protorev params
 | POST | /osmosis/v14/protorev/set_max_pool_points_per_block | Sets the maximum number of pool points that can be consumed per block |
 | POST | /osmosis/v14/protorev/set_pool_weights | Sets the amount of pool points each pool type will consume when executing and simulating trades |
 | POST | /osmosis/v14/protorev/set_base_denoms | Sets the base denominations that will be used by ProtoRev to construct cyclic arbitrage routes |
+
+## Events
+
+There is 1 type of event that exists in ProtoRev:
+
+* `types.TypeEvtBackrun` - "protorev_backrun"
+
+### `types.TypeEvtBackrun`
+
+This event is emitted after ProtoRev succesfully backruns a transaction.
+
+It consists of the following attributes:
+
+* `types.AttributeValueCategory` - "ModuleName"
+  * The value is the module's name - "protorev".
+* `types.AttributeKeyUserPoolId`
+  * The value is the pool id that the user swapped on that ProtoRev backran.
+* `types.AttributeKeyTxHash`
+  * The value is the transaction hash that ProtoRev backran.
+* `types.AttributeKeyUserDenomIn`
+  * The value is the user denom in for the swap ProtoRev backran.
+* `types.AttributeKeyUserDenomOut`
+  * The value is the user denom out for the swap ProtoRev backran.
+* `types.AttributeKeyBlockPoolPointsRemaining`
+  * The value is the remaining block pool points ProtoRev can still use after the backrun.
+* `types.AttributeKeyTxPoolPointsRemaining`
+  * The value is the remaining tx pool points ProtoRev can still use after the backrun.
+* `types.AttributeKeyProtorevProfit`
+  * The value is the profit ProtoRev captured through the backrun.
+* `types.AttributeKeyProtorevAmountIn`
+  * The value is the amount Protorev swapped in to execute the backrun.
+* `types.AttributeKeyProtorevAmountOut`
+  * The value is the amount Protorev got out of the backrun swap.
+* `types.AttributeKeyProtorevArbDenom`
+  * The value is the denom that ProtoRev swapped in/out to execute the backrun.

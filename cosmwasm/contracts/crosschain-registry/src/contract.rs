@@ -6,7 +6,8 @@ use cw2::set_contract_version;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, GetAddressFromAliasResponse, InstantiateMsg, QueryMsg};
 use crate::state::{Config, CONFIG, CONTRACT_ALIAS_MAP};
-use crate::{execute, query, Registries};
+use crate::{execute, query};
+use registry::Registry;
 
 // version info for migration
 const CONTRACT_NAME: &str = "crates.io:crosschain-registry";
@@ -60,8 +61,9 @@ pub fn execute(
         ExecuteMsg::UnwrapCoin {
             receiver,
             into_chain,
+            with_memo,
         } => {
-            let registries = Registries::new(deps.as_ref(), env.contract.address.to_string())?;
+            let registries = Registry::new(deps.as_ref(), env.contract.address.to_string())?;
             let coin = cw_utils::one_coin(&info)?;
             let transfer_msg = registries.unwrap_coin_into(
                 coin,
@@ -69,6 +71,8 @@ pub fn execute(
                 into_chain.as_deref(),
                 env.contract.address.to_string(),
                 env.block.time,
+                with_memo,
+                None,
             )?;
             deps.api.debug(&format!("transfer_msg: {transfer_msg:?}"));
             Ok(Response::new()
@@ -112,6 +116,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 
         QueryMsg::GetDenomTrace { ibc_denom } => {
             to_binary(&query::query_denom_trace_from_ibc_denom(deps, ibc_denom)?)
+        }
+        QueryMsg::GetChainNameFromBech32Prefix { prefix } => {
+            to_binary(&query::query_chain_name_from_bech32_prefix(deps, prefix)?)
         }
     }
 }
@@ -327,7 +334,7 @@ mod test {
                 new_channel_id: None,
             }],
         };
-        let result = execute(deps.as_mut(), mock_env(), info_creator.clone(), msg);
+        let result = execute(deps.as_mut(), mock_env(), info_creator, msg);
         assert!(result.is_ok());
 
         // Retrieve osmo<>juno link again, but this time it should be enabled

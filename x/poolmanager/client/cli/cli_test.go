@@ -63,7 +63,6 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-
 	// TODO: re-enable this once poolmanager is fully merged.
 	t.SkipNow()
 
@@ -199,9 +198,8 @@ func TestGetCmdEstimateSwapExactAmountIn(t *testing.T) {
 	desc, _ := cli.GetCmdEstimateSwapExactAmountIn()
 	tcs := map[string]osmocli.QueryCliTestCase[*queryproto.EstimateSwapExactAmountInRequest]{
 		"basic test": {
-			Cmd: "1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
+			Cmd: "1 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
 			ExpectedQuery: &queryproto.EstimateSwapExactAmountInRequest{
-				Sender:  "osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7",
 				PoolId:  1,
 				TokenIn: "10stake",
 				Routes:  []types.SwapAmountInRoute{{PoolId: 2, TokenOutDenom: "node0token"}},
@@ -210,13 +208,13 @@ func TestGetCmdEstimateSwapExactAmountIn(t *testing.T) {
 	}
 	osmocli.RunQueryTestCases(t, desc, tcs)
 }
+
 func TestGetCmdEstimateSwapExactAmountOut(t *testing.T) {
 	desc, _ := cli.GetCmdEstimateSwapExactAmountOut()
 	tcs := map[string]osmocli.QueryCliTestCase[*queryproto.EstimateSwapExactAmountOutRequest]{
 		"basic test": {
-			Cmd: "1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
+			Cmd: "1 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
 			ExpectedQuery: &queryproto.EstimateSwapExactAmountOutRequest{
-				Sender:   "osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7",
 				PoolId:   1,
 				TokenOut: "10stake",
 				Routes:   []types.SwapAmountOutRoute{{PoolId: 2, TokenInDenom: "node0token"}},
@@ -225,6 +223,37 @@ func TestGetCmdEstimateSwapExactAmountOut(t *testing.T) {
 	}
 	osmocli.RunQueryTestCases(t, desc, tcs)
 }
+
+func TestGetCmdEstimateSinglePoolSwapExactAmountIn(t *testing.T) {
+	desc, _ := cli.GetCmdEstimateSinglePoolSwapExactAmountIn()
+	tcs := map[string]osmocli.QueryCliTestCase[*queryproto.EstimateSinglePoolSwapExactAmountInRequest]{
+		"basic test": {
+			Cmd: "1 10stake node0token",
+			ExpectedQuery: &queryproto.EstimateSinglePoolSwapExactAmountInRequest{
+				PoolId:        1,
+				TokenIn:       "10stake",
+				TokenOutDenom: "node0token",
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
+
+func TestGetCmdEstimateSinglePoolSwapExactAmountOut(t *testing.T) {
+	desc, _ := cli.GetCmdEstimateSinglePoolSwapExactAmountOut()
+	tcs := map[string]osmocli.QueryCliTestCase[*queryproto.EstimateSinglePoolSwapExactAmountOutRequest]{
+		"basic test": {
+			Cmd: "1 node0token 10stake",
+			ExpectedQuery: &queryproto.EstimateSinglePoolSwapExactAmountOutRequest{
+				PoolId:       1,
+				TokenInDenom: "node0token",
+				TokenOut:     "10stake",
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
+
 func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 	val := s.network.Validators[0]
 
@@ -500,7 +529,13 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 				err = clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType)
 				s.Require().NoError(err, out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
+				var txResp *sdk.TxResponse
+				switch resp := tc.respType.(type) {
+				case *sdk.TxResponse:
+					txResp = resp
+				default:
+					s.T().Fatalf("unexpected response type: %T", tc.respType)
+				}
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 			}
 		})

@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-ARG GO_VERSION="1.19"
+ARG GO_VERSION="1.20"
 ARG RUNNER_IMAGE="gcr.io/distroless/static-debian11"
 
 # --------------------------------------------------------
@@ -66,5 +66,8 @@ WORKDIR $HOME
 EXPOSE 26656
 EXPOSE 26657
 EXPOSE 1317
+# Note: uncomment the line below if you need pprof in localosmosis
+# We disable it by default in out main Dockerfile for security reasons
+# EXPOSE 6060
 
 ENTRYPOINT ["osmosisd"]

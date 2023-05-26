@@ -28,6 +28,8 @@ func NewCmdQuery() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryMaxPoolPointsPerBlockCmd)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryBaseDenomsCmd)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryEnabledCmd)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryPoolWeightsCmd)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryPoolCmd)
 
 	return cmd
 }
@@ -86,7 +88,7 @@ func NewQueryAllRouteStatisticsCmd() (*osmocli.QueryDescriptor, *types.QueryGetP
 // NewQueryTokenPairArbRoutesCmd returns the command to query the token pair arb routes
 func NewQueryTokenPairArbRoutesCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevTokenPairArbRoutesRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "token-pair-arb-routes",
+		Use:   "hot-routes",
 		Short: "Query the ProtoRev hot routes currently being used",
 	}, &types.QueryGetProtoRevTokenPairArbRoutesRequest{}
 }
@@ -137,6 +139,22 @@ func NewQueryEnabledCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevEnab
 		Use:   "enabled",
 		Short: "Query whether protorev is currently enabled",
 	}, &types.QueryGetProtoRevEnabledRequest{}
+}
+
+// NewQueryPoolWeightsCmd returns the command to query the pool weights of protorev
+func NewQueryPoolWeightsCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevPoolWeightsRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "pool-weights",
+		Short: "Query the pool weights used to determine how computationally expensive a route is",
+	}, &types.QueryGetProtoRevPoolWeightsRequest{}
+}
+
+// NewQueryPoolCmd returns the command to query the pool id for a given denom pair stored via the highest liquidity method in ProtoRev
+func NewQueryPoolCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevPoolRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "pool [base_denom] [other_denom]",
+		Short: "Query the pool id for a given denom pair stored via the highest liquidity method in ProtoRev",
+	}, &types.QueryGetProtoRevPoolRequest{}
 }
 
 // convert a string array "[1,2,3]" to []uint64

@@ -1,29 +1,96 @@
-use cosmwasm_std::{coins, to_binary, wasm_execute, BankMsg, Empty, Timestamp};
+use cosmwasm_std::{coins, to_binary, wasm_execute, BankMsg, Env, MessageInfo};
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, SubMsg, SubMsgResponse, SubMsgResult};
+use registry::msg::{Callback, SerializableJson};
+use registry::{Registry, RegistryError};
 use swaprouter::msg::ExecuteMsg as SwapRouterExecute;
 
 use crate::checks::{check_is_contract_governor, ensure_key_missing, validate_receiver};
-use crate::consts::{MsgReplyID, CALLBACK_KEY, PACKET_LIFETIME};
-use crate::ibc::{MsgTransfer, MsgTransferResponse};
-use crate::msg::{CrosschainSwapResponse, FailedDeliveryAction, SerializableJson};
+use crate::consts::{MsgReplyID, CALLBACK_KEY};
+use crate::msg::{CrosschainSwapResponse, FailedDeliveryAction};
+use registry::proto::MsgTransferResponse;
 
-use crate::state::{self, Config, CHANNEL_MAP, DISABLED_PREFIXES};
 use crate::state::{
-    ForwardMsgReplyState, ForwardTo, SwapMsgReplyState, CONFIG, FORWARD_REPLY_STATE,
+    Config, ForwardMsgReplyState, ForwardTo, SwapMsgReplyState, CONFIG, FORWARD_REPLY_STATE,
     INFLIGHT_PACKETS, RECOVERY_STATES, SWAP_REPLY_STATE,
 };
 use crate::utils::{build_memo, parse_swaprouter_reply};
 use crate::ContractError;
+use crate::{state, ExecuteMsg};
 
-/// This is the main execute call of this contract.
+/// This function takes any token. If it's already something we can work with
+/// (either native to osmosis or native to a chain connected to osmosis via a
+/// valid channel), it will just proceed to swap and forward. If it's not, then
+/// it will send an IBC message to unwrap it first and provide a callback to
+/// ensure the right swap_and_forward gets called after the unwrap succeeds
+pub fn unwrap_or_swap_and_forward(
+    ctx: (DepsMut, Env, MessageInfo),
+    output_denom: String,
+    slippage: swaprouter::Slippage,
+    receiver: &str,
+    next_memo: Option<SerializableJson>,
+    failed_delivery_action: FailedDeliveryAction,
+) -> Result<Response, ContractError> {
+    let (ref deps, ref env, ref info) = ctx;
+    let swap_coin = cw_utils::one_coin(info)?;
+
+    deps.api
+        .debug(&format!("executing unwrap or swap and forward"));
+    let registry = Registry::default(deps.as_ref());
+
+    // Check the path that the coin took to get to the current chain.
+    // Each element in the path is an IBC hop.
+    let path = registry.unwrap_denom_path(&swap_coin.denom)?;
+    if path.is_empty() {
+        return Err(RegistryError::InvalidDenomTracePath {
+            path: String::new(),
+            denom: swap_coin.denom,
+        }
+        .into());
+    }
+
+    // If the path is larger than 2, we need to unwrap this token first
+    if path.len() > 2 {
+        let registry = Registry::default(deps.as_ref());
+        let ibc_transfer = registry.unwrap_coin_into(
+            swap_coin,
+            env.contract.address.to_string(),
+            None,
+            env.contract.address.to_string(),
+            env.block.time,
+            String::new(),
+            Some(Callback {
+                contract: env.contract.address.clone(),
+                msg: serde_cw_value::to_value(&ExecuteMsg::OsmosisSwap {
+                    output_denom,
+                    receiver: receiver.to_string(),
+                    slippage,
+                    next_memo,
+                    on_failed_delivery: failed_delivery_action,
+                })?
+                .into(),
+            }),
+        )?;
+        return Ok(Response::new().add_message(ibc_transfer));
+    }
+
+    // If the denom is either native or only one hop, we swap it directly
+    swap_and_forward(
+        ctx,
+        swap_coin,
+        output_denom,
+        slippage,
+        receiver,
+        next_memo,
+        failed_delivery_action,
+    )
+}
+
+/// This function takes token "known to the chain", swaps it, and then forwards
+/// the result to the receiver.
 ///
-/// It's objective is to trigger a swap between the supplied pairs
 ///
-#[allow(clippy::too_many_arguments)]
 pub fn swap_and_forward(
-    deps: DepsMut,
-    block_time: Timestamp,
-    contract_addr: Addr,
+    ctx: (DepsMut, Env, MessageInfo),
     swap_coin: Coin,
     output_denom: String,
     slippage: swaprouter::Slippage,
@@ -31,8 +98,36 @@ pub fn swap_and_forward(
     next_memo: Option<SerializableJson>,
     failed_delivery_action: FailedDeliveryAction,
 ) -> Result<Response, ContractError> {
+    let (deps, env, _) = ctx;
+
     deps.api.debug(&format!("executing swap and forward"));
     let config = CONFIG.load(deps.storage)?;
+
+    // Check that the received is valid and retrieve its channel
+    let (valid_chain, valid_receiver) = validate_receiver(deps.as_ref(), receiver)?;
+    // If there is a memo, check that it is valid (i.e. a valud json object that
+    // doesn't contain the key that we will insert later)
+    let memo = if let Some(memo) = &next_memo {
+        // Ensure the json is an object ({...}) and that it does not contain the CALLBACK_KEY
+        deps.api.debug(&format!("checking memo: {memo:?}"));
+        ensure_key_missing(memo.as_value(), CALLBACK_KEY)?;
+        serde_json_wasm::to_string(&memo)?
+    } else {
+        String::new()
+    };
+
+    // Validate that the swapped token can be unwrapped. If it can't, abort
+    // early to avoid swapping unnecessarily
+    let registry = Registry::default(deps.as_ref());
+    registry.unwrap_coin_into(
+        Coin::new(1, output_denom.clone()),
+        valid_receiver.to_string(),
+        Some(&valid_chain),
+        env.contract.address.to_string(),
+        env.block.time,
+        memo,
+        None,
+    )?;
 
     // Message to swap tokens in the underlying swaprouter contract
     let swap_msg = SwapRouterExecute::Swap {
@@ -41,15 +136,6 @@ pub fn swap_and_forward(
         slippage,
     };
     let msg = wasm_execute(config.swap_contract, &swap_msg, vec![swap_coin])?;
-
-    // Check that the received is valid and retrieve its channel
-    let (valid_channel, valid_receiver) = validate_receiver(deps.as_ref(), receiver)?;
-    // If there is a memo, check that it is valid (i.e. a valud json object that
-    // doesn't contain the key that we will insert later)
-    if let Some(memo) = &next_memo {
-        // Ensure the json is an object ({...}) and that it does not contain the CALLBACK_KEY
-        ensure_key_missing(memo.as_value(), CALLBACK_KEY)?;
-    }
 
     // Check that there isn't anything stored in SWAP_REPLY_STATES. If there is,
     // it means that the contract is already waiting for a reply and should not
@@ -67,10 +153,10 @@ pub fn swap_and_forward(
         deps.storage,
         &SwapMsgReplyState {
             swap_msg,
-            block_time,
-            contract_addr,
+            block_time: env.block.time,
+            contract_addr: env.contract.address,
             forward_to: ForwardTo {
-                channel: valid_channel,
+                chain: valid_chain,
                 receiver: valid_receiver,
                 next_memo,
                 on_failed_delivery: failed_delivery_action,
@@ -84,6 +170,7 @@ pub fn swap_and_forward(
 // The swap has succeeded and we need to generate the forward IBC transfer
 pub fn handle_swap_reply(
     deps: DepsMut,
+    env: Env,
     msg: cosmwasm_std::Reply,
 ) -> Result<Response, ContractError> {
     deps.api.debug(&format!("handle_swap_reply"));
@@ -95,32 +182,26 @@ pub fn handle_swap_reply(
 
     // Build an IBC packet to forward the swap.
     let contract_addr = &swap_msg_state.contract_addr;
-    let ts = swap_msg_state.block_time.plus_seconds(PACKET_LIFETIME);
 
     // If the memo is provided we want to include it in the IBC message. If not,
     // we default to an empty object. The resulting memo will always include the
     // callback so this contract can track the IBC send
     let memo = build_memo(swap_msg_state.forward_to.next_memo, contract_addr.as_str())?;
 
-    // Cosmwasm's  IBCMsg::Transfer  does not support memo.
-    // To build and send the packet properly, we need to send it using stargate messages.
-    // See https://github.com/CosmWasm/cosmwasm/issues/1477
-    let ibc_transfer = MsgTransfer {
-        source_port: "transfer".to_string(),
-        source_channel: swap_msg_state.forward_to.channel.clone(),
-        token: Some(
-            Coin::new(
-                swap_response.amount.into(),
-                swap_response.token_out_denom.clone(),
-            )
-            .into(),
+    let registry = Registry::default(deps.as_ref());
+    let ibc_transfer = registry.unwrap_coin_into(
+        Coin::new(
+            swap_response.amount.into(),
+            swap_response.token_out_denom.clone(),
         ),
-        sender: contract_addr.to_string(),
-        receiver: swap_msg_state.forward_to.receiver.clone().into(),
-        timeout_height: None,
-        timeout_timestamp: Some(ts.nanos()),
+        swap_msg_state.forward_to.receiver.clone().to_string(),
+        Some(&swap_msg_state.forward_to.chain),
+        env.contract.address.to_string(),
+        env.block.time,
         memo,
-    };
+        None,
+    )?;
+    deps.api.debug(&format!("IBC transfer: {ibc_transfer:?}"));
 
     // Base response
     let response = Response::new()
@@ -142,7 +223,7 @@ pub fn handle_swap_reply(
     FORWARD_REPLY_STATE.save(
         deps.storage,
         &ForwardMsgReplyState {
-            channel_id: swap_msg_state.forward_to.channel,
+            channel_id: ibc_transfer.source_channel.clone(),
             to_address: swap_msg_state.forward_to.receiver.into(),
             amount: swap_response.amount.into(),
             denom: swap_response.token_out_denom,
@@ -223,54 +304,13 @@ pub fn handle_forward_reply(
 /// Transfers any tokens stored in RECOVERY_STATES[sender] to the sender.
 pub fn recover(deps: DepsMut, sender: Addr) -> Result<Response, ContractError> {
     let recoveries = RECOVERY_STATES.load(deps.storage, &sender)?;
+    // Remove the recoveries from the store. If the sends fail, the whole tx should be reverted.
+    RECOVERY_STATES.remove(deps.storage, &sender);
     let msgs = recoveries.into_iter().map(|r| BankMsg::Send {
         to_address: r.recovery_addr.into(),
         amount: coins(r.amount, r.denom),
     });
     Ok(Response::new().add_messages(msgs))
-}
-
-/// Set a prefix->channel map in the registry
-pub fn set_channel(
-    deps: DepsMut,
-    sender: Addr,
-    prefix: String,
-    channel: String,
-) -> Result<Response, ContractError> {
-    check_is_contract_governor(deps.as_ref(), sender)?;
-    if CHANNEL_MAP.has(deps.storage, &prefix) {
-        return Err(ContractError::PrefixAlreadyExists { prefix });
-    }
-    CHANNEL_MAP.save(deps.storage, &prefix, &channel)?;
-    Ok(Response::new().add_attribute("method", "set_channel"))
-}
-
-/// Disable a prefix
-pub fn disable_prefix(
-    deps: DepsMut,
-    sender: Addr,
-    prefix: String,
-) -> Result<Response, ContractError> {
-    check_is_contract_governor(deps.as_ref(), sender)?;
-    if !CHANNEL_MAP.has(deps.storage, &prefix) {
-        return Err(ContractError::PrefixDoesNotExist { prefix });
-    }
-    DISABLED_PREFIXES.save(deps.storage, &prefix, &Empty {})?;
-    Ok(Response::new().add_attribute("method", "disable_prefix"))
-}
-
-/// Re-enable a prefix
-pub fn re_enable_prefix(
-    deps: DepsMut,
-    sender: Addr,
-    prefix: String,
-) -> Result<Response, ContractError> {
-    check_is_contract_governor(deps.as_ref(), sender)?;
-    if !DISABLED_PREFIXES.has(deps.storage, &prefix) {
-        return Err(ContractError::PrefixNotDisabled { prefix });
-    }
-    DISABLED_PREFIXES.remove(deps.storage, &prefix);
-    Ok(Response::new().add_attribute("method", "re_enable_prefix"))
 }
 
 // Transfer ownership of this contract
@@ -324,16 +364,12 @@ mod tests {
     static CREATOR_ADDRESS: &str = "creator";
     static SWAPCONTRACT_ADDRESS: &str = "swapcontract";
 
-    static RECEIVER_ADDRESS1: &str = "prefix12smx2wdlyttvyzvzg54y2vnqwq2qjatel8rck9";
-    static RECEIVER_ADDRESS2: &str = "other12smx2wdlyttvyzvzg54y2vnqwq2qjatere840z";
-
     // test helper
     #[allow(unused_assignments)]
     fn initialize_contract(deps: DepsMut) -> Addr {
         let msg = InstantiateMsg {
             governor: String::from(CREATOR_ADDRESS),
             swap_contract: String::from(SWAPCONTRACT_ADDRESS),
-            channels: vec![("prefix".to_string(), "channel1".to_string())],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
 
@@ -349,10 +385,6 @@ mod tests {
         let governor = initialize_contract(deps.as_mut());
         let config = CONFIG.load(&deps.storage).unwrap();
         assert_eq!(config.governor, governor);
-        assert_eq!(
-            CHANNEL_MAP.load(&deps.storage, "prefix").unwrap(),
-            "channel1"
-        );
     }
 
     #[test]
@@ -389,92 +421,6 @@ mod tests {
 
         let config = CONFIG.load(&deps.storage).unwrap();
         assert_eq!(governor, config.governor);
-    }
-
-    #[test]
-    fn modify_channel_registry() {
-        let mut deps = mock_dependencies();
-
-        let governor = initialize_contract(deps.as_mut());
-        let governor_info = mock_info(governor.as_str(), &vec![] as &Vec<Coin>);
-        validate_receiver(deps.as_ref(), RECEIVER_ADDRESS1).unwrap();
-
-        // and new channel
-        let msg = ExecuteMsg::SetChannel {
-            prefix: "other".to_string(),
-            channel: "channel2".to_string(),
-        };
-        contract::execute(deps.as_mut(), mock_env(), governor_info.clone(), msg).unwrap();
-
-        assert_eq!(
-            CHANNEL_MAP.load(&deps.storage, "prefix").unwrap(),
-            "channel1"
-        );
-        assert_eq!(
-            CHANNEL_MAP.load(&deps.storage, "other").unwrap(),
-            "channel2"
-        );
-        validate_receiver(deps.as_ref(), RECEIVER_ADDRESS1).unwrap();
-        validate_receiver(deps.as_ref(), RECEIVER_ADDRESS2).unwrap();
-
-        // Can't override an existing channel
-        let msg = ExecuteMsg::SetChannel {
-            prefix: "prefix".to_string(),
-            channel: "new_channel".to_string(),
-        };
-        contract::execute(deps.as_mut(), mock_env(), governor_info.clone(), msg).unwrap_err();
-
-        assert_eq!(
-            CHANNEL_MAP.load(&deps.storage, "prefix").unwrap(),
-            "channel1"
-        );
-
-        // remove channel
-        let msg = ExecuteMsg::DisablePrefix {
-            prefix: "prefix".to_string(),
-        };
-        contract::execute(deps.as_mut(), mock_env(), governor_info.clone(), msg).unwrap();
-
-        assert!(DISABLED_PREFIXES.load(&deps.storage, "prefix").is_ok());
-        // The prefix no longer validates
-        validate_receiver(deps.as_ref(), RECEIVER_ADDRESS1).unwrap_err();
-
-        // Re enable the prefix
-        let msg = ExecuteMsg::ReEnablePrefix {
-            prefix: "prefix".to_string(),
-        };
-        contract::execute(deps.as_mut(), mock_env(), governor_info, msg).unwrap();
-        assert!(DISABLED_PREFIXES.load(&deps.storage, "prefix").is_err());
-
-        // The prefix is allowed again
-        validate_receiver(deps.as_ref(), RECEIVER_ADDRESS1).unwrap();
-    }
-
-    #[test]
-    fn modify_channel_registry_unauthorized() {
-        let mut deps = mock_dependencies();
-        initialize_contract(deps.as_mut());
-
-        // A user other than the owner cannot modify the channel registry
-        let other_info = mock_info("other_sender", &vec![] as &Vec<Coin>);
-        let msg = ExecuteMsg::SetChannel {
-            prefix: "other".to_string(),
-            channel: "something_else".to_string(),
-        };
-        contract::execute(deps.as_mut(), mock_env(), other_info.clone(), msg).unwrap_err();
-        assert_eq!(
-            CHANNEL_MAP.load(&deps.storage, "prefix").unwrap(),
-            "channel1"
-        );
-
-        let msg = ExecuteMsg::DisablePrefix {
-            prefix: "prefix".to_string(),
-        };
-        contract::execute(deps.as_mut(), mock_env(), other_info, msg).unwrap_err();
-        assert_eq!(
-            CHANNEL_MAP.load(&deps.storage, "prefix").unwrap(),
-            "channel1"
-        );
     }
 
     #[test]

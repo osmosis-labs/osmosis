@@ -26,14 +26,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
+	icq "github.com/cosmos/ibc-apps/modules/async-icq/v4"
 	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
-	icq "github.com/strangelove-ventures/async-icq/v4"
 
 	_ "github.com/osmosis-labs/osmosis/v15/client/docs/statik"
+	clclient "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/clmodule"
 	cosmwasmpoolmodule "github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/module"
 	downtimemodule "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/module"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm"
+	gammclient "github.com/osmosis-labs/osmosis/v15/x/gamm/client"
 	"github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/ibcratelimitmodule"
 	"github.com/osmosis-labs/osmosis/v15/x/incentives"
 	"github.com/osmosis-labs/osmosis/v15/x/lockup"
@@ -76,6 +78,10 @@ var AppModuleBasics = []module.AppModuleBasic{
 			superfluidclient.SetSuperfluidAssetsProposalHandler,
 			superfluidclient.RemoveSuperfluidAssetsProposalHandler,
 			superfluidclient.UpdateUnpoolWhitelistProposalHandler,
+			gammclient.ReplaceMigrationRecordsProposalHandler,
+			gammclient.UpdateMigrationRecordsProposalHandler,
+			clclient.CreateConcentratedLiquidityPoolProposalHandler,
+			clclient.TickSpacingDecreaseProposalHandler,
 		)...,
 	),
 	params.AppModuleBasic{},

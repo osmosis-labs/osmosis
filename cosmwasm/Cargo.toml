@@ -1,6 +1,7 @@
 [workspace]
 members = [
   'contracts/*',
+  'packages/*'
 ]
 
 [workspace.package]
@@ -36,3 +37,4 @@ serde-json-wasm = "0.5.0"
 serde-cw-value = "0.7.0"
 bech32 = "0.9.1"
 cw-utils = "1.0.0"
+itertools = "0.10"

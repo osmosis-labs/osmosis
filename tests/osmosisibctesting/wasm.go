@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/tidwall/gjson"
+
 	"github.com/stretchr/testify/require"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -14,8 +16,6 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
 	"github.com/stretchr/testify/suite"
-
-	"github.com/Jeffail/gabs/v2"
 )
 
 func (chain *TestChain) StoreContractCode(suite *suite.Suite, path string) {
@@ -63,6 +63,19 @@ func (chain *TestChain) InstantiateRLContract(suite *suite.Suite, quotas string)
 	return addr
 }
 
+func (chain *TestChain) StoreContractCodeDirect(suite *suite.Suite, path string) uint64 {
+	osmosisApp := chain.GetOsmosisApp()
+	govKeeper := wasmkeeper.NewGovPermissionKeeper(osmosisApp.WasmKeeper)
+	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+
+	wasmCode, err := os.ReadFile(path)
+	suite.Require().NoError(err)
+	accessEveryone := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeEverybody}
+	codeID, _, err := govKeeper.Create(chain.GetContext(), creator, wasmCode, &accessEveryone)
+	suite.Require().NoError(err)
+	return codeID
+}
+
 func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string, codeID uint64) sdk.AccAddress {
 	osmosisApp := chain.GetOsmosisApp()
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
@@ -79,11 +92,12 @@ func (chain *TestChain) QueryContract(suite *suite.Suite, contract sdk.AccAddres
 	return string(state)
 }
 
-func (chain *TestChain) QueryContractJson(suite *suite.Suite, contract sdk.AccAddress, key []byte) *gabs.Container {
+func (chain *TestChain) QueryContractJson(suite *suite.Suite, contract sdk.AccAddress, key []byte) gjson.Result {
 	osmosisApp := chain.GetOsmosisApp()
 	state, err := osmosisApp.WasmKeeper.QuerySmart(chain.GetContext(), contract, key)
 	suite.Require().NoError(err)
-	json, err := gabs.ParseJSON(state)
+	suite.Require().True(gjson.Valid(string(state)))
+	json := gjson.Parse(string(state))
 	suite.Require().NoError(err)
 	return json
 }

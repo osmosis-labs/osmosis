@@ -6,13 +6,13 @@ from decimal import *
 import zero_for_one as zfo
 import one_for_zero as ofz
 
-def estimate_test_case_in_given_out(tick_ranges: list[SqrtPriceRange], token_out: Decimal, swap_fee: Decimal, is_zero_for_one: bool) -> Tuple[Decimal, Decimal]:
+def estimate_test_case_in_given_out(tick_ranges: list[SqrtPriceRange], token_out: Decimal, spread_factor: Decimal, is_zero_for_one: bool) -> Tuple[Decimal, Decimal]:
     """ Estimates a calc concentrated liquidity test case when swapping for token in given out.
     
     Given
       - sqrt price range with the start sqrt price, next sqrt price and liquidity
       - token out
-      - swap fee
+      - spread factor
       - zero for one boolean flag
     Estimates the token in with fee applied and the fee growth per share and prints it to stdout.
     Also, estimates these and other values at each range and prints them to stdout.
@@ -37,9 +37,9 @@ def estimate_test_case_in_given_out(tick_ranges: list[SqrtPriceRange], token_out
         if is_with_next_sqrt_price:
             token_out_consumed, token_in, fee_growth_per_share = sdk_dec.zero, sdk_dec.zero, sdk_dec.zero
             if is_zero_for_one:
-                token_out_consumed, token_in, fee_growth_per_share = zfo.calc_test_case_with_next_sqrt_price_in_given_out(tick_range.liquidity, tick_range.sqrt_price_start, tick_range.sqrt_price_next, swap_fee)
+                token_out_consumed, token_in, fee_growth_per_share = zfo.calc_test_case_with_next_sqrt_price_in_given_out(tick_range.liquidity, tick_range.sqrt_price_start, tick_range.sqrt_price_next, spread_factor)
             else:
-                token_out_consumed, token_in, fee_growth_per_share = ofz.calc_test_case_with_next_sqrt_price_in_given_out(tick_range.liquidity, tick_range.sqrt_price_start, tick_range.sqrt_price_next, swap_fee)
+                token_out_consumed, token_in, fee_growth_per_share = ofz.calc_test_case_with_next_sqrt_price_in_given_out(tick_range.liquidity, tick_range.sqrt_price_start, tick_range.sqrt_price_next, spread_factor)
             print(F"token_out_consumed {token_out_consumed}")
             print(F"token_in {token_in}")
             token_out_consumed_total += token_out_consumed
@@ -54,9 +54,9 @@ def estimate_test_case_in_given_out(tick_ranges: list[SqrtPriceRange], token_out
 
             token_in, fee_growth_per_share = sdk_dec.zero, sdk_dec.zero
             if is_zero_for_one:
-                _, token_in, fee_growth_per_share = zfo.calc_test_case_in_given_out(tick_range.liquidity, tick_range.sqrt_price_start, token_out_remaining, swap_fee)
+                _, token_in, fee_growth_per_share = zfo.calc_test_case_in_given_out(tick_range.liquidity, tick_range.sqrt_price_start, token_out_remaining, spread_factor)
             else:
-                _, token_in, fee_growth_per_share = ofz.calc_test_case_in_given_out(tick_range.liquidity, tick_range.sqrt_price_start, token_out_remaining, swap_fee)
+                _, token_in, fee_growth_per_share = ofz.calc_test_case_in_given_out(tick_range.liquidity, tick_range.sqrt_price_start, token_out_remaining, spread_factor)
 
             token_in_total += token_in
             fee_growth_per_share_total += fee_growth_per_share
@@ -81,14 +81,14 @@ def estimate_single_position_within_one_tick_ofz_in_given_out():
     """
 
     is_zero_for_one = False
-    swap_fee = sdk_dec.new("0.01")
+    spread_factor = sdk_dec.new("0.01")
     token_out_initial = sdk_dec.new("42000000")
 
     tick_ranges = [
         SqrtPriceRange(5000, None, sdk_dec.new("1517882343.751510418088349649")), # last one must be computed based on remaining token in, therefore it is None
     ]
 
-    token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_out_initial, swap_fee, is_zero_for_one)
+    token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_out_initial, spread_factor, is_zero_for_one)
 
     expected_token_in = sdk_dec.new("8481")
     expected_fee_growth_per_share_total = sdk_dec.new("0.000000055877384518")
@@ -103,21 +103,21 @@ def estimate_two_positions_within_one_tick_zfo_in_given_out():
     """
 
     is_zero_for_one = True
-    swap_fee = sdk_dec.new("0.03")
+    spread_factor = sdk_dec.new("0.03")
     token_out = sdk_dec.new("13370")
 
     tick_ranges = [
         SqrtPriceRange(5000, None, sdk_dec.new("3035764687.503020836176699298")), # last one must be computed based on remaining token in, therefore it is None
     ]
 
-    token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_out, swap_fee, is_zero_for_one)
+    token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_out, spread_factor, is_zero_for_one)
 
     expected_token_in = sdk_dec.new("68896070")
     expected_fee_growth_per_share_total = sdk_dec.new("0.000680843976677818")
 
     validate_confirmed_results(token_in, fee_growth_per_share_total, expected_token_in, expected_fee_growth_per_share_total)
 
-def estimate_two_consecutive_positions_zfo_in_given_out(swap_fee: str, expected_token_in: str, expected_fee_growth_per_share_total: str):
+def estimate_two_consecutive_positions_zfo_in_given_out(spread_factor: str, expected_token_in: str, expected_fee_growth_per_share_total: str):
     """Estimates and prints the results of a calc concentrated liquidity test case with two consecutive positions
     when swapping token zero for one (zfo).
 
@@ -125,7 +125,7 @@ def estimate_two_consecutive_positions_zfo_in_given_out(swap_fee: str, expected_
     """
 
     is_zero_for_one = True
-    swap_fee = sdk_dec.new(swap_fee)
+    spread_factor = sdk_dec.new(spread_factor)
     token_out = sdk_dec.new("2000000")
 
     tick_ranges = [
@@ -133,7 +133,7 @@ def estimate_two_consecutive_positions_zfo_in_given_out(swap_fee: str, expected_
         SqrtPriceRange(4545, None, sdk_dec.new("1198735489.597250295669959398")), # last one must be computed based on remaining token in, therefore it is None
     ]
 
-    token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_out, swap_fee, is_zero_for_one)
+    token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_out, spread_factor, is_zero_for_one)
 
     expected_token_in = sdk_dec.new(expected_token_in)
     expected_fee_growth_per_share_total = sdk_dec.new(expected_fee_growth_per_share_total)
@@ -148,7 +148,7 @@ def estimate_overlapping_price_range_ofz_test_in_given_out():
     """
 
     is_zero_for_one = False
-    swap_fee = sdk_dec.new("0.1")
+    spread_factor = sdk_dec.new("0.1")
     token_out_initial = sdk_dec.new("10000000000")
 
     tick_ranges = [
@@ -157,14 +157,14 @@ def estimate_overlapping_price_range_ofz_test_in_given_out():
         SqrtPriceRange(5500, None, sdk_dec.new("670416088.605668727039240782")), # last one must be computed based on remaining token in, therefore it is None
     ]
 
-    token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_out_initial, swap_fee, is_zero_for_one)
+    token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_out_initial, spread_factor, is_zero_for_one)
 
     expected_token_in = sdk_dec.new("2071290")
     expected_fee_growth_per_share_total = sdk_dec.new("0.000143548203873862")
 
     validate_confirmed_results(token_in, fee_growth_per_share_total, expected_token_in, expected_fee_growth_per_share_total)
 
-def estimate_overlapping_price_range_zfo_test_in_given_out(tokein_in_initial: str, swap_fee: str, expected_token_in: str, expected_fee_growth_per_share_total: str):
+def estimate_overlapping_price_range_zfo_test_in_given_out(tokein_in_initial: str, spread_factor: str, expected_token_in: str, expected_fee_growth_per_share_total: str):
     """Estimates and prints the results of a calc concentrated liquidity test case with overlapping price ranges
     when swapping token zero for one (zfo) and not consuming full liquidity of the second position.
 
@@ -172,7 +172,7 @@ def estimate_overlapping_price_range_zfo_test_in_given_out(tokein_in_initial: st
     """
 
     is_zero_for_one = True
-    swap_fee = sdk_dec.new(swap_fee)
+    spread_factor = sdk_dec.new(spread_factor)
     token_in_initial = sdk_dec.new(tokein_in_initial)
 
     tick_ranges = [
@@ -181,7 +181,7 @@ def estimate_overlapping_price_range_zfo_test_in_given_out(tokein_in_initial: st
         SqrtPriceRange(4545, None, sdk_dec.new("670416215.718827443660400594")), # last one must be computed based on remaining token in, therefore it is None
     ]
 
-    token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_in_initial, swap_fee, is_zero_for_one)
+    token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_in_initial, spread_factor, is_zero_for_one)
 
     expected_token_in = sdk_dec.new(expected_token_in)
     expected_fee_growth_per_share_total = sdk_dec.new(expected_fee_growth_per_share_total)
@@ -196,7 +196,7 @@ def estimate_consecutive_positions_gap_ofz_test_in_given_out():
     """
 
     is_zero_for_one = False
-    swap_fee = sdk_dec.new("0.03")
+    spread_factor = sdk_dec.new("0.03")
     token_out_initial = sdk_dec.new("10000000000")
 
     tick_ranges = [
@@ -204,7 +204,7 @@ def estimate_consecutive_positions_gap_ofz_test_in_given_out():
         SqrtPriceRange(5501, None, sdk_dec.new("1199528406.187413669220037261")), # last one must be computed based on remaining token in, therefore it is None
     ]
 
-    token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_out_initial, swap_fee, is_zero_for_one)
+    token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_out_initial, spread_factor, is_zero_for_one)
 
     expected_token_in = sdk_dec.new("1876851")
     expected_fee_growth_per_share_total = sdk_dec.new("0.000041537584780053")
@@ -219,14 +219,14 @@ def estimate_slippage_protection_zfo_test_in_given_out():
     """
 
     is_zero_for_one = True
-    swap_fee = sdk_dec.new("0.01")
+    spread_factor = sdk_dec.new("0.01")
     token_in_initial = sdk_dec.new("13370")
 
     tick_ranges = [
         SqrtPriceRange(5000, 4994, sdk_dec.new("1517882343.751510418088349649")),
     ]
 
-    token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_in_initial, swap_fee, is_zero_for_one)
+    token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_in_initial, spread_factor, is_zero_for_one)
 
     expected_token_in = sdk_dec.new("65068308")
     expected_fee_growth_per_share_total = sdk_dec.new("0.000428678206421614")

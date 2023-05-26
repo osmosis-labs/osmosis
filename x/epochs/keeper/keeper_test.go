@@ -22,16 +22,16 @@ type KeeperTestSuite struct {
 	queryClient  types.QueryClient
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (s *KeeperTestSuite) SetupTest() {
 	ctx, epochsKeeper := Setup()
-	suite.Ctx = ctx
-	suite.EpochsKeeper = epochsKeeper
+	s.Ctx = ctx
+	s.EpochsKeeper = epochsKeeper
 	queryRouter := baseapp.NewGRPCQueryRouter()
 	cfg := module.NewConfigurator(nil, nil, queryRouter)
-	types.RegisterQueryServer(cfg.QueryServer(), epochskeeper.NewQuerier(*suite.EpochsKeeper))
-	suite.queryClient = types.NewQueryClient(&baseapp.QueryServiceTestHelper{
+	types.RegisterQueryServer(cfg.QueryServer(), epochskeeper.NewQuerier(*s.EpochsKeeper))
+	s.queryClient = types.NewQueryClient(&baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: queryRouter,
-		Ctx:             suite.Ctx,
+		Ctx:             s.Ctx,
 	})
 }
 
@@ -48,10 +48,9 @@ func Setup() (sdk.Context, *epochskeeper.Keeper) {
 	epochsKeeper.InitGenesis(ctx, *types.DefaultGenesis())
 	SetEpochStartTime(ctx, epochsKeeper)
 	return ctx, epochsKeeper
-
 }
-func SetEpochStartTime(ctx sdk.Context, epochsKeeper *epochskeeper.Keeper) {
 
+func SetEpochStartTime(ctx sdk.Context, epochsKeeper *epochskeeper.Keeper) {
 	for _, epoch := range epochsKeeper.AllEpochInfos(ctx) {
 		epoch.StartTime = ctx.BlockTime()
 		epochsKeeper.DeleteEpochInfo(ctx, epoch.Identifier)

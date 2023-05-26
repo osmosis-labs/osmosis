@@ -27,10 +27,11 @@ type ContractKeeper interface {
 
 	Sudo(ctx sdk.Context, contractAddress sdk.AccAddress, msg []byte) ([]byte, error)
 
-	// TODO: decide if we want to allow this or if just sudo is enough.
 	Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, msg []byte, coins sdk.Coins) ([]byte, error)
 }
 
+// ContractKeeper defines the interface needed to be fulfilled for
+// the WasmKeeper.
 type WasmKeeper interface {
 	QuerySmart(ctx sdk.Context, contractAddress sdk.AccAddress, queryMsg []byte) ([]byte, error)
 }

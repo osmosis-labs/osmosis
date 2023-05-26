@@ -52,7 +52,6 @@ func NewAppConstructor() network.AppConstructor {
 		return NewOsmosisApp(
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 			simapp.EmptyAppOptions{},
-			GetWasmEnabledProposals(),
 			EmptyWasmOpts,
 			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)

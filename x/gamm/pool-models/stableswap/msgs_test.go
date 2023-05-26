@@ -20,7 +20,7 @@ func baseCreatePoolMsgGen(sender sdk.AccAddress) *stableswap.MsgCreateStableswap
 
 	poolParams := &stableswap.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.ZeroDec(),
 	}
 
 	msg := &stableswap.MsgCreateStableswapPool{
@@ -118,7 +118,7 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "negative swap fee with zero exit fee",
+			name: "negative spread factor with zero exit fee",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.PoolParams = &stableswap.PoolParams{
 					SwapFee: sdk.NewDecWithPrec(-1, 2),
@@ -193,7 +193,7 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 			expectPass: true,
 		},
 		{
-			name: "zero swap fee, zero exit fee",
+			name: "zero spread factor, zero exit fee",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.PoolParams = &stableswap.PoolParams{
 					ExitFee: sdk.NewDecWithPrec(0, 0),
@@ -300,7 +300,7 @@ func (suite *TestSuite) TestMsgCreateStableswapPool() {
 	suite.SetupTest()
 
 	var (
-		validParams           = &stableswap.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2), ExitFee: sdk.NewDecWithPrec(1, 3)}
+		validParams           = &stableswap.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2), ExitFee: sdk.ZeroDec()}
 		validInitialLiquidity = sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(1_000_000)), sdk.NewCoin("usdt", sdk.NewInt(2_000_000)))
 		validScalingFactors   = []uint64{1, 1}
 		invalidScalingFactors = []uint64{1, 1, 1}
@@ -338,7 +338,6 @@ func (suite *TestSuite) TestMsgCreateStableswapPool() {
 
 	for name, tc := range tests {
 		suite.Run(name, func() {
-
 			pool, err := tc.msg.CreatePool(suite.Ctx, 1)
 
 			if tc.expectError {
@@ -348,8 +347,12 @@ func (suite *TestSuite) TestMsgCreateStableswapPool() {
 			suite.Require().NoError(err)
 
 			suite.Require().Equal(tc.poolId, pool.GetId())
-			suite.Require().Equal(tc.msg.InitialPoolLiquidity, pool.GetTotalPoolLiquidity(suite.Ctx))
-			suite.Require().Equal(types.InitPoolSharesSupply, pool.GetTotalShares())
+
+			cfmmPool, ok := pool.(types.CFMMPoolI)
+			suite.Require().True(ok)
+
+			suite.Require().Equal(tc.msg.InitialPoolLiquidity, cfmmPool.GetTotalPoolLiquidity(suite.Ctx))
+			suite.Require().Equal(types.InitPoolSharesSupply, cfmmPool.GetTotalShares())
 		})
 	}
 }

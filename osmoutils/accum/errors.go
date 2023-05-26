@@ -16,15 +16,15 @@ type NoPositionError struct {
 }
 
 func (e NoPositionError) Error() string {
-	return fmt.Sprintf("no position found for address (%s)", e.Name)
+	return fmt.Sprintf("no position found for position key (%s)", e.Name)
 }
 
-type NegativeCustomAccError struct {
-	CustomAccumulatorValue sdk.DecCoins
+type NegativeIntervalAccumulationPerShareError struct {
+	IntervalAccumulationPerShare sdk.DecCoins
 }
 
-func (e NegativeCustomAccError) Error() string {
-	return fmt.Sprintf("customAccumulatorValue must be non-negative, was (%s)", e.CustomAccumulatorValue)
+func (e NegativeIntervalAccumulationPerShareError) Error() string {
+	return fmt.Sprintf("interval accumulation per share must be non-negative, was (%s)", e.IntervalAccumulationPerShare)
 }
 
 type NegativeAccDifferenceError struct {
@@ -41,4 +41,13 @@ type AccumDoesNotExistError struct {
 
 func (e AccumDoesNotExistError) Error() string {
 	return fmt.Sprintf("Accumulator name %s does not exist in store", e.AccumName)
+}
+
+type NegativeRewardsAdditionError struct {
+	AccumName    string
+	PositionName string
+}
+
+func (e NegativeRewardsAdditionError) Error() string {
+	return fmt.Sprintf("Attempted to add negative rewards to position %s of the accumulator %s", e.PositionName, e.AccumName)
 }

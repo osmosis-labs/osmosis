@@ -1,21 +1,16 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint128};
-use schemars::JsonSchema;
+use registry::msg::SerializableJson;
 use swaprouter::msg::Slippage;
 
 /// Message type for `instantiate` entry_point
 #[cw_serde]
 pub struct InstantiateMsg {
-    /// The address that will be allowed to manage the channel registry
+    /// The address that will be allowed to manage which swap_contract to use
     pub governor: String,
 
     /// This should be an instance of the Osmosis swaprouter contract
     pub swap_contract: String,
-
-    /// These are the channels that will be accepted by the contract. This is
-    /// needed to avoid sending packets to addresses not supported by the
-    /// receiving chain. The channels are specified as (bech32_prefix, channel_id)
-    pub channels: Vec<(String, String)>,
 }
 
 /// An enum specifying what resolution the user expects in the case of a bad IBC
@@ -28,34 +23,6 @@ pub enum FailedDeliveryAction {
     LocalRecoveryAddr(Addr),
     // Here we could potentially add new actions in the future
     // example: SendBackToSender, SwapBackAndReturn, etc
-}
-
-// Value does not implement JsonSchema, so we wrap it here. This can be removed
-// if https://github.com/CosmWasm/serde-cw-value/pull/3 gets merged
-#[derive(
-    ::cosmwasm_schema::serde::Serialize,
-    ::cosmwasm_schema::serde::Deserialize,
-    ::std::clone::Clone,
-    ::std::fmt::Debug,
-    PartialEq,
-    Eq,
-)]
-pub struct SerializableJson(pub serde_cw_value::Value);
-
-impl JsonSchema for SerializableJson {
-    fn schema_name() -> String {
-        "JSON".to_string()
-    }
-
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        schemars::schema::Schema::from(true)
-    }
-}
-
-impl SerializableJson {
-    pub fn as_value(&self) -> &serde_cw_value::Value {
-        &self.0
-    }
 }
 
 /// message type for `execute` entry_point
@@ -90,16 +57,6 @@ pub enum ExecuteMsg {
     Recover {},
 
     // Contract Management
-    SetChannel {
-        prefix: String,
-        channel: String,
-    },
-    DisablePrefix {
-        prefix: String,
-    },
-    ReEnablePrefix {
-        prefix: String,
-    },
     TransferOwnership {
         new_governor: String,
     },

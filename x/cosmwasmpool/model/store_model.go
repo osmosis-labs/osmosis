@@ -1,6 +1,8 @@
 package model
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 // String returns the json marshalled string of the pool
 func (p PoolStoreModel) String() string {

@@ -2,7 +2,7 @@ package v15
 
 import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
-	icqtypes "github.com/strangelove-ventures/async-icq/v4/types"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v4/types"
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 
 	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
@@ -17,9 +17,11 @@ import (
 const UpgradeName = "v15"
 
 // pool ids to migrate
-const stOSMO_OSMOPoolId = 833
-const stJUNO_JUNOPoolId = 817
-const stSTARS_STARSPoolId = 810
+const (
+	stOSMO_OSMOPoolId   = 833
+	stJUNO_JUNOPoolId   = 817
+	stSTARS_STARSPoolId = 810
+)
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,

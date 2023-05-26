@@ -11,6 +11,10 @@ import (
 	"github.com/gogo/protobuf/proto"
 )
 
+var (
+	ErrNoValuesInRange = errors.New("No values in range")
+)
+
 func GatherAllKeysFromStore(storeObj store.KVStore) []string {
 	iterator := storeObj.Iterator(nil, nil)
 	defer iterator.Close()
@@ -79,6 +83,19 @@ func GetIterValuesWithStop[T any](
 	return gatherValuesFromIterator(iter, parseValue, stopFn)
 }
 
+// HasAnyAtPrefix returns true if there is at least one value in the given prefix.
+func HasAnyAtPrefix[T any](storeObj store.KVStore, prefix []byte, parseValue func([]byte) (T, error)) (bool, error) {
+	_, err := GetFirstValueInRange(storeObj, prefix, sdk.PrefixEndBytes(prefix), false, parseValue)
+	if err != nil {
+		if err == ErrNoValuesInRange {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
+}
+
 func GetFirstValueAfterPrefixInclusive[T any](storeObj store.KVStore, keyStart []byte, parseValue func([]byte) (T, error)) (T, error) {
 	// SDK iterator is broken for nil end time, and non-nil start time
 	// https://github.com/cosmos/cosmos-sdk/issues/12661
@@ -92,7 +109,7 @@ func GetFirstValueInRange[T any](storeObj store.KVStore, keyStart []byte, keyEnd
 
 	if !iterator.Valid() {
 		var blankValue T
-		return blankValue, errors.New("No values in range")
+		return blankValue, ErrNoValuesInRange
 	}
 
 	return parseValue(iterator.Value())
@@ -161,6 +178,21 @@ func MustGetDec(store store.KVStore, key []byte) sdk.Dec {
 	result := &sdk.DecProto{}
 	MustGet(store, key, result)
 	return result.Dec
+}
+
+// GetDec gets dec value from store at key. Returns error if:
+// - database error occurs.
+// - no value at given key is found.
+func GetDec(store store.KVStore, key []byte) (sdk.Dec, error) {
+	result := &sdk.DecProto{}
+	isFound, err := Get(store, key, result)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	if !isFound {
+		return sdk.Dec{}, DecNotFoundError{Key: string(key)}
+	}
+	return result.Dec, nil
 }
 
 // Get returns a value at key by mutating the result parameter. Returns true if the value was found and the

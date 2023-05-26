@@ -71,6 +71,15 @@ func (m MsgServer) SetMaxPoolPointsPerTx(c context.Context, msg *types.MsgSetMax
 		return nil, err
 	}
 
+	maxPointsPerBlock, err := m.k.GetMaxPointsPerBlock(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if msg.MaxPoolPointsPerTx > maxPointsPerBlock {
+		return nil, fmt.Errorf("max pool points per tx cannot be greater than max pool points per block")
+	}
+
 	// Set the max pool points per tx
 	if err := m.k.SetMaxPointsPerTx(ctx, msg.MaxPoolPointsPerTx); err != nil {
 		return nil, err
@@ -86,6 +95,15 @@ func (m MsgServer) SetMaxPoolPointsPerBlock(c context.Context, msg *types.MsgSet
 	// Ensure the account has the admin role and can make the tx
 	if err := m.AdminCheck(ctx, msg.Admin); err != nil {
 		return nil, err
+	}
+
+	maxPointsPerTx, err := m.k.GetMaxPointsPerTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if msg.MaxPoolPointsPerBlock < maxPointsPerTx {
+		return nil, fmt.Errorf("max pool points per block cannot be less than max pool points per tx")
 	}
 
 	// Set the max pool points per block

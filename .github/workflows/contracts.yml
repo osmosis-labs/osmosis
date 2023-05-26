@@ -26,7 +26,7 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
-      - uses: technote-space/get-diff-action@v6.0.1
+      - uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
             **/**/*.wasm
@@ -38,6 +38,7 @@ jobs:
         working-directory: ${{ matrix.contract.workdir }}
         run: >
           docker run --rm -v "$(pwd)":/code \
+            -e REGISTRY_CONTRACT=osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9 \
             --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
             --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
             cosmwasm/workspace-optimizer:0.12.10
@@ -82,7 +83,7 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
-      - uses: technote-space/get-diff-action@v6.0.1
+      - uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
             **/bytecode/*.wasm
@@ -90,7 +91,7 @@ jobs:
             **/**Cargo.toml
             **/**Cargo.lock
       - name: Install toolchain
-        uses: dtolnay/rust-toolchain@1.65.0
+        uses: dtolnay/rust-toolchain@1.70.0
         with:
           target: wasm32-unknown-unknown
         if: env.GIT_DIFF
@@ -118,14 +119,14 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
-      - uses: technote-space/get-diff-action@v6.0.1
+      - uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
             **/**.rs
             **/**Cargo.toml
             **/**Cargo.lock
       - name: Install toolchain
-        uses: dtolnay/rust-toolchain@1.65.0
+        uses: dtolnay/rust-toolchain@1.70.0
         with:
           components: rustfmt, clippy
         if: env.GIT_DIFF

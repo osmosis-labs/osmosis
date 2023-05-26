@@ -55,7 +55,8 @@ func GetCmdPool() (*osmocli.QueryDescriptor, *types.QueryPoolRequest) {
 		// Deprecated: use x/poolmanager's Pool query.
 		// nolint: staticcheck
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} pool 1`}, &types.QueryPoolRequest{}
+{{.CommandPrefix}} pool 1`,
+	}, &types.QueryPoolRequest{}
 }
 
 // TODO: Push this to the SDK.
@@ -85,7 +86,8 @@ func GetCmdPools() (*osmocli.QueryDescriptor, *types.QueryPoolsRequest) {
 		Use:   "pools",
 		Short: "Query pools",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} pools`}, &types.QueryPoolsRequest{}
+{{.CommandPrefix}} pools`,
+	}, &types.QueryPoolsRequest{}
 }
 
 // nolint: staticcheck
@@ -158,18 +160,6 @@ $ %s query gamm pool-params 1
 	return cmd
 }
 
-func GetCmdTotalPoolLiquidity() *cobra.Command {
-	return osmocli.SimpleQueryCmd[*types.QueryTotalPoolLiquidityRequest](
-		"total-pool-liquidity [poolID]",
-		"Query total-pool-liquidity",
-		`Query total-pool-liquidity.
-Example:
-{{.CommandPrefix}} total-pool-liquidity 1
-`,
-		types.ModuleName, types.NewQueryClient,
-	)
-}
-
 func GetCmdTotalShares() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.QueryTotalSharesRequest](
 		"total-share [poolID]",
@@ -194,18 +184,18 @@ Example:
 	)
 }
 
-//nolint:staticcheck
+// Deprecated: use alternate in x/poolmanager.
 func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *types.QuerySpotPriceRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "spot-price <pool-ID> [quote-asset-denom] [base-asset-denom]",
 		Short: "Query spot-price (LEGACY, arguments are reversed!!)",
 		Long: `Query spot price (Legacy).{{.ExampleHeader}}
 {{.CommandPrefix}} spot-price 1 uosmo ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
-`}, &types.QuerySpotPriceRequest{}
+`,
+	}, &types.QuerySpotPriceRequest{}
 }
 
-// GetCmdEstimateSwapExactAmountIn returns estimation of output coin when amount of x token input.
-// nolint: staticcheck
+// Deprecated: use alternate in x/poolmanager.
 func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QuerySwapExactAmountInRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "estimate-swap-exact-amount-in <poolID> <sender> <tokenIn>",
@@ -219,8 +209,7 @@ func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QuerySw
 	}, &types.QuerySwapExactAmountInRequest{}
 }
 
-// GetCmdEstimateSwapExactAmountOut returns estimation of input coin to get exact amount of x token output.
-// nolint: staticcheck
+// Deprecated: use alternate in x/poolmanager.
 func GetCmdEstimateSwapExactAmountOut() (*osmocli.QueryDescriptor, *types.QuerySwapExactAmountOutRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "estimate-swap-exact-amount-out <poolID> <sender> <tokenOut>",
@@ -331,6 +320,21 @@ func GetCmdPoolType() *cobra.Command {
 		`Query pool type
 Example:
 {{.CommandPrefix}} pool-type <pool_id>
+`,
+		types.ModuleName, types.NewQueryClient,
+	)
+}
+
+// GetCmdTotalPoolLiquidity returns total liquidity in pool.
+// Deprecated: please use the alternative in x/poolmanager
+// nolint: staticcheck
+func GetCmdTotalPoolLiquidity() *cobra.Command {
+	return osmocli.SimpleQueryCmd[*types.QueryTotalPoolLiquidityRequest](
+		"total-pool-liquidity [poolID]",
+		"Query total-pool-liquidity",
+		`Query total-pool-liquidity.
+Example:
+{{.CommandPrefix}} total-pool-liquidity 1
 `,
 		types.ModuleName, types.NewQueryClient,
 	)

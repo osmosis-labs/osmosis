@@ -3,10 +3,13 @@ package osmosis.concentratedliquidity.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/any.proto";
+import "osmosis/accum/v1beta1/accum.proto";
 import "osmosis/concentrated-liquidity/params.proto";
 import "osmosis/concentrated-liquidity/position.proto";
 import "osmosis/concentrated-liquidity/tickInfo.proto";
+import "osmosis/concentrated-liquidity/incentive_record.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis";
 
@@ -32,6 +35,24 @@ message PoolData {
   // pool's ticks
   repeated FullTick ticks = 2
       [ (gogoproto.moretags) = "yaml:\"ticks\"", (gogoproto.nullable) = false ];
+  AccumObject fee_accumulator = 3 [
+    (gogoproto.moretags) = "yaml:\"fee_accumulator\"",
+    (gogoproto.nullable) = false
+  ];
+  repeated AccumObject incentives_accumulators = 4 [
+    (gogoproto.moretags) = "yaml:\"incentives_accumulator\"",
+    (gogoproto.nullable) = false
+  ];
+  // incentive records to be set
+  repeated IncentiveRecord incentive_records = 5
+      [ (gogoproto.nullable) = false ];
+}
+
+message PositionData {
+  Position position = 1;
+  uint64 lock_id = 2 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
+  osmosis.accum.v1beta1.Record fee_accum_record = 3
+      [ (gogoproto.nullable) = false ];
 }
 
 // GenesisState defines the concentrated liquidity module's genesis state.
@@ -39,10 +60,21 @@ message GenesisState {
   // params are all the parameters of the module
   Params params = 1 [ (gogoproto.nullable) = false ];
   // pool data containining serialized pool struct and ticks.
-  repeated PoolData pool_data = 2;
+  repeated PoolData pool_data = 2 [ (gogoproto.nullable) = false ];
 
-  repeated Position positions = 3 [ (gogoproto.nullable) = false ];
+  repeated PositionData position_data = 3 [ (gogoproto.nullable) = false ];
 
   uint64 next_position_id = 4
       [ (gogoproto.moretags) = "yaml:\"next_position_id\"" ];
+}
+
+message AccumObject {
+  // In original struct of Accum object, store.KVStore is stored together.
+  // For handling genesis, we do not need to include store.KVStore since we use
+  // CL module's KVStore.
+
+  // Accumulator's name (pulled from AccumulatorContent)
+  string name = 1 [ (gogoproto.moretags) = "yaml:\"name\"" ];
+
+  osmosis.accum.v1beta1.AccumulatorContent accum_content = 2;
 }

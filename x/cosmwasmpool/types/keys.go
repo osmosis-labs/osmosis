@@ -12,10 +12,8 @@ const (
 	RouterKey = ModuleName
 )
 
-var (
-	// PoolKey defines the store key for pools.
-	PoolsKey = []byte{0x01}
-)
+// PoolsKey defines the store key for pools.
+var PoolsKey = []byte{0x01}
 
 func FormatPoolsPrefix(poolId uint64) []byte {
 	return append(PoolsKey, sdk.Uint64ToBigEndian(poolId)...)

@@ -53,6 +53,7 @@ cw-utils = { workspace = true }
 
 swaprouter = { path = "../swaprouter", features = ["imported"]}
 crosschain-swaps = { path = "../crosschain-swaps", features = ["imported"]}
+registry = { path = "../../packages/registry"}
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }

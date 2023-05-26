@@ -40,6 +40,8 @@ const (
 	FlagSwapRouteDenoms = "swap-route-denoms"
 	// FlagScalingFactors represents the flag name for the scaling factors.
 	FlagScalingFactors = "scaling-factors"
+
+	FlagMigrationRecords = "migration-records"
 )
 
 type createBalancerPoolInputs struct {
@@ -112,5 +114,11 @@ func FlagSetJustPoolId() *flag.FlagSet {
 func FlagSetAdjustScalingFactors() *flag.FlagSet {
 	fs := FlagSetJustPoolId()
 	fs.String(FlagScalingFactors, "", "The scaling factors")
+	return fs
+}
+
+func FlagSetMigratePosition() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+	fs.StringArray(FlagMinAmountsOut, []string{""}, "Minimum tokens out")
 	return fs
 }

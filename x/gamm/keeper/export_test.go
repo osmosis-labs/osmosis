@@ -29,3 +29,7 @@ func (k Keeper) UnmarshalPoolLegacy(bz []byte) (poolmanagertypes.PoolI, error) {
 	var acc poolmanagertypes.PoolI
 	return acc, k.cdc.UnmarshalInterface(bz, &acc)
 }
+
+func GetMaximalNoSwapLPAmount(ctx sdk.Context, pool types.CFMMPoolI, shareOutAmount sdk.Int) (neededLpLiquidity sdk.Coins, err error) {
+	return getMaximalNoSwapLPAmount(ctx, pool, shareOutAmount)
+}

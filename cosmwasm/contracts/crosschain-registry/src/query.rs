@@ -1,9 +1,10 @@
-use crate::helpers::*;
 use crate::state::{
-    CHAIN_TO_BECH32_PREFIX_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP,
+    CHAIN_TO_BECH32_PREFIX_MAP, CHAIN_TO_BECH32_PREFIX_REVERSE_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP,
+    CHANNEL_ON_CHAIN_CHAIN_MAP,
 };
 
 use cosmwasm_std::{Deps, StdError};
+use registry::proto::{DenomTrace, QueryDenomTraceRequest};
 
 pub fn query_denom_trace_from_ibc_denom(
     deps: Deps,
@@ -25,12 +26,27 @@ pub fn query_bech32_prefix_from_chain_name(
 
     if !chain_to_bech32_prefix_map.enabled {
         return Err(StdError::generic_err(format!(
-            "Chain {} to bech32 prefix mapping is disabled",
-            chain_name
+            "Chain {chain_name} to bech32 prefix mapping is disabled"
         )));
     }
 
     Ok(chain_to_bech32_prefix_map.value)
+}
+
+pub fn query_chain_name_from_bech32_prefix(deps: Deps, prefix: String) -> Result<String, StdError> {
+    let chains = CHAIN_TO_BECH32_PREFIX_REVERSE_MAP.load(deps.storage, &prefix)?;
+    if chains.len() > 1 {
+        return Err(StdError::generic_err(format!(
+            "Bech32 prefix {prefix} is not unique"
+        )));
+    }
+
+    match chains.first() {
+        Some(chain) => Ok(chain.to_string()),
+        None => Err(StdError::generic_err(format!(
+            "Bech32 prefix {prefix} is not found"
+        ))),
+    }
 }
 
 pub fn query_channel_from_chain_pair(
@@ -48,8 +64,7 @@ pub fn query_channel_from_chain_pair(
 
     if !channel.enabled {
         return Err(StdError::generic_err(format!(
-            "Channel from {} to {} mapping is disabled",
-            source_chain, destination_chain
+            "Channel from {source_chain} to {destination_chain} mapping is disabled"
         )));
     }
 
@@ -68,8 +83,7 @@ pub fn query_chain_from_channel_chain_pair(
 
     if !chain.enabled {
         return Err(StdError::generic_err(format!(
-            "Destination chain from channel {} on source chain {} mapping is disabled",
-            on_chain, via_channel
+            "Destination chain from channel {on_chain} on source chain {via_channel} mapping is disabled"
         )));
     }
 

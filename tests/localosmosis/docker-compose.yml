@@ -1,21 +1,21 @@
 version: "3"
 
 services:
-
   osmosisd:
     image: local:osmosis
     build:
       context: ../../
       dockerfile: Dockerfile
       args:
-        RUNNER_IMAGE: alpine:3.16
-        GO_VERSION: 1.19
+        RUNNER_IMAGE: golang:1.20.3-alpine3.17
+        GO_VERSION: "1.20"
     volumes:
       - ./scripts/nativeDenomPoolA.json:/osmosis/nativeDenomPoolA.json
       - ./scripts/nativeDenomPoolB.json:/osmosis/nativeDenomPoolB.json
       - ./scripts/nativeDenomThreeAssetPool.json:/osmosis/nativeDenomThreeAssetPool.json
       - ./scripts/stableswapPool.json:/osmosis/stableswapPool.json
       - ./scripts/setup.sh:/osmosis/setup.sh
+      - ../cl-genesis-positions:/osmosis/cl-genesis-positions
       - $HOME/.osmosisd-local/:/osmosis/.osmosisd/
     entrypoint:
       - /osmosis/setup.sh
@@ -26,3 +26,4 @@ services:
       - 1317:1317
       - 9090:9090
       - 9091:9091
+      - 6060:6060
