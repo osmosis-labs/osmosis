@@ -491,6 +491,12 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulatorValues() {
 	}
 }
 
+func (s *KeeperTestSuite) getAllIncentiveRecordsForPool(poolId uint64) []types.IncentiveRecord {
+	records, err := s.clk.GetAllIncentiveRecordsForPool(s.Ctx, poolId)
+	s.Require().NoError(err)
+	return records
+}
+
 func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 	incentiveRecordOneWithDifferentStartTime := withStartTime(incentiveRecordOne, incentiveRecordOne.IncentiveRecordBody.StartTime.Add(10))
 	incentiveRecordOneWithDifferentMinUpTime := withMinUptime(incentiveRecordOne, testUptimeTwo)
@@ -710,9 +716,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 					err := s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, updatedPoolRecords)
 					s.Require().NoError(err)
 
-					updatedRecordsInState, err := s.App.ConcentratedLiquidityKeeper.GetAllIncentiveRecordsForPool(s.Ctx, tc.poolId)
-					s.Require().NoError(err)
-
+					updatedRecordsInState := s.getAllIncentiveRecordsForPool(tc.poolId)
 					s.Require().Equal(0, len(updatedRecordsInState))
 				}
 			} else {
@@ -763,8 +767,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			s.Require().Equal(initUptimeAccumValues, newUptimeAccumValues)
 
 			// Ensure incentive records remain unchanged
-			updatedIncentiveRecords, err := s.clk.GetAllIncentiveRecordsForPool(ctx, poolId)
-			s.Require().NoError(err)
+			updatedIncentiveRecords := s.getAllIncentiveRecordsForPool(poolId)
 			s.Require().Equal(tc.poolIncentiveRecords, updatedIncentiveRecords)
 
 			return nil
@@ -1028,8 +1031,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			s.Require().NoError(err)
 
 			// Add qualifying and non-qualifying liquidity to the pool
-			qualifyingLiquidity := sdk.ZeroDec()
-			qualifyingBalancerLiquidity := sdk.ZeroDec()
+			qualifyingLiquidity, qualifyingBalancerLiquidity := sdk.ZeroDec(), sdk.ZeroDec()
 			if !tc.isInvalidBalancerPool {
 				depositedCoins := sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), testQualifyingDepositsOne), sdk.NewCoin(clPool.GetToken1(), testQualifyingDepositsOne))
 				s.FundAcc(testAddressOne, depositedCoins)
@@ -1101,38 +1103,33 @@ func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
 	s.Ctx = s.Ctx.WithBlockTime(defaultStartTime)
 	emptyIncentiveRecords := []types.IncentiveRecord{}
 
-	// Set up test pool
+	// Set up two test pool
 	clPoolOne := s.PrepareConcentratedPool()
-
-	// Set up second pool for reference
 	clPoolTwo := s.PrepareConcentratedPool()
+	ensurePoolTwoRecordsEmpty := func() {
+		poolTwoRecords := s.getAllIncentiveRecordsForPool(clPoolTwo.GetId())
+		s.Require().Equal(emptyIncentiveRecords, poolTwoRecords)
+	}
 
 	// Ensure both pools start with no incentive records
-	poolOneRecords, err := clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolOne.GetId())
-	s.Require().NoError(err)
+	poolOneRecords := s.getAllIncentiveRecordsForPool(clPoolOne.GetId())
 	s.Require().Equal(emptyIncentiveRecords, poolOneRecords)
-
-	poolTwoRecords, err := clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolTwo.GetId())
-	s.Require().NoError(err)
-	s.Require().Equal(emptyIncentiveRecords, poolTwoRecords)
+	ensurePoolTwoRecordsEmpty()
 
 	// Ensure setting and getting a single record works with single Get and GetAll
-	err = clKeeper.SetIncentiveRecord(s.Ctx, incentiveRecordOne)
+	err := clKeeper.SetIncentiveRecord(s.Ctx, incentiveRecordOne)
 	s.Require().NoError(err)
 	poolOneRecord, err := clKeeper.GetIncentiveRecord(s.Ctx, clPoolOne.GetId(), incentiveRecordOne.IncentiveDenom, incentiveRecordOne.MinUptime, sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr))
 	s.Require().NoError(err)
 	s.Require().Equal(incentiveRecordOne, poolOneRecord)
-	allRecordsPoolOne, err := clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolOne.GetId())
-	s.Require().NoError(err)
+	allRecordsPoolOne := s.getAllIncentiveRecordsForPool(clPoolOne.GetId())
 	s.Require().Equal([]types.IncentiveRecord{incentiveRecordOne}, allRecordsPoolOne)
 
 	// Ensure records for other pool remain unchanged
 	poolTwoRecord, err := clKeeper.GetIncentiveRecord(s.Ctx, clPoolTwo.GetId(), incentiveRecordOne.IncentiveDenom, incentiveRecordOne.MinUptime, sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr))
 	s.Require().ErrorIs(err, types.IncentiveRecordNotFoundError{PoolId: clPoolTwo.GetId(), IncentiveDenom: incentiveRecordOne.IncentiveDenom, MinUptime: incentiveRecordOne.MinUptime, IncentiveCreatorStr: incentiveRecordOne.IncentiveCreatorAddr})
 	s.Require().Equal(types.IncentiveRecord{}, poolTwoRecord)
-	allRecordsPoolTwo, err := clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolTwo.GetId())
-	s.Require().NoError(err)
-	s.Require().Equal(emptyIncentiveRecords, allRecordsPoolTwo)
+	ensurePoolTwoRecordsEmpty()
 
 	// Ensure directly setting additional records don't overwrite previous ones
 	err = clKeeper.SetIncentiveRecord(s.Ctx, incentiveRecordTwo)
@@ -1140,8 +1137,7 @@ func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
 	poolOneRecord, err = clKeeper.GetIncentiveRecord(s.Ctx, clPoolOne.GetId(), incentiveRecordTwo.IncentiveDenom, incentiveRecordTwo.MinUptime, sdk.MustAccAddressFromBech32(incentiveRecordTwo.IncentiveCreatorAddr))
 	s.Require().NoError(err)
 	s.Require().Equal(incentiveRecordTwo, poolOneRecord)
-	allRecordsPoolOne, err = clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolOne.GetId())
-	s.Require().NoError(err)
+	allRecordsPoolOne = s.getAllIncentiveRecordsForPool(clPoolOne.GetId())
 	s.Require().Equal([]types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo}, allRecordsPoolOne)
 
 	// Ensure setting multiple records through helper functions as expected
@@ -1150,14 +1146,11 @@ func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
 	s.Require().NoError(err)
 
 	// Note: we expect the records to be retrieved in lexicographic order by denom and for the empty record to be cleared
-	allRecordsPoolOne, err = clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolOne.GetId())
-	s.Require().NoError(err)
+	allRecordsPoolOne = s.getAllIncentiveRecordsForPool(clPoolOne.GetId())
 	s.Require().Equal([]types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour}, allRecordsPoolOne)
 
 	// Finally, we ensure the second pool remains unaffected
-	allRecordsPoolTwo, err = clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolTwo.GetId())
-	s.Require().NoError(err)
-	s.Require().Equal(emptyIncentiveRecords, allRecordsPoolTwo)
+	ensurePoolTwoRecordsEmpty()
 }
 
 func (s *KeeperTestSuite) TestGetInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick() {
