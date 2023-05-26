@@ -194,13 +194,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 				for i := 0; i < numberOfPositions; i++ {
 					lowerTick := currentTick - 10
 					upperTick := currentTick + 10
-					tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(maxAmountDeposited).MulRaw(5))
-					tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(maxAmountDeposited).MulRaw(5))
-					tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
-					accountIndex := rand.Intn(len(s.TestAccs))
-					account := s.TestAccs[accountIndex]
-					simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
-					s.createPosition(accountIndex, clPoolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
+					createPosition(lowerTick, upperTick)
 				}
 			}
 
@@ -210,13 +204,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 				upperTick := currentTick + 100
 				lowerTick = lowerTick + (tickSpacing - lowerTick%tickSpacing)
 				upperTick = upperTick - upperTick%tickSpacing
-				tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(maxAmountDeposited).MulRaw(5))
-				tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(maxAmountDeposited).MulRaw(5))
-				tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
-				accountIndex := rand.Intn(len(s.TestAccs))
-				account := s.TestAccs[accountIndex]
-				simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
-				s.createPosition(accountIndex, clPoolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
+				createPosition(lowerTick, upperTick)
 			}
 		}
 
