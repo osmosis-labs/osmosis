@@ -15,7 +15,28 @@ One key concept, is that the pool has a native concept of
 
 ### Scaling factor handling
 
-An important concept thats up to now, not been mentioned is how do we set the expected price ratio.
+Scaling factors are the stableswap analogue of asset weights in the pool, meaning that changing them affects
+the way that assets are valued in the pool. We added the ability for a governor to change these values in
+the rare case where the assets are not pegged to a specific ratio of each other but are instead varying in
+some predictable way (e.g. non-rebasing LSTs, which get more valuable relative to their base asset, meaning
+that having fixed scaling factors eventually keeps the pool "stable" around the wrong price)
+
+It should be relatively infrequent in practice, scaling factors can be changed on demand by the scaling factor governor.
+(by default, pools should not have a governor set, as for most use cases like stablecoin to stablecoin pools, a
+single fixed ratio of assets (e.g. 1:1) is sufficient)
+
+For stablecoin pools, they should be even amounts. For other ratios, TODO: add more details here
+
+In terms of impermanent loss, it changes the price of the assets, so it depends on when the LP joined.
+It does not necessarily increase IL, which would depend entirely on the direction of the price change relative to the LP's original entry.
+
+Technically you can change scaling factors in both directions but the use cases for needing this are sparse.
+
+We don't currently have rate limits for scaling factor changes. Again, majority of pools should not have a governor,
+and for pools that do, LPs should be informed of the risks.
+
+Scaling factors help to set the expected price ratio.
+
 In the choice of curve section, we see that its the case that when `x_reserves ~= y_reserves`, that spot price is very close to `1`. However, there are a couple issues with just this in practice:
 
 1. Precision of pegged coins may differ. Suppose `1 Foo = 10^12 base units`, whereas `1 WrappedFoo = 10^6 base units`, but `1 Foo` is expected to trade near the price of `1 Wrapped Foo`.
@@ -41,7 +62,6 @@ for cases where the scaling factor doesn't perfectly divide into the liquidity.
 We detail rounding modes and scaling details as pseudocode in the relevant sections of the spec.
 (And rounding modes for 'descaling' from AMM eq output to real liquidity amounts, via multiplying by the respective scaling factor)
 
-<!-- TODO come back and revise the scaling factor section for clarity -->
 
 ## Algorithm details
 
