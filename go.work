@@ -1,5 +1,7 @@
 go 1.19
 
+replace github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230526185115-93aff3f16ac7
+
 use ./osmomath
 
 use ./osmoutils
