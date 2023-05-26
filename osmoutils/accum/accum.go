@@ -409,13 +409,15 @@ func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, sdk
 		return sdk.Coins{}, sdk.DecCoins{}, NoPositionError{positionName}
 	}
 
+	fmt.Println("ACCUMULATOR POSITION: ", position)
+
 	totalRewards := GetTotalRewards(accum, position)
-	fmt.Println("TOTAL REWARDS: ", totalRewards)
+
 	// Return the integer coins to the user
 	// The remaining change is thrown away.
 	// This is acceptable because we round in favor of the protocol.
 	truncatedRewardsTotal, dust := totalRewards.TruncateDecimal()
-	fmt.Println("DUST AMOUNT: ", dust)
+
 	if position.NumShares.Equal(sdk.ZeroDec()) {
 		// remove the position from state entirely if numShares = zero
 		accum.deletePosition(positionName)

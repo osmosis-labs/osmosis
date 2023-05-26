@@ -777,7 +777,7 @@ func updateAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey strin
 	if err != nil {
 		return sdk.Coins{}, sdk.DecCoins{}, err
 	}
-
+	fmt.Println("HAS POS: ", hasPosition)
 	// If position still exists, we update the position's accumulator value to be the current accumulator value minus the growth outside.
 	if hasPosition {
 		// The position accumulator value must always equal to the growth inside at the time of last update.
@@ -891,6 +891,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 
 		// If the accumulator contains the position, claim the position's incentives.
 		if hasPosition {
+			//fmt.Println("COLLECTED INCENTIVES: ", uptimeAccum, "POS NAME: ", positionName, "UPTIME GROWTH OUTSIDE", uptimeGrowthOutside[uptimeIndex])
 			collectedIncentivesForUptime, dust, err := updateAccumAndClaimRewards(uptimeAccum, positionName, uptimeGrowthOutside[uptimeIndex])
 			if err != nil {
 				return sdk.Coins{}, sdk.Coins{}, err
@@ -938,7 +939,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 			collectedIncentivesForPosition = collectedIncentivesForPosition.Add(collectedIncentivesForUptime...)
 		}
 	}
-	fmt.Println("forfeited value: ", forfeitedIncentivesForPosition)
+
 	totalForfeited, _ := forfeitedIncentivesForPosition.TruncateDecimal()
 	return collectedIncentivesForPosition, totalForfeited, nil
 }

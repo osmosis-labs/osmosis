@@ -1,6 +1,8 @@
 package accum
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -41,10 +43,11 @@ func GetTotalRewards(accum AccumulatorObject, position Record) sdk.DecCoins {
 	totalRewards := position.UnclaimedRewardsTotal
 
 	// TODO: add a check that accum.value is greater than position.InitAccumValue
+	// TODO:  accum.valuePerShare == global accum value
 	accumulatorRewards := accum.valuePerShare.Sub(position.AccumValuePerShare).MulDec(position.NumShares)
 	totalRewards = totalRewards.Add(accumulatorRewards...)
 
-	//fmt.Println("one", accum.valuePerShare, "two", position.AccumValuePerShare, "three", position.NumShares, "four", accumulatorRewards)
+	fmt.Println("one", accum.valuePerShare, "two", position.AccumValuePerShare, "three", position.NumShares, "four", accumulatorRewards, "five(unclaimed):", totalRewards)
 
 	return totalRewards
 }
