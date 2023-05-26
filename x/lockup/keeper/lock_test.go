@@ -235,7 +235,9 @@ func (s *KeeperTestSuite) TestUnlock() {
 		ctx := s.Ctx
 
 		addr1 := sdk.AccAddress([]byte("addr1---------------"))
-		_ = types.NewPeriodLock(1, addr1, addr1.String(), time.Second, time.Time{}, tc.fundAcc)
+		lock := types.NewPeriodLock(1, addr1, addr1.String(), time.Second, time.Time{}, tc.fundAcc)
+		fmt.Println("----")
+		fmt.Println(lock.String())
 
 		// lock with balance
 		s.FundAcc(addr1, tc.fundAcc)

@@ -773,7 +773,6 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 
 // setLock is a utility to store lock object into the store.
 func (k Keeper) setLock(ctx sdk.Context, lock types.PeriodLock) error {
-	ctx.Logger().Error(fmt.Sprintf("setting lock with id and durtion of %d %s", lock.ID, lock.Duration.String()))
 	store := ctx.KVStore(k.storeKey)
 	bz, err := proto.Marshal(&lock)
 	if err != nil {
