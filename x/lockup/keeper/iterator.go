@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
 	db "github.com/tendermint/tm-db"
@@ -185,7 +184,6 @@ func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []ty
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		lockID := sdk.BigEndianToUint64(iterator.Value())
-		ctx.Logger().Error(fmt.Sprintf("getting locks from iterator with lock id: %d", lockID))
 		lock, err := k.GetLockByID(ctx, lockID)
 		if err != nil {
 			panic(err)

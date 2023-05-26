@@ -428,9 +428,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 			// send based on synthetic lockup coins if it's distributing to synthetic lockups
 			var err error
 			if lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom) {
-				ctx.Logger().Error(fmt.Sprintf("gauge is %s", gauge.DistributeTo.Duration.String()))
 				// TODO: add test case to cover this
-				ctx.Logger().Error("here")
 				gaugeDistributedCoins, err = k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
 			} else {
 				gaugeDistributedCoins, err = k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)

@@ -230,14 +230,6 @@ func (k Keeper) GetLockedDenom(ctx sdk.Context, denom string, duration time.Dura
 
 // GetLocksLongerThanDurationDenom Returns the locks whose unlock duration is longer than duration.
 func (k Keeper) GetLocksLongerThanDurationDenom(ctx sdk.Context, denom string, duration time.Duration) []types.PeriodLock {
-	ctx.Logger().Error(fmt.Sprintf("get locks longer than duration denom has been called with denom and duration of %s %s", denom, duration.String()))
-	lock, err := k.GetLockByID(ctx, 2)
-	if err != nil {
-		ctx.Logger().Error("Err is not nil")
-		ctx.Logger().Error(err.Error())
-	}
-	ctx.Logger().Error(lock.String())
-
 	// returns both unlocking started and not started
 	unlockings := k.getLocksFromIterator(ctx, k.LockIteratorLongerThanDurationDenom(ctx, true, denom, duration))
 	notUnlockings := k.getLocksFromIterator(ctx, k.LockIteratorLongerThanDurationDenom(ctx, false, denom, duration))
