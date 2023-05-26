@@ -4,8 +4,6 @@ on:
     types: [assigned, opened, synchronize, reopened, labeled, unlabeled]
     branches:
       - main
-    paths-ignore:
-      - '**/*.md'
 jobs:
   build:
     name: Check Actions

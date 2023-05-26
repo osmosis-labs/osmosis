@@ -3,6 +3,7 @@ package types_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -46,6 +47,49 @@ func TestValidateTicks(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			err := types.ValidateTicks(tc.i)
+
+			if tc.expectError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestValidateBalancerSharesDiscount(t *testing.T) {
+	tests := map[string]struct {
+		i           interface{}
+		expectError bool
+	}{
+		"happy path": {
+			i: types.DefaultBalancerSharesDiscount,
+		},
+		"zero discount rate": {
+			i: sdk.NewDec(0),
+		},
+		"error: negative discount rate": {
+			i:           sdk.NewDec(-1),
+			expectError: true,
+		},
+		"error: negative discount rate on boundary": {
+			i:           sdk.NewDecWithPrec(-1, 18),
+			expectError: true,
+		},
+		"error: discount rate > 1": {
+			i:           sdk.NewDec(2),
+			expectError: true,
+		},
+		"error: discount rate > 1 on boundary": {
+			i:           sdk.NewDec(1).Add(sdk.NewDecWithPrec(1, 18)),
+			expectError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			err := types.ValidateBalancerSharesDiscount(tc.i)
 
 			if tc.expectError {
 				require.Error(t, err)
