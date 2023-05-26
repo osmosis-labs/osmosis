@@ -28,7 +28,7 @@ single fixed ratio of assets (e.g. 1:1) is sufficient)
 For stablecoin pools, they should be even amounts. For other ratios, TODO: add more details here
 
 In terms of impermanent loss, it changes the price of the assets, so it depends on when the LP joined.
-It does not necessarily increase IL.
+It does not necessarily increase IL, which would depend entirely on the direction of the price change relative to the LP's original entry.
 
 Technically you can change scaling factors in both directions but the use cases for needing this are sparse.
 
