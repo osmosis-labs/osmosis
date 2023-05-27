@@ -229,7 +229,7 @@ func (m MsgSetRewardReceiverAddress) ValidateBasic() error {
 	}
 
 	if m.LockID <= 0 {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "lock id should be bigger than 1 (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "lock id should be larger than zero, was (%s)", err)
 	}
 	return nil
 }
