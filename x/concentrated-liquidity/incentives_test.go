@@ -2858,11 +2858,10 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			}
 			s.Require().NoError(err)
 
-			newUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, validPoolId)
-			s.Require().NoError(err)
-
 			// Ensure that forfeited incentives were properly added to their respective accumulators
 			if tc.forfeitIncentives {
+				newUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, validPoolId)
+				s.Require().NoError(err)
 
 				// Subtract the initial accum values to get the delta
 				uptimeAccumDeltaValues, err := osmoutils.SubDecCoinArrays(newUptimeAccumValues, initUptimeAccumValues)
