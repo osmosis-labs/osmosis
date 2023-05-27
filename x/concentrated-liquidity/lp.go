@@ -2,7 +2,6 @@ package concentrated_liquidity
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -87,15 +86,13 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
-	fmt.Println("CRRENTTT TICKK BEFORE: ", pool.GetCurrentTick())
+
 	if !hasPositions {
-		fmt.Println("DOES NOT HAVE POSITION")
 		err := k.initializeInitialPositionForPool(ctx, pool, amount0Desired, amount1Desired)
 		if err != nil {
 			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 		}
 	}
-	fmt.Println("CRRENTTT TICKK: ", pool.GetCurrentTick())
 
 	// Calculate the amount of liquidity that will be added to the pool when this position is created.
 	liquidityDelta = math.GetLiquidityFromAmounts(pool.GetCurrentSqrtPrice(), sqrtPriceLowerTick, sqrtPriceUpperTick, amount0Desired, amount1Desired)

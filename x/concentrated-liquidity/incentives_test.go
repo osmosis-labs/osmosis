@@ -2901,7 +2901,6 @@ func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
 	var (
 		defaultAddress   = s.TestAccs[0]
 		secondAddress    = s.TestAccs[1]
-		thirdAddress     = s.TestAccs[2]
 		defaultBlockTime = time.Unix(1, 1).UTC()
 	)
 
@@ -2909,17 +2908,12 @@ func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
 	requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(1_000_000)), sdk.NewCoin(USDC, sdk.NewInt(5_000_000_000)))
 	s.FundAcc(defaultAddress, requiredBalances)
 	s.FundAcc(secondAddress, requiredBalances)
-	s.FundAcc(thirdAddress, requiredBalances)
 
 	// Create CL pool
 	pool := s.PrepareConcentratedPool()
 
 	// Set up position
-	// ? issue if tokensProvided = sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(100_000)), sdk.NewCoin(USDC, sdk.NewInt(500_000)))
-	positionIdOne, _, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), defaultAddress, sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(100_000)), sdk.NewCoin(USDC, sdk.NewInt(500_000))), sdk.ZeroInt(), sdk.ZeroInt(), -5000000, 5000000)
-	s.Require().NoError(err)
-
-	positionIdtwo, _, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), thirdAddress, sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(100_000)), sdk.NewCoin(USDC, sdk.NewInt(500_000))), sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	positionIdOne, _, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), defaultAddress, requiredBalances, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 	s.Require().NoError(err)
 
 	// Set incentives for pool to ensure accumulators work correctly
@@ -2938,43 +2932,41 @@ func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
 	s.Require().NoError(err)
 
 	// attempting to claim with same blocktime
-	// collectedInc, _, err := s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, positionIdOne)
-	// s.Require().NoError(err)
+	collectedInc, forfeitInc, err := s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, positionIdOne)
+	s.Require().NoError(err)
 
-	// // expected collectedIncentives in same blockTime = 0
-	// s.Require().Equal(sdk.NewCoins(), collectedInc)
+	// expected collectedIncentives in same blockTime = 0
+	s.Require().Equal(sdk.NewCoins(), collectedInc)
+	s.Require().Equal(0, len(forfeitInc))
 
-	// add 1 hour to current blocktime
+	// add 1min to current blocktime
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute))
 
 	// attempting to claim after 1min has passed
-	collectedInc, forfeit, err := s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, positionIdOne)
+	collectedInc, forfeitInc, err = s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, positionIdOne)
 	s.Require().NoError(err)
 
-	fmt.Println("1 min incentive", collectedInc, forfeit)
+	// expected collectedIncentives after 1min = 59.999999999901820104usdc ~ 59usdc becasue 1usdc emitted every second
+	// foefeited incentives will be zero because 0.999999999901820104 truncated down is 0
+	s.Require().Equal(sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(59))), collectedInc)
+	s.Require().Equal(0, len(forfeitInc))
 
-	collectedInc, forfeit, err = s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, positionIdtwo)
+	//add 1 hour to current blocktime
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour))
+
+	// attempting to claim after 1hr has passed
+	collectedInc, forfeitInc, err = s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, positionIdOne)
 	s.Require().NoError(err)
 
-	fmt.Println("1 min incentive", collectedInc, forfeit)
+	// expected collectedIncentives after 1hour = 3599.999999998662853243usdc ~ 3599usdc because 1usdc emitted every second
+	// foefeited incentives will be zero because 0.999999998662853243 truncated down is 0
+	s.Require().Equal(sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(3599))), collectedInc)
+	s.Require().Equal(0, len(forfeitInc))
 
-	// expected collectedIncentives after 1min  = 59.999999999901820104usdc ~ 59usdc
-	//s.Require().Equal(sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(59))), collectedInc)
+	// claim with invalid position id
+	_, _, err = s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, 2)
+	s.Require().Error(err)
 
-	// add 1 hour to current blocktime
-	// s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour))
-
-	// // attempting to claim after 1hr has passed
-	// collectedInc, forfeit, err = s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, positionIdOne)
-	// s.Require().NoError(err)
-
-	// fmt.Println("1 hr incentive", collectedInc, forfeit)
-	// // expected collectedIncentives after 1hour = 3599.999999998662853243usdc ~ 3599usdc
-	// //s.Require().Equal(sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(3599))), collectedInc)
-
-	// TODO: claim with invalid position id
-	// TODO: check balance of community pool
-	// TODO: check uptime accumulator has been correctly updated
 }
 
 // This functional test focuses on changing liquidity in the same range and collecting incentives
