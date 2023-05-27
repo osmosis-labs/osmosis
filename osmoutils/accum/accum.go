@@ -409,8 +409,6 @@ func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, sdk
 		return sdk.Coins{}, sdk.DecCoins{}, NoPositionError{positionName}
 	}
 
-	fmt.Println("ACCUMULATOR POSITION: ", position)
-
 	totalRewards := GetTotalRewards(accum, position)
 
 	// Return the integer coins to the user

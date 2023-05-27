@@ -1,7 +1,6 @@
 package concentrated_liquidity
 
 import (
-	"fmt"
 	"strconv"
 	"time"
 
@@ -777,7 +776,7 @@ func updateAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey strin
 	if err != nil {
 		return sdk.Coins{}, sdk.DecCoins{}, err
 	}
-	fmt.Println("HAS POS: ", hasPosition)
+
 	// If position still exists, we update the position's accumulator value to be the current accumulator value minus the growth outside.
 	if hasPosition {
 		// The position accumulator value must always equal to the growth inside at the time of last update.

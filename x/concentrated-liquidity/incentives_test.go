@@ -2901,6 +2901,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
 	var (
 		defaultAddress   = s.TestAccs[0]
 		secondAddress    = s.TestAccs[1]
+		thirdAddress     = s.TestAccs[2]
 		defaultBlockTime = time.Unix(1, 1).UTC()
 	)
 
@@ -2908,13 +2909,17 @@ func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
 	requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(1_000_000)), sdk.NewCoin(USDC, sdk.NewInt(5_000_000_000)))
 	s.FundAcc(defaultAddress, requiredBalances)
 	s.FundAcc(secondAddress, requiredBalances)
+	s.FundAcc(thirdAddress, requiredBalances)
 
 	// Create CL pool
 	pool := s.PrepareConcentratedPool()
 
 	// Set up position
 	// ? issue if tokensProvided = sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(100_000)), sdk.NewCoin(USDC, sdk.NewInt(500_000)))
-	positionIdOne, _, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), defaultAddress, requiredBalances, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	positionIdOne, _, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), defaultAddress, sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(100_000)), sdk.NewCoin(USDC, sdk.NewInt(500_000))), sdk.ZeroInt(), sdk.ZeroInt(), -5000000, 5000000)
+	s.Require().NoError(err)
+
+	positionIdtwo, _, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), thirdAddress, sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(100_000)), sdk.NewCoin(USDC, sdk.NewInt(500_000))), sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 	s.Require().NoError(err)
 
 	// Set incentives for pool to ensure accumulators work correctly
@@ -2947,6 +2952,12 @@ func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
 	s.Require().NoError(err)
 
 	fmt.Println("1 min incentive", collectedInc, forfeit)
+
+	collectedInc, forfeit, err = s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, positionIdtwo)
+	s.Require().NoError(err)
+
+	fmt.Println("1 min incentive", collectedInc, forfeit)
+
 	// expected collectedIncentives after 1min  = 59.999999999901820104usdc ~ 59usdc
 	//s.Require().Equal(sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(59))), collectedInc)
 
