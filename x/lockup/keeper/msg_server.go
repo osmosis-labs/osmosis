@@ -235,7 +235,7 @@ func (server msgServer) SetRewardReceiverAddress(goCtx context.Context, msg *typ
 		return nil, err
 	}
 
-	newRewardRecepient, err := sdk.AccAddressFromBech32(msg.Owner)
+	newRewardRecepient, err := sdk.AccAddressFromBech32(msg.RewardReceiver)
 	if err != nil {
 		return nil, err
 	}

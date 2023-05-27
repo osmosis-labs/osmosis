@@ -260,28 +260,28 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 		"lock that is superfluid delegated, not unlocking (full shares)": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 		},
-		// "lock that is superfluid delegated, not unlocking (partial shares)": {
-		// 	percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.5"),
-		// },
-		// "error: migrate more shares than lock has": {
-		// 	percentOfSharesToMigrate: sdk.MustNewDecFromStr("1.1"),
-		// 	expectedError:            types.MigrateMoreSharesThanLockHasError{SharesToMigrate: "55000000000000000000", SharesInLock: "50000000000000000000"},
-		// },
-		// "error: invalid validator address": {
-		// 	overwriteValidatorAddress: true,
-		// 	percentOfSharesToMigrate:  sdk.MustNewDecFromStr("1"),
-		// 	expectedError:             fmt.Errorf("decoding bech32 failed: invalid checksum"),
-		// },
-		// "error: non-existent lock ID": {
-		// 	overwriteLockId:          true,
-		// 	percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-		// 	expectedError:            lockuptypes.ErrLockupNotFound,
-		// },
-		// "error: lock that is superfluid delegated, not unlocking (full shares), token out mins is more than exit coins": {
-		// 	percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-		// 	tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100000))),
-		// 	expectedError:            gammtypes.ErrLimitMinAmount,
-		// },
+		"lock that is superfluid delegated, not unlocking (partial shares)": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.5"),
+		},
+		"error: migrate more shares than lock has": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1.1"),
+			expectedError:            types.MigrateMoreSharesThanLockHasError{SharesToMigrate: "55000000000000000000", SharesInLock: "50000000000000000000"},
+		},
+		"error: invalid validator address": {
+			overwriteValidatorAddress: true,
+			percentOfSharesToMigrate:  sdk.MustNewDecFromStr("1"),
+			expectedError:             fmt.Errorf("decoding bech32 failed: invalid checksum"),
+		},
+		"error: non-existent lock ID": {
+			overwriteLockId:          true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			expectedError:            lockuptypes.ErrLockupNotFound,
+		},
+		"error: lock that is superfluid delegated, not unlocking (full shares), token out mins is more than exit coins": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100000))),
+			expectedError:            gammtypes.ErrLimitMinAmount,
+		},
 	}
 
 	for name, tc := range testCases {
@@ -405,11 +405,6 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 			s.Require().Equal(concentratedLockId, clSynthLock.UnderlyingLockId)
 
 			// Run slashing logic and check if the new and old locks are slashed.
-			// lastLockId := s.App.LockupKeeper.GetLastLockID(s.Ctx)
-			// fmt.Println("last lock id in test is: ", lastLockId)
-			lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, 2)
-			s.Require().NoError(err)
-			fmt.Println(lock.String())
 			s.SlashAndValidateResult(ctx, originalGammLockId, concentratedLockId, clPoolId, tc.percentOfSharesToMigrate, valAddr, *balancerLock, true)
 		})
 	}

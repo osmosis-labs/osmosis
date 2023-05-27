@@ -888,6 +888,109 @@ func (s *KeeperTestSuite) TestLock() {
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, acc.GetAddress(), "stake")
 	s.Require().Equal(sdk.NewInt(0).String(), balance.Amount.String())
 }
+func (s *KeeperTestSuite) TestSplitLock() {
+	defaultAmount := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(200)))
+	defaultHalfAmount := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(40)), sdk.NewCoin("bar", sdk.NewInt(110)))
+	testCases := []struct {
+		name                      string
+		amountToSplit             sdk.Coins
+		isUnlocking               bool
+		isForceUnlock             bool
+		useDifferentRewardAddress bool
+		expectedErr               bool
+	}{
+		{
+			"happy path: split half amount",
+			defaultHalfAmount,
+			false,
+			false,
+			false,
+			false,
+		},
+		{
+			"happy path: split full amount",
+			defaultAmount,
+			false,
+			false,
+			false,
+			false,
+		},
+		{
+			"happy path: try using reward address with different reward receiver",
+			defaultAmount,
+			false,
+			false,
+			true,
+			false,
+		},
+		{
+			"error: unlocking lock",
+			defaultAmount,
+			true,
+			false,
+			false,
+			true,
+		},
+		{
+			"error: force unlock",
+			defaultAmount,
+			true,
+			false,
+			false,
+			true,
+		},
+	}
+	for _, tc := range testCases {
+		s.SetupTest()
+		defaultDuration := time.Minute
+		defaultEndTime := time.Time{}
+		lock := types.NewPeriodLock(
+			1,
+			s.TestAccs[0],
+			s.TestAccs[0].String(),
+			defaultDuration,
+			defaultEndTime,
+			defaultAmount,
+		)
+		if tc.isUnlocking {
+			lock.EndTime = s.Ctx.BlockTime()
+		}
+		if tc.useDifferentRewardAddress {
+			lock.RewardReceiverAddress = s.TestAccs[1].String()
+		}
+
+		// manually set last lock id to 1
+		s.App.LockupKeeper.SetLastLockID(s.Ctx, 1)
+		// System under test
+		newLock, err := s.App.LockupKeeper.SplitLock(s.Ctx, lock, tc.amountToSplit, tc.isForceUnlock)
+		if tc.expectedErr {
+			s.Require().Error(err)
+			return
+		}
+		s.Require().NoError(err)
+
+		// check if the new lock has correct states
+		s.Require().Equal(newLock.ID, lock.ID+1)
+		s.Require().Equal(newLock.Owner, lock.Owner)
+		s.Require().Equal(newLock.Duration, lock.Duration)
+		s.Require().Equal(newLock.EndTime, lock.EndTime)
+		s.Require().Equal(newLock.RewardReceiverAddress, lock.RewardReceiverAddress)
+		s.Require().True(newLock.Coins.IsEqual(tc.amountToSplit))
+
+		// now check if the old lock has correctly updated state
+		updatedOriginalLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
+		s.Require().Equal(updatedOriginalLock.ID, lock.ID)
+		s.Require().Equal(updatedOriginalLock.Owner, lock.Owner)
+		s.Require().Equal(updatedOriginalLock.Duration, lock.Duration)
+		s.Require().Equal(updatedOriginalLock.EndTime, lock.EndTime)
+		s.Require().Equal(updatedOriginalLock.RewardReceiverAddress, lock.RewardReceiverAddress)
+		s.Require().True(updatedOriginalLock.Coins.IsEqual(lock.Coins.Sub(tc.amountToSplit)))
+
+		// check that last lock id has incremented properly
+		lastLockId := s.App.LockupKeeper.GetLastLockID(s.Ctx)
+		s.Require().Equal(lastLockId, newLock.ID)
+	}
+}
 
 func (s *KeeperTestSuite) AddTokensToLockForSynth() {
 	s.SetupTest()

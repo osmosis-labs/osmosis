@@ -207,8 +207,8 @@ func (m MsgForceUnlock) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{owner}
 }
 
-// NewMsgBeginUnlockingAll creates a message to begin unlocking tokens.
-func NewMsgMsgSetRewardReceiverAddress(owner, rewardReceiver sdk.AccAddress, lockId uint64) *MsgSetRewardReceiverAddress {
+// NewMsgSetRewardReceiverAddress creates a message for setting reward receiver address
+func NewMsgSetRewardReceiverAddress(owner, rewardReceiver sdk.AccAddress, lockId uint64) *MsgSetRewardReceiverAddress {
 	return &MsgSetRewardReceiverAddress{
 		Owner:          owner.String(),
 		RewardReceiver: rewardReceiver.String(),

@@ -834,7 +834,7 @@ func (k Keeper) SplitLock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coin
 	splitLockID := k.GetLastLockID(ctx) + 1
 	k.SetLastLockID(ctx, splitLockID)
 
-	splitLock := types.NewPeriodLock(splitLockID, lock.OwnerAddress(), lock.OwnerAddress().String(), lock.Duration, lock.EndTime, coins)
+	splitLock := types.NewPeriodLock(splitLockID, lock.OwnerAddress(), lock.RewardReceiverAddress, lock.Duration, lock.EndTime, coins)
 
 	err = k.setLock(ctx, splitLock)
 	return splitLock, err

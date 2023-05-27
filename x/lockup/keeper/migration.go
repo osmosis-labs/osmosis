@@ -37,6 +37,8 @@ func normalizeDuration(baselineDurations []time.Duration, allowedDiff time.Durat
 // If a lockup is far from any base duration, we don't change anything about it.
 // We define a lockup length as a "Similar duration to base duration D", if:
 // D <= lockup length <= D + durationDiff.
+// Any locks with different reward receiver and lock owner would not be merged.
+// NOTE: This method has been outdated, please make new migration code if there is a need to merge locks with similar duration.
 func MergeLockupsForSimilarDurations(
 	ctx sdk.Context,
 	k Keeper,
@@ -65,6 +67,13 @@ func MergeLockupsForSimilarDurations(
 				continue
 			}
 			coin := lock.Coins[0]
+
+			// check if the reward receiver is the lock owner.
+			// if not, we do not normalize the lock.
+			if lock.Owner != lock.RewardReceiverAddress {
+				continue
+			}
+
 			// In this pass, add lock to normals if exact match
 			key := addr.String() + "/" + coin.Denom + "/" + strconv.FormatInt(int64(normalizedDuration), 10)
 			_, normalExists := normals[key]
