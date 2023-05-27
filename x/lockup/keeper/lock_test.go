@@ -582,7 +582,6 @@ func (s *KeeperTestSuite) TestSetLockRewardReceiverAddress() {
 
 			s.FundAcc(addr1, coins)
 
-			// create an account first
 			lock, err := s.App.LockupKeeper.CreateLock(s.Ctx, addr1, coins, time.Second)
 			s.Require().NoError(err)
 
