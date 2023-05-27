@@ -225,7 +225,7 @@ func (m MsgSetRewardReceiverAddress) ValidateBasic() error {
 	}
 	_, err = sdk.AccAddressFromBech32(m.RewardReceiver)
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid reward receiver address (%s)", err)
 	}
 
 	if m.LockID <= 0 {
