@@ -70,7 +70,7 @@ func MergeLockupsForSimilarDurations(
 
 			// check if the reward receiver is the lock owner.
 			// if not, we do not normalize the lock.
-			if lock.Owner != lock.RewardReceiverAddress {
+			if lock.RewardReceiverAddress != "" {
 				continue
 			}
 
