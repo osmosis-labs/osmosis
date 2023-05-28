@@ -8,6 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/types"
 )
 
+// SetPool stores the given pool in state.
 func (k Keeper) SetPool(ctx sdk.Context, pool types.CosmWasmExtension) {
 	store := ctx.KVStore(k.storeKey)
 	osmoutils.MustSet(store, types.FormatPoolsPrefix(pool.GetId()), pool.GetStoreModel())
