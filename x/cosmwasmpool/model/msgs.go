@@ -50,7 +50,9 @@ func (msg MsgCreateCosmWasmPool) ValidateBasic() error {
 }
 
 func (msg MsgCreateCosmWasmPool) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	// TODO: uncomment once merging state-breaks: https://github.com/osmosis-labs/osmosis/issues/5329
+	// return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	return nil
 }
 
 func (msg MsgCreateCosmWasmPool) GetSigners() []sdk.AccAddress {
