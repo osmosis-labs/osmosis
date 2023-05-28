@@ -59,7 +59,8 @@ var (
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
-	clk *concentrated_liquidity.Keeper
+	clk      *concentrated_liquidity.Keeper
+	clParams types.Params
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -69,6 +70,12 @@ func TestKeeperTestSuite(t *testing.T) {
 func (s *KeeperTestSuite) SetupTest() {
 	s.Setup()
 	s.clk = s.App.ConcentratedLiquidityKeeper
+
+	// Authorize all supported uptimes by default
+	clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+	clParams.AuthorizedUptimes = types.SupportedUptimes
+	s.clk.SetParams(s.Ctx, clParams)
+	s.clParams = clParams
 }
 
 func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {
@@ -221,7 +228,7 @@ func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uin
 
 	// In all cases, global uptime accums need to be updated. If lowerTick <= currentTick < upperTick,
 	// nothing more needs to be done.
-	err := addToUptimeAccums(ctx, poolId, s.App.ConcentratedLiquidityKeeper, uptimeGrowthToAdd)
+	err := s.addToUptimeAccums(ctx, poolId, s.App.ConcentratedLiquidityKeeper, uptimeGrowthToAdd)
 	s.Require().NoError(err)
 }
 
@@ -276,7 +283,7 @@ func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId ui
 
 	// In all cases, global uptime accums need to be updated. If currentTick < lowerTick,
 	// nothing more needs to be done.
-	err := addToUptimeAccums(ctx, poolId, s.App.ConcentratedLiquidityKeeper, uptimeGrowthToAdd)
+	err := s.addToUptimeAccums(ctx, poolId, s.App.ConcentratedLiquidityKeeper, uptimeGrowthToAdd)
 	s.Require().NoError(err)
 }
 

@@ -21,10 +21,6 @@ var (
 	HundredBarCoins    = sdk.NewDecCoin("bar", sdk.NewInt(100))
 	TwoHundredFooCoins = sdk.NewDecCoin("foo", sdk.NewInt(200))
 	TwoHundredBarCoins = sdk.NewDecCoin("bar", sdk.NewInt(200))
-	// TODO: this is incorrect. Should be grabbing from
-	// authorized params instead. Must verify that all tests still make sense.
-	// https://github.com/osmosis-labs/osmosis/issues/5039
-	FullyChargedDuration = types.SupportedUptimes[len(types.SupportedUptimes)-1]
 )
 
 func (k Keeper) SetPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {

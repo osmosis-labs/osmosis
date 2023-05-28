@@ -394,9 +394,9 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			positionAge := ctx.BlockTime().Sub(position.JoinTime)
 
 			// Set up accrued incentives
-			err = addToUptimeAccums(ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, uptimeHelper.hundredTokensMultiDenom)
+			err = s.addToUptimeAccums(ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, uptimeHelper.hundredTokensMultiDenom)
 			s.Require().NoError(err)
-			s.FundAcc(pool.GetIncentivesAddress(), expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, positionAge, sdk.NewInt(int64(len(tc.positionIds)))))
+			s.FundAcc(pool.GetIncentivesAddress(), s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, positionAge, sdk.NewInt(int64(len(tc.positionIds)))))
 
 			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 

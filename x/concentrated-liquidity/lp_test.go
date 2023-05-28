@@ -567,7 +567,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			s.AddToFeeAccumulator(pool.GetId(), globalFeeGrowth)
 
 			// Add global uptime growth
-			err = addToUptimeAccums(s.Ctx, pool.GetId(), concentratedLiquidityKeeper, defaultUptimeGrowth)
+			err = s.addToUptimeAccums(s.Ctx, pool.GetId(), concentratedLiquidityKeeper, defaultUptimeGrowth)
 			s.Require().NoError(err)
 
 			// Determine the liquidity expected to remain after the withdraw.
@@ -585,10 +585,11 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			communityPoolBalanceBefore := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
 
 			// Set expected incentives and fund pool with appropriate amount
-			expectedIncentivesClaimed = expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, tc.timeElapsed, defaultMultiplier)
+			expectedIncentivesClaimed = s.expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, tc.timeElapsed, defaultMultiplier)
 
 			// Fund full amount since forfeited incentives for the last position are sent to the community pool.
-			expectedFullIncentivesFromAllUptimes := expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, types.SupportedUptimes[len(types.SupportedUptimes)-1], defaultMultiplier)
+			largestAuthorizedUptime := s.clk.GetLargestAuthorizedUptimeDuration(s.Ctx)
+			expectedFullIncentivesFromAllUptimes := s.expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, largestAuthorizedUptime, defaultMultiplier)
 			s.FundAcc(pool.GetIncentivesAddress(), expectedFullIncentivesFromAllUptimes)
 
 			// Note the pool and owner balances before withdrawal of the position.
