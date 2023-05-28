@@ -60,7 +60,7 @@ func (p Pool) String() string {
 	return p.CosmWasmPool.String()
 }
 
-// GetSwapFee returns the swap fee of the pool.
+// GetSpreadFactor returns the swap fee of the pool.
 func (p Pool) GetSpreadFactor(ctx sdk.Context) sdk.Dec {
 	request := msg.GetSwapFeeQueryMsg{}
 	response := cosmwasmutils.MustQuery[msg.GetSwapFeeQueryMsg, msg.GetSwapFeeQueryMsgResponse](ctx, p.WasmKeeper, p.ContractAddress, request)
