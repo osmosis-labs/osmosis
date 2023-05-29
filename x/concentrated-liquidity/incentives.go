@@ -1118,6 +1118,7 @@ func (k Keeper) getLargestAuthorizedUptimeDuration(ctx sdk.Context) time.Duratio
 	return largestUptime
 }
 
+// nolint: unused
 // getLargestSupportedUptimeDuration retrieves the largest supported uptime duration from the preset constant slice.
 func (k Keeper) getLargestSupportedUptimeDuration(ctx sdk.Context) time.Duration {
 	var largestSupportedUptime time.Duration
