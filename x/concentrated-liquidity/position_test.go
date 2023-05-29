@@ -16,7 +16,7 @@ import (
 
 var DefaultIncentiveRecords = []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour}
 
-// AssertPositionsDoNotExist checks that the positions with the given IDs do not exist on the given accumulators.
+// AssertPositionsDoNotExist checks that the positions with the given IDs do not exist on uptime accumulators.
 func (s *KeeperTestSuite) AssertPositionsDoNotExist(positionIds []uint64) {
 	uptimeAccumulators, err := s.clk.GetUptimeAccumulators(s.Ctx, defaultPoolId)
 	s.Require().NoError(err)
@@ -37,7 +37,7 @@ func (s *KeeperTestSuite) AssertPositionsDoNotExist(positionIds []uint64) {
 	}
 }
 
-// GetTotalAccruedRewardsByAccumulator returns the total accrued rewards for the given position on each accumulator.
+// GetTotalAccruedRewardsByAccumulator returns the total accrued rewards for the given position on each uptime accumulator.
 func (s *KeeperTestSuite) GetTotalAccruedRewardsByAccumulator(positionId uint64, requireHasPosition bool) []sdk.DecCoins {
 	uptimeAccumulators, err := s.clk.GetUptimeAccumulators(s.Ctx, defaultPoolId)
 	s.Require().NoError(err)
