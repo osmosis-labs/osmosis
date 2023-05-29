@@ -28,11 +28,11 @@ queries:
       query_func: "k.LiquidityNetInDirection"
     cli:
       cmd: "LiquidityNetInDirection"
-  ClaimableFees:
+  ClaimableSpreadRewards:
     proto_wrapper:
-      query_func: "k.ClaimableFees"
+      query_func: "k.ClaimableSpreadRewards"
     cli:
-      cmd: "ClaimableFees"
+      cmd: "ClaimableSpreadRewards"
   ClaimableIncentives:
     proto_wrapper:
       query_func: "k.ClaimableIncentives"

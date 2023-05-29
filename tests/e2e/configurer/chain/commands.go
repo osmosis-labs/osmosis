@@ -57,14 +57,14 @@ func (n *NodeConfig) CreateStableswapPool(poolFile, from string) uint64 {
 	return poolID
 }
 
-// CollectFees collects fees earned by concentrated position in range of [lowerTick; upperTick] in pool with id of poolId
-func (n *NodeConfig) CollectFees(from, positionIds string) {
-	n.LogActionF("collecting fees from concentrated position")
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "collect-fees", positionIds, fmt.Sprintf("--from=%s", from)}
+// CollectSpreadRewards collects spread rewards earned by concentrated position in range of [lowerTick; upperTick] in pool with id of poolId
+func (n *NodeConfig) CollectSpreadRewards(from, positionIds string) {
+	n.LogActionF("collecting spread rewards from concentrated position")
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "collect-spread-rewards", positionIds, fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	n.LogActionF("successfully collected fees for account %s", from)
+	n.LogActionF("successfully collected spread rewards for account %s", from)
 }
 
 // CreateConcentratedPool creates a concentrated pool.

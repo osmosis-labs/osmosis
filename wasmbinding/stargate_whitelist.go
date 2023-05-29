@@ -155,7 +155,7 @@ func init() {
 	// concentrated-liquidity
 	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/PositionById", &concentratedliquidityquery.PositionByIdResponse{})
 	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/Params", &concentratedliquidityquery.ParamsResponse{})
-	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/ClaimableFees", &concentratedliquidityquery.ClaimableFeesResponse{})
+	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/ClaimableSpreadRewards", &concentratedliquidityquery.ClaimableSpreadRewardsResponse{})
 }
 
 // GetWhitelistedQuery returns the whitelisted query at the provided path.
