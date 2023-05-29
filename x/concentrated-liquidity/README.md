@@ -468,10 +468,10 @@ type MsgCreateConcentratedPoolResponse struct {
 
 ### `MsgCollectSpreadRewards`
 
-This message allows collecting spread factors allocated multiple position IDs from a
+This message allows collecting rewards from spreads for multiple position IDs from a
 single owner.
 
-The spread factor collection is discussed in more detail in the "SpreadFactors" section of this document.
+The spread factor collection is discussed in more detail in the "Spread Rewards" section of this document.
 
 ```go
 type MsgCollectSpreadRewards struct {
@@ -488,7 +488,7 @@ amounts.
 
 ```go
 type MsgCollectSpreadRewardsResponse struct {
- CollectedSpreadFactors []types.Coin
+ CollectedSpreadRewards []types.Coin
 }
 ```
 
@@ -1079,7 +1079,7 @@ As a result, we complete the swap having swapped 5_000 tokens one in for 22_500
 tokens zero out. The tick is now at 70 and the current liquidity at the active
 tick tracked by the pool is 11_000. The global spread reward growth per unit of liquidity
 has increased by 50 units of token one. See more details about the spread reward growth
-in the "SpreadFactors" section.
+in the "Spread Rewards" section.
 
 TODO: Swapping, Appendix B: Compute Swap Step Internals and Math
 
@@ -1090,22 +1090,22 @@ control of the price at which I trade
 
 TODO
 
-## SpreadFactors
+## Spread Rewards
 
-> As a an LP, I want to earn spread factors on my capital so that I am incentivized to
+> As a an LP, I want to earn spread rewards on my capital so that I am incentivized to
 participate in active market making.
 
-In Balancer-style pools, spread factors go directly back into the pool to benefit all LPs pro-rata.
+In Balancer-style pools, spread rewards go directly back into the pool to benefit all LPs pro-rata.
 For concentrated liquidity pools, this approach is no longer feasible due to the
 non-fungible property of positions. As a result, we use a different accumulator-based
-mechanism for tracking and storing spread factors.
+mechanism for tracking and storing spread rewards.
 
 Reference the following papers for more information on the inspiration behind our accumulator package:
 
 - [Scalable Reward Distribution](https://uploads-ssl.webflow.com/5ad71ffeb79acc67c8bcdaba/5ad8d1193a40977462982470_scalable-reward-distribution-paper.pdf)
 - [F1 Fee Distribution](https://drops.dagstuhl.de/opus/volltexte/2020/11974/pdf/OASIcs-Tokenomics-2019-10.pdf)
 
-We define the following accumulator and spread-factor-related fields to be stored on various
+We define the following accumulator and spread-reward-related fields to be stored on various
 layers of state:
 
 - **Per-pool**
@@ -1119,7 +1119,7 @@ type Pool struct {
 ```
 
 Each pool is initialized with a static spread factor value `SpreadFactor` to be paid by swappers.
-Additionally, each pool's spread factor accumulator tracks and stores the total spread factors accrued
+Additionally, each pool's spread reward accumulator tracks and stores the total rewards accrued from spreads
 throughout its lifespan, named `SpreadRewardGrowthGlobal`.
 
 - **Per-tick**
@@ -1132,14 +1132,14 @@ type TickInfo struct {
 }
 ```
 
-TickInfo keeps a record of spread factors accumulated opposite the direction the tick was last traversed.
+TickInfo keeps a record of spread rewards accumulated opposite the direction the tick was last traversed.
 In other words, when traversing the tick from right to left, `SpreadRewardGrowthOppositeDirectionOfLastTraversal`
-represents the spread factors accumulated above that tick. When traversing the tick from left to right,
-`SpreadRewardGrowthOppositeDirectionOfLastTraversal` represents the spread factors accumulated below that tick.
+represents the spread rewards accumulated above that tick. When traversing the tick from left to right,
+`SpreadRewardGrowthOppositeDirectionOfLastTraversal` represents the spread rewards accumulated below that tick.
 
 ![Tick Updates](./img/TickUpdates.png)
 
-This information is required for calculating the amount of spread factors that accrue between
+This information is required for calculating the amount of spread rewards that accrue between
 a range of two ticks.
 
 Note that keeping track of the spread reward growth is only necessary for the ticks that
@@ -1163,7 +1163,7 @@ if tickIndex <= currentTick {
 ```
 
 Essentially, setting the tick's `tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal`
-to the pools accum value represents the amount of spread factors collected by the pool up until
+to the pools accum value represents the amount of spread rewards collected by the pool up until
 the tick was activated.
 
 Once a tick is activated again (crossed in either direction),
@@ -1171,10 +1171,10 @@ Once a tick is activated again (crossed in either direction),
 between the pool's current accumulator value and the old value of
 `tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal`.
 
-Tracking how many spread factors are collected below, in the case of a lower tick, and above,
+Tracking how many spread rewards are collected below, in the case of a lower tick, and above,
 in the case of an upper tick, allows us to calculate the
-amount of spread factors inside a position (spread reward growth inside between two ticks) on demand.
-This is done by updating the activated tick with the amount of spread factors collected for
+amount of spread rewards inside a position (spread reward growth inside between two ticks) on demand.
+This is done by updating the activated tick with the amount of spread rewards collected for
 every tick lower than the tick that is being crossed.
 
 This has two benefits:
@@ -1197,7 +1197,7 @@ Now, by having the spread reward growth below the lower and above the upper tick
 we can calculate the spread reward growth inside the range by subtracting the two from the
 global per-unit-of-liquidity spread reward growth.
 
-![Spread Factor Growth Outside Calculations](./img/SpreadRewardGrowthOutsideCalcuations.png)
+![Spread Reward Growth Outside Calculations](./img/SpreadRewardGrowthOutsideCalcuations.png)
 
 ```go
 spreadRewardGrowthInsideRange := SpreadRewardGrowthGlobalOutside - spreadRewardGrowthBelowLowerTick - spreadRewardGrowthAboveUpperTick
@@ -1212,25 +1212,25 @@ last interacted with.
 
 - **Per-position-accumulator**
 
-In a concentrated liquidity pool, unlike traditional pools, spread factors do not get automatically
+In a concentrated liquidity pool, unlike traditional pools, spread rewards do not get automatically
 re-added to pool. Instead, they are tracked by the `unclaimedRewards` fields of each
 position's accumulator.
 
-The amount of uncollected spread factors needs to be calculated every time a user modifies
+The amount of uncollected spread rewards needs to be calculated every time a user modifies
 their position. This occurs when a position is created, and liquidity is removed
 (liquidity added is analogous to creating a new position).
 
 We must recalculate the values for any modification, because with a change in liquidity
-for the position, the amount of spread factors allocated to the position must also change accordingly.
+for the position, the amount of spread rewards allocated to the position must also change accordingly.
 
-## Collecting SpreadFactors
+## Collecting Spread Rewards
 
-Once calculated, collecting spread factors is a straightforward process of transferring the
+Once calculated, collecting spread rewards is a straightforward process of transferring the
 calculated amount from the pool address to the position owner.
 
-To collect spread factors, users call `MsgCollectSpreadRewards` with the ID corresponding to
+To collect spread rewards, users call `MsgCollectSpreadRewards` with the ID corresponding to
 their position. The function `collectSpreadRewards` in the keeper is responsible for
-executing the spread factor collection and returning the amount collected, given the owner's
+executing the spread reward collection and returning the amount collected, given the owner's
 address and the position ID:
 
 ```go
@@ -1241,26 +1241,26 @@ func (k Keeper) collectSpreadRewards(
 }
 ```
 
-This returns the amount of spread factors collected by the user.
+This returns the amount of spread rewards collected by the user.
 
 ## Swaps
 
 Swapping within a single tick works as the regular `xy = k` curve. For swaps
-across ticks to work, we simply apply the same spread factor calculation logic for every swap step.
+across ticks to work, we simply apply the same spread reward calculation logic for every swap step.
 
 Consider data structures defined above. Let `tokenInAmt` be the amount of token being
 swapped in.
 
-Then, to calculate the spread factor within a single tick, we perform the following steps:
+Then, to calculate the spread reward within a single tick, we perform the following steps:
 
-1. Calculate an updated `tokenInAmtAfterSpreadFactor` by charging the `pool.SpreadFactor` on `tokenInAmt`.
+1. Calculate an updated `tokenInAmtAfterSpreadReward` by charging the `pool.SpreadFactor` on `tokenInAmt`.
 
 ```go
-// Update global spread factor accumulator tracking spread factors for denom of tokenInAmt.
+// Update global spread reward accumulator tracking spread rewards for denom of tokenInAmt.
 // TODO: revisit to make sure if truncations need to happen.
 pool.SpreadRewardGrowthGlobalOutside.TokenX = pool.SpreadRewardGrowthGlobalOutside.TokenX.Add(tokenInAmt.Mul(pool.SpreadFactor))
 
-// Update tokenInAmt to account for spread factors.
+// Update tokenInAmt to account for spread factor.
 spread_factor = tokenInAmt.Mul(pool.SpreadFactor).Ceil()
 tokenInAmtAfterSpreadFactor = tokenInAmt.Sub(spread_factor)
 
@@ -1282,7 +1282,7 @@ $$\Delta \sqrt P = L / \Delta x$$
 Here, `tokenInAmtAfterSpreadFactor` is delta x.
 
 Once we have the updated square root price, we can calculate the amount of
-`tokenOut` to be returned. The returned `tokenOut` is computed with spread factors
+`tokenOut` to be returned. The returned `tokenOut` is computed with spread rewards
 accounted for given that we used `tokenInAmtAfterSpreadFactor`.
 
 ## Swap Step Spread Factors
@@ -1340,7 +1340,7 @@ between liquidity and volume kicks off, but for the sake of understanding what e
  we are trying to bootstrap with incentives it helps to be explicit with our goals.
 
 ### Liquidity Depth
-We want to ensure spread factors and incentives are being used to maximize liquidity depth at the active tick
+We want to ensure spread rewards and incentives are being used to maximize liquidity depth at the active tick
 (i.e. the tick the current spot price is in), as this gives the best execution price for trades on
 the pool.
 
@@ -1416,7 +1416,7 @@ While it is technically possible for Osmosis to enable the creation of incentive
 
 While we want to nudge Classic pool LPs to transition to CL pools, we also want to ensure that we do not have a hard cutoff for incentives where past a certain point it is no longer worth it to provide liquidity to Classic pools. This is because we want to ensure that we have a healthy transition period where liquidity is not split between Classic and CL pools, but rather that liquidity is added to CL pools while Classic pools are slowly drained of liquidity.
 
-To achieve this in a way that is difficult to game and efficient for the chain to process, we will be using a **reward-splitting** mechanism that treats _bonded_ liquidity in a Classic pool that is paired by governance to a CL pool (e.g. for the purpose of migration) as a single full-range position on the CL pool for the purpose of calculating incentives. Note that this _does not affect spread factor distribution_ and only applies to the flow of incentives through a CL pool.
+To achieve this in a way that is difficult to game and efficient for the chain to process, we will be using a **reward-splitting** mechanism that treats _bonded_ liquidity in a Classic pool that is paired by governance to a CL pool (e.g. for the purpose of migration) as a single full-range position on the CL pool for the purpose of calculating incentives. Note that this _does not affect spread reward distribution_ and only applies to the flow of incentives through a CL pool.
 
 One implication of this mechanism is that it moves the incentivization process to a higher level of abstraction (incentivizing _pairs_ instead of _pools_). For internal incentives (which are governance managed), this is in line with the goal of continuing to push governance to require less frequent actions, which this change ultimately does.
 

@@ -35,7 +35,7 @@ func calculateSpreadRewardGrowthInside(spreadRewardGrowthGlobal, spreadRewardGro
 
 // Assert balances that are not affected by swap:
 // * same amount of `stake` in balancesBefore and balancesAfter
-// * amount of `e2e-default-feetoken` dropped by 1000 (default amount for spread reward per tx)
+// * amount of `e2e-default-feetoken` dropped by 1000 (default amount for fee per tx)
 // * depending on `assertUosmoBalanceIsConstant` and `assertUionBalanceIsConstant` parameters, check that those balances have also not been changed
 func (s *IntegrationTestSuite) assertBalancesInvariants(balancesBefore, balancesAfter sdk.Coins, assertUosmoBalanceIsConstant, assertUionBalanceIsConstant bool) {
 	s.Require().True(balancesAfter.AmountOf("stake").Equal(balancesBefore.AmountOf("stake")))
