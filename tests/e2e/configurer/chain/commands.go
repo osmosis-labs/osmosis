@@ -391,7 +391,7 @@ func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress 
 	n.LogActionF("successfully sent bank sent %s from address %s to %s", amount, sendAddress, receiveAddress)
 }
 
-// This method also funds spread reward tokens from the `initialization.ValidatorWalletName` account.
+// This method also funds fee tokens from the `initialization.ValidatorWalletName` account.
 // TODO: Abstract this to be a fee token provider account.
 func (n *NodeConfig) CreateWallet(walletName string) string {
 	n.LogActionF("creating wallet %s", walletName)
