@@ -90,7 +90,7 @@ func (q Querier) ClaimableIncentives(grpcCtx context.Context,
 	return q.Q.ClaimableIncentives(ctx, *req)
 }
 
-func (q Querier) ClaimableSpreadRewards(grpcCtx context.Context,
+func (q Querier) ClaimableFees(grpcCtx context.Context,
 	req *queryproto.ClaimableSpreadRewardsRequest,
 ) (*queryproto.ClaimableSpreadRewardsResponse, error) {
 	if req == nil {
