@@ -61,7 +61,7 @@ pub enum IBCLifecycleComplete {
         sequence: u64,
         /// String encoded version of the ack as seen by OnAcknowledgementPacket(..)
         ack: String,
-        /// Weather an ack is a success of failure according to the transfer spec
+        /// Whether an ack is a success of failure according to the transfer spec
         success: bool,
     },
     #[serde(rename = "ibc_timeout")]

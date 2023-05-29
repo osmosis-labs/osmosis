@@ -33,8 +33,8 @@ pub enum RegistryError {
     #[error("serialization error: {error}")]
     SerialiaztionError { error: String },
 
-    #[error("registry inprolperly configured")]
-    InproperlyConfigured {},
+    #[error("registry improperly configured")]
+    ImproperlyConfigured {},
 
     #[error("denom {denom:?} is not an IBC denom")]
     InvalidIBCDenom { denom: String },
