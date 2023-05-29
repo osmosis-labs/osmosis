@@ -224,21 +224,6 @@ func addToUptimeAccums(ctx sdk.Context, poolId uint64, clKeeper *cl.Keeper, addV
 	return nil
 }
 
-// addDecCoinsArray adds the contents of the second param from the first (decCoinsArrayA + decCoinsArrayB)
-// Note that this takes in two _arrays_ of DecCoins, meaning that each term itself is of type DecCoins (i.e. an array of DecCoin).
-func addDecCoinsArray(decCoinsArrayA []sdk.DecCoins, decCoinsArrayB []sdk.DecCoins) ([]sdk.DecCoins, error) {
-	if len(decCoinsArrayA) != len(decCoinsArrayB) {
-		return []sdk.DecCoins{}, fmt.Errorf("DecCoin arrays must be of equal length to be added")
-	}
-
-	finalDecCoinArray := []sdk.DecCoins{}
-	for i := range decCoinsArrayA {
-		finalDecCoinArray = append(finalDecCoinArray, decCoinsArrayA[i].Add(decCoinsArrayB[i]...))
-	}
-
-	return finalDecCoinArray, nil
-}
-
 func withDenom(record types.IncentiveRecord, denom string) types.IncentiveRecord {
 	record.IncentiveDenom = denom
 
