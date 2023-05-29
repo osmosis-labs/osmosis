@@ -10,31 +10,44 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
-func TestCreateConcentratedLiquidityPoolProposalMarshalUnmarshal(t *testing.T) {
+func TestCreateConcentratedLiquidityPoolsProposalMarshalUnmarshal(t *testing.T) {
+	records := []types.PoolRecord{
+		{
+			Denom0:             "uion",
+			Denom1:             "uosmo",
+			TickSpacing:        100,
+			ExponentAtPriceOne: sdk.NewInt(-1),
+			SpreadFactor:       sdk.MustNewDecFromStr("0.01"),
+		},
+		{
+			Denom0:             "stake",
+			Denom1:             "uosmo",
+			TickSpacing:        100,
+			ExponentAtPriceOne: sdk.NewInt(-5),
+			SpreadFactor:       sdk.MustNewDecFromStr("0.02"),
+		},
+	}
+
 	tests := []struct {
-		proposal *types.CreateConcentratedLiquidityPoolProposal
+		proposal *types.CreateConcentratedLiquidityPoolsProposal
 	}{
 		{ // empty title
-			proposal: &types.CreateConcentratedLiquidityPoolProposal{
+			proposal: &types.CreateConcentratedLiquidityPoolsProposal{
 				Title:       "",
 				Description: "proposal to update migration records",
 			},
 		},
 		{ // empty description
-			proposal: &types.CreateConcentratedLiquidityPoolProposal{
+			proposal: &types.CreateConcentratedLiquidityPoolsProposal{
 				Title:       "title",
 				Description: "",
 			},
 		},
 		{ // happy path
-			proposal: &types.CreateConcentratedLiquidityPoolProposal{
-				Title:              "title",
-				Description:        "proposal to update migration records",
-				Denom0:             "denom0",
-				Denom1:             "denom1",
-				TickSpacing:        uint64(1),
-				ExponentAtPriceOne: sdk.NewInt(-1),
-				SpreadFactor:       sdk.MustNewDecFromStr("0.01"),
+			proposal: &types.CreateConcentratedLiquidityPoolsProposal{
+				Title:       "title",
+				Description: "proposal to update migration records",
+				PoolRecords: records,
 			},
 		},
 	}
@@ -42,7 +55,7 @@ func TestCreateConcentratedLiquidityPoolProposalMarshalUnmarshal(t *testing.T) {
 	for _, test := range tests {
 		bz, err := proto.Marshal(test.proposal)
 		require.NoError(t, err)
-		decoded := types.CreateConcentratedLiquidityPoolProposal{}
+		decoded := types.CreateConcentratedLiquidityPoolsProposal{}
 		err = proto.Unmarshal(bz, &decoded)
 		require.NoError(t, err)
 		require.Equal(t, *test.proposal, decoded)

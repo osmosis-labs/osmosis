@@ -93,8 +93,8 @@ func NewFungifyChargedPositionsCmd() (*osmocli.TxCliDesc, *types.MsgFungifyCharg
 	}, &types.MsgFungifyChargedPositions{}
 }
 
-// NewCmdCreateConcentratedLiquidityPoolProposal implements a command handler for create concentrated liquidity pool proposal
-func NewCmdCreateConcentratedLiquidityPoolProposal() *cobra.Command {
+// NewCmdCreateConcentratedLiquidityPoolsProposal implements a command handler for create concentrated liquidity pool proposal
+func NewCmdCreateConcentratedLiquidityPoolsProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-concentratedliquidity-pool-proposal [denom0] [denom1] [tick-spacing] [spread-factor] [flags]",
 		Args:  cobra.ExactArgs(4),
@@ -151,6 +151,7 @@ func NewCmdCreateConcentratedLiquidityPoolProposal() *cobra.Command {
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
 	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(FlagPoolRecords, "", "The pool records array")
 
 	return cmd
 }
@@ -221,13 +222,16 @@ func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command, denom
 	if err != nil {
 		return nil, err
 	}
-	content := &types.CreateConcentratedLiquidityPoolProposal{
-		Title:        title,
-		Description:  description,
-		Denom0:       denom0,
-		Denom1:       denom1,
-		TickSpacing:  tickSpacing,
-		SpreadFactor: spreadFactor,
+
+	poolRecords, err := parsePoolRecords(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	content := &types.CreateConcentratedLiquidityPoolsProposal{
+		Title:       title,
+		Description: description,
+		PoolRecords: poolRecords,
 	}
 
 	return content, nil
@@ -291,4 +295,54 @@ func parsePoolIdToTickSpacingRecords(cmd *cobra.Command) ([]types.PoolIdToTickSp
 	}
 
 	return poolIdToTickSpacingRecords, nil
+}
+
+func parsePoolRecords(cmd *cobra.Command) ([]types.PoolRecord, error) {
+	poolRecordsStr, err := cmd.Flags().GetString(FlagPoolRecords)
+	if err != nil {
+		return nil, err
+	}
+
+	poolRecords := strings.Split(poolRecordsStr, ",")
+
+	if len(poolRecords)%5 != 0 {
+		return nil, fmt.Errorf("poolRecords must be a list of denom0, denom1, tickSpacing, exponentAtPriceOne, and spreadFactor")
+	}
+
+	finalPoolRecords := []types.PoolRecord{}
+	i := 0
+	for i < len(poolRecords) {
+		denom0 := poolRecords[i]
+		denom1 := poolRecords[i+1]
+
+		tickSpacing, err := strconv.Atoi(poolRecords[i+2])
+		if err != nil {
+			return nil, err
+		}
+
+		exponentAtPriceOneStr := poolRecords[i+3]
+		exponentAtPriceOne, ok := sdk.NewIntFromString(exponentAtPriceOneStr)
+		if !ok {
+			return nil, fmt.Errorf("invalid exponentAtPriceOne: %s", exponentAtPriceOneStr)
+		}
+
+		spreadFactorStr := poolRecords[i+4]
+		spreadFactor, err := sdk.NewDecFromStr(spreadFactorStr)
+		if err != nil {
+			return nil, err
+		}
+
+		finalPoolRecords = append(finalPoolRecords, types.PoolRecord{
+			Denom0:             denom0,
+			Denom1:             denom1,
+			TickSpacing:        uint64(tickSpacing),
+			ExponentAtPriceOne: exponentAtPriceOne,
+			SpreadFactor:       spreadFactor,
+		})
+
+		// increase counter by the next 5
+		i = i + 5
+	}
+
+	return finalPoolRecords, nil
 }
