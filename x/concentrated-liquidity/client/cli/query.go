@@ -57,10 +57,10 @@ func GetCmdPools() (*osmocli.QueryDescriptor, *queryproto.PoolsRequest) {
 
 func GetClaimableSpreadRewards() (*osmocli.QueryDescriptor, *queryproto.ClaimableSpreadRewardsRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "claimable-spread-factors [positionID]",
+		Use:   "claimable-spread-rewards [positionID]",
 		Short: "Query claimable spread rewards",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} claimable-spread-factors 53`,
+{{.CommandPrefix}} claimable-spread-rewards 53`,
 	}, &queryproto.ClaimableSpreadRewardsRequest{}
 }
 
@@ -69,6 +69,6 @@ func GetClaimableIncentives() (*osmocli.QueryDescriptor, *queryproto.ClaimableIn
 		Use:   "claimable-incentives [positionID]",
 		Short: "Query claimable incentives",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} claimable-spread-factors 53`,
+{{.CommandPrefix}} claimable-incentives 53`,
 	}, &queryproto.ClaimableIncentivesRequest{}
 }
