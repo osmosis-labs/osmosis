@@ -2405,7 +2405,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordTwo.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet: incentiveRecordTwo,
+			recordToSet:       incentiveRecordTwo,
+			authorizedUptimes: types.SupportedUptimes,
 		},
 		"record with different start time": {
 			poolId: defaultPoolId,
@@ -2568,7 +2569,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet: withMinUptime(incentiveRecordOne, time.Hour*3),
+			recordToSet:       withMinUptime(incentiveRecordOne, time.Hour*3),
+			authorizedUptimes: types.SupportedUptimes,
 
 			expectedError: types.InvalidMinUptimeError{PoolId: 1, MinUptime: time.Hour * 3, AuthorizedUptimes: types.SupportedUptimes},
 		},
@@ -3707,24 +3709,26 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 	}
 }
 
-func (s *KeeperTestSuite) TestGetLargestAuthorizedUptime() {
-	s.SetupTest()
-	largestAuthorizedUptime := s.clk.GetLargestAuthorizedUptimeDuration(s.Ctx)
+func (s *KeeperTestSuite) TestGetLargestAuthorizedAndSupportedUptimes() {
+	// Note: we assume the largest supported uptime is at the end of the list.
+	// While we could hardcode this, this setup is backwards compatible with changes in the list.
+	longestSupportedUptime := types.SupportedUptimes[len(types.SupportedUptimes)-1]
 	tests := map[string]struct {
 		preSetAuthorizedParams []time.Duration
-		expected               time.Duration
+		expectedAuthorized     time.Duration
+		expectedSupported      time.Duration
 	}{
-		"all supported uptimes": {
+		"All supported uptimes authorized": {
 			preSetAuthorizedParams: types.SupportedUptimes,
-			expected:               largestAuthorizedUptime,
+			expectedAuthorized:     longestSupportedUptime,
 		},
-		"1 ns": {
+		"Only 1 ns authorized": {
 			preSetAuthorizedParams: []time.Duration{time.Nanosecond},
-			expected:               time.Nanosecond,
+			expectedAuthorized:     time.Nanosecond,
 		},
-		"unordered": {
+		"Unordered authorized uptimes": {
 			preSetAuthorizedParams: []time.Duration{time.Hour * 24 * 7, time.Nanosecond, time.Hour * 24},
-			expected:               time.Hour * 24 * 7,
+			expectedAuthorized:     time.Hour * 24 * 7,
 		},
 		// note cannot have test case with empty authorized uptimes due to parameter validation.
 	}
@@ -3738,9 +3742,11 @@ func (s *KeeperTestSuite) TestGetLargestAuthorizedUptime() {
 			clParams.AuthorizedUptimes = tc.preSetAuthorizedParams
 			s.clk.SetParams(s.Ctx, clParams)
 
-			actual := s.clk.GetLargestAuthorizedUptimeDuration(s.Ctx)
+			actualAuthorized := s.clk.GetLargestAuthorizedUptimeDuration(s.Ctx)
+			actualSupported := s.clk.GetLargestSupportedUptimeDuration(s.Ctx)
 
-			s.Require().Equal(tc.expected, actual)
+			s.Require().Equal(tc.expectedAuthorized, actualAuthorized)
+			s.Require().Equal(longestSupportedUptime, actualSupported)
 		})
 	}
 }
