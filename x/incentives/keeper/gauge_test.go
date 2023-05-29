@@ -237,7 +237,7 @@ func (s *KeeperTestSuite) TestGaugeOperations() {
 	}
 }
 
-func (s *KeeperTestSuite) TestChargeSpreadRewardsIfSufficientFeeDenomBalance() {
+func (s *KeeperTestSuite) TestChargeSpreadFactorIfSufficientFeeDenomBalance() {
 	const baseFee = int64(100)
 
 	testcases := map[string]struct {
@@ -312,7 +312,7 @@ func (s *KeeperTestSuite) TestChargeSpreadRewardsIfSufficientFeeDenomBalance() {
 			oldBalanceAmount := bankKeeper.GetBalance(ctx, testAccount, sdk.DefaultBondDenom).Amount
 
 			// System under test.
-			err := incentivesKeepers.ChargeSpreadRewardsIfSufficientFeeDenomBalance(ctx, testAccount, sdk.NewInt(tc.feeToCharge), tc.gaugeCoins)
+			err := incentivesKeepers.ChargeSpreadFactorIfSufficientFeeDenomBalance(ctx, testAccount, sdk.NewInt(tc.feeToCharge), tc.gaugeCoins)
 
 			// Assertions.
 			newBalanceAmount := bankKeeper.GetBalance(ctx, testAccount, sdk.DefaultBondDenom).Amount

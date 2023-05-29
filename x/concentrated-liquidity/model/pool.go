@@ -15,7 +15,7 @@ import (
 
 const (
 	incentivesAddressPrefix    = "incentives"
-	spreadFactorsAddressPrefix = "spreadFactors"
+	spreadRewardsAddressPrefix = "spreadRewards"
 )
 
 var (
@@ -40,7 +40,7 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 	pool := Pool{
 		Address:              poolmanagertypes.NewPoolAddress(poolId).String(),
 		IncentivesAddress:    osmoutils.NewModuleAddressWithPrefix(types.ModuleName, incentivesAddressPrefix, sdk.Uint64ToBigEndian(poolId)).String(),
-		SpreadRewardsAddress: osmoutils.NewModuleAddressWithPrefix(types.ModuleName, spreadFactorsAddressPrefix, sdk.Uint64ToBigEndian(poolId)).String(),
+		SpreadRewardsAddress: osmoutils.NewModuleAddressWithPrefix(types.ModuleName, spreadRewardsAddressPrefix, sdk.Uint64ToBigEndian(poolId)).String(),
 		Id:                   poolId,
 		CurrentSqrtPrice:     sdk.ZeroDec(),
 		CurrentTick:          0,

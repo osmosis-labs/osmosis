@@ -290,12 +290,12 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
 	return k.ek.GetEpochInfo(ctx, params.DistrEpochIdentifier)
 }
 
-// chargeSpreadRewardsIfSufficientFeeDenomBalance charges fee in the base denom on the address if the address has
+// chargeSpreadFactorIfSufficientFeeDenomBalance charges fee in the base denom on the address if the address has
 // balance that is less than fee + amount of the coin from gaugeCoins that is of base denom.
 // gaugeCoins might not have a coin of tx base denom. In that case, fee is only compared to balance.
 // The fee is sent to the community pool.
 // Returns nil on success, error otherwise.
-func (k Keeper) chargeSpreadRewardsIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee sdk.Int, gaugeCoins sdk.Coins) (err error) {
+func (k Keeper) chargeSpreadFactorIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee sdk.Int, gaugeCoins sdk.Coins) (err error) {
 	feeDenom, err := k.tk.GetBaseDenom(ctx)
 	if err != nil {
 		return err
