@@ -16,6 +16,76 @@ import (
 
 var DefaultIncentiveRecords = []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour}
 
+// AssertPositionsDoNotExist checks that the positions with the given IDs do not exist on the given accumulators.
+func (s *KeeperTestSuite) AssertPositionsDoNotExist(positionIds []uint64) {
+	uptimeAccumulators, err := s.clk.GetUptimeAccumulators(s.Ctx, defaultPoolId)
+	s.Require().NoError(err)
+
+	for _, positionId := range positionIds {
+		oldPositionName := string(types.KeyPositionId(positionId))
+		for _, uptimeAccum := range uptimeAccumulators {
+			// Check if the accumulator contains the position.
+			hasPosition, err := uptimeAccum.HasPosition(oldPositionName)
+			s.Require().NoError(err)
+			s.Require().False(hasPosition)
+		}
+
+		// Check that the old position has been deleted.
+		_, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+		s.Require().Error(err)
+		s.Require().ErrorAs(err, &types.PositionIdNotFoundError{})
+	}
+}
+
+// GetTotalAccruedRewardsByAccumulator returns the total accrued rewards for the given position on each accumulator.
+func (s *KeeperTestSuite) GetTotalAccruedRewardsByAccumulator(positionId uint64, requireHasPosition bool) []sdk.DecCoins {
+	uptimeAccumulators, err := s.clk.GetUptimeAccumulators(s.Ctx, defaultPoolId)
+	s.Require().NoError(err)
+
+	unclaimedRewardsForEachUptimeNewPosition := make([]sdk.DecCoins, len(uptimeAccumulators))
+
+	for i, uptimeAccum := range uptimeAccumulators {
+		newPositionName := string(types.KeyPositionId(positionId))
+		// Check if the accumulator contains the position.
+		hasPosition, err := uptimeAccum.HasPosition(newPositionName)
+		s.Require().NoError(err)
+
+		if requireHasPosition {
+			s.Require().True(hasPosition)
+		}
+
+		if hasPosition {
+			// Move the unclaimed rewards to the new position.
+			// Get the unclaimed rewards for the old position.
+			position, err := accum.GetPosition(uptimeAccum, newPositionName)
+			s.Require().NoError(err)
+
+			unclaimedRewardsForPosition := accum.GetTotalRewards(uptimeAccum, position)
+
+			unclaimedRewardsForEachUptimeNewPosition[i] = unclaimedRewardsForEachUptimeNewPosition[i].Add(unclaimedRewardsForPosition...)
+		}
+	}
+
+	return unclaimedRewardsForEachUptimeNewPosition
+}
+
+// ExecuteAndValidateSuccessfulIncentiveClaim claims incentives for position Id and asserts its output is as expected.
+// It also asserts that no more incentives can be claimed for the position.
+func (s *KeeperTestSuite) ExecuteAndValidateSuccessfulIncentiveClaim(positionId uint64, expectedRewards sdk.Coins, expectedForfeited sdk.Coins) {
+	// Initial claim and assertion
+	claimedRewards, forfeitedRewards, err := s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionId)
+	s.Require().NoError(err)
+
+	s.Require().Equal(expectedRewards, claimedRewards)
+	s.Require().Equal(expectedForfeited, forfeitedRewards)
+
+	// Sanity check that cannot claim again.
+	claimedRewards, _, err = s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionId)
+	s.Require().NoError(err)
+
+	s.Require().Equal(sdk.Coins(nil), claimedRewards)
+}
+
 func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 	const (
 		validPoolId   = 1
@@ -677,76 +747,6 @@ func (s *KeeperTestSuite) TestCalculateUnderlyingAssetsFromPosition() {
 			s.Require().Equal(calculatedCoin1.String(), sdk.NewCoin(clPool.GetToken1(), actualAmount1).String())
 		})
 	}
-}
-
-// AssertPositionsDoNotExist checks that the positions with the given IDs do not exist on the given accumulators.
-func (s *KeeperTestSuite) AssertPositionsDoNotExist(positionIds []uint64) {
-	uptimeAccumulators, err := s.clk.GetUptimeAccumulators(s.Ctx, defaultPoolId)
-	s.Require().NoError(err)
-
-	for _, positionId := range positionIds {
-		oldPositionName := string(types.KeyPositionId(positionId))
-		for _, uptimeAccum := range uptimeAccumulators {
-			// Check if the accumulator contains the position.
-			hasPosition, err := uptimeAccum.HasPosition(oldPositionName)
-			s.Require().NoError(err)
-			s.Require().False(hasPosition)
-		}
-
-		// Check that the old position has been deleted.
-		_, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
-		s.Require().Error(err)
-		s.Require().ErrorAs(err, &types.PositionIdNotFoundError{})
-	}
-}
-
-// ExecuteAndValidateSuccessfulIncentiveClaim claims incentives for position Id and asserts its output is as expected.
-// It also asserts that no more incentives can be claimed for the position.
-func (s *KeeperTestSuite) ExecuteAndValidateSuccessfulIncentiveClaim(positionId uint64, expectedRewards sdk.Coins, expectedForfeited sdk.Coins) {
-	// Initial claim and assertion
-	claimedRewards, forfeitedRewards, err := s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionId)
-	s.Require().NoError(err)
-
-	s.Require().Equal(expectedRewards, claimedRewards)
-	s.Require().Equal(expectedForfeited, forfeitedRewards)
-
-	// Sanity check that cannot claim again.
-	claimedRewards, _, err = s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionId)
-	s.Require().NoError(err)
-
-	s.Require().Equal(sdk.Coins(nil), claimedRewards)
-}
-
-// getTotalAccruedRewardsByAccumulator returns the total accrued rewards for the given position on each accumulator.
-func (s *KeeperTestSuite) GetTotalAccruedRewardsByAccumulator(positionId uint64, requireHasPosition bool) []sdk.DecCoins {
-	uptimeAccumulators, err := s.clk.GetUptimeAccumulators(s.Ctx, defaultPoolId)
-	s.Require().NoError(err)
-
-	unclaimedRewardsForEachUptimeNewPosition := make([]sdk.DecCoins, len(uptimeAccumulators))
-
-	for i, uptimeAccum := range uptimeAccumulators {
-		newPositionName := string(types.KeyPositionId(positionId))
-		// Check if the accumulator contains the position.
-		hasPosition, err := uptimeAccum.HasPosition(newPositionName)
-		s.Require().NoError(err)
-
-		if requireHasPosition {
-			s.Require().True(hasPosition)
-		}
-
-		if hasPosition {
-			// Move the unclaimed rewards to the new position.
-			// Get the unclaimed rewards for the old position.
-			position, err := accum.GetPosition(uptimeAccum, newPositionName)
-			s.Require().NoError(err)
-
-			unclaimedRewardsForPosition := accum.GetTotalRewards(uptimeAccum, position)
-
-			unclaimedRewardsForEachUptimeNewPosition[i] = unclaimedRewardsForEachUptimeNewPosition[i].Add(unclaimedRewardsForPosition...)
-		}
-	}
-
-	return unclaimedRewardsForEachUptimeNewPosition
 }
 
 func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
