@@ -80,16 +80,6 @@ func (q Querier) LiquidityNetInDirection(grpcCtx context.Context,
 	return q.Q.LiquidityNetInDirection(ctx, *req)
 }
 
-func (q Querier) ClaimableIncentives(grpcCtx context.Context,
-	req *queryproto.ClaimableIncentivesRequest,
-) (*queryproto.ClaimableIncentivesResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.ClaimableIncentives(ctx, *req)
-}
-
 func (q Querier) ClaimableSpreadRewards(grpcCtx context.Context,
 	req *queryproto.ClaimableSpreadRewardsRequest,
 ) (*queryproto.ClaimableSpreadRewardsResponse, error) {
@@ -98,5 +88,15 @@ func (q Querier) ClaimableSpreadRewards(grpcCtx context.Context,
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.ClaimableSpreadRewards(ctx, *req)
+}
+
+func (q Querier) ClaimableIncentives(grpcCtx context.Context,
+	req *queryproto.ClaimableIncentivesRequest,
+) (*queryproto.ClaimableIncentivesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.ClaimableIncentives(ctx, *req)
 }
 
