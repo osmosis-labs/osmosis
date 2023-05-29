@@ -88,9 +88,9 @@ func (p CreateConcentratedLiquidityPoolsProposal) String() string {
 
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf(`Create Concentrated Liquidity Pool Proposal:
-  Title:                 %s
-  Description:           %s
-  Records:     			 %s
+Title:       %s
+Description: %s
+Records:     %s
 `, p.Title, p.Description, recordsStr))
 	return b.String()
 }
@@ -138,9 +138,9 @@ func (p TickSpacingDecreaseProposal) String() string {
 
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf(`Decrease Pools Tick Spacing Proposal:
-  Title:       %s
-  Description: %s
-  Records:     %s
+Title:       %s
+Description: %s
+Records:     %s
 `, p.Title, p.Description, recordsStr))
 	return b.String()
 }

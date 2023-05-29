@@ -16,7 +16,10 @@ message CreateConcentratedLiquidityPoolsProposal {
   string title = 1;
   string description = 2;
 
-  repeated PoolRecord pool_records = 3 [ (gogoproto.nullable) = false ];
+  repeated PoolRecord pool_records = 3 [
+    (gogoproto.moretags) = "yaml:\"pool_records\"",
+    (gogoproto.nullable) = false
+  ];
 }
 // TickSpacingDecreaseProposal is a gov Content type for proposing a tick
 // spacing decrease for a pool. The proposal will fail if one of the pools do

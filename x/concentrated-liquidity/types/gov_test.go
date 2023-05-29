@@ -22,9 +22,16 @@ func TestCreateConcentratedLiquidityPoolsProposalMarshalUnmarshal(t *testing.T) 
 		{
 			Denom0:             "stake",
 			Denom1:             "uosmo",
-			TickSpacing:        100,
+			TickSpacing:        1000,
 			ExponentAtPriceOne: sdk.NewInt(-5),
 			SpreadFactor:       sdk.MustNewDecFromStr("0.02"),
+		},
+		{
+			Denom0:             "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+			Denom1:             "uosmo",
+			TickSpacing:        10,
+			ExponentAtPriceOne: sdk.NewInt(-3),
+			SpreadFactor:       sdk.MustNewDecFromStr("0.05"),
 		},
 	}
 
