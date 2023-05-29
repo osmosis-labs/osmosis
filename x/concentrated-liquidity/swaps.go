@@ -48,29 +48,29 @@ type SwapState struct {
 	// Updated each time a tick is crossed.
 	liquidity sdk.Dec
 
-	// Global fee growth per-current swap.
+	// Global spread reward growth per-current swap.
 	// Initialized to zero.
 	// Updated after every swap step.
-	feeGrowthGlobal sdk.Dec
+	spreadRewardGrowthGlobal sdk.Dec
 }
 
 var (
 	smallestDec = sdk.SmallestDec()
 )
 
-// updateFeeGrowthGlobal updates the swap state's fee growth global per unit of liquidity
+// updateSpreadRewardGrowthGlobal updates the swap state's spread reward growth global per unit of liquidity
 // when liquidity is positive.
 //
 // If the liquidity is zero, this is a no-op. This case may occur when there is no liquidity
 // between the ticks. This is possible when there are only 2 positions with no overlapping ranges.
 // As a result, the range from the end of position one to the beginning of position
 // two has no liquidity and can be skipped.
-func (ss *SwapState) updateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
+func (ss *SwapState) updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal sdk.Dec) {
 	if !ss.liquidity.IsZero() {
-		// We round down here since we want to avoid overdistributing (the "fee charge" refers to
-		// the total fees that will be accrued to the fee accumulator)
-		feesAccruedPerUnitOfLiquidity := feeChargeTotal.QuoTruncate(ss.liquidity)
-		ss.feeGrowthGlobal.AddMut(feesAccruedPerUnitOfLiquidity)
+		// We round down here since we want to avoid overdistributing (the "spread factor charge" refers to
+		// the total spread factors that will be accrued to the spread factor accumulator)
+		spreadFactorssAccruedPerUnitOfLiquidity := spreadRewardChargeTotal.QuoTruncate(ss.liquidity)
+		ss.spreadRewardGrowthGlobal.AddMut(spreadFactorssAccruedPerUnitOfLiquidity)
 		return
 	}
 }
@@ -115,7 +115,7 @@ func (k Keeper) SwapExactAmountIn(
 }
 
 // SwapExactAmountOut allows users to specify the output token amount they want to receive from a swap and get the exact
-// input token amount they need to provide based on the current pool prices and any applicable fees.
+// input token amount they need to provide based on the current pool prices and any applicable spread factors.
 func (k Keeper) SwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -167,7 +167,7 @@ func (k Keeper) swapOutAmtGivenIn(
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
 ) (calcTokenIn, calcTokenOut sdk.Coin, currentTick int64, liquidity, sqrtPrice sdk.Dec, err error) {
-	tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, totalFees, err := k.computeOutAmtGivenIn(ctx, pool.GetId(), tokenIn, tokenOutDenom, spreadFactor, priceLimit)
+	tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, totalSpreadFactors, err := k.computeOutAmtGivenIn(ctx, pool.GetId(), tokenIn, tokenOutDenom, spreadFactor, priceLimit)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
 	}
@@ -178,7 +178,7 @@ func (k Keeper) swapOutAmtGivenIn(
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
 	// Also emits swap event and updates related liquidity metrics
-	if err := k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, totalFees); err != nil {
+	if err := k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, totalSpreadFactors); err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
 	}
 
@@ -196,7 +196,7 @@ func (k *Keeper) swapInAmtGivenOut(
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
 ) (calcTokenIn, calcTokenOut sdk.Coin, currentTick int64, liquidity, sqrtPrice sdk.Dec, err error) {
-	tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, totalFees, err := k.computeInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit, pool.GetId())
+	tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, totalSpreadFactors, err := k.computeInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit, pool.GetId())
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
 	}
@@ -208,7 +208,7 @@ func (k *Keeper) swapInAmtGivenOut(
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
 	// Also emits swap event and updates related liquidity metrics
-	if err := k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, totalFees); err != nil {
+	if err := k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, totalSpreadFactors); err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
 	}
 
@@ -245,7 +245,7 @@ func (k Keeper) CalcInAmtGivenOut(
 	return tokenIn, nil
 }
 
-// computeOutAmtGivenIn calculates tokens to be swapped out given the provided amount and fee deducted. It also returns
+// computeOutAmtGivenIn calculates tokens to be swapped out given the provided amount and spread factor deducted. It also returns
 // what the updated tick, liquidity, and currentSqrtPrice for the pool would be after this swap.
 // Note this method is mutative, some of the tick and accumulator updates get written to store.
 // However, there are no token transfers or pool updates done in this method. These mutations are performed in swapInAmtGivenOut.
@@ -257,7 +257,7 @@ func (k Keeper) computeOutAmtGivenIn(
 	tokenOutDenom string,
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
-) (tokenIn, tokenOut sdk.Coin, updatedTick int64, updatedLiquidity, updatedSqrtPrice sdk.Dec, totalFees sdk.Dec, err error) {
+) (tokenIn, tokenOut sdk.Coin, updatedTick int64, updatedLiquidity, updatedSqrtPrice sdk.Dec, totalSpreadFactors sdk.Dec, err error) {
 	// Get pool and asset info
 	p, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -323,7 +323,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
-	feeAccumulator, err := k.GetFeeAccumulator(ctx, poolId)
+	spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, poolId)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
@@ -338,15 +338,15 @@ func (k Keeper) computeOutAmtGivenIn(
 		amountCalculated:         sdk.ZeroDec(),                  // tokenOut
 		sqrtPrice:                curSqrtPrice,
 		// Pad (or don't pad) current tick based on swap direction to avoid off-by-one errors
-		tick:            swapStrategy.InitializeTickValue(p.GetCurrentTick()),
-		liquidity:       p.GetLiquidity(),
-		feeGrowthGlobal: sdk.ZeroDec(),
+		tick:                     swapStrategy.InitializeTickValue(p.GetCurrentTick()),
+		liquidity:                p.GetLiquidity(),
+		spreadRewardGrowthGlobal: sdk.ZeroDec(),
 	}
 
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
 	defer nextTickIter.Close()
 
-	totalFees = sdk.ZeroDec()
+	totalSpreadFactors = sdk.ZeroDec()
 	// Iterate and update swapState until we swap all tokenIn or we reach the specific sqrtPriceLimit
 	// TODO: for now, we check if amountSpecifiedRemaining is GT 0.0000001. This is because there are times when the remaining
 	// amount may be extremely small, and that small amount cannot generate and amountIn/amountOut and we are therefore left
@@ -380,15 +380,15 @@ func (k Keeper) computeOutAmtGivenIn(
 
 		// Utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
 		// we also calculate the swap state's new sqrtPrice after this swap
-		sqrtPrice, amountIn, amountOut, feeCharge := swapStrategy.ComputeSwapStepOutGivenIn(
+		sqrtPrice, amountIn, amountOut, spreadRewardCharge := swapStrategy.ComputeSwapStepOutGivenIn(
 			swapState.sqrtPrice,
 			sqrtPriceTarget,
 			swapState.liquidity,
 			swapState.amountSpecifiedRemaining,
 		)
 
-		// Update the fee growth for the entire swap using the total fees charged.
-		swapState.updateFeeGrowthGlobal(feeCharge)
+		// Update the spread reward growth for the entire swap using the total spread factors charged.
+		swapState.updateSpreadRewardGrowthGlobal(spreadRewardCharge)
 
 		ctx.Logger().Debug("cl calc out given in")
 		ctx.Logger().Debug("start sqrt price", swapState.sqrtPrice)
@@ -396,15 +396,15 @@ func (k Keeper) computeOutAmtGivenIn(
 		ctx.Logger().Debug("liquidity", swapState.liquidity)
 		ctx.Logger().Debug("amountIn", amountIn)
 		ctx.Logger().Debug("amountOut", amountOut)
-		ctx.Logger().Debug("feeCharge", feeCharge)
+		ctx.Logger().Debug("spreadRewardCharge", spreadRewardCharge)
 
 		// Update the swapState with the new sqrtPrice from the above swap
 		swapState.sqrtPrice = sqrtPrice
 		// We deduct the amount of tokens we input in the computeSwapStep above from the user's defined tokenIn amount
-		swapState.amountSpecifiedRemaining.SubMut(amountIn.Add(feeCharge))
+		swapState.amountSpecifiedRemaining.SubMut(amountIn.Add(spreadRewardCharge))
 		// We add the amount of tokens we received (amountOut) from the computeSwapStep above to the amountCalculated accumulator
 		swapState.amountCalculated.AddMut(amountOut)
-		totalFees = totalFees.Add(feeCharge)
+		totalSpreadFactors = totalSpreadFactors.Add(spreadRewardCharge)
 
 		// If the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
 		// tick has been consumed and we must move on to the next tick to complete the swap
@@ -419,7 +419,7 @@ func (k Keeper) computeOutAmtGivenIn(
 			}
 
 			// Retrieve the liquidity held in the next closest initialized tick
-			liquidityNet, err := k.crossTick(ctx, poolId, nextTick, &nextTickInfo, sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.feeGrowthGlobal), feeAccumulator.GetValue(), uptimeAccums)
+			liquidityNet, err := k.crossTick(ctx, poolId, nextTick, &nextTickInfo, sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.spreadRewardGrowthGlobal), spreadRewardAccumulator.GetValue(), uptimeAccums)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 			}
@@ -445,8 +445,8 @@ func (k Keeper) computeOutAmtGivenIn(
 		}
 	}
 
-	// Add fee growth per share to the pool-global fee accumulator.
-	feeAccumulator.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.feeGrowthGlobal)))
+	// Add spread reward growth per share to the pool-global spread reward accumulator.
+	spreadRewardAccumulator.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.spreadRewardGrowthGlobal)))
 
 	// Coin amounts require int values
 	// Round amountIn up to avoid under charging
@@ -460,10 +460,10 @@ func (k Keeper) computeOutAmtGivenIn(
 	tokenIn = sdk.NewCoin(tokenInMin.Denom, amt0)
 	tokenOut = sdk.NewCoin(tokenOutDenom, amt1)
 
-	return tokenIn, tokenOut, swapState.tick, swapState.liquidity, swapState.sqrtPrice, totalFees, nil
+	return tokenIn, tokenOut, swapState.tick, swapState.liquidity, swapState.sqrtPrice, totalSpreadFactors, nil
 }
 
-// computeInAmtGivenOut calculates tokens to be swapped in given the desired token out and fee deducted. It also returns
+// computeInAmtGivenOut calculates tokens to be swapped in given the desired token out and spread factor deducted. It also returns
 // what the updated tick, liquidity, and currentSqrtPrice for the pool would be after this swap.
 // Note this method is mutative, some of the tick and accumulator updates get written to store.
 // However, there are no token transfers or pool updates done in this method. These mutations are performed in swapOutAmtGivenIn.
@@ -474,7 +474,7 @@ func (k Keeper) computeInAmtGivenOut(
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
 	poolId uint64,
-) (tokenIn, tokenOut sdk.Coin, updatedTick int64, updatedLiquidity, updatedSqrtPrice sdk.Dec, totalFees sdk.Dec, err error) {
+) (tokenIn, tokenOut sdk.Coin, updatedTick int64, updatedLiquidity, updatedSqrtPrice sdk.Dec, totalSpreadFactors sdk.Dec, err error) {
 	p, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
@@ -542,10 +542,10 @@ func (k Keeper) computeInAmtGivenOut(
 		sqrtPrice:                curSqrtPrice,
 		tick:                     swapStrategy.InitializeTickValue(p.GetCurrentTick()),
 		liquidity:                p.GetLiquidity(),
-		feeGrowthGlobal:          sdk.ZeroDec(),
+		spreadRewardGrowthGlobal: sdk.ZeroDec(),
 	}
 
-	totalFees = sdk.ZeroDec()
+	totalSpreadFactors = sdk.ZeroDec()
 
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
 	defer nextTickIter.Close()
@@ -555,7 +555,7 @@ func (k Keeper) computeInAmtGivenOut(
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
-	feeAccumulator, err := k.GetFeeAccumulator(ctx, poolId)
+	spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, poolId)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
@@ -590,14 +590,14 @@ func (k Keeper) computeInAmtGivenOut(
 
 		// utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
 		// we also calculate the swap state's new sqrtPrice after this swap
-		sqrtPrice, amountOut, amountIn, feeChargeTotal := swapStrategy.ComputeSwapStepInGivenOut(
+		sqrtPrice, amountOut, amountIn, spreadRewardChargeTotal := swapStrategy.ComputeSwapStepInGivenOut(
 			swapState.sqrtPrice,
 			sqrtPriceTarget,
 			swapState.liquidity,
 			swapState.amountSpecifiedRemaining,
 		)
 
-		swapState.updateFeeGrowthGlobal(feeChargeTotal)
+		swapState.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal)
 
 		ctx.Logger().Debug("cl calc in given out")
 		ctx.Logger().Debug("start sqrt price", swapState.sqrtPrice)
@@ -605,13 +605,13 @@ func (k Keeper) computeInAmtGivenOut(
 		ctx.Logger().Debug("liquidity", swapState.liquidity)
 		ctx.Logger().Debug("amountIn", amountIn)
 		ctx.Logger().Debug("amountOut", amountOut)
-		ctx.Logger().Debug("feeChargeTotal", feeChargeTotal)
+		ctx.Logger().Debug("spreadRewardChargeTotal", spreadRewardChargeTotal)
 
 		// update the swapState with the new sqrtPrice from the above swap
 		swapState.sqrtPrice = sqrtPrice
 		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.SubMut(amountOut)
-		swapState.amountCalculated = swapState.amountCalculated.AddMut(amountIn.Add(feeChargeTotal))
-		totalFees = totalFees.Add(feeChargeTotal)
+		swapState.amountCalculated = swapState.amountCalculated.AddMut(amountIn.Add(spreadRewardChargeTotal))
+		totalSpreadFactors = totalSpreadFactors.Add(spreadRewardChargeTotal)
 
 		// if the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
 		// tick has been consumed and we must move on to the next tick to complete the swap
@@ -626,7 +626,7 @@ func (k Keeper) computeInAmtGivenOut(
 			}
 
 			// retrieve the liquidity held in the next closest initialized tick
-			liquidityNet, err := k.crossTick(ctx, poolId, nextTick, &nextTickInfo, sdk.NewDecCoinFromDec(desiredTokenOut.Denom, swapState.feeGrowthGlobal), feeAccumulator.GetValue(), uptimeAccums)
+			liquidityNet, err := k.crossTick(ctx, poolId, nextTick, &nextTickInfo, sdk.NewDecCoinFromDec(desiredTokenOut.Denom, swapState.spreadRewardGrowthGlobal), spreadRewardAccumulator.GetValue(), uptimeAccums)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 			}
@@ -651,8 +651,8 @@ func (k Keeper) computeInAmtGivenOut(
 		}
 	}
 
-	// Add fee growth per share to the pool-global fee accumulator.
-	feeAccumulator.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec(tokenInDenom, swapState.feeGrowthGlobal)))
+	// Add spread reward growth per share to the pool-global spread reward accumulator.
+	spreadRewardAccumulator.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec(tokenInDenom, swapState.spreadRewardGrowthGlobal)))
 
 	// coin amounts require int values
 	// Round amount in up to avoid under charging the user.
@@ -666,7 +666,7 @@ func (k Keeper) computeInAmtGivenOut(
 	tokenIn = sdk.NewCoin(tokenInDenom, amt0)
 	tokenOut = sdk.NewCoin(desiredTokenOut.Denom, amt1)
 
-	return tokenIn, tokenOut, swapState.tick, swapState.liquidity, swapState.sqrtPrice, totalFees, nil
+	return tokenIn, tokenOut, swapState.tick, swapState.liquidity, swapState.sqrtPrice, totalSpreadFactors, nil
 }
 
 // updatePoolForSwap updates the given pool object with the results of a swap operation.
@@ -689,7 +689,7 @@ func (k Keeper) updatePoolForSwap(
 	newCurrentTick int64,
 	newLiquidity sdk.Dec,
 	newSqrtPrice sdk.Dec,
-	totalFees sdk.Dec,
+	totalSpreadFactors sdk.Dec,
 ) error {
 	// Fixed gas consumption per swap to prevent spam
 	poolId := pool.GetId()
@@ -699,11 +699,11 @@ func (k Keeper) updatePoolForSwap(
 		return err
 	}
 
-	// Fees should already be rounded up to a whole number dec, but we do this as a precaution
-	feesRoundedUp := sdk.NewCoin(tokenIn.Denom, totalFees.Ceil().TruncateInt())
+	// Spread factors should already be rounded up to a whole number dec, but we do this as a precaution
+	spreadFactorssRoundedUp := sdk.NewCoin(tokenIn.Denom, totalSpreadFactors.Ceil().TruncateInt())
 
-	// Remove the fees from the input token
-	tokenIn.Amount = tokenIn.Amount.Sub(feesRoundedUp.Amount)
+	// Remove the spread factors from the input token
+	tokenIn.Amount = tokenIn.Amount.Sub(spreadFactorssRoundedUp.Amount)
 
 	// Send the input token from the user to the pool's primary address
 	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), sdk.Coins{
@@ -713,10 +713,10 @@ func (k Keeper) updatePoolForSwap(
 		return types.InsufficientUserBalanceError{Err: err}
 	}
 
-	// Send the fees taken from the input token from the user to the pool's fee account
-	if !feesRoundedUp.IsZero() {
-		err = k.bankKeeper.SendCoins(ctx, sender, pool.GetFeesAddress(), sdk.Coins{
-			feesRoundedUp,
+	// Send the spread factors taken from the input token from the user to the pool's spread factor account
+	if !spreadFactorssRoundedUp.IsZero() {
+		err = k.bankKeeper.SendCoins(ctx, sender, pool.GetSpreadRewardsAddress(), sdk.Coins{
+			spreadFactorssRoundedUp,
 		})
 		if err != nil {
 			return types.InsufficientUserBalanceError{Err: err}

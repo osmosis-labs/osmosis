@@ -373,7 +373,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 				tickSpacing:  DefaultTickSpacing,
 				spreadFactor: sdk.ZeroDec().Sub(sdk.SmallestDec()),
 			},
-			expectedErr: types.InvalidSpreadFactorError{ActualFee: sdk.ZeroDec().Sub(sdk.SmallestDec())},
+			expectedErr: types.InvalidSpreadFactorError{ActualSpreadFactor: sdk.ZeroDec().Sub(sdk.SmallestDec())},
 		},
 		{
 			name: "Error: spread factor == 1",
@@ -384,7 +384,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 				tickSpacing:  DefaultTickSpacing,
 				spreadFactor: sdk.OneDec(),
 			},
-			expectedErr: types.InvalidSpreadFactorError{ActualFee: sdk.OneDec()},
+			expectedErr: types.InvalidSpreadFactorError{ActualSpreadFactor: sdk.OneDec()},
 		},
 	}
 

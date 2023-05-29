@@ -51,7 +51,7 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		return types.UnauthorizedQuoteDenomError{ProvidedQuoteDenom: quoteAsset, AuthorizedQuoteDenoms: params.AuthorizedQuoteDenoms}
 	}
 
-	if err := k.createFeeAccumulator(ctx, poolId); err != nil {
+	if err := k.createSpreadRewardAccumulator(ctx, poolId); err != nil {
 		return err
 	}
 

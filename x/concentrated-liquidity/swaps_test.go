@@ -17,8 +17,8 @@ import (
 var _ = suite.TestingSuite(nil)
 
 type secondPosition struct {
-	tickIndex         int64
-	expectedFeeGrowth sdk.DecCoins
+	tickIndex                  int64
+	expectedSpreadRewardGrowth sdk.DecCoins
 }
 
 type SwapTest struct {
@@ -36,16 +36,16 @@ type SwapTest struct {
 	secondPositionLowerPrice sdk.Dec
 	secondPositionUpperPrice sdk.Dec
 
-	expectedTokenIn                   sdk.Coin
-	expectedTokenOut                  sdk.Coin
-	expectedTick                      int64
-	expectedSqrtPrice                 sdk.Dec
-	expectedLowerTickFeeGrowth        sdk.DecCoins
-	expectedUpperTickFeeGrowth        sdk.DecCoins
-	expectedFeeGrowthAccumulatorValue sdk.Dec
-	// since we use different values for the seondary position's tick, save (tick, expectedFeeGrowth) tuple
-	expectedSecondLowerTickFeeGrowth secondPosition
-	expectedSecondUpperTickFeeGrowth secondPosition
+	expectedTokenIn                            sdk.Coin
+	expectedTokenOut                           sdk.Coin
+	expectedTick                               int64
+	expectedSqrtPrice                          sdk.Dec
+	expectedLowerTickSpreadRewardGrowth        sdk.DecCoins
+	expectedUpperTickSpreadRewardGrowth        sdk.DecCoins
+	expectedSpreadRewardGrowthAccumulatorValue sdk.Dec
+	// since we use different values for the seondary position's tick, save (tick, expectedSpreadRewardGrowth) tuple
+	expectedSecondLowerTickSpreadRewardGrowth secondPosition
+	expectedSecondUpperTickSpreadRewardGrowth secondPosition
 
 	newLowerPrice  sdk.Dec
 	newUpperPrice  sdk.Dec
@@ -87,8 +87,8 @@ var (
 			expectedTick:      31003900,
 			expectedSqrtPrice: sdk.MustNewDecFromStr("70.738348247484497717"), // https://www.wolframalpha.com/input?i=70.710678118654752440+%2B+42000000+%2F+1517882343.751510418088349649
 			// tick's accum coins stay same since crossing tick does not occur in this case
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
+			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 		},
 		"single position within one tick: eth -> usdc": {
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
@@ -101,12 +101,12 @@ var (
 			// sqrtPriceCurrent: 70.710678118654752440 which is 5000
 			// expectedTokenIn:  13370.00000 rounded up https://www.wolframalpha.com/input?i=%281517882343.751510418088349649+*+%2870.710678118654752440+-+70.6666639108571443311+%29%29+%2F+%2870.6666639108571443311+*+70.710678118654752440%29
 			// expectedTokenOut: 66808388.8901 rounded down https://www.wolframalpha.com/input?i=1517882343.751510418088349649+*+%2870.710678118654752440+-+70.6666639108571443311%29
-			expectedTokenIn:            sdk.NewCoin("eth", sdk.NewInt(13370)),
-			expectedTokenOut:           sdk.NewCoin("usdc", sdk.NewInt(66808388)),
-			expectedTick:               30993700,
-			expectedSqrtPrice:          sdk.MustNewDecFromStr("70.666663910857144332"), // https://www.wolframalpha.com/input?i=%28%281517882343.751510418088349649%29%29+%2F+%28%28%281517882343.751510418088349649%29+%2F+%2870.710678118654752440%29%29+%2B+%2813370%29%29
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
+			expectedTokenIn:                     sdk.NewCoin("eth", sdk.NewInt(13370)),
+			expectedTokenOut:                    sdk.NewCoin("usdc", sdk.NewInt(66808388)),
+			expectedTick:                        30993700,
+			expectedSqrtPrice:                   sdk.MustNewDecFromStr("70.666663910857144332"), // https://www.wolframalpha.com/input?i=%28%281517882343.751510418088349649%29%29+%2F+%28%28%281517882343.751510418088349649%29+%2F+%2870.710678118654752440%29%29+%2B+%2813370%29%29
+			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 		},
 		//  Two equal price ranges
 		//
@@ -131,10 +131,10 @@ var (
 			expectedTick:      31001900,
 			expectedSqrtPrice: sdk.MustNewDecFromStr("70.724513183069625078"), // https://www.wolframalpha.com/input?i=70.710678118654752440+%2B++++%2842000000++%2F+3035764687.503020836176699298%29
 			// two positions with same liquidity entered
-			poolLiqAmount0:             sdk.NewInt(1000000).MulRaw(2),
-			poolLiqAmount1:             sdk.NewInt(5000000000).MulRaw(2),
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
+			poolLiqAmount0:                      sdk.NewInt(1000000).MulRaw(2),
+			poolLiqAmount1:                      sdk.NewInt(5000000000).MulRaw(2),
+			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 		},
 		"two positions within one tick: eth -> usdc": {
 			tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(13370)),
@@ -154,10 +154,10 @@ var (
 			expectedTick:      30996800,
 			expectedSqrtPrice: sdk.MustNewDecFromStr("70.688664163408836320"), // https://www.wolframalpha.com/input?i=%28%283035764687.503020836176699298%29%29+%2F+%28%28%283035764687.503020836176699298%29+%2F+%2870.710678118654752440%29%29+%2B+%2813370.0000%29%29
 			// two positions with same liquidity entered
-			poolLiqAmount0:             sdk.NewInt(1000000).MulRaw(2),
-			poolLiqAmount1:             sdk.NewInt(5000000000).MulRaw(2),
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
+			poolLiqAmount0:                      sdk.NewInt(1000000).MulRaw(2),
+			poolLiqAmount1:                      sdk.NewInt(5000000000).MulRaw(2),
+			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 		},
 		//  Consecutive price ranges
 
@@ -186,17 +186,17 @@ var (
 			// expectedTokenOut: 821653.452 rounded down https://www.wolframalpha.com/input?i=%281197767444.955508123222985080+*+%2878.137149196772377272+-+74.161984870956629487+%29%29+%2F+%2874.161984870956629487+*+78.137149196772377272%29
 			// expectedTokenIn:  5238677582.189386755771808942932776 + 4761322417.810613244228191057067224 = 10000000000 usdc
 			// expectedTokenOut: 998976.6183474263883566299269 + 821653.4522259 = 1820630.070 round down = 1.820630 eth
-			expectedTokenIn:            sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			expectedTokenOut:           sdk.NewCoin("eth", sdk.NewInt(1820630)),
-			expectedTick:               32105400,
-			expectedSqrtPrice:          sdk.MustNewDecFromStr("78.137149196095607129"), // https://www.wolframalpha.com/input?i=74.16198487095662948711397441+%2B+4761322417+%2F+1197767444.955508123222985080
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
+			expectedTokenIn:                     sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			expectedTokenOut:                    sdk.NewCoin("eth", sdk.NewInt(1820630)),
+			expectedTick:                        32105400,
+			expectedSqrtPrice:                   sdk.MustNewDecFromStr("78.137149196095607129"), // https://www.wolframalpha.com/input?i=74.16198487095662948711397441+%2B+4761322417+%2F+1197767444.955508123222985080
+			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 			//  second positions both have greater tick than the current tick, thus never initialized
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 315000, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(5500),
-			newUpperPrice:                    sdk.NewDec(6250),
+			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 315000, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			newLowerPrice: sdk.NewDec(5500),
+			newUpperPrice: sdk.NewDec(6250),
 		},
 		//  Consecutive price ranges
 		//
@@ -220,18 +220,18 @@ var (
 			secondPositionUpperPrice: sdk.NewDec(4545),
 			expectedTokenIn:          sdk.NewCoin("eth", sdk.NewInt(2000000)),
 			expectedTokenOut:         sdk.NewCoin("usdc", sdk.NewInt(9103422788)),
-			// crosses one tick with fee growth outside
+			// crosses one tick with spread reward growth outside
 			expectedTick:      30095100,
 			expectedSqrtPrice: sdk.MustNewDecFromStr("63.993489023323078693"), // https://www.wolframalpha.com/input?i=%28%281198735489.597250295669959397%29%29+%2F+%28%28%281198735489.597250295669959397%29+%2F+%28+67.41661516273269559379442134%29%29+%2B+%28951138.000000000000000000%29%29
 			// crossing tick happens single time for each upper tick and lower tick.
-			// Thus the tick's fee growth is DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
+			// Thus the tick's spread reward growth is DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins
+			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedUpperTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
 			//  second positions both have greater tick than the current tick, thus never initialized
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 305450, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(4000),
-			newUpperPrice:                    sdk.NewDec(4545),
+			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 300000, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 305450, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			newLowerPrice: sdk.NewDec(4000),
+			newUpperPrice: sdk.NewDec(4545),
 		},
 		//  Partially overlapping price ranges
 
@@ -259,16 +259,16 @@ var (
 			secondPositionUpperPrice: sdk.NewDec(6250),
 			// expectedTokenIn:  5238677582.189386755771808942932776 + 4761322417.8106132444 = 10000000000.0000 = 10000.00 usdc
 			// expectedTokenOut: 998976.6183474263883566299269692777 + 865185.2591363751404579873403641 = 1864161.877 round down = 1.864161 eth
-			expectedTokenIn:                  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			expectedTokenOut:                 sdk.NewCoin("eth", sdk.NewInt(1864161)),
-			expectedTick:                     32055900,
-			expectedSqrtPrice:                sdk.MustNewDecFromStr("77.819789636800169393"), // https://www.wolframalpha.com/input?i=74.16198487095662948711397441+%2B++++%282452251164.000000000000000000+%2F+670416088.605668727039240782%29
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 310010, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(5001),
-			newUpperPrice:                    sdk.NewDec(6250),
+			expectedTokenIn:                           sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			expectedTokenOut:                          sdk.NewCoin("eth", sdk.NewInt(1864161)),
+			expectedTick:                              32055900,
+			expectedSqrtPrice:                         sdk.MustNewDecFromStr("77.819789636800169393"), // https://www.wolframalpha.com/input?i=74.16198487095662948711397441+%2B++++%282452251164.000000000000000000+%2F+670416088.605668727039240782%29
+			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
+			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 310010, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			newLowerPrice:                             sdk.NewDec(5001),
+			newUpperPrice:                             sdk.NewDec(6250),
 		},
 		"two positions with partially overlapping price ranges, not utilizing full liquidity of second position: usdc -> eth": {
 			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(8500000000)),
@@ -290,16 +290,16 @@ var (
 			secondPositionUpperPrice: sdk.NewDec(6250),
 			// expectedTokenIn:  5238677582.189386755771808942932776 + 3261322417.810613244228191057067224 = 8500000000.000 = 8500.00 usdc
 			// expectedTokenOut: 998976.61834742638835662992696 + 610161.47679708043791 = 1609138.09 round down = 1.609138 eth
-			expectedTokenIn:                  sdk.NewCoin("usdc", sdk.NewInt(8500000000)),
-			expectedTokenOut:                 sdk.NewCoin("eth", sdk.NewInt(1609138)),
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 310010, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
-			expectedTick:                     31712600,
-			expectedSqrtPrice:                sdk.MustNewDecFromStr("75.582373164412551491"), // https://www.wolframalpha.com/input?i=74.16198487095662948711397441++%2B+%28+952251164.000000000000000000++%2F+670416088.605668727039240782%29
-			newLowerPrice:                    sdk.NewDec(5001),
-			newUpperPrice:                    sdk.NewDec(6250),
+			expectedTokenIn:                           sdk.NewCoin("usdc", sdk.NewInt(8500000000)),
+			expectedTokenOut:                          sdk.NewCoin("eth", sdk.NewInt(1609138)),
+			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
+			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 310010, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedTick:                              31712600,
+			expectedSqrtPrice:                         sdk.MustNewDecFromStr("75.582373164412551491"), // https://www.wolframalpha.com/input?i=74.16198487095662948711397441++%2B+%28+952251164.000000000000000000++%2F+670416088.605668727039240782%29
+			newLowerPrice:                             sdk.NewDec(5001),
+			newUpperPrice:                             sdk.NewDec(6250),
 		},
 		//  Partially overlapping price ranges
 		//
@@ -325,14 +325,14 @@ var (
 			expectedTokenOut:         sdk.NewCoin("usdc", sdk.NewInt(9321276930)),
 			expectedTick:             30129000,
 			expectedSqrtPrice:        sdk.MustNewDecFromStr("64.257943794993248955"), // https://www.wolframalpha.com/input?i=%28%28670416215.71882744366040059300%29%29+%2F+%28%28%28670416215.71882744366040059300%29+%2F+%2867.41661516273269559379442134%29%29+%2B+%28488827.000000000000000000%29%29
-			// Started from DefaultFeeAccumCoins * 3, crossed tick once, thus becoming
-			// DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins = DefaultFeeAccumCoins * 2
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 309990, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(4000),
-			newUpperPrice:                    sdk.NewDec(4999),
+			// Started from DefaultSpreadRewardAccumCoins * 3, crossed tick once, thus becoming
+			// DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins = DefaultSpreadRewardAccumCoins * 2
+			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 300000, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 309990, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			newLowerPrice: sdk.NewDec(4000),
+			newUpperPrice: sdk.NewDec(4999),
 		},
 		//          		5000
 		//  		4545 -----|----- 5500
@@ -355,14 +355,14 @@ var (
 			expectedTokenOut:         sdk.NewCoin("usdc", sdk.NewInt(8479320318)),
 			expectedTick:             30292000,
 			expectedSqrtPrice:        sdk.MustNewDecFromStr("65.513815285481060960"), // https://www.wolframalpha.com/input?i=%28%28670416215.718827443660400593000%29%29+%2F+%28%28%28670416215.718827443660400593000%29+%2F+%2867.41661516273269559379442134%29%29+%2B+%28288827.000000000000000000%29%29
-			// Started from DefaultFeeAccumCoins * 3, crossed tick once, thus becoming
-			// DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins = DefaultFeeAccumCoins * 2
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 309990, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(4000),
-			newUpperPrice:                    sdk.NewDec(4999),
+			// Started from DefaultSpreadRewardAccumCoins * 3, crossed tick once, thus becoming
+			// DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins = DefaultSpreadRewardAccumCoins * 2
+			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 300000, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 309990, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			newLowerPrice: sdk.NewDec(4000),
+			newUpperPrice: sdk.NewDec(4999),
 		},
 		//  Sequential price ranges with a gap
 		//
@@ -390,16 +390,16 @@ var (
 			secondPositionUpperPrice: sdk.NewDec(6250),
 			// expectedTokenIn:  5238677582.1893867557718089429327 + 4761322417.810613244281820035563194 = 10000000000 usdc
 			// expectedTokenOut: 998976.61834742638835 + 821569.240826953837970 = 1820545.85917438022632 round down = 1.820545 eth
-			expectedTokenIn:                  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			expectedTokenOut:                 sdk.NewCoin("eth", sdk.NewInt(1820545)),
-			expectedTick:                     32105500,
-			expectedSqrtPrice:                sdk.MustNewDecFromStr("78.138055169663761658"), // https://www.wolframalpha.com/input?i=74.16872656315463530313879691++%2B+%28+4761322417.000000000000000000++%2F+1199528406.187413669220037261%29
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 315010, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(5501),
-			newUpperPrice:                    sdk.NewDec(6250),
+			expectedTokenIn:                           sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			expectedTokenOut:                          sdk.NewCoin("eth", sdk.NewInt(1820545)),
+			expectedTick:                              32105500,
+			expectedSqrtPrice:                         sdk.MustNewDecFromStr("78.138055169663761658"), // https://www.wolframalpha.com/input?i=74.16872656315463530313879691++%2B+%28+4761322417.000000000000000000++%2F+1199528406.187413669220037261%29
+			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
+			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 315010, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			newLowerPrice:                             sdk.NewDec(5501),
+			newUpperPrice:                             sdk.NewDec(6250),
 		},
 		// Slippage protection doesn't cause a failure but interrupts early.
 		//          5000
@@ -421,16 +421,16 @@ var (
 				tick, _ := math.PriceToTickRoundDown(sdk.NewDec(4994), DefaultTickSpacing)
 				return tick
 			}(),
-			expectedSqrtPrice:          sdk.MustNewDecFromStr("70.668238976219012613"), // https://www.wolframalpha.com/input?i=%28%281517882343.751510418088349649%29%29+%2F+%28%28%281517882343.751510418088349649%29+%2F+%2870.710678118654752440%29%29+%2B+%2812891.26207649936510%29%29
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
+			expectedSqrtPrice:                   sdk.MustNewDecFromStr("70.668238976219012613"), // https://www.wolframalpha.com/input?i=%28%281517882343.751510418088349649%29%29+%2F+%28%28%281517882343.751510418088349649%29+%2F+%2870.710678118654752440%29%29+%2B+%2812891.26207649936510%29%29
+			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 		},
 	}
 
-	swapOutGivenInFeeCases = map[string]SwapTest{
+	swapOutGivenInSpreadRewardCases = map[string]SwapTest{
 		//          5000
 		//  4545 -----|----- 5500
-		"fee 1 - single position within one tick: usdc -> eth (1% fee)": {
+		"spread factor 1 - single position within one tick: usdc -> eth (1% spread factor)": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
 			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(42000000)),
@@ -442,19 +442,19 @@ var (
 			// sqrtPriceNext:                     70.738071546196200264 which is 5003.9139127814610432508
 			// sqrtPriceCurrent: 				  70.710678118654752440 which is 5000
 			// expectedTokenIn:                   41999999.9999 rounded up
-			// expectedTokenInPriceAfterFees  	  41999999.9999 - (41999999.9999 * 0.01) = 41579999.999901
+			// expectedTokenInPriceAfterSpreadFactors  	  41999999.9999 - (41999999.9999 * 0.01) = 41579999.999901
 			// expectedTokenOut:                  8312
-			// expectedFeeGrowthAccumulatorValue: 0.000276701288297452
-			expectedTokenIn:                   sdk.NewCoin("usdc", sdk.NewInt(42000000)),
-			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(8312)),
-			expectedTick:                      31003800,
-			expectedSqrtPrice:                 sdk.MustNewDecFromStr("70.738071546196200264"), // https://www.wolframalpha.com/input?i=70.71067811865475244008443621+%2B++++%2841580000.000000000000000000+%2F+1517882343.751510418088349649%29
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000276701288297452"),
+			// expectedSpreadRewardGrowthAccumulatorValue: 0.000276701288297452
+			expectedTokenIn:   sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			expectedTokenOut:  sdk.NewCoin("eth", sdk.NewInt(8312)),
+			expectedTick:      31003800,
+			expectedSqrtPrice: sdk.MustNewDecFromStr("70.738071546196200264"), // https://www.wolframalpha.com/input?i=70.71067811865475244008443621+%2B++++%2841580000.000000000000000000+%2F+1517882343.751510418088349649%29
+			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000276701288297452"),
 		},
 		//          5000
 		//  4545 -----|----- 5500
 		//  4545 -----|----- 5500
-		"fee 2 - two positions within one tick: eth -> usdc (3% fee) ": {
+		"spread factor 2 - two positions within one tick: eth -> usdc (3% spread factor) ": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
 			tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(13370)),
@@ -467,14 +467,14 @@ var (
 			// liquidity:                         3035764687.503020836176699298
 			// sqrtPriceCurrent:                  70.710678118654752440 which is 5000
 			// given tokenIn:                     13370
-			// expectedTokenInAfterFees           13370 - (13370 * 0.03) = 12968.9
+			// expectedTokenInAfterSpreadFactors           13370 - (13370 * 0.03) = 12968.9
 			// expectedTokenOut:                  64824917.7760329489344598324379
-			// expectedFeeGrowthAccumulatorValue: 0.000000132124865162033700093060000008
-			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(13370)),
-			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(64824917)),
-			expectedTick:                      30996900,
-			expectedSqrtPrice:                 sdk.MustNewDecFromStr("70.689324382628080102"), // https://www.wolframalpha.com/input?i=%28%283035764687.503020836176699298%29%29+%2F+%28%28%283035764687.503020836176699298%29+%2F+%2870.71067811865475244008443621%29%29+%2B+%2812968.900000000000000000%29%29
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000132091924532"),
+			// expectedSpreadRewardGrowthAccumulatorValue: 0.000000132124865162033700093060000008
+			expectedTokenIn:   sdk.NewCoin("eth", sdk.NewInt(13370)),
+			expectedTokenOut:  sdk.NewCoin("usdc", sdk.NewInt(64824917)),
+			expectedTick:      30996900,
+			expectedSqrtPrice: sdk.MustNewDecFromStr("70.689324382628080102"), // https://www.wolframalpha.com/input?i=%28%283035764687.503020836176699298%29%29+%2F+%28%28%283035764687.503020836176699298%29+%2F+%2870.71067811865475244008443621%29%29+%2B+%2812968.900000000000000000%29%29
+			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000132091924532"),
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
 			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
@@ -482,7 +482,7 @@ var (
 		//          		   5000
 		//  		   4545 -----|----- 5500
 		//  4000 ----------- 4545
-		"fee 3 - two positions with consecutive price ranges: eth -> usdc (5% fee)": {
+		"spread factor 3 - two positions with consecutive price ranges: eth -> usdc (5% spread factor)": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
 			tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(2000000)),
@@ -494,19 +494,19 @@ var (
 			// params
 			// expectedTokenIn:                   1101304.35717321706748347321599 + 898695.642826782932516526784010 = 2000000 eth
 			// expectedTokenOut:                  4999999999.99999999999999999970 + 3702563350.03654978405015422548 = 8702563350.03654978405015422518 round down = 8702.563350 usdc
-			// expectedFeeGrowthAccumulatorValue: 0.000034550151296760 + 0.0000374851520884196734228699332666 = 0.0000720353033851796734228699332666
-			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(2000000)),
-			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(8691708221)),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000073738597832046"),
-			expectedTick:                      30139200,
-			expectedSqrtPrice:                 sdk.MustNewDecFromStr("64.336946417392457832"), // https://www.wolframalpha.com/input?i=%28%281198735489.597250295669959397%29%29+%2F+%28%28%281198735489.597250295669959397%29+%2F+%28+67.41661516273269559379442134%29%29+%2B+%28851137.999999999999999999%29%29
-			newLowerPrice:                     sdk.NewDec(4000),
-			newUpperPrice:                     sdk.NewDec(4545),
+			// expectedSpreadRewardGrowthAccumulatorValue: 0.000034550151296760 + 0.0000374851520884196734228699332666 = 0.0000720353033851796734228699332666
+			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(2000000)),
+			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(8691708221)),
+			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000073738597832046"),
+			expectedTick:      30139200,
+			expectedSqrtPrice: sdk.MustNewDecFromStr("64.336946417392457832"), // https://www.wolframalpha.com/input?i=%28%281198735489.597250295669959397%29%29+%2F+%28%28%281198735489.597250295669959397%29+%2F+%28+67.41661516273269559379442134%29%29+%2B+%28851137.999999999999999999%29%29
+			newLowerPrice:     sdk.NewDec(4000),
+			newUpperPrice:     sdk.NewDec(4545),
 		},
 		//          5000
 		//  4545 -----|----- 5500
 		//  	  5001 ----------- 6250
-		"fee 4 - two positions with partially overlapping price ranges: usdc -> eth (10% fee)": {
+		"spread factor 4 - two positions with partially overlapping price ranges: usdc -> eth (10% spread factor)": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
 			tokenIn:                  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
@@ -517,58 +517,58 @@ var (
 			secondPositionUpperPrice: sdk.NewDec(6250),
 			// expectedTokenIn:  5762545340.40832543134898983723 + 4237454659.59167456865101016277 = 10000000000.0000 = 10000.00 usdc
 			// expectedTokenOut: 2146.28785880640879265591374059 + 1437108.91592757237716789250871 + 269488.274305469529889078712213 = 1708743.47809184831584962713466 eth
-			// expectedFeeGrowthAccumulatorValue: 0.000707071429382580300000000000073 + 0.344423603800805124400000000000 + 0.253197426243519613677553835191 = 0.598328101473707318377553835191
-			expectedTokenIn:                   sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(1695807)),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.624166726347032857"),
-			expectedTick:                      31825900,
-			expectedSqrtPrice:                 sdk.MustNewDecFromStr("76.328178655208424124"), // https://www.wolframalpha.com/input?i=+74.16198487095662948711397441+%2B++++%281452251164.000000000000000001+%2F+670416088.605668727039240782%29
-			newLowerPrice:                     sdk.NewDec(5001),
-			newUpperPrice:                     sdk.NewDec(6250),
+			// expectedSpreadRewardGrowthAccumulatorValue: 0.000707071429382580300000000000073 + 0.344423603800805124400000000000 + 0.253197426243519613677553835191 = 0.598328101473707318377553835191
+			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1695807)),
+			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.624166726347032857"),
+			expectedTick:      31825900,
+			expectedSqrtPrice: sdk.MustNewDecFromStr("76.328178655208424124"), // https://www.wolframalpha.com/input?i=+74.16198487095662948711397441+%2B++++%281452251164.000000000000000001+%2F+670416088.605668727039240782%29
+			newLowerPrice:     sdk.NewDec(5001),
+			newUpperPrice:     sdk.NewDec(6250),
 		},
 		//          		5000
 		//  		4545 -----|----- 5500
 		// 4000 ----------- 4999
-		"fee 5 - two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth -> usdc (0.5% fee)": {
+		"spread factor 5 - two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth -> usdc (0.5% spread factor)": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
-			tokenIn:                           sdk.NewCoin("eth", sdk.NewInt(1800000)),
-			tokenOutDenom:                     "usdc",
-			priceLimit:                        sdk.NewDec(4128),
-			spreadFactor:                      sdk.MustNewDecFromStr("0.005"),
-			secondPositionLowerPrice:          sdk.NewDec(4000),
-			secondPositionUpperPrice:          sdk.NewDec(4999),
-			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(1800000)),
-			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(8440657775)),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000005569829831408"),
-			expectedTick:                      30299600,
-			expectedSqrtPrice:                 sdk.MustNewDecFromStr("65.571484748647169032"), // https://www.wolframalpha.com/input?i=%28%28670416215.718827443660400593000%29%29+%2F+%28%28%28670416215.718827443660400593000%29+%2F+%28+67.41661516273269559379442134%29%29+%2B+%28279827.000000000000000001%29%29
-			newLowerPrice:                     sdk.NewDec(4000),
-			newUpperPrice:                     sdk.NewDec(4999),
+			tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(1800000)),
+			tokenOutDenom:            "usdc",
+			priceLimit:               sdk.NewDec(4128),
+			spreadFactor:             sdk.MustNewDecFromStr("0.005"),
+			secondPositionLowerPrice: sdk.NewDec(4000),
+			secondPositionUpperPrice: sdk.NewDec(4999),
+			expectedTokenIn:          sdk.NewCoin("eth", sdk.NewInt(1800000)),
+			expectedTokenOut:         sdk.NewCoin("usdc", sdk.NewInt(8440657775)),
+			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000005569829831408"),
+			expectedTick:      30299600,
+			expectedSqrtPrice: sdk.MustNewDecFromStr("65.571484748647169032"), // https://www.wolframalpha.com/input?i=%28%28670416215.718827443660400593000%29%29+%2F+%28%28%28670416215.718827443660400593000%29+%2F+%28+67.41661516273269559379442134%29%29+%2B+%28279827.000000000000000001%29%29
+			newLowerPrice:     sdk.NewDec(4000),
+			newUpperPrice:     sdk.NewDec(4999),
 		},
 		//          5000
 		//  4545 -----|----- 5500
 		// 			   5501 ----------- 6250
-		"fee 6 - two sequential positions with a gap usdc -> eth (3% fee)": {
+		"spread factor 6 - two sequential positions with a gap usdc -> eth (3% spread factor)": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
-			tokenIn:                           sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			tokenOutDenom:                     "eth",
-			priceLimit:                        sdk.NewDec(6106),
-			secondPositionLowerPrice:          sdk.NewDec(5501),
-			secondPositionUpperPrice:          sdk.NewDec(6250),
-			spreadFactor:                      sdk.MustNewDecFromStr("0.03"),
-			expectedTokenIn:                   sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(1771252)),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.221769187794051751"),
-			expectedTick:                      32066500,
-			expectedSqrtPrice:                 sdk.MustNewDecFromStr("77.887956882326389372"), // https://www.wolframalpha.com/input?i=74.16872656315463530313879691+%2B++++%284461322417.000000000000000001+%2F+1199528406.187413669220037261%29
-			newLowerPrice:                     sdk.NewDec(5501),
-			newUpperPrice:                     sdk.NewDec(6250),
+			tokenIn:                  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenOutDenom:            "eth",
+			priceLimit:               sdk.NewDec(6106),
+			secondPositionLowerPrice: sdk.NewDec(5501),
+			secondPositionUpperPrice: sdk.NewDec(6250),
+			spreadFactor:             sdk.MustNewDecFromStr("0.03"),
+			expectedTokenIn:          sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			expectedTokenOut:         sdk.NewCoin("eth", sdk.NewInt(1771252)),
+			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.221769187794051751"),
+			expectedTick:      32066500,
+			expectedSqrtPrice: sdk.MustNewDecFromStr("77.887956882326389372"), // https://www.wolframalpha.com/input?i=74.16872656315463530313879691+%2B++++%284461322417.000000000000000001+%2F+1199528406.187413669220037261%29
+			newLowerPrice:     sdk.NewDec(5501),
+			newUpperPrice:     sdk.NewDec(6250),
 		},
 		//          5000
 		//  4545 ---!-|----- 5500
-		"fee 7: single position within one tick, trade completes but slippage protection interrupts trade early: eth -> usdc (1% fee)": {
+		"spread factor 7: single position within one tick, trade completes but slippage protection interrupts trade early: eth -> usdc (1% spread factor)": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
@@ -579,9 +579,9 @@ var (
 			// liquidity: 		 1517882343.751510418088349649
 			// sqrtPriceNext:    70.668238976219012614 which is 4994
 			// sqrtPriceCurrent: 70.710678118654752440 which is 5000
-			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(13023)),
-			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(64417624)),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000085792039652"),
+			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(13023)),
+			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(64417624)),
+			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000085792039652"),
 			expectedTick: func() int64 {
 				tick, _ := math.PriceToTickRoundDown(sdk.NewDec(4994), DefaultTickSpacing)
 				return tick
@@ -627,12 +627,12 @@ var (
 			// token_in = ceil(liq * (sqrt_cur - sqrt_next) / (sqrt_cur * sqrt_next))
 			// print(sqrt_next)
 			// print(token_in)
-			expectedTokenOut:           sdk.NewCoin(USDC, sdk.NewInt(42000000)),
-			expectedTokenIn:            sdk.NewCoin(ETH, sdk.NewInt(8404)),
-			expectedTick:               30996000,
-			expectedSqrtPrice:          sdk.MustNewDecFromStr("70.683007989825007162"),
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
+			expectedTokenOut:                    sdk.NewCoin(USDC, sdk.NewInt(42000000)),
+			expectedTokenIn:                     sdk.NewCoin(ETH, sdk.NewInt(8404)),
+			expectedTick:                        30996000,
+			expectedSqrtPrice:                   sdk.MustNewDecFromStr("70.683007989825007162"),
+			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 		},
 		"single position within one tick: usdc (in) -> eth (out) ofz": {
 			tokenOut:     sdk.NewCoin(ETH, sdk.NewInt(13370)),
@@ -648,12 +648,12 @@ var (
 			// token_in = ceil(liq * abs(sqrt_cur - sqrt_next))
 			// print(sqrt_next)
 			// print(token_in)
-			expectedTokenOut:           sdk.NewCoin(ETH, sdk.NewInt(13370)),
-			expectedTokenIn:            sdk.NewCoin(USDC, sdk.NewInt(66891663)),
-			expectedTick:               31006200,
-			expectedSqrtPrice:          sdk.MustNewDecFromStr("70.754747188468900467"),
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
+			expectedTokenOut:                    sdk.NewCoin(ETH, sdk.NewInt(13370)),
+			expectedTokenIn:                     sdk.NewCoin(USDC, sdk.NewInt(66891663)),
+			expectedTick:                        31006200,
+			expectedSqrtPrice:                   sdk.MustNewDecFromStr("70.754747188468900467"),
+			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 		},
 		//  Two equal price ranges
 		//
@@ -676,12 +676,12 @@ var (
 			// token_in = token_in = liq * (sqrt_cur - sqrt_next) / (sqrt_cur * sqrt_next)
 			// print(sqrt_next)
 			// print(token_in)
-			expectedTokenOut:           sdk.NewCoin("usdc", sdk.NewInt(66829187)),
-			expectedTokenIn:            sdk.NewCoin("eth", sdk.NewInt(13370)),
-			expectedTick:               30996800,
-			expectedSqrtPrice:          sdk.MustNewDecFromStr("70.688664163727643650"),
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
+			expectedTokenOut:                    sdk.NewCoin("usdc", sdk.NewInt(66829187)),
+			expectedTokenIn:                     sdk.NewCoin("eth", sdk.NewInt(13370)),
+			expectedTick:                        30996800,
+			expectedSqrtPrice:                   sdk.MustNewDecFromStr("70.688664163727643650"),
+			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
 			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
@@ -702,12 +702,12 @@ var (
 			// token_in = ceil(liq * abs(sqrt_cur - sqrt_next))
 			// print(sqrt_next)
 			// print(token_in)
-			expectedTokenOut:           sdk.NewCoin("eth", sdk.NewInt(8398)),
-			expectedTokenIn:            sdk.NewCoin("usdc", sdk.NewInt(41998216)),
-			expectedTick:               31001900,
-			expectedSqrtPrice:          sdk.MustNewDecFromStr("70.724512595179305566"),
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
+			expectedTokenOut:                    sdk.NewCoin("eth", sdk.NewInt(8398)),
+			expectedTokenIn:                     sdk.NewCoin("usdc", sdk.NewInt(41998216)),
+			expectedTick:                        31001900,
+			expectedSqrtPrice:                   sdk.MustNewDecFromStr("70.724512595179305566"),
+			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
 			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
@@ -751,13 +751,13 @@ var (
 			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(2000000)),
 			expectedTick:     30095100,
 
-			expectedSqrtPrice:                sdk.MustNewDecFromStr("63.993489023888951975"),
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 315000, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(4000),
-			newUpperPrice:                    sdk.NewDec(4545),
+			expectedSqrtPrice:                         sdk.MustNewDecFromStr("63.993489023888951975"),
+			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 315000, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			newLowerPrice:                             sdk.NewDec(4000),
+			newUpperPrice:                             sdk.NewDec(4545),
 		},
 		//  Consecutive price ranges
 		//
@@ -796,16 +796,16 @@ var (
 			// token_in = token_in_1 + token_in_2
 			// print(sqrt_next_2)
 			// print(token_in)
-			expectedTokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1820630)),
-			expectedTokenIn:                  sdk.NewCoin(USDC, sdk.NewInt(9999999570)),
-			expectedTick:                     32105400,
-			expectedSqrtPrice:                sdk.MustNewDecFromStr("78.137148837036751553"),
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 315000, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(5500),
-			newUpperPrice:                    sdk.NewDec(6250),
+			expectedTokenOut:                          sdk.NewCoin(ETH, sdk.NewInt(1820630)),
+			expectedTokenIn:                           sdk.NewCoin(USDC, sdk.NewInt(9999999570)),
+			expectedTick:                              32105400,
+			expectedSqrtPrice:                         sdk.MustNewDecFromStr("78.137148837036751553"),
+			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
+			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 315000, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			newLowerPrice:                             sdk.NewDec(5500),
+			newUpperPrice:                             sdk.NewDec(6250),
 		},
 		//  Partially overlapping price ranges
 		//
@@ -857,14 +857,14 @@ var (
 			expectedTokenOut:  sdk.NewCoin("usdc", sdk.NewInt(9321276930)),
 			expectedTick:      30129000,
 			expectedSqrtPrice: sdk.MustNewDecFromStr("64.257943796086567725"),
-			// Started from DefaultFeeAccumCoins * 3, crossed tick once, thus becoming
-			// DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins = DefaultFeeAccumCoins * 2
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 309990, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(4000),
-			newUpperPrice:                    sdk.NewDec(4999),
+			// Started from DefaultSpreadRewardAccumCoins * 3, crossed tick once, thus becoming
+			// DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins = DefaultSpreadRewardAccumCoins * 2
+			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 300000, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 309990, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			newLowerPrice: sdk.NewDec(4000),
+			newUpperPrice: sdk.NewDec(4999),
 		},
 		//          		5000
 		//  		4545 -----|----- 5500
@@ -913,14 +913,14 @@ var (
 			expectedTokenOut:  sdk.NewCoin(USDC, sdk.NewInt(8479320318)),
 			expectedTick:      30292000,
 			expectedSqrtPrice: sdk.MustNewDecFromStr("65.513815286452064191"),
-			// Started from DefaultFeeAccumCoins * 3, crossed tick once, thus becoming
-			// DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins = DefaultFeeAccumCoins * 2
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 309990, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(4000),
-			newUpperPrice:                    sdk.NewDec(4999),
+			// Started from DefaultSpreadRewardAccumCoins * 3, crossed tick once, thus becoming
+			// DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins = DefaultSpreadRewardAccumCoins * 2
+			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 300000, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 309990, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			newLowerPrice: sdk.NewDec(4000),
+			newUpperPrice: sdk.NewDec(4999),
 		},
 		//  Partially overlapping price ranges
 
@@ -968,16 +968,16 @@ var (
 			// token_in = token_in_1 + token_in_2 +token_in_3
 			// print(sqrt_next_3)
 			// print(token_in)
-			expectedTokenIn:                  sdk.NewCoin(USDC, sdk.NewInt(9999994688)),
-			expectedTokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1864161)),
-			expectedTick:                     32055900,
-			expectedSqrtPrice:                sdk.MustNewDecFromStr("77.819781711876553576"),
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 310010, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(5001),
-			newUpperPrice:                    sdk.NewDec(6250),
+			expectedTokenIn:                           sdk.NewCoin(USDC, sdk.NewInt(9999994688)),
+			expectedTokenOut:                          sdk.NewCoin(ETH, sdk.NewInt(1864161)),
+			expectedTick:                              32055900,
+			expectedSqrtPrice:                         sdk.MustNewDecFromStr("77.819781711876553576"),
+			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
+			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 310010, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			newLowerPrice:                             sdk.NewDec(5001),
+			newUpperPrice:                             sdk.NewDec(6250),
 		},
 		"two positions with partially overlapping price ranges, not utilizing full liquidity of second position: usdc (in) -> eth (out) | ofz": {
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1609138)),
@@ -1019,16 +1019,16 @@ var (
 			// token_in = token_in_1 + token_in_2 + token_in_3
 			// print(sqrt_next_3)
 			// print(token_in)
-			expectedTokenIn:                  sdk.NewCoin(USDC, sdk.NewInt(8499999458)),
-			expectedTokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1609138)),
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 310010, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
-			expectedTick:                     31712600,
-			expectedSqrtPrice:                sdk.MustNewDecFromStr("75.582372355128594340"),
-			newLowerPrice:                    sdk.NewDec(5001),
-			newUpperPrice:                    sdk.NewDec(6250),
+			expectedTokenIn:                           sdk.NewCoin(USDC, sdk.NewInt(8499999458)),
+			expectedTokenOut:                          sdk.NewCoin(ETH, sdk.NewInt(1609138)),
+			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
+			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 310010, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedTick:                              31712600,
+			expectedSqrtPrice:                         sdk.MustNewDecFromStr("75.582372355128594340"),
+			newLowerPrice:                             sdk.NewDec(5001),
+			newUpperPrice:                             sdk.NewDec(6250),
 		},
 		//  Sequential price ranges with a gap
 		//
@@ -1068,16 +1068,16 @@ var (
 			// token_in = token_in_1 + token_in_2
 			// print(sqrt_next_2)
 			// print(token_in)
-			expectedTokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1820545)),
-			expectedTokenIn:                  sdk.NewCoin(USDC, sdk.NewInt(9999994756)),
-			expectedTick:                     32105500,
-			expectedSqrtPrice:                sdk.MustNewDecFromStr("78.138050797173647031"),
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 315010, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(5501),
-			newUpperPrice:                    sdk.NewDec(6250),
+			expectedTokenOut:                          sdk.NewCoin(ETH, sdk.NewInt(1820545)),
+			expectedTokenIn:                           sdk.NewCoin(USDC, sdk.NewInt(9999994756)),
+			expectedTick:                              32105500,
+			expectedSqrtPrice:                         sdk.MustNewDecFromStr("78.138050797173647031"),
+			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
+			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 315010, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			newLowerPrice:                             sdk.NewDec(5501),
+			newUpperPrice:                             sdk.NewDec(6250),
 		},
 		// Slippage protection doesn't cause a failure but interrupts early.
 		"single position within one tick, trade completes but slippage protection interrupts trade early: usdc (in) -> eth (out) | ofz": {
@@ -1099,17 +1099,17 @@ var (
 			// # Summary:
 			// print(sqrt_next_1)
 			// print(token_in_1)
-			expectedTokenOut:           sdk.NewCoin(ETH, sdk.NewInt(4291)),
-			expectedTokenIn:            sdk.NewCoin(USDC, sdk.NewInt(21463952)),
-			expectedTick:               31002000,
-			expectedSqrtPrice:          sdk.MustNewDecFromStr("70.724818840347693039"),
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
+			expectedTokenOut:                    sdk.NewCoin(ETH, sdk.NewInt(4291)),
+			expectedTokenIn:                     sdk.NewCoin(USDC, sdk.NewInt(21463952)),
+			expectedTick:                        31002000,
+			expectedSqrtPrice:                   sdk.MustNewDecFromStr("70.724818840347693039"),
+			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 		},
 	}
 
-	swapInGivenOutFeeTestCases = map[string]SwapTest{
-		"fee 1: single position within one tick: eth (in) -> usdc (out) (1% fee) | zfo": {
+	swapInGivenOutSpreadRewardTestCases = map[string]SwapTest{
+		"spread factor 1: single position within one tick: eth (in) -> usdc (out) (1% spread factor) | zfo": {
 			tokenOut:     sdk.NewCoin(USDC, sdk.NewInt(42000000)),
 			tokenInDenom: ETH,
 			priceLimit:   sdk.NewDec(4993),
@@ -1123,23 +1123,23 @@ var (
 			// spread_factor = Decimal("0.01")
 
 			// token_in = ceil(liq * abs(sqrt_cur - sqrt_next) / (sqrt_cur * sqrt_next))
-			// fee = token_in *  spread_factor / (1 - spread_factor)
+			// spread factor = token_in *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
-			// token_in = ceil(token_in + fee)
-			// fee_growth = fee / liq
+			// token_in = ceil(token_in + spread factor)
+			// spread_rewards_growth = spread factor / liq
 			// print(sqrt_next)
 			// print(token_in)
-			// print(fee_growth)
-			expectedTokenOut:                  sdk.NewCoin(USDC, sdk.NewInt(42000000)),
-			expectedTokenIn:                   sdk.NewCoin(ETH, sdk.NewInt(8489)),
-			expectedTick:                      30996000,
-			expectedSqrtPrice:                 sdk.MustNewDecFromStr("70.683007989825007162"),
-			expectedLowerTickFeeGrowth:        DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth:        DefaultFeeAccumCoins,
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000055925868851"),
+			// print(spread_rewards_growth)
+			expectedTokenOut:                           sdk.NewCoin(USDC, sdk.NewInt(42000000)),
+			expectedTokenIn:                            sdk.NewCoin(ETH, sdk.NewInt(8489)),
+			expectedTick:                               30996000,
+			expectedSqrtPrice:                          sdk.MustNewDecFromStr("70.683007989825007162"),
+			expectedLowerTickSpreadRewardGrowth:        DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth:        DefaultSpreadRewardAccumCoins,
+			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000055925868851"),
 		},
-		"fee 2: two positions within one tick: usdc (in) -> eth (out) (3% fee) | ofz": {
+		"spread factor 2: two positions within one tick: usdc (in) -> eth (out) (3% spread factor) | ofz": {
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(8398)),
 			tokenInDenom:             USDC,
 			priceLimit:               sdk.NewDec(5020),
@@ -1155,26 +1155,26 @@ var (
 			// spread_factor = Decimal("0.03")
 
 			// token_in = ceil(liq * abs(sqrt_cur - sqrt_next))
-			// fee = token_in *  spread_factor / (1 - spread_factor)
+			// spread factor = token_in *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
-			// token_in = ceil(token_in + fee)
-			// fee_growth = fee / liq
+			// token_in = ceil(token_in + spread factor)
+			// spread_rewards_growth = spread factor / liq
 			// print(sqrt_next)
 			// print(token_in)
-			// print(fee_growth)
-			expectedTokenOut:           sdk.NewCoin(ETH, sdk.NewInt(8398)),
-			expectedTokenIn:            sdk.NewCoin(USDC, sdk.NewInt(43297130)),
-			expectedTick:               31001900,
-			expectedSqrtPrice:          sdk.MustNewDecFromStr("70.724512595179305566"),
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
+			// print(spread_rewards_growth)
+			expectedTokenOut:                    sdk.NewCoin(ETH, sdk.NewInt(8398)),
+			expectedTokenIn:                     sdk.NewCoin(USDC, sdk.NewInt(43297130)),
+			expectedTick:                        31001900,
+			expectedSqrtPrice:                   sdk.MustNewDecFromStr("70.724512595179305566"),
+			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 			// two positions with same liquidity entered
-			poolLiqAmount0:                    sdk.NewInt(1000000).MulRaw(2),
-			poolLiqAmount1:                    sdk.NewInt(5000000000).MulRaw(2),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000427870415073442"),
+			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
+			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
+			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000427870415073442"),
 		},
-		"fee 3: two positions with consecutive price ranges: usdc (in) -> eth (out) (0.1% fee) | ofz": {
+		"spread factor 3: two positions with consecutive price ranges: usdc (in) -> eth (out) (0.1% spread factor) | ofz": {
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1820630)),
 			tokenInDenom:             USDC,
 			priceLimit:               sdk.NewDec(6106),
@@ -1192,7 +1192,7 @@ var (
 
 			// token_out_1 = liq_1 * (sqrt_next_1 - sqrt_cur ) / (sqrt_next_1 * sqrt_cur)
 			// token_in_1 = ceil(liq_1 * abs(sqrt_cur - sqrt_next_1 ))
-			// fee_1 = token_in_1 *  spread_factor / (1 - spread_factor)
+			// spread_factor_1 = token_in_1 *  spread_factor / (1 - spread_factor)
 
 			// token_out = token_out - token_out_1
 
@@ -1202,27 +1202,27 @@ var (
 
 			// token_out_2 = liq_2 * (sqrt_next_2 - sqrt_next_1 ) / (sqrt_next_1 * sqrt_next_2)
 			// token_in_2 = ceil(liq_2 * (sqrt_next_2 - sqrt_next_1 ))
-			// fee_2 = token_in_2 *  spread_factor / (1 - spread_factor)
+			// spread_factor_2 = token_in_2 *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
-			// token_in = ceil(token_in_1 + fee_1 + token_in_2 + fee_2)
-			// fee_growth = fee_1 / liq_1 + fee_2 / liq_2
+			// token_in = ceil(token_in_1 + spread_factor_1 + token_in_2 + spread_factor_2)
+			// spread_rewards_growth = spread_factor_1 / liq_1 + spread_factor_2 / liq_2
 			// print(sqrt_next_2)
 			// print(token_in)
-			// print(fee_growth)
-			expectedTokenOut:                  sdk.NewCoin(ETH, sdk.NewInt(1820630)),
-			expectedTokenIn:                   sdk.NewCoin(USDC, sdk.NewInt(10010009580)),
-			expectedTick:                      32105400,
-			expectedSqrtPrice:                 sdk.MustNewDecFromStr("78.137148837036751553"),
-			expectedLowerTickFeeGrowth:        DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth:        DefaultFeeAccumCoins,
-			expectedSecondLowerTickFeeGrowth:  secondPosition{tickIndex: 315000, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth:  secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                     sdk.NewDec(5500),
-			newUpperPrice:                     sdk.NewDec(6250),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.007433904623597252"),
+			// print(spread_rewards_growth)
+			expectedTokenOut:                           sdk.NewCoin(ETH, sdk.NewInt(1820630)),
+			expectedTokenIn:                            sdk.NewCoin(USDC, sdk.NewInt(10010009580)),
+			expectedTick:                               32105400,
+			expectedSqrtPrice:                          sdk.MustNewDecFromStr("78.137148837036751553"),
+			expectedLowerTickSpreadRewardGrowth:        DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth:        DefaultSpreadRewardAccumCoins,
+			expectedSecondLowerTickSpreadRewardGrowth:  secondPosition{tickIndex: 315000, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickSpreadRewardGrowth:  secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			newLowerPrice:                              sdk.NewDec(5500),
+			newUpperPrice:                              sdk.NewDec(6250),
+			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.007433904623597252"),
 		},
-		"fee 4: two positions with partially overlapping price ranges: eth (in) -> usdc (out) (10% fee) | zfo": {
+		"spread factor 4: two positions with partially overlapping price ranges: eth (in) -> usdc (out) (10% spread factor) | zfo": {
 			tokenOut:                 sdk.NewCoin(USDC, sdk.NewInt(9321276930)),
 			tokenInDenom:             ETH,
 			priceLimit:               sdk.NewDec(4128),
@@ -1240,7 +1240,7 @@ var (
 
 			// token_out_1 = liq_1 * (sqrt_cur - sqrt_next_1 )
 			// token_in_1 = ceil(liq_1 * (sqrt_cur - sqrt_next_1 ) / (sqrt_next_1 * sqrt_cur))
-			// fee_1 = token_in_1 *  spread_factor / (1 - spread_factor)
+			// spread_factor_1 = token_in_1 *  spread_factor / (1 - spread_factor)
 
 			// token_out = token_out - token_out_1
 
@@ -1250,7 +1250,7 @@ var (
 
 			// token_out_2 = liq_2 * (sqrt_next_1 - sqrt_next_2 )
 			// token_in_2 = ceil(liq_2 * (sqrt_next_1 - sqrt_next_2 ) / (sqrt_next_2 * sqrt_next_1))
-			// fee_2 = token_in_2 *  spread_factor / (1 - spread_factor)
+			// spread_factor_2 = token_in_2 *  spread_factor / (1 - spread_factor)
 
 			// token_out = token_out - token_out_2
 
@@ -1260,29 +1260,29 @@ var (
 
 			// token_out_3 = liq_3 * (sqrt_next_2 - sqrt_next_3 )
 			// token_in_3 = ceil(liq_3 * (sqrt_next_2 - sqrt_next_3 ) / (sqrt_next_3 * sqrt_next_2))
-			// fee_3 = token_in_3 *  spread_factor / (1 - spread_factor)
+			// spread_factor_3 = token_in_3 *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
-			// token_in = token_in_1 + token_in_2 + token_in_3 + fee_1 + fee_2 + fee_3
-			// fee_growth = fee_1 / liq_1 + fee_2 / liq_2 + fee_3 / liq_3
+			// token_in = token_in_1 + token_in_2 + token_in_3 + spread_factor_1 + spread_factor_2 + spread_factor_3
+			// spread_rewards_growth = spread_factor_1 / liq_1 + spread_factor_2 / liq_2 + spread_factor_3 / liq_3
 			// print(sqrt_next_3)
 			// print(token_in)
-			// print(fee_growth)
+			// print(spread_rewards_growth)
 			expectedTokenIn:   sdk.NewCoin("eth", sdk.NewInt(2222223)),
 			expectedTokenOut:  sdk.NewCoin("usdc", sdk.NewInt(9321276930)),
 			expectedTick:      30129000,
 			expectedSqrtPrice: sdk.MustNewDecFromStr("64.257943796086567725"),
-			// Started from DefaultFeeAccumCoins * 3, crossed tick once, thus becoming
-			// DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins = DefaultFeeAccumCoins * 2
-			expectedLowerTickFeeGrowth:        DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickFeeGrowth:        DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedSecondLowerTickFeeGrowth:  secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth:  secondPosition{tickIndex: 309990, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                     sdk.NewDec(4000),
-			newUpperPrice:                     sdk.NewDec(4999),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000157793641388331"),
+			// Started from DefaultSpreadRewardAccumCoins * 3, crossed tick once, thus becoming
+			// DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins = DefaultSpreadRewardAccumCoins * 2
+			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 300000, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 309990, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			newLowerPrice: sdk.NewDec(4000),
+			newUpperPrice: sdk.NewDec(4999),
+			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000157793641388331"),
 		},
-		"fee 5: two positions with partially overlapping price ranges, not utilizing full liquidity of second position: usdc (in) -> eth (out) (5% fee) | ofz": {
+		"spread factor 5: two positions with partially overlapping price ranges, not utilizing full liquidity of second position: usdc (in) -> eth (out) (5% spread factor) | ofz": {
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1609138)),
 			tokenInDenom:             USDC,
 			priceLimit:               sdk.NewDec(6056),
@@ -1300,7 +1300,7 @@ var (
 
 			// token_out_1 = liq_1 * (sqrt_next_1 - sqrt_cur ) / (sqrt_next_1 * sqrt_cur)
 			// token_in_1 = ceil(liq_1 * (sqrt_next_1 - sqrt_cur ))
-			// fee_1 = token_in_1 *  spread_factor / (1 - spread_factor)
+			// spread_factor_1 = token_in_1 *  spread_factor / (1 - spread_factor)
 
 			// token_out = token_out - token_out_1
 
@@ -1310,7 +1310,7 @@ var (
 
 			// token_out_2 = liq_2 * (sqrt_next_2 - sqrt_next_1 ) / (sqrt_next_1 * sqrt_next_2)
 			// token_in_2 = ceil(liq_2 * (sqrt_next_2 - sqrt_next_1 ))
-			// fee_2 = token_in_2 *  spread_factor / (1 - spread_factor)
+			// spread_factor_2 = token_in_2 *  spread_factor / (1 - spread_factor)
 
 			// token_out = token_out - token_out_2
 
@@ -1320,27 +1320,27 @@ var (
 
 			// token_out_3 = liq_3 * (sqrt_next_3 - sqrt_next_2 ) / (sqrt_next_3 * sqrt_next_2)
 			// token_in_3 = ceil(liq_3 * (sqrt_next_3 - sqrt_next_2 ))
-			// fee_3 = token_in_3 *  spread_factor / (1 - spread_factor)
+			// spread_factor_3 = token_in_3 *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
-			// token_in = token_in_1 + token_in_2 +token_in_3 + fee_1 + fee_2 + fee_3
-			// fee_growth = fee_1 / liq_1 + fee_2 / liq_2 + fee_3 / liq_3
+			// token_in = token_in_1 + token_in_2 +token_in_3 + spread_factor_1 + spread_factor_2 + spread_factor_3
+			// spread_rewards_growth = spread_factor_1 / liq_1 + spread_factor_2 / liq_2 + spread_factor_3 / liq_3
 			// print(sqrt_next_3)
 			// print(token_in)
-			// print(fee_growth)
-			expectedTokenIn:                   sdk.NewCoin(USDC, sdk.NewInt(8947367851)),
-			expectedTokenOut:                  sdk.NewCoin(ETH, sdk.NewInt(1609138)),
-			expectedLowerTickFeeGrowth:        DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth:        DefaultFeeAccumCoins,
-			expectedSecondLowerTickFeeGrowth:  secondPosition{tickIndex: 310010, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth:  secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
-			expectedTick:                      31712600,
-			expectedSqrtPrice:                 sdk.MustNewDecFromStr("75.582372355128594340"),
-			newLowerPrice:                     sdk.NewDec(5001),
-			newUpperPrice:                     sdk.NewDec(6250),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.256404959888119530"),
+			// print(spread_reward_growth)
+			expectedTokenIn:                            sdk.NewCoin(USDC, sdk.NewInt(8947367851)),
+			expectedTokenOut:                           sdk.NewCoin(ETH, sdk.NewInt(1609138)),
+			expectedLowerTickSpreadRewardGrowth:        DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth:        DefaultSpreadRewardAccumCoins,
+			expectedSecondLowerTickSpreadRewardGrowth:  secondPosition{tickIndex: 310010, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickSpreadRewardGrowth:  secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedTick:                               31712600,
+			expectedSqrtPrice:                          sdk.MustNewDecFromStr("75.582372355128594340"),
+			newLowerPrice:                              sdk.NewDec(5001),
+			newUpperPrice:                              sdk.NewDec(6250),
+			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.256404959888119530"),
 		},
-		"fee 6: two sequential positions with a gap usdc (in) -> eth (out) (0.03% fee) | ofz": {
+		"spread factor 6: two sequential positions with a gap usdc (in) -> eth (out) (0.03% spread factor) | ofz": {
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1820545)),
 			tokenInDenom:             USDC,
 			priceLimit:               sdk.NewDec(6106),
@@ -1358,7 +1358,7 @@ var (
 
 			// token_out_1 = liq_1 * (sqrt_next_1 - sqrt_cur ) / (sqrt_next_1 * sqrt_cur)
 			// token_in_1 = ceil(liq_1 * (sqrt_next_1 - sqrt_cur ))
-			// fee_1 = token_in_1 *  spread_factor / (1 - spread_factor)
+			// spread_factor_1 = token_in_1 *  spread_factor / (1 - spread_factor)
 			// token_out = token_out - token_out_1
 
 			// # Range 2: from 5501 till end
@@ -1367,27 +1367,27 @@ var (
 			// sqrt_next_2 = liq_2 * sqrt_cur_2 / (liq_2 - token_out * sqrt_cur_2)
 			// token_out_2 = liq_2 * (sqrt_next_2 - sqrt_cur_2 ) / (sqrt_cur_2 * sqrt_next_2)
 			// token_in_2 = ceil(liq_2 * (sqrt_next_2 - sqrt_cur_2 ))
-			// fee_2 = token_in_2 *  spread_factor / (1 - spread_factor)
+			// spread_factor_2 = token_in_2 *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
-			// token_in = token_in_1 + token_in_2 + fee_1 + fee_2
-			// fee_growth = fee_1 / liq_1 + fee_2 / liq_2
+			// token_in = token_in_1 + token_in_2 + spread_factor_1 + spread_factor_2
+			// spread_rewards_growth = spread_factor_1 / liq_1 + spread_factor_2 / liq_2
 			// print(sqrt_next_2)
 			// print(token_in)
-			// print(fee_growth)
-			expectedTokenOut:                  sdk.NewCoin(ETH, sdk.NewInt(1820545)),
-			expectedTokenIn:                   sdk.NewCoin(USDC, sdk.NewInt(10002995655)),
-			expectedTick:                      32105500,
-			expectedSqrtPrice:                 sdk.MustNewDecFromStr("78.138050797173647031"),
-			expectedLowerTickFeeGrowth:        DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth:        DefaultFeeAccumCoins,
-			expectedSecondLowerTickFeeGrowth:  secondPosition{tickIndex: 315010, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth:  secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                     sdk.NewDec(5501),
-			newUpperPrice:                     sdk.NewDec(6250),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.002226857353494143"),
+			// print(spread_rewards_growth)
+			expectedTokenOut:                           sdk.NewCoin(ETH, sdk.NewInt(1820545)),
+			expectedTokenIn:                            sdk.NewCoin(USDC, sdk.NewInt(10002995655)),
+			expectedTick:                               32105500,
+			expectedSqrtPrice:                          sdk.MustNewDecFromStr("78.138050797173647031"),
+			expectedLowerTickSpreadRewardGrowth:        DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth:        DefaultSpreadRewardAccumCoins,
+			expectedSecondLowerTickSpreadRewardGrowth:  secondPosition{tickIndex: 315010, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickSpreadRewardGrowth:  secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
+			newLowerPrice:                              sdk.NewDec(5501),
+			newUpperPrice:                              sdk.NewDec(6250),
+			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.002226857353494143"),
 		},
-		"fee 7: single position within one tick, trade completes but slippage protection interrupts trade early: usdc (in) -> eth (out) (1% fee) | ofz": {
+		"spread factor 7: single position within one tick, trade completes but slippage protection interrupts trade early: usdc (in) -> eth (out) (1% spread factor) | ofz": {
 			tokenOut:     sdk.NewCoin(ETH, sdk.NewInt(1820545)),
 			tokenInDenom: USDC,
 			priceLimit:   sdk.NewDec(5002),
@@ -1403,21 +1403,21 @@ var (
 
 			// token_out_1 = liq_1 * (sqrt_next_1 - sqrt_cur ) / (sqrt_next_1 * sqrt_cur)
 			// token_in_1 = ceil(liq_1 * (sqrt_next_1 - sqrt_cur ))
-			// fee_1 = token_in_1 *  spread_factor / (1 - spread_factor)
+			// spread_factor_1 = token_in_1 *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
-			// token_in = ceil(token_in_1 + fee_1)
-			// fee_growth = fee_1 / liq_1
+			// token_in = ceil(token_in_1 + spread_factor_1)
+			// spread_rewards_growth = spread_factor_1 / liq_1
 			// print(sqrt_next_1)
 			// print(token_in)
-			// print(fee_growth)
-			expectedTokenOut:                  sdk.NewCoin(ETH, sdk.NewInt(4291)),
-			expectedTokenIn:                   sdk.NewCoin(USDC, sdk.NewInt(21680760)),
-			expectedTick:                      31002000,
-			expectedSqrtPrice:                 sdk.MustNewDecFromStr("70.724818840347693039"),
-			expectedLowerTickFeeGrowth:        DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth:        DefaultFeeAccumCoins,
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000142835574082604"),
+			// print(spread_rewards_growth)
+			expectedTokenOut:                           sdk.NewCoin(ETH, sdk.NewInt(4291)),
+			expectedTokenIn:                            sdk.NewCoin(USDC, sdk.NewInt(21680760)),
+			expectedTick:                               31002000,
+			expectedSqrtPrice:                          sdk.MustNewDecFromStr("70.724818840347693039"),
+			expectedLowerTickSpreadRewardGrowth:        DefaultSpreadRewardAccumCoins,
+			expectedUpperTickSpreadRewardGrowth:        DefaultSpreadRewardAccumCoins,
+			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000142835574082604"),
 		},
 	}
 
@@ -1438,7 +1438,7 @@ var (
 		},
 	}
 
-	additiveFeeGrowthGlobalErrTolerance = osmomath.ErrTolerance{
+	additiveSpreadRewardGrowthGlobalErrTolerance = osmomath.ErrTolerance{
 		// 2 * 10^-18
 		AdditiveTolerance: sdk.SmallestDec().Mul(sdk.NewDec(2)),
 	}
@@ -1493,34 +1493,34 @@ func (s *KeeperTestSuite) assertPoolNotModified(poolBeforeCalc types.Concentrate
 	s.Require().Equal(poolBeforeCalc.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
 }
 
-func (s *KeeperTestSuite) assertFeeAccum(test SwapTest, poolId uint64) {
-	feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, poolId)
+func (s *KeeperTestSuite) assertSpreadRewardAccum(test SwapTest, poolId uint64) {
+	spreadRewardAccum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, poolId)
 	s.Require().NoError(err)
 
-	feeAccumValue := feeAccum.GetValue()
-	if test.expectedFeeGrowthAccumulatorValue.IsNil() {
-		s.Require().Equal(0, feeAccumValue.Len())
+	spreadRewardAccumValue := spreadRewardAccum.GetValue()
+	if test.expectedSpreadRewardGrowthAccumulatorValue.IsNil() {
+		s.Require().Equal(0, spreadRewardAccumValue.Len())
 		return
 	}
 	amountOfDenom := test.tokenIn.Denom
 	if amountOfDenom == "" {
 		amountOfDenom = test.tokenInDenom
 	}
-	feeVal := feeAccumValue.AmountOf(amountOfDenom)
-	s.Require().Equal(1, feeAccumValue.Len(), "fee accumulator should only have one denom, was (%s)", feeAccumValue)
+	spreadRewardVal := spreadRewardAccumValue.AmountOf(amountOfDenom)
+	s.Require().Equal(1, spreadRewardAccumValue.Len(), "spread reward accumulator should only have one denom, was (%s)", spreadRewardAccumValue)
 	s.Require().Equal(0,
-		additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
-			osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
-			osmomath.BigDecFromSDKDec(feeVal),
+		additiveSpreadRewardGrowthGlobalErrTolerance.CompareBigDec(
+			osmomath.BigDecFromSDKDec(test.expectedSpreadRewardGrowthAccumulatorValue),
+			osmomath.BigDecFromSDKDec(spreadRewardVal),
 		),
-		fmt.Sprintf("expected %s, got %s", test.expectedFeeGrowthAccumulatorValue.String(), feeVal.String()),
+		fmt.Sprintf("expected %s, got %s", test.expectedSpreadRewardGrowthAccumulatorValue.String(), spreadRewardVal.String()),
 	)
 }
 
-func (s *KeeperTestSuite) assertZeroFees(poolId uint64) {
-	feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, poolId)
+func (s *KeeperTestSuite) assertZeroSpreadRewards(poolId uint64) {
+	spreadRewardAccum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, poolId)
 	s.Require().NoError(err)
-	s.Require().Equal(0, feeAccum.GetValue().Len())
+	s.Require().Equal(0, spreadRewardAccum.GetValue().Len())
 }
 
 func (s *KeeperTestSuite) getExpectedLiquidity(test SwapTest, pool types.ConcentratedPoolExtension) sdk.Dec {
@@ -1570,7 +1570,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 
 			// perform compute
 			cacheCtx, _ := s.Ctx.CacheContext()
-			tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, totalFees, err := s.App.ConcentratedLiquidityKeeper.ComputeOutAmtGivenIn(
+			tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, totalSpreadRewards, err := s.App.ConcentratedLiquidityKeeper.ComputeOutAmtGivenIn(
 				cacheCtx,
 				pool.GetId(),
 				test.tokenIn, test.tokenOutDenom,
@@ -1581,8 +1581,8 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 			} else {
 				s.testSwapResult(test, pool, tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, err)
 
-				expectedFees := tokenIn.Amount.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).TruncateInt()
-				s.Require().Equal(expectedFees.String(), totalFees.TruncateInt().String())
+				expectedSpreadFactors := tokenIn.Amount.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).TruncateInt()
+				s.Require().Equal(expectedSpreadFactors.String(), totalSpreadRewards.TruncateInt().String())
 
 				// check that the pool has not been modified after performing calc
 				s.assertPoolNotModified(poolBeforeCalc)
@@ -1599,7 +1599,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 				s.Require().Error(err)
 			} else {
 				s.testSwapResult(test, pool, tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, err)
-				s.assertFeeAccum(test, pool.GetId())
+				s.assertSpreadRewardAccum(test, pool.GetId())
 			}
 		})
 	}
@@ -1637,19 +1637,19 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 			// Create default CL pool
 			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, sdk.ZeroDec())
 
-			// manually update fee accumulator for the pool
-			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			// manually update spread factor accumulator for the pool
+			spreadFactorAccum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
-			feeAccum.AddToAccumulator(DefaultFeeAccumCoins)
+			spreadFactorAccum.AddToAccumulator(DefaultSpreadRewardAccumCoins)
 
 			// add default position
 			s.SetupDefaultPosition(pool.GetId())
 			s.setupSecondPosition(test, pool)
 
-			// add 2*DefaultFeeAccumCoins to fee accumulator, now fee accumulator has 3*DefaultFeeAccumCoins as its value
-			feeAccum, err = s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			// add 2*DefaultSpreadRewardAccumCoins to spread factor accumulator, now spread factor accumulator has 3*DefaultSpreadRewardAccumCoins as its value
+			spreadFactorAccum, err = s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
-			feeAccum.AddToAccumulator(DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)))
+			spreadFactorAccum.AddToAccumulator(DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)))
 
 			// perform swap
 			_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
@@ -1659,31 +1659,31 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 
 			s.Require().NoError(err)
 
-			// check lower tick and upper tick fee growth
+			// check lower tick and upper tick spread reward growth
 			lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), DefaultLowerTick)
 			s.Require().NoError(err)
-			s.Require().Equal(test.expectedLowerTickFeeGrowth, lowerTickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
+			s.Require().Equal(test.expectedLowerTickSpreadRewardGrowth, lowerTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal)
 
 			upperTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), DefaultLowerTick)
 			s.Require().NoError(err)
-			s.Require().Equal(test.expectedUpperTickFeeGrowth, upperTickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
+			s.Require().Equal(test.expectedUpperTickSpreadRewardGrowth, upperTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal)
 
-			if test.expectedSecondLowerTickFeeGrowth.expectedFeeGrowth != nil {
-				newTickIndex := test.expectedSecondLowerTickFeeGrowth.tickIndex
-				expectedFeeGrowth := test.expectedSecondLowerTickFeeGrowth.expectedFeeGrowth
+			if test.expectedSecondLowerTickSpreadRewardGrowth.expectedSpreadRewardGrowth != nil {
+				newTickIndex := test.expectedSecondLowerTickSpreadRewardGrowth.tickIndex
+				expectedSpreadRewardGrowth := test.expectedSecondLowerTickSpreadRewardGrowth.expectedSpreadRewardGrowth
 
 				newLowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), newTickIndex)
 				s.Require().NoError(err)
-				s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
+				s.Require().Equal(expectedSpreadRewardGrowth, newLowerTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal)
 			}
 
-			if test.expectedSecondUpperTickFeeGrowth.expectedFeeGrowth != nil {
-				newTickIndex := test.expectedSecondUpperTickFeeGrowth.tickIndex
-				expectedFeeGrowth := test.expectedSecondUpperTickFeeGrowth.expectedFeeGrowth
+			if test.expectedSecondUpperTickSpreadRewardGrowth.expectedSpreadRewardGrowth != nil {
+				newTickIndex := test.expectedSecondUpperTickSpreadRewardGrowth.tickIndex
+				expectedSpreadRewardGrowth := test.expectedSecondUpperTickSpreadRewardGrowth.expectedSpreadRewardGrowth
 
 				newLowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), newTickIndex)
 				s.Require().NoError(err)
-				s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
+				s.Require().Equal(expectedSpreadRewardGrowth, newLowerTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal)
 			}
 		})
 	}
@@ -1704,7 +1704,7 @@ func (s *KeeperTestSuite) testSwapResult(test SwapTest, pool types.ConcentratedP
 
 func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 	// add error cases as well
-	tests := makeTests(swapInGivenOutTestCases, swapInGivenOutFeeTestCases, swapInGivenOutErrorTestCases)
+	tests := makeTests(swapInGivenOutTestCases, swapInGivenOutSpreadRewardTestCases, swapInGivenOutErrorTestCases)
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
@@ -1716,7 +1716,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 
 			// perform compute
 			cacheCtx, _ := s.Ctx.CacheContext()
-			tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, totalFees, err := s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
+			tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, totalSpreadRewards, err := s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
 				cacheCtx,
 				test.tokenOut, test.tokenInDenom,
 				test.spreadFactor, test.priceLimit, pool.GetId())
@@ -1725,8 +1725,8 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 			} else {
 				s.testSwapResult(test, pool, tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, err)
 
-				expectedFees := tokenIn.Amount.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).TruncateInt()
-				s.Require().Equal(expectedFees.String(), totalFees.TruncateInt().String())
+				expectedSpreadRewards := tokenIn.Amount.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).TruncateInt()
+				s.Require().Equal(expectedSpreadRewards.String(), totalSpreadRewards.TruncateInt().String())
 			}
 
 			// perform swap
@@ -1754,10 +1754,10 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 			s.Require().Equal(expectedLiquidity.String(), pool.GetLiquidity().String())
 
 			if test.spreadFactor.IsZero() {
-				s.assertZeroFees(pool.GetId())
+				s.assertZeroSpreadRewards(pool.GetId())
 				return
 			}
-			s.assertFeeAccum(test, pool.GetId())
+			s.assertSpreadRewardAccum(test, pool.GetId())
 		})
 	}
 }
@@ -1771,19 +1771,19 @@ func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
 			// Create default CL pool
 			pool := s.PrepareConcentratedPool()
 
-			// manually update fee accumulator for the pool
-			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			// manually update spread factor accumulator for the pool
+			spreadFactorAccum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
-			feeAccum.AddToAccumulator(DefaultFeeAccumCoins)
+			spreadFactorAccum.AddToAccumulator(DefaultSpreadRewardAccumCoins)
 
 			// add default position
 			s.SetupDefaultPosition(pool.GetId())
 			s.setupSecondPosition(test, pool)
 
-			// add 2*DefaultFeeAccumCoins to fee accumulator, now fee accumulator has 3*DefaultFeeAccumCoins as its value
-			feeAccum, err = s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			// add 2*DefaultSpreadRewardAccumCoins to spread factor accumulator, now spread factor accumulator has 3*DefaultSpreadRewardAccumCoins as its value
+			spreadFactorAccum, err = s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
-			feeAccum.AddToAccumulator(DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)))
+			spreadFactorAccum.AddToAccumulator(DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)))
 
 			// perform swap
 			_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
@@ -1792,31 +1792,31 @@ func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
 				test.spreadFactor, test.priceLimit)
 			s.Require().NoError(err)
 
-			// check lower tick and upper tick fee growth
+			// check lower tick and upper tick spread reward growth
 			lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), DefaultLowerTick)
 			s.Require().NoError(err)
-			s.Require().Equal(test.expectedLowerTickFeeGrowth, lowerTickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
+			s.Require().Equal(test.expectedLowerTickSpreadRewardGrowth, lowerTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal)
 
 			upperTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), DefaultLowerTick)
 			s.Require().NoError(err)
-			s.Require().Equal(test.expectedUpperTickFeeGrowth, upperTickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
+			s.Require().Equal(test.expectedUpperTickSpreadRewardGrowth, upperTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal)
 
-			if test.expectedSecondLowerTickFeeGrowth.expectedFeeGrowth != nil {
-				newTickIndex := test.expectedSecondLowerTickFeeGrowth.tickIndex
-				expectedFeeGrowth := test.expectedSecondLowerTickFeeGrowth.expectedFeeGrowth
+			if test.expectedSecondLowerTickSpreadRewardGrowth.expectedSpreadRewardGrowth != nil {
+				newTickIndex := test.expectedSecondLowerTickSpreadRewardGrowth.tickIndex
+				expectedSpreadRewardGrowth := test.expectedSecondLowerTickSpreadRewardGrowth.expectedSpreadRewardGrowth
 
 				newLowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), newTickIndex)
 				s.Require().NoError(err)
-				s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
+				s.Require().Equal(expectedSpreadRewardGrowth, newLowerTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal)
 			}
 
-			if test.expectedSecondUpperTickFeeGrowth.expectedFeeGrowth != nil {
-				newTickIndex := test.expectedSecondUpperTickFeeGrowth.tickIndex
-				expectedFeeGrowth := test.expectedSecondUpperTickFeeGrowth.expectedFeeGrowth
+			if test.expectedSecondUpperTickSpreadRewardGrowth.expectedSpreadRewardGrowth != nil {
+				newTickIndex := test.expectedSecondUpperTickSpreadRewardGrowth.tickIndex
+				expectedSpreadRewardGrowth := test.expectedSecondUpperTickSpreadRewardGrowth.expectedSpreadRewardGrowth
 
 				newLowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), newTickIndex)
 				s.Require().NoError(err)
-				s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
+				s.Require().Equal(expectedSpreadRewardGrowth, newLowerTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal)
 			}
 		})
 	}
@@ -2171,12 +2171,12 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 }
 
 // TestComputeOutAmtGivenIn tests that ComputeOutAmtGivenIn successfully performs state changes as expected.
-// We expect to only change fee accum state, since pool state change is not handled by ComputeOutAmtGivenIn.
+// We expect to only change spread factor accum state, since pool state change is not handled by ComputeOutAmtGivenIn.
 func (s *KeeperTestSuite) TestComputeOutAmtGivenIn() {
-	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
-	tests := make(map[string]SwapTest, len(swapOutGivenInFeeCases))
+	// we only use spread factor cases here since write Ctx only takes effect in the spread factor accumulator
+	tests := make(map[string]SwapTest, len(swapOutGivenInSpreadRewardCases))
 
-	for name, test := range swapOutGivenInFeeCases {
+	for name, test := range swapOutGivenInSpreadRewardCases {
 		tests[name] = test
 	}
 
@@ -2196,15 +2196,15 @@ func (s *KeeperTestSuite) TestComputeOutAmtGivenIn() {
 
 			// check that the pool has not been modified after performing calc
 			s.assertPoolNotModified(poolBeforeCalc)
-			s.assertFeeAccum(test, poolBeforeCalc.GetId())
+			s.assertSpreadRewardAccum(test, poolBeforeCalc.GetId())
 		})
 	}
 }
 
 // TestCalcOutAmtGivenIn_NonMutative tests that CalcOutAmtGivenIn is non-mutative.
 func (s *KeeperTestSuite) TestCalcOutAmtGivenIn_NonMutative() {
-	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
-	tests := makeTests(swapOutGivenInFeeCases)
+	// we only use spread reward cases here since write Ctx only takes effect in the spread reward accumulator
+	tests := makeTests(swapOutGivenInSpreadRewardCases)
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
@@ -2221,7 +2221,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn_NonMutative() {
 
 			// check that the pool has not been modified after performing calc
 			s.assertPoolNotModified(poolBeforeCalc)
-			s.assertZeroFees(poolBeforeCalc.GetId())
+			s.assertZeroSpreadRewards(poolBeforeCalc.GetId())
 		})
 	}
 }
@@ -2240,8 +2240,8 @@ func (s *KeeperTestSuite) setupSecondPosition(test SwapTest, pool types.Concentr
 
 // TestCalcInAmtGivenOut_NonMutative tests that CalcInAmtGivenOut is non-mutative.
 func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
-	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
-	tests := makeTests(swapOutGivenInFeeCases)
+	// we only use spread reward cases here since write Ctx only takes effect in the spread reward accumulator
+	tests := makeTests(swapOutGivenInSpreadRewardCases)
 
 	for name, test := range tests {
 		test := test
@@ -2259,15 +2259,15 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
 
 			// check that the pool has not been modified after performing calc
 			s.assertPoolNotModified(poolBeforeCalc)
-			s.assertZeroFees(poolBeforeCalc.GetId())
+			s.assertZeroSpreadRewards(poolBeforeCalc.GetId())
 		})
 	}
 }
 
 // TestComputeInAmtGivenOut tests that ComputeInAmtGivenOut successfully performs state changes as expected.
 func (s *KeeperTestSuite) TestComputeInAmtGivenOut() {
-	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
-	tests := makeTests(swapInGivenOutFeeTestCases)
+	// we only use spread reward cases here since write Ctx only takes effect in the spread reward accumulator
+	tests := makeTests(swapInGivenOutSpreadRewardTestCases)
 
 	for name, test := range tests {
 		test := test
@@ -2284,7 +2284,7 @@ func (s *KeeperTestSuite) TestComputeInAmtGivenOut() {
 
 			// check that the pool has not been modified after performing calc
 			s.assertPoolNotModified(poolBeforeCalc)
-			s.assertFeeAccum(test, poolBeforeCalc.GetId())
+			s.assertSpreadRewardAccum(test, poolBeforeCalc.GetId())
 		})
 	}
 }
@@ -2319,30 +2319,30 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 	}
 }
 
-func (s *KeeperTestSuite) TestUpdateFeeGrowthGlobal() {
+func (s *KeeperTestSuite) TestUpdateSpreadRewardGrowthGlobal() {
 	ten := sdk.NewDec(10)
 
 	tests := map[string]struct {
-		liquidity               sdk.Dec
-		feeChargeTotal          sdk.Dec
-		expectedFeeGrowthGlobal sdk.Dec
+		liquidity                        sdk.Dec
+		spreadRewardChargeTotal          sdk.Dec
+		expectedSpreadRewardGrowthGlobal sdk.Dec
 	}{
 		"zero liquidity -> no-op": {
-			liquidity:               sdk.ZeroDec(),
-			feeChargeTotal:          ten,
-			expectedFeeGrowthGlobal: sdk.ZeroDec(),
+			liquidity:                        sdk.ZeroDec(),
+			spreadRewardChargeTotal:          ten,
+			expectedSpreadRewardGrowthGlobal: sdk.ZeroDec(),
 		},
 		"non-zero liquidity -> updated": {
-			liquidity:      ten,
-			feeChargeTotal: ten,
+			liquidity:               ten,
+			spreadRewardChargeTotal: ten,
 			// 10 / 10 = 1
-			expectedFeeGrowthGlobal: sdk.OneDec(),
+			expectedSpreadRewardGrowthGlobal: sdk.OneDec(),
 		},
-		"rounding test: boundary fee growth": {
-			liquidity:      ten.Add(ten).Mul(sdk.NewDec(1e18)),
-			feeChargeTotal: ten,
+		"rounding test: boundary spread reward growth": {
+			liquidity:               ten.Add(ten).Mul(sdk.NewDec(1e18)),
+			spreadRewardChargeTotal: ten,
 			// 10 / (20 * 10^18) = 5 * 10^-19, which we expect to truncate and leave 0.
-			expectedFeeGrowthGlobal: sdk.ZeroDec(),
+			expectedSpreadRewardGrowthGlobal: sdk.ZeroDec(),
 		},
 	}
 
@@ -2354,13 +2354,13 @@ func (s *KeeperTestSuite) TestUpdateFeeGrowthGlobal() {
 			// Setup.
 			swapState := cl.SwapState{}
 			swapState.SetLiquidity(tc.liquidity)
-			swapState.SetFeeGrowthGlobal(sdk.ZeroDec())
+			swapState.SetSpreadRewardGrowthGlobal(sdk.ZeroDec())
 
 			// System under test.
-			swapState.UpdateFeeGrowthGlobal(tc.feeChargeTotal)
+			swapState.UpdateSpreadRewardGrowthGlobal(tc.spreadRewardChargeTotal)
 
 			// Assertion.
-			s.Require().Equal(tc.expectedFeeGrowthGlobal, swapState.GetFeeGrowthGlobal())
+			s.Require().Equal(tc.expectedSpreadRewardGrowthGlobal, swapState.GetSpreadRewardGrowthGlobal())
 		})
 	}
 }
@@ -2480,9 +2480,9 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			// Set mock listener to make sure that is is called when desired.
 			s.setListenerMockOnConcentratedLiquidityKeeper()
 
-			expectedFees := tc.tokenIn.Amount.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).Ceil()
-			expectedFeesCoins := sdk.NewCoins(sdk.NewCoin(tc.tokenIn.Denom, expectedFees.TruncateInt()))
-			err = concentratedLiquidityKeeper.UpdatePoolForSwap(s.Ctx, pool, sender, tc.tokenIn, tc.tokenOut, tc.newCurrentTick, tc.newLiquidity, tc.newSqrtPrice, expectedFees)
+			expectedSpreadFactors := tc.tokenIn.Amount.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).Ceil()
+			expectedSpreadFactorsCoins := sdk.NewCoins(sdk.NewCoin(tc.tokenIn.Denom, expectedSpreadFactors.TruncateInt()))
+			err = concentratedLiquidityKeeper.UpdatePoolForSwap(s.Ctx, pool, sender, tc.tokenIn, tc.tokenOut, tc.newCurrentTick, tc.newLiquidity, tc.newSqrtPrice, expectedSpreadFactors)
 
 			// Test that pool is updated
 			poolAfterUpdate, err2 := concentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
@@ -2504,7 +2504,7 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 
 			// Estimate expected final balances from inputs.
 			expectedSenderFinalBalance := tc.senderInitialBalance.Sub(sdk.NewCoins(tc.tokenIn)).Add(tc.tokenOut)
-			expectedPoolFinalBalance := tc.poolInitialBalance.Add(tc.tokenIn).Sub(sdk.NewCoins(tc.tokenOut)).Sub(expectedFeesCoins)
+			expectedPoolFinalBalance := tc.poolInitialBalance.Add(tc.tokenIn).Sub(sdk.NewCoins(tc.tokenOut)).Sub(expectedSpreadFactorsCoins)
 
 			// Test that token out is sent from pool to sender.
 			senderBalanceAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, sender)
@@ -2514,8 +2514,8 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			poolBalanceAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
 			s.Require().Equal(expectedPoolFinalBalance.String(), poolBalanceAfterSwap.String())
 
-			feeBalanceAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetFeesAddress())
-			s.Require().Equal(expectedFeesCoins.String(), feeBalanceAfterSwap.String())
+			spreadFactorBalanceAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetSpreadRewardsAddress())
+			s.Require().Equal(expectedSpreadFactorsCoins.String(), spreadFactorBalanceAfterSwap.String())
 
 			// Validate that listeners were called the desired number of times
 			s.validateListenerCallCount(0, 0, 0, 1)
@@ -2612,7 +2612,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// Default setup only creates 3 accounts, but we need 5 for this test.
 	s.TestAccs = apptesting.CreateRandomAccounts(positions.numAccounts)
 
-	// Create a default CL pool, but with a 0.3 percent swap fee.
+	// Create a default CL pool, but with a 0.3 percent swap spread factor.
 	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, sdk.MustNewDecFromStr("0.003"))
 
 	positionIds := make([][]uint64, 4)
@@ -2669,8 +2669,8 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// sqrt_cur = Decimal("5000").sqrt()
 	// token_in = Decimal("5000000000")
 	// spread_factor = Decimal("0.003")
-	// token_in_after_fee = token_in * (Decimal("1") - spread_factor)
-	// sqrt_next = sqrt_cur + token_in_after_fee / liq
+	// token_in_after_spread_factors = token_in * (Decimal("1") - spread_factor)
+	// sqrt_next = sqrt_cur + token_in_after_spread_factors / liq
 	// token_out = liq * (sqrt_next - sqrt_cur) / (sqrt_cur * sqrt_next)
 
 	// # Summary:
@@ -2715,7 +2715,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// # Range 1: From 5146 to 4999
 	// token_in = Decimal("1000000")
 	// spread_factor = Decimal("0.003")
-	// token_in_after_fee = token_in - (token_in * spread_factor)
+	// token_in_after_spread_factors = token_in - (token_in * spread_factor)
 	// liq_1 = Decimal("4553647031.254531254265048947")
 	// sqrt_cur = Decimal("71.741384325871133645")
 	// sqrt_next_1 = Decimal("4999").sqrt()
@@ -2723,7 +2723,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// token_out_1 = liq_1 * (sqrt_cur - sqrt_next_1)
 	// token_in_1 = ceil(liq_1 * (sqrt_cur - sqrt_next_1) / (sqrt_next_1 * sqrt_cur))
 
-	// token_in = token_in_after_fee - token_in_1
+	// token_in = token_in_after_spread_factors - token_in_1
 
 	// # Range 2: from 4999 till end
 	// liq_2 = Decimal("5224063246.973358697925449540")
@@ -2774,7 +2774,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// # Range 1: From 4990.16... to 4999
 	// token_in = Decimal("5000000000")
 	// spread_factor = Decimal("0.003")
-	// token_in_after_fee = token_in - (token_in * spread_factor)
+	// token_in_after_spread_factors = token_in - (token_in * spread_factor)
 	// liq_1 = Decimal("670416215.718827443660400593")
 	// sqrt_cur = Decimal("70.641127368418251403")
 	// sqrt_next_1 = Decimal("4999").sqrt()
@@ -2782,7 +2782,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// token_out_1 = liq_1 * (sqrt_next_1 - sqrt_cur) / (sqrt_next_1 * sqrt_cur)
 	// token_in_1 = ceil(liq_1 * abs(sqrt_cur - sqrt_next_1))
 
-	// token_in = token_in_after_fee - token_in_1
+	// token_in = token_in_after_spread_factors - token_in_1
 
 	// # Range 2: from 5500 till end
 	// sqrt_next_1 = Decimal("5500").sqrt()
@@ -2835,8 +2835,8 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// sqrt_cur = Decimal("4999").sqrt()
 	// token_in = Decimal("1000000")
 	// spread_factor = Decimal("0.003")
-	// token_in_after_fee = token_in * (Decimal("1") - spread_factor)
-	// sqrt_next = liq / ((liq / sqrt_cur) + token_in_after_fee)
+	// token_in_after_spread_factors = token_in * (Decimal("1") - spread_factor)
+	// sqrt_next = liq / ((liq / sqrt_cur) + token_in_after_spread_factors)
 	// token_out = liq * (sqrt_cur - sqrt_next)
 
 	// # Summary:

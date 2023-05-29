@@ -61,7 +61,7 @@ func (msg MsgCreateConcentratedPool) ValidateBasic() error {
 
 	spreadFactor := msg.SpreadFactor
 	if spreadFactor.IsNegative() || spreadFactor.GTE(one) {
-		return cltypes.InvalidSpreadFactorError{ActualFee: spreadFactor}
+		return cltypes.InvalidSpreadFactorError{ActualSpreadFactor: spreadFactor}
 	}
 
 	return nil

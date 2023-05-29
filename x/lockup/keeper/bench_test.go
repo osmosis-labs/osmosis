@@ -69,7 +69,7 @@ func benchmarkResetLogic(b *testing.B, numLockups int) {
 		addr := addrs[r.Int()%numAccts]
 		simCoins := sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(r.Int63n(100))))
 		duration := time.Duration(r.Intn(1*60*60*24*7)) * time.Second
-		lock := lockuptypes.NewPeriodLock(uint64(i+1), addr, duration, time.Time{}, simCoins)
+		lock := lockuptypes.NewPeriodLock(uint64(i+1), addr, addr.String(), duration, time.Time{}, simCoins)
 		locks[i] = lock
 	}
 

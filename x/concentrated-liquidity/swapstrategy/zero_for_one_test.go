@@ -63,14 +63,14 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 		amountZeroInRemaining sdk.Dec
 		spreadFactor          sdk.Dec
 
-		expectedSqrtPriceNext  sdk.Dec
-		amountZeroInConsumed   sdk.Dec
-		expectedAmountOneOut   sdk.Dec
-		expectedFeeChargeTotal sdk.Dec
+		expectedSqrtPriceNext           sdk.Dec
+		amountZeroInConsumed            sdk.Dec
+		expectedAmountOneOut            sdk.Dec
+		expectedSpreadRewardChargeTotal sdk.Dec
 
 		expectError error
 	}{
-		"1: no fee - reach target": {
+		"1: no spread reward - reach target": {
 			// add 100 more
 			amountZeroInRemaining: defaultAmountZero.Add(sdk.NewDec(100)),
 			spreadFactor:          sdk.ZeroDec(),
@@ -79,52 +79,52 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 			// consumed without 100 since reached target.
 			amountZeroInConsumed: defaultAmountZero.Ceil(),
 			// liquidity * (sqrtPriceNext - sqrtPriceCurrent)
-			expectedAmountOneOut:   defaultAmountOne,
-			expectedFeeChargeTotal: sdk.ZeroDec(),
+			expectedAmountOneOut:            defaultAmountOne,
+			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
 		},
-		"2: no fee - do not reach target": {
+		"2: no spread reward - do not reach target": {
 			amountZeroInRemaining: defaultAmountZero.Sub(sdk.NewDec(100)),
 			spreadFactor:          sdk.ZeroDec(),
 
 			expectedSqrtPriceNext: sqrtPriceTargetNotReached,
 			amountZeroInConsumed:  defaultAmountZero.Sub(sdk.NewDec(100)).Ceil(),
 
-			expectedAmountOneOut:   amountOneTargetNotReached,
-			expectedFeeChargeTotal: sdk.ZeroDec(),
+			expectedAmountOneOut:            amountOneTargetNotReached,
+			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
 		},
-		"3: 3% fee - reach target": {
+		"3: 3% spread reward - reach target": {
 			// add 100 more
-			amountZeroInRemaining: defaultAmountZero.Add(sdk.NewDec(100)).Quo(one.Sub(defaultFee)),
-			spreadFactor:          defaultFee,
+			amountZeroInRemaining: defaultAmountZero.Add(sdk.NewDec(100)).Quo(one.Sub(defaultSpreadReward)),
+			spreadFactor:          defaultSpreadReward,
 
 			expectedSqrtPriceNext: sqrtPriceNext,
-			// Consumes without 100 since reached target and fee is applied.
+			// Consumes without 100 since reached target and spread reward is applied.
 			amountZeroInConsumed: defaultAmountZero.Ceil(),
 			// liquidity * (sqrtPriceNext - sqrtPriceCurrent)
-			expectedAmountOneOut:   defaultAmountOne,
-			expectedFeeChargeTotal: defaultAmountZero.Ceil().Quo(one.Sub(defaultFee)).Mul(defaultFee),
+			expectedAmountOneOut:            defaultAmountOne,
+			expectedSpreadRewardChargeTotal: defaultAmountZero.Ceil().Quo(one.Sub(defaultSpreadReward)).Mul(defaultSpreadReward),
 		},
-		"4: 3% fee - do not reach target": {
-			amountZeroInRemaining: defaultAmountZero.Sub(sdk.NewDec(100)).Quo(one.Sub(defaultFee)),
-			spreadFactor:          defaultFee,
+		"4: 3% spread reward - do not reach target": {
+			amountZeroInRemaining: defaultAmountZero.Sub(sdk.NewDec(100)).Quo(one.Sub(defaultSpreadReward)),
+			spreadFactor:          defaultSpreadReward,
 
 			expectedSqrtPriceNext: sqrtPriceTargetNotReached,
 			amountZeroInConsumed:  defaultAmountZero.Sub(sdk.NewDec(100)).Ceil(),
 			expectedAmountOneOut:  amountOneTargetNotReached,
 			// Difference between amount in given and actually consumed.
-			expectedFeeChargeTotal: defaultAmountZero.Sub(sdk.NewDec(100)).Quo(one.Sub(defaultFee)).Sub(defaultAmountZero.Sub(sdk.NewDec(100)).Ceil()),
+			expectedSpreadRewardChargeTotal: defaultAmountZero.Sub(sdk.NewDec(100)).Quo(one.Sub(defaultSpreadReward)).Sub(defaultAmountZero.Sub(sdk.NewDec(100)).Ceil()),
 		},
 	}
 
 	for name, tc := range tests {
 		suite.Run(name, func() {
 			strategy := suite.setupNewZeroForOneSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
-			sqrtPriceNext, amountZeroIn, amountOneOut, feeChargeTotal := strategy.ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget, defaultLiquidity, tc.amountZeroInRemaining)
+			sqrtPriceNext, amountZeroIn, amountOneOut, spreadRewardChargeTotal := strategy.ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget, defaultLiquidity, tc.amountZeroInRemaining)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
 			suite.Require().Equal(tc.amountZeroInConsumed, amountZeroIn)
 			suite.Require().Equal(tc.expectedAmountOneOut, amountOneOut)
-			suite.Require().Equal(tc.expectedFeeChargeTotal, feeChargeTotal)
+			suite.Require().Equal(tc.expectedSpreadRewardChargeTotal, spreadRewardChargeTotal)
 		})
 	}
 }
@@ -151,68 +151,68 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 		amountOneOutRemaining sdk.Dec
 		spreadFactor          sdk.Dec
 
-		expectedSqrtPriceNext  sdk.Dec
-		amountOneOutConsumed   sdk.Dec
-		expectedAmountInZero   sdk.Dec
-		expectedFeeChargeTotal sdk.Dec
+		expectedSqrtPriceNext           sdk.Dec
+		amountOneOutConsumed            sdk.Dec
+		expectedAmountInZero            sdk.Dec
+		expectedSpreadRewardChargeTotal sdk.Dec
 
 		expectError error
 	}{
-		"1: no fee - reach target": {
+		"1: no spread reward - reach target": {
 			// Add 100.
 			amountOneOutRemaining: defaultAmountOne.Add(sdk.NewDec(100)),
 			spreadFactor:          zero,
 
 			expectedSqrtPriceNext: sqrtPriceNext,
 			// Consumes without 100 since reaches target.
-			amountOneOutConsumed:   defaultAmountOne,
-			expectedAmountInZero:   defaultAmountZero.Ceil(),
-			expectedFeeChargeTotal: zero,
+			amountOneOutConsumed:            defaultAmountOne,
+			expectedAmountInZero:            defaultAmountZero.Ceil(),
+			expectedSpreadRewardChargeTotal: zero,
 		},
-		"2: no fee - do not reach target": {
+		"2: no spread reward - do not reach target": {
 			amountOneOutRemaining: defaultAmountOne.Sub(sdk.NewDec(10000)),
 			spreadFactor:          zero,
 
 			// sqrt_cur - amt_one / liq quo round up
 			expectedSqrtPriceNext: sqrtPriceTargetNotReached,
 			// subtracting 1 * smallest dec to account for truncations in favor of the pool.
-			amountOneOutConsumed:   amountOneOutTargetNotReached.Sub(sdk.SmallestDec()),
-			expectedAmountInZero:   amountZeroTargetNotReached.Ceil(),
-			expectedFeeChargeTotal: zero,
+			amountOneOutConsumed:            amountOneOutTargetNotReached.Sub(sdk.SmallestDec()),
+			expectedAmountInZero:            amountZeroTargetNotReached.Ceil(),
+			expectedSpreadRewardChargeTotal: zero,
 		},
-		"3: 3% fee - reach target": {
+		"3: 3% spread reward - reach target": {
 			// Add 100.
-			amountOneOutRemaining: defaultAmountOne.Quo(one.Sub(defaultFee)),
-			spreadFactor:          defaultFee,
+			amountOneOutRemaining: defaultAmountOne.Quo(one.Sub(defaultSpreadReward)),
+			spreadFactor:          defaultSpreadReward,
 
 			expectedSqrtPriceNext: sqrtPriceNext,
 			// Consumes without 100 since reaches target.
 			amountOneOutConsumed: defaultAmountOne,
 			// liquidity * (sqrtPriceNext - sqrtPriceCurrent) / (sqrtPriceNext * sqrtPriceCurrent)
-			expectedAmountInZero:   defaultAmountZero.Ceil(),
-			expectedFeeChargeTotal: swapstrategy.ComputeFeeChargeFromAmountIn(defaultAmountZero.Ceil(), defaultFee),
+			expectedAmountInZero:            defaultAmountZero.Ceil(),
+			expectedSpreadRewardChargeTotal: swapstrategy.ComputeSpreadRewardChargeFromAmountIn(defaultAmountZero.Ceil(), defaultSpreadReward),
 		},
-		"4: 3% fee - do not reach target": {
+		"4: 3% spread reward - do not reach target": {
 			amountOneOutRemaining: defaultAmountOne.Sub(sdk.NewDec(10000)),
-			spreadFactor:          defaultFee,
+			spreadFactor:          defaultSpreadReward,
 
 			expectedSqrtPriceNext: sqrtPriceTargetNotReached,
 			// subtracting 1 * smallest dec to account for truncations in favor of the pool.
-			amountOneOutConsumed:   amountOneOutTargetNotReached.Sub(sdk.SmallestDec()),
-			expectedAmountInZero:   amountZeroTargetNotReached.Ceil(),
-			expectedFeeChargeTotal: swapstrategy.ComputeFeeChargeFromAmountIn(amountZeroTargetNotReached.Ceil(), defaultFee),
+			amountOneOutConsumed:            amountOneOutTargetNotReached.Sub(sdk.SmallestDec()),
+			expectedAmountInZero:            amountZeroTargetNotReached.Ceil(),
+			expectedSpreadRewardChargeTotal: swapstrategy.ComputeSpreadRewardChargeFromAmountIn(amountZeroTargetNotReached.Ceil(), defaultSpreadReward),
 		},
 	}
 
 	for name, tc := range tests {
 		suite.Run(name, func() {
 			strategy := suite.setupNewZeroForOneSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
-			sqrtPriceNext, amountOneOut, amountZeroIn, feeChargeTotal := strategy.ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, defaultLiquidity, tc.amountOneOutRemaining)
+			sqrtPriceNext, amountOneOut, amountZeroIn, spreadRewardChargeTotal := strategy.ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, defaultLiquidity, tc.amountOneOutRemaining)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
 			suite.Require().Equal(tc.amountOneOutConsumed, amountOneOut)
 			suite.Require().Equal(tc.expectedAmountInZero, amountZeroIn)
-			suite.Require().Equal(tc.expectedFeeChargeTotal.String(), feeChargeTotal.String())
+			suite.Require().Equal(tc.expectedSpreadRewardChargeTotal.String(), spreadRewardChargeTotal.String())
 		})
 	}
 }

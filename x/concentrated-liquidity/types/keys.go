@@ -23,20 +23,20 @@ const (
 
 // Key prefixes
 var (
-	TickPrefix                   = []byte{0x01}
-	PositionPrefix               = []byte{0x02}
-	PoolPrefix                   = []byte{0x03}
-	IncentivePrefix              = []byte{0x04}
-	PositionIdPrefix             = []byte{0x08}
-	PoolPositionPrefix           = []byte{0x09}
-	FeePositionAccumulatorPrefix = []byte{0x0A}
-	PoolFeeAccumulatorPrefix     = []byte{0x0B}
-	UptimeAccumulatorPrefix      = []byte{0x0C}
-	PositionToLockPrefix         = []byte{0x0D}
-	PoolIdForLiquidityPrefix     = []byte{0x0E}
-	BalancerFullRangePrefix      = []byte{0x0F}
-	LockToPositionPrefix         = []byte{0x10}
-	ConcentratedLockPrefix       = []byte{0x11}
+	TickPrefix                            = []byte{0x01}
+	PositionPrefix                        = []byte{0x02}
+	PoolPrefix                            = []byte{0x03}
+	IncentivePrefix                       = []byte{0x04}
+	PositionIdPrefix                      = []byte{0x08}
+	PoolPositionPrefix                    = []byte{0x09}
+	SpreadRewardPositionAccumulatorPrefix = []byte{0x0A}
+	KeySpreadRewardPoolAccumulatorPrefix  = []byte{0x0B}
+	UptimeAccumulatorPrefix               = []byte{0x0C}
+	PositionToLockPrefix                  = []byte{0x0D}
+	PoolIdForLiquidityPrefix              = []byte{0x0E}
+	BalancerFullRangePrefix               = []byte{0x0F}
+	LockToPositionPrefix                  = []byte{0x10}
+	ConcentratedLockPrefix                = []byte{0x11}
 
 	// n.b. we negative prefix must be less than the positive prefix for proper iteration
 	TickNegativePrefix = []byte{0x05}
@@ -212,15 +212,15 @@ func KeyPoolIncentiveRecords(poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%s%d", IncentivePrefix, KeySeparator, poolId))
 }
 
-// Fee Accumulator Prefix Keys
+// Spread Reward Accumulator Prefix Keys
 
-func KeyFeePositionAccumulator(positionId uint64) string {
-	return strings.Join([]string{string(FeePositionAccumulatorPrefix), strconv.FormatUint(positionId, 10)}, KeySeparator)
+func KeySpreadRewardPositionAccumulator(positionId uint64) string {
+	return strings.Join([]string{string(SpreadRewardPositionAccumulatorPrefix), strconv.FormatUint(positionId, 10)}, KeySeparator)
 }
 
-func KeyFeePoolAccumulator(poolId uint64) string {
+func KeySpreadRewardPoolAccumulator(poolId uint64) string {
 	poolIdStr := strconv.FormatUint(poolId, uintBase)
-	return strings.Join([]string{string(PoolFeeAccumulatorPrefix), poolIdStr}, "/")
+	return strings.Join([]string{string(KeySpreadRewardPoolAccumulatorPrefix), poolIdStr}, "/")
 }
 
 // Uptme Accumulator Prefix Keys
