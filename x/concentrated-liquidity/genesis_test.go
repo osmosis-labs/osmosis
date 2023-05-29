@@ -78,7 +78,7 @@ var (
 		Options:               nil,
 	}
 
-	// five records because we have 5 supportive uptimes
+	// five records because we have 5 supported uptimes
 	testUptimeAccumRecord = []accum.Record{
 		accumRecord,
 		accumRecord,
@@ -813,8 +813,8 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 			for i, actualPositionData := range actualExported.PositionData {
 				expectedPositionData := expectedGenesis.PositionData[i]
 				// validate incentive accumulator
-				for i, incentiveAccumulator := range actualPositionData.UptimeAccumRecords {
-					s.Require().Equal(expectedPositionData.UptimeAccumRecords[i], incentiveAccumulator)
+				for i, uptimeAccum := range actualPositionData.UptimeAccumRecords {
+					s.Require().Equal(expectedPositionData.UptimeAccumRecords[i], uptimeAccum)
 				}
 			}
 
