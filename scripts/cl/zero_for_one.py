@@ -36,12 +36,12 @@ def calc_amount_zero_delta(liquidity: Decimal, sqrt_price_current: Decimal, sqrt
     return result
 
 
-def calc_test_case_out_given_in(liquidity: Decimal, sqrt_price_current: Decimal, token_in_remaining: Decimal, swap_fee: Decimal) -> Tuple[Decimal, Decimal, Decimal]:
+def calc_test_case_out_given_in(liquidity: Decimal, sqrt_price_current: Decimal, token_in_remaining: Decimal, spread_factor: Decimal) -> Tuple[Decimal, Decimal, Decimal]:
     """ Computes and prints all zero for one test case parameters. Next sqrt price is computed from the given parameters.
     Returns the next square root price, token out and fee amount per share.
     """
     token_in_remaining_after_fee = sdk_dec.mul(
-        token_in_remaining, (sdk_dec.one - swap_fee))
+        token_in_remaining, (sdk_dec.one - spread_factor))
     print(F"token_in_remaining_after_fee: {token_in_remaining_after_fee}")
 
     sqrt_price_next = get_next_sqrt_price(
@@ -55,7 +55,7 @@ def calc_test_case_out_given_in(liquidity: Decimal, sqrt_price_current: Decimal,
     token_out = get_token_out(liquidity, sqrt_price_current, sqrt_price_next)
 
     fee_charge_total = sdk_dec.zero
-    if swap_fee > sdk_dec.zero:
+    if spread_factor > sdk_dec.zero:
         fee_charge_total = token_in_remaining - token_in_after_fee_rounded_up
     fee_amount_per_share = sdk_dec.quo(fee_charge_total, liquidity)
 
@@ -69,7 +69,7 @@ def calc_test_case_out_given_in(liquidity: Decimal, sqrt_price_current: Decimal,
     return sqrt_price_next, token_out, fee_amount_per_share
 
 
-def calc_test_case_in_given_out(liquidity: Decimal, sqrt_price_current: Decimal, token_out_remaining: Decimal, swap_fee: Decimal) -> Tuple[Decimal, Decimal, Decimal]:
+def calc_test_case_in_given_out(liquidity: Decimal, sqrt_price_current: Decimal, token_out_remaining: Decimal, spread_factor: Decimal) -> Tuple[Decimal, Decimal, Decimal]:
     """ Computes and prints all zero for one test case parameters. Next sqrt price is computed from the given parameters.
     Returns the next square root price, token out and fee amount per share.
     """
@@ -80,7 +80,7 @@ def calc_test_case_in_given_out(liquidity: Decimal, sqrt_price_current: Decimal,
         liquidity, sqrt_price_current, sqrt_price_next)
 
     total_fee = sdk_dec.quo(sdk_dec.mul(
-        token_in, swap_fee), (sdk_dec.one - swap_fee))
+        token_in, spread_factor), (sdk_dec.one - spread_factor))
 
     fee_amount_per_share = sdk_dec.quo(total_fee, liquidity)
     token_in_after_fee = token_in + total_fee
@@ -94,7 +94,7 @@ def calc_test_case_in_given_out(liquidity: Decimal, sqrt_price_current: Decimal,
     return sqrt_price_next, token_in_after_fee, fee_amount_per_share
 
 
-def calc_test_case_with_next_sqrt_price_out_given_in(liquidity: Decimal, sqrt_price_current: Decimal, sqrt_price_next: Decimal, swap_fee: Decimal) -> Tuple[Decimal, Decimal, Decimal]:
+def calc_test_case_with_next_sqrt_price_out_given_in(liquidity: Decimal, sqrt_price_current: Decimal, sqrt_price_next: Decimal, spread_factor: Decimal) -> Tuple[Decimal, Decimal, Decimal]:
     """ Computes and prints all zero for one test case parameters when next square root price is known.
 
     Returns the expected token in, token out and fee amount per share. 
@@ -102,7 +102,7 @@ def calc_test_case_with_next_sqrt_price_out_given_in(liquidity: Decimal, sqrt_pr
     expected_token_in_before_fee = calc_amount_zero_delta(
         liquidity, sqrt_price_current, sqrt_price_next, True)
     expected_fee = sdk_dec.quo(sdk_dec.mul(
-        expected_token_in_before_fee, swap_fee), (sdk_dec.one - swap_fee))
+        expected_token_in_before_fee, spread_factor), (sdk_dec.one - spread_factor))
     expected_token_in = expected_token_in_before_fee + expected_fee
 
     token_out = get_token_out(liquidity, sqrt_price_current, sqrt_price_next)
@@ -120,7 +120,7 @@ def calc_test_case_with_next_sqrt_price_out_given_in(liquidity: Decimal, sqrt_pr
     return expected_token_in, token_out, fee_amount_per_share
 
 
-def calc_test_case_with_next_sqrt_price_in_given_out(liquidity: Decimal, sqrt_price_current: Decimal, sqrt_price_next: Decimal, swap_fee: Decimal) -> Tuple[Decimal, Decimal, Decimal]:
+def calc_test_case_with_next_sqrt_price_in_given_out(liquidity: Decimal, sqrt_price_current: Decimal, sqrt_price_next: Decimal, spread_factor: Decimal) -> Tuple[Decimal, Decimal, Decimal]:
     """ Computes and prints all zero for one test case parameters when next square root price is known.
     Assems swapping token for token in given out.
 
@@ -133,7 +133,7 @@ def calc_test_case_with_next_sqrt_price_in_given_out(liquidity: Decimal, sqrt_pr
         liquidity, sqrt_price_current, sqrt_price_next)
 
     total_fee = sdk_dec.quo(sdk_dec.mul(
-        token_in, swap_fee), (sdk_dec.one - swap_fee))
+        token_in, spread_factor), (sdk_dec.one - spread_factor))
 
     fee_amount_per_share = sdk_dec.quo(total_fee, liquidity)
     token_in_after_fee = token_in + total_fee

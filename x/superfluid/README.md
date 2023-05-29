@@ -376,6 +376,43 @@ It then mints concentrated liquidity shares and locks them up for the
 staking duration. From there, the normal superfluid delegation logic
 is executed.
 
+## Add To Superfluid Concentrated Position
+
+This message allows a user to add liquidity to a concentrated liquidity superfluid position.
+
+```{.go}
+type MsgAddToConcentratedLiquiditySuperfluidPosition struct {
+	PositionId    uint64
+	Sender        string
+	TokenDesired0 types.Coin
+	TokenDesired1 types.Coin
+}
+```
+
+It does so by performing the following steps:
+- perform validation of the input parameters
+   * make sure that position is locked
+   * belongs to the sender
+   * lock duration is correct and belongs to the sender
+- superfluid undelegate without synthetic lock creation
+- withdraw old position
+- make sure position isn't the last one in pool. Fail if so
+- update tokens for a new position (added + withdrawn)
+- created locked SF position
+- SF delegate (also creates synth lock)
+
+Upon successful execution, the following response is given:
+
+```{.go}
+type MsgAddToConcentratedLiquiditySuperfluidPositionResponse struct {
+	PositionId   uint64
+	Amount0      github_com_cosmos_cosmos_sdk_types.Int
+	Amount1      github_com_cosmos_cosmos_sdk_types.Int
+	NewLiquidity github_com_cosmos_cosmos_sdk_types.Dec
+	LockId       uint64
+}
+```
+
 ## Epochs
 
 Overall Epoch sequence

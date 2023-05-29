@@ -19,11 +19,11 @@ func init() {
 
 var _ govtypes.Content = &UpdateFeeTokenProposal{}
 
-func NewUpdateFeeTokenProposal(title, description string, feeToken FeeToken) UpdateFeeTokenProposal {
+func NewUpdateFeeTokenProposal(title, description string, feeTokens []FeeToken) UpdateFeeTokenProposal {
 	return UpdateFeeTokenProposal{
 		Title:       title,
 		Description: description,
-		Feetoken:    feeToken,
+		Feetokens:   feeTokens,
 	}
 }
 
@@ -43,15 +43,25 @@ func (p *UpdateFeeTokenProposal) ValidateBasic() error {
 		return err
 	}
 
-	return sdk.ValidateDenom(p.Feetoken.Denom)
+	for _, feeToken := range p.Feetokens {
+		if err := sdk.ValidateDenom(feeToken.Denom); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (p UpdateFeeTokenProposal) String() string {
+	recordsStr := ""
+	for _, feeToken := range p.Feetokens {
+		recordsStr = recordsStr + fmt.Sprintf("(Denom: %s, PoolID: %d) ", feeToken.Denom, feeToken.PoolID)
+	}
+
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf(`Update Fee Token Proposal:
   Title:       %s
   Description: %s
   Records:     %s
-`, p.Title, p.Description, p.Feetoken.String()))
+`, p.Title, p.Description, recordsStr))
 	return b.String()
 }

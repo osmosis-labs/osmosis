@@ -6,7 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
-func (suite *KeeperTestSuite) TestAddEpochInfo() {
+func (s *KeeperTestSuite) TestAddEpochInfo() {
 	defaultIdentifier := "default_add_epoch_info_id"
 	defaultDuration := time.Hour
 	startBlockHeight := int64(100)
@@ -51,46 +51,46 @@ func (suite *KeeperTestSuite) TestAddEpochInfo() {
 		},
 	}
 	for name, test := range tests {
-		suite.Run(name, func() {
-			suite.SetupTest()
-			suite.Ctx = suite.Ctx.WithBlockHeight(startBlockHeight).WithBlockTime(startBlockTime)
-			err := suite.EpochsKeeper.AddEpochInfo(suite.Ctx, test.addedEpochInfo)
+		s.Run(name, func() {
+			s.SetupTest()
+			s.Ctx = s.Ctx.WithBlockHeight(startBlockHeight).WithBlockTime(startBlockTime)
+			err := s.EpochsKeeper.AddEpochInfo(s.Ctx, test.addedEpochInfo)
 			if !test.expErr {
-				suite.Require().NoError(err)
-				actualEpochInfo := suite.EpochsKeeper.GetEpochInfo(suite.Ctx, test.addedEpochInfo.Identifier)
-				suite.Require().Equal(test.expEpochInfo, actualEpochInfo)
+				s.Require().NoError(err)
+				actualEpochInfo := s.EpochsKeeper.GetEpochInfo(s.Ctx, test.addedEpochInfo.Identifier)
+				s.Require().Equal(test.expEpochInfo, actualEpochInfo)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestDuplicateAddEpochInfo() {
+func (s *KeeperTestSuite) TestDuplicateAddEpochInfo() {
 	identifier := "duplicate_add_epoch_info"
 	epochInfo := types.NewGenesisEpochInfo(identifier, time.Hour*24*30)
-	err := suite.EpochsKeeper.AddEpochInfo(suite.Ctx, epochInfo)
-	suite.Require().NoError(err)
-	err = suite.EpochsKeeper.AddEpochInfo(suite.Ctx, epochInfo)
-	suite.Require().Error(err)
+	err := s.EpochsKeeper.AddEpochInfo(s.Ctx, epochInfo)
+	s.Require().NoError(err)
+	err = s.EpochsKeeper.AddEpochInfo(s.Ctx, epochInfo)
+	s.Require().Error(err)
 }
 
-func (suite *KeeperTestSuite) TestEpochLifeCycle() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestEpochLifeCycle() {
+	s.SetupTest()
 
 	epochInfo := types.NewGenesisEpochInfo("monthly", time.Hour*24*30)
-	suite.EpochsKeeper.AddEpochInfo(suite.Ctx, epochInfo)
-	epochInfoSaved := suite.EpochsKeeper.GetEpochInfo(suite.Ctx, "monthly")
+	s.EpochsKeeper.AddEpochInfo(s.Ctx, epochInfo)
+	epochInfoSaved := s.EpochsKeeper.GetEpochInfo(s.Ctx, "monthly")
 	// setup expected epoch info
 	expectedEpochInfo := epochInfo
-	expectedEpochInfo.StartTime = suite.Ctx.BlockTime()
-	expectedEpochInfo.CurrentEpochStartHeight = suite.Ctx.BlockHeight()
-	suite.Require().Equal(expectedEpochInfo, epochInfoSaved)
+	expectedEpochInfo.StartTime = s.Ctx.BlockTime()
+	expectedEpochInfo.CurrentEpochStartHeight = s.Ctx.BlockHeight()
+	s.Require().Equal(expectedEpochInfo, epochInfoSaved)
 
-	allEpochs := suite.EpochsKeeper.AllEpochInfos(suite.Ctx)
-	suite.Require().Len(allEpochs, 4)
-	suite.Require().Equal(allEpochs[0].Identifier, "day") // alphabetical order
-	suite.Require().Equal(allEpochs[1].Identifier, "hour")
-	suite.Require().Equal(allEpochs[2].Identifier, "monthly")
-	suite.Require().Equal(allEpochs[3].Identifier, "week")
+	allEpochs := s.EpochsKeeper.AllEpochInfos(s.Ctx)
+	s.Require().Len(allEpochs, 4)
+	s.Require().Equal(allEpochs[0].Identifier, "day") // alphabetical order
+	s.Require().Equal(allEpochs[1].Identifier, "hour")
+	s.Require().Equal(allEpochs[2].Identifier, "monthly")
+	s.Require().Equal(allEpochs[3].Identifier, "week")
 }

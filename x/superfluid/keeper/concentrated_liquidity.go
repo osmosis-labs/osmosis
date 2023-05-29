@@ -15,8 +15,8 @@ import (
 //
 // Returns:
 // newPositionId: ID of the newly created concentrated liquidity position.
-// actualAmount0: Actual amount of token 0 added.
-// actualAmount1: Actual amount of token 1 added.
+// actualAmount0: Actual amount of token 0 existing in the updated position.
+// actualAmount1: Actual amount of token 1 existing in the updated position.
 // newLiquidity: The new liquidity value.
 // newLockId: ID of the lock associated with the new position.
 // error: Error, if any.
@@ -24,10 +24,12 @@ import (
 // An error is returned if:
 // - The position does not exist.
 // - The amount added is negative.
-// - The function caller does not own the lock.
+// - The provided sender does not own the lock.
+// - The provided sender does not own the position.
 // - The position is not superfluid staked.
 // - The position is the last position in the pool.
-func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0ToAdd, amount1ToAdd sdk.Int) (uint64, sdk.Int, sdk.Int, sdk.Dec, uint64, error) {
+// - The lock duration does not match the unbonding duration.
+func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, sender sdk.AccAddress, positionId uint64, amount0ToAdd, amount1ToAdd sdk.Int) (uint64, sdk.Int, sdk.Int, sdk.Dec, uint64, error) {
 	position, err := k.clk.GetPosition(ctx, positionId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
@@ -46,6 +48,11 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, ow
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, types.PositionNotSuperfluidStakedError{PositionId: position.PositionId}
 	}
 
+	// Defense in depth making sure that the position is full-range.
+	if position.LowerTick != cltypes.MinTick || position.UpperTick != cltypes.MaxTick {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, types.ConcentratedTickRangeNotFullError{ActualLowerTick: position.LowerTick, ActualUpperTick: position.UpperTick}
+	}
+
 	lock, err := k.lk.GetLockByID(ctx, lockId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
@@ -59,8 +66,8 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, ow
 	if lock.Owner != position.Address {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, types.LockOwnerMismatchError{LockId: lockId, LockOwner: lock.Owner, ProvidedOwner: position.Address}
 	}
-	if lock.Owner != owner.String() {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, types.LockOwnerMismatchError{LockId: lockId, LockOwner: lock.Owner, ProvidedOwner: owner.String()}
+	if lock.Owner != sender.String() {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, types.LockOwnerMismatchError{LockId: lockId, LockOwner: lock.Owner, ProvidedOwner: sender.String()}
 	}
 	unbondingDuration := k.sk.UnbondingTime(ctx)
 	if lock.Duration != unbondingDuration || !lock.EndTime.IsZero() {
@@ -69,7 +76,7 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, ow
 
 	// Superfluid undelegate the superfluid delegated position.
 	// This deletes the connection between the lock and the intermediate account, deletes the synthetic lock, and burns the synthetic osmo.
-	intermediateAccount, err := k.SuperfluidUndelegateToConcentratedPosition(ctx, owner.String(), lockId)
+	intermediateAccount, err := k.SuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), lockId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
 	}
@@ -81,8 +88,8 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, ow
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
 	}
 
-	// Withdraw full position.
-	amount0Withdrawn, amount1Withdrawn, err := k.clk.WithdrawPosition(ctx, owner, positionId, position.Liquidity)
+	// Withdraw full liquidity from the position.
+	amount0Withdrawn, amount1Withdrawn, err := k.clk.WithdrawPosition(ctx, sender, positionId, position.Liquidity)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
 	}
@@ -97,18 +104,18 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, ow
 	}
 
 	// Create a coins object that includes the old position coins and the new position coins.
-	concentratedPool, err := k.clk.GetPoolFromPoolIdAndConvertToConcentrated(ctx, position.PoolId)
+	concentratedPool, err := k.clk.GetConcentratedPoolById(ctx, position.PoolId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
 	}
 	newPositionCoins := sdk.NewCoins(sdk.NewCoin(concentratedPool.GetToken0(), amount0Withdrawn.Add(amount0ToAdd)), sdk.NewCoin(concentratedPool.GetToken1(), amount1Withdrawn.Add(amount1ToAdd)))
 
 	// Create a full range (min to max tick) concentrated liquidity position, lock it, and superfluid delegate it.
-	newPositionId, actualAmount0, actualAmount1, newLiquidity, _, newLockId, err := k.clk.CreateFullRangePositionLocked(ctx, position.PoolId, owner, newPositionCoins, unbondingDuration)
+	newPositionId, actualNewAmount0, actualNewAmount1, newLiquidity, _, newLockId, err := k.clk.CreateFullRangePositionLocked(ctx, position.PoolId, sender, newPositionCoins, unbondingDuration)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
 	}
-	err = k.SuperfluidDelegate(ctx, owner.String(), newLockId, intermediateAccount.ValAddr)
+	err = k.SuperfluidDelegate(ctx, sender.String(), newLockId, intermediateAccount.ValAddr)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
 	}
@@ -117,17 +124,18 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, ow
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeySender, owner.String()),
+			sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
 		),
 		sdk.NewEvent(
 			types.TypeEvtAddToConcentratedLiquiditySuperfluidPosition,
-			sdk.NewAttribute(sdk.AttributeKeySender, owner.String()),
+			sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
 			sdk.NewAttribute(types.AttributePositionId, strconv.FormatUint(newPositionId, 10)),
-			sdk.NewAttribute(types.AttributeAmount0, actualAmount0.String()),
-			sdk.NewAttribute(types.AttributeAmount1, actualAmount1.String()),
+			sdk.NewAttribute(types.AttributeAmount0, actualNewAmount0.String()),
+			sdk.NewAttribute(types.AttributeAmount1, actualNewAmount1.String()),
 			sdk.NewAttribute(types.AttributeConcentratedLockId, strconv.FormatUint(newLockId, 10)),
+			sdk.NewAttribute(types.AttributeLiquidity, newLiquidity.String()),
 		),
 	})
 
-	return newPositionId, actualAmount0, actualAmount1, newLiquidity, newLockId, nil
+	return newPositionId, actualNewAmount0, actualNewAmount1, newLiquidity, newLockId, nil
 }

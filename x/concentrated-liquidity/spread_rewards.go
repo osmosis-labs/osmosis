@@ -32,20 +32,6 @@ func (k Keeper) GetFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.Accumul
 	return acc, nil
 }
 
-// chargeFee charges the given fee on the pool with the given id by updating
-// the internal per-pool accumulator that tracks fee growth per one unit of
-// liquidity. Returns error if fails to get accumulator.
-func (k Keeper) chargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin) error {
-	feeAccumulator, err := k.GetFeeAccumulator(ctx, poolId)
-	if err != nil {
-		return err
-	}
-
-	feeAccumulator.AddToAccumulator(sdk.NewDecCoins(feeUpdate))
-
-	return nil
-}
-
 // initOrUpdatePositionFeeAccumulator mutates the fee accumulator position by either creating or updating it
 // for the given pool id in the range specified by the given lower and upper ticks, position id and liquidityDelta.
 // If liquidityDelta is positive, it adds liquidity. If liquidityDelta is negative, it removes liquidity.
@@ -100,7 +86,7 @@ func (k Keeper) initOrUpdatePositionFeeAccumulator(ctx sdk.Context, poolId uint6
 		// At time t, we track fee growth inside from 0 to t.
 		// Then, the update happens at time t + 1. The call below makes the position's
 		// accumulator to be "fee growth inside from 0 to t + fee growth outside from 0 to t + 1".
-		err = preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
+		err = updatePositionToInitValuePlusGrowthOutside(feeAccumulator, positionKey, feeGrowthOutside)
 		if err != nil {
 			return err
 		}
@@ -122,13 +108,13 @@ func (k Keeper) initOrUpdatePositionFeeAccumulator(ctx sdk.Context, poolId uint6
 
 // getFeeGrowthOutside returns the sum of fee growth above the upper tick and fee growth below the lower tick
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
-// Currently, Tte call to GetTickInfo() may mutate state.
+// Currently, the call to GetTickInfo() may mutate state.
 func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
-	currentTick := pool.GetCurrentTick().Int64()
+	currentTick := pool.GetCurrentTick()
 
 	// get lower, upper tick info
 	lowerTickInfo, err := k.GetTickInfo(ctx, poolId, lowerTick)
@@ -164,7 +150,7 @@ func (k Keeper) getInitialFeeGrowthOppositeDirectionOfLastTraversalForTick(ctx s
 		return sdk.DecCoins{}, err
 	}
 
-	currentTick := pool.GetCurrentTick().Int64()
+	currentTick := pool.GetCurrentTick()
 	if currentTick >= tick {
 		feeAccumulator, err := k.GetFeeAccumulator(ctx, poolId)
 		if err != nil {
@@ -205,7 +191,7 @@ func (k Keeper) collectFees(ctx sdk.Context, sender sdk.AccAddress, positionId u
 	if err != nil {
 		return sdk.Coins{}, err
 	}
-	if err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), sender, feesClaimed); err != nil {
+	if err := k.bankKeeper.SendCoins(ctx, pool.GetFeesAddress(), sender, feesClaimed); err != nil {
 		return sdk.Coins{}, err
 	}
 
@@ -237,7 +223,9 @@ func (k Keeper) GetClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins,
 // prepareClaimableFees returns the amount of fees that a position is eligible to claim.
 // Note that it mutates the internal state of the fee accumulator by setting the position's
 // unclaimed rewards to zero and update the position's accumulator value to reflect the
-// current pool fee accumulator value.
+// current pool fee accumulator value. If there is any dust left over, it is added back to the
+// global accumulator as long as there are shares remaining in the accumulator. If not, the dust
+// is ignored.
 //
 // Returns error if:
 // - pool with the given id does not exist
@@ -275,9 +263,31 @@ func (k Keeper) prepareClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Co
 	}
 
 	// Claim rewards, set the unclaimed rewards to zero, and update the position's accumulator value to reflect the current accumulator value.
-	feesClaimed, _, err := prepareAccumAndClaimRewards(feeAccumulator, positionKey, feeGrowthOutside)
+	feesClaimed, forfeitedDust, err := updateAccumAndClaimRewards(feeAccumulator, positionKey, feeGrowthOutside)
 	if err != nil {
 		return nil, err
+	}
+
+	// add foreited dust back to the global accumulator
+	if !forfeitedDust.IsZero() {
+		// Refetch the fee accumulator as the number of shares has changed after claiming.
+		feeAccumulator, err := k.GetFeeAccumulator(ctx, position.PoolId)
+		if err != nil {
+			return nil, err
+		}
+
+		totalSharesRemaining, err := feeAccumulator.GetTotalShares()
+		if err != nil {
+			return nil, err
+		}
+
+		// if there are no shares remaining, the dust is ignored. Otherwise, it is added back to the global accumulator.
+		// Total shares remaining can be zero if we claim in withdrawPosition for the last position in the pool.
+		// The shares are decremented in osmoutils/accum.ClaimRewards.
+		if !totalSharesRemaining.IsZero() {
+			forfeitedDustPerShare := forfeitedDust.QuoDecTruncate(totalSharesRemaining)
+			feeAccumulator.AddToAccumulator(forfeitedDustPerShare)
+		}
 	}
 
 	return feesClaimed, nil
@@ -295,12 +305,11 @@ func calculateFeeGrowth(targetTick int64, ticksFeeGrowthOppositeDirectionOfLastT
 	return ticksFeeGrowthOppositeDirectionOfLastTraversal
 }
 
-// preparePositionAccumulator is called prior to updating unclaimed rewards,
+// updatePositionToInitValuePlusGrowthOutside is called prior to updating unclaimed rewards,
 // as we must set the position's accumulator value to the sum of
 // - the fee/uptime growth inside at position creation time (position.InitAccumValue)
 // - fee/uptime growth outside at the current block time (feeGrowthOutside/uptimeGrowthOutside)
-// CONTRACT: position accumulator value prior to this call is equal to the growth inside the position at the time of last update.
-func preparePositionAccumulator(accumulator accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) error {
+func updatePositionToInitValuePlusGrowthOutside(accumulator accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) error {
 	position, err := accum.GetPosition(accumulator, positionKey)
 	if err != nil {
 		return err

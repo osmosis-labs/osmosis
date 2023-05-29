@@ -160,7 +160,7 @@ func (q Querier) CalcJoinPoolShares(ctx context.Context, req *types.QueryCalcJoi
 		return nil, err
 	}
 
-	numShares, newLiquidity, err := pool.CalcJoinPoolShares(sdkCtx, req.TokensIn, pool.GetSwapFee(sdkCtx))
+	numShares, newLiquidity, err := pool.CalcJoinPoolShares(sdkCtx, req.TokensIn, pool.GetSpreadFactor(sdkCtx))
 	if err != nil {
 		return nil, err
 	}
@@ -276,7 +276,7 @@ func (q Querier) CalcJoinPoolNoSwapShares(ctx context.Context, req *types.QueryC
 		return nil, err
 	}
 
-	sharesOut, tokensJoined, err := pool.CalcJoinPoolNoSwapShares(sdkCtx, req.TokensIn, pool.GetSwapFee(sdkCtx))
+	sharesOut, tokensJoined, err := pool.CalcJoinPoolNoSwapShares(sdkCtx, req.TokensIn, pool.GetSpreadFactor(sdkCtx))
 	if err != nil {
 		return nil, err
 	}
