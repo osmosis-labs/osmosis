@@ -96,10 +96,15 @@ func NewFungifyChargedPositionsCmd() (*osmocli.TxCliDesc, *types.MsgFungifyCharg
 // NewCmdCreateConcentratedLiquidityPoolsProposal implements a command handler for create concentrated liquidity pool proposal
 func NewCmdCreateConcentratedLiquidityPoolsProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-concentratedliquidity-pool-proposal [denom0] [denom1] [tick-spacing] [spread-factor] [flags]",
-		Args:  cobra.ExactArgs(4),
+		Use:   "create-concentratedliquidity-pool-proposal [flags]",
+		Args:  cobra.ExactArgs(0),
 		Short: "Submit a create concentrated liquidity pool proposal",
 		Long: strings.TrimSpace(`Submit a create concentrated liquidity pool proposal.
+
+Passing in FlagPoolRecords separated by commas would be parsed automatically to pairs of pool records.
+Ex) --pool-records=uion,uosmo,100,-6,0.003,stake,uosmo,1000,-6,0.005 ->
+[uion<>uosmo, tickSpacing 100, exponentAtPriceOne -6, spreadFactor 0.3%]
+[stake<>uosmo, tickSpacing 1000, exponentAtPriceOne -6, spreadFactor 0.5%]
 
 		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -108,17 +113,7 @@ func NewCmdCreateConcentratedLiquidityPoolsProposal() *cobra.Command {
 				return err
 			}
 
-			tickSpacing, err := strconv.ParseUint(args[2], 10, 64)
-			if err != nil {
-				return err
-			}
-
-			spreadFactor, err := sdk.NewDecFromStr(args[3])
-			if err != nil {
-				return err
-			}
-
-			content, err := parseCreateConcentratedLiquidityPoolArgsToContent(cmd, args[0], args[1], tickSpacing, spreadFactor)
+			content, err := parseCreateConcentratedLiquidityPoolArgsToContent(cmd)
 			if err != nil {
 				return err
 			}
@@ -212,7 +207,7 @@ Note: The new tick spacing value must be less than the current tick spacing valu
 	return cmd
 }
 
-func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command, denom0, denom1 string, tickSpacing uint64, spreadFactor sdk.Dec) (govtypes.Content, error) {
+func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command) (govtypes.Content, error) {
 	title, err := cmd.Flags().GetString(govcli.FlagTitle)
 	if err != nil {
 		return nil, err

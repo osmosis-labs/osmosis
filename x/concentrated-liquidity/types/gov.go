@@ -55,7 +55,6 @@ func (p *CreateConcentratedLiquidityPoolsProposal) ValidateBasic() error {
 	}
 
 	for _, record := range p.PoolRecords {
-
 		if record.TickSpacing <= 0 {
 			return fmt.Errorf("tick spacing must be positive")
 		}
@@ -77,7 +76,6 @@ func (p *CreateConcentratedLiquidityPoolsProposal) ValidateBasic() error {
 			return InvalidSpreadFactorError{ActualSpreadFactor: spreadFactor}
 		}
 	}
-
 	return nil
 }
 
@@ -128,7 +126,6 @@ func (p *TickSpacingDecreaseProposal) ValidateBasic() error {
 	if len(p.PoolIdToTickSpacingRecords) == 0 {
 		return fmt.Errorf("empty proposal records")
 	}
-
 	return nil
 }
 
