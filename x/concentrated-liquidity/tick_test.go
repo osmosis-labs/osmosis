@@ -415,7 +415,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 
 			if test.preInitUptimeAccumValues != nil {
-				err := s.addToUptimeAccums(s.Ctx, clPool.GetId(), clKeeper, test.preInitUptimeAccumValues)
+				err := addToUptimeAccums(s.Ctx, clPool.GetId(), clKeeper, test.preInitUptimeAccumValues)
 				s.Require().NoError(err)
 			}
 
@@ -584,7 +584,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 
 			// Initialize global uptime accums
 			if test.initGlobalUptimeAccumValues != nil {
-				err := s.addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.initGlobalUptimeAccumValues)
+				err := addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.initGlobalUptimeAccumValues)
 				s.Require().NoError(err)
 			}
 
@@ -594,7 +594,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 
 			// Update global uptime accums for edge case testing
 			if test.globalUptimeAccumDelta != nil {
-				err = s.addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.globalUptimeAccumDelta)
+				err = addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.globalUptimeAccumDelta)
 				s.Require().NoError(err)
 			}
 

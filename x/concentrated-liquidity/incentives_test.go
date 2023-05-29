@@ -135,8 +135,8 @@ type ExpectedUptimes struct {
 }
 
 // getExpectedUptimes returns a base set of expected values for testing based on the number
-// of authorized uptimes at runtime. This abstraction exists only to ensure backwards-compatibility
-// of incentives-related tests across different authorized uptimes (and, by extension, different supported uptimes as well).
+// of supported uptimes at runtime. This abstraction exists only to ensure backwards-compatibility
+// of incentives-related tests if the supported uptimes are ever changed.
 func getExpectedUptimes() ExpectedUptimes {
 	expUptimes := ExpectedUptimes{
 		emptyExpectedAccumValues:     []sdk.DecCoins{},
@@ -183,25 +183,17 @@ func expectedIncentivesFromRate(denom string, rate sdk.Dec, timeElapsed time.Dur
 }
 
 // expectedIncentivesFromUptimeGrowth calculates the amount of incentives we expect to accrue based on uptime accumulator growth.
-// It only factors in accumulators corresponding to authorized uptimes
 //
 // Assumes `uptimeGrowths` represents the growths for all global uptime accums and only counts growth that `timeInPool` qualifies for
 // towards result. Takes in a multiplier parameter for further versatility in testing.
 //
 // Returns value as truncated sdk.Coins as the primary use of this helper is testing higher level incentives functions such as claiming.
-func (s *KeeperTestSuite) expectedIncentivesFromUptimeGrowth(uptimeGrowths []sdk.DecCoins, positionShares sdk.Dec, timeInPool time.Duration, multiplier sdk.Int) sdk.Coins {
-	// Uptime growths should only be intended for authorized uptimes
-	authorizedUptimes := s.clParams.AuthorizedUptimes
-	s.Require().Equal(len(uptimeGrowths), len(authorizedUptimes))
-
+func expectedIncentivesFromUptimeGrowth(uptimeGrowths []sdk.DecCoins, positionShares sdk.Dec, timeInPool time.Duration, multiplier sdk.Int) sdk.Coins {
 	// Sum up rewards from all inputs
 	totalRewards := sdk.Coins(nil)
-	for authorizedUptimeIndex, authorizedUptime := range authorizedUptimes {
-		// Find the index of the supported uptime corresponding to the current authorized uptime
-		supportedUptimeIndex, err := cl.FindUptimeIndex(authorizedUptime)
-		s.Require().NoError(err)
-		if timeInPool >= types.SupportedUptimes[supportedUptimeIndex] {
-			curRewards := uptimeGrowths[authorizedUptimeIndex].MulDecTruncate(positionShares).MulDecTruncate(multiplier.ToDec())
+	for uptimeIndex, uptimeGrowth := range uptimeGrowths {
+		if timeInPool >= types.SupportedUptimes[uptimeIndex] {
+			curRewards := uptimeGrowth.MulDecTruncate(positionShares).MulDecTruncate(multiplier.ToDec())
 			totalRewards = totalRewards.Add(sdk.NormalizeCoins(curRewards)...)
 		}
 	}
@@ -219,24 +211,14 @@ func chargeIncentiveRecord(incentiveRecord types.IncentiveRecord, timeElapsed ti
 }
 
 // Helper for adding a predetermined amount to each global uptime accum in clPool
-func (s *KeeperTestSuite) addToUptimeAccums(ctx sdk.Context, poolId uint64, clKeeper *cl.Keeper, addValues []sdk.DecCoins) error {
-	// Should only be able to add to authorized uptime accumulators
-	authorizedUptimes := s.clParams.AuthorizedUptimes
-	s.Require().Equal(len(addValues), len(authorizedUptimes))
-
-	// Get all supported uptime accumulators for pool
-	supportedUptimeAccumulators, err := clKeeper.GetUptimeAccumulators(ctx, poolId)
+func addToUptimeAccums(ctx sdk.Context, poolId uint64, clKeeper *cl.Keeper, addValues []sdk.DecCoins) error {
+	poolUptimeAccumulators, err := clKeeper.GetUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return err
 	}
 
-	// Add each value to the corresponding authorized uptime accumulator.
-	// e.g. The first value in addValues should be added to the first authorized uptime accumulator, etc.
-	for authorizedUptimeIndex, authorizedUptime := range authorizedUptimes {
-		supportedUptimeIndex, err := cl.FindUptimeIndex(authorizedUptime)
-		s.Require().NoError(err)
-
-		supportedUptimeAccumulators[supportedUptimeIndex].AddToAccumulator(addValues[authorizedUptimeIndex])
+	for uptimeIndex, uptimeAccum := range poolUptimeAccumulators {
+		uptimeAccum.AddToAccumulator(addValues[uptimeIndex])
 	}
 
 	return nil
@@ -400,8 +382,7 @@ func (s *KeeperTestSuite) TestGetUptimeAccumulatorName() {
 // Note that this is independent of authorized uptimes as the functions in question deal with all the active accumulators on the pool.
 func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulatorValues() {
 	// We expect there to be len(types.SupportedUptimes) number of initialized accumulators
-	// for a successful pool creation. Since all supported uptimes are authorized by default,
-	// `getExpectedUptimes` satisfies this requirement.
+	// for a successful pool creation.
 	//
 	// We re-calculate these values each time to ensure test compatibility if the uptimes
 	// we support ever change.
@@ -1525,7 +1506,7 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthRange() {
 			currentTick := pool.GetCurrentTick()
 
 			// Update global uptime accums
-			err := s.addToUptimeAccums(s.Ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.globalUptimeGrowth)
+			err := addToUptimeAccums(s.Ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.globalUptimeGrowth)
 			s.Require().NoError(err)
 
 			// Update tick-level uptime trackers
@@ -1731,7 +1712,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 			s.Require().NoError(err)
 
 			// Initialize global uptime accums
-			err = s.addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.globalUptimeAccumValues)
+			err = addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.globalUptimeAccumValues)
 			s.Require().NoError(err)
 
 			// If applicable, set up existing position and update ticks & global accums
@@ -1747,7 +1728,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 				err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, clPool)
 				s.Require().NoError(err)
 
-				err = s.addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.addToGlobalAccums)
+				err = addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.addToGlobalAccums)
 				s.Require().NoError(err)
 			}
 
@@ -1872,8 +1853,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			timeInPosition:          oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
-			expectedIncentivesClaimed:   s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
-			expectedForfeitedIncentives: s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"(lower < curr < upper) uptime growth both inside and outside range, 1D time in position": {
 			currentTick:              1,
@@ -1884,8 +1865,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			timeInPosition:           oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
-			expectedIncentivesClaimed:   s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
-			expectedForfeitedIncentives: s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"(lower < curr < upper) no uptime growth inside or outside range, 1W time in position": {
 			currentTick:                 1,
@@ -1913,7 +1894,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			timeInPosition:          oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
-			expectedIncentivesClaimed:   s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < curr < upper) uptime growth both inside and outside range, 1W time in position": {
@@ -1925,7 +1906,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			timeInPosition:           oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
-			expectedIncentivesClaimed:   s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < curr < upper) no uptime growth inside or outside range, no time in position": {
@@ -1952,7 +1933,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			numPositions:                1,
 			timeInPosition:              0,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
-			expectedForfeitedIncentives: s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 		},
 		"(lower < curr < upper) uptime growth both inside and outside range, no time in position": {
 			currentTick:                 1,
@@ -1962,7 +1943,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			numPositions:                1,
 			timeInPosition:              0,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
-			expectedForfeitedIncentives: s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 		},
 
 		// ---Cases for currentTick < lowerTick < upperTick---
@@ -1993,8 +1974,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			timeInPosition:          oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
-			expectedIncentivesClaimed:   s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
-			expectedForfeitedIncentives: s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"(curr < lower < upper) uptime growth both inside and outside range, 1D time in position": {
 			currentTick:              0,
@@ -2005,8 +1986,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			timeInPosition:           oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
-			expectedIncentivesClaimed:   s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
-			expectedForfeitedIncentives: s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"(curr < lower < upper) no uptime growth inside or outside range, 1W time in position": {
 			currentTick:                 0,
@@ -2034,7 +2015,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			timeInPosition:          oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
-			expectedIncentivesClaimed:   s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(curr < lower < upper) uptime growth both inside and outside range, 1W time in position": {
@@ -2046,7 +2027,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			timeInPosition:           oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
-			expectedIncentivesClaimed:   s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(curr < lower < upper) no uptime growth inside or outside range, no time in position": {
@@ -2073,7 +2054,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			numPositions:                1,
 			timeInPosition:              0,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
-			expectedForfeitedIncentives: s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 		},
 		"(curr < lower < upper) uptime growth both inside and outside range, no time in position": {
 			currentTick:                 0,
@@ -2083,7 +2064,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			numPositions:                1,
 			timeInPosition:              0,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
-			expectedForfeitedIncentives: s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 		},
 
 		// ---Cases for lowerTick < upperTick < currentTick---
@@ -2114,8 +2095,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			timeInPosition:          oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
-			expectedIncentivesClaimed:   s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
-			expectedForfeitedIncentives: s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"(lower < upper < curr) uptime growth both inside and outside range, 1D time in position": {
 			currentTick:              3,
@@ -2126,8 +2107,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			timeInPosition:           oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
-			expectedIncentivesClaimed:   s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
-			expectedForfeitedIncentives: s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"(lower < upper < curr) no uptime growth inside or outside range, 1W time in position": {
 			currentTick:                 3,
@@ -2155,7 +2136,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			timeInPosition:          oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
-			expectedIncentivesClaimed:   s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < upper < curr) uptime growth both inside and outside range, 1W time in position": {
@@ -2167,7 +2148,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			timeInPosition:           oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
-			expectedIncentivesClaimed:   s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 			expectedForfeitedIncentives: sdk.Coins(nil),
 		},
 		"(lower < upper < curr) no uptime growth inside or outside range, no time in position": {
@@ -2194,7 +2175,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			numPositions:                1,
 			timeInPosition:              0,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
-			expectedForfeitedIncentives: s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 		},
 		"(lower < upper < curr) uptime growth both inside and outside range, no time in position": {
 			currentTick:                 3,
@@ -2204,7 +2185,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			numPositions:                1,
 			timeInPosition:              0,
 			expectedIncentivesClaimed:   sdk.Coins(nil),
-			expectedForfeitedIncentives: s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier),
 		},
 
 		// Edge case tests
@@ -2217,8 +2198,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			numPositions:             1,
 			timeInPosition:           oneDay,
 			// We expect this case to behave like (lower < curr < upper)
-			expectedIncentivesClaimed:   s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
-			expectedForfeitedIncentives: s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"(curr = upper) uptime growth both inside and outside range, 1D time in position": {
 			currentTick:              2,
@@ -2228,8 +2209,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			numPositions:             1,
 			timeInPosition:           oneDay,
 			// We expect this case to behave like (lower < upper < curr)
-			expectedIncentivesClaimed:   s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
-			expectedForfeitedIncentives: s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"other liquidity on uptime accums: (lower < curr < upper) uptime growth both inside and outside range, 1D time in position": {
 			currentTick: 1,
@@ -2247,8 +2228,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			timeInPosition:           oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
-			expectedIncentivesClaimed:   s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
-			expectedForfeitedIncentives: s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 		"multiple positions in same range: (lower < curr < upper) uptime growth both inside and outside range, 1D time in position": {
 			currentTick: 1,
@@ -2266,8 +2247,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			timeInPosition:           oneDay,
 			// Since we introduced positionIDs, despite these position having the same range and pool, only
 			// the position ID being claimed will be considered for the claim.
-			expectedIncentivesClaimed:   s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
-			expectedForfeitedIncentives: s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(s.expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
+			expectedIncentivesClaimed:   expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+			expectedForfeitedIncentives: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeek, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier)),
 		},
 
 		// Error catching
@@ -2856,10 +2837,10 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			initSenderBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, defaultSender)
 			initPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetAddress())
 
-			largestAuthorizedUptime := s.clk.GetLargestAuthorizedUptimeDuration(s.Ctx)
+			largestSupportedUptime := s.clk.GetLargestSupportedUptimeDuration(s.Ctx)
 			if !tc.forfeitIncentives {
 				// Let enough time elapse for the position to accrue rewards for all supported uptimes.
-				s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(largestAuthorizedUptime))
+				s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(largestSupportedUptime))
 			}
 
 			// --- System under test ---
@@ -2954,8 +2935,9 @@ func (s *KeeperTestSuite) TestFunctional_ClaimIncentives_LiquidityChange_Varying
 	requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1))
 
 	// Set test authorized uptime params.
-	s.clParams.AuthorizedUptimes = []time.Duration{time.Nanosecond, testFullChargeDuration}
-	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, s.clParams)
+	clParams := s.clk.GetParams(s.Ctx)
+	clParams.AuthorizedUptimes = []time.Duration{time.Nanosecond, testFullChargeDuration}
+	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
 
 	// Fund accounts twice because two positions are created.
 	s.FundAcc(defaultAddress, requiredBalances.Add(requiredBalances...))
@@ -3615,7 +3597,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 					s.FundAcc(clPool.GetIncentivesAddress(), normalizedEmissions)
 				}
 			}
-			err := s.addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.uptimeGrowth)
+			err := addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.uptimeGrowth)
 			s.Require().NoError(err)
 
 			// --- System under test ---
@@ -3708,10 +3690,10 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			s.Require().NoError(err)
 
 			// Since balancer position bonding is a stronger constraint than CL charging, we never need to forfeit incentives
-			largestAuthorizedUptime := s.clk.GetLargestAuthorizedUptimeDuration(s.Ctx)
+			largestSupportedUptime := s.clk.GetLargestSupportedUptimeDuration(s.Ctx)
 
 			// Calculate the number of tokens we expect to see in the balancer gauge
-			expectedTokensInGauge := s.expectedIncentivesFromUptimeGrowth(tc.uptimeGrowth, addedLiquidity, largestAuthorizedUptime, defaultMultiplier)
+			expectedTokensInGauge := expectedIncentivesFromUptimeGrowth(tc.uptimeGrowth, addedLiquidity, largestSupportedUptime, defaultMultiplier)
 
 			// Ensure gauge coins and amountClaimed are correct
 			s.Require().Equal(expectedTokensInGauge, gauge.Coins)
@@ -3752,8 +3734,9 @@ func (s *KeeperTestSuite) TestGetLargestAuthorizedUptime() {
 		s.Run(name, func() {
 			s.SetupTest()
 
-			s.clParams.AuthorizedUptimes = tc.preSetAuthorizedParams
-			s.clk.SetParams(s.Ctx, s.clParams)
+			clParams := s.clk.GetParams(s.Ctx)
+			clParams.AuthorizedUptimes = tc.preSetAuthorizedParams
+			s.clk.SetParams(s.Ctx, clParams)
 
 			actual := s.clk.GetLargestAuthorizedUptimeDuration(s.Ctx)
 
