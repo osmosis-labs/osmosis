@@ -7,14 +7,12 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
-func (suite *StrategyTestSuite) TestGetSqrtTargetPrice_ZeroForOne() {
-	var (
-		two   = sdk.NewDec(2)
-		three = sdk.NewDec(2)
-		four  = sdk.NewDec(4)
-		five  = sdk.NewDec(5)
-	)
+func (suite *StrategyTestSuite) setupNewZeroForOneSwapStrategy(sqrtPriceLimit sdk.Dec, spread sdk.Dec) swapstrategy.SwapStrategy {
+	suite.SetupTest()
+	return swapstrategy.New(true, sqrtPriceLimit, suite.App.GetKey(types.ModuleName), spread, defaultTickSpacing)
+}
 
+func (suite *StrategyTestSuite) TestGetSqrtTargetPrice_ZeroForOne() {
 	tests := map[string]struct {
 		isZeroForOne      bool
 		sqrtPriceLimit    sdk.Dec
@@ -41,12 +39,8 @@ func (suite *StrategyTestSuite) TestGetSqrtTargetPrice_ZeroForOne() {
 	for name, tc := range tests {
 		tc := tc
 		suite.Run(name, func() {
-			suite.SetupTest()
-
-			sut := swapstrategy.New(true, tc.sqrtPriceLimit, suite.App.GetKey(types.ModuleName), sdk.ZeroDec(), defaultTickSpacing)
-
+			sut := suite.setupNewZeroForOneSwapStrategy(tc.sqrtPriceLimit, zero)
 			actualSqrtTargetPrice := sut.GetSqrtTargetPrice(tc.nextTickSqrtPrice)
-
 			suite.Require().Equal(tc.expectedResult, actualSqrtTargetPrice)
 		})
 	}
@@ -56,6 +50,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 	var (
 		sqrtPriceCurrent = defaultSqrtPriceUpper
 		sqrtPriceNext    = defaultSqrtPriceLower
+		sqrtPriceTarget  = sqrtPriceNext
 
 		// liquidity * sqrtPriceCurrent / (liquidity + amount in * sqrtPriceCurrent)
 		sqrtPriceTargetNotReached = sdk.MustNewDecFromStr("70.688828764403676330")
@@ -63,12 +58,10 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 		amountOneTargetNotReached = sdk.MustNewDecFromStr("66329498.080160866932624794")
 	)
 
+	// sqrtPriceCurrent, sqrtPriceTarget, liquidity are all set to defaults defined above.
 	tests := map[string]struct {
-		sqrtPriceCurrent      sdk.Dec
-		sqrtPriceTarget       sdk.Dec
-		liquidity             sdk.Dec
 		amountZeroInRemaining sdk.Dec
-		swapFee               sdk.Dec
+		spreadFactor          sdk.Dec
 
 		expectedSqrtPriceNext  sdk.Dec
 		amountZeroInConsumed   sdk.Dec
@@ -78,12 +71,9 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 		expectError error
 	}{
 		"1: no fee - reach target": {
-			sqrtPriceCurrent: sqrtPriceCurrent,
-			sqrtPriceTarget:  sqrtPriceNext,
-			liquidity:        defaultLiquidity,
 			// add 100 more
 			amountZeroInRemaining: defaultAmountZero.Add(sdk.NewDec(100)),
-			swapFee:               sdk.ZeroDec(),
+			spreadFactor:          sdk.ZeroDec(),
 
 			expectedSqrtPriceNext: sqrtPriceNext,
 			// consumed without 100 since reached target.
@@ -93,11 +83,8 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 			expectedFeeChargeTotal: sdk.ZeroDec(),
 		},
 		"2: no fee - do not reach target": {
-			sqrtPriceCurrent:      sqrtPriceCurrent,
-			sqrtPriceTarget:       sqrtPriceNext,
-			liquidity:             defaultLiquidity,
 			amountZeroInRemaining: defaultAmountZero.Sub(sdk.NewDec(100)),
-			swapFee:               sdk.ZeroDec(),
+			spreadFactor:          sdk.ZeroDec(),
 
 			expectedSqrtPriceNext: sqrtPriceTargetNotReached,
 			amountZeroInConsumed:  defaultAmountZero.Sub(sdk.NewDec(100)).Ceil(),
@@ -106,42 +93,33 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 			expectedFeeChargeTotal: sdk.ZeroDec(),
 		},
 		"3: 3% fee - reach target": {
-			sqrtPriceCurrent: sqrtPriceCurrent,
-			sqrtPriceTarget:  sqrtPriceNext,
-			liquidity:        defaultLiquidity,
 			// add 100 more
-			amountZeroInRemaining: defaultAmountZero.Add(sdk.NewDec(100)).Quo(sdk.OneDec().Sub(defaultFee)),
-			swapFee:               defaultFee,
+			amountZeroInRemaining: defaultAmountZero.Add(sdk.NewDec(100)).Quo(one.Sub(defaultFee)),
+			spreadFactor:          defaultFee,
 
 			expectedSqrtPriceNext: sqrtPriceNext,
 			// Consumes without 100 since reached target and fee is applied.
 			amountZeroInConsumed: defaultAmountZero.Ceil(),
 			// liquidity * (sqrtPriceNext - sqrtPriceCurrent)
 			expectedAmountOneOut:   defaultAmountOne,
-			expectedFeeChargeTotal: defaultAmountZero.Ceil().Quo(sdk.OneDec().Sub(defaultFee)).Mul(defaultFee),
+			expectedFeeChargeTotal: defaultAmountZero.Ceil().Quo(one.Sub(defaultFee)).Mul(defaultFee),
 		},
 		"4: 3% fee - do not reach target": {
-			sqrtPriceCurrent:      sqrtPriceCurrent,
-			sqrtPriceTarget:       sqrtPriceNext,
-			liquidity:             defaultLiquidity,
-			amountZeroInRemaining: defaultAmountZero.Sub(sdk.NewDec(100)).Quo(sdk.OneDec().Sub(defaultFee)),
-			swapFee:               defaultFee,
+			amountZeroInRemaining: defaultAmountZero.Sub(sdk.NewDec(100)).Quo(one.Sub(defaultFee)),
+			spreadFactor:          defaultFee,
 
 			expectedSqrtPriceNext: sqrtPriceTargetNotReached,
 			amountZeroInConsumed:  defaultAmountZero.Sub(sdk.NewDec(100)).Ceil(),
 			expectedAmountOneOut:  amountOneTargetNotReached,
 			// Difference between amount in given and actually consumed.
-			expectedFeeChargeTotal: defaultAmountZero.Sub(sdk.NewDec(100)).Quo(sdk.OneDec().Sub(defaultFee)).Sub(defaultAmountZero.Sub(sdk.NewDec(100)).Ceil()),
+			expectedFeeChargeTotal: defaultAmountZero.Sub(sdk.NewDec(100)).Quo(one.Sub(defaultFee)).Sub(defaultAmountZero.Sub(sdk.NewDec(100)).Ceil()),
 		},
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		suite.Run(name, func() {
-			suite.SetupTest()
-			strategy := swapstrategy.New(true, types.MaxSqrtPrice, suite.App.GetKey(types.ModuleName), tc.swapFee, defaultTickSpacing)
-
-			sqrtPriceNext, amountZeroIn, amountOneOut, feeChargeTotal := strategy.ComputeSwapStepOutGivenIn(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, tc.amountZeroInRemaining)
+			strategy := suite.setupNewZeroForOneSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
+			sqrtPriceNext, amountZeroIn, amountOneOut, feeChargeTotal := strategy.ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget, defaultLiquidity, tc.amountZeroInRemaining)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
 			suite.Require().Equal(tc.amountZeroInConsumed, amountZeroIn)
@@ -155,6 +133,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 	var (
 		sqrtPriceCurrent = defaultSqrtPriceUpper
 		sqrtPriceNext    = defaultSqrtPriceLower
+		sqrtPriceTarget  = sqrtPriceNext
 
 		// sqrt_cur - amt_one / liq quo round up
 		sqrtPriceTargetNotReached = sdk.MustNewDecFromStr("70.688667457471792243")
@@ -167,12 +146,10 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 		amountOneOutTargetNotReached = sdk.MustNewDecFromStr("66819187.967824033372217995")
 	)
 
+	// sqrtPriceCurrent, sqrtPriceTarget, liquidity are all set to defaults defined above.
 	tests := map[string]struct {
-		sqrtPriceCurrent      sdk.Dec
-		sqrtPriceTarget       sdk.Dec
-		liquidity             sdk.Dec
 		amountOneOutRemaining sdk.Dec
-		swapFee               sdk.Dec
+		spreadFactor          sdk.Dec
 
 		expectedSqrtPriceNext  sdk.Dec
 		amountOneOutConsumed   sdk.Dec
@@ -182,40 +159,31 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 		expectError error
 	}{
 		"1: no fee - reach target": {
-			sqrtPriceCurrent: sqrtPriceCurrent,
-			sqrtPriceTarget:  sqrtPriceNext,
-			liquidity:        defaultLiquidity,
 			// Add 100.
 			amountOneOutRemaining: defaultAmountOne.Add(sdk.NewDec(100)),
-			swapFee:               sdk.ZeroDec(),
+			spreadFactor:          zero,
 
 			expectedSqrtPriceNext: sqrtPriceNext,
 			// Consumes without 100 since reaches target.
 			amountOneOutConsumed:   defaultAmountOne,
 			expectedAmountInZero:   defaultAmountZero.Ceil(),
-			expectedFeeChargeTotal: sdk.ZeroDec(),
+			expectedFeeChargeTotal: zero,
 		},
 		"2: no fee - do not reach target": {
-			sqrtPriceCurrent:      sqrtPriceCurrent,
-			sqrtPriceTarget:       sqrtPriceNext,
-			liquidity:             defaultLiquidity,
 			amountOneOutRemaining: defaultAmountOne.Sub(sdk.NewDec(10000)),
-			swapFee:               sdk.ZeroDec(),
+			spreadFactor:          zero,
 
 			// sqrt_cur - amt_one / liq quo round up
 			expectedSqrtPriceNext: sqrtPriceTargetNotReached,
 			// subtracting 1 * smallest dec to account for truncations in favor of the pool.
 			amountOneOutConsumed:   amountOneOutTargetNotReached.Sub(sdk.SmallestDec()),
 			expectedAmountInZero:   amountZeroTargetNotReached.Ceil(),
-			expectedFeeChargeTotal: sdk.ZeroDec(),
+			expectedFeeChargeTotal: zero,
 		},
 		"3: 3% fee - reach target": {
-			sqrtPriceCurrent: sqrtPriceCurrent,
-			sqrtPriceTarget:  sqrtPriceNext,
-			liquidity:        defaultLiquidity,
 			// Add 100.
-			amountOneOutRemaining: defaultAmountOne.Quo(sdk.OneDec().Sub(defaultFee)),
-			swapFee:               defaultFee,
+			amountOneOutRemaining: defaultAmountOne.Quo(one.Sub(defaultFee)),
+			spreadFactor:          defaultFee,
 
 			expectedSqrtPriceNext: sqrtPriceNext,
 			// Consumes without 100 since reaches target.
@@ -225,11 +193,8 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 			expectedFeeChargeTotal: swapstrategy.ComputeFeeChargeFromAmountIn(defaultAmountZero.Ceil(), defaultFee),
 		},
 		"4: 3% fee - do not reach target": {
-			sqrtPriceCurrent:      sqrtPriceCurrent,
-			sqrtPriceTarget:       sqrtPriceNext,
-			liquidity:             defaultLiquidity,
 			amountOneOutRemaining: defaultAmountOne.Sub(sdk.NewDec(10000)),
-			swapFee:               defaultFee,
+			spreadFactor:          defaultFee,
 
 			expectedSqrtPriceNext: sqrtPriceTargetNotReached,
 			// subtracting 1 * smallest dec to account for truncations in favor of the pool.
@@ -240,17 +205,74 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		suite.Run(name, func() {
-			suite.SetupTest()
-			strategy := swapstrategy.New(true, types.MaxSqrtPrice, suite.App.GetKey(types.ModuleName), tc.swapFee, defaultTickSpacing)
-
-			sqrtPriceNext, amountOneOut, amountZeroIn, feeChargeTotal := strategy.ComputeSwapStepInGivenOut(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, tc.amountOneOutRemaining)
+			strategy := suite.setupNewZeroForOneSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
+			sqrtPriceNext, amountOneOut, amountZeroIn, feeChargeTotal := strategy.ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, defaultLiquidity, tc.amountOneOutRemaining)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
 			suite.Require().Equal(tc.amountOneOutConsumed, amountOneOut)
 			suite.Require().Equal(tc.expectedAmountInZero, amountZeroIn)
 			suite.Require().Equal(tc.expectedFeeChargeTotal.String(), feeChargeTotal.String())
+		})
+	}
+}
+
+func (suite *StrategyTestSuite) TestInitializeNextTickIterator_ZeroForOne() {
+	tests := map[string]tickIteratorTest{
+		"1 position, zero for one": {
+			preSetPositions: []position{
+				{
+					lowerTick: -100,
+					upperTick: 100,
+				},
+			},
+			expectIsValid:  true,
+			expectNextTick: -100,
+		},
+		"2 positions, zero for one": {
+			preSetPositions: []position{
+				{
+					lowerTick: -400,
+					upperTick: 300,
+				},
+				{
+					lowerTick: -200,
+					upperTick: 200,
+				},
+			},
+			expectIsValid:  true,
+			expectNextTick: -200,
+		},
+		"lower tick lands on current tick, zero for one": {
+			preSetPositions: []position{
+				{
+					lowerTick: 0,
+					upperTick: 100,
+				},
+			},
+			expectIsValid:  true,
+			expectNextTick: 0,
+		},
+		"upper tick lands on current tick, zero for one": {
+			preSetPositions: []position{
+				{
+					lowerTick: -100,
+					upperTick: 0,
+				},
+			},
+			expectIsValid:  true,
+			expectNextTick: 0,
+		},
+		"no ticks, zero for one": {
+			expectIsValid: false,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			strategy := suite.setupNewZeroForOneSwapStrategy(types.MaxSqrtPrice, zero)
+			suite.runTickIteratorTest(strategy, tc)
 		})
 	}
 }

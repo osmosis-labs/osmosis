@@ -54,7 +54,7 @@ type PoolModuleI interface {
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		tokenOutMinAmount sdk.Int,
-		swapFee sdk.Dec,
+		spreadFactor sdk.Dec,
 	) (sdk.Int, error)
 	// CalcOutAmtGivenIn calculates the amount of tokenOut given tokenIn and the pool's current state.
 	// Returns error if the given pool is not a CFMM pool. Returns error on internal calculations.
@@ -63,7 +63,7 @@ type PoolModuleI interface {
 		poolI PoolI,
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
-		swapFee sdk.Dec,
+		spreadFactor sdk.Dec,
 	) (tokenOut sdk.Coin, err error)
 
 	SwapExactAmountOut(
@@ -73,7 +73,7 @@ type PoolModuleI interface {
 		tokenInDenom string,
 		tokenInMaxAmount sdk.Int,
 		tokenOut sdk.Coin,
-		swapFee sdk.Dec,
+		spreadFactor sdk.Dec,
 	) (tokenInAmount sdk.Int, err error)
 	// CalcInAmtGivenOut calculates the amount of tokenIn given tokenOut and the pool's current state.
 	// Returns error if the given pool is not a CFMM pool. Returns error on internal calculations.
@@ -82,7 +82,7 @@ type PoolModuleI interface {
 		poolI PoolI,
 		tokenOut sdk.Coin,
 		tokenInDenom string,
-		swapFee sdk.Dec,
+		spreadFactor sdk.Dec,
 	) (tokenIn sdk.Coin, err error)
 
 	// GetTotalPoolLiquidity returns the coins in the pool owned by all LPs
@@ -185,7 +185,9 @@ func (routes SwapAmountOutRoutes) Length() int {
 	return len(routes)
 }
 
-// ValidateSwapAmountInSplitRoute validates a slice of SwapAmountInSplitRoute and returns an error if any of the following are true:
+// ValidateSwapAmountInSplitRoute validates a slice of SwapAmountInSplitRoute.
+//
+// returns an error if any of the following are true:
 // - the slice is empty
 // - any SwapAmountInRoute in the slice is invalid
 // - the last TokenOutDenom of any SwapAmountInRoute in the slice does not match the TokenOutDenom of the previous SwapAmountInRoute in the slice

@@ -12,7 +12,7 @@ type ConcentratedLiquidityListener interface {
 	// liquidity pool.
 	AfterLastPoolPositionRemoved(ctx sdk.Context, sender sdk.AccAddress, poolId uint64)
 	// AfterConcentratedPoolSwap is called after a swap in a concentrated liquidity pool.
-	AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64)
+	AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins)
 }
 
 type ConcentratedLiquidityListeners []ConcentratedLiquidityListener
@@ -37,9 +37,9 @@ func (l ConcentratedLiquidityListeners) AfterLastPoolPositionRemoved(ctx sdk.Con
 	}
 }
 
-func (l ConcentratedLiquidityListeners) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+func (l ConcentratedLiquidityListeners) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 	for i := range l {
-		l[i].AfterConcentratedPoolSwap(ctx, sender, poolId)
+		l[i].AfterConcentratedPoolSwap(ctx, sender, poolId, input, output)
 	}
 }
 

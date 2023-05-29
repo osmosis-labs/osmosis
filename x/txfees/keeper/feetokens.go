@@ -35,7 +35,7 @@ func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin
 }
 
 // CalcFeeSpotPrice converts the provided tx fees into their equivalent value in the base denomination.
-// Spot Price Calculation: spotPrice / (1 - swapFee),
+// Spot Price Calculation: spotPrice / (1 - spreadFactor),
 // where spotPrice is defined as:
 // (tokenBalanceIn / tokenWeightIn) / (tokenBalanceOut / tokenWeightOut)
 func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (sdk.Dec, error) {

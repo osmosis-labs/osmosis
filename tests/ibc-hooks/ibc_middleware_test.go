@@ -67,6 +67,7 @@ func TestIBCHooksTestSuite(t *testing.T) {
 }
 
 func (suite *HooksTestSuite) SetupTest() {
+	suite.SkipIfWSL()
 	// TODO: This needs to get removed. Waiting on https://github.com/cosmos/ibc-go/issues/3123
 	txfeetypes.ConsensusMinFee = sdk.ZeroDec()
 
@@ -1604,7 +1605,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCMultiHop() {
 	// Now the swwap can actually execute on A via the callback and generate a new packet with the swapped token to B
 	packet, err = ibctesting.ParsePacketFromEvents(res.GetEvents())
 	suite.Require().NoError(err)
-	res = suite.RelayPacketNoAck(packet, AtoB)
+	_ = suite.RelayPacketNoAck(packet, AtoB)
 
 	balanceToken0After := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), accountB, token0ACB)
 	suite.Require().Equal(int64(1000), balanceToken0.Amount.Sub(balanceToken0After.Amount).Int64())

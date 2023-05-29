@@ -544,15 +544,15 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 			s.Require().Equal(DefaultJoinTime, position.JoinTime)
 			s.Require().Equal(DefaultLiquidityAmt, position.Liquidity)
 
-			// Retrieve the position ID from the store via owner/poolId key and compare to expected values.
+			// Retrieve the position ID from the store via owner/poolId key and compare to expected value (true).
 			ownerPoolIdToPositionIdKey := types.KeyAddressPoolIdPositionId(s.TestAccs[0], defaultPoolId, DefaultPositionId)
-			positionIdBytes := store.Get(ownerPoolIdToPositionIdKey)
-			s.Require().Equal(DefaultPositionId, sdk.BigEndianToUint64(positionIdBytes))
+			valueBytes := store.Get(ownerPoolIdToPositionIdKey)
+			s.Require().Equal([]byte{1}, valueBytes)
 
-			// Retrieve the position ID from the store via poolId key and compare to expected values.
+			// Retrieve the position ID from the store via poolId key and compare to expected value (true).
 			poolIdtoPositionIdKey := types.KeyPoolPositionPositionId(defaultPoolId, DefaultPositionId)
-			positionIdBytes = store.Get(poolIdtoPositionIdKey)
-			s.Require().Equal(DefaultPositionId, sdk.BigEndianToUint64(positionIdBytes))
+			valueBytes = store.Get(poolIdtoPositionIdKey)
+			s.Require().Equal([]byte{1}, valueBytes)
 
 			// Retrieve the position ID to underlying lock ID mapping from the store and compare to expected values.
 			positionIdToLockIdKey := types.KeyPositionIdForLock(DefaultPositionId)
@@ -565,7 +565,7 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 
 			// Retrieve the lock ID to position ID mapping from the store and compare to expected values.
 			lockIdToPositionIdKey := types.KeyLockIdForPositionId(test.underlyingLockId)
-			positionIdBytes = store.Get(lockIdToPositionIdKey)
+			positionIdBytes := store.Get(lockIdToPositionIdKey)
 			if test.underlyingLockId != 0 {
 				s.Require().Equal(DefaultPositionId, sdk.BigEndianToUint64(positionIdBytes))
 			} else {
@@ -651,12 +651,12 @@ func (s *KeeperTestSuite) TestCalculateUnderlyingAssetsFromPosition() {
 			// prepare concentrated pool with a default position
 			s.PrepareConcentratedPool()
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1)))
-			_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, 1, s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+			_, _, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, 1, s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 			s.Require().NoError(err)
 
 			// create a position from the test case
 			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1)))
-			_, actualAmount0, actualAmount1, liquidity, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.position.PoolId, s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), tc.position.LowerTick, tc.position.UpperTick)
+			_, actualAmount0, actualAmount1, liquidity, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.position.PoolId, s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), tc.position.LowerTick, tc.position.UpperTick)
 			s.Require().NoError(err)
 			tc.position.Liquidity = liquidity
 
@@ -712,7 +712,6 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		unlockBeforeBlockTimeMs    time.Duration
 		expectedNewPositionId      uint64
 		expectedErr                error
-		doesValidatePass           bool
 	}{
 		{
 			name: "Happy path: Fungify three fully charged positions",
@@ -785,7 +784,6 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			accountCallingMigration: defaultAddress,
 			expectedNewPositionId:   0,
 			expectedErr:             types.PositionQuantityTooLowError{MinNumPositions: cl.MinNumPositions, NumPositions: 1},
-			doesValidatePass:        true,
 		},
 		{
 			name: "Error: one of the full range positions is locked",
@@ -858,7 +856,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 					_, _, _, liquidityCreated, _, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pos.poolId, pos.acc, pos.coins, lockDuration)
 					s.Require().NoError(err)
 				} else {
-					_, _, _, liquidityCreated, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pos.poolId, pos.acc, pos.coins, sdk.ZeroInt(), sdk.ZeroInt(), pos.lowerTick, pos.upperTick)
+					_, _, _, liquidityCreated, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pos.poolId, pos.acc, pos.coins, sdk.ZeroInt(), sdk.ZeroInt(), pos.lowerTick, pos.upperTick)
 					s.Require().NoError(err)
 				}
 
@@ -870,16 +868,19 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 
 			// Set up uncharged positions
 			for _, pos := range test.setupUnchargedPositions {
-				_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pos.poolId, pos.acc, pos.coins, sdk.ZeroInt(), sdk.ZeroInt(), pos.lowerTick, pos.upperTick)
+				_, _, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pos.poolId, pos.acc, pos.coins, sdk.ZeroInt(), sdk.ZeroInt(), pos.lowerTick, pos.upperTick)
 				s.Require().NoError(err)
 			}
 
 			// Increase block time by one more day - 1 ns to ensure that the previously added positions are not fully charged.
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration - time.Nanosecond))
 
+			// Get the longest authorized uptime, which is the fully charged duration.
+			fullyChargedDuration := s.App.ConcentratedLiquidityKeeper.GetLargestAuthorizedUptimeDuration(s.Ctx)
+
 			// First run non mutative validation and check results
-			poolId, lowerTick, upperTick, liquidity, err := s.App.ConcentratedLiquidityKeeper.ValidatePositionsAndGetTotalLiquidity(s.Ctx, test.accountCallingMigration, test.positionIdsToMigrate)
-			if test.expectedErr != nil && !test.doesValidatePass {
+			poolId, lowerTick, upperTick, liquidity, err := s.App.ConcentratedLiquidityKeeper.ValidatePositionsAndGetTotalLiquidity(s.Ctx, test.accountCallingMigration, test.positionIdsToMigrate, fullyChargedDuration)
+			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, test.expectedErr)
 				s.Require().Equal(uint64(0), poolId)
@@ -1147,7 +1148,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 	var (
 		defaultAddress   = s.TestAccs[0]
 		defaultBlockTime = time.Unix(1, 1).UTC()
-		swapFee          = sdk.NewDecWithPrec(2, 3)
+		spreadFactor     = sdk.NewDecWithPrec(2, 3)
 	)
 
 	expectedPositionIds := make([]uint64, numPositions)
@@ -1169,7 +1170,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 	s.FundAcc(defaultAddress, requiredBalances)
 
 	// Create CL pool
-	s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, swapFee)
+	s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, spreadFactor)
 
 	// Set incentives for pool to ensure accumulators work correctly
 	err := s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, DefaultIncentiveRecords)
@@ -1178,14 +1179,14 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 	// Set up fully charged positions
 	totalLiquidity := sdk.ZeroDec()
 	for i := 0; i < numPositions; i++ {
-		_, _, _, liquidityCreated, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+		_, _, _, liquidityCreated, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 		s.Require().NoError(err)
 		totalLiquidity = totalLiquidity.Add(liquidityCreated)
 	}
 
 	// Perform a swap to earn fees
 	swapAmountIn := sdk.NewCoin(ETH, sdk.NewInt(swapAmount))
-	expectedFee := swapAmountIn.Amount.ToDec().Mul(swapFee)
+	expectedFee := swapAmountIn.Amount.ToDec().Mul(spreadFactor)
 	// We run expected fees through a cycle of divison and multiplication by liquidity to capture appropriate rounding behavior.
 	// Note that we truncate the int at the end since it is not possible to have a decimal fee amount collected (the QuoTruncate
 	// and MulTruncates are much smaller operations that round down for values past the 18th decimal place).
@@ -1242,7 +1243,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 	var (
 		defaultAddress   = s.TestAccs[0]
 		defaultBlockTime = time.Unix(1, 1).UTC()
-		swapFee          = sdk.NewDecWithPrec(2, 3)
+		spreadFactor     = sdk.NewDecWithPrec(2, 3)
 	)
 
 	expectedPositionIds := make([]uint64, numPositions)
@@ -1264,7 +1265,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 	s.FundAcc(defaultAddress, requiredBalances)
 
 	// Create CL pool
-	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, swapFee)
+	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, spreadFactor)
 
 	// an error of 1 for each position
 	roundingError := int64(numPositions)
@@ -1293,7 +1294,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 	// Set up fully charged positions
 	totalLiquidity := sdk.ZeroDec()
 	for i := 0; i < numPositions; i++ {
-		_, _, _, liquidityCreated, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+		_, _, _, liquidityCreated, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 		s.Require().NoError(err)
 		totalLiquidity = totalLiquidity.Add(liquidityCreated)
 	}
@@ -1461,9 +1462,11 @@ func (s *KeeperTestSuite) TestCreateFullRangePosition() {
 	}
 }
 
-func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
-	defaultAddress := s.TestAccs[0]
-	defaultPositionCoins := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
+func (s *KeeperTestSuite) TestMintSharesAndLock() {
+	var (
+		defaultPositionCoins = sdk.NewCoins(DefaultCoin0, DefaultCoin1)
+		defaultAddress       = s.TestAccs[0]
+	)
 
 	tests := []struct {
 		name                    string
@@ -1504,25 +1507,25 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 			clPool := s.PrepareConcentratedPool()
 
 			// Fund the owner account
-			s.FundAcc(test.owner, defaultPositionCoins)
+			s.FundAcc(test.owner, DefaultCoins)
 
 			// Create a position
 			positionId := uint64(0)
 			liquidity := sdk.ZeroDec()
 			if test.createFullRangePosition {
 				var err error
-				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), test.owner, defaultPositionCoins)
+				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), test.owner, DefaultCoins)
 				s.Require().NoError(err)
 			} else {
 				var err error
-				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), test.owner, defaultPositionCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				positionId, _, _, liquidity, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), test.owner, defaultPositionCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 				s.Require().NoError(err)
 			}
 
 			lockupModuleAccountBalancePre := s.App.LockupKeeper.GetModuleBalance(s.Ctx)
 
 			// System under test
-			concentratedLockId, underlyingLiquidityTokenized, err := s.App.ConcentratedLiquidityKeeper.MintSharesLockAndUpdate(s.Ctx, clPool.GetId(), positionId, test.owner, test.remainingLockDuration)
+			concentratedLockId, underlyingLiquidityTokenized, err := s.App.ConcentratedLiquidityKeeper.MintSharesAndLock(s.Ctx, clPool.GetId(), positionId, test.owner, test.remainingLockDuration)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, test.expectedErr)
@@ -1564,13 +1567,14 @@ func (s *KeeperTestSuite) TestPositionHasActiveUnderlyingLock() {
 	defaultPositionCoins := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
 
 	type testParams struct {
-		name                                 string
-		createPosition                       func(s *KeeperTestSuite) (uint64, uint64)
-		expectedHasActiveLock                bool
-		expectedHasActiveLockAfterTimeUpdate bool
-		expectedLockError                    bool
-		expectedPositionLockID               uint64
-		expectedGetPositionLockIdErr         bool
+		name                                       string
+		createPosition                             func(s *KeeperTestSuite) (uint64, uint64)
+		expectedHasActiveLock                      bool
+		expectedHasActiveLockAfterTimeUpdate       bool
+		expectedLockError                          bool
+		expectedPositionHasActiveUnderlyingLockErr bool
+		expectedPositionLockID                     uint64
+		expectedGetPositionLockIdErr               bool
 	}
 
 	tests := []testParams{
@@ -1618,6 +1622,18 @@ func (s *KeeperTestSuite) TestPositionHasActiveUnderlyingLock() {
 			expectedLockError:                    true,
 			expectedPositionLockID:               0,
 			expectedGetPositionLockIdErr:         true,
+		},
+		{
+			name: "invalid position, invalid lock: should return false",
+			createPosition: func(s *KeeperTestSuite) (uint64, uint64) {
+				return 100, 0
+			},
+			expectedHasActiveLock:                      false,
+			expectedHasActiveLockAfterTimeUpdate:       false,
+			expectedLockError:                          true,
+			expectedPositionHasActiveUnderlyingLockErr: true,
+			expectedPositionLockID:                     0,
+			expectedGetPositionLockIdErr:               true,
 		},
 	}
 
@@ -1676,15 +1692,16 @@ func (s *KeeperTestSuite) TestPositionHasActiveUnderlyingLockAndUpdate() {
 	defaultPositionCoins := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
 
 	type testParams struct {
-		name                                        string
-		createPosition                              func(s *KeeperTestSuite) (uint64, uint64)
-		expectedHasActiveLock                       bool
-		expectedHasActiveLockAfterTimeUpdate        bool
-		expectedLockError                           bool
-		expectedPositionLockID                      uint64
-		expectedPositionLockIDAfterTimeUpdate       uint64
-		expectedGetPositionLockIdErr                bool
-		expectedGetPositionLockIdErrAfterTimeUpdate bool
+		name                                             string
+		createPosition                                   func(s *KeeperTestSuite) (uint64, uint64)
+		expectedHasActiveLock                            bool
+		expectedHasActiveLockAfterTimeUpdate             bool
+		expectedLockError                                bool
+		expectedPositionLockID                           uint64
+		expectedPositionLockIDAfterTimeUpdate            uint64
+		expectedGetPositionLockIdErr                     bool
+		expectedGetPositionLockIdErrAfterTimeUpdate      bool
+		expectedPositionHasActiveUnderlyingLockAndUpdate bool
 	}
 
 	tests := []testParams{
@@ -1739,6 +1756,20 @@ func (s *KeeperTestSuite) TestPositionHasActiveUnderlyingLockAndUpdate() {
 			expectedGetPositionLockIdErr:                true,
 			expectedGetPositionLockIdErrAfterTimeUpdate: true,
 		},
+		{
+			name: "invalid position without lock ",
+			// we return invalid lock id with no-op to trigger error
+			createPosition: func(s *KeeperTestSuite) (uint64, uint64) {
+				return 10, 0
+			},
+			expectedHasActiveLock:                       false,
+			expectedHasActiveLockAfterTimeUpdate:        false,
+			expectedLockError:                           true,
+			expectedPositionLockID:                      0,
+			expectedPositionLockIDAfterTimeUpdate:       0,
+			expectedGetPositionLockIdErr:                true,
+			expectedGetPositionLockIdErrAfterTimeUpdate: true,
+		},
 	}
 
 	for _, tc := range tests {
@@ -1755,7 +1786,11 @@ func (s *KeeperTestSuite) TestPositionHasActiveUnderlyingLockAndUpdate() {
 
 			// System under test (mutative)
 			hasActiveLockInState, retrievedLockID, err := s.App.ConcentratedLiquidityKeeper.PositionHasActiveUnderlyingLockAndUpdate(s.Ctx, positionID)
-			s.Require().NoError(err)
+			if tc.expectedPositionHasActiveUnderlyingLockAndUpdate {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+			}
 			s.Require().Equal(tc.expectedHasActiveLock, hasActiveLockInState)
 			s.Require().Equal(tc.expectedPositionLockID, retrievedLockID)
 
@@ -1841,7 +1876,7 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	s.Require().Equal(positionId, retrievedPositionId)
 
 	// Remove the lockId from the position
-	s.App.ConcentratedLiquidityKeeper.RemovePositionIdToLock(s.Ctx, positionId, retrievedLockId)
+	s.App.ConcentratedLiquidityKeeper.RemovePositionIdForLockId(s.Ctx, positionId, retrievedLockId)
 
 	// Check if position has lock in state, should not
 	retrievedLockId, err = s.App.ConcentratedLiquidityKeeper.GetLockIdFromPositionId(s.Ctx, positionId)
@@ -1921,15 +1956,15 @@ func (s *KeeperTestSuite) TestSetPosition() {
 		s.Require().Equal(tc.joinTime, position.JoinTime)
 		s.Require().Equal(tc.liquidity, position.Liquidity)
 
-		// Retrieve the position from the store via owner/poolId/positionId and compare to expected values.
+		// Retrieve the position from the store via owner/poolId/positionId and compare to expected value (true).
 		key = types.KeyAddressPoolIdPositionId(tc.owner, tc.poolId, tc.positionId)
-		positionIdBytes := store.Get(key)
-		s.Require().Equal(tc.positionId, sdk.BigEndianToUint64(positionIdBytes))
+		valueBytes := store.Get(key)
+		s.Require().Equal([]byte{1}, valueBytes)
 
-		// Retrieve the position from the store via poolId/positionId and compare to expected values.
+		// Retrieve the position from the store via poolId/positionId and compare to expected value (true).
 		key = types.KeyPoolPositionPositionId(tc.poolId, tc.positionId)
-		positionIdBytes = store.Get(key)
-		s.Require().Equal(tc.positionId, sdk.BigEndianToUint64(positionIdBytes))
+		valueBytes = store.Get(key)
+		s.Require().Equal([]byte{1}, valueBytes)
 
 		// Retrieve the position ID to underlying lock ID mapping from the store and compare to expected values.
 		key = types.KeyPositionIdForLock(tc.positionId)
@@ -1985,12 +2020,13 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 		s.Require().NoError(err)
 
 		// Get the full range liquidity for the pool.
-		expectedFullRangeLiquidity := s.App.ConcentratedLiquidityKeeper.MustGetFullRangeLiquidityInPool(s.Ctx, clPoolId)
+		expectedFullRangeLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetFullRangeLiquidityInPool(s.Ctx, clPoolId)
+		s.Require().NoError(err)
 		s.Require().Equal(expectedFullRangeLiquidity, actualFullRangeLiquidity)
 
 		// Create a new position that overlaps with the min tick, but is not full range and therefore should not count towards the full range liquidity.
 		s.FundAcc(owner, tc.positionCoins)
-		_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPoolId, owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), tc.lowerTick, tc.upperTick)
+		_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPoolId, owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), tc.lowerTick, tc.upperTick)
 		s.Require().NoError(err)
 
 		clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
@@ -1999,7 +2035,8 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 		// Test updating the full range liquidity.
 		err = s.App.ConcentratedLiquidityKeeper.UpdateFullRangeLiquidityInPool(s.Ctx, clPoolId, tc.updateLiquidity)
 		s.Require().NoError(err)
-		actualFullRangeLiquidity = s.App.ConcentratedLiquidityKeeper.MustGetFullRangeLiquidityInPool(s.Ctx, clPoolId)
+		actualFullRangeLiquidity, err = s.App.ConcentratedLiquidityKeeper.GetFullRangeLiquidityInPool(s.Ctx, clPoolId)
+		s.Require().NoError(err)
 		s.Require().Equal(expectedFullRangeLiquidity.Add(tc.updateLiquidity), actualFullRangeLiquidity)
 	}
 }
@@ -2025,10 +2062,10 @@ func (s *KeeperTestSuite) TestGetAllPositionIdsForPoolId() {
 	expectedPositionOneIds := []uint64{1, 2, 3}
 	expectedPositionTwoIds := []uint64{4, 5, 6}
 
-	positionOne, err := clKeeper.GetAllPositionIdsForPoolId(s.Ctx, clPoolOne.GetId())
+	positionOne, err := clKeeper.GetAllPositionIdsForPoolId(s.Ctx, types.PositionPrefix, clPoolOne.GetId())
 	s.Require().NoError(err)
 
-	positionTwo, err := clKeeper.GetAllPositionIdsForPoolId(s.Ctx, clPooltwo.GetId())
+	positionTwo, err := clKeeper.GetAllPositionIdsForPoolId(s.Ctx, types.PositionPrefix, clPooltwo.GetId())
 	s.Require().NoError(err)
 
 	s.Require().Equal(expectedPositionOneIds, positionOne)

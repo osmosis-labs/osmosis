@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -13,6 +12,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v15/app"
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
@@ -22,20 +22,8 @@ import (
 	clgenesis "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
 )
 
-// TODO: consider importing from big bang if use of the script
-// becomes frequent, requiring frequent updates.
-type BigBangPosition struct {
-	Address    string `json:"address"`
-	JoinTime   string `json:"join_time"`
-	Liquidity  string `json:"liquidity"`
-	LowerTick  string `json:"lower_tick"`
-	PoolID     string `json:"pool_id"`
-	PositionID string `json:"position_id"`
-	UpperTick  string `json:"upper_tick"`
-}
-
 type BigBangPositions struct {
-	Positions []BigBangPosition `json:"positions"`
+	PositionsData []clgenesis.PositionData `json:"position_data"`
 }
 
 type OsmosisApp struct {
@@ -96,11 +84,11 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 	}
 
 	msgCreatePool := model.MsgCreateConcentratedPool{
-		Sender:      osmosis.TestAccs[0].String(),
-		Denom0:      denom0,
-		Denom1:      denom1,
-		TickSpacing: 100,
-		SwapFee:     sdk.MustNewDecFromStr("0.0005"),
+		Sender:       osmosis.TestAccs[0].String(),
+		Denom0:       denom0,
+		Denom1:       denom1,
+		TickSpacing:  100,
+		SpreadFactor: sdk.MustNewDecFromStr("0.0005"),
 	}
 
 	err := msgCreatePool.ValidateBasic()
@@ -115,7 +103,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 
 	fmt.Println("Created pool id of: ", poolId)
 
-	pool, err := osmosis.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(osmosis.Ctx, poolId)
+	pool, err := osmosis.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(osmosis.Ctx, poolId)
 	if err != nil {
 		panic(err)
 	}
@@ -132,7 +120,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 
 	numberOfSuccesfulPositions := 0
 
-	bigBangPositions := make([]BigBangPosition, 0)
+	bigBangPositions := make([]clgenesis.PositionData, 0)
 
 	for _, uniV3Position := range positions {
 		lowerPrice := parsePrice(uniV3Position.TickLower.Price0)
@@ -156,15 +144,15 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 			panic(err)
 		}
 
-		if lowerTickOsmosis.GT(upperTickOsmosis) {
-			fmt.Printf("lowerTickOsmosis (%s) > upperTickOsmosis (%s), skipping", lowerTickOsmosis, upperTickOsmosis)
+		if lowerTickOsmosis > upperTickOsmosis {
+			fmt.Printf("lowerTickOsmosis (%d) > upperTickOsmosis (%d), skipping", lowerTickOsmosis, upperTickOsmosis)
 			continue
 		}
 
-		if lowerTickOsmosis.Equal(upperTickOsmosis) {
+		if lowerTickOsmosis == upperTickOsmosis {
 			// bump up the upper tick by one. We don't care about having exactly the same tick range
 			// Just a roughly similar breakdown
-			upperTickOsmosis = upperTickOsmosis.Add(sdk.OneInt())
+			upperTickOsmosis = upperTickOsmosis + 1
 		}
 
 		depositedAmount0, failedParsing := parseStringToInt(uniV3Position.DepositedToken0)
@@ -186,30 +174,35 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 		position, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(osmosis.Ctx), &cltypes.MsgCreatePosition{
 			PoolId:          poolId,
 			Sender:          randomCreator.String(),
-			LowerTick:       lowerTickOsmosis.Int64(),
-			UpperTick:       upperTickOsmosis.Int64(),
+			LowerTick:       lowerTickOsmosis,
+			UpperTick:       upperTickOsmosis,
 			TokensProvided:  tokensProvided,
 			TokenMinAmount0: sdk.ZeroInt(),
 			TokenMinAmount1: sdk.ZeroInt(),
 		})
 		if err != nil {
 			fmt.Printf("\n\n\nWARNING: Failed to create position: %v\n\n\n", err)
-			fmt.Printf("attempted creation between ticks (%s) and (%s), desired amount 0: (%s), desired amount 1 (%s)\n", lowerTickOsmosis, upperTickOsmosis, depositedAmount0, depositedAmount1)
+			fmt.Printf("attempted creation between ticks (%d) and (%d), desired amount 0: (%s), desired amount 1 (%s)\n", lowerTickOsmosis, upperTickOsmosis, depositedAmount0, depositedAmount1)
 			fmt.Println()
 			continue
 		}
 
-		fmt.Printf("created position with liquidity (%s) between ticks (%s) and (%s)\n", position.LiquidityCreated, lowerTickOsmosis, upperTickOsmosis)
+		fmt.Printf("created position with liquidity (%s) between ticks (%d) and (%d)\n", position.LiquidityCreated, lowerTickOsmosis, upperTickOsmosis)
 		numberOfSuccesfulPositions++
 
-		bigBangPositions = append(bigBangPositions, BigBangPosition{
-			Address:    randomCreator.String(),
-			PoolID:     strconv.FormatUint(poolId, 10),
-			JoinTime:   osmosis.Ctx.BlockTime().Format("2006-01-02T15:04:05Z"), // ISO 8601
-			Liquidity:  position.LiquidityCreated.String(),
-			PositionID: strconv.FormatUint(position.PositionId, 10),
-			LowerTick:  lowerTickOsmosis.String(),
-			UpperTick:  upperTickOsmosis.String(),
+		bigBangPositions = append(bigBangPositions, clgenesis.PositionData{
+			Position: &model.Position{
+				Address:    randomCreator.String(),
+				PoolId:     poolId,
+				JoinTime:   osmosis.Ctx.BlockTime(),
+				Liquidity:  position.LiquidityCreated,
+				PositionId: position.PositionId,
+				LowerTick:  lowerTickOsmosis,
+				UpperTick:  upperTickOsmosis,
+			},
+			FeeAccumRecord: accum.Record{
+				NumShares: position.LiquidityCreated,
+			},
 		})
 	}
 
@@ -277,10 +270,10 @@ func writeStateToDisk(state map[string]json.RawMessage) {
 	}
 }
 
-func writeBigBangPositionsToState(positions []BigBangPosition) {
+func writeBigBangPositionsToState(positions []clgenesis.PositionData) {
 	fmt.Println("writing big bang positions to disk")
 	positionsBytes, err := json.MarshalIndent(BigBangPositions{
-		Positions: positions,
+		PositionsData: positions,
 	}, "", "    ")
 	if err != nil {
 		panic(err)

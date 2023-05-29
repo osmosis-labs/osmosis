@@ -3,7 +3,6 @@ package simulation
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -20,7 +19,7 @@ import (
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
 
 func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*clmodeltypes.MsgCreateConcentratedPool, error) {
-	poolCreator, coin0, coin1, tickSpacing, swapFee, err := RandomPreparePoolFunc(sim, ctx, k)
+	poolCreator, coin0, coin1, tickSpacing, spreadFactor, err := RandomPreparePoolFunc(sim, ctx, k)
 	if err != nil {
 		return nil, err
 	}
@@ -47,11 +46,11 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 	}
 
 	return &clmodeltypes.MsgCreateConcentratedPool{
-		Sender:      poolCreator.String(),
-		Denom0:      coin0.Denom,
-		Denom1:      coin1.Denom,
-		TickSpacing: tickSpacing,
-		SwapFee:     swapFee,
+		Sender:       poolCreator.String(),
+		Denom0:       coin0.Denom,
+		Denom1:       coin1.Denom,
+		TickSpacing:  tickSpacing,
+		SpreadFactor: spreadFactor,
 	}, nil
 }
 
@@ -93,7 +92,7 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	}
 
 	// Utilize the PoolId to PositionId mapping
-	positionIds, err := k.GetAllPositionIdsForPoolId(ctx, clPool.GetId())
+	positionIds, err := k.GetAllPositionIdsForPoolId(ctx, cltypes.PositionPrefix, clPool.GetId())
 	if err != nil {
 		return nil, err
 	}
@@ -223,43 +222,6 @@ func RandMsgCollectIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx s
 	}, nil
 }
 
-func RandMsgCreateIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCreateIncentive, error) {
-	rand := sim.GetRand()
-	// get random pool
-	clPool, poolDenoms, err := getRandCLPool(k, sim, ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// incentiveCreator creates the incentives by supplying tokens
-	incentiveCreator, incentivesTokens, senderExists := sim.SelAddrWithDenoms(ctx, poolDenoms)
-	if !senderExists {
-		return nil, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
-	}
-
-	// emission rate is nonzero and nonnegative from 1 to 1million
-	randEmissionVal := sim.RandomDecAmount(sdk.MustNewDecFromStr("1000000"))
-
-	startTimeSecs := rand.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
-	startTime := ctx.BlockTime().Add(time.Duration(startTimeSecs) * time.Second)
-
-	durations := cltypes.DefaultParams().AuthorizedUptimes
-	randomDurationIndex := rand.Intn(len(durations))
-
-	// Get the duration value at the random index
-	randomDuration := durations[randomDurationIndex]
-	incentiveCoin := sdk.NewCoin(incentivesTokens[0].Denom, incentivesTokens[0].Amount)
-
-	return &cltypes.MsgCreateIncentive{
-		PoolId:        clPool.GetId(),
-		Sender:        incentiveCreator.Address.String(),
-		IncentiveCoin: incentiveCoin,
-		EmissionRate:  randEmissionVal,
-		StartTime:     startTime,
-		MinUptime:     randomDuration,
-	}, nil
-}
-
 // createPoolRestriction creates specific restriction for the creation of a pool.
 func createPoolRestriction(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) osmosimtypes.SimAccountConstraint {
 	return func(acc legacysimulationtype.Account) bool {
@@ -346,7 +308,7 @@ func RandomPreparePoolFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, k clkeeper
 	rand := sim.GetRand()
 
 	authorizedTickSpacing := cltypes.AuthorizedTickSpacing
-	authorizedSwapFee := cltypes.AuthorizedSwapFees
+	authorizedSpreadFactor := cltypes.AuthorizedSpreadFactors
 
 	// find an address with two or more distinct denoms in their wallet
 	sender, senderExists := sim.RandomSimAccountWithConstraint(createPoolRestriction(k, sim, ctx))
@@ -372,9 +334,9 @@ func RandomPreparePoolFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, k clkeeper
 	coin0 := poolCoins[0]
 	coin1 := poolCoins[1]
 	tickSpacing := authorizedTickSpacing[rand.Intn(len(authorizedTickSpacing))]
-	swapFee := authorizedSwapFee[rand.Intn(len(authorizedSwapFee))]
+	spreadFactor := authorizedSpreadFactor[rand.Intn(len(authorizedSpreadFactor))]
 
-	return sender.Address, coin0, coin1, tickSpacing, swapFee, nil
+	return sender.Address, coin0, coin1, tickSpacing, spreadFactor, nil
 }
 
 func RandomPrepareCreatePositionFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, clPool cltypes.ConcentratedPoolExtension, poolDenoms []string) (sdk.AccAddress, sdk.Coins, int64, int64, error) {
