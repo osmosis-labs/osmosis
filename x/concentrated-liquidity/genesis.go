@@ -224,7 +224,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 			FeeAccumRecord:     feeAccumPositionRecord,
 			UptimeAccumRecords: uptimeAccumObject,
 		})
-
 	}
 
 	return &genesis.GenesisState{
