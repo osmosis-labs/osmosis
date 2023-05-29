@@ -201,7 +201,8 @@ func expectedIncentivesFromUptimeGrowth(uptimeGrowths []sdk.DecCoins, positionSh
 	return totalRewards
 }
 
-func chargeIncentive(incentiveRecord types.IncentiveRecord, timeElapsed time.Duration) types.IncentiveRecord {
+// chargeIncentiveRecord updates the remaining amount of the passed in incentive record to what it would be after `timeElapsed` of emissions.
+func chargeIncentiveRecord(incentiveRecord types.IncentiveRecord, timeElapsed time.Duration) types.IncentiveRecord {
 	secToNanoSec := int64(1000000000)
 	incentivesEmitted := incentiveRecord.IncentiveRecordBody.EmissionRate.Mul(sdk.NewDec(int64(timeElapsed)).Quo(sdk.NewDec(secToNanoSec)))
 	incentiveRecord.IncentiveRecordBody.RemainingAmount = incentiveRecord.IncentiveRecordBody.RemainingAmount.Sub(incentivesEmitted)
@@ -268,6 +269,9 @@ func withEmissionRate(record types.IncentiveRecord, emissionRate sdk.Dec) types.
 	return record
 }
 
+// TestCreateAndGetUptimeAccumulators tests the creation and retrieval logic for pool-wide uptime accumulators.
+// Note that this is distinct from the authorized uptime accumulators, which will always be a subset of the accumulators
+// considered in this test.
 func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 	// We expect there to be len(types.SupportedUptimes) number of initialized accumulators
 	// for a successful pool creation. We calculate this upfront to ensure test compatibility
@@ -318,10 +322,10 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 			if tc.expectedPass {
 				s.Require().NoError(err)
 
-				// ensure number of uptime accumulators match supported uptimes
+				// Ensure number of uptime accumulators match supported uptimes
 				s.Require().Equal(len(tc.expectedAccumValues), len(poolUptimeAccumulators))
 
-				// ensure that each uptime was initialized to the correct value (sdk.DecCoins(nil))
+				// Ensure that each uptime was initialized to the correct value (sdk.DecCoins(nil))
 				accumValues := []sdk.DecCoins{}
 				for _, accum := range poolUptimeAccumulators {
 					accumValues = append(accumValues, accum.GetValue())
@@ -337,6 +341,7 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 	}
 }
 
+// TestGetUptimeAccumulatorName tests the name generation logic for pool-wide uptime accumulators.
 func (s *KeeperTestSuite) TestGetUptimeAccumulatorName() {
 	type getUptimeNameTest struct {
 		poolId            uint64
@@ -373,9 +378,12 @@ func (s *KeeperTestSuite) TestGetUptimeAccumulatorName() {
 	}
 }
 
+// TestCreateAndGetUptimeAccumulatorValues tests the creation and retrieval logic for pool-wide uptime accumulator values.
+// Note that this is independent of authorized uptimes as the functions in question deal with all the active accumulators on the pool.
 func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulatorValues() {
 	// We expect there to be len(types.SupportedUptimes) number of initialized accumulators
 	// for a successful pool creation.
+	//
 	// We re-calculate these values each time to ensure test compatibility if the uptimes
 	// we support ever change.
 	expectedUptimes := getExpectedUptimes()
@@ -497,6 +505,7 @@ func (s *KeeperTestSuite) getAllIncentiveRecordsForPool(poolId uint64) []types.I
 	return records
 }
 
+// TestCalcAccruedIncentivesForAccum tests the calculation of accrued incentives for a specific accumulator on a pool.
 func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 	incentiveRecordOneWithDifferentStartTime := withStartTime(incentiveRecordOne, incentiveRecordOne.IncentiveRecordBody.StartTime.Add(10))
 	incentiveRecordOneWithDifferentMinUpTime := withMinUptime(incentiveRecordOne, testUptimeTwo)
@@ -525,7 +534,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			expectedResult: sdk.DecCoins{
 				expectedIncentivesFromRate(incentiveRecordOne.IncentiveDenom, incentiveRecordOne.IncentiveRecordBody.EmissionRate, time.Hour, sdk.NewDec(100)),
 			},
-			expectedIncentiveRecords: []types.IncentiveRecord{chargeIncentive(incentiveRecordOne, time.Hour)},
+			expectedIncentiveRecords: []types.IncentiveRecord{chargeIncentiveRecord(incentiveRecordOne, time.Hour)},
 			expectedPass:             true,
 		},
 		"two incentive records, one with qualifying liquidity for incentives": {
@@ -541,7 +550,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			},
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We only charge the first incentive record since the second wasn't affected
-				chargeIncentive(incentiveRecordOne, time.Hour),
+				chargeIncentiveRecord(incentiveRecordOne, time.Hour),
 				incentiveRecordTwo,
 			},
 			expectedPass: true,
@@ -606,8 +615,8 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			),
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We only going to charge both incentive records
-				chargeIncentive(incentiveRecordOne, time.Hour),
-				chargeIncentive(incentiveRecordOneWithDifferentStartTime, time.Hour),
+				chargeIncentiveRecord(incentiveRecordOne, time.Hour),
+				chargeIncentiveRecord(incentiveRecordOneWithDifferentStartTime, time.Hour),
 			},
 			expectedPass: true,
 		},
@@ -626,8 +635,8 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			},
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We charge both incentive record here because both minUpTime has been hit
-				chargeIncentive(incentiveRecordOneWithDifferentStartTime, time.Hour),
-				chargeIncentive(incentiveRecordOneWithDifferentDenom, time.Hour),
+				chargeIncentiveRecord(incentiveRecordOneWithDifferentStartTime, time.Hour),
+				chargeIncentiveRecord(incentiveRecordOneWithDifferentDenom, time.Hour),
 			},
 			expectedPass: true,
 		},
@@ -645,7 +654,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			},
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We only charge the first incentive record because the second minUpTime hasn't been hit yet
-				chargeIncentive(incentiveRecordOne, time.Hour),
+				chargeIncentiveRecord(incentiveRecordOne, time.Hour),
 				incentiveRecordOneWithDifferentMinUpTime,
 			},
 			expectedPass: true,
@@ -665,8 +674,8 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			},
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We charge both incentive record here because both minUpTime has been hit
-				chargeIncentive(incentiveRecordOne, time.Hour),
-				chargeIncentive(incentiveRecordOneWithDifferentDenom, time.Hour),
+				chargeIncentiveRecord(incentiveRecordOne, time.Hour),
+				chargeIncentiveRecord(incentiveRecordOneWithDifferentDenom, time.Hour),
 			},
 			expectedPass: true,
 		},
@@ -685,9 +694,9 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			),
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We only charge the first three incentive record because the fourth minUpTime hasn't been hit yet
-				chargeIncentive(incentiveRecordOne, time.Hour),
-				chargeIncentive(incentiveRecordOneWithDifferentStartTime, time.Hour),
-				chargeIncentive(incentiveRecordOneWithDifferentDenom, time.Hour),
+				chargeIncentiveRecord(incentiveRecordOne, time.Hour),
+				chargeIncentiveRecord(incentiveRecordOneWithDifferentStartTime, time.Hour),
+				chargeIncentiveRecord(incentiveRecordOneWithDifferentDenom, time.Hour),
 				incentiveRecordOneWithDifferentMinUpTime, // this uptime hasn't hit yet so we do not have to charge incentive
 			},
 			expectedPass: true,
@@ -728,11 +737,11 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 
 func (s *KeeperTestSuite) setupBalancerPoolWithFractionLocked(pa []balancer.PoolAsset, fraction sdk.Dec) uint64 {
 	balancerPoolId := s.PrepareCustomBalancerPool(pa, defaultBalancerPoolParams)
-	longestDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
+	longestLockableDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
 	s.Require().NoError(err)
 	lockAmt := gammtypes.InitPoolSharesSupply.ToDec().Mul(fraction).TruncateInt()
 	lockCoins := sdk.NewCoins(sdk.NewCoin(gammtypes.GetPoolShareDenom(balancerPoolId), lockAmt))
-	_, err = s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[0], lockCoins, longestDuration)
+	_, err = s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[0], lockCoins, longestLockableDuration)
 	s.Require().NoError(err)
 	return balancerPoolId
 }
@@ -744,8 +753,8 @@ func (s *KeeperTestSuite) setupBalancerPoolWithFractionLocked(pa []balancer.Pool
 // 4. Ensure uptime accumulators and incentive records behave as expected
 func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 	defaultTestUptime := types.SupportedUptimes[2]
-	lockableDurations := s.App.PoolIncentivesKeeper.GetLockableDurations(s.Ctx)
-	longestLockableDuration := lockableDurations[len(lockableDurations)-1]
+	longestLockableDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
+	s.Require().NoError(err)
 	type updateAccumToNow struct {
 		poolId                      uint64
 		timeElapsed                 time.Duration
@@ -781,6 +790,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 		// Calculate expected uptime deltas using qualifying liquidity deltas.
 		// Recall that uptime accumulators track emitted incentives / qualifying liquidity.
+		// Note: we test on all supported uptimes to ensure robustness, since even if only a subset is authorized they all technically get updated.
 		expectedUptimeDeltas := []sdk.DecCoins{}
 		for _, curSupportedUptime := range types.SupportedUptimes {
 			// Calculate expected incentives for the current uptime by emitting incentives from
@@ -843,7 +853,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We deduct incentives from the record for the period it emitted incentives
-				chargeIncentive(incentiveRecordOne, defaultTestUptime+time.Hour),
+				chargeIncentiveRecord(incentiveRecordOne, defaultTestUptime+time.Hour),
 			},
 		},
 		"two incentive records, each with qualifying liquidity": {
@@ -853,8 +863,8 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We deduct incentives from both records since there are positions for each
-				chargeIncentive(incentiveRecordOne, defaultTestUptime+time.Hour),
-				chargeIncentive(incentiveRecordTwo, defaultTestUptime+time.Hour),
+				chargeIncentiveRecord(incentiveRecordOne, defaultTestUptime+time.Hour),
+				chargeIncentiveRecord(incentiveRecordTwo, defaultTestUptime+time.Hour),
 			},
 		},
 		"three incentive records, each with qualifying liquidity": {
@@ -865,9 +875,9 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We deduct incentives from each record since there are positions for all three
 				// Note that records are in ascending order by uptime index
-				chargeIncentive(incentiveRecordOne, defaultTestUptime+time.Hour),
-				chargeIncentive(incentiveRecordTwo, defaultTestUptime+time.Hour),
-				chargeIncentive(incentiveRecordThree, defaultTestUptime+time.Hour),
+				chargeIncentiveRecord(incentiveRecordOne, defaultTestUptime+time.Hour),
+				chargeIncentiveRecord(incentiveRecordTwo, defaultTestUptime+time.Hour),
+				chargeIncentiveRecord(incentiveRecordThree, defaultTestUptime+time.Hour),
 			},
 		},
 		"four incentive records, only three with qualifying liquidity": {
@@ -878,12 +888,12 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We only deduct from the first three incentive records since the last doesn't emit anything
 				// Note that records are in ascending order by uptime index
-				chargeIncentive(incentiveRecordOne, defaultTestUptime+time.Hour),
-				chargeIncentive(incentiveRecordTwo, defaultTestUptime+time.Hour),
-				chargeIncentive(incentiveRecordThree, defaultTestUptime+time.Hour),
+				chargeIncentiveRecord(incentiveRecordOne, defaultTestUptime+time.Hour),
+				chargeIncentiveRecord(incentiveRecordTwo, defaultTestUptime+time.Hour),
+				chargeIncentiveRecord(incentiveRecordThree, defaultTestUptime+time.Hour),
 				// We charge even for uptimes the position has technically not qualified for since its liquidity is on
 				// the accumulator.
-				chargeIncentive(incentiveRecordFour, defaultTestUptime+time.Hour),
+				chargeIncentiveRecord(incentiveRecordFour, defaultTestUptime+time.Hour),
 			},
 		},
 		"[reward splitting] one incentive record with qualifying liquidity": {
@@ -897,7 +907,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We deduct incentives from the record for the period it emitted incentives
-				chargeIncentive(incentiveRecordOne, defaultTestUptime+(time.Hour*1000)),
+				chargeIncentiveRecord(incentiveRecordOne, defaultTestUptime+(time.Hour*1000)),
 			},
 		},
 		"[reward splitting] four incentive records, only three with qualifying liquidity": {
@@ -912,12 +922,12 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We only deduct from the first three incentive records since the last doesn't emit anything
 				// Note that records are in ascending order by uptime index
-				chargeIncentive(incentiveRecordOne, defaultTestUptime+(time.Hour*1000)),
-				chargeIncentive(incentiveRecordTwo, defaultTestUptime+(time.Hour*1000)),
-				chargeIncentive(incentiveRecordThree, defaultTestUptime+(time.Hour*1000)),
+				chargeIncentiveRecord(incentiveRecordOne, defaultTestUptime+(time.Hour*1000)),
+				chargeIncentiveRecord(incentiveRecordTwo, defaultTestUptime+(time.Hour*1000)),
+				chargeIncentiveRecord(incentiveRecordThree, defaultTestUptime+(time.Hour*1000)),
 				// We charge even for uptimes the position has technically not qualified for since its liquidity is on
 				// the accumulator.
-				chargeIncentive(incentiveRecordFour, defaultTestUptime+(time.Hour*1000)),
+				chargeIncentiveRecord(incentiveRecordFour, defaultTestUptime+(time.Hour*1000)),
 			},
 		},
 		"[reward splitting] three incentive records, each with qualifying liquidity and small amount of time elapsed": {
@@ -932,9 +942,9 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We deduct incentives from each record since there are positions for all three
 				// Note that records are in ascending order by uptime index
-				chargeIncentive(incentiveRecordOne, defaultTestUptime+time.Hour),
-				chargeIncentive(incentiveRecordTwo, defaultTestUptime+time.Hour),
-				chargeIncentive(incentiveRecordThree, defaultTestUptime+time.Hour),
+				chargeIncentiveRecord(incentiveRecordOne, defaultTestUptime+time.Hour),
+				chargeIncentiveRecord(incentiveRecordTwo, defaultTestUptime+time.Hour),
+				chargeIncentiveRecord(incentiveRecordThree, defaultTestUptime+time.Hour),
 			},
 		},
 
@@ -947,7 +957,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We deduct incentives from the record for the period it emitted incentives
-				chargeIncentive(incentiveRecordOne, defaultTestUptime+time.Hour),
+				chargeIncentiveRecord(incentiveRecordOne, defaultTestUptime+time.Hour),
 			},
 			expectedError: types.PoolNotFoundError{PoolId: invalidPoolId},
 		},
@@ -960,7 +970,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We deduct incentives from the record for the period it emitted incentives
-				chargeIncentive(incentiveRecordOne, defaultTestUptime+time.Hour),
+				chargeIncentiveRecord(incentiveRecordOne, defaultTestUptime+time.Hour),
 			},
 			expectedError: types.ErrInvalidBalancerPoolLiquidityError{
 				ClPoolId:              1,
@@ -981,7 +991,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We deduct incentives from the record for the period it emitted incentives
-				chargeIncentive(incentiveRecordOne, defaultTestUptime+time.Hour),
+				chargeIncentiveRecord(incentiveRecordOne, defaultTestUptime+time.Hour),
 			},
 			expectedError: types.ErrInvalidBalancerPoolLiquidityError{
 				ClPoolId:              1,
@@ -1097,6 +1107,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 // Note: we test that incentive records are properly deducted by emissions in `TestUpdateUptimeAccumulatorsToNow` above.
 // This test aims to cover the behavior of a series of state read/writes relating to incentive records.
+// Since these are lower level functions, we expect that validation logic for authorized uptimes is done at a higher level (see `TestCreateIncentive` tests).
 func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
 	s.SetupTest()
 	clKeeper := s.App.ConcentratedLiquidityKeeper
@@ -1522,12 +1533,14 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthRange() {
 }
 
 func (s *KeeperTestSuite) TestGetUptimeGrowthErrors() {
-	_, err := s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthInsideRange(s.Ctx, defaultPoolId, 0, 0)
+	_, err := s.clk.GetUptimeGrowthInsideRange(s.Ctx, defaultPoolId, 0, 0)
 	s.Require().Error(err)
-	_, err = s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthOutsideRange(s.Ctx, defaultPoolId, 0, 0)
+	_, err = s.clk.GetUptimeGrowthOutsideRange(s.Ctx, defaultPoolId, 0, 0)
 	s.Require().Error(err)
 }
 
+// TestInitOrUpdatePositionUptimeAccumulators tests the subset of position update logic related to checkpointing uptime accumulators.
+// Since all supported uptime accumulators are checkpointed regardless of which are authorized, we test on all of them.
 func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 	uptimeHelper := getExpectedUptimes()
 	type tick struct {
@@ -1765,6 +1778,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 	}
 }
 
+// TestQueryAndCollectIncentives tests that incentive queries are correct by collecting incentives for a position and comparing the results to the query.
 func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 	ownerWithValidPosition := s.TestAccs[0]
 	uptimeHelper := getExpectedUptimes()
@@ -2355,6 +2369,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 	}
 }
 
+// TestCreateIncentive tests logic around incentive creation.
+// Since this function is the primary validation point for authorized uptimes, the core logic around authorized uptimes is tested here.
 func (s *KeeperTestSuite) TestCreateIncentive() {
 	type testCreateIncentive struct {
 		poolId             uint64
@@ -2378,8 +2394,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet:       incentiveRecordOne,
-			authorizedUptimes: types.SupportedUptimes,
+			recordToSet: incentiveRecordOne,
 		},
 		"record with different denom, emission rate, and min uptime": {
 			poolId: defaultPoolId,
@@ -2402,8 +2417,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet:       withStartTime(incentiveRecordOne, defaultStartTime.Add(time.Hour)),
-			authorizedUptimes: types.SupportedUptimes,
+			recordToSet: withStartTime(incentiveRecordOne, defaultStartTime.Add(time.Hour)),
 		},
 		"record with different incentive amount": {
 			poolId: defaultPoolId,
@@ -2414,8 +2428,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					sdk.NewInt(8),
 				),
 			),
-			recordToSet:       withAmount(incentiveRecordOne, sdk.NewDec(8)),
-			authorizedUptimes: types.SupportedUptimes,
+			recordToSet: withAmount(incentiveRecordOne, sdk.NewDec(8)),
 		},
 		"existing incentive records on different uptime accumulators": {
 			poolId: defaultPoolId,
@@ -2426,9 +2439,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet:       incentiveRecordOne,
-			existingRecords:   []types.IncentiveRecord{incentiveRecordTwo, incentiveRecordThree},
-			authorizedUptimes: types.SupportedUptimes,
+			recordToSet:     incentiveRecordOne,
+			existingRecords: []types.IncentiveRecord{incentiveRecordTwo, incentiveRecordThree},
 
 			// We still expect a minimum of 0 since the existing records are on other uptime accumulators
 			minimumGasConsumed: uint64(0),
@@ -2448,7 +2460,6 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 				withMinUptime(incentiveRecordThree, incentiveRecordOne.MinUptime),
 				withMinUptime(incentiveRecordFour, incentiveRecordOne.MinUptime),
 			},
-			authorizedUptimes: types.SupportedUptimes,
 
 			// We expect # existing records * BaseGasFeeForNewIncentive. Since there are
 			// three existing records on the uptime accum the new record is being added to,
@@ -2479,8 +2490,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet:       incentiveRecordOne,
-			authorizedUptimes: types.SupportedUptimes,
+			recordToSet: incentiveRecordOne,
 
 			expectedError: types.PoolNotFoundError{PoolId: 2},
 		},
@@ -2493,8 +2503,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					sdk.ZeroInt(),
 				),
 			),
-			recordToSet:       withAmount(incentiveRecordOne, sdk.ZeroDec()),
-			authorizedUptimes: types.SupportedUptimes,
+			recordToSet: withAmount(incentiveRecordOne, sdk.ZeroDec()),
 
 			expectedError: types.InvalidIncentiveCoinError{PoolId: 1, IncentiveCoin: sdk.NewCoin(incentiveRecordOne.IncentiveDenom, sdk.ZeroInt())},
 		},
@@ -2507,8 +2516,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet:       withStartTime(incentiveRecordOne, defaultBlockTime.Add(-1*time.Second)),
-			authorizedUptimes: types.SupportedUptimes,
+			recordToSet: withStartTime(incentiveRecordOne, defaultBlockTime.Add(-1*time.Second)),
 
 			expectedError: types.StartTimeTooEarlyError{PoolId: 1, CurrentBlockTime: defaultBlockTime, StartTime: defaultBlockTime.Add(-1 * time.Second)},
 		},
@@ -2521,8 +2529,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet:       withEmissionRate(incentiveRecordOne, sdk.ZeroDec()),
-			authorizedUptimes: types.SupportedUptimes,
+			recordToSet: withEmissionRate(incentiveRecordOne, sdk.ZeroDec()),
 
 			expectedError: types.NonPositiveEmissionRateError{PoolId: 1, EmissionRate: sdk.ZeroDec()},
 		},
@@ -2535,8 +2542,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet:       withEmissionRate(incentiveRecordOne, sdk.NewDec(-1)),
-			authorizedUptimes: types.SupportedUptimes,
+			recordToSet: withEmissionRate(incentiveRecordOne, sdk.NewDec(-1)),
 
 			expectedError: types.NonPositiveEmissionRateError{PoolId: 1, EmissionRate: sdk.NewDec(-1)},
 		},
@@ -2569,11 +2575,10 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			expectedError: types.InvalidMinUptimeError{PoolId: 1, MinUptime: time.Hour * 3, AuthorizedUptimes: types.SupportedUptimes},
 		},
 		"insufficient sender balance": {
-			poolId:            defaultPoolId,
-			sender:            sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr),
-			senderBalance:     sdk.NewCoins(),
-			recordToSet:       incentiveRecordOne,
-			authorizedUptimes: types.SupportedUptimes,
+			poolId:        defaultPoolId,
+			sender:        sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr),
+			senderBalance: sdk.NewCoins(),
+			recordToSet:   incentiveRecordOne,
 
 			expectedError: types.IncentiveInsufficientBalanceError{PoolId: 1, IncentiveDenom: incentiveRecordOne.IncentiveDenom, IncentiveAmount: incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt()},
 		},
@@ -2647,6 +2652,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 	}
 }
 
+// TestUpdateAccumAndClaimRewards runs basic sanity checks on accumulator update and claiming logic, testing a simple happy path invariant.
+// Both claiming and updating functionality is tested more thoroughly in each function's respective unit tests.
 func (s *KeeperTestSuite) TestUpdateAccumAndClaimRewards() {
 	validPositionKey := types.KeySpreadRewardPositionAccumulator(1)
 	invalidPositionKey := types.KeySpreadRewardPositionAccumulator(2)
@@ -2832,9 +2839,10 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			initSenderBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, defaultSender)
 			initPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetAddress())
 
+			largestSupportedUptime := s.clk.GetLargestSupportedUptimeDuration(s.Ctx)
 			if !tc.forfeitIncentives {
-				// Let enough time elapse for the position to accrue rewards for all uptimes
-				s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(types.SupportedUptimes[len(types.SupportedUptimes)-1]))
+				// Let enough time elapse for the position to accrue rewards for all supported uptimes.
+				s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(largestSupportedUptime))
 			}
 
 			// --- System under test ---
@@ -2929,9 +2937,9 @@ func (s *KeeperTestSuite) TestFunctional_ClaimIncentives_LiquidityChange_Varying
 	requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1))
 
 	// Set test authorized uptime params.
-	params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-	params.AuthorizedUptimes = []time.Duration{time.Nanosecond, testFullChargeDuration}
-	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
+	clParams := s.clk.GetParams(s.Ctx)
+	clParams.AuthorizedUptimes = []time.Duration{time.Nanosecond, testFullChargeDuration}
+	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
 
 	// Fund accounts twice because two positions are created.
 	s.FundAcc(defaultAddress, requiredBalances.Add(requiredBalances...))
@@ -3001,6 +3009,7 @@ func (s *KeeperTestSuite) TestFunctional_ClaimIncentives_LiquidityChange_Varying
 	s.Require().Equal(expectedCoinsPerFullCharge.Add(expectedHalfOfExpectedCoinsPerFullCharge.Add(oneUUSDCCoin)...).String(), collected.String())
 }
 
+// TestGetAllIncentiveRecordsForUptime tests getting all incentive records for a given uptime, regardless of whether it is authorized.
 func (s *KeeperTestSuite) TestGetAllIncentiveRecordsForUptime() {
 	invalidPoolId := uint64(2)
 	tests := map[string]struct {
@@ -3119,6 +3128,7 @@ func (s *KeeperTestSuite) TestGetAllIncentiveRecordsForUptime() {
 	}
 }
 
+// TestFindUptimeIndex tests finding the index of a given uptime in the supported uptimes constant slice.
 func (s *KeeperTestSuite) TestFindUptimeIndex() {
 	tests := map[string]struct {
 		requestedUptime time.Duration
@@ -3153,6 +3163,9 @@ func (s *KeeperTestSuite) TestFindUptimeIndex() {
 	}
 }
 
+// TestPrepareBalancerPoolAsFullRange tests the preparation of a balancer pool as a full range position on its linked concentrated pool.
+// Note that regardless of which uptimes are authorized, we always add records on all uptime accumulators so this test simply runs checks
+// on pool-wide supported uptimes.
 func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 	defaultBalancerAssets := []balancer.PoolAsset{
 		{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(1000000000))},
@@ -3412,8 +3425,8 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRangeWithNonExistentPools
 }
 
 func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
-	lockableDurations := s.App.PoolIncentivesKeeper.GetLockableDurations(s.Ctx)
-	longestLockableDuration := lockableDurations[len(lockableDurations)-1]
+	longestLockableDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
+	s.Require().NoError(err)
 	uptimeHelper := getExpectedUptimes()
 
 	tests := map[string]struct {
@@ -3679,10 +3692,10 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			s.Require().NoError(err)
 
 			// Since balancer position bonding is a stronger constraint than CL charging, we never need to forfeit incentives
-			longestSupportedUptime := types.SupportedUptimes[len(types.SupportedUptimes)-1]
+			largestSupportedUptime := s.clk.GetLargestSupportedUptimeDuration(s.Ctx)
 
 			// Calculate the number of tokens we expect to see in the balancer gauge
-			expectedTokensInGauge := expectedIncentivesFromUptimeGrowth(tc.uptimeGrowth, addedLiquidity, longestSupportedUptime, defaultMultiplier)
+			expectedTokensInGauge := expectedIncentivesFromUptimeGrowth(tc.uptimeGrowth, addedLiquidity, largestSupportedUptime, defaultMultiplier)
 
 			// Ensure gauge coins and amountClaimed are correct
 			s.Require().Equal(expectedTokensInGauge, gauge.Coins)
@@ -3696,22 +3709,26 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 	}
 }
 
-func (s *KeeperTestSuite) TestGetLargestAuthorizedUptime() {
+func (s *KeeperTestSuite) TestGetLargestAuthorizedAndSupportedUptimes() {
+	// Note: we assume the largest supported uptime is at the end of the list.
+	// While we could hardcode this, this setup is backwards compatible with changes in the list.
+	longestSupportedUptime := types.SupportedUptimes[len(types.SupportedUptimes)-1]
 	tests := map[string]struct {
 		preSetAuthorizedParams []time.Duration
-		expected               time.Duration
+		expectedAuthorized     time.Duration
+		expectedSupported      time.Duration
 	}{
-		"all supported uptimes": {
+		"All supported uptimes authorized": {
 			preSetAuthorizedParams: types.SupportedUptimes,
-			expected:               types.SupportedUptimes[len(types.SupportedUptimes)-1],
+			expectedAuthorized:     longestSupportedUptime,
 		},
-		"1 ns": {
+		"Only 1 ns authorized": {
 			preSetAuthorizedParams: []time.Duration{time.Nanosecond},
-			expected:               time.Nanosecond,
+			expectedAuthorized:     time.Nanosecond,
 		},
-		"unordered": {
+		"Unordered authorized uptimes": {
 			preSetAuthorizedParams: []time.Duration{time.Hour * 24 * 7, time.Nanosecond, time.Hour * 24},
-			expected:               time.Hour * 24 * 7,
+			expectedAuthorized:     time.Hour * 24 * 7,
 		},
 		// note cannot have test case with empty authorized uptimes due to parameter validation.
 	}
@@ -3720,15 +3737,16 @@ func (s *KeeperTestSuite) TestGetLargestAuthorizedUptime() {
 		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
-			k := s.App.ConcentratedLiquidityKeeper
 
-			params := k.GetParams(s.Ctx)
-			params.AuthorizedUptimes = tc.preSetAuthorizedParams
-			k.SetParams(s.Ctx, params)
+			clParams := s.clk.GetParams(s.Ctx)
+			clParams.AuthorizedUptimes = tc.preSetAuthorizedParams
+			s.clk.SetParams(s.Ctx, clParams)
 
-			actual := k.GetLargestAuthorizedUptimeDuration(s.Ctx)
+			actualAuthorized := s.clk.GetLargestAuthorizedUptimeDuration(s.Ctx)
+			actualSupported := s.clk.GetLargestSupportedUptimeDuration(s.Ctx)
 
-			s.Require().Equal(tc.expected, actual)
+			s.Require().Equal(tc.expectedAuthorized, actualAuthorized)
+			s.Require().Equal(longestSupportedUptime, actualSupported)
 		})
 	}
 }
@@ -3824,6 +3842,7 @@ func (s *KeeperTestSuite) TestMoveRewardsToSamePositionAndDeleteOldAcc() {
 	s.Require().ErrorIs(err, expectedError)
 }
 
+// TestGetUptimeTrackerValues tests getter for tick-level uptime trackers.
 func (s *KeeperTestSuite) TestGetUptimeTrackerValues() {
 	foo100 := sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(100)))
 	testCases := []struct {
