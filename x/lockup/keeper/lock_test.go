@@ -8,6 +8,7 @@ import (
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -533,6 +534,61 @@ func (s *KeeperTestSuite) TestCreateLock() {
 	s.Require().Equal(sdk.NewInt(30), balance.Amount)
 }
 
+func (s *KeeperTestSuite) TestCreateLockNoSend() {
+	s.SetupTest()
+
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+
+	// test locking without balance
+	lock, err := s.App.LockupKeeper.CreateLockNoSend(s.Ctx, addr1, coins, time.Second)
+	s.Require().NoError(err)
+
+	// check new lock
+	s.Require().Equal(coins, lock.Coins)
+	s.Require().Equal(time.Second, lock.Duration)
+	s.Require().Equal(time.Time{}, lock.EndTime)
+	s.Require().Equal(uint64(1), lock.ID)
+
+	lockID := s.App.LockupKeeper.GetLastLockID(s.Ctx)
+	s.Require().Equal(uint64(1), lockID)
+
+	// check accumulation store
+	accum := s.App.LockupKeeper.GetPeriodLocksAccumulation(s.Ctx, types.QueryCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "stake",
+		Duration:      time.Second,
+	})
+	s.Require().Equal(accum.String(), "10")
+
+	// create new lock (this time with a balance)
+	originalLockBalance := int64(20)
+	coins = sdk.Coins{sdk.NewInt64Coin("stake", originalLockBalance)}
+	s.FundAcc(addr1, coins)
+
+	lock, err = s.App.LockupKeeper.CreateLockNoSend(s.Ctx, addr1, coins, time.Second)
+	s.Require().NoError(err)
+
+	lockID = s.App.LockupKeeper.GetLastLockID(s.Ctx)
+	s.Require().Equal(uint64(2), lockID)
+
+	// check accumulation store
+	accum = s.App.LockupKeeper.GetPeriodLocksAccumulation(s.Ctx, types.QueryCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "stake",
+		Duration:      time.Second,
+	})
+	s.Require().Equal(accum.String(), "30")
+
+	// check that send did not occur and balances are unchanged
+	balance := s.App.BankKeeper.GetBalance(s.Ctx, addr1, "stake")
+	s.Require().Equal(sdk.NewInt(originalLockBalance).String(), balance.Amount.String())
+
+	acc := s.App.AccountKeeper.GetModuleAccount(s.Ctx, types.ModuleName)
+	balance = s.App.BankKeeper.GetBalance(s.Ctx, acc.GetAddress(), "stake")
+	s.Require().Equal(sdk.ZeroInt().String(), balance.Amount.String())
+}
+
 func (s *KeeperTestSuite) TestAddTokensToLock() {
 	initialLockCoin := sdk.NewInt64Coin("stake", 10)
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
@@ -717,9 +773,9 @@ func (s *KeeperTestSuite) TestLock() {
 		Coins:    coins,
 	}
 
-	// test locking without balance
+	// test locking without balance (should work since we don't send the underlying balance)
 	err := s.App.LockupKeeper.Lock(s.Ctx, lock, coins)
-	s.Require().Error(err)
+	s.Require().NoError(err)
 
 	// check accumulation store
 	accum := s.App.LockupKeeper.GetPeriodLocksAccumulation(s.Ctx, types.QueryCondition{
@@ -727,7 +783,7 @@ func (s *KeeperTestSuite) TestLock() {
 		Denom:         "stake",
 		Duration:      time.Second,
 	})
-	s.Require().Equal(accum.String(), "0")
+	s.Require().Equal(accum.String(), "10")
 
 	s.FundAcc(addr1, coins)
 	err = s.App.LockupKeeper.Lock(s.Ctx, lock, coins)
@@ -739,14 +795,15 @@ func (s *KeeperTestSuite) TestLock() {
 		Denom:         "stake",
 		Duration:      time.Second,
 	})
-	s.Require().Equal(accum.String(), "10")
+	s.Require().Equal(accum.String(), "20")
 
+	// Since lock method no longer sends the underlying coins, the account balance should be unchanged
 	balance := s.App.BankKeeper.GetBalance(s.Ctx, addr1, "stake")
-	s.Require().Equal(sdk.ZeroInt(), balance.Amount)
+	s.Require().Equal(sdk.NewInt(10).String(), balance.Amount.String())
 
 	acc := s.App.AccountKeeper.GetModuleAccount(s.Ctx, types.ModuleName)
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, acc.GetAddress(), "stake")
-	s.Require().Equal(sdk.NewInt(10), balance.Amount)
+	s.Require().Equal(sdk.NewInt(0).String(), balance.Amount.String())
 }
 
 func (s *KeeperTestSuite) AddTokensToLockForSynth() {
@@ -796,11 +853,12 @@ func (s *KeeperTestSuite) AddTokensToLockForSynth() {
 		for i, synthlock := range s.App.LockupKeeper.GetAllSyntheticLockups(s.Ctx) {
 			s.Require().Equal(synthlock, synthlocks[i])
 		}
-		// by GetAllSyntheticLockupsByLockup
+		// by GetSyntheticLockupByUnderlyingLockId
 		for i := uint64(1); i <= 3; i++ {
-			for j, synthlockByLockup := range s.App.LockupKeeper.GetAllSyntheticLockupsByLockup(s.Ctx, i) {
-				s.Require().Equal(synthlockByLockup, synthlocks[(int(i)-1)*3+j])
-			}
+			synthlockByLockup, err := s.App.LockupKeeper.GetSyntheticLockupByUnderlyingLockId(s.Ctx, i)
+			s.Require().NoError(err)
+			s.Require().Equal(synthlockByLockup, synthlocks[(int(i)-1)*3+int(i)])
+
 		}
 		// by GetAllSyntheticLockupsByAddr
 		for i, synthlock := range s.App.LockupKeeper.GetAllSyntheticLockupsByAddr(s.Ctx, addr1) {
@@ -1257,9 +1315,10 @@ func (s *KeeperTestSuite) TestForceUnlock() {
 		s.Require().Equal(balances, coinsToLock)
 
 		// if it was superfluid delegated lock,
-		//  confirm that we don't have associated synth locks
-		synthLocks := s.App.LockupKeeper.GetAllSyntheticLockupsByLockup(s.Ctx, lock.ID)
-		s.Require().Equal(0, len(synthLocks))
+		// confirm that we don't have associated synth lock
+		synthLock, err := s.App.LockupKeeper.GetSyntheticLockupByUnderlyingLockId(s.Ctx, lock.ID)
+		s.Require().NoError(err)
+		s.Require().Equal((lockuptypes.SyntheticLock{}), synthLock)
 
 		// check if lock is deleted by checking trying to get lock ID
 		_, err = s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
@@ -1272,6 +1331,7 @@ func (s *KeeperTestSuite) TestPartialForceUnlock() {
 
 	defaultDenomToLock := "stake"
 	defaultAmountToLock := sdk.NewInt(10000000)
+	coinsToLock := sdk.NewCoins(sdk.NewCoin("stake", defaultAmountToLock))
 
 	testCases := []struct {
 		name               string
@@ -1280,7 +1340,7 @@ func (s *KeeperTestSuite) TestPartialForceUnlock() {
 	}{
 		{
 			name:               "unlock full amount",
-			coinsToForceUnlock: sdk.Coins{sdk.NewCoin(defaultDenomToLock, defaultAmountToLock)},
+			coinsToForceUnlock: coinsToLock,
 			expectedPass:       true,
 		},
 		{
@@ -1302,9 +1362,9 @@ func (s *KeeperTestSuite) TestPartialForceUnlock() {
 	for _, tc := range testCases {
 		// set up test and create default lock
 		s.SetupTest()
-		coinsToLock := sdk.NewCoins(sdk.NewCoin("stake", defaultAmountToLock))
+
 		s.FundAcc(addr1, sdk.NewCoins(coinsToLock...))
-		// balanceBeforeLock := s.App.BankKeeper.GetAllBalances(s.Ctx, addr1)
+
 		lock, err := s.App.LockupKeeper.CreateLock(s.Ctx, addr1, coinsToLock, time.Minute)
 		s.Require().NoError(err)
 

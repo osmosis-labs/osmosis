@@ -28,6 +28,8 @@ type LockupKeeper interface {
 	// TODO: Fix this in future code update
 	BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) (uint64, error)
 	ForceUnlock(ctx sdk.Context, lock lockuptypes.PeriodLock) error
+	PartialForceUnlock(ctx sdk.Context, lock lockuptypes.PeriodLock, coins sdk.Coins) error
+	SplitLock(ctx sdk.Context, lock lockuptypes.PeriodLock, coins sdk.Coins, forceUnlock bool) (lockuptypes.PeriodLock, error)
 
 	CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockuptypes.PeriodLock, error)
 
@@ -39,7 +41,7 @@ type LockupKeeper interface {
 	GetAllSyntheticLockups(ctx sdk.Context) []lockuptypes.SyntheticLock
 	CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string, unlockDuration time.Duration, isUnlocking bool) error
 	DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) error
-	GetAllSyntheticLockupsByLockup(ctx sdk.Context, lockID uint64) []lockuptypes.SyntheticLock
+	GetSyntheticLockupByUnderlyingLockId(ctx sdk.Context, lockID uint64) (lockuptypes.SyntheticLock, error)
 }
 
 type LockupMsgServer interface {

@@ -103,7 +103,7 @@ func (k Keeper) RouteExactAmountIn(
 	return tokenOutAmount, nil
 }
 
-// SplitRouteExactAmountIn route the swap across multiple multihop paths
+// SplitRouteExactAmountIn routes the swap across multiple multihop paths
 // to get the desired token out. This is useful for achieving the most optimal execution. However, note that the responsibility
 // of determining the optimal split is left to the client. This method simply route the swap across the given route.
 // The route must end with the same token out and begin with the same token in.
@@ -121,11 +121,11 @@ func (k Keeper) RouteExactAmountIn(
 func (k Keeper) SplitRouteExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	route []types.SwapAmountInSplitRoute,
+	routes []types.SwapAmountInSplitRoute,
 	tokenInDenom string,
 	tokenOutMinAmount sdk.Int,
 ) (sdk.Int, error) {
-	if err := types.ValidateSwapAmountInSplitRoute(route); err != nil {
+	if err := types.ValidateSwapAmountInSplitRoute(routes); err != nil {
 		return sdk.Int{}, err
 	}
 
@@ -137,7 +137,7 @@ func (k Keeper) SplitRouteExactAmountIn(
 		totalOutAmount                 = sdk.ZeroInt()
 	)
 
-	for _, multihopRoute := range route {
+	for _, multihopRoute := range routes {
 		tokenOutAmount, err := k.RouteExactAmountIn(
 			ctx,
 			sender,

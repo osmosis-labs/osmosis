@@ -26,8 +26,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
+	icq "github.com/cosmos/ibc-apps/modules/async-icq/v4"
 	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
-	icq "github.com/strangelove-ventures/async-icq/v4"
 
 	_ "github.com/osmosis-labs/osmosis/v15/client/docs/statik"
 	clclient "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client"

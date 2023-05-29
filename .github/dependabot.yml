@@ -5,10 +5,15 @@ updates:
   schedule:
     interval: daily
   open-pull-requests-limit: 10
+  labels:
+    - "A:no-changelog"
+    - "V:state/compatible/no_backport"
 - package-ecosystem: gomod
   directory: "/"
   schedule:
     interval: weekly
+  labels:
+    - "A:no-changelog"
   ignore:
     - dependency-name: "github.com/tendermint/tendermint"
       update-types: ["version-update:semver-major", "version-update:semver-minor"]

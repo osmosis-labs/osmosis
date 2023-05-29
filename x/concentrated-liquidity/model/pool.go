@@ -267,9 +267,9 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 }
 
 // isCurrentTickInRange returns true if pool's current tick is within
-// the range of the lower and upper ticks. False otherwise.
+// the range [lowerTick, upperTick). False otherwise.
 func (p Pool) IsCurrentTickInRange(lowerTick, upperTick int64) bool {
-	return p.CurrentTick >= lowerTick && p.CurrentTick <= upperTick
+	return p.CurrentTick >= lowerTick && p.CurrentTick < upperTick
 }
 
 // ApplySwap state of pool after swap.

@@ -298,6 +298,16 @@ func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins
 	return pool.GetTotalPoolLiquidity(ctx), nil
 }
 
+// GetTotalPoolShares returns the total number of pool shares for the given pool.
+func (k Keeper) GetTotalPoolShares(ctx sdk.Context, poolId uint64) (sdk.Int, error) {
+	pool, err := k.GetCFMMPool(ctx, poolId)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	return pool.GetTotalShares(), nil
+}
+
 // setStableSwapScalingFactors sets the stable swap scaling factors.
 // errors if the pool does not exist, the sender is not the scaling factor controller, or due to other
 // internal errors.

@@ -318,6 +318,16 @@ func (k Keeper) computeOutAmtGivenIn(
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.DenomDuplicatedError{TokenInDenom: tokenInMin.Denom, TokenOutDenom: tokenOutDenom}
 	}
 
+	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+	}
+
+	spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, poolId)
+	if err != nil {
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+	}
+
 	// initialize swap state with the following parameters:
 	// as we iterate through the following for loop, this swap state will get updated after each required iteration
 	swapState := SwapState{
@@ -335,9 +345,6 @@ func (k Keeper) computeOutAmtGivenIn(
 
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
 	defer nextTickIter.Close()
-	if !nextTickIter.Valid() {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
-	}
 
 	totalSpreadFactors = sdk.ZeroDec()
 	// Iterate and update swapState until we swap all tokenIn or we reach the specific sqrtPriceLimit
@@ -402,16 +409,22 @@ func (k Keeper) computeOutAmtGivenIn(
 		// If the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
 		// tick has been consumed and we must move on to the next tick to complete the swap
 		if nextTickSqrtPrice.Equal(sqrtPrice) {
+			nextTickInfo, err := ParseTickFromBz(nextTickIter.Value())
+			if err != nil {
+				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+			}
+
+			if err := k.updateGivenPoolUptimeAccumulatorsToNow(ctx, p, uptimeAccums); err != nil {
+				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+			}
+
 			// Retrieve the liquidity held in the next closest initialized tick
-			liquidityNet, err := k.crossTick(ctx, poolId, nextTick, sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.spreadRewardGrowthGlobal))
+			liquidityNet, err := k.crossTick(ctx, poolId, nextTick, &nextTickInfo, sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.spreadRewardGrowthGlobal), spreadRewardAccumulator.GetValue(), uptimeAccums)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 			}
 
 			// Move next tick iterator to the next tick as the tick is crossed.
-			if !nextTickIter.Valid() {
-				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
-			}
 			nextTickIter.Next()
 
 			liquidityNet = swapStrategy.SetLiquidityDeltaSign(liquidityNet)
@@ -432,9 +445,8 @@ func (k Keeper) computeOutAmtGivenIn(
 		}
 	}
 
-	if err := k.chargeSpreadRewards(ctx, poolId, sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.spreadRewardGrowthGlobal)); err != nil {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
-	}
+	// Add spread reward growth per share to the pool-global spread reward accumulator.
+	spreadRewardAccumulator.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.spreadRewardGrowthGlobal)))
 
 	// Coin amounts require int values
 	// Round amountIn up to avoid under charging
@@ -535,19 +547,37 @@ func (k Keeper) computeInAmtGivenOut(
 
 	totalSpreadFactors = sdk.ZeroDec()
 
+	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
+	defer nextTickIter.Close()
+
+	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+	}
+
+	spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, poolId)
+	if err != nil {
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+	}
+
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
 	for swapState.amountSpecifiedRemaining.GT(smallestDec) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
 		// log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
 
+		// Iterator must be valid to be able to retrieve the next tick from it below.
+		if !nextTickIter.Valid() {
+			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
+		}
+
 		// we first check to see what the position of the nearest initialized tick is
 		// if zeroForOne is false, we look to the left of the tick the current sqrt price is at
 		// if zeroForOne is true, we look to the right of the tick the current sqrt price is at
 		// if no ticks are initialized (no users have created liquidity positions) then we return an error
-		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, swapState.tick)
-		if !ok {
-			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.InvalidTickError{}
+		nextTick, err := types.TickIndexFromBytes(nextTickIter.Key())
+		if err != nil {
+			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 		}
 
 		// utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
@@ -586,11 +616,24 @@ func (k Keeper) computeInAmtGivenOut(
 		// if the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
 		// tick has been consumed and we must move on to the next tick to complete the swap
 		if sqrtPriceNextTick.Equal(sqrtPrice) {
-			// retrieve the liquidity held in the next closest initialized tick
-			liquidityNet, err := k.crossTick(ctx, poolId, nextTick, sdk.NewDecCoinFromDec(desiredTokenOut.Denom, swapState.spreadRewardGrowthGlobal))
+			nextTickInfo, err := ParseTickFromBz(nextTickIter.Value())
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 			}
+
+			if err := k.updateGivenPoolUptimeAccumulatorsToNow(ctx, p, uptimeAccums); err != nil {
+				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+			}
+
+			// retrieve the liquidity held in the next closest initialized tick
+			liquidityNet, err := k.crossTick(ctx, poolId, nextTick, &nextTickInfo, sdk.NewDecCoinFromDec(desiredTokenOut.Denom, swapState.spreadRewardGrowthGlobal), spreadRewardAccumulator.GetValue(), uptimeAccums)
+			if err != nil {
+				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+			}
+
+			// Move next tick iterator to the next tick as the tick is crossed.
+			nextTickIter.Next()
+
 			liquidityNet = swapStrategy.SetLiquidityDeltaSign(liquidityNet)
 			// update the swapState's liquidity with the new tick's liquidity
 			swapState.liquidity = swapState.liquidity.AddMut(liquidityNet)
@@ -608,9 +651,8 @@ func (k Keeper) computeInAmtGivenOut(
 		}
 	}
 
-	if err := k.chargeSpreadRewards(ctx, poolId, sdk.NewDecCoinFromDec(tokenInDenom, swapState.spreadRewardGrowthGlobal)); err != nil {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
-	}
+	// Add spread reward growth per share to the pool-global spread reward accumulator.
+	spreadRewardAccumulator.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec(tokenInDenom, swapState.spreadRewardGrowthGlobal)))
 
 	// coin amounts require int values
 	// Round amount in up to avoid under charging the user.
@@ -698,7 +740,7 @@ func (k Keeper) updatePoolForSwap(
 		return err
 	}
 
-	k.listeners.AfterConcentratedPoolSwap(ctx, sender, poolId)
+	k.listeners.AfterConcentratedPoolSwap(ctx, sender, poolId, sdk.Coins{tokenIn}, sdk.Coins{tokenOut})
 
 	// TODO: move this to poolmanager and remove from here.
 	// Also, remove from gamm.

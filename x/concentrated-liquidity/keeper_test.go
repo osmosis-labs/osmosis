@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	concentrated_liquidity "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/clmocks"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
@@ -58,6 +59,7 @@ var (
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
+	clk *concentrated_liquidity.Keeper
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -66,6 +68,7 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (s *KeeperTestSuite) SetupTest() {
 	s.Setup()
+	s.clk = s.App.ConcentratedLiquidityKeeper
 }
 
 func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {
@@ -155,7 +158,7 @@ func (s *KeeperTestSuite) initializeTick(ctx sdk.Context, currentTick int64, tic
 	tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal = spreadRewardGrowthOppositeDirectionOfTraversal
 	tickInfo.UptimeTrackers = uptimeTrackers
 
-	s.App.ConcentratedLiquidityKeeper.SetTickInfo(ctx, validPoolId, tickIndex, tickInfo)
+	s.App.ConcentratedLiquidityKeeper.SetTickInfo(ctx, validPoolId, tickIndex, &tickInfo)
 }
 
 // initializeSpreadRewardsAccumulatorPositionWithLiquidity initializes spread factor accumulator position with given parameters and updates it with given liquidity.
@@ -315,14 +318,31 @@ func (s *KeeperTestSuite) setListenerMockOnConcentratedLiquidityKeeper() {
 	s.App.ConcentratedLiquidityKeeper.SetListenersUnsafe(types.NewConcentratedLiquidityListeners(&clmocks.ConcentratedLiquidityListenerMock{}))
 }
 
-// Crosses the tick and charges the spread factor on the global spread factor accumulator.
-// This mimics crossing an initialized tick during a swap and charging the spread factor on swap completion.
-func (s *KeeperTestSuite) crossTickAndChargeSpreadRewards(poolId uint64, tickIndexToCross int64) {
+// Crosses the tick and charges the fee on the global spread reward accumulator.
+// This mimics crossing an initialized tick during a swap and charging the fee on swap completion.
+func (s *KeeperTestSuite) crossTickAndChargeFee(poolId uint64, tickIndexToCross int64) {
+	nextTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, poolId, tickIndexToCross)
+	s.Require().NoError(err)
+
+	uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, poolId)
+	s.Require().NoError(err)
+
 	// Cross the tick to update it.
-	_, err := s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, poolId, tickIndexToCross, DefaultSpreadRewardAccumCoins[0])
+	_, err = s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, poolId, tickIndexToCross, &nextTickInfo, DefaultSpreadRewardAccumCoins[0], feeAccum.GetValue(), uptimeAccums)
 	s.Require().NoError(err)
-	err = s.App.ConcentratedLiquidityKeeper.ChargeSpreadRewards(s.Ctx, poolId, DefaultSpreadRewardAccumCoins[0])
+	s.AddToSpreadRewardAccumulator(poolId, DefaultSpreadRewardAccumCoins[0])
+}
+
+// AddToFeeAccumulator adds the given fee to pool by updating
+// the internal per-pool accumulator that tracks fee growth per one unit of
+// liquidity.
+func (s *KeeperTestSuite) AddToSpreadRewardAccumulator(poolId uint64, feeUpdate sdk.DecCoin) {
+	feeAccumulator, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, poolId)
 	s.Require().NoError(err)
+	feeAccumulator.AddToAccumulator(sdk.NewDecCoins(feeUpdate))
 }
 
 func (s *KeeperTestSuite) validatePositionSpreadRewardGrowth(poolId uint64, positionId uint64, expectedUnclaimedRewards sdk.DecCoins) {

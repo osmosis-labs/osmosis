@@ -85,7 +85,7 @@ func (s zeroForOneStrategy) ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPric
 
 	// Handle spread rewards.
 	// Note that spread reward is always charged on the amount in.
-	spreadRewardChargeTotal := computespreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget, amountZeroIn, amountZeroInRemaining, s.spreadFactor)
+	spreadRewardChargeTotal := computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget, amountZeroIn, amountZeroInRemaining, s.spreadFactor)
 
 	return sqrtPriceNext, amountZeroIn, amountOneOut, spreadRewardChargeTotal
 }
@@ -187,38 +187,6 @@ func (s zeroForOneStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId u
 // so must add one here to make sure that the current tick is included in the search.
 func (s zeroForOneStrategy) InitializeTickValue(currentTick int64) int64 {
 	return currentTick + 1
-}
-
-// NextInitializedTick returns the next initialized tick index based on the
-// provided tickindex. If no initialized tick exists, <0, false>
-// will be returned.
-//
-// zeroForOneStrategy searches for the next tick to the left of the current tickIndex.
-func (s zeroForOneStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, tickIndex int64) (next int64, initialized bool) {
-	store := ctx.KVStore(s.storeKey)
-
-	// Construct a prefix store with a prefix of <TickPrefix | poolID>, allowing
-	// us to retrieve the next initialized tick without having to scan all ticks.
-	prefixBz := types.KeyTickPrefixByPoolId(poolId)
-	prefixStore := prefix.NewStore(store, prefixBz)
-
-	startKey := types.TickIndexToBytes(tickIndex)
-
-	iter := prefixStore.ReverseIterator(nil, startKey)
-	defer iter.Close()
-
-	for ; iter.Valid(); iter.Next() {
-		// Since, we constructed our prefix store with <TickPrefix | poolID>, the
-		// key is the encoding of a tick index.
-		tick, err := types.TickIndexFromBytes(iter.Key())
-		if err != nil {
-			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
-		}
-		if tick <= tickIndex {
-			return tick, true
-		}
-	}
-	return 0, false
 }
 
 // SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.

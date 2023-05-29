@@ -82,8 +82,7 @@ message UserPositionsRequest {
 }
 
 message UserPositionsResponse {
-  repeated PositionWithUnderlyingAssetBreakdown positions = 1
-      [ (gogoproto.nullable) = false ];
+  repeated FullPositionBreakdown positions = 1 [ (gogoproto.nullable) = false ];
 }
 
 //=============================== PositionById
@@ -92,8 +91,7 @@ message PositionByIdRequest {
 }
 
 message PositionByIdResponse {
-  PositionWithUnderlyingAssetBreakdown position = 1
-      [ (gogoproto.nullable) = false ];
+  FullPositionBreakdown position = 1 [ (gogoproto.nullable) = false ];
 }
 
 //=============================== Pools
@@ -119,11 +117,7 @@ message TickLiquidityNet {
     (gogoproto.moretags) = "yaml:\"liquidity_net\"",
     (gogoproto.nullable) = false
   ];
-  string tick_index = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"tick\"",
-    (gogoproto.nullable) = false
-  ];
+  int64 tick_index = 2 [ (gogoproto.moretags) = "yaml:\"tick_index\"" ];
 }
 
 message LiquidityDepthWithRange {
@@ -132,16 +126,8 @@ message LiquidityDepthWithRange {
     (gogoproto.moretags) = "yaml:\"liquidity_net\"",
     (gogoproto.nullable) = false
   ];
-  string lower_tick = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"tick\"",
-    (gogoproto.nullable) = false
-  ];
-  string upper_tick = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"tick\"",
-    (gogoproto.nullable) = false
-  ];
+  int64 lower_tick = 2 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
+  int64 upper_tick = 3 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
 }
 
 //=============================== LiquidityNetInDirection

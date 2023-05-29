@@ -177,23 +177,6 @@ func (s *KeeperTestSuite) TestGetPoolById() {
 	}
 }
 
-func (s *KeeperTestSuite) TestPoolExists() {
-	s.SetupTest()
-
-	// Create default CL pool
-	pool := s.PrepareConcentratedPool()
-
-	// Check that the pool exists
-	poolExists := s.App.ConcentratedLiquidityKeeper.PoolExists(s.Ctx, pool.GetId())
-	s.Require().True(poolExists)
-
-	// try checking for a non-existent pool
-	poolExists = s.App.ConcentratedLiquidityKeeper.PoolExists(s.Ctx, 2)
-
-	// ensure that this returns false
-	s.Require().False(poolExists)
-}
-
 func (s *KeeperTestSuite) TestConvertConcentratedToPoolInterface() {
 	s.SetupTest()
 

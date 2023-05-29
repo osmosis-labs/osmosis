@@ -84,7 +84,7 @@ in a concentrated liquidity pool.
 
 The price [p] corresponding to a tick [t] is defined by the equation:
 
-$$ p(i) = 1.0001^t $$
+$$ p(t) = 1.0001^t $$
 
 This results in a .01% difference between adjacent tick prices. This does not,
 however, allow for control over the specific prices that the ticks correspond
