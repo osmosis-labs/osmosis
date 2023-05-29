@@ -38,7 +38,7 @@ func (k Keeper) MoveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gaug
 	return k.moveActiveGaugeToFinishedGauge(ctx, gauge)
 }
 
-// ChargeFeeIfSufficientFeeDenomBalance see chargeSpreadFactorIfSufficientFeeDenomBalance spec.
+// ChargeFeeIfSufficientFeeDenomBalance see chargeFeeIfSufficientFeeDenomBalance spec.
 func (k Keeper) ChargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee sdk.Int, gaugeCoins sdk.Coins) error {
 	return k.chargeFeeIfSufficientFeeDenomBalance(ctx, address, fee, gaugeCoins)
 }
