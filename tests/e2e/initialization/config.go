@@ -24,6 +24,7 @@ import (
 	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
 	poolitypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 	twaptypes "github.com/osmosis-labs/osmosis/v15/x/twap/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
@@ -53,6 +54,7 @@ const (
 	IonDenom            = "uion"
 	StakeDenom          = "stake"
 	AtomDenom           = "uatom"
+	DaiDenom            = "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7"
 	OsmoIBCDenom        = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
 	StakeIBCDenom       = "ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B7787"
 	E2EFeeToken         = "e2e-default-feetoken"
@@ -81,6 +83,8 @@ const (
 	EpochDayDuration      = time.Second * 60
 	EpochWeekDuration     = time.Second * 120
 	TWAPPruningKeepPeriod = EpochDayDuration / 4
+
+	DaiOsmoPoolId = 674
 )
 
 var (
@@ -88,6 +92,8 @@ var (
 	StakeAmountCoinA = sdk.NewCoin(OsmoDenom, StakeAmountIntA)
 	StakeAmountIntB  = sdk.NewInt(StakeAmountB)
 	StakeAmountCoinB = sdk.NewCoin(OsmoDenom, StakeAmountIntB)
+
+	DaiOsmoPoolBalances = fmt.Sprintf("%d%s", LuncBalanceA, DaiDenom)
 
 	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom, IonBalanceA, IonDenom, UstBalanceA, UstIBCDenom, LuncBalanceA, LuncIBCDenom)
 	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom, IonBalanceB, IonDenom)
@@ -193,11 +199,11 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 	configDir := chain.nodes[0].configDir()
 	for _, val := range chain.nodes {
 		if chain.chainMeta.Id == ChainAID {
-			if err := addAccount(configDir, "", InitBalanceStrA, val.keyInfo.GetAddress(), forkHeight); err != nil {
+			if err := addAccount(configDir, "", InitBalanceStrA+","+DaiOsmoPoolBalances, val.keyInfo.GetAddress(), forkHeight); err != nil {
 				return err
 			}
 		} else if chain.chainMeta.Id == ChainBID {
-			if err := addAccount(configDir, "", InitBalanceStrB, val.keyInfo.GetAddress(), forkHeight); err != nil {
+			if err := addAccount(configDir, "", InitBalanceStrB+","+DaiOsmoPoolBalances, val.keyInfo.GetAddress(), forkHeight); err != nil {
 				return err
 			}
 		}
@@ -291,6 +297,11 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 		return err
 	}
 
+	err = updateModuleGenesis(appGenState, protorevtypes.ModuleName, &protorevtypes.GenesisState{}, updateProtorevGenesis)
+	if err != nil {
+		return err
+	}
+
 	bz, err := json.MarshalIndent(appGenState, "", "  ")
 	if err != nil {
 		return err
@@ -314,7 +325,7 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 
 func updateBankGenesis(appGenState map[string]json.RawMessage) func(s *banktypes.GenesisState) {
 	return func(bankGenState *banktypes.GenesisState) {
-		denomsToRegister := []string{StakeDenom, IonDenom, OsmoDenom, AtomDenom, LuncIBCDenom, UstIBCDenom}
+		denomsToRegister := []string{StakeDenom, IonDenom, OsmoDenom, AtomDenom, LuncIBCDenom, UstIBCDenom, DaiDenom}
 		for _, denom := range denomsToRegister {
 			setDenomMetadata(bankGenState, denom)
 		}
@@ -357,8 +368,8 @@ func updateStakeGenesis(stakeGenState *staketypes.GenesisState) {
 
 func updatePoolIncentiveGenesis(pooliGenState *poolitypes.GenesisState) {
 	pooliGenState.LockableDurations = []time.Duration{
+		time.Second * 60,
 		time.Second * 120,
-		time.Second * 180,
 		time.Second * 240,
 	}
 	pooliGenState.Params = poolitypes.Params{
@@ -368,9 +379,8 @@ func updatePoolIncentiveGenesis(pooliGenState *poolitypes.GenesisState) {
 
 func updateIncentivesGenesis(incentivesGenState *incentivestypes.GenesisState) {
 	incentivesGenState.LockableDurations = []time.Duration{
-		time.Second,
+		time.Second * 60,
 		time.Second * 120,
-		time.Second * 180,
 		time.Second * 240,
 	}
 	incentivesGenState.Params = incentivestypes.Params{
@@ -397,9 +407,15 @@ func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 
 	gammGenState.Pools = []*types1.Any{uosmoFeeTokenPool}
 
+	// Notice that this is non-inclusive. The DAI/OSMO pool should be created in the
+	// pre-upgrade logic of the upgrade configurer.
+	for poolId := uint64(2); poolId < DaiOsmoPoolId; poolId++ {
+		gammGenState.Pools = append(gammGenState.Pools, setupPool(poolId, OsmoDenom, AtomDenom))
+	}
+
 	// Note that we set the next pool number as 1 greater than the latest created pool.
 	// This is to ensure that migrations are performed correctly.
-	gammGenState.NextPoolNumber = 2
+	gammGenState.NextPoolNumber = DaiOsmoPoolId
 }
 
 func updatePoolManagerGenesis(appGenState map[string]json.RawMessage) func(*poolmanagertypes.GenesisState) {
@@ -467,7 +483,7 @@ func updateTWAPGenesis(appGenState map[string]json.RawMessage) func(twapGenState
 					Asset0Denom:                 denomPair.Denom0,
 					Asset1Denom:                 denomPair.Denom0,
 					Height:                      1,
-					Time:                        time.Date(2023, 02, 1, 0, 0, 0, 0, time.UTC), // some time in the past.
+					Time:                        time.Date(2023, 0o2, 1, 0, 0, 0, 0, time.UTC), // some time in the past.
 					P0LastSpotPrice:             sp0,
 					P1LastSpotPrice:             sp1,
 					P0ArithmeticTwapAccumulator: sdk.ZeroDec(),
@@ -525,6 +541,10 @@ func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {
 		}
 		genUtilGenState.GenTxs = genTxs
 	}
+}
+
+func updateProtorevGenesis(protorevGenState *protorevtypes.GenesisState) {
+	protorevGenState.DeveloperAddress = "osmo1qs9akhf0s05hqskmu9gdnzz3e6u4xc7aaya0u0"
 }
 
 func setDenomMetadata(genState *banktypes.GenesisState, denom string) {

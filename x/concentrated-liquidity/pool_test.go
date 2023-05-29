@@ -1,6 +1,7 @@
 package concentrated_liquidity_test
 
 import (
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,45 +12,35 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
-func (s *KeeperTestSuite) TestOrderInitialPoolDenoms() {
-	denom0, denom1, err := types.OrderInitialPoolDenoms("axel", "osmo")
-	s.Require().NoError(err)
-	s.Require().Equal(denom0, "axel")
-	s.Require().Equal(denom1, "osmo")
-
-	denom0, denom1, err = types.OrderInitialPoolDenoms("usdc", "eth")
-	s.Require().NoError(err)
-	s.Require().Equal(denom0, "eth")
-	s.Require().Equal(denom1, "usdc")
-
-	denom0, denom1, err = types.OrderInitialPoolDenoms("usdc", "usdc")
-	s.Require().Error(err)
-}
-
 func (s *KeeperTestSuite) TestInitializePool() {
 	// Create a valid PoolI from a valid ConcentratedPoolExtension
 	validConcentratedPool := s.PrepareConcentratedPool()
-	validPoolI := validConcentratedPool.(poolmanagertypes.PoolI)
+	validPoolI, ok := validConcentratedPool.(poolmanagertypes.PoolI)
+	s.Require().True(ok)
 
-	// Create a concentrated liquidity pool with invalid tick spacing
+	// Create a concentrated liquidity pool with unauthorized tick spacing
 	invalidTickSpacing := uint64(25)
-	invalidTickSpacingConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(2, ETH, USDC, invalidTickSpacing, DefaultExponentAtPriceOne, DefaultZeroSwapFee)
+	invalidTickSpacingConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(2, ETH, USDC, invalidTickSpacing, DefaultZeroSpreadFactor)
+	s.Require().NoError(err)
 
-	// Create a concentrated liquidity pool with invalid swap fee
-	invalidSwapFee := sdk.MustNewDecFromStr("0.1")
-	invalidSwapFeeConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(3, ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, invalidSwapFee)
+	// Create a concentrated liquidity pool with unauthorized spread factor
+	invalidSpreadFactor := sdk.MustNewDecFromStr("0.1")
+	invalidSpreadFactorConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(3, ETH, USDC, DefaultTickSpacing, invalidSpreadFactor)
 	s.Require().NoError(err)
 
 	// Create an invalid PoolI that doesn't implement ConcentratedPoolExtension
-	var invalidPoolI poolmanagertypes.PoolI
+	invalidPoolId := s.PrepareBalancerPool()
+	invalidPoolI, err := s.App.GAMMKeeper.GetPool(s.Ctx, invalidPoolId)
+	s.Require().NoError(err)
 
-	validCreatorAddress := sdk.AccAddress([]byte("addr1---------------"))
+	validCreatorAddress := s.TestAccs[0]
 
 	tests := []struct {
-		name           string
-		poolI          poolmanagertypes.PoolI
-		creatorAddress sdk.AccAddress
-		expectedErr    error
+		name                      string
+		poolI                     poolmanagertypes.PoolI
+		authorizedDenomsOverwrite []string
+		creatorAddress            sdk.AccAddress
+		expectedErr               error
 	}{
 		{
 			name:           "Happy path",
@@ -66,22 +57,36 @@ func (s *KeeperTestSuite) TestInitializePool() {
 			name:           "Invalid tick spacing",
 			poolI:          &invalidTickSpacingConcentratedPool,
 			creatorAddress: validCreatorAddress,
-			expectedErr:    fmt.Errorf("invalid tick spacing. Got %d", invalidTickSpacing),
+			expectedErr:    types.UnauthorizedTickSpacingError{ProvidedTickSpacing: invalidTickSpacing, AuthorizedTickSpacings: s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx).AuthorizedTickSpacing},
 		},
 		{
-			name:           "Invalid swap fee",
-			poolI:          &invalidSwapFeeConcentratedPool,
+			name:           "Invalid spread factor",
+			poolI:          &invalidSpreadFactorConcentratedPool,
 			creatorAddress: validCreatorAddress,
-			expectedErr:    fmt.Errorf("invalid swap fee. Got %d", invalidSwapFee),
+			expectedErr:    types.UnauthorizedSpreadFactorError{ProvidedSpreadFactor: invalidSpreadFactor, AuthorizedSpreadFactors: s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx).AuthorizedSpreadFactors},
 		},
-		// We cannot test
-		// We don't check creator address because we don't mint anything when making concentrated liquidity pools
-
+		{
+			name:  "unauthorized quote denom",
+			poolI: validPoolI,
+			// this flag overwrites the default authorized quote denoms
+			// so that the test case fails.
+			authorizedDenomsOverwrite: []string{"otherDenom"},
+			creatorAddress:            validCreatorAddress,
+			expectedErr:               types.UnauthorizedQuoteDenomError{ProvidedQuoteDenom: USDC, AuthorizedQuoteDenoms: []string{"otherDenom"}},
+		},
 	}
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			s.SetupTest()
+
+			if len(test.authorizedDenomsOverwrite) > 0 {
+				params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+				params.AuthorizedQuoteDenoms = test.authorizedDenomsOverwrite
+				s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
+			}
+
+			s.setListenerMockOnConcentratedLiquidityKeeper()
 
 			// Method under test.
 			err := s.App.ConcentratedLiquidityKeeper.InitializePool(s.Ctx, test.poolI, test.creatorAddress)
@@ -90,10 +95,10 @@ func (s *KeeperTestSuite) TestInitializePool() {
 				// Ensure no error is returned
 				s.Require().NoError(err)
 
-				// ensure that fee accumulator has been properly initialized
-				feeAccumulator, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, test.poolI.GetId())
+				// Ensure that fee accumulator has been properly initialized
+				spreadRewardAccumulator, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, test.poolI.GetId())
 				s.Require().NoError(err)
-				s.Require().Equal(sdk.DecCoins(nil), feeAccumulator.GetValue())
+				s.Require().Equal(sdk.DecCoins(nil), spreadRewardAccumulator.GetValue())
 
 				// Ensure that uptime accumulators have been properly initialized
 				uptimeAccumulators, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, test.poolI.GetId())
@@ -102,10 +107,22 @@ func (s *KeeperTestSuite) TestInitializePool() {
 				for _, uptimeAccumulator := range uptimeAccumulators {
 					s.Require().Equal(cl.EmptyCoins, uptimeAccumulator.GetValue())
 				}
+
+				s.validateListenerCallCount(1, 0, 0, 0)
 			} else {
 				// Ensure specified error is returned
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, test.expectedErr.Error())
+
+				// Ensure that fee accumulator has not been initialized
+				_, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, test.poolI.GetId())
+				s.Require().Error(err)
+
+				// Ensure that uptime accumulators have not been initialized
+				_, err = s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, test.poolI.GetId())
+				s.Require().Error(err)
+
+				s.validateListenerCallCount(0, 0, 0, 0)
 			}
 		})
 	}
@@ -160,23 +177,6 @@ func (s *KeeperTestSuite) TestGetPoolById() {
 	}
 }
 
-func (s *KeeperTestSuite) TestPoolExists() {
-	s.SetupTest()
-
-	// Create default CL pool
-	pool := s.PrepareConcentratedPool()
-
-	// Check that the pool exists
-	poolExists := s.App.ConcentratedLiquidityKeeper.PoolExists(s.Ctx, pool.GetId())
-	s.Require().True(poolExists)
-
-	// try checking for a non-existent pool
-	poolExists = s.App.ConcentratedLiquidityKeeper.PoolExists(s.Ctx, 2)
-
-	// ensure that this returns false
-	s.Require().False(poolExists)
-}
-
 func (s *KeeperTestSuite) TestConvertConcentratedToPoolInterface() {
 	s.SetupTest()
 
@@ -193,7 +193,8 @@ func (s *KeeperTestSuite) TestPoolIToConcentratedPool() {
 
 	// Create default CL pool
 	concentratedPool := s.PrepareConcentratedPool()
-	poolI := concentratedPool.(poolmanagertypes.PoolI)
+	poolI, ok := concentratedPool.(poolmanagertypes.PoolI)
+	s.Require().True(ok)
 
 	// Ensure no error occurs when converting to ConcentratedPool
 	_, err := cl.ConvertPoolInterfaceToConcentrated(poolI)
@@ -233,45 +234,168 @@ func (s *KeeperTestSuite) TestCalculateSpotPrice() {
 
 	// Create default CL pool
 	concentratedPool := s.PrepareConcentratedPool()
+	poolId := concentratedPool.GetId()
 
 	// should error when price is zero
-	spotPrice, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, concentratedPool.GetId(), ETH, USDC)
+	spotPrice, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId, ETH, USDC)
 	s.Require().Error(err)
+	s.Require().ErrorAs(err, &types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId})
 	s.Require().Equal(sdk.Dec{}, spotPrice)
 
 	// set up default position to have proper spot price
 	s.SetupDefaultPosition(defaultPoolId)
 
-	spotPriceBaseUSDC, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, concentratedPool.GetId(), ETH, USDC)
+	spotPriceBaseUSDC, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId, ETH, USDC)
 	s.Require().NoError(err)
 	s.Require().Equal(spotPriceBaseUSDC, DefaultCurrSqrtPrice.Power(2))
 
 	// test that we have correct values for reversed quote asset and base asset
-	spotPriceBaseETH, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, concentratedPool.GetId(), USDC, ETH)
+	spotPriceBaseETH, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId, USDC, ETH)
 	s.Require().NoError(err)
 	s.Require().Equal(spotPriceBaseETH, sdk.OneDec().Quo(DefaultCurrSqrtPrice.Power(2)))
 
 	// try getting spot price from a non-existent pool
-	spotPrice, err = s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, concentratedPool.GetId()+1, USDC, ETH)
+	spotPrice, err = s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId+1, USDC, ETH)
 	s.Require().Error(err)
 	s.Require().True(spotPrice.IsNil())
 }
 
-func (s *KeeperTestSuite) TestValidateSwapFee() {
+func (s *KeeperTestSuite) TestValidateSpreadFactor() {
+	s.SetupTest()
+	params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+	tests := []struct {
+		name         string
+		spreadFactor sdk.Dec
+		expectValid  bool
+	}{
+		{
+			name:         "Valid spread factor",
+			spreadFactor: params.AuthorizedSpreadFactors[0],
+			expectValid:  true,
+		},
+		{
+			name:         "Invalid spread factor",
+			spreadFactor: params.AuthorizedSpreadFactors[0].Add(sdk.SmallestDec()),
+			expectValid:  false,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			// Method under test.
+			isValid := s.App.ConcentratedLiquidityKeeper.ValidateSpreadFactor(s.Ctx, params, test.spreadFactor)
+
+			s.Require().Equal(test.expectValid, isValid)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestValidateTickSpacing() {
+	s.SetupTest()
+	params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
 	tests := []struct {
 		name        string
-		swapFee     sdk.Dec
+		tickSpacing uint64
 		expectValid bool
 	}{
 		{
-			name:        "Valid swap fee",
-			swapFee:     sdk.MustNewDecFromStr("0.003"),
+			name:        "Valid tick spacing",
+			tickSpacing: params.AuthorizedTickSpacing[0],
 			expectValid: true,
 		},
 		{
-			name:        "Invalid swap fee",
-			swapFee:     sdk.MustNewDecFromStr("0.5"),
+			name:        "Invalid tick spacing",
+			tickSpacing: params.AuthorizedTickSpacing[0] + 1,
 			expectValid: false,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			// Method under test.
+			isValid := s.App.ConcentratedLiquidityKeeper.ValidateTickSpacing(s.Ctx, params, test.tickSpacing)
+
+			s.Require().Equal(test.expectValid, isValid)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestSetPool() {
+	var invalidPool types.ConcentratedPoolExtension
+	validPool := clmodel.Pool{
+		Address:              s.TestAccs[0].String(),
+		IncentivesAddress:    s.TestAccs[1].String(),
+		Id:                   1,
+		CurrentTickLiquidity: sdk.ZeroDec(),
+		Token0:               ETH,
+		Token1:               USDC,
+		CurrentSqrtPrice:     sdk.OneDec(),
+		CurrentTick:          0,
+		TickSpacing:          DefaultTickSpacing,
+		ExponentAtPriceOne:   -6,
+		SpreadFactor:         sdk.MustNewDecFromStr("0.003"),
+		LastLiquidityUpdate:  s.Ctx.BlockTime(),
+	}
+	tests := []struct {
+		name          string
+		pool          types.ConcentratedPoolExtension
+		expectedError error
+	}{
+		{
+			name: "happy path",
+			pool: &validPool,
+		},
+		{
+			name:          "invalidPool",
+			pool:          invalidPool,
+			expectedError: errors.New("invalid pool type when setting concentrated pool"),
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+
+			// Retrieving the pool by ID should return an error.
+			retrievedPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, 1)
+			s.Require().Error(err)
+			s.Require().Nil(retrievedPool)
+
+			// Method under test.
+			err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, test.pool)
+			if test.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, test.expectedError.Error())
+				return
+			}
+			s.Require().NoError(err)
+
+			// Retrieving the pool by ID should return the same pool.
+			retrievedPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, test.pool.GetId())
+			s.Require().NoError(err)
+			s.Require().Equal(test.pool, retrievedPool)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestValidateAuthorizedQuoteDenoms() {
+	tests := []struct {
+		name                  string
+		quoteDenom            string
+		authorizedQuoteDenoms []string
+		expectValid           bool
+	}{
+		{
+			name:                  "found - true",
+			quoteDenom:            ETH,
+			authorizedQuoteDenoms: []string{ETH, USDC},
+			expectValid:           true,
+		},
+		{
+			name:                  "not found - false",
+			quoteDenom:            ETH,
+			authorizedQuoteDenoms: []string{BAR, FOO},
+			expectValid:           false,
 		},
 	}
 
@@ -280,14 +404,166 @@ func (s *KeeperTestSuite) TestValidateSwapFee() {
 			s.SetupTest()
 
 			// Method under test.
-			params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-			isValid := s.App.ConcentratedLiquidityKeeper.ValidateSwapFee(s.Ctx, params, test.swapFee)
+			isValid := cl.ValidateAuthorizedQuoteDenoms(s.Ctx, test.quoteDenom, test.authorizedQuoteDenoms)
 
-			if test.expectValid {
-				s.Require().True(isValid)
-			} else {
-				s.Require().False(isValid)
+			s.Require().Equal(test.expectValid, isValid)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestDecreaseConcentratedPoolTickSpacing() {
+	type positionRange struct {
+		lowerTick int64
+		upperTick int64
+	}
+
+	tests := []struct {
+		name                       string
+		poolIdToTickSpacingRecord  []types.PoolIdToTickSpacingRecord
+		position                   positionRange
+		expectedDecreaseSpacingErr error
+		expectedCreatePositionErr  error
+	}{
+		{
+			name:                      "happy path: tick spacing 100 -> 10",
+			poolIdToTickSpacingRecord: []types.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 10}},
+			position:                  positionRange{lowerTick: -10, upperTick: 10},
+		},
+		{
+			name:                       "error: new tick spacing not authorized",
+			poolIdToTickSpacingRecord:  []types.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 11}},
+			position:                   positionRange{lowerTick: -10, upperTick: 10},
+			expectedDecreaseSpacingErr: fmt.Errorf("tick spacing %d is not valid", 11),
+		},
+		{
+			name:                       "error: new tick spacing higher than current",
+			poolIdToTickSpacingRecord:  []types.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 1000}},
+			position:                   positionRange{lowerTick: -10, upperTick: 10},
+			expectedDecreaseSpacingErr: fmt.Errorf("tick spacing %d is not valid", 1000),
+		},
+		{
+			name:                      "error: cant create position whose lower tick is not divisible by new tick spacing",
+			poolIdToTickSpacingRecord: []types.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 10}},
+			position:                  positionRange{lowerTick: -95, upperTick: 100},
+			expectedCreatePositionErr: types.TickSpacingError{TickSpacing: 10, LowerTick: -95, UpperTick: 100},
+		},
+		{
+			name:                      "error: cant create position whose upper tick is not divisible by new tick spacing",
+			poolIdToTickSpacingRecord: []types.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 10}},
+			position:                  positionRange{lowerTick: -100, upperTick: 95},
+			expectedCreatePositionErr: types.TickSpacingError{TickSpacing: 10, LowerTick: -100, UpperTick: 95},
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+			owner := s.TestAccs[0]
+
+			// Create OSMO <> USDC pool with tick spacing of 100
+			concentratedPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(ETH, USDC)
+
+			// Create a position in the pool that is divisible by the tick spacing
+			_, _, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), -100, 100)
+			s.Require().NoError(err)
+
+			// Attempt to create a position that is not divisible by the tick spacing
+			_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), test.position.lowerTick, test.position.upperTick)
+			s.Require().Error(err)
+
+			// Alter the tick spacing of the pool
+			err = s.App.ConcentratedLiquidityKeeper.DecreaseConcentratedPoolTickSpacing(s.Ctx, test.poolIdToTickSpacingRecord)
+			if test.expectedDecreaseSpacingErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, test.expectedDecreaseSpacingErr.Error())
+				return
 			}
+			s.Require().NoError(err)
+
+			// Attempt to create a position that was previously not divisible by the tick spacing but now is
+			_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), test.position.lowerTick, test.position.upperTick)
+			if test.expectedCreatePositionErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, test.expectedCreatePositionErr.Error())
+				return
+			}
+			s.Require().NoError(err)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
+	var (
+		defaultPoolCoinOne = sdk.NewCoin(USDC, sdk.OneInt())
+		defaultPoolCoinTwo = sdk.NewCoin(ETH, sdk.NewInt(2))
+		nonPoolCool        = sdk.NewCoin("uosmo", sdk.NewInt(3))
+
+		defaultCoins = sdk.NewCoins(defaultPoolCoinOne, defaultPoolCoinTwo)
+	)
+
+	tests := []struct {
+		name           string
+		poolId         uint64
+		poolLiquidity  sdk.Coins
+		expectedResult sdk.Coins
+		expectedErr    error
+	}{
+		{
+			name:           "valid with 2 coins",
+			poolId:         defaultPoolId,
+			poolLiquidity:  defaultCoins,
+			expectedResult: defaultCoins,
+		},
+		{
+			name:           "valid with 1 coin",
+			poolId:         defaultPoolId,
+			poolLiquidity:  sdk.NewCoins(defaultPoolCoinTwo),
+			expectedResult: sdk.NewCoins(defaultPoolCoinTwo),
+		},
+		{
+			// can only happen if someone sends extra tokens to pool
+			// address. Should not occur in practice.
+			name:           "valid with 3 coins",
+			poolId:         defaultPoolId,
+			poolLiquidity:  sdk.NewCoins(defaultPoolCoinTwo, defaultPoolCoinOne, nonPoolCool),
+			expectedResult: defaultCoins,
+		},
+		{
+			// this can happen if someone sends random dust to pool address.
+			name:           "only non-pool coin - does not show up in result",
+			poolId:         defaultPoolId,
+			poolLiquidity:  sdk.NewCoins(nonPoolCool),
+			expectedResult: sdk.Coins(nil),
+		},
+		{
+			name:        "invalid pool id",
+			poolId:      defaultPoolId + 1,
+			expectedErr: types.PoolNotFoundError{PoolId: defaultPoolId + 1},
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			// Create default CL pool
+			pool := s.PrepareConcentratedPool()
+
+			s.FundAcc(pool.GetAddress(), tc.poolLiquidity)
+
+			// Get pool defined in test case
+			actual, err := s.App.ConcentratedLiquidityKeeper.GetTotalPoolLiquidity(s.Ctx, tc.poolId)
+
+			if tc.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectedErr)
+				s.Require().Nil(actual)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedResult, actual)
 		})
 	}
 }

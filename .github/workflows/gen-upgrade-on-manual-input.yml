@@ -24,15 +24,16 @@ jobs:
   post_release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2.3.4
-
-      - name: Setup Go
-        uses: actions/setup-go@v3
+      - 
+        name: Checkout
+        uses: actions/checkout@v3
+      - 
+        name: 🐿 Setup Golang
+        uses: actions/setup-go@v4
         with:
-          go-version: '>=1.19.0'
-          
-      - name: Specify input
+          go-version: '^1.20'
+      - 
+        name: Specify input
         run: |
           env=${{ inputs.version }}
           if [[ $env != '' ]]; then 
@@ -61,7 +62,7 @@ jobs:
 
       - name: Create PR
         if: env.MAJOR == 1
-        uses: peter-evans/create-pull-request@v4
+        uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.COMMIT_TO_BRANCH }}
           title: "auto: code-gen upgrade handler ${{ env.input }}"

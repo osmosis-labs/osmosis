@@ -4,17 +4,19 @@ import (
 	"fmt"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // constants.
 const (
-	TypeMsgLockTokens        = "lock_tokens"
-	TypeMsgBeginUnlockingAll = "begin_unlocking_all"
-	TypeMsgBeginUnlocking    = "begin_unlocking"
-	TypeMsgExtendLockup      = "edit_lockup"
-	TypeForceUnlock          = "force_unlock"
+	TypeMsgLockTokens               = "lock_tokens"
+	TypeMsgBeginUnlockingAll        = "begin_unlocking_all"
+	TypeMsgBeginUnlocking           = "begin_unlocking"
+	TypeMsgExtendLockup             = "edit_lockup"
+	TypeForceUnlock                 = "force_unlock"
+	TypeMsgSetRewardReceiverAddress = "set_reward_receiver_address"
 )
 
 var _ sdk.Msg = &MsgLockTokens{}
@@ -33,7 +35,7 @@ func (m MsgLockTokens) Type() string  { return TypeMsgLockTokens }
 func (m MsgLockTokens) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Owner)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
 	}
 
 	if m.Duration <= 0 {
@@ -75,7 +77,7 @@ func (m MsgBeginUnlockingAll) Type() string  { return TypeMsgBeginUnlockingAll }
 func (m MsgBeginUnlockingAll) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Owner)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
 	}
 	return nil
 }
@@ -105,7 +107,7 @@ func (m MsgBeginUnlocking) Type() string  { return TypeMsgBeginUnlocking }
 func (m MsgBeginUnlocking) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Owner)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
 	}
 
 	if m.ID == 0 {
@@ -147,7 +149,7 @@ func (m MsgExtendLockup) Type() string  { return TypeMsgExtendLockup }
 func (m MsgExtendLockup) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Owner)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
 	}
 	if m.ID == 0 {
 		return fmt.Errorf("id is empty")
@@ -169,7 +171,7 @@ func (m MsgExtendLockup) GetSigners() []sdk.AccAddress {
 
 var _ sdk.Msg = &MsgForceUnlock{}
 
-// NewMsgBeginUnlockingAll creates a message to begin unlocking tokens.
+// NewMsgForceUnlock creates a message to force unlock tokens.
 func NewMsgForceUnlock(owner sdk.AccAddress, id uint64, coins sdk.Coins) *MsgForceUnlock {
 	return &MsgForceUnlock{
 		Owner: owner.String(),
@@ -179,19 +181,19 @@ func NewMsgForceUnlock(owner sdk.AccAddress, id uint64, coins sdk.Coins) *MsgFor
 }
 
 func (m MsgForceUnlock) Route() string { return RouterKey }
-func (m MsgForceUnlock) Type() string  { return TypeMsgBeginUnlockingAll }
+func (m MsgForceUnlock) Type() string  { return TypeForceUnlock }
 func (m MsgForceUnlock) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Owner)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
 	}
 
 	if m.ID <= 0 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "lock id should be bigger than 1 (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "lock id should be bigger than 1 (%s)", err)
 	}
 
 	if !m.Coins.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.Coins.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, m.Coins.String())
 	}
 	return nil
 }
@@ -201,6 +203,42 @@ func (m MsgForceUnlock) GetSignBytes() []byte {
 }
 
 func (m MsgForceUnlock) GetSigners() []sdk.AccAddress {
+	owner, _ := sdk.AccAddressFromBech32(m.Owner)
+	return []sdk.AccAddress{owner}
+}
+
+// NewMsgSetRewardReceiverAddress creates a message for setting reward receiver address
+func NewMsgSetRewardReceiverAddress(owner, rewardReceiver sdk.AccAddress, lockId uint64) *MsgSetRewardReceiverAddress {
+	return &MsgSetRewardReceiverAddress{
+		Owner:          owner.String(),
+		RewardReceiver: rewardReceiver.String(),
+		LockID:         lockId,
+	}
+}
+
+func (m MsgSetRewardReceiverAddress) Route() string { return RouterKey }
+func (m MsgSetRewardReceiverAddress) Type() string  { return TypeMsgSetRewardReceiverAddress }
+func (m MsgSetRewardReceiverAddress) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Owner)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
+	}
+	_, err = sdk.AccAddressFromBech32(m.RewardReceiver)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid reward receiver address (%s)", err)
+	}
+
+	if m.LockID <= 0 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "lock id should be larger than zero, was (%s)", err)
+	}
+	return nil
+}
+
+func (m MsgSetRewardReceiverAddress) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+func (m MsgSetRewardReceiverAddress) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}
 }

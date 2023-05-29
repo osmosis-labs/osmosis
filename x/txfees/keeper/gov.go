@@ -8,5 +8,10 @@ import (
 
 func (k Keeper) HandleUpdateFeeTokenProposal(ctx sdk.Context, p *types.UpdateFeeTokenProposal) error {
 	// setFeeToken internally calls ValidateFeeToken
-	return k.setFeeToken(ctx, p.Feetoken)
+	for _, feeToken := range p.Feetokens {
+		if err := k.setFeeToken(ctx, feeToken); err != nil {
+			return err
+		}
+	}
+	return nil
 }

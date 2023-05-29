@@ -2,12 +2,13 @@ package cli
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	"github.com/spf13/cobra"
-	"strings"
 
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 )
@@ -35,7 +36,6 @@ func GetQueryCmd() *cobra.Command {
 		RunE:                       indexRunCmd,
 	}
 
-	cmd.Short = fmt.Sprintf("Querying commands for the %s module", types.ModuleName)
 	cmd.AddCommand(
 		GetCmdWasmSender(),
 	)

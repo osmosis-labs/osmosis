@@ -11,12 +11,14 @@ import (
 	"time"
 
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/util"
 	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/util"
 
 	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
@@ -57,6 +59,7 @@ const (
 )
 
 func New(t *testing.T, containerManager *containers.Manager, id string, initValidatorConfigs []*initialization.NodeConfig) *Config {
+	t.Helper()
 	numVal := float32(len(initValidatorConfigs))
 	return &Config{
 		ChainMeta: initialization.ChainMeta{
@@ -151,8 +154,8 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	// removes the fee token from balances for calculating the difference in other tokens
 	// before and after the IBC send.
 	removeFeeTokenFromBalance := func(balance sdk.Coins) sdk.Coins {
-		feeTokenBalance := balance.FilterDenoms([]string{initialization.E2EFeeToken})
-		return balance.Sub(feeTokenBalance)
+		feeRewardTokenBalance := balance.FilterDenoms([]string{initialization.E2EFeeToken})
+		return balance.Sub(feeRewardTokenBalance)
 	}
 
 	balancesDstPreWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
@@ -272,6 +275,30 @@ func (c *Config) SubmitParamChangeProposal(subspace, key string, value []byte) e
 
 	node.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
 	c.LatestProposalNumber += 1
+
+	for _, n := range c.NodeConfigs {
+		n.VoteYesProposal(initialization.ValidatorWalletName, c.LatestProposalNumber)
+	}
+
+	require.Eventually(c.t, func() bool {
+		status, err := node.QueryPropStatus(c.LatestProposalNumber)
+		if err != nil {
+			return false
+		}
+		return status == proposalStatusPassed
+	}, time.Second*30, time.Millisecond*500)
+	return nil
+}
+
+func (c *Config) SubmitCreateConcentratedPoolProposal() error {
+	node, err := c.GetDefaultNode()
+	if err != nil {
+		return err
+	}
+
+	node.SubmitCreateConcentratedPoolProposal(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+	c.LatestProposalNumber += 1
+	node.DepositProposal(c.LatestProposalNumber, false)
 
 	for _, n := range c.NodeConfigs {
 		n.VoteYesProposal(initialization.ValidatorWalletName, c.LatestProposalNumber)

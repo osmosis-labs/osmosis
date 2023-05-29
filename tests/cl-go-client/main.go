@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"os/user"
 	"strings"
 	"sync"
 	"time"
@@ -15,7 +16,6 @@ import (
 	"github.com/ignite/cli/ignite/pkg/cosmosaccount"
 	"github.com/ignite/cli/ignite/pkg/cosmosclient"
 
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
@@ -23,34 +23,37 @@ import (
 )
 
 const (
-	expectedPoolId     uint64 = 1
-	addressPrefix             = "osmo"
-	clientHomePath            = "/root/.osmosisd-local"
-	consensusFee              = "1500uosmo"
-	denom0                    = "uosmo"
-	denom1                    = "uion"
-	accountNamePrefix         = "lo-test"
-	numPositions              = 1_000
-	minAmountDeposited        = int64(1_000_000)
-	randSeed                  = 1
-	maxAmountDeposited        = 1_00_000_000
+	expectedPoolId           uint64 = 1
+	addressPrefix                   = "osmo"
+	localosmosisFromHomePath        = "/.osmosisd-local"
+	consensusFee                    = "1500uosmo"
+	denom0                          = "uosmo"
+	denom1                          = "uusdc"
+	tickSpacing              int64  = 100
+	accountNamePrefix               = "lo-test"
+	numPositions                    = 1_000
+	minAmountDeposited              = int64(1_000_000)
+	randSeed                        = 1
+	maxAmountDeposited              = 1_00_000_000
 )
 
 var (
 	defaultAccountName = fmt.Sprintf("%s%d", accountNamePrefix, 1)
-	exponentAtPriceOne = sdk.OneInt().Neg()
 	defaultMinAmount   = sdk.ZeroInt()
+	accountMutex       sync.Mutex
 )
 
 func main() {
 	ctx := context.Background()
+
+	clientHome := getClientHomePath()
 
 	// Create a Cosmos igniteClient instance
 	igniteClient, err := cosmosclient.New(
 		ctx,
 		cosmosclient.WithAddressPrefix(addressPrefix),
 		cosmosclient.WithKeyringBackend(cosmosaccount.KeyringTest),
-		cosmosclient.WithHome(clientHomePath),
+		cosmosclient.WithHome(clientHome),
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -67,6 +70,13 @@ func main() {
 	// Instantiate a query client
 	clQueryClient := poolmanagerqueryproto.NewQueryClient(igniteClient.Context())
 
+	// Print warnings with common problems
+	log.Printf("\n\n\nWARNING 1: your localosmosis and client home are assummed to be %s. Run 'osmosisd get-env' and confirm it matches the path you see printed here\n\n\n", clientHome)
+
+	log.Printf("\n\n\nWARNING 2: you are attempting to interact with pool id %d.\nConfirm that the pool exists. if this is not the pool you want to interact with, please change the expectedPoolId variable in the code\n\n\n", expectedPoolId)
+
+	log.Println("\n\n\nWARNING 3: sometimes the script hangs when just started. In that case, kill it and restart")
+
 	// Query pool with id 1 and create new if does not exist.
 	_, err = clQueryClient.Pool(ctx, &poolmanagerqueryproto.PoolRequest{PoolId: expectedPoolId})
 	if err != nil {
@@ -79,56 +89,50 @@ func main() {
 		}
 	}
 
-	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
+	minTick, maxTick := cltypes.MinTick, cltypes.MaxTick
 	log.Println(minTick, " ", maxTick)
 
 	rand.Seed(randSeed)
 
-	var wg sync.WaitGroup
 	for i := 0; i < numPositions; i++ {
-		wg.Add(1)
-		go func(i int) {
-			defer wg.Done()
-			var (
-				// 1 to 9. These are localosmosis keyring test accounts with names such as:
-				// lo-test1
-				// lo-test2
-				// ...
-				randAccountNum = rand.Intn(8) + 1
-				accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
-				// minTick <= lowerTick <= upperTick
-				lowerTick = rand.Int63n(maxTick-minTick+1) + minTick
-				// lowerTick <= upperTick <= maxTick
-				upperTick = maxTick - rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick))))
+		var (
+			// 1 to 9. These are localosmosis keyring test accounts with names such as:
+			// lo-test1
+			// lo-test2
+			// ...
+			randAccountNum = rand.Intn(8) + 1
+			accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
+			// minTick <= lowerTick <= upperTick
+			lowerTick = roundTickDown(rand.Int63n(maxTick-minTick+1)+minTick, tickSpacing)
+			// lowerTick <= upperTick <= maxTick
+			upperTick = roundTickDown(maxTick-rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick)))), tickSpacing)
 
-				tokenDesired0 = sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
-				tokenDesired1 = sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
-			)
+			tokenDesired0 = sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
+			tokenDesired1 = sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
+			tokensDesired = sdk.NewCoins(tokenDesired0, tokenDesired1)
+		)
 
-			log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
+		log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
 
-			maxRetries := 100
-			for j := 0; j < maxRetries; j++ {
-				amt0, amt1, liquidity := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokenDesired0, tokenDesired1, defaultMinAmount, defaultMinAmount)
-				if err == nil {
-					log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
-					break
-				}
-				time.Sleep(8 * time.Second)
+		maxRetries := 100
+		for j := 0; j < maxRetries; j++ {
+			amt0, amt1, liquidity := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokensDesired, defaultMinAmount, defaultMinAmount)
+			if err == nil {
+				log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
+				break
 			}
-		}(i)
+			time.Sleep(8 * time.Second)
+		}
 	}
-	wg.Wait()
 }
 
 func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 	msg := &model.MsgCreateConcentratedPool{
-		Sender:             getAccountAddressFromKeyring(igniteClient, accountName),
-		Denom1:             denom0,
-		Denom0:             denom1,
-		TickSpacing:        1,
-		ExponentAtPriceOne: exponentAtPriceOne,
-		SwapFee:            sdk.ZeroDec(),
+		Sender:       getAccountAddressFromKeyring(igniteClient, accountName),
+		Denom1:       denom0,
+		Denom0:       denom1,
+		TickSpacing:  1,
+		SpreadFactor: sdk.ZeroDec(),
 	}
 	txResp, err := igniteClient.BroadcastTx(accountName, msg)
 	if err != nil {
@@ -141,14 +145,17 @@ func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 	return resp.PoolID
 }
 
-func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokenDesired0, tokenDesired1 sdk.Coin, tokenMinAmount0, tokenMinAmount1 sdk.Int) (amountCreated0, amountCreated1 sdk.Int, liquidityCreated sdk.Dec) {
+func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokensProvided sdk.Coins, tokenMinAmount0, tokenMinAmount1 sdk.Int) (amountCreated0, amountCreated1 sdk.Int, liquidityCreated sdk.Dec) {
+	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
+	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
+	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
+
 	msg := &cltypes.MsgCreatePosition{
 		PoolId:          poolId,
-		Sender:          getAccountAddressFromKeyring(client, senderKeyringAccountName),
+		Sender:          senderAddress,
 		LowerTick:       lowerTick,
 		UpperTick:       upperTick,
-		TokenDesired0:   tokenDesired0,
-		TokenDesired1:   tokenDesired1,
+		TokensProvided:  tokensProvided,
 		TokenMinAmount0: tokenMinAmount0,
 		TokenMinAmount1: tokenMinAmount1,
 	}
@@ -174,4 +181,34 @@ func getAccountAddressFromKeyring(igniteClient cosmosclient.Client, accountName 
 		log.Fatal(err)
 	}
 	return address
+}
+
+func getClientHomePath() string {
+	currentUser, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+		return ""
+	}
+
+	return currentUser.HomeDir + localosmosisFromHomePath
+}
+
+func roundTickDown(tickIndex int64, tickSpacing int64) int64 {
+	// Round the tick index down to the nearest tick spacing if the tickIndex is in between authorized tick values
+	// Note that this is Euclidean modulus.
+	// The difference from default Go modulus is that Go default results
+	// in a negative remainder when the dividend is negative.
+	// Consider example tickIndex = -17, tickSpacing = 10
+	// tickIndexModulus = tickIndex % tickSpacing = -7
+	// tickIndexModulus = -7 + 10 = 3
+	// tickIndex = -17 - 3 = -20
+	tickIndexModulus := tickIndex % tickSpacing
+	if tickIndexModulus < 0 {
+		tickIndexModulus += tickSpacing
+	}
+
+	if tickIndexModulus != 0 {
+		tickIndex = tickIndex - tickIndexModulus
+	}
+	return tickIndex
 }
