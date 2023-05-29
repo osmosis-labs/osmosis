@@ -936,7 +936,7 @@ func (s *IntegrationTestSuite) TestCreateConcentratedLiquidityPoolVoting_And_TWA
 	s.T().Log("geometric twap, start time ", timeBeforePositionCreationBeforeSwap.Unix())
 
 	// Wait for the next height so that the requested twap
-	// start time (timeBeforeSwap) is not equal to the block time.
+	// start time (timeBeforePositionCreationBeforeSwap) is not equal to the block time.
 	chainA.WaitForNumHeights(1)
 
 	// Check initial TWAP
@@ -951,6 +951,7 @@ func (s *IntegrationTestSuite) TestCreateConcentratedLiquidityPoolVoting_And_TWA
 	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,10000000%s", concentratedPool.GetToken0(), concentratedPool.GetToken1()), 0, 0, concentratedPool.GetId())
 	chainA.WaitForNumHeights(1)
 	timeAfterPositionCreationBeforeSwap := chainANode.QueryLatestBlockTime()
+	chainA.WaitForNumHeights(1)
 	firstPositionTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken0(), concentratedPool.GetToken1(), timeAfterPositionCreationBeforeSwap)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewDec(1), firstPositionTwapBOverA)
