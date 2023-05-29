@@ -983,7 +983,7 @@ func (s *IntegrationTestSuite) TestCreateConcentratedLiquidityPoolVoting_And_TWA
 	s.Require().Error(err)
 	s.Require().Equal(sdk.Dec{}, afterRemoveTwapBOverA)
 
-	// Create a position and check that TWAP now returns a value with the last error time present.
+	// Create a position and check that TWAP now returns a value.
 	s.T().Log("creating position")
 	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,10000000%s", concentratedPool.GetToken0(), concentratedPool.GetToken1()), 0, 0, concentratedPool.GetId())
 	chainA.WaitForNumHeights(1)
@@ -1678,6 +1678,11 @@ func (s *IntegrationTestSuite) TestAConcentratedLiquidity_CanonicalPool_And_Para
 	}
 
 	s.Require().True(found, "concentrated liquidity pool denom not found in superfluid assets")
+
+	// Check that the community pool module account possesses a position
+	communityPoolAddress := chainANode.QueryCommunityPoolModuleAccount()
+	positions := chainANode.QueryConcentratedPositions(communityPoolAddress)
+	s.Require().Len(positions, 1)
 
 	// This spot price is taken from the balancer pool that was initiated pre upgrade.
 	balancerDaiOsmoPool := s.updatedCFMMPool(chainANode, config.DaiOsmoPoolIdv16)
