@@ -1213,7 +1213,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimSpreadRewards(
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.Coins(nil), collected)
 
-	spreadRewardAccum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardsAccumulator(s.Ctx, defaultPoolId)
+	spreadRewardAccum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, defaultPoolId)
 	s.Require().NoError(err)
 
 	// Check that cannot claim old positions
@@ -1225,7 +1225,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimSpreadRewards(
 		hasPosition := s.App.ConcentratedLiquidityKeeper.HasPosition(s.Ctx, oldPositionId)
 		s.Require().False(hasPosition)
 
-		hasSpreadRewardPositionTracker, err := spreadRewardAccum.HasPosition(types.KeySpreadFactorPositionAccumulator(oldPositionId))
+		hasSpreadRewardPositionTracker, err := spreadRewardAccum.HasPosition(types.KeySpreadRewardPositionAccumulator(oldPositionId))
 		s.Require().NoError(err)
 		s.Require().False(hasSpreadRewardPositionTracker)
 	}

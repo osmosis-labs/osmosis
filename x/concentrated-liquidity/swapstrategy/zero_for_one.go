@@ -140,7 +140,7 @@ func (s zeroForOneStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPric
 
 	// Handle spread rewards.
 	// Note that spread reward is always charged on the amount in.
-	spreadRewardChargeTotal := computespreadRewardChargeFromAmountIn(amountZeroIn, s.spreadFactor)
+	spreadRewardChargeTotal := computeSpreadRewardChargeFromAmountIn(amountZeroIn, s.spreadFactor)
 
 	return sqrtPriceNext, amountOneOut, amountZeroIn, spreadRewardChargeTotal
 }

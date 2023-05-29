@@ -44,7 +44,7 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 	// set the tick's spread reward growth opposite direction of last traversal to the spread factor accumulator's value
 	if liquidityBefore.IsZero() {
 		if tickIndex <= currentTick {
-			accum, err := k.GetSpreadRewardsAccumulator(ctx, poolId)
+			accum, err := k.GetSpreadRewardAccumulator(ctx, poolId)
 			if err != nil {
 				return err
 			}

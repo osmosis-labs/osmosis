@@ -96,7 +96,7 @@ func (s *KeeperTestSuite) TestInitializePool() {
 				s.Require().NoError(err)
 
 				// Ensure that fee accumulator has been properly initialized
-				spreadRewardAccumulator, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardsAccumulator(s.Ctx, test.poolI.GetId())
+				spreadRewardAccumulator, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, test.poolI.GetId())
 				s.Require().NoError(err)
 				s.Require().Equal(sdk.DecCoins(nil), spreadRewardAccumulator.GetValue())
 
@@ -115,7 +115,7 @@ func (s *KeeperTestSuite) TestInitializePool() {
 				s.Require().ErrorContains(err, test.expectedErr.Error())
 
 				// Ensure that fee accumulator has not been initialized
-				_, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardsAccumulator(s.Ctx, test.poolI.GetId())
+				_, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, test.poolI.GetId())
 				s.Require().Error(err)
 
 				// Ensure that uptime accumulators have not been initialized

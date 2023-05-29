@@ -29,8 +29,8 @@ var (
 	IncentivePrefix                       = []byte{0x04}
 	PositionIdPrefix                      = []byte{0x08}
 	PoolPositionPrefix                    = []byte{0x09}
-	SpreadFactorPositionAccumulatorPrefix = []byte{0x0A}
-	PoolSpreadRewardsAccumulatorPrefix    = []byte{0x0B}
+	SpreadRewardPositionAccumulatorPrefix = []byte{0x0A}
+	KeySpreadRewardPoolAccumulatorPrefix  = []byte{0x0B}
 	UptimeAccumulatorPrefix               = []byte{0x0C}
 	PositionToLockPrefix                  = []byte{0x0D}
 	PoolIdForLiquidityPrefix              = []byte{0x0E}
@@ -212,15 +212,15 @@ func KeyPoolIncentiveRecords(poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%s%d", IncentivePrefix, KeySeparator, poolId))
 }
 
-// SpreadFactor Accumulator Prefix Keys
+// Spread Reward Accumulator Prefix Keys
 
-func KeySpreadFactorPositionAccumulator(positionId uint64) string {
-	return strings.Join([]string{string(SpreadFactorPositionAccumulatorPrefix), strconv.FormatUint(positionId, 10)}, KeySeparator)
+func KeySpreadRewardPositionAccumulator(positionId uint64) string {
+	return strings.Join([]string{string(SpreadRewardPositionAccumulatorPrefix), strconv.FormatUint(positionId, 10)}, KeySeparator)
 }
 
-func KeySpreadFactorPoolAccumulator(poolId uint64) string {
+func KeySpreadRewardPoolAccumulator(poolId uint64) string {
 	poolIdStr := strconv.FormatUint(poolId, uintBase)
-	return strings.Join([]string{string(PoolSpreadRewardsAccumulatorPrefix), poolIdStr}, "/")
+	return strings.Join([]string{string(KeySpreadRewardPoolAccumulatorPrefix), poolIdStr}, "/")
 }
 
 // Uptme Accumulator Prefix Keys

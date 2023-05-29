@@ -162,8 +162,8 @@ func (s *KeeperTestSuite) initializeTick(ctx sdk.Context, currentTick int64, tic
 }
 
 // initializeSpreadRewardsAccumulatorPositionWithLiquidity initializes spread factor accumulator position with given parameters and updates it with given liquidity.
-func (s *KeeperTestSuite) initializeSpreadRewardsAccumulatorPositionWithLiquidity(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidity sdk.Dec) {
-	err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionSpreadRewardsAccumulator(ctx, poolId, lowerTick, upperTick, positionId, liquidity)
+func (s *KeeperTestSuite) initializeSpreadRewardAccumulatorPositionWithLiquidity(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidity sdk.Dec) {
+	err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionSpreadRewardAccumulator(ctx, poolId, lowerTick, upperTick, positionId, liquidity)
 	s.Require().NoError(err)
 }
 
@@ -282,11 +282,11 @@ func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId ui
 
 // validatePositionSpreadFactorAccUpdate validates that the position's accumulator with given parameters
 // has been updated with liquidity.
-func (s *KeeperTestSuite) validatePositionSpreadFactorAccUpdate(ctx sdk.Context, poolId uint64, positionId uint64, liquidity sdk.Dec) {
-	accum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardsAccumulator(ctx, poolId)
+func (s *KeeperTestSuite) validatePositionSpreadRewardAccUpdate(ctx sdk.Context, poolId uint64, positionId uint64, liquidity sdk.Dec) {
+	accum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(ctx, poolId)
 	s.Require().NoError(err)
 
-	accumulatorPosition, err := accum.GetPositionSize(types.KeySpreadFactorPositionAccumulator(positionId))
+	accumulatorPosition, err := accum.GetPositionSize(types.KeySpreadRewardPositionAccumulator(positionId))
 	s.Require().NoError(err)
 
 	s.Require().Equal(liquidity.String(), accumulatorPosition.String())
@@ -320,14 +320,14 @@ func (s *KeeperTestSuite) setListenerMockOnConcentratedLiquidityKeeper() {
 
 // Crosses the tick and charges the fee on the global spread reward accumulator.
 // This mimics crossing an initialized tick during a swap and charging the fee on swap completion.
-func (s *KeeperTestSuite) crossTickAndChargeFee(poolId uint64, tickIndexToCross int64) {
+func (s *KeeperTestSuite) crossTickAndChargeSpreadReward(poolId uint64, tickIndexToCross int64) {
 	nextTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, poolId, tickIndexToCross)
 	s.Require().NoError(err)
 
 	uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, poolId)
 	s.Require().NoError(err)
 
-	feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, poolId)
+	feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, poolId)
 	s.Require().NoError(err)
 
 	// Cross the tick to update it.
@@ -336,19 +336,19 @@ func (s *KeeperTestSuite) crossTickAndChargeFee(poolId uint64, tickIndexToCross 
 	s.AddToSpreadRewardAccumulator(poolId, DefaultSpreadRewardAccumCoins[0])
 }
 
-// AddToFeeAccumulator adds the given fee to pool by updating
+// AddToSpreadRewardAccumulator adds the given fee to pool by updating
 // the internal per-pool accumulator that tracks fee growth per one unit of
 // liquidity.
 func (s *KeeperTestSuite) AddToSpreadRewardAccumulator(poolId uint64, feeUpdate sdk.DecCoin) {
-	feeAccumulator, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, poolId)
+	feeAccumulator, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, poolId)
 	s.Require().NoError(err)
 	feeAccumulator.AddToAccumulator(sdk.NewDecCoins(feeUpdate))
 }
 
 func (s *KeeperTestSuite) validatePositionSpreadRewardGrowth(poolId uint64, positionId uint64, expectedUnclaimedRewards sdk.DecCoins) {
-	accum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardsAccumulator(s.Ctx, poolId)
+	accum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, poolId)
 	s.Require().NoError(err)
-	positionRecord, err := accum.GetPosition(types.KeySpreadFactorPositionAccumulator(positionId))
+	positionRecord, err := accum.GetPosition(types.KeySpreadRewardPositionAccumulator(positionId))
 	s.Require().NoError(err)
 	if expectedUnclaimedRewards.IsZero() {
 		s.Require().Equal(expectedUnclaimedRewards, positionRecord.UnclaimedRewardsTotal)

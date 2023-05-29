@@ -27,7 +27,7 @@ func (suite *StrategyTestSuite) TestComputespreadRewardChargePerSwapStepOutGiven
 			spreadFactor:             onePercentSpreadFactor,
 
 			// amount in * spread factor / (1 - spread factor)
-			expectedspreadRewardCharge: swapstrategy.ComputespreadRewardChargeFromAmountIn(sdk.NewDec(100), onePercentSpreadFactor),
+			expectedspreadRewardCharge: swapstrategy.ComputeSpreadRewardChargeFromAmountIn(sdk.NewDec(100), onePercentSpreadFactor),
 		},
 		"did not reach target -> charge spread factor on the difference between amount remaining and amount in": {
 			hasReachedTarget:         false,
@@ -70,7 +70,7 @@ func (suite *StrategyTestSuite) TestComputespreadRewardChargePerSwapStepOutGiven
 			suite.SetupTest()
 
 			osmoassert.ConditionalPanic(suite.T(), tc.expectPanic, func() {
-				actualspreadRewardCharge := swapstrategy.ComputespreadRewardChargePerSwapStepOutGivenIn(tc.hasReachedTarget, tc.amountIn, tc.amountSpecifiedRemaining, tc.spreadFactor)
+				actualspreadRewardCharge := swapstrategy.ComputeSpreadRewardChargePerSwapStepOutGivenIn(tc.hasReachedTarget, tc.amountIn, tc.amountSpecifiedRemaining, tc.spreadFactor)
 
 				suite.Require().Equal(tc.expectedspreadRewardCharge, actualspreadRewardCharge)
 			})

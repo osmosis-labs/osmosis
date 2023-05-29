@@ -1153,7 +1153,7 @@ See the following code snippet:
 
 ```go
 if tickIndex <= currentTick {
-  accum, err := k.GetSpreadRewardsAccumulator(ctx, poolId)
+  accum, err := k.GetSpreadRewardAccumulator(ctx, poolId)
   if err != nil {
     return err
   }

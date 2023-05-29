@@ -427,7 +427,7 @@ var (
 		},
 	}
 
-	swapOutGivenInSpreadFactorCases = map[string]SwapTest{
+	swapOutGivenInSpreadRewardCases = map[string]SwapTest{
 		//          5000
 		//  4545 -----|----- 5500
 		"spread factor 1 - single position within one tick: usdc -> eth (1% spread factor)": {
@@ -1108,7 +1108,7 @@ var (
 		},
 	}
 
-	swapInGivenOutSpreadFactorTestCases = map[string]SwapTest{
+	swapInGivenOutSpreadRewardTestCases = map[string]SwapTest{
 		"spread factor 1: single position within one tick: eth (in) -> usdc (out) (1% spread factor) | zfo": {
 			tokenOut:     sdk.NewCoin(USDC, sdk.NewInt(42000000)),
 			tokenInDenom: ETH,
@@ -1638,7 +1638,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, sdk.ZeroDec())
 
 			// manually update spread factor accumulator for the pool
-			spreadFactorAccum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardsAccumulator(s.Ctx, 1)
+			spreadFactorAccum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
 			spreadFactorAccum.AddToAccumulator(DefaultSpreadRewardAccumCoins)
 
@@ -1647,7 +1647,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 			s.setupSecondPosition(test, pool)
 
 			// add 2*DefaultSpreadRewardAccumCoins to spread factor accumulator, now spread factor accumulator has 3*DefaultSpreadRewardAccumCoins as its value
-			spreadFactorAccum, err = s.App.ConcentratedLiquidityKeeper.GetSpreadRewardsAccumulator(s.Ctx, 1)
+			spreadFactorAccum, err = s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
 			spreadFactorAccum.AddToAccumulator(DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)))
 
@@ -1772,7 +1772,7 @@ func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
 			pool := s.PrepareConcentratedPool()
 
 			// manually update spread factor accumulator for the pool
-			spreadFactorAccum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardsAccumulator(s.Ctx, 1)
+			spreadFactorAccum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
 			spreadFactorAccum.AddToAccumulator(DefaultSpreadRewardAccumCoins)
 
@@ -1781,7 +1781,7 @@ func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
 			s.setupSecondPosition(test, pool)
 
 			// add 2*DefaultSpreadRewardAccumCoins to spread factor accumulator, now spread factor accumulator has 3*DefaultSpreadRewardAccumCoins as its value
-			spreadFactorAccum, err = s.App.ConcentratedLiquidityKeeper.GetSpreadRewardsAccumulator(s.Ctx, 1)
+			spreadFactorAccum, err = s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
 			spreadFactorAccum.AddToAccumulator(DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)))
 
@@ -2174,9 +2174,9 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 // We expect to only change spread factor accum state, since pool state change is not handled by ComputeOutAmtGivenIn.
 func (s *KeeperTestSuite) TestComputeOutAmtGivenIn() {
 	// we only use spread factor cases here since write Ctx only takes effect in the spread factor accumulator
-	tests := make(map[string]SwapTest, len(swapOutGivenInSpreadFactorCases))
+	tests := make(map[string]SwapTest, len(swapOutGivenInSpreadRewardCases))
 
-	for name, test := range swapOutGivenInSpreadFactorCases {
+	for name, test := range swapOutGivenInSpreadRewardCases {
 		tests[name] = test
 	}
 

@@ -83,12 +83,12 @@ func (e PositionIdNotFoundError) Error() string {
 	return fmt.Sprintf("position not found. position id (%d)", e.PositionId)
 }
 
-type SpreadFactorPositionNotFoundError struct {
+type SpreadRewardPositionNotFoundError struct {
 	PositionId uint64
 }
 
-func (e SpreadFactorPositionNotFoundError) Error() string {
-	return fmt.Sprintf("position not found in spread factor accumulator. position id (%d)", e.PositionId)
+func (e SpreadRewardPositionNotFoundError) Error() string {
+	return fmt.Sprintf("position not found in spread reward accumulator. position id (%d)", e.PositionId)
 }
 
 type PoolNotFoundError struct {

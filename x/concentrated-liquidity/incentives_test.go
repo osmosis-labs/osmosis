@@ -2648,8 +2648,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 }
 
 func (s *KeeperTestSuite) TestUpdateAccumAndClaimRewards() {
-	validPositionKey := types.KeySpreadFactorPositionAccumulator(1)
-	invalidPositionKey := types.KeySpreadFactorPositionAccumulator(2)
+	validPositionKey := types.KeySpreadRewardPositionAccumulator(1)
+	invalidPositionKey := types.KeySpreadRewardPositionAccumulator(2)
 	tests := map[string]struct {
 		poolId             uint64
 		growthInside       sdk.DecCoins
@@ -3738,7 +3738,7 @@ var defaultGlobalRewardGrowth = sdk.NewDecCoins(oneEth.Add(oneEth))
 
 func (s *KeeperTestSuite) prepareSpreadRewardsAccumulator() accum.AccumulatorObject {
 	pool := s.PrepareConcentratedPool()
-	testAccumulator, err := s.clk.GetSpreadRewardsAccumulator(s.Ctx, pool.GetId())
+	testAccumulator, err := s.clk.GetSpreadRewardAccumulator(s.Ctx, pool.GetId())
 	s.Require().NoError(err)
 	return testAccumulator
 }

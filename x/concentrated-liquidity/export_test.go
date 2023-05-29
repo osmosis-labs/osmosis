@@ -174,12 +174,12 @@ func RoundTickToCanonicalPriceTick(lowerTick, upperTick int64, priceTickLower, p
 }
 
 // spread rewards methods
-func (k Keeper) CreateSpreadRewardsAccumulator(ctx sdk.Context, poolId uint64) error {
-	return k.createSpreadRewardsAccumulator(ctx, poolId)
+func (k Keeper) CreateSpreadRewardAccumulator(ctx sdk.Context, poolId uint64) error {
+	return k.createSpreadRewardAccumulator(ctx, poolId)
 }
 
-func (k Keeper) InitOrUpdatePositionSpreadRewardsAccumulator(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidity sdk.Dec) error {
-	return k.initOrUpdatePositionSpreadRewardsAccumulator(ctx, poolId, lowerTick, upperTick, positionId, liquidity)
+func (k Keeper) InitOrUpdatePositionSpreadRewardAccumulator(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidity sdk.Dec) error {
+	return k.initOrUpdatePositionSpreadRewardAccumulator(ctx, poolId, lowerTick, upperTick, positionId, liquidity)
 }
 
 func (k Keeper) GetSpreadRewardGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {

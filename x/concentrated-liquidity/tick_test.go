@@ -267,9 +267,9 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			pool := s.PrepareConcentratedPool()
 			currentTick := pool.GetCurrentTick()
 
-			_, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardsAccumulator(s.Ctx, 1)
+			_, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
-			spreadFactorAccum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardsAccumulator(s.Ctx, 1)
+			spreadFactorAccum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
 
 			// manually update accumulator for testing
@@ -638,7 +638,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 				s.Require().Equal(test.expectedLiquidityDelta, liquidityDelta)
 
 				// now check if spread factor accumulator has been properly updated
-				accum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardsAccumulator(s.Ctx, test.poolToGet)
+				accum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, test.poolToGet)
 				s.Require().NoError(err)
 
 				// accum value should not have changed

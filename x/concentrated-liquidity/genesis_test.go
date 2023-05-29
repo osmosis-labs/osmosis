@@ -132,7 +132,7 @@ func incentiveAccumsWithPoolId(poolId uint64) []genesis.AccumObject {
 // The function iterates over the poolGenesisEntries, and for each entry, it creates a new Any type using
 // the pool's data, then appends a new PoolData structure containing the pool and its corresponding
 // ticks to the baseGenesis.PoolData. It also appends the corresponding positions to the
-// baseGenesis.Positions, along with the incentive records and accumulator values for spread factors and incentives.
+// baseGenesis.Positions, along with the incentive records and accumulator values for spread rewards and incentives.
 func setupGenesis(baseGenesis genesis.GenesisState, poolGenesisEntries []singlePoolGenesisEntry) genesis.GenesisState {
 	for _, poolGenesisEntry := range poolGenesisEntries {
 		poolCopy := poolGenesisEntry.pool
@@ -199,7 +199,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						},
 					},
 					spreadFactorAccumValues: genesis.AccumObject{
-						Name: types.KeySpreadFactorPoolAccumulator(1),
+						Name: types.KeySpreadRewardPoolAccumulator(1),
 						AccumContent: &accum.AccumulatorContent{
 							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
 							TotalShares: sdk.NewDec(10),
@@ -255,7 +255,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			},
 			expectedspreadFactorAccumValues: []genesis.AccumObject{
 				{
-					Name: types.KeySpreadFactorPoolAccumulator(1),
+					Name: types.KeySpreadRewardPoolAccumulator(1),
 					AccumContent: &accum.AccumulatorContent{
 						AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
 						TotalShares: sdk.NewDec(10),
@@ -303,7 +303,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						},
 					},
 					spreadFactorAccumValues: genesis.AccumObject{
-						Name: types.KeySpreadFactorPoolAccumulator(1),
+						Name: types.KeySpreadRewardPoolAccumulator(1),
 						AccumContent: &accum.AccumulatorContent{
 							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
 							TotalShares: sdk.NewDec(10),
@@ -338,7 +338,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					},
 
 					spreadFactorAccumValues: genesis.AccumObject{
-						Name: types.KeySpreadFactorPoolAccumulator(2),
+						Name: types.KeySpreadRewardPoolAccumulator(2),
 						AccumContent: &accum.AccumulatorContent{
 							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
 							TotalShares: sdk.NewDec(20),
@@ -375,14 +375,14 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			},
 			expectedspreadFactorAccumValues: []genesis.AccumObject{
 				{
-					Name: types.KeySpreadFactorPoolAccumulator(1),
+					Name: types.KeySpreadRewardPoolAccumulator(1),
 					AccumContent: &accum.AccumulatorContent{
 						AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
 						TotalShares: sdk.NewDec(10),
 					},
 				},
 				{
-					Name: types.KeySpreadFactorPoolAccumulator(2),
+					Name: types.KeySpreadRewardPoolAccumulator(2),
 					AccumContent: &accum.AccumulatorContent{
 						AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
 						TotalShares: sdk.NewDec(20),
@@ -465,8 +465,8 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				// Validate ticks.
 				s.validateTicks(expectedTicks, actualTicks)
 
-				// get spread factor accumulator
-				spreadFactorAccum, err := clKeeper.GetSpreadRewardsAccumulator(s.Ctx, actualPool.GetId())
+				// get spread reward accumulator
+				spreadFactorAccum, err := clKeeper.GetSpreadRewardAccumulator(s.Ctx, actualPool.GetId())
 				s.Require().NoError(err)
 				spreadFactorAccums = append(spreadFactorAccums, spreadFactorAccum)
 
@@ -580,7 +580,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						},
 					},
 					spreadFactorAccumValues: genesis.AccumObject{
-						Name: types.KeySpreadFactorPoolAccumulator(poolOne.Id),
+						Name: types.KeySpreadRewardPoolAccumulator(poolOne.Id),
 						AccumContent: &accum.AccumulatorContent{
 							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
 							TotalShares: sdk.NewDec(10),
@@ -635,7 +635,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						},
 					},
 					spreadFactorAccumValues: genesis.AccumObject{
-						Name: types.KeySpreadFactorPoolAccumulator(poolOne.Id),
+						Name: types.KeySpreadRewardPoolAccumulator(poolOne.Id),
 						AccumContent: &accum.AccumulatorContent{
 							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
 							TotalShares: sdk.NewDec(10),
@@ -663,7 +663,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						withTickIndex(withPoolId(defaultFullTick, poolTwo.Id), 999),
 					},
 					spreadFactorAccumValues: genesis.AccumObject{
-						Name: types.KeySpreadFactorPoolAccumulator(poolTwo.Id),
+						Name: types.KeySpreadRewardPoolAccumulator(poolTwo.Id),
 						AccumContent: &accum.AccumulatorContent{
 							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
 							TotalShares: sdk.NewDec(20),
@@ -722,7 +722,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 
 				s.validateTicks(expectedPoolData.Ticks, actualPoolData.Ticks)
 
-				// validate spread factor accumulators
+				// validate spread reward accumulators
 				s.Require().Equal(expectedPoolData.SpreadRewardAccumulator, actualPoolData.SpreadRewardAccumulator)
 
 				// validate incentive accumulator

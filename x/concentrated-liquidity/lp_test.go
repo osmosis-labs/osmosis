@@ -368,7 +368,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			// Check position state
 			s.validatePositionUpdate(s.Ctx, positionId, expectedLiquidityCreated)
 
-			s.validatePositionSpreadFactorAccUpdate(s.Ctx, tc.poolId, positionId, expectedLiquidityCreated)
+			s.validatePositionSpreadRewardAccUpdate(s.Ctx, tc.poolId, positionId, expectedLiquidityCreated)
 
 			// Check tick state
 			s.validateTickUpdates(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, tc.liquidityAmount, tc.expectedSpreadRewardGrowthOutsideLower, tc.expectedSpreadRewardGrowthOutsideUpper)

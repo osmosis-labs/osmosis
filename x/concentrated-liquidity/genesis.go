@@ -38,7 +38,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		}
 		seenPoolIds[poolId] = struct{}{}
 
-		// set up spread factor accumulators
+		// set up spread reward accumulators
 		store := ctx.KVStore(k.storeKey)
 		err = accum.MakeAccumulatorWithValueAndShare(store, poolData.SpreadRewardAccumulator.Name, poolData.SpreadRewardAccumulator.AccumContent.AccumValue, poolData.SpreadRewardAccumulator.AccumContent.TotalShares)
 		if err != nil {
@@ -71,14 +71,14 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 			panic(err)
 		}
 
-		// set individual spread factor accumulator state position
-		spreadFactorAccumObject, err := k.GetSpreadRewardsAccumulator(ctx, positionWrapper.Position.PoolId)
+		// set individual spread reward accumulator state position
+		spreadRewardAccumObject, err := k.GetSpreadRewardAccumulator(ctx, positionWrapper.Position.PoolId)
 		if err != nil {
 			panic(err)
 		}
-		spreadFactorPositionKey := types.KeySpreadFactorPositionAccumulator(positionWrapper.Position.PositionId)
+		spreadRewardPositionKey := types.KeySpreadRewardPositionAccumulator(positionWrapper.Position.PositionId)
 
-		k.initOrUpdateAccumPosition(ctx, spreadFactorAccumObject, positionWrapper.SpreadRewardAccumRecord.AccumValuePerShare, spreadFactorPositionKey, positionWrapper.SpreadRewardAccumRecord.NumShares, positionWrapper.SpreadRewardAccumRecord.UnclaimedRewardsTotal, positionWrapper.SpreadRewardAccumRecord.Options)
+		k.initOrUpdateAccumPosition(ctx, spreadRewardAccumObject, positionWrapper.SpreadRewardAccumRecord.AccumValuePerShare, spreadRewardPositionKey, positionWrapper.SpreadRewardAccumRecord.NumShares, positionWrapper.SpreadRewardAccumRecord.UnclaimedRewardsTotal, positionWrapper.SpreadRewardAccumRecord.Options)
 	}
 }
 
@@ -103,7 +103,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		if err != nil {
 			panic(err)
 		}
-		accumObject, err := k.GetSpreadRewardsAccumulator(ctx, poolI.GetId())
+		accumObject, err := k.GetSpreadRewardAccumulator(ctx, poolI.GetId())
 		if err != nil {
 			panic(err)
 		}
@@ -113,8 +113,8 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 			panic(err)
 		}
 
-		spreadFactorAccumObject := genesis.AccumObject{
-			Name: types.KeySpreadFactorPoolAccumulator(poolI.GetId()),
+		spreadRewardAccumObject := genesis.AccumObject{
+			Name: types.KeySpreadRewardPoolAccumulator(poolI.GetId()),
 			AccumContent: &accum.AccumulatorContent{
 				AccumValue:  accumObject.GetValue(),
 				TotalShares: totalShares,
@@ -151,7 +151,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		poolData = append(poolData, genesis.PoolData{
 			Pool:                    &anyCopy,
 			Ticks:                   ticks,
-			SpreadRewardAccumulator: spreadFactorAccumObject,
+			SpreadRewardAccumulator: spreadRewardAccumObject,
 			IncentivesAccumulators:  incentivesAccumObject,
 			IncentiveRecords:        incentiveRecordsForPool,
 		})
@@ -178,13 +178,13 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 			}
 		}
 
-		// Retrieve spread factor accumulator state for position
-		spreadFactorPositionKey := types.KeySpreadFactorPositionAccumulator(position.PositionId)
-		spreadFactorAccumObject, err := k.GetSpreadRewardsAccumulator(ctx, position.PoolId)
+		// Retrieve spread reward accumulator state for position
+		spreadRewardPositionKey := types.KeySpreadRewardPositionAccumulator(position.PositionId)
+		spreadRewardAccumObject, err := k.GetSpreadRewardAccumulator(ctx, position.PoolId)
 		if err != nil {
 			panic(err)
 		}
-		spreadFactorAccumPositionRecord, err := spreadFactorAccumObject.GetPosition(spreadFactorPositionKey)
+		spreadRewardAccumPositionRecord, err := spreadRewardAccumObject.GetPosition(spreadRewardPositionKey)
 		if err != nil {
 			panic(err)
 		}
@@ -192,7 +192,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		positionData = append(positionData, genesis.PositionData{
 			LockId:                  lockId,
 			Position:                &position,
-			SpreadRewardAccumRecord: spreadFactorAccumPositionRecord,
+			SpreadRewardAccumRecord: spreadRewardAccumPositionRecord,
 		})
 	}
 

@@ -52,7 +52,7 @@ func (q Querier) UserPositions(ctx sdk.Context, req clquery.UserPositionsRequest
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		claimableFees, err := q.Keeper.GetClaimableFees(ctx, position.PositionId)
+		claimableFees, err := q.Keeper.GetClaimableSpreadRewards(ctx, position.PositionId)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
@@ -100,7 +100,7 @@ func (q Querier) PositionById(ctx sdk.Context, req clquery.PositionByIdRequest) 
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	claimableFees, err := q.Keeper.GetClaimableFees(ctx, position.PositionId)
+	claimableFees, err := q.Keeper.GetClaimableSpreadRewards(ctx, position.PositionId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
