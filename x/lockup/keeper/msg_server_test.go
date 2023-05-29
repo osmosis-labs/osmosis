@@ -544,7 +544,7 @@ func (s *KeeperTestSuite) TestSetRewardReceiverAddress() {
 		if test.param.isRewardReceiverAddressOwner {
 			s.Require().Equal(newLock.RewardReceiverAddress, "")
 		} else {
-			s.Require().Equal(newLock.RewardReceiverAddress, s.TestAccs[1].String())
+			s.Require().Equal(s.TestAccs[1].String(), newLock.RewardReceiverAddress)
 		}
 
 	}

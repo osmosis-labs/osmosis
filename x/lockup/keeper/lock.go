@@ -463,7 +463,6 @@ func (k Keeper) SetLockRewardReceiverAddress(ctx sdk.Context, lockID uint64, own
 	if err != nil {
 		return err
 	}
-
 	// check if the lock owner is the method caller.
 	if lock.GetOwner() != owner.String() {
 		return types.ErrNotLockOwner
@@ -471,7 +470,7 @@ func (k Keeper) SetLockRewardReceiverAddress(ctx sdk.Context, lockID uint64, own
 
 	// if the given receiver address is same as the lock owner, we store an empty string instead.
 	if lock.Owner == newReceiverAddress {
-		newReceiverAddress = ""
+		newReceiverAddress = types.DefaultOwnerReceiverPlaceholder
 	}
 
 	if lock.RewardReceiverAddress == newReceiverAddress {

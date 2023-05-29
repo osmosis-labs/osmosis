@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
+
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
@@ -541,35 +543,34 @@ func (s *KeeperTestSuite) TestSetLockRewardReceiverAddress() {
 		isnotOwner            bool
 		lockID                uint64
 		useNewReceiverAddress bool
-		expectedError         bool
+		exepctedErrorType     error
 	}{
 		{
 			name:                  "happy case",
 			isnotOwner:            false,
 			lockID:                1,
 			useNewReceiverAddress: true,
-			expectedError:         false,
 		},
 		{
 			name:                  "error: caller of the function is not the owner",
 			isnotOwner:            true,
 			lockID:                1,
 			useNewReceiverAddress: true,
-			expectedError:         true,
+			exepctedErrorType:     types.ErrNotLockOwner,
 		},
 		{
 			name:                  "error: lock id is invalid",
 			isnotOwner:            false,
-			lockID:                2,
+			lockID:                5,
 			useNewReceiverAddress: true,
-			expectedError:         true,
+			exepctedErrorType:     errorsmod.Wrap(types.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", 5)),
 		},
 		{
 			name:                  "error: new receiver address is same as old",
 			isnotOwner:            false,
 			lockID:                1,
 			useNewReceiverAddress: false,
-			expectedError:         true,
+			exepctedErrorType:     types.ErrRewardReceiverIsSame,
 		},
 	}
 
@@ -602,8 +603,9 @@ func (s *KeeperTestSuite) TestSetLockRewardReceiverAddress() {
 			// System under test
 			// now change the reward receiver state
 			err = s.App.LockupKeeper.SetLockRewardReceiverAddress(s.Ctx, tc.lockID, owner, newReceiver.String())
-			if tc.expectedError {
+			if tc.exepctedErrorType != nil {
 				s.Require().Error(err)
+				s.Require().ErrorContains(tc.exepctedErrorType, err.Error())
 			} else {
 				s.Require().NoError(err)
 				lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
