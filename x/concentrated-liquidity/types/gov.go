@@ -76,7 +76,7 @@ func (p *CreateConcentratedLiquidityPoolProposal) ValidateBasic() error {
 
 	spreadFactor := p.SpreadFactor
 	if spreadFactor.IsNegative() || spreadFactor.GTE(sdk.OneDec()) {
-		return InvalidSpreadFactorError{ActualFee: spreadFactor}
+		return InvalidSpreadFactorError{ActualSpreadFactor: spreadFactor}
 	}
 
 	return nil
@@ -127,7 +127,7 @@ func (p CreateConcentratedLiquidityPoolProposal) String() string {
   Denom1:                %s
   Tick Spacing:          %d
   ExponentAtPriceOne     %s
-  Swap Fee:              %s
+  Spread Factor:         %s
 `, p.Title, p.Description, p.Denom0, p.Denom1, p.TickSpacing, p.ExponentAtPriceOne.String(), p.SpreadFactor.String()))
 	return b.String()
 }

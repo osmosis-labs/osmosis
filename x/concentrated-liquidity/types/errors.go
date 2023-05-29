@@ -83,12 +83,12 @@ func (e PositionIdNotFoundError) Error() string {
 	return fmt.Sprintf("position not found. position id (%d)", e.PositionId)
 }
 
-type FeePositionNotFoundError struct {
+type SpreadRewardPositionNotFoundError struct {
 	PositionId uint64
 }
 
-func (e FeePositionNotFoundError) Error() string {
-	return fmt.Sprintf("position not found in fee accumulator. position id (%d)", e.PositionId)
+func (e SpreadRewardPositionNotFoundError) Error() string {
+	return fmt.Sprintf("position not found in spread reward accumulator. position id (%d)", e.PositionId)
 }
 
 type PoolNotFoundError struct {
@@ -288,11 +288,11 @@ func (e SqrtPriceNegativeError) Error() string {
 }
 
 type InvalidSpreadFactorError struct {
-	ActualFee sdk.Dec
+	ActualSpreadFactor sdk.Dec
 }
 
 func (e InvalidSpreadFactorError) Error() string {
-	return fmt.Sprintf("invalid spread factor(%s), must be in [0, 1) range", e.ActualFee)
+	return fmt.Sprintf("invalid spread factor(%s), must be in [0, 1) range", e.ActualSpreadFactor)
 }
 
 type PositionAlreadyExistsError struct {

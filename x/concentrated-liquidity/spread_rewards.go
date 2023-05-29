@@ -11,20 +11,20 @@ import (
 
 var emptyCoins = sdk.DecCoins(nil)
 
-// createFeeAccumulator creates an accumulator object in the store using the given poolId.
+// createSpreadRewardAccumulator creates an accumulator object in the store using the given poolId.
 // The accumulator is initialized with the default(zero) values.
-func (k Keeper) createFeeAccumulator(ctx sdk.Context, poolId uint64) error {
-	err := accum.MakeAccumulator(ctx.KVStore(k.storeKey), types.KeyFeePoolAccumulator(poolId))
+func (k Keeper) createSpreadRewardAccumulator(ctx sdk.Context, poolId uint64) error {
+	err := accum.MakeAccumulator(ctx.KVStore(k.storeKey), types.KeySpreadRewardPoolAccumulator(poolId))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// GetFeeAccumulator gets the fee accumulator object using the given poolOd
+// GetSpreadRewardAccumulator gets the spread reward accumulator object using the given poolOd
 // returns error if accumulator for the given poolId does not exist.
-func (k Keeper) GetFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.AccumulatorObject, error) {
-	acc, err := accum.GetAccumulator(ctx.KVStore(k.storeKey), types.KeyFeePoolAccumulator(poolId))
+func (k Keeper) GetSpreadRewardAccumulator(ctx sdk.Context, poolId uint64) (accum.AccumulatorObject, error) {
+	acc, err := accum.GetAccumulator(ctx.KVStore(k.storeKey), types.KeySpreadRewardPoolAccumulator(poolId))
 	if err != nil {
 		return accum.AccumulatorObject{}, err
 	}
@@ -32,72 +32,72 @@ func (k Keeper) GetFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.Accumul
 	return acc, nil
 }
 
-// initOrUpdatePositionFeeAccumulator mutates the fee accumulator position by either creating or updating it
+// initOrUpdatePositionSpreadRewardAccumulator mutates the spread reward accumulator position by either creating or updating it
 // for the given pool id in the range specified by the given lower and upper ticks, position id and liquidityDelta.
 // If liquidityDelta is positive, it adds liquidity. If liquidityDelta is negative, it removes liquidity.
 // If this is a new position, liqudityDelta must be positive.
-// It checks if the position exists in the fee accumulator. If it does not exist, it creates a new position.
-// If it exists, it updates the shares of the position's accumulator in the fee accumulator.
-// Upon calling this method, the position's fee accumulator is equal to the fee growth inside the tick range.
+// It checks if the position exists in the spread reward accumulator. If it does not exist, it creates a new position.
+// If it exists, it updates the shares of the position's accumulator in the spread reward accumulator.
+// Upon calling this method, the position's spread reward accumulator is equal to the spread reward growth inside the tick range.
 // On update, the rewards are moved into the position's unclaimed rewards. See internal method comments for details.
 //
 // Returns nil on success. Returns error if:
 // - fails to get an accumulator for a given pool id
 // - fails to determine whether the positive with the given id exists in the accumulator.
-// - fails to calculate fee growth outside of the tick range.
+// - fails to calculate spread reward growth outside of the tick range.
 // - fails to create a new position.
 // - fails to prepare the accumulator for update.
 // - fails to update the position's accumulator.
-func (k Keeper) initOrUpdatePositionFeeAccumulator(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidityDelta sdk.Dec) error {
-	// Get the fee accumulator for the position's pool.
-	feeAccumulator, err := k.GetFeeAccumulator(ctx, poolId)
+func (k Keeper) initOrUpdatePositionSpreadRewardAccumulator(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidityDelta sdk.Dec) error {
+	// Get the spread reward accumulator for the position's pool.
+	spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, poolId)
 	if err != nil {
 		return err
 	}
 
-	// Get the key for the position's accumulator in the fee accumulator.
-	positionKey := types.KeyFeePositionAccumulator(positionId)
+	// Get the key for the position's accumulator in the spread reward accumulator.
+	positionKey := types.KeySpreadRewardPositionAccumulator(positionId)
 
-	hasPosition, err := feeAccumulator.HasPosition(positionKey)
+	hasPosition, err := spreadRewardAccumulator.HasPosition(positionKey)
 	if err != nil {
 		return err
 	}
 
-	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
+	spreadRewardGrowthOutside, err := k.getSpreadRewardGrowthOutside(ctx, poolId, lowerTick, upperTick)
 	if err != nil {
 		return err
 	}
 
-	feeGrowthInside := feeAccumulator.GetValue().Sub(feeGrowthOutside)
+	spreadRewardGrowthInside := spreadRewardAccumulator.GetValue().Sub(spreadRewardGrowthOutside)
 
 	if !hasPosition {
 		if !liquidityDelta.IsPositive() {
 			return types.NonPositiveLiquidityForNewPositionError{LiquidityDelta: liquidityDelta, PositionId: positionId}
 		}
 
-		// Initialize the position with the fee growth inside the tick range
-		if err := feeAccumulator.NewPositionIntervalAccumulation(positionKey, liquidityDelta, feeGrowthInside, nil); err != nil {
+		// Initialize the position with the spread reward growth inside the tick range
+		if err := spreadRewardAccumulator.NewPositionIntervalAccumulation(positionKey, liquidityDelta, spreadRewardGrowthInside, nil); err != nil {
 			return err
 		}
 	} else {
-		// Replace the position's accumulator in the fee accumulator with a new one
-		// that has the latest fee growth outside of the tick range.
+		// Replace the position's accumulator in the spread reward accumulator with a new one
+		// that has the latest spread reward growth outside of the tick range.
 		// Assume the last time the position was created or modified was at time t.
-		// At time t, we track fee growth inside from 0 to t.
+		// At time t, we track spread reward growth inside from 0 to t.
 		// Then, the update happens at time t + 1. The call below makes the position's
-		// accumulator to be "fee growth inside from 0 to t + fee growth outside from 0 to t + 1".
-		err = updatePositionToInitValuePlusGrowthOutside(feeAccumulator, positionKey, feeGrowthOutside)
+		// accumulator to be "spread reward growth inside from 0 to t + spread reward growth outside from 0 to t + 1".
+		err = updatePositionToInitValuePlusGrowthOutside(spreadRewardAccumulator, positionKey, spreadRewardGrowthOutside)
 		if err != nil {
 			return err
 		}
 
-		// Update the position's initialFeeAccumulatorValue in the fee accumulator with fee growth inside,
+		// Update the position's initialSpreadRewardAccumulatorValue in the spread reward accumulator with spread reward growth inside,
 		// taking into account the change in liquidity of the position.
 		// Prior to mutating the accumulator, it moves the accumulated rewards into the accumulator position's unclaimed rewards.
-		// The move happens by subtracting the "fee growth inside from 0 to t + fee growth outside from 0 to t + 1" from the global
-		// fee accumulator growth at time t + 1. This yields the "fee growth inside from t to t + 1". That is, the unclaimed fee growth
+		// The move happens by subtracting the "spread reward growth inside from 0 to t + spread reward growth outside from 0 to t + 1" from the global
+		// spread reward accumulator growth at time t + 1. This yields the "spread reward growth inside from t to t + 1". That is, the unclaimed spread reward growth
 		// from the last time the position was either modified or created.
-		err = feeAccumulator.UpdatePositionIntervalAccumulation(positionKey, liquidityDelta, feeGrowthInside)
+		err = spreadRewardAccumulator.UpdatePositionIntervalAccumulation(positionKey, liquidityDelta, spreadRewardGrowthInside)
 		if err != nil {
 			return err
 		}
@@ -106,10 +106,10 @@ func (k Keeper) initOrUpdatePositionFeeAccumulator(ctx sdk.Context, poolId uint6
 	return nil
 }
 
-// getFeeGrowthOutside returns the sum of fee growth above the upper tick and fee growth below the lower tick
+// getSpreadRewardGrowthOutside returns the sum of spread reward growth above the upper tick and spread reward growth below the lower tick
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 // Currently, the call to GetTickInfo() may mutate state.
-func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {
+func (k Keeper) getSpreadRewardGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.DecCoins{}, err
@@ -126,25 +126,25 @@ func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 		return sdk.DecCoins{}, err
 	}
 
-	poolFeeAccumulator, err := k.GetFeeAccumulator(ctx, poolId)
+	poolSpreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, poolId)
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
-	poolFeeGrowth := poolFeeAccumulator.GetValue()
+	poolSpreadRewardGrowth := poolSpreadRewardAccumulator.GetValue()
 
-	feeGrowthAboveUpperTick := calculateFeeGrowth(upperTick, upperTickInfo.FeeGrowthOppositeDirectionOfLastTraversal, currentTick, poolFeeGrowth, true)
-	feeGrowthBelowLowerTick := calculateFeeGrowth(lowerTick, lowerTickInfo.FeeGrowthOppositeDirectionOfLastTraversal, currentTick, poolFeeGrowth, false)
+	spreadRewardGrowthAboveUpperTick := calculateSpreadRewardGrowth(upperTick, upperTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal, currentTick, poolSpreadRewardGrowth, true)
+	spreadRewardGrowthBelowLowerTick := calculateSpreadRewardGrowth(lowerTick, lowerTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal, currentTick, poolSpreadRewardGrowth, false)
 
-	return feeGrowthAboveUpperTick.Add(feeGrowthBelowLowerTick...), nil
+	return spreadRewardGrowthAboveUpperTick.Add(spreadRewardGrowthBelowLowerTick...), nil
 }
 
-// getInitialFeeGrowthOppositeDirectionOfLastTraversalForTick returns what the initial value of the fee growth opposite direction of last traversal field should be for a given tick.
+// getInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick returns what the initial value of the spread reward growth opposite direction of last traversal field should be for a given tick.
 // This value depends on the provided tick's location relative to the current tick. If the provided tick is greater than the current tick,
-// then the value is zero. Otherwise, the value is the value of the current global fee growth.
+// then the value is zero. Otherwise, the value is the value of the current global spread reward growth.
 //
-// The value is chosen as if all of the fees earned to date had occurred below the tick.
-// Returns error if the pool with the given id does exist or if fails to get the fee accumulator.
-func (k Keeper) getInitialFeeGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
+// The value is chosen as if all of the spread rewards earned to date had occurred below the tick.
+// Returns error if the pool with the given id does exist or if fails to get the spread reward accumulator.
+func (k Keeper) getInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.DecCoins{}, err
@@ -152,25 +152,25 @@ func (k Keeper) getInitialFeeGrowthOppositeDirectionOfLastTraversalForTick(ctx s
 
 	currentTick := pool.GetCurrentTick()
 	if currentTick >= tick {
-		feeAccumulator, err := k.GetFeeAccumulator(ctx, poolId)
+		spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, poolId)
 		if err != nil {
 			return sdk.DecCoins{}, err
 		}
-		return feeAccumulator.GetValue(), nil
+		return spreadRewardAccumulator.GetValue(), nil
 	}
 
 	return emptyCoins, nil
 }
 
-// collectFees collects the fees earned by a position and sends them to the owner's account.
-// Returns error if the position with the given id does not exist or if fails to get the fee accumulator.
-func (k Keeper) collectFees(ctx sdk.Context, sender sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
+// collectSpreadRewards collects the spread reward earned by a position and sends them to the owner's account.
+// Returns error if the position with the given id does not exist or if fails to get the spread reward accumulator.
+func (k Keeper) collectSpreadRewards(ctx sdk.Context, sender sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
 
-	// Fee collector must be the owner of the position.
+	// Spread reward collector must be the owner of the position.
 	isOwner, err := k.isPositionOwner(ctx, sender, position.PoolId, positionId)
 	if err != nil {
 		return sdk.Coins{}, err
@@ -179,51 +179,51 @@ func (k Keeper) collectFees(ctx sdk.Context, sender sdk.AccAddress, positionId u
 		return sdk.Coins{}, types.NotPositionOwnerError{Address: sender.String(), PositionId: positionId}
 	}
 
-	// Get the amount of fees that the position is eligible to claim.
-	// This also mutates the internal state of the fee accumulator.
-	feesClaimed, err := k.prepareClaimableFees(ctx, positionId)
+	// Get the amount of spread rewards that the position is eligible to claim.
+	// This also mutates the internal state of the spread reward accumulator.
+	spreadRewardsClaimed, err := k.prepareClaimableSpreadRewards(ctx, positionId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
 
-	// Send the claimed fees from the pool's address to the owner's address.
+	// Send the claimed spread rewards from the pool's address to the owner's address.
 	pool, err := k.getPoolById(ctx, position.PoolId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
-	if err := k.bankKeeper.SendCoins(ctx, pool.GetFeesAddress(), sender, feesClaimed); err != nil {
+	if err := k.bankKeeper.SendCoins(ctx, pool.GetSpreadRewardsAddress(), sender, spreadRewardsClaimed); err != nil {
 		return sdk.Coins{}, err
 	}
 
-	// Emit an event for the fees collected.
+	// Emit an event for the spread rewards collected.
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.TypeEvtCollectFees,
+			types.TypeEvtCollectSpreadRewards,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(types.AttributeKeyPositionId, strconv.FormatUint(positionId, 10)),
-			sdk.NewAttribute(types.AttributeKeyTokensOut, feesClaimed.String()),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, spreadRewardsClaimed.String()),
 		),
 	})
 
-	return feesClaimed, nil
+	return spreadRewardsClaimed, nil
 }
 
-// GetClaimableFees returns the amount of fees that a position is eligible to claim.
+// GetClaimableSpreadRewards returns the amount of spread rewards that a position is eligible to claim.
 //
 // Returns error if:
 // - pool with the given id does not exist
 // - position given by pool id, owner, lower tick and upper tick does not exist
 // - other internal database or math errors.
-func (k Keeper) GetClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
+func (k Keeper) GetClaimableSpreadRewards(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
 	// Since this is a query, we don't want to modify the state and therefore use a cache context.
 	cacheCtx, _ := ctx.CacheContext()
-	return k.prepareClaimableFees(cacheCtx, positionId)
+	return k.prepareClaimableSpreadRewards(cacheCtx, positionId)
 }
 
-// prepareClaimableFees returns the amount of fees that a position is eligible to claim.
-// Note that it mutates the internal state of the fee accumulator by setting the position's
+// prepareClaimableSpreadRewards returns the amount of spread rewards that a position is eligible to claim.
+// Note that it mutates the internal state of the spread reward accumulator by setting the position's
 // unclaimed rewards to zero and update the position's accumulator value to reflect the
-// current pool fee accumulator value. If there is any dust left over, it is added back to the
+// current pool spread reward accumulator value. If there is any dust left over, it is added back to the
 // global accumulator as long as there are shares remaining in the accumulator. If not, the dust
 // is ignored.
 //
@@ -231,52 +231,52 @@ func (k Keeper) GetClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins,
 // - pool with the given id does not exist
 // - position given by pool id, owner, lower tick and upper tick does not exist
 // - other internal database or math errors.
-func (k Keeper) prepareClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
+func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
 	// Get the position with the given ID.
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get the fee accumulator for the position's pool.
-	feeAccumulator, err := k.GetFeeAccumulator(ctx, position.PoolId)
+	// Get the spread reward accumulator for the position's pool.
+	spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, position.PoolId)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get the key for the position's accumulator in the fee accumulator.
-	positionKey := types.KeyFeePositionAccumulator(positionId)
+	// Get the key for the position's accumulator in the spread reward accumulator.
+	positionKey := types.KeySpreadRewardPositionAccumulator(positionId)
 
-	// Check if the position exists in the fee accumulator.
-	hasPosition, err := feeAccumulator.HasPosition(positionKey)
+	// Check if the position exists in the spread reward accumulator.
+	hasPosition, err := spreadRewardAccumulator.HasPosition(positionKey)
 	if err != nil {
 		return nil, err
 	}
 	if !hasPosition {
-		return nil, types.FeePositionNotFoundError{PositionId: positionId}
+		return nil, types.SpreadRewardPositionNotFoundError{PositionId: positionId}
 	}
 
-	// Compute the fee growth outside of the range between the position's lower and upper ticks.
-	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, position.PoolId, position.LowerTick, position.UpperTick)
+	// Compute the spread reward growth outside of the range between the position's lower and upper ticks.
+	spreadRewardGrowthOutside, err := k.getSpreadRewardGrowthOutside(ctx, position.PoolId, position.LowerTick, position.UpperTick)
 	if err != nil {
 		return nil, err
 	}
 
 	// Claim rewards, set the unclaimed rewards to zero, and update the position's accumulator value to reflect the current accumulator value.
-	feesClaimed, forfeitedDust, err := updateAccumAndClaimRewards(feeAccumulator, positionKey, feeGrowthOutside)
+	spreadRewardsClaimed, forfeitedDust, err := updateAccumAndClaimRewards(spreadRewardAccumulator, positionKey, spreadRewardGrowthOutside)
 	if err != nil {
 		return nil, err
 	}
 
 	// add foreited dust back to the global accumulator
 	if !forfeitedDust.IsZero() {
-		// Refetch the fee accumulator as the number of shares has changed after claiming.
-		feeAccumulator, err := k.GetFeeAccumulator(ctx, position.PoolId)
+		// Refetch the spread reward accumulator as the number of shares has changed after claiming.
+		spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, position.PoolId)
 		if err != nil {
 			return nil, err
 		}
 
-		totalSharesRemaining, err := feeAccumulator.GetTotalShares()
+		totalSharesRemaining, err := spreadRewardAccumulator.GetTotalShares()
 		if err != nil {
 			return nil, err
 		}
@@ -286,29 +286,29 @@ func (k Keeper) prepareClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Co
 		// The shares are decremented in osmoutils/accum.ClaimRewards.
 		if !totalSharesRemaining.IsZero() {
 			forfeitedDustPerShare := forfeitedDust.QuoDecTruncate(totalSharesRemaining)
-			feeAccumulator.AddToAccumulator(forfeitedDustPerShare)
+			spreadRewardAccumulator.AddToAccumulator(forfeitedDustPerShare)
 		}
 	}
 
-	return feesClaimed, nil
+	return spreadRewardsClaimed, nil
 }
 
-// calculateFeeGrowth above or below the given tick.
-// If calculating fee growth for an upper tick, we consider the following two cases
-// 1. currentTick >= upperTick: If current Tick is GTE than the upper Tick, the fee growth would be pool fee growth - uppertick's fee growth outside
-// 2. currentTick < upperTick: If current tick is smaller than upper tick, fee growth would be the upper tick's fee growth outside
-// this goes vice versa for calculating fee growth for lower tick.
-func calculateFeeGrowth(targetTick int64, ticksFeeGrowthOppositeDirectionOfLastTraversal sdk.DecCoins, currentTick int64, feesGrowthGlobal sdk.DecCoins, isUpperTick bool) sdk.DecCoins {
+// calculateSpreadRewardGrowth above or below the given tick.
+// If calculating spread reward growth for an upper tick, we consider the following two cases
+// 1. currentTick >= upperTick: If current Tick is GTE than the upper Tick, the spread reward growth would be pool spread reward growth - uppertick's spread reward growth outside
+// 2. currentTick < upperTick: If current tick is smaller than upper tick, spread reward growth would be the upper tick's spread reward growth outside
+// this goes vice versa for calculating spread reward growth for lower tick.
+func calculateSpreadRewardGrowth(targetTick int64, ticksSpreadRewardGrowthOppositeDirectionOfLastTraversal sdk.DecCoins, currentTick int64, spreadRewardsGrowthGlobal sdk.DecCoins, isUpperTick bool) sdk.DecCoins {
 	if (isUpperTick && currentTick >= targetTick) || (!isUpperTick && currentTick < targetTick) {
-		return feesGrowthGlobal.Sub(ticksFeeGrowthOppositeDirectionOfLastTraversal)
+		return spreadRewardsGrowthGlobal.Sub(ticksSpreadRewardGrowthOppositeDirectionOfLastTraversal)
 	}
-	return ticksFeeGrowthOppositeDirectionOfLastTraversal
+	return ticksSpreadRewardGrowthOppositeDirectionOfLastTraversal
 }
 
 // updatePositionToInitValuePlusGrowthOutside is called prior to updating unclaimed rewards,
 // as we must set the position's accumulator value to the sum of
-// - the fee/uptime growth inside at position creation time (position.InitAccumValue)
-// - fee/uptime growth outside at the current block time (feeGrowthOutside/uptimeGrowthOutside)
+// - the spread reward/uptime growth inside at position creation time (position.InitAccumValue)
+// - spread reward/uptime growth outside at the current block time (spreadRewardGrowthOutside/uptimeGrowthOutside)
 func updatePositionToInitValuePlusGrowthOutside(accumulator accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) error {
 	position, err := accum.GetPosition(accumulator, positionKey)
 	if err != nil {

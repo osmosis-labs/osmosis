@@ -26,7 +26,7 @@ func NewTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, NewAddToPositionCmd)
 	osmocli.AddTxCmd(txCmd, NewWithdrawPositionCmd)
 	osmocli.AddTxCmd(txCmd, NewCreateConcentratedPoolCmd)
-	osmocli.AddTxCmd(txCmd, NewCollectFeesCmd)
+	osmocli.AddTxCmd(txCmd, NewCollectSpreadRewardsCmd)
 	osmocli.AddTxCmd(txCmd, NewCollectIncentivesCmd)
 	osmocli.AddTxCmd(txCmd, NewFungifyChargedPositionsCmd)
 	return txCmd
@@ -40,7 +40,7 @@ func NewCreateConcentratedPoolCmd() (*osmocli.TxCliDesc, *clmodel.MsgCreateConce
 	return &osmocli.TxCliDesc{
 		Use:     "create-pool [denom-0] [denom-1] [tick-spacing] [spread-factor]",
 		Short:   "create a concentrated liquidity pool with the given denom pair, tick spacing, and spread factor",
-		Long:    "denom-1 (the quote denom), tick spacing, and swap fees must all be authorized by the concentrated liquidity module",
+		Long:    "denom-1 (the quote denom), tick spacing, and spread factors must all be authorized by the concentrated liquidity module",
 		Example: "osmosisd tx concentratedliquidity create-pool uion uosmo 100 0.01 --from val --chain-id osmosis-1 -b block --keyring-backend test --fees 1000uosmo",
 	}, &clmodel.MsgCreateConcentratedPool{}
 }
@@ -69,12 +69,12 @@ func NewWithdrawPositionCmd() (*osmocli.TxCliDesc, *types.MsgWithdrawPosition) {
 	}, &types.MsgWithdrawPosition{}
 }
 
-func NewCollectFeesCmd() (*osmocli.TxCliDesc, *types.MsgCollectFees) {
+func NewCollectSpreadRewardsCmd() (*osmocli.TxCliDesc, *types.MsgCollectSpreadRewards) {
 	return &osmocli.TxCliDesc{
-		Use:     "collect-fees [position-ids]",
-		Short:   "collect fees from liquidity position(s)",
-		Example: "osmosisd tx concentratedliquidity collect-fees 998 --from val --chain-id localosmosis -b block --keyring-backend test --fees 1000000uosmo",
-	}, &types.MsgCollectFees{}
+		Use:     "collect-spread-rewards [position-ids]",
+		Short:   "collect spread rewards from liquidity position(s)",
+		Example: "osmosisd tx concentratedliquidity collect-spread-rewards 998 --from val --chain-id localosmosis -b block --keyring-backend test --fees 1000000uosmo",
+	}, &types.MsgCollectSpreadRewards{}
 }
 
 func NewCollectIncentivesCmd() (*osmocli.TxCliDesc, *types.MsgCollectIncentives) {

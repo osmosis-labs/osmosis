@@ -1133,9 +1133,9 @@ func (s *KeeperTestSuite) TestHasAnyPositionForPool() {
 	}
 }
 
-// This test specifically tests that fee collection works as expected
+// This test specifically tests that spread reward collection works as expected
 // after fungifying positions.
-func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
+func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimSpreadRewards() {
 	// Init suite for the test.
 	s.SetupTest()
 
@@ -1184,13 +1184,13 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 		totalLiquidity = totalLiquidity.Add(liquidityCreated)
 	}
 
-	// Perform a swap to earn fees
+	// Perform a swap to earn spread rewards
 	swapAmountIn := sdk.NewCoin(ETH, sdk.NewInt(swapAmount))
-	expectedFee := swapAmountIn.Amount.ToDec().Mul(spreadFactor)
-	// We run expected fees through a cycle of divison and multiplication by liquidity to capture appropriate rounding behavior.
-	// Note that we truncate the int at the end since it is not possible to have a decimal fee amount collected (the QuoTruncate
+	expectedSpreadReward := swapAmountIn.Amount.ToDec().Mul(spreadFactor)
+	// We run expected spread rewards through a cycle of divison and multiplication by liquidity to capture appropriate rounding behavior.
+	// Note that we truncate the int at the end since it is not possible to have a decimal spread reward amount collected (the QuoTruncate
 	// and MulTruncates are much smaller operations that round down for values past the 18th decimal place).
-	expectedFeeTruncated := expectedFee.QuoTruncate(totalLiquidity).MulTruncate(totalLiquidity).TruncateInt()
+	expectedSpreadRewardTruncated := expectedSpreadReward.QuoTruncate(totalLiquidity).MulTruncate(totalLiquidity).TruncateInt()
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(swapAmountIn))
 	s.swapAndTrackXTimesInARow(defaultPoolId, swapAmountIn, USDC, types.MinSpotPrice, 1)
 
@@ -1201,33 +1201,33 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 	newPositionId, err := s.App.ConcentratedLiquidityKeeper.FungifyChargedPosition(s.Ctx, defaultAddress, expectedPositionIds)
 	s.Require().NoError(err)
 
-	// Claim fees
-	collected, err := s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, defaultAddress, newPositionId)
+	// Claim spread rewards
+	collected, err := s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, defaultAddress, newPositionId)
 	s.Require().NoError(err)
 
-	// Validate that the correct fee amount was collected.
-	s.Require().Equal(expectedFeeTruncated, collected.AmountOf(swapAmountIn.Denom))
+	// Validate that the correct spread reward amount was collected.
+	s.Require().Equal(expectedSpreadRewardTruncated, collected.AmountOf(swapAmountIn.Denom))
 
 	// Check that cannot claim again.
-	collected, err = s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, defaultAddress, newPositionId)
+	collected, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, defaultAddress, newPositionId)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.Coins(nil), collected)
 
-	feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, defaultPoolId)
+	spreadRewardAccum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, defaultPoolId)
 	s.Require().NoError(err)
 
 	// Check that cannot claim old positions
 	for _, oldPositionId := range expectedPositionIds {
-		collected, err = s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, defaultAddress, oldPositionId)
+		collected, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, defaultAddress, oldPositionId)
 		s.Require().Error(err)
 		s.Require().Equal(sdk.Coins{}, collected)
 
 		hasPosition := s.App.ConcentratedLiquidityKeeper.HasPosition(s.Ctx, oldPositionId)
 		s.Require().False(hasPosition)
 
-		hasFeePositionTracker, err := feeAccum.HasPosition(types.KeyFeePositionAccumulator(oldPositionId))
+		hasSpreadRewardPositionTracker, err := spreadRewardAccum.HasPosition(types.KeySpreadRewardPositionAccumulator(oldPositionId))
 		s.Require().NoError(err)
-		s.Require().False(hasFeePositionTracker)
+		s.Require().False(hasSpreadRewardPositionTracker)
 	}
 }
 

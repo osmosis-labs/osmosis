@@ -75,9 +75,9 @@ func (k Keeper) getUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sd
 // of uptime growth opposite the direction of last traversal for each supported uptime for a given tick.
 // This value depends on the provided tick's location relative to the current tick. If the provided tick
 // is greater than the current tick, then the value is zero. Otherwise, the value is the value of the
-// current global fee growth.
+// current global spread reward growth.
 //
-// Similar to fees, by convention the value is chosen as if all of the uptime (seconds per liquidity) to date has
+// Similar to spread factors, by convention the value is chosen as if all of the uptime (seconds per liquidity) to date has
 // occurred below the tick.
 // Returns error if the pool with the given id does not exist or if fails to get any of the uptime accumulators.
 func (k Keeper) getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, poolId uint64, tick int64) ([]sdk.DecCoins, error) {

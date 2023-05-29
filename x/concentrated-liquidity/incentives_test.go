@@ -2648,8 +2648,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 }
 
 func (s *KeeperTestSuite) TestUpdateAccumAndClaimRewards() {
-	validPositionKey := types.KeyFeePositionAccumulator(1)
-	invalidPositionKey := types.KeyFeePositionAccumulator(2)
+	validPositionKey := types.KeySpreadRewardPositionAccumulator(1)
+	invalidPositionKey := types.KeySpreadRewardPositionAccumulator(2)
 	tests := map[string]struct {
 		poolId             uint64
 		growthInside       sdk.DecCoins
@@ -2671,15 +2671,15 @@ func (s *KeeperTestSuite) TestUpdateAccumAndClaimRewards() {
 		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
-			poolFeeAccumulator := s.prepareFeeAccumulator()
+			poolSpreadRewardsAccumulator := s.prepareSpreadRewardsAccumulator()
 			positionKey := validPositionKey
 
 			// Initialize position accumulator.
-			err := poolFeeAccumulator.NewPosition(positionKey, sdk.OneDec(), nil)
+			err := poolSpreadRewardsAccumulator.NewPosition(positionKey, sdk.OneDec(), nil)
 			s.Require().NoError(err)
 
 			// Record the initial position accumulator value.
-			positionPre, err := accum.GetPosition(poolFeeAccumulator, positionKey)
+			positionPre, err := accum.GetPosition(poolSpreadRewardsAccumulator, positionKey)
 			s.Require().NoError(err)
 
 			// If the test case requires an invalid position key, set it.
@@ -2687,10 +2687,10 @@ func (s *KeeperTestSuite) TestUpdateAccumAndClaimRewards() {
 				positionKey = invalidPositionKey
 			}
 
-			poolFeeAccumulator.AddToAccumulator(tc.growthOutside.Add(tc.growthInside...))
+			poolSpreadRewardsAccumulator.AddToAccumulator(tc.growthOutside.Add(tc.growthInside...))
 
 			// System under test.
-			amountClaimed, _, err := cl.UpdateAccumAndClaimRewards(poolFeeAccumulator, positionKey, tc.growthOutside)
+			amountClaimed, _, err := cl.UpdateAccumAndClaimRewards(poolSpreadRewardsAccumulator, positionKey, tc.growthOutside)
 
 			if tc.expectError != nil {
 				s.Require().ErrorIs(err, tc.expectError)
@@ -2703,7 +2703,7 @@ func (s *KeeperTestSuite) TestUpdateAccumAndClaimRewards() {
 			s.Require().Equal(expectedCoins, amountClaimed)
 
 			// Record the final position accumulator value.
-			positionPost, err := accum.GetPosition(poolFeeAccumulator, positionKey)
+			positionPost, err := accum.GetPosition(poolSpreadRewardsAccumulator, positionKey)
 			s.Require().NoError(err)
 
 			// Check that the difference between the new and old position accumulator values is equal to the growth inside (since
@@ -3736,9 +3736,9 @@ func (s *KeeperTestSuite) TestGetLargestAuthorizedUptime() {
 // 2ETH
 var defaultGlobalRewardGrowth = sdk.NewDecCoins(oneEth.Add(oneEth))
 
-func (s *KeeperTestSuite) prepareFeeAccumulator() accum.AccumulatorObject {
+func (s *KeeperTestSuite) prepareSpreadRewardsAccumulator() accum.AccumulatorObject {
 	pool := s.PrepareConcentratedPool()
-	testAccumulator, err := s.clk.GetFeeAccumulator(s.Ctx, pool.GetId())
+	testAccumulator, err := s.clk.GetSpreadRewardAccumulator(s.Ctx, pool.GetId())
 	s.Require().NoError(err)
 	return testAccumulator
 }
@@ -3781,7 +3781,7 @@ func (s *KeeperTestSuite) TestMoveRewardsToNewPositionAndDeleteOldAcc() {
 			s.SetupTest()
 
 			// Get accumulator. The fact that its a fee accumulator is irrelevant for this test.
-			testAccumulator := s.prepareFeeAccumulator()
+			testAccumulator := s.prepareSpreadRewardsAccumulator()
 
 			err := testAccumulator.NewPosition(oldPos, sdk.NewDec(tc.numShares), nil)
 			s.Require().NoError(err)
@@ -3819,7 +3819,7 @@ func (s *KeeperTestSuite) TestMoveRewardsToSamePositionAndDeleteOldAcc() {
 	posName := "pos name"
 	expectedError := types.ModifySamePositionAccumulatorError{PositionAccName: posName}
 
-	testAccumulator := s.prepareFeeAccumulator()
+	testAccumulator := s.prepareSpreadRewardsAccumulator()
 	err := cl.MoveRewardsToNewPositionAndDeleteOldAcc(s.Ctx, testAccumulator, posName, posName, defaultGlobalRewardGrowth)
 	s.Require().ErrorIs(err, expectedError)
 }

@@ -1,16 +1,16 @@
 package types
 
 const (
-	TypeEvtCreatePosition         = "create_position"
-	TypeEvtWithdrawPosition       = "withdraw_position"
-	TypeEvtAddToPosition          = "add_to_position"
-	TypeEvtTotalCollectFees       = "total_collect_fees"
-	TypeEvtCollectFees            = "collect_fees"
-	TypeEvtTotalCollectIncentives = "total_collect_incentives"
-	TypeEvtCollectIncentives      = "collect_incentives"
-	TypeEvtCreateIncentive        = "create_incentive"
-	TypeEvtFungifyChargedPosition = "fungify_charged_position"
-	TypeEvtMoveRewards            = "move_rewards"
+	TypeEvtCreatePosition            = "create_position"
+	TypeEvtWithdrawPosition          = "withdraw_position"
+	TypeEvtAddToPosition             = "add_to_position"
+	TypeEvtTotalCollectSpreadRewards = "total_collect_spread_rewards"
+	TypeEvtCollectSpreadRewards      = "collect_spread_rewards"
+	TypeEvtTotalCollectIncentives    = "total_collect_incentives"
+	TypeEvtCollectIncentives         = "collect_incentives"
+	TypeEvtCreateIncentive           = "create_incentive"
+	TypeEvtFungifyChargedPosition    = "fungify_charged_position"
+	TypeEvtMoveRewards               = "move_rewards"
 
 	AttributeValueCategory         = ModuleName
 	AttributeKeyPositionId         = "position_id"
