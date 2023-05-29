@@ -948,13 +948,12 @@ func (s *IntegrationTestSuite) TestCreateConcentratedLiquidityPoolVoting_And_TWA
 
 	// Create a position and check that TWAP now returns a value.
 	s.T().Log("creating first position")
-	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,10000000%s", concentratedPool.GetToken0(), concentratedPool.GetToken1()), 0, 0, concentratedPool.GetId())
-	chainA.WaitForNumHeights(1)
+	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,20000000%s", concentratedPool.GetToken0(), concentratedPool.GetToken1()), 0, 0, concentratedPool.GetId())
 	timeAfterPositionCreationBeforeSwap := chainANode.QueryLatestBlockTime()
 	chainA.WaitForNumHeights(1)
 	firstPositionTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken0(), concentratedPool.GetToken1(), timeAfterPositionCreationBeforeSwap)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewDec(1), firstPositionTwapBOverA)
+	s.Require().Equal(sdk.MustNewDecFromStr("0.5"), firstPositionTwapBOverA)
 
 	// Run a swap and check that the TWAP updates.
 	s.T().Log("run swap")
