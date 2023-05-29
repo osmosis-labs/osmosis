@@ -1620,7 +1620,7 @@ func (s *IntegrationTestSuite) TestAConcentratedLiquidity_CanonicalPool_And_Para
 
 func (s *IntegrationTestSuite) TestPoolMigration() {
 	chainA := s.configurer.GetChainConfig(0)
-	node, err := chainA.GetDefaultNode()
+	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
 
 	var (
@@ -1631,7 +1631,7 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 	)
 
 	// Get the permisionless pool creation parameter.
-	isPermisionlessCreationEnabledStr := node.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
+	isPermisionlessCreationEnabledStr := chainANode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
 	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "false") {
 		s.T().Fatal("concentrated liquidity pool creation is enabled when should not have been")
 	}
@@ -1641,7 +1641,7 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 	s.Require().NoError(err)
 
 	// Confirm that the parameter has been changed.
-	isPermisionlessCreationEnabledStr = node.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
+	isPermisionlessCreationEnabledStr = chainANode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
 	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
 		s.T().Fatal("concentrated liquidity pool creation is not enabled")
 	}
@@ -1657,16 +1657,16 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 	// )
 
 	// create balancer pool
-	balancePoolId := node.CreateBalancerPool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
-	balancerPool := s.updatedCFMMPool(node, balancePoolId)
+	balancePoolId := chainANode.CreateBalancerPool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
+	balancerPool := s.updatedCFMMPool(chainANode, balancePoolId)
 	// create CL pool
-	clPoolId, err := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
+	clPoolId, err := chainANode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
 	// clPool := getConcentratePoolFromId(clPoolId)
 
 	record := strconv.FormatUint(balancePoolId, 10) + "," + strconv.FormatUint(clPoolId, 10)
-	node.SubmitReplaceMigrationRecordsProposal(record, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+	chainANode.SubmitReplaceMigrationRecordsProposal(record, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 	chainA.LatestProposalNumber += 1
-	node.DepositProposal(chainA.LatestProposalNumber, false)
+	chainANode.DepositProposal(chainA.LatestProposalNumber, false)
 	for _, node := range chainA.NodeConfigs {
 		node.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
 	}
@@ -1678,9 +1678,9 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 
 	// Note balancer pool balance after joining balancer pool
 	sender, err := sdk.AccAddressFromBech32(chainA.NodeConfigs[0].PublicAddress)
-	node.MigrateSharesToFullRangeConcentratedPosition(sender.String(), tokenOutMins.String(), sharesToMigrate.String())
+	chainANode.MigrateSharesToFullRangeConcentratedPosition(sender.String(), tokenOutMins.String(), sharesToMigrate.String())
 
-	position := node.QueryConcentratedPositions(sender.String()) 
+	position := chainANode.QueryConcentratedPositions(sender.String()) 
 
 	s.Require().Equal(len(position), 1)
 }
