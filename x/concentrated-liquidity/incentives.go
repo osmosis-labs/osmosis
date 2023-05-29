@@ -151,6 +151,11 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64,
 	}
 	bondedShares := k.lockupKeeper.GetLockedDenom(ctx, gammtypes.GetPoolShareDenom(canonicalBalancerPoolId), longestDuration)
 
+	// We fail quietly if the Balancer pool has no bonded shares.
+	if bondedShares.IsZero() {
+		return 0, sdk.ZeroDec(), nil
+	}
+
 	// Calculate portion of Balancer pool shares that are bonded
 	bondedShareRatio := bondedShares.ToDec().Quo(totalBalancerPoolShares.ToDec())
 
