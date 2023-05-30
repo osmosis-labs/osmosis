@@ -92,7 +92,7 @@ func ParseFullTickFromBytes(key, value []byte) (tick genesis.FullTick, err error
 		return genesis.FullTick{}, types.ValueNotFoundForKeyError{Key: key}
 	}
 
-	if len(key) != types.TickKeyLengthBytes {
+	if len(key) != types.KeyTickLengthBytes {
 		return genesis.FullTick{}, types.InvalidTickKeyByteLengthError{Length: len(key)}
 	}
 

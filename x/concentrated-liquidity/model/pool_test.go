@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	clmath "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
@@ -39,6 +40,99 @@ type ConcentratedPoolTestSuite struct {
 
 func TestConcentratedPoolTestSuite(t *testing.T) {
 	suite.Run(t, new(ConcentratedPoolTestSuite))
+}
+
+// TestGetAddress tests the GetAddress method of pool
+func (s *ConcentratedPoolTestSuite) TestGetAddress() {
+
+	tests := []struct {
+		name          string
+		expectedPanic bool
+	}{
+		{
+			name: "Happy path",
+		},
+		{
+			name:          "Unhappy path: wrong bech32 encoded address",
+			expectedPanic: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// Init suite for each test.
+			s.Setup()
+
+			address := s.TestAccs[0].String()
+
+			// if the test case is expected to panic, we use wrong bech32 encoded address instead
+			if tc.expectedPanic {
+				address = "osmo15l7yueqf3tx4cvpt6njvj7zxmvuhkwyrr509e9"
+			}
+			mock_pool := model.Pool{
+				Id:      1,
+				Address: address,
+			}
+
+			// Check that the returned address is backward compatible
+			osmoassert.ConditionalPanic(s.T(), tc.expectedPanic, func() {
+				addr := mock_pool.GetAddress()
+				s.Require().Equal(addr, s.TestAccs[0])
+			})
+		})
+	}
+}
+
+// TestGetIncentivesAddress tests the GetIncentivesAddress method of pool
+func (s *ConcentratedPoolTestSuite) TestGetIncentivesAddress() {
+
+	tests := []struct {
+		name          string
+		expectedPanic bool
+	}{
+		{
+			name: "Happy path",
+		},
+		{
+			name:          "Unhappy path: wrong bech32 encoded address",
+			expectedPanic: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// Init suite for each test.
+			s.Setup()
+
+			// Create a concentrated liquidity pool struct instance
+			address := s.TestAccs[0].String()
+
+			// if the test case is expected to panic, we use wrong bech32 encoded address instead
+			if tc.expectedPanic {
+				address = "osmo15l7yueqf3tx4cvpt6njvj7zxmvuhkwyrr509e9"
+			}
+			mock_pool := model.Pool{
+				Id:                1,
+				IncentivesAddress: address,
+			}
+
+			// Check that the returned address is backward compatible
+			osmoassert.ConditionalPanic(s.T(), tc.expectedPanic, func() {
+				addr := mock_pool.GetIncentivesAddress()
+				s.Require().Equal(addr, s.TestAccs[0])
+			})
+		})
+	}
+}
+
+// TestString tests if String method of the pool correctly json marshals the pool object
+func (s *ConcentratedPoolTestSuite) TestString() {
+	s.Setup()
+
+	pool, err := model.NewConcentratedLiquidityPool(1, "foo", "bar", DefaultTickSpacing, DefaultSpreadFactor)
+	s.Require().NoError(err)
+	poolString := pool.String()
+	s.Require().Equal(poolString, "{\"address\":\"osmo19e2mf7cywkv7zaug6nk5f87d07fxrdgrladvymh2gwv5crvm3vnsuewhh7\",\"incentives_address\":\"osmo156gncm3w2hdvuxxaejue8nejxgdgsrvdf7jftntuhxnaarhxcuas4ywjxf\",\"spread_rewards_address\":\"osmo10t3u6ze74jn7et6rluuxyf9vr2arykewmhcx67svg6heuu0gte2syfudcv\",\"id\":1,\"current_tick_liquidity\":\"0.000000000000000000\",\"token0\":\"foo\",\"token1\":\"bar\",\"current_sqrt_price\":\"0.000000000000000000\",\"tick_spacing\":1,\"exponent_at_price_one\":-6,\"spread_factor\":\"0.010000000000000000\",\"last_liquidity_update\":\"0001-01-01T00:00:00Z\"}")
 }
 
 // TestSpotPrice tests the SpotPrice method of the ConcentratedPoolTestSuite.
@@ -173,6 +267,18 @@ func (s *ConcentratedPoolTestSuite) TestIsCurrentTickInRange() {
 			false,
 		},
 		{
+			"only lower tick is equal to the pool tick",
+			DefaultCurrTick,
+			DefaultCurrTick + 3,
+			true,
+		},
+		{
+			"only upper tick is equal to the pool tick",
+			DefaultCurrTick - 3,
+			DefaultCurrTick,
+			false,
+		},
+		{
 			"lower tick is greater then pool tick",
 			DefaultCurrTick + 1,
 			DefaultCurrTick + 3,
@@ -250,7 +356,7 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			expectErr:        types.SqrtPriceNegativeError{ProvidedSqrtPrice: negativeOne},
 		},
 		{
-			name:             "upper tick too big",
+			name:             "upper tick is greater than max tick",
 			currentLiquidity: DefaultLiquidityAmt,
 			currentTick:      1,
 			currentSqrtPrice: DefaultCurrSqrtPrice,
@@ -264,7 +370,7 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			},
 		},
 		{
-			name:             "lower tick too small",
+			name:             "lower tick is smaller than min tick",
 			currentLiquidity: DefaultLiquidityAmt,
 			currentTick:      1,
 			currentSqrtPrice: DefaultCurrSqrtPrice,

@@ -273,7 +273,8 @@ func (p Pool) IsCurrentTickInRange(lowerTick, upperTick int64) bool {
 }
 
 // ApplySwap state of pool after swap.
-// It specifically overwrites the pool's liquidity, curr tick and the curr sqrt price
+// It specifically overwrites the pool's liquidity, curr tick and the curr sqrt price.
+// Note that this method is mutative.
 func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick int64, newCurrentSqrtPrice sdk.Dec) error {
 	// Check if the new liquidity provided is not negative.
 	if newLiquidity.IsNegative() {

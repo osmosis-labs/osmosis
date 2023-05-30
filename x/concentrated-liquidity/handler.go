@@ -14,8 +14,8 @@ func NewConcentratedLiquidityProposalHandler(k Keeper) govtypes.Handler {
 		switch c := content.(type) {
 		case *types.TickSpacingDecreaseProposal:
 			return handleTickSpacingDecreaseProposal(ctx, k, c)
-		case *types.CreateConcentratedLiquidityPoolProposal:
-			return handleCreateConcentratedLiquidityPoolProposal(ctx, k, c)
+		case *types.CreateConcentratedLiquidityPoolsProposal:
+			return handleCreateConcentratedLiquidityPoolsProposal(ctx, k, c)
 
 		default:
 			return fmt.Errorf("unrecognized concentrated liquidity proposal content type: %T", c)

@@ -224,21 +224,6 @@ func addToUptimeAccums(ctx sdk.Context, poolId uint64, clKeeper *cl.Keeper, addV
 	return nil
 }
 
-// addDecCoinsArray adds the contents of the second param from the first (decCoinsArrayA + decCoinsArrayB)
-// Note that this takes in two _arrays_ of DecCoins, meaning that each term itself is of type DecCoins (i.e. an array of DecCoin).
-func addDecCoinsArray(decCoinsArrayA []sdk.DecCoins, decCoinsArrayB []sdk.DecCoins) ([]sdk.DecCoins, error) {
-	if len(decCoinsArrayA) != len(decCoinsArrayB) {
-		return []sdk.DecCoins{}, fmt.Errorf("DecCoin arrays must be of equal length to be added")
-	}
-
-	finalDecCoinArray := []sdk.DecCoins{}
-	for i := range decCoinsArrayA {
-		finalDecCoinArray = append(finalDecCoinArray, decCoinsArrayA[i].Add(decCoinsArrayB[i]...))
-	}
-
-	return finalDecCoinArray, nil
-}
-
 func withDenom(record types.IncentiveRecord, denom string) types.IncentiveRecord {
 	record.IncentiveDenom = denom
 
@@ -2742,7 +2727,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 	uptimeHelper := getExpectedUptimes()
 	defaultSender := s.TestAccs[0]
 	tests := map[string]struct {
-		poolId            uint64
 		numShares         sdk.Dec
 		positionIdCreate  uint64
 		positionIdClaim   uint64
@@ -2926,6 +2910,78 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			})
 		}
 	})
+}
+
+func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
+	testCases := []struct {
+		name             string
+		blockTimeElapsed time.Duration
+		expectedCoins    sdk.Coins
+	}{
+		{
+			name:             "Claim with same blocktime",
+			blockTimeElapsed: 0,
+			expectedCoins:    sdk.NewCoins(),
+		},
+		{
+			name:             "Claim after 1 minute",
+			blockTimeElapsed: time.Minute,
+			expectedCoins:    sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(59))), //  after 1min = 59.999999999901820104usdc ~ 59usdc becasue 1usdc emitted every second
+
+		},
+		{
+			name:             "Claim after 1 hr",
+			blockTimeElapsed: time.Hour,
+			expectedCoins:    sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(3599))), //  after 1min = 59.999999999901820104usdc ~ 59usdc becasue 1usdc emitted every second
+
+		},
+		{
+			name:             "Claim after 3 hours",
+			blockTimeElapsed: time.Hour * 3,
+			expectedCoins:    sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(9999))), //  after 3hr > 2hr46min = 9999usdc.999999999901820104 ~ 9999usdc
+
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			// Init suite for the test.
+			s.SetupTest()
+
+			requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(1_000_000)), sdk.NewCoin(USDC, sdk.NewInt(5_000_000_000)))
+			s.FundAcc(s.TestAccs[0], requiredBalances)
+			s.FundAcc(s.TestAccs[1], requiredBalances)
+
+			// Create CL pool
+			pool := s.PrepareConcentratedPool()
+
+			// Set up position
+			positionIdOne, _, _, _, _, _, _, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], requiredBalances, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+			s.Require().NoError(err)
+
+			// Set incentives for pool to ensure accumulators work correctly
+			testIncentiveRecord := types.IncentiveRecord{
+				PoolId:               pool.GetId(),
+				IncentiveDenom:       USDC,
+				IncentiveCreatorAddr: s.TestAccs[1].String(), // different address is going to create incentives
+				IncentiveRecordBody: types.IncentiveRecordBody{
+					RemainingAmount: sdk.NewDec(10_000), // 2hr 46m to emit all incentives
+					EmissionRate:    sdk.NewDec(1),      // 1 per second
+					StartTime:       s.Ctx.BlockTime(),
+				},
+				MinUptime: time.Nanosecond,
+			}
+			err = s.clk.SetMultipleIncentiveRecords(s.Ctx, []types.IncentiveRecord{testIncentiveRecord})
+			s.Require().NoError(err)
+
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(tc.blockTimeElapsed))
+
+			collectedInc, forfeitInc, err := s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionIdOne)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedCoins, collectedInc)
+			s.Require().True(forfeitInc.Empty())
+		})
+	}
 }
 
 // This functional test focuses on changing liquidity in the same range and collecting incentives
