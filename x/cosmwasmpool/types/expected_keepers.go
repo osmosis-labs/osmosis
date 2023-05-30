@@ -13,7 +13,7 @@ type AccountKeeper interface {
 }
 
 // BankKeeper defines the banking contract that must be fulfilled when
-// creating a x/concentrated-liquidity keeper.
+// creating a x/cosmwasmpool keeper.
 type BankKeeper interface {
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 }
