@@ -43,7 +43,6 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 
-
 // Set the poolmanager keeper.
 func (k *Keeper) SetPoolManagerKeeper(poolmanagerKeeper types.PoolManagerKeeper) {
 	k.poolmanagerKeeper = poolmanagerKeeper
