@@ -63,7 +63,6 @@ func (s *ConcentratedPoolTestSuite) TestGetAddress() {
 			// Init suite for each test.
 			s.Setup()
 
-			// Create a concentrated liquidity pool struct instance
 			address := s.TestAccs[0].String()
 
 			// if the test case is expected to panic, we use wrong bech32 encoded address instead
