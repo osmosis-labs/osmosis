@@ -30,6 +30,7 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 		superfluidDelegated      bool
 		superfluidUndelegating   bool
 		unlocking                bool
+		noLock                   bool
 		overwriteLockId          bool
 		percentOfSharesToMigrate sdk.Dec
 		minExitCoins             sdk.Coins
@@ -80,6 +81,16 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 			superfluidUndelegating:   true,
 			unlocking:                true,
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.3"),
+		},
+		"no lock (partial shares)": {
+			// MigrateUnlockedPositionFromBalancerToConcentrated
+			noLock:                   true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.3"),
+		},
+		"no lock (full shares)": {
+			// MigrateUnlockedPositionFromBalancerToConcentrated
+			noLock:                   true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 		},
 		"error: non-existent lock": {
 			overwriteLockId:          true,
@@ -142,7 +153,7 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 			stakingKeeper := s.App.StakingKeeper
 
 			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
-			joinPoolAmt, balancerIntermediaryAcc, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := s.SetupMigrationTest(ctx, tc.superfluidDelegated, tc.superfluidUndelegating, tc.unlocking, tc.percentOfSharesToMigrate)
+			joinPoolAmt, balancerIntermediaryAcc, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := s.SetupMigrationTest(ctx, tc.superfluidDelegated, tc.superfluidUndelegating, tc.unlocking, tc.noLock, tc.percentOfSharesToMigrate)
 			originalGammLockId := balancerLock.GetID()
 
 			// Depending on the test case, we attempt to migrate a subset of the balancer LP tokens we originally created.
@@ -240,9 +251,11 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 				s.Require().False(found, "expected no delegation, found delegation w/ %d shares", delegation.Shares)
 			}
 
-			// Run slashing logic if the test case is superfluid staked or superfluid undelegating and check if the new and old locks are slashed.
-			slashExpected := tc.superfluidDelegated || tc.superfluidUndelegating
-			s.SlashAndValidateResult(ctx, originalGammLockId, concentratedLockId, poolIdEntering, tc.percentOfSharesToMigrate, valAddr, *balancerLock, slashExpected)
+			// Run slashing logic if the test case is involves locks and check if the new and old locks are slashed.
+			if !tc.noLock {
+				slashExpected := tc.superfluidDelegated || tc.superfluidUndelegating
+				s.SlashAndValidateResult(ctx, originalGammLockId, concentratedLockId, poolIdEntering, tc.percentOfSharesToMigrate, valAddr, *balancerLock, slashExpected)
+			}
 		})
 	}
 }
@@ -294,7 +307,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 			stakingKeeper := s.App.StakingKeeper
 
 			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
-			joinPoolAmt, balancerIntermediaryAcc, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := s.SetupMigrationTest(ctx, true, false, false, tc.percentOfSharesToMigrate)
+			joinPoolAmt, balancerIntermediaryAcc, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := s.SetupMigrationTest(ctx, true, false, false, false, tc.percentOfSharesToMigrate)
 			originalGammLockId := balancerLock.GetID()
 
 			// Depending on the test case, we attempt to migrate a subset of the balancer LP tokens we originally created.
@@ -455,7 +468,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrated()
 			lockupKeeper := s.App.LockupKeeper
 
 			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
-			joinPoolAmt, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := s.SetupMigrationTest(ctx, true, true, tc.unlocking, tc.percentOfSharesToMigrate)
+			joinPoolAmt, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := s.SetupMigrationTest(ctx, true, true, tc.unlocking, false, tc.percentOfSharesToMigrate)
 			originalGammLockId := balancerLock.GetID()
 
 			// Depending on the test case, we attempt to migrate a subset of the balancer LP tokens we originally created.
@@ -570,7 +583,7 @@ func (s *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated() {
 			lockupKeeper := s.App.LockupKeeper
 
 			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
-			joinPoolAmt, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := s.SetupMigrationTest(ctx, false, false, tc.unlocking, tc.percentOfSharesToMigrate)
+			joinPoolAmt, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := s.SetupMigrationTest(ctx, false, false, tc.unlocking, false, tc.percentOfSharesToMigrate)
 			originalGammLockId := balancerLock.GetID()
 
 			// Depending on the test case, we attempt to migrate a subset of the balancer LP tokens we originally created.
@@ -612,6 +625,73 @@ func (s *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated() {
 
 			// Run slashing logic and check if the new and old locks are not slashed.
 			s.SlashAndValidateResult(ctx, originalGammLockId, concentratedLockId, clPoolId, tc.percentOfSharesToMigrate, valAddr, *balancerLock, false)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestMigrateUnlockedPositionFromBalancerToConcentrated() {
+	defaultJoinTime := s.Ctx.BlockTime()
+	type sendTest struct {
+		unlocking                bool
+		percentOfSharesToMigrate sdk.Dec
+		tokenOutMins             sdk.Coins
+		expectedError            error
+	}
+	testCases := map[string]sendTest{
+		"no lock (full shares)": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+		},
+		"no lock (partial shares)": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.9"),
+		},
+		"error: no lock (full shares), token out mins is more than exit coins": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10000))),
+			expectedError:            gammtypes.ErrLimitMinAmount,
+		},
+	}
+
+	for name, tc := range testCases {
+		s.Run(name, func() {
+			s.SetupTest()
+			s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime)
+			ctx := s.Ctx
+			superfluidKeeper := s.App.SuperfluidKeeper
+			gammKeeper := s.App.GAMMKeeper
+
+			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
+			joinPoolAmt, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, _ := s.SetupMigrationTest(ctx, false, false, false, true, tc.percentOfSharesToMigrate)
+			s.Require().Equal(uint64(0), balancerLock.GetID())
+
+			// Depending on the test case, we attempt to migrate a subset of the balancer LP tokens we originally created.
+			coinsToMigrate := balancerPoolShareOut
+			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
+
+			// RouteMigration is called via the migration message router and is always run prior to the migration itself
+			synthLockBeforeMigration, migrationType, err := superfluidKeeper.RouteMigration(ctx, poolJoinAcc, 0, coinsToMigrate)
+			s.Require().NoError(err)
+			s.Require().Equal((lockuptypes.SyntheticLock{}), synthLockBeforeMigration)
+			s.Require().Equal(migrationType, keeper.Unlocked)
+
+			// System under test.
+			positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, err := gammKeeper.MigrateUnlockedPositionFromBalancerToConcentrated(ctx, poolJoinAcc, coinsToMigrate, tc.tokenOutMins)
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
+				return
+			}
+			s.Require().NoError(err)
+			s.AssertEventEmitted(ctx, gammtypes.TypeEvtPoolExited, 1)
+
+			s.ValidateMigrateResult(
+				ctx,
+				positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering,
+				tc.percentOfSharesToMigrate,
+				*balancerLock,
+				joinPoolAmt,
+				balancerPoolShareOut, coinsToMigrate,
+				amount0, amount1,
+			)
 		})
 	}
 }
@@ -713,7 +793,7 @@ func (s *KeeperTestSuite) TestValidateMigration() {
 			superfluidKeeper := s.App.SuperfluidKeeper
 
 			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
-			_, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, _ := s.SetupMigrationTest(ctx, tc.isSuperfluidDelegated, tc.isSuperfluidUndelegating, tc.unlocking, tc.percentOfSharesToMigrate)
+			_, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, _ := s.SetupMigrationTest(ctx, tc.isSuperfluidDelegated, tc.isSuperfluidUndelegating, tc.unlocking, false, tc.percentOfSharesToMigrate)
 			originalGammLockId := balancerLock.GetID()
 
 			// Depending on the test case, we attempt to migrate a subset of the balancer LP tokens we originally created.
@@ -903,7 +983,7 @@ func (s *KeeperTestSuite) TestValidateSharesToMigrateUnlockAndExitBalancerPool()
 	}
 }
 
-func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegated, superfluidUndelegating, unlocking bool, percentOfSharesToMigrate sdk.Dec) (joinPoolAmt sdk.Coins, balancerIntermediaryAcc types.SuperfluidIntermediaryAccount, balancerLock *lockuptypes.PeriodLock, poolCreateAcc, poolJoinAcc sdk.AccAddress, balancerPooId, clPoolId uint64, balancerPoolShareOut sdk.Coin, valAddr sdk.ValAddress) {
+func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegated, superfluidUndelegating, unlocking, noLock bool, percentOfSharesToMigrate sdk.Dec) (joinPoolAmt sdk.Coins, balancerIntermediaryAcc types.SuperfluidIntermediaryAccount, balancerLock *lockuptypes.PeriodLock, poolCreateAcc, poolJoinAcc sdk.AccAddress, balancerPooId, clPoolId uint64, balancerPoolShareOut sdk.Coin, valAddr sdk.ValAddress) {
 	bankKeeper := s.App.BankKeeper
 	gammKeeper := s.App.GAMMKeeper
 	superfluidKeeper := s.App.SuperfluidKeeper
@@ -972,7 +1052,10 @@ func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegate
 	unbondingDuration := stakingKeeper.GetParams(ctx).UnbondingTime
 
 	// Lock the LP tokens for the duration of the unbonding period.
-	originalGammLockId := s.LockTokens(poolJoinAcc, sdk.NewCoins(balancerPoolShareOut), unbondingDuration)
+	originalGammLockId := uint64(0)
+	if !noLock {
+		originalGammLockId = s.LockTokens(poolJoinAcc, sdk.NewCoins(balancerPoolShareOut), unbondingDuration)
+	}
 
 	// Superfluid delegate the balancer lock if the test case requires it.
 	// Note the intermediary account that was created.
@@ -1004,8 +1087,11 @@ func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegate
 		}
 	}
 
-	balancerLock, err = lockupKeeper.GetLockByID(ctx, originalGammLockId)
-	s.Require().NoError(err)
+	balancerLock = &lockuptypes.PeriodLock{}
+	if !noLock {
+		balancerLock, err = lockupKeeper.GetLockByID(ctx, originalGammLockId)
+		s.Require().NoError(err)
+	}
 
 	// Create a full range position in the concentrated liquidity pool.
 	// This is to have a spot price and liquidity value to work off when migrating.
