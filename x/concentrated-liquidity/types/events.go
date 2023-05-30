@@ -14,6 +14,7 @@ const (
 
 	AttributeValueCategory         = ModuleName
 	AttributeKeyPositionId         = "position_id"
+	AttributeKeyNewPositionId      = "new_position_id"
 	AttributeKeyPoolId             = "pool_id"
 	AttributeAmount0               = "amount0"
 	AttributeAmount1               = "amount1"

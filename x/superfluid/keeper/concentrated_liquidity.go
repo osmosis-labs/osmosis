@@ -129,7 +129,8 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, se
 		sdk.NewEvent(
 			types.TypeEvtAddToConcentratedLiquiditySuperfluidPosition,
 			sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
-			sdk.NewAttribute(types.AttributePositionId, strconv.FormatUint(newPositionId, 10)),
+			sdk.NewAttribute(types.AttributePositionId, strconv.FormatUint(positionId, 10)),
+			sdk.NewAttribute(types.AttributeNewPositionId, strconv.FormatUint(newPositionId, 10)),
 			sdk.NewAttribute(types.AttributeAmount0, actualNewAmount0.String()),
 			sdk.NewAttribute(types.AttributeAmount1, actualNewAmount1.String()),
 			sdk.NewAttribute(types.AttributeConcentratedLockId, strconv.FormatUint(newLockId, 10)),
