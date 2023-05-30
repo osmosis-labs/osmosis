@@ -133,7 +133,7 @@ func (s *ConcentratedPoolTestSuite) TestString() {
 	pool, err := model.NewConcentratedLiquidityPool(1, "foo", "bar", DefaultTickSpacing, DefaultSpreadFactor)
 	s.Require().NoError(err)
 	poolString := pool.String()
-	s.Require().Equal(poolString, "{\"address\":\"osmo19e2mf7cywkv7zaug6nk5f87d07fxrdgrladvymh2gwv5crvm3vnsuewhh7\",\"incentives_address\":\"osmo156gncm3w2hdvuxxaejue8nejxgdgsrvdf7jftntuhxnaarhxcuas4ywjxf\",\"fees_address\":\"osmo1nsz03mrk6krk5p86f4qr48kden2pt39afw35qzvgqp8m09jwafzqdl8nsk\",\"id\":1,\"current_tick_liquidity\":\"0.000000000000000000\",\"token0\":\"foo\",\"token1\":\"bar\",\"current_sqrt_price\":\"0.000000000000000000\",\"tick_spacing\":1,\"exponent_at_price_one\":-6,\"spread_factor\":\"0.010000000000000000\",\"last_liquidity_update\":\"0001-01-01T00:00:00Z\"}")
+	s.Require().Equal(poolString, "{\"address\":\"osmo19e2mf7cywkv7zaug6nk5f87d07fxrdgrladvymh2gwv5crvm3vnsuewhh7\",\"incentives_address\":\"osmo156gncm3w2hdvuxxaejue8nejxgdgsrvdf7jftntuhxnaarhxcuas4ywjxf\",\"spread_rewards_address\":\"osmo10t3u6ze74jn7et6rluuxyf9vr2arykewmhcx67svg6heuu0gte2syfudcv\",\"id\":1,\"current_tick_liquidity\":\"0.000000000000000000\",\"token0\":\"foo\",\"token1\":\"bar\",\"current_sqrt_price\":\"0.000000000000000000\",\"tick_spacing\":1,\"exponent_at_price_one\":-6,\"spread_factor\":\"0.010000000000000000\",\"last_liquidity_update\":\"0001-01-01T00:00:00Z\"}")
 }
 
 // TestSpotPrice tests the SpotPrice method of the ConcentratedPoolTestSuite.
@@ -480,7 +480,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 				tickSpacing:  DefaultTickSpacing,
 				spreadFactor: sdk.ZeroDec().Sub(sdk.SmallestDec()),
 			},
-			expectedErr: types.InvalidSpreadFactorError{ActualFee: sdk.ZeroDec().Sub(sdk.SmallestDec())},
+			expectedErr: types.InvalidSpreadFactorError{ActualSpreadFactor: sdk.ZeroDec().Sub(sdk.SmallestDec())},
 		},
 		{
 			name: "Error: spread factor == 1",
@@ -491,7 +491,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 				tickSpacing:  DefaultTickSpacing,
 				spreadFactor: sdk.OneDec(),
 			},
-			expectedErr: types.InvalidSpreadFactorError{ActualFee: sdk.OneDec()},
+			expectedErr: types.InvalidSpreadFactorError{ActualSpreadFactor: sdk.OneDec()},
 		},
 	}
 

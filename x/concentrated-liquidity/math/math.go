@@ -112,7 +112,7 @@ func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 		// Examples include:
 		// - calculating amountIn during swap
 		// - adding liquidity (request user to provide more tokens in in favor of the pool)
-		return liq.MulRoundUp(diff).Ceil()
+		return liq.Mul(diff).Ceil()
 	}
 	// This is truncated at precision end to round in favor of the pool when:
 	// - calculating amount out during swap

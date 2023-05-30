@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	incentivesAddressPrefix = "incentives"
-	feesAddressPrefix       = "fees"
+	incentivesAddressPrefix    = "incentives"
+	spreadRewardsAddressPrefix = "spreadRewards"
 )
 
 var (
@@ -31,16 +31,16 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 		return Pool{}, types.MatchingDenomError{Denom: denom0}
 	}
 
-	// Swap fee must be [0,1)
+	// Spread factor must be [0,1)
 	if spreadFactor.IsNegative() || spreadFactor.GTE(one) {
-		return Pool{}, types.InvalidSpreadFactorError{ActualFee: spreadFactor}
+		return Pool{}, types.InvalidSpreadFactorError{ActualSpreadFactor: spreadFactor}
 	}
 
 	// Create a new pool struct with the specified parameters
 	pool := Pool{
 		Address:              poolmanagertypes.NewPoolAddress(poolId).String(),
 		IncentivesAddress:    osmoutils.NewModuleAddressWithPrefix(types.ModuleName, incentivesAddressPrefix, sdk.Uint64ToBigEndian(poolId)).String(),
-		FeesAddress:          osmoutils.NewModuleAddressWithPrefix(types.ModuleName, feesAddressPrefix, sdk.Uint64ToBigEndian(poolId)).String(),
+		SpreadRewardsAddress: osmoutils.NewModuleAddressWithPrefix(types.ModuleName, spreadRewardsAddressPrefix, sdk.Uint64ToBigEndian(poolId)).String(),
 		Id:                   poolId,
 		CurrentSqrtPrice:     sdk.ZeroDec(),
 		CurrentTick:          0,
@@ -72,10 +72,10 @@ func (p Pool) GetIncentivesAddress() sdk.AccAddress {
 	return addr
 }
 
-func (p Pool) GetFeesAddress() sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(p.FeesAddress)
+func (p Pool) GetSpreadRewardsAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(p.SpreadRewardsAddress)
 	if err != nil {
-		panic(fmt.Sprintf("could not bech32 decode fee address of pool with id: %d", p.GetId()))
+		panic(fmt.Sprintf("could not bech32 decode spread factor address of pool with id: %d", p.GetId()))
 	}
 	return addr
 }

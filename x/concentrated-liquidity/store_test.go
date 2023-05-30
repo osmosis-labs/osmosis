@@ -20,7 +20,7 @@ var (
 	defaultTickInfo = model.TickInfo{
 		LiquidityGross: DefaultLiquidityAmt,
 		LiquidityNet:   DefaultLiquidityAmt,
-		FeeGrowthOppositeDirectionOfLastTraversal: DefaultFeeAccumCoins,
+		SpreadRewardGrowthOppositeDirectionOfLastTraversal: DefaultSpreadRewardAccumCoins,
 		UptimeTrackers: wrapUptimeTrackers(getExpectedUptimes().hundredTokensMultiDenom),
 	}
 

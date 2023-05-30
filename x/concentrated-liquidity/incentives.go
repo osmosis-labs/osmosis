@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -74,9 +75,9 @@ func (k Keeper) getUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sd
 // of uptime growth opposite the direction of last traversal for each supported uptime for a given tick.
 // This value depends on the provided tick's location relative to the current tick. If the provided tick
 // is greater than the current tick, then the value is zero. Otherwise, the value is the value of the
-// current global fee growth.
+// current global spread reward growth.
 //
-// Similar to fees, by convention the value is chosen as if all of the uptime (seconds per liquidity) to date has
+// Similar to spread factors, by convention the value is chosen as if all of the uptime (seconds per liquidity) to date has
 // occurred below the tick.
 // Returns error if the pool with the given id does not exist or if fails to get any of the uptime accumulators.
 func (k Keeper) getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, poolId uint64, tick int64) ([]sdk.DecCoins, error) {
@@ -228,7 +229,7 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64,
 // lock on the Balancer pool. Importantly, this is a dynamic check such that if a longer duration lock is added in the future, it will
 // begin using that lock. The given uptime accumulators are mutated to reflect the claimed rewards.
 //
-// Returns the number of coins that were claimed and distrbuted.
+// Returns the number of coins that were claimed and distributed.
 // Returns error if either reward claiming, record deletion or adding to the gauge fails.
 // CONTRACT: the caller validates that the pool with the given id exists.
 // CONTRACT: caller is responsible for the uptimeAccums to be up-to-date.
@@ -803,6 +804,14 @@ func moveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum accum.Accumu
 		return types.ModifySamePositionAccumulatorError{PositionAccName: oldPositionName}
 	}
 
+	hasPosition, err := accum.HasPosition(oldPositionName)
+	if err != nil {
+		return err
+	}
+	if !hasPosition {
+		return fmt.Errorf("position %s does not exist", oldPositionName)
+	}
+
 	if err := updatePositionToInitValuePlusGrowthOutside(accum, oldPositionName, growthOutside); err != nil {
 		return err
 	}
@@ -1107,4 +1116,16 @@ func (k Keeper) getLargestAuthorizedUptimeDuration(ctx sdk.Context) time.Duratio
 		}
 	}
 	return largestUptime
+}
+
+// nolint: unused
+// getLargestSupportedUptimeDuration retrieves the largest supported uptime duration from the preset constant slice.
+func (k Keeper) getLargestSupportedUptimeDuration(ctx sdk.Context) time.Duration {
+	var largestSupportedUptime time.Duration
+	for _, uptime := range types.SupportedUptimes {
+		if uptime > largestSupportedUptime {
+			largestSupportedUptime = uptime
+		}
+	}
+	return largestSupportedUptime
 }

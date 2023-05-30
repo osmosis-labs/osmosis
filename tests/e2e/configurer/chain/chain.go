@@ -154,8 +154,8 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	// removes the fee token from balances for calculating the difference in other tokens
 	// before and after the IBC send.
 	removeFeeTokenFromBalance := func(balance sdk.Coins) sdk.Coins {
-		feeTokenBalance := balance.FilterDenoms([]string{initialization.E2EFeeToken})
-		return balance.Sub(feeTokenBalance)
+		feeRewardTokenBalance := balance.FilterDenoms([]string{initialization.E2EFeeToken})
+		return balance.Sub(feeRewardTokenBalance)
 	}
 
 	balancesDstPreWithTxFeeBalance, err := dstNode.QueryBalances(recipient)

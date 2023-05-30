@@ -12,7 +12,7 @@ const (
 	TypeMsgCreatePosition          = "create-position"
 	TypeAddToPosition              = "add-to-position"
 	TypeMsgWithdrawPosition        = "withdraw-position"
-	TypeMsgCollectFees             = "collect-fees"
+	TypeMsgCollectSpreadRewards    = "collect-spread-rewards"
 	TypeMsgCollectIncentives       = "collect-incentives"
 	TypeMsgFungifyChargedPositions = "fungify-charged-positions"
 )
@@ -143,11 +143,11 @@ func (msg MsgWithdrawPosition) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sender}
 }
 
-var _ sdk.Msg = &MsgCollectFees{}
+var _ sdk.Msg = &MsgCollectSpreadRewards{}
 
-func (msg MsgCollectFees) Route() string { return RouterKey }
-func (msg MsgCollectFees) Type() string  { return TypeMsgCollectFees }
-func (msg MsgCollectFees) ValidateBasic() error {
+func (msg MsgCollectSpreadRewards) Route() string { return RouterKey }
+func (msg MsgCollectSpreadRewards) Type() string  { return TypeMsgCollectSpreadRewards }
+func (msg MsgCollectSpreadRewards) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return fmt.Errorf("Invalid sender address (%s)", err)
@@ -156,11 +156,11 @@ func (msg MsgCollectFees) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgCollectFees) GetSignBytes() []byte {
+func (msg MsgCollectSpreadRewards) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
-func (msg MsgCollectFees) GetSigners() []sdk.AccAddress {
+func (msg MsgCollectSpreadRewards) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)
