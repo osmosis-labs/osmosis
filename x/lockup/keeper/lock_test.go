@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
+
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
@@ -236,7 +238,7 @@ func (s *KeeperTestSuite) TestUnlock() {
 		ctx := s.Ctx
 
 		addr1 := sdk.AccAddress([]byte("addr1---------------"))
-		_ = types.NewPeriodLock(1, addr1, time.Second, time.Time{}, tc.fundAcc)
+		lock := types.NewPeriodLock(1, addr1, addr1.String(), time.Second, time.Time{}, tc.fundAcc)
 
 		// lock with balance
 		s.FundAcc(addr1, tc.fundAcc)
@@ -495,6 +497,7 @@ func (s *KeeperTestSuite) TestCreateLock() {
 	s.Require().Equal(time.Second, lock.Duration)
 	s.Require().Equal(time.Time{}, lock.EndTime)
 	s.Require().Equal(uint64(1), lock.ID)
+	s.Require().Equal("", lock.RewardReceiverAddress)
 
 	lockID := s.App.LockupKeeper.GetLastLockID(s.Ctx)
 	s.Require().Equal(uint64(1), lockID)
@@ -532,6 +535,87 @@ func (s *KeeperTestSuite) TestCreateLock() {
 	acc := s.App.AccountKeeper.GetModuleAccount(s.Ctx, types.ModuleName)
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, acc.GetAddress(), "stake")
 	s.Require().Equal(sdk.NewInt(30), balance.Amount)
+}
+
+func (s *KeeperTestSuite) TestSetLockRewardReceiverAddress() {
+	testCases := []struct {
+		name                  string
+		isnotOwner            bool
+		lockID                uint64
+		useNewReceiverAddress bool
+		exepctedErrorType     error
+	}{
+		{
+			name:                  "happy case",
+			isnotOwner:            false,
+			lockID:                1,
+			useNewReceiverAddress: true,
+		},
+		{
+			name:                  "error: caller of the function is not the owner",
+			isnotOwner:            true,
+			lockID:                1,
+			useNewReceiverAddress: true,
+			exepctedErrorType:     types.ErrNotLockOwner,
+		},
+		{
+			name:                  "error: lock id is invalid",
+			isnotOwner:            false,
+			lockID:                5,
+			useNewReceiverAddress: true,
+			exepctedErrorType:     errorsmod.Wrap(types.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", 5)),
+		},
+		{
+			name:                  "error: new receiver address is same as old",
+			isnotOwner:            false,
+			lockID:                1,
+			useNewReceiverAddress: false,
+			exepctedErrorType:     types.ErrRewardReceiverIsSame,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			addr1 := s.TestAccs[0]
+			coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+
+			s.FundAcc(addr1, coins)
+
+			lock, err := s.App.LockupKeeper.CreateLock(s.Ctx, addr1, coins, time.Second)
+			s.Require().NoError(err)
+
+			// check that the reward receiver is the lock owner by default
+			s.Require().Equal(lock.RewardReceiverAddress, "")
+
+			owner := addr1
+			if tc.isnotOwner {
+				owner = s.TestAccs[1]
+			}
+
+			newReceiver := addr1
+			// if this field is set to true, use different account as input
+			if tc.useNewReceiverAddress {
+				newReceiver = s.TestAccs[1]
+			}
+
+			// System under test
+			// now change the reward receiver state
+			err = s.App.LockupKeeper.SetLockRewardReceiverAddress(s.Ctx, tc.lockID, owner, newReceiver.String())
+			if tc.exepctedErrorType != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(tc.exepctedErrorType, err.Error())
+			} else {
+				s.Require().NoError(err)
+				lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
+				s.Require().NoError(err)
+				s.Require().Equal(lock.RewardReceiverAddress, newReceiver.String())
+			}
+
+		})
+	}
+
 }
 
 func (s *KeeperTestSuite) TestCreateLockNoSend() {
@@ -804,6 +888,109 @@ func (s *KeeperTestSuite) TestLock() {
 	acc := s.App.AccountKeeper.GetModuleAccount(s.Ctx, types.ModuleName)
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, acc.GetAddress(), "stake")
 	s.Require().Equal(sdk.NewInt(0).String(), balance.Amount.String())
+}
+func (s *KeeperTestSuite) TestSplitLock() {
+	defaultAmount := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(200)))
+	defaultHalfAmount := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(40)), sdk.NewCoin("bar", sdk.NewInt(110)))
+	testCases := []struct {
+		name                      string
+		amountToSplit             sdk.Coins
+		isUnlocking               bool
+		isForceUnlock             bool
+		useDifferentRewardAddress bool
+		expectedErr               bool
+	}{
+		{
+			"happy path: split half amount",
+			defaultHalfAmount,
+			false,
+			false,
+			false,
+			false,
+		},
+		{
+			"happy path: split full amount",
+			defaultAmount,
+			false,
+			false,
+			false,
+			false,
+		},
+		{
+			"happy path: try using reward address with different reward receiver",
+			defaultAmount,
+			false,
+			false,
+			true,
+			false,
+		},
+		{
+			"error: unlocking lock",
+			defaultAmount,
+			true,
+			false,
+			false,
+			true,
+		},
+		{
+			"error: force unlock",
+			defaultAmount,
+			true,
+			false,
+			false,
+			true,
+		},
+	}
+	for _, tc := range testCases {
+		s.SetupTest()
+		defaultDuration := time.Minute
+		defaultEndTime := time.Time{}
+		lock := types.NewPeriodLock(
+			1,
+			s.TestAccs[0],
+			s.TestAccs[0].String(),
+			defaultDuration,
+			defaultEndTime,
+			defaultAmount,
+		)
+		if tc.isUnlocking {
+			lock.EndTime = s.Ctx.BlockTime()
+		}
+		if tc.useDifferentRewardAddress {
+			lock.RewardReceiverAddress = s.TestAccs[1].String()
+		}
+
+		// manually set last lock id to 1
+		s.App.LockupKeeper.SetLastLockID(s.Ctx, 1)
+		// System under test
+		newLock, err := s.App.LockupKeeper.SplitLock(s.Ctx, lock, tc.amountToSplit, tc.isForceUnlock)
+		if tc.expectedErr {
+			s.Require().Error(err)
+			return
+		}
+		s.Require().NoError(err)
+
+		// check if the new lock has correct states
+		s.Require().Equal(newLock.ID, lock.ID+1)
+		s.Require().Equal(newLock.Owner, lock.Owner)
+		s.Require().Equal(newLock.Duration, lock.Duration)
+		s.Require().Equal(newLock.EndTime, lock.EndTime)
+		s.Require().Equal(newLock.RewardReceiverAddress, lock.RewardReceiverAddress)
+		s.Require().True(newLock.Coins.IsEqual(tc.amountToSplit))
+
+		// now check if the old lock has correctly updated state
+		updatedOriginalLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
+		s.Require().Equal(updatedOriginalLock.ID, lock.ID)
+		s.Require().Equal(updatedOriginalLock.Owner, lock.Owner)
+		s.Require().Equal(updatedOriginalLock.Duration, lock.Duration)
+		s.Require().Equal(updatedOriginalLock.EndTime, lock.EndTime)
+		s.Require().Equal(updatedOriginalLock.RewardReceiverAddress, lock.RewardReceiverAddress)
+		s.Require().True(updatedOriginalLock.Coins.IsEqual(lock.Coins.Sub(tc.amountToSplit)))
+
+		// check that last lock id has incremented properly
+		lastLockId := s.App.LockupKeeper.GetLastLockID(s.Ctx)
+		s.Require().Equal(lastLockId, newLock.ID)
+	}
 }
 
 func (s *KeeperTestSuite) AddTokensToLockForSynth() {

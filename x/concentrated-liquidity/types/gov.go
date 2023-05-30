@@ -15,71 +15,84 @@ const (
 
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeCreateConcentratedLiquidityPool)
-	govtypes.RegisterProposalTypeCodec(&CreateConcentratedLiquidityPoolProposal{}, "osmosis/CreateConcentratedLiquidityPoolProposal")
+	govtypes.RegisterProposalTypeCodec(&CreateConcentratedLiquidityPoolsProposal{}, "osmosis/CreateCLPoolsProposal")
 	govtypes.RegisterProposalType(ProposalTypeTickSpacingDecrease)
 	govtypes.RegisterProposalTypeCodec(&TickSpacingDecreaseProposal{}, "osmosis/TickSpacingDecreaseProposal")
 }
 
 var (
-	_ govtypes.Content = &CreateConcentratedLiquidityPoolProposal{}
+	_ govtypes.Content = &CreateConcentratedLiquidityPoolsProposal{}
 	_ govtypes.Content = &TickSpacingDecreaseProposal{}
 )
 
-// NewCreateConcentratedLiquidityPoolProposal returns a new instance of a create concentrated liquidity pool proposal struct.
-func NewCreateConcentratedLiquidityPoolProposal(title, description string, denom0, denom1 string, tickSpacing uint64, exponentAtPriceOne sdk.Int, spreadFactor sdk.Dec) govtypes.Content {
-	return &CreateConcentratedLiquidityPoolProposal{
-		Title:              title,
-		Description:        description,
-		Denom0:             denom0,
-		Denom1:             denom1,
-		TickSpacing:        tickSpacing,
-		ExponentAtPriceOne: exponentAtPriceOne,
-		SpreadFactor:       spreadFactor,
+// NewCreateConcentratedLiquidityPoolsProposal returns a new instance of a create concentrated liquidity pool proposal struct.
+func NewCreateConcentratedLiquidityPoolsProposal(title, description string, records []PoolRecord) govtypes.Content {
+	return &CreateConcentratedLiquidityPoolsProposal{
+		Title:       title,
+		Description: description,
+		PoolRecords: records,
 	}
 }
 
-func (p *CreateConcentratedLiquidityPoolProposal) GetTitle() string { return p.Title }
+func (p *CreateConcentratedLiquidityPoolsProposal) GetTitle() string { return p.Title }
 
 // GetDescription gets the description of the proposal
-func (p *CreateConcentratedLiquidityPoolProposal) GetDescription() string { return p.Description }
+func (p *CreateConcentratedLiquidityPoolsProposal) GetDescription() string { return p.Description }
 
 // ProposalRoute returns the router key for the proposal
-func (p *CreateConcentratedLiquidityPoolProposal) ProposalRoute() string { return RouterKey }
+func (p *CreateConcentratedLiquidityPoolsProposal) ProposalRoute() string { return RouterKey }
 
 // ProposalType returns the type of the proposal
-func (p *CreateConcentratedLiquidityPoolProposal) ProposalType() string {
+func (p *CreateConcentratedLiquidityPoolsProposal) ProposalType() string {
 	return ProposalTypeCreateConcentratedLiquidityPool
 }
 
 // ValidateBasic validates a governance proposal's abstract and basic contents
-func (p *CreateConcentratedLiquidityPoolProposal) ValidateBasic() error {
+func (p *CreateConcentratedLiquidityPoolsProposal) ValidateBasic() error {
 	err := govtypes.ValidateAbstract(p)
 	if err != nil {
 		return err
 	}
 
-	if p.TickSpacing <= 0 {
-		return fmt.Errorf("tick spacing must be positive")
-	}
+	for _, record := range p.PoolRecords {
+		if record.TickSpacing <= 0 {
+			return fmt.Errorf("tick spacing must be positive")
+		}
 
-	if p.Denom0 == p.Denom1 {
-		return fmt.Errorf("denom0 and denom1 must be different")
-	}
+		if record.Denom0 == record.Denom1 {
+			return fmt.Errorf("denom0 and denom1 must be different")
+		}
 
-	if sdk.ValidateDenom(p.Denom0) != nil {
-		return fmt.Errorf("denom0 is invalid: %s", sdk.ValidateDenom(p.Denom0))
-	}
+		if sdk.ValidateDenom(record.Denom0) != nil {
+			return fmt.Errorf("denom0 is invalid: %s", sdk.ValidateDenom(record.Denom0))
+		}
 
-	if sdk.ValidateDenom(p.Denom1) != nil {
-		return fmt.Errorf("denom1 is invalid: %s", sdk.ValidateDenom(p.Denom1))
-	}
+		if sdk.ValidateDenom(record.Denom1) != nil {
+			return fmt.Errorf("denom1 is invalid: %s", sdk.ValidateDenom(record.Denom1))
+		}
 
-	spreadFactor := p.SpreadFactor
-	if spreadFactor.IsNegative() || spreadFactor.GTE(sdk.OneDec()) {
-		return InvalidSpreadFactorError{ActualFee: spreadFactor}
+		spreadFactor := record.SpreadFactor
+		if spreadFactor.IsNegative() || spreadFactor.GTE(sdk.OneDec()) {
+			return InvalidSpreadFactorError{ActualSpreadFactor: spreadFactor}
+		}
 	}
-
 	return nil
+}
+
+// String returns a string containing the pool incentives proposal.
+func (p CreateConcentratedLiquidityPoolsProposal) String() string {
+	recordsStr := ""
+	for _, record := range p.PoolRecords {
+		recordsStr = recordsStr + fmt.Sprintf("(Denom0: %s, Denom1: %s, TickSpacing: %d, ExponentAtPriceOne: %d, SpreadFactor: %d) ", record.Denom0, record.Denom1, record.TickSpacing, record.ExponentAtPriceOne, record.SpreadFactor)
+	}
+
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf(`Create Concentrated Liquidity Pool Proposal:
+Title:       %s
+Description: %s
+Records:     %s
+`, p.Title, p.Description, recordsStr))
+	return b.String()
 }
 
 func NewTickSpacingDecreaseProposal(title, description string, records []PoolIdToTickSpacingRecord) govtypes.Content {
@@ -114,22 +127,16 @@ func (p *TickSpacingDecreaseProposal) ValidateBasic() error {
 		return fmt.Errorf("empty proposal records")
 	}
 
-	return nil
-}
+	for _, poolIdToTickSpacingRecord := range p.PoolIdToTickSpacingRecords {
+		if poolIdToTickSpacingRecord.PoolId <= uint64(0) {
+			return fmt.Errorf("Pool Id cannot be negative")
+		}
 
-// String returns a string containing the pool incentives proposal.
-func (p CreateConcentratedLiquidityPoolProposal) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Create Concentrated Liquidity Pool Proposal:
-  Title:                 %s
-  Description:           %s
-  Denom0:                %s
-  Denom1:                %s
-  Tick Spacing:          %d
-  ExponentAtPriceOne     %s
-  Swap Fee:              %s
-`, p.Title, p.Description, p.Denom0, p.Denom1, p.TickSpacing, p.ExponentAtPriceOne.String(), p.SpreadFactor.String()))
-	return b.String()
+		if poolIdToTickSpacingRecord.NewTickSpacing <= uint64(0) {
+			return fmt.Errorf("tick spacing must be positive")
+		}
+	}
+	return nil
 }
 
 // String returns a string containing the decrease tick spacing proposal.
@@ -141,9 +148,9 @@ func (p TickSpacingDecreaseProposal) String() string {
 
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf(`Decrease Pools Tick Spacing Proposal:
-  Title:       %s
-  Description: %s
-  Records:     %s
+Title:       %s
+Description: %s
+Records:     %s
 `, p.Title, p.Description, recordsStr))
 	return b.String()
 }

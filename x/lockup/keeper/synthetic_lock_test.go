@@ -59,11 +59,12 @@ func (s *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 
 	expectedLocks := []types.PeriodLock{
 		{
-			ID:       1,
-			Owner:    addr1.String(),
-			Duration: time.Second,
-			EndTime:  time.Time{},
-			Coins:    coins,
+			ID:                    1,
+			Owner:                 addr1.String(),
+			RewardReceiverAddress: "",
+			Duration:              time.Second,
+			EndTime:               time.Time{},
+			Coins:                 coins,
 		},
 	}
 	// check locks

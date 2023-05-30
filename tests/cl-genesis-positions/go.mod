@@ -8,7 +8,7 @@ require (
 	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230516205127-c213fddde069
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230516205127-c213fddde069
 	// this commit points to https://github.com/osmosis-labs/osmosis/commit/6e8fbee70d9067b69a900cfc7441b5c4185ec495
-	github.com/osmosis-labs/osmosis/v15 v15.0.0-20230524174100-7f0441ab1da0
+	github.com/osmosis-labs/osmosis/v15 v15.0.0-20230529161742-5ecd4b4758a1
 	github.com/tendermint/tendermint v0.34.26
 )
 
@@ -25,7 +25,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
-	github.com/btcsuite/btcd v0.22.2 // indirect
+	github.com/btcsuite/btcd v0.22.3 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
@@ -38,7 +38,8 @@ require (
 	github.com/cosmos/gogoproto v1.4.6 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.19.5 // indirect
-	github.com/cosmos/ibc-go/v4 v4.3.0 // indirect
+	github.com/cosmos/ibc-apps/modules/async-icq/v4 v4.0.0-20230524151648-c02fa46c2860 // indirect
+	github.com/cosmos/ibc-go/v4 v4.3.1 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.2 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
@@ -118,7 +119,6 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.15.0 // indirect
-	github.com/strangelove-ventures/async-icq/v4 v4.0.0-rc0 // indirect
 	github.com/strangelove-ventures/packet-forward-middleware/v4 v4.0.5 // indirect
 	github.com/stretchr/testify v1.8.3 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect

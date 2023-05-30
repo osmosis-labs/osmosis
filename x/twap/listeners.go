@@ -80,6 +80,6 @@ func (l *concentratedLiquidityListener) AfterLastPoolPositionRemoved(ctx sdk.Con
 	l.k.trackChangedPool(ctx, poolId)
 }
 
-func (l *concentratedLiquidityListener) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+func (l *concentratedLiquidityListener) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 	l.k.trackChangedPool(ctx, poolId)
 }

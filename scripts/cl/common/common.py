@@ -26,7 +26,7 @@ class SqrtPriceRange:
        self.sqrt_price_next =  None
     self.liquidity = liquidity
 
-def validate_confirmed_results(actual_token_amount: Decimal, fee_growth_per_share_total: Decimal, expected_token_amount: Decimal, expected_fee_growth_per_share_total: Decimal):
+def validate_confirmed_results(actual_token_amount: Decimal, spread_rewards_growth_per_share_total: Decimal, expected_token_amount: Decimal, expected_spread_rewards_growth_per_share_total: Decimal):
     """Validates the results of a calc concentrated liquidity test case estimates.
 
     This validation helper exists to make sure that subsequent changes to the script do not break test cases.
@@ -35,5 +35,5 @@ def validate_confirmed_results(actual_token_amount: Decimal, fee_growth_per_shar
     if math.floor(actual_token_amount) != math.floor(expected_token_amount):
         raise Exception(F"actual_token_amount {actual_token_amount} does not match expected_token_amount {expected_token_amount}")
     
-    if abs(fee_growth_per_share_total - expected_fee_growth_per_share_total) > (1 / math.pow(10, 18)):
-        raise Exception(F"fee_growth_per_share_total {fee_growth_per_share_total} does not match expected_fee_growth_per_share_total {expected_fee_growth_per_share_total}")
+    if abs(spread_rewards_growth_per_share_total - expected_spread_rewards_growth_per_share_total) > (1 / math.pow(10, 18)):
+        raise Exception(F"spread_rewards_growth_per_share_total {spread_rewards_growth_per_share_total} does not match expected_spread_rewards_growth_per_share_total {expected_spread_rewards_growth_per_share_total}")
