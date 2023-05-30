@@ -274,7 +274,7 @@ pub enum SudoMessage {
 
 ## Incentives and Shares
 
-In order to allow CosmWasm pool to work with incentives module (or being composable in general),
+In order to allow CosmWasm pool to work with the incentives module (or being composable in general),
 the contract needs to be able to create share tokens.
 
 We handle this by utilizing the `x/tokenfactory` module.
