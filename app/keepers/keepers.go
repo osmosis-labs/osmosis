@@ -36,6 +36,7 @@ import (
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v4"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v4/types"
 
+	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool"
 	downtimedetector "github.com/osmosis-labs/osmosis/v15/x/downtime-detector"
 	downtimetypes "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/types"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm"
@@ -146,6 +147,8 @@ type AppKeepers struct {
 	PoolManagerKeeper            *poolmanager.Keeper
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
 	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
+	// TODO: initialize this keeper: https://github.com/osmosis-labs/osmosis/issues/5329
+	CosmwasmPoolKeeper *cosmwasmpool.Keeper
 
 	// IBC modules
 	// transfer module

@@ -52,7 +52,7 @@ func (q Querier) UserPositions(ctx sdk.Context, req clquery.UserPositionsRequest
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		claimableFees, err := q.Keeper.GetClaimableFees(ctx, position.PositionId)
+		claimableFees, err := q.Keeper.GetClaimableSpreadRewards(ctx, position.PositionId)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
@@ -100,7 +100,7 @@ func (q Querier) PositionById(ctx sdk.Context, req clquery.PositionByIdRequest) 
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	claimableFees, err := q.Keeper.GetClaimableFees(ctx, position.PositionId)
+	claimableFees, err := q.Keeper.GetClaimableSpreadRewards(ctx, position.PositionId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -192,14 +192,14 @@ func (q Querier) LiquidityNetInDirection(ctx sdk.Context, req clquery.LiquidityN
 	return &clquery.LiquidityNetInDirectionResponse{LiquidityDepths: liquidityDepths, CurrentLiquidity: pool.GetLiquidity(), CurrentTick: pool.GetCurrentTick()}, nil
 }
 
-func (q Querier) ClaimableFees(ctx sdk.Context, req clquery.ClaimableFeesRequest) (*clquery.ClaimableFeesResponse, error) {
-	claimableFees, err := q.Keeper.GetClaimableFees(ctx, req.PositionId)
+func (q Querier) ClaimableSpreadRewards(ctx sdk.Context, req clquery.ClaimableSpreadRewardsRequest) (*clquery.ClaimableSpreadRewardsResponse, error) {
+	ClaimableSpreadRewards, err := q.Keeper.GetClaimableSpreadRewards(ctx, req.PositionId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &clquery.ClaimableFeesResponse{
-		ClaimableFees: claimableFees,
+	return &clquery.ClaimableSpreadRewardsResponse{
+		ClaimableSpreadRewards: ClaimableSpreadRewards,
 	}, nil
 }
 

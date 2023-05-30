@@ -38,9 +38,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		}
 		seenPoolIds[poolId] = struct{}{}
 
-		// set up fee accumulators
+		// set up spread reward accumulators
 		store := ctx.KVStore(k.storeKey)
-		err = accum.MakeAccumulatorWithValueAndShare(store, poolData.FeeAccumulator.Name, poolData.FeeAccumulator.AccumContent.AccumValue, poolData.FeeAccumulator.AccumContent.TotalShares)
+		err = accum.MakeAccumulatorWithValueAndShare(store, poolData.SpreadRewardAccumulator.Name, poolData.SpreadRewardAccumulator.AccumContent.AccumValue, poolData.SpreadRewardAccumulator.AccumContent.TotalShares)
 		if err != nil {
 			panic(err)
 		}
@@ -71,14 +71,14 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 			panic(err)
 		}
 
-		// set individual fee accumulator state position
-		feeAccumObject, err := k.GetFeeAccumulator(ctx, positionWrapper.Position.PoolId)
+		// set individual spread reward accumulator state position
+		spreadRewardAccumObject, err := k.GetSpreadRewardAccumulator(ctx, positionWrapper.Position.PoolId)
 		if err != nil {
 			panic(err)
 		}
-		feePositionKey := types.KeyFeePositionAccumulator(positionWrapper.Position.PositionId)
+		spreadRewardPositionKey := types.KeySpreadRewardPositionAccumulator(positionWrapper.Position.PositionId)
 
-		k.initOrUpdateAccumPosition(ctx, feeAccumObject, positionWrapper.FeeAccumRecord.AccumValuePerShare, feePositionKey, positionWrapper.FeeAccumRecord.NumShares, positionWrapper.FeeAccumRecord.UnclaimedRewardsTotal, positionWrapper.FeeAccumRecord.Options)
+		k.initOrUpdateAccumPosition(ctx, spreadRewardAccumObject, positionWrapper.SpreadRewardAccumRecord.AccumValuePerShare, spreadRewardPositionKey, positionWrapper.SpreadRewardAccumRecord.NumShares, positionWrapper.SpreadRewardAccumRecord.UnclaimedRewardsTotal, positionWrapper.SpreadRewardAccumRecord.Options)
 	}
 }
 
@@ -103,7 +103,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		if err != nil {
 			panic(err)
 		}
-		accumObject, err := k.GetFeeAccumulator(ctx, poolI.GetId())
+		accumObject, err := k.GetSpreadRewardAccumulator(ctx, poolI.GetId())
 		if err != nil {
 			panic(err)
 		}
@@ -113,8 +113,8 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 			panic(err)
 		}
 
-		feeAccumObject := genesis.AccumObject{
-			Name: types.KeyFeePoolAccumulator(poolI.GetId()),
+		spreadRewardAccumObject := genesis.AccumObject{
+			Name: types.KeySpreadRewardPoolAccumulator(poolI.GetId()),
 			AccumContent: &accum.AccumulatorContent{
 				AccumValue:  accumObject.GetValue(),
 				TotalShares: totalShares,
@@ -149,11 +149,11 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		}
 
 		poolData = append(poolData, genesis.PoolData{
-			Pool:                   &anyCopy,
-			Ticks:                  ticks,
-			FeeAccumulator:         feeAccumObject,
-			IncentivesAccumulators: incentivesAccumObject,
-			IncentiveRecords:       incentiveRecordsForPool,
+			Pool:                    &anyCopy,
+			Ticks:                   ticks,
+			SpreadRewardAccumulator: spreadRewardAccumObject,
+			IncentivesAccumulators:  incentivesAccumObject,
+			IncentiveRecords:        incentiveRecordsForPool,
 		})
 	}
 
@@ -178,21 +178,21 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 			}
 		}
 
-		// Retrieve fee accumulator state for position
-		feePositionKey := types.KeyFeePositionAccumulator(position.PositionId)
-		feeAccumObject, err := k.GetFeeAccumulator(ctx, position.PoolId)
+		// Retrieve spread reward accumulator state for position
+		spreadRewardPositionKey := types.KeySpreadRewardPositionAccumulator(position.PositionId)
+		spreadRewardAccumObject, err := k.GetSpreadRewardAccumulator(ctx, position.PoolId)
 		if err != nil {
 			panic(err)
 		}
-		feeAccumPositionRecord, err := feeAccumObject.GetPosition(feePositionKey)
+		spreadRewardAccumPositionRecord, err := spreadRewardAccumObject.GetPosition(spreadRewardPositionKey)
 		if err != nil {
 			panic(err)
 		}
 
 		positionData = append(positionData, genesis.PositionData{
-			LockId:         lockId,
-			Position:       &position,
-			FeeAccumRecord: feeAccumPositionRecord,
+			LockId:                  lockId,
+			Position:                &position,
+			SpreadRewardAccumRecord: spreadRewardAccumPositionRecord,
 		})
 	}
 

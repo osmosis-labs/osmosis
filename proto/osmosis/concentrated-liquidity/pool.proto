@@ -23,8 +23,9 @@ message Pool {
   string incentives_address = 2
       [ (gogoproto.moretags) = "yaml:\"incentives_address\"" ];
 
-  // address holding fees from swaps.
-  string fees_address = 3 [ (gogoproto.moretags) = "yaml:\"fees_address\"" ];
+  // address holding spread rewards from swaps.
+  string spread_rewards_address = 3
+      [ (gogoproto.moretags) = "yaml:\"spread_rewards_address\"" ];
 
   uint64 id = 4;
 
