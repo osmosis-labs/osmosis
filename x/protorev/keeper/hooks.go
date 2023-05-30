@@ -163,7 +163,7 @@ func (k Keeper) storeSwap(ctx sdk.Context, poolId uint64, tokenIn, tokenOut stri
 	}
 
 	if err := k.AddSwapsToSwapsToBackrun(ctx, []types.Trade{swapToBackrun}); err != nil {
-		ctx.Logger().Error("Protorev error adding swap to backrun from storeSwap", err)
+		ctx.Logger().Error("Protorev error adding swap to backrun from storeSwap", err) // Does not return since logging is last thing in the function
 	}
 }
 
