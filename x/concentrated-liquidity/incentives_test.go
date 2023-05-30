@@ -709,41 +709,42 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 		},
 	}
 
-	// TODO: investigate why running multiple authorized uptimes on these tests lead to different results (seems to be rounding difference)
-	// Works when I hardcode the authorized uptimes, not otherwise.
-	// Commenting the earlier func variables don't fix the issue.
-	// Issue persists when I run the same tests multiple times with the same authorized uptimes, so it's not related to the specific authorized uptimes.
-	for name, tc := range tests {
-		tc := tc
-		s.Run(name, func() {
-			// s.authorizedUptimes = types.SupportedUptimes
-			s.SetupTest()
-			s.Ctx = s.Ctx.WithBlockTime(defaultStartTime.Add(tc.timeElapsed))
+	s.runMultipleAuthorizedUptimes(func() {
+		for name, tc := range tests {
+			tc := tc
+			s.Run(name, func() {
+				s.SetupTest()
+				s.Ctx = s.Ctx.WithBlockTime(defaultStartTime.Add(tc.timeElapsed))
 
-			s.PrepareConcentratedPool()
+				s.PrepareConcentratedPool()
 
-			// system under test
-			actualResult, updatedPoolRecords, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, tc.accumUptime, tc.qualifyingLiquidity, sdk.NewDec(int64(tc.timeElapsed)).Quo(sdk.MustNewDecFromStr("1000000000")), tc.poolIncentiveRecords)
+				// We copy over incentive records to allow for multiple runthroughs of the same test case to test different authorized uptimes
+				incentiveRecordsCopy := make([]types.IncentiveRecord, len(tc.poolIncentiveRecords))
+				copy(incentiveRecordsCopy, tc.poolIncentiveRecords)
 
-			if tc.expectedPass {
-				s.Require().NoError(err)
+				// system under test
+				actualResult, updatedPoolRecords, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, tc.accumUptime, tc.qualifyingLiquidity, sdk.NewDec(int64(tc.timeElapsed)).Quo(sdk.MustNewDecFromStr("1000000000")), incentiveRecordsCopy)
 
-				s.Require().Equal(tc.expectedResult, actualResult)
-				s.Require().Equal(tc.expectedIncentiveRecords, updatedPoolRecords)
-
-				// If incentives are fully emitted, we ensure they are cleared from state
-				if tc.recordsCleared {
-					err := s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, updatedPoolRecords)
+				if tc.expectedPass {
 					s.Require().NoError(err)
 
-					updatedRecordsInState := s.getAllIncentiveRecordsForPool(tc.poolId)
-					s.Require().Equal(0, len(updatedRecordsInState))
+					s.Require().Equal(tc.expectedResult, actualResult)
+					s.Require().Equal(tc.expectedIncentiveRecords, updatedPoolRecords)
+
+					// If incentives are fully emitted, we ensure they are cleared from state
+					if tc.recordsCleared {
+						err := s.clk.SetMultipleIncentiveRecords(s.Ctx, updatedPoolRecords)
+						s.Require().NoError(err)
+
+						updatedRecordsInState := s.getAllIncentiveRecordsForPool(tc.poolId)
+						s.Require().Equal(0, len(updatedRecordsInState))
+					}
+				} else {
+					s.Require().Error(err)
 				}
-			} else {
-				s.Require().Error(err)
-			}
-		})
-	}
+			})
+		}
+	})
 }
 
 func (s *KeeperTestSuite) setupBalancerPoolWithFractionLocked(pa []balancer.PoolAsset, fraction sdk.Dec) uint64 {
