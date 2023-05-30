@@ -56,11 +56,16 @@ var (
 	BAR                                                  = "bar"
 	FOO                                                  = "foo"
 	InsufficientFundsError                               = fmt.Errorf("insufficient funds")
+	DefaultAuthorizedUptimes                             = []time.Duration{time.Nanosecond}
+	ThreeOrderedConsecutiveAuthorizedUptimes             = []time.Duration{time.Nanosecond, time.Minute, time.Hour, time.Hour * 24}
+	ThreeUnorderedNonConsecutiveAuthorizedUptimes        = []time.Duration{time.Nanosecond, time.Hour * 24 * 7, time.Minute}
+	AllUptimesAuthorized                                 = types.SupportedUptimes
 )
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
-	clk *concentrated_liquidity.Keeper
+	clk               *concentrated_liquidity.Keeper
+	authorizedUptimes []time.Duration
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -70,6 +75,12 @@ func TestKeeperTestSuite(t *testing.T) {
 func (s *KeeperTestSuite) SetupTest() {
 	s.Setup()
 	s.clk = s.App.ConcentratedLiquidityKeeper
+
+	if s.authorizedUptimes != nil {
+		clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+		clParams.AuthorizedUptimes = s.authorizedUptimes
+		s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
+	}
 }
 
 func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {
@@ -374,4 +385,18 @@ func (s *KeeperTestSuite) TestValidatePermissionlessPoolCreationEnabled() {
 
 	// Validate that permissionless pool creation is disabled.
 	s.Require().Error(s.App.ConcentratedLiquidityKeeper.ValidatePermissionlessPoolCreationEnabled(s.Ctx))
+}
+
+func (s *KeeperTestSuite) runMultipleAuthorizedUptimes(tests func()) {
+	authorizedUptimesTested := [][]time.Duration{
+		DefaultAuthorizedUptimes,
+		ThreeOrderedConsecutiveAuthorizedUptimes,
+		ThreeUnorderedNonConsecutiveAuthorizedUptimes,
+		AllUptimesAuthorized,
+	}
+
+	for _, curAuthorizedUptimes := range authorizedUptimesTested {
+		s.authorizedUptimes = curAuthorizedUptimes
+		tests()
+	}
 }
