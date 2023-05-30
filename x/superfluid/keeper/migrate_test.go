@@ -251,7 +251,7 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 				s.Require().False(found, "expected no delegation, found delegation w/ %d shares", delegation.Shares)
 			}
 
-			// Run slashing logic if the test case is involves locks and check if the new and old locks are slashed.
+			// Run slashing logic if the test case involves locks and check if the new and old locks are slashed.
 			if !tc.noLock {
 				slashExpected := tc.superfluidDelegated || tc.superfluidUndelegating
 				s.SlashAndValidateResult(ctx, originalGammLockId, concentratedLockId, poolIdEntering, tc.percentOfSharesToMigrate, valAddr, *balancerLock, slashExpected)
