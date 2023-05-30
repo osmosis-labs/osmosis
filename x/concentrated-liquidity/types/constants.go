@@ -17,8 +17,8 @@ var (
 	MinSpotPrice              = sdk.MustNewDecFromStr("0.000000000000000001")
 	MaxSqrtPrice, _           = MaxSpotPrice.ApproxRoot(2)
 	MinSqrtPrice, _           = MinSpotPrice.ApproxRoot(2)
-	// Supported uptimes preset to 1 ns, 1 min, 1 hr, 1D, 1W
-	SupportedUptimes              = []time.Duration{time.Nanosecond, time.Minute, time.Hour, time.Hour * 24, time.Hour * 24 * 7}
+	// Supported uptimes preset to 1 ns, 1 min, 1 hr, 1D, 1W, 2W
+	SupportedUptimes              = []time.Duration{time.Nanosecond, time.Minute, time.Hour, time.Hour * 24, time.Hour * 24 * 7, time.Hour * 24 * 7 * 2}
 	ExponentAtPriceOne      int64 = -6
 	AuthorizedTickSpacing         = []uint64{1, 10, 100, 1000}
 	AuthorizedSpreadFactors       = []sdk.Dec{
