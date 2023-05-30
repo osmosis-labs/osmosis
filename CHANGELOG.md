@@ -89,10 +89,16 @@ This release containts the following new modules:
   * [#4207](https://github.com/osmosis-labs/osmosis/pull/4207) Integrate Async ICQ.
 
 ### Misc Improvements
+
   * [#4131](https://github.com/osmosis-labs/osmosis/pull/4141) Add GatherValuesFromStorePrefixWithKeyParser function to osmoutils.
   * [#4388](https://github.com/osmosis-labs/osmosis/pull/4388) Increase the max allowed contract size for non-proposal contracts to 3MB
   * [#4384](https://github.com/osmosis-labs/osmosis/pull/4384) migrate stXXX/XXX constant product pools 833, 817, 810 to stable swap
   * [#4461](https://github.com/osmosis-labs/osmosis/pull/4461) added rate limit quotas for a set of high value tokens
+<<<<<<< HEAD
+=======
+  * [#4819](https://github.com/osmosis-labs/osmosis/pull/4819) remove duplicate denom-authority-metadata query command
+  * [#5028](https://github.com/osmosis-labs/osmosis/pull/5028) Change stakingTypes.Bankkeeper to simtypes.Bankkeeper
+>>>>>>> 50b26a87 (Remove duplicate denom-authority-metadata query command (#4819))
 
 ### API breaks
 
