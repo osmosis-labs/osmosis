@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -168,7 +169,7 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 			balancerDelegationPre, _ := stakingKeeper.GetDelegation(ctx, balancerIntermediaryAcc.GetAccAddress(), valAddr)
 
 			// Run the migration logic.
-			positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, concentratedLockId, err := superfluidKeeper.RouteLockedBalancerToConcentratedMigration(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, tc.minExitCoins)
+			positionId, amount0, amount1, liquidityMigrated, joinTime, poolIdLeaving, poolIdEntering, concentratedLockId, err := superfluidKeeper.RouteLockedBalancerToConcentratedMigration(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, tc.minExitCoins)
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, tc.expectedError)
@@ -180,7 +181,8 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 			s.ValidateMigrateResult(
 				ctx,
 				positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering,
-				tc.percentOfSharesToMigrate,
+				tc.percentOfSharesToMigrate, liquidityMigrated,
+				joinTime,
 				*balancerLock,
 				joinPoolAmt,
 				balancerPoolShareOut, coinsToMigrate,
@@ -336,7 +338,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 			balancerDelegationPre, _ := stakingKeeper.GetDelegation(ctx, balancerIntermediaryAcc.GetAccAddress(), valAddr)
 
 			// System under test.
-			positionId, amount0, amount1, liquidityMigrated, _, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateSuperfluidBondedBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, synthLockBeforeMigration.SynthDenom, tc.tokenOutMins)
+			positionId, amount0, amount1, liquidityMigrated, joinTime, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateSuperfluidBondedBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, synthLockBeforeMigration.SynthDenom, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
@@ -348,7 +350,8 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 			s.ValidateMigrateResult(
 				ctx,
 				positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering,
-				tc.percentOfSharesToMigrate,
+				tc.percentOfSharesToMigrate, liquidityMigrated,
+				joinTime,
 				*balancerLock,
 				joinPoolAmt,
 				balancerPoolShareOut, coinsToMigrate,
@@ -490,7 +493,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrated()
 			}
 
 			// System under test.
-			positionId, amount0, amount1, liquidityMigrated, _, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateSuperfluidUnbondingBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, synthLockBeforeMigration.SynthDenom, tc.tokenOutMins)
+			positionId, amount0, amount1, liquidityMigrated, joinTime, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateSuperfluidUnbondingBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, synthLockBeforeMigration.SynthDenom, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
@@ -502,7 +505,8 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrated()
 			s.ValidateMigrateResult(
 				ctx,
 				positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering,
-				tc.percentOfSharesToMigrate,
+				tc.percentOfSharesToMigrate, liquidityMigrated,
+				joinTime,
 				*balancerLock,
 				joinPoolAmt,
 				balancerPoolShareOut, coinsToMigrate,
@@ -597,7 +601,7 @@ func (s *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated() {
 			s.Require().Equal(migrationType, keeper.NonSuperfluid)
 
 			// System under test.
-			positionId, amount0, amount1, liquidityMigrated, _, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateNonSuperfluidLockBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, tc.tokenOutMins)
+			positionId, amount0, amount1, liquidityMigrated, joinTime, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateNonSuperfluidLockBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
@@ -609,7 +613,8 @@ func (s *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated() {
 			s.ValidateMigrateResult(
 				ctx,
 				positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering,
-				tc.percentOfSharesToMigrate,
+				tc.percentOfSharesToMigrate, liquidityMigrated,
+				joinTime,
 				*balancerLock,
 				joinPoolAmt,
 				balancerPoolShareOut, coinsToMigrate,
@@ -682,7 +687,7 @@ func (s *KeeperTestSuite) TestMigrateUnlockedPositionFromBalancerToConcentrated(
 			s.Require().Equal(migrationType, keeper.Unlocked)
 
 			// System under test.
-			positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, err := gammKeeper.MigrateUnlockedPositionFromBalancerToConcentrated(ctx, poolJoinAcc, coinsToMigrate, tc.tokenOutMins)
+			positionId, amount0, amount1, liquidityMigrated, joinTime, poolIdLeaving, poolIdEntering, err := gammKeeper.MigrateUnlockedPositionFromBalancerToConcentrated(ctx, poolJoinAcc, coinsToMigrate, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				s.Require().ErrorContains(err, tc.expectedError.Error())
 				return
@@ -693,7 +698,8 @@ func (s *KeeperTestSuite) TestMigrateUnlockedPositionFromBalancerToConcentrated(
 			s.ValidateMigrateResult(
 				ctx,
 				positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering,
-				tc.percentOfSharesToMigrate,
+				tc.percentOfSharesToMigrate, liquidityMigrated,
+				joinTime,
 				*balancerLock,
 				joinPoolAmt,
 				balancerPoolShareOut, coinsToMigrate,
@@ -1168,16 +1174,18 @@ func (s *KeeperTestSuite) SlashAndValidateResult(ctx sdk.Context, gammLockId, co
 func (s *KeeperTestSuite) ValidateMigrateResult(
 	ctx sdk.Context,
 	positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering uint64,
-	percentOfSharesToMigrate sdk.Dec,
+	percentOfSharesToMigrate, liquidityMigrated sdk.Dec,
+	joinTime time.Time,
 	balancerLock lockuptypes.PeriodLock,
 	joinPoolAmt sdk.Coins,
 	balancerPoolShareOut, coinsToMigrate sdk.Coin,
 	amount0, amount1 sdk.Int,
 ) {
-	// Check that the concentrated liquidity position now exists
-	position, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(ctx, positionId)
+	// Check that the concentrated liquidity and join time match what we expect
+	position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(ctx, positionId)
 	s.Require().NoError(err)
-	s.Require().NotNil(position)
+	s.Require().Equal(liquidityMigrated, position.Liquidity)
+	s.Require().Equal(joinTime, position.JoinTime)
 
 	// Expect the poolIdLeaving to be the balancer pool id
 	// Expect the poolIdEntering to be the concentrated liquidity pool id
