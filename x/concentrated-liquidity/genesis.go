@@ -76,10 +76,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		spreadRewardPositionKey := types.KeySpreadRewardPositionAccumulator(positionWrapper.Position.PositionId)
 
-    k.initOrUpdateAccumPosition(ctx, spreadRewardAccumObject, positionWrapper.SpreadRewardAccumRecord.AccumValuePerShare, spreadRewardPositionKey, positionWrapper.SpreadRewardAccumRecord.NumShares, positionWrapper.SpreadRewardAccumRecord.UnclaimedRewardsTotal, positionWrapper.SpreadRewardAccumRecord.Options)
-    
+		spreadRewardPositionKey := types.KeySpreadRewardPositionAccumulator(positionWrapper.Position.PositionId)
+		k.initOrUpdateAccumPosition(ctx, spreadRewardAccumObject, positionWrapper.SpreadRewardAccumRecord.AccumValuePerShare, spreadRewardPositionKey, positionWrapper.SpreadRewardAccumRecord.NumShares, positionWrapper.SpreadRewardAccumRecord.UnclaimedRewardsTotal, positionWrapper.SpreadRewardAccumRecord.Options)
+
 		positionName := string(types.KeyPositionId(positionWrapper.Position.PositionId))
 		uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, positionWrapper.Position.PoolId)
 		if err != nil {
@@ -89,7 +89,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		for uptimeIndex, uptimeRecord := range positionWrapper.UptimeAccumRecords {
 			k.initOrUpdateAccumPosition(ctx, uptimeAccumulators[uptimeIndex], uptimeRecord.AccumValuePerShare, positionName, uptimeRecord.NumShares, uptimeRecord.UnclaimedRewardsTotal, uptimeRecord.Options)
 		}
-    
+
 	}
 }
 
@@ -223,7 +223,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 			LockId:                  lockId,
 			Position:                &position,
 			SpreadRewardAccumRecord: spreadRewardAccumPositionRecord,
-      UptimeAccumRecords: uptimeAccumObject,
+			UptimeAccumRecords:      uptimeAccumObject,
 		})
 	}
 
