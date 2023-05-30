@@ -123,7 +123,7 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	}, nil
 }
 
-func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCollectFees, error) {
+func RandMsgCollectSpreadRewards(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCollectSpreadRewards, error) {
 	// get random pool
 	clPool, poolDenoms, err := getRandCLPool(k, sim, ctx)
 	if err != nil {
@@ -183,7 +183,7 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 		remainingSwapOwnerToken0Amt = remainingSwapOwnerToken0Amt.Sub(randToken0Amt)
 	}
 
-	return &cltypes.MsgCollectFees{
+	return &cltypes.MsgCollectSpreadRewards{
 		Sender:      sender.Address.String(),
 		PositionIds: positionIds,
 	}, nil

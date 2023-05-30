@@ -45,7 +45,7 @@ message EmptyStruct {}
 
 message GetTotalPoolLiquidityQueryMsg {
   // get_total_pool_liquidity is the structure containing request field of the
-  // spot price query message.
+  // total pool liquidity query message.
   EmptyStruct get_total_pool_liquidity = 1 [ (gogoproto.nullable) = false ];
 }
 
@@ -54,4 +54,16 @@ message GetTotalPoolLiquidityQueryMsgResponse {
   //  coins.
   repeated cosmos.base.v1beta1.Coin total_pool_liquidity = 1
       [ (gogoproto.nullable) = false ];
+}
+
+// ===================== GetTotalSharesQueryMsg
+message GetTotalSharesQueryMsg {
+  // get_total_shares is the structure containing request field of the
+  // total shares query message.
+  EmptyStruct get_total_shares = 1 [ (gogoproto.nullable) = false ];
+}
+
+message GetTotalSharesQueryMsgResponse {
+  // total_shares is the amount of shares returned.
+  string total_shares = 1;
 }

@@ -200,7 +200,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 				LowerTick:  lowerTickOsmosis,
 				UpperTick:  upperTickOsmosis,
 			},
-			FeeAccumRecord: accum.Record{
+			SpreadRewardAccumRecord: accum.Record{
 				NumShares: position.LiquidityCreated,
 			},
 		})

@@ -12,7 +12,7 @@ type ConcentratedPoolExtension interface {
 	poolmanagertypes.PoolI
 
 	GetIncentivesAddress() sdk.AccAddress
-	GetFeesAddress() sdk.AccAddress
+	GetSpreadRewardsAddress() sdk.AccAddress
 	GetToken0() string
 	GetToken1() string
 	GetCurrentSqrtPrice() sdk.Dec

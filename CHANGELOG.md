@@ -51,10 +51,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * [#4886](https://github.com/osmosis-labs/osmosis/pull/4886) Implement MsgSplitRouteSwapExactAmountIn and MsgSplitRouteSwapExactAmountOut that supports route splitting.
   * [#5000](https://github.com/osmosis-labs/osmosis/pull/5000) osmomath.Power panics for base < 1 to temporarily restrict broken logic for such base.
   * [#5045] (https://github.com/osmosis-labs/osmosis/pull/5045) Implement hook-based backrunning logic for ProtoRev
+  * [#5281](https://github.com/osmosis-labs/osmosis/pull/5281) Add option to designate Reward Recipient to Lock and Incentives.
   * [#4827] (https://github.com/osmosis-labs/osmosis/pull/4827) Protorev: Change highest liquidity pool updating from weekly to daily and change dev fee payout from weekly to after every trade.
 
 ### Misc Improvements
-
+  
+  * [#5356](https://github.com/osmosis-labs/osmosis/pull/5356) Fix wrong restHandler for ReplaceMigrationRecordsProposal
   * [#5020](https://github.com/osmosis-labs/osmosis/pull/5020) Add gas config to the client.toml
   * [#5105](https://github.com/osmosis-labs/osmosis/pull/5105) Lint stableswap in the same manner as all of Osmosis
   * [#5065](https://github.com/osmosis-labs/osmosis/pull/5065) Use cosmossdk.io/errors
@@ -136,11 +138,14 @@ This release containts the following new modules:
   * [#4207](https://github.com/osmosis-labs/osmosis/pull/4207) Integrate Async ICQ.
 
 ### Misc Improvements
+
   * [#4131](https://github.com/osmosis-labs/osmosis/pull/4141) Add GatherValuesFromStorePrefixWithKeyParser function to osmoutils.
   * [#4388](https://github.com/osmosis-labs/osmosis/pull/4388) Increase the max allowed contract size for non-proposal contracts to 3MB
   * [#4384](https://github.com/osmosis-labs/osmosis/pull/4384) migrate stXXX/XXX constant product pools 833, 817, 810 to stable swap
   * [#4461](https://github.com/osmosis-labs/osmosis/pull/4461) added rate limit quotas for a set of high value tokens
+  * [#4819](https://github.com/osmosis-labs/osmosis/pull/4819) remove duplicate denom-authority-metadata query command
   * [#5028](https://github.com/osmosis-labs/osmosis/pull/5028) Change stakingTypes.Bankkeeper to simtypes.Bankkeeper
+
 ### API breaks
 
 * [#3766](https://github.com/osmosis-labs/osmosis/pull/3766) Remove Osmosis gamm and twap `bindings` that were previously supported as custom wasm plugins.

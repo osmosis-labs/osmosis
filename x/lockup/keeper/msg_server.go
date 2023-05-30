@@ -226,3 +226,24 @@ func (server msgServer) ForceUnlock(goCtx context.Context, msg *types.MsgForceUn
 
 	return &types.MsgForceUnlockResponse{Success: true}, nil
 }
+
+func (server msgServer) SetRewardReceiverAddress(goCtx context.Context, msg *types.MsgSetRewardReceiverAddress) (*types.MsgSetRewardReceiverAddressResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	owner, err := sdk.AccAddressFromBech32(msg.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	newRewardRecepient, err := sdk.AccAddressFromBech32(msg.RewardReceiver)
+	if err != nil {
+		return nil, err
+	}
+
+	err = server.keeper.SetLockRewardReceiverAddress(ctx, msg.LockID, owner, newRewardRecepient.String())
+	if err != nil {
+		return &types.MsgSetRewardReceiverAddressResponse{Success: false}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	return &types.MsgSetRewardReceiverAddressResponse{Success: true}, nil
+}

@@ -1,10 +1,11 @@
 package model
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"encoding/json"
+	"errors"
+	"fmt"
 
-	errorsmod "cosmossdk.io/errors"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
@@ -21,28 +22,35 @@ var (
 )
 
 func NewMsgCreateCosmWasmPool(
+	codeId uint64,
 	sender sdk.AccAddress,
+	instantiateMsg []byte,
 ) MsgCreateCosmWasmPool {
 	return MsgCreateCosmWasmPool{
-		Sender: sender.String(),
+		CodeId:         codeId,
+		Sender:         sender.String(),
+		InstantiateMsg: instantiateMsg,
 	}
 }
 
 func (msg MsgCreateCosmWasmPool) Route() string { return types.RouterKey }
 func (msg MsgCreateCosmWasmPool) Type() string  { return TypeMsgCreateCosmWasmPool }
 func (msg MsgCreateCosmWasmPool) ValidateBasic() error {
-	// TODO: add more validation.
-
+	if msg.CodeId == 0 {
+		return errors.New("CodeId cannot be 0")
+	}
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return fmt.Errorf("Invalid sender address (%s)", err)
 	}
-
+	if !json.Valid(msg.InstantiateMsg) {
+		return fmt.Errorf("InstantiateMsg is not a valid json")
+	}
 	return nil
 }
 
 func (msg MsgCreateCosmWasmPool) GetSignBytes() []byte {
-	// TODO: uncomment once merging state-breaks.
+	// TODO: uncomment once merging state-breaks: https://github.com/osmosis-labs/osmosis/issues/5329
 	// return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 	return nil
 }
@@ -73,10 +81,8 @@ func (msg MsgCreateCosmWasmPool) InitialLiquidity() sdk.Coins {
 }
 
 func (msg MsgCreateCosmWasmPool) CreatePool(ctx sdk.Context, poolID uint64) (poolmanagertypes.PoolI, error) {
-	// TODO: uncomment once merging state-breaks.
-	// poolI := NewCosmWasmPool(poolID, msg.CodeId, msg.InstantiateMsg)
-	// return &poolI, nil
-	return nil, nil
+	poolI := NewCosmWasmPool(poolID, msg.CodeId, msg.InstantiateMsg)
+	return &poolI, nil
 }
 
 func (msg MsgCreateCosmWasmPool) GetPoolType() poolmanagertypes.PoolType {
