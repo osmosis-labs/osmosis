@@ -891,7 +891,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	)
 }
 
-func (s *IntegrationTestSuite) TestCreateConcentratedLiquidityPoolVoting() {
+func (s *IntegrationTestSuite) TestCreateConcentratedLiquidityPoolVoting_And_TWAP() {
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
@@ -907,9 +907,10 @@ func (s *IntegrationTestSuite) TestCreateConcentratedLiquidityPoolVoting() {
 	)
 
 	poolId := chainANode.QueryNumPools()
+	var concentratedPool cltypes.ConcentratedPoolExtension
 	s.Eventually(
 		func() bool {
-			concentratedPool := s.updatedConcentratedPool(chainANode, poolId)
+			concentratedPool = s.updatedConcentratedPool(chainANode, poolId)
 			s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
 			s.Require().Equal(expectedDenom0, concentratedPool.GetToken0())
 			s.Require().Equal(expectedDenom1, concentratedPool.GetToken1())
@@ -922,6 +923,75 @@ func (s *IntegrationTestSuite) TestCreateConcentratedLiquidityPoolVoting() {
 		10*time.Millisecond,
 		"create concentrated liquidity pool was not successful.",
 	)
+
+	fundTokens := []string{"100000000stake", "100000000uosmo"}
+
+	// Get address to create positions
+	address1 := chainANode.CreateWalletAndFund("address1", fundTokens)
+
+	// We add 5 ms to avoid landing directly on block time in twap. If block time
+	// is provided as start time, the latest spot price is used. Otherwise
+	// interpolation is done.
+	timeBeforePositionCreationBeforeSwap := chainANode.QueryLatestBlockTime().Add(5 * time.Millisecond)
+	s.T().Log("geometric twap, start time ", timeBeforePositionCreationBeforeSwap.Unix())
+
+	// Wait for the next height so that the requested twap
+	// start time (timeBeforePositionCreationBeforeSwap) is not equal to the block time.
+	chainA.WaitForNumHeights(1)
+
+	// Check initial TWAP
+	// We expect this to error since there is no spot price yet.
+	s.T().Log("initial twap check")
+	initialTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken0(), concentratedPool.GetToken1(), timeBeforePositionCreationBeforeSwap)
+	s.Require().Error(err)
+	s.Require().Equal(sdk.Dec{}, initialTwapBOverA)
+
+	// Create a position and check that TWAP now returns a value.
+	s.T().Log("creating first position")
+	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,20000000%s", concentratedPool.GetToken0(), concentratedPool.GetToken1()), 0, 0, concentratedPool.GetId())
+	timeAfterPositionCreationBeforeSwap := chainANode.QueryLatestBlockTime()
+	chainA.WaitForNumHeights(1)
+	firstPositionTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken0(), concentratedPool.GetToken1(), timeAfterPositionCreationBeforeSwap)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.MustNewDecFromStr("0.5"), firstPositionTwapBOverA)
+
+	// Run a swap and check that the TWAP updates.
+	s.T().Log("run swap")
+	coinAIn := fmt.Sprintf("1000000%s", concentratedPool.GetToken0())
+	chainANode.SwapExactAmountIn(coinAIn, "1", fmt.Sprintf("%d", concentratedPool.GetId()), concentratedPool.GetToken1(), address1)
+
+	timeAfterSwap := chainANode.QueryLatestBlockTime()
+	chainA.WaitForNumHeights(1)
+	timeAfterSwapPlus1Height := chainANode.QueryLatestBlockTime()
+
+	s.T().Log("querying for the TWAP after swap")
+	afterSwapTwapBOverA, err := chainANode.QueryGeometricTwap(concentratedPool.GetId(), concentratedPool.GetToken0(), concentratedPool.GetToken1(), timeAfterSwap, timeAfterSwapPlus1Height)
+	s.Require().NoError(err)
+
+	// We swap stake so uosmo's supply will decrease and stake will increase.
+	// The price after will be larger than the previous one.
+	s.Require().True(afterSwapTwapBOverA.GT(firstPositionTwapBOverA))
+
+	// Remove the position and check that TWAP returns an error.
+	s.T().Log("removing first position (pool is drained)")
+	positions := chainANode.QueryConcentratedPositions(address1)
+	chainANode.WithdrawPosition(address1, positions[0].Position.Liquidity.String(), positions[0].Position.PositionId)
+	chainA.WaitForNumHeights(1)
+
+	s.T().Log("querying for the TWAP from after pool drained")
+	afterRemoveTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken0(), concentratedPool.GetToken1(), timeAfterSwapPlus1Height)
+	s.Require().Error(err)
+	s.Require().Equal(sdk.Dec{}, afterRemoveTwapBOverA)
+
+	// Create a position and check that TWAP now returns a value.
+	// Should be equal to 1 since the position contains equal amounts of both tokens.
+	s.T().Log("creating position")
+	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,10000000%s", concentratedPool.GetToken0(), concentratedPool.GetToken1()), 0, 0, concentratedPool.GetId())
+	chainA.WaitForNumHeights(1)
+	timeAfterSwapRemoveAndCreatePlus1Height := chainANode.QueryLatestBlockTime()
+	secondTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken0(), concentratedPool.GetToken1(), timeAfterSwapRemoveAndCreatePlus1Height)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewDec(1), secondTwapBOverA)
 }
 
 func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
@@ -1609,6 +1679,11 @@ func (s *IntegrationTestSuite) TestAConcentratedLiquidity_CanonicalPool_And_Para
 	}
 
 	s.Require().True(found, "concentrated liquidity pool denom not found in superfluid assets")
+
+	// Check that the community pool module account possesses a position
+	communityPoolAddress := chainANode.QueryCommunityPoolModuleAccount()
+	positions := chainANode.QueryConcentratedPositions(communityPoolAddress)
+	s.Require().Len(positions, 1)
 
 	// This spot price is taken from the balancer pool that was initiated pre upgrade.
 	balancerDaiOsmoPool := s.updatedCFMMPool(chainANode, config.DaiOsmoPoolIdv16)

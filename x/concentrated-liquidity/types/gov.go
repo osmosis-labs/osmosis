@@ -15,7 +15,7 @@ const (
 
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeCreateConcentratedLiquidityPool)
-	govtypes.RegisterProposalTypeCodec(&CreateConcentratedLiquidityPoolsProposal{}, "osmosis/CreateConcentratedLiquidityPoolProposal")
+	govtypes.RegisterProposalTypeCodec(&CreateConcentratedLiquidityPoolsProposal{}, "osmosis/CreateCLPoolsProposal")
 	govtypes.RegisterProposalType(ProposalTypeTickSpacingDecrease)
 	govtypes.RegisterProposalTypeCodec(&TickSpacingDecreaseProposal{}, "osmosis/TickSpacingDecreaseProposal")
 }
@@ -125,6 +125,16 @@ func (p *TickSpacingDecreaseProposal) ValidateBasic() error {
 	}
 	if len(p.PoolIdToTickSpacingRecords) == 0 {
 		return fmt.Errorf("empty proposal records")
+	}
+
+	for _, poolIdToTickSpacingRecord := range p.PoolIdToTickSpacingRecords {
+		if poolIdToTickSpacingRecord.PoolId <= uint64(0) {
+			return fmt.Errorf("Pool Id cannot be negative")
+		}
+
+		if poolIdToTickSpacingRecord.NewTickSpacing <= uint64(0) {
+			return fmt.Errorf("tick spacing must be positive")
+		}
 	}
 	return nil
 }
