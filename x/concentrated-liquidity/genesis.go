@@ -89,7 +89,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		for uptimeIndex, uptimeRecord := range positionWrapper.UptimeAccumRecords {
 			k.initOrUpdateAccumPosition(ctx, uptimeAccumulators[uptimeIndex], uptimeRecord.AccumValuePerShare, positionName, uptimeRecord.NumShares, uptimeRecord.UnclaimedRewardsTotal, uptimeRecord.Options)
 		}
-
 	}
 }
 
