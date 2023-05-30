@@ -2711,8 +2711,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 	uptimeHelper := getExpectedUptimes()
 	defaultSender := s.TestAccs[0]
 	tests := map[string]struct {
-		name              string
-		poolId            uint64
 		numShares         sdk.Dec
 		positionIdCreate  uint64
 		positionIdClaim   uint64
@@ -2723,7 +2721,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 		expectedError     error
 	}{
 		"happy path: claim rewards without forfeiting": {
-			poolId:           validPoolId,
 			positionIdCreate: DefaultPositionId,
 			positionIdClaim:  DefaultPositionId,
 			defaultJoinTime:  true,
@@ -2732,7 +2729,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			numShares:        sdk.OneDec(),
 		},
 		"claim and forfeit rewards (2 shares)": {
-			poolId:            validPoolId,
 			positionIdCreate:  DefaultPositionId,
 			positionIdClaim:   DefaultPositionId,
 			defaultJoinTime:   true,
@@ -2742,7 +2738,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			numShares:         sdk.NewDec(2),
 		},
 		"claim and forfeit rewards when no rewards have accrued": {
-			poolId:            validPoolId,
 			positionIdCreate:  DefaultPositionId,
 			positionIdClaim:   DefaultPositionId,
 			defaultJoinTime:   true,
@@ -2750,7 +2745,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			numShares:         sdk.OneDec(),
 		},
 		"claim and forfeit rewards with varying amounts and different denoms": {
-			poolId:            validPoolId,
 			positionIdCreate:  DefaultPositionId,
 			positionIdClaim:   DefaultPositionId,
 			defaultJoinTime:   true,
@@ -2763,7 +2757,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 		// error catching
 
 		"error: non existent position": {
-			poolId:           validPoolId + 1,
 			positionIdCreate: DefaultPositionId,
 			positionIdClaim:  DefaultPositionId + 1, // non existent position
 			defaultJoinTime:  true,
@@ -2775,7 +2768,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 		},
 
 		"error: negative duration": {
-			poolId:           validPoolId,
 			positionIdCreate: DefaultPositionId,
 			positionIdClaim:  DefaultPositionId,
 			defaultJoinTime:  false,
@@ -2786,14 +2778,15 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			expectedError: types.NegativeDurationError{Duration: time.Hour * 504 * -1},
 		},
 	}
-	for _, tc := range tests {
+	for name, tc := range tests {
 		tc := tc
-		s.Run(tc.name, func() {
+		s.Run(name, func() {
 			// --- Setup test env ---
 
 			s.SetupTest()
 			clPool := s.PrepareConcentratedPool()
 			clKeeper := s.App.ConcentratedLiquidityKeeper
+			clPool.SetCurrentTick(DefaultCurrTick)
 
 			joinTime := s.Ctx.BlockTime()
 			if !tc.defaultJoinTime {
@@ -2804,7 +2797,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, tc.numShares, joinTime, tc.positionIdCreate)
 			s.Require().NoError(err)
 
-			clPool.SetCurrentTick(DefaultCurrTick)
 			if tc.growthOutside != nil {
 				s.addUptimeGrowthOutsideRange(s.Ctx, validPoolId, defaultSender, DefaultCurrTick, DefaultLowerTick, DefaultUpperTick, tc.growthOutside)
 			}
@@ -2897,6 +2889,78 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			// Ensure balances have not been mutated
 			s.Require().Equal(initSenderBalances, newSenderBalances)
 			s.Require().Equal(initPoolBalances, newPoolBalances)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
+	testCases := []struct {
+		name             string
+		blockTimeElapsed time.Duration
+		expectedCoins    sdk.Coins
+	}{
+		{
+			name:             "Claim with same blocktime",
+			blockTimeElapsed: 0,
+			expectedCoins:    sdk.NewCoins(),
+		},
+		{
+			name:             "Claim after 1 minute",
+			blockTimeElapsed: time.Minute,
+			expectedCoins:    sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(59))), //  after 1min = 59.999999999901820104usdc ~ 59usdc becasue 1usdc emitted every second
+
+		},
+		{
+			name:             "Claim after 1 hr",
+			blockTimeElapsed: time.Hour,
+			expectedCoins:    sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(3599))), //  after 1min = 59.999999999901820104usdc ~ 59usdc becasue 1usdc emitted every second
+
+		},
+		{
+			name:             "Claim after 3 hours",
+			blockTimeElapsed: time.Hour * 3,
+			expectedCoins:    sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(9999))), //  after 3hr > 2hr46min = 9999usdc.999999999901820104 ~ 9999usdc
+
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			// Init suite for the test.
+			s.SetupTest()
+
+			requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(1_000_000)), sdk.NewCoin(USDC, sdk.NewInt(5_000_000_000)))
+			s.FundAcc(s.TestAccs[0], requiredBalances)
+			s.FundAcc(s.TestAccs[1], requiredBalances)
+
+			// Create CL pool
+			pool := s.PrepareConcentratedPool()
+
+			// Set up position
+			positionIdOne, _, _, _, _, _, _, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], requiredBalances, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+			s.Require().NoError(err)
+
+			// Set incentives for pool to ensure accumulators work correctly
+			testIncentiveRecord := types.IncentiveRecord{
+				PoolId:               pool.GetId(),
+				IncentiveDenom:       USDC,
+				IncentiveCreatorAddr: s.TestAccs[1].String(), // different address is going to create incentives
+				IncentiveRecordBody: types.IncentiveRecordBody{
+					RemainingAmount: sdk.NewDec(10_000), // 2hr 46m to emit all incentives
+					EmissionRate:    sdk.NewDec(1),      // 1 per second
+					StartTime:       s.Ctx.BlockTime(),
+				},
+				MinUptime: time.Nanosecond,
+			}
+			err = s.clk.SetMultipleIncentiveRecords(s.Ctx, []types.IncentiveRecord{testIncentiveRecord})
+			s.Require().NoError(err)
+
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(tc.blockTimeElapsed))
+
+			collectedInc, forfeitInc, err := s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionIdOne)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedCoins, collectedInc)
+			s.Require().True(forfeitInc.Empty())
 		})
 	}
 }
