@@ -167,6 +167,9 @@ func RandMsgCollectSpreadRewards(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ct
 
 	// perform swap until token 1 runs out
 	remainingSwapOwnerToken0Amt := swapOwnerTokens[0].Amount
+	// we must use cacheCtx when calling a mutative method within a simulator method
+	// otherwise, if this errors, it will partially commit and lead to unrealistic state
+	cacheCtx, write := ctx.CacheContext()
 	for remainingSwapOwnerToken0Amt.GT(sdk.ZeroInt()) {
 		randToken0Amt := sim.RandPositiveInt(remainingSwapOwnerToken0Amt)
 
@@ -175,13 +178,14 @@ func RandMsgCollectSpreadRewards(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ct
 		}
 
 		// perform swap from token0 to token1 until either token0 or token1 fund runs out
-		_, err = k.SwapExactAmountIn(ctx, swapOwner.Address, poolI, sdk.NewCoin(swapOwnerTokens[0].Denom, randToken0Amt), swapOwnerTokens[1].Denom, sdk.OneInt(), sdk.NewDecWithPrec(1, 2))
+		_, err = k.SwapExactAmountIn(cacheCtx, swapOwner.Address, poolI, sdk.NewCoin(swapOwnerTokens[0].Denom, randToken0Amt), swapOwnerTokens[1].Denom, sdk.OneInt(), sdk.NewDecWithPrec(1, 2))
 		if err != nil {
 			return nil, err
 		}
 
 		remainingSwapOwnerToken0Amt = remainingSwapOwnerToken0Amt.Sub(randToken0Amt)
 	}
+	write()
 
 	return &cltypes.MsgCollectSpreadRewards{
 		Sender:      sender.Address.String(),
