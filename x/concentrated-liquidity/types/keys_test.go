@@ -20,6 +20,15 @@ func TestReverseRelationTickIndexToBytes(t *testing.T) {
 		"negative tick index": {
 			tickIndex: -3,
 		},
+		"zero tick index": {
+			tickIndex: 0,
+		},
+		"maximum tick index": {
+			tickIndex: types.MaxTick,
+		},
+		"minimum tick index": {
+			tickIndex: types.MinTick,
+		},
 	}
 
 	for name, tc := range tests {

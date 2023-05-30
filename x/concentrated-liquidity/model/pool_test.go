@@ -43,7 +43,7 @@ func TestConcentratedPoolTestSuite(t *testing.T) {
 }
 
 // TestGetAddress tests the GetAddress method of pool
-func (s *ConcentratedPoolTestSuite) TestGetAddressAndGetIncentiveAddress() {
+func (s *ConcentratedPoolTestSuite) TestGetAddress() {
 
 	tests := []struct {
 		name          string
@@ -113,13 +113,13 @@ func (s *ConcentratedPoolTestSuite) TestGetIncentivesAddress() {
 				address = "osmo15l7yueqf3tx4cvpt6njvj7zxmvuhkwyrr509e9"
 			}
 			mock_pool := model.Pool{
-				Id:      1,
-				Address: address,
+				Id:                1,
+				IncentivesAddress: address,
 			}
 
 			// Check that the returned address is backward compatible
 			osmoassert.ConditionalPanic(s.T(), tc.expectedPanic, func() {
-				addr := mock_pool.GetAddress()
+				addr := mock_pool.GetIncentivesAddress()
 				s.Require().Equal(addr, s.TestAccs[0])
 			})
 		})
