@@ -644,6 +644,14 @@ func (s *KeeperTestSuite) TestMigrateUnlockedPositionFromBalancerToConcentrated(
 		"no lock (partial shares)": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.9"),
 		},
+		"no lock (more shares than own)": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1.1"),
+			expectedError:            fmt.Errorf("insufficient funds"),
+		},
+		"no lock (no shares)": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0"),
+			expectedError:            errorsmod.Wrapf(gammtypes.ErrInvalidMathApprox, "Trying to exit a negative amount of shares"),
+		},
 		"error: no lock (full shares), token out mins is more than exit coins": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 			tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10000))),
