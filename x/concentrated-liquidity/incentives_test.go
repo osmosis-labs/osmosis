@@ -718,10 +718,6 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 
 				s.PrepareConcentratedPool()
 
-				// We copy over incentive records to allow for multiple runthroughs of the same test case to test different authorized uptimes
-				incentiveRecordsCopy := make([]types.IncentiveRecord, len(tc.poolIncentiveRecords))
-				copy(incentiveRecordsCopy, tc.poolIncentiveRecords)
-
 				// system under test
 				actualResult, updatedPoolRecords, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, tc.accumUptime, tc.qualifyingLiquidity, sdk.NewDec(int64(tc.timeElapsed)).Quo(sdk.MustNewDecFromStr("1000000000")), incentiveRecordsCopy)
 
