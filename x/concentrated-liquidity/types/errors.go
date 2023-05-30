@@ -468,7 +468,7 @@ type InvalidTickKeyByteLengthError struct {
 }
 
 func (e InvalidTickKeyByteLengthError) Error() string {
-	return fmt.Sprintf("expected tick store key to be of length (%d), was (%d)", TickKeyLengthBytes, e.Length)
+	return fmt.Sprintf("expected tick store key to be of length (%d), was (%d)", KeyTickLengthBytes, e.Length)
 }
 
 type InsufficientPoolBalanceError struct {

@@ -1541,13 +1541,22 @@ This listener executes after a swap in a concentrated liquidity pool.
 
 At the time of this writing, it is only utilized by the `x/twap` module.
 
-## State
 
-- global (per-pool)
+### State entries and KV store management
+The following are the state entries (key and value pairs) stored for the concentrated liquidity module. 
 
-- per-tick
+- structs
+  - TickPrefix + pool ID + tickIndex ➝ Tick Info struct
+  - PoolPrefix + pool id ➝ pool struct
+  - IncentivePrefix | pool id | min uptime index | denom | addr ➝ Incentive Record body struct
+- links
+  - positionToLockPrefix | position id ➝ lock id
+  - lockToPositionPrefix | lock id ➝ position id
+  - PositionPrefix | addr bytes | pool id | position id ➝ boolean
+  - PoolPositionPrefix | pool id | position id ➝ boolean
 
-- per-position
+Note that for storing ticks, we use 9 bytes instead of directly using uint64, first byte being reserved for the Negative / Positive prefix, and the remaining 8 bytes being reserved for the tick itself, which is of uint64. Although we directly store signed integers as values, we use the first byte to indicate and re-arrange tick indexes from negative to positive.
+
 
 ## Terminology
 

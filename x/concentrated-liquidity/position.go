@@ -754,7 +754,7 @@ func (k Keeper) positionHasActiveUnderlyingLockAndUpdate(ctx sdk.Context, positi
 // - there is no full range liquidity in the pool.
 func (k Keeper) GetFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64) (sdk.Dec, error) {
 	store := ctx.KVStore(k.storeKey)
-	poolIdLiquidityKey := types.KeyPoolIdForLiquidity(poolId)
+	poolIdLiquidityKey := types.KeyFullRangeLiquidityPrefix(poolId)
 	currentTotalFullRangeLiquidity, err := osmoutils.GetDec(store, poolIdLiquidityKey)
 	if err != nil {
 		return sdk.Dec{}, err
@@ -766,7 +766,7 @@ func (k Keeper) GetFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64) (sdk
 func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, liquidity sdk.Dec) error {
 	store := ctx.KVStore(k.storeKey)
 	// Get previous total liquidity.
-	poolIdLiquidityKey := types.KeyPoolIdForLiquidity(poolId)
+	poolIdLiquidityKey := types.KeyFullRangeLiquidityPrefix(poolId)
 	currentTotalFullRangeLiquidityDecProto := sdk.DecProto{}
 	found, err := osmoutils.Get(store, poolIdLiquidityKey, &currentTotalFullRangeLiquidityDecProto)
 	if err != nil {

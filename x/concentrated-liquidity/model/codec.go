@@ -38,8 +38,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	msgservice.RegisterMsgServiceDesc(registry, &_MsgCreator_serviceDesc)
 }
 
-// TODO: re-enable this when CL state-breakage PR is merged.
-// return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 var (
 	amino     = codec.NewLegacyAmino()
 	ModuleCdc = codec.NewAminoCodec(amino)
