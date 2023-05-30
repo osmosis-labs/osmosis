@@ -1553,7 +1553,7 @@ The following are the state entries (key and value pairs) stored for the concent
   - positionToLockPrefix | position id ➝ lock id
   - lockToPositionPrefix | lock id ➝ position id
   - PositionPrefix | addr bytes | pool id | position id ➝ boolean
-  - PoolPositionPrefix + pool id | position id ➝ boolean
+  - PoolPositionPrefix | pool id | position id ➝ boolean
 
 Note that for storing ticks, we use 9 bytes instead of directly using uint64, first byte being reserved for the Negative / Positive prefix, and the remaining 8 bytes being reserved for the tick itself, which is of uint64. Although we directly store signed integers as values, we use the first byte to indicate and re-arrange tick indexes from negative to positive.
 
