@@ -21,10 +21,6 @@ var (
 	HundredBarCoins    = sdk.NewDecCoin("bar", sdk.NewInt(100))
 	TwoHundredFooCoins = sdk.NewDecCoin("foo", sdk.NewInt(200))
 	TwoHundredBarCoins = sdk.NewDecCoin("bar", sdk.NewInt(200))
-	// TODO: this is incorrect. Should be grabbing from
-	// authorized params instead. Must verify that all tests still make sense.
-	// https://github.com/osmosis-labs/osmosis/issues/5039
-	FullyChargedDuration = types.SupportedUptimes[len(types.SupportedUptimes)-1]
 )
 
 func (k Keeper) SetPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {
@@ -43,8 +39,8 @@ func (k Keeper) GetPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedP
 	return k.getPoolById(ctx, poolId)
 }
 
-func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64, nextTickInfo *model.TickInfo, swapStateFeeGrowth sdk.DecCoin) (liquidityDelta sdk.Dec, err error) {
-	return k.crossTick(ctx, poolId, tickIndex, nextTickInfo, swapStateFeeGrowth)
+func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64, nextTickInfo *model.TickInfo, swapStateSpreadRewardGrowth sdk.DecCoin, spreadRewardAccumValue sdk.DecCoins, uptimeAccums []accum.AccumulatorObject) (liquidityDelta sdk.Dec, err error) {
+	return k.crossTick(ctx, poolId, tickIndex, nextTickInfo, swapStateSpreadRewardGrowth, spreadRewardAccumValue, uptimeAccums)
 }
 
 func (k Keeper) SendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 string, amount0, amount1 sdk.Int, sender, receiver sdk.AccAddress) error {
@@ -70,7 +66,7 @@ func (k Keeper) ComputeOutAmtGivenIn(
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
 
-) (calcTokenIn, calcTokenOut sdk.Coin, currentTick int64, liquidity, sqrtPrice sdk.Dec, totalFees sdk.Dec, err error) {
+) (calcTokenIn, calcTokenOut sdk.Coin, currentTick int64, liquidity, sqrtPrice sdk.Dec, totalSpreadRewards sdk.Dec, err error) {
 	return k.computeOutAmtGivenIn(ctx, poolId, tokenInMin, tokenOutDenom, spreadFactor, priceLimit)
 }
 
@@ -93,7 +89,7 @@ func (k Keeper) ComputeInAmtGivenOut(
 	priceLimit sdk.Dec,
 	poolId uint64,
 
-) (calcTokenIn, calcTokenOut sdk.Coin, currentTick int64, liquidity, sqrtPrice sdk.Dec, totalFees sdk.Dec, err error) {
+) (calcTokenIn, calcTokenOut sdk.Coin, currentTick int64, liquidity, sqrtPrice sdk.Dec, totalSpreadRewards sdk.Dec, err error) {
 	return k.computeInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit, poolId)
 }
 
@@ -113,16 +109,16 @@ func (k Keeper) InitializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	return k.initializeInitialPositionForPool(ctx, pool, amount0Desired, amount1Desired)
 }
 
-func (k Keeper) CollectFees(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
-	return k.collectFees(ctx, owner, positionId)
+func (k Keeper) CollectSpreadRewards(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
+	return k.collectSpreadRewards(ctx, owner, positionId)
 }
 
 func (k Keeper) IsPositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, positionId uint64) (bool, error) {
 	return k.isPositionOwner(ctx, sender, poolId, positionId)
 }
 
-func (k Keeper) PrepareClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
-	return k.prepareClaimableFees(ctx, positionId)
+func (k Keeper) PrepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
+	return k.prepareClaimableSpreadRewards(ctx, positionId)
 }
 
 func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (poolmanagertypes.PoolI, error) {
@@ -145,8 +141,8 @@ func (k Keeper) FungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	return k.fungifyChargedPosition(ctx, owner, positionIds)
 }
 
-func (k Keeper) ValidatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, int64, int64, sdk.Dec, error) {
-	return k.validatePositionsAndGetTotalLiquidity(ctx, owner, positionIds)
+func (k Keeper) ValidatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64, fullyChargedDuration time.Duration) (uint64, int64, int64, sdk.Dec, error) {
+	return k.validatePositionsAndGetTotalLiquidity(ctx, owner, positionIds, fullyChargedDuration)
 }
 
 func (k Keeper) IsLockMature(ctx sdk.Context, underlyingLockId uint64) (bool, error) {
@@ -173,37 +169,33 @@ func RoundTickToCanonicalPriceTick(lowerTick, upperTick int64, priceTickLower, p
 	return roundTickToCanonicalPriceTick(lowerTick, upperTick, priceTickLower, priceTickUpper, tickSpacing)
 }
 
-// fees methods
-func (k Keeper) CreateFeeAccumulator(ctx sdk.Context, poolId uint64) error {
-	return k.createFeeAccumulator(ctx, poolId)
+// spread rewards methods
+func (k Keeper) CreateSpreadRewardAccumulator(ctx sdk.Context, poolId uint64) error {
+	return k.createSpreadRewardAccumulator(ctx, poolId)
 }
 
-func (k Keeper) InitOrUpdatePositionFeeAccumulator(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidity sdk.Dec) error {
-	return k.initOrUpdatePositionFeeAccumulator(ctx, poolId, lowerTick, upperTick, positionId, liquidity)
+func (k Keeper) InitOrUpdatePositionSpreadRewardAccumulator(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidity sdk.Dec) error {
+	return k.initOrUpdatePositionSpreadRewardAccumulator(ctx, poolId, lowerTick, upperTick, positionId, liquidity)
 }
 
-func (k Keeper) GetFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {
-	return k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
+func (k Keeper) GetSpreadRewardGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {
+	return k.getSpreadRewardGrowthOutside(ctx, poolId, lowerTick, upperTick)
 }
 
-func CalculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, currentTick int64, feesGrowthGlobal sdk.DecCoins, isUpperTick bool) sdk.DecCoins {
-	return calculateFeeGrowth(targetTick, feeGrowthOutside, currentTick, feesGrowthGlobal, isUpperTick)
+func CalculateSpreadRewardGrowth(targetTick int64, spreadRewardGrowthOutside sdk.DecCoins, currentTick int64, spreadRewardsGrowthGlobal sdk.DecCoins, isUpperTick bool) sdk.DecCoins {
+	return calculateSpreadRewardGrowth(targetTick, spreadRewardGrowthOutside, currentTick, spreadRewardsGrowthGlobal, isUpperTick)
 }
 
-func (k Keeper) GetInitialFeeGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
-	return k.getInitialFeeGrowthOppositeDirectionOfLastTraversalForTick(ctx, poolId, tick)
-}
-
-func (k Keeper) ChargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin) error {
-	return k.chargeFee(ctx, poolId, feeUpdate)
+func (k Keeper) GetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
+	return k.getInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx, poolId, tick)
 }
 
 func ValidateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int64) error {
 	return validateTickRangeIsValid(tickSpacing, lowerTick, upperTick)
 }
 
-func UpdatePosValueToInitValuePlusGrowthOutside(feeAccumulator accum.AccumulatorObject, positionKey string, feeGrowthOutside sdk.DecCoins) error {
-	return updatePositionToInitValuePlusGrowthOutside(feeAccumulator, positionKey, feeGrowthOutside)
+func UpdatePosValueToInitValuePlusGrowthOutside(spreadRewardAccumulator accum.AccumulatorObject, positionKey string, spreadRewardGrowthOutside sdk.DecCoins) error {
+	return updatePositionToInitValuePlusGrowthOutside(spreadRewardAccumulator, positionKey, spreadRewardGrowthOutside)
 }
 
 func UpdatePositionToInitValuePlusGrowthOutside(accumulator accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) error {
@@ -218,8 +210,8 @@ func (k Keeper) AddToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 	return k.addToPosition(ctx, owner, positionId, amount0Added, amount1Added, amount0Min, amount1Min)
 }
 
-func (ss *SwapState) UpdateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
-	ss.updateFeeGrowthGlobal(feeChargeTotal)
+func (ss *SwapState) UpdateSpreadRewardGrowthGlobal(spreadRewardChargeTotal sdk.Dec) {
+	ss.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal)
 }
 
 // Test helpers.
@@ -227,12 +219,12 @@ func (ss *SwapState) SetLiquidity(liquidity sdk.Dec) {
 	ss.liquidity = liquidity
 }
 
-func (ss *SwapState) SetFeeGrowthGlobal(feeGrowthGlobal sdk.Dec) {
-	ss.feeGrowthGlobal = feeGrowthGlobal
+func (ss *SwapState) SetSpreadRewardGrowthGlobal(spreadRewardGrowthGlobal sdk.Dec) {
+	ss.spreadRewardGrowthGlobal = spreadRewardGrowthGlobal
 }
 
-func (ss *SwapState) GetFeeGrowthGlobal() sdk.Dec {
-	return ss.feeGrowthGlobal
+func (ss *SwapState) GetSpreadRewardGrowthGlobal() sdk.Dec {
+	return ss.spreadRewardGrowthGlobal
 }
 
 // incentive methods
@@ -250,6 +242,10 @@ func CalcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 
 func (k Keeper) UpdateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) error {
 	return k.updatePoolUptimeAccumulatorsToNow(ctx, poolId)
+}
+
+func (k Keeper) UpdateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool types.ConcentratedPoolExtension, uptimeAccums []accum.AccumulatorObject) error {
+	return k.updateGivenPoolUptimeAccumulatorsToNow(ctx, pool, uptimeAccums)
 }
 
 func (k Keeper) SetIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) error {
@@ -296,16 +292,16 @@ func (k Keeper) GetAllPositions(ctx sdk.Context) ([]model.Position, error) {
 	return k.getAllPositions(ctx)
 }
 
-func (k Keeper) UpdatePoolForSwap(ctx sdk.Context, pool types.ConcentratedPoolExtension, sender sdk.AccAddress, tokenIn sdk.Coin, tokenOut sdk.Coin, newCurrentTick int64, newLiquidity sdk.Dec, newSqrtPrice sdk.Dec, totalFees sdk.Dec) error {
-	return k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, totalFees)
+func (k Keeper) UpdatePoolForSwap(ctx sdk.Context, pool types.ConcentratedPoolExtension, sender sdk.AccAddress, tokenIn sdk.Coin, tokenOut sdk.Coin, newCurrentTick int64, newLiquidity sdk.Dec, newSqrtPrice sdk.Dec, totalSpreadRewards sdk.Dec) error {
+	return k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, totalSpreadRewards)
 }
 
-func (k Keeper) PrepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64) (uint64, sdk.Dec, error) {
-	return k.prepareBalancerPoolAsFullRange(ctx, clPoolId)
+func (k Keeper) PrepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64, uptimeAccums []accum.AccumulatorObject) (uint64, sdk.Dec, error) {
+	return k.prepareBalancerPoolAsFullRange(ctx, clPoolId, uptimeAccums)
 }
 
-func (k Keeper) ClaimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uint64, balPoolId uint64) (sdk.Coins, error) {
-	return k.claimAndResetFullRangeBalancerPool(ctx, clPoolId, balPoolId)
+func (k Keeper) ClaimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uint64, balPoolId uint64, uptimeAccums []accum.AccumulatorObject) (sdk.Coins, error) {
+	return k.claimAndResetFullRangeBalancerPool(ctx, clPoolId, balPoolId, uptimeAccums)
 }
 
 func (k Keeper) UninitializePool(ctx sdk.Context, poolId uint64) error {
@@ -334,6 +330,10 @@ func (k Keeper) ValidatePositionUpdateById(ctx sdk.Context, positionId uint64, u
 
 func (k Keeper) GetLargestAuthorizedUptimeDuration(ctx sdk.Context) time.Duration {
 	return k.getLargestAuthorizedUptimeDuration(ctx)
+}
+
+func (k Keeper) GetLargestSupportedUptimeDuration(ctx sdk.Context) time.Duration {
+	return k.getLargestSupportedUptimeDuration(ctx)
 }
 
 func MoveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum accum.AccumulatorObject, oldPositionName, newPositionName string, growthOutside sdk.DecCoins) error {

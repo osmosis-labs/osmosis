@@ -270,7 +270,7 @@ func (n *NodeConfig) QueryPoolType(poolId string) string {
 	return poolTypeResponse.PoolType
 }
 
-func (n *NodeConfig) QueryConcentratedPositions(address string) []model.PositionWithUnderlyingAssetBreakdown {
+func (n *NodeConfig) QueryConcentratedPositions(address string) []model.FullPositionBreakdown {
 	path := fmt.Sprintf("/osmosis/concentratedliquidity/v1beta1/positions/%s", address)
 
 	bz, err := n.QueryGRPCGateway(path)
@@ -641,4 +641,25 @@ func (n *NodeConfig) QueryAllSuperfluidAssets() []superfluidtypes.SuperfluidAsse
 	err = util.Cdc.UnmarshalJSON(bz, &response)
 	require.NoError(n.t, err)
 	return response.Assets
+}
+
+func (n *NodeConfig) QueryCommunityPoolModuleAccount() string {
+	cmd := []string{"osmosisd", "query", "auth", "module-accounts", "--output=json"}
+
+	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	require.NoError(n.t, err)
+	var result map[string][]interface{}
+	err = json.Unmarshal(out.Bytes(), &result)
+	require.NoError(n.t, err)
+	for _, acc := range result["accounts"] {
+		account, ok := acc.(map[string]interface{})
+		require.True(n.t, ok)
+		if account["name"] == "distribution" {
+			moduleAccount, ok := account["base_account"].(map[string]interface{})["address"].(string)
+			require.True(n.t, ok)
+			return moduleAccount
+		}
+	}
+	require.True(n.t, false, "distribution module account not found")
+	return ""
 }

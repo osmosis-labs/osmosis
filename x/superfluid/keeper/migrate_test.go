@@ -310,10 +310,10 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 			// Modify migration inputs if necessary
 
 			if tc.overwriteValidatorAddress {
-				synthDenomParts := strings.Split(synthLockBeforeMigration[0].SynthDenom, "/")
+				synthDenomParts := strings.Split(synthLockBeforeMigration.SynthDenom, "/")
 				synthDenomParts[4] = "osmovaloper1n69ghlk6404gzxtmtq0w7ma59n9vd9ed9dplg" // invalid, too short
 				newSynthDenom := strings.Join(synthDenomParts, "/")
-				synthLockBeforeMigration[0].SynthDenom = newSynthDenom
+				synthLockBeforeMigration.SynthDenom = newSynthDenom
 			}
 
 			if tc.overwriteLockId {
@@ -323,7 +323,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 			balancerDelegationPre, _ := stakingKeeper.GetDelegation(ctx, balancerIntermediaryAcc.GetAccAddress(), valAddr)
 
 			// System under test.
-			positionId, amount0, amount1, liquidityMigrated, _, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateSuperfluidBondedBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, synthLockBeforeMigration[0].SynthDenom, tc.tokenOutMins)
+			positionId, amount0, amount1, liquidityMigrated, _, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateSuperfluidBondedBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, synthLockBeforeMigration.SynthDenom, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
@@ -470,14 +470,14 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrated()
 			// Modify migration inputs if necessary
 
 			if tc.overwriteValidatorAddress {
-				synthDenomParts := strings.Split(synthLockBeforeMigration[0].SynthDenom, "/")
+				synthDenomParts := strings.Split(synthLockBeforeMigration.SynthDenom, "/")
 				synthDenomParts[4] = "osmovaloper1n69ghlk6404gzxtmtq0w7ma59n9vd9ed9dplg" // invalid, too short
 				newSynthDenom := strings.Join(synthDenomParts, "/")
-				synthLockBeforeMigration[0].SynthDenom = newSynthDenom
+				synthLockBeforeMigration.SynthDenom = newSynthDenom
 			}
 
 			// System under test.
-			positionId, amount0, amount1, liquidityMigrated, _, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateSuperfluidUnbondingBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, synthLockBeforeMigration[0].SynthDenom, tc.tokenOutMins)
+			positionId, amount0, amount1, liquidityMigrated, _, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateSuperfluidUnbondingBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, synthLockBeforeMigration.SynthDenom, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
@@ -580,7 +580,7 @@ func (s *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated() {
 			// RouteMigration is called via the migration message router and is always run prior to the migration itself
 			synthLockBeforeMigration, migrationType, err := superfluidKeeper.RouteMigration(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
 			s.Require().NoError(err)
-			s.Require().Equal(0, len(synthLockBeforeMigration))
+			s.Require().Equal((lockuptypes.SyntheticLock{}), synthLockBeforeMigration)
 			s.Require().Equal(migrationType, keeper.NonSuperfluid)
 
 			// System under test.

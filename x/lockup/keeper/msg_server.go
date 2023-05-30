@@ -208,8 +208,11 @@ func (server msgServer) ForceUnlock(goCtx context.Context, msg *types.MsgForceUn
 	}
 
 	// check that given lock is not superfluid staked
-	synthLocks := server.keeper.GetAllSyntheticLockupsByLockup(ctx, lock.ID)
-	if len(synthLocks) > 0 {
+	synthLock, err := server.keeper.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
+	if err != nil {
+		return &types.MsgForceUnlockResponse{Success: false}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+	if !synthLock.IsNil() {
 		return &types.MsgForceUnlockResponse{Success: false}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "superfluid delegation exists for lock")
 	}
 
@@ -222,4 +225,25 @@ func (server msgServer) ForceUnlock(goCtx context.Context, msg *types.MsgForceUn
 	}
 
 	return &types.MsgForceUnlockResponse{Success: true}, nil
+}
+
+func (server msgServer) SetRewardReceiverAddress(goCtx context.Context, msg *types.MsgSetRewardReceiverAddress) (*types.MsgSetRewardReceiverAddressResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	owner, err := sdk.AccAddressFromBech32(msg.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	newRewardRecepient, err := sdk.AccAddressFromBech32(msg.RewardReceiver)
+	if err != nil {
+		return nil, err
+	}
+
+	err = server.keeper.SetLockRewardReceiverAddress(ctx, msg.LockID, owner, newRewardRecepient.String())
+	if err != nil {
+		return &types.MsgSetRewardReceiverAddressResponse{Success: false}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	return &types.MsgSetRewardReceiverAddressResponse{Success: true}, nil
 }

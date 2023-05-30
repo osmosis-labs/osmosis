@@ -22,22 +22,23 @@ message TickInfo {
     (gogoproto.moretags) = "yaml:\"liquidity_net\"",
     (gogoproto.nullable) = false
   ];
-  // Total fees accumulated in the opposite direction that the tick was last
-  // crossed. i.e. if the current tick is to the right of this tick (meaning its
-  // currently a greater price), then this is the total fees accumulated below
-  // the tick. If the current tick is to the left of this tick (meaning its
-  // currently at a lower price), then this is the total fees accumulated above
-  // the tick.
+  // Total spread rewards accumulated in the opposite direction that the tick
+  // was last crossed. i.e. if the current tick is to the right of this tick
+  // (meaning its currently a greater price), then this is the total spread
+  // rewards accumulated below the tick. If the current tick is to the left of
+  // this tick (meaning its currently at a lower price), then this is the total
+  // spread rewards accumulated above the tick.
   //
-  // Note: the way this value is used depends on the direction of fees we are
-  // calculating for. If we are calculating fees below the lower tick and the
-  // lower tick is the active tick, then this is the feeGrowthGlobal - the
-  // lower tick's feeGrowthOppositeDirectionOfLastTraversal. If we are
-  // calculating fees above the upper tick and the upper tick is the active
-  // tick, then this is just the tick's
-  // feeGrowthOppositeDirectionOfLastTraversal value.
+  // Note: the way this value is used depends on the direction of spread rewards
+  // we are calculating for. If we are calculating spread rewards below the
+  // lower tick and the lower tick is the active tick, then this is the
+  // spreadRewardGrowthGlobal - the lower tick's
+  // spreadRewardGrowthOppositeDirectionOfLastTraversal. If we are calculating
+  // spread rewards above the upper tick and the upper tick is the active tick,
+  // then this is just the tick's
+  // spreadRewardGrowthOppositeDirectionOfLastTraversal value.
   repeated cosmos.base.v1beta1.DecCoin
-      fee_growth_opposite_direction_of_last_traversal = 3 [
+      spread_reward_growth_opposite_direction_of_last_traversal = 3 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable) = false
   ];

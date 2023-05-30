@@ -16,6 +16,76 @@ import (
 
 var DefaultIncentiveRecords = []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour}
 
+// AssertPositionsDoNotExist checks that the positions with the given IDs do not exist on uptime accumulators.
+func (s *KeeperTestSuite) AssertPositionsDoNotExist(positionIds []uint64) {
+	uptimeAccumulators, err := s.clk.GetUptimeAccumulators(s.Ctx, defaultPoolId)
+	s.Require().NoError(err)
+
+	for _, positionId := range positionIds {
+		oldPositionName := string(types.KeyPositionId(positionId))
+		for _, uptimeAccum := range uptimeAccumulators {
+			// Check if the accumulator contains the position.
+			hasPosition, err := uptimeAccum.HasPosition(oldPositionName)
+			s.Require().NoError(err)
+			s.Require().False(hasPosition)
+		}
+
+		// Check that the old position has been deleted.
+		_, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+		s.Require().Error(err)
+		s.Require().ErrorAs(err, &types.PositionIdNotFoundError{})
+	}
+}
+
+// GetTotalAccruedRewardsByAccumulator returns the total accrued rewards for the given position on each uptime accumulator.
+func (s *KeeperTestSuite) GetTotalAccruedRewardsByAccumulator(positionId uint64, requireHasPosition bool) []sdk.DecCoins {
+	uptimeAccumulators, err := s.clk.GetUptimeAccumulators(s.Ctx, defaultPoolId)
+	s.Require().NoError(err)
+
+	unclaimedRewardsForEachUptimeNewPosition := make([]sdk.DecCoins, len(uptimeAccumulators))
+
+	for i, uptimeAccum := range uptimeAccumulators {
+		newPositionName := string(types.KeyPositionId(positionId))
+		// Check if the accumulator contains the position.
+		hasPosition, err := uptimeAccum.HasPosition(newPositionName)
+		s.Require().NoError(err)
+
+		if requireHasPosition {
+			s.Require().True(hasPosition)
+		}
+
+		if hasPosition {
+			// Move the unclaimed rewards to the new position.
+			// Get the unclaimed rewards for the old position.
+			position, err := accum.GetPosition(uptimeAccum, newPositionName)
+			s.Require().NoError(err)
+
+			unclaimedRewardsForPosition := accum.GetTotalRewards(uptimeAccum, position)
+
+			unclaimedRewardsForEachUptimeNewPosition[i] = unclaimedRewardsForEachUptimeNewPosition[i].Add(unclaimedRewardsForPosition...)
+		}
+	}
+
+	return unclaimedRewardsForEachUptimeNewPosition
+}
+
+// ExecuteAndValidateSuccessfulIncentiveClaim claims incentives for position Id and asserts its output is as expected.
+// It also asserts that no more incentives can be claimed for the position.
+func (s *KeeperTestSuite) ExecuteAndValidateSuccessfulIncentiveClaim(positionId uint64, expectedRewards sdk.Coins, expectedForfeited sdk.Coins) {
+	// Initial claim and assertion
+	claimedRewards, forfeitedRewards, err := s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionId)
+	s.Require().NoError(err)
+
+	s.Require().Equal(expectedRewards, claimedRewards)
+	s.Require().Equal(expectedForfeited, forfeitedRewards)
+
+	// Sanity check that cannot claim again.
+	claimedRewards, _, err = s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionId)
+	s.Require().NoError(err)
+
+	s.Require().Equal(sdk.Coins(nil), claimedRewards)
+}
+
 func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 	const (
 		validPoolId   = 1
@@ -712,7 +782,6 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		unlockBeforeBlockTimeMs    time.Duration //nolint:stylecheck
 		expectedNewPositionId      uint64
 		expectedErr                error
-		doesValidatePass           bool
 	}{
 		{
 			name: "Happy path: Fungify three fully charged positions",
@@ -785,7 +854,6 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			accountCallingMigration: defaultAddress,
 			expectedNewPositionId:   0,
 			expectedErr:             types.PositionQuantityTooLowError{MinNumPositions: cl.MinNumPositions, NumPositions: 1},
-			doesValidatePass:        true,
 		},
 		{
 			name: "Error: one of the full range positions is locked",
@@ -839,7 +907,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			s.PrepareConcentratedPool()
 
 			// Set incentives for pool to ensure accumulators work correctly
-			err := s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, DefaultIncentiveRecords)
+			err := s.clk.SetMultipleIncentiveRecords(s.Ctx, DefaultIncentiveRecords)
 			s.Require().NoError(err)
 
 			// Set up fully charged positions
@@ -855,10 +923,10 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 					err              error
 				)
 				if pos.isLocked {
-					_, _, _, liquidityCreated, _, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pos.poolId, pos.acc, pos.coins, lockDuration)
+					_, _, _, liquidityCreated, _, _, err = s.clk.CreateFullRangePositionUnlocking(s.Ctx, pos.poolId, pos.acc, pos.coins, lockDuration)
 					s.Require().NoError(err)
 				} else {
-					_, _, _, liquidityCreated, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pos.poolId, pos.acc, pos.coins, sdk.ZeroInt(), sdk.ZeroInt(), pos.lowerTick, pos.upperTick)
+					_, _, _, liquidityCreated, _, _, _, err = s.clk.CreatePosition(s.Ctx, pos.poolId, pos.acc, pos.coins, sdk.ZeroInt(), sdk.ZeroInt(), pos.lowerTick, pos.upperTick)
 					s.Require().NoError(err)
 				}
 
@@ -870,17 +938,19 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 
 			// Set up uncharged positions
 			for _, pos := range test.setupUnchargedPositions {
-				_, _, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pos.poolId, pos.acc, pos.coins, sdk.ZeroInt(), sdk.ZeroInt(), pos.lowerTick, pos.upperTick)
+				_, _, _, _, _, _, _, err := s.clk.CreatePosition(s.Ctx, pos.poolId, pos.acc, pos.coins, sdk.ZeroInt(), sdk.ZeroInt(), pos.lowerTick, pos.upperTick)
 				s.Require().NoError(err)
 			}
 
 			// Increase block time by one more day - 1 ns to ensure that the previously added positions are not fully charged.
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration - time.Nanosecond))
 
+			// Get the longest authorized uptime, which is the fully charged duration.
+			fullyChargedDuration := s.clk.GetLargestAuthorizedUptimeDuration(s.Ctx)
+
 			// First run non mutative validation and check results
-			poolId, lowerTick, upperTick, liquidity, err := s.App.ConcentratedLiquidityKeeper.ValidatePositionsAndGetTotalLiquidity(s.Ctx, test.accountCallingMigration, test.positionIdsToMigrate)
-			if test.expectedErr != nil && !test.doesValidatePass {
-				s.Require().Error(err)
+			poolId, lowerTick, upperTick, liquidity, err := s.clk.ValidatePositionsAndGetTotalLiquidity(s.Ctx, test.accountCallingMigration, test.positionIdsToMigrate, fullyChargedDuration)
+			if test.expectedErr != nil {
 				s.Require().ErrorIs(err, test.expectedErr)
 				s.Require().Equal(uint64(0), poolId)
 				s.Require().Equal(int64(0), lowerTick)
@@ -891,7 +961,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 
 				// Check that the poolId, lowerTick, upperTick, and liquidity are correct
 				for _, posId := range test.positionIdsToMigrate {
-					position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, posId)
+					position, err := s.clk.GetPosition(s.Ctx, posId)
 					s.Require().NoError(err)
 					s.Require().Equal(poolId, position.PoolId)
 					s.Require().Equal(lowerTick, position.LowerTick)
@@ -901,41 +971,20 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			}
 
 			// Update the accumulators for defaultPoolId to the current time
-			err = s.App.ConcentratedLiquidityKeeper.UpdateUptimeAccumulatorsToNow(s.Ctx, defaultPoolId)
+			err = s.clk.UpdateUptimeAccumulatorsToNow(s.Ctx, defaultPoolId)
 			s.Require().NoError(err)
-
-			// Get the uptime accumulators for defaultPoolId
-			uptimeAccumulators, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, defaultPoolId)
-			s.Require().NoError(err)
-
-			unclaimedRewardsForEachUptimeAcrossAllOldPositions := make([]sdk.DecCoins, len(uptimeAccumulators))
 
 			// Get the unclaimed rewards for all the positions that are being migrated
+			unclaimedRewardsForEachUptimeAcrossAllOldPositions := make([]sdk.DecCoins, len(types.SupportedUptimes))
 			for _, positionId := range test.positionIdsToMigrate {
-				oldPositionName := string(types.KeyPositionId(positionId))
-				for i, uptimeAccum := range uptimeAccumulators {
-					// Check if the accumulator contains the position.
-					hasPosition, err := uptimeAccum.HasPosition(oldPositionName)
-					s.Require().NoError(err)
-
-					// If the accumulator contains the position, note the unclaimed rewards.
-					if hasPosition {
-						// Get the unclaimed rewards for the old position.
-						position, err := accum.GetPosition(uptimeAccum, oldPositionName)
-						s.Require().NoError(err)
-
-						unclaimedRewardsForPosition := accum.GetTotalRewards(uptimeAccum, position)
-
-						// Add the unclaimed rewards to the total unclaimed rewards for all the old positions.
-						unclaimedRewardsForEachUptimeAcrossAllOldPositions[i] = unclaimedRewardsForEachUptimeAcrossAllOldPositions[i].Add(unclaimedRewardsForPosition...)
-					}
-				}
+				unclaimedRewardsForPosition := s.GetTotalAccruedRewardsByAccumulator(positionId, false)
+				unclaimedRewardsForEachUptimeAcrossAllOldPositions, err = osmoutils.AddDecCoinArrays(unclaimedRewardsForEachUptimeAcrossAllOldPositions, unclaimedRewardsForPosition)
+				s.Require().NoError(err)
 			}
 
 			// Next, run the mutative function and check results
-			newPositionId, err := s.App.ConcentratedLiquidityKeeper.FungifyChargedPosition(s.Ctx, test.accountCallingMigration, test.positionIdsToMigrate)
+			newPositionId, err := s.clk.FungifyChargedPosition(s.Ctx, test.accountCallingMigration, test.positionIdsToMigrate)
 			if test.expectedErr != nil {
-				s.Require().Error(err)
 				s.Require().ErrorIs(err, test.expectedErr)
 				s.Require().Equal(uint64(0), newPositionId)
 			} else {
@@ -944,90 +993,42 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 
 				// Since the positionLiquidity of the old position should have been deleted, retrieving it should return an error.
 				for _, posId := range test.positionIdsToMigrate {
-					positionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, posId)
-					s.Require().Error(err)
+					positionLiquidity, err := s.clk.GetPositionLiquidity(s.Ctx, posId)
 					s.Require().ErrorIs(err, types.PositionIdNotFoundError{PositionId: posId})
 					s.Require().Equal(sdk.Dec{}, positionLiquidity)
 				}
 
-				// Retrieve the new position and check that the liquidity is equal to the sum of the old positions.
-				newPosition, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, newPositionId)
+				// --- New position assertions ---
+
+				newPosition, err := s.clk.GetPosition(s.Ctx, newPositionId)
+
+				// Check that the liquidity is equal to the sum of the old positions.
 				s.Require().NoError(err)
 				s.Require().Equal(totalLiquidity, newPosition.Liquidity)
 
 				// The new position's join time should be the current block time minus the fully charged duration.
-				fullCharge := s.App.ConcentratedLiquidityKeeper.GetLargestAuthorizedUptimeDuration(s.Ctx)
+				fullCharge := s.clk.GetLargestAuthorizedUptimeDuration(s.Ctx)
 				s.Require().Equal(s.Ctx.BlockTime().Add(-fullCharge), newPosition.JoinTime)
 
-				// Get the uptime accumulators for the poolId of the new position.
-				uptimeAccumulators, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, poolId)
-				s.Require().NoError(err)
-
-				unclaimedRewardsForEachUptimeNewPosition := make([]sdk.DecCoins, len(uptimeAccumulators))
-
 				// Get the unclaimed rewards for the new position
-				for i, uptimeAccum := range uptimeAccumulators {
-					newPositionName := string(types.KeyPositionId(newPositionId))
-					// Check if the accumulator contains the position.
-					hasPosition, err := uptimeAccum.HasPosition(newPositionName)
-					s.Require().NoError(err)
-					s.Require().True(hasPosition)
+				unclaimedRewardsForEachUptimeNewPosition := s.GetTotalAccruedRewardsByAccumulator(newPositionId, true)
 
-					// Move the unclaimed rewards to the new position.
-					// Get the unclaimed rewards for the old position.
-					position, err := accum.GetPosition(uptimeAccum, newPositionName)
-					s.Require().NoError(err)
-
-					unclaimedRewardsForPosition := accum.GetTotalRewards(uptimeAccum, position)
-
-					unclaimedRewardsForEachUptimeNewPosition[i] = unclaimedRewardsForEachUptimeNewPosition[i].Add(unclaimedRewardsForPosition...)
-				}
-
-				// Check that the old uptime accumulators and positions have been deleted.
-				for _, positionId := range test.positionIdsToMigrate {
-					oldPositionName := string(types.KeyPositionId(positionId))
-					for _, uptimeAccum := range uptimeAccumulators {
-						// Check if the accumulator contains the position.
-						hasPosition, err := uptimeAccum.HasPosition(oldPositionName)
-						s.Require().NoError(err)
-						s.Require().False(hasPosition)
-					}
-
-					// Check that the old position has been deleted.
-					_, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
-					s.Require().Error(err)
-					s.Require().ErrorAs(err, &types.PositionIdNotFoundError{})
-				}
+				// Check that the old positions have been deleted.
+				s.AssertPositionsDoNotExist(test.positionIdsToMigrate)
 
 				// The new position's unclaimed rewards should be the sum of the old positions' unclaimed rewards.
 				s.Require().Equal(unclaimedRewardsForEachUptimeAcrossAllOldPositions, unclaimedRewardsForEachUptimeNewPosition)
 
-				// Get the final amount expected to be claimed by merging the unclaimed rewards across
-				// all uptimes.
-				expectedRewardToClaimDecCoins := sdk.NewDecCoins()
-				for _, uptimeCoins := range unclaimedRewardsForEachUptimeAcrossAllOldPositions {
-					expectedRewardToClaimDecCoins = expectedRewardToClaimDecCoins.Add(uptimeCoins...)
-				}
-
-				expectedRewardsToClaim, _ := expectedRewardToClaimDecCoins.TruncateDecimal()
+				// Get the final amount expected to be claimed by merging the unclaimed rewards across all uptimes.
+				// Note that the second value is dust, not an error.
+				expectedRewardsToClaim, _ := osmoutils.CollapseDecCoinsArray(unclaimedRewardsForEachUptimeAcrossAllOldPositions).TruncateDecimal()
 
 				// Claim all the rewards for the new position and check that the rewards match the unclaimed rewards.
-				claimedRewards, forfeitedRewards, err := s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, newPositionId)
-				s.Require().NoError(err)
-
-				s.Require().Equal(expectedRewardsToClaim, claimedRewards)
-				s.Require().Equal(sdk.Coins(nil), forfeitedRewards)
-
-				// Sanity check that cannot claim again.
-				claimedRewards, _, err = s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, newPositionId)
-				s.Require().NoError(err)
-
-				s.Require().Equal(sdk.Coins(nil), claimedRewards)
-				s.Require().Equal(sdk.Coins(nil), claimedRewards)
+				s.ExecuteAndValidateSuccessfulIncentiveClaim(newPositionId, expectedRewardsToClaim, sdk.Coins(nil))
 
 				// Check that cannot claim rewards for the old positions.
 				for _, positionId := range test.positionIdsToMigrate {
-					_, _, err := s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, positionId)
+					_, _, err := s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionId)
 					s.Require().Error(err)
 				}
 			}
@@ -1132,9 +1133,9 @@ func (s *KeeperTestSuite) TestHasAnyPositionForPool() {
 	}
 }
 
-// This test specifically tests that fee collection works as expected
+// This test specifically tests that spread reward collection works as expected
 // after fungifying positions.
-func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
+func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimSpreadRewards() {
 	// Init suite for the test.
 	s.SetupTest()
 
@@ -1183,13 +1184,13 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 		totalLiquidity = totalLiquidity.Add(liquidityCreated)
 	}
 
-	// Perform a swap to earn fees
+	// Perform a swap to earn spread rewards
 	swapAmountIn := sdk.NewCoin(ETH, sdk.NewInt(swapAmount))
-	expectedFee := swapAmountIn.Amount.ToDec().Mul(spreadFactor)
-	// We run expected fees through a cycle of division and multiplication by liquidity to capture appropriate rounding behavior.
-	// Note that we truncate the int at the end since it is not possible to have a decimal fee amount collected (the QuoTruncate
+	expectedSpreadReward := swapAmountIn.Amount.ToDec().Mul(spreadFactor)
+	// We run expected spread rewards through a cycle of divison and multiplication by liquidity to capture appropriate rounding behavior.
+	// Note that we truncate the int at the end since it is not possible to have a decimal spread reward amount collected (the QuoTruncate
 	// and MulTruncates are much smaller operations that round down for values past the 18th decimal place).
-	expectedFeeTruncated := expectedFee.QuoTruncate(totalLiquidity).MulTruncate(totalLiquidity).TruncateInt()
+	expectedSpreadRewardTruncated := expectedSpreadReward.QuoTruncate(totalLiquidity).MulTruncate(totalLiquidity).TruncateInt()
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(swapAmountIn))
 	s.swapAndTrackXTimesInARow(defaultPoolId, swapAmountIn, USDC, types.MinSpotPrice, 1)
 
@@ -1200,33 +1201,33 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 	newPositionId, err := s.App.ConcentratedLiquidityKeeper.FungifyChargedPosition(s.Ctx, defaultAddress, expectedPositionIds)
 	s.Require().NoError(err)
 
-	// Claim fees
-	collected, err := s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, defaultAddress, newPositionId)
+	// Claim spread rewards
+	collected, err := s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, defaultAddress, newPositionId)
 	s.Require().NoError(err)
 
-	// Validate that the correct fee amount was collected.
-	s.Require().Equal(expectedFeeTruncated, collected.AmountOf(swapAmountIn.Denom))
+	// Validate that the correct spread reward amount was collected.
+	s.Require().Equal(expectedSpreadRewardTruncated, collected.AmountOf(swapAmountIn.Denom))
 
 	// Check that cannot claim again.
-	collected, err = s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, defaultAddress, newPositionId)
+	collected, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, defaultAddress, newPositionId)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.Coins(nil), collected)
 
-	feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, defaultPoolId)
+	spreadRewardAccum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, defaultPoolId)
 	s.Require().NoError(err)
 
 	// Check that cannot claim old positions
 	for _, oldPositionId := range expectedPositionIds {
-		collected, err = s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, defaultAddress, oldPositionId)
+		collected, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, defaultAddress, oldPositionId)
 		s.Require().Error(err)
 		s.Require().Equal(sdk.Coins{}, collected)
 
 		hasPosition := s.App.ConcentratedLiquidityKeeper.HasPosition(s.Ctx, oldPositionId)
 		s.Require().False(hasPosition)
 
-		hasFeePositionTracker, err := feeAccum.HasPosition(types.KeyFeePositionAccumulator(oldPositionId))
+		hasSpreadRewardPositionTracker, err := spreadRewardAccum.HasPosition(types.KeySpreadRewardPositionAccumulator(oldPositionId))
 		s.Require().NoError(err)
-		s.Require().False(hasFeePositionTracker)
+		s.Require().False(hasSpreadRewardPositionTracker)
 	}
 }
 

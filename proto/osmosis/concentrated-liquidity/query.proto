@@ -52,11 +52,12 @@ service Query {
                                    "liquidity_net_in_direction";
   }
 
-  // ClaimableFees returns the amount of fees that can be claimed by a position
-  // with the given id.
-  rpc ClaimableFees(ClaimableFeesRequest) returns (ClaimableFeesResponse) {
+  // ClaimableSpreadRewards returns the amount of spread rewards that can be
+  // claimed by a position with the given id.
+  rpc ClaimableSpreadRewards(ClaimableSpreadRewardsRequest)
+      returns (ClaimableSpreadRewardsResponse) {
     option (google.api.http).get =
-        "/osmosis/concentratedliquidity/v1beta1/claimable_fees";
+        "/osmosis/concentratedliquidity/v1beta1/claimable_spread_rewards";
   };
 
   // ClaimableIncentives returns the amount of incentives that can be claimed
@@ -81,8 +82,7 @@ message UserPositionsRequest {
 }
 
 message UserPositionsResponse {
-  repeated PositionWithUnderlyingAssetBreakdown positions = 1
-      [ (gogoproto.nullable) = false ];
+  repeated FullPositionBreakdown positions = 1 [ (gogoproto.nullable) = false ];
 }
 
 //=============================== PositionById
@@ -91,8 +91,7 @@ message PositionByIdRequest {
 }
 
 message PositionByIdResponse {
-  PositionWithUnderlyingAssetBreakdown position = 1
-      [ (gogoproto.nullable) = false ];
+  FullPositionBreakdown position = 1 [ (gogoproto.nullable) = false ];
 }
 
 //=============================== Pools
@@ -127,16 +126,8 @@ message LiquidityDepthWithRange {
     (gogoproto.moretags) = "yaml:\"liquidity_net\"",
     (gogoproto.nullable) = false
   ];
-  string lower_tick = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"tick\"",
-    (gogoproto.nullable) = false
-  ];
-  string upper_tick = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"tick\"",
-    (gogoproto.nullable) = false
-  ];
+  int64 lower_tick = 2 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
+  int64 upper_tick = 3 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
 }
 
 //=============================== LiquidityNetInDirection
@@ -168,14 +159,14 @@ message LiquidityPerTickRangeResponse {
       [ (gogoproto.nullable) = false ];
 }
 
-// ===================== QueryClaimableFees
-message ClaimableFeesRequest {
+// ===================== QueryClaimableSpreadRewards
+message ClaimableSpreadRewardsRequest {
   uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
 }
 
-message ClaimableFeesResponse {
-  repeated cosmos.base.v1beta1.Coin claimable_fees = 1 [
-    (gogoproto.moretags) = "yaml:\"claimable_fees\"",
+message ClaimableSpreadRewardsResponse {
+  repeated cosmos.base.v1beta1.Coin claimable_spread_rewards = 1 [
+    (gogoproto.moretags) = "yaml:\"claimable_spread_rewards\"",
     (gogoproto.nullable) = false
   ];
 }

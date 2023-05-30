@@ -43,7 +43,7 @@ var (
 	defaultAmountOne      = sdk.MustNewDecFromStr("66829187.967824033199646915")
 	defaultAmountZero     = sdk.MustNewDecFromStr("13369.999999999998920002")
 	defaultLiquidity      = sdk.MustNewDecFromStr("3035764687.503020836176699298")
-	defaultFee            = sdk.MustNewDecFromStr("0.03")
+	defaultSpreadReward   = sdk.MustNewDecFromStr("0.03")
 	defaultTickSpacing    = uint64(100)
 	defaultAmountReserves = sdk.NewInt(1_000_000_000)
 	DefaultCoins          = sdk.NewCoins(sdk.NewCoin(ETH, defaultAmountReserves), sdk.NewCoin(USDC, defaultAmountReserves))
@@ -137,7 +137,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 		expectedAmountIn                sdk.Dec
 		expectedAmountOut               sdk.Dec
 	}{
-		"1: one_for_zero__not_equal_target__no_fee": {
+		"1: one_for_zero__not_equal_target__no_spread_reward": {
 			sqrtPriceCurrent: sqrt5000,                                       // 5000
 			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.724818840347693039"), // 5002
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
@@ -154,7 +154,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			expectedAmountIn:  sdk.NewDec(42000000),
 			expectedAmountOut: sdk.NewDec(8398),
 		},
-		"2: zero_for_one__not_equal_target__no_fee": {
+		"2: zero_for_one__not_equal_target__no_spread_reward": {
 			sqrtPriceCurrent: sqrt5000,                                       // 5000
 			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.682388188289167342"), // 4996
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
@@ -172,7 +172,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			expectedAmountIn:  sdk.NewDec(13370),
 			expectedAmountOut: sdk.NewDec(66829187),
 		},
-		"3: one_for_zero__equal_target__no_fee": {
+		"3: one_for_zero__equal_target__no_spread_reward": {
 			sqrtPriceCurrent: sqrt5000,                                       // 5000
 			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.724513183069625078"), // approx 5001.96
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
@@ -189,7 +189,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			expectedAmountIn:  sdk.NewDec(42000000),
 			expectedAmountOut: sdk.NewDec(8398),
 		},
-		"4: zero_for_one__equal_target__no_fee": {
+		"4: zero_for_one__equal_target__no_spread_reward": {
 			sqrtPriceCurrent: sqrt5000,                                       // 5000
 			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.688664163408836320"), // approx 4996.89
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),

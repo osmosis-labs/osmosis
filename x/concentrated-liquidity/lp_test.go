@@ -37,10 +37,10 @@ type lpTest struct {
 	isNotFirstPositionWithSameAccount bool
 	expectedError                     error
 
-	// fee related fields
-	preSetChargeFee               sdk.DecCoin
-	expectedFeeGrowthOutsideLower sdk.DecCoins
-	expectedFeeGrowthOutsideUpper sdk.DecCoins
+	// spread reward related fields
+	preSetChargeSpreadRewards              sdk.DecCoin
+	expectedSpreadRewardGrowthOutsideLower sdk.DecCoins
+	expectedSpreadRewardGrowthOutsideUpper sdk.DecCoins
 }
 
 var (
@@ -64,12 +64,12 @@ var (
 		positionId:                        1,
 		underlyingLockId:                  0,
 
-		preSetChargeFee: oneEth,
+		preSetChargeSpreadRewards: oneEth,
 		// in this setup lower tick < current tick < upper tick
-		// the fee accumulator for ticks <= current tick are updated.
-		expectedFeeGrowthOutsideLower: cl.EmptyCoins,
+		// the spread reward accumulator for ticks <= current tick are updated.
+		expectedSpreadRewardGrowthOutsideLower: cl.EmptyCoins,
 		// as a result, the upper tick is not updated.
-		expectedFeeGrowthOutsideUpper: cl.EmptyCoins,
+		expectedSpreadRewardGrowthOutsideUpper: cl.EmptyCoins,
 	}
 
 	errToleranceOneRoundDown = osmomath.ErrTolerance{
@@ -81,69 +81,69 @@ var (
 
 	positionCases = map[string]lpTest{
 		"base case": {
-			expectedFeeGrowthOutsideLower: oneEthCoins,
+			expectedSpreadRewardGrowthOutsideLower: oneEthCoins,
 
 			// Rounding up in favor of the pool.
 			amount0Expected: DefaultAmt0Expected.Add(roundingError),
 			amount1Expected: DefaultAmt1Expected,
 		},
 		"create a position with non default tick spacing (10) with ticks that fall into tick spacing requirements": {
-			tickSpacing:                   10,
-			expectedFeeGrowthOutsideLower: oneEthCoins,
+			tickSpacing:                            10,
+			expectedSpreadRewardGrowthOutsideLower: oneEthCoins,
 
 			// Rounding up in favor of the pool.
 			amount0Expected: DefaultAmt0Expected.Add(roundingError),
 			amount1Expected: DefaultAmt1Expected,
 		},
-		"lower tick < upper tick < current tick -> both tick's fee accumulators are updated with one eth": {
+		"lower tick < upper tick < current tick -> both tick's spread reward accumulators are updated with one eth": {
 			lowerTick:   DefaultLowerTick,
 			upperTick:   DefaultUpperTick,
 			currentTick: DefaultUpperTick + 100,
 
-			preSetChargeFee:               oneEth,
-			expectedFeeGrowthOutsideLower: oneEthCoins,
+			preSetChargeSpreadRewards:              oneEth,
+			expectedSpreadRewardGrowthOutsideLower: oneEthCoins,
 
 			// Rounding up in favor of the pool.
 			amount0Expected: DefaultAmt0Expected.Add(roundingError),
 			amount1Expected: DefaultAmt1Expected,
 		},
-		"lower tick < upper tick < current tick -> the fee is not charged so tick accumulators are unset": {
+		"lower tick < upper tick < current tick -> the spread reward is not charged so tick accumulators are unset": {
 			lowerTick:   DefaultLowerTick,
 			upperTick:   DefaultUpperTick,
 			currentTick: DefaultUpperTick + 100,
 
-			preSetChargeFee:               sdk.NewDecCoin(ETH, sdk.ZeroInt()), // zero fee
-			expectedFeeGrowthOutsideLower: oneEthCoins,
+			preSetChargeSpreadRewards:              sdk.NewDecCoin(ETH, sdk.ZeroInt()), // zero spread reward
+			expectedSpreadRewardGrowthOutsideLower: oneEthCoins,
 
 			// Rounding up in favor of the pool.
 			amount0Expected: DefaultAmt0Expected.Add(roundingError),
 			amount1Expected: DefaultAmt1Expected,
 		},
-		"current tick < lower tick < upper tick -> both tick's fee accumulators are unitilialized": {
+		"current tick < lower tick < upper tick -> both tick's spread reward accumulators are unitilialized": {
 			lowerTick:   DefaultLowerTick,
 			upperTick:   DefaultUpperTick,
 			currentTick: DefaultLowerTick - 100,
 
-			preSetChargeFee:               oneEth,
-			expectedFeeGrowthOutsideLower: oneEthCoins,
+			preSetChargeSpreadRewards:              oneEth,
+			expectedSpreadRewardGrowthOutsideLower: oneEthCoins,
 
 			// Rounding up in favor of the pool.
 			amount0Expected: DefaultAmt0Expected.Add(roundingError),
 			amount1Expected: DefaultAmt1Expected,
 		},
-		"lower tick < upper tick == current tick -> both tick's fee accumulators are updated with one eth": {
+		"lower tick < upper tick == current tick -> both tick's spread reward accumulators are updated with one eth": {
 			lowerTick:   DefaultLowerTick,
 			upperTick:   DefaultUpperTick,
 			currentTick: DefaultUpperTick,
 
-			preSetChargeFee:               oneEth,
-			expectedFeeGrowthOutsideLower: oneEthCoins,
+			preSetChargeSpreadRewards:              oneEth,
+			expectedSpreadRewardGrowthOutsideLower: oneEthCoins,
 
 			// Rounding up in favor of the pool.
 			amount0Expected: DefaultAmt0Expected.Add(roundingError),
 			amount1Expected: DefaultAmt1Expected,
 		},
-		"second position: lower tick < upper tick == current tick -> both tick's fee accumulators are updated with one eth": {
+		"second position: lower tick < upper tick == current tick -> both tick's spread reward accumulators are updated with one eth": {
 			lowerTick:   DefaultLowerTick,
 			upperTick:   DefaultUpperTick,
 			currentTick: DefaultUpperTick,
@@ -151,9 +151,9 @@ var (
 			isNotFirstPositionWithSameAccount: true,
 			positionId:                        2,
 
-			liquidityAmount:               baseCase.liquidityAmount.MulInt64(2),
-			preSetChargeFee:               oneEth,
-			expectedFeeGrowthOutsideLower: oneEthCoins,
+			liquidityAmount:                        baseCase.liquidityAmount.MulInt64(2),
+			preSetChargeSpreadRewards:              oneEth,
+			expectedSpreadRewardGrowthOutsideLower: oneEthCoins,
 
 			// Rounding up in favor of the pool.
 			amount0Expected: DefaultAmt0Expected.Add(roundingError),
@@ -169,10 +169,10 @@ var (
 			isNotFirstPositionWithSameAccount: true,
 			positionId:                        2,
 
-			liquidityAmount:               sdk.MustNewDecFromStr("15731321859400083838.506717486806808937").MulInt64(2),
-			preSetChargeFee:               oneEth,
-			expectedFeeGrowthOutsideLower: oneEthCoins,
-			expectedFeeGrowthOutsideUpper: oneEthCoins,
+			liquidityAmount:                        sdk.MustNewDecFromStr("15731321859400083838.506717486806808937").MulInt64(2),
+			preSetChargeSpreadRewards:              oneEth,
+			expectedSpreadRewardGrowthOutsideLower: oneEthCoins,
+			expectedSpreadRewardGrowthOutsideUpper: oneEthCoins,
 
 			// Rounding up in favor of the pool.
 			amount0Expected: sdk.ZeroInt(),
@@ -268,7 +268,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			mergeConfigs(&baseConfigCopy, &tc)
 			tc = baseConfigCopy
 
-			// Fund account to pay for the pool creation fee.
+			// Fund account to pay for the pool creation spread reward.
 			s.FundAcc(s.TestAccs[0], PoolCreationFee)
 
 			// Create a CL pool with custom tickSpacing
@@ -281,10 +281,9 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			pool, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, poolID)
 			s.Require().NoError(err)
 
-			// Pre-set fee growth accumulator
-			if !tc.preSetChargeFee.IsZero() {
-				err = clKeeper.ChargeFee(s.Ctx, 1, tc.preSetChargeFee)
-				s.Require().NoError(err)
+			// Pre-set spread reward growth accumulator
+			if !tc.preSetChargeSpreadRewards.IsZero() {
+				s.AddToSpreadRewardAccumulator(poolID, tc.preSetChargeSpreadRewards)
 			}
 
 			expectedNumCreatePositionEvents := 1
@@ -368,10 +367,10 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			// Check position state
 			s.validatePositionUpdate(s.Ctx, positionId, expectedLiquidityCreated)
 
-			s.validatePositionFeeAccUpdate(s.Ctx, tc.poolId, positionId, expectedLiquidityCreated)
+			s.validatePositionSpreadRewardAccUpdate(s.Ctx, tc.poolId, positionId, expectedLiquidityCreated)
 
 			// Check tick state
-			s.validateTickUpdates(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, tc.liquidityAmount, tc.expectedFeeGrowthOutsideLower, tc.expectedFeeGrowthOutsideUpper)
+			s.validateTickUpdates(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, tc.liquidityAmount, tc.expectedSpreadRewardGrowthOutsideLower, tc.expectedSpreadRewardGrowthOutsideUpper)
 
 			// Validate events emitted.
 			s.AssertEventEmitted(s.Ctx, types.TypeEvtCreatePosition, expectedNumCreatePositionEvents)
@@ -562,10 +561,9 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(tc.timeElapsed))
 			store := s.Ctx.KVStore(s.App.GetKey(types.StoreKey))
 
-			// Set global fee growth to 1 ETH and charge the fee to the pool.
-			globalFeeGrowth := sdk.NewDecCoin(ETH, sdk.NewInt(1))
-			err = concentratedLiquidityKeeper.ChargeFee(s.Ctx, pool.GetId(), globalFeeGrowth)
-			s.Require().NoError(err)
+			// Set global spread reward growth to 1 ETH and charge the spread reward to the pool.
+			globalSpreadRewardGrowth := sdk.NewDecCoin(ETH, sdk.NewInt(1))
+			s.AddToSpreadRewardAccumulator(pool.GetId(), globalSpreadRewardGrowth)
 
 			// Add global uptime growth
 			err = addToUptimeAccums(s.Ctx, pool.GetId(), concentratedLiquidityKeeper, defaultUptimeGrowth)
@@ -574,12 +572,13 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// Determine the liquidity expected to remain after the withdraw.
 			expectedRemainingLiquidity := liquidityCreated.Sub(config.liquidityAmount)
 
-			expectedFeesClaimed := sdk.NewCoins()
-			// Set the expected fees claimed to the amount of liquidity created since the global fee growth is 1.
-			// Fund the pool account with the expected fees claimed.
+			expectedSpreadRewardsClaimed := sdk.NewCoins()
+			expectedIncentivesClaimed := sdk.NewCoins()
+			// Set the expected spread rewards claimed to the amount of liquidity created since the global spread reward growth is 1.
+			// Fund the pool account with the expected spread rewards claimed.
 			if expectedRemainingLiquidity.IsZero() {
-				expectedFeesClaimed = expectedFeesClaimed.Add(sdk.NewCoin(ETH, liquidityCreated.TruncateInt()))
-				s.FundAcc(pool.GetFeesAddress(), expectedFeesClaimed)
+				expectedSpreadRewardsClaimed = expectedSpreadRewardsClaimed.Add(sdk.NewCoin(ETH, liquidityCreated.TruncateInt()))
+				s.FundAcc(pool.GetSpreadRewardsAddress(), expectedSpreadRewardsClaimed)
 			}
 
 			communityPoolBalanceBefore := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
@@ -588,12 +587,13 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			expectedIncentivesClaimed := expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, tc.timeElapsed, defaultMultiplier)
 
 			// Fund full amount since forfeited incentives for the last position are sent to the community pool.
-			expectedFullIncentivesFromAllUptimes := expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, types.SupportedUptimes[len(types.SupportedUptimes)-1], defaultMultiplier)
+			largestSupportedUptime := s.clk.GetLargestSupportedUptimeDuration(s.Ctx)
+			expectedFullIncentivesFromAllUptimes := expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, largestSupportedUptime, defaultMultiplier)
 			s.FundAcc(pool.GetIncentivesAddress(), expectedFullIncentivesFromAllUptimes)
 
 			// Note the pool and owner balances before withdrawal of the position.
 			poolBalanceBeforeWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
-			poolFeeBalanceBeforeWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetFeesAddress())
+			poolSpreadRewardBalanceBeforeWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetSpreadRewardsAddress())
 			incentivesBalanceBeforeWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetIncentivesAddress())
 			ownerBalancerBeforeWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, owner)
 
@@ -620,16 +620,16 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			s.Require().Equal(config.amount0Expected.String(), amtDenom0.String())
 			s.Require().Equal(config.amount1Expected.String(), amtDenom1.String())
 
-			// If the remaining liquidity is zero, all fees and incentives should be collected and the position should be deleted.
-			// Check if all fees and incentives were collected.
+			// If the remaining liquidity is zero, all spread rewards and incentives should be collected and the position should be deleted.
+			// Check if all spread rewards and incentives were collected.
 			poolBalanceAfterWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
-			poolFeeBalanceAfterWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetFeesAddress())
+			poolSpreadRewardBalanceAfterWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetSpreadRewardsAddress())
 			incentivesBalanceAfterWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetIncentivesAddress())
 			ownerBalancerAfterWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, owner)
 			communityPoolBalanceAfter := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
 
-			// owner should only have tokens equivalent to the delta balance of the pool
-			expectedOwnerBalanceDelta := expectedPoolBalanceDelta.Add(expectedIncentivesClaimed...).Add(expectedFeesClaimed...)
+			// owner should only have tokens equivilent to the delta balance of the pool
+			expectedOwnerBalanceDelta := expectedPoolBalanceDelta.Add(expectedIncentivesClaimed...).Add(expectedSpreadRewardsClaimed...)
 			actualOwnerBalancerDelta := ownerBalancerAfterWithdraw.Sub(ownerBalancerBeforeWithdraw)
 
 			communityPoolBalanceDelta := communityPoolBalanceAfter.Sub(communityPoolBalanceBefore)
@@ -652,7 +652,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				s.Require().True(expected.Equal(actual))
 			}
 
-			s.Require().Equal(poolFeeBalanceBeforeWithdraw.Sub(poolFeeBalanceAfterWithdraw).String(), expectedFeesClaimed.String())
+			s.Require().Equal(poolSpreadRewardBalanceBeforeWithdraw.Sub(poolSpreadRewardBalanceAfterWithdraw).String(), expectedSpreadRewardsClaimed.String())
 
 			// if the position's expected remaining liquidity is equal to zero, we check if all state
 			// have been correctly deleted.
@@ -711,7 +711,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			}
 
 			// Check tick state.
-			s.validateTickUpdates(s.Ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity, config.expectedFeeGrowthOutsideLower, config.expectedFeeGrowthOutsideUpper)
+			s.validateTickUpdates(s.Ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity, config.expectedSpreadRewardGrowthOutsideLower, config.expectedSpreadRewardGrowthOutsideUpper)
 
 			// Validate event emitted.
 			s.AssertEventEmitted(s.Ctx, types.TypeEvtWithdrawPosition, 1)
@@ -1170,11 +1170,11 @@ func mergeConfigs(dst *lpTest, overwrite *lpTest) {
 		if !overwrite.joinTime.IsZero() {
 			dst.joinTime = overwrite.joinTime
 		}
-		if !overwrite.expectedFeeGrowthOutsideLower.IsEqual(sdk.DecCoins{}) {
-			dst.expectedFeeGrowthOutsideLower = overwrite.expectedFeeGrowthOutsideLower
+		if !overwrite.expectedSpreadRewardGrowthOutsideLower.IsEqual(sdk.DecCoins{}) {
+			dst.expectedSpreadRewardGrowthOutsideLower = overwrite.expectedSpreadRewardGrowthOutsideLower
 		}
-		if !overwrite.expectedFeeGrowthOutsideUpper.IsEqual(sdk.DecCoins{}) {
-			dst.expectedFeeGrowthOutsideUpper = overwrite.expectedFeeGrowthOutsideUpper
+		if !overwrite.expectedSpreadRewardGrowthOutsideUpper.IsEqual(sdk.DecCoins{}) {
+			dst.expectedSpreadRewardGrowthOutsideUpper = overwrite.expectedSpreadRewardGrowthOutsideUpper
 		}
 		if overwrite.positionId != 0 {
 			dst.positionId = overwrite.positionId
@@ -1638,7 +1638,7 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 
-			// Fund account to pay for the pool creation fee.
+			// Fund account to pay for the pool creation spread reward.
 			s.FundAcc(s.TestAccs[0], PoolCreationFee)
 
 			// Create a CL pool with custom tickSpacing
@@ -1650,10 +1650,9 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			liquidityBefore, err := s.App.ConcentratedLiquidityKeeper.GetTotalPoolLiquidity(s.Ctx, poolID)
 			s.Require().NoError(err)
 
-			// Pre-set fee growth accumulator
-			if !tc.preSetChargeFee.IsZero() {
-				err = clKeeper.ChargeFee(s.Ctx, 1, tc.preSetChargeFee)
-				s.Require().NoError(err)
+			// Pre-set spread reward growth accumulator
+			if !tc.preSetChargeSpreadRewards.IsZero() {
+				s.AddToSpreadRewardAccumulator(1, tc.preSetChargeSpreadRewards)
 			}
 
 			// If we want to test a non-first position, we create a first position with a separate account

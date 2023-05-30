@@ -91,7 +91,7 @@ jobs:
             **/**Cargo.toml
             **/**Cargo.lock
       - name: Install toolchain
-        uses: dtolnay/rust-toolchain@1.70.0
+        uses: dtolnay/rust-toolchain@1.69.0
         with:
           target: wasm32-unknown-unknown
         if: env.GIT_DIFF
@@ -126,7 +126,7 @@ jobs:
             **/**Cargo.toml
             **/**Cargo.lock
       - name: Install toolchain
-        uses: dtolnay/rust-toolchain@1.70.0
+        uses: dtolnay/rust-toolchain@1.69.0
         with:
           components: rustfmt, clippy
         if: env.GIT_DIFF
