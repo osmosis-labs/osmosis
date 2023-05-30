@@ -8,13 +8,21 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
-var DefaultIncentiveRecords = []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour}
+const (
+	DefaultFungifyNumPositions       = 3
+	DefaultFungifyFullChargeDuration = 24 * time.Hour
+)
+
+var (
+	DefaultIncentiveRecords = []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour}
+	DefaultBlockTime        = time.Unix(1, 1).UTC()
+	DefaultSpreadFactor     = sdk.NewDecWithPrec(2, 3)
+)
 
 // AssertPositionsDoNotExist checks that the positions with the given IDs do not exist on uptime accumulators.
 func (s *KeeperTestSuite) AssertPositionsDoNotExist(positionIds []uint64) {
@@ -1139,54 +1147,15 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimSpreadRewards(
 	// Init suite for the test.
 	s.SetupTest()
 
-	const (
-		numPositions           = 3
-		testFullChargeDuration = time.Hour * 24
-		swapAmount             = 1_000_000
-	)
+	const swapAmount = 1_000_000
+	var defaultAddress = s.TestAccs[0]
 
-	var (
-		defaultAddress   = s.TestAccs[0]
-		defaultBlockTime = time.Unix(1, 1).UTC()
-		spreadFactor     = sdk.NewDecWithPrec(2, 3)
-	)
-
-	expectedPositionIds := make([]uint64, numPositions)
-	for i := 0; i < numPositions; i++ {
-		expectedPositionIds[i] = uint64(i + 1)
-	}
-
-	s.TestAccs = apptesting.CreateRandomAccounts(5)
-	s.Ctx = s.Ctx.WithBlockTime(defaultBlockTime)
-	totalPositionsToCreate := sdk.NewInt(int64(numPositions))
-	requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0.Mul(totalPositionsToCreate)), sdk.NewCoin(USDC, DefaultAmt1.Mul(totalPositionsToCreate)))
-
-	// Set test authorized uptime params.
-	params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-	params.AuthorizedUptimes = []time.Duration{time.Nanosecond, testFullChargeDuration}
-	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
-
-	// Fund account
-	s.FundAcc(defaultAddress, requiredBalances)
-
-	// Create CL pool
-	s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, spreadFactor)
-
-	// Set incentives for pool to ensure accumulators work correctly
-	err := s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, DefaultIncentiveRecords)
-	s.Require().NoError(err)
-
-	// Set up fully charged positions
-	totalLiquidity := sdk.ZeroDec()
-	for i := 0; i < numPositions; i++ {
-		_, _, _, liquidityCreated, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-		s.Require().NoError(err)
-		totalLiquidity = totalLiquidity.Add(liquidityCreated)
-	}
+	// Set up pool, positions, and incentive records
+	_, expectedPositionIds, totalLiquidity := s.runFungifySetup(defaultAddress, DefaultFungifyNumPositions, DefaultFungifyFullChargeDuration, DefaultSpreadFactor, DefaultIncentiveRecords)
 
 	// Perform a swap to earn spread rewards
 	swapAmountIn := sdk.NewCoin(ETH, sdk.NewInt(swapAmount))
-	expectedSpreadReward := swapAmountIn.Amount.ToDec().Mul(spreadFactor)
+	expectedSpreadReward := swapAmountIn.Amount.ToDec().Mul(DefaultSpreadFactor)
 	// We run expected spread rewards through a cycle of divison and multiplication by liquidity to capture appropriate rounding behavior.
 	// Note that we truncate the int at the end since it is not possible to have a decimal spread reward amount collected (the QuoTruncate
 	// and MulTruncates are much smaller operations that round down for values past the 18th decimal place).
@@ -1195,34 +1164,34 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimSpreadRewards(
 	s.swapAndTrackXTimesInARow(defaultPoolId, swapAmountIn, USDC, types.MinSpotPrice, 1)
 
 	// Increase block time by the fully charged duration
-	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration))
+	s.AddBlockTime(DefaultFungifyFullChargeDuration)
 
 	// First run non mutative validation and check results
-	newPositionId, err := s.App.ConcentratedLiquidityKeeper.FungifyChargedPosition(s.Ctx, defaultAddress, expectedPositionIds)
+	newPositionId, err := s.clk.FungifyChargedPosition(s.Ctx, defaultAddress, expectedPositionIds)
 	s.Require().NoError(err)
 
 	// Claim spread rewards
-	collected, err := s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, defaultAddress, newPositionId)
+	collected, err := s.clk.CollectSpreadRewards(s.Ctx, defaultAddress, newPositionId)
 	s.Require().NoError(err)
 
 	// Validate that the correct spread reward amount was collected.
 	s.Require().Equal(expectedSpreadRewardTruncated, collected.AmountOf(swapAmountIn.Denom))
 
 	// Check that cannot claim again.
-	collected, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, defaultAddress, newPositionId)
+	collected, err = s.clk.CollectSpreadRewards(s.Ctx, defaultAddress, newPositionId)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.Coins(nil), collected)
 
-	spreadRewardAccum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, defaultPoolId)
+	spreadRewardAccum, err := s.clk.GetSpreadRewardAccumulator(s.Ctx, defaultPoolId)
 	s.Require().NoError(err)
 
 	// Check that cannot claim old positions
 	for _, oldPositionId := range expectedPositionIds {
-		collected, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, defaultAddress, oldPositionId)
+		collected, err = s.clk.CollectSpreadRewards(s.Ctx, defaultAddress, oldPositionId)
 		s.Require().Error(err)
 		s.Require().Equal(sdk.Coins{}, collected)
 
-		hasPosition := s.App.ConcentratedLiquidityKeeper.HasPosition(s.Ctx, oldPositionId)
+		hasPosition := s.clk.HasPosition(s.Ctx, oldPositionId)
 		s.Require().False(hasPosition)
 
 		hasSpreadRewardPositionTracker, err := spreadRewardAccum.HasPosition(types.KeySpreadRewardPositionAccumulator(oldPositionId))
@@ -1234,48 +1203,8 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimSpreadRewards(
 func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 	// Init suite for the test.
 	s.SetupTest()
+	var defaultAddress = s.TestAccs[0]
 
-	const (
-		numPositions           = 3
-		testFullChargeDuration = 24 * time.Hour
-	)
-
-	var (
-		defaultAddress   = s.TestAccs[0]
-		defaultBlockTime = time.Unix(1, 1).UTC()
-		spreadFactor     = sdk.NewDecWithPrec(2, 3)
-	)
-
-	expectedPositionIds := make([]uint64, numPositions)
-	for i := 0; i < numPositions; i++ {
-		expectedPositionIds[i] = uint64(i + 1)
-	}
-
-	s.TestAccs = apptesting.CreateRandomAccounts(5)
-	s.Ctx = s.Ctx.WithBlockTime(defaultBlockTime)
-	totalPositionsToCreate := sdk.NewInt(int64(numPositions))
-	requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0.Mul(totalPositionsToCreate)), sdk.NewCoin(USDC, DefaultAmt1.Mul(totalPositionsToCreate)))
-
-	// Set test authorized uptime params.
-	params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-	params.AuthorizedUptimes = []time.Duration{time.Nanosecond, testFullChargeDuration}
-	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
-
-	// Fund accounts
-	s.FundAcc(defaultAddress, requiredBalances)
-
-	// Create CL pool
-	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, spreadFactor)
-
-	// an error of 1 for each position
-	roundingError := int64(numPositions)
-	roundingTolerance := osmomath.ErrTolerance{
-		AdditiveTolerance: sdk.NewDec(roundingError),
-		RoundingDir:       osmomath.RoundDown,
-	}
-	expectedAmount := sdk.NewInt(60 * 60 * 24) // 1 day in seconds * 1 per second
-
-	s.FundAcc(pool.GetIncentivesAddress(), sdk.NewCoins(sdk.NewCoin(USDC, expectedAmount)))
 	// Set incentives for pool to ensure accumulators work correctly
 	testIncentiveRecord := types.IncentiveRecord{
 		PoolId:               1,
@@ -1288,31 +1217,33 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 		},
 		MinUptime: time.Nanosecond,
 	}
-	err := s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, []types.IncentiveRecord{testIncentiveRecord})
-	s.Require().NoError(err)
 
-	// Set up fully charged positions
-	totalLiquidity := sdk.ZeroDec()
-	for i := 0; i < numPositions; i++ {
-		_, _, _, liquidityCreated, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-		s.Require().NoError(err)
-		totalLiquidity = totalLiquidity.Add(liquidityCreated)
+	// Set up pool, positions, and incentive records
+	pool, expectedPositionIds, _ := s.runFungifySetup(defaultAddress, DefaultFungifyNumPositions, DefaultFungifyFullChargeDuration, DefaultSpreadFactor, []types.IncentiveRecord{testIncentiveRecord})
+
+	// an error of 1 for each position
+	roundingError := int64(DefaultFungifyNumPositions)
+	roundingTolerance := osmomath.ErrTolerance{
+		AdditiveTolerance: sdk.NewDec(roundingError),
+		RoundingDir:       osmomath.RoundDown,
 	}
+	expectedAmount := sdk.NewInt(60 * 60 * 24) // 1 day in seconds * 1 per second
+	s.FundAcc(pool.GetIncentivesAddress(), sdk.NewCoins(sdk.NewCoin(USDC, expectedAmount)))
 
 	// Increase block time by the fully charged duration
-	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration))
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(DefaultFungifyFullChargeDuration))
 
 	// sync accumulators
 	// We use cache context to update uptime accumulators for estimating claimable incentives
 	// prior to running fungify. However, we do not want the mutations made in test setup to have
 	// impact on the system under test because it (fungify) must update the uptime accumulators itself.
 	cacheCtx, _ := s.Ctx.CacheContext()
-	err = s.App.ConcentratedLiquidityKeeper.UpdateUptimeAccumulatorsToNow(cacheCtx, pool.GetId())
+	err := s.clk.UpdateUptimeAccumulatorsToNow(cacheCtx, pool.GetId())
 	s.Require().NoError(err)
 
 	claimableIncentives := sdk.NewCoins()
-	for i := 0; i < numPositions; i++ {
-		positionIncentices, forfeitedIncentives, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(cacheCtx, uint64(i+1))
+	for i := 0; i < DefaultFungifyNumPositions; i++ {
+		positionIncentices, forfeitedIncentives, err := s.clk.GetClaimableIncentives(cacheCtx, uint64(i+1))
 		s.Require().NoError(err)
 		s.Require().Equal(sdk.Coins(nil), forfeitedIncentives)
 		claimableIncentives = claimableIncentives.Add(positionIncentices...)
@@ -1322,11 +1253,11 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 	s.Require().Equal(0, roundingTolerance.Compare(expectedAmount, actualClaimedAmount), "expected: %s, got: %s", expectedAmount, actualClaimedAmount)
 
 	// System under test
-	newPositionId, err := s.App.ConcentratedLiquidityKeeper.FungifyChargedPosition(s.Ctx, defaultAddress, expectedPositionIds)
+	newPositionId, err := s.clk.FungifyChargedPosition(s.Ctx, defaultAddress, expectedPositionIds)
 	s.Require().NoError(err)
 
 	// Claim incentives.
-	collected, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, newPositionId)
+	collected, _, err := s.clk.CollectIncentives(s.Ctx, defaultAddress, newPositionId)
 	s.Require().NoError(err)
 
 	// Validate that the correct incentives amount was collected.
@@ -1335,13 +1266,13 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 	s.Require().Equal(0, roundingTolerance.Compare(expectedAmount, actualClaimedAmount), "expected: %s, got: %s", expectedAmount, actualClaimedAmount)
 
 	// Check that cannot claim again.
-	collected, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, newPositionId)
+	collected, _, err = s.clk.CollectIncentives(s.Ctx, defaultAddress, newPositionId)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.Coins(nil), collected)
 
 	// Check that cannot claim old positions
-	for i := 0; i < numPositions; i++ {
-		collected, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, uint64(i+1))
+	for i := 0; i < DefaultFungifyNumPositions; i++ {
+		collected, _, err = s.clk.CollectIncentives(s.Ctx, defaultAddress, uint64(i+1))
 		s.Require().Error(err)
 		s.Require().Equal(sdk.Coins{}, collected)
 	}
