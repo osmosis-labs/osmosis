@@ -451,6 +451,7 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 }
 
 // calcAccruedIncentivesForAccum calculates IncentivesPerLiquidity to be added to an accum.
+// This function is non-mutative. It operates on and returns an updated _copy_ of the passed in incentives records.
 // Returns the IncentivesPerLiquidity value and an updated list of IncentiveRecords that
 // reflect emitted incentives
 // Returns error if the qualifying liquidity/time elapsed are zero.
