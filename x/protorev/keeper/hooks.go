@@ -129,7 +129,7 @@ func (k Keeper) afterPoolCreated(ctx sdk.Context, poolId uint64) {
 	}
 }
 
-// getCoinsFromPool gets the coins from the pool, handling concentrated pools differently since they can have 0 liquidity.
+// getCoinsFromPool gets the coins from the pool, handling Concentrated Liquidity pools differently since they can have 0 liquidity.
 func (k Keeper) getCoinsFromPool(ctx sdk.Context, pool poolmanagertypes.PoolI, poolId uint64) sdk.Coins {
 	coins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
 	if err != nil {
