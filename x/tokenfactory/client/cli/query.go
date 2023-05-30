@@ -23,6 +23,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdDenomsFromCreator)
 
 	cmd.AddCommand(
+		GetCmdDenomBeforeSendHook(),
 		osmocli.GetParams[*types.QueryParamsRequest](
 			types.ModuleName, types.NewQueryClient),
 	)
