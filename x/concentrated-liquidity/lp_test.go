@@ -999,8 +999,8 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 				amount1Minimum: sdk.NewInt(10000000000),
 				expectedError: types.InsufficientLiquidityCreatedError{
 					Actual: sdk.NewInt(9999998816),
-					// minimum amount we have input becomes default amt 1 expected (from original position withdraw) + 10000000000 (input)
-					Minimum:     DefaultAmt1Expected.Add(sdk.NewInt(10000000000)),
+					// minimum amount we have input becomes default amt 1 expected (from original position withdraw) + 10000000000 (input) - 1 (rounding)
+					Minimum:     DefaultAmt1Expected.Add(sdk.NewInt(10000000000)).Sub(sdk.OneInt()),
 					IsTokenZero: false,
 				},
 			},
