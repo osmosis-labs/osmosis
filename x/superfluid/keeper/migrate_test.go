@@ -676,7 +676,6 @@ func (s *KeeperTestSuite) TestMigrateUnlockedPositionFromBalancerToConcentrated(
 			// System under test.
 			positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, err := gammKeeper.MigrateUnlockedPositionFromBalancerToConcentrated(ctx, poolJoinAcc, coinsToMigrate, tc.tokenOutMins)
 			if tc.expectedError != nil {
-				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
 				return
 			}
