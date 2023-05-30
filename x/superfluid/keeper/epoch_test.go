@@ -2,11 +2,16 @@ package keeper_test
 
 import (
 	"errors"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
@@ -102,6 +107,213 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 				// Check that multiplier was set correctly
 				multiplier := superfluidKeeper.GetOsmoEquivalentMultiplier(ctx, tc.asset.Denom)
 				s.Require().NotEqual(multiplier, sdk.ZeroDec())
+			}
+		})
+	}
+}
+
+type gaugeChecker struct {
+	intermediaryAccIndex     uint64
+	valIndex                 int64
+	delIndexes               []int64
+	lpIndex                  int64
+	rewarded                 bool
+	expectedDistributedCoins sdk.Coins
+}
+type distributionTestCase struct {
+	name             string
+	validatorStats   []stakingtypes.BondStatus
+	superDelegations []superfluidDelegation
+	rewardedVals     []int64
+	gaugeChecks      []gaugeChecker
+}
+
+var (
+	// distributed coin when there is one account receiving from one gauge
+	defaultSingleLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 19999))
+	// distributed coins when there is two account receiving from one gauge
+	defaultTwoLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 9999))
+	// distributed coins when there is one account receiving from two gauge
+	defaultTwoGaugeDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 19998))
+	distributionTestCases           = []distributionTestCase{
+		{
+			"happy path with single validator and delegator",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			[]int64{0},
+			[]gaugeChecker{{0, 0, []int64{0}, 0, true, defaultSingleLockDistributedCoins}},
+		},
+		{
+			"two LP tokens delegation to a single validator",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {0, 0, 1, 1000000}},
+			[]int64{0},
+			[]gaugeChecker{{0, 0, []int64{0}, 0, true, defaultTwoLockDistributedCoins}, {1, 0, []int64{0}, 1, true, defaultTwoLockDistributedCoins}},
+		},
+		{
+			"one LP token with two locks to a single validator",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 0, 0, 1000000}},
+			[]int64{0},
+			// expected distributed is 19998stake since it has been rounded down from 19999stake due to num of delegators
+			[]gaugeChecker{{0, 0, []int64{0, 1}, 0, true, defaultTwoGaugeDistributedCoins}},
+		},
+		// In this case, allocate reward to validators with different stat.
+		// There is no difference between Bonded, Unbonding, Unbonded
+		{
+			"add unbonded, unbonding validator case",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonded, stakingtypes.Unbonding},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}, {2, 2, 0, 1000000}},
+			[]int64{0, 1, 2},
+			[]gaugeChecker{
+				{0, 0, []int64{0}, 0, true, defaultSingleLockDistributedCoins},
+				{1, 1, []int64{1}, 0, true, defaultSingleLockDistributedCoins},
+				{2, 2, []int64{2}, 0, true, defaultSingleLockDistributedCoins}},
+		},
+		// Do not allocate rewards to the Unbonded validator. Therefore gauges are not distributed
+		{
+			"Unallocate to Unbonded validator",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
+			[]int64{0},
+			[]gaugeChecker{{0, 0, []int64{0}, 0, true, defaultSingleLockDistributedCoins}, {1, 1, []int64{1}, 0, false, defaultSingleLockDistributedCoins}},
+		},
+	}
+)
+
+func (s *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
+	for _, tc := range distributionTestCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			// setup validators
+			valAddrs := s.SetupValidators(tc.validatorStats)
+
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+
+			// setup superfluid delegations
+			_, intermediaryAccs, _ := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
+			unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
+
+			// allocate rewards to designated validators
+			for _, valIndex := range tc.rewardedVals {
+				s.AllocateRewardsToValidator(valAddrs[valIndex], sdk.NewInt(20000))
+			}
+
+			// move intermediary account delegation rewards to gauges
+			s.App.SuperfluidKeeper.MoveSuperfluidDelegationRewardToGauges(s.Ctx)
+
+			// check invariant is fine
+			reason, broken := keeper.AllInvariants(*s.App.SuperfluidKeeper)(s.Ctx)
+			s.Require().False(broken, reason)
+
+			// check gauge balance
+			for _, gaugeCheck := range tc.gaugeChecks {
+				gaugeId := intermediaryAccs[gaugeCheck.intermediaryAccIndex].GaugeId
+				gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
+				s.Require().NoError(err)
+				s.Require().Equal(gauge.Id, gaugeId)
+				s.Require().Equal(gauge.IsPerpetual, true)
+				s.Require().Equal(lockuptypes.QueryCondition{
+					LockQueryType: lockuptypes.ByDuration,
+					Denom:         keeper.StakingSyntheticDenom(denoms[gaugeCheck.lpIndex], valAddrs[gaugeCheck.valIndex].String()),
+					Duration:      unbondingDuration,
+				}, gauge.DistributeTo)
+				if gaugeCheck.rewarded {
+					s.Require().True(gauge.Coins.AmountOf(sdk.DefaultBondDenom).IsPositive())
+				} else {
+					s.Require().True(gauge.Coins.AmountOf(sdk.DefaultBondDenom).IsZero())
+				}
+				s.Require().Equal(gauge.StartTime, s.Ctx.BlockTime())
+				s.Require().Equal(gauge.NumEpochsPaidOver, uint64(1))
+				s.Require().Equal(gauge.FilledEpochs, uint64(0))
+				s.Require().Equal(gauge.DistributedCoins, sdk.Coins(nil))
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestDistributeSuperfluidGauges() {
+	for _, tc := range distributionTestCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			// setup validators
+			valAddrs := s.SetupValidators(tc.validatorStats)
+
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+
+			// setup superfluid delegations
+			delAddrs, intermediaryAccs, _ := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
+
+			// allocate rewards to designated validators
+			for _, valIndex := range tc.rewardedVals {
+				s.AllocateRewardsToValidator(valAddrs[valIndex], sdk.NewInt(20000))
+			}
+
+			// move intermediary account delegation rewards to gauges
+			s.App.SuperfluidKeeper.MoveSuperfluidDelegationRewardToGauges(s.Ctx)
+
+			// move gauges to active gauge by declaring epoch end
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute))
+			epochId := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Identifier
+			err := s.App.IncentivesKeeper.AfterEpochEnd(s.Ctx, epochId, 1)
+			s.Require().NoError(err)
+
+			// create a map of delegator index -> number of locks eligible for distribution.
+			// This is used to check amount of coins distributed for the delegator in future check.
+			delegatorIndexDistributionNumMap := make(map[int64]int64)
+			for _, gaugeCheck := range tc.gaugeChecks {
+				for _, delegatorIndex := range gaugeCheck.delIndexes {
+					delegatorIndexDistributionNumMap[delegatorIndex]++
+				}
+			}
+
+			// system under test
+			s.App.SuperfluidKeeper.DistributeSuperfluidGauges(s.Ctx)
+
+			for _, gaugeCheck := range tc.gaugeChecks {
+				gaugeId := intermediaryAccs[gaugeCheck.intermediaryAccIndex].GaugeId
+				gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
+				s.Require().NoError(err)
+				s.Require().Equal(gauge.Id, gaugeId)
+				s.Require().Equal(gauge.IsPerpetual, true)
+				s.Require().Equal(gauge.NumEpochsPaidOver, uint64(1))
+
+				bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+
+				moduleAddress := s.App.AccountKeeper.GetModuleAddress(incentivestypes.ModuleName)
+				moduleBalanceAfter := s.App.BankKeeper.GetBalance(s.Ctx, moduleAddress, bondDenom)
+
+				if gaugeCheck.rewarded {
+					s.Require().Equal(gauge.FilledEpochs, uint64(1))
+					s.Require().Equal(gaugeCheck.expectedDistributedCoins, gauge.DistributedCoins)
+					s.Require().Equal(gauge.Coins.Sub(gauge.DistributedCoins).AmountOf(bondDenom), moduleBalanceAfter.Amount)
+
+					// iterate over delegator index that received incentive from this gauge and check balance
+					for _, delegatorIndex := range gaugeCheck.delIndexes {
+						delegatorAddr := delAddrs[delegatorIndex]
+						delegatorBalance := s.App.BankKeeper.GetBalance(s.Ctx, delegatorAddr, bondDenom)
+
+						// delegator balance should be
+						// gauge distributed coin / amount of locks for that gauge * num of gauges delegator is getting rewards from
+						numOfDistribution := delegatorIndexDistributionNumMap[delegatorIndex]
+						expectedDelegatorBalance := gauge.DistributedCoins.AmountOf(bondDenom).Int64() / int64(len(gaugeCheck.delIndexes)) * numOfDistribution
+						s.Require().Equal(expectedDelegatorBalance, delegatorBalance.Amount.Int64())
+					}
+				} else {
+					s.Require().Equal(gauge.FilledEpochs, uint64(0))
+					s.Require().Equal(sdk.Coins(nil), gauge.DistributedCoins)
+					for _, delegatorIndex := range gaugeCheck.delIndexes {
+						delegatorAddr := delAddrs[delegatorIndex]
+						delegatorBalance := s.App.BankKeeper.GetBalance(s.Ctx, delegatorAddr, bondDenom)
+						s.Require().Equal(sdk.ZeroInt(), delegatorBalance.Amount)
+					}
+				}
 			}
 		})
 	}

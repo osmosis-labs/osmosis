@@ -426,7 +426,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 			filteredLocks := k.getDistributeToBaseLocks(ctx, gauge, locksByDenomCache)
 			// send based on synthetic lockup coins if it's distributing to synthetic lockups
 			var err error
-			if lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom) {
+			if lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom) { // If the gauge is superfluid gauge,
 				// TODO: add test case to cover this
 				gaugeDistributedCoins, err = k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
 			} else {

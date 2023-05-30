@@ -61,3 +61,7 @@ func (k Keeper) GetExistingLockRemainingDuration(ctx sdk.Context, lock *lockupty
 func (k Keeper) PartialSuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, sender string, lockID uint64, amountToUndelegate sdk.Coin) (intermediaryAcc types.SuperfluidIntermediaryAccount, newlock *lockuptypes.PeriodLock, err error) {
 	return k.partialSuperfluidUndelegateToConcentratedPosition(ctx, sender, lockID, amountToUndelegate)
 }
+
+func (k Keeper) DistributeSuperfluidGauges(ctx sdk.Context) {
+	k.distributeSuperfluidGauges(ctx)
+}
