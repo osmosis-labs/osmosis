@@ -24,7 +24,7 @@ var (
 )
 
 // NewCosmWasmPool creates a new CosmWasm pool with the specified parameters.
-func NewCosmWasmPool(poolId uint64, codeId uint64, instantiateMsg []byte) Pool {
+func NewCosmWasmPool(poolId uint64, codeId uint64, instantiateMsg []byte) *Pool {
 	pool := Pool{
 		CosmWasmPool: CosmWasmPool{
 			PoolAddress:     poolmanagertypes.NewPoolAddress(poolId).String(),
@@ -36,7 +36,7 @@ func NewCosmWasmPool(poolId uint64, codeId uint64, instantiateMsg []byte) Pool {
 		WasmKeeper: nil, // N.B.: this is set in InitializePool().
 	}
 
-	return pool
+	return &pool
 }
 
 // poolmanager.PoolI interface implementation
