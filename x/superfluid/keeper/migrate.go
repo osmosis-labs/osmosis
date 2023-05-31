@@ -19,6 +19,7 @@ const (
 	SuperfluidBonded MigrationType = iota
 	SuperfluidUnbonding
 	NonSuperfluid
+	Unlocked
 	Unsupported
 )
 
@@ -40,6 +41,9 @@ func (k Keeper) RouteLockedBalancerToConcentratedMigration(ctx sdk.Context, send
 		positionId, amount0, amount1, liquidity, joinTime, concentratedLockId, poolIdLeaving, poolIdEntering, err = k.migrateSuperfluidUnbondingBalancerToConcentrated(ctx, sender, lockId, sharesToMigrate, synthLockBeforeMigration.SynthDenom, tokenOutMins)
 	case NonSuperfluid:
 		positionId, amount0, amount1, liquidity, joinTime, concentratedLockId, poolIdLeaving, poolIdEntering, err = k.migrateNonSuperfluidLockBalancerToConcentrated(ctx, sender, lockId, sharesToMigrate, tokenOutMins)
+	case Unlocked:
+		positionId, amount0, amount1, liquidity, joinTime, poolIdLeaving, poolIdEntering, err = k.gk.MigrateUnlockedPositionFromBalancerToConcentrated(ctx, sender, sharesToMigrate, tokenOutMins)
+		concentratedLockId = 0
 	default:
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, fmt.Errorf("unsupported migration type")
 	}
@@ -208,6 +212,10 @@ func (k Keeper) migrateNonSuperfluidLockBalancerToConcentrated(ctx sdk.Context,
 // routeMigration determines the status of the provided lock which is used to determine the method for migration.
 // It also returns the underlying synthetic locks of the provided lock, if any exist.
 func (k Keeper) routeMigration(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) (synthLockBeforeMigration lockuptypes.SyntheticLock, migrationType MigrationType, err error) {
+	if lockId == 0 {
+		return lockuptypes.SyntheticLock{}, Unlocked, nil
+	}
+
 	synthLockBeforeMigration, err = k.lk.GetSyntheticLockupByUnderlyingLockId(ctx, lockId)
 	if err != nil {
 		return lockuptypes.SyntheticLock{}, Unsupported, err

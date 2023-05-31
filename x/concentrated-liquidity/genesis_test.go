@@ -121,6 +121,13 @@ func incentiveAccumsWithPoolId(poolId uint64) []genesis.AccumObject {
 				TotalShares: sdk.NewDec(20),
 			},
 		},
+		{
+			Name: types.KeyUptimeAccumulator(poolId, uint64(5)),
+			AccumContent: &accum.AccumulatorContent{
+				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("quuux", sdk.NewInt(10))),
+				TotalShares: sdk.NewDec(20),
+			},
+		},
 	}
 }
 
