@@ -327,10 +327,10 @@ func (k Keeper) setStableSwapScalingFactors(ctx sdk.Context, poolId uint64, scal
 	return k.setPool(ctx, stableswapPool)
 }
 
-// convertToCFMMPool converts PoolI to CFMMPoolI by casting the input.
+// asCFMMPool converts PoolI to CFMMPoolI by casting the input.
 // Returns the pool of the CFMMPoolI or error if the given pool does not implement
 // CFMMPoolI.
-func convertToCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {
+func asCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {
 	cfmmPool, ok := pool.(types.CFMMPoolI)
 	if !ok {
 		return nil, fmt.Errorf("given pool does not implement CFMMPoolI, implements %T", pool)

@@ -30,7 +30,7 @@ var (
 // - error: An error if the pool conversion, contract instantiation, or storage process fails; otherwise, nil.
 func (k Keeper) InitializePool(ctx sdk.Context, pool poolmanagertypes.PoolI, creatorAddress sdk.AccAddress) error {
 	// Convert the pool to CosmWasmPool
-	cosmwasmPool, err := k.convertToCosmwasmPool(pool)
+	cosmwasmPool, err := k.asCosmwasmPool(pool)
 	if err != nil {
 		return err
 	}
@@ -177,7 +177,7 @@ func (k Keeper) SwapExactAmountIn(
 	tokenOutMinAmount sdk.Int,
 	swapFee sdk.Dec,
 ) (sdk.Int, error) {
-	cosmwasmPool, err := k.convertToCosmwasmPool(pool)
+	cosmwasmPool, err := k.asCosmwasmPool(pool)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -218,7 +218,7 @@ func (k Keeper) CalcOutAmtGivenIn(
 	tokenOutDenom string,
 	swapFee sdk.Dec,
 ) (tokenOut sdk.Coin, err error) {
-	cosmwasmPool, err := k.convertToCosmwasmPool(poolI)
+	cosmwasmPool, err := k.asCosmwasmPool(poolI)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -255,7 +255,7 @@ func (k Keeper) SwapExactAmountOut(
 	tokenOut sdk.Coin,
 	swapFee sdk.Dec,
 ) (tokenInAmount sdk.Int, err error) {
-	cosmwasmPool, err := k.convertToCosmwasmPool(pool)
+	cosmwasmPool, err := k.asCosmwasmPool(pool)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -296,7 +296,7 @@ func (k Keeper) CalcInAmtGivenOut(
 	tokenInDenom string,
 	swapFee sdk.Dec,
 ) (tokenIn sdk.Coin, err error) {
-	cosmwasmPool, err := k.convertToCosmwasmPool(poolI)
+	cosmwasmPool, err := k.asCosmwasmPool(poolI)
 	if err != nil {
 		return sdk.Coin{}, err
 	}

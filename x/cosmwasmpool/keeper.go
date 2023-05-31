@@ -58,8 +58,8 @@ func (k *Keeper) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
 	k.wasmKeeper = wasmKeeper
 }
 
-// convertToCosmwasmPool converts a poolI to a CosmWasmExtension.
-func (k *Keeper) convertToCosmwasmPool(poolI poolmanagertypes.PoolI) (types.CosmWasmExtension, error) {
+// asCosmwasmPool converts a poolI to a CosmWasmExtension.
+func (k *Keeper) asCosmwasmPool(poolI poolmanagertypes.PoolI) (types.CosmWasmExtension, error) {
 	cosmwasmPool, ok := poolI.(types.CosmWasmExtension)
 	if !ok {
 		return nil, types.InvalidPoolTypeError{
