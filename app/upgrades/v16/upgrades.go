@@ -128,6 +128,16 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		clPoolTwapRecords, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, clPoolId)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, twapRecord := range clPoolTwapRecords {
+			twapRecord.LastErrorTime = time.Time{}
+			keepers.TwapKeeper.StoreNewRecord(ctx, twapRecord)
+		}
+
 		updateTokenFactoryParams(ctx, keepers.TokenFactoryKeeper)
 
 		// Transfers out all the dev fees in kvstore to dev account during upgrade
