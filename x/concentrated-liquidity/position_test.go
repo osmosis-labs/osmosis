@@ -581,7 +581,7 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 			positionId:       DefaultPositionId,
 		},
 		{
-			name:             "InValid case: Delete a non existing position",
+			name:             "Invalid case: Delete a non existing position",
 			positionId:       DefaultPositionId + 1,
 			underlyingLockId: 0,
 			poolId:           defaultPoolId,
