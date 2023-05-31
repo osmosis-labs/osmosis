@@ -3,6 +3,7 @@ package osmosis.concentratedliquidity.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "osmosis/concentrated-liquidity/params.proto";
+import "osmosis/concentrated-liquidity/tickInfo.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
@@ -72,6 +73,14 @@ service Query {
   rpc PositionById(PositionByIdRequest) returns (PositionByIdResponse) {
     option (google.api.http).get =
         "/osmosis/concentratedliquidity/v1beta1/position_by_id";
+  };
+
+  // PoolAccumulatorRewards returns the pool-global accumulator rewards.
+  // Contains spread factor rewards and uptime rewards.
+  rpc PoolAccumulatorRewards(PoolAccumulatorRewardsRequest)
+      returns (PoolAccumulatorRewardsResponse) {
+    option (google.api.http).get =
+        "/osmosis/concentratedliquidity/v1beta1/pool_accum_rewards";
   };
 }
 
@@ -183,6 +192,22 @@ message ClaimableIncentivesResponse {
   ];
   repeated cosmos.base.v1beta1.Coin forfeited_incentives = 2 [
     (gogoproto.moretags) = "yaml:\"forfeited_incentives\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// ===================== QueryPoolAccumulatorRewards
+message PoolAccumulatorRewardsRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+
+message PoolAccumulatorRewardsResponse {
+  repeated cosmos.base.v1beta1.DecCoin spread_reward_growth_global = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable) = false
+  ];
+  repeated UptimeTracker uptime_growth_global = 2 [
+    (gogoproto.moretags) = "yaml:\"uptime_growth_global\"",
     (gogoproto.nullable) = false
   ];
 }
