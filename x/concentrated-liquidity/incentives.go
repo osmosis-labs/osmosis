@@ -451,6 +451,7 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 }
 
 // calcAccruedIncentivesForAccum calculates IncentivesPerLiquidity to be added to an accum.
+// This function is non-mutative. It operates on and returns an updated _copy_ of the passed in incentives records.
 // Returns the IncentivesPerLiquidity value and an updated list of IncentiveRecords that
 // reflect emitted incentives
 // Returns error if the qualifying liquidity/time elapsed are zero.
@@ -459,8 +460,10 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 		return sdk.DecCoins{}, []types.IncentiveRecord{}, types.QualifyingLiquidityOrTimeElapsedNotPositiveError{QualifyingLiquidity: liquidityInAccum, TimeElapsed: timeElapsed}
 	}
 
+	copyPoolIncentiveRecords := make([]types.IncentiveRecord, len(poolIncentiveRecords))
+	copy(copyPoolIncentiveRecords, poolIncentiveRecords)
 	incentivesToAddToCurAccum := sdk.NewDecCoins()
-	for incentiveIndex, incentiveRecord := range poolIncentiveRecords {
+	for incentiveIndex, incentiveRecord := range copyPoolIncentiveRecords {
 		// We consider all incentives matching the current uptime that began emitting before the current blocktime
 		if incentiveRecord.IncentiveRecordBody.StartTime.UTC().Before(ctx.BlockTime().UTC()) && incentiveRecord.MinUptime == accumUptime {
 			// Total amount emitted = time elapsed * emission
@@ -482,7 +485,7 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 				remainingRewards = remainingRewards.Sub(totalEmittedAmount)
 
 				// Each incentive record should only be modified once
-				poolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingAmount = remainingRewards
+				copyPoolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingAmount = remainingRewards
 			} else {
 				// If there are not enough incentives remaining to be emitted, we emit the remaining rewards.
 				// When the returned records are set in state, all records with remaining rewards of zero will be cleared.
@@ -490,12 +493,12 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 				emittedIncentivesPerLiquidity = sdk.NewDecCoinFromDec(incentiveRecord.IncentiveDenom, remainingIncentivesPerLiquidity)
 				incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
 
-				poolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingAmount = sdk.ZeroDec()
+				copyPoolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingAmount = sdk.ZeroDec()
 			}
 		}
 	}
 
-	return incentivesToAddToCurAccum, poolIncentiveRecords, nil
+	return incentivesToAddToCurAccum, copyPoolIncentiveRecords, nil
 }
 
 // findUptimeIndex finds the uptime index for the passed in min uptime.
