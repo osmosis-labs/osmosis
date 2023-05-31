@@ -336,10 +336,12 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 
 func (s *KeeperTestSuite) TestGetTickInfo() {
 	var (
-		preInitializedTickIndex = DefaultCurrTick + 2
-		expectedUptimes         = getExpectedUptimes()
-		emptyUptimeTrackers     = wrapUptimeTrackers(expectedUptimes.emptyExpectedAccumValues)
-		varyingTokensAndDenoms  = wrapUptimeTrackers(expectedUptimes.varyingTokensMultiDenom)
+		preInitializedTickIndex     = DefaultCurrTick + 2
+		expectedUptimes             = getExpectedUptimes()
+		emptyUptimeTrackers         = wrapUptimeTrackers(expectedUptimes.emptyExpectedAccumValues)
+		emptyUptimeTrackersModel    = model.UptimeTrackers{emptyUptimeTrackers}
+		varyingTokensAndDenoms      = wrapUptimeTrackers(expectedUptimes.varyingTokensMultiDenom)
+		varyingTokensAndDenomsModel = model.UptimeTrackers{varyingTokensAndDenoms}
 	)
 
 	tests := []struct {
@@ -355,7 +357,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			poolToGet: validPoolId,
 			tickToGet: preInitializedTickIndex,
 			// Note that SpreadRewardGrowthOutside and UptimeGrowthOutside(s) are not updated.
-			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg(), UptimeTrackers: emptyUptimeTrackers},
+			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg(), UptimeTrackers: emptyUptimeTrackersModel},
 		},
 		{
 			name:                     "Get tick info on existing pool and existing tick with init but zero global uptime accums",
@@ -364,7 +366,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
 			// Note that neither SpreadRewardGrowthOutside nor UptimeGrowthOutsides are updated.
 			// We expect uptime trackers to be initialized to zero since tick > active tick
-			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg(), UptimeTrackers: emptyUptimeTrackers},
+			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg(), UptimeTrackers: emptyUptimeTrackersModel},
 		},
 		{
 			name:                     "Get tick info on existing pool and existing tick with nonzero global uptime accums",
@@ -373,7 +375,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
 			// Note that both SpreadRewardGrowthOutside and UptimeGrowthOutsides are updated.
 			// We expect uptime trackers to be initialized to global accums since tick <= active tick
-			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenoms},
+			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenomsModel},
 		},
 		{
 			name:                     "Get tick info for active tick on existing pool with existing tick",
@@ -381,21 +383,21 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			tickToGet:                DefaultCurrTick,
 			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
 			// Both spread reward growth and uptime trackers are set to global since tickToGet <= current tick
-			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenoms},
+			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenomsModel},
 		},
 		{
 			name:      "Get tick info on existing pool with no existing tick (cur pool tick > tick)",
 			poolToGet: validPoolId,
 			tickToGet: DefaultCurrTick + 1,
 			// Note that SpreadRewardGrowthOutside and UptimeGrowthOutside(s) are not initialized.
-			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), UptimeTrackers: emptyUptimeTrackers},
+			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), UptimeTrackers: emptyUptimeTrackersModel},
 		},
 		{
 			name:      "Get tick info on existing pool with no existing tick (cur pool tick == tick), initialized spread reward growth outside",
 			poolToGet: validPoolId,
 			tickToGet: DefaultCurrTick,
 			// Note that SpreadRewardGrowthOutside and UptimeGrowthOutside(s) are initialized.
-			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth), UptimeTrackers: emptyUptimeTrackers},
+			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth), UptimeTrackers: emptyUptimeTrackersModel},
 		},
 		{
 			name:        "Get tick info on a non-existing pool with no existing tick",
@@ -650,7 +652,10 @@ func (s *KeeperTestSuite) TestCrossTick() {
 				s.Require().Equal(test.expectedTickSpreadRewardGrowthOppositeDirectionOfLastTraversal, tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal)
 
 				// ensure tick being entered has properly updated uptime trackers
-				s.Require().Equal(test.expectedUptimeTrackers, tickInfo.UptimeTrackers)
+				s.Require().Equal(test.expectedUptimeTrackers, tickInfo.UptimeTrackers.List)
+
+				// ensure the event is emitted with updated tick accumulators.
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtCrossTick, 1)
 			}
 		})
 	}

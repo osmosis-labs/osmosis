@@ -44,9 +44,11 @@ var (
 		LiquidityGross: sdk.OneDec(),
 		LiquidityNet:   sdk.OneDec(),
 		SpreadRewardGrowthOppositeDirectionOfLastTraversal: testCoins,
-		UptimeTrackers: []model.UptimeTracker{
-			{
-				UptimeGrowthOutside: testCoins,
+		UptimeTrackers: model.UptimeTrackers{
+			List: []model.UptimeTracker{
+				{
+					UptimeGrowthOutside: testCoins,
+				},
 			},
 		},
 	}

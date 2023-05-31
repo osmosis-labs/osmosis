@@ -643,8 +643,8 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 	// Calculate uptime growth between lower and upper ticks
 	// Note that we regard "within range" to mean [lowerTick, upperTick),
 	// inclusive of lowerTick and exclusive of upperTick.
-	lowerTickUptimeValues := getUptimeTrackerValues(lowerTickInfo.UptimeTrackers)
-	upperTickUptimeValues := getUptimeTrackerValues(upperTickInfo.UptimeTrackers)
+	lowerTickUptimeValues := getUptimeTrackerValues(lowerTickInfo.UptimeTrackers.List)
+	upperTickUptimeValues := getUptimeTrackerValues(upperTickInfo.UptimeTrackers.List)
 	// If current tick is below range, we subtract uptime growth of upper tick from that of lower tick
 	if currentTick < lowerTick {
 		return osmoutils.SubDecCoinArrays(lowerTickUptimeValues, upperTickUptimeValues)
