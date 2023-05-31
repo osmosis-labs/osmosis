@@ -186,7 +186,25 @@ IBC supports the ability to send an ack back to the sender of the packet asynchr
 cases where the packet is received, but the ack is not immediately known. For example, if the packet is being
 forwarded to another chain, the ack may not be known until the packet is received on the other chain.
 
-Note this ACK does not imply full revertability. It is possible unrevertable actions have occured even if there is an Ack Error. (This is distinct from the behavior of ICS-20 transfers)
+Note this ACK does not imply full revertability. It is possible that unrevertable actions have occurred 
+even if there is an Ack Error. (This is distinct from the behavior of ICS-20 transfers). If you want to ensure 
+revertability, your contract should be implemented in a way that actions are not finalized until a success ack
+is received.
+
+#### Use case
+
+Async acks are useful in cases where the contract needs to wait for a response from another chain before
+returning a result to the caller. 
+
+For example, if you want to send tokens to another chain after the contract is executed you need to
+add a new ibc packet and wait for its ack. 
+
+In the synchronous acks case, the caller will receive an ack from the contract before the second packet 
+has been processed. This means that the caller will have to wait (and potentially track) if the second 
+packet has been processed successfully or not. 
+
+With async acks, you contract can take this responsibility and only send an ack to the caller once the 
+second packet has been processed
 
 #### Making contract Acks async
 
