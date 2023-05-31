@@ -1,6 +1,7 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -8,6 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -1276,6 +1278,77 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 		s.Require().Error(err)
 		s.Require().Equal(sdk.Coins{}, collected)
 	}
+}
+
+func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
+	s.SetupTest()
+	roundingError := sdk.NewCoins(sdk.NewCoin(ETH, roundingError), sdk.NewCoin(USDC, roundingError))
+
+	// middleAddress refers to the owner of the position in the middle of the three we create in this test
+	middleAddress := s.TestAccs[0]
+
+	// Set up pool, default incentive records, and a single default position
+	pool, middlePositionId, totalLiquidity := s.runFungifySetup(middleAddress, 1, DefaultFungifyFullChargeDuration, DefaultSpreadFactor, DefaultIncentiveRecords)
+	fmt.Println("middlePositionId, totalLiquidity: ", middlePositionId, totalLiquidity)
+
+	// Create two new addresses to hold a position to the left and right of the one we created above
+	testAccs := apptesting.CreateRandomAccounts(4)
+	leftAddressOne, leftAddressTwo := testAccs[0], testAccs[1]
+	rightAddressOne, rightAddressTwo := testAccs[2], testAccs[3]
+
+	// Create the relevant positions with these acccounts such that the left, middle, and right positions
+	// are exactly adjacent to each other in terms of tick ranges.
+	defaultPositionWidth := DefaultUpperTick - DefaultLowerTick
+
+	// We add dust amounts to each account since rounding makes `SetupPosition` occasionally error
+	// TODO: update `SetupPosition` to accommodate this internally
+	for _, acc := range testAccs {
+		s.FundAcc(acc, roundingError)
+	}
+
+	// Set up left positions
+	leftPositionLowerTick := DefaultLowerTick - defaultPositionWidth
+	leftPositionUpperTick := DefaultLowerTick
+	_, _ = s.SetupPosition(pool.GetId(), leftAddressOne, DefaultCoins, leftPositionLowerTick, leftPositionUpperTick, s.Ctx.BlockTime())
+	_, _ = s.SetupPosition(pool.GetId(), leftAddressTwo, DefaultCoins, leftPositionLowerTick, leftPositionUpperTick, s.Ctx.BlockTime())
+
+	// Set up right positions
+	rightPositionLowerTick := DefaultUpperTick
+	rightPositionUpperTick := DefaultUpperTick + defaultPositionWidth
+	_, _ = s.SetupPosition(pool.GetId(), rightAddressOne, DefaultCoins, rightPositionLowerTick, rightPositionUpperTick, s.Ctx.BlockTime())
+	_, _ = s.SetupPosition(pool.GetId(), rightAddressTwo, DefaultCoins, rightPositionLowerTick, rightPositionUpperTick, s.Ctx.BlockTime())
+
+	// Set up and execute large swap (actual amount is exactly equal to the eth in the pool)
+	// Sanity check current tick
+	pool, _ = s.clk.GetPoolById(s.Ctx, pool.GetId())
+	fmt.Println("current tick: ", pool.GetCurrentTick())
+
+	poolLiquidity := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
+	fmt.Println("pool liquidity: ", poolLiquidity)
+	usdcSupply := poolLiquidity.FilterDenoms([]string{USDC})[0]
+	usdcSupply = sdk.NewCoin(USDC, usdcSupply.Amount.Sub(sdk.NewInt(1)))
+
+	ethFunded := sdk.NewCoins(sdk.NewCoin(ETH, poolLiquidity.AmountOf(ETH).MulRaw(2)))
+
+	s.TestAccs = apptesting.CreateRandomAccounts(5)
+	s.FundAcc(s.TestAccs[4], ethFunded)
+	coinIn, coinOut, currentTick, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(s.Ctx, s.TestAccs[4], pool, usdcSupply, ETH, DefaultSpreadFactor, types.MinSpotPrice)
+	s.Require().NoError(err)
+
+	fmt.Println("coinIn, coinOut, currentTick: ", coinIn, coinOut, currentTick)
+
+	expectedTotalSpreadReward := coinIn.Amount.ToDec().Mul(DefaultSpreadFactor)
+	// We run expected spread rewards through a cycle of divison and multiplication by liquidity to capture appropriate rounding behavior.
+	// Note that we truncate the int at the end since it is not possible to have a decimal spread reward amount collected (the QuoTruncate
+	// and MulTruncates are much smaller operations that round down for values past the 18th decimal place).
+	expectedTotalSpreadRewardTruncated := expectedTotalSpreadReward.QuoTruncate(totalLiquidity).MulTruncate(totalLiquidity).TruncateInt()
+
+	expectedMiddleSpreadReward := expectedTotalSpreadRewardTruncated.Quo(sdk.NewInt(6))
+
+	collected, err := s.clk.CollectSpreadRewards(s.Ctx, middleAddress, middlePositionId[0])
+	s.Require().NoError(err)
+
+	s.Require().Equal(expectedMiddleSpreadReward, collected)
 }
 
 func (s *KeeperTestSuite) TestCreateFullRangePosition() {

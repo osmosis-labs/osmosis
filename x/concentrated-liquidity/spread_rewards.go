@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -300,6 +301,9 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 // this goes vice versa for calculating spread reward growth for lower tick.
 func calculateSpreadRewardGrowth(targetTick int64, ticksSpreadRewardGrowthOppositeDirectionOfLastTraversal sdk.DecCoins, currentTick int64, spreadRewardsGrowthGlobal sdk.DecCoins, isUpperTick bool) sdk.DecCoins {
 	if (isUpperTick && currentTick >= targetTick) || (!isUpperTick && currentTick < targetTick) {
+		fmt.Println("spreadRewardsGrowthGlobal: ", spreadRewardsGrowthGlobal)
+		fmt.Println("ticksSpreadRewardGrowthOppositeDirectionOfLastTraversal: ", ticksSpreadRewardGrowthOppositeDirectionOfLastTraversal)
+		fmt.Println("Triggers negative count amount panic since above two are different denoms")
 		return spreadRewardsGrowthGlobal.Sub(ticksSpreadRewardGrowthOppositeDirectionOfLastTraversal)
 	}
 	return ticksSpreadRewardGrowthOppositeDirectionOfLastTraversal
