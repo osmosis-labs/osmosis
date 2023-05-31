@@ -115,7 +115,7 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 type gaugeChecker struct {
 	intermediaryAccIndex     uint64
 	valIndex                 int64
-	delIndexes               []int64
+	lockIndexes              []int64
 	lpIndex                  int64
 	rewarded                 bool
 	expectedDistributedCoins sdk.Coins
@@ -155,7 +155,6 @@ var (
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 0, 0, 1000000}},
 			[]int64{0},
-			// expected distributed is 19998stake since it has been rounded down from 19999stake due to num of delegators
 			[]gaugeChecker{{0, 0, []int64{0, 1}, 0, true, defaultTwoGaugeDistributedCoins}},
 		},
 		// In this case, allocate reward to validators with different stat.
@@ -236,85 +235,131 @@ func (s *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 }
 
 func (s *KeeperTestSuite) TestDistributeSuperfluidGauges() {
+	changeRewardReceiverTestCases := []bool{true, false}
 	for _, tc := range distributionTestCases {
-		tc := tc
+		// run distributionTestCases two times.
+		// Once with lock reward reciver as owner,
+		// Second time with lock reward receiver as a different account.
+		for _, changeRewardReceiver := range changeRewardReceiverTestCases {
+			tc := tc
 
-		s.Run(tc.name, func() {
-			s.SetupTest()
+			s.Run(tc.name, func() {
+				s.SetupTest()
+				// create one more account to set reward receiver as arbitrary account
+				thirdTestAcc := CreateRandomAccounts(1)
+				s.TestAccs = append(s.TestAccs, thirdTestAcc...)
+				// setup validators
+				valAddrs := s.SetupValidators(tc.validatorStats)
 
-			// setup validators
-			valAddrs := s.SetupValidators(tc.validatorStats)
+				denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+				// setup superfluid delegations
+				delAddresses, intermediaryAccs, locks := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
 
-			// setup superfluid delegations
-			delAddrs, intermediaryAccs, _ := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
-
-			// allocate rewards to designated validators
-			for _, valIndex := range tc.rewardedVals {
-				s.AllocateRewardsToValidator(valAddrs[valIndex], sdk.NewInt(20000))
-			}
-
-			// move intermediary account delegation rewards to gauges
-			s.App.SuperfluidKeeper.MoveSuperfluidDelegationRewardToGauges(s.Ctx)
-
-			// move gauges to active gauge by declaring epoch end
-			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute))
-			epochId := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Identifier
-			err := s.App.IncentivesKeeper.AfterEpochEnd(s.Ctx, epochId, 1)
-			s.Require().NoError(err)
-
-			// create a map of delegator index -> number of locks eligible for distribution.
-			// This is used to check amount of coins distributed for the delegator in future check.
-			delegatorIndexDistributionNumMap := make(map[int64]int64)
-			for _, gaugeCheck := range tc.gaugeChecks {
-				for _, delegatorIndex := range gaugeCheck.delIndexes {
-					delegatorIndexDistributionNumMap[delegatorIndex]++
+				// if test setting is changing reward receiver,
+				// we iterate over all locks and change the reward receiver to owner with index of + 1
+				if changeRewardReceiver {
+					for _, lock := range locks {
+						var newRewardReceiver string
+						if lock.Owner == s.TestAccs[0].String() || lock.Owner == delAddresses[0].String() {
+							newRewardReceiver = s.TestAccs[1].String()
+						} else if lock.Owner == s.TestAccs[1].String() || lock.Owner == delAddresses[1].String() {
+							newRewardReceiver = s.TestAccs[2].String()
+						} else {
+							newRewardReceiver = s.TestAccs[3].String()
+						}
+						err := s.App.LockupKeeper.SetLockRewardReceiverAddress(s.Ctx, lock.ID, lock.OwnerAddress(), newRewardReceiver)
+						s.Require().NoError(err)
+					}
 				}
-			}
 
-			// system under test
-			s.App.SuperfluidKeeper.DistributeSuperfluidGauges(s.Ctx)
+				// allocate rewards to designated validators
+				for _, valIndex := range tc.rewardedVals {
+					s.AllocateRewardsToValidator(valAddrs[valIndex], sdk.NewInt(20000))
+				}
 
-			for _, gaugeCheck := range tc.gaugeChecks {
-				gaugeId := intermediaryAccs[gaugeCheck.intermediaryAccIndex].GaugeId
-				gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
+				// move intermediary account delegation rewards to gauges
+				s.App.SuperfluidKeeper.MoveSuperfluidDelegationRewardToGauges(s.Ctx)
+
+				// move gauges to active gauge by declaring epoch end
+				s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute))
+				epochId := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Identifier
+				err := s.App.IncentivesKeeper.AfterEpochEnd(s.Ctx, epochId, 1)
 				s.Require().NoError(err)
-				s.Require().Equal(gauge.Id, gaugeId)
-				s.Require().Equal(gauge.IsPerpetual, true)
-				s.Require().Equal(gauge.NumEpochsPaidOver, uint64(1))
 
-				bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
-
-				moduleAddress := s.App.AccountKeeper.GetModuleAddress(incentivestypes.ModuleName)
-				moduleBalanceAfter := s.App.BankKeeper.GetBalance(s.Ctx, moduleAddress, bondDenom)
-
-				if gaugeCheck.rewarded {
-					s.Require().Equal(gauge.FilledEpochs, uint64(1))
-					s.Require().Equal(gaugeCheck.expectedDistributedCoins, gauge.DistributedCoins)
-					s.Require().Equal(gauge.Coins.Sub(gauge.DistributedCoins).AmountOf(bondDenom), moduleBalanceAfter.Amount)
-
-					// iterate over delegator index that received incentive from this gauge and check balance
-					for _, delegatorIndex := range gaugeCheck.delIndexes {
-						delegatorAddr := delAddrs[delegatorIndex]
-						delegatorBalance := s.App.BankKeeper.GetBalance(s.Ctx, delegatorAddr, bondDenom)
-
-						// delegator balance should be
-						// gauge distributed coin / amount of locks for that gauge * num of gauges delegator is getting rewards from
-						numOfDistribution := delegatorIndexDistributionNumMap[delegatorIndex]
-						expectedDelegatorBalance := gauge.DistributedCoins.AmountOf(bondDenom).Int64() / int64(len(gaugeCheck.delIndexes)) * numOfDistribution
-						s.Require().Equal(expectedDelegatorBalance, delegatorBalance.Amount.Int64())
-					}
-				} else {
-					s.Require().Equal(gauge.FilledEpochs, uint64(0))
-					s.Require().Equal(sdk.Coins(nil), gauge.DistributedCoins)
-					for _, delegatorIndex := range gaugeCheck.delIndexes {
-						delegatorAddr := delAddrs[delegatorIndex]
-						delegatorBalance := s.App.BankKeeper.GetBalance(s.Ctx, delegatorAddr, bondDenom)
-						s.Require().Equal(sdk.ZeroInt(), delegatorBalance.Amount)
+				// create a map of delegator index -> number of locks eligible for distribution.
+				// This is used to check amount of coins distributed for the delegator in future check.
+				lockIndexDistributionNumMap := make(map[int64]int64)
+				for _, gaugeCheck := range tc.gaugeChecks {
+					for _, lockIndex := range gaugeCheck.lockIndexes {
+						lockIndexDistributionNumMap[lockIndex]++
 					}
 				}
-			}
-		})
+
+				// system under test
+				s.App.SuperfluidKeeper.DistributeSuperfluidGauges(s.Ctx)
+
+				for _, gaugeCheck := range tc.gaugeChecks {
+					gaugeId := intermediaryAccs[gaugeCheck.intermediaryAccIndex].GaugeId
+					gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
+					s.Require().NoError(err)
+					s.Require().Equal(gauge.Id, gaugeId)
+					s.Require().Equal(gauge.IsPerpetual, true)
+					s.Require().Equal(gauge.NumEpochsPaidOver, uint64(1))
+
+					bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+
+					moduleAddress := s.App.AccountKeeper.GetModuleAddress(incentivestypes.ModuleName)
+					moduleBalanceAfter := s.App.BankKeeper.GetBalance(s.Ctx, moduleAddress, bondDenom)
+
+					if gaugeCheck.rewarded {
+						s.Require().Equal(gauge.FilledEpochs, uint64(1))
+						s.Require().Equal(gaugeCheck.expectedDistributedCoins, gauge.DistributedCoins)
+						s.Require().Equal(gauge.Coins.Sub(gauge.DistributedCoins).AmountOf(bondDenom), moduleBalanceAfter.Amount)
+
+						// iterate over delegator index that received incentive from this gauge and check balance
+						for _, lockIndex := range gaugeCheck.lockIndexes {
+							lock := locks[lockIndex]
+
+							// get updated lock from state
+							updatedLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
+							s.Require().NoError(err)
+
+							// reward receiver is lock owner if lock owner is an empty string literal
+							rewardReceiver := updatedLock.RewardReceiverAddress
+							if rewardReceiver == "" {
+								rewardReceiver = lock.Owner
+							}
+
+							// check balance of the reward receiver
+							rewardReceiverBalance := s.App.BankKeeper.GetBalance(s.Ctx, sdk.MustAccAddressFromBech32(rewardReceiver), bondDenom)
+
+							// reward receiver balance should be
+							// gauge distributed coin / amount of locks for that gauge * num of gauges delegator is getting rewards from
+							numOfDistribution := lockIndexDistributionNumMap[lockIndex]
+							expectedDelegatorBalance := gauge.DistributedCoins.AmountOf(bondDenom).Int64() / int64(len(gaugeCheck.lockIndexes)) * numOfDistribution
+							s.Require().Equal(expectedDelegatorBalance, rewardReceiverBalance.Amount.Int64())
+						}
+					} else {
+						s.Require().Equal(gauge.FilledEpochs, uint64(0))
+						s.Require().Equal(sdk.Coins(nil), gauge.DistributedCoins)
+						for _, lockIndex := range gaugeCheck.lockIndexes {
+							lock := locks[lockIndex]
+
+							// get updated lock from state
+							updatedLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
+							s.Require().NoError(err)
+
+							rewardReceiver := updatedLock.RewardReceiverAddress
+							if rewardReceiver == "" {
+								rewardReceiver = lock.Owner
+							}
+							delegatorBalance := s.App.BankKeeper.GetBalance(s.Ctx, sdk.MustAccAddressFromBech32(rewardReceiver), bondDenom)
+							s.Require().Equal(sdk.ZeroInt(), delegatorBalance.Amount)
+						}
+					}
+				}
+			})
+		}
 	}
 }
