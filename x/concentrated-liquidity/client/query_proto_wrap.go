@@ -33,7 +33,7 @@ func (q Querier) UserPositions(ctx sdk.Context, req clquery.UserPositionsRequest
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	userPositions, err := q.Keeper.GetUserPositions(ctx, sdkAddr, req.PoolId)
+	userPositions, pageRes, err := q.Keeper.GetUserPositionsSerialized(ctx, sdkAddr, req.PoolId, req.Pagination)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -74,7 +74,8 @@ func (q Querier) UserPositions(ctx sdk.Context, req clquery.UserPositionsRequest
 	}
 
 	return &clquery.UserPositionsResponse{
-		Positions: positions,
+		Positions:  positions,
+		Pagination: pageRes,
 	}, nil
 }
 

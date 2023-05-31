@@ -8,7 +8,9 @@ import (
 	"strings"
 	"time"
 
+	sdkprefix "github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
@@ -210,6 +212,60 @@ func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId ui
 	}
 
 	return positions, nil
+}
+
+// GetUserPositionsSerialized behaves similarly to GetUserPositions, but returns the positions in a way that can be paginated.
+func (k Keeper) GetUserPositionsSerialized(ctx sdk.Context, addr sdk.AccAddress, poolId uint64, pagination *query.PageRequest) ([]model.Position, *query.PageResponse, error) {
+	var prefix []byte
+	var expectedLen int
+	if poolId == 0 {
+		expectedLen = 3
+		prefix = types.KeyUserPositions(addr)
+	} else {
+		expectedLen = 2
+		prefix = types.KeyAddressAndPoolId(addr, poolId)
+	}
+
+	positionsStore := sdkprefix.NewStore(ctx.KVStore(k.storeKey), prefix)
+
+	positions := []model.Position{}
+	positionIds := []uint64{}
+
+	pageRes, err := query.Paginate(positionsStore, pagination, func(key, value []byte) error {
+		// Extract the components from the key
+		parts := bytes.Split(key, []byte(types.KeySeparator))
+		if len(parts) != expectedLen {
+			return fmt.Errorf("invalid key format: %s", key)
+		}
+
+		// Parse the positionId from the key
+		positionId, err := strconv.ParseUint(string(parts[expectedLen-1]), 10, 64)
+		if err != nil {
+			return fmt.Errorf("failed to parse positionId: %w", err)
+		}
+
+		positionIds = append(positionIds, positionId)
+		return nil
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Sort the positionIds in ascending order
+	sort.Slice(positionIds, func(i, j int) bool {
+		return positionIds[i] < positionIds[j]
+	})
+
+	// Retrieve each position from the store using its ID and add it to the result slice.
+	for _, positionId := range positionIds {
+		position, err := k.GetPosition(ctx, positionId)
+		if err != nil {
+			return nil, nil, err
+		}
+		positions = append(positions, position)
+	}
+
+	return positions, pageRes, nil
 }
 
 // SetPosition sets the position information for a given user in a given pool.
