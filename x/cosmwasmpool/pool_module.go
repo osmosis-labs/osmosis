@@ -114,12 +114,6 @@ func (k Keeper) GetPoolDenoms(ctx sdk.Context, poolId uint64) (denoms []string, 
 	}
 
 	liquidity := cosmwasmPool.GetTotalPoolLiquidity(ctx)
-	if liquidity.Len() < 2 {
-		return nil, types.InvalidLiquiditySetError{
-			PoolId:     poolId,
-			TokenCount: liquidity.Len(),
-		}
-	}
 
 	denoms = make([]string, 0, liquidity.Len())
 	for _, coin := range liquidity {
