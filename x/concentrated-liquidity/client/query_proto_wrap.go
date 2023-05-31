@@ -242,3 +242,22 @@ func (q Querier) PoolAccumulatorRewards(ctx sdk.Context, req clquery.PoolAccumul
 		UptimeGrowthGlobal:       uptimeGrowthTrackers,
 	}, nil
 }
+
+// TickAccumulatorTrackers returns tick accumulator trackers.
+// It includes spread reward growth in the opposite direction of last traversal and uptime tracker values.
+func (q Querier) TickAccumulatorTrackers(ctx sdk.Context, req clquery.TickAccumulatorTrackersRequest) (*clquery.TickAccumulatorTrackersResponse, error) {
+	if req.PoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "pool id is zero")
+	}
+
+	cacheCtx, _ := ctx.CacheContext()
+	tickInfo, err := q.Keeper.GetTickInfo(cacheCtx, req.PoolId, req.TickIndex)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &clquery.TickAccumulatorTrackersResponse{
+		SpreadRewardGrowthOppositeDirectionOfLastTraversal: tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal,
+		UptimeTrackers: tickInfo.UptimeTrackers.List,
+	}, nil
+}

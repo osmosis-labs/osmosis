@@ -46,3 +46,6 @@ queries:
   PoolAccumulatorRewards:
     proto_wrapper:
       query_func: "k.PoolAccumulatorRewards"
+  TickAccumulatorTrackers:
+    proto_wrapper:
+      query_func: "k.TickAccumulatorTrackers"

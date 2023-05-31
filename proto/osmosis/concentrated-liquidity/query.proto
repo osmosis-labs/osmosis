@@ -82,6 +82,14 @@ service Query {
     option (google.api.http).get =
         "/osmosis/concentratedliquidity/v1beta1/pool_accum_rewards";
   };
+
+  // TickAccumulatorTrackers returns the tick accumulator trackers.
+  // Contains spread factor and uptime accumulator trackers.
+  rpc TickAccumulatorTrackers(TickAccumulatorTrackersRequest)
+      returns (TickAccumulatorTrackersResponse) {
+    option (google.api.http).get =
+        "/osmosis/concentratedliquidity/v1beta1/tick_accum_trackers";
+  };
 }
 
 //=============================== UserPositions
@@ -208,6 +216,24 @@ message PoolAccumulatorRewardsResponse {
   ];
   repeated UptimeTracker uptime_growth_global = 2 [
     (gogoproto.moretags) = "yaml:\"uptime_growth_global\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// ===================== QueryTickAccumulatorTrackers
+message TickAccumulatorTrackersRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  int64 tick_index = 2 [ (gogoproto.moretags) = "yaml:\"tick_index\"" ];
+}
+
+message TickAccumulatorTrackersResponse {
+  repeated cosmos.base.v1beta1.DecCoin
+      spread_reward_growth_opposite_direction_of_last_traversal = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable) = false
+  ];
+  repeated UptimeTracker uptime_trackers = 2 [
+    (gogoproto.moretags) = "yaml:\"uptime_trackers\"",
     (gogoproto.nullable) = false
   ];
 }
