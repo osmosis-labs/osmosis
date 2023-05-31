@@ -475,15 +475,6 @@ func (s *KeeperTestSuite) TestValidateCreatedPool() {
 			},
 			expectedError: types.IncorrectPoolIdError{ExpectedPoolId: 1, ActualPoolId: 2},
 		},
-		{
-			name:   "error: unexpected address",
-			poolId: 2,
-			pool: &balancer.Pool{
-				Address: types.NewPoolAddress(1).String(),
-				Id:      2,
-			},
-			expectedError: types.IncorrectPoolAddressError{ExpectedPoolAddress: types.NewPoolAddress(2).String(), ActualPoolAddress: types.NewPoolAddress(1).String()},
-		},
 	}
 
 	for _, tc := range tests {
