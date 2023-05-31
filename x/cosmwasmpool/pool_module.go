@@ -63,11 +63,11 @@ func (k Keeper) InitializePool(ctx sdk.Context, pool poolmanagertypes.PoolI, cre
 // - poolmanagertypes.PoolI: The pool interface of the corresponding pool model, if found.
 // - error: An error if the pool model is not found; otherwise, nil.
 func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error) {
-	concentratedPool, err := k.GetPoolById(ctx, poolId)
+	cwPool, err := k.GetPoolById(ctx, poolId)
 	if err != nil {
 		return nil, err
 	}
-	return concentratedPool, nil
+	return cwPool, nil
 }
 
 // GetPools retrieves all pool objects stored in the keeper.
