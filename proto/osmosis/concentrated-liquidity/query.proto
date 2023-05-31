@@ -214,8 +214,10 @@ message PoolAccumulatorRewardsResponse {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable) = false
   ];
-  repeated UptimeTracker uptime_growth_global = 2
-      [ (gogoproto.moretags) = "yaml:\"list\"", (gogoproto.nullable) = false ];
+  repeated UptimeTracker uptime_growth_global = 2 [
+    (gogoproto.moretags) = "yaml:\"uptime_growth_global\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // ===================== QueryTickAccumulatorTrackers
@@ -230,6 +232,8 @@ message TickAccumulatorTrackersResponse {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable) = false
   ];
-  repeated UptimeTracker uptime_trackers = 2
-      [ (gogoproto.moretags) = "yaml:\"list\"", (gogoproto.nullable) = false ];
+  repeated UptimeTracker uptime_trackers = 2 [
+    (gogoproto.moretags) = "yaml:\"uptime_trackers\"",
+    (gogoproto.nullable) = false
+  ];
 }
