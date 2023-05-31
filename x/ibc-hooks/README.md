@@ -186,6 +186,8 @@ IBC supports the ability to send an ack back to the sender of the packet asynchr
 cases where the packet is received, but the ack is not immediately known. For example, if the packet is being
 forwarded to another chain, the ack may not be known until the packet is received on the other chain.
 
+Note this ACK does not imply full revertability. It is possible unrevertable actions have occured even if there is an Ack Error. (This is distinct from the behavior of ICS-20 transfers)
+
 #### Making contract Acks async
 
 To support this, we allow contracts to return an `IBCAsync` response from the function being executed when the
