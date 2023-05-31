@@ -571,28 +571,32 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 		{
 			name:             "Valid case: Delete position info on existing pool and existing position (no underlying lock)",
 			underlyingLockId: 0,
+			poolId:           defaultPoolId,
 			positionId:       DefaultPositionId,
 		},
 		{
 			name:             "Valid case: Delete position info on existing pool and existing position (has underlying lock)",
 			underlyingLockId: 1,
+			poolId:           defaultPoolId,
 			positionId:       DefaultPositionId,
 		},
 		{
 			name:             "InValid case: Delete a non existing position",
 			positionId:       DefaultPositionId + 1,
 			underlyingLockId: 0,
+			poolId:           defaultPoolId,
 			expectedErr:      types.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
 		},
 		{
-			name:             "InValid case: Delete the address-pool-position ID to position mapping",
+			name:             "Invalid case: non-existent the address-pool-position ID to position mapping",
 			positionId:       DefaultPositionId,
 			underlyingLockId: 0,
+			poolId:           defaultPoolId,
 			creator:          secondaryAccount,
 			expectedErr:      types.AddressPoolPositionIdNotFoundError{PoolId: DefaultPositionId, PositionId: DefaultPositionId, Owner: secondaryAccount.String()},
 		},
 		{
-			name:             "InValid case: Delete pool-position ID mapping",
+			name:             "Invalid case: non-existent pool-position ID mapping",
 			poolId:           3,
 			positionId:       DefaultPositionId,
 			underlyingLockId: 0,
@@ -664,7 +668,7 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 				defaultCreator = secondaryAccount
 			}
 
-			if test.poolId != 0 && test.poolId != defaultPoolId {
+			if test.poolId != defaultPoolId {
 				defaultPoolId = test.poolId
 			}
 
