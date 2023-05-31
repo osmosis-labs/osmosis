@@ -2073,18 +2073,10 @@ func (s *KeeperTestSuite) TestGetAllPositionIdsForPoolId() {
 }
 
 func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
-	var (
-		position           model.Position
-		positionId         uint64
-		liquidity          sdk.Dec
-		concentratedLockId uint64
-		err                error
-	)
-
 	invalidCoinsAmount := sdk.NewCoins(DefaultCoin0)
 	invalidCoin0Denom := sdk.NewCoins(sdk.NewCoin("invalidDenom", sdk.NewInt(1000000000000000000)), DefaultCoin1)
 	invalidCoin1Denom := sdk.NewCoins(DefaultCoin0, sdk.NewCoin("invalidDenom", sdk.NewInt(1000000000000000000)))
-	zeroCoins := sdk.NewCoins(sdk.NewCoin(ETH, sdk.ZeroInt()), sdk.NewCoin(USDC, sdk.ZeroInt()))
+	zeroCoins := sdk.NewCoins()
 
 	tests := []struct {
 		name                  string
@@ -2128,8 +2120,6 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 		s.Run(test.name, func() {
 			// Init suite for each test.
 			s.SetupTest()
-			DefaultJoinTime := s.Ctx.BlockTime()
-			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
 			// Create a default CL pool
 			clPool := s.PrepareConcentratedPoolWithCoins(ETH, USDC)
@@ -2139,10 +2129,9 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 			s.FundAcc(defaultAddress, test.coinsForPosition)
 
 			// System under test
-			positionId, _, _, liquidity, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool.GetId(), defaultAddress, test.coinsForPosition, test.remainingLockDuration)
+			positionId, _, _, liquidity, _, concentratedLockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool.GetId(), defaultAddress, test.coinsForPosition, test.remainingLockDuration)
 
 			if test.expectedErr != nil {
-				s.Require().Error(err)
 				s.Require().ErrorContains(err, test.expectedErr.Error())
 				return
 			}
@@ -2150,17 +2139,17 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 			s.Require().NoError(err)
 
 			// Check position
-			position, err = s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+			position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
 			s.Require().NoError(err)
-			s.Require().Equal(position.JoinTime, s.Ctx.BlockTime())
-			s.Require().Equal(position.UpperTick, types.MaxTick)
-			s.Require().Equal(position.LowerTick, types.MinTick)
-			s.Require().Equal(position.Liquidity, liquidity)
+			s.Require().Equal(s.Ctx.BlockTime(), position.JoinTime)
+			s.Require().Equal(types.MaxTick, position.UpperTick)
+			s.Require().Equal(types.MinTick, position.LowerTick)
+			s.Require().Equal(liquidity, position.Liquidity)
 
 			// Check locked
 			concentratedLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, concentratedLockId)
 			s.Require().NoError(err)
-			s.Require().Equal(liquidity.TruncateInt().String(), concentratedLock.Coins[0].Amount.String())
+			s.Require().Equal(concentratedLock.Coins[0].Amount.String(), liquidity.TruncateInt().String())
 			s.Require().False(concentratedLock.IsUnlocking())
 		})
 	}
