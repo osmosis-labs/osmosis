@@ -50,6 +50,16 @@ func (q Querier) Pools(grpcCtx context.Context,
 	return q.Q.Pools(ctx, *req)
 }
 
+func (q Querier) PoolAccumulatorRewards(grpcCtx context.Context,
+	req *queryproto.PoolAccumulatorRewardsRequest,
+) (*queryproto.PoolAccumulatorRewardsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.PoolAccumulatorRewards(ctx, *req)
+}
+
 func (q Querier) Params(grpcCtx context.Context,
 	req *queryproto.ParamsRequest,
 ) (*queryproto.ParamsResponse, error) {

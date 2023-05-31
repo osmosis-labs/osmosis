@@ -55,9 +55,9 @@ func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.A
 	return accums, nil
 }
 
-// getUptimeAccumulatorValues gets the accumulator values for the supported uptimes for the given poolId
+// GetUptimeAccumulatorValues gets the accumulator values for the supported uptimes for the given poolId
 // Returns error if accumulator for the given poolId does not exist.
-func (k Keeper) getUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sdk.DecCoins, error) {
+func (k Keeper) GetUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sdk.DecCoins, error) {
 	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return []sdk.DecCoins{}, err
@@ -88,7 +88,7 @@ func (k Keeper) getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ct
 
 	currentTick := pool.GetCurrentTick()
 	if currentTick >= tick {
-		uptimeAccumulatorValues, err := k.getUptimeAccumulatorValues(ctx, poolId)
+		uptimeAccumulatorValues, err := k.GetUptimeAccumulatorValues(ctx, poolId)
 		if err != nil {
 			return []sdk.DecCoins{}, err
 		}
@@ -624,7 +624,7 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 	}
 
 	// Get global uptime accumulator values
-	globalUptimeValues, err := k.getUptimeAccumulatorValues(ctx, poolId)
+	globalUptimeValues, err := k.GetUptimeAccumulatorValues(ctx, poolId)
 	if err != nil {
 		return []sdk.DecCoins{}, err
 	}
@@ -669,7 +669,7 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 // attempt to claim their incentives.
 // When LPs are ready to claim their incentives we calculate it using: (shares of # of LP) * (uptimeGrowthOutside - uptimeGrowthInside)
 func (k Keeper) GetUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64) ([]sdk.DecCoins, error) {
-	globalUptimeValues, err := k.getUptimeAccumulatorValues(ctx, poolId)
+	globalUptimeValues, err := k.GetUptimeAccumulatorValues(ctx, poolId)
 	if err != nil {
 		return []sdk.DecCoins{}, err
 	}

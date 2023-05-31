@@ -930,6 +930,103 @@ func (m *ClaimableIncentivesResponse) GetForfeitedIncentives() []types2.Coin {
 	return nil
 }
 
+// ===================== QueryPoolAccumulatorRewards
+type PoolAccumulatorRewardsRequest struct {
+	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+}
+
+func (m *PoolAccumulatorRewardsRequest) Reset()         { *m = PoolAccumulatorRewardsRequest{} }
+func (m *PoolAccumulatorRewardsRequest) String() string { return proto.CompactTextString(m) }
+func (*PoolAccumulatorRewardsRequest) ProtoMessage()    {}
+func (*PoolAccumulatorRewardsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5c83e18b11fd607d, []int{18}
+}
+func (m *PoolAccumulatorRewardsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PoolAccumulatorRewardsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PoolAccumulatorRewardsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PoolAccumulatorRewardsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PoolAccumulatorRewardsRequest.Merge(m, src)
+}
+func (m *PoolAccumulatorRewardsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *PoolAccumulatorRewardsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PoolAccumulatorRewardsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PoolAccumulatorRewardsRequest proto.InternalMessageInfo
+
+func (m *PoolAccumulatorRewardsRequest) GetPoolId() uint64 {
+	if m != nil {
+		return m.PoolId
+	}
+	return 0
+}
+
+type PoolAccumulatorRewardsResponse struct {
+	SpreadRewardGrowthGlobal github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=spread_reward_growth_global,json=spreadRewardGrowthGlobal,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"spread_reward_growth_global"`
+	UptimeGrowthGlobal       []model.UptimeTracker                       `protobuf:"bytes,2,rep,name=uptime_growth_global,json=uptimeGrowthGlobal,proto3" json:"uptime_growth_global" yaml:"uptime_growth_global"`
+}
+
+func (m *PoolAccumulatorRewardsResponse) Reset()         { *m = PoolAccumulatorRewardsResponse{} }
+func (m *PoolAccumulatorRewardsResponse) String() string { return proto.CompactTextString(m) }
+func (*PoolAccumulatorRewardsResponse) ProtoMessage()    {}
+func (*PoolAccumulatorRewardsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5c83e18b11fd607d, []int{19}
+}
+func (m *PoolAccumulatorRewardsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PoolAccumulatorRewardsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PoolAccumulatorRewardsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PoolAccumulatorRewardsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PoolAccumulatorRewardsResponse.Merge(m, src)
+}
+func (m *PoolAccumulatorRewardsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *PoolAccumulatorRewardsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_PoolAccumulatorRewardsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PoolAccumulatorRewardsResponse proto.InternalMessageInfo
+
+func (m *PoolAccumulatorRewardsResponse) GetSpreadRewardGrowthGlobal() github_com_cosmos_cosmos_sdk_types.DecCoins {
+	if m != nil {
+		return m.SpreadRewardGrowthGlobal
+	}
+	return nil
+}
+
+func (m *PoolAccumulatorRewardsResponse) GetUptimeGrowthGlobal() []model.UptimeTracker {
+	if m != nil {
+		return m.UptimeGrowthGlobal
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*UserPositionsRequest)(nil), "osmosis.concentratedliquidity.v1beta1.UserPositionsRequest")
 	proto.RegisterType((*UserPositionsResponse)(nil), "osmosis.concentratedliquidity.v1beta1.UserPositionsResponse")
@@ -949,6 +1046,8 @@ func init() {
 	proto.RegisterType((*ClaimableSpreadRewardsResponse)(nil), "osmosis.concentratedliquidity.v1beta1.ClaimableSpreadRewardsResponse")
 	proto.RegisterType((*ClaimableIncentivesRequest)(nil), "osmosis.concentratedliquidity.v1beta1.ClaimableIncentivesRequest")
 	proto.RegisterType((*ClaimableIncentivesResponse)(nil), "osmosis.concentratedliquidity.v1beta1.ClaimableIncentivesResponse")
+	proto.RegisterType((*PoolAccumulatorRewardsRequest)(nil), "osmosis.concentratedliquidity.v1beta1.PoolAccumulatorRewardsRequest")
+	proto.RegisterType((*PoolAccumulatorRewardsResponse)(nil), "osmosis.concentratedliquidity.v1beta1.PoolAccumulatorRewardsResponse")
 }
 
 func init() {
@@ -1083,6 +1182,9 @@ type QueryClient interface {
 	ClaimableIncentives(ctx context.Context, in *ClaimableIncentivesRequest, opts ...grpc.CallOption) (*ClaimableIncentivesResponse, error)
 	// PositionById returns a position with the given id.
 	PositionById(ctx context.Context, in *PositionByIdRequest, opts ...grpc.CallOption) (*PositionByIdResponse, error)
+	// PoolAccumulatorRewards returns the pool-global accumulator rewards.
+	// Contains spread factor rewards and uptime rewards.
+	PoolAccumulatorRewards(ctx context.Context, in *PoolAccumulatorRewardsRequest, opts ...grpc.CallOption) (*PoolAccumulatorRewardsResponse, error)
 }
 
 type queryClient struct {
@@ -1165,6 +1267,15 @@ func (c *queryClient) PositionById(ctx context.Context, in *PositionByIdRequest,
 	return out, nil
 }
 
+func (c *queryClient) PoolAccumulatorRewards(ctx context.Context, in *PoolAccumulatorRewardsRequest, opts ...grpc.CallOption) (*PoolAccumulatorRewardsResponse, error) {
+	out := new(PoolAccumulatorRewardsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.concentratedliquidity.v1beta1.Query/PoolAccumulatorRewards", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Pools returns all concentrated liquidity pools
@@ -1188,6 +1299,9 @@ type QueryServer interface {
 	ClaimableIncentives(context.Context, *ClaimableIncentivesRequest) (*ClaimableIncentivesResponse, error)
 	// PositionById returns a position with the given id.
 	PositionById(context.Context, *PositionByIdRequest) (*PositionByIdResponse, error)
+	// PoolAccumulatorRewards returns the pool-global accumulator rewards.
+	// Contains spread factor rewards and uptime rewards.
+	PoolAccumulatorRewards(context.Context, *PoolAccumulatorRewardsRequest) (*PoolAccumulatorRewardsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -1217,6 +1331,9 @@ func (*UnimplementedQueryServer) ClaimableIncentives(ctx context.Context, req *C
 }
 func (*UnimplementedQueryServer) PositionById(ctx context.Context, req *PositionByIdRequest) (*PositionByIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PositionById not implemented")
+}
+func (*UnimplementedQueryServer) PoolAccumulatorRewards(ctx context.Context, req *PoolAccumulatorRewardsRequest) (*PoolAccumulatorRewardsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PoolAccumulatorRewards not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -1367,6 +1484,24 @@ func _Query_PositionById_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_PoolAccumulatorRewards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PoolAccumulatorRewardsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).PoolAccumulatorRewards(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.concentratedliquidity.v1beta1.Query/PoolAccumulatorRewards",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).PoolAccumulatorRewards(ctx, req.(*PoolAccumulatorRewardsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.concentratedliquidity.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -1402,6 +1537,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PositionById",
 			Handler:    _Query_PositionById_Handler,
+		},
+		{
+			MethodName: "PoolAccumulatorRewards",
+			Handler:    _Query_PoolAccumulatorRewards_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -2112,6 +2251,85 @@ func (m *ClaimableIncentivesResponse) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
+func (m *PoolAccumulatorRewardsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PoolAccumulatorRewardsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PoolAccumulatorRewardsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.PoolId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.PoolId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *PoolAccumulatorRewardsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PoolAccumulatorRewardsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PoolAccumulatorRewardsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.UptimeGrowthGlobal) > 0 {
+		for iNdEx := len(m.UptimeGrowthGlobal) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.UptimeGrowthGlobal[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.SpreadRewardGrowthGlobal) > 0 {
+		for iNdEx := len(m.SpreadRewardGrowthGlobal) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.SpreadRewardGrowthGlobal[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -2396,6 +2614,39 @@ func (m *ClaimableIncentivesResponse) Size() (n int) {
 	}
 	if len(m.ForfeitedIncentives) > 0 {
 		for _, e := range m.ForfeitedIncentives {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *PoolAccumulatorRewardsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PoolId != 0 {
+		n += 1 + sovQuery(uint64(m.PoolId))
+	}
+	return n
+}
+
+func (m *PoolAccumulatorRewardsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.SpreadRewardGrowthGlobal) > 0 {
+		for _, e := range m.SpreadRewardGrowthGlobal {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if len(m.UptimeGrowthGlobal) > 0 {
+		for _, e := range m.UptimeGrowthGlobal {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
@@ -4167,6 +4418,193 @@ func (m *ClaimableIncentivesResponse) Unmarshal(dAtA []byte) error {
 			}
 			m.ForfeitedIncentives = append(m.ForfeitedIncentives, types2.Coin{})
 			if err := m.ForfeitedIncentives[len(m.ForfeitedIncentives)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PoolAccumulatorRewardsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PoolAccumulatorRewardsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PoolAccumulatorRewardsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+			}
+			m.PoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PoolAccumulatorRewardsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PoolAccumulatorRewardsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PoolAccumulatorRewardsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SpreadRewardGrowthGlobal", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SpreadRewardGrowthGlobal = append(m.SpreadRewardGrowthGlobal, types2.DecCoin{})
+			if err := m.SpreadRewardGrowthGlobal[len(m.SpreadRewardGrowthGlobal)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UptimeGrowthGlobal", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UptimeGrowthGlobal = append(m.UptimeGrowthGlobal, model.UptimeTracker{})
+			if err := m.UptimeGrowthGlobal[len(m.UptimeGrowthGlobal)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

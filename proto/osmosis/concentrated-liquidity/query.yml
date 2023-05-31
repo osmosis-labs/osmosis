@@ -43,3 +43,6 @@ queries:
       query_func: "k.PositionById"
     cli:
       cmd: "PositionById"
+  PoolAccumulatorRewards:
+    proto_wrapper:
+      query_func: "k.PoolAccumulatorRewards"
