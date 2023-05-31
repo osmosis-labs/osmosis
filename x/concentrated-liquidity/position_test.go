@@ -2074,6 +2074,7 @@ func (s *KeeperTestSuite) TestGetAllPositionIdsForPoolId() {
 
 func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 	var (
+		position           model.Position
 		positionId         uint64
 		liquidity          sdk.Dec
 		concentratedLockId uint64
@@ -2149,8 +2150,12 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 			s.Require().NoError(err)
 
 			// Check position
-			_, err = s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+			position, err = s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
 			s.Require().NoError(err)
+			s.Require().Equal(position.JoinTime, s.Ctx.BlockTime())
+			s.Require().Equal(position.UpperTick, types.MaxTick)
+			s.Require().Equal(position.LowerTick, types.MinTick)
+			s.Require().Equal(position.Liquidity, liquidity)
 
 			// Check locked
 			concentratedLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, concentratedLockId)
