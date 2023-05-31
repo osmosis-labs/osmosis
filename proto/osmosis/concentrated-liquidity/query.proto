@@ -82,8 +82,8 @@ service Query {
       returns (PoolAccumulatorRewardsResponse) {
     option (google.api.http).get =
         "/osmosis/concentratedliquidity/v1beta1/pool_accum_rewards";
-      }
-      
+  }
+
   // IncentiveRecords returns the incentive records for a given poolId
   rpc IncentiveRecords(IncentiveRecordsRequest)
       returns (IncentiveRecordsResponse) {
