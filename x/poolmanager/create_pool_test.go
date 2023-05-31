@@ -8,6 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	cwmodel "github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/model"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	stableswap "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
@@ -150,6 +151,9 @@ func (s *KeeperTestSuite) TestCreatePool() {
 
 		validConcentratedPoolMsg = clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], foo, bar, 1, defaultPoolSpreadFactor)
 
+		validTransmuterCodeId = uint64(1)
+		validCWPoolMsg        = cwmodel.NewMsgCreateCosmWasmPool(validTransmuterCodeId, s.TestAccs[0], s.GetDefaultTransmuterInstantiateMsgBytes())
+
 		defaultFundAmount = sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount.Mul(sdk.NewInt(2))), sdk.NewCoin(bar, defaultInitPoolAmount.Mul(sdk.NewInt(2))))
 	)
 
@@ -186,6 +190,12 @@ func (s *KeeperTestSuite) TestCreatePool() {
 			expectedModuleType: concentratedKeeperType,
 		},
 		{
+			name:               "cosmwasm pool - success",
+			creatorFundAmount:  defaultFundAmount,
+			msg:                validCWPoolMsg,
+			expectedModuleType: cosmwasmKeeperType,
+		},
+		{
 			name:               "error: balancer pool with non zero exit fee",
 			creatorFundAmount:  defaultFundAmount,
 			msg:                invalidBalancerPoolMsg,
@@ -217,6 +227,11 @@ func (s *KeeperTestSuite) TestCreatePool() {
 				params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
 				params.IsPermissionlessPoolCreationEnabled = false
 				s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
+			}
+
+			if tc.expectedModuleType == cosmwasmKeeperType {
+				codeId := s.StoreCosmWasmPoolContractCode(apptesting.TransmuterContractName)
+				s.Require().Equal(validTransmuterCodeId, codeId)
 			}
 
 			poolmanagerKeeper := s.App.PoolManagerKeeper
@@ -367,6 +382,10 @@ func (s *KeeperTestSuite) TestSetAndGetAllPoolRoutes() {
 				{
 					PoolType: types.Concentrated,
 					PoolId:   3,
+				},
+				{
+					PoolType: types.CosmWasm,
+					PoolId:   4,
 				},
 			},
 		},

@@ -1027,6 +1027,111 @@ func (m *PoolAccumulatorRewardsResponse) GetUptimeGrowthGlobal() []model.UptimeT
 	return nil
 }
 
+// ===================== QueryTickAccumulatorTrackers
+type TickAccumulatorTrackersRequest struct {
+	PoolId    uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+	TickIndex int64  `protobuf:"varint,2,opt,name=tick_index,json=tickIndex,proto3" json:"tick_index,omitempty" yaml:"tick_index"`
+}
+
+func (m *TickAccumulatorTrackersRequest) Reset()         { *m = TickAccumulatorTrackersRequest{} }
+func (m *TickAccumulatorTrackersRequest) String() string { return proto.CompactTextString(m) }
+func (*TickAccumulatorTrackersRequest) ProtoMessage()    {}
+func (*TickAccumulatorTrackersRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5c83e18b11fd607d, []int{20}
+}
+func (m *TickAccumulatorTrackersRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TickAccumulatorTrackersRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TickAccumulatorTrackersRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TickAccumulatorTrackersRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TickAccumulatorTrackersRequest.Merge(m, src)
+}
+func (m *TickAccumulatorTrackersRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *TickAccumulatorTrackersRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_TickAccumulatorTrackersRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TickAccumulatorTrackersRequest proto.InternalMessageInfo
+
+func (m *TickAccumulatorTrackersRequest) GetPoolId() uint64 {
+	if m != nil {
+		return m.PoolId
+	}
+	return 0
+}
+
+func (m *TickAccumulatorTrackersRequest) GetTickIndex() int64 {
+	if m != nil {
+		return m.TickIndex
+	}
+	return 0
+}
+
+type TickAccumulatorTrackersResponse struct {
+	SpreadRewardGrowthOppositeDirectionOfLastTraversal github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=spread_reward_growth_opposite_direction_of_last_traversal,json=spreadRewardGrowthOppositeDirectionOfLastTraversal,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"spread_reward_growth_opposite_direction_of_last_traversal"`
+	UptimeTrackers                                     []model.UptimeTracker                       `protobuf:"bytes,2,rep,name=uptime_trackers,json=uptimeTrackers,proto3" json:"uptime_trackers" yaml:"uptime_trackers"`
+}
+
+func (m *TickAccumulatorTrackersResponse) Reset()         { *m = TickAccumulatorTrackersResponse{} }
+func (m *TickAccumulatorTrackersResponse) String() string { return proto.CompactTextString(m) }
+func (*TickAccumulatorTrackersResponse) ProtoMessage()    {}
+func (*TickAccumulatorTrackersResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5c83e18b11fd607d, []int{21}
+}
+func (m *TickAccumulatorTrackersResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TickAccumulatorTrackersResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TickAccumulatorTrackersResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TickAccumulatorTrackersResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TickAccumulatorTrackersResponse.Merge(m, src)
+}
+func (m *TickAccumulatorTrackersResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *TickAccumulatorTrackersResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_TickAccumulatorTrackersResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TickAccumulatorTrackersResponse proto.InternalMessageInfo
+
+func (m *TickAccumulatorTrackersResponse) GetSpreadRewardGrowthOppositeDirectionOfLastTraversal() github_com_cosmos_cosmos_sdk_types.DecCoins {
+	if m != nil {
+		return m.SpreadRewardGrowthOppositeDirectionOfLastTraversal
+	}
+	return nil
+}
+
+func (m *TickAccumulatorTrackersResponse) GetUptimeTrackers() []model.UptimeTracker {
+	if m != nil {
+		return m.UptimeTrackers
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*UserPositionsRequest)(nil), "osmosis.concentratedliquidity.v1beta1.UserPositionsRequest")
 	proto.RegisterType((*UserPositionsResponse)(nil), "osmosis.concentratedliquidity.v1beta1.UserPositionsResponse")
@@ -1048,6 +1153,8 @@ func init() {
 	proto.RegisterType((*ClaimableIncentivesResponse)(nil), "osmosis.concentratedliquidity.v1beta1.ClaimableIncentivesResponse")
 	proto.RegisterType((*PoolAccumulatorRewardsRequest)(nil), "osmosis.concentratedliquidity.v1beta1.PoolAccumulatorRewardsRequest")
 	proto.RegisterType((*PoolAccumulatorRewardsResponse)(nil), "osmosis.concentratedliquidity.v1beta1.PoolAccumulatorRewardsResponse")
+	proto.RegisterType((*TickAccumulatorTrackersRequest)(nil), "osmosis.concentratedliquidity.v1beta1.TickAccumulatorTrackersRequest")
+	proto.RegisterType((*TickAccumulatorTrackersResponse)(nil), "osmosis.concentratedliquidity.v1beta1.TickAccumulatorTrackersResponse")
 }
 
 func init() {
@@ -1195,6 +1302,9 @@ type QueryClient interface {
 	// PoolAccumulatorRewards returns the pool-global accumulator rewards.
 	// Contains spread factor rewards and uptime rewards.
 	PoolAccumulatorRewards(ctx context.Context, in *PoolAccumulatorRewardsRequest, opts ...grpc.CallOption) (*PoolAccumulatorRewardsResponse, error)
+	// TickAccumulatorTrackers returns the tick accumulator trackers.
+	// Contains spread factor and uptime accumulator trackers.
+	TickAccumulatorTrackers(ctx context.Context, in *TickAccumulatorTrackersRequest, opts ...grpc.CallOption) (*TickAccumulatorTrackersResponse, error)
 }
 
 type queryClient struct {
@@ -1286,6 +1396,15 @@ func (c *queryClient) PoolAccumulatorRewards(ctx context.Context, in *PoolAccumu
 	return out, nil
 }
 
+func (c *queryClient) TickAccumulatorTrackers(ctx context.Context, in *TickAccumulatorTrackersRequest, opts ...grpc.CallOption) (*TickAccumulatorTrackersResponse, error) {
+	out := new(TickAccumulatorTrackersResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.concentratedliquidity.v1beta1.Query/TickAccumulatorTrackers", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Pools returns all concentrated liquidity pools
@@ -1312,6 +1431,9 @@ type QueryServer interface {
 	// PoolAccumulatorRewards returns the pool-global accumulator rewards.
 	// Contains spread factor rewards and uptime rewards.
 	PoolAccumulatorRewards(context.Context, *PoolAccumulatorRewardsRequest) (*PoolAccumulatorRewardsResponse, error)
+	// TickAccumulatorTrackers returns the tick accumulator trackers.
+	// Contains spread factor and uptime accumulator trackers.
+	TickAccumulatorTrackers(context.Context, *TickAccumulatorTrackersRequest) (*TickAccumulatorTrackersResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -1344,6 +1466,9 @@ func (*UnimplementedQueryServer) PositionById(ctx context.Context, req *Position
 }
 func (*UnimplementedQueryServer) PoolAccumulatorRewards(ctx context.Context, req *PoolAccumulatorRewardsRequest) (*PoolAccumulatorRewardsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PoolAccumulatorRewards not implemented")
+}
+func (*UnimplementedQueryServer) TickAccumulatorTrackers(ctx context.Context, req *TickAccumulatorTrackersRequest) (*TickAccumulatorTrackersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TickAccumulatorTrackers not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -1512,6 +1637,24 @@ func _Query_PoolAccumulatorRewards_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_TickAccumulatorTrackers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TickAccumulatorTrackersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TickAccumulatorTrackers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.concentratedliquidity.v1beta1.Query/TickAccumulatorTrackers",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TickAccumulatorTrackers(ctx, req.(*TickAccumulatorTrackersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.concentratedliquidity.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -1551,6 +1694,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PoolAccumulatorRewards",
 			Handler:    _Query_PoolAccumulatorRewards_Handler,
+		},
+		{
+			MethodName: "TickAccumulatorTrackers",
+			Handler:    _Query_TickAccumulatorTrackers_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -2340,6 +2487,90 @@ func (m *PoolAccumulatorRewardsResponse) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
+func (m *TickAccumulatorTrackersRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TickAccumulatorTrackersRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TickAccumulatorTrackersRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.TickIndex != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.TickIndex))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.PoolId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.PoolId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TickAccumulatorTrackersResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TickAccumulatorTrackersResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TickAccumulatorTrackersResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.UptimeTrackers) > 0 {
+		for iNdEx := len(m.UptimeTrackers) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.UptimeTrackers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.SpreadRewardGrowthOppositeDirectionOfLastTraversal) > 0 {
+		for iNdEx := len(m.SpreadRewardGrowthOppositeDirectionOfLastTraversal) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.SpreadRewardGrowthOppositeDirectionOfLastTraversal[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -2657,6 +2888,42 @@ func (m *PoolAccumulatorRewardsResponse) Size() (n int) {
 	}
 	if len(m.UptimeGrowthGlobal) > 0 {
 		for _, e := range m.UptimeGrowthGlobal {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TickAccumulatorTrackersRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PoolId != 0 {
+		n += 1 + sovQuery(uint64(m.PoolId))
+	}
+	if m.TickIndex != 0 {
+		n += 1 + sovQuery(uint64(m.TickIndex))
+	}
+	return n
+}
+
+func (m *TickAccumulatorTrackersResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.SpreadRewardGrowthOppositeDirectionOfLastTraversal) > 0 {
+		for _, e := range m.SpreadRewardGrowthOppositeDirectionOfLastTraversal {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if len(m.UptimeTrackers) > 0 {
+		for _, e := range m.UptimeTrackers {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
@@ -4615,6 +4882,212 @@ func (m *PoolAccumulatorRewardsResponse) Unmarshal(dAtA []byte) error {
 			}
 			m.UptimeGrowthGlobal = append(m.UptimeGrowthGlobal, model.UptimeTracker{})
 			if err := m.UptimeGrowthGlobal[len(m.UptimeGrowthGlobal)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TickAccumulatorTrackersRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TickAccumulatorTrackersRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TickAccumulatorTrackersRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+			}
+			m.PoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TickIndex", wireType)
+			}
+			m.TickIndex = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TickIndex |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TickAccumulatorTrackersResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TickAccumulatorTrackersResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TickAccumulatorTrackersResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SpreadRewardGrowthOppositeDirectionOfLastTraversal", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SpreadRewardGrowthOppositeDirectionOfLastTraversal = append(m.SpreadRewardGrowthOppositeDirectionOfLastTraversal, types2.DecCoin{})
+			if err := m.SpreadRewardGrowthOppositeDirectionOfLastTraversal[len(m.SpreadRewardGrowthOppositeDirectionOfLastTraversal)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UptimeTrackers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UptimeTrackers = append(m.UptimeTrackers, model.UptimeTracker{})
+			if err := m.UptimeTrackers[len(m.UptimeTrackers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

@@ -121,12 +121,12 @@ func (k Keeper) PrepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 	return k.prepareClaimableSpreadRewards(ctx, positionId)
 }
 
-func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (poolmanagertypes.PoolI, error) {
-	return convertConcentratedToPoolInterface(concentratedPool)
+func AsPoolI(concentratedPool types.ConcentratedPoolExtension) (poolmanagertypes.PoolI, error) {
+	return asPoolI(concentratedPool)
 }
 
-func ConvertPoolInterfaceToConcentrated(poolI poolmanagertypes.PoolI) (types.ConcentratedPoolExtension, error) {
-	return convertPoolInterfaceToConcentrated(poolI)
+func AsConcentrated(poolI poolmanagertypes.PoolI) (types.ConcentratedPoolExtension, error) {
+	return asConcentrated(poolI)
 }
 
 func (k Keeper) ValidateSpreadFactor(ctx sdk.Context, params types.Params, spreadFactor sdk.Dec) bool {
