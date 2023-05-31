@@ -21,7 +21,7 @@ var (
 		LiquidityGross: DefaultLiquidityAmt,
 		LiquidityNet:   DefaultLiquidityAmt,
 		SpreadRewardGrowthOppositeDirectionOfLastTraversal: DefaultSpreadRewardAccumCoins,
-		UptimeTrackers: model.UptimeTrackers{wrapUptimeTrackers(getExpectedUptimes().hundredTokensMultiDenom)},
+		UptimeTrackers: model.UptimeTrackers{List: wrapUptimeTrackers(getExpectedUptimes().hundredTokensMultiDenom)},
 	}
 
 	defaultTick = genesis.FullTick{

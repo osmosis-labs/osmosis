@@ -339,9 +339,9 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 		preInitializedTickIndex     = DefaultCurrTick + 2
 		expectedUptimes             = getExpectedUptimes()
 		emptyUptimeTrackers         = wrapUptimeTrackers(expectedUptimes.emptyExpectedAccumValues)
-		emptyUptimeTrackersModel    = model.UptimeTrackers{emptyUptimeTrackers}
+		emptyUptimeTrackersModel    = model.UptimeTrackers{List: emptyUptimeTrackers}
 		varyingTokensAndDenoms      = wrapUptimeTrackers(expectedUptimes.varyingTokensMultiDenom)
-		varyingTokensAndDenomsModel = model.UptimeTrackers{varyingTokensAndDenoms}
+		varyingTokensAndDenomsModel = model.UptimeTrackers{List: varyingTokensAndDenoms}
 	)
 
 	tests := []struct {
