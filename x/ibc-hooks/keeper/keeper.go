@@ -147,6 +147,8 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 		newAck = channeltypes.NewResultAcknowledgement(jsonAck)
 	}
 
+	// ToDo: handle error acks here!
+
 	err = k.channelKeeper.WriteAcknowledgement(ctx, cap, ack.Packet, newAck)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "could not write acknowledgement")

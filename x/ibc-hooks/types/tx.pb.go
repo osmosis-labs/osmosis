@@ -473,7 +473,7 @@ func (m *MsgEmitIBCAck) Unmarshal(dAtA []byte) error {
 			}
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SourceChannel", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Channel", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
