@@ -533,6 +533,7 @@ func (s *KeeperTestSuite) TestGetUserPositions() {
 							Address:    pos.acc.String(),
 							LowerTick:  pos.lowerTick,
 							UpperTick:  pos.upperTick,
+							JoinTime:   s.Ctx.BlockTime(),
 							Liquidity:  liquidity,
 						})
 					}
