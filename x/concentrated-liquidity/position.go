@@ -217,12 +217,12 @@ func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId ui
 // GetUserPositionsSerialized behaves similarly to GetUserPositions, but returns the positions in a way that can be paginated.
 func (k Keeper) GetUserPositionsSerialized(ctx sdk.Context, addr sdk.AccAddress, poolId uint64, pagination *query.PageRequest) ([]model.Position, *query.PageResponse, error) {
 	var prefix []byte
-	var expectedLen int
+	var expectedKeyPartCount int
 	if poolId == 0 {
-		expectedLen = 3
+		expectedKeyPartCount = 3
 		prefix = types.KeyUserPositions(addr)
 	} else {
-		expectedLen = 2
+		expectedKeyPartCount = 2
 		prefix = types.KeyAddressAndPoolId(addr, poolId)
 	}
 
@@ -234,12 +234,12 @@ func (k Keeper) GetUserPositionsSerialized(ctx sdk.Context, addr sdk.AccAddress,
 	pageRes, err := query.Paginate(positionsStore, pagination, func(key, value []byte) error {
 		// Extract the components from the key
 		parts := bytes.Split(key, []byte(types.KeySeparator))
-		if len(parts) != expectedLen {
+		if len(parts) != expectedKeyPartCount {
 			return fmt.Errorf("invalid key format: %s", key)
 		}
 
 		// Parse the positionId from the key
-		positionId, err := strconv.ParseUint(string(parts[expectedLen-1]), 10, 64)
+		positionId, err := strconv.ParseUint(string(parts[expectedKeyPartCount-1]), 10, 64)
 		if err != nil {
 			return fmt.Errorf("failed to parse positionId: %w", err)
 		}
