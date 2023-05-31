@@ -19,9 +19,6 @@ const (
 )
 
 func TestPoolModuleSuite(t *testing.T) {
-
-	t.Skip("Skipping test until https://github.com/osmosis-labs/osmosis/issues/5329 is completed")
-
 	suite.Run(t, new(CosmWasmPoolSuite))
 }
 
