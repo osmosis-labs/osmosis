@@ -278,8 +278,11 @@ In order to allow CosmWasm pool to work with the incentives module (or being com
 the contract needs to be able to create share tokens.
 
 We handle this by utilizing the `x/tokenfactory` module.
-Each pool have share denom with this pattern: `tokenfactory/{contract_address}/{pool_id}`.
-The  pool contract should have the knowledge of its pool id in state. Similarly, we store that in state in chain-code as well.
+Each pool has share denom with this pattern: `factory/{contract_address}/cw-pool/{custom-name}`.
+
+The contract address uniquely identifies a pool. We also use cw-pool to make these denoms distinguishable
+from other tokenfactory denoms and provide contracts the ability to customize the `{custom-name}`.
+
 Each contract is responsible for minting and burning its token factory shares. The chain does no interaction with tokenfactory.
 
 To integrate `x/cosmwasmpool` into the `x/incentives` module, it also needs to create gauges.
