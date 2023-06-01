@@ -46,7 +46,7 @@ func (s *TransmuterSuite) TestFunctionalTransmuter() {
 
 	const (
 		exppectedDenomPrefix = tokenfactorytypes.ModuleDenomPrefix + "/"
-		expectedDenomSuffix  = "/cosmwasmpoo/lp"
+		expectedDenomSuffix  = "/transmuter/poolshare"
 	)
 
 	// Create Transmuter pool
