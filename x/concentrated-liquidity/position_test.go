@@ -558,7 +558,6 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 	defaultPoolId := uint64(1)
 	DefaultJoinTime := s.Ctx.BlockTime()
 	defaultCreator := s.TestAccs[0]
-	secondaryAccount := s.TestAccs[1]
 
 	tests := []struct {
 		name             string
@@ -572,12 +571,14 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 			name:             "Valid case: Delete position info on existing pool and existing position (no underlying lock)",
 			underlyingLockId: 0,
 			poolId:           defaultPoolId,
+			creator:          defaultCreator,
 			positionId:       DefaultPositionId,
 		},
 		{
 			name:             "Valid case: Delete position info on existing pool and existing position (has underlying lock)",
 			underlyingLockId: 1,
 			poolId:           defaultPoolId,
+			creator:          defaultCreator,
 			positionId:       DefaultPositionId,
 		},
 		{
@@ -585,6 +586,7 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 			positionId:       DefaultPositionId + 1,
 			underlyingLockId: 0,
 			poolId:           defaultPoolId,
+			creator:          defaultCreator,
 			expectedErr:      types.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
 		},
 		{
@@ -592,13 +594,14 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 			positionId:       DefaultPositionId,
 			underlyingLockId: 0,
 			poolId:           defaultPoolId,
-			creator:          secondaryAccount,
-			expectedErr:      types.AddressPoolPositionIdNotFoundError{PoolId: DefaultPositionId, PositionId: DefaultPositionId, Owner: secondaryAccount.String()},
+			creator:          s.TestAccs[1],
+			expectedErr:      types.AddressPoolPositionIdNotFoundError{PoolId: DefaultPositionId, PositionId: DefaultPositionId, Owner: s.TestAccs[1].String()},
 		},
 		{
 			name:             "Invalid case: non-existent pool-position ID mapping",
 			poolId:           3,
 			positionId:       DefaultPositionId,
+			creator:          defaultCreator,
 			underlyingLockId: 0,
 			expectedErr:      types.PoolPositionIdNotFoundError{PoolId: 3, PositionId: DefaultPositionId},
 		},
@@ -664,15 +667,7 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 				s.Require().Nil(positionIdBytes)
 			}
 
-			if test.creator != nil {
-				defaultCreator = secondaryAccount
-			}
-
-			if test.poolId != defaultPoolId {
-				defaultPoolId = test.poolId
-			}
-
-			err = s.App.ConcentratedLiquidityKeeper.DeletePosition(s.Ctx, test.positionId, defaultCreator, defaultPoolId)
+			err = s.App.ConcentratedLiquidityKeeper.DeletePosition(s.Ctx, test.positionId, test.creator, test.poolId)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, test.expectedErr)
