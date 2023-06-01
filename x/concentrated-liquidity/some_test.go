@@ -30,7 +30,7 @@ func (s *KeeperTestSuite) createPosition(accountIndex int, poolId uint64, coin0,
 }
 
 func (s *KeeperTestSuite) TestAndCreatePosition() {
-
+	s.Setup()
 	const (
 		numberOfPositions              = 100_000
 		maxAmountDeposited             = int64(1_000_000_000_000)
@@ -60,7 +60,7 @@ func (s *KeeperTestSuite) TestAndCreatePosition() {
 
 	rand.Seed(seed)
 
-	cleanup := s.SetupWithLevelDb()
+	// cleanup := s.SetupWithLevelDb()
 
 	for _, acc := range s.TestAccs {
 		simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, sdk.NewCoins(
@@ -200,7 +200,7 @@ func (s *KeeperTestSuite) TestAndCreatePosition() {
 	// Commit so that the changes are propagated to IAVL.
 	s.Commit()
 
-	cleanup()
+	// cleanup()
 	fmt.Println("=-=")
 	psotiionState := s.App.ExportState(s.Ctx)
 	stateBz, err := json.MarshalIndent(psotiionState, "", "    ")
