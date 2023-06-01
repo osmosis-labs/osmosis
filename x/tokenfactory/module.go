@@ -194,7 +194,10 @@ func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *s
 // WeightedOperations returns the all the lockup module operations with their respective weights.
 func (am AppModule) Actions() []simtypes.Action {
 	return []simtypes.Action{
-		simtypes.NewMsgBasedAction("create token factory token", am.keeper, simulation.RandomMsgCreateDenom),
+		// TODO:
+		// ref: https://github.com/osmosis-labs/osmosis/pull/5381 @p0mvn disabled as unable to configure
+		// custom gas settings for this message at this time. To be addressed once solution is found.
+		// simtypes.NewMsgBasedAction("create token factory token", am.keeper, simulation.RandomMsgCreateDenom),
 		simtypes.NewMsgBasedAction("mint token factory token", am.keeper, simulation.RandomMsgMintDenom),
 		simtypes.NewMsgBasedAction("burn token factory token", am.keeper, simulation.RandomMsgBurnDenom),
 		simtypes.NewMsgBasedAction("change admin token factory token", am.keeper, simulation.RandomMsgChangeAdmin),
