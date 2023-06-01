@@ -3,8 +3,6 @@ package types
 import (
 	"fmt"
 
-	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -13,6 +11,9 @@ import (
 var (
 	KeyDenomCreationFee        = []byte("DenomCreationFee")
 	KeyDenomCreationGasConsume = []byte("DenomCreationGasConsume")
+
+	// For choice, see: https://github.com/osmosis-labs/osmosis/pull/4983
+	DefaultCreationGasFee = 40_000_000
 )
 
 // ParamTable for gamm module.
@@ -30,8 +31,9 @@ func NewParams(denomCreationFee sdk.Coins, denomCreationGasConsume uint64) Param
 // default gamm module parameters.
 func DefaultParams() Params {
 	return Params{
-		DenomCreationFee:        sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 10_000_000)), // 10 OSMO
-		DenomCreationGasConsume: 0,
+		// For choice, see: https://github.com/osmosis-labs/osmosis/pull/4983
+		DenomCreationFee:        sdk.NewCoins(), // used to be 10 OSMO at launch.
+		DenomCreationGasConsume: uint64(DefaultCreationGasFee),
 	}
 }
 

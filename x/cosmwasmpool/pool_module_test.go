@@ -185,7 +185,7 @@ func (s *PoolModuleSuite) TestCalcOutAmtGivenIn_SwapOutAmtGivenIn() {
 			initialCoins:         initalDefaultSupply,
 			tokenIn:              sdk.NewCoin(denomA, defaultAmount.Add(sdk.OneInt())),
 			tokenOutDenom:        denomB,
-			expectedErrorMessage: fmt.Sprintf("Insufficient fund: required: %s, available: %s", sdk.NewCoin(denomB, defaultAmount.Add(sdk.OneInt())), sdk.NewCoin(denomB, defaultAmount)),
+			expectedErrorMessage: fmt.Sprintf("Insufficient pool asset: required: %s, available: %s", sdk.NewCoin(denomB, defaultAmount.Add(sdk.OneInt())), sdk.NewCoin(denomB, defaultAmount)),
 		},
 		"non-zero swap fee": {
 			initialCoins:         initalDefaultSupply,
@@ -310,7 +310,7 @@ func (s *PoolModuleSuite) TestCalcInAmtGivenOut_SwapInAmtGivenOut() {
 			initialCoins:         initalDefaultSupply,
 			tokenOut:             sdk.NewCoin(denomA, defaultAmount.Add(sdk.OneInt())),
 			tokenInDenom:         denomB,
-			expectedErrorMessage: fmt.Sprintf("Insufficient fund: required: %s, available: %s", sdk.NewCoin(denomA, defaultAmount.Add(sdk.OneInt())), sdk.NewCoin(denomA, defaultAmount)),
+			expectedErrorMessage: fmt.Sprintf("Insufficient pool asset: required: %s, available: %s", sdk.NewCoin(denomA, defaultAmount.Add(sdk.OneInt())), sdk.NewCoin(denomA, defaultAmount)),
 		},
 		"non-zero swap fee": {
 			initialCoins:         initalDefaultSupply,
