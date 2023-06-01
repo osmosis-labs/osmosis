@@ -229,7 +229,6 @@ func (k Keeper) GetUserPositionsSerialized(ctx sdk.Context, addr sdk.AccAddress,
 	positionsStore := sdkprefix.NewStore(ctx.KVStore(k.storeKey), prefix)
 
 	positions := []model.Position{}
-	positionIds := []uint64{}
 
 	pageRes, err := query.Paginate(positionsStore, pagination, func(key, value []byte) error {
 		// Extract the components from the key
@@ -244,26 +243,23 @@ func (k Keeper) GetUserPositionsSerialized(ctx sdk.Context, addr sdk.AccAddress,
 			return fmt.Errorf("failed to parse positionId: %w", err)
 		}
 
-		positionIds = append(positionIds, positionId)
+		// Retrieve the position from the store using its ID and add it to the result slice.
+		position, err := k.GetPosition(ctx, positionId)
+		if err != nil {
+			return err
+		}
+		positions = append(positions, position)
+
 		return nil
 	})
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// Sort the positionIds in ascending order
-	sort.Slice(positionIds, func(i, j int) bool {
-		return positionIds[i] < positionIds[j]
+	// Sort the positions in ascending order by ID
+	sort.Slice(positions, func(i, j int) bool {
+		return positions[i].PositionId < positions[j].PositionId
 	})
-
-	// Retrieve each position from the store using its ID and add it to the result slice.
-	for _, positionId := range positionIds {
-		position, err := k.GetPosition(ctx, positionId)
-		if err != nil {
-			return nil, nil, err
-		}
-		positions = append(positions, position)
-	}
 
 	return positions, pageRes, nil
 }
