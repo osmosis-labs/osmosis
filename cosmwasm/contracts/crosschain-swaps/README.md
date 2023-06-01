@@ -332,7 +332,7 @@ osmosis testnets and a relayer between them.
 
 Compile the contracts using the Rust workspace optimizer:
 
-```
+```bash
 cd osmosis/cosmwasm
 docker run --rm -v "$(pwd)":/code \
       --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
