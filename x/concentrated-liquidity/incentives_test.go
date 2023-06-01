@@ -3986,7 +3986,7 @@ func (s *KeeperTestSuite) TestGetIncentiveRecordSerialized() {
 		expectedNumberOfRecords int
 	}{
 		{
-			name:                    "Get one incentive records from a valid pool",
+			name:                    "Get incentive records from a valid pool",
 			poolIdToQuery:           1,
 			expectedNumberOfRecords: 1,
 			paginationLimit:         10,
