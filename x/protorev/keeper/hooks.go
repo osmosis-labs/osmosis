@@ -111,22 +111,20 @@ func (k Keeper) afterPoolCreatedWithCoins(ctx sdk.Context, poolId uint64) {
 		return
 	}
 
-	coins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
+	//coins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
+	denoms, err := k.poolmanagerKeeper.RouteGetPoolDenoms(ctx, poolId)
 	if err != nil {
 		ctx.Logger().Error("Protorev error getting pool liquidity in afterPoolCreated", err)
 		return
 	}
 
-	// Pool must be active and the number of coins must be 2
-	if pool.IsActive(ctx) && len(coins) == 2 {
-		tokenA := coins[0]
-		tokenB := coins[1]
-
-		if baseDenomMap[tokenA.Denom] {
-			k.compareAndStorePool(ctx, poolId, tokenA, tokenB)
+	// Pool must be active and the number of denoms must be 2
+	if pool.IsActive(ctx) && len(denoms) == 2 {
+		if baseDenomMap[denoms[0]] {
+			k.compareAndStorePool(ctx, poolId, denoms[0], denoms[1])
 		}
-		if baseDenomMap[tokenB.Denom] {
-			k.compareAndStorePool(ctx, poolId, tokenB, tokenA)
+		if baseDenomMap[denoms[1]] {
+			k.compareAndStorePool(ctx, poolId, denoms[1], denoms[0])
 		}
 	}
 }
@@ -145,11 +143,11 @@ func (k Keeper) storeSwap(ctx sdk.Context, poolId uint64, tokenIn, tokenOut stri
 }
 
 // compareAndStorePool compares the liquidity of the new pool with the liquidity of the stored pool, and stores the new pool if it has more liquidity.
-func (k Keeper) compareAndStorePool(ctx sdk.Context, poolId uint64, baseToken, otherToken sdk.Coin) {
-	storedPoolId, err := k.GetPoolForDenomPair(ctx, baseToken.Denom, otherToken.Denom)
+func (k Keeper) compareAndStorePool(ctx sdk.Context, poolId uint64, baseDenom, otherDenom string) {
+	storedPoolId, err := k.GetPoolForDenomPair(ctx, baseDenom, otherDenom)
 	if err != nil {
 		// Error means no pool exists for this pair, so we set it
-		k.SetPoolForDenomPair(ctx, baseToken.Denom, otherToken.Denom, poolId)
+		k.SetPoolForDenomPair(ctx, baseDenom, otherDenom, poolId)
 		return
 	}
 
@@ -159,20 +157,26 @@ func (k Keeper) compareAndStorePool(ctx sdk.Context, poolId uint64, baseToken, o
 		}
 	}()
 
-	liquidity := baseToken.Amount.Mul(otherToken.Amount)
+	// Get coins and calculate liquidity for the new pool
+	newPoolCoins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
+	if err != nil {
+		ctx.Logger().Error("Protorev error getting newPoolCoins in compareAndStorePool", err)
+		return
+	}
+	newPoolliquidity := newPoolCoins[0].Amount.Mul(newPoolCoins[1].Amount)
 
+	// Get coins and calculate liquidity for the stored pool
 	storedPool, err := k.gammKeeper.GetPoolAndPoke(ctx, storedPoolId)
 	if err != nil {
 		ctx.Logger().Error("Protorev error getting storedPool in AfterCFMMPoolCreated hook", err)
 		return
 	}
-
 	storedPoolCoins := storedPool.GetTotalPoolLiquidity(ctx)
 	storedPoolLiquidity := storedPoolCoins[0].Amount.Mul(storedPoolCoins[1].Amount)
 
 	// If the new pool has more liquidity, we set it
-	if liquidity.GT(storedPoolLiquidity) {
-		k.SetPoolForDenomPair(ctx, baseToken.Denom, otherToken.Denom, poolId)
+	if newPoolliquidity.GT(storedPoolLiquidity) {
+		k.SetPoolForDenomPair(ctx, baseDenom, otherDenom, poolId)
 	}
 }
 

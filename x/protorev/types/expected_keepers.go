@@ -53,6 +53,7 @@ type PoolManagerKeeper interface {
 	) (poolmanagertypes.PoolI, error)
 	GetPoolModule(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolModuleI, error)
 	GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error)
+	RouteGetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error)
 }
 
 // EpochKeeper defines the Epoch contract that must be fulfilled when
