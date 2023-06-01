@@ -1765,7 +1765,7 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 
 	// Note balancer pool balance after joining balancer pool
 	sender, err := sdk.AccAddressFromBech32(chainA.NodeConfigs[0].PublicAddress)
-	chainANode.MigrateSharesToFullRangeConcentratedPosition(sender.String(), tokenOutMins.String(), sharesToMigrate.String())
+	chainANode.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sender.String(), "0" ,tokenOutMins.String(), sharesToMigrate.String())
 
 	position := chainANode.QueryConcentratedPositions(sender.String()) 
 
