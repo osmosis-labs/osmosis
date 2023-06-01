@@ -2,6 +2,7 @@ package concentrated_liquidity_test
 
 import (
 	"fmt"
+	"math/rand"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1355,6 +1356,27 @@ func (s *KeeperTestSuite) TestUpdatePosValueToInitValuePlusGrowthOutside() {
 			positionAccumDelta := positionPost.AccumValuePerShare.Sub(positionPre.AccumValuePerShare)
 			s.Require().Equal(tc.spreadRewardGrowthOutside, positionAccumDelta)
 		})
+	}
+}
+
+func NewRandomizedPositions() Positions {
+	rand.Seed(time.Now().UnixNano())
+
+	numSwaps := 2 + rand.Intn(99) // Random number between 2 and 100
+	numAccounts := 2 + rand.Intn(99)
+
+	numFullRange := rand.Intn(numAccounts + 1) // Random number between 0 and numAccounts inclusive
+	numNarrowRange := rand.Intn(numAccounts + 1)
+	numConsecutive := rand.Intn(numAccounts + 1)
+	numOverlapping := rand.Intn(numAccounts + 1)
+
+	return Positions{
+		numSwaps:       numSwaps,
+		numAccounts:    numAccounts,
+		numFullRange:   numFullRange,
+		numNarrowRange: numNarrowRange,
+		numConsecutive: numConsecutive,
+		numOverlapping: numOverlapping,
 	}
 }
 
