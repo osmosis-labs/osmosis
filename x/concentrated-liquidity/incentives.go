@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	sdkprefix "github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"golang.org/x/exp/slices"
@@ -597,8 +597,7 @@ func (k Keeper) GetAllIncentiveRecordsForPool(ctx sdk.Context, poolId uint64) ([
 }
 
 func (k Keeper) GetIncentiveRecordSerialized(ctx sdk.Context, poolId uint64, pagination *query.PageRequest) ([]types.IncentiveRecord, *query.PageResponse, error) {
-	store := ctx.KVStore(k.storeKey)
-	incentivesRecordStore := prefix.NewStore(store, types.KeyPoolIncentiveRecords(poolId))
+	incentivesRecordStore := sdkprefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPoolIncentiveRecords(poolId))
 
 	incentiveRecords := []types.IncentiveRecord{}
 	pageRes, err := query.Paginate(incentivesRecordStore, pagination, func(key, value []byte) error {

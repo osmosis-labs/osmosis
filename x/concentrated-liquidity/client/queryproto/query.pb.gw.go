@@ -990,6 +990,8 @@ var (
 	pattern_Query_PoolAccumulatorRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "concentratedliquidity", "v1beta1", "pool_accum_rewards"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_IncentiveRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "concentratedliquidity", "v1beta1", "incentive_records"}, "", runtime.AssumeColonVerbOpt(false)))
+
+	pattern_Query_TickAccumulatorTrackers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "concentratedliquidity", "v1beta1", "tick_accum_trackers"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
@@ -1012,4 +1014,6 @@ var (
 	forward_Query_PoolAccumulatorRewards_0 = runtime.ForwardResponseMessage
 
 	forward_Query_IncentiveRecords_0 = runtime.ForwardResponseMessage
+
+	forward_Query_TickAccumulatorTrackers_0 = runtime.ForwardResponseMessage
 )

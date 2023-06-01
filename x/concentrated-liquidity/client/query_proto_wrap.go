@@ -238,8 +238,6 @@ func (q Querier) PoolAccumulatorRewards(ctx sdk.Context, req clquery.PoolAccumul
 		SpreadRewardGrowthGlobal: spreadRewardsAcc.GetValue(),
 		UptimeGrowthGlobal:       uptimeGrowthTrackers,
 	}, nil
-	return &clquery.IncentiveRecordsResponse{IncentiveRecords: incentiveRecords}, nil
-
 }
 
 func (q Querier) IncentiveRecords(ctx sdk.Context, req clquery.IncentiveRecordsRequest) (*clquery.IncentiveRecordsResponse, error) {
