@@ -223,6 +223,9 @@ func (q Querier) PoolAccumulatorRewards(ctx sdk.Context, req clquery.PoolAccumul
 	}
 
 	spreadRewardsAcc, err := q.Keeper.GetSpreadRewardAccumulator(ctx, req.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 
 	uptimeAccValues, err := q.Keeper.GetUptimeAccumulatorValues(ctx, req.PoolId)
 	if err != nil {
