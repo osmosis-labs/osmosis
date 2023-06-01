@@ -632,20 +632,34 @@ func (s *KeeperTestSuite) TestGetUserPositionsSerialized() {
 				{7, 2, alternateAddress, DefaultCoins, DefaultLowerTick + 200, DefaultUpperTick + 200},
 			}
 
-			expectedUserPositions := []model.Position{}
+			expectedUserPositions := []model.FullPositionBreakdown{}
 			count := test.paginationLimit
 			for _, pos := range positions {
 				// if position does not exist this errors
-				liquidity, _ := s.SetupPosition(pos.poolId, pos.acc, pos.coins, pos.lowerTick, pos.upperTick)
+				s.SetupPosition(pos.poolId, pos.acc, pos.coins, pos.lowerTick, pos.upperTick)
 				if pos.acc.Equals(test.addressToQuery) && (test.poolIdToQuery == 0 || test.poolIdToQuery == pos.poolId) && count > 0 {
-					expectedUserPositions = append(expectedUserPositions, model.Position{
-						PositionId: pos.positionId,
-						PoolId:     pos.poolId,
-						Address:    pos.acc.String(),
-						LowerTick:  pos.lowerTick,
-						UpperTick:  pos.upperTick,
-						JoinTime:   s.Ctx.BlockTime(),
-						Liquidity:  liquidity,
+					position, err := k.GetPosition(s.Ctx, pos.positionId)
+					s.Require().NoError(err)
+
+					positionPool, err := k.GetConcentratedPoolById(s.Ctx, position.PoolId)
+					s.Require().NoError(err)
+
+					asset0, asset1, err := cl.CalculateUnderlyingAssetsFromPosition(s.Ctx, position, positionPool)
+					s.Require().NoError(err)
+
+					claimableFees, err := k.GetClaimableSpreadRewards(s.Ctx, pos.positionId)
+					s.Require().NoError(err)
+
+					claimableIncentives, forfeitedIncentives, err := k.GetClaimableIncentives(s.Ctx, pos.positionId)
+					s.Require().NoError(err)
+
+					expectedUserPositions = append(expectedUserPositions, model.FullPositionBreakdown{
+						Position:            position,
+						Asset0:              asset0,
+						Asset1:              asset1,
+						ClaimableFees:       claimableFees,
+						ClaimableIncentives: claimableIncentives,
+						ForfeitedIncentives: forfeitedIncentives,
 					})
 					count--
 				}

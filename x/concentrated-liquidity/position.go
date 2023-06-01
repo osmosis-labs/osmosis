@@ -215,7 +215,7 @@ func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId ui
 }
 
 // GetUserPositionsSerialized behaves similarly to GetUserPositions, but returns the positions in a way that can be paginated.
-func (k Keeper) GetUserPositionsSerialized(ctx sdk.Context, addr sdk.AccAddress, poolId uint64, pagination *query.PageRequest) ([]model.Position, *query.PageResponse, error) {
+func (k Keeper) GetUserPositionsSerialized(ctx sdk.Context, addr sdk.AccAddress, poolId uint64, pagination *query.PageRequest) ([]model.FullPositionBreakdown, *query.PageResponse, error) {
 	var prefix []byte
 	var expectedKeyPartCount int
 	if poolId == 0 {
@@ -228,7 +228,7 @@ func (k Keeper) GetUserPositionsSerialized(ctx sdk.Context, addr sdk.AccAddress,
 
 	positionsStore := sdkprefix.NewStore(ctx.KVStore(k.storeKey), prefix)
 
-	positions := []model.Position{}
+	fullPositions := []model.FullPositionBreakdown{}
 
 	pageRes, err := query.Paginate(positionsStore, pagination, func(key, value []byte) error {
 		// Extract the components from the key
@@ -248,7 +248,37 @@ func (k Keeper) GetUserPositionsSerialized(ctx sdk.Context, addr sdk.AccAddress,
 		if err != nil {
 			return err
 		}
-		positions = append(positions, position)
+
+		// get the pool from the position
+		pool, err := k.GetConcentratedPoolById(ctx, position.PoolId)
+		if err != nil {
+			return err
+		}
+
+		asset0, asset1, err := CalculateUnderlyingAssetsFromPosition(ctx, position, pool)
+		if err != nil {
+			return err
+		}
+
+		claimableFees, err := k.GetClaimableSpreadRewards(ctx, position.PositionId)
+		if err != nil {
+			return err
+		}
+
+		claimableIncentives, forfeitedIncentives, err := k.GetClaimableIncentives(ctx, position.PositionId)
+		if err != nil {
+			return err
+		}
+
+		// Append the position and underlying assets to the positions slice
+		fullPositions = append(fullPositions, model.FullPositionBreakdown{
+			Position:            position,
+			Asset0:              asset0,
+			Asset1:              asset1,
+			ClaimableFees:       claimableFees,
+			ClaimableIncentives: claimableIncentives,
+			ForfeitedIncentives: forfeitedIncentives,
+		})
 
 		return nil
 	})
@@ -257,11 +287,11 @@ func (k Keeper) GetUserPositionsSerialized(ctx sdk.Context, addr sdk.AccAddress,
 	}
 
 	// Sort the positions in ascending order by ID
-	sort.Slice(positions, func(i, j int) bool {
-		return positions[i].PositionId < positions[j].PositionId
+	sort.Slice(fullPositions, func(i, j int) bool {
+		return fullPositions[i].Position.PositionId < fullPositions[j].Position.PositionId
 	})
 
-	return positions, pageRes, nil
+	return fullPositions, pageRes, nil
 }
 
 // SetPosition sets the position information for a given user in a given pool.
