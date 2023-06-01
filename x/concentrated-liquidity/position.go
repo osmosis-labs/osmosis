@@ -296,19 +296,19 @@ func (k Keeper) deletePosition(ctx sdk.Context,
 	}
 	store.Delete(positionIdKey)
 
-	// Remove the address-pool-position ID to position mapping.
-	addressPoolIdPositionIdKey := types.KeyAddressPoolIdPositionId(owner, poolId, positionId)
-	if !store.Has(addressPoolIdPositionIdKey) {
-		return types.AddressPoolPositionIdNotFoundError{Owner: owner.String(), PoolId: poolId, PositionId: positionId}
-	}
-	store.Delete(addressPoolIdPositionIdKey)
-
 	// Remove the pool-position ID mapping.
 	poolIdKey := types.KeyPoolPositionPositionId(poolId, positionId)
 	if !store.Has(poolIdKey) {
 		return types.PoolPositionIdNotFoundError{PoolId: poolId, PositionId: positionId}
 	}
 	store.Delete(poolIdKey)
+
+	// Remove the address-pool-position ID to position mapping.
+	addressPoolIdPositionIdKey := types.KeyAddressPoolIdPositionId(owner, poolId, positionId)
+	if !store.Has(addressPoolIdPositionIdKey) {
+		return types.AddressPoolPositionIdNotFoundError{Owner: owner.String(), PoolId: poolId, PositionId: positionId}
+	}
+	store.Delete(addressPoolIdPositionIdKey)
 
 	// Remove the position ID to underlying lock ID mapping (if it exists)
 	positionIdLockKey := types.KeyPositionIdForLock(positionId)

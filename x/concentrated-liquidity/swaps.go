@@ -89,7 +89,7 @@ func (k Keeper) SwapExactAmountIn(
 	}
 
 	// Convert pool interface to CL pool type
-	pool, err := convertPoolInterfaceToConcentrated(poolI)
+	pool, err := asConcentrated(poolI)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -129,7 +129,7 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, types.DenomDuplicatedError{TokenInDenom: tokenInDenom, TokenOutDenom: tokenOut.Denom}
 	}
 
-	pool, err := convertPoolInterfaceToConcentrated(poolI)
+	pool, err := asConcentrated(poolI)
 	if err != nil {
 		return sdk.Int{}, err
 	}

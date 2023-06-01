@@ -214,3 +214,50 @@ func (q Querier) ClaimableIncentives(ctx sdk.Context, req clquery.ClaimableIncen
 		ForfeitedIncentives: forfeitedIncentives,
 	}, nil
 }
+
+// PoolAccumulatorRewards returns pool accumulator rewards.
+// It includes global spread reward growth and global uptime growth accumulator values.
+func (q Querier) PoolAccumulatorRewards(ctx sdk.Context, req clquery.PoolAccumulatorRewardsRequest) (*clquery.PoolAccumulatorRewardsResponse, error) {
+	if req.PoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "pool id is zero")
+	}
+
+	spreadRewardsAcc, err := q.Keeper.GetSpreadRewardAccumulator(ctx, req.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	uptimeAccValues, err := q.Keeper.GetUptimeAccumulatorValues(ctx, req.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	uptimeGrowthTrackers := make([]model.UptimeTracker, 0, len(uptimeAccValues))
+	for _, uptimeTrackerValue := range uptimeAccValues {
+		uptimeGrowthTrackers = append(uptimeGrowthTrackers, model.UptimeTracker{UptimeGrowthOutside: uptimeTrackerValue})
+	}
+
+	return &clquery.PoolAccumulatorRewardsResponse{
+		SpreadRewardGrowthGlobal: spreadRewardsAcc.GetValue(),
+		UptimeGrowthGlobal:       uptimeGrowthTrackers,
+	}, nil
+}
+
+// TickAccumulatorTrackers returns tick accumulator trackers.
+// It includes spread reward growth in the opposite direction of last traversal and uptime tracker values.
+func (q Querier) TickAccumulatorTrackers(ctx sdk.Context, req clquery.TickAccumulatorTrackersRequest) (*clquery.TickAccumulatorTrackersResponse, error) {
+	if req.PoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "pool id is zero")
+	}
+
+	cacheCtx, _ := ctx.CacheContext()
+	tickInfo, err := q.Keeper.GetTickInfo(cacheCtx, req.PoolId, req.TickIndex)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &clquery.TickAccumulatorTrackersResponse{
+		SpreadRewardGrowthOppositeDirectionOfLastTraversal: tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal,
+		UptimeTrackers: tickInfo.UptimeTrackers.List,
+	}, nil
+}

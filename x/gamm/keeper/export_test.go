@@ -21,8 +21,8 @@ func (k Keeper) SetStableSwapScalingFactors(ctx sdk.Context, poolId uint64, scal
 	return k.setStableSwapScalingFactors(ctx, poolId, scalingFactors, sender)
 }
 
-func ConvertToCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {
-	return convertToCFMMPool(pool)
+func AsCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {
+	return asCFMMPool(pool)
 }
 
 func (k Keeper) UnmarshalPoolLegacy(bz []byte) (poolmanagertypes.PoolI, error) {
