@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"bytes"
 	"fmt"
 	"strconv"
 	"time"
@@ -596,19 +597,33 @@ func (k Keeper) GetAllIncentiveRecordsForPool(ctx sdk.Context, poolId uint64) ([
 	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyPoolIncentiveRecords(poolId), ParseFullIncentiveRecordFromBz)
 }
 
+// GetIncentiveRecordSerialized gets incentive records based on limit set by pagination query.
 func (k Keeper) GetIncentiveRecordSerialized(ctx sdk.Context, poolId uint64, pagination *query.PageRequest) ([]types.IncentiveRecord, *query.PageResponse, error) {
 	incentivesRecordStore := sdkprefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPoolIncentiveRecords(poolId))
 
 	incentiveRecords := []types.IncentiveRecord{}
 	pageRes, err := query.Paginate(incentivesRecordStore, pagination, func(key, value []byte) error {
-		incRecord, err := ParseFullIncentiveRecordFromBz(key, value)
+		parts := bytes.Split(key, []byte(types.KeySeparator))
+
+		minUptimeIndex, err := strconv.ParseUint(string(parts[1]), 10, 64)
+		if err != nil {
+			return fmt.Errorf("failed to parse minUptimeIndex: %w", err)
+		}
+
+		denom := string(parts[2])
+
+		incentiveCreator, err := sdk.AccAddressFromBech32(string(parts[3]))
+		if err != nil {
+			return fmt.Errorf("failed to parse incentive creator: %w", err)
+		}
+
+		incRecord, err := k.GetIncentiveRecord(ctx, poolId, denom, types.SupportedUptimes[minUptimeIndex], incentiveCreator)
 		if err != nil {
 			return err
 		}
 
-		if incRecord.PoolId == poolId {
-			incentiveRecords = append(incentiveRecords, incRecord)
-		}
+		incentiveRecords = append(incentiveRecords, incRecord)
+
 		return nil
 	})
 	if err != nil {
