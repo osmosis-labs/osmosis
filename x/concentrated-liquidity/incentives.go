@@ -597,7 +597,7 @@ func (k Keeper) GetAllIncentiveRecordsForPool(ctx sdk.Context, poolId uint64) ([
 	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyPoolIncentiveRecords(poolId), ParseFullIncentiveRecordFromBz)
 }
 
-// GetIncentiveRecordSerialized gets incentive records based on limit set by pagination query.
+// GetIncentiveRecordSerialized gets incentive records based on limit set by pagination request.
 func (k Keeper) GetIncentiveRecordSerialized(ctx sdk.Context, poolId uint64, pagination *query.PageRequest) ([]types.IncentiveRecord, *query.PageResponse, error) {
 	incentivesRecordStore := sdkprefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPoolIncentiveRecords(poolId))
 
@@ -607,14 +607,14 @@ func (k Keeper) GetIncentiveRecordSerialized(ctx sdk.Context, poolId uint64, pag
 
 		minUptimeIndex, err := strconv.ParseUint(string(parts[1]), 10, 64)
 		if err != nil {
-			return fmt.Errorf("failed to parse minUptimeIndex: %w", err)
+			return err
 		}
 
 		denom := string(parts[2])
 
 		incentiveCreator, err := sdk.AccAddressFromBech32(string(parts[3]))
 		if err != nil {
-			return fmt.Errorf("failed to parse incentive creator: %w", err)
+			return err
 		}
 
 		incRecord, err := k.GetIncentiveRecord(ctx, poolId, denom, types.SupportedUptimes[minUptimeIndex], incentiveCreator)
