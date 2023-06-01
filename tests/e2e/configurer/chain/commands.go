@@ -254,7 +254,7 @@ func (n *NodeConfig) ExitPool(from, minAmountsOut string, poolId uint64, shareAm
 
 func (n *NodeConfig) UnlockAndMigrateSharesToFullRangeConcentratedPosition(from, lock_id, minAmountsOut string, sharesToMigrate string) {
 	n.LogActionF("Unlock and migrate shares to full range Concentrated position")
-	cmd := []string{"osmosisd", "tx", "superfluid", "unlock-and-migrate-to-cl", lock_id, sharesToMigrate, minAmountsOut, fmt.Sprintf("--from=%s", from)}
+	cmd := []string{"osmosisd", "tx", "superfluid", "unlock-and-migrate-to-cl", lock_id, sharesToMigrate, minAmountsOut, fmt.Sprintf("--from=%s", from), "--gas=500000", "--fees=1250uosmo"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully unlock and migrate shares")
