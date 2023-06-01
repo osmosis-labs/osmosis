@@ -125,13 +125,12 @@ func (s *KeeperTestSuite) TestSwapping() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			s.SetupTest()
 			tc.param.executeSwap()
 
 			routes, err := s.App.ProtoRevKeeper.GetSwapsToBackrun(s.Ctx)
 			s.Require().NoError(err)
 			s.Require().Equal(tc.param.expectedTrades, routes.Trades)
-
-			s.App.ProtoRevKeeper.DeleteSwapsToBackrun(s.Ctx)
 		})
 	}
 }
