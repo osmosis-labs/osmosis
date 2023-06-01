@@ -275,7 +275,18 @@ func (s *KeeperTestSuite) TestPoolCreation() {
 			expectPass: true,
 		},
 		{
-			name: "Concentrated Liquidity - Create Pool",
+			name: "Concentrated Liquidity - Create Pool w/ No Liqudity",
+			param: param{
+				matchDenom: "hookCL",
+				executePoolCreation: func() uint64 {
+					clPool := s.PrepareConcentratedPool()
+					return clPool.GetId()
+				},
+			},
+			expectPass: false,
+		},
+		{
+			name: "Concentrated Liquidity - Create Pool w/ Liqudity",
 			param: param{
 				matchDenom: "hookCL",
 				executePoolCreation: func() uint64 {
@@ -291,8 +302,14 @@ func (s *KeeperTestSuite) TestPoolCreation() {
 		s.Run(tc.name, func() {
 			poolId := tc.param.executePoolCreation()
 			setPoolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, types.OsmosisDenomination, tc.param.matchDenom)
-			s.Require().NoError(err)
-			s.Require().Equal(poolId, setPoolId)
+
+			if tc.expectPass {
+				s.Require().NoError(err)
+				s.Require().Equal(poolId, setPoolId)
+			} else {
+				s.Require().Error(err)
+				s.Require().NotEqual(poolId, setPoolId)
+			}
 		})
 	}
 }
