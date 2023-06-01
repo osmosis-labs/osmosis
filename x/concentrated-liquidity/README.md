@@ -876,22 +876,23 @@ Once the swap is completed, we persiste the swap state to the global state
 
 Users can migrate their Balancer positions to a Concentrated Liquidity full range
 position provided the underlying Balancer pool has a governance-selected canonical
-Concentrated Liquidity pool. The migration follows two distinct flows depending
-on the state of the underlying Balancer position:
+Concentrated Liquidity pool. The migration is routed depending on the state of the
+underlying Balancer position:
 
-1. Balancer position is:
+Balancer position is:
 
 - Superfluid delegated
+  - Locked
 - Superfluid undelegating
-- Locked
+  - Locked
+  - Unlocking
+- Normal lock
+  - Locked
+  - Unlocking
 - Unlocked
 
-2. Balancer position has no underlying lock whatsoever
-
-Regardless of the path taken, a single message executes all of the below logic:
-
-`UnlockAndMigrateSharesToFullRangeConcentratedPosition` in superfluid for path 1,
-and `MigrateSharesToFullRangeConcentratedPosition` in gamm for path 2.
+Regardless of the path taken, the `UnlockAndMigrateSharesToFullRangeConcentratedPosition`
+message executes all of the below logic:
 
 ### Superfluid Delegated Balancer to Concentrated
 

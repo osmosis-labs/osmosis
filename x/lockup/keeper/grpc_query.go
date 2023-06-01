@@ -164,6 +164,17 @@ func (q Querier) LockedByID(goCtx context.Context, req *types.LockedRequest) (*t
 	return &types.LockedResponse{Lock: lock}, err
 }
 
+// LockRewardReceiver returns lock reward receiver of the lock.
+func (q Querier) LockRewardReceiver(goCtx context.Context, req *types.LockRewardReceiverRequest) (*types.LockRewardReceiverResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	rewardReceiver, err := q.Keeper.GetLockRewardReceiver(ctx, req.LockId)
+	return &types.LockRewardReceiverResponse{RewardReceiver: rewardReceiver}, err
+}
+
 // NextLockID returns next lock ID to be created.
 func (q Querier) NextLockID(goCtx context.Context, req *types.NextLockIDRequest) (*types.NextLockIDResponse, error) {
 	if req == nil {

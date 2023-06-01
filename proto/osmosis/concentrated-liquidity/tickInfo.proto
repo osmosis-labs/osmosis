@@ -42,10 +42,19 @@ message TickInfo {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable) = false
   ];
-  repeated UptimeTracker uptime_trackers = 4 [
+  // uptime_trackers is a container encapsulating the uptime trackers.
+  // We use a container instead of a "repeated UptimeTracker" directly
+  // because we need the ability to serialize and deserialize the
+  // container easily for events when crossing a tick.
+  UptimeTrackers uptime_trackers = 4 [
     (gogoproto.moretags) = "yaml:\"uptime_trackers\"",
     (gogoproto.nullable) = false
   ];
+}
+
+message UptimeTrackers {
+  repeated UptimeTracker list = 1
+      [ (gogoproto.moretags) = "yaml:\"list\"", (gogoproto.nullable) = false ];
 }
 
 message UptimeTracker {

@@ -38,6 +38,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdAccountUnlockedBeforeTime(),
 		GetCmdAccountLockedPastTimeDenom(),
 		GetCmdLockedByID(),
+		GetCmdLockRewardReceiver(),
 		GetCmdAccountLockedLongerDuration(),
 		GetCmdAccountLockedLongerDurationNotUnlockingOnly(),
 		GetCmdAccountLockedLongerDurationDenom(),
@@ -190,6 +191,19 @@ func GetCmdLockedByID() *cobra.Command {
 	}
 	q.Long = osmocli.FormatLongDesc(q.Long, osmocli.NewLongMetadata(types.ModuleName).WithShort(q.Short))
 	return osmocli.BuildQueryCli[*types.LockedRequest](&q, types.NewQueryClient)
+}
+
+// GetCmdLockRewardReceiver returns reward receiver for the given lock id
+func GetCmdLockRewardReceiver() *cobra.Command {
+	q := osmocli.QueryDescriptor{
+		Use:   "lock-reward-receiver <id>",
+		Short: "Query lock's reward receiver",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} lock-reward-receiver 1`,
+		QueryFnName: "LockedByID",
+	}
+	q.Long = osmocli.FormatLongDesc(q.Long, osmocli.NewLongMetadata(types.ModuleName).WithShort(q.Short))
+	return osmocli.BuildQueryCli[*types.LockRewardReceiverRequest](&q, types.NewQueryClient)
 }
 
 // GetCmdNextLockID returns next lock id to be created.

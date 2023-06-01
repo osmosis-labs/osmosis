@@ -28,7 +28,7 @@ import (
 // - There is an error creating the fee or uptime accumulator.
 // - There is an error setting the pool in the keeper's state.
 func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, creatorAddress sdk.AccAddress) error {
-	concentratedPool, err := convertPoolInterfaceToConcentrated(poolI)
+	concentratedPool, err := asConcentrated(poolI)
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI,
 	if err != nil {
 		return nil, types.PoolNotFoundError{PoolId: poolId}
 	}
-	poolI, err := convertConcentratedToPoolInterface(concentratedPool)
+	poolI, err := asPoolI(concentratedPool)
 	if err != nil {
 		return nil, err
 	}
@@ -185,10 +185,10 @@ func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins
 	return filteredPoolBalance, nil
 }
 
-// convertConcentratedToPoolInterface takes a types.ConcentratedPoolExtension and attempts to convert it to a
+// asPoolI takes a types.ConcentratedPoolExtension and attempts to convert it to a
 // poolmanagertypes.PoolI. If the conversion is successful, the converted value is returned. If the conversion fails,
 // an error is returned.
-func convertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (poolmanagertypes.PoolI, error) {
+func asPoolI(concentratedPool types.ConcentratedPoolExtension) (poolmanagertypes.PoolI, error) {
 	// Attempt to convert the concentratedPool to a poolmanagertypes.PoolI
 	pool, ok := concentratedPool.(poolmanagertypes.PoolI)
 	if !ok {
@@ -199,10 +199,10 @@ func convertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolE
 	return pool, nil
 }
 
-// convertPoolInterfaceToConcentrated takes a poolmanagertypes.PoolI and attempts to convert it to a
+// asConcentrated takes a poolmanagertypes.PoolI and attempts to convert it to a
 // types.ConcentratedPoolExtension. If the conversion is successful, the converted value is returned. If the conversion fails,
 // an error is returned.
-func convertPoolInterfaceToConcentrated(poolI poolmanagertypes.PoolI) (types.ConcentratedPoolExtension, error) {
+func asConcentrated(poolI poolmanagertypes.PoolI) (types.ConcentratedPoolExtension, error) {
 	// Attempt to convert poolmanagertypes.PoolI to a concentratedPool
 	concentratedPool, ok := poolI.(types.ConcentratedPoolExtension)
 	if !ok {
@@ -220,7 +220,7 @@ func (k Keeper) GetConcentratedPoolById(ctx sdk.Context, poolId uint64) (types.C
 	if err != nil {
 		return nil, err
 	}
-	return convertPoolInterfaceToConcentrated(poolI)
+	return asConcentrated(poolI)
 }
 
 func (k Keeper) GetSerializedPools(ctx sdk.Context, pagination *query.PageRequest) ([]*codectypes.Any, *query.PageResponse, error) {

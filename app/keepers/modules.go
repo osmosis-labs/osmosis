@@ -32,6 +32,7 @@ import (
 	_ "github.com/osmosis-labs/osmosis/v15/client/docs/statik"
 	clclient "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/clmodule"
+	cosmwasmpoolmodule "github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/module"
 	downtimemodule "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/module"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm"
 	gammclient "github.com/osmosis-labs/osmosis/v15/x/gamm/client"
@@ -111,4 +112,5 @@ var AppModuleBasics = []module.AppModuleBasic{
 	ibc_hooks.AppModuleBasic{},
 	ibcratelimitmodule.AppModuleBasic{},
 	router.AppModuleBasic{},
+	cosmwasmpoolmodule.AppModuleBasic{},
 }

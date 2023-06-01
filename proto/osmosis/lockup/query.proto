@@ -83,6 +83,13 @@ service Query {
         "/osmosis/lockup/v1beta1/locked_by_id/{lock_id}";
   }
 
+  // Returns lock record by id
+  rpc LockRewardReceiver(LockRewardReceiverRequest)
+      returns (LockRewardReceiverResponse) {
+    option (google.api.http).get =
+        "/osmosis/lockup/v1beta1/lock_reward_receiver/{lock_id}";
+  }
+
   // Returns next lock ID
   rpc NextLockID(NextLockIDRequest) returns (NextLockIDResponse) {
     option (google.api.http).get = "/osmosis/lockup/v1beta1/next_lock_id";
@@ -252,6 +259,9 @@ message LockedDenomResponse {
 
 message LockedRequest { uint64 lock_id = 1; };
 message LockedResponse { PeriodLock lock = 1; };
+
+message LockRewardReceiverRequest { uint64 lock_id = 1; };
+message LockRewardReceiverResponse { string reward_receiver = 1; };
 
 message NextLockIDRequest {};
 message NextLockIDResponse { uint64 lock_id = 1; };
