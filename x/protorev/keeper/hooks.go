@@ -3,9 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
@@ -26,7 +24,7 @@ func (k Keeper) Hooks() Hooks { return Hooks{k} }
 
 // AfterCFMMPoolCreated hook checks and potentially stores the pool via the highest liquidity method.
 func (h Hooks) AfterCFMMPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
-	h.k.afterPoolCreated(ctx, poolId)
+	h.k.afterPoolCreatedWithCoins(ctx, poolId)
 }
 
 // AfterJoinPool stores swaps to be checked by protorev given the coins entered into the pool.
@@ -66,13 +64,13 @@ func (h Hooks) AfterCFMMSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint
 // CONCENTRATED LIQUIDITY HOOKS
 // ----------------------------------------------------------------------------
 
-// AfterConcentratedPoolCreated checks and potentially stores the pool via the highest liquidity method.
+// AfterConcentratedPoolCreated is a noop.
 func (h Hooks) AfterConcentratedPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
-	h.k.afterPoolCreated(ctx, poolId)
 }
 
-// AfterInitialPoolPositionCreated is a noop.
+// AfterInitialPoolPositionCreated checks and potentially stores the pool via the highest liquidity method.
 func (h Hooks) AfterInitialPoolPositionCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+	h.k.afterPoolCreatedWithCoins(ctx, poolId)
 }
 
 // AfterLastPoolPositionRemoved is a noop.
@@ -93,9 +91,9 @@ func (h Hooks) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress,
 // HELPER METHODS
 // ----------------------------------------------------------------------------
 
-// afterPoolCreated checks if the new pool should be stored as the highest liquidity pool
+// afterPoolCreatedWithCoins checks if the new pool should be stored as the highest liquidity pool
 // for any of the base denoms, and stores it if so.
-func (k Keeper) afterPoolCreated(ctx sdk.Context, poolId uint64) {
+func (k Keeper) afterPoolCreatedWithCoins(ctx sdk.Context, poolId uint64) {
 	baseDenoms, err := k.GetAllBaseDenoms(ctx)
 	if err != nil {
 		ctx.Logger().Error("Protorev error getting base denoms in AfterCFMMPoolCreated hook", err)
@@ -113,7 +111,11 @@ func (k Keeper) afterPoolCreated(ctx sdk.Context, poolId uint64) {
 		return
 	}
 
-	coins := k.getCoinsFromPool(ctx, pool, poolId)
+	coins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
+	if err != nil {
+		ctx.Logger().Error("Protorev error getting pool liquidity in afterPoolCreated", err)
+		return
+	}
 
 	// Pool must be active and the number of coins must be 2
 	if pool.IsActive(ctx) && len(coins) == 2 {
@@ -127,31 +129,6 @@ func (k Keeper) afterPoolCreated(ctx sdk.Context, poolId uint64) {
 			k.compareAndStorePool(ctx, poolId, tokenB, tokenA)
 		}
 	}
-}
-
-// getCoinsFromPool gets the coins from the pool, handling Concentrated Liquidity pools differently since they can have 0 liquidity.
-func (k Keeper) getCoinsFromPool(ctx sdk.Context, pool poolmanagertypes.PoolI, poolId uint64) sdk.Coins {
-	coins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
-	if err != nil {
-		ctx.Logger().Error("Protorev error getting pool liquidity in AfterCFMMPoolCreated hook", err)
-		return sdk.Coins{}
-	}
-
-	if coins == nil {
-		if pool.GetType() == poolmanagertypes.Concentrated {
-			clPool, ok := pool.(cltypes.ConcentratedPoolExtension)
-			if !ok {
-				ctx.Logger().Error("Protorev error casting pool to concentrated pool in AfterCFMMPoolCreated hook")
-				return sdk.Coins{}
-			}
-			coins = sdk.Coins{sdk.NewCoin(clPool.GetToken0(), sdk.NewInt(0)), sdk.NewCoin(clPool.GetToken1(), sdk.NewInt(0))}
-		} else {
-			ctx.Logger().Error("Protorev error getting pool liquidity in AfterCFMMPoolCreated hook")
-			return sdk.Coins{}
-		}
-	}
-
-	return coins
 }
 
 // storeSwap stores a swap to be checked by protorev when attempting backruns.
