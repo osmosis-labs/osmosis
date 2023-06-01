@@ -111,7 +111,6 @@ func (k Keeper) afterPoolCreatedWithCoins(ctx sdk.Context, poolId uint64) {
 		return
 	}
 
-	//coins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
 	denoms, err := k.poolmanagerKeeper.RouteGetPoolDenoms(ctx, poolId)
 	if err != nil {
 		ctx.Logger().Error("Protorev error getting pool liquidity in afterPoolCreated", err)
