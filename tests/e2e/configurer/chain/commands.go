@@ -308,7 +308,7 @@ func (n *NodeConfig) SubmitReplaceMigrationRecordsProposal(records string, initi
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "replace-migration-records-proposal", fmt.Sprintf("--migration-records=%s", records), fmt.Sprintf("--title=\"%s migration-records\"", records), fmt.Sprintf("--description=\"%s replace migration records\"", records), "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
-	n.LogActionF("successfully submitted update migration records proposal for record %s", records)
+	n.LogActionF("successfully submitted replace migration records proposal for record %s", records)
 }
 
 func (n *NodeConfig) SubmitTickSpacingReductionProposal(poolTickSpacingRecords string, initialDeposit sdk.Coin, isExpedited bool) {

@@ -1721,7 +1721,7 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 		s.T().Fatal("concentrated liquidity pool creation is not enabled")
 	}
 
-	tokenOutMins := sdk.NewCoins(sdk.NewCoin("uosmos", sdk.NewInt(499000)), sdk.NewCoin("stake", sdk.NewInt(490000)))
+	tokenOutMins := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(499000)), sdk.NewCoin("stake", sdk.NewInt(490000)))
 	// helpers
 	// var (
 	// 	getConcentratePoolFromId = func(poolId uint64) types.ConcentratedPoolExtension {
@@ -1742,10 +1742,22 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 	chainANode.SubmitReplaceMigrationRecordsProposal(record, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 	chainA.LatestProposalNumber += 1
 	chainANode.DepositProposal(chainA.LatestProposalNumber, false)
+	totalTimeChan := make(chan time.Duration, 1)
+	go chainANode.QueryPropStatusTimed(chainA.LatestProposalNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
 	for _, node := range chainA.NodeConfigs {
 		node.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
 	}
-	sharesToMigrate := sdk.NewCoin(gammtypes.GetPoolShareDenom(balancePoolId), balancerPool.GetTotalShares())
+
+	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
+	timeoutPeriod := 2 * time.Minute
+	select {
+	case <-time.After(timeoutPeriod):
+		err := fmt.Errorf("go routine took longer than %s", timeoutPeriod)
+		s.Require().NoError(err)
+	case <-totalTimeChan:
+		// The goroutine finished before the timeout period, continue execution.
+	}
+	sharesToMigrate := sdk.NewCoin(gammtypes.GetPoolShareDenom(balancePoolId), balancerPool.GetTotalShares().SubRaw(1))
 	// // Note gamm and cl pool addresses
 	// balancerPoolAddress := balancerPool.GetAddress()
 	// clPoolAddress := clPool.GetAddress()
