@@ -28,7 +28,6 @@ var (
 	defaultPoolId       = uint64(1)
 	defaultAmount       = sdk.NewInt(100)
 	initalDefaultSupply = sdk.NewCoins(sdk.NewCoin(denomA, defaultAmount), sdk.NewCoin(denomB, defaultAmount))
-	nonZeroFeeStr       = "0.01"
 	uosmo               = "uosmo"
 
 	defaultDenoms = []string{denomA, denomB}
