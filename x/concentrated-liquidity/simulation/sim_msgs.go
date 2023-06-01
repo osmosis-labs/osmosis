@@ -298,9 +298,9 @@ func getRandomTickPositions(sim *osmosimtypes.SimCtx, minTick, maxTick int64, ti
 func RandomMinAmount(sim *osmosimtypes.SimCtx, token0Desired, token1Desired sdk.Int) (sdk.Int, sdk.Int) {
 	rand := sim.GetRand()
 	percent := sdk.NewDec(int64(sdkrand.RandIntBetween(rand, 0, 100) / 100))
-	mintAmount0 := sdk.NewDecFromInt(token0Desired).Mul(percent).TruncateInt()
-	mintAmount1 := sdk.NewDecFromInt(token1Desired).Mul(percent).TruncateInt()
-	return mintAmount0, mintAmount1
+	minAmount0 := sdk.NewDecFromInt(token0Desired).Mul(percent).TruncateInt()
+	minAmount1 := sdk.NewDecFromInt(token1Desired).Mul(percent).TruncateInt()
+	return minAmount0, minAmount1
 }
 
 // RandomTickDivisibility calculates a random number between minTick - maxTick (inclusive) that is divisible by tickSpacing
