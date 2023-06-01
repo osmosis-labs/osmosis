@@ -11,14 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
 
 	cosmwasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	icahosttypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
@@ -85,37 +78,10 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
-		// Specifying the whole list instead of adding and removing. Less fragile.
-		hostParams := icahosttypes.Params{
-			HostEnabled: true,
-			AllowMessages: []string{
-				sdk.MsgTypeURL(&ibctransfertypes.MsgTransfer{}),
-				sdk.MsgTypeURL(&banktypes.MsgSend{}),
-				sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}),
-				sdk.MsgTypeURL(&stakingtypes.MsgBeginRedelegate{}),
-				sdk.MsgTypeURL(&stakingtypes.MsgCreateValidator{}),
-				sdk.MsgTypeURL(&stakingtypes.MsgEditValidator{}),
-				sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}),
-				sdk.MsgTypeURL(&distrtypes.MsgWithdrawDelegatorReward{}),
-				sdk.MsgTypeURL(&distrtypes.MsgSetWithdrawAddress{}),
-				sdk.MsgTypeURL(&distrtypes.MsgWithdrawValidatorCommission{}),
-				sdk.MsgTypeURL(&distrtypes.MsgFundCommunityPool{}),
-				sdk.MsgTypeURL(&govtypes.MsgVote{}),
-				sdk.MsgTypeURL(&gammtypes.MsgJoinPool{}),
-				sdk.MsgTypeURL(&gammtypes.MsgExitPool{}),
-				sdk.MsgTypeURL(&gammtypes.MsgSwapExactAmountIn{}),
-				sdk.MsgTypeURL(&gammtypes.MsgSwapExactAmountOut{}),
-				sdk.MsgTypeURL(&gammtypes.MsgJoinSwapExternAmountIn{}),
-				sdk.MsgTypeURL(&gammtypes.MsgJoinSwapShareAmountOut{}),
-				sdk.MsgTypeURL(&gammtypes.MsgExitSwapExternAmountOut{}),
-				sdk.MsgTypeURL(&gammtypes.MsgExitSwapShareAmountIn{}),
-				sdk.MsgTypeURL(&superfluidtypes.MsgSuperfluidUnbondLock{}),
-				// Change: Added MsgExecuteContract
-				sdk.MsgTypeURL(&cosmwasmtypes.MsgExecuteContract{}),
-				// Change: Added MsgInstantiateContract
-				sdk.MsgTypeURL(&cosmwasmtypes.MsgInstantiateContract{}),
-			},
-		}
+		// Add both MsgExecuteContract and MsgInstantiateContract to the list of allowed messages.
+		hostParams := keepers.ICAHostKeeper.GetParams(ctx)
+		hostParams.AllowMessages = append(hostParams.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgExecuteContract{}))
+		hostParams.AllowMessages = append(hostParams.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgInstantiateContract{}))
 		keepers.ICAHostKeeper.SetParams(ctx, hostParams)
 
 		// Although parameters are set on InitGenesis() in RunMigrations(), we reset them here
