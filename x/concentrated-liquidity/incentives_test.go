@@ -8,6 +8,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
@@ -3975,4 +3976,69 @@ func (s *KeeperTestSuite) TestGetUptimeTrackerValues() {
 			})
 		}
 	})
+}
+
+func (s *KeeperTestSuite) TestGetIncentiveRecordSerialized() {
+	tests := []struct {
+		name                    string
+		poolIdToQuery           uint64
+		paginationLimit         uint64
+		expectedNumberOfRecords int
+	}{
+		{
+			name:                    "Get incentive records from a valid pool",
+			poolIdToQuery:           1,
+			expectedNumberOfRecords: 1,
+			paginationLimit:         10,
+		},
+		{
+			name:                    "Get many incentive records from a valid pool",
+			poolIdToQuery:           1,
+			expectedNumberOfRecords: 3,
+			paginationLimit:         10,
+		},
+		{
+			name:                    "Get all incentive records from an invalid pool",
+			poolIdToQuery:           2,
+			expectedNumberOfRecords: 0,
+			paginationLimit:         10,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+
+			s.SetupTest()
+			k := s.App.ConcentratedLiquidityKeeper
+
+			pool := s.PrepareConcentratedPool()
+
+			for i := 0; i < test.expectedNumberOfRecords; i++ {
+				testIncentiveRecord := types.IncentiveRecord{
+					PoolId:               pool.GetId(),
+					IncentiveDenom:       USDC,
+					IncentiveCreatorAddr: s.TestAccs[i].String(),
+					IncentiveRecordBody: types.IncentiveRecordBody{
+						RemainingAmount: sdk.NewDec(1000),
+						EmissionRate:    sdk.NewDec(1), // 1 per second
+						StartTime:       defaultBlockTime,
+					},
+					MinUptime: time.Nanosecond,
+				}
+
+				err := s.App.ConcentratedLiquidityKeeper.SetIncentiveRecord(s.Ctx, testIncentiveRecord)
+				s.Require().NoError(err)
+			}
+
+			paginationReq := &query.PageRequest{
+				Limit:      test.paginationLimit,
+				CountTotal: true,
+			}
+
+			incRecords, _, err := k.GetIncentiveRecordSerialized(s.Ctx, test.poolIdToQuery, paginationReq)
+			s.Require().NoError(err)
+
+			s.Require().Equal(test.expectedNumberOfRecords, len(incRecords))
+		})
+	}
 }
