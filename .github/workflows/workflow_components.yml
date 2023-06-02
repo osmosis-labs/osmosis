@@ -1,0 +1,26 @@
+name: Reusable steps
+
+on:
+  workflow_call:
+  
+jobs:
+  state_machine_diff:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v36.0.14
+        with:
+          files_ignore: |
+            **/*.md
+            **/*_test.go
+            tests/**
+            .github/workflows/*.yml
+
+      - name: Set change variable
+        id: set-state-machine-changed
+        run: echo "CODE_DIFF=true" >> $GITHUB_ENV
+        if: |
+          steps.changed-files.outputs.any_changed == 'true' ||
+          steps.changed-files.outputs.any_deleted == 'true' ||
+          steps.changed-files.outputs.any_modified == 'true'

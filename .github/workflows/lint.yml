@@ -23,7 +23,7 @@ jobs:
             **/**.go
             go.mod
             go.sum
-            .github/**
+            .github/workflows/lint.yml
             Makefile
       - name: Get data from build cache
         uses: actions/cache@v3

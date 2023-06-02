@@ -12,21 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v36.0.14
-        with:
-          files_ignore: |
-            **/*.md
-            **/*_test.go
-            .github/workflows/*.yml
+      - name: Is there a Changelog requiring diff?
+        id: state_machine_diff
+        uses: ./.github/workflows/workflow_components.yml
 
       - name: Changelog check
-        # Skip this step and return success result for markdown only changes
         if: |
-          steps.changed-files.outputs.any_changed == 'true' ||
-          steps.changed-files.outputs.any_deleted == 'true' ||
-          steps.changed-files.outputs.any_modified == 'true'
+          env.CODE_DIFF == 'true'
         uses: Zomzog/changelog-checker@v1.3.0
         with:
           fileName: CHANGELOG.md
