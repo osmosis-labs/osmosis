@@ -100,6 +100,16 @@ func (q Querier) LiquidityNetInDirection(grpcCtx context.Context,
 	return q.Q.LiquidityNetInDirection(ctx, *req)
 }
 
+func (q Querier) IncentiveRecords(grpcCtx context.Context,
+	req *queryproto.IncentiveRecordsRequest,
+) (*queryproto.IncentiveRecordsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.IncentiveRecords(ctx, *req)
+}
+
 func (q Querier) ClaimableSpreadRewards(grpcCtx context.Context,
 	req *queryproto.ClaimableSpreadRewardsRequest,
 ) (*queryproto.ClaimableSpreadRewardsResponse, error) {

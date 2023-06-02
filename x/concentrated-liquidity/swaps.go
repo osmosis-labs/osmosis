@@ -626,7 +626,7 @@ func (k Keeper) computeInAmtGivenOut(
 			}
 
 			// retrieve the liquidity held in the next closest initialized tick
-			liquidityNet, err := k.crossTick(ctx, poolId, nextTick, &nextTickInfo, sdk.NewDecCoinFromDec(desiredTokenOut.Denom, swapState.spreadRewardGrowthGlobal), spreadRewardAccumulator.GetValue(), uptimeAccums)
+			liquidityNet, err := k.crossTick(ctx, poolId, nextTick, &nextTickInfo, sdk.NewDecCoinFromDec(tokenInDenom, swapState.spreadRewardGrowthGlobal), spreadRewardAccumulator.GetValue(), uptimeAccums)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 			}

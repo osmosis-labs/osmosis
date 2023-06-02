@@ -243,6 +243,17 @@ func (q Querier) PoolAccumulatorRewards(ctx sdk.Context, req clquery.PoolAccumul
 	}, nil
 }
 
+func (q Querier) IncentiveRecords(ctx sdk.Context, req clquery.IncentiveRecordsRequest) (*clquery.IncentiveRecordsResponse, error) {
+	anys, pageRes, err := q.Keeper.GetIncentiveRecordSerialized(ctx, req.PoolId, req.Pagination)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &clquery.IncentiveRecordsResponse{
+		IncentiveRecords: anys,
+		Pagination:       pageRes,
+	}, nil
+}
+
 // TickAccumulatorTrackers returns tick accumulator trackers.
 // It includes spread reward growth in the opposite direction of last traversal and uptime tracker values.
 func (q Querier) TickAccumulatorTrackers(ctx sdk.Context, req clquery.TickAccumulatorTrackersRequest) (*clquery.TickAccumulatorTrackersResponse, error) {

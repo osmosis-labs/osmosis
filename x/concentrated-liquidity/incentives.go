@@ -1,11 +1,14 @@
 package concentrated_liquidity
 
 import (
+	"bytes"
 	"fmt"
 	"strconv"
 	"time"
 
+	sdkprefix "github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"golang.org/x/exp/slices"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -592,6 +595,41 @@ func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, denom string,
 // Returns error if it is unable to retrieve records.
 func (k Keeper) GetAllIncentiveRecordsForPool(ctx sdk.Context, poolId uint64) ([]types.IncentiveRecord, error) {
 	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyPoolIncentiveRecords(poolId), ParseFullIncentiveRecordFromBz)
+}
+
+// GetIncentiveRecordSerialized gets incentive records based on limit set by pagination request.
+func (k Keeper) GetIncentiveRecordSerialized(ctx sdk.Context, poolId uint64, pagination *query.PageRequest) ([]types.IncentiveRecord, *query.PageResponse, error) {
+	incentivesRecordStore := sdkprefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPoolIncentiveRecords(poolId))
+
+	incentiveRecords := []types.IncentiveRecord{}
+	pageRes, err := query.Paginate(incentivesRecordStore, pagination, func(key, value []byte) error {
+		parts := bytes.Split(key, []byte(types.KeySeparator))
+
+		minUptimeIndex, err := strconv.ParseUint(string(parts[1]), 10, 64)
+		if err != nil {
+			return err
+		}
+
+		denom := string(parts[2])
+
+		incentiveCreator, err := sdk.AccAddressFromBech32(string(parts[3]))
+		if err != nil {
+			return err
+		}
+
+		incRecord, err := k.GetIncentiveRecord(ctx, poolId, denom, types.SupportedUptimes[minUptimeIndex], incentiveCreator)
+		if err != nil {
+			return err
+		}
+
+		incentiveRecords = append(incentiveRecords, incRecord)
+
+		return nil
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return incentiveRecords, pageRes, err
 }
 
 // getAllIncentiveRecordsForUptime gets all the incentive records for the given poolId and minUptime

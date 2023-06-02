@@ -16,9 +16,6 @@ func (k Keeper) validateCreatedPool(ctx sdk.Context, poolId uint64, pool types.P
 	if pool.GetId() != poolId {
 		return types.IncorrectPoolIdError{ExpectedPoolId: poolId, ActualPoolId: pool.GetId()}
 	}
-	if !pool.GetAddress().Equals(types.NewPoolAddress(poolId)) {
-		return types.IncorrectPoolAddressError{ExpectedPoolAddress: types.NewPoolAddress(poolId).String(), ActualPoolAddress: pool.GetAddress().String()}
-	}
 	return nil
 }
 
@@ -122,16 +119,16 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 		return nil, err
 	}
 
-	// Create and save the pool's module account to the account keeper.
-	// This utilizes the pool address already created and validated in the previous steps.
-	if err := osmoutils.CreateModuleAccount(ctx, k.accountKeeper, pool.GetAddress()); err != nil {
-		return nil, fmt.Errorf("creating pool module account for id %d: %w", poolId, err)
-	}
-
 	// Run the respective pool type's initialization logic.
 	swapModule := k.routes[msg.GetPoolType()]
 	if err := swapModule.InitializePool(ctx, pool, msg.PoolCreator()); err != nil {
 		return nil, err
+	}
+
+	// Create and save the pool's module account to the account keeper.
+	// This utilizes the pool address already created and validated in the previous steps.
+	if err := osmoutils.CreateModuleAccount(ctx, k.accountKeeper, pool.GetAddress()); err != nil {
+		return nil, fmt.Errorf("creating pool module account for id %d: %w", poolId, err)
 	}
 
 	emitCreatePoolEvents(ctx, poolId, msg)

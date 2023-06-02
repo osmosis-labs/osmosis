@@ -14,6 +14,7 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
 import "osmosis/concentrated-liquidity/position.proto";
+import "osmosis/concentrated-liquidity/incentive_record.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/queryproto";
 
@@ -81,6 +82,13 @@ service Query {
       returns (PoolAccumulatorRewardsResponse) {
     option (google.api.http).get =
         "/osmosis/concentratedliquidity/v1beta1/pool_accum_rewards";
+  }
+
+  // IncentiveRecords returns the incentive records for a given poolId
+  rpc IncentiveRecords(IncentiveRecordsRequest)
+      returns (IncentiveRecordsResponse) {
+    option (google.api.http).get =
+        "/osmosis/concentratedliquidity/v1beta1/incentive_records";
   };
 
   // TickAccumulatorTrackers returns the tick accumulator trackers.
@@ -236,4 +244,17 @@ message TickAccumulatorTrackersResponse {
     (gogoproto.moretags) = "yaml:\"uptime_trackers\"",
     (gogoproto.nullable) = false
   ];
+}
+
+// ===================== QueryIncentiveRecords
+message IncentiveRecordsRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message IncentiveRecordsResponse {
+  repeated IncentiveRecord incentive_records = 1
+      [ (gogoproto.nullable) = false ];
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
