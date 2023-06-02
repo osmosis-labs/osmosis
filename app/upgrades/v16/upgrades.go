@@ -80,18 +80,24 @@ func CreateUpgradeHandler(
 
 		// Add both MsgExecuteContract and MsgInstantiateContract to the list of allowed messages.
 		hostParams := keepers.ICAHostKeeper.GetParams(ctx)
-		exists := false
+		msgExecuteContractExists := false
+		msgInstantiateContractExists := false
 		for _, msg := range hostParams.AllowMessages {
-			if msg == sdk.MsgTypeURL(&cosmwasmtypes.MsgExecuteContract{}) || msg == sdk.MsgTypeURL(&cosmwasmtypes.MsgInstantiateContract{}) {
-				exists = true
-				break
+			if msg == sdk.MsgTypeURL(&cosmwasmtypes.MsgExecuteContract{}) {
+				msgExecuteContractExists = true
+			}
+			if msg == sdk.MsgTypeURL(&cosmwasmtypes.MsgInstantiateContract{}) {
+				msgInstantiateContractExists = true
 			}
 		}
-		if !exists {
+		if !msgExecuteContractExists {
 			hostParams.AllowMessages = append(hostParams.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgExecuteContract{}))
-			hostParams.AllowMessages = append(hostParams.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgInstantiateContract{}))
-			keepers.ICAHostKeeper.SetParams(ctx, hostParams)
 		}
+
+		if !msgInstantiateContractExists {
+			hostParams.AllowMessages = append(hostParams.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgInstantiateContract{}))
+		}
+		keepers.ICAHostKeeper.SetParams(ctx, hostParams)
 
 		// Although parameters are set on InitGenesis() in RunMigrations(), we reset them here
 		// for visibility of the final configuration.

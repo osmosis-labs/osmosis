@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	cosmwasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -123,6 +124,11 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 				// Ensure that the protorev upgrade was successful
 				verifyProtorevUpdateSuccess(suite)
+
+				// Validate MsgExecuteContract and MsgInstantiateContract were added to the whitelist
+				icaHostAllowList := suite.App.ICAHostKeeper.GetParams(suite.Ctx)
+				suite.Require().Contains(icaHostAllowList.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgExecuteContract{}))
+				suite.Require().Contains(icaHostAllowList.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgInstantiateContract{}))
 			},
 			func() {
 				// Validate that tokenfactory params have been updated
