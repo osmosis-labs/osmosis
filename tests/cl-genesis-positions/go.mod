@@ -8,7 +8,7 @@ require (
 	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230516205127-c213fddde069
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230529060317-d6d2dda0fb22
 	// this commit points to https://github.com/osmosis-labs/osmosis/commit/b764323ce7702185d2089b9e76a0115c7058f37e
-	github.com/osmosis-labs/osmosis/v15 v15.0.0-20230601221251-b764323ce770
+	github.com/osmosis-labs/osmosis/v15 v15.0.0-20230602143948-7c9acb65e46c
 	github.com/tendermint/tendermint v0.34.26
 )
 
