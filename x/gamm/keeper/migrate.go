@@ -191,7 +191,7 @@ func (k Keeper) redirectDistributionRecord(ctx sdk.Context, cfmmPoolId, clPoolId
 	// Get concentrated gauge corresponding to the distribution epoch duration.
 	concentratedGaugeId, err := k.poolIncentivesKeeper.GetPoolGaugeId(ctx, clPoolId, distributionEpochDuration)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	// Iterate through all the distr records, and redirect the old balancer gauge to the new concentrated gauge.
