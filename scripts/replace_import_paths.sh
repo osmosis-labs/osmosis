@@ -32,14 +32,13 @@ echo "Updating all files"
 
 for file in "${files[@]}"; do
     if test -f "$file"; then
-        echo $file
         # skip files that need manual upgrading 
         for excluded_file in "${modules_to_upgrade_manually[@]}"; do
             if [[ "$file" == *"$excluded_file"* ]]; then
                 continue 2
             fi
         done
-        # replace_paths $file
+        replace_paths $file
     fi
 done
 
