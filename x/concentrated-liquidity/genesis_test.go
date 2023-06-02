@@ -72,7 +72,30 @@ var (
 		UnclaimedRewardsTotal: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(5))),
 		Options:               nil,
 	}
+
+	accumRecord = accum.Record{
+		NumShares:             sdk.OneDec(),
+		AccumValuePerShare:    sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50))),
+		UnclaimedRewardsTotal: sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(25))),
+		Options:               nil,
+	}
+
+	// five records because we have 5 supported uptimes
+	testUptimeAccumRecord = []accum.Record{
+		accumRecord,
+		accumRecord,
+		accumRecord,
+		accumRecord,
+		accumRecord,
+	}
 )
+
+func accumRecordWithDefinedValues(accumRecord accum.Record, numShares sdk.Dec, initAccumValue, unclaimedRewards sdk.Int) accum.Record {
+	accumRecord.NumShares = numShares
+	accumRecord.AccumValuePerShare = sdk.NewDecCoins(sdk.NewDecCoin("uion", initAccumValue))
+	accumRecord.UnclaimedRewardsTotal = sdk.NewDecCoins(sdk.NewDecCoin("uosmo", unclaimedRewards))
+	return accumRecord
+}
 
 func positionWithPoolId(position model.Position, poolId uint64) *model.Position {
 	position.PoolId = poolId
@@ -118,13 +141,6 @@ func incentiveAccumsWithPoolId(poolId uint64) []genesis.AccumObject {
 			Name: types.KeyUptimeAccumulator(poolId, uint64(4)),
 			AccumContent: &accum.AccumulatorContent{
 				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("quux", sdk.NewInt(20))),
-				TotalShares: sdk.NewDec(20),
-			},
-		},
-		{
-			Name: types.KeyUptimeAccumulator(poolId, uint64(5)),
-			AccumContent: &accum.AccumulatorContent{
-				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("quuux", sdk.NewInt(10))),
 				TotalShares: sdk.NewDec(20),
 			},
 		},
@@ -200,11 +216,19 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 							LockId:                  1,
 							Position:                &testPositionModel,
 							SpreadRewardAccumRecord: testSpreadRewardAccumRecord,
+							UptimeAccumRecords:      testUptimeAccumRecord,
 						},
 						{
 							LockId:                  0,
 							Position:                withPositionId(testPositionModel, 2),
 							SpreadRewardAccumRecord: testSpreadRewardAccumRecord,
+							UptimeAccumRecords: []accum.Record{
+								accumRecordWithDefinedValues(accumRecord, sdk.NewDec(10000), sdk.NewInt(100), sdk.NewInt(50)),
+								accumRecordWithDefinedValues(accumRecord, sdk.NewDec(1000), sdk.NewInt(100), sdk.NewInt(50)),
+								accumRecordWithDefinedValues(accumRecord, sdk.NewDec(100), sdk.NewInt(100), sdk.NewInt(50)),
+								accumRecordWithDefinedValues(accumRecord, sdk.NewDec(10), sdk.NewInt(100), sdk.NewInt(50)),
+								accumRecordWithDefinedValues(accumRecord, sdk.NewDec(1), sdk.NewInt(100), sdk.NewInt(50)),
+							},
 						},
 					},
 					spreadFactorAccumValues: genesis.AccumObject{
@@ -255,11 +279,19 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					LockId:                  1,
 					Position:                &testPositionModel,
 					SpreadRewardAccumRecord: testSpreadRewardAccumRecord,
+					UptimeAccumRecords:      testUptimeAccumRecord,
 				},
 				{
 					LockId:                  0,
 					Position:                withPositionId(testPositionModel, 2),
 					SpreadRewardAccumRecord: testSpreadRewardAccumRecord,
+					UptimeAccumRecords: []accum.Record{
+						accumRecordWithDefinedValues(accumRecord, sdk.NewDec(10000), sdk.NewInt(100), sdk.NewInt(50)),
+						accumRecordWithDefinedValues(accumRecord, sdk.NewDec(1000), sdk.NewInt(100), sdk.NewInt(50)),
+						accumRecordWithDefinedValues(accumRecord, sdk.NewDec(100), sdk.NewInt(100), sdk.NewInt(50)),
+						accumRecordWithDefinedValues(accumRecord, sdk.NewDec(10), sdk.NewInt(100), sdk.NewInt(50)),
+						accumRecordWithDefinedValues(accumRecord, sdk.NewDec(1), sdk.NewInt(100), sdk.NewInt(50)),
+					},
 				},
 			},
 			expectedspreadFactorAccumValues: []genesis.AccumObject{
@@ -309,6 +341,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 							LockId:                  1,
 							Position:                &testPositionModel,
 							SpreadRewardAccumRecord: testSpreadRewardAccumRecord,
+							UptimeAccumRecords:      testUptimeAccumRecord,
 						},
 					},
 					spreadFactorAccumValues: genesis.AccumObject{
@@ -343,6 +376,13 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						{
 							LockId:   2,
 							Position: withPositionId(*positionWithPoolId(testPositionModel, 2), DefaultPositionId+1),
+							UptimeAccumRecords: []accum.Record{
+								accumRecordWithDefinedValues(accumRecord, sdk.NewDec(99999), sdk.NewInt(10), sdk.NewInt(5)),
+								accumRecordWithDefinedValues(accumRecord, sdk.NewDec(9999), sdk.NewInt(10), sdk.NewInt(5)),
+								accumRecordWithDefinedValues(accumRecord, sdk.NewDec(999), sdk.NewInt(100), sdk.NewInt(50)),
+								accumRecordWithDefinedValues(accumRecord, sdk.NewDec(99), sdk.NewInt(50), sdk.NewInt(25)),
+								accumRecordWithDefinedValues(accumRecord, sdk.NewDec(9), sdk.NewInt(50), sdk.NewInt(25)),
+							},
 						},
 					},
 
@@ -427,11 +467,19 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					LockId:                  1,
 					Position:                &testPositionModel,
 					SpreadRewardAccumRecord: testSpreadRewardAccumRecord,
+					UptimeAccumRecords:      testUptimeAccumRecord,
 				},
 				{
 					LockId:                  2,
 					Position:                withPositionId(*positionWithPoolId(testPositionModel, 2), DefaultPositionId+1),
 					SpreadRewardAccumRecord: testSpreadRewardAccumRecord,
+					UptimeAccumRecords: []accum.Record{
+						accumRecordWithDefinedValues(accumRecord, sdk.NewDec(99999), sdk.NewInt(10), sdk.NewInt(5)),
+						accumRecordWithDefinedValues(accumRecord, sdk.NewDec(9999), sdk.NewInt(10), sdk.NewInt(5)),
+						accumRecordWithDefinedValues(accumRecord, sdk.NewDec(999), sdk.NewInt(100), sdk.NewInt(50)),
+						accumRecordWithDefinedValues(accumRecord, sdk.NewDec(99), sdk.NewInt(50), sdk.NewInt(25)),
+						accumRecordWithDefinedValues(accumRecord, sdk.NewDec(9), sdk.NewInt(50), sdk.NewInt(25)),
+					},
 				},
 			},
 		},
@@ -519,6 +567,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					LockId:                  actualLockId,
 					Position:                &getPosition,
 					SpreadRewardAccumRecord: positionDataEntry.SpreadRewardAccumRecord,
+					UptimeAccumRecords:      positionDataEntry.UptimeAccumRecords,
 				})
 			}
 
@@ -586,6 +635,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 							LockId:                  1,
 							Position:                &testPositionModel,
 							SpreadRewardAccumRecord: testSpreadRewardAccumRecord,
+							UptimeAccumRecords:      testUptimeAccumRecord,
 						},
 					},
 					spreadFactorAccumValues: genesis.AccumObject{
@@ -636,11 +686,13 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 							LockId:                  1,
 							Position:                &testPositionModel,
 							SpreadRewardAccumRecord: testSpreadRewardAccumRecord,
+							UptimeAccumRecords:      testUptimeAccumRecord,
 						},
 						{
 							LockId:                  0,
 							Position:                withPositionId(testPositionModel, DefaultPositionId+1),
 							SpreadRewardAccumRecord: testSpreadRewardAccumRecord,
+							UptimeAccumRecords:      testUptimeAccumRecord,
 						},
 					},
 					spreadFactorAccumValues: genesis.AccumObject{
@@ -697,6 +749,13 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 							LockId:                  2,
 							Position:                withPositionId(*positionWithPoolId(testPositionModel, 2), DefaultPositionId+2),
 							SpreadRewardAccumRecord: testSpreadRewardAccumRecord,
+							UptimeAccumRecords: []accum.Record{
+								accumRecordWithDefinedValues(accumRecord, sdk.NewDec(99999), sdk.NewInt(10), sdk.NewInt(5)),
+								accumRecordWithDefinedValues(accumRecord, sdk.NewDec(9999), sdk.NewInt(10), sdk.NewInt(5)),
+								accumRecordWithDefinedValues(accumRecord, sdk.NewDec(999), sdk.NewInt(100), sdk.NewInt(50)),
+								accumRecordWithDefinedValues(accumRecord, sdk.NewDec(99), sdk.NewInt(50), sdk.NewInt(25)),
+								accumRecordWithDefinedValues(accumRecord, sdk.NewDec(9), sdk.NewInt(50), sdk.NewInt(25)),
+							},
 						},
 					},
 				},
@@ -749,6 +808,15 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 					s.Require().Equal(incentiveRecord.IncentiveRecordBody.EmissionRate.String(), expectedPoolData.IncentiveRecords[i].IncentiveRecordBody.EmissionRate.String())
 					s.Require().Equal(incentiveRecord.IncentiveRecordBody.RemainingAmount.String(), expectedPoolData.IncentiveRecords[i].IncentiveRecordBody.RemainingAmount.String())
 					s.Require().True(incentiveRecord.IncentiveRecordBody.StartTime.Equal(expectedPoolData.IncentiveRecords[i].IncentiveRecordBody.StartTime))
+				}
+			}
+
+			// Validate uptime accumulators
+			for i, actualPositionData := range actualExported.PositionData {
+				expectedPositionData := expectedGenesis.PositionData[i]
+				// validate incentive accumulator
+				for i, uptimeAccum := range actualPositionData.UptimeAccumRecords {
+					s.Require().Equal(expectedPositionData.UptimeAccumRecords[i], uptimeAccum)
 				}
 			}
 
