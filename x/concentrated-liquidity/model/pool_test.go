@@ -743,3 +743,38 @@ func (suite *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 		})
 	}
 }
+
+func (suite *ConcentratedPoolTestSuite) TestAmino() {
+	suite.Setup()
+
+	msg := model.MsgCreateConcentratedPool{
+		Sender:       suite.TestAccs[0].String(),
+		Denom0:       ETH,
+		Denom1:       USDC,
+		TickSpacing:  1,
+		SpreadFactor: sdk.MustNewDecFromStr("0.01"),
+	}
+
+	json, err := suite.App.AppCodec().MarshalJSON(&msg)
+	suite.Require().NoError(err)
+
+	fmt.Println(string(json))
+
+	bytes, err := suite.App.AppCodec().Marshal(&msg)
+	suite.Require().NoError(err)
+
+	fmt.Println(string(bytes))
+
+	sdkDec := sdk.MustNewDecFromStr("1")
+	bytes, err = sdkDec.MarshalAmino()
+	suite.Require().NoError(err)
+
+	fmt.Println(string(bytes))
+
+	dec := sdk.Dec{}
+
+	err = dec.UnmarshalAmino([]byte("2310000000000000000"))
+	suite.Require().NoError(err)
+
+	suite.Equal(sdk.MustNewDecFromStr("2.31"), dec)
+}
