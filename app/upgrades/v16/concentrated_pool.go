@@ -58,8 +58,9 @@ func createConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLinkWith uint64
 	return concentratedPool, nil
 }
 
-// createCanonicalConcentratedLiquidityPoolAndMigrationLink creates a new concentrated liquidity pool from an existing CFMM pool
-// Additionally, it creates a migration link between the CFMM pool and the CL pool and stores it in x/gamm.
+// createCanonicalConcentratedLiquidityPoolAndMigrationLink creates a new concentrated liquidity pool from an existing CFMM pool.
+// This method calls OverwriteMigrationRecords, which creates a migration link between the CFMM/CL pool as well as migrates the
+// gauges and distribution records from the CFMM pool to the new CL pool.
 // Returns error if fails to create concentrated liquidity pool from CFMM pool.
 func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, cfmmPoolId uint64, desiredDenom0 string, keepers *keepers.AppKeepers) (poolmanagertypes.PoolI, error) {
 	concentratedPool, err := createConcentratedPoolFromCFMM(ctx, cfmmPoolId, desiredDenom0, *keepers.AccountKeeper, *keepers.GAMMKeeper, *keepers.PoolManagerKeeper)
@@ -68,6 +69,7 @@ func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, c
 	}
 
 	// Set the migration link in x/gamm.
+	// This will also migrate the CFMM distribution records to point to the new CL pool.
 	err = keepers.GAMMKeeper.OverwriteMigrationRecords(ctx, gammtypes.MigrationRecords{
 		BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 			{

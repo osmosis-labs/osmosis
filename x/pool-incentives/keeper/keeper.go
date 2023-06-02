@@ -170,12 +170,10 @@ func (k Keeper) GetGaugesForCFMMPool(ctx sdk.Context, poolId uint64) ([]incentiv
 	for _, duration := range lockableDurations {
 		gaugeId, err := k.GetPoolGaugeId(ctx, poolId, duration)
 		if err != nil {
-			fmt.Println("error getting gauge id for pool", poolId, "duration", duration, err)
 			return nil, err
 		}
 		gauge, err := k.incentivesKeeper.GetGaugeByID(ctx, gaugeId)
 		if err != nil {
-			fmt.Println("error getting gauge for pool", poolId, "duration", duration, "gauge id", gaugeId, err)
 			return nil, err
 		}
 
