@@ -104,10 +104,12 @@ service Query {
 message UserPositionsRequest {
   string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
 
 message UserPositionsResponse {
   repeated FullPositionBreakdown positions = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 //=============================== PositionById
