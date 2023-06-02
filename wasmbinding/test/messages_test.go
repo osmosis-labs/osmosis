@@ -143,10 +143,6 @@ func TestChangeAdmin(t *testing.T) {
 			// Setup
 			osmosis, ctx := SetupCustomApp(t, tokenCreator)
 
-			// Fund actor with 100 base denom creation fees
-			actorAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-			fundAccount(t, ctx, osmosis, tokenCreator, actorAmount)
-
 			err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, tokenCreator, &bindings.CreateDenom{
 				Subdenom: validDenom,
 			})
