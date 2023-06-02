@@ -19,10 +19,6 @@ func TestCreateDenom(t *testing.T) {
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
 
-	// Fund actor with 100 base denom creation fees
-	actorAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-	fundAccount(t, ctx, osmosis, actor, actorAmount)
-
 	specs := map[string]struct {
 		createDenom *bindings.CreateDenom
 		expErr      bool
