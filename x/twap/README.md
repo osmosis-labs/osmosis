@@ -202,7 +202,7 @@ See `x/concentrated-liquidity/README.md` for the details about these differences
 
 <p style="text-align:center;">
 
-<img src="TWAP module - process flow.png" height="700"/>
+<img src="TWAP_module-process_flow.png" height="700"/>
 
 </p>
 
