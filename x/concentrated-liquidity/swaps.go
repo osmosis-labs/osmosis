@@ -596,6 +596,7 @@ func (k Keeper) computeInAmtGivenOut(
 			swapState.liquidity,
 			swapState.amountSpecifiedRemaining,
 		)
+		fmt.Println("----- IN SWAP: spreadRewardChargeTotal: ", spreadRewardChargeTotal)
 
 		swapState.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal)
 
