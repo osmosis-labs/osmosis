@@ -4,7 +4,7 @@ use cosmwasm_schema::cw_serde;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_binary, DepsMut, Env, MessageInfo, Response, StdError};
-use ibc::{ContractAck, IBCAckResponse, IBCAsyncOptions, OnRecvPacketAsyncResponse, Packet};
+use ibc::{ContractAck, IBCAck, IBCAckResponse, IBCAckError, IBCAsyncOptions, OnRecvPacketAsyncResponse, Packet};
 use osmosis_std_derive::CosmwasmExt;
 use state::INFLIGHT_PACKETS;
 
@@ -24,6 +24,7 @@ pub enum ExecuteMsg {
     ForceEmitIBCAck {
         packet: Packet,
         channel: String,
+        success: bool,
     },
 }
 
@@ -89,11 +90,11 @@ pub fn execute(
                 Ok(Response::default())
             }
         }
-        ExecuteMsg::ForceEmitIBCAck { packet, channel } => {
+        ExecuteMsg::ForceEmitIBCAck { packet, channel, success } => {
             INFLIGHT_PACKETS.save(
                 deps.storage,
                 (&packet.destination_channel, packet.sequence),
-                &packet,
+                &(packet.clone(), success),
             )?;
             let msg = MsgEmitIBCAck {
                 sender: env.contract.address.to_string(),
@@ -111,12 +112,21 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, StdError
         SudoMsg::IBCAsync(IBCAsyncOptions::RequestAck {
             source_channel,
             packet_sequence,
-        }) => Ok(Response::new().set_data(to_binary(&IBCAckResponse {
-            packet: INFLIGHT_PACKETS.load(deps.storage, (&source_channel, packet_sequence))?,
-            contract_ack: ContractAck {
-                contract_result: base64::encode("success"),
-                ibc_ack: base64::encode("ack"),
-            },
-        })?)),
+        }) => {
+            let (packet, success) = INFLIGHT_PACKETS.load(deps.storage, (&source_channel, packet_sequence))?;
+            let data = match success {
+                true => to_binary(&IBCAck::AckResponse(IBCAckResponse {
+                    packet,
+                    contract_ack: ContractAck {
+                        contract_result: base64::encode("success"),
+                        ibc_ack: base64::encode("ack"),
+                    },
+                }))?,
+                false => to_binary(&IBCAck::AckError(IBCAckError {
+                    packet,
+                    contract_error: "forced error".to_string(),
+                }))?
+            };
+            Ok(Response::new().set_data(data))},
     }
 }

@@ -7,6 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
+	"github.com/cosmos/ibc-go/v4/modules/core/exported"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
@@ -133,26 +135,37 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 		return nil, sdkerrors.Wrap(err, "could not execute contract")
 	}
 
-	var ack types.IBCAckResponse
-	err = json.Unmarshal(bz, &ack)
+	ack, err := types.UnmarshalIBCAck(bz)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "could not unmarshal ack")
-	}
+		return nil, sdkerrors.Wrap(err, "could not unmarshal into IBCAckResponse or IBCAckError")
 
+	}
 	var newAck channeltypes.Acknowledgement
-	jsonAck, err := json.Marshal(ack)
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "could not marshal acknowledgement")
-	} else {
+	var packet exported.PacketI
+
+	switch ack.Type {
+	case "ack_response":
+		jsonAck, err := json.Marshal(ack.AckResponse)
+		if err != nil {
+			return nil, sdkerrors.Wrap(err, "could not marshal acknowledgement")
+		}
+		packet = ack.AckResponse.Packet
 		newAck = channeltypes.NewResultAcknowledgement(jsonAck)
+	case "ack_error":
+		packet = ack.AckError.Packet
+		newAck = osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrAckFromContract, ack.AckError.ContractError)
+	default:
+		return nil, sdkerrors.Wrap(err, "could not unmarshal into IBCAckResponse or IBCAckError")
 	}
 
-	// ToDo: handle error acks here!
-
-	err = k.channelKeeper.WriteAcknowledgement(ctx, cap, ack.Packet, newAck)
+	err = k.channelKeeper.WriteAcknowledgement(ctx, cap, packet, newAck)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "could not write acknowledgement")
 	}
 
-	return jsonAck, nil
+	response, err := json.Marshal(newAck)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "could not marshal acknowledgement")
+	}
+	return response, nil
 }

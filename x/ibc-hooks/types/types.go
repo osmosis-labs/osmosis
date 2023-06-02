@@ -1,6 +1,9 @@
 package types
 
-import channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
+import (
+	"encoding/json"
+	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
+)
 
 // Async: The following types represent the response sent by a contract on OnRecvPacket when it wants the ack to be async
 
@@ -39,4 +42,42 @@ type ContractAck struct {
 type IBCAckResponse struct {
 	Packet      channeltypes.Packet `json:"packet"`
 	ContractAck ContractAck         `json:"contract_ack"`
+}
+
+// IBCAckError is the error that a contract returns from the sudo() call on RequestAck
+type IBCAckError struct {
+	Packet        channeltypes.Packet `json:"packet"`
+	ContractError string              `json:"contract_error"`
+}
+
+type IBCAck struct {
+	Type    string          `json:"type"`
+	Content json.RawMessage `json:"content"`
+	// Note: These two fields have to be pointers so that they can be null
+	// If they are not pointers, they will be empty structs when null,
+	// which will cause issues with json.Unmarshal.
+	AckResponse *IBCAckResponse `json:"response,omitempty"`
+	AckError    *IBCAckError    `json:"error,omitempty"`
+}
+
+func UnmarshalIBCAck(bz []byte) (*IBCAck, error) {
+	var ack IBCAck
+	if err := json.Unmarshal(bz, &ack); err != nil {
+		return nil, err
+	}
+
+	switch ack.Type {
+	case "ack_response":
+		ack.AckResponse = &IBCAckResponse{}
+		if err := json.Unmarshal(ack.Content, ack.AckResponse); err != nil {
+			return nil, err
+		}
+	case "ack_error":
+		ack.AckError = &IBCAckError{}
+		if err := json.Unmarshal(ack.Content, ack.AckError); err != nil {
+			return nil, err
+		}
+	}
+
+	return &ack, nil
 }

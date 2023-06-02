@@ -56,8 +56,23 @@ pub struct ContractAck {
     pub ibc_ack: String,
 }
 
+
 #[cw_serde]
 pub struct IBCAckResponse {
     pub packet: Packet,
     pub contract_ack: ContractAck,
 }
+
+#[cw_serde]
+pub struct IBCAckError {
+    pub packet: Packet,
+    pub contract_error: String,
+}
+
+#[cw_serde]
+#[serde(tag = "type", content = "content")]
+pub enum IBCAck {
+    AckResponse(IBCAckResponse),
+    AckError(IBCAckError),
+}
+
