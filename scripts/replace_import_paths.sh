@@ -24,6 +24,7 @@ echo "Replacing import paths in all files"
 files=$(find ./ -type f -and -not \( -path "./vendor*" -or -path "./.git*" -or -name "*.md" \))
 
 echo "Updating all files"
+
 for file in $files; do
     if test -f "$file"; then
         for excluded_file in "${modules_to_upgrade_manually[@]}"; do
