@@ -5,7 +5,7 @@ set -euo pipefail
 NEXT_MAJOR_VERSION=$1
 import_path_to_replace=$(go list -m)
 
-version_to_replace=$(echo $import_path_to_replace | sed 's/g.*v//') 
+version_to_replace=$(echo $import_path_to_replace | sed -n 's/.*v\([0-9]*\).*/\1/p') 
 
 echo Current import paths are $version_to_replace, replacing with $NEXT_MAJOR_VERSION
 
