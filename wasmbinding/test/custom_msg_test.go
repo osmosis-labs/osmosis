@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
 
 	"github.com/stretchr/testify/require"
 
@@ -179,10 +178,6 @@ func TestBurnMsg(t *testing.T) {
 	lucky := RandomAccountAddress()
 	reflect := instantiateReflectContract(t, ctx, osmosis, lucky)
 	require.NotEmpty(t, reflect)
-
-	// Fund reflect contract with 100 base denom creation fees
-	reflectAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-	fundAccount(t, ctx, osmosis, reflect, reflectAmount)
 
 	// lucky was broke
 	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
