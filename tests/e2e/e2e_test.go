@@ -1765,8 +1765,9 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 
 	// Note balancer pool balance after joining balancer pool
 	sender, err := sdk.AccAddressFromBech32(chainA.NodeConfigs[0].PublicAddress)
-	chainANode.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sender.String(), "0" ,tokenOutMins.String(), sharesToMigrate.String())
-
+	// positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, concentratedLockId := chainANode.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sender.String(), "0" ,tokenOutMins.String(), sharesToMigrate.String())
+	positionId, _, _, _, _, _, _ := chainANode.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sender.String(), "0" ,tokenOutMins.String(), sharesToMigrate.String())
+	println(positionId)
 	position := chainANode.QueryConcentratedPositions(sender.String()) 
 
 	s.Require().Equal(len(position), 1)

@@ -25,6 +25,7 @@ import (
 	"github.com/tendermint/tendermint/p2p"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	app "github.com/osmosis-labs/osmosis/v15/app"
 )
 
@@ -252,12 +253,44 @@ func (n *NodeConfig) ExitPool(from, minAmountsOut string, poolId uint64, shareAm
 	n.LogActionF("successfully exited pool %d, minAmountsOut %s, shareAmountIn %s", poolId, minAmountsOut, shareAmountIn)
 }
 
-func (n *NodeConfig) UnlockAndMigrateSharesToFullRangeConcentratedPosition(from, lock_id, minAmountsOut string, sharesToMigrate string) {
+func (n *NodeConfig) UnlockAndMigrateSharesToFullRangeConcentratedPosition(from, lock_id, minAmountsOut string, sharesToMigrate string) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, poolIdLeaving, poolIdEntering, concentratedLockId uint64) {
 	n.LogActionF("Unlock and migrate shares to full range Concentrated position")
-	cmd := []string{"osmosisd", "tx", "superfluid", "unlock-and-migrate-to-cl", lock_id, sharesToMigrate, minAmountsOut, fmt.Sprintf("--from=%s", from), "--gas=500000", "--fees=1250uosmo"}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	cmd := []string{"osmosisd", "tx", "superfluid", "unlock-and-migrate-to-cl", lock_id, sharesToMigrate, minAmountsOut, fmt.Sprintf("--from=%s", from), "--gas=500000", "--fees=1250uosmo", "-o json"}
+	outJson, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "code\":0")
 	require.NoError(n.t, err)
+
+	var txResponse map[string]interface{}
+	err = json.Unmarshal(outJson.Bytes(), &txResponse)
+	require.NoError(n.t, err)
+
+	positionIdString, amount0String, amount1String, liquidityString, poolIdLeavingString, poolIdEnteringString, concentratedLockIdString, err := GetDataReponseUnlockAndMigrateSharesToFullRangeConcentratedPosition(txResponse)
+	require.NoError(n.t, err)
+
+	positionId, err = osmocli.ParseUint(positionIdString, "")
+	require.NoError(n.t, err)
+
+	amount0Int, err := osmocli.ParseInt(amount0String, "")
+	require.NoError(n.t, err)
+	amount0 = sdk.NewInt(amount0Int)
+
+	amount1Int, err := osmocli.ParseInt(amount1String, "")
+	require.NoError(n.t, err)
+	amount1 = sdk.NewInt(amount1Int)
+
+	liquidity = sdk.MustNewDecFromStr(liquidityString)
+
+	poolIdLeaving, err = osmocli.ParseUint(poolIdLeavingString, "")
+	require.NoError(n.t, err)
+
+	poolIdEntering, err = osmocli.ParseUint(poolIdEnteringString, "")
+	require.NoError(n.t, err)
+
+	concentratedLockId, err = osmocli.ParseUint(concentratedLockIdString, "")
+	require.NoError(n.t, err)
+
 	n.LogActionF("successfully unlock and migrate shares")
+
+	return positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, concentratedLockId
 }
 
 func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight int64, initialDeposit sdk.Coin) {
@@ -555,4 +588,81 @@ func GetPositionID(responseJson map[string]interface{}) (string, error) {
 	}
 
 	return "", fmt.Errorf("position_id field not found in response")
+}
+
+func GetDataReponseUnlockAndMigrateSharesToFullRangeConcentratedPosition(responseJson map[string]interface{}) (positionId string, amount0, amount1 string, liquidity string, poolIdLeaving, poolIdEntering, concentratedLockId string, err error) {
+	logs, ok := responseJson["logs"].([]interface{})
+	if !ok {
+		return "", "", "", "", "", "", "", fmt.Errorf("logs field not found in response")
+	}
+
+	if len(logs) == 0 {
+		return "", "", "", "", "", "", "", fmt.Errorf("empty logs field in response")
+	}
+
+	log, ok := logs[0].(map[string]interface{})
+	if !ok {
+		return "", "", "", "", "", "", "", fmt.Errorf("invalid format of logs field")
+	}
+
+	events, ok := log["events"].([]interface{})
+	if !ok {
+		return "", "", "", "", "", "", "", fmt.Errorf("events field not found in logs")
+	}
+
+	for _, event := range events {
+		attributes, ok := event.(map[string]interface{})["attributes"].([]interface{})
+		if !ok {
+			return "", "", "", "", "", "", "", fmt.Errorf("attributes field not found in event")
+		}
+
+		for _, attr := range attributes {
+			switch v := attr.(type) {
+			case map[string]interface{}:
+				if v["key"] == "position_id" {
+					positionId, ok = v["value"].(string)
+					if !ok {
+						return "", "", "", "", "", "", "", fmt.Errorf("invalid format of position_id field")
+					}
+				} else if v["key"] == "amount0" {
+					amount0, ok = v["value"].(string)
+					if !ok {
+						return "", "", "", "", "", "", "", fmt.Errorf("invalid format of amount0 field")
+					}
+				} else if v["key"] == "amount1" {
+					amount1, ok = v["value"].(string)
+					if !ok {
+						return "", "", "", "", "", "", "", fmt.Errorf("invalid format of amount1 field")
+					}
+				} else if v["key"] == "liquidity" {
+					liquidity, ok = v["value"].(string)
+					if !ok {
+						return "", "", "", "", "", "", "", fmt.Errorf("invalid format of amount1 field")
+					}
+				} else if v["key"] == "pool_id_leaving" {
+					poolIdLeaving, ok = v["value"].(string)
+					if !ok {
+						return "", "", "", "", "", "", "", fmt.Errorf("invalid format of poolIdLeaving field")
+					}
+				} else if v["key"] == "pool_id_entering" {
+					poolIdEntering, ok = v["value"].(string)
+					if !ok {
+						return "", "", "", "", "", "", "", fmt.Errorf("invalid format of poolIdEntering field")
+					}
+				} else if v["key"] == "concentrated_lock_id" {
+					concentratedLockId, ok = v["value"].(string)
+					if !ok {
+						return "", "", "", "", "", "", "", fmt.Errorf("invalid format of concentratedLockId field")
+					}
+				}
+				if positionId != "" && concentratedLockId != "" && poolIdEntering != "" {
+					return positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, concentratedLockId, nil
+				}
+			default:
+				return "", "", "", "", "", "", "", fmt.Errorf("invalid type for attributes field")
+			}
+		}
+	}
+
+	return "", "", "", "", "", "", "", fmt.Errorf("position_id field not found in response")
 }
