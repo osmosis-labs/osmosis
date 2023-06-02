@@ -14,7 +14,7 @@ jobs:
 
       - name: Is there a Changelog requiring diff?
         id: state_machine_diff
-        uses: ./.github/workflows/workflow_components.yml@main
+        uses: ./.github/workflows/workflow_components.yml@dev/try_abstracting_workflows
 
       - name: Changelog check
         if: |
