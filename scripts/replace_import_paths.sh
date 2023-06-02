@@ -13,7 +13,9 @@ echo Current import paths are $version_to_replace, replacing with $NEXT_MAJOR_VE
 # list all folders containing Go modules.
 modules=$(go list -tags e2e ./... | sed "s/g.*v${version_to_replace}\///")
 
-modules_to_upgrade_manually=$(find . -name go.mod -exec grep -l "github.com/osmosis-labs/osmosis/v15" {} \; | grep -v  "^./go.mod$" | sed 's|/go.mod||')
+while IFS= read -r line; do
+  modules_to_upgrade_manually+=("$line")
+done < <(find . -name go.mod -exec grep -l "github.com/osmosis-labs/osmosis/v15" {} \; | grep -v  "^./go.mod$" | sed 's|/go.mod||' | sed 's|^./||')
 
 replace_paths() {
     file="${1}"
@@ -22,22 +24,20 @@ replace_paths() {
 
 echo "Replacing import paths in all files"
 
-files=$(find ./ -type f -and -not \( -path "./vendor*" -or -path "./.git*" -or -name "*.md" \))
+while IFS= read -r line; do
+  files+=("$line")
+done < <(find ./ -type f -not \( -path "./vendor*" -or -path "./.git*" -or -name "*.md" \))
 
 echo "Updating all files"
 
-for file in $files; do
+for file in "${files[@]}"; do
     if test -f "$file"; then
         for excluded_file in "${modules_to_upgrade_manually[@]}"; do
-            echo "$excluded_file", "$file"
-            if [[ "$file" == "$excluded_file" ]]; then
-                echo $file, $excluded_file
+            if [[ "$file" == *"$excluded_file"* ]]; then
                 continue 2
             fi
         done
-        break
-        # replace_paths $file
-        # echo $file
+        replace_paths $file
     fi
 done
 
