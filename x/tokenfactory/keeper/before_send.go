@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
 
 	errorsmod "cosmossdk.io/errors"
 	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
