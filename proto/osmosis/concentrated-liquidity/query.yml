@@ -49,3 +49,8 @@ queries:
   TickAccumulatorTrackers:
     proto_wrapper:
       query_func: "k.TickAccumulatorTrackers"
+  IncentiveRecords:
+    proto_wrapper:
+      query_func: "k.IncentiveRecords"
+    cli:
+      cmd: "IncentiveRecords"

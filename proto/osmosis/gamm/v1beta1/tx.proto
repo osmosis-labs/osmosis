@@ -82,7 +82,7 @@ message MsgExitPoolResponse {
 
 // ===================== MsgSwapExactAmountIn
 message MsgSwapExactAmountIn {
-  option (amino.name) = "osmosis/gamm/exit-pool";
+  option (amino.name) = "osmosis/gamm/swap-exact-amount-in";
 
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   repeated osmosis.poolmanager.v1beta1.SwapAmountInRoute routes = 2

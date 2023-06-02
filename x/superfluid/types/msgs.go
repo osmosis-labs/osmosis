@@ -286,9 +286,6 @@ func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) ValidateBasi
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
-	if msg.LockId <= 0 {
-		return fmt.Errorf("Invalid lock ID (%d)", msg.LockId)
-	}
 	if msg.SharesToMigrate.IsNegative() {
 		return fmt.Errorf("Invalid shares to migrate (%s)", msg.SharesToMigrate)
 	}
