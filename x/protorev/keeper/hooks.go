@@ -156,27 +156,34 @@ func (k Keeper) compareAndStorePool(ctx sdk.Context, poolId uint64, baseDenom, o
 		}
 	}()
 
-	// Get coins and calculate liquidity for the new pool
-	newPoolCoins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
+	// Get comparable liquidity for the new pool
+	newPoolliquidity, err := k.getComparablePoolLiquidity(ctx, poolId)
 	if err != nil {
-		ctx.Logger().Error("Protorev error getting newPoolCoins in compareAndStorePool", err)
+		ctx.Logger().Error("Protorev error getting newPoolLiquidity in compareAndStorePool", err)
 		return
 	}
-	newPoolliquidity := newPoolCoins[0].Amount.Mul(newPoolCoins[1].Amount)
 
-	// Get coins and calculate liquidity for the stored pool
-	storedPool, err := k.gammKeeper.GetPoolAndPoke(ctx, storedPoolId)
+	// Get comparable liquidity for the stored pool
+	storedPoolLiquidity, err := k.getComparablePoolLiquidity(ctx, storedPoolId)
 	if err != nil {
-		ctx.Logger().Error("Protorev error getting storedPool in AfterCFMMPoolCreated hook", err)
+		ctx.Logger().Error("Protorev error getting storedPoolLiquidity in compareAndStorePool", err)
 		return
 	}
-	storedPoolCoins := storedPool.GetTotalPoolLiquidity(ctx)
-	storedPoolLiquidity := storedPoolCoins[0].Amount.Mul(storedPoolCoins[1].Amount)
 
 	// If the new pool has more liquidity, we set it
 	if newPoolliquidity.GT(storedPoolLiquidity) {
 		k.SetPoolForDenomPair(ctx, baseDenom, otherDenom, poolId)
 	}
+}
+
+// getComparablePoolLiquidity gets the comparable liquidity of a pool by multiplying the amounts of the pool coins.
+func (k Keeper) getComparablePoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Int, error) {
+	coins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	return coins[0].Amount.Mul(coins[1].Amount), nil
 }
 
 // storeJoinExitPoolMsgs stores the join/exit pool messages in the store, depending on if it is a join or exit.
