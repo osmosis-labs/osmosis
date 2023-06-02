@@ -7,16 +7,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app/keepers"
-	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v16/app/keepers"
+	"github.com/osmosis-labs/osmosis/v16/app/upgrades"
 
 	cosmwasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/keeper"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v16/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
 )
 
 const (

@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	clmath "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	clmath "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
 const (

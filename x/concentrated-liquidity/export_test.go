@@ -6,9 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 const (

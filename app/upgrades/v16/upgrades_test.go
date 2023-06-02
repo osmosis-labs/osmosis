@@ -13,11 +13,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	v16 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v16"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	v16 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v16"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v16/x/protorev/types"
 )
 
 type UpgradeTestSuite struct {

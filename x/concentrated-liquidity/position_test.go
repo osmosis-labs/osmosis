@@ -9,10 +9,10 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
 var DefaultIncentiveRecords = []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour}
