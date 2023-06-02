@@ -12,6 +12,8 @@ echo Current import paths are $version_to_replace, replacing with $NEXT_MAJOR_VE
 # list all folders containing Go modules.
 modules=$(go list -tags e2e ./... | sed "s/g.*v${version_to_replace}\///")
 
+modules_to_upgrade_manually=$(find . -name go.mod -exec grep -l "github.com/osmosis-labs/osmosis/v15" {} \; | grep -v  "^./go.mod$" | sed 's|/go.mod||')
+
 replace_paths() {
     file="${1}"
     sed -i "s/github.com\/osmosis-labs\/osmosis\/v${version_to_replace}/github.com\/osmosis-labs\/osmosis\/v${NEXT_MAJOR_VERSION}/g" ${file}
@@ -24,9 +26,20 @@ files=$(find ./ -type f -and -not \( -path "./vendor*" -or -path "./.git*" -or -
 echo "Updating all files"
 for file in $files; do
     if test -f "$file"; then
-        replace_paths $file
+        for excluded_file in "${modules_to_upgrade_manually[@]}"; do
+            echo "$excluded_file", "$file"
+            if [[ "$file" == "$excluded_file" ]]; then
+                echo $file, $excluded_file
+                continue 2
+            fi
+        done
+        break
+        # replace_paths $file
+        # echo $file
     fi
 done
+
+exit 0
 
 echo "Updating go.mod and vendoring"
 # go.mod
