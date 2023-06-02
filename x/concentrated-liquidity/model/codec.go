@@ -7,6 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 
+	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
+
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
@@ -44,10 +46,10 @@ var (
 
 func init() {
 	RegisterCodec(amino)
-	// sdk.RegisterLegacyAminoCodec(amino)
+	sdk.RegisterLegacyAminoCodec(amino)
 
 	// Register all Amino interfaces and concrete types on the authz Amino codec so that this can later be
 	// used to properly serialize MsgGrant and MsgExec instances
-	// RegisterCodec(authzcodec.Amino)
+	RegisterCodec(authzcodec.Amino)
 	amino.Seal()
 }
