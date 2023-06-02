@@ -9,7 +9,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v15/wasmbinding"
 	"github.com/osmosis-labs/osmosis/v15/wasmbinding/bindings"
-	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
 
 	"github.com/stretchr/testify/require"
 )
@@ -165,10 +164,6 @@ func TestMint(t *testing.T) {
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
 
-	// Fund actor with 100 base denom creation fees
-	tokenCreationFeeAmt := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-	fundAccount(t, ctx, osmosis, creator, tokenCreationFeeAmt)
-
 	// Create denoms for valid mint tests
 	validDenom := bindings.CreateDenom{
 		Subdenom: "MOON",
@@ -284,10 +279,6 @@ func TestBurn(t *testing.T) {
 	apptesting.SkipIfWSL(t)
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
-
-	// Fund actor with 100 base denom creation fees
-	tokenCreationFeeAmt := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-	fundAccount(t, ctx, osmosis, creator, tokenCreationFeeAmt)
 
 	// Create denoms for valid burn tests
 	validDenom := bindings.CreateDenom{
