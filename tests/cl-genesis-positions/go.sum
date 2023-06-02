@@ -697,14 +697,10 @@ github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230523200430-193959b898ec h1:p7tm
 github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230523200430-193959b898ec/go.mod h1:ss3tUfPTwaa6NsoPZrCR7xOqLqCK0LwoNbc2Q8Zs5/Y=
 github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230516205127-c213fddde069 h1:ZgDrTJ2GCH4CJGbV6rudw4O9rPMAuwWoLVZnG6cUr+A=
 github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230516205127-c213fddde069/go.mod h1:a7lhiXRpn8QJ21OhFpaEnUNErTSIafaYpp02q6uI/Dk=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230516205127-c213fddde069 h1:9C/n+Nx5rre/AHPMlPsQrk1isgydrCNB68aqer86ygE=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230516205127-c213fddde069/go.mod h1:hk/o9/kmTSZmZqwXcSrPuwj/gpRMCqbE/d3vj6teL2A=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230529060317-d6d2dda0fb22 h1:I14d+U4gDSL5dHoQ3G+kGLhZP5Zj3mOxMb/97Xflusc=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230529060317-d6d2dda0fb22/go.mod h1:GIvgXqD8NOtrpu5bJ052tZxWLFj4ekpi1BMwEHIvXVU=
-github.com/osmosis-labs/osmosis/v15 v15.0.0-20230529161742-5ecd4b4758a1 h1:lXoByLU+isHFXqHZ475nR70jNh+ggMnKkf8sjlrFD4E=
-github.com/osmosis-labs/osmosis/v15 v15.0.0-20230529161742-5ecd4b4758a1/go.mod h1:WLizb8rE6PDUiu5S/VWqbqFeIps8sCo+EX7zGRdia0o=
-github.com/osmosis-labs/osmosis/v15 v15.0.0-20230530235412-9f091596cbcf h1:APgiJVc3pKayuHM3w6QVJmq91yj6c+EhmpgWZPXT4d0=
-github.com/osmosis-labs/osmosis/v15 v15.0.0-20230530235412-9f091596cbcf/go.mod h1:ww2QtVh+XW91yTpbyfM4mJBmIRk4AU0PigLL94zr0+8=
+github.com/osmosis-labs/osmosis/v15 v15.0.0-20230601221251-b764323ce770 h1:to+kNe/UeQwFpYHMqOkdY7TGIjt5mp+QxIniNRDzDUc=
+github.com/osmosis-labs/osmosis/v15 v15.0.0-20230601221251-b764323ce770/go.mod h1:ww2QtVh+XW91yTpbyfM4mJBmIRk4AU0PigLL94zr0+8=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230328024000-175ec88e4304 h1:RIrWLzIiZN5Xd2JOfSOtGZaf6V3qEQYg6EaDTAkMnCo=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230328024000-175ec88e4304/go.mod h1:yPWoJTj5RKrXKUChAicp+G/4Ni/uVEpp27mi/FF/L9c=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230331072320-5d6f6cfa2627 h1:A0SwZgp4bmJFbivYJc8mmVhMjrr3EdUZluBYFke11+w=
