@@ -18,6 +18,8 @@ jobs:
         with:
           files_ignore: |
             **/*.md
+            **/*_test.go
+            .github/workflows/*.yml
 
       - name: Check required labels
         # Skip this step and return success result for markdown only changes
