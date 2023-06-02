@@ -2,7 +2,11 @@ name: Reusable steps
 
 on:
   workflow_call:
-  
+    inputs:
+    ref:
+      required: true
+      type: string
+
 jobs:
   state_machine_diff:
     runs-on: ubuntu-latest
