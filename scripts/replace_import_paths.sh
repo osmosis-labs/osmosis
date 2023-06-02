@@ -7,6 +7,7 @@ import_path_to_replace=$(go list -m)
 
 version_to_replace=$(echo $import_path_to_replace | sed -n 's/.*v\([0-9]*\).*/\1/p') 
 
+echo $version_to_replace
 echo Current import paths are $version_to_replace, replacing with $NEXT_MAJOR_VERSION
 
 # list all folders containing Go modules.
