@@ -55,10 +55,6 @@ func TestMintMsg(t *testing.T) {
 	reflect := instantiateReflectContract(t, ctx, osmosis, lucky)
 	require.NotEmpty(t, reflect)
 
-	// Fund reflect contract with 100 base denom creation fees
-	reflectAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-	fundAccount(t, ctx, osmosis, reflect, reflectAmount)
-
 	// lucky was broke
 	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
 	require.Empty(t, balances)
