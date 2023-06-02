@@ -17,8 +17,8 @@ var (
 	MinSpotPrice              = sdk.MustNewDecFromStr("0.000000000000000001")
 	MaxSqrtPrice, _           = MaxSpotPrice.ApproxRoot(2)
 	MinSqrtPrice, _           = MinSpotPrice.ApproxRoot(2)
-	// Supported uptimes preset to 1 ns, 1 min, 1 hr, 1D, 1W
-	SupportedUptimes              = []time.Duration{time.Nanosecond, time.Minute, time.Hour, time.Hour * 24, time.Hour * 24 * 7}
+	// Supported uptimes preset to 1 ns, 1 min, 1 hr, 1D, 1W, 2W
+	SupportedUptimes              = []time.Duration{time.Nanosecond, time.Minute, time.Hour, time.Hour * 24, time.Hour * 24 * 7, time.Hour * 24 * 7 * 2}
 	ExponentAtPriceOne      int64 = -6
 	AuthorizedTickSpacing         = []uint64{1, 10, 100, 1000}
 	AuthorizedSpreadFactors       = []sdk.Dec{
@@ -28,8 +28,8 @@ var (
 		sdk.MustNewDecFromStr("0.001"),  // 0.1%
 		sdk.MustNewDecFromStr("0.002"),  // 0.2%
 		sdk.MustNewDecFromStr("0.003"),  // 0.3%
-		sdk.MustNewDecFromStr("0.005"),
-	} // 0.5%
+		sdk.MustNewDecFromStr("0.005"),  // 0.5%
+	}
 	BaseGasFeeForNewIncentive     = 10_000
 	DefaultBalancerSharesDiscount = sdk.MustNewDecFromStr("0.05")
 	// By default, we only authorize one nanosecond (one block) uptime as an option

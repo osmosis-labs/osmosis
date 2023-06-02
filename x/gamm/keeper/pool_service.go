@@ -64,7 +64,7 @@ func (k Keeper) CalculateSpotPrice(
 // - Records total liquidity increase
 // - Calls the AfterPoolCreated hook
 func (k Keeper) InitializePool(ctx sdk.Context, pool poolmanagertypes.PoolI, sender sdk.AccAddress) (err error) {
-	cfmmPool, err := convertToCFMMPool(pool)
+	cfmmPool, err := asCFMMPool(pool)
 	if err != nil {
 		return err
 	}

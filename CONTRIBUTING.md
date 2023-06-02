@@ -68,6 +68,22 @@ Making table-driven tests in an environment built on the Cosmos SDK has some qui
 
 We'll lay out three examples below (one that uses our format for messages, one that applies to keeper methods, and one that applies to our GAMM module), each of which will hopefully be simple enough to copy-paste into a test file and use as a starting point for your test-writing in the Osmosis Core repo.
 
+### High level testing strategy and requirements
+
+To ensure that our tests are both robust and readable, we have a number of preferences on how tests should generally be written regardless of the specific code being tested. While these might seem simple, they are critical to ensuring reviewability of complex features.
+
+#### Test comments
+
+Every test should have a description explaining what specifically it tests and what the high level testing strategy is. Without this, it is difficult for an external (or even internal) reviewer to efficiently get a good grasp on what functionality is covered by existing tests or how to parse testing logic for more complex features.
+
+#### Test names
+
+Test names should be descriptive and focus on the core functionality being tested. If forced to choose between being concise and verbose where being concise would make it unclear what is being tested, it is acceptable for the test name to be slightly more verbose (although with good test comments and properly isolated tests this should ideally rarely be an issue).
+
+#### Test size
+
+When possible, contributors should err on the side of keeping tests small and story-driven. While it is ultimately up to the author's discretion and judgement whether a specific test case being added is getting too large or testing too many things, it is acceptable and encouraged to split up larger tests into smaller, more pointed ones that cover specific flows and functionality.
+
 ### Generating unit tests using our Gotest template
 
 To simplify (and speed up) the process of writing unit tests that fit our standard, we have put together a Gotest template that allows you to easily generate unit tests using built-in functionality for the Vscode Go plugin (complete with parameters listed, basic error checking logic etc.). The following two sections lay out how to generate a unit test automatically using this method.

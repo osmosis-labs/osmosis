@@ -44,9 +44,11 @@ var (
 		LiquidityGross: sdk.OneDec(),
 		LiquidityNet:   sdk.OneDec(),
 		SpreadRewardGrowthOppositeDirectionOfLastTraversal: testCoins,
-		UptimeTrackers: []model.UptimeTracker{
-			{
-				UptimeGrowthOutside: testCoins,
+		UptimeTrackers: model.UptimeTrackers{
+			List: []model.UptimeTracker{
+				{
+					UptimeGrowthOutside: testCoins,
+				},
 			},
 		},
 	}
@@ -116,6 +118,13 @@ func incentiveAccumsWithPoolId(poolId uint64) []genesis.AccumObject {
 			Name: types.KeyUptimeAccumulator(poolId, uint64(4)),
 			AccumContent: &accum.AccumulatorContent{
 				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("quux", sdk.NewInt(20))),
+				TotalShares: sdk.NewDec(20),
+			},
+		},
+		{
+			Name: types.KeyUptimeAccumulator(poolId, uint64(5)),
+			AccumContent: &accum.AccumulatorContent{
+				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("quuux", sdk.NewInt(10))),
 				TotalShares: sdk.NewDec(20),
 			},
 		},

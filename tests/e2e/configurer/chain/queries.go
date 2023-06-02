@@ -642,3 +642,24 @@ func (n *NodeConfig) QueryAllSuperfluidAssets() []superfluidtypes.SuperfluidAsse
 	require.NoError(n.t, err)
 	return response.Assets
 }
+
+func (n *NodeConfig) QueryCommunityPoolModuleAccount() string {
+	cmd := []string{"osmosisd", "query", "auth", "module-accounts", "--output=json"}
+
+	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	require.NoError(n.t, err)
+	var result map[string][]interface{}
+	err = json.Unmarshal(out.Bytes(), &result)
+	require.NoError(n.t, err)
+	for _, acc := range result["accounts"] {
+		account, ok := acc.(map[string]interface{})
+		require.True(n.t, ok)
+		if account["name"] == "distribution" {
+			moduleAccount, ok := account["base_account"].(map[string]interface{})["address"].(string)
+			require.True(n.t, ok)
+			return moduleAccount
+		}
+	}
+	require.True(n.t, false, "distribution module account not found")
+	return ""
+}

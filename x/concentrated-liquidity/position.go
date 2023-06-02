@@ -296,19 +296,19 @@ func (k Keeper) deletePosition(ctx sdk.Context,
 	}
 	store.Delete(positionIdKey)
 
-	// Remove the address-pool-position ID to position mapping.
-	addressPoolIdPositionIdKey := types.KeyAddressPoolIdPositionId(owner, poolId, positionId)
-	if !store.Has(addressPoolIdPositionIdKey) {
-		return types.AddressPoolPositionIdNotFoundError{Owner: owner.String(), PoolId: poolId, PositionId: positionId}
-	}
-	store.Delete(addressPoolIdPositionIdKey)
-
 	// Remove the pool-position ID mapping.
 	poolIdKey := types.KeyPoolPositionPositionId(poolId, positionId)
 	if !store.Has(poolIdKey) {
 		return types.PoolPositionIdNotFoundError{PoolId: poolId, PositionId: positionId}
 	}
 	store.Delete(poolIdKey)
+
+	// Remove the address-pool-position ID to position mapping.
+	addressPoolIdPositionIdKey := types.KeyAddressPoolIdPositionId(owner, poolId, positionId)
+	if !store.Has(addressPoolIdPositionIdKey) {
+		return types.AddressPoolPositionIdNotFoundError{Owner: owner.String(), PoolId: poolId, PositionId: positionId}
+	}
+	store.Delete(addressPoolIdPositionIdKey)
 
 	// Remove the position ID to underlying lock ID mapping (if it exists)
 	positionIdLockKey := types.KeyPositionIdForLock(positionId)
@@ -754,7 +754,7 @@ func (k Keeper) positionHasActiveUnderlyingLockAndUpdate(ctx sdk.Context, positi
 // - there is no full range liquidity in the pool.
 func (k Keeper) GetFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64) (sdk.Dec, error) {
 	store := ctx.KVStore(k.storeKey)
-	poolIdLiquidityKey := types.KeyPoolIdForLiquidity(poolId)
+	poolIdLiquidityKey := types.KeyFullRangeLiquidityPrefix(poolId)
 	currentTotalFullRangeLiquidity, err := osmoutils.GetDec(store, poolIdLiquidityKey)
 	if err != nil {
 		return sdk.Dec{}, err
@@ -766,7 +766,7 @@ func (k Keeper) GetFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64) (sdk
 func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, liquidity sdk.Dec) error {
 	store := ctx.KVStore(k.storeKey)
 	// Get previous total liquidity.
-	poolIdLiquidityKey := types.KeyPoolIdForLiquidity(poolId)
+	poolIdLiquidityKey := types.KeyFullRangeLiquidityPrefix(poolId)
 	currentTotalFullRangeLiquidityDecProto := sdk.DecProto{}
 	found, err := osmoutils.Get(store, poolIdLiquidityKey, &currentTotalFullRangeLiquidityDecProto)
 	if err != nil {
