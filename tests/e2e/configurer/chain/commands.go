@@ -506,6 +506,33 @@ func (n *NodeConfig) SuperfluidDelegate(lockNumber int, valAddress string, from 
 	n.LogActionF("successfully superfluid delegated lock %s to %s", lockStr, valAddress)
 }
 
+func (n *NodeConfig) SuperfluidUndelegate(lockNumber int, from string) {
+	lockStr := strconv.Itoa(lockNumber)
+	n.LogActionF("superfluid undelegating a lock %s from a validator", lockStr)
+	cmd := []string{"osmosisd", "tx", "superfluid", "undelegate", lockStr, fmt.Sprintf("--from=%s", from)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully superfluid undelegated a lock %s from a validator", lockStr)
+}
+
+func (n *NodeConfig) SuperfluidUnbondLock(lockNumber int, from string) {
+	lockStr := strconv.Itoa(lockNumber)
+	n.LogActionF("superfluid unbond lock that has been superfluid staked")
+	cmd := []string{"osmosisd", "tx", "superfluid", "unbond-lock", lockStr, fmt.Sprintf("--from=%s", from)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully superfluid unbond lock that has been superfluid staked")
+}
+
+func (n *NodeConfig) LockupBeginUnlock(lockNumber int, from string, coins string) {
+	lockStr := strconv.Itoa(lockNumber)
+	n.LogActionF("lockup begin unlock individual period lock by ID")
+	cmd := []string{"osmosisd", "tx", "lockup", "begin-unlock-by-id", lockStr, fmt.Sprintf("--amount=%s", coins), fmt.Sprintf("--from=%s", from)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully lockup begin unlock individual period lock by ID")
+}
+
 func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress string) {
 	n.LogActionF("bank sending %s from address %s to %s", amount, sendAddress, receiveAddress)
 	cmd := []string{"osmosisd", "tx", "bank", "send", sendAddress, receiveAddress, amount, "--from=val"}

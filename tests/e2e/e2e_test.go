@@ -1721,27 +1721,21 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 	var (
 		superfluidDelegated = false
 		superfluidUndelegating = false
-		unlocking = true
+		unlocking = false
 		noLock = true
 	)
 
 	// joinPoolAmt, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr     := s.setupMigrationTest(chainA, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate)
-	_, _, _, _, _, balancerPooId, clPoolId, balancerPoolShareOut, _ := s.setupMigrationTest(chainA, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate)
+	_, _, balancerLock, _, _, balancerPooId, clPoolId, balancerPoolShareOut, _ := s.setupMigrationTest(chainA, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate)
+	originalGammLockId := balancerLock.GetID()
 
 	// we attempt to migrate a subset of the balancer LP tokens we originally created.
 	coinsToMigrate := balancerPoolShareOut
 	coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(percentOfSharesToMigrate).RoundInt()
 
-	// sharesToMigrate := sdk.NewCoin(gammtypes.GetPoolShareDenom(balancePoolId), balancerPool.GetTotalShares().SubRaw(1))
-	// sharesToMigrate := sdk.NewCoin(gammtypes.GetPoolShareDenom(balancePoolId), sdk.Int(balancerPool.GetTotalShares().ToDec().Mul(percentOfSharesToMigrate).RoundInt()))
-	// // Note gamm and cl pool addresses
-	// balancerPoolAddress := balancerPool.GetAddress()
-	// clPoolAddress := clPool.GetAddress()
-	// minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetPrecisionFactorAtPriceOne())
-
 	// Note balancer pool balance after joining balancer pool
 	sender, err := sdk.AccAddressFromBech32(chainA.NodeConfigs[0].PublicAddress)
-	positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, _ := chainANode.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sender.String(), "0" ,tokenOutMins.String(), coinsToMigrate.String())
+	positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, _ := chainANode.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sender.String(), fmt.Sprintf("%d", originalGammLockId) ,tokenOutMins.String(), coinsToMigrate.String())
 	// positionId, _, _, _, _, _, _ := chainANode.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sender.String(), "0" ,tokenOutMins.String(), sharesToMigrate.String())
 	println(positionId)
 	// position := chainANode.QueryConcentratedPositions(sender.String()) 

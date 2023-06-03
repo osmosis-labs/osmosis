@@ -30,6 +30,7 @@ import (
 	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 	twapqueryproto "github.com/osmosis-labs/osmosis/v16/x/twap/client/queryproto"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 )
 
 // QueryProtoRevNumberOfTrades gets the number of trades the protorev module has executed.
@@ -480,6 +481,34 @@ func (n *NodeConfig) QueryIntermediaryAccount(denom string, valAddr string) (int
 	intAccountBalance, err := strconv.Atoi(intAccBalance)
 	require.NoError(n.t, err)
 	return intAccountBalance, err
+}
+
+func (n *NodeConfig) QueryConnectedIntermediaryAccount(lockId string) *superfluidtypes.SuperfluidIntermediaryAccountInfo {
+	path := fmt.Sprintf("/osmosis/superfluid/v1beta1/connected_intermediary_account/%s", lockId)
+
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var superfluidResp superfluidtypes.ConnectedIntermediaryAccountResponse
+	err = util.Cdc.UnmarshalJSON(bz, &superfluidResp)
+	require.NoError(n.t, err)
+
+	connectedIntermediaryAccount := superfluidResp.Account
+
+	return connectedIntermediaryAccount
+}
+
+func (n *NodeConfig) QueryLockedById(lockId string) *lockuptypes.PeriodLock {
+	path := fmt.Sprintf("/osmosis/lockup/v1beta1/locked_by_id/%s", lockId)
+
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var lockedResp lockuptypes.LockedResponse
+	err = util.Cdc.UnmarshalJSON(bz, &lockedResp)
+	require.NoError(n.t, err)
+
+	return lockedResp.Lock
 }
 
 func (n *NodeConfig) QueryCurrentEpoch(identifier string) int64 {

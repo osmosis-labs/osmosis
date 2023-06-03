@@ -16,6 +16,7 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
 var defaultFeePerTx = sdk.NewInt(1000)
@@ -135,6 +136,29 @@ func (s *IntegrationTestSuite) validateMigrateResult(
 	// s.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf("uosmo").ToDec().Mul(percentOfSharesToMigrate).RoundInt(), amount1))
 }
 
+func (s *IntegrationTestSuite) createFullRangePosition(node *chain.NodeConfig, from sdk.AccAddress, tokens sdk.Coins, poolId uint64) uint64 {
+	// Check that exactly two coins are provided.
+	if len(tokens) != 2 {
+		return 0
+	}
+
+	concentratedPool := s.updatedConcentratedPool(node, poolId)
+
+	// Defense in depth, ensure coins provided match the pool's token denominations.
+	if tokens.AmountOf(concentratedPool.GetToken0()).LTE(sdk.ZeroInt()) {
+		return 0
+	}
+
+	if tokens.AmountOf(concentratedPool.GetToken1()).LTE(sdk.ZeroInt()) {
+		return 0
+	}
+
+	// Create a full range (min to max tick) concentrated liquidity position.
+	positionId := node.CreateConcentratedPosition(from.String(), fmt.Sprintf("[%d]", cltypes.MinTick), fmt.Sprintf("%d", cltypes.MaxTick), tokens.String(), 0, 0, poolId)
+
+	return positionId
+}
+
 func (s *IntegrationTestSuite) setupMigrationTest(
 	chain *chain.Config,
 	superfluidDelegated, superfluidUndelegating, unlocking, noLock bool,
@@ -144,13 +168,18 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 	node, err := chain.GetDefaultNode()
 	s.NoError(err)
 
-	fundTokens := []string{"499404uosmo", "500000stake"}
+	fullRangeCoins := sdk.NewCoins(
+		sdk.NewInt64Coin("uosmo",500000),
+		sdk.NewInt64Coin("stake",500000),
+	)
+
+	fundTokens := []string{"50000000000uosmo", "50000000000stake"}
 	poolJoinAddress := node.CreateWalletAndFund("poolJoinAddress", fundTokens)
 	poolJoinAcc, err = sdk.AccAddressFromBech32(poolJoinAddress)
 	s.Require().NoError(err)
 
 	// fullRangeCoins := sdk.NewCoin()
-	balancerPooId = node.CreateBalancerPool("nativeDenomPool.json", node.PublicAddress)
+	balancerPooId = node.CreateBalancerPool("nativeDenomPoolMigration.json", node.PublicAddress)
 	// balancerPool := s.updatedCFMMPool(node, balancePoolId)
 
 	balanceBeforeJoin := s.addrBalance(node, poolJoinAddress)
@@ -174,7 +203,7 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 		Denom:  balancerPoolDenom,
 	}
 
-	clPoolId, err = node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
+	clPoolId, err = node.CreateConcentratedPool(poolJoinAddress, denom0, denom1, tickSpacing, spreadFactor)
 	// clPool := s.updatedConcentratedPool(node, clPoolId)
 
 	record := strconv.FormatUint(balancerPooId, 10) + "," + strconv.FormatUint(clPoolId, 10)
@@ -199,10 +228,58 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 
 	// The unbonding duration is the same as the staking module's unbonding duration.
 	// hardcore this, data get from config file
-	// unbondingDuration := time.Duration(240000000000)
+	unbondingDuration := time.Duration(240000000000)
 
-	// if !noLock {
-	// 	originalGammLockId
-	// }
+	// Lock the LP tokens for the duration of the unbonding period.
+	originalGammLockId := uint64(0)
+	if !noLock {
+		// TODO: get originalGammLockId return from LockTokens cmd below
+		// lock tokens
+		node.LockTokens(fmt.Sprintf("%v%s", balancerPoolShareOut.Amount, balancerPoolShareOut.Denom), unbondingDuration.String(), poolJoinAcc.String())
+		chain.LatestLockNumber += 1
+		// add to existing lock
+		node.AddToExistingLock(balancerPoolShareOut.Amount, balancerPoolShareOut.Denom, unbondingDuration.String(), poolJoinAcc.String())
+		// originalGammLockId = s.LockTokens(poolJoinAcc, sdk.NewCoins(balancerPoolShareOut), unbondingDuration)
+	}
+
+	// Superfluid delegate the balancer lock if the case requires it.
+	// Note the intermediary account that was created.
+	if superfluidDelegated {
+		node.SuperfluidDelegate(int(originalGammLockId), chain.NodeConfigs[1].OperatorAddress, poolJoinAcc.String())
+		connectedIntermediaryAccount := node.QueryConnectedIntermediaryAccount(fmt.Sprintf("%d", originalGammLockId))
+		balancerIntermediaryAcc = superfluidtypes.SuperfluidIntermediaryAccount{
+			Denom:   connectedIntermediaryAccount.Denom,
+			ValAddr: connectedIntermediaryAccount.ValAddr,
+			GaugeId: connectedIntermediaryAccount.GaugeId,
+		}
+	}
+
+	// Superfluid undelegate the lock if the test case requires it.
+	if superfluidUndelegating {
+		node.SuperfluidUndelegate(int(originalGammLockId), poolJoinAcc.String())
+	}
+
+	// Unlock the balancer lock if the test case requires it.
+	if unlocking {
+		if superfluidUndelegating {
+			node.SuperfluidUnbondLock(int(originalGammLockId), poolJoinAcc.String())
+		} else {
+			lock := node.QueryLockedById(fmt.Sprintf("%d", originalGammLockId))
+			node.LockupBeginUnlock(int(originalGammLockId), lock.Coins.String(), node.PublicAddress)
+		}
+	}
+
+	balancerLock = &lockuptypes.PeriodLock{}
+	if !noLock {
+		balancerLock = node.QueryLockedById(fmt.Sprintf("%d", originalGammLockId))
+	}
+	
+	// Create a full range position in the concentrated liquidity pool.
+	s.createFullRangePosition(node, sdk.MustAccAddressFromBech32(poolJoinAddress), fullRangeCoins, clPoolId)
+
+	// Register the CL full range LP tokens as a superfluid asset.
+	clPoolDenom := fmt.Sprintf("%s/%d", cltypes.ConcentratedLiquidityTokenPrefix, clPoolId)
+	chain.EnableSuperfluidAsset(clPoolDenom)
+
 	return joinPoolAmt, balancerIntermediaryAcc, balancerLock, poolCreateAcc, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr
 }
