@@ -24,13 +24,13 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v16/x/poolmanager/client/queryproto"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v16/x/protorev/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 	twapqueryproto "github.com/osmosis-labs/osmosis/v16/x/twap/client/queryproto"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 )
 
 // QueryProtoRevNumberOfTrades gets the number of trades the protorev module has executed.
