@@ -32,7 +32,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
 	clmath "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 // Reusable Checks
@@ -1698,13 +1697,7 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
 
-	var (
-		denom0       string = "stake"
-		denom1       string = "uosmo"
-		tickSpacing  uint64 = 100
-		spreadFactor        = "0.001" // 0.1%
-	)
-	// percentOfSharesToMigrate := sdk.MustNewDecFromStr("0.9")
+	percentOfSharesToMigrate := sdk.MustNewDecFromStr("0.9")
 
 	// Get the permisionless pool creation parameter.
 	isPermisionlessCreationEnabledStr := chainANode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
@@ -1722,43 +1715,24 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 		s.T().Fatal("concentrated liquidity pool creation is not enabled")
 	}
 
-	tokenOutMins := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(499000)), sdk.NewCoin("stake", sdk.NewInt(490000)))
-	// helpers
-	// var (
-	// 	getConcentratePoolFromId = func(poolId uint64) types.ConcentratedPoolExtension {
-	// 		concentratedPool, err := node.QueryConcentratedPool(poolId)
-	// 		s.Require().NoError(err)
-	// 		return concentratedPool
-	// 	}
-	// )
+	tokenOutMins := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(200000)), sdk.NewCoin("stake", sdk.NewInt(200000)))
 
-	// create balancer pool
-	balancePoolId := chainANode.CreateBalancerPool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
-	balancerPool := s.updatedCFMMPool(chainANode, balancePoolId)
-	// create CL pool
-	clPoolId, err := chainANode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
-	// clPool := getConcentratePoolFromId(clPoolId)
+	// Case 4:
+	var (
+		superfluidDelegated = false
+		superfluidUndelegating = false
+		unlocking = true
+		noLock = true
+	)
 
-	record := strconv.FormatUint(balancePoolId, 10) + "," + strconv.FormatUint(clPoolId, 10)
-	chainANode.SubmitReplaceMigrationRecordsProposal(record, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
-	chainA.LatestProposalNumber += 1
-	chainANode.DepositProposal(chainA.LatestProposalNumber, false)
-	totalTimeChan := make(chan time.Duration, 1)
-	go chainANode.QueryPropStatusTimed(chainA.LatestProposalNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
-	for _, node := range chainA.NodeConfigs {
-		node.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
-	}
+	// joinPoolAmt, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr     := s.setupMigrationTest(chainA, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate)
+	_, _, _, _, _, balancerPooId, clPoolId, balancerPoolShareOut, _ := s.setupMigrationTest(chainA, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate)
 
-	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
-	timeoutPeriod := 2 * time.Minute
-	select {
-	case <-time.After(timeoutPeriod):
-		err := fmt.Errorf("go routine took longer than %s", timeoutPeriod)
-		s.Require().NoError(err)
-	case <-totalTimeChan:
-		// The goroutine finished before the timeout period, continue execution.
-	}
-	sharesToMigrate := sdk.NewCoin(gammtypes.GetPoolShareDenom(balancePoolId), balancerPool.GetTotalShares().SubRaw(1))
+	// we attempt to migrate a subset of the balancer LP tokens we originally created.
+	coinsToMigrate := balancerPoolShareOut
+	coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(percentOfSharesToMigrate).RoundInt()
+
+	// sharesToMigrate := sdk.NewCoin(gammtypes.GetPoolShareDenom(balancePoolId), balancerPool.GetTotalShares().SubRaw(1))
 	// sharesToMigrate := sdk.NewCoin(gammtypes.GetPoolShareDenom(balancePoolId), sdk.Int(balancerPool.GetTotalShares().ToDec().Mul(percentOfSharesToMigrate).RoundInt()))
 	// // Note gamm and cl pool addresses
 	// balancerPoolAddress := balancerPool.GetAddress()
@@ -1767,10 +1741,10 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 
 	// Note balancer pool balance after joining balancer pool
 	sender, err := sdk.AccAddressFromBech32(chainA.NodeConfigs[0].PublicAddress)
-	// positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, concentratedLockId := chainANode.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sender.String(), "0" ,tokenOutMins.String(), sharesToMigrate.String())
-	positionId, _, _, _, _, _, _ := chainANode.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sender.String(), "0" ,tokenOutMins.String(), sharesToMigrate.String())
+	positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, _ := chainANode.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sender.String(), "0" ,tokenOutMins.String(), coinsToMigrate.String())
+	// positionId, _, _, _, _, _, _ := chainANode.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sender.String(), "0" ,tokenOutMins.String(), sharesToMigrate.String())
 	println(positionId)
 	// position := chainANode.QueryConcentratedPositions(sender.String()) 
 
-	// s.validateMigrateResult(chainANode, positionId, balancePoolId, poolIdLeaving, clPoolId, poolIdEntering, percentOfSharesToMigrate, liquidity, sdk.Coins{}, amount0, amount1 )
+	s.validateMigrateResult(chainANode, positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering, percentOfSharesToMigrate, liquidity, sdk.Coins{}, amount0, amount1 )
 }

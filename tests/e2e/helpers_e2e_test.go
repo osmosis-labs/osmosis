@@ -1,16 +1,31 @@
 package e2e
 
 import (
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"strconv"
+	"time"
 	// "github.com/osmosis-labs/osmosis/osmomath"
 
+	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
 var defaultFeePerTx = sdk.NewInt(1000)
+
+var (
+	denom0       string = "stake"
+	denom1       string = "uosmo"
+	tickSpacing  uint64 = 100
+	spreadFactor        = "0.001" // 0.1%
+)
 
 // calculateSpreadRewardGrowthGlobal calculates spread reward growth global per unit of virtual liquidity based on swap parameters:
 // amountIn - amount being swapped
@@ -118,4 +133,76 @@ func (s *IntegrationTestSuite) validateMigrateResult(
 	// }
 	// s.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf("stake").ToDec().Mul(percentOfSharesToMigrate).RoundInt(), amount0))
 	// s.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf("uosmo").ToDec().Mul(percentOfSharesToMigrate).RoundInt(), amount1))
+}
+
+func (s *IntegrationTestSuite) setupMigrationTest(
+	chain *chain.Config,
+	superfluidDelegated, superfluidUndelegating, unlocking, noLock bool,
+	percentOfSharesToMigrate sdk.Dec,
+) (joinPoolAmt sdk.Coins, balancerIntermediaryAcc superfluidtypes.SuperfluidIntermediaryAccount, balancerLock *lockuptypes.PeriodLock, poolCreateAcc, poolJoinAcc sdk.AccAddress, balancerPooId, clPoolId uint64, balancerPoolShareOut sdk.Coin, valAddr sdk.ValAddress) {
+
+	node, err := chain.GetDefaultNode()
+	s.NoError(err)
+
+	fundTokens := []string{"499404uosmo", "500000stake"}
+	poolJoinAddress := node.CreateWalletAndFund("poolJoinAddress", fundTokens)
+	poolJoinAcc, err = sdk.AccAddressFromBech32(poolJoinAddress)
+	s.Require().NoError(err)
+
+	// fullRangeCoins := sdk.NewCoin()
+	balancerPooId = node.CreateBalancerPool("nativeDenomPool.json", node.PublicAddress)
+	// balancerPool := s.updatedCFMMPool(node, balancePoolId)
+
+	balanceBeforeJoin := s.addrBalance(node, poolJoinAddress)
+	node.JoinPoolNoSwap(poolJoinAddress, balancerPooId, gammtypes.OneShare.MulRaw(50).String(), sdk.Coins{}.String())
+	balanceAfterJoin := s.addrBalance(node, poolJoinAddress)
+
+	// The balancer join pool amount is the difference between the account balance before and after joining the pool.
+	joinPoolAmt, _ = balanceBeforeJoin.SafeSub(balanceAfterJoin)
+
+	// Determine the balancer pool's LP token denomination.
+	balancerPoolDenom := gammtypes.GetPoolShareDenom(balancerPooId)
+
+	// Register the balancer pool's LP token as a superfluid asset
+	chain.EnableSuperfluidAsset(balancerPoolDenom)
+
+	// Note how much of the balancer pool's LP token the account that joined the pool has.
+	balanceCurrent := s.addrBalance(node, poolJoinAddress)
+
+	balancerPoolShareOut = sdk.Coin{
+		Amount: balanceCurrent.AmountOf(balancerPoolDenom),
+		Denom:  balancerPoolDenom,
+	}
+
+	clPoolId, err = node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
+	// clPool := s.updatedConcentratedPool(node, clPoolId)
+
+	record := strconv.FormatUint(balancerPooId, 10) + "," + strconv.FormatUint(clPoolId, 10)
+	node.SubmitReplaceMigrationRecordsProposal(record, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+	chain.LatestProposalNumber += 1
+	node.DepositProposal(chain.LatestProposalNumber, false)
+	totalTimeChan := make(chan time.Duration, 1)
+	go node.QueryPropStatusTimed(chain.LatestProposalNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
+	for _, node := range chain.NodeConfigs {
+		node.VoteYesProposal(initialization.ValidatorWalletName, chain.LatestProposalNumber)
+	}
+
+	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
+	timeoutPeriod := 2 * time.Minute
+	select {
+	case <-time.After(timeoutPeriod):
+		err := fmt.Errorf("go routine took longer than %s", timeoutPeriod)
+		s.Require().NoError(err)
+	case <-totalTimeChan:
+		// The goroutine finished before the timeout period, continue execution.
+	}
+
+	// The unbonding duration is the same as the staking module's unbonding duration.
+	// hardcore this, data get from config file
+	// unbondingDuration := time.Duration(240000000000)
+
+	// if !noLock {
+	// 	originalGammLockId
+	// }
+	return joinPoolAmt, balancerIntermediaryAcc, balancerLock, poolCreateAcc, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr
 }

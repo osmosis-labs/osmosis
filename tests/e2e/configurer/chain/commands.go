@@ -303,6 +303,14 @@ func (n *NodeConfig) JoinPoolExactAmountIn(tokenIn string, poolId uint64, shareO
 	n.LogActionF("successfully joined pool")
 }
 
+func (n *NodeConfig) JoinPoolNoSwap(from string, poolId uint64, shareAmountOut string, maxAmountsIn string) {
+	n.LogActionF("Join pool no swap")
+	cmd := []string{"osmosisd", "tx", "gamm", "join-pool", fmt.Sprintf("--pool-id=%d", poolId), fmt.Sprintf("--share-amount-out=%s", shareAmountOut), fmt.Sprintf("--max-amounts-in=%s", maxAmountsIn), fmt.Sprintf("--from=%s", from)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully joined pool no swap")
+}
+
 func (n *NodeConfig) ExitPool(from, minAmountsOut string, poolId uint64, shareAmountIn string) {
 	n.LogActionF("exiting gamm pool")
 	cmd := []string{"osmosisd", "tx", "gamm", "exit-pool", fmt.Sprintf("--min-amounts-out=%s", minAmountsOut), fmt.Sprintf("--share-amount-in=%s", shareAmountIn), fmt.Sprintf("--pool-id=%d", poolId), fmt.Sprintf("--from=%s", from)}
