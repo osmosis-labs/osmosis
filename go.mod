@@ -50,7 +50,6 @@ require (
 	github.com/Djarvur/go-err113 v0.1.0 // indirect
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
-	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.4.6 // indirect
 	github.com/cosmos/iavl v0.19.5 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
@@ -58,9 +57,8 @@ require (
 	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
-	github.com/gogo/googleapis v1.4.1-0.20201022092350-68b0159b7869 // indirect
+	github.com/gogo/gateway v1.1.0 // indirect
 	github.com/google/btree v1.1.2 // indirect
-	github.com/huandu/skiplist v1.2.0 // indirect
 	github.com/junk1tm/musttag v0.5.0 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.4 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
@@ -319,8 +317,8 @@ replace (
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.31.0-osmo-v16
 	// dragonberry
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v16.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/193959b898ecdcae36b52f97927e6a0a4389e98c
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230602024122-1cfa6927834d
+	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v16.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/93d9d4851b92bcbc1ede8c031ca1559b35ecc708
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230603004404-93d9d4851b92
 
 	// N.B. v0.19.5 contains a breaking change to the IAVL API
 	github.com/cosmos/iavl v0.19.5 => github.com/cosmos/iavl v0.19.4
