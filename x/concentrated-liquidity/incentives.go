@@ -324,7 +324,7 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 // poold id to be up to date for the given pool. Updates the pool last liquidity update time with
 // the current block time and writes the updated pool to state.
 // Specifically, it gets the time elapsed since the last update and divides it
-// by the qualifying liquidity for each uptime. It then adds this value to the
+// by the qualifying liquidity on the active tick. It then adds this value to the
 // respective accumulator and updates relevant time trackers accordingly.
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 // Note: the following are the differences of this function from updateGivenPoolUptimeAccumulatorsToNow:
