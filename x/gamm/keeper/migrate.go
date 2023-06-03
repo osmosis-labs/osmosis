@@ -109,7 +109,7 @@ func (k Keeper) GetLinkedBalancerPoolID(ctx sdk.Context, concentratedPoolId uint
 	return sdk.BigEndianToUint64(balancerPoolIdBigEndian), nil
 }
 
-// deleteMigrationKeys deletes all keys with the given prefixKey.
+// deleteMigrationKeys deletes all migration records with the given prefixKey.
 func (k Keeper) deleteMigrationKeys(ctx sdk.Context, prefixKey []byte) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, prefixKey)
