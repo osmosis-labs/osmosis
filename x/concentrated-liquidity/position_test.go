@@ -1270,10 +1270,10 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 
 	claimableIncentives := sdk.NewCoins()
 	for i := 0; i < DefaultFungifyNumPositions; i++ {
-		positionIncentices, forfeitedIncentives, err := s.clk.GetClaimableIncentives(cacheCtx, uint64(i+1))
+		positionIncentives, forfeitedIncentives, err := s.clk.GetClaimableIncentives(cacheCtx, uint64(i+1))
 		s.Require().NoError(err)
 		s.Require().Equal(sdk.Coins(nil), forfeitedIncentives)
-		claimableIncentives = claimableIncentives.Add(positionIncentices...)
+		claimableIncentives = claimableIncentives.Add(positionIncentives...)
 	}
 
 	actualClaimedAmount := claimableIncentives.AmountOf(USDC)
@@ -1345,6 +1345,7 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 	// Set up pool, default incentive records, and a single default position
 	pool, middlePositionIds, _ := s.runFungifySetup(middleAddress, 2, DefaultFungifyFullChargeDuration, DefaultSpreadFactor, []types.IncentiveRecord{testIncentiveRecord})
 
+	fmt.Println("Time unchanged: ", s.Ctx.BlockTime() == defaultBlockTime)
 	// Create two new addresses to hold a position to the left and right of the one we created above
 	testAccs := apptesting.CreateRandomAccounts(2)
 	leftAddress := testAccs[0]
@@ -1399,17 +1400,17 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 
 	// --- Emit incentives ---
 
-	// Increase block time by the fully charged duration and update incentives accumulators
+	// Increase block time by the fully charged duration
+	// Note: claiming incentives should already trigger update incentives accumulators
 	s.AddBlockTime(DefaultFungifyFullChargeDuration)
-	err = s.clk.UpdateUptimeAccumulatorsToNow(s.Ctx, pool.GetId())
-	s.Require().NoError(err)
+	fmt.Println("initial records: ", s.getAllIncentiveRecordsForPool(pool.GetId()))
 
 	// --- Assertions on non-fungified positions ---
 
 	// We operate and claim on cached context so we can compare against behavior with fungified positions
 	cacheCtx, _ := s.Ctx.CacheContext()
-	allPositionIds := []uint64{middlePositionIds[0], middlePositionIds[1], leftOne, leftTwo, rightOne, rightTwo}
-	positionOwners := []sdk.AccAddress{middleAddress, middleAddress, leftAddress, leftAddress, rightAddress, rightAddress}
+	allPositionIds := []uint64{leftOne, leftTwo, middlePositionIds[0], middlePositionIds[1], rightOne, rightTwo}
+	positionOwners := []sdk.AccAddress{leftAddress, leftAddress, middleAddress, middleAddress, rightAddress, rightAddress}
 
 	// Set up trackers for individual and total collected rewards
 	collectedSpreadRewardsMap := make(map[uint64]sdk.Coins, len(allPositionIds))
@@ -1418,6 +1419,7 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 	totalCollectedIncentives := sdk.NewCoins()
 
 	for i, id := range allPositionIds {
+		fmt.Println("-------- next position --------")
 		// Collect spread rewards and incentives on cached context
 		collectedSpread, err := s.clk.CollectSpreadRewards(cacheCtx, positionOwners[i], id)
 		s.Require().NoError(err)
@@ -1442,7 +1444,13 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 		totalCollectedSpread = totalCollectedSpread.Add(collectedSpread...)
 		totalCollectedIncentives = totalCollectedIncentives.Add(collectedIncentives...)
 	}
+	fmt.Println("updated records: ", s.getAllIncentiveRecordsForPool(pool.GetId()))
 	fmt.Println("total collected incentives: ", totalCollectedIncentives)
+
+	poolIncentivesBalance := s.App.BankKeeper.GetAllBalances(cacheCtx, pool.GetIncentivesAddress())
+	leftBalances := s.App.BankKeeper.GetAllBalances(cacheCtx, leftAddress)
+	fmt.Println("pool incentives balance: ", poolIncentivesBalance)
+	fmt.Println("left balances: ", leftBalances)
 
 	// Ensure that identical positions collected the same amounts
 	s.Require().Equal(collectedSpreadRewardsMap[leftOne], collectedSpreadRewardsMap[leftTwo])
@@ -1470,10 +1478,10 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 	fmt.Println("totalCollectedIncentives: ", totalCollectedIncentives)
 	fmt.Println("expectedIncentivesCoins: ", expectedIncentivesCoins)
 	// TODO: fix incentives assertions
-	// for _, incentiveCoin := range expectedIncentivesCoins {
-	// 	denom := incentiveCoin.Denom
-	// 	s.Require().Equal(0, roundingTolerance.Compare(expectedIncentivesCoins.AmountOf(denom), totalCollectedIncentives.AmountOf(denom)))
-	// }
+	for _, incentiveCoin := range expectedIncentivesCoins {
+		denom := incentiveCoin.Denom
+		s.Require().Equal(0, roundingTolerance.Compare(expectedIncentivesCoins.AmountOf(denom), totalCollectedIncentives.AmountOf(denom)), "expected: %s, got: %s", expectedIncentivesCoins.AmountOf(denom), totalCollectedIncentives.AmountOf(denom))
+	}
 
 	// --- System under test: Fungify positions ---
 

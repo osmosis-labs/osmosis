@@ -401,10 +401,7 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 		curUptimeDuration := types.SupportedUptimes[uptimeIndex]
 
 		// Qualifying liquidity is the amount of liquidity that satisfies uptime requirements
-		qualifyingLiquidity, err := uptimeAccums[uptimeIndex].GetTotalShares()
-		if err != nil {
-			return err
-		}
+		qualifyingLiquidity := pool.GetLiquidity()
 
 		// If there is no share to be incentivized for the current uptime accumulator, we leave it unchanged
 		if qualifyingLiquidity.LT(sdk.OneDec()) {
@@ -879,6 +876,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 	if err != nil {
 		return sdk.Coins{}, sdk.Coins{}, err
 	}
+	fmt.Println("uptime growth outside: ", uptimeGrowthOutside)
 
 	// Create a variable to hold the name of the position.
 	positionName := string(types.KeyPositionId(positionId))
