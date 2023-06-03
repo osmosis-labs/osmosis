@@ -7,15 +7,15 @@ import (
 	"time"
 	// "github.com/osmosis-labs/osmosis/osmomath"
 
-	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 )
 
 var defaultFeePerTx = sdk.NewInt(1000)

@@ -6,10 +6,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v15/wasmbinding"
-	"github.com/osmosis-labs/osmosis/v15/wasmbinding/bindings"
-	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v16/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v16/wasmbinding/bindings"
 
 	"github.com/stretchr/testify/require"
 )
@@ -18,10 +17,6 @@ func TestCreateDenom(t *testing.T) {
 	apptesting.SkipIfWSL(t)
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
-
-	// Fund actor with 100 base denom creation fees
-	actorAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-	fundAccount(t, ctx, osmosis, actor, actorAmount)
 
 	specs := map[string]struct {
 		createDenom *bindings.CreateDenom
@@ -147,10 +142,6 @@ func TestChangeAdmin(t *testing.T) {
 			// Setup
 			osmosis, ctx := SetupCustomApp(t, tokenCreator)
 
-			// Fund actor with 100 base denom creation fees
-			actorAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-			fundAccount(t, ctx, osmosis, tokenCreator, actorAmount)
-
 			err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, tokenCreator, &bindings.CreateDenom{
 				Subdenom: validDenom,
 			})
@@ -172,10 +163,6 @@ func TestMint(t *testing.T) {
 	apptesting.SkipIfWSL(t)
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
-
-	// Fund actor with 100 base denom creation fees
-	tokenCreationFeeAmt := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-	fundAccount(t, ctx, osmosis, creator, tokenCreationFeeAmt)
 
 	// Create denoms for valid mint tests
 	validDenom := bindings.CreateDenom{
@@ -292,10 +279,6 @@ func TestBurn(t *testing.T) {
 	apptesting.SkipIfWSL(t)
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
-
-	// Fund actor with 100 base denom creation fees
-	tokenCreationFeeAmt := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-	fundAccount(t, ctx, osmosis, creator, tokenCreationFeeAmt)
 
 	// Create denoms for valid burn tests
 	validDenom := bindings.CreateDenom{

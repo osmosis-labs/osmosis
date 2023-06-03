@@ -11,12 +11,12 @@ import (
 
 	"github.com/tendermint/tendermint/libs/bytes"
 
-	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/util"
+	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/util"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -26,8 +26,8 @@ import (
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	app "github.com/osmosis-labs/osmosis/v15/app"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	app "github.com/osmosis-labs/osmosis/v16/app"
 )
 
 // The value is returned as a string, so we have to unmarshal twice

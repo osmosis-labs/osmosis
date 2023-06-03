@@ -9,8 +9,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
+	types "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types/genesis"
 )
 
 // InitGenesis initializes the concentrated-liquidity module with the provided genesis state.
@@ -79,6 +79,16 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		spreadRewardPositionKey := types.KeySpreadRewardPositionAccumulator(positionWrapper.Position.PositionId)
 
 		k.initOrUpdateAccumPosition(ctx, spreadRewardAccumObject, positionWrapper.SpreadRewardAccumRecord.AccumValuePerShare, spreadRewardPositionKey, positionWrapper.SpreadRewardAccumRecord.NumShares, positionWrapper.SpreadRewardAccumRecord.UnclaimedRewardsTotal, positionWrapper.SpreadRewardAccumRecord.Options)
+
+		positionName := string(types.KeyPositionId(positionWrapper.Position.PositionId))
+		uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, positionWrapper.Position.PoolId)
+		if err != nil {
+			panic(err)
+		}
+
+		for uptimeIndex, uptimeRecord := range positionWrapper.UptimeAccumRecords {
+			k.initOrUpdateAccumPosition(ctx, uptimeAccumulators[uptimeIndex], uptimeRecord.AccumValuePerShare, positionName, uptimeRecord.NumShares, uptimeRecord.UnclaimedRewardsTotal, uptimeRecord.Options)
+		}
 	}
 }
 
@@ -189,10 +199,28 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 			panic(err)
 		}
 
+		// Retrieve uptime incentive accumulator state for position
+		positionName := string(types.KeyPositionId(position.PositionId))
+		uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, position.PoolId)
+		if err != nil {
+			panic(err)
+		}
+
+		uptimeAccumObject := make([]accum.Record, len(uptimeAccumulators))
+		for uptimeIndex := range types.SupportedUptimes {
+			accumRecord, err := uptimeAccumulators[uptimeIndex].GetPosition(positionName)
+			if err != nil {
+				panic(err)
+			}
+
+			uptimeAccumObject[uptimeIndex] = accumRecord
+		}
+
 		positionData = append(positionData, genesis.PositionData{
 			LockId:                  lockId,
 			Position:                &position,
 			SpreadRewardAccumRecord: spreadRewardAccumPositionRecord,
+			UptimeAccumRecords:      uptimeAccumObject,
 		})
 	}
 
