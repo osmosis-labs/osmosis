@@ -6,9 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/cosmwasm/msg"
-	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/cosmwasm/msg"
+	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 
 	cosmwasmutils "github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 )
@@ -27,7 +27,6 @@ var (
 func NewCosmWasmPool(poolId uint64, codeId uint64, instantiateMsg []byte) *Pool {
 	pool := Pool{
 		CosmWasmPool: CosmWasmPool{
-			PoolAddress:     poolmanagertypes.NewPoolAddress(poolId).String(),
 			ContractAddress: "", // N.B. This is to be set in InitializePool()
 			PoolId:          poolId,
 			CodeId:          codeId,
@@ -41,16 +40,16 @@ func NewCosmWasmPool(poolId uint64, codeId uint64, instantiateMsg []byte) *Pool 
 
 // poolmanager.PoolI interface implementation
 
-// GetAddress returns the address of the concentrated liquidity pool
+// GetAddress returns the address of the cosmwasm pool
 func (p Pool) GetAddress() sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(p.PoolAddress)
+	addr, err := sdk.AccAddressFromBech32(p.ContractAddress)
 	if err != nil {
 		panic(fmt.Sprintf("could not bech32 decode address of pool with id: %d", p.GetId()))
 	}
 	return addr
 }
 
-// GetId returns the id of the concentrated liquidity pool
+// GetId returns the id of the cosmwasm pool
 func (p Pool) GetId() uint64 {
 	return p.PoolId
 }

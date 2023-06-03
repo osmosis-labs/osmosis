@@ -1,4 +1,4 @@
-module github.com/osmosis-labs/osmosis/v15
+module github.com/osmosis-labs/osmosis/v16
 
 go 1.20
 

@@ -8,12 +8,13 @@ import (
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
-	osmosimtypes "github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
-	clkeeper "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-	clmodeltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
+	appParams "github.com/osmosis-labs/osmosis/v16/app/params"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
+	sdkrand "github.com/osmosis-labs/osmosis/v16/simulation/simtypes/random"
+	clkeeper "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
+	clmodeltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	minttypes "github.com/osmosis-labs/osmosis/v16/x/mint/types"
 )
 
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
@@ -66,6 +67,11 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 		return nil, err
 	}
 
+	token0Desired := tokens.AmountOf(clPool.GetToken0())
+	token1Desired := tokens.AmountOf(clPool.GetToken1())
+
+	tokenMinAmount0, tokenMinAmount1 := RandomMinAmount(sim, token0Desired, token1Desired)
+
 	accountBalancePoolDenom0 := sim.BankKeeper().GetBalance(ctx, positionCreator, poolDenoms[0])
 	accountBalancePoolDenom1 := sim.BankKeeper().GetBalance(ctx, positionCreator, poolDenoms[1])
 	if accountBalancePoolDenom0.Amount.LT(tokens[0].Amount) || accountBalancePoolDenom1.Amount.LT(tokens[1].Amount) {
@@ -78,8 +84,8 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 		LowerTick:       lowerTick,
 		UpperTick:       upperTick,
 		TokensProvided:  tokens,
-		TokenMinAmount0: sdk.NewInt(0),
-		TokenMinAmount1: sdk.NewInt(0),
+		TokenMinAmount0: tokenMinAmount0,
+		TokenMinAmount1: tokenMinAmount1,
 	}, nil
 }
 
@@ -287,6 +293,14 @@ func getRandomTickPositions(sim *osmosimtypes.SimCtx, minTick, maxTick int64, ti
 	}
 
 	return lowerTick, upperTick, nil
+}
+
+func RandomMinAmount(sim *osmosimtypes.SimCtx, token0Desired, token1Desired sdk.Int) (sdk.Int, sdk.Int) {
+	rand := sim.GetRand()
+	percent := sdk.NewDec(int64(sdkrand.RandIntBetween(rand, 0, 100) / 100))
+	minAmount0 := sdk.NewDecFromInt(token0Desired).Mul(percent).TruncateInt()
+	minAmount1 := sdk.NewDecFromInt(token1Desired).Mul(percent).TruncateInt()
+	return minAmount0, minAmount1
 }
 
 // RandomTickDivisibility calculates a random number between minTick - maxTick (inclusive) that is divisible by tickSpacing

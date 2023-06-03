@@ -7,11 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 const (
@@ -185,7 +185,7 @@ func (s *PoolModuleSuite) TestCalcOutAmtGivenIn_SwapOutAmtGivenIn() {
 			initialCoins:         initalDefaultSupply,
 			tokenIn:              sdk.NewCoin(denomA, defaultAmount.Add(sdk.OneInt())),
 			tokenOutDenom:        denomB,
-			expectedErrorMessage: fmt.Sprintf("Insufficient fund: required: %s, available: %s", sdk.NewCoin(denomB, defaultAmount.Add(sdk.OneInt())), sdk.NewCoin(denomB, defaultAmount)),
+			expectedErrorMessage: fmt.Sprintf("Insufficient pool asset: required: %s, available: %s", sdk.NewCoin(denomB, defaultAmount.Add(sdk.OneInt())), sdk.NewCoin(denomB, defaultAmount)),
 		},
 		"non-zero swap fee": {
 			initialCoins:         initalDefaultSupply,
@@ -310,7 +310,7 @@ func (s *PoolModuleSuite) TestCalcInAmtGivenOut_SwapInAmtGivenOut() {
 			initialCoins:         initalDefaultSupply,
 			tokenOut:             sdk.NewCoin(denomA, defaultAmount.Add(sdk.OneInt())),
 			tokenInDenom:         denomB,
-			expectedErrorMessage: fmt.Sprintf("Insufficient fund: required: %s, available: %s", sdk.NewCoin(denomA, defaultAmount.Add(sdk.OneInt())), sdk.NewCoin(denomA, defaultAmount)),
+			expectedErrorMessage: fmt.Sprintf("Insufficient pool asset: required: %s, available: %s", sdk.NewCoin(denomA, defaultAmount.Add(sdk.OneInt())), sdk.NewCoin(denomA, defaultAmount)),
 		},
 		"non-zero swap fee": {
 			initialCoins:         initalDefaultSupply,

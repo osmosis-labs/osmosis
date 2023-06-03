@@ -6,10 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
+	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types/genesis"
 )
 
 const (
@@ -21,7 +21,7 @@ var (
 		LiquidityGross: DefaultLiquidityAmt,
 		LiquidityNet:   DefaultLiquidityAmt,
 		SpreadRewardGrowthOppositeDirectionOfLastTraversal: DefaultSpreadRewardAccumCoins,
-		UptimeTrackers: model.UptimeTrackers{wrapUptimeTrackers(getExpectedUptimes().hundredTokensMultiDenom)},
+		UptimeTrackers: model.UptimeTrackers{List: wrapUptimeTrackers(getExpectedUptimes().hundredTokensMultiDenom)},
 	}
 
 	defaultTick = genesis.FullTick{
