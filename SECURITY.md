@@ -6,7 +6,7 @@ Osmosis uses GitHub to manage feature requests and bugs for its platform. This i
 
 For a feature request, please [create a GitHub issue](https://github.com/osmosis-labs/osmosis/issues/new). Clearly state your use case and what value it will bring to other users or developers on Osmosis.
 
-If it is something that can be handled by a parameter change, discuss it on [the discussions](https://github.com/osmosis-labs/osmosis/discussions) or on [Discord](https://discord.com/invite/osmosis) in `#governance-proposals` and consider a governance proposal.
+If it is something that can be handled by a parameter change, we encourage you to join the Osmosis Commonwealth Forum for discussions. You can participate in the forum by visiting https://gov.osmosis.zone/overview. Additionally, you can also join the Osmosis Discord community at https://discord.com/invite/osmosis and engage in the #governance-proposals channel to discuss and consider governance proposals.
 
 ## Standard Priority Bug
 
