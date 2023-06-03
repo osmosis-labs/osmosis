@@ -27,6 +27,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	app "github.com/osmosis-labs/osmosis/v15/app"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 )
 
 // The value is returned as a string, so we have to unmarshal twice
@@ -176,6 +177,63 @@ func (n *NodeConfig) QueryGovModuleAccount() string {
 	}
 	require.True(n.t, false, "gov module account not found")
 	return ""
+}
+
+func (n *NodeConfig) QueryPositionById(id uint64) model.Position {
+	cmd := []string{"osmosisd", "query", "concentratedliquidity", "position-by-id", fmt.Sprintf("%d", id), "--output=json"}
+
+	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	require.NoError(n.t, err)
+
+	// TODO: update the way to handle this
+	type Position struct {
+		PositionId string `json:"position_id"`
+		Address    string `json:"address"`
+		PoolId     string `json:"pool_id"`
+		LowerTick  string `json:"lower_tick"`
+		UpperTick  string `json:"upper_tick"`
+		JoinTime   string `json:"join_time"`
+		Liquidity  string `json:"liquidity"`
+	}
+
+	type Coin struct {
+		Denom  string `json:"denom"`
+		Amount string `json:"amount"`
+	}
+
+	type Response struct {
+		Position            Position `json:"position"`
+		Asset0              Coin     `json:"asset0"`
+		Asset1              Coin     `json:"asset1"`
+		ClaimableFees       []Coin   `json:"claimable_fees"`
+		ClaimableIncentives []Coin   `json:"claimable_incentives"`
+		ForfeitedIncentives []Coin   `json:"forfeited_incentives"`
+	}
+
+	type JsonResponse struct {
+		Position Response `json:"position"`
+	}
+
+	data := JsonResponse{}
+
+	err = json.Unmarshal(out.Bytes(), &data)
+	require.NoError(n.t, err)
+
+	positionId, err := osmocli.ParseUint(data.Position.Position.PositionId, "")
+	require.NoError(n.t, err)
+
+	poolId, err := osmocli.ParseUint(data.Position.Position.PoolId, "")
+	require.NoError(n.t, err)
+
+	liquidity := sdk.MustNewDecFromStr(data.Position.Position.Liquidity)
+
+	result := model.Position{
+		PositionId: positionId,
+		PoolId:     poolId,
+		Liquidity:  liquidity,
+	}
+
+	return result
 }
 
 func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) {

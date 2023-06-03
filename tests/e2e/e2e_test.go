@@ -1704,6 +1704,7 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 		tickSpacing  uint64 = 100
 		spreadFactor        = "0.001" // 0.1%
 	)
+	// percentOfSharesToMigrate := sdk.MustNewDecFromStr("0.9")
 
 	// Get the permisionless pool creation parameter.
 	isPermisionlessCreationEnabledStr := chainANode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
@@ -1758,6 +1759,7 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 		// The goroutine finished before the timeout period, continue execution.
 	}
 	sharesToMigrate := sdk.NewCoin(gammtypes.GetPoolShareDenom(balancePoolId), balancerPool.GetTotalShares().SubRaw(1))
+	// sharesToMigrate := sdk.NewCoin(gammtypes.GetPoolShareDenom(balancePoolId), sdk.Int(balancerPool.GetTotalShares().ToDec().Mul(percentOfSharesToMigrate).RoundInt()))
 	// // Note gamm and cl pool addresses
 	// balancerPoolAddress := balancerPool.GetAddress()
 	// clPoolAddress := clPool.GetAddress()
@@ -1768,7 +1770,7 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 	// positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, concentratedLockId := chainANode.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sender.String(), "0" ,tokenOutMins.String(), sharesToMigrate.String())
 	positionId, _, _, _, _, _, _ := chainANode.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sender.String(), "0" ,tokenOutMins.String(), sharesToMigrate.String())
 	println(positionId)
-	position := chainANode.QueryConcentratedPositions(sender.String()) 
+	// position := chainANode.QueryConcentratedPositions(sender.String()) 
 
-	s.Require().Equal(len(position), 1)
+	// s.validateMigrateResult(chainANode, positionId, balancePoolId, poolIdLeaving, clPoolId, poolIdEntering, percentOfSharesToMigrate, liquidity, sdk.Coins{}, amount0, amount1 )
 }

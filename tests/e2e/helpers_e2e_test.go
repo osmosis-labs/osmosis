@@ -2,6 +2,7 @@ package e2e
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	// "github.com/osmosis-labs/osmosis/osmomath"
 
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
@@ -91,4 +92,30 @@ func (s *IntegrationTestSuite) validateCLPosition(position model.Position, poolI
 	s.Require().Equal(position.PoolId, poolId)
 	s.Require().Equal(position.LowerTick, lowerTick)
 	s.Require().Equal(position.UpperTick, upperTick)
+}
+
+func (s *IntegrationTestSuite) validateMigrateResult(
+	node *chain.NodeConfig,
+	positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering uint64,
+	percentOfSharesToMigrate, liquidityMigrated sdk.Dec,
+	joinPoolAmt sdk.Coins,
+	amount0, amount1 sdk.Int,
+) {
+	// Check that the concentrated liquidity match what we expect
+	position := node.QueryPositionById(positionId)
+	s.Require().Equal(liquidityMigrated, position.Liquidity)
+
+	// Expect the poolIdLeaving to be the balancer pool id
+	// Expect the poolIdEntering to be the concentrated liquidity pool id
+	s.Require().Equal(balancerPooId, poolIdLeaving)
+	s.Require().Equal(clPoolId, poolIdEntering)
+
+	// exitPool has rounding difference.
+	// We test if correct amt has been exited and frozen by comparing with rounding tolerance.
+	// defaultErrorTolerance := osmomath.ErrTolerance{
+	// 	AdditiveTolerance: sdk.NewDec(2),
+	// 	RoundingDir:       osmomath.RoundDown,
+	// }
+	// s.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf("stake").ToDec().Mul(percentOfSharesToMigrate).RoundInt(), amount0))
+	// s.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf("uosmo").ToDec().Mul(percentOfSharesToMigrate).RoundInt(), amount1))
 }
