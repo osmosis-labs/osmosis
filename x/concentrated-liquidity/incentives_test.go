@@ -296,7 +296,6 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 			tc := tc
 			s.Run(name, func() {
 				s.SetupTest()
-				fmt.Println("Current authorized uptimes: ", s.authorizedUptimes)
 				clKeeper := s.App.ConcentratedLiquidityKeeper
 
 				// system under test
@@ -1064,7 +1063,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(tc.timeElapsed))
 
 				// System under test 1
-				// Use cache context to avoud persisting updates for the next function
+				// Use cache context to avoid persisting updates for the next function
 				// that relies on the same test cases and setup.
 				cacheCtx, _ := s.Ctx.CacheContext()
 				err = clKeeper.UpdateUptimeAccumulatorsToNow(cacheCtx, tc.poolId)
