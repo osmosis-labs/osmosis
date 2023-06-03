@@ -26,8 +26,8 @@ import (
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	app "github.com/osmosis-labs/osmosis/v16/app"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 )
 
 // The value is returned as a string, so we have to unmarshal twice
