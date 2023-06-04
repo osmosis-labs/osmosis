@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"strconv"
 	"time"
-	// "github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmomath"
 
 	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/chain"
@@ -128,12 +128,12 @@ func (s *IntegrationTestSuite) validateMigrateResult(
 
 	// exitPool has rounding difference.
 	// We test if correct amt has been exited and frozen by comparing with rounding tolerance.
-	// defaultErrorTolerance := osmomath.ErrTolerance{
-	// 	AdditiveTolerance: sdk.NewDec(2),
-	// 	RoundingDir:       osmomath.RoundDown,
-	// }
-	// s.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf("stake").ToDec().Mul(percentOfSharesToMigrate).RoundInt(), amount0))
-	// s.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf("uosmo").ToDec().Mul(percentOfSharesToMigrate).RoundInt(), amount1))
+	defaultErrorTolerance := osmomath.ErrTolerance{
+		AdditiveTolerance: sdk.NewDec(2),
+		RoundingDir:       osmomath.RoundDown,
+	}
+	s.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf("stake").ToDec().Mul(percentOfSharesToMigrate).RoundInt(), amount0))
+	s.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf("uosmo").ToDec().Mul(percentOfSharesToMigrate).RoundInt(), amount1))
 }
 
 func (s *IntegrationTestSuite) createFullRangePosition(node *chain.NodeConfig, from sdk.AccAddress, tokens sdk.Coins, poolId uint64) uint64 {

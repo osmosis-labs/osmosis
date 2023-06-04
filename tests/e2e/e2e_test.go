@@ -1726,7 +1726,7 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 	)
 
 	// joinPoolAmt, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr     := s.setupMigrationTest(chainA, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate)
-	_, _, balancerLock, _, _, balancerPooId, clPoolId, balancerPoolShareOut, _ := s.setupMigrationTest(chainA, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate)
+	joinPoolAmt, _, balancerLock, _, _, balancerPooId, clPoolId, balancerPoolShareOut, _ := s.setupMigrationTest(chainA, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate)
 	originalGammLockId := balancerLock.GetID()
 
 	// we attempt to migrate a subset of the balancer LP tokens we originally created.
@@ -1740,5 +1740,5 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 	println(positionId)
 	// position := chainANode.QueryConcentratedPositions(sender.String()) 
 
-	s.validateMigrateResult(chainANode, positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering, percentOfSharesToMigrate, liquidity, sdk.Coins{}, amount0, amount1 )
+	s.validateMigrateResult(chainANode, positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering, percentOfSharesToMigrate, liquidity, joinPoolAmt, amount0, amount1 )
 }
