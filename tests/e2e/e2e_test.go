@@ -1698,6 +1698,8 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 	s.NoError(err)
 
 	percentOfSharesToMigrate := sdk.MustNewDecFromStr("0.9")
+	fundTokens := []string{"50000000000uosmo", "50000000000stake"}
+	poolJoinAddress := node.CreateWalletAndFund("poolJoinAddress", fundTokens)
 
 	// Get the permisionless pool creation parameter.
 	isPermisionlessCreationEnabledStr := node.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
@@ -1717,12 +1719,20 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 
 	tokenOutMins := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(200000)), sdk.NewCoin("stake", sdk.NewInt(200000)))
 
-	// Case 4:
+	// Case 1: SuperfluidBonded
 	var (
-		superfluidDelegated = false
+		superfluidDelegated = true
 		superfluidUndelegating = false
 		unlocking = false
-		noLock = true
+		noLock = false
 	)
-	s.supportTestPoolMigration(chain, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate, tokenOutMins)
+	s.supportTestPoolMigration(chain, poolJoinAddress, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate, tokenOutMins)
+
+	// Case 4: Unlocked
+	superfluidDelegated = false
+	superfluidUndelegating = false
+	unlocking = false
+	noLock = true
+
+	s.supportTestPoolMigration(chain, poolJoinAddress, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate, tokenOutMins)
 }

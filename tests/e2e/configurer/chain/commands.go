@@ -91,7 +91,7 @@ func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick strin
 	n.LogActionF("creating concentrated position")
 	// gas = 50,000 because e2e  default to 40,000, we hardcoded extra 10k gas to initialize tick
 	// fees = 1250 (because 50,000 * 0.0025 = 1250)
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", fmt.Sprint(poolId), lowerTick, upperTick, tokens, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), "--gas=500000", "--fees=1250uosmo", "-o json"}
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", fmt.Sprint(poolId), lowerTick, upperTick, tokens, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), "--gas=600000", "--fees=1500uosmo", "-o json"}
 	outJson, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "code\":0")
 	require.NoError(n.t, err)
 
@@ -321,7 +321,7 @@ func (n *NodeConfig) ExitPool(from, minAmountsOut string, poolId uint64, shareAm
 
 func (n *NodeConfig) UnlockAndMigrateSharesToFullRangeConcentratedPosition(from, lock_id, minAmountsOut string, sharesToMigrate string) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, poolIdLeaving, poolIdEntering, concentratedLockId uint64) {
 	n.LogActionF("Unlock and migrate shares to full range Concentrated position")
-	cmd := []string{"osmosisd", "tx", "superfluid", "unlock-and-migrate-to-cl", lock_id, sharesToMigrate, minAmountsOut, fmt.Sprintf("--from=%s", from), "--gas=500000", "--fees=1250uosmo", "-o json"}
+	cmd := []string{"osmosisd", "tx", "superfluid", "unlock-and-migrate-to-cl", lock_id, sharesToMigrate, minAmountsOut, fmt.Sprintf("--from=%s", from), "--gas=1500000", "--fees=3750uosmo", "-o json"}
 	outJson, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "code\":0")
 	require.NoError(n.t, err)
 
@@ -449,12 +449,25 @@ func (n *NodeConfig) VoteNoProposal(from string, proposalNumber int) {
 	n.LogActionF("successfully voted no on proposal: %d", proposalNumber)
 }
 
-func (n *NodeConfig) LockTokens(tokens string, duration string, from string) {
+func (n *NodeConfig) LockTokens(tokens string, duration string, from string) uint64 {
 	n.LogActionF("locking %s for %s", tokens, duration)
-	cmd := []string{"osmosisd", "tx", "lockup", "lock-tokens", tokens, fmt.Sprintf("--duration=%s", duration), fmt.Sprintf("--from=%s", from)}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	cmd := []string{"osmosisd", "tx", "lockup", "lock-tokens", tokens, fmt.Sprintf("--duration=%s", duration), fmt.Sprintf("--from=%s", from), "-o json"}
+	outJson, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "code\":0")
 	require.NoError(n.t, err)
+
+	var txResponse map[string]interface{}
+	err = json.Unmarshal(outJson.Bytes(), &txResponse)
+	require.NoError(n.t, err)
+
+	periodLockIDString, err := GetPeriodLockID(txResponse)
+	require.NoError(n.t, err)
+
+	periodLockID, err := strconv.ParseUint(periodLockIDString, 10, 64)
+	require.NoError(n.t, err)
+
 	n.LogActionF("successfully created lock")
+
+	return periodLockID
 }
 
 func (n *NodeConfig) AddToExistingLock(tokens sdk.Int, denom, duration, from string) {
@@ -758,4 +771,49 @@ func GetDataReponseUnlockAndMigrateSharesToFullRangeConcentratedPosition(respons
 	}
 
 	return "", "", "", "", "", "", "", fmt.Errorf("position_id field not found in response")
+}
+
+func GetPeriodLockID(responseJson map[string]interface{}) (string, error) {
+	logs, ok := responseJson["logs"].([]interface{})
+	if !ok {
+		return "", fmt.Errorf("logs field not found in response")
+	}
+
+	if len(logs) == 0 {
+		return "", fmt.Errorf("empty logs field in response")
+	}
+
+	log, ok := logs[0].(map[string]interface{})
+	if !ok {
+		return "", fmt.Errorf("invalid format of logs field")
+	}
+
+	events, ok := log["events"].([]interface{})
+	if !ok {
+		return "", fmt.Errorf("events field not found in logs")
+	}
+
+	for _, event := range events {
+		attributes, ok := event.(map[string]interface{})["attributes"].([]interface{})
+		if !ok {
+			return "", fmt.Errorf("attributes field not found in event")
+		}
+
+		for _, attr := range attributes {
+			switch v := attr.(type) {
+			case map[string]interface{}:
+				if v["key"] == "period_lock_id" {
+					positionID, ok := v["value"].(string)
+					if !ok {
+						return "", fmt.Errorf("invalid format of period_lock_id field")
+					}
+					return positionID, nil
+				}
+			default:
+				return "", fmt.Errorf("invalid type for attributes field")
+			}
+		}
+	}
+
+	return "", fmt.Errorf("period_lock_id field not found in response")
 }

@@ -161,6 +161,7 @@ func (s *IntegrationTestSuite) createFullRangePosition(node *chain.NodeConfig, f
 
 func (s *IntegrationTestSuite) setupMigrationTest(
 	chain *chain.Config,
+	poolJoinAddress string,
 	superfluidDelegated, superfluidUndelegating, unlocking, noLock bool,
 	percentOfSharesToMigrate sdk.Dec,
 ) (joinPoolAmt sdk.Coins, balancerIntermediaryAcc superfluidtypes.SuperfluidIntermediaryAccount, balancerLock *lockuptypes.PeriodLock, poolCreateAcc, poolJoinAcc sdk.AccAddress, balancerPooId, clPoolId uint64, balancerPoolShareOut sdk.Coin, valAddr sdk.ValAddress) {
@@ -173,8 +174,6 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 		sdk.NewInt64Coin("stake",500000),
 	)
 
-	fundTokens := []string{"50000000000uosmo", "50000000000stake"}
-	poolJoinAddress := node.CreateWalletAndFund("poolJoinAddress", fundTokens)
 	poolJoinAcc, err = sdk.AccAddressFromBech32(poolJoinAddress)
 	s.Require().NoError(err)
 
@@ -233,13 +232,8 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 	// Lock the LP tokens for the duration of the unbonding period.
 	originalGammLockId := uint64(0)
 	if !noLock {
-		// TODO: get originalGammLockId return from LockTokens cmd below
 		// lock tokens
-		node.LockTokens(fmt.Sprintf("%v%s", balancerPoolShareOut.Amount, balancerPoolShareOut.Denom), unbondingDuration.String(), poolJoinAcc.String())
-		chain.LatestLockNumber += 1
-		// add to existing lock
-		node.AddToExistingLock(balancerPoolShareOut.Amount, balancerPoolShareOut.Denom, unbondingDuration.String(), poolJoinAcc.String())
-		// originalGammLockId = s.LockTokens(poolJoinAcc, sdk.NewCoins(balancerPoolShareOut), unbondingDuration)
+		originalGammLockId = node.LockTokens(fmt.Sprintf("%v%s", balancerPoolShareOut.Amount, balancerPoolShareOut.Denom), unbondingDuration.String(), poolJoinAcc.String())
 	}
 
 	// Superfluid delegate the balancer lock if the case requires it.
@@ -280,12 +274,13 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 	// Register the CL full range LP tokens as a superfluid asset.
 	clPoolDenom := fmt.Sprintf("%s/%d", cltypes.ConcentratedLiquidityTokenPrefix, clPoolId)
 	chain.EnableSuperfluidAsset(clPoolDenom)
-
+	time.Sleep(60 * time.Second)
 	return joinPoolAmt, balancerIntermediaryAcc, balancerLock, poolCreateAcc, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr
 }
 
 func (s *IntegrationTestSuite) supportTestPoolMigration(
 	chain *chain.Config,
+	poolJoinAddress string,
 	superfluidDelegated, superfluidUndelegating, unlocking, noLock bool,
 	percentOfSharesToMigrate sdk.Dec,
 	tokenOutMins sdk.Coins,
@@ -294,7 +289,7 @@ func (s *IntegrationTestSuite) supportTestPoolMigration(
 	s.NoError(err)
 
 	// joinPoolAmt, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr     := s.setupMigrationTest(chainA, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate)
-	joinPoolAmt, _, balancerLock, _, _, balancerPooId, clPoolId, balancerPoolShareOut, _ := s.setupMigrationTest(chain, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate)
+	joinPoolAmt, _, balancerLock, _, _, balancerPooId, clPoolId, balancerPoolShareOut, _ := s.setupMigrationTest(chain, poolJoinAddress, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate)
 	originalGammLockId := balancerLock.GetID()
 
 	// we attempt to migrate a subset of the balancer LP tokens we originally created.
@@ -302,8 +297,7 @@ func (s *IntegrationTestSuite) supportTestPoolMigration(
 	coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(percentOfSharesToMigrate).RoundInt()
 
 	// Note balancer pool balance after joining balancer pool
-	sender, err := sdk.AccAddressFromBech32(chain.NodeConfigs[0].PublicAddress)
-	positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, _ := node.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sender.String(), fmt.Sprintf("%d", originalGammLockId) ,tokenOutMins.String(), coinsToMigrate.String())
+	positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, _ := node.UnlockAndMigrateSharesToFullRangeConcentratedPosition(poolJoinAddress, fmt.Sprintf("%d", originalGammLockId) ,tokenOutMins.String(), coinsToMigrate.String())
 	// positionId, _, _, _, _, _, _ := chainANode.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sender.String(), "0" ,tokenOutMins.String(), sharesToMigrate.String())
 	println(positionId)
 	// position := chainANode.QueryConcentratedPositions(sender.String()) 
