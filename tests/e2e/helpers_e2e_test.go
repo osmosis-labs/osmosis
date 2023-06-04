@@ -283,3 +283,30 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 
 	return joinPoolAmt, balancerIntermediaryAcc, balancerLock, poolCreateAcc, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr
 }
+
+func (s *IntegrationTestSuite) supportTestPoolMigration(
+	chain *chain.Config,
+	superfluidDelegated, superfluidUndelegating, unlocking, noLock bool,
+	percentOfSharesToMigrate sdk.Dec,
+	tokenOutMins sdk.Coins,
+) {
+	node, err := chain.GetDefaultNode()
+	s.NoError(err)
+
+	// joinPoolAmt, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr     := s.setupMigrationTest(chainA, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate)
+	joinPoolAmt, _, balancerLock, _, _, balancerPooId, clPoolId, balancerPoolShareOut, _ := s.setupMigrationTest(chain, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate)
+	originalGammLockId := balancerLock.GetID()
+
+	// we attempt to migrate a subset of the balancer LP tokens we originally created.
+	coinsToMigrate := balancerPoolShareOut
+	coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(percentOfSharesToMigrate).RoundInt()
+
+	// Note balancer pool balance after joining balancer pool
+	sender, err := sdk.AccAddressFromBech32(chain.NodeConfigs[0].PublicAddress)
+	positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, _ := node.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sender.String(), fmt.Sprintf("%d", originalGammLockId) ,tokenOutMins.String(), coinsToMigrate.String())
+	// positionId, _, _, _, _, _, _ := chainANode.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sender.String(), "0" ,tokenOutMins.String(), sharesToMigrate.String())
+	println(positionId)
+	// position := chainANode.QueryConcentratedPositions(sender.String()) 
+
+	s.validateMigrateResult(node, positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering, percentOfSharesToMigrate, liquidity, joinPoolAmt, amount0, amount1 )
+}

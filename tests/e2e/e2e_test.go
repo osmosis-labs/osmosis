@@ -1693,24 +1693,24 @@ func (s *IntegrationTestSuite) TestAConcentratedLiquidity_CanonicalPool_And_Para
 }
 
 func (s *IntegrationTestSuite) TestPoolMigration() {
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
+	chain := s.configurer.GetChainConfig(0)
+	node, err := chain.GetDefaultNode()
 	s.NoError(err)
 
 	percentOfSharesToMigrate := sdk.MustNewDecFromStr("0.9")
 
 	// Get the permisionless pool creation parameter.
-	isPermisionlessCreationEnabledStr := chainANode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
+	isPermisionlessCreationEnabledStr := node.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
 	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "false") {
 		s.T().Fatal("concentrated liquidity pool creation is enabled when should not have been")
 	}
 
 	// Change the parameter to enable permisionless pool creation.
-	err = chainA.SubmitParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"))
+	err = chain.SubmitParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"))
 	s.Require().NoError(err)
 
 	// Confirm that the parameter has been changed.
-	isPermisionlessCreationEnabledStr = chainANode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
+	isPermisionlessCreationEnabledStr = node.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
 	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
 		s.T().Fatal("concentrated liquidity pool creation is not enabled")
 	}
@@ -1724,21 +1724,5 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 		unlocking = false
 		noLock = true
 	)
-
-	// joinPoolAmt, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr     := s.setupMigrationTest(chainA, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate)
-	joinPoolAmt, _, balancerLock, _, _, balancerPooId, clPoolId, balancerPoolShareOut, _ := s.setupMigrationTest(chainA, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate)
-	originalGammLockId := balancerLock.GetID()
-
-	// we attempt to migrate a subset of the balancer LP tokens we originally created.
-	coinsToMigrate := balancerPoolShareOut
-	coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(percentOfSharesToMigrate).RoundInt()
-
-	// Note balancer pool balance after joining balancer pool
-	sender, err := sdk.AccAddressFromBech32(chainA.NodeConfigs[0].PublicAddress)
-	positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, _ := chainANode.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sender.String(), fmt.Sprintf("%d", originalGammLockId) ,tokenOutMins.String(), coinsToMigrate.String())
-	// positionId, _, _, _, _, _, _ := chainANode.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sender.String(), "0" ,tokenOutMins.String(), sharesToMigrate.String())
-	println(positionId)
-	// position := chainANode.QueryConcentratedPositions(sender.String()) 
-
-	s.validateMigrateResult(chainANode, positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering, percentOfSharesToMigrate, liquidity, joinPoolAmt, amount0, amount1 )
+	s.supportTestPoolMigration(chain, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate, tokenOutMins)
 }
