@@ -546,3 +546,65 @@ func (s *KeeperTestSuite) TestGetComparablePoolLiquidity() {
 		})
 	}
 }
+
+// Tests StoreJoinExitPoolSwaps stores the swaps associated with GAMM join/exit pool messages in the store, depending on if it is a join or exit.
+func (s *KeeperTestSuite) TestStoreJoinExitPoolSwaps() {
+	type param struct {
+		poolId       uint64
+		denom        string
+		isJoin       bool
+		expectedSwap types.Trade
+	}
+
+	tests := []struct {
+		name       string
+		param      param
+		expectPass bool
+	}{
+		{
+			name: "Store Join Pool Swap",
+			param: param{
+				poolId: 1,
+				denom:  "akash",
+				isJoin: true,
+				expectedSwap: types.Trade{
+					Pool:     1,
+					TokenIn:  "akash",
+					TokenOut: "Atom",
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name: "Store Exit Pool Swap",
+			param: param{
+				poolId: 1,
+				denom:  "akash",
+				isJoin: false,
+				expectedSwap: types.Trade{
+					Pool:     1,
+					TokenIn:  "Atom",
+					TokenOut: "akash",
+				},
+			},
+			expectPass: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			// All pools are already created in the setup
+			s.App.ProtoRevKeeper.StoreJoinExitPoolSwaps(s.Ctx, s.TestAccs[0], tc.param.poolId, tc.param.denom, tc.param.isJoin)
+
+			// Get the swaps to backrun after storing the swap via StoreJoinExitPoolSwaps
+			swapsToBackrun, err := s.App.ProtoRevKeeper.GetSwapsToBackrun(s.Ctx)
+
+			if tc.expectPass {
+				s.Require().NoError(err)
+				s.Require().Equal(tc.param.expectedSwap, swapsToBackrun.Trades[len(swapsToBackrun.Trades)-1])
+			}
+		})
+	}
+}

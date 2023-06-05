@@ -34,7 +34,7 @@ func (h Hooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint
 		return
 	}
 
-	h.k.storeJoinExitPoolSwaps(ctx, sender, poolId, enterCoins[0].Denom, true)
+	h.k.StoreJoinExitPoolSwaps(ctx, sender, poolId, enterCoins[0].Denom, true)
 }
 
 // AfterExitPool stores swaps to be checked by protorev given the coins exited from the pool.
@@ -47,7 +47,7 @@ func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint
 		return
 	}
 
-	h.k.storeJoinExitPoolSwaps(ctx, sender, poolId, exitCoins[0].Denom, false)
+	h.k.StoreJoinExitPoolSwaps(ctx, sender, poolId, exitCoins[0].Denom, false)
 }
 
 // AfterCFMMSwap stores swaps to be checked by protorev given the coins swapped in the pool.
@@ -104,7 +104,7 @@ func (k Keeper) StoreSwap(ctx sdk.Context, poolId uint64, tokenIn, tokenOut stri
 	}
 }
 
-// getComparablePoolLiquidity gets the comparable liquidity of a pool by multiplying the amounts of the pool coins.
+// GetComparablePoolLiquidity gets the comparable liquidity of a pool by multiplying the amounts of the pool coins.
 func (k Keeper) GetComparablePoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Int, error) {
 	coins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
 	if err != nil {
@@ -112,6 +112,30 @@ func (k Keeper) GetComparablePoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.
 	}
 
 	return coins[0].Amount.Mul(coins[1].Amount), nil
+}
+
+// StoreJoinExitPoolSwaps stores the swaps associated with GAMM join/exit pool messages in the store, depending on if it is a join or exit.
+func (k Keeper) StoreJoinExitPoolSwaps(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, denom string, isJoin bool) {
+	pool, err := k.gammKeeper.GetPoolAndPoke(ctx, poolId)
+	if err != nil {
+		return
+	}
+
+	// Get all the pool coins and iterate to get the denoms that make up the swap
+	coins := pool.GetTotalPoolLiquidity(ctx)
+
+	// Create swaps to backrun being the join coin swapped against all other pool coins
+	for _, coin := range coins {
+		if coin.Denom == denom {
+			continue
+		}
+		// Join messages swap in the denom, exit messages swap out the denom
+		if isJoin {
+			k.StoreSwap(ctx, poolId, denom, coin.Denom)
+		} else {
+			k.StoreSwap(ctx, poolId, coin.Denom, denom)
+		}
+	}
 }
 
 // afterPoolCreatedWithCoins checks if the new pool should be stored as the highest liquidity pool
