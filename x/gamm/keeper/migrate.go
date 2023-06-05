@@ -127,7 +127,9 @@ func (k Keeper) deleteMigrationKeys(ctx sdk.Context, prefixKey []byte) {
 func (k Keeper) OverwriteMigrationRecordsAndRedirectDistrRecords(ctx sdk.Context, migrationInfo types.MigrationRecords) error {
 	store := ctx.KVStore(k.storeKey)
 
-	// delete all existing keys
+	// delete all existing migration records
+	// this is done for both replace and update migration calls because, regardless of whether we are replacing all or updating a few,
+	// the resulting migrationInfo that gets passed into this function is the complete set of migration records.
 	k.deleteMigrationKeys(ctx, types.KeyPrefixMigrationInfoBalancerPool)
 	k.deleteMigrationKeys(ctx, types.KeyPrefixMigrationInfoCLPool)
 
@@ -307,6 +309,7 @@ func (k Keeper) ReplaceMigrationRecords(ctx sdk.Context, records []types.Balance
 
 	migrationInfo.BalancerToConcentratedPoolLinks = records
 
+	// Remove all records from the distribution module and replace them with the new records
 	err = k.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, migrationInfo)
 	if err != nil {
 		return err
@@ -353,6 +356,8 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []types.Balancer
 		return newRecords[i].BalancerPoolId < newRecords[j].BalancerPoolId
 	})
 
+	// We now have a list of all previous records, as well as records that have been updated.
+	// We can now remove all previous records and replace them with the new ones.
 	err = k.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, types.MigrationRecords{
 		BalancerToConcentratedPoolLinks: newRecords,
 	})
