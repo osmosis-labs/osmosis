@@ -2,13 +2,14 @@ package app
 
 import (
 	"fmt"
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
+
+	store "github.com/cosmos/cosmos-sdk/store/types"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
@@ -452,7 +453,6 @@ func (app *OsmosisApp) setupUpgradeStoreLoaders() {
 			app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &upgrade.StoreUpgrades))
 		}
 	}
-
 }
 
 func (app *OsmosisApp) customPreUpgradeHandler(upgradeInfo store.UpgradeInfo) {
@@ -466,7 +466,6 @@ func (app *OsmosisApp) customPreUpgradeHandler(upgradeInfo store.UpgradeInfo) {
 			panic(err)
 		}
 	}
-
 }
 
 func (app *OsmosisApp) setupUpgradeHandlers() {
