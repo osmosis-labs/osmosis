@@ -34,7 +34,7 @@ func (h Hooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint
 		return
 	}
 
-	h.k.storeJoinExitPoolMsgs(ctx, sender, poolId, enterCoins[0].Denom, true)
+	h.k.storeJoinExitPoolSwaps(ctx, sender, poolId, enterCoins[0].Denom, true)
 }
 
 // AfterExitPool stores swaps to be checked by protorev given the coins exited from the pool.
@@ -47,7 +47,7 @@ func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint
 		return
 	}
 
-	h.k.storeJoinExitPoolMsgs(ctx, sender, poolId, exitCoins[0].Denom, false)
+	h.k.storeJoinExitPoolSwaps(ctx, sender, poolId, exitCoins[0].Denom, false)
 }
 
 // AfterCFMMSwap stores swaps to be checked by protorev given the coins swapped in the pool.
@@ -104,6 +104,16 @@ func (k Keeper) StoreSwap(ctx sdk.Context, poolId uint64, tokenIn, tokenOut stri
 	}
 }
 
+// getComparablePoolLiquidity gets the comparable liquidity of a pool by multiplying the amounts of the pool coins.
+func (k Keeper) GetComparablePoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Int, error) {
+	coins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	return coins[0].Amount.Mul(coins[1].Amount), nil
+}
+
 // afterPoolCreatedWithCoins checks if the new pool should be stored as the highest liquidity pool
 // for any of the base denoms, and stores it if so.
 func (k Keeper) afterPoolCreatedWithCoins(ctx sdk.Context, poolId uint64) {
@@ -157,14 +167,14 @@ func (k Keeper) compareAndStorePool(ctx sdk.Context, poolId uint64, baseDenom, o
 	}()
 
 	// Get comparable liquidity for the new pool
-	newPoolLiquidity, err := k.getComparablePoolLiquidity(ctx, poolId)
+	newPoolLiquidity, err := k.GetComparablePoolLiquidity(ctx, poolId)
 	if err != nil {
 		ctx.Logger().Error("Protorev error getting newPoolLiquidity in compareAndStorePool", err)
 		return
 	}
 
 	// Get comparable liquidity for the stored pool
-	storedPoolLiquidity, err := k.getComparablePoolLiquidity(ctx, storedPoolId)
+	storedPoolLiquidity, err := k.GetComparablePoolLiquidity(ctx, storedPoolId)
 	if err != nil {
 		ctx.Logger().Error("Protorev error getting storedPoolLiquidity in compareAndStorePool", err)
 		return
@@ -176,18 +186,8 @@ func (k Keeper) compareAndStorePool(ctx sdk.Context, poolId uint64, baseDenom, o
 	}
 }
 
-// getComparablePoolLiquidity gets the comparable liquidity of a pool by multiplying the amounts of the pool coins.
-func (k Keeper) getComparablePoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Int, error) {
-	coins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	return coins[0].Amount.Mul(coins[1].Amount), nil
-}
-
-// storeJoinExitPoolMsgs stores the join/exit pool messages in the store, depending on if it is a join or exit.
-func (k Keeper) storeJoinExitPoolMsgs(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, denom string, isJoin bool) {
+// storeJoinExitPoolSwaps stores the swaps associated with join/exit pool messages in the store, depending on if it is a join or exit.
+func (k Keeper) storeJoinExitPoolSwaps(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, denom string, isJoin bool) {
 	pool, err := k.gammKeeper.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
 		return

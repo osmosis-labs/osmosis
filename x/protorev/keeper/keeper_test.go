@@ -138,6 +138,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		sdk.NewCoin("hookGamm", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("hookCL", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("hook", sdk.NewInt(9000000000000000000)),
+		sdk.NewCoin("eth", sdk.NewInt(9000000000000000000)),
 	)
 	s.fundAllAccountsWith()
 	s.Commit()
@@ -900,11 +901,12 @@ func (s *KeeperTestSuite) setUpPools() {
 }
 
 // createStableswapPool creates a stableswap pool with the given pool assets and params
-func (s *KeeperTestSuite) createStableswapPool(initialLiquidity sdk.Coins, poolParams stableswap.PoolParams, scalingFactors []uint64) {
-	_, err := s.App.PoolManagerKeeper.CreatePool(
+func (s *KeeperTestSuite) createStableswapPool(initialLiquidity sdk.Coins, poolParams stableswap.PoolParams, scalingFactors []uint64) uint64 {
+	poolId, err := s.App.PoolManagerKeeper.CreatePool(
 		s.Ctx,
 		stableswap.NewMsgCreateStableswapPool(s.TestAccs[1], poolParams, initialLiquidity, scalingFactors, ""))
 	s.Require().NoError(err)
+	return poolId
 }
 
 // createGAMMPool creates a balancer pool with the given pool assets and params

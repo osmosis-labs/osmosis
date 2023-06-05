@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/stableswap"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
 )
@@ -462,6 +463,85 @@ func (s *KeeperTestSuite) TestStoreSwap() {
 				s.Require().NoError(err)
 				s.Require().Equal(tc.param.expectedSwapsStoredLen, len(routes.Trades))
 				s.Require().Equal(tc.param.expectedSwap, routes.Trades[len(routes.Trades)-1])
+			}
+		})
+	}
+}
+
+// Tests GetComparablePoolLiquidity gets the comparable liquidity of a pool by multiplying the amounts of the pool coins.
+func (s *KeeperTestSuite) TestGetComparablePoolLiquidity() {
+	type param struct {
+		executePoolCreation         func() uint64
+		expectedComparableLiquidity sdk.Int
+	}
+
+	tests := []struct {
+		name       string
+		param      param
+		expectPass bool
+	}{
+		{
+			name: "Get Balancer Pool Comparable Liquidity",
+			param: param{
+				executePoolCreation: func() uint64 {
+					return s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10)), sdk.NewCoin("juno", sdk.NewInt(10)))
+				},
+				expectedComparableLiquidity: sdk.NewInt(100),
+			},
+			expectPass: true,
+		},
+		{
+			name: "Get Stable Swap Pool Comparable Liquidity",
+			param: param{
+				executePoolCreation: func() uint64 {
+					return s.createStableswapPool(
+						sdk.NewCoins(
+							sdk.NewCoin("uosmo", sdk.NewInt(10)),
+							sdk.NewCoin("juno", sdk.NewInt(10)),
+						),
+						stableswap.PoolParams{
+							SwapFee: sdk.NewDecWithPrec(1, 4),
+							ExitFee: sdk.NewDecWithPrec(0, 2),
+						},
+						[]uint64{1, 1},
+					)
+				},
+				expectedComparableLiquidity: sdk.NewInt(100),
+			},
+			expectPass: true,
+		},
+		{
+			name: "Get Concentrated Liquidity Pool Comparable Liquidity",
+			param: param{
+				executePoolCreation: func() uint64 {
+					pool := s.PrepareConcentratedPool()
+					err := s.App.BankKeeper.SendCoins(
+						s.Ctx,
+						s.TestAccs[0],
+						pool.GetAddress(),
+						sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10)), sdk.NewCoin("usdc", sdk.NewInt(10))))
+					s.Require().NoError(err)
+					return pool.GetId()
+				},
+				expectedComparableLiquidity: sdk.NewInt(100),
+			},
+			expectPass: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			// Create the pool
+			poolId := tc.param.executePoolCreation()
+
+			// Get the comparable liquidity
+			comparableLiquidity, err := s.App.ProtoRevKeeper.GetComparablePoolLiquidity(s.Ctx, poolId)
+
+			if tc.expectPass {
+				s.Require().NoError(err)
+				s.Require().Equal(tc.param.expectedComparableLiquidity, comparableLiquidity)
 			}
 		})
 	}
