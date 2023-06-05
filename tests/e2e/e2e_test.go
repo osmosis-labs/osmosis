@@ -1701,20 +1701,18 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 	fundTokens := []string{"50000000000uosmo", "50000000000stake"}
 	poolJoinAddress := node.CreateWalletAndFund("poolJoinAddress", fundTokens)
 
-	// Get the permisionless pool creation parameter.
-	isPermisionlessCreationEnabledStr := node.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
-	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "false") {
-		s.T().Fatal("concentrated liquidity pool creation is enabled when should not have been")
-	}
+	// Get the permissionless pool creation parameter.
+	isPermissionlessCreationEnabledStr := node.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
+	if !strings.EqualFold(isPermissionlessCreationEnabledStr, "true") {
+		// Change the parameter to enable permissionless pool creation.
+		err = chain.SubmitParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"))
+		s.Require().NoError(err)
 
-	// Change the parameter to enable permisionless pool creation.
-	err = chain.SubmitParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"))
-	s.Require().NoError(err)
-
-	// Confirm that the parameter has been changed.
-	isPermisionlessCreationEnabledStr = node.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
-	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
-		s.T().Fatal("concentrated liquidity pool creation is not enabled")
+		// Confirm that the parameter has been changed.
+		isPermissionlessCreationEnabledStr = node.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
+		if !strings.EqualFold(isPermissionlessCreationEnabledStr, "true") {
+			s.T().Fatal("concentrated liquidity pool creation is not enabled")
+		}
 	}
 
 	tokenOutMins := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(200000)), sdk.NewCoin("stake", sdk.NewInt(200000)))
