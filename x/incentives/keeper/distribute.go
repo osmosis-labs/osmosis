@@ -9,10 +9,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 // getDistributedCoinsFromGauges returns coins that have been distributed already from the provided gauges

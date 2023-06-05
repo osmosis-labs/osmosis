@@ -274,36 +274,18 @@ pub enum SudoMessage {
 
 ## Incentives and Shares
 
-In order to allow CosmWasm pool to work with incentives module (or being composable in general), the contract needs to be able to create shares token and have ability to mint/burn them.
+In order to allow CosmWasm pool to work with the incentives module (or being composable in general),
+the contract needs to be able to create share tokens.
 
-Each pool have share denom with this pattern: `cosmwasmpool/address/{contract_address}`.
+We handle this by utilizing the `x/tokenfactory` module.
+Each pool has share denom with this pattern: `factory/{contract_address}/cw-pool/{custom-name}`.
 
-(Using `contract_address` instead of `pool_id` giving the advantage of not needing to query `pool_id` in contract to reconstuct denom. It's mapping is 1:1 and already stored on chain, so on chain logic can work that out as well if it needs to.
+The contract address uniquely identifies a pool. We also use cw-pool to make these denoms distinguishable
+from other tokenfactory denoms and provide contracts the ability to customize the `{custom-name}`.
 
-Alternatively, we can use `cosmwasmpool/pool/{pool_id}` and have contract query for it to maintain consistency. (TBD))
+Each contract is responsible for minting and burning its token factory shares. The chain does no interaction with tokenfactory.
 
-
-```go
-type MsgMintShares struct {
-  Sender  sdk.AccAddress // the address of the pool contract
-  Shares  sdk.Coin
-}
-```
-
-```go
-type MsgBurnShares struct {
-  Sender  sdk.AccAddress // the address of the pool contract
-  Shares  sdk.Coin
-}
-```
-
-These msgs will get validated by the `cosmwasmpool` module:
-- ensure that sender is the pool contract
-- ensure that the denom has valid pattern, and `contract_address` is matched with sender
-
-If they are valid, it will mint/burn the shares.
-
-With shares denom, anyone can create guage with `incentives` module. But in existing pool, there is a way to set up guage automatically when the pool is created and wire things up in `pool-incentive` module.
+To integrate `x/cosmwasmpool` into the `x/incentives` module, it also needs to create gauges.
 
 This can be done by setting `after_pool_created` on `instantiate` response.
 

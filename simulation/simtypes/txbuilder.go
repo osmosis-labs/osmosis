@@ -11,7 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
-	"github.com/osmosis-labs/osmosis/v15/app/params"
+	"github.com/osmosis-labs/osmosis/v16/app/params"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -37,11 +38,14 @@ func (sim *SimCtx) defaultTxBuilder(
 	// TODO: Consider making a default tx builder that charges some random fees
 	// Low value for amount of work right now though.
 	fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 25000))
+
+	gas := getGas(msg)
+
 	tx, err := genTx(
 		txConfig,
 		[]sdk.Msg{msg},
 		fees,
-		helpers.DefaultGenTxGas,
+		gas,
 		ctx.ChainID(),
 		[]uint64{authAcc.GetAccountNumber()},
 		[]uint64{authAcc.GetSequence()},
@@ -121,4 +125,13 @@ func genTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 	}
 
 	return txBuilder.GetTx(), nil
+}
+
+// special cases some messages that require higher gas limits
+func getGas(msg sdk.Msg) uint64 {
+	_, ok := msg.(*tokenfactorytypes.MsgCreateDenom)
+	if ok {
+		return uint64(tokenfactorytypes.DefaultCreationGasFee + helpers.DefaultGenTxGas)
+	}
+	return uint64(helpers.DefaultGenTxGas)
 }

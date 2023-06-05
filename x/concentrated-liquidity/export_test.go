@@ -6,9 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 const (
@@ -121,12 +121,12 @@ func (k Keeper) PrepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 	return k.prepareClaimableSpreadRewards(ctx, positionId)
 }
 
-func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (poolmanagertypes.PoolI, error) {
-	return convertConcentratedToPoolInterface(concentratedPool)
+func AsPoolI(concentratedPool types.ConcentratedPoolExtension) (poolmanagertypes.PoolI, error) {
+	return asPoolI(concentratedPool)
 }
 
-func ConvertPoolInterfaceToConcentrated(poolI poolmanagertypes.PoolI) (types.ConcentratedPoolExtension, error) {
-	return convertPoolInterfaceToConcentrated(poolI)
+func AsConcentrated(poolI poolmanagertypes.PoolI) (types.ConcentratedPoolExtension, error) {
+	return asConcentrated(poolI)
 }
 
 func (k Keeper) ValidateSpreadFactor(ctx sdk.Context, params types.Params, spreadFactor sdk.Dec) bool {
@@ -230,10 +230,6 @@ func (ss *SwapState) GetSpreadRewardGrowthGlobal() sdk.Dec {
 // incentive methods
 func (k Keeper) CreateUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
 	return k.createUptimeAccumulators(ctx, poolId)
-}
-
-func (k Keeper) GetUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sdk.DecCoins, error) {
-	return k.getUptimeAccumulatorValues(ctx, poolId)
 }
 
 func CalcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, qualifyingLiquidity sdk.Dec, timeElapsed sdk.Dec, poolIncentiveRecords []types.IncentiveRecord) (sdk.DecCoins, []types.IncentiveRecord, error) {

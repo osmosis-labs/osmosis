@@ -13,9 +13,9 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/keeper"
-	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v16/x/tokenfactory/keeper"
+	"github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
 )
 
 type KeeperTestSuite struct {
@@ -55,7 +55,7 @@ func (p SudoAuthorizationPolicy) CanModifyCodeAccessConfig(creator, actor sdk.Ac
 func (s *KeeperTestSuite) SetupTest() {
 	s.Setup()
 	// Fund every TestAcc with two denoms, one of which is the denom creation fee
-	fundAccsAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)), sdk.NewCoin(apptesting.SecondaryDenom, apptesting.SecondaryAmount))
+	fundAccsAmount := sdk.NewCoins(sdk.NewCoin(apptesting.SecondaryDenom, apptesting.SecondaryAmount))
 	for _, acc := range s.TestAccs {
 		s.FundAcc(acc, fundAccsAmount)
 	}

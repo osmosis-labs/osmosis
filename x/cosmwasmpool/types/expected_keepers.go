@@ -3,8 +3,20 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
+
+// AccountKeeper defines the contract needed for AccountKeeper related APIs.
+// Interface provides support to use non-sdk AccountKeeper for AnteHandler's decorators.
+type AccountKeeper interface {
+	GetModuleAddress(moduleName string) sdk.AccAddress
+}
+
+// BankKeeper defines the banking contract that must be fulfilled when
+// creating a x/cosmwasmpool keeper.
+type BankKeeper interface {
+	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
+}
 
 // PoolManagerKeeper defines the interface needed to be fulfilled for
 // the poolmanager keeper.

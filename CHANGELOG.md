@@ -43,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Features
-
+  * [#5354](https://github.com/osmosis-labs/osmosis/pull/5354) implement x/cosmwasmpool module.
   * [#4659](https://github.com/osmosis-labs/osmosis/pull/4659) implement AllPools query in x/poolmanager.
   * [#4783](https://github.com/osmosis-labs/osmosis/pull/4783) Update wasmd to 0.31.0
   * [#4629](https://github.com/osmosis-labs/osmosis/pull/4629) add amino proto annotations
@@ -55,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * [#4827] (https://github.com/osmosis-labs/osmosis/pull/4827) Protorev: Change highest liquidity pool updating from weekly to daily and change dev fee payout from weekly to after every trade.
 
 ### Misc Improvements
-  
+ 
   * [#5356](https://github.com/osmosis-labs/osmosis/pull/5356) Fix wrong restHandler for ReplaceMigrationRecordsProposal
   * [#5020](https://github.com/osmosis-labs/osmosis/pull/5020) Add gas config to the client.toml
   * [#5105](https://github.com/osmosis-labs/osmosis/pull/5105) Lint stableswap in the same manner as all of Osmosis

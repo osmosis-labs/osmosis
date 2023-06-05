@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v16/x/twap/types"
 )
 
 type (
@@ -16,16 +16,8 @@ type (
 	GeometricTwapStrategy  = geometric
 )
 
-func (k Keeper) StoreNewRecord(ctx sdk.Context, record types.TwapRecord) {
-	k.storeNewRecord(ctx, record)
-}
-
 func (k Keeper) GetMostRecentRecordStoreRepresentation(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
 	return k.getMostRecentRecordStoreRepresentation(ctx, poolId, asset0Denom, asset1Denom)
-}
-
-func (k Keeper) GetAllMostRecentRecordsForPool(ctx sdk.Context, poolId uint64) ([]types.TwapRecord, error) {
-	return k.getAllMostRecentRecordsForPool(ctx, poolId)
 }
 
 func (k Keeper) GetRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, time time.Time, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
