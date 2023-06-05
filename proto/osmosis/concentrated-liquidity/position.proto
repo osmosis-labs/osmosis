@@ -50,8 +50,8 @@ message FullPositionBreakdown {
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
   ];
-  repeated cosmos.base.v1beta1.Coin claimable_fees = 4 [
-    (gogoproto.moretags) = "yaml:\"claimable_fees\"",
+  repeated cosmos.base.v1beta1.Coin claimable_spread_rewards = 4 [
+    (gogoproto.moretags) = "yaml:\"claimable_spread_rewards\"",
     (gogoproto.nullable) = false
   ];
   repeated cosmos.base.v1beta1.Coin claimable_incentives = 5 [

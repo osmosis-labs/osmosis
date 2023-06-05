@@ -656,19 +656,19 @@ func (s *KeeperTestSuite) TestGetUserPositionsSerialized() {
 					asset0, asset1, err := cl.CalculateUnderlyingAssetsFromPosition(s.Ctx, position, positionPool)
 					s.Require().NoError(err)
 
-					claimableFees, err := k.GetClaimableSpreadRewards(s.Ctx, pos.positionId)
+					claimableSpreadRewards, err := k.GetClaimableSpreadRewards(s.Ctx, pos.positionId)
 					s.Require().NoError(err)
 
 					claimableIncentives, forfeitedIncentives, err := k.GetClaimableIncentives(s.Ctx, pos.positionId)
 					s.Require().NoError(err)
 
 					expectedUserPositions = append(expectedUserPositions, model.FullPositionBreakdown{
-						Position:            position,
-						Asset0:              asset0,
-						Asset1:              asset1,
-						ClaimableFees:       claimableFees,
-						ClaimableIncentives: claimableIncentives,
-						ForfeitedIncentives: forfeitedIncentives,
+						Position:               position,
+						Asset0:                 asset0,
+						Asset1:                 asset1,
+						ClaimableSpreadRewards: claimableSpreadRewards,
+						ClaimableIncentives:    claimableIncentives,
+						ForfeitedIncentives:    forfeitedIncentives,
 					})
 					count--
 				}
