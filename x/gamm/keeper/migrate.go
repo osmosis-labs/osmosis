@@ -121,10 +121,10 @@ func (k Keeper) deleteMigrationKeys(ctx sdk.Context, prefixKey []byte) {
 	}
 }
 
-// OverwriteMigrationRecords sets the balancer to gamm pool migration info to the store and deletes all existing records
+// OverwriteMigrationRecordsAndRedirectDistrRecords sets the balancer to gamm pool migration info to the store and deletes all existing records
 // migrationInfo in state is completely overwitten by the given migrationInfo.
 // Additionally, the distribution record for the balancer pool is modified to redirect incentives to the new concentrated pool.
-func (k Keeper) OverwriteMigrationRecords(ctx sdk.Context, migrationInfo types.MigrationRecords) error {
+func (k Keeper) OverwriteMigrationRecordsAndRedirectDistrRecords(ctx sdk.Context, migrationInfo types.MigrationRecords) error {
 	store := ctx.KVStore(k.storeKey)
 
 	// delete all existing keys
@@ -313,7 +313,7 @@ func (k Keeper) ReplaceMigrationRecords(ctx sdk.Context, records []types.Balance
 
 	migrationInfo.BalancerToConcentratedPoolLinks = records
 
-	err = k.OverwriteMigrationRecords(ctx, migrationInfo)
+	err = k.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, migrationInfo)
 	if err != nil {
 		return err
 	}
@@ -359,7 +359,7 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []types.Balancer
 		return newRecords[i].BalancerPoolId < newRecords[j].BalancerPoolId
 	})
 
-	err = k.OverwriteMigrationRecords(ctx, types.MigrationRecords{
+	err = k.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, types.MigrationRecords{
 		BalancerToConcentratedPoolLinks: newRecords,
 	})
 	if err != nil {

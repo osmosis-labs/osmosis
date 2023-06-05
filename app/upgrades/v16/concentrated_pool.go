@@ -70,7 +70,7 @@ func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, c
 
 	// Set the migration link in x/gamm.
 	// This will also migrate the CFMM distribution records to point to the new CL pool.
-	err = keepers.GAMMKeeper.OverwriteMigrationRecords(ctx, gammtypes.MigrationRecords{
+	err = keepers.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, gammtypes.MigrationRecords{
 		BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 			{
 				BalancerPoolId: cfmmPoolId,
