@@ -8,6 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
+// Tests the hook implementation that is called after swapping
 func (s *KeeperTestSuite) TestSwapping() {
 	type param struct {
 		expectedTrades []types.Trade
@@ -135,6 +136,7 @@ func (s *KeeperTestSuite) TestSwapping() {
 	}
 }
 
+// Tests the hook implementation that is called after liquidity providing
 func (s *KeeperTestSuite) TestLiquidityChanging() {
 	type param struct {
 		expectedTrades            []types.Trade
@@ -240,6 +242,7 @@ func (s *KeeperTestSuite) TestLiquidityChanging() {
 	}
 }
 
+// Tests the hook implementation that is called after pool creation with coins
 func (s *KeeperTestSuite) TestPoolCreation() {
 	type param struct {
 		matchDenom          string
@@ -296,10 +299,82 @@ func (s *KeeperTestSuite) TestPoolCreation() {
 			},
 			expectPass: true,
 		},
+		{
+			name: "Create Balancer Pool First, Then Concentrated Liquidity w/ Liquidity - CL with more liquidity so should be stored",
+			param: param{
+				matchDenom: "hook",
+				executePoolCreation: func() uint64 {
+					// Create balancer pool first with a new denom pair
+					balancerPoolId := s.createGAMMPool([]balancer.PoolAsset{
+						{
+							Token:  sdk.NewCoin("hook", sdk.NewInt(1)),
+							Weight: sdk.NewInt(1),
+						},
+						{
+							Token:  sdk.NewCoin("uosmo", sdk.NewInt(1)),
+							Weight: sdk.NewInt(1),
+						},
+					},
+						sdk.NewDecWithPrec(1, 1),
+						sdk.NewDecWithPrec(0, 2),
+					)
+
+					// Ensure that the balancer pool is stored since no other pool exists for the denom pair
+					setPoolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, "uosmo", "hook")
+					s.Require().NoError(err)
+					s.Require().Equal(balancerPoolId, setPoolId)
+
+					// Create Concentrated Liquidity pool with the same denom pair and more liquidity
+					// The returned pool id should be what is finally stored in the protorev keeper
+					clPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("hook", "uosmo")
+					return clPool.GetId()
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name: "Create Concentrated Liquidity Pool w/ Liquidity First, Then Balancer Pool - Balancer with more liquidity so should be stored",
+			param: param{
+				matchDenom: "hook",
+				executePoolCreation: func() uint64 {
+					// Create Concentrated Liquidity pool with a denom pair not already stored
+					clPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("hook", "uosmo")
+
+					// Ensure that the concentrated pool is stored since no other pool exists for the denom pair
+					setPoolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, "uosmo", "hook")
+					s.Require().NoError(err)
+					s.Require().Equal(clPool.GetId(), setPoolId)
+
+					// Get clPool liquidity
+					clPoolLiquidity, err := s.App.PoolManagerKeeper.GetTotalPoolLiquidity(s.Ctx, clPool.GetId())
+					s.Require().NoError(err)
+
+					// Create balancer pool with the same denom pair and more liquidity
+					balancerPoolId := s.createGAMMPool([]balancer.PoolAsset{
+						{
+							Token:  sdk.NewCoin(clPoolLiquidity[0].Denom, clPoolLiquidity[0].Amount.Add(sdk.NewInt(1))),
+							Weight: sdk.NewInt(1),
+						},
+						{
+							Token:  sdk.NewCoin(clPoolLiquidity[1].Denom, clPoolLiquidity[1].Amount.Add(sdk.NewInt(1))),
+							Weight: sdk.NewInt(1),
+						},
+					},
+						sdk.NewDecWithPrec(1, 1),
+						sdk.NewDecWithPrec(0, 2),
+					)
+
+					// The returned pool id should be what is finally stored in the protorev keeper since it has more liquidity
+					return balancerPoolId
+				},
+			},
+			expectPass: true,
+		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			s.SetupTest()
 			poolId := tc.param.executePoolCreation()
 			setPoolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, types.OsmosisDenomination, tc.param.matchDenom)
 
