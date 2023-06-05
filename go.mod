@@ -21,7 +21,7 @@ require (
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230516205127-c213fddde069
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230529060317-d6d2dda0fb22
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230605194623-ad924fbdd9b0
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230328024000-175ec88e4304
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230331072320-5d6f6cfa2627
 	github.com/pkg/errors v0.9.1
@@ -217,7 +217,7 @@ require (
 	github.com/maratori/testpackage v1.1.1 // indirect
 	github.com/matoous/godox v0.0.0-20230222163458-006bad1f9d26 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.17 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mbilski/exhaustivestruct v1.2.0 // indirect
