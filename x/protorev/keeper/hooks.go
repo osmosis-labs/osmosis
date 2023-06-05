@@ -209,27 +209,3 @@ func (k Keeper) compareAndStorePool(ctx sdk.Context, poolId uint64, baseDenom, o
 		k.SetPoolForDenomPair(ctx, baseDenom, otherDenom, poolId)
 	}
 }
-
-// storeJoinExitPoolSwaps stores the swaps associated with join/exit pool messages in the store, depending on if it is a join or exit.
-func (k Keeper) storeJoinExitPoolSwaps(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, denom string, isJoin bool) {
-	pool, err := k.gammKeeper.GetPoolAndPoke(ctx, poolId)
-	if err != nil {
-		return
-	}
-
-	// Get all the pool coins and iterate to get the denoms that make up the swap
-	coins := pool.GetTotalPoolLiquidity(ctx)
-
-	// Create swaps to backrun being the join coin swapped against all other pool coins
-	for _, coin := range coins {
-		if coin.Denom == denom {
-			continue
-		}
-		// Join messages swap in the denom, exit messages swap out the denom
-		if isJoin {
-			k.StoreSwap(ctx, poolId, denom, coin.Denom)
-		} else {
-			k.StoreSwap(ctx, poolId, coin.Denom, denom)
-		}
-	}
-}
