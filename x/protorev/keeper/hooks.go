@@ -157,7 +157,7 @@ func (k Keeper) compareAndStorePool(ctx sdk.Context, poolId uint64, baseDenom, o
 	}()
 
 	// Get comparable liquidity for the new pool
-	newPoolliquidity, err := k.getComparablePoolLiquidity(ctx, poolId)
+	newPoolLiquidity, err := k.getComparablePoolLiquidity(ctx, poolId)
 	if err != nil {
 		ctx.Logger().Error("Protorev error getting newPoolLiquidity in compareAndStorePool", err)
 		return
@@ -171,7 +171,7 @@ func (k Keeper) compareAndStorePool(ctx sdk.Context, poolId uint64, baseDenom, o
 	}
 
 	// If the new pool has more liquidity, we set it
-	if newPoolliquidity.GT(storedPoolLiquidity) {
+	if newPoolLiquidity.GT(storedPoolLiquidity) {
 		k.SetPoolForDenomPair(ctx, baseDenom, otherDenom, poolId)
 	}
 }
