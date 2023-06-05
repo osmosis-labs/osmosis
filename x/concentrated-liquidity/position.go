@@ -8,13 +8,15 @@ import (
 	"strings"
 	"time"
 
+	sdkprefix "github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 )
 
 const MinNumPositions = 2
@@ -210,6 +212,86 @@ func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId ui
 	}
 
 	return positions, nil
+}
+
+// GetUserPositionsSerialized behaves similarly to GetUserPositions, but returns the positions in a way that can be paginated.
+func (k Keeper) GetUserPositionsSerialized(ctx sdk.Context, addr sdk.AccAddress, poolId uint64, pagination *query.PageRequest) ([]model.FullPositionBreakdown, *query.PageResponse, error) {
+	var prefix []byte
+	var expectedKeyPartCount int
+	if poolId == 0 {
+		expectedKeyPartCount = 3
+		prefix = types.KeyUserPositions(addr)
+	} else {
+		expectedKeyPartCount = 2
+		prefix = types.KeyAddressAndPoolId(addr, poolId)
+	}
+
+	positionsStore := sdkprefix.NewStore(ctx.KVStore(k.storeKey), prefix)
+
+	fullPositions := []model.FullPositionBreakdown{}
+
+	pageRes, err := query.Paginate(positionsStore, pagination, func(key, value []byte) error {
+		// Extract the components from the key
+		parts := bytes.Split(key, []byte(types.KeySeparator))
+		if len(parts) != expectedKeyPartCount {
+			return fmt.Errorf("invalid key format: %s", key)
+		}
+
+		// Parse the positionId from the key
+		positionId, err := strconv.ParseUint(string(parts[expectedKeyPartCount-1]), 10, 64)
+		if err != nil {
+			return fmt.Errorf("failed to parse positionId: %w", err)
+		}
+
+		// Retrieve the position from the store using its ID and add it to the result slice.
+		position, err := k.GetPosition(ctx, positionId)
+		if err != nil {
+			return err
+		}
+
+		// get the pool from the position
+		pool, err := k.GetConcentratedPoolById(ctx, position.PoolId)
+		if err != nil {
+			return err
+		}
+
+		asset0, asset1, err := CalculateUnderlyingAssetsFromPosition(ctx, position, pool)
+		if err != nil {
+			return err
+		}
+
+		claimableFees, err := k.GetClaimableSpreadRewards(ctx, position.PositionId)
+		if err != nil {
+			return err
+		}
+
+		claimableIncentives, forfeitedIncentives, err := k.GetClaimableIncentives(ctx, position.PositionId)
+		if err != nil {
+			return err
+		}
+
+		// Append the position and underlying assets to the positions slice
+		fullPositions = append(fullPositions, model.FullPositionBreakdown{
+			Position:            position,
+			Asset0:              asset0,
+			Asset1:              asset1,
+			ClaimableFees:       claimableFees,
+			ClaimableIncentives: claimableIncentives,
+			ForfeitedIncentives: forfeitedIncentives,
+		})
+
+		return nil
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Sort the positions in ascending order by ID
+	sort.Slice(fullPositions, func(i, j int) bool {
+		return fullPositions[i].Position.PositionId < fullPositions[j].Position.PositionId
+	})
+
+	return fullPositions, pageRes, nil
 }
 
 // SetPosition sets the position information for a given user in a given pool.

@@ -9,10 +9,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	types "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
 type lpTest struct {
@@ -291,7 +291,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 
 			// If we want to test a non-first position, we create a first position with a separate account
 			if tc.isNotFirstPosition {
-				s.SetupPosition(1, s.TestAccs[1], DefaultCoins, tc.lowerTick, tc.upperTick, DefaultJoinTime)
+				s.SetupPosition(1, s.TestAccs[1], DefaultCoins, tc.lowerTick, tc.upperTick)
 				expectedNumCreatePositionEvents += 1
 			}
 
@@ -301,7 +301,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 				// we expect to create half of the final liquidity amount.
 				expectedLiquidityCreated = tc.liquidityAmount.QuoInt64(2)
 
-				s.SetupPosition(1, s.TestAccs[0], DefaultCoins, tc.lowerTick, tc.upperTick, DefaultJoinTime)
+				s.SetupPosition(1, s.TestAccs[0], DefaultCoins, tc.lowerTick, tc.upperTick)
 				expectedNumCreatePositionEvents += 1
 			}
 
@@ -1657,7 +1657,7 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 
 			// If we want to test a non-first position, we create a first position with a separate account
 			if tc.isNotFirstPosition {
-				s.SetupPosition(1, s.TestAccs[1], DefaultCoins, tc.lowerTick, tc.upperTick, DefaultJoinTime)
+				s.SetupPosition(1, s.TestAccs[1], DefaultCoins, tc.lowerTick, tc.upperTick)
 			}
 
 			// Fund test account and create the desired position

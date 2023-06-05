@@ -10,20 +10,20 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-	clmath "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
-	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
+	clmath "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
+	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 )
 
 type BenchTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
-func (s BenchTestSuite) createPosition(accountIndex int, poolId uint64, coin0, coin1 sdk.Coin, lowerTick, upperTick int64) {
+func (s *BenchTestSuite) createPosition(accountIndex int, poolId uint64, coin0, coin1 sdk.Coin, lowerTick, upperTick int64) {
 	tokensDesired := sdk.NewCoins(coin0, coin1)
 
 	_, _, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[accountIndex], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
