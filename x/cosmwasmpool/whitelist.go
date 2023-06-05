@@ -18,6 +18,7 @@ func (k Keeper) WhitelistCodeId(ctx sdk.Context, codeId uint64) {
 // deWhitelistCodeId removes the code id from the whitelist.
 // Returns true if the code id was in the whitelist and was removed.
 // Returns false if the code id was not in the whitelist.
+// nolint: unused
 func (k Keeper) deWhiteListCodeId(ctx sdk.Context, codeId uint64) bool {
 	params := k.GetParams(ctx)
 	whitelist := params.CodeIdWhitelist
