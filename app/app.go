@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	"io"
 	"net/http"
 	"os"
@@ -139,6 +140,7 @@ type OsmosisApp struct {
 
 	mm           *module.Manager
 	configurator module.Configurator
+	homePath     string
 }
 
 // init sets DefaultNodeHome to default osmosisd install location.
@@ -204,6 +206,7 @@ func NewOsmosisApp(
 		invCheckPeriod:    invCheckPeriod,
 	}
 
+	app.homePath = homePath
 	wasmDir := filepath.Join(homePath, "wasm")
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	// Uncomment this for debugging contracts. In the future this could be made into a param passed by the tests
@@ -438,11 +441,29 @@ func (app *OsmosisApp) setupUpgradeStoreLoaders() {
 		return
 	}
 
+	currentHeight := app.CommitMultiStore().LastCommitID().Version
+
+	if upgradeInfo.Height == currentHeight+1 {
+		app.customPreUpgradeHandler(upgradeInfo)
+	}
+
 	for _, upgrade := range Upgrades {
 		if upgradeInfo.Name == upgrade.UpgradeName {
 			app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &upgrade.StoreUpgrades))
 		}
 	}
+
+}
+
+func (app *OsmosisApp) customPreUpgradeHandler(upgradeInfo store.UpgradeInfo) {
+	switch upgradeInfo.Name {
+	case "v16":
+		// v16 upgrade handler
+		fmt.Println("Running v16 pre-upgrade handler")
+		// remove the wasm cache for cosmwasm cherry https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-002.md#wasm-module-cache-issue
+		err := os.RemoveAll(app.homePath + "/wasm/wasm/cache")
+	}
+
 }
 
 func (app *OsmosisApp) setupUpgradeHandlers() {
