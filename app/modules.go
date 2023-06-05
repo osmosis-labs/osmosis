@@ -63,6 +63,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/clmodule"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	cwpoolmodule "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/module"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm"
 	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
@@ -183,6 +184,7 @@ func appModules(
 		ibc_hooks.NewAppModule(app.AccountKeeper),
 		icq.NewAppModule(*app.AppKeepers.ICQKeeper),
 		packetforward.NewAppModule(app.PacketForwardKeeper),
+		cwpoolmodule.NewAppModule(*app.CosmwasmPoolKeeper),
 	}
 }
 
@@ -269,6 +271,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		ibchookstypes.ModuleName,
 		icqtypes.ModuleName,
 		packetforwardtypes.ModuleName,
+		cosmwasmpooltypes.ModuleName,
 	}
 }
 
