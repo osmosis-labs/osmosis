@@ -610,6 +610,8 @@ func (s *KeeperTestSuite) TestStoreJoinExitPoolSwaps() {
 }
 
 // Tests CompareAndStorePool compares the comparable liquidity of a pool with the stored pool, storing the new pool if it has higher comparable liquidity.
+// Note: This test calls DeleteAllPoolsForBaseDenom in the prepareStateAndGetPoolIdToCompare function because the
+// hooks are triggered by default and we want to test the CompareAndStorePool on the state before the hooks are triggered.
 func (s *KeeperTestSuite) TestCompareAndStorePool() {
 	type param struct {
 		baseDenom                         string
