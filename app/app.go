@@ -462,6 +462,9 @@ func (app *OsmosisApp) customPreUpgradeHandler(upgradeInfo store.UpgradeInfo) {
 		fmt.Println("Running v16 pre-upgrade handler")
 		// remove the wasm cache for cosmwasm cherry https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-002.md#wasm-module-cache-issue
 		err := os.RemoveAll(app.homePath + "/wasm/wasm/cache")
+		if err != nil {
+			panic(err)
+		}
 	}
 
 }
