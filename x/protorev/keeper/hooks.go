@@ -24,7 +24,7 @@ func (k Keeper) Hooks() Hooks { return Hooks{k} }
 
 // AfterCFMMPoolCreated hook checks and potentially stores the pool via the highest liquidity method.
 func (h Hooks) AfterCFMMPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
-	h.k.afterPoolCreatedWithCoins(ctx, poolId)
+	h.k.AfterPoolCreatedWithCoins(ctx, poolId)
 }
 
 // AfterJoinPool stores swaps to be checked by protorev given the coins entered into the pool.
@@ -70,7 +70,7 @@ func (h Hooks) AfterConcentratedPoolCreated(ctx sdk.Context, sender sdk.AccAddre
 
 // AfterInitialPoolPositionCreated checks and potentially stores the pool via the highest liquidity method.
 func (h Hooks) AfterInitialPoolPositionCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
-	h.k.afterPoolCreatedWithCoins(ctx, poolId)
+	h.k.AfterPoolCreatedWithCoins(ctx, poolId)
 }
 
 // AfterLastPoolPositionRemoved is a noop.
@@ -138,9 +138,9 @@ func (k Keeper) StoreJoinExitPoolSwaps(ctx sdk.Context, sender sdk.AccAddress, p
 	}
 }
 
-// afterPoolCreatedWithCoins checks if the new pool should be stored as the highest liquidity pool
+// AfterPoolCreatedWithCoins checks if the new pool should be stored as the highest liquidity pool
 // for any of the base denoms, and stores it if so.
-func (k Keeper) afterPoolCreatedWithCoins(ctx sdk.Context, poolId uint64) {
+func (k Keeper) AfterPoolCreatedWithCoins(ctx sdk.Context, poolId uint64) {
 	baseDenoms, err := k.GetAllBaseDenoms(ctx)
 	if err != nil {
 		ctx.Logger().Error("Protorev error getting base denoms in AfterCFMMPoolCreated hook", err)
