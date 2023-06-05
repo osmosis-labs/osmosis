@@ -392,3 +392,77 @@ func (s *KeeperTestSuite) TestPoolCreation() {
 }
 
 // Helper function tests
+
+// Tests StoreSwap stores a swap properly
+func (s *KeeperTestSuite) TestStoreSwap() {
+	type param struct {
+		expectedSwap           types.Trade
+		prepateState           func()
+		expectedSwapsStoredLen int
+	}
+
+	tests := []struct {
+		name       string
+		param      param
+		expectPass bool
+	}{
+		{
+			name: "Store Swap Without An Existing Swap Stored",
+			param: param{
+				expectedSwap: types.Trade{
+					Pool:     1,
+					TokenIn:  "akash",
+					TokenOut: "Atom",
+				},
+				prepateState: func() {
+					s.App.ProtoRevKeeper.DeleteSwapsToBackrun(s.Ctx)
+				},
+				expectedSwapsStoredLen: 1,
+			},
+			expectPass: true,
+		},
+		{
+			name: "Store Swap With With An Existing Swap Stored",
+			param: param{
+				expectedSwap: types.Trade{
+					Pool:     2,
+					TokenIn:  "uosmo",
+					TokenOut: "test",
+				},
+				prepateState: func() {
+					s.App.ProtoRevKeeper.SetSwapsToBackrun(s.Ctx, types.Route{
+						Trades: []types.Trade{
+							{
+								Pool:     1,
+								TokenIn:  "Atom",
+								TokenOut: "akash",
+							},
+						},
+						StepSize: sdk.NewInt(1),
+					})
+				},
+				expectedSwapsStoredLen: 2,
+			},
+			expectPass: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			// Run any state preparation
+			tc.param.prepateState()
+
+			// Store the swap
+			s.App.ProtoRevKeeper.StoreSwap(s.Ctx, tc.param.expectedSwap.Pool, tc.param.expectedSwap.TokenIn, tc.param.expectedSwap.TokenOut)
+
+			routes, err := s.App.ProtoRevKeeper.GetSwapsToBackrun(s.Ctx)
+			if tc.expectPass {
+				s.Require().NoError(err)
+				s.Require().Equal(tc.param.expectedSwapsStoredLen, len(routes.Trades))
+				s.Require().Equal(tc.param.expectedSwap, routes.Trades[len(routes.Trades)-1])
+			}
+		})
+	}
+}

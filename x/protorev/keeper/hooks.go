@@ -57,7 +57,7 @@ func (h Hooks) AfterCFMMSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint
 		return
 	}
 
-	h.k.storeSwap(ctx, poolId, input[0].Denom, output[0].Denom)
+	h.k.StoreSwap(ctx, poolId, input[0].Denom, output[0].Denom)
 }
 
 // ----------------------------------------------------------------------------
@@ -84,12 +84,25 @@ func (h Hooks) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress,
 		return
 	}
 
-	h.k.storeSwap(ctx, poolId, input[0].Denom, output[0].Denom)
+	h.k.StoreSwap(ctx, poolId, input[0].Denom, output[0].Denom)
 }
 
 // ----------------------------------------------------------------------------
 // HELPER METHODS
 // ----------------------------------------------------------------------------
+
+// StoreSwap stores a swap to be checked by protorev when attempting backruns.
+func (k Keeper) StoreSwap(ctx sdk.Context, poolId uint64, tokenIn, tokenOut string) {
+	swapToBackrun := types.Trade{
+		Pool:     poolId,
+		TokenIn:  tokenIn,
+		TokenOut: tokenOut,
+	}
+
+	if err := k.AddSwapsToSwapsToBackrun(ctx, []types.Trade{swapToBackrun}); err != nil {
+		ctx.Logger().Error("Protorev error adding swap to backrun from storeSwap", err) // Does not return since logging is last thing in the function
+	}
+}
 
 // afterPoolCreatedWithCoins checks if the new pool should be stored as the highest liquidity pool
 // for any of the base denoms, and stores it if so.
@@ -125,19 +138,6 @@ func (k Keeper) afterPoolCreatedWithCoins(ctx sdk.Context, poolId uint64) {
 		if _, ok := baseDenomMap[denoms[1]]; ok {
 			k.compareAndStorePool(ctx, poolId, denoms[1], denoms[0])
 		}
-	}
-}
-
-// storeSwap stores a swap to be checked by protorev when attempting backruns.
-func (k Keeper) storeSwap(ctx sdk.Context, poolId uint64, tokenIn, tokenOut string) {
-	swapToBackrun := types.Trade{
-		Pool:     poolId,
-		TokenIn:  tokenIn,
-		TokenOut: tokenOut,
-	}
-
-	if err := k.AddSwapsToSwapsToBackrun(ctx, []types.Trade{swapToBackrun}); err != nil {
-		ctx.Logger().Error("Protorev error adding swap to backrun from storeSwap", err) // Does not return since logging is last thing in the function
 	}
 }
 
@@ -203,9 +203,9 @@ func (k Keeper) storeJoinExitPoolMsgs(ctx sdk.Context, sender sdk.AccAddress, po
 		}
 		// Join messages swap in the denom, exit messages swap out the denom
 		if isJoin {
-			k.storeSwap(ctx, poolId, denom, coin.Denom)
+			k.StoreSwap(ctx, poolId, denom, coin.Denom)
 		} else {
-			k.storeSwap(ctx, poolId, coin.Denom, denom)
+			k.StoreSwap(ctx, poolId, coin.Denom, denom)
 		}
 	}
 }
