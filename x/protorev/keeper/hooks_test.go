@@ -398,7 +398,7 @@ func (s *KeeperTestSuite) TestPoolCreation() {
 func (s *KeeperTestSuite) TestStoreSwap() {
 	type param struct {
 		expectedSwap           types.Trade
-		prepateState           func()
+		prepareState           func()
 		expectedSwapsStoredLen int
 	}
 
@@ -415,7 +415,7 @@ func (s *KeeperTestSuite) TestStoreSwap() {
 					TokenIn:  "akash",
 					TokenOut: "Atom",
 				},
-				prepateState: func() {
+				prepareState: func() {
 					s.App.ProtoRevKeeper.DeleteSwapsToBackrun(s.Ctx)
 				},
 				expectedSwapsStoredLen: 1,
@@ -430,7 +430,7 @@ func (s *KeeperTestSuite) TestStoreSwap() {
 					TokenIn:  "uosmo",
 					TokenOut: "test",
 				},
-				prepateState: func() {
+				prepareState: func() {
 					s.App.ProtoRevKeeper.SetSwapsToBackrun(s.Ctx, types.Route{
 						Trades: []types.Trade{
 							{
@@ -453,7 +453,7 @@ func (s *KeeperTestSuite) TestStoreSwap() {
 			s.SetupTest()
 
 			// Run any state preparation
-			tc.param.prepateState()
+			tc.param.prepareState()
 
 			// Store the swap
 			s.App.ProtoRevKeeper.StoreSwap(s.Ctx, tc.param.expectedSwap.Pool, tc.param.expectedSwap.TokenIn, tc.param.expectedSwap.TokenOut)
@@ -604,6 +604,140 @@ func (s *KeeperTestSuite) TestStoreJoinExitPoolSwaps() {
 			if tc.expectPass {
 				s.Require().NoError(err)
 				s.Require().Equal(tc.param.expectedSwap, swapsToBackrun.Trades[len(swapsToBackrun.Trades)-1])
+			}
+		})
+	}
+}
+
+// Tests CompareAndStorePool compares the comparable liquidity of a pool with the stored pool, storing the new pool if it has higher comparable liquidity.
+func (s *KeeperTestSuite) TestCompareAndStorePool() {
+	type param struct {
+		baseDenom                        string
+		matchDenom                       string
+		prepareStateAndGetExpectedPoolId func() uint64
+	}
+
+	tests := []struct {
+		name       string
+		param      param
+		expectPass bool
+	}{
+		{
+			name: "Nothing Stored, Store Balancer",
+			param: param{
+				baseDenom:  "uosmo",
+				matchDenom: "juno",
+				prepareStateAndGetExpectedPoolId: func() uint64 {
+					return s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10)), sdk.NewCoin("juno", sdk.NewInt(10)))
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name: "Nothing Stored, Store Concentrated Liquidity Pool w/ Coins",
+			param: param{
+				baseDenom:  "uosmo",
+				matchDenom: "stake",
+				prepareStateAndGetExpectedPoolId: func() uint64 {
+					return s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("uosmo", "stake").GetId()
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name: "Balancer Previously Stored w/ Less liquidity, Compare Concentrated Liquidity Pool w/ More liqudidity, Ensure CL Gets Stored",
+			param: param{
+				baseDenom:  "uosmo",
+				matchDenom: "stake",
+				prepareStateAndGetExpectedPoolId: func() uint64 {
+					preparedPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10)), sdk.NewCoin("stake", sdk.NewInt(10)))
+					storedPoolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, "uosmo", "stake")
+					s.Require().NoError(err)
+					s.Require().Equal(preparedPoolId, storedPoolId)
+
+					return s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("uosmo", "stake").GetId()
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name: "Balancer Previously Stored w/ More liquidity, Compare Concentrated Liquidity Pool w/ Less liqudidity, Ensure Balancer Stays Stored",
+			param: param{
+				baseDenom:  "uosmo",
+				matchDenom: "stake",
+				prepareStateAndGetExpectedPoolId: func() uint64 {
+					// Prepare a balancer pool with more liquidity
+					balancerPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(2000000000000000000)), sdk.NewCoin("stake", sdk.NewInt(1000000000000000000)))
+					storedPoolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, "uosmo", "stake")
+					s.Require().NoError(err)
+					s.Require().Equal(balancerPoolId, storedPoolId)
+
+					// Prepare a concentrated liquidity pool with less liquidity
+					s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("uosmo", "stake")
+
+					// Return the balancer pool id since it should be stored
+					return balancerPoolId
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name: "Concentrated Liquidity Previously Stored w/ Less liquidity, Compare Balancer Pool w/ More liqudidity, Ensure Balancer Gets Stored",
+			param: param{
+				baseDenom:  "uosmo",
+				matchDenom: "stake",
+				prepareStateAndGetExpectedPoolId: func() uint64 {
+					// Prepare a concentrated liquidity pool with less liquidity, should be stored since nothing is stored
+					clPoolId := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("uosmo", "stake").GetId()
+					storedPoolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, "uosmo", "stake")
+					s.Require().NoError(err)
+					s.Require().Equal(clPoolId, storedPoolId)
+
+					// Prepare a balancer pool with more liquidity and return the pool id since it should be stored
+					return s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(2000000000000000000)), sdk.NewCoin("stake", sdk.NewInt(1000000000000000000)))
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name: "Concentrated Liquidity Previously Stored w/ More liquidity, Compare Balancer Pool w/ Less liqudidity, Ensure CL Stays Stored",
+			param: param{
+				baseDenom:  "uosmo",
+				matchDenom: "stake",
+				prepareStateAndGetExpectedPoolId: func() uint64 {
+					// Prepare a concentrated liquidity pool with less liquidity, should be stored since nothing is stored
+					clPoolId := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("uosmo", "stake").GetId()
+					storedPoolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, "uosmo", "stake")
+					s.Require().NoError(err)
+					s.Require().Equal(clPoolId, storedPoolId)
+
+					// Prepare a balancer pool with less liquidity
+					s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(500000000000000000)), sdk.NewCoin("stake", sdk.NewInt(1000000000000000000)))
+
+					// Return the cl pool id since it should be stored
+					return clPoolId
+				},
+			},
+			expectPass: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			// Delete all pools for the base denom uosmo so that all tests start with a clean slate
+			s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "uosmo")
+
+			// Run any state preparation and get the expected pool id
+			poolId := tc.param.prepareStateAndGetExpectedPoolId()
+
+			// Get the stored pool id for the highest liquidity pool in protorev
+			storedPoolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, tc.param.baseDenom, tc.param.matchDenom)
+
+			if tc.expectPass {
+				s.Require().NoError(err)
+				s.Require().Equal(poolId, storedPoolId)
 			}
 		})
 	}

@@ -167,16 +167,16 @@ func (k Keeper) afterPoolCreatedWithCoins(ctx sdk.Context, poolId uint64) {
 	// Pool must be active and the number of denoms must be 2
 	if pool.IsActive(ctx) && len(denoms) == 2 {
 		if _, ok := baseDenomMap[denoms[0]]; ok {
-			k.compareAndStorePool(ctx, poolId, denoms[0], denoms[1])
+			k.CompareAndStorePool(ctx, poolId, denoms[0], denoms[1])
 		}
 		if _, ok := baseDenomMap[denoms[1]]; ok {
-			k.compareAndStorePool(ctx, poolId, denoms[1], denoms[0])
+			k.CompareAndStorePool(ctx, poolId, denoms[1], denoms[0])
 		}
 	}
 }
 
-// compareAndStorePool compares the liquidity of the new pool with the liquidity of the stored pool, and stores the new pool if it has more liquidity.
-func (k Keeper) compareAndStorePool(ctx sdk.Context, poolId uint64, baseDenom, otherDenom string) {
+// CompareAndStorePool compares the liquidity of the new pool with the liquidity of the stored pool, and stores the new pool if it has more liquidity.
+func (k Keeper) CompareAndStorePool(ctx sdk.Context, poolId uint64, baseDenom, otherDenom string) {
 	storedPoolId, err := k.GetPoolForDenomPair(ctx, baseDenom, otherDenom)
 	if err != nil {
 		// Error means no pool exists for this pair, so we set it
