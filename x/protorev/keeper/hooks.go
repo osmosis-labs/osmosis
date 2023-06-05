@@ -119,10 +119,10 @@ func (k Keeper) afterPoolCreatedWithCoins(ctx sdk.Context, poolId uint64) {
 
 	// Pool must be active and the number of denoms must be 2
 	if pool.IsActive(ctx) && len(denoms) == 2 {
-		if baseDenomMap[denoms[0]] {
+		if _, ok := baseDenomMap[denoms[0]]; ok {
 			k.compareAndStorePool(ctx, poolId, denoms[0], denoms[1])
 		}
-		if baseDenomMap[denoms[1]] {
+		if _, ok := baseDenomMap[denoms[1]]; ok {
 			k.compareAndStorePool(ctx, poolId, denoms[1], denoms[0])
 		}
 	}

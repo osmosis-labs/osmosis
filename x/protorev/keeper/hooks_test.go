@@ -388,3 +388,5 @@ func (s *KeeperTestSuite) TestPoolCreation() {
 		})
 	}
 }
+
+// Helper function tests
