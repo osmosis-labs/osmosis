@@ -400,7 +400,7 @@ without governance approval. This is why we create two additional governance pro
 
 Note, that in both cases, x/cosmwasmpool module account will act as the admin and creator of the contract.
 
-#### 1. Store code and update code id whitelist.
+#### 1. Store code and update code id whitelist
 
 Proposal Name: `UploadCosmWasmPoolCodeAndWhiteListProposal`
 
@@ -414,7 +414,7 @@ Inputs
 
 The created code id is emitted via `TypeEvtUploadedCosmwasmPoolCode` event.
 
-#### 2. Store code and migrate a specific code id to a new code id.
+#### 2. Store code and migrate a specific code id to a new code id
 
 Proposal Name: `MigratePoolContractsProposal`
 
