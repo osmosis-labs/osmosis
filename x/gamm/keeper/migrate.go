@@ -5,10 +5,6 @@ import (
 	"sort"
 	"time"
 
-	"encoding/binary"
-
-	gogotypes "github.com/gogo/protobuf/types"
-
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
@@ -76,7 +72,7 @@ func (k Keeper) GetAllMigrationInfo(ctx sdk.Context) (types.MigrationRecords, er
 		balancerToClPoolLink.BalancerPoolId = sdk.BigEndianToUint64(iter.Key())
 
 		// concentrated Pool Id
-		balancerToClPoolLink.ClPoolId = binary.BigEndian.Uint64(iter.Value())
+		balancerToClPoolLink.ClPoolId = sdk.BigEndianToUint64(iter.Value())
 
 		balancerToClPoolLinks = append(balancerToClPoolLinks, balancerToClPoolLink)
 	}
@@ -90,38 +86,28 @@ func (k Keeper) GetAllMigrationInfo(ctx sdk.Context) (types.MigrationRecords, er
 // Returns error if link for the given pool id does not exist.
 func (k Keeper) GetLinkedConcentratedPoolID(ctx sdk.Context, balancerPoolId uint64) (uint64, error) {
 	store := ctx.KVStore(k.storeKey)
-	concentratedPoolId := gogotypes.UInt64Value{}
 	balancerToClPoolKey := types.GetKeyPrefixMigrationInfoBalancerPool(balancerPoolId)
 
-	found, err := osmoutils.Get(store, balancerToClPoolKey, &concentratedPoolId)
-	if err != nil {
-		return 0, err
-	}
-
-	if !found {
+	concentratedPoolIdBigEndian := store.Get(balancerToClPoolKey)
+	if concentratedPoolIdBigEndian == nil {
 		return 0, types.ConcentratedPoolMigrationLinkNotFoundError{PoolIdLeaving: balancerPoolId}
 	}
 
-	return concentratedPoolId.Value, nil
+	return sdk.BigEndianToUint64(concentratedPoolIdBigEndian), nil
 }
 
 // GetLinkedConcentratedPoolID returns the Balancer pool Id linked for the given concentrated pool Id.
 // Returns error if link for the given pool id does not exist.
 func (k Keeper) GetLinkedBalancerPoolID(ctx sdk.Context, concentratedPoolId uint64) (uint64, error) {
 	store := ctx.KVStore(k.storeKey)
-	balancerPoolId := gogotypes.UInt64Value{}
 	concentratedToBalancerPoolKey := types.GetKeyPrefixMigrationInfoPoolCLPool(concentratedPoolId)
 
-	found, err := osmoutils.Get(store, concentratedToBalancerPoolKey, &balancerPoolId)
-	if err != nil {
-		return 0, err
-	}
-
-	if !found {
+	balancerPoolIdBigEndian := store.Get(concentratedToBalancerPoolKey)
+	if balancerPoolIdBigEndian == nil {
 		return 0, types.BalancerPoolMigrationLinkNotFoundError{PoolIdEntering: concentratedPoolId}
 	}
 
-	return balancerPoolId.Value, nil
+	return sdk.BigEndianToUint64(balancerPoolIdBigEndian), nil
 }
 
 // OverwriteMigrationRecordsAndRedirectDistrRecords sets the balancer to gamm pool migration info to the store and deletes all existing records
@@ -138,10 +124,10 @@ func (k Keeper) OverwriteMigrationRecordsAndRedirectDistrRecords(ctx sdk.Context
 
 	for _, balancerToCLPoolLink := range migrationInfo.BalancerToConcentratedPoolLinks {
 		balancerToClPoolKey := types.GetKeyPrefixMigrationInfoBalancerPool(balancerToCLPoolLink.BalancerPoolId)
-		osmoutils.MustSet(store, balancerToClPoolKey, &gogotypes.UInt64Value{Value: balancerToCLPoolLink.ClPoolId})
+		store.Set(balancerToClPoolKey, sdk.Uint64ToBigEndian(balancerToCLPoolLink.ClPoolId))
 
 		clToBalancerPoolKey := types.GetKeyPrefixMigrationInfoPoolCLPool(balancerToCLPoolLink.ClPoolId)
-		osmoutils.MustSet(store, clToBalancerPoolKey, &gogotypes.UInt64Value{Value: balancerToCLPoolLink.BalancerPoolId})
+		store.Set(clToBalancerPoolKey, sdk.Uint64ToBigEndian(balancerToCLPoolLink.BalancerPoolId))
 
 		err := k.redirectDistributionRecord(ctx, balancerToCLPoolLink.BalancerPoolId, balancerToCLPoolLink.ClPoolId)
 		if err != nil {
