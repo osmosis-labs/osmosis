@@ -374,6 +374,14 @@ func (s *KeeperTestSuite) validatePositionSpreadRewardGrowth(poolId uint64, posi
 	}
 }
 
+func (s *KeeperTestSuite) SetBlockTime(timeToSet time.Time) {
+	s.Ctx = s.Ctx.WithBlockTime(timeToSet)
+}
+
+func (s *KeeperTestSuite) AddBlockTime(timeToAdd time.Duration) {
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(timeToAdd))
+}
+
 func (s *KeeperTestSuite) TestValidatePermissionlessPoolCreationEnabled() {
 	s.SetupTest()
 	// Normally, by default, permissionless pool creation is disabled.
@@ -387,6 +395,47 @@ func (s *KeeperTestSuite) TestValidatePermissionlessPoolCreationEnabled() {
 
 	// Validate that permissionless pool creation is disabled.
 	s.Require().Error(s.App.ConcentratedLiquidityKeeper.ValidatePermissionlessPoolCreationEnabled(s.Ctx))
+}
+
+// runFungifySetup Sets up a pool with `poolSpreadFactor`, prepares `numPositions` default positions on it (all identical), and sets
+// up the passed in incentive records such that they emit on the pool. It also sets the largest authorized uptime to be `fullChargeDuration`.
+//
+// Returns the pool, expected position ids and the total liquidity created on the pool.
+func (s *KeeperTestSuite) runFungifySetup(address sdk.AccAddress, numPositions int, fullChargeDuration time.Duration, poolSpreadFactor sdk.Dec, incentiveRecords []types.IncentiveRecord) (types.ConcentratedPoolExtension, []uint64, sdk.Dec) {
+	expectedPositionIds := make([]uint64, numPositions)
+	for i := 0; i < numPositions; i++ {
+		expectedPositionIds[i] = uint64(i + 1)
+	}
+
+	s.TestAccs = apptesting.CreateRandomAccounts(5)
+	s.SetBlockTime(defaultBlockTime)
+	totalPositionsToCreate := sdk.NewInt(int64(numPositions))
+	requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0.Mul(totalPositionsToCreate)), sdk.NewCoin(USDC, DefaultAmt1.Mul(totalPositionsToCreate)))
+
+	// Set test authorized uptime params.
+	params := s.clk.GetParams(s.Ctx)
+	params.AuthorizedUptimes = []time.Duration{time.Nanosecond, fullChargeDuration}
+	s.clk.SetParams(s.Ctx, params)
+
+	// Fund account
+	s.FundAcc(address, requiredBalances)
+
+	// Create CL pool
+	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, poolSpreadFactor)
+
+	// Set incentives for pool to ensure accumulators work correctly
+	err := s.clk.SetMultipleIncentiveRecords(s.Ctx, incentiveRecords)
+	s.Require().NoError(err)
+
+	// Set up fully charged positions
+	totalLiquidity := sdk.ZeroDec()
+	for i := 0; i < numPositions; i++ {
+		_, _, _, liquidityCreated, _, _, _, err := s.clk.CreatePosition(s.Ctx, defaultPoolId, address, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+		s.Require().NoError(err)
+		totalLiquidity = totalLiquidity.Add(liquidityCreated)
+	}
+
+	return pool, expectedPositionIds, totalLiquidity
 }
 
 func (s *KeeperTestSuite) runMultipleAuthorizedUptimes(tests func()) {

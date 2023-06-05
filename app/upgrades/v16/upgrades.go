@@ -78,6 +78,12 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		// Update expedited governance param
+		// In particular, set expedited quorum to 2/3.
+		params := keepers.GovKeeper.GetTallyParams(ctx)
+		params.ExpeditedQuorum = sdk.NewDec(2).Quo(sdk.NewDec(3))
+		keepers.GovKeeper.SetTallyParams(ctx, params)
+
 		// Add both MsgExecuteContract and MsgInstantiateContract to the list of allowed messages.
 		hostParams := keepers.ICAHostKeeper.GetParams(ctx)
 		msgExecuteContractExists := false
