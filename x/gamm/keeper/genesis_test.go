@@ -116,7 +116,7 @@ func (s *KeeperTestSuite) TestGammExportGenesis() {
 	_, err = s.App.PoolManagerKeeper.CreatePool(ctx, msg)
 	s.Require().NoError(err)
 
-	s.App.GAMMKeeper.OverwriteMigrationRecordsNoRedirect(ctx, DefaultMigrationRecords)
+	s.App.GAMMKeeper.SetMigrationRecords(ctx, DefaultMigrationRecords)
 
 	genesis := s.App.GAMMKeeper.ExportGenesis(ctx)
 	s.Require().Len(genesis.Pools, 2)
@@ -148,7 +148,7 @@ func (s *KeeperTestSuite) TestMarshalUnmarshalGenesis() {
 	_, err = s.App.PoolManagerKeeper.CreatePool(ctx, msg)
 	s.Require().NoError(err)
 
-	s.App.GAMMKeeper.OverwriteMigrationRecordsNoRedirect(ctx, DefaultMigrationRecords)
+	s.App.GAMMKeeper.SetMigrationRecords(ctx, DefaultMigrationRecords)
 	s.Require().NoError(err)
 
 	genesis := s.App.GAMMKeeper.ExportGenesis(ctx)

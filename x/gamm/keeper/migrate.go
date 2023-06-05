@@ -146,15 +146,9 @@ func (k Keeper) OverwriteMigrationRecordsAndRedirectDistrRecords(ctx sdk.Context
 	return nil
 }
 
-// OverwriteMigrationRecordsNoRedirect behaves the same as OverwriteMigrationRecords but does not modify the distribution record.
-// This is specifically used in init genesis, since we want to overwrite the migration records but not modify the distribution record,
-// since this should be handled at time of genesis export by the incentive module.
-func (k Keeper) OverwriteMigrationRecordsNoRedirect(ctx sdk.Context, migrationInfo types.MigrationRecords) {
+// SetMigrationRecords is used in initGenesis, setting the balancer to gamm pool migration info in store.
+func (k Keeper) SetMigrationRecords(ctx sdk.Context, migrationInfo types.MigrationRecords) {
 	store := ctx.KVStore(k.storeKey)
-
-	// delete all existing keys
-	k.deleteMigrationKeys(ctx, types.KeyPrefixMigrationInfoBalancerPool)
-	k.deleteMigrationKeys(ctx, types.KeyPrefixMigrationInfoCLPool)
 
 	for _, balancerToCLPoolLink := range migrationInfo.BalancerToConcentratedPoolLinks {
 		balancerToClPoolKey := types.GetKeyPrefixMigrationInfoBalancerPool(balancerToCLPoolLink.BalancerPoolId)
