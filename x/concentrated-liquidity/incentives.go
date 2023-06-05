@@ -915,7 +915,6 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 	if err != nil {
 		return sdk.Coins{}, sdk.Coins{}, err
 	}
-	fmt.Println("uptime growth outside: ", uptimeGrowthOutside)
 
 	// Create a variable to hold the name of the position.
 	positionName := string(types.KeyPositionId(positionId))

@@ -1,7 +1,6 @@
 package concentrated_liquidity_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1469,7 +1468,6 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 	// Set up pool, default incentive records, and a single default position
 	pool, middlePositionIds, _ := s.runFungifySetup(middleAddress, 2, DefaultFungifyFullChargeDuration, DefaultSpreadFactor, []types.IncentiveRecord{testIncentiveRecord})
 
-	fmt.Println("Time unchanged: ", s.Ctx.BlockTime() == defaultBlockTime)
 	// Create two new addresses to hold a position to the left and right of the one we created above
 	testAccs := apptesting.CreateRandomAccounts(2)
 	leftAddress := testAccs[0]
@@ -1485,14 +1483,14 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 	// Set up left positions
 	leftPositionLowerTick := DefaultLowerTick - defaultPositionWidth
 	leftPositionUpperTick := DefaultLowerTick
-	_, leftOne := s.SetupPosition(pool.GetId(), leftAddress, DefaultCoins, leftPositionLowerTick, leftPositionUpperTick, s.Ctx.BlockTime())
-	_, leftTwo := s.SetupPosition(pool.GetId(), leftAddress, DefaultCoins, leftPositionLowerTick, leftPositionUpperTick, s.Ctx.BlockTime())
+	_, leftOne := s.SetupPosition(pool.GetId(), leftAddress, DefaultCoins, leftPositionLowerTick, leftPositionUpperTick)
+	_, leftTwo := s.SetupPosition(pool.GetId(), leftAddress, DefaultCoins, leftPositionLowerTick, leftPositionUpperTick)
 
 	// Set up right positions
 	rightPositionLowerTick := DefaultUpperTick
 	rightPositionUpperTick := DefaultUpperTick + defaultPositionWidth
-	_, rightOne := s.SetupPosition(pool.GetId(), rightAddress, DefaultCoins, rightPositionLowerTick, rightPositionUpperTick, s.Ctx.BlockTime())
-	_, rightTwo := s.SetupPosition(pool.GetId(), rightAddress, DefaultCoins, rightPositionLowerTick, rightPositionUpperTick, s.Ctx.BlockTime())
+	_, rightOne := s.SetupPosition(pool.GetId(), rightAddress, DefaultCoins, rightPositionLowerTick, rightPositionUpperTick)
+	_, rightTwo := s.SetupPosition(pool.GetId(), rightAddress, DefaultCoins, rightPositionLowerTick, rightPositionUpperTick)
 
 	// --- Set up large swap ---
 
@@ -1527,7 +1525,6 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 	// Increase block time by the fully charged duration
 	// Note: claiming incentives should already trigger update incentives accumulators
 	s.AddBlockTime(DefaultFungifyFullChargeDuration)
-	fmt.Println("initial records: ", s.getAllIncentiveRecordsForPool(pool.GetId()))
 
 	// --- Assertions on non-fungified positions ---
 
@@ -1543,7 +1540,6 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 	totalCollectedIncentives := sdk.NewCoins()
 
 	for i, id := range allPositionIds {
-		fmt.Println("-------- next position --------")
 		// Collect spread rewards and incentives on cached context
 		collectedSpread, err := s.clk.CollectSpreadRewards(cacheCtx, positionOwners[i], id)
 		s.Require().NoError(err)
@@ -1568,13 +1564,6 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 		totalCollectedSpread = totalCollectedSpread.Add(collectedSpread...)
 		totalCollectedIncentives = totalCollectedIncentives.Add(collectedIncentives...)
 	}
-	fmt.Println("updated records: ", s.getAllIncentiveRecordsForPool(pool.GetId()))
-	fmt.Println("total collected incentives: ", totalCollectedIncentives)
-
-	poolIncentivesBalance := s.App.BankKeeper.GetAllBalances(cacheCtx, pool.GetIncentivesAddress())
-	leftBalances := s.App.BankKeeper.GetAllBalances(cacheCtx, leftAddress)
-	fmt.Println("pool incentives balance: ", poolIncentivesBalance)
-	fmt.Println("left balances: ", leftBalances)
 
 	// Ensure that identical positions collected the same amounts
 	s.Require().Equal(collectedSpreadRewardsMap[leftOne], collectedSpreadRewardsMap[leftTwo])
@@ -1599,9 +1588,6 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 	}
 
 	// Ensure that the total incentives collected is correct
-	fmt.Println("totalCollectedIncentives: ", totalCollectedIncentives)
-	fmt.Println("expectedIncentivesCoins: ", expectedIncentivesCoins)
-	// TODO: fix incentives assertions
 	for _, incentiveCoin := range expectedIncentivesCoins {
 		denom := incentiveCoin.Denom
 		s.Require().Equal(0, roundingTolerance.Compare(expectedIncentivesCoins.AmountOf(denom), totalCollectedIncentives.AmountOf(denom)), "expected: %s, got: %s", expectedIncentivesCoins.AmountOf(denom), totalCollectedIncentives.AmountOf(denom))
@@ -1617,17 +1603,20 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 
 	// --- Spread reward assertions on fungified positions ---
 
-	truncatedSpreadCoins := sdk.NewCoins(sdk.NewCoin(ETH, roundingError))
+	// Set up variables to represent loss due to truncation since expected values
+	// are derived from individual position claims (each of which truncate)
+	truncatedETHCoins := sdk.NewCoins(sdk.NewCoin(ETH, roundingError))
+	truncatedUSDCCoins := sdk.NewCoins(sdk.NewCoin(USDC, roundingError))
 
 	// Left position spread reward assertion
 	fungifiedLeftSpread, err := s.clk.CollectSpreadRewards(s.Ctx, leftAddress, fungifiedLeft)
 	s.Require().NoError(err)
-	s.Require().Equal(collectedSpreadRewardsMap[leftOne].Add(collectedSpreadRewardsMap[leftTwo]...).Add(truncatedSpreadCoins...), fungifiedLeftSpread)
+	s.Require().Equal(collectedSpreadRewardsMap[leftOne].Add(collectedSpreadRewardsMap[leftTwo]...).Add(truncatedETHCoins...), fungifiedLeftSpread)
 
 	// Middle position spread reward assertion
 	fungifiedMiddleSpread, err := s.clk.CollectSpreadRewards(s.Ctx, middleAddress, fungifiedMiddle)
 	s.Require().NoError(err)
-	s.Require().Equal(collectedSpreadRewardsMap[middlePositionIds[0]].Add(collectedSpreadRewardsMap[middlePositionIds[1]]...).Add(truncatedSpreadCoins...), fungifiedMiddleSpread)
+	s.Require().Equal(collectedSpreadRewardsMap[middlePositionIds[0]].Add(collectedSpreadRewardsMap[middlePositionIds[1]]...).Add(truncatedETHCoins...), fungifiedMiddleSpread)
 
 	// Right position spread reward assertion
 	fungifiedRightSpread, err := s.clk.CollectSpreadRewards(s.Ctx, rightAddress, fungifiedRight)
@@ -1640,7 +1629,7 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 	fungifiedLeftIncentives, forfeited, err := s.clk.CollectIncentives(s.Ctx, leftAddress, fungifiedLeft)
 	s.Require().NoError(err)
 	s.Require().True(forfeited.Empty())
-	s.Require().Equal(collectedIncentivesMap[leftOne].Add(collectedIncentivesMap[leftTwo]...), fungifiedLeftIncentives)
+	s.Require().Equal(collectedIncentivesMap[leftOne].Add(collectedIncentivesMap[leftTwo]...).Add(truncatedUSDCCoins...), fungifiedLeftIncentives)
 
 	// Middle position incentives assertion
 	fungifiedMiddleIncentives, forfeited, err := s.clk.CollectIncentives(s.Ctx, middleAddress, fungifiedMiddle)
