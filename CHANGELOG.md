@@ -42,16 +42,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v16.0.0
 This release containts the following new modules and updates:
-- Concentrated Liquidity module (x/concentrated-liquidity). Concentrated liquidity is a novel Automated Market Maker (AMM) design introduced by Uniswap that allows for more efficient use of capital. The improvement is
-achieved by providing liquidity in specific price ranges chosen by the user.
-- implement Cosmwasmpool module (x/cosmwasmpool). The CosmWasm Pool Module is an extension for the Osmosis pools, aiming to create a custom module that allows users to create and manage liquidity pools backed by CosmWasm smart contracts. 
+- Concentrated Liquidity module (x/concentrated-liquidity). Concentrated liquidity is a gamechanging new pool model that will bring unprecedented capital efficiency to Osmosis. The initial version of our design is heavily influenced by Uniswap V3, although our implementation has a number of important differences.
+- Implement Cosmwasmpool module (x/cosmwasmpool). The CosmWasm Pool Module is an extension for the Osmosis pools, aiming to create a custom module that allows users to create and manage liquidity pools backed by CosmWasm smart contracts. 
 - ProtoRev changes 
   - Integrate with Concentrated Liquidity Pools. 
-  - Changes dev account payment from once per week to after every trade
+  - Changes dev account payment from once per week to after every trade.
+  - Trigger backruns, joinPool and exitPool using hooks.
 - Dependency Updates 
-  - bump wasmvm to v1.2 and add cosmwasm_1_2 capability
-  - update async ICQ version 
-  - apply Cosmwasm Cherry security patch 
+  - bump wasmvm to v1.2 and add cosmwasm_1_2 capability. (Note: if E2E is throwing error, remove the wasm cache during the upgrade)
+  - update async ICQ version.
+
 
 ### Features
   * [#3014](https://github.com/osmosis-labs/osmosis/issues/3014) implement x/concentrated-liquidity module.
@@ -59,8 +59,8 @@ achieved by providing liquidity in specific price ranges chosen by the user.
   * [#4659](https://github.com/osmosis-labs/osmosis/pull/4659) implement AllPools query in x/poolmanager.
   * [#4886](https://github.com/osmosis-labs/osmosis/pull/4886) Implement MsgSplitRouteSwapExactAmountIn and MsgSplitRouteSwapExactAmountOut that supports route splitting.
   * [#5281](https://github.com/osmosis-labs/osmosis/pull/5281) Add option to designate Reward Recipient to Lock and Incentives.
-  * [#4827] (https://github.com/osmosis-labs/osmosis/pull/4827) Protorev: Change highest liquidity pool updating from weekly to daily and change dev fee payout from weekly to after every trade.
-  * [#457] (https://github.com/osmosis-labs/cosmos-sdk/pull/457) x/gov: added expedited quorum param
+  * [#4827](https://github.com/osmosis-labs/osmosis/pull/4827) Protorev: Change highest liquidity pool updating from weekly to daily and change dev fee payout from weekly to after every trade.
+  * [#5409](https://github.com/osmosis-labs/osmosis/pull/5409) x/gov: added expedited quorum param (Note: we set the expedited quorum to 2/3 in the upgrade handler)
 
 ### Misc Improvements
  
@@ -85,8 +85,10 @@ achieved by providing liquidity in specific price ranges chosen by the user.
   * [#5265](https://github.com/osmosis-labs/osmosis/pull/5265) Ensure a lock cannot point to multiple synthetic locks. Deprecates `SyntheticLockupsByLockupID` in favor of `SyntheticLockupByLockupID`.
   * [#4950] (https://github.com/osmosis-labs/osmosis/pull/4950) Add in/out tokens to Concentrated Liquidity's AfterConcentratedPoolSwap hook
   * [#4783](https://github.com/osmosis-labs/osmosis/pull/4783) Update wasmd to 0.31.0
-  * [#4629](https://github.com/osmosis-labs/osmosis/pull/4629) add amino proto annotations
+  * [#4629](https://github.com/osmosis-labs/osmosis/pull/4629) Add amino proto annotations
   * [#4830](https://github.com/osmosis-labs/osmosis/pull/4830) Add gas cost when we AddToGaugeRewards, linearly increase with coins to add
+  * [#5000](https://github.com/osmosis-labs/osmosis/pull/5000) osmomath.Power panics for base < 1 to temporarily restrict broken logic for such base.
+
 
 ### API breaks
 
@@ -98,7 +100,6 @@ achieved by providing liquidity in specific price ranges chosen by the user.
 * [#4983](https://github.com/osmosis-labs/osmosis/pull/4983) Consume a gas when creating a new token using tokenfactory as a spam deterrence mechanism.
 * [#4951](https://github.com/osmosis-labs/osmosis/pull/4951) Implement pool liquidity query in pool manager, deprecate the one in gamm
 * [#5138](https://github.com/osmosis-labs/osmosis/pull/5138) Rename swap fee to spread factor. Broke PoolI interface. Did not break CLI, message, pool models, queries or events.
-* [#5000](https://github.com/osmosis-labs/osmosis/pull/5000) osmomath.Power panics for base < 1 to temporarily restrict broken logic for such base.
 
 ## v15.1.2
 
