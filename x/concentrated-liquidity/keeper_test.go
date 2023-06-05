@@ -402,3 +402,38 @@ func (s *KeeperTestSuite) runMultipleAuthorizedUptimes(tests func()) {
 		tests()
 	}
 }
+
+// runMultiplePositionRanges runs various test constructions and invariants on the given position ranges.
+func (s *KeeperTestSuite) runMultiplePositionRanges(tests func([][]uint64)) {
+	// Pool setup parameters to vary:
+	// 1. Spread factor
+	// 2. Incentive records (and all subfields)
+	// 3. TestParams struct that we pass into vectors for fuzzing (default should run a single hardcoded set)
+	//    * Should include a map of addresses to ranges (ideally could do multiple addr per range but this is harder)
+	//    * Default case should be running two hardcoded vectors: one with single addr on all ranges, and one with k addr for k ranges
+	//
+	// Hard coded vectors (all run for N = 1, N = 2, and N = 37)
+	// Case 1: N positions in every range, default liq amounts
+	// Case 2: N positions in every range, non-default liq amounts
+	// Case 3: N positions in every range, non-default liq amounts, spaced out by time elapsed
+	// Case 4: N positions in every range, swaps in between
+	// Case 5: N positions in every range, incentive record created & emitted in between
+	// Case 6: N positions in every range, incentive record created but not emitted in between (later start time)
+
+	// Invariant checks to run on cached context:
+	// 1. Collecting fees on all positions yields expected total fees
+	// 2. Collecting incentives on all positions yields expected total incentives
+	// 3. The above two invariants hold even during intermediate test steps
+	// 4. Join then exit a single position on each range yields same amount (within rounding tolerance)
+	// 5. Swap in then out and vice versa yield same amounts minus fees (within rounding tolerance)
+	// 6. Removing all positions drains pool address, fee address, and incentive address (even with rounding?)
+	// 7. (more complex) At intermediate steps, creating a smaller position then adding to it yields the same end state
+	// 8. (more complex) At intermediate steps, creating a larger position then removing from it yields the same end state
+	//
+	// func (s *KeeperTestSuite) runInvariants(ctx, poolId, positionIds) {}
+
+	// Potential helpers to reference:
+	// - ExecuteAndValidateSuccessfulIncentiveClaim
+	// - AssertPositionsDoNotExist
+	// - GetTotalAccruedRewardsByAccumulator
+}
