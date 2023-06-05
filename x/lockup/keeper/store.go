@@ -7,7 +7,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -247,6 +247,24 @@ func (k Keeper) GetLockByID(ctx sdk.Context, lockID uint64) (*types.PeriodLock, 
 	bz := store.Get(lockKey)
 	err := proto.Unmarshal(bz, &lock)
 	return &lock, err
+}
+
+// GetLockRewardReceiver returns the reward receiver stored in state.
+// Note that if the lock reward receiver address in state is an empty string literal,
+// it indicates that the lock reward receiver is the owner of the lock, thus
+// returns the lock owner address.
+func (k Keeper) GetLockRewardReceiver(ctx sdk.Context, lockID uint64) (string, error) {
+	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return "", err
+	}
+
+	rewardReceiverAddress := lock.RewardReceiverAddress
+	if rewardReceiverAddress == "" {
+		rewardReceiverAddress = lock.Owner
+	}
+
+	return rewardReceiverAddress, nil
 }
 
 // GetPeriodLocks Returns the period locks on pool.

@@ -330,6 +330,16 @@ osmosis testnets and a relayer between them.
 
 #### Setup
 
+Compile the contracts using the Rust workspace optimizer:
+
+```bash
+cd osmosis/cosmwasm
+docker run --rm -v "$(pwd)":/code \
+      --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+      --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+      cosmwasm/workspace-optimizer-arm64:0.12.13
+```
+
 Create an alias for chainA and chainB commands that will be used throughout the guide:
 
 ```bash
@@ -340,9 +350,9 @@ alias chainB="osmosisd --node http://localhost:36657 --chain-id localosmosis-b"
 Prepare other variables that we will use across the test:
 
 ```bash
-VALIDATOR=$(osmosisd keys show validator -a)
+VALIDATOR=$(osmosisd keys show validator -a --keyring-backend test)
 CHANNEL_ID="channel-0"
-args="--keyring-backend test --gas auto --gas-prices 0.1uosmo --gas-adjustment 1.3 --broadcast-mode block --yes"
+args="--keyring-backend test --gas auto --gas-prices 0.1uosmo --gas-adjustment 2 --broadcast-mode block --yes"
 TX_FLAGS=($args)
 ```
 
@@ -358,8 +368,8 @@ This will generate two keys, validator and faucet and will be used to send money
 #### Fund accounts on both chains
 
 ```bash
-chainA tx bank send faucet "$VALIDATOR" 1000000000uosmo "${TX_FLAGS[@]}"
-chainB tx bank send faucet "$VALIDATOR" 1000000000uosmo "${TX_FLAGS[@]}"
+chainA tx bank send faucet "$VALIDATOR" 3000000000uosmo "${TX_FLAGS[@]}"
+chainB tx bank send faucet "$VALIDATOR" 3000000000uosmo "${TX_FLAGS[@]}"
 ```
 We will use the validator account as our main account for this test. This sends 1000000000uosmo from the faucet that account.
 
@@ -399,7 +409,7 @@ EOF
 Create the pool:
 
 ```bash
-chainB tx gamm create-pool --pool-file sample_pool.json --from validator --yes  -b block
+chainB tx gamm create-pool --pool-file sample_pool.json --from validator  "${TX_FLAGS[@]}"
 ```
 
 export the pool id:
@@ -413,7 +423,7 @@ export POOL_ID=$(chainB query gamm pools -o json | jq -r '.pools[-1].id')
 Store the contract:
 
 ```bash
-chainB tx wasm store ./bytecode/swaprouter.wasm --from validator "${TX_FLAGS[@]}"
+chainB tx wasm store ./artifacts/swaprouter.wasm --from validator "${TX_FLAGS[@]}"
 ```
 
 Get the code id:
@@ -426,20 +436,20 @@ Instantiate the contract:
 
 ```bash
 MSG=$(jenv -c '{"owner": $VALIDATOR}')
-chainB tx wasm instantiate "$SWAPROUTER_CODE_ID" "$MSG" --from validator --admin $VALIDATOR --label swaprouter --yes  -b block
+chainB tx wasm instantiate "$SWAPROUTER_CODE_ID" "$MSG" --from validator --admin $VALIDATOR --label swaprouter --yes  -b block --keyring-backend test "${TX_FLAGS[@]}"
 ```
 
 Export the swaprouter contract address:
 
 ```bash
-export SWAPROUTER_ADDRESS=$(chainB query wasm list-contract-by-code "$SWAPROUTER_CODE_ID" -o json | jq -r '.contracts[-1].address')
+export SWAPROUTER_ADDRESS=$(chainB query wasm list-contract-by-code "$SWAPROUTER_CODE_ID" -o json | jq -r '.contracts[-1]')
 ```
 
 #### Add the pool to the swaprouter
 
 ```bash
 MSG=$(jenv -c '{"set_route":{"input_denom":$DENOM,"output_denom":"uosmo","pool_route":[{"pool_id":$POOL_ID,"token_out_denom":"uosmo"}]}}')
-chainB tx wasm execute "$SWAPROUTER_ADDRESS" "$MSG" --from validator -y
+chainB tx wasm execute "$SWAPROUTER_ADDRESS" "$MSG" --from validator -y --keyring-backend test "${TX_FLAGS[@]}"
 ```
 
 #### Store and instantiate the crosschain swaps contract
@@ -447,20 +457,20 @@ chainB tx wasm execute "$SWAPROUTER_ADDRESS" "$MSG" --from validator -y
 Store the contract:
 
 ```bash
-chainB tx wasm store ./bytecode/crosschainswaps.wasm --from validator "${TX_FLAGS[@]}"
+chainB tx wasm store ./artifacts/crosschain_swaps.wasm --from validator "${TX_FLAGS[@]}"
 ```
 
 Get the code id:
 
 ```bash
-CROSSCHAINSWAPS_CODE_ID=$(chainA query wasm list-code -o json | jq -r '.code_infos[-1].code_id')
+CROSSCHAINSWAPS_CODE_ID=$(chainB query wasm list-code -o json | jq -r '.code_infos[-1].code_id')
 ```
 
 Instantiate the contract:
 
 ```bash
-MSG=$(jenv -c '{"swap_contract": $SWAPROUTER_ADDRESS, "channels": [["osmo", $CHANNEL_ID]]}')
-chainB tx wasm instantiate "$CROSSCHAIN_SWAPS_CODE_ID" "$MSG" --from validator --admin $VALIDATOR --label=crosschain_swaps --yes  -b block
+MSG=$(jenv -c '{"swap_contract": $SWAPROUTER_ADDRESS, "channels": [["osmo", $CHANNEL_ID]], "governor": $VALIDATOR}')
+chainB tx wasm instantiate "$CROSSCHAINSWAPS_CODE_ID" "$MSG" --from validator --admin $VALIDATOR --label=crosschain_swaps --yes -b block --keyring-backend test "${TX_FLAGS[@]}"
 ```
 
 The channels here describe the allowed channels that the cross chain swap contract will accept for the receiver.
@@ -472,7 +482,7 @@ No other bech32 prefixes are allowed in this example.
 
 
 ```bash
-export CROSSCHAIN_SWAPS_ADDRESS=$(chainB query wasm list-contract-by-code "$CROSSCHAIN_SWAPS_CODE_ID" -o json | jq -r '.contracts | [last][0]')
+export CROSSCHAIN_SWAPS_ADDRESS=$(chainB query wasm list-contract-by-code "$CROSSCHAINSWAPS_CODE_ID" -o json | jq -r '.contracts | [last][0]')
 ```
 
 #### Prepare to perform the crosschain swap

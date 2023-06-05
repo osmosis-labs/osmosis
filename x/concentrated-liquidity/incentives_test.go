@@ -8,16 +8,17 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
+	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
 )
 
 var (
@@ -3343,7 +3344,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 				clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, sdk.ZeroDec())
 
 				// Set up an existing full range position. Note that the second return value is the position ID, not an error.
-				initialLiquidity, _ := s.SetupPosition(clPool.GetId(), s.TestAccs[0], tc.existingConcentratedLiquidity, DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime())
+				initialLiquidity, _ := s.SetupPosition(clPool.GetId(), s.TestAccs[0], tc.existingConcentratedLiquidity, DefaultMinTick, DefaultMaxTick)
 
 				// If a canonical balancer pool exists, we create it and link it with the CL pool
 				balancerPoolId := s.setupBalancerPoolWithFractionLocked(tc.balancerPoolAssets, tc.portionOfSharesBonded)
@@ -3476,7 +3477,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRangeWithNonExistentPools
 				clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], existingConcentratedAssets[0].Denom, existingConcentratedAssets[1].Denom, DefaultTickSpacing, sdk.ZeroDec())
 
 				// Set up an existing full range position. Note that the second return value is the position ID, not an error.
-				s.SetupPosition(clPool.GetId(), s.TestAccs[0], existingConcentratedAssets, DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime())
+				s.SetupPosition(clPool.GetId(), s.TestAccs[0], existingConcentratedAssets, DefaultMinTick, DefaultMaxTick)
 
 				// If a canonical balancer pool exists, we create it and link it with the CL pool
 				balancerPoolId := s.setupBalancerPoolWithFractionLocked(tc.balancerPoolAssets, sdk.OneDec())
@@ -3639,7 +3640,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 
 				// Set up an existing full range position.
 				// Note that the second return value here is the position ID, not an error.
-				initialLiquidity, _ := s.SetupPosition(clPoolId, s.TestAccs[0], tc.existingConcentratedLiquidity, DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime())
+				initialLiquidity, _ := s.SetupPosition(clPoolId, s.TestAccs[0], tc.existingConcentratedLiquidity, DefaultMinTick, DefaultMaxTick)
 
 				// Create and bond shares for balancer pool to be linked with CL pool in happy path cases
 				balancerPoolId := s.setupBalancerPoolWithFractionLocked(tc.balancerPoolAssets, sdk.OneDec())
@@ -3975,4 +3976,69 @@ func (s *KeeperTestSuite) TestGetUptimeTrackerValues() {
 			})
 		}
 	})
+}
+
+func (s *KeeperTestSuite) TestGetIncentiveRecordSerialized() {
+	tests := []struct {
+		name                    string
+		poolIdToQuery           uint64
+		paginationLimit         uint64
+		expectedNumberOfRecords int
+	}{
+		{
+			name:                    "Get incentive records from a valid pool",
+			poolIdToQuery:           1,
+			expectedNumberOfRecords: 1,
+			paginationLimit:         10,
+		},
+		{
+			name:                    "Get many incentive records from a valid pool",
+			poolIdToQuery:           1,
+			expectedNumberOfRecords: 3,
+			paginationLimit:         10,
+		},
+		{
+			name:                    "Get all incentive records from an invalid pool",
+			poolIdToQuery:           2,
+			expectedNumberOfRecords: 0,
+			paginationLimit:         10,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+
+			s.SetupTest()
+			k := s.App.ConcentratedLiquidityKeeper
+
+			pool := s.PrepareConcentratedPool()
+
+			for i := 0; i < test.expectedNumberOfRecords; i++ {
+				testIncentiveRecord := types.IncentiveRecord{
+					PoolId:               pool.GetId(),
+					IncentiveDenom:       USDC,
+					IncentiveCreatorAddr: s.TestAccs[i].String(),
+					IncentiveRecordBody: types.IncentiveRecordBody{
+						RemainingAmount: sdk.NewDec(1000),
+						EmissionRate:    sdk.NewDec(1), // 1 per second
+						StartTime:       defaultBlockTime,
+					},
+					MinUptime: time.Nanosecond,
+				}
+
+				err := s.App.ConcentratedLiquidityKeeper.SetIncentiveRecord(s.Ctx, testIncentiveRecord)
+				s.Require().NoError(err)
+			}
+
+			paginationReq := &query.PageRequest{
+				Limit:      test.paginationLimit,
+				CountTotal: true,
+			}
+
+			incRecords, _, err := k.GetIncentiveRecordSerialized(s.Ctx, test.poolIdToQuery, paginationReq)
+			s.Require().NoError(err)
+
+			s.Require().Equal(test.expectedNumberOfRecords, len(incRecords))
+		})
+	}
 }

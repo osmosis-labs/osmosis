@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
 )
 
 type Querier struct {
@@ -98,6 +98,16 @@ func (q Querier) LiquidityNetInDirection(grpcCtx context.Context,
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.LiquidityNetInDirection(ctx, *req)
+}
+
+func (q Querier) IncentiveRecords(grpcCtx context.Context,
+	req *queryproto.IncentiveRecordsRequest,
+) (*queryproto.IncentiveRecordsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.IncentiveRecords(ctx, *req)
 }
 
 func (q Querier) ClaimableSpreadRewards(grpcCtx context.Context,

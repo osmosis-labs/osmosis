@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -102,23 +102,19 @@ func (s *KeeperTestSuite) TestBurnDenomMsg() {
 
 // TestCreateDenomMsg tests TypeMsgCreateDenom message is emitted on a successful denom creation
 func (s *KeeperTestSuite) TestCreateDenomMsg() {
-	defaultDenomCreationFee := types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(50000000)))}
 	for _, tc := range []struct {
 		desc                  string
-		denomCreationFee      types.Params
 		subdenom              string
 		valid                 bool
 		expectedMessageEvents int
 	}{
 		{
-			desc:             "subdenom too long",
-			denomCreationFee: defaultDenomCreationFee,
-			subdenom:         "assadsadsadasdasdsadsadsadsadsadsadsklkadaskkkdasdasedskhanhassyeunganassfnlksdflksafjlkasd",
-			valid:            false,
+			desc:     "subdenom too long",
+			subdenom: "assadsadsadasdasdsadsadsadsadsadsadsklkadaskkkdasdasedskhanhassyeunganassfnlksdflksafjlkasd",
+			valid:    false,
 		},
 		{
 			desc:                  "success case: defaultDenomCreationFee",
-			denomCreationFee:      defaultDenomCreationFee,
 			subdenom:              "evmos",
 			valid:                 true,
 			expectedMessageEvents: 1,
@@ -126,11 +122,9 @@ func (s *KeeperTestSuite) TestCreateDenomMsg() {
 	} {
 		s.SetupTest()
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			tokenFactoryKeeper := s.App.TokenFactoryKeeper
 			ctx := s.Ctx.WithEventManager(sdk.NewEventManager())
 			s.Require().Equal(0, len(ctx.EventManager().Events()))
 			// Set denom creation fee in params
-			tokenFactoryKeeper.SetParams(s.Ctx, tc.denomCreationFee)
 			// Test create denom message
 			_, err := s.msgServer.CreateDenom(sdk.WrapSDKContext(ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), tc.subdenom))
 			if tc.valid {
