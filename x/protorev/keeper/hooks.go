@@ -197,26 +197,15 @@ func (k Keeper) storeJoinExitPoolMsgs(ctx sdk.Context, sender sdk.AccAddress, po
 	coins := pool.GetTotalPoolLiquidity(ctx)
 
 	// Create swaps to backrun being the join coin swapped against all other pool coins
-	swapsToBackrun := make([]types.Trade, 0)
 	for _, coin := range coins {
 		if coin.Denom == denom {
 			continue
 		}
 		// Join messages swap in the denom, exit messages swap out the denom
 		if isJoin {
-			swapsToBackrun = append(swapsToBackrun, types.Trade{
-				Pool:     poolId,
-				TokenIn:  denom,
-				TokenOut: coin.Denom})
+			k.storeSwap(ctx, poolId, denom, coin.Denom)
 		} else {
-			swapsToBackrun = append(swapsToBackrun, types.Trade{
-				Pool:     poolId,
-				TokenIn:  coin.Denom,
-				TokenOut: denom})
+			k.storeSwap(ctx, poolId, coin.Denom, denom)
 		}
-	}
-
-	if err := k.AddSwapsToSwapsToBackrun(ctx, swapsToBackrun); err != nil {
-		ctx.Logger().Error("Protorev error adding swaps to backrun from AfterJoin/ExitPool hook", err)
 	}
 }
