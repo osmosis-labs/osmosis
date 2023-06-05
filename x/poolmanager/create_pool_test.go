@@ -6,13 +6,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	cwmodel "github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	stableswap "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	cwmodel "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
+	stableswap "github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/stableswap"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 func (s *KeeperTestSuite) TestPoolCreationFee() {
@@ -474,15 +474,6 @@ func (s *KeeperTestSuite) TestValidateCreatedPool() {
 				Id:      2,
 			},
 			expectedError: types.IncorrectPoolIdError{ExpectedPoolId: 1, ActualPoolId: 2},
-		},
-		{
-			name:   "error: unexpected address",
-			poolId: 2,
-			pool: &balancer.Pool{
-				Address: types.NewPoolAddress(1).String(),
-				Id:      2,
-			},
-			expectedError: types.IncorrectPoolAddressError{ExpectedPoolAddress: types.NewPoolAddress(2).String(), ActualPoolAddress: types.NewPoolAddress(1).String()},
 		},
 	}
 

@@ -7,15 +7,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app/keepers"
-	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v16/app/keepers"
+	"github.com/osmosis-labs/osmosis/v16/app/upgrades"
 
-	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	cosmwasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/keeper"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v16/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
 )
 
 const (
@@ -77,6 +78,33 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		// Update expedited governance param
+		// In particular, set expedited quorum to 2/3.
+		params := keepers.GovKeeper.GetTallyParams(ctx)
+		params.ExpeditedQuorum = sdk.NewDec(2).Quo(sdk.NewDec(3))
+		keepers.GovKeeper.SetTallyParams(ctx, params)
+
+		// Add both MsgExecuteContract and MsgInstantiateContract to the list of allowed messages.
+		hostParams := keepers.ICAHostKeeper.GetParams(ctx)
+		msgExecuteContractExists := false
+		msgInstantiateContractExists := false
+		for _, msg := range hostParams.AllowMessages {
+			if msg == sdk.MsgTypeURL(&cosmwasmtypes.MsgExecuteContract{}) {
+				msgExecuteContractExists = true
+			}
+			if msg == sdk.MsgTypeURL(&cosmwasmtypes.MsgInstantiateContract{}) {
+				msgInstantiateContractExists = true
+			}
+		}
+		if !msgExecuteContractExists {
+			hostParams.AllowMessages = append(hostParams.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgExecuteContract{}))
+		}
+
+		if !msgInstantiateContractExists {
+			hostParams.AllowMessages = append(hostParams.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgInstantiateContract{}))
+		}
+		keepers.ICAHostKeeper.SetParams(ctx, hostParams)
+
 		// Although parameters are set on InitGenesis() in RunMigrations(), we reset them here
 		// for visibility of the final configuration.
 		defaultConcentratedLiquidityParams := keepers.ConcentratedLiquidityKeeper.GetParams(ctx)
@@ -98,7 +126,7 @@ func CreateUpgradeHandler(
 		// Create a position to initialize the balancerPool.
 
 		// Get community pool and DAI/OSMO pool address.
-		communityPoolAddress := keepers.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName)
+		communityPoolAddress := keepers.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
 		daiOsmoPool, err := keepers.PoolManagerKeeper.GetPool(ctx, DaiOsmoPoolId)
 		if err != nil {
 			return nil, err

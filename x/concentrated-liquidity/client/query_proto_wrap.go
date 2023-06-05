@@ -6,9 +6,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-	clquery "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
+	clquery "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 )
 
 // Querier defines a wrapper around the x/concentrated-liquidity keeper providing gRPC method
@@ -33,48 +33,14 @@ func (q Querier) UserPositions(ctx sdk.Context, req clquery.UserPositionsRequest
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	userPositions, err := q.Keeper.GetUserPositions(ctx, sdkAddr, req.PoolId)
+	fullPositions, pageRes, err := q.Keeper.GetUserPositionsSerialized(ctx, sdkAddr, req.PoolId, req.Pagination)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	positions := make([]model.FullPositionBreakdown, 0, len(userPositions))
-
-	for _, position := range userPositions {
-		// get the pool from the position
-		pool, err := q.Keeper.GetConcentratedPoolById(ctx, position.PoolId)
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
-
-		asset0, asset1, err := cl.CalculateUnderlyingAssetsFromPosition(ctx, position, pool)
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
-
-		claimableFees, err := q.Keeper.GetClaimableSpreadRewards(ctx, position.PositionId)
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
-
-		claimableIncentives, forfeitedIncentives, err := q.Keeper.GetClaimableIncentives(ctx, position.PositionId)
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
-
-		// Append the position and underlying assets to the positions slice
-		positions = append(positions, model.FullPositionBreakdown{
-			Position:            position,
-			Asset0:              asset0,
-			Asset1:              asset1,
-			ClaimableFees:       claimableFees,
-			ClaimableIncentives: claimableIncentives,
-			ForfeitedIncentives: forfeitedIncentives,
-		})
-	}
-
 	return &clquery.UserPositionsResponse{
-		Positions: positions,
+		Positions:  fullPositions,
+		Pagination: pageRes,
 	}, nil
 }
 

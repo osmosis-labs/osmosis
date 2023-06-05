@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types"
 )
 
 // SetPool stores the given pool in state.

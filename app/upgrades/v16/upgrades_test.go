@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	cosmwasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -12,11 +13,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	v16 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v16"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	v16 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v16"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v16/x/protorev/types"
 )
 
 type UpgradeTestSuite struct {
@@ -123,6 +124,11 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 				// Ensure that the protorev upgrade was successful
 				verifyProtorevUpdateSuccess(suite)
+
+				// Validate MsgExecuteContract and MsgInstantiateContract were added to the whitelist
+				icaHostAllowList := suite.App.ICAHostKeeper.GetParams(suite.Ctx)
+				suite.Require().Contains(icaHostAllowList.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgExecuteContract{}))
+				suite.Require().Contains(icaHostAllowList.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgInstantiateContract{}))
 			},
 			func() {
 				// Validate that tokenfactory params have been updated
