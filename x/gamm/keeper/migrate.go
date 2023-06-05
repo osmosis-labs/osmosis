@@ -5,7 +5,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
+	"encoding/binary"
+
 	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -75,11 +76,7 @@ func (k Keeper) GetAllMigrationInfo(ctx sdk.Context) (types.MigrationRecords, er
 		balancerToClPoolLink.BalancerPoolId = sdk.BigEndianToUint64(iter.Key())
 
 		// concentrated Pool Id
-		clPoolId := gogotypes.UInt64Value{}
-		if err := proto.Unmarshal(iter.Value(), &clPoolId); err != nil {
-			return types.MigrationRecords{}, err
-		}
-		balancerToClPoolLink.ClPoolId = clPoolId.Value
+		balancerToClPoolLink.ClPoolId = binary.BigEndian.Uint64(iter.Value())
 
 		balancerToClPoolLinks = append(balancerToClPoolLinks, balancerToClPoolLink)
 	}
@@ -127,18 +124,6 @@ func (k Keeper) GetLinkedBalancerPoolID(ctx sdk.Context, concentratedPoolId uint
 	return balancerPoolId.Value, nil
 }
 
-// deleteMigrationKeys deletes all migration records with the given prefixKey.
-func (k Keeper) deleteMigrationKeys(ctx sdk.Context, prefixKey []byte) {
-	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, prefixKey)
-	iter := prefixStore.Iterator(nil, nil)
-	defer iter.Close()
-
-	for ; iter.Valid(); iter.Next() {
-		prefixStore.Delete(iter.Key())
-	}
-}
-
 // OverwriteMigrationRecordsAndRedirectDistrRecords sets the balancer to gamm pool migration info to the store and deletes all existing records
 // migrationInfo in state is completely overwitten by the given migrationInfo.
 // Additionally, the distribution record for the balancer pool is modified to redirect incentives to the new concentrated pool.
@@ -148,8 +133,8 @@ func (k Keeper) OverwriteMigrationRecordsAndRedirectDistrRecords(ctx sdk.Context
 	// delete all existing migration records
 	// this is done for both replace and update migration calls because, regardless of whether we are replacing all or updating a few,
 	// the resulting migrationInfo that gets passed into this function is the complete set of migration records.
-	k.deleteMigrationKeys(ctx, types.KeyPrefixMigrationInfoBalancerPool)
-	k.deleteMigrationKeys(ctx, types.KeyPrefixMigrationInfoCLPool)
+	osmoutils.DeleteAllKeysFromPrefix(ctx, store, types.KeyPrefixMigrationInfoBalancerPool)
+	osmoutils.DeleteAllKeysFromPrefix(ctx, store, types.KeyPrefixMigrationInfoCLPool)
 
 	for _, balancerToCLPoolLink := range migrationInfo.BalancerToConcentratedPoolLinks {
 		balancerToClPoolKey := types.GetKeyPrefixMigrationInfoBalancerPool(balancerToCLPoolLink.BalancerPoolId)
