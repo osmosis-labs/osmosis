@@ -61,6 +61,7 @@ This release containts the following new modules and updates:
   * [#5281](https://github.com/osmosis-labs/osmosis/pull/5281) Add option to designate Reward Recipient to Lock and Incentives.
   * [#4827](https://github.com/osmosis-labs/osmosis/pull/4827) Protorev: Change highest liquidity pool updating from weekly to daily and change dev fee payout from weekly to after every trade.
   * [#5409](https://github.com/osmosis-labs/osmosis/pull/5409) x/gov: added expedited quorum param (Note: we set the expedited quorum to 2/3 in the upgrade handler)
+  * [#4382](https://github.com/osmosis-labs/osmosis/pull/4382) Tokenfactory: Add Before send hooks
 
 ### API breaks
   * [#5375](https://github.com/osmosis-labs/osmosis/pull/5373) Add query and cli for lock reward receiver
@@ -84,7 +85,6 @@ This release containts the following new modules and updates:
   * [#4830](https://github.com/osmosis-labs/osmosis/pull/4830) Scale gas costs by denoms in gauge
   * [#4336](https://github.com/osmosis-labs/osmosis/pull/4336) feat: make epochs standalone
   * [#4320](https://github.com/osmosis-labs/osmosis/pull/4320) feat: crosschain registry contract 
-  * [#4382](https://github.com/osmosis-labs/osmosis/pull/4382) Tokenfactory: Add Before send hooks
   * [#4801](https://github.com/osmosis-labs/osmosis/pull/4801) refactor: remove GetTotalShares, GetTotalLiquidity and GetExitFee from PoolI
   * [#4951](https://github.com/osmosis-labs/osmosis/pull/4951) feat: implement pool liquidity query in pool manager, deprecate the one in gamm
 
