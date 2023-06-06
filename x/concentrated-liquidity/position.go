@@ -115,7 +115,7 @@ func (k Keeper) isPositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId u
 	return isOwner, nil
 }
 
-// GetAllPositionsForPoolId gets all the position for a specific poolId and store prefix.
+// GetAllPositionsForPoolId gets all the position for a specific store prefix.
 func (k Keeper) GetAllPositionIdsForPoolId(ctx sdk.Context, prefix []byte, poolId uint64) ([]uint64, error) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, prefix)
@@ -126,18 +126,27 @@ func (k Keeper) GetAllPositionIdsForPoolId(ctx sdk.Context, prefix []byte, poolI
 	for ; iterator.Valid(); iterator.Next() {
 		key := iterator.Key()
 
-		// Extract the components from the key
-		parts := bytes.Split(key, []byte(types.KeySeparator))
-		if len(parts) != 4 {
-			return nil, fmt.Errorf("invalid key format: %s", key)
+		// Get last index of the key separator.
+		lastKeySeparatorIndex := bytes.LastIndex(key, []byte(types.KeySeparator))
+		if lastKeySeparatorIndex == -1 {
+			return nil, fmt.Errorf("invalid key format: %s. Failed to parse position id", key)
 		}
 
-		// Parse the poolId and positionId from the key
-		keyPoolId, err := strconv.ParseUint(string(parts[2]), 16, 64)
+		// Parse the positionId from the key. It is expected to be the last field in the key.
+		positionId, err := strconv.ParseUint(string(key[lastKeySeparatorIndex+1:]), 10, 64)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse poolId: %w", err)
+			return nil, fmt.Errorf("failed to parse positionId: %w", err)
 		}
-		positionId, err := strconv.ParseUint(string(parts[3]), 10, 64)
+
+		key = key[:lastKeySeparatorIndex]
+
+		// Get last index of the key separator.
+		lastKeySeparatorIndex = bytes.LastIndex(key, []byte(types.KeySeparator))
+		if lastKeySeparatorIndex == -1 {
+			return nil, fmt.Errorf("invalid key format: %s. Failed to parse pool id", key)
+		}
+
+		keyPoolId, err := strconv.ParseUint(string(key[lastKeySeparatorIndex+1:]), 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse positionId: %w", err)
 		}
@@ -217,12 +226,9 @@ func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId ui
 // GetUserPositionsSerialized behaves similarly to GetUserPositions, but returns the positions in a way that can be paginated.
 func (k Keeper) GetUserPositionsSerialized(ctx sdk.Context, addr sdk.AccAddress, poolId uint64, pagination *query.PageRequest) ([]model.FullPositionBreakdown, *query.PageResponse, error) {
 	var prefix []byte
-	var expectedKeyPartCount int
 	if poolId == 0 {
-		expectedKeyPartCount = 3
 		prefix = types.KeyUserPositions(addr)
 	} else {
-		expectedKeyPartCount = 2
 		prefix = types.KeyAddressAndPoolId(addr, poolId)
 	}
 
@@ -231,14 +237,14 @@ func (k Keeper) GetUserPositionsSerialized(ctx sdk.Context, addr sdk.AccAddress,
 	fullPositions := []model.FullPositionBreakdown{}
 
 	pageRes, err := query.Paginate(positionsStore, pagination, func(key, value []byte) error {
-		// Extract the components from the key
-		parts := bytes.Split(key, []byte(types.KeySeparator))
-		if len(parts) != expectedKeyPartCount {
+		// Get last index of the key separator.
+		lastKeySeparatorIndex := bytes.LastIndex(key, []byte(types.KeySeparator))
+		if lastKeySeparatorIndex == -1 {
 			return fmt.Errorf("invalid key format: %s", key)
 		}
 
-		// Parse the positionId from the key
-		positionId, err := strconv.ParseUint(string(parts[expectedKeyPartCount-1]), 10, 64)
+		// Parse the positionId from the key. It is expected to be the last field in the key.
+		positionId, err := strconv.ParseUint(string(key[lastKeySeparatorIndex+1:]), 10, 64)
 		if err != nil {
 			return fmt.Errorf("failed to parse positionId: %w", err)
 		}

@@ -12,7 +12,10 @@ const (
 	ModuleName = "concentratedliquidity"
 	RouterKey  = ModuleName
 
-	StoreKey     = ModuleName
+	StoreKey = ModuleName
+	// WARNING: if splitting by key separator, make sure that the key does not contain
+	// raw address bytes in its structure. Otherwise, the address can be split into
+	// more components than intended and fail parsing.
 	KeySeparator = "|"
 
 	uint64ByteSize = 8
@@ -34,6 +37,8 @@ var (
 
 	KeyNextGlobalPositionId = []byte{0x07}
 
+	// WARNING: do not parse this index by splitting by key separator as it contains
+	// raw address bytes in its structure.
 	PositionIdPrefix                      = []byte{0x08}
 	PoolPositionPrefix                    = []byte{0x09}
 	SpreadRewardPositionAccumulatorPrefix = []byte{0x0A}
@@ -160,18 +165,24 @@ func KeyPositionId(positionId uint64) []byte {
 // Position Prefix Keys
 
 // KeyAddressPoolIdPositionId returns the full key needed to store the position id for given addr + pool id + position id combination.
+// WARNING: do not parse this index by splitting by key separator as it contains
+// raw address bytes in its structure.
 func KeyAddressPoolIdPositionId(addr sdk.AccAddress, poolId uint64, positionId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%s%x%s%d%s%d", PositionPrefix, KeySeparator, addr.Bytes(), KeySeparator, poolId, KeySeparator, positionId))
 }
 
 // KeyAddressAndPoolId returns the prefix key used to create KeyAddressPoolIdPositionId, which only includes addr + pool id.
 // This key can be used to iterate over users positions for a specific pool.
+// WARNING: do not parse this index by splitting by key separator as it contains
+// raw address bytes in its structure.
 func KeyAddressAndPoolId(addr sdk.AccAddress, poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%s%x%s%d", PositionPrefix, KeySeparator, addr.Bytes(), KeySeparator, poolId))
 }
 
 // KeyUserPositions returns the prefix key used to create KeyAddressPoolIdPositionId, which only includes the addr.
 // This key can be used to iterate over all positions that a specific address has.
+// WARNING: do not parse this index by splitting by key separator as it contains
+// raw address bytes in its structure.
 func KeyUserPositions(addr sdk.AccAddress) []byte {
 	return []byte(fmt.Sprintf("%s%s%x", PositionPrefix, KeySeparator, addr.Bytes()))
 }
