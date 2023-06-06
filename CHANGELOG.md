@@ -62,44 +62,65 @@ This release containts the following new modules and updates:
   * [#4827](https://github.com/osmosis-labs/osmosis/pull/4827) Protorev: Change highest liquidity pool updating from weekly to daily and change dev fee payout from weekly to after every trade.
   * [#5409](https://github.com/osmosis-labs/osmosis/pull/5409) x/gov: added expedited quorum param (Note: we set the expedited quorum to 2/3 in the upgrade handler)
 
+### API breaks
+  * [#5375](https://github.com/osmosis-labs/osmosis/pull/5373) Add query and cli for lock reward receiver
+  * [#4757](https://github.com/osmosis-labs/osmosis/pull/4752) Pagination for all intermediary accounts
+  * [#5066](https://github.com/osmosis-labs/osmosis/pull/5066) Fixed bad stargate query declaration
+  * [#4868](https://github.com/osmosis-labs/osmosis/pull/4868) Remove wasmEnabledProposals []wasm.ProposalType from NewOsmosisApp
+  * [#4791](https://github.com/osmosis-labs/osmosis/pull/4791) feat(osmoutils): cosmwasm query and message wrappers
+  * [#4549](https://github.com/osmosis-labs/osmosis/pull/4549) added single pool query
+  * [#4659](https://github.com/osmosis-labs/osmosis/pull/4659) feat: implement AllPools query in x/poolmanager
+  * [#4489](https://github.com/osmosis-labs/osmosis/pull/4489) Add unlocking lock id to BeginUnlocking response
+  * [#4658](https://github.com/osmosis-labs/osmosis/pull/4658) refactor: unify pool query in pool manager, deprecate x/gamm, remove from CL module
+  * [#4682](https://github.com/osmosis-labs/osmosis/pull/4682) feat(CL): x/poolmanager spot price query for concentrated liquidity
+  * [#5138](https://github.com/osmosis-labs/osmosis/pull/5138) refactor: rename swap fee to spread factor
+  * [#5020](https://github.com/osmosis-labs/osmosis/pull/5020) Add gas config to the client.toml
+
+## State Breaking
+  * [#5380](https://github.com/osmosis-labs/osmosis/pull/5380) feat: add ica authorized messages in upgrade handler
+  * [#5363](https://github.com/osmosis-labs/osmosis/pull/5363) fix: twap record upgrade handler
+  * [#5265](https://github.com/osmosis-labs/osmosis/pull/5265) fix: expect single synthetic lock per native lock ID 
+  * [#4983](https://github.com/osmosis-labs/osmosis/pull/4983) implement gas consume on denom creation
+  * [#4830](https://github.com/osmosis-labs/osmosis/pull/4830) Scale gas costs by denoms in gauge
+  * [#4336](https://github.com/osmosis-labs/osmosis/pull/4336) feat: make epochs standalone
+  * [#4320](https://github.com/osmosis-labs/osmosis/pull/4320) feat: crosschain registry contract 
+  * [#4382](https://github.com/osmosis-labs/osmosis/pull/4382) Tokenfactory: Add Before send hooks
+  * [#4801](https://github.com/osmosis-labs/osmosis/pull/4801) refactor: remove GetTotalShares, GetTotalLiquidity and GetExitFee from PoolI
+  * [#4951](https://github.com/osmosis-labs/osmosis/pull/4951) feat: implement pool liquidity query in pool manager, deprecate the one in gamm
+
+## Dependencies
+  * [#4783](https://github.com/osmosis-labs/osmosis/pull/4783) Update wasmd to 0.31 
+  * [#5404](https://github.com/osmosis-labs/osmosis/pull/5404) Cosmwasm Cherry security patch 
+  * [#5320](https://github.com/osmosis-labs/osmosis/pull/5320) minor: huckleberry ibc patch
+
 ### Misc Improvements
  
-  * [#5356](https://github.com/osmosis-labs/osmosis/pull/5356) Fix wrong restHandler for ReplaceMigrationRecordsProposal
-  * [#5020](https://github.com/osmosis-labs/osmosis/pull/5020) Add gas config to the client.toml
-  * [#5105](https://github.com/osmosis-labs/osmosis/pull/5105) Lint stableswap in the same manner as all of Osmosis
-  * [#5065](https://github.com/osmosis-labs/osmosis/pull/5065) Use cosmossdk.io/errors
-  * [#4549](https://github.com/osmosis-labs/osmosis/pull/4549) Add single pool price estimate queries
-  * [#4767](https://github.com/osmosis-labs/osmosis/pull/4767) Disable create pool with non-zero exit fee
-  * [#4847](https://github.com/osmosis-labs/osmosis/pull/4847) Update `make build` command to build only `osmosisd` binary
-  * [#4891](https://github.com/osmosis-labs/osmosis/pull/4891) Enable CORS by default on localosmosis
-  * [#4892](https://github.com/osmosis-labs/osmosis/pull/4847) Update Golang to 1.20
-  * [#4893](https://github.com/osmosis-labs/osmosis/pull/4893) Update alpine docker base image to `alpine:3.17`
-  * [#4907](https://github.com/osmosis-labs/osmosis/pull/4847) Add migrate-position cli
-  * [#4912](https://github.com/osmosis-labs/osmosis/pull/4912) Export Position_lock_id mappings to GenesisState
-  * [#4974](https://github.com/osmosis-labs/osmosis/pull/4974) Add lock id to `MsgSuperfluidUndelegateAndUnbondLockResponse`
-  * [#2741](https://github.com/osmosis-labs/osmosis/pull/2741) Prevent updating the twap record if `ctx.BlockTime <= record.Time` or `ctx.BlockHeight <= record.Height`. Exception, can update the record created when creating the pool in the same block.
-  * [#5165](https://github.com/osmosis-labs/osmosis/pull/5165) Improve error message when fully exiting from a pool.
-  * [#5187](https://github.com/osmosis-labs/osmosis/pull/5187) Expand `IncentivizedPools` query to include internally incentivized CL pools.
-  * [#5239](https://github.com/osmosis-labs/osmosis/pull/5239) Implement `GetTotalPoolShares` public keeper function for GAMM.
-  * [#5261](https://github.com/osmosis-labs/osmosis/pull/5261) Allows `UpdateFeeTokenProposal` to take in multiple fee tokens instead of just one.
-  * [#5265](https://github.com/osmosis-labs/osmosis/pull/5265) Ensure a lock cannot point to multiple synthetic locks. Deprecates `SyntheticLockupsByLockupID` in favor of `SyntheticLockupByLockupID`.
-  * [#4950] (https://github.com/osmosis-labs/osmosis/pull/4950) Add in/out tokens to Concentrated Liquidity's AfterConcentratedPoolSwap hook
-  * [#4783](https://github.com/osmosis-labs/osmosis/pull/4783) Update wasmd to 0.31.0
-  * [#4629](https://github.com/osmosis-labs/osmosis/pull/4629) Add amino proto annotations
-  * [#4830](https://github.com/osmosis-labs/osmosis/pull/4830) Add gas cost when we AddToGaugeRewards, linearly increase with coins to add
-  * [#5000](https://github.com/osmosis-labs/osmosis/pull/5000) osmomath.Power panics for base < 1 to temporarily restrict broken logic for such base.
+* [#5356](https://github.com/osmosis-labs/osmosis/pull/5356) Fix wrong restHandler for ReplaceMigrationRecordsProposal
+* [#5020](https://github.com/osmosis-labs/osmosis/pull/5020) Add gas config to the client.toml
+* [#5105](https://github.com/osmosis-labs/osmosis/pull/5105) Lint stableswap in the same manner as all of Osmosis
+* [#5065](https://github.com/osmosis-labs/osmosis/pull/5065) Use cosmossdk.io/errors
+* [#4549](https://github.com/osmosis-labs/osmosis/pull/4549) Add single pool price estimate queries
+* [#4767](https://github.com/osmosis-labs/osmosis/pull/4767) Disable create pool with non-zero exit fee
+* [#4847](https://github.com/osmosis-labs/osmosis/pull/4847) Update `make build` command to build only `osmosisd` binary
+* [#4891](https://github.com/osmosis-labs/osmosis/pull/4891) Enable CORS by default on localosmosis
+* [#4892](https://github.com/osmosis-labs/osmosis/pull/4847) Update Golang to 1.20
+* [#4893](https://github.com/osmosis-labs/osmosis/pull/4893) Update alpine docker base image to `alpine:3.17`
+* [#4907](https://github.com/osmosis-labs/osmosis/pull/4847) Add migrate-position cli
+* [#4912](https://github.com/osmosis-labs/osmosis/pull/4912) Export Position_lock_id mappings to GenesisState
+* [#4974](https://github.com/osmosis-labs/osmosis/pull/4974) Add lock id to `MsgSuperfluidUndelegateAndUnbondLockResponse`
+* [#2741](https://github.com/osmosis-labs/osmosis/pull/2741) Prevent updating the twap record if `ctx.BlockTime <= record.Time` or `ctx.BlockHeight <= record.Height`. Exception, can update the record created when creating the pool in the same block.
+* [#5165](https://github.com/osmosis-labs/osmosis/pull/5165) Improve error message when fully exiting from a pool.
+* [#5187](https://github.com/osmosis-labs/osmosis/pull/5187) Expand `IncentivizedPools` query to include internally incentivized CL pools.
+* [#5239](https://github.com/osmosis-labs/osmosis/pull/5239) Implement `GetTotalPoolShares` public keeper function for GAMM.
+* [#5261](https://github.com/osmosis-labs/osmosis/pull/5261) Allows `UpdateFeeTokenProposal` to take in multiple fee tokens instead of just one.
+* [#5265](https://github.com/osmosis-labs/osmosis/pull/5265) Ensure a lock cannot point to multiple synthetic locks. Deprecates `SyntheticLockupsByLockupID` in favor of `SyntheticLockupByLockupID`.
+* [#4950] (https://github.com/osmosis-labs/osmosis/pull/4950) Add in/out tokens to Concentrated Liquidity's AfterConcentratedPoolSwap hook
+* [#4783](https://github.com/osmosis-labs/osmosis/pull/4783) Update wasmd to 0.31.0
+* [#4629](https://github.com/osmosis-labs/osmosis/pull/4629) Add amino proto annotations
+* [#4830](https://github.com/osmosis-labs/osmosis/pull/4830) Add gas cost when we AddToGaugeRewards, linearly increase with coins to add
+* [#5000](https://github.com/osmosis-labs/osmosis/pull/5000) osmomath.Power panics for base < 1 to temporarily restrict broken logic for such base.
 
 
-### API breaks
-
-* [#4336](https://github.com/osmosis-labs/osmosis/pull/4336) Move epochs module into its own go.mod
-* [#4658](https://github.com/osmosis-labs/osmosis/pull/4658) Deprecate x/gamm Pool query. The new one is located in x/poolmanager.
-* [#4682](https://github.com/osmosis-labs/osmosis/pull/4682) Deprecate x/gamm SpotPrice v2 query. The new one is located in x/poolmanager.
-* [#4801](https://github.com/osmosis-labs/osmosis/pull/4801) remove GetTotalShares, GetTotalLiquidity and GetExitFee from PoolI. Define all on CFMMPoolI, define GetTotalLiquidity on PoolModuleI only.
-* [#4868](https://github.com/osmosis-labs/osmosis/pull/4868) Remove wasmEnabledProposals []wasm.ProposalType from NewOsmosisApp
-* [#4983](https://github.com/osmosis-labs/osmosis/pull/4983) Consume a gas when creating a new token using tokenfactory as a spam deterrence mechanism.
-* [#4951](https://github.com/osmosis-labs/osmosis/pull/4951) Implement pool liquidity query in pool manager, deprecate the one in gamm
-* [#5138](https://github.com/osmosis-labs/osmosis/pull/5138) Rename swap fee to spread factor. Broke PoolI interface. Did not break CLI, message, pool models, queries or events.
 
 ## v15.1.2
 
