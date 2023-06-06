@@ -178,6 +178,11 @@ func (k Keeper) AfterPoolCreatedWithCoins(ctx sdk.Context, poolId uint64) {
 
 	// Pool must be active and the number of denoms must be 2
 	if pool.IsActive(ctx) && len(denoms) == 2 {
+		// Check if either of the denoms are base denoms (denoms in which we store highest liquidity
+		// pools for to create backrun routes). If so, we call CompareAndStorePool which will check
+		// if a pool already exists for the base denom pair, and if not, stores the new pool.
+		// If a pool does already exist for the base denom pair, it will compare the liquidity
+		// of the new pool with the stored pool, and store the new pool if it has more liquidity.
 		if _, ok := baseDenomMap[denoms[0]]; ok {
 			k.CompareAndStorePool(ctx, poolId, denoms[0], denoms[1])
 		}
