@@ -41,16 +41,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## v16.0.0
-This release containts the following new modules and updates:
-- Concentrated Liquidity module (x/concentrated-liquidity). Concentrated liquidity is a gamechanging new pool model that will bring unprecedented capital efficiency to Osmosis. The initial version of our design is heavily influenced by Uniswap V3, although our implementation has a number of important differences.
-- Implement Cosmwasmpool module (x/cosmwasmpool). The CosmWasm Pool Module is an extension for the Osmosis pools, aiming to create a custom module that allows users to create and manage liquidity pools backed by CosmWasm smart contracts. 
-- ProtoRev changes 
-  - Integrate with Concentrated Liquidity Pools. 
-  - Changes dev account payment from once per week to after every trade.
-  - Trigger backruns, joinPool and exitPool using hooks.
-- Dependency Updates 
-  - bump wasmvm to v1.2 and add cosmwasm_1_2 capability. (Note: if E2E is throwing error, remove the wasm cache during the upgrade)
-  - update async ICQ version.
+Osmosis Labs is excited to announce the release of v16.0.0, a major upgrade that includes a number of new features and improvements like introduction of new modules, updates existing APIs, and dependency updates. This upgrade aims to enhance capital efficiency by introducing SuperCharged Liquidity, introduce custom liquidity pools backed by CosmWasm smart contracts, and improve overall functionality.
+
+New Modules and Features:
+
+SuperCharged Liquidity Module (x/concentrated-liquidity):
+- Introduces a game-changing pool model that enhances captical efficiency in Osmosis.
+
+CosmWasm Pool Module (x/cosmwasmpool):
+- Enables the creation and management of liquidity pools backed by CosmWasm smart contracts.
+
+ProtoRev Changes (x/protorev):
+- Modifies the payment schedule for the dev account from weekly to after every trade.
+- Triggers backruns, joinPool, and exitPool using hooks.
+
+TokenFactory before send hooks (x/tokenfactory): 
+- This enhancement allows for executing custom logic before sending tokens, providing more flexibility 
+and control over token transfers.
 
 
 ### Features
@@ -84,7 +91,6 @@ This release containts the following new modules and updates:
   * [#4983](https://github.com/osmosis-labs/osmosis/pull/4983) implement gas consume on denom creation
   * [#4830](https://github.com/osmosis-labs/osmosis/pull/4830) Scale gas costs by denoms in gauge
   * [#4336](https://github.com/osmosis-labs/osmosis/pull/4336) feat: make epochs standalone
-  * [#4320](https://github.com/osmosis-labs/osmosis/pull/4320) feat: crosschain registry contract 
   * [#4801](https://github.com/osmosis-labs/osmosis/pull/4801) refactor: remove GetTotalShares, GetTotalLiquidity and GetExitFee from PoolI
   * [#4951](https://github.com/osmosis-labs/osmosis/pull/4951) feat: implement pool liquidity query in pool manager, deprecate the one in gamm
 
