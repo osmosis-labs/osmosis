@@ -115,7 +115,7 @@ func (k Keeper) isPositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId u
 	return isOwner, nil
 }
 
-// GetAllPositionsForPoolId gets all the position for a specific store prefix.
+// GetAllPositionsForPoolId gets all the position for a specific poolId and store prefix.
 func (k Keeper) GetAllPositionIdsForPoolId(ctx sdk.Context, prefix []byte, poolId uint64) ([]uint64, error) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, prefix)
