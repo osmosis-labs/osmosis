@@ -17,10 +17,11 @@ import (
 )
 
 const (
-	DefaultTransmuterDenomA = "axlusdc"
-	DefaultTransmuterDenomB = "gravusdc"
-	TransmuterContractName  = "transmuter"
-	DefaultCodeId           = 1
+	DefaultTransmuterDenomA       = "axlusdc"
+	DefaultTransmuterDenomB       = "gravusdc"
+	TransmuterContractName        = "transmuter"
+	TransmuterMigrateContractName = "transmuter_migrate"
+	DefaultCodeId                 = 1
 )
 
 // PrepareCosmWasmPool sets up a cosmwasm pool with the default parameters.

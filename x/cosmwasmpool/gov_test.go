@@ -1,6 +1,7 @@
 package cosmwasmpool_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -130,6 +131,7 @@ func (s *CWPoolGovSuite) TestUploadCodeIdAndWhitelist() {
 // Test vectors considered:
 // 1. Migration to a pre-uploaded code id works as expected and whitelist updated.
 // 2. Migration to a new byte code works as expected and whitelist updated.
+// 3. Migration fails because the contract to migrate has no migrate entrypoint.
 // 3. Migration fails because the code id is not whitelisted.
 // 3. Migration fails because one of the given pool ids does not exist
 // 4. Migration fails because more than the limit of allowed pools is attempted to migrate.
@@ -137,7 +139,9 @@ func (s *CWPoolGovSuite) TestUploadCodeIdAndWhitelist() {
 // 6. For success cases, tests that relevant event is emitted.
 func (s *CWPoolGovSuite) TestMigrateCosmwasmPools() {
 	// Get valid transmuter code.
-	validTransmuterCode := s.GetContractCode(apptesting.TransmuterContractName)
+	validTransmuterCodeNoMigrateEntrypoint := s.GetContractCode(apptesting.TransmuterContractName)
+	// Get valid transmuter code with migration entrypoint.
+	validTransmuterMigrateCode := s.GetContractCode(apptesting.TransmuterMigrateContractName)
 
 	const (
 		preUploadCodeIdPlaceholder  uint64 = 1000
@@ -145,9 +149,14 @@ func (s *CWPoolGovSuite) TestMigrateCosmwasmPools() {
 		defaultPoolCountToPreCreate uint64 = 3
 	)
 
+	type MigrateMsg struct{}
+	migrateMsg := MigrateMsg{}
+
+	emptyMigrateMsg, err := json.Marshal(migrateMsg)
+	s.Require().NoError(err)
+
 	var (
 		emptyByteCode           []byte = []byte{}
-		emptyMigrateMsg         []byte = []byte{}
 		defaultPoolIdsToMigrate        = []uint64{1, 2, 3}
 	)
 
@@ -162,12 +171,6 @@ func (s *CWPoolGovSuite) TestMigrateCosmwasmPools() {
 		shouldWhitelistCWPoolModuleAccountUpload bool
 		poolIdLimitOverwrite                     uint64
 
-		// TODO: REMOVE THIS
-		// Temporarily skipping this test case as
-		// transmuter does not have migrate entrypoint exposed.
-		// Tracked in: https://github.com/osmosis-labs/osmosis/issues/5329
-		shouldTempSkipCase bool
-
 		expectedErr bool
 	}{
 		{
@@ -178,10 +181,6 @@ func (s *CWPoolGovSuite) TestMigrateCosmwasmPools() {
 			byteCode:             emptyByteCode,
 			migrateMsg:           emptyMigrateMsg,
 
-			// TODO: unskip once migration entrypoint is exposed.
-			// https://github.com/osmosis-labs/osmosis/issues/5329
-			shouldTempSkipCase: true,
-
 			expectedCodeId: validCodeId,
 		},
 		{
@@ -189,22 +188,29 @@ func (s *CWPoolGovSuite) TestMigrateCosmwasmPools() {
 			poolCountToPreCreate:                     defaultPoolCountToPreCreate,
 			poolIdsToMigrate:                         defaultPoolIdsToMigrate,
 			newCodeId:                                zeroCodeId,
-			byteCode:                                 validTransmuterCode,
+			byteCode:                                 validTransmuterMigrateCode,
 			migrateMsg:                               emptyMigrateMsg,
 			shouldWhitelistCWPoolModuleAccountUpload: true,
 
-			// TODO: unskip once migration entrypoint is exposed.
-			// https://github.com/osmosis-labs/osmosis/issues/5329
-			shouldTempSkipCase: true,
-
 			expectedCodeId: validCodeId,
+		},
+		{
+			name:                                     "error: contract without migration entrypoint",
+			poolCountToPreCreate:                     defaultPoolCountToPreCreate,
+			poolIdsToMigrate:                         defaultPoolIdsToMigrate,
+			newCodeId:                                zeroCodeId,
+			byteCode:                                 validTransmuterCodeNoMigrateEntrypoint,
+			migrateMsg:                               emptyMigrateMsg,
+			shouldWhitelistCWPoolModuleAccountUpload: true,
+
+			expectedErr: true,
 		},
 		{
 			name:                 "error: cw pool module account does not have upload access",
 			poolCountToPreCreate: defaultPoolCountToPreCreate,
 			poolIdsToMigrate:     defaultPoolIdsToMigrate,
 			newCodeId:            zeroCodeId,
-			byteCode:             validTransmuterCode,
+			byteCode:             validTransmuterCodeNoMigrateEntrypoint,
 			migrateMsg:           emptyMigrateMsg,
 
 			expectedErr: true,
@@ -249,12 +255,6 @@ func (s *CWPoolGovSuite) TestMigrateCosmwasmPools() {
 
 			cosmwasmPoolKeeper := s.App.CosmwasmPoolKeeper
 
-			// TODO: unskip once migration entrypoint is exposed.
-			// https://github.com/osmosis-labs/osmosis/issues/5329
-			if tc.shouldTempSkipCase {
-				s.T().Skip()
-			}
-
 			// Reset the event manager for each test case.
 			s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
 
@@ -264,16 +264,13 @@ func (s *CWPoolGovSuite) TestMigrateCosmwasmPools() {
 			}
 
 			// Change upload permissions to desired for cw pool module
-			wasmKeeperParams := s.App.WasmKeeper.GetParams(s.Ctx)
-			if tc.shouldWhitelistCWPoolModuleAccountUpload {
-				cwPoolModuleAddress := s.App.AccountKeeper.GetModuleAddress(types.ModuleName)
-				addressesAllowedCodeUpload := wasmKeeperParams.CodeUploadAccess.Addresses
-				wasmKeeperParams.CodeUploadAccess.Permission = wasmtypes.AccessTypeAnyOfAddresses
-				wasmKeeperParams.CodeUploadAccess.Addresses = append(addressesAllowedCodeUpload, cwPoolModuleAddress.String())
-			} else {
+			// Note that by default the comswasm pool module account is whitelisted
+			// in PrepareCosmWasmPool
+			if !tc.shouldWhitelistCWPoolModuleAccountUpload {
+				wasmKeeperParams := s.App.WasmKeeper.GetParams(s.Ctx)
 				wasmKeeperParams.CodeUploadAccess.Permission = wasmtypes.AccessTypeNobody
+				s.App.WasmKeeper.SetParams(s.Ctx, wasmKeeperParams)
 			}
-			s.App.WasmKeeper.SetParams(s.Ctx, wasmKeeperParams)
 
 			// Overwrite pool id limit if needed.
 			if tc.poolIdLimitOverwrite != 0 {
@@ -285,7 +282,7 @@ func (s *CWPoolGovSuite) TestMigrateCosmwasmPools() {
 			// If the code id is a placeholder, then upload the transmuter code
 			// and set tc.newCodeId to the resulting code id.
 			if tc.newCodeId == preUploadCodeIdPlaceholder {
-				tc.newCodeId = s.StoreCosmWasmPoolContractCode(apptesting.TransmuterContractName)
+				tc.newCodeId = s.StoreCosmWasmPoolContractCode(apptesting.TransmuterMigrateContractName)
 			}
 
 			// System under test.
@@ -299,7 +296,7 @@ func (s *CWPoolGovSuite) TestMigrateCosmwasmPools() {
 			s.Require().NoError(err)
 
 			// Check that the code id is whitelisted.
-			s.Require().True(cosmwasmPoolKeeper.IsWhitelisted(s.Ctx, tc.newCodeId))
+			s.Require().True(cosmwasmPoolKeeper.IsWhitelisted(s.Ctx, tc.expectedCodeId))
 
 			// Validate that the event is emitted.
 			s.AssertEventEmitted(s.Ctx, types.TypeEvtMigratedCosmwasmPoolCode, 1)
