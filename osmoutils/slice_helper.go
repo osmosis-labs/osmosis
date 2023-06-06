@@ -156,7 +156,7 @@ func iThSmallest[T constraints.Ordered](s []T, i int, less LessFunc[T]) T {
 		// if the last slice ends up being smaller than 5 elements.
 		sliceOfFive := s[i:Min(i+5, originalLength)]
 
-		// sort the subslice of five. Note, that this is sort
+		// sort the subslice of five. Note, that this sort
 		// is O(1) since only 5 elements.
 		sort.Slice(sliceOfFive, func(i, j int) bool {
 			return less(sliceOfFive[i], sliceOfFive[j])
