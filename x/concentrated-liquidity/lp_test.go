@@ -585,11 +585,11 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			communityPoolBalanceBefore := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
 
 			// Set expected incentives and fund pool with appropriate amount
-			expectedIncentivesClaimed = expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, tc.timeElapsed, defaultMultiplier)
+			expectedIncentivesClaimed = sdk.NormalizeCoins(expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, tc.timeElapsed, defaultMultiplier))
 
 			// Fund full amount since forfeited incentives for the last position are sent to the community pool.
 			largestSupportedUptime := s.clk.GetLargestSupportedUptimeDuration(s.Ctx)
-			expectedFullIncentivesFromAllUptimes := expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, largestSupportedUptime, defaultMultiplier)
+			expectedFullIncentivesFromAllUptimes := sdk.NormalizeCoins(expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, largestSupportedUptime, defaultMultiplier))
 			s.FundAcc(pool.GetIncentivesAddress(), expectedFullIncentivesFromAllUptimes)
 
 			// Note the pool and owner balances before withdrawal of the position.
