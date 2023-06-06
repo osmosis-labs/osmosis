@@ -105,13 +105,23 @@ func (k Keeper) StoreSwap(ctx sdk.Context, poolId uint64, tokenIn, tokenOut stri
 }
 
 // GetComparablePoolLiquidity gets the comparable liquidity of a pool by multiplying the amounts of the pool coins.
-func (k Keeper) GetComparablePoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Int, error) {
+func (k Keeper) GetComparablePoolLiquidity(ctx sdk.Context, poolId uint64) (comparableLiquidity sdk.Int, err error) {
 	coins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	return coins[0].Amount.Mul(coins[1].Amount), nil
+	// Recover from overflow panic
+	defer func() {
+		if r := recover(); r != nil {
+			comparableLiquidity = sdk.Int{}
+			err = sdk.ErrIntOverflowAbci
+		}
+	}()
+
+	comparableLiquidity = coins[0].Amount.Mul(coins[1].Amount)
+
+	return comparableLiquidity, nil
 }
 
 // StoreJoinExitPoolSwaps stores the swaps associated with GAMM join/exit pool messages in the store, depending on if it is a join or exit.
@@ -183,12 +193,6 @@ func (k Keeper) CompareAndStorePool(ctx sdk.Context, poolId uint64, baseDenom, o
 		k.SetPoolForDenomPair(ctx, baseDenom, otherDenom, poolId)
 		return
 	}
-
-	defer func() {
-		if r := recover(); r != nil {
-			ctx.Logger().Error("Protorev error recovering from panic in AfterCFMMPoolCreated hook, likely an overflow error", r)
-		}
-	}()
 
 	// Get comparable liquidity for the new pool
 	newPoolLiquidity, err := k.GetComparablePoolLiquidity(ctx, poolId)
