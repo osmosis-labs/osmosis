@@ -3343,7 +3343,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 				clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, sdk.ZeroDec())
 
 				// Set up an existing full range position. Note that the second return value is the position ID, not an error.
-				initialLiquidity, _ := s.SetupPosition(clPool.GetId(), s.TestAccs[0], tc.existingConcentratedLiquidity, DefaultMinTick, DefaultMaxTick)
+				initialLiquidity, _ := s.SetupPosition(clPool.GetId(), s.TestAccs[0], tc.existingConcentratedLiquidity, DefaultMinTick, DefaultMaxTick, false)
 
 				// If a canonical balancer pool exists, we create it and link it with the CL pool
 				balancerPoolId := s.setupBalancerPoolWithFractionLocked(tc.balancerPoolAssets, tc.portionOfSharesBonded)
@@ -3476,7 +3476,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRangeWithNonExistentPools
 				clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], existingConcentratedAssets[0].Denom, existingConcentratedAssets[1].Denom, DefaultTickSpacing, sdk.ZeroDec())
 
 				// Set up an existing full range position. Note that the second return value is the position ID, not an error.
-				s.SetupPosition(clPool.GetId(), s.TestAccs[0], existingConcentratedAssets, DefaultMinTick, DefaultMaxTick)
+				s.SetupPosition(clPool.GetId(), s.TestAccs[0], existingConcentratedAssets, DefaultMinTick, DefaultMaxTick, false)
 
 				// If a canonical balancer pool exists, we create it and link it with the CL pool
 				balancerPoolId := s.setupBalancerPoolWithFractionLocked(tc.balancerPoolAssets, sdk.OneDec())
@@ -3639,7 +3639,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 
 				// Set up an existing full range position.
 				// Note that the second return value here is the position ID, not an error.
-				initialLiquidity, _ := s.SetupPosition(clPoolId, s.TestAccs[0], tc.existingConcentratedLiquidity, DefaultMinTick, DefaultMaxTick)
+				initialLiquidity, _ := s.SetupPosition(clPoolId, s.TestAccs[0], tc.existingConcentratedLiquidity, DefaultMinTick, DefaultMaxTick, false)
 
 				// Create and bond shares for balancer pool to be linked with CL pool in happy path cases
 				balancerPoolId := s.setupBalancerPoolWithFractionLocked(tc.balancerPoolAssets, sdk.OneDec())

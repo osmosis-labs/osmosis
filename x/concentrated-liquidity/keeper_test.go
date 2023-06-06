@@ -2,6 +2,7 @@ package concentrated_liquidity_test
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -84,15 +85,21 @@ func (s *KeeperTestSuite) SetupTest() {
 }
 
 func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {
-	s.SetupPosition(poolId, s.TestAccs[0], DefaultCoins, DefaultLowerTick, DefaultUpperTick)
+	s.SetupPosition(poolId, s.TestAccs[0], DefaultCoins, DefaultLowerTick, DefaultUpperTick, false)
 }
 
-func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, providedCoins sdk.Coins, lowerTick, upperTick int64) (sdk.Dec, uint64) {
-	s.FundAcc(owner, providedCoins)
-	positionId, _, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, providedCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, providedCoins sdk.Coins, lowerTick, upperTick int64, addRoundingError bool) (sdk.Dec, uint64) {
+	roundingErrorCoins := sdk.NewCoins()
+	if addRoundingError {
+		roundingErrorCoins = sdk.NewCoins(sdk.NewCoin(ETH, roundingError), sdk.NewCoin(USDC, roundingError))
+	}
+
+	s.FundAcc(owner, providedCoins.Add(roundingErrorCoins...))
+	positionId, actual0, actual1, liquidityDelta, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, providedCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
 	s.Require().NoError(err)
 	liquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, positionId)
 	s.Require().NoError(err)
+	fmt.Println("actual0, actual1, liquidityDelta, liquidity: ", actual0, actual1, liquidityDelta, liquidity)
 	return liquidity, positionId
 }
 
@@ -118,22 +125,22 @@ func (s *KeeperTestSuite) SetupDefaultPositions(poolId uint64) {
 }
 
 func (s *KeeperTestSuite) SetupDefaultPositionAcc(poolId uint64, owner sdk.AccAddress) uint64 {
-	_, positionId := s.SetupPosition(poolId, owner, DefaultCoins, DefaultLowerTick, DefaultUpperTick)
+	_, positionId := s.SetupPosition(poolId, owner, DefaultCoins, DefaultLowerTick, DefaultUpperTick, false)
 	return positionId
 }
 
 func (s *KeeperTestSuite) SetupFullRangePositionAcc(poolId uint64, owner sdk.AccAddress) uint64 {
-	_, positionId := s.SetupPosition(poolId, owner, DefaultCoins, DefaultMinTick, DefaultMaxTick)
+	_, positionId := s.SetupPosition(poolId, owner, DefaultCoins, DefaultMinTick, DefaultMaxTick, false)
 	return positionId
 }
 
 func (s *KeeperTestSuite) SetupConsecutiveRangePositionAcc(poolId uint64, owner sdk.AccAddress) uint64 {
-	_, positionId := s.SetupPosition(poolId, owner, DefaultCoins, DefaultExponentConsecutivePositionLowerTick, DefaultExponentConsecutivePositionUpperTick)
+	_, positionId := s.SetupPosition(poolId, owner, DefaultCoins, DefaultExponentConsecutivePositionLowerTick, DefaultExponentConsecutivePositionUpperTick, false)
 	return positionId
 }
 
 func (s *KeeperTestSuite) SetupOverlappingRangePositionAcc(poolId uint64, owner sdk.AccAddress) uint64 {
-	_, positionId := s.SetupPosition(poolId, owner, DefaultCoins, DefaultExponentOverlappingPositionLowerTick, DefaultExponentOverlappingPositionUpperTick)
+	_, positionId := s.SetupPosition(poolId, owner, DefaultCoins, DefaultExponentOverlappingPositionLowerTick, DefaultExponentOverlappingPositionUpperTick, false)
 	return positionId
 }
 
@@ -452,8 +459,27 @@ func (s *KeeperTestSuite) runMultipleAuthorizedUptimes(tests func()) {
 	}
 }
 
+type RangeTestParams struct {
+	baseAssets       sdk.Coins
+	baseNumPositions int
+	numSwapAddresses int
+
+	// If false, creates one address per position.
+	// Useful for testing fungification.
+	singleAddrPerRange                bool
+	swapBefore                        bool
+	swapAfter                         bool
+	swapsBetweenJoins                 bool
+	activeIncentives                  bool
+	newActiveIncentivesBetweenJoins   bool
+	newInactiveIncentivesBetweenJoins bool
+	spacedOutJoins                    bool
+	fuzzAssets                        bool
+	fuzzNumPositions                  bool
+}
+
 // runMultiplePositionRanges runs various test constructions and invariants on the given position ranges.
-func (s *KeeperTestSuite) runMultiplePositionRanges(tests func([][]uint64)) {
+func (s *KeeperTestSuite) runMultiplePositionRanges(ranges [][]int64) {
 	// Pool setup parameters to vary:
 	// 1. Spread factor
 	// 2. Incentive records (and all subfields)
@@ -485,4 +511,181 @@ func (s *KeeperTestSuite) runMultiplePositionRanges(tests func([][]uint64)) {
 	// - ExecuteAndValidateSuccessfulIncentiveClaim
 	// - AssertPositionsDoNotExist
 	// - GetTotalAccruedRewardsByAccumulator
+
+	fmt.Println("woot")
+
+	// Preset seed to ensure deterministic test runs.
+	rand.Seed(2)
+
+	baseAssets := sdk.NewCoins(
+		sdk.NewCoin(ETH, sdk.NewInt(5000000000)),
+		sdk.NewCoin(USDC, sdk.NewInt(5000000000)),
+	)
+
+	defaultParams := RangeTestParams{
+		baseNumPositions: 5,
+		baseAssets:       baseAssets,
+		numSwapAddresses: 0,
+		fuzzNumPositions: true,
+		fuzzAssets:       true,
+		// singleAddrPerRange: true,
+	}
+
+	// TODO: make this pool custom with spread factor (fuzzed?)
+	pool := s.PrepareConcentratedPool()
+
+	fmt.Println("Current tick: ", pool.GetCurrentTick())
+
+	s.SetupRanges(pool, ranges, defaultParams)
+}
+
+// SetupRanges takes in a set of tick ranges
+func (s *KeeperTestSuite) SetupRanges(pool types.ConcentratedPoolExtension, ranges [][]int64, testParams RangeTestParams) {
+
+	// binaryFlipOne := rand.Int() % 2
+	// binaryFlipTwo := rand.Int() % 2
+
+	// --- Parse test params ---
+
+	// Prepare a slice tracking how many positions to create on each range.
+	numPositionSlice, totalPositions := s.prepareNumPositionSlice(ranges, testParams.baseNumPositions, testParams.fuzzNumPositions)
+
+	// Prepare a slice tracking how many assets each position should have (tracked as Coins type).
+	assetSlice := s.prepareAssetSlice(ranges, totalPositions, testParams.baseAssets, testParams.fuzzAssets)
+
+	fmt.Println("assetSlice: ", assetSlice)
+	// Prepare a slice tracking how much time should elapse after each position creation.
+	// TODO: support time elapsing between joins (occasionally no time elapsed)
+
+	// --- Set up addresses ---
+
+	// -- Set up position accounts --
+	var positionAddresses []sdk.AccAddress
+	if testParams.singleAddrPerRange {
+		positionAddresses = apptesting.CreateRandomAccounts(len(ranges))
+	} else {
+		positionAddresses = apptesting.CreateRandomAccounts(totalPositions)
+	}
+
+	// -- Set up swap accounts --
+	// TODO: support swaps. Swap amounts should be fuzzed & based on total pool liquidity (e.g. 3-5% of total pool liquidity in the chosen direction)
+	// Swap direction & inGivenOut/outGivenIn should be based on separate binary flips
+
+	// Assert that there are a positive number of swap addresses if swaps are enabled
+	s.Require().False(testParams.numSwapAddresses <= 0 && (testParams.swapBefore || testParams.swapAfter || testParams.swapsBetweenJoins), "Must have positive number of swap addresses if swaps are enabled")
+	// Generate swap accounts
+	swapAddresses := apptesting.CreateRandomAccounts(testParams.numSwapAddresses)
+
+	// --- Incentive setup ---
+	// TODO: support incentives
+
+	// Set up incentive records.
+
+	// --- Position setup ---
+
+	// Loop over ranges and create positions, setting up behavior as determined by the slices set up above.
+	// TODO: add better comments explaining this behavior
+	lastVisitedBlockIndex := 0
+	totalLiquidity := sdk.ZeroDec()
+	allPositionIds := []uint64{}
+	for i := range ranges {
+		curBlock := 0
+		startNumPositions := len(allPositionIds)
+		for j := lastVisitedBlockIndex; j < lastVisitedBlockIndex+numPositionSlice[i]; j++ {
+			var curAddr sdk.AccAddress
+			if testParams.singleAddrPerRange {
+				curAddr = positionAddresses[i]
+			} else {
+				curAddr = positionAddresses[j]
+			}
+
+			curAssets := assetSlice[j]
+			// Setup position
+			curLiquidity, curPositionId := s.SetupPosition(pool.GetId(), curAddr, curAssets, ranges[i][0], ranges[i][1], true)
+			// curTimeElapsed := curTimeElapsedMap[j]
+
+			pool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+			fmt.Println("Current tick: ", pool.GetCurrentTick())
+			// Track new position values in global variables
+			totalLiquidity = totalLiquidity.Add(curLiquidity)
+			allPositionIds = append(allPositionIds, curPositionId)
+			curBlock++
+		}
+		endNumPositions := len(allPositionIds)
+
+		// Ensure the correct number of positions were set up in current range
+		s.Require().Equal(numPositionSlice[i], endNumPositions-startNumPositions, "Incorrect number of positions set up in range %d", i)
+
+		lastVisitedBlockIndex += curBlock
+	}
+
+	// Ensure that the correct number of positions were set up globally
+	s.Require().Equal(totalPositions, len(allPositionIds))
+
+	// Get pool assets
+	poolAssets := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
+	fmt.Println("poolAssets: ", poolAssets)
+	pool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+	fmt.Println("Current tick: ", pool.GetCurrentTick())
+
+	fmt.Println("Last visited index: ", lastVisitedBlockIndex)
+
+	fmt.Println("Values: \n", numPositionSlice, "Length: ", len(numPositionSlice), "\n", positionAddresses, "\n", swapAddresses)
+}
+
+// numPositionSlice prepares a slice tracking the number of positions to create on each range, fuzzing the number at each step if applicable.
+// Returns a slice representing the number of positions for each range index.
+func (s *KeeperTestSuite) prepareNumPositionSlice(ranges [][]int64, baseNumPositions int, fuzzNumPositions bool) ([]int, int) {
+	// Create slice representing number of positions for each range index.
+	// Default case is `numPositions` on each range unless fuzzing is turned on.
+	numPositionsPerRange := make([]int, len(ranges))
+	totalPositions := 0
+
+	// Loop through each range and set number of positions, fuzzing if applicable.
+	for i := range ranges {
+		numPositionsPerRange[i] = baseNumPositions
+
+		// If applicable, fuzz the number of positions on current range
+		if fuzzNumPositions {
+			// Fuzzed amount should be between 1 and (2 * numPositions) + 1 (up to 100% fuzz both ways from numPositions)
+			numPositionsPerRange[i] = (rand.Int() % (2 * baseNumPositions)) + 1
+		}
+
+		// Track total positions
+		totalPositions += numPositionsPerRange[i]
+	}
+
+	return numPositionsPerRange, totalPositions
+}
+
+// prepareAssetSlice prepares a slice tracking the assets for each position, fuzzing the amount at each step if applicable.
+func (s *KeeperTestSuite) prepareAssetSlice(ranges [][]int64, totalPositions int, baseAssets sdk.Coins, fuzzAssets bool) []sdk.Coins {
+	// Create slice representing assets for each position.
+	// Default case is `baseAssets` on each range unless fuzzing is turned on.
+	assetsByPosition := make([]sdk.Coins, totalPositions)
+	totalAssets := sdk.NewCoins()
+
+	// Loop through each range and set number of positions, fuzzing if applicable.
+	for i := 0; i < totalPositions; i++ {
+		assetsByPosition[i] = baseAssets
+
+		// If applicable, fuzz the number of positions on current range
+		if fuzzAssets {
+			fuzzedAssets := make([]sdk.Coin, len(baseAssets))
+			for coinIndex, coin := range baseAssets {
+				// Fuzz +/- 100% of current amount
+				newAmount := (rand.Int63() % (2 * coin.Amount.Int64())) + 1
+				fuzzedAssets[coinIndex] = sdk.NewCoin(coin.Denom, sdk.NewInt(newAmount))
+			}
+
+			assetsByPosition[i] = fuzzedAssets
+		}
+
+		// Track total positions
+		totalAssets = totalAssets.Add(assetsByPosition[i]...)
+	}
+
+	return assetsByPosition
 }
