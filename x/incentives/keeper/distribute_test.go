@@ -892,7 +892,7 @@ func (s *KeeperTestSuite) TestDistributeConcentratedLiquidity() {
 // at the end of each epoch
 //
 // we expect these events to occour at the end of each epoch.
-// - mint and distribute coins according to the configuration set via parameters
+// - mint and distribute coins according to the configuration
 // - distribution happens proportional to the gauge weight in the record
 // - moduleAccount holds the funds and handles distribution
 //
@@ -909,8 +909,8 @@ func (s *KeeperTestSuite) TestFunctionalConcentratedLiquidityGaugeDistribute() {
 	numPools := uint64(3)
 	startTime := s.Ctx.BlockTime()
 	var expectedCoinsToDistribute sdk.Coins
-	token0ToDistribute := sdk.NewCoin("uosmo", sdk.NewInt(10_000))
-	token1ToDistribute := sdk.NewCoin("uusdc", sdk.NewInt(10_000))
+	token0ToDistribute := sdk.NewCoin("uusdc", sdk.NewInt(10_000))
+	token1ToDistribute := sdk.NewCoin("uosmo", sdk.NewInt(10_000))
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10_000_000_000)),
 		sdk.NewCoin("uusdc", sdk.NewInt(10_000_000_000)),
 		sdk.NewCoin("uatom", sdk.NewInt(10_000_000_000)),
@@ -952,12 +952,12 @@ func (s *KeeperTestSuite) TestFunctionalConcentratedLiquidityGaugeDistribute() {
 	for poolId := uint64(1); poolId <= numPools; poolId++ {
 		expectedEmissionRate := sdk.NewDecFromInt(token0ToDistribute.Amount).QuoTruncate(sdk.NewDec(int64(currentEpoch.Duration.Seconds())))
 
-		incentiveRecord_denom0, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, poolId, "uosmo", types.DefaultConcentratedUptime, moduleAddress)
+		incentiveRecord_denom0, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, poolId, token0ToDistribute.Denom, types.DefaultConcentratedUptime, moduleAddress)
 		s.Require().NoError(err)
 
 		s.CheckIncentiveRecords(poolId, token0ToDistribute.Denom, moduleAddress.String(), expectedEmissionRate, startTime, token0ToDistribute.Amount, incentiveRecord_denom0)
 
-		incentiveRecord_denom1, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, poolId, "uusdc", types.DefaultConcentratedUptime, moduleAddress)
+		incentiveRecord_denom1, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, poolId, token1ToDistribute.Denom, types.DefaultConcentratedUptime, moduleAddress)
 		s.Require().NoError(err)
 
 		s.CheckIncentiveRecords(poolId, token1ToDistribute.Denom, moduleAddress.String(), expectedEmissionRate, startTime, token0ToDistribute.Amount, incentiveRecord_denom1)
@@ -969,8 +969,6 @@ func (s *KeeperTestSuite) TestFunctionalConcentratedLiquidityGaugeDistribute() {
 
 	for idx, gauge := range gauges_afterDistribute {
 		s.Require().Equal(gauges_afterEpoch[idx].FilledEpochs+1, gauge.FilledEpochs)
-
-		//s.Require().Equal(expectedCoinsToDistribute[idx], gauge.DistributedCoins)
+		s.Require().Equal(token0ToDistribute, gauge.DistributedCoins[0])
 	}
-
 }
