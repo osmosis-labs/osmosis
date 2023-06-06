@@ -16,6 +16,39 @@ import (
 
 var _ = suite.TestingSuite(nil)
 
+func (s *KeeperTestSuite) SetupCLPoolAndGauge(numPools uint64, currEpochDuration time.Duration, coins sdk.Coins, gaugeStartTime time.Time) []types.Gauge {
+	var gauges []types.Gauge
+	// create CL Pools
+	for i := uint64(1); i <= numPools; i++ {
+		poolId := s.PrepareConcentratedPool().GetId()
+
+		// get the gaugeId corresponding to the CL pool
+		gaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, poolId, currEpochDuration)
+		s.Require().NoError(err)
+
+		// get the gauge from the gaudeId
+		gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
+		s.Require().NoError(err)
+
+		gauge.Coins = coins
+		gauge.StartTime = gaugeStartTime
+
+		gauges = append(gauges, *gauge)
+	}
+
+	return gauges
+}
+
+func (s *KeeperTestSuite) CheckIncentiveRecords(poolId uint64, denom string, moduleAddr string, emissionRate sdk.Dec, startTime time.Time, remainingAmt sdk.Int, incentiveRecord cltypes.IncentiveRecord) {
+	s.Require().Equal(poolId, incentiveRecord.PoolId)
+	s.Require().Equal(denom, incentiveRecord.IncentiveDenom)
+	s.Require().Equal(moduleAddr, incentiveRecord.IncentiveCreatorAddr)
+	s.Require().Equal(emissionRate, incentiveRecord.GetIncentiveRecordBody().EmissionRate)
+	s.Require().Equal(startTime, incentiveRecord.GetIncentiveRecordBody().StartTime)
+	s.Require().Equal(types.DefaultConcentratedUptime, incentiveRecord.MinUptime)
+	s.Require().Equal(remainingAmt, incentiveRecord.GetIncentiveRecordBody().RemainingAmount.RoundInt())
+}
+
 // TestDistribute tests that when the distribute command is executed on a provided gauge
 // that the correct amount of rewards is sent to the correct lock owners.
 func (s *KeeperTestSuite) TestDistribute() {
@@ -285,7 +318,6 @@ func (s *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 			}
 
 			var gauges []types.Gauge
-
 			// prepare the minting account
 			addr := s.TestAccs[0]
 			// mints coins so supply exists on chain
@@ -295,24 +327,9 @@ func (s *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 			err := s.App.BankKeeper.SendCoinsFromAccountToModule(s.Ctx, addr, types.ModuleName, coinsToMint)
 			s.Require().NoError(err)
 
-			var poolId uint64
 			// prepare a CL Pool that creates gauge at the end of createPool
 			if tc.poolType == poolmanagertypes.Concentrated {
-				for i := 0; i < tc.numPools; i++ {
-					poolId = s.PrepareConcentratedPool().GetId()
-
-					// get the gaugeId corresponding to the CL pool
-					gaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, poolId, currentEpoch.Duration)
-					s.Require().NoError(err)
-
-					// get the gauge from the gaudeId
-					gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
-					s.Require().NoError(err)
-
-					gauge.Coins = tc.gaugeCoins
-					gauge.StartTime = tc.gaugeStartTime
-					gauges = append(gauges, *gauge)
-				}
+				gauges = s.SetupCLPoolAndGauge(uint64(tc.numPools), currentEpoch.Duration, tc.gaugeCoins, tc.gaugeStartTime)
 			}
 
 			var addrs []sdk.AccAddress
@@ -370,13 +387,7 @@ func (s *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 							expectedEmissionRate := sdk.NewDecFromInt(coin.Amount).QuoTruncate(sdk.NewDec(int64(currentEpoch.Duration.Seconds())))
 
 							// check every parameter in incentiveRecord so that it matches what we created
-							s.Require().Equal(poolId, incentiveRecord.PoolId)
-							s.Require().Equal(defaultRewardDenom, incentiveRecord.IncentiveDenom)
-							s.Require().Equal(s.App.AccountKeeper.GetModuleAddress(types.ModuleName).String(), incentiveRecord.IncentiveCreatorAddr)
-							s.Require().Equal(expectedEmissionRate, incentiveRecord.GetIncentiveRecordBody().EmissionRate)
-							s.Require().Equal(gauge.StartTime, incentiveRecord.GetIncentiveRecordBody().StartTime)
-							s.Require().Equal(types.DefaultConcentratedUptime, incentiveRecord.MinUptime)
-							s.Require().Equal(fiveKRewardCoins.Amount, incentiveRecord.GetIncentiveRecordBody().RemainingAmount.RoundInt())
+							s.CheckIncentiveRecords(poolId, defaultRewardDenom, s.App.AccountKeeper.GetModuleAddress(types.ModuleName).String(), expectedEmissionRate, gauge.StartTime, fiveKRewardCoins.Amount, incentiveRecord)
 						}
 					}
 				}
@@ -875,4 +886,91 @@ func (s *KeeperTestSuite) TestDistributeConcentratedLiquidity() {
 			}
 		})
 	}
+}
+
+// TestFunctionalConcentratedLiquidityGaugeDistribute is a functional test that covers more complex scenarios relating to distributing incentives throught gauges
+// at the end of each epoch
+//
+// we expect these events to occour at the end of each epoch.
+// - mint and distribute coins according to the configuration set via parameters
+// - distribution happens proportional to the gauge weight in the record
+// - moduleAccount holds the funds and handles distribution
+//
+// Testing strategy:
+// 1. Initialize variables.
+// 2. Setup CL pool and gauge (gauge automatically gets created at the end of CL pool creation).
+// 3. Update the gauge by adding rewards (should happen at end of each epoch).
+// 4. get updated gauges and distribute the rewards that was added.
+// 5. Check that incentive has been correctly created and gauge has been correctly updated.
+func (s *KeeperTestSuite) TestFunctionalConcentratedLiquidityGaugeDistribute() {
+	s.SetupTest()
+
+	// 1. Initialize variables
+	numPools := uint64(3)
+	startTime := s.Ctx.BlockTime()
+	var expectedCoinsToDistribute sdk.Coins
+	token0ToDistribute := sdk.NewCoin("uosmo", sdk.NewInt(10_000))
+	token1ToDistribute := sdk.NewCoin("uusdc", sdk.NewInt(10_000))
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10_000_000_000)),
+		sdk.NewCoin("uusdc", sdk.NewInt(10_000_000_000)),
+		sdk.NewCoin("uatom", sdk.NewInt(10_000_000_000)),
+	))
+
+	// get epoch information
+	incentivesParams := s.App.IncentivesKeeper.GetParams(s.Ctx).DistrEpochIdentifier
+	currentEpoch := s.App.EpochsKeeper.GetEpochInfo(s.Ctx, incentivesParams)
+
+	// 2. Setup CL pool and gauge (gauge automatically gets created at the end of CL pool creation)
+	gauges_original := s.SetupCLPoolAndGauge(numPools, currentEpoch.Duration, sdk.NewCoins(), startTime)
+
+	// 3. update the gauge by adding rewards (should happen at end of each epoch)
+	for _, gauge := range gauges_original {
+		// adds token from a specific owner to the moduleAddress, which updated the gauge coins in the process
+		coinsToAdd := sdk.NewCoins(token0ToDistribute, token1ToDistribute)
+		err := s.App.IncentivesKeeper.AddToGaugeRewards(s.Ctx, s.TestAccs[0], coinsToAdd, gauge.Id)
+		s.Require().NoError(err)
+
+		expectedCoinsToDistribute = expectedCoinsToDistribute.Add(coinsToAdd...)
+	}
+
+	// make sure the module recieved the funds
+	moduleAddress := s.App.AccountKeeper.GetModuleAddress(types.ModuleName)
+	actualModuleCoins := s.App.BankKeeper.GetAllBalances(s.Ctx, moduleAddress)
+	s.Require().Equal(expectedCoinsToDistribute, actualModuleCoins)
+
+	// 4. get updated gauges and distribute the rewards that was added
+	gauges_afterEpoch := s.App.IncentivesKeeper.GetGauges(s.Ctx)
+	s.Require().Equal(len(gauges_original), len(gauges_afterEpoch))
+
+	// we run distribute at the end of each epoch and expect all the coins in gauge to be distributed
+	totalDistributedCoins, err := s.App.IncentivesKeeper.Distribute(s.Ctx, gauges_afterEpoch)
+	s.Require().NoError(err)
+
+	s.Require().Equal(expectedCoinsToDistribute, totalDistributedCoins)
+
+	// 5. Check that incentive has been correctly created and gauge has been correctly updated
+	for poolId := uint64(1); poolId <= numPools; poolId++ {
+		expectedEmissionRate := sdk.NewDecFromInt(token0ToDistribute.Amount).QuoTruncate(sdk.NewDec(int64(currentEpoch.Duration.Seconds())))
+
+		incentiveRecord_denom0, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, poolId, "uosmo", types.DefaultConcentratedUptime, moduleAddress)
+		s.Require().NoError(err)
+
+		s.CheckIncentiveRecords(poolId, token0ToDistribute.Denom, moduleAddress.String(), expectedEmissionRate, startTime, token0ToDistribute.Amount, incentiveRecord_denom0)
+
+		incentiveRecord_denom1, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, poolId, "uusdc", types.DefaultConcentratedUptime, moduleAddress)
+		s.Require().NoError(err)
+
+		s.CheckIncentiveRecords(poolId, token1ToDistribute.Denom, moduleAddress.String(), expectedEmissionRate, startTime, token0ToDistribute.Amount, incentiveRecord_denom1)
+	}
+
+	// check gauge post distribution (check filled epoch, check distributed coins)
+	gauges_afterDistribute := s.App.IncentivesKeeper.GetGauges(s.Ctx)
+	s.Require().Equal(len(gauges_afterDistribute), len(gauges_afterEpoch))
+
+	for idx, gauge := range gauges_afterDistribute {
+		s.Require().Equal(gauges_afterEpoch[idx].FilledEpochs+1, gauge.FilledEpochs)
+
+		//s.Require().Equal(expectedCoinsToDistribute[idx], gauge.DistributedCoins)
+	}
+
 }
