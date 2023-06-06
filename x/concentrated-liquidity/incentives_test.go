@@ -12,6 +12,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
@@ -2922,32 +2923,59 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 
 func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
 	testCases := []struct {
-		name             string
-		blockTimeElapsed time.Duration
-		expectedCoins    sdk.Coins
+		name                              string
+		blockTimeElapsed                  time.Duration
+		minUptimeIncentiveRecord          time.Duration
+		expectedCoins                     sdk.Coins
+		expectedAccumulatorValuePostClaim sdk.DecCoins
 	}{
 		{
-			name:             "Claim with same blocktime",
-			blockTimeElapsed: 0,
-			expectedCoins:    sdk.NewCoins(),
+			name:                     "Claim with same blocktime",
+			blockTimeElapsed:         0,
+			expectedCoins:            sdk.NewCoins(),
+			minUptimeIncentiveRecord: time.Nanosecond,
 		},
 		{
-			name:             "Claim after 1 minute",
-			blockTimeElapsed: time.Minute,
-			expectedCoins:    sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(59))), //  after 1min = 59.999999999901820104usdc ~ 59usdc becasue 1usdc emitted every second
-
+			name:                     "Claim after 1 minute, 1ns uptime",
+			blockTimeElapsed:         time.Minute,
+			expectedCoins:            sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(59))), //  after 1min = 59.999999999901820104usdc ~ 59usdc becasue 1usdc emitted every second
+			minUptimeIncentiveRecord: time.Nanosecond,
 		},
 		{
-			name:             "Claim after 1 hr",
-			blockTimeElapsed: time.Hour,
-			expectedCoins:    sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(3599))), //  after 1min = 59.999999999901820104usdc ~ 59usdc becasue 1usdc emitted every second
-
+			name:                     "Claim after 1 hr, 1ns uptime",
+			blockTimeElapsed:         time.Hour,
+			expectedCoins:            sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(3599))), //  after 1min = 59.999999999901820104usdc ~ 59usdc becasue 1usdc emitted every second
+			minUptimeIncentiveRecord: time.Nanosecond,
 		},
 		{
-			name:             "Claim after 3 hours",
-			blockTimeElapsed: time.Hour * 3,
-			expectedCoins:    sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(9999))), //  after 3hr > 2hr46min = 9999usdc.999999999901820104 ~ 9999usdc
-
+			name:                     "Claim after 24 hours, 1ns uptime",
+			blockTimeElapsed:         time.Hour * 24,
+			expectedCoins:            sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(9999))), //  after 24hr > 2hr46min = 9999usdc.999999999901820104 ~ 9999usdc
+			minUptimeIncentiveRecord: time.Nanosecond,
+		},
+		{
+			name:                     "Claim with same blocktime",
+			blockTimeElapsed:         0,
+			expectedCoins:            sdk.NewCoins(),
+			minUptimeIncentiveRecord: time.Hour * 24,
+		},
+		{
+			name:                     "Claim after 1 minute, 1d uptime",
+			blockTimeElapsed:         time.Minute,
+			expectedCoins:            sdk.NewCoins(),
+			minUptimeIncentiveRecord: time.Hour * 24,
+		},
+		{
+			name:                     "Claim after 1 hr, 1d uptime",
+			blockTimeElapsed:         time.Hour,
+			expectedCoins:            sdk.NewCoins(),
+			minUptimeIncentiveRecord: time.Hour * 24,
+		},
+		{
+			name:                     "Claim after 24 hours, 1d uptime",
+			blockTimeElapsed:         time.Hour * 24,
+			expectedCoins:            sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(9999))), //  after 24hr > 2hr46min = 9999usdc.999999999901820104 ~ 9999usdc
+			minUptimeIncentiveRecord: time.Hour * 24,
 		},
 	}
 
@@ -2977,17 +3005,73 @@ func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
 					EmissionRate:    sdk.NewDec(1),      // 1 per second
 					StartTime:       s.Ctx.BlockTime(),
 				},
-				MinUptime: time.Nanosecond,
+				MinUptime: tc.minUptimeIncentiveRecord,
 			}
 			err = s.clk.SetMultipleIncentiveRecords(s.Ctx, []types.IncentiveRecord{testIncentiveRecord})
 			s.Require().NoError(err)
 
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(tc.blockTimeElapsed))
 
-			collectedInc, forfeitInc, err := s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionIdOne)
+			// Update the uptime accumulators to the current block time.
+			// This is done to determine the exact amount of incentives we expect to be forfeited, if any.
+			err = s.clk.UpdateUptimeAccumulatorsToNow(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
-			s.Require().Equal(tc.expectedCoins, collectedInc)
-			s.Require().True(forfeitInc.Empty())
+
+			// Retrieve the uptime accumulators for the pool.
+			uptimeAccumulatorsPreClaim, err := s.clk.GetUptimeAccumulators(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+
+			expectedForfeitedIncentives := sdk.NewDecCoins()
+
+			// If the block time elapsed is less than the minUptimeIncentiveRecord, we expect to forfeit all incentives.
+			// Determine what the expected forfeited incentives per share is, including the dust since we reinvest the dust when we forfeit.
+			if tc.blockTimeElapsed < tc.minUptimeIncentiveRecord {
+				for _, uptimeAccum := range uptimeAccumulatorsPreClaim {
+					newPositionName := string(types.KeyPositionId(positionIdOne))
+					// Check if the accumulator contains the position.
+					hasPosition, err := uptimeAccum.HasPosition(newPositionName)
+					s.Require().NoError(err)
+
+					if hasPosition {
+						position, err := accum.GetPosition(uptimeAccum, newPositionName)
+						s.Require().NoError(err)
+
+						outstandingRewards := accum.GetTotalRewards(uptimeAccum, position)
+						collectedIncentivesForUptime, dust := outstandingRewards.TruncateDecimal()
+
+						// When we forfeit rewards, we expect to add both the collected incentives and the dust back to the accumulator.
+						for _, coin := range collectedIncentivesForUptime {
+							coinToAddToAccum := sdk.NewDecCoinFromDec(coin.Denom, coin.Amount.ToDec().Add(dust.AmountOf(coin.Denom)))
+							expectedForfeitedIncentives = expectedForfeitedIncentives.Add(coinToAddToAccum)
+						}
+					}
+				}
+			}
+
+			// System under test
+			collectedInc, forfeitedIncentives, err := s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionIdOne)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedCoins.String(), collectedInc.String())
+			s.Require().Equal(expectedForfeitedIncentives.String(), forfeitedIncentives.String())
+
+			// The difference accumulator value should have increased if we forfeited incentives by claiming.
+			uptimeAccumsDiffPostClaim := sdk.NewDecCoins()
+			if tc.blockTimeElapsed < tc.minUptimeIncentiveRecord {
+				uptimeAccumulatorsPostClaim, err := s.clk.GetUptimeAccumulators(s.Ctx, pool.GetId())
+				s.Require().NoError(err)
+				for i, acc := range uptimeAccumulatorsPostClaim {
+					totalSharesAccum, err := acc.GetTotalShares()
+					s.Require().NoError(err)
+
+					uptimeAccumsDiffPostClaim = append(uptimeAccumsDiffPostClaim, acc.GetValue().MulDec(totalSharesAccum).Sub(uptimeAccumulatorsPreClaim[i].GetValue().MulDec(totalSharesAccum))...)
+				}
+			}
+
+			// We expect the incentives to be forfeited and added to the accumulator (to include the dust)
+			for i, uptimeAccumDiffPostClaim := range uptimeAccumsDiffPostClaim {
+				osmoassert.DecApproxEq(s.T(), expectedForfeitedIncentives[i].Amount, uptimeAccumDiffPostClaim.Amount, sdk.MustNewDecFromStr("0.000000000000000001"))
+			}
+
 		})
 	}
 }
