@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
@@ -115,7 +117,7 @@ func (k Keeper) GetComparablePoolLiquidity(ctx sdk.Context, poolId uint64) (comp
 	defer func() {
 		if r := recover(); r != nil {
 			comparableLiquidity = sdk.Int{}
-			err = sdk.ErrIntOverflowAbci
+			err = errors.New("Int overflow in GetComparablePoolLiquidity")
 		}
 	}()
 
