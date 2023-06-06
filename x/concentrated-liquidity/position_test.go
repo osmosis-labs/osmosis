@@ -1441,7 +1441,6 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 	s.SetupTest()
 	s.Ctx = s.Ctx.WithBlockTime(defaultBlockTime)
-	roundingErrorCoins := sdk.NewCoins(sdk.NewCoin(ETH, roundingError), sdk.NewCoin(USDC, roundingError))
 
 	// Set incentives for pool to ensure accumulators work correctly
 	testIncentiveRecord := types.IncentiveRecord{
@@ -1472,13 +1471,6 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 	testAccs := apptesting.CreateRandomAccounts(2)
 	leftAddress := testAccs[0]
 	rightAddress := testAccs[1]
-
-	// We add dust amounts to each account since rounding makes `SetupPosition` occasionally error (one set of
-	// rounding error per position created)
-	// TODO: update `SetupPosition` to accommodate this internally
-	for _, acc := range testAccs {
-		s.FundAcc(acc, roundingErrorCoins.Add(roundingErrorCoins...))
-	}
 
 	// Set up left positions
 	leftPositionLowerTick := DefaultLowerTick - defaultPositionWidth
