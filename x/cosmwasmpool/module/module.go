@@ -97,7 +97,7 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
+	return sdk.NewRoute(types.RouterKey, nil)
 }
 
 // QuerierRoute returns the gamm module's querier route name.
