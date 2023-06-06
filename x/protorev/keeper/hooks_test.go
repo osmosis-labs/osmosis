@@ -232,6 +232,7 @@ func (s *KeeperTestSuite) TestLiquidityChanging() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			s.SetupTest()
 			tc.param.executeLiquidityProviding()
 
 			routes, err := s.App.ProtoRevKeeper.GetSwapsToBackrun(s.Ctx)
@@ -239,8 +240,6 @@ func (s *KeeperTestSuite) TestLiquidityChanging() {
 				s.Require().NoError(err)
 				s.Require().Equal(tc.param.expectedTrades, routes.Trades)
 			}
-
-			s.App.ProtoRevKeeper.DeleteSwapsToBackrun(s.Ctx)
 		})
 	}
 }

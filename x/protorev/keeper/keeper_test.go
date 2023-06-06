@@ -139,6 +139,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		sdk.NewCoin("hookCL", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("hook", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("eth", sdk.NewInt(9000000000000000000)),
+		sdk.NewCoin("gamm/pool/1", sdk.NewInt(9000000000000000000)),
 	)
 	s.fundAllAccountsWith()
 	s.Commit()
