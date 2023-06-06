@@ -533,7 +533,7 @@ func (s *KeeperTestSuite) TestGetUserPositions() {
 			expectedUserPositions := []model.Position{}
 			for _, pos := range test.setupPositions {
 				// if position does not exist this errors
-				liquidity, _ := s.SetupPosition(pos.poolId, pos.acc, pos.coins, pos.lowerTick, pos.upperTick)
+				liquidity, _ := s.SetupPosition(pos.poolId, pos.acc, pos.coins, pos.lowerTick, pos.upperTick, false)
 				if pos.acc.Equals(pos.acc) {
 					if test.poolId == 0 || test.poolId == pos.poolId {
 						expectedUserPositions = append(expectedUserPositions, model.Position{
@@ -645,7 +645,7 @@ func (s *KeeperTestSuite) TestGetUserPositionsSerialized() {
 			count := test.paginationLimit
 			for _, pos := range positions {
 				// if position does not exist this errors
-				s.SetupPosition(pos.poolId, pos.acc, pos.coins, pos.lowerTick, pos.upperTick)
+				s.SetupPosition(pos.poolId, pos.acc, pos.coins, pos.lowerTick, pos.upperTick, false)
 				if pos.acc.Equals(test.addressToQuery) && (test.poolIdToQuery == 0 || test.poolIdToQuery == pos.poolId) && count > 0 {
 					position, err := k.GetPosition(s.Ctx, pos.positionId)
 					s.Require().NoError(err)
@@ -1279,7 +1279,7 @@ func (s *KeeperTestSuite) TestHasAnyPositionForPool() {
 			s.PrepareConcentratedPool()
 
 			for _, pos := range test.setupPositions {
-				s.SetupPosition(pos.PoolId, sdk.AccAddress(pos.Address), DefaultCoins, pos.LowerTick, pos.UpperTick)
+				s.SetupPosition(pos.PoolId, sdk.AccAddress(pos.Address), DefaultCoins, pos.LowerTick, pos.UpperTick, false)
 			}
 
 			// System under test
@@ -1483,14 +1483,14 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 	// Set up left positions
 	leftPositionLowerTick := DefaultLowerTick - defaultPositionWidth
 	leftPositionUpperTick := DefaultLowerTick
-	_, leftOne := s.SetupPosition(pool.GetId(), leftAddress, DefaultCoins, leftPositionLowerTick, leftPositionUpperTick)
-	_, leftTwo := s.SetupPosition(pool.GetId(), leftAddress, DefaultCoins, leftPositionLowerTick, leftPositionUpperTick)
+	_, leftOne := s.SetupPosition(pool.GetId(), leftAddress, DefaultCoins, leftPositionLowerTick, leftPositionUpperTick, false)
+	_, leftTwo := s.SetupPosition(pool.GetId(), leftAddress, DefaultCoins, leftPositionLowerTick, leftPositionUpperTick, false)
 
 	// Set up right positions
 	rightPositionLowerTick := DefaultUpperTick
 	rightPositionUpperTick := DefaultUpperTick + defaultPositionWidth
-	_, rightOne := s.SetupPosition(pool.GetId(), rightAddress, DefaultCoins, rightPositionLowerTick, rightPositionUpperTick)
-	_, rightTwo := s.SetupPosition(pool.GetId(), rightAddress, DefaultCoins, rightPositionLowerTick, rightPositionUpperTick)
+	_, rightOne := s.SetupPosition(pool.GetId(), rightAddress, DefaultCoins, rightPositionLowerTick, rightPositionUpperTick, true)
+	_, rightTwo := s.SetupPosition(pool.GetId(), rightAddress, DefaultCoins, rightPositionLowerTick, rightPositionUpperTick, true)
 
 	// --- Set up large swap ---
 
