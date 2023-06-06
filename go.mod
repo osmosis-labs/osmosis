@@ -23,7 +23,7 @@ require (
 	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230516205127-c213fddde069
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230605194623-ad924fbdd9b0
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230328024000-175ec88e4304
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230331072320-5d6f6cfa2627
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230602130523-f9a94d8bbd10
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.5.1
@@ -56,12 +56,11 @@ require (
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
-	github.com/go-playground/universal-translator v0.18.0 // indirect
+	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/gogo/gateway v1.1.0 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/junk1tm/musttag v0.5.0 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.4 // indirect
-	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/maratori/testableexamples v1.0.0 // indirect
 	github.com/nunnatsa/ginkgolinter v0.9.0 // indirect
 	github.com/regen-network/cosmos-proto v0.3.1 // indirect
@@ -315,6 +314,8 @@ require (
 replace (
 	// osmosis-patched wasmd.
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.31.0-osmo-v16
+	// Security patch for wasmvm. See https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-002.md
+	github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.2.3
 	// dragonberry
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v16.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/93d9d4851b92bcbc1ede8c031ca1559b35ecc708
