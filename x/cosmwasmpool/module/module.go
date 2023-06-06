@@ -18,6 +18,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
 	cosmwasmpool "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool"
 	moduleclient "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/client"
+	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/client/cli"
 	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/client/grpc"
 	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/model"
@@ -66,7 +67,7 @@ func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 }
 
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
+	return cli.GetQueryCmd()
 }
 
 // RegisterInterfaces registers interfaces and implementations of the gamm module.

@@ -1061,6 +1061,9 @@ func (s *IntegrationTestSuite) TestLargeWasmUpload() {
 	node, err := chainA.GetDefaultNode()
 	s.NoError(err)
 	node.StoreWasmCode("bytecode/large.wasm", initialization.ValidatorWalletName)
+	chainA.LatestCodeId = int(node.QueryLatestWasmCodeID())
+
+	// node.CreateConcentratedPool()
 }
 
 func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) string {
@@ -1690,4 +1693,11 @@ func (s *IntegrationTestSuite) TestAConcentratedLiquidity_CanonicalPool_And_Para
 	expectedSpotPrice, err := balancerDaiOsmoPool.SpotPrice(sdk.Context{}, v16.DAIIBCDenom, v16.DesiredDenom0)
 	s.Require().NoError(err)
 	osmoassert.DecApproxEq(s.T(), expectedSpotPrice, concentratedPool.GetCurrentSqrtPrice().Power(2), sdk.NewDecWithPrec(1, 3))
+}
+
+func (s *IntegrationTestSuite) TestCosmWasmPool_Transmuter() {
+	chainA := s.configurer.GetChainConfig(0)
+	node, err := chainA.GetDefaultNode()
+	s.NoError(err)
+	node.StoreWasmCode("bytecode/transmuter.wasm", initialization.ValidatorWalletName)
 }
