@@ -768,6 +768,52 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 			},
 			expectPass: true,
 		},
+		{
+			name: "Catch overflow error when getting newPoolLiquidity - Ensure test doesn't panic",
+			param: param{
+				baseDenom:  "uosmo",
+				matchDenom: "stake",
+				prepareStateAndGetPoolIdToCompare: func() (uint64, uint64) {
+					// Prepare a balancer pool with liquidity levels that will overflow when multiplied
+					overflowPoolId := s.PrepareBalancerPoolWithCoins(
+						sdk.NewCoin("uosmo", sdk.Int(sdk.NewUintFromString("999999999999999999999999999999999999999"))),
+						sdk.NewCoin("stake", sdk.Int(sdk.NewUintFromString("999999999999999999999999999999999999999"))))
+
+					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
+					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "uosmo")
+
+					// Prepare a balancer pool with normal liquidity
+					poolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10)), sdk.NewCoin("stake", sdk.NewInt(10)))
+
+					// The normal liquidity pool should be stored since the function will return early when catching the overflow error
+					return poolId, overflowPoolId
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name: "Catch overflow error when getting storedPoolLiquidity - Ensure test doesn't panic",
+			param: param{
+				baseDenom:  "uosmo",
+				matchDenom: "stake",
+				prepareStateAndGetPoolIdToCompare: func() (uint64, uint64) {
+					// Prepare a balancer pool with normal liquidity
+					poolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10)), sdk.NewCoin("stake", sdk.NewInt(10)))
+
+					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
+					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "uosmo")
+
+					// Prepare a balancer pool with liquidity levels that will overflow when multiplied
+					overflowPoolId := s.PrepareBalancerPoolWithCoins(
+						sdk.NewCoin("uosmo", sdk.Int(sdk.NewUintFromString("999999999999999999999999999999999999999"))),
+						sdk.NewCoin("stake", sdk.Int(sdk.NewUintFromString("999999999999999999999999999999999999999"))))
+
+					// The overflow pool should be stored since the function will return early when catching the overflow error
+					return overflowPoolId, poolId
+				},
+			},
+			expectPass: true,
+		},
 	}
 
 	for _, tc := range tests {
