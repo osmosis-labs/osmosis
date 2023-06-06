@@ -9,29 +9,32 @@ DISABLED_MUTATORS='branch/*'
 # * go files in types, keeper, or module root directories
 # * ignore test and Protobuf files
 go_file_exclusions="-type f ! -path */client/* -name *.go -and -not -name *_test.go -and -not -name *pb* -and -not -name module.go"
-MUTATION_SOURCES=$(find ./x  $go_file_exclusions )
-MUTATION_SOURCES+=$(find ./x -maxdepth 2 $go_file_exclusions )
+MUTATION_SOURCES=$(find ../x  $go_file_exclusions )
+MUTATION_SOURCES+=$(printf '\n'; find ../x -maxdepth 2 $go_file_exclusions )
 
 # Filter on a module-by-module basis as provided by input
 arg_len=$#
 
-for i in "$@"; do
-  if [ $arg_len -gt 1 ]; then
-    MODULE_FORMAT+="./x/$i\|"
-    MODULE_NAMES+="${i} "
-    let "arg_len--"
-  else
-    MODULE_FORMAT+="./x/$i"
-    MODULE_NAMES+="${i}"
-  fi
-done
-
-MUTATION_SOURCES=$(echo "$MUTATION_SOURCES" | grep "$MODULE_FORMAT")
+if [ $arg_len -gt 0 ]; then
+  for i in "$@"; do
+    if [ $arg_len -gt 1 ]; then
+      MODULE_FORMAT+="./x/$i\|"
+      MODULE_NAMES+="${i} "
+      let "arg_len--"
+    else
+      MODULE_FORMAT+="./x/$i"
+      MODULE_NAMES+="${i}"
+    fi
+  done
+  MUTATION_SOURCES=$(echo "$MUTATION_SOURCES" | grep "$MODULE_FORMAT")
+  echo "running mutation tests for the following module(s): $MODULE_NAMES"
+else
+  echo "No specific modules provided, running mutation tests for all modules."
+fi
 
 #Collect multiple lines into a single line to be fed into go-mutesting
 MUTATION_SOURCES=$(echo $MUTATION_SOURCES | tr '\n' ' ')
 
-echo "running mutation tests for the following module(s): $MODULE_NAMES"
 OUTPUT=$(go run github.com/osmosis-labs/go-mutesting/cmd/go-mutesting --disable=$DISABLED_MUTATORS $MUTATION_SOURCES)
 
 # Fetch the final result output and the overall mutation testing score
