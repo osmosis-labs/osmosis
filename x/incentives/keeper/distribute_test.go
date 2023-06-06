@@ -888,13 +888,13 @@ func (s *KeeperTestSuite) TestDistributeConcentratedLiquidity() {
 	}
 }
 
-// TestFunctionalConcentratedLiquidityGaugeDistribute is a functional test that covers more complex scenarios relating to distributing incentives throught gauges
-// at the end of each epoch
+// TestFunctionalConcentratedLiquidityGaugeDistribute is a functional test that covers more complex scenarios relating to distributing incentives through gauges
+// at the end of each epoch.
 //
-// we expect these events to occour at the end of each epoch.
-// - mint and distribute coins according to the configuration
-// - distribution happens proportional to the gauge weight in the record
-// - moduleAccount holds the funds and handles distribution
+// we expect these events to occour at the end of each epoch;
+// - mint and distribute coins according to the configuration.
+// - distribution happens proportional to the gauge weight in the record.
+// - moduleAccount holds the funds and handles distribution.
 //
 // Testing strategy:
 // 1. Initialize variables.
