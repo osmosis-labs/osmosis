@@ -205,8 +205,8 @@ func iThSmallest[T constraints.Ordered](s []T, i int, less LessFunc[T]) T {
 	if i < numberOfElementsSmallerThanPivot {
 		return iThSmallest(smallerThanPivot, i, less)
 	} else if i > numberOfElementsSmallerThanPivot {
-		// Handle edge case where there are duplicate pivots and it is the result.
-		if len(greaterThanPivot) == 0 && numEqualToPivot > 1 {
+		// We return pivot, if `i` lays between smallerThanPivot and greaterThanPivot sets
+		if i < originalLength-len(greaterThanPivot) && i > numberOfElementsSmallerThanPivot && numEqualToPivot > 1 {
 			return pivot
 		}
 
