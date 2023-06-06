@@ -527,6 +527,18 @@ func (s *KeeperTestSuite) TestGetComparablePoolLiquidity() {
 			},
 			expectPass: true,
 		},
+		{
+			name: "Catch overflow error on liquidity multiplication",
+			param: param{
+				executePoolCreation: func() uint64 {
+					return s.PrepareBalancerPoolWithCoins(
+						sdk.NewCoin("uosmo", sdk.Int(sdk.NewUintFromString("999999999999999999999999999999999999999"))),
+						sdk.NewCoin("juno", sdk.Int(sdk.NewUintFromString("999999999999999999999999999999999999999"))))
+				},
+				expectedComparableLiquidity: sdk.Int{},
+			},
+			expectPass: false,
+		},
 	}
 
 	for _, tc := range tests {
@@ -541,6 +553,9 @@ func (s *KeeperTestSuite) TestGetComparablePoolLiquidity() {
 
 			if tc.expectPass {
 				s.Require().NoError(err)
+				s.Require().Equal(tc.param.expectedComparableLiquidity, comparableLiquidity)
+			} else {
+				s.Require().Error(err)
 				s.Require().Equal(tc.param.expectedComparableLiquidity, comparableLiquidity)
 			}
 		})
