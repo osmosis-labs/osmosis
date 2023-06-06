@@ -272,7 +272,11 @@ func TestIThSmallest(t *testing.T) {
 			expected: 12,
 		},
 		"edge case: copied pivot": {
-			s:           []int{1, 2, 3, 4, 5, 6, 7, 7, 7, 7, 8, 9, 10},
+			s: []int{
+				1, 2, 3, 4, 5,
+				6, 7, 7, 7, 7,
+				8, 9, 10,
+			},
 			i:           9,
 			less:        less,
 			expected:    7,

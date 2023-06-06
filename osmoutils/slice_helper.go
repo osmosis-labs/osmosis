@@ -150,7 +150,14 @@ func iThSmallest[T constraints.Ordered](s []T, i int, less LessFunc[T]) T {
 	originalLength := len(s)
 
 	// Pre-allocate enough buffer for the medians in case input is large.
-	mediansOfSubSlices := make([]T, 0, originalLength/5+originalLength%5)
+	var mediansOfSubSlices []T
+	if originalLength%5 != 0 {
+		// If a slice cannot be perfectly divided into sub-slices of length 5, add 1 to medians slice's capacity to account for a slice that will hold [1; 4] additional elements
+		mediansOfSubSlices = make([]T, 0, originalLength/5+1)
+	} else {
+		mediansOfSubSlices = make([]T, 0, originalLength/5+originalLength%5)
+	}
+
 	for i := 0; i < originalLength; i += 5 {
 		// choose either 5 elements, or everything that is remaining
 		// if the last slice ends up being smaller than 5 elements.
