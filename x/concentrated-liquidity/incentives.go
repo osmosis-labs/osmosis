@@ -324,7 +324,7 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 // poold id to be up to date for the given pool. Updates the pool last liquidity update time with
 // the current block time and writes the updated pool to state.
 // Specifically, it gets the time elapsed since the last update and divides it
-// by the qualifying liquidity for each uptime. It then adds this value to the
+// by the qualifying liquidity on the active tick. It then adds this value to the
 // respective accumulator and updates relevant time trackers accordingly.
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 // Note: the following are the differences of this function from updateGivenPoolUptimeAccumulatorsToNow:
@@ -388,7 +388,7 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 	// Set up canonical balancer pool as a full range position for the purposes of incentives.
 	// Note that this function fails quietly if no canonical balancer pool exists and only errors
 	// if it does exist and there is a lower level inconsistency.
-	balancerPoolId, _, err := k.prepareBalancerPoolAsFullRange(ctx, poolId, uptimeAccums)
+	balancerPoolId, qualifyingBalancerShares, err := k.prepareBalancerPoolAsFullRange(ctx, poolId, uptimeAccums)
 	if err != nil {
 		return err
 	}
@@ -399,15 +399,13 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 		return err
 	}
 
+	// We optimistically assume that all liquidity on the active tick qualifies and handle
+	// uptime-related checks in forfeiting logic.
+	qualifyingLiquidity := pool.GetLiquidity().Add(qualifyingBalancerShares)
+
 	for uptimeIndex := range uptimeAccums {
 		// Get relevant uptime-level values
 		curUptimeDuration := types.SupportedUptimes[uptimeIndex]
-
-		// Qualifying liquidity is the amount of liquidity that satisfies uptime requirements
-		qualifyingLiquidity, err := uptimeAccums[uptimeIndex].GetTotalShares()
-		if err != nil {
-			return err
-		}
 
 		// If there is no share to be incentivized for the current uptime accumulator, we leave it unchanged
 		if qualifyingLiquidity.LT(sdk.OneDec()) {

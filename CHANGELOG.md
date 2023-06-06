@@ -60,11 +60,16 @@ TokenFactory before send hooks (x/tokenfactory):
 and control over token transfers.
 
 
+### Security
+
+* Upgraded wasmvm to 1.2.3 in response to [CWA-2023-002](https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-002.md)
+
 ### Features
   * [#3014](https://github.com/osmosis-labs/osmosis/issues/3014) implement x/concentrated-liquidity module.
   * [#5354](https://github.com/osmosis-labs/osmosis/pull/5354) implement x/cosmwasmpool module.
   * [#4659](https://github.com/osmosis-labs/osmosis/pull/4659) implement AllPools query in x/poolmanager.
   * [#4886](https://github.com/osmosis-labs/osmosis/pull/4886) Implement MsgSplitRouteSwapExactAmountIn and MsgSplitRouteSwapExactAmountOut that supports route splitting.
+  * [#5045] (https://github.com/osmosis-labs/osmosis/pull/5045) Implement hook-based backrunning logic for ProtoRev
   * [#5281](https://github.com/osmosis-labs/osmosis/pull/5281) Add option to designate Reward Recipient to Lock and Incentives.
   * [#4827](https://github.com/osmosis-labs/osmosis/pull/4827) Protorev: Change highest liquidity pool updating from weekly to daily and change dev fee payout from weekly to after every trade.
   * [#5409](https://github.com/osmosis-labs/osmosis/pull/5409) x/gov: added expedited quorum param (Note: we set the expedited quorum to 2/3 in the upgrade handler)
@@ -93,6 +98,7 @@ and control over token transfers.
   * [#4336](https://github.com/osmosis-labs/osmosis/pull/4336) feat: make epochs standalone
   * [#4801](https://github.com/osmosis-labs/osmosis/pull/4801) refactor: remove GetTotalShares, GetTotalLiquidity and GetExitFee from PoolI
   * [#4951](https://github.com/osmosis-labs/osmosis/pull/4951) feat: implement pool liquidity query in pool manager, deprecate the one in gamm
+  * [#5000](https://github.com/osmosis-labs/osmosis/pull/5000) osmomath.Power panics for base < 1 to temporarily restrict broken logic for such base.
 
 ## Dependencies
   * [#4783](https://github.com/osmosis-labs/osmosis/pull/4783) Update wasmd to 0.31 

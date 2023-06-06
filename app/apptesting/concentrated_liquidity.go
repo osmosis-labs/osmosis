@@ -20,7 +20,7 @@ var (
 	DefaultCoinAmount  = sdk.NewInt(1000000000000000000)
 )
 
-// PrepareConcentratedPool sets up an eth usdc concentrated liquidity pool with pool ID 1, tick spacing of 100,
+// PrepareConcentratedPool sets up an eth usdc concentrated liquidity pool with a tick spacing of 100,
 // no liquidity and zero spread factor.
 func (s *KeeperTestHelper) PrepareConcentratedPool() types.ConcentratedPoolExtension {
 	return s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, sdk.ZeroDec())

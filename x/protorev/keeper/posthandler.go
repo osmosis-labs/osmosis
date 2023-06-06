@@ -4,9 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 type SwapToBackrun struct {
@@ -42,7 +39,8 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	//
 	// 50M is chosen as a large enough number to ensure that the posthandler will not run out of gas,
 	// but will eventually terminate in event of an accidental infinite loop with some gas usage.
-	cacheCtx = cacheCtx.WithGasMeter(sdk.NewGasMeter(sdk.Gas(50_000_000)))
+	upperGasLimitMeter := sdk.NewGasMeter(sdk.Gas(50_000_000))
+	cacheCtx = cacheCtx.WithGasMeter(upperGasLimitMeter)
 
 	// Check if the protorev posthandler can be executed
 	if err := protoRevDec.ProtoRevKeeper.AnteHandleCheck(cacheCtx); err != nil {
@@ -50,7 +48,7 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	}
 
 	// Extract all of the pools that were swapped in the tx
-	swappedPools := ExtractSwappedPools(tx)
+	swappedPools := protoRevDec.ProtoRevKeeper.ExtractSwappedPools(cacheCtx)
 	if len(swappedPools) == 0 {
 		return next(ctx, tx, simulate)
 	}
@@ -62,6 +60,10 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	} else {
 		ctx.Logger().Error("ProtoRevTrade failed with error", err)
 	}
+
+	// Delete swaps to backrun for next transaction without consuming gas
+	// from the current transaction's gas meter, but instead from a new gas meter
+	protoRevDec.ProtoRevKeeper.DeleteSwapsToBackrun(ctx.WithGasMeter(upperGasLimitMeter))
 
 	return next(ctx, tx, simulate)
 }
@@ -140,58 +142,20 @@ func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) (er
 
 // ExtractSwappedPools checks if there were any swaps made on pools and if so returns a list of all the pools that were
 // swapped on and metadata about the swap
-func ExtractSwappedPools(tx sdk.Tx) []SwapToBackrun {
+func (k Keeper) ExtractSwappedPools(ctx sdk.Context) []SwapToBackrun {
 	swappedPools := make([]SwapToBackrun, 0)
 
-	// Extract only swaps types and the swapped pools from the tx
-	for _, msg := range tx.GetMsgs() {
-		switch msg := msg.(type) {
-		case *poolmanagertypes.MsgSwapExactAmountIn:
-			swappedPools = append(swappedPools, extractSwapInPools(msg.Routes, msg.TokenIn.Denom)...)
-		case *poolmanagertypes.MsgSwapExactAmountOut:
-			swappedPools = append(swappedPools, extractSwapOutPools(msg.Routes, msg.TokenOut.Denom)...)
-		case *gammtypes.MsgSwapExactAmountIn:
-			swappedPools = append(swappedPools, extractSwapInPools(msg.Routes, msg.TokenIn.Denom)...)
-		case *gammtypes.MsgSwapExactAmountOut:
-			swappedPools = append(swappedPools, extractSwapOutPools(msg.Routes, msg.TokenOut.Denom)...)
-		}
+	swapsToBackrun, err := k.GetSwapsToBackrun(ctx)
+	if err != nil {
+		return swappedPools
 	}
 
-	return swappedPools
-}
-
-// extractSwapInPools extracts the pools that were swapped on for a MsgSwapExactAmountIn
-func extractSwapInPools(routes []poolmanagertypes.SwapAmountInRoute, tokenInDenom string) []SwapToBackrun {
-	swappedPools := make([]SwapToBackrun, 0)
-
-	prevTokenIn := tokenInDenom
-	for _, route := range routes {
+	for _, swap := range swapsToBackrun.Trades {
 		swappedPools = append(swappedPools, SwapToBackrun{
-			PoolId:        route.PoolId,
-			TokenOutDenom: route.TokenOutDenom,
-			TokenInDenom:  prevTokenIn,
+			PoolId:        swap.Pool,
+			TokenInDenom:  swap.TokenIn,
+			TokenOutDenom: swap.TokenOut,
 		})
-
-		prevTokenIn = route.TokenOutDenom
-	}
-
-	return swappedPools
-}
-
-// extractSwapOutPools extracts the pools that were swapped on for a MsgSwapExactAmountOut
-func extractSwapOutPools(routes []poolmanagertypes.SwapAmountOutRoute, tokenOutDenom string) []SwapToBackrun {
-	swappedPools := make([]SwapToBackrun, 0)
-
-	prevTokenOut := tokenOutDenom
-	for i := len(routes) - 1; i >= 0; i-- {
-		route := routes[i]
-		swappedPools = append(swappedPools, SwapToBackrun{
-			PoolId:        route.PoolId,
-			TokenOutDenom: prevTokenOut,
-			TokenInDenom:  route.TokenInDenom,
-		})
-
-		prevTokenOut = route.TokenInDenom
 	}
 
 	return swappedPools
