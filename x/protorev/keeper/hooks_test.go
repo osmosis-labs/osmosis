@@ -604,6 +604,16 @@ func (s *KeeperTestSuite) TestStoreJoinExitPoolSwaps() {
 			},
 			expectPass: true,
 		},
+		{
+			name: "Non-Gamm Pool, Return Early Do Not Store Any Swaps",
+			param: param{
+				poolId:       49,
+				denom:        "uosmo",
+				isJoin:       true,
+				expectedSwap: types.Trade{},
+			},
+			expectPass: false,
+		},
 	}
 
 	for _, tc := range tests {
@@ -619,6 +629,8 @@ func (s *KeeperTestSuite) TestStoreJoinExitPoolSwaps() {
 			if tc.expectPass {
 				s.Require().NoError(err)
 				s.Require().Equal(tc.param.expectedSwap, swapsToBackrun.Trades[len(swapsToBackrun.Trades)-1])
+			} else {
+				s.Require().Equal(swapsToBackrun, types.Route{})
 			}
 		})
 	}
