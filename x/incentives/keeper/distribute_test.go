@@ -905,32 +905,41 @@ func (s *KeeperTestSuite) TestDistributeConcentratedLiquidity() {
 func (s *KeeperTestSuite) TestFunctionalConcentratedLiquidityGaugeDistribute() {
 	s.SetupTest()
 
+	// get epoch information
+	incentivesParams := s.App.IncentivesKeeper.GetParams(s.Ctx).DistrEpochIdentifier
+	currentEpoch := s.App.EpochsKeeper.GetEpochInfo(s.Ctx, incentivesParams)
+
 	// 1. Initialize variables
-	numPools := uint64(3)
+	poolIds := []uint64{1, 2, 3}
 	startTime := s.Ctx.BlockTime()
-	var expectedCoinsToDistribute sdk.Coins
-	token0ToDistribute := sdk.NewCoin("uusdc", sdk.NewInt(10_000))
-	token1ToDistribute := sdk.NewCoin("uosmo", sdk.NewInt(10_000))
+	// 2. Setup CL pool and gauge (gauge automatically gets created at the end of CL pool creation).
+	gauges := s.SetupCLPoolAndGauge(uint64(len(poolIds)), currentEpoch.Duration, sdk.NewCoins(), startTime)
+
+	//Test1: distribute 2 coins using CL gauge
+	gaugeRewards := sdk.NewCoins(sdk.NewCoin("uusdc", sdk.NewInt(10_000)), sdk.NewCoin("uosmo", sdk.NewInt(10_000)))
+	expectedCoinsToDistribute := sdk.NewCoins(sdk.NewCoin("uusdc", sdk.NewInt(30_000)), sdk.NewCoin("uosmo", sdk.NewInt(30_000))) // 3 pool, 10k each token per pool = 30k each token
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10_000_000_000)),
 		sdk.NewCoin("uusdc", sdk.NewInt(10_000_000_000)),
 		sdk.NewCoin("uatom", sdk.NewInt(10_000_000_000)),
 	))
 
-	// get epoch information
-	incentivesParams := s.App.IncentivesKeeper.GetParams(s.Ctx).DistrEpochIdentifier
-	currentEpoch := s.App.EpochsKeeper.GetEpochInfo(s.Ctx, incentivesParams)
+	s.TestFunctionalConcentratedDistributeGaugeHelper(poolIds, gauges, startTime, gaugeRewards, expectedCoinsToDistribute)
 
-	// 2. Setup CL pool and gauge (gauge automatically gets created at the end of CL pool creation)
-	gauges_original := s.SetupCLPoolAndGauge(numPools, currentEpoch.Duration, sdk.NewCoins(), startTime)
+	//Test2: distribute 3 coins using CL gauge
+	poolIds1 := []uint64{4, 5, 6}
+	gauges1 := s.SetupCLPoolAndGauge(uint64(len(poolIds1)), currentEpoch.Duration, sdk.NewCoins(), startTime)
+	gaugeRewards1 := sdk.NewCoins(sdk.NewCoin("uusdc", sdk.NewInt(10_000)), sdk.NewCoin("uosmo", sdk.NewInt(10_000)), sdk.NewCoin("uatom", sdk.NewInt(10_000)))
+	expectedCoinsToDistribute1 := sdk.NewCoins(sdk.NewCoin("uusdc", sdk.NewInt(30_000)), sdk.NewCoin("uosmo", sdk.NewInt(30_000)), sdk.NewCoin("uatom", sdk.NewInt(30_000))) // 3 pool, 10k each token per pool = 30k each token
 
+	s.TestFunctionalConcentratedDistributeGaugeHelper(poolIds1, gauges1, startTime, gaugeRewards1, expectedCoinsToDistribute1)
+}
+
+func (s *KeeperTestSuite) TestFunctionalConcentratedDistributeGaugeHelper(poolIds []uint64, gauges_original []types.Gauge, startTime time.Time, gaugeRewards sdk.Coins, expectedCoinsToDistribute sdk.Coins) {
 	// 3. update the gauge by adding rewards (should happen at end of each epoch)
 	for _, gauge := range gauges_original {
 		// adds token from a specific owner to the moduleAddress, which updated the gauge coins in the process
-		coinsToAdd := sdk.NewCoins(token0ToDistribute, token1ToDistribute)
-		err := s.App.IncentivesKeeper.AddToGaugeRewards(s.Ctx, s.TestAccs[0], coinsToAdd, gauge.Id)
+		err := s.App.IncentivesKeeper.AddToGaugeRewards(s.Ctx, s.TestAccs[0], gaugeRewards, gauge.Id)
 		s.Require().NoError(err)
-
-		expectedCoinsToDistribute = expectedCoinsToDistribute.Add(coinsToAdd...)
 	}
 
 	// make sure the module recieved the funds
@@ -939,7 +948,12 @@ func (s *KeeperTestSuite) TestFunctionalConcentratedLiquidityGaugeDistribute() {
 	s.Require().Equal(expectedCoinsToDistribute, actualModuleCoins)
 
 	// 4. get updated gauges and distribute the rewards that was added
-	gauges_afterEpoch := s.App.IncentivesKeeper.GetGauges(s.Ctx)
+	for _, gauge := range gauges_original {
+		err := s.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(s.Ctx, gauge)
+		s.Require().NoError(err)
+	}
+
+	gauges_afterEpoch := s.App.IncentivesKeeper.GetActiveGauges(s.Ctx)
 	s.Require().Equal(len(gauges_original), len(gauges_afterEpoch))
 
 	// we run distribute at the end of each epoch and expect all the coins in gauge to be distributed
@@ -949,26 +963,33 @@ func (s *KeeperTestSuite) TestFunctionalConcentratedLiquidityGaugeDistribute() {
 	s.Require().Equal(expectedCoinsToDistribute, totalDistributedCoins)
 
 	// 5. Check that incentive has been correctly created and gauge has been correctly updated
-	for poolId := uint64(1); poolId <= numPools; poolId++ {
-		expectedEmissionRate := sdk.NewDecFromInt(token0ToDistribute.Amount).QuoTruncate(sdk.NewDec(int64(currentEpoch.Duration.Seconds())))
+	for _, poolId := range poolIds {
+		for _, gaugeReward := range gaugeRewards {
+			incentivesParams := s.App.IncentivesKeeper.GetParams(s.Ctx).DistrEpochIdentifier
+			currentEpoch := s.App.EpochsKeeper.GetEpochInfo(s.Ctx, incentivesParams)
+			expectedEmissionRate := sdk.NewDecFromInt(gaugeReward.Amount).QuoTruncate(sdk.NewDec(int64(currentEpoch.Duration.Seconds())))
 
-		incentiveRecord_denom0, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, poolId, token0ToDistribute.Denom, types.DefaultConcentratedUptime, moduleAddress)
-		s.Require().NoError(err)
+			incentiveRecord, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, poolId, gaugeReward.Denom, types.DefaultConcentratedUptime, moduleAddress)
+			s.Require().NoError(err)
 
-		s.CheckIncentiveRecords(poolId, token0ToDistribute.Denom, moduleAddress.String(), expectedEmissionRate, startTime, token0ToDistribute.Amount, incentiveRecord_denom0)
-
-		incentiveRecord_denom1, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, poolId, token1ToDistribute.Denom, types.DefaultConcentratedUptime, moduleAddress)
-		s.Require().NoError(err)
-
-		s.CheckIncentiveRecords(poolId, token1ToDistribute.Denom, moduleAddress.String(), expectedEmissionRate, startTime, token0ToDistribute.Amount, incentiveRecord_denom1)
+			s.CheckIncentiveRecords(poolId, gaugeReward.Denom, moduleAddress.String(), expectedEmissionRate, startTime, gaugeReward.Amount, incentiveRecord)
+		}
 	}
 
-	// check gauge post distribution (check filled epoch, check distributed coins)
-	gauges_afterDistribute := s.App.IncentivesKeeper.GetGauges(s.Ctx)
+	// check gauge post distribution
+	gauges_afterDistribute := s.App.IncentivesKeeper.GetActiveGauges(s.Ctx)
 	s.Require().Equal(len(gauges_afterDistribute), len(gauges_afterEpoch))
 
 	for idx, gauge := range gauges_afterDistribute {
 		s.Require().Equal(gauges_afterEpoch[idx].FilledEpochs+1, gauge.FilledEpochs)
-		s.Require().Equal(token0ToDistribute, gauge.DistributedCoins[0])
+	}
+
+	// check module account amount decreased
+	moduleCoins_afterDistribute := s.App.BankKeeper.GetAllBalances(s.Ctx, moduleAddress)
+	s.Require().Equal(sdk.Coins{}, moduleCoins_afterDistribute)
+
+	for _, gauge := range gauges_afterDistribute {
+		err := s.App.IncentivesKeeper.MoveActiveGaugeToFinishedGauge(s.Ctx, gauge)
+		s.Require().NoError(err)
 	}
 }
