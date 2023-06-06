@@ -2895,10 +2895,10 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 					s.Require().NoError(err)
 
 					// Convert DecCoins to Coins by truncation for comparison
-					normalizedUptimeAccumDelta := sdk.NewCoins()
+					normalizedUptimeAccumDelta := sdk.NewDecCoins()
 					for _, uptimeAccumDelta := range uptimeAccumDeltaValues {
 						// Multiply by the number of shares since the accumulators are per share amounts.
-						normalizedUptimeAccumDelta = normalizedUptimeAccumDelta.Add(sdk.NormalizeCoins(uptimeAccumDelta.MulDec(tc.numShares))...)
+						normalizedUptimeAccumDelta = normalizedUptimeAccumDelta.Add(uptimeAccumDelta.MulDec(tc.numShares)...)
 					}
 
 					s.Require().Equal(normalizedUptimeAccumDelta.String(), amountForfeited.String())
@@ -2910,7 +2910,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 						expectedCoins = expectedCoins.Add(sdk.NormalizeCoins(growthInside)...)
 					}
 					s.Require().Equal(expectedCoins, amountClaimed)
-					s.Require().Equal(sdk.Coins(nil), amountForfeited)
+					s.Require().Equal(sdk.DecCoins{}, amountForfeited)
 				}
 
 				// Ensure balances have not been mutated
