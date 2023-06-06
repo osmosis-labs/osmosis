@@ -260,7 +260,7 @@ func (k Keeper) GetUserPositionsSerialized(ctx sdk.Context, addr sdk.AccAddress,
 			return err
 		}
 
-		claimableFees, err := k.GetClaimableSpreadRewards(ctx, position.PositionId)
+		claimableSpreadRewards, err := k.GetClaimableSpreadRewards(ctx, position.PositionId)
 		if err != nil {
 			return err
 		}
@@ -272,12 +272,12 @@ func (k Keeper) GetUserPositionsSerialized(ctx sdk.Context, addr sdk.AccAddress,
 
 		// Append the position and underlying assets to the positions slice
 		fullPositions = append(fullPositions, model.FullPositionBreakdown{
-			Position:            position,
-			Asset0:              asset0,
-			Asset1:              asset1,
-			ClaimableFees:       claimableFees,
-			ClaimableIncentives: claimableIncentives,
-			ForfeitedIncentives: forfeitedIncentives,
+			Position:               position,
+			Asset0:                 asset0,
+			Asset1:                 asset1,
+			ClaimableSpreadRewards: claimableSpreadRewards,
+			ClaimableIncentives:    claimableIncentives,
+			ForfeitedIncentives:    forfeitedIncentives,
 		})
 
 		return nil

@@ -175,7 +175,7 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiquid
 
 			balancerId := suite.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
 
-			// Another pool for testing that its gauge linkes are unchanged
+			// Another pool for testing that its gauge links are unchanged
 			balancerId2 := suite.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
 
 			balancerPool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, balancerId)

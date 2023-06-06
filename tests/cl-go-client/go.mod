@@ -88,7 +88,7 @@ require (
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230516205127-c213fddde069 // indirect
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230529060317-d6d2dda0fb22 // indirect
-	github.com/osmosis-labs/osmosis/v16 v16.0.0-20230602200356-bdf5b96b3674 // indirect
+	github.com/osmosis-labs/osmosis/v16 v16.0.0-20230603032959-4d2ba21b8d1e // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

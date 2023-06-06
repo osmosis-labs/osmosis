@@ -355,3 +355,99 @@ pub struct Coin {
     pub amount: Uint128,
 }
 ```
+
+### Governance and Code Id Management
+
+Despite code upload being permissioned by governance on Osmosis, it is allowed to be done by a certain
+set of addresses:
+
+```bash
+osmosisd q wasm params
+code_upload_access:
+  address: ""
+  addresses:
+  - osmo1cd4nn8yzdrrsfqsmmvaafq8r03xn38qgqt8fzh
+  - osmo1wl59k23zngj34l7d42y9yltask7rjlnxgccawc7ltrknp6n52fps94qsjd
+  - osmo19vxp8vq8qm368dr026qxh8v82satwaf79y235lfv6wmgpwxx8dtskedaku
+  - osmo1e0x2hnhhwyek7eq3kcxu2x6pt77wdnwz0lutz9fespdr9utq963qr0y5p5
+  - osmo14n3a65fnqz9jve85l23al6m3pjugf0atvrfqh5
+  - osmo15wna5dwylkuzvljsudyn6zfsd4zl0rkg5ge888mzk4vtnjpp0z5q4e9w58
+  - osmo1r02tlyyaqs6tmrfa4jf37t7ewuxr57qp8ghzly
+  permission: AnyOfAddresses
+instantiate_default_permission: Everybody
+```
+
+We would like to make sure that it is not possible to upload any pool code
+without governance approval. This is why we create two additional governance proposals:
+
+Note, that in both cases, x/cosmwasmpool module account will act as the admin and creator of the contract.
+
+#### 1. Store code and update code id whitelist
+
+Proposal Name: `UploadCosmWasmPoolCodeAndWhiteListProposal`
+
+On successful passing of this proposal, the code id of the pool contract will be added to the whitelist.
+As a result, anyone would be able to instantiate a pool contract with this code id when creating a pol.
+No address will be able to maliciously upload a new code id and instantiate a pool contract with it without
+governance approval.
+
+Inputs
+ - `uploadByteCode` - `[]byte` - the raw wasm bytecode
+
+The created code id is emitted via `TypeEvtUploadedCosmwasmPoolCode` event.
+
+#### 2. Store code and migrate a specific code id to a new code id
+
+Proposal Name: `MigratePoolContractsProposal`
+
+Similarly, if we want to migrate a contract, anyone can do so but they will need to go
+through a custom governance proposal.
+
+Migrates all given cw pool contracts specified by their IDs. It has two options to perform the migration.
+
+a. If the `codeID` is non-zero, it will migrate the pool contracts to a given `codeID` assuming that it has already been uploaded. uploadByteCode must be empty in such a case. Fails if `codeID` does not exist. Fails if uploadByteCode is not empty.
+
+b. If the `codeID` is zero, it will upload the given `uploadByteCode` and use the new resulting code id to migrate the pool to. Errors if uploadByteCode is empty or invalid.
+
+In both cases, if one of the pools specified by the given `poolID` does not exist, the proposal fails.
+
+The reason for having `poolID`s be a slice of ids is to account for the potential need for emergency migration of all old code ids to new code ids, or simply having the flexibility of migrating multiple older pool contracts to a new one at once when there is a release.
+
+`poolD`s must be at the most size of `PoolMigrationLimit` module parameter. It is configured to 20 at launch.
+The proposal fails if more. Note that 20 was chosen arbitrarily to have a constant bound on the number of pools migrated at once.
+
+Inputs
+ - `poolIDs`        - `[]uint64`
+ - `codeID`         - `uint64`
+ - `uploadByteCode` - `[]byte`
+
+ If the code is uploaded via proposal, the resulting code id is emitted via `TypeEvtMigratedCosmwasmPoolCode`.
+
+##### Analysis of the Parameter Choice
+
+- Pros
+   * The flexibility is maximized as each pool id can be migrated individually either by uploading a new contract code or migrating to a pre-added one.
+   * There is still an ability to migrate all pools belonging to a list of code ids. The max number of pools migrated at once is bounded by a constant parameter.
+
+- Cons
+   * If there are multiple iterations of the same type, It might become cumbersome to keep track of which pool is on which code id, why one is migrated and the other one is not
+   * Some conditionality with proposal parameters. For example, if `codeId` is zero, byte code must be empty.
+
+Overall, we concluded that pros outweigh the cons, and this is the best approach out of the other alternatives considered.
+
+#### 3. Whitelist Management via Params
+
+Since the code id whitelist is implemented as a module parameter, in addition to
+the previous two proposals, the whitelist can be updated via parameter change proposal
+to either add or remove a code id from the whitelist independently of the code upload.
+
+The relevant parameter for changing is `CodeIdWhitelist`
+
+Note, that the update to the parameter overwrites all previous values so the proposer
+should be careful to include all code ids that should be whitelisted.
+
+#### 4. Pool Migration Limit via Params
+
+Additionally, the maximum number of pools that can be migrated at once is also implemented
+as a parameter. It is initialized to 20 in the v16 upgrade handler. However, governance
+can tweak it by changing the `PoolMigrationLimit` parameter.
