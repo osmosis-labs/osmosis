@@ -296,7 +296,6 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 			tc := tc
 			s.Run(name, func() {
 				s.SetupTest()
-				fmt.Println("Current authorized uptimes: ", s.authorizedUptimes)
 				clKeeper := s.App.ConcentratedLiquidityKeeper
 
 				// system under test
@@ -1011,7 +1010,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				if tc.canonicalBalancerPoolAssets != nil {
 					// Create balancer pool and bond its shares
 					balancerPoolId = s.setupBalancerPoolWithFractionLocked(tc.canonicalBalancerPoolAssets, sdk.OneDec())
-					s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx,
+					s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
 						gammtypes.MigrationRecords{
 							BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 								{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()},
@@ -1064,7 +1063,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(tc.timeElapsed))
 
 				// System under test 1
-				// Use cache context to avoud persisting updates for the next function
+				// Use cache context to avoid persisting updates for the next function
 				// that relies on the same test cases and setup.
 				cacheCtx, _ := s.Ctx.CacheContext()
 				err = clKeeper.UpdateUptimeAccumulatorsToNow(cacheCtx, tc.poolId)
@@ -3344,7 +3343,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 				clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, sdk.ZeroDec())
 
 				// Set up an existing full range position. Note that the second return value is the position ID, not an error.
-				initialLiquidity, _ := s.SetupPosition(clPool.GetId(), s.TestAccs[0], tc.existingConcentratedLiquidity, DefaultMinTick, DefaultMaxTick)
+				initialLiquidity, _ := s.SetupPosition(clPool.GetId(), s.TestAccs[0], tc.existingConcentratedLiquidity, DefaultMinTick, DefaultMaxTick, false)
 
 				// If a canonical balancer pool exists, we create it and link it with the CL pool
 				balancerPoolId := s.setupBalancerPoolWithFractionLocked(tc.balancerPoolAssets, tc.portionOfSharesBonded)
@@ -3352,7 +3351,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 				if tc.noCanonicalBalancerPool {
 					balancerPoolId = 0
 				} else {
-					s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx,
+					s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
 						gammtypes.MigrationRecords{
 							BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 								{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()},
@@ -3477,7 +3476,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRangeWithNonExistentPools
 				clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], existingConcentratedAssets[0].Denom, existingConcentratedAssets[1].Denom, DefaultTickSpacing, sdk.ZeroDec())
 
 				// Set up an existing full range position. Note that the second return value is the position ID, not an error.
-				s.SetupPosition(clPool.GetId(), s.TestAccs[0], existingConcentratedAssets, DefaultMinTick, DefaultMaxTick)
+				s.SetupPosition(clPool.GetId(), s.TestAccs[0], existingConcentratedAssets, DefaultMinTick, DefaultMaxTick, false)
 
 				// If a canonical balancer pool exists, we create it and link it with the CL pool
 				balancerPoolId := s.setupBalancerPoolWithFractionLocked(tc.balancerPoolAssets, sdk.OneDec())
@@ -3486,7 +3485,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRangeWithNonExistentPools
 					balancerPoolId = invalidPoolId
 				}
 
-				s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx,
+				s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
 					gammtypes.MigrationRecords{
 						BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 							{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()},
@@ -3640,7 +3639,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 
 				// Set up an existing full range position.
 				// Note that the second return value here is the position ID, not an error.
-				initialLiquidity, _ := s.SetupPosition(clPoolId, s.TestAccs[0], tc.existingConcentratedLiquidity, DefaultMinTick, DefaultMaxTick)
+				initialLiquidity, _ := s.SetupPosition(clPoolId, s.TestAccs[0], tc.existingConcentratedLiquidity, DefaultMinTick, DefaultMaxTick, false)
 
 				// Create and bond shares for balancer pool to be linked with CL pool in happy path cases
 				balancerPoolId := s.setupBalancerPoolWithFractionLocked(tc.balancerPoolAssets, sdk.OneDec())
@@ -3654,7 +3653,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 				}
 
 				// Link the balancer and CL pools
-				s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx,
+				s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
 					gammtypes.MigrationRecords{
 						BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 							{BalancerPoolId: balancerPoolId, ClPoolId: clPoolId},

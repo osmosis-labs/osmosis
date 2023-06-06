@@ -1059,7 +1059,7 @@ func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegate
 	migrationRecord := gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 		{BalancerPoolId: balancerPooId, ClPoolId: clPoolId},
 	}}
-	gammKeeper.OverwriteMigrationRecords(ctx, migrationRecord)
+	gammKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, migrationRecord)
 
 	// The unbonding duration is the same as the staking module's unbonding duration.
 	unbondingDuration := stakingKeeper.GetParams(ctx).UnbondingTime

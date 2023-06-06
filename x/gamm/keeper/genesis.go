@@ -36,9 +36,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState, unpack
 	k.setTotalLiquidity(ctx, liquidity)
 
 	if genState.MigrationRecords == nil {
-		k.OverwriteMigrationRecords(ctx, types.MigrationRecords{})
+		k.SetMigrationRecords(ctx, types.MigrationRecords{})
 	} else {
-		k.OverwriteMigrationRecords(ctx, *genState.MigrationRecords)
+		k.SetMigrationRecords(ctx, *genState.MigrationRecords)
 	}
 }
 
