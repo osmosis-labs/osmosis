@@ -5,16 +5,15 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/rest"
-	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/client/cli"
+	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/client/cli"
 
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 )
 
 var (
-	UploadCodeIdAndWhitelistProposalHandler = govclient.NewProposalHandler(cli.NewCmdUploadCodeIdAndWhitelistProposal, rest.ProposalTickSpacingDecreaseRESTHandler)
-	MigratePoolContractsProposalHandler     = govclient.NewProposalHandler(cli.NewCmdMigratePoolContractsProposal, rest.ProposalCreateConcentratedLiquidityPoolHandler)
+	UploadCodeIdAndWhitelistProposalHandler = govclient.NewProposalHandler(cli.NewCmdUploadCodeIdAndWhitelistProposal, UploadCodeIdAndWhitelistProposalRESTHandler)
+	MigratePoolContractsProposalHandler     = govclient.NewProposalHandler(cli.NewCmdMigratePoolContractsProposal, MigratePoolContractsProposalRESTHandler)
 )
 
 func UploadCodeIdAndWhitelistProposalRESTHandler(clientCtx client.Context) govrest.ProposalRESTHandler {
