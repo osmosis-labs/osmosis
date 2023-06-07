@@ -29,11 +29,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		(*types.CosmWasmExtension)(nil),
 		&CosmWasmPool{},
 	)
-	registry.RegisterInterface(
-		"osmosis.cosmwasmpool.v1beta1.Pool",
-		(*types.CosmWasmExtension)(nil),
-		&Pool{},
-	)
 
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
