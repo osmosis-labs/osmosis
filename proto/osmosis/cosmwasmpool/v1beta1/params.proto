@@ -1,0 +1,21 @@
+syntax = "proto3";
+package osmosis.cosmwasmpool.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types";
+
+message Params {
+  // code_ide_whitelist contains the list of code ids that are allowed to be
+  // instantiated.
+  repeated uint64 code_id_whitelist = 1
+      [ (gogoproto.moretags) = "yaml:\"code_id_whitelist\"" ];
+  // pool_migration_limit is the maximum number of pools that can be migrated
+  // at once via governance proposal. This is to have a constant bound on the
+  // number of pools that can be migrated at once and remove the possibility
+  // of an unlikely scenario of causing a chain halt due to a large migration.
+  uint64 pool_migration_limit = 2
+      [ (gogoproto.moretags) = "yaml:\"pool_migration_limit\"" ];
+}

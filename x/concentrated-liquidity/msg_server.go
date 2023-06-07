@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
 type msgServer struct {
@@ -128,9 +128,9 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 	return &types.MsgWithdrawPositionResponse{Amount0: amount0, Amount1: amount1}, nil
 }
 
-// CollectFees collects the fees earned by each position ID provided and sends them to the owner's account.
+// CollectSpreadRewards collects the fees earned by each position ID provided and sends them to the owner's account.
 // Returns error if one of the provided position IDs do not exist or if the function fails to get the fee accumulator.
-func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollectFees) (*types.MsgCollectFeesResponse, error) {
+func (server msgServer) CollectSpreadRewards(goCtx context.Context, msg *types.MsgCollectSpreadRewards) (*types.MsgCollectSpreadRewardsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
@@ -138,13 +138,13 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 		return nil, err
 	}
 
-	totalCollectedFees := sdk.NewCoins()
+	totalCollectedSpreadRewards := sdk.NewCoins()
 	for _, positionId := range msg.PositionIds {
-		collectedFees, err := server.keeper.collectFees(ctx, sender, positionId)
+		collectedFees, err := server.keeper.collectSpreadRewards(ctx, sender, positionId)
 		if err != nil {
 			return nil, err
 		}
-		totalCollectedFees = totalCollectedFees.Add(collectedFees...)
+		totalCollectedSpreadRewards = totalCollectedSpreadRewards.Add(collectedFees...)
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -154,14 +154,14 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
 		sdk.NewEvent(
-			types.TypeEvtTotalCollectFees,
+			types.TypeEvtTotalCollectSpreadRewards,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeKeyTokensOut, totalCollectedFees.String()),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, totalCollectedSpreadRewards.String()),
 		),
 	})
 
-	return &types.MsgCollectFeesResponse{CollectedFees: totalCollectedFees}, nil
+	return &types.MsgCollectSpreadRewardsResponse{CollectedSpreadRewards: totalCollectedSpreadRewards}, nil
 }
 
 // CollectIncentives collects incentives for all positions in given range that belong to sender

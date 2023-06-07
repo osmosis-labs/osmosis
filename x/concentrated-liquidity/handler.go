@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
 func NewConcentratedLiquidityProposalHandler(k Keeper) govtypes.Handler {
@@ -14,8 +14,8 @@ func NewConcentratedLiquidityProposalHandler(k Keeper) govtypes.Handler {
 		switch c := content.(type) {
 		case *types.TickSpacingDecreaseProposal:
 			return handleTickSpacingDecreaseProposal(ctx, k, c)
-		case *types.CreateConcentratedLiquidityPoolProposal:
-			return handleCreateConcentratedLiquidityPoolProposal(ctx, k, c)
+		case *types.CreateConcentratedLiquidityPoolsProposal:
+			return handleCreateConcentratedLiquidityPoolsProposal(ctx, k, c)
 
 		default:
 			return fmt.Errorf("unrecognized concentrated liquidity proposal content type: %T", c)

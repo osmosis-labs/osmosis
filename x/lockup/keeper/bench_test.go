@@ -9,8 +9,8 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v16/app"
+	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -69,7 +69,7 @@ func benchmarkResetLogic(b *testing.B, numLockups int) {
 		addr := addrs[r.Int()%numAccts]
 		simCoins := sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(r.Int63n(100))))
 		duration := time.Duration(r.Intn(1*60*60*24*7)) * time.Second
-		lock := lockuptypes.NewPeriodLock(uint64(i+1), addr, duration, time.Time{}, simCoins)
+		lock := lockuptypes.NewPeriodLock(uint64(i+1), addr, addr.String(), duration, time.Time{}, simCoins)
 		locks[i] = lock
 	}
 

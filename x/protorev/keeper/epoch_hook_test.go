@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v16/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
 )
 
 // BenchmarkEpochHook benchmarks the epoch hook. In particular, it benchmarks the UpdatePools function.
@@ -162,7 +162,7 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 			},
 			expectedBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
 				"epochTwo": {
-					"uosmo": {Liquidity: sdk.NewInt(2000000), PoolId: 49},
+					"uosmo": {Liquidity: sdk.Int(sdk.NewUintFromString("999999999000000001000000000000000000")), PoolId: 49},
 				},
 			},
 		},

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	cosmwasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -11,12 +12,14 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	v16 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v16"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	v16 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v16"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v16/x/protorev/types"
 )
 
 type UpgradeTestSuite struct {
@@ -123,6 +126,20 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 				// Ensure that the protorev upgrade was successful
 				verifyProtorevUpdateSuccess(suite)
+
+				// Validate MsgExecuteContract and MsgInstantiateContract were added to the whitelist
+				icaHostAllowList := suite.App.ICAHostKeeper.GetParams(suite.Ctx)
+				suite.Require().Contains(icaHostAllowList.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgExecuteContract{}))
+				suite.Require().Contains(icaHostAllowList.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgInstantiateContract{}))
+
+				// Validate that expedited quorum was set to 2/3
+				expQuorum := suite.App.GovKeeper.GetTallyParams(suite.Ctx).ExpeditedQuorum
+				suite.Require().Equal(sdk.NewDec(2).Quo(sdk.NewDec(3)), expQuorum)
+
+				// Validate that cw pool module address is allowed to upload contract code
+				allowedAddresses := suite.App.WasmKeeper.GetParams(suite.Ctx).CodeUploadAccess.Addresses
+				isCwPoolModuleAddressAllowedUpload := osmoutils.Contains(allowedAddresses, suite.App.AccountKeeper.GetModuleAddress(cosmwasmpooltypes.ModuleName).String())
+				suite.Require().True(isCwPoolModuleAddressAllowedUpload)
 			},
 			func() {
 				// Validate that tokenfactory params have been updated

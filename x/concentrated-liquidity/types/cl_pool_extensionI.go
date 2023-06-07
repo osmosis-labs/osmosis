@@ -5,14 +5,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 type ConcentratedPoolExtension interface {
 	poolmanagertypes.PoolI
 
 	GetIncentivesAddress() sdk.AccAddress
-	GetFeesAddress() sdk.AccAddress
+	GetSpreadRewardsAddress() sdk.AccAddress
 	GetToken0() string
 	GetToken1() string
 	GetCurrentSqrtPrice() sdk.Dec

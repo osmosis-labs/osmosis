@@ -5,9 +5,10 @@ import (
 	"sort"
 	"time"
 
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -109,27 +110,36 @@ func (k Keeper) GetLinkedBalancerPoolID(ctx sdk.Context, concentratedPoolId uint
 	return sdk.BigEndianToUint64(balancerPoolIdBigEndian), nil
 }
 
-// OverwriteMigrationRecords sets the balancer to gamm pool migration info to the store
-// Deletes all existing records, migrationInfo in state is completely overwitten by the given migrationInfo.
-func (k Keeper) OverwriteMigrationRecords(ctx sdk.Context, migrationInfo types.MigrationRecords) {
+// OverwriteMigrationRecordsAndRedirectDistrRecords sets the balancer to gamm pool migration info to the store and deletes all existing records
+// migrationInfo in state is completely overwitten by the given migrationInfo.
+// Additionally, the distribution record for the balancer pool is modified to redirect incentives to the new concentrated pool.
+func (k Keeper) OverwriteMigrationRecordsAndRedirectDistrRecords(ctx sdk.Context, migrationInfo types.MigrationRecords) error {
 	store := ctx.KVStore(k.storeKey)
 
-	// delete all existing keys
-	prefixStore := prefix.NewStore(store, types.KeyPrefixMigrationInfoBalancerPool)
-	iter := prefixStore.Iterator(nil, nil)
-	defer iter.Close()
+	// delete all existing migration records
+	// this is done for both replace and update migration calls because, regardless of whether we are replacing all or updating a few,
+	// the resulting migrationInfo that gets passed into this function is the complete set of migration records.
+	osmoutils.DeleteAllKeysFromPrefix(ctx, store, types.KeyPrefixMigrationInfoBalancerPool)
+	osmoutils.DeleteAllKeysFromPrefix(ctx, store, types.KeyPrefixMigrationInfoCLPool)
 
-	for ; iter.Valid(); iter.Next() {
-		prefixStore.Delete(iter.Key())
+	for _, balancerToCLPoolLink := range migrationInfo.BalancerToConcentratedPoolLinks {
+		balancerToClPoolKey := types.GetKeyPrefixMigrationInfoBalancerPool(balancerToCLPoolLink.BalancerPoolId)
+		store.Set(balancerToClPoolKey, sdk.Uint64ToBigEndian(balancerToCLPoolLink.ClPoolId))
+
+		clToBalancerPoolKey := types.GetKeyPrefixMigrationInfoPoolCLPool(balancerToCLPoolLink.ClPoolId)
+		store.Set(clToBalancerPoolKey, sdk.Uint64ToBigEndian(balancerToCLPoolLink.BalancerPoolId))
+
+		err := k.redirectDistributionRecord(ctx, balancerToCLPoolLink.BalancerPoolId, balancerToCLPoolLink.ClPoolId)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
+}
 
-	prefixStore = prefix.NewStore(store, types.KeyPrefixMigrationInfoCLPool)
-	iter = prefixStore.Iterator(nil, nil)
-	defer iter.Close()
-
-	for ; iter.Valid(); iter.Next() {
-		prefixStore.Delete(iter.Key())
-	}
+// SetMigrationRecords is used in initGenesis, setting the balancer to gamm pool migration info in store.
+func (k Keeper) SetMigrationRecords(ctx sdk.Context, migrationInfo types.MigrationRecords) {
+	store := ctx.KVStore(k.storeKey)
 
 	for _, balancerToCLPoolLink := range migrationInfo.BalancerToConcentratedPoolLinks {
 		balancerToClPoolKey := types.GetKeyPrefixMigrationInfoBalancerPool(balancerToCLPoolLink.BalancerPoolId)
@@ -138,6 +148,49 @@ func (k Keeper) OverwriteMigrationRecords(ctx sdk.Context, migrationInfo types.M
 		clToBalancerPoolKey := types.GetKeyPrefixMigrationInfoPoolCLPool(balancerToCLPoolLink.ClPoolId)
 		store.Set(clToBalancerPoolKey, sdk.Uint64ToBigEndian(balancerToCLPoolLink.BalancerPoolId))
 	}
+}
+
+// redirectDistributionRecord redirects the distribution record for the given balancer pool to the given concentrated pool.
+func (k Keeper) redirectDistributionRecord(ctx sdk.Context, cfmmPoolId, clPoolId uint64) error {
+	// Get CFMM gauges
+	cfmmGauges, err := k.poolIncentivesKeeper.GetGaugesForCFMMPool(ctx, cfmmPoolId)
+	if err != nil {
+		return err
+	}
+
+	if len(cfmmGauges) == 0 {
+		return fmt.Errorf("no gauges found for cfmm pool %d", cfmmPoolId)
+	}
+
+	// Get longest gauge duration from CFMM pool.
+	longestDurationGauge := cfmmGauges[0]
+	for i := 1; i < len(cfmmGauges); i++ {
+		if cfmmGauges[i].DistributeTo.Duration > longestDurationGauge.DistributeTo.Duration {
+			longestDurationGauge = cfmmGauges[i]
+		}
+	}
+
+	// Get concentrated liquidity gauge duration.
+	distributionEpochDuration := k.incentivesKeeper.GetEpochInfo(ctx).Duration
+
+	// Get concentrated gauge corresponding to the distribution epoch duration.
+	concentratedGaugeId, err := k.poolIncentivesKeeper.GetPoolGaugeId(ctx, clPoolId, distributionEpochDuration)
+	if err != nil {
+		return err
+	}
+
+	// Iterate through all the distr records, and redirect the old balancer gauge to the new concentrated gauge.
+	distrInfo := k.poolIncentivesKeeper.GetDistrInfo(ctx)
+	for i, distrRecord := range distrInfo.Records {
+		if distrRecord.GaugeId == longestDurationGauge.Id {
+			distrInfo.Records[i].GaugeId = concentratedGaugeId
+		}
+	}
+
+	// Set the new distr info.
+	k.poolIncentivesKeeper.SetDistrInfo(ctx, distrInfo)
+
+	return nil
 }
 
 // validateRecords validates a list of BalancerToConcentratedPoolLink records to ensure that:
@@ -245,7 +298,11 @@ func (k Keeper) ReplaceMigrationRecords(ctx sdk.Context, records []types.Balance
 
 	migrationInfo.BalancerToConcentratedPoolLinks = records
 
-	k.OverwriteMigrationRecords(ctx, migrationInfo)
+	// Remove all records from the distribution module and replace them with the new records
+	err = k.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, migrationInfo)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -288,8 +345,13 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []types.Balancer
 		return newRecords[i].BalancerPoolId < newRecords[j].BalancerPoolId
 	})
 
-	k.OverwriteMigrationRecords(ctx, types.MigrationRecords{
+	// We now have a list of all previous records, as well as records that have been updated.
+	// We can now remove all previous records and replace them with the new ones.
+	err = k.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, types.MigrationRecords{
 		BalancerToConcentratedPoolLinks: newRecords,
 	})
+	if err != nil {
+		return err
+	}
 	return nil
 }

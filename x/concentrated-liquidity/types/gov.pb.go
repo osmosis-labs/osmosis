@@ -24,32 +24,28 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// CreateConcentratedLiquidityPoolProposal is a gov Content type for creating a
-// concentrated liquidity pool. If a CreateConcentratedLiquidityPoolProposal
-// passes, pool is created via pool manager module account.
-type CreateConcentratedLiquidityPoolProposal struct {
-	Title              string                                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description        string                                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Denom0             string                                 `protobuf:"bytes,3,opt,name=denom0,proto3" json:"denom0,omitempty" yaml:"denom0"`
-	Denom1             string                                 `protobuf:"bytes,4,opt,name=denom1,proto3" json:"denom1,omitempty" yaml:"denom1"`
-	TickSpacing        uint64                                 `protobuf:"varint,5,opt,name=tick_spacing,json=tickSpacing,proto3" json:"tick_spacing,omitempty" yaml:"tick_spacing"`
-	ExponentAtPriceOne github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,6,opt,name=exponent_at_price_one,json=exponentAtPriceOne,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"exponent_at_price_one" yaml:"exponent_at_price_one"`
-	SpreadFactor       github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,7,opt,name=spread_factor,json=spreadFactor,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"spread_factor" yaml:"spread_factor"`
+// CreateConcentratedLiquidityPoolsProposal is a gov Content type for creating
+// concentrated liquidity pools. If a CreateConcentratedLiquidityPoolsProposal
+// passes, the pools are created via pool manager module account.
+type CreateConcentratedLiquidityPoolsProposal struct {
+	Title       string       `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description string       `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	PoolRecords []PoolRecord `protobuf:"bytes,3,rep,name=pool_records,json=poolRecords,proto3" json:"pool_records" yaml:"pool_records"`
 }
 
-func (m *CreateConcentratedLiquidityPoolProposal) Reset() {
-	*m = CreateConcentratedLiquidityPoolProposal{}
+func (m *CreateConcentratedLiquidityPoolsProposal) Reset() {
+	*m = CreateConcentratedLiquidityPoolsProposal{}
 }
-func (*CreateConcentratedLiquidityPoolProposal) ProtoMessage() {}
-func (*CreateConcentratedLiquidityPoolProposal) Descriptor() ([]byte, []int) {
+func (*CreateConcentratedLiquidityPoolsProposal) ProtoMessage() {}
+func (*CreateConcentratedLiquidityPoolsProposal) Descriptor() ([]byte, []int) {
 	return fileDescriptor_e6d167276ceeedc2, []int{0}
 }
-func (m *CreateConcentratedLiquidityPoolProposal) XXX_Unmarshal(b []byte) error {
+func (m *CreateConcentratedLiquidityPoolsProposal) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *CreateConcentratedLiquidityPoolProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *CreateConcentratedLiquidityPoolsProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_CreateConcentratedLiquidityPoolProposal.Marshal(b, m, deterministic)
+		return xxx_messageInfo_CreateConcentratedLiquidityPoolsProposal.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -59,17 +55,17 @@ func (m *CreateConcentratedLiquidityPoolProposal) XXX_Marshal(b []byte, determin
 		return b[:n], nil
 	}
 }
-func (m *CreateConcentratedLiquidityPoolProposal) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CreateConcentratedLiquidityPoolProposal.Merge(m, src)
+func (m *CreateConcentratedLiquidityPoolsProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CreateConcentratedLiquidityPoolsProposal.Merge(m, src)
 }
-func (m *CreateConcentratedLiquidityPoolProposal) XXX_Size() int {
+func (m *CreateConcentratedLiquidityPoolsProposal) XXX_Size() int {
 	return m.Size()
 }
-func (m *CreateConcentratedLiquidityPoolProposal) XXX_DiscardUnknown() {
-	xxx_messageInfo_CreateConcentratedLiquidityPoolProposal.DiscardUnknown(m)
+func (m *CreateConcentratedLiquidityPoolsProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_CreateConcentratedLiquidityPoolsProposal.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_CreateConcentratedLiquidityPoolProposal proto.InternalMessageInfo
+var xxx_messageInfo_CreateConcentratedLiquidityPoolsProposal proto.InternalMessageInfo
 
 // TickSpacingDecreaseProposal is a gov Content type for proposing a tick
 // spacing decrease for a pool. The proposal will fail if one of the pools do
@@ -167,10 +163,73 @@ func (m *PoolIdToTickSpacingRecord) GetNewTickSpacing() uint64 {
 	return 0
 }
 
+type PoolRecord struct {
+	Denom0             string                                 `protobuf:"bytes,1,opt,name=denom0,proto3" json:"denom0,omitempty" yaml:"denom0"`
+	Denom1             string                                 `protobuf:"bytes,2,opt,name=denom1,proto3" json:"denom1,omitempty" yaml:"denom1"`
+	TickSpacing        uint64                                 `protobuf:"varint,3,opt,name=tick_spacing,json=tickSpacing,proto3" json:"tick_spacing,omitempty" yaml:"tick_spacing"`
+	ExponentAtPriceOne github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=exponent_at_price_one,json=exponentAtPriceOne,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"exponent_at_price_one" yaml:"exponent_at_price_one"`
+	SpreadFactor       github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=spread_factor,json=spreadFactor,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"spread_factor" yaml:"spread_factor"`
+}
+
+func (m *PoolRecord) Reset()         { *m = PoolRecord{} }
+func (m *PoolRecord) String() string { return proto.CompactTextString(m) }
+func (*PoolRecord) ProtoMessage()    {}
+func (*PoolRecord) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e6d167276ceeedc2, []int{3}
+}
+func (m *PoolRecord) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PoolRecord) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PoolRecord.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PoolRecord) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PoolRecord.Merge(m, src)
+}
+func (m *PoolRecord) XXX_Size() int {
+	return m.Size()
+}
+func (m *PoolRecord) XXX_DiscardUnknown() {
+	xxx_messageInfo_PoolRecord.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PoolRecord proto.InternalMessageInfo
+
+func (m *PoolRecord) GetDenom0() string {
+	if m != nil {
+		return m.Denom0
+	}
+	return ""
+}
+
+func (m *PoolRecord) GetDenom1() string {
+	if m != nil {
+		return m.Denom1
+	}
+	return ""
+}
+
+func (m *PoolRecord) GetTickSpacing() uint64 {
+	if m != nil {
+		return m.TickSpacing
+	}
+	return 0
+}
+
 func init() {
-	proto.RegisterType((*CreateConcentratedLiquidityPoolProposal)(nil), "osmosis.concentratedliquidity.v1beta1.CreateConcentratedLiquidityPoolProposal")
+	proto.RegisterType((*CreateConcentratedLiquidityPoolsProposal)(nil), "osmosis.concentratedliquidity.v1beta1.CreateConcentratedLiquidityPoolsProposal")
 	proto.RegisterType((*TickSpacingDecreaseProposal)(nil), "osmosis.concentratedliquidity.v1beta1.TickSpacingDecreaseProposal")
 	proto.RegisterType((*PoolIdToTickSpacingRecord)(nil), "osmosis.concentratedliquidity.v1beta1.PoolIdToTickSpacingRecord")
+	proto.RegisterType((*PoolRecord)(nil), "osmosis.concentratedliquidity.v1beta1.PoolRecord")
 }
 
 func init() {
@@ -178,52 +237,54 @@ func init() {
 }
 
 var fileDescriptor_e6d167276ceeedc2 = []byte{
-	// 553 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x53, 0xb1, 0x6f, 0xd3, 0x4e,
-	0x14, 0xb6, 0x7f, 0x71, 0x53, 0xfd, 0x2e, 0x29, 0x02, 0x13, 0x54, 0x53, 0x90, 0x1d, 0x59, 0x02,
-	0xc2, 0x10, 0x1b, 0x83, 0x58, 0x32, 0x41, 0x5a, 0x55, 0xaa, 0x84, 0x20, 0x32, 0x9d, 0x10, 0x92,
-	0xe5, 0x9c, 0x8f, 0x70, 0x8a, 0x73, 0xcf, 0xf8, 0xae, 0x69, 0x33, 0xb2, 0x21, 0xb1, 0x30, 0x32,
-	0xe6, 0xcf, 0xe9, 0xd8, 0x11, 0x31, 0x58, 0x28, 0x59, 0x58, 0xc9, 0x5f, 0x80, 0x7c, 0x4e, 0x8a,
-	0x8b, 0x1a, 0x09, 0xc4, 0x64, 0x7f, 0xef, 0x7d, 0xef, 0xfb, 0xee, 0xbd, 0x77, 0x87, 0x5a, 0xc0,
-	0x47, 0xc0, 0x29, 0x77, 0x31, 0x30, 0x4c, 0x98, 0x48, 0x43, 0x41, 0xa2, 0x76, 0x4c, 0xdf, 0x1d,
-	0xd1, 0x88, 0x8a, 0x89, 0x3b, 0x80, 0xb1, 0x93, 0xa4, 0x20, 0x40, 0xbf, 0xb3, 0x64, 0x3a, 0x65,
-	0xe6, 0x39, 0xd1, 0x19, 0x7b, 0x7d, 0x22, 0x42, 0x6f, 0xa7, 0x31, 0x80, 0x01, 0xc8, 0x0a, 0x37,
-	0xff, 0x2b, 0x8a, 0xed, 0x45, 0x05, 0xdd, 0xdb, 0x4d, 0x49, 0x28, 0xc8, 0x6e, 0xa9, 0xfa, 0xd9,
-	0xaa, 0xba, 0x07, 0x10, 0xf7, 0x52, 0x48, 0x80, 0x87, 0xb1, 0xde, 0x40, 0x1b, 0x82, 0x8a, 0x98,
-	0x18, 0x6a, 0x53, 0x6d, 0xfd, 0xef, 0x17, 0x40, 0x6f, 0xa2, 0x5a, 0x44, 0x38, 0x4e, 0x69, 0x22,
-	0x28, 0x30, 0xe3, 0x3f, 0x99, 0x2b, 0x87, 0xf4, 0xfb, 0xa8, 0x1a, 0x11, 0x06, 0xa3, 0x07, 0x46,
-	0x25, 0x4f, 0x76, 0xaf, 0x2d, 0x32, 0x6b, 0x6b, 0x12, 0x8e, 0xe2, 0x8e, 0x5d, 0xc4, 0x6d, 0x7f,
-	0x49, 0x38, 0xa7, 0x7a, 0x86, 0x76, 0x29, 0xd5, 0x5b, 0x51, 0x3d, 0xbd, 0x83, 0xea, 0x82, 0xe2,
-	0x61, 0xc0, 0x93, 0x10, 0x53, 0x36, 0x30, 0x36, 0x9a, 0x6a, 0x4b, 0xeb, 0x6e, 0x2f, 0x32, 0xeb,
-	0x7a, 0x51, 0x50, 0xce, 0xda, 0x7e, 0x2d, 0x87, 0x2f, 0x0b, 0xa4, 0xbf, 0x57, 0xd1, 0x0d, 0x72,
-	0x92, 0x00, 0x23, 0x4c, 0x04, 0xa1, 0x08, 0x92, 0x94, 0x62, 0x12, 0x00, 0x23, 0x46, 0x55, 0xda,
-	0x3e, 0x3f, 0xcd, 0x2c, 0xe5, 0x6b, 0x66, 0xdd, 0x1d, 0x50, 0xf1, 0xf6, 0xa8, 0xef, 0x60, 0x18,
-	0xb9, 0x58, 0x8e, 0x79, 0xf9, 0x69, 0xf3, 0x68, 0xe8, 0x8a, 0x49, 0x42, 0xb8, 0x73, 0xc0, 0xc4,
-	0x22, 0xb3, 0x6e, 0x17, 0x9e, 0x97, 0x8a, 0xda, 0xbe, 0xbe, 0x8a, 0x3f, 0x15, 0xbd, 0x3c, 0xfa,
-	0x82, 0x11, 0x7d, 0x88, 0xb6, 0x78, 0x92, 0x92, 0x30, 0x0a, 0xde, 0x84, 0x58, 0x40, 0x6a, 0x6c,
-	0x4a, 0xeb, 0xfd, 0xbf, 0xb0, 0xde, 0x23, 0x78, 0x91, 0x59, 0x8d, 0xc2, 0xfa, 0x82, 0x98, 0xed,
-	0xd7, 0x0b, 0xbc, 0x2f, 0x61, 0xa7, 0xfe, 0x61, 0x6a, 0x29, 0x9f, 0xa7, 0x96, 0xf2, 0x7d, 0x6a,
-	0xa9, 0xf6, 0x0f, 0x15, 0xdd, 0x3a, 0xfc, 0x35, 0x8e, 0x3d, 0x82, 0x53, 0x12, 0x72, 0xf2, 0xcf,
-	0x8b, 0xfe, 0xa8, 0x22, 0x2b, 0x01, 0x88, 0x03, 0x1a, 0x05, 0x02, 0x82, 0xf2, 0x02, 0x82, 0x94,
-	0x60, 0x48, 0x23, 0x6e, 0x54, 0x9a, 0x95, 0x56, 0xed, 0xe1, 0x13, 0xe7, 0x8f, 0x2e, 0xad, 0x93,
-	0xdf, 0xbf, 0x83, 0xe8, 0x10, 0x4a, 0xa7, 0xf5, 0xa5, 0x50, 0x57, 0xcb, 0xe7, 0xe4, 0xef, 0x24,
-	0xeb, 0x08, 0xfc, 0xb7, 0x9e, 0x23, 0x74, 0x73, 0xad, 0x98, 0xbe, 0x8d, 0x36, 0x97, 0xe7, 0x96,
-	0x2d, 0x6b, 0x7e, 0xb5, 0xd0, 0xd5, 0x5b, 0xe8, 0x2a, 0x23, 0xc7, 0x17, 0x3a, 0x91, 0x8d, 0x6b,
-	0xfe, 0x15, 0x46, 0x8e, 0x4b, 0x42, 0x1d, 0x2d, 0x77, 0xe9, 0xbe, 0x3e, 0x9d, 0x99, 0xea, 0xd9,
-	0xcc, 0x54, 0xbf, 0xcd, 0x4c, 0xf5, 0xd3, 0xdc, 0x54, 0xce, 0xe6, 0xa6, 0xf2, 0x65, 0x6e, 0x2a,
-	0xaf, 0xba, 0xa5, 0x7d, 0x2e, 0x7b, 0x6f, 0xc7, 0x61, 0x9f, 0xaf, 0x80, 0x3b, 0xf6, 0x1e, 0xbb,
-	0x27, 0xeb, 0x5e, 0xbb, 0xdc, 0x77, 0xbf, 0x2a, 0xdf, 0xec, 0xa3, 0x9f, 0x01, 0x00, 0x00, 0xff,
-	0xff, 0xcd, 0x50, 0xb8, 0x56, 0x1c, 0x04, 0x00, 0x00,
+	// 584 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0x41, 0x8b, 0xd3, 0x40,
+	0x14, 0x4e, 0x6c, 0xb7, 0xe2, 0xb4, 0x2b, 0x1a, 0x2b, 0x5b, 0x77, 0x25, 0x29, 0x01, 0xa5, 0x1e,
+	0x9a, 0x18, 0x05, 0x0f, 0x3d, 0x69, 0x77, 0x59, 0x58, 0x10, 0x2d, 0x71, 0x4f, 0x22, 0x84, 0x74,
+	0x32, 0xd6, 0xa1, 0xe9, 0x4c, 0x36, 0x33, 0xdb, 0xdd, 0x1e, 0xbd, 0x09, 0x5e, 0xbc, 0x08, 0x1e,
+	0xfb, 0x73, 0xf6, 0xb8, 0x47, 0xf1, 0x10, 0xa4, 0xbd, 0x78, 0xb5, 0xbf, 0x40, 0x32, 0x93, 0xb6,
+	0xe9, 0x6a, 0xc1, 0x65, 0x4f, 0xc9, 0x7b, 0xf3, 0xbd, 0xf7, 0x7d, 0xdf, 0x7b, 0xc3, 0x80, 0x06,
+	0x65, 0x03, 0xca, 0x30, 0xb3, 0x21, 0x25, 0x10, 0x11, 0x1e, 0xfb, 0x1c, 0x05, 0xcd, 0x10, 0x1f,
+	0x1d, 0xe3, 0x00, 0xf3, 0x91, 0xdd, 0xa3, 0x43, 0x2b, 0x8a, 0x29, 0xa7, 0xda, 0x83, 0x0c, 0x69,
+	0xe5, 0x91, 0x0b, 0xa0, 0x35, 0x74, 0xba, 0x88, 0xfb, 0xce, 0x76, 0xb5, 0x47, 0x7b, 0x54, 0x54,
+	0xd8, 0xe9, 0x9f, 0x2c, 0x36, 0xa7, 0x2a, 0x68, 0xec, 0xc6, 0xc8, 0xe7, 0x68, 0x37, 0x57, 0xfd,
+	0x72, 0x5e, 0xdd, 0xa1, 0x34, 0x64, 0x9d, 0x98, 0x46, 0x94, 0xf9, 0xa1, 0x56, 0x05, 0x1b, 0x1c,
+	0xf3, 0x10, 0xd5, 0xd4, 0xba, 0xda, 0xb8, 0xe1, 0xca, 0x40, 0xab, 0x83, 0x72, 0x80, 0x18, 0x8c,
+	0x71, 0xc4, 0x31, 0x25, 0xb5, 0x6b, 0xe2, 0x2c, 0x9f, 0xd2, 0x8e, 0x40, 0x25, 0xa2, 0x34, 0xf4,
+	0x62, 0x04, 0x69, 0x1c, 0xb0, 0x5a, 0xa1, 0x5e, 0x68, 0x94, 0x9f, 0x38, 0xd6, 0x7f, 0x09, 0xb7,
+	0x52, 0x0d, 0xae, 0xa8, 0x6c, 0xef, 0x9c, 0x25, 0x86, 0x32, 0x4b, 0x8c, 0x3b, 0x23, 0x7f, 0x10,
+	0xb6, 0xcc, 0x7c, 0x53, 0xd3, 0x2d, 0x47, 0x0b, 0x20, 0x6b, 0x55, 0x3e, 0x8d, 0x0d, 0xe5, 0xdb,
+	0xd8, 0x50, 0x7e, 0x8d, 0x0d, 0xd5, 0xfc, 0xad, 0x82, 0x9d, 0x43, 0x0c, 0xfb, 0x6f, 0x22, 0x1f,
+	0x62, 0xd2, 0xdb, 0x43, 0x30, 0x46, 0x3e, 0x43, 0x57, 0x36, 0xf6, 0x59, 0x05, 0x86, 0x10, 0x81,
+	0x03, 0x8f, 0x53, 0x8f, 0x63, 0xd8, 0xf7, 0x98, 0xe4, 0xb8, 0x60, 0xf6, 0xf9, 0x25, 0xcc, 0x1e,
+	0x04, 0x87, 0x34, 0xa7, 0x36, 0xf3, 0x5e, 0x4c, 0xbd, 0xbb, 0xdb, 0xd1, 0x3a, 0xc0, 0x45, 0xcf,
+	0x01, 0xb8, 0xb7, 0xb6, 0x99, 0xb6, 0x05, 0xae, 0x67, 0xba, 0x85, 0xe5, 0xa2, 0x5b, 0x92, 0x7d,
+	0xb5, 0x06, 0xb8, 0x45, 0xd0, 0xc9, 0x8a, 0x13, 0x61, 0xbc, 0xe8, 0xde, 0x24, 0xe8, 0x24, 0xd7,
+	0xa8, 0x55, 0x14, 0x2c, 0x5f, 0x0b, 0x00, 0x2c, 0x17, 0xa4, 0x3d, 0x02, 0xa5, 0x00, 0x11, 0x3a,
+	0x78, 0x2c, 0x27, 0xd9, 0xbe, 0x3d, 0x4b, 0x8c, 0x4d, 0xb9, 0x2c, 0x99, 0x37, 0xdd, 0x0c, 0xb0,
+	0x80, 0x3a, 0x72, 0xb0, 0x7f, 0x41, 0x9d, 0x39, 0xd4, 0xd1, 0x5a, 0xa0, 0xb2, 0x22, 0xa8, 0x90,
+	0x0a, 0x6a, 0x6f, 0x2d, 0x2f, 0x42, 0xfe, 0xd4, 0x74, 0xcb, 0x7c, 0x29, 0x53, 0xfb, 0xa8, 0x82,
+	0xbb, 0xe8, 0x34, 0xa2, 0x04, 0x11, 0xee, 0xf9, 0xdc, 0x8b, 0x62, 0x0c, 0x91, 0x47, 0x09, 0xaa,
+	0x15, 0x05, 0xed, 0xab, 0x74, 0xac, 0x3f, 0x12, 0xe3, 0x61, 0x0f, 0xf3, 0x0f, 0xc7, 0x5d, 0x0b,
+	0xd2, 0x81, 0x0d, 0xc5, 0xae, 0xb2, 0x4f, 0x93, 0x05, 0x7d, 0x9b, 0x8f, 0x22, 0xc4, 0xac, 0x03,
+	0xc2, 0x67, 0x89, 0x71, 0x5f, 0x72, 0xfe, 0xb3, 0xa9, 0xe9, 0x6a, 0xf3, 0xfc, 0x0b, 0xde, 0x49,
+	0xb3, 0xaf, 0x09, 0xd2, 0xfa, 0x60, 0x93, 0x45, 0x31, 0xf2, 0x03, 0xef, 0xbd, 0x0f, 0x39, 0x8d,
+	0x6b, 0x1b, 0x82, 0x7a, 0xff, 0x12, 0xd4, 0x7b, 0x08, 0xce, 0x12, 0xa3, 0x2a, 0xa9, 0x57, 0x9a,
+	0x99, 0x6e, 0x45, 0xc6, 0xfb, 0x22, 0x94, 0x7b, 0x69, 0xbf, 0x3b, 0x9b, 0xe8, 0xea, 0xf9, 0x44,
+	0x57, 0x7f, 0x4e, 0x74, 0xf5, 0xcb, 0x54, 0x57, 0xce, 0xa7, 0xba, 0xf2, 0x7d, 0xaa, 0x2b, 0x6f,
+	0xdb, 0x39, 0xb6, 0xec, 0x4e, 0x36, 0x43, 0xbf, 0xcb, 0xe6, 0x81, 0x3d, 0x74, 0x9e, 0xd9, 0xa7,
+	0xeb, 0x9e, 0x1d, 0xa1, 0xa6, 0x5b, 0x12, 0x8f, 0xc7, 0xd3, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff,
+	0x35, 0x64, 0x88, 0x0b, 0xa5, 0x04, 0x00, 0x00,
 }
 
-func (this *CreateConcentratedLiquidityPoolProposal) Equal(that interface{}) bool {
+func (this *CreateConcentratedLiquidityPoolsProposal) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*CreateConcentratedLiquidityPoolProposal)
+	that1, ok := that.(*CreateConcentratedLiquidityPoolsProposal)
 	if !ok {
-		that2, ok := that.(CreateConcentratedLiquidityPoolProposal)
+		that2, ok := that.(CreateConcentratedLiquidityPoolsProposal)
 		if ok {
 			that1 = &that2
 		} else {
@@ -241,20 +302,13 @@ func (this *CreateConcentratedLiquidityPoolProposal) Equal(that interface{}) boo
 	if this.Description != that1.Description {
 		return false
 	}
-	if this.Denom0 != that1.Denom0 {
+	if len(this.PoolRecords) != len(that1.PoolRecords) {
 		return false
 	}
-	if this.Denom1 != that1.Denom1 {
-		return false
-	}
-	if this.TickSpacing != that1.TickSpacing {
-		return false
-	}
-	if !this.ExponentAtPriceOne.Equal(that1.ExponentAtPriceOne) {
-		return false
-	}
-	if !this.SpreadFactor.Equal(that1.SpreadFactor) {
-		return false
+	for i := range this.PoolRecords {
+		if !this.PoolRecords[i].Equal(&that1.PoolRecords[i]) {
+			return false
+		}
 	}
 	return true
 }
@@ -320,7 +374,43 @@ func (this *PoolIdToTickSpacingRecord) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *CreateConcentratedLiquidityPoolProposal) Marshal() (dAtA []byte, err error) {
+func (this *PoolRecord) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*PoolRecord)
+	if !ok {
+		that2, ok := that.(PoolRecord)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Denom0 != that1.Denom0 {
+		return false
+	}
+	if this.Denom1 != that1.Denom1 {
+		return false
+	}
+	if this.TickSpacing != that1.TickSpacing {
+		return false
+	}
+	if !this.ExponentAtPriceOne.Equal(that1.ExponentAtPriceOne) {
+		return false
+	}
+	if !this.SpreadFactor.Equal(that1.SpreadFactor) {
+		return false
+	}
+	return true
+}
+func (m *CreateConcentratedLiquidityPoolsProposal) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -330,54 +420,29 @@ func (m *CreateConcentratedLiquidityPoolProposal) Marshal() (dAtA []byte, err er
 	return dAtA[:n], nil
 }
 
-func (m *CreateConcentratedLiquidityPoolProposal) MarshalTo(dAtA []byte) (int, error) {
+func (m *CreateConcentratedLiquidityPoolsProposal) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *CreateConcentratedLiquidityPoolProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *CreateConcentratedLiquidityPoolsProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.SpreadFactor.Size()
-		i -= size
-		if _, err := m.SpreadFactor.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
+	if len(m.PoolRecords) > 0 {
+		for iNdEx := len(m.PoolRecords) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.PoolRecords[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGov(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
 		}
-		i = encodeVarintGov(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x3a
-	{
-		size := m.ExponentAtPriceOne.Size()
-		i -= size
-		if _, err := m.ExponentAtPriceOne.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintGov(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x32
-	if m.TickSpacing != 0 {
-		i = encodeVarintGov(dAtA, i, uint64(m.TickSpacing))
-		i--
-		dAtA[i] = 0x28
-	}
-	if len(m.Denom1) > 0 {
-		i -= len(m.Denom1)
-		copy(dAtA[i:], m.Denom1)
-		i = encodeVarintGov(dAtA, i, uint64(len(m.Denom1)))
-		i--
-		dAtA[i] = 0x22
-	}
-	if len(m.Denom0) > 0 {
-		i -= len(m.Denom0)
-		copy(dAtA[i:], m.Denom0)
-		i = encodeVarintGov(dAtA, i, uint64(len(m.Denom0)))
-		i--
-		dAtA[i] = 0x1a
 	}
 	if len(m.Description) > 0 {
 		i -= len(m.Description)
@@ -480,6 +545,68 @@ func (m *PoolIdToTickSpacingRecord) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
+func (m *PoolRecord) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PoolRecord) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PoolRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.SpreadFactor.Size()
+		i -= size
+		if _, err := m.SpreadFactor.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintGov(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x2a
+	{
+		size := m.ExponentAtPriceOne.Size()
+		i -= size
+		if _, err := m.ExponentAtPriceOne.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintGov(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	if m.TickSpacing != 0 {
+		i = encodeVarintGov(dAtA, i, uint64(m.TickSpacing))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Denom1) > 0 {
+		i -= len(m.Denom1)
+		copy(dAtA[i:], m.Denom1)
+		i = encodeVarintGov(dAtA, i, uint64(len(m.Denom1)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Denom0) > 0 {
+		i -= len(m.Denom0)
+		copy(dAtA[i:], m.Denom0)
+		i = encodeVarintGov(dAtA, i, uint64(len(m.Denom0)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintGov(dAtA []byte, offset int, v uint64) int {
 	offset -= sovGov(v)
 	base := offset
@@ -491,7 +618,7 @@ func encodeVarintGov(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *CreateConcentratedLiquidityPoolProposal) Size() (n int) {
+func (m *CreateConcentratedLiquidityPoolsProposal) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -505,21 +632,12 @@ func (m *CreateConcentratedLiquidityPoolProposal) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovGov(uint64(l))
 	}
-	l = len(m.Denom0)
-	if l > 0 {
-		n += 1 + l + sovGov(uint64(l))
+	if len(m.PoolRecords) > 0 {
+		for _, e := range m.PoolRecords {
+			l = e.Size()
+			n += 1 + l + sovGov(uint64(l))
+		}
 	}
-	l = len(m.Denom1)
-	if l > 0 {
-		n += 1 + l + sovGov(uint64(l))
-	}
-	if m.TickSpacing != 0 {
-		n += 1 + sovGov(uint64(m.TickSpacing))
-	}
-	l = m.ExponentAtPriceOne.Size()
-	n += 1 + l + sovGov(uint64(l))
-	l = m.SpreadFactor.Size()
-	n += 1 + l + sovGov(uint64(l))
 	return n
 }
 
@@ -561,13 +679,37 @@ func (m *PoolIdToTickSpacingRecord) Size() (n int) {
 	return n
 }
 
+func (m *PoolRecord) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom0)
+	if l > 0 {
+		n += 1 + l + sovGov(uint64(l))
+	}
+	l = len(m.Denom1)
+	if l > 0 {
+		n += 1 + l + sovGov(uint64(l))
+	}
+	if m.TickSpacing != 0 {
+		n += 1 + sovGov(uint64(m.TickSpacing))
+	}
+	l = m.ExponentAtPriceOne.Size()
+	n += 1 + l + sovGov(uint64(l))
+	l = m.SpreadFactor.Size()
+	n += 1 + l + sovGov(uint64(l))
+	return n
+}
+
 func sovGov(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozGov(x uint64) (n int) {
 	return sovGov(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *CreateConcentratedLiquidityPoolProposal) Unmarshal(dAtA []byte) error {
+func (m *CreateConcentratedLiquidityPoolsProposal) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -590,10 +732,10 @@ func (m *CreateConcentratedLiquidityPoolProposal) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: CreateConcentratedLiquidityPoolProposal: wiretype end group for non-group")
+			return fmt.Errorf("proto: CreateConcentratedLiquidityPoolsProposal: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CreateConcentratedLiquidityPoolProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: CreateConcentratedLiquidityPoolsProposal: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -662,9 +804,9 @@ func (m *CreateConcentratedLiquidityPoolProposal) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Denom0", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolRecords", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowGov
@@ -674,140 +816,23 @@ func (m *CreateConcentratedLiquidityPoolProposal) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthGov
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthGov
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Denom0 = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Denom1", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGov
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthGov
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthGov
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Denom1 = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TickSpacing", wireType)
-			}
-			m.TickSpacing = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGov
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.TickSpacing |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ExponentAtPriceOne", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGov
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthGov
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthGov
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.ExponentAtPriceOne.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 7:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SpreadFactor", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGov
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthGov
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthGov
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.SpreadFactor.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.PoolRecords = append(m.PoolRecords, PoolRecord{})
+			if err := m.PoolRecords[len(m.PoolRecords)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1047,6 +1072,207 @@ func (m *PoolIdToTickSpacingRecord) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGov(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGov
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PoolRecord) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGov
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PoolRecord: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PoolRecord: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom0", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGov
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGov
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGov
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom0 = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom1", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGov
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGov
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGov
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom1 = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TickSpacing", wireType)
+			}
+			m.TickSpacing = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGov
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TickSpacing |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExponentAtPriceOne", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGov
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGov
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGov
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ExponentAtPriceOne.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SpreadFactor", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGov
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGov
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGov
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.SpreadFactor.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipGov(dAtA[iNdEx:])

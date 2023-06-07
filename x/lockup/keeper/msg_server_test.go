@@ -3,9 +3,9 @@ package keeper_test
 import (
 	"time"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v15/x/lockup/keeper"
-	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v16/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -453,5 +453,99 @@ func (s *KeeperTestSuite) TestMsgForceUnlock() {
 			s.Require().NotEqual(test.forceUnlockAmount, balanceAfterForceUnlock.Amount)
 			return
 		}
+	}
+}
+
+func (s *KeeperTestSuite) TestSetRewardReceiverAddress() {
+	type param struct {
+		isOwner                      bool
+		isRewardReceiverAddressOwner bool
+		isLockOwner                  bool
+	}
+
+	tests := []struct {
+		name       string
+		param      param
+		expectPass bool
+	}{
+		{
+			name: "happy path: change reward receiver address to another address",
+			param: param{
+				isOwner:                      true,
+				isRewardReceiverAddressOwner: false,
+				isLockOwner:                  true,
+			},
+			expectPass: true,
+		},
+		{
+			name: "error: attempt to try changing to same owner",
+			param: param{
+				isOwner:                      false,
+				isRewardReceiverAddressOwner: true,
+				isLockOwner:                  true,
+			},
+			expectPass: false,
+		},
+		{
+			name: "error: sender is not the owner of the lock",
+			param: param{
+				isOwner:                      false,
+				isRewardReceiverAddressOwner: false,
+				isLockOwner:                  true,
+			},
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		s.SetupTest()
+
+		defaultAmountInLock := sdk.NewCoins(sdk.NewInt64Coin("foo", 100))
+		s.FundAcc(s.TestAccs[0], defaultAmountInLock)
+
+		lock, err := s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[0], defaultAmountInLock, time.Minute)
+		s.Require().NoError(err)
+
+		// lock reward receiver address should initially be an empty string
+		s.Require().Equal(lock.RewardReceiverAddress, "")
+
+		msgServer := keeper.NewMsgServerImpl(s.App.LockupKeeper)
+		c := sdk.WrapSDKContext(s.Ctx)
+
+		owner := s.TestAccs[0]
+		if !test.param.isOwner {
+			owner = s.TestAccs[1]
+		}
+
+		rewardReceiver := s.TestAccs[0]
+		if !test.param.isRewardReceiverAddressOwner {
+			rewardReceiver = s.TestAccs[1]
+		}
+
+		lockId := lock.ID
+		if !test.param.isLockOwner {
+			lockId = lockId + 1
+		}
+		// System under test
+		msg := types.NewMsgSetRewardReceiverAddress(owner, rewardReceiver, lockId)
+		resp, err := msgServer.SetRewardReceiverAddress(c, msg)
+		if !test.expectPass {
+			s.Require().Error(err)
+			s.Require().Equal(resp.Success, false)
+			return
+		}
+
+		s.Require().NoError(err)
+		s.Require().Equal(resp.Success, true)
+
+		// now check if the reward receiver address has been changed
+		newLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
+		s.Require().NoError(err)
+		if test.param.isRewardReceiverAddressOwner {
+			s.Require().Equal(newLock.RewardReceiverAddress, "")
+		} else {
+			s.Require().Equal(s.TestAccs[1].String(), newLock.RewardReceiverAddress)
+		}
+
 	}
 }

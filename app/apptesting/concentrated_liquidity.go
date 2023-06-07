@@ -5,10 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
 )
 
 var (
@@ -20,7 +20,7 @@ var (
 	DefaultCoinAmount  = sdk.NewInt(1000000000000000000)
 )
 
-// PrepareConcentratedPool sets up an eth usdc concentrated liquidity pool with pool ID 1, tick spacing of 100,
+// PrepareConcentratedPool sets up an eth usdc concentrated liquidity pool with a tick spacing of 100,
 // no liquidity and zero spread factor.
 func (s *KeeperTestHelper) PrepareConcentratedPool() types.ConcentratedPoolExtension {
 	return s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, sdk.ZeroDec())

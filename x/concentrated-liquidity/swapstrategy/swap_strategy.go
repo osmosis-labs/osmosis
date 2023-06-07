@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
 // swapStrategy defines the interface for computing a swap.
@@ -16,7 +16,7 @@ type swapStrategy interface {
 	// upon comparing it to sqrt price limit.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.Dec
-	// ComputeSwapStepOutGivenIn calculates the next sqrt price, the amount of token in consumed, the amount out to return to the user, and total fee charge on token in.
+	// ComputeSwapStepOutGivenIn calculates the next sqrt price, the amount of token in consumed, the amount out to return to the user, and total spread reward charge on token in.
 	// Parameters:
 	//   * sqrtPriceCurrent is the current sqrt price.
 	//   * sqrtPriceTarget is the target sqrt price computed with GetSqrtTargetPrice(). It must be one of:
@@ -30,10 +30,10 @@ type swapStrategy interface {
 	//   * sqrtPriceNext is the next sqrt price. It equals sqrt price target if target is reached. Otherwise, it is in-between sqrt price current and target.
 	//   * amountInConsumed is the amount of token in consumed. It equals amountRemainingIn if target is reached. Otherwise, it is less than amountRemainingIn.
 	//   * amountOutComputed is the amount of token out computed. It is the amount of token out to return to the user.
-	//   * feeChargeTotal is the total fee charge. The fee is charged on the amount of token in.
+	//   * spreadRewardChargeTotal is the total spread reward charge. The spread reward is charged on the amount of token in.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemainingIn sdk.Dec) (sqrtPriceNext, amountInConsumed, amountOutComputed, feeChargeTotal sdk.Dec)
-	// ComputeSwapStepInGivenOut calculates the next sqrt price, the amount of token out consumed, the amount in to charge to the user for requested out, and total fee charge on token in.
+	ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemainingIn sdk.Dec) (sqrtPriceNext, amountInConsumed, amountOutComputed, spreadRewardChargeTotal sdk.Dec)
+	// ComputeSwapStepInGivenOut calculates the next sqrt price, the amount of token out consumed, the amount in to charge to the user for requested out, and total spread reward charge on token in.
 	// Parameters:
 	//   * sqrtPriceCurrent is the current sqrt price.
 	//   * sqrtPriceTarget is the target sqrt price computed with GetSqrtTargetPrice(). It must be one of:
@@ -47,9 +47,9 @@ type swapStrategy interface {
 	//   * sqrtPriceNext is the next sqrt price. It equals sqrt price target if target is reached. Otherwise, it is in-between sqrt price current and target.
 	//   * amountOutConsumed is the amount of token out consumed. It equals amountRemainingOut if target is reached. Otherwise, it is less than amountRemainingOut.
 	//   * amountInComputed is the amount of token in computed. It is the amount of token in to charge to the user for the desired amount out.
-	//   * feeChargeTotal is the total fee charge. The fee is charged on the amount of token in.
+	//   * spreadRewardChargeTotal is the total spread reward charge. The spread reward is charged on the amount of token in.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemainingOut sdk.Dec) (sqrtPriceNext, amountOutConsumed, amountInComputed, feeChargeTotal sdk.Dec)
+	ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemainingOut sdk.Dec) (sqrtPriceNext, amountOutConsumed, amountInComputed, spreadRewardChargeTotal sdk.Dec)
 	// InitializeNextTickIterator returns iterator that seeks to the next tick from the given tickIndex.
 	// If nex tick relative to tickINdex does not exist in the store, it will return an invalid iterator.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.

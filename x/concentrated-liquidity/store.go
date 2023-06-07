@@ -11,9 +11,9 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types/genesis"
 )
 
 const (
@@ -92,7 +92,7 @@ func ParseFullTickFromBytes(key, value []byte) (tick genesis.FullTick, err error
 		return genesis.FullTick{}, types.ValueNotFoundForKeyError{Key: key}
 	}
 
-	if len(key) != types.TickKeyLengthBytes {
+	if len(key) != types.KeyTickLengthBytes {
 		return genesis.FullTick{}, types.InvalidTickKeyByteLengthError{Length: len(key)}
 	}
 

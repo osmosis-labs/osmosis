@@ -11,7 +11,7 @@ import "osmosis/concentrated-liquidity/position.proto";
 import "osmosis/concentrated-liquidity/tickInfo.proto";
 import "osmosis/concentrated-liquidity/incentive_record.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis";
+option go_package = "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types/genesis";
 
 // FullTick contains tick index and pool id along with other tick model
 // information.
@@ -35,8 +35,8 @@ message PoolData {
   // pool's ticks
   repeated FullTick ticks = 2
       [ (gogoproto.moretags) = "yaml:\"ticks\"", (gogoproto.nullable) = false ];
-  AccumObject fee_accumulator = 3 [
-    (gogoproto.moretags) = "yaml:\"fee_accumulator\"",
+  AccumObject spread_reward_accumulator = 3 [
+    (gogoproto.moretags) = "yaml:\"spread_reward_accumulator\"",
     (gogoproto.nullable) = false
   ];
   repeated AccumObject incentives_accumulators = 4 [
@@ -51,7 +51,9 @@ message PoolData {
 message PositionData {
   Position position = 1;
   uint64 lock_id = 2 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
-  osmosis.accum.v1beta1.Record fee_accum_record = 3
+  osmosis.accum.v1beta1.Record spread_reward_accum_record = 3
+      [ (gogoproto.nullable) = false ];
+  repeated osmosis.accum.v1beta1.Record uptime_accum_records = 4
       [ (gogoproto.nullable) = false ];
 }
 

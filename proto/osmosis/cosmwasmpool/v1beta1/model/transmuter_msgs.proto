@@ -1,0 +1,27 @@
+syntax = "proto3";
+package osmosis.cosmwasmpool.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/cosmwasm/msg/transmuter";
+
+// ===================== JoinPoolExecuteMsg
+message EmptyRequest {}
+
+message JoinPoolExecuteMsgRequest {
+  // join_pool is the structure containing all request fields of the join pool
+  // execute message.
+  EmptyRequest join_pool = 1 [ (gogoproto.nullable) = false ];
+}
+
+message JoinPoolExecuteMsgResponse {}
+
+// ===================== ExitPoolExecuteMsg
+message ExitPoolExecuteMsgRequest {
+  // exit_pool is the structure containing all request fields of the exit pool
+  // execute message.
+  EmptyRequest exit_pool = 1 [ (gogoproto.nullable) = false ];
+}
+
+message ExitPoolExecuteMsgResponse {}

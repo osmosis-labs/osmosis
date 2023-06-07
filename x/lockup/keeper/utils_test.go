@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -44,26 +44,26 @@ func TestGetDurationKey(t *testing.T) {
 func TestLockRefKeys(t *testing.T) {
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	// empty address and 1 coin
-	lock1 := types.NewPeriodLock(1, sdk.AccAddress{}, time.Second, time.Now(), sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	lock1 := types.NewPeriodLock(1, sdk.AccAddress{}, sdk.AccAddress{}.String(), time.Second, time.Now(), sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 	_, err := lockRefKeys(lock1)
 	require.Error(t, err)
 	// empty address and 2 coins
-	lock2 := types.NewPeriodLock(1, sdk.AccAddress{}, time.Second, time.Now(), sdk.Coins{sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin("atom", 1)})
+	lock2 := types.NewPeriodLock(1, sdk.AccAddress{}, sdk.AccAddress{}.String(), time.Second, time.Now(), sdk.Coins{sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin("atom", 1)})
 	_, err = lockRefKeys(lock2)
 	require.Error(t, err)
 
 	// not empty address and 1 coin
-	lock3 := types.NewPeriodLock(1, addr1, time.Second, time.Now(), sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	lock3 := types.NewPeriodLock(1, addr1, addr1.String(), time.Second, time.Now(), sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 	keys3, err := lockRefKeys(lock3)
 	require.NoError(t, err)
 	require.Len(t, keys3, 8)
 	// not empty address and empty coin
-	lock4 := types.NewPeriodLock(1, addr1, time.Second, time.Now(), sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	lock4 := types.NewPeriodLock(1, addr1, addr1.String(), time.Second, time.Now(), sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 	keys4, err := lockRefKeys(lock4)
 	require.NoError(t, err)
 	require.Len(t, keys4, 8)
 	// not empty address and 2 coins
-	lock5 := types.NewPeriodLock(1, addr1, time.Second, time.Now(), sdk.Coins{sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin("atom", 1)})
+	lock5 := types.NewPeriodLock(1, addr1, addr1.String(), time.Second, time.Now(), sdk.Coins{sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin("atom", 1)})
 	keys5, err := lockRefKeys(lock5)
 	require.NoError(t, err)
 	require.Len(t, keys5, 12)

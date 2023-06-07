@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 // constants.
@@ -61,7 +61,7 @@ func (msg MsgCreateConcentratedPool) ValidateBasic() error {
 
 	spreadFactor := msg.SpreadFactor
 	if spreadFactor.IsNegative() || spreadFactor.GTE(one) {
-		return cltypes.InvalidSpreadFactorError{ActualFee: spreadFactor}
+		return cltypes.InvalidSpreadFactorError{ActualSpreadFactor: spreadFactor}
 	}
 
 	return nil

@@ -16,17 +16,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/cli"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/queryproto"
-	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/simulation"
+	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/cli"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
+	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/simulation"
 
-	clkeeper "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-	clclient "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/grpc"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
+	clkeeper "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
+	clclient "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/grpc"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types/genesis"
 )
 
 var (
@@ -160,7 +160,7 @@ func (am AppModule) Actions() []simtypes.Action {
 		simtypes.NewMsgBasedAction("CreateConcentratedPool", am.keeper, simulation.RandomMsgCreateConcentratedPool),
 		simtypes.NewMsgBasedAction("CreatePosition", am.keeper, simulation.RandMsgCreatePosition),
 		simtypes.NewMsgBasedAction("WithdrawPosition", am.keeper, simulation.RandMsgWithdrawPosition),
-		simtypes.NewMsgBasedAction("CollectFees", am.keeper, simulation.RandMsgCollectFees),
+		simtypes.NewMsgBasedAction("CollectSpreadRewards", am.keeper, simulation.RandMsgCollectSpreadRewards),
 		simtypes.NewMsgBasedAction("CollectIncentives", am.keeper, simulation.RandMsgCollectIncentives),
 	}
 }

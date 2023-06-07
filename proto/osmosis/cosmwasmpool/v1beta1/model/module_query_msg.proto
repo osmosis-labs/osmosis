@@ -1,0 +1,59 @@
+syntax = "proto3";
+package osmosis.cosmwasmpool.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/cosmwasm/msg";
+
+// ===================== CalcOutAmtGivenIn
+message CalcOutAmtGivenIn {
+  // token_in is the token to be sent to the pool.
+  cosmos.base.v1beta1.Coin token_in = 1 [ (gogoproto.nullable) = false ];
+
+  // token_out_denom is the token denom to be received from the pool.
+  string token_out_denom = 2;
+
+  // swap_fee is the swap fee for this swap estimate.
+  string swap_fee = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message CalcOutAmtGivenInRequest {
+  // calc_out_amt_given_in is the structure containing all the request
+  // information for this query.
+  CalcOutAmtGivenIn calc_out_amt_given_in = 1 [ (gogoproto.nullable) = false ];
+}
+
+message CalcOutAmtGivenInResponse {
+  // token_out is the token out computed from this swap estimate call.
+  cosmos.base.v1beta1.Coin token_out = 1 [ (gogoproto.nullable) = false ];
+}
+
+// ===================== CalcInAmtGivenOut
+message CalcInAmtGivenOut {
+  // token_out is the token out to be receoved from the pool.
+  cosmos.base.v1beta1.Coin token_out = 1 [ (gogoproto.nullable) = false ];
+
+  // token_in_denom is the token denom to be sentt to the pool.
+  string token_in_denom = 2;
+
+  // swap_fee is the swap fee for this swap estimate.
+  string swap_fee = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message CalcInAmtGivenOutRequest {
+  // calc_in_amt_given_out is the structure containing all the request
+  // information for this query.
+  CalcInAmtGivenOut calc_in_amt_given_out = 1 [ (gogoproto.nullable) = false ];
+}
+
+message CalcInAmtGivenOutResponse {
+  // token_in is the token in computed from this swap estimate call.
+  cosmos.base.v1beta1.Coin token_in = 1 [ (gogoproto.nullable) = false ];
+}

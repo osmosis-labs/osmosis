@@ -1,0 +1,81 @@
+syntax = "proto3";
+package osmosis.cosmwasmpool.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/cosmwasm/msg";
+
+// ===================== SwapExactAmountIn
+message SwapExactAmountIn {
+  string sender = 1;
+  // token_in is the token to be sent to the pool.
+  cosmos.base.v1beta1.Coin token_in = 2 [ (gogoproto.nullable) = false ];
+
+  // token_out_denom is the token denom to be received from the pool.
+  string token_out_denom = 3;
+
+  // token_out_min_amount is the minimum amount of token_out to be received from
+  // the pool.
+  string token_out_min_amount = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+
+  // swap_fee is the swap fee for this swap estimate.
+  string swap_fee = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message SwapExactAmountInSudoMsg {
+  // swap_exact_amount_in is the structure containing all the request
+  // information for this message.
+  SwapExactAmountIn swap_exact_amount_in = 1 [ (gogoproto.nullable) = false ];
+}
+
+message SwapExactAmountInSudoMsgResponse {
+  // token_out_amount is the token out computed from this swap estimate call.
+  string token_out_amount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// ===================== SwapExactAmountOut
+message SwapExactAmountOut {
+  string sender = 1;
+  // token_out is the token to be sent out of the pool.
+  cosmos.base.v1beta1.Coin token_out = 2 [ (gogoproto.nullable) = false ];
+
+  // token_in_denom is the token denom to be sent too the pool.
+  string token_in_denom = 3;
+
+  // token_in_max_amount is the maximum amount of token_in to be sent to the
+  // pool.
+  string token_in_max_amount = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+
+  // swap_fee is the swap fee for this swap estimate.
+  string swap_fee = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message SwapExactAmountOutSudoMsg {
+  // swap_exact_amount_out is the structure containing all the request
+  // information for this message.
+  SwapExactAmountOut swap_exact_amount_out = 1 [ (gogoproto.nullable) = false ];
+}
+
+message SwapExactAmountOutSudoMsgResponse {
+  // token_in_amount is the token in computed from this swap estimate call.
+  string token_in_amount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+}

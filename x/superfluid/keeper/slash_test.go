@@ -3,11 +3,11 @@ package keeper_test
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v16/x/superfluid/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -262,9 +262,9 @@ func (s *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
 			slashAmt := positionPreSlash.Liquidity.Mul(tc.slashPercent)
 
 			// Note the value of the fee accumulator before the slash for the position.
-			feeAccumPreSlash, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, clPoolId)
+			feeAccumPreSlash, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, clPoolId)
 			s.Require().NoError(err)
-			feePositionKey := cltypes.KeyFeePositionAccumulator(positionId)
+			feePositionKey := cltypes.KeySpreadRewardPositionAccumulator(positionId)
 			positionSizePreSlash, err := feeAccumPreSlash.GetPositionSize(feePositionKey)
 			s.Require().NoError(err)
 
@@ -294,7 +294,7 @@ func (s *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
 				s.Require().Error(err)
 
 				// Check that the position's fee accumulator has not changed.
-				feeAccumPostSlash, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, clPoolId)
+				feeAccumPostSlash, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, clPoolId)
 				s.Require().NoError(err)
 				positionSizePostSlash, err := feeAccumPostSlash.GetPositionSize(feePositionKey)
 				s.Require().NoError(err)
@@ -337,7 +337,7 @@ func (s *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
 				s.Require().Equal(0, errTolerance.Compare(asset1PreSlash.Sub(asset1PostSlash).Amount, underlyingAssetsToSlash[1].Amount))
 
 				// Check that the fee accumulator has been updated by the amount it was slashed.
-				feeAccumPostSlash, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, clPoolId)
+				feeAccumPostSlash, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, clPoolId)
 				s.Require().NoError(err)
 				positionSizePostSlash, err := feeAccumPostSlash.GetPositionSize(feePositionKey)
 				s.Require().NoError(err)

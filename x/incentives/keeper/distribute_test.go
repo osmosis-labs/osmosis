@@ -7,11 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	appParams "github.com/osmosis-labs/osmosis/v16/app/params"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -37,12 +37,14 @@ func (s *KeeperTestSuite) TestDistribute() {
 	noRewardCoins := sdk.Coins{}
 	oneKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000)}
 	twoKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 2000)}
+	threeKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)}
 	fiveKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 5000)}
 	tests := []struct {
-		name            string
-		users           []userLocks
-		gauges          []perpGaugeDesc
-		expectedRewards []sdk.Coins
+		name                 string
+		users                []userLocks
+		gauges               []perpGaugeDesc
+		changeRewardReceiver []changeRewardReceiver
+		expectedRewards      []sdk.Coins
 	}{
 		// gauge 1 gives 3k coins. three locks, all eligible. 1k coins per lock.
 		// 1k should go to oneLockupUser and 2k to twoLockupUser.
@@ -78,12 +80,81 @@ func (s *KeeperTestSuite) TestDistribute() {
 			gauges:          []perpGaugeDesc{noRewardGauge, defaultGauge},
 			expectedRewards: []sdk.Coins{oneKRewardCoins, twoKRewardCoins},
 		},
+		// gauge 1 gives 3k coins. three locks, all eligible. 1k coins per lock.
+		// we change oneLockupUser lock's reward recepient to the twoLockupUser
+		// none should go to oneLockupUser and 3k to twoLockupUser.
+		{
+			name:   "Change Reward Receiver: One user with one lockup, another user with two lockups, single default gauge",
+			users:  []userLocks{oneLockupUser, twoLockupUser},
+			gauges: []perpGaugeDesc{defaultGauge},
+			changeRewardReceiver: []changeRewardReceiver{
+				// change first lock's receiver address to the second account
+				{
+					lockId:              1,
+					newReceiverAccIndex: 1,
+				},
+			},
+			expectedRewards: []sdk.Coins{sdk.NewCoins(), threeKRewardCoins},
+		},
+		// gauge 1 gives 3k coins. three locks, all eligible. 1k coins per lock.
+		// We change oneLockupUser's reward recepient to twoLockupUser, twoLockupUser's reward recepient to OneLockupUser.
+		// Rewards should be reversed to the original test case, 2k should go to oneLockupUser and 1k to twoLockupUser.
+		{
+			name:   "Change Reward Receiver: One user with one lockup, another user with two lockups, single default gauge",
+			users:  []userLocks{oneLockupUser, twoLockupUser},
+			gauges: []perpGaugeDesc{defaultGauge},
+			changeRewardReceiver: []changeRewardReceiver{
+				// change first lock's receiver address to the second account
+				{
+					lockId:              1,
+					newReceiverAccIndex: 1,
+				},
+				{
+					lockId:              2,
+					newReceiverAccIndex: 0,
+				},
+				{
+					lockId:              3,
+					newReceiverAccIndex: 0,
+				},
+			},
+			expectedRewards: []sdk.Coins{twoKRewardCoins, oneKRewardCoins},
+		},
+		// gauge 1 gives 3k coins. three locks, all eligible.
+		// gauge 2 gives 3k coins. one lock, to twoLockupUser.
+		// Change all of oneLockupUser's reward recepient to twoLockupUser, vice versa.
+		// Rewards should be reversed, 5k should to oneLockupUser and 1k to twoLockupUser.
+		{
+			name:   "Change Reward Receiver: One user with one lockup (default gauge), another user with two lockups (double length gauge)",
+			users:  []userLocks{oneLockupUser, twoLockupUser},
+			gauges: []perpGaugeDesc{defaultGauge, doubleLengthGauge},
+			changeRewardReceiver: []changeRewardReceiver{
+				{
+					lockId:              1,
+					newReceiverAccIndex: 1,
+				},
+				{
+					lockId:              2,
+					newReceiverAccIndex: 0,
+				},
+				{
+					lockId:              3,
+					newReceiverAccIndex: 0,
+				},
+			},
+			expectedRewards: []sdk.Coins{fiveKRewardCoins, oneKRewardCoins},
+		},
 	}
 	for _, tc := range tests {
 		s.SetupTest()
 		// setup gauges and the locks defined in the above tests, then distribute to them
 		gauges := s.SetupGauges(tc.gauges, defaultLPDenom)
 		addrs := s.SetupUserLocks(tc.users)
+
+		// set up reward receiver if not nil
+		if len(tc.changeRewardReceiver) != 0 {
+			s.SetupChangeRewardReceiver(tc.changeRewardReceiver, addrs)
+		}
 
 		_, err := s.App.IncentivesKeeper.Distribute(s.Ctx, gauges)
 		s.Require().NoError(err)

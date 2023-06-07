@@ -7,8 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
 // zeroForOneStrategy implements the swapStrategy interface.
@@ -36,7 +36,7 @@ func (s zeroForOneStrategy) GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.De
 	return nextTickSqrtPrice
 }
 
-// ComputeSwapStepOutGivenIn calculates the next sqrt price, the amount of token in consumed, the amount out to return to the user, and total fee charge on token in.
+// ComputeSwapStepOutGivenIn calculates the next sqrt price, the amount of token in consumed, the amount out to return to the user, and total spread reward charge on token in.
 // Parameters:
 //   - sqrtPriceCurrent is the current sqrt price.
 //   - sqrtPriceTarget is the target sqrt price computed with GetSqrtTargetPrice(). It must be one of:
@@ -51,7 +51,7 @@ func (s zeroForOneStrategy) GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.De
 //   - sqrtPriceNext is the next sqrt price. It equals sqrt price target if target is reached. Otherwise, it is in-between sqrt price current and target.
 //   - amountZeroIn is the amount of token zero in consumed. It equals amountZeroInRemaining if target is reached. Otherwise, it is less than amountZeroInRemaining.
 //   - amountOutComputed is the amount of token out computed. It is the amount of token out to return to the user.
-//   - feeChargeTotal is the total fee charge. The fee is charged on the amount of token in.
+//   - spreadRewardChargeTotal is the total spread reward charge. The spread reward is charged on the amount of token in.
 //
 // ZeroForOne details:
 // - zeroForOneStrategy assumes moving to the left of the current square root price.
@@ -59,22 +59,22 @@ func (s zeroForOneStrategy) ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPric
 	// Estimate the amount of token zero needed until the target sqrt price is reached.
 	amountZeroIn := math.CalcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
 
-	// Calculate sqrtPriceNext on the amount of token remaining after fee.
-	amountZeroInRemainingLessFee := amountZeroInRemaining.Mul(sdk.OneDec().Sub(s.spreadFactor))
+	// Calculate sqrtPriceNext on the amount of token remaining after spread reward.
+	amountZeroInRemainingLessSpreadReward := amountZeroInRemaining.Mul(sdk.OneDec().Sub(s.spreadFactor))
 	var sqrtPriceNext sdk.Dec
-	// If have more of the amount remaining after fee than estimated until target,
+	// If have more of the amount remaining after spread reward than estimated until target,
 	// bound the next sqrtPriceNext by the target sqrt price.
-	if amountZeroInRemainingLessFee.GTE(amountZeroIn) {
+	if amountZeroInRemainingLessSpreadReward.GTE(amountZeroIn) {
 		sqrtPriceNext = sqrtPriceTarget
 	} else {
-		// Otherwise, compute the next sqrt price based on the amount remaining after fee.
-		sqrtPriceNext = math.GetNextSqrtPriceFromAmount0InRoundingUp(sqrtPriceCurrent, liquidity, amountZeroInRemainingLessFee)
+		// Otherwise, compute the next sqrt price based on the amount remaining after spread reward.
+		sqrtPriceNext = math.GetNextSqrtPriceFromAmount0InRoundingUp(sqrtPriceCurrent, liquidity, amountZeroInRemainingLessSpreadReward)
 	}
 
 	hasReachedTarget := sqrtPriceTarget == sqrtPriceNext
 
-	// If the sqrt price target was not reached, recalculate how much of the amount remaining after fee was needed
-	// to complete the swap step. This implies that some of the amount remaining after fee is left over after the
+	// If the sqrt price target was not reached, recalculate how much of the amount remaining after spread reward was needed
+	// to complete the swap step. This implies that some of the amount remaining after spread reward is left over after the
 	// current swap step.
 	if !hasReachedTarget {
 		amountZeroIn = math.CalcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
@@ -83,14 +83,14 @@ func (s zeroForOneStrategy) ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPric
 	// Calculate the amount of the other token given the sqrt price range.
 	amountOneOut := math.CalcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
 
-	// Handle fees.
-	// Note that fee is always charged on the amount in.
-	feeChargeTotal := computeFeeChargePerSwapStepOutGivenIn(hasReachedTarget, amountZeroIn, amountZeroInRemaining, s.spreadFactor)
+	// Handle spread rewards.
+	// Note that spread reward is always charged on the amount in.
+	spreadRewardChargeTotal := computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget, amountZeroIn, amountZeroInRemaining, s.spreadFactor)
 
-	return sqrtPriceNext, amountZeroIn, amountOneOut, feeChargeTotal
+	return sqrtPriceNext, amountZeroIn, amountOneOut, spreadRewardChargeTotal
 }
 
-// ComputeSwapStepInGivenOut calculates the next sqrt price, the amount of token out consumed, the amount in to charge to the user for requested out, and total fee charge on token in.
+// ComputeSwapStepInGivenOut calculates the next sqrt price, the amount of token out consumed, the amount in to charge to the user for requested out, and total spread reward charge on token in.
 // Parameters:
 //   - sqrtPriceCurrent is the current sqrt price.
 //   - sqrtPriceTarget is the target sqrt price computed with GetSqrtTargetPrice(). It must be one of:
@@ -105,7 +105,7 @@ func (s zeroForOneStrategy) ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPric
 //   - sqrtPriceNext is the next sqrt price. It equals sqrt price target if target is reached. Otherwise, it is in-between sqrt price current and target.
 //   - amountOneOut is the amount of token one out consumed. It equals amountOneRemainingOut if target is reached. Otherwise, it is less than amountOneRemainingOut.
 //   - amountZeroIn is the amount of token zero in computed. It is the amount of token in to charge to the user for the desired amount out.
-//   - feeChargeTotal is the total fee charge. The fee is charged on the amount of token in.
+//   - spreadRewardChargeTotal is the total spread reward charge. The spread reward is charged on the amount of token in.
 //
 // ZeroForOne details:
 // - zeroForOneStrategy assumes moving to the left of the current square root price.
@@ -114,22 +114,22 @@ func (s zeroForOneStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPric
 	amountOneOut := math.CalcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, false)
 
 	// Calculate sqrtPriceNext on the amount of token remaining. Note that the
-	// fee is not charged as amountRemaining is amountOut, and we only charge fee on
+	// spread reward is not charged as amountRemaining is amountOut, and we only charge spread reward on
 	// amount in.
 	var sqrtPriceNext sdk.Dec
-	// If have more of the amount remaining after fee than estimated until target,
+	// If have more of the amount remaining after spread reward than estimated until target,
 	// bound the next sqrtPriceNext by the target sqrt price.
 	if amountOneRemainingOut.GTE(amountOneOut) {
 		sqrtPriceNext = sqrtPriceTarget
 	} else {
-		// Otherwise, compute the next sqrt price based on the amount remaining after fee.
+		// Otherwise, compute the next sqrt price based on the amount remaining after spread reward.
 		sqrtPriceNext = math.GetNextSqrtPriceFromAmount1OutRoundingDown(sqrtPriceCurrent, liquidity, amountOneRemainingOut)
 	}
 
 	hasReachedTarget := sqrtPriceTarget == sqrtPriceNext
 
-	// If the sqrt price target was not reached, recalculate how much of the amount remaining after fee was needed
-	// to complete the swap step. This implies that some of the amount remaining after fee is left over after the
+	// If the sqrt price target was not reached, recalculate how much of the amount remaining after spread reward was needed
+	// to complete the swap step. This implies that some of the amount remaining after spread reward is left over after the
 	// current swap step.
 	if !hasReachedTarget {
 		amountOneOut = math.CalcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
@@ -138,11 +138,11 @@ func (s zeroForOneStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPric
 	// Calculate the amount of the other token given the sqrt price range.
 	amountZeroIn := math.CalcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, true)
 
-	// Handle fees.
-	// Note that fee is always charged on the amount in.
-	feeChargeTotal := computeFeeChargeFromAmountIn(amountZeroIn, s.spreadFactor)
+	// Handle spread rewards.
+	// Note that spread reward is always charged on the amount in.
+	spreadRewardChargeTotal := computeSpreadRewardChargeFromAmountIn(amountZeroIn, s.spreadFactor)
 
-	return sqrtPriceNext, amountOneOut, amountZeroIn, feeChargeTotal
+	return sqrtPriceNext, amountOneOut, amountZeroIn, spreadRewardChargeTotal
 }
 
 // InitializeNextTickIterator returns iterator that seeks to the next tick from the given tickIndex.

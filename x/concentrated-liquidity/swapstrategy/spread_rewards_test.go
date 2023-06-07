@@ -4,12 +4,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/swapstrategy"
 )
 
-var onePercentFee = sdk.NewDecWithPrec(1, 2)
+var onePercentSpreadFactor = sdk.NewDecWithPrec(1, 2)
 
-func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
+func (suite *StrategyTestSuite) TestComputespreadRewardChargePerSwapStepOutGivenIn() {
 	tests := map[string]struct {
 		currentSqrtPrice         sdk.Dec
 		hasReachedTarget         bool
@@ -17,25 +17,25 @@ func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
 		amountSpecifiedRemaining sdk.Dec
 		spreadFactor             sdk.Dec
 
-		expectedFeeCharge sdk.Dec
-		expectPanic       bool
+		expectedspreadRewardCharge sdk.Dec
+		expectPanic                bool
 	}{
-		"reached target -> charge fee on amount in": {
+		"reached target -> charge spread factor on amount in": {
 			hasReachedTarget:         true,
 			amountIn:                 sdk.NewDec(100),
 			amountSpecifiedRemaining: five,
-			spreadFactor:             onePercentFee,
+			spreadFactor:             onePercentSpreadFactor,
 
 			// amount in * spread factor / (1 - spread factor)
-			expectedFeeCharge: swapstrategy.ComputeFeeChargeFromAmountIn(sdk.NewDec(100), onePercentFee),
+			expectedspreadRewardCharge: swapstrategy.ComputeSpreadRewardChargeFromAmountIn(sdk.NewDec(100), onePercentSpreadFactor),
 		},
-		"did not reach target -> charge fee on the difference between amount remaining and amount in": {
+		"did not reach target -> charge spread factor on the difference between amount remaining and amount in": {
 			hasReachedTarget:         false,
 			amountIn:                 five,
 			amountSpecifiedRemaining: sdk.NewDec(100),
-			spreadFactor:             onePercentFee,
+			spreadFactor:             onePercentSpreadFactor,
 
-			expectedFeeCharge: sdk.MustNewDecFromStr("95"),
+			expectedspreadRewardCharge: sdk.MustNewDecFromStr("95"),
 		},
 		"zero spread factor": {
 			hasReachedTarget:         true,
@@ -43,7 +43,7 @@ func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
 			amountSpecifiedRemaining: sdk.NewDec(100),
 			spreadFactor:             sdk.ZeroDec(),
 
-			expectedFeeCharge: sdk.ZeroDec(),
+			expectedspreadRewardCharge: sdk.ZeroDec(),
 		},
 		"negative spread factor - panic": {
 			hasReachedTarget:         false,
@@ -53,11 +53,11 @@ func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
 
 			expectPanic: true,
 		},
-		"amount specified remaining < amount in leads to negative fee - panic": {
+		"amount specified remaining < amount in leads to negative spread factor - panic": {
 			hasReachedTarget:         false,
 			amountIn:                 sdk.NewDec(102),
 			amountSpecifiedRemaining: sdk.NewDec(101),
-			spreadFactor:             onePercentFee,
+			spreadFactor:             onePercentSpreadFactor,
 
 			// 101 - 102 = -1 -> panic
 			expectPanic: true,
@@ -70,9 +70,9 @@ func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
 			suite.SetupTest()
 
 			osmoassert.ConditionalPanic(suite.T(), tc.expectPanic, func() {
-				actualFeeCharge := swapstrategy.ComputeFeeChargePerSwapStepOutGivenIn(tc.hasReachedTarget, tc.amountIn, tc.amountSpecifiedRemaining, tc.spreadFactor)
+				actualspreadRewardCharge := swapstrategy.ComputeSpreadRewardChargePerSwapStepOutGivenIn(tc.hasReachedTarget, tc.amountIn, tc.amountSpecifiedRemaining, tc.spreadFactor)
 
-				suite.Require().Equal(tc.expectedFeeCharge, actualFeeCharge)
+				suite.Require().Equal(tc.expectedspreadRewardCharge, actualspreadRewardCharge)
 			})
 		})
 	}

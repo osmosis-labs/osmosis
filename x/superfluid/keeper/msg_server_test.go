@@ -6,14 +6,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	v8constants "github.com/osmosis-labs/osmosis/v15/app/upgrades/v8/constants"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v15/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	v8constants "github.com/osmosis-labs/osmosis/v16/app/upgrades/v8/constants"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v16/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v16/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 )
 
 var defaultFunds = sdk.NewCoins(defaultPoolAssets[0].Token, sdk.NewCoin("stake", sdk.NewInt(5000000000)))
@@ -503,7 +503,7 @@ func (s *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedPosit
 	migrationRecord := gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 		{BalancerPoolId: balancerPool.GetId(), ClPoolId: clPool.GetId()},
 	}}
-	s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx, migrationRecord)
+	s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, migrationRecord)
 
 	// Superfluid delegate the balancer pool shares
 	_, _, locks := s.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 9000000000000000000}}, []string{poolDenom})

@@ -1,8 +1,8 @@
 package balancer
 
 import (
-	types "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	types "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -17,7 +17,6 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&Pool{}, "osmosis/gamm/BalancerPool", nil)
 	cdc.RegisterConcrete(&MsgCreateBalancerPool{}, "osmosis/gamm/create-balancer-pool", nil)
 	cdc.RegisterConcrete(&PoolParams{}, "osmosis/gamm/BalancerPoolParams", nil)
-	cdc.RegisterConcrete(&MsgMigrateSharesToFullRangeConcentratedPosition{}, "osmosis/gamm/migrate-position", nil)
 }
 
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
@@ -34,7 +33,6 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgCreateBalancerPool{},
-		&MsgMigrateSharesToFullRangeConcentratedPosition{},
 	)
 	registry.RegisterImplementations(
 		(*proto.Message)(nil),

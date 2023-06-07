@@ -7,8 +7,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // AccountKeeper defines the account contract that must be fulfilled when
@@ -88,4 +91,15 @@ type PoolManager interface {
 	GetPoolModule(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolModuleI, error)
 
 	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
+}
+
+type PoolIncentivesKeeper interface {
+	GetGaugesForCFMMPool(ctx sdk.Context, poolId uint64) ([]incentivestypes.Gauge, error)
+	GetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration time.Duration) (uint64, error)
+	GetDistrInfo(ctx sdk.Context) types.DistrInfo
+	SetDistrInfo(ctx sdk.Context, distrInfo types.DistrInfo)
+}
+
+type IncentivesKeeper interface {
+	GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo
 }

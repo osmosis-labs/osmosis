@@ -7,10 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	v16 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v16"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	v16 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v16"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
 )
 
 type ConcentratedUpgradeTestSuite struct {
@@ -112,8 +112,8 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateConcentratedPoolFromCFMM() 
 func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrationLink() {
 	suite.Setup()
 
-	lockableDurations := suite.App.PoolIncentivesKeeper.GetLockableDurations(suite.Ctx)
-	longestLockableDuration := lockableDurations[len(lockableDurations)-1]
+	longestLockableDuration, err := suite.App.PoolIncentivesKeeper.GetLongestLockableDuration(suite.Ctx)
+	suite.Require().NoError(err)
 
 	tests := map[string]struct {
 		poolLiquidity              sdk.Coins
@@ -175,7 +175,7 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiquid
 
 			balancerId := suite.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
 
-			// Another pool for testing that its gauge linkes are unchanged
+			// Another pool for testing that its gauge links are unchanged
 			balancerId2 := suite.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
 
 			balancerPool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, balancerId)

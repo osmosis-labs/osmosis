@@ -3,21 +3,26 @@ package concentrated_liquidity
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
-func handleCreateConcentratedLiquidityPoolProposal(ctx sdk.Context, k Keeper, p *types.CreateConcentratedLiquidityPoolProposal) error {
-	return k.HandleCreateConcentratedLiquidityPoolProposal(ctx, p)
+func handleCreateConcentratedLiquidityPoolsProposal(ctx sdk.Context, k Keeper, p *types.CreateConcentratedLiquidityPoolsProposal) error {
+	return k.HandleCreateConcentratedLiquidityPoolsProposal(ctx, p)
 }
 
-func (k Keeper) HandleCreateConcentratedLiquidityPoolProposal(ctx sdk.Context, p *types.CreateConcentratedLiquidityPoolProposal) error {
+func (k Keeper) HandleCreateConcentratedLiquidityPoolsProposal(ctx sdk.Context, p *types.CreateConcentratedLiquidityPoolsProposal) error {
 	poolmanagerModuleAcc := k.accountKeeper.GetModuleAccount(ctx, poolmanagertypes.ModuleName)
 	poolCreatorAddress := poolmanagerModuleAcc.GetAddress()
-	createPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolCreatorAddress, p.Denom0, p.Denom1, p.TickSpacing, p.SpreadFactor)
-	_, err := k.poolmanagerKeeper.CreateConcentratedPoolAsPoolManager(ctx, createPoolMsg)
-	return err
+	for _, record := range p.PoolRecords {
+		createPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolCreatorAddress, record.Denom0, record.Denom1, record.TickSpacing, record.SpreadFactor)
+		_, err := k.poolmanagerKeeper.CreateConcentratedPoolAsPoolManager(ctx, createPoolMsg)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // HandleTickSpacingDecreaseProposal handles a tick spacing decrease proposal to the corresponding keeper method.

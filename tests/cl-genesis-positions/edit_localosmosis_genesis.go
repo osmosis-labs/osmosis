@@ -16,12 +16,12 @@ import (
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	osmosisApp "github.com/osmosis-labs/osmosis/v15/app"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	osmosisApp "github.com/osmosis-labs/osmosis/v16/app"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	clgenesis "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	clgenesis "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types/genesis"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBankGenesis *banktypes.GenesisState) {
@@ -78,7 +78,7 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 		balancesMap[balance.Address] = append(balancesMap[balance.Address], balance)
 	}
 
-	// Copy pool state, including ticks, incentive accums, records, and fee accumulators
+	// Copy pool state, including ticks, incentive accums, records, and spread reward accumulators
 	for _, pool := range updatedCLGenesis.PoolData {
 		poolAny := pool.Pool
 
@@ -117,9 +117,9 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 			Ticks:                  pool.Ticks,
 			IncentivesAccumulators: pool.IncentivesAccumulators,
 			IncentiveRecords:       pool.IncentiveRecords,
-			FeeAccumulator: clgenesis.AccumObject{
-				Name:         cltypes.KeyFeePoolAccumulator(nextPoolId),
-				AccumContent: pool.FeeAccumulator.AccumContent,
+			SpreadRewardAccumulator: clgenesis.AccumObject{
+				Name:         cltypes.KeySpreadRewardPoolAccumulator(nextPoolId),
+				AccumContent: pool.SpreadRewardAccumulator.AccumContent,
 			},
 		}
 

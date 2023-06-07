@@ -9,7 +9,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model";
+option go_package = "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model";
 
 message Pool {
   option (gogoproto.goproto_getters) = false;
@@ -23,8 +23,9 @@ message Pool {
   string incentives_address = 2
       [ (gogoproto.moretags) = "yaml:\"incentives_address\"" ];
 
-  // address holding fees from swaps.
-  string fees_address = 3 [ (gogoproto.moretags) = "yaml:\"fees_address\"" ];
+  // address holding spread rewards from swaps.
+  string spread_rewards_address = 3
+      [ (gogoproto.moretags) = "yaml:\"spread_rewards_address\"" ];
 
   uint64 id = 4;
 

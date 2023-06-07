@@ -6,10 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
+	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 // TestCreateConcentratedPool_Events tests that events are correctly emitted
@@ -215,56 +215,56 @@ func (s *KeeperTestSuite) TestAddToPosition_Events() {
 
 // TODO: Add test cases for withdraw position messages
 
-// TestCollectFees_Events tests that events are correctly emitted
-// when calling CollectFees.
-func (s *KeeperTestSuite) TestCollectFees_Events() {
+// TestCollectSpreadRewards_Events tests that events are correctly emitted
+// when calling CollectSpreadRewards.
+func (s *KeeperTestSuite) TestCollectSpreadRewards_Events() {
 	testcases := map[string]struct {
-		upperTick                     int64
-		lowerTick                     int64
-		positionIds                   []uint64
-		numPositionsToCreate          int
-		shouldSetupUnownedPosition    bool
-		expectedTotalCollectFeesEvent int
-		expectedCollectFeesEvent      int
-		expectedMessageEvents         int
-		expectedError                 error
-		errorFromValidateBasic        error
+		upperTick                              int64
+		lowerTick                              int64
+		positionIds                            []uint64
+		numPositionsToCreate                   int
+		shouldSetupUnownedPosition             bool
+		expectedTotalCollectSpreadRewardsEvent int
+		expectedCollectSpreadRewardsEvent      int
+		expectedMessageEvents                  int
+		expectedError                          error
+		errorFromValidateBasic                 error
 	}{
 		"single position ID": {
-			upperTick:                     DefaultUpperTick,
-			lowerTick:                     DefaultLowerTick,
-			positionIds:                   []uint64{DefaultPositionId},
-			numPositionsToCreate:          1,
-			expectedTotalCollectFeesEvent: 1,
-			expectedCollectFeesEvent:      1,
-			expectedMessageEvents:         2, // 1 for collect fees, 1 for send message
+			upperTick:                              DefaultUpperTick,
+			lowerTick:                              DefaultLowerTick,
+			positionIds:                            []uint64{DefaultPositionId},
+			numPositionsToCreate:                   1,
+			expectedTotalCollectSpreadRewardsEvent: 1,
+			expectedCollectSpreadRewardsEvent:      1,
+			expectedMessageEvents:                  2, // 1 for collect fees, 1 for send message
 		},
 		"two position IDs": {
-			upperTick:                     DefaultUpperTick,
-			lowerTick:                     DefaultLowerTick,
-			positionIds:                   []uint64{DefaultPositionId, DefaultPositionId + 1},
-			numPositionsToCreate:          2,
-			expectedTotalCollectFeesEvent: 1,
-			expectedCollectFeesEvent:      2,
-			expectedMessageEvents:         3, // 1 for collect fees, 2 for send messages
+			upperTick:                              DefaultUpperTick,
+			lowerTick:                              DefaultLowerTick,
+			positionIds:                            []uint64{DefaultPositionId, DefaultPositionId + 1},
+			numPositionsToCreate:                   2,
+			expectedTotalCollectSpreadRewardsEvent: 1,
+			expectedCollectSpreadRewardsEvent:      2,
+			expectedMessageEvents:                  3, // 1 for collect fees, 2 for send messages
 		},
 		"three position IDs": {
-			upperTick:                     DefaultUpperTick,
-			lowerTick:                     DefaultLowerTick,
-			positionIds:                   []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
-			numPositionsToCreate:          3,
-			expectedTotalCollectFeesEvent: 1,
-			expectedCollectFeesEvent:      3,
-			expectedMessageEvents:         4, // 1 for collect fees, 3 for send messages
+			upperTick:                              DefaultUpperTick,
+			lowerTick:                              DefaultLowerTick,
+			positionIds:                            []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			numPositionsToCreate:                   3,
+			expectedTotalCollectSpreadRewardsEvent: 1,
+			expectedCollectSpreadRewardsEvent:      3,
+			expectedMessageEvents:                  4, // 1 for collect fees, 3 for send messages
 		},
 		"error: attempt to claim fees with different owner": {
-			upperTick:                     DefaultUpperTick,
-			lowerTick:                     DefaultLowerTick,
-			positionIds:                   []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
-			shouldSetupUnownedPosition:    true,
-			numPositionsToCreate:          2,
-			expectedTotalCollectFeesEvent: 0,
-			expectedError:                 types.NotPositionOwnerError{},
+			upperTick:                              DefaultUpperTick,
+			lowerTick:                              DefaultLowerTick,
+			positionIds:                            []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			shouldSetupUnownedPosition:             true,
+			numPositionsToCreate:                   2,
+			expectedTotalCollectSpreadRewardsEvent: 0,
+			expectedError:                          types.NotPositionOwnerError{},
 		},
 	}
 
@@ -289,18 +289,18 @@ func (s *KeeperTestSuite) TestCollectFees_Events() {
 			s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
 			s.Equal(0, len(s.Ctx.EventManager().Events()))
 
-			msg := &types.MsgCollectFees{
+			msg := &types.MsgCollectSpreadRewards{
 				Sender:      s.TestAccs[0].String(),
 				PositionIds: tc.positionIds,
 			}
 
-			response, err := msgServer.CollectFees(sdk.WrapSDKContext(s.Ctx), msg)
+			response, err := msgServer.CollectSpreadRewards(sdk.WrapSDKContext(s.Ctx), msg)
 
 			if tc.expectedError == nil {
 				s.Require().NoError(err)
 				s.Require().NotNil(response)
-				s.AssertEventEmitted(s.Ctx, types.TypeEvtTotalCollectFees, tc.expectedTotalCollectFeesEvent)
-				s.AssertEventEmitted(s.Ctx, types.TypeEvtCollectFees, tc.expectedCollectFeesEvent)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtTotalCollectSpreadRewards, tc.expectedTotalCollectSpreadRewardsEvent)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtCollectSpreadRewards, tc.expectedCollectSpreadRewardsEvent)
 				s.AssertEventEmitted(s.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 			} else {
 				s.Require().Error(err)

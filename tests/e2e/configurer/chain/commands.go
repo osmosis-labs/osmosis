@@ -11,12 +11,12 @@ import (
 
 	"github.com/tendermint/tendermint/libs/bytes"
 
-	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/util"
+	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/util"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -25,7 +25,7 @@ import (
 	"github.com/tendermint/tendermint/p2p"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	app "github.com/osmosis-labs/osmosis/v15/app"
+	app "github.com/osmosis-labs/osmosis/v16/app"
 )
 
 // The value is returned as a string, so we have to unmarshal twice
@@ -57,14 +57,14 @@ func (n *NodeConfig) CreateStableswapPool(poolFile, from string) uint64 {
 	return poolID
 }
 
-// CollectFees collects fees earned by concentrated position in range of [lowerTick; upperTick] in pool with id of poolId
-func (n *NodeConfig) CollectFees(from, positionIds string) {
-	n.LogActionF("collecting fees from concentrated position")
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "collect-fees", positionIds, fmt.Sprintf("--from=%s", from)}
+// CollectSpreadRewards collects spread rewards earned by concentrated position in range of [lowerTick; upperTick] in pool with id of poolId
+func (n *NodeConfig) CollectSpreadRewards(from, positionIds string) {
+	n.LogActionF("collecting spread rewards from concentrated position")
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "collect-spread-rewards", positionIds, fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	n.LogActionF("successfully collected fees for account %s", from)
+	n.LogActionF("successfully collected spread rewards for account %s", from)
 }
 
 // CreateConcentratedPool creates a concentrated pool.
@@ -118,7 +118,7 @@ func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 
 func (n *NodeConfig) WithdrawPosition(from, liquidityOut string, positionId uint64) {
 	n.LogActionF("withdrawing liquidity from position")
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", fmt.Sprint(positionId), liquidityOut, fmt.Sprintf("--from=%s", from), "--gas=650000", "--fees=5000uosmo"}
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", fmt.Sprint(positionId), liquidityOut, fmt.Sprintf("--from=%s", from), "--gas=700000", "--fees=5000uosmo"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully withdrew %s liquidity from position %d", liquidityOut, positionId)
@@ -269,8 +269,8 @@ func (n *NodeConfig) SubmitSuperfluidProposal(asset string, initialDeposit sdk.C
 }
 
 func (n *NodeConfig) SubmitCreateConcentratedPoolProposal(initialDeposit sdk.Coin) {
-	n.LogActionF("Cretaing concentrated liquidity pool")
-	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "create-concentratedliquidity-pool-proposal", "stake", "uosmo", "100", "0.001", "--title=\"create concentrated pool\"", "--description=\"create concentrated pool", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
+	n.LogActionF("Creating concentrated liquidity pool")
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "create-concentratedliquidity-pool-proposal", "--pool-records=stake,uosmo,100,-6,0.001", "--title=\"create concentrated pool\"", "--description=\"create concentrated pool", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully created a create concentrated liquidity pool proposal")

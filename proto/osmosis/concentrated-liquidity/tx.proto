@@ -6,7 +6,7 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types";
+option go_package = "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types";
 
 service Msg {
   rpc CreatePosition(MsgCreatePosition) returns (MsgCreatePositionResponse);
@@ -18,7 +18,8 @@ service Msg {
   // charging, this function deletes the old position and creates a new one with
   // the resulting amount after addition.
   rpc AddToPosition(MsgAddToPosition) returns (MsgAddToPositionResponse);
-  rpc CollectFees(MsgCollectFees) returns (MsgCollectFeesResponse);
+  rpc CollectSpreadRewards(MsgCollectSpreadRewards)
+      returns (MsgCollectSpreadRewardsResponse);
   rpc CollectIncentives(MsgCollectIncentives)
       returns (MsgCollectIncentivesResponse);
   rpc FungifyChargedPositions(MsgFungifyChargedPositions)
@@ -155,16 +156,16 @@ message MsgWithdrawPositionResponse {
   ];
 }
 
-// ===================== MsgCollectFees
-message MsgCollectFees {
+// ===================== MsgCollectSpreadRewards
+message MsgCollectSpreadRewards {
   repeated uint64 position_ids = 1
       [ (gogoproto.moretags) = "yaml:\"position_ids\"" ];
   string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 }
 
-message MsgCollectFeesResponse {
-  repeated cosmos.base.v1beta1.Coin collected_fees = 1 [
-    (gogoproto.moretags) = "yaml:\"collected_fees\"",
+message MsgCollectSpreadRewardsResponse {
+  repeated cosmos.base.v1beta1.Coin collected_spread_rewards = 1 [
+    (gogoproto.moretags) = "yaml:\"collected_spread_rewards\"",
     (gogoproto.nullable) = false
   ];
 }

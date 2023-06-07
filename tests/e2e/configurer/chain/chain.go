@@ -12,19 +12,19 @@ import (
 
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/util"
 
-	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
+	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/config"
 
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/initialization"
 )
 
 type Config struct {
@@ -154,8 +154,8 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	// removes the fee token from balances for calculating the difference in other tokens
 	// before and after the IBC send.
 	removeFeeTokenFromBalance := func(balance sdk.Coins) sdk.Coins {
-		feeTokenBalance := balance.FilterDenoms([]string{initialization.E2EFeeToken})
-		return balance.Sub(feeTokenBalance)
+		feeRewardTokenBalance := balance.FilterDenoms([]string{initialization.E2EFeeToken})
+		return balance.Sub(feeRewardTokenBalance)
 	}
 
 	balancesDstPreWithTxFeeBalance, err := dstNode.QueryBalances(recipient)

@@ -414,7 +414,7 @@ potentially in partial amount of liquidity. It should fail if the position ID
 does not exist or if attempting to withdraw an amount higher than originally
 provided. If an LP withdraws all of their liquidity from a position, then the
 position is deleted from state along with the three KV stores that were
-initialized in the `MsgCreatePosition` section. However, the fee accumulators
+initialized in the `MsgCreatePosition` section. However, the spread factor accumulators
 associated with the position are still retained until a user claims them manually.
 
 ```go
@@ -466,15 +466,15 @@ type MsgCreateConcentratedPoolResponse struct {
 }
 ```
 
-### `MsgCollectFees`
+### `MsgCollectSpreadRewards`
 
-This message allows collecting fees allocated multiple position IDs from a
+This message allows collecting rewards from spreads for multiple position IDs from a
 single owner.
 
-The fee collection is discussed in more detail in the "Fees" section of this document.
+The spread factor collection is discussed in more detail in the "Spread Rewards" section of this document.
 
 ```go
-type MsgCollectFees struct {
+type MsgCollectSpreadRewards struct {
  PositionIds    []uint64
  Sender         string
 }
@@ -487,8 +487,8 @@ The sender should also see their balance increase by the returned
 amounts.
 
 ```go
-type MsgCollectFeesResponse struct {
- CollectedFees []types.Coin
+type MsgCollectSpreadRewardsResponse struct {
+ CollectedSpreadRewards []types.Coin
 }
 ```
 
@@ -796,10 +796,10 @@ type SwapState struct {
  // Updated each time a tick is crossed.
  liquidity sdk.Dec
 
- // Global fee growth per-current swap.
+ // Global spread reward growth per-current swap.
  // Initialized to zero.
  // Updated after every swap step.
- feeGrowthGlobal sdk.Dec
+ spreadRewardGrowthGlobal sdk.Dec
 }
 ```
 
@@ -861,7 +861,7 @@ swap step. Namely,
   tick is crossed. The liquidity is updated by incorporating the `liquidity_net`
   amount associated with the next initialized tick being crossed.
 
-- Update `swapState.feeGrowthGlobal` to the value of the total fee charged within
+- Update `swapState.spreadRewardGrowthGlobal` to the value of the total spread factor charged within
   the swap step on the amount of token in per one unit of liquidity within the
   tick range being swapped in.
 
@@ -876,22 +876,23 @@ Once the swap is completed, we persiste the swap state to the global state
 
 Users can migrate their Balancer positions to a Concentrated Liquidity full range
 position provided the underlying Balancer pool has a governance-selected canonical
-Concentrated Liquidity pool. The migration follows two distinct flows depending
-on the state of the underlying Balancer position:
+Concentrated Liquidity pool. The migration is routed depending on the state of the
+underlying Balancer position:
 
-1. Balancer position is:
+Balancer position is:
 
 - Superfluid delegated
+  - Locked
 - Superfluid undelegating
-- Locked
+  - Locked
+  - Unlocking
+- Normal lock
+  - Locked
+  - Unlocking
 - Unlocked
 
-2. Balancer position has no underlying lock whatsoever
-
-Regardless of the path taken, a single message executes all of the below logic:
-
-`UnlockAndMigrateSharesToFullRangeConcentratedPosition` in superfluid for path 1,
-and `MigrateSharesToFullRangeConcentratedPosition` in gamm for path 2.
+Regardless of the path taken, the `UnlockAndMigrateSharesToFullRangeConcentratedPosition`
+message executes all of the below logic:
 
 ### Superfluid Delegated Balancer to Concentrated
 
@@ -972,7 +973,7 @@ Besides being fully charged, all of the positions must be in the same tick range
 owner (sender). All must belong to the same pool and be unlocked. As a result, none of the positions
 can be superfluid staked if they are full-range.
 
-Once the message finishes, the user will have a completely new position with fees and incentive rewards
+Once the message finishes, the user will have a completely new position with spread factors and incentive rewards
 moved into the new position. The old positions will be deleted.
 
 ## Swapping. Appendix A: Example
@@ -1010,7 +1011,7 @@ The swap state is initialized as follows:
 (computed from the tick -34)
 - `tick` is set to the current tick of the pool (-34)
 - `liquidity` is set to the current liquidity tracked by the pool at tick -34 (10_000)
-- `feeGrowthGlobal` is set to (0)
+- `spreadRewardGrowthGlobal` is set to (0)
 
 We proceed by getting the next initialized tick in the direction of the swap (0).
 
@@ -1048,7 +1049,7 @@ Now, we update the swap state as follows:
 - `liquidity` is set to the old liquidity value (10_000) + the `liquidity_net`
 of the crossed tick 0 (1_000) = 11_000.
 
-- `feeGrowthGlobal` is set to 2_500 \* 0.01 / 10_000 = 0.0025 because we assumed
+- `spreadRewardGrowthGlobal` is set to 2_500 \* 0.01 / 10_000 = 0.0025 because we assumed
 1% spread factor.
 
 Now, we proceed by getting the next initialized tick in the direction of
@@ -1072,14 +1073,14 @@ Now, we update the swap state as follows:
 
 - `liquidity` is set kept the same as we did not cross any initialized tick.
 
-- `feeGrowthGlobal` is updated to 0.0025 + (2_500 \* 0.01 / 10_000) = 0.005
+- `spreadRewardGrowthGlobal` is updated to 0.0025 + (2_500 \* 0.01 / 10_000) = 0.005
   because we assumed 1% spread factor.
 
 As a result, we complete the swap having swapped 5_000 tokens one in for 22_500
 tokens zero out. The tick is now at 70 and the current liquidity at the active
-tick tracked by the pool is 11_000. The global fee growth per unit of liquidity
-has increased by 50 units of token one. See more details about the fee growth
-in the "Fees" section.
+tick tracked by the pool is 11_000. The global spread reward growth per unit of liquidity
+has increased by 50 units of token one. See more details about the spread reward growth
+in the "Spread Rewards" section.
 
 TODO: Swapping, Appendix B: Compute Swap Step Internals and Math
 
@@ -1090,22 +1091,22 @@ control of the price at which I trade
 
 TODO
 
-## Fees
+## Spread Rewards
 
-> As a an LP, I want to earn fees on my capital so that I am incentivized to
+> As a an LP, I want to earn spread rewards on my capital so that I am incentivized to
 participate in active market making.
 
-In Balancer-style pools, fees go directly back into the pool to benefit all LPs pro-rata.
+In Balancer-style pools, spread rewards go directly back into the pool to benefit all LPs pro-rata.
 For concentrated liquidity pools, this approach is no longer feasible due to the
 non-fungible property of positions. As a result, we use a different accumulator-based
-mechanism for tracking and storing fees.
+mechanism for tracking and storing spread rewards.
 
 Reference the following papers for more information on the inspiration behind our accumulator package:
 
 - [Scalable Reward Distribution](https://uploads-ssl.webflow.com/5ad71ffeb79acc67c8bcdaba/5ad8d1193a40977462982470_scalable-reward-distribution-paper.pdf)
 - [F1 Fee Distribution](https://drops.dagstuhl.de/opus/volltexte/2020/11974/pdf/OASIcs-Tokenomics-2019-10.pdf)
 
-We define the following accumulator and fee-related fields to be stored on various
+We define the following accumulator and spread-reward-related fields to be stored on various
 layers of state:
 
 - **Per-pool**
@@ -1118,9 +1119,9 @@ type Pool struct {
 }
 ```
 
-Each pool is initialized with a static fee value `SpreadFactor` to be paid by swappers.
-Additionally, each pool's fee accumulator tracks and stores the total fees accrued
-throughout its lifespan, named `FeeGrowthGlobal`.
+Each pool is initialized with a static spread factor value `SpreadFactor` to be paid by swappers.
+Additionally, each pool's spread reward accumulator tracks and stores the total rewards accrued from spreads
+throughout its lifespan, named `SpreadRewardGrowthGlobal`.
 
 - **Per-tick**
 
@@ -1128,53 +1129,53 @@ throughout its lifespan, named `FeeGrowthGlobal`.
 // Note that this is proto-generated.
 type TickInfo struct {
     ...
-   FeeGrowthOppositeDirectionOfLastTraversal sdk.DecCoins
+   SpreadRewardGrowthOppositeDirectionOfLastTraversal sdk.DecCoins
 }
 ```
 
-TickInfo keeps a record of fees accumulated opposite the direction the tick was last traversed.
-In other words, when traversing the tick from right to left, `FeeGrowthOppositeDirectionOfLastTraversal`
-represents the fees accumulated above that tick. When traversing the tick from left to right,
-`FeeGrowthOppositeDirectionOfLastTraversal` represents the fees accumulated below that tick.
+TickInfo keeps a record of spread rewards accumulated opposite the direction the tick was last traversed.
+In other words, when traversing the tick from right to left, `SpreadRewardGrowthOppositeDirectionOfLastTraversal`
+represents the spread rewards accumulated above that tick. When traversing the tick from left to right,
+`SpreadRewardGrowthOppositeDirectionOfLastTraversal` represents the spread rewards accumulated below that tick.
 
 ![Tick Updates](./img/TickUpdates.png)
 
-This information is required for calculating the amount of fees that accrue between
+This information is required for calculating the amount of spread rewards that accrue between
 a range of two ticks.
 
-Note that keeping track of the fee growth is only necessary for the ticks that
+Note that keeping track of the spread reward growth is only necessary for the ticks that
 have been initialized. In other words, at least one position must be referencing
-that tick to require tracking the fee growth occurring in that tick.
+that tick to require tracking the spread reward growth occurring in that tick.
 
-By convention, when a new tick is activated, it is set to the pool's `FeeGrowthGlobal`
+By convention, when a new tick is activated, it is set to the pool's `SpreadRewardGrowthGlobal`
 if the tick being initialized is above the current tick.
 
 See the following code snippet:
 
 ```go
 if tickIndex <= currentTick {
-  accum, err := k.GetFeeAccumulator(ctx, poolId)
+  accum, err := k.GetSpreadRewardAccumulator(ctx, poolId)
   if err != nil {
     return err
   }
 
-  tickInfo.FeeGrowthBelow = accum.GetValue()
+  tickInfo.SpreadRewardGrowthBelow = accum.GetValue()
 }
 ```
 
-Essentially, setting the tick's `tickInfo.FeeGrowthOppositeDirectionOfLastTraversal`
-to the pools accum value represents the amount of fees collected by the pool up until
+Essentially, setting the tick's `tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal`
+to the pools accum value represents the amount of spread rewards collected by the pool up until
 the tick was activated.
 
 Once a tick is activated again (crossed in either direction),
-`tickInfo.FeeGrowthOppositeDirectionOfLastTraversal` is updated to add the difference
+`tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal` is updated to add the difference
 between the pool's current accumulator value and the old value of
-`tickInfo.FeeGrowthOppositeDirectionOfLastTraversal`.
+`tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal`.
 
-Tracking how many fees are collected below, in the case of a lower tick, and above,
+Tracking how many spread rewards are collected below, in the case of a lower tick, and above,
 in the case of an upper tick, allows us to calculate the
-amount of fees inside a position (fee growth inside between two ticks) on demand.
-This is done by updating the activated tick with the amount of fees collected for
+amount of spread rewards inside a position (spread reward growth inside between two ticks) on demand.
+This is done by updating the activated tick with the amount of spread rewards collected for
 every tick lower than the tick that is being crossed.
 
 This has two benefits:
@@ -1183,109 +1184,109 @@ This has two benefits:
 - We can calculate a range by subtracting the upper and lower ticks for the range
   using the logic below.
 
-We calculate the fee growth above the upper tick in the following way:
+We calculate the spread reward growth above the upper tick in the following way:
 
-- If calculating fee growth for an upper tick, we consider the following two cases:
+- If calculating spread reward growth for an upper tick, we consider the following two cases:
   - currentTick >= upperTick: If the current tick is greater than or equal to the
-  upper tick, the fee growth would be the pool's fee growth minus the upper tick's
+  upper tick, the spread reward growth would be the pool's spread reward growth minus the upper tick's
   - currentTick < upperTick: If the current tick is smaller than the upper tick,
-  the fee growth would be the upper tick's fee growth outside.
+  the spread reward growth would be the upper tick's spread reward growth outside.
 
-This process is vice versa for calculating fee growth below the lower tick.
+This process is vice versa for calculating spread reward growth below the lower tick.
 
-Now, by having the fee growth below the lower and above the upper tick of a range,
-we can calculate the fee growth inside the range by subtracting the two from the
-global per-unit-of-liquidity fee growth.
+Now, by having the spread reward growth below the lower and above the upper tick of a range,
+we can calculate the spread reward growth inside the range by subtracting the two from the
+global per-unit-of-liquidity spread reward growth.
 
-![Fee Growth Outside Calculations](./img/FeeGrowthOutsideCalcuations.png)
+![Spread Reward Growth Outside Calculations](./img/SpreadRewardGrowthOutsideCalcuations.png)
 
 ```go
-feeGrowthInsideRange := FeeGrowthGlobalOutside - feeGrowthBelowLowerTick - feeGrowthAboveUpperTick
+spreadRewardGrowthInsideRange := SpreadRewardGrowthGlobalOutside - spreadRewardGrowthBelowLowerTick - spreadRewardGrowthAboveUpperTick
 ```
 
-Note that although `tickInfo.FeeGrowthOutside` may be initialized at different times
+Note that although `tickInfo.SpreadRewardGrowthOutside` may be initialized at different times
 for each tick, the comparison of these values between ticks is not meaningful, and
 there is no guarantee that the values across ticks will follow any particular pattern.
 However, this does not affect the per-position calculations since all the position
-needs to know is the fee growth inside the position's range since the position was
+needs to know is the spread reward growth inside the position's range since the position was
 last interacted with.
 
 - **Per-position-accumulator**
 
-In a concentrated liquidity pool, unlike traditional pools, fees do not get automatically
+In a concentrated liquidity pool, unlike traditional pools, spread rewards do not get automatically
 re-added to pool. Instead, they are tracked by the `unclaimedRewards` fields of each
 position's accumulator.
 
-The amount of uncollected fees needs to be calculated every time a user modifies
+The amount of uncollected spread rewards needs to be calculated every time a user modifies
 their position. This occurs when a position is created, and liquidity is removed
 (liquidity added is analogous to creating a new position).
 
 We must recalculate the values for any modification, because with a change in liquidity
-for the position, the amount of fees allocated to the position must also change accordingly.
+for the position, the amount of spread rewards allocated to the position must also change accordingly.
 
-## Collecting Fees
+## Collecting Spread Rewards
 
-Once calculated, collecting fees is a straightforward process of transferring the
+Once calculated, collecting spread rewards is a straightforward process of transferring the
 calculated amount from the pool address to the position owner.
 
-To collect fees, users call `MsgCollectFees` with the ID corresponding to
-their position. The function `collectFees` in the keeper is responsible for
-executing the fee collection and returning the amount collected, given the owner's
+To collect spread rewards, users call `MsgCollectSpreadRewards` with the ID corresponding to
+their position. The function `collectSpreadRewards` in the keeper is responsible for
+executing the spread reward collection and returning the amount collected, given the owner's
 address and the position ID:
 
 ```go
-func (k Keeper) collectFees(
+func (k Keeper) collectSpreadRewards(
     ctx sdk.Context,
     owner sdk.AccAddress,
     positionId uint64) (sdk.Coins, error) {
 }
 ```
 
-This returns the amount of fees collected by the user.
+This returns the amount of spread rewards collected by the user.
 
 ## Swaps
 
 Swapping within a single tick works as the regular `xy = k` curve. For swaps
-across ticks to work, we simply apply the same fee calculation logic for every swap step.
+across ticks to work, we simply apply the same spread reward calculation logic for every swap step.
 
 Consider data structures defined above. Let `tokenInAmt` be the amount of token being
 swapped in.
 
-Then, to calculate the fee within a single tick, we perform the following steps:
+Then, to calculate the spread reward within a single tick, we perform the following steps:
 
-1. Calculate an updated `tokenInAmtAfterFee` by charging the `pool.SpreadFactor` on `tokenInAmt`.
+1. Calculate an updated `tokenInAmtAfterSpreadReward` by charging the `pool.SpreadFactor` on `tokenInAmt`.
 
 ```go
-// Update global fee accumulator tracking fees for denom of tokenInAmt.
+// Update global spread reward accumulator tracking spread rewards for denom of tokenInAmt.
 // TODO: revisit to make sure if truncations need to happen.
-pool.FeeGrowthGlobalOutside.TokenX = pool.FeeGrowthGlobalOutside.TokenX.Add(tokenInAmt.Mul(pool.SpreadFactor))
+pool.SpreadRewardGrowthGlobalOutside.TokenX = pool.SpreadRewardGrowthGlobalOutside.TokenX.Add(tokenInAmt.Mul(pool.SpreadFactor))
 
-// Update tokenInAmt to account for fees.
-fee = tokenInAmt.Mul(pool.SpreadFactor).Ceil()
-tokenInAmtAfterFee = tokenInAmt.Sub(fee)
+// Update tokenInAmt to account for spread factor.
+spread_factor = tokenInAmt.Mul(pool.SpreadFactor).Ceil()
+tokenInAmtAfterSpreadFactor = tokenInAmt.Sub(spread_factor)
 
-k.bankKeeper.SendCoins(ctx, swapper, pool.GetAddress(), ...) // send tokenInAmtAfterFee
+k.bankKeeper.SendCoins(ctx, swapper, pool.GetAddress(), ...) // send tokenInAmtAfterSpreadFactor
 ```
 
-2. Proceed to calculating the next square root price by utilizing the updated `tokenInAmtAfterFee.
+2. Proceed to calculating the next square root price by utilizing the updated `tokenInAmtAfterSpreadFactor.
 
 Depending on which of the tokens in `tokenIn`,
 
 If token1 is being swapped in:
 $$\Delta \sqrt P = \Delta y / L$$
 
-Here, `tokenInAmtAfterFee` is delta y.
+Here, `tokenInAmtAfterSpreadFactor` is delta y.
 
 If token0 is being swapped in:
 $$\Delta \sqrt P = L / \Delta x$$
 
-Here, `tokenInAmtAfterFee` is delta x.
+Here, `tokenInAmtAfterSpreadFactor` is delta x.
 
 Once we have the updated square root price, we can calculate the amount of
-`tokenOut` to be returned. The returned `tokenOut` is computed with fees
-accounted for given that we used `tokenInAmtAfterFee`.
+`tokenOut` to be returned. The returned `tokenOut` is computed with spread rewards
+accounted for given that we used `tokenInAmtAfterSpreadFactor`.
 
-## Swap Step Fees
+## Swap Step Spread Factors
 
 We have a notion of `swapState.amountSpecifiedRemaining` which is the amount of
 token in remaining over all swap steps.
@@ -1294,28 +1295,28 @@ After performing the current swap step, the following cases are possible:
 
 1. All amount remaining is consumed
 
-In that case, the fee is equal to the difference between the original amount remaining
-and the one actually consumed. The difference between them is the fee.
+In that case, the spread factor is equal to the difference between the original amount remaining
+and the one actually consumed. The difference between them is the spread factor.
 
 ```go
-feeChargeTotal = amountSpecifiedRemaining.Sub(amountIn)
+spreadRewardChargeTotal = amountSpecifiedRemaining.Sub(amountIn)
 ```
 
 2. Did not consume amount remaining in-full.
 
-The fee is charged on the amount actually consumed during a swap step.
+The spread factor is charged on the amount actually consumed during a swap step.
 
 ```go
-feeChargeTotal = amountIn.Mul(spreadFactor)
+spreadRewardChargeTotal = amountIn.Mul(spreadFactor)
 ```
 
 3. Price impact protection makes it exit before consuming all amount remaining.
 
-The fee is charged on the amount in actually consumed before price impact
+The spread factor is charged on the amount in actually consumed before price impact
 protection got trigerred.
 
 ```go
-feeChargeTotal = amountIn.Mul(spreadFactor)
+spreadRewardChargeTotal = amountIn.Mul(spreadFactor)
 ```
 
 ## Incentive/Liquidity Mining Mechanism
@@ -1340,7 +1341,7 @@ between liquidity and volume kicks off, but for the sake of understanding what e
  we are trying to bootstrap with incentives it helps to be explicit with our goals.
 
 ### Liquidity Depth
-We want to ensure fees and incentives are being used to maximize liquidity depth at the active tick
+We want to ensure spread rewards and incentives are being used to maximize liquidity depth at the active tick
 (i.e. the tick the current spot price is in), as this gives the best execution price for trades on
 the pool.
 
@@ -1416,7 +1417,7 @@ While it is technically possible for Osmosis to enable the creation of incentive
 
 While we want to nudge Classic pool LPs to transition to CL pools, we also want to ensure that we do not have a hard cutoff for incentives where past a certain point it is no longer worth it to provide liquidity to Classic pools. This is because we want to ensure that we have a healthy transition period where liquidity is not split between Classic and CL pools, but rather that liquidity is added to CL pools while Classic pools are slowly drained of liquidity.
 
-To achieve this in a way that is difficult to game and efficient for the chain to process, we will be using a **reward-splitting** mechanism that treats _bonded_ liquidity in a Classic pool that is paired by governance to a CL pool (e.g. for the purpose of migration) as a single full-range position on the CL pool for the purpose of calculating incentives. Note that this _does not affect fee distribution_ and only applies to the flow of incentives through a CL pool.
+To achieve this in a way that is difficult to game and efficient for the chain to process, we will be using a **reward-splitting** mechanism that treats _bonded_ liquidity in a Classic pool that is paired by governance to a CL pool (e.g. for the purpose of migration) as a single full-range position on the CL pool for the purpose of calculating incentives. Note that this _does not affect spread reward distribution_ and only applies to the flow of incentives through a CL pool.
 
 One implication of this mechanism is that it moves the incentivization process to a higher level of abstraction (incentivizing _pairs_ instead of _pools_). For internal incentives (which are governance managed), this is in line with the goal of continuing to push governance to require less frequent actions, which this change ultimately does.
 
@@ -1541,13 +1542,22 @@ This listener executes after a swap in a concentrated liquidity pool.
 
 At the time of this writing, it is only utilized by the `x/twap` module.
 
-## State
 
-- global (per-pool)
+### State entries and KV store management
+The following are the state entries (key and value pairs) stored for the concentrated liquidity module. 
 
-- per-tick
+- structs
+  - TickPrefix + pool ID + tickIndex ➝ Tick Info struct
+  - PoolPrefix + pool id ➝ pool struct
+  - IncentivePrefix | pool id | min uptime index | denom | addr ➝ Incentive Record body struct
+- links
+  - positionToLockPrefix | position id ➝ lock id
+  - lockToPositionPrefix | lock id ➝ position id
+  - PositionPrefix | addr bytes | pool id | position id ➝ boolean
+  - PoolPositionPrefix | pool id | position id ➝ boolean
 
-- per-position
+Note that for storing ticks, we use 9 bytes instead of directly using uint64, first byte being reserved for the Negative / Positive prefix, and the remaining 8 bytes being reserved for the tick itself, which is of uint64. Although we directly store signed integers as values, we use the first byte to indicate and re-arrange tick indexes from negative to positive.
+
 
 ## Terminology
 

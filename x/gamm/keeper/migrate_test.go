@@ -8,7 +8,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
 )
 
 func (s *KeeperTestSuite) TestMigrate() {
@@ -750,7 +751,7 @@ func (s *KeeperTestSuite) TestGetLinkedConcentratedPoolID() {
 			s.PrepareMultipleBalancerPools(3)
 			s.PrepareMultipleConcentratedPools(3)
 
-			keeper.OverwriteMigrationRecords(s.Ctx, DefaultMigrationRecords)
+			keeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, DefaultMigrationRecords)
 
 			for i, poolIdLeaving := range test.poolIdLeaving {
 				poolIdEntering, err := keeper.GetLinkedConcentratedPoolID(s.Ctx, poolIdLeaving)
@@ -817,7 +818,7 @@ func (s *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 			s.PrepareMultipleConcentratedPools(3)
 
 			if !test.skipLinking {
-				keeper.OverwriteMigrationRecords(s.Ctx, DefaultMigrationRecords)
+				keeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, DefaultMigrationRecords)
 			}
 
 			s.Require().True(len(test.poolIdEntering) > 0)
@@ -863,7 +864,7 @@ func (s *KeeperTestSuite) TestGetAllMigrationInfo() {
 			s.PrepareMultipleConcentratedPools(3)
 
 			if !test.skipLinking {
-				keeper.OverwriteMigrationRecords(s.Ctx, DefaultMigrationRecords)
+				keeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, DefaultMigrationRecords)
 			}
 
 			migrationRecords, err := s.App.GAMMKeeper.GetAllMigrationInfo(s.Ctx)
@@ -873,6 +874,106 @@ func (s *KeeperTestSuite) TestGetAllMigrationInfo() {
 			} else {
 				s.Require().Equal(len(migrationRecords.BalancerToConcentratedPoolLinks), 0)
 			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestRedirectDistributionRecord() {
+	suite.Setup()
+
+	var (
+		defaultUsdcAmount = sdk.NewInt(7300000000)
+		defaultOsmoAmount = sdk.NewInt(10000000000)
+		usdcCoin          = sdk.NewCoin("uusdc", defaultUsdcAmount)
+		osmoCoin          = sdk.NewCoin("uosmo", defaultOsmoAmount)
+	)
+
+	longestLockableDuration, err := suite.App.PoolIncentivesKeeper.GetLongestLockableDuration(suite.Ctx)
+	suite.Require().NoError(err)
+
+	tests := map[string]struct {
+		poolLiquidity sdk.Coins
+		cfmmPoolId    uint64
+		clPoolId      uint64
+		expectError   error
+	}{
+		"happy path": {
+			poolLiquidity: sdk.NewCoins(usdcCoin, osmoCoin),
+			cfmmPoolId:    uint64(1),
+			clPoolId:      uint64(3),
+		},
+		"error: cfmm pool ID doesn't exist": {
+			poolLiquidity: sdk.NewCoins(usdcCoin, osmoCoin),
+			cfmmPoolId:    uint64(4),
+			clPoolId:      uint64(3),
+			expectError:   poolincentivestypes.NoGaugeAssociatedWithPoolError{PoolId: 4, Duration: longestLockableDuration},
+		},
+		"error: cl pool ID doesn't exist": {
+			poolLiquidity: sdk.NewCoins(usdcCoin, osmoCoin),
+			cfmmPoolId:    uint64(1),
+			clPoolId:      uint64(4),
+			expectError:   poolincentivestypes.NoGaugeAssociatedWithPoolError{PoolId: 4, Duration: longestLockableDuration},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+
+			// Create primary balancer pool.
+			balancerId := suite.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
+			balancerPool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, balancerId)
+			suite.Require().NoError(err)
+
+			// Create another balancer pool to test that its gauge links are unchanged
+			balancerId2 := suite.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
+
+			// Get gauges for both balancer pools.
+			gaugeToRedirect, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, balancerPool.GetId(), longestLockableDuration)
+			suite.Require().NoError(err)
+			gaugeToNotRedirect, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, balancerId2, longestLockableDuration)
+			suite.Require().NoError(err)
+
+			// Distribution info prior to redirecting.
+			originalDistrInfo := poolincentivestypes.DistrInfo{
+				TotalWeight: sdk.NewInt(100),
+				Records: []poolincentivestypes.DistrRecord{
+					{
+						GaugeId: gaugeToRedirect,
+						Weight:  sdk.NewInt(50),
+					},
+					{
+						GaugeId: gaugeToNotRedirect,
+						Weight:  sdk.NewInt(50),
+					},
+				},
+			}
+			suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, originalDistrInfo)
+
+			// Create concentrated pool.
+			clPool := suite.PrepareCustomConcentratedPool(suite.TestAccs[0], tc.poolLiquidity[1].Denom, tc.poolLiquidity[0].Denom, 100, sdk.MustNewDecFromStr("0.001"))
+
+			// Redirect distribution record from the primary balancer pool to the concentrated pool.
+			err = suite.App.GAMMKeeper.RedirectDistributionRecord(suite.Ctx, tc.cfmmPoolId, tc.clPoolId)
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				return
+			}
+			suite.Require().NoError(err)
+
+			// Validate that the balancer gauge is now linked to the new concentrated pool.
+			concentratedPoolGaugeId, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, clPool.GetId(), suite.App.IncentivesKeeper.GetEpochInfo(suite.Ctx).Duration)
+			suite.Require().NoError(err)
+			distrInfo := suite.App.PoolIncentivesKeeper.GetDistrInfo(suite.Ctx)
+			suite.Require().Equal(distrInfo.Records[0].GaugeId, concentratedPoolGaugeId)
+
+			// Validate that distribution record from another pool is not redirected.
+			suite.Require().Equal(distrInfo.Records[1].GaugeId, gaugeToNotRedirect)
+
+			// Validate that old gauge still exist
+			_, err = suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeToRedirect)
+			suite.Require().NoError(err)
 		})
 	}
 }

@@ -1,7 +1,7 @@
 keeper:
-  path: "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+  path: "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
   struct: "Keeper"
-client_path: "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client"
+client_path: "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client"
 queries:
   Pools:
     proto_wrapper:
@@ -28,11 +28,11 @@ queries:
       query_func: "k.LiquidityNetInDirection"
     cli:
       cmd: "LiquidityNetInDirection"
-  ClaimableFees:
+  ClaimableSpreadRewards:
     proto_wrapper:
-      query_func: "k.ClaimableFees"
+      query_func: "k.ClaimableSpreadRewards"
     cli:
-      cmd: "ClaimableFees"
+      cmd: "ClaimableSpreadRewards"
   ClaimableIncentives:
     proto_wrapper:
       query_func: "k.ClaimableIncentives"
@@ -43,3 +43,14 @@ queries:
       query_func: "k.PositionById"
     cli:
       cmd: "PositionById"
+  PoolAccumulatorRewards:
+    proto_wrapper:
+      query_func: "k.PoolAccumulatorRewards"
+  TickAccumulatorTrackers:
+    proto_wrapper:
+      query_func: "k.TickAccumulatorTrackers"
+  IncentiveRecords:
+    proto_wrapper:
+      query_func: "k.IncentiveRecords"
+    cli:
+      cmd: "IncentiveRecords"

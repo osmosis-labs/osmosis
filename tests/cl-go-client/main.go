@@ -16,10 +16,10 @@ import (
 	"github.com/ignite/cli/ignite/pkg/cosmosaccount"
 	"github.com/ignite/cli/ignite/pkg/cosmosclient"
 
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v16/x/poolmanager/client/queryproto"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 const (
@@ -27,8 +27,9 @@ const (
 	addressPrefix                   = "osmo"
 	localosmosisFromHomePath        = "/.osmosisd-local"
 	consensusFee                    = "1500uosmo"
-	denom0                          = "uusdc"
-	denom1                          = "uosmo"
+	denom0                          = "uosmo"
+	denom1                          = "uusdc"
+	tickSpacing              int64  = 100
 	accountNamePrefix               = "lo-test"
 	numPositions                    = 1_000
 	minAmountDeposited              = int64(1_000_000)
@@ -102,9 +103,9 @@ func main() {
 			randAccountNum = rand.Intn(8) + 1
 			accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
 			// minTick <= lowerTick <= upperTick
-			lowerTick = rand.Int63n(maxTick-minTick+1) + minTick
+			lowerTick = roundTickDown(rand.Int63n(maxTick-minTick+1)+minTick, tickSpacing)
 			// lowerTick <= upperTick <= maxTick
-			upperTick = maxTick - rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick))))
+			upperTick = roundTickDown(maxTick-rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick)))), tickSpacing)
 
 			tokenDesired0 = sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
 			tokenDesired1 = sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
@@ -190,4 +191,24 @@ func getClientHomePath() string {
 	}
 
 	return currentUser.HomeDir + localosmosisFromHomePath
+}
+
+func roundTickDown(tickIndex int64, tickSpacing int64) int64 {
+	// Round the tick index down to the nearest tick spacing if the tickIndex is in between authorized tick values
+	// Note that this is Euclidean modulus.
+	// The difference from default Go modulus is that Go default results
+	// in a negative remainder when the dividend is negative.
+	// Consider example tickIndex = -17, tickSpacing = 10
+	// tickIndexModulus = tickIndex % tickSpacing = -7
+	// tickIndexModulus = -7 + 10 = 3
+	// tickIndex = -17 - 3 = -20
+	tickIndexModulus := tickIndex % tickSpacing
+	if tickIndexModulus < 0 {
+		tickIndexModulus += tickSpacing
+	}
+
+	if tickIndexModulus != 0 {
+		tickIndex = tickIndex - tickIndexModulus
+	}
+	return tickIndex
 }

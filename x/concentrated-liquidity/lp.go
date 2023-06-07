@@ -7,9 +7,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
-	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
+	types "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 )
 
 const noUnderlyingLockId = uint64(0)
@@ -39,6 +39,12 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
+	}
+
+	for _, token := range tokensProvided {
+		if token.Denom != pool.GetToken0() && token.Denom != pool.GetToken1() {
+			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, errors.New("token provided is not one of the pool tokens")
+		}
 	}
 
 	// Check if the provided tick range is valid according to the pool's tick spacing and module parameters.
@@ -79,6 +85,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
+
 	if !hasPositions {
 		err := k.initializeInitialPositionForPool(ctx, pool, amount0Desired, amount1Desired)
 		if err != nil {
@@ -127,7 +134,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 // WithdrawPosition attempts to withdraw liquidityAmount from a position with the given pool id in the given tick range.
 // On success, returns a positive amount of each token withdrawn.
-// If we are attempting to withdraw all liquidity available in the position, we also collect fees and incentives for the position.
+// If we are attempting to withdraw all liquidity available in the position, we also collect spread factors and incentives for the position.
 // When the last position within a pool is removed, this function calls an AfterLastPoolPosistionRemoved listener
 // Currently, it creates twap records. Assumming that pool had all liqudity drained and then re-initialized,
 // the whole twap state is completely reset. This is because when there is no liquidity in pool, spot price
@@ -208,10 +215,10 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	}
 
 	// If the requested liquidity amount to withdraw is equal to the available liquidity, delete the position from state.
-	// Ensure we collect any outstanding fees and incentives prior to deleting the position from state. This claiming
-	// process also clears position records from fee and incentive accumulators.
+	// Ensure we collect any outstanding spread factors and incentives prior to deleting the position from state. This claiming
+	// process also clears position records from spread factor and incentive accumulators.
 	if requestedLiquidityAmountToWithdraw.Equal(positionLiquidity) {
-		if _, err := k.collectFees(ctx, owner, positionId); err != nil {
+		if _, err := k.collectSpreadRewards(ctx, owner, positionId); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
 
@@ -335,6 +342,7 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, owner.String()),
 			sdk.NewAttribute(types.AttributeKeyPositionId, strconv.FormatUint(positionId, 10)),
+			sdk.NewAttribute(types.AttributeKeyNewPositionId, strconv.FormatUint(newPositionId, 10)),
 			sdk.NewAttribute(types.AttributeAmount0, actualAmount0.String()),
 			sdk.NewAttribute(types.AttributeAmount1, actualAmount1.String()),
 		),
@@ -400,7 +408,7 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	if err := k.initOrUpdatePositionFeeAccumulator(ctx, poolId, lowerTick, upperTick, positionId, liquidityDelta); err != nil {
+	if err := k.initOrUpdatePositionSpreadRewardAccumulator(ctx, poolId, lowerTick, upperTick, positionId, liquidityDelta); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 

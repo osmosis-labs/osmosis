@@ -13,13 +13,13 @@ def estimate_test_case_out_given_in(tick_ranges: list[SqrtPriceRange], token_in_
       - initial token in
       - spread factor
       - zero for one boolean flag
-    Estimates the final token out and the fee growth per share and prints it to stdout.
+    Estimates the final token out and the spread reward growth per share and prints it to stdout.
     Also, estimates these and other values at each range and prints them to stdout.
 
-    Returns the total token out and the total fee growth per share.
+    Returns the total token out and the total spread reward growth per share.
     """
 
-    token_in_consumed_total, token_out_total, fee_growth_per_share_total = zero, zero, zero
+    token_in_consumed_total, token_out_total, spread_rewards_growth_per_share_total = zero, zero, zero
 
     for i in range(len(tick_ranges)):
         tick_range = tick_ranges[i]
@@ -37,47 +37,47 @@ def estimate_test_case_out_given_in(tick_ranges: list[SqrtPriceRange], token_in_
         print(f"token_in_remaining: {token_in_remaining}")
 
         if is_with_next_sqrt_price:
-            token_in_consumed, token_out, fee_growth_per_share = zero, zero, zero
+            token_in_consumed, token_out, spread_rewards_growth_per_share = zero, zero, zero
             if is_zero_for_one:
-                token_in_consumed, token_out, fee_growth_per_share = zfo.calc_test_case_with_next_sqrt_price_out_given_in(tick_range.liquidity, tick_range.sqrt_price_start, tick_range.sqrt_price_next, spread_factor)
+                token_in_consumed, token_out, spread_rewards_growth_per_share = zfo.calc_test_case_with_next_sqrt_price_out_given_in(tick_range.liquidity, tick_range.sqrt_price_start, tick_range.sqrt_price_next, spread_factor)
             else:
-                token_in_consumed, token_out, fee_growth_per_share = ofz.calc_test_case_with_next_sqrt_price_out_given_in(tick_range.liquidity, tick_range.sqrt_price_start, tick_range.sqrt_price_next, spread_factor)
+                token_in_consumed, token_out, spread_rewards_growth_per_share = ofz.calc_test_case_with_next_sqrt_price_out_given_in(tick_range.liquidity, tick_range.sqrt_price_start, tick_range.sqrt_price_next, spread_factor)
             
             token_in_consumed_total += token_in_consumed
             token_out_total += token_out
-            fee_growth_per_share_total += fee_growth_per_share
+            spread_rewards_growth_per_share_total += spread_rewards_growth_per_share
 
         else:
             if token_in_remaining < zero:
                 raise Exception(F"token_in_remaining {token_in_remaining} is negative with token_in_initial {token_in_initial} and token_in_consumed_total {token_in_consumed_total}")
 
-            token_out, fee_growth_per_share = zero, zero
+            token_out, spread_rewards_growth_per_share = zero, zero
             if is_zero_for_one:
-                _, token_out, fee_growth_per_share = zfo.calc_test_case_out_given_in(tick_range.liquidity, tick_range.sqrt_price_start, token_in_remaining, spread_factor)
+                _, token_out, spread_rewards_growth_per_share = zfo.calc_test_case_out_given_in(tick_range.liquidity, tick_range.sqrt_price_start, token_in_remaining, spread_factor)
             else:
-                _, token_out, fee_growth_per_share = ofz.calc_test_case_out_given_in(tick_range.liquidity, tick_range.sqrt_price_start, token_in_remaining, spread_factor)
+                _, token_out, spread_rewards_growth_per_share = ofz.calc_test_case_out_given_in(tick_range.liquidity, tick_range.sqrt_price_start, token_in_remaining, spread_factor)
 
             token_out_total += token_out
-            fee_growth_per_share_total += fee_growth_per_share
+            spread_rewards_growth_per_share_total += spread_rewards_growth_per_share
         print("\n")
         print(F"After processing range {i}")
         print(F"current token_in_consumed_total: {token_in_consumed_total}")
         print(F"current token_out_total: {token_out_total}")
-        print(F"current current fee_growth_per_share_total: {fee_growth_per_share_total}")
+        print(F"current current spread_rewards_growth_per_share_total: {spread_rewards_growth_per_share_total}")
         print("\n\n\n")
 
     print("\n\n")
     print("Final results:")
     print("token_out_total: ", token_out_total)
-    print("fee_growth_per_share_total: ", fee_growth_per_share_total)
+    print("spread_rewards_growth_per_share_total: ", spread_rewards_growth_per_share_total)
 
-    return token_out_total, fee_growth_per_share_total
+    return token_out_total, spread_rewards_growth_per_share_total
 
 def estimate_single_position_within_one_tick_ofz():
     """Estimates and prints the results of a calc concentrated liquidity test case with a single position within one tick
     when swapping token one for token zero (ofz).
 
-     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_1 github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity
+     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_1 github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity
     """
 
     is_zero_for_one = False
@@ -90,18 +90,18 @@ def estimate_single_position_within_one_tick_ofz():
 
     print(tick_ranges[0].liquidity)
 
-    token_out_total, fee_growth_per_share_total = estimate_test_case_out_given_in(tick_ranges, token_in_initial, spread_factor, is_zero_for_one)
+    token_out_total, spread_rewards_growth_per_share_total = estimate_test_case_out_given_in(tick_ranges, token_in_initial, spread_factor, is_zero_for_one)
 
     expected_token_out_total = sdk_dec.new("8312")
-    expected_fee_growth_per_share_total = sdk_dec.new("0.000276701288297452")
+    expected_spread_rewards_growth_per_share_total = sdk_dec.new("0.000276701288297452")
 
-    validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
+    validate_confirmed_results(token_out_total, spread_rewards_growth_per_share_total, expected_token_out_total, expected_spread_rewards_growth_per_share_total)
 
 def estimate_two_positions_within_one_tick_zfo():
     """Estimates and prints the results of a calc concentrated liquidity test case with two positions within one tick
     when swapping token zero for one (zfo).
 
-     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_2 github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity
+     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_2 github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity
     """
 
     is_zero_for_one = True
@@ -112,23 +112,23 @@ def estimate_two_positions_within_one_tick_zfo():
         SqrtPriceRange(5000, None, sdk_dec.new("3035764687.503020836176699298")), # last one must be computed based on remaining token in, therefore it is None
     ]
 
-    token_out_total, fee_growth_per_share_total = estimate_test_case_out_given_in(tick_ranges, token_in_initial, spread_factor, is_zero_for_one)
+    token_out_total, spread_rewards_growth_per_share_total = estimate_test_case_out_given_in(tick_ranges, token_in_initial, spread_factor, is_zero_for_one)
 
     expected_token_out_total = sdk_dec.new("64824917")
-    expected_fee_growth_per_share_total = sdk_dec.new("0.000000132091924532")
+    expected_spread_rewards_growth_per_share_total = sdk_dec.new("0.000000132091924532")
 
-    validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
+    validate_confirmed_results(token_out_total, spread_rewards_growth_per_share_total, expected_token_out_total, expected_spread_rewards_growth_per_share_total)
 
-def estimate_two_consecutive_positions_zfo(spread_factor: str, expected_token_out_total: str, expected_fee_growth_per_share_total: str):
+def estimate_two_consecutive_positions_zfo(spread_factor: str, expected_token_out_total: str, expected_spread_rewards_growth_per_share_total: str):
     """Estimates and prints the results of a calc concentrated liquidity test case with two consecutive positions
     when swapping token zero for one (zfo).
 
-     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_3 github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity
+     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_3 github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity
     """
 
     spread_factor = sdk_dec.new(spread_factor)
     expected_token_out_total = sdk_dec.new(expected_token_out_total)
-    expected_fee_growth_per_share_total = sdk_dec.new(expected_fee_growth_per_share_total)
+    expected_spread_rewards_growth_per_share_total = sdk_dec.new(expected_spread_rewards_growth_per_share_total)
 
     is_zero_for_one = True
     token_in_initial = sdk_dec.new("2000000")
@@ -138,18 +138,18 @@ def estimate_two_consecutive_positions_zfo(spread_factor: str, expected_token_ou
         SqrtPriceRange(4545, None, sdk_dec.new("1198735489.597250295669959397")), # last one must be computed based on remaining token in, therefore it is None
     ]
 
-    token_out_total, fee_growth_per_share_total = estimate_test_case_out_given_in(tick_ranges, token_in_initial, spread_factor, is_zero_for_one)
+    token_out_total, spread_rewards_growth_per_share_total = estimate_test_case_out_given_in(tick_ranges, token_in_initial, spread_factor, is_zero_for_one)
 
     # TODO: this validation fails due to a different rounding strategy in scripts.
     # Needs investigation.
     # Go code should have the right value
-    # validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
+    # validate_confirmed_results(token_out_total, spread_rewards_growth_per_share_total, expected_token_out_total, expected_spread_rewards_growth_per_share_total)
 
-def estimate_overlapping_price_range_ofz_test(spread_factor: str, expected_token_out_total: str, expected_fee_growth_per_share_total: str):
+def estimate_overlapping_price_range_ofz_test(spread_factor: str, expected_token_out_total: str, expected_spread_rewards_growth_per_share_total: str):
     """Estimates and prints the results of a calc concentrated liquidity test case with overlapping price ranges
     when swapping token one for token zero (ofz).
 
-     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_4 github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity
+     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_4 github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity
     """
 
     is_zero_for_one = False
@@ -165,18 +165,18 @@ def estimate_overlapping_price_range_ofz_test(spread_factor: str, expected_token
         SqrtPriceRange(5500, None, sdk_dec.new("670416088.605668727039240782")), # last one must be computed based on remaining token in, therefore it is None
     ]
 
-    token_out_total, fee_growth_per_share_total = estimate_test_case_out_given_in(tick_ranges, token_in_initial, spread_factor, is_zero_for_one)
+    token_out_total, spread_rewards_growth_per_share_total = estimate_test_case_out_given_in(tick_ranges, token_in_initial, spread_factor, is_zero_for_one)
 
     expected_token_out_total = sdk_dec.new(expected_token_out_total)
-    expected_fee_growth_per_share_total = sdk_dec.new(expected_fee_growth_per_share_total)
+    expected_spread_rewards_growth_per_share_total = sdk_dec.new(expected_spread_rewards_growth_per_share_total)
 
-    validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
+    validate_confirmed_results(token_out_total, spread_rewards_growth_per_share_total, expected_token_out_total, expected_spread_rewards_growth_per_share_total)
 
-def estimate_overlapping_price_range_zfo_test(token_in_initial: str, spread_factor: str, expected_token_out_total: str, expected_fee_growth_per_share_total: str):
+def estimate_overlapping_price_range_zfo_test(token_in_initial: str, spread_factor: str, expected_token_out_total: str, expected_spread_rewards_growth_per_share_total: str):
     """Estimates and prints the results of a calc concentrated liquidity test case with overlapping price ranges
     when swapping token zero for one (zfo) and not consuming full liquidity of the second position.
 
-     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_5 github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity
+     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_5 github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity
     """
 
     is_zero_for_one = True
@@ -189,18 +189,18 @@ def estimate_overlapping_price_range_zfo_test(token_in_initial: str, spread_fact
         SqrtPriceRange(4545, None, sdk_dec.new("670416215.718827443660400593000")), # last one must be computed based on remaining token in, therefore it is None
     ]
 
-    token_out_total, fee_growth_per_share_total = estimate_test_case_out_given_in(tick_ranges, token_in_initial, spread_factor, is_zero_for_one)
+    token_out_total, spread_rewards_growth_per_share_total = estimate_test_case_out_given_in(tick_ranges, token_in_initial, spread_factor, is_zero_for_one)
 
     expected_token_out_total = sdk_dec.new(expected_token_out_total)
-    expected_fee_growth_per_share_total = sdk_dec.new(expected_fee_growth_per_share_total)
+    expected_spread_rewards_growth_per_share_total = sdk_dec.new(expected_spread_rewards_growth_per_share_total)
 
-    validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
+    validate_confirmed_results(token_out_total, spread_rewards_growth_per_share_total, expected_token_out_total, expected_spread_rewards_growth_per_share_total)
 
 def estimate_consecutive_positions_gap_ofz_test():
     """Estimates and prints the results of a calc concentrated liquidity test case with consecutive positions with a gap
     when swapping token one for zero (ofz).
 
-     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_6 github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity
+     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_6 github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity
     """
 
     is_zero_for_one = False
@@ -212,18 +212,18 @@ def estimate_consecutive_positions_gap_ofz_test():
         SqrtPriceRange(5501, None, sdk_dec.new("1199528406.187413669220037261")), # last one must be computed based on remaining token in, therefore it is None
     ]
 
-    token_out_total, fee_growth_per_share_total = estimate_test_case_out_given_in(tick_ranges, token_in_initial, spread_factor, is_zero_for_one)
+    token_out_total, spread_rewards_growth_per_share_total = estimate_test_case_out_given_in(tick_ranges, token_in_initial, spread_factor, is_zero_for_one)
 
     expected_token_out_total = sdk_dec.new("1771252")
-    expected_fee_growth_per_share_total = sdk_dec.new("0.221769187794051751")
+    expected_spread_rewards_growth_per_share_total = sdk_dec.new("0.221769187794051751")
 
-    validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
+    validate_confirmed_results(token_out_total, spread_rewards_growth_per_share_total, expected_token_out_total, expected_spread_rewards_growth_per_share_total)
 
 def estimate_slippage_protection_zfo_test():
     """Estimates and prints the results of a calc concentrated liquidity test case with slippage protection
     when swapping token zero for one (zfo).
 
-     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_7 github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity
+     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_7 github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity
     """
 
     is_zero_for_one = True
@@ -234,12 +234,12 @@ def estimate_slippage_protection_zfo_test():
         SqrtPriceRange(5000, 4994, sdk_dec.new("1517882343.751510418088349649")),
     ]
 
-    token_out_total, fee_growth_per_share_total = estimate_test_case_out_given_in(tick_ranges, token_in_initial, spread_factor, is_zero_for_one)
+    token_out_total, spread_rewards_growth_per_share_total = estimate_test_case_out_given_in(tick_ranges, token_in_initial, spread_factor, is_zero_for_one)
 
     expected_token_out_total = sdk_dec.new("64417624")
-    expected_fee_growth_per_share_total = sdk_dec.new("0.000000085792039652")
+    expected_spread_rewards_growth_per_share_total = sdk_dec.new("0.000000085792039652")
 
-    validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
+    validate_confirmed_results(token_out_total, spread_rewards_growth_per_share_total, expected_token_out_total, expected_spread_rewards_growth_per_share_total)
 
 def test():
     """Runs all swap out given in test cases, prints results as well as the intermediary calculations.

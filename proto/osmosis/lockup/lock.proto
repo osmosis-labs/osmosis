@@ -6,7 +6,7 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v15/x/lockup/types";
+option go_package = "github.com/osmosis-labs/osmosis/v16/x/lockup/types";
 
 // PeriodLock is a single lock unit by period defined by the x/lockup module.
 // It's a record of a locked coin at a specific time. It stores owner, duration,
@@ -42,6 +42,11 @@ message PeriodLock {
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
+  // Reward Receiver Address is the address that would be receiving rewards for
+  // the incentives for the lock. This is set to owner by default and can be
+  // changed via separate msg.
+  string reward_receiver_address = 6
+      [ (gogoproto.moretags) = "yaml:\"reward_receiver_address\"" ];
 }
 
 // LockQueryType defines the type of the lock query that can

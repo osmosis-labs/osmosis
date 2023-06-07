@@ -7,15 +7,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app/keepers"
-	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v16/app/keepers"
+	"github.com/osmosis-labs/osmosis/v16/app/upgrades"
 
-	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	cosmwasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/keeper"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v16/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
 )
 
 const (
@@ -40,16 +42,18 @@ const (
 )
 
 var (
+	ATOMIBCDenom = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
 	DAIIBCDenom  = "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7"
 	USDCIBCDenom = "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858"
 
 	// authorized_quote_denoms quote assets that can be used as token1
 	// when creating a pool. We limit the quote assets to a small set
-	// for the purposes of having convinient price increments stemming
+	// for the purposes of having convenient price increments stemming
 	// from tick to price conversion. These increments are in a human
 	// understandeable magnitude only for token1 as a quote.
 	authorizedQuoteDenoms []string = []string{
 		"uosmo",
+		ATOMIBCDenom,
 		DAIIBCDenom,
 		USDCIBCDenom,
 	}
@@ -75,6 +79,39 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		// Update expedited governance param
+		// In particular, set expedited quorum to 2/3.
+		params := keepers.GovKeeper.GetTallyParams(ctx)
+		params.ExpeditedQuorum = sdk.NewDec(2).Quo(sdk.NewDec(3))
+		keepers.GovKeeper.SetTallyParams(ctx, params)
+
+		// Add cosmwasmpool module address to the list of allowed addresses to upload contract code.
+		cwPoolModuleAddress := keepers.AccountKeeper.GetModuleAddress(cosmwasmpooltypes.ModuleName)
+		wasmParams := keepers.WasmKeeper.GetParams(ctx)
+		wasmParams.CodeUploadAccess.Addresses = append(wasmParams.CodeUploadAccess.Addresses, cwPoolModuleAddress.String())
+		keepers.WasmKeeper.SetParams(ctx, wasmParams)
+
+		// Add both MsgExecuteContract and MsgInstantiateContract to the list of allowed messages.
+		hostParams := keepers.ICAHostKeeper.GetParams(ctx)
+		msgExecuteContractExists := false
+		msgInstantiateContractExists := false
+		for _, msg := range hostParams.AllowMessages {
+			if msg == sdk.MsgTypeURL(&cosmwasmtypes.MsgExecuteContract{}) {
+				msgExecuteContractExists = true
+			}
+			if msg == sdk.MsgTypeURL(&cosmwasmtypes.MsgInstantiateContract{}) {
+				msgInstantiateContractExists = true
+			}
+		}
+		if !msgExecuteContractExists {
+			hostParams.AllowMessages = append(hostParams.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgExecuteContract{}))
+		}
+
+		if !msgInstantiateContractExists {
+			hostParams.AllowMessages = append(hostParams.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgInstantiateContract{}))
+		}
+		keepers.ICAHostKeeper.SetParams(ctx, hostParams)
+
 		// Although parameters are set on InitGenesis() in RunMigrations(), we reset them here
 		// for visibility of the final configuration.
 		defaultConcentratedLiquidityParams := keepers.ConcentratedLiquidityKeeper.GetParams(ctx)
@@ -96,7 +133,7 @@ func CreateUpgradeHandler(
 		// Create a position to initialize the balancerPool.
 
 		// Get community pool and DAI/OSMO pool address.
-		communityPoolAddress := keepers.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName)
+		communityPoolAddress := keepers.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
 		daiOsmoPool, err := keepers.PoolManagerKeeper.GetPool(ctx, DaiOsmoPoolId)
 		if err != nil {
 			return nil, err
@@ -124,6 +161,16 @@ func CreateUpgradeHandler(
 		err = keepers.SuperfluidKeeper.AddNewSuperfluidAsset(ctx, superfluidAsset)
 		if err != nil {
 			return nil, err
+		}
+
+		clPoolTwapRecords, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, clPoolId)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, twapRecord := range clPoolTwapRecords {
+			twapRecord.LastErrorTime = time.Time{}
+			keepers.TwapKeeper.StoreNewRecord(ctx, twapRecord)
 		}
 
 		updateTokenFactoryParams(ctx, keepers.TokenFactoryKeeper)

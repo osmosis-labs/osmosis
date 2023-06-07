@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 
@@ -144,6 +144,57 @@ func (k Keeper) SetPoolForDenomPair(ctx sdk.Context, baseDenom, denomToMatch str
 func (k Keeper) DeleteAllPoolsForBaseDenom(ctx sdk.Context, baseDenom string) {
 	key := append(types.KeyPrefixDenomPairToPool, types.GetKeyPrefixDenomPairToPool(baseDenom, "")...)
 	k.DeleteAllEntriesForKeyPrefix(ctx, key)
+}
+
+// SetSwapsToBackrun sets the swaps to backrun, updated via hooks
+func (k Keeper) SetSwapsToBackrun(ctx sdk.Context, swapsToBackrun types.Route) error {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSwapsToBackrun)
+
+	bz, err := swapsToBackrun.Marshal()
+	if err != nil {
+		return err
+	}
+
+	store.Set(types.KeyPrefixSwapsToBackrun, bz)
+
+	return nil
+}
+
+// GetSwapsToBackrun returns the swaps to backrun, updated via hooks
+func (k Keeper) GetSwapsToBackrun(ctx sdk.Context) (types.Route, error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSwapsToBackrun)
+	bz := store.Get(types.KeyPrefixSwapsToBackrun)
+
+	swapsToBackrun := types.Route{}
+	err := swapsToBackrun.Unmarshal(bz)
+	if err != nil {
+		return types.Route{}, err
+	}
+
+	return swapsToBackrun, nil
+}
+
+// DeleteSwapsToBackrun deletes the swaps to backrun
+func (k Keeper) DeleteSwapsToBackrun(ctx sdk.Context) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSwapsToBackrun)
+	store.Delete(types.KeyPrefixSwapsToBackrun)
+}
+
+// AddSwapToSwapsToBackrun appends a swap to the swaps to backrun
+func (k Keeper) AddSwapsToSwapsToBackrun(ctx sdk.Context, swaps []types.Trade) error {
+	swapsToBackrun, err := k.GetSwapsToBackrun(ctx)
+	if err != nil {
+		return err
+	}
+
+	swapsToBackrun.Trades = append(swapsToBackrun.Trades, swaps...)
+
+	err = k.SetSwapsToBackrun(ctx, swapsToBackrun)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // DeleteAllEntriesForKeyPrefix deletes all the entries from the store for the given key prefix

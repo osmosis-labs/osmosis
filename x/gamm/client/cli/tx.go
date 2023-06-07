@@ -11,10 +11,10 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -33,7 +33,6 @@ func NewTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, NewJoinSwapShareAmountOut)
 	osmocli.AddTxCmd(txCmd, NewExitSwapExternAmountOut)
 	osmocli.AddTxCmd(txCmd, NewExitSwapShareAmountIn)
-	osmocli.AddTxCmd(txCmd, NewMigrateSharesToFullRangeConcentratedPosition)
 	txCmd.AddCommand(
 		NewCreatePoolCmd().BuildCommandCustomFn(),
 		NewStableSwapAdjustScalingFactorsCmd(),
@@ -164,19 +163,6 @@ func NewExitSwapShareAmountIn() (*osmocli.TxCliDesc, *types.MsgExitSwapShareAmou
 		CustomFlagOverrides: poolIdFlagOverride,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
 	}, &types.MsgExitSwapShareAmountIn{}
-}
-
-func NewMigrateSharesToFullRangeConcentratedPosition() (*osmocli.TxCliDesc, *balancer.MsgMigrateSharesToFullRangeConcentratedPosition) {
-	cmd := &osmocli.TxCliDesc{
-		Use:     "migrate-position [unlocked-shares]",
-		Short:   "migrate shares to full range concentrated position",
-		Example: "migrate-position 1000gamm/pool/1 --min-amounts-out=100stake,100uosmo --from=val --chain-id osmosis-1",
-		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
-			"TokenOutMins": osmocli.FlagOnlyParser(minAmountsOutParser),
-		},
-		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMigratePosition()}},
-	}
-	return cmd, &balancer.MsgMigrateSharesToFullRangeConcentratedPosition{}
 }
 
 // TODO: Change these flags to args. Required flags don't make that much sense.

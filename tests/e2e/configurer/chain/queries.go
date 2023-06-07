@@ -19,16 +19,16 @@ import (
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/util"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
-	twapqueryproto "github.com/osmosis-labs/osmosis/v15/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v16/x/poolmanager/client/queryproto"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v16/x/protorev/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
+	twapqueryproto "github.com/osmosis-labs/osmosis/v16/x/twap/client/queryproto"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -641,4 +641,25 @@ func (n *NodeConfig) QueryAllSuperfluidAssets() []superfluidtypes.SuperfluidAsse
 	err = util.Cdc.UnmarshalJSON(bz, &response)
 	require.NoError(n.t, err)
 	return response.Assets
+}
+
+func (n *NodeConfig) QueryCommunityPoolModuleAccount() string {
+	cmd := []string{"osmosisd", "query", "auth", "module-accounts", "--output=json"}
+
+	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	require.NoError(n.t, err)
+	var result map[string][]interface{}
+	err = json.Unmarshal(out.Bytes(), &result)
+	require.NoError(n.t, err)
+	for _, acc := range result["accounts"] {
+		account, ok := acc.(map[string]interface{})
+		require.True(n.t, ok)
+		if account["name"] == "distribution" {
+			moduleAccount, ok := account["base_account"].(map[string]interface{})["address"].(string)
+			require.True(n.t, ok)
+			return moduleAccount
+		}
+	}
+	require.True(n.t, false, "distribution module account not found")
+	return ""
 }

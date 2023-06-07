@@ -3,8 +3,8 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/v16/x/mint/types"
 )
 
 type Hooks struct {
@@ -78,5 +78,5 @@ func (h Hooks) AfterLastPoolPositionRemoved(ctx sdk.Context, sender sdk.AccAddre
 }
 
 // AfterConcentratedPoolSwap is a noop.
-func (h Hooks) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+func (h Hooks) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 }

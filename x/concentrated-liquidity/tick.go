@@ -2,6 +2,7 @@ package concentrated_liquidity
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -10,17 +11,17 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types/genesis"
 )
 
 // initOrUpdateTick retrieves the tickInfo from the specified tickIndex and updates both the liquidityNet and LiquidityGross.
-// The given currentTick value is used to determine the strategy for updating the fee accumulator.
-// We update the tick's fee growth opposite direction of last traversal accumulator to the fee growth global when tick index is <= current tick.
+// The given currentTick value is used to determine the strategy for updating the spread factor accumulator.
+// We update the tick's spread reward growth opposite direction of last traversal accumulator to the spread reward growth global when tick index is <= current tick.
 // Otherwise, it is set to zero.
 // Note that liquidityDelta can be either positive or negative depending on whether we are adding or removing liquidity.
 // if we are initializing or updating an upper tick, we subtract the liquidityIn from the LiquidityNet
@@ -32,24 +33,24 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 		return err
 	}
 
-	// If both liquidity fields are zero, we consume the base gas fee for initializing a tick.
+	// If both liquidity fields are zero, we consume the base gas spread factor for initializing a tick.
 	if tickInfo.LiquidityGross.IsZero() && tickInfo.LiquidityNet.IsZero() {
-		ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForInitializingTick), "initialize tick gas fee")
+		ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForInitializingTick), "initialize tick gas spread factor")
 	}
 
 	// calculate liquidityGross, which does not care about whether liquidityIn is positive or negative
 	liquidityBefore := tickInfo.LiquidityGross
 
 	// if given tickIndex is LTE to the current tick and the liquidityBefore is zero,
-	// set the tick's fee growth opposite direction of last traversal to the fee accumulator's value
+	// set the tick's spread reward growth opposite direction of last traversal to the spread factor accumulator's value
 	if liquidityBefore.IsZero() {
 		if tickIndex <= currentTick {
-			accum, err := k.GetFeeAccumulator(ctx, poolId)
+			accum, err := k.GetSpreadRewardAccumulator(ctx, poolId)
 			if err != nil {
 				return err
 			}
 
-			tickInfo.FeeGrowthOppositeDirectionOfLastTraversal = accum.GetValue()
+			tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal = accum.GetValue()
 		}
 	}
 
@@ -71,28 +72,39 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 }
 
 // crossTick crosses the given tick. The tick is specified by its index and tick info.
-// It updates the given tick's uptime and fee accumulators and writes it back to state.
+// It updates the given tick's uptime and spread reward accumulators and writes it back to state.
 // Prior to updating the tick info and writing it to state, it updates the pool uptime accumulators until the current block time.
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 // CONTRACT: the caller validates that the pool with the given id exists.
 // CONTRACT: caller is responsible for the uptimeAccums to be up-to-date.
 // CONTRACT: uptimeAccums are associated with the given pool id.
-func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo *model.TickInfo, swapStateFeeGrowth sdk.DecCoin, feeAccumValue sdk.DecCoins, uptimeAccums []accum.AccumulatorObject) (liquidityDelta sdk.Dec, err error) {
+func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo *model.TickInfo, swapStateSpreadRewardGrowth sdk.DecCoin, spreadRewardAccumValue sdk.DecCoins, uptimeAccums []accum.AccumulatorObject) (liquidityDelta sdk.Dec, err error) {
 	if tickInfo == nil {
 		return sdk.Dec{}, types.ErrNextTickInfoNil
 	}
 
-	// subtract tick's fee growth opposite direction of last traversal from current fee growth global, including the fee growth of the current swap.
-	tickInfo.FeeGrowthOppositeDirectionOfLastTraversal = feeAccumValue.Add(swapStateFeeGrowth).Sub(tickInfo.FeeGrowthOppositeDirectionOfLastTraversal)
+	// subtract tick's spread reward growth opposite direction of last traversal from current spread reward growth global, including the spread reward growth of the current swap.
+	tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal = spreadRewardAccumValue.Add(swapStateSpreadRewardGrowth).Sub(tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal)
 
 	// For each supported uptime, subtract tick's uptime growth outside from the respective uptime accumulator
 	// This is functionally equivalent to "flipping" the trackers once the tick is crossed
-	updatedUptimeTrackers := tickInfo.UptimeTrackers
+	updatedUptimeTrackers := tickInfo.UptimeTrackers.List
 	for uptimeId := range uptimeAccums {
 		updatedUptimeTrackers[uptimeId].UptimeGrowthOutside = uptimeAccums[uptimeId].GetValue().Sub(updatedUptimeTrackers[uptimeId].UptimeGrowthOutside)
 	}
 
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtCrossTick,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
+			sdk.NewAttribute(types.AttributeKeyTickIndex, strconv.FormatInt(tickIndex, 10)),
+			sdk.NewAttribute(types.AttributeKeySpreadRewardGrowthOppositeDirectionOfLastTraversal, tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal.String()),
+			sdk.NewAttribute(types.AttributeKeyUptimeGrowthOppositeDirectionOfLastTraversal, tickInfo.UptimeTrackers.String()),
+		),
+	})
 
 	return tickInfo.LiquidityNet, nil
 }
@@ -110,8 +122,8 @@ func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	// return 0 values if key has not been initialized
 	if !found {
 		// If tick has not yet been initialized, we create a new one and initialize
-		// the fee growth opposite direction of last traversal value.
-		initialFeeGrowthOppositeDirectionOfLastTraversal, err := k.getInitialFeeGrowthOppositeDirectionOfLastTraversalForTick(ctx, poolId, tickIndex)
+		// the spread reward growth opposite direction of last traversal value.
+		initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, err := k.getInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx, poolId, tickIndex)
 		if err != nil {
 			return tickStruct, err
 		}
@@ -132,7 +144,7 @@ func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 			initialUptimeTrackers = append(initialUptimeTrackers, model.UptimeTracker{UptimeGrowthOutside: uptimeTrackerValue})
 		}
 
-		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOppositeDirectionOfLastTraversal: initialFeeGrowthOppositeDirectionOfLastTraversal, UptimeTrackers: initialUptimeTrackers}, nil
+		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, UptimeTrackers: model.UptimeTrackers{List: initialUptimeTrackers}}, nil
 	}
 	if err != nil {
 		return tickStruct, err
