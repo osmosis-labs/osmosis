@@ -18,7 +18,7 @@ const (
 	denomA        = apptesting.DefaultTransmuterDenomA
 	denomB        = apptesting.DefaultTransmuterDenomB
 	validCodeId   = uint64(1)
-	invalidCodeId        = validCodeId + 1
+	invalidCodeId = validCodeId + 1
 	defaultPoolId = uint64(1)
 	nonZeroFeeStr = "0.01"
 )
@@ -101,7 +101,7 @@ func (s *PoolModuleSuite) TestInitializePool() {
 			}
 			s.Require().NoError(err)
 
-			pool, err := cosmwasmPoolKeeper.GetPool(s.Ctx, defaultPoolId)
+			pool, err := cosmwasmPoolKeeper.GetPoolById(s.Ctx, defaultPoolId)
 			s.Require().NoError(err)
 
 			cosmWasmPool, ok := pool.(*model.Pool)

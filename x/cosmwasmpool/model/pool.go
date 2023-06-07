@@ -4,7 +4,6 @@ import (
 	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/cosmwasm/msg"
 	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types"
@@ -116,7 +115,7 @@ func (p *Pool) SetContractAddress(contractAddress string) {
 	p.ContractAddress = contractAddress
 }
 
-func (p Pool) GetStoreModel() proto.Message {
+func (p Pool) GetStoreModel() poolmanagertypes.PoolI {
 	return &p.CosmWasmPool
 }
 
