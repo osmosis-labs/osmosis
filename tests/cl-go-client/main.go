@@ -146,25 +146,10 @@ func createManyRandomPositions(igniteClient cosmosclient.Client, poolId uint64, 
 			tokensDesired = sdk.NewCoins(tokenDesired0, tokenDesired1)
 		)
 
-		log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
-
-		maxRetries := 100
-		var err error
-		for j := 0; j < maxRetries; j++ {
-			amt0, amt1, liquidity, err := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokensDesired, defaultMinAmount, defaultMinAmount)
-			log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
-			if err != nil {
-				log.Println("retrying, error occurred while creating position: ", err)
-				time.Sleep(8 * time.Second)
-			} else {
-				time.Sleep(200 * time.Millisecond)
-				break
-			}
-		}
-
-		if err != nil {
-			log.Fatal(err)
-		}
+		runMessageWithRetries(func() error {
+			_, _, _, err := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokensDesired, defaultMinAmount, defaultMinAmount)
+			return err
+		})
 	}
 }
 
@@ -187,25 +172,9 @@ func swapSmallAmountsContinuously(igniteClient cosmosclient.Client, poolId uint6
 		}
 		tokenInCoin := sdk.NewCoin(tokenInDenom, sdk.NewInt(rand.Int63n(maxAmountSingleSwap)))
 
-		maxRetries := 100
-		var err error
-		for j := 0; j < maxRetries; j++ {
-
-			log.Println("making swap in: pool id", expectedPoolId, "tokenIn", tokenInCoin, "tokenOutDenom", tokenOutDenom, "tokenOutMinAmount", tokenOutMinAmount, "from", accountName)
-
-			tokenOutAmount, err := makeSwap(igniteClient, expectedPoolId, accountName, tokenInCoin, tokenOutDenom, tokenOutMinAmount)
-			if err != nil {
-				log.Println("retrying, error occurred while creating position: ", err)
-				time.Sleep(8 * time.Second)
-			} else {
-				log.Println("swap made, token out amount: ", tokenOutAmount)
-				time.Sleep(200 * time.Millisecond)
-				break
-			}
-		}
-		if err != nil {
-			log.Fatal(err)
-		}
+		runMessageWithRetries(func() error {
+			return makeSwap(igniteClient, expectedPoolId, accountName, tokenInCoin, tokenOutDenom, tokenOutMinAmount)
+		})
 	}
 
 	log.Println("finished swapping, num swaps done", numSwaps)
@@ -235,6 +204,8 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
 	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
 
+	log.Println("creating position: pool id", expectedPoolId, "accountName", senderKeyringAccountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokensProvided[0], "tokenDesired1", tokensProvided[1], "defaultMinAmount", defaultMinAmount)
+
 	msg := &cltypes.MsgCreatePosition{
 		PoolId:          poolId,
 		Sender:          senderAddress,
@@ -252,13 +223,16 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 	if err := txResp.Decode(&resp); err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
+	log.Println("created position: amt0", resp.Amount0, "amt1", resp.Amount1, "liquidity", resp.LiquidityCreated)
 	return resp.Amount0, resp.Amount1, resp.LiquidityCreated, nil
 }
 
-func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, tokenInCoin sdk.Coin, tokenOutDenom string, tokenOutMinAmount sdk.Int) (sdk.Int, error) {
+func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, tokenInCoin sdk.Coin, tokenOutDenom string, tokenOutMinAmount sdk.Int) error {
 	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
 	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
 	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
+
+	log.Println("making swap in: pool id", expectedPoolId, "tokenIn", tokenInCoin, "tokenOutDenom", tokenOutDenom, "tokenOutMinAmount", tokenOutMinAmount, "from", senderKeyringAccountName)
 
 	msg := &poolmanagertypes.MsgSwapExactAmountIn{
 		Sender: senderAddress,
@@ -273,13 +247,15 @@ func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountNam
 	}
 	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
 	if err != nil {
-		return sdk.Int{}, err
+		return err
 	}
 	resp := poolmanagertypes.MsgSwapExactAmountInResponse{}
 	if err := txResp.Decode(&resp); err != nil {
-		return sdk.Int{}, err
+		return err
 	}
-	return resp.TokenOutAmount, nil
+
+	log.Println("swap made, token out amount: ", resp.TokenOutAmount)
+	return nil
 }
 
 func getAccountAddressFromKeyring(igniteClient cosmosclient.Client, accountName string) string {
@@ -303,6 +279,24 @@ func getClientHomePath() string {
 	}
 
 	return currentUser.HomeDir + localosmosisFromHomePath
+}
+
+func runMessageWithRetries(runMsg func() error) {
+	maxRetries := 100
+	var err error
+	for j := 0; j < maxRetries; j++ {
+		err := runMsg()
+		if err != nil {
+			log.Println("retrying, error occurred while creating position: ", err)
+			time.Sleep(8 * time.Second)
+		} else {
+			time.Sleep(200 * time.Millisecond)
+			break
+		}
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func roundTickDown(tickIndex int64, tickSpacing int64) int64 {
