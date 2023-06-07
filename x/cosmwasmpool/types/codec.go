@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
@@ -12,6 +13,13 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		"osmosis.poolmanager.v1beta1.PoolI",
 		(*CosmWasmExtension)(nil),
 	)
+
+	registry.RegisterImplementations(
+		(*govtypes.Content)(nil),
+		&UploadCosmWasmPoolCodeAndWhiteListProposal{},
+		&MigratePoolContractsProposal{},
+	)
+
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 

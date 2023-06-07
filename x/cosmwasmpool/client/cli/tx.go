@@ -31,9 +31,8 @@ func NewTxCmd() *cobra.Command {
 func NewCreateCWPoolCmd() (*osmocli.TxCliDesc, *model.MsgCreateCosmWasmPool) {
 	return &osmocli.TxCliDesc{
 		Use:              "create-pool [code-id] [instantiate-msg] [sender]",
-		Short:            "create a concentrated liquidity pool with the given denom pair, tick spacing, and spread factor",
-		Long:             "denom-1 (the quote denom), tick spacing, and spread factors must all be authorized by the concentrated liquidity module",
-		Example:          "osmosisd tx concentratedliquidity create-pool uion uosmo 100 0.01 --from val --chain-id osmosis-1 -b block --keyring-backend test --fees 1000uosmo",
+		Short:            "create a cosmwasm pool",
+		Example:          "osmosisd tx cosmwasmpool create-pool 1 uion,uosmo --from lo-test1 --keyring-backend test --chain-id localosmosis --fees 875uosmo -b=block",
 		NumArgs:          2,
 		ParseAndBuildMsg: BuildCreatePoolMsg,
 	}, &model.MsgCreateCosmWasmPool{}
@@ -65,9 +64,10 @@ func BuildCreatePoolMsg(clientCtx client.Context, args []string, flags *pflag.Fl
 
 func NewCmdUploadCodeIdAndWhitelistProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "upload-code-id-and-whitelist [flags]",
-		Args:  cobra.ExactArgs(0),
-		Short: "Submit an upload code id and whitelist proposal",
+		Use:     "upload-code-id-and-whitelist [wasm-file-path] [flags]",
+		Args:    cobra.ExactArgs(1),
+		Short:   "Submit an upload code id and whitelist proposal",
+		Example: "osmosisd tx gov submit-proposal upload-code-id-and-whitelist x/cosmwasmpool/bytecode/transmuter.wasm --from lo-test1 --keyring-backend test --title \"Test\" --description \"Test\" -b=block --chain-id localosmosis",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -134,6 +134,10 @@ func parseUploadCodeIdAndWhitelistProposal(cmd *cobra.Command, fileName string) 
 }
 
 func parseWasmByteCode(fileName string) ([]byte, error) {
+	if len(fileName) == 0 {
+		return nil, fmt.Errorf("invalid input file. Provide file argument")
+	}
+
 	wasm, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, err
@@ -155,8 +159,8 @@ func parseWasmByteCode(fileName string) ([]byte, error) {
 
 func NewCmdMigratePoolContractsProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "migrate-cw-pool-contracts [flags]",
-		Args:  cobra.ExactArgs(0),
+		Use:   "migrate-cw-pool-contracts [pool-ids] [new-code-id] [wasm-file-path] [flags]",
+		Args:  cobra.ExactArgs(3),
 		Short: "Submit a migrate cw pool contracts proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
