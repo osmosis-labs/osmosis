@@ -459,6 +459,18 @@ localnet-cl-small-swap:
 localnet-cl-large-swap:
 	go run tests/cl-go-client/main.go --operation 2
 
+# creates a gauge and waits for one epoch so that the gauge
+# is converted into an incentive record for pool id 1.
+localnet-cl-external-incentive:
+	go run tests/cl-go-client/main.go --operation 3
+
+# attempts to create a CL pool at id 1.
+# if pool already exists, this is a no-op.
+# if pool with different id is desired, tweak expectedPoolId
+# in the script.
+localnet-cl-create-pool:
+	go run tests/cl-go-client/main.go --operation 4
+
 # does both of localnet-cl-create-positions and localnet-cl-small-swap
 localnet-cl-positions-small-swaps: localnet-cl-create-positions localnet-cl-small-swap
 
