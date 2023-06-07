@@ -446,9 +446,16 @@ localnet-state-export-stop:
 
 localnet-state-export-clean: localnet-clean
 
-# create 1000 concentrated-liquidity positions in localosmosis at pool id 1
+# create 100 concentrated-liquidity positions in localosmosis at pool id 1
 localnet-cl-create-positions:
-	go run tests/cl-go-client/main.go
+	go run tests/cl-go-client/main.go --operation 0
+
+# does 100 swaps in localosmosis at pool id 1
+localnet-cl-swap:
+	go run tests/cl-go-client/main.go --operation 1 
+
+# does both of localnet-cl-create-positions and localnet-cl-swap
+localnet-cl-positions-and-swaps: localnet-cl-create-positions localnet-cl-swap
 
 # This script retrieves Uniswap v3 Ethereum position data
 # from subgraph. It uses WETH / USDC pool. This is helpful

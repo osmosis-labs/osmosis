@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"math"
@@ -22,6 +23,17 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
+// operation defines the desired operation to be run by this script.
+type operation int
+
+const (
+	// createPositions creates positions in the CL pool with id expectedPoolId.
+	createPositions operation = iota
+
+	// makeManySwaps makes many swaps in the CL pool with id expectedPoolId.
+	makeManySwaps
+)
+
 const (
 	expectedPoolId           uint64 = 1
 	addressPrefix                   = "osmo"
@@ -31,10 +43,12 @@ const (
 	denom1                          = "uusdc"
 	tickSpacing              int64  = 100
 	accountNamePrefix               = "lo-test"
-	numPositions                    = 1_000
+	numPositions                    = 100
+	numSwaps                        = 100
 	minAmountDeposited              = int64(1_000_000)
 	randSeed                        = 1
 	maxAmountDeposited              = 1_00_000_000
+	maxAmountSingleSwap             = 1_000_000
 )
 
 var (
@@ -44,6 +58,14 @@ var (
 )
 
 func main() {
+	var (
+		desiredOperation int
+	)
+
+	flag.IntVar(&desiredOperation, "operation", 0, fmt.Sprintf("operation to run:\nget subgraph data: %v, convert subgraph positions to osmo genesis: %v\nmerge converted subgraph genesis and localosmosis genesis: %v"))
+
+	flag.Parse()
+
 	ctx := context.Background()
 
 	clientHome := getClientHomePath()
@@ -89,11 +111,23 @@ func main() {
 		}
 	}
 
-	minTick, maxTick := cltypes.MinTick, cltypes.MaxTick
-	log.Println(minTick, " ", maxTick)
-
 	rand.Seed(randSeed)
 
+	switch operation(desiredOperation) {
+	case createPositions:
+		createManyRandomPositions(igniteClient, expectedPoolId, numPositions)
+		return
+	case makeManySwaps:
+		swapSmallAmountsContinuously(igniteClient, expectedPoolId, numSwaps)
+		return
+	default:
+		log.Fatalf("invalid operation: %d", desiredOperation)
+	}
+}
+
+func createManyRandomPositions(igniteClient cosmosclient.Client, poolId uint64, numPositions int) {
+	minTick, maxTick := cltypes.MinTick, cltypes.MaxTick
+	log.Println(minTick, " ", maxTick)
 	for i := 0; i < numPositions; i++ {
 		var (
 			// 1 to 9. These are localosmosis keyring test accounts with names such as:
@@ -115,15 +149,66 @@ func main() {
 		log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
 
 		maxRetries := 100
+		var err error
 		for j := 0; j < maxRetries; j++ {
-			amt0, amt1, liquidity := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokensDesired, defaultMinAmount, defaultMinAmount)
-			if err == nil {
-				log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
+			amt0, amt1, liquidity, err := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokensDesired, defaultMinAmount, defaultMinAmount)
+			log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
+			if err != nil {
+				log.Println("retrying, error occurred while creating position: ", err)
+				time.Sleep(8 * time.Second)
+			} else {
+				time.Sleep(200 * time.Millisecond)
 				break
 			}
-			time.Sleep(8 * time.Second)
+		}
+
+		if err != nil {
+			log.Fatal(err)
 		}
 	}
+}
+
+func swapSmallAmountsContinuously(igniteClient cosmosclient.Client, poolId uint64, numSwaps int) {
+	for i := 0; i < numSwaps; i++ {
+		var (
+			randAccountNum = rand.Intn(8) + 1
+			accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
+
+			isToken0In = rand.Intn(2) == 0
+
+			tokenOutMinAmount = sdk.OneInt()
+		)
+
+		tokenInDenom := denom0
+		tokenOutDenom := denom1
+		if !isToken0In {
+			tokenInDenom = denom1
+			tokenOutDenom = denom0
+		}
+		tokenInCoin := sdk.NewCoin(tokenInDenom, sdk.NewInt(rand.Int63n(maxAmountSingleSwap)))
+
+		maxRetries := 100
+		var err error
+		for j := 0; j < maxRetries; j++ {
+
+			log.Println("making swap in: pool id", expectedPoolId, "tokenIn", tokenInCoin, "tokenOutDenom", tokenOutDenom, "tokenOutMinAmount", tokenOutMinAmount, "from", accountName)
+
+			tokenOutAmount, err := makeSwap(igniteClient, expectedPoolId, accountName, tokenInCoin, tokenOutDenom, tokenOutMinAmount)
+			if err != nil {
+				log.Println("retrying, error occurred while creating position: ", err)
+				time.Sleep(8 * time.Second)
+			} else {
+				log.Println("swap made, token out amount: ", tokenOutAmount)
+				time.Sleep(200 * time.Millisecond)
+				break
+			}
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	log.Println("finished swapping, num swaps done", numSwaps)
 }
 
 func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
@@ -145,7 +230,7 @@ func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 	return resp.PoolID
 }
 
-func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokensProvided sdk.Coins, tokenMinAmount0, tokenMinAmount1 sdk.Int) (amountCreated0, amountCreated1 sdk.Int, liquidityCreated sdk.Dec) {
+func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokensProvided sdk.Coins, tokenMinAmount0, tokenMinAmount1 sdk.Int) (amountCreated0, amountCreated1 sdk.Int, liquidityCreated sdk.Dec, err error) {
 	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
 	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
 	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
@@ -161,13 +246,40 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 	}
 	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
 	if err != nil {
-		log.Fatal(err)
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 	resp := cltypes.MsgCreatePositionResponse{}
 	if err := txResp.Decode(&resp); err != nil {
-		log.Fatal(err)
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
-	return resp.Amount0, resp.Amount1, resp.LiquidityCreated
+	return resp.Amount0, resp.Amount1, resp.LiquidityCreated, nil
+}
+
+func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, tokenInCoin sdk.Coin, tokenOutDenom string, tokenOutMinAmount sdk.Int) (sdk.Int, error) {
+	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
+	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
+	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
+
+	msg := &poolmanagertypes.MsgSwapExactAmountIn{
+		Sender: senderAddress,
+		Routes: []poolmanagertypes.SwapAmountInRoute{
+			{
+				PoolId:        expectedPoolId,
+				TokenOutDenom: tokenOutDenom,
+			},
+		},
+		TokenIn:           tokenInCoin,
+		TokenOutMinAmount: tokenOutMinAmount,
+	}
+	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+	resp := poolmanagertypes.MsgSwapExactAmountInResponse{}
+	if err := txResp.Decode(&resp); err != nil {
+		return sdk.Int{}, err
+	}
+	return resp.TokenOutAmount, nil
 }
 
 func getAccountAddressFromKeyring(igniteClient cosmosclient.Client, accountName string) string {
