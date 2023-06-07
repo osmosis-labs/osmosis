@@ -111,3 +111,22 @@ make localnet-cl-positions-large-swaps
 ```
 
 This script runs "Create Positions" and "Make Large Invertible Swaps" scripts in sequence.
+
+### Create Incentive
+
+Creates a new gauge and waits for one epoch so that the gauge
+is converted into an incentive record for pool id 1.
+
+```bash
+make localnet-cl-external-incentive
+```
+
+### Create Pool
+
+Attempts to create a CL pool at id 1. If pool at id 1 already exists, this is a no-op.
+If pool with different id is desired, tweak expectedPoolId in the script.
+
+```bash
+make localnet-cl-create-pool
+```
+
