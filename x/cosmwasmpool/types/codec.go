@@ -19,7 +19,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterInterface(
-		"osmosis.cosmwasmpool.v1beta1.PoolI",
+		"osmosis.cosmwasmpool.v1beta1.CosmWasmExtension",
 		(*CosmWasmExtension)(nil),
 	)
 
