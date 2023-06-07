@@ -36,6 +36,7 @@ func (AppModuleBasic) Name() string { return types.ModuleName }
 
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	model.RegisterCodec(cdc)
+	types.RegisterCodec(cdc)
 }
 
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
