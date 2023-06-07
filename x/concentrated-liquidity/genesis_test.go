@@ -37,7 +37,7 @@ var (
 			BalancerSharesRewardDiscount: types.DefaultBalancerSharesDiscount,
 			AuthorizedUptimes:            types.DefaultAuthorizedUptimes,
 		},
-		PoolData: []genesis.PoolData{},
+		PoolData: []genesis.GenesisPoolData{},
 	}
 	testCoins    = sdk.NewDecCoins(cl.HundredFooCoins)
 	testTickInfo = model.TickInfo{
@@ -173,7 +173,7 @@ func setupGenesis(baseGenesis genesis.GenesisState, poolGenesisEntries []singleP
 		if err != nil {
 			panic(err)
 		}
-		baseGenesis.PoolData = append(baseGenesis.PoolData, genesis.PoolData{
+		baseGenesis.PoolData = append(baseGenesis.PoolData, genesis.GenesisPoolData{
 			Pool:                    poolAny,
 			Ticks:                   poolGenesisEntry.tick,
 			SpreadRewardAccumulator: poolGenesisEntry.spreadFactorAccumValues,

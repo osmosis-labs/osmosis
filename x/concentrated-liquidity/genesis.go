@@ -99,7 +99,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		panic(err)
 	}
 
-	poolData := make([]genesis.PoolData, 0, len(pools))
+	poolData := make([]genesis.GenesisPoolData, 0, len(pools))
 
 	for _, poolI := range pools {
 		poolI := poolI
@@ -158,7 +158,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 			incentivesAccumObject[i] = genesisAccum
 		}
 
-		poolData = append(poolData, genesis.PoolData{
+		poolData = append(poolData, genesis.GenesisPoolData{
 			Pool:                    &anyCopy,
 			Ticks:                   ticks,
 			SpreadRewardAccumulator: spreadRewardAccumObject,

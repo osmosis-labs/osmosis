@@ -29,7 +29,7 @@ message FullTick {
 
 // PoolData represents a serialized pool along with its ticks
 // for genesis state.
-message PoolData {
+message GenesisPoolData {
   // pool struct
   google.protobuf.Any pool = 1 [ (cosmos_proto.accepts_interface) = "PoolI" ];
   // pool's ticks
@@ -62,7 +62,7 @@ message GenesisState {
   // params are all the parameters of the module
   Params params = 1 [ (gogoproto.nullable) = false ];
   // pool data containining serialized pool struct and ticks.
-  repeated PoolData pool_data = 2 [ (gogoproto.nullable) = false ];
+  repeated GenesisPoolData pool_data = 2 [ (gogoproto.nullable) = false ];
 
   repeated PositionData position_data = 3 [ (gogoproto.nullable) = false ];
 
