@@ -62,7 +62,7 @@ func main() {
 		desiredOperation int
 	)
 
-	flag.IntVar(&desiredOperation, "operation", 0, fmt.Sprintf("operation to run:\nget subgraph data: %v, convert subgraph positions to osmo genesis: %v\nmerge converted subgraph genesis and localosmosis genesis: %v"))
+	flag.IntVar(&desiredOperation, "operation", 0, fmt.Sprintf("operation to run:\ncreate positions: %v, make many swaps: %v", createPositions, makeManySwaps))
 
 	flag.Parse()
 
