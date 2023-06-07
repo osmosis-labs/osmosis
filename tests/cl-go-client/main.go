@@ -30,8 +30,14 @@ const (
 	// createPositions creates positions in the CL pool with id expectedPoolId.
 	createPositions operation = iota
 
-	// makeManySwaps makes many swaps in the CL pool with id expectedPoolId.
-	makeManySwaps
+	// makeManySmallSwaps makes many swaps in the CL pool with id expectedPoolId.
+	makeManySmallSwaps
+
+	// makeManyLargeSwaps makes many large swaps in the CL pool with id expectedPoolId.
+	// it takes one large amount and swaps it into the pool. Then, takes output token
+	// and swaps it back while accounting for the spread factor. This is done to
+	// ensure that we cross ticks while minimizing the chance of running out of funds or liquidity.
+	makeManyInvertibleLargeSwaps
 )
 
 const (
@@ -49,12 +55,14 @@ const (
 	randSeed                        = 1
 	maxAmountDeposited              = 1_00_000_000
 	maxAmountSingleSwap             = 1_000_000
+	largeSwapAmount                 = 90_000_000_000
 )
 
 var (
-	defaultAccountName = fmt.Sprintf("%s%d", accountNamePrefix, 1)
-	defaultMinAmount   = sdk.ZeroInt()
-	accountMutex       sync.Mutex
+	defaultAccountName  = fmt.Sprintf("%s%d", accountNamePrefix, 1)
+	defaultMinAmount    = sdk.ZeroInt()
+	defaultSpreadFactor = sdk.MustNewDecFromStr("0.001")
+	accountMutex        sync.Mutex
 )
 
 func main() {
@@ -62,7 +70,7 @@ func main() {
 		desiredOperation int
 	)
 
-	flag.IntVar(&desiredOperation, "operation", 0, fmt.Sprintf("operation to run:\ncreate positions: %v, make many swaps: %v", createPositions, makeManySwaps))
+	flag.IntVar(&desiredOperation, "operation", 0, fmt.Sprintf("operation to run:\ncreate positions: %v, make many swaps: %v", createPositions, makeManySmallSwaps))
 
 	flag.Parse()
 
@@ -117,9 +125,11 @@ func main() {
 	case createPositions:
 		createManyRandomPositions(igniteClient, expectedPoolId, numPositions)
 		return
-	case makeManySwaps:
-		swapSmallAmountsContinuously(igniteClient, expectedPoolId, numSwaps)
+	case makeManySmallSwaps:
+		swapRandomSmallAmountsContinuously(igniteClient, expectedPoolId, numSwaps)
 		return
+	case makeManyInvertibleLargeSwaps:
+		swapGivenLargeAmountsBothDirections(igniteClient, expectedPoolId, numSwaps, largeSwapAmount)
 	default:
 		log.Fatalf("invalid operation: %d", desiredOperation)
 	}
@@ -153,7 +163,7 @@ func createManyRandomPositions(igniteClient cosmosclient.Client, poolId uint64, 
 	}
 }
 
-func swapSmallAmountsContinuously(igniteClient cosmosclient.Client, poolId uint64, numSwaps int) {
+func swapRandomSmallAmountsContinuously(igniteClient cosmosclient.Client, poolId uint64, numSwaps int) {
 	for i := 0; i < numSwaps; i++ {
 		var (
 			randAccountNum = rand.Intn(8) + 1
@@ -173,7 +183,48 @@ func swapSmallAmountsContinuously(igniteClient cosmosclient.Client, poolId uint6
 		tokenInCoin := sdk.NewCoin(tokenInDenom, sdk.NewInt(rand.Int63n(maxAmountSingleSwap)))
 
 		runMessageWithRetries(func() error {
-			return makeSwap(igniteClient, expectedPoolId, accountName, tokenInCoin, tokenOutDenom, tokenOutMinAmount)
+			_, err := makeSwap(igniteClient, expectedPoolId, accountName, tokenInCoin, tokenOutDenom, tokenOutMinAmount)
+			return err
+		})
+	}
+
+	log.Println("finished swapping, num swaps done", numSwaps)
+}
+
+func swapGivenLargeAmountsBothDirections(igniteClient cosmosclient.Client, poolId uint64, numSwaps int, largeStartAmount int64) {
+	var (
+		randAccountNum = rand.Intn(8) + 1
+		accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
+
+		isToken0In = rand.Intn(2) == 0
+
+		tokenOutMinAmount = sdk.OneInt()
+	)
+
+	tokenInDenom := denom0
+	tokenOutDenom := denom1
+	if !isToken0In {
+		tokenInDenom = denom1
+		tokenOutDenom = denom0
+	}
+
+	tokenInCoin := sdk.NewCoin(tokenInDenom, sdk.NewInt(largeStartAmount))
+
+	for i := 0; i < numSwaps; i++ {
+		runMessageWithRetries(func() error {
+			tokenOut, err := makeSwap(igniteClient, expectedPoolId, accountName, tokenInCoin, tokenOutDenom, tokenOutMinAmount)
+
+			if err == nil {
+				// Swap the resulting amount out back while accounting for spread factor.
+				// This is to make sure we can continue swapping back and forth and not run
+				// out of funds or liquidity.
+				tempTokenInDenom := tokenInCoin.Denom
+				// new token in = token out / (1 - spread factor)
+				tokenInCoin = sdk.NewCoin(tokenOutDenom, tokenOut.ToDec().Quo(sdk.OneDec().Sub(defaultSpreadFactor)).RoundInt())
+				tokenOutDenom = tempTokenInDenom
+			}
+
+			return err
 		})
 	}
 
@@ -186,7 +237,7 @@ func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 		Denom1:       denom0,
 		Denom0:       denom1,
 		TickSpacing:  1,
-		SpreadFactor: sdk.ZeroDec(),
+		SpreadFactor: defaultSpreadFactor,
 	}
 	txResp, err := igniteClient.BroadcastTx(accountName, msg)
 	if err != nil {
@@ -227,7 +278,7 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 	return resp.Amount0, resp.Amount1, resp.LiquidityCreated, nil
 }
 
-func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, tokenInCoin sdk.Coin, tokenOutDenom string, tokenOutMinAmount sdk.Int) error {
+func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, tokenInCoin sdk.Coin, tokenOutDenom string, tokenOutMinAmount sdk.Int) (sdk.Int, error) {
 	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
 	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
 	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
@@ -247,15 +298,15 @@ func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountNam
 	}
 	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
 	if err != nil {
-		return err
+		return sdk.Int{}, err
 	}
 	resp := poolmanagertypes.MsgSwapExactAmountInResponse{}
 	if err := txResp.Decode(&resp); err != nil {
-		return err
+		return sdk.Int{}, err
 	}
 
 	log.Println("swap made, token out amount: ", resp.TokenOutAmount)
-	return nil
+	return resp.TokenOutAmount, nil
 }
 
 func getAccountAddressFromKeyring(igniteClient cosmosclient.Client, accountName string) string {

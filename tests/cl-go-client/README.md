@@ -63,24 +63,51 @@ In the current state, it does the following:
 - Queries pool with id 1. If does not exist, creates it
 - Sets up 100 CL positions (count configured at the top of the file)
 
-### Make Swaps
+### Make Small Randomized Swaps
 
 ```bash
-make localnet-cl-swap
+make localnet-cl-small-swap
 ```
 
 In the current state, it does the following:
 - Queries status of the chain to make sure it's running.
 - Queries pool with id 1.
-- Performs 100 swaps against the pool with id 1.
+- Performs 100 randomized swaps against the pool with id 1.
 
 Note that this script does not set up positions, assumming they are
 already set up.
 
-### Create Positions and Swap
+### Create Positions and Make Small Randomized Swaps
 
 ```bash
-make localnet-cl-positions-and-swaps
+make localnet-cl-positions-small-swaps
 ```
 
-This script runs "Create Positions" and "Make Swaps" scripts in sequence.
+This script runs "Create Positions" and "Make Small Randomized Swaps" scripts in sequence.
+
+### Make Large Invertible Swaps
+
+```bash
+make localnet-cl-large-swap
+```
+
+In the current state, it does the following:
+- Queries status of the chain to make sure it's running.
+- Queries pool with id 1.
+- Performs 100 large swaps where the output of the previous swap is swapped back at the
+next swap.
+
+In other words, it takes one large amount and swaps it into the pool. Then, takes output token
+and swaps it back while accounting for the spread factor. This is done to
+ensure that we cross ticks while minimizing the chance of running out of funds or liquidity.
+
+Note that this script does not set up positions, assumming they are
+already set up.
+
+### Create Positions and Make Large Invertible Swaps
+
+```bash
+make localnet-cl-positions-large-swaps
+```
+
+This script runs "Create Positions" and "Make Large Invertible Swaps" scripts in sequence.
