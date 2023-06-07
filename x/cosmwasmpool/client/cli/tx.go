@@ -67,7 +67,7 @@ func NewCmdUploadCodeIdAndWhitelistProposal() *cobra.Command {
 		Use:     "upload-code-id-and-whitelist [wasm-file-path] [flags]",
 		Args:    cobra.ExactArgs(1),
 		Short:   "Submit an upload code id and whitelist proposal",
-		Example: "osmosisd tx gov submit-proposal upload-code-id-and-whitelist x/cosmwasmpool/bytecode/transmuter.wasm --from lo-test1 --keyring-backend test --title \"Test\" --description \"Test\" -b=block --chain-id localosmosis",
+		Example: "osmosisd tx gov submit-proposal upload-code-id-and-whitelist x/cosmwasmpool/bytecode/transmuter.wasm --from lo-test1 --keyring-backend test --title \"Test\" --description \"Test\" -b=block --chain-id localosmosis --fees=100000uosmo --gas=20000000",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
