@@ -51,12 +51,12 @@ func (k Keeper) GetSerializedPools(ctx sdk.Context, pagination *query.PageReques
 		}
 
 		// Retrieve the poolInterface from the respective pool
-		poolI, err := k.GetPool(ctx, pool.GetId())
+		poolI, err := k.GetPoolById(ctx, pool.GetId())
 		if err != nil {
 			return err
 		}
 
-		any, err := codectypes.NewAnyWithValue(poolI)
+		any, err := codectypes.NewAnyWithValue(poolI.GetStoreModel())
 		if err != nil {
 			return err
 		}
