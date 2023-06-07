@@ -54,8 +54,9 @@ message PeriodLock {
 enum LockQueryType {
   option (gogoproto.goproto_enum_prefix) = false;
 
-  ByTime = 0;
-  ByDuration = 1;
+  UNSPECIFIED = 0;
+  ByTime = 1;
+  ByDuration = 2;
 }
 
 // QueryCondition is a struct used for querying locks upon different conditions.

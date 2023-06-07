@@ -96,25 +96,26 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 // CreateGauge creates a gauge and sends coins to the gauge.
 func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error) {
 	// Ensure that this gauge's duration is one of the allowed durations on chain
-	durations := k.GetLockableDurations(ctx)
-	if distrTo.LockQueryType == lockuptypes.ByDuration {
-		durationOk := false
-		for _, duration := range durations {
-			if duration == distrTo.Duration {
-				durationOk = true
-				break
+	if distrTo.LockQueryType != lockuptypes.UNSPECIFIED {
+		durations := k.GetLockableDurations(ctx)
+		if distrTo.LockQueryType == lockuptypes.ByDuration {
+			durationOk := false
+			for _, duration := range durations {
+				if duration == distrTo.Duration {
+					durationOk = true
+					break
+				}
+			}
+			if !durationOk {
+				return 0, fmt.Errorf("invalid duration: %d", distrTo.Duration)
 			}
 		}
-		if !durationOk {
-			return 0, fmt.Errorf("invalid duration: %d", distrTo.Duration)
+
+		// check if denom this gauge pays out to exists on-chain
+		if !k.bk.HasSupply(ctx, distrTo.Denom) && !strings.Contains(distrTo.Denom, "osmovaloper") {
+			return 0, fmt.Errorf("denom does not exist: %s", distrTo.Denom)
 		}
 	}
-
-	// check if denom this gauge pays out to exists on-chain
-	if distrTo.Denom != "" && !k.bk.HasSupply(ctx, distrTo.Denom) && !strings.Contains(distrTo.Denom, "osmovaloper") {
-		return 0, fmt.Errorf("denom does not exist: %s", distrTo.Denom)
-	}
-
 	gauge := types.Gauge{
 		Id:                k.GetLastGaugeID(ctx) + 1,
 		IsPerpetual:       isPerpetual,
