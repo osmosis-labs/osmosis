@@ -279,24 +279,30 @@ pub enum SudoMsg {
 and that sudo call should return an `IBCAckResponse`:
 
 ```rust
+
 #[cw_serde]
 pub struct IBCAckResponse {
     pub packet: Packet,
     pub contract_ack: ContractAck,
 }
+
+#[cw_serde]
+pub struct IBCAckError {
+    pub packet: Packet,
+    pub contract_error: String,
+}
+
+#[cw_serde]
+#[serde(tag = "type", content = "content")]
+pub enum IBCAck {
+    AckResponse(IBCAckResponse),
+    AckError(IBCAckError),
+}
 ```
 
----
-
-TODO: I think this is overcomplicated and I can't remember why I wrote it like this. 
-
-I think the idea was that the message could be sent by anyone and the sudo message then is only sent to the proper 
-contract, but since we only allow the contract to send the message, we could just include the packet and response 
-and have the chain verify and write the ack directly instead of doing the sudo round trip.
-
-Alternatively, we keep the sudo message but allow anyone to call MsgEmitIBCAck. 
-
-Feedback?
+Note: the sudo call is required to potentially allow anyone to send the MsgEmitIBCAck message. For now, however,
+this is artificially limited so that the message can only be send by the same contract. This could be expanded in
+the future if needed. 
 
 # Testing strategy
 

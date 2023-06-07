@@ -11,14 +11,6 @@ pub struct Height {
     revision_height: Option<u64>,
 }
 
-// #[cw_serde]
-// pub struct FungibleTokenData {
-//     pub denom: String,
-//     amount: Uint256,
-//     sender: String,
-//     receiver: String,
-// }
-
 // An IBC packet
 #[cw_serde]
 pub struct Packet {
