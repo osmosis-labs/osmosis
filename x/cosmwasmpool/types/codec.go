@@ -10,7 +10,7 @@ import (
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterInterface(
-		"osmosis.poolmanager.v1beta1.PoolI",
+		"osmosis.cosmwasmpool.v1beta1.PoolI",
 		(*CosmWasmExtension)(nil),
 	)
 
