@@ -10,7 +10,7 @@ queries:
       cmd: "GetParams"
   Pools:
     proto_wrapper:
-      query_func: "k.GetPools"
+      query_func: "k.Pools"
     cli:
       cmd: "Pools"
   ContractInfoByPoolId:
