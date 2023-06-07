@@ -84,6 +84,7 @@ type AppModule struct {
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), cosmwasmpool.NewMsgServerImpl(&am.k))
+	model.RegisterMsgCreatorServer(cfg.MsgServer(), cosmwasmpool.NewMsgCreatorServerImpl(&am.k))
 	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: moduleclient.NewQuerier(am.k)})
 }
 
