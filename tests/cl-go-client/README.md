@@ -41,7 +41,7 @@ nano client.toml
 Replace node RPC with the testnet value and save,
 
 Next, manually edit the `localosmosisFromHomePath` variable in the script:
-https://github.com/osmosis-labs/osmosis/blob/98025f185ab2ee1b060511ed22679112abcc08fa/tests/cl-go-client/main.go#L28 
+<https://github.com/osmosis-labs/osmosis/blob/98025f185ab2ee1b060511ed22679112abcc08fa/tests/cl-go-client/main.go#L28>
 
 Set the value to `.osmosisd-testnet-script` and save.
 
