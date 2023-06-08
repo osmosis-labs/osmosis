@@ -239,7 +239,7 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 	// Superfluid delegate the balancer lock if the case requires it.
 	// Note the intermediary account that was created.
 	if superfluidDelegated {
-		node.SuperfluidDelegate(int(originalGammLockId), initialization.ValidatorWalletName, poolJoinAcc.String())
+		node.SuperfluidDelegate(int(originalGammLockId), chain.NodeConfigs[1].OperatorAddress, poolJoinAcc.String())
 		connectedIntermediaryAccount := node.QueryConnectedIntermediaryAccount(fmt.Sprintf("%d", originalGammLockId))
 		balancerIntermediaryAcc = superfluidtypes.SuperfluidIntermediaryAccount{
 			Denom:   connectedIntermediaryAccount.Denom,
