@@ -268,7 +268,17 @@ func (k Keeper) distributeSyntheticInternal(
 
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
 // the distrInfo struct. It also updates the gauge for the distribution.
-// Locks is expected to be the correct set of lock recipients for this gauge.
+// It handles any kind of gauges:
+// - distributing to locks
+//   - Locks is expected to be the correct set of lock recipients for this gauge.
+//   - perpetual
+//   - non-perpetual
+//
+// - distributing to pools
+//   - perpetual
+//   - non-perpetual
+//
+// CONTRACT: gauge must be active
 func (k Keeper) distributeInternal(
 	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {
@@ -300,15 +310,17 @@ func (k Keeper) distributeInternal(
 		// Get distribution epoch duration. This is used to calculate the emission rate.
 		currentEpoch := k.GetEpochInfo(ctx)
 
-		// only want to run this logic if the gaugeId is associated with CL PoolId
+		// For every coin in the gauge, calculate the remaining reward per epoch
+		// and create a concentrated liquidity incentive record for it that
+		// is supposed to distribute over that epoch.
 		for _, remainCoin := range remainCoins {
+			// remaining coin amount per epoch.
 			remainAmountPerEpoch := remainCoin.Amount.Quo(sdk.NewIntFromUint64(remainEpochs))
 			remainCoinPerEpoch := sdk.NewCoin(remainCoin.Denom, remainAmountPerEpoch)
 
 			// emissionRate calculates amount of tokens to emit per second
-			// for ex: 10000tokens to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
-			// Note: reason why we do millisecond conversion is because floats are non-deterministic so if someone refactors this and accidentally
-			// uses the return of currEpoch.Duration.Seconds() in math operations, this will lead to an app hash.
+			// for ex: 10000uosmo to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
+			// Note: reason why we do millisecond conversion is because floats are non-deterministic.
 			emissionRate := sdk.NewDecFromInt(remainAmountPerEpoch).QuoTruncate(sdk.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(sdk.NewInt(1000)))
 
 			_, err := k.clk.CreateIncentive(ctx,
@@ -316,9 +328,11 @@ func (k Keeper) distributeInternal(
 				k.ak.GetModuleAddress(types.ModuleName),
 				remainCoinPerEpoch,
 				emissionRate,
+				// Use current block time as start time, NOT the gauge start time.
+				// Gauge start time should be checked whenever moving between active
+				// and inactive gauges. By the time we get here, the gauge should be active.
 				ctx.BlockTime(),
-				// Note that the minimum uptime does not affect the distribution of incentives from the gauge and
-				// thus can be any value authorized by the CL module.
+				// Only default uptime is supported at launch.
 				types.DefaultConcentratedUptime,
 			)
 			if err != nil {
@@ -401,7 +415,8 @@ func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cac
 	return FilterLocksByMinDuration(allLocks, gauge.DistributeTo.Duration)
 }
 
-// Distribute distributes coins from an array of gauges to all eligible locks.
+// Distribute distributes coins from an array of gauges to all eligible locks and pools in the case of "NoLock" gauges.
+// CONTRACT: gauges must be active.
 func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, error) {
 	distrInfo := newDistributionInfo()
 
