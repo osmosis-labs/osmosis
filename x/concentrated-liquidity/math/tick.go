@@ -136,6 +136,7 @@ func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (int64, error) {
 	if tickIndexModulus < 0 {
 		tickIndexModulus += int64(tickSpacing)
 	}
+	fmt.Println("tickIndexModulus: ", tickIndexModulus)
 
 	if tickIndexModulus != 0 {
 		tickIndex = tickIndex - tickIndexModulus

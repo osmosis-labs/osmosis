@@ -732,9 +732,14 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 	// TODO: decide which swap function to use
 	// TODO: fuzz swap amounts
 
-	swapInCoin := sdk.NewCoin(swapInDenom, baseSwapAmount)
-	s.FundAcc(swapAddress, sdk.NewCoins(swapInCoin))
+	swapInFunded := sdk.NewCoin(swapInDenom, sdk.Int(sdk.MustNewDecFromStr("10000000000000000000000")))
+	s.FundAcc(swapAddress, sdk.NewCoins(swapInFunded))
+
+	swapOutCoin := sdk.NewCoin(swapOutDenom, sdk.MinInt(baseSwapAmount, poolLiquidity.AmountOf(swapOutDenom)))
+	fmt.Println("asset 0: ", pool.GetToken0())
+	fmt.Println("swapOutCoin: ", swapOutCoin)
+	fmt.Println("poolLiquidity: ", poolLiquidity)
 	// Note that we set the price limit to zero to ensure that the swap can execute in either direction (gets automatically set to correct limit)
-	_, _, _, _, _, err := s.clk.SwapOutAmtGivenIn(s.Ctx, swapAddress, pool, swapInCoin, swapOutDenom, DefaultSpreadFactor, sdk.ZeroDec())
+	_, _, _, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, swapOutCoin, swapInDenom, DefaultSpreadFactor, sdk.ZeroDec())
 	s.Require().NoError(err)
 }

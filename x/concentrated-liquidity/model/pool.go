@@ -232,6 +232,7 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 
 	// Transform the provided ticks into their corresponding sqrtPrices.
 	_, _, sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
+	fmt.Println("[liq -> assets]: sqrtPriceLowerTick, sqrtPriceUpperTick: ", sqrtPriceLowerTick, sqrtPriceUpperTick)
 	if err != nil {
 		return sdk.Dec{}, sdk.Dec{}, err
 	}
@@ -245,6 +246,7 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 	roundUp := liquidityDelta.IsPositive()
 
 	if p.IsCurrentTickInRange(lowerTick, upperTick) {
+		fmt.Println("[liq -> assets]: curTick is in range")
 		// outcome one: the current price falls within the position
 		// if this is the case, we attempt to provide liquidity evenly between asset0 and asset1
 		// we also update the pool liquidity since the virtual liquidity is modified by this position's creation
@@ -252,11 +254,13 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 		actualAmountDenom0 = math.CalcAmount0Delta(liquidityDelta, currentSqrtPrice, sqrtPriceUpperTick, roundUp)
 		actualAmountDenom1 = math.CalcAmount1Delta(liquidityDelta, currentSqrtPrice, sqrtPriceLowerTick, roundUp)
 	} else if p.CurrentTick < lowerTick {
+		fmt.Println("[liq -> assets]: curTick is below range")
 		// outcome two: position is below current price
 		// this means position is solely made up of asset0
 		actualAmountDenom1 = sdk.ZeroDec()
 		actualAmountDenom0 = math.CalcAmount0Delta(liquidityDelta, sqrtPriceLowerTick, sqrtPriceUpperTick, roundUp)
 	} else {
+		fmt.Println("[liq -> assets]: curTick is above range")
 		// outcome three: position is above current price
 		// this means position is solely made up of asset1
 		actualAmountDenom0 = sdk.ZeroDec()

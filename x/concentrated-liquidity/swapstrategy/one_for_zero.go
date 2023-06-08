@@ -164,11 +164,17 @@ func (s oneForZeroStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId u
 	prefixStore := prefix.NewStore(store, prefixBz)
 	startKey := types.TickIndexToBytes(currentTickIndex)
 	iter := prefixStore.Iterator(startKey, nil)
+	fmt.Println("initial iter: ", iter)
 
 	for ; iter.Valid(); iter.Next() {
 		// Since, we constructed our prefix store with <TickPrefix | poolID>, the
 		// key is the encoding of a tick index.
+		fmt.Println("iter loop")
+		fmt.Println("intermediate iter 1: ", iter)
+		fmt.Println("iter valid: ", iter.Valid())
 		tick, err := types.TickIndexFromBytes(iter.Key())
+		fmt.Println("found tick: ", tick)
+		fmt.Println("current tick: ", currentTickIndex)
 		if err != nil {
 			iter.Close()
 			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
@@ -177,7 +183,10 @@ func (s oneForZeroStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId u
 		if tick > currentTickIndex {
 			break
 		}
+		fmt.Println("intermediate iter 2: ", iter)
+		fmt.Println("iter valid: ", iter.Valid())
 	}
+	fmt.Println("final iter: ", iter)
 	return iter
 }
 
@@ -191,7 +200,8 @@ func (s oneForZeroStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId u
 // zeroForOneStrategy where we use reverse iterator and have to add one to
 // the input. Therefore, we define this method to account for different strategies.
 func (s oneForZeroStrategy) InitializeTickValue(currentTick int64) int64 {
-	return currentTick + 1
+	fmt.Println("one for zero init tick, current: ", currentTick)
+	return currentTick + 2
 }
 
 // SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.

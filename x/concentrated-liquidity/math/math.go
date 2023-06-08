@@ -174,19 +174,26 @@ func GetNextSqrtPriceFromAmount1OutRoundingDown(sqrtPriceCurrent, liquidity, amo
 func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0, amount1 sdk.Int) (liquidity sdk.Dec) {
 	// Reorder the prices so that sqrtPriceA is the smaller of the two.
 	if sqrtPriceA.GT(sqrtPriceB) {
+		fmt.Println("prices reordered")
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
+	fmt.Println("[assets -> liq]: sqrtPriceLowerTick, sqrtPriceUpperTick: ", sqrtPriceA, sqrtPriceB)
 
-	if sqrtPrice.LTE(sqrtPriceA) {
+	// TODO: find rounded lower, current, and upper ticks -> replace bound checks with them
+
+	if sqrtPrice.LT(sqrtPriceA) {
+		fmt.Println("[assets -> liq]: curTick is below range")
 		// If the current price is less than or equal to the lower tick, then we use the liquidity0 formula.
 		liquidity = Liquidity0(amount0, sqrtPriceA, sqrtPriceB)
-	} else if sqrtPrice.LTE(sqrtPriceB) {
+	} else if sqrtPrice.LT(sqrtPriceB) {
+		fmt.Println("[assets -> liq]: curTick is in range")
 		// If the current price is between the lower and upper ticks (inclusive of the lower tick but not the upper tick),
 		// then we use the minimum of the liquidity0 and liquidity1 formulas.
 		liquidity0 := Liquidity0(amount0, sqrtPrice, sqrtPriceB)
 		liquidity1 := Liquidity1(amount1, sqrtPrice, sqrtPriceA)
 		liquidity = sdk.MinDec(liquidity0, liquidity1)
 	} else {
+		fmt.Println("[assets -> liq]: curTick is above range")
 		// If the current price is greater than the upper tick, then we use the liquidity1 formula.
 		liquidity = Liquidity1(amount1, sqrtPriceB, sqrtPriceA)
 	}

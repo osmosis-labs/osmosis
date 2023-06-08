@@ -173,6 +173,7 @@ func (k Keeper) swapOutAmtGivenIn(
 	}
 
 	if !tokenOut.Amount.IsPositive() {
+		fmt.Println("Invalid token out: ", tokenOut.Amount)
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, types.InvalidAmountCalculatedError{Amount: tokenOut.Amount}
 	}
 
@@ -200,6 +201,7 @@ func (k *Keeper) swapInAmtGivenOut(
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
 	}
+	fmt.Println("Computed token in: ", tokenIn)
 
 	// check that the tokenOut calculated is both valid and less than specified limit
 	if !tokenIn.Amount.IsPositive() {
@@ -536,6 +538,8 @@ func (k Keeper) computeInAmtGivenOut(
 
 	// initialize swap state with the following parameters:
 	// as we iterate through the following for loop, this swap state will get updated after each required iteration
+	fmt.Println("Current tick: ", p.GetCurrentTick())
+	fmt.Println("zeroForOne: ", zeroForOne)
 	swapState := SwapState{
 		amountSpecifiedRemaining: tokenAmountOutSpecified, // tokenOut
 		amountCalculated:         sdk.ZeroDec(),           // tokenIn
@@ -548,6 +552,7 @@ func (k Keeper) computeInAmtGivenOut(
 	totalSpreadFactors = sdk.ZeroDec()
 
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
+	fmt.Println("nextTickIter: ", nextTickIter)
 	defer nextTickIter.Close()
 
 	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
@@ -562,12 +567,14 @@ func (k Keeper) computeInAmtGivenOut(
 
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
+	fmt.Println("Amount remining in swap: ", swapState.amountSpecifiedRemaining)
 	for swapState.amountSpecifiedRemaining.GT(smallestDec) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
 		// log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
 
 		// Iterator must be valid to be able to retrieve the next tick from it below.
 		if !nextTickIter.Valid() {
+			fmt.Println("Error: invalid iterator")
 			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
 		}
 
@@ -612,6 +619,7 @@ func (k Keeper) computeInAmtGivenOut(
 		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.SubMut(amountOut)
 		swapState.amountCalculated = swapState.amountCalculated.AddMut(amountIn.Add(spreadRewardChargeTotal))
 		totalSpreadFactors = totalSpreadFactors.Add(spreadRewardChargeTotal)
+		fmt.Println("--- Swap state amount calc step: ", swapState.amountCalculated)
 
 		// if the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
 		// tick has been consumed and we must move on to the next tick to complete the swap

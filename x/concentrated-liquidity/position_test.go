@@ -2447,10 +2447,13 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 func (s *KeeperTestSuite) TestMultipleRanges() {
 	dummyRanges := [][]int64{
 		// Note: if seed is set to 3, just the first range is sufficient to trigger the panic.
-		{-6872000, -6871000},
-		{-6871000, -6870000},
+		{-68720000, -68710000},
+		{-68710000, -68700000},
 		// {-6873000, -6872000},
 	}
+
+	// Close to MinTick case (triggers large tick rounding)
+	// {-161795100, -160000000},
 
 	// Working no fuzz assets base case:
 	// {-10000, 10000},

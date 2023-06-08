@@ -2,6 +2,7 @@ package concentrated_liquidity
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -71,11 +72,13 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
 
+	fmt.Println("pre round ticks lower upper: ", lowerTick, upperTick)
 	// If multiple ticks can represent the same spot price, ensure we are using the largest of those ticks.
 	lowerTick, upperTick, err = roundTickToCanonicalPriceTick(lowerTick, upperTick, priceLowerTick, priceUpperTick, pool.GetTickSpacing())
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
+	fmt.Println("post round ticks lower upper: ", lowerTick, upperTick)
 
 	positionId = k.getNextPositionIdAndIncrement(ctx)
 
@@ -87,6 +90,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	if !hasPositions {
+		fmt.Println("triggered initialize")
 		err := k.initializeInitialPositionForPool(ctx, pool, amount0Desired, amount1Desired)
 		if err != nil {
 			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
@@ -456,6 +460,11 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("InitialSpotPrice: ", initialSpotPrice)
+	fmt.Println("InitialTick: ", initialTick)
+	nonRounded, _ := math.PriceToTick(initialSpotPrice)
+	fmt.Println("Non rounded tick: ", nonRounded)
 
 	// Set the pool's current sqrt price and current tick to the above calculated values
 	// Note that initial initial cur sqrt price might not fall directly on the initial tick.

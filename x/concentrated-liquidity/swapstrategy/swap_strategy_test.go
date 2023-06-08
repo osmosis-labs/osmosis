@@ -46,7 +46,7 @@ var (
 	defaultSpreadReward   = sdk.MustNewDecFromStr("0.03")
 	defaultTickSpacing    = uint64(100)
 	defaultAmountReserves = sdk.NewInt(1_000_000_000)
-	DefaultCoins          = sdk.NewCoins(sdk.NewCoin(ETH, defaultAmountReserves), sdk.NewCoin(USDC, defaultAmountReserves))
+	DefaultCoins          = sdk.NewCoins(sdk.NewCoin(ETH, defaultAmountReserves), sdk.NewCoin(USDC, defaultAmountReserves.Mul(sdk.NewInt(3231223))))
 )
 
 func TestStrategyTestSuite(t *testing.T) {
@@ -74,8 +74,11 @@ func (suite *StrategyTestSuite) runTickIteratorTest(strategy swapstrategy.SwapSt
 	pool, err := suite.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(suite.Ctx, pool.GetId())
 	suite.Require().NoError(err)
 
+	fmt.Println("pool liq for iterator test: ", suite.App.BankKeeper.GetAllBalances(suite.Ctx, pool.GetAddress()))
 	currentTick := pool.GetCurrentTick()
 	suite.Require().Equal(int64(0), currentTick)
+	pool.SetCurrentTick(int64(99))
+	fmt.Println("current tick for iterator test: ", currentTick)
 
 	tickIndex := strategy.InitializeTickValue(currentTick)
 
