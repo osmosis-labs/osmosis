@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
@@ -71,6 +72,8 @@ func (m MsgCreateGauge) ValidateBasic() error {
 	if lockType == lockuptypes.NoLock && m.DistributeTo.Denom != "" {
 		return errors.New("no lock gauge denom should be unset. It will be automatically set to the no-lock/{pool-id} format")
 	}
+
+	fmt.Println("m.DistributeTo.Denom", m.DistributeTo.Denom)
 
 	return nil
 }
