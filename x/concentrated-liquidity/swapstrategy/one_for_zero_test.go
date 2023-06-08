@@ -10,7 +10,7 @@ import (
 
 func (suite *StrategyTestSuite) setupNewOneForZeroSwapStrategy(sqrtPriceLimit sdk.Dec, spread sdk.Dec) swapstrategy.SwapStrategy {
 	suite.SetupTest()
-	return swapstrategy.New(false, sqrtPriceLimit, suite.App.GetKey(types.ModuleName), spread, defaultTickSpacing)
+	return swapstrategy.New(false, sqrtPriceLimit, suite.App.GetKey(types.ModuleName), spread, 1) // defaultTickSpacing)
 }
 
 func (suite *StrategyTestSuite) TestGetSqrtTargetPrice_OneForZero() {
@@ -281,7 +281,7 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_OneForZero() {
 			preSetPositions: []position{
 				{
 					lowerTick: 0,
-					upperTick: 100,
+					upperTick: 1,
 				},
 			},
 			expectIsValid:  true,

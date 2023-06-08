@@ -67,7 +67,7 @@ type tickIteratorTest struct {
 }
 
 func (suite *StrategyTestSuite) runTickIteratorTest(strategy swapstrategy.SwapStrategy, tc tickIteratorTest) {
-	pool := suite.PrepareConcentratedPool()
+	pool := suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, 1, sdk.ZeroDec()) // PrepareConcentratedPool()
 	suite.setupPresetPositions(pool.GetId(), tc.preSetPositions)
 
 	// refetch pool
