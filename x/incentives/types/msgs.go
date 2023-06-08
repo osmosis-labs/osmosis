@@ -71,7 +71,8 @@ func (m MsgCreateGauge) ValidateBasic() error {
 	}
 
 	if lockType == lockuptypes.NoLock && m.DistributeTo.Denom != "" {
-		return errors.New("no lock gauge denom should be unset. It will be automatically set to the no-lock/{pool-id} format")
+		return errors.New(`no lock gauge denom should be unset. It will be automatically set to the NoLockExternalGaugeDenom(<pool id>)
+		 format internally, allowing for querying the gauges by denom with this prefix`)
 	}
 
 	return nil
