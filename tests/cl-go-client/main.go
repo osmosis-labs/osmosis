@@ -396,16 +396,15 @@ func createGauge(client cosmosclient.Client, poolId uint64, senderKeyringAccount
 	log.Println("creating CL gauge for pool id", expectedPoolId, "gaugeCoins", gaugeCoins)
 
 	msg := &incentivestypes.MsgCreateGauge{
-		IsPerpetual: true,
+		IsPerpetual: false,
 		Owner:       senderAddress,
 		DistributeTo: lockuptypes.QueryCondition{
-			LockQueryType: lockuptypes.ByDuration,
-			Denom:         "uosmo",
-			Duration:      time.Second * 120,
+			LockQueryType: lockuptypes.NoLock,
 		},
 		StartTime:         time.Now(),
 		Coins:             gaugeCoins,
-		NumEpochsPaidOver: 1,
+		NumEpochsPaidOver: 5,
+		PoolId:            expectedPoolId,
 	}
 	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
 	if err != nil {

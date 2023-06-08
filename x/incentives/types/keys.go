@@ -1,5 +1,7 @@
 package types
 
+import "fmt"
+
 var (
 	// ModuleName defines the module name.
 	ModuleName = "incentives"
@@ -49,4 +51,8 @@ var (
 
 func KeyPrefix(p string) []byte {
 	return []byte(p)
+}
+
+func NoLockGaugePrefix(poolId uint64) []byte {
+	return []byte(fmt.Sprintf("no-lock/%d", poolId))
 }

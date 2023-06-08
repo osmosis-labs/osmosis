@@ -18,6 +18,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v16/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -94,7 +95,7 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 }
 
 // CreateGauge creates a gauge and sends coins to the gauge.
-func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error) {
+func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64, poolId uint64) (uint64, error) {
 	// Ensure that this gauge's duration is one of the allowed durations on chain
 	durations := k.GetLockableDurations(ctx)
 	if distrTo.LockQueryType == lockuptypes.ByDuration {
@@ -110,13 +111,44 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		}
 	}
 
-	// check if denom this gauge pays out to exists on-chain
-	if !k.bk.HasSupply(ctx, distrTo.Denom) && !strings.Contains(distrTo.Denom, "osmovaloper") {
-		return 0, fmt.Errorf("denom does not exist: %s", distrTo.Denom)
+	nextGaugeId := k.GetLastGaugeID(ctx) + 1
+
+	// For no lock gauges, a pool id must be set.
+	// A pool with such id must exist and be a concentrated pool.
+	if distrTo.LockQueryType == lockuptypes.NoLock {
+		if poolId == 0 {
+			return 0, fmt.Errorf("no lock gauges must have a pool id")
+		}
+		if distrTo.Denom != "" {
+			return 0, fmt.Errorf("no lock gauges must not have a denom. It will be automatically set to no-lock/{pool-id}")
+		}
+
+		pool, err := k.pmk.GetPool(ctx, poolId)
+		if err != nil {
+			return 0, err
+		}
+
+		if pool.GetType() != poolmanagertypes.Concentrated {
+			return 0, fmt.Errorf("no lock gauges must be created for concentrated pools only")
+		}
+
+		// We assume that external gauges are created with 0 duration,
+		// while internal gauges are created with an incentive epoch duration.
+		k.pik.SetPoolGaugeId(ctx, poolId, distrTo.Duration, nextGaugeId)
+	} else {
+		// For all other gauges, pool id must be 0.
+		if poolId != 0 {
+			return 0, fmt.Errorf("pool id must be 0 for gauges with lock")
+		}
+
+		// check if denom this gauge pays out to exists on-chain
+		if !k.bk.HasSupply(ctx, distrTo.Denom) && !strings.Contains(distrTo.Denom, "osmovaloper") {
+			return 0, fmt.Errorf("denom does not exist: %s", distrTo.Denom)
+		}
 	}
 
 	gauge := types.Gauge{
-		Id:                k.GetLastGaugeID(ctx) + 1,
+		Id:                nextGaugeId,
 		IsPerpetual:       isPerpetual,
 		DistributeTo:      distrTo,
 		Coins:             coins,

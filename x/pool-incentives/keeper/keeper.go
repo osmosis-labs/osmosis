@@ -79,6 +79,7 @@ func (k Keeper) CreateLockablePoolGauges(ctx sdk.Context, poolId uint64) error {
 			},
 			ctx.BlockTime(),
 			1,
+			0,
 		)
 		if err != nil {
 			return err
@@ -100,28 +101,25 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 		return fmt.Errorf("pool %d is not concentrated liquidity pool", poolId)
 	}
 
-	gaugeIdCL, err := k.incentivesKeeper.CreateGauge(
+	incentivesEpoch := k.incentivesKeeper.GetEpochInfo(ctx)
+
+	_, err = k.incentivesKeeper.CreateGauge(
 		ctx,
 		true,
 		k.accountKeeper.GetModuleAddress(types.ModuleName),
 		sdk.Coins{},
-		// dummy variable so that the existing logic does not break
-		// CreateGauge checks if LockQueryType is `ByDuration` or not, we bypass this check by passing
-		// lockQueryType as byTime. Although we do not need this check, we still cannot pass empty struct.
 		lockuptypes.QueryCondition{
-			LockQueryType: lockuptypes.ByTime,
+			LockQueryType: lockuptypes.NoLock,
 			Denom:         appParams.BaseCoinUnit,
+			Duration:      incentivesEpoch.Duration,
 		},
 		ctx.BlockTime(),
 		1,
+		poolId,
 	)
 	if err != nil {
 		return err
 	}
-
-	incParams := k.incentivesKeeper.GetEpochInfo(ctx)
-	// lockable duration is epoch duration because we create incentive_record on every epoch
-	k.SetPoolGaugeId(ctx, poolId, incParams.Duration, gaugeIdCL)
 
 	return nil
 }

@@ -24,11 +24,11 @@ func (s *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 		Denom:         defaultLPDenom,
 		Duration:      defaultLockDuration / 2, // 0.5 second, invalid duration
 	}
-	_, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
+	_, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1, 0)
 	s.Require().Error(err)
 
 	distrTo.Duration = defaultLockDuration
-	_, err = s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
+	_, err = s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1, 0)
 	s.Require().NoError(err)
 }
 
@@ -43,10 +43,10 @@ func (s *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
 		Denom:         defaultLPDenom,
 		Duration:      defaultLockDuration,
 	}
-	_, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, addrNoSupply, defaultLiquidTokens, distrTo, time.Time{}, 1)
+	_, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, addrNoSupply, defaultLiquidTokens, distrTo, time.Time{}, 1, 0)
 	s.Require().Error(err)
 
-	_, err = s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
+	_, err = s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1, 0)
 	s.Require().NoError(err)
 }
 
@@ -422,6 +422,112 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 				s.Require().NoError(err)
 
 				s.Require().Equal(expectedCoins, gauge.Coins)
+			}
+		})
+	}
+}
+
+// TestCreateGauge_NoLockGauges tests the CreateGauge function
+// specifically focusing on the no lock gauge type and test cases around it.
+// It tests the following:
+// - For no lock gauges, a CL pool id must be given as well and then pool must exist
+// - Otherwise, the given pool id must be zero. Errors if not.
+func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
+	const (
+		zeroPoolId       = uint64(0)
+		balancerPool     = uint64(1)
+		concentratedPool = uint64(2)
+		invalidPool      = uint64(3)
+		// 3 are created for balancer pool and 1 for CL.
+		// As a result, the next gauge id should be 5.
+		defaultExpectedGaugeId = uint64(5)
+
+		defaultIsPerpetualParam = false
+
+		defaultNumEpochPaidOver = uint64(10)
+	)
+
+	var (
+		defaultCoins = sdk.NewCoins(
+			sdk.NewCoin("uosmo", sdk.NewInt(100000)),
+			sdk.NewCoin("atom", sdk.NewInt(99999)),
+		)
+
+		defaultTime = time.Unix(0, 0)
+	)
+	testCases := []struct {
+		name    string
+		distrTo lockuptypes.QueryCondition
+		poolId  uint64
+
+		expectedGaugeId uint64
+		expectErr       bool
+	}{
+		{
+			name: "create valid no lock gauge with CL pool",
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+			},
+			poolId: concentratedPool,
+
+			expectedGaugeId: defaultExpectedGaugeId,
+			expectErr:       false,
+		},
+		{
+			name: "fail to create no lock gauge with balancer pool",
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+			},
+			poolId: balancerPool,
+
+			expectErr: true,
+		},
+		{
+			name: "fail to create no lock gauge with non-existent pool",
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+			},
+			poolId: invalidPool,
+
+			expectErr: true,
+		},
+		{
+			name: "fail to create no lock gauge with zero pool id",
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+			},
+			poolId: zeroPoolId,
+
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			s.PrepareBalancerPool()
+			s.PrepareConcentratedPool()
+
+			s.FundAcc(s.TestAccs[0], defaultCoins)
+
+			// System under test
+			// Note that the default params are used for some inputs since they are not relevant to the test case.
+			gaugeId, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, defaultIsPerpetualParam, s.TestAccs[0], defaultCoins, tc.distrTo, defaultTime, defaultNumEpochPaidOver, tc.poolId)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				s.Require().Equal(tc.expectedGaugeId, gaugeId)
+
+				// Assert that pool id and gauge id links are created
+				gaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, tc.poolId, tc.distrTo.Duration)
+				s.Require().NoError(err)
+
+				s.Require().Equal(tc.expectedGaugeId, gaugeId)
 			}
 		})
 	}

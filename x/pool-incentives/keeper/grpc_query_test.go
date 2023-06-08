@@ -242,7 +242,7 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 								LockQueryType: lockuptypes.ByDuration,
 								Denom:         "stake",
 								Duration:      time.Hour,
-							}, time.Now(), 1)
+							}, time.Now(), 1, 0)
 						s.Require().NoError(err)
 						distRecords = append(distRecords, types.DistrRecord{GaugeId: gaugePerpetualId, Weight: sdk.NewInt(300)})
 					}
@@ -252,7 +252,7 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 								LockQueryType: lockuptypes.ByDuration,
 								Denom:         "stake",
 								Duration:      time.Hour,
-							}, time.Now(), 1)
+							}, time.Now(), 1, 0)
 						s.Require().NoError(err)
 						distRecords = append(distRecords, types.DistrRecord{GaugeId: gaugeNonPerpetualId, Weight: sdk.NewInt(100)})
 					}
@@ -394,7 +394,7 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges() {
 								LockQueryType: lockuptypes.ByDuration,
 								Denom:         "stake",
 								Duration:      time.Hour,
-							}, time.Now(), 1)
+							}, time.Now(), 1, 0)
 						s.Require().NoError(err)
 					}
 				}

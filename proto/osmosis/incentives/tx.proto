@@ -45,6 +45,12 @@ message MsgCreateGauge {
   // num_epochs_paid_over is the number of epochs distribution will be completed
   // over
   uint64 num_epochs_paid_over = 6;
+
+  // pool_id is the ID of the pool that the gauge is meant to be associated
+  // with. if pool_id is set, then the "QueryCondition.LockQueryType" must be
+  // "NoLock" with all other fields unset.
+  // The denom query condition is set to "no-lock/{pool_id}" prefix in such a case.
+  uint64 pool_id = 7;
 }
 message MsgCreateGaugeResponse {}
 

@@ -55,8 +55,21 @@ func (m MsgCreateGauge) ValidateBasic() error {
 		return errors.New("distribution period should be 1 epoch for perpetual gauge")
 	}
 
-	if lockuptypes.LockQueryType_name[int32(m.DistributeTo.LockQueryType)] != "ByDuration" {
-		return errors.New("only duration query condition is allowed. Start time distr conditions is an obsolete codepath slated for deletion")
+	lockType := m.DistributeTo.LockQueryType
+	if lockType == lockuptypes.ByTime {
+		return errors.New("start time distr conditions is an obsolete codepath slated for deletion")
+	}
+
+	if lockType == lockuptypes.ByDuration && m.PoolId != 0 {
+		return errors.New("pool id should not be set for duration distr condition")
+	}
+
+	if lockType == lockuptypes.NoLock && m.PoolId == 0 {
+		return errors.New("pool id should be set for no lock distr condition")
+	}
+
+	if lockType == lockuptypes.NoLock && m.DistributeTo.Denom != "" {
+		return errors.New("no lock gauge denom should be unset. It will be automatically set to the no-lock/{pool-id} format")
 	}
 
 	return nil
