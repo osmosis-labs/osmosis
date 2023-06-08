@@ -7,10 +7,9 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types";
+import "osmosis/cosmwasmpool/v1beta1/params.proto";
 
-// Params holds parameters for the cosmwasmpool module
-message Params {}
+option go_package = "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types";
 
 // GenesisState defines the cosmwasmpool module's genesis state.
 message GenesisState {

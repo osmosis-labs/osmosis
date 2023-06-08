@@ -27,7 +27,10 @@ var (
 // - creatorAddress: The address of the creator of the pool.
 //
 // Returns:
-// - error: An error if the pool conversion, contract instantiation, or storage process fails; otherwise, nil.
+// - error:
+// * if the pool conversion, contract instantiation, or storage process fails.
+// * if the code id is not whitelisted by governance.
+// - otherwise, nil.
 func (k Keeper) InitializePool(ctx sdk.Context, pool poolmanagertypes.PoolI, creatorAddress sdk.AccAddress) error {
 	// Convert the pool to CosmWasmPool
 	cosmwasmPool, err := k.asCosmwasmPool(pool)
@@ -35,10 +38,18 @@ func (k Keeper) InitializePool(ctx sdk.Context, pool poolmanagertypes.PoolI, cre
 		return err
 	}
 
+	// Check if the code id is whitelisted.
+	codeId := cosmwasmPool.GetCodeId()
+	if !k.isWhitelisted(ctx, codeId) {
+		return types.CodeIdNotWhitelistedError{CodeId: codeId}
+	}
+
+	k.WhitelistCodeId(ctx, codeId)
+
 	cosmwasmpoolModuleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 
 	// Instantiate the wasm contract
-	contractAddress, _, err := k.contractKeeper.Instantiate(ctx, cosmwasmPool.GetCodeId(), cosmwasmpoolModuleAddr, cosmwasmpoolModuleAddr, cosmwasmPool.GetInstantiateMsg(), types.ModuleName, emptyCoins)
+	contractAddress, _, err := k.contractKeeper.Instantiate(ctx, codeId, cosmwasmpoolModuleAddr, cosmwasmpoolModuleAddr, cosmwasmPool.GetInstantiateMsg(), types.ModuleName, emptyCoins)
 	if err != nil {
 		return err
 	}

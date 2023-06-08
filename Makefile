@@ -255,7 +255,7 @@ run-querygen:
 ###                           Tests & Simulation                            ###
 ###############################################################################
 
-PACKAGES_UNIT=$(shell go list ./... ./osmomath/... ./osmoutils/... ./x/ibc-hooks/... | grep -E -v 'tests/simulator|e2e')
+PACKAGES_UNIT=$(shell go list ./... ./osmomath/... ./osmoutils/... ./x/ibc-hooks/... ./x/epochs | grep -E -v 'tests/simulator|e2e')
 PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
 PACKAGES_SIM=$(shell go list ./... | grep '/tests/simulator')
 TEST_PACKAGES=./...
@@ -446,9 +446,24 @@ localnet-state-export-stop:
 
 localnet-state-export-clean: localnet-clean
 
-# create 1000 concentrated-liquidity positions in localosmosis at pool id 1
+# create 100 concentrated-liquidity positions in localosmosis at pool id 1
 localnet-cl-create-positions:
-	go run tests/cl-go-client/main.go
+	go run tests/cl-go-client/main.go --operation 0
+
+# does 100 small randomized swaps in localosmosis at pool id 1
+localnet-cl-small-swap:
+	go run tests/cl-go-client/main.go --operation 1
+
+# does 100 large swaps where the output of the previous swap is swapped back at the
+# next swap. localosmosis at pool id 1
+localnet-cl-large-swap:
+	go run tests/cl-go-client/main.go --operation 2
+
+# does both of localnet-cl-create-positions and localnet-cl-small-swap
+localnet-cl-positions-small-swaps: localnet-cl-create-positions localnet-cl-small-swap
+
+# does both of localnet-cl-create-positions and localnet-cl-large-swap
+localnet-cl-positions-large-swaps: localnet-cl-create-positions localnet-cl-large-swap
 
 # This script retrieves Uniswap v3 Ethereum position data
 # from subgraph. It uses WETH / USDC pool. This is helpful

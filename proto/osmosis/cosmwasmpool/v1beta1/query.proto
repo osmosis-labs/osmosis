@@ -2,7 +2,7 @@ syntax = "proto3";
 package osmosis.cosmwasmpool.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "osmosis/cosmwasmpool/v1beta1/genesis.proto";
+import "osmosis/cosmwasmpool/v1beta1/params.proto";
 import "osmosis/cosmwasmpool/v1beta1/tx.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
