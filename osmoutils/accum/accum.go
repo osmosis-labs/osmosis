@@ -3,6 +3,7 @@ package accum
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,7 +29,11 @@ type AccumulatorObject struct {
 
 // Makes a new accumulator at store/accum/{accumName}
 // Returns error if already exists / theres some overlapping keys
+// @Dev: accumName must not contain "/"
 func MakeAccumulator(accumStore store.KVStore, accumName string) error {
+	if strings.Contains(accumName, "/") {
+		return fmt.Errorf("Accumulator name cannot contain '/'")
+	}
 	if accumStore.Has(formatAccumPrefixKey(accumName)) {
 		return errors.New("Accumulator with given name already exists in store")
 	}
