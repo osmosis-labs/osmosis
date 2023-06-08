@@ -29,7 +29,7 @@ var _ types.MsgServer = msgServer{}
 // Emits create gauge event and returns the create gauge response.
 func (server msgServer) CreateGauge(goCtx context.Context, msg *types.MsgCreateGauge) (*types.MsgCreateGaugeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	ctx.Logger().Error("CreateGauge", msg)
+	ctx.Logger().Error("CreateGauge", "msg", msg)
 	owner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
 		return nil, err

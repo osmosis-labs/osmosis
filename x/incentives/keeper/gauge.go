@@ -96,7 +96,7 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 
 // CreateGauge creates a gauge and sends coins to the gauge.
 func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64, poolId uint64) (uint64, error) {
-	ctx.Logger().Error("create gauge", distrTo.Denom)
+	ctx.Logger().Error("create gauge", "gauge", distrTo.Denom)
 
 	// Ensure that this gauge's duration is one of the allowed durations on chain
 	durations := k.GetLockableDurations(ctx)
