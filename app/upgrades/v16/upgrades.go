@@ -14,6 +14,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v16/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
@@ -83,6 +84,12 @@ func CreateUpgradeHandler(
 		params := keepers.GovKeeper.GetTallyParams(ctx)
 		params.ExpeditedQuorum = sdk.NewDec(2).Quo(sdk.NewDec(3))
 		keepers.GovKeeper.SetTallyParams(ctx, params)
+
+		// Add cosmwasmpool module address to the list of allowed addresses to upload contract code.
+		cwPoolModuleAddress := keepers.AccountKeeper.GetModuleAddress(cosmwasmpooltypes.ModuleName)
+		wasmParams := keepers.WasmKeeper.GetParams(ctx)
+		wasmParams.CodeUploadAccess.Addresses = append(wasmParams.CodeUploadAccess.Addresses, cwPoolModuleAddress.String())
+		keepers.WasmKeeper.SetParams(ctx, wasmParams)
 
 		// Add both MsgExecuteContract and MsgInstantiateContract to the list of allowed messages.
 		hostParams := keepers.ICAHostKeeper.GetParams(ctx)

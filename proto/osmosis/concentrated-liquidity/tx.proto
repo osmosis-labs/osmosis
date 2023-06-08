@@ -95,7 +95,7 @@ message MsgAddToPosition {
   // amount1 represents the amount of token1 willing to put in.
   string amount1 = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"amount1\"",
+    (gogoproto.moretags) = "yaml:\"amount_1\"",
     (gogoproto.nullable) = false
   ];
   // token_min_amount0 represents the minimum amount of token0 desired from the
