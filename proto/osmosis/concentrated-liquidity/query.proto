@@ -169,10 +169,10 @@ message LiquidityNetInDirectionRequest {
 message LiquidityNetInDirectionResponse {
   repeated TickLiquidityNet liquidity_depths = 1
       [ (gogoproto.nullable) = false ];
-  int64 current_tick = 2;
-  string current_liquidity = 3 [
+  int64 start_tick = 2;
+  string start_tick_liquidity = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"current_liquidity\"",
+    (gogoproto.moretags) = "yaml:\"start_tick_liquidity\"",
     (gogoproto.nullable) = false
   ];
 }
