@@ -267,7 +267,7 @@ func createExternalCLIncentive(igniteClient cosmosclient.Client, poolId uint64, 
 		log.Println("could not find information about previous epoch. If duration is too long, this test might be infeasible")
 	}
 
-	//.Create gauge
+	// Create gauge
 	runMessageWithRetries(func() error {
 		return createGauge(igniteClient, expectedPoolId, accountName, gaugeCoins)
 	})
