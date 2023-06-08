@@ -106,7 +106,7 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 // Additionally, lockuptypes.Denom must be either an empty string, signifying that
 // this is an external gauge, or be equal to types.NoLockInternalGaugeDenom(poolId).
 // If the denom is empty, it will get overwritten to types.NoLockExternalGaugeDenom(poolId).
-// This denom formatting is useful for querying internal vs externa gauges associated with a pool.
+// This denom formatting is useful for querying internal vs external gauges associated with a pool.
 func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64, poolId uint64) (uint64, error) {
 	// Ensure that this gauge's duration is one of the allowed durations on chain
 	durations := k.GetLockableDurations(ctx)
