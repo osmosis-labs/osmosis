@@ -170,6 +170,7 @@ func TestMsgCreateGauge(t *testing.T) {
 			name: "valid no lock with pool id unset",
 			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
 				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
+				msg.DistributeTo.Denom = ""
 				msg.PoolId = 1
 				return msg
 			}),
@@ -208,11 +209,14 @@ func TestMsgCreateGauge(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if test.expectPass {
-			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
-		} else {
-			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
-		}
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			if test.expectPass {
+				require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			} else {
+				require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			}
+		})
 	}
 }
 
