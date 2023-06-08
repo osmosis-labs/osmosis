@@ -325,6 +325,19 @@ Example:
 	)
 }
 
+// GetConcentratedPoolIdLinkFromCFMMRequest returns concentrated pool id that is linked to the given cfmm pool id.
+func GetConcentratedPoolIdLinkFromCFMMRequest() *cobra.Command {
+	return osmocli.SimpleQueryCmd[*types.QueryConcentratedPoolIdLinkFromCFMMRequest](
+		"cl-pool-link-from-cfmm-pool-id <pool_id>",
+		"Query concentrated pool id link from cfmm pool id",
+		`Query concentrated pool id link from cfmm pool id
+Example:
+{{.CommandPrefix}} cl-pool-link-from-cfmm-pool-id <pool_id>
+`,
+		types.ModuleName, types.NewQueryClient,
+	)
+}
+
 // GetCmdTotalPoolLiquidity returns total liquidity in pool.
 // Deprecated: please use the alternative in x/poolmanager
 // nolint: staticcheck
