@@ -94,7 +94,19 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 	}
 }
 
-// CreateGauge creates a gauge and sends coins to the gauge.
+// CreateGauge creates a gauge with the given parameters and sends coins to the gauge.
+// There can be 2 kinds of gauges for a given set of paramters:
+// * lockuptypes.ByDuration - a gauge that incentivizes one of the lockable durations.
+// For this gauge, the pool id must be 0. Fails if not.
+//
+// * lockuptypes.NoLock - a gauge that incentivizes pools without locking. Initially,
+// this is meant specifically for the concentrated liquidity pools. As a result,
+// if NoLock gauge is being created, the given pool id must be non-zero, the pool
+// at this id must exist and be of a concentrated liquidity type. Fails if not.
+// Additionally, lockuptypes.Denom must be either an empty string, signifying that
+// this is an external gauge, or be equal to types.NoLockInternalGaugeDenom(poolId).
+// If the denom is empty, it will get overwritten to types.NoLockExternalGaugeDenom(poolId).
+// This denom formatting is useful for querying internal vs externa gauges associated with a pool.
 func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64, poolId uint64) (uint64, error) {
 	// Ensure that this gauge's duration is one of the allowed durations on chain
 	durations := k.GetLockableDurations(ctx)
