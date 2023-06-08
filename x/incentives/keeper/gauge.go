@@ -120,7 +120,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 			return 0, fmt.Errorf("no lock gauges must have a pool id")
 		}
 		if distrTo.Denom != "" {
-			return 0, fmt.Errorf("no lock gauges must not have a denom. It will be automatically set to no-lock/{pool-id}, was %s", &distrTo.Denom)
+			return 0, fmt.Errorf("no lock gauges must not have a denom. It will be automatically set to no-lock/{pool-id}, was %s", distrTo.Denom)
 		}
 
 		pool, err := k.pmk.GetPool(ctx, poolId)
