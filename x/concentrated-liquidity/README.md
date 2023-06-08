@@ -1421,7 +1421,7 @@ To create a gauge dedicated to the concentrated liquidity pool, run a `MsgCreate
 The rest of the parameters can be set according to the desired configuration of the gauge. Please read the `x/incentives` module documentation for more information on how to configure gauges.
 
 Note, that the created gauge will start emitting at the first epoch after the given `StartTime`. During the epoch, a `x/concentrated-liquidity`
-module `IncentiveRecord` will be created for every denom in the gauge. This incentive record will be condifured to emit all given incentives
+module `IncentiveRecord` will be created for every denom in the gauge. This incentive record will be configured to emit all given incentives
 over the period of an epoch. If the gauge is non-perpetual (emits over several epochs), the distribution will be split evenly between the epochs.
 and a new `IncentiveRecord` will be created for each denom every epoch with the emission rate and token set to finish emitting at the end of the epoch.
 
