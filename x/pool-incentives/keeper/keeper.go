@@ -100,6 +100,8 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 		return fmt.Errorf("pool %d is not concentrated liquidity pool", poolId)
 	}
 
+	incentivesEpoch := k.incentivesKeeper.GetEpochInfo(ctx)
+
 	_, err = k.incentivesKeeper.CreateGauge(
 		ctx,
 		true,
@@ -108,6 +110,7 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 		lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.NoLock,
 			Denom:         incentivestypes.NoLockInternalGaugeDenom(pool.GetId()),
+			Duration:      incentivesEpoch.Duration,
 		},
 		ctx.BlockTime(),
 		1,
