@@ -357,12 +357,12 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 	}
 }
 
-// TestDistribute_ExternalIncentives_ConcentratedPool tests the distribution of external incentives
-// to concentrated liquidity pools. It creates an external gauge with the correct configuration
+// TestDistribute_ExternalIncentives_NoLock tests the distribution of externally
+// created NoLock gauges. It creates an external gauge with the correct configuration
 // and uses it to attempt to distribute tokens to a concentrated liquidity pool.
 // It attempts to distribute with all possible gauge configurations and with various tokens.
 // However, it does not test distribution of NoLock gauges.
-func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_ConcentratedPool() {
+func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 	const (
 		defaultCLPool       = uint64(1)
 		defaultBalancerPool = uint64(2)
