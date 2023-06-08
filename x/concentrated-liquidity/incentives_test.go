@@ -1046,7 +1046,8 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 					clPool, err = clKeeper.GetPoolById(s.Ctx, clPool.GetId())
 					s.Require().NoError(err)
 					if tc.canonicalBalancerPoolAssets != nil {
-						qualifyingBalancerLiquidityPreDiscount := math.GetLiquidityFromAmounts(clPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, tc.canonicalBalancerPoolAssets[0].Token.Amount, tc.canonicalBalancerPoolAssets[1].Token.Amount)
+						qualifyingBalancerLiquidityPreDiscount, err := math.GetLiquidityFromAmounts(clPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, tc.canonicalBalancerPoolAssets[0].Token.Amount, tc.canonicalBalancerPoolAssets[1].Token.Amount)
+						s.Require().NoError(err)
 						qualifyingBalancerLiquidity = (sdk.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingBalancerLiquidityPreDiscount)
 						qualifyingLiquidity = qualifyingLiquidity.Add(qualifyingBalancerLiquidity)
 
@@ -3365,7 +3366,8 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 				s.Require().NoError(err)
 				asset0BalancerAmount := tc.balancerPoolAssets[0].Token.Amount.ToDec().Mul(tc.portionOfSharesBonded).TruncateInt()
 				asset1BalancerAmount := tc.balancerPoolAssets[1].Token.Amount.ToDec().Mul(tc.portionOfSharesBonded).TruncateInt()
-				qualifyingSharesPreDiscount := math.GetLiquidityFromAmounts(updatedClPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, asset1BalancerAmount, asset0BalancerAmount)
+				qualifyingSharesPreDiscount, err := math.GetLiquidityFromAmounts(updatedClPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, asset1BalancerAmount, asset0BalancerAmount)
+				s.Require().NoError(err)
 				qualifyingShares := (sdk.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingSharesPreDiscount)
 
 				// TODO: clean this check up (will likely require refactoring the whole test)

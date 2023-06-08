@@ -398,7 +398,8 @@ func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
 			// CASE B: if the currentSqrtP is less than the sqrtPHigh but greater than sqrtPLow, the liquidity is split between asset0 and asset1,
 			// so GetLiquidityFromAmounts returns the smaller liquidity of asset0 and asset1
 			// CASE C: if the currentSqrtP is greater than the sqrtPHigh, all the liquidity is in asset1, so GetLiquidityFromAmounts returns the liquidity of asset1
-			liquidity := math.GetLiquidityFromAmounts(tc.currentSqrtP, tc.sqrtPLow, tc.sqrtPHigh, tc.amount0Desired, tc.amount1Desired)
+			liquidity, err := math.GetLiquidityFromAmounts(tc.currentSqrtP, tc.sqrtPLow, tc.sqrtPHigh, tc.amount0Desired, tc.amount1Desired)
+			suite.Require().NoError(err)
 			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
 		})
 	}

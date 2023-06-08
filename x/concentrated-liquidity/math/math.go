@@ -171,16 +171,30 @@ func GetNextSqrtPriceFromAmount1OutRoundingDown(sqrtPriceCurrent, liquidity, amo
 
 // GetLiquidityFromAmounts takes the current sqrtPrice and the sqrtPrice for the upper and lower ticks as well as the amounts of asset0 and asset1
 // and returns the resulting liquidity from these inputs.
-func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0, amount1 sdk.Int) (liquidity sdk.Dec) {
+func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0, amount1 sdk.Int) (liquidity sdk.Dec, err error) {
 	// Reorder the prices so that sqrtPriceA is the smaller of the two.
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
 
-	if sqrtPrice.LTE(sqrtPriceA) {
+	// TODO: square & PriceToTick the lower, upper, and current sqrt prices -> replace bound checks
+	lowerTick, err := PriceToTick(sqrtPriceA.Power(2))
+	if err != nil {
+		return sdk.ZeroDec(), err
+	}
+	upperTick, err := PriceToTick(sqrtPriceB.Power(2))
+	if err != nil {
+		return sdk.ZeroDec(), err
+	}
+	currentTick, err := PriceToTick(sqrtPrice.Power(2))
+	if err != nil {
+		return sdk.ZeroDec(), err
+	}
+
+	if currentTick < lowerTick {
 		// If the current price is less than or equal to the lower tick, then we use the liquidity0 formula.
 		liquidity = Liquidity0(amount0, sqrtPriceA, sqrtPriceB)
-	} else if sqrtPrice.LTE(sqrtPriceB) {
+	} else if currentTick < upperTick {
 		// If the current price is between the lower and upper ticks (inclusive of the lower tick but not the upper tick),
 		// then we use the minimum of the liquidity0 and liquidity1 formulas.
 		liquidity0 := Liquidity0(amount0, sqrtPrice, sqrtPriceB)
@@ -191,7 +205,7 @@ func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0,
 		liquidity = Liquidity1(amount1, sqrtPriceB, sqrtPriceA)
 	}
 
-	return liquidity
+	return liquidity, nil
 }
 
 // SquareRoundUp squares and rounds up at precision end.
