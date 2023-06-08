@@ -165,7 +165,7 @@ func (s *KeeperTestSuite) TestDistribute() {
 	}
 }
 
-func (s *KeeperTestSuite) TestDistribute_InternalIncentives_ConcentratedPool() {
+func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 	defaultGauge := perpGaugeDesc{
 		lockDenom:    defaultLPDenom,
 		lockDuration: defaultLockDuration,
