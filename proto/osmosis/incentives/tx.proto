@@ -48,8 +48,10 @@ message MsgCreateGauge {
 
   // pool_id is the ID of the pool that the gauge is meant to be associated
   // with. if pool_id is set, then the "QueryCondition.LockQueryType" must be
-  // "NoLock" with all other fields unset.
-  // The denom query condition is set to "no-lock/{pool_id}" prefix in such a case.
+  // "NoLock" with all other fields unset, including "QueryCondition.Denom".
+  // However, note that, internally, the empty string ends up being overwritten
+  // with incentivestypes.NoLockExternalGaugeDenom(<pool-id>) so that the
+  // gauges associated with a pool can be queried by this prefix if needed.
   uint64 pool_id = 7;
 }
 message MsgCreateGaugeResponse {}

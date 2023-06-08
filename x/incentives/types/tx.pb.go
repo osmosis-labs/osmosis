@@ -58,7 +58,10 @@ type MsgCreateGauge struct {
 	NumEpochsPaidOver uint64 `protobuf:"varint,6,opt,name=num_epochs_paid_over,json=numEpochsPaidOver,proto3" json:"num_epochs_paid_over,omitempty"`
 	// pool_id is the ID of the pool that the gauge is meant to be associated
 	// with. if pool_id is set, then the "QueryCondition.LockQueryType" must be
-	// "NoLock" with all other fields unset.
+	// "NoLock" with all other fields unset, including "QueryCondition.Denom".
+	// However, note that, internally, the empty string ends up being overwritten
+	// with incentivestypes.NoLockExternalGaugeDenom(<pool-id>) so that the
+	// gauges associated with a pool can be queried by this prefix if needed.
 	PoolId uint64 `protobuf:"varint,7,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
 }
 
