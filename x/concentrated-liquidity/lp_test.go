@@ -664,9 +664,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				s.Require().ErrorAs(err, &types.PositionIdNotFoundError{PositionId: config.positionId})
 				s.Require().Equal(clmodel.Position{}, position)
 
-				isPositionOwner, err := concentratedLiquidityKeeper.IsPositionOwner(s.Ctx, owner, config.poolId, config.positionId)
-				s.Require().NoError(err)
-				s.Require().False(isPositionOwner)
+				err = concentratedLiquidityKeeper.EnsurePositionOwner(s.Ctx, owner, config.poolId, config.positionId)
+				s.Require().Error(err, types.NotPositionOwnerError{PositionId: config.positionId, Address: owner.String()})
 
 				// Since the positionLiquidity is deleted, retrieving it should return an error.
 				positionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, config.positionId)
