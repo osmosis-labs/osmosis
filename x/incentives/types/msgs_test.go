@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
 
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
@@ -166,13 +167,43 @@ func TestMsgCreateGauge(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "valid no lick with pool id unset",
+			name: "valid no lock with pool id unset",
 			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
 				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
 				msg.PoolId = 1
 				return msg
 			}),
 			expectPass: true,
+		},
+		{
+			name: "invalid due to denom being set",
+			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
+				msg.DistributeTo.Denom = "stake"
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "invalid due to external denom being set",
+			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
+				// This is set by the system. Client should provide empty string.
+				msg.DistributeTo.Denom = types.NoLockExternalGaugeDenom(1)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "invalid due to internal denom being set",
+			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
+				// This is set by the system when creating internal gauges.
+				// Client should provide empty string.
+				msg.DistributeTo.Denom = types.NoLockInternalGaugeDenom(1)
+				return msg
+			}),
+			expectPass: false,
 		},
 	}
 

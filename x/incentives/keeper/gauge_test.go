@@ -431,13 +431,16 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 // specifically focusing on the no lock gauge type and test cases around it.
 // It tests the following:
 // - For no lock gauges, a CL pool id must be given as well and then pool must exist
+// - For no lock gauges, the denom must be set either to NoLockExternalGaugeDenom(<pool id>)
+// or be unset. If not unset, fails with error. Also, assumes that the gauge was created externally
+// if unset and overwrites the denom to NoLockExternalGaugeDenom(<pool id>)
 // - Otherwise, the given pool id must be zero. Errors if not.
 func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 	const (
-		zeroPoolId       = uint64(0)
-		balancerPool     = uint64(1)
-		concentratedPool = uint64(2)
-		invalidPool      = uint64(3)
+		zeroPoolId         = uint64(0)
+		balancerPoolId     = uint64(1)
+		concentratedPoolId = uint64(2)
+		invalidPool        = uint64(3)
 		// 3 are created for balancer pool and 1 for CL.
 		// As a result, the next gauge id should be 5.
 		defaultExpectedGaugeId = uint64(5)
@@ -460,25 +463,53 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 		distrTo lockuptypes.QueryCondition
 		poolId  uint64
 
-		expectedGaugeId uint64
-		expectErr       bool
+		expectedGaugeId  uint64
+		expectedDenomSet string
+		expectErr        bool
 	}{
 		{
-			name: "create valid no lock gauge with CL pool",
+			name: "create valid no lock gauge with CL pool (no denom set)",
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
+				// Note: this assumes the gauge is external
+				Denom: "",
 			},
-			poolId: concentratedPool,
+			poolId: concentratedPoolId,
 
-			expectedGaugeId: defaultExpectedGaugeId,
-			expectErr:       false,
+			expectedGaugeId:  defaultExpectedGaugeId,
+			expectedDenomSet: types.NoLockExternalGaugeDenom(concentratedPoolId),
+			expectErr:        false,
+		},
+		{
+			name: "create valid no lock gauge with CL pool (denom set to uosmo)",
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+				// Note: this assumes the gauge is internal
+				Denom: types.NoLockInternalGaugeDenom(concentratedPoolId),
+			},
+			poolId: concentratedPoolId,
+
+			expectedGaugeId:  defaultExpectedGaugeId,
+			expectedDenomSet: types.NoLockInternalGaugeDenom(concentratedPoolId),
+			expectErr:        false,
+		},
+		{
+			name: "fail to create gauge because invalid denom is set",
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+				// Note: this is invalid for NoLock gauges
+				Denom: "uosmo",
+			},
+			poolId: concentratedPoolId,
+
+			expectErr: true,
 		},
 		{
 			name: "fail to create no lock gauge with balancer pool",
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
 			},
-			poolId: balancerPool,
+			poolId: balancerPoolId,
 
 			expectErr: true,
 		},
@@ -528,6 +559,12 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 				s.Require().NoError(err)
 
 				s.Require().Equal(tc.expectedGaugeId, gaugeId)
+
+				// Get gage and check that the denom is set correctly
+				gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, tc.expectedGaugeId)
+				s.Require().NoError(err)
+
+				s.Require().Equal(tc.expectedDenomSet, gauge.DistributeTo.Denom)
 			}
 		})
 	}

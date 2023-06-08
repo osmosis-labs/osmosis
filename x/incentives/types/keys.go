@@ -53,6 +53,12 @@ func KeyPrefix(p string) []byte {
 	return []byte(p)
 }
 
-func NoLockGaugePrefix(poolId uint64) []byte {
-	return []byte(fmt.Sprintf("no-lock/%d", poolId))
+// NoLockExternalGaugeDenom returns the gauge denom for the no-lock external gauge for the given pool ID.
+func NoLockExternalGaugeDenom(poolId uint64) string {
+	return fmt.Sprintf("no-lock/e/%d", poolId)
+}
+
+// NoLockInternalGaugeDenom returns the gauge denom for the no-lock internal gauge for the given pool ID.
+func NoLockInternalGaugeDenom(poolId uint64) string {
+	return fmt.Sprintf("no-lock/i/%d", poolId)
 }

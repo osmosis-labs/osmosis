@@ -121,8 +121,16 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		if poolId == 0 {
 			return 0, fmt.Errorf("no lock gauges must have a pool id")
 		}
-		if distrTo.Denom != "" {
-			return 0, fmt.Errorf("no lock gauges must not have a denom. It will be automatically set to no-lock/{pool-id}, was %s", distrTo.Denom)
+
+		// If not internal gauge denom, then must be set to ""
+		// and get overwritten with the external prefix + pool id
+		// for internal query purposes.
+		if distrTo.Denom != types.NoLockInternalGaugeDenom(poolId) {
+			// If denom is set, then fails.
+			if distrTo.Denom != "" {
+				return 0, fmt.Errorf("no lock external gauges must have an empty denom set")
+			}
+			distrTo.Denom = types.NoLockExternalGaugeDenom(poolId)
 		}
 
 		pool, err := k.pmk.GetPool(ctx, poolId)

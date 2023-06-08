@@ -15,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	appParams "github.com/osmosis-labs/osmosis/v16/app/params"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
@@ -101,8 +100,6 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 		return fmt.Errorf("pool %d is not concentrated liquidity pool", poolId)
 	}
 
-	incentivesEpoch := k.incentivesKeeper.GetEpochInfo(ctx)
-
 	_, err = k.incentivesKeeper.CreateGauge(
 		ctx,
 		true,
@@ -110,8 +107,7 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 		sdk.Coins{},
 		lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.NoLock,
-			Denom:         appParams.BaseCoinUnit,
-			Duration:      incentivesEpoch.Duration,
+			Denom:         incentivestypes.NoLockInternalGaugeDenom(pool.GetId()),
 		},
 		ctx.BlockTime(),
 		1,
