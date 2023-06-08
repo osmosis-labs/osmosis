@@ -166,8 +166,8 @@ func (k Keeper) migrateSuperfluidUnbondingBalancerToConcentrated(ctx sdk.Context
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, err
 	}
 
-	// Create a new synthetic lockup for the new intermediary account in an unlocking status
-	err = k.createSyntheticLockup(ctx, concentratedLockId, clIntermediateAccount, unlockingStatus)
+	// Create a new synthetic lockup for the new intermediary account in an unlocking status for the remaining duration.
+	err = k.createSyntheticLockupWithDuration(ctx, concentratedLockId, clIntermediateAccount, remainingLockTime, unlockingStatus)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, err
 	}
