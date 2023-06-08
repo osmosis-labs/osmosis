@@ -431,9 +431,12 @@ func (s *KeeperTestSuite) TestIsPositionOwnerDev() {
 				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, owner, DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, uint64(i))
 				s.Require().NoError(err)
 			}
-			isOwner, err := s.App.ConcentratedLiquidityKeeper.IsPositionOwner(s.Ctx, test.queryPositionOwner, p.GetId(), test.queryPositionId)
-			s.Require().NoError(err)
-			s.Require().Equal(isOwner, test.expPass)
+			err := s.App.ConcentratedLiquidityKeeper.EnsurePositionOwner(s.Ctx, test.queryPositionOwner, p.GetId(), test.queryPositionId)
+			if test.expPass {
+				s.Require().NoError(err)
+			} else {
+				s.Require().Error(err)
+			}
 		})
 	}
 }
@@ -492,10 +495,12 @@ func (s *KeeperTestSuite) TestIsPositionOwner() {
 			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, actualOwner, DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, DefaultPositionId)
 			s.Require().NoError(err)
 
-			// System under test.
-			isOwner, err := s.App.ConcentratedLiquidityKeeper.IsPositionOwner(s.Ctx, test.ownerToQuery, test.poolId, test.positionId)
-			s.Require().Equal(test.isOwner, isOwner)
-			s.Require().NoError(err)
+			err = s.App.ConcentratedLiquidityKeeper.EnsurePositionOwner(s.Ctx, test.ownerToQuery, test.poolId, test.positionId)
+			if test.isOwner {
+				s.Require().NoError(err)
+			} else {
+				s.Require().Error(err)
+			}
 		})
 	}
 }
