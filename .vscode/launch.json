@@ -129,12 +129,12 @@
             "type": "go",
             "request": "launch",
             "mode": "test",
-            "program": "${workspaceFolder}/x/incentives/keeper",
+            "program": "${workspaceFolder}/x/incentives",
             "args": [
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestKeeperTestSuite/TestDistribute_ExternalIncentives_ConcentratedPool",
+                "TestKeeperTestSuite/TestYourName",
                 "-test.v"
             ],
         },
