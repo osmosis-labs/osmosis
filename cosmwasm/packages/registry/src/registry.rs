@@ -236,7 +236,7 @@ impl<'a> Registry<'a> {
                     chain: chain.to_string(),
                 },
             )
-            .map_err(|_e| RegistryError::InproperlyConfigured {})
+            .map_err(|_e| RegistryError::ImproperlyConfigured {})
     }
 
     /// Re-encodes the bech32 address for the receiving chain

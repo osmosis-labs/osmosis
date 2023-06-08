@@ -712,7 +712,6 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		unlockBeforeBlockTimeMs    time.Duration
 		expectedNewPositionId      uint64
 		expectedErr                error
-		doesValidatePass           bool
 	}{
 		{
 			name: "Happy path: Fungify three fully charged positions",
@@ -785,7 +784,6 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			accountCallingMigration: defaultAddress,
 			expectedNewPositionId:   0,
 			expectedErr:             types.PositionQuantityTooLowError{MinNumPositions: cl.MinNumPositions, NumPositions: 1},
-			doesValidatePass:        true,
 		},
 		{
 			name: "Error: one of the full range positions is locked",
@@ -877,9 +875,12 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			// Increase block time by one more day - 1 ns to ensure that the previously added positions are not fully charged.
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration - time.Nanosecond))
 
+			// Get the longest authorized uptime, which is the fully charged duration.
+			fullyChargedDuration := s.App.ConcentratedLiquidityKeeper.GetLargestAuthorizedUptimeDuration(s.Ctx)
+
 			// First run non mutative validation and check results
-			poolId, lowerTick, upperTick, liquidity, err := s.App.ConcentratedLiquidityKeeper.ValidatePositionsAndGetTotalLiquidity(s.Ctx, test.accountCallingMigration, test.positionIdsToMigrate)
-			if test.expectedErr != nil && !test.doesValidatePass {
+			poolId, lowerTick, upperTick, liquidity, err := s.App.ConcentratedLiquidityKeeper.ValidatePositionsAndGetTotalLiquidity(s.Ctx, test.accountCallingMigration, test.positionIdsToMigrate, fullyChargedDuration)
+			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, test.expectedErr)
 				s.Require().Equal(uint64(0), poolId)
