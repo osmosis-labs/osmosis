@@ -430,10 +430,11 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 // TestCreateGauge_NoLockGauges tests the CreateGauge function
 // specifically focusing on the no lock gauge type and test cases around it.
 // It tests the following:
-// - For no lock gauges, a CL pool id must be given as well and then pool must exist
-// - For no lock gauges, the denom must be set either to NoLockExternalGaugeDenom(<pool id>)
-// or be unset. If not unset, fails with error. Also, assumes that the gauge was created externally
-// if unset and overwrites the denom to NoLockExternalGaugeDenom(<pool id>)
+// - For no lock gauges, a CL pool id must be given and then pool must exist
+// - For no lock gauges, the denom must be set either to NoLockInternalGaugeDenom(<pool id>)
+// or be unset. If set to anything other than the internal prefix, fails with error.
+// Assumes that the gauge was created externally (via MsgCreateGauge) if the denom is unset and overwrites it
+// with NoLockExternalGaugeDenom(<pool id>)
 // - Otherwise, the given pool id must be zero. Errors if not.
 func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 	const (
@@ -565,6 +566,11 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 				s.Require().NoError(err)
 
 				s.Require().Equal(tc.expectedDenomSet, gauge.DistributeTo.Denom)
+				s.Require().Equal(tc.distrTo.LockQueryType, gauge.DistributeTo.LockQueryType)
+				s.Require().Equal(defaultIsPerpetualParam, gauge.IsPerpetual)
+				s.Require().Equal(defaultCoins, gauge.Coins)
+				s.Require().Equal(defaultTime.UTC(), gauge.StartTime.UTC())
+				s.Require().Equal(defaultNumEpochPaidOver, gauge.NumEpochsPaidOver)
 			}
 		})
 	}
