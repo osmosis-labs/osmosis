@@ -338,7 +338,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		amountCalculated:         sdk.ZeroDec(),                  // tokenOut
 		sqrtPrice:                curSqrtPrice,
 		// Pad (or don't pad) current tick based on swap direction to avoid off-by-one errors
-		tick:                     swapStrategy.InitializeTickValue(p.GetCurrentTick()),
+		tick:                     p.GetCurrentTick(),
 		liquidity:                p.GetLiquidity(),
 		spreadRewardGrowthGlobal: sdk.ZeroDec(),
 	}
@@ -540,7 +540,7 @@ func (k Keeper) computeInAmtGivenOut(
 		amountSpecifiedRemaining: tokenAmountOutSpecified, // tokenOut
 		amountCalculated:         sdk.ZeroDec(),           // tokenIn
 		sqrtPrice:                curSqrtPrice,
-		tick:                     swapStrategy.InitializeTickValue(p.GetCurrentTick()),
+		tick:                     p.GetCurrentTick(),
 		liquidity:                p.GetLiquidity(),
 		spreadRewardGrowthGlobal: sdk.ZeroDec(),
 	}

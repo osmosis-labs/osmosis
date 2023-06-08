@@ -319,6 +319,84 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_OneForZero() {
 			tickSpacing:   defaultTickSpacing,
 			expectIsValid: false,
 		},
+
+		// Non-default tick spacing
+
+		"1 position, 1 tick spacing": {
+			preSetPositions: []position{
+				{
+					lowerTick: -1,
+					upperTick: 1,
+				},
+			},
+			tickSpacing:    1,
+			expectIsValid:  true,
+			expectNextTick: 1,
+		},
+		"2 positions, 1 tick spacing": {
+			preSetPositions: []position{
+				{
+					lowerTick: -4,
+					upperTick: 3,
+				},
+				{
+					lowerTick: -2,
+					upperTick: 2,
+				},
+			},
+			tickSpacing:    1,
+			expectIsValid:  true,
+			expectNextTick: 2,
+		},
+		"lower tick lands on current tick, 1 tick spacing": {
+			preSetPositions: []position{
+				{
+					lowerTick: 0,
+					upperTick: 1,
+				},
+			},
+			tickSpacing:    1,
+			expectIsValid:  true,
+			expectNextTick: 1,
+		},
+		"upper tick lands on current tick, 1 tick spacing": {
+			preSetPositions: []position{
+				{
+					lowerTick: -1,
+					upperTick: 0,
+				},
+				{
+					lowerTick: 1,
+					upperTick: 2,
+				},
+			},
+			tickSpacing:    1,
+			expectIsValid:  true,
+			expectNextTick: 1,
+		},
+
+		"sanity check: 1 position, 10 tick spacing": {
+			preSetPositions: []position{
+				{
+					lowerTick: -10,
+					upperTick: 10,
+				},
+			},
+			tickSpacing:    10,
+			expectIsValid:  true,
+			expectNextTick: 10,
+		},
+		"sanity check: 1 position, 1000 tick spacing": {
+			preSetPositions: []position{
+				{
+					lowerTick: -1000,
+					upperTick: 1000,
+				},
+			},
+			tickSpacing:    1000,
+			expectIsValid:  true,
+			expectNextTick: 1000,
+		},
 	}
 
 	for name, tc := range tests {
