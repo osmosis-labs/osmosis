@@ -182,4 +182,4 @@ pub enum SudoMsg {
 
 # Testing strategy
 
-See go tests.
+See go tests.`

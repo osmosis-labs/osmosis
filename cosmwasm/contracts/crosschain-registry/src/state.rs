@@ -14,6 +14,7 @@ enum StorageKey {
     ChainAdminMap,
     ChainMaintainerMap,
     HasPacketForwardMiddleware,
+    DenomMap,
 }
 
 // Implement the `StorageKey` enum to a string conversion.
@@ -30,6 +31,7 @@ impl StorageKey {
             StorageKey::ChainAdminMap => "cam",
             StorageKey::ChainMaintainerMap => "cmm",
             StorageKey::HasPacketForwardMiddleware => "hpfm",
+            StorageKey::DenomMap => "dm",
         }
     }
 }
