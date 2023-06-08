@@ -561,7 +561,7 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 
 				s.Require().Equal(tc.expectedGaugeId, gaugeId)
 
-				// Get gage and check that the denom is set correctly
+				// Get gauge and check that the denom is set correctly
 				gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, tc.expectedGaugeId)
 				s.Require().NoError(err)
 
