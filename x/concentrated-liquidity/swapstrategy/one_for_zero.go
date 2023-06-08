@@ -21,7 +21,6 @@ type oneForZeroStrategy struct {
 	sqrtPriceLimit sdk.Dec
 	storeKey       sdk.StoreKey
 	spreadFactor   sdk.Dec
-	tickSpacing    uint64
 }
 
 var _ swapStrategy = (*oneForZeroStrategy)(nil)

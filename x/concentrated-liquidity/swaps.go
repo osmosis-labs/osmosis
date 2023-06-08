@@ -296,7 +296,7 @@ func (k Keeper) computeOutAmtGivenIn(
 	}
 
 	// Set the swap strategy
-	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey, spreadFactor, p.GetTickSpacing())
+	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey, spreadFactor)
 
 	// Get current sqrt price from pool and run sanity check that current sqrt price is
 	// on the correct side of the price limit given swap direction.
@@ -511,7 +511,7 @@ func (k Keeper) computeInAmtGivenOut(
 	}
 
 	// set the swap strategy
-	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey, spreadFactor, tickSpacing)
+	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey, spreadFactor)
 
 	// get current sqrt price from pool
 	curSqrtPrice := p.GetCurrentSqrtPrice()
