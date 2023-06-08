@@ -401,6 +401,43 @@ func (s *KeeperTestSuite) TestGetNextPositionAndIncrement() {
 	s.Require().Equal(positionId, uint64(3))
 }
 
+func (s *KeeperTestSuite) TestIsPositionOwnerDev() {
+	tenAddrOneAddr := []sdk.AccAddress{}
+	for i := 0; i < 10; i++ {
+		tenAddrOneAddr = append(tenAddrOneAddr, s.TestAccs[0])
+	}
+	tenAddrOneAddr = append(tenAddrOneAddr, s.TestAccs[1])
+	tests := []struct {
+		name               string
+		queryPositionOwner sdk.AccAddress
+		queryPositionId    uint64
+		expPass            bool
+
+		setupPositions []sdk.AccAddress
+	}{
+		// This is our current bug.
+		{
+			name:               "prefix malleability",
+			queryPositionOwner: s.TestAccs[1],
+			queryPositionId:    1, expPass: false,
+			setupPositions: tenAddrOneAddr,
+		},
+	}
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+			p := s.PrepareConcentratedPool()
+			for _, i := range test.setupPositions {
+				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, i, DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, DefaultPositionId)
+				s.Require().NoError(err)
+			}
+			isOwner, err := s.App.ConcentratedLiquidityKeeper.IsPositionOwner(s.Ctx, test.queryPositionOwner, p.GetId(), test.queryPositionId)
+			s.Require().NoError(err)
+			s.Require().Equal(test.expPass, isOwner)
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestIsPositionOwner() {
 	actualOwner := s.TestAccs[0]
 	nonOwner := s.TestAccs[1]

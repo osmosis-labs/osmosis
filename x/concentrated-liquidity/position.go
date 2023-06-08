@@ -99,6 +99,20 @@ func (k Keeper) HasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, err
 	return osmoutils.HasAnyAtPrefix(store, poolPositionKey, parse)
 }
 
+func (k Keeper) ensurePositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, positionId uint64) error {
+	isOwner, err := k.isPositionOwner(ctx, sender, poolId, positionId)
+	if err != nil {
+		return err
+	}
+	if !isOwner {
+		return types.NotPositionOwnerError{
+			PositionId: positionId,
+			Address:    sender.String(),
+		}
+	}
+	return nil
+}
+
 // isPositionOwner returns true if the given positionId is owned by the given sender inside the given pool.
 func (k Keeper) isPositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, positionId uint64) (bool, error) {
 	parse := func(bz []byte) (bool, error) {
@@ -107,6 +121,7 @@ func (k Keeper) isPositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId u
 		}
 		return bz[0] != 0, nil
 	}
+	// TODO: Why do we have to iterate over keys? Should just be checking if the key exists?
 	isOwner, err := osmoutils.HasAnyAtPrefix(ctx.KVStore(k.storeKey), types.KeyAddressPoolIdPositionId(sender, poolId, positionId), parse)
 	if err != nil {
 		return false, err
