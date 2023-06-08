@@ -435,7 +435,7 @@ func createPoolOp(igniteClient cosmosclient.Client) {
 			log.Fatalf("created pool id (%d), expected pool id (%d)", createdPoolId, expectedPoolId)
 		}
 	} else {
-		log.Println("pool already exists. Tweak expectedPoolId variable if you want another pool, current expectedPoolId", expectedPoolId)
+		log.Println("pool already exists. Tweak expectedPoolId variable if you want another pool, current expectedPoolId: ", expectedPoolId)
 	}
 }
 
