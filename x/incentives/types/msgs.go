@@ -36,10 +36,13 @@ func (m MsgCreateGauge) Type() string { return TypeMsgCreateGauge }
 
 // ValidateBasic checks that the create gauge message is valid.
 func (m MsgCreateGauge) ValidateBasic() error {
+	lockType := m.DistributeTo.LockQueryType
+
 	if m.Owner == "" {
 		return errors.New("owner should be set")
 	}
-	if sdk.ValidateDenom(m.DistributeTo.Denom) != nil {
+	// For no lock type, the denom must be empty and we check that down below.
+	if lockType != lockuptypes.NoLock && sdk.ValidateDenom(m.DistributeTo.Denom) != nil {
 		return errors.New("denom should be valid for the condition")
 	}
 	if lockuptypes.LockQueryType_name[int32(m.DistributeTo.LockQueryType)] == "" {
@@ -55,7 +58,6 @@ func (m MsgCreateGauge) ValidateBasic() error {
 		return errors.New("distribution period should be 1 epoch for perpetual gauge")
 	}
 
-	lockType := m.DistributeTo.LockQueryType
 	if lockType == lockuptypes.ByTime {
 		return errors.New("start time distr conditions is an obsolete codepath slated for deletion")
 	}
