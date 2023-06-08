@@ -79,6 +79,7 @@ func (k Keeper) GetUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sd
 // This value depends on the provided tick's location relative to the current tick. If the provided tick
 // is greater than the current tick, then the value is zero. Otherwise, the value is the value of the
 // current global spread reward growth.
+// TODO: EXPLAIN THAT CORRECTNESS HERE REQUIRES A NUANCED ARGUMENT
 //
 // Similar to spread factors, by convention the value is chosen as if all of the uptime (seconds per liquidity) to date has
 // occurred below the tick.
@@ -848,6 +849,7 @@ func moveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum accum.Accumu
 		return types.ModifySamePositionAccumulatorError{PositionAccName: oldPositionName}
 	}
 
+	// @Dev: should this be GetPosition?
 	hasPosition, err := accum.HasPosition(oldPositionName)
 	if err != nil {
 		return err
@@ -900,6 +902,8 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 
 	// Compute the age of the position.
 	positionAge := ctx.BlockTime().Sub(position.JoinTime)
+	// @Dev: This check seems concerning if its ever hit? Like panic worthy, how would you get a position in state from the future
+	// Do we actually need to be checking this?
 	if positionAge < 0 {
 		return sdk.Coins{}, sdk.Coins{}, types.NegativeDurationError{Duration: positionAge}
 	}
@@ -928,6 +932,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 	// Loop through each uptime accumulator for the pool.
 	for uptimeIndex, uptimeAccum := range uptimeAccumulators {
 		// Check if the accumulator contains the position.
+		// @Dev: There should never be a case where you can have a position for 1 accumulator, and not the rest right?
 		hasPosition, err := uptimeAccum.HasPosition(positionName)
 		if err != nil {
 			return sdk.Coins{}, sdk.Coins{}, err
@@ -1018,6 +1023,7 @@ func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positi
 	}
 
 	// If no incentives were collected, return an empty coin set.
+	// @Dev: Does collectedIncentivesForPosition = 0 => forfeitedIncentivesForPosition = 0?
 	if collectedIncentivesForPosition.IsZero() {
 		return collectedIncentivesForPosition, forfeitedIncentivesForPosition, nil
 	}
