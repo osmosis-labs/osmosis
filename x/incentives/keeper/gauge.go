@@ -95,7 +95,7 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 }
 
 // CreateGauge creates a gauge with the given parameters and sends coins to the gauge.
-// There can be 2 kinds of gauges for a given set of paramters:
+// There can be 2 kinds of gauges for a given set of parameters:
 // * lockuptypes.ByDuration - a gauge that incentivizes one of the lockable durations.
 // For this gauge, the pool id must be 0. Fails if not.
 //
