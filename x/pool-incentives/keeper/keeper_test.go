@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v16/app/params"
 	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
 	"github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
@@ -220,7 +219,7 @@ func (s *KeeperTestSuite) TestCreateConcentratedLiquidityPoolGauge() {
 				s.Require().True(gaugeInfo.IsPerpetual)
 				s.Require().Empty(gaugeInfo.Coins)
 				s.Require().Equal(s.Ctx.BlockTime(), gaugeInfo.StartTime)
-				s.Require().Equal(appParams.BaseCoinUnit, gaugeInfo.DistributeTo.Denom)
+				s.Require().Equal(incentivestypes.NoLockInternalGaugeDenom(tc.poolId), gaugeInfo.DistributeTo.Denom)
 				s.Require().Equal(uint64(1), gaugeInfo.NumEpochsPaidOver)
 			}
 		})
