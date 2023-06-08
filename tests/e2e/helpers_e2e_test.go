@@ -229,7 +229,7 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 	// hardcore this, data get from config file
 	unbondingDuration := time.Duration(240000000000)
 
-	// Lock the LP tokens for the duration of the unbonding period.
+	// Lock the LP tokens for the duration of the unbonding provided asset is not supported for superfluid staking.
 	originalGammLockId := uint64(0)
 	if !noLock {
 		// lock tokens
@@ -239,7 +239,7 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 	// Superfluid delegate the balancer lock if the case requires it.
 	// Note the intermediary account that was created.
 	if superfluidDelegated {
-		node.SuperfluidDelegate(int(originalGammLockId), chain.NodeConfigs[1].OperatorAddress, poolJoinAcc.String())
+		node.SuperfluidDelegate(int(originalGammLockId), initialization.ValidatorWalletName, poolJoinAcc.String())
 		connectedIntermediaryAccount := node.QueryConnectedIntermediaryAccount(fmt.Sprintf("%d", originalGammLockId))
 		balancerIntermediaryAcc = superfluidtypes.SuperfluidIntermediaryAccount{
 			Denom:   connectedIntermediaryAccount.Denom,
@@ -255,6 +255,8 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 
 	// Unlock the balancer lock if the test case requires it.
 	if unlocking {
+		// If lock was superfluid staked, we can't unlock via `BeginUnlock`,
+		// we need to unlock lock via `SuperfluidUnbondLock`
 		if superfluidUndelegating {
 			node.SuperfluidUnbondLock(int(originalGammLockId), poolJoinAcc.String())
 		} else {
@@ -274,7 +276,7 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 	// Register the CL full range LP tokens as a superfluid asset.
 	clPoolDenom := fmt.Sprintf("%s/%d", cltypes.ConcentratedLiquidityTokenPrefix, clPoolId)
 	chain.EnableSuperfluidAsset(clPoolDenom)
-	time.Sleep(60 * time.Second)
+
 	return joinPoolAmt, balancerIntermediaryAcc, balancerLock, poolCreateAcc, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr
 }
 

@@ -201,6 +201,13 @@ func (c *Config) EnableSuperfluidAsset(denom string) {
 	for _, node := range c.NodeConfigs {
 		node.VoteYesProposal(initialization.ValidatorWalletName, c.LatestProposalNumber)
 	}
+	require.Eventually(c.t, func() bool {
+		status, err := chain.QueryPropStatus(c.LatestProposalNumber)
+		if err != nil {
+			return false
+		}
+		return status == proposalStatusPassed
+	}, time.Second*30, time.Millisecond*500)
 }
 
 func (c *Config) LockAndAddToExistingLock(amount sdk.Int, denom, lockupWalletAddr, lockupWalletSuperfluidAddr string) {
