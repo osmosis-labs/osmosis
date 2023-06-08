@@ -59,7 +59,7 @@ conventional rules of the respective gauge type.
 Additionally, for `NoLock` gauges, lockuptypes.Denom must be either an empty string, signifying that
 this is an external gauge, or be equal to types.NoLockInternalGaugeDenom(poolId) (when created from the `AfterPoolCreatedHook`)
 If the denom is empty, it will get overwritten to types.NoLockExternalGaugeDenom(poolId).
-This denom formatting is useful for querying internal vs externa gauges associated with a pool since the denom prefix is
+This denom formatting is useful for querying internal vs external gauges associated with a pool since the denom prefix is
 appended into the store prefix.
 
 ## State
