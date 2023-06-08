@@ -427,13 +427,13 @@ func (s *KeeperTestSuite) TestIsPositionOwnerDev() {
 		s.Run(test.name, func() {
 			s.SetupTest()
 			p := s.PrepareConcentratedPool()
-			for _, i := range test.setupPositions {
-				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, i, DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, DefaultPositionId)
+			for i, owner := range test.setupPositions {
+				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, owner, DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, uint64(i))
 				s.Require().NoError(err)
 			}
 			isOwner, err := s.App.ConcentratedLiquidityKeeper.IsPositionOwner(s.Ctx, test.queryPositionOwner, p.GetId(), test.queryPositionId)
 			s.Require().NoError(err)
-			s.Require().Equal(test.expPass, isOwner)
+			s.Require().Equal(isOwner, test.expPass)
 		})
 	}
 }
