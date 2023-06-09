@@ -219,10 +219,10 @@ func (k Keeper) GetUserPositionsSerialized(ctx sdk.Context, addr sdk.AccAddress,
 	var prefix []byte
 	var expectedKeyPartCount int
 	if poolId == 0 {
-		expectedKeyPartCount = 3
+		expectedKeyPartCount = 2
 		prefix = types.KeyUserPositions(addr)
 	} else {
-		expectedKeyPartCount = 2
+		expectedKeyPartCount = 1
 		prefix = types.KeyAddressAndPoolId(addr, poolId)
 	}
 

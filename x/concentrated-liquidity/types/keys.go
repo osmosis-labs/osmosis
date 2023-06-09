@@ -185,7 +185,7 @@ func KeyAddressAndPoolId(addr sdk.AccAddress, poolId uint64) []byte {
 // KeyUserPositions returns the prefix key used to create KeyAddressPoolIdPositionId, which only includes the addr.
 // This key can be used to iterate over all positions that a specific address has.
 func KeyUserPositions(addr sdk.AccAddress) []byte {
-	return []byte(fmt.Sprintf("%s%s%x", PositionPrefix, KeySeparator, addr.Bytes()))
+	return []byte(fmt.Sprintf("%s%s%x%s", PositionPrefix, KeySeparator, addr.Bytes(), KeySeparator))
 }
 
 // Pool Position Prefix Keys

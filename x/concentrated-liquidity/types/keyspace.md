@@ -12,6 +12,7 @@ Also all of this really shows we vastly overpay for complexity in the statemachi
 We break this up into parts, the multi-component keys, and the single component keys that don't really have concern.
 
 TODO: How do we train AI tools to do more of this for us, instead if it being manual
+- Maybe not worth doing since collections / ORM should delete this code for us.
 
 ## multi-component keys
 
