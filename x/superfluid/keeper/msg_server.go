@@ -209,7 +209,6 @@ func (server msgServer) UnlockAndMigrateSharesToFullRangeConcentratedPosition(go
 	if err != nil {
 		return nil, err
 	}
-	joinTime := ctx.BlockTime()
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -222,7 +221,6 @@ func (server msgServer) UnlockAndMigrateSharesToFullRangeConcentratedPosition(go
 			sdk.NewAttribute(types.AttributeAmount0, amount0.String()),
 			sdk.NewAttribute(types.AttributeAmount1, amount1.String()),
 			sdk.NewAttribute(types.AttributeLiquidity, liquidity.String()),
-			sdk.NewAttribute(types.AttributeJoinTime, joinTime.String()),
 		),
 	})
 
