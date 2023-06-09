@@ -51,9 +51,13 @@ var (
 	KeyTickLengthBytes = KeyTickPrefixByPoolIdLengthBytes + 1 + uint64ByteSize
 )
 
-// TickIndexToBytes converts a tick index to a byte slice. Negative tick indexes
-// are prefixed with 0x00 a byte and positive tick indexes are prefixed with a
-// 0x01 byte. We do this because big endian byte encoding does not give us in
+// TickIndexToBytes converts a tick index to a byte slice. The encoding is:
+// - Negative tick indexes are prefixed with a byte `b`
+// - Positive tick indexes are prefixed with a byte `b + 1`.
+// - Then we encode sign || BigEndian(uint64(tickIndex))
+//
+// @Dev: We should explain this better. (The uint64 cast is superflous) This is moreso about 2's complement.
+// We do this because big endian byte encoding does not give us in
 // order iteration in state due to the tick index values being signed integers, thus
 // iterating starting from positive then to negative.
 func TickIndexToBytes(tickIndex int64) []byte {
@@ -71,6 +75,8 @@ func TickIndexToBytes(tickIndex int64) []byte {
 
 // TickIndexFromBytes converts an encoded tick index to an int64 value. It returns
 // an error if the encoded tick has invalid length.
+// Warning: It assumes that the TickIndex was sign-encoded correctly,b ut does not check this
+// @Dev: Lets just fix this, and not have to worry about that.
 func TickIndexFromBytes(bz []byte) (int64, error) {
 	if len(bz) != 9 {
 		return 0, InvalidTickIndexEncodingError{Length: len(bz)}
@@ -132,8 +138,8 @@ func keyTickPrefixByPoolIdPrealloc(poolId uint64, preAllocBytes int) []byte {
 
 // PositionId<>LockId and LockId<>PositionId Prefix Keys
 func PositionIdForLockIdKeys(positionId, lockId uint64) (positionIdToLockIdKey []byte, lockIdToPositionIdKey []byte) {
-	positionIdToLockIdKey = []byte(fmt.Sprintf("%s%d", PositionToLockPrefix, positionId))
-	lockIdToPositionIdKey = []byte(fmt.Sprintf("%s%d", LockToPositionPrefix, lockId))
+	positionIdToLockIdKey = KeyPositionIdForLock(positionId)
+	lockIdToPositionIdKey = KeyLockIdForPositionId(lockId)
 	return positionIdToLockIdKey, lockIdToPositionIdKey
 }
 
@@ -166,6 +172,7 @@ func KeyAddressPoolIdPositionId(addr sdk.AccAddress, poolId uint64, positionId u
 
 // KeyAddressAndPoolId returns the prefix key used to create KeyAddressPoolIdPositionId, which only includes addr + pool id.
 // This key can be used to iterate over users positions for a specific pool.
+// @Dev: Insecure, as it does not include final separator.
 func KeyAddressAndPoolId(addr sdk.AccAddress, poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%s%x%s%d", PositionPrefix, KeySeparator, addr.Bytes(), KeySeparator, poolId))
 }
