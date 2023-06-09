@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -45,18 +46,22 @@ func (server msgServer) CreateDenom(goCtx context.Context, msg *types.MsgCreateD
 func (server msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	ctx.Logger().Error("MSG MINT START BEING CALLED")
 	// pay some extra gas cost to give a better error here.
 	_, denomExists := server.bankKeeper.GetDenomMetaData(ctx, msg.Amount.Denom)
 	if !denomExists {
+		ctx.Logger().Error("DENOM DEOES NOT EXIST THUS ERRORED")
 		return nil, types.ErrDenomDoesNotExist.Wrapf("denom: %s", msg.Amount.Denom)
 	}
 
 	authorityMetadata, err := server.Keeper.GetAuthorityMetadata(ctx, msg.Amount.GetDenom())
 	if err != nil {
+		ctx.Logger().Error("Get authority meta data errored")
 		return nil, err
 	}
 
 	if msg.Sender != authorityMetadata.GetAdmin() {
+		ctx.Logger().Error("Different admin")
 		return nil, types.ErrUnauthorized
 	}
 
@@ -66,6 +71,7 @@ func (server msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.
 
 	err = server.Keeper.mintTo(ctx, msg.Amount, msg.MintToAddress)
 	if err != nil {
+		ctx.Logger().Error(fmt.Sprint("mint to errored with: ", err.Error()))
 		return nil, err
 	}
 

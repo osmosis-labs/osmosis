@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
@@ -8,10 +10,12 @@ import (
 
 func (k Keeper) mintTo(ctx sdk.Context, amount sdk.Coin, mintTo string) error {
 	// verify that denom is an x/tokenfactory denom
+	ctx.Logger().Error("STARTING MINT TO ")
 	_, _, err := types.DeconstructDenom(amount.Denom)
 	if err != nil {
 		return err
 	}
+	ctx.Logger().Error(fmt.Sprint("Minting coins of: ", amount.String()))
 
 	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(amount))
 	if err != nil {
@@ -23,9 +27,11 @@ func (k Keeper) mintTo(ctx sdk.Context, amount sdk.Coin, mintTo string) error {
 		return err
 	}
 
-	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName,
+	ctx.Logger().Error(fmt.Sprint("Sending coins of: ", amount.String()))
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName,
 		addr,
 		sdk.NewCoins(amount))
+	return err
 }
 
 func (k Keeper) burnFrom(ctx sdk.Context, amount sdk.Coin, burnFrom string) error {
