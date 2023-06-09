@@ -282,10 +282,12 @@ pub fn denom_alias_operations(
                     &(map_entry.value.clone(), true).into(),
                 )?;
                 // Add to the enabled alias to the reverse map
-                DENOM_ALIAS_REVERSE_MAP.save(deps.storage, &map_entry.value, &denom_alias)?;
+                DENOM_ALIAS_REVERSE_MAP.save(deps.storage, &map_entry.value, &path)?;
 
-                response = response
-                    .add_attribute("enable_denom_alias", format!("{denom_alias} <=> {path}"));
+                response = response.add_attribute(
+                    "enable_denom_alias",
+                    format!("{} <=> {path}", map_entry.value),
+                );
             }
             FullOperation::Disable => {
                 let map_entry = DENOM_ALIAS_MAP
@@ -1680,6 +1682,75 @@ mod tests {
             vec![(
                 "change_denom_alias".to_string(),
                 format!("newalias1 <=> {path1}")
+            )]
+        );
+
+        // Test case: Disable an alias
+        let disable_msg = ExecuteMsg::ModifyDenomAlias {
+            operations: vec![DenomAliasInput {
+                operation: FullOperation::Disable,
+                full_denom_path: path1.to_string(),
+                alias: "newalias1".to_string(),
+            }],
+        };
+
+        let disable_info = mock_info(CREATOR_ADDRESS, &[]);
+        let disable_res =
+            contract::execute(deps.as_mut(), mock_env(), disable_info.clone(), disable_msg)
+                .unwrap();
+
+        assert_eq!(
+            DENOM_ALIAS_MAP
+                .may_load(deps.as_ref().storage, &path1)
+                .unwrap(),
+            Some(("newalias1".to_string(), false).into())
+        );
+        assert_eq!(
+            DENOM_ALIAS_REVERSE_MAP
+                .may_load(deps.as_ref().storage, "alias3")
+                .unwrap(),
+            None
+        );
+
+        assert_eq!(
+            disable_res.attributes,
+            vec![(
+                "disable_denom_alias".to_string(),
+                format!("newalias1 <=> {path1}")
+            )]
+        );
+
+        // Re-enable the alias
+        let enable_msg = ExecuteMsg::ModifyDenomAlias {
+            operations: vec![DenomAliasInput {
+                operation: FullOperation::Enable,
+                full_denom_path: path1.to_string(),
+                alias: "doesntmatter".to_string(),
+            }],
+        };
+
+        let enable_info = mock_info(CREATOR_ADDRESS, &[]);
+        let enable_res =
+            contract::execute(deps.as_mut(), mock_env(), enable_info.clone(), enable_msg).unwrap();
+
+        assert_eq!(
+            DENOM_ALIAS_MAP
+                .may_load(deps.as_ref().storage, &path1)
+                .unwrap(),
+            Some(("newalias1", true).into())
+        );
+        assert_eq!(
+            DENOM_ALIAS_REVERSE_MAP
+                .may_load(deps.as_ref().storage, "newalias1")
+                .unwrap(),
+            Some(path1.to_string())
+        );
+
+        assert_eq!(
+            enable_res.attributes,
+            vec![(
+                "enable_denom_alias".to_string(),
+                format!("newalias1 <=> {}", path1)
             )]
         );
 
