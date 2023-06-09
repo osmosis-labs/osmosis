@@ -79,7 +79,7 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 		// - adding liquidity (request user to provide more tokens in in favor of the pool)
 		// The denominator is truncated to get a higher final amount.
 		denom := sqrtPriceA.MulTruncate(sqrtPriceB)
-		return liq.Mul(diff).QuoMut(denom).Ceil()
+		return liq.Mul(diff).QuoMut(denom)
 	}
 	// These are truncated at precision end to round in favor of the pool when:
 	// - calculating amount out during swap
@@ -180,6 +180,7 @@ func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0,
 	if sqrtPrice.LTE(sqrtPriceA) {
 		// If the current price is less than or equal to the lower tick, then we use the liquidity0 formula.
 		liquidity = Liquidity0(amount0, sqrtPriceA, sqrtPriceB)
+		fmt.Println("liquidity0", liquidity)
 	} else if sqrtPrice.LTE(sqrtPriceB) {
 		// If the current price is between the lower and upper ticks (inclusive of the lower tick but not the upper tick),
 		// then we use the minimum of the liquidity0 and liquidity1 formulas.

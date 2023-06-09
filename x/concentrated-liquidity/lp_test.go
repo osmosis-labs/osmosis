@@ -1113,6 +1113,144 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 	}
 }
 
+func (s *KeeperTestSuite) TestSingleSidedAddToPosition() {
+	defaultTimeElapsed := time.Hour * 24
+
+	tests := map[string]struct {
+		setupConfig *lpTest
+		// when this is set, it overwrites the setupConfig
+		// and gives the overwritten configuration to
+		// the system under test.
+		sutConfigOverwrite      *lpTest
+		timeElapsed             time.Duration
+		createPositionOverwrite bool
+		createLockState         lockState
+		lastPositionInPool      bool
+		senderNotOwner          bool
+
+		amount0ToAdd sdk.Int
+		amount1ToAdd sdk.Int
+	}{
+		"single sided amount0 add": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			sutConfigOverwrite: &lpTest{
+				amount0Expected: DefaultAmt0.Add(DefaultAmt0).Sub(sdk.NewInt(1)),
+				amount1Expected: sdk.ZeroInt(),
+				// current tick is 0, so create the position completely above it
+				lowerTick: 100,
+				upperTick: 200,
+			},
+			amount0ToAdd: DefaultAmt0,
+			amount1ToAdd: sdk.ZeroInt(),
+		},
+		"single sided amount1 add": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			sutConfigOverwrite: &lpTest{
+				amount0Expected: sdk.ZeroInt(),
+				amount1Expected: DefaultAmt1.Add(DefaultAmt1).Sub(sdk.NewInt(1)),
+				// current tick is 0, so create the position completely below it
+				lowerTick: -200,
+				upperTick: -100,
+			},
+			amount0ToAdd: sdk.ZeroInt(),
+			amount1ToAdd: DefaultAmt1,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			// --- Setup ---
+			s.SetupTest()
+			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
+
+			var (
+				concentratedLiquidityKeeper = s.App.ConcentratedLiquidityKeeper
+				owner                       = s.TestAccs[1]
+				config                      = *tc.setupConfig
+				err                         error
+			)
+
+			// If specific configs are provided in the test case, overwrite the config with those values.
+			mergeConfigs(&config, tc.sutConfigOverwrite)
+
+			// Create a pool and position with a full range position.
+			pool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(ETH, USDC)
+			fundCoins := config.tokensProvided
+
+			// Fund tokens that is used to create the owners initial position
+			if !tc.amount0ToAdd.IsZero() {
+				s.FundAcc(owner, sdk.NewCoins(sdk.NewCoin(ETH, tc.amount0ToAdd)))
+			}
+			if !tc.amount1ToAdd.IsZero() {
+				s.FundAcc(owner, sdk.NewCoins(sdk.NewCoin(USDC, tc.amount1ToAdd)))
+			}
+
+			// Create a position from the parameters in the test case.
+			testCoins := sdk.NewCoins(sdk.NewCoin(ETH, tc.amount0ToAdd), sdk.NewCoin(USDC, tc.amount1ToAdd))
+			positionId, _, _, _, _, _, _, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), owner, testCoins, sdk.ZeroInt(), sdk.ZeroInt(), config.lowerTick, config.upperTick)
+			s.Require().NoError(err)
+
+			// Move the block time forward
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(defaultTimeElapsed))
+
+			// Check the position owner's balance before the add.
+			preBalanceToken0 := s.App.BankKeeper.GetBalance(s.Ctx, owner, pool.GetToken0())
+			preBalanceToken1 := s.App.BankKeeper.GetBalance(s.Ctx, owner, pool.GetToken1())
+
+			if !tc.lastPositionInPool {
+				s.FundAcc(s.TestAccs[0], fundCoins)
+				_, _, _, _, _, _, _, err = concentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], config.tokensProvided, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				s.Require().NoError(err)
+			}
+
+			// now we fund the owner account again for the amount0ToAdd and amount1ToAdd coins.
+			// only fund coins if the amount is non-negative or else test would panic here
+			if !tc.amount0ToAdd.IsNegative() {
+				s.FundAcc(owner, sdk.NewCoins(sdk.NewCoin(ETH, tc.amount0ToAdd)))
+			}
+			if !tc.amount1ToAdd.IsNegative() {
+				s.FundAcc(owner, sdk.NewCoins(sdk.NewCoin(USDC, tc.amount1ToAdd)))
+			}
+
+			// --- System under test ---
+			newPosId, newAmt0, newAmt1, err := concentratedLiquidityKeeper.AddToPosition(s.Ctx, owner, positionId, tc.amount0ToAdd, tc.amount1ToAdd, config.amount0Minimum, config.amount1Minimum)
+			if config.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().Equal(sdk.Int{}, newAmt0)
+				s.Require().Equal(sdk.Int{}, newAmt1)
+				s.Require().Equal(uint64(0), newPosId)
+				s.Require().ErrorContains(err, config.expectedError.Error())
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().Equal(config.amount0Expected.String(), newAmt0.String())
+			s.Require().Equal(config.amount1Expected.String(), newAmt1.String())
+
+			// We expect the position ID to be 4 since we have three setup positions (initial full range position, owner position, and lastPositionInPool position)
+			s.Require().Equal(uint64(4), newPosId)
+
+			postBalanceToken0 := s.App.BankKeeper.GetBalance(s.Ctx, owner, pool.GetToken0())
+			postBalanceToken1 := s.App.BankKeeper.GetBalance(s.Ctx, owner, pool.GetToken1())
+
+			// Ensure that we utilized all the tokens we funded the account with when adding to the position.
+			s.Require().Equal(0, errToleranceOneRoundDown.Compare(preBalanceToken0.Amount, postBalanceToken0.Amount))
+			s.Require().Equal(0, errToleranceOneRoundDown.Compare(preBalanceToken1.Amount, postBalanceToken1.Amount))
+
+			// now check that old position id has been successfully deleted
+			_, err = s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+			s.Require().Error(err)
+		})
+	}
+}
+
 // mergeConfigs merges every desired non-zero field from overwrite
 // into dst. dst is mutated due to being a pointer.
 func mergeConfigs(dst *lpTest, overwrite *lpTest) {
