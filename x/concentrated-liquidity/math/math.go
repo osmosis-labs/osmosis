@@ -78,8 +78,8 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 		// - calculating amountIn during swap
 		// - adding liquidity (request user to provide more tokens in in favor of the pool)
 		// The denominator is truncated to get a higher final amount.
-		denom := sqrtPriceA.MulRoundUp(sqrtPriceB)
-		return liq.Mul(diff).QuoMut(denom).Ceil()
+		denom := sqrtPriceA.Mul(sqrtPriceB)
+		return liq.Mul(diff).QuoRoundUp(denom)
 	}
 	// These are truncated at precision end to round in favor of the pool when:
 	// - calculating amount out during swap
