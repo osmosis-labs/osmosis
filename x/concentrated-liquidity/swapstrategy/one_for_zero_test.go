@@ -61,7 +61,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 		}
 	)
 
-	defaultLiquidity, err := math.GetLiquidityFromAmounts(sqrt(1), sqrt(100_000_000), sqrt(100_000_100), defaultAmountZero.TruncateInt(), defaultAmountOne.TruncateInt())
+	customPriceLiquidity, err := math.GetLiquidityFromAmounts(sqrt(1), sqrt(100_000_000), sqrt(100_000_100), defaultAmountZero.TruncateInt(), defaultAmountOne.TruncateInt(), defaultTickSpacing)
 	suite.Require().NoError(err)
 
 	tests := map[string]struct {
@@ -137,7 +137,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 		"5: custom amounts at high price levels - reach target": {
 			sqrtPriceCurrent: sqrt(100_000_000),
 			sqrtPriceTarget:  sqrt(100_000_100),
-			liquidity:        defaultLiquidity,
+			liquidity:        customPriceLiquidity,
 
 			// this value is exactly enough to reach the target
 			amountOneInRemaining: sdk.NewDec(1336900668450),

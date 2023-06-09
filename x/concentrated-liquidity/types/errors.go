@@ -833,3 +833,13 @@ type TickToSqrtPriceConversionError struct {
 func (e TickToSqrtPriceConversionError) Error() string {
 	return fmt.Sprintf("could not convert next tick  to nextSqrtPrice (%v)", e.NextTick)
 }
+
+type InvalidSqrtPriceBoundError struct {
+	LowerSqrtPrice   sdk.Dec
+	CurrentSqrtPrice sdk.Dec
+	UpperSqrtPrice   sdk.Dec
+}
+
+func (e InvalidSqrtPriceBoundError) Error() string {
+	return fmt.Sprintf("attempted to run bound checks on invalid sqrt prices. Lower (%s), current (%s), upper (%s)", e.LowerSqrtPrice, e.CurrentSqrtPrice, e.UpperSqrtPrice)
+}

@@ -171,25 +171,48 @@ func GetNextSqrtPriceFromAmount1OutRoundingDown(sqrtPriceCurrent, liquidity, amo
 
 // GetLiquidityFromAmounts takes the current sqrtPrice and the sqrtPrice for the upper and lower ticks as well as the amounts of asset0 and asset1
 // and returns the resulting liquidity from these inputs.
-func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0, amount1 sdk.Int) (liquidity sdk.Dec, err error) {
+func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0, amount1 sdk.Int, tickSpacing uint64) (liquidity sdk.Dec, err error) {
 	// Reorder the prices so that sqrtPriceA is the smaller of the two.
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
 
-	// TODO: square & PriceToTick the lower, upper, and current sqrt prices -> replace bound checks
-	lowerTick, err := PriceToTick(sqrtPriceA.Power(2))
+	// Retrieve rounded ticks to do appropriate bound checks
+	lowerTick, err := PriceToTickRoundDown(sqrtPriceA.Power(2), tickSpacing)
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}
-	upperTick, err := PriceToTick(sqrtPriceB.Power(2))
+	upperTick, err := PriceToTickRoundDown(sqrtPriceB.Power(2), tickSpacing)
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}
-	currentTick, err := PriceToTick(sqrtPrice.Power(2))
+	currentTick, err := PriceToTickRoundDown(sqrtPrice.Power(2), tickSpacing)
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}
+
+	/* TODO: decide on keeping or removing this based on whether sqrt prices should align with rounded tick boundaries
+	//
+	// Validate that the original sqrt price values fell on tick spacing bounds.
+	// While this is an expensive check, it is critical to ensure that invalid state
+	// is never reached.
+	_, inverseCurSqrtPrice, err := TickToSqrtPrice(currentTick)
+	if err != nil {
+		return sdk.ZeroDec(), err
+	}
+	_, inverseLowerSqrtPrice, err := TickToSqrtPrice(lowerTick)
+	if err != nil {
+		return sdk.ZeroDec(), err
+	}
+	_, inverseUpperSqrtPrice, err := TickToSqrtPrice(upperTick)
+	if err != nil {
+		return sdk.ZeroDec(), err
+	}
+
+	if !sqrtPriceA.Equal(inverseLowerSqrtPrice) || !sqrtPrice.Equal(inverseCurSqrtPrice) || !sqrtPriceB.Equal(inverseUpperSqrtPrice) {
+		return sdk.ZeroDec(), types.InvalidSqrtPriceBoundError{LowerSqrtPrice: sqrtPriceA, CurrentSqrtPrice: sqrtPrice, UpperSqrtPrice: sqrtPriceB}
+	}
+	*/
 
 	if currentTick < lowerTick {
 		// If the current price is less than or equal to the lower tick, then we use the liquidity0 formula.

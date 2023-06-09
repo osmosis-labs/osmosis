@@ -20,7 +20,12 @@ func TestConcentratedTestSuite(t *testing.T) {
 	suite.Run(t, new(ConcentratedMathTestSuite))
 }
 
-var sqrt5000 = sdk.MustNewDecFromStr("70.710678118654752440")
+var (
+	sqrt4545 = sdk.MustNewDecFromStr("67.416615162732695594")
+	sqrt5000 = sdk.MustNewDecFromStr("70.710678118654752440")
+	sqrt5001 = sdk.MustNewDecFromStr("70.717748832948578242")
+	sqrt5500 = sdk.MustNewDecFromStr("74.161984870956629487")
+)
 
 // liquidity1 takes an amount of asset1 in the pool as well as the sqrtpCur and the nextPrice
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
@@ -330,27 +335,29 @@ func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
 		// price of x in terms of y
 		expectedLiquidity0 sdk.Dec
 		expectedLiquidity1 sdk.Dec
+
+		expectedError error
 	}{
 		"happy path (case A)": {
-			currentSqrtP:      sdk.MustNewDecFromStr("67"),                    // 4489
-			sqrtPHigh:         sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
-			sqrtPLow:          sdk.MustNewDecFromStr("67.416615162732695594"), // 4545
+			currentSqrtP:      sdk.MustNewDecFromStr("67"), // sqrt(4489)
+			sqrtPHigh:         sqrt5500,
+			sqrtPLow:          sqrt4545,
 			amount0Desired:    sdk.NewInt(1000000),
 			amount1Desired:    sdk.ZeroInt(),
 			expectedLiquidity: "741212151.448720111852782017",
 		},
 		"happy path (case B)": {
-			currentSqrtP:      sqrt5000,                                       // 5000
-			sqrtPHigh:         sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
-			sqrtPLow:          sdk.MustNewDecFromStr("67.416615162732695594"), // 4545
+			currentSqrtP:      sqrt5000,
+			sqrtPHigh:         sqrt5500,
+			sqrtPLow:          sqrt4545,
 			amount0Desired:    sdk.NewInt(1000000),
 			amount1Desired:    sdk.NewInt(5000000000),
 			expectedLiquidity: "1517882343.751510418088349649",
 		},
 		"happy path (case C)": {
-			currentSqrtP:      sdk.MustNewDecFromStr("75"),                    // 5625
-			sqrtPHigh:         sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
-			sqrtPLow:          sdk.MustNewDecFromStr("67.416615162732695594"), // 4545
+			currentSqrtP:      sdk.MustNewDecFromStr("75"), // sqrt(5625)
+			sqrtPHigh:         sqrt5500,
+			sqrtPLow:          sqrt4545,
 			amount0Desired:    sdk.ZeroInt(),
 			amount1Desired:    sdk.NewInt(5000000000),
 			expectedLiquidity: "741249214.836069764856625637",
@@ -388,6 +395,49 @@ func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
 			expectedLiquidity0: sdk.MustNewDecFromStr("7.706742302257039729"),
 			expectedLiquidity1: sdk.MustNewDecFromStr("4.828427124746190095"),
 		},
+		"bound check: current price equal to upper price": {
+			currentSqrtP:   sqrt5500,
+			sqrtPHigh:      sqrt5500,
+			sqrtPLow:       sqrt4545,
+			amount0Desired: sdk.NewInt(1000000),
+			amount1Desired: sdk.NewInt(5000000000),
+			// We expect Liquidity1 to be returned since having current sqrt price equal to upper sqrt price
+			// should be considered above range.
+			// The specific calculation is:
+			//     expectedLiquidity = amount1Desired / (sqrtPHigh - sqrtPLow)
+			// where we use raw values for sqrt5500 & sqrt4545 that are truncated to 18 decimal places:
+			// https://www.wolframalpha.com/input?i=5000000000%2F%2874.161984870956629487-67.416615162732695594%29
+			expectedLiquidity: "741249214.836069764856625637",
+		},
+
+		/* TODO: determine whether this panicking is expected behavior or if curTick <= lowTick should default to the Liquidity0 branch
+		"bound check: current price on lower tick": {
+			currentSqrtP:   sqrt4545,
+			sqrtPHigh:      sqrt5500,
+			sqrtPLow:       sqrt4545,
+			amount0Desired: sdk.NewInt(1000000),
+			amount1Desired: sdk.NewInt(5000000000),
+			// We expect Liquidity0 to be returned since having current sqrt price equal to lower sqrt price
+			// should be considered within range.
+			// The specific calculation is:
+			//     expectedLiquidity = amount0Desired * (sqrtPHigh * sqrtPLow) / (sqrtPHigh - sqrtPLow)
+			// where we use raw values for sqrt5500 & sqrt4545 that are truncated to 18 decimal places:
+			expectedLiquidity: "741212151.448720111852782017",
+		},
+		*/
+
+		/* TODO: convert this to non error case if the rounded sqrt price check is removed
+		"error: current price does not comply with tick spacing requirements": {
+			currentSqrtP:      sqrt5000.Add(sdk.MustNewDecFromStr("0.0001")),
+			sqrtPHigh:         sqrt5000,
+			sqrtPLow:          sqrt4545,
+			amount0Desired:    sdk.NewInt(1000000),
+			amount1Desired:    sdk.NewInt(5000000000),
+			expectedLiquidity: "0.000000000000000000",
+
+			expectedError: cltypes.InvalidSqrtPriceBoundError{LowerSqrtPrice: sqrt4545, CurrentSqrtPrice: sqrt5000.Add(sdk.MustNewDecFromStr("0.0001")), UpperSqrtPrice: sqrt5000},
+		},
+		*/
 	}
 
 	for name, tc := range testCases {
@@ -398,8 +448,15 @@ func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
 			// CASE B: if the currentSqrtP is less than the sqrtPHigh but greater than sqrtPLow, the liquidity is split between asset0 and asset1,
 			// so GetLiquidityFromAmounts returns the smaller liquidity of asset0 and asset1
 			// CASE C: if the currentSqrtP is greater than the sqrtPHigh, all the liquidity is in asset1, so GetLiquidityFromAmounts returns the liquidity of asset1
-			liquidity, err := math.GetLiquidityFromAmounts(tc.currentSqrtP, tc.sqrtPLow, tc.sqrtPHigh, tc.amount0Desired, tc.amount1Desired)
-			suite.Require().NoError(err)
+			// TODO: make default tick spacing into a test field and test multiple authorized tick spacings
+			liquidity, err := math.GetLiquidityFromAmounts(tc.currentSqrtP, tc.sqrtPLow, tc.sqrtPHigh, tc.amount0Desired, tc.amount1Desired, defaultTickSpacing)
+
+			if tc.expectedError != nil {
+				suite.Require().ErrorContains(err, tc.expectedError.Error())
+			} else {
+				suite.Require().NoError(err)
+			}
+
 			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
 		})
 	}

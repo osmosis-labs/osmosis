@@ -1544,7 +1544,7 @@ func (s *KeeperTestSuite) getExpectedLiquidity(test SwapTest, pool types.Concent
 		test.poolLiqAmount1 = DefaultAmt1
 	}
 
-	expectedLiquidity, err := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
+	expectedLiquidity, err := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1, pool.GetTickSpacing())
 	s.Require().NoError(err)
 	return expectedLiquidity
 }
