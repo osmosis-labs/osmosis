@@ -129,16 +129,17 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	// A pool with such id must exist and be a concentrated pool.
 	if distrTo.LockQueryType == lockuptypes.NoLock {
 		if poolId == 0 {
-			return 0, fmt.Errorf("no lock gauges must have a pool id")
+			return 0, fmt.Errorf("'no lock' type gauges must have a pool id")
 		}
 
 		// If not internal gauge denom, then must be set to ""
 		// and get overwritten with the external prefix + pool id
 		// for internal query purposes.
-		if distrTo.Denom != types.NoLockInternalGaugeDenom(poolId) {
+		distrToDenom := distrTo.Denom
+		if distrToDenom != types.NoLockInternalGaugeDenom(poolId) {
 			// If denom is set, then fails.
-			if distrTo.Denom != "" {
-				return 0, fmt.Errorf("no lock external gauges must have an empty denom set")
+			if distrToDenom != "" {
+				return 0, fmt.Errorf("'no lock' type external gauges must have an empty denom set, was %s", distrToDenom)
 			}
 			distrTo.Denom = types.NoLockExternalGaugeDenom(poolId)
 		}
@@ -149,7 +150,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		}
 
 		if pool.GetType() != poolmanagertypes.Concentrated {
-			return 0, fmt.Errorf("no lock gauges must be created for concentrated pools only")
+			return 0, fmt.Errorf("'no lock' type gauges must be created for concentrated pools only")
 		}
 
 		// Note that this is a general linking between the gauge and the pool
