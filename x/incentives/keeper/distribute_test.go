@@ -394,8 +394,6 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 		numEpochsPaidOver  uint64
 		poolId             uint64
 
-		isBalancerPool bool
-
 		// expected
 		expectErr                              bool
 		expectedDistributions                  sdk.Coins
