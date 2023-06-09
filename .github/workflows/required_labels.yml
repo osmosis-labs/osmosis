@@ -27,7 +27,7 @@ jobs:
           steps.changed-files.outputs.any_changed == 'true' ||
           steps.changed-files.outputs.any_deleted == 'true' ||
           steps.changed-files.outputs.any_modified == 'true'
-        uses: mheap/github-action-required-labels@v4
+        uses: mheap/github-action-required-labels@v5
         env:
           GITHUB_TOKEN: ${{ secrets.ADD_TO_PROJECT_PAT }}
         with: #Require one of the following labels
