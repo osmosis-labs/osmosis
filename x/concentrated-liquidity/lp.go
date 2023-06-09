@@ -535,7 +535,7 @@ func emitLiquidityChangeEvent(ctx sdk.Context, eventType string, positionId uint
 func (k Keeper) isLockMature(ctx sdk.Context, underlyingLockId uint64) (bool, error) {
 	// Query the underlying lock
 	underlyingLock, err := k.lockupKeeper.GetLockByID(ctx, underlyingLockId)
-	if err != nil && errors.Is(err, lockuptypes.ErrLockupNotFound) {
+	if errors.Is(err, lockuptypes.ErrLockupNotFound) {
 		// Lock doesn't exist, so we can withdraw from this position
 		return true, nil
 	} else if err != nil {

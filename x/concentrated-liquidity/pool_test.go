@@ -567,3 +567,46 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestValidateTickSpacingUpdate() {
+	tests := []struct {
+		name                     string
+		newTickSpacing           uint64
+		expectedValidationResult bool
+	}{
+		{
+			name:                     "happy case: reduce tick spacing to smaller tick",
+			newTickSpacing:           1,
+			expectedValidationResult: true,
+		},
+		{
+			name:                     "validation fail: try reducing unauthorized tick spacing",
+			newTickSpacing:           3,
+			expectedValidationResult: false,
+		},
+		{
+			name:                     "validation fail: try increasing tick spacing",
+			newTickSpacing:           500,
+			expectedValidationResult: false,
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			// Create default CL pool
+			// default pool tick spacing is 100.
+			pool := s.PrepareConcentratedPool()
+
+			params := types.DefaultParams()
+			validationResult := s.App.ConcentratedLiquidityKeeper.ValidateTickSpacingUpdate(s.Ctx, pool, params, tc.newTickSpacing)
+			if tc.expectedValidationResult {
+				s.Require().True(validationResult)
+			} else {
+				s.Require().False(validationResult)
+			}
+		})
+	}
+}
