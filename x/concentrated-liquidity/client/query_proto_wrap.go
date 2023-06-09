@@ -155,11 +155,14 @@ func (q Querier) LiquidityNetInDirection(ctx sdk.Context, req clquery.LiquidityN
 		return nil, err
 	}
 
-	startTickLiquidity := sdk.ZeroDec()
+	// Default the startTickLiquidity to the current tick liquidity
+	startTickLiquidity := pool.GetLiquidity()
+
+	// White iterate through the liquidity depths, if the tick index is less than the pool's current tick,
+	// then we add the liquidity net to the startTickLiquidity to determine the liquidity at the start tick.
 	for i := range liquidityDepths {
-		if liquidityDepths[i].TickIndex == startTick {
+		if liquidityDepths[i].TickIndex < pool.GetCurrentTick() {
 			startTickLiquidity = liquidityDepths[i].LiquidityNet
-			break
 		}
 	}
 
