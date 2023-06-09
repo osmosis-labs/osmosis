@@ -33,8 +33,23 @@ pub enum ContractError {
         actual_sender: String,
     },
 
-    #[error("contract alias already exists: {alias:?}")]
+    #[error("alias already exists: {alias:?}")]
     AliasAlreadyExists { alias: String },
+
+    #[error("alias already exists for: {base:?}")]
+    AliasAlreadyExistsFor { base: String },
+
+    #[error("alias does not exist: {alias:?}")]
+    AliasDoesNotExist { alias: String },
+
+    #[error("alias does not exist for: {base:?}")]
+    AliasDoesNotExistFor { base: String },
+
+    #[error("existing alias {existing} does not match supplied alias: {expected}")]
+    AliasDoesNotMatch { existing: String, expected: String },
+
+    #[error("invalid alias {alias}. Must be alphanumeric")]
+    InvalidAlias { alias: String },
 
     #[error(
         "PFM validation already in progress for {chain:?}. Wait for the ibc lifecycle to complete"

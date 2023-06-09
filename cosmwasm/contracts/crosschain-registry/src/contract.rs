@@ -53,6 +53,10 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
+        ExecuteMsg::ModifyDenomAlias { operations } => {
+            execute::denom_alias_operations(deps, info.sender, operations)
+        }
+
         // Contract aliases
         ExecuteMsg::ModifyContractAlias { operations } => {
             execute::contract_alias_operations(deps, info.sender, operations)

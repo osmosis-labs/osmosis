@@ -10,6 +10,10 @@ pub struct InstantiateMsg {
 #[cw_serde]
 pub enum ExecuteMsg {
     // Contract Registry
+    ModifyDenomAlias {
+        operations: Vec<execute::DenomAliasInput>,
+    },
+
     ModifyContractAlias {
         operations: Vec<execute::ContractAliasInput>,
     },
