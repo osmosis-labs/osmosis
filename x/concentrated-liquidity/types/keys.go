@@ -56,11 +56,11 @@ var (
 // - Positive tick indexes are prefixed with a byte `b + 1`.
 // - Then we encode sign || BigEndian(uint64(tickIndex))
 //
-// @Dev: We should explain this better. (The uint64 cast is superflous)
-// This is really about 2's complement.
-// We do this because big endian byte encoding does not give us in
-// order iteration in state due to the tick index values being signed integers, thus
-// iterating starting from positive then to negative.
+// This leading sign byte is to ensure we can iterate over the tick indexes in order.
+// 2's complement guarantees that negative integers are in order when iterating.
+// However they are not in order relative to positive integers (as 2's complement flips the leading bit)
+// Hence we use the leading sign byte to ensure that negative tick indexes
+// are in order relative to positive tick indexes.
 func TickIndexToBytes(tickIndex int64) []byte {
 	key := make([]byte, 9)
 	if tickIndex < 0 {
@@ -76,14 +76,19 @@ func TickIndexToBytes(tickIndex int64) []byte {
 
 // TickIndexFromBytes converts an encoded tick index to an int64 value. It returns
 // an error if the encoded tick has invalid length.
-// Warning: It assumes that the TickIndex was sign-encoded correctly,b ut does not check this
-// @Dev: Lets just fix this, and not have to worry about that.
 func TickIndexFromBytes(bz []byte) (int64, error) {
 	if len(bz) != 9 {
 		return 0, InvalidTickIndexEncodingError{Length: len(bz)}
 	}
 
-	return int64(sdk.BigEndianToUint64(bz[1:])), nil
+	i := int64(sdk.BigEndianToUint64(bz[1:]))
+	// ensure sign byte is correct, these errors should never occur.
+	if bz[0] == TickNegativePrefix[0] && i >= 0 {
+		return 0, InvalidTickIndexEncodingError{Length: len(bz)}
+	} else if bz[0] == TickPositivePrefix[0] && i < 0 {
+		return 0, InvalidTickIndexEncodingError{Length: len(bz)}
+	}
+	return i, nil
 }
 
 // KeyTick generates a tick key for a given pool and tick index by concatenating
@@ -173,9 +178,8 @@ func KeyAddressPoolIdPositionId(addr sdk.AccAddress, poolId uint64, positionId u
 
 // KeyAddressAndPoolId returns the prefix key used to create KeyAddressPoolIdPositionId, which only includes addr + pool id.
 // This key can be used to iterate over users positions for a specific pool.
-// @Dev: Insecure, as it does not include final separator.
 func KeyAddressAndPoolId(addr sdk.AccAddress, poolId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%s%x%s%d", PositionPrefix, KeySeparator, addr.Bytes(), KeySeparator, poolId))
+	return []byte(fmt.Sprintf("%s%s%x%s%d%s", PositionPrefix, KeySeparator, addr.Bytes(), KeySeparator, poolId, KeySeparator))
 }
 
 // KeyUserPositions returns the prefix key used to create KeyAddressPoolIdPositionId, which only includes the addr.
