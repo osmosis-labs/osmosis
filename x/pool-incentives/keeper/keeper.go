@@ -110,7 +110,8 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 		lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.NoLock,
 			Denom:         incentivestypes.NoLockInternalGaugeDenom(pool.GetId()),
-			Duration:      incentivesEpoch.Duration,
+			// We specify this duration so that we can query this duration in the IncentivizedPools() query.
+			Duration: incentivesEpoch.Duration,
 		},
 		ctx.BlockTime(),
 		1,
