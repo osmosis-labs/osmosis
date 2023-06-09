@@ -737,9 +737,10 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 
 	swapOutCoin := sdk.NewCoin(swapOutDenom, sdk.MinInt(baseSwapAmount, poolLiquidity.AmountOf(swapOutDenom)))
 	fmt.Println("asset 0: ", pool.GetToken0())
+	fmt.Println("swapInDenom: ", swapInDenom)
 	fmt.Println("swapOutCoin: ", swapOutCoin)
 	fmt.Println("poolLiquidity: ", poolLiquidity)
 	// Note that we set the price limit to zero to ensure that the swap can execute in either direction (gets automatically set to correct limit)
-	_, _, _, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, swapOutCoin, swapInDenom, DefaultSpreadFactor, sdk.ZeroDec())
+	_, _, _, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, swapOutCoin, swapInDenom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
 	s.Require().NoError(err)
 }

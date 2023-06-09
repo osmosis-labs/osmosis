@@ -552,7 +552,6 @@ func (k Keeper) computeInAmtGivenOut(
 	totalSpreadFactors = sdk.ZeroDec()
 
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
-	fmt.Println("nextTickIter: ", nextTickIter)
 	defer nextTickIter.Close()
 
 	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
@@ -567,14 +566,15 @@ func (k Keeper) computeInAmtGivenOut(
 
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
-	fmt.Println("Amount remining in swap: ", swapState.amountSpecifiedRemaining)
+	fmt.Println("Amount remaining in swap: ", swapState.amountSpecifiedRemaining)
 	for swapState.amountSpecifiedRemaining.GT(smallestDec) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
 		// log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
 
 		// Iterator must be valid to be able to retrieve the next tick from it below.
 		if !nextTickIter.Valid() {
-			fmt.Println("Error: invalid iterator")
+			updatedPool, _ := k.getPoolById(ctx, poolId)
+			fmt.Println("pool liq before running out of ticks: ", k.bankKeeper.GetAllBalances(ctx, updatedPool.GetAddress()))
 			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
 		}
 
@@ -624,6 +624,7 @@ func (k Keeper) computeInAmtGivenOut(
 		// if the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
 		// tick has been consumed and we must move on to the next tick to complete the swap
 		if sqrtPriceNextTick.Equal(sqrtPrice) {
+			fmt.Println("~crossing tick~")
 			nextTickInfo, err := ParseTickFromBz(nextTickIter.Value())
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err

@@ -46,7 +46,7 @@ var (
 	defaultSpreadReward   = sdk.MustNewDecFromStr("0.03")
 	defaultTickSpacing    = uint64(100)
 	defaultAmountReserves = sdk.NewInt(1_000_000_000)
-	DefaultCoins          = sdk.NewCoins(sdk.NewCoin(ETH, defaultAmountReserves), sdk.NewCoin(USDC, defaultAmountReserves.Mul(sdk.NewInt(3231223))))
+	DefaultCoins          = sdk.NewCoins(sdk.NewCoin(ETH, defaultAmountReserves), sdk.NewCoin(USDC, defaultAmountReserves))
 )
 
 func TestStrategyTestSuite(t *testing.T) {
