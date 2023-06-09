@@ -555,9 +555,16 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 
 				s.Require().Equal(tc.expectedGaugeId, gaugeId)
 
-				// Assert that pool id and gauge id links are created
-				gaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, tc.poolId, tc.distrTo.Duration)
+				// Assert that pool id and gauge id link meant for internally incentivized gauges is unset.
+				_, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, tc.poolId, tc.distrTo.Duration)
+				s.Require().Error(err)
+
+				// Confirm that the general pool id to gauge id link is set.
+				gaugeIds, err := s.App.PoolIncentivesKeeper.GetNoLockGaugeIdsFromPool(s.Ctx, tc.poolId)
 				s.Require().NoError(err)
+				// One must have been created at pool creation time for internal incentives.
+				s.Require().Len(gaugeIds, 2)
+				gaugeId := gaugeIds[1]
 
 				s.Require().Equal(tc.expectedGaugeId, gaugeId)
 

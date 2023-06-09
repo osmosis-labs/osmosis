@@ -152,9 +152,12 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 			return 0, fmt.Errorf("no lock gauges must be created for concentrated pools only")
 		}
 
-		// We assume that external gauges are created with 0 duration,
-		// while internal gauges are created with an incentive epoch duration.
-		k.pik.SetPoolGaugeId(ctx, poolId, distrTo.Duration, nextGaugeId)
+		// Note that this is a general linking between the gauge and the pool
+		// for "NoLock" gauges. It occurs for both external and internal gauges.
+		// That being said, internal gauges have an additional linking
+		// by duration where duration is the incentives epoch duration.
+		// The internal incentive linking is set in x/pool-incentives CreateConcentratedLiquidityPoolGauge.
+		k.pik.SetPoolGaugeIdNoLock(ctx, poolId, nextGaugeId)
 	} else {
 		// For all other gauges, pool id must be 0.
 		if poolId != 0 {
