@@ -261,7 +261,7 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 			node.SuperfluidUnbondLock(int(originalGammLockId), poolJoinAcc.String())
 		} else {
 			lock := node.QueryLockedById(fmt.Sprintf("%d", originalGammLockId))
-			node.LockupBeginUnlock(int(originalGammLockId), lock.Coins.String(), node.PublicAddress)
+			node.LockupBeginUnlock(int(originalGammLockId), poolJoinAcc.String(), lock.Coins.String())
 		}
 	}
 
