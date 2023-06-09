@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/json"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -87,8 +88,11 @@ func (h Hooks) BlockBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount 
 // callBeforeSendListener iterates over each coin and sends corresponding sudo msg to the contract address stored in state.
 // If blockBeforeSend is true, sudoMsg wraps BlockBeforeSendMsg, otherwise sudoMsg wraps TrackBeforeSendMsg.
 func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins, blockBeforeSend bool) error {
+	ctx.Logger().Error("CALL BEFORE SEND LISTNER IS BEING CALLED")
+	ctx.Logger().Error(fmt.Sprint("From, to, amount: ", from.String(), to.String(), amount.String()))
 	for _, coin := range amount {
 		cosmwasmAddress := k.GetBeforeSendHook(ctx, coin.Denom)
+		ctx.Logger().Error(fmt.Sprint("COSMWASM ADDRESS FOR BEFORE SEND HOOK IS: ", cosmwasmAddress))
 		if cosmwasmAddress != "" {
 			cwAddr, err := sdk.AccAddressFromBech32(cosmwasmAddress)
 			if err != nil {
@@ -118,13 +122,13 @@ func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress,
 				msgBz, err = json.Marshal(msg)
 			}
 			if err != nil {
+				ctx.Logger().Error(fmt.Sprint("FAILED TO CALL SEND SEND HOOK WITH: ", err.Error()))
 				return err
 			}
 
-			em := sdk.NewEventManager()
-
-			_, err = k.contractKeeper.Sudo(ctx.WithEventManager(em), cwAddr, msgBz)
+			_, err = k.contractKeeper.Sudo(ctx, cwAddr, msgBz)
 			if err != nil {
+				ctx.Logger().Error(fmt.Sprint("FAILED TO CALL SEND SEND HOOK SUDO WITH: ", err.Error()))
 				return errorsmod.Wrapf(err, "failed to call before send hook for denom %s", coin.Denom)
 			}
 		}
