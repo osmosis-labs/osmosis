@@ -205,10 +205,11 @@ func (server msgServer) UnlockAndMigrateSharesToFullRangeConcentratedPosition(go
 		return nil, err
 	}
 
-	positionId, amount0, amount1, liquidity, joinTime, poolIdLeaving, poolIdEntering, clLockId, err := server.keeper.RouteLockedBalancerToConcentratedMigration(ctx, sender, msg.LockId, msg.SharesToMigrate, msg.TokenOutMins)
+	positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, clLockId, err := server.keeper.RouteLockedBalancerToConcentratedMigration(ctx, sender, msg.LockId, msg.SharesToMigrate, msg.TokenOutMins)
 	if err != nil {
 		return nil, err
 	}
+	joinTime := ctx.BlockTime()
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
