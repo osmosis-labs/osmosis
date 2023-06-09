@@ -122,6 +122,7 @@ pub const CHAIN_PFM_MAP: Map<&str, ChainPFM> =
 pub const DENOM_ALIAS_MAP: Map<&str, RegistryValue> =
     Map::new(StorageKey::DenomAliasMap.to_string());
 
+// TODO: modify this to keep track of enabled/disabled
 // DENOM_ALIAS_REVERSE_MAP is a map from a denom alias to a denom path
 pub const DENOM_ALIAS_REVERSE_MAP: Map<&str, String> =
     Map::new(StorageKey::DenomAliasReverseMap.to_string());

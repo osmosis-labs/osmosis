@@ -221,15 +221,16 @@ pub fn denom_alias_operations(
         let denom_alias = normalize_alias(&operation.alias)?;
         let path = operation.full_denom_path;
 
-        // TODO: check reverse value doesn't exist on modifications
-
         match operation.operation {
             FullOperation::Set => {
-                if DENOM_ALIAS_MAP.has(deps.storage, &operation.alias) {
-                    return Err(ContractError::AliasAlreadyExists { alias: denom_alias });
-                }
-                if DENOM_ALIAS_REVERSE_MAP.has(deps.storage, &path) {
+                if DENOM_ALIAS_MAP.has(deps.storage, &path) {
                     return Err(ContractError::AliasAlreadyExistsFor { base: path });
+                }
+                // TODO: This check is not enough, as disabled aliases could be
+                // re-set. We need to keep track of enabled/disabled in the
+                // reverse map as well
+                if DENOM_ALIAS_REVERSE_MAP.has(deps.storage, &operation.alias) {
+                    return Err(ContractError::AliasAlreadyExists { alias: denom_alias });
                 }
 
                 DENOM_ALIAS_MAP.save(deps.storage, &path, &(denom_alias.clone(), true).into())?;
@@ -251,6 +252,10 @@ pub fn denom_alias_operations(
 
                 let is_enabled = map_entry.enabled;
                 let new_alias = normalize_alias(&operation.alias)?;
+
+                if DENOM_ALIAS_REVERSE_MAP.has(deps.storage, &new_alias) {
+                    return Err(ContractError::AliasAlreadyExists { alias: new_alias });
+                }
 
                 DENOM_ALIAS_MAP.save(deps.storage, &path, &(&new_alias, is_enabled).into())?;
                 DENOM_ALIAS_REVERSE_MAP.remove(deps.storage, &map_entry.value);
@@ -795,6 +800,7 @@ pub fn authorized_address_operations(
 mod tests {
     use super::*;
     use crate::msg::ExecuteMsg;
+    use crate::query::{query_alias_for_denom_path, query_denom_path_for_alias};
     use crate::{contract, helpers::test::initialize_contract};
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     static CREATOR_ADDRESS: &str = "creator";
@@ -1624,6 +1630,7 @@ mod tests {
             }],
         };
 
+        // Test case: Set an alias
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let res = contract::execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
 
@@ -1642,6 +1649,16 @@ mod tests {
         assert_eq!(
             res.attributes,
             vec![("set_denom_alias".to_string(), format!("alias1 <=> {path1}"))]
+        );
+
+        // Check queries
+        assert_eq!(
+            query_denom_path_for_alias(deps.as_ref(), "alias1").unwrap(),
+            path1
+        );
+        assert_eq!(
+            query_alias_for_denom_path(deps.as_ref(), path1).unwrap(),
+            "alias1"
         );
 
         // Test case: Change an alias
@@ -1685,6 +1702,17 @@ mod tests {
             )]
         );
 
+        // Check queries
+        query_denom_path_for_alias(deps.as_ref(), "alias1").unwrap_err();
+        assert_eq!(
+            query_denom_path_for_alias(deps.as_ref(), "newalias1").unwrap(),
+            path1
+        );
+        assert_eq!(
+            query_alias_for_denom_path(deps.as_ref(), path1).unwrap(),
+            "newalias1"
+        );
+
         // Test case: Disable an alias
         let disable_msg = ExecuteMsg::ModifyDenomAlias {
             operations: vec![DenomAliasInput {
@@ -1720,6 +1748,10 @@ mod tests {
             )]
         );
 
+        // Check queries
+        query_denom_path_for_alias(deps.as_ref(), "newalias1").unwrap_err();
+        query_alias_for_denom_path(deps.as_ref(), path1).unwrap_err();
+
         // Re-enable the alias
         let enable_msg = ExecuteMsg::ModifyDenomAlias {
             operations: vec![DenomAliasInput {
@@ -1754,6 +1786,15 @@ mod tests {
             )]
         );
 
+        assert_eq!(
+            query_denom_path_for_alias(deps.as_ref(), "newalias1").unwrap(),
+            path1
+        );
+        assert_eq!(
+            query_alias_for_denom_path(deps.as_ref(), path1).unwrap(),
+            "newalias1"
+        );
+
         // Test case: Remove an alias
         let remove_msg = ExecuteMsg::ModifyDenomAlias {
             operations: vec![DenomAliasInput {
@@ -1784,5 +1825,8 @@ mod tests {
             remove_res.attributes,
             vec![("remove_denom_alias".to_string(), "newalias1".to_string())]
         );
+
+        query_denom_path_for_alias(deps.as_ref(), "newalias1").unwrap_err();
+        query_alias_for_denom_path(deps.as_ref(), path1).unwrap_err();
     }
 }

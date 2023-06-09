@@ -146,6 +146,12 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::HasPacketForwarding { chain } => {
             to_binary(&query::query_chain_has_pfm(deps, chain))
         }
+        QueryMsg::GetAliasForDenomPath { denom_path } => {
+            to_binary(&query::query_alias_for_denom_path(deps, &denom_path)?)
+        }
+        QueryMsg::GetDenomPathForAlias { alias } => {
+            to_binary(&query::query_denom_path_for_alias(deps, &alias)?)
+        }
     }
 }
 

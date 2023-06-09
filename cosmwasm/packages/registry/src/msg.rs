@@ -34,6 +34,12 @@ pub enum QueryMsg {
 
     #[returns(bool)]
     HasPacketForwarding { chain: String },
+
+    #[returns(QueryAliasForDenomPathResponse)]
+    GetAliasForDenomPath { denom_path: String },
+
+    #[returns(QueryDenomPathForAliasResponse)]
+    GetDenomPathForAlias { alias: String },
 }
 
 // Response for GetAddressFromAlias query
@@ -64,6 +70,18 @@ pub struct QueryGetBech32PrefixFromChainNameResponse {
 #[cw_serde]
 pub struct QueryGetChainNameFromBech32PrefixResponse {
     pub chain_name: String,
+}
+
+// Response for GetAliasForDenomPath query
+#[cw_serde]
+pub struct QueryAliasForDenomPathResponse {
+    pub alias: String,
+}
+
+// Response for GetDenomPathForAlias query
+#[cw_serde]
+pub struct QueryDenomPathForAliasResponse {
+    pub denom_path: String,
 }
 
 // Value does not implement JsonSchema, so we wrap it here. This can be removed
