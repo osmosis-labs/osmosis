@@ -56,7 +56,8 @@ var (
 // - Positive tick indexes are prefixed with a byte `b + 1`.
 // - Then we encode sign || BigEndian(uint64(tickIndex))
 //
-// @Dev: We should explain this better. (The uint64 cast is superflous) This is moreso about 2's complement.
+// @Dev: We should explain this better. (The uint64 cast is superflous)
+// This is really about 2's complement.
 // We do this because big endian byte encoding does not give us in
 // order iteration in state due to the tick index values being signed integers, thus
 // iterating starting from positive then to negative.
