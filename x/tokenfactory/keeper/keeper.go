@@ -20,8 +20,10 @@ type (
 
 		paramSpace paramtypes.Subspace
 
-		accountKeeper       types.AccountKeeper
-		bankKeeper          types.BankKeeper
+		accountKeeper types.AccountKeeper
+		bankKeeper    types.BankKeeper
+		wasmKeeper    types.WasmKeeper
+
 		communityPoolKeeper types.CommunityPoolKeeper
 	}
 )
@@ -69,6 +71,11 @@ func (k Keeper) GetCreatorPrefixStore(ctx sdk.Context, creator string) sdk.KVSto
 func (k Keeper) GetCreatorsPrefixStore(ctx sdk.Context) sdk.KVStore {
 	store := ctx.KVStore(k.storeKey)
 	return prefix.NewStore(store, types.GetCreatorsPrefix())
+}
+
+// Set the wasm keeper.
+func (k *Keeper) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
+	k.wasmKeeper = wasmKeeper
 }
 
 // CreateModuleAccount creates a module account with minting and burning capabilities
