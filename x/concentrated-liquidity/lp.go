@@ -262,7 +262,7 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		}
 	}
 	event := &liquidityChangeEvent{
-		eventType:      types.TypeEvtCreatePosition,
+		eventType:      types.TypeEvtWithdrawPosition,
 		positionId:     positionId,
 		sender:         owner,
 		poolId:         position.PoolId,
