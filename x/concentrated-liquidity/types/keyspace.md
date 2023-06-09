@@ -7,7 +7,7 @@ If || is seen outside of a `backtick` quotation, it means raw appending.
 
 We use `string encoding` of an integer to mean the variable length, base10 encoding of an integer into a string.
 
-Also all of this really shows we vastly overpay for complexity in the statemachine, and that collections work in the SDK can really simplify this code.
+Also all of this really shows we vastly overpay for complexity in the state machine, and that collections work in the SDK can really simplify this code.
 
 We break this up into parts, the multi-component keys, and the single component keys that don't really have concern.
 
