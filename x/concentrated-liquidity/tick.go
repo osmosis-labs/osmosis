@@ -222,9 +222,14 @@ func roundTickToCanonicalPriceTick(lowerTick, upperTick int64, priceTickLower, p
 
 // GetTickLiquidityForFullRange returns an array of liquidity depth for all ticks existing from min tick ~ max tick.
 func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]queryproto.LiquidityDepthWithRange, error) {
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return []queryproto.LiquidityDepthWithRange{}, err
+	}
+
 	// use false for zeroForOne since we're going from lower tick -> upper tick
 	zeroForOne := false
-	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
+	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec(), pool.GetTickSpacing())
 
 	// set current tick to min tick, and find the first initialized tick starting from min tick -1.
 	// we do -1 to make min tick inclusive.
@@ -350,7 +355,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	}
 
 	liquidityDepths := []queryproto.TickLiquidityNet{}
-	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
+	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec(), p.GetTickSpacing())
 
 	currentTick := p.GetCurrentTick()
 	_, currentTickSqrtPrice, err := math.TickToSqrtPrice(currentTick)
