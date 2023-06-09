@@ -61,6 +61,7 @@ var (
 // However they are not in order relative to positive integers (as 2's complement flips the leading bit)
 // Hence we use the leading sign byte to ensure that negative tick indexes
 // are in order relative to positive tick indexes.
+// TODO: Test key iteration property
 func TickIndexToBytes(tickIndex int64) []byte {
 	key := make([]byte, 9)
 	if tickIndex < 0 {
