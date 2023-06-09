@@ -403,8 +403,6 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 
 	// Default the startTickLiquidity to the current tick liquidity
 	startTickLiquidity = p.GetLiquidity()
-	fmt.Println("zeroForOne", zeroForOne)
-	fmt.Println("startTickLiquidity", startTickLiquidity)
 
 	// define iterator depending on swap strategy
 	var iterator db.Iterator
@@ -431,18 +429,14 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 			TickIndex:    tickIndex,
 		}
 
-		fmt.Println("liquidityDepth.TickIndex", liquidityDepth.TickIndex)
-
 		if zeroForOne {
 			if liquidityDepth.TickIndex < currentTick {
-				fmt.Println("liquidityDepth.LiquidityNet", liquidityDepth.LiquidityNet)
 				if liquidityDepth.LiquidityNet.IsNegative() {
 					startTickLiquidity = startTickLiquidity.Sub(liquidityDepth.LiquidityNet)
 				}
 			}
 		} else {
 			if liquidityDepth.TickIndex > currentTick {
-				fmt.Println("liquidityDepth.LiquidityNet", liquidityDepth.LiquidityNet)
 				if liquidityDepth.LiquidityNet.IsPositive() {
 					startTickLiquidity = startTickLiquidity.Add(liquidityDepth.LiquidityNet)
 				}
