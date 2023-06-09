@@ -13,7 +13,7 @@ var (
 	KeyDenomCreationGasConsume = []byte("DenomCreationGasConsume")
 
 	// For choice, see: https://github.com/osmosis-labs/osmosis/pull/4983
-	// Set to 1_000_000 so that the gas limit doesnot go over 25M limit that is set in our config file.
+	// chosen as an arbitrary large number, less than the max_gas_wanted_per_tx in config.
 	DefaultCreationGasFee = 1_000_000
 )
 
