@@ -43,10 +43,6 @@ func (m MsgCreateGauge) ValidateBasic() error {
 	if m.Owner == "" {
 		return errors.New("owner should be set")
 	}
-	// For no lock type, the denom must be empty and we check that down below.
-	if lockType != lockuptypes.NoLock && sdk.ValidateDenom(m.DistributeTo.Denom) != nil {
-		return errors.New("denom should be valid for the condition")
-	}
 	if lockuptypes.LockQueryType_name[int32(m.DistributeTo.LockQueryType)] == "" {
 		return errors.New("lock query type is invalid")
 	}
@@ -80,6 +76,11 @@ func (m MsgCreateGauge) ValidateBasic() error {
 	} else {
 		if m.PoolId != 0 {
 			return errors.New("pool id should not be set for duration distr condition")
+		}
+
+		// For no lock type, the denom must be empty and we check that above.
+		if err := sdk.ValidateDenom(m.DistributeTo.Denom); err != nil {
+			return fmt.Errorf("denom should be valid for the condition, %s", err)
 		}
 	}
 
