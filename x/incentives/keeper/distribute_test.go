@@ -322,8 +322,10 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 
 					for _, gauge := range gauges {
 						for _, coin := range gauge.Coins {
+							gaugeId := gauge.GetId()
+
 							// get poolId from GaugeId
-							poolId, err := s.App.PoolIncentivesKeeper.GetPoolIdFromGaugeId(s.Ctx, gauge.GetId(), currentEpoch.Duration)
+							poolId, err := s.App.PoolIncentivesKeeper.GetPoolIdFromGaugeId(s.Ctx, gaugeId, currentEpoch.Duration)
 							s.Require().NoError(err)
 
 							// GetIncentiveRecord to see if pools received incentives properly
@@ -331,6 +333,9 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 							s.Require().NoError(err)
 
 							expectedEmissionRate := sdk.NewDecFromInt(coin.Amount).QuoTruncate(sdk.NewDec(int64(currentEpoch.Duration.Seconds())))
+
+							// Check that gauge distribution state is updated.
+							s.ValidateDistributedGauge(gaugeId, 1, totalDistributedCoins)
 
 							// check every parameter in incentiveRecord so that it matches what we created
 							s.Require().Equal(poolId, incentiveRecord.PoolId)
@@ -532,6 +537,9 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 					s.Require().Equal(expectedEmissionRatePerEpoch, incentiveRecords.IncentiveRecordBody.EmissionRate)
 					s.Require().Equal(time.Nanosecond, incentiveRecords.MinUptime)
 				}
+
+				// Check that the gauge's distribution state was updated
+				s.ValidateDistributedGauge(externalGaugeid, 1, tc.expectedDistributions)
 			}
 		})
 	}
@@ -697,8 +705,8 @@ func (s *KeeperTestSuite) TestGetModuleDistributedCoins() {
 	s.Require().Equal(coins, distrCoins)
 }
 
-// TestNoLockPerpetualGaugeDistribution tests that the creation of a perp gauge that has no locks associated does not distribute any tokens.
-func (s *KeeperTestSuite) TestNoLockPerpetualGaugeDistribution() {
+// TestBuDurationPerpetualGaugeDistribution_NoLockNoOp tests that the creation of a perp gauge that has no locks associated does not distribute any tokens.
+func (s *KeeperTestSuite) TestBuDurationPerpetualGaugeDistribution_NoLockNoOp() {
 	s.SetupTest()
 
 	// setup a perpetual gauge with no associated locks
@@ -742,10 +750,13 @@ func (s *KeeperTestSuite) TestNoLockPerpetualGaugeDistribution() {
 	gauges = s.App.IncentivesKeeper.GetNotFinishedGauges(s.Ctx)
 	s.Require().Len(gauges, 1)
 	s.Require().Equal(gauges[0].String(), expectedGauge.String())
+
+	// Check that gauge distribution state is not updated.
+	s.ValidateNotDistributedGauge(gaugeID)
 }
 
-// TestNoLockNonPerpetualGaugeDistribution tests that the creation of a non perp gauge that has no locks associated does not distribute any tokens.
-func (s *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
+// TestByDurationNonPerpetualGaugeDistribution_NoLockNoOp tests that the creation of a non perp gauge that has no locks associated does not distribute any tokens.
+func (s *KeeperTestSuite) TestByDurationNonPerpetualGaugeDistribution_NoLockNoOp() {
 	s.SetupTest()
 
 	// setup non-perpetual gauge with no associated locks
@@ -789,6 +800,9 @@ func (s *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 	gauges = s.App.IncentivesKeeper.GetNotFinishedGauges(s.Ctx)
 	s.Require().Len(gauges, 1)
 	s.Require().Equal(gauges[0].String(), expectedGauge.String())
+
+	// Check that gauge distribution state is not updated.
+	s.ValidateNotDistributedGauge(gaugeID)
 }
 
 func (s *KeeperTestSuite) TestGetPoolFromGaugeId() {
