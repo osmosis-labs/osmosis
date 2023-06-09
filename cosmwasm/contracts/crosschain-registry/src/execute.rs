@@ -243,17 +243,11 @@ pub fn denom_alias_operations(
                     // Only the owner can change for security reasons
                     return Err(ContractError::Unauthorized {});
                 }
+
                 // Ensure the alias exists
                 let map_entry = DENOM_ALIAS_MAP
                     .load(deps.storage, &path)
                     .map_err(|_| ContractError::AliasDoesNotExistFor { base: path.clone() })?;
-
-                if map_entry.value != operation.alias {
-                    return Err(ContractError::AliasDoesNotMatch {
-                        existing: map_entry.value,
-                        expected: denom_alias,
-                    });
-                }
 
                 let is_enabled = map_entry.enabled;
                 let new_alias = normalize_alias(&operation.alias)?;
@@ -1614,7 +1608,6 @@ mod tests {
 
     #[test]
     fn test_denom_alias_operations() {
-        println!("test_denom_alias_operations");
         let mut deps = mock_dependencies();
 
         initialize_contract(deps.as_mut());
@@ -1632,9 +1625,6 @@ mod tests {
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let res = contract::execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
 
-        println!("test_denom_alias_operations: set_response");
-        println!("{:?}", res);
-
         assert_eq!(
             DENOM_ALIAS_MAP
                 .may_load(deps.as_ref().storage, &path1)
@@ -1650,6 +1640,78 @@ mod tests {
         assert_eq!(
             res.attributes,
             vec![("set_denom_alias".to_string(), format!("alias1 <=> {path1}"))]
+        );
+
+        // Test case: Change an alias
+        let change_msg = ExecuteMsg::ModifyDenomAlias {
+            operations: vec![DenomAliasInput {
+                operation: FullOperation::Change,
+                full_denom_path: path1.to_string(),
+                alias: "newalias1".to_string(),
+            }],
+        };
+
+        let change_info = mock_info(CREATOR_ADDRESS, &[]);
+
+        let change_res =
+            contract::execute(deps.as_mut(), mock_env(), change_info.clone(), change_msg).unwrap();
+
+        assert_eq!(
+            DENOM_ALIAS_MAP
+                .may_load(deps.as_ref().storage, &path1)
+                .unwrap(),
+            Some(("newalias1".to_string(), true).into())
+        );
+        assert_eq!(
+            DENOM_ALIAS_REVERSE_MAP
+                .may_load(deps.as_ref().storage, "alias1")
+                .unwrap(),
+            None
+        );
+        assert_eq!(
+            DENOM_ALIAS_REVERSE_MAP
+                .may_load(deps.as_ref().storage, "newalias1")
+                .unwrap(),
+            Some(path1.to_string())
+        );
+
+        assert_eq!(
+            change_res.attributes,
+            vec![(
+                "change_denom_alias".to_string(),
+                format!("newalias1 <=> {path1}")
+            )]
+        );
+
+        // Test case: Remove an alias
+        let remove_msg = ExecuteMsg::ModifyDenomAlias {
+            operations: vec![DenomAliasInput {
+                operation: FullOperation::Remove,
+                full_denom_path: path1.to_string(),
+                alias: "unusedaliascanbeanything".to_string(),
+            }],
+        };
+
+        let remove_info = mock_info(CREATOR_ADDRESS, &[]);
+        let remove_res =
+            contract::execute(deps.as_mut(), mock_env(), remove_info.clone(), remove_msg).unwrap();
+
+        assert_eq!(
+            DENOM_ALIAS_MAP
+                .may_load(deps.as_ref().storage, &path1)
+                .unwrap(),
+            None
+        );
+        assert_eq!(
+            DENOM_ALIAS_REVERSE_MAP
+                .may_load(deps.as_ref().storage, "new_alias1")
+                .unwrap(),
+            None
+        );
+
+        assert_eq!(
+            remove_res.attributes,
+            vec![("remove_denom_alias".to_string(), "newalias1".to_string())]
         );
     }
 }
