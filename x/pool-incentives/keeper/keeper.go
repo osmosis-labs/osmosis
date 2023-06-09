@@ -155,6 +155,9 @@ func (k Keeper) SetPoolGaugeIdNoLock(ctx sdk.Context, poolId uint64, gaugeId uin
 	store.Set(key, sdk.Uint64ToBigEndian(gaugeId))
 
 	// Note: this index is used for general linking.
+	// We supply zero for incentivized duration as "NoLock" gauges are not
+	// associated with any lockable duration. Instead, they incentivize
+	// pools directly.
 	key = types.GetPoolIdFromGaugeIdStoreKey(gaugeId, 0)
 	store.Set(key, sdk.Uint64ToBigEndian(poolId))
 }
