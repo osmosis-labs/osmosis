@@ -92,7 +92,7 @@ func (s *KeeperTestSuite) TestCreateConcentratePoolGauges() {
 		gaugeId, err := keeper.GetPoolGaugeId(s.Ctx, clPool.GetId(), currEpoch.Duration)
 		s.NoError(err)
 
-		// Same amount of gauges as lockableDurations must be created for every pool created.
+		// Same amount of NoLock gauges as lockableDurations must be created for every pool created.
 		gaugeIds, err := keeper.GetNoLockGaugeIdsFromPool(s.Ctx, clPool.GetId())
 		s.NoError(err)
 
