@@ -152,7 +152,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 			return 0, fmt.Errorf("no lock gauges must be created for concentrated pools only")
 		}
 
-		//Note that this is a general linking between the gauge and the pool
+		// Note that this is a general linking between the gauge and the pool
 		// for "NoLock" gauges. It occurs for both external and internal gauges.
 		// That being said, internal gauges have an additional linking
 		// by duration where duration is the incentives epoch duration.
