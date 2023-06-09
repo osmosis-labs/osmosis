@@ -104,9 +104,9 @@ service Query {
   rpc CFMMPoolIdLinkFromConcentratedPoolId(
       CFMMPoolIdLinkFromConcentratedPoolIdRequest)
       returns (CFMMPoolIdLinkFromConcentratedPoolIdResponse) {
-    option (google.api.http).get =
-        "/osmosis/gamm/v1beta1/cfmm_pool_id_link_from_concentrated_pool_id/"
-        "{concentrated_pool_id}";
+    option (google.api.http).get = "/osmosis/concentratedliquidity/v1beta1/"
+                                   "cfmm_pool_id_link_from_concentrated/"
+                                   "{concentrated_pool_id}";
   }
 }
 

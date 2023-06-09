@@ -89,6 +89,6 @@ func GetCFMMPoolIdLinkFromConcentratedPoolId() (*osmocli.QueryDescriptor, *query
 		Use:   "cfmm-pool-link-from-cl [poolId]",
 		Short: "Query cfmm pool id link from concentrated pool id",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} cfmm-pool-link-from-cl-pool-id 1`,
+{{.CommandPrefix}} cfmm-pool-link-from-cl 1`,
 	}, &queryproto.CFMMPoolIdLinkFromConcentratedPoolIdRequest{}
 }

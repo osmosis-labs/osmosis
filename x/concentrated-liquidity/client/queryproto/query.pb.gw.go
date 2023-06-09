@@ -1090,7 +1090,7 @@ var (
 
 	pattern_Query_TickAccumulatorTrackers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "concentratedliquidity", "v1beta1", "tick_accum_trackers"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_CFMMPoolIdLinkFromConcentratedPoolId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "gamm", "v1beta1", "cfmm_pool_id_link_from_concentrated_pool_id", "concentrated_pool_id"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_CFMMPoolIdLinkFromConcentratedPoolId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "concentratedliquidity", "v1beta1", "cfmm_pool_id_link_from_concentrated", "concentrated_pool_id"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
