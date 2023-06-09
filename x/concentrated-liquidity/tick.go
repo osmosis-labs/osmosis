@@ -311,20 +311,24 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 //	Note that the start tick is never included if given. The same goes for the current tick.
 //	Returns liquidity net amounts starting from the next tick relative to start/current tick
 //
+// startTick (int64): The tick index of the first tick used to calculate the liquidity net. This is returned because, if the userGivenStartTick is not provided, the pools current tick is used.
+//
+// startTickLiquidity (sdk.Dec): The liquidity net amount of the start tick
+//
 // (error): An error if any issue occurs during the operation.
 // Errors:
 // * types.PoolNotFoundError: If the given pool does not exist.
 // * types.TokenInDenomNotInPoolError: If the given tokenIn is not an asset in the pool.
-func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, tokenIn string, userGivenStartTick sdk.Int, boundTick sdk.Int) ([]queryproto.TickLiquidityNet, error) {
+func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, tokenIn string, userGivenStartTick sdk.Int, boundTick sdk.Int) (liquidityDepths []queryproto.TickLiquidityNet, startTick int64, startTickLiquidity sdk.Dec, err error) {
 	// get min and max tick for the pool
 	p, err := k.getPoolById(ctx, poolId)
 	if err != nil {
-		return []queryproto.TickLiquidityNet{}, err
+		return []queryproto.TickLiquidityNet{}, 0, sdk.Dec{}, err
 	}
 
 	ctx.Logger().Debug(fmt.Sprintf("userGivenStartTick %s, boundTick %s, currentTick %d\n", userGivenStartTick, boundTick, p.GetCurrentTick()))
 
-	startTick := p.GetCurrentTick()
+	startTick = p.GetCurrentTick()
 	// If start tick is set, use it as the current tick for grabbing liquidities from.
 	if !userGivenStartTick.IsNil() {
 		startTick = userGivenStartTick.Int64()
@@ -333,7 +337,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 
 	// sanity check that given tokenIn is an asset in pool.
 	if tokenIn != p.GetToken0() && tokenIn != p.GetToken1() {
-		return []queryproto.TickLiquidityNet{}, types.TokenInDenomNotInPoolError{TokenInDenom: tokenIn}
+		return []queryproto.TickLiquidityNet{}, 0, sdk.Dec{}, types.TokenInDenomNotInPoolError{TokenInDenom: tokenIn}
 	}
 
 	// figure out zero for one depending on the token in.
@@ -354,13 +358,12 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 		}
 	}
 
-	liquidityDepths := []queryproto.TickLiquidityNet{}
 	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec(), p.GetTickSpacing())
 
 	currentTick := p.GetCurrentTick()
 	_, currentTickSqrtPrice, err := math.TickToSqrtPrice(currentTick)
 	if err != nil {
-		return []queryproto.TickLiquidityNet{}, err
+		return []queryproto.TickLiquidityNet{}, 0, sdk.Dec{}, err
 	}
 
 	ctx.Logger().Debug(fmt.Sprintf("currentTick %d; current tick's sqrt price%s\n", currentTick, currentTickSqrtPrice))
@@ -383,12 +386,12 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 
 	ctx.Logger().Debug("validating bound tick")
 	if err := validateTickIsInValidRange(boundTick); err != nil {
-		return []queryproto.TickLiquidityNet{}, fmt.Errorf("failed validating bound tick (%s) with current sqrt price of (%s): %w", boundTick, currentTickSqrtPrice, err)
+		return []queryproto.TickLiquidityNet{}, 0, sdk.Dec{}, fmt.Errorf("failed validating bound tick (%s) with current sqrt price of (%s): %w", boundTick, currentTickSqrtPrice, err)
 	}
 
 	ctx.Logger().Debug("validating start tick")
 	if err := validateTickIsInValidRange(sdk.NewInt(startTick)); err != nil {
-		return []queryproto.TickLiquidityNet{}, fmt.Errorf("failed validating start tick (%d) with current sqrt price of (%s): %w", startTick, currentTickSqrtPrice, err)
+		return []queryproto.TickLiquidityNet{}, 0, sdk.Dec{}, fmt.Errorf("failed validating start tick (%d) with current sqrt price of (%s): %w", startTick, currentTickSqrtPrice, err)
 	}
 
 	// iterator assignments
@@ -397,6 +400,11 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	prefixStore := prefix.NewStore(store, prefixBz)
 	startTickKey := types.TickIndexToBytes(startTick)
 	boundTickKey := types.TickIndexToBytes(boundTick.Int64())
+
+	// Default the startTickLiquidity to the current tick liquidity
+	startTickLiquidity = p.GetLiquidity()
+	fmt.Println("zeroForOne", zeroForOne)
+	fmt.Println("startTickLiquidity", startTickLiquidity)
 
 	// define iterator depending on swap strategy
 	var iterator db.Iterator
@@ -410,22 +418,41 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	for ; iterator.Valid(); iterator.Next() {
 		tickIndex, err := types.TickIndexFromBytes(iterator.Key())
 		if err != nil {
-			return []queryproto.TickLiquidityNet{}, err
+			return []queryproto.TickLiquidityNet{}, 0, sdk.Dec{}, err
 		}
 
 		tickStruct, err := ParseTickFromBz(iterator.Value())
 		if err != nil {
-			return []queryproto.TickLiquidityNet{}, err
+			return []queryproto.TickLiquidityNet{}, 0, sdk.Dec{}, err
 		}
 
 		liquidityDepth := queryproto.TickLiquidityNet{
 			LiquidityNet: tickStruct.LiquidityNet,
 			TickIndex:    tickIndex,
 		}
+
+		fmt.Println("liquidityDepth.TickIndex", liquidityDepth.TickIndex)
+
+		if zeroForOne {
+			if liquidityDepth.TickIndex < currentTick {
+				fmt.Println("liquidityDepth.LiquidityNet", liquidityDepth.LiquidityNet)
+				if liquidityDepth.LiquidityNet.IsNegative() {
+					startTickLiquidity = startTickLiquidity.Sub(liquidityDepth.LiquidityNet)
+				}
+			}
+		} else {
+			if liquidityDepth.TickIndex > currentTick {
+				fmt.Println("liquidityDepth.LiquidityNet", liquidityDepth.LiquidityNet)
+				if liquidityDepth.LiquidityNet.IsPositive() {
+					startTickLiquidity = startTickLiquidity.Add(liquidityDepth.LiquidityNet)
+				}
+			}
+		}
+
 		liquidityDepths = append(liquidityDepths, liquidityDepth)
 	}
 
-	return liquidityDepths, nil
+	return liquidityDepths, startTick, startTickLiquidity, nil
 }
 
 func (k Keeper) getTickByTickIndex(ctx sdk.Context, poolId uint64, tickIndex int64) (model.TickInfo, error) {

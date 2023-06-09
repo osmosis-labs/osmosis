@@ -144,7 +144,7 @@ func (q Querier) LiquidityNetInDirection(ctx sdk.Context, req clquery.LiquidityN
 		boundTick = sdk.NewInt(req.BoundTick)
 	}
 
-	liquidityDepths, err := q.Keeper.GetTickLiquidityNetInDirection(
+	liquidityDepths, startTick, startTickLiquidity, err := q.Keeper.GetTickLiquidityNetInDirection(
 		ctx,
 		req.PoolId,
 		req.TokenIn,
@@ -153,19 +153,6 @@ func (q Querier) LiquidityNetInDirection(ctx sdk.Context, req clquery.LiquidityN
 	)
 	if err != nil {
 		return nil, err
-	}
-
-	// Default the startTickLiquidity to the current tick liquidity
-	startTickLiquidity := pool.GetLiquidity()
-
-	// If we aren't using the currentTick as the start tick, we don't store in state what the liquidity is at whatever the user provided startTick is.
-	// We need to calculate this by iterating through the liquidity depths and subtracting the tickIndex's net liquidity until we reach the pool's current tick
-	if !req.UseCurTick {
-		for i := range liquidityDepths {
-			if liquidityDepths[i].TickIndex < pool.GetCurrentTick() {
-				startTickLiquidity = startTickLiquidity.Sub(liquidityDepths[i].LiquidityNet)
-			}
-		}
 	}
 
 	return &clquery.LiquidityNetInDirectionResponse{LiquidityDepths: liquidityDepths, StartTickLiquidity: startTickLiquidity, StartTick: startTick}, nil

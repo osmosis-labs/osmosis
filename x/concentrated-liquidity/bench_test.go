@@ -230,7 +230,7 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 	runBenchmark(b, func(b *testing.B, s *BenchTestSuite, pool types.ConcentratedPoolExtension, largeSwapInCoin sdk.Coin, currentTick int64) {
 		clKeeper := s.App.ConcentratedLiquidityKeeper
 
-		liquidityNet, err := clKeeper.GetTickLiquidityNetInDirection(s.Ctx, pool.GetId(), largeSwapInCoin.Denom, sdk.NewInt(currentTick), sdk.Int{})
+		liquidityNet, _, _, err := clKeeper.GetTickLiquidityNetInDirection(s.Ctx, pool.GetId(), largeSwapInCoin.Denom, sdk.NewInt(currentTick), sdk.Int{})
 		noError(b, err)
 		simapp.FundAccount(s.App.BankKeeper, s.Ctx, s.TestAccs[0], sdk.NewCoins(largeSwapInCoin))
 
@@ -253,7 +253,7 @@ func BenchmarkGetTickLiquidityNetInDirection(b *testing.B) {
 		b.StartTimer()
 
 		// System under test
-		liquidityNet, err := clKeeper.GetTickLiquidityNetInDirection(s.Ctx, pool.GetId(), largeSwapInCoin.Denom, sdk.NewInt(currentTick), sdk.Int{})
+		liquidityNet, _, _, err := clKeeper.GetTickLiquidityNetInDirection(s.Ctx, pool.GetId(), largeSwapInCoin.Denom, sdk.NewInt(currentTick), sdk.Int{})
 		b.StopTimer()
 		noError(b, err)
 
