@@ -9,7 +9,7 @@ import (
 
 func (suite *StrategyTestSuite) setupNewZeroForOneSwapStrategy(sqrtPriceLimit sdk.Dec, spread sdk.Dec) swapstrategy.SwapStrategy {
 	suite.SetupTest()
-	return swapstrategy.New(true, sqrtPriceLimit, suite.App.GetKey(types.ModuleName), spread, defaultTickSpacing)
+	return swapstrategy.New(true, sqrtPriceLimit, suite.App.GetKey(types.ModuleName), spread)
 }
 
 func (suite *StrategyTestSuite) TestGetSqrtTargetPrice_ZeroForOne() {
@@ -226,6 +226,7 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_ZeroForOne() {
 					upperTick: 100,
 				},
 			},
+			tickSpacing:    defaultTickSpacing,
 			expectIsValid:  true,
 			expectNextTick: -100,
 		},
@@ -240,18 +241,24 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_ZeroForOne() {
 					upperTick: 200,
 				},
 			},
+			tickSpacing:    defaultTickSpacing,
 			expectIsValid:  true,
 			expectNextTick: -200,
 		},
 		"lower tick lands on current tick, zero for one": {
 			preSetPositions: []position{
 				{
+					lowerTick: -200,
+					upperTick: -100,
+				},
+				{
 					lowerTick: 0,
 					upperTick: 100,
 				},
 			},
+			tickSpacing:    defaultTickSpacing,
 			expectIsValid:  true,
-			expectNextTick: 0,
+			expectNextTick: -100,
 		},
 		"upper tick lands on current tick, zero for one": {
 			preSetPositions: []position{
@@ -260,11 +267,95 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_ZeroForOne() {
 					upperTick: 0,
 				},
 			},
+			tickSpacing:    defaultTickSpacing,
 			expectIsValid:  true,
-			expectNextTick: 0,
+			expectNextTick: -100,
 		},
 		"no ticks, zero for one": {
+			tickSpacing:   defaultTickSpacing,
 			expectIsValid: false,
+		},
+
+		// Non-default tick spacing
+
+		"1 position, 1 tick spacing": {
+			preSetPositions: []position{
+				{
+					lowerTick: -1,
+					upperTick: 1,
+				},
+			},
+			tickSpacing:    1,
+			expectIsValid:  true,
+			expectNextTick: -1,
+		},
+		"2 positions, 1 tick spacing": {
+			preSetPositions: []position{
+				{
+					lowerTick: -4,
+					upperTick: 3,
+				},
+				{
+					lowerTick: -2,
+					upperTick: 2,
+				},
+			},
+			tickSpacing:    1,
+			expectIsValid:  true,
+			expectNextTick: -2,
+		},
+		"lower tick lands on current tick, 1 tick spacing": {
+			preSetPositions: []position{
+				{
+					lowerTick: -3,
+					upperTick: -2,
+				},
+				{
+					lowerTick: 0,
+					upperTick: 1,
+				},
+			},
+			tickSpacing:    1,
+			expectIsValid:  true,
+			expectNextTick: -2,
+		},
+		"upper tick lands on current tick, 1 tick spacing": {
+			preSetPositions: []position{
+				{
+					lowerTick: -1,
+					upperTick: 0,
+				},
+				{
+					lowerTick: 1,
+					upperTick: 2,
+				},
+			},
+			tickSpacing:    1,
+			expectIsValid:  true,
+			expectNextTick: -1,
+		},
+
+		"sanity check: 1 position, 10 tick spacing": {
+			preSetPositions: []position{
+				{
+					lowerTick: -10,
+					upperTick: 10,
+				},
+			},
+			tickSpacing:    10,
+			expectIsValid:  true,
+			expectNextTick: -10,
+		},
+		"sanity check: 1 position, 1000 tick spacing": {
+			preSetPositions: []position{
+				{
+					lowerTick: -1000,
+					upperTick: 1000,
+				},
+			},
+			tickSpacing:    1000,
+			expectIsValid:  true,
+			expectNextTick: -1000,
 		},
 	}
 
