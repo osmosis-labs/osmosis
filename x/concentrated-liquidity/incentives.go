@@ -1004,13 +1004,9 @@ func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positi
 		return sdk.Coins{}, sdk.DecCoins{}, err
 	}
 
-	isOwner, err := k.isPositionOwner(ctx, sender, position.PoolId, positionId)
+	err = k.ensurePositionOwner(ctx, sender, position.PoolId, positionId)
 	if err != nil {
 		return sdk.Coins{}, sdk.DecCoins{}, err
-	}
-
-	if !isOwner {
-		return sdk.Coins{}, sdk.DecCoins{}, types.NotPositionOwnerError{Address: sender.String(), PositionId: positionId}
 	}
 
 	// Claim all incentives for the position.

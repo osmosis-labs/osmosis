@@ -401,6 +401,57 @@ func (s *KeeperTestSuite) TestGetNextPositionAndIncrement() {
 	s.Require().Equal(positionId, uint64(3))
 }
 
+type positionOwnershipTest struct {
+	queryPositionOwner sdk.AccAddress
+	queryPositionId    uint64
+	expPass            bool
+
+	setupPositions []sdk.AccAddress
+	poolId         uint64
+}
+
+func (s *KeeperTestSuite) runIsPositionOwnerTest(test positionOwnershipTest) {
+	s.SetupTest()
+	p := s.PrepareConcentratedPool()
+	for i, owner := range test.setupPositions {
+		err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, p.GetId(), owner, DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, uint64(i))
+		s.Require().NoError(err)
+	}
+	err := s.App.ConcentratedLiquidityKeeper.EnsurePositionOwner(s.Ctx, test.queryPositionOwner, test.poolId, test.queryPositionId)
+	if test.expPass {
+		s.Require().NoError(err)
+	} else {
+		s.Require().Error(err)
+	}
+
+}
+
+func (s *KeeperTestSuite) TestIsPositionOwnerMultiPosition() {
+	tenAddrOneAddr := []sdk.AccAddress{}
+	for i := 0; i < 10; i++ {
+		tenAddrOneAddr = append(tenAddrOneAddr, s.TestAccs[0])
+	}
+	tenAddrOneAddr = append(tenAddrOneAddr, s.TestAccs[1])
+	tests := map[string]positionOwnershipTest{
+		"prefix malleability (prior bug)": {
+			queryPositionOwner: s.TestAccs[1],
+			queryPositionId:    1, expPass: false,
+			setupPositions: tenAddrOneAddr,
+		},
+		"things work": {
+			queryPositionOwner: s.TestAccs[1],
+			queryPositionId:    10, expPass: true,
+			setupPositions: tenAddrOneAddr,
+		},
+	}
+	for name, test := range tests {
+		s.Run(name, func() {
+			test.poolId = 1
+			s.runIsPositionOwnerTest(test)
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestIsPositionOwner() {
 	actualOwner := s.TestAccs[0]
 	nonOwner := s.TestAccs[1]
@@ -444,21 +495,14 @@ func (s *KeeperTestSuite) TestIsPositionOwner() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			// Init suite for each test.
-			s.SetupTest()
-			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
-
-			// Create a default CL pool.
-			s.PrepareConcentratedPool()
-
-			// Set up a default initialized position.
-			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, actualOwner, DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, DefaultPositionId)
-			s.Require().NoError(err)
-
-			// System under test.
-			isOwner, err := s.App.ConcentratedLiquidityKeeper.IsPositionOwner(s.Ctx, test.ownerToQuery, test.poolId, test.positionId)
-			s.Require().Equal(test.isOwner, isOwner)
-			s.Require().NoError(err)
+			s.runIsPositionOwnerTest(positionOwnershipTest{
+				queryPositionOwner: test.ownerToQuery,
+				queryPositionId:    test.positionId,
+				expPass:            test.isOwner,
+				// positions 0 and 1 are owned by actualOwner
+				setupPositions: []sdk.AccAddress{actualOwner, actualOwner},
+				poolId:         test.poolId,
+			})
 		})
 	}
 }
