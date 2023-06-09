@@ -175,7 +175,7 @@ func (k Keeper) GetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration 
 // - general
 // - by duration (for internal incentives)
 //
-// Any "NoLock" gauge has the first link. Only the internal incentives "NoLock" gauges
+// Every "NoLock" gauge has the first link. Only the internal incentives "NoLock" gauges
 // have the second link.
 func (k Keeper) GetNoLockGaugeIdsFromPool(ctx sdk.Context, poolId uint64) ([]uint64, error) {
 	store := ctx.KVStore(k.storeKey)
