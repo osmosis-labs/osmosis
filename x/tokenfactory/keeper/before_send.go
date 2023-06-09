@@ -92,6 +92,7 @@ func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress,
 	ctx.Logger().Error(fmt.Sprint("From, to, amount: ", from.String(), to.String(), amount.String()))
 	for _, coin := range amount {
 		cosmwasmAddress := k.GetBeforeSendHook(ctx, coin.Denom)
+		ctx.Logger().Error(fmt.Sprintf("denom: ", coin.Denom))
 		ctx.Logger().Error(fmt.Sprint("COSMWASM ADDRESS FOR BEFORE SEND HOOK IS: ", cosmwasmAddress))
 		if cosmwasmAddress != "" {
 			cwAddr, err := sdk.AccAddressFromBech32(cosmwasmAddress)
