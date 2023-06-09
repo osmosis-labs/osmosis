@@ -86,7 +86,7 @@ func GetIncentiveRecords() (*osmocli.QueryDescriptor, *queryproto.IncentiveRecor
 
 func GetCFMMPoolIdLinkFromConcentratedPoolId() (*osmocli.QueryDescriptor, *queryproto.CFMMPoolIdLinkFromConcentratedPoolIdRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "cfmm-pool-link-from-cl-pool-id [poolId]",
+		Use:   "cfmm-pool-link-from-cl [poolId]",
 		Short: "Query cfmm pool id link from concentrated pool id",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} cfmm-pool-link-from-cl-pool-id 1`,
