@@ -47,6 +47,9 @@ var (
 
 	// LockableDurationsKey defines key for storing valid durations for giving incentives.
 	LockableDurationsKey = []byte("lockable_durations")
+
+	NoLockInternalPrefix = "no-lock/i/"
+	NoLockExternalPrefix = "no-lock/e/"
 )
 
 func KeyPrefix(p string) []byte {
@@ -55,10 +58,10 @@ func KeyPrefix(p string) []byte {
 
 // NoLockExternalGaugeDenom returns the gauge denom for the no-lock external gauge for the given pool ID.
 func NoLockExternalGaugeDenom(poolId uint64) string {
-	return fmt.Sprintf("no-lock/e/%d", poolId)
+	return fmt.Sprintf("%s%d", NoLockExternalPrefix, poolId)
 }
 
 // NoLockInternalGaugeDenom returns the gauge denom for the no-lock internal gauge for the given pool ID.
 func NoLockInternalGaugeDenom(poolId uint64) string {
-	return fmt.Sprintf("no-lock/i/%d", poolId)
+	return fmt.Sprintf("%s%d", NoLockInternalPrefix, poolId)
 }

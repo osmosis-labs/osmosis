@@ -84,7 +84,7 @@ func (k Keeper) CreateLockablePoolGauges(ctx sdk.Context, poolId uint64) error {
 			return err
 		}
 
-		k.SetPoolGaugeId(ctx, poolId, lockableDuration, gaugeId)
+		k.SetPoolGaugeIdByDuration(ctx, poolId, lockableDuration, gaugeId)
 	}
 	return nil
 }
@@ -102,7 +102,7 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 
 	incentivesEpoch := k.incentivesKeeper.GetEpochInfo(ctx)
 
-	_, err = k.incentivesKeeper.CreateGauge(
+	gaugeId, err := k.incentivesKeeper.CreateGauge(
 		ctx,
 		true,
 		k.accountKeeper.GetModuleAddress(types.ModuleName),
@@ -120,10 +120,16 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 		return err
 	}
 
+	// Although the pool id <> gauge "NoLock" link is creted in CreateGauge,
+	// we create an additional "ByDuration" link here for tracking
+	// internal incentive "NoLock" gauges
+	incentivesEpochDuration := k.incentivesKeeper.GetEpochInfo(ctx).Duration
+	k.SetPoolGaugeIdByDuration(ctx, poolId, incentivesEpochDuration, gaugeId)
+
 	return nil
 }
 
-func (k Keeper) SetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration time.Duration, gaugeId uint64) {
+func (k Keeper) SetPoolGaugeIdByDuration(ctx sdk.Context, poolId uint64, lockableDuration time.Duration, gaugeId uint64) {
 	key := types.GetPoolGaugeIdStoreKey(poolId, lockableDuration)
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, sdk.Uint64ToBigEndian(gaugeId))
@@ -132,7 +138,26 @@ func (k Keeper) SetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration 
 	store.Set(key, sdk.Uint64ToBigEndian(poolId))
 }
 
+func (k Keeper) SetPoolGaugeIdNoLock(ctx sdk.Context, poolId uint64, gaugeId uint64) {
+	store := ctx.KVStore(k.storeKey)
+	// maps pool id and gauge id to gauge id.
+	// Note: this could be pool id and gauge id to empty byte array,
+	// but is chosen this way for ease of implementation at the cost of space.
+	key := types.GetPoolNoLockGaugeIdStoreKey(poolId, gaugeId)
+	store.Set(key, sdk.Uint64ToBigEndian(gaugeId))
+
+	key = types.GetPoolIdFromGaugeIdStoreKey(gaugeId, 0)
+	store.Set(key, sdk.Uint64ToBigEndian(poolId))
+}
+
+// GetPoolGaugeId returns the gauge id associated with the pool id and lockable duration.
+// This can only be used for the internally incentivized gauges.
+// Externally incentivized gauges do not have such link created.
 func (k Keeper) GetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration time.Duration) (uint64, error) {
+	if lockableDuration == 0 {
+		return 0, fmt.Errorf("cannot get gauge id from pool id without a lockable duration. There can be many gauges for pool id %d and duration 0", poolId)
+	}
+
 	key := types.GetPoolGaugeIdStoreKey(poolId, lockableDuration)
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(key)
@@ -142,6 +167,25 @@ func (k Keeper) GetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration 
 	}
 
 	return sdk.BigEndianToUint64(bz), nil
+}
+
+// GetNoLockGaugeIdsFromPool returns all the gauge ids associated with the pool id.
+// This can only be used for the "NoLock" gauges. For "NoLock" gauges there are 2 kinds
+// of links created:
+// - general
+// - by duration (for internal incentives)
+//
+// Any "NoLock" gauge has the first link. Only the internal incentives "NoLock" gauges
+// have the second link.
+func (k Keeper) GetNoLockGaugeIdsFromPool(ctx sdk.Context, poolId uint64) ([]uint64, error) {
+	store := ctx.KVStore(k.storeKey)
+	gaugeIds, err := osmoutils.GatherValuesFromStorePrefix(store, types.GetPoolNoLockGaugeIdIterationStoreKey(poolId), func(b []byte) (uint64, error) {
+		return sdk.BigEndianToUint64(b), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return gaugeIds, nil
 }
 
 func (k Keeper) GetPoolIdFromGaugeId(ctx sdk.Context, gaugeId uint64, lockableDuration time.Duration) (uint64, error) {

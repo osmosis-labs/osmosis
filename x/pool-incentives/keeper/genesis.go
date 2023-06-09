@@ -20,7 +20,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	}
 	if genState.PoolToGauges != nil {
 		for _, record := range genState.PoolToGauges.PoolToGauge {
-			k.SetPoolGaugeId(ctx, record.PoolId, record.Duration, record.GaugeId)
+			if record.Duration == 0 {
+				k.SetPoolGaugeIdNoLock(ctx, record.PoolId, record.GaugeId)
+			} else {
+				k.SetPoolGaugeIdByDuration(ctx, record.PoolId, record.Duration, record.GaugeId)
+			}
 		}
 	}
 }

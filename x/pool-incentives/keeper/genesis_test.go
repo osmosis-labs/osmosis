@@ -48,6 +48,19 @@ var (
 					GaugeId:  2,
 					Duration: time.Second,
 				},
+				// This duplication with zero duration
+				// can happen with "NoLock" gauges
+				// where the link containing the duration
+				// is used to signify that the gauge is internal
+				// while the link without the duration is used
+				// for general purpose. This redundancy is
+				// made for convinience of plugging in the
+				// later added "NoLock" gauge into the existing
+				// logic without having to change majority of the queries.
+				{
+					PoolId:  2,
+					GaugeId: 2,
+				},
 			},
 		},
 	}
