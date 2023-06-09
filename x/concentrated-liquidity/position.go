@@ -562,6 +562,8 @@ func (k Keeper) getNextPositionIdAndIncrement(ctx sdk.Context) uint64 {
 // - positions are all not fully charged
 // - positions are not in the same tick range
 // - all positions are unlocked
+// NOTE: disabled and unused at launch
+// nolint: unused
 func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, error) {
 	// Get the longest authorized uptime, which is the fully charged duration.
 	fullyChargedDuration := k.getLargestAuthorizedUptimeDuration(ctx)
@@ -672,6 +674,8 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 // - positions are all not fully charged
 // - positions are not in the same tick range
 // - all positions are unlocked
+// NOTE: It is only used by fungifyChargedPosition which we disabled for launch.
+// nolint: unused
 func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64, fullyChargedDuration time.Duration) (uint64, int64, int64, sdk.Dec, error) {
 	totalLiquidity := sdk.ZeroDec()
 
