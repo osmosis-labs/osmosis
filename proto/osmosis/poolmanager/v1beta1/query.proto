@@ -17,7 +17,7 @@ option go_package = "github.com/osmosis-labs/osmosis/v16/x/poolmanager/client/qu
 
 service Query {
   rpc Params(ParamsRequest) returns (ParamsResponse) {
-    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/Params";
+    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/params";
   }
 
   // Estimates swap amount out given in.
