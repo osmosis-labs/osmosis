@@ -482,7 +482,7 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			expectErr:        false,
 		},
 		{
-			name: "create valid no lock gauge with CL pool (denom set to uosmo)",
+			name: "create valid no lock gauge with CL pool (denom set to no lock internal prefix)",
 			distrTo: lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.NoLock,
 				// Note: this assumes the gauge is internal
