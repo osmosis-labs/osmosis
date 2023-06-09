@@ -16,7 +16,7 @@ const (
 	KeySeparator = "|"
 
 	uint64ByteSize = 8
-	uintBase       = 10
+	base10         = 10
 
 	ConcentratedLiquidityTokenPrefix = "cl/pool"
 )
@@ -229,16 +229,17 @@ func KeySpreadRewardPositionAccumulator(positionId uint64) string {
 	return strings.Join([]string{string(SpreadRewardPositionAccumulatorPrefix), strconv.FormatUint(positionId, 10)}, KeySeparator)
 }
 
+// This is guaranteed to not contain "||" so it can be used as an accumulator name.
 func KeySpreadRewardPoolAccumulator(poolId uint64) string {
-	poolIdStr := strconv.FormatUint(poolId, uintBase)
+	poolIdStr := strconv.FormatUint(poolId, base10)
 	return strings.Join([]string{string(KeySpreadRewardPoolAccumulatorPrefix), poolIdStr}, "/")
 }
 
 // Uptme Accumulator Prefix Keys
-
+// This is guaranteed to not contain "||" so it can be used as an accumulator name.
 func KeyUptimeAccumulator(poolId uint64, uptimeIndex uint64) string {
-	poolIdStr := strconv.FormatUint(poolId, uintBase)
-	uptimeIndexStr := strconv.FormatUint(uptimeIndex, uintBase)
+	poolIdStr := strconv.FormatUint(poolId, base10)
+	uptimeIndexStr := strconv.FormatUint(uptimeIndex, base10)
 	return strings.Join([]string{string(UptimeAccumulatorPrefix), poolIdStr, uptimeIndexStr}, "/")
 }
 

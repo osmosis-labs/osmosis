@@ -28,12 +28,11 @@ type AccumulatorObject struct {
 }
 
 // Makes a new accumulator at store/accum/{accumName}
-// Returns error if already exists / theres some overlapping keys
-// @Dev: accumName must not contain "/"
+// Returns error if:
+// * accumName already exists
+// * theres some overlapping keys
+// * Accumulator name contains "||"
 func MakeAccumulator(accumStore store.KVStore, accumName string) error {
-	if strings.Contains(accumName, "/") {
-		return fmt.Errorf("Accumulator name cannot contain '/'") // alt we need to make a new key separator within accum
-	}
 	if accumStore.Has(formatAccumPrefixKey(accumName)) {
 		return errors.New("Accumulator with given name already exists in store")
 	}
@@ -50,7 +49,10 @@ func MakeAccumulator(accumStore store.KVStore, accumName string) error {
 }
 
 // Makes a new accumulator at store/accum/{accumName}
-// Returns error if already exists / theres some overlapping keys
+// Returns error if:
+// * accumName already exists
+// * theres some overlapping keys
+// * Accumulator name contains "||"
 func MakeAccumulatorWithValueAndShare(accumStore store.KVStore, accumName string, accumValue sdk.DecCoins, totalShares sdk.Dec) error {
 	if accumStore.Has(formatAccumPrefixKey(accumName)) {
 		return errors.New("Accumulator with given name already exists in store")
@@ -100,8 +102,8 @@ func (accum AccumulatorObject) GetPosition(name string) (Record, error) {
 }
 
 func setAccumulator(accum *AccumulatorObject, value sdk.DecCoins, shares sdk.Dec) error {
-	if strings.Contains(accum.name, keySeparator) {
-		return fmt.Errorf("Accumulator name cannot contain '%s', provided name %s", keySeparator, accum.name)
+	if strings.Contains(accum.name, KeySeparator) {
+		return fmt.Errorf("Accumulator name cannot contain '%s', provided name %s", KeySeparator, accum.name)
 	}
 	newAccum := AccumulatorContent{value, shares}
 	osmoutils.MustSet(accum.store, formatAccumPrefixKey(accum.name), &newAccum)

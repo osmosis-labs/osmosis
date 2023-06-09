@@ -6,10 +6,10 @@ const (
 	modulePrefix      = "accum"
 	accumulatorPrefix = "acc"
 	positionPrefix    = "pos"
-	keySeparator      = "||" // needs to be different from other modules.
+	KeySeparator      = "||" // needs to be different from other modules.
 
-	accumPrefixKey    = modulePrefix + keySeparator + accumulatorPrefix + keySeparator
-	positionPrefixKey = modulePrefix + keySeparator + positionPrefix + keySeparator
+	accumPrefixKey    = modulePrefix + KeySeparator + accumulatorPrefix + KeySeparator
+	positionPrefixKey = modulePrefix + KeySeparator + positionPrefix + KeySeparator
 )
 
 // formatAccumPrefix returns the key prefix used
@@ -25,5 +25,5 @@ func formatAccumPrefixKey(accumName string) []byte {
 // We use a different key separator, namely `||`, to separate the accumulator name and the position name.
 // This is because we require that accumName does not contain this as a substring.
 func FormatPositionPrefixKey(accumName, name string) []byte {
-	return []byte(fmt.Sprintf(positionPrefixKey+"%s"+keySeparator+"%s", accumName, name))
+	return []byte(fmt.Sprintf(positionPrefixKey+"%s"+KeySeparator+"%s", accumName, name))
 }
