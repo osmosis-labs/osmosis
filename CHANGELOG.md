@@ -99,6 +99,7 @@ and control over token transfers.
   * [#4801](https://github.com/osmosis-labs/osmosis/pull/4801) refactor: remove GetTotalShares, GetTotalLiquidity and GetExitFee from PoolI
   * [#4951](https://github.com/osmosis-labs/osmosis/pull/4951) feat: implement pool liquidity query in pool manager, deprecate the one in gamm
   * [#5000](https://github.com/osmosis-labs/osmosis/pull/5000) osmomath.Power panics for base < 1 to temporarily restrict broken logic for such base.
+  * [#5468](https://github.com/osmosis-labs/osmosis/pull/5468) fix: Reduce tokenfactory denom creation gas fee to 1_000_000
 
 ## Dependencies
   * [#4783](https://github.com/osmosis-labs/osmosis/pull/4783) Update wasmd to 0.31 
