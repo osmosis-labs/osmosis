@@ -120,7 +120,7 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 		return err
 	}
 
-	// Although the pool id <> gauge "NoLock" link is creted in CreateGauge,
+	// Although the pool id <> gauge "NoLock" link is created in CreateGauge,
 	// we create an additional "ByDuration" link here for tracking
 	// internal incentive "NoLock" gauges
 	incentivesEpochDuration := k.incentivesKeeper.GetEpochInfo(ctx).Duration
