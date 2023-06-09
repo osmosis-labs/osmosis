@@ -93,6 +93,7 @@ func (desc TxCliDesc) BuildCommandCustomFn(isPropCmd bool) *cobra.Command {
 		cmd.Long = desc.Long
 	}
 
+	// For proposal cmd, tx flags already added in gov.GetTxCmd() so no need to re-add in this func
 	if !isPropCmd {
 		flags.AddTxFlagsToCmd(cmd)
 	}
