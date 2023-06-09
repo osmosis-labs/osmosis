@@ -120,16 +120,16 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	event := &liquidityChangeEvent{
-		eventType: types.TypeEvtCreatePosition,
-		positionId: positionId,
-		sender: owner,
-		poolId: poolId,
-		lowerTick: lowerTick,
-		upperTick: upperTick,
-		joinTime: joinTime,
+		eventType:      types.TypeEvtCreatePosition,
+		positionId:     positionId,
+		sender:         owner,
+		poolId:         poolId,
+		lowerTick:      lowerTick,
+		upperTick:      upperTick,
+		joinTime:       joinTime,
 		liquidityDelta: liquidityDelta,
-		actualAmount0: actualAmount0,
-		actualAmount1: actualAmount1,
+		actualAmount0:  actualAmount0,
+		actualAmount1:  actualAmount1,
 	}
 	event.emit(ctx)
 
@@ -262,16 +262,16 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		}
 	}
 	event := &liquidityChangeEvent{
-		eventType: types.TypeEvtCreatePosition,
-		positionId: positionId,
-		sender: owner,
-		poolId: position.PoolId,
-		lowerTick: position.LowerTick,
-		upperTick: position.UpperTick,
-		joinTime: position.JoinTime,
+		eventType:      types.TypeEvtCreatePosition,
+		positionId:     positionId,
+		sender:         owner,
+		poolId:         position.PoolId,
+		lowerTick:      position.LowerTick,
+		upperTick:      position.UpperTick,
+		joinTime:       position.JoinTime,
 		liquidityDelta: liquidityDelta,
-		actualAmount0: actualAmount0,
-		actualAmount1: actualAmount1,
+		actualAmount0:  actualAmount0,
+		actualAmount1:  actualAmount1,
 	}
 	event.emit(ctx)
 

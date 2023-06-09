@@ -9,7 +9,7 @@ import (
 	types "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
-//event is the interface all event types should be implementing
+// event is the interface all event types should be implementing
 type event interface {
 	emit(ctx sdk.Context)
 }
@@ -17,8 +17,8 @@ type event interface {
 // guarantee that liquidityChangeEvent type implements the event interface
 var _ event = &liquidityChangeEvent{}
 
-// liquidityChangeEvent represent the fields used for event emition 
-// and uniquely identifying a position such as: 
+// liquidityChangeEvent represent the fields used for event emission
+// and uniquely identifying a position such as:
 // - position id
 // - sender
 // - pool id
@@ -27,19 +27,19 @@ var _ event = &liquidityChangeEvent{}
 // - upper tick
 // It also hols additional attributes for the liquidity added or removed and the actual amounts of asset0 and asset1 it translates to.
 type liquidityChangeEvent struct {
-	eventType string
-	positionId uint64
-	sender sdk.AccAddress
-	poolId uint64
-	lowerTick int64
-	upperTick int64
-	joinTime time.Time
+	eventType      string
+	positionId     uint64
+	sender         sdk.AccAddress
+	poolId         uint64
+	lowerTick      int64
+	upperTick      int64
+	joinTime       time.Time
 	liquidityDelta sdk.Dec
-	actualAmount0 sdk.Int
-	actualAmount1 sdk.Int
+	actualAmount0  sdk.Int
+	actualAmount1  sdk.Int
 }
 
-//emit emits an event for a liquidity change when creating or withdrawing a position based its field.
+// emit emits an event for a liquidity change when creating or withdrawing a position based its field.
 func (l *liquidityChangeEvent) emit(ctx sdk.Context) {
 	if l != nil {
 		ctx.EventManager().EmitEvent(sdk.NewEvent(
