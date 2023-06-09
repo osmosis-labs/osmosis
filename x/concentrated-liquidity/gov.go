@@ -12,10 +12,6 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
-func handleCreateConcentratedLiquidityPoolsProposal(ctx sdk.Context, k Keeper, p *types.CreateConcentratedLiquidityPoolsProposal) error {
-	return k.HandleCreateConcentratedLiquidityPoolsProposal(ctx, p)
-}
-
 func (k Keeper) HandleCreateConcentratedLiquidityPoolsProposal(ctx sdk.Context, p *types.CreateConcentratedLiquidityPoolsProposal) error {
 	poolmanagerModuleAcc := k.accountKeeper.GetModuleAccount(ctx, poolmanagertypes.ModuleName)
 	poolCreatorAddress := poolmanagerModuleAcc.GetAddress()
@@ -38,16 +34,12 @@ func NewConcentratedLiquidityProposalHandler(k Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
 		case *types.TickSpacingDecreaseProposal:
-			return handleTickSpacingDecreaseProposal(ctx, k, c)
+			return k.HandleTickSpacingDecreaseProposal(ctx, c)
 		case *types.CreateConcentratedLiquidityPoolsProposal:
-			return handleCreateConcentratedLiquidityPoolsProposal(ctx, k, c)
+			return k.HandleCreateConcentratedLiquidityPoolsProposal(ctx, c)
 
 		default:
 			return fmt.Errorf("unrecognized concentrated liquidity proposal content type: %T", c)
 		}
 	}
-}
-
-func handleTickSpacingDecreaseProposal(ctx sdk.Context, k Keeper, p *types.TickSpacingDecreaseProposal) error {
-	return k.HandleTickSpacingDecreaseProposal(ctx, p)
 }
