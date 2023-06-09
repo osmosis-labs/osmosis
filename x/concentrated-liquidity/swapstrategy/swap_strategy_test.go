@@ -60,7 +60,6 @@ func (suite *StrategyTestSuite) SetupTest() {
 type tickIteratorTest struct {
 	currentTick     int64
 	preSetPositions []position
-	tickSpacing     uint64
 
 	expectIsValid  bool
 	expectNextTick int64
@@ -68,7 +67,7 @@ type tickIteratorTest struct {
 }
 
 func (suite *StrategyTestSuite) runTickIteratorTest(strategy swapstrategy.SwapStrategy, tc tickIteratorTest) {
-	pool := suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, tc.tickSpacing, sdk.ZeroDec())
+	pool := suite.PrepareConcentratedPool()
 	suite.setupPresetPositions(pool.GetId(), tc.preSetPositions)
 
 	// refetch pool
@@ -78,7 +77,9 @@ func (suite *StrategyTestSuite) runTickIteratorTest(strategy swapstrategy.SwapSt
 	currentTick := pool.GetCurrentTick()
 	suite.Require().Equal(int64(0), currentTick)
 
-	iter := strategy.InitializeNextTickIterator(suite.Ctx, defaultPoolId, currentTick)
+	tickIndex := strategy.InitializeTickValue(currentTick)
+
+	iter := strategy.InitializeNextTickIterator(suite.Ctx, defaultPoolId, tickIndex)
 	defer iter.Close()
 
 	suite.Require().Equal(tc.expectIsValid, iter.Valid())
@@ -211,7 +212,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 	for name, tc := range testCases {
 		tc := tc
 		suite.Run(name, func() {
-			sut := swapstrategy.New(tc.zeroForOne, sdk.ZeroDec(), suite.App.GetKey(types.ModuleName), sdk.ZeroDec())
+			sut := swapstrategy.New(tc.zeroForOne, sdk.ZeroDec(), suite.App.GetKey(types.ModuleName), sdk.ZeroDec(), defaultTickSpacing)
 			sqrtPriceNextOutGivenIn, amountInOutGivenIn, amountOutOutGivenIn, _ := sut.ComputeSwapStepOutGivenIn(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, tc.amountIn)
 			suite.Require().Equal(tc.expectedSqrtPriceNextOutGivenIn.String(), sqrtPriceNextOutGivenIn.String())
 

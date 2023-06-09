@@ -296,7 +296,7 @@ func (k Keeper) computeOutAmtGivenIn(
 	}
 
 	// Set the swap strategy
-	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey, spreadFactor)
+	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey, spreadFactor, p.GetTickSpacing())
 
 	// Get current sqrt price from pool and run sanity check that current sqrt price is
 	// on the correct side of the price limit given swap direction.
@@ -337,7 +337,8 @@ func (k Keeper) computeOutAmtGivenIn(
 		amountSpecifiedRemaining: tokenAmountInSpecified.Clone(), // tokenIn
 		amountCalculated:         sdk.ZeroDec(),                  // tokenOut
 		sqrtPrice:                curSqrtPrice,
-		tick:                     p.GetCurrentTick(),
+		// Pad (or don't pad) current tick based on swap direction to avoid off-by-one errors
+		tick:                     swapStrategy.InitializeTickValue(p.GetCurrentTick()),
 		liquidity:                p.GetLiquidity(),
 		spreadRewardGrowthGlobal: sdk.ZeroDec(),
 	}
@@ -511,7 +512,7 @@ func (k Keeper) computeInAmtGivenOut(
 	}
 
 	// set the swap strategy
-	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey, spreadFactor)
+	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey, spreadFactor, tickSpacing)
 
 	// get current sqrt price from pool
 	curSqrtPrice := p.GetCurrentSqrtPrice()
@@ -539,7 +540,7 @@ func (k Keeper) computeInAmtGivenOut(
 		amountSpecifiedRemaining: tokenAmountOutSpecified, // tokenOut
 		amountCalculated:         sdk.ZeroDec(),           // tokenIn
 		sqrtPrice:                curSqrtPrice,
-		tick:                     p.GetCurrentTick(),
+		tick:                     swapStrategy.InitializeTickValue(p.GetCurrentTick()),
 		liquidity:                p.GetLiquidity(),
 		spreadRewardGrowthGlobal: sdk.ZeroDec(),
 	}
