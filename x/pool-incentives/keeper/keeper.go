@@ -169,7 +169,7 @@ func (k Keeper) GetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration 
 	return sdk.BigEndianToUint64(bz), nil
 }
 
-// GetNoLockGaugeIdsFromPool returns all the gauge ids associated with the pool id.
+// GetNoLockGaugeIdsFromPool returns all the NoLock gauge ids associated with the pool id.
 // This can only be used for the "NoLock" gauges. For "NoLock" gauges there are 2 kinds
 // of links created:
 // - general
