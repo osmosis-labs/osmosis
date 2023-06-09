@@ -466,25 +466,26 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrated()
 		s.Run(name, func() {
 			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime)
-			ctx := s.Ctx
 			superfluidKeeper := s.App.SuperfluidKeeper
 			lockupKeeper := s.App.LockupKeeper
 
 			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
-			joinPoolAmt, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := s.SetupMigrationTest(ctx, true, true, tc.unlocking, false, tc.percentOfSharesToMigrate)
+			joinPoolAmt, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := s.SetupMigrationTest(s.Ctx, true, true, tc.unlocking, false, tc.percentOfSharesToMigrate)
 			originalGammLockId := balancerLock.GetID()
+
+			// Since we are testing unbonding migration, we let some time pass (24 hours) since unbonding to simulate a more realistic environment.
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24))
 
 			// Depending on the test case, we attempt to migrate a subset of the balancer LP tokens we originally created.
 			coinsToMigrate := balancerPoolShareOut
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
 			// RouteMigration is called via the migration message router and is always run prior to the migration itself
-			synthLockBeforeMigration, migrationType, err := superfluidKeeper.RouteMigration(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
+			synthLockBeforeMigration, migrationType, err := superfluidKeeper.RouteMigration(s.Ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
 			s.Require().NoError(err)
 			s.Require().Equal(migrationType, keeper.SuperfluidUnbonding)
 
 			// Modify migration inputs if necessary
-
 			if tc.overwriteValidatorAddress {
 				synthDenomParts := strings.Split(synthLockBeforeMigration.SynthDenom, "/")
 				synthDenomParts[4] = "osmovaloper1n69ghlk6404gzxtmtq0w7ma59n9vd9ed9dplg" // invalid, too short
@@ -493,17 +494,17 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrated()
 			}
 
 			// System under test.
-			positionId, amount0, amount1, liquidityMigrated, joinTime, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateSuperfluidUnbondingBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, synthLockBeforeMigration.SynthDenom, tc.tokenOutMins)
+			positionId, amount0, amount1, liquidityMigrated, joinTime, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateSuperfluidUnbondingBalancerToConcentrated(s.Ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, synthLockBeforeMigration.SynthDenom, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
 				return
 			}
 			s.Require().NoError(err)
-			s.AssertEventEmitted(ctx, gammtypes.TypeEvtPoolExited, 1)
+			s.AssertEventEmitted(s.Ctx, gammtypes.TypeEvtPoolExited, 1)
 
 			s.ValidateMigrateResult(
-				ctx,
+				s.Ctx,
 				positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering,
 				tc.percentOfSharesToMigrate, liquidityMigrated,
 				joinTime,
@@ -517,33 +518,43 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrated()
 				// If we migrated all the shares:
 
 				// The synthetic lockup should be deleted.
-				_, err = lockupKeeper.GetSyntheticLockup(ctx, originalGammLockId, keeper.UnstakingSyntheticDenom(balancerLock.Coins[0].Denom, valAddr.String()))
+				_, err = lockupKeeper.GetSyntheticLockup(s.Ctx, originalGammLockId, keeper.UnstakingSyntheticDenom(balancerLock.Coins[0].Denom, valAddr.String()))
 				s.Require().Error(err)
 			} else if tc.percentOfSharesToMigrate.LT(sdk.OneDec()) {
 				// If we migrated part of the shares:
 
 				// The synthetic lockup should not be deleted.
-				gammSynthLock, err := lockupKeeper.GetSyntheticLockup(ctx, originalGammLockId, keeper.UnstakingSyntheticDenom(balancerLock.Coins[0].Denom, valAddr.String()))
+				gammSynthLock, err := lockupKeeper.GetSyntheticLockup(s.Ctx, originalGammLockId, keeper.UnstakingSyntheticDenom(balancerLock.Coins[0].Denom, valAddr.String()))
 				s.Require().NoError(err)
 
 				s.Require().Equal(originalGammLockId, gammSynthLock.UnderlyingLockId)
 			}
 
 			// Check newly created concentrated lock.
-			concentratedLock, err := lockupKeeper.GetLockByID(ctx, concentratedLockId)
+			concentratedLock, err := lockupKeeper.GetLockByID(s.Ctx, concentratedLockId)
 			s.Require().NoError(err)
 			s.Require().Equal(liquidityMigrated.TruncateInt().String(), concentratedLock.Coins[0].Amount.String(), "expected %s shares, found %s shares", coinsToMigrate.Amount.String(), concentratedLock.Coins[0].Amount.String())
-			s.Require().Equal(balancerLock.Duration, concentratedLock.Duration)
-			s.Require().Equal(s.Ctx.BlockTime().Add(balancerLock.Duration), concentratedLock.EndTime)
+			// If the original lock was not unlocking, then the new lock should have the same duration and end time (regardless of the fact that an hour has passed since the lock began superfluid unbonding).
+			expectedConcentratedLockDuration := balancerLock.Duration
+			expectedConcentratedLockEndTime := s.Ctx.BlockTime().Add(balancerLock.Duration)
+			if tc.unlocking {
+				// If the original lock was unlocking, then the new lock should have a duration of 24 hours less than the original lock, and an end time of 24 hours less than the original lock.
+				expectedConcentratedLockDuration = expectedConcentratedLockDuration - time.Hour*24
+				expectedConcentratedLockEndTime = expectedConcentratedLockEndTime.Add(-time.Hour * 24)
+			}
+			s.Require().Equal(expectedConcentratedLockDuration, concentratedLock.Duration)
+			s.Require().Equal(expectedConcentratedLockEndTime, concentratedLock.EndTime)
 
 			// Check if the new synthetic unbonding lockup was created.
-			clSynthLock, err := lockupKeeper.GetSyntheticLockup(ctx, concentratedLockId, keeper.UnstakingSyntheticDenom(concentratedLock.Coins[0].Denom, valAddr.String()))
+			clSynthLock, err := lockupKeeper.GetSyntheticLockup(s.Ctx, concentratedLockId, keeper.UnstakingSyntheticDenom(concentratedLock.Coins[0].Denom, valAddr.String()))
 			s.Require().NoError(err)
-
 			s.Require().Equal(concentratedLockId, clSynthLock.UnderlyingLockId)
+			s.Require().NoError(err)
+			s.Require().Equal(concentratedLock.Duration, clSynthLock.Duration)
+			s.Require().Equal(concentratedLock.EndTime, clSynthLock.EndTime)
 
 			// Run slashing logic and check if the new and old locks are slashed.
-			s.SlashAndValidateResult(ctx, originalGammLockId, concentratedLockId, clPoolId, tc.percentOfSharesToMigrate, valAddr, *balancerLock, true)
+			s.SlashAndValidateResult(s.Ctx, originalGammLockId, concentratedLockId, clPoolId, tc.percentOfSharesToMigrate, valAddr, *balancerLock, true)
 		})
 	}
 }
@@ -1123,9 +1134,9 @@ func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegate
 
 func (s *KeeperTestSuite) SlashAndValidateResult(ctx sdk.Context, gammLockId, concentratedLockId, poolIdEntering uint64, percentOfSharesToMigrate sdk.Dec, valAddr sdk.ValAddress, balancerLock lockuptypes.PeriodLock, expectSlash bool) {
 	// Retrieve the concentrated lock and gamm lock prior to slashing.
-	concentratedLockPreSlash, err := s.App.LockupKeeper.GetLockByID(s.Ctx, concentratedLockId)
+	concentratedLockPreSlash, err := s.App.LockupKeeper.GetLockByID(ctx, concentratedLockId)
 	s.Require().NoError(err)
-	gammLockPreSlash, err := s.App.LockupKeeper.GetLockByID(s.Ctx, gammLockId)
+	gammLockPreSlash, err := s.App.LockupKeeper.GetLockByID(ctx, gammLockId)
 	if percentOfSharesToMigrate.LT(sdk.OneDec()) {
 		s.Require().NoError(err)
 	} else {
@@ -1135,15 +1146,15 @@ func (s *KeeperTestSuite) SlashAndValidateResult(ctx sdk.Context, gammLockId, co
 	// Slash the validator.
 	slashFactor := sdk.NewDecWithPrec(5, 2)
 	s.App.SuperfluidKeeper.SlashLockupsForValidatorSlash(
-		s.Ctx,
+		ctx,
 		valAddr,
-		s.Ctx.BlockHeight(),
+		ctx.BlockHeight(),
 		slashFactor)
 
 	// Retrieve the concentrated lock and gamm lock after slashing.
-	concentratedLockPostSlash, err := s.App.LockupKeeper.GetLockByID(s.Ctx, concentratedLockId)
+	concentratedLockPostSlash, err := s.App.LockupKeeper.GetLockByID(ctx, concentratedLockId)
 	s.Require().NoError(err)
-	gammLockPostSlash, err := s.App.LockupKeeper.GetLockByID(s.Ctx, gammLockId)
+	gammLockPostSlash, err := s.App.LockupKeeper.GetLockByID(ctx, gammLockId)
 	if percentOfSharesToMigrate.LT(sdk.OneDec()) {
 		s.Require().NoError(err)
 	} else {
