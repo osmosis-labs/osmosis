@@ -171,6 +171,7 @@ func TestMsgCreateGauge(t *testing.T) {
 			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
 				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
 				msg.DistributeTo.Denom = ""
+				msg.DistributeTo.Duration = 0
 				msg.PoolId = 1
 				return msg
 			}),
@@ -202,6 +203,19 @@ func TestMsgCreateGauge(t *testing.T) {
 				// This is set by the system when creating internal gauges.
 				// Client should provide empty string.
 				msg.DistributeTo.Denom = types.NoLockInternalGaugeDenom(1)
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "invalid due to no lock with non-zero lock duration",
+			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
+				msg.DistributeTo.Denom = ""
+				msg.PoolId = 1
+
+				// breaks
+				msg.DistributeTo.Duration = time.Hour
 				return msg
 			}),
 			expectPass: false,

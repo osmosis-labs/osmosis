@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
@@ -37,6 +38,7 @@ func (m MsgCreateGauge) Type() string { return TypeMsgCreateGauge }
 // ValidateBasic checks that the create gauge message is valid.
 func (m MsgCreateGauge) ValidateBasic() error {
 	lockType := m.DistributeTo.LockQueryType
+	isNoLockGauge := lockType == lockuptypes.NoLock
 
 	if m.Owner == "" {
 		return errors.New("owner should be set")
@@ -62,17 +64,23 @@ func (m MsgCreateGauge) ValidateBasic() error {
 		return errors.New("start time distr conditions is an obsolete codepath slated for deletion")
 	}
 
-	if lockType == lockuptypes.ByDuration && m.PoolId != 0 {
-		return errors.New("pool id should not be set for duration distr condition")
-	}
+	if isNoLockGauge {
+		if m.PoolId == 0 {
+			return errors.New("pool id should be set for no lock distr condition")
+		}
 
-	if lockType == lockuptypes.NoLock && m.PoolId == 0 {
-		return errors.New("pool id should be set for no lock distr condition")
-	}
+		if m.DistributeTo.Denom != "" {
+			return errors.New(`no lock gauge denom should be unset. It will be automatically set to the NoLockExternalGaugeDenom(<pool id>)
+			 format internally, allowing for querying the gauges by denom with this prefix`)
+		}
 
-	if lockType == lockuptypes.NoLock && m.DistributeTo.Denom != "" {
-		return errors.New(`no lock gauge denom should be unset. It will be automatically set to the NoLockExternalGaugeDenom(<pool id>)
-		 format internally, allowing for querying the gauges by denom with this prefix`)
+		if m.DistributeTo.Duration != 0 {
+			return fmt.Errorf("no lock gauge must have duration set to 0, was (%d)", m.DistributeTo.Duration)
+		}
+	} else {
+		if m.PoolId != 0 {
+			return errors.New("pool id should not be set for duration distr condition")
+		}
 	}
 
 	return nil
