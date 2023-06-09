@@ -23,7 +23,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			if record.Duration == 0 {
 				k.SetPoolGaugeIdNoLock(ctx, record.PoolId, record.GaugeId)
 			} else {
-				k.SetPoolGaugeIdByDuration(ctx, record.PoolId, record.Duration, record.GaugeId)
+				k.SetPoolGaugeIdInternalIncentive(ctx, record.PoolId, record.Duration, record.GaugeId)
 			}
 		}
 	}

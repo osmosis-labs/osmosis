@@ -491,7 +491,7 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 
 			// Force gauge's pool id to balancer to trigger error
 			if tc.poolId == defaultBalancerPool {
-				s.App.PoolIncentivesKeeper.SetPoolGaugeIdByDuration(s.Ctx, defaultBalancerPool, tc.distrTo.Duration, externalGaugeid)
+				s.App.PoolIncentivesKeeper.SetPoolGaugeIdInternalIncentive(s.Ctx, defaultBalancerPool, tc.distrTo.Duration, externalGaugeid)
 			}
 
 			// Activate the gauge.
@@ -865,7 +865,7 @@ func (s *KeeperTestSuite) TestGetPoolFromGaugeId() {
 			}
 
 			if tc.shouldSetPoolGaugeId {
-				s.App.PoolIncentivesKeeper.SetPoolGaugeIdByDuration(s.Ctx, validPoolId, duration, poolIdOne)
+				s.App.PoolIncentivesKeeper.SetPoolGaugeIdInternalIncentive(s.Ctx, validPoolId, duration, poolIdOne)
 			}
 
 			pool, err := s.App.IncentivesKeeper.GetPoolFromGaugeId(s.Ctx, tc.gaugeId, duration)
