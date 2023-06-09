@@ -33,7 +33,7 @@ func NewTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, NewExitSwapExternAmountOut)
 	osmocli.AddTxCmd(txCmd, NewExitSwapShareAmountIn)
 	txCmd.AddCommand(
-		NewCreatePoolCmd().BuildCommandCustomFn(),
+		NewCreatePoolCmd().BuildCommandCustomFn(false),
 		NewStableSwapAdjustScalingFactorsCmd(),
 	)
 	return txCmd
@@ -172,7 +172,7 @@ func NewStableSwapAdjustScalingFactorsCmd() *cobra.Command {
 		Example:          "osmosisd adjust-scaling-factors --pool-id=1 --scaling-factors=\"100, 100\"",
 		NumArgs:          0,
 		ParseAndBuildMsg: NewStableSwapAdjustScalingFactorsMsg,
-	}.BuildCommandCustomFn()
+	}.BuildCommandCustomFn(false)
 
 	cmd.Flags().AddFlagSet(FlagSetAdjustScalingFactors())
 	_ = cmd.MarkFlagRequired(FlagPoolId)
@@ -191,7 +191,7 @@ func NewCmdSubmitReplaceMigrationRecordsProposal() *cobra.Command {
 		Passing in poolIds separated by commas would be parsed automatically to pairs of migration record.
 		Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 		`),
-	}.BuildCommandCustomFn()
+	}.BuildCommandCustomFn(true)
 
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
@@ -214,7 +214,7 @@ func NewCmdSubmitUpdateMigrationRecordsProposal() *cobra.Command {
 Passing in poolIds separated by commas would be parsed automatically to pairs of migration record.
 Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 		`),
-	}.BuildCommandCustomFn()
+	}.BuildCommandCustomFn(true)
 
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")

@@ -60,12 +60,12 @@ func BuildTxCli[M sdk.Msg](desc *TxCliDesc) *cobra.Command {
 			return ParseFieldsFromFlagsAndArgs[M](flagAdvice, flags, args)
 		}
 	}
-	return desc.BuildCommandCustomFn()
+	return desc.BuildCommandCustomFn(false)
 }
 
 // Creates a new cobra command given the description.
 // Its up to then caller to add CLI flags, aside from `flags.AddTxFlagsToCmd(cmd)`
-func (desc TxCliDesc) BuildCommandCustomFn() *cobra.Command {
+func (desc TxCliDesc) BuildCommandCustomFn(isPropCmd bool) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   desc.Use,
 		Short: desc.Short,
@@ -93,7 +93,9 @@ func (desc TxCliDesc) BuildCommandCustomFn() *cobra.Command {
 		cmd.Long = desc.Long
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
+	if !isPropCmd {
+		flags.AddTxFlagsToCmd(cmd)
+	}
 	AddFlags(cmd, desc.Flags)
 	return cmd
 }

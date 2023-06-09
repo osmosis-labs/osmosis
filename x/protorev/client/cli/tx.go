@@ -28,9 +28,9 @@ func NewCmdTx() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, CmdSetMaxPoolPointsPerTx)
 	osmocli.AddTxCmd(txCmd, CmdSetMaxPoolPointsPerBlock)
 	txCmd.AddCommand(
-		CmdSetDeveloperHotRoutes().BuildCommandCustomFn(),
-		CmdSetPoolWeights().BuildCommandCustomFn(),
-		CmdSetBaseDenoms().BuildCommandCustomFn(),
+		CmdSetDeveloperHotRoutes().BuildCommandCustomFn(false),
+		CmdSetPoolWeights().BuildCommandCustomFn(false),
+		CmdSetBaseDenoms().BuildCommandCustomFn(false),
 		CmdSetProtoRevAdminAccountProposal(),
 		CmdSetProtoRevEnabledProposal(),
 	)
