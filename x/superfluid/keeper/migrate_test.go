@@ -698,7 +698,7 @@ func (s *KeeperTestSuite) TestMigrateUnlockedPositionFromBalancerToConcentrated(
 			s.Require().Equal(migrationType, keeper.Unlocked)
 
 			// System under test.
-			positionId, amount0, amount1, liquidityMigrated, joinTime, poolIdLeaving, poolIdEntering, err := gammKeeper.MigrateUnlockedPositionFromBalancerToConcentrated(ctx, poolJoinAcc, coinsToMigrate, tc.tokenOutMins)
+			positionId, amount0, amount1, liquidityMigrated, poolIdLeaving, poolIdEntering, err := gammKeeper.MigrateUnlockedPositionFromBalancerToConcentrated(ctx, poolJoinAcc, coinsToMigrate, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				s.Require().ErrorContains(err, tc.expectedError.Error())
 				return
@@ -710,7 +710,7 @@ func (s *KeeperTestSuite) TestMigrateUnlockedPositionFromBalancerToConcentrated(
 				ctx,
 				positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering,
 				tc.percentOfSharesToMigrate, liquidityMigrated,
-				joinTime,
+				ctx.BlockTime(),
 				*balancerLock,
 				joinPoolAmt,
 				balancerPoolShareOut, coinsToMigrate,

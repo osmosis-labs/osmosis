@@ -135,7 +135,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			if !tc.isLastPositionInPool {
 				fundCoins := sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), sdk.NewInt(100000000)), sdk.NewCoin(clPool.GetToken1(), sdk.NewInt(100000000)))
 				s.FundAcc(nonOwner, fundCoins)
-				_, _, _, _, _, err := concentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPool.GetId(), nonOwner, fundCoins)
+				_, _, _, _, err := concentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPool.GetId(), nonOwner, fundCoins)
 				s.Require().NoError(err)
 			}
 
@@ -256,7 +256,7 @@ func (s *KeeperTestSuite) SetupSuperfluidConcentratedPosition(ctx sdk.Context, s
 	unbondingDuration := stakingKeeper.GetParams(ctx).UnbondingTime
 
 	// Create a full range position in the concentrated liquidity pool.
-	positionId, amount0, amount1, _, _, lockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPoolId, poolJoinAcc, fullRangeCoins, unbondingDuration)
+	positionId, amount0, amount1, _, lockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPoolId, poolJoinAcc, fullRangeCoins, unbondingDuration)
 	s.Require().NoError(err)
 
 	// Register the CL full range LP tokens as a superfluid asset.
