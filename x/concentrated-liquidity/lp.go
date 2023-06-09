@@ -119,7 +119,19 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
 
-	emitLiquidityChangeEvent(ctx, types.TypeEvtCreatePosition, positionId, owner, poolId, lowerTick, upperTick, joinTime, liquidityDelta, actualAmount0, actualAmount1)
+	event := &liquidityChangeEvent{
+		eventType:      types.TypeEvtCreatePosition,
+		positionId:     positionId,
+		sender:         owner,
+		poolId:         poolId,
+		lowerTick:      lowerTick,
+		upperTick:      upperTick,
+		joinTime:       joinTime,
+		liquidityDelta: liquidityDelta,
+		actualAmount0:  actualAmount0,
+		actualAmount1:  actualAmount1,
+	}
+	event.emit(ctx)
 
 	if !hasPositions {
 		// N.B. calling this listener propagates to x/twap for twap record creation.
@@ -249,8 +261,19 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 			k.listeners.AfterLastPoolPositionRemoved(ctx, owner, pool.GetId())
 		}
 	}
-
-	emitLiquidityChangeEvent(ctx, types.TypeEvtWithdrawPosition, positionId, owner, position.PoolId, position.LowerTick, position.UpperTick, position.JoinTime, liquidityDelta, actualAmount0, actualAmount1)
+	event := &liquidityChangeEvent{
+		eventType:      types.TypeEvtWithdrawPosition,
+		positionId:     positionId,
+		sender:         owner,
+		poolId:         position.PoolId,
+		lowerTick:      position.LowerTick,
+		upperTick:      position.UpperTick,
+		joinTime:       position.JoinTime,
+		liquidityDelta: liquidityDelta,
+		actualAmount0:  actualAmount0,
+		actualAmount1:  actualAmount1,
+	}
+	event.emit(ctx)
 
 	return actualAmount0.Neg(), actualAmount1.Neg(), nil
 }
@@ -500,31 +523,6 @@ func (k Keeper) uninitializePool(ctx sdk.Context, poolId uint64) error {
 	}
 
 	return nil
-}
-
-// emitLiquidityChangeEvent emits an event for a liquidity change when creating or withdrawing a position.
-// It emits all of the fields uniquely identifying a position such as:
-// - position id
-// - sender
-// - pool id
-// - join time
-// - lower tick
-// - upper tick
-// It also emits additional attributes for the liquidity added or removed and the actual amounts of asset0 and asset1 it translates to.
-func emitLiquidityChangeEvent(ctx sdk.Context, eventType string, positionId uint64, sender sdk.AccAddress, poolId uint64, lowerTick, upperTick int64, joinTime time.Time, liquidityDelta sdk.Dec, actualAmount0, actualAmount1 sdk.Int) {
-	ctx.EventManager().EmitEvent(sdk.NewEvent(
-		eventType,
-		sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		sdk.NewAttribute(types.AttributeKeyPositionId, strconv.FormatUint(positionId, 10)),
-		sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
-		sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-		sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(lowerTick, 10)),
-		sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(upperTick, 10)),
-		sdk.NewAttribute(types.AttributeJoinTime, joinTime.String()),
-		sdk.NewAttribute(types.AttributeLiquidity, liquidityDelta.String()),
-		sdk.NewAttribute(types.AttributeAmount0, actualAmount0.String()),
-		sdk.NewAttribute(types.AttributeAmount1, actualAmount1.String()),
-	))
 }
 
 // isLockMature checks if the underlying lock has expired.
