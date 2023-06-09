@@ -464,6 +464,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.WasmKeeper = &wasmKeeper
 	appKeepers.CosmwasmPoolKeeper.SetWasmKeeper(appKeepers.WasmKeeper)
+	appKeepers.TokenFactoryKeeper.SetWasmKeeper(appKeepers.WasmKeeper)
 
 	// Pass the contract keeper to all the structs (generally ICS4Wrappers for ibc middlewares) that need it
 	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
@@ -674,7 +675,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 	// Recall that SetHooks is a mutative call.
 	appKeepers.BankKeeper.SetHooks(
 		banktypes.NewMultiBankHooks(
-			appKeepers.TokenFactoryKeeper.Hooks(*appKeepers.WasmKeeper),
+			appKeepers.TokenFactoryKeeper.Hooks(),
 		),
 	)
 
