@@ -137,6 +137,10 @@ func (k Keeper) ValidateTickSpacing(ctx sdk.Context, params types.Params, tickSp
 	return k.validateTickSpacing(ctx, params, tickSpacing)
 }
 
+func (k Keeper) ValidateTickSpacingUpdate(ctx sdk.Context, pool types.ConcentratedPoolExtension, params types.Params, newTickSpacing uint64) bool {
+	return k.validateTickSpacingUpdate(ctx, pool, params, newTickSpacing)
+}
+
 func (k Keeper) FungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, error) {
 	return k.fungifyChargedPosition(ctx, owner, positionIds)
 }

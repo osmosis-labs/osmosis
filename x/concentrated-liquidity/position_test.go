@@ -1058,6 +1058,15 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			expectedErr:             types.PositionQuantityTooLowError{MinNumPositions: cl.MinNumPositions, NumPositions: 1},
 		},
 		{
+			name:                       "Error: No position to fungify",
+			setupFullyChargedPositions: []position{},
+			setupUnchargedPositions:    []position{},
+			positionIdsToMigrate:       []uint64{1},
+			accountCallingMigration:    defaultAddress,
+			expectedNewPositionId:      0,
+			expectedErr:                types.PositionQuantityTooLowError{MinNumPositions: cl.MinNumPositions, NumPositions: 1},
+		},
+		{
 			name: "Error: one of the full range positions is locked",
 			setupFullyChargedPositions: []position{
 				{1, defaultPoolId, defaultAddress, DefaultCoins, types.MinTick, types.MaxTick, unlocked},
@@ -1806,6 +1815,8 @@ func (s *KeeperTestSuite) TestMintSharesAndLock() {
 		owner                   sdk.AccAddress
 		remainingLockDuration   time.Duration
 		createFullRangePosition bool
+		lowerTick               int64
+		upperTick               int64
 		expectedErr             error
 	}{
 		{
@@ -1821,11 +1832,22 @@ func (s *KeeperTestSuite) TestMintSharesAndLock() {
 			remainingLockDuration:   24 * time.Hour,
 		},
 		{
-			name:                    "err: not a full range position",
+			name:                    "err: lower tick is not min tick",
 			owner:                   defaultAddress,
 			createFullRangePosition: false,
+			lowerTick:               DefaultLowerTick,
+			upperTick:               types.MaxTick,
 			remainingLockDuration:   24 * time.Hour,
-			expectedErr:             types.PositionNotFullRangeError{PositionId: 1, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick},
+			expectedErr:             types.PositionNotFullRangeError{PositionId: 1, LowerTick: DefaultLowerTick, UpperTick: types.MaxTick},
+		},
+		{
+			name:                    "err: upper tick is not max tick",
+			owner:                   defaultAddress,
+			createFullRangePosition: false,
+			lowerTick:               types.MinTick,
+			upperTick:               DefaultUpperTick,
+			remainingLockDuration:   24 * time.Hour,
+			expectedErr:             types.PositionNotFullRangeError{PositionId: 1, LowerTick: types.MinTick, UpperTick: DefaultUpperTick},
 		},
 	}
 
@@ -1851,7 +1873,7 @@ func (s *KeeperTestSuite) TestMintSharesAndLock() {
 				s.Require().NoError(err)
 			} else {
 				var err error
-				positionId, _, _, liquidity, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), test.owner, defaultPositionCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				positionId, _, _, liquidity, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), test.owner, defaultPositionCoins, sdk.ZeroInt(), sdk.ZeroInt(), test.lowerTick, test.upperTick)
 				s.Require().NoError(err)
 			}
 
