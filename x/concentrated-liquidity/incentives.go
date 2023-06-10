@@ -189,7 +189,7 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64,
 		if balancerPoolLiquidity[1].Denom != clPool.GetToken1() {
 			return 0, sdk.ZeroDec(), types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: clPoolId, BalancerPoolId: canonicalBalancerPoolId, BalancerPoolLiquidity: balancerPoolLiquidity}
 		}
-	} else {
+	} else if balancerPoolLiquidity[0].Denom == clPool.GetToken1() {
 		asset0Amount = balancerPoolLiquidity[1].Amount
 		asset1Amount = balancerPoolLiquidity[0].Amount
 
@@ -197,6 +197,8 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64,
 		if balancerPoolLiquidity[1].Denom != clPool.GetToken0() {
 			return 0, sdk.ZeroDec(), types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: clPoolId, BalancerPoolId: canonicalBalancerPoolId, BalancerPoolLiquidity: balancerPoolLiquidity}
 		}
+	} else {
+		return 0, sdk.ZeroDec(), types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: clPoolId, BalancerPoolId: canonicalBalancerPoolId, BalancerPoolLiquidity: balancerPoolLiquidity}
 	}
 
 	// Calculate the amount of liquidity the Balancer amounts qualify in the CL pool. Note that since we use the CL spot price, this is
@@ -204,14 +206,11 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64,
 	// The `sqrtPriceLowerTick` and `sqrtPriceUpperTick` fields are set to the appropriate values for a full range position.
 	qualifyingFullRangeSharesPreDiscount := math.GetLiquidityFromAmounts(clPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, asset0Amount, asset1Amount)
 
-	// Get discount ratio from governance-set discount rate. Note that the case we check for is technically impossible, but we include
-	// the check as a guardrail anyway. Specifically, we error if the discount ratio is not [0, 1].
+	// Get discount ratio from governance-set discount rate.
 	// Note that discount rate is the amount that is being discounted by (e.g. 0.05 for a 5% discount), while discount ratio is what
 	// we multiply by to apply the discount (e.g. 0.95 for a 5% discount).
+	// Concentrated Liquidity parameters provide a contract that the discount rate will be between 0 and 1.
 	balancerSharesDiscountRatio := sdk.OneDec().Sub(k.GetParams(ctx).BalancerSharesRewardDiscount)
-	if !balancerSharesDiscountRatio.GTE(sdk.ZeroDec()) || !balancerSharesDiscountRatio.LTE(sdk.OneDec()) {
-		return 0, sdk.ZeroDec(), types.InvalidDiscountRateError{DiscountRate: k.GetParams(ctx).BalancerSharesRewardDiscount}
-	}
 
 	// Apply discount rate to qualifying full range shares
 	qualifyingFullRangeShares := balancerSharesDiscountRatio.Mul(qualifyingFullRangeSharesPreDiscount)
@@ -537,7 +536,7 @@ func (k Keeper) setIncentiveRecord(ctx sdk.Context, incentiveRecord types.Incent
 	}
 
 	// If the remaining amount is zero and the record already exists in state, we delete the record from state.
-	// If it's zero and the record doesn't exist in state, we do a no-op.
+	// If the remaining amount is zero and the record doesn't exist in state, we do a no-op.
 	// In all other cases, we update the record in state
 	if store.Has(key) && incentiveRecordBody.RemainingAmount.IsZero() {
 		store.Delete(key)
@@ -777,7 +776,7 @@ func (k Keeper) initOrUpdatePositionUptimeAccumulators(ctx sdk.Context, poolId u
 			}
 		} else {
 			// Prep accum since we claim rewards first under the hood before any update (otherwise we would overpay)
-			err = updatePositionToInitValuePlusGrowthOutside(curUptimeAccum, positionName, globalUptimeGrowthOutsideRange[uptimeIndex])
+			err := updatePositionToInitValuePlusGrowthOutside(curUptimeAccum, positionName, globalUptimeGrowthOutsideRange[uptimeIndex])
 			if err != nil {
 				return err
 			}
@@ -1090,7 +1089,7 @@ func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 		if minUptime == authorizedUptime {
 			validUptime = true
 
-			// We break here to save on itearions
+			// We break here to save on iterations
 			break
 		}
 	}
