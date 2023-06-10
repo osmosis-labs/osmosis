@@ -103,6 +103,7 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 	}
 
 	incentivesEpoch := k.incentivesKeeper.GetEpochInfo(ctx)
+	incentivesEpochDuration := incentivesEpoch.Duration
 
 	gaugeId, err := k.incentivesKeeper.CreateGauge(
 		ctx,
@@ -113,7 +114,7 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 			LockQueryType: lockuptypes.NoLock,
 			Denom:         incentivestypes.NoLockInternalGaugeDenom(pool.GetId()),
 			// We specify this duration so that we can query this duration in the IncentivizedPools() query.
-			Duration: incentivesEpoch.Duration,
+			Duration: incentivesEpochDuration,
 		},
 		ctx.BlockTime(),
 		1,
@@ -126,7 +127,6 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 	// Although the pool id <> gauge "NoLock" link is created in CreateGauge,
 	// we create an additional "ByDuration" link here for tracking
 	// internal incentive "NoLock" gauges
-	incentivesEpochDuration := k.incentivesKeeper.GetEpochInfo(ctx).Duration
 	if err := k.SetPoolGaugeIdInternalIncentive(ctx, poolId, incentivesEpochDuration, gaugeId); err != nil {
 		return err
 	}
