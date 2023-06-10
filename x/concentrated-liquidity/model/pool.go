@@ -231,11 +231,14 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 	}
 
 	// Transform the provided ticks into their corresponding sqrtPrices.
+	fmt.Println("calc0Amounts ticks lower, upper: ", lowerTick, upperTick)
 	_, _, sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
-	fmt.Println("[liq -> assets]: sqrtPriceLowerTick, sqrtPriceUpperTick: ", sqrtPriceLowerTick, sqrtPriceUpperTick)
+	fmt.Println("[liq -> assets]: sqrtPriceLowerTick, sqrtPriceUpperTick, currentSqrtPrice: ", sqrtPriceLowerTick, sqrtPriceUpperTick, p.CurrentSqrtPrice)
 	if err != nil {
 		return sdk.Dec{}, sdk.Dec{}, err
 	}
+	_, curTickPriceSqrt, _ := math.TickToSqrtPrice(p.CurrentTick)
+	fmt.Println("raw current tick and converted sqrt price: ", p.CurrentTick, curTickPriceSqrt)
 
 	// When liquidity delta is positive, that means that we are adding liquidity.
 	// Therefore, we should round up to require user provide a higher amount
@@ -251,6 +254,7 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 		// if this is the case, we attempt to provide liquidity evenly between asset0 and asset1
 		// we also update the pool liquidity since the virtual liquidity is modified by this position's creation
 		currentSqrtPrice := p.CurrentSqrtPrice
+		fmt.Println("current tick: ", p.CurrentTick)
 		actualAmountDenom0 = math.CalcAmount0Delta(liquidityDelta, currentSqrtPrice, sqrtPriceUpperTick, roundUp)
 		actualAmountDenom1 = math.CalcAmount1Delta(liquidityDelta, currentSqrtPrice, sqrtPriceLowerTick, roundUp)
 	} else if p.CurrentTick < lowerTick {

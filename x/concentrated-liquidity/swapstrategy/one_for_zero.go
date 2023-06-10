@@ -174,6 +174,8 @@ func (s oneForZeroStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId u
 			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
 		}
 
+		fmt.Println("iter loop: ", tick)
+
 		if tick > currentTickIndex {
 			break
 		}

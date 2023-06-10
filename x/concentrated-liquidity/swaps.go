@@ -570,6 +570,7 @@ func (k Keeper) computeInAmtGivenOut(
 	for swapState.amountSpecifiedRemaining.GT(smallestDec) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
 		// log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
+		fmt.Println("swap loop")
 
 		// Iterator must be valid to be able to retrieve the next tick from it below.
 		if !nextTickIter.Valid() {
@@ -586,6 +587,7 @@ func (k Keeper) computeInAmtGivenOut(
 		if err != nil {
 			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 		}
+		fmt.Println("nextTick: ", nextTick)
 
 		// utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
 		_, sqrtPriceNextTick, err := math.TickToSqrtPrice(nextTick)
@@ -650,13 +652,24 @@ func (k Keeper) computeInAmtGivenOut(
 			// update the swapState's tick with the tick we retrieved liquidity from
 			swapState.tick = nextTick
 		} else if !sqrtPriceStart.Equal(sqrtPrice) {
+			fmt.Println("didn't make it to end of tick")
 			// otherwise if the sqrtPrice calculated from computeSwapStep does not equal the sqrtPrice we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the sqrtPrice calculated from computeSwapStep
 			price := sqrtPrice.Mul(sqrtPrice)
+			fmt.Println("Full price: ", price)
 			swapState.tick, err = math.PriceToTickRoundDown(price, tickSpacing)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 			}
+
+			fmt.Println("Landed on sqrt price: ", sqrtPrice)
+			fmt.Println("Set current tick to: ", swapState.tick)
+
+			_, sqp, _ := math.TickToSqrtPrice(swapState.tick)
+			fmt.Println("Lowest price corresponding to tick: ", sqp)
+			// if sqrtPrice.LT(sqp) {
+			// 	swapState.tick = swapState.tick - int64(tickSpacing)
+			// }
 		}
 	}
 

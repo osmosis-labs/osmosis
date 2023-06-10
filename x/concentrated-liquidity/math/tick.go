@@ -38,6 +38,8 @@ func TickToSqrtPrice(tickIndex int64) (sdk.Dec, sdk.Dec, error) {
 
 	// Determine the sqrtPrice from the price
 	sqrtPrice, err := price.ApproxSqrt()
+	fmt.Println("*Price: ", price)
+	fmt.Println("*SqrtPrice: ", sqrtPrice)
 	if err != nil {
 		return sdk.Dec{}, sdk.Dec{}, err
 	}
@@ -212,6 +214,8 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
 
 	// Determine how many ticks we have passed in the exponentAtCurrentTick (in other words, the incomplete geometricExponent above)
 	ticksToBeFulfilledByExponentAtCurrentTick := osmomath.BigDecFromSDKDec(price.Sub(currentPrice)).Quo(currentAdditiveIncrementInTicks)
+
+	fmt.Println("ticksToBeFulfilledByExponentAtCurrentTick: ", ticksToBeFulfilledByExponentAtCurrentTick)
 
 	// Finally, add the ticks we have passed from the completed geometricExponent values, as well as the ticks we have passed in the current geometricExponent value
 	tickIndex = ticksPassed + ticksToBeFulfilledByExponentAtCurrentTick.SDKDec().RoundInt64()

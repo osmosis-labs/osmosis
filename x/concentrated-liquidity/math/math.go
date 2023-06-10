@@ -16,6 +16,10 @@ func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
+	fmt.Println("---Liquidity0 inputs:")
+	fmt.Println("----amount: ", amount)
+	fmt.Println("----sqrtPriceA: ", sqrtPriceA)
+	fmt.Println("----sqrtPriceB: ", sqrtPriceB)
 
 	// We convert to BigDec to avoid precision loss when calculating liquidity. Without doing this,
 	// our liquidity calculations will be off from our theoretical calculations within our tests.
@@ -63,6 +67,11 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
+	fmt.Println("---CalcAmount0Delta inputs:")
+	fmt.Println("----liq: ", liq)
+	fmt.Println("----sqrtPriceA: ", sqrtPriceA)
+	fmt.Println("----sqrtPriceB: ", sqrtPriceB)
+
 	diff := sqrtPriceB.Sub(sqrtPriceA)
 	// if calculating for amountIn, we round up
 	// if calculating for amountOut, we round down at precision end
@@ -177,7 +186,7 @@ func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0,
 		fmt.Println("prices reordered")
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
-	fmt.Println("[assets -> liq]: sqrtPriceLowerTick, sqrtPriceUpperTick: ", sqrtPriceA, sqrtPriceB)
+	fmt.Println("[assets -> liq]: sqrtPriceLowerTick, sqrtPriceUpperTick, currentSqrtPrice: ", sqrtPriceA, sqrtPriceB, sqrtPrice)
 
 	// TODO: find rounded lower, current, and upper ticks -> replace bound checks with them
 

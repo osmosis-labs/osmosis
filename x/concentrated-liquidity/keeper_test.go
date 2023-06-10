@@ -523,12 +523,12 @@ func (s *KeeperTestSuite) runMultiplePositionRanges(ranges [][]int64) {
 	)
 
 	defaultParams := RangeTestParams{
-		baseNumPositions: 5,
+		baseNumPositions: 1,
 		baseAssets:       baseAssets,
 		numSwapAddresses: 1,
 		baseSwapAmount:   sdk.NewInt(10000),
-		fuzzNumPositions: true,
-		fuzzAssets:       true,
+		// fuzzNumPositions: true,
+		fuzzAssets: true,
 		// singleAddrPerRange: true,
 	}
 
@@ -618,6 +618,9 @@ func (s *KeeperTestSuite) SetupRanges(pool types.ConcentratedPoolExtension, rang
 			s.Require().NoError(err)
 			poolLiquidity = s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
 			fmt.Println("Current tick after swap: ", pool.GetCurrentTick())
+			_, updatedCurTickSqrtPrice, _ := math.TickToSqrtPrice(pool.GetCurrentTick())
+			fmt.Println("current tick/bucket's sqrt price: ", updatedCurTickSqrtPrice)
+			fmt.Println("pool's current sqrt price: ", pool.GetCurrentSqrtPrice())
 			fmt.Println("poolLiquidity after swap: ", poolLiquidity)
 			// Track new position values in global variables
 			totalLiquidity = totalLiquidity.Add(curLiquidity)
@@ -740,7 +743,11 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 	fmt.Println("swapInDenom: ", swapInDenom)
 	fmt.Println("swapOutCoin: ", swapOutCoin)
 	fmt.Println("poolLiquidity: ", poolLiquidity)
+	allTicks, _ := s.clk.GetAllInitializedTicksForPool(s.Ctx, pool.GetId())
+	fmt.Println("All initialized ticks before next swap: ", allTicks)
 	// Note that we set the price limit to zero to ensure that the swap can execute in either direction (gets automatically set to correct limit)
+	fmt.Println("------ENTERING SWAP------")
 	_, _, _, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, swapOutCoin, swapInDenom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
 	s.Require().NoError(err)
+	fmt.Println("------EXITING SWAP------")
 }

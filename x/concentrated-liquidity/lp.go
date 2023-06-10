@@ -73,12 +73,15 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	fmt.Println("pre round ticks lower upper: ", lowerTick, upperTick)
+	fmt.Println("pre round sqrtPrices lower upper: ", sqrtPriceLowerTick, sqrtPriceUpperTick)
 	// If multiple ticks can represent the same spot price, ensure we are using the largest of those ticks.
 	lowerTick, upperTick, err = roundTickToCanonicalPriceTick(lowerTick, upperTick, priceLowerTick, priceUpperTick, pool.GetTickSpacing())
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
 	fmt.Println("post round ticks lower upper: ", lowerTick, upperTick)
+	_, _, sqrtPriceLowerTick, sqrtPriceUpperTick, _ = math.TicksToSqrtPrice(lowerTick, upperTick)
+	fmt.Println("post round sqrtPrices lower upper: ", sqrtPriceLowerTick, sqrtPriceUpperTick)
 
 	positionId = k.getNextPositionIdAndIncrement(ctx)
 
@@ -102,9 +105,11 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	if liquidityDelta.IsZero() {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, errors.New("liquidityDelta calculated equals zero")
 	}
+	fmt.Println("liquidity delta: = ", liquidityDelta)
 
 	// Initialize / update the position in the pool based on the provided tick range and liquidity delta.
 	actualAmount0, actualAmount1, err = k.UpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
+	fmt.Println("actual added 0, 1: ", actualAmount0, actualAmount1)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
