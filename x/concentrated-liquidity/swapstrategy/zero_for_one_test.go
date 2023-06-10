@@ -248,10 +248,6 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_ZeroForOne() {
 		"lower tick lands on current tick, zero for one": {
 			preSetPositions: []position{
 				{
-					lowerTick: -200,
-					upperTick: -100,
-				},
-				{
 					lowerTick: 0,
 					upperTick: 100,
 				},
