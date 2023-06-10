@@ -105,6 +105,7 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec {
 	// make sqrtPriceA the smaller value amongst sqrtPriceA and sqrtPriceB
 	if sqrtPriceA.GT(sqrtPriceB) {
+		fmt.Println("values flipped in calc1delta")
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
 	diff := sqrtPriceB.Sub(sqrtPriceA)

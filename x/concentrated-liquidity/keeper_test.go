@@ -95,6 +95,7 @@ func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, pro
 	}
 
 	s.FundAcc(owner, providedCoins.Add(roundingErrorCoins...))
+	fmt.Println("owner balances before liq: ", s.App.BankKeeper.GetAllBalances(s.Ctx, owner))
 	positionId, actual0, actual1, liquidityDelta, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, providedCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
 	s.Require().NoError(err)
 	liquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, positionId)
@@ -603,8 +604,11 @@ func (s *KeeperTestSuite) SetupRanges(pool types.ConcentratedPoolExtension, rang
 
 			curAssets := assetSlice[j]
 			// Setup position
+			fmt.Println("first position assets and range: ", curAssets, ranges[i][0], ranges[i][1])
 			curLiquidity, curPositionId := s.SetupPosition(pool.GetId(), curAddr, curAssets, ranges[i][0], ranges[i][1], true)
+			fmt.Println("owner balances after liq: ", s.App.BankKeeper.GetAllBalances(s.Ctx, curAddr))
 			// curTimeElapsed := curTimeElapsedMap[j]
+			fmt.Println("first position addr index and ID: ", j, curPositionId)
 
 			pool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
@@ -613,6 +617,10 @@ func (s *KeeperTestSuite) SetupRanges(pool types.ConcentratedPoolExtension, rang
 			fmt.Println("poolLiquidity before swap: ", poolLiquidity)
 
 			s.executeRandomizedSwap(pool, swapAddresses[0], testParams.baseSwapAmount, testParams.fuzzSwapAmounts)
+
+			// amt0Withdrawn, amt1Withdrawn, err := s.clk.WithdrawPosition(s.Ctx, curAddr, curPositionId, curLiquidity)
+			// s.Require().NoError(err)
+			// fmt.Println("withdrawn asset amounts: ", amt0Withdrawn, amt1Withdrawn)
 
 			pool, err = s.clk.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
@@ -747,6 +755,7 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 	fmt.Println("All initialized ticks before next swap: ", allTicks)
 	// Note that we set the price limit to zero to ensure that the swap can execute in either direction (gets automatically set to correct limit)
 	fmt.Println("------ENTERING SWAP------")
+	fmt.Println("swap fields: ", swapOutCoin, swapInDenom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
 	_, _, _, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, swapOutCoin, swapInDenom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
 	s.Require().NoError(err)
 	fmt.Println("------EXITING SWAP------")
