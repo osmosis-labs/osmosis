@@ -84,7 +84,7 @@ func (s *KeeperTestSuite) TestMigrate() {
 				sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
 			},
 			sharesToCreate:         defaultGammShares.Amount.Mul(sdk.NewInt(2)),
-			expectedLiquidity:      sdk.MustNewDecFromStr("49999999999.000000004999999999"),
+			expectedLiquidity:      sdk.MustNewDecFromStr("49999999999.000000005000000000"),
 			setupPoolMigrationLink: true,
 			errTolerance:           defaultErrorTolerance,
 		},

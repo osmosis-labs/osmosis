@@ -67,7 +67,7 @@ func (suite *ConcentratedMathTestSuite) TestLiquidity0() {
 			currentSqrtP:      sqrt5000,                                       // 5000
 			sqrtPHigh:         sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
 			amount0Desired:    sdk.NewInt(1000000),
-			expectedLiquidity: "1519437308.014768571720923239",
+			expectedLiquidity: "1519437308.014768571720938768",
 			// https://www.wolframalpha.com/input?i=1000000+*+%2870.710678118654752440*+74.161984870956629487%29+%2F+%2874.161984870956629487+-+70.710678118654752440%29
 		},
 	}
@@ -337,7 +337,7 @@ func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
 			sqrtPLow:          sdk.MustNewDecFromStr("67.416615162732695594"), // 4545
 			amount0Desired:    sdk.NewInt(1000000),
 			amount1Desired:    sdk.ZeroInt(),
-			expectedLiquidity: "741212151.448720111852782017",
+			expectedLiquidity: "741212151.448720111852790162",
 		},
 		"happy path (case B)": {
 			currentSqrtP:      sqrt5000,                                       // 5000
@@ -353,7 +353,7 @@ func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
 			sqrtPLow:          sdk.MustNewDecFromStr("67.416615162732695594"), // 4545
 			amount0Desired:    sdk.ZeroInt(),
 			amount1Desired:    sdk.NewInt(5000000000),
-			expectedLiquidity: "741249214.836069764856625637",
+			expectedLiquidity: "741249214.836069764856625638",
 		},
 		"full range, price proportional to amounts, equal liquidities (some rounding error) price of 4": {
 			currentSqrtP:   sqrt(sdk.NewDec(4)),
@@ -362,7 +362,7 @@ func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
 			amount0Desired: sdk.NewInt(4),
 			amount1Desired: sdk.NewInt(16),
 
-			expectedLiquidity:  sdk.MustNewDecFromStr("8.000000000000000001").String(),
+			expectedLiquidity:  sdk.MustNewDecFromStr("8.000000000000000002").String(),
 			expectedLiquidity0: sdk.MustNewDecFromStr("8.000000000000000001"),
 			expectedLiquidity1: sdk.MustNewDecFromStr("8.000000004000000002"),
 		},
