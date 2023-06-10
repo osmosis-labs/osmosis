@@ -838,9 +838,9 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	// setup wallets and send gamm tokens to these wallets (both chains)
 	superfluidVotingWallet := chainANode.CreateWallet("TestSuperfluidVoting")
 	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, superfluidVotingWallet)
-	chainANode.LockTokens(fmt.Sprintf("%v%s", sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluidVotingWallet)
+	lockId := chainANode.LockTokens(fmt.Sprintf("%v%s", sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluidVotingWallet)
 	chainA.LatestLockNumber += 1
-	chainANode.SuperfluidDelegate(chainA.LatestLockNumber, chainA.NodeConfigs[1].OperatorAddress, superfluidVotingWallet)
+	chainANode.SuperfluidDelegate(int(lockId), chainA.NodeConfigs[1].OperatorAddress, superfluidVotingWallet)
 
 	// create a text prop, deposit and vote yes
 	chainANode.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)), false)

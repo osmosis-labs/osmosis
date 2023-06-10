@@ -178,7 +178,7 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 	s.Require().NoError(err)
 
 	// fullRangeCoins := sdk.NewCoin()
-	balancerPooId = node.CreateBalancerPool("nativeDenomPoolMigration.json", node.PublicAddress)
+	balancerPooId = node.CreateBalancerPool("nativeDenomPoolMigration.json", chain.NodeConfigs[0].PublicAddress)
 	// balancerPool := s.updatedCFMMPool(node, balancePoolId)
 
 	balanceBeforeJoin := s.addrBalance(node, poolJoinAddress)
@@ -234,6 +234,7 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 	if !noLock {
 		// lock tokens
 		originalGammLockId = node.LockTokens(fmt.Sprintf("%v%s", balancerPoolShareOut.Amount, balancerPoolShareOut.Denom), unbondingDuration.String(), poolJoinAcc.String())
+		chain.LatestLockNumber += 1
 	}
 
 	// Superfluid delegate the balancer lock if the case requires it.
@@ -291,6 +292,7 @@ func (s *IntegrationTestSuite) supportTestPoolMigration(
 	s.NoError(err)
 
 	// joinPoolAmt, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr     := s.setupMigrationTest(chainA, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate)
+	// joinPoolAmt, balancerIntermediaryAcc, balancerLock, _, _, balancerPooId, clPoolId, balancerPoolShareOut, _ := s.setupMigrationTest(chain, poolJoinAddress, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate)
 	joinPoolAmt, _, balancerLock, _, _, balancerPooId, clPoolId, balancerPoolShareOut, _ := s.setupMigrationTest(chain, poolJoinAddress, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate)
 	originalGammLockId := balancerLock.GetID()
 
@@ -300,9 +302,14 @@ func (s *IntegrationTestSuite) supportTestPoolMigration(
 
 	// Note balancer pool balance after joining balancer pool
 	positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, _ := node.UnlockAndMigrateSharesToFullRangeConcentratedPosition(poolJoinAddress, fmt.Sprintf("%d", originalGammLockId) ,tokenOutMins.String(), coinsToMigrate.String())
-	// positionId, _, _, _, _, _, _ := chainANode.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sender.String(), "0" ,tokenOutMins.String(), sharesToMigrate.String())
-	println(positionId)
-	// position := chainANode.QueryConcentratedPositions(sender.String()) 
 
 	s.validateMigrateResult(node, positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering, percentOfSharesToMigrate, liquidity, joinPoolAmt, amount0, amount1 )
+
+	// // If the lock was superfluid delegated:
+	// if superfluidDelegated && !superfluidUndelegating {
+	// 	// If we migrated part of the shares:
+	// 	// The intermediary account connection to the old gamm lock should still be present.
+	// 	addr := node.QueryConnectedIntermediaryAccount(fmt.Sprintf("%d", originalGammLockId))
+	// 	s.Require().Equal(balancerIntermediaryAcc.ValAddr, addr.String())
+	// }
 }
