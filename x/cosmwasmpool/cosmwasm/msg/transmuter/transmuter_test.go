@@ -87,7 +87,7 @@ func (s *TransmuterSuite) TestFunctionalTransmuter() {
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         expectedShareDenom,
 		Duration:      lockDuration,
-	}, s.Ctx.BlockTime(), 1)
+	}, s.Ctx.BlockTime(), 1, 0)
 	s.Require().NoError(err)
 	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
 	s.Require().NoError(err)

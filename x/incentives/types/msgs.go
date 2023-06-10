@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
@@ -36,11 +37,11 @@ func (m MsgCreateGauge) Type() string { return TypeMsgCreateGauge }
 
 // ValidateBasic checks that the create gauge message is valid.
 func (m MsgCreateGauge) ValidateBasic() error {
+	lockType := m.DistributeTo.LockQueryType
+	isNoLockGauge := lockType == lockuptypes.NoLock
+
 	if m.Owner == "" {
 		return errors.New("owner should be set")
-	}
-	if sdk.ValidateDenom(m.DistributeTo.Denom) != nil {
-		return errors.New("denom should be valid for the condition")
 	}
 	if lockuptypes.LockQueryType_name[int32(m.DistributeTo.LockQueryType)] == "" {
 		return errors.New("lock query type is invalid")
@@ -55,8 +56,32 @@ func (m MsgCreateGauge) ValidateBasic() error {
 		return errors.New("distribution period should be 1 epoch for perpetual gauge")
 	}
 
-	if lockuptypes.LockQueryType_name[int32(m.DistributeTo.LockQueryType)] != "ByDuration" {
-		return errors.New("only duration query condition is allowed. Start time distr conditions is an obsolete codepath slated for deletion")
+	if lockType == lockuptypes.ByTime {
+		return errors.New("start time distr conditions is an obsolete codepath slated for deletion")
+	}
+
+	if isNoLockGauge {
+		if m.PoolId == 0 {
+			return errors.New("pool id should be set for no lock distr condition")
+		}
+
+		if m.DistributeTo.Denom != "" {
+			return errors.New(`no lock gauge denom should be unset. It will be automatically set to the NoLockExternalGaugeDenom(<pool id>)
+			 format internally, allowing for querying the gauges by denom with this prefix`)
+		}
+
+		if m.DistributeTo.Duration != 0 {
+			return fmt.Errorf("'no lock' gauge must have duration set to 0, was (%d)", m.DistributeTo.Duration)
+		}
+	} else {
+		if m.PoolId != 0 {
+			return errors.New("pool id should not be set for duration distr condition")
+		}
+
+		// For no lock type, the denom must be empty and we check that above.
+		if err := sdk.ValidateDenom(m.DistributeTo.Denom); err != nil {
+			return fmt.Errorf("denom should be valid for the condition, %s", err)
+		}
 	}
 
 	return nil
