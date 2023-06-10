@@ -843,6 +843,8 @@ func updateAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey strin
 // The given growth outside the positions range is used for claim rewards accounting.
 // The rewards are moved as "unclaimed rewards" to the new position.
 // Returns nil on success. Error otherwise.
+// NOTE: It is only used by fungifyChargedPosition which we disabled for launch.
+// nolint: unused
 func moveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum accum.AccumulatorObject, oldPositionName, newPositionName string, growthOutside sdk.DecCoins) error {
 	if oldPositionName == newPositionName {
 		return types.ModifySamePositionAccumulatorError{PositionAccName: oldPositionName}
@@ -1148,6 +1150,8 @@ func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 }
 
 // getLargestAuthorizedUptimeDuration retrieves the largest authorized uptime duration from the params.
+// NOTE: It is only used by fungifyChargedPosition which we disabled for launch.
+// nolint: unused
 func (k Keeper) getLargestAuthorizedUptimeDuration(ctx sdk.Context) time.Duration {
 	var largestUptime time.Duration
 	for _, uptime := range k.GetParams(ctx).AuthorizedUptimes {
