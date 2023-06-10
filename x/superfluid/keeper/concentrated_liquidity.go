@@ -111,7 +111,7 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, se
 	newPositionCoins := sdk.NewCoins(sdk.NewCoin(concentratedPool.GetToken0(), amount0Withdrawn.Add(amount0ToAdd)), sdk.NewCoin(concentratedPool.GetToken1(), amount1Withdrawn.Add(amount1ToAdd)))
 
 	// Create a full range (min to max tick) concentrated liquidity position, lock it, and superfluid delegate it.
-	newPositionId, actualNewAmount0, actualNewAmount1, newLiquidity, _, newLockId, err := k.clk.CreateFullRangePositionLocked(ctx, position.PoolId, sender, newPositionCoins, unbondingDuration)
+	newPositionId, actualNewAmount0, actualNewAmount1, newLiquidity, newLockId, err := k.clk.CreateFullRangePositionLocked(ctx, position.PoolId, sender, newPositionCoins, unbondingDuration)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
 	}
