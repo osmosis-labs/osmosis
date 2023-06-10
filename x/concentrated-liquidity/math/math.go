@@ -4,8 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 // liquidity0 takes an amount of asset0 in the pool as well as the sqrtpCur and the nextPrice
@@ -17,19 +15,27 @@ func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
 
-	// We convert to BigDec to avoid precision loss when calculating liquidity. Without doing this,
-	// our liquidity calculations will be off from our theoretical calculations within our tests.
-	amountBigDec := osmomath.BigDecFromSDKDec(amount.ToDec())
-	sqrtPriceABigDec := osmomath.BigDecFromSDKDec(sqrtPriceA)
-	sqrtPriceBBigDec := osmomath.BigDecFromSDKDec(sqrtPriceB)
+	// // We convert to BigDec to avoid precision loss when calculating liquidity. Without doing this,
+	// // our liquidity calculations will be off from our theoretical calculations within our tests.
+	// amountBigDec := osmomath.BigDecFromSDKDec(amount.ToDec())
+	// sqrtPriceABigDec := osmomath.BigDecFromSDKDec(sqrtPriceA)
+	// sqrtPriceBBigDec := osmomath.BigDecFromSDKDec(sqrtPriceB)
 
-	product := sqrtPriceABigDec.Mul(sqrtPriceBBigDec)
-	diff := sqrtPriceBBigDec.Sub(sqrtPriceABigDec)
-	if diff.Equal(osmomath.ZeroDec()) {
+	// product := sqrtPriceABigDec.Mul(sqrtPriceBBigDec)
+	// diff := sqrtPriceBBigDec.Sub(sqrtPriceABigDec)
+	// if diff.Equal(osmomath.ZeroDec()) {
+	// 	panic(fmt.Sprintf("liquidity0 diff is zero: sqrtPriceA %s sqrtPriceB %s", sqrtPriceA, sqrtPriceB))
+	// }
+	// fmt.Println("regular liquidity0", amount.ToDec().Mul(sqrtPriceA.Mul(sqrtPriceB)).Quo(sqrtPriceB.Sub(sqrtPriceA)))
+
+	product := sqrtPriceA.Mul(sqrtPriceB)
+	diff := sqrtPriceB.Sub(sqrtPriceA)
+	if diff.Equal(sdk.ZeroDec()) {
 		panic(fmt.Sprintf("liquidity0 diff is zero: sqrtPriceA %s sqrtPriceB %s", sqrtPriceA, sqrtPriceB))
 	}
+	fmt.Println("regular liquidity0", amount.ToDec().Mul(sqrtPriceA.Mul(sqrtPriceB)).Quo(sqrtPriceB.Sub(sqrtPriceA)))
 
-	return amountBigDec.Mul(product).Quo(diff).SDKDec()
+	return amount.ToDec().Mul(product).Quo(diff)
 }
 
 // Liquidity1 takes an amount of asset1 in the pool as well as the sqrtpCur and the nextPrice
@@ -41,18 +47,23 @@ func Liquidity1(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
 
-	// We convert to BigDec to avoid precision loss when calculating liquidity. Without doing this,
-	// our liquidity calculations will be off from our theoretical calculations within our tests.
-	amountBigDec := osmomath.BigDecFromSDKDec(amount.ToDec())
-	sqrtPriceABigDec := osmomath.BigDecFromSDKDec(sqrtPriceA)
-	sqrtPriceBBigDec := osmomath.BigDecFromSDKDec(sqrtPriceB)
+	// // We convert to BigDec to avoid precision loss when calculating liquidity. Without doing this,
+	// // our liquidity calculations will be off from our theoretical calculations within our tests.
+	// amountBigDec := osmomath.BigDecFromSDKDec(amount.ToDec())
+	// sqrtPriceABigDec := osmomath.BigDecFromSDKDec(sqrtPriceA)
+	// sqrtPriceBBigDec := osmomath.BigDecFromSDKDec(sqrtPriceB)
 
-	diff := sqrtPriceBBigDec.Sub(sqrtPriceABigDec)
-	if diff.Equal(osmomath.ZeroDec()) {
+	// diff := sqrtPriceBBigDec.Sub(sqrtPriceABigDec)
+	// if diff.Equal(osmomath.ZeroDec()) {
+	// 	panic(fmt.Sprintf("liquidity1 diff is zero: sqrtPriceA %s sqrtPriceB %s", sqrtPriceA, sqrtPriceB))
+	// }
+
+	diff := sqrtPriceB.Sub(sqrtPriceA)
+	if diff.Equal(sdk.ZeroDec()) {
 		panic(fmt.Sprintf("liquidity1 diff is zero: sqrtPriceA %s sqrtPriceB %s", sqrtPriceA, sqrtPriceB))
 	}
 
-	return amountBigDec.Quo(diff).SDKDec()
+	return amount.ToDec().Quo(diff)
 }
 
 // CalcAmount0 takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 0
@@ -79,7 +90,12 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 		// - adding liquidity (request user to provide more tokens in in favor of the pool)
 		// The denominator is truncated to get a higher final amount.
 		denom := sqrtPriceA.Mul(sqrtPriceB)
-		return liq.Mul(diff).QuoRoundUp(denom)
+		fmt.Println("denom", denom)
+		fmt.Println("liq", liq)
+		fmt.Println("diff", diff)
+		fmt.Println("liq.Mul(diff).Quo(denom)", liq.Mul(diff).Quo(denom))
+		fmt.Println("(liq.Mul(diff).Quo(denom)).Ceil()", (liq.Mul(diff).Quo(denom)).Ceil())
+		return (liq.Mul(diff).Quo(denom)).Ceil()
 	}
 	// These are truncated at precision end to round in favor of the pool when:
 	// - calculating amount out during swap
