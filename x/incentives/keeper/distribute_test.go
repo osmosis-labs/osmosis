@@ -672,8 +672,8 @@ func (s *KeeperTestSuite) TestGetModuleDistributedCoins() {
 	s.Require().Equal(coins, distrCoins)
 }
 
-// TestBuDurationPerpetualGaugeDistribution_NoLockNoOp tests that the creation of a perp gauge that has no locks associated does not distribute any tokens.
-func (s *KeeperTestSuite) TestBuDurationPerpetualGaugeDistribution_NoLockNoOp() {
+// TestByDurationPerpetualGaugeDistribution_NoLockNoOp tests that the creation of a perp gauge that has no locks associated does not distribute any tokens.
+func (s *KeeperTestSuite) TestByDurationPerpetualGaugeDistribution_NoLockNoOp() {
 	s.SetupTest()
 
 	// setup a perpetual gauge with no associated locks
