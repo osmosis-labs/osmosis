@@ -1,6 +1,7 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -2508,4 +2509,34 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 			s.Require().False(concentratedLock.IsUnlocking())
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestDrainLPFundsAttackVector() {
+	s.SetupTest()
+	pool := s.PrepareConcentratedPool()
+
+	testAccs := apptesting.CreateRandomAccounts(3)
+	firstPositionAddr := testAccs[0]
+	secondPositionAddr := testAccs[1]
+
+	firstPositionAssets := sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(9823358512)), sdk.NewCoin(USDC, sdk.NewInt(8985893232)))
+	firstPosLiq, firstPosId := s.SetupPosition(pool.GetId(), firstPositionAddr, firstPositionAssets, -68720000, -68710000, true)
+
+	secondPositionAssets := sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(9823358512)), sdk.NewCoin(USDC, sdk.NewInt(8985893232)))
+	secondPosLiq, secondPosId := s.SetupPosition(pool.GetId(), secondPositionAddr, secondPositionAssets, -68720000, -68710000, true)
+
+	swapAddr := testAccs[2]
+	desiredTokenOut := sdk.NewCoin(USDC, sdk.NewInt(10000))
+	s.FundAcc(swapAddr, sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(1000000000000000000))))
+	_, _, _, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddr, pool, desiredTokenOut, ETH, sdk.ZeroDec(), sdk.ZeroDec())
+	s.Require().NoError(err)
+
+	amt0FirstPos, amt1FirstPos, err := s.clk.WithdrawPosition(s.Ctx, firstPositionAddr, firstPosId, firstPosLiq)
+	s.Require().NoError(err)
+
+	fmt.Println("withdrawn amounts: ", amt0FirstPos, amt1FirstPos)
+
+	// Triggers panic
+	_, _, err = s.clk.WithdrawPosition(s.Ctx, secondPositionAddr, secondPosId, secondPosLiq)
+	s.Require().NoError(err)
 }
