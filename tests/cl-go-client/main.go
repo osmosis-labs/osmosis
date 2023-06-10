@@ -17,10 +17,14 @@ import (
 	"github.com/ignite/cli/ignite/pkg/cosmosaccount"
 	"github.com/ignite/cli/ignite/pkg/cosmosclient"
 
+	clqueryproto "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v16/x/poolmanager/client/queryproto"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // operation defines the desired operation to be run by this script.
@@ -38,6 +42,12 @@ const (
 	// and swaps it back while accounting for the spread factor. This is done to
 	// ensure that we cross ticks while minimizing the chance of running out of funds or liquidity.
 	makeManyInvertibleLargeSwaps
+
+	// createExternalCLIncentives creates external CL incentives.
+	createExternalCLIncentives
+
+	// createPoolOperation creates a pool with expectedPoolId.
+	createPoolOperation
 )
 
 const (
@@ -49,19 +59,22 @@ const (
 	denom1                          = "uusdc"
 	tickSpacing              int64  = 100
 	accountNamePrefix               = "lo-test"
-	numPositions                    = 100
-	numSwaps                        = 100
-	minAmountDeposited              = int64(1_000_000)
-	randSeed                        = 1
-	maxAmountDeposited              = 1_00_000_000
-	maxAmountSingleSwap             = 1_000_000
-	largeSwapAmount                 = 90_000_000_000
+	// Note, this is localosmosis-specific.
+	expectedEpochIdentifier = "hour"
+	numPositions            = 100
+	numSwaps                = 100
+	minAmountDeposited      = int64(1_000_000)
+	randSeed                = 1
+	maxAmountDeposited      = 1_00_000_000
+	maxAmountSingleSwap     = 1_000_000
+	largeSwapAmount         = 90_000_000_000
 )
 
 var (
 	defaultAccountName  = fmt.Sprintf("%s%d", accountNamePrefix, 1)
 	defaultMinAmount    = sdk.ZeroInt()
 	defaultSpreadFactor = sdk.MustNewDecFromStr("0.001")
+	externalGaugeCoins  = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000_000_000)))
 	accountMutex        sync.Mutex
 )
 
@@ -97,9 +110,6 @@ func main() {
 
 	log.Println("connected to: ", "chain-id", statusResp.NodeInfo.Network, "height", statusResp.SyncInfo.LatestBlockHeight)
 
-	// Instantiate a query client
-	clQueryClient := poolmanagerqueryproto.NewQueryClient(igniteClient.Context())
-
 	// Print warnings with common problems
 	log.Printf("\n\n\nWARNING 1: your localosmosis and client home are assummed to be %s. Run 'osmosisd get-env' and confirm it matches the path you see printed here\n\n\n", clientHome)
 
@@ -107,16 +117,9 @@ func main() {
 
 	log.Println("\n\n\nWARNING 3: sometimes the script hangs when just started. In that case, kill it and restart")
 
-	// Query pool with id 1 and create new if does not exist.
-	_, err = clQueryClient.Pool(ctx, &poolmanagerqueryproto.PoolRequest{PoolId: expectedPoolId})
-	if err != nil {
-		if !strings.Contains(err.Error(), poolmanagertypes.FailedToFindRouteError{PoolId: expectedPoolId}.Error()) {
-			log.Fatal(err)
-		}
-		createdPoolId := createPool(igniteClient, defaultAccountName)
-		if createdPoolId != expectedPoolId {
-			log.Fatalf("created pool id (%d), expected pool id (%d)", createdPoolId, expectedPoolId)
-		}
+	// Check if need to create pool before every opperation.
+	if operation(desiredOperation) != createPoolOperation {
+		createPoolOp(igniteClient)
 	}
 
 	rand.Seed(randSeed)
@@ -130,6 +133,10 @@ func main() {
 		return
 	case makeManyInvertibleLargeSwaps:
 		swapGivenLargeAmountsBothDirections(igniteClient, expectedPoolId, numSwaps, largeSwapAmount)
+	case createExternalCLIncentives:
+		createExternalCLIncentive(igniteClient, expectedPoolId, externalGaugeCoins, expectedEpochIdentifier)
+	case createPoolOperation:
+		createPoolOp(igniteClient)
 	default:
 		log.Fatalf("invalid operation: %d", desiredOperation)
 	}
@@ -231,6 +238,78 @@ func swapGivenLargeAmountsBothDirections(igniteClient cosmosclient.Client, poolI
 	log.Println("finished swapping, num swaps done", numSwaps)
 }
 
+func createExternalCLIncentive(igniteClient cosmosclient.Client, poolId uint64, gaugeCoins sdk.Coins, expectedEpochIdentifier string) {
+	var (
+		randAccountNum = rand.Intn(8) + 1
+		accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
+	)
+
+	epochsQueryClient := epochstypes.NewQueryClient(igniteClient.Context())
+	currentEpochResponse, err := epochsQueryClient.CurrentEpoch(context.Background(), &epochstypes.QueryCurrentEpochRequest{
+		expectedEpochIdentifier,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("current epoch", currentEpochResponse.CurrentEpoch, "epoch identifier", expectedEpochIdentifier)
+
+	log.Println("querying epoch info. Note that incentives are distributed at the end of epoch. That's why it matters.")
+	epochInfosRespose, err := epochsQueryClient.EpochInfos(context.Background(), &epochstypes.QueryEpochsInfoRequest{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if len(epochInfosRespose.Epochs) > 0 {
+		lastEpochInfo := epochInfosRespose.Epochs[len(epochInfosRespose.Epochs)-1]
+		log.Println("epoch duration", lastEpochInfo, "next epoch start time", lastEpochInfo.StartTime.Add(lastEpochInfo.Duration))
+	} else {
+		log.Println("could not find information about previous epoch. If duration is too long, this test might be infeasible")
+	}
+
+	// Create gauge
+	runMessageWithRetries(func() error {
+		return createGauge(igniteClient, expectedPoolId, accountName, gaugeCoins)
+	})
+
+	epochAfterGaugeCreation := int64(-1)
+	for {
+		// Wait for 1 epoch to pass
+		currentEpochResponse, err = epochsQueryClient.CurrentEpoch(context.Background(), &epochstypes.QueryCurrentEpochRequest{
+			expectedEpochIdentifier,
+		})
+		if err != nil {
+			log.Fatal(err)
+		}
+		if epochAfterGaugeCreation == -1 {
+			log.Println("current epoch after gauge creation", currentEpochResponse.CurrentEpoch)
+			log.Println("waiting for next epoch...")
+			epochAfterGaugeCreation = currentEpochResponse.CurrentEpoch
+			continue
+		}
+
+		// One epoch after gauge creation has passed
+		if epochAfterGaugeCreation+1 == currentEpochResponse.CurrentEpoch {
+			log.Println("next epoch reached, checking incentive records...")
+			break
+		}
+
+		log.Println("current epoch", currentEpochResponse.CurrentEpoch)
+		time.Sleep(5 * time.Second)
+	}
+
+	clQueryClient := clqueryproto.NewQueryClient(igniteClient.Context())
+
+	incentiveRecordsResponse, err := clQueryClient.IncentiveRecords(context.Background(), &clqueryproto.IncentiveRecordsRequest{
+		PoolId: expectedPoolId,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("incentive records. If empty, something probably went wrong", incentiveRecordsResponse.IncentiveRecords)
+}
+
 func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 	msg := &model.MsgCreateConcentratedPool{
 		Sender:       getAccountAddressFromKeyring(igniteClient, accountName),
@@ -309,6 +388,57 @@ func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountNam
 	return resp.TokenOutAmount, nil
 }
 
+func createGauge(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, gaugeCoins sdk.Coins) error {
+	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
+	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
+	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
+
+	log.Println("creating CL gauge for pool id", expectedPoolId, "gaugeCoins", gaugeCoins)
+
+	msg := &incentivestypes.MsgCreateGauge{
+		IsPerpetual: true,
+		Owner:       senderAddress,
+		DistributeTo: lockuptypes.QueryCondition{
+			LockQueryType: lockuptypes.ByDuration,
+			Denom:         "uosmo",
+			Duration:      time.Second * 120,
+		},
+		StartTime:         time.Now(),
+		Coins:             gaugeCoins,
+		NumEpochsPaidOver: 1,
+	}
+	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
+	if err != nil {
+		return err
+	}
+	resp := &incentivestypes.MsgCreateGaugeResponse{}
+	if err := txResp.Decode(resp); err != nil {
+		return err
+	}
+
+	log.Println("gauge created")
+	return nil
+}
+
+func createPoolOp(igniteClient cosmosclient.Client) {
+	// Instantiate a query client
+	poolManagerClient := poolmanagerqueryproto.NewQueryClient(igniteClient.Context())
+
+	// Query pool with id 1 and create new if does not exist.
+	_, err := poolManagerClient.Pool(context.Background(), &poolmanagerqueryproto.PoolRequest{PoolId: expectedPoolId})
+	if err != nil {
+		if !strings.Contains(err.Error(), poolmanagertypes.FailedToFindRouteError{PoolId: expectedPoolId}.Error()) {
+			log.Fatal(err)
+		}
+		createdPoolId := createPool(igniteClient, defaultAccountName)
+		if createdPoolId != expectedPoolId {
+			log.Fatalf("created pool id (%d), expected pool id (%d)", createdPoolId, expectedPoolId)
+		}
+	} else {
+		log.Println("pool already exists. Tweak expectedPoolId variable if you want another pool, current expectedPoolId: ", expectedPoolId)
+	}
+}
+
 func getAccountAddressFromKeyring(igniteClient cosmosclient.Client, accountName string) string {
 	account, err := igniteClient.Account(accountName)
 	if err != nil {
@@ -338,7 +468,7 @@ func runMessageWithRetries(runMsg func() error) {
 	for j := 0; j < maxRetries; j++ {
 		err := runMsg()
 		if err != nil {
-			log.Println("retrying, error occurred while creating position: ", err)
+			log.Println("retrying, error occurred while running message: ", err)
 			time.Sleep(8 * time.Second)
 		} else {
 			time.Sleep(200 * time.Millisecond)
