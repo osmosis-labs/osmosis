@@ -37,7 +37,9 @@ var (
 			BalancerSharesRewardDiscount: types.DefaultBalancerSharesDiscount,
 			AuthorizedUptimes:            types.DefaultAuthorizedUptimes,
 		},
-		PoolData: []genesis.PoolData{},
+		PoolData:              []genesis.PoolData{},
+		NextIncentiveRecordId: 2,
+		NextPositionId:        3,
 	}
 	testCoins    = sdk.NewDecCoins(cl.HundredFooCoins)
 	testTickInfo = model.TickInfo{
@@ -252,7 +254,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						{
 							PoolId:               uint64(1),
 							IncentiveDenom:       "foo",
-							IncentiveCreatorAddr: testAddressOne.String(),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingAmount: sdk.NewDec(5),
 								EmissionRate:    sdk.NewDec(10),
@@ -263,7 +264,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						{
 							PoolId:               uint64(1),
 							IncentiveDenom:       "bar",
-							IncentiveCreatorAddr: testAddressTwo.String(),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingAmount: sdk.NewDec(15),
 								EmissionRate:    sdk.NewDec(20),
@@ -317,7 +317,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				{
 					PoolId:               uint64(1),
 					IncentiveDenom:       "bar",
-					IncentiveCreatorAddr: testAddressTwo.String(),
 					IncentiveRecordBody: types.IncentiveRecordBody{
 						RemainingAmount: sdk.NewDec(15),
 						EmissionRate:    sdk.NewDec(20),
@@ -328,7 +327,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				{
 					PoolId:               uint64(1),
 					IncentiveDenom:       "foo",
-					IncentiveCreatorAddr: testAddressOne.String(),
 					IncentiveRecordBody: types.IncentiveRecordBody{
 						RemainingAmount: sdk.NewDec(5),
 						EmissionRate:    sdk.NewDec(10),
@@ -366,7 +364,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						{
 							PoolId:               uint64(1),
 							IncentiveDenom:       "foo",
-							IncentiveCreatorAddr: testAddressOne.String(),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingAmount: sdk.NewDec(5),
 								EmissionRate:    sdk.NewDec(10),
@@ -409,7 +406,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						{
 							PoolId:               uint64(2),
 							IncentiveDenom:       "bar",
-							IncentiveCreatorAddr: testAddressOne.String(),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingAmount: sdk.NewDec(5),
 								EmissionRate:    sdk.NewDec(10),
@@ -453,7 +449,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				{
 					PoolId:               uint64(1),
 					IncentiveDenom:       "foo",
-					IncentiveCreatorAddr: testAddressOne.String(),
 					IncentiveRecordBody: types.IncentiveRecordBody{
 						RemainingAmount: sdk.NewDec(5),
 						EmissionRate:    sdk.NewDec(10),
@@ -464,7 +459,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				{
 					PoolId:               uint64(2),
 					IncentiveDenom:       "bar",
-					IncentiveCreatorAddr: testAddressOne.String(),
 					IncentiveRecordBody: types.IncentiveRecordBody{
 						RemainingAmount: sdk.NewDec(5),
 						EmissionRate:    sdk.NewDec(10),
@@ -599,7 +593,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			// Validate incentive records
 			s.Require().Equal(len(incentiveRecords), len(tc.expectedIncentiveRecords))
 			for i, incentiveRecord := range incentiveRecords {
-				s.Require().Equal(incentiveRecord.IncentiveCreatorAddr, tc.expectedIncentiveRecords[i].IncentiveCreatorAddr)
 				s.Require().Equal(incentiveRecord.PoolId, tc.expectedIncentiveRecords[i].PoolId)
 				s.Require().Equal(incentiveRecord.IncentiveDenom, tc.expectedIncentiveRecords[i].IncentiveDenom)
 				s.Require().Equal(incentiveRecord.MinUptime, tc.expectedIncentiveRecords[i].MinUptime)
@@ -662,7 +655,6 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						{
 							PoolId:               uint64(1),
 							IncentiveDenom:       "bar",
-							IncentiveCreatorAddr: testAddressTwo.String(),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingAmount: sdk.NewDec(15),
 								EmissionRate:    sdk.NewDec(20),
@@ -673,7 +665,6 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						{
 							PoolId:               uint64(1),
 							IncentiveDenom:       "foo",
-							IncentiveCreatorAddr: testAddressOne.String(),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingAmount: sdk.NewDec(5),
 								EmissionRate:    sdk.NewDec(10),
@@ -719,7 +710,6 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						{
 							PoolId:               uint64(1),
 							IncentiveDenom:       "foo",
-							IncentiveCreatorAddr: testAddressOne.String(),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingAmount: sdk.NewDec(5),
 								EmissionRate:    sdk.NewDec(10),
@@ -747,7 +737,6 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						{
 							PoolId:               uint64(2),
 							IncentiveDenom:       "bar",
-							IncentiveCreatorAddr: testAddressOne.String(),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingAmount: sdk.NewDec(5),
 								EmissionRate:    sdk.NewDec(10),
@@ -814,7 +803,6 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 				// Validate Incentive Records
 				s.Require().Equal(len(expectedPoolData.IncentiveRecords), len(actualPoolData.IncentiveRecords))
 				for i, incentiveRecord := range actualPoolData.IncentiveRecords {
-					s.Require().Equal(incentiveRecord.IncentiveCreatorAddr, expectedPoolData.IncentiveRecords[i].IncentiveCreatorAddr)
 					s.Require().Equal(incentiveRecord.IncentiveDenom, expectedPoolData.IncentiveRecords[i].IncentiveDenom)
 					s.Require().Equal(incentiveRecord.PoolId, expectedPoolData.IncentiveRecords[i].PoolId)
 					s.Require().Equal(incentiveRecord.MinUptime, expectedPoolData.IncentiveRecords[i].MinUptime)

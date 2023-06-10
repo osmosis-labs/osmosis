@@ -21,8 +21,6 @@ message IncentiveRecord {
   // incentiveCreator is the address that created the incentive record. This
   // address does not have any special privileges – it is only kept to keep
   // incentive records created by different addresses separate.
-  string incentive_creator_addr = 3
-      [ (gogoproto.moretags) = "yaml:\"incentive_creator_addr\"" ];
   // incentive record body holds necessary
   IncentiveRecordBody incentive_record_body = 4 [
     (gogoproto.moretags) = "yaml:\"incentive_record_body\"",

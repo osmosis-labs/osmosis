@@ -1571,6 +1571,79 @@ The following are the state entries (key and value pairs) stored for the concent
 Note that for storing ticks, we use 9 bytes instead of directly using uint64, first byte being reserved for the Negative / Positive prefix, and the remaining 8 bytes being reserved for the tick itself, which is of uint64. Although we directly store signed integers as values, we use the first byte to indicate and re-arrange tick indexes from negative to positive.
 
 
+## State and Keys
+
+### Incentive Records
+
+// Incentive Prefix Keys
+// KeyIncentiveRecord is the key used to store incentive record struct for the
+// pool id + min uptime index + denom + addr combination.
+func KeyIncentiveRecord(poolId uint64, minUptimeIndex int, denom string) []byte {
+	return []byte(fmt.Sprintf("%s%s%d%s%d%s%s", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex, KeySeparator, denom))
+}
+
+// KeyUptimeIncentiveRecords returns the prefix key for incentives records using the combination of pool id + min uptime index.
+// This can be used to iterate over incentive records for the pool id + min upttime index combination.
+func KeyUptimeIncentiveRecords(poolId uint64, minUptimeIndex int) []byte {
+	return []byte(fmt.Sprintf("%s%s%d%s%d", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex))
+}
+
+// KeyPoolIncentiveRecords returns the prefix key for incentives records using given pool id.
+// This can be used to iterate over all incentive records for the pool.
+func KeyPoolIncentiveRecords(poolId uint64) []byte {
+	return []byte(fmt.Sprintf("%s%s%d", IncentivePrefix, KeySeparator, poolId))
+}
+
+
+- KeyIncentiveRecord 
+
+IncentivePrefix || KeySeparator || poolId || KeySeparator || minUptimeIndex || KeySeparator || denom
+
+- KeyUptimeIncentiveRecords
+
+IncentivePrefix || KeySeparator || poolId || KeySeparator || minUptimeIndex
+
+- KeyPoolIncentiveRecords
+
+IncentivePrefix || KeySeparator || poolId
+
+
+type IncentiveRecord struct {
+	PoolId uint64
+
+	IncentiveDenom string
+
+	IncentiveRecordBody IncentiveRecordBody 
+
+	MinUptime time.Duration
+}
+
+
+// IncentiveRecordBody represents the body stored in state for each individual
+// record.
+message IncentiveRecordBody {
+  string remaining_amount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"remaining_amount\"",
+    (gogoproto.nullable) = false
+  ];
+
+  // emission_rate is the incentive emission rate per second
+  string emission_rate = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"emission_rate\"",
+    (gogoproto.nullable) = false
+  ];
+
+  // start_time is the time when the incentive starts distributing
+  google.protobuf.Timestamp start_time = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"start_time\""
+  ];
+}
+
+
 ## Terminology
 
 We will use the following terms throughout the document:

@@ -1412,7 +1412,6 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 	testIncentiveRecord := types.IncentiveRecord{
 		PoolId:               1,
 		IncentiveDenom:       USDC,
-		IncentiveCreatorAddr: s.TestAccs[0].String(),
 		IncentiveRecordBody: types.IncentiveRecordBody{
 			RemainingAmount: sdk.NewDec(1000000000000000000),
 			EmissionRate:    sdk.NewDec(1), // 1 per second
@@ -1499,7 +1498,6 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 	testIncentiveRecord := types.IncentiveRecord{
 		PoolId:               1,
 		IncentiveDenom:       USDC,
-		IncentiveCreatorAddr: s.TestAccs[0].String(),
 		IncentiveRecordBody: types.IncentiveRecordBody{
 			RemainingAmount: sdk.NewDec(1000000000000000000),
 			EmissionRate:    sdk.NewDec(1), // 1 per second

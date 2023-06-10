@@ -519,17 +519,12 @@ func findUptimeIndex(uptime time.Duration) (int, error) {
 func (k Keeper) setIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) error {
 	store := ctx.KVStore(k.storeKey)
 
-	incentiveCreator, err := sdk.AccAddressFromBech32(incentiveRecord.IncentiveCreatorAddr)
-	if err != nil {
-		return err
-	}
-
 	uptimeIndex, err := findUptimeIndex(incentiveRecord.MinUptime)
 	if err != nil {
 		return err
 	}
 
-	key := types.KeyIncentiveRecord(incentiveRecord.PoolId, uptimeIndex, incentiveRecord.IncentiveDenom, incentiveCreator)
+	key := types.KeyIncentiveRecord(incentiveRecord.PoolId, uptimeIndex, incentiveRecord.IncentiveDenom)
 	incentiveRecordBody := types.IncentiveRecordBody{
 		RemainingAmount: incentiveRecord.IncentiveRecordBody.RemainingAmount,
 		EmissionRate:    incentiveRecord.IncentiveRecordBody.EmissionRate,
@@ -560,7 +555,7 @@ func (k Keeper) setMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []
 }
 
 // GetIncentiveRecord gets the incentive record corresponding to the passed in values from store
-func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, denom string, minUptime time.Duration, incentiveCreator sdk.AccAddress) (types.IncentiveRecord, error) {
+func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, denom string, minUptime time.Duration) (types.IncentiveRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 	incentiveBodyStruct := types.IncentiveRecordBody{}
 
@@ -569,7 +564,7 @@ func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, denom string,
 		return types.IncentiveRecord{}, err
 	}
 
-	key := types.KeyIncentiveRecord(poolId, uptimeIndex, denom, incentiveCreator)
+	key := types.KeyIncentiveRecord(poolId, uptimeIndex, denom)
 
 	found, err := osmoutils.Get(store, key, &incentiveBodyStruct)
 	if err != nil {
@@ -577,15 +572,14 @@ func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, denom string,
 	}
 
 	if !found {
-		return types.IncentiveRecord{}, types.IncentiveRecordNotFoundError{PoolId: poolId, IncentiveDenom: denom, MinUptime: minUptime, IncentiveCreatorStr: incentiveCreator.String()}
+		return types.IncentiveRecord{}, types.IncentiveRecordNotFoundError{PoolId: poolId, IncentiveDenom: denom, MinUptime: minUptime}
 	}
 
 	return types.IncentiveRecord{
-		PoolId:               poolId,
-		IncentiveDenom:       denom,
-		IncentiveCreatorAddr: incentiveCreator.String(),
-		MinUptime:            minUptime,
-		IncentiveRecordBody:  incentiveBodyStruct,
+		PoolId:              poolId,
+		IncentiveDenom:      denom,
+		MinUptime:           minUptime,
+		IncentiveRecordBody: incentiveBodyStruct,
 	}, nil
 }
 
@@ -610,12 +604,7 @@ func (k Keeper) GetIncentiveRecordSerialized(ctx sdk.Context, poolId uint64, pag
 
 		denom := string(parts[2])
 
-		incentiveCreator, err := sdk.AccAddressFromBech32(string(parts[3]))
-		if err != nil {
-			return err
-		}
-
-		incRecord, err := k.GetIncentiveRecord(ctx, poolId, denom, types.SupportedUptimes[minUptimeIndex], incentiveCreator)
+		incRecord, err := k.GetIncentiveRecord(ctx, poolId, denom, types.SupportedUptimes[minUptimeIndex])
 		if err != nil {
 			return err
 		}
@@ -1121,7 +1110,6 @@ func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 	incentiveRecord := types.IncentiveRecord{
 		PoolId:               poolId,
 		IncentiveDenom:       incentiveCoin.Denom,
-		IncentiveCreatorAddr: sender.String(),
 		IncentiveRecordBody:  incentiveRecordBody,
 		MinUptime:            minUptime,
 	}
