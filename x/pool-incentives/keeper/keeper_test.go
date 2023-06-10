@@ -112,11 +112,12 @@ func (s *KeeperTestSuite) TestCreateLockablePoolGauges() {
 	durations := s.App.PoolIncentivesKeeper.GetLockableDurations(s.Ctx)
 
 	tests := []struct {
-		name                   string
-		poolId                 uint64
-		expectedGaugeDurations []time.Duration
-		expectedGaugeIds       []uint64
-		expectedErr            bool
+		name                      string
+		poolId                    uint64
+		isInvalidLockableDuration bool
+		expectedGaugeDurations    []time.Duration
+		expectedGaugeIds          []uint64
+		expectedErr               bool
 	}{
 		{
 			name:                   "Create Gauge with valid PoolId",
@@ -132,12 +133,26 @@ func (s *KeeperTestSuite) TestCreateLockablePoolGauges() {
 			expectedGaugeIds:       []uint64{},
 			expectedErr:            true,
 		},
+		{
+			name:                      "error: invalid lockable duration",
+			poolId:                    uint64(1),
+			isInvalidLockableDuration: true,
+
+			expectedErr: true,
+		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			s.SetupTest()
+
 			poolId := s.PrepareBalancerPool()
+
+			// This should trigger error when creating a pool id <> gauge id internal incentive link.
+			if tc.isInvalidLockableDuration {
+				durations = []time.Duration{time.Duration(0)}
+				s.App.PoolIncentivesKeeper.SetLockableDurations(s.Ctx, durations)
+			}
 
 			err := s.App.PoolIncentivesKeeper.CreateLockablePoolGauges(s.Ctx, tc.poolId)
 			if tc.expectedErr {

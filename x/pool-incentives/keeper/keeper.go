@@ -84,7 +84,9 @@ func (k Keeper) CreateLockablePoolGauges(ctx sdk.Context, poolId uint64) error {
 			return err
 		}
 
-		k.SetPoolGaugeIdInternalIncentive(ctx, poolId, lockableDuration, gaugeId)
+		if err := k.SetPoolGaugeIdInternalIncentive(ctx, poolId, lockableDuration, gaugeId); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -125,14 +127,21 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 	// we create an additional "ByDuration" link here for tracking
 	// internal incentive "NoLock" gauges
 	incentivesEpochDuration := k.incentivesKeeper.GetEpochInfo(ctx).Duration
-	k.SetPoolGaugeIdInternalIncentive(ctx, poolId, incentivesEpochDuration, gaugeId)
+	if err := k.SetPoolGaugeIdInternalIncentive(ctx, poolId, incentivesEpochDuration, gaugeId); err != nil {
+		return err
+	}
 
 	return nil
 }
 
 // SetPoolGaugeIdInternalIncentive sets the gauge id for the pool and internally incentivized duration.
+// Returns error if the incentivized duration is zero.
 // CONTRACT: this link is created only for the internally incentivized gauges.
-func (k Keeper) SetPoolGaugeIdInternalIncentive(ctx sdk.Context, poolId uint64, incentivizedDuration time.Duration, gaugeId uint64) {
+func (k Keeper) SetPoolGaugeIdInternalIncentive(ctx sdk.Context, poolId uint64, incentivizedDuration time.Duration, gaugeId uint64) error {
+	if incentivizedDuration == 0 {
+		return fmt.Errorf("incentivized duration cannot be zero, pool id: %d", poolId)
+	}
+
 	// Note: this index is used for internal incentive gauges only.
 	key := types.GetPoolGaugeIdInternalStoreKey(poolId, incentivizedDuration)
 	store := ctx.KVStore(k.storeKey)
@@ -141,6 +150,8 @@ func (k Keeper) SetPoolGaugeIdInternalIncentive(ctx sdk.Context, poolId uint64, 
 	// Note: this index is used for general linking.
 	key = types.GetPoolIdFromGaugeIdStoreKey(gaugeId, incentivizedDuration)
 	store.Set(key, sdk.Uint64ToBigEndian(poolId))
+
+	return nil
 }
 
 // SetPoolGaugeIdNoLock sets the link between pool id and gauge id for "NoLock" gauges.

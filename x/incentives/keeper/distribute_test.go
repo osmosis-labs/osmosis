@@ -422,6 +422,11 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 	}
 
 	withPoolId := func(tc test, poolId uint64) test {
+		if poolId == defaultBalancerPool {
+			// If we do not set it, SetPoolGaugeIdInternalIncentive(...) errors with
+			// "zero duration is invalid"
+			tc.distrTo.Duration = time.Hour
+		}
 		tc.poolId = poolId
 		tc.expectErr = true
 		return tc
@@ -463,7 +468,8 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 
 			// Force gauge's pool id to balancer to trigger error
 			if tc.poolId == defaultBalancerPool {
-				s.App.PoolIncentivesKeeper.SetPoolGaugeIdInternalIncentive(s.Ctx, defaultBalancerPool, tc.distrTo.Duration, externalGaugeid)
+				err := s.App.PoolIncentivesKeeper.SetPoolGaugeIdInternalIncentive(s.Ctx, defaultBalancerPool, tc.distrTo.Duration, externalGaugeid)
+				s.Require().NoError(err)
 			}
 
 			// Activate the gauge.
@@ -846,7 +852,8 @@ func (s *KeeperTestSuite) TestGetPoolFromGaugeId() {
 			}
 
 			if tc.shouldSetPoolGaugeId {
-				s.App.PoolIncentivesKeeper.SetPoolGaugeIdInternalIncentive(s.Ctx, validPoolId, duration, poolIdOne)
+				err := s.App.PoolIncentivesKeeper.SetPoolGaugeIdInternalIncentive(s.Ctx, validPoolId, duration, poolIdOne)
+				s.Require().NoError(err)
 			}
 
 			pool, err := s.App.IncentivesKeeper.GetPoolFromGaugeId(s.Ctx, tc.gaugeId, duration)
