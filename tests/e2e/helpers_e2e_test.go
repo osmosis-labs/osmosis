@@ -17,6 +17,7 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var defaultFeePerTx = sdk.NewInt(1000)
@@ -301,9 +302,12 @@ func (s *IntegrationTestSuite) supportTestPoolMigration(
 	coinsToMigrate := balancerPoolShareOut
 	coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(percentOfSharesToMigrate).RoundInt()
 
-	delegationResp, _ := node.QueryIntermediaryAccount(balancerIntermediaryAcc.Denom, chain.NodeConfigs[1].OperatorAddress)
-	balancerDelegationPre := delegationResp.GetDelegation()
-
+	balancerDelegationPre := stakingtypes.Delegation{}
+	if superfluidDelegated && !superfluidUndelegating {
+		delegationResp, err := node.QueryIntermediaryAccount(balancerIntermediaryAcc.Denom, chain.NodeConfigs[1].OperatorAddress)
+		s.NoError(err)
+		balancerDelegationPre = delegationResp.GetDelegation()
+	}	
 	// Note balancer pool balance after joining balancer pool
 	positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, concentratedLockId := node.UnlockAndMigrateSharesToFullRangeConcentratedPosition(poolJoinAddress, fmt.Sprintf("%d", originalGammLockId) ,tokenOutMins.String(), coinsToMigrate.String())
 
