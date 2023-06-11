@@ -354,15 +354,15 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 		expectedMessageEvents               int
 		expectedError                       error
 	}{
-		// "single position ID": {
-		// 	upperTick:                           DefaultUpperTick,
-		// 	lowerTick:                           DefaultLowerTick,
-		// 	positionIds:                         []uint64{DefaultPositionId},
-		// 	numPositionsToCreate:                1,
-		// 	expectedTotalCollectIncentivesEvent: 1,
-		// 	expectedCollectIncentivesEvent:      1,
-		// 	expectedMessageEvents:               2, // 1 for collect incentives, 1 for send message
-		// },
+		"single position ID": {
+			upperTick:                           DefaultUpperTick,
+			lowerTick:                           DefaultLowerTick,
+			positionIds:                         []uint64{DefaultPositionId},
+			numPositionsToCreate:                1,
+			expectedTotalCollectIncentivesEvent: 1,
+			expectedCollectIncentivesEvent:      1,
+			expectedMessageEvents:               2, // 1 for collect incentives, 1 for send message
+		},
 		"two position IDs": {
 			upperTick:                           DefaultUpperTick,
 			lowerTick:                           DefaultLowerTick,
@@ -372,32 +372,32 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			expectedCollectIncentivesEvent:      2,
 			expectedMessageEvents:               3, // 1 for collect incentives, 2 for send messages
 		},
-		// "three position IDs": {
-		// 	upperTick:                           DefaultUpperTick,
-		// 	lowerTick:                           DefaultLowerTick,
-		// 	positionIds:                         []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
-		// 	numPositionsToCreate:                3,
-		// 	expectedTotalCollectIncentivesEvent: 1,
-		// 	expectedCollectIncentivesEvent:      3,
-		// 	expectedMessageEvents:               4, // 1 for collect incentives, 3 for send messages
-		// },
-		// "error: three position IDs - not an owner": {
-		// 	upperTick:                  DefaultUpperTick,
-		// 	lowerTick:                  DefaultLowerTick,
-		// 	positionIds:                []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
-		// 	numPositionsToCreate:       2,
-		// 	shouldSetupUnownedPosition: true,
-		// 	expectedError:              types.NotPositionOwnerError{},
-		// },
-		// "error": {
-		// 	upperTick:                           DefaultUpperTick,
-		// 	lowerTick:                           DefaultLowerTick,
-		// 	positionIds:                         []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
-		// 	numPositionsToCreate:                2,
-		// 	expectedTotalCollectIncentivesEvent: 0,
-		// 	expectedCollectIncentivesEvent:      0,
-		// 	expectedError:                       types.PositionIdNotFoundError{PositionId: DefaultPositionId + 2},
-		// },
+		"three position IDs": {
+			upperTick:                           DefaultUpperTick,
+			lowerTick:                           DefaultLowerTick,
+			positionIds:                         []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			numPositionsToCreate:                3,
+			expectedTotalCollectIncentivesEvent: 1,
+			expectedCollectIncentivesEvent:      3,
+			expectedMessageEvents:               4, // 1 for collect incentives, 3 for send messages
+		},
+		"error: three position IDs - not an owner": {
+			upperTick:                  DefaultUpperTick,
+			lowerTick:                  DefaultLowerTick,
+			positionIds:                []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			numPositionsToCreate:       2,
+			shouldSetupUnownedPosition: true,
+			expectedError:              types.NotPositionOwnerError{},
+		},
+		"error": {
+			upperTick:                           DefaultUpperTick,
+			lowerTick:                           DefaultLowerTick,
+			positionIds:                         []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			numPositionsToCreate:                2,
+			expectedTotalCollectIncentivesEvent: 0,
+			expectedCollectIncentivesEvent:      0,
+			expectedError:                       types.PositionIdNotFoundError{PositionId: DefaultPositionId + 2},
+		},
 	}
 
 	for name, tc := range testcases {
