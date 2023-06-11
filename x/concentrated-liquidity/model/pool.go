@@ -301,3 +301,7 @@ func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick int64, newCurrentS
 
 	return nil
 }
+
+func (p *Pool) AsSerializablePool() poolmanagertypes.PoolI {
+	return p
+}

@@ -2,7 +2,6 @@ package model
 
 import (
 	fmt "fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/cosmwasm/msg"
@@ -122,4 +121,17 @@ func (p Pool) GetStoreModel() poolmanagertypes.PoolI {
 // Set the wasm keeper.
 func (p *Pool) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
 	p.WasmKeeper = wasmKeeper
+}
+
+func (p Pool) AsSerializablePool() poolmanagertypes.PoolI {
+	return &CosmWasmPool{
+		ContractAddress: p.ContractAddress,
+		PoolId:          p.PoolId,
+		CodeId:          p.CodeId,
+		InstantiateMsg:  p.InstantiateMsg,
+	}
+}
+
+func (p *CosmWasmPool) AsSerializablePool() poolmanagertypes.PoolI {
+	return p
 }

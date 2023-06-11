@@ -78,7 +78,7 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI,
 	if err != nil {
 		return nil, err
 	}
-	return cwPool.GetStoreModel(), nil
+	return cwPool, nil
 }
 
 // GetPools retrieves all pool objects stored in the keeper.
