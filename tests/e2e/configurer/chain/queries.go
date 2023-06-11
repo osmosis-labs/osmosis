@@ -464,7 +464,7 @@ func (n *NodeConfig) QueryPropStatus(proposalNumber int) (string, error) {
 	return proposalStatus.String(), nil
 }
 
-func (n *NodeConfig) QueryIntermediaryAccount(denom string, valAddr string) (int, error) {
+func (n *NodeConfig) QueryIntermediaryAccount(denom string, valAddr string) (stakingtypes.DelegationResponse, error) {
 	intAccount := superfluidtypes.GetSuperfluidIntermediaryAccountAddr(denom, valAddr)
 	path := fmt.Sprintf(
 		"cosmos/staking/v1beta1/validators/%s/delegations/%s",
@@ -478,10 +478,7 @@ func (n *NodeConfig) QueryIntermediaryAccount(denom string, valAddr string) (int
 	err = util.Cdc.UnmarshalJSON(bz, &stakingResp)
 	require.NoError(n.t, err)
 
-	intAccBalance := stakingResp.DelegationResponse.Balance.Amount.String()
-	intAccountBalance, err := strconv.Atoi(intAccBalance)
-	require.NoError(n.t, err)
-	return intAccountBalance, err
+	return *stakingResp.DelegationResponse, err
 }
 
 func (n *NodeConfig) QueryConnectedIntermediaryAccount(lockId string) *superfluidtypes.SuperfluidIntermediaryAccountInfo {
@@ -510,6 +507,19 @@ func (n *NodeConfig) QueryLockedById(lockId string) *lockuptypes.PeriodLock {
 	require.NoError(n.t, err)
 
 	return lockedResp.Lock
+}
+
+func (n *NodeConfig) QuerySyntheticLockupByLockupID(lockId string) *lockuptypes.SyntheticLock {
+	path := fmt.Sprintf("/osmosis/lockup/v1beta1/synthetic_lockup_by_lock_id/%s", lockId)
+
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var syntheticLockedResp lockuptypes.SyntheticLockupByLockupIDResponse
+	err = util.Cdc.UnmarshalJSON(bz, &syntheticLockedResp)
+	require.NoError(n.t, err)
+
+	return &syntheticLockedResp.SyntheticLock
 }
 
 func (n *NodeConfig) QueryCurrentEpoch(identifier string) int64 {

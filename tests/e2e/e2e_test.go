@@ -874,7 +874,10 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 
 	s.Eventually(
 		func() bool {
-			intAccountBalance, err := chainANode.QueryIntermediaryAccount(fmt.Sprintf("gamm/pool/%d", poolId), chainA.NodeConfigs[1].OperatorAddress)
+			delegationResp, err := chainANode.QueryIntermediaryAccount(fmt.Sprintf("gamm/pool/%d", poolId), chainA.NodeConfigs[1].OperatorAddress)
+			s.Require().NoError(err)
+			intAccBalance := delegationResp.Balance.Amount.String()
+			intAccountBalance, err := strconv.Atoi(intAccBalance)
 			s.Require().NoError(err)
 			if err != nil {
 				return false
