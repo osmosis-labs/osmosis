@@ -267,7 +267,7 @@ func createExternalCLIncentive(igniteClient cosmosclient.Client, poolId uint64, 
 		log.Println("could not find information about previous epoch. If duration is too long, this test might be infeasible")
 	}
 
-	// Create gauge
+	//.Create gauge
 	runMessageWithRetries(func() error {
 		return createGauge(igniteClient, expectedPoolId, accountName, gaugeCoins)
 	})
@@ -396,16 +396,15 @@ func createGauge(client cosmosclient.Client, poolId uint64, senderKeyringAccount
 	log.Println("creating CL gauge for pool id", expectedPoolId, "gaugeCoins", gaugeCoins)
 
 	msg := &incentivestypes.MsgCreateGauge{
-		IsPerpetual: true,
+		IsPerpetual: false,
 		Owner:       senderAddress,
 		DistributeTo: lockuptypes.QueryCondition{
-			LockQueryType: lockuptypes.ByDuration,
-			Denom:         "uosmo",
-			Duration:      time.Second * 120,
+			LockQueryType: lockuptypes.NoLock,
 		},
 		StartTime:         time.Now(),
 		Coins:             gaugeCoins,
-		NumEpochsPaidOver: 1,
+		NumEpochsPaidOver: 5,
+		PoolId:            expectedPoolId,
 	}
 	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
 	if err != nil {
@@ -435,7 +434,7 @@ func createPoolOp(igniteClient cosmosclient.Client) {
 			log.Fatalf("created pool id (%d), expected pool id (%d)", createdPoolId, expectedPoolId)
 		}
 	} else {
-		log.Println("pool already exists. Tweak expectedPoolId variable if you want another pool, current expectedPoolId: ", expectedPoolId)
+		log.Println("pool already exists. Tweak expectedPoolId variable if you want another pool, current expectedPoolId", expectedPoolId)
 	}
 }
 
