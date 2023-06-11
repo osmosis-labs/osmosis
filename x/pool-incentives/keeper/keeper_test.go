@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v16/app/params"
 	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
 	"github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
@@ -92,6 +91,15 @@ func (s *KeeperTestSuite) TestCreateConcentratePoolGauges() {
 		// Same amount of gauges as lockableDurations must be created for every pool created.
 		gaugeId, err := keeper.GetPoolGaugeId(s.Ctx, clPool.GetId(), currEpoch.Duration)
 		s.NoError(err)
+
+		// Same amount of NoLock gauges as lockableDurations must be created for every pool created.
+		gaugeIds, err := keeper.GetNoLockGaugeIdsFromPool(s.Ctx, clPool.GetId())
+		s.NoError(err)
+
+		s.Equal(1, len(gaugeIds))
+
+		s.Equal(gaugeId, gaugeIds[0])
+
 		gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
 		s.NoError(err)
 		s.Equal(0, len(gauge.Coins))
@@ -104,11 +112,12 @@ func (s *KeeperTestSuite) TestCreateLockablePoolGauges() {
 	durations := s.App.PoolIncentivesKeeper.GetLockableDurations(s.Ctx)
 
 	tests := []struct {
-		name                   string
-		poolId                 uint64
-		expectedGaugeDurations []time.Duration
-		expectedGaugeIds       []uint64
-		expectedErr            bool
+		name                      string
+		poolId                    uint64
+		isInvalidLockableDuration bool
+		expectedGaugeDurations    []time.Duration
+		expectedGaugeIds          []uint64
+		expectedErr               bool
 	}{
 		{
 			name:                   "Create Gauge with valid PoolId",
@@ -124,12 +133,26 @@ func (s *KeeperTestSuite) TestCreateLockablePoolGauges() {
 			expectedGaugeIds:       []uint64{},
 			expectedErr:            true,
 		},
+		{
+			name:                      "error: invalid lockable duration",
+			poolId:                    uint64(1),
+			isInvalidLockableDuration: true,
+
+			expectedErr: true,
+		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			s.SetupTest()
+
 			poolId := s.PrepareBalancerPool()
+
+			// This should trigger error when creating a pool id <> gauge id internal incentive link.
+			if tc.isInvalidLockableDuration {
+				durations = []time.Duration{time.Duration(0)}
+				s.App.PoolIncentivesKeeper.SetLockableDurations(s.Ctx, durations)
+			}
 
 			err := s.App.PoolIncentivesKeeper.CreateLockablePoolGauges(s.Ctx, tc.poolId)
 			if tc.expectedErr {
@@ -220,7 +243,7 @@ func (s *KeeperTestSuite) TestCreateConcentratedLiquidityPoolGauge() {
 				s.Require().True(gaugeInfo.IsPerpetual)
 				s.Require().Empty(gaugeInfo.Coins)
 				s.Require().Equal(s.Ctx.BlockTime(), gaugeInfo.StartTime)
-				s.Require().Equal(appParams.BaseCoinUnit, gaugeInfo.DistributeTo.Denom)
+				s.Require().Equal(incentivestypes.NoLockInternalGaugeDenom(tc.poolId), gaugeInfo.DistributeTo.Denom)
 				s.Require().Equal(uint64(1), gaugeInfo.NumEpochsPaidOver)
 			}
 		})

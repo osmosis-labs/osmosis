@@ -24,11 +24,11 @@ func (s *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 		Denom:         defaultLPDenom,
 		Duration:      defaultLockDuration / 2, // 0.5 second, invalid duration
 	}
-	_, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
+	_, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1, 0)
 	s.Require().Error(err)
 
 	distrTo.Duration = defaultLockDuration
-	_, err = s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
+	_, err = s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1, 0)
 	s.Require().NoError(err)
 }
 
@@ -43,10 +43,10 @@ func (s *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
 		Denom:         defaultLPDenom,
 		Duration:      defaultLockDuration,
 	}
-	_, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, addrNoSupply, defaultLiquidTokens, distrTo, time.Time{}, 1)
+	_, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, addrNoSupply, defaultLiquidTokens, distrTo, time.Time{}, 1, 0)
 	s.Require().Error(err)
 
-	_, err = s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
+	_, err = s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1, 0)
 	s.Require().NoError(err)
 }
 
@@ -422,6 +422,162 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 				s.Require().NoError(err)
 
 				s.Require().Equal(expectedCoins, gauge.Coins)
+			}
+		})
+	}
+}
+
+// TestCreateGauge_NoLockGauges tests the CreateGauge function
+// specifically focusing on the no lock gauge type and test cases around it.
+// It tests the following:
+// - For no lock gauges, a CL pool id must be given and then pool must exist
+// - For no lock gauges, the denom must be set either to NoLockInternalGaugeDenom(<pool id>)
+// or be unset. If set to anything other than the internal prefix, fails with error.
+// Assumes that the gauge was created externally (via MsgCreateGauge) if the denom is unset and overwrites it
+// with NoLockExternalGaugeDenom(<pool id>)
+// - Otherwise, the given pool id must be zero. Errors if not.
+func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
+	const (
+		zeroPoolId         = uint64(0)
+		balancerPoolId     = uint64(1)
+		concentratedPoolId = uint64(2)
+		invalidPool        = uint64(3)
+		// 3 are created for balancer pool and 1 for CL.
+		// As a result, the next gauge id should be 5.
+		defaultExpectedGaugeId = uint64(5)
+
+		defaultIsPerpetualParam = false
+
+		defaultNumEpochPaidOver = uint64(10)
+	)
+
+	var (
+		defaultCoins = sdk.NewCoins(
+			sdk.NewCoin("uosmo", sdk.NewInt(100000)),
+			sdk.NewCoin("atom", sdk.NewInt(99999)),
+		)
+
+		defaultTime = time.Unix(0, 0)
+	)
+	testCases := []struct {
+		name    string
+		distrTo lockuptypes.QueryCondition
+		poolId  uint64
+
+		expectedGaugeId  uint64
+		expectedDenomSet string
+		expectErr        bool
+	}{
+		{
+			name: "create valid no lock gauge with CL pool (no denom set)",
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+				// Note: this assumes the gauge is external
+				Denom: "",
+			},
+			poolId: concentratedPoolId,
+
+			expectedGaugeId:  defaultExpectedGaugeId,
+			expectedDenomSet: types.NoLockExternalGaugeDenom(concentratedPoolId),
+			expectErr:        false,
+		},
+		{
+			name: "create valid no lock gauge with CL pool (denom set to no lock internal prefix)",
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+				// Note: this assumes the gauge is internal
+				Denom: types.NoLockInternalGaugeDenom(concentratedPoolId),
+			},
+			poolId: concentratedPoolId,
+
+			expectedGaugeId:  defaultExpectedGaugeId,
+			expectedDenomSet: types.NoLockInternalGaugeDenom(concentratedPoolId),
+			expectErr:        false,
+		},
+		{
+			name: "fail to create gauge because invalid denom is set",
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+				// Note: this is invalid for NoLock gauges
+				Denom: "uosmo",
+			},
+			poolId: concentratedPoolId,
+
+			expectErr: true,
+		},
+		{
+			name: "fail to create no lock gauge with balancer pool",
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+			},
+			poolId: balancerPoolId,
+
+			expectErr: true,
+		},
+		{
+			name: "fail to create no lock gauge with non-existent pool",
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+			},
+			poolId: invalidPool,
+
+			expectErr: true,
+		},
+		{
+			name: "fail to create no lock gauge with zero pool id",
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+			},
+			poolId: zeroPoolId,
+
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			s.PrepareBalancerPool()
+			s.PrepareConcentratedPool()
+
+			s.FundAcc(s.TestAccs[0], defaultCoins)
+
+			// System under test
+			// Note that the default params are used for some inputs since they are not relevant to the test case.
+			gaugeId, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, defaultIsPerpetualParam, s.TestAccs[0], defaultCoins, tc.distrTo, defaultTime, defaultNumEpochPaidOver, tc.poolId)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				s.Require().Equal(tc.expectedGaugeId, gaugeId)
+
+				// Assert that pool id and gauge id link meant for internally incentivized gauges is unset.
+				_, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, tc.poolId, tc.distrTo.Duration)
+				s.Require().Error(err)
+
+				// Confirm that the general pool id to gauge id link is set.
+				gaugeIds, err := s.App.PoolIncentivesKeeper.GetNoLockGaugeIdsFromPool(s.Ctx, tc.poolId)
+				s.Require().NoError(err)
+				// One must have been created at pool creation time for internal incentives.
+				s.Require().Len(gaugeIds, 2)
+				gaugeId := gaugeIds[1]
+
+				s.Require().Equal(tc.expectedGaugeId, gaugeId)
+
+				// Get gauge and check that the denom is set correctly
+				gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, tc.expectedGaugeId)
+				s.Require().NoError(err)
+
+				s.Require().Equal(tc.expectedDenomSet, gauge.DistributeTo.Denom)
+				s.Require().Equal(tc.distrTo.LockQueryType, gauge.DistributeTo.LockQueryType)
+				s.Require().Equal(defaultIsPerpetualParam, gauge.IsPerpetual)
+				s.Require().Equal(defaultCoins, gauge.Coins)
+				s.Require().Equal(defaultTime.UTC(), gauge.StartTime.UTC())
+				s.Require().Equal(defaultNumEpochPaidOver, gauge.NumEpochsPaidOver)
 			}
 		})
 	}
