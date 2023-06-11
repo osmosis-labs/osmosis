@@ -935,6 +935,11 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 			return sdk.Coins{}, sdk.Coins{}, err
 		}
 
+		pos, err := uptimeAccum.GetPosition(positionName)
+		if err != nil {
+			return sdk.Coins{}, sdk.Coins{}, err
+		}
+
 		// If the accumulator contains the position, claim the position's incentives.
 		if hasPosition {
 			collectedIncentivesForUptime, dust, err := updateAccumAndClaimRewards(uptimeAccum, positionName, uptimeGrowthOutside[uptimeIndex])
@@ -966,11 +971,6 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 
 					forfeitedIncentivesForPosition = forfeitedIncentivesForPosition.Add(sdk.NewDecCoinsFromCoins(collectedIncentivesForUptime...)...)
 					continue
-				}
-
-				pos, err := uptimeAccum.GetPosition(positionName)
-				if err != nil {
-					return sdk.Coins{}, sdk.Coins{}, err
 				}
 
 				var forfeitedIncentivesPerShare sdk.DecCoins
