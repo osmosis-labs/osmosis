@@ -1623,12 +1623,17 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 				tickIndex:      50,
 				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
 			},
-			existingPosition:         true,
-			addToGlobalAccums:        uptimeHelper.threeHundredTokensMultiDenom,
-			positionId:               DefaultPositionId,
-			currentTickIndex:         0,
-			globalUptimeAccumValues:  uptimeHelper.threeHundredTokensMultiDenom,
-			expectedInitAccumValue:   uptimeHelper.fourHundredTokensMultiDenom,
+			existingPosition:  true,
+			addToGlobalAccums: uptimeHelper.threeHundredTokensMultiDenom,
+			positionId:        DefaultPositionId,
+			currentTickIndex:  0,
+
+			// The global accum value here is arbitrarily chosen to determine what we initialize the global accumulators to.
+			globalUptimeAccumValues: uptimeHelper.threeHundredTokensMultiDenom,
+			// We start with `hundredTokensMultiDenom` in the tick trackers (which is in range), and add `threeHundredTokensMultiDenom` to the global accumulators.
+			// This gives us an expected init value of `fourHundredTokensMultiDenom`.
+			expectedInitAccumValue: uptimeHelper.fourHundredTokensMultiDenom,
+			// The unclaimed rewards matches the amount we added to the global accumulators (since the position already existed and was in range).
 			expectedUnclaimedRewards: uptimeHelper.threeHundredTokensMultiDenom,
 		},
 		"(lower < upper < curr) nonzero uptime trackers": {
@@ -1657,12 +1662,17 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 				tickIndex:      50,
 				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.threeHundredTokensMultiDenom),
 			},
-			existingPosition:         true,
-			addToGlobalAccums:        uptimeHelper.threeHundredTokensMultiDenom,
-			positionId:               DefaultPositionId,
-			currentTickIndex:         51,
-			globalUptimeAccumValues:  uptimeHelper.fourHundredTokensMultiDenom,
-			expectedInitAccumValue:   uptimeHelper.twoHundredTokensMultiDenom,
+			existingPosition:  true,
+			addToGlobalAccums: uptimeHelper.threeHundredTokensMultiDenom,
+			positionId:        DefaultPositionId,
+			currentTickIndex:  51,
+
+			// The global accum value here is arbitrarily chosen to determine what we initialize the global accumulators to.
+			globalUptimeAccumValues: uptimeHelper.fourHundredTokensMultiDenom,
+			// The difference between the lower and upper tick's uptime trackers is `twoHundredTokensMultiDenom`.
+			// The amount we added to the global accumulators is `threeHundredTokensMultiDenom`, but doesn't count towards the init value since the position was out of range.
+			expectedInitAccumValue: uptimeHelper.twoHundredTokensMultiDenom,
+			// The unclaimed rewards here is still empty despite having a pre-existing position, because the position has been out of range for the entire time.
 			expectedUnclaimedRewards: uptimeHelper.emptyExpectedAccumValues,
 		},
 		"(curr < lower < upper) nonzero uptime trackers": {
@@ -1691,12 +1701,17 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 				tickIndex:      50,
 				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
 			},
-			existingPosition:         true,
-			addToGlobalAccums:        uptimeHelper.threeHundredTokensMultiDenom,
-			positionId:               DefaultPositionId,
-			currentTickIndex:         -51,
-			globalUptimeAccumValues:  uptimeHelper.fourHundredTokensMultiDenom,
-			expectedInitAccumValue:   uptimeHelper.twoHundredTokensMultiDenom,
+			existingPosition:  true,
+			addToGlobalAccums: uptimeHelper.threeHundredTokensMultiDenom,
+			positionId:        DefaultPositionId,
+			currentTickIndex:  -51,
+
+			// The global accum value here is arbitrarily chosen to determine what we initialize the global accumulators to.
+			globalUptimeAccumValues: uptimeHelper.fourHundredTokensMultiDenom,
+			// The difference between the lower and upper tick's uptime trackers is `twoHundredTokensMultiDenom`.
+			// The amount we added to the global accumulators is `threeHundredTokensMultiDenom`, but doesn't count towards the init value since the position was out of range.
+			expectedInitAccumValue: uptimeHelper.twoHundredTokensMultiDenom,
+			// The unclaimed rewards here is still empty despite having a pre-existing position, because the position has been out of range for the entire time.
 			expectedUnclaimedRewards: uptimeHelper.emptyExpectedAccumValues,
 		},
 		"(lower < curr < upper) nonzero and variable uptime trackers": {
