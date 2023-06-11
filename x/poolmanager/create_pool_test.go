@@ -232,6 +232,7 @@ func (s *KeeperTestSuite) TestCreatePool() {
 			if tc.expectedModuleType == cosmwasmKeeperType {
 				codeId := s.StoreCosmWasmPoolContractCode(apptesting.TransmuterContractName)
 				s.Require().Equal(validTransmuterCodeId, codeId)
+				s.App.CosmwasmPoolKeeper.WhitelistCodeId(s.Ctx, codeId)
 			}
 
 			poolmanagerKeeper := s.App.PoolManagerKeeper

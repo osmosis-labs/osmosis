@@ -130,3 +130,13 @@ func (q Querier) ClaimableIncentives(grpcCtx context.Context,
 	return q.Q.ClaimableIncentives(ctx, *req)
 }
 
+func (q Querier) CFMMPoolIdLinkFromConcentratedPoolId(grpcCtx context.Context,
+	req *queryproto.CFMMPoolIdLinkFromConcentratedPoolIdRequest,
+) (*queryproto.CFMMPoolIdLinkFromConcentratedPoolIdResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.CFMMPoolIdLinkFromConcentratedPoolId(ctx, *req)
+}
+
