@@ -10,8 +10,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	distributiontypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
@@ -2922,9 +2920,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 					joinTime = joinTime.AddDate(0, 0, 28)
 				}
 
-				communityPoolAddress := s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName)
-				communityPoolBalanceBefore := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolAddress)
-
 				// Initialize position
 				err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, tc.numShares, joinTime, tc.positionIdCreate)
 				s.Require().NoError(err)
@@ -2990,11 +2985,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 					return
 				}
 				s.Require().NoError(err)
-
-				communityPoolBalanceAfter := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolAddress)
-				fmt.Println("communityPoolBalanceBefore", communityPoolBalanceBefore)
-				fmt.Println("communityPoolBalanceAfter", communityPoolBalanceAfter)
-				fmt.Println()
 
 				// Ensure that forfeited incentives were properly added to their respective accumulators
 				if tc.forfeitIncentives {
