@@ -403,7 +403,6 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 	for name, tc := range testcases {
 		s.Run(name, func() {
 			s.SetupTest()
-			ctx := s.Ctx
 
 			// Create a cl pool with a default position
 			pool := s.PrepareConcentratedPool()
@@ -416,37 +415,51 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 				s.SetupDefaultPositionAcc(pool.GetId(), s.TestAccs[1])
 			}
 
-			position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(ctx, tc.positionIds[0])
+			position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, tc.positionIds[0])
 			s.Require().NoError(err)
-			ctx = ctx.WithBlockTime(position.JoinTime.Add(time.Hour * 24 * 7))
-			positionAge := ctx.BlockTime().Sub(position.JoinTime)
+			s.Ctx = s.Ctx.WithBlockTime(position.JoinTime.Add(time.Hour * 24 * 7))
+			positionAge := s.Ctx.BlockTime().Sub(position.JoinTime)
 
 			// Set up accrued incentives
-			err = addToUptimeAccums(ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, uptimeHelper.hundredTokensMultiDenom)
+			err = addToUptimeAccums(s.Ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, uptimeHelper.hundredTokensMultiDenom)
 			s.Require().NoError(err)
 
-			expectedIncentives := expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, positionAge, sdk.NewInt(1))
+			expectedIncentives := sdk.Coins{}
+			expectedForfeit := sdk.Coins{}
 
-			expectedForfeit := expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, twoWeeks, sdk.NewInt(1)).Sub(expectedIncentives)
-
-			for i := range expectedIncentives {
-				expectedIncentives[i].Amount = expectedIncentives[i].Amount.Mul(sdk.NewInt(int64(len(tc.positionIds))))
+			// Determine uptime growth at time of claim
+			// This isn't really straight forward, since when each position claimed, it forfeits its respective rewards and they become claimable by the next
+			// This modifies the uptime accumulator for each position, so we need to determine what that uptime accumulator value will be at the time each position claims.
+			perPosUptimeGrowthAtTimeOfClaim := [][]sdk.DecCoins{}
+			for i := range tc.positionIds {
+				if i == 0 {
+					perPosUptimeGrowthAtTimeOfClaim = append(perPosUptimeGrowthAtTimeOfClaim, uptimeHelper.hundredTokensMultiDenom)
+				} else {
+					newUptimeGrowthPostPreviousUserForfeit := make([]sdk.DecCoins, len(uptimeHelper.hundredTokensMultiDenom))
+					copy(newUptimeGrowthPostPreviousUserForfeit, uptimeHelper.hundredTokensMultiDenom)
+					newUptimeGrowthWithPreviousUserForfeit := perPosUptimeGrowthAtTimeOfClaim[i-1][len(perPosUptimeGrowthAtTimeOfClaim[i-1])-1].MulDec(sdk.NewDec(int64(len(tc.positionIds))).Quo(sdk.NewDec(int64(len(tc.positionIds) - 1))))
+					newUptimeGrowthPostPreviousUserForfeit[len(newUptimeGrowthPostPreviousUserForfeit)-1] = newUptimeGrowthWithPreviousUserForfeit
+					perPosUptimeGrowthAtTimeOfClaim = append(perPosUptimeGrowthAtTimeOfClaim, newUptimeGrowthPostPreviousUserForfeit)
+				}
 			}
 
-			for i := range expectedForfeit {
-				expectedForfeit[i].Amount = expectedForfeit[i].Amount.Mul(sdk.NewInt(int64(len(tc.positionIds))))
+			// Using the above calculated uptime growth for each position, calculate the expected redeemed incentives and forfeits.
+			for _, uptimeGrowth := range perPosUptimeGrowthAtTimeOfClaim {
+				expectedIncentivesInternal := expectedIncentivesFromUptimeGrowth(uptimeGrowth, DefaultLiquidityAmt, positionAge, sdk.NewInt(1))
+				expectedForfeitInternal := expectedIncentivesFromUptimeGrowth(uptimeGrowth, DefaultLiquidityAmt, twoWeeks, sdk.NewInt(1)).Sub(expectedIncentivesInternal)
+				expectedIncentives = expectedIncentives.Add(expectedIncentivesInternal...)
+				expectedForfeit = expectedForfeit.Add(expectedForfeitInternal...)
+
 			}
 
+			// Fund the incentive address with the expected incentives to be distributed
 			s.FundAcc(pool.GetIncentivesAddress(), expectedIncentives)
-
-			fmt.Println("expectedIncentives", expectedIncentives)
-			fmt.Println("expectedForfeit", expectedForfeit)
 
 			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 
 			// Reset event counts to 0 by creating a new manager.
-			ctx = ctx.WithEventManager(sdk.NewEventManager())
-			s.Equal(0, len(ctx.EventManager().Events()))
+			s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
+			s.Equal(0, len(s.Ctx.EventManager().Events()))
 
 			msg := &types.MsgCollectIncentives{
 				Sender:      s.TestAccs[0].String(),
@@ -454,22 +467,23 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			}
 
 			// System under test
-			response, err := msgServer.CollectIncentives(sdk.WrapSDKContext(ctx), msg)
+			response, err := msgServer.CollectIncentives(sdk.WrapSDKContext(s.Ctx), msg)
 
 			if tc.expectedError == nil {
 				s.Require().NoError(err)
 				s.Require().NotNil(response)
 
+				// Need to change the output to a single coin array for comparison
 				expectedCollectedIncentives := []sdk.Coin{}
+				expectedForfeitIncentives := []sdk.Coin{}
 				expectedCollectedIncentives = append(expectedCollectedIncentives, expectedIncentives...)
+				expectedForfeitIncentives = append(expectedForfeitIncentives, expectedForfeit...)
 
-				fmt.Println("expectedForfeit", expectedForfeit)
-				fmt.Println("response.ForfeitedIncentives", response.ForfeitedIncentives)
-				fmt.Println()
 				s.Require().Equal(expectedCollectedIncentives, response.CollectedIncentives)
-				s.AssertEventEmitted(ctx, types.TypeEvtTotalCollectIncentives, tc.expectedTotalCollectIncentivesEvent)
-				s.AssertEventEmitted(ctx, types.TypeEvtCollectIncentives, tc.expectedCollectIncentivesEvent)
-				s.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+				s.Require().Equal(expectedForfeitIncentives, response.ForfeitedIncentives)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtTotalCollectIncentives, tc.expectedTotalCollectIncentivesEvent)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtCollectIncentives, tc.expectedCollectIncentivesEvent)
+				s.AssertEventEmitted(s.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 			} else {
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &tc.expectedError)

@@ -2892,6 +2892,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 					// Subtract the initial accum values to get the delta
 					uptimeAccumDeltaValues, err := osmoutils.SubDecCoinArrays(newUptimeAccumValues, initUptimeAccumValues)
 					s.Require().NoError(err)
+					s.Require().NotNil(uptimeAccumDeltaValues)
 
 					// Convert DecCoins to Coins by truncation for comparison
 					normalizedUptimeAccumDelta := sdk.NewCoins()

@@ -912,6 +912,11 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 		return sdk.Coins{}, sdk.Coins{}, err
 	}
 
+	fmt.Println("Uptime accumulators pre claim: ")
+	for _, uptimeAccum := range uptimeAccumulators {
+		fmt.Println(uptimeAccum.GetValue())
+	}
+
 	// Compute uptime growth outside of the range between lower tick and upper tick
 	uptimeGrowthOutside, err := k.GetUptimeGrowthOutsideRange(ctx, position.PoolId, position.LowerTick, position.UpperTick)
 	if err != nil {
@@ -934,6 +939,8 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 		if err != nil {
 			return sdk.Coins{}, sdk.Coins{}, err
 		}
+
+		pos, _ := uptimeAccum.GetPosition(positionName)
 
 		// If the accumulator contains the position, claim the position's incentives.
 		if hasPosition {
@@ -972,8 +979,15 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 
 				var forfeitedIncentivesPerShare sdk.DecCoins
 				for _, coin := range collectedIncentivesForUptime {
-					// updated forfeitedIncentivesPerShare to add back = collectedIncentivesPerShare / totalSharesAccum
-					forfeitedIncentivesPerShare = append(forfeitedIncentivesPerShare, sdk.NewDecCoinFromDec(coin.Denom, coin.Amount.ToDec().Add(dust.AmountOf(coin.Denom)).Quo(totalSharesAccum)))
+					// updated forfeitedIncentivesPerShare to add back = collectedIncentivesPerShare / (totalSharesAccum - position.NumShares)
+					denominator := totalSharesAccum.Sub(pos.NumShares)
+					// If this is the last position in the accumulator, then the denominator will be zero.
+					// We instead reinvest the forfeited incentives back into the accumulator, because the contract here is that this method will
+					// be called once again, but this time those incentives will be send to the community pool above.
+					if denominator.IsZero() {
+						denominator = totalSharesAccum
+					}
+					forfeitedIncentivesPerShare = append(forfeitedIncentivesPerShare, sdk.NewDecCoinFromDec(coin.Denom, coin.Amount.ToDec().Add(dust.AmountOf(coin.Denom)).Quo(denominator)))
 
 					// convert to DecCoin to merge back with dust.
 					forfeitedIncentivesForPosition = forfeitedIncentivesForPosition.Add(sdk.NewDecCoinFromDec(coin.Denom, coin.Amount.ToDec().Add(dust.AmountOf(coin.Denom))))
