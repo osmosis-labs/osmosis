@@ -979,7 +979,8 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 					denominator := totalSharesAccum.Sub(pos.NumShares)
 					// If this is the last position in the accumulator, then the denominator will be zero.
 					// We instead reinvest the forfeited incentives back into the accumulator, because the contract here is that this method will
-					// be called once again, but this time those incentives will be send to the community pool above.
+					// be called a second time when withdrawing the final position, but during the second time, the totalSharesAccum will be zero so
+					// those incentives will be sent to the community pool in the logic directly above this.
 					if denominator.IsZero() {
 						denominator = totalSharesAccum
 					}

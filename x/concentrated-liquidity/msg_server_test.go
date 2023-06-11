@@ -429,7 +429,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 
 			// Determine uptime growth at time of claim
 			// This isn't really straight forward, since when each position claimed, it forfeits its respective rewards and they become claimable by the next
-			// This modifies the uptime accumulator for each position, so we need to determine what that uptime accumulator value will be at the time each position claims.
+			// This modifies the expected uptime accumulator for each position, so we need to determine what that uptime accumulator value will be at the time each position claims.
 			perPosUptimeGrowthAtTimeOfClaim := [][]sdk.DecCoins{}
 			for i := range tc.positionIds {
 				if i == 0 {
