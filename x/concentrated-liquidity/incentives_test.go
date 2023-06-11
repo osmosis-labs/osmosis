@@ -1647,7 +1647,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 			expectedInitAccumValue:   uptimeHelper.twoHundredTokensMultiDenom,
 			expectedUnclaimedRewards: uptimeHelper.emptyExpectedAccumValues,
 		},
-		"(lower < upper < curr) nonzero uptime trackers (position already existing)": {
+		"(lower < upper < curr) non-zero uptime trackers (position already existing)": {
 			positionLiquidity: DefaultLiquidityAmt,
 			lowerTick: tick{
 				tickIndex:      -50,
