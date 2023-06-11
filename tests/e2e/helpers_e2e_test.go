@@ -305,7 +305,7 @@ func (s *IntegrationTestSuite) supportTestPoolMigration(
 	balancerDelegationPre := delegationResp.GetDelegation()
 
 	// Note balancer pool balance after joining balancer pool
-	positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, _ := node.UnlockAndMigrateSharesToFullRangeConcentratedPosition(poolJoinAddress, fmt.Sprintf("%d", originalGammLockId) ,tokenOutMins.String(), coinsToMigrate.String())
+	positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, concentratedLockId := node.UnlockAndMigrateSharesToFullRangeConcentratedPosition(poolJoinAddress, fmt.Sprintf("%d", originalGammLockId) ,tokenOutMins.String(), coinsToMigrate.String())
 
 	s.validateMigrateResult(node, positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering, percentOfSharesToMigrate, liquidity, joinPoolAmt, amount0, amount1 )
 
@@ -325,5 +325,18 @@ func (s *IntegrationTestSuite) supportTestPoolMigration(
 		
 		lock := node.QueryLockedById(fmt.Sprintf("%d", originalGammLockId))
 		s.Require().Equal(balancerPoolShareOut.Amount.Sub(coinsToMigrate.Amount).String(), lock.Coins[0].Amount.String())
+		
+		// Check the new superfluid staked amount.
+		clIntermediaryAcc := node.QueryConnectedIntermediaryAccount(fmt.Sprintf("%d", concentratedLockId))
+		delegationResp, _ = node.QueryIntermediaryAccount(clIntermediaryAcc.Denom, chain.NodeConfigs[1].OperatorAddress)
+		delegation = delegationResp.GetDelegation()
+		s.Require().Equal(balancerDelegationPre.Shares.Mul(percentOfSharesToMigrate).RoundInt().String(), delegation.Shares.RoundInt().String())
+	}
+
+	// If the lock was superfluid undelegating
+	if superfluidDelegated && superfluidUndelegating {
+		// The intermediary account connection to the old gamm lock should be deleted.
+		connectedIntermediaryAccount := node.QueryConnectedIntermediaryAccount(fmt.Sprintf("%d", originalGammLockId))
+		s.Require().Equal(connectedIntermediaryAccount.Address, "")
 	}
 }
