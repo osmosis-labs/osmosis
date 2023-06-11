@@ -699,10 +699,6 @@ github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230516205127-c213fddde06
 github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230516205127-c213fddde069/go.mod h1:a7lhiXRpn8QJ21OhFpaEnUNErTSIafaYpp02q6uI/Dk=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230529060317-d6d2dda0fb22 h1:I14d+U4gDSL5dHoQ3G+kGLhZP5Zj3mOxMb/97Xflusc=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230529060317-d6d2dda0fb22/go.mod h1:GIvgXqD8NOtrpu5bJ052tZxWLFj4ekpi1BMwEHIvXVU=
-github.com/osmosis-labs/osmosis/v15 v15.0.0-20230601221251-b764323ce770 h1:to+kNe/UeQwFpYHMqOkdY7TGIjt5mp+QxIniNRDzDUc=
-github.com/osmosis-labs/osmosis/v15 v15.0.0-20230601221251-b764323ce770/go.mod h1:ww2QtVh+XW91yTpbyfM4mJBmIRk4AU0PigLL94zr0+8=
-github.com/osmosis-labs/osmosis/v16 v16.0.0-20230602200356-bdf5b96b3674 h1:sCXD8SajkGC3AmHrwiklgTWHZUXcSHm8YFJKbvw6Lk4=
-github.com/osmosis-labs/osmosis/v16 v16.0.0-20230602200356-bdf5b96b3674/go.mod h1:Vg+05vXFc682OEF52HTqhEKF+deQ0GSt9rkisCFJ8Ug=
 github.com/osmosis-labs/osmosis/v16 v16.0.0-20230603032959-4d2ba21b8d1e h1:Rbkpe0cLh67eyWpCMN8u/6xDNHlWimrLceMEhtNJ0TI=
 github.com/osmosis-labs/osmosis/v16 v16.0.0-20230603032959-4d2ba21b8d1e/go.mod h1:Vg+05vXFc682OEF52HTqhEKF+deQ0GSt9rkisCFJ8Ug=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230328024000-175ec88e4304 h1:RIrWLzIiZN5Xd2JOfSOtGZaf6V3qEQYg6EaDTAkMnCo=

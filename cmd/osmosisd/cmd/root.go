@@ -43,6 +43,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/cosmos/cosmos-sdk/client/config"
+
 	osmosis "github.com/osmosis-labs/osmosis/v16/app"
 )
 
