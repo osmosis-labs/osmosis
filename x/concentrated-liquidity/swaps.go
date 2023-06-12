@@ -533,8 +533,12 @@ func (k Keeper) swapCrossTickLogic(ctx sdk.Context,
 		return swapState, err
 	}
 
+	if err := k.updateGivenPoolUptimeAccumulatorsToNow(ctx, p, uptimeAccums); err != nil {
+		return swapState, err
+	}
+
 	// Retrieve the liquidity held in the next closest initialized tick
-	liquidityNet, err := k.crossTick(ctx, p, nextTick, &nextTickInfo, sdk.NewDecCoinFromDec(tokenInDenom, swapState.spreadRewardGrowthGlobal), spreadRewardAccum.GetValue(), uptimeAccums)
+	liquidityNet, err := k.crossTick(ctx, p.GetId(), nextTick, &nextTickInfo, sdk.NewDecCoinFromDec(tokenInDenom, swapState.spreadRewardGrowthGlobal), spreadRewardAccum.GetValue(), uptimeAccums)
 	if err != nil {
 		return swapState, err
 	}
