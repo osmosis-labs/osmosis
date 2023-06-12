@@ -91,3 +91,35 @@ func TestContainsDuplicateDeepEqual(t *testing.T) {
 		require.Equal(t, tt.want, got)
 	}
 }
+
+func TestContains(t *testing.T) {
+	testCases := []struct {
+		name   string
+		slice  []int
+		item   int
+		expect bool
+	}{
+		{
+			name:   "Contains - item is in the slice",
+			slice:  []int{1, 2, 3, 4, 5},
+			item:   3,
+			expect: true,
+		},
+		{
+			name:   "Contains - item is not in the slice",
+			slice:  []int{1, 2, 3, 4, 5},
+			item:   6,
+			expect: false,
+		},
+		// add more test cases here...
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := osmoutils.Contains(tc.slice, tc.item)
+			if got != tc.expect {
+				t.Fatalf("Contains(%v, %v): expected %v, got %v", tc.slice, tc.item, tc.expect, got)
+			}
+		})
+	}
+}

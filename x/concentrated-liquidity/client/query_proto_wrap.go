@@ -66,7 +66,7 @@ func (q Querier) PositionById(ctx sdk.Context, req clquery.PositionByIdRequest) 
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	claimableFees, err := q.Keeper.GetClaimableSpreadRewards(ctx, position.PositionId)
+	claimableSpreadRewards, err := q.Keeper.GetClaimableSpreadRewards(ctx, position.PositionId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -78,12 +78,12 @@ func (q Querier) PositionById(ctx sdk.Context, req clquery.PositionByIdRequest) 
 
 	return &clquery.PositionByIdResponse{
 		Position: model.FullPositionBreakdown{
-			Position:            position,
-			Asset0:              asset0,
-			Asset1:              asset1,
-			ClaimableFees:       claimableFees,
-			ClaimableIncentives: claimableIncentives,
-			ForfeitedIncentives: forfeitedIncentives,
+			Position:               position,
+			Asset0:                 asset0,
+			Asset1:                 asset1,
+			ClaimableSpreadRewards: claimableSpreadRewards,
+			ClaimableIncentives:    claimableIncentives,
+			ForfeitedIncentives:    forfeitedIncentives,
 		},
 	}, nil
 }
@@ -236,5 +236,20 @@ func (q Querier) TickAccumulatorTrackers(ctx sdk.Context, req clquery.TickAccumu
 	return &clquery.TickAccumulatorTrackersResponse{
 		SpreadRewardGrowthOppositeDirectionOfLastTraversal: tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal,
 		UptimeTrackers: tickInfo.UptimeTrackers.List,
+	}, nil
+}
+
+// CFMMPoolIdLinkFromConcentratedPoolId queries the cfmm pool id linked to a concentrated pool id.
+func (q Querier) CFMMPoolIdLinkFromConcentratedPoolId(ctx sdk.Context, req clquery.CFMMPoolIdLinkFromConcentratedPoolIdRequest) (*clquery.CFMMPoolIdLinkFromConcentratedPoolIdResponse, error) {
+	if req.ConcentratedPoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid cfmm pool id")
+	}
+	cfmmPoolId, err := q.Keeper.GetLinkedBalancerPoolID(ctx, req.ConcentratedPoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &clquery.CFMMPoolIdLinkFromConcentratedPoolIdResponse{
+		CfmmPoolId: cfmmPoolId,
 	}, nil
 }

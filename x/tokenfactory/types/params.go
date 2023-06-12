@@ -12,8 +12,8 @@ var (
 	KeyDenomCreationFee        = []byte("DenomCreationFee")
 	KeyDenomCreationGasConsume = []byte("DenomCreationGasConsume")
 
-	// For choice, see: https://github.com/osmosis-labs/osmosis/pull/4983
-	DefaultCreationGasFee = 40_000_000
+	// chosen as an arbitrary large number, less than the max_gas_wanted_per_tx in config.
+	DefaultCreationGasFee = 1_000_000
 )
 
 // ParamTable for gamm module.
