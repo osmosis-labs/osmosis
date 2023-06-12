@@ -58,6 +58,8 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 		return &types.MsgLockTokensResponse{ID: lockID}, nil
 	}
 
+	fmt.Println("owner bal pre create lock", server.keeper.bk.GetAllBalances(ctx, owner))
+
 	// if the owner + duration combination is new, create a new lock.
 	lock, err := server.keeper.CreateLock(ctx, owner, msg.Coins, msg.Duration)
 	if err != nil {

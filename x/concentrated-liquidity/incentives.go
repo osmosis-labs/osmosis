@@ -306,6 +306,7 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 			return sdk.Coins{}, types.BalancerRecordNotClearedError{ClPoolId: clPoolId, BalancerPoolId: balPoolId, UptimeIndex: uint64(uptimeIndex)}
 		}
 	}
+	fmt.Println("total rewards", totalRewards)
 
 	// After claiming accrued rewards from all uptime accumulators, add the total claimed amount to the
 	// Balancer pool's longest duration gauge. To avoid unnecessarily triggering gauge-related listeners,
@@ -373,6 +374,8 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 	// time elapsed in seconds
 	timeElapsedNanoSec := sdk.NewDec(int64(ctx.BlockTime().Sub(pool.GetLastLiquidityUpdate())))
 	timeElapsedSec := timeElapsedNanoSec.Quo(sdk.NewDec(10e8))
+
+	fmt.Println("timeElapsedSec: ", timeElapsedSec.String())
 
 	// If no time has elapsed, this function is a no-op
 	if timeElapsedSec.Equal(sdk.ZeroDec()) {
@@ -927,12 +930,19 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 
 	supportedUptimes := types.SupportedUptimes
 
-	// Declare the variables related to the balancer pool outside of the for loop
+	// These variables are used to store values when a position forfeits its incentives and the totalSharesAccum is not zero.
+	// It is declared outside the for loop so we don't need to fetch qualifyingBalancerShares on every iteration, and
+	// instead store it when it is used for the first time.
 	var (
-		balancerPoolId           uint64
-		qualifyingBalancerShares sdk.Dec
-		hasPreparedBalancerPool  = false
+		balancerPoolId uint64
+		//qualifyingBalancerShares sdk.Dec
+		//hasPreparedBalancerPool = false
 	)
+
+	balancerPoolId, _, err = k.prepareBalancerPoolAsFullRange(ctx, position.PoolId, uptimeAccumulators)
+	if err != nil {
+		return sdk.Coins{}, sdk.Coins{}, err
+	}
 
 	// Loop through each uptime accumulator for the pool.
 	for uptimeIndex, uptimeAccum := range uptimeAccumulators {
@@ -953,10 +963,12 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 			if err != nil {
 				return sdk.Coins{}, sdk.Coins{}, err
 			}
+			fmt.Println("collectedIncentivesForUptime", collectedIncentivesForUptime)
 
 			// If the claimed incentives are forfeited, deposit them back into the accumulator to be distributed
 			// to other qualifying positions.
 			if positionAge < supportedUptimes[uptimeIndex] {
+				fmt.Println("forfeited loop")
 				forfeitedIncentivesForUptime := collectedIncentivesForUptime
 
 				totalSharesAccum, err := uptimeAccum.GetTotalShares()
@@ -965,6 +977,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 				}
 
 				if totalSharesAccum.IsZero() {
+					fmt.Println("forfeited loop zero totalSharesAccum")
 					pool, err := k.getPoolById(ctx, position.PoolId)
 					if err != nil {
 						return sdk.Coins{}, sdk.Coins{}, err
@@ -984,17 +997,30 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 
 				var forfeitedIncentivesPerShare sdk.DecCoins
 				for _, forfeitedCoin := range forfeitedIncentivesForUptime {
+					fmt.Println("forfeited loop non zero totalSharesAccum")
 					// Only prepare balancer pool once, and we call it here to avoid unnecessary preparation in the event this logic branch is never reached
-					if !hasPreparedBalancerPool {
-						balancerPoolId, qualifyingBalancerShares, err = k.prepareBalancerPoolAsFullRange(ctx, position.PoolId, uptimeAccumulators)
-						if err != nil {
-							return sdk.Coins{}, sdk.Coins{}, err
-						}
-						hasPreparedBalancerPool = true
-					}
+					// if !hasPreparedBalancerPool {
+					// 	fmt.Println("forfeited loop non zero totalSharesAccum !hasPreparedBalancerPool")
+					// 	balancerPoolId, qualifyingBalancerShares, err = k.prepareBalancerPoolAsFullRange(ctx, position.PoolId, uptimeAccumulators)
+					// 	if err != nil {
+					// 		return sdk.Coins{}, sdk.Coins{}, err
+					// 	}
+					// 	hasPreparedBalancerPool = true
+					// }
+
+					// fmt.Println("totalshares pre ", totalSharesAccum)
+					// fmt.Println("qualifyingBalancerShares", qualifyingBalancerShares)
+					// fmt.Println("pos.NumShares", pos.NumShares)
+					// // totalSharesAccum, err := uptimeAccum.GetTotalShares()
+					// // if err != nil {
+					// // 	return sdk.Coins{}, sdk.Coins{}, err
+					// // }
+					// // fmt.Println("totalshares post ", totalSharesAccum)
 
 					forfeitedDecCoin := sdk.NewDecCoinFromDec(forfeitedCoin.Denom, forfeitedCoin.Amount.ToDec().Add(dust.AmountOf(forfeitedCoin.Denom)))
-					denominator := qualifyingBalancerShares.Add(totalSharesAccum).Sub(pos.NumShares)
+					// total shares accumulator includes full range balancer shares as well
+					denominator := totalSharesAccum.Sub(pos.NumShares)
+					fmt.Println("denominator", denominator)
 
 					// If this is the last position in the accumulator, then the denominator will be zero.
 					// We instead reinvest the forfeited incentives back into the accumulator, because the contract here is that this method will
@@ -1018,8 +1044,13 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 
 	// If we prepared the balancer pool as a full range position to determine the new uptime accumulator value for the pool due to forfeited incentives,
 	// then we need to claim the balancer pool's incentives and reset it.
-	if hasPreparedBalancerPool && balancerPoolId != 0 {
-		_, err := k.claimAndResetFullRangeBalancerPool(ctx, position.PoolId, balancerPoolId, uptimeAccumulators)
+	if balancerPoolId != 0 {
+		fmt.Println("claiming and resetting full range balancer pool")
+		uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, position.PoolId)
+		if err != nil {
+			return sdk.Coins{}, sdk.Coins{}, err
+		}
+		_, err = k.claimAndResetFullRangeBalancerPool(ctx, position.PoolId, balancerPoolId, uptimeAccumulators)
 		if err != nil {
 			return sdk.Coins{}, sdk.Coins{}, err
 		}
