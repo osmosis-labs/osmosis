@@ -66,11 +66,11 @@ edit_genesis () {
     dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[1]' "120s"
     dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[2]' "180s"
     dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[3]' "240s"
-    dasel put string -f $GENESIS '.app_state.incentives.params.distr_epoch_identifier' "day"
+    dasel put string -f $GENESIS '.app_state.incentives.params.distr_epoch_identifier' "hour"
 
     # Update mint module
     dasel put string -f $GENESIS '.app_state.mint.params.mint_denom' "uosmo"
-    dasel put string -f $GENESIS '.app_state.mint.params.epoch_identifier' "day"
+    dasel put string -f $GENESIS '.app_state.mint.params.epoch_identifier' "hour"
 
     # Update poolmanager module
     dasel put string -f $GENESIS '.app_state.poolmanager.params.pool_creation_fee.[0].denom' "uosmo"

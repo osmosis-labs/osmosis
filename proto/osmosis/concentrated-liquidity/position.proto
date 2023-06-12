@@ -58,7 +58,8 @@ message FullPositionBreakdown {
     (gogoproto.moretags) = "yaml:\"claimable_incentives\"",
     (gogoproto.nullable) = false
   ];
-  repeated cosmos.base.v1beta1.Coin forfeited_incentives = 6 [
+  repeated cosmos.base.v1beta1.DecCoin forfeited_incentives = 6 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.moretags) = "yaml:\"forfeited_incentives\"",
     (gogoproto.nullable) = false
   ];

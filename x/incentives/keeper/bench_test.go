@@ -114,7 +114,7 @@ func benchmarkDistributionLogic(b *testing.B, numAccts, numDenoms, numGauges, nu
 			numEpochsPaidOver = uint64(r.Int63n(durationMillisecs/millisecsPerEpoch)) + 1
 		}
 
-		gaugeId, err := app.IncentivesKeeper.CreateGauge(ctx, isPerpetual, addr, rewards, distributeTo, startTime, numEpochsPaidOver)
+		gaugeId, err := app.IncentivesKeeper.CreateGauge(ctx, isPerpetual, addr, rewards, distributeTo, startTime, numEpochsPaidOver, 0)
 		if err != nil {
 			fmt.Printf("Create Gauge, %v\n", err)
 			b.FailNow()

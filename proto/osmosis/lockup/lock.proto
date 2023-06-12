@@ -56,6 +56,7 @@ enum LockQueryType {
 
   ByDuration = 0;
   ByTime = 1;
+  NoLock = 2;
 }
 
 // QueryCondition is a struct used for querying locks upon different conditions.
