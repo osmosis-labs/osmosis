@@ -24,6 +24,44 @@ var (
 	geometricExponentIncrementDistanceInTicks = 9 * sdk.NewDec(10).PowerMut(uint64(-types.ExponentAtPriceOne)).TruncateInt64()
 )
 
+// Builds metadata for every additive tickspacing exponent, namely:
+// * what is the first price this tick spacing applies to
+// * what is the first tick this applies for
+// * (saves on pre-compute) what is the additive increment per tick.
+//
+// This would be stored in a map, keyed by:
+// 0 => (1.00, 10^(types.ExponentAtPriceOne), 0)
+// 1 => (10, 10^(1 + types.ExponentAtPriceOne), 9 * types.ExponentAtPriceOne)
+// 2 => (100, 10^(2 + types.ExponentAtPriceOne), 9 * (types.ExponentAtPriceOne + 1))
+// -1 => (0.1, 10^(types.ExponentAtPriceOne - 1), 9 * (types.ExponentAtPriceOne - 1))
+type tickExpIndexData struct {
+	// if price < initialPrice, we are not in this exponent range.
+	initialPrice sdk.Dec
+	// if price >= maxPrice, we are not in this exponent range.
+	maxPrice sdk.Dec
+	// TODO: Change to normal Dec, if min spot price increases.
+	additiveIncrementPerTick osmomath.BigDec
+	initialTick              int64
+}
+
+var tickExpCache map[int64]tickExpIndexData = make(map[int64]tickExpIndexData)
+
+func buildTickExpCache() {
+	// build positive numbers first
+	maxPrice := sdkOneDec
+	curExpIndex := int64(0)
+	for maxPrice.LT(types.MaxSpotPrice) {
+		tickExpCache[curExpIndex] = tickExpIndexData{
+			initialPrice:             sdkOneDec.Mul(sdkTenDec.Power(uint64(curExpIndex))),
+			maxPrice:                 sdkOneDec.Mul(sdkTenDec.Power(uint64(curExpIndex + 1))),
+			additiveIncrementPerTick: powTenBigDec(types.ExponentAtPriceOne + curExpIndex),
+			initialTick:              geometricExponentIncrementDistanceInTicks * curExpIndex,
+		}
+		maxPrice = tickExpCache[curExpIndex].maxPrice
+		curExpIndex += 1
+	}
+}
+
 // Set precision multipliers
 func init() {
 	negPowersOfTen = make([]sdk.Dec, sdk.Precision+1)
@@ -45,4 +83,6 @@ func init() {
 	for i := 0; i <= 308; i++ {
 		bigPowersOfTen[i] = osmomathBigTenDec.PowerInteger(uint64(i))
 	}
+
+	buildTickExpCache()
 }

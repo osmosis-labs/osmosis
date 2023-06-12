@@ -180,8 +180,6 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
 	currentPrice := sdkOneDec
 	ticksPassed := int64(0)
 
-	exponentAtCurrentTick := exponentAtPriceOne
-
 	// Set the currentAdditiveIncrementInTicks to the 10^{exponentAtPriceOne}
 	// this will be a value like 10^-6. It will increase/decrease by powers of 10.
 	currentAdditiveIncrementInTicks := PowTenInternal(exponentAtPriceOne)
@@ -195,14 +193,16 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
 	// The only difference is we must reduce the increment distance by a factor of 10.
 	// TODO: Precompute the entire loop structure and cache it
 	if price.GT(sdkOneDec) {
-		for currentPrice.LT(price) {
-			currentAdditiveIncrementInTicks = PowTenInternal(exponentAtCurrentTick)
-			maxPriceForCurrentAdditiveIncrementInTicks := currentAdditiveIncrementInTicks.MulInt64(geometricExponentIncrementDistanceInTicks)
-			currentPrice = currentPrice.Add(maxPriceForCurrentAdditiveIncrementInTicks)
-			exponentAtCurrentTick = exponentAtCurrentTick + 1
-			ticksPassed = ticksPassed + geometricExponentIncrementDistanceInTicks
+		index := 0
+		res := tickExpCache[int64(index)]
+		for res.maxPrice.LT(price) {
+			index += 1
+			res = tickExpCache[int64(index)]
 		}
-		currentAdditiveIncrementInTicksBigDec = osmomath.BigDecFromSDKDec(currentAdditiveIncrementInTicks)
+		priceInThisExponent := osmomath.BigDecFromSDKDec(price.Sub(res.initialPrice))
+		ticksToBeFulfilledByExponentAtCurrentTick := priceInThisExponent.Quo(res.additiveIncrementPerTick)
+		tickIndex = res.initialTick + ticksToBeFulfilledByExponentAtCurrentTick.SDKDec().RoundInt64()
+		return tickIndex
 	} else {
 		// We must decrement the exponentAtCurrentTick by one when traversing negative ticks in order to constantly step up in precision when going further down in ticks
 		// Otherwise, from tick 0 to tick -(geometricExponentIncrementDistanceInTicks), we would use the same exponent as the exponentAtPriceOne
