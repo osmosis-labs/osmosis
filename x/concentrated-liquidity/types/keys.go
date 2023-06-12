@@ -32,19 +32,20 @@ var (
 	TickNegativePrefix = []byte{0x05}
 	TickPositivePrefix = []byte{0x06}
 
-	KeyNextGlobalPositionId        = []byte{0x07}
-	KeyNextGlobalIncentiveRecordId = []byte{0x08}
+	KeyNextGlobalPositionId = []byte{0x07}
 
-	PositionIdPrefix                      = []byte{0x09}
-	PoolPositionPrefix                    = []byte{0x0A}
-	SpreadRewardPositionAccumulatorPrefix = []byte{0x0B}
-	KeySpreadRewardPoolAccumulatorPrefix  = []byte{0x0C}
-	UptimeAccumulatorPrefix               = []byte{0x0D}
-	PositionToLockPrefix                  = []byte{0x0E}
-	FullRangeLiquidityPrefix              = []byte{0x0F}
-	BalancerFullRangePrefix               = []byte{0x10}
-	LockToPositionPrefix                  = []byte{0x11}
-	ConcentratedLockPrefix                = []byte{0x12}
+	PositionIdPrefix                      = []byte{0x08}
+	PoolPositionPrefix                    = []byte{0x09}
+	SpreadRewardPositionAccumulatorPrefix = []byte{0x0A}
+	KeySpreadRewardPoolAccumulatorPrefix  = []byte{0x0B}
+	UptimeAccumulatorPrefix               = []byte{0x0C}
+	PositionToLockPrefix                  = []byte{0x0D}
+	FullRangeLiquidityPrefix              = []byte{0x0E}
+	BalancerFullRangePrefix               = []byte{0x0F}
+	LockToPositionPrefix                  = []byte{0x10}
+	ConcentratedLockPrefix                = []byte{0x11}
+
+	KeyNextGlobalIncentiveRecordId = []byte{0x12}
 
 	// TickPrefix + pool id
 	KeyTickPrefixByPoolIdLengthBytes = len(TickPrefix) + uint64ByteSize
