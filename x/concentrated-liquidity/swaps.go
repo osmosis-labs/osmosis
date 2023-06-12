@@ -291,17 +291,8 @@ func (k Keeper) computeOutAmtGivenIn(
 	}
 
 	// TODO: Move this to beginning of swap logic. (Its validation logic)
-	// Check that the specified tokenIn matches one of the assets in the specified pool
-	if tokenInMin.Denom != asset0 && tokenInMin.Denom != asset1 {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.TokenInDenomNotInPoolError{TokenInDenom: tokenInMin.Denom}
-	}
-	// Check that the specified tokenOut matches one of the assets in the specified pool
-	if tokenOutDenom != asset0 && tokenOutDenom != asset1 {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.TokenOutDenomNotInPoolError{TokenOutDenom: tokenOutDenom}
-	}
-	// Check that token in and token out are different denominations
-	if tokenInMin.Denom == tokenOutDenom {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.DenomDuplicatedError{TokenInDenom: tokenInMin.Denom, TokenOutDenom: tokenOutDenom}
+	if err := checkDenomValidity(tokenInMin.Denom, tokenOutDenom, asset0, asset1); err != nil {
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
 	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
@@ -495,17 +486,8 @@ func (k Keeper) computeInAmtGivenOut(
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
-	// check that the specified tokenOut matches one of the assets in the specified pool
-	if desiredTokenOut.Denom != asset0 && desiredTokenOut.Denom != asset1 {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.TokenOutDenomNotInPoolError{TokenOutDenom: desiredTokenOut.Denom}
-	}
-	// check that the specified tokenIn matches one of the assets in the specified pool
-	if tokenInDenom != asset0 && tokenInDenom != asset1 {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.TokenInDenomNotInPoolError{TokenInDenom: tokenInDenom}
-	}
-	// check that token in and token out are different denominations
-	if desiredTokenOut.Denom == tokenInDenom {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.DenomDuplicatedError{TokenInDenom: tokenInDenom, TokenOutDenom: desiredTokenOut.Denom}
+	if err := checkDenomValidity(tokenInDenom, desiredTokenOut.Denom, asset0, asset1); err != nil {
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
 	// initialize swap state with the following parameters:
@@ -721,6 +703,22 @@ func (k Keeper) updatePoolForSwap(
 	events.EmitSwapEvent(ctx, sender, pool.GetId(), sdk.Coins{tokenIn}, sdk.Coins{tokenOut})
 
 	return err
+}
+
+func checkDenomValidity(inDenom, outDenom, asset0, asset1 string) error {
+	// check that the specified tokenOut matches one of the assets in the specified pool
+	if outDenom != asset0 && outDenom != asset1 {
+		return types.TokenOutDenomNotInPoolError{TokenOutDenom: outDenom}
+	}
+	// check that the specified tokenIn matches one of the assets in the specified pool
+	if inDenom != asset0 && inDenom != asset1 {
+		return types.TokenInDenomNotInPoolError{TokenInDenom: inDenom}
+	}
+	// check that token in and token out are different denominations
+	if outDenom == inDenom {
+		return types.DenomDuplicatedError{TokenInDenom: inDenom, TokenOutDenom: outDenom}
+	}
+	return nil
 }
 
 func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.ConcentratedPoolExtension, error) {
