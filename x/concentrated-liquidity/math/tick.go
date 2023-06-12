@@ -206,7 +206,7 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
 	// * taking the bucket index of the smallest price in this tick
 	// * adding to it the number of ticks "completely" filled by the current spacing
 	// the latter is the truncation of the division above
-	// TODO: This should be rounding down???
+	// TODO: This should be rounding down?
 	tickIndex = geoSpacing.initialTick + ticksFilledByCurrentSpacing.SDKDec().RoundInt64()
 	return tickIndex
 }

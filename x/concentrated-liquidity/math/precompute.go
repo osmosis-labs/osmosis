@@ -40,8 +40,10 @@ type tickExpIndexData struct {
 	// if price >= maxPrice, we are not in this exponent range.
 	maxPrice sdk.Dec
 	// TODO: Change to normal Dec, if min spot price increases.
+	// additive increment per tick here.
 	additiveIncrementPerTick osmomath.BigDec
-	initialTick              int64
+	// the tick that corresponds to initial price
+	initialTick int64
 }
 
 var tickExpCache map[int64]*tickExpIndexData = make(map[int64]*tickExpIndexData)
@@ -52,6 +54,7 @@ func buildTickExpCache() {
 	curExpIndex := int64(0)
 	for maxPrice.LT(types.MaxSpotPrice) {
 		tickExpCache[curExpIndex] = &tickExpIndexData{
+			// price range 10^curExpIndex to 10^(curExpIndex + 1). (10, 100)
 			initialPrice:             sdkOneDec.Mul(sdkTenDec.Power(uint64(curExpIndex))),
 			maxPrice:                 sdkOneDec.Mul(sdkTenDec.Power(uint64(curExpIndex + 1))),
 			additiveIncrementPerTick: powTenBigDec(types.ExponentAtPriceOne + curExpIndex),
@@ -62,10 +65,10 @@ func buildTickExpCache() {
 	}
 
 	minPrice := sdkOneDec
-	// minSpotPrice := osmomath.BigDecFromSDKDec(types.MinSpotPrice)
 	curExpIndex = -1
 	for minPrice.GT(types.MinSpotPrice) {
 		tickExpCache[curExpIndex] = &tickExpIndexData{
+			// price range 10^curExpIndex to 10^(curExpIndex + 1). (0.001, 0.01)
 			initialPrice:             powTenBigDec(curExpIndex).SDKDec(),
 			maxPrice:                 powTenBigDec(curExpIndex + 1).SDKDec(),
 			additiveIncrementPerTick: powTenBigDec(types.ExponentAtPriceOne + curExpIndex),
