@@ -274,16 +274,8 @@ func (k Keeper) computeOutAmtGivenIn(
 	// If swapping asset0 for asset1, zeroForOne is true
 	zeroForOne := tokenInMin.Denom == asset0
 
-	// If priceLimit not set (i.e. set to zero), set to max/min value based on swap direction
-	// TODO: Can we move this to the swap strategy?
-	if zeroForOne && priceLimit.Equal(sdk.ZeroDec()) {
-		priceLimit = types.MinSpotPrice
-	} else if !zeroForOne && priceLimit.Equal(sdk.ZeroDec()) {
-		priceLimit = types.MaxSpotPrice
-	}
-
 	// Take provided price limit and turn this into a sqrt price limit since formulas use sqrtPrice
-	sqrtPriceLimit, err := priceLimit.ApproxSqrt()
+	sqrtPriceLimit, err := swapstrategy.GetSqrtPriceLimit(priceLimit, zeroForOne)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("issue calculating square root of price limit")
 	}
@@ -487,16 +479,8 @@ func (k Keeper) computeInAmtGivenOut(
 	// if swapping asset0 (in) for asset1 (out), zeroForOne is true
 	zeroForOne := desiredTokenOut.Denom == asset1
 
-	// if priceLimit not set, set to max/min value based on swap direction
-	// TODO: Can we move this to the swap strategy?
-	if zeroForOne && priceLimit.Equal(sdk.ZeroDec()) {
-		priceLimit = types.MinSpotPrice
-	} else if !zeroForOne && priceLimit.Equal(sdk.ZeroDec()) {
-		priceLimit = types.MaxSpotPrice
-	}
-
 	// take provided price limit and turn this into a sqrt price limit since formulas use sqrtPrice
-	sqrtPriceLimit, err := priceLimit.ApproxSqrt()
+	sqrtPriceLimit, err := swapstrategy.GetSqrtPriceLimit(priceLimit, zeroForOne)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.SqrtRootCalculationError{SqrtPriceLimit: sqrtPriceLimit}
 	}
