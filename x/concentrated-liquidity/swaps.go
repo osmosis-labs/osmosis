@@ -56,6 +56,17 @@ type SwapState struct {
 	spreadRewardGrowthGlobal sdk.Dec
 }
 
+func newSwapState(specifiedAmount sdk.Int, p types.ConcentratedPoolExtension, strategy swapstrategy.SwapStrategy) SwapState {
+	return SwapState{
+		amountSpecifiedRemaining: specifiedAmount.ToDec(),
+		amountCalculated:         sdk.ZeroDec(),
+		sqrtPrice:                p.GetCurrentSqrtPrice(),
+		tick:                     strategy.InitializeTickValue(p.GetCurrentTick()),
+		liquidity:                p.GetLiquidity(),
+		spreadRewardGrowthGlobal: sdk.ZeroDec(),
+	}
+}
+
 var (
 	smallestDec = sdk.SmallestDec()
 )
@@ -278,20 +289,7 @@ func (k Keeper) computeOutAmtGivenIn(
 
 	// initialize swap state with the following parameters:
 	// as we iterate through the following for loop, this swap state will get updated after each required iteration
-	swapState := SwapState{
-		// N.B. We need to be able to mutate amountSpecifiedRemaining,
-		// however this is safe here, as ToDec makes a new copy.
-		amountSpecifiedRemaining: tokenInMin.Amount.ToDec(), // tokenIn
-		amountCalculated:         sdk.ZeroDec(),             // tokenOut
-		sqrtPrice:                p.GetCurrentSqrtPrice(),
-		// Pad (or don't pad) current tick based on swap direction to avoid off-by-one errors
-		// TODO: We need to be extremely careful about dependence on this variable.
-		// p.GetCurrentTick() could contain error, so we want to really make sure that
-		// its consistent with curSqrtPrice at all locations.
-		tick:                     swapStrategy.InitializeTickValue(p.GetCurrentTick()),
-		liquidity:                p.GetLiquidity(),
-		spreadRewardGrowthGlobal: sdk.ZeroDec(),
-	}
+	swapState := newSwapState(tokenInMin.Amount, p, swapStrategy)
 
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
 	defer nextTickIter.Close()
@@ -421,16 +419,7 @@ func (k Keeper) computeInAmtGivenOut(
 
 	// initialize swap state with the following parameters:
 	// as we iterate through the following for loop, this swap state will get updated after each required iteration
-	swapState := SwapState{
-		amountSpecifiedRemaining: desiredTokenOut.Amount.ToDec(), // tokenOut
-		amountCalculated:         sdk.ZeroDec(),                  // tokenIn
-		sqrtPrice:                p.GetCurrentSqrtPrice(),
-		tick:                     swapStrategy.InitializeTickValue(p.GetCurrentTick()),
-		liquidity:                p.GetLiquidity(),
-		spreadRewardGrowthGlobal: sdk.ZeroDec(),
-	}
-
-	totalSpreadFactors = sdk.ZeroDec()
+	swapState := newSwapState(desiredTokenOut.Amount, p, swapStrategy)
 
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
 	defer nextTickIter.Close()
@@ -439,6 +428,8 @@ func (k Keeper) computeInAmtGivenOut(
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
+
+	totalSpreadFactors = sdk.ZeroDec()
 
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
