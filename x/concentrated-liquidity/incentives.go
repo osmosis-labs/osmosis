@@ -42,6 +42,18 @@ func getUptimeTrackerValues(uptimeTrackers []model.UptimeTracker) []sdk.DecCoins
 	return trackerValues
 }
 
+func (k Keeper) GetAccumulators(ctx sdk.Context, poolId uint64) (accum.AccumulatorObject, []accum.AccumulatorObject, error) {
+	spreadAccum, err := k.GetSpreadRewardAccumulator(ctx, poolId)
+	if err != nil {
+		return accum.AccumulatorObject{}, []accum.AccumulatorObject{}, err
+	}
+	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return accum.AccumulatorObject{}, []accum.AccumulatorObject{}, err
+	}
+	return spreadAccum, uptimeAccums, nil
+}
+
 // GetUptimeAccumulators gets the uptime accumulator objects for the given poolId
 // Returns error if accumulator for the given poolId does not exist.
 func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.AccumulatorObject, error) {

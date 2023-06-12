@@ -266,8 +266,7 @@ func (k Keeper) computeOutAmtGivenIn(
 
 	var (
 		tickSpacing            = p.GetTickSpacing()
-		asset0                 = p.GetToken0()
-		asset1                 = p.GetToken1()
+		asset0, asset1         = p.GetToken0(), p.GetToken1()
 		tokenAmountInSpecified = tokenInMin.Amount.ToDec()
 	)
 
@@ -295,12 +294,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
-	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
-	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
-	}
-
-	spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, poolId)
+	spreadRewardAccumulator, uptimeAccums, err := k.GetAccumulators(ctx, poolId)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
@@ -462,8 +456,7 @@ func (k Keeper) computeInAmtGivenOut(
 
 	var (
 		tickSpacing             = p.GetTickSpacing()
-		asset0                  = p.GetToken0()
-		asset1                  = p.GetToken1()
+		asset0, asset1          = p.GetToken0(), p.GetToken1()
 		tokenAmountOutSpecified = desiredTokenOut.Amount.ToDec()
 	)
 
@@ -506,12 +499,7 @@ func (k Keeper) computeInAmtGivenOut(
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
 	defer nextTickIter.Close()
 
-	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
-	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
-	}
-
-	spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, poolId)
+	spreadRewardAccumulator, uptimeAccums, err := k.GetAccumulators(ctx, poolId)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
@@ -726,7 +714,6 @@ func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.Concentrat
 	if err != nil {
 		return p, err
 	}
-
 	hasPositionInPool, err := k.HasAnyPositionForPool(ctx, poolId)
 	if err != nil {
 		return p, err
