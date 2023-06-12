@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	events "github.com/osmosis-labs/osmosis/v16/x/poolmanager/events"
 
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
@@ -288,7 +289,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
-	spreadRewardAccumulator, uptimeAccums, err := k.GetAccumulators(ctx, poolId)
+	spreadRewardAccumulator, uptimeAccums, err := k.getSwapAccumulators(ctx, poolId)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
@@ -491,7 +492,7 @@ func (k Keeper) computeInAmtGivenOut(
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
 	defer nextTickIter.Close()
 
-	spreadRewardAccumulator, uptimeAccums, err := k.GetAccumulators(ctx, poolId)
+	spreadRewardAccumulator, uptimeAccums, err := k.getSwapAccumulators(ctx, poolId)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
@@ -718,4 +719,16 @@ func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.Concentrat
 		return p, types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId}
 	}
 	return p, nil
+}
+
+func (k Keeper) getSwapAccumulators(ctx sdk.Context, poolId uint64) (accum.AccumulatorObject, []accum.AccumulatorObject, error) {
+	spreadAccum, err := k.GetSpreadRewardAccumulator(ctx, poolId)
+	if err != nil {
+		return accum.AccumulatorObject{}, []accum.AccumulatorObject{}, err
+	}
+	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return accum.AccumulatorObject{}, []accum.AccumulatorObject{}, err
+	}
+	return spreadAccum, uptimeAccums, nil
 }
