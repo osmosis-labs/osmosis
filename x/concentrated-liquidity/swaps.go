@@ -95,8 +95,7 @@ func (k Keeper) SwapExactAmountIn(
 	}
 
 	// Determine if we are swapping asset0 for asset1 or vice versa
-	asset0 := pool.GetToken0()
-	zeroForOne := tokenIn.Denom == asset0
+	zeroForOne := getZeroForOne(tokenIn.Denom, pool.GetToken0())
 
 	// Change priceLimit based on which direction we are swapping
 	priceLimit := swapstrategy.GetPriceLimit(zeroForOne)
@@ -134,10 +133,7 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, err
 	}
 
-	// determine if we are swapping asset0 for asset1 or vice versa
-	asset1 := pool.GetToken1()
-	// if swapping asset0 (in) for asset1 (out), zeroForOne is true
-	zeroForOne := tokenOut.Denom == asset1
+	zeroForOne := getZeroForOne(tokenInDenom, pool.GetToken0())
 
 	// change priceLimit based on which direction we are swapping
 	// if zeroForOne == true, use MinSpotPrice else use MaxSpotPrice
@@ -280,7 +276,7 @@ func (k Keeper) computeOutAmtGivenIn(
 	}
 
 	// Set the swap strategy
-	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey, spreadFactor, p.GetTickSpacing())
+	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey, spreadFactor, tickSpacing)
 
 	// Get current sqrt price from pool and run sanity check that current sqrt price is
 	// on the correct side of the price limit given swap direction.
@@ -456,12 +452,10 @@ func (k Keeper) computeInAmtGivenOut(
 
 	var (
 		tickSpacing             = p.GetTickSpacing()
-		asset0, asset1          = p.GetToken0(), p.GetToken1()
 		tokenAmountOutSpecified = desiredTokenOut.Amount.ToDec()
 	)
 
-	// if swapping asset0 (in) for asset1 (out), zeroForOne is true
-	zeroForOne := desiredTokenOut.Denom == asset1
+	zeroForOne := getZeroForOne(tokenInDenom, p.GetToken0())
 
 	// take provided price limit and turn this into a sqrt price limit since formulas use sqrtPrice
 	sqrtPriceLimit, err := swapstrategy.GetSqrtPriceLimit(priceLimit, zeroForOne)
@@ -479,7 +473,7 @@ func (k Keeper) computeInAmtGivenOut(
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
-	if err := checkDenomValidity(tokenInDenom, desiredTokenOut.Denom, asset0, asset1); err != nil {
+	if err := checkDenomValidity(tokenInDenom, desiredTokenOut.Denom, p.GetToken0(), p.GetToken1()); err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
@@ -691,6 +685,10 @@ func (k Keeper) updatePoolForSwap(
 	events.EmitSwapEvent(ctx, sender, pool.GetId(), sdk.Coins{tokenIn}, sdk.Coins{tokenOut})
 
 	return err
+}
+
+func getZeroForOne(inDenom, asset0 string) bool {
+	return inDenom == asset0
 }
 
 func checkDenomValidity(inDenom, outDenom, asset0, asset1 string) error {
