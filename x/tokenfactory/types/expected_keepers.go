@@ -37,3 +37,7 @@ type BankHooks interface {
 type CommunityPoolKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
+
+type ContractKeeper interface {
+	Sudo(ctx sdk.Context, contractAddress sdk.AccAddress, msg []byte) ([]byte, error)
+}

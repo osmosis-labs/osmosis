@@ -238,3 +238,18 @@ func (q Querier) TickAccumulatorTrackers(ctx sdk.Context, req clquery.TickAccumu
 		UptimeTrackers: tickInfo.UptimeTrackers.List,
 	}, nil
 }
+
+// CFMMPoolIdLinkFromConcentratedPoolId queries the cfmm pool id linked to a concentrated pool id.
+func (q Querier) CFMMPoolIdLinkFromConcentratedPoolId(ctx sdk.Context, req clquery.CFMMPoolIdLinkFromConcentratedPoolIdRequest) (*clquery.CFMMPoolIdLinkFromConcentratedPoolIdResponse, error) {
+	if req.ConcentratedPoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid cfmm pool id")
+	}
+	cfmmPoolId, err := q.Keeper.GetLinkedBalancerPoolID(ctx, req.ConcentratedPoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &clquery.CFMMPoolIdLinkFromConcentratedPoolIdResponse{
+		CfmmPoolId: cfmmPoolId,
+	}, nil
+}
