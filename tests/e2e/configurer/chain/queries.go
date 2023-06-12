@@ -31,7 +31,6 @@ import (
 	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 	twapqueryproto "github.com/osmosis-labs/osmosis/v16/x/twap/client/queryproto"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
-	queryclproto "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
 )
 
 // QueryProtoRevNumberOfTrades gets the number of trades the protorev module has executed.
@@ -710,7 +709,7 @@ func (n *NodeConfig) QueryPositionById(positionId uint64) model.Position {
 	bz, err := n.QueryGRPCGateway(path, "position_id", strconv.FormatInt(int64(positionId), 10))
 	require.NoError(n.t, err)
 
-	var positionResp queryclproto.PositionByIdResponse
+	var positionResp queryproto.PositionByIdResponse
 	err = util.Cdc.UnmarshalJSON(bz, &positionResp)
 	require.NoError(n.t, err)
 
