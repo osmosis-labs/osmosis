@@ -320,11 +320,13 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 						s.ValidateDistributedGauge(gaugeId, 1, tc.gaugeCoins)
 
 						// check every parameter in incentiveRecord so that it matches what we created
+						incentiveRecordBody := incentiveRecord.GetIncentiveRecordBody()
 						s.Require().Equal(poolId, incentiveRecord.PoolId)
-						s.Require().Equal(expectedEmissionRate, incentiveRecord.GetIncentiveRecordBody().EmissionRate)
-						s.Require().Equal(s.Ctx.BlockTime().UTC().String(), incentiveRecord.GetIncentiveRecordBody().StartTime.UTC().String())
+						s.Require().Equal(expectedEmissionRate, incentiveRecordBody.EmissionRate)
+						s.Require().Equal(s.Ctx.BlockTime().UTC().String(), incentiveRecordBody.StartTime.UTC().String())
 						s.Require().Equal(types.DefaultConcentratedUptime, incentiveRecord.MinUptime)
-						s.Require().Equal(fiveKRewardCoins, incentiveRecord.GetIncentiveRecordBody().RemainingCoin)
+						s.Require().Equal(coin.Amount, incentiveRecordBody.RemainingCoin.Amount.TruncateInt())
+						s.Require().Equal(coin.Denom, incentiveRecordBody.RemainingCoin.Denom)
 					}
 				}
 				// check the totalAmount of tokens distributed, for both lock gauges and CL pool gauges
@@ -504,7 +506,7 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 
 					s.Require().Equal(tc.startTime.UTC(), incentiveRecords.IncentiveRecordBody.StartTime.UTC())
 					s.Require().Equal(coin.Denom, incentiveRecords.IncentiveRecordBody.RemainingCoin.Denom)
-					s.Require().Equal(tc.expectedRemainingAmountIncentiveRecord[i].TruncateInt(), incentiveRecords.IncentiveRecordBody.RemainingCoin.Amount)
+					s.Require().Equal(tc.expectedRemainingAmountIncentiveRecord[i], incentiveRecords.IncentiveRecordBody.RemainingCoin.Amount)
 					s.Require().Equal(expectedEmissionRatePerEpoch, incentiveRecords.IncentiveRecordBody.EmissionRate)
 					s.Require().Equal(time.Nanosecond, incentiveRecords.MinUptime)
 				}
