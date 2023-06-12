@@ -71,7 +71,7 @@ func (p CosmWasmPool) GetContractAddress() string {
 	return p.ContractAddress
 }
 
-func (p CosmWasmPool) SetContractAddress(contractAddress string) {
+func (p *CosmWasmPool) SetContractAddress(contractAddress string) {
 	p.ContractAddress = contractAddress
 }
 

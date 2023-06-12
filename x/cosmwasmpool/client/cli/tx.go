@@ -123,6 +123,9 @@ func parseUploadCodeIdAndWhitelistProposal(cmd *cobra.Command, fileName string) 
 	}
 
 	wasm, err := parseWasmByteCode(fileName)
+	if err != nil {
+		return nil, err
+	}
 
 	content := &types.UploadCosmWasmPoolCodeAndWhiteListProposal{
 		Title:        title,
