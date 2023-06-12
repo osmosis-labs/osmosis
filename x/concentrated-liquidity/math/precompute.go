@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
 var (
@@ -17,6 +18,10 @@ var (
 	osmomathBigTenDec = osmomath.NewBigDec(10)
 	bigPowersOfTen    []osmomath.BigDec
 	bigNegPowersOfTen []osmomath.BigDec
+
+	// 9 * 10^(-types.ExponentAtPriceOne), where types.ExponentAtPriceOne is non-positive and is s.t.
+	// this answer fits well within an int64.
+	geometricExponentIncrementDistanceInTicks = 9 * sdk.NewDec(10).PowerMut(uint64(-types.ExponentAtPriceOne)).TruncateInt64()
 )
 
 // Set precision multipliers
