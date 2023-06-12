@@ -260,14 +260,17 @@ func (k Keeper) computeOutAmtGivenIn(
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
+	if err := checkDenomValidity(tokenInMin.Denom, tokenOutDenom, p.GetToken0(), p.GetToken1()); err != nil {
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+	}
+
 	var (
 		tickSpacing            = p.GetTickSpacing()
-		asset0, asset1         = p.GetToken0(), p.GetToken1()
 		tokenAmountInSpecified = tokenInMin.Amount.ToDec()
 	)
 
 	// If swapping asset0 for asset1, zeroForOne is true
-	zeroForOne := tokenInMin.Denom == asset0
+	zeroForOne := getZeroForOne(tokenInMin.Denom, p.GetToken0())
 
 	// Take provided price limit and turn this into a sqrt price limit since formulas use sqrtPrice
 	sqrtPriceLimit, err := swapstrategy.GetSqrtPriceLimit(priceLimit, zeroForOne)
@@ -282,11 +285,6 @@ func (k Keeper) computeOutAmtGivenIn(
 	// on the correct side of the price limit given swap direction.
 	curSqrtPrice := p.GetCurrentSqrtPrice()
 	if err := swapStrategy.ValidateSqrtPrice(sqrtPriceLimit, curSqrtPrice); err != nil {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
-	}
-
-	// TODO: Move this to beginning of swap logic. (Its validation logic)
-	if err := checkDenomValidity(tokenInMin.Denom, tokenOutDenom, asset0, asset1); err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
@@ -450,6 +448,10 @@ func (k Keeper) computeInAmtGivenOut(
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
+	if err := checkDenomValidity(tokenInDenom, desiredTokenOut.Denom, p.GetToken0(), p.GetToken1()); err != nil {
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+	}
+
 	var (
 		tickSpacing             = p.GetTickSpacing()
 		tokenAmountOutSpecified = desiredTokenOut.Amount.ToDec()
@@ -470,10 +472,6 @@ func (k Keeper) computeInAmtGivenOut(
 	curSqrtPrice := p.GetCurrentSqrtPrice()
 
 	if err := swapStrategy.ValidateSqrtPrice(sqrtPriceLimit, curSqrtPrice); err != nil {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
-	}
-
-	if err := checkDenomValidity(tokenInDenom, desiredTokenOut.Denom, p.GetToken0(), p.GetToken1()); err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
