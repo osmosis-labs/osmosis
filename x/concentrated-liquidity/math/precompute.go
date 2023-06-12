@@ -55,8 +55,8 @@ func buildTickExpCache() {
 	for maxPrice.LT(types.MaxSpotPrice) {
 		tickExpCache[curExpIndex] = &tickExpIndexData{
 			// price range 10^curExpIndex to 10^(curExpIndex + 1). (10, 100)
-			initialPrice:             sdkOneDec.Mul(sdkTenDec.Power(uint64(curExpIndex))),
-			maxPrice:                 sdkOneDec.Mul(sdkTenDec.Power(uint64(curExpIndex + 1))),
+			initialPrice:             sdkTenDec.Power(uint64(curExpIndex)),
+			maxPrice:                 sdkTenDec.Power(uint64(curExpIndex + 1)),
 			additiveIncrementPerTick: powTenBigDec(types.ExponentAtPriceOne + curExpIndex),
 			initialTick:              geometricExponentIncrementDistanceInTicks * curExpIndex,
 		}
