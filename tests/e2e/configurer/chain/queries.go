@@ -19,7 +19,6 @@ import (
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/util"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
@@ -32,6 +31,7 @@ import (
 	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 	twapqueryproto "github.com/osmosis-labs/osmosis/v16/x/twap/client/queryproto"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	queryclproto "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
 )
 
 // QueryProtoRevNumberOfTrades gets the number of trades the protorev module has executed.
@@ -704,59 +704,15 @@ func (n *NodeConfig) QueryCommunityPoolModuleAccount() string {
 	return ""
 }
 
-func (n *NodeConfig) QueryPositionById(id uint64) model.Position {
-	cmd := []string{"osmosisd", "query", "concentratedliquidity", "position-by-id", fmt.Sprintf("%d", id), "--output=json"}
+func (n *NodeConfig) QueryPositionById(positionId uint64) model.Position {
+	path := "/osmosis/concentratedliquidity/v1beta1/position_by_id"
 
-	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	bz, err := n.QueryGRPCGateway(path, "position_id", strconv.FormatInt(int64(positionId), 10))
 	require.NoError(n.t, err)
 
-	// TODO: update the way to handle this
-	type Position struct {
-		PositionId string `json:"position_id"`
-		Address    string `json:"address"`
-		PoolId     string `json:"pool_id"`
-		LowerTick  string `json:"lower_tick"`
-		UpperTick  string `json:"upper_tick"`
-		JoinTime   string `json:"join_time"`
-		Liquidity  string `json:"liquidity"`
-	}
-
-	type Coin struct {
-		Denom  string `json:"denom"`
-		Amount string `json:"amount"`
-	}
-
-	type Response struct {
-		Position            Position `json:"position"`
-		Asset0              Coin     `json:"asset0"`
-		Asset1              Coin     `json:"asset1"`
-		ClaimableFees       []Coin   `json:"claimable_fees"`
-		ClaimableIncentives []Coin   `json:"claimable_incentives"`
-		ForfeitedIncentives []Coin   `json:"forfeited_incentives"`
-	}
-
-	type JsonResponse struct {
-		Position Response `json:"position"`
-	}
-
-	data := JsonResponse{}
-
-	err = json.Unmarshal(out.Bytes(), &data)
+	var positionResp queryclproto.PositionByIdResponse
+	err = util.Cdc.UnmarshalJSON(bz, &positionResp)
 	require.NoError(n.t, err)
 
-	positionId, err := osmocli.ParseUint(data.Position.Position.PositionId, "")
-	require.NoError(n.t, err)
-
-	poolId, err := osmocli.ParseUint(data.Position.Position.PoolId, "")
-	require.NoError(n.t, err)
-
-	liquidity := sdk.MustNewDecFromStr(data.Position.Position.Liquidity)
-
-	result := model.Position{
-		PositionId: positionId,
-		PoolId:     poolId,
-		Liquidity:  liquidity,
-	}
-
-	return result
+	return positionResp.Position.Position
 }
