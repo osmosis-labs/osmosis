@@ -47,7 +47,7 @@ type tickExpIndexData struct {
 var tickExpCache map[int64]tickExpIndexData = make(map[int64]tickExpIndexData)
 
 func buildTickExpCache() {
-	// build positive numbers first
+	// build positive indices first
 	maxPrice := sdkOneDec
 	curExpIndex := int64(0)
 	for maxPrice.LT(types.MaxSpotPrice) {
@@ -59,6 +59,20 @@ func buildTickExpCache() {
 		}
 		maxPrice = tickExpCache[curExpIndex].maxPrice
 		curExpIndex += 1
+	}
+
+	minPrice := sdkOneDec
+	// minSpotPrice := osmomath.BigDecFromSDKDec(types.MinSpotPrice)
+	curExpIndex = -1
+	for minPrice.GT(types.MinSpotPrice) {
+		tickExpCache[curExpIndex] = tickExpIndexData{
+			initialPrice:             powTenBigDec(curExpIndex).SDKDec(),
+			maxPrice:                 powTenBigDec(curExpIndex + 1).SDKDec(),
+			additiveIncrementPerTick: powTenBigDec(types.ExponentAtPriceOne + curExpIndex),
+			initialTick:              geometricExponentIncrementDistanceInTicks * curExpIndex,
+		}
+		minPrice = tickExpCache[curExpIndex].initialPrice
+		curExpIndex -= 1
 	}
 }
 

@@ -169,58 +169,28 @@ func powTenBigDec(exponent int64) osmomath.BigDec {
 // CalculatePriceToTick takes in a price and returns the corresponding tick index.
 // This function does not take into consideration tick spacing.
 func CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
-	// The formula is as follows: geometricExponentIncrementDistanceInTicks = 9 * 10**(-exponentAtPriceOne)
-	// NOTE: exponent at price one is constrained to be non-positive.
-	// It semantically means, at price one, the first tick has a price increase of 10**(-exponentAtPriceOne).
-	exponentAtPriceOne := types.ExponentAtPriceOne
-	// pulled from constant
-	geometricExponentIncrementDistanceInTicks := geometricExponentIncrementDistanceInTicks
+	var res tickExpIndexData
 
-	// Initialize the current price to 1, the current precision to exponentAtPriceOne, and the number of ticks passed to 0
-	currentPrice := sdkOneDec
-	ticksPassed := int64(0)
-
-	// Set the currentAdditiveIncrementInTicks to the 10^{exponentAtPriceOne}
-	// this will be a value like 10^-6. It will increase/decrease by powers of 10.
-	currentAdditiveIncrementInTicks := PowTenInternal(exponentAtPriceOne)
-	// TODO: If we raise min spot price, we can compute in sdk.Dec the whole way through
-	var currentAdditiveIncrementInTicksBigDec osmomath.BigDec
-
-	// Now, we loop through the exponentAtCurrentTicks until we have passed the price
-	// Once we pass the price, we can determine what which geometric exponents we have filled in their entirety,
-	// as well as how many ticks that corresponds to
-	// In the opposite direction (price < 1), we do the same thing (just decrement the geometric exponent instead of incrementing).
-	// The only difference is we must reduce the increment distance by a factor of 10.
-	// TODO: Precompute the entire loop structure and cache it
 	if price.GT(sdkOneDec) {
 		index := 0
-		res := tickExpCache[int64(index)]
+		res = tickExpCache[int64(index)]
 		for res.maxPrice.LT(price) {
 			index += 1
 			res = tickExpCache[int64(index)]
 		}
-		priceInThisExponent := osmomath.BigDecFromSDKDec(price.Sub(res.initialPrice))
-		ticksToBeFulfilledByExponentAtCurrentTick := priceInThisExponent.Quo(res.additiveIncrementPerTick)
-		tickIndex = res.initialTick + ticksToBeFulfilledByExponentAtCurrentTick.SDKDec().RoundInt64()
-		return tickIndex
+	} else if price.Equal(sdkOneDec) {
+		return 0
 	} else {
-		// We must decrement the exponentAtCurrentTick by one when traversing negative ticks in order to constantly step up in precision when going further down in ticks
-		// Otherwise, from tick 0 to tick -(geometricExponentIncrementDistanceInTicks), we would use the same exponent as the exponentAtPriceOne
-		exponentAtCurrentTick := exponentAtPriceOne - 1
-		currentAdditiveIncrementInTicksBigDec = osmomath.BigDecFromSDKDec(currentAdditiveIncrementInTicks)
-		for currentPrice.GT(price) {
-			currentAdditiveIncrementInTicksBigDec = powTenBigDec(exponentAtCurrentTick)
-			maxPriceForCurrentAdditiveIncrementInTicks := currentAdditiveIncrementInTicksBigDec.MulInt64(geometricExponentIncrementDistanceInTicks)
-			currentPrice = currentPrice.Sub(maxPriceForCurrentAdditiveIncrementInTicks.SDKDec())
-			exponentAtCurrentTick = exponentAtCurrentTick - 1
-			ticksPassed = ticksPassed - geometricExponentIncrementDistanceInTicks
+		index := -1
+		res = tickExpCache[int64(index)]
+		for res.initialPrice.GT(price) {
+			index -= 1
+			res = tickExpCache[int64(index)]
 		}
 	}
 
-	// Determine how many ticks we have passed in the exponentAtCurrentTick (in other words, the incomplete geometricExponent above)
-	ticksToBeFulfilledByExponentAtCurrentTick := osmomath.BigDecFromSDKDec(price.Sub(currentPrice)).Quo(currentAdditiveIncrementInTicksBigDec)
-
-	// Finally, add the ticks we have passed from the completed geometricExponent values, as well as the ticks we have passed in the current geometricExponent value
-	tickIndex = ticksPassed + ticksToBeFulfilledByExponentAtCurrentTick.SDKDec().RoundInt64()
+	priceInThisExponent := osmomath.BigDecFromSDKDec(price.Sub(res.initialPrice))
+	ticksToBeFulfilledByExponentAtCurrentTick := priceInThisExponent.Quo(res.additiveIncrementPerTick)
+	tickIndex = res.initialTick + ticksToBeFulfilledByExponentAtCurrentTick.SDKDec().RoundInt64()
 	return tickIndex
 }
