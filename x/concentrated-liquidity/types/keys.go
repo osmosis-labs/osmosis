@@ -32,18 +32,19 @@ var (
 	TickNegativePrefix = []byte{0x05}
 	TickPositivePrefix = []byte{0x06}
 
-	KeyNextGlobalPositionId = []byte{0x07}
+	KeyNextGlobalPositionId        = []byte{0x07}
+	KeyNextGlobalIncentiveRecordId = []byte{0x08}
 
-	PositionIdPrefix                      = []byte{0x08}
-	PoolPositionPrefix                    = []byte{0x09}
-	SpreadRewardPositionAccumulatorPrefix = []byte{0x0A}
-	KeySpreadRewardPoolAccumulatorPrefix  = []byte{0x0B}
-	UptimeAccumulatorPrefix               = []byte{0x0C}
-	PositionToLockPrefix                  = []byte{0x0D}
-	FullRangeLiquidityPrefix              = []byte{0x0E}
-	BalancerFullRangePrefix               = []byte{0x0F}
-	LockToPositionPrefix                  = []byte{0x10}
-	ConcentratedLockPrefix                = []byte{0x11}
+	PositionIdPrefix                      = []byte{0x09}
+	PoolPositionPrefix                    = []byte{0x0A}
+	SpreadRewardPositionAccumulatorPrefix = []byte{0x0B}
+	KeySpreadRewardPoolAccumulatorPrefix  = []byte{0x0C}
+	UptimeAccumulatorPrefix               = []byte{0x0D}
+	PositionToLockPrefix                  = []byte{0x0E}
+	FullRangeLiquidityPrefix              = []byte{0x0F}
+	BalancerFullRangePrefix               = []byte{0x10}
+	LockToPositionPrefix                  = []byte{0x11}
+	ConcentratedLockPrefix                = []byte{0x12}
 
 	// TickPrefix + pool id
 	KeyTickPrefixByPoolIdLengthBytes = len(TickPrefix) + uint64ByteSize
@@ -205,10 +206,10 @@ func KeyPool(poolId uint64) []byte {
 }
 
 // Incentive Prefix Keys
-// KeyIncentiveRecord is the key used to store incentive record struct for the
-// pool id + min uptime index + denom + addr combination.
-func KeyIncentiveRecord(poolId uint64, minUptimeIndex int, denom string, addr sdk.AccAddress) []byte {
-	return []byte(fmt.Sprintf("%s%s%d%s%d%s%s%s%s", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex, KeySeparator, denom, KeySeparator, addr))
+// KeyIncentiveRecord is the key used to store incentive records using the combination of
+// pool id + min uptime index + denom combination.
+func KeyIncentiveRecord(poolId uint64, minUptimeIndex int, id uint64) []byte {
+	return []byte(fmt.Sprintf("%s%s%d%s%d%s%d", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex, KeySeparator, id))
 }
 
 // KeyUptimeIncentiveRecords returns the prefix key for incentives records using the combination of pool id + min uptime index.
