@@ -349,6 +349,8 @@ func (k Keeper) updatePoolUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64
 	return nil
 }
 
+var dec1e9 = sdk.NewDec(1e9)
+
 // updateGivenPoolUptimeAccumulatorsToNow syncs all given uptime accumulators for a given pool id
 // Updates the pool last liquidity update time with the current block time and writes the updated pool to state.
 // If last liquidity update happened in the current block, this function is a no-op.
@@ -368,17 +370,17 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 		return types.ErrPoolNil
 	}
 
-	// Since our base unit of time is nanoseconds, we divide with truncation by 10^9 (10e8) to get
+	// Since our base unit of time is nanoseconds, we divide with truncation by 10^9 to get
 	// time elapsed in seconds
 	timeElapsedNanoSec := sdk.NewDec(int64(ctx.BlockTime().Sub(pool.GetLastLiquidityUpdate())))
-	timeElapsedSec := timeElapsedNanoSec.Quo(sdk.NewDec(10e8))
+	timeElapsedSec := timeElapsedNanoSec.Quo(dec1e9)
 
 	// If no time has elapsed, this function is a no-op
-	if timeElapsedSec.Equal(sdk.ZeroDec()) {
+	if timeElapsedSec.IsZero() {
 		return nil
 	}
 
-	if timeElapsedSec.LT(sdk.ZeroDec()) {
+	if timeElapsedSec.IsNegative() {
 		return types.TimeElapsedNotPositiveError{TimeElapsed: timeElapsedSec}
 	}
 
