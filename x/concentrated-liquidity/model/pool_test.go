@@ -625,6 +625,14 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 
 			expectError: types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: lowerTick},
 		},
+		"error: lower tick is greater than upper tick": {
+			currentTick:    lowerTick,
+			lowerTick:      lowerTick + 1,
+			upperTick:      lowerTick,
+			liquidityDelta: defaultLiquidityDelta,
+
+			expectError: types.InvalidLowerUpperTickError{LowerTick: lowerTick + 1, UpperTick: lowerTick},
+		},
 	}
 
 	for name, tc := range tests {
