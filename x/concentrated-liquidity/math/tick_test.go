@@ -714,3 +714,19 @@ func (suite *ConcentratedMathTestSuite) TestCalculatePriceToTick() {
 		})
 	}
 }
+
+func (suite *ConcentratedMathTestSuite) TestSqrtTickPriceVector() {
+	// Tick 31003912 -> sqrtPrice 70.738334727359817881
+	// Tick 31003913 -> sqrtPrice 70.738341795662697029
+	// Implies that sqrtPrice equal to 70.738341795662697029 should be in tick 31003913
+	startingSqrtPrice := sdk.MustNewDecFromStr("70.738341795662697029")
+
+	// Incorrectly yields tick 31003912 if we truncate in `CalculatePriceToTick`
+	tickFromPrice, err := math.PriceToTickRoundDown(startingSqrtPrice.Power(2), uint64(1))
+	suite.Require().NoError(err)
+	fmt.Println("tick: ", tickFromPrice)
+
+	_, sqrtPriceFromTick, err := math.TickToSqrtPrice(tickFromPrice)
+	suite.Require().NoError(err)
+	fmt.Println("sqrtPriceFromTick: ", sqrtPriceFromTick)
+}
