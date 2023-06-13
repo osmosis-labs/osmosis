@@ -4383,7 +4383,7 @@ func (s *KeeperTestSuite) TestIncentives_Functional() {
 	positionIdOne, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId, ownerOne, coinsPositionOne)
 	s.Require().NoError(err)
 
-	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
+	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
 	s.Require().NoError(err)
 	currentTick := clPool.GetCurrentTick()
 	lowerTickPositionTwo := currentTick - int64(clPool.GetTickSpacing())
