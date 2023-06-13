@@ -3191,11 +3191,12 @@ func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
 			err = s.clk.SetMultipleIncentiveRecords(s.Ctx, []types.IncentiveRecord{testIncentiveRecord})
 			s.Require().NoError(err)
 
-			// Since the canonical balancer pool automatically claims, ensure that the pool is properly funded if the pool exists.
-			if tc.setUpConnectedBalancerPool {
-				s.FundAcc(clPool.GetIncentivesAddress(), sdk.NewCoins(sdk.NewCoin(testIncentiveRecord.IncentiveDenom, testIncentiveRecord.IncentiveRecordBody.RemainingAmount.TruncateInt())))
+			// // Since the canonical balancer pool automatically claims, ensure that the pool is properly funded if the pool exists.
+			// if tc.setUpConnectedBalancerPool {
+			// 	s.FundAcc(clPool.GetIncentivesAddress(), sdk.NewCoins(sdk.NewCoin(testIncentiveRecord.IncentiveDenom, testIncentiveRecord.IncentiveRecordBody.RemainingAmount.TruncateInt())))
 
-			}
+			// }
+			s.FundAcc(clPool.GetIncentivesAddress(), sdk.NewCoins(sdk.NewCoin(testIncentiveRecord.IncentiveDenom, testIncentiveRecord.IncentiveRecordBody.RemainingAmount.TruncateInt())))
 
 			longestLockableDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
 			s.Require().NoError(err)

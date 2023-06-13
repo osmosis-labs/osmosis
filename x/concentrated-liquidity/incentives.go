@@ -1074,11 +1074,11 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 		return sdk.Coins{}, sdk.DecCoins{}, err
 	}
 
-	// Re-retrieve the uptime accumulators for the position's pool since it was modified above via the prepare method above.
-	uptimeAccumulators, err = k.GetUptimeAccumulators(ctx, position.PoolId)
-	if err != nil {
-		return sdk.Coins{}, sdk.DecCoins{}, err
-	}
+	// // Re-retrieve the uptime accumulators for the position's pool since it was modified above via the prepare method above.
+	// uptimeAccumulators, err = k.GetUptimeAccumulators(ctx, position.PoolId)
+	// if err != nil {
+	// 	return sdk.Coins{}, sdk.DecCoins{}, err
+	// }
 
 	// Determine if the position is in range. We will also use the pool object in the loop below.
 	pool, err = k.getPoolById(ctx, position.PoolId)
@@ -1095,10 +1095,10 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 			return sdk.Coins{}, sdk.DecCoins{}, err
 		}
 
-		pos, err := uptimeAccum.GetPosition(positionName)
-		if err != nil {
-			return sdk.Coins{}, sdk.DecCoins{}, err
-		}
+		// pos, err := uptimeAccum.GetPosition(positionName)
+		// if err != nil {
+		// 	return sdk.Coins{}, sdk.DecCoins{}, err
+		// }
 
 		// If the accumulator contains the position, claim the position's incentives.
 		if hasPosition {
@@ -1117,17 +1117,17 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 			fmt.Println("collectedIncentivesForUptime", collectedIncentivesForUptime)
 			if uptimeIndex == 2 && positionAge > supportedUptimes[uptimeIndex] {
 				fmt.Println("collectedIncentivesForUptime", collectedIncentivesForUptime)
-				fmt.Println("qualifyingBalancerShares", qualifyingBalancerShares)
-				fmt.Println("isPositionInRange", isPositionInRange)
-				fmt.Println("pool.GetLiquidity() post", pool.GetLiquidity())
-				fmt.Println("qualifyingBalancerShares post", qualifyingBalancerShares)
-				qualifyingLiquidity := pool.GetLiquidity().Add(qualifyingBalancerShares)
+				// fmt.Println("qualifyingBalancerShares", qualifyingBalancerShares)
+				// fmt.Println("isPositionInRange", isPositionInRange)
+				// fmt.Println("pool.GetLiquidity() post", pool.GetLiquidity())
+				// fmt.Println("qualifyingBalancerShares post", qualifyingBalancerShares)
+				// qualifyingLiquidity := pool.GetLiquidity().Add(qualifyingBalancerShares)
 
-				// If the position we are claiming for is in range, we must subtract these shares from the qualifying liquidity.
-				if isPositionInRange {
-					qualifyingLiquidity = qualifyingLiquidity.Sub(pos.NumShares)
-				}
-				fmt.Println("qualifyingLiquidity post", qualifyingLiquidity)
+				// // If the position we are claiming for is in range, we must subtract these shares from the qualifying liquidity.
+				// if isPositionInRange {
+				// 	qualifyingLiquidity = qualifyingLiquidity.Sub(pos.NumShares)
+				// }
+				// fmt.Println("qualifyingLiquidity post", qualifyingLiquidity)
 			}
 			// If the claimed incentives are forfeited, deposit them back into the accumulator to be distributed
 			// to other qualifying positions.
@@ -1170,14 +1170,15 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 					forfeitedDecCoin := sdk.NewDecCoinFromDec(forfeitedCoin.Denom, forfeitedCoin.Amount.ToDec().Add(dust.AmountOf(forfeitedCoin.Denom)))
 
 					// To determine the amount of liquidity we must distribute the forfeited incentives to, we add the current tick liquidity as well as the qualifying balancer shares.
+					//qualifyingLiquidity := pool.GetLiquidity().Add(qualifyingBalancerShares)
 					qualifyingLiquidity := pool.GetLiquidity().Add(qualifyingBalancerShares)
 
-					// If the position we are claiming for is in range, we must subtract these shares from the qualifying liquidity.
-					if isPositionInRange {
-						qualifyingLiquidity = qualifyingLiquidity.Sub(pos.NumShares)
-					}
+					// // If the position we are claiming for is in range, we must subtract these shares from the qualifying liquidity.
+					// if isPositionInRange {
+					// 	qualifyingLiquidity = qualifyingLiquidity.Sub(pos.NumShares)
+					// }
 					if uptimeIndex == 2 {
-						fmt.Println("qualifyingBalancerShares", qualifyingBalancerShares)
+						// fmt.Println("qualifyingBalancerShares", qualifyingBalancerShares)
 						fmt.Println("isPositionInRange", isPositionInRange)
 						fmt.Println("qualifyingLiquidity", qualifyingLiquidity)
 					}
