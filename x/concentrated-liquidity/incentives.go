@@ -515,7 +515,7 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNowNew(ctx sdk.Context, pool 
 		return err
 	}
 
-	for uptimeIndex, _ := range uptimeAccums {
+	for uptimeIndex := range uptimeAccums {
 		// Get relevant uptime-level values
 		curUptimeDuration := types.SupportedUptimes[uptimeIndex]
 
