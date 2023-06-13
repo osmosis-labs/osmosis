@@ -3,6 +3,7 @@ package types_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
@@ -65,4 +66,12 @@ func TestAccumulatorNameKeys(t *testing.T) {
 			}
 		})
 	}
+}
+
+// sanity test to show that addresses are hex encoded.
+func TestAddrKeyEncoding(t *testing.T) {
+	addr := "bytes_underlying_address"
+	accAddr := sdk.AccAddress(addr)
+	bz := types.KeyUserPositions(accAddr)
+	require.Equal(t, "\x02|62797465735f756e6465726c79696e675f61646472657373|", string(bz))
 }
