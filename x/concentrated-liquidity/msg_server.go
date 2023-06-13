@@ -2,6 +2,7 @@ package concentrated_liquidity
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -180,6 +181,8 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 		if err != nil {
 			return nil, err
 		}
+		fmt.Println("ADAM: collectedIncentives", collectedIncentives)
+		fmt.Println("ADAM: forfeitedIncentives", forfeitedIncentives)
 		totalCollectedIncentives = totalCollectedIncentives.Add(collectedIncentives...)
 		totalForefeitedIncentives = totalForefeitedIncentives.Add(forfeitedIncentives...)
 	}

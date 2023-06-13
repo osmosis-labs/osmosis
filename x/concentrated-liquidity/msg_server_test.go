@@ -398,8 +398,13 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			err = addToUptimeAccums(s.Ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, uptimeHelper.hundredTokensMultiDenom)
 			s.Require().NoError(err)
 
+			// // Update the uptime accumulators to the current block time.
+			// // This is done to determine the exact amount of incentives we expect to be forfeited, if any.
+			// err = s.clk.UpdateUptimeAccumulatorsToNow(s.Ctx, pool.GetId())
+			// s.Require().NoError(err)
+
 			expectedIncentives := sdk.Coins{}
-			expectedForfeit := sdk.Coins{}
+			expectedForfeit := sdk.DecCoins{}
 
 			// Determine uptime growth at time of claim
 			// This isn't really straight forward, since when each position claimed, it forfeits its respective rewards and they become claimable by the next
@@ -411,19 +416,34 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 				} else {
 					newUptimeGrowthPostPreviousUserForfeit := make([]sdk.DecCoins, len(uptimeHelper.hundredTokensMultiDenom))
 					copy(newUptimeGrowthPostPreviousUserForfeit, uptimeHelper.hundredTokensMultiDenom)
-					newUptimeGrowthWithPreviousUserForfeit := perPosUptimeGrowthAtTimeOfClaim[i-1][len(perPosUptimeGrowthAtTimeOfClaim[i-1])-1].MulDec(sdk.NewDec(int64(len(tc.positionIds))).Quo(sdk.NewDec(int64(len(tc.positionIds) - 1))))
+					fmt.Println("perPosUptimeGrowthAtTimeOfClaim[i-1][len(perPosUptimeGrowthAtTimeOfClaim[i-1])-1]", perPosUptimeGrowthAtTimeOfClaim[i-1][len(perPosUptimeGrowthAtTimeOfClaim[i-1])-1])
+					fmt.Println("sdk.NewDec(int64(len(tc.positionIds))", sdk.NewDec(int64(len(tc.positionIds))))
+					fmt.Println("sdk.NewDec(int64(len(tc.positionIds) - 1))", sdk.NewDec(int64(len(tc.positionIds)-1)))
+					previousUptime := perPosUptimeGrowthAtTimeOfClaim[i-1][len(perPosUptimeGrowthAtTimeOfClaim[i-1])-1]
+					fmt.Println("previousUptime", previousUptime)
+					newUptimeGrowthWithPreviousUserForfeit := previousUptime.Add(previousUptime.QuoDec(sdk.NewDec(int64(len(tc.positionIds))))...)
+					//newUptimeGrowthWithPreviousUserForfeit := perPosUptimeGrowthAtTimeOfClaim[i-1][len(perPosUptimeGrowthAtTimeOfClaim[i-1])-1].MulDec(sdk.NewDec(int64(len(tc.positionIds))).Quo(sdk.NewDec(int64(len(tc.positionIds) - 1))))
+					fmt.Println("previousUptime.Add(previousUptime...)", previousUptime.Add(previousUptime...))
+					fmt.Println("newUptimeGrowthWithPreviousUserForfeit", newUptimeGrowthWithPreviousUserForfeit)
 					newUptimeGrowthPostPreviousUserForfeit[len(newUptimeGrowthPostPreviousUserForfeit)-1] = newUptimeGrowthWithPreviousUserForfeit
+					fmt.Println("newUptimeGrowthWithPreviousUserForfeit", newUptimeGrowthWithPreviousUserForfeit.QuoDec(sdk.NewDec(2)))
 					perPosUptimeGrowthAtTimeOfClaim = append(perPosUptimeGrowthAtTimeOfClaim, newUptimeGrowthPostPreviousUserForfeit)
 				}
 			}
 
+			fmt.Println("perPosUptimeGrowthAtTimeOfClaim", perPosUptimeGrowthAtTimeOfClaim)
+
 			// Using the above calculated uptime growth for each position, calculate the expected redeemed incentives and forfeits.
 			for _, uptimeGrowth := range perPosUptimeGrowthAtTimeOfClaim {
-				expectedIncentivesInternal := expectedIncentivesFromUptimeGrowth(uptimeGrowth, DefaultLiquidityAmt, positionAge, sdk.NewInt(1))
-				expectedForfeitInternal := expectedIncentivesFromUptimeGrowth(uptimeGrowth, DefaultLiquidityAmt, twoWeeks, sdk.NewInt(1)).Sub(expectedIncentivesInternal)
-				expectedIncentives = expectedIncentives.Add(expectedIncentivesInternal...)
+				expectedIncentivesInternal := expectedForfeitureFromUptimeGrowth(uptimeGrowth, DefaultLiquidityAmt, positionAge, sdk.NewInt(1))
+				fmt.Println("uptimeGrowth", uptimeGrowth)
+				fmt.Println("first ", expectedForfeitureFromUptimeGrowth(uptimeGrowth, DefaultLiquidityAmt, twoWeeks, sdk.NewInt(1)))
+				fmt.Println("minus second", expectedIncentivesInternal)
+				expectedForfeitInternal := expectedForfeitureFromUptimeGrowth(uptimeGrowth, DefaultLiquidityAmt, twoWeeks, sdk.NewInt(1)).Sub(expectedIncentivesInternal)
+				expectedIncentives = expectedIncentives.Add(sdk.NormalizeCoins(expectedIncentivesInternal)...)
 				expectedForfeit = expectedForfeit.Add(expectedForfeitInternal...)
-
+				fmt.Println("expectedIncentivesInternal", expectedIncentivesInternal)
+				fmt.Println("expectedForfeitInternal", expectedForfeitInternal)
 			}
 
 			// Fund the incentive address with the expected incentives to be distributed
@@ -449,12 +469,13 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 
 				// Need to change the output to a single coin array for comparison
 				expectedCollectedIncentives := []sdk.Coin{}
-				expectedForfeitIncentives := []sdk.Coin{}
 				expectedCollectedIncentives = append(expectedCollectedIncentives, expectedIncentives...)
-				expectedForfeitIncentives = append(expectedForfeitIncentives, expectedForfeit...)
+
+				fmt.Println("expectedCollectedIncentives", expectedCollectedIncentives)
+				fmt.Println("response.CollectedIncentives", response.CollectedIncentives)
 
 				s.Require().Equal(expectedCollectedIncentives, response.CollectedIncentives)
-				s.Require().Equal(expectedForfeitIncentives, response.ForfeitedIncentives)
+				s.Require().Equal(sdk.NormalizeCoins(expectedForfeit), sdk.NormalizeCoins(response.ForfeitedIncentives))
 				s.AssertEventEmitted(s.Ctx, types.TypeEvtTotalCollectIncentives, tc.expectedTotalCollectIncentivesEvent)
 				s.AssertEventEmitted(s.Ctx, types.TypeEvtCollectIncentives, tc.expectedCollectIncentivesEvent)
 				s.AssertEventEmitted(s.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)

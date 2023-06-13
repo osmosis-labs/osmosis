@@ -1187,11 +1187,15 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 					// We instead reinvest the forfeited incentives back into the accumulator, because the contract here is that this method will
 					// be called a second time when withdrawing the final position, but during the second time it is called, the totalSharesAccum will be zero so
 					// those incentives will be sent to the community pool in the logic directly above this.
-					if qualifyingLiquidity.IsZero() {
-						qualifyingLiquidity = pool.GetLiquidity().Add(qualifyingBalancerShares)
-					}
+					// if qualifyingLiquidity.IsZero() {
+					// 	qualifyingLiquidity = pool.GetLiquidity().Add(qualifyingBalancerShares)
+					// }
+					fmt.Println("ADAM pool.GetLiquidity()", pool.GetLiquidity())
+					fmt.Println("ADAM qualifyingBalancerShares", qualifyingBalancerShares)
 
-					forfeitedIncentivesPerShare = append(forfeitedIncentivesPerShare, sdk.NewDecCoinFromDec(forfeitedCoin.Denom, forfeitedDecCoin.Amount.Quo(qualifyingLiquidity)))
+					if !qualifyingLiquidity.IsZero() {
+						forfeitedIncentivesPerShare = append(forfeitedIncentivesPerShare, sdk.NewDecCoinFromDec(forfeitedCoin.Denom, forfeitedDecCoin.Amount.Quo(qualifyingLiquidity)))
+					}
 					forfeitedIncentivesForPosition = forfeitedIncentivesForPosition.Add(forfeitedDecCoin)
 				}
 

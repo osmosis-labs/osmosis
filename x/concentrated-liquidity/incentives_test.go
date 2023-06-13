@@ -2376,10 +2376,14 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 				validPool := s.PrepareConcentratedPool()
 				validPoolId := validPool.GetId()
 
+				fmt.Println("ADAM: validPool liq", validPool.GetLiquidity())
+
 				s.FundAcc(validPool.GetIncentivesAddress(), tc.expectedIncentivesClaimed)
 
 				clKeeper := s.App.ConcentratedLiquidityKeeper
 				ctx := s.Ctx
+
+				validPool.SetCurrentTick(tc.currentTick)
 
 				if tc.numPositions > 0 {
 					// Initialize lower and upper ticks with empty uptime trackers
@@ -2397,6 +2401,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 					}
 					ctx = ctx.WithBlockTime(ctx.BlockTime().Add(tc.timeInPosition))
 
+					validPool.UpdateLiquidityIfActivePosition(ctx, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.positionParams.liquidity)
+
 					// Add to uptime growth inside range
 					if tc.addedUptimeGrowthInside != nil {
 						s.addUptimeGrowthInsideRange(ctx, validPoolId, ownerWithValidPosition, tc.currentTick, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.addedUptimeGrowthInside)
@@ -2408,7 +2414,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 					}
 				}
 
-				validPool.SetCurrentTick(tc.currentTick)
 				err := clKeeper.SetPool(ctx, validPool)
 				s.Require().NoError(err)
 
@@ -2419,6 +2424,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 
 				// System under test
 				incentivesClaimedQuery, incentivesForfeitedQuery, err := clKeeper.GetClaimableIncentives(ctx, DefaultPositionId)
+				fmt.Println("ADAM: incentivesClaimedQuery", incentivesClaimedQuery)
+				fmt.Println("ADAM: incentivesForfeitedQuery", incentivesForfeitedQuery)
 
 				_ = s.App.BankKeeper.GetAllBalances(ctx, validPool.GetAddress())
 				incentivesBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetIncentivesAddress())
@@ -2434,6 +2441,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 					s.Require().Equal(tc.expectedForfeitedIncentives, incentivesForfeitedQuery)
 				}
 				actualIncentivesClaimed, actualIncetivesForfeited, err := clKeeper.CollectIncentives(ctx, ownerWithValidPosition, DefaultPositionId)
+				fmt.Println("ADAM: actualIncentivesClaimed", actualIncentivesClaimed)
+				fmt.Println("ADAM: actualIncetivesForfeited", actualIncetivesForfeited)
 
 				// Assertions
 
@@ -2934,11 +2943,14 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 					joinTime = joinTime.AddDate(0, 0, 28)
 				}
 
+				clPool.SetCurrentTick(DefaultCurrTick)
+
 				// Initialize position
 				err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, tc.numShares, joinTime, tc.positionIdCreate)
 				s.Require().NoError(err)
 
-				clPool.SetCurrentTick(DefaultCurrTick)
+				clPool.UpdateLiquidityIfActivePosition(s.Ctx, DefaultLowerTick, DefaultUpperTick, tc.numShares)
+
 				if tc.growthOutside != nil {
 					s.addUptimeGrowthOutsideRange(s.Ctx, validPoolId, defaultSender, DefaultCurrTick, DefaultLowerTick, DefaultUpperTick, tc.growthOutside)
 				}
@@ -2949,6 +2961,8 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 
 				err = clKeeper.SetPool(s.Ctx, clPool)
 				s.Require().NoError(err)
+
+				fmt.Println("Pool: ", clPool.GetLiquidity())
 
 				// Store initial accum values for comparison later
 				initUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, validPoolId)
@@ -3047,89 +3061,126 @@ func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
 		expectedForfeitedIncentives         sdk.Coins
 		expectedSecondPosForfeitedIncentive sdk.Coins
 	}{
-		// {
-		// 	name:                        "Two equal positions. Claim 1 with same blocktime, all uptimes forfeit but no time passed, so nothing to actually forfeit. Claim second after 1 hour, meets min uptime, so claim all",
-		// 	blockTimeElapsed:            0,
-		// 	expectedIncentivesClaimed:   sdk.Coins(nil),
-		// 	expectedForfeitedIncentives: sdk.Coins(nil),
+		{
+			name:                        "Two equal positions. Claim 1 with same blocktime, all uptimes forfeit but no time passed, so nothing to actually forfeit. Claim second after 1 hour, meets min uptime, so claim all",
+			blockTimeElapsed:            0,
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 
-		// 	// an hour passes after the first position is claimed, so we now have a total of 1hr of uptime
+			// An hour passes after the first position is claimed, so we now have a total of 1hr of uptime
 
-		// 	// 3600usdc is emitted after and hour, so 3600/2 = 1800usdc.
-		// 	expectedSeconPosIncentivesClaimed:   sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(1799))),
-		// 	expectedSecondPosForfeitedIncentive: sdk.Coins(nil),
-		// },
-		// {
-		// 	name:                      "Two equal positions. Claim 1 after 1 minute, does not meet one hour min uptime, so forfeit all. Claim second after 1 hour + 1 min, meets min uptime, so claim all and get forfeited amount from first position",
-		// 	blockTimeElapsed:          time.Minute,
-		// 	expectedIncentivesClaimed: sdk.Coins(nil),
+			// 3600usdc is emitted after and hour, so 3600*50% = 1800usdc.
+			expectedSeconPosIncentivesClaimed:   sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(1799))),
+			expectedSecondPosForfeitedIncentive: sdk.Coins(nil),
+		},
+		{
+			name:             "Two equal positions. Claim 1 after 1 minute, does not meet one hour min uptime, so forfeit all. Claim second after 1 hour + 1 min, meets min uptime, so claim all and get forfeited amount from first position",
+			blockTimeElapsed: time.Minute,
 
-		// 	//  after 1min = 29usdc ~ because 1usdc emitted every second is 60usdc, split between two positions
-		// 	expectedForfeitedIncentives: sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(29))),
+			// After 1min, 60 usdc is emitted. 50% of 60 is 30, so when position 1 attempts to claim before the min uptime, it forfeits 29usdc (gets rounded down).
+			// Of the 29 forfeited and reinvest back into the uptime accumulator, assuming no further forfeitures:
+			// 50% of 29 is ~14
+			// This mean that after the min uptime has occurred, position 1 and 2 should get 14 usdc of the forfeited rewards each.
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(29))),
 
-		// 	// an hour passes after the first position is claimed, so we now have a total of 1hr and 1min of uptime
+			// An hour passes after the first position is claimed, so we now have a total of 1hr of uptime
 
-		// 	// 3600usdc is emitted after and hour, so 3600/2 = 1800usdc. If the previous position didn't forfeit, then this position would get 1830usdc.
-		// 	// Since it did, this position gets the 29 usdc that was forfeited from the previous position, so 1830 + 29 = 1859usdc
-		// 	expectedSeconPosIncentivesClaimed:   sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(1859))),
-		// 	expectedSecondPosForfeitedIncentive: sdk.Coins(nil),
-		// },
-		// {
-		// 	name:             "Two equal positions. Claim 1 after 1 hr, meets one hour min uptime, so claim all. Claim second after 1 hour + 1 hour, meets min uptime, so claim all",
-		// 	blockTimeElapsed: time.Hour,
+			// 3600usdc is emitted after and hour, so 3600*50% = 1800usdc.
+			// Position 1:3600*50% = 1800 usdc + 14 usdc from forfeited rewards = 1814 usdc
+			// Position 2:3660*50% = 1830 usdc + 14 usdc from forfeited rewards = 1844 usdc
+			expectedSeconPosIncentivesClaimed:   sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(1844))),
+			expectedSecondPosForfeitedIncentive: sdk.Coins(nil),
+		},
+		{
+			name:             "Two equal positions. Claim 1 after 1 hr, meets one hour min uptime, so claim all. Claim second after 1 hour + 1 hour, meets min uptime, so claim all",
+			blockTimeElapsed: time.Hour,
 
-		// 	//  after 1hr = 1800usdc ~ because 1usdc emitted every second is 3600usdc, split between two positions
-		// 	expectedIncentivesClaimed:   sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(1799))),
-		// 	expectedForfeitedIncentives: sdk.Coins(nil),
+			// 3600usdc is emitted after and hour, so 3600*50% = 1800usdc.
+			// Position 1:3600*50% = 1800 usdc
+			expectedIncentivesClaimed:   sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(1799))),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 
-		// 	// an hour passes after the first position is claimed, so we now have a total of 2hr of uptime
+			// An hour passes after the first position is claimed, so we now have a total of 2hr of uptime
 
-		// 	// 7200usdc is emitted after and hour, so 7200/2 = 3600usdc. The previous position didn't forfeit, so this position gets 3600usdc.
-		// 	expectedSeconPosIncentivesClaimed:   sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(3599))),
-		// 	expectedSecondPosForfeitedIncentive: sdk.Coins(nil),
-		// },
-		// {
-		// 	name:             "Claim after 3 hours, meets one hour min uptime, so claim all",
-		// 	blockTimeElapsed: time.Hour * 3,
+			// 7200usdc is emitted after two hours, so 7200*50% = 3600usdc. The previous position didn't forfeit, so this position gets 3600usdc.
+			// Position 1:7200*50% = 3600 usdc
+			expectedSeconPosIncentivesClaimed:   sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(3599))),
+			expectedSecondPosForfeitedIncentive: sdk.Coins(nil),
+		},
+		{
+			name:             "Two equal positions. Claim 1 after 3 hours, meets one hour min uptime, so claim all. Claim second after 3 hours + 1hour, meets min uptime, so claim all (but not extra since incentive record is completed)",
+			blockTimeElapsed: time.Hour * 3,
 
-		// 	//  after 3hr > 2hr46min = 9999usdc.999999999901820104 ~ 9999usdc split between two positions
-		// 	expectedIncentivesClaimed:   sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(4999))),
-		// 	expectedForfeitedIncentives: sdk.Coins(nil),
+			//  after 3hr > 2hr46min = 9999usdc.999999999901820104 ~ 9999usdc split between two positions
+			expectedIncentivesClaimed:   sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(4999))),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 
-		// 	// an hour passes after the first position is claimed, so we now have a total of 4hr of uptime
+			// An hour passes after the first position is claimed, so we now have a total of 4hr of uptime
 
-		// 	// the extra uptime doesn't matter since the incentive record is completed, so we should get the same amount as the previous test
-		// 	expectedSeconPosIncentivesClaimed:   sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(4999))),
-		// 	expectedSecondPosForfeitedIncentive: sdk.Coins(nil),
-		// },
-		// {
-		// 	name:                        "Claim with same blocktime, all uptimes forfeit but no time passed, so nothing to actually forfeit, shared with connected pool",
-		// 	blockTimeElapsed:            0,
-		// 	setUpConnectedBalancerPool:  true,
-		// 	expectedIncentivesClaimed:   sdk.Coins(nil),
-		// 	expectedForfeitedIncentives: sdk.Coins(nil),
+			// The extra uptime doesn't matter since the incentive record is completed, so we should get the same amount as the previous test
+			expectedSeconPosIncentivesClaimed:   sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(4999))),
+			expectedSecondPosForfeitedIncentive: sdk.Coins(nil),
+		},
 
-		// 	// an hour passes after the first position is claimed, so we now have a total of 1hr of uptime
+		// Connected balancer pool tests
+		{
+			name:                        "Linked balancer pool and two equal positions. Claim 1 with same blocktime, all uptimes forfeit but no time passed, so nothing to actually forfeit. Claim second after 1 hour, meets min uptime, so claim all",
+			blockTimeElapsed:            0,
+			setUpConnectedBalancerPool:  true,
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.Coins(nil),
 
-		// 	// 3600usdc is emitted after and hour, so 3600*45.833% = 1650.0usdc
-		// 	expectedSeconPosIncentivesClaimed:   sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(1653))),
-		// 	expectedSecondPosForfeitedIncentive: sdk.Coins(nil),
-		// },
+			// An hour passes after the first position is claimed, so we now have a total of 1hr of uptime
+
+			// 3600usdc is emitted after and hour, so 3600*45.833% = 1646.587usdc.
+			expectedSeconPosIncentivesClaimed:   sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(1646))),
+			expectedSecondPosForfeitedIncentive: sdk.Coins(nil),
+		},
 		{
 			name:             "Linked balancer pool and two equal positions. Claim after 1 minute, does not meet one hour min uptime, so forfeit all, shared with connected pool and position 2. Claim second after 1 hour + 1 hour, meets min uptime, so claim all",
 			blockTimeElapsed: time.Minute,
-			// balancer pool makes up 8.3% of the rewards, and the two cl positions split the other 91.66%, so 45.833% each
+			// balancer pool makes up 8.52293% of the rewards, and the two cl positions split the other 91.477%, so 45.738% each
 			setUpConnectedBalancerPool: true,
 
-			//  after 1min = 27usdc ~ because 1usdc emitted every second is 60usdc, split between three positions
+			// After 1min, 60 usdc is emitted. 45.738% of 60 is ~27, so when position 1 attempts to claim before the min uptime, it forfeits 27usdc.
+			// Of the 27 forfeited and reinvest back into the uptime accumulator, assuming no further forfeitures:
+			// 45.738% of 27 is ~12
+			// 8.52293% of 60 is ~2
+			// This mean that after the min uptime has occurred, position 1 and 2 should get 12 usdc of the forfeited rewards each, and the balancer pool should get 2 usdc
 			expectedIncentivesClaimed:   sdk.Coins(nil),
 			expectedForfeitedIncentives: sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(27))),
 
 			// an hour passes after the first position is claimed, so we now have a total of 1hr and 1min of uptime
 
-			// 3600usdc is emitted after and hour, so 3600*45.833% = 1650.0usdc. If the previous position didn't forfeit, then this position would get 1678usdc.
-			// Since it did, this position gets the 26 of the 27 usdc that was forfeited from the previous position, so 1678 + 26 = 1704usdc
-			expectedSeconPosIncentivesClaimed:   sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(1704))),
+			// 3600usdc is emitted after an hour, so 3600*45.833% = 1646.587usdc.
+			// Position 1:3600*45.833% = 1646.587 usdc + 12.349403 usdc from forfeited rewards = 1658.93659. NOTE: for some reason, position 1 gets 13 rewards and position 2 gets 12 rewards despite being equal positions..
+			// Position 2:3660*45.833% = 1674.0303 usdc + 12.349403 usdc from forfeited rewards = 1686.3797
+			// Balancer pool: 3660*8.52293% = 311.939377 usdc + 2.30119213 usdc from forfeited rewards = 314.240569
+			expectedSeconPosIncentivesClaimed:   sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(1686))),
+			expectedSecondPosForfeitedIncentive: sdk.Coins(nil),
+		},
+		{
+			name:             "Linked balancer pool and two equal positions. Claim after 1 minute, does not meet one hour min uptime, so forfeit all, shared with connected pool and position 2. Claim second after 1 hour + 1 hour, meets min uptime, so claim all",
+			blockTimeElapsed: time.Minute,
+			// balancer pool makes up 8.52293% of the rewards, and the two cl positions split the other 91.477%, so 45.738% each
+			setUpConnectedBalancerPool: true,
+
+			// After 1min, 60 usdc is emitted. 45.738% of 60 is ~27, so when position 1 attempts to claim before the min uptime, it forfeits 27usdc.
+			// Of the 27 forfeited and reinvest back into the uptime accumulator, assuming no further forfeitures:
+			// 45.738% of 27 is ~12
+			// 8.52293% of 60 is ~2
+			// This mean that after the min uptime has occurred, position 1 and 2 should get 12 usdc of the forfeited rewards each, and the balancer pool should get 2 usdc
+			expectedIncentivesClaimed:   sdk.Coins(nil),
+			expectedForfeitedIncentives: sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(27))),
+
+			// an hour passes after the first position is claimed, so we now have a total of 1hr and 1min of uptime
+
+			// 3600usdc is emitted after an hour, so 3600*45.833% = 1646.587usdc.
+			// Position 1:3600*45.833% = 1646.587 usdc + 12.349403 usdc from forfeited rewards = 1658.93659. NOTE: for some reason, position 1 gets 13 rewards and position 2 gets 12 rewards despite being equal positions..
+			// Position 2:3660*45.833% = 1674.0303 usdc + 12.349403 usdc from forfeited rewards = 1686.3797
+			// Balancer pool: 3660*8.52293% = 311.939377 usdc + 2.30119213 usdc from forfeited rewards = 314.240569
+			expectedSeconPosIncentivesClaimed:   sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(1686))),
 			expectedSecondPosForfeitedIncentive: sdk.Coins(nil),
 		},
 	}
@@ -3224,33 +3275,33 @@ func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
 			totalForfeited, _ := forfeitInc.TruncateDecimal()
 			s.Require().NoError(err)
 			fmt.Println("first claim for first position", collectedInc.String(), totalForfeited.String())
-			// s.Require().Equal(tc.expectedIncentivesClaimed.String(), collectedInc.String())
-			// s.Require().Equal(tc.expectedForfeitedIncentives.String(), totalForfeited.String())
+			s.Require().Equal(tc.expectedIncentivesClaimed.String(), collectedInc.String())
+			s.Require().Equal(tc.expectedForfeitedIncentives.String(), totalForfeited.String())
 
 			// // Utilize second position here to claim incentives for it as well
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour))
 
 			fmt.Println("COLLECT INCENTIVES POS 2")
 			collectedInc, forfeitInc, err = s.clk.CollectIncentives(s.Ctx, s.TestAccs[2], positionIdTwo)
-			//totalForfeited, _ = forfeitInc.TruncateDecimal()
+			totalForfeited, _ = forfeitInc.TruncateDecimal()
 			s.Require().NoError(err)
-			// s.Require().Equal(tc.expectedSeconPosIncentivesClaimed.String(), collectedInc.String())
-			// s.Require().Equal(tc.expectedSecondPosForfeitedIncentive.String(), totalForfeited.String())
+			s.Require().Equal(tc.expectedSeconPosIncentivesClaimed.String(), collectedInc.String())
+			s.Require().Equal(tc.expectedSecondPosForfeitedIncentive.String(), totalForfeited.String())
 
-			fmt.Println("COLLECT INCENTIVES POS 1 TIME #2")
-			collectedInc, forfeitInc, err = s.clk.CollectIncentives(s.Ctx, s.TestAccs[1], positionIdOne)
-			fmt.Println("second claim for first position", collectedInc.String(), forfeitInc.String())
+			// fmt.Println("COLLECT INCENTIVES POS 1 TIME #2")
+			// collectedInc, forfeitInc, err = s.clk.CollectIncentives(s.Ctx, s.TestAccs[1], positionIdOne)
+			// fmt.Println("second claim for first position", collectedInc.String(), forfeitInc.String())
 
-			gaugeId, err = s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerPoolId, longestLockableDuration)
-			s.Require().NoError(err)
+			// gaugeId, err = s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerPoolId, longestLockableDuration)
+			// s.Require().NoError(err)
 
-			gauge, err = s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
-			s.Require().NoError(err)
+			// gauge, err = s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
+			// s.Require().NoError(err)
 
-			fmt.Println("POST TIME PASS", s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetIncentivesAddress()))
-			fmt.Println("POST TIME PASS acc1", s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[1]))
-			fmt.Println("POST TIME PASS acc2", s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[2]))
-			fmt.Println("POST GAUGE COINS", gauge.Coins)
+			// fmt.Println("POST TIME PASS", s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetIncentivesAddress()))
+			// fmt.Println("POST TIME PASS acc1", s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[1]))
+			// fmt.Println("POST TIME PASS acc2", s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[2]))
+			// fmt.Println("POST GAUGE COINS", gauge.Coins)
 
 			// Depending on the test case prior to calling it, the second position may or may not be entitled to the incentives the previous position forfeited
 		})
