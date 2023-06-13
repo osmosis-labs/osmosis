@@ -70,6 +70,13 @@ func (suite *ConcentratedMathTestSuite) TestLiquidity0() {
 			expectedLiquidity: "1519437308.014768571720923239",
 			// https://www.wolframalpha.com/input?i=1000000+*+%2870.710678118654752440*+74.161984870956629487%29+%2F+%2874.161984870956629487+-+70.710678118654752440%29
 		},
+		"sqrtPriceA greater than sqrtPriceB": {
+			currentSqrtP:      sdk.MustNewDecFromStr("74.161984870956629487"), // 5000
+			sqrtPHigh:         sqrt5000,
+			amount0Desired:    sdk.NewInt(1000000),
+			expectedLiquidity: "1519437308.014768571720923239",
+			// https://www.wolframalpha.com/input?i=1000000+*+%2870.710678118654752440*+74.161984870956629487%29+%2F+%2874.161984870956629487+-+70.710678118654752440%29
+		},
 	}
 
 	for name, tc := range testCases {
@@ -164,6 +171,15 @@ func (suite *ConcentratedMathTestSuite) TestCalcAmount0Delta() {
 			liquidity:       sdk.MustNewDecFromStr("1517882343.751510418088349649"), // we use the smaller liquidity between liq0 and liq1
 			sqrtPA:          sqrt5000,                                               // 5000
 			sqrtPB:          sdk.MustNewDecFromStr("74.161984870956629487"),         // 5500
+			roundUp:         false,
+			amount0Expected: "998976.618347426388356619", // truncated at precision end.
+			isWithTolerance: false,
+			// https://www.wolframalpha.com/input?i=%281517882343.751510418088349649+*+%2874.161984870956629487+-+70.710678118654752440+%29%29+%2F+%2870.710678118654752440+*+74.161984870956629487%29
+		},
+		"happy path, sqrtPriceA greater than sqrtPrice B": {
+			liquidity:       sdk.MustNewDecFromStr("1517882343.751510418088349649"), // we use the smaller liquidity between liq0 and liq1
+			sqrtPA:          sdk.MustNewDecFromStr("74.161984870956629487"),         // 5500
+			sqrtPB:          sqrt5000,                                               // 5000
 			roundUp:         false,
 			amount0Expected: "998976.618347426388356619", // truncated at precision end.
 			isWithTolerance: false,
@@ -335,6 +351,14 @@ func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
 			currentSqrtP:      sdk.MustNewDecFromStr("67"),                    // 4489
 			sqrtPHigh:         sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
 			sqrtPLow:          sdk.MustNewDecFromStr("67.416615162732695594"), // 4545
+			amount0Desired:    sdk.NewInt(1000000),
+			amount1Desired:    sdk.ZeroInt(),
+			expectedLiquidity: "741212151.448720111852782017",
+		},
+		"happy path (case A, but with sqrtPriceA greater than sqrtPriceB)": {
+			currentSqrtP:      sdk.MustNewDecFromStr("67"),                    // 4489
+			sqrtPHigh:         sdk.MustNewDecFromStr("67.416615162732695594"), // 4545
+			sqrtPLow:          sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
 			amount0Desired:    sdk.NewInt(1000000),
 			amount1Desired:    sdk.ZeroInt(),
 			expectedLiquidity: "741212151.448720111852782017",
