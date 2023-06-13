@@ -77,7 +77,6 @@ func (suite *StrategyTestSuite) runTickIteratorTest(strategy swapstrategy.SwapSt
 	fmt.Println("pool liq for iterator test: ", suite.App.BankKeeper.GetAllBalances(suite.Ctx, pool.GetAddress()))
 	currentTick := pool.GetCurrentTick()
 	suite.Require().Equal(int64(0), currentTick)
-	pool.SetCurrentTick(int64(99))
 	fmt.Println("current tick for iterator test: ", currentTick)
 
 	tickIndex := strategy.InitializeTickValue(currentTick)

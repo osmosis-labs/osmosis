@@ -162,6 +162,7 @@ func (s zeroForOneStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId u
 	startKey := types.TickIndexToBytes(currentTickIndexPlusOne)
 
 	iter := prefixStore.ReverseIterator(nil, startKey)
+	fmt.Println("initial iterator valid, startKey, curTickPlusOne: ", iter.Valid(), startKey)
 
 	for ; iter.Valid(); iter.Next() {
 		// Since, we constructed our prefix store with <TickPrefix | poolID>, the
@@ -171,6 +172,7 @@ func (s zeroForOneStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId u
 			iter.Close()
 			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
 		}
+		fmt.Println("internal considered tick for iterator vs. current+1: ", tick, currentTickIndexPlusOne)
 		if tick < currentTickIndexPlusOne {
 			break
 		}
@@ -186,7 +188,7 @@ func (s zeroForOneStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId u
 // tick to the left of current. The end cursor for reverse iteration is non-inclusive
 // so must add one here to make sure that the current tick is included in the search.
 func (s zeroForOneStrategy) InitializeTickValue(currentTick int64) int64 {
-	return currentTick
+	return currentTick + 1
 }
 
 // SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.

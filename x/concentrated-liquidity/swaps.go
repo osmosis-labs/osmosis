@@ -426,6 +426,7 @@ func (k Keeper) computeInAmtGivenOut(
 	swapState := newSwapState(desiredTokenOut.Amount, p, swapStrategy)
 
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
+	fmt.Println("next initialized tick: ", nextTickIter.Value())
 	defer nextTickIter.Close()
 
 	spreadRewardAccumulator, uptimeAccums, err := k.getSwapAccumulators(ctx, poolId)

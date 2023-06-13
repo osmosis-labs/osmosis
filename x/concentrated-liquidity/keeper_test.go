@@ -743,7 +743,8 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 	swapInFunded := sdk.NewCoin(swapInDenom, sdk.Int(sdk.MustNewDecFromStr("10000000000000000000000")))
 	s.FundAcc(swapAddress, sdk.NewCoins(swapInFunded))
 
-	swapOutCoin := sdk.NewCoin(swapOutDenom, sdk.MinInt(baseSwapAmount, poolLiquidity.AmountOf(swapOutDenom).Sub(sdk.OneInt())))
+	swapOutCoin := sdk.NewCoin(swapOutDenom, sdk.MinInt(baseSwapAmount, poolLiquidity.AmountOf(swapOutDenom).ToDec().Mul(sdk.MustNewDecFromStr("0.5")).TruncateInt()))
+	fmt.Println("remaining swap out amount: ", poolLiquidity.AmountOf(swapOutDenom))
 	fmt.Println("asset 0: ", pool.GetToken0())
 	fmt.Println("swapInDenom: ", swapInDenom)
 	fmt.Println("swapOutCoin: ", swapOutCoin)
