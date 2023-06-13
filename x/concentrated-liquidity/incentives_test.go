@@ -13,6 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
@@ -4306,4 +4307,190 @@ func (s *KeeperTestSuite) TestGetIncentiveRecordSerialized() {
 			s.Require().Equal(test.expectedNumberOfRecords, len(incRecords))
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestIncentives_Functional() {
+	s.Setup()
+	s.TestAccs = apptesting.CreateRandomAccounts(6)
+
+	s.Ctx = s.Ctx.WithBlockTime(defaultBlockTime)
+
+	// BLOCK 1:
+	// 1. Create balancer link
+	// 2. Create 3 positions: 1) full-range 2) in-range, 3) completely out of range
+	// 3. Create incentive record
+	//
+	// BLOCK 2:
+	// 4. Increase block time and perform a swap
+	//
+	// BLOCK 3:
+	// 5. Increase block time and collect incentives for 1) 2) 3)
+	//   * 1) claims correct amount
+	//   * 2) claims correct amount
+	//   * 3) claims nothing
+
+	// BLOCK 1:
+
+	// Create pools
+	clPool := s.PrepareConcentratedPool()
+	clPoolId := clPool.GetId()
+	balancerPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1))...)
+
+	ownerOne := s.TestAccs[0]
+	ownerTwo := s.TestAccs[1]
+	ownerThree := s.TestAccs[2]
+	balancerOwner := s.TestAccs[3]
+
+	coinsPositionOne := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1))
+	s.FundAcc(ownerOne, coinsPositionOne)
+
+	coinsPositionTwo := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1))
+	s.FundAcc(ownerTwo, coinsPositionTwo)
+
+	coinsPositionThree := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1))
+	s.FundAcc(ownerThree, coinsPositionThree)
+
+	// Create balancer link
+	s.App.GAMMKeeper.SetMigrationRecords(s.Ctx, gammtypes.MigrationRecords{
+		BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
+			{
+				BalancerPoolId: balancerPoolId,
+				ClPoolId:       clPoolId,
+			},
+		},
+	})
+
+	// Join balancer pool so that shares are bonded.
+	balancerShares := gammtypes.InitPoolSharesSupply
+	tokenInMaxs := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1))
+	s.FundAcc(balancerOwner, tokenInMaxs)
+	actualBalancerTokenIn, bondedShareAmount, err := s.App.GAMMKeeper.JoinPoolNoSwap(s.Ctx, balancerOwner, balancerPoolId, balancerShares, tokenInMaxs)
+	s.Require().NoError(err)
+
+	// Lock shares
+	// Choosing balancerShares to be an initial pool share supply implies that we
+	// LP with 50% of total pool shares. By locking up half of that, we end up
+	// with 25% of total pool shares locked.
+	fraction := sdk.NewDecWithPrec(5, 1)
+	longestLockableDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
+	s.Require().NoError(err)
+	lockAmt := bondedShareAmount.ToDec().Mul(fraction).TruncateInt()
+	lockCoins := sdk.NewCoins(sdk.NewCoin(gammtypes.GetPoolShareDenom(balancerPoolId), lockAmt))
+	_, err = s.App.LockupKeeper.CreateLock(s.Ctx, balancerOwner, lockCoins, longestLockableDuration)
+	s.Require().NoError(err)
+
+	// Create full range position 1.
+	positionIdOne, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId, ownerOne, coinsPositionOne)
+	s.Require().NoError(err)
+
+	currentTick := clPool.GetCurrentTick()
+	lowerTickPositionTwo := currentTick - int64(clPool.GetTickSpacing())
+	upperTickPositionTwo := currentTick + int64(clPool.GetTickSpacing())
+
+	// Create narrow range active position 2.
+	positionIdTwo, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPoolId, ownerTwo, coinsPositionTwo, sdk.ZeroInt(), sdk.ZeroInt(), lowerTickPositionTwo, upperTickPositionTwo)
+	s.Require().NoError(err)
+
+	// Create narrow range inactive position 3 next to max tick.
+	lowerTickPositionThree := types.MaxTick - int64(clPool.GetTickSpacing())
+	upperTickPositionThree := types.MaxTick
+	positionIdThree, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPoolId, ownerTwo, coinsPositionTwo, sdk.ZeroInt(), sdk.ZeroInt(), lowerTickPositionThree, upperTickPositionThree)
+	s.Require().NoError(err)
+
+	// Create incentive record
+	incentiveRecordCreator := s.TestAccs[4]
+	remainingCoin := sdk.NewCoin(ETH, sdk.NewInt(1000000000000000000))
+
+	s.FundAcc(incentiveRecordCreator, sdk.NewCoins(remainingCoin))
+
+	incentiveRecord := types.IncentiveRecord{
+		PoolId: clPoolId,
+		IncentiveRecordBody: types.IncentiveRecordBody{
+			RemainingCoin: sdk.NewDecCoinFromCoin(remainingCoin),
+			EmissionRate:  sdk.NewDec(1000000), // 1 per second
+			StartTime:     defaultBlockTime,
+		},
+		MinUptime: time.Nanosecond,
+	}
+	_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, clPoolId, incentiveRecordCreator, remainingCoin, incentiveRecord.IncentiveRecordBody.EmissionRate, incentiveRecord.IncentiveRecordBody.StartTime, incentiveRecord.MinUptime)
+	s.Require().NoError(err)
+
+	// BLOCK 2:
+	// Block time is increased by 1 second by Commit() below
+	s.Commit()
+
+	// Perform a swap in the opposite direction of position 3 so that we never activate it.
+	// This is to test that we don't claim rewards for inactive positions.
+	// Since USDC is token 1 and ETH is token 0, we swap ETH for USDC to move to the left.
+	swapper := s.TestAccs[5]
+	swapTokenIn := sdk.NewCoin(ETH, sdk.NewInt(10000000))
+	s.FundAcc(swapper, sdk.NewCoins(swapTokenIn))
+	// Refetech pool
+	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
+	s.Require().NoError(err)
+	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, swapper, clPool, swapTokenIn, USDC, sdk.ZeroInt(), sdk.ZeroDec())
+	s.Require().NoError(err)
+
+	// BLOCK 3:
+	// Block time is increased by 1 second by Commit() below
+	s.Commit()
+
+	balancerTokens := actualBalancerTokenIn
+	for i, balancerToken := range balancerTokens {
+		// 25%, see reasoning above balancer position creation
+		balancerTokens[i].Amount = balancerToken.Amount.QuoRaw(2)
+	}
+	// Refetech pool
+	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
+	s.Require().NoError(err)
+	balancerLiquidity := math.GetLiquidityFromAmounts(clPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, balancerTokens[0].Amount, balancerTokens[1].Amount)
+	params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+	balancerRatio := sdk.OneDec().Sub(params.BalancerSharesRewardDiscount)
+	balancerLiquidity = balancerLiquidity.Mul(balancerRatio)
+
+	currentTickLiquidity := clPool.GetLiquidity()
+	totalLiquidity := currentTickLiquidity.Add(balancerLiquidity)
+
+	// 2 blocks have passed, so we expect 2 * emission rate
+	expectedTotalAmountCollected := incentiveRecord.IncentiveRecordBody.EmissionRate.MulInt64(2)
+
+	balancerShare := expectedTotalAmountCollected.Mul(balancerLiquidity).Quo(totalLiquidity).TruncateInt()
+	ownerOneShare := expectedTotalAmountCollected.Mul(currentTickLiquidity).Quo(totalLiquidity).TruncateInt()
+
+	// Get balancer gauge id
+	balancerGaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerPoolId, longestLockableDuration)
+	s.Require().NoError(err)
+
+	// Validate that gauge is not getting updated unless a mutative action occurs within
+	// a block that transfers the rewards to the gauge.
+	balancerGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, balancerGaugeId)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.Coins(nil), balancerGauge.Coins)
+
+	// Collect incentives for all positions
+	// 1) claims correct amount
+	collected, forfeited, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, ownerOne, positionIdOne)
+	s.Require().NoError(err)
+
+	s.Require().Equal(sdk.NewCoins(sdk.NewCoin(ETH, ownerOneShare)), collected)
+	s.Require().Equal(sdk.DecCoins{}, forfeited)
+
+	// Refetch the gauge and check that balancer gauge has been updated
+	balancerGauge, err = s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, balancerGaugeId)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewCoins(sdk.NewCoin(ETH, balancerShare)), balancerGauge.Coins)
+
+	// 2) claims correct amount
+	collected, forfeited, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, ownerTwo, positionIdTwo)
+	s.Require().NoError(err)
+
+	s.Require().Equal(sdk.Coins(nil), collected)
+	s.Require().Equal(sdk.DecCoins{}, forfeited)
+
+	// 3) claims nothing
+	collected, forfeited, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, ownerTwo, positionIdThree)
+	s.Require().NoError(err)
+
+	s.Require().Equal(sdk.Coins(nil), collected)
+	s.Require().Equal(sdk.DecCoins{}, forfeited)
 }
