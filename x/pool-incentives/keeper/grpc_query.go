@@ -11,6 +11,7 @@ import (
 
 	incentivetypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
 	"github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -25,20 +26,53 @@ func NewQuerier(k Keeper) Querier {
 	return Querier{Keeper: k}
 }
 
-// GaugeIds takes provided gauge request and returns the respective gaugeIDs.
+// GaugeIds takes provided gauge request and returns the respective internally incentivized gaugeIDs.
+// If internally incentivized for a given pool id is not found, returns an error.
 func (q Querier) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) (*types.QueryGaugeIdsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	lockableDurations := q.Keeper.GetLockableDurations(sdkCtx)
-	distrInfo := q.Keeper.GetDistrInfo(sdkCtx)
-	gaugeIdsWithDuration := make([]*types.QueryGaugeIdsResponse_GaugeIdWithDuration, len(lockableDurations))
 
+	distrInfo := q.Keeper.GetDistrInfo(sdkCtx)
 	totalWeightDec := distrInfo.TotalWeight.ToDec()
 	incentivePercentage := sdk.NewDec(0)
 	percentMultiplier := sdk.NewInt(100)
+
+	pool, err := q.Keeper.poolmanagerKeeper.GetPool(sdkCtx, req.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	isConcentratedPool := pool.GetType() == poolmanagertypes.Concentrated
+	if isConcentratedPool {
+		incentiveEpochDuration := q.Keeper.incentivesKeeper.GetEpochInfo(sdkCtx).Duration
+		gaugeId, err := q.Keeper.GetPoolGaugeId(sdkCtx, req.PoolId, incentiveEpochDuration)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		for _, record := range distrInfo.Records {
+			if record.GaugeId == gaugeId {
+				// Pool incentive % = (gauge_id_weight / sum_of_all_pool_gauge_weight) * 100
+				incentivePercentage = record.Weight.ToDec().Quo(totalWeightDec).MulInt(percentMultiplier)
+			}
+		}
+
+		return &types.QueryGaugeIdsResponse{
+			GaugeIdsWithDuration: []*types.QueryGaugeIdsResponse_GaugeIdWithDuration{
+				{
+					GaugeId:                  gaugeId,
+					Duration:                 incentiveEpochDuration,
+					GaugeIncentivePercentage: incentivePercentage.String(),
+				},
+			},
+		}, nil
+	}
+
+	lockableDurations := q.Keeper.GetLockableDurations(sdkCtx)
+	gaugeIdsWithDuration := make([]*types.QueryGaugeIdsResponse_GaugeIdWithDuration, len(lockableDurations))
 
 	for i, duration := range lockableDurations {
 		gaugeId, err := q.Keeper.GetPoolGaugeId(sdkCtx, req.PoolId, duration)
@@ -136,7 +170,7 @@ func (q Querier) ExternalIncentiveGauges(ctx context.Context, req *types.QueryEx
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	store := sdkCtx.KVStore(q.Keeper.storeKey)
-	prefixStore := prefix.NewStore(store, []byte("pool-incentives"))
+	prefixStore := prefix.NewStore(store, []byte("pool-incentives/"))
 
 	iterator := prefixStore.Iterator(nil, nil)
 	defer iterator.Close()

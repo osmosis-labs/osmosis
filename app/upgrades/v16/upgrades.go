@@ -148,7 +148,7 @@ func CreateUpgradeHandler(
 
 		// Create a full range position via the community pool with the funds that were swapped.
 		fullRangeOsmoDaiCoins := sdk.NewCoins(sdk.NewCoin(DesiredDenom0, tokenInAmt), oneDai)
-		_, _, _, _, _, err = keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeOsmoDaiCoins)
+		_, _, _, _, err = keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeOsmoDaiCoins)
 		if err != nil {
 			return nil, err
 		}

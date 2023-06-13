@@ -52,7 +52,7 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 		return nil, err
 	}
 
-	positionId, actualAmount0, actualAmount1, liquidityCreated, joinTime, lowerTick, upperTick, err := server.keeper.createPosition(ctx, msg.PoolId, sender, msg.TokensProvided, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick)
+	positionId, actualAmount0, actualAmount1, liquidityCreated, lowerTick, upperTick, err := server.keeper.createPosition(ctx, msg.PoolId, sender, msg.TokensProvided, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 
 	// Note: create position event is emitted in keeper.createPosition(...)
 
-	return &types.MsgCreatePositionResponse{PositionId: positionId, Amount0: actualAmount0, Amount1: actualAmount1, JoinTime: joinTime, LiquidityCreated: liquidityCreated, LowerTick: lowerTick, UpperTick: upperTick}, nil
+	return &types.MsgCreatePositionResponse{PositionId: positionId, Amount0: actualAmount0, Amount1: actualAmount1, LiquidityCreated: liquidityCreated, LowerTick: lowerTick, UpperTick: upperTick}, nil
 }
 
 func (server msgServer) AddToPosition(goCtx context.Context, msg *types.MsgAddToPosition) (*types.MsgAddToPositionResponse, error) {
@@ -174,7 +174,7 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 	}
 
 	totalCollectedIncentives := sdk.NewCoins()
-	totalForefeitedIncentives := sdk.NewCoins()
+	totalForefeitedIncentives := sdk.NewDecCoins()
 	for _, positionId := range msg.PositionIds {
 		collectedIncentives, forfeitedIncentives, err := server.keeper.collectIncentives(ctx, sender, positionId)
 		if err != nil {
@@ -199,30 +199,4 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 	})
 
 	return &types.MsgCollectIncentivesResponse{CollectedIncentives: totalCollectedIncentives, ForfeitedIncentives: totalForefeitedIncentives}, nil
-}
-
-func (server msgServer) FungifyChargedPositions(goCtx context.Context, msg *types.MsgFungifyChargedPositions) (*types.MsgFungifyChargedPositionsResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return nil, err
-	}
-
-	newPositionId, err := server.keeper.fungifyChargedPosition(ctx, sender, msg.PositionIds)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-		),
-	})
-
-	return &types.MsgFungifyChargedPositionsResponse{
-		NewPositionId: newPositionId,
-	}, nil
 }

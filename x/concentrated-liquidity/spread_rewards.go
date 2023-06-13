@@ -171,12 +171,9 @@ func (k Keeper) collectSpreadRewards(ctx sdk.Context, sender sdk.AccAddress, pos
 	}
 
 	// Spread reward collector must be the owner of the position.
-	isOwner, err := k.isPositionOwner(ctx, sender, position.PoolId, positionId)
+	err = k.ensurePositionOwner(ctx, sender, position.PoolId, positionId)
 	if err != nil {
 		return sdk.Coins{}, err
-	}
-	if !isOwner {
-		return sdk.Coins{}, types.NotPositionOwnerError{Address: sender.String(), PositionId: positionId}
 	}
 
 	// Get the amount of spread rewards that the position is eligible to claim.

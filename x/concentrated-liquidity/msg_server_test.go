@@ -428,6 +428,9 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 }
 
 func (s *KeeperTestSuite) TestFungify_Events() {
+
+	s.T().Skip("TODO: re-enable fungify test if message is restored")
+
 	testcases := map[string]struct {
 		positionIdsToFungify       []uint64
 		numPositionsToCreate       int
@@ -467,7 +470,7 @@ func (s *KeeperTestSuite) TestFungify_Events() {
 		s.Run(name, func() {
 			s.SetupTest()
 
-			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
+			// msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 
 			// Create a cl pool with a default position
 			pool := s.PrepareConcentratedPool()
@@ -491,23 +494,23 @@ func (s *KeeperTestSuite) TestFungify_Events() {
 			s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
 			s.Equal(0, len(s.Ctx.EventManager().Events()))
 
-			msg := &types.MsgFungifyChargedPositions{
-				Sender:      s.TestAccs[0].String(),
-				PositionIds: tc.positionIdsToFungify,
-			}
+			// msg := &types.MsgFungifyChargedPositions{
+			// 	Sender:      s.TestAccs[0].String(),
+			// 	PositionIds: tc.positionIdsToFungify,
+			// }
 
-			response, err := msgServer.FungifyChargedPositions(sdk.WrapSDKContext(s.Ctx), msg)
+			// response, err := msgServer.FungifyChargedPositions(sdk.WrapSDKContext(s.Ctx), msg)
 
-			if tc.expectedError == nil {
-				s.Require().NoError(err)
-				s.Require().NotNil(response)
-				s.AssertEventEmitted(s.Ctx, types.TypeEvtFungifyChargedPosition, tc.expectedFungifyEvents)
-				s.AssertEventEmitted(s.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
-			} else {
-				s.Require().Error(err)
-				s.Require().ErrorAs(err, &tc.expectedError)
-				s.Require().Nil(response)
-			}
+			// if tc.expectedError == nil {
+			// 	s.Require().NoError(err)
+			// 	s.Require().NotNil(response)
+			// 	s.AssertEventEmitted(s.Ctx, types.TypeEvtFungifyChargedPosition, tc.expectedFungifyEvents)
+			// 	s.AssertEventEmitted(s.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+			// } else {
+			// 	s.Require().Error(err)
+			// 	s.Require().ErrorAs(err, &tc.expectedError)
+			// 	s.Require().Nil(response)
+			// }
 		})
 	}
 }

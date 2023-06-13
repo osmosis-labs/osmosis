@@ -1,6 +1,8 @@
 package math_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
@@ -197,6 +199,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 		})
 	}
 }
+
 func (suite *ConcentratedMathTestSuite) TestTicksToSqrtPrice() {
 	testCases := map[string]struct {
 		lowerTickIndex     sdk.Int
@@ -283,8 +286,9 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 	)
 
 	testCases := map[string]struct {
-		price        sdk.Dec
-		tickExpected int64
+		price         sdk.Dec
+		tickExpected  int64
+		expectedError error
 	}{
 		"BTC <> USD, tick 38035200 -> price 30352": {
 			price:        sdk.MustNewDecFromStr("30352"),
@@ -350,21 +354,38 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 			price:        sdk.MustNewDecFromStr("25761000"),
 			tickExpected: 64576100,
 		},
-		"used price is 1": {
+		"price is one Dec": {
 			price:        sdk.OneDec(),
 			tickExpected: 0,
+		},
+		"price is negative decimal": {
+			price:         sdk.OneDec().Neg(),
+			expectedError: fmt.Errorf("price must be greater than zero"),
+		},
+		"price is greater than max spot price": {
+			price:         types.MaxSpotPrice.Add(sdk.OneDec()),
+			expectedError: types.PriceBoundError{ProvidedPrice: types.MaxSpotPrice.Add(sdk.OneDec()), MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice},
+		},
+		"price is smaller than min spot price": {
+			price:         types.MinSpotPrice.Quo(sdk.NewDec(10)),
+			expectedError: types.PriceBoundError{ProvidedPrice: types.MinSpotPrice.Quo(sdk.NewDec(10)), MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice},
 		},
 	}
 	for name, tc := range testCases {
 		tc := tc
 
 		suite.Run(name, func() {
-			tick, err := math.PriceToTick(tc.price)
-			// With tick spacing of one, no rounding should occur.
-			tickRoundDown, err1 := math.PriceToTickRoundDown(tc.price, one)
+			// surpress error here, we only listen to errors from system under test.
+			tick, _ := math.PriceToTick(tc.price)
 
+			// With tick spacing of one, no rounding should occur.
+			tickRoundDown, err := math.PriceToTickRoundDown(tc.price, one)
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorContains(err, tc.expectedError.Error())
+				return
+			}
 			suite.Require().NoError(err)
-			suite.Require().NoError(err1)
 			suite.Require().Equal(tc.tickExpected, tick)
 			suite.Require().Equal(tc.tickExpected, tickRoundDown)
 		})

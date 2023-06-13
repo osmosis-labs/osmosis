@@ -78,7 +78,7 @@ func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr s
 		// move this synthetic denom creation to a dedicated function
 		Denom:    stakingSyntheticDenom(denom, valAddr),
 		Duration: k.sk.GetParams(ctx).UnbondingTime,
-	}, ctx.BlockTime(), 1)
+	}, ctx.BlockTime(), 1, 0)
 	if err != nil {
 		k.Logger(ctx).Error(err.Error())
 		return types.SuperfluidIntermediaryAccount{}, err

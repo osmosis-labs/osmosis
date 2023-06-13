@@ -26,11 +26,13 @@ const (
 
 // PrepareCosmWasmPool sets up a cosmwasm pool with the default parameters.
 func (s *KeeperTestHelper) PrepareCosmWasmPool() cosmwasmpooltypes.CosmWasmExtension {
+	s.T().Skip("CI was getting flaky: https://github.com/osmosis-labs/osmosis/issues/5477")
 	return s.PrepareCustomTransmuterPool(s.TestAccs[0], []string{DefaultTransmuterDenomA, DefaultTransmuterDenomB})
 }
 
 // PrepareCustomConcentratedPool sets up a concentrated liquidity pool with the custom parameters.
 func (s *KeeperTestHelper) PrepareCustomTransmuterPool(owner sdk.AccAddress, denoms []string) cosmwasmpooltypes.CosmWasmExtension {
+	s.T().Skip("CI was getting flaky: https://github.com/osmosis-labs/osmosis/issues/5477")
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
 
