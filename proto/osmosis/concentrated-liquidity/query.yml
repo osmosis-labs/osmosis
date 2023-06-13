@@ -54,3 +54,8 @@ queries:
       query_func: "k.IncentiveRecords"
     cli:
       cmd: "IncentiveRecords"
+  CFMMPoolIdLinkFromConcentratedPoolId:
+    proto_wrapper:
+      query_func: "k.CFMMPoolIdLinkFromConcentratedPoolId"
+    cli:
+      cmd: "CFMMPoolIdLinkFromConcentratedPoolId"

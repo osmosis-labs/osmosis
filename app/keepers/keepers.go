@@ -471,6 +471,9 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.Ics20WasmHooks.ContractKeeper = appKeepers.ContractKeeper
 	appKeepers.CosmwasmPoolKeeper.SetContractKeeper(appKeepers.ContractKeeper)
 
+	// set token factory contract keeper
+	appKeepers.TokenFactoryKeeper.SetContractKeeper(appKeepers.ContractKeeper)
+
 	// wire up x/wasm to IBC
 	ibcRouter.AddRoute(wasm.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper, appKeepers.IBCKeeper.ChannelKeeper))
 
@@ -490,7 +493,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*appKeepers.SuperfluidKeeper, *appKeepers.EpochsKeeper, *appKeepers.GAMMKeeper)).
 		AddRoute(protorevtypes.RouterKey, protorev.NewProtoRevProposalHandler(*appKeepers.ProtoRevKeeper)).
 		AddRoute(gammtypes.RouterKey, gamm.NewMigrationRecordHandler(*appKeepers.GAMMKeeper)).
-		AddRoute(concentratedliquiditytypes.RouterKey, concentratedliquidity.NewConcentratedLiquidityProposalHandler(*appKeepers.ConcentratedLiquidityKeeper))
+		AddRoute(concentratedliquiditytypes.RouterKey, concentratedliquidity.NewConcentratedLiquidityProposalHandler(*appKeepers.ConcentratedLiquidityKeeper)).
+		AddRoute(cosmwasmpooltypes.RouterKey, cosmwasmpool.NewCosmWasmPoolProposalHandler(*appKeepers.CosmwasmPoolKeeper))
 
 	// The gov proposal types can be individually enabled
 	if len(wasmEnabledProposals) != 0 {
@@ -673,7 +677,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 	// Recall that SetHooks is a mutative call.
 	appKeepers.BankKeeper.SetHooks(
 		banktypes.NewMultiBankHooks(
-			appKeepers.TokenFactoryKeeper.Hooks(*appKeepers.WasmKeeper),
+			appKeepers.TokenFactoryKeeper.Hooks(),
 		),
 	)
 
@@ -690,6 +694,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 			// insert gamm hooks receivers here
 			appKeepers.PoolIncentivesKeeper.Hooks(),
 			appKeepers.TwapKeeper.GammHooks(),
+			appKeepers.ProtoRevKeeper.Hooks(),
 		),
 	)
 
@@ -697,6 +702,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 		concentratedliquiditytypes.NewConcentratedLiquidityListeners(
 			appKeepers.TwapKeeper.ConcentratedLiquidityListener(),
 			appKeepers.PoolIncentivesKeeper.Hooks(),
+			appKeepers.ProtoRevKeeper.Hooks(),
 		),
 	)
 

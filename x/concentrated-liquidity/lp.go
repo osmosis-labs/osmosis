@@ -20,7 +20,7 @@ const noUnderlyingLockId = uint64(0)
 // liquidity proportional to the existing reserves, the actual amount of tokens used might differ from requested.
 // As a result, LPs may also provide the minimum amount of each token to be used so that the system fails
 // to create position if the desired amounts cannot be satisfied.
-// For every initial position within a pool, it calls an AfterInitialPoolPosistionCreated listener
+// For every initial position within a pool, it calls an AfterInitialPoolPositionCreated listener
 // Currently, it creates TWAP records. Assuming that pool had all liquidity drained and then re-initialized,
 // the TWAP records are updated with the valid spot price. This is needed because when there is no liquidity in pool,
 // the spot price is undefined.
@@ -32,44 +32,44 @@ const noUnderlyingLockId = uint64(0)
 // - the liquidity delta is zero
 // - the amount0 or amount1 returned from the position update is less than the given minimums
 // - the pool or user does not have enough tokens to satisfy the requested amount
-func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (positionId uint64, actualAmount0 sdk.Int, actualAmount1 sdk.Int, liquidityDelta sdk.Dec, joinTime time.Time, lowerTickResult int64, upperTickResult int64, err error) {
+func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (positionId uint64, actualAmount0 sdk.Int, actualAmount1 sdk.Int, liquidityDelta sdk.Dec, lowerTickResult int64, upperTickResult int64, err error) {
 	// Use the current blockTime as the position's join time.
-	joinTime = ctx.BlockTime()
+	joinTime := ctx.BlockTime()
 
 	// Retrieve the pool associated with the given pool ID.
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
 
 	for _, token := range tokensProvided {
 		if token.Denom != pool.GetToken0() && token.Denom != pool.GetToken1() {
-			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, errors.New("token provided is not one of the pool tokens")
+			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, errors.New("token provided is not one of the pool tokens")
 		}
 	}
 
 	// Check if the provided tick range is valid according to the pool's tick spacing and module parameters.
 	if err := validateTickRangeIsValid(pool.GetTickSpacing(), lowerTick, upperTick); err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
 	amount0Desired := tokensProvided.AmountOf(pool.GetToken0())
 	amount1Desired := tokensProvided.AmountOf(pool.GetToken1())
 	if amount0Desired.IsZero() && amount1Desired.IsZero() {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, errors.New("cannot create a position with zero amounts of both pool tokens")
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, errors.New("cannot create a position with zero amounts of both pool tokens")
 	}
 
 	// sanity check that both given minimum accounts are not negative amounts.
 	if amount0Min.IsNegative() {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, types.NotPositiveRequireAmountError{Amount: amount0Min.String()}
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, types.NotPositiveRequireAmountError{Amount: amount0Min.String()}
 	}
 	if amount1Min.IsNegative() {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, types.NotPositiveRequireAmountError{Amount: amount1Min.String()}
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, types.NotPositiveRequireAmountError{Amount: amount1Min.String()}
 	}
 
 	// Transform the provided ticks into their corresponding sqrtPrices.
 	priceLowerTick, priceUpperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
 
 	fmt.Println("pre round ticks lower upper: ", lowerTick, upperTick)
@@ -77,7 +77,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	// If multiple ticks can represent the same spot price, ensure we are using the largest of those ticks.
 	lowerTick, upperTick, err = roundTickToCanonicalPriceTick(lowerTick, upperTick, priceLowerTick, priceUpperTick, pool.GetTickSpacing())
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
 	fmt.Println("post round ticks lower upper: ", lowerTick, upperTick)
 	_, _, sqrtPriceLowerTick, sqrtPriceUpperTick, _ = math.TicksToSqrtPrice(lowerTick, upperTick)
@@ -89,21 +89,21 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	// in order to assign an initial spot price.
 	hasPositions, err := k.HasAnyPositionForPool(ctx, poolId)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
 
 	if !hasPositions {
 		fmt.Println("triggered initialize")
 		err := k.initializeInitialPositionForPool(ctx, pool, amount0Desired, amount1Desired)
 		if err != nil {
-			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
+			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 		}
 	}
 
 	// Calculate the amount of liquidity that will be added to the pool when this position is created.
 	liquidityDelta = math.GetLiquidityFromAmounts(pool.GetCurrentSqrtPrice(), sqrtPriceLowerTick, sqrtPriceUpperTick, amount0Desired, amount1Desired)
 	if liquidityDelta.IsZero() {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, errors.New("liquidityDelta calculated equals zero")
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, errors.New("liquidityDelta calculated equals zero")
 	}
 	fmt.Println("liquidity delta: = ", liquidityDelta)
 
@@ -111,24 +111,36 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	actualAmount0, actualAmount1, err = k.UpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
 	fmt.Println("actual added 0, 1: ", actualAmount0, actualAmount1)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
 
 	// Check if the actual amounts of tokens 0 and 1 are greater than or equal to the given minimum amounts.
 	if actualAmount0.LT(amount0Min) {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, types.InsufficientLiquidityCreatedError{Actual: actualAmount0, Minimum: amount0Min, IsTokenZero: true}
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, types.InsufficientLiquidityCreatedError{Actual: actualAmount0, Minimum: amount0Min, IsTokenZero: true}
 	}
 	if actualAmount1.LT(amount1Min) {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, types.InsufficientLiquidityCreatedError{Actual: actualAmount1, Minimum: amount1Min}
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, types.InsufficientLiquidityCreatedError{Actual: actualAmount1, Minimum: amount1Min}
 	}
 
 	// Transfer the actual amounts of tokens 0 and 1 from the position owner to the pool.
 	err = k.sendCoinsBetweenPoolAndUser(ctx, pool.GetToken0(), pool.GetToken1(), actualAmount0, actualAmount1, owner, pool.GetAddress())
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
 
-	emitLiquidityChangeEvent(ctx, types.TypeEvtCreatePosition, positionId, owner, poolId, lowerTick, upperTick, joinTime, liquidityDelta, actualAmount0, actualAmount1)
+	event := &liquidityChangeEvent{
+		eventType:      types.TypeEvtCreatePosition,
+		positionId:     positionId,
+		sender:         owner,
+		poolId:         poolId,
+		lowerTick:      lowerTick,
+		upperTick:      upperTick,
+		joinTime:       joinTime,
+		liquidityDelta: liquidityDelta,
+		actualAmount0:  actualAmount0,
+		actualAmount1:  actualAmount1,
+	}
+	event.emit(ctx)
 
 	if !hasPositions {
 		// N.B. calling this listener propagates to x/twap for twap record creation.
@@ -138,7 +150,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		k.listeners.AfterInitialPoolPositionCreated(ctx, owner, poolId)
 	}
 
-	return positionId, actualAmount0, actualAmount1, liquidityDelta, joinTime, lowerTick, upperTick, nil
+	return positionId, actualAmount0, actualAmount1, liquidityDelta, lowerTick, upperTick, nil
 }
 
 // WithdrawPosition attempts to withdraw liquidityAmount from a position with the given pool id in the given tick range.
@@ -258,8 +270,19 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 			k.listeners.AfterLastPoolPositionRemoved(ctx, owner, pool.GetId())
 		}
 	}
-
-	emitLiquidityChangeEvent(ctx, types.TypeEvtWithdrawPosition, positionId, owner, position.PoolId, position.LowerTick, position.UpperTick, position.JoinTime, liquidityDelta, actualAmount0, actualAmount1)
+	event := &liquidityChangeEvent{
+		eventType:      types.TypeEvtWithdrawPosition,
+		positionId:     positionId,
+		sender:         owner,
+		poolId:         position.PoolId,
+		lowerTick:      position.LowerTick,
+		upperTick:      position.UpperTick,
+		joinTime:       position.JoinTime,
+		liquidityDelta: liquidityDelta,
+		actualAmount0:  actualAmount0,
+		actualAmount1:  actualAmount1,
+	}
+	event.emit(ctx)
 
 	return actualAmount0.Neg(), actualAmount1.Neg(), nil
 }
@@ -339,7 +362,7 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 	if !amount1MinGiven.IsZero() {
 		minimumAmount1 = amount1MinGiven
 	}
-	newPositionId, actualAmount0, actualAmount1, _, _, _, _, err := k.createPosition(ctx, position.PoolId, owner, tokensProvided, minimumAmount0, minimumAmount1, position.LowerTick, position.UpperTick)
+	newPositionId, actualAmount0, actualAmount1, _, _, _, err := k.createPosition(ctx, position.PoolId, owner, tokensProvided, minimumAmount0, minimumAmount1, position.LowerTick, position.UpperTick)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
 	}
@@ -516,31 +539,6 @@ func (k Keeper) uninitializePool(ctx sdk.Context, poolId uint64) error {
 	return nil
 }
 
-// emitLiquidityChangeEvent emits an event for a liquidity change when creating or withdrawing a position.
-// It emits all of the fields uniquely identifying a position such as:
-// - position id
-// - sender
-// - pool id
-// - join time
-// - lower tick
-// - upper tick
-// It also emits additional attributes for the liquidity added or removed and the actual amounts of asset0 and asset1 it translates to.
-func emitLiquidityChangeEvent(ctx sdk.Context, eventType string, positionId uint64, sender sdk.AccAddress, poolId uint64, lowerTick, upperTick int64, joinTime time.Time, liquidityDelta sdk.Dec, actualAmount0, actualAmount1 sdk.Int) {
-	ctx.EventManager().EmitEvent(sdk.NewEvent(
-		eventType,
-		sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		sdk.NewAttribute(types.AttributeKeyPositionId, strconv.FormatUint(positionId, 10)),
-		sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
-		sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-		sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(lowerTick, 10)),
-		sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(upperTick, 10)),
-		sdk.NewAttribute(types.AttributeJoinTime, joinTime.String()),
-		sdk.NewAttribute(types.AttributeLiquidity, liquidityDelta.String()),
-		sdk.NewAttribute(types.AttributeAmount0, actualAmount0.String()),
-		sdk.NewAttribute(types.AttributeAmount1, actualAmount1.String()),
-	))
-}
-
 // isLockMature checks if the underlying lock has expired.
 // If the lock doesn't exist, it returns true.
 // If the lock exists, it checks if the lock has expired.
@@ -549,7 +547,7 @@ func emitLiquidityChangeEvent(ctx sdk.Context, eventType string, positionId uint
 func (k Keeper) isLockMature(ctx sdk.Context, underlyingLockId uint64) (bool, error) {
 	// Query the underlying lock
 	underlyingLock, err := k.lockupKeeper.GetLockByID(ctx, underlyingLockId)
-	if err != nil && errors.Is(err, lockuptypes.ErrLockupNotFound) {
+	if errors.Is(err, lockuptypes.ErrLockupNotFound) {
 		// Lock doesn't exist, so we can withdraw from this position
 		return true, nil
 	} else if err != nil {
