@@ -607,50 +607,50 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			tokenIn:            sdk.NewCoin(foo, sdk.NewInt(100000)),
 			tokenOutMinAmount:  sdk.NewInt(1),
 		},
-		// {
-		// 	name: "[Cosmwasm] One route: Swap - [foo -> bar], 1 percent fee",
-		// 	poolCoins: []sdk.Coins{
-		// 		sdk.NewCoins(sdk.NewCoin(foo, apptesting.DefaultCoinAmount), sdk.NewCoin(bar, apptesting.DefaultCoinAmount)),
-		// 	},
-		// 	poolType:         []types.PoolType{types.CosmWasm},
-		// 	poolSpreadFactor: []sdk.Dec{sdk.OneDec()},
-		// 	routes: []types.SwapAmountInRoute{
-		// 		{
-		// 			PoolId:        1,
-		// 			TokenOutDenom: bar,
-		// 		},
-		// 	},
-		// 	tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100000)),
-		// 	tokenOutMinAmount: sdk.NewInt(1),
-		// },
-		// {
-		// 	name: "[Cosmwasm -> Concentrated] One route: Swap - [foo -> bar] -> [bar -> baz], 1 percent fee",
-		// 	poolCoins: []sdk.Coins{
-		// 		sdk.NewCoins(sdk.NewCoin(foo, apptesting.DefaultCoinAmount), sdk.NewCoin(bar, apptesting.DefaultCoinAmount)),
-		// 		sdk.NewCoins(sdk.NewCoin(bar, defaultInitPoolAmount), sdk.NewCoin(baz, defaultInitPoolAmount)),
-		// 	},
-		// 	poolType:         []types.PoolType{types.CosmWasm, types.Concentrated},
-		// 	poolSpreadFactor: []sdk.Dec{sdk.OneDec(), defaultPoolSpreadFactor},
-		// 	routes: []types.SwapAmountInRoute{
-		// 		{
-		// 			PoolId:        1,
-		// 			TokenOutDenom: bar,
-		// 		},
-		// 		{
-		// 			PoolId:        2,
-		// 			TokenOutDenom: baz,
-		// 		},
-		// 	},
-		// 	tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100000)),
-		// 	tokenOutMinAmount: sdk.NewInt(1),
-		// },
-		// TODO:
-		// change values in and out to be different with each swap module type
-		// tests for stable-swap pools
-		// edge cases:
-		//   * invalid route length
-		//   * pool does not exist
-		//   * swap errors
+		{
+			name: "[Cosmwasm] One route: Swap - [foo -> bar], 1 percent fee",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(foo, apptesting.DefaultCoinAmount), sdk.NewCoin(bar, apptesting.DefaultCoinAmount)),
+			},
+			poolType:         []types.PoolType{types.CosmWasm},
+			poolSpreadFactor: []sdk.Dec{sdk.OneDec()},
+			routes: []types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: bar,
+				},
+			},
+			tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100000)),
+			tokenOutMinAmount: sdk.NewInt(1),
+		},
+		{
+			name: "[Cosmwasm -> Concentrated] One route: Swap - [foo -> bar] -> [bar -> baz], 1 percent fee",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(foo, apptesting.DefaultCoinAmount), sdk.NewCoin(bar, apptesting.DefaultCoinAmount)),
+				sdk.NewCoins(sdk.NewCoin(bar, defaultInitPoolAmount), sdk.NewCoin(baz, defaultInitPoolAmount)),
+			},
+			poolType:         []types.PoolType{types.CosmWasm, types.Concentrated},
+			poolSpreadFactor: []sdk.Dec{sdk.OneDec(), defaultPoolSpreadFactor},
+			routes: []types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: bar,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: baz,
+				},
+			},
+			tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100000)),
+			tokenOutMinAmount: sdk.NewInt(1),
+		},
+		//TODO:
+		//change values in and out to be different with each swap module type
+		//tests for stable-swap pools
+		//edge cases:
+		//  * invalid route length
+		//  * pool does not exist
+		//  * swap errors
 	}
 
 	for _, tc := range tests {
@@ -897,43 +897,43 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 			tokenInMaxAmount:        sdk.NewInt(90000000),
 			expectReducedFeeApplied: false,
 		},
-		// {
-		// 	name: "[Cosmwasm] One route: Swap - [foo -> bar], 1 percent fee",
-		// 	poolCoins: []sdk.Coins{
-		// 		sdk.NewCoins(sdk.NewCoin(foo, apptesting.DefaultCoinAmount), sdk.NewCoin(bar, apptesting.DefaultCoinAmount)),
-		// 	},
-		// 	poolType:         []types.PoolType{types.CosmWasm},
-		// 	poolSpreadFactor: []sdk.Dec{sdk.OneDec()},
-		// 	routes: []types.SwapAmountOutRoute{
-		// 		{
-		// 			PoolId:       1,
-		// 			TokenInDenom: foo,
-		// 		},
-		// 	},
-		// 	tokenOut:         sdk.NewCoin(bar, sdk.NewInt(100000)),
-		// 	tokenInMaxAmount: sdk.NewInt(90000000),
-		// },
-		// {
-		// 	name: "[Cosmwasm -> Concentrated] One route: Swap - [foo -> bar] -> [bar -> baz], 1 percent fee",
-		// 	poolCoins: []sdk.Coins{
-		// 		sdk.NewCoins(sdk.NewCoin(foo, apptesting.DefaultCoinAmount), sdk.NewCoin(bar, apptesting.DefaultCoinAmount)),
-		// 		sdk.NewCoins(sdk.NewCoin(bar, defaultInitPoolAmount), sdk.NewCoin(baz, defaultInitPoolAmount)),
-		// 	},
-		// 	poolType:         []types.PoolType{types.CosmWasm, types.Concentrated},
-		// 	poolSpreadFactor: []sdk.Dec{sdk.OneDec(), defaultPoolSpreadFactor},
-		// 	routes: []types.SwapAmountOutRoute{
-		// 		{
-		// 			PoolId:       1,
-		// 			TokenInDenom: foo,
-		// 		},
-		// 		{
-		// 			PoolId:       2,
-		// 			TokenInDenom: bar,
-		// 		},
-		// 	},
-		// 	tokenOut:         sdk.NewCoin(baz, sdk.NewInt(100000)),
-		// 	tokenInMaxAmount: sdk.NewInt(90000000),
-		// },
+		{
+			name: "[Cosmwasm] One route: Swap - [foo -> bar], 1 percent fee",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(foo, apptesting.DefaultCoinAmount), sdk.NewCoin(bar, apptesting.DefaultCoinAmount)),
+			},
+			poolType:         []types.PoolType{types.CosmWasm},
+			poolSpreadFactor: []sdk.Dec{sdk.OneDec()},
+			routes: []types.SwapAmountOutRoute{
+				{
+					PoolId:       1,
+					TokenInDenom: foo,
+				},
+			},
+			tokenOut:         sdk.NewCoin(bar, sdk.NewInt(100000)),
+			tokenInMaxAmount: sdk.NewInt(90000000),
+		},
+		{
+			name: "[Cosmwasm -> Concentrated] One route: Swap - [foo -> bar] -> [bar -> baz], 1 percent fee",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(foo, apptesting.DefaultCoinAmount), sdk.NewCoin(bar, apptesting.DefaultCoinAmount)),
+				sdk.NewCoins(sdk.NewCoin(bar, defaultInitPoolAmount), sdk.NewCoin(baz, defaultInitPoolAmount)),
+			},
+			poolType:         []types.PoolType{types.CosmWasm, types.Concentrated},
+			poolSpreadFactor: []sdk.Dec{sdk.OneDec(), defaultPoolSpreadFactor},
+			routes: []types.SwapAmountOutRoute{
+				{
+					PoolId:       1,
+					TokenInDenom: foo,
+				},
+				{
+					PoolId:       2,
+					TokenInDenom: bar,
+				},
+			},
+			tokenOut:         sdk.NewCoin(baz, sdk.NewInt(100000)),
+			tokenInMaxAmount: sdk.NewInt(90000000),
+		},
 		// TODO:
 		// tests for concentrated liquidity
 		// tests for stable-swap pools
