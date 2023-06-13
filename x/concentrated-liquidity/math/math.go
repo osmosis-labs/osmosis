@@ -12,6 +12,7 @@ import (
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // Liquidity0 = amount0 * (sqrtPriceA * sqrtPriceB) / (sqrtPriceB - sqrtPriceA)
+// TODO: Define rounding properties we expect to hold for this function.
 func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA

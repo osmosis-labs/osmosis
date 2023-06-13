@@ -2378,6 +2378,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 
 				fmt.Println("ADAM: validPool liq", validPool.GetLiquidity())
 
+				fmt.Println("expected incentives claimed for: ", name, " ", tc.expectedIncentivesClaimed.String())
 				s.FundAcc(validPool.GetIncentivesAddress(), tc.expectedIncentivesClaimed)
 
 				clKeeper := s.App.ConcentratedLiquidityKeeper
