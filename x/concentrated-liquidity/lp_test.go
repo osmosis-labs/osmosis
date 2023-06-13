@@ -2,6 +2,7 @@ package concentrated_liquidity_test
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
@@ -1566,7 +1568,7 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 			amount1Desired:        sdk.NewInt(100_000_051),
 			tickSpacing:           1,
 			expectedCurrSqrtPrice: sqrt(100_000_051),
-			expectedTick:          72000001,
+			expectedTick:          72000000,
 		},
 		"error: amount0Desired is zero": {
 			amount0Desired: sdk.ZeroInt(),
@@ -1609,6 +1611,11 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 				s.Require().NoError(err)
 
 				s.Require().Equal(tc.expectedCurrSqrtPrice.String(), pool.GetCurrentSqrtPrice().String())
+				_, curTickSqrtPrice, err := math.TickToSqrtPrice(pool.GetCurrentTick())
+				s.Require().NoError(err)
+				fmt.Println("curTickSqrtPrice, pool.GetCurrentSqrtPrice(): ", curTickSqrtPrice, pool.GetCurrentSqrtPrice())
+				s.Require().True(curTickSqrtPrice.LTE(pool.GetCurrentSqrtPrice()))
+
 				s.Require().Equal(tc.expectedTick, pool.GetCurrentTick())
 			}
 		})

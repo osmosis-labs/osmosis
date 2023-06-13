@@ -201,11 +201,11 @@ func validateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int
 //
 // This really only applies to very small tick values, as the increment of a single tick continues to get smaller as the tick value gets smaller.
 func roundTickToCanonicalPriceTick(lowerTick, upperTick int64, priceTickLower, priceTickUpper sdk.Dec, tickSpacing uint64) (int64, int64, error) {
-	newLowerTick, err := math.PriceToTickRoundDown(priceTickLower, tickSpacing)
+	newLowerTick, err := math.PriceToTickRoundDownSpacing(priceTickLower, tickSpacing)
 	if err != nil {
 		return 0, 0, err
 	}
-	newUpperTick, err := math.PriceToTickRoundDown(priceTickUpper, tickSpacing)
+	newUpperTick, err := math.PriceToTickRoundDownSpacing(priceTickUpper, tickSpacing)
 	if err != nil {
 		return 0, 0, err
 	}

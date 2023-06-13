@@ -134,12 +134,12 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 			continue
 		}
 
-		lowerTickOsmosis, err := math.PriceToTickRoundDown(lowerPrice, pool.GetTickSpacing())
+		lowerTickOsmosis, err := math.PriceToTickRoundDownSpacing(lowerPrice, pool.GetTickSpacing())
 		if err != nil {
 			panic(err)
 		}
 
-		upperTickOsmosis, err := math.PriceToTickRoundDown(upperPrice, pool.GetTickSpacing())
+		upperTickOsmosis, err := math.PriceToTickRoundDownSpacing(upperPrice, pool.GetTickSpacing())
 		if err != nil {
 			panic(err)
 		}

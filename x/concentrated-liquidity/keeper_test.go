@@ -49,10 +49,10 @@ var (
 	FullRangeLiquidityAmt                                = sdk.MustNewDecFromStr("70710678.118654752940000000")
 	DefaultTickSpacing                                   = uint64(100)
 	PoolCreationFee                                      = poolmanagertypes.DefaultParams().PoolCreationFee
-	DefaultExponentConsecutivePositionLowerTick, _       = math.PriceToTickRoundDown(sdk.NewDec(5500), DefaultTickSpacing)
-	DefaultExponentConsecutivePositionUpperTick, _       = math.PriceToTickRoundDown(sdk.NewDec(6250), DefaultTickSpacing)
-	DefaultExponentOverlappingPositionLowerTick, _       = math.PriceToTickRoundDown(sdk.NewDec(4000), DefaultTickSpacing)
-	DefaultExponentOverlappingPositionUpperTick, _       = math.PriceToTickRoundDown(sdk.NewDec(4999), DefaultTickSpacing)
+	DefaultExponentConsecutivePositionLowerTick, _       = math.PriceToTickRoundDownSpacing(sdk.NewDec(5500), DefaultTickSpacing)
+	DefaultExponentConsecutivePositionUpperTick, _       = math.PriceToTickRoundDownSpacing(sdk.NewDec(6250), DefaultTickSpacing)
+	DefaultExponentOverlappingPositionLowerTick, _       = math.PriceToTickRoundDownSpacing(sdk.NewDec(4000), DefaultTickSpacing)
+	DefaultExponentOverlappingPositionUpperTick, _       = math.PriceToTickRoundDownSpacing(sdk.NewDec(4999), DefaultTickSpacing)
 	BAR                                                  = "bar"
 	FOO                                                  = "foo"
 	InsufficientFundsError                               = fmt.Errorf("insufficient funds")

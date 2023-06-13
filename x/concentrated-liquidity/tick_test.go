@@ -1199,6 +1199,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			// Create a default CL pool
 			pool := s.PrepareConcentratedPool()
+			pool.SetTickSpacing(1)
+			s.clk.SetPool(s.Ctx, pool)
 			for _, tick := range test.presetTicks {
 				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, &tick.Info)
 			}
@@ -1209,7 +1211,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			curPrice := sdk.OneDec()
 			// TODO: consider adding tests for GetTickLiquidityNetInDirection
 			// with tick spacing > 1, requiring price to tick conversion with rounding.
-			curTick, err := math.PriceToTick(curPrice)
+			curTick, err := math.PriceToTickRoundDownSpacing(curPrice, pool.GetTickSpacing())
 			s.Require().NoError(err)
 			if test.currentPoolTick > 0 {
 				_, sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)

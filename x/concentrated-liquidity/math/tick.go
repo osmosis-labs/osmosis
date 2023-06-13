@@ -93,7 +93,7 @@ func TickToPrice(tickIndex int64) (price sdk.Dec, err error) {
 
 // PriceToTick takes a price and returns the corresponding tick index assuming
 // tick spacing of 1.
-func PriceToTick(price sdk.Dec) (int64, error) {
+func priceToTickExact(price sdk.Dec) (int64, error) {
 	if price.Equal(sdk.OneDec()) {
 		return 0, nil
 	}
@@ -108,18 +108,22 @@ func PriceToTick(price sdk.Dec) (int64, error) {
 
 	// Determine the tick that corresponds to the price
 	// This does not take into account the tickSpacing
-	tickIndex := CalculatePriceToTick(price)
+	tickIndex, err := CalculatePriceToTick(price)
+	if err != nil {
+		return 0, err
+	}
 
 	return tickIndex, nil
 }
 
-// PriceToTickRoundDown takes a price and returns the corresponding tick index.
+// PriceToTickRoundDownSpacing takes a price and returns the corresponding tick index.
 // If tickSpacing is provided, the tick index will be rounded down to the nearest multiple of tickSpacing.
 // CONTRACT: tickSpacing must be smaller or equal to the max of 1 << 63 - 1.
 // This is not a concern because we have authorized tick spacings that are smaller than this max,
 // and we don't expect to ever require it to be this large.
-func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (int64, error) {
-	tickIndex, err := PriceToTick(price)
+func PriceToTickRoundDownSpacing(price sdk.Dec, tickSpacing uint64) (int64, error) {
+	fmt.Println("input price: ", price)
+	tickIndex, err := priceToTickExact(price)
 	if err != nil {
 		return 0, err
 	}
@@ -138,6 +142,7 @@ func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (int64, error) {
 	}
 
 	if tickIndexModulus != 0 {
+		fmt.Println("rounded to canonical tick: ", tickIndex, " -> ", tickIndex-tickIndexModulus)
 		tickIndex = tickIndex - tickIndexModulus
 	}
 
@@ -168,7 +173,8 @@ func powTenBigDec(exponent int64) osmomath.BigDec {
 
 // CalculatePriceToTick takes in a price and returns the corresponding tick index.
 // This function does not take into consideration tick spacing.
-func CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
+// CONTRACT: `price` is between MinSpotPrice and MaxSpotPrice, inclusive.
+func CalculatePriceToTick(price sdk.Dec) (tickIndex int64, err error) {
 	// The formula is as follows: geometricExponentIncrementDistanceInTicks = 9 * 10**(-exponentAtPriceOne)
 	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**exponentAtPriceOne)
 	exponentAtPriceOne := types.ExponentAtPriceOne
@@ -213,6 +219,77 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
 	ticksToBeFulfilledByExponentAtCurrentTick := osmomath.BigDecFromSDKDec(price.Sub(currentPrice)).Quo(currentAdditiveIncrementInTicks)
 
 	// Finally, add the ticks we have passed from the completed geometricExponent values, as well as the ticks we have passed in the current geometricExponent value
+	// We expect there to be some error carried through from the original price, which we assume will be bounded at `e < 1`.
+	// This error value means that we cannot know for sure which direction to round final tick index to, so we do the following:
+	// 1. Take an educated guess by doing bankers rounding (increases the error bound we can support from .5 to 1 tick)
+	// 2. Check the output against the tick below and above the result. Shift the final tick to be in alignment with whichever satisfies
+	//    our convention that tick index `t` corresponds to the price range [`TickToPrice(t)`, `TickToPrice(b + 1)`).
+	// 3. If the passed in price falls outside the range of our original guess +/- 1, this violates our assumption that e < 1 so we panic.
 	tickIndex = ticksPassed + ticksToBeFulfilledByExponentAtCurrentTick.SDKDec().RoundInt64()
-	return tickIndex
+	fmt.Println("tick index: ", tickIndex)
+
+	// We return the errors here instead of panicking because we expect these conversions could legitimately error if we are operating near
+	// minTick and maxTick. Note that this tightens the effective min tick and max tick range by 1 tick on each end (since we have to check
+	// a tick above and below), but this is not an issue since the error will be triggered at the end of any swap that brings the pool into
+	// that state, making it impossible to lock a pool by bringing current tick to min/max tick.
+	curPrice, err := TickToPrice(tickIndex)
+	if err != nil {
+		return 0, err
+	}
+
+	if curPrice.Equal(types.MinSpotPrice) && curPrice.LTE(price) {
+		// We assume that the error to the downside is caught by input price bound checks, as it
+		// would be below the minimum allowed spot price.
+		return types.MinTick, nil
+	} else if curPrice.Equal(types.MaxSpotPrice) && curPrice.GTE(price) {
+		tickBelowPrice, err := TickToPrice(tickIndex - 1)
+		if err != nil {
+			return 0, err
+		}
+
+		if price.LT(tickBelowPrice) {
+			panic(fmt.Sprintf("price %s is outside of error bounds for tick %d", price, tickIndex))
+		}
+
+		if price.GTE(tickBelowPrice) && price.LT(curPrice) {
+			tickIndex = tickIndex - 1
+		} else {
+			tickIndex = types.MaxTick
+		}
+
+		return tickIndex, nil
+	}
+
+	tickBelowPrice, err := TickToPrice(tickIndex - 1)
+	if err != nil {
+		return 0, err
+	}
+	tickAbovePrice, err := TickToPrice(tickIndex + 1)
+	if err != nil {
+		return 0, err
+	}
+
+	// If rounded incorrectly, fix current tick.
+	// Claim tick t is correct tick for current price p.
+	// To test this, assuming error < 1, convert tick t - 1 (p0), t (p1) and t + 1 (p2) to prices
+	// If p < p0 || p > p2, panic (violates error < 1 assumption)
+	if price.LT(tickBelowPrice) || price.GT(tickAbovePrice) {
+		panic(fmt.Sprintf("price %s is outside of error bounds for tick %d", price, tickIndex))
+	}
+
+	// If tickBelowPrice <= price < curPrice, then set tick = t - 1 because by convention, bucket index b is for ticks t <= b < t + 1.
+	// If not, this means that curPrice <= price < tickAbovePrice, which is already accurately represented by our original tickIndex guess.
+	if price.GTE(tickBelowPrice) && price.LT(curPrice) {
+		tickIndex = tickIndex - 1
+	}
+
+	return tickIndex, err
+
+	// perfect tick: 100
+	// derived tick = 99.9999 +/- e
+	// if e < 0.4999, safe to round up
+	// e > 0.4999 in attack vector
+	// tick with error due to precision truncation: 99.9999
+	// previously: truncate -> tick = 99 (incorrect)
+	// fix: bankers round: tick = 100 (correct)
 }
