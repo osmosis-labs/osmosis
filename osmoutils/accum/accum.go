@@ -3,6 +3,7 @@ package accum
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,7 +28,10 @@ type AccumulatorObject struct {
 }
 
 // Makes a new accumulator at store/accum/{accumName}
-// Returns error if already exists / theres some overlapping keys
+// Returns error if:
+// * accumName already exists
+// * theres some overlapping keys
+// * Accumulator name contains "||"
 func MakeAccumulator(accumStore store.KVStore, accumName string) error {
 	if accumStore.Has(formatAccumPrefixKey(accumName)) {
 		return errors.New("Accumulator with given name already exists in store")
@@ -41,13 +45,14 @@ func MakeAccumulator(accumStore store.KVStore, accumName string) error {
 	newAccum := &AccumulatorObject{accumStore, accumName, initAccumValue, initTotalShares}
 
 	// Stores accumulator in state
-	setAccumulator(newAccum, initAccumValue, initTotalShares)
-
-	return nil
+	return setAccumulator(newAccum, initAccumValue, initTotalShares)
 }
 
 // Makes a new accumulator at store/accum/{accumName}
-// Returns error if already exists / theres some overlapping keys
+// Returns error if:
+// * accumName already exists
+// * theres some overlapping keys
+// * Accumulator name contains "||"
 func MakeAccumulatorWithValueAndShare(accumStore store.KVStore, accumName string, accumValue sdk.DecCoins, totalShares sdk.Dec) error {
 	if accumStore.Has(formatAccumPrefixKey(accumName)) {
 		return errors.New("Accumulator with given name already exists in store")
@@ -56,9 +61,7 @@ func MakeAccumulatorWithValueAndShare(accumStore store.KVStore, accumName string
 	newAccum := AccumulatorObject{accumStore, accumName, accumValue, totalShares}
 
 	// Stores accumulator in state
-	setAccumulator(&newAccum, accumValue, totalShares)
-
-	return nil
+	return setAccumulator(&newAccum, accumValue, totalShares)
 }
 
 // Gets the current value of the accumulator corresponding to accumName in accumStore
@@ -98,9 +101,13 @@ func (accum AccumulatorObject) GetPosition(name string) (Record, error) {
 	return position, nil
 }
 
-func setAccumulator(accum *AccumulatorObject, value sdk.DecCoins, shares sdk.Dec) {
+func setAccumulator(accum *AccumulatorObject, value sdk.DecCoins, shares sdk.Dec) error {
+	if strings.Contains(accum.name, KeySeparator) {
+		return fmt.Errorf("Accumulator name cannot contain '%s', provided name %s", KeySeparator, accum.name)
+	}
 	newAccum := AccumulatorContent{value, shares}
 	osmoutils.MustSet(accum.store, formatAccumPrefixKey(accum.name), &newAccum)
+	return nil
 }
 
 // AddToAccumulator updates the accumulator's value by amt.
@@ -108,6 +115,8 @@ func setAccumulator(accum *AccumulatorObject, value sdk.DecCoins, shares sdk.Dec
 // the given amount. Persists to store. Mutates the receiver.
 func (accum *AccumulatorObject) AddToAccumulator(amt sdk.DecCoins) {
 	accum.valuePerShare = accum.valuePerShare.Add(amt...)
+	// its safe to ignore error here.
+	//nolint:errcheck
 	setAccumulator(accum, accum.valuePerShare, accum.totalShares)
 }
 
@@ -145,9 +154,7 @@ func (accum *AccumulatorObject) NewPositionIntervalAccumulation(name string, num
 		return err
 	}
 	accum.totalShares = updatedAccum.totalShares.Add(numShareUnits)
-	setAccumulator(accum, accum.valuePerShare, accum.totalShares)
-
-	return nil
+	return setAccumulator(accum, accum.valuePerShare, accum.totalShares)
 }
 
 // AddToPosition adds newShares of shares to an existing position with the given name.
@@ -214,9 +221,7 @@ func (accum *AccumulatorObject) AddToPositionIntervalAccumulation(name string, n
 		return err
 	}
 	accum.totalShares = updatedAccum.totalShares.Add(newShares)
-	setAccumulator(accum, accum.valuePerShare, accum.totalShares)
-
-	return nil
+	return setAccumulator(accum, accum.valuePerShare, accum.totalShares)
 }
 
 // RemovePosition removes the specified number of shares from a position. Specifically, it claims
@@ -267,9 +272,7 @@ func (accum *AccumulatorObject) RemoveFromPositionIntervalAccumulation(name stri
 		return err
 	}
 	accum.totalShares = updatedAccum.totalShares.Sub(numSharesToRemove)
-	setAccumulator(accum, accum.valuePerShare, accum.totalShares)
-
-	return nil
+	return setAccumulator(accum, accum.valuePerShare, accum.totalShares)
 }
 
 // UpdatePosition updates the position with the given name by adding or removing
@@ -347,7 +350,10 @@ func (accum *AccumulatorObject) DeletePosition(positionName string) (sdk.DecCoin
 		return sdk.DecCoins{}, err
 	}
 	accum.totalShares = totalShares.Sub(position.NumShares)
-	setAccumulator(accum, accum.valuePerShare, accum.totalShares)
+	err = setAccumulator(accum, accum.valuePerShare, accum.totalShares)
+	if err != nil {
+		return sdk.DecCoins{}, err
+	}
 
 	return sdk.NewDecCoinsFromCoins(remainingRewards...).Add(dust...), nil
 }
