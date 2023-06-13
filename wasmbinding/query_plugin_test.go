@@ -71,7 +71,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 		},
 		{
 			name: "happy path gamm",
-			path: "/osmosis.gamm.v2.Query/SpotPrice",
+			path: "/osmosis.poolmanager.v1beta1.Query/SpotPrice",
 			testSetup: func() {
 				pk := ed25519.GenPrivKey().PubKey()
 				sender := sdk.AccAddress(pk.Address())
