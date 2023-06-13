@@ -227,13 +227,13 @@ func KeyIncentiveRecord(poolId uint64, minUptimeIndex int, denom string, addr sd
 // KeyUptimeIncentiveRecords returns the prefix key for incentives records using the combination of pool id + min uptime index.
 // This can be used to iterate over incentive records for the pool id + min upttime index combination.
 func KeyUptimeIncentiveRecords(poolId uint64, minUptimeIndex int) []byte {
-	return []byte(fmt.Sprintf("%s%s%d%s%d", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex))
+	return []byte(fmt.Sprintf("%s%s%d%s%d%s", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex, KeySeparator))
 }
 
 // KeyPoolIncentiveRecords returns the prefix key for incentives records using given pool id.
 // This can be used to iterate over all incentive records for the pool.
 func KeyPoolIncentiveRecords(poolId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%s%d", IncentivePrefix, KeySeparator, poolId))
+	return []byte(fmt.Sprintf("%s%s%d%s", IncentivePrefix, KeySeparator, poolId, KeySeparator))
 }
 
 // Spread Reward Accumulator Prefix Keys

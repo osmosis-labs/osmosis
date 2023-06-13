@@ -604,14 +604,14 @@ func (k Keeper) GetIncentiveRecordSerialized(ctx sdk.Context, poolId uint64, pag
 	pageRes, err := query.Paginate(incentivesRecordStore, pagination, func(key, value []byte) error {
 		parts := bytes.Split(key, []byte(types.KeySeparator))
 
-		minUptimeIndex, err := strconv.ParseUint(string(parts[1]), 10, 64)
+		minUptimeIndex, err := strconv.ParseUint(string(parts[0]), 10, 64)
 		if err != nil {
 			return err
 		}
 
-		denom := string(parts[2])
+		denom := string(parts[1])
 
-		incentiveCreator, err := sdk.AccAddressFromBech32(string(parts[3]))
+		incentiveCreator, err := sdk.AccAddressFromBech32(string(parts[2]))
 		if err != nil {
 			return err
 		}

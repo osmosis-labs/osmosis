@@ -35,9 +35,7 @@ If a key exists in state, that begins with `0x02`, it is expected that it is of 
 
 Since we encode the address in hexadecimal, and hexadecimal doesn't contain `/`, there is no malleability on the encoding.
 
-However, we are likely better off encoding this address with bech32, which also doesn't contain `/`, but has the benefit of being:
-- A more user friendly representation
-- Marginally more space inefficient. ("43" bytes vs "40" bytes)
+However, we are likely better off encoding this address with bech32, which also doesn't contain `/`, but has the benefit of being a more user friendly representation. This is at the expense of being marginally more space inefficient. ("43" bytes vs "40" bytes)
 
 ## 0x04 - Incentive records
 
@@ -46,7 +44,11 @@ If a key exists in state, that begins with `0x04`, it is expected that it is of 
 `0x04|` || `string encoding of pool ID` || `|` || `string encoding of min uptime index` || `|` || `denom` || `|` || `bech32 addr`
 
 - This encoding is safe, because denom cannot contain a `|`, it is restricted to alpha-numeric and `/`.
-- We are expected to be able to iterate over every (pool id, uptime index) combination.
+
+- We are expected to be able to safely iterate over all positions for a pool ID
+    - Iterate over `0x04|` || `string encoding of pool ID` || `|` 
+- We are expected to be able to safely iterate over all positions for a pool_ID, uptime index.
+    - Iterate over `0x04|` || `string encoding of pool ID` || `|` || `string encoding of min uptime index` || `|` 
 
 ## 0x09 - Pool Position ID storage
 
