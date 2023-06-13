@@ -3226,7 +3226,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
 			// s.Require().Equal(tc.expectedIncentivesClaimed.String(), collectedInc.String())
 			// s.Require().Equal(tc.expectedForfeitedIncentives.String(), totalForfeited.String())
 
-			// Utilize second position here to claim incentives for it as well
+			// // Utilize second position here to claim incentives for it as well
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour))
 
 			fmt.Println("COLLECT INCENTIVES POS 2")

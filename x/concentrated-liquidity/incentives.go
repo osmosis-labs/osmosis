@@ -512,22 +512,22 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNowNew(ctx sdk.Context, pool 
 		return err
 	}
 
-	for uptimeIndex, uptimeAccum := range uptimeAccums {
+	for uptimeIndex, _ := range uptimeAccums {
 		// Get relevant uptime-level values
 		curUptimeDuration := types.SupportedUptimes[uptimeIndex]
 
-		pos, err := uptimeAccum.GetPosition(positionName)
-		if err != nil {
-			return err
-		}
+		// pos, err := uptimeAccum.GetPosition(positionName)
+		// if err != nil {
+		// 	return err
+		// }
 
 		// We optimistically assume that all liquidity on the active tick qualifies and handle
 		// uptime-related checks in forfeiting logic.
 		qualifyingLiquidity := pool.GetLiquidity().Add(qualifyingBalancerShares)
 
-		if isPositionInRange {
-			qualifyingLiquidity = qualifyingLiquidity.Sub(pos.NumShares)
-		}
+		// if isPositionInRange {
+		// 	qualifyingLiquidity = qualifyingLiquidity.Sub(pos.NumShares)
+		// }
 
 		fmt.Println("pool.GetLiquidity() pre: ", pool.GetLiquidity())
 		fmt.Println("qualifyingBalancerShares pre: ", qualifyingBalancerShares.String())
@@ -568,11 +568,11 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNowNew(ctx sdk.Context, pool 
 	// require a lot of capital to be tied up in a two week bond, which is a viable tradeoff given the relative
 	// simplicity of this approach.
 	if balancerPoolId != 0 {
-		uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, poolId)
-		if err != nil {
-			return err
-		}
-		_, err = k.claimAndResetFullRangeBalancerPool(ctx, poolId, balancerPoolId, uptimeAccumulators)
+		// uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
+		// if err != nil {
+		// 	return err
+		// }
+		_, err = k.claimAndResetFullRangeBalancerPool(ctx, poolId, balancerPoolId, uptimeAccums)
 		if err != nil {
 			return err
 		}
@@ -614,6 +614,7 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 
 				// Update incentive record to reflect the incentives that were emitted
 				remainingRewards = remainingRewards.Sub(totalEmittedAmount)
+				fmt.Println("remainingRewards: ", remainingRewards.String())
 
 				// Each incentive record should only be modified once
 				copyPoolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingAmount = remainingRewards
@@ -1110,9 +1111,9 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 				return sdk.Coins{}, sdk.DecCoins{}, err
 			}
 
-			if len(collectedIncentivesForUptime) > 0 {
-				collectedIncentivesForUptime[0].Amount = collectedIncentivesForUptime[0].Amount.Quo(sdk.NewInt(2))
-			}
+			// if len(collectedIncentivesForUptime) > 0 {
+			// 	collectedIncentivesForUptime[0].Amount = collectedIncentivesForUptime[0].Amount.Quo(sdk.NewInt(2))
+			// }
 			fmt.Println("collectedIncentivesForUptime", collectedIncentivesForUptime)
 			if uptimeIndex == 2 && positionAge > supportedUptimes[uptimeIndex] {
 				fmt.Println("collectedIncentivesForUptime", collectedIncentivesForUptime)
