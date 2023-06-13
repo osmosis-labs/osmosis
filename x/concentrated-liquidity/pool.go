@@ -333,3 +333,10 @@ func validateAuthorizedQuoteDenoms(ctx sdk.Context, denom1 string, authorizedQuo
 	}
 	return false
 }
+
+// GetLinkedBalancerPoolID is a wrapper function for gammKeeper.GetLinkedBalancerPoolID in order to allow
+// the concentrated pool module to access the linked balancer pool id via query.
+// Without this function, both pool link query functions would have to live in the gamm module which is unintuitive.
+func (k Keeper) GetLinkedBalancerPoolID(ctx sdk.Context, concentratedPoolId uint64) (uint64, error) {
+	return k.gammKeeper.GetLinkedBalancerPoolID(ctx, concentratedPoolId)
+}

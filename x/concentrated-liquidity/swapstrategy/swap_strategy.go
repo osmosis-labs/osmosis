@@ -93,3 +93,13 @@ func GetPriceLimit(zeroForOne bool) sdk.Dec {
 	}
 	return types.MaxSpotPrice
 }
+
+func GetSqrtPriceLimit(priceLimit sdk.Dec, zeroForOne bool) (sdk.Dec, error) {
+	if priceLimit.IsZero() {
+		if zeroForOne {
+			return types.MinSqrtPrice, nil
+		}
+		return types.MaxSqrtPrice, nil
+	}
+	return priceLimit.ApproxSqrt()
+}

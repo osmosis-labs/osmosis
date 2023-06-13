@@ -35,6 +35,7 @@ var (
 		lockAmounts:   []sdk.Coins{defaultLPSyntheticTokens, defaultLPSyntheticTokens},
 	}
 	defaultRewardDenom string = "rewardDenom"
+	otherDenom         string = "someOtherDenom"
 )
 
 // TODO: Switch more code to use userLocks and perpGaugeDesc
@@ -134,7 +135,7 @@ func (s *KeeperTestSuite) SetupGauges(gaugeDescriptors []perpGaugeDesc, denom st
 // CreateGauge creates a gauge struct given the required params.
 func (s *KeeperTestSuite) CreateGauge(isPerpetual bool, addr sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpoch uint64) (uint64, *types.Gauge) {
 	s.FundAcc(addr, coins)
-	gaugeID, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, isPerpetual, addr, coins, distrTo, startTime, numEpoch)
+	gaugeID, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, isPerpetual, addr, coins, distrTo, startTime, numEpoch, 0)
 	s.Require().NoError(err)
 	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeID)
 	s.Require().NoError(err)

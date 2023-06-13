@@ -242,7 +242,7 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 								LockQueryType: lockuptypes.ByDuration,
 								Denom:         "stake",
 								Duration:      time.Hour,
-							}, time.Now(), 1)
+							}, time.Now(), 1, 0)
 						s.Require().NoError(err)
 						distRecords = append(distRecords, types.DistrRecord{GaugeId: gaugePerpetualId, Weight: sdk.NewInt(300)})
 					}
@@ -252,7 +252,7 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 								LockQueryType: lockuptypes.ByDuration,
 								Denom:         "stake",
 								Duration:      time.Hour,
-							}, time.Now(), 1)
+							}, time.Now(), 1, 0)
 						s.Require().NoError(err)
 						distRecords = append(distRecords, types.DistrRecord{GaugeId: gaugeNonPerpetualId, Weight: sdk.NewInt(100)})
 					}
@@ -394,7 +394,7 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges() {
 								LockQueryType: lockuptypes.ByDuration,
 								Denom:         "stake",
 								Duration:      time.Hour,
-							}, time.Now(), 1)
+							}, time.Now(), 1, 0)
 						s.Require().NoError(err)
 					}
 				}
@@ -418,6 +418,132 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges() {
 					for i, gaugeId := range tc.expectedGaugeIDs {
 						s.Require().Equal(gaugeId, res.Data[i].Id)
 					}
+				}
+			}
+		})
+	}
+}
+
+// TestExternalIncentiveGauges_NoLock tests the ExternalIncentiveGauges
+// around gauges of type NoLock.
+// For every test case, this test sets up a balancer pool and a concentrated pool.
+// Balancer pool creates 3 internal gauges with ids 1, 2, 3
+// Concentrated pool creates 1 internal gauge with id 4
+// Next, each test case creates external gauges with different distributeTo conditions
+// based on the test case parameters.
+// Finally, the test calls ExternalIncentiveGauges and ensures that the correct
+// gauges are returned.
+func (s *KeeperTestSuite) TestExternalIncentiveGauges_NoLock() {
+	type gaugeConfig struct {
+		distributeTo lockuptypes.QueryCondition
+		poolId       uint64
+	}
+
+	const (
+		defaultIsPerpetual       = true
+		defaultNumEpochsPaidOver = 1
+
+		balancerPoolId     = 1
+		concentratedPoolId = 2
+
+		// Balancer pool creates 3 internal gauges with ids 1, 2, 3
+		// Concentrated pool creates 1 internal gauge with id 4
+		firstExpectedExternalGaugeId = 5
+
+		defaultDenom = "stake"
+	)
+
+	var (
+		defaultCoins = sdk.NewCoins(sdk.NewCoin(defaultDenom, sdk.NewInt(10000000000)))
+
+		defaultLockableDuration = s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)[0]
+
+		defaultNoLockGaugeConfig = gaugeConfig{
+			distributeTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+			},
+			poolId: concentratedPoolId,
+		}
+
+		defaultByDurationGaugeConfig = gaugeConfig{
+			distributeTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.ByDuration,
+				Duration:      defaultLockableDuration,
+				Denom:         defaultDenom,
+			},
+		}
+	)
+
+	tests := map[string]struct {
+		gaugesToCreate []gaugeConfig
+
+		expectedGaugeIds []uint64
+
+		expectError bool
+	}{
+		"1 no lock external gauge": {
+			gaugesToCreate: []gaugeConfig{
+				defaultNoLockGaugeConfig,
+			},
+			expectedGaugeIds: []uint64{firstExpectedExternalGaugeId},
+		},
+		"1 by duration external gauge": {
+			gaugesToCreate: []gaugeConfig{
+				defaultByDurationGaugeConfig,
+			},
+			expectedGaugeIds: []uint64{firstExpectedExternalGaugeId},
+		},
+		"5 gauges no lock and by duration mixed": {
+			gaugesToCreate: []gaugeConfig{
+				defaultByDurationGaugeConfig,
+				defaultNoLockGaugeConfig,
+				defaultByDurationGaugeConfig,
+				defaultNoLockGaugeConfig,
+				defaultByDurationGaugeConfig,
+			},
+			expectedGaugeIds: []uint64{
+				firstExpectedExternalGaugeId,
+				firstExpectedExternalGaugeId + 1,
+				firstExpectedExternalGaugeId + 2,
+				firstExpectedExternalGaugeId + 3,
+				firstExpectedExternalGaugeId + 4,
+			},
+		},
+	}
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+
+			defaultStartTime := s.Ctx.BlockTime()
+
+			queryClient := s.queryClient
+
+			// Prepare a balancer and a CL pool
+			// Creates 3 NoLock internal gauges with ids 1, 2, 3
+			s.PrepareBalancerPool()
+			// Creates 1 NoLock internal gauge with id 4
+			s.PrepareConcentratedPool()
+
+			// Pre-create external gauges
+			for _, gauge := range tc.gaugesToCreate {
+
+				// Fund creator
+				s.FundAcc(s.TestAccs[0], defaultCoins)
+
+				// Note that some parameters are defaults as they are not relevant to this test
+				_, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, defaultIsPerpetual, s.TestAccs[0], defaultCoins, gauge.distributeTo, defaultStartTime, defaultNumEpochsPaidOver, gauge.poolId)
+				s.Require().NoError(err)
+			}
+
+			res, err := queryClient.ExternalIncentiveGauges(context.Background(), &types.QueryExternalIncentiveGaugesRequest{})
+
+			if tc.expectError {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(len(tc.expectedGaugeIds), len(res.Data))
+				for i, gaugeId := range tc.expectedGaugeIds {
+					s.Require().Equal(gaugeId, res.Data[i].Id)
 				}
 			}
 		})
