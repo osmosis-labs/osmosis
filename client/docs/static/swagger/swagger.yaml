@@ -6155,6 +6155,16 @@ paths:
                       description: >-
                         Coins are the tokens locked within the lock, kept in the
                         module account.
+                    reward_receiver_address:
+                      type: string
+                      description: >-
+                        Reward Receiver Address is the address that would be
+                        receiving rewards for
+
+                        the incentives for the lock. This is set to owner by
+                        default and can be
+
+                        changed via separate msg.
                   description: >-
                     PeriodLock is a single lock unit by period defined by the
                     x/lockup module.
@@ -6271,6 +6281,16 @@ paths:
                       description: >-
                         Coins are the tokens locked within the lock, kept in the
                         module account.
+                    reward_receiver_address:
+                      type: string
+                      description: >-
+                        Reward Receiver Address is the address that would be
+                        receiving rewards for
+
+                        the incentives for the lock. This is set to owner by
+                        default and can be
+
+                        changed via separate msg.
                   description: >-
                     PeriodLock is a single lock unit by period defined by the
                     x/lockup module.
@@ -6387,6 +6407,16 @@ paths:
                       description: >-
                         Coins are the tokens locked within the lock, kept in the
                         module account.
+                    reward_receiver_address:
+                      type: string
+                      description: >-
+                        Reward Receiver Address is the address that would be
+                        receiving rewards for
+
+                        the incentives for the lock. This is set to owner by
+                        default and can be
+
+                        changed via separate msg.
                   description: >-
                     PeriodLock is a single lock unit by period defined by the
                     x/lockup module.
@@ -6509,6 +6539,16 @@ paths:
                       description: >-
                         Coins are the tokens locked within the lock, kept in the
                         module account.
+                    reward_receiver_address:
+                      type: string
+                      description: >-
+                        Reward Receiver Address is the address that would be
+                        receiving rewards for
+
+                        the incentives for the lock. This is set to owner by
+                        default and can be
+
+                        changed via separate msg.
                   description: >-
                     PeriodLock is a single lock unit by period defined by the
                     x/lockup module.
@@ -6625,6 +6665,16 @@ paths:
                       description: >-
                         Coins are the tokens locked within the lock, kept in the
                         module account.
+                    reward_receiver_address:
+                      type: string
+                      description: >-
+                        Reward Receiver Address is the address that would be
+                        receiving rewards for
+
+                        the incentives for the lock. This is set to owner by
+                        default and can be
+
+                        changed via separate msg.
                   description: >-
                     PeriodLock is a single lock unit by period defined by the
                     x/lockup module.
@@ -6742,6 +6792,16 @@ paths:
                       description: >-
                         Coins are the tokens locked within the lock, kept in the
                         module account.
+                    reward_receiver_address:
+                      type: string
+                      description: >-
+                        Reward Receiver Address is the address that would be
+                        receiving rewards for
+
+                        the incentives for the lock. This is set to owner by
+                        default and can be
+
+                        changed via separate msg.
                   description: >-
                     PeriodLock is a single lock unit by period defined by the
                     x/lockup module.
@@ -6865,6 +6925,16 @@ paths:
                       description: >-
                         Coins are the tokens locked within the lock, kept in the
                         module account.
+                    reward_receiver_address:
+                      type: string
+                      description: >-
+                        Reward Receiver Address is the address that would be
+                        receiving rewards for
+
+                        the incentives for the lock. This is set to owner by
+                        default and can be
+
+                        changed via separate msg.
                   description: >-
                     PeriodLock is a single lock unit by period defined by the
                     x/lockup module.
@@ -7038,6 +7108,16 @@ paths:
                       description: >-
                         Coins are the tokens locked within the lock, kept in the
                         module account.
+                    reward_receiver_address:
+                      type: string
+                      description: >-
+                        Reward Receiver Address is the address that would be
+                        receiving rewards for
+
+                        the incentives for the lock. This is set to owner by
+                        default and can be
+
+                        changed via separate msg.
                   description: >-
                     PeriodLock is a single lock unit by period defined by the
                     x/lockup module.
@@ -7142,6 +7222,48 @@ paths:
           type: string
       tags:
         - Query
+  /osmosis/lockup/v1beta1/lock_reward_receiver/{lock_id}:
+    get:
+      summary: Returns lock record by id
+      operationId: LockRewardReceiver
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              reward_receiver:
+                type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: lock_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
   /osmosis/lockup/v1beta1/locked_by_id/{lock_id}:
     get:
       summary: Returns lock record by id
@@ -7208,6 +7330,16 @@ paths:
                     description: >-
                       Coins are the tokens locked within the lock, kept in the
                       module account.
+                  reward_receiver_address:
+                    type: string
+                    description: >-
+                      Reward Receiver Address is the address that would be
+                      receiving rewards for
+
+                      the incentives for the lock. This is set to owner by
+                      default and can be
+
+                      changed via separate msg.
                 description: >-
                   PeriodLock is a single lock unit by period defined by the
                   x/lockup module.
@@ -7477,9 +7609,91 @@ paths:
                       format: byte
       tags:
         - Query
+  /osmosis/lockup/v1beta1/synthetic_lockup_by_lock_id/{lock_id}:
+    get:
+      summary: Returns synthetic lockup by native lockup id
+      operationId: SyntheticLockupByLockupID
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              synthetic_lock:
+                type: object
+                properties:
+                  underlying_lock_id:
+                    type: string
+                    format: uint64
+                    description: >-
+                      Underlying Lock ID is the underlying native lock's id for
+                      this synthetic
+
+                      lockup. A synthetic lock MUST have an underlying lock.
+                  synth_denom:
+                    type: string
+                    description: |-
+                      SynthDenom is the synthetic denom that is a combination of
+                      gamm share + bonding status + validator address.
+                  end_time:
+                    type: string
+                    format: date-time
+                    title: >-
+                      used for unbonding synthetic lockups, for active synthetic
+                      lockups, this
+
+                      value is set to uninitialized value
+                  duration:
+                    type: string
+                    description: |-
+                      Duration is the duration for a synthetic lock to mature
+                      at the point of unbonding has started.
+                description: >-
+                  SyntheticLock is creating virtual lockup where new denom is
+                  combination of
+
+                  original denom and synthetic suffix. At the time of synthetic
+                  lockup creation
+
+                  and deletion, accumulation store is also being updated and on
+                  querier side,
+
+                  they can query as freely as native lockup.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: lock_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
   /osmosis/lockup/v1beta1/synthetic_lockups_by_lock_id/{lock_id}:
     get:
-      summary: Returns synthetic lockups by native lockup id
+      summary: |-
+        Returns synthetic lockup by native lockup id
+        Deprecated: use SyntheticLockupByLockupID instead
       operationId: SyntheticLockupsByLockupID
       responses:
         '200':
@@ -21552,6 +21766,12 @@ paths:
                     description: >-
                       Minimum proportion of Yes votes for an expedited proposal
                       to pass. Default value: 0.67.
+                  expedited_quorum:
+                    type: string
+                    format: byte
+                    description: >-
+                      Minimum proportion of Yes votes for an expedited proposal
+                      to reach quorum. Default value: 0.67.
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
@@ -35565,6 +35785,16 @@ definitions:
               description: >-
                 Coins are the tokens locked within the lock, kept in the module
                 account.
+            reward_receiver_address:
+              type: string
+              description: >-
+                Reward Receiver Address is the address that would be receiving
+                rewards for
+
+                the incentives for the lock. This is set to owner by default and
+                can be
+
+                changed via separate msg.
           description: >-
             PeriodLock is a single lock unit by period defined by the x/lockup
             module.
@@ -35640,6 +35870,16 @@ definitions:
               description: >-
                 Coins are the tokens locked within the lock, kept in the module
                 account.
+            reward_receiver_address:
+              type: string
+              description: >-
+                Reward Receiver Address is the address that would be receiving
+                rewards for
+
+                the incentives for the lock. This is set to owner by default and
+                can be
+
+                changed via separate msg.
           description: >-
             PeriodLock is a single lock unit by period defined by the x/lockup
             module.
@@ -35715,6 +35955,16 @@ definitions:
               description: >-
                 Coins are the tokens locked within the lock, kept in the module
                 account.
+            reward_receiver_address:
+              type: string
+              description: >-
+                Reward Receiver Address is the address that would be receiving
+                rewards for
+
+                the incentives for the lock. This is set to owner by default and
+                can be
+
+                changed via separate msg.
           description: >-
             PeriodLock is a single lock unit by period defined by the x/lockup
             module.
@@ -35790,6 +36040,16 @@ definitions:
               description: >-
                 Coins are the tokens locked within the lock, kept in the module
                 account.
+            reward_receiver_address:
+              type: string
+              description: >-
+                Reward Receiver Address is the address that would be receiving
+                rewards for
+
+                the incentives for the lock. This is set to owner by default and
+                can be
+
+                changed via separate msg.
           description: >-
             PeriodLock is a single lock unit by period defined by the x/lockup
             module.
@@ -35865,6 +36125,16 @@ definitions:
               description: >-
                 Coins are the tokens locked within the lock, kept in the module
                 account.
+            reward_receiver_address:
+              type: string
+              description: >-
+                Reward Receiver Address is the address that would be receiving
+                rewards for
+
+                the incentives for the lock. This is set to owner by default and
+                can be
+
+                changed via separate msg.
           description: >-
             PeriodLock is a single lock unit by period defined by the x/lockup
             module.
@@ -35940,6 +36210,16 @@ definitions:
               description: >-
                 Coins are the tokens locked within the lock, kept in the module
                 account.
+            reward_receiver_address:
+              type: string
+              description: >-
+                Reward Receiver Address is the address that would be receiving
+                rewards for
+
+                the incentives for the lock. This is set to owner by default and
+                can be
+
+                changed via separate msg.
           description: >-
             PeriodLock is a single lock unit by period defined by the x/lockup
             module.
@@ -36015,6 +36295,16 @@ definitions:
               description: >-
                 Coins are the tokens locked within the lock, kept in the module
                 account.
+            reward_receiver_address:
+              type: string
+              description: >-
+                Reward Receiver Address is the address that would be receiving
+                rewards for
+
+                the incentives for the lock. This is set to owner by default and
+                can be
+
+                changed via separate msg.
           description: >-
             PeriodLock is a single lock unit by period defined by the x/lockup
             module.
@@ -36107,6 +36397,16 @@ definitions:
               description: >-
                 Coins are the tokens locked within the lock, kept in the module
                 account.
+            reward_receiver_address:
+              type: string
+              description: >-
+                Reward Receiver Address is the address that would be receiving
+                rewards for
+
+                the incentives for the lock. This is set to owner by default and
+                can be
+
+                changed via separate msg.
           description: >-
             PeriodLock is a single lock unit by period defined by the x/lockup
             module.
@@ -36138,6 +36438,11 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
+  osmosis.lockup.LockRewardReceiverResponse:
+    type: object
+    properties:
+      reward_receiver:
+        type: string
   osmosis.lockup.LockedDenomResponse:
     type: object
     properties:
@@ -36202,6 +36507,16 @@ definitions:
             description: >-
               Coins are the tokens locked within the lock, kept in the module
               account.
+          reward_receiver_address:
+            type: string
+            description: >-
+              Reward Receiver Address is the address that would be receiving
+              rewards for
+
+              the incentives for the lock. This is set to owner by default and
+              can be
+
+              changed via separate msg.
         description: >-
           PeriodLock is a single lock unit by period defined by the x/lockup
           module.
@@ -36314,6 +36629,16 @@ definitions:
         description: >-
           Coins are the tokens locked within the lock, kept in the module
           account.
+      reward_receiver_address:
+        type: string
+        description: >-
+          Reward Receiver Address is the address that would be receiving rewards
+          for
+
+          the incentives for the lock. This is set to owner by default and can
+          be
+
+          changed via separate msg.
     description: >-
       PeriodLock is a single lock unit by period defined by the x/lockup module.
 
@@ -36375,6 +36700,49 @@ definitions:
       side,
 
       they can query as freely as native lockup.
+  osmosis.lockup.SyntheticLockupByLockupIDResponse:
+    type: object
+    properties:
+      synthetic_lock:
+        type: object
+        properties:
+          underlying_lock_id:
+            type: string
+            format: uint64
+            description: >-
+              Underlying Lock ID is the underlying native lock's id for this
+              synthetic
+
+              lockup. A synthetic lock MUST have an underlying lock.
+          synth_denom:
+            type: string
+            description: |-
+              SynthDenom is the synthetic denom that is a combination of
+              gamm share + bonding status + validator address.
+          end_time:
+            type: string
+            format: date-time
+            title: >-
+              used for unbonding synthetic lockups, for active synthetic
+              lockups, this
+
+              value is set to uninitialized value
+          duration:
+            type: string
+            description: |-
+              Duration is the duration for a synthetic lock to mature
+              at the point of unbonding has started.
+        description: >-
+          SyntheticLock is creating virtual lockup where new denom is
+          combination of
+
+          original denom and synthetic suffix. At the time of synthetic lockup
+          creation
+
+          and deletion, accumulation store is also being updated and on querier
+          side,
+
+          they can query as freely as native lockup.
   osmosis.lockup.SyntheticLockupsByLockupIDResponse:
     type: object
     properties:
@@ -45620,6 +45988,12 @@ definitions:
             description: >-
               Minimum proportion of Yes votes for an expedited proposal to pass.
               Default value: 0.67.
+          expedited_quorum:
+            type: string
+            format: byte
+            description: >-
+              Minimum proportion of Yes votes for an expedited proposal to reach
+              quorum. Default value: 0.67.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   cosmos.gov.v1beta1.QueryProposalResponse:
     type: object
@@ -46325,6 +46699,12 @@ definitions:
         description: >-
           Minimum proportion of Yes votes for an expedited proposal to pass.
           Default value: 0.67.
+      expedited_quorum:
+        type: string
+        format: byte
+        description: >-
+          Minimum proportion of Yes votes for an expedited proposal to reach
+          quorum. Default value: 0.67.
     description: TallyParams defines the params for tallying votes on governance proposals.
   cosmos.gov.v1beta1.TallyResult:
     type: object

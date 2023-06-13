@@ -23,7 +23,7 @@ type oneForZeroStrategy struct {
 	spreadFactor   sdk.Dec
 }
 
-var _ swapStrategy = (*oneForZeroStrategy)(nil)
+var _ SwapStrategy = (*oneForZeroStrategy)(nil)
 
 // GetSqrtTargetPrice returns the target square root price given the next tick square root price.
 // If the given nextTickSqrtPrice is greater than the sqrt price limit, the sqrt price limit is returned.
