@@ -178,14 +178,13 @@ func (suite *ConcentratedMathTestSuite) TestCalcAmount0Delta() {
 			isWithTolerance: false,
 			// https://www.wolframalpha.com/input?i=%281517882343.751510418088349649+*+%2874.161984870956629487+-+70.710678118654752440+%29%29+%2F+%2870.710678118654752440+*+74.161984870956629487%29
 		},
-		"happy path, sqrtPriceA greater than sqrtPrice B": {
-			liquidity:       sdk.MustNewDecFromStr("1517882343.751510418088349649"), // we use the smaller liquidity between liq0 and liq1
-			sqrtPA:          sqrt5500,                                               // 5500
-			sqrtPB:          sqrt5000,                                               // 5000
+		"happy path, sqrtPriceA greater than sqrtPrice B": { // commute prior vector
+			liquidity:       sdk.MustNewDecFromStr("1517882343.751510418088349649"),
+			sqrtPA:          sqrt5500,
+			sqrtPB:          sqrt5000,
 			roundUp:         false,
-			amount0Expected: "998976.618347426388356619", // truncated at precision end.
+			amount0Expected: "998976.618347426388356619",
 			isWithTolerance: false,
-			// https://www.wolframalpha.com/input?i=%281517882343.751510418088349649+*+%2874.161984870956629487+-+70.710678118654752440+%29%29+%2F+%2870.710678118654752440+*+74.161984870956629487%29
 		},
 		"round down: large liquidity amount in wide price range": {
 			// Note the values are hand-picked to cause multiplication of 2 large numbers
