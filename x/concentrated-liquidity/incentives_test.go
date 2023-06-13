@@ -4383,6 +4383,8 @@ func (s *KeeperTestSuite) TestIncentives_Functional() {
 	positionIdOne, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId, ownerOne, coinsPositionOne)
 	s.Require().NoError(err)
 
+	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
+	s.Require().NoError(err)
 	currentTick := clPool.GetCurrentTick()
 	lowerTickPositionTwo := currentTick - int64(clPool.GetTickSpacing())
 	upperTickPositionTwo := currentTick + int64(clPool.GetTickSpacing())
@@ -4394,7 +4396,7 @@ func (s *KeeperTestSuite) TestIncentives_Functional() {
 	// Create narrow range inactive position 3 next to max tick.
 	lowerTickPositionThree := types.MaxTick - int64(clPool.GetTickSpacing())
 	upperTickPositionThree := types.MaxTick
-	positionIdThree, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPoolId, ownerTwo, coinsPositionTwo, sdk.ZeroInt(), sdk.ZeroInt(), lowerTickPositionThree, upperTickPositionThree)
+	positionIdThree, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPoolId, ownerThree, coinsPositionThree, sdk.ZeroInt(), sdk.ZeroInt(), lowerTickPositionThree, upperTickPositionThree)
 	s.Require().NoError(err)
 
 	// Create incentive record
@@ -4480,6 +4482,11 @@ func (s *KeeperTestSuite) TestIncentives_Functional() {
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewCoins(sdk.NewCoin(ETH, balancerShare)), balancerGauge.Coins)
 
+	pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
+	s.Require().NoError(err)
+
+	fmt.Println(pool.GetCurrentTick())
+
 	// 2) claims correct amount
 	collected, forfeited, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, ownerTwo, positionIdTwo)
 	s.Require().NoError(err)
@@ -4488,7 +4495,7 @@ func (s *KeeperTestSuite) TestIncentives_Functional() {
 	s.Require().Equal(sdk.DecCoins{}, forfeited)
 
 	// 3) claims nothing
-	collected, forfeited, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, ownerTwo, positionIdThree)
+	collected, forfeited, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, ownerThree, positionIdThree)
 	s.Require().NoError(err)
 
 	s.Require().Equal(sdk.Coins(nil), collected)
