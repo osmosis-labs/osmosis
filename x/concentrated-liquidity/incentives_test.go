@@ -4380,7 +4380,7 @@ func (s *KeeperTestSuite) TestIncentives_Functional() {
 	s.Require().NoError(err)
 
 	// Create full range position 1.
-	positionIdOne, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId, ownerOne, coinsPositionOne)
+	positionIdOne, _, _, positionOneLiquidity, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId, ownerOne, coinsPositionOne)
 	s.Require().NoError(err)
 
 	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
@@ -4390,7 +4390,7 @@ func (s *KeeperTestSuite) TestIncentives_Functional() {
 	upperTickPositionTwo := currentTick + int64(clPool.GetTickSpacing())
 
 	// Create narrow range active position 2.
-	positionIdTwo, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPoolId, ownerTwo, coinsPositionTwo, sdk.ZeroInt(), sdk.ZeroInt(), lowerTickPositionTwo, upperTickPositionTwo)
+	positionIdTwo, _, _, positionTwoLiquidity, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPoolId, ownerTwo, coinsPositionTwo, sdk.ZeroInt(), sdk.ZeroInt(), lowerTickPositionTwo, upperTickPositionTwo)
 	s.Require().NoError(err)
 
 	// Create narrow range inactive position 3 next to max tick.
@@ -4430,6 +4430,16 @@ func (s *KeeperTestSuite) TestIncentives_Functional() {
 	// Refetech pool
 	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
 	s.Require().NoError(err)
+
+	// estimate amount in that would not cross the tick
+	_, lowerTickPositionTwoSqrtPrice, err := math.TickToSqrtPrice(lowerTickPositionTwo)
+	s.Require().NoError(err)
+	currentSqrtPrice := clPool.GetCurrentSqrtPrice()
+	currentLiquidity := clPool.GetLiquidity()
+	amountInUntilNextTick := math.CalcAmount0Delta(currentLiquidity, lowerTickPositionTwoSqrtPrice, currentSqrtPrice, true)
+	fmt.Println("amountInUntilNextTick", amountInUntilNextTick)
+	swapTokenIn.Amount = amountInUntilNextTick.Mul(sdk.NewDecWithPrec(5, 1)).TruncateInt()
+
 	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, swapper, clPool, swapTokenIn, USDC, sdk.ZeroInt(), sdk.ZeroDec())
 	s.Require().NoError(err)
 
@@ -4457,7 +4467,8 @@ func (s *KeeperTestSuite) TestIncentives_Functional() {
 	expectedTotalAmountCollected := incentiveRecord.IncentiveRecordBody.EmissionRate.MulInt64(2)
 
 	balancerShare := expectedTotalAmountCollected.Mul(balancerLiquidity).Quo(totalLiquidity).TruncateInt()
-	ownerOneShare := expectedTotalAmountCollected.Mul(currentTickLiquidity).Quo(totalLiquidity).TruncateInt()
+	ownerOneShare := expectedTotalAmountCollected.Mul(positionOneLiquidity).Quo(totalLiquidity).TruncateInt()
+	ownerTwoShare := expectedTotalAmountCollected.Mul(positionTwoLiquidity).Quo(totalLiquidity).TruncateInt()
 
 	// Get balancer gauge id
 	balancerGaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerPoolId, longestLockableDuration)
@@ -4485,13 +4496,11 @@ func (s *KeeperTestSuite) TestIncentives_Functional() {
 	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
 	s.Require().NoError(err)
 
-	fmt.Println(clPool.GetCurrentTick())
-
 	// 2) claims correct amount
 	collected, forfeited, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, ownerTwo, positionIdTwo)
 	s.Require().NoError(err)
 
-	s.Require().Equal(sdk.Coins(nil), collected)
+	s.Require().Equal(sdk.NewCoins(sdk.NewCoin(ETH, ownerTwoShare)), collected)
 	s.Require().Equal(sdk.DecCoins{}, forfeited)
 
 	// 3) claims nothing
