@@ -450,6 +450,7 @@ func (k Keeper) computeInAmtGivenOut(
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
+	fmt.Println("pool liq going into swap: ", k.bankKeeper.GetAllBalances(ctx, p.GetAddress()))
 
 	if err := checkDenomValidity(tokenInDenom, desiredTokenOut.Denom, p.GetToken0(), p.GetToken1()); err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
