@@ -24,7 +24,7 @@ type zeroForOneStrategy struct {
 	tickSpacing    uint64
 }
 
-var _ swapStrategy = (*zeroForOneStrategy)(nil)
+var _ SwapStrategy = (*zeroForOneStrategy)(nil)
 
 // GetSqrtTargetPrice returns the target square root price given the next tick square root price.
 // If the given nextTickSqrtPrice is less than the sqrt price limit, the sqrt price limit is returned.
