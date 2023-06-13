@@ -4482,10 +4482,10 @@ func (s *KeeperTestSuite) TestIncentives_Functional() {
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewCoins(sdk.NewCoin(ETH, balancerShare)), balancerGauge.Coins)
 
-	pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
+	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
 	s.Require().NoError(err)
 
-	fmt.Println(pool.GetCurrentTick())
+	fmt.Println(clPool.GetCurrentTick())
 
 	// 2) claims correct amount
 	collected, forfeited, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, ownerTwo, positionIdTwo)
