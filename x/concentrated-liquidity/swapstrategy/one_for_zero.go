@@ -21,7 +21,6 @@ type oneForZeroStrategy struct {
 	sqrtPriceLimit sdk.Dec
 	storeKey       sdk.StoreKey
 	spreadFactor   sdk.Dec
-	tickSpacing    uint64
 }
 
 var _ SwapStrategy = (*oneForZeroStrategy)(nil)
@@ -191,7 +190,7 @@ func (s oneForZeroStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId u
 // zeroForOneStrategy where we use reverse iterator and have to add one to
 // the input. Therefore, we define this method to account for different strategies.
 func (s oneForZeroStrategy) InitializeTickValue(currentTick int64) int64 {
-	return currentTick + 1
+	return currentTick
 }
 
 // SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.

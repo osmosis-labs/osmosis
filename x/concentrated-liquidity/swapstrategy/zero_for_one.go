@@ -21,7 +21,6 @@ type zeroForOneStrategy struct {
 	sqrtPriceLimit sdk.Dec
 	storeKey       sdk.StoreKey
 	spreadFactor   sdk.Dec
-	tickSpacing    uint64
 }
 
 var _ SwapStrategy = (*zeroForOneStrategy)(nil)
@@ -148,7 +147,7 @@ func (s zeroForOneStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPric
 // InitializeNextTickIterator returns iterator that seeks to the next tick from the given tickIndex.
 // If nex tick relative to tickINdex does not exist in the store, it will return an invalid iterator.
 //
-// oneForZeroStrategy assumes moving to the left of the current square root price.
+// zeroForOneStrategy assumes moving to the left of the current square root price.
 // As a result, we use a reverse iterator to seek to the next tick index relative to the currentTickIndexPlusOne.
 // Since end key of the reverse iterator is exclusive, we search from current + 1 tick index.
 // in decrasing lexicographic order until a tick one smaller than current is found.
