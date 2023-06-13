@@ -1021,7 +1021,8 @@ func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positi
 	}
 
 	// If no incentives were collected, return an empty coin set.
-	// @Dev: Does collectedIncentivesForPosition = 0 => forfeitedIncentivesForPosition = 0?
+	// TODO: Does collectedIncentivesForPosition = 0 => forfeitedIncentivesForPosition = 0?
+	// TODO: Do we need to get event emitted here still?
 	if collectedIncentivesForPosition.IsZero() {
 		return collectedIncentivesForPosition, forfeitedIncentivesForPosition, nil
 	}
