@@ -20,6 +20,16 @@ type Querier struct {
 
 var _ queryproto.QueryServer = Querier{}
 
+func (q Querier) Pools(grpcCtx context.Context,
+	req *queryproto.PoolsRequest,
+) (*queryproto.PoolsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.Pools(ctx, *req)
+}
+
 func (q Querier) Params(grpcCtx context.Context,
 	req *queryproto.ParamsRequest,
 ) (*queryproto.ParamsResponse, error) {
@@ -28,5 +38,15 @@ func (q Querier) Params(grpcCtx context.Context,
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.Params(ctx, *req)
+}
+
+func (q Querier) ContractInfoByPoolId(grpcCtx context.Context,
+	req *queryproto.ContractInfoByPoolIdRequest,
+) (*queryproto.ContractInfoByPoolIdResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.ContractInfoByPoolId(ctx, *req)
 }
 

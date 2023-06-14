@@ -79,6 +79,7 @@ func (k Keeper) GetUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sd
 // This value depends on the provided tick's location relative to the current tick. If the provided tick
 // is greater than the current tick, then the value is zero. Otherwise, the value is the value of the
 // current global spread reward growth.
+// TODO: Explain that this is true iff this is being called for consecutive ticks, not if we were jump around.
 //
 // Similar to spread factors, by convention the value is chosen as if all of the uptime (seconds per liquidity) to date has
 // occurred below the tick.
@@ -349,6 +350,8 @@ func (k Keeper) updatePoolUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64
 	return nil
 }
 
+var dec1e9 = sdk.NewDec(1e9)
+
 // updateGivenPoolUptimeAccumulatorsToNow syncs all given uptime accumulators for a given pool id
 // Updates the pool last liquidity update time with the current block time and writes the updated pool to state.
 // If last liquidity update happened in the current block, this function is a no-op.
@@ -368,17 +371,17 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 		return types.ErrPoolNil
 	}
 
-	// Since our base unit of time is nanoseconds, we divide with truncation by 10^9 (10e8) to get
+	// Since our base unit of time is nanoseconds, we divide with truncation by 10^9 to get
 	// time elapsed in seconds
 	timeElapsedNanoSec := sdk.NewDec(int64(ctx.BlockTime().Sub(pool.GetLastLiquidityUpdate())))
-	timeElapsedSec := timeElapsedNanoSec.Quo(sdk.NewDec(10e8))
+	timeElapsedSec := timeElapsedNanoSec.Quo(dec1e9)
 
 	// If no time has elapsed, this function is a no-op
-	if timeElapsedSec.Equal(sdk.ZeroDec()) {
+	if timeElapsedSec.IsZero() {
 		return nil
 	}
 
-	if timeElapsedSec.LT(sdk.ZeroDec()) {
+	if timeElapsedSec.IsNegative() {
 		return types.TimeElapsedNotPositiveError{TimeElapsed: timeElapsedSec}
 	}
 
@@ -602,14 +605,14 @@ func (k Keeper) GetIncentiveRecordSerialized(ctx sdk.Context, poolId uint64, pag
 	pageRes, err := query.Paginate(incentivesRecordStore, pagination, func(key, value []byte) error {
 		parts := bytes.Split(key, []byte(types.KeySeparator))
 
-		minUptimeIndex, err := strconv.ParseUint(string(parts[1]), 10, 64)
+		minUptimeIndex, err := strconv.ParseUint(string(parts[0]), 10, 64)
 		if err != nil {
 			return err
 		}
 
-		denom := string(parts[2])
+		denom := string(parts[1])
 
-		incentiveCreator, err := sdk.AccAddressFromBech32(string(parts[3]))
+		incentiveCreator, err := sdk.AccAddressFromBech32(string(parts[2]))
 		if err != nil {
 			return err
 		}
@@ -901,6 +904,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 
 	// Compute the age of the position.
 	positionAge := ctx.BlockTime().Sub(position.JoinTime)
+	// should never happen, defense in depth
 	if positionAge < 0 {
 		return sdk.Coins{}, sdk.DecCoins{}, types.NegativeDurationError{Duration: positionAge}
 	}
@@ -929,6 +933,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 	// Loop through each uptime accumulator for the pool.
 	for uptimeIndex, uptimeAccum := range uptimeAccumulators {
 		// Check if the accumulator contains the position.
+		// There should never be a case where you can have a position for 1 accumulator, and not the rest.
 		hasPosition, err := uptimeAccum.HasPosition(positionName)
 		if err != nil {
 			return sdk.Coins{}, sdk.DecCoins{}, err
@@ -1018,6 +1023,8 @@ func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positi
 	}
 
 	// If no incentives were collected, return an empty coin set.
+	// TODO: Does collectedIncentivesForPosition = 0 => forfeitedIncentivesForPosition = 0?
+	// TODO: Do we need to get event emitted here still?
 	if collectedIncentivesForPosition.IsZero() {
 		return collectedIncentivesForPosition, forfeitedIncentivesForPosition, nil
 	}

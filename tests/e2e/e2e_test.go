@@ -1061,6 +1061,7 @@ func (s *IntegrationTestSuite) TestLargeWasmUpload() {
 	node, err := chainA.GetDefaultNode()
 	s.NoError(err)
 	node.StoreWasmCode("bytecode/large.wasm", initialization.ValidatorWalletName)
+	chainA.LatestCodeId = int(node.QueryLatestWasmCodeID())
 }
 
 func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) string {

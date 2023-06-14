@@ -36,6 +36,20 @@ func (m *MockCFMMPoolI) EXPECT() *MockCFMMPoolIMockRecorder {
 	return m.recorder
 }
 
+// AsSerializablePool mocks base method.
+func (m *MockCFMMPoolI) AsSerializablePool() types0.PoolI {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AsSerializablePool")
+	ret0, _ := ret[0].(types0.PoolI)
+	return ret0
+}
+
+// AsSerializablePool indicates an expected call of AsSerializablePool.
+func (mr *MockCFMMPoolIMockRecorder) AsSerializablePool() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AsSerializablePool", reflect.TypeOf((*MockCFMMPoolI)(nil).AsSerializablePool))
+}
+
 // CalcExitPoolCoinsFromShares mocks base method.
 func (m *MockCFMMPoolI) CalcExitPoolCoinsFromShares(ctx types.Context, numShares types.Int, exitFee types.Dec) (types.Coins, error) {
 	m.ctrl.T.Helper()
@@ -374,6 +388,20 @@ func NewMockPoolAmountOutExtension(ctrl *gomock.Controller) *MockPoolAmountOutEx
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockPoolAmountOutExtension) EXPECT() *MockPoolAmountOutExtensionMockRecorder {
 	return m.recorder
+}
+
+// AsSerializablePool mocks base method.
+func (m *MockPoolAmountOutExtension) AsSerializablePool() types0.PoolI {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AsSerializablePool")
+	ret0, _ := ret[0].(types0.PoolI)
+	return ret0
+}
+
+// AsSerializablePool indicates an expected call of AsSerializablePool.
+func (mr *MockPoolAmountOutExtensionMockRecorder) AsSerializablePool() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AsSerializablePool", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).AsSerializablePool))
 }
 
 // CalcExitPoolCoinsFromShares mocks base method.
@@ -771,6 +799,20 @@ func NewMockWeightedPoolExtension(ctrl *gomock.Controller) *MockWeightedPoolExte
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockWeightedPoolExtension) EXPECT() *MockWeightedPoolExtensionMockRecorder {
 	return m.recorder
+}
+
+// AsSerializablePool mocks base method.
+func (m *MockWeightedPoolExtension) AsSerializablePool() types0.PoolI {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AsSerializablePool")
+	ret0, _ := ret[0].(types0.PoolI)
+	return ret0
+}
+
+// AsSerializablePool indicates an expected call of AsSerializablePool.
+func (mr *MockWeightedPoolExtensionMockRecorder) AsSerializablePool() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AsSerializablePool", reflect.TypeOf((*MockWeightedPoolExtension)(nil).AsSerializablePool))
 }
 
 // CalcExitPoolCoinsFromShares mocks base method.

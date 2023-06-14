@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/cosmos/cosmos-sdk v0.47.3
 	github.com/ignite/cli v0.23.0
-	github.com/osmosis-labs/osmosis/v16 v16.0.0-20230608013130-4c65a87ef8f1
+	github.com/osmosis-labs/osmosis/v16 v16.0.0-20230612054801-1cd3195471ff
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230328024000-175ec88e4304
 
 )
@@ -89,9 +89,8 @@ require (
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230516205127-c213fddde069 // indirect
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230529060317-d6d2dda0fb22 // indirect
-	github.com/osmosis-labs/osmosis/v16 v16.0.0-20230607130515-971283a67849 // indirect
-	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230608190634-3395abe098ce // indirect
+	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
