@@ -1554,21 +1554,30 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 			amount1Desired:        sdk.NewInt(100_000_050),
 			tickSpacing:           DefaultTickSpacing,
 			expectedCurrSqrtPrice: sqrt(100_000_050),
-			expectedTick:          72000000,
+			// We expect the returned tick to always be rounded down.
+			// In this case, tick 72000000 corresponds to 100_000_000,
+			// while 72000001 corresponds to 100_000_100.
+			expectedTick: 72000000,
 		},
 		"100_000_051 and tick spacing 100, price level where curr sqrt price does not translate to allowed tick (assumes exponent at price one of -6 and tick spacing of 100)": {
 			amount0Desired:        sdk.OneInt(),
 			amount1Desired:        sdk.NewInt(100_000_051),
 			tickSpacing:           DefaultTickSpacing,
 			expectedCurrSqrtPrice: sqrt(100_000_051),
-			expectedTick:          72000000,
+			// We expect the returned tick to always be rounded down.
+			// In this case, tick 72000000 corresponds to 100_000_000,
+			// while 72000001 corresponds to 100_000_100.
+			expectedTick: 72000000,
 		},
 		"100_000_051 and tick spacing 1, price level where curr sqrt price translates to allowed tick (assumes exponent at price one of -6 and tick spacing of 1)": {
 			amount0Desired:        sdk.OneInt(),
 			amount1Desired:        sdk.NewInt(100_000_051),
 			tickSpacing:           1,
 			expectedCurrSqrtPrice: sqrt(100_000_051),
-			expectedTick:          72000000,
+			// We expect the returned tick to always be rounded down.
+			// In this case, tick 72000000 corresponds to 100_000_000,
+			// while 72000001 corresponds to 100_000_100.
+			expectedTick: 72000000,
 		},
 		"error: amount0Desired is zero": {
 			amount0Desired: sdk.ZeroInt(),
