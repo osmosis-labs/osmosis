@@ -200,6 +200,7 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
 	// We know were between (geoSpacing.initialPrice, geoSpacing.endPrice)
 	// The number of ticks that need to be filled by our current spacing is
 	// (price - geoSpacing.initialPrice) / geoSpacing.additiveIncrementPerTick
+	fmt.Println(geoSpacing.initialPrice)
 	priceInThisExponent := osmomath.BigDecFromSDKDec(price.Sub(geoSpacing.initialPrice))
 	ticksFilledByCurrentSpacing := priceInThisExponent.Quo(geoSpacing.additiveIncrementPerTick)
 	// we get the bucket index by:
@@ -207,6 +208,8 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
 	// * adding to it the number of ticks "completely" filled by the current spacing
 	// the latter is the truncation of the division above
 	// TODO: This should be rounding down?
+	fmt.Println(priceInThisExponent, geoSpacing.additiveIncrementPerTick)
+	fmt.Println(ticksFilledByCurrentSpacing.SDKDec())
 	tickIndex = geoSpacing.initialTick + ticksFilledByCurrentSpacing.SDKDec().TruncateInt64()
 	return tickIndex
 }
