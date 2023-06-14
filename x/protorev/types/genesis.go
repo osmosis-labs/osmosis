@@ -28,6 +28,12 @@ var (
 	DefaultMaxPoolPointsPerBlock     = uint64(100)
 	DefaultMaxPoolPointsPerTx        = uint64(18)
 	DefaultPoolPointsConsumedInBlock = uint64(0)
+	DefaultProfits                   = []sdk.Coin{
+		{
+			Denom:  OsmosisDenomination,
+			Amount: sdk.NewInt(0),
+		},
+	}
 )
 
 // DefaultGenesis returns the default genesis state
@@ -44,6 +50,7 @@ func DefaultGenesis() *GenesisState {
 		MaxPoolPointsPerBlock:  DefaultMaxPoolPointsPerBlock,
 		MaxPoolPointsPerTx:     DefaultMaxPoolPointsPerTx,
 		PointCountForBlock:     DefaultPoolPointsConsumedInBlock,
+		Profits:                DefaultProfits,
 	}
 }
 
