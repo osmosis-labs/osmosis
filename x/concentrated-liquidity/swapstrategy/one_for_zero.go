@@ -152,9 +152,9 @@ func (s oneForZeroStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPric
 //
 // oneForZeroStrategy assumes moving to the right of the current square root price.
 // As a result, we use forward iterator to seek to the next tick index relative to the currentTickIndex.
-// Since start key of the forward iterator is inclusive, we search directly from the tickIndex
+// Since start key of the forward iterator is inclusive, we search directly from the currentTickIndex
 // forwards in increasing lexicographic order until a tick greater than currentTickIndex is found.
-// Returns an invalid iterator if tickIndex is not in the store.
+// Returns an invalid iterator if no tick greater than currentTickIndex is found in the store.
 // Panics if fails to parse tick index from bytes.
 // The caller is responsible for closing the iterator on success.
 func (s oneForZeroStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId uint64, currentTickIndex int64) dbm.Iterator {
@@ -178,19 +178,6 @@ func (s oneForZeroStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId u
 		}
 	}
 	return iter
-}
-
-// InitializeTickValue returns the initial tick value for computing swaps based
-// on the actual current tick.
-//
-// oneForZeroStrategy assumes moving to the right of the current square root price.
-// As a result, we use forward iterator in InitializeNextTickIterator to find the next
-// tick to the left of current. The end cursor for forward iteration is inclusive.
-// Therefore, this method is, essentially a no-op. The logic is reversed for
-// zeroForOneStrategy where we use reverse iterator and have to add one to
-// the input. Therefore, we define this method to account for different strategies.
-func (s oneForZeroStrategy) InitializeTickValue(currentTick int64) int64 {
-	return currentTick
 }
 
 // SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.
