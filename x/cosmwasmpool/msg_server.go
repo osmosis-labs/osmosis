@@ -24,6 +24,12 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	}
 }
 
+func NewMsgCreatorServerImpl(keeper *Keeper) model.MsgCreatorServer {
+	return &msgServer{
+		keeper: keeper,
+	}
+}
+
 func (m msgServer) CreateCosmWasmPool(goCtx context.Context, msg *model.MsgCreateCosmWasmPool) (*model.MsgCreateCosmWasmPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
