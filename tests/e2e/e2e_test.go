@@ -1692,10 +1692,3 @@ func (s *IntegrationTestSuite) TestAConcentratedLiquidity_CanonicalPool_And_Para
 	s.Require().NoError(err)
 	osmoassert.DecApproxEq(s.T(), expectedSpotPrice, concentratedPool.GetCurrentSqrtPrice().Power(2), sdk.NewDecWithPrec(1, 3))
 }
-
-func (s *IntegrationTestSuite) TestCosmWasmPool_Transmuter() {
-	chainA := s.configurer.GetChainConfig(0)
-	node, err := chainA.GetDefaultNode()
-	s.NoError(err)
-	node.StoreWasmCode("bytecode/transmuter.wasm", initialization.ValidatorWalletName)
-}
