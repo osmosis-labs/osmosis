@@ -80,6 +80,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	// Configure the pool weights for genesis. This roughly correlates to the ms of execution time
 	// by pool type.
 	k.SetPoolWeights(ctx, genState.PoolWeights)
+
+	// Set the profits that have been collected by Protorev.
+	for _, coin := range genState.Profits {
+		k.UpdateProfitsByDenom(ctx, coin.Denom, coin.Amount)
+	}
 }
 
 // ExportGenesis returns the module's exported genesis. ExportGenesis intentionally ignores a few of the errors thrown
@@ -145,6 +150,9 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	if pointCount, err := k.GetPointCountForBlock(ctx); err == nil {
 		genesis.PointCountForBlock = pointCount
 	}
+
+	// Export the profits that have been collected by Protorev.
+	genesis.Profits = k.GetAllProfits(ctx)
 
 	return genesis
 }
