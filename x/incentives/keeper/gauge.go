@@ -185,7 +185,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	}
 
 	// Fixed gas consumption create gauge based on the number of coins to add
-	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForCreateGauge*(len(coins)+len(gauge.Coins))), "scaling gas cost for creating gauge rewards")
+	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForCreateGauge*len(gauge.Coins)), "scaling gas cost for creating gauge rewards")
 
 	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, gauge.Coins); err != nil {
 		return 0, err
