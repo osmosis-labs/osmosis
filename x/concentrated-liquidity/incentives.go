@@ -921,6 +921,9 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 		return sdk.Coins{}, sdk.DecCoins{}, err
 	}
 
+	// Create a variable to hold the name of the position.
+	positionName := string(types.KeyPositionId(positionId))
+
 	// Create variables to hold the total collected and forfeited incentives for the position.
 	collectedIncentivesForPosition := sdk.Coins{}
 	forfeitedIncentivesForPosition := sdk.DecCoins{}
@@ -939,9 +942,6 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 		return sdk.Coins{}, sdk.DecCoins{}, err
 	}
 	//isPositionInRange := position.LowerTick < pool.GetCurrentTick() && position.UpperTick >= pool.GetCurrentTick()
-
-	// Create a variable to hold the name of the position.
-	positionName := string(types.KeyPositionId(positionId))
 
 	// Loop through each uptime accumulator for the pool.
 	for uptimeIndex, uptimeAccum := range uptimeAccumulators {
@@ -984,30 +984,36 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 
 				var forfeitedIncentivesPerShare sdk.DecCoins
 				for _, forfeitedCoin := range forfeitedIncentivesForUptime {
-					// get the current tick liquidity instead of total shares accum
-					// qualifyingBalancerShares + currentTicKliquidity - (pos.NumShares (only if in range))
+					// Total forfeited amount includes the dust since it gets redistributed to other LPs.
 					forfeitedDecCoin := sdk.NewDecCoinFromDec(forfeitedCoin.Denom, forfeitedCoin.Amount.ToDec().Add(dust.AmountOf(forfeitedCoin.Denom)))
 
 					// To determine the amount of liquidity we must distribute the forfeited incentives to, we add the current tick liquidity as well as the qualifying balancer shares.
 					qualifyingLiquidity := pool.GetLiquidity().Add(qualifyingBalancerShares)
 
+					// If there is qualifying liquidity, then we can determine the amount of incentives to distribute per share.
+					// This value gets added back into the accumulator.
 					if !qualifyingLiquidity.IsZero() {
 						forfeitedIncentivesPerShare = append(forfeitedIncentivesPerShare, sdk.NewDecCoinFromDec(forfeitedCoin.Denom, forfeitedDecCoin.Amount.Quo(qualifyingLiquidity)))
 					}
+
+					// Track total forfeited from all uptimes for the position.
 					forfeitedIncentivesForPosition = forfeitedIncentivesForPosition.Add(forfeitedDecCoin)
 				}
 
+				// Add the incentives per share that was forfeited back into the accumulator.
 				uptimeAccum.AddToAccumulator(forfeitedIncentivesPerShare)
 				continue
 			}
 
+			// Track total incentives collected from all uptimes for the position.
 			collectedIncentivesForPosition = collectedIncentivesForPosition.Add(collectedIncentivesForUptime...)
 		}
 	}
 
-	// If we prepared the balancer pool as a full range position to determine the new uptime accumulator value for the pool due to forfeited incentives,
-	// then we need to claim the balancer pool's incentives and reset it.
+	// If the CL pool had a connected balancer pool, we had prepared the balancer pool as a full range position.
+	// We must claim and reset the balancer pool now.
 	if balancerPoolId != 0 {
+		// The uptimeAccum was modified earlier, so we must retrieve it again.
 		uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, position.PoolId)
 		if err != nil {
 			return sdk.Coins{}, sdk.DecCoins{}, err
