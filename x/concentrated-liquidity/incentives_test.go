@@ -2376,14 +2376,13 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 				validPool := s.PrepareConcentratedPool()
 				validPoolId := validPool.GetId()
 
-				fmt.Println("ADAM: validPool liq", validPool.GetLiquidity())
-
 				fmt.Println("expected incentives claimed for: ", name, " ", tc.expectedIncentivesClaimed.String())
 				s.FundAcc(validPool.GetIncentivesAddress(), tc.expectedIncentivesClaimed)
 
 				clKeeper := s.App.ConcentratedLiquidityKeeper
 				ctx := s.Ctx
 
+				// Set current tick according to test case
 				validPool.SetCurrentTick(tc.currentTick)
 
 				if tc.numPositions > 0 {
@@ -2401,8 +2400,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 						s.Require().NoError(err)
 					}
 					ctx = ctx.WithBlockTime(ctx.BlockTime().Add(tc.timeInPosition))
-
-					validPool.UpdateLiquidityIfActivePosition(ctx, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.positionParams.liquidity)
 
 					// Add to uptime growth inside range
 					if tc.addedUptimeGrowthInside != nil {
@@ -2425,8 +2422,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 
 				// System under test
 				incentivesClaimedQuery, incentivesForfeitedQuery, err := clKeeper.GetClaimableIncentives(ctx, DefaultPositionId)
-				fmt.Println("ADAM: incentivesClaimedQuery", incentivesClaimedQuery)
-				fmt.Println("ADAM: incentivesForfeitedQuery", incentivesForfeitedQuery)
 
 				_ = s.App.BankKeeper.GetAllBalances(ctx, validPool.GetAddress())
 				incentivesBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetIncentivesAddress())
@@ -2442,8 +2437,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 					s.Require().Equal(tc.expectedForfeitedIncentives, incentivesForfeitedQuery)
 				}
 				actualIncentivesClaimed, actualIncetivesForfeited, err := clKeeper.CollectIncentives(ctx, ownerWithValidPosition, DefaultPositionId)
-				fmt.Println("ADAM: actualIncentivesClaimed", actualIncentivesClaimed)
-				fmt.Println("ADAM: actualIncetivesForfeited", actualIncetivesForfeited)
 
 				// Assertions
 
@@ -2950,6 +2943,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 				err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, tc.numShares, joinTime, tc.positionIdCreate)
 				s.Require().NoError(err)
 
+				// Update liquidity of the pool
 				clPool.UpdateLiquidityIfActivePosition(s.Ctx, DefaultLowerTick, DefaultUpperTick, tc.numShares)
 
 				if tc.growthOutside != nil {
@@ -2962,8 +2956,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 
 				err = clKeeper.SetPool(s.Ctx, clPool)
 				s.Require().NoError(err)
-
-				fmt.Println("Pool: ", clPool.GetLiquidity())
 
 				// Store initial accum values for comparison later
 				initUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, validPoolId)
@@ -3192,15 +3184,15 @@ func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
 			s.SetupTest()
 
 			requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(1_000_000)), sdk.NewCoin(USDC, sdk.NewInt(5_000_000_000)))
-			s.FundAcc(s.TestAccs[0], requiredBalances)
-			s.FundAcc(s.TestAccs[1], requiredBalances)
-			s.FundAcc(s.TestAccs[2], requiredBalances)
+			s.FundAcc(s.TestAccs[0], requiredBalances) // Used for pool and incentive record creation
+			s.FundAcc(s.TestAccs[1], requiredBalances) // Used for position 1
+			s.FundAcc(s.TestAccs[2], requiredBalances) // Used for position 2
 
 			// Create CL clPool
 			clPool := s.PrepareConcentratedPool()
 			clPoolId := clPool.GetId()
 
-			// Create balancer pool
+			// Create balancer pool. This is used for the test cases that require a connected balancer pool.
 			balancerPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin(ETH, sdk.NewInt(4_000_000)), sdk.NewCoin(USDC, sdk.NewInt(20_000_000_000)))
 
 			// Lock the gamm shares so that we can test that this liquidity is counted towards incentives total at the proper time
@@ -3216,15 +3208,14 @@ func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
 				s.Require().NoError(err)
 			}
 
-			parasm := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-			parasm.BalancerSharesRewardDiscount = sdk.ZeroDec()
+			// Set the discount rate to 0 to simplify the already complex accounting of where rewards go.
+			clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+			clParams.BalancerSharesRewardDiscount = sdk.ZeroDec()
+			s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
 
-			s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, parasm)
-
-			// Set up position (utilize account that did not set up the pools and will not be creating the incentive records)
+			// Set up two equal positions
 			positionIdOne, _, _, _, _, _, err := s.clk.CreatePosition(s.Ctx, clPoolId, s.TestAccs[1], requiredBalances, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 			s.Require().NoError(err)
-
 			positionIdTwo, _, _, _, _, _, err := s.clk.CreatePosition(s.Ctx, clPoolId, s.TestAccs[2], requiredBalances, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 			s.Require().NoError(err)
 
@@ -3243,68 +3234,28 @@ func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
 			err = s.clk.SetMultipleIncentiveRecords(s.Ctx, []types.IncentiveRecord{testIncentiveRecord})
 			s.Require().NoError(err)
 
-			// // Since the canonical balancer pool automatically claims, ensure that the pool is properly funded if the pool exists.
-			// if tc.setUpConnectedBalancerPool {
-			// 	s.FundAcc(clPool.GetIncentivesAddress(), sdk.NewCoins(sdk.NewCoin(testIncentiveRecord.IncentiveDenom, testIncentiveRecord.IncentiveRecordBody.RemainingAmount.TruncateInt())))
-
-			// }
+			// Fund the incentive address.
 			s.FundAcc(clPool.GetIncentivesAddress(), sdk.NewCoins(sdk.NewCoin(testIncentiveRecord.IncentiveDenom, testIncentiveRecord.IncentiveRecordBody.RemainingAmount.TruncateInt())))
 
-			longestLockableDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
-			s.Require().NoError(err)
-
-			gaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerPoolId, longestLockableDuration)
-			s.Require().NoError(err)
-
-			gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
-			s.Require().NoError(err)
-
-			fmt.Println("PRE TIME PASS", s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetIncentivesAddress()))
-			fmt.Println("PRE TIME PASS acc1", s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[1]))
-			fmt.Println("PRE TIME PASS acc2", s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[2]))
-			fmt.Println("PRE GAUGE COINS", gauge.Coins)
-
+			// Move the block time forward by the amount of time the test case specifies.
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(tc.blockTimeElapsed))
 
-			// // Update the uptime accumulators to the current block time.
-			// // This is done to determine the exact amount of incentives we expect to be forfeited, if any.
-			// err = s.clk.UpdateUptimeAccumulatorsToNow(s.Ctx, clPoolId)
-			// s.Require().NoError(err)
-
-			fmt.Println("COLLECT INCENTIVES POS 1")
-			collectedInc, forfeitInc, err := s.clk.CollectIncentives(s.Ctx, s.TestAccs[1], positionIdOne)
+			// Claim incentives for the first position and check invariants.
+			collectedInc, forfeitInc, err := s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionIdOne)
 			totalForfeited, _ := forfeitInc.TruncateDecimal()
 			s.Require().NoError(err)
-			fmt.Println("first claim for first position", collectedInc.String(), totalForfeited.String())
 			s.Require().Equal(tc.expectedIncentivesClaimed.String(), collectedInc.String())
 			s.Require().Equal(tc.expectedForfeitedIncentives.String(), totalForfeited.String())
 
-			// // Utilize second position here to claim incentives for it as well
+			// Move the block time forward one hour from the current time.
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour))
 
-			fmt.Println("COLLECT INCENTIVES POS 2")
-			collectedInc, forfeitInc, err = s.clk.CollectIncentives(s.Ctx, s.TestAccs[2], positionIdTwo)
+			// Claim incentives for the second position and check invariants.
+			collectedInc, forfeitInc, err = s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionIdTwo)
 			totalForfeited, _ = forfeitInc.TruncateDecimal()
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedSeconPosIncentivesClaimed.String(), collectedInc.String())
 			s.Require().Equal(tc.expectedSecondPosForfeitedIncentive.String(), totalForfeited.String())
-
-			// fmt.Println("COLLECT INCENTIVES POS 1 TIME #2")
-			// collectedInc, forfeitInc, err = s.clk.CollectIncentives(s.Ctx, s.TestAccs[1], positionIdOne)
-			// fmt.Println("second claim for first position", collectedInc.String(), forfeitInc.String())
-
-			// gaugeId, err = s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerPoolId, longestLockableDuration)
-			// s.Require().NoError(err)
-
-			// gauge, err = s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
-			// s.Require().NoError(err)
-
-			// fmt.Println("POST TIME PASS", s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetIncentivesAddress()))
-			// fmt.Println("POST TIME PASS acc1", s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[1]))
-			// fmt.Println("POST TIME PASS acc2", s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[2]))
-			// fmt.Println("POST GAUGE COINS", gauge.Coins)
-
-			// Depending on the test case prior to calling it, the second position may or may not be entitled to the incentives the previous position forfeited
 		})
 	}
 }
