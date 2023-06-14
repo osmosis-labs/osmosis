@@ -201,7 +201,7 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex int64, err error) {
 		}
 	}
 
-	// We know were between (geoSpacing.initialPrice, geoSpacing.endPrice)
+	// We know we're between (geoSpacing.initialPrice, geoSpacing.endPrice)
 	// The number of ticks that need to be filled by our current spacing is
 	// (price - geoSpacing.initialPrice) / geoSpacing.additiveIncrementPerTick
 	priceInThisExponent := osmomath.BigDecFromSDKDec(price.Sub(geoSpacing.initialPrice))
@@ -212,16 +212,13 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex int64, err error) {
 	// the latter is the truncation of the division above
 	tickIndex = geoSpacing.initialTick + ticksFilledByCurrentSpacing.SDKDec().TruncateInt64()
 
-	// We return the errors here instead of panicking because we expect these conversions could legitimately error if we are operating near
-	// minTick and maxTick. Note that this tightens the effective min tick and max tick range by 1 tick on each end (since we have to check
-	// a tick above and below), but this is not an issue since the error will be triggered at the end of any swap that brings the pool into
-	// that state, making it impossible to lock a pool by bringing current tick to min/max tick.
+	// We get the price corresponding to our calculated bucket index to compare against the input price.
 	curPrice, err := TickToPrice(tickIndex)
 	if err != nil {
 		return 0, err
 	}
 
-	// We handle cases related to min and max tick independently here, as in either case checking both the tick above and below is not possible.
+	// We first handle cases related to min and max tick independently here, as in either case checking both the tick above and below is not possible.
 	if curPrice.Equal(types.MinSpotPrice) && curPrice.LTE(price) {
 		// We assume that the error to the downside is caught by input price bound checks, as it
 		// would be below the minimum allowed spot price.
