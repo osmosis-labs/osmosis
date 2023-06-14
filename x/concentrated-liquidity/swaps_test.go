@@ -2895,63 +2895,69 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 func (s *KeeperTestSuite) TestSwap_ZFO_TickBugRepro() {
 	s.Setup()
 
-	clPool := s.PrepareConcentratedPool()
+	pool := s.PrepareConcentratedPool()
+	poolId := pool.GetId()
 
 	// Create a full range position
 	s.FundAcc(s.TestAccs[0], DefaultCoins)
-	_, _, _, liquidityFullRange, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), s.TestAccs[0], DefaultCoins)
+	_, _, _, liquidityFullRange, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, poolId, s.TestAccs[0], DefaultCoins)
 	s.Require().NoError(err)
 
-	// Refetch pool
-	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+	// Refetch pool as the first position updated its state.
+	pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 	s.Require().NoError(err)
 
-	// Create narrow range position around current tick
-	lowerTick := clPool.GetCurrentTick() - int64(clPool.GetTickSpacing())
-	upperTick := clPool.GetCurrentTick() + int64(clPool.GetTickSpacing())
+	// Create narrow range position 1 tick spacing around the current tick
+	lowerTick := pool.GetCurrentTick() - int64(pool.GetTickSpacing())
+	upperTick := pool.GetCurrentTick() + int64(pool.GetTickSpacing())
 	s.FundAcc(s.TestAccs[0], DefaultCoins)
-	_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+	_, _, _, liquidityNarrowRange, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
 	s.Require().NoError(err)
 
+	// Refetch pool as the second position updated its state.
+	pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	// As a sanity check confirm that current liquidity corresponds
+	// to the sum of liquidities of the two positions.
+	s.Require().Equal(liquidityFullRange.Add(liquidityNarrowRange), pool.GetLiquidity())
+
+	// Compute the sqrt price corresponding to the lower tick
+	// of the narrow range position.
 	_, lowerSqrtPrice, err := math.TickToSqrtPrice(lowerTick)
 	s.Require().NoError(err)
 
-	// Refetch pool
-	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
-	s.Require().NoError(err)
-
-	// This is the total amount necessary to cross the lower tick of narrow position.
-	// Note it is rounded up to ensure that the tick is crossed.
-	amountZeroInCrossTick := math.CalcAmount0Delta(clPool.GetLiquidity(), lowerSqrtPrice, clPool.GetCurrentSqrtPrice(), true).Ceil().TruncateInt()
-
 	var (
-		tokenIn = sdk.NewCoin(clPool.GetToken0(), amountZeroInCrossTick)
+		// This is the total amount necessary to cross the lower tick of narrow position.
+		// Note it is rounded up to ensure that the tick is crossed.
+		amountZeroInCrossTick = math.CalcAmount0Delta(pool.GetLiquidity(), lowerSqrtPrice, pool.GetCurrentSqrtPrice(), true).Ceil().TruncateInt()
+		tokenZeroInCrossTick  = sdk.NewCoin(pool.GetToken0(), amountZeroInCrossTick)
 	)
 
-	// Perform the swap that should cross the lower tick
-	s.FundAcc(s.TestAccs[0], sdk.NewCoins(tokenIn))
-	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], clPool, tokenIn, clPool.GetToken1(), sdk.ZeroInt(), sdk.ZeroDec())
+	// Perform the swap that should cross the lower tick of the narrow range position.
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(tokenZeroInCrossTick))
+	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, tokenZeroInCrossTick, pool.GetToken1(), sdk.ZeroInt(), sdk.ZeroDec())
 	s.Require().NoError(err)
 
-	// Refetch pool
-	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+	// Refetch pool as the swap updated its state.
+	pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 	s.Require().NoError(err)
 
 	// Check that the tick was crossed
-	s.Require().Equal(lowerTick, clPool.GetCurrentTick())
+	s.Require().Equal(lowerTick, pool.GetCurrentTick())
 
-	// Since we expect the tick to have been crossed, there must only be
+	// Since we expect the tick to be crossed, there must only be
 	// liquidity of the full range position.
-	s.Require().Equal(liquidityFullRange, clPool.GetLiquidity())
+	s.Require().Equal(liquidityFullRange, pool.GetLiquidity())
 
 	// Therefore, if we swap a small amount again, we do not expect
 	// a tick to be crossed again.
-	smallAmount := sdk.NewCoin(clPool.GetToken0(), sdk.NewInt(10))
+	smallAmount := sdk.NewCoin(pool.GetToken0(), sdk.NewInt(10))
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(smallAmount))
-	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], clPool, smallAmount, clPool.GetToken1(), sdk.ZeroInt(), sdk.ZeroDec())
+	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, smallAmount, pool.GetToken1(), sdk.ZeroInt(), sdk.ZeroDec())
 	s.Require().NoError(err)
 
-	// Liquidity is the same
-	s.Require().Equal(liquidityFullRange, clPool.GetLiquidity())
-
+	// Liquidity remains the same, confirming that we did not cross the same tick twice.
+	// Otherwise, if we were to cross it twice, the liquidity would be zero.
+	s.Require().Equal(liquidityFullRange, pool.GetLiquidity())
 }
