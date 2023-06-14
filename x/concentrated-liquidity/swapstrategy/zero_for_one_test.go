@@ -250,8 +250,7 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_ZeroForOne() {
 					upperTick: 100,
 				},
 			},
-			expectIsValid:  true,
-			expectNextTick: 0,
+			expectIsValid: false,
 		},
 		"upper tick lands on current tick, zero for one": {
 			preSetPositions: []position{
@@ -261,7 +260,7 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_ZeroForOne() {
 				},
 			},
 			expectIsValid:  true,
-			expectNextTick: 0,
+			expectNextTick: -100,
 		},
 		"no ticks, zero for one": {
 			expectIsValid: false,

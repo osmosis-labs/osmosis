@@ -117,10 +117,14 @@ func (s *KeeperTestHelper) CreateTestContextWithMultiStore() (sdk.Context, sdk.C
 
 // CreateTestContext creates a test context.
 func (s *KeeperTestHelper) Commit() {
+	s.CommitWithBlockTime(time.Second)
+}
+
+func (s *KeeperTestHelper) CommitWithBlockTime(blockTime time.Duration) {
 	oldHeight := s.Ctx.BlockHeight()
 	oldHeader := s.Ctx.BlockHeader()
 	s.App.Commit()
-	newHeader := tmtypes.Header{Height: oldHeight + 1, ChainID: oldHeader.ChainID, Time: oldHeader.Time.Add(time.Second)}
+	newHeader := tmtypes.Header{Height: oldHeight + 1, ChainID: oldHeader.ChainID, Time: oldHeader.Time.Add(blockTime)}
 	s.App.BeginBlock(abci.RequestBeginBlock{Header: newHeader})
 	s.Ctx = s.App.GetBaseApp().NewContext(false, newHeader)
 }
