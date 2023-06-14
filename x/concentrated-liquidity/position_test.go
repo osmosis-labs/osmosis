@@ -81,7 +81,7 @@ func (s *KeeperTestSuite) GetTotalAccruedRewardsByAccumulator(positionId uint64,
 
 // ExecuteAndValidateSuccessfulIncentiveClaim claims incentives for position Id and asserts its output is as expected.
 // It also asserts that no more incentives can be claimed for the position.
-func (s *KeeperTestSuite) ExecuteAndValidateSuccessfulIncentiveClaim(positionId uint64, expectedRewards sdk.Coins, expectedForfeited sdk.Coins) {
+func (s *KeeperTestSuite) ExecuteAndValidateSuccessfulIncentiveClaim(positionId uint64, expectedRewards sdk.Coins, expectedForfeited sdk.DecCoins) {
 	// Initial claim and assertion
 	claimedRewards, forfeitedRewards, err := s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionId)
 	s.Require().NoError(err)
@@ -1235,7 +1235,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 				expectedRewardsToClaim, _ := osmoutils.CollapseDecCoinsArray(unclaimedRewardsForEachUptimeAcrossAllOldPositions).TruncateDecimal()
 
 				// Claim all the rewards for the new position and check that the rewards match the unclaimed rewards.
-				s.ExecuteAndValidateSuccessfulIncentiveClaim(newPositionId, expectedRewardsToClaim, sdk.Coins(nil))
+				s.ExecuteAndValidateSuccessfulIncentiveClaim(newPositionId, expectedRewardsToClaim, sdk.DecCoins{})
 
 				// Check that cannot claim rewards for the old positions.
 				for _, positionId := range test.positionIdsToMigrate {
@@ -1448,7 +1448,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 	for i := 0; i < DefaultFungifyNumPositions; i++ {
 		positionIncentives, forfeitedIncentives, err := s.clk.GetClaimableIncentives(cacheCtx, uint64(i+1))
 		s.Require().NoError(err)
-		s.Require().Equal(sdk.Coins(nil), forfeitedIncentives)
+		s.Require().Equal(sdk.DecCoins{}, forfeitedIncentives)
 		claimableIncentives = claimableIncentives.Add(positionIncentives...)
 	}
 

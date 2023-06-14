@@ -172,58 +172,45 @@ func powTenBigDec(exponent int64) osmomath.BigDec {
 // CalculatePriceToTick takes in a price and returns the corresponding tick index.
 // This function does not take into consideration tick spacing.
 // CONTRACT: `price` is between MinSpotPrice and MaxSpotPrice, inclusive.
+// NOTE: This is really returning a "Bucket index". Bucket index `b` corresponds to
+// all prices in range [TickToPrice(b), TickToPrice(b+1)).
 func CalculatePriceToTick(price sdk.Dec) (tickIndex int64, err error) {
-	// The formula is as follows: geometricExponentIncrementDistanceInTicks = 9 * 10**(-exponentAtPriceOne)
-	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**exponentAtPriceOne)
-	exponentAtPriceOne := types.ExponentAtPriceOne
-	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(PowTenInternal(exponentAtPriceOne * -1)).TruncateInt64()
+	if price.Equal(sdkOneDec) {
+		return 0, nil
+	}
 
-	// Initialize the current price to 1, the current precision to exponentAtPriceOne, and the number of ticks passed to 0
-	currentPrice := sdkOneDec
-	ticksPassed := int64(0)
-
-	exponentAtCurrentTick := exponentAtPriceOne
-
-	// Set the currentAdditiveIncrementInTicks to the exponentAtPriceOne
-	currentAdditiveIncrementInTicks := powTenBigDec(exponentAtPriceOne)
-
-	// Now, we loop through the exponentAtCurrentTicks until we have passed the price
-	// Once we pass the price, we can determine what which geometric exponents we have filled in their entirety,
-	// as well as how many ticks that corresponds to
-	// In the opposite direction (price < 1), we do the same thing (just decrement the geometric exponent instead of incrementing).
-	// The only difference is we must reduce the increment distance by a factor of 10.
+	// The approach here is to try determine which "geometric spacing" are we in.
+	// There is one geometric spacing for every power of ten.
+	// If price > 1, we search for the first geometric spacing w/ a max price greater than our price.
+	// If price < 1, we search for the first geometric spacing w/ a min price smaller than our price.
+	// TODO: We can optimize by using smarter search algorithms
+	var geoSpacing *tickExpIndexData
 	if price.GT(sdkOneDec) {
-		for currentPrice.LT(price) {
-			currentAdditiveIncrementInTicks = powTenBigDec(exponentAtCurrentTick)
-			maxPriceForCurrentAdditiveIncrementInTicks := osmomath.NewBigDec(geometricExponentIncrementDistanceInTicks).Mul(currentAdditiveIncrementInTicks)
-			currentPrice = currentPrice.Add(maxPriceForCurrentAdditiveIncrementInTicks.SDKDec())
-			exponentAtCurrentTick = exponentAtCurrentTick + 1
-			ticksPassed = ticksPassed + geometricExponentIncrementDistanceInTicks
+		index := 0
+		geoSpacing = tickExpCache[int64(index)]
+		for geoSpacing.maxPrice.LT(price) {
+			index += 1
+			geoSpacing = tickExpCache[int64(index)]
 		}
 	} else {
-		// We must decrement the exponentAtCurrentTick by one when traversing negative ticks in order to constantly step up in precision when going further down in ticks
-		// Otherwise, from tick 0 to tick -(geometricExponentIncrementDistanceInTicks), we would use the same exponent as the exponentAtPriceOne
-		exponentAtCurrentTick := exponentAtPriceOne - 1
-		for currentPrice.GT(price) {
-			currentAdditiveIncrementInTicks = powTenBigDec(exponentAtCurrentTick)
-			maxPriceForCurrentAdditiveIncrementInTicks := osmomath.NewBigDec(geometricExponentIncrementDistanceInTicks).Mul(currentAdditiveIncrementInTicks)
-			currentPrice = currentPrice.Sub(maxPriceForCurrentAdditiveIncrementInTicks.SDKDec())
-			exponentAtCurrentTick = exponentAtCurrentTick - 1
-			ticksPassed = ticksPassed - geometricExponentIncrementDistanceInTicks
+		index := -1
+		geoSpacing = tickExpCache[int64(index)]
+		for geoSpacing.initialPrice.GT(price) {
+			index -= 1
+			geoSpacing = tickExpCache[int64(index)]
 		}
 	}
 
-	// Determine how many ticks we have passed in the exponentAtCurrentTick (in other words, the incomplete geometricExponent above)
-	ticksToBeFulfilledByExponentAtCurrentTick := osmomath.BigDecFromSDKDec(price.Sub(currentPrice)).Quo(currentAdditiveIncrementInTicks)
-
-	// Finally, add the ticks we have passed from the completed geometricExponent values, as well as the ticks we have passed in the current geometricExponent value
-	// We expect there to be some error carried through from the original price, which we assume will be bounded at `e < 1`.
-	// This error value means that we cannot know for sure which direction to round final tick index to, so we do the following:
-	// 1. Take an educated guess by doing bankers rounding (increases the error bound we can support from .5 to 1 tick)
-	// 2. Check the output against the tick below and above the result. Shift the final tick to be in alignment with whichever satisfies
-	//    our convention that tick index `t` corresponds to the price range [`TickToPrice(t)`, `TickToPrice(b + 1)`).
-	// 3. If the passed in price falls outside the range of our original guess +/- 1, this violates our assumption that e < 1 so we panic.
-	tickIndex = ticksPassed + ticksToBeFulfilledByExponentAtCurrentTick.SDKDec().RoundInt64()
+	// We know were between (geoSpacing.initialPrice, geoSpacing.endPrice)
+	// The number of ticks that need to be filled by our current spacing is
+	// (price - geoSpacing.initialPrice) / geoSpacing.additiveIncrementPerTick
+	priceInThisExponent := osmomath.BigDecFromSDKDec(price.Sub(geoSpacing.initialPrice))
+	ticksFilledByCurrentSpacing := priceInThisExponent.Quo(geoSpacing.additiveIncrementPerTick)
+	// we get the bucket index by:
+	// * taking the bucket index of the smallest price in this tick
+	// * adding to it the number of ticks "completely" filled by the current spacing
+	// the latter is the truncation of the division above
+	tickIndex = geoSpacing.initialTick + ticksFilledByCurrentSpacing.SDKDec().TruncateInt64()
 
 	// We return the errors here instead of panicking because we expect these conversions could legitimately error if we are operating near
 	// minTick and maxTick. Note that this tightens the effective min tick and max tick range by 1 tick on each end (since we have to check
@@ -280,13 +267,5 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex int64, err error) {
 		tickIndex = tickIndex - 1
 	}
 
-	return tickIndex, err
-
-	// perfect tick: 100
-	// derived tick = 99.9999 +/- e
-	// if e < 0.4999, safe to round up
-	// e > 0.4999 in attack vector
-	// tick with error due to precision truncation: 99.9999
-	// previously: truncate -> tick = 99 (incorrect)
-	// fix: bankers round: tick = 100 (correct)
+	return tickIndex, nil
 }

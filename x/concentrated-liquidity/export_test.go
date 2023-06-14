@@ -39,6 +39,10 @@ func (k Keeper) GetPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedP
 	return k.getPoolById(ctx, poolId)
 }
 
+func (k Keeper) GetSwapAccumulators(ctx sdk.Context, poolId uint64) (accum.AccumulatorObject, []accum.AccumulatorObject, error) {
+	return k.getSwapAccumulators(ctx, poolId)
+}
+
 func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64, nextTickInfo *model.TickInfo, swapStateSpreadRewardGrowth sdk.DecCoin, spreadRewardAccumValue sdk.DecCoins, uptimeAccums []accum.AccumulatorObject) (liquidityDelta sdk.Dec, err error) {
 	return k.crossTick(ctx, poolId, tickIndex, nextTickInfo, swapStateSpreadRewardGrowth, spreadRewardAccumValue, uptimeAccums)
 }
@@ -268,7 +272,7 @@ func (k Keeper) GetAllIncentiveRecordsForUptime(ctx sdk.Context, poolId uint64, 
 	return k.getAllIncentiveRecordsForUptime(ctx, poolId, minUptime)
 }
 
-func (k Keeper) CollectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, sdk.Coins, error) {
+func (k Keeper) CollectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, sdk.DecCoins, error) {
 	return k.collectIncentives(ctx, owner, positionId)
 }
 
@@ -280,7 +284,7 @@ func UpdateAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey strin
 	return updateAccumAndClaimRewards(accum, positionKey, growthOutside)
 }
 
-func (k Keeper) ClaimAllIncentivesForPosition(ctx sdk.Context, positionId uint64) (sdk.Coins, sdk.Coins, error) {
+func (k Keeper) ClaimAllIncentivesForPosition(ctx sdk.Context, positionId uint64) (sdk.Coins, sdk.DecCoins, error) {
 	return k.claimAllIncentivesForPosition(ctx, positionId)
 }
 

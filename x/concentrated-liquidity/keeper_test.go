@@ -340,17 +340,14 @@ func (s *KeeperTestSuite) setListenerMockOnConcentratedLiquidityKeeper() {
 // Crosses the tick and charges the fee on the global spread reward accumulator.
 // This mimics crossing an initialized tick during a swap and charging the fee on swap completion.
 func (s *KeeperTestSuite) crossTickAndChargeSpreadReward(poolId uint64, tickIndexToCross int64) {
-	nextTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, poolId, tickIndexToCross)
+	nextTickInfo, err := s.clk.GetTickInfo(s.Ctx, poolId, tickIndexToCross)
 	s.Require().NoError(err)
 
-	uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, poolId)
-	s.Require().NoError(err)
-
-	feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, poolId)
+	feeAccum, uptimeAccums, err := s.clk.GetSwapAccumulators(s.Ctx, poolId)
 	s.Require().NoError(err)
 
 	// Cross the tick to update it.
-	_, err = s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, poolId, tickIndexToCross, &nextTickInfo, DefaultSpreadRewardAccumCoins[0], feeAccum.GetValue(), uptimeAccums)
+	_, err = s.clk.CrossTick(s.Ctx, poolId, tickIndexToCross, &nextTickInfo, DefaultSpreadRewardAccumCoins[0], feeAccum.GetValue(), uptimeAccums)
 	s.Require().NoError(err)
 	s.AddToSpreadRewardAccumulator(poolId, DefaultSpreadRewardAccumCoins[0])
 }

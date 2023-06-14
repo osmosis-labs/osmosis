@@ -977,3 +977,7 @@ func (p *Pool) ExitSwapExactAmountOut(
 
 	return sharesIn, nil
 }
+
+func (p *Pool) AsSerializablePool() poolmanagertypes.PoolI {
+	return p
+}

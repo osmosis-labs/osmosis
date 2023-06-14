@@ -14,6 +14,7 @@ import (
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&CosmWasmPool{}, "osmosis/cw-pool", nil)
+	cdc.RegisterConcrete(&Pool{}, "osmosis/cw-pool-wrap", nil)
 	cdc.RegisterConcrete(&MsgCreateCosmWasmPool{}, "osmosis/cw-create-pool", nil)
 }
 

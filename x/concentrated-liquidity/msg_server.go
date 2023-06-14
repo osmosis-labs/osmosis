@@ -174,7 +174,7 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 	}
 
 	totalCollectedIncentives := sdk.NewCoins()
-	totalForefeitedIncentives := sdk.NewCoins()
+	totalForefeitedIncentives := sdk.NewDecCoins()
 	for _, positionId := range msg.PositionIds {
 		collectedIncentives, forfeitedIncentives, err := server.keeper.collectIncentives(ctx, sender, positionId)
 		if err != nil {
