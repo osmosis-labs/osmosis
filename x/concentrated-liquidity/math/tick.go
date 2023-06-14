@@ -93,7 +93,7 @@ func TickToPrice(tickIndex int64) (price sdk.Dec, err error) {
 
 // PriceToTick takes a price and returns the corresponding tick index assuming
 // tick spacing of 1.
-func priceToTickExact(price sdk.Dec) (int64, error) {
+func priceToTick(price sdk.Dec) (int64, error) {
 	if price.Equal(sdk.OneDec()) {
 		return 0, nil
 	}
@@ -122,7 +122,7 @@ func priceToTickExact(price sdk.Dec) (int64, error) {
 // This is not a concern because we have authorized tick spacings that are smaller than this max,
 // and we don't expect to ever require it to be this large.
 func PriceToTickRoundDownSpacing(price sdk.Dec, tickSpacing uint64) (int64, error) {
-	tickIndex, err := priceToTickExact(price)
+	tickIndex, err := priceToTick(price)
 	if err != nil {
 		return 0, err
 	}

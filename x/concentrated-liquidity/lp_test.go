@@ -2,7 +2,6 @@ package concentrated_liquidity_test
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1620,12 +1619,13 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 				s.Require().NoError(err)
 
 				s.Require().Equal(tc.expectedCurrSqrtPrice.String(), pool.GetCurrentSqrtPrice().String())
-				_, curTickSqrtPrice, err := math.TickToSqrtPrice(pool.GetCurrentTick())
-				s.Require().NoError(err)
-				fmt.Println("curTickSqrtPrice, pool.GetCurrentSqrtPrice(): ", curTickSqrtPrice, pool.GetCurrentSqrtPrice())
-				s.Require().True(curTickSqrtPrice.LTE(pool.GetCurrentSqrtPrice()))
-
 				s.Require().Equal(tc.expectedTick, pool.GetCurrentTick())
+
+				// Assert current sqrt price is in correct tick range
+				_, curTickSqrtPrice, err := math.TickToSqrtPrice(pool.GetCurrentTick())
+				_, nextTickSqrtPrice, err := math.TickToSqrtPrice(pool.GetCurrentTick() + 1)
+				s.Require().True(curTickSqrtPrice.LTE(pool.GetCurrentSqrtPrice()))
+				s.Require().True(pool.GetCurrentSqrtPrice().LT(nextTickSqrtPrice))
 			}
 		})
 	}

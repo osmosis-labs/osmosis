@@ -376,7 +376,7 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 
 		suite.Run(name, func() {
 			// surpress error here, we only listen to errors from system under test.
-			tick, _ := math.PriceToTickExact(tc.price)
+			tick, _ := math.PriceToTick(tc.price)
 
 			// With tick spacing of one, no rounding should occur.
 			tickRoundDown, err := math.PriceToTickRoundDownSpacing(tc.price, one)
