@@ -714,3 +714,40 @@ func (suite *ConcentratedMathTestSuite) TestCalculatePriceToTick() {
 		})
 	}
 }
+
+func (suite *ConcentratedMathTestSuite) TestMonotnicityAtPriceBounds() {
+	// Note: this starting value was manually adjusted until it was on the boundary of where the
+	// ticks started becoming monotonic
+	x := int64(-108000002)
+	lastValueMonotonic := true
+	highestMonotonicTick := types.MinTick
+
+	// Find the highest tick where the sqrt price is monotonic. If nothing is found in 50,000 ticks,
+	// lastValueMonotonic is false and starting value should be adjusted.
+	for i := 0; i < 50000; i++ {
+		_, xSqrtPrice, err := math.TickToSqrtPrice(x)
+		suite.Require().NoError(err)
+		_, xSqrtPriceNext, err := math.TickToSqrtPrice(x + 1)
+		suite.Require().NoError(err)
+		if xSqrtPrice.GTE(xSqrtPriceNext) {
+			fmt.Printf("Non-monotonic behavior detected at x = %d\n", x)
+			lastValueMonotonic = false
+		} else if !lastValueMonotonic {
+			highestMonotonicTick = x
+			lastValueMonotonic = true
+		} else {
+			lastValueMonotonic = true
+		}
+		x++
+	}
+	fmt.Println("Last value was monotonic: ", lastValueMonotonic)
+
+	// highestMonotonicTick lands on tick -108000000
+	fmt.Println("Highest monotonic tick: ", highestMonotonicTick)
+
+	// smallestSupportedPrice = 10^-12
+	smallestSupportedPrice, smallestSqrtPrice, err := math.TickToSqrtPrice(highestMonotonicTick)
+	suite.Require().NoError(err)
+	fmt.Println("smallestSupportedPrice: ", smallestSupportedPrice)
+	fmt.Println("smallestSqrtPrice: ", smallestSqrtPrice)
+}
