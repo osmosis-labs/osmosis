@@ -1199,6 +1199,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			// Create a default CL pool
 			pool := s.PrepareConcentratedPool()
+
+			// We set tick spacing to 1 to ensure we can test granular tick behavior.
 			pool.SetTickSpacing(1)
 			s.clk.SetPool(s.Ctx, pool)
 			for _, tick := range test.presetTicks {
