@@ -2892,7 +2892,36 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	s.Require().Equal(0, multiplicativeTolerance.Compare(expectedTokenOut, totalTokenOut.Amount))
 }
 
-func (s *KeeperTestSuite) TestSwap_ZFO_TickBugRepro() {
+// TestSwap_ZeroForOne_TickInitialization tests that ticks are initialized correctly when performing
+// 2 zero for one swaps in a row.
+// This test helped to identify a bug with tick initialization when performing 2 zero for one swaps in a row.
+//
+// The core of the bug: if we perform a swap and cross a tick, the subsequent swap in the same direction
+// would cross the same tick again and mistakenly kick in liquidity, completely invalidating pool state.
+// The reason is that by having a zero for one tick initialization at currentTick + 1, we end up getting
+// currentTick as nextTick and cross it twice. Once during the first swap and once during the second swap.
+//
+// This test is set up to reproduce the 2 subsequent swaps zero for one swaps in a row.
+//
+// It creates 2 positions:
+// - full range
+// - narrow range where
+//   - narrow range's lower tick is 1 tick spacing belowe current tick
+//   - narrow range's upper tick is 1 tick spacing above current tick
+//
+// It does the first swap that stops exactly after crossing the narrow position's lower tick.
+// Next, it continues with the second swap that we do not expect to cross the narrow position's
+// lower tick again.
+//
+// Once the second swap is completed we validated that the liquidity in the pool corresponds to
+// full range position only. If the tick were to be crossed twice, we would have mistakenly
+// subtracted liquidity net from the lower tick of the narrow position twice, making the
+// current liquidity be zero.
+//
+// Prior to adding this test and implementing a fix, the system would have panicked with:
+// "negative coin amount: -7070961745605321174329" at the end of the second swap. This stems
+// from the invalid liquidity of zero that is incorrectly computed due to crossing the tick twice.
+func (s *KeeperTestSuite) TestSwap_ZeroForOne_TickInitialization() {
 	s.Setup()
 
 	pool := s.PrepareConcentratedPool()
