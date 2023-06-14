@@ -55,7 +55,7 @@ var (
 	DefaultExponentOverlappingPositionUpperTick, _       = math.PriceToTickRoundDown(sdk.NewDec(4999), DefaultTickSpacing)
 	BAR                                                  = "bar"
 	FOO                                                  = "foo"
-	InsufficientFundsError                               = fmt.Errorf("insufficient funds")
+	ErrInsufficientFunds                                 = fmt.Errorf("insufficient funds")
 	DefaultAuthorizedUptimes                             = []time.Duration{time.Nanosecond}
 	ThreeOrderedConsecutiveAuthorizedUptimes             = []time.Duration{time.Nanosecond, time.Minute, time.Hour, time.Hour * 24}
 	ThreeUnorderedNonConsecutiveAuthorizedUptimes        = []time.Duration{time.Nanosecond, time.Hour * 24 * 7, time.Minute}
