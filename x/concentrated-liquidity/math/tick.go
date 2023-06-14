@@ -1,6 +1,7 @@
 package math
 
 import (
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -166,13 +167,9 @@ func powTenBigDec(exponent int64) osmomath.BigDec {
 	return bigNegPowersOfTen[-exponent]
 }
 
-// CalculatePriceToTick takes in a price and returns the corresponding tick index.
-// This function does not take into consideration tick spacing.
-// NOTE: This is really returning a "Bucket index". Bucket index `b` corresponds to
-// all prices in range [TickToPrice(b), TickToPrice(b+1)).
-func CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
+func calculatePriceToTickDec(price sdk.Dec) (tickIndex sdk.Dec) {
 	if price.Equal(sdkOneDec) {
-		return 0
+		return sdk.ZeroDec()
 	}
 
 	// The approach here is to try determine which "geometric spacing" are we in.
@@ -204,9 +201,72 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
 	ticksFilledByCurrentSpacing := priceInThisExponent.Quo(geoSpacing.additiveIncrementPerTick)
 	// we get the bucket index by:
 	// * taking the bucket index of the smallest price in this tick
-	// * adding to it the number of ticks "completely" filled by the current spacing
-	// the latter is the truncation of the division above
-	// TODO: This should be rounding down?
-	tickIndex = geoSpacing.initialTick + ticksFilledByCurrentSpacing.SDKDec().RoundInt64()
+	// * adding to it the number of ticks filled by the current spacing
+	// We leave rounding of this to the caller
+	// (NOTE: You'd expect it to be number of ticks "completely" filled by the current spacing,
+	// which would be truncation. However price may have errors, hence it being callers job)
+	tickIndex = ticksFilledByCurrentSpacing.SDKDec()
+	tickIndex = tickIndex.Add(sdk.NewDec(geoSpacing.initialTick))
 	return tickIndex
+}
+
+// CalculatePriceToTick takes in a price and returns the corresponding tick index.
+// This function does not take into consideration tick spacing.
+// NOTE: This should not be called in the state machine.
+// NOTE: This is really returning a "Bucket index". Bucket index `b` corresponds to
+// all prices in range [TickToSqrtPrice(b), TickToSqrtPrice(b+1)).
+// We make an erroneous assumption here, that bucket index `b` corresponds to
+// all prices in range [TickToPrice(b), TickToPrice(b+1)).
+// This currently makes this function unsuitable for the state machine.
+func CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
+	// TODO: Make truncate, since this defines buckets as
+	// [TickToPrice(b - .5), TickToPrice(b+.5))
+	return calculatePriceToTickDec(price).RoundInt64()
+}
+
+// CalculatePriceToTick takes in a square root and returns the corresponding tick index.
+// This function does not take into consideration tick spacing.
+// NOTE: This is really returning a "Bucket index". Bucket index `b` corresponds to
+// all sqrt prices in range [TickToSqrtPrice(b), TickToSqrtPrice(b+1)).
+func CalculateSqrtPriceToTick(sqrtPrice sdk.Dec) (tickIndex int64, err error) {
+	// SqrtPrice may have errors, so we take the tick obtained from the price
+	// and move it in a +/- 1 tick range based on the sqrt price those ticks would imply.
+	price := sqrtPrice.Mul(sqrtPrice)
+	tick := calculatePriceToTickDec(price)
+	truncatedTick := tick.TruncateInt64()
+
+	// We have a candidate bucket index `t`. We discern here if:
+	// * sqrtPrice in [TickToSqrtPrice(t - 1), TickToSqrtPrice(t))
+	// * sqrtPrice in [TickToSqrtPrice(t), TickToSqrtPrice(t + 1))
+	// * sqrtPrice in [TickToSqrtPrice(t+1), TickToSqrtPrice(t + 2))
+	// * sqrtPrice not in either.
+	// We handle boundary checks, by saying that if our candidate is the min tick,
+	// set the candidate to min tick + 1.
+	// If our candidate is the max tick, set the candidate to max tick - 2.
+	outOfBounds := false
+	if truncatedTick <= types.MinTick {
+		truncatedTick = types.MinTick + 1
+		outOfBounds = true
+	} else if truncatedTick >= types.MaxTick {
+		truncatedTick = types.MaxTick - 2
+		outOfBounds = true
+	}
+
+	_, sqrtPriceTmin1, errM1 := TickToSqrtPrice(truncatedTick - 1)
+	_, sqrtPriceT, errT := TickToSqrtPrice(truncatedTick)
+	_, sqrtPriceTplus1, errP1 := TickToSqrtPrice(truncatedTick + 1)
+	_, sqrtPriceTplus2, errP2 := TickToSqrtPrice(truncatedTick + 2)
+	if errM1 != nil || errT != nil || errP1 != nil || errP2 != nil {
+		return 0, errors.New("internal error in computing square roots within CalculateSqrtPriceToTick")
+	}
+	if sqrtPrice.GTE(sqrtPriceTplus2) || sqrtPrice.LT(sqrtPriceTmin1) {
+		return 0, fmt.Errorf("sqrt price to tick could not find a satisfying tick index. Hit bounds: %v", outOfBounds)
+	}
+	if sqrtPrice.GTE(sqrtPriceTplus1) {
+		return truncatedTick + 1, nil
+	}
+	if sqrtPrice.GTE(sqrtPriceT) {
+		return truncatedTick, nil
+	}
+	return truncatedTick - 1, nil
 }
