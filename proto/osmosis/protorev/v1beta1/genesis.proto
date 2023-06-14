@@ -58,4 +58,9 @@ message GenesisState {
   // The number of pool points that have been consumed in the current block.
   uint64 point_count_for_block = 11
       [ (gogoproto.moretags) = "yaml:\"point_count_for_block\"" ];
+  // All of the profits that have been accumulated by the module.
+  repeated cosmos.base.v1beta1.Coin profits = 12 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"profits\""
+  ];
 }
