@@ -185,7 +185,7 @@ func (s zeroForOneStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId u
 // tick to the left of current. The end cursor for reverse iteration is non-inclusive
 // so must add one here to make sure that the current tick is included in the search.
 func (s zeroForOneStrategy) InitializeTickValue(currentTick int64) int64 {
-	return currentTick + 1
+	return currentTick
 }
 
 // SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.
