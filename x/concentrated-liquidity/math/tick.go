@@ -221,29 +221,34 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex int64, err error) {
 		return 0, err
 	}
 
+	// We handle cases related to min and max tick independently here, as in either case checking both the tick above and below is not possible.
 	if curPrice.Equal(types.MinSpotPrice) && curPrice.LTE(price) {
 		// We assume that the error to the downside is caught by input price bound checks, as it
 		// would be below the minimum allowed spot price.
 		return types.MinTick, nil
 	} else if curPrice.Equal(types.MaxSpotPrice) && curPrice.GTE(price) {
+		// We assume that the error to the upside is caught by input price bound checks, so we only
+		// check the price in the tick below.
 		tickBelowPrice, err := TickToPrice(tickIndex - 1)
 		if err != nil {
 			return 0, err
 		}
 
+		// If price is lower than the price in the tick below, our error assumption is violated so we panic.
 		if price.LT(tickBelowPrice) {
 			panic(fmt.Sprintf("price %s is outside of error bounds for tick %d", price, tickIndex))
 		}
 
+		// If price falls in the bucket below `tickIndex`, return that bucket index.
+		// Otherwise, return the current tick index.
 		if price.GTE(tickBelowPrice) && price.LT(curPrice) {
-			tickIndex = tickIndex - 1
-		} else {
-			tickIndex = types.MaxTick
+			return tickIndex - 1, nil
 		}
 
-		return tickIndex, nil
+		return types.MaxTick, nil
 	}
 
+	// We get the prices corresponding to the ticks above and below our calculated tick index to compare against the input price.
 	tickBelowPrice, err := TickToPrice(tickIndex - 1)
 	if err != nil {
 		return 0, err
@@ -264,7 +269,7 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex int64, err error) {
 	// If tickBelowPrice <= price < curPrice, then set tick = t - 1 because by convention, bucket index b is for ticks t <= b < t + 1.
 	// If not, this means that curPrice <= price < tickAbovePrice, which is already accurately represented by our original tickIndex guess.
 	if price.GTE(tickBelowPrice) && price.LT(curPrice) {
-		tickIndex = tickIndex - 1
+		return tickIndex - 1, nil
 	}
 
 	return tickIndex, nil
