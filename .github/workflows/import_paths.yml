@@ -72,4 +72,4 @@ jobs:
           delete-branch: true
           assignees: ${{ github.actor }}
           draft: true
-          labels: T:auto,T:code-hygiene
+          labels: T:auto,T:code-hygiene,V:state/compatible/no_backport,A:no-changelog

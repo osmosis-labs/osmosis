@@ -7,12 +7,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/golang/mock/gomock"
 
-	"github.com/osmosis-labs/osmosis/v15/tests/mocks"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/tests/mocks"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 var (
@@ -30,7 +30,7 @@ var (
 // 	"github.com/cosmos/cosmos-sdk/simapp"
 // 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-// 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+// 	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 // )
 
 // func (s *KeeperTestSuite) TestCleanupPool() {
@@ -329,7 +329,7 @@ func (s *KeeperTestSuite) TestGetPoolAndPoke() {
 	}
 }
 
-func (s *KeeperTestSuite) TestConvertToCFMMPool() {
+func (s *KeeperTestSuite) TestAsCFMMPool() {
 	ctrl := gomock.NewController(s.T())
 
 	tests := map[string]struct {
@@ -349,7 +349,7 @@ func (s *KeeperTestSuite) TestConvertToCFMMPool() {
 		s.Run(name, func() {
 			s.SetupTest()
 
-			pool, err := keeper.ConvertToCFMMPool(tc.pool)
+			pool, err := keeper.AsCFMMPool(tc.pool)
 
 			if tc.expectError {
 				s.Require().Error(err)

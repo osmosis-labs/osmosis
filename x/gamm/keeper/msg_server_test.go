@@ -3,10 +3,9 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
-	balancer "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 const (
@@ -355,124 +354,5 @@ func (s *KeeperTestSuite) TestExitPool_Events() {
 			s.AssertEventEmitted(ctx, types.TypeEvtPoolExited, tc.expectedRemoveLiquidityEvents)
 			s.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 		})
-	}
-}
-
-func (s *KeeperTestSuite) TestMsgMigrateShares_Events() {
-	defaultAccount := s.TestAccs[0]
-	defaultGammShares := sdk.NewCoin("gamm/pool/1", sdk.MustNewDecFromStr("100000000000000000000").RoundInt())
-	defaultAccountFunds := sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(200000000000)), sdk.NewCoin("usdc", sdk.NewInt(200000000000)))
-
-	type param struct {
-		sender                sdk.AccAddress
-		sharesToMigrateDenom  string
-		sharesToMigrateAmount sdk.Int
-	}
-
-	tests := []struct {
-		name                       string
-		param                      param
-		sharesToCreate             sdk.Int
-		expectedMigrateShareEvents int
-		expectedMessageEvents      int
-		expectError                bool
-	}{
-		{
-			name: "migrate all of the shares",
-			param: param{
-				sender:                defaultAccount,
-				sharesToMigrateDenom:  defaultGammShares.Denom,
-				sharesToMigrateAmount: defaultGammShares.Amount,
-			},
-			sharesToCreate:             defaultGammShares.Amount,
-			expectedMigrateShareEvents: 1,
-			expectedMessageEvents:      4, // 1 create pool, 1 exitPool, 1 createPosition, 1 migrateShares.
-		},
-		{
-			name: "migrate half of the shares",
-			param: param{
-				sender:                defaultAccount,
-				sharesToMigrateDenom:  defaultGammShares.Denom,
-				sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
-			},
-			sharesToCreate:             defaultGammShares.Amount,
-			expectedMigrateShareEvents: 1,
-			expectedMessageEvents:      4, // 1 create pool, 1 exitPool, 1 createPosition, 1 migrateShares.
-		},
-		{
-			name: "double the created shares, migrate 1/4 of the shares",
-			param: param{
-				sender:                defaultAccount,
-				sharesToMigrateDenom:  defaultGammShares.Denom,
-				sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
-			},
-			sharesToCreate:             defaultGammShares.Amount.Mul(sdk.NewInt(2)),
-			expectedMigrateShareEvents: 1,
-			expectedMessageEvents:      4, // 1 create pool, 1 exitPool, 1 createPosition, 1 migrateShares.
-		},
-		{
-			name: "error: attempt to migrate shares from non-existent pool",
-			param: param{
-				sender:                defaultAccount,
-				sharesToMigrateDenom:  "gamm/pool/1000",
-				sharesToMigrateAmount: defaultGammShares.Amount,
-			},
-			sharesToCreate: defaultGammShares.Amount,
-			expectError:    true,
-		},
-		{
-			name: "error: attempt to migrate more shares than the user has",
-			param: param{
-				sender:                defaultAccount,
-				sharesToMigrateDenom:  defaultGammShares.Denom,
-				sharesToMigrateAmount: defaultGammShares.Amount.Add(sdk.NewInt(1)),
-			},
-			sharesToCreate:        defaultGammShares.Amount,
-			expectedMessageEvents: 1, // 1 create pool
-			expectError:           true,
-		},
-	}
-
-	for _, test := range tests {
-		s.SetupTest()
-		msgServer := keeper.NewBalancerMsgServerImpl(s.App.GAMMKeeper)
-
-		// Prepare both balancer and concentrated pools
-		s.FundAcc(test.param.sender, defaultAccountFunds)
-		balancerPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("eth", sdk.NewInt(100000000000)), sdk.NewCoin("usdc", sdk.NewInt(100000000000)))
-		clPool := s.PrepareConcentratedPool()
-
-		// Set up migration records
-		record := types.BalancerToConcentratedPoolLink{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()}
-		err := s.App.GAMMKeeper.ReplaceMigrationRecords(s.Ctx, []types.BalancerToConcentratedPoolLink{record})
-		s.Require().NoError(err)
-
-		// Join gamm pool to create gamm shares directed in the test case
-		_, _, err = s.App.GAMMKeeper.JoinPoolNoSwap(s.Ctx, test.param.sender, balancerPoolId, test.sharesToCreate, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(999999999999999)), sdk.NewCoin("usdc", sdk.NewInt(999999999999999))))
-		s.Require().NoError(err)
-
-		// Create migrate message
-		sharesToMigrate := sdk.NewCoin(test.param.sharesToMigrateDenom, test.param.sharesToMigrateAmount)
-		msg := &balancer.MsgMigrateSharesToFullRangeConcentratedPosition{
-			Sender:          test.param.sender.String(),
-			SharesToMigrate: sharesToMigrate,
-		}
-
-		// Reset event counts to 0 by creating a new manager.
-		s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
-		s.Require().Equal(0, len(s.Ctx.EventManager().Events()))
-
-		// Migrate the user's gamm shares to a full range concentrated liquidity position
-		response, err := msgServer.MigrateSharesToFullRangeConcentratedPosition(sdk.WrapSDKContext(s.Ctx), msg)
-
-		if !test.expectError {
-			s.NoError(err)
-			s.NotNil(response)
-			s.AssertEventEmitted(s.Ctx, types.TypeEvtMigrateShares, test.expectedMigrateShareEvents)
-			s.AssertEventEmitted(s.Ctx, sdk.EventTypeMessage, test.expectedMessageEvents)
-		} else {
-			s.Require().Error(err)
-			s.Require().Nil(response)
-		}
 	}
 }

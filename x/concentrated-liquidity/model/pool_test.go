@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	clmath "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	clmath "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
 const (
@@ -356,7 +356,27 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			expectErr:        types.SqrtPriceNegativeError{ProvidedSqrtPrice: negativeOne},
 		},
 		{
-			name:             "upper tick is greater than max tick",
+			name:             "new tick is equal to max tick",
+			currentLiquidity: DefaultLiquidityAmt,
+			currentTick:      DefaultCurrTick,
+			currentSqrtPrice: DefaultCurrSqrtPrice,
+			newLiquidity:     DefaultLiquidityAmt,
+			newTick:          types.MaxTick,
+			newSqrtPrice:     DefaultCurrSqrtPrice,
+			expectErr:        nil,
+		},
+		{
+			name:             "new tick is equal to min tick",
+			currentLiquidity: DefaultLiquidityAmt,
+			currentTick:      DefaultCurrTick,
+			currentSqrtPrice: DefaultCurrSqrtPrice,
+			newLiquidity:     DefaultLiquidityAmt,
+			newTick:          types.MinTick,
+			newSqrtPrice:     DefaultCurrSqrtPrice,
+			expectErr:        nil,
+		},
+		{
+			name:             "error: upper tick is greater than max tick",
 			currentLiquidity: DefaultLiquidityAmt,
 			currentTick:      1,
 			currentSqrtPrice: DefaultCurrSqrtPrice,
@@ -370,7 +390,7 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			},
 		},
 		{
-			name:             "lower tick is smaller than min tick",
+			name:             "error: lower tick is smaller than min tick",
 			currentLiquidity: DefaultLiquidityAmt,
 			currentTick:      1,
 			currentSqrtPrice: DefaultCurrSqrtPrice,
@@ -624,6 +644,14 @@ func (s *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			liquidityDelta: defaultLiquidityDelta,
 
 			expectError: types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: lowerTick},
+		},
+		"error: lower tick is greater than upper tick": {
+			currentTick:    lowerTick,
+			lowerTick:      lowerTick + 1,
+			upperTick:      lowerTick,
+			liquidityDelta: defaultLiquidityDelta,
+
+			expectError: types.InvalidLowerUpperTickError{LowerTick: lowerTick + 1, UpperTick: lowerTick},
 		},
 	}
 

@@ -40,6 +40,7 @@ type PoolModuleI interface {
 	GetPools(ctx sdk.Context) ([]PoolI, error)
 
 	GetPoolDenoms(ctx sdk.Context, poolId uint64) (denoms []string, err error)
+
 	CalculateSpotPrice(
 		ctx sdk.Context,
 		poolId uint64,

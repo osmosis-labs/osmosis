@@ -6,7 +6,7 @@ import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/poolmanager/v1beta1/swap_route.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v15/x/gamm/types";
+option go_package = "github.com/osmosis-labs/osmosis/v16/x/gamm/types";
 
 service Msg {
   rpc JoinPool(MsgJoinPool) returns (MsgJoinPoolResponse);
@@ -82,7 +82,7 @@ message MsgExitPoolResponse {
 
 // ===================== MsgSwapExactAmountIn
 message MsgSwapExactAmountIn {
-  option (amino.name) = "osmosis/gamm/exit-pool";
+  option (amino.name) = "osmosis/gamm/swap-exact-amount-in";
 
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   repeated osmosis.poolmanager.v1beta1.SwapAmountInRoute routes = 2

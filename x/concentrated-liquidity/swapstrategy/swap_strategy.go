@@ -4,14 +4,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
 // swapStrategy defines the interface for computing a swap.
 // There are 2 implementations of this interface:
 // - zeroForOneStrategy to provide implementations when swapping token 0 for token 1.
 // - oneForZeroStrategy to provide implementations when swapping token 1 for token 0.
-type swapStrategy interface {
+type SwapStrategy interface {
 	// GetSqrtTargetPrice returns the target square root price given the next tick square root price
 	// upon comparing it to sqrt price limit.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
@@ -77,11 +77,11 @@ type swapStrategy interface {
 // New returns a swap strategy based on the provided zeroForOne parameter
 // with sqrtPriceLimit for the maximum square root price until which to perform
 // the swap and the stor key of the module that stores swap data.
-func New(zeroForOne bool, sqrtPriceLimit sdk.Dec, storeKey sdk.StoreKey, spreadFactor sdk.Dec, tickSpacing uint64) swapStrategy {
+func New(zeroForOne bool, sqrtPriceLimit sdk.Dec, storeKey sdk.StoreKey, spreadFactor sdk.Dec) SwapStrategy {
 	if zeroForOne {
-		return &zeroForOneStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, spreadFactor: spreadFactor, tickSpacing: tickSpacing}
+		return &zeroForOneStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, spreadFactor: spreadFactor}
 	}
-	return &oneForZeroStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, spreadFactor: spreadFactor, tickSpacing: tickSpacing}
+	return &oneForZeroStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, spreadFactor: spreadFactor}
 }
 
 // GetPriceLimit returns the price limit based on which token is being swapped in.
@@ -92,4 +92,14 @@ func GetPriceLimit(zeroForOne bool) sdk.Dec {
 		return types.MinSpotPrice
 	}
 	return types.MaxSpotPrice
+}
+
+func GetSqrtPriceLimit(priceLimit sdk.Dec, zeroForOne bool) (sdk.Dec, error) {
+	if priceLimit.IsZero() {
+		if zeroForOne {
+			return types.MinSqrtPrice, nil
+		}
+		return types.MaxSqrtPrice, nil
+	}
+	return priceLimit.ApproxSqrt()
 }

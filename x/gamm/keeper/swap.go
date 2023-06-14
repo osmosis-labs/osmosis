@@ -7,9 +7,9 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/events"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/events"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 // swapExactAmountIn is an internal method for swapping an exact amount of tokens
@@ -43,7 +43,7 @@ func (k Keeper) SwapExactAmountIn(
 		}
 	}()
 
-	cfmmPool, err := convertToCFMMPool(pool)
+	cfmmPool, err := asCFMMPool(pool)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -108,7 +108,7 @@ func (k Keeper) SwapExactAmountOut(
 			"can't get more tokens out than there are tokens in the pool")
 	}
 
-	cfmmPool, err := convertToCFMMPool(pool)
+	cfmmPool, err := asCFMMPool(pool)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -143,7 +143,7 @@ func (k Keeper) CalcOutAmtGivenIn(
 	tokenOutDenom string,
 	spreadFactor sdk.Dec,
 ) (tokenOut sdk.Coin, err error) {
-	cfmmPool, err := convertToCFMMPool(poolI)
+	cfmmPool, err := asCFMMPool(poolI)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -159,7 +159,7 @@ func (k Keeper) CalcInAmtGivenOut(
 	tokenInDenom string,
 	spreadFactor sdk.Dec,
 ) (tokenIn sdk.Coin, err error) {
-	cfmmPool, err := convertToCFMMPool(poolI)
+	cfmmPool, err := asCFMMPool(poolI)
 	if err != nil {
 		return sdk.Coin{}, err
 	}

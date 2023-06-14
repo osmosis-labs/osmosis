@@ -5,16 +5,27 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
 )
 
 func (s *KeeperTestSuite) TestMsgCreateDenom() {
 	var (
 		tokenFactoryKeeper = s.App.TokenFactoryKeeper
 		bankKeeper         = s.App.BankKeeper
-		denomCreationFee   = tokenFactoryKeeper.GetParams(s.Ctx).DenomCreationFee
+		denomCreationFee   = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000)))
 	)
+
+	// Set the denom creation fee. It is currently turned off in favor
+	// of gas charge by default.
+	params := s.App.TokenFactoryKeeper.GetParams(s.Ctx)
+	params.DenomCreationFee = denomCreationFee
+	s.App.TokenFactoryKeeper.SetParams(s.Ctx, params)
+
+	// Fund denom creation fee for every execution of MsgCreateDenom.
+	s.FundAcc(s.TestAccs[0], denomCreationFee)
+	s.FundAcc(s.TestAccs[0], denomCreationFee)
+	s.FundAcc(s.TestAccs[1], denomCreationFee)
 
 	// Get balance of acc 0 before creating a denom
 	preCreateBalance := bankKeeper.GetBalance(s.Ctx, s.TestAccs[0], denomCreationFee[0].Denom)
@@ -63,7 +74,7 @@ func (s *KeeperTestSuite) TestMsgCreateDenom() {
 
 func (s *KeeperTestSuite) TestCreateDenom() {
 	var (
-		primaryDenom            = types.DefaultParams().DenomCreationFee[0].Denom
+		primaryDenom            = "uosmo"
 		secondaryDenom          = apptesting.SecondaryDenom
 		defaultDenomCreationFee = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, sdk.NewInt(50000000)))}
 		twoDenomCreationFee     = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, sdk.NewInt(50000000)), sdk.NewCoin(secondaryDenom, sdk.NewInt(50000000)))}
@@ -133,6 +144,7 @@ func (s *KeeperTestSuite) TestCreateDenom() {
 			tokenFactoryKeeper := s.App.TokenFactoryKeeper
 			bankKeeper := s.App.BankKeeper
 			// Set denom creation fee in params
+			s.FundAcc(s.TestAccs[0], defaultDenomCreationFee.DenomCreationFee)
 			tokenFactoryKeeper.SetParams(s.Ctx, tc.denomCreationFee)
 			denomCreationFee := tokenFactoryKeeper.GetParams(s.Ctx).DenomCreationFee
 			s.Require().Equal(tc.denomCreationFee.DenomCreationFee, denomCreationFee)

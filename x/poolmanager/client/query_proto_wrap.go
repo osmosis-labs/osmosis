@@ -7,9 +7,9 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 // This file should evolve to being code gen'd, off of `proto/poolmanager/v1beta/query.yml`
@@ -106,6 +106,7 @@ func (q Querier) Pool(ctx sdk.Context, req queryproto.PoolRequest) (*queryproto.
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+	pool = pool.AsSerializablePool()
 
 	any, err := codectypes.NewAnyWithValue(pool)
 	if err != nil {
@@ -125,7 +126,7 @@ func (q Querier) AllPools(ctx sdk.Context, req queryproto.AllPoolsRequest) (*que
 
 	var anyPools []*codectypes.Any
 	for _, pool := range pools {
-		any, err := codectypes.NewAnyWithValue(pool)
+		any, err := codectypes.NewAnyWithValue(pool.AsSerializablePool())
 		if err != nil {
 			return nil, err
 		}

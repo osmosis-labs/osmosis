@@ -5,8 +5,8 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
@@ -17,6 +17,8 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetPositionById)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetClaimableSpreadRewards)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetClaimableIncentives)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetIncentiveRecords)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCFMMPoolIdLinkFromConcentratedPoolId)
 	cmd.AddCommand(
 		osmocli.GetParams[*queryproto.ParamsRequest](
 			types.ModuleName, queryproto.NewQueryClient),
@@ -71,4 +73,22 @@ func GetClaimableIncentives() (*osmocli.QueryDescriptor, *queryproto.ClaimableIn
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} claimable-incentives 53`,
 	}, &queryproto.ClaimableIncentivesRequest{}
+}
+
+func GetIncentiveRecords() (*osmocli.QueryDescriptor, *queryproto.IncentiveRecordsRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "incentive-records [poolId]",
+		Short: "Query incentive records for a given pool",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} incentive-records 1`,
+	}, &queryproto.IncentiveRecordsRequest{}
+}
+
+func GetCFMMPoolIdLinkFromConcentratedPoolId() (*osmocli.QueryDescriptor, *queryproto.CFMMPoolIdLinkFromConcentratedPoolIdRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "cfmm-pool-link-from-cl [poolId]",
+		Short: "Query cfmm pool id link from concentrated pool id",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} cfmm-pool-link-from-cl 1`,
+	}, &queryproto.CFMMPoolIdLinkFromConcentratedPoolIdRequest{}
 }

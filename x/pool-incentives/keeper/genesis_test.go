@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	pool_incentives "github.com/osmosis-labs/osmosis/v15/x/pool-incentives"
+	pool_incentives "github.com/osmosis-labs/osmosis/v16/x/pool-incentives"
 
-	simapp "github.com/osmosis-labs/osmosis/v15/app"
+	simapp "github.com/osmosis-labs/osmosis/v16/app"
 
-	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
 )
 
 var (
@@ -47,6 +47,19 @@ var (
 					PoolId:   2,
 					GaugeId:  2,
 					Duration: time.Second,
+				},
+				// This duplication with zero duration
+				// can happen with "NoLock" gauges
+				// where the link containing the duration
+				// is used to signify that the gauge is internal
+				// while the link without the duration is used
+				// for general purpose. This redundancy is
+				// made for convinience of plugging in the
+				// later added "NoLock" gauge into the existing
+				// logic without having to change majority of the queries.
+				{
+					PoolId:  2,
+					GaugeId: 2,
 				},
 			},
 		},

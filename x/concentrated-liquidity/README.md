@@ -876,22 +876,23 @@ Once the swap is completed, we persiste the swap state to the global state
 
 Users can migrate their Balancer positions to a Concentrated Liquidity full range
 position provided the underlying Balancer pool has a governance-selected canonical
-Concentrated Liquidity pool. The migration follows two distinct flows depending
-on the state of the underlying Balancer position:
+Concentrated Liquidity pool. The migration is routed depending on the state of the
+underlying Balancer position:
 
-1. Balancer position is:
+Balancer position is:
 
 - Superfluid delegated
+  - Locked
 - Superfluid undelegating
-- Locked
+  - Locked
+  - Unlocking
+- Normal lock
+  - Locked
+  - Unlocking
 - Unlocked
 
-2. Balancer position has no underlying lock whatsoever
-
-Regardless of the path taken, a single message executes all of the below logic:
-
-`UnlockAndMigrateSharesToFullRangeConcentratedPosition` in superfluid for path 1,
-and `MigrateSharesToFullRangeConcentratedPosition` in gamm for path 2.
+Regardless of the path taken, the `UnlockAndMigrateSharesToFullRangeConcentratedPosition`
+message executes all of the below logic:
 
 ### Superfluid Delegated Balancer to Concentrated
 
@@ -1411,6 +1412,18 @@ that has been in the pool for the required amount of time qualifies for claiming
 ### Incentive Creation and Querying
 
 While it is technically possible for Osmosis to enable the creation of incentive records directly in the CL module, incentive creation is currently funneled through existing gauge infrastructure in the `x/incentives` module. This simplifies UX drastically for frontends, external incentive creators, and governance, while making CL incentives fully backwards-compatible with incentive creation and querying flows that everyone is already used to. As of the initial version of Osmosis's CL, all incentive creation and querying logic will be handled by respective gauge functions (e.g. the `IncentivizedPools` query in the `x/incentives` module will include CL pools that have internal incentives on them).
+
+To create a gauge dedicated to the concentrated liquidity pool, run a `MsgCreateGauge` message in the `x/incentives` module with the following parameter constraints:
+- `PoolId`: The ID of the CL pool to create a gauge for.
+- `DistrTo.LockQueryType` must be set to `locktypes.LockQueryType.NoLock`
+- `DistrTo.Denom` must be an empty string.
+
+The rest of the parameters can be set according to the desired configuration of the gauge. Please read the `x/incentives` module documentation for more information on how to configure gauges.
+
+Note, that the created gauge will start emitting at the first epoch after the given `StartTime`. During the epoch, a `x/concentrated-liquidity`
+module `IncentiveRecord` will be created for every denom in the gauge. This incentive record will be configured to emit all given incentives
+over the period of an epoch. If the gauge is non-perpetual (emits over several epochs), the distribution will be split evenly between the epochs.
+and a new `IncentiveRecord` will be created for each denom every epoch with the emission rate and token set to finish emitting at the end of the epoch.
 
 ### Reward Splitting Between Classic and CL pools
 

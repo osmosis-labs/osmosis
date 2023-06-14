@@ -8,10 +8,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/client/cli"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/client/cli"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -297,21 +297,6 @@ func TestNewExitSwapShareAmountInCmd(t *testing.T) {
 				TokenOutDenom:     "stake",
 				ShareInAmount:     sdk.NewIntFromUint64(10),
 				TokenOutMinAmount: sdk.NewIntFromUint64(1),
-			},
-		},
-	}
-	osmocli.RunTxTestCases(t, desc, tcs)
-}
-
-func TestNewMigrateSharesToFullRangeConcentratedPosition(t *testing.T) {
-	desc, _ := cli.NewMigrateSharesToFullRangeConcentratedPosition()
-	tcs := map[string]osmocli.TxCliTestCase[*balancer.MsgMigrateSharesToFullRangeConcentratedPosition]{
-		"migrate shares to full range concentrated position": {
-			Cmd: "1000stake --min-amounts-out=100stake,1000uosmo --from=" + testAddresses[0].String(),
-			ExpectedMsg: &balancer.MsgMigrateSharesToFullRangeConcentratedPosition{
-				Sender:          testAddresses[0].String(),
-				SharesToMigrate: sdk.NewCoin("stake", sdk.NewInt(1000)),
-				TokenOutMins:    sdk.NewCoins(sdk.NewInt64Coin("stake", 100), sdk.NewInt64Coin("uosmo", 1000)),
 			},
 		},
 	}

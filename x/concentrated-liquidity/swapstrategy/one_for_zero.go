@@ -7,8 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
 // oneForZeroStrategy implements the swapStrategy interface.
@@ -21,10 +21,9 @@ type oneForZeroStrategy struct {
 	sqrtPriceLimit sdk.Dec
 	storeKey       sdk.StoreKey
 	spreadFactor   sdk.Dec
-	tickSpacing    uint64
 }
 
-var _ swapStrategy = (*oneForZeroStrategy)(nil)
+var _ SwapStrategy = (*oneForZeroStrategy)(nil)
 
 // GetSqrtTargetPrice returns the target square root price given the next tick square root price.
 // If the given nextTickSqrtPrice is greater than the sqrt price limit, the sqrt price limit is returned.
@@ -191,7 +190,7 @@ func (s oneForZeroStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId u
 // zeroForOneStrategy where we use reverse iterator and have to add one to
 // the input. Therefore, we define this method to account for different strategies.
 func (s oneForZeroStrategy) InitializeTickValue(currentTick int64) int64 {
-	return currentTick + 1
+	return currentTick
 }
 
 // SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.

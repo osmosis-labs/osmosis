@@ -92,3 +92,13 @@ func MergeSlices[T any](slice1, slice2 []T, less LessFunc[T]) []T {
 
 	return result
 }
+
+// Contains returns true if the slice contains the item, false otherwise.
+func Contains[T comparable](slice []T, item T) bool {
+	for _, a := range slice {
+		if a == item {
+			return true
+		}
+	}
+	return false
+}

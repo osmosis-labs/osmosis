@@ -35,6 +35,7 @@ const (
 	prefixPoolPointCountForBlock
 	prefixLatestBlockHeight
 	prefixPoolWeights
+	prefixSwapsToBackrun
 )
 
 var (
@@ -85,6 +86,9 @@ var (
 
 	// KeyPrefixPoolWeights is the prefix for store that keeps track of the weights for different pool types
 	KeyPrefixPoolWeights = []byte{prefixPoolWeights}
+
+	// KeyPrefixSwapsToBackrun is the prefix for store that keeps track of the swaps that need to be backrun for a given tx
+	KeyPrefixSwapsToBackrun = []byte{prefixSwapsToBackrun}
 )
 
 // Returns the key needed to fetch the pool id for a given denom
