@@ -1436,3 +1436,18 @@ func (s *decimalTestSuite) TestPower() {
 		})
 	}
 }
+
+func (s *decimalTestSuite) TestApproxRootMonotinicity() {
+	// Set hand-picked values to demonstrate lack of monotonicity
+	decOne := sdk.MustNewDecFromStr("120.120060020005000000")
+	decTwo := sdk.MustNewDecFromStr("120.120060020005000001")
+
+	// Take square root of both using `ApproxRoot`
+	sqrtDecOne, err := decOne.ApproxRoot(2)
+	s.Require().NoError(err)
+	sqrtDecTwo, err := decTwo.ApproxRoot(2)
+	s.Require().NoError(err)
+
+	// We expect this to be true for all `decTwo` > `decOne`, but it fails for these specific values
+	s.Require().True(sqrtDecOne.LT(sqrtDecTwo), "sqrtDecOne: %s, sqrtDecTwo: %s", sqrtDecOne, sqrtDecTwo)
+}
