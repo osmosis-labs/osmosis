@@ -1,8 +1,6 @@
 package concentrated_liquidity_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -58,6 +56,9 @@ func (s *KeeperTestSuite) assertTotalRewardsInvariant() {
 		owner, err := sdk.AccAddressFromBech32(position.Address)
 		s.Require().NoError(err)
 
+		// Log initial position owner balance
+		initialBalance := s.App.BankKeeper.GetAllBalances(cachedCtx, owner)
+
 		// Collect spread rewards.
 		collectedSpread, err := s.clk.CollectSpreadRewards(cachedCtx, owner, position.PositionId)
 		s.Require().NoError(err)
@@ -72,7 +73,9 @@ func (s *KeeperTestSuite) assertTotalRewardsInvariant() {
 		collectedIncentives, _, err := s.clk.CollectIncentives(cachedCtx, owner, position.PositionId)
 		s.Require().NoError(err)
 
-		fmt.Println("collected spread rewards for position with ID: ", position.PositionId, collectedSpread)
+		// Ensure position owner's balance was updated correctly
+		finalBalance := s.App.BankKeeper.GetAllBalances(cachedCtx, owner)
+		s.Require().Equal(initialBalance.Add(collectedSpread...).Add(collectedIncentives...), finalBalance)
 
 		// Track total amounts
 		totalCollectedSpread = totalCollectedSpread.Add(collectedSpread...)
