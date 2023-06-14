@@ -1,8 +1,6 @@
 package concentrated_liquidity_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -20,9 +18,9 @@ import (
 func (s *KeeperTestSuite) getAllPositionsAndPoolBalances(ctx sdk.Context) ([]model.Position, sdk.Coins, sdk.Coins, sdk.Coins) {
 	// Get total spread rewards distributed to all pools
 	allPools, err := s.clk.GetPools(ctx)
-	totalPoolAssets := sdk.NewCoins()
-	totalSpreadRewards := sdk.NewCoins()
-	totalIncentives := sdk.NewCoins()
+	totalPoolAssets, totalSpreadRewards, totalIncentives := sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins()
+
+	// Sum up pool balances across all pools
 	for _, pool := range allPools {
 		clPool, ok := pool.(types.ConcentratedPoolExtension)
 		s.Require().True(ok)
@@ -51,12 +49,13 @@ func (s *KeeperTestSuite) assertTotalRewardsInvariant() {
 	cachedCtx, _ := s.Ctx.CacheContext()
 
 	// Collect spread rewards for all positions and track output
-	totalCollectedSpread := sdk.NewCoins()
-	totalCollectedIncentives := sdk.NewCoins()
+	totalCollectedSpread, totalCollectedIncentives := sdk.NewCoins(), sdk.NewCoins()
 	for _, position := range allPositions {
-		// Ensure position exists and get owner
 		owner, err := sdk.AccAddressFromBech32(position.Address)
 		s.Require().NoError(err)
+
+		// Log initial position owner balance
+		initialBalance := s.App.BankKeeper.GetAllBalances(cachedCtx, owner)
 
 		// Collect spread rewards.
 		collectedSpread, err := s.clk.CollectSpreadRewards(cachedCtx, owner, position.PositionId)
@@ -72,7 +71,9 @@ func (s *KeeperTestSuite) assertTotalRewardsInvariant() {
 		collectedIncentives, _, err := s.clk.CollectIncentives(cachedCtx, owner, position.PositionId)
 		s.Require().NoError(err)
 
-		fmt.Println("collected spread rewards for position with ID: ", position.PositionId, collectedSpread)
+		// Ensure position owner's balance was updated correctly
+		finalBalance := s.App.BankKeeper.GetAllBalances(cachedCtx, owner)
+		s.Require().Equal(initialBalance.Add(collectedSpread...).Add(collectedIncentives...), finalBalance)
 
 		// Track total amounts
 		totalCollectedSpread = totalCollectedSpread.Add(collectedSpread...)
@@ -86,10 +87,8 @@ func (s *KeeperTestSuite) assertTotalRewardsInvariant() {
 		RoundingDir:       osmomath.RoundDown,
 	}
 
-	// Assert total collected spread rewards equal to expected
+	// Assert total collected spread rewards and incentives equal to expected
 	s.Require().True(errTolerance.EqualCoins(expectedTotalSpreadRewards, totalCollectedSpread))
-
-	// Assert total collected incentives equal to expected
 	s.Require().True(errTolerance.EqualCoins(expectedTotalIncentives, totalCollectedIncentives))
 
 	// Refetch total pool balances across all pools
@@ -119,7 +118,6 @@ func (s *KeeperTestSuite) assertWithdrawAllInvariant() {
 	// Withdraw all assets for all positions and track output
 	totalWithdrawn := sdk.NewCoins()
 	for _, position := range allPositions {
-		// Ensure position exists and get owner
 		owner, err := sdk.AccAddressFromBech32(position.Address)
 		s.Require().NoError(err)
 

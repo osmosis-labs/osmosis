@@ -8,3 +8,13 @@ queries:
       query_func: "k.GetParams"
     cli:
       cmd: "GetParams"
+  Pools:
+    proto_wrapper:
+      query_func: "k.Pools"
+    cli:
+      cmd: "Pools"
+  ContractInfoByPoolId:
+    proto_wrapper:
+      query_func: "k.ContractInfoByPoolId"
+    cli:
+      cmd: "ContractInfoByPoolId"

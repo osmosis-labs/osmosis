@@ -191,13 +191,13 @@ type MsgAddToPosition struct {
 	Amount1 github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=amount1,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount1" yaml:"amount_1"`
 	// token_min_amount0 represents the minimum amount of token0 desired from the
 	// new position being created. Note that this field indicates the min amount0
-	// corresponding to the total liquidity of the position, not just the
-	// liquidity that is being added.
+	// corresponding to the liquidity that is being added, not the total
+	// liquidity of the position.
 	TokenMinAmount0 github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=token_min_amount0,json=tokenMinAmount0,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"token_min_amount0" yaml:"token_min_amount0"`
 	// token_min_amount1 represents the minimum amount of token1 desired from the
 	// new position being created. Note that this field indicates the min amount1
-	// corresponding to the total liquidity of the position, not just the
-	// liquidity that is being added.
+	// corresponding to the liquidity that is being added, not the total
+	// liquidity of the position.
 	TokenMinAmount1 github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,6,opt,name=token_min_amount1,json=tokenMinAmount1,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"token_min_amount1" yaml:"token_min_amount1"`
 }
 
