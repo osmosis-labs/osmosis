@@ -83,7 +83,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 
 	// Set the profits that have been collected by Protorev.
 	for _, coin := range genState.Profits {
-		k.UpdateProfitsByDenom(ctx, coin.Denom, coin.Amount)
+		if err := k.UpdateProfitsByDenom(ctx, coin.Denom, coin.Amount); err != nil {
+			panic(err)
+		}
 	}
 }
 
