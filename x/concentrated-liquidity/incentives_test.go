@@ -2382,9 +2382,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 				clKeeper := s.App.ConcentratedLiquidityKeeper
 				ctx := s.Ctx
 
-				// Set current tick according to test case
-				validPool.SetCurrentTick(tc.currentTick)
-
 				if tc.numPositions > 0 {
 					// Initialize lower and upper ticks with empty uptime trackers
 					s.initializeTick(ctx, tc.currentTick, tc.positionParams.lowerTick, tc.positionParams.liquidity, cl.EmptyCoins, wrapUptimeTrackers(uptimeHelper.emptyExpectedAccumValues), true)
@@ -2412,6 +2409,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 					}
 				}
 
+				validPool.SetCurrentTick(tc.currentTick)
 				err := clKeeper.SetPool(ctx, validPool)
 				s.Require().NoError(err)
 
