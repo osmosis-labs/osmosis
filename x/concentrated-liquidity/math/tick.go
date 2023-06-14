@@ -122,7 +122,6 @@ func priceToTickExact(price sdk.Dec) (int64, error) {
 // This is not a concern because we have authorized tick spacings that are smaller than this max,
 // and we don't expect to ever require it to be this large.
 func PriceToTickRoundDownSpacing(price sdk.Dec, tickSpacing uint64) (int64, error) {
-	fmt.Println("input price: ", price)
 	tickIndex, err := priceToTickExact(price)
 	if err != nil {
 		return 0, err
@@ -142,7 +141,6 @@ func PriceToTickRoundDownSpacing(price sdk.Dec, tickSpacing uint64) (int64, erro
 	}
 
 	if tickIndexModulus != 0 {
-		fmt.Println("rounded to canonical tick: ", tickIndex, " -> ", tickIndex-tickIndexModulus)
 		tickIndex = tickIndex - tickIndexModulus
 	}
 
@@ -226,7 +224,6 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex int64, err error) {
 	//    our convention that tick index `t` corresponds to the price range [`TickToPrice(t)`, `TickToPrice(b + 1)`).
 	// 3. If the passed in price falls outside the range of our original guess +/- 1, this violates our assumption that e < 1 so we panic.
 	tickIndex = ticksPassed + ticksToBeFulfilledByExponentAtCurrentTick.SDKDec().RoundInt64()
-	fmt.Println("tick index: ", tickIndex)
 
 	// We return the errors here instead of panicking because we expect these conversions could legitimately error if we are operating near
 	// minTick and maxTick. Note that this tightens the effective min tick and max tick range by 1 tick on each end (since we have to check

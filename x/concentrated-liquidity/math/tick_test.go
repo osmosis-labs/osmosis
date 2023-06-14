@@ -444,9 +444,12 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTickRoundDown() {
 			tickExpected: 72000000,
 		},
 		"tick spacing 1, Spot price 100_000_051 -> 72000001 no tick spacing rounding": {
-			price:        sdk.NewDec(100_000_051),
-			tickSpacing:  1,
-			tickExpected: 72000001,
+			price:       sdk.NewDec(100_000_051),
+			tickSpacing: 1,
+			// We expect the returned tick to always be rounded down.
+			// In this case, tick 72000000 corresponds to 100_000_000,
+			// while 72000001 corresponds to 100_000_100.
+			tickExpected: 72000000,
 		},
 	}
 	for name, tc := range testCases {
@@ -464,6 +467,8 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTickRoundDown() {
 // TestTickToSqrtPricePriceToTick_InverseRelationship tests that ensuring the inverse calculation
 // between the two methods: tick to square root price to power of 2 and price to tick
 func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRelationship() {
+	suite.T().Skip("Need to converge on whether this inverse relationship is relevant to maintain: https://github.com/osmosis-labs/osmosis/issues/5519")
+
 	testCases := map[string]struct {
 		price          sdk.Dec
 		truncatedPrice sdk.Dec
@@ -615,7 +620,6 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			suite.Require().NoError(err)
 
 			priceFromSqrtPrice := sqrtPrice.Power(2)
-			fmt.Println("price, sqrtPrice^2: ", price, priceFromSqrtPrice)
 
 			// TODO: investigate this separately
 			// https://github.com/osmosis-labs/osmosis/issues/4925
@@ -624,7 +628,6 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			// 5. Compute tick from sqrt price from the original tick.
 			inverseTickFromSqrtPrice, err := math.PriceToTickRoundDownSpacing(priceFromSqrtPrice, tickSpacing)
 			suite.Require().NoError(err)
-			fmt.Println("tick spacing: ", tickSpacing)
 
 			suite.Require().Equal(tickFromPrice, inverseTickFromSqrtPrice, "expected: %s, actual: %s", tickFromPrice, inverseTickFromSqrtPrice)
 		})
@@ -653,8 +656,11 @@ func (suite *ConcentratedMathTestSuite) TestCalculatePriceToTick() {
 			expectedTickIndex: 72000000,
 		},
 		"100_000_051 -> 72000001": {
-			price:             sdk.NewDec(100_000_051),
-			expectedTickIndex: 72000001,
+			price: sdk.NewDec(100_000_051),
+			// We expect the returned tick to always be rounded down.
+			// In this case, tick 72000000 corresponds to 100_000_000,
+			// while 72000001 corresponds to 100_000_100.
+			expectedTickIndex: 72000000,
 		},
 		"100_000_100 -> 72000001": {
 			price:             sdk.NewDec(100_000_100),

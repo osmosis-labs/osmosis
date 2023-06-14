@@ -1099,9 +1099,12 @@ var (
 			// # Summary:
 			// print(sqrt_next_1)
 			// print(token_in_1)
-			expectedTokenOut:                    sdk.NewCoin(ETH, sdk.NewInt(4291)),
-			expectedTokenIn:                     sdk.NewCoin(USDC, sdk.NewInt(21463952)),
-			expectedTick:                        31002000,
+			expectedTokenOut: sdk.NewCoin(ETH, sdk.NewInt(4291)),
+			expectedTokenIn:  sdk.NewCoin(USDC, sdk.NewInt(21463952)),
+			// While a perfect price limit of 5002 would put us exactly in tick 31002000, the precision loss
+			// when we convert the price limit to sqrt takes us into tick 31001999, which gets rounded down to
+			// the tick spacing below, which is 31001900.
+			expectedTick:                        31001900,
 			expectedSqrtPrice:                   sdk.MustNewDecFromStr("70.724818840347693039"),
 			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 			expectedUpperTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
@@ -1411,9 +1414,12 @@ var (
 			// print(sqrt_next_1)
 			// print(token_in)
 			// print(spread_rewards_growth)
-			expectedTokenOut:                           sdk.NewCoin(ETH, sdk.NewInt(4291)),
-			expectedTokenIn:                            sdk.NewCoin(USDC, sdk.NewInt(21680760)),
-			expectedTick:                               31002000,
+			expectedTokenOut: sdk.NewCoin(ETH, sdk.NewInt(4291)),
+			expectedTokenIn:  sdk.NewCoin(USDC, sdk.NewInt(21680760)),
+			// While a perfect price limit of 5002 would put us exactly in tick 31002000, the precision loss
+			// when we convert the price limit to sqrt takes us into tick 31001999, which gets rounded down to
+			// the tick spacing below, which is 31001900.
+			expectedTick:                               31001900,
 			expectedSqrtPrice:                          sdk.MustNewDecFromStr("70.724818840347693039"),
 			expectedLowerTickSpreadRewardGrowth:        DefaultSpreadRewardAccumCoins,
 			expectedUpperTickSpreadRewardGrowth:        DefaultSpreadRewardAccumCoins,
