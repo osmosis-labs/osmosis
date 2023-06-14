@@ -92,7 +92,7 @@ require (
 
 replace (
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v16.x.  Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/93d9d4851b92bcbc1ede8c031ca1559b35ecc708
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230603004404-93d9d4851b92
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230614051536-fa3d908c496b
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.26

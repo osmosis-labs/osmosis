@@ -686,8 +686,7 @@ github.com/openzipkin/zipkin-go v0.1.6/go.mod h1:QgAqvLzwWbR/WpD4A3cGpPtJrZXNIiJ
 github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
-github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230603004404-93d9d4851b92 h1:BedgZf5yT5jYTrYsUJc7JF+4PXw2P/W0uuXHdG7MNho=
-github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230603004404-93d9d4851b92/go.mod h1:9KGhMg+7ZWgZ50Wa/x8w/jN19O0TSqYLlqUj+2wwxLU=
+github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230614051536-fa3d908c496b h1:MQeJGz7IMfpYtzP9SZUfBUxr4Vw66AiGSHE96UvsJBA=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230510161551-8bf252f26bae h1:I1Cy+GpTPWbVi0lBw9+bS1w42YfQjvXNK9bW4YbHhcs=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230510161551-8bf252f26bae/go.mod h1:hk/o9/kmTSZmZqwXcSrPuwj/gpRMCqbE/d3vj6teL2A=
 github.com/otiai10/copy v1.7.0 h1:hVoPiN+t+7d2nzzwMiDHPSOogsWAStewq3TwU05+clE=
@@ -843,8 +842,6 @@ github.com/subosito/gotenv v1.4.2 h1:X1TuBLAMDFbaTAChgCBLu3DU3UPyELpnF2jjJ2cz/S8
 github.com/subosito/gotenv v1.4.2/go.mod h1:ayKnFf/c6rvx/2iiLrJUk1e6plDbT3edrFNGqEflhK0=
 github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 h1:epCh84lMvA70Z7CTTCmYQn2CKbY8j86K7/FAIr141uY=
 github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7/go.mod h1:q4W45IWZaF22tdD+VEXcAWRA037jwmWEB5VWYORlTpc=
-github.com/tendermint/btcd v0.1.1 h1:0VcxPfflS2zZ3RiOAHkBiFUcPvbtRj5O7zHmcJWHV7s=
-github.com/tendermint/btcd v0.1.1/go.mod h1:DC6/m53jtQzr/NFmMNEu0rxf18/ktVoVtMrnDD5pN+U=
 github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15 h1:hqAk8riJvK4RMWx1aInLzndwxKalgi5rTqgfXxOxbEI=
 github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15/go.mod h1:z4YtwM70uOnk8h0pjJYlj3zdYwi9l03By6iAIF5j/Pk=
 github.com/tendermint/go-amino v0.16.0 h1:GyhmgQKvqF82e2oZeuMSp9JTN0N09emoSZlb2lyGa2E=

@@ -126,7 +126,6 @@ require (
 	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
-	github.com/tendermint/btcd v0.1.1 // indirect
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15 // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
 	github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b // indirect
@@ -161,7 +160,7 @@ replace (
 	// dragonberry
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v16.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/93d9d4851b92bcbc1ede8c031ca1559b35ecc708
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230603004404-93d9d4851b92
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230614051536-fa3d908c496b
 
 	// N.B. v0.19.5 contains a breaking change to the IAVL API
 	github.com/cosmos/iavl v0.19.5 => github.com/cosmos/iavl v0.19.4
