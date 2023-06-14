@@ -520,9 +520,9 @@ func (k Keeper) computeInAmtGivenOut(
 
 			_, sqp, _ := math.TickToSqrtPrice(swapState.tick)
 			fmt.Println("Lowest price corresponding to tick: ", sqp)
-			// if sqrtPrice.LT(sqp) {
-			// 	swapState.tick = swapState.tick - int64(tickSpacing)
-			// }
+			if sqrtPrice.LT(sqp) {
+				swapState.tick = swapState.tick - int64(100)
+			}
 		}
 	}
 

@@ -165,6 +165,8 @@ func (s oneForZeroStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId u
 	startKey := types.TickIndexToBytes(currentTickIndex)
 	iter := prefixStore.Iterator(startKey, nil)
 
+	fmt.Println("oneForZero iterator valid, startKey, currentTickIndex: ", iter.Valid(), startKey, currentTickIndex)
+
 	for ; iter.Valid(); iter.Next() {
 		// Since, we constructed our prefix store with <TickPrefix | poolID>, the
 		// key is the encoding of a tick index.
