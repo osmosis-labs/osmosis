@@ -1,7 +1,6 @@
 package concentrated_liquidity_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -2511,7 +2510,8 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 	}
 }
 
-func (s *KeeperTestSuite) TestDrainLPFundsAttackVector() {
+// TestTickRoundingEdgeCase tests an edge case where incorrect tick rounding would cause LP funds to be drained.
+func (s *KeeperTestSuite) TestTickRoundingEdgeCase() {
 	s.SetupTest()
 	pool := s.PrepareConcentratedPool()
 
@@ -2519,24 +2519,22 @@ func (s *KeeperTestSuite) TestDrainLPFundsAttackVector() {
 	firstPositionAddr := testAccs[0]
 	secondPositionAddr := testAccs[1]
 
+	// Create two identical positions with the initial assets set such that both positions are fully in one asset
 	firstPositionAssets := sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(9823358512)), sdk.NewCoin(USDC, sdk.NewInt(8985893232)))
 	firstPosLiq, firstPosId := s.SetupPosition(pool.GetId(), firstPositionAddr, firstPositionAssets, -68720000, -68710000, true)
-
 	secondPositionAssets := sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(9823358512)), sdk.NewCoin(USDC, sdk.NewInt(8985893232)))
 	secondPosLiq, secondPosId := s.SetupPosition(pool.GetId(), secondPositionAddr, secondPositionAssets, -68720000, -68710000, true)
 
+	// Execute a swap that brings the price close enough to the edge of a tick to trigger bankers rounding
 	swapAddr := testAccs[2]
 	desiredTokenOut := sdk.NewCoin(USDC, sdk.NewInt(10000))
 	s.FundAcc(swapAddr, sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(1000000000000000000))))
 	_, _, _, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddr, pool, desiredTokenOut, ETH, sdk.ZeroDec(), sdk.ZeroDec())
 	s.Require().NoError(err)
 
-	amt0FirstPos, amt1FirstPos, err := s.clk.WithdrawPosition(s.Ctx, firstPositionAddr, firstPosId, firstPosLiq)
+	// Both positions should be able to withdraw successfully
+	_, _, err = s.clk.WithdrawPosition(s.Ctx, firstPositionAddr, firstPosId, firstPosLiq)
 	s.Require().NoError(err)
-
-	fmt.Println("withdrawn amounts: ", amt0FirstPos, amt1FirstPos)
-
-	// Triggers panic
 	_, _, err = s.clk.WithdrawPosition(s.Ctx, secondPositionAddr, secondPosId, secondPosLiq)
 	s.Require().NoError(err)
 }
