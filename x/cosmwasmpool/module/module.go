@@ -18,6 +18,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
 	cosmwasmpool "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool"
 	moduleclient "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/client"
+	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/client/cli"
 	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/client/grpc"
 	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/model"
@@ -35,6 +36,7 @@ func (AppModuleBasic) Name() string { return types.ModuleName }
 
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	model.RegisterCodec(cdc)
+	types.RegisterCodec(cdc)
 }
 
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
@@ -62,11 +64,11 @@ func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux 
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil
+	return cli.NewTxCmd()
 }
 
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
+	return cli.NewQueryCmd()
 }
 
 // RegisterInterfaces registers interfaces and implementations of the gamm module.
@@ -83,6 +85,7 @@ type AppModule struct {
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), cosmwasmpool.NewMsgServerImpl(&am.k))
+	model.RegisterMsgCreatorServer(cfg.MsgServer(), cosmwasmpool.NewMsgCreatorServerImpl(&am.k))
 	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: moduleclient.NewQuerier(am.k)})
 }
 
@@ -97,7 +100,7 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, nil)
+	return sdk.Route{}
 }
 
 // QuerierRoute returns the gamm module's querier route name.

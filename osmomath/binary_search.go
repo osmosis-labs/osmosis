@@ -141,6 +141,23 @@ func (e ErrTolerance) CompareBigDec(expected BigDec, actual BigDec) int {
 	return 0
 }
 
+// EqualCoins returns true iff the two coins are equal within the ErrTolerance constraints and false otherwise.
+// TODO: move error tolerance functions to a separate file.
+func (e ErrTolerance) EqualCoins(expectedCoins sdk.Coins, actualCoins sdk.Coins) bool {
+	if len(expectedCoins) < len(actualCoins) {
+		return false
+	}
+
+	for _, expectedCoin := range expectedCoins {
+		curCoinEqual := e.Compare(expectedCoin.Amount, actualCoins.AmountOf(expectedCoin.Denom))
+		if curCoinEqual != 0 {
+			return false
+		}
+	}
+
+	return true
+}
+
 // Binary search inputs between [lowerbound, upperbound] to a monotonic increasing function f.
 // We stop once f(found_input) meets the ErrTolerance constraints.
 // If we perform more than maxIterations (or equivalently lowerbound = upperbound), we return an error.

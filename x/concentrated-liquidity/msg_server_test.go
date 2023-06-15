@@ -31,7 +31,7 @@ func (s *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			expectedPoolCreatedEvent: 1,
 			expectedMessageEvents:    4, // 1 for pool created, 1 for coin spent, 1 for coin received, 1 for after pool create hook
 		},
-		"error: tickSpacing not positive": {
+		"error: tickSpacing zero": {
 			denom0:        ETH,
 			denom1:        USDC,
 			tickSpacing:   0,

@@ -1,7 +1,10 @@
 package cosmwasmpool
 
 import (
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/model"
@@ -30,4 +33,39 @@ func (k Keeper) GetPoolById(ctx sdk.Context, poolId uint64) (types.CosmWasmExten
 		CosmWasmPool: pool,
 		WasmKeeper:   k.wasmKeeper,
 	}, nil
+}
+
+// GetSerializedPools retrieves all pool objects stored in the keeper.
+// Returns them as a slice of codectypes.Any for use as a response to pools queries and CLI
+func (k Keeper) GetSerializedPools(ctx sdk.Context, pagination *query.PageRequest) ([]*codectypes.Any, *query.PageResponse, error) {
+	store := ctx.KVStore(k.storeKey)
+	poolStore := prefix.NewStore(store, types.PoolsKey)
+
+	var anys []*codectypes.Any
+	pageRes, err := query.Paginate(poolStore, pagination, func(key, _ []byte) error {
+		pool := model.Pool{}
+		// Get the next pool from the poolStore and pass it to the pool variable
+		_, err := osmoutils.Get(poolStore, key, &pool)
+		if err != nil {
+			return err
+		}
+
+		// Retrieve the poolInterface from the respective pool
+		poolI, err := k.GetPoolById(ctx, pool.GetId())
+		if err != nil {
+			return err
+		}
+
+		any, err := codectypes.NewAnyWithValue(poolI.GetStoreModel())
+		if err != nil {
+			return err
+		}
+
+		anys = append(anys, any)
+		return nil
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return anys, pageRes, err
 }

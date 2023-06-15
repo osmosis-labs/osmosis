@@ -32,6 +32,7 @@ import (
 	_ "github.com/osmosis-labs/osmosis/v16/client/docs/statik"
 	clclient "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/clmodule"
+	cwpoolclient "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/client"
 	cosmwasmpoolmodule "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/module"
 	downtimemodule "github.com/osmosis-labs/osmosis/v16/x/downtime-detector/module"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm"
@@ -82,6 +83,8 @@ var AppModuleBasics = []module.AppModuleBasic{
 			gammclient.UpdateMigrationRecordsProposalHandler,
 			clclient.CreateConcentratedLiquidityPoolProposalHandler,
 			clclient.TickSpacingDecreaseProposalHandler,
+			cwpoolclient.UploadCodeIdAndWhitelistProposalHandler,
+			cwpoolclient.MigratePoolContractsProposalHandler,
 		)...,
 	),
 	params.AppModuleBasic{},
