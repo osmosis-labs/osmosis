@@ -272,7 +272,7 @@ func (k Keeper) GetAllIncentiveRecordsForUptime(ctx sdk.Context, poolId uint64, 
 	return k.getAllIncentiveRecordsForUptime(ctx, poolId, minUptime)
 }
 
-func (k Keeper) CollectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, sdk.DecCoins, error) {
+func (k Keeper) CollectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, sdk.Coins, error) {
 	return k.collectIncentives(ctx, owner, positionId)
 }
 
@@ -284,8 +284,8 @@ func UpdateAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey strin
 	return updateAccumAndClaimRewards(accum, positionKey, growthOutside)
 }
 
-func (k Keeper) ClaimAllIncentivesForPosition(ctx sdk.Context, positionId uint64) (sdk.Coins, sdk.DecCoins, error) {
-	return k.claimAllIncentivesForPosition(ctx, positionId)
+func (k Keeper) PrepareClaimAllIncentivesForPosition(ctx sdk.Context, positionId uint64) (sdk.Coins, sdk.Coins, error) {
+	return k.prepareClaimAllIncentivesForPosition(ctx, positionId)
 }
 
 func FindUptimeIndex(uptime time.Duration) (int, error) {
