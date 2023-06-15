@@ -354,3 +354,33 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []types.Balancer
 	}
 	return nil
 }
+
+func (k Keeper) LinkBalancerPoolWithClPoolRecords(ctx sdk.Context, records []types.BalancerToConcentratedPoolLink) error {
+	// TODO: check case where balancePoolExist but ClPool doesnot exist
+	// 	cfmmPool, err := k.GetCFMMPool(ctx, cfmmPoolIdToLinkWith)
+	// 	if err != nil {
+	// 		return 0, err
+	// 	}
+
+	// 	poolLiquidity := cfmmPool.GetTotalPoolLiquidity(ctx)
+	// 	if len(poolLiquidity) != 2 {
+	// 		return 0, nil
+	// 	}
+
+	// 	poolmanagerModuleAccAddress := k.accountKeeper.GetModuleAccount(ctx, poolmanagertypes.ModuleName).GetAddress()
+	// 	createPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolmanagerModuleAccAddress, poolLiquidity[0].Denom, poolLiquidity[1].Denom, 1, cfmmPool.GetSpreadFactor(ctx))
+	// 	clPool, err := k.poolManager.CreateConcentratedPoolAsPoolManager(ctx, createPoolMsg)
+	// 	if err != nil {
+	// 		return 0, err
+	// 	}
+
+	// both cfmm and cl poolId exists with same denom
+	err := k.validateRecords(ctx, records)
+	if err != nil {
+		return err
+	}
+
+	return k.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, types.MigrationRecords{
+		BalancerToConcentratedPoolLinks: records,
+	})
+}
