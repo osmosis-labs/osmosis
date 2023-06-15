@@ -2362,6 +2362,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 				validPoolId := validPool.GetId()
 
 				fmt.Println("expected incentives claimed for: ", name, " ", tc.expectedIncentivesClaimed.String())
+
+				// Fund the incentives address with amount we intend to claim and forfeit.
 				s.FundAcc(validPool.GetIncentivesAddress(), tc.expectedIncentivesClaimed.Add(tc.expectedForfeitedIncentives...))
 
 				clKeeper := s.App.ConcentratedLiquidityKeeper
@@ -2421,12 +2423,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 				actualIncentivesClaimed, actualIncetivesForfeited, err := clKeeper.CollectIncentives(s.Ctx, ownerWithValidPosition, DefaultPositionId)
 
 				// Assertions
-
-				fmt.Println("incentivesClaimedQuery", incentivesClaimedQuery)
-				fmt.Println("actualIncentivesClaimed", actualIncentivesClaimed)
-				fmt.Println("incentivesForfeitedQuery", incentivesForfeitedQuery)
-				fmt.Println("actualIncetivesForfeited", actualIncetivesForfeited)
-
 				s.Require().Equal(incentivesClaimedQuery, actualIncentivesClaimed)
 				s.Require().Equal(incentivesForfeitedQuery, actualIncetivesForfeited)
 
@@ -2944,10 +2940,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 
 				preCommunityPoolBalance := bankKeeper.GetAllBalances(s.Ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName))
 
-				// // Store initial accum values for comparison later
-				// initUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, validPoolId)
-				// s.Require().NoError(err)
-
 				// Store initial pool and sender balances for comparison later
 				initSenderBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, defaultSender)
 				initPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetAddress())
@@ -2973,7 +2965,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 				s.Require().Equal(initSenderBalances, newSenderBalances)
 				s.Require().Equal(initPoolBalances, newPoolBalances)
 
-				amountClaimed, amountForfeited, err := clKeeper.ClaimAllIncentivesForPosition(s.Ctx, tc.positionIdClaim)
+				amountClaimed, amountForfeited, err := clKeeper.PrepareClaimAllIncentivesForPosition(s.Ctx, tc.positionIdClaim)
 
 				// --- Assertions ---
 
@@ -2994,7 +2986,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 				}
 				s.Require().NoError(err)
 
-				// Claim does not do any bank sends, so ensure that the community pool in unchanged
+				// Prepare claim does not do any bank sends, so ensure that the community pool in unchanged
 				if tc.forfeitIncentives {
 					postCommunityPoolBalance := bankKeeper.GetAllBalances(s.Ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName))
 					communityPoolBalanceDelta := postCommunityPoolBalance.Sub(preCommunityPoolBalance)
@@ -3018,7 +3010,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 	})
 }
 
-func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
+func (s *KeeperTestSuite) TestPrepareClaimAllIncentivesForPosition() {
 	testCases := []struct {
 		name                              string
 		blockTimeElapsed                  time.Duration
@@ -3144,7 +3136,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentivesForPosition() {
 			}
 
 			// System under test
-			collectedInc, forfeitedIncentives, err := s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionIdOne)
+			collectedInc, forfeitedIncentives, err := s.clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionIdOne)
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedCoins.String(), collectedInc.String())
 			s.Require().Equal(expectedForfeitedIncentives.String(), forfeitedIncentives.String())

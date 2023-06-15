@@ -334,7 +334,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                1,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      1,
-			expectedMessageEvents:               3, // 1 for collect incentives, 2 for send messages
+			expectedMessageEvents:               3, // 1 for collect incentives, 1 for collect send, 1 for forfeit send
 		},
 		"two position IDs": {
 			upperTick:                           DefaultUpperTick,
@@ -343,7 +343,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                2,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      2,
-			expectedMessageEvents:               5, // 1 for collect incentives, 4 for send messages
+			expectedMessageEvents:               5, // 1 for collect incentives, 2 for collect send, 2 for forfeit send
 		},
 		"three position IDs": {
 			upperTick:                           DefaultUpperTick,
@@ -352,7 +352,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                3,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      3,
-			expectedMessageEvents:               7, // 1 for collect incentives, 6 for send messages
+			expectedMessageEvents:               7, // 1 for collect incentives, 3 for collect send, 3 for forfeit send
 		},
 		"error: three position IDs - not an owner": {
 			upperTick:                  DefaultUpperTick,
@@ -399,7 +399,9 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			s.Require().NoError(err)
 
 			numPositions := sdk.NewInt(int64(len(tc.positionIds)))
+			// Fund the incentives address with the amount we expect to collect.
 			s.FundAcc(pool.GetIncentivesAddress(), expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, positionAge, numPositions))
+			// Fund the incentives address with the amount we expect to forfeit.
 			s.FundAcc(pool.GetIncentivesAddress(), expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, twoWeeks, numPositions).Sub(expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, positionAge, numPositions)))
 
 			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)

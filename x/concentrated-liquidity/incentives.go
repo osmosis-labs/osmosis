@@ -884,13 +884,12 @@ func moveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum accum.Accumu
 	return nil
 }
 
-// claimAllIncentivesForPosition claims and returns all the incentives for a given position.
-// It claims all the incentives that the position is eligible for and forfeits the rest by redepositing them back
-// into the accumulator (effectively redistributing them to the other LPs).
+// prepareClaimAllIncentivesForPosition updates accumulators to the current time and returns all the incentives for a given position.
+// It claims all the incentives that the position is eligible for and determines if those incentives should be forfeited or not.
+// The parent function (collectIncentives) does the actual bank send.
 //
-// Returns the amount of successfully claimed incentives and the amount of forfeited incentives.
 // Returns error if the position/uptime accumulators don't exist, or if there is an issue that arises while claiming.
-func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64) (sdk.Coins, sdk.Coins, error) {
+func (k Keeper) prepareClaimAllIncentivesForPosition(ctx sdk.Context, positionId uint64) (sdk.Coins, sdk.Coins, error) {
 	// Retrieve the position with the given ID.
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
@@ -946,34 +945,15 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 				return sdk.Coins{}, sdk.Coins{}, err
 			}
 
-			// If the age of the position is less than the current uptime we are iterating through, then the position's
-			// incentives are forfeited by sending them to the community pool.
 			if positionAge < supportedUptimes[uptimeIndex] {
-				forfeitedIncentivesForUptime := collectedIncentivesForUptime
-
-				// totalSharesAccum, err := uptimeAccum.GetTotalShares()
-				// if err != nil {
-				// 	return sdk.Coins{}, sdk.Coins{}, err
-				// }
-
-				// pool, err := k.getPoolById(ctx, position.PoolId)
-				// if err != nil {
-				// 	return sdk.Coins{}, sdk.Coins{}, err
-				// }
-
-				// // If totalSharesAccum is zero, then there are no other qualifying positions to distribute the forfeited
-				// // incentives to. This might happen if this is the last position in the pool and it is being withdrawn.
-				// // Therefore, we send the forfeited amount to the community pool in this case.
-				// err = k.communityPoolKeeper.FundCommunityPool(ctx, forfeitedIncentivesForUptime, pool.GetIncentivesAddress())
-				// if err != nil {
-				// 	return sdk.Coins{}, sdk.Coins{}, err
-				// }
-
-				forfeitedIncentivesForPosition = forfeitedIncentivesForPosition.Add(forfeitedIncentivesForUptime...)
-				continue
+				// If the age of the position is less than the current uptime we are iterating through, then the position's
+				// incentives are forfeited to the community pool. The parent function does the actual bank send.
+				forfeitedIncentivesForPosition = forfeitedIncentivesForPosition.Add(collectedIncentivesForUptime...)
+			} else {
+				// If the age of the position is greater than or equal to the current uptime we are iterating through, then the
+				// position's incentives are collected by the position owner. The parent function does the actual bank send.
+				collectedIncentivesForPosition = collectedIncentivesForPosition.Add(collectedIncentivesForUptime...)
 			}
-
-			collectedIncentivesForPosition = collectedIncentivesForPosition.Add(collectedIncentivesForUptime...)
 		}
 	}
 
@@ -983,7 +963,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 func (k Keeper) GetClaimableIncentives(ctx sdk.Context, positionId uint64) (sdk.Coins, sdk.Coins, error) {
 	// Since this is a query, we don't want to modify the state and therefore use a cache context.
 	cacheCtx, _ := ctx.CacheContext()
-	return k.claimAllIncentivesForPosition(cacheCtx, positionId)
+	return k.prepareClaimAllIncentivesForPosition(cacheCtx, positionId)
 }
 
 // collectIncentives collects incentives for all uptime accumulators for the specified position id.
@@ -1005,7 +985,7 @@ func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positi
 	}
 
 	// Claim all incentives for the position.
-	collectedIncentivesForPosition, forfeitedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, position.PositionId)
+	collectedIncentivesForPosition, forfeitedIncentivesForPosition, err := k.prepareClaimAllIncentivesForPosition(ctx, position.PositionId)
 	if err != nil {
 		return sdk.Coins{}, sdk.Coins{}, err
 	}
@@ -1013,8 +993,6 @@ func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positi
 	fmt.Println("forfeitedIncentivesForPosition", forfeitedIncentivesForPosition)
 
 	// If no incentives were collected, return an empty coin set.
-	// TODO: Does collectedIncentivesForPosition = 0 => forfeitedIncentivesForPosition = 0?
-	// TODO: Do we need to get event emitted here still?
 	if collectedIncentivesForPosition.IsZero() && forfeitedIncentivesForPosition.IsZero() {
 		return collectedIncentivesForPosition, forfeitedIncentivesForPosition, nil
 	}
