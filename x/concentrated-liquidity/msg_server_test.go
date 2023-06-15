@@ -399,11 +399,13 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			s.Require().NoError(err)
 
 			numPositions := sdk.NewInt(int64(len(tc.positionIds)))
-			// Fund the incentives address with the amount we expect to collect.
-			distributedIncentives := expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, positionAge, numPositions)
-			s.FundAcc(pool.GetIncentivesAddress(), distributedIncentives)
-			// Fund the incentives address with the amount we expect to forfeit.
-			s.FundAcc(pool.GetIncentivesAddress(), expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, twoWeeks, numPositions).Sub(distributedIncentives))
+			// Fund the incentives address with the amount of incentives we expect the positions to both claim and forfeit.
+			// The claim amount must be funded to the incentives address in order for the rewards to be sent to the user.
+			// The forfeited about must be funded to the incentives address in order for the forfeited rewards to be sent to the community pool.
+			incentivesToBeSentToUsers := expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, positionAge, numPositions)
+			incentivesToBeSentToCommunityPool := expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, twoWeeks, numPositions).Sub(incentivesToBeSentToUsers)
+			totalAmountToFund := incentivesToBeSentToUsers.Add(incentivesToBeSentToCommunityPool...)
+			s.FundAcc(pool.GetIncentivesAddress(), totalAmountToFund)
 
 			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 
