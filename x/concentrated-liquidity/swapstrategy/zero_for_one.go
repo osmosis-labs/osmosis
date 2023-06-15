@@ -177,6 +177,17 @@ func (s zeroForOneStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId u
 	return iter
 }
 
+// InitializeTickValue returns the initial tick value for computing swaps based
+// on the actual current tick.
+//
+// zeroForOneStrategy assumes moving to the left of the current square root price.
+// As a result, we use reverse iterator in InitializeNextTickIterator to find the next
+// tick to the left of current. The end cursor for reverse iteration is non-inclusive
+// so must add one here to make sure that the current tick is included in the search.
+func (s zeroForOneStrategy) InitializeTickValue(currentTick int64) int64 {
+	return currentTick + 1
+}
+
 // SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.
 // This is called when consuming all liquidity.
 // When a position is created, we add liquidity to lower tick
