@@ -63,6 +63,18 @@ type SwapStrategy interface {
 	// going up. As a result, the sign depends on the direction we are moving.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	SetLiquidityDeltaSign(liquidityDelta sdk.Dec) sdk.Dec
+	// UpdateTickAfterCrossing updates the next tick after crossing
+	// to satisfy our "position in-range" invariant which is:
+	// lower tick <= current tick < upper tick
+	// When crossing a tick in zero for one direction, we move
+	// left on the range. As a result, we end up crossing the lower tick
+	// that is inclusive. Therefore, we must decrease the next tick
+	// by 1 additional unit so that it falls under the current range.
+	// When crossing a tick in one for zero direction, we move
+	// right on the range. As a result, we end up crossing the upper tick
+	// that is exclusive. Therefore, we leave the next tick as is since
+	// it is already excluded from the current range.
+	UpdateTickAfterCrossing(nextTick int64) (updatedNextTick int64)
 	// ValidateSqrtPrice validates the given square root price
 	// relative to the current square root price on one side of the bound
 	// and the min/max sqrt price on the other side.

@@ -196,6 +196,17 @@ func (s oneForZeroStrategy) SetLiquidityDeltaSign(deltaLiquidity sdk.Dec) sdk.De
 	return deltaLiquidity
 }
 
+// UpdateTickAfterCrossing updates the next tick after crossing
+// to satisfy our "position in-range" invariant which is:
+// lower tick <= current tick < upper tick.
+// When crossing a tick in one for zero direction, we move
+// right on the range. As a result, we end up crossing the upper tick
+// that is exclusive. Therefore, we leave the next tick as is since
+// it is already excluded from the current range.
+func (s oneForZeroStrategy) UpdateTickAfterCrossing(nextTick int64) int64 {
+	return nextTick
+}
+
 // ValidateSqrtPrice validates the given square root price
 // relative to the current square root price on one side of the bound
 // and the min/max sqrt price on the other side.

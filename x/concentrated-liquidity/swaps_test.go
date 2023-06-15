@@ -2956,6 +2956,10 @@ func (s *KeeperTestSuite) TestSwap_ZeroForOne_TickInitialization() {
 	_, lowerSqrtPrice, err := math.TickToSqrtPrice(lowerTick)
 	s.Require().NoError(err)
 
+	// Check that narrow range position is considered in range
+	isNarrowInRange := pool.IsCurrentTickInRange(lowerTick, upperTick)
+	s.Require().True(isNarrowInRange)
+
 	var (
 		// This is the total amount necessary to cross the lower tick of narrow position.
 		// Note it is rounded up to ensure that the tick is crossed.
@@ -2973,11 +2977,18 @@ func (s *KeeperTestSuite) TestSwap_ZeroForOne_TickInitialization() {
 	s.Require().NoError(err)
 
 	// Check that the tick was crossed
-	s.Require().Equal(lowerTick, pool.GetCurrentTick())
+	// Since our bound for "is position active" si:
+	// lowerTick <= currentTick < upperTick, we must make
+	// sure that the current tick is not equal to the lower tick.
+	s.Require().Equal(lowerTick-1, pool.GetCurrentTick())
 
 	// Since we expect the tick to be crossed, there must only be
 	// liquidity of the full range position.
 	s.Require().Equal(liquidityFullRange, pool.GetLiquidity())
+
+	// Check that narrow range position is considered out of range
+	isNarrowInRange = pool.IsCurrentTickInRange(lowerTick, upperTick)
+	s.Require().False(isNarrowInRange)
 
 	// Therefore, if we swap a small amount again, we do not expect
 	// a tick to be crossed again.
@@ -2986,7 +2997,15 @@ func (s *KeeperTestSuite) TestSwap_ZeroForOne_TickInitialization() {
 	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, smallAmount, pool.GetToken1(), sdk.ZeroInt(), sdk.ZeroDec())
 	s.Require().NoError(err)
 
+	// Refetch pool as the swap updated its state.
+	pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+
 	// Liquidity remains the same, confirming that we did not cross the same tick twice.
 	// Otherwise, if we were to cross it twice, the liquidity would be zero.
 	s.Require().Equal(liquidityFullRange, pool.GetLiquidity())
+
+	// Check that narrow range position is considered out of range
+	isNarrowInRange = pool.IsCurrentTickInRange(lowerTick, upperTick)
+	s.Require().False(isNarrowInRange)
 }

@@ -552,7 +552,7 @@ func (k Keeper) swapCrossTickLogic(ctx sdk.Context,
 	swapState.liquidity = newLiquidity
 
 	// Update the swapState's tick with the tick we retrieved liquidity from
-	swapState.tick = nextTick
+	swapState.tick = swapStrategy.UpdateTickAfterCrossing(nextTick)
 	return swapState, nil
 }
 
