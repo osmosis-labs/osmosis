@@ -468,17 +468,18 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 	incentivesToAddToCurAccum := sdk.NewDecCoins()
 	for incentiveIndex, incentiveRecord := range copyPoolIncentiveRecords {
 		// We consider all incentives matching the current uptime that began emitting before the current blocktime
-		if incentiveRecord.IncentiveRecordBody.StartTime.UTC().Before(ctx.BlockTime().UTC()) && incentiveRecord.MinUptime == accumUptime {
+		incentiveRecordBody := incentiveRecord.IncentiveRecordBody
+		if incentiveRecordBody.StartTime.UTC().Before(ctx.BlockTime().UTC()) && incentiveRecord.MinUptime == accumUptime {
 			// Total amount emitted = time elapsed * emission
-			totalEmittedAmount := timeElapsed.Mul(incentiveRecord.IncentiveRecordBody.EmissionRate)
+			totalEmittedAmount := timeElapsed.Mul(incentiveRecordBody.EmissionRate)
 
 			// Incentives to emit per unit of qualifying liquidity = total emitted / liquidityInAccum
 			// Note that we truncate to ensure we do not overdistribute incentives
 			incentivesPerLiquidity := totalEmittedAmount.QuoTruncate(liquidityInAccum)
-			emittedIncentivesPerLiquidity := sdk.NewDecCoinFromDec(incentiveRecord.IncentiveDenom, incentivesPerLiquidity)
+			emittedIncentivesPerLiquidity := sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, incentivesPerLiquidity)
 
 			// Ensure that we only emit if there are enough incentives remaining to be emitted
-			remainingRewards := poolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingAmount
+			remainingRewards := poolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingCoin.Amount
 
 			// if total amount emitted does not exceed remaining rewards,
 			if totalEmittedAmount.LTE(remainingRewards) {
@@ -488,15 +489,15 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 				remainingRewards = remainingRewards.Sub(totalEmittedAmount)
 
 				// Each incentive record should only be modified once
-				copyPoolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingAmount = remainingRewards
+				copyPoolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingCoin.Amount = remainingRewards
 			} else {
 				// If there are not enough incentives remaining to be emitted, we emit the remaining rewards.
 				// When the returned records are set in state, all records with remaining rewards of zero will be cleared.
 				remainingIncentivesPerLiquidity := remainingRewards.QuoTruncate(liquidityInAccum)
-				emittedIncentivesPerLiquidity = sdk.NewDecCoinFromDec(incentiveRecord.IncentiveDenom, remainingIncentivesPerLiquidity)
+				emittedIncentivesPerLiquidity = sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, remainingIncentivesPerLiquidity)
 				incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
 
-				copyPoolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingAmount = sdk.ZeroDec()
+				copyPoolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingCoin.Amount = sdk.ZeroDec()
 			}
 		}
 	}
@@ -521,29 +522,20 @@ func findUptimeIndex(uptime time.Duration) (int, error) {
 func (k Keeper) setIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) error {
 	store := ctx.KVStore(k.storeKey)
 
-	incentiveCreator, err := sdk.AccAddressFromBech32(incentiveRecord.IncentiveCreatorAddr)
-	if err != nil {
-		return err
-	}
-
 	uptimeIndex, err := findUptimeIndex(incentiveRecord.MinUptime)
 	if err != nil {
 		return err
 	}
 
-	key := types.KeyIncentiveRecord(incentiveRecord.PoolId, uptimeIndex, incentiveRecord.IncentiveDenom, incentiveCreator)
-	incentiveRecordBody := types.IncentiveRecordBody{
-		RemainingAmount: incentiveRecord.IncentiveRecordBody.RemainingAmount,
-		EmissionRate:    incentiveRecord.IncentiveRecordBody.EmissionRate,
-		StartTime:       incentiveRecord.IncentiveRecordBody.StartTime,
-	}
+	key := types.KeyIncentiveRecord(incentiveRecord.PoolId, uptimeIndex, incentiveRecord.IncentiveId)
+	incentiveRecordBody := incentiveRecord.IncentiveRecordBody
 
 	// If the remaining amount is zero and the record already exists in state, we delete the record from state.
 	// If the remaining amount is zero and the record doesn't exist in state, we do a no-op.
 	// In all other cases, we update the record in state
-	if store.Has(key) && incentiveRecordBody.RemainingAmount.IsZero() {
+	if store.Has(key) && incentiveRecordBody.RemainingCoin.IsZero() {
 		store.Delete(key)
-	} else if incentiveRecordBody.RemainingAmount.GT(sdk.ZeroDec()) {
+	} else if incentiveRecordBody.RemainingCoin.Amount.GT(sdk.ZeroDec()) {
 		osmoutils.MustSet(store, key, &incentiveRecordBody)
 	}
 
@@ -562,7 +554,7 @@ func (k Keeper) setMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []
 }
 
 // GetIncentiveRecord gets the incentive record corresponding to the passed in values from store
-func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, denom string, minUptime time.Duration, incentiveCreator sdk.AccAddress) (types.IncentiveRecord, error) {
+func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, minUptime time.Duration, incentiveRecordId uint64) (types.IncentiveRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 	incentiveBodyStruct := types.IncentiveRecordBody{}
 
@@ -571,7 +563,7 @@ func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, denom string,
 		return types.IncentiveRecord{}, err
 	}
 
-	key := types.KeyIncentiveRecord(poolId, uptimeIndex, denom, incentiveCreator)
+	key := types.KeyIncentiveRecord(poolId, uptimeIndex, incentiveRecordId)
 
 	found, err := osmoutils.Get(store, key, &incentiveBodyStruct)
 	if err != nil {
@@ -579,15 +571,14 @@ func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, denom string,
 	}
 
 	if !found {
-		return types.IncentiveRecord{}, types.IncentiveRecordNotFoundError{PoolId: poolId, IncentiveDenom: denom, MinUptime: minUptime, IncentiveCreatorStr: incentiveCreator.String()}
+		return types.IncentiveRecord{}, types.IncentiveRecordNotFoundError{PoolId: poolId, MinUptime: minUptime, IncentiveRecordId: incentiveRecordId}
 	}
 
 	return types.IncentiveRecord{
-		PoolId:               poolId,
-		IncentiveDenom:       denom,
-		IncentiveCreatorAddr: incentiveCreator.String(),
-		MinUptime:            minUptime,
-		IncentiveRecordBody:  incentiveBodyStruct,
+		PoolId:              poolId,
+		MinUptime:           minUptime,
+		IncentiveId:         incentiveRecordId,
+		IncentiveRecordBody: incentiveBodyStruct,
 	}, nil
 }
 
@@ -610,14 +601,12 @@ func (k Keeper) GetIncentiveRecordSerialized(ctx sdk.Context, poolId uint64, pag
 			return err
 		}
 
-		denom := string(parts[1])
-
-		incentiveCreator, err := sdk.AccAddressFromBech32(string(parts[2]))
+		incentiveRecordId, err := strconv.ParseUint(string(parts[1]), 10, 64)
 		if err != nil {
 			return err
 		}
 
-		incRecord, err := k.GetIncentiveRecord(ctx, poolId, denom, types.SupportedUptimes[minUptimeIndex], incentiveCreator)
+		incRecord, err := k.GetIncentiveRecord(ctx, poolId, types.SupportedUptimes[minUptimeIndex], incentiveRecordId)
 		if err != nil {
 			return err
 		}
@@ -1117,18 +1106,22 @@ func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 		return types.IncentiveRecord{}, err
 	}
 
+	// Get an ID unique to this incentive record
+	incentiveRecordId := k.GetNextIncentiveRecordId(ctx)
+	k.SetNextIncentiveRecordId(ctx, incentiveRecordId+1)
+
 	incentiveRecordBody := types.IncentiveRecordBody{
-		RemainingAmount: incentiveCoin.Amount.ToDec(),
-		EmissionRate:    emissionRate,
-		StartTime:       startTime,
+		RemainingCoin: sdk.NewDecCoinFromCoin(incentiveCoin),
+		EmissionRate:  emissionRate,
+		StartTime:     startTime,
 	}
+
 	// Set up incentive record to put in state
 	incentiveRecord := types.IncentiveRecord{
-		PoolId:               poolId,
-		IncentiveDenom:       incentiveCoin.Denom,
-		IncentiveCreatorAddr: sender.String(),
-		IncentiveRecordBody:  incentiveRecordBody,
-		MinUptime:            minUptime,
+		PoolId:              poolId,
+		IncentiveRecordBody: incentiveRecordBody,
+		MinUptime:           minUptime,
+		IncentiveId:         incentiveRecordId,
 	}
 
 	// Get all incentive records for uptime

@@ -5,6 +5,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types";
 
@@ -13,16 +14,10 @@ option go_package = "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidit
 // are included in the key so we avoid storing them in state, hence the
 // distinction between IncentiveRecord and IncentiveRecordBody.
 message IncentiveRecord {
-  uint64 pool_id = 1;
-  // incentive_denom is the denom of the token being distributed as part of this
-  // incentive record
-  string incentive_denom = 2
-      [ (gogoproto.moretags) = "yaml:\"incentive_denom\"" ];
-  // incentiveCreator is the address that created the incentive record. This
-  // address does not have any special privileges – it is only kept to keep
-  // incentive records created by different addresses separate.
-  string incentive_creator_addr = 3
-      [ (gogoproto.moretags) = "yaml:\"incentive_creator_addr\"" ];
+  // incentive_id is the id uniquely identifying this incentive record.
+  uint64 incentive_id = 1 [ (gogoproto.moretags) = "yaml:\"incentive_id\"" ];
+  uint64 pool_id = 2;
+
   // incentive record body holds necessary
   IncentiveRecordBody incentive_record_body = 4 [
     (gogoproto.moretags) = "yaml:\"incentive_record_body\"",
@@ -41,11 +36,11 @@ message IncentiveRecord {
 // IncentiveRecordBody represents the body stored in state for each individual
 // record.
 message IncentiveRecordBody {
-  // remaining_amount is the total amount of incentives to be distributed
-  string remaining_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"remaining_amount\"",
-    (gogoproto.nullable) = false
+  // remaining_coin is the total amount of incentives to be distributed
+  cosmos.base.v1beta1.DecCoin remaining_coin = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoin",
+    (gogoproto.moretags) = "yaml:\"remaining_coins\""
   ];
 
   // emission_rate is the incentive emission rate per second

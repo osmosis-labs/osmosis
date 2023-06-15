@@ -68,6 +68,9 @@ message GenesisState {
 
   uint64 next_position_id = 4
       [ (gogoproto.moretags) = "yaml:\"next_position_id\"" ];
+
+  uint64 next_incentive_record_id = 5
+      [ (gogoproto.moretags) = "yaml:\"next_incentive_record_id\"" ];
 }
 
 message AccumObject {
