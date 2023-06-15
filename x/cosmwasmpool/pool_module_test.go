@@ -35,14 +35,11 @@ var (
 )
 
 func TestPoolModuleSuite(t *testing.T) {
-	t.Skip("CI was getting flaky: https://github.com/osmosis-labs/osmosis/issues/5477")
 	suite.Run(t, new(PoolModuleSuite))
 }
 
 func (s *PoolModuleSuite) TestInitializePool() {
-	var (
-		validInstantitateMsg = s.GetTransmuterInstantiateMsgBytes(defaultDenoms)
-	)
+	validInstantitateMsg := s.GetTransmuterInstantiateMsgBytes(defaultDenoms)
 
 	tests := map[string]struct {
 		codeid            uint64

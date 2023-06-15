@@ -34,7 +34,6 @@ var (
 )
 
 func TestTransmuterSuite(t *testing.T) {
-	t.Skip("CI was getting flaky: https://github.com/osmosis-labs/osmosis/issues/5477")
 	suite.Run(t, new(TransmuterSuite))
 }
 
