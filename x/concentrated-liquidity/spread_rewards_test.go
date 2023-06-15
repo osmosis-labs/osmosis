@@ -489,7 +489,7 @@ func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLas
 		validPoolId = 1
 	)
 
-	initialPoolTick, err := math.PriceToTickRoundDown(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()), DefaultTickSpacing)
+	initialPoolTick, err := math.PriceToTickRoundDownSpacing(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()), DefaultTickSpacing)
 	s.Require().NoError(err)
 
 	tests := map[string]struct {

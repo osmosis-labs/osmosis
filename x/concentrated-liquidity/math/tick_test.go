@@ -714,3 +714,73 @@ func (suite *ConcentratedMathTestSuite) TestCalculatePriceToTick() {
 		})
 	}
 }
+
+func (s *ConcentratedMathTestSuite) TestSqrtPriceToTickRoundDownSpacing() {
+	testCases := map[string]struct {
+		sqrtPrice    sdk.Dec
+		tickSpacing  uint64
+		tickExpected int64
+	}{
+		"sqrt price of 1 (tick spacing 1)": {
+			sqrtPrice:    sdk.OneDec(),
+			tickSpacing:  1,
+			tickExpected: 0,
+		},
+		"sqrt price exactly on boundary of next tick (tick spacing 1)": {
+			sqrtPrice:    sdk.MustNewDecFromStr("1.000000499999875000"),
+			tickSpacing:  1,
+			tickExpected: 1,
+		},
+		"sqrt price one ULP below boundary of next tick (tick spacing 1)": {
+			sqrtPrice:    sdk.MustNewDecFromStr("1.000000499999874999"),
+			tickSpacing:  1,
+			tickExpected: 0,
+		},
+		"sqrt price corresponding to bucket 99 (tick spacing 100)": {
+			sqrtPrice:    sdk.MustNewDecFromStr("1.000049498774935650"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: 0,
+		},
+		"sqrt price exactly on bucket 100 (tick spacing 100)": {
+			sqrtPrice:    sdk.MustNewDecFromStr("1.000049998750062496"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: 100,
+		},
+		"sqrt price one ULP below bucket 100 (tick spacing 100)": {
+			sqrtPrice:    sdk.MustNewDecFromStr("1.000049998750062495"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: 0,
+		},
+		"sqrt price exactly on bucket -100 (tick spacing 100)": {
+			sqrtPrice:    sdk.MustNewDecFromStr("0.999994999987499937"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: -100,
+		},
+		"sqrt price one ULP below bucket -100 (tick spacing 100)": {
+			sqrtPrice:    sdk.MustNewDecFromStr("0.999994999987499936"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: -200,
+		},
+		"sqrt price exactly on tick -101 (tick spacing 100)": {
+			sqrtPrice:    sdk.MustNewDecFromStr("0.999994949987248685"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: -200,
+		},
+	}
+	for name, tc := range testCases {
+		s.Run(name, func() {
+			tickIndex, err := math.SqrtPriceToTickRoundDownSpacing(tc.sqrtPrice, tc.tickSpacing)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.tickExpected, tickIndex)
+
+			// Ensure returned bucket properly encapsulates given sqrt price
+			_, inverseSqrtPrice, err := math.TickToSqrtPrice(tickIndex)
+			s.Require().NoError(err)
+			_, inverseSqrtPriceTickAbove, err := math.TickToSqrtPrice(tickIndex + int64(tc.tickSpacing))
+			s.Require().NoError(err)
+
+			s.Require().True(inverseSqrtPrice.LTE(tc.sqrtPrice))
+			s.Require().True(inverseSqrtPriceTickAbove.GT(tc.sqrtPrice))
+		})
+	}
+}
