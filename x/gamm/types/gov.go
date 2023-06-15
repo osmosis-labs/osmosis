@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	ProposalTypeUpdateMigrationRecords  = "UpdateMigrationRecords"
-	ProposalTypeReplaceMigrationRecords = "ReplaceMigrationRecords"
+	ProposalTypeUpdateMigrationRecords             = "UpdateMigrationRecords"
+	ProposalTypeReplaceMigrationRecords            = "ReplaceMigrationRecords"
+	ProposalTypeLinkBalancerPoolWithCLPoolProposal = "LinkBalancerPoolWithCLPoolProposal"
 )
 
 // Init registers proposals to update and replace migration records.
@@ -18,11 +19,15 @@ func init() {
 	govtypes.RegisterProposalTypeCodec(&UpdateMigrationRecordsProposal{}, "osmosis/UpdateMigrationRecordsProposal")
 	govtypes.RegisterProposalType(ProposalTypeReplaceMigrationRecords)
 	govtypes.RegisterProposalTypeCodec(&ReplaceMigrationRecordsProposal{}, "osmosis/ReplaceMigrationRecordsProposal")
+	govtypes.RegisterProposalType(ProposalTypeReplaceMigrationRecords)
+	govtypes.RegisterProposalTypeCodec(&LinkBalancerPoolWithCLPoolProposal{}, "osmosis/LinkBalancerPoolWithCLPoolProposal")
+	govtypes.RegisterProposalType(ProposalTypeLinkBalancerPoolWithCLPoolProposal)
 }
 
 var (
 	_ govtypes.Content = &UpdateMigrationRecordsProposal{}
 	_ govtypes.Content = &ReplaceMigrationRecordsProposal{}
+	_ govtypes.Content = &LinkBalancerPoolWithCLPoolProposal{}
 )
 
 // NewReplacePoolIncentivesProposal returns a new instance of a replace migration record's proposal struct.
@@ -115,6 +120,59 @@ func (p *UpdateMigrationRecordsProposal) ValidateBasic() error {
 
 // String returns a string containing the migration record's proposal.
 func (p UpdateMigrationRecordsProposal) String() string {
+	// TODO: Make this prettier
+	recordsStr := ""
+	for _, record := range p.Records {
+		recordsStr = recordsStr + fmt.Sprintf("(BalancerPoolID: %d, ClPoolID: %d) ", record.BalancerPoolId, record.ClPoolId)
+	}
+
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf(`Update Migration Records Proposal:
+  Title:       %s
+  Description: %s
+  Records:     %s
+`, p.Title, p.Description, recordsStr))
+	return b.String()
+}
+
+// LinkBalancerPoolWithCLPoolProposal returns a new instance of a replace migration record's proposal struct.
+func NewLinkBalancerPoolWithCLPoolProposal(title, description string, records []BalancerToConcentratedPoolLink) govtypes.Content {
+	return &UpdateMigrationRecordsProposal{
+		Title:       title,
+		Description: description,
+		Records:     records,
+	}
+}
+
+// GetTitle gets the title of the proposal
+func (p *LinkBalancerPoolWithCLPoolProposal) GetTitle() string { return p.Title }
+
+// GetDescription gets the description of the proposal
+func (p *LinkBalancerPoolWithCLPoolProposal) GetDescription() string { return p.Description }
+
+// ProposalRoute returns the router key for the proposal
+func (p *LinkBalancerPoolWithCLPoolProposal) ProposalRoute() string { return RouterKey }
+
+// ProposalType returns the type of the proposal
+func (p *LinkBalancerPoolWithCLPoolProposal) ProposalType() string {
+	return ProposalTypeUpdateMigrationRecords
+}
+
+// ValidateBasic validates a governance proposal's abstract and basic contents.
+func (p *LinkBalancerPoolWithCLPoolProposal) ValidateBasic() error {
+	err := govtypes.ValidateAbstract(p)
+	if err != nil {
+		return err
+	}
+	if len(p.Records) == 0 {
+		return fmt.Errorf("empty proposal records")
+	}
+
+	return nil
+}
+
+// String returns a string containing the migration record's proposal.
+func (p LinkBalancerPoolWithCLPoolProposal) String() string {
 	// TODO: Make this prettier
 	recordsStr := ""
 	for _, record := range p.Records {

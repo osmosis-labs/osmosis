@@ -57,3 +57,19 @@ message UpdateMigrationRecordsProposal {
   repeated BalancerToConcentratedPoolLink records = 3
       [ (gogoproto.nullable) = false ];
 }
+
+// LinkBalancerPoolWithCLPoolProposal contains a balancer_pool_id that
+// wants to be linked with CL_pool.
+message LinkBalancerPoolWithCLPoolProposal {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (amino.name) = "osmosis/LinkBalancerPoolWithCLPoolProposal";
+  option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
+
+  string title = 1;
+  string description = 2;
+
+  repeated BalancerToConcentratedPoolLink records = 3
+      [ (gogoproto.nullable) = false ];
+}

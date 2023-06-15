@@ -294,6 +294,63 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 	return cmd
 }
 
+// NewCmdSubmitUpdateMigrationRecordsProposal implements a command handler for update migration records proposal
+func NewCmdSubmitLinkBalancerPoolWithCLPoolProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "link-balancer-pool-to-cl-pool-proposal [flags]",
+		Args:  cobra.ExactArgs(0),
+		Short: "Submit a link migration record proposal",
+		Long: strings.TrimSpace(`Submit a create migration record proposal.
+
+Passing in poolIds separated by commas would be parsed automatically to pairs of migration record.
+Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
+
+		`),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			content, err := parseCreatePoolLinRecordsArgsToContent(cmd)
+			if err != nil {
+				return err
+			}
+
+			from := clientCtx.GetFromAddress()
+
+			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+	cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(FlagMigrationRecords, "", "The migration records array")
+
+	return cmd
+}
+
 func BuildCreatePoolCmd(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
 	poolType, err := fs.GetString(FlagPoolType)
 	if err != nil {
@@ -707,6 +764,30 @@ func parseUpdateMigrationRecordsArgsToContent(cmd *cobra.Command) (govtypes.Cont
 	}
 
 	content := &types.UpdateMigrationRecordsProposal{
+		Title:       title,
+		Description: description,
+		Records:     replaceMigrations,
+	}
+	return content, nil
+}
+
+func parseCreatePoolLinRecordsArgsToContent(cmd *cobra.Command) (govtypes.Content, error) {
+	title, err := cmd.Flags().GetString(govcli.FlagTitle)
+	if err != nil {
+		return nil, err
+	}
+
+	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	if err != nil {
+		return nil, err
+	}
+
+	replaceMigrations, err := parseMigrationRecords(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	content := &types.LinkBalancerPoolWithCLPoolProposal{
 		Title:       title,
 		Description: description,
 		Records:     replaceMigrations,
