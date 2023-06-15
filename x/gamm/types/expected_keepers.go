@@ -22,7 +22,6 @@ type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
 	SetAccount(ctx sdk.Context, acc authtypes.AccountI)
 
-	GetModuleAccount(ctx sdk.Context, moduleName string) authtypes.ModuleAccountI
 	GetModuleAddressAndPermissions(moduleName string) (addr sdk.AccAddress, permissions []string)
 }
 
@@ -92,8 +91,6 @@ type PoolManager interface {
 	GetPoolModule(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolModuleI, error)
 
 	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
-
-	CreateConcentratedPoolAsPoolManager(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (poolmanagertypes.PoolI, error)
 }
 
 type PoolIncentivesKeeper interface {
