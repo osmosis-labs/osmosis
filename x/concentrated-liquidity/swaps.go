@@ -61,7 +61,7 @@ func newSwapState(specifiedAmount sdk.Int, p types.ConcentratedPoolExtension, st
 		amountSpecifiedRemaining: specifiedAmount.ToDec(),
 		amountCalculated:         sdk.ZeroDec(),
 		sqrtPrice:                p.GetCurrentSqrtPrice(),
-		tick:                     p.GetCurrentTick(),
+		tick:                     strategy.InitializeTickValue(p.GetCurrentTick()),
 		liquidity:                p.GetLiquidity(),
 		spreadRewardGrowthGlobal: sdk.ZeroDec(),
 	}
