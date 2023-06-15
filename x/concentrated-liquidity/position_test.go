@@ -83,14 +83,14 @@ func (s *KeeperTestSuite) GetTotalAccruedRewardsByAccumulator(positionId uint64,
 // It also asserts that no more incentives can be claimed for the position.
 func (s *KeeperTestSuite) ExecuteAndValidateSuccessfulIncentiveClaim(positionId uint64, expectedRewards sdk.Coins, expectedForfeited sdk.Coins) {
 	// Initial claim and assertion
-	claimedRewards, forfeitedRewards, err := s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionId)
+	claimedRewards, forfeitedRewards, err := s.clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionId)
 	s.Require().NoError(err)
 
 	s.Require().Equal(expectedRewards, claimedRewards)
 	s.Require().Equal(expectedForfeited, forfeitedRewards)
 
 	// Sanity check that cannot claim again.
-	claimedRewards, _, err = s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionId)
+	claimedRewards, _, err = s.clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionId)
 	s.Require().NoError(err)
 
 	s.Require().Equal(sdk.Coins(nil), claimedRewards)
@@ -1239,7 +1239,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 
 				// Check that cannot claim rewards for the old positions.
 				for _, positionId := range test.positionIdsToMigrate {
-					_, _, err := s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionId)
+					_, _, err := s.clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionId)
 					s.Require().Error(err)
 				}
 			}

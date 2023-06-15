@@ -886,7 +886,7 @@ func moveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum accum.Accumu
 
 // prepareClaimAllIncentivesForPosition updates accumulators to the current time and returns all the incentives for a given position.
 // It claims all the incentives that the position is eligible for and determines if those incentives should be forfeited or not.
-// The parent function (collectIncentives) does the actual bank send.
+// The parent function (collectIncentives) does the actual bank sends for both the collected and forfeited incentives.
 //
 // Returns error if the position/uptime accumulators don't exist, or if there is an issue that arises while claiming.
 func (k Keeper) prepareClaimAllIncentivesForPosition(ctx sdk.Context, positionId uint64) (sdk.Coins, sdk.Coins, error) {
@@ -903,7 +903,8 @@ func (k Keeper) prepareClaimAllIncentivesForPosition(ctx sdk.Context, positionId
 
 	// Compute the age of the position.
 	positionAge := ctx.BlockTime().Sub(position.JoinTime)
-	// should never happen, defense in depth
+
+	// Should never happen, defense in depth.
 	if positionAge < 0 {
 		return sdk.Coins{}, sdk.Coins{}, types.NegativeDurationError{Duration: positionAge}
 	}
@@ -989,8 +990,6 @@ func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positi
 	if err != nil {
 		return sdk.Coins{}, sdk.Coins{}, err
 	}
-	fmt.Println("collectedIncentivesForPosition", collectedIncentivesForPosition)
-	fmt.Println("forfeitedIncentivesForPosition", forfeitedIncentivesForPosition)
 
 	// If no incentives were collected, return an empty coin set.
 	if collectedIncentivesForPosition.IsZero() && forfeitedIncentivesForPosition.IsZero() {
@@ -1008,6 +1007,7 @@ func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positi
 		return sdk.Coins{}, sdk.Coins{}, err
 	}
 
+	// Send the forfeited incentives to the community pool from the pool's address.
 	err = k.communityPoolKeeper.FundCommunityPool(ctx, forfeitedIncentivesForPosition, pool.GetIncentivesAddress())
 	if err != nil {
 		return sdk.Coins{}, sdk.Coins{}, err
