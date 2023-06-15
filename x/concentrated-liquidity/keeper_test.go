@@ -460,7 +460,7 @@ func (s *KeeperTestSuite) runMultiplePositionRanges(ranges [][]int64, rangeTestP
 	// Preset seed to ensure deterministic test runs.
 	rand.Seed(2)
 
-	// TODO: add pool-related params to fuzz (spread factor & number of pools)
+	// TODO: add pool-related fuzz params (spread factor & number of pools)
 	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultSpreadFactor)
 
 	// Run full state determined by params while asserting invariants at each intermediate step

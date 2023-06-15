@@ -26,6 +26,14 @@ type RangeTestParams struct {
 	// List of addresses to swap from (randomly selected for each swap)
 	numSwapAddresses int
 
+	// -- Fuzz params --
+
+	fuzzAssets           bool
+	fuzzNumPositions     bool
+	fuzzSwapAmounts      bool
+	fuzzTimeBetweenJoins bool
+	fuzzIncentiveRecords bool
+
 	// -- Optional additional test dimensions --
 
 	// Have a single address for all positions in each range
@@ -34,13 +42,6 @@ type RangeTestParams struct {
 	newActiveIncentivesBetweenJoins bool
 	// Create new inactive incentive records between each join
 	newInactiveIncentivesBetweenJoins bool
-
-	// When set to true, fuzzes the corresponding base value
-	fuzzAssets           bool
-	fuzzNumPositions     bool
-	fuzzSwapAmounts      bool
-	fuzzTimeBetweenJoins bool
-	fuzzIncentiveRecords bool
 }
 
 var (
@@ -50,19 +51,18 @@ var (
 		baseAssets:           sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(5000000000)), sdk.NewCoin(USDC, sdk.NewInt(5000000000))),
 		baseTimeBetweenJoins: time.Hour,
 		baseSwapAmount:       sdk.NewInt(10000000),
+		numSwapAddresses:     10,
 
 		// Fuzz params
 		fuzzNumPositions:     true,
 		fuzzAssets:           true,
 		fuzzSwapAmounts:      true,
 		fuzzTimeBetweenJoins: true,
-
-		// Additional params
-		numSwapAddresses: 10,
 	}
 )
 
-// SetupRanges takes in a set of tick ranges
+// setupRangesAndAssertInvariants sets up the state specified by `testParams` on the given set of ranges.
+// It also asserts global invariants at each intermediate step.
 func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.ConcentratedPoolExtension, ranges [][]int64, testParams RangeTestParams) {
 
 	// --- Parse test params ---
@@ -70,9 +70,7 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 	// Prepare a slice tracking how many positions to create on each range.
 	numPositionSlice, totalPositions := s.prepareNumPositionSlice(ranges, testParams.baseNumPositions, testParams.fuzzNumPositions)
 
-	// --- Set up addresses ---
-
-	// -- Set up position accounts --
+	// Set up position accounts
 	var positionAddresses []sdk.AccAddress
 	if testParams.singleAddrPerRange {
 		positionAddresses = apptesting.CreateRandomAccounts(len(ranges))
@@ -80,33 +78,33 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 		positionAddresses = apptesting.CreateRandomAccounts(totalPositions)
 	}
 
-	// -- Set up swap accounts --
-
-	// Assert that there are a positive number of swap addresses if swaps are enabled
-	s.Require().False(testParams.numSwapAddresses < 0, "Must have nonnegative number of swap addresses if swaps are enabled")
-
-	// Generate swap accounts
+	// Set up swap accounts
 	swapAddresses := apptesting.CreateRandomAccounts(testParams.numSwapAddresses)
 
 	// --- Incentive setup ---
 
-	// TODO: support incentives
+	// TODO: support incentive fuzzing (use to `totalTimeElapsed` to track emitted amounts)
 
 	// --- Position setup ---
 
-	// Loop over ranges and create positions, setting up behavior as determined by the slices set up above.
+	// This loop runs through each given tick range and does the following at each iteration:
+	// 1. Set up a position
+	// 2. Let time elapse
+	// 3. Execute a swap
 	totalLiquidity, totalAssets, totalTimeElapsed, allPositionIds, lastVisitedBlockIndex := sdk.ZeroDec(), sdk.NewCoins(), time.Duration(0), []uint64{}, 0
-	for i := range ranges {
+	for curRange := range ranges {
 		curBlock := 0
 		startNumPositions := len(allPositionIds)
-		for j := lastVisitedBlockIndex; j < lastVisitedBlockIndex+numPositionSlice[i]; j++ {
+		for curNumPositions := lastVisitedBlockIndex; curNumPositions < lastVisitedBlockIndex+numPositionSlice[curRange]; curNumPositions++ {
 			// By default we create a new address for each position, but if the test params specify using a single address
 			// for each range, we handle that logic here.
 			var curAddr sdk.AccAddress
 			if testParams.singleAddrPerRange {
-				curAddr = positionAddresses[i]
+				// If we are using a single address per range, we use the address corresponding to the current range.
+				curAddr = positionAddresses[curRange]
 			} else {
-				curAddr = positionAddresses[j]
+				// If we're not using a single address per range, we use a unique address for each position.
+				curAddr = positionAddresses[curNumPositions]
 			}
 
 			// Set up assets for new position
@@ -114,32 +112,24 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 			s.FundAcc(curAddr, curAssets)
 
 			// Set up position
-			curPositionId, actualAmt0, actualAmt1, curLiquidity, _, _, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), curAddr, curAssets, sdk.ZeroInt(), sdk.ZeroInt(), ranges[i][0], ranges[i][1])
-			actualAddedCoins := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), actualAmt0), sdk.NewCoin(pool.GetToken1(), actualAmt1))
+			curPositionId, actualAmt0, actualAmt1, curLiquidity, actualLowerTick, actualUpperTick, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), curAddr, curAssets, sdk.ZeroInt(), sdk.ZeroInt(), ranges[curRange][0], ranges[curRange][1])
 			s.Require().NoError(err)
 
-			// Assert global invariants on intermediate state after join
+			// Ensure position was set up correctly and didn't break global invariants
+			s.Require().Equal(ranges[curRange][0], actualLowerTick)
+			s.Require().Equal(ranges[curRange][1], actualUpperTick)
 			s.assertGlobalInvariants()
 
 			// Let time elapse after join if applicable
-			timeElapsed := time.Duration(0)
-			if testParams.baseTimeBetweenJoins != time.Duration(0) {
-				timeElapsed = s.addRandomizedBlockTime(testParams.baseTimeBetweenJoins, testParams.fuzzTimeBetweenJoins)
-
-				// Assert global invariants on intermediate state after time elapsed
-				s.assertGlobalInvariants()
-			}
+			timeElapsed := s.addRandomizedBlockTime(testParams.baseTimeBetweenJoins, testParams.fuzzTimeBetweenJoins)
+			s.assertGlobalInvariants()
 
 			// Execute swap against pool if applicable
-			swappedIn, swappedOut := sdk.Coin{}, sdk.Coin{}
-			if !testParams.baseSwapAmount.Equal(sdk.Int{}) {
-				swappedIn, swappedOut = s.executeRandomizedSwap(pool, swapAddresses, testParams.baseSwapAmount, testParams.fuzzSwapAmounts)
+			swappedIn, swappedOut := s.executeRandomizedSwap(pool, swapAddresses, testParams.baseSwapAmount, testParams.fuzzSwapAmounts)
+			s.assertGlobalInvariants()
 
-				// Assert global invariants on intermediate state after swap
-				s.assertGlobalInvariants()
-			}
-
-			// Track new position values in global variables
+			// Track changes to state
+			actualAddedCoins := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), actualAmt0), sdk.NewCoin(pool.GetToken1(), actualAmt1))
 			totalAssets = totalAssets.Add(actualAddedCoins...).Add(swappedIn).Sub(sdk.NewCoins(swappedOut))
 			totalLiquidity = totalLiquidity.Add(curLiquidity)
 			totalTimeElapsed = totalTimeElapsed + timeElapsed
@@ -149,7 +139,7 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 		endNumPositions := len(allPositionIds)
 
 		// Ensure the correct number of positions were set up in current range
-		s.Require().Equal(numPositionSlice[i], endNumPositions-startNumPositions, "Incorrect number of positions set up in range %d", i)
+		s.Require().Equal(numPositionSlice[curRange], endNumPositions-startNumPositions, "Incorrect number of positions set up in range %d", curRange)
 
 		lastVisitedBlockIndex += curBlock
 	}
@@ -195,8 +185,8 @@ func (s *KeeperTestSuite) prepareNumPositionSlice(ranges [][]int64, baseNumPosit
 // The direction of the swap is chosen randomly, but the swap function used is always SwapInGivenOut to
 // ensure it is always possible to swap against the pool without having to use lower level calc functions.
 func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExtension, swapAddresses []sdk.AccAddress, baseSwapAmount sdk.Int, fuzzSwap bool) (sdk.Coin, sdk.Coin) {
-	// Quietly skip if no swap addresses provided
-	if len(swapAddresses) == 0 {
+	// Quietly skip if no swap assets or swap addresses provided
+	if baseSwapAmount.Equal(sdk.Int{}) || len(swapAddresses) == 0 {
 		return sdk.Coin{}, sdk.Coin{}
 	}
 
@@ -251,15 +241,18 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 
 // addRandomizedBlockTime adds the given block time to the context, fuzzing the added time if applicable.
 func (s *KeeperTestSuite) addRandomizedBlockTime(baseTimeToAdd time.Duration, fuzzTime bool) time.Duration {
-	timeToAdd := baseTimeToAdd
-	if fuzzTime {
-		// Fuzz +/- 100% of base time to add
-		timeToAdd = time.Duration(fuzzInt64(int64(baseTimeToAdd), 2))
+	if baseTimeToAdd != time.Duration(0) {
+		timeToAdd := baseTimeToAdd
+		if fuzzTime {
+			// Fuzz +/- 100% of base time to add
+			timeToAdd = time.Duration(fuzzInt64(int64(baseTimeToAdd), 2))
+		}
+
+		s.AddBlockTime(timeToAdd)
+
 	}
 
-	s.AddBlockTime(timeToAdd)
-
-	return timeToAdd
+	return baseTimeToAdd
 }
 
 // getFuzzedAssets returns the base asset amount, fuzzing each asset if applicable
