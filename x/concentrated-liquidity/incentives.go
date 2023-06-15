@@ -904,7 +904,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 		return sdk.Coins{}, sdk.DecCoins{}, err
 	}
 
-	// Compute uptime growth outside of the range between lower tick and upper tick
+	// Compute uptime growth outside the range between lower tick and upper tick
 	uptimeGrowthOutside, err := k.GetUptimeGrowthOutsideRange(ctx, position.PoolId, position.LowerTick, position.UpperTick)
 	if err != nil {
 		return sdk.Coins{}, sdk.DecCoins{}, err
@@ -928,57 +928,79 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 			return sdk.Coins{}, sdk.DecCoins{}, err
 		}
 
-		// If the accumulator contains the position, claim the position's incentives.
-		if hasPosition {
-			collectedIncentivesForUptime, dust, err := updateAccumAndClaimRewards(uptimeAccum, positionName, uptimeGrowthOutside[uptimeIndex])
-			if err != nil {
-				return sdk.Coins{}, sdk.DecCoins{}, err
-			}
-
-			// If the claimed incentives are forfeited, deposit them back into the accumulator to be distributed
-			// to other qualifying positions.
-			if positionAge < supportedUptimes[uptimeIndex] {
-				totalSharesAccum, err := uptimeAccum.GetTotalShares()
-				if err != nil {
-					return sdk.Coins{}, sdk.DecCoins{}, err
-				}
-
-				if totalSharesAccum.IsZero() {
-					pool, err := k.getPoolById(ctx, position.PoolId)
-					if err != nil {
-						return sdk.Coins{}, sdk.DecCoins{}, err
-					}
-
-					// If totalSharesAccum is zero, then there are no other qualifying positions to distribute the forfeited
-					// incentives to. This might happen if this is the last position in the pool and it is being withdrawn.
-					// Therefore, we send the forfeited amount to the community pool in this case.
-					err = k.communityPoolKeeper.FundCommunityPool(ctx, collectedIncentivesForUptime, pool.GetIncentivesAddress())
-					if err != nil {
-						return sdk.Coins{}, sdk.DecCoins{}, err
-					}
-
-					forfeitedIncentivesForPosition = forfeitedIncentivesForPosition.Add(sdk.NewDecCoinsFromCoins(collectedIncentivesForUptime...)...)
-					continue
-				}
-
-				var forfeitedIncentivesPerShare sdk.DecCoins
-				for _, coin := range collectedIncentivesForUptime {
-					// updated forfeitedIncentivesPerShare to add back = collectedIncentivesPerShare / totalSharesAccum
-					forfeitedIncentivesPerShare = append(forfeitedIncentivesPerShare, sdk.NewDecCoinFromDec(coin.Denom, coin.Amount.ToDec().Add(dust.AmountOf(coin.Denom)).Quo(totalSharesAccum)))
-
-					// convert to DecCoin to merge back with dust.
-					forfeitedIncentivesForPosition = forfeitedIncentivesForPosition.Add(sdk.NewDecCoinFromDec(coin.Denom, coin.Amount.ToDec().Add(dust.AmountOf(coin.Denom))))
-				}
-
-				uptimeAccum.AddToAccumulator(forfeitedIncentivesPerShare)
-				continue
-			}
-
-			collectedIncentivesForPosition = collectedIncentivesForPosition.Add(collectedIncentivesForUptime...)
+		if !hasPosition {
+			// the accumulator does not contain the position, continue.
+			continue
 		}
+
+		// If the accumulator contains the position, claim the position's incentives.
+		collectedIncentivesForUptime, dust, err := updateAccumAndClaimRewards(uptimeAccum, positionName, uptimeGrowthOutside[uptimeIndex])
+		if err != nil {
+			return sdk.Coins{}, sdk.DecCoins{}, err
+		}
+
+		if positionAge >= supportedUptimes[uptimeIndex] {
+			// the claimed incentives are not forfeited; add them to the total collected incentives and continue.
+			collectedIncentivesForPosition = collectedIncentivesForPosition.Add(collectedIncentivesForUptime...)
+			continue
+		}
+
+		// If the claimed incentives are forfeited, deposit them back into the accumulator to be distributed
+		// to other qualifying positions.
+		totalSharesAccum, err := uptimeAccum.GetTotalShares()
+		if err != nil {
+			return sdk.Coins{}, sdk.DecCoins{}, err
+		}
+
+		forfeitedIncentivesForAccumulator, err := k.calculateForfeitedIncentivesForAccumulator(ctx, totalSharesAccum, position, collectedIncentivesForUptime, dust, uptimeAccum)
+		if err != nil {
+			return sdk.Coins{}, sdk.DecCoins{}, err
+		}
+		forfeitedIncentivesForPosition = forfeitedIncentivesForPosition.Add(forfeitedIncentivesForAccumulator...)
+
+	}
+
+	// Enforcing the right type because sdk.DecCoins{}.Add(sdk.DecCoins{}...) == nil
+	if forfeitedIncentivesForPosition == nil {
+		forfeitedIncentivesForPosition = sdk.DecCoins{}
 	}
 
 	return collectedIncentivesForPosition, forfeitedIncentivesForPosition, nil
+}
+
+// calculateForfeitedIncentivesForPosition calculates the amount of incentives that are forfeited for a given position.
+func (k Keeper) calculateForfeitedIncentivesForAccumulator(ctx sdk.Context, totalSharesAccum sdk.Dec, position model.Position, collectedIncentivesForUptime sdk.Coins, dust sdk.DecCoins, uptimeAccum accum.AccumulatorObject) (sdk.DecCoins, error) {
+	if totalSharesAccum.IsZero() {
+		pool, err := k.getPoolById(ctx, position.PoolId)
+		if err != nil {
+			return sdk.DecCoins{}, err
+		}
+
+		// If totalSharesAccum is zero, then there are no other qualifying positions to distribute the forfeited
+		// incentives to. This might happen if this is the last position in the pool, and it is being withdrawn.
+		// Therefore, we send the forfeited amount to the community pool in this case.
+		err = k.communityPoolKeeper.FundCommunityPool(ctx, collectedIncentivesForUptime, pool.GetIncentivesAddress())
+		if err != nil {
+			return sdk.DecCoins{}, err
+		}
+
+		return sdk.NewDecCoinsFromCoins(collectedIncentivesForUptime...), nil
+	}
+
+	// If totalSharesAccum is not zero, then there are qualifying positions to distribute the forfeited
+	var forfeitedIncentivesPerShare sdk.DecCoins
+	forfeitedIncentivesForPosition := sdk.DecCoins{}
+	for _, coin := range collectedIncentivesForUptime {
+		// updated forfeitedIncentivesPerShare to add back = collectedIncentivesPerShare / totalSharesAccum
+		forfeitedIncentivesPerShare = append(forfeitedIncentivesPerShare, sdk.NewDecCoinFromDec(coin.Denom, coin.Amount.ToDec().Add(dust.AmountOf(coin.Denom)).Quo(totalSharesAccum)))
+
+		// convert to DecCoin to merge back with dust.
+		forfeitedIncentivesForPosition = forfeitedIncentivesForPosition.Add(sdk.NewDecCoinFromDec(coin.Denom, coin.Amount.ToDec().Add(dust.AmountOf(coin.Denom))))
+	}
+
+	uptimeAccum.AddToAccumulator(forfeitedIncentivesPerShare)
+
+	return forfeitedIncentivesForPosition, nil
 }
 
 func (k Keeper) GetClaimableIncentives(ctx sdk.Context, positionId uint64) (sdk.Coins, sdk.DecCoins, error) {
