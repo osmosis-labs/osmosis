@@ -184,6 +184,7 @@ func (s *KeeperTestSuite) prepareNumPositionSlice(ranges [][]int64, baseNumPosit
 // executeRandomizedSwap executes a swap against the pool, fuzzing the swap amount if applicable.
 // The direction of the swap is chosen randomly, but the swap function used is always SwapInGivenOut to
 // ensure it is always possible to swap against the pool without having to use lower level calc functions.
+// TODO: Make swaps that target getting to a tick boundary exactly
 func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExtension, swapAddresses []sdk.AccAddress, baseSwapAmount sdk.Int, fuzzSwap bool) (sdk.Coin, sdk.Coin) {
 	// Quietly skip if no swap assets or swap addresses provided
 	if baseSwapAmount.Equal(sdk.Int{}) || len(swapAddresses) == 0 {
