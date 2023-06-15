@@ -282,7 +282,7 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 // For the sake of backwards-compatibility with future implementations of charging, this function deletes the old position and creates
 // a new one with the resulting amount after addition. Note that due to truncation after `withdrawPosition`, there is some rounding error
 // that is upper bounded by 1 unit of the more valuable token.
-// Uses the amount0MinGiven,amount1MinGiven as the minimum token out for creating the new position.
+// Uses the amount0MinGiven + withdrawn amount0, amount1MinGiven + withdrawn amount1 as the minimum token out for creating the new position.
 // Note that these field indicates the min amount corresponding to the total liquidity of the position,
 // not only for the liquidity amount that is being added.
 // Uses amounts withdrawn from the original position if provided min amount is zero.
@@ -348,10 +348,10 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 	minimumAmount1 := amount1Withdrawn
 
 	if !amount0MinGiven.IsZero() {
-		minimumAmount0 = amount0MinGiven
+		minimumAmount0 = amount0Withdrawn.Add(amount0MinGiven)
 	}
 	if !amount1MinGiven.IsZero() {
-		minimumAmount1 = amount1MinGiven
+		minimumAmount1 = amount1Withdrawn.Add(amount1MinGiven)
 	}
 	newPositionId, actualAmount0, actualAmount1, _, _, _, err := k.createPosition(ctx, position.PoolId, owner, tokensProvided, minimumAmount0, minimumAmount1, position.LowerTick, position.UpperTick)
 	if err != nil {

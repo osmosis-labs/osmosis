@@ -2380,6 +2380,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 				validPool := s.PrepareConcentratedPool()
 				validPoolId := validPool.GetId()
 
+				fmt.Println("expected incentives claimed for: ", name, " ", tc.expectedIncentivesClaimed.String())
 				s.FundAcc(validPool.GetIncentivesAddress(), tc.expectedIncentivesClaimed)
 
 				clKeeper := s.App.ConcentratedLiquidityKeeper

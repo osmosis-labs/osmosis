@@ -1,6 +1,8 @@
 package cosmwasmpool
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -70,4 +72,20 @@ func (k *Keeper) asCosmwasmPool(poolI poolmanagertypes.PoolI) (types.CosmWasmExt
 	cosmwasmPool.SetWasmKeeper(k.wasmKeeper)
 
 	return cosmwasmPool, nil
+}
+
+// GetCodeIdByPoolId returns the contract address and code id associated with the given pool.
+func (k Keeper) GetCodeIdByPoolId(ctx sdk.Context, poolId uint64) (sdk.AccAddress, uint64, error) {
+	pool, err := k.GetPoolById(ctx, poolId)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	contractAddress := sdk.MustAccAddressFromBech32(pool.GetContractAddress())
+
+	contractInfo := k.wasmKeeper.GetContractInfo(ctx, contractAddress)
+	if contractInfo == nil {
+		return nil, 0, fmt.Errorf("code id for pool id (%d) not found", poolId)
+	}
+	return contractAddress, contractInfo.CodeID, nil
 }

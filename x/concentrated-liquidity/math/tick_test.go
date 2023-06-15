@@ -248,6 +248,11 @@ func (suite *ConcentratedMathTestSuite) TestTicksToSqrtPrice() {
 			upperTickIndex: sdk.NewInt(342000000 + 1),
 			expectedError:  types.TickIndexMaximumError{MaxTick: 342000000},
 		},
+		"error: provided lower tick and upper tick are same": {
+			lowerTickIndex: sdk.NewInt(-162000000),
+			upperTickIndex: sdk.NewInt(-162000000),
+			expectedError:  types.InvalidLowerUpperTickError{LowerTick: sdk.NewInt(-162000000).Int64(), UpperTick: sdk.NewInt(-162000000).Int64()},
+		},
 	}
 
 	for name, tc := range testCases {
@@ -574,6 +579,10 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			price:        sdk.MustNewDecFromStr("1234568000"),
 			tickExpected: 81234568,
 		},
+		"inverse testing with 1": {
+			price:        sdk.OneDec(),
+			tickExpected: 0,
+		},
 	}
 	for name, tc := range testCases {
 		tc := tc
@@ -619,6 +628,51 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			suite.Require().NoError(err)
 
 			suite.Require().Equal(tickFromPrice, inverseTickFromSqrtPrice, "expected: %s, actual: %s", tickFromPrice, inverseTickFromSqrtPrice)
+		})
+	}
+}
+
+func (suite *ConcentratedMathTestSuite) TestPriceToTick_ErrorCases() {
+	testCases := map[string]struct {
+		price sdk.Dec
+	}{
+		"use negative price": {
+			price: sdk.OneDec().Neg(),
+		},
+		"price is greater than max spot price": {
+			price: types.MaxSpotPrice.Add(sdk.OneDec()),
+		},
+		"price is less than min spot price": {
+			price: types.MinSpotPrice.Sub(sdk.OneDec()),
+		},
+	}
+	for name, tc := range testCases {
+		tc := tc
+
+		suite.Run(name, func() {
+			tickFromPrice, err := math.PriceToTick(tc.price)
+			suite.Require().Error(err)
+			suite.Require().Equal(tickFromPrice, int64(0))
+		})
+	}
+}
+func (suite *ConcentratedMathTestSuite) TestTickToPrice_ErrorCases() {
+	testCases := map[string]struct {
+		tickIndex int64
+	}{
+		"tick index is greater than max tick": {
+			tickIndex: types.MaxTick + 1,
+		},
+		"tick index is less than min tick": {
+			tickIndex: types.MinTick - 1,
+		},
+	}
+	for name, tc := range testCases {
+		tc := tc
+
+		suite.Run(name, func() {
+			_, err := math.TickToPrice(tc.tickIndex)
+			suite.Require().Error(err)
 		})
 	}
 }
