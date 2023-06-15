@@ -61,7 +61,7 @@ func newSwapState(specifiedAmount sdk.Int, p types.ConcentratedPoolExtension, st
 		amountSpecifiedRemaining: specifiedAmount.ToDec(),
 		amountCalculated:         sdk.ZeroDec(),
 		sqrtPrice:                p.GetCurrentSqrtPrice(),
-		tick:                     strategy.InitializeTickValue(p.GetCurrentTick()),
+		tick:                     p.GetCurrentTick(),
 		liquidity:                p.GetLiquidity(),
 		spreadRewardGrowthGlobal: sdk.ZeroDec(),
 	}
@@ -366,9 +366,22 @@ func (k Keeper) computeOutAmtGivenIn(
 			// Otherwise if the sqrtPrice calculated from computeSwapStep does not equal the sqrtPrice we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the sqrtPrice calculated from computeSwapStep
 			price := sqrtPrice.Mul(sqrtPrice)
-			swapState.tick, err = math.PriceToTickRoundDown(price, p.GetTickSpacing())
+			newTick, err := math.PriceToTickRoundDown(price, p.GetTickSpacing())
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+			}
+
+			// TEMPORARY HACK: this is to fix tick rounding error where
+			// the tick is off by 1 due to banker's rounding error in PriceToTickRoundDown
+			isZeroForOne := getZeroForOne(tokenInMin.Denom, p.GetToken0())
+			if isZeroForOne {
+				if newTick <= swapState.tick {
+					swapState.tick = newTick
+				}
+			} else {
+				if newTick >= swapState.tick {
+					swapState.tick = newTick
+				}
 			}
 		}
 	}
