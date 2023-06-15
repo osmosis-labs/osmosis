@@ -879,8 +879,8 @@ func (m *ClaimableIncentivesRequest) GetPositionId() uint64 {
 }
 
 type ClaimableIncentivesResponse struct {
-	ClaimableIncentives []types2.Coin `protobuf:"bytes,1,rep,name=claimable_incentives,json=claimableIncentives,proto3" json:"claimable_incentives" yaml:"claimable_incentives"`
-	ForfeitedIncentives []types2.Coin `protobuf:"bytes,2,rep,name=forfeited_incentives,json=forfeitedIncentives,proto3" json:"forfeited_incentives" yaml:"forfeited_incentives"`
+	ClaimableIncentives []types2.Coin                               `protobuf:"bytes,1,rep,name=claimable_incentives,json=claimableIncentives,proto3" json:"claimable_incentives" yaml:"claimable_incentives"`
+	ForfeitedIncentives github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,2,rep,name=forfeited_incentives,json=forfeitedIncentives,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"forfeited_incentives" yaml:"forfeited_incentives"`
 }
 
 func (m *ClaimableIncentivesResponse) Reset()         { *m = ClaimableIncentivesResponse{} }
@@ -923,7 +923,7 @@ func (m *ClaimableIncentivesResponse) GetClaimableIncentives() []types2.Coin {
 	return nil
 }
 
-func (m *ClaimableIncentivesResponse) GetForfeitedIncentives() []types2.Coin {
+func (m *ClaimableIncentivesResponse) GetForfeitedIncentives() github_com_cosmos_cosmos_sdk_types.DecCoins {
 	if m != nil {
 		return m.ForfeitedIncentives
 	}
@@ -1238,6 +1238,103 @@ func (m *IncentiveRecordsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
+// =============================== CFMMPoolIdLinkFromConcentratedPoolId
+type CFMMPoolIdLinkFromConcentratedPoolIdRequest struct {
+	ConcentratedPoolId uint64 `protobuf:"varint,1,opt,name=concentrated_pool_id,json=concentratedPoolId,proto3" json:"concentrated_pool_id,omitempty" yaml:"concentrated_pool_id"`
+}
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) Reset() {
+	*m = CFMMPoolIdLinkFromConcentratedPoolIdRequest{}
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) String() string {
+	return proto.CompactTextString(m)
+}
+func (*CFMMPoolIdLinkFromConcentratedPoolIdRequest) ProtoMessage() {}
+func (*CFMMPoolIdLinkFromConcentratedPoolIdRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5c83e18b11fd607d, []int{24}
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CFMMPoolIdLinkFromConcentratedPoolIdRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CFMMPoolIdLinkFromConcentratedPoolIdRequest.Merge(m, src)
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_CFMMPoolIdLinkFromConcentratedPoolIdRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CFMMPoolIdLinkFromConcentratedPoolIdRequest proto.InternalMessageInfo
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) GetConcentratedPoolId() uint64 {
+	if m != nil {
+		return m.ConcentratedPoolId
+	}
+	return 0
+}
+
+type CFMMPoolIdLinkFromConcentratedPoolIdResponse struct {
+	CfmmPoolId uint64 `protobuf:"varint,1,opt,name=cfmm_pool_id,json=cfmmPoolId,proto3" json:"cfmm_pool_id,omitempty" yaml:"cfmm_pool_id"`
+}
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) Reset() {
+	*m = CFMMPoolIdLinkFromConcentratedPoolIdResponse{}
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*CFMMPoolIdLinkFromConcentratedPoolIdResponse) ProtoMessage() {}
+func (*CFMMPoolIdLinkFromConcentratedPoolIdResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5c83e18b11fd607d, []int{25}
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CFMMPoolIdLinkFromConcentratedPoolIdResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CFMMPoolIdLinkFromConcentratedPoolIdResponse.Merge(m, src)
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_CFMMPoolIdLinkFromConcentratedPoolIdResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CFMMPoolIdLinkFromConcentratedPoolIdResponse proto.InternalMessageInfo
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) GetCfmmPoolId() uint64 {
+	if m != nil {
+		return m.CfmmPoolId
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*UserPositionsRequest)(nil), "osmosis.concentratedliquidity.v1beta1.UserPositionsRequest")
 	proto.RegisterType((*UserPositionsResponse)(nil), "osmosis.concentratedliquidity.v1beta1.UserPositionsResponse")
@@ -1263,6 +1360,8 @@ func init() {
 	proto.RegisterType((*TickAccumulatorTrackersResponse)(nil), "osmosis.concentratedliquidity.v1beta1.TickAccumulatorTrackersResponse")
 	proto.RegisterType((*IncentiveRecordsRequest)(nil), "osmosis.concentratedliquidity.v1beta1.IncentiveRecordsRequest")
 	proto.RegisterType((*IncentiveRecordsResponse)(nil), "osmosis.concentratedliquidity.v1beta1.IncentiveRecordsResponse")
+	proto.RegisterType((*CFMMPoolIdLinkFromConcentratedPoolIdRequest)(nil), "osmosis.concentratedliquidity.v1beta1.CFMMPoolIdLinkFromConcentratedPoolIdRequest")
+	proto.RegisterType((*CFMMPoolIdLinkFromConcentratedPoolIdResponse)(nil), "osmosis.concentratedliquidity.v1beta1.CFMMPoolIdLinkFromConcentratedPoolIdResponse")
 }
 
 func init() {
@@ -1429,6 +1528,9 @@ type QueryClient interface {
 	// TickAccumulatorTrackers returns the tick accumulator trackers.
 	// Contains spread factor and uptime accumulator trackers.
 	TickAccumulatorTrackers(ctx context.Context, in *TickAccumulatorTrackersRequest, opts ...grpc.CallOption) (*TickAccumulatorTrackersResponse, error)
+	// CFMMPoolIdLinkFromConcentratedPoolId returns the pool id of the CFMM
+	// pool that is linked with the given concentrated pool.
+	CFMMPoolIdLinkFromConcentratedPoolId(ctx context.Context, in *CFMMPoolIdLinkFromConcentratedPoolIdRequest, opts ...grpc.CallOption) (*CFMMPoolIdLinkFromConcentratedPoolIdResponse, error)
 }
 
 type queryClient struct {
@@ -1538,6 +1640,15 @@ func (c *queryClient) TickAccumulatorTrackers(ctx context.Context, in *TickAccum
 	return out, nil
 }
 
+func (c *queryClient) CFMMPoolIdLinkFromConcentratedPoolId(ctx context.Context, in *CFMMPoolIdLinkFromConcentratedPoolIdRequest, opts ...grpc.CallOption) (*CFMMPoolIdLinkFromConcentratedPoolIdResponse, error) {
+	out := new(CFMMPoolIdLinkFromConcentratedPoolIdResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.concentratedliquidity.v1beta1.Query/CFMMPoolIdLinkFromConcentratedPoolId", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Pools returns all concentrated liquidity pools
@@ -1569,6 +1680,9 @@ type QueryServer interface {
 	// TickAccumulatorTrackers returns the tick accumulator trackers.
 	// Contains spread factor and uptime accumulator trackers.
 	TickAccumulatorTrackers(context.Context, *TickAccumulatorTrackersRequest) (*TickAccumulatorTrackersResponse, error)
+	// CFMMPoolIdLinkFromConcentratedPoolId returns the pool id of the CFMM
+	// pool that is linked with the given concentrated pool.
+	CFMMPoolIdLinkFromConcentratedPoolId(context.Context, *CFMMPoolIdLinkFromConcentratedPoolIdRequest) (*CFMMPoolIdLinkFromConcentratedPoolIdResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -1607,6 +1721,9 @@ func (*UnimplementedQueryServer) IncentiveRecords(ctx context.Context, req *Ince
 }
 func (*UnimplementedQueryServer) TickAccumulatorTrackers(ctx context.Context, req *TickAccumulatorTrackersRequest) (*TickAccumulatorTrackersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TickAccumulatorTrackers not implemented")
+}
+func (*UnimplementedQueryServer) CFMMPoolIdLinkFromConcentratedPoolId(ctx context.Context, req *CFMMPoolIdLinkFromConcentratedPoolIdRequest) (*CFMMPoolIdLinkFromConcentratedPoolIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CFMMPoolIdLinkFromConcentratedPoolId not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -1811,6 +1928,24 @@ func _Query_TickAccumulatorTrackers_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_CFMMPoolIdLinkFromConcentratedPoolId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CFMMPoolIdLinkFromConcentratedPoolIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).CFMMPoolIdLinkFromConcentratedPoolId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.concentratedliquidity.v1beta1.Query/CFMMPoolIdLinkFromConcentratedPoolId",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).CFMMPoolIdLinkFromConcentratedPoolId(ctx, req.(*CFMMPoolIdLinkFromConcentratedPoolIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.concentratedliquidity.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -1858,6 +1993,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TickAccumulatorTrackers",
 			Handler:    _Query_TickAccumulatorTrackers_Handler,
+		},
+		{
+			MethodName: "CFMMPoolIdLinkFromConcentratedPoolId",
+			Handler:    _Query_CFMMPoolIdLinkFromConcentratedPoolId_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -2820,6 +2959,62 @@ func (m *IncentiveRecordsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ConcentratedPoolId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ConcentratedPoolId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.CfmmPoolId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.CfmmPoolId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -3211,6 +3406,30 @@ func (m *IncentiveRecordsResponse) Size() (n int) {
 	if m.Pagination != nil {
 		l = m.Pagination.Size()
 		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ConcentratedPoolId != 0 {
+		n += 1 + sovQuery(uint64(m.ConcentratedPoolId))
+	}
+	return n
+}
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.CfmmPoolId != 0 {
+		n += 1 + sovQuery(uint64(m.CfmmPoolId))
 	}
 	return n
 }
@@ -4977,7 +5196,7 @@ func (m *ClaimableIncentivesResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ForfeitedIncentives = append(m.ForfeitedIncentives, types2.Coin{})
+			m.ForfeitedIncentives = append(m.ForfeitedIncentives, types2.DecCoin{})
 			if err := m.ForfeitedIncentives[len(m.ForfeitedIncentives)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -5600,6 +5819,144 @@ func (m *IncentiveRecordsResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CFMMPoolIdLinkFromConcentratedPoolIdRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CFMMPoolIdLinkFromConcentratedPoolIdRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConcentratedPoolId", wireType)
+			}
+			m.ConcentratedPoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ConcentratedPoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CFMMPoolIdLinkFromConcentratedPoolIdResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CFMMPoolIdLinkFromConcentratedPoolIdResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CfmmPoolId", wireType)
+			}
+			m.CfmmPoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.CfmmPoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])

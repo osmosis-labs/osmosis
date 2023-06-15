@@ -88,6 +88,8 @@ and control over token transfers.
   * [#4682](https://github.com/osmosis-labs/osmosis/pull/4682) feat(CL): x/poolmanager spot price query for concentrated liquidity
   * [#5138](https://github.com/osmosis-labs/osmosis/pull/5138) refactor: rename swap fee to spread factor
   * [#5020](https://github.com/osmosis-labs/osmosis/pull/5020) Add gas config to the client.toml
+  * [#5459](https://github.com/osmosis-labs/osmosis/pull/5459) Create locktypes.LockQueryType.NoLock gauge. MsgCreateGauge takes pool id for new gauge type.
+  * [#5503](https://github.com/osmosis-labs/osmosis/pull/5503) Deprecate gamm spot price query and add pool manager spot price query to stargate query whitelist.
 
 ## State Breaking
   * [#5380](https://github.com/osmosis-labs/osmosis/pull/5380) feat: add ica authorized messages in upgrade handler
@@ -99,6 +101,7 @@ and control over token transfers.
   * [#4801](https://github.com/osmosis-labs/osmosis/pull/4801) refactor: remove GetTotalShares, GetTotalLiquidity and GetExitFee from PoolI
   * [#4951](https://github.com/osmosis-labs/osmosis/pull/4951) feat: implement pool liquidity query in pool manager, deprecate the one in gamm
   * [#5000](https://github.com/osmosis-labs/osmosis/pull/5000) osmomath.Power panics for base < 1 to temporarily restrict broken logic for such base.
+  * [#5468](https://github.com/osmosis-labs/osmosis/pull/5468) fix: Reduce tokenfactory denom creation gas fee to 1_000_000
 
 ## Dependencies
   * [#4783](https://github.com/osmosis-labs/osmosis/pull/4783) Update wasmd to 0.31 

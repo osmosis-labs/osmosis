@@ -57,7 +57,12 @@ var (
 
 // Setup sets up basic environment for suite (App, Ctx, and test accounts)
 func (s *KeeperTestHelper) Setup() {
-	s.App = app.Setup(false)
+	dir, err := os.MkdirTemp("", "osmosisd-test-home")
+	if err != nil {
+		panic(fmt.Sprintf("failed creating temporary directory: %v", err))
+	}
+	s.T().Cleanup(func() { os.RemoveAll(dir) })
+	s.App = app.SetupWithCustomHome(false, dir)
 	s.setupGeneral()
 }
 

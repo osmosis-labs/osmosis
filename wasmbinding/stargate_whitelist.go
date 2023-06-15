@@ -14,10 +14,11 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 
+	gammv2types "github.com/osmosis-labs/osmosis/v16/x/gamm/v2types"
+
 	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
 	downtimequerytypes "github.com/osmosis-labs/osmosis/v16/x/downtime-detector/client/queryproto"
 	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-	gammv2types "github.com/osmosis-labs/osmosis/v16/x/gamm/v2types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v16/x/mint/types"
@@ -131,6 +132,7 @@ func init() {
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/EstimateSinglePoolSwapExactAmountIn", &poolmanagerqueryproto.EstimateSwapExactAmountInResponse{})
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/EstimateSinglePoolSwapExactAmountOut", &poolmanagerqueryproto.EstimateSwapExactAmountOutResponse{})
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/Pool", &poolmanagerqueryproto.PoolResponse{})
+	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/SpotPrice", &poolmanagerqueryproto.SpotPriceResponse{})
 
 	// txfees
 	setWhitelistedQuery("/osmosis.txfees.v1beta1.Query/FeeTokens", &txfeestypes.QueryFeeTokensResponse{})

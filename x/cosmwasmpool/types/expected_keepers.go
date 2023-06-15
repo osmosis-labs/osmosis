@@ -52,4 +52,6 @@ type ContractKeeper interface {
 // the WasmKeeper.
 type WasmKeeper interface {
 	QuerySmart(ctx sdk.Context, contractAddress sdk.AccAddress, queryMsg []byte) ([]byte, error)
+
+	GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmtypes.ContractInfo
 }
