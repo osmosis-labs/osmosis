@@ -223,7 +223,7 @@ func KeyPool(poolId uint64) []byte {
 // KeyIncentiveRecord is the key used to store incentive records using the combination of
 // pool id + min uptime index + incentive record id.
 func KeyIncentiveRecord(poolId uint64, minUptimeIndex int, id uint64) []byte {
-	return []byte(fmt.Sprintf("%s%s%d%s%d%s%d", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex, KeySeparator, id))
+	return []byte(fmt.Sprintf("%s%s%d%s%d%s%d%s", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex, KeySeparator, id, KeySeparator))
 }
 
 // KeyUptimeIncentiveRecords returns the prefix key for incentives records using the combination of pool id + min uptime index.

@@ -166,7 +166,7 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 	// - min uptime
 	// - incentive id
 
-	relevantIncentiveKeyComponents := incentiveRecordKeyComponents[len(incentiveRecordKeyComponents)-3:]
+	relevantIncentiveKeyComponents := incentiveRecordKeyComponents[len(incentiveRecordKeyComponents)-4:]
 
 	incentivePrefix := incentiveRecordKeyComponents[0]
 	if incentivePrefix != string(types.IncentivePrefix) {
