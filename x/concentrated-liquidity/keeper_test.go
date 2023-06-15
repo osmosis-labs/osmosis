@@ -61,6 +61,20 @@ var (
 	ThreeOrderedConsecutiveAuthorizedUptimes             = []time.Duration{time.Nanosecond, time.Minute, time.Hour, time.Hour * 24}
 	ThreeUnorderedNonConsecutiveAuthorizedUptimes        = []time.Duration{time.Nanosecond, time.Hour * 24 * 7, time.Minute}
 	AllUptimesAuthorized                                 = types.SupportedUptimes
+	DefaultRangeTestParams                               = RangeTestParams{
+		baseNumPositions: 1000,
+		baseAssets: sdk.NewCoins(
+			sdk.NewCoin(ETH, sdk.NewInt(5000000000)),
+			sdk.NewCoin(USDC, sdk.NewInt(5000000000)),
+		),
+		baseTimeBetweenJoins: time.Hour,
+		numSwapAddresses:     10,
+		baseSwapAmount:       sdk.NewInt(10000000),
+		fuzzNumPositions:     true,
+		fuzzAssets:           true,
+		fuzzSwapAmounts:      true,
+		fuzzTimeBetweenJoins: true,
+	}
 )
 
 type KeeperTestSuite struct {
@@ -95,12 +109,10 @@ func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, pro
 	}
 
 	s.FundAcc(owner, providedCoins.Add(roundingErrorCoins...))
-	fmt.Println("owner balances before liq: ", s.App.BankKeeper.GetAllBalances(s.Ctx, owner))
-	positionId, actual0, actual1, liquidityDelta, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, providedCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+	positionId, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, providedCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
 	s.Require().NoError(err)
 	liquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, positionId)
 	s.Require().NoError(err)
-	fmt.Println("actual0, actual1, liquidityDelta, liquidity: ", actual0, actual1, liquidityDelta, liquidity)
 	return liquidity, positionId
 }
 
@@ -482,7 +494,7 @@ type RangeTestParams struct {
 }
 
 // runMultiplePositionRanges runs various test constructions and invariants on the given position ranges.
-func (s *KeeperTestSuite) runMultiplePositionRanges(ranges [][]int64) {
+func (s *KeeperTestSuite) runMultiplePositionRanges(ranges [][]int64, rangeTestParams RangeTestParams) {
 	// Pool setup parameters to vary:
 	// 1. Spread factor
 	// 2. Incentive records (and all subfields)
@@ -518,30 +530,10 @@ func (s *KeeperTestSuite) runMultiplePositionRanges(ranges [][]int64) {
 	// Preset seed to ensure deterministic test runs.
 	rand.Seed(2)
 
-	baseAssets := sdk.NewCoins(
-		sdk.NewCoin(ETH, sdk.NewInt(5000000000)),
-		sdk.NewCoin(USDC, sdk.NewInt(5000000000)),
-	)
-
-	defaultParams := RangeTestParams{
-		baseNumPositions:     100,
-		baseAssets:           baseAssets,
-		baseTimeBetweenJoins: time.Hour,
-		numSwapAddresses:     10,
-		baseSwapAmount:       sdk.NewInt(1000000),
-		fuzzNumPositions:     true,
-		fuzzAssets:           true,
-		fuzzSwapAmounts:      true,
-		fuzzTimeBetweenJoins: true,
-		// singleAddrPerRange: true,
-	}
-
 	// TODO: make this pool custom with spread factor (fuzzed?)
 	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultSpreadFactor)
 
-	fmt.Println("Current tick: ", pool.GetCurrentTick())
-
-	s.SetupRanges(pool, ranges, defaultParams)
+	s.SetupRanges(pool, ranges, rangeTestParams)
 }
 
 // SetupRanges takes in a set of tick ranges
@@ -554,12 +546,9 @@ func (s *KeeperTestSuite) SetupRanges(pool types.ConcentratedPoolExtension, rang
 
 	// Prepare a slice tracking how many positions to create on each range.
 	numPositionSlice, totalPositions := s.prepareNumPositionSlice(ranges, testParams.baseNumPositions, testParams.fuzzNumPositions)
-	fmt.Println("numPositionSlice, total positions: ", numPositionSlice, totalPositions)
 
 	// Prepare a slice tracking how many assets each position should have (tracked as Coins type).
 	assetSlice, totalAssets := s.prepareAssetSlice(ranges, totalPositions, testParams.baseAssets, testParams.fuzzAssets)
-	fmt.Println("assetSlice: ", assetSlice)
-	fmt.Println("total assets: ", totalAssets)
 
 	// --- Set up addresses ---
 
@@ -602,23 +591,15 @@ func (s *KeeperTestSuite) SetupRanges(pool types.ConcentratedPoolExtension, rang
 			}
 
 			curAssets := assetSlice[j]
+
 			// Setup position
-			fmt.Println("first position assets and range: ", curAssets, ranges[i][0], ranges[i][1])
-			// Double-fund the position account to ensure position is created successfully
+			// We double-fund the position account to ensure position is created successfully
 			// TODO: remove this line once tick rounding bug is fixed and merged
 			s.FundAcc(curAddr, curAssets)
 			curLiquidity, curPositionId := s.SetupPosition(pool.GetId(), curAddr, curAssets, ranges[i][0], ranges[i][1], true)
-			fmt.Println("owner balances after liq: ", s.App.BankKeeper.GetAllBalances(s.Ctx, curAddr))
-			fmt.Println("first position addr index and ID: ", j, curPositionId)
 
 			// Let time elapse after join
 			s.addRandomizedBlockTime(testParams.baseTimeBetweenJoins, testParams.fuzzTimeBetweenJoins)
-
-			pool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
-			poolLiquidity := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
-			fmt.Println("Current tick before swap: ", pool.GetCurrentTick())
-			fmt.Println("poolLiquidity before swap: ", poolLiquidity)
 
 			// Execute swap against pool
 			swappedIn, swappedOut := s.executeRandomizedSwap(pool, swapAddresses, testParams.baseSwapAmount, testParams.fuzzSwapAmounts)
@@ -626,14 +607,6 @@ func (s *KeeperTestSuite) SetupRanges(pool types.ConcentratedPoolExtension, rang
 			// Update tracker for expected total assets in pool
 			totalAssets = totalAssets.Add(swappedIn).Sub(sdk.NewCoins(swappedOut))
 
-			pool, err = s.clk.GetPoolById(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
-			poolLiquidity = s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
-			fmt.Println("Current tick after swap: ", pool.GetCurrentTick())
-			_, updatedCurTickSqrtPrice, _ := math.TickToSqrtPrice(pool.GetCurrentTick())
-			fmt.Println("current tick/bucket's sqrt price: ", updatedCurTickSqrtPrice)
-			fmt.Println("pool's current sqrt price: ", pool.GetCurrentSqrtPrice())
-			fmt.Println("poolLiquidity after swap: ", poolLiquidity)
 			// Track new position values in global variables
 			totalLiquidity = totalLiquidity.Add(curLiquidity)
 			allPositionIds = append(allPositionIds, curPositionId)
@@ -650,22 +623,12 @@ func (s *KeeperTestSuite) SetupRanges(pool types.ConcentratedPoolExtension, rang
 	// Ensure that the correct number of positions were set up globally
 	s.Require().Equal(totalPositions, len(allPositionIds))
 
-	// Get pool assets
-	poolAssets := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
-	fmt.Println("poolAssets: ", poolAssets)
-	pool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
-	s.Require().NoError(err)
-	fmt.Println("Current tick: ", pool.GetCurrentTick())
-
 	// TODO: ensure these pass after tick rounding bug is fixed and merged
+	// poolAssets := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
 	// s.Require().Equal(totalAssets, poolAssets)
 	// s.assertWithdrawAllInvariant()
 
 	s.assertTotalRewardsInvariant()
-
-	fmt.Println("Last visited index: ", lastVisitedBlockIndex)
-
-	fmt.Println("Values: \n", numPositionSlice, "Length: ", len(numPositionSlice), "\n", positionAddresses, "\n", swapAddresses)
 }
 
 // numPositionSlice prepares a slice tracking the number of positions to create on each range, fuzzing the number at each step if applicable.
@@ -760,10 +723,8 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 		}
 	}
 
-	// TODO: decide which swap function to use
-	// TODO: fuzz swap amounts
-
-	swapInFunded := sdk.NewCoin(swapInDenom, sdk.Int(sdk.MustNewDecFromStr("10000000000000000000000")))
+	// TODO: pick a more granular amount to fund without losing ability to swap at really high/low ticks
+	swapInFunded := sdk.NewCoin(swapInDenom, sdk.Int(sdk.MustNewDecFromStr("10000000000000000000000000000000000000000")))
 	s.FundAcc(swapAddress, sdk.NewCoins(swapInFunded))
 
 	baseSwapOutAmount := sdk.MinInt(baseSwapAmount, poolLiquidity.AmountOf(swapOutDenom).ToDec().Mul(sdk.MustNewDecFromStr("0.5")).TruncateInt())
@@ -773,19 +734,10 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 	}
 
 	swapOutCoin := sdk.NewCoin(swapOutDenom, baseSwapOutAmount)
-	fmt.Println("remaining swap out amount: ", poolLiquidity.AmountOf(swapOutDenom))
-	fmt.Println("asset 0: ", pool.GetToken0())
-	fmt.Println("swapInDenom: ", swapInDenom)
-	fmt.Println("swapOutCoin: ", swapOutCoin)
-	fmt.Println("poolLiquidity: ", poolLiquidity)
-	allTicks, _ := s.clk.GetAllInitializedTicksForPool(s.Ctx, pool.GetId())
-	fmt.Println("All initialized ticks before next swap: ", allTicks)
+
 	// Note that we set the price limit to zero to ensure that the swap can execute in either direction (gets automatically set to correct limit)
-	fmt.Println("------ENTERING SWAP------")
-	fmt.Println("swap fields: ", swapOutCoin, swapInDenom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
 	swappedIn, swappedOut, _, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, swapOutCoin, swapInDenom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
 	s.Require().NoError(err)
-	fmt.Println("------EXITING SWAP------")
 
 	return swappedIn, swappedOut
 }
@@ -798,7 +750,6 @@ func (s *KeeperTestSuite) addRandomizedBlockTime(baseTimeToAdd time.Duration, fu
 	}
 
 	s.AddBlockTime(timeToAdd)
-	fmt.Println("time added: ", timeToAdd)
 }
 
 // fuzzInt64 fuzzes an int64 number uniformly within a range defined by `multiplier` and centered on the provided `intToFuzz`.

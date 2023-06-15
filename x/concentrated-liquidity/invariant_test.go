@@ -88,8 +88,8 @@ func (s *KeeperTestSuite) assertTotalRewardsInvariant() {
 	}
 
 	// Assert total collected spread rewards and incentives equal to expected
-	s.Require().True(errTolerance.EqualCoins(expectedTotalSpreadRewards, totalCollectedSpread))
-	s.Require().True(errTolerance.EqualCoins(expectedTotalIncentives, totalCollectedIncentives))
+	s.Require().True(errTolerance.EqualCoins(expectedTotalSpreadRewards, totalCollectedSpread), "expected spread rewards vs. collected: %s vs. %s", expectedTotalSpreadRewards, totalCollectedSpread)
+	s.Require().True(errTolerance.EqualCoins(expectedTotalIncentives, totalCollectedIncentives), "expected incentives vs. collected: %s vs. %s", expectedTotalIncentives, totalCollectedIncentives)
 
 	// Refetch total pool balances across all pools
 	remainingPositions, finalTotalPoolLiquidity, remainingTotalSpreadRewards, remainingTotalIncentives := s.getAllPositionsAndPoolBalances(cachedCtx)

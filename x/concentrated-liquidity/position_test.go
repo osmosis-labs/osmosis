@@ -2511,15 +2511,44 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 }
 
 func (s *KeeperTestSuite) TestMultipleRanges() {
-	dummyRanges := [][]int64{
-		{-10000, 10000},
-		{10000, 20000},
+	tests := map[string]struct {
+		tickRanges      [][]int64
+		rangeTestParams RangeTestParams
+	}{
+		"one min width range": {
+			tickRanges: [][]int64{
+				{0, 100},
+			},
+			rangeTestParams: DefaultRangeTestParams,
+		},
+		"two adjacent ranges": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{10000, 20000},
+			},
+			rangeTestParams: DefaultRangeTestParams,
+		},
+
+		// Both of these lead to underclaiming of fees greater than additive
+		// error tolerance of 1 per token per position. Increasing ticks increases
+		// error disproportionally, while increasing tick range decreases error proportionally.
+		//
+		// "one range on large tick": {
+		// 	tickRanges: [][]int64{
+		// 		{207000000, 207000000 + 100},
+		// 	},
+		// },
+		// "one range on small tick": {
+		// 	tickRanges: [][]int64{
+		// 		{-107000000, -107000000 + 100},
+		// 	},
+		// },
 	}
 
-	// Close to MinTick case (triggers large tick rounding)
-	// {-161795100, -160000000},
-
-	// Working no fuzz assets base case:
-	// {-10000, 10000},
-	s.runMultiplePositionRanges(dummyRanges)
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			s.runMultiplePositionRanges(tc.tickRanges, tc.rangeTestParams)
+		})
+	}
 }

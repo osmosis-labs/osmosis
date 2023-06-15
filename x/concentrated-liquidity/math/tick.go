@@ -38,8 +38,6 @@ func TickToSqrtPrice(tickIndex int64) (sdk.Dec, sdk.Dec, error) {
 
 	// Determine the sqrtPrice from the price
 	sqrtPrice, err := price.ApproxSqrt()
-	fmt.Println("*Price: ", price)
-	fmt.Println("*SqrtPrice: ", sqrtPrice)
 	if err != nil {
 		return sdk.Dec{}, sdk.Dec{}, err
 	}
@@ -138,7 +136,6 @@ func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (int64, error) {
 	if tickIndexModulus < 0 {
 		tickIndexModulus += int64(tickSpacing)
 	}
-	fmt.Println("tickIndexModulus: ", tickIndexModulus)
 
 	if tickIndexModulus != 0 {
 		tickIndex = tickIndex - tickIndexModulus
@@ -205,7 +202,7 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
 	// (price - geoSpacing.initialPrice) / geoSpacing.additiveIncrementPerTick
 	priceInThisExponent := osmomath.BigDecFromSDKDec(price.Sub(geoSpacing.initialPrice))
 	ticksFilledByCurrentSpacing := priceInThisExponent.Quo(geoSpacing.additiveIncrementPerTick)
-	fmt.Println("ticksFilledByCurrentSpacing: ", ticksFilledByCurrentSpacing)
+
 	// we get the bucket index by:
 	// * taking the bucket index of the smallest price in this tick
 	// * adding to it the number of ticks "completely" filled by the current spacing

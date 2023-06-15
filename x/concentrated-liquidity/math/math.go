@@ -17,10 +17,6 @@ func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
-	fmt.Println("---Liquidity0 inputs:")
-	fmt.Println("----amount: ", amount)
-	fmt.Println("----sqrtPriceA: ", sqrtPriceA)
-	fmt.Println("----sqrtPriceB: ", sqrtPriceB)
 
 	// We convert to BigDec to avoid precision loss when calculating liquidity. Without doing this,
 	// our liquidity calculations will be off from our theoretical calculations within our tests.
@@ -68,10 +64,6 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
-	fmt.Println("---CalcAmount0Delta inputs:")
-	fmt.Println("----liq: ", liq)
-	fmt.Println("----sqrtPriceA: ", sqrtPriceA)
-	fmt.Println("----sqrtPriceB: ", sqrtPriceB)
 
 	diff := sqrtPriceB.Sub(sqrtPriceA)
 	// if calculating for amountIn, we round up
@@ -106,7 +98,6 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec {
 	// make sqrtPriceA the smaller value amongst sqrtPriceA and sqrtPriceB
 	if sqrtPriceA.GT(sqrtPriceB) {
-		fmt.Println("values flipped in calc1delta")
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
 	diff := sqrtPriceB.Sub(sqrtPriceA)
@@ -185,26 +176,19 @@ func GetNextSqrtPriceFromAmount1OutRoundingDown(sqrtPriceCurrent, liquidity, amo
 func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0, amount1 sdk.Int) (liquidity sdk.Dec) {
 	// Reorder the prices so that sqrtPriceA is the smaller of the two.
 	if sqrtPriceA.GT(sqrtPriceB) {
-		fmt.Println("prices reordered")
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
-	fmt.Println("[assets -> liq]: sqrtPriceLowerTick, sqrtPriceUpperTick, currentSqrtPrice: ", sqrtPriceA, sqrtPriceB, sqrtPrice)
 
-	// TODO: find rounded lower, current, and upper ticks -> replace bound checks with them
-
-	if sqrtPrice.LT(sqrtPriceA) {
-		fmt.Println("[assets -> liq]: curTick is below range")
+	if sqrtPrice.LTE(sqrtPriceA) {
 		// If the current price is less than or equal to the lower tick, then we use the liquidity0 formula.
 		liquidity = Liquidity0(amount0, sqrtPriceA, sqrtPriceB)
-	} else if sqrtPrice.LT(sqrtPriceB) {
-		fmt.Println("[assets -> liq]: curTick is in range")
-		// If the current price is between the lower and upper ticks (inclusive of the lower tick but not the upper tick),
+	} else if sqrtPrice.LTE(sqrtPriceB) {
+		// If the current price is between the lower and upper ticks (non-inclusive of the lower tick but inclusive of the upper tick),
 		// then we use the minimum of the liquidity0 and liquidity1 formulas.
 		liquidity0 := Liquidity0(amount0, sqrtPrice, sqrtPriceB)
 		liquidity1 := Liquidity1(amount1, sqrtPrice, sqrtPriceA)
 		liquidity = sdk.MinDec(liquidity0, liquidity1)
 	} else {
-		fmt.Println("[assets -> liq]: curTick is above range")
 		// If the current price is greater than the upper tick, then we use the liquidity1 formula.
 		liquidity = Liquidity1(amount1, sqrtPriceB, sqrtPriceA)
 	}

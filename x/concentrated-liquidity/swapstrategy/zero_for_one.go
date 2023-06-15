@@ -161,7 +161,6 @@ func (s zeroForOneStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId u
 	startKey := types.TickIndexToBytes(currentTickIndexPlusOne)
 
 	iter := prefixStore.ReverseIterator(nil, startKey)
-	fmt.Println("initial iterator valid, startKey, curTickPlusOne: ", iter.Valid(), startKey)
 
 	for ; iter.Valid(); iter.Next() {
 		// Since, we constructed our prefix store with <TickPrefix | poolID>, the
@@ -171,7 +170,6 @@ func (s zeroForOneStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId u
 			iter.Close()
 			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
 		}
-		fmt.Println("internal considered tick for iterator vs. current+1: ", tick, currentTickIndexPlusOne)
 		if tick < currentTickIndexPlusOne {
 			break
 		}
