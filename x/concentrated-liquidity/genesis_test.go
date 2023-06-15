@@ -961,7 +961,7 @@ func (s *KeeperTestSuite) TestParseFullTickFromBytes() {
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-			fullTick, err := cl.ParseFullTickFromBytesWithoutPoolId(tc.key, tc.val)
+			fullTick, err := cl.ParseFullTickFromBytes(tc.key, tc.val)
 			if tc.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, tc.expectedErr)

@@ -3,7 +3,6 @@ package concentrated_liquidity
 import (
 	"bytes"
 	"errors"
-	"fmt"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,7 +19,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 	k.SetNextPositionId(ctx, genState.NextPositionId)
 	// Initialize pools
 	var unpacker codectypes.AnyUnpacker = k.cdc
-	seenPoolIds := map[uint64]struct{}{}
 	for _, poolData := range genState.PoolData {
 		var pool types.ConcentratedPoolExtension
 		err := unpacker.UnpackAny(poolData.Pool, &pool)
@@ -37,7 +35,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		for _, tick := range poolTicks {
 			k.SetTickInfo(ctx, poolId, tick.TickIndex, &tick.Info)
 		}
-		seenPoolIds[poolId] = struct{}{}
 
 		// set up spread reward accumulators
 		store := ctx.KVStore(k.storeKey)
@@ -62,10 +59,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 
 		// set positions for pool
 		for _, positionWrapper := range poolData.PositionData {
-			if _, ok := seenPoolIds[poolId]; !ok {
-				panic(fmt.Sprintf("found position with pool id (%d) but there is no pool with such id that exists", poolId))
-			}
-
 			err := k.SetPosition(ctx, poolId, sdk.MustAccAddressFromBech32(positionWrapper.Position.Address), positionWrapper.Position.LowerTick, positionWrapper.Position.UpperTick, positionWrapper.Position.JoinTime, positionWrapper.Position.Liquidity, positionWrapper.Position.PositionId, positionWrapper.LockId)
 			if err != nil {
 				panic(err)
@@ -264,17 +257,17 @@ func (k Keeper) initOrUpdateAccumPosition(ctx sdk.Context, accumumulator accum.A
 
 // GetAllInitializedTicksForPoolWithoutPoolId returns all ticks in FullTick struct, without the pool id.
 func (k Keeper) GetAllInitializedTicksForPoolWithoutPoolId(ctx sdk.Context, poolId uint64) ([]genesis.FullTick, error) {
-	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyTickPrefixByPoolId(poolId), ParseFullTickFromBytesWithoutPoolId)
+	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyTickPrefixByPoolId(poolId), ParseFullTickFromBytes)
 }
 
-// ParseFullTickFromBytesWithoutPoolId takes key and value byte slices and attempts to parse
+// ParseFullTickFromBytes takes key and value byte slices and attempts to parse
 // them into a FullTick struct. If the key or value is not valid, an appropriate
 // error is returned. The function expects the key to have three components
 // 1. The tick prefix (1 byte)
 // 2. The pool id (8 bytes)
 // 3. The tick index (1 byte for sign + 8 bytes for unsigned integer)
 //
-// The function returns a FullTick struct containing the pool id, tick index, and
+// The function returns a FullTick struct containing the tick index, and
 // tick information.
 //
 // Parameters:
@@ -284,7 +277,7 @@ func (k Keeper) GetAllInitializedTicksForPoolWithoutPoolId(ctx sdk.Context, pool
 // Returns:
 // - genesis.FullTick: A struct containing the tick index, and tick information.
 // - error: An error if the key or value is not valid or if the parsing fails.
-func ParseFullTickFromBytesWithoutPoolId(key, value []byte) (tick genesis.FullTick, err error) {
+func ParseFullTickFromBytes(key, value []byte) (tick genesis.FullTick, err error) {
 	if len(key) == 0 {
 		return genesis.FullTick{}, types.ErrKeyNotFound
 	}
