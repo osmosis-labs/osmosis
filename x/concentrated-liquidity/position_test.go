@@ -2505,3 +2505,49 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestMultipleRanges() {
+	tests := map[string]struct {
+		tickRanges      [][]int64
+		rangeTestParams RangeTestParams
+	}{
+		// The following two tests will fail until the tick rounding bug is fixed (and should pass after):
+		// https://github.com/osmosis-labs/osmosis/issues/5516
+		//
+		// "one min width range": {
+		// 	tickRanges: [][]int64{
+		// 		{0, 100},
+		// 	},
+		// 	rangeTestParams: DefaultRangeTestParams,
+		// },
+		// "two adjacent ranges": {
+		// 	tickRanges: [][]int64{
+		// 		{-10000, 10000},
+		// 		{10000, 20000},
+		// 	},
+		// 	rangeTestParams: DefaultRangeTestParams,
+		// },
+
+		// Both of these lead to underclaiming of fees greater than additive
+		// error tolerance of 1 per token per position. Increasing ticks increases
+		// error disproportionally, while increasing tick range decreases error proportionally.
+		//
+		// "one range on large tick": {
+		// 	tickRanges: [][]int64{
+		// 		{207000000, 207000000 + 100},
+		// 	},
+		// },
+		// "one range on small tick": {
+		// 	tickRanges: [][]int64{
+		// 		{-107000000, -107000000 + 100},
+		// 	},
+		// },
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			s.runMultiplePositionRanges(tc.tickRanges, tc.rangeTestParams)
+		})
+	}
+}
