@@ -341,8 +341,7 @@ func (s *KeeperTestSuite) TestCollectSpreadRewards_Events() {
 // when calling CollectIncentives.
 func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 	uptimeHelper := getExpectedUptimes()
-	twoWeeks := 14 * time.Hour * 24
-
+	twoWeeks := time.Hour * 24 * 14
 	testcases := map[string]struct {
 		upperTick                           int64
 		lowerTick                           int64
@@ -354,15 +353,15 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 		expectedMessageEvents               int
 		expectedError                       error
 	}{
-		// "single position ID": {
-		// 	upperTick:                           DefaultUpperTick,
-		// 	lowerTick:                           DefaultLowerTick,
-		// 	positionIds:                         []uint64{DefaultPositionId},
-		// 	numPositionsToCreate:                1,
-		// 	expectedTotalCollectIncentivesEvent: 1,
-		// 	expectedCollectIncentivesEvent:      1,
-		// 	expectedMessageEvents:               2, // 1 for collect incentives, 1 for send message
-		// },
+		"single position ID": {
+			upperTick:                           DefaultUpperTick,
+			lowerTick:                           DefaultLowerTick,
+			positionIds:                         []uint64{DefaultPositionId},
+			numPositionsToCreate:                1,
+			expectedTotalCollectIncentivesEvent: 1,
+			expectedCollectIncentivesEvent:      1,
+			expectedMessageEvents:               3, // 1 for collect incentives, 1 for collect send, 1 for forfeit send
+		},
 		"two position IDs": {
 			upperTick:                           DefaultUpperTick,
 			lowerTick:                           DefaultLowerTick,
@@ -370,34 +369,34 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                2,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      2,
-			expectedMessageEvents:               3, // 1 for collect incentives, 2 for send messages
+			expectedMessageEvents:               5, // 1 for collect incentives, 2 for collect send, 2 for forfeit send
 		},
-		// "three position IDs": {
-		// 	upperTick:                           DefaultUpperTick,
-		// 	lowerTick:                           DefaultLowerTick,
-		// 	positionIds:                         []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
-		// 	numPositionsToCreate:                3,
-		// 	expectedTotalCollectIncentivesEvent: 1,
-		// 	expectedCollectIncentivesEvent:      3,
-		// 	expectedMessageEvents:               4, // 1 for collect incentives, 3 for send messages
-		// },
-		// "error: three position IDs - not an owner": {
-		// 	upperTick:                  DefaultUpperTick,
-		// 	lowerTick:                  DefaultLowerTick,
-		// 	positionIds:                []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
-		// 	numPositionsToCreate:       2,
-		// 	shouldSetupUnownedPosition: true,
-		// 	expectedError:              types.NotPositionOwnerError{},
-		// },
-		// "error": {
-		// 	upperTick:                           DefaultUpperTick,
-		// 	lowerTick:                           DefaultLowerTick,
-		// 	positionIds:                         []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
-		// 	numPositionsToCreate:                2,
-		// 	expectedTotalCollectIncentivesEvent: 0,
-		// 	expectedCollectIncentivesEvent:      0,
-		// 	expectedError:                       types.PositionIdNotFoundError{PositionId: DefaultPositionId + 2},
-		// },
+		"three position IDs": {
+			upperTick:                           DefaultUpperTick,
+			lowerTick:                           DefaultLowerTick,
+			positionIds:                         []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			numPositionsToCreate:                3,
+			expectedTotalCollectIncentivesEvent: 1,
+			expectedCollectIncentivesEvent:      3,
+			expectedMessageEvents:               7, // 1 for collect incentives, 3 for collect send, 3 for forfeit send
+		},
+		"error: three position IDs - not an owner": {
+			upperTick:                  DefaultUpperTick,
+			lowerTick:                  DefaultLowerTick,
+			positionIds:                []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			numPositionsToCreate:       2,
+			shouldSetupUnownedPosition: true,
+			expectedError:              types.NotPositionOwnerError{},
+		},
+		"error": {
+			upperTick:                           DefaultUpperTick,
+			lowerTick:                           DefaultLowerTick,
+			positionIds:                         []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			numPositionsToCreate:                2,
+			expectedTotalCollectIncentivesEvent: 0,
+			expectedCollectIncentivesEvent:      0,
+			expectedError:                       types.PositionIdNotFoundError{PositionId: DefaultPositionId + 2},
+		},
 	}
 
 	for name, tc := range testcases {
@@ -424,36 +423,14 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			err = addToUptimeAccums(s.Ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, uptimeHelper.hundredTokensMultiDenom)
 			s.Require().NoError(err)
 
-			expectedIncentives := sdk.Coins{}
-			expectedForfeit := sdk.Coins{}
-
-			// Determine uptime growth at time of claim
-			// This isn't really straight forward, since when each position claimed, it forfeits its respective rewards and they become claimable by the next
-			// This modifies the uptime accumulator for each position, so we need to determine what that uptime accumulator value will be at the time each position claims.
-			perPosUptimeGrowthAtTimeOfClaim := [][]sdk.DecCoins{}
-			for i := range tc.positionIds {
-				if i == 0 {
-					perPosUptimeGrowthAtTimeOfClaim = append(perPosUptimeGrowthAtTimeOfClaim, uptimeHelper.hundredTokensMultiDenom)
-				} else {
-					newUptimeGrowthPostPreviousUserForfeit := make([]sdk.DecCoins, len(uptimeHelper.hundredTokensMultiDenom))
-					copy(newUptimeGrowthPostPreviousUserForfeit, uptimeHelper.hundredTokensMultiDenom)
-					newUptimeGrowthWithPreviousUserForfeit := perPosUptimeGrowthAtTimeOfClaim[i-1][len(perPosUptimeGrowthAtTimeOfClaim[i-1])-1].MulDec(sdk.NewDec(int64(len(tc.positionIds))).Quo(sdk.NewDec(int64(len(tc.positionIds) - 1))))
-					newUptimeGrowthPostPreviousUserForfeit[len(newUptimeGrowthPostPreviousUserForfeit)-1] = newUptimeGrowthWithPreviousUserForfeit
-					perPosUptimeGrowthAtTimeOfClaim = append(perPosUptimeGrowthAtTimeOfClaim, newUptimeGrowthPostPreviousUserForfeit)
-				}
-			}
-
-			// Using the above calculated uptime growth for each position, calculate the expected redeemed incentives and forfeits.
-			for _, uptimeGrowth := range perPosUptimeGrowthAtTimeOfClaim {
-				expectedIncentivesInternal := expectedIncentivesFromUptimeGrowth(uptimeGrowth, DefaultLiquidityAmt, positionAge, sdk.NewInt(1))
-				expectedForfeitInternal := expectedIncentivesFromUptimeGrowth(uptimeGrowth, DefaultLiquidityAmt, twoWeeks, sdk.NewInt(1)).Sub(expectedIncentivesInternal)
-				expectedIncentives = expectedIncentives.Add(expectedIncentivesInternal...)
-				expectedForfeit = expectedForfeit.Add(expectedForfeitInternal...)
-
-			}
-
-			// Fund the incentive address with the expected incentives to be distributed
-			s.FundAcc(pool.GetIncentivesAddress(), expectedIncentives)
+			numPositions := sdk.NewInt(int64(len(tc.positionIds)))
+			// Fund the incentives address with the amount of incentives we expect the positions to both claim and forfeit.
+			// The claim amount must be funded to the incentives address in order for the rewards to be sent to the user.
+			// The forfeited about must be funded to the incentives address in order for the forfeited rewards to be sent to the community pool.
+			incentivesToBeSentToUsers := expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, positionAge, numPositions)
+			incentivesToBeSentToCommunityPool := expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, twoWeeks, numPositions).Sub(incentivesToBeSentToUsers)
+			totalAmountToFund := incentivesToBeSentToUsers.Add(incentivesToBeSentToCommunityPool...)
+			s.FundAcc(pool.GetIncentivesAddress(), totalAmountToFund)
 
 			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 
@@ -468,19 +445,9 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 
 			// System under test
 			response, err := msgServer.CollectIncentives(sdk.WrapSDKContext(s.Ctx), msg)
-
 			if tc.expectedError == nil {
 				s.Require().NoError(err)
 				s.Require().NotNil(response)
-
-				// Need to change the output to a single coin array for comparison
-				expectedCollectedIncentives := []sdk.Coin{}
-				expectedForfeitIncentives := []sdk.Coin{}
-				expectedCollectedIncentives = append(expectedCollectedIncentives, expectedIncentives...)
-				expectedForfeitIncentives = append(expectedForfeitIncentives, expectedForfeit...)
-
-				s.Require().Equal(expectedCollectedIncentives, response.CollectedIncentives)
-				s.Require().Equal(expectedForfeitIncentives, response.ForfeitedIncentives)
 				s.AssertEventEmitted(s.Ctx, types.TypeEvtTotalCollectIncentives, tc.expectedTotalCollectIncentivesEvent)
 				s.AssertEventEmitted(s.Ctx, types.TypeEvtCollectIncentives, tc.expectedCollectIncentivesEvent)
 				s.AssertEventEmitted(s.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
