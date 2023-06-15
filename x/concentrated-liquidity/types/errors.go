@@ -307,14 +307,13 @@ func (e PositionAlreadyExistsError) Error() string {
 }
 
 type IncentiveRecordNotFoundError struct {
-	PoolId              uint64
-	IncentiveDenom      string
-	MinUptime           time.Duration
-	IncentiveCreatorStr string
+	PoolId            uint64
+	MinUptime         time.Duration
+	IncentiveRecordId uint64
 }
 
 func (e IncentiveRecordNotFoundError) Error() string {
-	return fmt.Sprintf("incentive record not found. pool id (%d), incentive denom (%s), minimum uptime (%s), incentive creator (%s)", e.PoolId, e.IncentiveDenom, e.MinUptime.String(), e.IncentiveCreatorStr)
+	return fmt.Sprintf("incentive record not found. pool id (%d), minimum uptime (%s), incentive record id (%d)", e.PoolId, e.MinUptime.String(), e.IncentiveRecordId)
 }
 
 type StartTimeTooEarlyError struct {
@@ -504,7 +503,15 @@ type InvalidNextPositionIdError struct {
 }
 
 func (e InvalidNextPositionIdError) Error() string {
-	return fmt.Sprintf("invalid next position id (%d), must be positive", e.NextPositionId)
+	return fmt.Sprintf("invalid next incentive record id (%d), must be positive", e.NextPositionId)
+}
+
+type InvalidNextIncentiveRecordIdError struct {
+	NextIncentiveRecordId uint64
+}
+
+func (e InvalidNextIncentiveRecordIdError) Error() string {
+	return fmt.Sprintf("invalid next incentive record id (%d), must be positive", e.NextIncentiveRecordId)
 }
 
 type AddressPoolPositionIdNotFoundError struct {

@@ -1410,13 +1410,11 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 
 	// Set incentives for pool to ensure accumulators work correctly
 	testIncentiveRecord := types.IncentiveRecord{
-		PoolId:               1,
-		IncentiveDenom:       USDC,
-		IncentiveCreatorAddr: s.TestAccs[0].String(),
+		PoolId: 1,
 		IncentiveRecordBody: types.IncentiveRecordBody{
-			RemainingAmount: sdk.NewDec(1000000000000000000),
-			EmissionRate:    sdk.NewDec(1), // 1 per second
-			StartTime:       defaultBlockTime,
+			RemainingCoin: sdk.NewDecCoinFromDec(USDC, sdk.NewDec(1000000000000000000)),
+			EmissionRate:  sdk.NewDec(1), // 1 per second
+			StartTime:     defaultBlockTime,
 		},
 		MinUptime: time.Nanosecond,
 	}
@@ -1497,13 +1495,11 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 
 	// Set incentives for pool to ensure accumulators work correctly
 	testIncentiveRecord := types.IncentiveRecord{
-		PoolId:               1,
-		IncentiveDenom:       USDC,
-		IncentiveCreatorAddr: s.TestAccs[0].String(),
+		PoolId: 1,
 		IncentiveRecordBody: types.IncentiveRecordBody{
-			RemainingAmount: sdk.NewDec(1000000000000000000),
-			EmissionRate:    sdk.NewDec(1), // 1 per second
-			StartTime:       defaultBlockTime,
+			RemainingCoin: sdk.NewDecCoinFromDec(USDC, sdk.NewDec(1000000000000000000)),
+			EmissionRate:  sdk.NewDec(1), // 1 per second
+			StartTime:     defaultBlockTime,
 		},
 		MinUptime: time.Nanosecond,
 	}
