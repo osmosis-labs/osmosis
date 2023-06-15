@@ -8,6 +8,13 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
+// assertGlobalInvariants asserts all available global invariants (i.e. invariants that should hold on all valid states).
+// Does not persist any changes to state.
+func (s *KeeperTestSuite) assertGlobalInvariants() {
+	s.assertTotalRewardsInvariant()
+	s.assertWithdrawAllInvariant()
+}
+
 // getAllPositionsAndBalances returns all the positions in state alongside all the pool balances for all pools in state.
 //
 // Returns:

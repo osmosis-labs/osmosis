@@ -10,46 +10,57 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
-var DefaultRangeTestParams = RangeTestParams{
-	// Base amounts
-	baseNumPositions:     1000,
-	baseAssets:           sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(5000000000)), sdk.NewCoin(USDC, sdk.NewInt(5000000000))),
-	baseTimeBetweenJoins: time.Hour,
-	baseSwapAmount:       sdk.NewInt(10000000),
-
-	// Fuzz params
-	fuzzNumPositions:     true,
-	fuzzAssets:           true,
-	fuzzSwapAmounts:      true,
-	fuzzTimeBetweenJoins: true,
-
-	// Additional params
-	numSwapAddresses: 10,
-}
-
 type RangeTestParams struct {
-	// Base amounts for runs
-	baseAssets           sdk.Coins
-	baseNumPositions     int
-	numSwapAddresses     int
-	baseSwapAmount       sdk.Int
-	baseTimeBetweenJoins time.Duration
-	baseIncentiveRecords []types.IncentiveRecord
+	// -- Base amounts --
 
-	// If false, creates one address per position.
-	// Useful for testing fungification.
-	singleAddrPerRange                bool
-	swapsBetweenJoins                 bool
-	newActiveIncentivesBetweenJoins   bool
+	// Base number of assets for each position
+	baseAssets sdk.Coins
+	// Base number of positions for each range
+	baseNumPositions int
+	// Base amount to swap for each swap
+	baseSwapAmount sdk.Int
+	// Base amount to add after each new position
+	baseTimeBetweenJoins time.Duration
+	// Base incentive records to have on pool
+	baseIncentiveRecords []types.IncentiveRecord
+	// List of addresses to swap from (randomly selected for each swap)
+	numSwapAddresses int
+
+	// -- Optional additional test dimensions --
+
+	// Have a single address for all positions in each range
+	singleAddrPerRange bool
+	// Create new active incentive records between each join
+	newActiveIncentivesBetweenJoins bool
+	// Create new inactive incentive records between each join
 	newInactiveIncentivesBetweenJoins bool
 
-	// Fuzz params
+	// When set to true, fuzzes the corresponding base value
 	fuzzAssets           bool
 	fuzzNumPositions     bool
 	fuzzSwapAmounts      bool
 	fuzzTimeBetweenJoins bool
 	fuzzIncentiveRecords bool
 }
+
+var (
+	DefaultRangeTestParams = RangeTestParams{
+		// Base amounts
+		baseNumPositions:     1000,
+		baseAssets:           sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(5000000000)), sdk.NewCoin(USDC, sdk.NewInt(5000000000))),
+		baseTimeBetweenJoins: time.Hour,
+		baseSwapAmount:       sdk.NewInt(10000000),
+
+		// Fuzz params
+		fuzzNumPositions:     true,
+		fuzzAssets:           true,
+		fuzzSwapAmounts:      true,
+		fuzzTimeBetweenJoins: true,
+
+		// Additional params
+		numSwapAddresses: 10,
+	}
+)
 
 // SetupRanges takes in a set of tick ranges
 func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.ConcentratedPoolExtension, ranges [][]int64, testParams RangeTestParams) {
@@ -108,18 +119,25 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 			s.Require().NoError(err)
 
 			// Assert global invariants on intermediate state after join
-			s.assertWithdrawAllInvariant()
-			s.assertTotalRewardsInvariant()
+			s.assertGlobalInvariants()
 
-			// Let time elapse after join
-			timeElapsed := s.addRandomizedBlockTime(testParams.baseTimeBetweenJoins, testParams.fuzzTimeBetweenJoins)
+			// Let time elapse after join if applicable
+			timeElapsed := time.Duration(0)
+			if testParams.baseTimeBetweenJoins != time.Duration(0) {
+				timeElapsed = s.addRandomizedBlockTime(testParams.baseTimeBetweenJoins, testParams.fuzzTimeBetweenJoins)
 
-			// Execute swap against pool
-			swappedIn, swappedOut := s.executeRandomizedSwap(pool, swapAddresses, testParams.baseSwapAmount, testParams.fuzzSwapAmounts)
+				// Assert global invariants on intermediate state after time elapsed
+				s.assertGlobalInvariants()
+			}
 
-			// Assert global invariants on intermediate state after swap
-			s.assertWithdrawAllInvariant()
-			s.assertTotalRewardsInvariant()
+			// Execute swap against pool if applicable
+			swappedIn, swappedOut := sdk.Coin{}, sdk.Coin{}
+			if !testParams.baseSwapAmount.Equal(sdk.Int{}) {
+				swappedIn, swappedOut = s.executeRandomizedSwap(pool, swapAddresses, testParams.baseSwapAmount, testParams.fuzzSwapAmounts)
+
+				// Assert global invariants on intermediate state after swap
+				s.assertGlobalInvariants()
+			}
 
 			// Track new position values in global variables
 			totalAssets = totalAssets.Add(actualAddedCoins...).Add(swappedIn).Sub(sdk.NewCoins(swappedOut))

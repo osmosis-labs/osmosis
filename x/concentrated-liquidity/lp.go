@@ -76,7 +76,6 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
-	_, _, sqrtPriceLowerTick, sqrtPriceUpperTick, _ = math.TicksToSqrtPrice(lowerTick, upperTick)
 
 	positionId = k.getNextPositionIdAndIncrement(ctx)
 

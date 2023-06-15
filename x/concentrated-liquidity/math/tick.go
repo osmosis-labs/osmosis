@@ -202,7 +202,6 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
 	// (price - geoSpacing.initialPrice) / geoSpacing.additiveIncrementPerTick
 	priceInThisExponent := osmomath.BigDecFromSDKDec(price.Sub(geoSpacing.initialPrice))
 	ticksFilledByCurrentSpacing := priceInThisExponent.Quo(geoSpacing.additiveIncrementPerTick)
-
 	// we get the bucket index by:
 	// * taking the bucket index of the smallest price in this tick
 	// * adding to it the number of ticks "completely" filled by the current spacing

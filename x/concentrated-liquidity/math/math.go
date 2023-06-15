@@ -64,7 +64,6 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
-
 	diff := sqrtPriceB.Sub(sqrtPriceA)
 	// if calculating for amountIn, we round up
 	// if calculating for amountOut, we round down at precision end
