@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
-
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // MigrateUnlockedPositionFromBalancerToConcentrated migrates unlocked lp tokens from a balancer pool to a concentrated liquidity pool.
@@ -355,32 +356,47 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []types.Balancer
 	return nil
 }
 
+// LinkBalancerPoolWithClPoolRecords creates a link between CL <> Gamm pool.
+// If a CL pool does not exist for a given GAMM pool, it creates it and links it.
 func (k Keeper) LinkBalancerPoolWithClPoolRecords(ctx sdk.Context, records []types.BalancerToConcentratedPoolLink) error {
-	// TODO: check case where balancePoolExist but ClPool doesnot exist
-	// 	cfmmPool, err := k.GetCFMMPool(ctx, cfmmPoolIdToLinkWith)
-	// 	if err != nil {
-	// 		return 0, err
-	// 	}
+	updatedRecords := make([]types.BalancerToConcentratedPoolLink, 0)
+	poolmanagerModuleAccAddress := k.accountKeeper.GetModuleAccount(ctx, poolmanagertypes.ModuleName).GetAddress()
 
-	// 	poolLiquidity := cfmmPool.GetTotalPoolLiquidity(ctx)
-	// 	if len(poolLiquidity) != 2 {
-	// 		return 0, nil
-	// 	}
+	for _, record := range records {
+		// If the record's CLPoolId is 0, it means we are attempting to link to a CL pool that does not exist.
+		// Therefore, we create the CL pool first and then link it.
+		if record.ClPoolId == 0 {
+			cfmmPool, err := k.GetCFMMPool(ctx, record.BalancerPoolId)
+			if err != nil {
+				return err
+			}
 
-	// 	poolmanagerModuleAccAddress := k.accountKeeper.GetModuleAccount(ctx, poolmanagertypes.ModuleName).GetAddress()
-	// 	createPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolmanagerModuleAccAddress, poolLiquidity[0].Denom, poolLiquidity[1].Denom, 1, cfmmPool.GetSpreadFactor(ctx))
-	// 	clPool, err := k.poolManager.CreateConcentratedPoolAsPoolManager(ctx, createPoolMsg)
-	// 	if err != nil {
-	// 		return 0, err
-	// 	}
+			poolLiquidity := cfmmPool.GetTotalPoolLiquidity(ctx)
+			if len(poolLiquidity) != 2 {
+				continue
+			}
 
-	// both cfmm and cl poolId exists with same denom
-	err := k.validateRecords(ctx, records)
+			createPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolmanagerModuleAccAddress, poolLiquidity[0].Denom, poolLiquidity[1].Denom, 1, cfmmPool.GetSpreadFactor(ctx))
+			clPool, err := k.poolManager.CreateConcentratedPoolAsPoolManager(ctx, createPoolMsg)
+			if err != nil {
+				return err
+			}
+
+			record.ClPoolId = clPool.GetId()
+		}
+
+		// If ClPoolId is not 0 then append the record to updatedRecords
+		if record.ClPoolId != 0 {
+			updatedRecords = append(updatedRecords, record)
+		}
+	}
+
+	err := k.validateRecords(ctx, updatedRecords)
 	if err != nil {
 		return err
 	}
 
 	return k.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, types.MigrationRecords{
-		BalancerToConcentratedPoolLinks: records,
+		BalancerToConcentratedPoolLinks: updatedRecords,
 	})
 }

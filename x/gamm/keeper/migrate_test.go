@@ -977,3 +977,109 @@ func (suite *KeeperTestSuite) TestRedirectDistributionRecord() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestLinkBalancerPoolWithCLPoolRecords() {
+	tests := []struct {
+		name                     string
+		testingMigrationRecords  []types.BalancerToConcentratedPoolLink
+		expectedResultingRecords []types.BalancerToConcentratedPoolLink
+		expectErr                bool
+	}{
+		{
+			name: "Valid Case: Both poolid exists",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 1,
+					ClPoolId:       5,
+				},
+			},
+			expectedResultingRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 1,
+					ClPoolId:       5,
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Valid Case: Gamm Exist, CL doesnot exists",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 4,
+					ClPoolId:       8,
+				},
+				{
+					BalancerPoolId: 3,
+					ClPoolId:       0,
+				},
+			},
+			expectedResultingRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 3,
+					ClPoolId:       9,
+				},
+				{
+					BalancerPoolId: 4,
+					ClPoolId:       8,
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Invalid Case: Gamm doesnot exist, CL  exists",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 0,
+					ClPoolId:       1,
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Invalid Case: Gamm doesnot exist, CL doesnot exists",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 0,
+					ClPoolId:       0,
+				},
+			},
+			expectErr: true,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+			keeper := s.App.GAMMKeeper
+
+			defaultBalancerCoin0 := sdk.NewCoin(ETH, sdk.NewInt(1000000000))
+			defaultBalancerCoin1 := sdk.NewCoin(USDC, sdk.NewInt(1000000000))
+
+			// Our testing environment is as follows:
+			// Balancer pool IDs: 1, 2, 3, 4
+			// Concentrated pool IDs: 5, 6, 7, 8
+			for i := 0; i < 4; i++ {
+				poolCoins := sdk.NewCoins(defaultBalancerCoin0, defaultBalancerCoin1)
+				s.PrepareBalancerPoolWithCoins(poolCoins...)
+			}
+			for i := 0; i < 4; i++ {
+				s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, defaultTickSpacing, sdk.ZeroDec())
+			}
+
+			err := keeper.LinkBalancerPoolWithClPoolRecords(s.Ctx, test.testingMigrationRecords)
+			if test.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				migrationInfo, err := keeper.GetAllMigrationInfo(s.Ctx)
+				s.Require().NoError(err)
+				s.Require().Equal(len(test.expectedResultingRecords), len(migrationInfo.BalancerToConcentratedPoolLinks))
+				for i, record := range test.expectedResultingRecords {
+					s.Require().Equal(record.BalancerPoolId, migrationInfo.BalancerToConcentratedPoolLinks[i].BalancerPoolId)
+					s.Require().Equal(record.ClPoolId, migrationInfo.BalancerToConcentratedPoolLinks[i].ClPoolId)
+				}
+			}
+		})
+	}
+}

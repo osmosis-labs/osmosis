@@ -19,9 +19,8 @@ func init() {
 	govtypes.RegisterProposalTypeCodec(&UpdateMigrationRecordsProposal{}, "osmosis/UpdateMigrationRecordsProposal")
 	govtypes.RegisterProposalType(ProposalTypeReplaceMigrationRecords)
 	govtypes.RegisterProposalTypeCodec(&ReplaceMigrationRecordsProposal{}, "osmosis/ReplaceMigrationRecordsProposal")
-	govtypes.RegisterProposalType(ProposalTypeReplaceMigrationRecords)
-	govtypes.RegisterProposalTypeCodec(&LinkBalancerPoolWithCLPoolProposal{}, "osmosis/LinkBalancerPoolWithCLPoolProposal")
 	govtypes.RegisterProposalType(ProposalTypeLinkBalancerPoolWithCLPoolProposal)
+	govtypes.RegisterProposalTypeCodec(&LinkBalancerPoolWithCLPoolProposal{}, "osmosis/LinkBalancerPoolWithCLPoolProposal")
 }
 
 var (
