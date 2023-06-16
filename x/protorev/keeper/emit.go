@@ -13,6 +13,7 @@ import (
 )
 
 // EmitBackrunEvent updates and emits a backrunEvent
+// TODO: REMOVE THIS ARBITRARY DIFF
 func EmitBackrunEvent(ctx sdk.Context, pool SwapToBackrun, inputCoin sdk.Coin, profit, tokenOutAmount sdk.Int, remainingTxPoolPoints, remainingBlockPoolPoints uint64) {
 	// Get tx hash
 	txHash := strings.ToUpper(hex.EncodeToString(tmhash.Sum(ctx.TxBytes())))
