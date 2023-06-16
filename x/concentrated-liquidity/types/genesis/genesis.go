@@ -7,9 +7,10 @@ import (
 // DefaultGenesis returns the default GenesisState for the concentrated-liquidity module.
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		PoolData:       []PoolData{},
-		Params:         types.DefaultParams(),
-		NextPositionId: 1,
+		PoolData:              []PoolData{},
+		Params:                types.DefaultParams(),
+		NextPositionId:        1,
+		NextIncentiveRecordId: 1,
 	}
 }
 
@@ -21,5 +22,9 @@ func (gs GenesisState) Validate() error {
 	if gs.NextPositionId == 0 {
 		return types.InvalidNextPositionIdError{NextPositionId: gs.NextPositionId}
 	}
+	if gs.NextIncentiveRecordId == 0 {
+		return types.InvalidNextIncentiveRecordIdError{NextIncentiveRecordId: gs.NextIncentiveRecordId}
+	}
+
 	return nil
 }
