@@ -317,16 +317,16 @@ func (k Keeper) computeOutAmtGivenIn(
 			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 		}
 
-		// Utilizing the next initialized tick, we find the corresponding nextPrice (the target price).
+		// Utilizing the next initialized tick, we find the corresponding nextInitializedTickSqrtPrice (the target sqrt price).
 		_, nextInitializedTickSqrtPrice, err := math.TickToSqrtPrice(nextTick)
 		if err != nil {
 			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
 		}
 
-		// If nextSqrtPrice exceeds the price limit, we set the nextSqrtPrice to the price limit.
+		// If nextInitializedTickSqrtPrice exceeds the given price limit, we set the sqrtPriceTarget to the price limit.
 		sqrtPriceTarget := swapStrategy.GetSqrtTargetPrice(nextInitializedTickSqrtPrice)
 
-		// Utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
+		// Utilizing the bucket's liquidity and knowing the sqrt price target, we calculate how much tokenOut we get from the tokenIn
 		// we also calculate the swap state's new computedSqrtPrice after this swap
 		computedSqrtPrice, amountIn, amountOut, spreadRewardCharge := swapStrategy.ComputeSwapWithinBucketOutGivenIn(
 			swapState.sqrtPrice,
