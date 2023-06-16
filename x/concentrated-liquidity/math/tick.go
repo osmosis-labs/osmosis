@@ -285,8 +285,6 @@ func CalculateSqrtPriceToTick(sqrtPrice sdk.Dec) (tickIndex int64, err error) {
 	if errM1 != nil || errT != nil || errP1 != nil || errP2 != nil {
 		return 0, errors.New("internal error in computing square roots within CalculateSqrtPriceToTick")
 	}
-	fmt.Println("sqrtPriceTplus1: ", sqrtPriceTplus1)
-	fmt.Println("sqrtPriceTplus2: ", sqrtPriceTplus2)
 
 	// We error if sqrtPriceT is above sqrtPriceTplus2 or below sqrtPriceTmin1.
 	// For cases where calculated tick does not fall on a limit (min/max tick), the upper end is exclusive.
