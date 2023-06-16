@@ -35,7 +35,7 @@ func (s zeroForOneStrategy) GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.De
 	return nextTickSqrtPrice
 }
 
-// ComputeSwapStepOutGivenIn calculates the next sqrt price, the amount of token in consumed, the amount out to return to the user, and total spread reward charge on token in.
+// ComputeSwapWithinBucketOutGivenIn calculates the next sqrt price, the amount of token in consumed, the amount out to return to the user, and total spread reward charge on token in.
 // Parameters:
 //   - sqrtPriceCurrent is the current sqrt price.
 //   - sqrtPriceTarget is the target sqrt price computed with GetSqrtTargetPrice(). It must be one of:
@@ -54,7 +54,7 @@ func (s zeroForOneStrategy) GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.De
 //
 // ZeroForOne details:
 // - zeroForOneStrategy assumes moving to the left of the current square root price.
-func (s zeroForOneStrategy) ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountZeroInRemaining sdk.Dec) (sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec) {
+func (s zeroForOneStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountZeroInRemaining sdk.Dec) (sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec) {
 	// Estimate the amount of token zero needed until the target sqrt price is reached.
 	amountZeroIn := math.CalcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
 
@@ -89,11 +89,12 @@ func (s zeroForOneStrategy) ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPric
 	return sqrtPriceNext, amountZeroIn, amountOneOut, spreadRewardChargeTotal
 }
 
-// ComputeSwapStepInGivenOut calculates the next sqrt price, the amount of token out consumed, the amount in to charge to the user for requested out, and total spread reward charge on token in.
+// ComputeSwapWithinBucketInGivenOut calculates the next sqrt price, the amount of token out consumed, the amount in to charge to the user for requested out, and total spread reward charge on token in.
+// This assumes swapping over a single bucket where the liqudiity stays constant until we cross the next initialized tick of the next bucket.
 // Parameters:
 //   - sqrtPriceCurrent is the current sqrt price.
 //   - sqrtPriceTarget is the target sqrt price computed with GetSqrtTargetPrice(). It must be one of:
-//     1. Next tick sqrt price.
+//     1. Next initialized tick sqrt price.
 //     2. Sqrt price limit representing price impact protection.
 //   - liquidity is the amount of liquidity between the sqrt price current and sqrt price target.
 //   - amountOneRemainingOut is the amount of token one out remaining to be swapped to estimate how much of token zero in is needed to be charged.
@@ -108,7 +109,7 @@ func (s zeroForOneStrategy) ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPric
 //
 // ZeroForOne details:
 // - zeroForOneStrategy assumes moving to the left of the current square root price.
-func (s zeroForOneStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountOneRemainingOut sdk.Dec) (sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec) {
+func (s zeroForOneStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountOneRemainingOut sdk.Dec) (sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec) {
 	// Estimate the amount of token one needed until the target sqrt price is reached.
 	amountOneOut := math.CalcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, false)
 

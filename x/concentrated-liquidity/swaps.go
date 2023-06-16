@@ -291,8 +291,8 @@ func (k Keeper) computeOutAmtGivenIn(
 	// as we iterate through the following for loop, this swap state will get updated after each required iteration
 	swapState := newSwapState(tokenInMin.Amount, p, swapStrategy)
 
-	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
-	defer nextTickIter.Close()
+	nextInitTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
+	defer nextInitTickIter.Close()
 
 	totalSpreadFactors = sdk.ZeroDec()
 	// Iterate and update swapState until we swap all tokenIn or we reach the specific sqrtPriceLimit
@@ -304,7 +304,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		sqrtPriceStart := swapState.sqrtPrice
 
 		// Iterator must be valid to be able to retrieve the next tick from it below.
-		if !nextTickIter.Valid() {
+		if !nextInitTickIter.Valid() {
 			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
 		}
 
@@ -312,23 +312,23 @@ func (k Keeper) computeOutAmtGivenIn(
 		// if zeroForOneStrategy, we look to the left of the tick the current sqrt price is at
 		// if oneForZeroStrategy, we look to the right of the tick the current sqrt price is at
 		// if no ticks are initialized (no users have created liquidity positions) then we return an error
-		nextTick, err := types.TickIndexFromBytes(nextTickIter.Key())
+		nextTick, err := types.TickIndexFromBytes(nextInitTickIter.Key())
 		if err != nil {
 			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 		}
 
 		// Utilizing the next initialized tick, we find the corresponding nextPrice (the target price).
-		_, nextTickSqrtPrice, err := math.TickToSqrtPrice(nextTick)
+		_, nextInitializedTickSqrtPrice, err := math.TickToSqrtPrice(nextTick)
 		if err != nil {
 			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
 		}
 
 		// If nextSqrtPrice exceeds the price limit, we set the nextSqrtPrice to the price limit.
-		sqrtPriceTarget := swapStrategy.GetSqrtTargetPrice(nextTickSqrtPrice)
+		sqrtPriceTarget := swapStrategy.GetSqrtTargetPrice(nextInitializedTickSqrtPrice)
 
 		// Utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
-		// we also calculate the swap state's new sqrtPrice after this swap
-		sqrtPrice, amountIn, amountOut, spreadRewardCharge := swapStrategy.ComputeSwapStepOutGivenIn(
+		// we also calculate the swap state's new computedSqrtPrice after this swap
+		computedSqrtPrice, amountIn, amountOut, spreadRewardCharge := swapStrategy.ComputeSwapWithinBucketOutGivenIn(
 			swapState.sqrtPrice,
 			sqrtPriceTarget,
 			swapState.liquidity,
@@ -340,14 +340,14 @@ func (k Keeper) computeOutAmtGivenIn(
 
 		ctx.Logger().Debug("cl calc out given in")
 		ctx.Logger().Debug("start sqrt price", swapState.sqrtPrice)
-		ctx.Logger().Debug("reached sqrt price", sqrtPrice)
+		ctx.Logger().Debug("reached sqrt price", computedSqrtPrice)
 		ctx.Logger().Debug("liquidity", swapState.liquidity)
 		ctx.Logger().Debug("amountIn", amountIn)
 		ctx.Logger().Debug("amountOut", amountOut)
 		ctx.Logger().Debug("spreadRewardCharge", spreadRewardCharge)
 
 		// Update the swapState with the new sqrtPrice from the above swap
-		swapState.sqrtPrice = sqrtPrice
+		swapState.sqrtPrice = computedSqrtPrice
 		// We deduct the amount of tokens we input in the computeSwapStep above from the user's defined tokenIn amount
 		swapState.amountSpecifiedRemaining.SubMut(amountIn.Add(spreadRewardCharge))
 		// We add the amount of tokens we received (amountOut) from the computeSwapStep above to the amountCalculated accumulator
@@ -356,16 +356,16 @@ func (k Keeper) computeOutAmtGivenIn(
 
 		// If the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
 		// tick has been consumed and we must move on to the next tick to complete the swap
-		if nextTickSqrtPrice.Equal(sqrtPrice) {
+		if nextInitializedTickSqrtPrice.Equal(computedSqrtPrice) {
 			swapState, err = k.swapCrossTickLogic(ctx, swapState, swapStrategy,
-				nextTick, nextTickIter, p, spreadRewardAccumulator, uptimeAccums, tokenInMin.Denom)
+				nextTick, nextInitTickIter, p, spreadRewardAccumulator, uptimeAccums, tokenInMin.Denom)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 			}
-		} else if !sqrtPriceStart.Equal(sqrtPrice) {
+		} else if !sqrtPriceStart.Equal(computedSqrtPrice) {
 			// Otherwise if the sqrtPrice calculated from computeSwapStep does not equal the sqrtPrice we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the sqrtPrice calculated from computeSwapStep
-			price := sqrtPrice.Mul(sqrtPrice)
+			price := computedSqrtPrice.Mul(computedSqrtPrice)
 			swapState.tick, err = math.PriceToTickRoundDown(price, p.GetTickSpacing())
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
@@ -421,8 +421,8 @@ func (k Keeper) computeInAmtGivenOut(
 	// as we iterate through the following for loop, this swap state will get updated after each required iteration
 	swapState := newSwapState(desiredTokenOut.Amount, p, swapStrategy)
 
-	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
-	defer nextTickIter.Close()
+	nextInitTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
+	defer nextInitTickIter.Close()
 
 	spreadRewardAccumulator, uptimeAccums, err := k.getSwapAccumulators(ctx, poolId)
 	if err != nil {
@@ -438,7 +438,7 @@ func (k Keeper) computeInAmtGivenOut(
 		sqrtPriceStart := swapState.sqrtPrice
 
 		// Iterator must be valid to be able to retrieve the next tick from it below.
-		if !nextTickIter.Valid() {
+		if !nextInitTickIter.Valid() {
 			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
 		}
 
@@ -446,22 +446,22 @@ func (k Keeper) computeInAmtGivenOut(
 		// if zeroForOne is false, we look to the left of the tick the current sqrt price is at
 		// if zeroForOne is true, we look to the right of the tick the current sqrt price is at
 		// if no ticks are initialized (no users have created liquidity positions) then we return an error
-		nextTick, err := types.TickIndexFromBytes(nextTickIter.Key())
+		nextInitializedTick, err := types.TickIndexFromBytes(nextInitTickIter.Key())
 		if err != nil {
 			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 		}
 
 		// utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
-		_, sqrtPriceNextTick, err := math.TickToSqrtPrice(nextTick)
+		_, nextInitializedTickSqrtPrice, err := math.TickToSqrtPrice(nextInitializedTick)
 		if err != nil {
-			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.TickToSqrtPriceConversionError{NextTick: nextTick}
+			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.TickToSqrtPriceConversionError{NextTick: nextInitializedTick}
 		}
 
-		sqrtPriceTarget := swapStrategy.GetSqrtTargetPrice(sqrtPriceNextTick)
+		sqrtPriceTarget := swapStrategy.GetSqrtTargetPrice(nextInitializedTickSqrtPrice)
 
 		// utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
-		// we also calculate the swap state's new sqrtPrice after this swap
-		sqrtPrice, amountOut, amountIn, spreadRewardChargeTotal := swapStrategy.ComputeSwapStepInGivenOut(
+		// we also calculate the swap state's new computedSqrtPrice after this swap
+		computedSqrtPrice, amountOut, amountIn, spreadRewardChargeTotal := swapStrategy.ComputeSwapWithinBucketInGivenOut(
 			swapState.sqrtPrice,
 			sqrtPriceTarget,
 			swapState.liquidity,
@@ -472,30 +472,30 @@ func (k Keeper) computeInAmtGivenOut(
 
 		ctx.Logger().Debug("cl calc in given out")
 		ctx.Logger().Debug("start sqrt price", swapState.sqrtPrice)
-		ctx.Logger().Debug("reached sqrt price", sqrtPrice)
+		ctx.Logger().Debug("reached sqrt price", computedSqrtPrice)
 		ctx.Logger().Debug("liquidity", swapState.liquidity)
 		ctx.Logger().Debug("amountIn", amountIn)
 		ctx.Logger().Debug("amountOut", amountOut)
 		ctx.Logger().Debug("spreadRewardChargeTotal", spreadRewardChargeTotal)
 
 		// update the swapState with the new sqrtPrice from the above swap
-		swapState.sqrtPrice = sqrtPrice
+		swapState.sqrtPrice = computedSqrtPrice
 		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.SubMut(amountOut)
 		swapState.amountCalculated = swapState.amountCalculated.AddMut(amountIn.Add(spreadRewardChargeTotal))
 		totalSpreadFactors = totalSpreadFactors.Add(spreadRewardChargeTotal)
 
 		// if the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
 		// tick has been consumed and we must move on to the next tick to complete the swap
-		if sqrtPriceNextTick.Equal(sqrtPrice) {
+		if nextInitializedTickSqrtPrice.Equal(computedSqrtPrice) {
 			swapState, err = k.swapCrossTickLogic(ctx, swapState, swapStrategy,
-				nextTick, nextTickIter, p, spreadRewardAccumulator, uptimeAccums, tokenInDenom)
+				nextInitializedTick, nextInitTickIter, p, spreadRewardAccumulator, uptimeAccums, tokenInDenom)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 			}
-		} else if !sqrtPriceStart.Equal(sqrtPrice) {
+		} else if !sqrtPriceStart.Equal(computedSqrtPrice) {
 			// otherwise if the sqrtPrice calculated from computeSwapStep does not equal the sqrtPrice we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the sqrtPrice calculated from computeSwapStep
-			price := sqrtPrice.Mul(sqrtPrice)
+			price := computedSqrtPrice.Mul(computedSqrtPrice)
 			swapState.tick, err = math.PriceToTickRoundDown(price, p.GetTickSpacing())
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
@@ -524,11 +524,11 @@ func (k Keeper) computeInAmtGivenOut(
 // logic for crossing a tick during a swap
 func (k Keeper) swapCrossTickLogic(ctx sdk.Context,
 	swapState SwapState, swapStrategy swapstrategy.SwapStrategy,
-	nextTick int64, nextTickIter db.Iterator,
+	nextInitializedTick int64, nextTickIter db.Iterator,
 	p types.ConcentratedPoolExtension,
 	spreadRewardAccum accum.AccumulatorObject, uptimeAccums []accum.AccumulatorObject,
 	tokenInDenom string) (SwapState, error) {
-	nextTickInfo, err := ParseTickFromBz(nextTickIter.Value())
+	nextInitializedTickInfo, err := ParseTickFromBz(nextTickIter.Value())
 	if err != nil {
 		return swapState, err
 	}
@@ -538,7 +538,7 @@ func (k Keeper) swapCrossTickLogic(ctx sdk.Context,
 	}
 
 	// Retrieve the liquidity held in the next closest initialized tick
-	liquidityNet, err := k.crossTick(ctx, p.GetId(), nextTick, &nextTickInfo, sdk.NewDecCoinFromDec(tokenInDenom, swapState.spreadRewardGrowthGlobal), spreadRewardAccum.GetValue(), uptimeAccums)
+	liquidityNet, err := k.crossTick(ctx, p.GetId(), nextInitializedTick, &nextInitializedTickInfo, sdk.NewDecCoinFromDec(tokenInDenom, swapState.spreadRewardGrowthGlobal), spreadRewardAccum.GetValue(), uptimeAccums)
 	if err != nil {
 		return swapState, err
 	}
@@ -552,7 +552,7 @@ func (k Keeper) swapCrossTickLogic(ctx sdk.Context,
 	swapState.liquidity = newLiquidity
 
 	// Update the swapState's tick with the tick we retrieved liquidity from
-	swapState.tick = nextTick
+	swapState.tick = nextInitializedTick
 	return swapState, nil
 }
 
