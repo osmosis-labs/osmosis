@@ -15,35 +15,12 @@ func generateRandomDecForEachBitlen(r *rand.Rand, numPerBitlen int) []sdk.Dec {
 	for i := 0; i < 255+sdk.DecimalPrecisionBits; i++ {
 		upperbound := big.NewInt(1)
 		upperbound.Lsh(upperbound, uint(i))
-		for j := 0; j < 10; j++ {
+		for j := 0; j < numPerBitlen; j++ {
 			v := big.NewInt(0).Rand(r, upperbound)
 			res[i*numPerBitlen+j] = sdk.NewDecFromBigIntWithPrec(v, 18)
 		}
 	}
 	return res
-}
-
-// Test that the guess for an initial square root value is always greater
-// than the true square root value.
-func TestInitialSqrtGuessGreaterThanTrueSqrt(t *testing.T) {
-	cases := []sdk.Dec{
-		sdk.SmallestDec(),
-		sdk.MaxSortableDec,
-		sdk.NewDecWithPrec(123456, 1),
-		sdk.NewDecWithPrec(123456, 7),
-	}
-	for i := 0; i < 512; i++ {
-		cases = append(cases, sdk.NewDec(int64(i)))
-	}
-	// create random test vectors for every bit-length
-	r := rand.New(rand.NewSource(rand.Int63()))
-	cases = append(cases, generateRandomDecForEachBitlen(r, 10)...)
-	for _, c := range cases {
-		guess := getInitialSquareRootGuess(c)
-		if guess.Mul(guess).LT(c) {
-			t.Errorf("Guess %v is less than or equal to %v", guess, c)
-		}
-	}
 }
 
 func TestSdkApproxSqrtVectors(t *testing.T) {
@@ -165,5 +142,27 @@ func TestSqrtRounding(t *testing.T) {
 		sqrtMin1 := sqrt.Sub(smallestDec)
 		sqrtSquared = sqrtMin1.Mul(sqrtMin1)
 		assert.True(t, sqrtSquared.LTE(i), "sqrtMin1ULP %s, sqrtSquared: %s, original: %s", sqrt, sqrtSquared, i)
+	}
+}
+
+func BenchmarkSqrt(b *testing.B) {
+	r := rand.New(rand.NewSource(1))
+	vectors := generateRandomDecForEachBitlen(r, 1)
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < len(vectors); j++ {
+			a, _ := vectors[j].ApproxSqrt()
+			_ = a
+		}
+	}
+}
+
+func BenchmarkMonotonicSqrt(b *testing.B) {
+	r := rand.New(rand.NewSource(1))
+	vectors := generateRandomDecForEachBitlen(r, 1)
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < len(vectors); j++ {
+			a, _ := MonotonicSqrt(vectors[j])
+			_ = a
+		}
 	}
 }
