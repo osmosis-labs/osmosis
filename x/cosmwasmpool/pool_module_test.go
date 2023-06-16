@@ -39,9 +39,7 @@ func TestPoolModuleSuite(t *testing.T) {
 }
 
 func (s *PoolModuleSuite) TestInitializePool() {
-	var (
-		validInstantitateMsg = s.GetTransmuterInstantiateMsgBytes(defaultDenoms)
-	)
+	validInstantitateMsg := s.GetTransmuterInstantiateMsgBytes(defaultDenoms)
 
 	tests := map[string]struct {
 		codeid            uint64

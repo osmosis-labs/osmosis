@@ -45,6 +45,8 @@ var (
 	LockToPositionPrefix                  = []byte{0x10}
 	ConcentratedLockPrefix                = []byte{0x11}
 
+	KeyNextGlobalIncentiveRecordId = []byte{0x12}
+
 	// TickPrefix + pool id
 	KeyTickPrefixByPoolIdLengthBytes = len(TickPrefix) + uint64ByteSize
 	// TickPrefix + pool id + sign byte(negative / positive prefix) + tick index: 18bytes in total
@@ -218,10 +220,10 @@ func KeyPool(poolId uint64) []byte {
 }
 
 // Incentive Prefix Keys
-// KeyIncentiveRecord is the key used to store incentive record struct for the
-// pool id + min uptime index + denom + addr combination.
-func KeyIncentiveRecord(poolId uint64, minUptimeIndex int, denom string, addr sdk.AccAddress) []byte {
-	return []byte(fmt.Sprintf("%s%s%d%s%d%s%s%s%s", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex, KeySeparator, denom, KeySeparator, addr))
+// KeyIncentiveRecord is the key used to store incentive records using the combination of
+// pool id + min uptime index + incentive record id.
+func KeyIncentiveRecord(poolId uint64, minUptimeIndex int, id uint64) []byte {
+	return []byte(fmt.Sprintf("%s%s%d%s%d%s%d%s", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex, KeySeparator, id, KeySeparator))
 }
 
 // KeyUptimeIncentiveRecords returns the prefix key for incentives records using the combination of pool id + min uptime index.
