@@ -67,6 +67,19 @@ func TestSdkApproxSqrtVectors(t *testing.T) {
 	}
 }
 
+func testMonotonicityAround(t *testing.T, x sdk.Dec) {
+	// test that sqrt(x) is monotonic around x
+	// i.e. sqrt(x-1) <= sqrt(x) <= sqrt(x+1)
+	sqrtX, err := MonotonicSqrt(x)
+	require.NoError(t, err)
+	sqrtXMinusOne, err := MonotonicSqrt(x.Sub(smallestDec))
+	require.NoError(t, err)
+	sqrtXPlusOne, err := MonotonicSqrt(x.Add(smallestDec))
+	require.NoError(t, err)
+	assert.True(t, sqrtXMinusOne.LTE(sqrtX), "sqrtXMinusOne: %s, sqrtX: %s", sqrtXMinusOne, sqrtX)
+	assert.True(t, sqrtX.LTE(sqrtXPlusOne), "sqrtX: %s, sqrtXPlusOne: %s", sqrtX, sqrtXPlusOne)
+}
+
 func TestSqrtMonotinicity(t *testing.T) {
 	type testcase struct {
 		smaller sdk.Dec
@@ -74,21 +87,17 @@ func TestSqrtMonotinicity(t *testing.T) {
 	}
 	testCases := []testcase{
 		{sdk.MustNewDecFromStr("120.120060020005000000"), sdk.MustNewDecFromStr("120.120060020005000001")},
-		{sdk.SmallestDec(), sdk.SmallestDec().MulInt64(2)},
+		{smallestDec, smallestDec.MulInt64(2)},
 	}
 	// create random test vectors for every bit-length
 	r := rand.New(rand.NewSource(rand.Int63()))
-	differences := []sdk.Dec{}
-	for i := 0; i < 5; i++ {
-		differences = append(differences, smallestDec.MulInt64(1<<i))
-	}
 	for i := 0; i < 255+sdk.DecimalPrecisionBits; i++ {
 		upperbound := big.NewInt(1)
 		upperbound.Lsh(upperbound, uint(i))
 		for j := 0; j < 100; j++ {
 			v := big.NewInt(0).Rand(r, upperbound)
 			d := sdk.NewDecFromBigIntWithPrec(v, 18)
-			testCases = append(testCases, testcase{d, d.Add(differences[j%len(differences)])})
+			testCases = append(testCases, testcase{d, d.Add(smallestDec)})
 		}
 	}
 	for i := 0; i < 1024; i++ {
@@ -134,6 +143,9 @@ func TestPerfectSquares(t *testing.T) {
 		sqrt, err := MonotonicSqrt(i)
 		require.NoError(t, err, "smaller: %s", i)
 		assert.Equal(t, i, sqrt.MulMut(sqrt))
+		if !i.IsZero() {
+			testMonotonicityAround(t, i)
+		}
 	}
 }
 
@@ -141,11 +153,17 @@ func TestSqrtRounding(t *testing.T) {
 	testCases := []sdk.Dec{
 		sdk.MustNewDecFromStr("11662930532952632574132537947829685675668532938920838254939577167671385459971.396347723368091000"),
 	}
+	r := rand.New(rand.NewSource(rand.Int63()))
+	testCases = append(testCases, generateRandomDecForEachBitlen(r, 10)...)
 	for _, i := range testCases {
 		sqrt, err := MonotonicSqrt(i)
 		require.NoError(t, err, "smaller: %s", i)
-		// separately sanity check that sqrt * sqrt >= input
+		// Sanity check that sqrt * sqrt >= input
 		sqrtSquared := sqrt.Mul(sqrt)
 		assert.True(t, sqrtSquared.GTE(i), "sqrt %s, sqrtSquared: %s, original: %s", sqrt, sqrtSquared, i)
+		// (aside) check that (sqrt - 1ulp)^2 <= input
+		sqrtMin1 := sqrt.Sub(smallestDec)
+		sqrtSquared = sqrtMin1.Mul(sqrtMin1)
+		assert.True(t, sqrtSquared.LTE(i), "sqrtMin1ULP %s, sqrtSquared: %s, original: %s", sqrt, sqrtSquared, i)
 	}
 }

@@ -17,6 +17,8 @@ var smallestDec = sdk.SmallestDec()
 // the returned root r, will be such that r^2 >= d
 // This function is monotonic, i.e. if d1 >= d2, then sqrt(d1) >= sqrt(d2)
 func MonotonicSqrt(d sdk.Dec) (sdk.Dec, error) {
+	// This function is going to involve error analysis.
+	// recall that 1 ulp = 1 unit of least precision = 10^-18 = smallestDec for us.
 	if d.IsNegative() {
 		return d, errors.New("cannot take square root of negative number")
 	}
@@ -55,17 +57,31 @@ func MonotonicSqrt(d sdk.Dec) (sdk.Dec, error) {
 	}
 	// at this point, the last applied delta was either 0 or smallestDec.
 	// the above loop would under-estimate (d/prev) relative to computation with infinite precision,
-	// due to quo being truncated division.
-	// Since were converging from a larger value, d/prev - guess should be negative, meaning this can be too negative.
+	// due to quo being truncated division. We get floor(d/prev), which is at most 1 ulp less than d/prev.
+	// Since were converging from a larger value, d/prev - guess should be negative,
+	// meaning this can be 1 ulp too negative.
 	// If delta is too negative, then we can over-shoot our target square root value.
 	// So we currently have no guarantees on whether we are over or under-shooting.
-	// This under-estimation should be bounded by smallest dec. So we can just add smallest dec to our guess.
+	// This under-estimation should be bounded by 1 ulp.
+	// hence we fix this by adding smallestDec if were too small:
 	if guess.Mul(guess).LT(d) {
 		guess = guess.AddMut(smallestDec)
 	}
-	//
 	// We want to guarantee monotonicity across various inputs. Namely:
 	//   if d1 <= d2, then sqrt(d1) <= sqrt(d2)
+	// We are about to do a bunch of reasoning to claim this is the case.
+	//
+	// At this point, we can write out the states guess can be in:
+	// 1. We under-estimated by at most smallestDec. This has been remedied
+	//    so we are now over-estimating by at most 1 ulp.
+	// 2. last delta was 0, and we over-estimated by at most 1 ulp.
+	// 3. last delta was 1 ulp, and we over-estimated by at most 1 ulp.
+	// we prove that the over-estimation is bounded by 1 ulp later.
+	// So right now we need to argue that we can never get a scenario where
+	// sqrt(d) was over-estimated by 1 ulp, and sqrt(d + 1 ulp) has no over-estimation.
+	// However over-estimating by at most 1 ulp could yield 2 answers, iff d is a perfect square root.
+	// So we can restrict ourselves to thinking about what happens when d is a perfect square (and values nearby it).
+	//
 	// this is equivalent to arguing that guess isn't "too over-estimated", s.t. a larger sqrt input
 	// wouldn't get "over-estimated less", yielding a smaller result.
 	// The scenario of concern would be
