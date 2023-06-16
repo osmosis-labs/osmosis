@@ -58,7 +58,7 @@ func (k Keeper) SwapOutAmtGivenIn(
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	spreadFactor sdk.Dec,
-	priceLimit sdk.Dec) (calcTokenIn, calcTokenOut sdk.Coin, tickUpdates TickUpdates, err error) {
+	priceLimit sdk.Dec) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, err error) {
 	return k.swapOutAmtGivenIn(ctx, sender, pool, tokenIn, tokenOutDenom, spreadFactor, priceLimit)
 }
 
@@ -70,7 +70,7 @@ func (k Keeper) ComputeOutAmtGivenIn(
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
 
-) (calcTokenIn, calcTokenOut sdk.Coin, tickUpdates TickUpdates, totalSpreadRewards sdk.Dec, err error) {
+) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, totalSpreadRewards sdk.Dec, err error) {
 	return k.computeOutAmtGivenIn(ctx, poolId, tokenInMin, tokenOutDenom, spreadFactor, priceLimit)
 }
 
@@ -81,7 +81,7 @@ func (k Keeper) SwapInAmtGivenOut(
 	desiredTokenOut sdk.Coin,
 	tokenInDenom string,
 	spreadFactor sdk.Dec,
-	priceLimit sdk.Dec) (calcTokenIn, calcTokenOut sdk.Coin, tickUpdates TickUpdates, err error) {
+	priceLimit sdk.Dec) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, err error) {
 	return k.swapInAmtGivenOut(ctx, sender, pool, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit)
 }
 
@@ -93,7 +93,7 @@ func (k Keeper) ComputeInAmtGivenOut(
 	priceLimit sdk.Dec,
 	poolId uint64,
 
-) (calcTokenIn, calcTokenOut sdk.Coin, tickUpdates TickUpdates, totalSpreadRewards sdk.Dec, err error) {
+) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, totalSpreadRewards sdk.Dec, err error) {
 	return k.computeInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit, poolId)
 }
 
@@ -296,8 +296,8 @@ func (k Keeper) GetAllPositions(ctx sdk.Context) ([]model.Position, error) {
 	return k.getAllPositions(ctx)
 }
 
-func (k Keeper) UpdatePoolForSwap(ctx sdk.Context, pool types.ConcentratedPoolExtension, swapDetails SwapDetails, tickUpdates TickUpdates, totalSpreadRewards sdk.Dec) error {
-	return k.updatePoolForSwap(ctx, pool, swapDetails, tickUpdates, totalSpreadRewards)
+func (k Keeper) UpdatePoolForSwap(ctx sdk.Context, pool types.ConcentratedPoolExtension, swapDetails SwapDetails, poolUpdates PoolUpdates, totalSpreadRewards sdk.Dec) error {
+	return k.updatePoolForSwap(ctx, pool, swapDetails, poolUpdates, totalSpreadRewards)
 }
 
 func (k Keeper) PrepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64, uptimeAccums []accum.AccumulatorObject) (uint64, sdk.Dec, error) {
