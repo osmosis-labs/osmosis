@@ -227,7 +227,7 @@ func (ss *SwapState) SetLiquidity(liquidity sdk.Dec) {
 	ss.liquidity = liquidity
 }
 
-// TODO: Refactor tests to ge this deleted?
+// TODO: Refactor tests to get this deleted?
 func (ss *SwapState) SetGlobalSpreadRewardGrowthPerUnitLiquidity(spreadRewardGrowthGlobal sdk.Dec) {
 	ss.globalSpreadRewardGrowthPerUnitLiquidity = spreadRewardGrowthGlobal
 }
