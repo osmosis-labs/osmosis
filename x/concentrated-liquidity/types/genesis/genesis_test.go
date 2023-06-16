@@ -40,6 +40,16 @@ func TestValidateGenesis(t *testing.T) {
 			},
 			exepectedError: true,
 		},
+		{
+			name: "next incentive record id is zero",
+			genesis: *&genesis.GenesisState{
+				Params:                genesis.DefaultGenesis().GetParams(),
+				PoolData:              genesis.DefaultGenesis().PoolData,
+				PositionData:          genesis.DefaultGenesis().GetPositionData(),
+				NextIncentiveRecordId: 0,
+			},
+			exepectedError: true,
+		},
 	}
 
 	for _, test := range tests {
