@@ -1586,7 +1586,7 @@ all incentive records for a given pool ID and min uptime index by performing pre
 
 We will use the following terms throughout the document and our codebase:
 
-- `Tick` - a unit of account that has a 1:1 mapping with price
+- `Tick` - a unit that has a 1:1 mapping with price
 
 - `Bucket` - an area between two initialized ticks.
 
