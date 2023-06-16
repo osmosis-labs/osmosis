@@ -1646,8 +1646,8 @@ osmosisd q gamm spot-price 1011 uosmo ibc/10E5E5B06D78FFBB61FD9F89209DEE5FD4446E
 spot_price: "0.000000000002155018"
 ```
 
-As a protocol, need to accomodate prices that are very far apart.
-As in the example above, the difference between `10**6 and 10**18`
+As a protocol, we need to accomodate prices that are very far apart.
+In the example above, the difference between `10**6 and 10**18`
 
 Most of the native precision is 10**6. However, most of the ETH
 precision is 10**18.
@@ -1658,9 +1658,10 @@ the quote asset that has precision of 6 (e.g `uosmo` or `uusdc`).
 
 The true price of PEPE in USDC terms is `0.0000009749`.
 
-0.0000009749 * 10**6 / 10**18 = 9.749e-19
+In the "on-chain representaiton", this would be:
+`0.0000009749 * 10**6 / 10**18 = 9.749e-19`
 
-This below the minimum precision of `sdk.Dec`.
+Noe that this is below the minimum precision of `sdk.Dec`.
 
 Additionally, there is a problem with tick to sqrt price conversions
 where at small price levels, two sqrt prices can map to the same
@@ -1682,7 +1683,7 @@ E.g. OSMO/DAI.
 ### Solution
 
 At launch, pool creation is permissioned. Therefore, we can
-ensure correctness.
+ensure correctness for the initial set of pools.
 
 Long term, we will implement a wrapper contract around concentrated liquidity
 that will handle the precision issues and scale the prices to be all in the
