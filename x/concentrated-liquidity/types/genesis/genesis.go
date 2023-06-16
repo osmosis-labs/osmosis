@@ -1,8 +1,6 @@
 package genesis
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
@@ -22,9 +20,6 @@ func (gs GenesisState) Validate() error {
 	}
 	if gs.NextPositionId == 0 {
 		return types.InvalidNextPositionIdError{NextPositionId: gs.NextPositionId}
-	}
-	if gs.Params.BalancerSharesRewardDiscount.LT(sdk.ZeroDec()) || gs.Params.BalancerSharesRewardDiscount.GT(sdk.OneDec()) || (gs.Params.BalancerSharesRewardDiscount == sdk.Dec{}) {
-		return types.InvalidDiscountRateError{DiscountRate: gs.Params.BalancerSharesRewardDiscount}
 	}
 	return nil
 }

@@ -37,8 +37,16 @@ func TestValidateTicks(t *testing.T) {
 			i:           []int64{types.MaxTick * 2},
 			expectError: true,
 		},
+		"error: is max tick": {
+			i:           []int64{types.MaxTick},
+			expectError: true,
+		},
 		"error: smaller than min tick": {
 			i:           []int64{types.MinTick * 2},
+			expectError: true,
+		},
+		"error: is min tick": {
+			i:           []int64{types.MinTick},
 			expectError: true,
 		},
 	}

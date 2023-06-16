@@ -128,6 +128,19 @@ func TestMsgCreatePosition(t *testing.T) {
 			expectPass: false,
 		},
 		{
+			name: "upper tick is same as lower tick",
+			msg: types.MsgCreatePosition{
+				PoolId:          1,
+				Sender:          addr1,
+				LowerTick:       10,
+				UpperTick:       10,
+				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", sdk.ZeroInt()), sdk.NewCoin("osmo", sdk.ZeroInt())),
+				TokenMinAmount0: sdk.OneInt(),
+				TokenMinAmount1: sdk.OneInt(),
+			},
+			expectPass: false,
+		},
+		{
 			name: "negative amount",
 			msg: types.MsgCreatePosition{
 				PoolId:          1,
@@ -157,6 +170,103 @@ func TestMsgCreatePosition(t *testing.T) {
 
 	for _, test := range tests {
 		runValidateBasicTest(t, test.name, &test.msg, test.expectPass, types.TypeMsgCreatePosition)
+	}
+}
+
+func TestMsgAddToPosition(t *testing.T) {
+	tests := []struct {
+		name       string
+		msg        types.MsgAddToPosition
+		expectPass bool
+	}{
+		{
+			name: "proper msg",
+			msg: types.MsgAddToPosition{
+				PositionId:      1,
+				Sender:          addr1,
+				Amount0:         sdk.OneInt(),
+				Amount1:         sdk.OneInt(),
+				TokenMinAmount0: sdk.OneInt(),
+				TokenMinAmount1: sdk.OneInt(),
+			},
+			expectPass: true,
+		},
+		{
+			name: "proper msg",
+			msg: types.MsgAddToPosition{
+				PositionId:      1,
+				Sender:          invalidAddr.String(),
+				Amount0:         sdk.OneInt(),
+				Amount1:         sdk.OneInt(),
+				TokenMinAmount0: sdk.OneInt(),
+				TokenMinAmount1: sdk.OneInt(),
+			},
+			expectPass: false,
+		},
+		{
+			name: "position id zero",
+			msg: types.MsgAddToPosition{
+				PositionId:      0,
+				Sender:          addr1,
+				Amount0:         sdk.OneInt(),
+				Amount1:         sdk.OneInt(),
+				TokenMinAmount0: sdk.OneInt(),
+				TokenMinAmount1: sdk.OneInt(),
+			},
+			expectPass: false,
+		},
+		{
+			name: "amount0 is negative",
+			msg: types.MsgAddToPosition{
+				PositionId:      0,
+				Sender:          addr1,
+				Amount0:         sdk.OneInt().Neg(),
+				Amount1:         sdk.OneInt(),
+				TokenMinAmount0: sdk.OneInt(),
+				TokenMinAmount1: sdk.OneInt(),
+			},
+			expectPass: false,
+		},
+		{
+			name: "amount1 is negative",
+			msg: types.MsgAddToPosition{
+				PositionId:      1,
+				Sender:          addr1,
+				Amount0:         sdk.OneInt(),
+				Amount1:         sdk.OneInt().Neg(),
+				TokenMinAmount0: sdk.OneInt(),
+				TokenMinAmount1: sdk.OneInt(),
+			},
+			expectPass: false,
+		},
+		{
+			name: "token min amount0 is negative",
+			msg: types.MsgAddToPosition{
+				PositionId:      1,
+				Sender:          addr1,
+				Amount0:         sdk.OneInt(),
+				Amount1:         sdk.OneInt(),
+				TokenMinAmount0: sdk.OneInt().Neg(),
+				TokenMinAmount1: sdk.OneInt(),
+			},
+			expectPass: false,
+		},
+		{
+			name: "token min amount1 is negative",
+			msg: types.MsgAddToPosition{
+				PositionId:      1,
+				Sender:          addr1,
+				Amount0:         sdk.OneInt(),
+				Amount1:         sdk.OneInt(),
+				TokenMinAmount0: sdk.OneInt(),
+				TokenMinAmount1: sdk.OneInt().Neg(),
+			},
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		runValidateBasicTest(t, test.name, &test.msg, test.expectPass, types.TypeAddToPosition)
 	}
 }
 
