@@ -55,4 +55,9 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	pointCount, err := suite.App.ProtoRevKeeper.GetPointCountForBlock(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(pointCount, exportedGenesis.PointCountForBlock)
+
+	// Test protorev profits exported correctly
+	profits := suite.App.ProtoRevKeeper.GetAllProfits(suite.Ctx)
+	suite.Require().Equal(len(profits), len(exportedGenesis.Profits))
+	suite.Require().Equal(profits, exportedGenesis.Profits)
 }
