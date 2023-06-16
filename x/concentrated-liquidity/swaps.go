@@ -366,10 +366,7 @@ func (k Keeper) computeOutAmtGivenIn(
 			// Otherwise if the sqrtPrice calculated from computeSwapStep does not equal the sqrtPrice we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the sqrtPrice calculated from computeSwapStep
 			price := sqrtPrice.Mul(sqrtPrice)
-			newTick, err := math.PriceToTickRoundDown(price, p.GetTickSpacing())
-			if err != nil {
-				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
-			}
+			newTick := math.CalculatePriceToTick(price)
 
 			// TEMPORARY HACK: this is to fix tick rounding error where
 			// the tick is off by 1 due to banker's rounding error in PriceToTickRoundDown
