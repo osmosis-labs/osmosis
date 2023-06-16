@@ -96,5 +96,22 @@ func TestSqrtMonotinicity(t *testing.T) {
 		sqrtBigger, err := MonotonicSqrt(i.bigger)
 		require.NoError(t, err, "bigger: %s", i.bigger)
 		assert.True(t, sqrtSmaller.LTE(sqrtBigger), "sqrtSmaller: %s, sqrtBigger: %s", sqrtSmaller, sqrtBigger)
+
+		// separately sanity check that sqrt * sqrt >= input
+		sqrtSmallerSquared := sqrtSmaller.Mul(sqrtSmaller)
+		assert.True(t, sqrtSmallerSquared.GTE(i.smaller), "sqrt %s, sqrtSmallerSquared: %s, smaller: %s", sqrtSmaller, sqrtSmallerSquared, i.smaller)
+	}
+}
+
+func TestSqrtRounding(t *testing.T) {
+	testCases := []sdk.Dec{
+		sdk.MustNewDecFromStr("11662930532952632574132537947829685675668532938920838254939577167671385459971.396347723368091000"),
+	}
+	for _, i := range testCases {
+		sqrt, err := MonotonicSqrt(i)
+		require.NoError(t, err, "smaller: %s", i)
+		// separately sanity check that sqrt * sqrt >= input
+		sqrtSquared := sqrt.Mul(sqrt)
+		assert.True(t, sqrtSquared.GTE(i), "sqrt %s, sqrtSquared: %s, original: %s", sqrt, sqrtSquared, i)
 	}
 }

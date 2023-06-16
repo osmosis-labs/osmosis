@@ -2,6 +2,7 @@ package osmomath
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,9 +38,8 @@ func MonotonicSqrt(d sdk.Dec) (sdk.Dec, error) {
 	var iter = 0
 
 	for ; delta.AbsMut().GT(smallestDec) && iter < maxApproxRootIterations; iter++ {
-		// prev = guess
 		prev = guess
-		if prev.IsZero() {
+		if prev.IsZero() { // division by zero guard, shouldn't happen.
 			prev = smallestDec
 		}
 		// delta = ((d/prev) - guess)/root
@@ -48,14 +48,29 @@ func MonotonicSqrt(d sdk.Dec) (sdk.Dec, error) {
 		delta.QuoInt64Mut(int64(2))
 
 		guess.AddMut(delta)
+		fmt.Println(guess, delta)
 	}
 
 	if iter == maxApproxRootIterations {
 		return guess, errors.New("failed to converge")
 	}
-	// Now we have a sqrt answer, up to some accuracy bound.
-	// We want to get monotonicity across various inputs.
-	// e.g. if d1 <= d2, then sqrt(d1) <= sqrt(d2)
+	// at this point, the last applied delta was either 0 or smallestDec.
+	// the above loop would under-estimate (d/prev) relative to computation with infinite precision,
+	// due to quo being truncated division.
+	// Since were converging from a larger value, d/prev - guess should be negative, meaning this can be too negative.
+	// If delta is too negative, then we can over-shoot our target square root value.
+	// So we currently have no guarantees on whether we are over or under-shooting.
+	//
+	// We want to guarantee monotonicity across various inputs. Namely:
+	//   if d1 <= d2, then sqrt(d1) <= sqrt(d2)
+	// this is equivalent to arguing that guess isn't "too over-estimated", s.t. a larger sqrt input
+	// wouldn't get "over-estimated less", yielding a smaller result.
+	// The scenario of concern would be
+	//
+	// First we argue that if the final approximation had a delta of smallestDec, the next iteration is
+	// guaranteed to be less than smallestDec.
+	//
+	// Then we argue
 	//
 	// We know that the update we were about to do is delta <= smallestDec.
 	// furthermore we know that every successive iteration, if we had higher precision, would be much smaller.
