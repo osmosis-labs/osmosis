@@ -296,8 +296,8 @@ func (k Keeper) GetAllPositions(ctx sdk.Context) ([]model.Position, error) {
 	return k.getAllPositions(ctx)
 }
 
-func (k Keeper) UpdatePoolForSwap(ctx sdk.Context, pool types.ConcentratedPoolExtension, swapDetails SwapDetails, newCurrentTick int64, newLiquidity sdk.Dec, newSqrtPrice sdk.Dec, totalSpreadRewards sdk.Dec) error {
-	return k.updatePoolForSwap(ctx, pool, swapDetails, newCurrentTick, newLiquidity, newSqrtPrice, totalSpreadRewards)
+func (k Keeper) UpdatePoolForSwap(ctx sdk.Context, pool types.ConcentratedPoolExtension, swapDetails SwapDetails, tickUpdates TickUpdates, totalSpreadRewards sdk.Dec) error {
+	return k.updatePoolForSwap(ctx, pool, swapDetails, tickUpdates, totalSpreadRewards)
 }
 
 func (k Keeper) PrepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64, uptimeAccums []accum.AccumulatorObject) (uint64, sdk.Dec, error) {

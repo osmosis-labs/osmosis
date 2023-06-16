@@ -63,9 +63,9 @@ type SwapDetails struct {
 }
 
 type TickUpdates struct {
-	newCurrentTick int64
-	newLiquidity   sdk.Dec
-	newSqrtPrice   sdk.Dec
+	NewCurrentTick int64
+	NewLiquidity   sdk.Dec
+	NewSqrtPrice   sdk.Dec
 }
 
 func newSwapState(specifiedAmount sdk.Int, p types.ConcentratedPoolExtension, strategy swapstrategy.SwapStrategy) SwapState {
@@ -199,7 +199,11 @@ func (k Keeper) swapOutAmtGivenIn(
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
 	// Also emits swap event and updates related liquidity metrics
-	if err := k.updatePoolForSwap(ctx, pool, SwapDetails{sender, tokenIn, tokenOut}, newCurrentTick, newLiquidity, newSqrtPrice, totalSpreadFactors); err != nil {
+	if err := k.updatePoolForSwap(ctx,
+		pool,
+		SwapDetails{sender, tokenIn, tokenOut},
+		TickUpdates{newCurrentTick, newLiquidity, newSqrtPrice},
+		totalSpreadFactors); err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
 	}
 
@@ -232,7 +236,8 @@ func (k *Keeper) swapInAmtGivenOut(
 	if err := k.updatePoolForSwap(ctx,
 		pool,
 		SwapDetails{sender, tokenIn, tokenOut},
-		newCurrentTick, newLiquidity, newSqrtPrice, totalSpreadFactors,
+		TickUpdates{newCurrentTick, newLiquidity, newSqrtPrice},
+		totalSpreadFactors,
 	); err != nil {
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
 	}
@@ -587,9 +592,7 @@ func (k Keeper) updatePoolForSwap(
 	ctx sdk.Context,
 	pool types.ConcentratedPoolExtension,
 	swapDetails SwapDetails,
-	newCurrentTick int64,
-	newLiquidity sdk.Dec,
-	newSqrtPrice sdk.Dec,
+	tickUpdates TickUpdates,
 	totalSpreadFactors sdk.Dec,
 ) error {
 	// Fixed gas consumption per swap to prevent spam
@@ -632,7 +635,7 @@ func (k Keeper) updatePoolForSwap(
 		return types.InsufficientPoolBalanceError{Err: err}
 	}
 
-	err = pool.ApplySwap(newLiquidity, newCurrentTick, newSqrtPrice)
+	err = pool.ApplySwap(tickUpdates.NewLiquidity, tickUpdates.NewCurrentTick, tickUpdates.NewSqrtPrice)
 	if err != nil {
 		return fmt.Errorf("error applying swap: %w", err)
 	}
