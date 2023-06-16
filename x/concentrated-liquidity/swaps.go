@@ -348,13 +348,13 @@ func (k Keeper) computeOutAmtGivenIn(
 
 		// Update the swapState with the new sqrtPrice from the above swap
 		swapState.sqrtPrice = computedSqrtPrice
-		// We deduct the amount of tokens we input in the computeSwapStep above from the user's defined tokenIn amount
+		// We deduct the amount of tokens we input in ComputeSwapWithinBucketOutGivenIn(...) above from the user's defined tokenIn amount
 		swapState.amountSpecifiedRemaining.SubMut(amountIn.Add(spreadRewardCharge))
-		// We add the amount of tokens we received (amountOut) from the computeSwapStep above to the amountCalculated accumulator
+		// We add the amount of tokens we received (amountOut) from the ComputeSwapWithinBucketOutGivenIn(...) above to the amountCalculated accumulator
 		swapState.amountCalculated.AddMut(amountOut)
 		totalSpreadFactors = totalSpreadFactors.Add(spreadRewardCharge)
 
-		// If the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
+		// If ComputeSwapWithinBucketOutGivenIn(...) calculated a computedSqrtPrice that is equal to the nextInitializedTickSqrtPrice, this means all liquidity in the current
 		// tick has been consumed and we must move on to the next tick to complete the swap
 		if nextInitializedTickSqrtPrice.Equal(computedSqrtPrice) {
 			swapState, err = k.swapCrossTickLogic(ctx, swapState, swapStrategy,
@@ -363,8 +363,8 @@ func (k Keeper) computeOutAmtGivenIn(
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 			}
 		} else if !sqrtPriceStart.Equal(computedSqrtPrice) {
-			// Otherwise if the sqrtPrice calculated from computeSwapStep does not equal the sqrtPrice we started with at the
-			// beginning of this iteration, we set the swapState tick to the corresponding tick of the sqrtPrice calculated from computeSwapStep
+			// Otherwise if the sqrtPrice calculated from ComputeSwapWithinBucketOutGivenIn(...) does not equal the sqrtPriceStart we started with at the
+			// beginning of this iteration, we set the swapState tick to the corresponding tick of the computedSqrtPrice calculated from ComputeSwapWithinBucketOutGivenIn(...)
 			price := computedSqrtPrice.Mul(computedSqrtPrice)
 			swapState.tick, err = math.PriceToTickRoundDown(price, p.GetTickSpacing())
 			if err != nil {
