@@ -1123,6 +1123,7 @@ func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 	return incentiveRecord, nil
 }
 
+// nolint: unused
 // getLargestDuration retrieves the largest duration from the given slice.
 func getLargestDuration(durations []time.Duration) time.Duration {
 	var largest time.Duration
