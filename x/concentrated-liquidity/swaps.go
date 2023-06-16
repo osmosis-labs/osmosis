@@ -99,8 +99,6 @@ func (ss *SwapState) updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal sdk.
 	// the total spread factors that will be accrued to the spread factor accumulator)
 	spreadFactorssAccruedPerUnitOfLiquidity := spreadRewardChargeTotal.QuoTruncate(ss.liquidity)
 	ss.spreadRewardGrowthGlobal.AddMut(spreadFactorssAccruedPerUnitOfLiquidity)
-	return
-
 }
 
 func (k Keeper) SwapExactAmountIn(
