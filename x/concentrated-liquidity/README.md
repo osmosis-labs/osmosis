@@ -1618,7 +1618,7 @@ Let's say we want to migrate this into a CL pool where `uosmo` is the quote
 asset and `uarb` is the base asset.
 
 Note that quote asset is denom1 and base asset is denom0.
-We want quote asset to be `uosmo` so that limit oredrs on ticks
+We want quote asset to be `uosmo` so that limit orders on ticks
 have tick spacing in terms of `uosmo` as the quote.
 
 
