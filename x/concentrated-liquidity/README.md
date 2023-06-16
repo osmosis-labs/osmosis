@@ -1661,7 +1661,7 @@ The true price of PEPE in USDC terms is `0.0000009749`.
 In the "on-chain representation", this would be:
 `0.0000009749 * 10**6 / 10**18 = 9.749e-19`
 
-Noe that this is below the minimum precision of `sdk.Dec`.
+Note that this is below the minimum precision of `sdk.Dec`.
 
 Additionally, there is a problem with tick to sqrt price conversions
 where at small price levels, two sqrt prices can map to the same
