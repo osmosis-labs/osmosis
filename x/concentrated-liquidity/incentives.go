@@ -1120,27 +1120,26 @@ func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 	return incentiveRecord, nil
 }
 
+// getLargestDuration retrieves the largest duration from the given slice.
+func getLargestDuration(durations []time.Duration) time.Duration {
+	var largest time.Duration
+	for _, duration := range durations {
+		if duration > largest {
+			largest = duration
+		}
+	}
+	return largest
+}
+
 // getLargestAuthorizedUptimeDuration retrieves the largest authorized uptime duration from the params.
 // NOTE: It is only used by fungifyChargedPosition which we disabled for launch.
 // nolint: unused
 func (k Keeper) getLargestAuthorizedUptimeDuration(ctx sdk.Context) time.Duration {
-	var largestUptime time.Duration
-	for _, uptime := range k.GetParams(ctx).AuthorizedUptimes {
-		if uptime > largestUptime {
-			largestUptime = uptime
-		}
-	}
-	return largestUptime
+	return getLargestDuration(k.GetParams(ctx).AuthorizedUptimes)
 }
 
 // nolint: unused
 // getLargestSupportedUptimeDuration retrieves the largest supported uptime duration from the preset constant slice.
 func (k Keeper) getLargestSupportedUptimeDuration(ctx sdk.Context) time.Duration {
-	var largestSupportedUptime time.Duration
-	for _, uptime := range types.SupportedUptimes {
-		if uptime > largestSupportedUptime {
-			largestSupportedUptime = uptime
-		}
-	}
-	return largestSupportedUptime
+	return getLargestDuration(types.SupportedUptimes)
 }
