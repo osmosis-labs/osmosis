@@ -3303,19 +3303,11 @@ func (s *KeeperTestSuite) TestSwap_ZeroForOne_TickInitialization() {
 
 			originalCurrentTick := pool.GetCurrentTick()
 
-			// Create narrow range position 1 tick spacing around the current tick
-			lowerTickOne := originalCurrentTick - 2*int64(pool.GetTickSpacing())
-			upperTickOne := originalCurrentTick + 2*int64(pool.GetTickSpacing())
-			s.FundAcc(s.TestAccs[0], DefaultCoins)
-			_, _, _, liquidityNarrowRangeOne, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTickOne, upperTickOne)
-			s.Require().NoError(err)
+			// Create narrow range position 2 tick spacing around the current tick
+			narrowRangeOnePosition := s.CreatePositionTickSpacingsFromCurrentTick(poolId, 2)
 
-			// Create narrow range position 2 tick spacings away from the current.
-			lowerTickTwo := originalCurrentTick - 5*int64(pool.GetTickSpacing())
-			upperTickTwo := originalCurrentTick + 5*int64(pool.GetTickSpacing())
-			s.FundAcc(s.TestAccs[0], DefaultCoins)
-			_, _, _, liquidityNarrowRangeTwo, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTickTwo, upperTickTwo)
-			s.Require().NoError(err)
+			// Create narrow range position 5 tick spacings away from the current.
+			narrowRangeTwoPosition := s.CreatePositionTickSpacingsFromCurrentTick(poolId, 5)
 
 			// Refetch pool as the second position updated its state.
 			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
@@ -3323,20 +3315,20 @@ func (s *KeeperTestSuite) TestSwap_ZeroForOne_TickInitialization() {
 
 			// As a sanity check confirm that current liquidity corresponds
 			// to the sum of liquidities of the all positions.
-			s.Require().Equal(liquidityFullRange.Add(liquidityNarrowRangeOne.Add(liquidityNarrowRangeTwo)), pool.GetLiquidity())
+			s.Require().Equal(liquidityFullRange.Add(narrowRangeOnePosition.liquidity.Add(narrowRangeTwoPosition.liquidity)), pool.GetLiquidity())
 
 			tickToSwapTo := originalCurrentTick + tc.swapTicksAway
 			expectedTickAfterFirstSwap := originalCurrentTick + tc.expectedTickAwayAfterFirstSwap
 
-			doesFirstSwapCrossLowerTickOne := expectedTickAfterFirstSwap < lowerTickOne
-			expectedLiquidityAfterFirstAndSecondSwap := liquidityFullRange.Add(liquidityNarrowRangeTwo)
+			doesFirstSwapCrossLowerTickOne := expectedTickAfterFirstSwap < narrowRangeOnePosition.lowerTick
+			expectedLiquidityAfterFirstAndSecondSwap := liquidityFullRange.Add(narrowRangeTwoPosition.liquidity)
 
-			expectedNextTickAfterFirstSwapZFO := lowerTickTwo
-			expectedNextTickAfterFirstSwapOFZ := lowerTickOne
+			expectedNextTickAfterFirstSwapZFO := narrowRangeTwoPosition.lowerTick
+			expectedNextTickAfterFirstSwapOFZ := narrowRangeOnePosition.lowerTick
 			if !doesFirstSwapCrossLowerTickOne {
-				expectedLiquidityAfterFirstAndSecondSwap = expectedLiquidityAfterFirstAndSecondSwap.Add(liquidityNarrowRangeOne)
-				expectedNextTickAfterFirstSwapZFO = lowerTickOne
-				expectedNextTickAfterFirstSwapOFZ = upperTickOne
+				expectedLiquidityAfterFirstAndSecondSwap = expectedLiquidityAfterFirstAndSecondSwap.Add(narrowRangeOnePosition.liquidity)
+				expectedNextTickAfterFirstSwapZFO = narrowRangeOnePosition.lowerTick
+				expectedNextTickAfterFirstSwapOFZ = narrowRangeOnePosition.upperTick
 			}
 
 			// Compute the sqrt price corresponding to the lower tick
@@ -3345,7 +3337,7 @@ func (s *KeeperTestSuite) TestSwap_ZeroForOne_TickInitialization() {
 			s.Require().NoError(err)
 
 			// Check that narrow range position is considered in range
-			isNarrowInRange := pool.IsCurrentTickInRange(lowerTickOne, upperTickOne)
+			isNarrowInRange := pool.IsCurrentTickInRange(narrowRangeOnePosition.lowerTick, narrowRangeOnePosition.upperTick)
 			s.Require().True(isNarrowInRange)
 
 			var (
@@ -3355,15 +3347,15 @@ func (s *KeeperTestSuite) TestSwap_ZeroForOne_TickInitialization() {
 				liquidity = pool.GetLiquidity()
 			)
 
-			if tickToSwapTo < lowerTickOne {
-				_, sqrtPriceLowerTickOne, err := math.TickToSqrtPrice(lowerTickOne)
+			if tickToSwapTo < narrowRangeOnePosition.lowerTick {
+				_, sqrtPriceLowerTickOne, err := math.TickToSqrtPrice(narrowRangeOnePosition.lowerTick)
 				s.Require().NoError(err)
 
 				amountZeroIn = math.CalcAmount0Delta(liquidity, sqrtPriceLowerTickOne, sqrtPriceStart, true)
 
 				sqrtPriceStart = sqrtPriceLowerTickOne
 
-				liquidity = liquidity.Sub(liquidityNarrowRangeOne)
+				liquidity = liquidity.Sub(narrowRangeOnePosition.liquidity)
 			}
 
 			// This is the total amount necessary to cross the lower tick of narrow position.
@@ -3399,7 +3391,7 @@ func (s *KeeperTestSuite) TestSwap_ZeroForOne_TickInitialization() {
 			s.Require().Equal(expectedLiquidityAfterFirstAndSecondSwap, pool.GetLiquidity())
 
 			// Check that narrow range position is considered out of range
-			isNarrowInRange = pool.IsCurrentTickInRange(lowerTickOne, upperTickOne)
+			isNarrowInRange = pool.IsCurrentTickInRange(narrowRangeOnePosition.lowerTick, narrowRangeOnePosition.upperTick)
 			s.Require().Equal(!doesFirstSwapCrossLowerTickOne, isNarrowInRange)
 
 			// Confirm that the next tick to be returned is correct for both zero for one and one for zero directions.
@@ -3447,7 +3439,7 @@ func (s *KeeperTestSuite) TestSwap_ZeroForOne_TickInitialization() {
 			s.Require().Equal(expectedLiquidityAfterFirstAndSecondSwap, pool.GetLiquidity())
 
 			// Check that narrow range position is considered out of range
-			isNarrowInRange = pool.IsCurrentTickInRange(lowerTickOne, upperTickOne)
+			isNarrowInRange = pool.IsCurrentTickInRange(narrowRangeOnePosition.lowerTick, narrowRangeOnePosition.upperTick)
 			s.Require().Equal(!doesFirstSwapCrossLowerTickOne, isNarrowInRange)
 		})
 	}
@@ -3588,19 +3580,11 @@ func (s *KeeperTestSuite) TestSwap_OneForZero_TickInitialization() {
 
 			originalCurrentTick := pool.GetCurrentTick()
 
-			// Create narrow range position 1 tick spacing around the current tick
-			lowerTickOne := originalCurrentTick - 2*int64(pool.GetTickSpacing())
-			upperTickOne := originalCurrentTick + 2*int64(pool.GetTickSpacing())
-			s.FundAcc(s.TestAccs[0], DefaultCoins)
-			_, _, _, liquidityNarrowRangeOne, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTickOne, upperTickOne)
-			s.Require().NoError(err)
+			// Create narrow range position 2 tick spacing around the current tick
+			narrowRangeOnePosition := s.CreatePositionTickSpacingsFromCurrentTick(poolId, 2)
 
-			// Create narrow range position 2 tick spacings away from the current.
-			lowerTickTwo := originalCurrentTick - 5*int64(pool.GetTickSpacing())
-			upperTickTwo := originalCurrentTick + 5*int64(pool.GetTickSpacing())
-			s.FundAcc(s.TestAccs[0], DefaultCoins)
-			_, _, _, liquidityNarrowRangeTwo, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTickTwo, upperTickTwo)
-			s.Require().NoError(err)
+			// Create narrow range position 5 tick spacings away from the current.
+			narrowRangeTwoPosition := s.CreatePositionTickSpacingsFromCurrentTick(poolId, 5)
 
 			// Refetch pool as the second position updated its state.
 			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
@@ -3608,20 +3592,20 @@ func (s *KeeperTestSuite) TestSwap_OneForZero_TickInitialization() {
 
 			// As a sanity check confirm that current liquidity corresponds
 			// to the sum of liquidities of the all positions.
-			s.Require().Equal(liquidityFullRange.Add(liquidityNarrowRangeOne.Add(liquidityNarrowRangeTwo)), pool.GetLiquidity())
+			s.Require().Equal(liquidityFullRange.Add(narrowRangeOnePosition.liquidity.Add(narrowRangeTwoPosition.liquidity)), pool.GetLiquidity())
 
 			tickToSwapTo := originalCurrentTick + tc.swapTicksAway
 			expectedTickAfterFirstSwap := originalCurrentTick + tc.expectedTickAwayAfterFirstSwap
 
-			doesFirstSwapCrossUpperTickOne := expectedTickAfterFirstSwap >= upperTickOne
-			expectedLiquidityAfterFirstAndSecondSwap := liquidityFullRange.Add(liquidityNarrowRangeTwo)
+			doesFirstSwapCrossUpperTickOne := expectedTickAfterFirstSwap >= narrowRangeOnePosition.upperTick
+			expectedLiquidityAfterFirstAndSecondSwap := liquidityFullRange.Add(narrowRangeTwoPosition.liquidity)
 
-			expectedNextTickAfterFirstSwapZFO := upperTickOne
-			expectedNextTickAfterFirstSwapOFZ := upperTickTwo
+			expectedNextTickAfterFirstSwapZFO := narrowRangeOnePosition.upperTick
+			expectedNextTickAfterFirstSwapOFZ := narrowRangeTwoPosition.upperTick
 			if !doesFirstSwapCrossUpperTickOne {
-				expectedLiquidityAfterFirstAndSecondSwap = expectedLiquidityAfterFirstAndSecondSwap.Add(liquidityNarrowRangeOne)
-				expectedNextTickAfterFirstSwapZFO = lowerTickOne
-				expectedNextTickAfterFirstSwapOFZ = upperTickOne
+				expectedLiquidityAfterFirstAndSecondSwap = expectedLiquidityAfterFirstAndSecondSwap.Add(narrowRangeOnePosition.liquidity)
+				expectedNextTickAfterFirstSwapZFO = narrowRangeOnePosition.lowerTick
+				expectedNextTickAfterFirstSwapOFZ = narrowRangeOnePosition.upperTick
 			}
 
 			// Compute the sqrt price corresponding to the lower tick
@@ -3630,7 +3614,7 @@ func (s *KeeperTestSuite) TestSwap_OneForZero_TickInitialization() {
 			s.Require().NoError(err)
 
 			// Check that narrow range position is considered in range
-			isNarrowInRange := pool.IsCurrentTickInRange(lowerTickOne, upperTickOne)
+			isNarrowInRange := pool.IsCurrentTickInRange(narrowRangeOnePosition.lowerTick, narrowRangeOnePosition.upperTick)
 			s.Require().True(isNarrowInRange)
 
 			var (
@@ -3639,15 +3623,15 @@ func (s *KeeperTestSuite) TestSwap_OneForZero_TickInitialization() {
 				liquidity              = pool.GetLiquidity()
 			)
 
-			if tickToSwapTo >= upperTickOne {
-				_, sqrtPriceUpperOne, err := math.TickToSqrtPrice(upperTickOne)
+			if tickToSwapTo >= narrowRangeOnePosition.upperTick {
+				_, sqrtPriceUpperOne, err := math.TickToSqrtPrice(narrowRangeOnePosition.upperTick)
 				s.Require().NoError(err)
 
 				amountOneIn = math.CalcAmount1Delta(liquidity, sqrtPriceUpperOne, sqrtPriceStart, true)
 
 				sqrtPriceStart = sqrtPriceUpperOne
 
-				liquidity = liquidity.Sub(liquidityNarrowRangeOne)
+				liquidity = liquidity.Sub(narrowRangeOnePosition.liquidity)
 			}
 
 			// This is the total amount necessary to cross the lower tick of narrow position.
@@ -3683,7 +3667,7 @@ func (s *KeeperTestSuite) TestSwap_OneForZero_TickInitialization() {
 			s.Require().Equal(expectedLiquidityAfterFirstAndSecondSwap, pool.GetLiquidity())
 
 			// Check that narrow range position is considered out of range
-			isNarrowInRange = pool.IsCurrentTickInRange(lowerTickOne, upperTickOne)
+			isNarrowInRange = pool.IsCurrentTickInRange(narrowRangeOnePosition.lowerTick, narrowRangeOnePosition.upperTick)
 			s.Require().Equal(!doesFirstSwapCrossUpperTickOne, isNarrowInRange)
 
 			// Confirm that the next tick to be returned is correct for both zero for one and one for zero directions.
@@ -3731,7 +3715,7 @@ func (s *KeeperTestSuite) TestSwap_OneForZero_TickInitialization() {
 			s.Require().Equal(expectedLiquidityAfterFirstAndSecondSwap, pool.GetLiquidity())
 
 			// Check that narrow range position is considered out of range
-			isNarrowInRange = pool.IsCurrentTickInRange(lowerTickOne, upperTickOne)
+			isNarrowInRange = pool.IsCurrentTickInRange(narrowRangeOnePosition.lowerTick, narrowRangeOnePosition.upperTick)
 			s.Require().Equal(!doesFirstSwapCrossUpperTickOne, isNarrowInRange)
 		})
 	}
