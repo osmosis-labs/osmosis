@@ -1598,10 +1598,10 @@ We will use the following terms throughout the document and our codebase:
 - `Tick Spacing` - the distance between two ticks that can be initialized. This is
 what defines the minimum bucket size.
 
-Note that ticks are defined inside buckets. Assume tick spacing is 100. I create a
-position with amounts such that the current tick is 155 between ticks 100 and 200.
+Note that ticks are defined inside buckets. Assume tick spacing is 100. A liquidity provider
+creates a position with amounts such that the current tick is 155 between ticks 100 and 200.
 
-Note, that the current tick is defined inside the bucket over a range of 100 to 200.
+Note, that the current tick of 155 is defined inside the bucket over a range of 100 to 200.
 
 ## External Sources
 
