@@ -469,37 +469,41 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 	for incentiveIndex, incentiveRecord := range copyPoolIncentiveRecords {
 		// We consider all incentives matching the current uptime that began emitting before the current blocktime
 		incentiveRecordBody := incentiveRecord.IncentiveRecordBody
-		if incentiveRecordBody.StartTime.UTC().Before(ctx.BlockTime().UTC()) && incentiveRecord.MinUptime == accumUptime {
-			// Total amount emitted = time elapsed * emission
-			totalEmittedAmount := timeElapsed.Mul(incentiveRecordBody.EmissionRate)
-
-			// Incentives to emit per unit of qualifying liquidity = total emitted / liquidityInAccum
-			// Note that we truncate to ensure we do not overdistribute incentives
-			incentivesPerLiquidity := totalEmittedAmount.QuoTruncate(liquidityInAccum)
-			emittedIncentivesPerLiquidity := sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, incentivesPerLiquidity)
-
-			// Ensure that we only emit if there are enough incentives remaining to be emitted
-			remainingRewards := poolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingCoin.Amount
-
-			// if total amount emitted does not exceed remaining rewards,
-			if totalEmittedAmount.LTE(remainingRewards) {
-				incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
-
-				// Update incentive record to reflect the incentives that were emitted
-				remainingRewards = remainingRewards.Sub(totalEmittedAmount)
-
-				// Each incentive record should only be modified once
-				copyPoolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingCoin.Amount = remainingRewards
-			} else {
-				// If there are not enough incentives remaining to be emitted, we emit the remaining rewards.
-				// When the returned records are set in state, all records with remaining rewards of zero will be cleared.
-				remainingIncentivesPerLiquidity := remainingRewards.QuoTruncate(liquidityInAccum)
-				emittedIncentivesPerLiquidity = sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, remainingIncentivesPerLiquidity)
-				incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
-
-				copyPoolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingCoin.Amount = sdk.ZeroDec()
-			}
+		if !incentiveRecordBody.StartTime.UTC().Before(ctx.BlockTime().UTC()) || incentiveRecord.MinUptime == accumUptime {
+			// If the incentive does not match the current uptime or has not started emitting, we skip it
+			continue
 		}
+
+		// Total amount emitted = time elapsed * emission
+		totalEmittedAmount := timeElapsed.Mul(incentiveRecordBody.EmissionRate)
+
+		// Incentives to emit per unit of qualifying liquidity = total emitted / liquidityInAccum
+		// Note that we truncate to ensure we do not overdistribute incentives
+		incentivesPerLiquidity := totalEmittedAmount.QuoTruncate(liquidityInAccum)
+		emittedIncentivesPerLiquidity := sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, incentivesPerLiquidity)
+
+		// Ensure that we only emit if there are enough incentives remaining to be emitted
+		remainingRewards := poolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingCoin.Amount
+
+		// if total amount emitted does not exceed remaining rewards,
+		if totalEmittedAmount.LTE(remainingRewards) {
+			incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
+
+			// Update incentive record to reflect the incentives that were emitted
+			remainingRewards = remainingRewards.Sub(totalEmittedAmount)
+
+			// Each incentive record should only be modified once
+			copyPoolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingCoin.Amount = remainingRewards
+		} else {
+			// If there are not enough incentives remaining to be emitted, we emit the remaining rewards.
+			// When the returned records are set in state, all records with remaining rewards of zero will be cleared.
+			remainingIncentivesPerLiquidity := remainingRewards.QuoTruncate(liquidityInAccum)
+			emittedIncentivesPerLiquidity = sdk.NewDecCoinFromDec(incentiveRecordBody.RemainingCoin.Denom, remainingIncentivesPerLiquidity)
+			incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
+
+			copyPoolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingCoin.Amount = sdk.ZeroDec()
+		}
+
 	}
 
 	return incentivesToAddToCurAccum, copyPoolIncentiveRecords, nil
