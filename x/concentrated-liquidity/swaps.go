@@ -91,13 +91,16 @@ var (
 // As a result, the range from the end of position one to the beginning of position
 // two has no liquidity and can be skipped.
 func (ss *SwapState) updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal sdk.Dec) {
-	if !ss.liquidity.IsZero() {
-		// We round down here since we want to avoid overdistributing (the "spread factor charge" refers to
-		// the total spread factors that will be accrued to the spread factor accumulator)
-		spreadFactorssAccruedPerUnitOfLiquidity := spreadRewardChargeTotal.QuoTruncate(ss.liquidity)
-		ss.spreadRewardGrowthGlobal.AddMut(spreadFactorssAccruedPerUnitOfLiquidity)
+	if ss.liquidity.IsZero() {
 		return
 	}
+
+	// We round down here since we want to avoid overdistributing (the "spread factor charge" refers to
+	// the total spread factors that will be accrued to the spread factor accumulator)
+	spreadFactorssAccruedPerUnitOfLiquidity := spreadRewardChargeTotal.QuoTruncate(ss.liquidity)
+	ss.spreadRewardGrowthGlobal.AddMut(spreadFactorssAccruedPerUnitOfLiquidity)
+	return
+
 }
 
 func (k Keeper) SwapExactAmountIn(
