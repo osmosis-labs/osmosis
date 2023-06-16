@@ -1588,7 +1588,7 @@ There are precision issues that we must be considerate of in our design.
 
 Consider the balancer pool between `uarb` and `uosmo`:
 
-```
+```bash
 osmosisd q gamm pool 1011
 pool:
   '@type': /osmosis.gamm.v1beta1.Pool
@@ -1627,21 +1627,21 @@ Note:
 - ARB has precision of 18. 1 ARB = 10**18 `uarb`
 
 Therefore, the true price of the pool is:
-```
+```python
 >>> (218023341414 / 10**6)  / (101170077995723619690981 / 10**18)
 2.1550180224553714
 ```
 
 However, in our core logic it is represented as:
 
-```
+```python
 218023341414 / 101170077995723619690981
 2.1550180224553714e-12
 ```
 
 or
 
-```
+```python
 osmosisd q gamm spot-price 1011 uosmo ibc/10E5E5B06D78FFBB61FD9F89209DEE5FD4446ED0550CBB8E3747DA79E10D9DC6
 spot_price: "0.000000000002155018"
 ```
