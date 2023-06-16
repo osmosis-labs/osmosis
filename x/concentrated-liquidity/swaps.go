@@ -202,11 +202,7 @@ func (k Keeper) swapOutAmtGivenIn(
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
 	// Also emits swap event and updates related liquidity metrics
-	if err := k.updatePoolForSwap(ctx,
-		pool,
-		SwapDetails{sender, tokenIn, tokenOut},
-		tickUpdates,
-		totalSpreadFactors); err != nil {
+	if err := k.updatePoolForSwap(ctx, pool, SwapDetails{sender, tokenIn, tokenOut}, tickUpdates, totalSpreadFactors); err != nil {
 		return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, err
 	}
 
@@ -236,12 +232,7 @@ func (k *Keeper) swapInAmtGivenOut(
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
 	// Also emits swap event and updates related liquidity metrics
-	if err := k.updatePoolForSwap(ctx,
-		pool,
-		SwapDetails{sender, tokenIn, tokenOut},
-		tickUpdates,
-		totalSpreadFactors,
-	); err != nil {
+	if err := k.updatePoolForSwap(ctx, pool, SwapDetails{sender, tokenIn, tokenOut}, tickUpdates, totalSpreadFactors); err != nil {
 		return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, err
 	}
 
