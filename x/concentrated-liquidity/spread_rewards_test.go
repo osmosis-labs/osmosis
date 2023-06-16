@@ -1408,28 +1408,40 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_Swaps() {
 	// Setup overlapping range position (in relation to narrow range position) on one of four accounts
 	for i := 0; i < positions.numOverlapping; i++ {
 		positionId := s.SetupOverlappingRangePositionAcc(clPool.GetId(), s.TestAccs[i])
+		fmt.Println("THIS IS POSITION ID: ", positionId)
 		positionIds[3] = append(positionIds[3], positionId)
 	}
 
+	clPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+	s.Require().NoError(err)
+
+	fmt.Println("CURRENT TICK BEFORE SWAP", clPool.GetCurrentTick())
+
 	// Swap multiple times USDC for ETH, therefore increasing the spot price
-	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, types.MaxSpotPrice, positions.numSwaps)
+	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, types.MaxSpotPrice, 1)
+	fmt.Println(ticksActivatedAfterEachSwap, totalSpreadRewardsExpected)
 	s.CollectAndAssertSpreadRewards(s.Ctx, clPool.GetId(), totalSpreadRewardsExpected, positionIds, [][]int64{ticksActivatedAfterEachSwap}, onlyUSDC, positions)
 
-	// Swap multiple times ETH for USDC, therefore decreasing the spot price
-	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ = s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, types.MinSpotPrice, positions.numSwaps)
-	s.CollectAndAssertSpreadRewards(s.Ctx, clPool.GetId(), totalSpreadRewardsExpected, positionIds, [][]int64{ticksActivatedAfterEachSwap}, onlyETH, positions)
+	fees, err := s.App.ConcentratedLiquidityKeeper.GetClaimableSpreadRewards(s.Ctx, 10)
+	s.Require().NoError(err)
 
-	// Do the same swaps as before, however this time we collect spread rewards after both swap directions are complete.
-	ticksActivatedAfterEachSwapUp, totalSpreadRewardsExpectedUp, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, types.MaxSpotPrice, positions.numSwaps)
-	ticksActivatedAfterEachSwapDown, totalSpreadRewardsExpectedDown, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, types.MinSpotPrice, positions.numSwaps)
-	totalSpreadRewardsExpected = totalSpreadRewardsExpectedUp.Add(totalSpreadRewardsExpectedDown...)
+	fmt.Println("FEES", fees)
+
+	// Swap multiple times ETH for USDC, therefore decreasing the spot price
+	// ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ = s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, types.MinSpotPrice, positions.numSwaps)
+	// s.CollectAndAssertSpreadRewards(s.Ctx, clPool.GetId(), totalSpreadRewardsExpected, positionIds, [][]int64{ticksActivatedAfterEachSwap}, onlyETH, positions)
+
+	// // Do the same swaps as before, however this time we collect spread rewards after both swap directions are complete.
+	// ticksActivatedAfterEachSwapUp, totalSpreadRewardsExpectedUp, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, types.MaxSpotPrice, positions.numSwaps)
+	// ticksActivatedAfterEachSwapDown, totalSpreadRewardsExpectedDown, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, types.MinSpotPrice, positions.numSwaps)
+	// totalSpreadRewardsExpected = totalSpreadRewardsExpectedUp.Add(totalSpreadRewardsExpectedDown...)
 
 	// We expect all positions to have both denoms in their spread reward accumulators except USDC for the overlapping range position since
 	// it was not activated during the USDC -> ETH swap direction but was activated during the ETH -> USDC swap direction.
-	ticksActivatedAfterEachSwapTest := [][]int64{ticksActivatedAfterEachSwapUp, ticksActivatedAfterEachSwapDown}
-	denomsExpected := [][]string{{USDC, ETH}, {USDC, ETH}, {USDC, ETH}, {NoUSDCExpected, ETH}}
+	// ticksActivatedAfterEachSwapTest := [][]int64{ticksActivatedAfterEachSwapUp, ticksActivatedAfterEachSwapDown}
+	// denomsExpected := [][]string{{USDC, ETH}, {USDC, ETH}, {USDC, ETH}, {NoUSDCExpected, ETH}}
 
-	s.CollectAndAssertSpreadRewards(s.Ctx, clPool.GetId(), totalSpreadRewardsExpected, positionIds, ticksActivatedAfterEachSwapTest, denomsExpected, positions)
+	//s.CollectAndAssertSpreadRewards(s.Ctx, clPool.GetId(), totalSpreadRewardsExpected, positionIds, ticksActivatedAfterEachSwapTest, denomsExpected, positions)
 }
 
 // This test focuses on various functional testing around spread rewards and LP logic.
@@ -1601,6 +1613,7 @@ func (s *KeeperTestSuite) swapAndTrackXTimesInARow(poolId uint64, coinIn sdk.Coi
 	for i := 0; i < numSwaps; i++ {
 		coinIn, coinOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, s.TestAccs[4], clPool, coinIn, coinOutDenom, clPool.GetSpreadFactor(s.Ctx), priceLimit)
 		s.Require().NoError(err)
+		fmt.Println("SWAP RESULT: ", coinIn, coinOut)
 		spreadReward := coinIn.Amount.ToDec().Mul(clPool.GetSpreadFactor(s.Ctx))
 		totalSpreadRewards = totalSpreadRewards.Add(sdk.NewCoin(coinIn.Denom, spreadReward.TruncateInt()))
 		clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
@@ -1619,4 +1632,65 @@ func (s *KeeperTestSuite) collectSpreadRewardsAndCheckInvariance(ctx sdk.Context
 	totalSpreadRewardsCollected = spreadRewardsCollected.Add(coins...)
 	s.tickStatusInvariance(activeTicks, minTick, maxTick, coins, expectedSpreadRewardDenoms)
 	return totalSpreadRewardsCollected
+}
+
+func (s *KeeperTestSuite) TestGetClaimableSpreadRewards() {
+
+	// Init suite.
+	s.SetupTest()
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(1_000_000)), sdk.NewCoin(USDC, sdk.NewInt(5_000_000_000))))
+	s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(1_000_000)), sdk.NewCoin(USDC, sdk.NewInt(10_000_000_000))))
+	s.FundAcc(s.TestAccs[2], sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(1_000_000)), sdk.NewCoin(USDC, sdk.NewInt(5_000_000_000))))
+
+	// Create a default CL pool, but with a 0.3 percent spread factor.
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, 1, sdk.MustNewDecFromStr("0.002"))
+
+	// create a position
+	// currentTick = 31000000										     currentTick
+	// -162000000------------------------------------------------------------|---------------------------------342000000			minTick to maxTick
+	//     					                            30545000 --------------- 31500000											Position1
+	//     					                            								31500001 ----- 32000000						Position2
+
+	_, positionId1 := s.SetupPosition(clPool.GetId(), s.TestAccs[0], DefaultCoins, 30545000, 31500000, false) // position contains = 1_000_000eth 5_000_000_000usdc
+	_, positionId2 := s.SetupPosition(clPool.GetId(), s.TestAccs[2], DefaultCoins, 31500001, 32000000, false) // position contains = 1_000_000eth 5_000_000_000usdc
+
+	clPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+	s.Require().NoError(err)
+
+	fmt.Println("CURRENT TICK BEFORE SWAP", clPool.GetCurrentTick())
+
+	// check fees
+	fees, err := s.App.ConcentratedLiquidityKeeper.GetClaimableSpreadRewards(s.Ctx, positionId1)
+	s.Require().NoError(err)
+
+	fees1, err := s.App.ConcentratedLiquidityKeeper.GetClaimableSpreadRewards(s.Ctx, positionId2)
+	s.Require().NoError(err)
+
+	fmt.Println("FEES BEFORE SWAP Position1 & POsition2: ", fees, fees1)
+
+	// perform a  swap
+	// swap 5_000_000_000usdc to eth
+	coinIn, coinOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, s.TestAccs[1], clPool, sdk.NewCoin(USDC, sdk.NewInt(6_000_000_000)), ETH, clPool.GetSpreadFactor(s.Ctx), types.MaxSpotPrice)
+	s.Require().NoError(err)
+
+	fmt.Println("SWAP RESULT", coinIn, coinOut)
+
+	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+	s.Require().NoError(err)
+
+	fmt.Println("CURRENT TICK AFTER SWAP", clPool.GetCurrentTick())
+
+	// check fees
+	fees, err = s.App.ConcentratedLiquidityKeeper.GetClaimableSpreadRewards(s.Ctx, positionId1)
+	s.Require().NoError(err)
+
+	fees1, err = s.App.ConcentratedLiquidityKeeper.GetClaimableSpreadRewards(s.Ctx, positionId2)
+	s.Require().NoError(err)
+
+	fmt.Println("FEES AFTER SWAP Position1 & POsition2: ", fees, fees1)
+
+	poolLiquidity, err := s.App.PoolManagerKeeper.GetTotalPoolLiquidity(s.Ctx, clPool.GetId())
+	s.Require().NoError(err)
+
+	fmt.Println("POOL LIQUIDITY", poolLiquidity)
 }

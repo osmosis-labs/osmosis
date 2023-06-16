@@ -291,6 +291,8 @@ func (k Keeper) computeOutAmtGivenIn(
 	// as we iterate through the following for loop, this swap state will get updated after each required iteration
 	swapState := newSwapState(tokenInMin.Amount, p, swapStrategy)
 
+	fmt.Println("SWAP STATE: TICK: ", swapState.tick, "")
+
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
 	defer nextTickIter.Close()
 
