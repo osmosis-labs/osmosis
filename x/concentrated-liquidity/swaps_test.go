@@ -2519,7 +2519,8 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 
 			expectedSpreadFactors := tc.tokenIn.Amount.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).Ceil()
 			expectedSpreadFactorsCoins := sdk.NewCoins(sdk.NewCoin(tc.tokenIn.Denom, expectedSpreadFactors.TruncateInt()))
-			err = concentratedLiquidityKeeper.UpdatePoolForSwap(s.Ctx, pool, sender, tc.tokenIn, tc.tokenOut, tc.newCurrentTick, tc.newLiquidity, tc.newSqrtPrice, expectedSpreadFactors)
+			swapDetails := cl.SwapDetails{Sender: sender, TokenIn: tc.tokenIn, TokenOut: tc.tokenOut}
+			err = concentratedLiquidityKeeper.UpdatePoolForSwap(s.Ctx, pool, swapDetails, tc.newCurrentTick, tc.newLiquidity, tc.newSqrtPrice, expectedSpreadFactors)
 
 			// Test that pool is updated
 			poolAfterUpdate, err2 := concentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
