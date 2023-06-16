@@ -379,7 +379,7 @@ func (k Keeper) computeOutAmtGivenIn(
 					swapState.tick = newTick
 				}
 			} else {
-				if newTick >= swapState.tick {
+				if newTick > swapState.tick {
 					swapState.tick = newTick
 				}
 			}
