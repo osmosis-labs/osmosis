@@ -273,7 +273,7 @@ func CalculateSqrtPriceToTick(sqrtPrice sdk.Dec) (tickIndex int64, err error) {
 	if truncatedTick <= types.MinTick {
 		truncatedTick = types.MinTick + 1
 		outOfBounds = true
-	} else if truncatedTick >= types.MaxTick {
+	} else if truncatedTick >= types.MaxTick-1 {
 		truncatedTick = types.MaxTick - 2
 		outOfBounds = true
 	}
@@ -285,9 +285,24 @@ func CalculateSqrtPriceToTick(sqrtPrice sdk.Dec) (tickIndex int64, err error) {
 	if errM1 != nil || errT != nil || errP1 != nil || errP2 != nil {
 		return 0, errors.New("internal error in computing square roots within CalculateSqrtPriceToTick")
 	}
-	if sqrtPrice.GTE(sqrtPriceTplus2) || sqrtPrice.LT(sqrtPriceTmin1) {
+	fmt.Println("sqrtPriceTplus1: ", sqrtPriceTplus1)
+	fmt.Println("sqrtPriceTplus2: ", sqrtPriceTplus2)
+
+	// We error if sqrtPriceT is above sqrtPriceTplus2 or below sqrtPriceTmin1.
+	// For cases where calculated tick does not fall on a limit (min/max tick), the upper end is exclusive.
+	// For cases where calculated tick falls on a limit, the upper end is inclusive, since the actual tick is
+	// already shifted and making it exclusive would make min/max tick impossible to reach by construction.
+	// We do this primary for code simplicity, as alternatives would require more branching and special cases.
+	if (!outOfBounds && sqrtPrice.GTE(sqrtPriceTplus2)) || sqrtPrice.LT(sqrtPriceTmin1) || sqrtPrice.GT(sqrtPriceTplus2) {
 		return 0, fmt.Errorf("sqrt price to tick could not find a satisfying tick index. Hit bounds: %v", outOfBounds)
 	}
+
+	// We expect this case to only be hit when the original provided sqrt price is exactly equal to the max sqrt price.
+	if sqrtPrice.Equal(sqrtPriceTplus2) {
+		return truncatedTick + 2, nil
+	}
+
+	// The remaining cases handle shifting tick index by +/- 1.
 	if sqrtPrice.GTE(sqrtPriceTplus1) {
 		return truncatedTick + 1, nil
 	}

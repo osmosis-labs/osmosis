@@ -766,6 +766,39 @@ func (s *ConcentratedMathTestSuite) TestSqrtPriceToTickRoundDownSpacing() {
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: -200,
 		},
+		"sqrt price exactly equal to max sqrt price": {
+			sqrtPrice:    types.MaxSqrtPrice,
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: types.MaxTick,
+		},
+		"sqrt price exactly equal to min sqrt price": {
+			sqrtPrice:    types.MinSqrtPrice,
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: types.MinTick,
+		},
+		"sqrt price equal to max sqrt price minus one ULP": {
+			sqrtPrice:    types.MaxSqrtPrice.Sub(sdk.SmallestDec()),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: types.MaxTick - defaultTickSpacing,
+		},
+		"sqrt price corresponds exactly to max tick - 1 (tick spacing 1)": {
+			// Calculated using TickToSqrtPrice(types.MaxTick - 1)
+			sqrtPrice:    sdk.MustNewDecFromStr("9999999499999987499.999374999960937497"),
+			tickSpacing:  1,
+			tickExpected: types.MaxTick - 1,
+		},
+		"sqrt price one ULP below max tick - 1 (tick spacing 1)": {
+			// Calculated using TickToSqrtPrice(types.MaxTick - 1) - 1 ULP
+			sqrtPrice:    sdk.MustNewDecFromStr("9999999499999987499.999374999960937496"),
+			tickSpacing:  1,
+			tickExpected: types.MaxTick - 2,
+		},
+		"sqrt price one ULP below max tick - 1 (tick spacing 100)": {
+			// Calculated using TickToSqrtPrice(types.MaxTick - 1) - 1 ULP
+			sqrtPrice:    sdk.MustNewDecFromStr("9999999499999987499.999374999960937496"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: types.MaxTick - defaultTickSpacing,
+		},
 	}
 	for name, tc := range testCases {
 		s.Run(name, func() {
@@ -773,14 +806,17 @@ func (s *ConcentratedMathTestSuite) TestSqrtPriceToTickRoundDownSpacing() {
 			s.Require().NoError(err)
 			s.Require().Equal(tc.tickExpected, tickIndex)
 
-			// Ensure returned bucket properly encapsulates given sqrt price
+			// Ensure returned bucket properly encapsulates given sqrt price, skipping the upper bound
+			// check if we're on the max tick
 			_, inverseSqrtPrice, err := math.TickToSqrtPrice(tickIndex)
 			s.Require().NoError(err)
-			_, inverseSqrtPriceTickAbove, err := math.TickToSqrtPrice(tickIndex + int64(tc.tickSpacing))
-			s.Require().NoError(err)
-
 			s.Require().True(inverseSqrtPrice.LTE(tc.sqrtPrice))
-			s.Require().True(inverseSqrtPriceTickAbove.GT(tc.sqrtPrice))
+
+			if tc.tickExpected != types.MaxTick {
+				_, inverseSqrtPriceTickAbove, err := math.TickToSqrtPrice(tickIndex + int64(tc.tickSpacing))
+				s.Require().NoError(err)
+				s.Require().True(inverseSqrtPriceTickAbove.GT(tc.sqrtPrice))
+			}
 		})
 	}
 }
