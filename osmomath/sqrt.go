@@ -13,16 +13,23 @@ var smallestDec = sdk.SmallestDec()
 // returns an error iff one of the following conditions is met:
 // - d is negative
 // - d is too small to have a representable square root.
-func MonotonicSqrtRoot(d sdk.Dec) (sdk.Dec, error) {
+// This function guarantees:
+// the returned root r, will be such that r^2 >= d
+// This function is monotonic, i.e. if d1 >= d2, then sqrt(d1) >= sqrt(d2)
+func MonotonicSqrt(d sdk.Dec) (sdk.Dec, error) {
 	if d.IsNegative() {
 		return d, errors.New("cannot take square root of negative number")
+	}
+	if d.IsZero() {
+		return sdk.ZeroDec(), nil
 	}
 
 	// we run newton's approximation on f(x) = x^2 - d
 	// which has derivative f'(x) = 2 * x
 	// x_{n+1} = x_n - f(x_n)/f'(x_n)
 	// f(x_n)/f'(x_n) = (x_n^2 - d) / (2 * x_n) = x_n/2 - d/(2 * x_n)
-	// newton's method will monotonically approximate the root. (source: https://math.mit.edu/~stevenj/18.335/newton-sqrt.pdf)
+	// newton's method will be a monotonic sequence converging to the root.
+	// source: https://math.mit.edu/~stevenj/18.335/newton-sqrt.pdf
 	// So to ensure were over-estimating, we just need to get an initial over-estimate.
 	guess := getInitialSquareRootGuess(d)
 	delta := sdk.OneDec()
@@ -46,8 +53,27 @@ func MonotonicSqrtRoot(d sdk.Dec) (sdk.Dec, error) {
 	if iter == maxApproxRootIterations {
 		return guess, errors.New("failed to converge")
 	}
-	// Now we have a monotonic sqrt answer, up to some accuracy bound.
-	// Now we need to round that down.
+	// Now we have a sqrt answer, up to some accuracy bound.
+	// We want to get monotonicity across various inputs.
+	// e.g. if d1 <= d2, then sqrt(d1) <= sqrt(d2)
+	//
+	// We know that the update we were about to do is delta <= smallestDec.
+	// furthermore we know that every successive iteration, if we had higher precision, would be much smaller.
+	// We also know that once were close to the solution (d_n << 1),
+	// the relative error d_n = |(x_n - x) / x|, obeys:
+	// d_n+1 = (d_n^2) / 2 + O(d_n^3)
+	// Note that we are always "close" to the solution in this case.
+	// The smallest number we can take a square root of is 10^-18, whose square root is ~10^-9.
+	// so a difference of 10^-18 is quite small (were already mostly correct for 7+ digits of the square root).
+	//
+	// Therefore our d_n is then on the order of magnitude 10^-18, and if we had infinite precision, d_{n+1} would go to
+	// 10^-36.
+	//
+	// To argue monotonicity off this alone requires reasoning about the following points:
+	// - no edge effects around this binary representation, especially with the quotient behavior
+	// -
+	// TODO: Seems like we could just reason about the quo behavior, round the 10^-18 term (really final 3 bits),
+	// and be certain.
 	return guess, nil
 }
 
