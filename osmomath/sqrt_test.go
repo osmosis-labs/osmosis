@@ -10,6 +10,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func generateRandomDecForEachBitlen(r *rand.Rand, numPerBitlen int) []sdk.Dec {
+	res := make([]sdk.Dec, (255+sdk.DecimalPrecisionBits)*numPerBitlen)
+	for i := 0; i < 255+sdk.DecimalPrecisionBits; i++ {
+		upperbound := big.NewInt(1)
+		upperbound.Lsh(upperbound, uint(i))
+		for j := 0; j < 10; j++ {
+			v := big.NewInt(0).Rand(r, upperbound)
+			res[i*numPerBitlen+j] = sdk.NewDecFromBigIntWithPrec(v, 18)
+		}
+	}
+	return res
+}
+
 // Test that the guess for an initial square root value is always greater
 // than the true square root value.
 func TestInitialSqrtGuessGreaterThanTrueSqrt(t *testing.T) {
@@ -24,14 +37,7 @@ func TestInitialSqrtGuessGreaterThanTrueSqrt(t *testing.T) {
 	}
 	// create random test vectors for every bit-length
 	r := rand.New(rand.NewSource(rand.Int63()))
-	for i := 1; i < 255+sdk.DecimalPrecisionBits; i++ {
-		upperbound := big.NewInt(1)
-		upperbound.Lsh(upperbound, uint(i))
-		for j := 0; j < 10; j++ {
-			v := big.NewInt(0).Rand(r, upperbound)
-			cases = append(cases, sdk.NewDecFromBigIntWithPrec(v, 18))
-		}
-	}
+	cases = append(cases, generateRandomDecForEachBitlen(r, 10)...)
 	for _, c := range cases {
 		guess := getInitialSquareRootGuess(c)
 		if guess.Mul(guess).LT(c) {
@@ -76,7 +82,7 @@ func TestSqrtMonotinicity(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		differences = append(differences, smallestDec.MulInt64(1<<i))
 	}
-	for i := 1; i < 255+sdk.DecimalPrecisionBits; i++ {
+	for i := 0; i < 255+sdk.DecimalPrecisionBits; i++ {
 		upperbound := big.NewInt(1)
 		upperbound.Lsh(upperbound, uint(i))
 		for j := 0; j < 100; j++ {
@@ -100,6 +106,34 @@ func TestSqrtMonotinicity(t *testing.T) {
 		// separately sanity check that sqrt * sqrt >= input
 		sqrtSmallerSquared := sqrtSmaller.Mul(sqrtSmaller)
 		assert.True(t, sqrtSmallerSquared.GTE(i.smaller), "sqrt %s, sqrtSmallerSquared: %s, smaller: %s", sqrtSmaller, sqrtSmallerSquared, i.smaller)
+	}
+}
+
+// Test that square(sqrt(x)) = x when x is a perfect square.
+// We do this by sampling sqrt(v) from the set of numbers `a.b`, where a in [0, 2^128], b in [0, 10^9].
+// and then setting x = sqrt(v)
+// this is because this is the set of values whose squares are perfectly representable.
+func TestPerfectSquares(t *testing.T) {
+	cases := []sdk.Dec{
+		sdk.NewDec(100),
+	}
+	r := rand.New(rand.NewSource(rand.Int63()))
+	tenToMin9 := big.NewInt(1_000_000_000)
+	for i := 0; i < 128; i++ {
+		upperbound := big.NewInt(1)
+		upperbound.Lsh(upperbound, uint(i))
+		for j := 0; j < 100; j++ {
+			v := big.NewInt(0).Rand(r, upperbound)
+			dec := big.NewInt(0).Rand(r, tenToMin9)
+			d := sdk.NewDecFromBigInt(v).Add(sdk.NewDecFromBigIntWithPrec(dec, 9))
+			cases = append(cases, d.MulMut(d))
+		}
+	}
+
+	for _, i := range cases {
+		sqrt, err := MonotonicSqrt(i)
+		require.NoError(t, err, "smaller: %s", i)
+		assert.Equal(t, i, sqrt.MulMut(sqrt))
 	}
 }
 

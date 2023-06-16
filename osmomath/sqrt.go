@@ -2,7 +2,6 @@ package osmomath
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,7 +47,7 @@ func MonotonicSqrt(d sdk.Dec) (sdk.Dec, error) {
 		delta.QuoInt64Mut(int64(2))
 
 		guess.AddMut(delta)
-		fmt.Println(guess, delta)
+		// fmt.Println(guess, delta)
 	}
 
 	if iter == maxApproxRootIterations {
@@ -60,6 +59,10 @@ func MonotonicSqrt(d sdk.Dec) (sdk.Dec, error) {
 	// Since were converging from a larger value, d/prev - guess should be negative, meaning this can be too negative.
 	// If delta is too negative, then we can over-shoot our target square root value.
 	// So we currently have no guarantees on whether we are over or under-shooting.
+	// This under-estimation should be bounded by smallest dec. So we can just add smallest dec to our guess.
+	if guess.Mul(guess).LT(d) {
+		guess = guess.AddMut(smallestDec)
+	}
 	//
 	// We want to guarantee monotonicity across various inputs. Namely:
 	//   if d1 <= d2, then sqrt(d1) <= sqrt(d2)
