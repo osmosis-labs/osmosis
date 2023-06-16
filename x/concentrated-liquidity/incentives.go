@@ -469,7 +469,7 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, l
 	for incentiveIndex, incentiveRecord := range copyPoolIncentiveRecords {
 		// We consider all incentives matching the current uptime that began emitting before the current blocktime
 		incentiveRecordBody := incentiveRecord.IncentiveRecordBody
-		if !incentiveRecordBody.StartTime.UTC().Before(ctx.BlockTime().UTC()) || incentiveRecord.MinUptime == accumUptime {
+		if !incentiveRecordBody.StartTime.UTC().Before(ctx.BlockTime().UTC()) || incentiveRecord.MinUptime != accumUptime {
 			// If the incentive does not match the current uptime or has not started emitting, we skip it
 			continue
 		}

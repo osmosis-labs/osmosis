@@ -56,6 +56,17 @@ type SwapState struct {
 	spreadRewardGrowthGlobal sdk.Dec
 }
 
+func newSwapState(specifiedAmount sdk.Int, p types.ConcentratedPoolExtension, strategy swapstrategy.SwapStrategy) SwapState {
+	return SwapState{
+		amountSpecifiedRemaining: specifiedAmount.ToDec(),
+		amountCalculated:         sdk.ZeroDec(),
+		sqrtPrice:                p.GetCurrentSqrtPrice(),
+		tick:                     strategy.InitializeTickValue(p.GetCurrentTick()),
+		liquidity:                p.GetLiquidity(),
+		spreadRewardGrowthGlobal: sdk.ZeroDec(),
+	}
+}
+
 type SwapDetails struct {
 	Sender   sdk.AccAddress
 	TokenIn  sdk.Coin
@@ -66,17 +77,6 @@ type TickUpdates struct {
 	NewCurrentTick int64
 	NewLiquidity   sdk.Dec
 	NewSqrtPrice   sdk.Dec
-}
-
-func newSwapState(specifiedAmount sdk.Int, p types.ConcentratedPoolExtension, strategy swapstrategy.SwapStrategy) SwapState {
-	return SwapState{
-		amountSpecifiedRemaining: specifiedAmount.ToDec(),
-		amountCalculated:         sdk.ZeroDec(),
-		sqrtPrice:                p.GetCurrentSqrtPrice(),
-		tick:                     strategy.InitializeTickValue(p.GetCurrentTick()),
-		liquidity:                p.GetLiquidity(),
-		spreadRewardGrowthGlobal: sdk.ZeroDec(),
-	}
 }
 
 var (
@@ -127,7 +127,7 @@ func (k Keeper) SwapExactAmountIn(
 
 	// Change priceLimit based on which direction we are swapping
 	priceLimit := swapstrategy.GetPriceLimit(zeroForOne)
-	tokenIn, tokenOut, _, _, _, err := k.swapOutAmtGivenIn(ctx, sender, pool, tokenIn, tokenOutDenom, spreadFactor, priceLimit)
+	tokenIn, tokenOut, _, err := k.swapOutAmtGivenIn(ctx, sender, pool, tokenIn, tokenOutDenom, spreadFactor, priceLimit)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -166,7 +166,7 @@ func (k Keeper) SwapExactAmountOut(
 	// change priceLimit based on which direction we are swapping
 	// if zeroForOne == true, use MinSpotPrice else use MaxSpotPrice
 	priceLimit := swapstrategy.GetPriceLimit(zeroForOne)
-	tokenIn, tokenOut, _, _, _, err := k.swapInAmtGivenOut(ctx, sender, pool, tokenOut, tokenInDenom, spreadFactor, priceLimit)
+	tokenIn, tokenOut, _, err := k.swapInAmtGivenOut(ctx, sender, pool, tokenOut, tokenInDenom, spreadFactor, priceLimit)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -190,14 +190,14 @@ func (k Keeper) swapOutAmtGivenIn(
 	tokenOutDenom string,
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
-) (calcTokenIn, calcTokenOut sdk.Coin, currentTick int64, liquidity, sqrtPrice sdk.Dec, err error) {
-	tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, totalSpreadFactors, err := k.computeOutAmtGivenIn(ctx, pool.GetId(), tokenIn, tokenOutDenom, spreadFactor, priceLimit)
+) (calcTokenIn, calcTokenOut sdk.Coin, tickUpdates TickUpdates, err error) {
+	tokenIn, tokenOut, tickUpdates, totalSpreadFactors, err := k.computeOutAmtGivenIn(ctx, pool.GetId(), tokenIn, tokenOutDenom, spreadFactor, priceLimit)
 	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, err
 	}
 
 	if !tokenOut.Amount.IsPositive() {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, types.InvalidAmountCalculatedError{Amount: tokenOut.Amount}
+		return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, types.InvalidAmountCalculatedError{Amount: tokenOut.Amount}
 	}
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
@@ -205,12 +205,12 @@ func (k Keeper) swapOutAmtGivenIn(
 	if err := k.updatePoolForSwap(ctx,
 		pool,
 		SwapDetails{sender, tokenIn, tokenOut},
-		TickUpdates{newCurrentTick, newLiquidity, newSqrtPrice},
+		tickUpdates,
 		totalSpreadFactors); err != nil {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, err
 	}
 
-	return tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, nil
+	return tokenIn, tokenOut, tickUpdates, nil
 }
 
 // swapInAmtGivenOut is the internal mutative method for calcInAmtGivenOut. Utilizing calcInAmtGivenOut's output, this function applies the
@@ -223,15 +223,15 @@ func (k *Keeper) swapInAmtGivenOut(
 	tokenInDenom string,
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
-) (calcTokenIn, calcTokenOut sdk.Coin, currentTick int64, liquidity, sqrtPrice sdk.Dec, err error) {
-	tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, totalSpreadFactors, err := k.computeInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit, pool.GetId())
+) (calcTokenIn, calcTokenOut sdk.Coin, tickUpdates TickUpdates, err error) {
+	tokenIn, tokenOut, tickUpdates, totalSpreadFactors, err := k.computeInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit, pool.GetId())
 	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, err
 	}
 
 	// check that the tokenOut calculated is both valid and less than specified limit
 	if !tokenIn.Amount.IsPositive() {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, types.InvalidAmountCalculatedError{Amount: tokenIn.Amount}
+		return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, types.InvalidAmountCalculatedError{Amount: tokenIn.Amount}
 	}
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
@@ -239,13 +239,13 @@ func (k *Keeper) swapInAmtGivenOut(
 	if err := k.updatePoolForSwap(ctx,
 		pool,
 		SwapDetails{sender, tokenIn, tokenOut},
-		TickUpdates{newCurrentTick, newLiquidity, newSqrtPrice},
+		tickUpdates,
 		totalSpreadFactors,
 	); err != nil {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, err
 	}
 
-	return tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, nil
+	return tokenIn, tokenOut, tickUpdates, nil
 }
 
 func (k Keeper) CalcOutAmtGivenIn(
@@ -256,7 +256,7 @@ func (k Keeper) CalcOutAmtGivenIn(
 	spreadFactor sdk.Dec,
 ) (tokenOut sdk.Coin, err error) {
 	cacheCtx, _ := ctx.CacheContext()
-	_, tokenOut, _, _, _, _, err = k.computeOutAmtGivenIn(cacheCtx, poolI.GetId(), tokenIn, tokenOutDenom, spreadFactor, sdk.ZeroDec())
+	_, tokenOut, _, _, err = k.computeOutAmtGivenIn(cacheCtx, poolI.GetId(), tokenIn, tokenOutDenom, spreadFactor, sdk.ZeroDec())
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -271,7 +271,7 @@ func (k Keeper) CalcInAmtGivenOut(
 	spreadFactor sdk.Dec,
 ) (tokenIn sdk.Coin, err error) {
 	cacheCtx, _ := ctx.CacheContext()
-	tokenIn, _, _, _, _, _, err = k.computeInAmtGivenOut(cacheCtx, tokenOut, tokenInDenom, spreadFactor, sdk.ZeroDec(), poolI.GetId())
+	tokenIn, _, _, _, err = k.computeInAmtGivenOut(cacheCtx, tokenOut, tokenInDenom, spreadFactor, sdk.ZeroDec(), poolI.GetId())
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -290,25 +290,25 @@ func (k Keeper) computeOutAmtGivenIn(
 	tokenOutDenom string,
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
-) (tokenIn, tokenOut sdk.Coin, updatedTick int64, updatedLiquidity, updatedSqrtPrice sdk.Dec, totalSpreadFactors sdk.Dec, err error) {
+) (tokenIn, tokenOut sdk.Coin, tickUpdates TickUpdates, totalSpreadFactors sdk.Dec, err error) {
 	// Get pool and asset info
 	p, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, sdk.Dec{}, err
 	}
 
 	if err := checkDenomValidity(tokenInMin.Denom, tokenOutDenom, p.GetToken0(), p.GetToken1()); err != nil {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, sdk.Dec{}, err
 	}
 
 	swapStrategy, sqrtPriceLimit, err := k.setupSwapStrategy(p, spreadFactor, tokenInMin.Denom, priceLimit)
 	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, sdk.Dec{}, err
 	}
 
 	spreadRewardAccumulator, uptimeAccums, err := k.getSwapAccumulators(ctx, poolId)
 	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, sdk.Dec{}, err
 	}
 
 	// initialize swap state with the following parameters:
@@ -329,7 +329,7 @@ func (k Keeper) computeOutAmtGivenIn(
 
 		// Iterator must be valid to be able to retrieve the next tick from it below.
 		if !nextTickIter.Valid() {
-			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
+			return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
 		}
 
 		// We first check to see what the position of the nearest initialized tick is
@@ -338,13 +338,13 @@ func (k Keeper) computeOutAmtGivenIn(
 		// if no ticks are initialized (no users have created liquidity positions) then we return an error
 		nextTick, err := types.TickIndexFromBytes(nextTickIter.Key())
 		if err != nil {
-			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+			return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, sdk.Dec{}, err
 		}
 
 		// Utilizing the next initialized tick, we find the corresponding nextPrice (the target price).
 		_, nextTickSqrtPrice, err := math.TickToSqrtPrice(nextTick)
 		if err != nil {
-			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
+			return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
 		}
 
 		// If nextSqrtPrice exceeds the price limit, we set the nextSqrtPrice to the price limit.
@@ -384,7 +384,7 @@ func (k Keeper) computeOutAmtGivenIn(
 			swapState, err = k.swapCrossTickLogic(ctx, swapState, swapStrategy,
 				nextTick, nextTickIter, p, spreadRewardAccumulator, uptimeAccums, tokenInMin.Denom)
 			if err != nil {
-				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+				return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, sdk.Dec{}, err
 			}
 		} else if !sqrtPriceStart.Equal(sqrtPrice) {
 			// Otherwise if the sqrtPrice calculated from computeSwapStep does not equal the sqrtPrice we started with at the
@@ -392,7 +392,7 @@ func (k Keeper) computeOutAmtGivenIn(
 			price := sqrtPrice.Mul(sqrtPrice)
 			swapState.tick, err = math.PriceToTickRoundDown(price, p.GetTickSpacing())
 			if err != nil {
-				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+				return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, sdk.Dec{}, err
 			}
 		}
 	}
@@ -412,7 +412,7 @@ func (k Keeper) computeOutAmtGivenIn(
 	tokenIn = sdk.NewCoin(tokenInMin.Denom, amt0)
 	tokenOut = sdk.NewCoin(tokenOutDenom, amt1)
 
-	return tokenIn, tokenOut, swapState.tick, swapState.liquidity, swapState.sqrtPrice, totalSpreadFactors, nil
+	return tokenIn, tokenOut, TickUpdates{swapState.tick, swapState.liquidity, swapState.sqrtPrice}, totalSpreadFactors, nil
 }
 
 // computeInAmtGivenOut calculates tokens to be swapped in given the desired token out and spread factor deducted. It also returns
@@ -426,19 +426,19 @@ func (k Keeper) computeInAmtGivenOut(
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
 	poolId uint64,
-) (tokenIn, tokenOut sdk.Coin, updatedTick int64, updatedLiquidity, updatedSqrtPrice sdk.Dec, totalSpreadFactors sdk.Dec, err error) {
+) (tokenIn, tokenOut sdk.Coin, tickUpdates TickUpdates, totalSpreadFactors sdk.Dec, err error) {
 	p, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, sdk.Dec{}, err
 	}
 
 	if err := checkDenomValidity(tokenInDenom, desiredTokenOut.Denom, p.GetToken0(), p.GetToken1()); err != nil {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, sdk.Dec{}, err
 	}
 
 	swapStrategy, sqrtPriceLimit, err := k.setupSwapStrategy(p, spreadFactor, tokenInDenom, priceLimit)
 	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, sdk.Dec{}, err
 	}
 
 	// initialize swap state with the following parameters:
@@ -450,7 +450,7 @@ func (k Keeper) computeInAmtGivenOut(
 
 	spreadRewardAccumulator, uptimeAccums, err := k.getSwapAccumulators(ctx, poolId)
 	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, sdk.Dec{}, err
 	}
 
 	totalSpreadFactors = sdk.ZeroDec()
@@ -463,7 +463,7 @@ func (k Keeper) computeInAmtGivenOut(
 
 		// Iterator must be valid to be able to retrieve the next tick from it below.
 		if !nextTickIter.Valid() {
-			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
+			return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
 		}
 
 		// we first check to see what the position of the nearest initialized tick is
@@ -472,13 +472,13 @@ func (k Keeper) computeInAmtGivenOut(
 		// if no ticks are initialized (no users have created liquidity positions) then we return an error
 		nextTick, err := types.TickIndexFromBytes(nextTickIter.Key())
 		if err != nil {
-			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+			return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, sdk.Dec{}, err
 		}
 
 		// utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
 		_, sqrtPriceNextTick, err := math.TickToSqrtPrice(nextTick)
 		if err != nil {
-			return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.TickToSqrtPriceConversionError{NextTick: nextTick}
+			return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, sdk.Dec{}, types.TickToSqrtPriceConversionError{NextTick: nextTick}
 		}
 
 		sqrtPriceTarget := swapStrategy.GetSqrtTargetPrice(sqrtPriceNextTick)
@@ -514,7 +514,7 @@ func (k Keeper) computeInAmtGivenOut(
 			swapState, err = k.swapCrossTickLogic(ctx, swapState, swapStrategy,
 				nextTick, nextTickIter, p, spreadRewardAccumulator, uptimeAccums, tokenInDenom)
 			if err != nil {
-				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+				return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, sdk.Dec{}, err
 			}
 		} else if !sqrtPriceStart.Equal(sqrtPrice) {
 			// otherwise if the sqrtPrice calculated from computeSwapStep does not equal the sqrtPrice we started with at the
@@ -522,7 +522,7 @@ func (k Keeper) computeInAmtGivenOut(
 			price := sqrtPrice.Mul(sqrtPrice)
 			swapState.tick, err = math.PriceToTickRoundDown(price, p.GetTickSpacing())
 			if err != nil {
-				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+				return sdk.Coin{}, sdk.Coin{}, TickUpdates{}, sdk.Dec{}, err
 			}
 		}
 	}
@@ -542,7 +542,7 @@ func (k Keeper) computeInAmtGivenOut(
 	tokenIn = sdk.NewCoin(tokenInDenom, amt0)
 	tokenOut = sdk.NewCoin(desiredTokenOut.Denom, amt1)
 
-	return tokenIn, tokenOut, swapState.tick, swapState.liquidity, swapState.sqrtPrice, totalSpreadFactors, nil
+	return tokenIn, tokenOut, TickUpdates{swapState.tick, swapState.liquidity, swapState.sqrtPrice}, totalSpreadFactors, nil
 }
 
 // logic for crossing a tick during a swap
@@ -587,7 +587,7 @@ func (k Keeper) swapCrossTickLogic(ctx sdk.Context,
 // of the keeper. Finally, it transfers the input and output tokens to and from the sender and the pool account
 // using the SendCoins method of the bank keeper.
 //
-// Calls AfterConcentratedPoolSwap listener. Currently, it notifies twap module about a
+// Calls AfterConcentratedPoolSwap listener. Currently, it notifies twap module about
 // a spot price update.
 //
 // If any error occurs during the swap operation, the method returns an error value indicating the cause of the error.
