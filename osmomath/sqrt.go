@@ -25,11 +25,13 @@ func MonotonicSqrt(d sdk.Dec) (sdk.Dec, error) {
 
 	// A decimal value of d, is represented as an integer of value v = 10^18 * d.
 	// We have an integer square root function, and we'd like to get the square root of d.
+	// recall integer square root is floor(sqrt(x)), hence its accuract up to 1 integer.
 	// we want sqrt d accurate to 18 decimal places.
 	// So first we multiply our current value by 10^18, then we take the integer square root.
 	// since sqrt(10^18 * v) = 10^9 * sqrt(v) = 10^18 * sqrt(d), we get the answer we want.
 	//
 	// We can than interpret sqrt(10^18 * v) as our resulting decimal and return it.
+	// monotonicity is guaranteed by correctness of integer square root.
 	dBi := d.BigInt()
 	r := big.NewInt(0).Mul(dBi, tenTo18)
 	r.Sqrt(r)
