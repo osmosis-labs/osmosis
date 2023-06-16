@@ -144,10 +144,10 @@ func (s *KeeperTestSuite) assertWithdrawAllInvariant() {
 		totalWithdrawn = totalWithdrawn.Add(withdrawn...)
 	}
 
-	// We allow for an additive tolerance of 1 per position in the pool, since this is the maximum that can be truncated
-	// when collecting spread rewards.
+	// We allow for an additive tolerance of 2 per position in the pool, since we expect up to 1 to be lost to rounding on
+	// join and withdrawal each.
 	errTolerance := osmomath.ErrTolerance{
-		AdditiveTolerance: sdk.NewDec(int64(len(allPositions))),
+		AdditiveTolerance: sdk.NewDec(2 * int64(len(allPositions))),
 		RoundingDir:       osmomath.RoundDown,
 	}
 
