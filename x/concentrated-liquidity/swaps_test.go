@@ -657,7 +657,7 @@ var (
 			spreadFactor: sdk.ZeroDec(),
 			// from math import *
 			// from decimal import *
-			// liq = Decimal("1517882343.751510418088349649")
+			// liq = Decimal("1517882343.751510417627556287")
 			// sqrt_cur = Decimal("5000").sqrt()
 			// token_out = Decimal("42000000")
 			// sqrt_next = sqrt_cur - token_out / liq
@@ -667,7 +667,7 @@ var (
 			expectedTokenOut:                    sdk.NewCoin(USDC, sdk.NewInt(42000000)),
 			expectedTokenIn:                     sdk.NewCoin(ETH, sdk.NewInt(8404)),
 			expectedTick:                        30996000,
-			expectedSqrtPrice:                   sdk.MustNewDecFromStr("70.683007989825007162"),
+			expectedSqrtPrice:                   sdk.MustNewDecFromStr("70.683007989825007163"),
 			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 			expectedUpperTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 		},
@@ -678,6 +678,7 @@ var (
 			spreadFactor: sdk.ZeroDec(),
 			// from math import *
 			// from decimal import *
+			// TODO: Where does this liq defn come from?
 			// liq = Decimal("1517882343.751510418088349649")
 			// sqrt_cur = Decimal("5000").sqrt()
 			// token_out = Decimal("13370")
@@ -1730,7 +1731,7 @@ func (s *KeeperTestSuite) testSwapResult(test SwapTest, pool types.ConcentratedP
 	s.Require().NoError(err)
 
 	// check that tokenIn, tokenOut, tick, and sqrtPrice from CalcOut are all what we expected
-	s.Require().Equal(test.expectedSqrtPrice, sqrtPrice)
+	s.Require().Equal(test.expectedSqrtPrice, sqrtPrice, "resultant sqrt price not equal to expected sqrt price")
 	s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
 	s.Require().Equal(test.expectedTokenIn.String(), tokenIn.String())
 	s.Require().Equal(test.expectedTick, updatedTick)

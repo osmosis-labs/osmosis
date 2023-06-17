@@ -7,6 +7,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -47,7 +48,7 @@ var (
 	DefaultAmt1Expected                                  = sdk.NewInt(5000000000)
 	DefaultCoin1                                         = sdk.NewCoin(USDC, DefaultAmt1)
 	DefaultCoins                                         = sdk.NewCoins(DefaultCoin0, DefaultCoin1)
-	DefaultLiquidityAmt                                  = sdk.MustNewDecFromStr("1517882343.751510418088349649")
+	DefaultLiquidityAmt                                  = sdk.MustNewDecFromStr("1517882343.751510417627556287")
 	FullRangeLiquidityAmt                                = sdk.MustNewDecFromStr("70710678.118654752940000000")
 	DefaultTickSpacing                                   = uint64(100)
 	PoolCreationFee                                      = poolmanagertypes.DefaultParams().PoolCreationFee
@@ -63,6 +64,14 @@ var (
 	ThreeUnorderedNonConsecutiveAuthorizedUptimes        = []time.Duration{time.Nanosecond, time.Hour * 24 * 7, time.Minute}
 	AllUptimesAuthorized                                 = types.SupportedUptimes
 )
+
+func TestConstants(t *testing.T) {
+	lowerSqrtPrice, _ := osmomath.MonotonicSqrt(DefaultLowerPrice)
+	upperSqrtPrice, _ := osmomath.MonotonicSqrt(DefaultUpperPrice)
+	liq := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice,
+		lowerSqrtPrice, upperSqrtPrice, DefaultAmt0, DefaultAmt1)
+	require.Equal(t, DefaultLiquidityAmt, liq)
+}
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
