@@ -3219,15 +3219,13 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		// For every test case, the following invariants hold:
 		// * first swap MAY cross a tick depending on test case configuration
 		// * second swap MUST NOT cross a tick (only swap in-between ticks)
-		testCases := []testCase{
+		testCases := map[string]testCase{
 
 			// Group 1:
 			// Test setup:
 			// swap 1: just enough to cross lower tick of NR1
 			// swap 2: stop between NR2 lower and lower NR1
-			{
-
-				name:        "group1 100 tick spacing, first swap crosses tick, second swap in same direction",
+			"group1 100 tick spacing, first swap crosses tick, second swap in same direction": {
 				tickSpacing: 100,
 
 				// 100 ticks to the left of current or one tick spacing away
@@ -3235,8 +3233,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 
 				expectedTickAwayAfterFirstSwap: -2*100 - 1,
 			},
-			{
-				name:        "group1 1 tick spacing, first swap cross tick, second swap in same direction",
+			"group1 1 tick spacing, first swap cross tick, second swap in same direction": {
 				tickSpacing: 1,
 
 				// 1 tick to the left of current or one tick spacing away
@@ -3249,8 +3246,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 			// Test setup:
 			// swap 1: stop right before lower tick of NR1
 			// swap 2: stop right before lower tick of NR1
-			{
-				name:        "group2 100 tick spacing, first swap does not cross tick, second swap in same direction",
+			"group2 100 tick spacing, first swap does not cross tick, second swap in same direction": {
 				tickSpacing: 100,
 
 				// one tick spacing to the left + 1 tick from current
@@ -3262,8 +3258,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 				// TODO: could it be due to tick rounding at the of the swap?
 				expectedTickAwayAfterFirstSwap: -2*100 + 1,
 			},
-			{
-				name:        "group2 1 tick spacing, first swap does not cross tick, second swap in same direction",
+			"group2 1 tick spacing, first swap does not cross tick, second swap in same direction": {
 				tickSpacing: 1,
 
 				// one tick spacing to the left + 1 tick from current
@@ -3276,8 +3271,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 			// Test setup:
 			// swap 1: stop right after lower tick of NR1
 			// swap 2: stop right before lower tick of NR1
-			{
-				name:        "group3 100 tick spacing, first swap does not cross tick, second swap in same direction",
+			"group3 100 tick spacing, first swap does not cross tick, second swap in same direction": {
 				tickSpacing: 100,
 
 				// one tick spacing to the left + 1 tick from current
@@ -3289,8 +3283,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 				// TODO: could it be due to tick rounding at the of the swap?
 				expectedTickAwayAfterFirstSwap: -3 * 100,
 			},
-			{
-				name:        "group3 100 tick spacing, first swap does not cross tick, second swap in same direction",
+			"group3 1 tick spacing, first swap does not cross tick, second swap in same direction": {
 				tickSpacing: 100,
 
 				// one tick spacing to the left + 1 tick from current
@@ -3304,9 +3297,9 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 			},
 		}
 
-		for _, tc := range testCases {
+		for name, tc := range testCases {
 			tc := tc
-			s.Run(tc.name, func() {
+			s.Run(name, func() {
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				// 1. Prepare pool and positions for test
 
@@ -3353,15 +3346,13 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		// For every test case, the following invariants hold:
 		// * first swap MAY cross a tick depending on test case configuration
 		// * second swap MUST NOT cross a tick (only swap in-between ticks)
-		testCases := []testCase{
+		testCases := map[string]testCase{
 
 			// Group 1:
 			// Test setup:
 			// swap 1: just enough to cross upper tick of NR1
 			// swap 2: stop between NR1 upper and NR 2 upper
-			{
-
-				name:         "group1 100 tick spacing, first swap cross tick, second swap in same direction",
+			"group1 100 tick spacing, first swap cross tick, second swap in same direction": {
 				tickSpacing:  100,
 				isZeroForOne: oneForZero,
 
@@ -3370,8 +3361,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 
 				expectedTickAwayAfterFirstSwap: 2 * 100,
 			},
-			{
-				name:         "group1 1 tick spacing, first swap cross tick, second swap in same direction",
+			"group1 1 tick spacing, first swap cross tick, second swap in same direction": {
 				tickSpacing:  1,
 				isZeroForOne: oneForZero,
 
@@ -3385,8 +3375,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 			// Test setup:
 			// swap 1: stop right before upper tick of NR1
 			// swap 2: stop right before upper tick of NR1
-			{
-				name:        "group2 100 tick spacing, first swap does not cross tick, second swap in same direction",
+			"group2 100 tick spacing, first swap does not cross tick, second swap in same direction": {
 				tickSpacing: 100,
 
 				// one tick spacing to the left + 1 tick from current
@@ -3398,8 +3387,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 				// TODO: could it be due to tick rounding at the of the swap?
 				expectedTickAwayAfterFirstSwap: 2*100 - 1,
 			},
-			{
-				name:        "group2 1 tick spacing, first swap does not cross tick, second swap in same direction",
+			"group2 1 tick spacing, first swap does not cross tick, second swap in same direction": {
 				tickSpacing: 1,
 
 				// one tick (and tick spacing) to the right from current
@@ -3412,8 +3400,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 			// Test setup:
 			// swap 1: stop right after lower tick of NR1
 			// swap 2: stop right before lower tick of NR1
-			{
-				name:        "group3 100 tick spacing, first swap crosses tick, second swap in same direction",
+			"group3 100 tick spacing, first swap crosses tick, second swap in same direction": {
 				tickSpacing: 100,
 
 				// one tick spacing to the left + 1 tick from current
@@ -3425,8 +3412,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 				// TODO: could it be due to tick rounding at the of the swap?
 				expectedTickAwayAfterFirstSwap: 3 * 100,
 			},
-			{
-				name:        "group3 1 tick spacing, first swap crosses tick, second swap in same direction",
+			"group3 1 tick spacing, first swap crosses tick, second swap in same direction": {
 				tickSpacing: 100,
 
 				// 3 ticks (tick spacings) to the right from current
@@ -3436,9 +3422,9 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 			},
 		}
 
-		for _, tc := range testCases {
+		for name, tc := range testCases {
 			tc := tc
-			s.Run(tc.name, func() {
+			s.Run(name, func() {
 
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				// 1. Prepare pool and positions for test
