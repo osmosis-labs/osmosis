@@ -35,7 +35,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgCreateConcentratedPool{},
 	)
 
-	msgservice.RegisterMsgServiceDesc(registry, &_MsgCreator_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 var (
