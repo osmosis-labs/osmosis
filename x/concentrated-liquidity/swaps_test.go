@@ -2928,7 +2928,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 //
 // For every test case, we set it up with 1 and 100 tick spacing.
 //
-// This test helped to identify 2 high severity:
+// This test helped to identify 2 high severity bugs:
 //
 // BUG 1. Wrong "current tick" update when swapping in zero for one (left) direction.
 //
