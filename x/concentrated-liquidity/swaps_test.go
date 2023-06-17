@@ -2391,13 +2391,14 @@ func (s *KeeperTestSuite) TestUpdateSpreadRewardGrowthGlobal() {
 			// Setup.
 			swapState := cl.SwapState{}
 			swapState.SetLiquidity(tc.liquidity)
-			swapState.SetSpreadRewardGrowthGlobal(sdk.ZeroDec())
+			swapState.SetGlobalSpreadRewardGrowthPerUnitLiquidity(sdk.ZeroDec())
+			swapState.SetGlobalSpreadRewardGrowth(sdk.ZeroDec())
 
 			// System under test.
 			swapState.UpdateSpreadRewardGrowthGlobal(tc.spreadRewardChargeTotal)
 
 			// Assertion.
-			s.Require().Equal(tc.expectedSpreadRewardGrowthGlobal, swapState.GetSpreadRewardGrowthGlobal())
+			s.Require().Equal(tc.expectedSpreadRewardGrowthGlobal, swapState.GetGlobalSpreadRewardGrowthPerUnitLiquidity())
 		})
 	}
 }

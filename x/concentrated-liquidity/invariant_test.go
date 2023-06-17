@@ -8,6 +8,13 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
+// assertGlobalInvariants asserts all available global invariants (i.e. invariants that should hold on all valid states).
+// Does not persist any changes to state.
+func (s *KeeperTestSuite) assertGlobalInvariants() {
+	s.assertTotalRewardsInvariant()
+	s.assertWithdrawAllInvariant()
+}
+
 // getAllPositionsAndBalances returns all the positions in state alongside all the pool balances for all pools in state.
 //
 // Returns:
@@ -88,8 +95,8 @@ func (s *KeeperTestSuite) assertTotalRewardsInvariant() {
 	}
 
 	// Assert total collected spread rewards and incentives equal to expected
-	s.Require().True(errTolerance.EqualCoins(expectedTotalSpreadRewards, totalCollectedSpread))
-	s.Require().True(errTolerance.EqualCoins(expectedTotalIncentives, totalCollectedIncentives))
+	s.Require().True(errTolerance.EqualCoins(expectedTotalSpreadRewards, totalCollectedSpread), "expected spread rewards vs. collected: %s vs. %s", expectedTotalSpreadRewards, totalCollectedSpread)
+	s.Require().True(errTolerance.EqualCoins(expectedTotalIncentives, totalCollectedIncentives), "expected incentives vs. collected: %s vs. %s", expectedTotalIncentives, totalCollectedIncentives)
 
 	// Refetch total pool balances across all pools
 	remainingPositions, finalTotalPoolLiquidity, remainingTotalSpreadRewards, remainingTotalIncentives := s.getAllPositionsAndPoolBalances(cachedCtx)
