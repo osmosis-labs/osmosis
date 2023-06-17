@@ -2893,9 +2893,20 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	s.Require().Equal(0, multiplicativeTolerance.Compare(expectedTokenOut, totalTokenOut.Amount))
 }
 
-// TestSwap_ZeroForOne_TickInitialization tests that ticks are initialized correctly when performing
-// 2 zero for one swaps in a row.
-// This test helped to identify a bug with tick initialization when performing 2 zero for one swaps in a row.
+// TestSwapOutGivenIn_Tick_Initialization_And_Crossing tests that ticks are initialized and updated correctly
+// across multiple swaps. In particular, this test does 2 swaps.
+// For every test case, the following invariants hold:
+// * first swap MAY cross a tick depending on test case configuration
+// * second swap MUST NOT cross a tick (only swap in-between ticks)
+// * both swaps are in the same direction
+//
+// Both directions are tested. Zero for one (left). One for zero (right).
+//
+// For every test case, we set it up with 1 and 100 tick spacing.
+//
+// This test helped to identify 2 high severity:
+//
+// BUG 1. Wrong tick initialization when performing 2 zero for one swaps in a row.
 //
 // The core of the bug: if we perform a swap and cross a tick, the subsequent swap in the same direction
 // would cross the same tick again and mistakenly kick in liquidity, completely invalidating pool state.
@@ -2907,14 +2918,14 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 // It creates 2 positions:
 // - full range
 // - narrow range where
-//   - narrow range's lower tick is 1 tick spacing belowe current tick
-//   - narrow range's upper tick is 1 tick spacing above current tick
+//   - (NR1) narrow range is 2 tick spacings around the current tick
+//   - (NR2) narrow range'is 5 tick spacings above current tick
 //
-// It does the first swap that stops exactly after crossing the narrow position's lower tick.
-// Next, it continues with the second swap that we do not expect to cross the narrow position's
-// lower tick again.
+// It does the first swap that stops exactly after crossing the NR1's lower tick.
+// Next, it continues with the second swap that we do not expect to cross any ticks
+// and remain in the bucket between NR2 lower tick and NR1 lower tick.
 //
-// Once the second swap is completed we validated that the liquidity in the pool corresponds to
+// Once the second swap is completed, we validate that the liquidity in the pool corresponds to
 // full range position only. If the tick were to be crossed twice, we would have mistakenly
 // subtracted liquidity net from the lower tick of the narrow position twice, making the
 // current liquidity be zero.
@@ -2922,7 +2933,18 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 // Prior to adding this test and implementing a fix, the system would have panicked with:
 // "negative coin amount: -7070961745605321174329" at the end of the second swap. This stems
 // from the invalid liquidity of zero that is incorrectly computed due to crossing the tick twice.
-func (s *KeeperTestSuite) TestSwap_ZeroForOne_TickInitialization() {
+//
+// BUG 2. Banker's rounding in sqrt price to tick conversion for zero for one swap makes current tick be off by 1,
+// leading to tick being crossed twice.
+//
+// The consequences of this bug are similar to the first where we cross the tick twice. However, in
+// this case the error occurs at the end of the second swap, not the first. The reason is that
+// second swap takes in such a small amount as to barely move the sqrt price. Then, at the end it
+// converts the sqrt price to tick and rounds up. Rounding up, makes current tick be equal to the
+// tick we already crossed (be off by 1). As a result, inactive positions are treated as active
+// The solution is to avoid tick update if the swap state's tick is smaller than the tick computed
+// from the sqrt price. That is, if we already seen a further tick, we do not update it to an earlier one.
+func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() {
 	s.Setup()
 
 	const (
