@@ -15,7 +15,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/clmocks"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 
@@ -454,122 +453,6 @@ func (s *KeeperTestSuite) runMultipleAuthorizedUptimes(tests func()) {
 		s.authorizedUptimes = curAuthorizedUptimes
 		tests()
 	}
-}
-
-// CreatePositionTickSpacingsFromCurrentTick creates a position with the passed in tick spacings away from the current tick.
-func (s *KeeperTestSuite) CreatePositionTickSpacingsFromCurrentTick(poolId uint64, tickSpacingsAwayFromCurrentTick uint64) positionMeta {
-	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
-	s.Require().NoError(err)
-
-	currentTick := pool.GetCurrentTick()
-
-	lowerTickTwo := currentTick - int64(tickSpacingsAwayFromCurrentTick)*int64(pool.GetTickSpacing())
-	upperTickTwo := currentTick + int64(tickSpacingsAwayFromCurrentTick)*int64(pool.GetTickSpacing())
-	s.FundAcc(s.TestAccs[0], DefaultCoins)
-	positionId, _, _, liquidityNarrowRangeTwo, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTickTwo, upperTickTwo)
-	s.Require().NoError(err)
-
-	return positionMeta{
-		positionId: positionId,
-		lowerTick:  lowerTickTwo,
-		upperTick:  upperTickTwo,
-		liquidity:  liquidityNarrowRangeTwo,
-	}
-}
-
-func (s *KeeperTestSuite) tickToSqrtPrice(tick int64) sdk.Dec {
-	_, sqrtPrice, err := math.TickToSqrtPrice(tick)
-	s.Require().NoError(err)
-	return sqrtPrice
-}
-
-func (s *KeeperTestSuite) validateIteratorLeftZeroForOne(poolId uint64, expectedTick int64) {
-	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
-	s.Require().NoError(err)
-
-	zeroForOneSwapStrategy, _, err := s.App.ConcentratedLiquidityKeeper.SetupSwapStrategy(s.Ctx, pool, sdk.ZeroDec(), pool.GetToken0(), types.MinSqrtPrice)
-	s.Require().NoError(err)
-	initializedTickValue := pool.GetCurrentTick()
-	iter := zeroForOneSwapStrategy.InitializeNextTickIterator(s.Ctx, pool.GetId(), initializedTickValue)
-	s.Require().True(iter.Valid())
-	nextTick, err := types.TickIndexFromBytes(iter.Key())
-	s.Require().NoError(err)
-	s.Require().NoError(iter.Close())
-
-	s.Require().Equal(expectedTick, nextTick)
-}
-
-func (s *KeeperTestSuite) validateIteratorRightOneForZero(poolId uint64, expectedTick int64) {
-	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
-	s.Require().NoError(err)
-
-	// Setup swap strategy directly as it would fail validation if constructed via SetupSwapStrategy(...)
-	oneForZeroSwapStrategy := swapstrategy.New(false, types.MaxSqrtPrice, s.App.GetKey(types.ModuleName), sdk.ZeroDec())
-	s.Require().NoError(err)
-	initializedTickValue := pool.GetCurrentTick()
-	iter := oneForZeroSwapStrategy.InitializeNextTickIterator(s.Ctx, pool.GetId(), initializedTickValue)
-	s.Require().True(iter.Valid())
-	nextTick, err := types.TickIndexFromBytes(iter.Key())
-	s.Require().NoError(err)
-	s.Require().NoError(iter.Close())
-
-	s.Require().Equal(expectedTick, nextTick)
-}
-
-func (s *KeeperTestSuite) asserPositionInRange(poolId uint64, lowerTick int64, upperTick int64) {
-	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
-	s.Require().NoError(err)
-
-	isInRange := pool.IsCurrentTickInRange(lowerTick, upperTick)
-	s.Require().True(isInRange, "currentTick: %d, lowerTick %d, upperTick: %d", pool.GetCurrentTick(), lowerTick, upperTick)
-}
-
-func (s *KeeperTestSuite) assertPositionOutOfRange(poolId uint64, lowerTick int64, upperTick int64) {
-	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
-	s.Require().NoError(err)
-
-	isInRange := pool.IsCurrentTickInRange(lowerTick, upperTick)
-	s.Require().False(isInRange, "currentTick: %d, lowerTick %d, upperTick: %d", pool.GetCurrentTick(), lowerTick, upperTick)
-}
-
-func (s *KeeperTestSuite) assertPositionRangeConditional(poolId uint64, isOutOfRangeExpected bool, lowerTick int64, upperTick int64) {
-	if isOutOfRangeExpected {
-		s.assertPositionOutOfRange(poolId, lowerTick, upperTick)
-	} else {
-		s.asserPositionInRange(poolId, lowerTick, upperTick)
-	}
-}
-
-func (s *KeeperTestSuite) swapZeroForOneLeft(poolId uint64, amount sdk.Coin) {
-	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
-	s.Require().NoError(err)
-
-	s.FundAcc(s.TestAccs[0], sdk.NewCoins(amount))
-	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, amount, pool.GetToken1(), sdk.ZeroInt(), sdk.ZeroDec())
-	s.Require().NoError(err)
-}
-
-func (s *KeeperTestSuite) swapOneForZeroRight(poolId uint64, amount sdk.Coin) {
-	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
-	s.Require().NoError(err)
-
-	s.FundAcc(s.TestAccs[0], sdk.NewCoins(amount))
-	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, amount, pool.GetToken0(), sdk.ZeroInt(), sdk.ZeroDec())
-	s.Require().NoError(err)
-}
-
-func (s *KeeperTestSuite) asserPoolLiquidityEquals(poolId uint64, expectedLiquidity sdk.Dec) {
-	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
-	s.Require().NoError(err)
-
-	s.Require().Equal(expectedLiquidity, pool.GetLiquidity())
-}
-
-func (s *KeeperTestSuite) asserPoolTickEquals(poolId uint64, expectedTick int64) {
-	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
-	s.Require().NoError(err)
-
-	s.Require().Equal(expectedTick, pool.GetCurrentTick())
 }
 
 // runMultiplePositionRanges runs various test constructions and invariants on the given position ranges.
