@@ -128,6 +128,8 @@ func TestPerfectSquares(t *testing.T) {
 
 func TestSqrtRounding(t *testing.T) {
 	testCases := []sdk.Dec{
+		// TODO: uncomment when SDK supports dec from str with bigger bitlenghths.
+		// it works if you override the sdk panic locally.
 		// sdk.MustNewDecFromStr("11662930532952632574132537947829685675668532938920838254939577167671385459971.396347723368091000"),
 	}
 	r := rand.New(rand.NewSource(rand.Int63()))
@@ -145,6 +147,7 @@ func TestSqrtRounding(t *testing.T) {
 	}
 }
 
+// benchmarks the SDK square root across bit-lengths, for comparison with the new square root.
 func BenchmarkSqrt(b *testing.B) {
 	r := rand.New(rand.NewSource(1))
 	vectors := generateRandomDecForEachBitlen(r, 1)
@@ -156,6 +159,7 @@ func BenchmarkSqrt(b *testing.B) {
 	}
 }
 
+// benchmarks the new square root across bit-lengths, for comparison with the SDK square root.
 func BenchmarkMonotonicSqrt(b *testing.B) {
 	r := rand.New(rand.NewSource(1))
 	vectors := generateRandomDecForEachBitlen(r, 1)
