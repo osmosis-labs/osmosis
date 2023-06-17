@@ -866,7 +866,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		expectedError              bool
 	}{
 		{
-			name: "one full range position, zero for one true",
+			name: "one full range position, zero for one",
 			presetTicks: []genesis.FullTick{
 				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
 				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
@@ -884,7 +884,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			},
 		},
 		{
-			name: "one full range position, zero for one false",
+			name: "one full range position, one for zero",
 			presetTicks: []genesis.FullTick{
 				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
 				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
@@ -902,7 +902,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			},
 		},
 		{
-			name: "one full range position, one range position above current tick, zero for one true",
+			name: "one full range position, one range position above current tick, zero for one",
 			presetTicks: []genesis.FullTick{
 				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
 				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
@@ -922,7 +922,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			},
 		},
 		{
-			name: "one full range position, one range position above current tick, zero for one false",
+			name: "one full range position, one range position above current tick, one for zero",
 			presetTicks: []genesis.FullTick{
 				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
 				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
@@ -933,7 +933,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			poolId:                     defaultPoolId,
 			tokenIn:                    USDC,
 			boundTick:                  sdk.Int{},
-			expectedStartTickLiquidity: sdk.NewDec(30),
+			expectedStartTickLiquidity: sdk.NewDec(10),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(20),
@@ -950,7 +950,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			},
 		},
 		{
-			name: "one full range position, one range position above current tick, zero for one false, bound tick below with non-empty ticks",
+			name: "one full range position, one range position above current tick, bound tick below with non-empty ticks, zero for one",
 			presetTicks: []genesis.FullTick{
 				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
 				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
@@ -970,7 +970,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			},
 		},
 		{
-			name: "one ranged position, returned empty array",
+			name: "one ranged position, returned empty array, zero for one",
 			presetTicks: []genesis.FullTick{
 				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
 				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
@@ -983,7 +983,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			expectedLiquidityDepths:    []queryproto.TickLiquidityNet(nil),
 		},
 		{
-			name: "one full range position, one range position above current tick, zero for one false, bound tick below with non-empty ticks",
+			name: "one full range position, one range position above current tick, bound tick below with non-empty ticks, one for zero",
 			presetTicks: []genesis.FullTick{
 				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
 				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
@@ -1003,7 +1003,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			},
 		},
 		{
-			name: "one full range position, two ranged positions, zero for one true",
+			name: "one full range position, two ranged positions, zero for one",
 			presetTicks: []genesis.FullTick{
 				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
 				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
@@ -1029,7 +1029,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			},
 		},
 		{
-			name: "one full range position, two ranged positions, zero for one false",
+			name: "one full range position, two ranged positions, one for zero",
 			presetTicks: []genesis.FullTick{
 				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
 				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
@@ -1042,7 +1042,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			poolId:                     defaultPoolId,
 			tokenIn:                    USDC,
 			boundTick:                  sdk.Int{},
-			expectedStartTickLiquidity: sdk.NewDec(70),
+			expectedStartTickLiquidity: sdk.NewDec(30),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(40),
