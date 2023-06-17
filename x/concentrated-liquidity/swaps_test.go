@@ -2909,6 +2909,21 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 // * second swap MUST NOT cross a tick (only swap in-between ticks)
 // * both swaps are in the same direction
 //
+// It creates 3 positions:
+// - (FR) full range
+// - narrow range where
+//   - (NR1) narrow range is 2 tick spacings around the current tick
+//   - (NR2) narrow range'is 5 tick spacings above current tick
+//
+// Position setup:
+//
+//	                                                                              cur tick
+//	                                                                                  |
+//	narrow range 1  (NR1)                                                        //////////
+//	narrow range 2  (NR2)                                                  //////////////////////
+//	full range:     (FR)      //////////////////////////////////////////////////////////////////////////////////////////
+//	                          MinTick                                                                            MaxTick
+//
 // Both directions are tested. Zero for one (left). One for zero (right).
 //
 // For every test case, we set it up with 1 and 100 tick spacing.
@@ -2923,12 +2938,6 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 // currentTick as nextTick and cross it twice. Once during the first swap and once during the second swap.
 //
 // This test is set up to reproduce the 2 subsequent swaps zero for one swaps in a row.
-//
-// It creates 2 positions:
-// - full range
-// - narrow range where
-//   - (NR1) narrow range is 2 tick spacings around the current tick
-//   - (NR2) narrow range'is 5 tick spacings above current tick
 //
 // It does the first swap that stops exactly after crossing the NR1's lower tick.
 // Next, it continues with the second swap that we do not expect to cross any ticks
@@ -3244,19 +3253,6 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 
 		return expectedValues
 	}
-
-	// Position setup:
-	//
-	//
-	//                                                                                cur tick
-	//                                                                                    |
-	//  narrow range 1  (NR1)                                                        //////////
-	//  narrow range 2  (NR2)                                                  //////////////////////
-	//  full range pos: (FR)      //////////////////////////////////////////////////////////////////////////////////////////
-	//                            MinTick                                                                            MaxTick
-	//
-	//
-	//
 
 	s.Run("zero for one", func() {
 		// For every test case, the following invariants hold:
