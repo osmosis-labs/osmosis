@@ -54,6 +54,15 @@ type SwapTest struct {
 	expectErr      bool
 }
 
+// positionMeta defines the metadata of a position
+// after its creation.
+type positionMeta struct {
+	positionId uint64
+	lowerTick  int64
+	upperTick  int64
+	liquidity  sdk.Dec
+}
+
 var (
 	swapFundCoins = sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000)))
 
@@ -2947,17 +2956,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() {
 	s.Setup()
 
-	const (
-		tickSpacingOne = 1
-		tickSpacing100 = 100
-
-		// Defines how many tick spacings away from the current
-		// tick NR1 and NR2 are. Note that lower and upper ticks
-		// are equally spaced around the current tick.
-		nr1TickSpacingsAway = 2
-		nr2TickSpacingsAway = 5
-	)
-
+	// testCase defines the test case configuration
 	type testCase struct {
 		name        string
 		tickSpacing uint64
@@ -2966,6 +2965,9 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		expectedTickAwayAfterFirstSwap int64
 	}
 
+	// expectedAndComputedValues defines the expected and computed values
+	// that are derived from testCase parameters during the execution
+	// of the test case.
 	type expectedAndComputedValues struct {
 		// computed inputs
 		tokenIn sdk.Coin
@@ -2978,7 +2980,24 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		expectedNextTickAfterFirstSwapOFZRight   int64
 	}
 
-	setupPoolAndPositionsCommon := func(testTickSpacing uint64) (uint64, PositionReturn, PositionReturn) {
+	const (
+		tickSpacingOne = 1
+		tickSpacing100 = 100
+
+		// Defines how many tick spacings away from the current
+		// tick NR1 and NR2 are. Note that lower and upper ticks
+		// are equally spaced around the current tick.
+		nr1TickSpacingsAway = 2
+		nr2TickSpacingsAway = 5
+	)
+
+	// setupPoolAndPositions creates a pool and 3 positions:
+	// - full range
+	// - NR1: narrow range one with nr1TickSpacingsAway around the current tick
+	// - NR2: narrow range two with nr2TickSpacingsAway around the current tick
+	//
+	// Returns the pool id and the 2 positions metatadata to be used in tests.
+	setupPoolAndPositions := func(testTickSpacing uint64) (uint64, positionMeta, positionMeta) {
 		pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, testTickSpacing, sdk.ZeroDec())
 		poolId := pool.GetId()
 
@@ -3011,7 +3030,15 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		return poolId, narrowRangeOnePosition, narrowRangeTwoPosition
 	}
 
-	validateAfterFirstSwapCommon := func(poolId uint64, expectedValues expectedAndComputedValues, nr1Position PositionReturn, nr2Position PositionReturn) {
+	// validateAfterFirstSwap runs validation logic of the system's state after the first swap executes.
+	// It validates the following:
+	// - pool's current tick equals the expected value
+	// - pool's liquidity equals the expected value
+	// - NR1 position is either in or out of range depending on the test configuration
+	// - NR2 position is always in range by construction of the test case
+	// - next tick iterator towards left (zero for one) is correct
+	// - next tick iterator towards right (one for zero) is correct
+	validateAfterFirstSwap := func(poolId uint64, expectedValues expectedAndComputedValues, nr1Position positionMeta, nr2Position positionMeta) {
 		// Assert that pool tick and liquidity correspond to the expected values.
 		s.asserPoolTickEquals(poolId, expectedValues.expectedTickAfterFirstSwap)
 		s.asserPoolLiquidityEquals(poolId, expectedValues.expectedLiquidityAfterFirstAndSecondSwap)
@@ -3033,7 +3060,12 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		s.validateIteratorRightOneForZero(poolId, expectedValues.expectedNextTickAfterFirstSwapOFZRight)
 	}
 
-	validateAfterSecondSwapCommon := func(poolId uint64, expectedValues expectedAndComputedValues, nr1Position PositionReturn, nr2Position PositionReturn) {
+	// validateAfterSecondSwap runs validation logic of the system's state after the second swap executes.
+	// It validates the following:
+	// - pool's liquidity equals the expected value
+	// - NR1 position is either in or out of range depending on the test configuration
+	// - NR2 position is always in range by construction of the test case
+	validateAfterSecondSwap := func(poolId uint64, expectedValues expectedAndComputedValues, nr1Position positionMeta, nr2Position positionMeta) {
 		// Liquidity should remain the same by construction as we do not expect second swap to cross the tick.
 		// This check helps validate that we start from the correct tick on second swap and do not cross
 		// a tick twice inter-swap. Otherwise, if we were to cross it twice, the liquidity would be zero.
@@ -3048,7 +3080,11 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		s.asserPositionInRange(poolId, nr2Position.lowerTick, nr2Position.upperTick)
 	}
 
-	computeValuesForTestZeroForOne := func(poolId uint64, tc testCase, nr1Position PositionReturn, nr2Position PositionReturn) expectedAndComputedValues {
+	// computeValuesForTestZeroForOne computes the expected values for the test case when swapping zero for one.
+	// It does so by determining whether the first swap crosses NR1's lower tick from tc parameter.
+	// Next, it determines the appropriate amount to swap in for the first swap as well as the
+	// expected liquidity, current tick, and next tick in either direction to be returned by the iterator after first swap.
+	computeValuesForTestZeroForOne := func(poolId uint64, tc testCase, nr1Position positionMeta, nr2Position positionMeta) expectedAndComputedValues {
 		// Fetch pool
 		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 		s.Require().NoError(err)
@@ -3117,7 +3153,11 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		return expectedValues
 	}
 
-	computeValuesForTestOneForZero := func(poolId uint64, tc testCase, nr1Position PositionReturn, nr2Position PositionReturn) expectedAndComputedValues {
+	// computeExpectedValuesForTestOneForZero computes the expected values for the test case when swapping one for zero.
+	// It does so by determining whether the first swap crosses NR1's upper tick from tc parameter.
+	// Next, it determines the appropriate amount to swap in for the first swap as well as the
+	// expected liquidity, current tick, and next tick in either direction to be returned by the iterator after first swap.
+	computeExpectedValuesForTestOneForZero := func(poolId uint64, tc testCase, nr1Position positionMeta, nr2Position positionMeta) expectedAndComputedValues {
 		// Fetch pool
 		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 		s.Require().NoError(err)
@@ -3300,7 +3340,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				// 1. Prepare pool and positions for test
 
-				poolId, nr1Position, nr2Position := setupPoolAndPositionsCommon(tc.tickSpacing)
+				poolId, nr1Position, nr2Position := setupPoolAndPositions(tc.tickSpacing)
 
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				// 2. Estimate the amount of tokenIn to swap in to depending on test configuration.
@@ -3314,7 +3354,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 				s.swapZeroForOneLeft(poolId, expectedAndComputedValues.tokenIn)
 
 				// Perform validations after the first swap.
-				validateAfterFirstSwapCommon(
+				validateAfterFirstSwap(
 					poolId,
 					expectedAndComputedValues,
 					nr1Position,
@@ -3329,7 +3369,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 				s.swapZeroForOneLeft(poolId, smallAmount)
 
 				// Perform validation after the second swap.
-				validateAfterSecondSwapCommon(
+				validateAfterSecondSwap(
 					poolId,
 					expectedAndComputedValues,
 					nr1Position,
@@ -3424,11 +3464,11 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				// 1. Prepare pool and positions for test
 
-				poolId, nr1Position, nr2Position := setupPoolAndPositionsCommon(tc.tickSpacing)
+				poolId, nr1Position, nr2Position := setupPoolAndPositions(tc.tickSpacing)
 
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				// 2. Estimate the amount of token 1 to swap to depending on test configuration.
-				expectedAndComputedValues := computeValuesForTestOneForZero(poolId, tc, nr1Position, nr2Position)
+				expectedAndComputedValues := computeExpectedValuesForTestOneForZero(poolId, tc, nr1Position, nr2Position)
 
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				// 3. Run the first swap and validate results.
@@ -3437,7 +3477,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 				s.swapOneForZeroRight(poolId, expectedAndComputedValues.tokenIn)
 
 				// Perform validations after the first swap.
-				validateAfterFirstSwapCommon(
+				validateAfterFirstSwap(
 					poolId,
 					expectedAndComputedValues,
 					nr1Position,
@@ -3452,7 +3492,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 				s.swapOneForZeroRight(poolId, smallAmount)
 
 				// Perform validation after the second swap.
-				validateAfterSecondSwapCommon(
+				validateAfterSecondSwap(
 					poolId,
 					expectedAndComputedValues,
 					nr1Position,

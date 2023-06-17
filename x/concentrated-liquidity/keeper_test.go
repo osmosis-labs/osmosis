@@ -24,13 +24,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 )
 
-type PositionReturn struct {
-	positionId uint64
-	lowerTick  int64
-	upperTick  int64
-	liquidity  sdk.Dec
-}
-
 var (
 	DefaultMinTick, DefaultMaxTick                       = types.MinTick, types.MaxTick
 	DefaultLowerPrice                                    = sdk.NewDec(4545)
@@ -464,7 +457,7 @@ func (s *KeeperTestSuite) runMultipleAuthorizedUptimes(tests func()) {
 }
 
 // CreatePositionTickSpacingsFromCurrentTick creates a position with the passed in tick spacings away from the current tick.
-func (s *KeeperTestSuite) CreatePositionTickSpacingsFromCurrentTick(poolId uint64, tickSpacingsAwayFromCurrentTick uint64) PositionReturn {
+func (s *KeeperTestSuite) CreatePositionTickSpacingsFromCurrentTick(poolId uint64, tickSpacingsAwayFromCurrentTick uint64) positionMeta {
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
@@ -476,7 +469,7 @@ func (s *KeeperTestSuite) CreatePositionTickSpacingsFromCurrentTick(poolId uint6
 	positionId, _, _, liquidityNarrowRangeTwo, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTickTwo, upperTickTwo)
 	s.Require().NoError(err)
 
-	return PositionReturn{
+	return positionMeta{
 		positionId: positionId,
 		lowerTick:  lowerTickTwo,
 		upperTick:  upperTickTwo,
