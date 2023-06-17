@@ -2930,12 +2930,12 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 //
 // This test helped to identify 2 high severity:
 //
-// BUG 1. Wrong tick initialization when performing 2 zero for one swaps in a row.
+// BUG 1. Wrong tick initialization when performing second swap in zero for one (left) direction.
 //
 // The core of the bug: if we perform a swap and cross a tick, the subsequent swap in the same direction
 // would cross the same tick again and mistakenly kick in liquidity, completely invalidating pool state.
 // The reason is that by having a zero for one tick initialization at currentTick + 1, we end up getting
-// currentTick as nextTick and cross it twice. Once during the first swap and once during the second swap.
+// currentTick as nextTick and cross it twice. Once during the first swap, and once during the second swap.
 //
 // This test is set up to reproduce the 2 subsequent swaps zero for one swaps in a row.
 //
@@ -3255,11 +3255,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 	}
 
 	s.Run("zero for one", func() {
-		// For every test case, the following invariants hold:
-		// * first swap MAY cross a tick depending on test case configuration
-		// * second swap MUST NOT cross a tick (only swap in-between ticks)
 		testCases := map[string]testCase{
-
 			// Group 1:
 			// Test setup:
 			// swap 1: just enough to cross lower tick of NR1
@@ -3270,6 +3266,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 				// 200 ticks to the left of current or 2 tick spacings away
 				swapTicksAway: -nr1TickSpacingsAway * tickSpacing100,
 				// Note, we expect the system to kick as to the left by 1 tick since we cross the NR1 lower tick.
+				// The definition of the active range is exclusive of the upper tick and inclusive of the lower tick.
 				expectedTickAwayAfterFirstSwap: -nr1TickSpacingsAway*tickSpacing100 - 1,
 			},
 			"group1 1 tick spacing, first swap cross tick, second swap in same direction": {
@@ -3277,7 +3274,8 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 
 				// 2 ticks to the left of current or 2 tick spacings away
 				swapTicksAway: -nr1TickSpacingsAway,
-				// Note, we expect the system to kick as to the left by 1 tick since we cross the NR1 lower tick.
+				// Note, we expect the system to kick us to the left by 1 tick since we cross the NR1 lower tick.
+				// The definition of the active range is exclusive of the upper tick and inclusive of the lower tick.
 				expectedTickAwayAfterFirstSwap: -nr1TickSpacingsAway - 1,
 			},
 
@@ -3307,25 +3305,16 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 			"group3 100 tick spacing, first swap does not cross tick, second swap in same direction": {
 				tickSpacing: tickSpacing100,
 
-				// one tick spacing to the left + 1 tick from current
+				// 200 ticks (or 2 tick spacings to the left) + 1 tick from current
 				swapTicksAway: -(nr1TickSpacingsAway + 1) * tickSpacing100,
 
-				// Note: it actually ends up getting one tick further away than
-				// swapTicksAway due to rounding up the amount in CalcAmount0Delta calculation.
-				//
-				// TODO: could it be due to tick rounding at the of the swap?
 				expectedTickAwayAfterFirstSwap: -(nr1TickSpacingsAway + 1) * tickSpacing100,
 			},
 			"group3 1 tick spacing, first swap does not cross tick, second swap in same direction": {
 				tickSpacing: tickSpacingOne,
 
-				// one tick spacing to the left + 1 tick from current
-				swapTicksAway: -(nr1TickSpacingsAway + 1),
-
-				// Note: it actually ends up getting one tick further away than
-				// swapTicksAway due to rounding up the amount in CalcAmount0Delta calculation.
-				//
-				// TODO: could it be due to tick rounding at the of the swap?
+				// 2 tick s(or 2 tick spacings to the left) + 1 tick from current
+				swapTicksAway:                  -(nr1TickSpacingsAway + 1),
 				expectedTickAwayAfterFirstSwap: -(nr1TickSpacingsAway + 1),
 			},
 		}
@@ -3376,9 +3365,6 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 	})
 
 	s.Run("one for zero", func() {
-		// For every test case, the following invariants hold:
-		// * first swap MAY cross a tick depending on test case configuration
-		// * second swap MUST NOT cross a tick (only swap in-between ticks)
 		testCases := map[string]testCase{
 
 			// Group 1:
@@ -3409,22 +3395,18 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 			"group2 100 tick spacing, first swap does not cross tick, second swap in same direction": {
 				tickSpacing: tickSpacing100,
 
-				// one tick spacing to the left + 1 tick from current
+				// 200 ticks (or 2 tick spacings away) + 1 tick from current
 				swapTicksAway: nr1TickSpacingsAway*tickSpacing100 - 1,
 
-				// Note: it actually ends up getting one tick further away than
-				// swapTicksAway due to rounding up the amount in CalcAmount1Delta calculation.
-				//
-				// TODO: could it be due to tick rounding at the of the swap?
 				expectedTickAwayAfterFirstSwap: nr1TickSpacingsAway*tickSpacing100 - 1,
 			},
 			"group2 1 tick spacing, first swap does not cross tick, second swap in same direction": {
 				tickSpacing: tickSpacingOne,
 
-				// one tick (and tick spacing) to the right from current
-				swapTicksAway: tickSpacingOne,
+				// 2 ticks (or 2 tick spacings away) - 1
+				swapTicksAway: nr1TickSpacingsAway*tickSpacingOne - 1,
 
-				expectedTickAwayAfterFirstSwap: tickSpacingOne,
+				expectedTickAwayAfterFirstSwap: nr1TickSpacingsAway*tickSpacingOne - 1,
 			},
 
 			// Group 3:
@@ -3434,19 +3416,15 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 			"group3 100 tick spacing, first swap crosses tick, second swap in same direction": {
 				tickSpacing: tickSpacing100,
 
-				// one tick spacing to the left + 1 tick from current
+				// 200 ticks (or 2 tick spacings away) + 1 tick from current
 				swapTicksAway: (nr1TickSpacingsAway + 1) * tickSpacing100,
 
-				// Note: it actually ends up getting one tick further away than
-				// swapTicksAway due to rounding up the amount in CalcAmount0Delta calculation.
-				//
-				// TODO: could it be due to tick rounding at the of the swap?
 				expectedTickAwayAfterFirstSwap: (nr1TickSpacingsAway + 1) * tickSpacing100,
 			},
 			"group3 1 tick spacing, first swap crosses tick, second swap in same direction": {
 				tickSpacing: tickSpacingOne,
 
-				// 3 ticks (tick spacings) to the right from current
+				// 2 ticks (or 2 tick spacings away) + 1 tick from current
 				swapTicksAway: nr1TickSpacingsAway + 1,
 
 				expectedTickAwayAfterFirstSwap: nr1TickSpacingsAway + 1,

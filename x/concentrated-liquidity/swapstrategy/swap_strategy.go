@@ -56,10 +56,6 @@ type SwapStrategy interface {
 	// If nex tick relative to tickINdex does not exist in the store, it will return an invalid iterator.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	InitializeNextTickIterator(ctx sdk.Context, poolId uint64, tickIndex int64) dbm.Iterator
-	// InitializeTickValue returns the initial tick value for computing swaps based
-	// on the actual current tick.
-	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	InitializeTickValue(currentTick int64) int64
 	// SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.
 	// This is called when consuming all liquidity.
 	// When a position is created, we add liquidity to lower tick

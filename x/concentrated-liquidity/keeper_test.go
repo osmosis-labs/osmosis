@@ -489,7 +489,7 @@ func (s *KeeperTestSuite) validateIteratorLeftZeroForOne(poolId uint64, expected
 
 	zeroForOneSwapStrategy, _, err := s.App.ConcentratedLiquidityKeeper.SetupSwapStrategy(s.Ctx, pool, sdk.ZeroDec(), pool.GetToken0(), types.MinSqrtPrice)
 	s.Require().NoError(err)
-	initializedTickValue := zeroForOneSwapStrategy.InitializeTickValue(pool.GetCurrentTick())
+	initializedTickValue := pool.GetCurrentTick()
 	iter := zeroForOneSwapStrategy.InitializeNextTickIterator(s.Ctx, pool.GetId(), initializedTickValue)
 	s.Require().True(iter.Valid())
 	nextTick, err := types.TickIndexFromBytes(iter.Key())
@@ -506,7 +506,7 @@ func (s *KeeperTestSuite) validateIteratorRightOneForZero(poolId uint64, expecte
 	// Setup swap strategy directly as it would fail validation if constructed via SetupSwapStrategy(...)
 	oneForZeroSwapStrategy := swapstrategy.New(false, types.MaxSqrtPrice, s.App.GetKey(types.ModuleName), sdk.ZeroDec())
 	s.Require().NoError(err)
-	initializedTickValue := oneForZeroSwapStrategy.InitializeTickValue(pool.GetCurrentTick())
+	initializedTickValue := pool.GetCurrentTick()
 	iter := oneForZeroSwapStrategy.InitializeNextTickIterator(s.Ctx, pool.GetId(), initializedTickValue)
 	s.Require().True(iter.Valid())
 	nextTick, err := types.TickIndexFromBytes(iter.Key())
@@ -521,7 +521,7 @@ func (s *KeeperTestSuite) asserPositionInRange(poolId uint64, lowerTick int64, u
 	s.Require().NoError(err)
 
 	isInRange := pool.IsCurrentTickInRange(lowerTick, upperTick)
-	s.Require().True(isInRange)
+	s.Require().True(isInRange, "currentTick: %d, lowerTick %d, upperTick: %d", pool.GetCurrentTick(), lowerTick, upperTick)
 }
 
 func (s *KeeperTestSuite) assertPositionOutOfRange(poolId uint64, lowerTick int64, upperTick int64) {
@@ -529,7 +529,7 @@ func (s *KeeperTestSuite) assertPositionOutOfRange(poolId uint64, lowerTick int6
 	s.Require().NoError(err)
 
 	isInRange := pool.IsCurrentTickInRange(lowerTick, upperTick)
-	s.Require().False(isInRange)
+	s.Require().False(isInRange, "currentTick: %d, lowerTick %d, upperTick: %d", pool.GetCurrentTick(), lowerTick, upperTick)
 }
 
 func (s *KeeperTestSuite) assertPositionRangeConditional(poolId uint64, isOutOfRangeExpected bool, lowerTick int64, upperTick int64) {

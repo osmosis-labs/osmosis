@@ -371,7 +371,7 @@ func (k Keeper) computeOutAmtGivenIn(
 			newTick := math.CalculatePriceToTick(price)
 
 			// TEMPORARY HACK: this is to fix tick rounding error where
-			// the tick is off by 1 due to banker's rounding error in PriceToTickRoundDown
+			// the tick is off by 1 due to banker's rounding error in CalculatePriceToTick
 			// TODO: if this is to remain in the codebase, consider abstracting this into a
 			// method of swap strategy.
 			isZeroForOne := getZeroForOne(tokenInMin.Denom, p.GetToken0())
