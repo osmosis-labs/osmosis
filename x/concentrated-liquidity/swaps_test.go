@@ -2941,251 +2941,243 @@ func (s *KeeperTestSuite) TestSwap_ZeroForOne_TickInitialization() {
 		expectedErrorAfterFistSwap     bool
 	}
 
-	// Position setup:
-	//
-	//
-	//                                                                                cur tick
-	//                                                                                    |
-	//  narrow range 1  (NR1)                                                        //////////
-	//  narrow range 2  (NR2)                                                  //////////////////////
-	//  full range pos: (FR)      //////////////////////////////////////////////////////////////////////////////////////////
-	//                            MinTick                                                                            MaxTick
-	//
-	//
-	//
+	type expectedAndComputedValues struct {
+		// computed inputs
+		tokenIn sdk.Coin
 
-	// For every test case, the following invariants hold:
-	// * first swap MAY cross a tick depending on test case configuration
-	// * second swap MUST NOT cross a tick (only swap in-between ticks)
-	testCases := []testCase{
-
-		// Group 1:
-		// Test setup:
-		// swap 1: just enough to cross lower tick of NR1
-		// swap 2: stop between NR2 lower and lower NR1
-		{
-
-			name:        "group1 100 tick spacing, first swap crosses tick, second swap in same direction",
-			tickSpacing: 100,
-
-			// 100 ticks to the left of current or one tick spacing away
-			swapTicksAway: -2 * 100,
-
-			expectedTickAwayAfterFirstSwap: -2*100 - 1,
-		},
-		{
-			name:        "group1 1 tick spacing, first swap cross tick, second swap in same direction",
-			tickSpacing: 1,
-
-			// 1 tick to the left of current or one tick spacing away
-			swapTicksAway: -2,
-
-			expectedTickAwayAfterFirstSwap: -2 - 1,
-		},
-
-		// Group 2:
-		// Test setup:
-		// swap 1: stop right before lower tick of NR1
-		// swap 2: stop right before lower tick of NR1
-		{
-			name:        "group2 100 tick spacing, first swap does not cross tick, second swap in same direction",
-			tickSpacing: 100,
-
-			// one tick spacing to the left + 1 tick from current
-			swapTicksAway: -2*100 + 1,
-
-			// Note: it actually ends up getting one tick further away than
-			// swapTicksAway due to rounding up the amount in CalcAmount0Delta calculation.
-			//
-			// TODO: could it be due to tick rounding at the of the swap?
-			expectedTickAwayAfterFirstSwap: -2*100 + 1,
-		},
-		{
-			name:        "group2 1 tick spacing, first swap does not cross tick, second swap in same direction",
-			tickSpacing: 1,
-
-			// one tick spacing to the left + 1 tick from current
-			swapTicksAway: -1,
-
-			expectedTickAwayAfterFirstSwap: -1,
-		},
-
-		// Group 3:
-		// Test setup:
-		// swap 1: stop right after lower tick of NR1
-		// swap 2: stop right before lower tick of NR1
-		{
-			name:        "group3 100 tick spacing, first swap does not cross tick, second swap in same direction",
-			tickSpacing: 100,
-
-			// one tick spacing to the left + 1 tick from current
-			swapTicksAway: -3 * 100,
-
-			// Note: it actually ends up getting one tick further away than
-			// swapTicksAway due to rounding up the amount in CalcAmount0Delta calculation.
-			//
-			// TODO: could it be due to tick rounding at the of the swap?
-			expectedTickAwayAfterFirstSwap: -3 * 100,
-		},
-		{
-			name:        "group3 100 tick spacing, first swap does not cross tick, second swap in same direction",
-			tickSpacing: 100,
-
-			// one tick spacing to the left + 1 tick from current
-			swapTicksAway: -3,
-
-			// Note: it actually ends up getting one tick further away than
-			// swapTicksAway due to rounding up the amount in CalcAmount0Delta calculation.
-			//
-			// TODO: could it be due to tick rounding at the of the swap?
-			expectedTickAwayAfterFirstSwap: -3,
-		},
+		// computed expected outputs
+		expectedTickAfterFirstSwap               int64
+		expectedLiquidityAfterFirstAndSecondSwap sdk.Dec
+		doesFirstSwapCrossTick                   bool
+		expectedNextTickAfterFirstSwapZFOLeft    int64
+		expectedNextTickAfterFirstSwapOFZRight   int64
 	}
 
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, sdk.ZeroDec())
-			poolId := pool.GetId()
+	setupPoolAndPositionsCommon := func(testTickSpacing uint64) (uint64, PositionReturn, PositionReturn) {
+		pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, testTickSpacing, sdk.ZeroDec())
+		poolId := pool.GetId()
 
-			// Create a full range position
-			s.FundAcc(s.TestAccs[0], DefaultCoins)
-			_, _, _, liquidityFullRange, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, poolId, s.TestAccs[0], DefaultCoins)
-			s.Require().NoError(err)
+		// Create a full range position
+		s.FundAcc(s.TestAccs[0], DefaultCoins)
+		_, _, _, liquidityFullRange, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, poolId, s.TestAccs[0], DefaultCoins)
+		s.Require().NoError(err)
 
-			// Refetch pool as the first position updated its state.
-			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
+		// Refetch pool as the first position updated its state.
+		pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+		s.Require().NoError(err)
 
-			originalCurrentTick := pool.GetCurrentTick()
+		// Create narrow range position 2 tick spacings away the current tick
+		narrowRangeOnePosition := s.CreatePositionTickSpacingsFromCurrentTick(poolId, 2)
 
-			// Create narrow range position 2 tick spacing around the current tick
-			narrowRangeOnePosition := s.CreatePositionTickSpacingsFromCurrentTick(poolId, 2)
+		// Create narrow range position 5 tick spacings away from the current.
+		narrowRangeTwoPosition := s.CreatePositionTickSpacingsFromCurrentTick(poolId, 5)
 
-			// Create narrow range position 5 tick spacings away from the current.
-			narrowRangeTwoPosition := s.CreatePositionTickSpacingsFromCurrentTick(poolId, 5)
+		// As a sanity check confirm that current liquidity corresponds
+		// to the sum of liquidities of all positions.
+		liquidityAllPositions := liquidityFullRange.Add(narrowRangeOnePosition.liquidity.Add(narrowRangeTwoPosition.liquidity))
+		s.asserPoolLiquidityEquals(poolId, liquidityAllPositions)
 
-			// Refetch pool as the second position updated its state.
-			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
-			s.Require().NoError(err)
+		// Sanity check that that NR1 is in range prior to swap.
+		s.asserPositionInRange(poolId, narrowRangeOnePosition.lowerTick, narrowRangeOnePosition.upperTick)
 
-			// As a sanity check confirm that current liquidity corresponds
-			// to the sum of liquidities of the all positions.
-			s.Require().Equal(liquidityFullRange.Add(narrowRangeOnePosition.liquidity.Add(narrowRangeTwoPosition.liquidity)), pool.GetLiquidity())
+		// Sanity check that that NR2 is in range prior to swap.
+		s.asserPositionInRange(poolId, narrowRangeTwoPosition.lowerTick, narrowRangeTwoPosition.upperTick)
 
-			tickToSwapTo := originalCurrentTick + tc.swapTicksAway
-			expectedTickAfterFirstSwap := originalCurrentTick + tc.expectedTickAwayAfterFirstSwap
-
-			doesFirstSwapCrossLowerTickOne := expectedTickAfterFirstSwap < narrowRangeOnePosition.lowerTick
-			expectedLiquidityAfterFirstAndSecondSwap := liquidityFullRange.Add(narrowRangeTwoPosition.liquidity)
-
-			expectedNextTickAfterFirstSwapZFO := narrowRangeTwoPosition.lowerTick
-			expectedNextTickAfterFirstSwapOFZ := narrowRangeOnePosition.lowerTick
-			if !doesFirstSwapCrossLowerTickOne {
-				expectedLiquidityAfterFirstAndSecondSwap = expectedLiquidityAfterFirstAndSecondSwap.Add(narrowRangeOnePosition.liquidity)
-				expectedNextTickAfterFirstSwapZFO = narrowRangeOnePosition.lowerTick
-				expectedNextTickAfterFirstSwapOFZ = narrowRangeOnePosition.upperTick
-			}
-
-			// Compute the sqrt price corresponding to the lower tick
-			// of the narrow range position.
-			sqrtPriceTarget := s.tickToSqrtPrice(tickToSwapTo)
-
-			// Check that narrow range position is considered in range
-			isNarrowInRange := pool.IsCurrentTickInRange(narrowRangeOnePosition.lowerTick, narrowRangeOnePosition.upperTick)
-			s.Require().True(isNarrowInRange)
-
-			var (
-				amountZeroIn   sdk.Dec = sdk.ZeroDec()
-				sqrtPriceStart sdk.Dec = pool.GetCurrentSqrtPrice()
-
-				liquidity = pool.GetLiquidity()
-			)
-
-			if tickToSwapTo < narrowRangeOnePosition.lowerTick {
-				sqrtPriceLowerTickOne := s.tickToSqrtPrice(narrowRangeOnePosition.lowerTick)
-
-				amountZeroIn = math.CalcAmount0Delta(liquidity, sqrtPriceLowerTickOne, sqrtPriceStart, true)
-
-				sqrtPriceStart = sqrtPriceLowerTickOne
-
-				liquidity = liquidity.Sub(narrowRangeOnePosition.liquidity)
-			}
-
-			// This is the total amount necessary to cross the lower tick of narrow position.
-			// Note it is rounded up to ensure that the tick is crossed.
-			amountZeroIn = math.CalcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceStart, true).Add(amountZeroIn)
-
-			tokenZeroIn := sdk.NewCoin(pool.GetToken0(), amountZeroIn.Ceil().TruncateInt())
-
-			// Perform the swap that should cross the lower tick of the narrow range position.
-			s.swapZeroForOneLeft(poolId, tokenZeroIn)
-
-			s.Require().NoError(err)
-
-			// Refetch pool as the swap updated its state.
-			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
-
-			// Check that the tick was crossed
-			// Since our bound for "is position active" si:
-			// lowerTick <= currentTick < upperTick, we must make
-			// sure that the current tick is not equal to the lower tick.
-			s.Require().Equal(expectedTickAfterFirstSwap, pool.GetCurrentTick())
-
-			// Since we expect the tick to be crossed, there must only be
-			// liquidity of the full range position.
-			s.Require().Equal(expectedLiquidityAfterFirstAndSecondSwap, pool.GetLiquidity())
-
-			// Check that narrow range position is considered out of range
-			isNarrowInRange = pool.IsCurrentTickInRange(narrowRangeOnePosition.lowerTick, narrowRangeOnePosition.upperTick)
-			s.Require().Equal(!doesFirstSwapCrossLowerTickOne, isNarrowInRange)
-
-			// Confirm that the next tick to be returned is correct for both zero for one and one for zero directions.
-
-			// Validate iterator in the zero for one direction.
-			s.validateIteratorLeftZeroForOne(poolId, expectedNextTickAfterFirstSwapZFO)
-
-			// Validate itertor in the one for zero direction
-			s.validateIteratorRightOneForZero(poolId, expectedNextTickAfterFirstSwapOFZ)
-
-			// Therefore, if we swap a small amount in the same direction again, we do not expect
-			// the lowerTickOne to be crossed again.
-			smallAmount := sdk.NewCoin(pool.GetToken0(), sdk.NewInt(10))
-			s.swapZeroForOneLeft(poolId, smallAmount)
-
-			// Refetch pool as the swap updated its state.
-			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
-
-			// Liquidity remains the same, confirming that we did not cross the same tick twice.
-			// Otherwise, if we were to cross it twice, the liquidity would be zero.
-			s.Require().Equal(expectedLiquidityAfterFirstAndSecondSwap, pool.GetLiquidity())
-
-			// Check that narrow range position is considered out of range
-			isNarrowInRange = pool.IsCurrentTickInRange(narrowRangeOnePosition.lowerTick, narrowRangeOnePosition.upperTick)
-			s.Require().Equal(!doesFirstSwapCrossLowerTickOne, isNarrowInRange)
-		})
+		return poolId, narrowRangeOnePosition, narrowRangeTwoPosition
 	}
-}
 
-func (s *KeeperTestSuite) TestSwap_OneForZero_TickInitialization() {
-	s.Setup()
+	validateAfterFirstSwapCommon := func(poolId uint64, expectedValues expectedAndComputedValues, nr1Position PositionReturn, nr2Position PositionReturn) {
+		// Assert that pool tick and liquidity correspond to the expected values.
+		s.asserPoolTickEquals(poolId, expectedValues.expectedTickAfterFirstSwap)
+		s.asserPoolLiquidityEquals(poolId, expectedValues.expectedLiquidityAfterFirstAndSecondSwap)
 
-	const (
-		zeroForOne = true
-		oneForZero = false
-	)
+		// Check position ranges
 
-	type testCase struct {
-		name         string
-		isZeroForOne bool
-		tickSpacing  uint64
+		// First position is out if range if doesFirstSwapCrossUpperTickOne is true. Otherwise, it is in range.
+		s.assertPositionRangeConditional(poolId, expectedValues.doesFirstSwapCrossTick, nr1Position.lowerTick, nr1Position.upperTick)
 
-		swapTicksAway int64
+		// Second position is always in range by test construction.
+		s.asserPositionInRange(poolId, nr2Position.lowerTick, nr2Position.upperTick)
 
-		expectedTickAwayAfterFirstSwap int64
-		expectedErrorAfterFistSwap     bool
+		// Confirm that the next tick to be returned is correct for both zero for one and one for zero directions.
+
+		// Validate iterator in the zero for one direction (left).
+		s.validateIteratorLeftZeroForOne(poolId, expectedValues.expectedNextTickAfterFirstSwapZFOLeft)
+
+		// Validate iterator in the one for zero direction (right).
+		s.validateIteratorRightOneForZero(poolId, expectedValues.expectedNextTickAfterFirstSwapOFZRight)
+	}
+
+	validateAfterSecondSwapCommon := func(poolId uint64, expectedValues expectedAndComputedValues, nr1Position PositionReturn, nr2Position PositionReturn) {
+		// Liquidity should remain the same by construction as we do not expect second swap to cross the tick.
+		// This check helps validate that we start from the correct tick on second swap and do not cross
+		// a tick twice inter-swap. Otherwise, if we were to cross it twice, the liquidity would be zero.
+		s.asserPoolLiquidityEquals(poolId, expectedValues.expectedLiquidityAfterFirstAndSecondSwap)
+
+		// Check position ranges
+
+		// First position is out if range if doesFirstSwapCrossTick is true. Otherwise, it is in range.
+		s.assertPositionRangeConditional(poolId, expectedValues.doesFirstSwapCrossTick, nr1Position.lowerTick, nr1Position.upperTick)
+
+		// Second position is always in range by test construction.
+		s.asserPositionInRange(poolId, nr2Position.lowerTick, nr2Position.upperTick)
+	}
+
+	computeValuesForTestZeroForOne := func(poolId uint64, tc testCase, nr1Position PositionReturn, nr2Position PositionReturn) expectedAndComputedValues {
+		// Fetch pool
+		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+		s.Require().NoError(err)
+
+		var (
+			originalCurrentTick = pool.GetCurrentTick()
+			// Note: it already validated to be correct in setupPoolAndPositionsCommon(...)
+			liquidityAllPositions = pool.GetLiquidity()
+		)
+
+		tickToSwapTo := originalCurrentTick + tc.swapTicksAway
+		expectedTickAfterFirstSwap := originalCurrentTick + tc.expectedTickAwayAfterFirstSwap
+
+		doesFirstSwapCrossLowerTickOne := expectedTickAfterFirstSwap < nr1Position.lowerTick
+		expectedLiquidityAfterFirstAndSecondSwap := liquidityAllPositions.Sub(nr1Position.liquidity)
+
+		expectedNextTickAfterFirstSwapZFOLeft := nr2Position.lowerTick
+		expectedNextTickAfterFirstSwapOFZRight := nr1Position.lowerTick
+		if !doesFirstSwapCrossLowerTickOne {
+			expectedLiquidityAfterFirstAndSecondSwap = expectedLiquidityAfterFirstAndSecondSwap.Add(nr1Position.liquidity)
+			expectedNextTickAfterFirstSwapZFOLeft = nr1Position.lowerTick
+			expectedNextTickAfterFirstSwapOFZRight = nr1Position.upperTick
+		}
+
+		// Compute the sqrt price corresponding to the lower tick
+		// of the narrow range position.
+		sqrtPriceTarget := s.tickToSqrtPrice(tickToSwapTo)
+
+		// Check that narrow range position is considered in range
+		isNarrowInRange := pool.IsCurrentTickInRange(nr1Position.lowerTick, nr1Position.upperTick)
+		s.Require().True(isNarrowInRange)
+
+		var (
+			amountZeroIn   sdk.Dec = sdk.ZeroDec()
+			sqrtPriceStart sdk.Dec = pool.GetCurrentSqrtPrice()
+
+			liquidity = pool.GetLiquidity()
+		)
+
+		if tickToSwapTo < nr1Position.lowerTick {
+			sqrtPriceLowerTickOne := s.tickToSqrtPrice(nr1Position.lowerTick)
+
+			amountZeroIn = math.CalcAmount0Delta(liquidity, sqrtPriceLowerTickOne, sqrtPriceStart, true)
+
+			sqrtPriceStart = sqrtPriceLowerTickOne
+
+			liquidity = liquidity.Sub(nr1Position.liquidity)
+		}
+
+		// This is the total amount necessary to cross the lower tick of narrow position.
+		// Note it is rounded up to ensure that the tick is crossed.
+		amountZeroIn = math.CalcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceStart, true).Add(amountZeroIn)
+
+		tokenZeroIn := sdk.NewCoin(pool.GetToken0(), amountZeroIn.Ceil().TruncateInt())
+
+		expectedValues := expectedAndComputedValues{
+			tokenIn: tokenZeroIn,
+
+			expectedTickAfterFirstSwap:               expectedTickAfterFirstSwap,
+			expectedLiquidityAfterFirstAndSecondSwap: expectedLiquidityAfterFirstAndSecondSwap,
+			doesFirstSwapCrossTick:                   doesFirstSwapCrossLowerTickOne,
+			expectedNextTickAfterFirstSwapZFOLeft:    expectedNextTickAfterFirstSwapZFOLeft,
+			expectedNextTickAfterFirstSwapOFZRight:   expectedNextTickAfterFirstSwapOFZRight,
+		}
+
+		return expectedValues
+	}
+
+	computeValuesForTestOneForZero := func(poolId uint64, tc testCase, nr1Position PositionReturn, nr2Position PositionReturn) expectedAndComputedValues {
+		// Fetch pool
+		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+		s.Require().NoError(err)
+
+		var (
+			originalCurrentTick = pool.GetCurrentTick()
+			// Note: it already validated to be correct in setupPoolAndPositionsCommon(...)
+			liquidityAllPositions = pool.GetLiquidity()
+		)
+
+		// Compute the tick to swap to relative to the current tick depending on test case configuration.
+		tickToSwapTo := originalCurrentTick + tc.swapTicksAway
+		// Compute the expected tick after the first swap relative to the current tick depending on test case configuration.
+		expectedTickAfterFirstSwap := originalCurrentTick + tc.expectedTickAwayAfterFirstSwap
+
+		// If expected tick after the first swap is greater than or equal to the upper tick of the narrow range position
+		// then the first swap will cross the upper tick of the narrow range position.
+		// N.B.: equals matters since our "active bucket" definition is inclusive of the lower tick and exclusive of the upper tick.
+		// One for zero swap swaps to the right.
+		doesFirstSwapCrossUpperTickOne := expectedTickAfterFirstSwap >= nr1Position.upperTick
+
+		var (
+			expectedLiquidityAfterFirstAndSecondSwap sdk.Dec
+			expectedNextTickAfterFirstSwapZFOLeft    int64
+			expectedNextTickAfterFirstSwapOFZRight   int64
+		)
+
+		// If we expect swap to cross the tick, then we must be in the bucket
+		// between the upper tick of NR1 and lower tick of the NR2.
+		if doesFirstSwapCrossUpperTickOne {
+			expectedNextTickAfterFirstSwapZFOLeft = nr1Position.upperTick
+			expectedNextTickAfterFirstSwapOFZRight = nr2Position.upperTick
+			expectedLiquidityAfterFirstAndSecondSwap = liquidityAllPositions.Sub(nr1Position.liquidity)
+		} else {
+			// If we expect swap to NOT cross the tick, then we must be in the original bucket
+			// between the lower tick of NR1 and upper tick the NR1.
+			expectedLiquidityAfterFirstAndSecondSwap = liquidityAllPositions
+			expectedNextTickAfterFirstSwapZFOLeft = nr1Position.lowerTick
+			expectedNextTickAfterFirstSwapOFZRight = nr1Position.upperTick
+		}
+
+		// Compute the sqrt price corresponding to the tick we want to swap to.
+		sqrtPriceTarget := s.tickToSqrtPrice(tickToSwapTo)
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// 2. Estimate the amount of token 1 to swap to depending on test configuration.
+
+		// Refetch pool as the second position creation updated its state.
+		pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+		s.Require().NoError(err)
+
+		var (
+			amountOneIn    sdk.Dec = sdk.ZeroDec()
+			sqrtPriceStart sdk.Dec = pool.GetCurrentSqrtPrice()
+			liquidity              = pool.GetLiquidity()
+		)
+
+		if tickToSwapTo >= nr1Position.upperTick {
+			_, sqrtPriceUpperOne, err := math.TickToSqrtPrice(nr1Position.upperTick)
+			s.Require().NoError(err)
+
+			amountOneIn = math.CalcAmount1Delta(liquidity, sqrtPriceUpperOne, sqrtPriceStart, true)
+
+			sqrtPriceStart = sqrtPriceUpperOne
+
+			liquidity = liquidity.Sub(nr1Position.liquidity)
+		}
+
+		// This is the total amount necessary to cross the lower tick of narrow position.
+		// Note it is rounded up to ensure that the tick is crossed.
+		amountOneIn = math.CalcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceStart, true).Add(amountOneIn)
+
+		tokenOneIn := sdk.NewCoin(pool.GetToken1(), amountOneIn.Ceil().TruncateInt())
+
+		expectedValues := expectedAndComputedValues{
+			tokenIn: tokenOneIn,
+
+			expectedTickAfterFirstSwap:               expectedTickAfterFirstSwap,
+			expectedLiquidityAfterFirstAndSecondSwap: expectedLiquidityAfterFirstAndSecondSwap,
+			doesFirstSwapCrossTick:                   doesFirstSwapCrossUpperTickOne,
+			expectedNextTickAfterFirstSwapZFOLeft:    expectedNextTickAfterFirstSwapZFOLeft,
+			expectedNextTickAfterFirstSwapOFZRight:   expectedNextTickAfterFirstSwapOFZRight,
+		}
+
+		return expectedValues
 	}
 
 	// Position setup:
@@ -3201,244 +3193,269 @@ func (s *KeeperTestSuite) TestSwap_OneForZero_TickInitialization() {
 	//
 	//
 
-	// For every test case, the following invariants hold:
-	// * first swap MAY cross a tick depending on test case configuration
-	// * second swap MUST NOT cross a tick (only swap in-between ticks)
-	testCases := []testCase{
+	s.Run("zero for one", func() {
+		// For every test case, the following invariants hold:
+		// * first swap MAY cross a tick depending on test case configuration
+		// * second swap MUST NOT cross a tick (only swap in-between ticks)
+		testCases := []testCase{
 
-		// Group 1:
-		// Test setup:
-		// swap 1: just enough to cross upper tick of NR1
-		// swap 2: stop between NR1 upper and NR 2 upper
-		{
+			// Group 1:
+			// Test setup:
+			// swap 1: just enough to cross lower tick of NR1
+			// swap 2: stop between NR2 lower and lower NR1
+			{
 
-			name:         "group1 100 tick spacing, first swap cross tick, second swap in same direction",
-			tickSpacing:  100,
-			isZeroForOne: oneForZero,
+				name:        "group1 100 tick spacing, first swap crosses tick, second swap in same direction",
+				tickSpacing: 100,
 
-			// 2 tick spacings away from current tick.
-			swapTicksAway: 2 * 100,
+				// 100 ticks to the left of current or one tick spacing away
+				swapTicksAway: -2 * 100,
 
-			expectedTickAwayAfterFirstSwap: 2 * 100,
-		},
-		{
-			name:         "group1 1 tick spacing, first swap cross tick, second swap in same direction",
-			tickSpacing:  1,
-			isZeroForOne: oneForZero,
+				expectedTickAwayAfterFirstSwap: -2*100 - 1,
+			},
+			{
+				name:        "group1 1 tick spacing, first swap cross tick, second swap in same direction",
+				tickSpacing: 1,
 
-			// 2 ticks (tick spacings) away from current tick.
-			swapTicksAway: 2,
+				// 1 tick to the left of current or one tick spacing away
+				swapTicksAway: -2,
 
-			expectedTickAwayAfterFirstSwap: 2,
-		},
+				expectedTickAwayAfterFirstSwap: -2 - 1,
+			},
 
-		// Group 2:
-		// Test setup:
-		// swap 1: stop right before upper tick of NR1
-		// swap 2: stop right before upper tick of NR1
-		{
-			name:        "group2 100 tick spacing, first swap does not cross tick, second swap in same direction",
-			tickSpacing: 100,
+			// Group 2:
+			// Test setup:
+			// swap 1: stop right before lower tick of NR1
+			// swap 2: stop right before lower tick of NR1
+			{
+				name:        "group2 100 tick spacing, first swap does not cross tick, second swap in same direction",
+				tickSpacing: 100,
 
-			// one tick spacing to the left + 1 tick from current
-			swapTicksAway: 2*100 - 1,
+				// one tick spacing to the left + 1 tick from current
+				swapTicksAway: -2*100 + 1,
 
-			// Note: it actually ends up getting one tick further away than
-			// swapTicksAway due to rounding up the amount in CalcAmount1Delta calculation.
-			//
-			// TODO: could it be due to tick rounding at the of the swap?
-			expectedTickAwayAfterFirstSwap: 2*100 - 1,
-		},
-		{
-			name:        "group2 1 tick spacing, first swap does not cross tick, second swap in same direction",
-			tickSpacing: 1,
+				// Note: it actually ends up getting one tick further away than
+				// swapTicksAway due to rounding up the amount in CalcAmount0Delta calculation.
+				//
+				// TODO: could it be due to tick rounding at the of the swap?
+				expectedTickAwayAfterFirstSwap: -2*100 + 1,
+			},
+			{
+				name:        "group2 1 tick spacing, first swap does not cross tick, second swap in same direction",
+				tickSpacing: 1,
 
-			// one tick (and tick spacing) to the right from current
-			swapTicksAway: 1,
+				// one tick spacing to the left + 1 tick from current
+				swapTicksAway: -1,
 
-			expectedTickAwayAfterFirstSwap: 1,
-		},
+				expectedTickAwayAfterFirstSwap: -1,
+			},
 
-		// Group 3:
-		// Test setup:
-		// swap 1: stop right after lower tick of NR1
-		// swap 2: stop right before lower tick of NR1
-		{
-			name:        "group3 100 tick spacing, first swap crosses tick, second swap in same direction",
-			tickSpacing: 100,
+			// Group 3:
+			// Test setup:
+			// swap 1: stop right after lower tick of NR1
+			// swap 2: stop right before lower tick of NR1
+			{
+				name:        "group3 100 tick spacing, first swap does not cross tick, second swap in same direction",
+				tickSpacing: 100,
 
-			// one tick spacing to the left + 1 tick from current
-			swapTicksAway: 3 * 100,
+				// one tick spacing to the left + 1 tick from current
+				swapTicksAway: -3 * 100,
 
-			// Note: it actually ends up getting one tick further away than
-			// swapTicksAway due to rounding up the amount in CalcAmount0Delta calculation.
-			//
-			// TODO: could it be due to tick rounding at the of the swap?
-			expectedTickAwayAfterFirstSwap: 3 * 100,
-		},
-		{
-			name:        "group3 1 tick spacing, first swap crosses tick, second swap in same direction",
-			tickSpacing: 100,
+				// Note: it actually ends up getting one tick further away than
+				// swapTicksAway due to rounding up the amount in CalcAmount0Delta calculation.
+				//
+				// TODO: could it be due to tick rounding at the of the swap?
+				expectedTickAwayAfterFirstSwap: -3 * 100,
+			},
+			{
+				name:        "group3 100 tick spacing, first swap does not cross tick, second swap in same direction",
+				tickSpacing: 100,
 
-			// 3 ticks (tick spacings) to the right from current
-			swapTicksAway: 3,
+				// one tick spacing to the left + 1 tick from current
+				swapTicksAway: -3,
 
-			expectedTickAwayAfterFirstSwap: 3,
-		},
-	}
+				// Note: it actually ends up getting one tick further away than
+				// swapTicksAway due to rounding up the amount in CalcAmount0Delta calculation.
+				//
+				// TODO: could it be due to tick rounding at the of the swap?
+				expectedTickAwayAfterFirstSwap: -3,
+			},
+		}
 
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
+		for _, tc := range testCases {
+			tc := tc
+			s.Run(tc.name, func() {
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// 1. Prepare pool and positions for test
 
-			////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			// 1. Prepare pool and positions for test
+				poolId, nr1Position, nr2Position := setupPoolAndPositionsCommon(tc.tickSpacing)
 
-			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, sdk.ZeroDec())
-			poolId := pool.GetId()
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// 2. Estimate the amount of tokenIn to swap in to depending on test configuration.
+				// Also, estimated the expected values depending on test configuration.
+				expectedAndComputedValues := computeValuesForTestZeroForOne(poolId, tc, nr1Position, nr2Position)
 
-			// Create a full range position
-			s.FundAcc(s.TestAccs[0], DefaultCoins)
-			_, _, _, liquidityFullRange, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, poolId, s.TestAccs[0], DefaultCoins)
-			s.Require().NoError(err)
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// 3. Run the first swap and validate results.
 
-			// Refetch pool as the first position updated its state.
-			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
+				// Perform the swap that should cross the next NR1 tick in the direction of the swap.
+				s.swapZeroForOneLeft(poolId, expectedAndComputedValues.tokenIn)
 
-			originalCurrentTick := pool.GetCurrentTick()
+				// Perform validations after the first swap.
+				validateAfterFirstSwapCommon(
+					poolId,
+					expectedAndComputedValues,
+					nr1Position,
+					nr2Position)
 
-			// Create narrow range position 2 tick spacings away the current tick
-			narrowRangeOnePosition := s.CreatePositionTickSpacingsFromCurrentTick(poolId, 2)
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// 4. Run the second swap and validate results.
 
-			// Create narrow range position 5 tick spacings away from the current.
-			narrowRangeTwoPosition := s.CreatePositionTickSpacingsFromCurrentTick(poolId, 5)
+				// If we swap a small amount in the same direction again, we do not expect
+				// any tick to be crossed again.
+				smallAmount := sdk.NewCoin(expectedAndComputedValues.tokenIn.Denom, sdk.NewInt(10))
+				s.swapZeroForOneLeft(poolId, smallAmount)
 
-			// As a sanity check confirm that current liquidity corresponds
-			// to the sum of liquidities of all positions.
-			liquidityAllPositions := liquidityFullRange.Add(narrowRangeOnePosition.liquidity.Add(narrowRangeTwoPosition.liquidity))
-			s.asserPoolLiquidityEquals(poolId, liquidityAllPositions)
+				// Perform validation after the second swap.
+				validateAfterSecondSwapCommon(
+					poolId,
+					expectedAndComputedValues,
+					nr1Position,
+					nr2Position,
+				)
+			})
+		}
+	})
 
-			// Compute the tick to swap to relative to the current tick depending on test case configuration.
-			tickToSwapTo := originalCurrentTick + tc.swapTicksAway
-			// Compute the expected tick after the first swap relative to the current tick depending on test case configuration.
-			expectedTickAfterFirstSwap := originalCurrentTick + tc.expectedTickAwayAfterFirstSwap
+	s.Run("one for zero", func() {
+		// For every test case, the following invariants hold:
+		// * first swap MAY cross a tick depending on test case configuration
+		// * second swap MUST NOT cross a tick (only swap in-between ticks)
+		testCases := []testCase{
 
-			// If expected tick after the first swap is greater than or equal to the upper tick of the narrow range position
-			// then the first swap will cross the upper tick of the narrow range position.
-			// N.B.: equals matters since our "active bucket" definition is inclusive of the lower tick and exclusive of the upper tick.
-			// One for zero swap swaps to the right.
-			doesFirstSwapCrossUpperTickOne := expectedTickAfterFirstSwap >= narrowRangeOnePosition.upperTick
+			// Group 1:
+			// Test setup:
+			// swap 1: just enough to cross upper tick of NR1
+			// swap 2: stop between NR1 upper and NR 2 upper
+			{
 
-			var (
-				expectedLiquidityAfterFirstAndSecondSwap sdk.Dec
-				expectedNextTickAfterFirstSwapZFOLeft    int64
-				expectedNextTickAfterFirstSwapOFZRight   int64
-			)
+				name:         "group1 100 tick spacing, first swap cross tick, second swap in same direction",
+				tickSpacing:  100,
+				isZeroForOne: oneForZero,
 
-			// If we expect swap to cross the tick, then we must be in the bucket
-			// between the upper tick of NR1 and lower tick of the NR2.
-			if doesFirstSwapCrossUpperTickOne {
-				expectedNextTickAfterFirstSwapZFOLeft = narrowRangeOnePosition.upperTick
-				expectedNextTickAfterFirstSwapOFZRight = narrowRangeTwoPosition.upperTick
-				expectedLiquidityAfterFirstAndSecondSwap = liquidityAllPositions.Sub(narrowRangeOnePosition.liquidity)
-			} else {
-				// If we expect swap to NOT cross the tick, then we must be in the original bucket
-				// between the lower tick of NR1 and upper tick the NR1.
-				expectedLiquidityAfterFirstAndSecondSwap = liquidityAllPositions
-				expectedNextTickAfterFirstSwapZFOLeft = narrowRangeOnePosition.lowerTick
-				expectedNextTickAfterFirstSwapOFZRight = narrowRangeOnePosition.upperTick
-			}
+				// 2 tick spacings away from current tick.
+				swapTicksAway: 2 * 100,
 
-			// Compute the sqrt price corresponding to the tick we want to swap to.
-			sqrtPriceTarget := s.tickToSqrtPrice(tickToSwapTo)
+				expectedTickAwayAfterFirstSwap: 2 * 100,
+			},
+			{
+				name:         "group1 1 tick spacing, first swap cross tick, second swap in same direction",
+				tickSpacing:  1,
+				isZeroForOne: oneForZero,
 
-			// Sanity check that that NR1 is in range prior to swap.
-			s.asserPositionInRange(poolId, narrowRangeOnePosition.lowerTick, narrowRangeOnePosition.upperTick)
+				// 2 ticks (tick spacings) away from current tick.
+				swapTicksAway: 2,
 
-			// Refetch pool as the second position creation updated its state.
-			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
-			s.Require().NoError(err)
+				expectedTickAwayAfterFirstSwap: 2,
+			},
 
-			////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			// 2. Estimate the amount of token 1 to swap to depending on test configuration.
-			var (
-				amountOneIn    sdk.Dec = sdk.ZeroDec()
-				sqrtPriceStart sdk.Dec = pool.GetCurrentSqrtPrice()
-				liquidity              = pool.GetLiquidity()
-			)
+			// Group 2:
+			// Test setup:
+			// swap 1: stop right before upper tick of NR1
+			// swap 2: stop right before upper tick of NR1
+			{
+				name:        "group2 100 tick spacing, first swap does not cross tick, second swap in same direction",
+				tickSpacing: 100,
 
-			if tickToSwapTo >= narrowRangeOnePosition.upperTick {
-				_, sqrtPriceUpperOne, err := math.TickToSqrtPrice(narrowRangeOnePosition.upperTick)
-				s.Require().NoError(err)
+				// one tick spacing to the left + 1 tick from current
+				swapTicksAway: 2*100 - 1,
 
-				amountOneIn = math.CalcAmount1Delta(liquidity, sqrtPriceUpperOne, sqrtPriceStart, true)
+				// Note: it actually ends up getting one tick further away than
+				// swapTicksAway due to rounding up the amount in CalcAmount1Delta calculation.
+				//
+				// TODO: could it be due to tick rounding at the of the swap?
+				expectedTickAwayAfterFirstSwap: 2*100 - 1,
+			},
+			{
+				name:        "group2 1 tick spacing, first swap does not cross tick, second swap in same direction",
+				tickSpacing: 1,
 
-				sqrtPriceStart = sqrtPriceUpperOne
+				// one tick (and tick spacing) to the right from current
+				swapTicksAway: 1,
 
-				liquidity = liquidity.Sub(narrowRangeOnePosition.liquidity)
-			}
+				expectedTickAwayAfterFirstSwap: 1,
+			},
 
-			// This is the total amount necessary to cross the lower tick of narrow position.
-			// Note it is rounded up to ensure that the tick is crossed.
-			amountOneIn = math.CalcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceStart, true).Add(amountOneIn)
+			// Group 3:
+			// Test setup:
+			// swap 1: stop right after lower tick of NR1
+			// swap 2: stop right before lower tick of NR1
+			{
+				name:        "group3 100 tick spacing, first swap crosses tick, second swap in same direction",
+				tickSpacing: 100,
 
-			tokenOneIn := sdk.NewCoin(pool.GetToken1(), amountOneIn.Ceil().TruncateInt())
+				// one tick spacing to the left + 1 tick from current
+				swapTicksAway: 3 * 100,
 
-			////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			// 3. Run the first swap and validate results.
+				// Note: it actually ends up getting one tick further away than
+				// swapTicksAway due to rounding up the amount in CalcAmount0Delta calculation.
+				//
+				// TODO: could it be due to tick rounding at the of the swap?
+				expectedTickAwayAfterFirstSwap: 3 * 100,
+			},
+			{
+				name:        "group3 1 tick spacing, first swap crosses tick, second swap in same direction",
+				tickSpacing: 100,
 
-			// Perform the swap that should cross the lower tick of the narrow range position.
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(tokenOneIn))
-			_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, tokenOneIn, pool.GetToken0(), sdk.ZeroInt(), sdk.ZeroDec())
+				// 3 ticks (tick spacings) to the right from current
+				swapTicksAway: 3,
 
-			if tc.expectedErrorAfterFistSwap {
-				s.Require().Error(err)
-				s.Require().Equal(sdk.ZeroInt(), tokenOneIn.Amount)
-				return
-			}
+				expectedTickAwayAfterFirstSwap: 3,
+			},
+		}
 
-			s.Require().NoError(err)
+		for _, tc := range testCases {
+			tc := tc
+			s.Run(tc.name, func() {
 
-			// Assert that pool tick and liquidity correspond to the expected values.
-			s.asserPoolTickEquals(poolId, expectedTickAfterFirstSwap)
-			s.asserPoolLiquidityEquals(poolId, expectedLiquidityAfterFirstAndSecondSwap)
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// 1. Prepare pool and positions for test
 
-			// Check position ranges
+				poolId, nr1Position, nr2Position := setupPoolAndPositionsCommon(tc.tickSpacing)
 
-			// First position is out if range if doesFirstSwapCrossUpperTickOne is true. Otherwise, it is in range.
-			s.assertPositionRangeConditional(poolId, doesFirstSwapCrossUpperTickOne, narrowRangeOnePosition.lowerTick, narrowRangeOnePosition.upperTick)
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// 2. Estimate the amount of token 1 to swap to depending on test configuration.
+				expectedAndComputedValues := computeValuesForTestOneForZero(poolId, tc, nr1Position, nr2Position)
 
-			// Second position is always in range by test consttruction.
-			s.asserPositionInRange(poolId, narrowRangeTwoPosition.lowerTick, narrowRangeTwoPosition.upperTick)
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// 3. Run the first swap and validate results.
 
-			// Confirm that the next tick to be returned is correct for both zero for one and one for zero directions.
+				// Perform the swap that should cross the next NR1 tick in the direction of the swap.
+				s.swapOneForZeroRight(poolId, expectedAndComputedValues.tokenIn)
 
-			// Validate iterator in the zero for one direction.
-			s.validateIteratorLeftZeroForOne(poolId, expectedNextTickAfterFirstSwapZFOLeft)
+				// Perform validations after the first swap.
+				validateAfterFirstSwapCommon(
+					poolId,
+					expectedAndComputedValues,
+					nr1Position,
+					nr2Position)
 
-			// Validate iterator in the one for zero direction.
-			s.validateIteratorRightOneForZero(poolId, expectedNextTickAfterFirstSwapOFZRight)
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// 4. Run the second swap and validate results.
 
-			////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			// 4. Run the second swap and validate results.
+				// If we swap a small amount in the same direction again, we do not expect
+				// any tick to be crossed again.
+				smallAmount := sdk.NewCoin(expectedAndComputedValues.tokenIn.Denom, sdk.NewInt(10000))
+				s.swapOneForZeroRight(poolId, smallAmount)
 
-			// Therefore, if we swap a small amount in the same direction again, we do not expect
-			// the lowerTickOne to be crossed again.
-			smallAmount := sdk.NewCoin(pool.GetToken1(), sdk.NewInt(10000))
-			s.swapOneForZeroRight(poolId, smallAmount)
-
-			// Liquidity remains the same, confirming that we did not cross the same tick twice.
-			// Otherwise, if we were to cross it twice, the liquidity would be zero.
-			s.asserPoolLiquidityEquals(poolId, expectedLiquidityAfterFirstAndSecondSwap)
-
-			// Check position ranges
-
-			// First position is out if range if doesFirstSwapCrossUpperTickOne is true. Otherwise, it is in range.
-			s.assertPositionRangeConditional(poolId, doesFirstSwapCrossUpperTickOne, narrowRangeOnePosition.lowerTick, narrowRangeOnePosition.upperTick)
-
-			// Second position is always in range by test construction.
-			s.asserPositionInRange(poolId, narrowRangeTwoPosition.lowerTick, narrowRangeTwoPosition.upperTick)
-		})
-	}
+				// Perform validation after the second swap.
+				validateAfterSecondSwapCommon(
+					poolId,
+					expectedAndComputedValues,
+					nr1Position,
+					nr2Position,
+				)
+			})
+		}
+	})
 }
