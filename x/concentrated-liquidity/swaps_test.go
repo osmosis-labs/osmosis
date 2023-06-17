@@ -3232,12 +3232,12 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 				tickSpacing: tickSpacing100,
 
 				// 200 ticks to the left of current or 2 tick spacings away
-				swapTicksAway: -nr1TickSpacingsAway * 100,
+				swapTicksAway: -nr1TickSpacingsAway * tickSpacing100,
 				// Note, we expect the system to kick as to the left by 1 tick since we cross the NR1 lower tick.
-				expectedTickAwayAfterFirstSwap: -nr1TickSpacingsAway*100 - 1,
+				expectedTickAwayAfterFirstSwap: -nr1TickSpacingsAway*tickSpacing100 - 1,
 			},
 			"group1 1 tick spacing, first swap cross tick, second swap in same direction": {
-				tickSpacing: 1,
+				tickSpacing: tickSpacingOne,
 
 				// 2 ticks to the left of current or 2 tick spacings away
 				swapTicksAway: -nr1TickSpacingsAway,
@@ -3350,20 +3350,20 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 			// swap 1: just enough to cross upper tick of NR1
 			// swap 2: stop between NR1 upper and NR 2 upper
 			"group1 100 tick spacing, first swap cross tick, second swap in same direction": {
-				tickSpacing: 100,
+				tickSpacing: tickSpacing100,
 
 				// 2 tick spacings away from current tick.
-				swapTicksAway: 2 * 100,
+				swapTicksAway: nr1TickSpacingsAway * tickSpacing100,
 
-				expectedTickAwayAfterFirstSwap: 2 * 100,
+				expectedTickAwayAfterFirstSwap: nr1TickSpacingsAway * tickSpacing100,
 			},
 			"group1 1 tick spacing, first swap cross tick, second swap in same direction": {
-				tickSpacing: 1,
+				tickSpacing: tickSpacingOne,
 
 				// 2 ticks (tick spacings) away from current tick.
-				swapTicksAway: 2,
+				swapTicksAway: nr1TickSpacingsAway,
 
-				expectedTickAwayAfterFirstSwap: 2,
+				expectedTickAwayAfterFirstSwap: nr1TickSpacingsAway,
 			},
 
 			// Group 2:
@@ -3371,24 +3371,24 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 			// swap 1: stop right before upper tick of NR1
 			// swap 2: stop right before upper tick of NR1
 			"group2 100 tick spacing, first swap does not cross tick, second swap in same direction": {
-				tickSpacing: 100,
+				tickSpacing: tickSpacing100,
 
 				// one tick spacing to the left + 1 tick from current
-				swapTicksAway: 2*100 - 1,
+				swapTicksAway: nr1TickSpacingsAway*tickSpacing100 - 1,
 
 				// Note: it actually ends up getting one tick further away than
 				// swapTicksAway due to rounding up the amount in CalcAmount1Delta calculation.
 				//
 				// TODO: could it be due to tick rounding at the of the swap?
-				expectedTickAwayAfterFirstSwap: 2*100 - 1,
+				expectedTickAwayAfterFirstSwap: nr1TickSpacingsAway*tickSpacing100 - 1,
 			},
 			"group2 1 tick spacing, first swap does not cross tick, second swap in same direction": {
-				tickSpacing: 1,
+				tickSpacing: tickSpacingOne,
 
 				// one tick (and tick spacing) to the right from current
-				swapTicksAway: 1,
+				swapTicksAway: tickSpacingOne,
 
-				expectedTickAwayAfterFirstSwap: 1,
+				expectedTickAwayAfterFirstSwap: tickSpacingOne,
 			},
 
 			// Group 3:
@@ -3396,24 +3396,24 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 			// swap 1: stop right after lower tick of NR1
 			// swap 2: stop right before lower tick of NR1
 			"group3 100 tick spacing, first swap crosses tick, second swap in same direction": {
-				tickSpacing: 100,
+				tickSpacing: tickSpacing100,
 
 				// one tick spacing to the left + 1 tick from current
-				swapTicksAway: 3 * 100,
+				swapTicksAway: (nr1TickSpacingsAway + 1) * tickSpacing100,
 
 				// Note: it actually ends up getting one tick further away than
 				// swapTicksAway due to rounding up the amount in CalcAmount0Delta calculation.
 				//
 				// TODO: could it be due to tick rounding at the of the swap?
-				expectedTickAwayAfterFirstSwap: 3 * 100,
+				expectedTickAwayAfterFirstSwap: (nr1TickSpacingsAway + 1) * tickSpacing100,
 			},
 			"group3 1 tick spacing, first swap crosses tick, second swap in same direction": {
-				tickSpacing: 100,
+				tickSpacing: tickSpacingOne,
 
 				// 3 ticks (tick spacings) to the right from current
-				swapTicksAway: 3,
+				swapTicksAway: nr1TickSpacingsAway + 1,
 
-				expectedTickAwayAfterFirstSwap: 3,
+				expectedTickAwayAfterFirstSwap: nr1TickSpacingsAway + 1,
 			},
 		}
 
