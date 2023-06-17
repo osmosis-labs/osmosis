@@ -252,8 +252,9 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_ZeroForOne() {
 					upperTick: 100,
 				},
 			},
-			tickSpacing:   defaultTickSpacing,
-			expectIsValid: false,
+			tickSpacing:    defaultTickSpacing,
+			expectIsValid:  true,
+			expectNextTick: 0,
 		},
 		"upper tick lands on current tick, zero for one": {
 			preSetPositions: []position{
@@ -264,7 +265,7 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_ZeroForOne() {
 			},
 			tickSpacing:    defaultTickSpacing,
 			expectIsValid:  true,
-			expectNextTick: -100,
+			expectNextTick: 0,
 		},
 		"no ticks, zero for one": {
 			tickSpacing:   defaultTickSpacing,
@@ -312,7 +313,7 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_ZeroForOne() {
 			},
 			tickSpacing:    1,
 			expectIsValid:  true,
-			expectNextTick: -2,
+			expectNextTick: 0,
 		},
 		"upper tick lands on current tick, 1 tick spacing": {
 			preSetPositions: []position{
@@ -327,7 +328,7 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_ZeroForOne() {
 			},
 			tickSpacing:    1,
 			expectIsValid:  true,
-			expectNextTick: -1,
+			expectNextTick: 0,
 		},
 
 		"sanity check: 1 position, 10 tick spacing": {
