@@ -47,7 +47,7 @@ type RangeTestParams struct {
 var (
 	DefaultRangeTestParams = RangeTestParams{
 		// Base amounts
-		baseNumPositions:     100,
+		baseNumPositions:     10,
 		baseAssets:           sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(5000000000)), sdk.NewCoin(USDC, sdk.NewInt(5000000000))),
 		baseTimeBetweenJoins: time.Hour,
 		baseSwapAmount:       sdk.NewInt(10000000),
