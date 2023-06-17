@@ -733,7 +733,7 @@ var (
 			secondPositionUpperPrice: DefaultUpperPrice,
 			// from math import *
 			// from decimal import *
-			// liq = Decimal("1517882343.751510418088349649") * 2
+			// liq = Decimal("1517882343.751510417627556287") * 2
 			// sqrt_cur = Decimal("5000").sqrt()
 			// token_out = Decimal("8398")
 			// sqrt_next = liq * sqrt_cur / (liq - token_out * sqrt_cur)
@@ -743,7 +743,7 @@ var (
 			expectedTokenOut:                    sdk.NewCoin("eth", sdk.NewInt(8398)),
 			expectedTokenIn:                     sdk.NewCoin("usdc", sdk.NewInt(41998216)),
 			expectedTick:                        31001900,
-			expectedSqrtPrice:                   sdk.MustNewDecFromStr("70.724512595179305566"),
+			expectedSqrtPrice:                   sdk.MustNewDecFromStr("70.724512595179305567"),
 			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 			expectedUpperTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 			// two positions with same liquidity entered
@@ -1196,8 +1196,8 @@ var (
 			// spread factor = token_in *  spread_factor / (1 - spread_factor)
 
 			// # Summary:
-			// token_in = ceil(token_in + spread factor)
-			// spread_rewards_growth = spread factor / liq
+			// token_in = ceil(token_in + spread_factor)
+			// spread_rewards_growth = spread_factor / liq
 			// print(sqrt_next)
 			// print(token_in)
 			// print(spread_rewards_growth)
@@ -1434,7 +1434,7 @@ var (
 			// from decimal import *
 			// # Range 1: From 5000 to 5002
 			// token_out = Decimal("1820545")
-			// liq_1 = Decimal("1517882343.751510418088349649")
+			// liq_1 = Decimal("1517882343.751510417627556287")
 			// sqrt_cur = Decimal("5000").sqrt()
 			// sqrt_next_1 = Decimal("5002").sqrt()
 			// spread_factor = Decimal("0.01")
@@ -1452,7 +1452,7 @@ var (
 			expectedTokenOut:                           sdk.NewCoin(ETH, sdk.NewInt(4291)),
 			expectedTokenIn:                            sdk.NewCoin(USDC, sdk.NewInt(21680760)),
 			expectedTick:                               31002000,
-			expectedSqrtPrice:                          sdk.MustNewDecFromStr("70.724818840347693039"),
+			expectedSqrtPrice:                          sdk.MustNewDecFromStr("70.724818840347693040"),
 			expectedLowerTickSpreadRewardGrowth:        DefaultSpreadRewardAccumCoins,
 			expectedUpperTickSpreadRewardGrowth:        DefaultSpreadRewardAccumCoins,
 			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000142835574082604"),
