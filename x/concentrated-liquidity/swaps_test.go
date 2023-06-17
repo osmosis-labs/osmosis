@@ -2930,14 +2930,23 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 //
 // This test helped to identify 2 high severity:
 //
-// BUG 1. Wrong tick initialization when performing second swap in zero for one (left) direction.
+// BUG 1. Wrong "current tick" update when swapping in zero for one (left) direction.
 //
-// The core of the bug: if we perform a swap and cross a tick, the subsequent swap in the same direction
+// The repro of the bug: if we perform a swap and cross a tick, the subsequent swap in the same direction
 // would cross the same tick again and mistakenly kick in liquidity, completely invalidating pool state.
-// The reason is that by having a zero for one tick initialization at currentTick + 1, we end up getting
-// currentTick as nextTick and cross it twice. Once during the first swap, and once during the second swap.
 //
-// This test is set up to reproduce the 2 subsequent swaps zero for one swaps in a row.
+// Initial guess was that we should not search inclusive of the current tick when initializing the next tick iterator
+// in zero for one direction. Otherwise, it would be possible to initialize nextTick to the already crossed currenTick.
+// and cross it twice. Once during the first swap, and once during the second swap.
+// However, when initializing the tick for the second swap, it is correct to search inclusive of the current
+// tick. To understand this, consider another case where we swap right (zfo) and cross tick X, then when we swap
+// left (ofz). In such a case, we must cross tick X in the opposite direction when going left.
+// Therefore, the realization concluded that we need to special case the "update of the current tick after tick crossing
+// when swapping in zero for one direction". In such a case, we should kick current tick 1 unit to the left (outside of
+// the current range before first swap). This way, during second swap, we do not cross the already crossed tick again.
+// While with the sequence of 2 swaps (zfo, ofz), we do cross the same tick twice as expected.
+//
+// This test is set up to reproduce all of the above.
 //
 // It does the first swap that stops exactly after crossing the NR1's lower tick.
 // Next, it continues with the second swap that we do not expect to cross any ticks
@@ -2951,6 +2960,10 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 // Prior to adding this test and implementing a fix, the system would have panicked with:
 // "negative coin amount: -7070961745605321174329" at the end of the second swap. This stems
 // from the invalid liquidity of zero that is incorrectly computed due to crossing the tick twice.
+//
+// Additionally, it sets up a case of swapping in one for zero direction to swap directly at the next initialzed
+// tick. After the swap completes, we manually validate that next tick iterators return the correct values
+// in both directions (left and right).
 //
 // BUG 2. Banker's rounding in sqrt price to tick conversion for zero for one swap makes current tick be off by 1,
 // leading to tick being crossed twice.
