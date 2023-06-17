@@ -96,7 +96,8 @@ and control over token transfers.
   * [#5363](https://github.com/osmosis-labs/osmosis/pull/5363) fix: twap record upgrade handler
   * [#5265](https://github.com/osmosis-labs/osmosis/pull/5265) fix: expect single synthetic lock per native lock ID 
   * [#4983](https://github.com/osmosis-labs/osmosis/pull/4983) implement gas consume on denom creation
-  * [#4830](https://github.com/osmosis-labs/osmosis/pull/4830) Scale gas costs by denoms in gauge
+  * [#4830](https://github.com/osmosis-labs/osmosis/pull/4830) Scale gas costs by denoms in gauge (AddToGaugeReward)
+  * [#5511](https://github.com/osmosis-labs/osmosis/pull/5511) Scale gas costs by denoms in gauge (CreateGauge)
   * [#4336](https://github.com/osmosis-labs/osmosis/pull/4336) feat: make epochs standalone
   * [#4801](https://github.com/osmosis-labs/osmosis/pull/4801) refactor: remove GetTotalShares, GetTotalLiquidity and GetExitFee from PoolI
   * [#4951](https://github.com/osmosis-labs/osmosis/pull/4951) feat: implement pool liquidity query in pool manager, deprecate the one in gamm
