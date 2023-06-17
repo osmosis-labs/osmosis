@@ -16,11 +16,12 @@ type SwapStrategy interface {
 	// upon comparing it to sqrt price limit.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.Dec
-	// ComputeSwapStepOutGivenIn calculates the next sqrt price, the amount of token in consumed, the amount out to return to the user, and total spread reward charge on token in.
+	// ComputeSwapWithinBucketOutGivenIn calculates the next sqrt price, the amount of token in consumed, the amount out to return to the user, and total spread reward charge on token in.
+	// This assumes swapping over a single bucket where the liqudiity stays constant until we cross the next initialized tick of the next bucket.
 	// Parameters:
 	//   * sqrtPriceCurrent is the current sqrt price.
 	//   * sqrtPriceTarget is the target sqrt price computed with GetSqrtTargetPrice(). It must be one of:
-	//       - Next tick sqrt price.
+	//       - Next initialized tick sqrt price.
 	//       - Sqrt price limit representing price impact protection.
 	//   * liquidity is the amount of liquidity between the sqrt price current and sqrt price target.
 	//   * amountRemainingIn is the amount of token in remaining to be swapped. This amount is fully consumed
@@ -32,12 +33,13 @@ type SwapStrategy interface {
 	//   * amountOutComputed is the amount of token out computed. It is the amount of token out to return to the user.
 	//   * spreadRewardChargeTotal is the total spread reward charge. The spread reward is charged on the amount of token in.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemainingIn sdk.Dec) (sqrtPriceNext, amountInConsumed, amountOutComputed, spreadRewardChargeTotal sdk.Dec)
-	// ComputeSwapStepInGivenOut calculates the next sqrt price, the amount of token out consumed, the amount in to charge to the user for requested out, and total spread reward charge on token in.
+	ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemainingIn sdk.Dec) (sqrtPriceNext, amountInConsumed, amountOutComputed, spreadRewardChargeTotal sdk.Dec)
+	// ComputeSwapWithinBucketInGivenOut calculates the next sqrt price, the amount of token out consumed, the amount in to charge to the user for requested out, and total spread reward charge on token in.
+	// This assumes swapping over a single bucket where the liqudiity stays constant until we cross the next initialized tick of the next bucket.
 	// Parameters:
 	//   * sqrtPriceCurrent is the current sqrt price.
 	//   * sqrtPriceTarget is the target sqrt price computed with GetSqrtTargetPrice(). It must be one of:
-	//       - Next tick sqrt price.
+	//       - Next initialized tick sqrt price.
 	//       - Sqrt price limit representing price impact protection.
 	//   * liquidity is the amount of liquidity between the sqrt price current and sqrt price target.
 	//   * amountRemainingOut is the amount of token out remaining to be swapped to estimate how much of token in is needed to be charged.
@@ -49,7 +51,7 @@ type SwapStrategy interface {
 	//   * amountInComputed is the amount of token in computed. It is the amount of token in to charge to the user for the desired amount out.
 	//   * spreadRewardChargeTotal is the total spread reward charge. The spread reward is charged on the amount of token in.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemainingOut sdk.Dec) (sqrtPriceNext, amountOutConsumed, amountInComputed, spreadRewardChargeTotal sdk.Dec)
+	ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemainingOut sdk.Dec) (sqrtPriceNext, amountOutConsumed, amountInComputed, spreadRewardChargeTotal sdk.Dec)
 	// InitializeNextTickIterator returns iterator that seeks to the next tick from the given tickIndex.
 	// If nex tick relative to tickINdex does not exist in the store, it will return an invalid iterator.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.

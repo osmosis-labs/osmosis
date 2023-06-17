@@ -119,7 +119,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 	for name, tc := range tests {
 		suite.Run(name, func() {
 			strategy := suite.setupNewZeroForOneSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
-			sqrtPriceNext, amountZeroIn, amountOneOut, spreadRewardChargeTotal := strategy.ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget, defaultLiquidity, tc.amountZeroInRemaining)
+			sqrtPriceNext, amountZeroIn, amountOneOut, spreadRewardChargeTotal := strategy.ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget, defaultLiquidity, tc.amountZeroInRemaining)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
 			suite.Require().Equal(tc.amountZeroInConsumed, amountZeroIn)
@@ -207,7 +207,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 	for name, tc := range tests {
 		suite.Run(name, func() {
 			strategy := suite.setupNewZeroForOneSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
-			sqrtPriceNext, amountOneOut, amountZeroIn, spreadRewardChargeTotal := strategy.ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, defaultLiquidity, tc.amountOneOutRemaining)
+			sqrtPriceNext, amountOneOut, amountZeroIn, spreadRewardChargeTotal := strategy.ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, defaultLiquidity, tc.amountOneOutRemaining)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
 			suite.Require().Equal(tc.amountOneOutConsumed, amountOneOut)
