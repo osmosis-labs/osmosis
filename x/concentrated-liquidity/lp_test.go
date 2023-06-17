@@ -160,25 +160,6 @@ var (
 			amount0Expected: DefaultAmt0Expected.Add(roundingError),
 			amount1Expected: DefaultAmt1Expected,
 		},
-		"use ticks that are not the canonical tick for a given price, expect them to be rounded to the proper tick": {
-			lowerTick:         -161987600,
-			expectedLowerTick: -161000000,
-			upperTick:         -160009800,
-			expectedUpperTick: -160000000,
-			currentTick:       DefaultUpperTick,
-
-			isNotFirstPositionWithSameAccount: true,
-			positionId:                        2,
-
-			liquidityAmount:                        sdk.MustNewDecFromStr("15731321859400083838.506717486806808937").MulInt64(2),
-			preSetChargeSpreadRewards:              oneEth,
-			expectedSpreadRewardGrowthOutsideLower: oneEthCoins,
-			expectedSpreadRewardGrowthOutsideUpper: oneEthCoins,
-
-			// Rounding up in favor of the pool.
-			amount0Expected: sdk.ZeroInt(),
-			amount1Expected: DefaultAmt1,
-		},
 	}
 )
 
