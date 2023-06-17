@@ -1586,7 +1586,7 @@ all incentive records for a given pool ID and min uptime index by performing pre
 
 There are precision issues that we must be considerate of in our design.
 
-Consider the balancer pool between `uarb` and `uosmo`:
+Consider the balancer pool between `arb` base unit and `uosmo`:
 
 ```bash
 osmosisd q gamm pool 1011
@@ -1615,16 +1615,15 @@ pool:
 ```
 
 Let's say we want to migrate this into a CL pool where `uosmo` is the quote
-asset and `uarb` is the base asset.
+asset and `arb` base unit is the base asset.
 
 Note that quote asset is denom1 and base asset is denom0.
 We want quote asset to be `uosmo` so that limit orders on ticks
 have tick spacing in terms of `uosmo` as the quote.
 
-
 Note:
 - OSMO has precision of 6. 1 OSMO = 10**6 `uosmo`
-- ARB has precision of 18. 1 ARB = 10**18 `uarb`
+- ARB has precision of 18. 1 ARB = 10**18 `arb` base unit
 
 Therefore, the true price of the pool is:
 ```python
