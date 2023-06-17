@@ -523,7 +523,7 @@ func (s *KeeperTestSuite) validateIteratorRightOneForZero(poolId uint64, expecte
 	s.Require().Equal(expectedTick, nextTick)
 }
 
-func (s *KeeperTestSuite) asserPositiontInRange(poolId uint64, lowerTick int64, upperTick int64) {
+func (s *KeeperTestSuite) asserPositionInRange(poolId uint64, lowerTick int64, upperTick int64) {
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
@@ -543,7 +543,7 @@ func (s *KeeperTestSuite) assertPositionRangeConditional(poolId uint64, isOutOfR
 	if isOutOfRangeExpected {
 		s.assertPositionOutOfRange(poolId, lowerTick, upperTick)
 	} else {
-		s.asserPositiontInRange(poolId, lowerTick, upperTick)
+		s.asserPositionInRange(poolId, lowerTick, upperTick)
 	}
 }
 
@@ -570,6 +570,13 @@ func (s *KeeperTestSuite) asserPoolLiquidityEquals(poolId uint64, expectedLiquid
 	s.Require().NoError(err)
 
 	s.Require().Equal(expectedLiquidity, pool.GetLiquidity())
+}
+
+func (s *KeeperTestSuite) asserPoolTickEquals(poolId uint64, expectedTick int64) {
+	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	s.Require().Equal(expectedTick, pool.GetCurrentTick())
 }
 
 // runMultiplePositionRanges runs various test constructions and invariants on the given position ranges.
