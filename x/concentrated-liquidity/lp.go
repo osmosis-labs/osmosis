@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	types "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
@@ -467,7 +468,7 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 
 	// Calculate the spot price and sqrt price from the amount provided
 	initialSpotPrice := amount1Desired.ToDec().Quo(amount0Desired.ToDec())
-	initialCurSqrtPrice, err := initialSpotPrice.ApproxSqrt()
+	initialCurSqrtPrice, err := osmomath.MonotonicSqrt(initialSpotPrice)
 	if err != nil {
 		return err
 	}

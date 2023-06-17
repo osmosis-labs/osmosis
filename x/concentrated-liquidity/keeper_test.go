@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	concentrated_liquidity "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
@@ -31,7 +32,7 @@ var (
 	DefaultUpperTick                                     = int64(31500000)
 	DefaultCurrPrice                                     = sdk.NewDec(5000)
 	DefaultCurrTick                                int64 = 31000000
-	DefaultCurrSqrtPrice, _                              = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
+	DefaultCurrSqrtPrice, _                              = osmomath.MonotonicSqrt(DefaultCurrPrice) // 70.710678118654752440
 	DefaultZeroSpreadFactor                              = sdk.ZeroDec()
 	DefaultSpreadRewardAccumCoins                        = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
 	DefaultPositionId                                    = uint64(1)

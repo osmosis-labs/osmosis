@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
@@ -191,7 +192,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 				return
 			}
 			suite.Require().NoError(err)
-			expectedSqrtPrice, err := tc.expectedPrice.ApproxSqrt()
+			expectedSqrtPrice, err := osmomath.MonotonicSqrt(tc.expectedPrice)
 			suite.Require().NoError(err)
 
 			suite.Require().Equal(tc.expectedPrice.String(), price.String())
@@ -267,9 +268,9 @@ func (suite *ConcentratedMathTestSuite) TestTicksToSqrtPrice() {
 			suite.Require().NoError(err)
 
 			// convert test case's prices to sqrt price
-			expectedLowerSqrtPrice, err := tc.expectedLowerPrice.ApproxSqrt()
+			expectedLowerSqrtPrice, err := osmomath.MonotonicSqrt(tc.expectedLowerPrice)
 			suite.Require().NoError(err)
-			expectedUpperSqrtPrice, err := tc.expectedUpperPrice.ApproxSqrt()
+			expectedUpperSqrtPrice, err := osmomath.MonotonicSqrt(tc.expectedUpperPrice)
 			suite.Require().NoError(err)
 
 			suite.Require().Equal(tc.expectedLowerPrice.String(), priceLower.String())

@@ -3,6 +3,7 @@ package swapstrategy_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
@@ -56,7 +57,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 		amountZeroTargetNotReached = sdk.MustNewDecFromStr("13369.979999999989129753")
 
 		sqrt = func(x int64) sdk.Dec {
-			sqrt, _ := sdk.NewDec(x).ApproxSqrt()
+			sqrt, _ := osmomath.MonotonicSqrt(sdk.NewDec(x))
 			return sqrt
 		}
 	)
