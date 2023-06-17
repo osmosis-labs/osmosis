@@ -149,7 +149,12 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, 
 }
 
 // InitializeNextTickIterator returns iterator that seeks to the next tick from the given tickIndex.
-// If nex tick relative to tickINdex does not exist in the store, it will return an invalid iterator.
+// In one for zero direction, the search is EXCLUSIVE of the current tick index.
+// If next tick relative to currentTickIndex is not initialized (does not exist in the store),
+// it will return an invalid iterator.
+// This is a requirement to satisfy our "active range" invariant of "lower tick <= current tick < upper tick".
+// If we swap twice and the first swap crosses tick X, we do not want the second swap to cross tick X again
+// so we search from X + 1.
 //
 // oneForZeroStrategy assumes moving to the right of the current square root price.
 // As a result, we use forward iterator to seek to the next tick index relative to the currentTickIndex.

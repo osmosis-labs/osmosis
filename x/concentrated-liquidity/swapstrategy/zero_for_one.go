@@ -146,7 +146,7 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, 
 }
 
 // InitializeNextTickIterator returns iterator that searches for the next tick given currentTickIndex.
-// In zero for one direction, the search is inclusive of the current tick index.
+// In zero for one direction, the search is INCLUSIVE of the current tick index.
 // If next tick relative to currentTickIndex is not initialized (does not exist in the store),
 // it will return an invalid iterator.
 //
