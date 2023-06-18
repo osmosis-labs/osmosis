@@ -104,12 +104,12 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 			expectedPrice: types.MaxSpotPrice,
 		},
 		"Min tick and max k": {
-			tickIndex:     -162000000,
+			tickIndex:     types.MinTick,
 			expectedPrice: types.MinSpotPrice,
 		},
 		"error: tickIndex less than minimum": {
-			tickIndex:     -162000000 - 1,
-			expectedError: types.TickIndexMinimumError{MinTick: -162000000},
+			tickIndex:     types.MinTick - 1,
+			expectedError: types.TickIndexMinimumError{MinTick: types.MinTick},
 		},
 		"error: tickIndex greater than maximum": {
 			tickIndex:     342000000 + 1,
@@ -233,25 +233,25 @@ func (suite *ConcentratedMathTestSuite) TestTicksToSqrtPrice() {
 			expectedUpperPrice: sdk.MustNewDecFromStr("10733"),
 		},
 		"Max tick and min k": {
-			lowerTickIndex:     sdk.NewInt(-162000000),
-			upperTickIndex:     sdk.NewInt(342000000),
+			lowerTickIndex:     sdk.NewInt(types.MinTick),
+			upperTickIndex:     sdk.NewInt(types.MaxTick),
 			expectedUpperPrice: types.MaxSpotPrice,
 			expectedLowerPrice: types.MinSpotPrice,
 		},
 		"error: lowerTickIndex less than minimum": {
-			lowerTickIndex: sdk.NewInt(-162000000 - 1),
+			lowerTickIndex: sdk.NewInt(types.MinTick - 1),
 			upperTickIndex: sdk.NewInt(36073300),
-			expectedError:  types.TickIndexMinimumError{MinTick: -162000000},
+			expectedError:  types.TickIndexMinimumError{MinTick: types.MinTick},
 		},
 		"error: upperTickIndex greater than maximum": {
-			lowerTickIndex: sdk.NewInt(-162000000),
-			upperTickIndex: sdk.NewInt(342000000 + 1),
-			expectedError:  types.TickIndexMaximumError{MaxTick: 342000000},
+			lowerTickIndex: sdk.NewInt(types.MinTick),
+			upperTickIndex: sdk.NewInt(types.MaxTick + 1),
+			expectedError:  types.TickIndexMaximumError{MaxTick: types.MaxTick},
 		},
 		"error: provided lower tick and upper tick are same": {
-			lowerTickIndex: sdk.NewInt(-162000000),
-			upperTickIndex: sdk.NewInt(-162000000),
-			expectedError:  types.InvalidLowerUpperTickError{LowerTick: sdk.NewInt(-162000000).Int64(), UpperTick: sdk.NewInt(-162000000).Int64()},
+			lowerTickIndex: sdk.NewInt(types.MinTick),
+			upperTickIndex: sdk.NewInt(types.MinTick),
+			expectedError:  types.InvalidLowerUpperTickError{LowerTick: sdk.NewInt(types.MinTick).Int64(), UpperTick: sdk.NewInt(types.MinTick).Int64()},
 		},
 	}
 
@@ -424,9 +424,11 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTickRoundDown() {
 			tickExpected: types.MinTick,
 		},
 		"tick spacing 100, Spot price one tick above min, one tick above min -> MinTick": {
-			price:        types.MinSpotPrice.Add(sdk.SmallestDec()),
-			tickSpacing:  defaultTickSpacing,
-			tickExpected: closestTickAboveMinPriceDefaultTickSpacing.Int64(),
+			price:       types.MinSpotPrice.Add(sdk.SmallestDec()),
+			tickSpacing: defaultTickSpacing,
+			// Since the tick should always be the closest tick below (and `smallestDec` isn't sufficient
+			// to push us into the next tick), we expect MinTick to be returned here.
+			tickExpected: types.MinTick,
 		},
 		"tick spacing 100, Spot price one tick below max, one tick below max -> MaxTick - 1": {
 			price:        closestPriceBelowMaxPriceDefaultTickSpacing,
@@ -504,7 +506,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 		},
 		"min spot price": {
 			price:        types.MinSpotPrice,
-			tickExpected: -162000000,
+			tickExpected: types.MinTick,
 		},
 		"smallest + min price increment": {
 			price:        sdk.MustNewDecFromStr("0.000000000000000002"),

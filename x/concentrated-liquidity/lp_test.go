@@ -428,7 +428,9 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			setupConfig: baseCase,
 			sutConfigOverwrite: &lpTest{
 				// Note: subtracting one due to truncations in favor of the pool when withdrawing.
-				amount0Expected:  DefaultAmt0.Sub(sdk.OneInt()),
+				// amount0Expected = (liquidity * (sqrtPriceB - sqrtPriceA)) / (sqrtPriceB * sqrtPriceA)
+				amount0Expected: DefaultAmt0.Sub(sdk.OneInt()),
+				// amount1Expected = liq * (sqrtPriceB - sqrtPriceA)
 				amount1Expected:  DefaultAmt1.Sub(sdk.OneInt()),
 				liquidityAmount:  FullRangeLiquidityAmt,
 				underlyingLockId: 1,
@@ -819,8 +821,11 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 				// 1998976eth (amount withdrawn with rounded down amounts) + 998977(token amount in)
 				amount0Expected: sdk.NewInt(2997953),
 				// tokens Provided for token1 is 9999999999 (amount withdrawn) + 5000000000 = 14999999999usdc.
-				// we calcualte calc amount1 by using: https://www.wolframalpha.com/input?i=70.728769315114743567+*+212041526.154556192320661969
-				amount1Expected: sdk.NewInt(14997436189),
+				// We calcualte calc amount1 by using the following equation:
+				// liq * (sqrtPriceB - sqrtPriceA), where liq is equal to the original joined liq + added liq, sqrtPriceB is current sqrt price, and sqrtPriceA is min sqrt price.
+				// Note that these numbers were calculated using `GetLiquidityFromAmounts` and `TickToSqrtPrice` and thus assume correctness of those functions.
+				// https://www.wolframalpha.com/input?i=212041526.154556192317664016+*+%2870.728769315114743566+-+0.000001000000000000%29
+				amount1Expected: sdk.NewInt(14997435977),
 			},
 			timeElapsed:  defaultTimeElapsed,
 			amount0ToAdd: amount0PerfectRatio,
@@ -1031,7 +1036,6 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			// Create a position from the parameters in the test case.
 			positionId, _ := s.createPositionWithLockState(tc.createLockState, pool.GetId(), owner, lockCoins, tc.timeElapsed)
-
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(tc.timeElapsed))
 			preBalanceToken0 := s.App.BankKeeper.GetBalance(s.Ctx, owner, pool.GetToken0())
 
@@ -1056,6 +1060,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			}
 
 			// --- System under test ---
+
 			newPosId, newAmt0, newAmt1, err := concentratedLiquidityKeeper.AddToPosition(s.Ctx, sender, config.positionId, tc.amount0ToAdd, tc.amount1ToAdd, config.amount0Minimum, config.amount1Minimum)
 			// config.amount0Minimum
 			if config.expectedError != nil {
