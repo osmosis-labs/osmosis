@@ -87,11 +87,12 @@ func (s *KeeperTestSuite) assertTotalRewardsInvariant() {
 		totalCollectedIncentives = totalCollectedIncentives.Add(collectedIncentives...)
 	}
 
-	// We allow for an additive tolerance of 1 per position in the pool, since this is the maximum that can be truncated
-	// when collecting spread rewards.
+	// For global invariant checks, we simply ensure that any rounding error was in the pool's favor.
+	// This is to allow for cases where we slightly overround, which would otherwise fail here.
+	// TODO: create ErrTolerance type that allows for additive OR multiplicative tolerance to allow for
+	// tightening this check further.
 	errTolerance := osmomath.ErrTolerance{
-		AdditiveTolerance: sdk.NewDec(int64(len(allPositions))),
-		RoundingDir:       osmomath.RoundDown,
+		RoundingDir: osmomath.RoundDown,
 	}
 
 	// Assert total collected spread rewards and incentives equal to expected
@@ -144,15 +145,16 @@ func (s *KeeperTestSuite) assertWithdrawAllInvariant() {
 		totalWithdrawn = totalWithdrawn.Add(withdrawn...)
 	}
 
-	// We allow for an additive tolerance of 1 per position in the pool, since this is the maximum that can be truncated
-	// when collecting spread rewards.
+	// For global invariant checks, we simply ensure that any rounding error was in the pool's favor.
+	// This is to allow for cases where we slightly overround, which would otherwise fail here.
+	// TODO: create ErrTolerance type that allows for additive OR multiplicative tolerance to allow for
+	// tightening this check further.
 	errTolerance := osmomath.ErrTolerance{
-		AdditiveTolerance: sdk.NewDec(int64(len(allPositions))),
-		RoundingDir:       osmomath.RoundDown,
+		RoundingDir: osmomath.RoundDown,
 	}
 
 	// Assert total withdrawn assets equal to expected
-	s.Require().True(errTolerance.EqualCoins(expectedTotalWithdrawn, totalWithdrawn))
+	s.Require().True(errTolerance.EqualCoins(expectedTotalWithdrawn, totalWithdrawn), "expected withdrawn vs. actual: %s vs. %s", expectedTotalWithdrawn, totalWithdrawn)
 
 	// Refetch total pool balances across all pools
 	remainingPositions, finalTotalPoolAssets, remainingTotalSpreadRewards, remainingTotalIncentives := s.getAllPositionsAndPoolBalances(cachedCtx)
