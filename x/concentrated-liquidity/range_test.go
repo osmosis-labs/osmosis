@@ -168,6 +168,9 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 	s.Require().Equal(totalAssets, poolAssets.Add(poolSpreadRewards...))
 
 	fmt.Println("cumulative emitted incentives: ", cumulativeEmittedIncentives)
+	// Do a final checkpoint for incentives
+	cumulativeEmittedIncentives, lastIncentiveTrackerUpdate = s.trackEmittedIncentives(cumulativeEmittedIncentives, lastIncentiveTrackerUpdate)
+	// TODO: s.claimAndAssertTotalIncentives(cumulativeEmittedIncentives)
 }
 
 // numPositionSlice prepares a slice tracking the number of positions to create on each range, fuzzing the number at each step if applicable.
