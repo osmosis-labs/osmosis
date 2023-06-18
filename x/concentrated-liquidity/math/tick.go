@@ -250,10 +250,8 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
 	return calculatePriceToTickDec(price).RoundInt64()
 }
 
-// CalculatePriceToTick takes in a square root and returns the corresponding tick index.
+// CalculateSqrtPriceToTick takes in a square root and returns the corresponding tick index.
 // This function does not take into consideration tick spacing.
-// NOTE: This is really returning a "Bucket index". Bucket index `b` corresponds to
-// all sqrt prices in range [TickToSqrtPrice(b), TickToSqrtPrice(b+1)).
 func CalculateSqrtPriceToTick(sqrtPrice sdk.Dec) (tickIndex int64, err error) {
 	// SqrtPrice may have errors, so we take the tick obtained from the price
 	// and move it in a +/- 1 tick range based on the sqrt price those ticks would imply.
@@ -268,7 +266,11 @@ func CalculateSqrtPriceToTick(sqrtPrice sdk.Dec) (tickIndex int64, err error) {
 	// * sqrtPrice not in either.
 	// We handle boundary checks, by saying that if our candidate is the min tick,
 	// set the candidate to min tick + 1.
-	// If our candidate is the max tick, set the candidate to max tick - 2.
+	// If our candidate is at or above max tick - 1, set the candidate to max tick - 2.
+	// This is because to check tick t + 1, we need to go to t + 2, so to not go over
+	// max tick during these checks, we need to shift it down by 2.
+	// We check this at max tick - 1 instead of max tick, since we expect the output to
+	// have some error that can push us over the tick boundary.
 	outOfBounds := false
 	if truncatedTick <= types.MinTick {
 		truncatedTick = types.MinTick + 1
