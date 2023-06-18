@@ -1240,7 +1240,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			curPrice := sdk.OneDec()
 			// TODO: consider adding tests for GetTickLiquidityNetInDirection
 			// with tick spacing > 1, requiring price to tick conversion with rounding.
-			curTick, err := math.PriceToTick(curPrice)
+			curTick, err := s.PriceToTick(curPrice)
 			s.Require().NoError(err)
 			if test.currentPoolTick > 0 {
 				_, sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)

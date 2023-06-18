@@ -92,28 +92,6 @@ func TickToPrice(tickIndex int64) (price sdk.Dec, err error) {
 	return price, nil
 }
 
-// PriceToTick takes a price and returns the corresponding tick index assuming
-// tick spacing of 1.
-func PriceToTick(price sdk.Dec) (int64, error) {
-	if price.Equal(sdk.OneDec()) {
-		return 0, nil
-	}
-
-	if price.IsNegative() {
-		return 0, fmt.Errorf("price must be greater than zero")
-	}
-
-	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
-		return 0, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
-	}
-
-	// Determine the tick that corresponds to the price
-	// This does not take into account the tickSpacing
-	tickIndex := CalculatePriceToTick(price)
-
-	return tickIndex, nil
-}
-
 // RoundDownTickToSpacing rounds the tick index down to the nearest tick spacing if the tickIndex is in between authorized tick values
 // Note that this is Euclidean modulus.
 // The difference from default Go modulus is that Go default results
@@ -136,26 +114,6 @@ func RoundDownTickToSpacing(tickIndex int64, tickSpacing int64) (int64, error) {
 	// Should never get here.
 	if tickIndex > types.MaxTick || tickIndex < types.MinTick {
 		return 0, types.TickIndexNotWithinBoundariesError{ActualTick: tickIndex, MinTick: types.MinTick, MaxTick: types.MaxTick}
-	}
-
-	return tickIndex, nil
-}
-
-// PriceToTickRoundDown takes a price and returns the corresponding tick index.
-// If tickSpacing is provided, the tick index will be rounded down to the nearest multiple of tickSpacing.
-// NOTE: This should not be called in the state machine.
-// CONTRACT: tickSpacing must be smaller or equal to the max of 1 << 63 - 1.
-// This is not a concern because we have authorized tick spacings that are smaller than this max,
-// and we don't expect to ever require it to be this large.
-func PriceToTickRoundDownSpacing(price sdk.Dec, tickSpacing uint64) (int64, error) {
-	tickIndex, err := PriceToTick(price)
-	if err != nil {
-		return 0, err
-	}
-
-	tickIndex, err = RoundDownTickToSpacing(tickIndex, int64(tickSpacing))
-	if err != nil {
-		return 0, err
 	}
 
 	return tickIndex, nil
@@ -193,7 +151,7 @@ func powTenBigDec(exponent int64) osmomath.BigDec {
 	return bigNegPowersOfTen[-exponent]
 }
 
-func calculatePriceToTickDec(price sdk.Dec) (tickIndex sdk.Dec) {
+func CalculatePriceToTickDec(price sdk.Dec) (tickIndex sdk.Dec) {
 	if price.Equal(sdkOneDec) {
 		return sdk.ZeroDec()
 	}
@@ -236,27 +194,13 @@ func calculatePriceToTickDec(price sdk.Dec) (tickIndex sdk.Dec) {
 	return tickIndex
 }
 
-// CalculatePriceToTick takes in a price and returns the corresponding tick index.
-// This function does not take into consideration tick spacing.
-// NOTE: This should not be called in the state machine.
-// NOTE: This is really returning a "Bucket index". Bucket index `b` corresponds to
-// all prices in range [TickToSqrtPrice(b), TickToSqrtPrice(b+1)).
-// We make an erroneous assumption here, that bucket index `b` corresponds to
-// all prices in range [TickToPrice(b), TickToPrice(b+1)).
-// This currently makes this function unsuitable for the state machine.
-func CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
-	// TODO: Make truncate, since this defines buckets as
-	// [TickToPrice(b - .5), TickToPrice(b+.5))
-	return calculatePriceToTickDec(price).RoundInt64()
-}
-
 // CalculateSqrtPriceToTick takes in a square root and returns the corresponding tick index.
 // This function does not take into consideration tick spacing.
 func CalculateSqrtPriceToTick(sqrtPrice sdk.Dec) (tickIndex int64, err error) {
 	// SqrtPrice may have errors, so we take the tick obtained from the price
 	// and move it in a +/- 1 tick range based on the sqrt price those ticks would imply.
 	price := sqrtPrice.Mul(sqrtPrice)
-	tick := calculatePriceToTickDec(price)
+	tick := CalculatePriceToTickDec(price)
 	truncatedTick := tick.TruncateInt64()
 
 	// We have a candidate bucket index `t`. We discern here if:

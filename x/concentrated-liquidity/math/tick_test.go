@@ -376,10 +376,10 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 
 		suite.Run(name, func() {
 			// surpress error here, we only listen to errors from system under test.
-			tick, _ := math.PriceToTick(tc.price)
+			tick, _ := suite.PriceToTick(tc.price)
 
 			// With tick spacing of one, no rounding should occur.
-			tickRoundDown, err := math.PriceToTickRoundDownSpacing(tc.price, one)
+			tickRoundDown, err := suite.PriceToTickRoundDownSpacing(tc.price, one)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
@@ -453,7 +453,7 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTickRoundDown() {
 		tc := tc
 
 		suite.Run(name, func() {
-			tick, err := math.PriceToTickRoundDownSpacing(tc.price, tc.tickSpacing)
+			tick, err := suite.PriceToTickRoundDownSpacing(tc.price, tc.tickSpacing)
 
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.tickExpected, tick)
@@ -591,7 +591,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			tickSpacing := uint64(1)
 
 			// 1. Compute tick from price.
-			tickFromPrice, err := math.PriceToTickRoundDownSpacing(tc.price, tickSpacing)
+			tickFromPrice, err := suite.PriceToTickRoundDownSpacing(tc.price, tickSpacing)
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.tickExpected, tickFromPrice)
 
@@ -607,7 +607,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			suite.Require().Equal(expectedPrice, price)
 
 			// 3. Compute tick from inverse price (inverse tick)
-			inverseTickFromPrice, err := math.PriceToTickRoundDownSpacing(price, tickSpacing)
+			inverseTickFromPrice, err := suite.PriceToTickRoundDownSpacing(price, tickSpacing)
 			suite.Require().NoError(err)
 
 			// Make sure original tick and inverse tick match.
@@ -624,7 +624,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			// suite.Require().Equal(expectedPrice.String(), priceFromSqrtPrice.String())
 
 			// 5. Compute tick from sqrt price from the original tick.
-			inverseTickFromSqrtPrice, err := math.PriceToTickRoundDownSpacing(priceFromSqrtPrice, tickSpacing)
+			inverseTickFromSqrtPrice, err := suite.PriceToTickRoundDownSpacing(priceFromSqrtPrice, tickSpacing)
 			suite.Require().NoError(err)
 
 			suite.Require().Equal(tickFromPrice, inverseTickFromSqrtPrice, "expected: %s, actual: %s", tickFromPrice, inverseTickFromSqrtPrice)
@@ -650,7 +650,7 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick_ErrorCases() {
 		tc := tc
 
 		suite.Run(name, func() {
-			tickFromPrice, err := math.PriceToTick(tc.price)
+			tickFromPrice, err := suite.PriceToTick(tc.price)
 			suite.Require().Error(err)
 			suite.Require().Equal(tickFromPrice, int64(0))
 		})
@@ -709,7 +709,7 @@ func (suite *ConcentratedMathTestSuite) TestCalculatePriceToTick() {
 	}
 	for name, t := range testCases {
 		suite.Run(name, func() {
-			tickIndex := math.CalculatePriceToTick(t.price)
+			tickIndex := suite.CalculatePriceToTick(t.price)
 			suite.Require().Equal(t.expectedTickIndex, tickIndex)
 		})
 	}
