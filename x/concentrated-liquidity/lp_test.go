@@ -429,9 +429,19 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			sutConfigOverwrite: &lpTest{
 				// Note: subtracting one due to truncations in favor of the pool when withdrawing.
 				// amount0Expected = (liquidity * (sqrtPriceB - sqrtPriceA)) / (sqrtPriceB * sqrtPriceA)
-				amount0Expected: DefaultAmt0.Sub(sdk.OneInt()),
+				// Where:
+				// * liquidity = FullRangeLiquidityAmt
+				// * sqrtPriceB = MaxSqrtPrice
+				// * sqrtPriceA = DefaultCurrSqrtPrice
+				// Exact calculation: https://www.wolframalpha.com/input?i=70710678.118654752940000000+*+%2810000000000000000000.000000000000000000+-+70.710678118654752440%29+%2F+%2810000000000000000000.000000000000000000+*+70.710678118654752440%29
+				amount0Expected: sdk.NewInt(999999),
 				// amount1Expected = liq * (sqrtPriceB - sqrtPriceA)
-				amount1Expected:  DefaultAmt1.Sub(sdk.OneInt()),
+				// Where:
+				// * liquidity = FullRangeLiquidityAmt
+				// * sqrtPriceB = DefaultCurrSqrtPrice
+				// * sqrtPriceA = MinSqrtPrice
+				// Exact calculation: https://www.wolframalpha.com/input?i=70710678.118654752940000000+*+%2870.710678118654752440+-+0.000001000000000000%29
+				amount1Expected:  sdk.NewInt(4999999929),
 				liquidityAmount:  FullRangeLiquidityAmt,
 				underlyingLockId: 1,
 			},
