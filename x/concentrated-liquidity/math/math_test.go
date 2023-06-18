@@ -20,11 +20,9 @@ func TestConcentratedTestSuite(t *testing.T) {
 	suite.Run(t, new(ConcentratedMathTestSuite))
 }
 
-var (
-	sqrt4545 = sdk.MustNewDecFromStr("67.416615162732695594")
-	sqrt5000 = sdk.MustNewDecFromStr("70.710678118654752440")
-	sqrt5500 = sdk.MustNewDecFromStr("74.161984870956629487")
-)
+var sqrt4545 = sdk.MustNewDecFromStr("67.416615162732695594")
+var sqrt5000 = sdk.MustNewDecFromStr("70.710678118654752440")
+var sqrt5500 = sdk.MustNewDecFromStr("74.161984870956629487")
 
 // liquidity1 takes an amount of asset1 in the pool as well as the sqrtpCur and the nextPrice
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
