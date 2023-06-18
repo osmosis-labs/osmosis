@@ -18,7 +18,7 @@ const (
 var _ sdk.Msg = &MsgCreateGauge{}
 
 // NewMsgCreateGauge creates a message to create a gauge with the provided parameters.
-func NewMsgCreateGauge(isPerpetual bool, owner sdk.AccAddress, distributeTo lockuptypes.QueryCondition, coins sdk.Coins, startTime time.Time, numEpochsPaidOver uint64) *MsgCreateGauge {
+func NewMsgCreateGauge(isPerpetual bool, owner sdk.AccAddress, distributeTo lockuptypes.QueryCondition, coins sdk.Coins, startTime time.Time, numEpochsPaidOver uint64, poolId uint64) *MsgCreateGauge {
 	return &MsgCreateGauge{
 		IsPerpetual:       isPerpetual,
 		Owner:             owner.String(),
@@ -26,6 +26,7 @@ func NewMsgCreateGauge(isPerpetual bool, owner sdk.AccAddress, distributeTo lock
 		Coins:             coins,
 		StartTime:         startTime,
 		NumEpochsPaidOver: numEpochsPaidOver,
+		PoolId:            poolId,
 	}
 }
 

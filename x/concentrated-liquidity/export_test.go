@@ -227,12 +227,17 @@ func (ss *SwapState) SetLiquidity(liquidity sdk.Dec) {
 	ss.liquidity = liquidity
 }
 
-func (ss *SwapState) SetSpreadRewardGrowthGlobal(spreadRewardGrowthGlobal sdk.Dec) {
-	ss.spreadRewardGrowthGlobal = spreadRewardGrowthGlobal
+// TODO: Refactor tests to get this deleted?
+func (ss *SwapState) SetGlobalSpreadRewardGrowthPerUnitLiquidity(spreadRewardGrowthGlobal sdk.Dec) {
+	ss.globalSpreadRewardGrowthPerUnitLiquidity = spreadRewardGrowthGlobal
 }
 
-func (ss *SwapState) GetSpreadRewardGrowthGlobal() sdk.Dec {
-	return ss.spreadRewardGrowthGlobal
+func (ss *SwapState) SetGlobalSpreadRewardGrowth(spreadRewardGrowthGlobal sdk.Dec) {
+	ss.globalSpreadRewardGrowth = spreadRewardGrowthGlobal
+}
+
+func (ss *SwapState) GetGlobalSpreadRewardGrowthPerUnitLiquidity() sdk.Dec {
+	return ss.globalSpreadRewardGrowthPerUnitLiquidity
 }
 
 // incentive methods
