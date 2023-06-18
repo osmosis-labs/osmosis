@@ -2542,6 +2542,13 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 		// 		{-107000000, -107000000 + 100},
 		// 	},
 		// },
+
+		"one range, default params": {
+			tickRanges: [][]int64{
+				{0, 10000},
+			},
+			rangeTestParams: DefaultRangeTestParams,
+		},
 	}
 
 	for name, tc := range tests {
