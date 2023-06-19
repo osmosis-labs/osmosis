@@ -12,6 +12,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
@@ -1257,8 +1258,8 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 
 		// Find the largest numPosition value and set numAccounts to be one greater than the largest position value
 		// The first account is used to create pools and the rest are used to create positions
-		largestPositionValue := max(numBondedSuperfluid, numUnbondingSuperfluidLocked, numUnbondingSuperfluidUnlocking, numVanillaLockLocked, numVanillaLockUnlocking, numNoLock)
-		numAccounts := largestPositionValue + 1
+		largestPositionValue := osmoutils.Max(numBondedSuperfluid, numUnbondingSuperfluidLocked, numUnbondingSuperfluidUnlocking, numVanillaLockLocked, numVanillaLockUnlocking, numNoLock)
+		numAccounts := largestPositionValue.(int) + 1
 
 		positions := Positions{
 			numAccounts:                     numAccounts,
@@ -1492,18 +1493,4 @@ func (s *KeeperTestSuite) calculateUnusedPositionCreationFunds(numAccounts, numN
 		unusedPositionCreationFunds = unusedPositionCreationFunds.Add(sdk.NewCoin(coin1Denom, balances.AmountOf(coin1Denom)))
 	}
 	return unusedPositionCreationFunds
-}
-
-// max returns the maximum value among the given integers.
-func max(values ...int) int {
-	if len(values) == 0 {
-		return 0
-	}
-	max := values[0]
-	for _, value := range values[1:] {
-		if value > max {
-			max = value
-		}
-	}
-	return max
 }
