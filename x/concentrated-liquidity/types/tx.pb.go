@@ -581,7 +581,7 @@ func (m *MsgCollectIncentivesResponse) GetCollectedIncentives() github_com_cosmo
 	return nil
 }
 
-func (m *MsgCollectIncentivesResponse) GetForfeitedIncentives() github_com_cosmos_cosmos_sdk_types.DecCoins {
+func (m *MsgCollectIncentivesResponse) GetForfeitedIncentives() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.ForfeitedIncentives
 	}
@@ -3449,7 +3449,7 @@ func (m *MsgCollectIncentivesResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ForfeitedIncentives = append(m.ForfeitedIncentives, types.DecCoin{})
+			m.ForfeitedIncentives = append(m.ForfeitedIncentives, types.Coin{})
 			if err := m.ForfeitedIncentives[len(m.ForfeitedIncentives)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
