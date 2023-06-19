@@ -28,16 +28,21 @@ func (s *SwapTickCrossTestSuite) CreatePositionTickSpacingsFromCurrentTick(poolI
 
 	currentTick := pool.GetCurrentTick()
 
-	lowerTickTwo := currentTick - int64(tickSpacingsAwayFromCurrentTick)*int64(pool.GetTickSpacing())
-	upperTickTwo := currentTick + int64(tickSpacingsAwayFromCurrentTick)*int64(pool.GetTickSpacing())
+	tickSpacing := int64(pool.GetTickSpacing())
+
+	// make sure that current tick is a multiple of tick spacing
+	currentTick = currentTick - (currentTick % tickSpacing)
+
+	lowerTick := currentTick - int64(tickSpacingsAwayFromCurrentTick)*tickSpacing
+	upperTick := currentTick + int64(tickSpacingsAwayFromCurrentTick)*tickSpacing
 	s.FundAcc(s.TestAccs[0], DefaultCoins)
-	positionId, _, _, liquidityNarrowRangeTwo, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTickTwo, upperTickTwo)
+	positionId, _, _, liquidityNarrowRangeTwo, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
 	s.Require().NoError(err)
 
 	return positionMeta{
 		positionId: positionId,
-		lowerTick:  lowerTickTwo,
-		upperTick:  upperTickTwo,
+		lowerTick:  lowerTick,
+		upperTick:  upperTick,
 		liquidity:  liquidityNarrowRangeTwo,
 	}
 }
