@@ -17,6 +17,7 @@ import (
 )
 
 const validPoolId = 1
+const defaultTickIndex = 1
 
 var (
 	defaultTickInfo = model.TickInfo{
