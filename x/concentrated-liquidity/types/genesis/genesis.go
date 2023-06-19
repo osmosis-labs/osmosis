@@ -1,15 +1,13 @@
 package genesis
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
 // DefaultGenesis returns the default GenesisState for the concentrated-liquidity module.
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		PoolData:              []PoolData{},
+		PoolData:              []GenesisPoolData{},
 		Params:                types.DefaultParams(),
 		NextPositionId:        1,
 		NextIncentiveRecordId: 1,
@@ -27,8 +25,6 @@ func (gs GenesisState) Validate() error {
 	if gs.NextIncentiveRecordId == 0 {
 		return types.InvalidNextIncentiveRecordIdError{NextIncentiveRecordId: gs.NextIncentiveRecordId}
 	}
-	if gs.Params.BalancerSharesRewardDiscount.LT(sdk.ZeroDec()) || gs.Params.BalancerSharesRewardDiscount.GT(sdk.OneDec()) || (gs.Params.BalancerSharesRewardDiscount == sdk.Dec{}) {
-		return types.InvalidDiscountRateError{DiscountRate: gs.Params.BalancerSharesRewardDiscount}
-	}
+
 	return nil
 }

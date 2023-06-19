@@ -10,7 +10,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
@@ -489,7 +488,7 @@ func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLas
 		validPoolId = 1
 	)
 
-	initialPoolTick, err := math.PriceToTickRoundDown(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()), DefaultTickSpacing)
+	initialPoolTick, err := s.PriceToTickRoundDownSpacing(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()), DefaultTickSpacing)
 	s.Require().NoError(err)
 
 	tests := map[string]struct {

@@ -294,11 +294,32 @@ func (s *KeeperTestSuite) TestCollectSpreadRewards_Events() {
 				PositionIds: tc.positionIds,
 			}
 
+			// Add spread rewards to the pool's accum so we aren't just claiming 0 rewards.
+			// Claiming 0 rewards is still a valid message, but is not as valuable for testing.
+			s.AddToSpreadRewardAccumulator(validPoolId, sdk.NewDecCoin(ETH, sdk.NewInt(1)))
+
+			// Determine expected rewards from all provided positions without modifying state.
+			expectedTotalSpreadRewards := sdk.Coins(nil)
+			cacheCtx, _ := s.Ctx.CacheContext()
+			for _, positionId := range tc.positionIds {
+				spreadRewardsClaimed, _ := s.App.ConcentratedLiquidityKeeper.PrepareClaimableSpreadRewards(cacheCtx, positionId)
+				expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(spreadRewardsClaimed...)
+			}
+
+			// Fund the spread rewards account with the expected rewards (not testing the distribution algorithm here, just the events, so this is okay)
+			s.FundAcc(pool.GetSpreadRewardsAddress(), sdk.NewCoins(sdk.NewCoin(ETH, expectedTotalSpreadRewards[0].Amount)))
+
+			// Reset event counts to 0 by creating a new manager.
+			s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
+			s.Equal(0, len(s.Ctx.EventManager().Events()))
+
+			// System under test.
 			response, err := msgServer.CollectSpreadRewards(sdk.WrapSDKContext(s.Ctx), msg)
 
 			if tc.expectedError == nil {
 				s.Require().NoError(err)
 				s.Require().NotNil(response)
+				s.Require().Equal(expectedTotalSpreadRewards, response.CollectedSpreadRewards)
 				s.AssertEventEmitted(s.Ctx, types.TypeEvtTotalCollectSpreadRewards, tc.expectedTotalCollectSpreadRewardsEvent)
 				s.AssertEventEmitted(s.Ctx, types.TypeEvtCollectSpreadRewards, tc.expectedCollectSpreadRewardsEvent)
 				s.AssertEventEmitted(s.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
