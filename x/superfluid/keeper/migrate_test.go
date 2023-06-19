@@ -1287,7 +1287,7 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 		// lock duration, an "add to lock" call will happen rather than creating a new lock.
 
 		totalFundsForPositionCreation := sdk.NewCoins()
-		createPositions := func(positionType int, numPositions int, lockDurationFn func(int) time.Duration, superfluidDelegate bool, callbackFn func(int, positionInfo)) {
+		createPositions := func(positionInfoIndex int, numPositions int, lockDurationFn func(int) time.Duration, superfluidDelegate bool, callbackFn func(int, positionInfo)) {
 			for i := 0; i < numPositions; i++ {
 				index := i + 1                              // Skip the first account, which is used for pool creation
 				divisor := int64(rand.Intn(maxDivisor)) + 1 // Randomly generate a divisor between 1 and maxDivisor
@@ -1297,7 +1297,7 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 				s.FundAcc(s.TestAccs[index], positionCoins)
 				totalFundsForPositionCreation = totalFundsForPositionCreation.Add(positionCoins...) // Track total funds used for position creation, to be used by invariant checks later
 				posInfoInternal := s.createBalancerPosition(s.TestAccs[index], balancerPoolId, lockDurationFn(i), balancerPoolShareDenom, positionCoins, positions.numAccounts-i, superfluidDelegate)
-				positionInfos[positionType] = append(positionInfos[positionType], posInfoInternal) // Track position info for invariant checks later
+				positionInfos[positionInfoIndex] = append(positionInfos[positionInfoIndex], posInfoInternal) // Track position info for invariant checks later
 				callbackFn(index, posInfoInternal)
 			}
 		}
