@@ -2,7 +2,7 @@ name: Generate Mutation Test Errors
 
 on:
   schedule:
-    - cron: '0 13 1,15 * *' # Bi-weekly – 1PM UTC (9AM EST) on the 1st and 15th of every month
+    - cron: "0 13 1,15 * *" # Bi-weekly – 1PM UTC (9AM EST) on the 1st and 15th of every month
 
 jobs:
   test:
@@ -10,11 +10,10 @@ jobs:
     steps:
       - name: checkout repo
         uses: actions/checkout@v3
-      - 
-        name: 🐿 Setup Golang
+      - name: 🐿 Setup Golang
         uses: actions/setup-go@v4
         with:
-          go-version: '^1.20'
+          go-version: "^1.20"
       - name: Display go version
         run: go version
       - name: Run mutation test
@@ -25,7 +24,7 @@ jobs:
       - name: Execute mutation test format script
         id: mutest-formatted
         run: |
-          cat mutation_test_result.txt | grep -Ev "PASS" | grep -Ev "SKIP" | tee mutation_test_result.txt
+          grep -Ev "PASS|SKIP" mutation_test_result.txt > mutation_test_result_temp.txt && mv mutation_test_result_temp.txt mutation_test_result.txt
       - name: Generate code blocks
         id: gen-code-blocks
         run: |

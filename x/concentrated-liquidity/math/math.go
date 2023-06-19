@@ -181,9 +181,9 @@ func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0,
 	if sqrtPrice.LTE(sqrtPriceA) {
 		// If the current price is less than or equal to the lower tick, then we use the liquidity0 formula.
 		liquidity = Liquidity0(amount0, sqrtPriceA, sqrtPriceB)
-	} else if sqrtPrice.LTE(sqrtPriceB) {
-		// If the current price is between the lower and upper ticks (non-inclusive of the lower tick but inclusive of the upper tick),
-		// then we use the minimum of the liquidity0 and liquidity1 formulas.
+	} else if sqrtPrice.LT(sqrtPriceB) {
+		// If the current price is between the lower and upper ticks (exclusive of both the lower and upper ticks,
+		// as both would trigger a division by zero), then we use the minimum of the liquidity0 and liquidity1 formulas.
 		liquidity0 := Liquidity0(amount0, sqrtPrice, sqrtPriceB)
 		liquidity1 := Liquidity1(amount1, sqrtPrice, sqrtPriceA)
 		liquidity = sdk.MinDec(liquidity0, liquidity1)

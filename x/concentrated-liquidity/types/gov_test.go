@@ -108,3 +108,87 @@ func TestTickSpacingDecreaseProposalMarshalUnmarshal(t *testing.T) {
 		require.Equal(t, *test.proposal, decoded)
 	}
 }
+
+func TestCreateConcentratedLiquidityPoolsProposal_ValidateBasic(t *testing.T) {
+	baseRecord := types.PoolRecord{
+		Denom0:             "uion",
+		Denom1:             "uosmo",
+		TickSpacing:        100,
+		ExponentAtPriceOne: sdk.NewInt(-1),
+		SpreadFactor:       sdk.MustNewDecFromStr("0.01"),
+	}
+
+	withInvalidTickSpacing := func(record types.PoolRecord) types.PoolRecord {
+		record.TickSpacing = 0
+		return record
+	}
+
+	withSameDenom := func(record types.PoolRecord) types.PoolRecord {
+		record.Denom1 = record.Denom0
+		return record
+	}
+
+	withInvalidDenom0 := func(record types.PoolRecord) types.PoolRecord {
+		record.Denom0 = "0"
+		return record
+	}
+
+	withInvalidDenom1 := func(record types.PoolRecord) types.PoolRecord {
+		record.Denom1 = "1"
+		return record
+	}
+
+	withInvalidSpreadFactor := func(record types.PoolRecord) types.PoolRecord {
+		record.SpreadFactor = sdk.MustNewDecFromStr("1.01")
+		return record
+	}
+
+	tests := []struct {
+		name       string
+		modifyFunc func(types.PoolRecord) types.PoolRecord
+		expectPass bool
+	}{
+		{
+			name:       "proper msg",
+			modifyFunc: func(record types.PoolRecord) types.PoolRecord { return record },
+			expectPass: true,
+		},
+		{
+			name:       "invalid tick spacing",
+			modifyFunc: withInvalidTickSpacing,
+			expectPass: false,
+		},
+		{
+			name:       "invalid denom pair",
+			modifyFunc: withSameDenom,
+			expectPass: false,
+		},
+		{
+			name:       "invalid denom0",
+			modifyFunc: withInvalidDenom0,
+			expectPass: false,
+		},
+		{
+			name:       "invalid denom1",
+			modifyFunc: withInvalidDenom1,
+			expectPass: false,
+		},
+		{
+			name:       "invalid spread factor",
+			modifyFunc: withInvalidSpreadFactor,
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		records := []types.PoolRecord{test.modifyFunc(baseRecord)}
+
+		createClPoolsProposal := types.NewCreateConcentratedLiquidityPoolsProposal("title", "description", records)
+
+		if test.expectPass {
+			require.NoError(t, createClPoolsProposal.ValidateBasic(), "test: %v", test.name)
+		} else {
+			require.Error(t, createClPoolsProposal.ValidateBasic(), "test: %v", test.name)
+		}
+	}
+}

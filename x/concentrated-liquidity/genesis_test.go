@@ -1,6 +1,7 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -37,7 +38,7 @@ var (
 			BalancerSharesRewardDiscount: types.DefaultBalancerSharesDiscount,
 			AuthorizedUptimes:            types.DefaultAuthorizedUptimes,
 		},
-		PoolData:              []genesis.PoolData{},
+		PoolData:              []genesis.GenesisPoolData{},
 		NextIncentiveRecordId: 2,
 		NextPositionId:        3,
 	}
@@ -55,19 +56,24 @@ var (
 		},
 	}
 	defaultFullTick = genesis.FullTick{
-		PoolId:    defaultPoolId,
 		TickIndex: 0,
 		Info:      testTickInfo,
 	}
-	testPositionModel = model.Position{
+
+	defaultFullTickWithoutPoolId = genesis.FullTick{
+		TickIndex: 0,
+		Info:      testTickInfo,
+	}
+
+	testPositionModel = genesis.PositionWithoutPoolId{
 		PositionId: 1,
-		PoolId:     1,
 		Address:    testAddressOne.String(),
 		Liquidity:  sdk.OneDec(),
 		LowerTick:  -1,
 		UpperTick:  100,
 		JoinTime:   defaultBlockTime,
 	}
+
 	testSpreadRewardAccumRecord = accum.Record{
 		NumShares:             sdk.OneDec(),
 		AccumValuePerShare:    sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
@@ -100,12 +106,7 @@ func accumRecordWithDefinedValues(accumRecord accum.Record, numShares sdk.Dec, i
 	return accumRecord
 }
 
-func positionWithPoolId(position model.Position, poolId uint64) *model.Position {
-	position.PoolId = poolId
-	return &position
-}
-
-func withPositionId(position model.Position, positionId uint64) *model.Position {
+func withPositionId(position genesis.PositionWithoutPoolId, positionId uint64) *genesis.PositionWithoutPoolId {
 	position.PositionId = positionId
 	return &position
 }
@@ -175,14 +176,14 @@ func setupGenesis(baseGenesis genesis.GenesisState, poolGenesisEntries []singleP
 		if err != nil {
 			panic(err)
 		}
-		baseGenesis.PoolData = append(baseGenesis.PoolData, genesis.PoolData{
+		baseGenesis.PoolData = append(baseGenesis.PoolData, genesis.GenesisPoolData{
 			Pool:                    poolAny,
+			PositionData:            poolGenesisEntry.positionData,
 			Ticks:                   poolGenesisEntry.tick,
 			SpreadRewardAccumulator: poolGenesisEntry.spreadFactorAccumValues,
 			IncentivesAccumulators:  poolGenesisEntry.incentiveAccumulators,
 			IncentiveRecords:        poolGenesisEntry.incentiveRecords,
 		})
-		baseGenesis.PositionData = append(baseGenesis.PositionData, poolGenesisEntry.positionData...)
 		baseGenesis.NextPositionId = uint64(len(poolGenesisEntry.positionData))
 	}
 	return baseGenesis
@@ -218,8 +219,8 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				{
 					pool: *poolOne,
 					tick: []genesis.FullTick{
-						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), -10),
-						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), 10),
+						withTickIndex(defaultFullTick, -10),
+						withTickIndex(defaultFullTick, 10),
 					},
 					positionData: []genesis.PositionData{
 						{
@@ -279,8 +280,8 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			},
 			expectedTicksPerPoolId: map[uint64][]genesis.FullTick{
 				1: {
-					withTickIndex(withPoolId(defaultFullTick, poolOne.Id), -10),
-					withTickIndex(withPoolId(defaultFullTick, poolOne.Id), 10),
+					withTickIndex(defaultFullTick, -10),
+					withTickIndex(defaultFullTick, 10),
 				},
 			},
 			expectedPositionData: []genesis.PositionData{
@@ -340,7 +341,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				{
 					pool: *poolOne,
 					tick: []genesis.FullTick{
-						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), -1234),
+						withTickIndex(defaultFullTick, -1234),
 					},
 					positionData: []genesis.PositionData{
 						{
@@ -374,13 +375,13 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				{
 					pool: *poolTwo,
 					tick: []genesis.FullTick{
-						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), 0),
-						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), 999),
+						withTickIndex(defaultFullTick, 0),
+						withTickIndex(defaultFullTick, 999),
 					},
 					positionData: []genesis.PositionData{
 						{
 							LockId:   2,
-							Position: withPositionId(*positionWithPoolId(testPositionModel, 2), DefaultPositionId+1),
+							Position: withPositionId(testPositionModel, DefaultPositionId+1),
 							UptimeAccumRecords: []accum.Record{
 								accumRecordWithDefinedValues(accumRecord, sdk.NewDec(99999), sdk.NewInt(10), sdk.NewInt(5)),
 								accumRecordWithDefinedValues(accumRecord, sdk.NewDec(9999), sdk.NewInt(10), sdk.NewInt(5)),
@@ -420,11 +421,11 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			},
 			expectedTicksPerPoolId: map[uint64][]genesis.FullTick{
 				1: {
-					withTickIndex(withPoolId(defaultFullTick, poolOne.Id), -1234),
+					withTickIndex(defaultFullTick, -1234),
 				},
 				2: {
-					withTickIndex(withPoolId(defaultFullTick, poolTwo.Id), 0),
-					withTickIndex(withPoolId(defaultFullTick, poolTwo.Id), 999),
+					withTickIndex(defaultFullTick, 0),
+					withTickIndex(defaultFullTick, 999),
 				},
 			},
 			expectedspreadFactorAccumValues: []genesis.AccumObject{
@@ -472,7 +473,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				},
 				{
 					LockId:                  2,
-					Position:                withPositionId(*positionWithPoolId(testPositionModel, 2), DefaultPositionId+1),
+					Position:                withPositionId(testPositionModel, DefaultPositionId+1),
 					SpreadRewardAccumRecord: testSpreadRewardAccumRecord,
 					UptimeAccumRecords: []accum.Record{
 						accumRecordWithDefinedValues(accumRecord, sdk.NewDec(99999), sdk.NewInt(10), sdk.NewInt(5)),
@@ -518,11 +519,11 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				expectedTicks, ok := tc.expectedTicksPerPoolId[actualPool.Id]
 				s.Require().True(ok)
 
-				actualTicks, err := clKeeper.GetAllInitializedTicksForPool(ctx, actualPool.Id)
+				actualTicks, err := clKeeper.GetAllInitializedTicksForPoolWithoutPoolId(ctx, actualPool.Id)
 				s.Require().NoError(err)
 
 				// Validate ticks.
-				s.validateTicks(expectedTicks, actualTicks)
+				s.validateTicksWithoutPoolId(expectedTicks, actualTicks)
 
 				// get spread reward accumulator
 				spreadFactorAccum, err := clKeeper.GetSpreadRewardAccumulator(s.Ctx, actualPool.GetId())
@@ -552,7 +553,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			s.Require().NoError(err)
 			var actualPositionData []genesis.PositionData
 			for _, positionDataEntry := range tc.expectedPositionData {
-				getPosition, err := clKeeper.GetPosition(ctx, positionDataEntry.Position.PositionId)
+				position, err := clKeeper.GetPosition(ctx, positionDataEntry.Position.PositionId)
 				s.Require().NoError(err)
 
 				actualLockId := uint64(0)
@@ -564,10 +565,17 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					s.Require().Error(err)
 					s.Require().ErrorIs(err, types.PositionIdToLockNotFoundError{PositionId: positionDataEntry.Position.PositionId})
 				}
+				positionWithoutPoolId := genesis.PositionWithoutPoolId{}
+				positionWithoutPoolId.Address = position.Address
+				positionWithoutPoolId.JoinTime = position.JoinTime
+				positionWithoutPoolId.Liquidity = position.Liquidity
+				positionWithoutPoolId.LowerTick = position.LowerTick
+				positionWithoutPoolId.UpperTick = position.UpperTick
+				positionWithoutPoolId.PositionId = position.PositionId
 
 				actualPositionData = append(actualPositionData, genesis.PositionData{
 					LockId:                  actualLockId,
-					Position:                &getPosition,
+					Position:                &positionWithoutPoolId,
 					SpreadRewardAccumRecord: positionDataEntry.SpreadRewardAccumRecord,
 					UptimeAccumRecords:      positionDataEntry.UptimeAccumRecords,
 				})
@@ -627,8 +635,8 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 				{
 					pool: *poolOne,
 					tick: []genesis.FullTick{
-						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), -10),
-						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), 10),
+						withTickIndex(defaultFullTickWithoutPoolId, -10),
+						withTickIndex(defaultFullTickWithoutPoolId, 10),
 					},
 					positionData: []genesis.PositionData{
 						{
@@ -677,7 +685,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 				{
 					pool: *poolOne,
 					tick: []genesis.FullTick{
-						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), -1234),
+						withTickIndex(defaultFullTickWithoutPoolId, -1234),
 					},
 					positionData: []genesis.PositionData{
 						{
@@ -716,8 +724,8 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 				{
 					pool: *poolTwo,
 					tick: []genesis.FullTick{
-						withTickIndex(withPoolId(defaultFullTick, poolTwo.Id), 0),
-						withTickIndex(withPoolId(defaultFullTick, poolTwo.Id), 999),
+						withTickIndex(defaultFullTickWithoutPoolId, 0),
+						withTickIndex(defaultFullTickWithoutPoolId, 9999),
 					},
 					spreadFactorAccumValues: genesis.AccumObject{
 						Name: types.KeySpreadRewardPoolAccumulator(poolTwo.Id),
@@ -741,7 +749,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 					positionData: []genesis.PositionData{
 						{
 							LockId:                  2,
-							Position:                withPositionId(*positionWithPoolId(testPositionModel, 2), DefaultPositionId+2),
+							Position:                withPositionId(testPositionModel, DefaultPositionId+2),
 							SpreadRewardAccumRecord: testSpreadRewardAccumRecord,
 							UptimeAccumRecords: []accum.Record{
 								accumRecordWithDefinedValues(accumRecord, sdk.NewDec(99999), sdk.NewInt(10), sdk.NewInt(5)),
@@ -783,7 +791,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 				expectedPoolData := expectedGenesis.PoolData[i]
 				s.Require().Equal(expectedPoolData.Pool, actualPoolData.Pool)
 
-				s.validateTicks(expectedPoolData.Ticks, actualPoolData.Ticks)
+				s.validateTicksWithoutPoolId(expectedPoolData.Ticks, actualPoolData.Ticks)
 
 				// validate spread reward accumulators
 				s.Require().Equal(expectedPoolData.SpreadRewardAccumulator, actualPoolData.SpreadRewardAccumulator)
@@ -802,19 +810,19 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 					s.Require().Equal(incentiveRecord.IncentiveRecordBody.RemainingCoin.String(), expectedPoolData.IncentiveRecords[i].IncentiveRecordBody.RemainingCoin.String())
 					s.Require().True(incentiveRecord.IncentiveRecordBody.StartTime.Equal(expectedPoolData.IncentiveRecords[i].IncentiveRecordBody.StartTime))
 				}
-			}
 
-			// Validate uptime accumulators
-			for i, actualPositionData := range actualExported.PositionData {
-				expectedPositionData := expectedGenesis.PositionData[i]
-				// validate incentive accumulator
-				for i, uptimeAccum := range actualPositionData.UptimeAccumRecords {
-					s.Require().Equal(expectedPositionData.UptimeAccumRecords[i], uptimeAccum)
+				// Validate positions.
+				s.Require().Equal(expectedPoolData.PositionData, actualPoolData.PositionData)
+
+				// Validate uptime accumulators
+				for i, actualPositionData := range actualPoolData.PositionData {
+					expectedPositionData := expectedPoolData.PositionData[i]
+					// validate incentive accumulator
+					for i, uptimeAccum := range actualPositionData.UptimeAccumRecords {
+						s.Require().Equal(expectedPositionData.UptimeAccumRecords[i], uptimeAccum)
+					}
 				}
 			}
-
-			// Validate positions.
-			s.Require().Equal(tc.genesis.PositionData, actualExported.PositionData)
 
 			// Validate next position id.
 			s.Require().Equal(tc.genesis.NextPositionId, actualExported.NextPositionId)
@@ -849,10 +857,177 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	})
 }
 
-func (s *KeeperTestSuite) validateTicks(expectedTicks []genesis.FullTick, actualTicks []genesis.FullTick) {
+func (s *KeeperTestSuite) TestParseFullTickFromBytes() {
+	var (
+		cdc = s.App.AppCodec()
+
+		formatFullKey = func(tickPrefix []byte, poolIdBytes []byte, tickIndexBytes []byte) []byte {
+			key := make([]byte, 0)
+			key = append(key, tickPrefix...)
+			key = append(key, poolIdBytes...)
+			key = append(key, tickIndexBytes...)
+			return key
+		}
+	)
+
+	tests := map[string]struct {
+		key           []byte
+		val           []byte
+		expectedValue genesis.FullTick
+		expectedErr   error
+	}{
+		"valid positive tick": {
+			key:           types.KeyTick(defaultPoolId, defaultTickIndex),
+			val:           cdc.MustMarshal(&defaultTickInfo),
+			expectedValue: defaultTickWithoutPoolId,
+		},
+		"valid zero tick": {
+			key:           types.KeyTick(defaultPoolId, 0),
+			val:           cdc.MustMarshal(&defaultTickInfo),
+			expectedValue: withTickIndex(defaultTickWithoutPoolId, 0),
+		},
+		"valid negative tick": {
+			key:           types.KeyTick(defaultPoolId, -1),
+			val:           cdc.MustMarshal(&defaultTickInfo),
+			expectedValue: withTickIndex(defaultTickWithoutPoolId, -1),
+		},
+		"valid negative tick large": {
+			key:           types.KeyTick(defaultPoolId, -200),
+			val:           cdc.MustMarshal(&defaultTickInfo),
+			expectedValue: withTickIndex(defaultTickWithoutPoolId, -200),
+		},
+		"empty key": {
+			key:         []byte{},
+			val:         cdc.MustMarshal(&defaultTickInfo),
+			expectedErr: types.ErrKeyNotFound,
+		},
+		"random key": {
+			key: []byte{112, 12, 14, 4, 5},
+			val: cdc.MustMarshal(&defaultTickInfo),
+			expectedErr: types.InvalidTickKeyByteLengthError{
+				Length: 5,
+			},
+		},
+		"using not full key (wrong key)": {
+			key: types.KeyTickPrefixByPoolId(defaultPoolId),
+			val: cdc.MustMarshal(&defaultTickInfo),
+			expectedErr: types.InvalidTickKeyByteLengthError{
+				Length: len(types.TickPrefix) + cl.Uint64Bytes,
+			},
+		},
+		"invalid prefix key": {
+			key:         formatFullKey(types.PositionPrefix, sdk.Uint64ToBigEndian(defaultPoolId), types.TickIndexToBytes(defaultTickIndex)),
+			val:         cdc.MustMarshal(&defaultTickInfo),
+			expectedErr: types.InvalidPrefixError{Actual: string(types.PositionPrefix), Expected: string(types.TickPrefix)},
+		},
+		"invalid tick index encoding": {
+			// must use types.TickIndexToBytes() on tick index for correct encoding.
+			key: formatFullKey(types.TickPrefix, sdk.Uint64ToBigEndian(defaultPoolId), sdk.Uint64ToBigEndian(defaultTickIndex)),
+			val: cdc.MustMarshal(&defaultTickInfo),
+			expectedErr: types.InvalidTickKeyByteLengthError{
+				Length: len(types.TickPrefix) + cl.Uint64Bytes + cl.Uint64Bytes,
+			},
+		},
+		"invalid pool id encoding": {
+			// format 1 byte.
+			key: formatFullKey(types.TickPrefix, []byte(fmt.Sprintf("%x", defaultPoolId)), types.TickIndexToBytes(defaultTickIndex)),
+			val: cdc.MustMarshal(&defaultTickInfo),
+			expectedErr: types.InvalidTickKeyByteLengthError{
+				Length: len(types.TickPrefix) + 2 + cl.Uint64Bytes,
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			fullTick, err := cl.ParseFullTickFromBytes(tc.key, tc.val)
+			if tc.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectedErr)
+				s.Require().Equal(fullTick, genesis.FullTick{})
+			} else {
+				s.Require().NoError(err)
+
+				// check result
+				s.Require().Equal(tc.expectedValue, fullTick)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetAllInitializedTicksForPool() {
+	const (
+		// chosen randomly
+		defaultPoolId = 676
+	)
+
+	tests := []struct {
+		name                   string
+		preSetTicks            []genesis.FullTick
+		expectedTicksOverwrite []genesis.FullTick
+		expectedError          error
+	}{
+		{
+			name:        "one positive tick for pool",
+			preSetTicks: []genesis.FullTick{defaultTick},
+		},
+		{
+			name:        "one negative tick for pool",
+			preSetTicks: []genesis.FullTick{withTickIndex(defaultTick, -1)},
+		},
+		{
+			name:        "one zero tick for pool",
+			preSetTicks: []genesis.FullTick{withTickIndex(defaultTick, 0)},
+		},
+		{
+			name: "multiple ticks for pool",
+			preSetTicks: []genesis.FullTick{
+				defaultTick,
+				withTickIndex(defaultTick, -1),
+				withTickIndex(defaultTick, 0),
+				withTickIndex(defaultTick, -200),
+				withTickIndex(defaultTick, 1000),
+				withTickIndex(defaultTick, -999),
+			},
+			expectedTicksOverwrite: []genesis.FullTick{
+				withTickIndex(defaultTick, -999),
+				withTickIndex(defaultTick, -200),
+				withTickIndex(defaultTick, -1),
+				withTickIndex(defaultTick, 0),
+				defaultTick,
+				withTickIndex(defaultTick, 1000),
+			},
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+
+			for _, tick := range test.preSetTicks {
+				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, defaultPoolId, tick.TickIndex, &tick.Info)
+			}
+
+			// If overwrite is not specified, we expect the pre-set ticks to be returned.
+			expectedTicks := test.preSetTicks
+			if len(test.expectedTicksOverwrite) > 0 {
+				expectedTicks = test.expectedTicksOverwrite
+			}
+
+			// System Under Test
+			ticks, err := s.App.ConcentratedLiquidityKeeper.GetAllInitializedTicksForPoolWithoutPoolId(s.Ctx, defaultPoolId)
+			s.Require().NoError(err)
+
+			s.Require().Equal(len(expectedTicks), len(ticks))
+			s.validateTicksWithoutPoolId(expectedTicks, ticks)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) validateTicksWithoutPoolId(expectedTicks []genesis.FullTick, actualTicks []genesis.FullTick) {
 	s.Require().Equal(len(expectedTicks), len(actualTicks))
 	for i, tick := range actualTicks {
-		s.Require().Equal(expectedTicks[i].PoolId, tick.PoolId, "tick (%d) pool ids are not equal", i)
 		s.Require().Equal(expectedTicks[i].TickIndex, tick.TickIndex, "tick (%d) pool indexes are not equal", i)
 		s.Require().Equal(expectedTicks[i].Info, tick.Info, "tick (%d) infos are not equal", i)
 	}
