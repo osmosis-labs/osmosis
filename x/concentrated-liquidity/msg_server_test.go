@@ -299,20 +299,11 @@ func (s *KeeperTestSuite) TestCollectSpreadRewards_Events() {
 			s.AddToSpreadRewardAccumulator(validPoolId, sdk.NewDecCoin(ETH, sdk.NewInt(1)))
 
 			// Determine expected rewards from all provided positions without modifying state.
-			expectedTotalSpreadRewards := []sdk.Coin(nil)
+			expectedTotalSpreadRewards := sdk.Coins(nil)
 			cacheCtx, _ := s.Ctx.CacheContext()
 			for _, positionId := range tc.positionIds {
 				spreadRewardsClaimed, _ := s.App.ConcentratedLiquidityKeeper.PrepareClaimableSpreadRewards(cacheCtx, positionId)
-				for _, spreadReward := range spreadRewardsClaimed {
-					for i, expectedSpreadReward := range expectedTotalSpreadRewards {
-						if expectedSpreadReward.Denom == spreadReward.Denom {
-							expectedTotalSpreadRewards[i].Amount = expectedSpreadReward.Amount.Add(spreadReward.Amount)
-							goto nextSpreadReward
-						}
-					}
-					expectedTotalSpreadRewards = append(expectedTotalSpreadRewards, spreadReward)
-				}
-			nextSpreadReward:
+				expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(spreadRewardsClaimed...)
 			}
 
 			// Fund the spread rewards account with the expected rewards (not testing the distribution algorithm here, just the events, so this is okay)
