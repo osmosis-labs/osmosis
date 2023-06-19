@@ -1642,7 +1642,7 @@ func (s *KeeperTestSuite) TestGetClaimableSpreadRewards() {
 	s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(1_000_000)), sdk.NewCoin(USDC, sdk.NewInt(10_000_000_000))))
 	s.FundAcc(s.TestAccs[2], sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(1_000_000)), sdk.NewCoin(USDC, sdk.NewInt(5_000_000_000))))
 
-	// Create a default CL pool, but with a 0.3 percent spread factor.
+	// Create a default CL pool
 	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, 100, sdk.MustNewDecFromStr("0.002"))
 
 	// create a position
@@ -1662,9 +1662,8 @@ func (s *KeeperTestSuite) TestGetClaimableSpreadRewards() {
 	s.Require().NoError(err)
 
 	// perform a  swap
-	// swap 5_000_000_000usdc to eth
 	spreadFactor := clPool.GetSpreadFactor(s.Ctx)
-	coinIn, coinOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(s.Ctx, s.TestAccs[1], clPool, sdk.NewCoin(USDC, sdk.NewInt(100_000)), ETH, spreadFactor, sdk.OneDec())
+	coinIn, coinOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(s.Ctx, s.TestAccs[1], clPool, sdk.NewCoin(USDC, sdk.NewInt(100_000)), ETH, spreadFactor, sdk.NewDec(100))
 	s.Require().NoError(err)
 
 	// coinIn, coinOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, s.TestAccs[1], clPool, sdk.NewCoin(USDC, sdk.NewInt(500_000)), ETH, spreadFactor, types.MaxSpotPrice)
@@ -1683,5 +1682,6 @@ func (s *KeeperTestSuite) TestGetClaimableSpreadRewards() {
 	s.Require().NoError(err)
 
 	fmt.Println("FEES AFTER SWAP Position1 ", fees)
+	s.Require().Equal(sdk.Coins(nil), fees)
 
 }
