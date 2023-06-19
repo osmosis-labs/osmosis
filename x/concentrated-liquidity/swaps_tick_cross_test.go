@@ -46,10 +46,10 @@ const (
 // This configuratio is expected to generate the position layout below:
 //
 //	                                 original_cur_tick
-//		                                    ///
-//		                                /////////
-//		                            ////////////////
-//	                             //////////////////////
+//		                                    ///               (NR4)
+//		                                /////////             (NR3)
+//		                            ////////////////          (NR2)
+//	                             //////////////////////       (NR1)
 //
 // min tick                                                      max tick
 var (
@@ -872,11 +872,22 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Cros
 }
 
 func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickSpacingOne() {
-
+	// defines an individual test case
 	type continugousTestCase struct {
+		// This defines how many ticks away from current the swap should reach
+		// negative values indicate ticks below current tick
+		// positive values indicate ticks above current tick
 		swapEndTicksAwayFromOriginalCurrent []int64
-		isOneForZeroWithinSameTick          bool
+		// This flag is used to control an edge case behavior in test setup
+		// when swapping right and then right again within the same tick.
+		// It is only used to signal the swap direction while estimating the expected results.
+		isOneForZeroWithinSameTick bool
 
+		// isPositionActiveFlag is used to control the expected state of position
+		// at the end of configured swaps of the test.
+		// See diagram above the definition of defaultTickSpacingsAway variable for layout.
+		// The first position is NR1, the second position is NR2 etc.
+		// That is, the wider range position is preceeds the narrower range position.
 		isPositionActiveFlag []bool
 	}
 
