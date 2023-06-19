@@ -1242,6 +1242,14 @@ const (
 	NoLock
 )
 
+// TestFunctional_VaryingPositions_Migrations proves that, given a set of balancer pool positions of various types, the migration process works as expected.
+// By "works as expected", we mean that after we migrate a position, the funds that:
+// - get moved to the new cl positions
+// - get left behind in the balancer pool
+// - get sent back to the user
+// all add up to the amount that the user originally had in the balancer pool.
+//
+// This test also asserts this same invariant at the very end, to ensure that all coins the accounts were funded with are accounted for.
 func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 	for i := 0; i < 10; i++ {
 		rand.Seed(time.Now().UnixNano() + int64(i))
