@@ -1055,6 +1055,10 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_SwapBelowSmallestTick() {
 	s.swapOneForZeroRight(poolId, sdk.NewCoin(pool.GetToken1(), sdk.NewInt(100)))
 }
 
+// TestSwapOutGivenIn_SwapAboveLargestTick tests tick crossing behavior around max tick
+// It first swaps to the max tick, then tries to swap beyond it and fails.
+// At the same time, it validates that the liquidity and tick are updated correctly.
+// Additionally, it validates that it is still possible to swap left.
 func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_SwapAboveLargestTick() {
 	s.SetupTest()
 
@@ -1068,23 +1072,32 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_SwapAboveLargestTick() {
 	var (
 		isZeroForOne                  = false
 		shouldStayWithinTheSameBucket = false
+		tokeOneDenom                  = pool.GetToken1()
+		tokenZeroDenom                = pool.GetToken0()
+		smallTokenOneCoinIn           = sdk.NewCoin(tokeOneDenom, sdk.NewInt(100))
+		smallTokenZeroCoinIn          = sdk.NewCoin(pool.GetToken0(), sdk.NewInt(100))
 	)
-	tokenIn, _, _ := s.computeSwapAmounts(poolId, sdk.Dec{}, types.MinInitializedTick, isZeroForOne, shouldStayWithinTheSameBucket)
 
-	// Swap
-	s.swapOneForZeroRight(poolId, sdk.NewCoin(pool.GetToken1(), tokenIn.Ceil().TruncateInt()))
+	// Compute tokenIn amount necessary to reach the max tick.
+	tokenIn, _, _ := s.computeSwapAmounts(poolId, sdk.Dec{}, types.MaxTick, isZeroForOne, shouldStayWithinTheSameBucket)
 
+	// Swap the computed large amount.
+	s.swapOneForZeroRight(poolId, sdk.NewCoin(tokeOneDenom, tokenIn.Ceil().TruncateInt()))
+
+	// Assert that max tick is crossed and liquidity is zero.
 	s.assertPoolTickEquals(poolId, types.MaxTick)
 	s.assertPoolLiquidityEquals(poolId, sdk.ZeroDec())
 
-	// Validate cannot swap left again
+	// Validate cannot swap right again
 	// Refetch pool
 	pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
-	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, sdk.NewCoin(pool.GetToken1(), sdk.NewInt(100)), pool.GetToken0(), sdk.ZeroInt(), sdk.ZeroDec())
+
+	// Fail to swap right
+	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, smallTokenOneCoinIn, tokenZeroDenom, sdk.ZeroInt(), sdk.ZeroDec())
 	s.Require().Error(err)
 	s.Require().ErrorContains(err, types.InvalidAmountCalculatedError{Amount: sdk.ZeroInt()}.Error())
 
-	// Validate can swap left
-	s.swapZeroForOneLeft(poolId, sdk.NewCoin(pool.GetToken0(), sdk.NewInt(100)))
+	// Validate the ability to swap left
+	s.swapZeroForOneLeft(poolId, smallTokenZeroCoinIn)
 }
