@@ -233,6 +233,15 @@ func (s *SwapTickCrossTestSuite) assertPoolTickEquals(poolId uint64, expectedTic
 	s.Require().Equal(expectedTick, pool.GetCurrentTick())
 }
 
+// computeSwapAmounts computes the amountIn that should be swapped to reach the expectedTickToSwapTo
+// given the direction of the swap (as defined by isZeroForOne) and the current sqrt price.
+// if shouldStayWithinTheSameBucket is true, the amountIn is computed such that the swap does not cross the tick.
+// curSqrtPrice can be a nil dec (sdk.Dec{}). In such a case, the system converts the current tick to a current sqrt price.
+// The reason why user might want to provide a current sqrt price is when going in zero for one direction of a second swap.
+// In that case, the current sqrt price is still in the domain of the previous bucket but the current tick is already in the next
+// bucket.
+//
+// Note, that this logic runs quote estimation. Our frontend logic runs a similar algorithm.
 func (s *SwapTickCrossTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice sdk.Dec, expectedTickToSwapTo int64, isZeroForOne bool, shouldStayWithinTheSameBucket bool) (sdk.Dec, sdk.Dec, sdk.Dec) {
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
@@ -244,39 +253,49 @@ func (s *SwapTickCrossTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice 
 		tokenInDenom = pool.GetToken1()
 	}
 
+	// Get liquidity net amounts for tokenIn estimation.
 	liquidityNetAmounts, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityNetInDirection(s.Ctx, poolId, tokenInDenom, sdk.Int{}, sdk.Int{})
 	s.Require().NoError(err)
 
 	currentTick := originalCurrentTick
-
+	// compute current sqrt price if not provided
 	if curSqrtPrice.IsNil() {
 		curSqrtPrice = s.tickToSqrtPrice(currentTick)
 	}
 
+	// Start from current pool liquidity and zero amount in.
 	currentLiquidity := pool.GetLiquidity()
 	amountIn := sdk.ZeroDec()
 
 	for i, liquidityNetEntry := range liquidityNetAmounts {
+		// Initialize the next initialized tick and its sqrt price.
 		nextInitializedTick := liquidityNetEntry.TickIndex
 		nextInitTickSqrtPrice := s.tickToSqrtPrice(nextInitializedTick)
 
+		// Handle swap depending on the direction.
+		// Left (zero for one) or right (one for zero)
 		var isWithinDesiredBucketAfterSwap bool
 		if isZeroForOne {
-
+			// Round up so that we cross the tick by default.
 			curAmountIn := math.CalcAmount0Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, true)
 
 			amountIn = amountIn.Add(curAmountIn)
 
+			// The tick should be crossed if currentTick > expectedTickToSwapTo, unless the intention
+			// is to stay within the same bucket.
 			shouldCrossTick := currentTick > expectedTickToSwapTo && !shouldStayWithinTheSameBucket
 			if shouldCrossTick {
+				// Runs regular tick crossing logic.
 				curSqrtPrice = s.tickToSqrtPrice(nextInitializedTick)
 				currentLiquidity = currentLiquidity.Sub(liquidityNetEntry.LiquidityNet)
 				currentTick = nextInitializedTick - 1
 			}
 
+			// Determine if we've reached the desired bucket.
 			isWithinDesiredBucketAfterSwap = currentTick == expectedTickToSwapTo || shouldStayWithinTheSameBucket
 
-			// This in an edge case when going left in second swap after previously going right.
+			// This in an edge case when going left in second swap after previously going right
+			// and indetending to stay within the same bucket.
 			if amountIn.IsZero() && isWithinDesiredBucketAfterSwap {
 				nextInitTickSqrtPrice := s.tickToSqrtPrice(liquidityNetAmounts[i+1].TickIndex)
 
@@ -285,19 +304,25 @@ func (s *SwapTickCrossTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice 
 				amountIn = amountIn.Add(curAmountIn)
 			}
 		} else {
+			// Round up so that we cross the tick by default.
 			curAmountIn := math.CalcAmount1Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, true)
 			amountIn = amountIn.Add(curAmountIn)
 
+			// The tick should be crossed if currentTick <= expectedTickToSwapTo, unless the intention
+			// is to stay within the same bucket.
 			shouldCrossTick := currentTick <= expectedTickToSwapTo && !shouldStayWithinTheSameBucket
 			if shouldCrossTick {
+				// Runs regular tick crossing logic.
 				curSqrtPrice = s.tickToSqrtPrice(nextInitializedTick)
 				currentLiquidity = currentLiquidity.Add(liquidityNetEntry.LiquidityNet)
 				currentTick = nextInitializedTick
 			}
 
+			// Determine if we've reached the desired bucket.
 			isWithinDesiredBucketAfterSwap = currentTick == expectedTickToSwapTo || shouldStayWithinTheSameBucket
 		}
 
+		// Stop if the desired bucket is activated.
 		if isWithinDesiredBucketAfterSwap {
 			break
 		}
