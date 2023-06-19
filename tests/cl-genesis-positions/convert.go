@@ -134,12 +134,20 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 			continue
 		}
 
-		lowerTickOsmosis, err := math.PriceToTickRoundDown(lowerPrice, pool.GetTickSpacing())
+		sqrtPriceLower, err := lowerPrice.ApproxRoot(2)
+		if err != nil {
+			panic(err)
+		}
+		lowerTickOsmosis, err := math.SqrtPriceToTickRoundDownSpacing(sqrtPriceLower, pool.GetTickSpacing())
 		if err != nil {
 			panic(err)
 		}
 
-		upperTickOsmosis, err := math.PriceToTickRoundDown(upperPrice, pool.GetTickSpacing())
+		sqrtPriceUpper, err := upperPrice.ApproxRoot(2)
+		if err != nil {
+			panic(err)
+		}
+		upperTickOsmosis, err := math.SqrtPriceToTickRoundDownSpacing(sqrtPriceUpper, pool.GetTickSpacing())
 		if err != nil {
 			panic(err)
 		}
@@ -191,9 +199,8 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 		numberOfSuccesfulPositions++
 
 		bigBangPositions = append(bigBangPositions, clgenesis.PositionData{
-			Position: &model.Position{
+			Position: &clgenesis.PositionWithoutPoolId{
 				Address:    randomCreator.String(),
-				PoolId:     poolId,
 				JoinTime:   osmosis.Ctx.BlockTime(),
 				Liquidity:  position.LiquidityCreated,
 				PositionId: position.PositionId,

@@ -5,9 +5,9 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
 import "osmosis/accum/v1beta1/accum.proto";
 import "osmosis/concentrated-liquidity/params.proto";
-import "osmosis/concentrated-liquidity/position.proto";
 import "osmosis/concentrated-liquidity/tickInfo.proto";
 import "osmosis/concentrated-liquidity/incentive_record.proto";
 
@@ -16,12 +16,10 @@ option go_package = "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidit
 // FullTick contains tick index and pool id along with other tick model
 // information.
 message FullTick {
-  // pool id associated with the tick.
-  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   // tick's index.
-  int64 tick_index = 2 [ (gogoproto.moretags) = "yaml:\"tick_index\"" ];
+  int64 tick_index = 1 [ (gogoproto.moretags) = "yaml:\"tick_index\"" ];
   // tick's info.
-  TickInfo info = 3 [
+  TickInfo info = 2 [
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"tick_info\""
   ];
@@ -29,7 +27,7 @@ message FullTick {
 
 // PoolData represents a serialized pool along with its ticks
 // for genesis state.
-message PoolData {
+message GenesisPoolData {
   // pool struct
   google.protobuf.Any pool = 1 [ (cosmos_proto.accepts_interface) = "PoolI" ];
   // pool's ticks
@@ -46,10 +44,12 @@ message PoolData {
   // incentive records to be set
   repeated IncentiveRecord incentive_records = 5
       [ (gogoproto.nullable) = false ];
+
+  repeated PositionData position_data = 6 [ (gogoproto.nullable) = false ];
 }
 
 message PositionData {
-  Position position = 1;
+  PositionWithoutPoolId position = 1;
   uint64 lock_id = 2 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
   osmosis.accum.v1beta1.Record spread_reward_accum_record = 3
       [ (gogoproto.nullable) = false ];
@@ -57,14 +57,29 @@ message PositionData {
       [ (gogoproto.nullable) = false ];
 }
 
+message PositionWithoutPoolId {
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  string address = 2 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+  int64 lower_tick = 3;
+  int64 upper_tick = 4;
+  google.protobuf.Timestamp join_time = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"join_time\""
+  ];
+  string liquidity = 6 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"liquidity\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
 // GenesisState defines the concentrated liquidity module's genesis state.
 message GenesisState {
   // params are all the parameters of the module
   Params params = 1 [ (gogoproto.nullable) = false ];
   // pool data containining serialized pool struct and ticks.
-  repeated PoolData pool_data = 2 [ (gogoproto.nullable) = false ];
-
-  repeated PositionData position_data = 3 [ (gogoproto.nullable) = false ];
+  repeated GenesisPoolData pool_data = 2 [ (gogoproto.nullable) = false ];
 
   uint64 next_position_id = 4
       [ (gogoproto.moretags) = "yaml:\"next_position_id\"" ];

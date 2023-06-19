@@ -7,6 +7,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
@@ -343,6 +344,12 @@ func (k Keeper) GetLargestAuthorizedUptimeDuration(ctx sdk.Context) time.Duratio
 
 func (k Keeper) GetLargestSupportedUptimeDuration(ctx sdk.Context) time.Duration {
 	return k.getLargestSupportedUptimeDuration(ctx)
+}
+
+func (k Keeper) SetupSwapStrategy(ctx sdk.Context, p types.ConcentratedPoolExtension,
+	spreadFactor sdk.Dec, tokenInDenom string,
+	priceLimit sdk.Dec) (strategy swapstrategy.SwapStrategy, sqrtPriceLimit sdk.Dec, err error) {
+	return k.setupSwapStrategy(ctx, p, spreadFactor, tokenInDenom, priceLimit)
 }
 
 func MoveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum accum.AccumulatorObject, oldPositionName, newPositionName string, growthOutside sdk.DecCoins) error {
