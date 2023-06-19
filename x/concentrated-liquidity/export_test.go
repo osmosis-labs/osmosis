@@ -349,7 +349,7 @@ func (k Keeper) GetLargestSupportedUptimeDuration(ctx sdk.Context) time.Duration
 func (k Keeper) SetupSwapStrategy(ctx sdk.Context, p types.ConcentratedPoolExtension,
 	spreadFactor sdk.Dec, tokenInDenom string,
 	priceLimit sdk.Dec) (strategy swapstrategy.SwapStrategy, sqrtPriceLimit sdk.Dec, err error) {
-	return k.setupSwapStrategy(ctx, p, spreadFactor, tokenInDenom, priceLimit)
+	return k.setupSwapStrategy(p, spreadFactor, tokenInDenom, priceLimit)
 }
 
 func MoveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum accum.AccumulatorObject, oldPositionName, newPositionName string, growthOutside sdk.DecCoins) error {
