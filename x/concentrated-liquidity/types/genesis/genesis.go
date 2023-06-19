@@ -27,7 +27,7 @@ func (gs GenesisState) Validate() error {
 	if gs.NextIncentiveRecordId == 0 {
 		return types.InvalidNextIncentiveRecordIdError{NextIncentiveRecordId: gs.NextIncentiveRecordId}
 	}
-	if gs.Params.BalancerSharesRewardDiscount.LT(sdk.ZeroDec()) || gs.Params.BalancerSharesRewardDiscount.GT(sdk.OneDec()) || (gs.Params.BalancerSharesRewardDiscount == sdk.Dec{}) {
+	if gs.Params.BalancerSharesRewardDiscount.IsNegative() || gs.Params.BalancerSharesRewardDiscount.GT(sdk.OneDec()) || (gs.Params.BalancerSharesRewardDiscount == sdk.Dec{}) {
 		return types.InvalidDiscountRateError{DiscountRate: gs.Params.BalancerSharesRewardDiscount}
 	}
 	return nil

@@ -61,9 +61,9 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 
 	// calculate liquidityNet, which we take into account and track depending on whether liquidityIn is positive or negative
 	if upper {
-		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Sub(liquidityDelta)
+		tickInfo.LiquidityNet.SubMut(liquidityDelta)
 	} else {
-		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Add(liquidityDelta)
+		tickInfo.LiquidityNet.AddMut(liquidityDelta)
 	}
 
 	k.SetTickInfo(ctx, poolId, tickIndex, &tickInfo)

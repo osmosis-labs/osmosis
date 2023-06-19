@@ -278,7 +278,7 @@ func (k Keeper) distributeSyntheticInternal(
 //   - perpetual
 //   - non-perpetual
 //
-// CONTRACT: gauge must be active
+// CONTRACT: gauge passed in as argument must be an active gauge.
 func (k Keeper) distributeInternal(
 	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {
@@ -290,6 +290,12 @@ func (k Keeper) distributeInternal(
 	remainEpochs := uint64(1)
 	if !gauge.IsPerpetual {
 		remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
+	}
+
+	// defense in depth
+	// this should never happen in practice since gauge passed in should always be an active gauge.
+	if remainEpochs == uint64(0) {
+		return nil, fmt.Errorf("gauge with id of %d is not active", gauge.Id)
 	}
 
 	// This is a no lock distribution flow that assumes that we have a pool associated with the gauge.
