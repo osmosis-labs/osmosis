@@ -508,47 +508,39 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			price:        types.MinSpotPrice,
 			tickExpected: types.MinTick,
 		},
-		"smallest + min price increment": {
-			price:        sdk.MustNewDecFromStr("0.000000000000000002"),
-			tickExpected: -161000000,
+		"smallest + min price + tick": {
+			price:        sdk.MustNewDecFromStr("0.000000000001000001"),
+			tickExpected: types.MinTick + 1,
 		},
 		"min price increment 10^1": {
-			price:        sdk.MustNewDecFromStr("0.000000000000000009"),
-			tickExpected: -154000000,
+			price:        sdk.MustNewDecFromStr("0.000000000010000000"),
+			tickExpected: types.MinTick + (9 * 1e6),
 		},
-		"smallest + min price increment 10^1": {
-			price:        sdk.MustNewDecFromStr("0.000000000000000010"),
-			tickExpected: -153000000,
+		"min price increment 10^2": {
+			price:        sdk.MustNewDecFromStr("0.000000000100000000"),
+			tickExpected: types.MinTick + (2 * 9 * 1e6),
 		},
-		"smallest + min price increment * 10^2": {
-			price:        sdk.MustNewDecFromStr("0.000000000000000100"),
-			tickExpected: -144000000,
+		"min price increment 10^3": {
+			price:        sdk.MustNewDecFromStr("0.000000001000000000"),
+			tickExpected: types.MinTick + (3 * 9 * 1e6),
 		},
-		"smallest + min price increment * 10^3": {
-			price:        sdk.MustNewDecFromStr("0.000000000000001000"),
-			tickExpected: -135000000,
+		"min price increment 10^4": {
+			price:        sdk.MustNewDecFromStr("0.000000010000000000"),
+			tickExpected: types.MinTick + (4 * 9 * 1e6),
 		},
-		"smallest + min price increment * 10^4": {
-			price:        sdk.MustNewDecFromStr("0.000000000000010000"),
-			tickExpected: -126000000,
+		"min price increment 10^5": {
+			price:        sdk.MustNewDecFromStr("0.000000100000000000"),
+			tickExpected: types.MinTick + (5 * 9 * 1e6),
 		},
-		"smallest + min price * increment 10^5": {
-			price:        sdk.MustNewDecFromStr("0.000000000000100000"),
-			tickExpected: -117000000,
+		"min price increment 10^6": {
+			price:        sdk.MustNewDecFromStr("0.000001000000000000"),
+			tickExpected: types.MinTick + (6 * 9 * 1e6),
 		},
-		"smallest + min price * increment 10^6": {
-			price:        sdk.MustNewDecFromStr("0.000000000001000000"),
-			tickExpected: -108000000,
-		},
-		"smallest + min price * increment 10^6 + tick": {
-			price:        sdk.MustNewDecFromStr("0.000000000001000001"),
-			tickExpected: -107999999,
-		},
-		"smallest + min price * increment 10^17": {
+		"smallest + min price * increment 10^11": {
 			price:        sdk.MustNewDecFromStr("0.100000000000000000"),
 			tickExpected: -9000000,
 		},
-		"smallest + min price * increment 10^18": {
+		"smallest + min price * increment 10^12": {
 			price:        sdk.MustNewDecFromStr("1.000000000000000000"),
 			tickExpected: 0,
 		},
