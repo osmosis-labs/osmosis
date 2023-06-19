@@ -237,7 +237,7 @@ func CalculateSqrtPriceToTick(sqrtPrice sdk.Dec) (tickIndex int64, err error) {
 	// For cases where calculated tick falls on a limit, the upper end is inclusive, since the actual tick is
 	// already shifted and making it exclusive would make min/max tick impossible to reach by construction.
 	// We do this primary for code simplicity, as alternatives would require more branching and special cases.
-	if (!outOfBounds && sqrtPrice.GTE(sqrtPriceTplus2)) || sqrtPrice.LT(sqrtPriceTmin1) || sqrtPrice.GT(sqrtPriceTplus2) {
+	if (!outOfBounds && sqrtPrice.GTE(sqrtPriceTplus2)) || (outOfBounds && sqrtPrice.GT(sqrtPriceTplus2)) || sqrtPrice.LT(sqrtPriceTmin1) {
 		return 0, fmt.Errorf("sqrt price to tick could not find a satisfying tick index. Hit bounds: %v", outOfBounds)
 	}
 
