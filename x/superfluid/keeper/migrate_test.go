@@ -1230,6 +1230,17 @@ type positionInfo struct {
 	lockId        uint64
 }
 
+type PositionType int
+
+const (
+	BondedSuperfluid PositionType = iota
+	UnbondingSuperfluidLocked
+	UnbondingSuperfluidUnlocking
+	VanillaLockLocked
+	VanillaLockUnlocking
+	NoLock
+)
+
 func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 	for i := 0; i < 10; i++ {
 		rand.Seed(time.Now().UnixNano() + int64(i))
@@ -1287,7 +1298,7 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 		// lock duration, an "add to lock" call will happen rather than creating a new lock.
 
 		totalFundsForPositionCreation := sdk.NewCoins()
-		createPositions := func(positionInfoIndex int, numPositions int, lockDurationFn func(int) time.Duration, superfluidDelegate bool, callbackFn func(int, positionInfo)) {
+		createPositions := func(posType PositionType, numPositions int, lockDurationFn func(int) time.Duration, superfluidDelegate bool, callbackFn func(int, positionInfo)) {
 			for i := 0; i < numPositions; i++ {
 				index := i + 1                              // Skip the first account, which is used for pool creation
 				divisor := int64(rand.Intn(maxDivisor)) + 1 // Randomly generate a divisor between 1 and maxDivisor
@@ -1297,37 +1308,37 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 				s.FundAcc(s.TestAccs[index], positionCoins)
 				totalFundsForPositionCreation = totalFundsForPositionCreation.Add(positionCoins...) // Track total funds used for position creation, to be used by invariant checks later
 				posInfoInternal := s.createBalancerPosition(s.TestAccs[index], balancerPoolId, lockDurationFn(i), balancerPoolShareDenom, positionCoins, positions.numAccounts-i, superfluidDelegate)
-				positionInfos[positionInfoIndex] = append(positionInfos[positionInfoIndex], posInfoInternal) // Track position info for invariant checks later
+				positionInfos[posType] = append(positionInfos[posType], posInfoInternal) // Track position info for invariant checks later
 				callbackFn(index, posInfoInternal)
 			}
 		}
 
-		createPositions(0, positions.numBondedSuperfluid, func(int) time.Duration { return unbondingDuration }, true, func(index int, posInfoInternal positionInfo) {
+		createPositions(BondedSuperfluid, positions.numBondedSuperfluid, func(int) time.Duration { return unbondingDuration }, true, func(index int, posInfoInternal positionInfo) {
 		})
 
-		createPositions(1, positions.numUnbondingSuperfluidLocked, func(int) time.Duration { return unbondingDuration + time.Nanosecond }, true, func(index int, posInfoInternal positionInfo) {
+		createPositions(UnbondingSuperfluidLocked, positions.numUnbondingSuperfluidLocked, func(int) time.Duration { return unbondingDuration + time.Nanosecond }, true, func(index int, posInfoInternal positionInfo) {
 			err := s.App.SuperfluidKeeper.SuperfluidUndelegate(s.Ctx, s.TestAccs[index].String(), posInfoInternal.lockId)
 			s.Require().NoError(err)
 		})
 
-		createPositions(2, positions.numUnbondingSuperfluidUnlocking, func(int) time.Duration { return unbondingDuration + time.Nanosecond*2 }, true, func(index int, posInfoInternal positionInfo) {
+		createPositions(UnbondingSuperfluidUnlocking, positions.numUnbondingSuperfluidUnlocking, func(int) time.Duration { return unbondingDuration + time.Nanosecond*2 }, true, func(index int, posInfoInternal positionInfo) {
 			err := s.App.SuperfluidKeeper.SuperfluidUndelegate(s.Ctx, s.TestAccs[index].String(), posInfoInternal.lockId)
 			s.Require().NoError(err)
 			err = s.App.SuperfluidKeeper.SuperfluidUnbondLock(s.Ctx, posInfoInternal.lockId, s.TestAccs[index].String())
 			s.Require().NoError(err)
 		})
 
-		createPositions(3, positions.numVanillaLockLocked, func(int) time.Duration { return unbondingDuration + time.Nanosecond*3 }, false, func(index int, posInfoInternal positionInfo) {
+		createPositions(VanillaLockLocked, positions.numVanillaLockLocked, func(int) time.Duration { return unbondingDuration + time.Nanosecond*3 }, false, func(index int, posInfoInternal positionInfo) {
 		})
 
-		createPositions(4, positions.numVanillaLockUnlocking, func(int) time.Duration { return unbondingDuration + time.Nanosecond*4 }, false, func(index int, posInfoInternal positionInfo) {
+		createPositions(VanillaLockUnlocking, positions.numVanillaLockUnlocking, func(int) time.Duration { return unbondingDuration + time.Nanosecond*4 }, false, func(index int, posInfoInternal positionInfo) {
 			lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, posInfoInternal.lockId)
 			s.Require().NoError(err)
 			_, err = s.App.LockupKeeper.BeginUnlock(s.Ctx, posInfoInternal.lockId, lock.Coins)
 			s.Require().NoError(err)
 		})
 
-		createPositions(5, positions.numNoLock, func(int) time.Duration { return time.Duration(0) }, false, func(index int, posInfoInternal positionInfo) {
+		createPositions(NoLock, positions.numNoLock, func(int) time.Duration { return time.Duration(0) }, false, func(index int, posInfoInternal positionInfo) {
 		})
 
 		// Some funds might not have been completely used when creating the above positions.
