@@ -376,6 +376,14 @@ func (s *KeeperTestHelper) LockTokens(addr sdk.AccAddress, coins sdk.Coins, dura
 	return msgResponse.ID
 }
 
+// LockTokensNoFund locks tokens and returns a lockID.
+func (s *KeeperTestHelper) LockTokensNoFund(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockID uint64) {
+	msgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
+	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(s.Ctx), lockuptypes.NewMsgLockTokens(addr, duration, coins))
+	s.Require().NoError(err)
+	return msgResponse.ID
+}
+
 // BuildTx builds a transaction.
 func (s *KeeperTestHelper) BuildTx(
 	txBuilder client.TxBuilder,
