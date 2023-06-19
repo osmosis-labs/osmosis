@@ -29,7 +29,7 @@ func TestReverseRelationTickIndexToBytes(t *testing.T) {
 			tickIndex: types.MaxTick,
 		},
 		"minimum tick index": {
-			tickIndex: types.MinTick,
+			tickIndex: types.MinInitializedTick,
 		},
 	}
 

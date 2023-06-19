@@ -58,8 +58,8 @@ func TickToPrice(tickIndex int64) (price sdk.Dec, err error) {
 	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(PowTenInternal(-exponentAtPriceOne)).TruncateInt64()
 
 	// Check that the tick index is between min and max value
-	if tickIndex < types.MinTick {
-		return sdk.Dec{}, types.TickIndexMinimumError{MinTick: types.MinTick}
+	if tickIndex < types.MinInitializedTick {
+		return sdk.Dec{}, types.TickIndexMinimumError{MinTick: types.MinInitializedTick}
 	}
 	if tickIndex > types.MaxTick {
 		return sdk.Dec{}, types.TickIndexMaximumError{MaxTick: types.MaxTick}
@@ -114,8 +114,8 @@ func RoundDownTickToSpacing(tickIndex int64, tickSpacing int64) (int64, error) {
 
 	// Defense-in-depth check to ensure that the tick index is within the authorized range
 	// Should never get here.
-	if tickIndex > types.MaxTick || tickIndex < types.MinTick {
-		return 0, types.TickIndexNotWithinBoundariesError{ActualTick: tickIndex, MinTick: types.MinTick, MaxTick: types.MaxTick}
+	if tickIndex > types.MaxTick || tickIndex < types.MinInitializedTick {
+		return 0, types.TickIndexNotWithinBoundariesError{ActualTick: tickIndex, MinTick: types.MinInitializedTick, MaxTick: types.MaxTick}
 	}
 
 	return tickIndex, nil
@@ -218,8 +218,8 @@ func CalculateSqrtPriceToTick(sqrtPrice sdk.Dec) (tickIndex int64, err error) {
 	// We check this at max tick - 1 instead of max tick, since we expect the output to
 	// have some error that can push us over the tick boundary.
 	outOfBounds := false
-	if truncatedTick <= types.MinTick {
-		truncatedTick = types.MinTick + 1
+	if truncatedTick <= types.MinInitializedTick {
+		truncatedTick = types.MinInitializedTick + 1
 		outOfBounds = true
 	} else if truncatedTick >= types.MaxTick-1 {
 		truncatedTick = types.MaxTick - 2

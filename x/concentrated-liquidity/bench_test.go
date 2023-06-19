@@ -113,7 +113,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 		tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(100))
 		tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(100))
 		tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
-		_, _, _, _, _, _, err = clKeeper.CreatePosition(s.Ctx, clPoolId, s.TestAccs[0], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinTick, types.MaxTick)
+		_, _, _, _, _, _, err = clKeeper.CreatePosition(s.Ctx, clPoolId, s.TestAccs[0], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinInitializedTick, types.MaxTick)
 		noError(b, err)
 
 		pool, err := clKeeper.GetPoolById(s.Ctx, clPoolId)
@@ -133,7 +133,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 				if denomIn == denom0 {
 					// Decreasing price so want to be below current tick
 					// minTick <= lowerTick <= currentTick
-					lowerTick = rand.Int63n(currentTick-types.MinTick+1) + types.MinTick
+					lowerTick = rand.Int63n(currentTick-types.MinInitializedTick+1) + types.MinInitializedTick
 					// lowerTick <= upperTick <= currentTick
 					upperTick = currentTick - rand.Int63n(int64(math.Abs(float64(currentTick-lowerTick))))
 				} else {
@@ -180,7 +180,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 		// Setup numberOfPositions full range positions for deeper liquidity.
 		setupFullRangePositions := func() {
 			for i := 0; i < numberOfPositions; i++ {
-				lowerTick := types.MinTick
+				lowerTick := types.MinInitializedTick
 				upperTick := types.MaxTick
 				createPosition(lowerTick, upperTick)
 			}
