@@ -1142,6 +1142,34 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 				},
 			},
 		},
+		{
+			name: "one full range position, one range position below current tick, zero for one",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -3, sdk.NewDec(5)),
+				withLiquidityNetandTickIndex(defaultTick, -2, sdk.NewDec(-5)),
+			},
+
+			poolId:                     defaultPoolId,
+			tokenIn:                    ETH,
+			boundTick:                  sdk.Int{},
+			expectedStartTickLiquidity: sdk.NewDec(10),
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(-5),
+					TickIndex:    -2,
+				},
+				{
+					LiquidityNet: sdk.NewDec(5),
+					TickIndex:    -3,
+				},
+				{
+					LiquidityNet: sdk.NewDec(10),
+					TickIndex:    DefaultMinTick,
+				},
+			},
+		},
 
 		// error cases
 		{
@@ -1207,7 +1235,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			expectedError: true,
 		},
 		{
-			name: "start tick is in invalid range relative to current pool tick, zero for one",
+			name: "error: start tick is in invalid range relative to current pool tick, zero for one",
 			presetTicks: []genesis.FullTick{
 				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
 				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
@@ -1221,7 +1249,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			expectedError:   true,
 		},
 		{
-			name: "start tick is in invalid range relative to current pool tick, one for zero",
+			name: "error: start tick is in invalid range relative to current pool tick, one for zero",
 			presetTicks: []genesis.FullTick{
 				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
 				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),

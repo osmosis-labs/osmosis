@@ -435,9 +435,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 		// Otherwise, depending on the swap direction, we need to accumulate liquidity values to determine the liquidity at the start tick.
 		if zeroForOne {
 			if liquidityDepth.TickIndex < currentTick {
-				if liquidityDepth.LiquidityNet.IsPositive() {
-					startTickLiquidity = startTickLiquidity.Add(liquidityDepth.LiquidityNet)
-				}
+				startTickLiquidity = startTickLiquidity.Add(liquidityDepth.LiquidityNet)
 			}
 		} else {
 			if liquidityDepth.TickIndex > currentTick {
