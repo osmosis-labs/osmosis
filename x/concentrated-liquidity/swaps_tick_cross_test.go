@@ -87,7 +87,7 @@ func (s *SwapTickCrossTestSuite) validateIteratorRightOneForZero(poolId uint64, 
 }
 
 // assertPositionInRange a helper to assert that a position with the given lowerTick and upperTick is in range.
-func (s *SwapTickCrossTestSuite) asserPositionInRange(poolId uint64, lowerTick int64, upperTick int64) {
+func (s *SwapTickCrossTestSuite) assertPositionInRange(poolId uint64, lowerTick int64, upperTick int64) {
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
@@ -110,7 +110,7 @@ func (s *SwapTickCrossTestSuite) assertPositionRangeConditional(poolId uint64, i
 	if isOutOfRangeExpected {
 		s.assertPositionOutOfRange(poolId, lowerTick, upperTick)
 	} else {
-		s.asserPositionInRange(poolId, lowerTick, upperTick)
+		s.assertPositionInRange(poolId, lowerTick, upperTick)
 	}
 }
 
@@ -136,16 +136,16 @@ func (s *SwapTickCrossTestSuite) swapOneForZeroRight(poolId uint64, amount sdk.C
 	s.Require().NoError(err)
 }
 
-// asserPoolLiquidityEquals a helper to assert that the liquidity of a pool is equal to the expected value.
-func (s *SwapTickCrossTestSuite) asserPoolLiquidityEquals(poolId uint64, expectedLiquidity sdk.Dec) {
+// assertPoolLiquidityEquals a helper to assert that the liquidity of a pool is equal to the expected value.
+func (s *SwapTickCrossTestSuite) assertPoolLiquidityEquals(poolId uint64, expectedLiquidity sdk.Dec) {
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
 	s.Require().Equal(expectedLiquidity, pool.GetLiquidity())
 }
 
-// asserPoolTickEquals a helper to assert that the current tick of a pool is equal to the expected value.
-func (s *SwapTickCrossTestSuite) asserPoolTickEquals(poolId uint64, expectedTick int64) {
+// assertPoolTickEquals a helper to assert that the current tick of a pool is equal to the expected value.
+func (s *SwapTickCrossTestSuite) assertPoolTickEquals(poolId uint64, expectedTick int64) {
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
@@ -291,13 +291,13 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Cros
 		// As a sanity check confirm that current liquidity corresponds
 		// to the sum of liquidities of all positions.
 		liquidityAllPositions := liquidityFullRange.Add(narrowRangeOnePosition.liquidity.Add(narrowRangeTwoPosition.liquidity))
-		s.asserPoolLiquidityEquals(poolId, liquidityAllPositions)
+		s.assertPoolLiquidityEquals(poolId, liquidityAllPositions)
 
 		// Sanity check that that NR1 is in range prior to swap.
-		s.asserPositionInRange(poolId, narrowRangeOnePosition.lowerTick, narrowRangeOnePosition.upperTick)
+		s.assertPositionInRange(poolId, narrowRangeOnePosition.lowerTick, narrowRangeOnePosition.upperTick)
 
 		// Sanity check that that NR2 is in range prior to swap.
-		s.asserPositionInRange(poolId, narrowRangeTwoPosition.lowerTick, narrowRangeTwoPosition.upperTick)
+		s.assertPositionInRange(poolId, narrowRangeTwoPosition.lowerTick, narrowRangeTwoPosition.upperTick)
 
 		return poolId, narrowRangeOnePosition, narrowRangeTwoPosition
 	}
@@ -312,8 +312,8 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Cros
 	// - next tick iterator towards right (one for zero) is correct
 	validateAfterFirstSwap := func(poolId uint64, expectedValues expectedAndComputedValues, nr1Position positionMeta, nr2Position positionMeta) {
 		// Assert that pool tick and liquidity correspond to the expected values.
-		s.asserPoolTickEquals(poolId, expectedValues.expectedTickAfterFirstSwap)
-		s.asserPoolLiquidityEquals(poolId, expectedValues.expectedLiquidityAfterFirstAndSecondSwap)
+		s.assertPoolTickEquals(poolId, expectedValues.expectedTickAfterFirstSwap)
+		s.assertPoolLiquidityEquals(poolId, expectedValues.expectedLiquidityAfterFirstAndSecondSwap)
 
 		// Check position ranges
 
@@ -321,7 +321,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Cros
 		s.assertPositionRangeConditional(poolId, expectedValues.doesFirstSwapCrossTick, nr1Position.lowerTick, nr1Position.upperTick)
 
 		// Second position is always in range by test construction.
-		s.asserPositionInRange(poolId, nr2Position.lowerTick, nr2Position.upperTick)
+		s.assertPositionInRange(poolId, nr2Position.lowerTick, nr2Position.upperTick)
 
 		// Confirm that the next tick to be returned is correct for both zero for one and one for zero directions.
 
@@ -341,7 +341,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Cros
 		// Liquidity should remain the same by construction as we do not expect second swap to cross the tick.
 		// This check helps validate that we start from the correct tick on second swap and do not cross
 		// a tick twice inter-swap. Otherwise, if we were to cross it twice, the liquidity would be zero.
-		s.asserPoolLiquidityEquals(poolId, expectedValues.expectedLiquidityAfterFirstAndSecondSwap)
+		s.assertPoolLiquidityEquals(poolId, expectedValues.expectedLiquidityAfterFirstAndSecondSwap)
 
 		// Check position ranges
 
@@ -349,7 +349,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Cros
 		s.assertPositionRangeConditional(poolId, expectedValues.doesFirstSwapCrossTick, nr1Position.lowerTick, nr1Position.upperTick)
 
 		// Second position is always in range by test construction.
-		s.asserPositionInRange(poolId, nr2Position.lowerTick, nr2Position.upperTick)
+		s.assertPositionInRange(poolId, nr2Position.lowerTick, nr2Position.upperTick)
 	}
 
 	// computeValuesForTestZeroForOne computes the expected values for the test case when swapping zero for one.
