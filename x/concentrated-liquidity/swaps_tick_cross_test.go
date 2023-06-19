@@ -322,7 +322,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Cros
 
 		// Check position ranges
 
-		// First position is out if range if doesFirstSwapCrossUpperTickOne is true. Otherwise, it is in range.
+		// First position is out of range if doesFirstSwapCrossUpperTickOne is true. Otherwise, it is in range.
 		s.assertPositionRangeConditional(poolId, expectedValues.doesFirstSwapCrossTick, nr1Position.lowerTick, nr1Position.upperTick)
 
 		// Second position is always in range by test construction.
@@ -555,35 +555,46 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Cros
 				tickSpacing: tickSpacing100,
 
 				// two tick spacings to the left + 1 tick from current tick
-				swapTicksAway:                  -nr1TickSpacingsAway*tickSpacing100 + 1,
-				expectedTickAwayAfterFirstSwap: -nr1TickSpacingsAway*tickSpacing100 + 1,
+				swapTicksAway: -nr1TickSpacingsAway*tickSpacing100 + 1,
+
+				// N.B.: rounding takes our current tick to the left by 1 tick.
+				// This is acceptable as we stay in the same bucket.
+				expectedTickAwayAfterFirstSwap: -nr1TickSpacingsAway * tickSpacing100,
 			},
 			"group2 1 tick spacing, first swap does not cross tick, second swap in same direction": {
 				tickSpacing: 1,
 
 				// two tick spacings to the left + 1 tick from current
-				swapTicksAway:                  -nr1TickSpacingsAway + 1,
-				expectedTickAwayAfterFirstSwap: -nr1TickSpacingsAway + 1,
+				swapTicksAway: -nr1TickSpacingsAway + 1,
+
+				// N.B.: rounding takes our current tick to the left by 1 tick.
+				// This is acceptable as we stay in the same bucket.
+				expectedTickAwayAfterFirstSwap: -nr1TickSpacingsAway,
 			},
 
 			// Group 3:
 			// Test setup:
-			// swap 1: stop right after lower tick of NR1
-			// swap 2: stop right before lower tick of NR1
+			// swap 1: stop to the right of lower tick of NR1
+			// swap 2: stop to the right of lower tick of NR1
 			"group3 100 tick spacing, first swap does not cross tick, second swap in same direction": {
 				tickSpacing: tickSpacing100,
 
 				// 200 ticks (or 2 tick spacings to the left) + 1 tick from current
-				swapTicksAway: -(nr1TickSpacingsAway + 1) * tickSpacing100,
+				swapTicksAway: -(nr1TickSpacingsAway - 1) * tickSpacing100,
 
-				expectedTickAwayAfterFirstSwap: -(nr1TickSpacingsAway + 1) * tickSpacing100,
+				// N.B.: rounding takes our current tick to the left by 1 tick.
+				// This is acceptable as we stay in the same bucket.
+				expectedTickAwayAfterFirstSwap: -(nr1TickSpacingsAway-1)*tickSpacing100 - 1,
 			},
 			"group3 1 tick spacing, first swap does not cross tick, second swap in same direction": {
 				tickSpacing: tickSpacingOne,
 
 				// 2 tick s(or 2 tick spacings to the left) + 1 tick from current
-				swapTicksAway:                  -(nr1TickSpacingsAway + 1),
-				expectedTickAwayAfterFirstSwap: -(nr1TickSpacingsAway + 1),
+				swapTicksAway: -(nr1TickSpacingsAway + 1),
+
+				// N.B.: rounding takes our current tick to the left by 1 tick.
+				// This is acceptable as we stay in the same bucket.
+				expectedTickAwayAfterFirstSwap: -(nr1TickSpacingsAway + 1) - 1,
 			},
 		}
 
