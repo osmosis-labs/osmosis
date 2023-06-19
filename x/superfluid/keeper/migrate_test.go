@@ -1287,7 +1287,7 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 		// lock duration, an "add to lock" call will happen rather than creating a new lock.
 
 		totalFundsForPositionCreation := sdk.NewCoins()
-		createPositions := func(positionType int, numPositions int, lockDurationFn func(int) time.Duration, superfluidDelegate bool, followOnFn func(int, positionInfo)) {
+		createPositions := func(positionType int, numPositions int, lockDurationFn func(int) time.Duration, superfluidDelegate bool, callbackFn func(int, positionInfo)) {
 			for i := 0; i < numPositions; i++ {
 				index := i + 1                              // Skip the first account, which is used for pool creation
 				divisor := int64(rand.Intn(maxDivisor)) + 1 // Randomly generate a divisor between 1 and maxDivisor
