@@ -56,10 +56,6 @@ type SwapStrategy interface {
 	// If nex tick relative to tickINdex does not exist in the store, it will return an invalid iterator.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	InitializeNextTickIterator(ctx sdk.Context, poolId uint64, tickIndex int64) dbm.Iterator
-	// InitializeTickValue returns the initial tick value for computing swaps based
-	// on the actual current tick.
-	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	InitializeTickValue(currentTick int64) int64
 	// SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.
 	// This is called when consuming all liquidity.
 	// When a position is created, we add liquidity to lower tick
@@ -69,6 +65,18 @@ type SwapStrategy interface {
 	// going up. As a result, the sign depends on the direction we are moving.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	SetLiquidityDeltaSign(liquidityDelta sdk.Dec) sdk.Dec
+	// UpdateTickAfterCrossing updates the next tick after crossing
+	// to satisfy our "position in-range" invariant which is:
+	// lower tick <= current tick < upper tick
+	// When crossing a tick in zero for one direction, we move
+	// left on the range. As a result, we end up crossing the lower tick
+	// that is inclusive. Therefore, we must decrease the next tick
+	// by 1 additional unit so that it falls under the current range.
+	// When crossing a tick in one for zero direction, we move
+	// right on the range. As a result, we end up crossing the upper tick
+	// that is exclusive. Therefore, we leave the next tick as is since
+	// it is already excluded from the current range.
+	UpdateTickAfterCrossing(nextTick int64) (updatedNextTick int64)
 	// ValidateSqrtPrice validates the given square root price
 	// relative to the current square root price on one side of the bound
 	// and the min/max sqrt price on the other side.
