@@ -1685,8 +1685,7 @@ At launch, pool creation is permissioned. Therefore, we can
 ensure correctness for the initial set of pools.
 
 Long term, we will implement a wrapper contract around concentrated liquidity
-that will handle the precision issues and scale the prices to be all in the
-desired precision of 6.
+that will handle the precision issues and scale the prices to all have a precision of at most 12.
 
 The contract will have to handle truncation and rounding to determine
 how to handle dust during this process. The truncated amount can be significant.
