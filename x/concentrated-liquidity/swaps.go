@@ -374,7 +374,7 @@ func (k Keeper) computeOutAmtGivenIn(
 			}
 		}
 	}
-
+	fmt.Println("SPREADDDDDD: ", swapState.spreadRewardGrowthGlobal)
 	// Add spread reward growth per share to the pool-global spread reward accumulator.
 	spreadRewardAccumulator.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.spreadRewardGrowthGlobal)))
 
@@ -419,17 +419,17 @@ func (k Keeper) computeInAmtGivenOut(
 		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
+	spreadRewardAccumulator, uptimeAccums, err := k.getSwapAccumulators(ctx, poolId)
+	if err != nil {
+		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+	}
+
 	// initialize swap state with the following parameters:
 	// as we iterate through the following for loop, this swap state will get updated after each required iteration
 	swapState := newSwapState(desiredTokenOut.Amount, p, swapStrategy)
 
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
 	defer nextTickIter.Close()
-
-	spreadRewardAccumulator, uptimeAccums, err := k.getSwapAccumulators(ctx, poolId)
-	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
-	}
 
 	totalSpreadFactors = sdk.ZeroDec()
 
@@ -504,7 +504,7 @@ func (k Keeper) computeInAmtGivenOut(
 			}
 		}
 	}
-
+	fmt.Println("SPREADDDDDD: ", totalSpreadFactors)
 	// Add spread reward growth per share to the pool-global spread reward accumulator.
 	spreadRewardAccumulator.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec(tokenInDenom, swapState.spreadRewardGrowthGlobal)))
 

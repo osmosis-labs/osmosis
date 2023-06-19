@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -264,6 +265,7 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("SPREAD REWARDS CLAIMED", spreadRewardsClaimed, "FORFEITED", forfeitedDust)
 
 	// add foreited dust back to the global accumulator
 	if !forfeitedDust.IsZero() {
