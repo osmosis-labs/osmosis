@@ -1046,6 +1046,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			// Create a position from the parameters in the test case.
 			positionId, _ := s.createPositionWithLockState(tc.createLockState, pool.GetId(), owner, lockCoins, tc.timeElapsed)
+
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(tc.timeElapsed))
 			preBalanceToken0 := s.App.BankKeeper.GetBalance(s.Ctx, owner, pool.GetToken0())
 
@@ -1070,7 +1071,6 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			}
 
 			// --- System under test ---
-
 			newPosId, newAmt0, newAmt1, err := concentratedLiquidityKeeper.AddToPosition(s.Ctx, sender, config.positionId, tc.amount0ToAdd, tc.amount1ToAdd, config.amount0Minimum, config.amount1Minimum)
 			// config.amount0Minimum
 			if config.expectedError != nil {
