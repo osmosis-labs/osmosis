@@ -1582,6 +1582,115 @@ Note that for storing ticks, we use 9 bytes instead of directly using uint64, fi
 Note that the reason for having pool ID and min uptime index is so that we can retrieve
 all incentive records for a given pool ID and min uptime index by performing prefix iteration.
 
+## Precision Issues With Price
+
+There are precision issues that we must be considerate of in our design.
+
+Consider the balancer pool between `arb` base unit and `uosmo`:
+
+```bash
+osmosisd q gamm pool 1011
+pool:
+  '@type': /osmosis.gamm.v1beta1.Pool
+  address: osmo1pv6ffw8whyle2nyxhh8re44k4mu4smqd7fd66cu2y8gftw3473csxft8y5
+  future_pool_governor: 24h
+  id: "1011"
+  pool_assets:
+  - token:
+      amount: "101170077995723619690981"
+      denom: ibc/10E5E5B06D78FFBB61FD9F89209DEE5FD4446ED0550CBB8E3747DA79E10D9DC6
+    weight: "536870912000000"
+  - token:
+      amount: "218023341414"
+      denom: uosmo
+    weight: "536870912000000"
+  pool_params:
+    exit_fee: "0.000000000000000000"
+    smooth_weight_change_params: null
+    swap_fee: "0.002000000000000000"
+  total_shares:
+    amount: "18282469846754434906194"
+    denom: gamm/pool/1011
+  total_weight: "1073741824000000"
+```
+
+Let's say we want to migrate this into a CL pool where `uosmo` is the quote
+asset and `arb` base unit is the base asset.
+
+Note that quote asset is denom1 and base asset is denom0.
+We want quote asset to be `uosmo` so that limit orders on ticks
+have tick spacing in terms of `uosmo` as the quote.
+
+Note:
+- OSMO has precision of 6. 1 OSMO = 10**6 `uosmo`
+- ARB has precision of 18. 1 ARB = 10**18 `arb` base unit
+
+Therefore, the true price of the pool is:
+```python
+>>> (218023341414 / 10**6)  / (101170077995723619690981 / 10**18)
+2.1550180224553714
+```
+
+However, in our core logic it is represented as:
+
+```python
+218023341414 / 101170077995723619690981
+2.1550180224553714e-12
+```
+
+or
+
+```python
+osmosisd q gamm spot-price 1011 uosmo ibc/10E5E5B06D78FFBB61FD9F89209DEE5FD4446ED0550CBB8E3747DA79E10D9DC6
+spot_price: "0.000000000002155018"
+```
+
+As a protocol, we need to accomodate prices that are very far apart.
+In the example above, the difference between `10**6 and 10**18`
+
+Most of the native precision is 10**6. However, most of the ETH
+precision is 10**18.
+
+This starts to matter for assets such as `upepe`. That have
+a precision of 18 and a very low price level relative to
+the quote asset that has precision of 6 (e.g `uosmo` or `uusdc`).
+
+The true price of PEPE in USDC terms is `0.0000009749`.
+
+In the "on-chain representation", this would be:
+`0.0000009749 * 10**6 / 10**18 = 9.749e-19`
+
+Note that this is below the minimum precision of `sdk.Dec`.
+
+Additionally, there is a problem with tick to sqrt price conversions
+where at small price levels, two sqrt prices can map to the same
+tick.
+
+As a workaround, we have decided to limit min spot price to 10^-12
+and min tick to `-108000000`. It has been shown at at price levels
+below 10^-12, this issue is most apparent. See this issue for details:
+<https://github.com/osmosis-labs/osmosis/issues/5550>
+
+Now, we have a problem that we cannot handle pairs where
+the quote asset has a precision of 6 and the base asset has a
+precision of 18.
+
+Note that this is not a problem for pairs where the quote asset
+has a precision of 18 and the base asset has a precision of 6.
+E.g. OSMO/DAI.
+
+### Solution
+
+At launch, pool creation is permissioned. Therefore, we can
+ensure correctness for the initial set of pools.
+
+Long term, we will implement a wrapper contract around concentrated liquidity
+that will handle the precision issues and scale the prices to all have a precision of at most 12.
+
+The contract will have to handle truncation and rounding to determine
+how to handle dust during this process. The truncated amount can be significant.
+That being said, this problem is out of scope for this document.
+
 ## Terminology
 
 We will use the following terms throughout the document and our codebase:
