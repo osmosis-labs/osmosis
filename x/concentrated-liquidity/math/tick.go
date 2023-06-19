@@ -86,6 +86,8 @@ func TickToPrice(tickIndex int64) (price sdk.Dec, err error) {
 	// Finally, we can calculate the price
 	price = PowTenInternal(geometricExponentDelta).Add(osmomath.NewBigDec(numAdditiveTicks).Mul(currentAdditiveIncrementInTicks).SDKDec())
 
+	// defense in depth, this logic would not be reached due to use having checked if given tick is in between
+	// min tick and max tick.
 	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
 		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
 	}

@@ -714,6 +714,31 @@ func (suite *ConcentratedMathTestSuite) TestCalculatePriceToTick() {
 		})
 	}
 }
+func (suite *ConcentratedMathTestSuite) TestPowTenInternal() {
+	testCases := map[string]struct {
+		exponent             int64
+		expectedPowTenResult sdk.Dec
+	}{
+		"Power by 5": {
+			exponent:             5,
+			expectedPowTenResult: sdk.NewDec(100000),
+		},
+		"Power by 0": {
+			exponent:             0,
+			expectedPowTenResult: sdk.NewDec(1),
+		},
+		"Power by -5": {
+			exponent:             -5,
+			expectedPowTenResult: sdk.MustNewDecFromStr("0.00001"),
+		},
+	}
+	for name, t := range testCases {
+		suite.Run(name, func() {
+			powTenResult := math.PowTenInternal(t.exponent)
+			suite.Require().Equal(t.expectedPowTenResult, powTenResult)
+		})
+	}
+}
 
 func (s *ConcentratedMathTestSuite) TestSqrtPriceToTickRoundDownSpacing() {
 	testCases := map[string]struct {
