@@ -372,7 +372,7 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			currentTick:      DefaultCurrTick,
 			currentSqrtPrice: DefaultCurrSqrtPrice,
 			newLiquidity:     DefaultLiquidityAmt,
-			newTick:          types.MinTick,
+			newTick:          types.MinInitializedTick,
 			newSqrtPrice:     DefaultCurrSqrtPrice,
 			expectErr:        nil,
 		},
@@ -386,7 +386,7 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			newSqrtPrice:     DefaultCurrSqrtPrice,
 			expectErr: types.TickIndexNotWithinBoundariesError{
 				MaxTick:    types.MaxTick,
-				MinTick:    types.MinTick,
+				MinTick:    types.MinInitializedTick,
 				ActualTick: math.MaxInt64,
 			},
 		},
@@ -400,7 +400,7 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			newSqrtPrice:     DefaultCurrSqrtPrice,
 			expectErr: types.TickIndexNotWithinBoundariesError{
 				MaxTick:    types.MaxTick,
-				MinTick:    types.MinTick,
+				MinTick:    types.MinInitializedTick,
 				ActualTick: math.MinInt64,
 			},
 		},

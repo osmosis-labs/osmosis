@@ -18,7 +18,7 @@ var (
 	// Note we get spot price exponent by counting the number of digits in the max spot price and subtracting 1.
 	closestPriceBelowMaxPriceDefaultTickSpacing = types.MaxSpotPrice.Sub(sdk.NewDec(10).PowerMut(uint64(len(types.MaxSpotPrice.TruncateInt().String()) - 1 - int(-types.ExponentAtPriceOne) - 1)))
 	// min tick + 10 ^ -expoentAtPriceOne
-	closestTickAboveMinPriceDefaultTickSpacing = sdk.NewInt(types.MinTick).Add(sdk.NewInt(10).ToDec().Power(uint64(types.ExponentAtPriceOne * -1)).TruncateInt())
+	closestTickAboveMinPriceDefaultTickSpacing = sdk.NewInt(types.MinInitializedTick).Add(sdk.NewInt(10).ToDec().Power(uint64(types.ExponentAtPriceOne * -1)).TruncateInt())
 )
 
 // use following equations to test testing vectors using sage
@@ -421,7 +421,7 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTickRoundDown() {
 		"tick spacing 100, MinSpotPrice, MinTick": {
 			price:        types.MinSpotPrice,
 			tickSpacing:  defaultTickSpacing,
-			tickExpected: types.MinTick,
+			tickExpected: types.MinInitializedTick,
 		},
 		"tick spacing 100, Spot price one tick above min, one tick above min -> MinTick": {
 			price:        types.MinSpotPrice.Add(sdk.SmallestDec()),
@@ -664,7 +664,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToPrice_ErrorCases() {
 			tickIndex: types.MaxTick + 1,
 		},
 		"tick index is less than min tick": {
-			tickIndex: types.MinTick - 1,
+			tickIndex: types.MinInitializedTick - 1,
 		},
 	}
 	for name, tc := range testCases {
@@ -799,7 +799,7 @@ func (s *ConcentratedMathTestSuite) TestSqrtPriceToTickRoundDownSpacing() {
 		"sqrt price exactly equal to min sqrt price": {
 			sqrtPrice:    types.MinSqrtPrice,
 			tickSpacing:  defaultTickSpacing,
-			tickExpected: types.MinTick,
+			tickExpected: types.MinInitializedTick,
 		},
 		"sqrt price equal to max sqrt price minus one ULP": {
 			sqrtPrice:    types.MaxSqrtPrice.Sub(sdk.SmallestDec()),

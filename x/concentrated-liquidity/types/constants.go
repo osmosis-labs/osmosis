@@ -8,7 +8,13 @@ import (
 
 const (
 	// Precomputed values for min and max tick
-	MinTick, MaxTick              int64 = -162000000, 342000000
+	MinInitializedTick, MaxTick int64 = -162000000, 342000000
+	// If we consume all liquidity and cross the min initialized tick,
+	// our current tick will equal to this value with zero liquidity.
+	// However, note that this tick cannot be crossed. If current tick
+	// equals to this tick, it is only possible to swap in the right (one for zero)
+	// direction.
+	MinCurrentTick                int64 = MinInitializedTick - 1
 	ExponentAtPriceOne            int64 = -6
 	ConcentratedGasFeeForSwap           = 10_000
 	BaseGasFeeForNewIncentive           = 10_000

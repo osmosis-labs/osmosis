@@ -287,10 +287,10 @@ func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick int64, newCurrentS
 	}
 
 	// Check if the new tick provided is within boundaries of the pool's precision factor.
-	if newCurrentTick < types.MinTick-1 || newCurrentTick > types.MaxTick {
+	if newCurrentTick < types.MinInitializedTick-1 || newCurrentTick > types.MaxTick {
 		return types.TickIndexNotWithinBoundariesError{
 			MaxTick:    types.MaxTick,
-			MinTick:    types.MinTick,
+			MinTick:    types.MinInitializedTick,
 			ActualTick: newCurrentTick,
 		}
 	}

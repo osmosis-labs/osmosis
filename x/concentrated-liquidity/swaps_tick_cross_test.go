@@ -43,6 +43,19 @@ const (
 	nr2TickSpacingsAway = 5
 )
 
+// This configuratio is expected to generate the position layout below:
+//
+//	                                 original_cur_tick
+//		                                    ///
+//		                                /////////
+//		                            ////////////////
+//	                             //////////////////////
+//
+// min tick                                                      max tick
+var (
+	defaultTickSpacingsAway = []uint64{4, 3, 2, 1}
+)
+
 // CreatePositionTickSpacingsFromCurrentTick creates a position with the passed in tick spacings away from the current tick.
 func (s *SwapTickCrossTestSuite) CreatePositionTickSpacingsFromCurrentTick(poolId uint64, tickSpacingsAwayFromCurrentTick uint64) positionMeta {
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
@@ -867,19 +880,25 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickS
 		isPositionActiveFlag []bool
 	}
 
+	// computeExpectedTicks estimates the expected tick values from the given test case
+	// and returns them as tick slice.
 	computeExpectedTicks := func(poolId uint64, tc continugousTestCase) []int64 {
 		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 		s.Require().NoError(err)
 
 		originalCurrentTick := pool.GetCurrentTick()
 
-		// Convert configured ticks away from original current to actual ticks
+		// Convert the given "ticks away from original current" to actual tick indexes.
 
 		expectedSwapEndTicks := make([]int64, len(tc.swapEndTicksAwayFromOriginalCurrent))
 
 		for i, swapTicksAway := range tc.swapEndTicksAwayFromOriginalCurrent {
-			if swapTicksAway == types.MinTick {
-				expectedSwapEndTicks[i] = types.MinTick - 1
+			// We special case the min and max tick to be given by absolute values
+			// rather than relative to the original current tick.
+			if swapTicksAway == types.MinInitializedTick {
+				// In zero for one direction, we kick the tick back by one while crossing.
+				// This is to ensure that our definition of "active bucket" is correct.
+				expectedSwapEndTicks[i] = types.MinCurrentTick
 			} else if swapTicksAway == types.MaxTick {
 				expectedSwapEndTicks[i] = types.MaxTick
 			} else {
@@ -890,11 +909,6 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickS
 		return expectedSwapEndTicks
 	}
 
-	//                                                 original_cur_tick
-	//                                                   /////////
-	//                                               ////////////////
-	//                                           //////////////////////
-	// min tick                                                                                 max tick
 	s.Run("tick spacing one, contiguosly initialized", func() {
 		testcases := map[string]continugousTestCase{
 			"zero for one, swap to the middle tick to the left of the original current, then swap again to the leftmost tick": {
@@ -914,7 +928,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickS
 				isPositionActiveFlag:                []bool{true, true, true, false},
 			},
 			"zero for one, swap beyond the leftmost tick": {
-				swapEndTicksAwayFromOriginalCurrent: []int64{-3, types.MinTick},
+				swapEndTicksAwayFromOriginalCurrent: []int64{-3, types.MinInitializedTick},
 				isPositionActiveFlag:                []bool{false, false, false, false},
 			},
 
@@ -945,9 +959,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickS
 			s.Run(name, func() {
 				s.SetupTest()
 
-				tickSpacingsAway := []uint64{4, 3, 2, 1}
-
-				poolId, positionMeta := s.setupPoolAndPositions(tickSpacingOne, tickSpacingsAway)
+				poolId, positionMeta := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway)
 				s.Require().Equal(len(tc.isPositionActiveFlag), len(positionMeta))
 
 				// Get pool
@@ -1010,12 +1022,9 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickS
 }
 
 func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_SwapBelowSmallestTick() {
-
 	s.SetupTest()
 
-	tickSpacingsAway := []uint64{4, 3, 2, 1}
-
-	poolId, _ := s.setupPoolAndPositions(tickSpacingOne, tickSpacingsAway)
+	poolId, _ := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway)
 
 	// Fetch pool
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
@@ -1026,12 +1035,12 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_SwapBelowSmallestTick() {
 		isZeroForOne                  = true
 		shouldStayWithinTheSameBucket = false
 	)
-	tokenIn, _, _ := s.computeSwapAmounts(poolId, sdk.Dec{}, types.MinTick, isZeroForOne, shouldStayWithinTheSameBucket)
+	tokenIn, _, _ := s.computeSwapAmounts(poolId, sdk.Dec{}, types.MinInitializedTick, isZeroForOne, shouldStayWithinTheSameBucket)
 
 	// Swap
 	s.swapZeroForOneLeft(poolId, sdk.NewCoin(pool.GetToken0(), tokenIn.Ceil().TruncateInt()))
 
-	s.assertPoolTickEquals(poolId, types.MinTick-1)
+	s.assertPoolTickEquals(poolId, types.MinCurrentTick)
 	s.assertPoolLiquidityEquals(poolId, sdk.ZeroDec())
 
 	// Validate cannot swap left again
@@ -1047,12 +1056,9 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_SwapBelowSmallestTick() {
 }
 
 func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_SwapAboveLargestTick() {
-
 	s.SetupTest()
 
-	tickSpacingsAway := []uint64{4, 3, 2, 1}
-
-	poolId, _ := s.setupPoolAndPositions(tickSpacingOne, tickSpacingsAway)
+	poolId, _ := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway)
 
 	// Fetch pool
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
@@ -1063,7 +1069,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_SwapAboveLargestTick() {
 		isZeroForOne                  = false
 		shouldStayWithinTheSameBucket = false
 	)
-	tokenIn, _, _ := s.computeSwapAmounts(poolId, sdk.Dec{}, types.MinTick, isZeroForOne, shouldStayWithinTheSameBucket)
+	tokenIn, _, _ := s.computeSwapAmounts(poolId, sdk.Dec{}, types.MinInitializedTick, isZeroForOne, shouldStayWithinTheSameBucket)
 
 	// Swap
 	s.swapOneForZeroRight(poolId, sdk.NewCoin(pool.GetToken1(), tokenIn.Ceil().TruncateInt()))
