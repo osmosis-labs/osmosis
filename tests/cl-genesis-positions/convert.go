@@ -191,9 +191,8 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 		numberOfSuccesfulPositions++
 
 		bigBangPositions = append(bigBangPositions, clgenesis.PositionData{
-			Position: &model.Position{
+			Position: &clgenesis.PositionWithoutPoolId{
 				Address:    randomCreator.String(),
-				PoolId:     poolId,
 				JoinTime:   osmosis.Ctx.BlockTime(),
 				Liquidity:  position.LiquidityCreated,
 				PositionId: position.PositionId,

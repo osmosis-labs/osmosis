@@ -4,6 +4,7 @@ import (
 	fmt "fmt"
 	"math"
 	"testing"
+	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
@@ -768,6 +769,56 @@ func (suite *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 				suite.Require().False(wasUpdated)
 				suite.Require().Equal(defaultLiquidityAmt, pool.CurrentTickLiquidity)
 			}
+		})
+	}
+}
+
+func (suite *ConcentratedPoolTestSuite) TestPoolSetMethods() {
+	var (
+		newCurrentTick      = DefaultCurrTick
+		newCurrentSqrtPrice = DefaultCurrSqrtPrice
+		newTickSpacing      = DefaultTickSpacing
+	)
+
+	tests := map[string]struct {
+		currentTick              int64
+		currentSqrtPrice         sdk.Dec
+		tickSpacing              uint64
+		lastLiquidityUpdateDelta time.Duration
+	}{
+		"happy path": {
+			currentTick:              newCurrentTick,
+			currentSqrtPrice:         newCurrentSqrtPrice,
+			tickSpacing:              newTickSpacing,
+			lastLiquidityUpdateDelta: time.Hour,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.Setup()
+
+			currentBlockTime := suite.Ctx.BlockTime()
+
+			// Create the pool and check that the initial values are not equal to the new values we will set.
+			clPool := suite.PrepareConcentratedPool()
+			suite.Require().NotEqual(tc.currentTick, clPool.GetCurrentTick())
+			suite.Require().NotEqual(tc.currentSqrtPrice, clPool.GetCurrentSqrtPrice())
+			suite.Require().NotEqual(tc.tickSpacing, clPool.GetTickSpacing())
+			suite.Require().NotEqual(currentBlockTime.Add(tc.lastLiquidityUpdateDelta), clPool.GetLastLiquidityUpdate())
+
+			// Run the setters.
+			clPool.SetCurrentTick(tc.currentTick)
+			clPool.SetCurrentSqrtPrice(tc.currentSqrtPrice)
+			clPool.SetTickSpacing(tc.tickSpacing)
+			clPool.SetLastLiquidityUpdate(currentBlockTime.Add(tc.lastLiquidityUpdateDelta))
+
+			// Check that the values are now equal to the new values.
+			suite.Require().Equal(tc.currentTick, clPool.GetCurrentTick())
+			suite.Require().Equal(tc.currentSqrtPrice, clPool.GetCurrentSqrtPrice())
+			suite.Require().Equal(tc.tickSpacing, clPool.GetTickSpacing())
+			suite.Require().Equal(currentBlockTime.Add(tc.lastLiquidityUpdateDelta), clPool.GetLastLiquidityUpdate())
 		})
 	}
 }
