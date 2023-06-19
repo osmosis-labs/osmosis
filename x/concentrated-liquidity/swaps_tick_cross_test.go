@@ -262,18 +262,10 @@ func (s *SwapTickCrossTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice 
 
 		var isWithinDesiredBucketAfterSwap bool
 		if isZeroForOne {
-			fmt.Println("test swap step", originalCurrentTick)
-			fmt.Println("liq", currentLiquidity)
-			fmt.Println("curSqrtPrice", curSqrtPrice)
-			fmt.Println("nextInitTickSqrtPrice", nextInitTickSqrtPrice)
-			fmt.Println("current tick", currentTick)
 
 			curAmountIn := math.CalcAmount0Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, true)
 
 			amountIn = amountIn.Add(curAmountIn)
-
-			fmt.Println("curAmountIn", curAmountIn)
-			fmt.Printf("\n")
 
 			shouldCrossTick := currentTick > expectedTickToSwapTo && !shouldStayWithinTheSameBucket
 			if shouldCrossTick {
@@ -293,18 +285,8 @@ func (s *SwapTickCrossTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice 
 				amountIn = amountIn.Add(curAmountIn)
 			}
 		} else {
-
-			fmt.Println("test swap step", originalCurrentTick)
-			fmt.Println("liq", currentLiquidity)
-			fmt.Println("curSqrtPrice", curSqrtPrice)
-			fmt.Println("nextInitTickSqrtPrice", nextInitTickSqrtPrice)
-			fmt.Println("current tick", currentTick)
-
 			curAmountIn := math.CalcAmount1Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, true)
 			amountIn = amountIn.Add(curAmountIn)
-
-			fmt.Println("curAmountIn", curAmountIn)
-			fmt.Printf("\n")
 
 			shouldCrossTick := currentTick <= expectedTickToSwapTo && !shouldStayWithinTheSameBucket
 			if shouldCrossTick {
@@ -1029,8 +1011,6 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickS
 
 					// Discount the amount in by 50% if we are swapping within the same tick.
 					amountInRoundedUp := amountIn.Mul(withinTheSameTickDiscount).Ceil().TruncateInt()
-
-					fmt.Printf("\n\n\n\n")
 
 					// Perform the swap in the desired direction.
 					if isZeroForOne {
