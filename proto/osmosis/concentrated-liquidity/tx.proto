@@ -158,6 +158,7 @@ message MsgCollectSpreadRewards {
 
 message MsgCollectSpreadRewardsResponse {
   repeated cosmos.base.v1beta1.Coin collected_spread_rewards = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"collected_spread_rewards\"",
     (gogoproto.nullable) = false
   ];
@@ -172,11 +173,12 @@ message MsgCollectIncentives {
 
 message MsgCollectIncentivesResponse {
   repeated cosmos.base.v1beta1.Coin collected_incentives = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"collected_incentives\"",
     (gogoproto.nullable) = false
   ];
-  repeated cosmos.base.v1beta1.DecCoin forfeited_incentives = 2 [
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+  repeated cosmos.base.v1beta1.Coin forfeited_incentives = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"forfeited_incentives\"",
     (gogoproto.nullable) = false
   ];

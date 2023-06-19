@@ -584,7 +584,7 @@ func (k Keeper) validatePositionUpdateById(ctx sdk.Context, positionId uint64, u
 		}
 
 		if liquidityDeltaGiven.IsNegative() && position.Liquidity.LT(liquidityDeltaGiven.Abs()) {
-			return types.LiquidityWithdrawalError{PositionID: positionId, RequestedAmount: liquidityDeltaGiven, CurrentLiquidity: position.Liquidity}
+			return types.LiquidityWithdrawalError{PositionID: positionId, RequestedAmount: liquidityDeltaGiven.Abs(), CurrentLiquidity: position.Liquidity}
 		}
 
 		if position.JoinTime.UTC() != joinTimeGiven.UTC() {

@@ -17,6 +17,7 @@ import (
 func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 	k.SetParams(ctx, genState.Params)
 	k.SetNextPositionId(ctx, genState.NextPositionId)
+	k.SetNextIncentiveRecordId(ctx, genState.NextIncentiveRecordId)
 	// Initialize pools
 	var unpacker codectypes.AnyUnpacker = k.cdc
 	for _, poolData := range genState.PoolData {
@@ -236,9 +237,10 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 	}
 
 	return &genesis.GenesisState{
-		Params:         k.GetParams(ctx),
-		PoolData:       poolData,
-		NextPositionId: k.GetNextPositionId(ctx),
+		Params:                k.GetParams(ctx),
+		PoolData:              poolData,
+		NextPositionId:        k.GetNextPositionId(ctx),
+		NextIncentiveRecordId: k.GetNextIncentiveRecordId(ctx),
 	}
 }
 

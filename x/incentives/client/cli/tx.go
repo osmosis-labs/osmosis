@@ -31,7 +31,7 @@ func GetTxCmd() *cobra.Command {
 // NewCreateGaugeCmd broadcasts a CreateGauge message.
 func NewCreateGaugeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-gauge [lockup_denom] [reward] [flags]",
+		Use:   "create-gauge [lockup_denom] [reward] [poolId] [flags]",
 		Short: "create a gauge to distribute rewards to users",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -82,6 +82,11 @@ func NewCreateGaugeCmd() *cobra.Command {
 				return err
 			}
 
+			poolId, err := strconv.ParseUint(args[2], 10, 64)
+			if err != nil {
+				return err
+			}
+
 			distributeTo := lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.ByDuration,
 				Denom:         denom,
@@ -96,6 +101,7 @@ func NewCreateGaugeCmd() *cobra.Command {
 				coins,
 				startTime,
 				epochs,
+				poolId,
 			)
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
