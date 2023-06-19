@@ -372,8 +372,6 @@ func (k Keeper) computeOutAmtGivenIn(
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 			}
 
-			swapState.tick = newTick
-
 			// // TEMPORARY HACK: this is to fix tick rounding error where
 			// // the tick is off by 1 due to banker's rounding error in CalculatePriceToTick
 			// // TODO: if this is to remain in the codebase, consider abstracting this into a
