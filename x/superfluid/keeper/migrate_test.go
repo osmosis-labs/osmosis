@@ -1298,7 +1298,7 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 				totalFundsForPositionCreation = totalFundsForPositionCreation.Add(positionCoins...) // Track total funds used for position creation, to be used by invariant checks later
 				posInfoInternal := s.createBalancerPosition(s.TestAccs[index], balancerPoolId, lockDurationFn(i), balancerPoolShareDenom, positionCoins, positions.numAccounts-i, superfluidDelegate)
 				positionInfos[positionType] = append(positionInfos[positionType], posInfoInternal) // Track position info for invariant checks later
-				followOnFn(index, posInfoInternal)
+				callbackFn(index, posInfoInternal)
 			}
 		}
 
