@@ -367,13 +367,17 @@ func (k Keeper) computeOutAmtGivenIn(
 		} else if !sqrtPriceStart.Equal(computedSqrtPrice) {
 			// Otherwise if the sqrtPrice calculated from ComputeSwapWithinBucketOutGivenIn(...) does not equal the sqrtPriceStart we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the computedSqrtPrice calculated from ComputeSwapWithinBucketOutGivenIn(...)
-			price := computedSqrtPrice.Mul(computedSqrtPrice)
-			newTick := math.CalculatePriceToTick(price)
+			newTick, err := math.CalculateSqrtPriceToTick(computedSqrtPrice)
+			if err != nil {
+				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+			}
 
-			// TEMPORARY HACK: this is to fix tick rounding error where
-			// the tick is off by 1 due to banker's rounding error in CalculatePriceToTick
-			// TODO: if this is to remain in the codebase, consider abstracting this into a
-			// method of swap strategy.
+			swapState.tick = newTick
+
+			// // TEMPORARY HACK: this is to fix tick rounding error where
+			// // the tick is off by 1 due to banker's rounding error in CalculatePriceToTick
+			// // TODO: if this is to remain in the codebase, consider abstracting this into a
+			// // method of swap strategy.
 			isZeroForOne := getZeroForOne(tokenInMin.Denom, p.GetToken0())
 			if isZeroForOne {
 				if newTick <= swapState.tick {
@@ -503,8 +507,7 @@ func (k Keeper) computeInAmtGivenOut(
 		} else if !sqrtPriceStart.Equal(computedSqrtPrice) {
 			// Otherwise, if the computedSqrtPrice calculated from ComputeSwapWithinBucketInGivenOut(...) does not equal the sqrtPriceStart we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the computedSqrtPrice calculated from ComputeSwapWithinBucketInGivenOut(...)
-			price := computedSqrtPrice.Mul(computedSqrtPrice)
-			swapState.tick, err = math.PriceToTickRoundDown(price, p.GetTickSpacing())
+			swapState.tick, err = math.SqrtPriceToTickRoundDownSpacing(computedSqrtPrice, p.GetTickSpacing())
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
 			}
