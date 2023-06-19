@@ -1,6 +1,7 @@
 package math
 
 import (
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -91,50 +92,18 @@ func TickToPrice(tickIndex int64) (price sdk.Dec, err error) {
 	return price, nil
 }
 
-// PriceToTick takes a price and returns the corresponding tick index assuming
-// tick spacing of 1.
-func PriceToTick(price sdk.Dec) (int64, error) {
-	if price.Equal(sdk.OneDec()) {
-		return 0, nil
-	}
-
-	if price.IsNegative() {
-		return 0, fmt.Errorf("price must be greater than zero")
-	}
-
-	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
-		return 0, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
-	}
-
-	// Determine the tick that corresponds to the price
-	// This does not take into account the tickSpacing
-	tickIndex := CalculatePriceToTick(price)
-
-	return tickIndex, nil
-}
-
-// PriceToTickRoundDown takes a price and returns the corresponding tick index.
-// If tickSpacing is provided, the tick index will be rounded down to the nearest multiple of tickSpacing.
-// CONTRACT: tickSpacing must be smaller or equal to the max of 1 << 63 - 1.
-// This is not a concern because we have authorized tick spacings that are smaller than this max,
-// and we don't expect to ever require it to be this large.
-func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (int64, error) {
-	tickIndex, err := PriceToTick(price)
-	if err != nil {
-		return 0, err
-	}
-
-	// Round the tick index down to the nearest tick spacing if the tickIndex is in between authorized tick values
-	// Note that this is Euclidean modulus.
-	// The difference from default Go modulus is that Go default results
-	// in a negative remainder when the dividend is negative.
-	// Consider example tickIndex = -17, tickSpacing = 10
-	// tickIndexModulus = tickIndex % tickSpacing = -7
-	// tickIndexModulus = -7 + 10 = 3
-	// tickIndex = -17 - 3 = -20
-	tickIndexModulus := tickIndex % int64(tickSpacing)
+// RoundDownTickToSpacing rounds the tick index down to the nearest tick spacing if the tickIndex is in between authorized tick values
+// Note that this is Euclidean modulus.
+// The difference from default Go modulus is that Go default results
+// in a negative remainder when the dividend is negative.
+// Consider example tickIndex = -17, tickSpacing = 10
+// tickIndexModulus = tickIndex % tickSpacing = -7
+// tickIndexModulus = -7 + 10 = 3
+// tickIndex = -17 - 3 = -20
+func RoundDownTickToSpacing(tickIndex int64, tickSpacing int64) (int64, error) {
+	tickIndexModulus := tickIndex % tickSpacing
 	if tickIndexModulus < 0 {
-		tickIndexModulus += int64(tickSpacing)
+		tickIndexModulus += tickSpacing
 	}
 
 	if tickIndexModulus != 0 {
@@ -145,6 +114,22 @@ func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (int64, error) {
 	// Should never get here.
 	if tickIndex > types.MaxTick || tickIndex < types.MinTick {
 		return 0, types.TickIndexNotWithinBoundariesError{ActualTick: tickIndex, MinTick: types.MinTick, MaxTick: types.MaxTick}
+	}
+
+	return tickIndex, nil
+}
+
+// SqrtPriceToTickRoundDown converts the given sqrt price to its corresponding tick rounded down
+// to the nearest tick spacing.
+func SqrtPriceToTickRoundDownSpacing(sqrtPrice sdk.Dec, tickSpacing uint64) (int64, error) {
+	tickIndex, err := CalculateSqrtPriceToTick(sqrtPrice)
+	if err != nil {
+		return 0, err
+	}
+
+	tickIndex, err = RoundDownTickToSpacing(tickIndex, int64(tickSpacing))
+	if err != nil {
+		return 0, err
 	}
 
 	return tickIndex, nil
@@ -166,13 +151,9 @@ func powTenBigDec(exponent int64) osmomath.BigDec {
 	return bigNegPowersOfTen[-exponent]
 }
 
-// CalculatePriceToTick takes in a price and returns the corresponding tick index.
-// This function does not take into consideration tick spacing.
-// NOTE: This is really returning a "Bucket index". Bucket index `b` corresponds to
-// all prices in range [TickToPrice(b), TickToPrice(b+1)).
-func CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
+func CalculatePriceToTickDec(price sdk.Dec) (tickIndex sdk.Dec) {
 	if price.Equal(sdkOneDec) {
-		return 0
+		return sdk.ZeroDec()
 	}
 
 	// The approach here is to try determine which "geometric spacing" are we in.
@@ -204,9 +185,73 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
 	ticksFilledByCurrentSpacing := priceInThisExponent.Quo(geoSpacing.additiveIncrementPerTick)
 	// we get the bucket index by:
 	// * taking the bucket index of the smallest price in this tick
-	// * adding to it the number of ticks "completely" filled by the current spacing
-	// the latter is the truncation of the division above
-	// TODO: This should be rounding down?
-	tickIndex = geoSpacing.initialTick + ticksFilledByCurrentSpacing.SDKDec().RoundInt64()
+	// * adding to it the number of ticks filled by the current spacing
+	// We leave rounding of this to the caller
+	// (NOTE: You'd expect it to be number of ticks "completely" filled by the current spacing,
+	// which would be truncation. However price may have errors, hence it being callers job)
+	tickIndex = ticksFilledByCurrentSpacing.SDKDec()
+	tickIndex = tickIndex.Add(sdk.NewDec(geoSpacing.initialTick))
 	return tickIndex
+}
+
+// CalculateSqrtPriceToTick takes in a square root and returns the corresponding tick index.
+// This function does not take into consideration tick spacing.
+func CalculateSqrtPriceToTick(sqrtPrice sdk.Dec) (tickIndex int64, err error) {
+	// SqrtPrice may have errors, so we take the tick obtained from the price
+	// and move it in a +/- 1 tick range based on the sqrt price those ticks would imply.
+	price := sqrtPrice.Mul(sqrtPrice)
+	tick := CalculatePriceToTickDec(price)
+	truncatedTick := tick.TruncateInt64()
+
+	// We have a candidate bucket index `t`. We discern here if:
+	// * sqrtPrice in [TickToSqrtPrice(t - 1), TickToSqrtPrice(t))
+	// * sqrtPrice in [TickToSqrtPrice(t), TickToSqrtPrice(t + 1))
+	// * sqrtPrice in [TickToSqrtPrice(t+1), TickToSqrtPrice(t + 2))
+	// * sqrtPrice not in either.
+	// We handle boundary checks, by saying that if our candidate is the min tick,
+	// set the candidate to min tick + 1.
+	// If our candidate is at or above max tick - 1, set the candidate to max tick - 2.
+	// This is because to check tick t + 1, we need to go to t + 2, so to not go over
+	// max tick during these checks, we need to shift it down by 2.
+	// We check this at max tick - 1 instead of max tick, since we expect the output to
+	// have some error that can push us over the tick boundary.
+	outOfBounds := false
+	if truncatedTick <= types.MinTick {
+		truncatedTick = types.MinTick + 1
+		outOfBounds = true
+	} else if truncatedTick >= types.MaxTick-1 {
+		truncatedTick = types.MaxTick - 2
+		outOfBounds = true
+	}
+
+	_, sqrtPriceTmin1, errM1 := TickToSqrtPrice(truncatedTick - 1)
+	_, sqrtPriceT, errT := TickToSqrtPrice(truncatedTick)
+	_, sqrtPriceTplus1, errP1 := TickToSqrtPrice(truncatedTick + 1)
+	_, sqrtPriceTplus2, errP2 := TickToSqrtPrice(truncatedTick + 2)
+	if errM1 != nil || errT != nil || errP1 != nil || errP2 != nil {
+		return 0, errors.New("internal error in computing square roots within CalculateSqrtPriceToTick")
+	}
+
+	// We error if sqrtPriceT is above sqrtPriceTplus2 or below sqrtPriceTmin1.
+	// For cases where calculated tick does not fall on a limit (min/max tick), the upper end is exclusive.
+	// For cases where calculated tick falls on a limit, the upper end is inclusive, since the actual tick is
+	// already shifted and making it exclusive would make min/max tick impossible to reach by construction.
+	// We do this primary for code simplicity, as alternatives would require more branching and special cases.
+	if (!outOfBounds && sqrtPrice.GTE(sqrtPriceTplus2)) || (outOfBounds && sqrtPrice.GT(sqrtPriceTplus2)) || sqrtPrice.LT(sqrtPriceTmin1) {
+		return 0, fmt.Errorf("sqrt price to tick could not find a satisfying tick index. Hit bounds: %v", outOfBounds)
+	}
+
+	// We expect this case to only be hit when the original provided sqrt price is exactly equal to the max sqrt price.
+	if sqrtPrice.Equal(sqrtPriceTplus2) {
+		return truncatedTick + 2, nil
+	}
+
+	// The remaining cases handle shifting tick index by +/- 1.
+	if sqrtPrice.GTE(sqrtPriceTplus1) {
+		return truncatedTick + 1, nil
+	}
+	if sqrtPrice.GTE(sqrtPriceT) {
+		return truncatedTick, nil
+	}
+	return truncatedTick - 1, nil
 }

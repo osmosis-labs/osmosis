@@ -150,7 +150,8 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 	// Ensure the pool balance is exactly equal to the assets added + amount swapped in - amount swapped out
 	poolAssets := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
 	poolSpreadRewards := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetSpreadRewardsAddress())
-	s.Require().Equal(totalAssets, poolAssets.Add(poolSpreadRewards...))
+	// We rebuild coins to handle nil cases cleanly
+	s.Require().Equal(sdk.NewCoins(totalAssets...), sdk.NewCoins(poolAssets.Add(poolSpreadRewards...)...))
 }
 
 // numPositionSlice prepares a slice tracking the number of positions to create on each range, fuzzing the number at each step if applicable.

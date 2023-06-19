@@ -2506,42 +2506,63 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 	}
 }
 
+// TestTickRoundingEdgeCase tests an edge case where incorrect tick rounding would cause LP funds to be drained.
+func (s *KeeperTestSuite) TestTickRoundingEdgeCase() {
+	s.SetupTest()
+	pool := s.PrepareConcentratedPool()
+
+	testAccs := apptesting.CreateRandomAccounts(3)
+	firstPositionAddr := testAccs[0]
+	secondPositionAddr := testAccs[1]
+
+	// Create two identical positions with the initial assets set such that both positions are fully in one asset
+	firstPositionAssets := sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(9823358512)), sdk.NewCoin(USDC, sdk.NewInt(8985893232)))
+	firstPosLiq, firstPosId := s.SetupPosition(pool.GetId(), firstPositionAddr, firstPositionAssets, -68720000, -68710000, true)
+	secondPositionAssets := sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(9823358512)), sdk.NewCoin(USDC, sdk.NewInt(8985893232)))
+	secondPosLiq, secondPosId := s.SetupPosition(pool.GetId(), secondPositionAddr, secondPositionAssets, -68720000, -68710000, true)
+
+	// Execute a swap that brings the price close enough to the edge of a tick to trigger bankers rounding
+	swapAddr := testAccs[2]
+	desiredTokenOut := sdk.NewCoin(USDC, sdk.NewInt(10000))
+	s.FundAcc(swapAddr, sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(1000000000000000000))))
+	_, _, _, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddr, pool, desiredTokenOut, ETH, sdk.ZeroDec(), sdk.ZeroDec())
+	s.Require().NoError(err)
+
+	// Both positions should be able to withdraw successfully
+	_, _, err = s.clk.WithdrawPosition(s.Ctx, firstPositionAddr, firstPosId, firstPosLiq)
+	s.Require().NoError(err)
+	_, _, err = s.clk.WithdrawPosition(s.Ctx, secondPositionAddr, secondPosId, secondPosLiq)
+	s.Require().NoError(err)
+}
+
 func (s *KeeperTestSuite) TestMultipleRanges() {
 	tests := map[string]struct {
 		tickRanges      [][]int64
 		rangeTestParams RangeTestParams
 	}{
-		// The following two tests will fail until the tick rounding bug is fixed (and should pass after):
-		// https://github.com/osmosis-labs/osmosis/issues/5516
-		//
-		// "one min width range": {
-		// 	tickRanges: [][]int64{
-		// 		{0, 100},
-		// 	},
-		// 	rangeTestParams: DefaultRangeTestParams,
-		// },
-		// "two adjacent ranges": {
-		// 	tickRanges: [][]int64{
-		// 		{-10000, 10000},
-		// 		{10000, 20000},
-		// 	},
-		// 	rangeTestParams: DefaultRangeTestParams,
-		// },
-
-		// Both of these lead to underclaiming of fees greater than additive
-		// error tolerance of 1 per token per position. Increasing ticks increases
-		// error disproportionally, while increasing tick range decreases error proportionally.
-		//
-		// "one range on large tick": {
-		// 	tickRanges: [][]int64{
-		// 		{207000000, 207000000 + 100},
-		// 	},
-		// },
-		// "one range on small tick": {
-		// 	tickRanges: [][]int64{
-		// 		{-107000000, -107000000 + 100},
-		// 	},
-		// },
+		"one min width range": {
+			tickRanges: [][]int64{
+				{0, 100},
+			},
+			rangeTestParams: DefaultRangeTestParams,
+		},
+		"two adjacent ranges": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{10000, 20000},
+			},
+			rangeTestParams: DefaultRangeTestParams,
+		},
+		"one range on large tick": {
+			tickRanges: [][]int64{
+				{207000000, 207000000 + 100},
+			},
+		},
+		"one range on small tick": {
+			tickRanges: [][]int64{
+				{-107000000, -107000000 + 100},
+			},
+		},
 	}
 
 	for name, tc := range tests {
