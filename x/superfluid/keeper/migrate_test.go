@@ -1281,6 +1281,10 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 		//
 		// After each position is created, we track the position info in a slice of slices.
 		// This allows us to easily iterate through all positions and test migration for each position later.
+		//
+		// Note: you may notice we add one nanosecond to the lock duration between position types. This is so
+		// we don't reuse the same lock, since under the hood if an account tries to lock twice with the same
+		// lock duration, an "add to lock" call will happen rather than creating a new lock.
 
 		totalFundsForPositionCreation := sdk.NewCoins()
 		createPositions := func(positionType int, numPositions int, lockDurationFn func(int) time.Duration, superfluidDelegate bool, followOnFn func(int, positionInfo)) {
@@ -1334,15 +1338,12 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 		clPool := s.PrepareConcentratedPoolWithCoins(DefaultCoin0.Denom, DefaultCoin1.Denom)
 		clPoolId := clPool.GetId()
 
-		// Match the spot price of the CL pool to the balancer pool
+		// Match the spot price of the CL pool to the balancer pool by creating a position with the same ratio.
 		balancerPool, err := s.App.GAMMKeeper.GetCFMMPool(s.Ctx, balancerPoolId)
 		s.Require().NoError(err)
 		balancerSpotPrice, err := balancerPool.SpotPrice(s.Ctx, DefaultCoin1.Denom, DefaultCoin0.Denom)
 		s.Require().NoError(err)
-		// TODO: investigate why we need a full range position to add as superfluid asset.
-		coin0 := sdk.NewCoin(DefaultCoin0.Denom, sdk.NewInt(100000000))
-		coin1 := sdk.NewCoin(DefaultCoin1.Denom, sdk.NewDec(100000000).Mul(balancerSpotPrice).TruncateInt())
-		s.CreateFullRangePosition(clPool, sdk.NewCoins(coin0, coin1))
+		s.CreateFullRangePosition(clPool, sdk.NewCoins(sdk.NewCoin(DefaultCoin0.Denom, sdk.NewInt(100000000)), sdk.NewCoin(DefaultCoin1.Denom, sdk.NewDec(100000000).Mul(balancerSpotPrice).TruncateInt())))
 
 		// Add a gov sanctioned link between the balancer and concentrated liquidity pool.
 		migrationRecord := gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
