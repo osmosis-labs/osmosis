@@ -2553,21 +2553,16 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 			},
 			rangeTestParams: DefaultRangeTestParams,
 		},
-
-		// Both of these lead to underclaiming of fees greater than additive
-		// error tolerance of 1 per token per position. Increasing ticks increases
-		// error disproportionally, while increasing tick range decreases error proportionally.
-		//
-		// "one range on large tick": {
-		// 	tickRanges: [][]int64{
-		// 		{207000000, 207000000 + 100},
-		// 	},
-		// },
-		// "one range on small tick": {
-		// 	tickRanges: [][]int64{
-		// 		{-107000000, -107000000 + 100},
-		// 	},
-		// },
+		"one range on large tick": {
+			tickRanges: [][]int64{
+				{207000000, 207000000 + 100},
+			},
+		},
+		"one range on small tick": {
+			tickRanges: [][]int64{
+				{-107000000, -107000000 + 100},
+			},
+		},
 	}
 
 	for name, tc := range tests {
