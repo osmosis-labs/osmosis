@@ -1664,8 +1664,11 @@ func (s *KeeperTestSuite) TestGetClaimableSpreadRewards() {
 	// perform a  swap
 	// swap 5_000_000_000usdc to eth
 	spreadFactor := clPool.GetSpreadFactor(s.Ctx)
-	coinIn, coinOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(s.Ctx, s.TestAccs[1], clPool, sdk.NewCoin(USDC, sdk.NewInt(100_000)), ETH, spreadFactor, sdk.ZeroDec())
+	coinIn, coinOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(s.Ctx, s.TestAccs[1], clPool, sdk.NewCoin(USDC, sdk.NewInt(100_000)), ETH, spreadFactor, sdk.OneDec())
 	s.Require().NoError(err)
+
+	// coinIn, coinOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, s.TestAccs[1], clPool, sdk.NewCoin(USDC, sdk.NewInt(500_000)), ETH, spreadFactor, types.MaxSpotPrice)
+	// s.Require().NoError(err)
 
 	fmt.Println("********* POST TRADE ********")
 	fmt.Println("SWAP RESULT: coinIn , coinOut, spreadFactor:", coinIn, coinOut, spreadFactor)
