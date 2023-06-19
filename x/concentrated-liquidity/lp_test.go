@@ -1706,7 +1706,10 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 			amount1Desired:        sdk.NewInt(100_000_051),
 			tickSpacing:           1,
 			expectedCurrSqrtPrice: sqrt(100_000_051),
-			expectedTick:          72000001,
+			// We expect the returned tick to always be rounded down.
+			// In this case, tick 72000000 corresponds to 100_000_000,
+			// while 72000001 corresponds to 100_000_100.
+			expectedTick: 72000000,
 		},
 		"error: amount0Desired is zero": {
 			amount0Desired: sdk.ZeroInt(),

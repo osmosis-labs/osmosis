@@ -66,13 +66,13 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// Transform the provided ticks into their corresponding sqrtPrices.
-	priceLowerTick, priceUpperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
+	_, _, sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
 
 	// If multiple ticks can represent the same spot price, ensure we are using the largest of those ticks.
-	lowerTick, upperTick, err = roundTickToCanonicalPriceTick(lowerTick, upperTick, priceLowerTick, priceUpperTick, pool.GetTickSpacing())
+	lowerTick, upperTick, err = roundTickToCanonicalPriceTick(lowerTick, upperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, pool.GetTickSpacing())
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
@@ -475,7 +475,7 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	// Calculate the initial tick from the initial spot price
 	// We round down here so that the tick is rounded to
 	// the nearest possible value given the tick spacing.
-	initialTick, err := math.PriceToTickRoundDown(initialSpotPrice, pool.GetTickSpacing())
+	initialTick, err := math.SqrtPriceToTickRoundDownSpacing(initialCurSqrtPrice, pool.GetTickSpacing())
 	if err != nil {
 		return err
 	}

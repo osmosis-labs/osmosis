@@ -1251,7 +1251,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			curPrice := sdk.OneDec()
 			// TODO: consider adding tests for GetTickLiquidityNetInDirection
 			// with tick spacing > 1, requiring price to tick conversion with rounding.
-			curTick, err := math.PriceToTick(curPrice)
+			curTick, err := s.PriceToTick(curPrice)
 			s.Require().NoError(err)
 			if test.currentPoolTick > 0 {
 				_, sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)
@@ -1462,13 +1462,13 @@ func (s *KeeperTestSuite) TestRoundTickToCanonicalPriceTick() {
 		s.Run(test.name, func() {
 			s.SetupTest()
 
-			priceTickLower, _, err := math.TickToSqrtPrice(test.lowerTick)
+			_, sqrtPriceTickLower, err := math.TickToSqrtPrice(test.lowerTick)
 			s.Require().NoError(err)
-			priceTickUpper, _, err := math.TickToSqrtPrice(test.upperTick)
+			_, sqrtPriceTickUpper, err := math.TickToSqrtPrice(test.upperTick)
 			s.Require().NoError(err)
 
 			// System Under Test
-			newLowerTick, newUpperTick, err := cl.RoundTickToCanonicalPriceTick(test.lowerTick, test.upperTick, priceTickLower, priceTickUpper, DefaultTickSpacing)
+			newLowerTick, newUpperTick, err := cl.RoundTickToCanonicalPriceTick(test.lowerTick, test.upperTick, sqrtPriceTickLower, sqrtPriceTickUpper, DefaultTickSpacing)
 
 			if test.expectedError != nil {
 				s.Require().Error(err)
