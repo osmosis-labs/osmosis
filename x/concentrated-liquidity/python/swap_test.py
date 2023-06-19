@@ -1,5 +1,6 @@
 from decimal import Decimal, getcontext
 from clmath import *
+from math import *
 
 DefaultPoolLiq0 = 1000000
 DefaultPoolLiq1 = 5000000000
@@ -24,7 +25,8 @@ class SecondPosition:
         self.amount = amount
 
 class SwapTest:
-    def init_in_given_out(token_arg: Coin,
+    @staticmethod
+    def init_in_given_out(token_out: Coin,
                  price_limit: Decimal,
                  new_lower_price: Decimal,
                  new_upper_price: Decimal,
@@ -34,11 +36,11 @@ class SwapTest:
                  second_position_upper_price: Decimal = Decimal(0),
                  spread_factor: Decimal = Decimal(0),
                  expect_err: bool = False):
-        if token_arg.denom == "usdc":
+        if token_out.denom == "usdc":
             token_other_arg = "eth"
-        if token_arg.denom == "eth":
+        if token_out.denom == "eth":
             token_other_arg = "usdc"
-        return SwapTest(True, token_arg, token_other_arg, price_limit, spread_factor, second_position_lower_price, second_position_upper_price, new_lower_price, new_upper_price, pool_liq_amount0, pool_liq_amount1, expect_err)
+        return SwapTest(True, token_out, token_other_arg, price_limit, spread_factor, second_position_lower_price, second_position_upper_price, new_lower_price, new_upper_price, pool_liq_amount0, pool_liq_amount1, expect_err)
 
     def __init__(self,
                  in_given_out: bool,
@@ -53,12 +55,13 @@ class SwapTest:
                  pool_liq_amount0: int,
                  pool_liq_amount1: int,
                  expect_err: bool):
+        self.in_given_out = in_given_out
         if in_given_out:
-            self.token_in = token_arg
-            self.token_out_denom = token_other_arg
-        else:
             self.token_out = token_arg
             self.token_in_denom = token_other_arg
+        else:
+            self.token_in = token_arg
+            self.token_out_denom = token_other_arg
         self.price_limit = price_limit
         self.spread_factor = spread_factor
         self.second_position_lower_price = second_position_lower_price
@@ -71,6 +74,20 @@ class SwapTest:
 
     def is_single_position(self):
         return self.second_position_lower_price == Decimal(0) and self.second_position_upper_price == Decimal(0)
+
+    def derive_single_position(self):
+        if self.in_given_out:
+            sqrt_cur = DefaultCurrSqrtPrice
+            sqrt_next = DefaultCurrSqrtPrice - self.token_out.amount / DefaultLiquidity
+            token_in = ceil(DefaultLiquidity * (sqrt_cur - sqrt_next) / (sqrt_cur * sqrt_next))
+            # self.expectedTick = ??? calculation not provided
+            self.expectedSqrtPrice = sqrt_next
+            self.expectedTokenIn = Coin(self.token_in_denom, token_in)
+            self.expectedLowerTickSpreadRewardGrowth = DefaultSpreadRewardAccumCoins # Assume this is set elsewhere
+            self.expectedUpperTickSpreadRewardGrowth = DefaultSpreadRewardAccumCoins # Assume this is set elsewhere
+    
+    def print_golang_struct(self):
+        pass
 
     def derive_expected_fields(self):
         # Here you would calculate and set all the "expected" fields
