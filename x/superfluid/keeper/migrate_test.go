@@ -1222,52 +1222,20 @@ type Positions struct {
 	numNoLock                       int
 }
 
-type positionInfo struct {
-	joinPoolCoins sdk.Coins
-	coin          sdk.Coin
-	shares        sdk.Int
-	lockId        uint64
-}
-
-func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
-	positions := Positions{
-		numAccounts:                     7,
-		numBondedSuperfluid:             6,
-		numUnbondingSuperfluidLocked:    5,
-		numUnbondingSuperfluidUnlocking: 4,
-		numVanillaLockLocked:            3,
-		numVanillaLockUnlocking:         2,
-		numNoLock:                       1,
-	}
-	s.SetupTest()
-	s.TestAccs = apptesting.CreateRandomAccounts(positions.numAccounts)
-
-	// Fund all accounts with default coins. Keeps track of total funds to be used for position creation (does not include first account in tracker, since this account is only used for pool creation).
-	// After all methods are tested, we should have total accountability of these funds.
-	totalFundsForPositionCreation := sdk.NewCoins()
-	for i := 0; i < positions.numAccounts; i++ {
-		s.FundAcc(s.TestAccs[i], DefaultCoins)
-		if i != 0 {
-			totalFundsForPositionCreation = totalFundsForPositionCreation.Add(DefaultCoins...)
-		}
-	}
-
-	// Create a balancer pool (includes staking denom to be superfluid compatible).
-	balancerPoolId := s.PrepareBalancerPoolWithCoins(DefaultCoins...)
+// Populate a Balancer pool with multiple positions
+// Positions should be spread between:
+// - Bonded superfluid
+// - Unbonded superfluid (locked)
+// - Unbonded superfluid (unlocking)
+// - Vanilla lock (locked)
+// - Vanilla lock (unlocking)
+// - No lock
+//
+// After each position is created, we track the position info in a slice of slices.
+// This allows us to easily iterate through all positions and test migration for each position later.
+func (s *KeeperTestSuite) buildPositions(balancerPoolId uint64, positions Positions) [][]positionInfo {
 	balancerPoolShareDenom := fmt.Sprintf("gamm/pool/%d", balancerPoolId)
 	unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
-
-	// Create Balancer pool with multiple positions
-	// Positions should be spread between:
-	// - Bonded superfluid
-	// - Unbonded superfluid (locked)
-	// - Unbonded superfluid (unlocking)
-	// - Vanilla lock (locked)
-	// - Vanilla lock (unlocking)
-	// - No lock
-	//
-	// After each position is created, we track the position info in a slice of slices.
-	// This allows us to easily iterate through all positions and test migration for each position later.
 
 	positionInfos := make([][]positionInfo, 6)
 
@@ -1310,6 +1278,44 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 		posInfoInternal := s.createBalancerPosition(s.TestAccs[i+1], balancerPoolId, time.Duration(0), balancerPoolShareDenom, DefaultCoins, positions.numAccounts-i, false)
 		positionInfos[5] = append(positionInfos[5], posInfoInternal)
 	}
+	return positionInfos
+}
+
+type positionInfo struct {
+	joinPoolCoins sdk.Coins
+	coin          sdk.Coin
+	shares        sdk.Int
+	lockId        uint64
+}
+
+// Test that during a migration, all coins are either migrated or sent back to user.
+// Repeats this test for many different balancer positions.
+func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
+	positions := Positions{
+		numAccounts:                     7,
+		numBondedSuperfluid:             6,
+		numUnbondingSuperfluidLocked:    5,
+		numUnbondingSuperfluidUnlocking: 4,
+		numVanillaLockLocked:            3,
+		numVanillaLockUnlocking:         2,
+		numNoLock:                       1,
+	}
+	s.SetupTest()
+	s.TestAccs = apptesting.CreateRandomAccounts(positions.numAccounts)
+
+	// Fund all accounts with default coins. Keeps track of total funds to be used for position creation (does not include first account in tracker, since this account is only used for pool creation).
+	// After all methods are tested, we should have total accountability of these funds.
+	totalFundsForPositionCreation := sdk.NewCoins()
+	for i := 0; i < positions.numAccounts; i++ {
+		s.FundAcc(s.TestAccs[i], DefaultCoins)
+		if i != 0 {
+			totalFundsForPositionCreation = totalFundsForPositionCreation.Add(DefaultCoins...)
+		}
+	}
+
+	// Create a balancer pool (includes staking denom to be superfluid compatible).
+	balancerPoolId := s.PrepareBalancerPoolWithCoins(DefaultCoins...)
+	positionInfos := s.buildPositions(balancerPoolId, positions)
 
 	// Some funds might not have been completely used when creating the above positions.
 	// We note them here and use them when tracking invariants at the very end.
