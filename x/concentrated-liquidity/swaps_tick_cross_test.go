@@ -167,13 +167,13 @@ func (s *SwapTickCrossTestSuite) swapOneForZeroRight(poolId uint64, amount sdk.C
 // t tick spacings away from the current tick.
 //
 // Returns the pool id and the narrow range position metadata.
-func (s *SwapTickCrossTestSuite) setupPoolAndPositions(testTickSpacing uint64, positionTickSpacingsFromCurrTick []uint64) (uint64, []positionMeta) {
+func (s *SwapTickCrossTestSuite) setupPoolAndPositions(testTickSpacing uint64, positionTickSpacingsFromCurrTick []uint64, initialCoins sdk.Coins) (uint64, []positionMeta) {
 	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, testTickSpacing, sdk.ZeroDec())
 	poolId := pool.GetId()
 
 	// Create a full range position
 	s.FundAcc(s.TestAccs[0], DefaultCoins)
-	_, _, _, liquidityFullRange, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, poolId, s.TestAccs[0], DefaultCoins)
+	_, _, _, liquidityFullRange, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, poolId, s.TestAccs[0], initialCoins)
 	s.Require().NoError(err)
 
 	// Refetch pool as the first position updated its state.
@@ -724,7 +724,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Cros
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				// 1. Prepare pool and positions for test
 
-				poolId, positionMetas := s.setupPoolAndPositions(tc.tickSpacing, desiredPositionTickSpacingsAway)
+				poolId, positionMetas := s.setupPoolAndPositions(tc.tickSpacing, desiredPositionTickSpacingsAway, DefaultCoins)
 				nr1Position := positionMetas[0]
 				nr2Position := positionMetas[1]
 
@@ -839,7 +839,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Cros
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				// 1. Prepare pool and positions for test
 
-				poolId, positionMetas := s.setupPoolAndPositions(tc.tickSpacing, desiredPositionTickSpacingsAway)
+				poolId, positionMetas := s.setupPoolAndPositions(tc.tickSpacing, desiredPositionTickSpacingsAway, DefaultCoins)
 				nr1Position := positionMetas[0]
 				nr2Position := positionMetas[1]
 
@@ -1003,7 +1003,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickS
 			s.Run(name, func() {
 				s.SetupTest()
 
-				poolId, positionMeta := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway)
+				poolId, positionMeta := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
 				s.Require().Equal(len(tc.isPositionActiveFlag), len(positionMeta))
 
 				// Refetch pool.
@@ -1092,7 +1092,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 	s.Run("to min tick", func() {
 		s.SetupTest()
 
-		poolId, _ := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway)
+		poolId, _ := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
 
 		// Fetch pool
 		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
@@ -1132,7 +1132,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 	s.Run("to max tick", func() {
 		s.SetupTest()
 
-		poolId, _ := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway)
+		poolId, _ := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
 
 		// Fetch pool
 		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
@@ -1164,4 +1164,77 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 		// Validate the ability to swap left
 		s.swapZeroForOneLeft(poolId, smallTokenZeroCoinIn)
 	})
+}
+
+// TestSwapOutGivenIn_PriceLimit_TickCross_ZeroForOne tests edge case behavior of swapping
+// with price limit right at the boundary of crossing a tick
+// It picks a sqrtPriceLimitT such that this is the max sqrt price that translates to tickT
+// It picks a sqrtPriceLimitTpPlusOne such that this is the min sqrt price that translates to tickTPlusOne
+// It swaps in both cases and asserts that the pool's state is updated correctly. This helps to confirm
+// that we do not decrement the tick without crossing it at the edges.
+func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_PriceLimit_TickCross_ZeroForOne() {
+	s.SetupTest()
+
+	poolId, _ := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
+
+	// Fetch pool
+	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	// Compute tokenIn amount necessary to reach the min tick.
+	const (
+		isZeroForOne                  = true
+		shouldStayWithinTheSameBucket = false
+
+		estimatTokenInUntilTick = 30999996
+
+		tickT        int64 = 30999998
+		tickTPlusOne int64 = 30999999
+	)
+	tokenIn, _, _ := s.computeSwapAmounts(poolId, sdk.Dec{}, estimatTokenInUntilTick, isZeroForOne, shouldStayWithinTheSameBucket)
+
+	// Refetch pool
+	pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	initialLiquidity := pool.GetLiquidity()
+
+	// Swap
+	coinsIn := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), tokenIn.TruncateInt()))
+	s.FundAcc(s.TestAccs[0], coinsIn)
+
+	// Hand picked such that this is the largest possible price that translates to tickT (30999998)
+	sqrtPriceLimitT := sdk.MustNewDecFromStr("4999.999000000000000080")
+
+	// Swap with cache context so that we can reuse the same setup logic for another swap
+	// with different price limit.
+	originalCtx := s.Ctx
+	s.Ctx, _ = s.Ctx.CacheContext()
+
+	_, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, s.TestAccs[0], pool, coinsIn[0], pool.GetToken1(), sdk.ZeroDec(), sqrtPriceLimitT)
+	s.Require().NoError(err)
+
+	// Refetch pool
+	pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	s.assertPoolTickEquals(poolId, tickT)
+	s.assertPositionInRange(poolId, tickT, tickTPlusOne)
+
+	// Confirms that the tick was crossed
+	s.Require().NotEqual(initialLiquidity, pool.GetLiquidity())
+
+	// Hand picked such that this is the smallest possible price that translates to tick tPlusOne (30999999)
+	sqrtPriceLimitTPlusOne := sqrtPriceLimitT.Add(sdk.SmallestDec())
+
+	// Replace original context back so that we can repeat the scenario with a different price limit.
+	s.Ctx = originalCtx
+	_, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, s.TestAccs[0], pool, coinsIn[0], pool.GetToken1(), sdk.ZeroDec(), sqrtPriceLimitTPlusOne)
+	s.Require().NoError(err)
+	s.assertPoolTickEquals(poolId, tickTPlusOne)
+
+	// Confirm that the tick wasn't crossed.
+	s.assertPositionOutOfRange(poolId, tickT, tickTPlusOne)
+	s.assertPoolTickEquals(poolId, tickTPlusOne)
+	s.assertPoolLiquidityEquals(poolId, initialLiquidity)
 }
