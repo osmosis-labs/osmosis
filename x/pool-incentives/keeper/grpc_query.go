@@ -157,6 +157,45 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 		}
 	}
 
+	// Retrieve the migration records between balancer pools and concentrated liquidity pools.
+	// This comes from the superfluid keeper, since superfluid is the only pool incentives connected
+	// module that has access to the gamm modules store.
+	migrationRecords, err := q.superfluidKeeper.GetAllMigrationInfo(sdkCtx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// Iterate over all migration records.
+	for _, record := range migrationRecords.BalancerToConcentratedPoolLinks {
+		linkedClPoolIsIncentivized := false
+
+		// If the linked concentrated liquidity pool is in the list of incentivized pools, skip.
+		for _, incentivizedPool := range incentivizedPools {
+			if incentivizedPool.PoolId == record.ClPoolId {
+				linkedClPoolIsIncentivized = true
+				continue
+			}
+		}
+
+		if !linkedClPoolIsIncentivized {
+			continue
+		}
+
+		// The cl pool is incentivized, so we add it's balancer pool counterpart to the list of incentivized pools.
+		for _, lockableDuration := range lockableDurations {
+			gaugeId, err := q.Keeper.GetPoolGaugeId(sdkCtx, record.BalancerPoolId, lockableDuration)
+			if err == nil {
+				incentivizedPool := types.IncentivizedPool{
+					PoolId:           record.BalancerPoolId,
+					LockableDuration: lockableDuration,
+					GaugeId:          gaugeId,
+				}
+
+				incentivizedPools = append(incentivizedPools, incentivizedPool)
+			}
+		}
+	}
+
 	return &types.QueryIncentivizedPoolsResponse{
 		IncentivizedPools: incentivizedPools,
 	}, nil

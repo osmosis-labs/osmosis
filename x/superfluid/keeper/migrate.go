@@ -333,3 +333,9 @@ func (k Keeper) validateSharesToMigrateUnlockAndExitBalancerPool(ctx sdk.Context
 
 	return exitCoins, nil
 }
+
+// GetAllMigrationInfo helps to give pool-incentives access to the migration info located in the gamm store.
+// This is required to circumnavigate import cycle errors without having to do a complete refactor.
+func (k Keeper) GetAllMigrationInfo(ctx sdk.Context) (gammtypes.MigrationRecords, error) {
+	return k.gk.GetAllMigrationInfo(ctx)
+}
