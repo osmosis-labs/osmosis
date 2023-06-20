@@ -321,17 +321,19 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 		return 0, sdk.Int{}, sdk.Int{}, types.PositionSuperfluidStakedError{PositionId: position.PositionId}
 	}
 
-	positions, err := k.GetAllPositionIdsForPoolId(ctx, types.PositionPrefix, position.PoolId)
-	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, err
-	}
-	if len(positions) < 2 {
-		return 0, sdk.Int{}, sdk.Int{}, types.AddToLastPositionInPoolError{PoolId: position.PoolId, PositionId: position.PositionId}
-	}
 	// Withdraw full position.
 	amount0Withdrawn, amount1Withdrawn, err := k.WithdrawPosition(ctx, owner, positionId, position.Liquidity)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
+	}
+
+	anyPositionsRemainingInPool, err := k.HasAnyPositionForPool(ctx, position.PoolId)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, err
+	}
+
+	if !anyPositionsRemainingInPool {
+		return 0, sdk.Int{}, sdk.Int{}, types.AddToLastPositionInPoolError{PoolId: position.PoolId, PositionId: position.PositionId}
 	}
 
 	// Create new position with updated liquidity.
