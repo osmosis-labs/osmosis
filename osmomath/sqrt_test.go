@@ -1,6 +1,7 @@
 package osmomath
 
 import (
+	"fmt"
 	"math/big"
 	"math/rand"
 	"testing"
@@ -169,4 +170,31 @@ func BenchmarkMonotonicSqrt(b *testing.B) {
 			_ = a
 		}
 	}
+}
+
+func TestSqrtOutput(t *testing.T) {
+	sqrt4545, err := MonotonicSqrt(sdk.NewDec(4545))
+	require.NoError(t, err)
+
+	sqrt5000, err := MonotonicSqrt(sdk.NewDec(5000))
+	require.NoError(t, err)
+
+	sqrt5001, err := MonotonicSqrt(sdk.NewDec(5001))
+	require.NoError(t, err)
+
+	sqrt5501, err := MonotonicSqrt(sdk.NewDec(5501))
+	require.NoError(t, err)
+
+	sqrt5500, err := MonotonicSqrt(sdk.NewDec(5500))
+	require.NoError(t, err)
+
+	sqrt6250, err := MonotonicSqrt(sdk.NewDec(6250))
+	require.NoError(t, err)
+
+	fmt.Println("sqrt4545: ", sqrt4545)
+	fmt.Println("sqrt5000: ", sqrt5000)
+	fmt.Println("sqrt5001: ", sqrt5001)
+	fmt.Println("sqrt5500: ", sqrt5500)
+	fmt.Println("sqrt5501: ", sqrt5501)
+	fmt.Println("sqrt6250: ", sqrt6250)
 }

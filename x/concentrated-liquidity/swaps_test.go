@@ -1085,9 +1085,9 @@ var (
 			// from decimal import *
 			// #Range 1: From 5000 to 5500
 			// token_out = Decimal("1820545")
-			// liq_1 = Decimal("1517882343.751510418088349649")
-			// sqrt_cur = Decimal("5000").sqrt()
-			// sqrt_next_1 = Decimal("5500").sqrt()
+			// liq_1 = Decimal("1517882343.751510417627556287")
+			// sqrt_cur = Decimal("70.710678118654752441") # sqrt5000
+			// sqrt_next_1 = Decimal("74.161984870956629488") # sqrt5500
 
 			// token_out_1 = liq_1 * (sqrt_next_1 - sqrt_cur ) / (sqrt_next_1 * sqrt_cur)
 			// token_in_1 = ceil(liq_1 * (sqrt_next_1 - sqrt_cur ))
@@ -1095,8 +1095,8 @@ var (
 			// token_out = token_out - token_out_1
 
 			// # Range 2: from 5501 till end
-			// liq_2 = Decimal("1199528406.187413669220031452")
-			// sqrt_cur_2 = Decimal("5501").sqrt()
+			// liq_2 = Decimal("1199528406.187413669481596331")
+			// sqrt_cur_2 = Decimal("74.168726563154635304") # sqrt5501
 			// sqrt_next_2 = liq_2 * sqrt_cur_2 / (liq_2 - token_out * sqrt_cur_2)
 
 			// token_out_2 = liq_2 * (sqrt_next_2 - sqrt_cur_2 ) / (sqrt_cur_2 * sqrt_next_2)
@@ -1106,10 +1106,12 @@ var (
 			// token_in = token_in_1 + token_in_2
 			// print(sqrt_next_2)
 			// print(token_in)
-			expectedTokenOut:                          sdk.NewCoin(ETH, sdk.NewInt(1820545)),
-			expectedTokenIn:                           sdk.NewCoin(USDC, sdk.NewInt(9999994756)),
-			expectedTick:                              32105500,
-			expectedSqrtPrice:                         sdk.MustNewDecFromStr("78.138050797173647031"),
+			expectedTokenOut: sdk.NewCoin(ETH, sdk.NewInt(1820545)),
+			expectedTokenIn:  sdk.NewCoin(USDC, sdk.NewInt(9999994756)),
+			expectedTick:     32105500,
+			// True value with arbitrary precision: 78.1380507971736470319
+			// Expected value due to our monotonic sqrt's >= true value guarantee: 78.138050797173647032
+			expectedSqrtPrice:                         sdk.MustNewDecFromStr("78.138050797173647032"),
 			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
 			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 315010, expectedSpreadRewardGrowth: cl.EmptyCoins},
