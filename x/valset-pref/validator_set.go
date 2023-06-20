@@ -252,16 +252,16 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 
 	// Algorithm starts here, verbose explanation in README.md
 	for _, diffVal := range diffValSets {
-		if diffVal.Amount.TruncateDec().GT(sdk.ZeroDec()) {
+		if diffVal.Amount.TruncateDec().IsPositive() {
 			for idx, targetDiffVal := range diffValSets {
-				if targetDiffVal.Amount.TruncateDec().LT(sdk.ZeroDec()) && diffVal.ValAddr != targetDiffVal.ValAddr {
+				if targetDiffVal.Amount.TruncateDec().IsNegative() && diffVal.ValAddr != targetDiffVal.ValAddr {
 					valSource, valTarget, err := k.getValTargetAndSource(ctx, diffVal.ValAddr, targetDiffVal.ValAddr)
 					if err != nil {
 						return err
 					}
 
 					transferAmount := sdk.MinDec(diffVal.Amount, targetDiffVal.Amount.Abs()).TruncateDec()
-					if transferAmount.Equal(sdk.ZeroDec()) {
+					if transferAmount.IsZero() {
 						break
 					}
 
@@ -273,7 +273,7 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 					diffVal.Amount = diffVal.Amount.Sub(transferAmount)
 					diffValSets[idx].Amount = targetDiffVal.Amount.Add(transferAmount)
 
-					if diffVal.Amount.Equal(sdk.ZeroDec()) {
+					if diffVal.Amount.IsZero() {
 						break
 					}
 				}

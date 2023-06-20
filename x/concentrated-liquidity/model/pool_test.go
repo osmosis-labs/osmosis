@@ -695,8 +695,8 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 				amt1Diff := actualAmount1.Sub(actualAmount1Neg.Neg())
 
 				// Difference is between 0 and 1 due to positive liquidity rounding up and negative liquidity performing math normally.
-				suite.Require().True(amt0Diff.GT(sdk.ZeroDec()) && amt0Diff.LT(sdk.OneDec()))
-				suite.Require().True(amt1Diff.GT(sdk.ZeroDec()) && amt1Diff.LT(sdk.OneDec()))
+				suite.Require().True(amt0Diff.IsPositive() && amt0Diff.LT(sdk.OneDec()))
+				suite.Require().True(amt1Diff.IsPositive() && amt1Diff.LT(sdk.OneDec()))
 			}
 		})
 	}

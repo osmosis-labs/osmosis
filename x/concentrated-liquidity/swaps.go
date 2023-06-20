@@ -503,8 +503,8 @@ func (k Keeper) computeInAmtGivenOut(
 
 		// Update the swapState with the new sqrtPrice from the above swap
 		swapState.sqrtPrice = computedSqrtPrice
-		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.SubMut(amountOut)
-		swapState.amountCalculated = swapState.amountCalculated.AddMut(amountIn.Add(spreadRewardChargeTotal))
+		swapState.amountSpecifiedRemaining.SubMut(amountOut)
+		swapState.amountCalculated.AddMut(amountIn.Add(spreadRewardChargeTotal))
 
 		// If the ComputeSwapWithinBucketInGivenOut(...) calculated a computedSqrtPrice that is equal to the nextInitializedTickSqrtPrice, this means all liquidity in the current
 		// bucket has been consumed and we must move on to the next bucket by crossing a tick to complete the swap
@@ -578,8 +578,7 @@ func (k Keeper) swapCrossTickLogic(ctx sdk.Context,
 
 	liquidityNet = swapState.swapStrategy.SetLiquidityDeltaSign(liquidityNet)
 	// Update the swapState's liquidity with the new tick's liquidity
-	newLiquidity := swapState.liquidity.AddMut(liquidityNet)
-	swapState.liquidity = newLiquidity
+	swapState.liquidity.AddMut(liquidityNet)
 
 	return swapState, nil
 }
