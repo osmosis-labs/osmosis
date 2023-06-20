@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -142,7 +141,9 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 	// While there are exceptions, typically the number of incentivizedPools
 	// equals to the number of incentivized gauges / number of lockable durations.
 	incentivizedPools := make([]types.IncentivizedPool, 0, len(distrInfo.Records)/len(lockableDurations))
+	incentivizedPoolIDs := make(map[uint64]struct{})
 
+	// Loop over the distribution records and fill in the incentivized pools struct.
 	for _, record := range distrInfo.Records {
 		for _, lockableDuration := range lockableDurations {
 			poolId, err := q.Keeper.GetPoolIdFromGaugeId(sdkCtx, record.GaugeId, lockableDuration)
@@ -154,6 +155,7 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 				}
 
 				incentivizedPools = append(incentivizedPools, incentivizedPool)
+				incentivizedPoolIDs[poolId] = struct{}{}
 			}
 		}
 	}
@@ -168,23 +170,22 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 
 	// Iterate over all migration records.
 	for _, record := range migrationRecords.BalancerToConcentratedPoolLinks {
-		linkedClPoolIsIncentivized := false
-		var duration time.Duration
-
-		// If the linked concentrated liquidity pool is in the list of incentivized pools,
-		// note this and add its balancer counterpart to the list of incentivized pools.
-		for _, incentivizedPool := range incentivizedPools {
-			if incentivizedPool.PoolId == record.ClPoolId {
-				linkedClPoolIsIncentivized = true
-				duration = incentivizedPool.LockableDuration
-				continue
-			}
-		}
-
-		if !linkedClPoolIsIncentivized {
+		// If the cl pool is not in the list of incentivized pools, skip it.
+		_, incentivized := incentivizedPoolIDs[record.ClPoolId]
+		if !incentivized {
 			continue
 		}
 
+		// Determine the duration of the incentivized pool.
+		duration := lockableDurations[0]
+		for _, pool := range incentivizedPools {
+			if pool.PoolId == record.ClPoolId {
+				duration = pool.LockableDuration
+				break
+			}
+		}
+
+		// Add the indirectly incentivized balancer pools to the list of incentivized pools.
 		gaugeId, err := q.Keeper.GetPoolGaugeId(sdkCtx, record.BalancerPoolId, duration)
 		if err == nil {
 			incentivizedPool := types.IncentivizedPool{
