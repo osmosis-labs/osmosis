@@ -10,6 +10,7 @@ import (
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
 	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 )
 
@@ -334,8 +335,39 @@ func (k Keeper) validateSharesToMigrateUnlockAndExitBalancerPool(ctx sdk.Context
 	return exitCoins, nil
 }
 
+// // GetAllMigrationInfo helps to give pool-incentives access to the migration info located in the gamm store.
+// // This is required to circumnavigate import cycle errors without having to do a complete refactor.
+// func (k Keeper) GetAllMigrationInfo(ctx sdk.Context) (poolincentivestypes.MigrationRecords, error) {
+// 	return k.gk.GetAllMigrationInfo(ctx)
+// }
+
 // GetAllMigrationInfo helps to give pool-incentives access to the migration info located in the gamm store.
 // This is required to circumnavigate import cycle errors without having to do a complete refactor.
-func (k Keeper) GetAllMigrationInfo(ctx sdk.Context) (gammtypes.MigrationRecords, error) {
-	return k.gk.GetAllMigrationInfo(ctx)
+func (k Keeper) GetAllMigrationInfo(ctx sdk.Context) (poolincentivestypes.MigrationRecords, error) {
+	gammMigrationRecords, err := k.gk.GetAllMigrationInfo(ctx)
+	if err != nil {
+		return poolincentivestypes.MigrationRecords{}, err
+	}
+
+	// Perform conversion from gamm types.MigrationRecords to pool-incentives types.MigrationRecords
+	poolIncentivesMigrationRecords := convertMigrationRecords(gammMigrationRecords)
+
+	return poolIncentivesMigrationRecords, nil
+}
+
+// convertMigrationRecords performs the conversion from gamm types.MigrationRecords to pool-incentives types.MigrationRecords
+func convertMigrationRecords(gammMigrationRecords gammtypes.MigrationRecords) poolincentivestypes.MigrationRecords {
+	poolIncentivesMigrationRecords := poolincentivestypes.MigrationRecords{}
+
+	// Map the BalancerToConcentratedPoolLinks field
+	poolIncentivesMigrationRecords.BalancerToConcentratedPoolLinks = make([]poolincentivestypes.BalancerToConcentratedPoolLink, len(gammMigrationRecords.BalancerToConcentratedPoolLinks))
+	for i := range gammMigrationRecords.BalancerToConcentratedPoolLinks {
+		// Perform the mapping for each BalancerToConcentratedPoolLink
+		poolIncentivesLink := poolincentivestypes.BalancerToConcentratedPoolLink{
+			// Map the relevant fields from gammLink to poolIncentivesLink
+		}
+		poolIncentivesMigrationRecords.BalancerToConcentratedPoolLinks[i] = poolIncentivesLink
+	}
+
+	return poolIncentivesMigrationRecords
 }
