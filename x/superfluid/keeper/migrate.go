@@ -335,12 +335,6 @@ func (k Keeper) validateSharesToMigrateUnlockAndExitBalancerPool(ctx sdk.Context
 	return exitCoins, nil
 }
 
-// // GetAllMigrationInfo helps to give pool-incentives access to the migration info located in the gamm store.
-// // This is required to circumnavigate import cycle errors without having to do a complete refactor.
-// func (k Keeper) GetAllMigrationInfo(ctx sdk.Context) (poolincentivestypes.MigrationRecords, error) {
-// 	return k.gk.GetAllMigrationInfo(ctx)
-// }
-
 // GetAllMigrationInfo helps to give pool-incentives access to the migration info located in the gamm store.
 // This is required to circumnavigate import cycle errors without having to do a complete refactor.
 func (k Keeper) GetAllMigrationInfo(ctx sdk.Context) (poolincentivestypes.MigrationRecords, error) {
@@ -359,12 +353,12 @@ func (k Keeper) GetAllMigrationInfo(ctx sdk.Context) (poolincentivestypes.Migrat
 func convertMigrationRecords(gammMigrationRecords gammtypes.MigrationRecords) poolincentivestypes.MigrationRecords {
 	poolIncentivesMigrationRecords := poolincentivestypes.MigrationRecords{}
 
-	// Map the BalancerToConcentratedPoolLinks field
 	poolIncentivesMigrationRecords.BalancerToConcentratedPoolLinks = make([]poolincentivestypes.BalancerToConcentratedPoolLink, len(gammMigrationRecords.BalancerToConcentratedPoolLinks))
 	for i := range gammMigrationRecords.BalancerToConcentratedPoolLinks {
 		// Perform the mapping for each BalancerToConcentratedPoolLink
 		poolIncentivesLink := poolincentivestypes.BalancerToConcentratedPoolLink{
-			// Map the relevant fields from gammLink to poolIncentivesLink
+			BalancerPoolId: gammMigrationRecords.BalancerToConcentratedPoolLinks[i].BalancerPoolId,
+			ClPoolId:       gammMigrationRecords.BalancerToConcentratedPoolLinks[i].ClPoolId,
 		}
 		poolIncentivesMigrationRecords.BalancerToConcentratedPoolLinks[i] = poolIncentivesLink
 	}
