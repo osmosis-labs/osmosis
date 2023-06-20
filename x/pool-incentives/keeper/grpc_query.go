@@ -160,41 +160,44 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 		}
 	}
 
-	// Retrieve the migration records between balancer pools and concentrated liquidity pools.
-	// This comes from the superfluid keeper, since superfluid is the only pool incentives connected
-	// module that has access to the gamm modules store.
-	migrationRecords, err := q.superfluidKeeper.GetAllMigrationInfo(sdkCtx)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	// Iterate over all migration records.
-	for _, record := range migrationRecords.BalancerToConcentratedPoolLinks {
-		// If the cl pool is not in the list of incentivized pools, skip it.
-		_, incentivized := incentivizedPoolIDs[record.ClPoolId]
-		if !incentivized {
-			continue
+	// Only run the following if the above loop determined there were incentivized pools.
+	if len(incentivizedPoolIDs) > 0 {
+		// Retrieve the migration records between balancer pools and concentrated liquidity pools.
+		// This comes from the superfluid keeper, since superfluid is the only pool incentives connected
+		// module that has access to the gamm modules store.
+		migrationRecords, err := q.superfluidKeeper.GetAllMigrationInfo(sdkCtx)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		// Determine the duration of the incentivized pool.
-		duration := lockableDurations[0]
-		for _, pool := range incentivizedPools {
-			if pool.PoolId == record.ClPoolId {
-				duration = pool.LockableDuration
-				break
-			}
-		}
-
-		// Add the indirectly incentivized balancer pools to the list of incentivized pools.
-		gaugeId, err := q.Keeper.GetPoolGaugeId(sdkCtx, record.BalancerPoolId, duration)
-		if err == nil {
-			incentivizedPool := types.IncentivizedPool{
-				PoolId:           record.BalancerPoolId,
-				LockableDuration: duration,
-				GaugeId:          gaugeId,
+		// Iterate over all migration records.
+		for _, record := range migrationRecords.BalancerToConcentratedPoolLinks {
+			// If the cl pool is not in the list of incentivized pools, skip it.
+			_, incentivized := incentivizedPoolIDs[record.ClPoolId]
+			if !incentivized {
+				continue
 			}
 
-			incentivizedPools = append(incentivizedPools, incentivizedPool)
+			// Determine the duration of the incentivized pool.
+			duration := lockableDurations[0]
+			for _, pool := range incentivizedPools {
+				if pool.PoolId == record.ClPoolId {
+					duration = pool.LockableDuration
+					break
+				}
+			}
+
+			// Add the indirectly incentivized balancer pools to the list of incentivized pools.
+			gaugeId, err := q.Keeper.GetPoolGaugeId(sdkCtx, record.BalancerPoolId, duration)
+			if err == nil {
+				incentivizedPool := types.IncentivizedPool{
+					PoolId:           record.BalancerPoolId,
+					LockableDuration: duration,
+					GaugeId:          gaugeId,
+				}
+
+				incentivizedPools = append(incentivizedPools, incentivizedPool)
+			}
 		}
 	}
 
