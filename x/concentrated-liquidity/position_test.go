@@ -1450,7 +1450,7 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 
 	s.TestAccs = apptesting.CreateRandomAccounts(5)
 	s.FundAcc(s.TestAccs[4], ethFunded)
-	coinIn, _, _, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, s.TestAccs[4], pool, usdcSupply, ETH, DefaultSpreadFactor, types.MinSpotPrice)
+	coinIn, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, s.TestAccs[4], pool, usdcSupply, ETH, DefaultSpreadFactor, types.MinSpotPrice)
 	s.Require().NoError(err)
 
 	// --- Set up expected spread rewards and incentives ---
@@ -2428,7 +2428,11 @@ func (s *KeeperTestSuite) TestTickRoundingEdgeCase() {
 	swapAddr := testAccs[2]
 	desiredTokenOut := sdk.NewCoin(USDC, sdk.NewInt(10000))
 	s.FundAcc(swapAddr, sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(1000000000000000000))))
+<<<<<<< HEAD
 	_, _, _, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddr, pool, desiredTokenOut, ETH, sdk.ZeroDec(), sdk.ZeroDec())
+=======
+	_, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddr, pool, desiredTokenOut, ETH, sdk.ZeroDec(), sdk.ZeroDec())
+>>>>>>> main
 	s.Require().NoError(err)
 
 	// Both positions should be able to withdraw successfully

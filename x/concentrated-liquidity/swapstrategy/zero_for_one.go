@@ -145,21 +145,26 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, 
 	return sqrtPriceNext, amountOneOut, amountZeroIn, spreadRewardChargeTotal
 }
 
-// InitializeNextTickIterator returns iterator that seeks to the next tick from the given tickIndex.
-// If nex tick relative to tickINdex does not exist in the store, it will return an invalid iterator.
+// InitializeNextTickIterator returns iterator that searches for the next tick given currentTickIndex.
+// In zero for one direction, the search is INCLUSIVE of the current tick index.
+// If next tick relative to currentTickIndex is not initialized (does not exist in the store),
+// it will return an invalid iterator.
 //
 // zeroForOneStrategy assumes moving to the left of the current square root price.
-// As a result, we use a reverse iterator to seek to the next tick index relative to the currentTickIndexPlusOne.
-// Since end key of the reverse iterator is exclusive, we search from current + 1 tick index.
+// As a result, we use a reverse iterator to seek to the next tick index relative to the currentTickIndex.
+// Since end key of the reverse iterator is exclusive, we search from currentTickIndex + 1 tick index
 // in decrasing lexicographic order until a tick one smaller than current is found.
-// Returns an invalid iterator if currentTickIndexPlusOne is not in the store.
+// We add 1 so that the current tick index is included in the search. This is a requirement to satisfy our
+// "active range" invariant of "lower tick <= current tick < upper tick". If we swapr right (zfo) and
+// cross tick X, then immediately start swapping left (zfo), we should be able to cross tick X in the other direction.
+// Returns an invalid iterator if no ticks smaller than currentTickIndex are initialized in the the store.
 // Panics if fails to parse tick index from bytes.
 // The caller is responsible for closing the iterator on success.
-func (s zeroForOneStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId uint64, currentTickIndexPlusOne int64) dbm.Iterator {
+func (s zeroForOneStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId uint64, currentTickIndex int64) dbm.Iterator {
 	store := ctx.KVStore(s.storeKey)
 	prefixBz := types.KeyTickPrefixByPoolId(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
-	startKey := types.TickIndexToBytes(currentTickIndexPlusOne)
+	startKey := types.TickIndexToBytes(currentTickIndex + 1)
 
 	iter := prefixStore.ReverseIterator(nil, startKey)
 
@@ -171,22 +176,11 @@ func (s zeroForOneStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId u
 			iter.Close()
 			panic(fmt.Errorf("invalid tick index (%s): %v", string(iter.Key()), err))
 		}
-		if tick < currentTickIndexPlusOne {
+		if tick <= currentTickIndex {
 			break
 		}
 	}
 	return iter
-}
-
-// InitializeTickValue returns the initial tick value for computing swaps based
-// on the actual current tick.
-//
-// zeroForOneStrategy assumes moving to the left of the current square root price.
-// As a result, we use reverse iterator in InitializeNextTickIterator to find the next
-// tick to the left of current. The end cursor for reverse iteration is non-inclusive
-// so must add one here to make sure that the current tick is included in the search.
-func (s zeroForOneStrategy) InitializeTickValue(currentTick int64) int64 {
-	return currentTick + 1
 }
 
 // SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.
@@ -203,6 +197,17 @@ func (s zeroForOneStrategy) InitializeTickValue(currentTick int64) int64 {
 // negative.
 func (s zeroForOneStrategy) SetLiquidityDeltaSign(deltaLiquidity sdk.Dec) sdk.Dec {
 	return deltaLiquidity.Neg()
+}
+
+// UpdateTickAfterCrossing updates the next tick after crossing
+// to satisfy our "position in-range" invariant which is:
+// lower tick <= current tick < upper tick
+// When crossing a tick in zero for one direction, we move
+// left on the range. As a result, we end up crossing the lower tick
+// that is inclusive. Therefore, we must decrease the next tick
+// by 1 additional unit so that it falls under the current range.
+func (s zeroForOneStrategy) UpdateTickAfterCrossing(nextTick int64) int64 {
+	return nextTick - 1
 }
 
 // ValidateSqrtPrice validates the given square root price
