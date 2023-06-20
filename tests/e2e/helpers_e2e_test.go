@@ -170,7 +170,7 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 	s.NoError(err)
 
 	fullRangeCoins := sdk.NewCoins(
-		sdk.NewInt64Coin("uosmo",500000),
+		sdk.NewInt64Coin("uosmo",499404),
 		sdk.NewInt64Coin("stake",500000),
 	)
 
@@ -180,7 +180,7 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 	poolJoinAcc, err = sdk.AccAddressFromBech32(poolJoinAddress)
 	s.Require().NoError(err)
 
-	balancerPooId = node.CreateBalancerPool("nativeDenomPoolMigration.json", chain.NodeConfigs[0].PublicAddress)
+	balancerPooId = node.CreateBalancerPool("nativeDenomPool.json", chain.NodeConfigs[0].PublicAddress)
 
 	balanceBeforeJoin := s.addrBalance(node, poolJoinAddress)
 	node.JoinPoolNoSwap(poolJoinAddress, balancerPooId, gammtypes.OneShare.MulRaw(50).String(), sdk.Coins{}.String())

@@ -271,8 +271,9 @@ func (n *NodeConfig) UnlockAndMigrateSharesToFullRangeConcentratedPosition(from,
 	err = json.Unmarshal(outJson.Bytes(), &txResponse)
 	require.NoError(n.t, err)
 
-	positionIdString, amount0String, amount1String, liquidityString, poolIdLeavingString, poolIdEnteringString, concentratedLockIdString, err := GetDataReponseUnlockAndMigrateSharesToFullRangeConcentratedPosition(txResponse)
+	data, err := GetDataReponseUnlockAndMigrateSharesToFullRangeConcentratedPosition(txResponse)
 	require.NoError(n.t, err)
+	positionIdString, amount0String, amount1String, liquidityString, poolIdLeavingString, poolIdEnteringString, concentratedLockIdString := data[0], data[1], data[2], data[3], data[4], data[5], data[6]
 
 	positionId, err = osmocli.ParseUint(positionIdString, "")
 	require.NoError(n.t, err)
@@ -638,81 +639,90 @@ func GetPositionID(responseJson map[string]interface{}) (string, error) {
 	return "", fmt.Errorf("position_id field not found in response")
 }
 
-func GetDataReponseUnlockAndMigrateSharesToFullRangeConcentratedPosition(responseJson map[string]interface{}) (positionId string, amount0, amount1 string, liquidity string, poolIdLeaving, poolIdEntering, concentratedLockId string, err error) {
+func GetDataReponseUnlockAndMigrateSharesToFullRangeConcentratedPosition(responseJson map[string]interface{}) ([]string, error) {
+	var result [7]string
+
 	logs, ok := responseJson["logs"].([]interface{})
 	if !ok {
-		return "", "", "", "", "", "", "", fmt.Errorf("logs field not found in response")
+		return nil, fmt.Errorf("logs field not found in response")
 	}
 
 	if len(logs) == 0 {
-		return "", "", "", "", "", "", "", fmt.Errorf("empty logs field in response")
+		return nil, fmt.Errorf("empty logs field in response")
 	}
 
 	log, ok := logs[0].(map[string]interface{})
 	if !ok {
-		return "", "", "", "", "", "", "", fmt.Errorf("invalid format of logs field")
+		return nil, fmt.Errorf("invalid format of logs field")
 	}
 
 	events, ok := log["events"].([]interface{})
 	if !ok {
-		return "", "", "", "", "", "", "", fmt.Errorf("events field not found in logs")
+		return nil, fmt.Errorf("events field not found in logs")
 	}
 
 	for _, event := range events {
 		attributes, ok := event.(map[string]interface{})["attributes"].([]interface{})
 		if !ok {
-			return "", "", "", "", "", "", "", fmt.Errorf("attributes field not found in event")
+			return nil, fmt.Errorf("attributes field not found in event")
 		}
 
 		for _, attr := range attributes {
 			switch v := attr.(type) {
 			case map[string]interface{}:
 				if v["key"] == "position_id" {
-					positionId, ok = v["value"].(string)
+					positionId, ok := v["value"].(string)
 					if !ok {
-						return "", "", "", "", "", "", "", fmt.Errorf("invalid format of position_id field")
+						return nil, fmt.Errorf("invalid format of position_id field")
 					}
+					result[0] = positionId
 				} else if v["key"] == "amount0" {
-					amount0, ok = v["value"].(string)
+					amount0, ok := v["value"].(string)
 					if !ok {
-						return "", "", "", "", "", "", "", fmt.Errorf("invalid format of amount0 field")
+						return nil, fmt.Errorf("invalid format of amount0 field")
 					}
+					result[1] = amount0
 				} else if v["key"] == "amount1" {
-					amount1, ok = v["value"].(string)
+					amount1, ok := v["value"].(string)
 					if !ok {
-						return "", "", "", "", "", "", "", fmt.Errorf("invalid format of amount1 field")
+						return nil, fmt.Errorf("invalid format of amount1 field")
 					}
+					result[2] = amount1
 				} else if v["key"] == "liquidity" {
-					liquidity, ok = v["value"].(string)
+					liquidity, ok := v["value"].(string)
 					if !ok {
-						return "", "", "", "", "", "", "", fmt.Errorf("invalid format of amount1 field")
+						return nil, fmt.Errorf("invalid format of amount1 field")
 					}
+					result[3] = liquidity
 				} else if v["key"] == "pool_id_leaving" {
-					poolIdLeaving, ok = v["value"].(string)
+					poolIdLeaving, ok := v["value"].(string)
 					if !ok {
-						return "", "", "", "", "", "", "", fmt.Errorf("invalid format of poolIdLeaving field")
+						return nil, fmt.Errorf("invalid format of poolIdLeaving field")
 					}
+					result[4] = poolIdLeaving
 				} else if v["key"] == "pool_id_entering" {
-					poolIdEntering, ok = v["value"].(string)
+					poolIdEntering, ok := v["value"].(string)
 					if !ok {
-						return "", "", "", "", "", "", "", fmt.Errorf("invalid format of poolIdEntering field")
+						return nil, fmt.Errorf("invalid format of poolIdEntering field")
 					}
+					result[5] = poolIdEntering
 				} else if v["key"] == "concentrated_lock_id" {
-					concentratedLockId, ok = v["value"].(string)
+					concentratedLockId, ok := v["value"].(string)
 					if !ok {
-						return "", "", "", "", "", "", "", fmt.Errorf("invalid format of concentratedLockId field")
+						return nil, fmt.Errorf("invalid format of concentratedLockId field")
 					}
+					result[6] = concentratedLockId
 				}
-				if positionId != "" && concentratedLockId != "" && poolIdEntering != "" {
-					return positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, concentratedLockId, nil
+				if result[0] != "" && result[6] != "" && result[4] != "" {
+					return result[:], nil
 				}
 			default:
-				return "", "", "", "", "", "", "", fmt.Errorf("invalid type for attributes field")
+				return nil, fmt.Errorf("invalid type for attributes field")
 			}
 		}
 	}
 
-	return "", "", "", "", "", "", "", fmt.Errorf("position_id field not found in response")
+	return nil, fmt.Errorf("position_id field not found in response")
 }
 
 func GetPeriodLockID(responseJson map[string]interface{}) (string, error) {
