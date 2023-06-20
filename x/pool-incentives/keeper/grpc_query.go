@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -168,11 +169,14 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 	// Iterate over all migration records.
 	for _, record := range migrationRecords.BalancerToConcentratedPoolLinks {
 		linkedClPoolIsIncentivized := false
+		var duration time.Duration
 
-		// If the linked concentrated liquidity pool is in the list of incentivized pools, skip.
+		// If the linked concentrated liquidity pool is in the list of incentivized pools,
+		// note this and add its balancer counterpart to the list of incentivized pools.
 		for _, incentivizedPool := range incentivizedPools {
 			if incentivizedPool.PoolId == record.ClPoolId {
 				linkedClPoolIsIncentivized = true
+				duration = incentivizedPool.LockableDuration
 				continue
 			}
 		}
@@ -181,18 +185,15 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 			continue
 		}
 
-		// The cl pool is incentivized, so we add it's balancer pool counterpart to the list of incentivized pools.
-		for _, lockableDuration := range lockableDurations {
-			gaugeId, err := q.Keeper.GetPoolGaugeId(sdkCtx, record.BalancerPoolId, lockableDuration)
-			if err == nil {
-				incentivizedPool := types.IncentivizedPool{
-					PoolId:           record.BalancerPoolId,
-					LockableDuration: lockableDuration,
-					GaugeId:          gaugeId,
-				}
-
-				incentivizedPools = append(incentivizedPools, incentivizedPool)
+		gaugeId, err := q.Keeper.GetPoolGaugeId(sdkCtx, record.BalancerPoolId, duration)
+		if err == nil {
+			incentivizedPool := types.IncentivizedPool{
+				PoolId:           record.BalancerPoolId,
+				LockableDuration: duration,
+				GaugeId:          gaugeId,
 			}
+
+			incentivizedPools = append(incentivizedPools, incentivizedPool)
 		}
 	}
 
