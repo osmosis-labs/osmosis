@@ -166,7 +166,6 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 	superfluidDelegated, superfluidUndelegating, unlocking, noLock bool,
 	percentOfSharesToMigrate sdk.Dec,
 ) (joinPoolAmt sdk.Coins, balancerIntermediaryAcc superfluidtypes.SuperfluidIntermediaryAccount, balancerLock *lockuptypes.PeriodLock, poolCreateAcc, poolJoinAcc sdk.AccAddress, balancerPooId, clPoolId uint64, balancerPoolShareOut sdk.Coin, valAddr sdk.ValAddress) {
-
 	node, err := chain.GetDefaultNode()
 	s.NoError(err)
 
@@ -181,9 +180,7 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 	poolJoinAcc, err = sdk.AccAddressFromBech32(poolJoinAddress)
 	s.Require().NoError(err)
 
-	// fullRangeCoins := sdk.NewCoin()
 	balancerPooId = node.CreateBalancerPool("nativeDenomPoolMigration.json", chain.NodeConfigs[0].PublicAddress)
-	// balancerPool := s.updatedCFMMPool(node, balancePoolId)
 
 	balanceBeforeJoin := s.addrBalance(node, poolJoinAddress)
 	node.JoinPoolNoSwap(poolJoinAddress, balancerPooId, gammtypes.OneShare.MulRaw(50).String(), sdk.Coins{}.String())
@@ -207,7 +204,6 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 	}
 
 	clPoolId, err = node.CreateConcentratedPool(poolJoinAddress, denom0, denom1, tickSpacing, spreadFactor)
-	// clPool := s.updatedConcentratedPool(node, clPoolId)
 
 	record := strconv.FormatUint(balancerPooId, 10) + "," + strconv.FormatUint(clPoolId, 10)
 	node.SubmitReplaceMigrationRecordsProposal(record, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
@@ -285,7 +281,7 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 	return joinPoolAmt, balancerIntermediaryAcc, balancerLock, poolCreateAcc, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr
 }
 
-func (s *IntegrationTestSuite) supportTestPoolMigration(
+func (s *IntegrationTestSuite) testPoolMigration(
 	chain *chain.Config,
 	poolJoinAddress string,
 	superfluidDelegated, superfluidUndelegating, unlocking, noLock bool,

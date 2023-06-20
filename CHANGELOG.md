@@ -108,7 +108,6 @@ and control over token transfers.
   * [#5320](https://github.com/osmosis-labs/osmosis/pull/5320) minor: huckleberry ibc patch
 
 ### Misc Improvements
-
   * [#5356](https://github.com/osmosis-labs/osmosis/pull/5356) Fix wrong restHandler for ReplaceMigrationRecordsProposal
   * [#5020](https://github.com/osmosis-labs/osmosis/pull/5020) Add gas config to the client.toml
   * [#5105](https://github.com/osmosis-labs/osmosis/pull/5105) Lint stableswap in the same manner as all of Osmosis
