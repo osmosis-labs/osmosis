@@ -714,8 +714,6 @@ func (suite *ConcentratedMathTestSuite) TestCalculatePriceToTick() {
 		})
 	}
 }
-<<<<<<< HEAD
-=======
 func (suite *ConcentratedMathTestSuite) TestPowTenInternal() {
 	testCases := map[string]struct {
 		exponent             int64
@@ -741,7 +739,6 @@ func (suite *ConcentratedMathTestSuite) TestPowTenInternal() {
 		})
 	}
 }
->>>>>>> main
 
 func (s *ConcentratedMathTestSuite) TestSqrtPriceToTickRoundDownSpacing() {
 	testCases := map[string]struct {
