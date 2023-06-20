@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -162,6 +162,17 @@ func (q Querier) LockedByID(goCtx context.Context, req *types.LockedRequest) (*t
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	lock, err := q.Keeper.GetLockByID(ctx, req.LockId)
 	return &types.LockedResponse{Lock: lock}, err
+}
+
+// LockRewardReceiver returns lock reward receiver of the lock.
+func (q Querier) LockRewardReceiver(goCtx context.Context, req *types.LockRewardReceiverRequest) (*types.LockRewardReceiverResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	rewardReceiver, err := q.Keeper.GetLockRewardReceiver(ctx, req.LockId)
+	return &types.LockRewardReceiverResponse{RewardReceiver: rewardReceiver}, err
 }
 
 // NextLockID returns next lock ID to be created.

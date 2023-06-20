@@ -6,28 +6,24 @@ package balancer
 import (
 	context "context"
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "github.com/gogo/protobuf/types"
-	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 	io "io"
 	math "math"
 	math_bits "math/bits"
-	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
-var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -149,129 +145,9 @@ func (m *MsgCreateBalancerPoolResponse) GetPoolID() uint64 {
 	return 0
 }
 
-// ===================== MsgMigrateSharesToFullRangeConcentratedPosition
-type MsgMigrateSharesToFullRangeConcentratedPosition struct {
-	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	// shares_to_migrate indicates number of shares to migrate.
-	SharesToMigrate types.Coin `protobuf:"bytes,2,opt,name=shares_to_migrate,json=sharesToMigrate,proto3" json:"shares_to_migrate" yaml:"shares_to_migrate"`
-	// token_out_mins indicates minimum token to exit Balancer pool with.
-	TokenOutMins []types.Coin `protobuf:"bytes,3,rep,name=token_out_mins,json=tokenOutMins,proto3" json:"token_out_mins" yaml:"token_out_min_amounts"`
-}
-
-func (m *MsgMigrateSharesToFullRangeConcentratedPosition) Reset() {
-	*m = MsgMigrateSharesToFullRangeConcentratedPosition{}
-}
-func (m *MsgMigrateSharesToFullRangeConcentratedPosition) String() string {
-	return proto.CompactTextString(m)
-}
-func (*MsgMigrateSharesToFullRangeConcentratedPosition) ProtoMessage() {}
-func (*MsgMigrateSharesToFullRangeConcentratedPosition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0647ee155de97433, []int{2}
-}
-func (m *MsgMigrateSharesToFullRangeConcentratedPosition) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgMigrateSharesToFullRangeConcentratedPosition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgMigrateSharesToFullRangeConcentratedPosition.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgMigrateSharesToFullRangeConcentratedPosition) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgMigrateSharesToFullRangeConcentratedPosition.Merge(m, src)
-}
-func (m *MsgMigrateSharesToFullRangeConcentratedPosition) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgMigrateSharesToFullRangeConcentratedPosition) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgMigrateSharesToFullRangeConcentratedPosition.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgMigrateSharesToFullRangeConcentratedPosition proto.InternalMessageInfo
-
-func (m *MsgMigrateSharesToFullRangeConcentratedPosition) GetSender() string {
-	if m != nil {
-		return m.Sender
-	}
-	return ""
-}
-
-func (m *MsgMigrateSharesToFullRangeConcentratedPosition) GetSharesToMigrate() types.Coin {
-	if m != nil {
-		return m.SharesToMigrate
-	}
-	return types.Coin{}
-}
-
-func (m *MsgMigrateSharesToFullRangeConcentratedPosition) GetTokenOutMins() []types.Coin {
-	if m != nil {
-		return m.TokenOutMins
-	}
-	return nil
-}
-
-type MsgMigrateSharesToFullRangeConcentratedPositionResponse struct {
-	Amount0          github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=amount0,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount0" yaml:"amount0"`
-	Amount1          github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=amount1,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount1" yaml:"amount1"`
-	LiquidityCreated github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=liquidity_created,json=liquidityCreated,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"liquidity_created" yaml:"liquidity_created"`
-	JoinTime         time.Time                              `protobuf:"bytes,4,opt,name=join_time,json=joinTime,proto3,stdtime" json:"join_time" yaml:"join_time"`
-}
-
-func (m *MsgMigrateSharesToFullRangeConcentratedPositionResponse) Reset() {
-	*m = MsgMigrateSharesToFullRangeConcentratedPositionResponse{}
-}
-func (m *MsgMigrateSharesToFullRangeConcentratedPositionResponse) String() string {
-	return proto.CompactTextString(m)
-}
-func (*MsgMigrateSharesToFullRangeConcentratedPositionResponse) ProtoMessage() {}
-func (*MsgMigrateSharesToFullRangeConcentratedPositionResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0647ee155de97433, []int{3}
-}
-func (m *MsgMigrateSharesToFullRangeConcentratedPositionResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgMigrateSharesToFullRangeConcentratedPositionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgMigrateSharesToFullRangeConcentratedPositionResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgMigrateSharesToFullRangeConcentratedPositionResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgMigrateSharesToFullRangeConcentratedPositionResponse.Merge(m, src)
-}
-func (m *MsgMigrateSharesToFullRangeConcentratedPositionResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgMigrateSharesToFullRangeConcentratedPositionResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgMigrateSharesToFullRangeConcentratedPositionResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgMigrateSharesToFullRangeConcentratedPositionResponse proto.InternalMessageInfo
-
-func (m *MsgMigrateSharesToFullRangeConcentratedPositionResponse) GetJoinTime() time.Time {
-	if m != nil {
-		return m.JoinTime
-	}
-	return time.Time{}
-}
-
 func init() {
 	proto.RegisterType((*MsgCreateBalancerPool)(nil), "osmosis.gamm.poolmodels.balancer.v1beta1.MsgCreateBalancerPool")
 	proto.RegisterType((*MsgCreateBalancerPoolResponse)(nil), "osmosis.gamm.poolmodels.balancer.v1beta1.MsgCreateBalancerPoolResponse")
-	proto.RegisterType((*MsgMigrateSharesToFullRangeConcentratedPosition)(nil), "osmosis.gamm.poolmodels.balancer.v1beta1.MsgMigrateSharesToFullRangeConcentratedPosition")
-	proto.RegisterType((*MsgMigrateSharesToFullRangeConcentratedPositionResponse)(nil), "osmosis.gamm.poolmodels.balancer.v1beta1.MsgMigrateSharesToFullRangeConcentratedPositionResponse")
 }
 
 func init() {
@@ -279,57 +155,38 @@ func init() {
 }
 
 var fileDescriptor_0647ee155de97433 = []byte{
-	// 792 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x55, 0x4d, 0x6f, 0xe3, 0x44,
-	0x18, 0x8e, 0x9b, 0x2a, 0xcb, 0x4e, 0x60, 0xd9, 0x58, 0x0b, 0x0a, 0x61, 0x89, 0x83, 0x41, 0xab,
-	0x80, 0xc8, 0x0c, 0x09, 0x20, 0xa4, 0xbd, 0x2c, 0xb8, 0xd5, 0xae, 0x8a, 0x14, 0x51, 0xcc, 0x72,
-	0xe8, 0x5e, 0xac, 0x49, 0x3c, 0xeb, 0x1d, 0xd6, 0x9e, 0x09, 0x9e, 0x71, 0x69, 0xff, 0x02, 0xa7,
-	0x5e, 0xb8, 0xf2, 0x0b, 0x38, 0xf0, 0x17, 0xb8, 0xf5, 0xd8, 0x23, 0xe2, 0x60, 0xaa, 0xf4, 0xc0,
-	0x85, 0x53, 0x7e, 0x01, 0x9a, 0x0f, 0xa7, 0x2d, 0xa4, 0x40, 0x54, 0x71, 0x49, 0x3c, 0xef, 0x3c,
-	0xef, 0xf3, 0xbc, 0x7e, 0xbf, 0x0c, 0x06, 0x5c, 0x64, 0x5c, 0x50, 0x81, 0x12, 0x9c, 0x65, 0x68,
-	0xc6, 0x79, 0x3a, 0xc8, 0x78, 0x4c, 0x52, 0x81, 0x26, 0x38, 0xc5, 0x6c, 0x4a, 0x72, 0x24, 0x0f,
-	0x90, 0x3c, 0x80, 0xb3, 0x9c, 0x4b, 0xee, 0xf6, 0x2d, 0x1c, 0x2a, 0x38, 0x54, 0x70, 0x83, 0x86,
-	0x15, 0x1a, 0xee, 0x0f, 0x27, 0x44, 0xe2, 0x61, 0xe7, 0x4e, 0xc2, 0x13, 0xae, 0x9d, 0x90, 0x7a,
-	0x32, 0xfe, 0x9d, 0x16, 0xce, 0x28, 0xe3, 0x48, 0xff, 0x5a, 0xd3, 0x87, 0xff, 0x1e, 0x41, 0xf5,
-	0xb0, 0xcb, 0x79, 0x6a, 0xbd, 0xba, 0x53, 0xed, 0x86, 0x26, 0x58, 0x10, 0x64, 0x35, 0xd1, 0x94,
-	0x53, 0x66, 0xef, 0xbd, 0x84, 0xf3, 0x24, 0x25, 0x48, 0x9f, 0x26, 0xc5, 0x53, 0x24, 0x69, 0x46,
-	0x84, 0xc4, 0xd9, 0xcc, 0x00, 0xfc, 0xd3, 0x0d, 0xf0, 0xca, 0x58, 0x24, 0x5b, 0x39, 0xc1, 0x92,
-	0x04, 0x17, 0x04, 0xdc, 0x77, 0x40, 0x43, 0x10, 0x16, 0x93, 0xbc, 0xed, 0xf4, 0x9c, 0xfe, 0xcd,
-	0xa0, 0xb5, 0x28, 0xbd, 0x97, 0x0e, 0x71, 0x96, 0xde, 0xf7, 0x8d, 0xdd, 0x0f, 0x2d, 0xc0, 0xdd,
-	0x03, 0x4d, 0x15, 0x70, 0x34, 0xc3, 0x39, 0xce, 0x44, 0x7b, 0xa3, 0xe7, 0xf4, 0x9b, 0xa3, 0x1e,
-	0xbc, 0x94, 0x24, 0x1b, 0x1c, 0x54, 0xdc, 0xbb, 0x1a, 0x17, 0xbc, 0xba, 0x28, 0x3d, 0xd7, 0x30,
-	0x5e, 0x70, 0xf7, 0x43, 0x30, 0x5b, 0x62, 0xdc, 0x87, 0x96, 0x1a, 0x0b, 0x41, 0xa4, 0x68, 0xd7,
-	0x7b, 0xf5, 0x7e, 0x73, 0xe4, 0x5d, 0x4d, 0xfd, 0xa9, 0xc2, 0x05, 0x9b, 0xc7, 0xa5, 0x57, 0x33,
-	0x3c, 0xda, 0x20, 0xdc, 0x2f, 0xc0, 0x9d, 0xa7, 0x85, 0x2c, 0x72, 0x12, 0x69, 0xba, 0x84, 0xef,
-	0x93, 0x9c, 0xf1, 0xbc, 0xbd, 0xa9, 0xdf, 0xcd, 0x5b, 0x94, 0xde, 0xeb, 0x26, 0x92, 0x55, 0x28,
-	0x3f, 0x74, 0x8d, 0x59, 0x29, 0x3c, 0xb2, 0xc6, 0xfb, 0xf7, 0xbe, 0xfb, 0xfd, 0xa7, 0x77, 0xdf,
-	0xbc, 0x54, 0xb6, 0xa9, 0x4e, 0xe3, 0xa0, 0x2a, 0xd4, 0x40, 0xb1, 0xf8, 0xdb, 0xe0, 0x8d, 0x95,
-	0x19, 0x0e, 0x89, 0x98, 0x71, 0x26, 0x88, 0xfb, 0x16, 0xb8, 0xa1, 0xe5, 0x68, 0xac, 0x53, 0xbd,
-	0x19, 0x80, 0x79, 0xe9, 0x35, 0x14, 0x64, 0x67, 0x3b, 0x6c, 0xa8, 0xab, 0x9d, 0xd8, 0xff, 0x71,
-	0x03, 0xa0, 0xb1, 0x48, 0xc6, 0x34, 0xc9, 0xb1, 0x24, 0x5f, 0x3e, 0xc3, 0x39, 0x11, 0x8f, 0xf9,
-	0xc3, 0x22, 0x4d, 0x43, 0xcc, 0x12, 0xb2, 0xc5, 0xd9, 0x94, 0x30, 0xa9, 0xee, 0xe2, 0x5d, 0x2e,
-	0xa8, 0xa4, 0x9c, 0xad, 0x53, 0xc2, 0x04, 0xb4, 0x84, 0xe6, 0x8c, 0x24, 0x8f, 0x32, 0x23, 0x62,
-	0x0b, 0xf9, 0x1a, 0x34, 0x4d, 0x06, 0x55, 0x93, 0x2d, 0x93, 0xbd, 0xc5, 0x29, 0x0b, 0x7a, 0x2a,
-	0xcf, 0x8b, 0xd2, 0x6b, 0x5b, 0xd2, 0xbf, 0x32, 0xf8, 0xe1, 0xcb, 0xc2, 0x46, 0x6a, 0x03, 0x77,
-	0x09, 0xb8, 0x25, 0xf9, 0x73, 0xc2, 0x22, 0x5e, 0xc8, 0x28, 0xa3, 0xac, 0xaa, 0xe9, 0x3f, 0xa8,
-	0xbc, 0x6d, 0x55, 0xee, 0x1a, 0x95, 0x4b, 0xee, 0x11, 0xce, 0x78, 0xc1, 0xa4, 0xf0, 0xc3, 0x17,
-	0xb5, 0xfd, 0xf3, 0x42, 0x8e, 0x29, 0x13, 0xfe, 0xcf, 0x75, 0xf0, 0xf1, 0x9a, 0xe9, 0x5a, 0xd6,
-	0xe3, 0x09, 0xb8, 0x61, 0x58, 0xdf, 0xb7, 0x79, 0xfb, 0x44, 0x05, 0xf0, 0x6b, 0xe9, 0xdd, 0x4b,
-	0xa8, 0x7c, 0x56, 0x4c, 0xe0, 0x94, 0x67, 0xc8, 0x0e, 0x9e, 0xf9, 0x1b, 0x88, 0xf8, 0x39, 0x92,
-	0x87, 0x33, 0x22, 0xe0, 0x0e, 0x93, 0x8b, 0xd2, 0xbb, 0x65, 0x42, 0xb5, 0x34, 0x7e, 0x58, 0x11,
-	0x9e, 0x73, 0x0f, 0x75, 0x76, 0xaf, 0xcd, 0x3d, 0x5c, 0x72, 0x0f, 0xdd, 0x6f, 0x41, 0x2b, 0xa5,
-	0xdf, 0x14, 0x34, 0xa6, 0xf2, 0x30, 0x32, 0xad, 0x18, 0xb7, 0xeb, 0x5a, 0xe5, 0xb3, 0x35, 0x54,
-	0xb6, 0xc9, 0xf4, 0xbc, 0xa4, 0x7f, 0x23, 0xf4, 0xc3, 0xdb, 0x4b, 0x9b, 0xe9, 0xe9, 0xd8, 0xfd,
-	0x0a, 0xdc, 0xfc, 0x9a, 0x53, 0x16, 0xa9, 0xe5, 0xa2, 0x27, 0xaa, 0x39, 0xea, 0x40, 0xb3, 0x79,
-	0x60, 0xb5, 0x79, 0xe0, 0xe3, 0x6a, 0xf3, 0x04, 0x77, 0x6d, 0x3d, 0x6f, 0x1b, 0x89, 0xa5, 0xab,
-	0x7f, 0xf4, 0x9b, 0xe7, 0x84, 0x2f, 0xa8, 0xb3, 0x02, 0x8f, 0xbe, 0xaf, 0x83, 0xfa, 0x58, 0x24,
-	0xee, 0x0f, 0x0e, 0x70, 0x57, 0x2c, 0xa8, 0x07, 0xf0, 0xbf, 0x6e, 0x61, 0xb8, 0x72, 0xfe, 0x3a,
-	0x8f, 0xae, 0x49, 0xb0, 0x6c, 0x98, 0x3f, 0x1c, 0xf0, 0xde, 0x5a, 0x83, 0xb9, 0xb7, 0x96, 0xf2,
-	0x3a, 0xd4, 0x1d, 0xfc, 0xbf, 0x51, 0x57, 0xaf, 0x1b, 0xec, 0x1d, 0xcf, 0xbb, 0xce, 0xc9, 0xbc,
-	0xeb, 0x9c, 0xce, 0xbb, 0xce, 0xd1, 0x59, 0xb7, 0x76, 0x72, 0xd6, 0xad, 0xfd, 0x72, 0xd6, 0xad,
-	0x3d, 0x79, 0x70, 0xa1, 0xbd, 0x6c, 0x18, 0x83, 0x14, 0x4f, 0x44, 0x75, 0x40, 0xfb, 0xc3, 0x8f,
-	0xd0, 0xc1, 0xd5, 0x9f, 0xb8, 0x49, 0x43, 0xb7, 0xcb, 0x07, 0x7f, 0x06, 0x00, 0x00, 0xff, 0xff,
-	0x67, 0xfc, 0xcb, 0xc9, 0x90, 0x07, 0x00, 0x00,
+	// 492 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x93, 0x41, 0x6f, 0xd3, 0x30,
+	0x14, 0xc7, 0x9b, 0xb5, 0x2a, 0xc2, 0x15, 0x87, 0x59, 0x03, 0x55, 0x45, 0x24, 0x25, 0x48, 0xa8,
+	0x20, 0xd5, 0x56, 0x0b, 0xe2, 0xb0, 0xcb, 0x44, 0x98, 0x98, 0x76, 0x98, 0x34, 0x72, 0x1b, 0x97,
+	0xc9, 0x49, 0xbd, 0x10, 0x29, 0xce, 0x8b, 0x62, 0xb7, 0x2a, 0x5f, 0x81, 0x13, 0x9f, 0x80, 0x23,
+	0x67, 0x3e, 0xc6, 0x8e, 0x3b, 0x72, 0x8a, 0xa6, 0xf6, 0xc0, 0xbd, 0x9f, 0x00, 0xd9, 0x71, 0xd0,
+	0x26, 0x75, 0x02, 0x89, 0x4b, 0x64, 0x3f, 0xff, 0xde, 0xff, 0xfd, 0xfd, 0x9e, 0x83, 0xc6, 0x20,
+	0x05, 0xc8, 0x54, 0xd2, 0x84, 0x09, 0x41, 0x0b, 0x80, 0x6c, 0x2c, 0x60, 0xc6, 0x33, 0x49, 0x23,
+	0x96, 0xb1, 0x3c, 0xe6, 0x25, 0x55, 0x4b, 0xaa, 0x96, 0xa4, 0x28, 0x41, 0x01, 0x1e, 0x59, 0x9c,
+	0x68, 0x9c, 0x68, 0xbc, 0xa6, 0x49, 0x43, 0x93, 0xc5, 0x24, 0xe2, 0x8a, 0x4d, 0x06, 0x7b, 0x09,
+	0x24, 0x60, 0x92, 0xa8, 0x5e, 0xd5, 0xf9, 0x83, 0x5d, 0x26, 0xd2, 0x1c, 0xa8, 0xf9, 0xda, 0xd0,
+	0xeb, 0xbf, 0x3b, 0x68, 0x16, 0xa7, 0x00, 0x99, 0xcd, 0x72, 0x63, 0x93, 0x46, 0x23, 0x26, 0x39,
+	0xb5, 0x35, 0x69, 0x0c, 0x69, 0x6e, 0xcf, 0xbd, 0x04, 0x20, 0xc9, 0x38, 0x35, 0xbb, 0x68, 0x7e,
+	0x41, 0x55, 0x2a, 0xb8, 0x54, 0x4c, 0x14, 0x35, 0xe0, 0x5f, 0xef, 0xa0, 0x87, 0x27, 0x32, 0x79,
+	0x57, 0x72, 0xa6, 0x78, 0x70, 0xa3, 0x00, 0x7e, 0x81, 0xba, 0x92, 0xe7, 0x33, 0x5e, 0xf6, 0x9d,
+	0xa1, 0x33, 0xba, 0x1f, 0xec, 0x6e, 0x2a, 0xef, 0xc1, 0x67, 0x26, 0xb2, 0x7d, 0xbf, 0x8e, 0xfb,
+	0xa1, 0x05, 0xf0, 0x19, 0xea, 0x69, 0xc3, 0xe7, 0x05, 0x2b, 0x99, 0x90, 0xfd, 0x9d, 0xa1, 0x33,
+	0xea, 0x4d, 0x87, 0xe4, 0x56, 0x93, 0xac, 0x39, 0xa2, 0xb5, 0x4f, 0x0d, 0x17, 0x3c, 0xda, 0x54,
+	0x1e, 0xae, 0x15, 0x6f, 0xa4, 0xfb, 0x21, 0x2a, 0xfe, 0x30, 0xf8, 0xbd, 0x95, 0x66, 0x52, 0x72,
+	0x25, 0xfb, 0xed, 0x61, 0x7b, 0xd4, 0x9b, 0x7a, 0x77, 0x4b, 0xbf, 0xd5, 0x5c, 0xd0, 0xb9, 0xac,
+	0xbc, 0x56, 0xad, 0x63, 0x02, 0x12, 0x7f, 0x40, 0x7b, 0x17, 0x73, 0x35, 0x2f, 0xf9, 0xb9, 0x91,
+	0x4b, 0x60, 0xc1, 0xcb, 0x1c, 0xca, 0x7e, 0xc7, 0xdc, 0xcd, 0xdb, 0x54, 0xde, 0xe3, 0xda, 0xc9,
+	0x36, 0xca, 0x0f, 0x71, 0x1d, 0xd6, 0x15, 0x8e, 0x6c, 0x70, 0xff, 0xf9, 0x97, 0x5f, 0x3f, 0x5e,
+	0x3e, 0xbd, 0x35, 0xb6, 0xd8, 0xb4, 0x71, 0xdc, 0x0c, 0x6a, 0xac, 0x55, 0xfc, 0x43, 0xf4, 0x64,
+	0x6b, 0x87, 0x43, 0x2e, 0x0b, 0xc8, 0x25, 0xc7, 0xcf, 0xd0, 0x3d, 0x53, 0x2e, 0x9d, 0x99, 0x56,
+	0x77, 0x02, 0xb4, 0xaa, 0xbc, 0xae, 0x46, 0x8e, 0x0f, 0xc3, 0xae, 0x3e, 0x3a, 0x9e, 0x4d, 0xbf,
+	0x3b, 0xa8, 0x7d, 0x22, 0x13, 0xfc, 0xcd, 0x41, 0x78, 0xcb, 0xb4, 0x0e, 0xc8, 0xbf, 0x3e, 0x49,
+	0xb2, 0xd5, 0xcc, 0xe0, 0xe8, 0x3f, 0x05, 0x9a, 0xdb, 0x04, 0x67, 0x97, 0x2b, 0xd7, 0xb9, 0x5a,
+	0xb9, 0xce, 0xf5, 0xca, 0x75, 0xbe, 0xae, 0xdd, 0xd6, 0xd5, 0xda, 0x6d, 0xfd, 0x5c, 0xbb, 0xad,
+	0x8f, 0x07, 0x49, 0xaa, 0x3e, 0xcd, 0x23, 0x12, 0x83, 0xa0, 0xb6, 0xd8, 0x38, 0x63, 0x91, 0x6c,
+	0x36, 0x74, 0x31, 0x79, 0x43, 0x97, 0x77, 0xff, 0x00, 0x51, 0xd7, 0xbc, 0xd9, 0x57, 0xbf, 0x03,
+	0x00, 0x00, 0xff, 0xff, 0x5a, 0x94, 0x54, 0x50, 0xae, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -345,7 +202,6 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
 	CreateBalancerPool(ctx context.Context, in *MsgCreateBalancerPool, opts ...grpc.CallOption) (*MsgCreateBalancerPoolResponse, error)
-	MigrateSharesToFullRangeConcentratedPosition(ctx context.Context, in *MsgMigrateSharesToFullRangeConcentratedPosition, opts ...grpc.CallOption) (*MsgMigrateSharesToFullRangeConcentratedPositionResponse, error)
 }
 
 type msgClient struct {
@@ -365,19 +221,9 @@ func (c *msgClient) CreateBalancerPool(ctx context.Context, in *MsgCreateBalance
 	return out, nil
 }
 
-func (c *msgClient) MigrateSharesToFullRangeConcentratedPosition(ctx context.Context, in *MsgMigrateSharesToFullRangeConcentratedPosition, opts ...grpc.CallOption) (*MsgMigrateSharesToFullRangeConcentratedPositionResponse, error) {
-	out := new(MsgMigrateSharesToFullRangeConcentratedPositionResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.gamm.poolmodels.balancer.v1beta1.Msg/MigrateSharesToFullRangeConcentratedPosition", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	CreateBalancerPool(context.Context, *MsgCreateBalancerPool) (*MsgCreateBalancerPoolResponse, error)
-	MigrateSharesToFullRangeConcentratedPosition(context.Context, *MsgMigrateSharesToFullRangeConcentratedPosition) (*MsgMigrateSharesToFullRangeConcentratedPositionResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -386,9 +232,6 @@ type UnimplementedMsgServer struct {
 
 func (*UnimplementedMsgServer) CreateBalancerPool(ctx context.Context, req *MsgCreateBalancerPool) (*MsgCreateBalancerPoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateBalancerPool not implemented")
-}
-func (*UnimplementedMsgServer) MigrateSharesToFullRangeConcentratedPosition(ctx context.Context, req *MsgMigrateSharesToFullRangeConcentratedPosition) (*MsgMigrateSharesToFullRangeConcentratedPositionResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method MigrateSharesToFullRangeConcentratedPosition not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -413,24 +256,6 @@ func _Msg_CreateBalancerPool_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_MigrateSharesToFullRangeConcentratedPosition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgMigrateSharesToFullRangeConcentratedPosition)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).MigrateSharesToFullRangeConcentratedPosition(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/osmosis.gamm.poolmodels.balancer.v1beta1.Msg/MigrateSharesToFullRangeConcentratedPosition",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).MigrateSharesToFullRangeConcentratedPosition(ctx, req.(*MsgMigrateSharesToFullRangeConcentratedPosition))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.gamm.poolmodels.balancer.v1beta1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -438,10 +263,6 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateBalancerPool",
 			Handler:    _Msg_CreateBalancerPool_Handler,
-		},
-		{
-			MethodName: "MigrateSharesToFullRangeConcentratedPosition",
-			Handler:    _Msg_MigrateSharesToFullRangeConcentratedPosition_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -539,121 +360,6 @@ func (m *MsgCreateBalancerPoolResponse) MarshalToSizedBuffer(dAtA []byte) (int, 
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgMigrateSharesToFullRangeConcentratedPosition) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgMigrateSharesToFullRangeConcentratedPosition) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgMigrateSharesToFullRangeConcentratedPosition) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.TokenOutMins) > 0 {
-		for iNdEx := len(m.TokenOutMins) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.TokenOutMins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintTx(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x1a
-		}
-	}
-	{
-		size, err := m.SharesToMigrate.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x12
-	if len(m.Sender) > 0 {
-		i -= len(m.Sender)
-		copy(dAtA[i:], m.Sender)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgMigrateSharesToFullRangeConcentratedPositionResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgMigrateSharesToFullRangeConcentratedPositionResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgMigrateSharesToFullRangeConcentratedPositionResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	n3, err3 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.JoinTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.JoinTime):])
-	if err3 != nil {
-		return 0, err3
-	}
-	i -= n3
-	i = encodeVarintTx(dAtA, i, uint64(n3))
-	i--
-	dAtA[i] = 0x22
-	{
-		size := m.LiquidityCreated.Size()
-		i -= size
-		if _, err := m.LiquidityCreated.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x1a
-	{
-		size := m.Amount1.Size()
-		i -= size
-		if _, err := m.Amount1.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x12
-	{
-		size := m.Amount0.Size()
-		i -= size
-		if _, err := m.Amount0.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0xa
-	return len(dAtA) - i, nil
-}
-
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -701,44 +407,6 @@ func (m *MsgCreateBalancerPoolResponse) Size() (n int) {
 	if m.PoolID != 0 {
 		n += 1 + sovTx(uint64(m.PoolID))
 	}
-	return n
-}
-
-func (m *MsgMigrateSharesToFullRangeConcentratedPosition) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Sender)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = m.SharesToMigrate.Size()
-	n += 1 + l + sovTx(uint64(l))
-	if len(m.TokenOutMins) > 0 {
-		for _, e := range m.TokenOutMins {
-			l = e.Size()
-			n += 1 + l + sovTx(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *MsgMigrateSharesToFullRangeConcentratedPositionResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = m.Amount0.Size()
-	n += 1 + l + sovTx(uint64(l))
-	l = m.Amount1.Size()
-	n += 1 + l + sovTx(uint64(l))
-	l = m.LiquidityCreated.Size()
-	n += 1 + l + sovTx(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.JoinTime)
-	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
@@ -980,340 +648,6 @@ func (m *MsgCreateBalancerPoolResponse) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgMigrateSharesToFullRangeConcentratedPosition) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgMigrateSharesToFullRangeConcentratedPosition: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgMigrateSharesToFullRangeConcentratedPosition: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Sender = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SharesToMigrate", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.SharesToMigrate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TokenOutMins", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.TokenOutMins = append(m.TokenOutMins, types.Coin{})
-			if err := m.TokenOutMins[len(m.TokenOutMins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgMigrateSharesToFullRangeConcentratedPositionResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgMigrateSharesToFullRangeConcentratedPositionResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgMigrateSharesToFullRangeConcentratedPositionResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount0", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Amount0.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount1", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Amount1.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LiquidityCreated", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.LiquidityCreated.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field JoinTime", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.JoinTime, dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

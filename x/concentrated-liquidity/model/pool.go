@@ -8,9 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 const (
@@ -273,7 +273,8 @@ func (p Pool) IsCurrentTickInRange(lowerTick, upperTick int64) bool {
 }
 
 // ApplySwap state of pool after swap.
-// It specifically overwrites the pool's liquidity, curr tick and the curr sqrt price
+// It specifically overwrites the pool's liquidity, curr tick and the curr sqrt price.
+// Note that this method is mutative.
 func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick int64, newCurrentSqrtPrice sdk.Dec) error {
 	// Check if the new liquidity provided is not negative.
 	if newLiquidity.IsNegative() {
@@ -299,4 +300,8 @@ func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick int64, newCurrentS
 	p.CurrentSqrtPrice = newCurrentSqrtPrice
 
 	return nil
+}
+
+func (p *Pool) AsSerializablePool() poolmanagertypes.PoolI {
+	return p
 }

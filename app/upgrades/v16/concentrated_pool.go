@@ -4,12 +4,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
-	"github.com/osmosis-labs/osmosis/v15/app/keepers"
-	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/app/keepers"
+	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	gammkeeper "github.com/osmosis-labs/osmosis/v16/x/gamm/keeper"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v16/x/poolmanager"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 // createConcentratedPoolFromCFMM creates a new concentrated liquidity pool with the desiredDenom0 token as the
@@ -58,58 +58,19 @@ func createConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLinkWith uint64
 	return concentratedPool, nil
 }
 
-// createCanonicalConcentratedLiquidityPoolAndMigrationLink creates a new concentrated liquidity pool from an existing
-// CFMM pool, and migrates the gauges and distribution records from the CFMM pool to the new CL pool.
-// Additionally, it creates a migration link between the CFMM pool and the CL pool and stores it in x/gamm.
+// createCanonicalConcentratedLiquidityPoolAndMigrationLink creates a new concentrated liquidity pool from an existing CFMM pool.
+// This method calls OverwriteMigrationRecords, which creates a migration link between the CFMM/CL pool as well as migrates the
+// gauges and distribution records from the CFMM pool to the new CL pool.
 // Returns error if fails to create concentrated liquidity pool from CFMM pool.
-// Returns error if fails to get gauges for CFMM pool.
-// Returns error if fails to get gauge for the concentrated liquidity pool.
 func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, cfmmPoolId uint64, desiredDenom0 string, keepers *keepers.AppKeepers) (poolmanagertypes.PoolI, error) {
 	concentratedPool, err := createConcentratedPoolFromCFMM(ctx, cfmmPoolId, desiredDenom0, *keepers.AccountKeeper, *keepers.GAMMKeeper, *keepers.PoolManagerKeeper)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get CFMM gauges
-	cfmmGauges, err := keepers.PoolIncentivesKeeper.GetGaugesForCFMMPool(ctx, cfmmPoolId)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(cfmmGauges) == 0 {
-		return nil, ErrNoGaugeToRedirect
-	}
-
-	// Get longest gauge duration from balancer.
-	longestDurationGauge := cfmmGauges[0]
-	for i := 1; i < len(cfmmGauges); i++ {
-		if cfmmGauges[i].DistributeTo.Duration > longestDurationGauge.DistributeTo.Duration {
-			longestDurationGauge = cfmmGauges[i]
-		}
-	}
-
-	// Get concentrated liquidity gauge duration.
-	distributionEpochDuration := keepers.IncentivesKeeper.GetEpochInfo(ctx).Duration
-
-	// Get concentrated gauge correspondng to the distribution epoch duration.
-	concentratedGaugeId, err := keepers.PoolIncentivesKeeper.GetPoolGaugeId(ctx, concentratedPool.GetId(), distributionEpochDuration)
-	if err != nil {
-		return nil, err
-	}
-
-	// Iterate through all the distr records, and redirect the old balancer gauge to the new concentrated gauge.
-	distrInfo := keepers.PoolIncentivesKeeper.GetDistrInfo(ctx)
-	for i, distrRecord := range distrInfo.Records {
-		if distrRecord.GaugeId == longestDurationGauge.Id {
-			distrInfo.Records[i].GaugeId = concentratedGaugeId
-		}
-	}
-
-	// Set the new distr info.
-	keepers.PoolIncentivesKeeper.SetDistrInfo(ctx, distrInfo)
-
 	// Set the migration link in x/gamm.
-	keepers.GAMMKeeper.OverwriteMigrationRecords(ctx, gammtypes.MigrationRecords{
+	// This will also migrate the CFMM distribution records to point to the new CL pool.
+	err = keepers.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, gammtypes.MigrationRecords{
 		BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 			{
 				BalancerPoolId: cfmmPoolId,
@@ -117,6 +78,9 @@ func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, c
 			},
 		},
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	return concentratedPool, nil
 }

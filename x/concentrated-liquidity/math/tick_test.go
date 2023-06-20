@@ -1,10 +1,12 @@
 package math_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
 const (
@@ -197,6 +199,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 		})
 	}
 }
+
 func (suite *ConcentratedMathTestSuite) TestTicksToSqrtPrice() {
 	testCases := map[string]struct {
 		lowerTickIndex     sdk.Int
@@ -245,6 +248,11 @@ func (suite *ConcentratedMathTestSuite) TestTicksToSqrtPrice() {
 			upperTickIndex: sdk.NewInt(342000000 + 1),
 			expectedError:  types.TickIndexMaximumError{MaxTick: 342000000},
 		},
+		"error: provided lower tick and upper tick are same": {
+			lowerTickIndex: sdk.NewInt(-162000000),
+			upperTickIndex: sdk.NewInt(-162000000),
+			expectedError:  types.InvalidLowerUpperTickError{LowerTick: sdk.NewInt(-162000000).Int64(), UpperTick: sdk.NewInt(-162000000).Int64()},
+		},
 	}
 
 	for name, tc := range testCases {
@@ -278,8 +286,9 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 	)
 
 	testCases := map[string]struct {
-		price        sdk.Dec
-		tickExpected int64
+		price         sdk.Dec
+		tickExpected  int64
+		expectedError error
 	}{
 		"BTC <> USD, tick 38035200 -> price 30352": {
 			price:        sdk.MustNewDecFromStr("30352"),
@@ -345,17 +354,38 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 			price:        sdk.MustNewDecFromStr("25761000"),
 			tickExpected: 64576100,
 		},
+		"price is one Dec": {
+			price:        sdk.OneDec(),
+			tickExpected: 0,
+		},
+		"price is negative decimal": {
+			price:         sdk.OneDec().Neg(),
+			expectedError: fmt.Errorf("price must be greater than zero"),
+		},
+		"price is greater than max spot price": {
+			price:         types.MaxSpotPrice.Add(sdk.OneDec()),
+			expectedError: types.PriceBoundError{ProvidedPrice: types.MaxSpotPrice.Add(sdk.OneDec()), MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice},
+		},
+		"price is smaller than min spot price": {
+			price:         types.MinSpotPrice.Quo(sdk.NewDec(10)),
+			expectedError: types.PriceBoundError{ProvidedPrice: types.MinSpotPrice.Quo(sdk.NewDec(10)), MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice},
+		},
 	}
 	for name, tc := range testCases {
 		tc := tc
 
 		suite.Run(name, func() {
-			tick, err := math.PriceToTick(tc.price)
-			// With tick spacing of one, no rounding should occur.
-			tickRoundDown, err1 := math.PriceToTickRoundDown(tc.price, one)
+			// surpress error here, we only listen to errors from system under test.
+			tick, _ := suite.PriceToTick(tc.price)
 
+			// With tick spacing of one, no rounding should occur.
+			tickRoundDown, err := suite.PriceToTickRoundDownSpacing(tc.price, one)
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorContains(err, tc.expectedError.Error())
+				return
+			}
 			suite.Require().NoError(err)
-			suite.Require().NoError(err1)
 			suite.Require().Equal(tc.tickExpected, tick)
 			suite.Require().Equal(tc.tickExpected, tickRoundDown)
 		})
@@ -423,7 +453,7 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTickRoundDown() {
 		tc := tc
 
 		suite.Run(name, func() {
-			tick, err := math.PriceToTickRoundDown(tc.price, tc.tickSpacing)
+			tick, err := suite.PriceToTickRoundDownSpacing(tc.price, tc.tickSpacing)
 
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.tickExpected, tick)
@@ -549,6 +579,10 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			price:        sdk.MustNewDecFromStr("1234568000"),
 			tickExpected: 81234568,
 		},
+		"inverse testing with 1": {
+			price:        sdk.OneDec(),
+			tickExpected: 0,
+		},
 	}
 	for name, tc := range testCases {
 		tc := tc
@@ -557,7 +591,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			tickSpacing := uint64(1)
 
 			// 1. Compute tick from price.
-			tickFromPrice, err := math.PriceToTickRoundDown(tc.price, tickSpacing)
+			tickFromPrice, err := suite.PriceToTickRoundDownSpacing(tc.price, tickSpacing)
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.tickExpected, tickFromPrice)
 
@@ -573,7 +607,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			suite.Require().Equal(expectedPrice, price)
 
 			// 3. Compute tick from inverse price (inverse tick)
-			inverseTickFromPrice, err := math.PriceToTickRoundDown(price, tickSpacing)
+			inverseTickFromPrice, err := suite.PriceToTickRoundDownSpacing(price, tickSpacing)
 			suite.Require().NoError(err)
 
 			// Make sure original tick and inverse tick match.
@@ -590,10 +624,55 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			// suite.Require().Equal(expectedPrice.String(), priceFromSqrtPrice.String())
 
 			// 5. Compute tick from sqrt price from the original tick.
-			inverseTickFromSqrtPrice, err := math.PriceToTickRoundDown(priceFromSqrtPrice, tickSpacing)
+			inverseTickFromSqrtPrice, err := suite.PriceToTickRoundDownSpacing(priceFromSqrtPrice, tickSpacing)
 			suite.Require().NoError(err)
 
 			suite.Require().Equal(tickFromPrice, inverseTickFromSqrtPrice, "expected: %s, actual: %s", tickFromPrice, inverseTickFromSqrtPrice)
+		})
+	}
+}
+
+func (suite *ConcentratedMathTestSuite) TestPriceToTick_ErrorCases() {
+	testCases := map[string]struct {
+		price sdk.Dec
+	}{
+		"use negative price": {
+			price: sdk.OneDec().Neg(),
+		},
+		"price is greater than max spot price": {
+			price: types.MaxSpotPrice.Add(sdk.OneDec()),
+		},
+		"price is less than min spot price": {
+			price: types.MinSpotPrice.Sub(sdk.OneDec()),
+		},
+	}
+	for name, tc := range testCases {
+		tc := tc
+
+		suite.Run(name, func() {
+			tickFromPrice, err := suite.PriceToTick(tc.price)
+			suite.Require().Error(err)
+			suite.Require().Equal(tickFromPrice, int64(0))
+		})
+	}
+}
+func (suite *ConcentratedMathTestSuite) TestTickToPrice_ErrorCases() {
+	testCases := map[string]struct {
+		tickIndex int64
+	}{
+		"tick index is greater than max tick": {
+			tickIndex: types.MaxTick + 1,
+		},
+		"tick index is less than min tick": {
+			tickIndex: types.MinTick - 1,
+		},
+	}
+	for name, tc := range testCases {
+		tc := tc
+
+		suite.Run(name, func() {
+			_, err := math.TickToPrice(tc.tickIndex)
+			suite.Require().Error(err)
 		})
 	}
 }
@@ -630,8 +709,139 @@ func (suite *ConcentratedMathTestSuite) TestCalculatePriceToTick() {
 	}
 	for name, t := range testCases {
 		suite.Run(name, func() {
-			tickIndex := math.CalculatePriceToTick(t.price)
+			tickIndex := suite.CalculatePriceToTick(t.price)
 			suite.Require().Equal(t.expectedTickIndex, tickIndex)
+		})
+	}
+}
+func (suite *ConcentratedMathTestSuite) TestPowTenInternal() {
+	testCases := map[string]struct {
+		exponent             int64
+		expectedPowTenResult sdk.Dec
+	}{
+		"Power by 5": {
+			exponent:             5,
+			expectedPowTenResult: sdk.NewDec(100000),
+		},
+		"Power by 0": {
+			exponent:             0,
+			expectedPowTenResult: sdk.NewDec(1),
+		},
+		"Power by -5": {
+			exponent:             -5,
+			expectedPowTenResult: sdk.MustNewDecFromStr("0.00001"),
+		},
+	}
+	for name, t := range testCases {
+		suite.Run(name, func() {
+			powTenResult := math.PowTenInternal(t.exponent)
+			suite.Require().Equal(t.expectedPowTenResult, powTenResult)
+		})
+	}
+}
+
+func (s *ConcentratedMathTestSuite) TestSqrtPriceToTickRoundDownSpacing() {
+	testCases := map[string]struct {
+		sqrtPrice    sdk.Dec
+		tickSpacing  uint64
+		tickExpected int64
+	}{
+		"sqrt price of 1 (tick spacing 1)": {
+			sqrtPrice:    sdk.OneDec(),
+			tickSpacing:  1,
+			tickExpected: 0,
+		},
+		"sqrt price exactly on boundary of next tick (tick spacing 1)": {
+			sqrtPrice:    sdk.MustNewDecFromStr("1.000000499999875000"),
+			tickSpacing:  1,
+			tickExpected: 1,
+		},
+		"sqrt price one ULP below boundary of next tick (tick spacing 1)": {
+			sqrtPrice:    sdk.MustNewDecFromStr("1.000000499999874999"),
+			tickSpacing:  1,
+			tickExpected: 0,
+		},
+		"sqrt price corresponding to bucket 99 (tick spacing 100)": {
+			sqrtPrice:    sdk.MustNewDecFromStr("1.000049498774935650"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: 0,
+		},
+		"sqrt price exactly on bucket 100 (tick spacing 100)": {
+			sqrtPrice:    sdk.MustNewDecFromStr("1.000049998750062496"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: 100,
+		},
+		"sqrt price one ULP below bucket 100 (tick spacing 100)": {
+			sqrtPrice:    sdk.MustNewDecFromStr("1.000049998750062495"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: 0,
+		},
+		"sqrt price exactly on bucket -100 (tick spacing 100)": {
+			sqrtPrice:    sdk.MustNewDecFromStr("0.999994999987499937"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: -100,
+		},
+		"sqrt price one ULP below bucket -100 (tick spacing 100)": {
+			sqrtPrice:    sdk.MustNewDecFromStr("0.999994999987499936"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: -200,
+		},
+		"sqrt price exactly on tick -101 (tick spacing 100)": {
+			sqrtPrice:    sdk.MustNewDecFromStr("0.999994949987248685"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: -200,
+		},
+		"sqrt price exactly equal to max sqrt price": {
+			sqrtPrice:    types.MaxSqrtPrice,
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: types.MaxTick,
+		},
+		"sqrt price exactly equal to min sqrt price": {
+			sqrtPrice:    types.MinSqrtPrice,
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: types.MinTick,
+		},
+		"sqrt price equal to max sqrt price minus one ULP": {
+			sqrtPrice:    types.MaxSqrtPrice.Sub(sdk.SmallestDec()),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: types.MaxTick - defaultTickSpacing,
+		},
+		"sqrt price corresponds exactly to max tick - 1 (tick spacing 1)": {
+			// Calculated using TickToSqrtPrice(types.MaxTick - 1)
+			sqrtPrice:    sdk.MustNewDecFromStr("9999999499999987499.999374999960937497"),
+			tickSpacing:  1,
+			tickExpected: types.MaxTick - 1,
+		},
+		"sqrt price one ULP below max tick - 1 (tick spacing 1)": {
+			// Calculated using TickToSqrtPrice(types.MaxTick - 1) - 1 ULP
+			sqrtPrice:    sdk.MustNewDecFromStr("9999999499999987499.999374999960937496"),
+			tickSpacing:  1,
+			tickExpected: types.MaxTick - 2,
+		},
+		"sqrt price one ULP below max tick - 1 (tick spacing 100)": {
+			// Calculated using TickToSqrtPrice(types.MaxTick - 1) - 1 ULP
+			sqrtPrice:    sdk.MustNewDecFromStr("9999999499999987499.999374999960937496"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: types.MaxTick - defaultTickSpacing,
+		},
+	}
+	for name, tc := range testCases {
+		s.Run(name, func() {
+			tickIndex, err := math.SqrtPriceToTickRoundDownSpacing(tc.sqrtPrice, tc.tickSpacing)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.tickExpected, tickIndex)
+
+			// Ensure returned bucket properly encapsulates given sqrt price, skipping the upper bound
+			// check if we're on the max tick
+			_, inverseSqrtPrice, err := math.TickToSqrtPrice(tickIndex)
+			s.Require().NoError(err)
+			s.Require().True(inverseSqrtPrice.LTE(tc.sqrtPrice))
+
+			if tc.tickExpected != types.MaxTick {
+				_, inverseSqrtPriceTickAbove, err := math.TickToSqrtPrice(tickIndex + int64(tc.tickSpacing))
+				s.Require().NoError(err)
+				s.Require().True(inverseSqrtPriceTickAbove.GT(tc.sqrtPrice))
+			}
 		})
 	}
 }

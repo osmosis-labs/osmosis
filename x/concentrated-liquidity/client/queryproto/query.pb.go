@@ -15,8 +15,8 @@ import (
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "github.com/gogo/protobuf/types"
-	model "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	types1 "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	model "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	types1 "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -39,8 +39,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // =============================== UserPositions
 type UserPositionsRequest struct {
-	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty" yaml:"address"`
-	PoolId  uint64 `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+	Address    string             `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty" yaml:"address"`
+	PoolId     uint64             `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+	Pagination *query.PageRequest `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *UserPositionsRequest) Reset()         { *m = UserPositionsRequest{} }
@@ -90,8 +91,16 @@ func (m *UserPositionsRequest) GetPoolId() uint64 {
 	return 0
 }
 
+func (m *UserPositionsRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
 type UserPositionsResponse struct {
-	Positions []model.FullPositionBreakdown `protobuf:"bytes,1,rep,name=positions,proto3" json:"positions"`
+	Positions  []model.FullPositionBreakdown `protobuf:"bytes,1,rep,name=positions,proto3" json:"positions"`
+	Pagination *query.PageResponse           `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *UserPositionsResponse) Reset()         { *m = UserPositionsResponse{} }
@@ -130,6 +139,13 @@ var xxx_messageInfo_UserPositionsResponse proto.InternalMessageInfo
 func (m *UserPositionsResponse) GetPositions() []model.FullPositionBreakdown {
 	if m != nil {
 		return m.Positions
+	}
+	return nil
+}
+
+func (m *UserPositionsResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
 	}
 	return nil
 }
@@ -914,6 +930,411 @@ func (m *ClaimableIncentivesResponse) GetForfeitedIncentives() []types2.Coin {
 	return nil
 }
 
+// ===================== QueryPoolAccumulatorRewards
+type PoolAccumulatorRewardsRequest struct {
+	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+}
+
+func (m *PoolAccumulatorRewardsRequest) Reset()         { *m = PoolAccumulatorRewardsRequest{} }
+func (m *PoolAccumulatorRewardsRequest) String() string { return proto.CompactTextString(m) }
+func (*PoolAccumulatorRewardsRequest) ProtoMessage()    {}
+func (*PoolAccumulatorRewardsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5c83e18b11fd607d, []int{18}
+}
+func (m *PoolAccumulatorRewardsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PoolAccumulatorRewardsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PoolAccumulatorRewardsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PoolAccumulatorRewardsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PoolAccumulatorRewardsRequest.Merge(m, src)
+}
+func (m *PoolAccumulatorRewardsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *PoolAccumulatorRewardsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PoolAccumulatorRewardsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PoolAccumulatorRewardsRequest proto.InternalMessageInfo
+
+func (m *PoolAccumulatorRewardsRequest) GetPoolId() uint64 {
+	if m != nil {
+		return m.PoolId
+	}
+	return 0
+}
+
+type PoolAccumulatorRewardsResponse struct {
+	SpreadRewardGrowthGlobal github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=spread_reward_growth_global,json=spreadRewardGrowthGlobal,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"spread_reward_growth_global"`
+	UptimeGrowthGlobal       []model.UptimeTracker                       `protobuf:"bytes,2,rep,name=uptime_growth_global,json=uptimeGrowthGlobal,proto3" json:"uptime_growth_global" yaml:"uptime_growth_global"`
+}
+
+func (m *PoolAccumulatorRewardsResponse) Reset()         { *m = PoolAccumulatorRewardsResponse{} }
+func (m *PoolAccumulatorRewardsResponse) String() string { return proto.CompactTextString(m) }
+func (*PoolAccumulatorRewardsResponse) ProtoMessage()    {}
+func (*PoolAccumulatorRewardsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5c83e18b11fd607d, []int{19}
+}
+func (m *PoolAccumulatorRewardsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PoolAccumulatorRewardsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PoolAccumulatorRewardsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PoolAccumulatorRewardsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PoolAccumulatorRewardsResponse.Merge(m, src)
+}
+func (m *PoolAccumulatorRewardsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *PoolAccumulatorRewardsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_PoolAccumulatorRewardsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PoolAccumulatorRewardsResponse proto.InternalMessageInfo
+
+func (m *PoolAccumulatorRewardsResponse) GetSpreadRewardGrowthGlobal() github_com_cosmos_cosmos_sdk_types.DecCoins {
+	if m != nil {
+		return m.SpreadRewardGrowthGlobal
+	}
+	return nil
+}
+
+func (m *PoolAccumulatorRewardsResponse) GetUptimeGrowthGlobal() []model.UptimeTracker {
+	if m != nil {
+		return m.UptimeGrowthGlobal
+	}
+	return nil
+}
+
+// ===================== QueryTickAccumulatorTrackers
+type TickAccumulatorTrackersRequest struct {
+	PoolId    uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+	TickIndex int64  `protobuf:"varint,2,opt,name=tick_index,json=tickIndex,proto3" json:"tick_index,omitempty" yaml:"tick_index"`
+}
+
+func (m *TickAccumulatorTrackersRequest) Reset()         { *m = TickAccumulatorTrackersRequest{} }
+func (m *TickAccumulatorTrackersRequest) String() string { return proto.CompactTextString(m) }
+func (*TickAccumulatorTrackersRequest) ProtoMessage()    {}
+func (*TickAccumulatorTrackersRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5c83e18b11fd607d, []int{20}
+}
+func (m *TickAccumulatorTrackersRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TickAccumulatorTrackersRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TickAccumulatorTrackersRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TickAccumulatorTrackersRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TickAccumulatorTrackersRequest.Merge(m, src)
+}
+func (m *TickAccumulatorTrackersRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *TickAccumulatorTrackersRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_TickAccumulatorTrackersRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TickAccumulatorTrackersRequest proto.InternalMessageInfo
+
+func (m *TickAccumulatorTrackersRequest) GetPoolId() uint64 {
+	if m != nil {
+		return m.PoolId
+	}
+	return 0
+}
+
+func (m *TickAccumulatorTrackersRequest) GetTickIndex() int64 {
+	if m != nil {
+		return m.TickIndex
+	}
+	return 0
+}
+
+type TickAccumulatorTrackersResponse struct {
+	SpreadRewardGrowthOppositeDirectionOfLastTraversal github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=spread_reward_growth_opposite_direction_of_last_traversal,json=spreadRewardGrowthOppositeDirectionOfLastTraversal,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"spread_reward_growth_opposite_direction_of_last_traversal"`
+	UptimeTrackers                                     []model.UptimeTracker                       `protobuf:"bytes,2,rep,name=uptime_trackers,json=uptimeTrackers,proto3" json:"uptime_trackers" yaml:"uptime_trackers"`
+}
+
+func (m *TickAccumulatorTrackersResponse) Reset()         { *m = TickAccumulatorTrackersResponse{} }
+func (m *TickAccumulatorTrackersResponse) String() string { return proto.CompactTextString(m) }
+func (*TickAccumulatorTrackersResponse) ProtoMessage()    {}
+func (*TickAccumulatorTrackersResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5c83e18b11fd607d, []int{21}
+}
+func (m *TickAccumulatorTrackersResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TickAccumulatorTrackersResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TickAccumulatorTrackersResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TickAccumulatorTrackersResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TickAccumulatorTrackersResponse.Merge(m, src)
+}
+func (m *TickAccumulatorTrackersResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *TickAccumulatorTrackersResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_TickAccumulatorTrackersResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TickAccumulatorTrackersResponse proto.InternalMessageInfo
+
+func (m *TickAccumulatorTrackersResponse) GetSpreadRewardGrowthOppositeDirectionOfLastTraversal() github_com_cosmos_cosmos_sdk_types.DecCoins {
+	if m != nil {
+		return m.SpreadRewardGrowthOppositeDirectionOfLastTraversal
+	}
+	return nil
+}
+
+func (m *TickAccumulatorTrackersResponse) GetUptimeTrackers() []model.UptimeTracker {
+	if m != nil {
+		return m.UptimeTrackers
+	}
+	return nil
+}
+
+// ===================== QueryIncentiveRecords
+type IncentiveRecordsRequest struct {
+	PoolId     uint64             `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *IncentiveRecordsRequest) Reset()         { *m = IncentiveRecordsRequest{} }
+func (m *IncentiveRecordsRequest) String() string { return proto.CompactTextString(m) }
+func (*IncentiveRecordsRequest) ProtoMessage()    {}
+func (*IncentiveRecordsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5c83e18b11fd607d, []int{22}
+}
+func (m *IncentiveRecordsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *IncentiveRecordsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_IncentiveRecordsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *IncentiveRecordsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_IncentiveRecordsRequest.Merge(m, src)
+}
+func (m *IncentiveRecordsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *IncentiveRecordsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_IncentiveRecordsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_IncentiveRecordsRequest proto.InternalMessageInfo
+
+func (m *IncentiveRecordsRequest) GetPoolId() uint64 {
+	if m != nil {
+		return m.PoolId
+	}
+	return 0
+}
+
+func (m *IncentiveRecordsRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+type IncentiveRecordsResponse struct {
+	IncentiveRecords []types1.IncentiveRecord `protobuf:"bytes,1,rep,name=incentive_records,json=incentiveRecords,proto3" json:"incentive_records"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *IncentiveRecordsResponse) Reset()         { *m = IncentiveRecordsResponse{} }
+func (m *IncentiveRecordsResponse) String() string { return proto.CompactTextString(m) }
+func (*IncentiveRecordsResponse) ProtoMessage()    {}
+func (*IncentiveRecordsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5c83e18b11fd607d, []int{23}
+}
+func (m *IncentiveRecordsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *IncentiveRecordsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_IncentiveRecordsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *IncentiveRecordsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_IncentiveRecordsResponse.Merge(m, src)
+}
+func (m *IncentiveRecordsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *IncentiveRecordsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_IncentiveRecordsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_IncentiveRecordsResponse proto.InternalMessageInfo
+
+func (m *IncentiveRecordsResponse) GetIncentiveRecords() []types1.IncentiveRecord {
+	if m != nil {
+		return m.IncentiveRecords
+	}
+	return nil
+}
+
+func (m *IncentiveRecordsResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// =============================== CFMMPoolIdLinkFromConcentratedPoolId
+type CFMMPoolIdLinkFromConcentratedPoolIdRequest struct {
+	ConcentratedPoolId uint64 `protobuf:"varint,1,opt,name=concentrated_pool_id,json=concentratedPoolId,proto3" json:"concentrated_pool_id,omitempty" yaml:"concentrated_pool_id"`
+}
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) Reset() {
+	*m = CFMMPoolIdLinkFromConcentratedPoolIdRequest{}
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) String() string {
+	return proto.CompactTextString(m)
+}
+func (*CFMMPoolIdLinkFromConcentratedPoolIdRequest) ProtoMessage() {}
+func (*CFMMPoolIdLinkFromConcentratedPoolIdRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5c83e18b11fd607d, []int{24}
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CFMMPoolIdLinkFromConcentratedPoolIdRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CFMMPoolIdLinkFromConcentratedPoolIdRequest.Merge(m, src)
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_CFMMPoolIdLinkFromConcentratedPoolIdRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CFMMPoolIdLinkFromConcentratedPoolIdRequest proto.InternalMessageInfo
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) GetConcentratedPoolId() uint64 {
+	if m != nil {
+		return m.ConcentratedPoolId
+	}
+	return 0
+}
+
+type CFMMPoolIdLinkFromConcentratedPoolIdResponse struct {
+	CfmmPoolId uint64 `protobuf:"varint,1,opt,name=cfmm_pool_id,json=cfmmPoolId,proto3" json:"cfmm_pool_id,omitempty" yaml:"cfmm_pool_id"`
+}
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) Reset() {
+	*m = CFMMPoolIdLinkFromConcentratedPoolIdResponse{}
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*CFMMPoolIdLinkFromConcentratedPoolIdResponse) ProtoMessage() {}
+func (*CFMMPoolIdLinkFromConcentratedPoolIdResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5c83e18b11fd607d, []int{25}
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CFMMPoolIdLinkFromConcentratedPoolIdResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CFMMPoolIdLinkFromConcentratedPoolIdResponse.Merge(m, src)
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_CFMMPoolIdLinkFromConcentratedPoolIdResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CFMMPoolIdLinkFromConcentratedPoolIdResponse proto.InternalMessageInfo
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) GetCfmmPoolId() uint64 {
+	if m != nil {
+		return m.CfmmPoolId
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*UserPositionsRequest)(nil), "osmosis.concentratedliquidity.v1beta1.UserPositionsRequest")
 	proto.RegisterType((*UserPositionsResponse)(nil), "osmosis.concentratedliquidity.v1beta1.UserPositionsResponse")
@@ -933,6 +1354,14 @@ func init() {
 	proto.RegisterType((*ClaimableSpreadRewardsResponse)(nil), "osmosis.concentratedliquidity.v1beta1.ClaimableSpreadRewardsResponse")
 	proto.RegisterType((*ClaimableIncentivesRequest)(nil), "osmosis.concentratedliquidity.v1beta1.ClaimableIncentivesRequest")
 	proto.RegisterType((*ClaimableIncentivesResponse)(nil), "osmosis.concentratedliquidity.v1beta1.ClaimableIncentivesResponse")
+	proto.RegisterType((*PoolAccumulatorRewardsRequest)(nil), "osmosis.concentratedliquidity.v1beta1.PoolAccumulatorRewardsRequest")
+	proto.RegisterType((*PoolAccumulatorRewardsResponse)(nil), "osmosis.concentratedliquidity.v1beta1.PoolAccumulatorRewardsResponse")
+	proto.RegisterType((*TickAccumulatorTrackersRequest)(nil), "osmosis.concentratedliquidity.v1beta1.TickAccumulatorTrackersRequest")
+	proto.RegisterType((*TickAccumulatorTrackersResponse)(nil), "osmosis.concentratedliquidity.v1beta1.TickAccumulatorTrackersResponse")
+	proto.RegisterType((*IncentiveRecordsRequest)(nil), "osmosis.concentratedliquidity.v1beta1.IncentiveRecordsRequest")
+	proto.RegisterType((*IncentiveRecordsResponse)(nil), "osmosis.concentratedliquidity.v1beta1.IncentiveRecordsResponse")
+	proto.RegisterType((*CFMMPoolIdLinkFromConcentratedPoolIdRequest)(nil), "osmosis.concentratedliquidity.v1beta1.CFMMPoolIdLinkFromConcentratedPoolIdRequest")
+	proto.RegisterType((*CFMMPoolIdLinkFromConcentratedPoolIdResponse)(nil), "osmosis.concentratedliquidity.v1beta1.CFMMPoolIdLinkFromConcentratedPoolIdResponse")
 }
 
 func init() {
@@ -940,97 +1369,130 @@ func init() {
 }
 
 var fileDescriptor_5c83e18b11fd607d = []byte{
-	// 1428 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x58, 0x4d, 0x6f, 0x1b, 0xc5,
-	0x1b, 0xcf, 0xa6, 0x4d, 0x5a, 0x4f, 0x92, 0xbe, 0x4c, 0xd2, 0x36, 0x75, 0x5b, 0xbb, 0xff, 0xf9,
-	0xab, 0x6d, 0xd4, 0x36, 0xbb, 0xea, 0x4b, 0x54, 0xd1, 0x17, 0x50, 0xd6, 0x69, 0x2a, 0x03, 0x8a,
-	0xc2, 0x42, 0x01, 0x71, 0x60, 0x59, 0xef, 0x4e, 0x9d, 0x51, 0xd6, 0x3b, 0xce, 0xbe, 0x24, 0xb5,
-	0x80, 0x0b, 0xfd, 0x00, 0x20, 0x71, 0xe7, 0x0a, 0x07, 0x8e, 0xe5, 0x2b, 0xa0, 0x8a, 0x03, 0xaa,
-	0xc4, 0x05, 0x71, 0x30, 0xd0, 0x70, 0x43, 0xe2, 0x60, 0x2e, 0x1c, 0xd1, 0xce, 0xcb, 0xee, 0xc6,
-	0x59, 0x13, 0x3b, 0xee, 0xc9, 0x3b, 0xfb, 0xbc, 0xfd, 0x7e, 0xcf, 0x3c, 0x33, 0xcf, 0xb3, 0x06,
-	0x97, 0x69, 0xd0, 0xa0, 0x01, 0x09, 0x34, 0x9b, 0x7a, 0x36, 0xf6, 0x42, 0xdf, 0x0a, 0xb1, 0x33,
-	0xef, 0x92, 0x8d, 0x88, 0x38, 0x24, 0x6c, 0x69, 0x1b, 0x11, 0xf6, 0x5b, 0x6a, 0xd3, 0xa7, 0x21,
-	0x85, 0x17, 0x84, 0xae, 0x9a, 0xd5, 0x4d, 0x54, 0xd5, 0xcd, 0x6b, 0x35, 0x1c, 0x5a, 0xd7, 0x8a,
-	0x33, 0x75, 0x5a, 0xa7, 0xcc, 0x42, 0x8b, 0x9f, 0xb8, 0x71, 0xf1, 0xca, 0x1e, 0x81, 0x9a, 0x96,
-	0x6f, 0x35, 0x02, 0xa1, 0x5c, 0xb2, 0x99, 0xb6, 0x56, 0xb3, 0x02, 0xac, 0x09, 0xbf, 0x9a, 0x4d,
-	0x89, 0x27, 0xe4, 0x97, 0xb3, 0x72, 0x06, 0x31, 0xd1, 0x6a, 0x5a, 0x75, 0xe2, 0x59, 0x21, 0xa1,
-	0x52, 0xf7, 0x6c, 0x9d, 0xd2, 0xba, 0x8b, 0x35, 0xab, 0x49, 0x34, 0xcb, 0xf3, 0x68, 0xc8, 0x84,
-	0x32, 0xd2, 0x69, 0x21, 0x65, 0xab, 0x5a, 0xf4, 0x48, 0xb3, 0xbc, 0x96, 0x14, 0xf1, 0x20, 0x26,
-	0xa7, 0xc2, 0x17, 0x42, 0x54, 0xee, 0xb6, 0x0a, 0x49, 0x03, 0x07, 0xa1, 0xd5, 0x68, 0x4a, 0x02,
-	0xdd, 0x0a, 0x4e, 0xe4, 0x67, 0x41, 0xcd, 0xef, 0x95, 0x0d, 0x1a, 0x90, 0x54, 0x1d, 0x6d, 0x80,
-	0x99, 0x87, 0x01, 0xf6, 0x57, 0xc5, 0xdb, 0xc0, 0xc0, 0x1b, 0x11, 0x0e, 0x42, 0x78, 0x15, 0x1c,
-	0xb2, 0x1c, 0xc7, 0xc7, 0x41, 0x30, 0xab, 0x9c, 0x57, 0xe6, 0x0a, 0x3a, 0xec, 0xb4, 0xcb, 0x47,
-	0x5a, 0x56, 0xc3, 0xbd, 0x8d, 0x84, 0x00, 0x19, 0x52, 0x05, 0x5e, 0x01, 0x87, 0x9a, 0x94, 0xba,
-	0x26, 0x71, 0x66, 0x47, 0xcf, 0x2b, 0x73, 0x07, 0xb3, 0xda, 0x42, 0x80, 0x8c, 0xf1, 0xf8, 0xa9,
-	0xea, 0xa0, 0x16, 0x38, 0xd1, 0x15, 0x32, 0x68, 0x52, 0x2f, 0xc0, 0xf0, 0x23, 0x50, 0x90, 0xe8,
-	0xe2, 0xa8, 0x07, 0xe6, 0x26, 0xae, 0xdf, 0x55, 0xfb, 0xaa, 0x0c, 0x75, 0x39, 0x72, 0x5d, 0xe9,
-	0x50, 0xf7, 0xb1, 0xb5, 0xee, 0xd0, 0x2d, 0x4f, 0x3f, 0xf8, 0xac, 0x5d, 0x1e, 0x31, 0x52, 0xa7,
-	0x68, 0x05, 0x4c, 0x27, 0x5a, 0xad, 0xaa, 0x23, 0xc9, 0xde, 0x02, 0x13, 0x52, 0x27, 0xa6, 0xa0,
-	0x30, 0x0a, 0x27, 0x3b, 0xed, 0x32, 0x94, 0x14, 0x12, 0x21, 0x32, 0x80, 0x5c, 0x55, 0x1d, 0xb4,
-	0x09, 0x66, 0x76, 0xfa, 0x13, 0x4c, 0x3e, 0x04, 0x87, 0xa5, 0x16, 0xf3, 0xf6, 0x72, 0x88, 0x24,
-	0x3e, 0xd1, 0xbb, 0x60, 0x72, 0x95, 0x52, 0x37, 0xd9, 0xad, 0x65, 0x00, 0xd2, 0xea, 0x64, 0x5b,
-	0x30, 0x71, 0xfd, 0xa2, 0x2a, 0x0a, 0x2b, 0x2e, 0x65, 0x95, 0x9f, 0x36, 0x19, 0x65, 0xd5, 0xaa,
-	0x63, 0x61, 0x6b, 0x64, 0x2c, 0xd1, 0xe7, 0x0a, 0x98, 0x12, 0x8e, 0x05, 0x93, 0x05, 0x30, 0x16,
-	0x6f, 0x9b, 0xdc, 0x8f, 0x19, 0x95, 0x97, 0x9f, 0x2a, 0xcb, 0x4f, 0x5d, 0xf4, 0x5a, 0x7a, 0xe1,
-	0x87, 0xa7, 0xf3, 0x63, 0xb1, 0x5d, 0xd5, 0xe0, 0xda, 0xf0, 0x41, 0x0e, 0xa0, 0x4b, 0x7b, 0x02,
-	0xe2, 0x31, 0x77, 0x20, 0x3a, 0x0a, 0xa6, 0x56, 0xd9, 0xf9, 0x15, 0x70, 0xd1, 0x43, 0x70, 0x44,
-	0xbe, 0x10, 0x10, 0x2b, 0x60, 0x9c, 0x1f, 0x71, 0x91, 0xea, 0x0b, 0x7b, 0xa4, 0x9a, 0x9b, 0x8b,
-	0x9c, 0x0a, 0x53, 0xf4, 0x9d, 0x02, 0x8e, 0xbd, 0x43, 0xec, 0xf5, 0x37, 0xa5, 0xda, 0x0a, 0x0e,
-	0xe1, 0x3a, 0x98, 0x4a, 0xcc, 0x4c, 0x0f, 0x87, 0xe2, 0x28, 0x2c, 0xc7, 0x96, 0xbf, 0xb4, 0xcb,
-	0x17, 0xeb, 0x24, 0x5c, 0x8b, 0x6a, 0xaa, 0x4d, 0x1b, 0xe2, 0x10, 0x8b, 0x9f, 0xf9, 0xc0, 0x59,
-	0xd7, 0xc2, 0x56, 0x13, 0x07, 0xea, 0x12, 0xb6, 0x3b, 0xed, 0xf2, 0x0c, 0xaf, 0xa3, 0x1d, 0xce,
-	0x90, 0x31, 0xe9, 0x66, 0x83, 0xdd, 0x04, 0x20, 0x24, 0xf6, 0xba, 0x49, 0x3c, 0x07, 0x3f, 0x66,
-	0x29, 0x3b, 0xa0, 0x9f, 0xe8, 0xb4, 0xcb, 0xc7, 0xb9, 0x6d, 0x2a, 0x43, 0x46, 0x21, 0x5e, 0x54,
-	0xd9, 0xf3, 0x3f, 0x0a, 0x38, 0x95, 0x60, 0x5e, 0xc2, 0xcd, 0x70, 0xed, 0x3d, 0x12, 0xae, 0x19,
-	0x96, 0x57, 0xc7, 0x70, 0x03, 0x1c, 0x4b, 0x23, 0x5a, 0x0d, 0x1a, 0x79, 0x2f, 0x9b, 0xc1, 0xd1,
-	0x64, 0xbd, 0xc8, 0xdc, 0xc7, 0x24, 0x5c, 0xba, 0x85, 0x7d, 0x33, 0x46, 0xb8, 0x9b, 0x44, 0x2a,
-	0x43, 0x46, 0x81, 0x2d, 0xe2, 0x9c, 0xc7, 0x56, 0x51, 0xb3, 0x29, 0xad, 0x0e, 0x74, 0x5b, 0xa5,
-	0x32, 0x64, 0x14, 0xd8, 0x22, 0xb6, 0x42, 0xbf, 0x8e, 0x82, 0x52, 0x76, 0xbb, 0xaa, 0xde, 0x12,
-	0xf1, 0xb1, 0x1d, 0x97, 0x8d, 0x3c, 0x17, 0x99, 0x7b, 0x49, 0xd9, 0xeb, 0x5e, 0x82, 0x2a, 0x38,
-	0x1c, 0xd2, 0x75, 0xec, 0x99, 0x84, 0x57, 0x6c, 0x41, 0x9f, 0xee, 0xb4, 0xcb, 0x47, 0x45, 0xfa,
-	0x85, 0x04, 0x19, 0x87, 0xd8, 0x63, 0xd5, 0x8b, 0x51, 0x07, 0xa1, 0xe5, 0x87, 0x3d, 0x50, 0xa7,
-	0x32, 0x64, 0x14, 0xd8, 0x82, 0x71, 0x7d, 0x05, 0x4c, 0x46, 0x01, 0x36, 0xed, 0x48, 0xb0, 0x3d,
-	0x78, 0x5e, 0x99, 0x3b, 0xac, 0x9f, 0xea, 0xb4, 0xcb, 0xd3, 0x82, 0x6d, 0x46, 0x8a, 0x0c, 0x10,
-	0x05, 0xb8, 0x12, 0x25, 0x69, 0xaa, 0xd1, 0xc8, 0x73, 0xb8, 0xe1, 0x58, 0x77, 0xc0, 0x54, 0x86,
-	0x8c, 0x02, 0x5b, 0x64, 0x03, 0x7a, 0xd4, 0x64, 0xef, 0x66, 0xc7, 0xf3, 0x02, 0x4a, 0x29, 0x0f,
-	0xb8, 0x42, 0x75, 0xb6, 0xf8, 0x7a, 0x14, 0x94, 0x7b, 0x66, 0x58, 0x9c, 0xbe, 0xb5, 0x6c, 0x91,
-	0x39, 0x71, 0x01, 0xca, 0xbb, 0xe2, 0x56, 0x9f, 0x57, 0x5e, 0xf7, 0xb1, 0x13, 0x27, 0x33, 0xad,
-	0x2d, 0x56, 0xd6, 0x01, 0xfc, 0x1f, 0x98, 0xb4, 0x23, 0xdf, 0xc7, 0x5e, 0x98, 0xa9, 0x2e, 0x63,
-	0x42, 0xbc, 0x63, 0x5c, 0xb7, 0xc0, 0x71, 0xa9, 0x92, 0x58, 0xb3, 0x9d, 0x29, 0xe8, 0xaf, 0x0f,
-	0x5c, 0xf2, 0xb3, 0x3c, 0x3d, 0xbb, 0x1c, 0x22, 0xe3, 0x98, 0x78, 0x97, 0xa0, 0x46, 0x6f, 0x80,
-	0xb3, 0xc9, 0x62, 0x95, 0xd7, 0x27, 0x3b, 0x83, 0xfb, 0x29, 0x44, 0xf4, 0x44, 0x01, 0xe7, 0x7a,
-	0x78, 0x13, 0x49, 0xaf, 0x81, 0x42, 0xca, 0x8f, 0x67, 0xfb, 0xd5, 0x3e, 0xb3, 0xdd, 0xe3, 0xb2,
-	0x90, 0xbd, 0x32, 0x65, 0xf9, 0x3e, 0x38, 0x57, 0x71, 0x2d, 0xd2, 0xb0, 0x6a, 0x2e, 0x7e, 0xbb,
-	0xe9, 0x63, 0xcb, 0x31, 0xf0, 0x96, 0xe5, 0x3b, 0xc1, 0xd0, 0x5d, 0xf3, 0x2b, 0x05, 0x94, 0x7a,
-	0xb9, 0x16, 0x04, 0x3f, 0x01, 0xb3, 0xb6, 0xd4, 0x30, 0x03, 0xa6, 0x62, 0xfa, 0x5c, 0x47, 0xf0,
-	0x3d, 0xbd, 0xa3, 0x9b, 0x48, 0x76, 0x15, 0x4a, 0x3c, 0xfd, 0x52, 0x4c, 0xa5, 0xd3, 0x2e, 0x97,
-	0xc5, 0x06, 0xf6, 0x70, 0x84, 0x8c, 0x93, 0x76, 0x2e, 0x0a, 0xf4, 0x10, 0x14, 0x13, 0x7c, 0x55,
-	0x96, 0x4c, 0xb2, 0x89, 0x87, 0xe7, 0xfd, 0x64, 0x14, 0x9c, 0xc9, 0xf5, 0x2b, 0x48, 0x6f, 0x80,
-	0x99, 0x14, 0x2b, 0x49, 0xe4, 0x7b, 0x13, 0xfe, 0xbf, 0x20, 0x7c, 0xa6, 0x9b, 0x70, 0xea, 0x04,
-	0x19, 0xd3, 0xf6, 0xee, 0xd0, 0x71, 0xc8, 0x47, 0xd4, 0x7f, 0x84, 0x49, 0x88, 0x9d, 0x6c, 0xc8,
-	0xd1, 0x01, 0x43, 0xe6, 0x39, 0x41, 0xc6, 0x74, 0xf2, 0x3a, 0x0d, 0x79, 0xfd, 0xe9, 0x14, 0x18,
-	0x7b, 0x2b, 0x6e, 0xfe, 0xf0, 0x1b, 0x05, 0xb0, 0xa9, 0x21, 0x80, 0x37, 0xfa, 0x2c, 0xde, 0xec,
-	0xd0, 0x53, 0xbc, 0x39, 0x98, 0x11, 0x4f, 0x32, 0xba, 0xf9, 0xd9, 0x4f, 0x7f, 0x7c, 0x39, 0xaa,
-	0xc2, 0xab, 0x5a, 0xde, 0xa0, 0x9c, 0xce, 0xc9, 0xc9, 0xd4, 0xcf, 0x00, 0x7e, 0xab, 0x80, 0x71,
-	0x3e, 0x37, 0xc0, 0xbe, 0xc3, 0x66, 0xc7, 0x96, 0xe2, 0xc2, 0x80, 0x56, 0x02, 0xed, 0x02, 0x43,
-	0xab, 0xc1, 0xf9, 0x7e, 0xd1, 0x72, 0x8c, 0x3f, 0x2a, 0x60, 0x6a, 0xc7, 0x8c, 0x0d, 0xef, 0xf4,
-	0x19, 0x3f, 0xef, 0x63, 0xa0, 0x78, 0x77, 0x7f, 0xc6, 0x82, 0x83, 0xce, 0x38, 0xdc, 0x85, 0xb7,
-	0xfb, 0xce, 0xb8, 0xf0, 0xa0, 0x7d, 0x2c, 0xbe, 0x2f, 0x3e, 0x85, 0x7f, 0x2a, 0xe0, 0x44, 0xee,
-	0x95, 0x08, 0x2b, 0x83, 0xde, 0x7b, 0x39, 0xd7, 0x73, 0x71, 0x69, 0x38, 0x27, 0x82, 0xe8, 0x03,
-	0x46, 0x74, 0x11, 0xbe, 0xd6, 0x27, 0xd1, 0xb4, 0x6f, 0xca, 0xf9, 0xc6, 0xf4, 0x19, 0xa7, 0xbf,
-	0xb3, 0x43, 0xdd, 0xce, 0xbe, 0x0b, 0xef, 0x0f, 0x0a, 0x35, 0x77, 0x32, 0x2a, 0x2e, 0x0f, 0xeb,
-	0x46, 0x70, 0xae, 0x32, 0xce, 0x15, 0xb8, 0x38, 0x30, 0x67, 0x0f, 0x87, 0x26, 0xf1, 0x4c, 0x27,
-	0x61, 0xf6, 0x97, 0x02, 0x4e, 0xe6, 0xb7, 0x05, 0xd8, 0xef, 0xfe, 0xfc, 0x67, 0xc3, 0x2a, 0xde,
-	0x1f, 0xd2, 0xcb, 0x3e, 0xb7, 0xb9, 0x57, 0xff, 0x81, 0xbf, 0x2b, 0x60, 0x3a, 0xa7, 0x1f, 0xc0,
-	0xc5, 0x41, 0x71, 0xee, 0xea, 0x51, 0x45, 0x7d, 0x18, 0x17, 0x82, 0x67, 0x85, 0xf1, 0xbc, 0x07,
-	0xef, 0x0c, 0xcc, 0x33, 0xed, 0x01, 0xf0, 0x7b, 0x25, 0xfe, 0x54, 0x4d, 0x3f, 0x91, 0xe1, 0xed,
-	0xbe, 0x6f, 0xed, 0x5d, 0xdf, 0xe9, 0xc5, 0x3b, 0xfb, 0xb2, 0x15, 0x74, 0xee, 0x31, 0x3a, 0xb7,
-	0xe0, 0xc2, 0x80, 0xd7, 0x90, 0x59, 0x6b, 0x99, 0xc4, 0xd1, 0xd7, 0x9e, 0xbd, 0x28, 0x29, 0xcf,
-	0x5f, 0x94, 0x94, 0xdf, 0x5e, 0x94, 0x94, 0x2f, 0xb6, 0x4b, 0x23, 0xcf, 0xb7, 0x4b, 0x23, 0x3f,
-	0x6f, 0x97, 0x46, 0x3e, 0x58, 0xc9, 0x4c, 0x94, 0xc2, 0xf5, 0xbc, 0x6b, 0xd5, 0x82, 0x24, 0xce,
-	0xe6, 0xb5, 0x05, 0xed, 0x71, 0xaf, 0xff, 0x63, 0x6c, 0x97, 0x60, 0x2f, 0xe4, 0x7f, 0x35, 0xf1,
-	0x8f, 0xea, 0x71, 0xf6, 0x73, 0xe3, 0xdf, 0x00, 0x00, 0x00, 0xff, 0xff, 0xa2, 0xb8, 0xde, 0x18,
-	0x41, 0x13, 0x00, 0x00,
+	// 1954 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x59, 0x4f, 0x6c, 0x1b, 0x59,
+	0x19, 0xef, 0x73, 0xdb, 0xb4, 0xfe, 0x9a, 0xb6, 0xe9, 0x4b, 0x9a, 0x66, 0xdd, 0xd6, 0x2e, 0x0f,
+	0x76, 0x37, 0xda, 0x36, 0xb6, 0xfa, 0x27, 0x5b, 0xfa, 0x67, 0x77, 0x89, 0x9d, 0x4d, 0x65, 0xe8,
+	0x76, 0xb3, 0xb3, 0x2d, 0x20, 0x0e, 0x0c, 0xe3, 0x99, 0x17, 0x67, 0xe4, 0xf1, 0x3c, 0x67, 0xfe,
+	0x24, 0x1b, 0x2d, 0x95, 0x10, 0x7b, 0x44, 0x82, 0x95, 0xb8, 0x73, 0xe1, 0x00, 0x42, 0x1c, 0xe1,
+	0x00, 0x37, 0x38, 0xa0, 0x8a, 0xc3, 0x6a, 0x25, 0x84, 0x84, 0x38, 0x78, 0xa1, 0xe5, 0x80, 0xb4,
+	0x88, 0x43, 0xb8, 0x70, 0x44, 0xf3, 0xe6, 0xbd, 0x99, 0xb1, 0x3d, 0x8e, 0xc7, 0x4e, 0x38, 0xc5,
+	0x6f, 0xbe, 0xbf, 0xbf, 0xef, 0xfb, 0xde, 0x37, 0xdf, 0x37, 0x81, 0xd7, 0x98, 0xdb, 0x66, 0xae,
+	0xe9, 0x56, 0x74, 0x66, 0xeb, 0xd4, 0xf6, 0x1c, 0xcd, 0xa3, 0xc6, 0x92, 0x65, 0x6e, 0xf9, 0xa6,
+	0x61, 0x7a, 0xbb, 0x95, 0x2d, 0x9f, 0x3a, 0xbb, 0xe5, 0x8e, 0xc3, 0x3c, 0x86, 0x5f, 0x16, 0xbc,
+	0xe5, 0x24, 0x6f, 0xc4, 0x5a, 0xde, 0xbe, 0xde, 0xa0, 0x9e, 0x76, 0xbd, 0x30, 0xd7, 0x64, 0x4d,
+	0xc6, 0x25, 0x2a, 0xc1, 0xaf, 0x50, 0xb8, 0x70, 0x75, 0x84, 0xa1, 0x8e, 0xe6, 0x68, 0x6d, 0x57,
+	0x30, 0x2f, 0x8d, 0x60, 0xf6, 0x4c, 0xbd, 0x55, 0xb7, 0x37, 0xa4, 0xee, 0xa2, 0xce, 0xf9, 0x2b,
+	0x0d, 0xcd, 0xa5, 0x15, 0xe1, 0x46, 0x45, 0x67, 0xa6, 0x2d, 0xe8, 0xaf, 0x25, 0xe9, 0x1c, 0x51,
+	0xc4, 0xd5, 0xd1, 0x9a, 0xa6, 0xad, 0x79, 0x26, 0x93, 0xbc, 0x97, 0x9a, 0x8c, 0x35, 0x2d, 0x5a,
+	0xd1, 0x3a, 0x66, 0x45, 0xb3, 0x6d, 0xe6, 0x71, 0xa2, 0x74, 0xec, 0x25, 0x41, 0xe5, 0xa7, 0x86,
+	0xbf, 0x51, 0xd1, 0xec, 0x5d, 0x49, 0x0a, 0x8d, 0xa8, 0x21, 0xf2, 0xf0, 0x20, 0x48, 0xa5, 0x7e,
+	0x29, 0xcf, 0x6c, 0x53, 0xd7, 0xd3, 0xda, 0x1d, 0x09, 0xa0, 0x9f, 0xc1, 0xf0, 0x9d, 0xa4, 0x53,
+	0xa3, 0xe2, 0xd1, 0x61, 0xae, 0x99, 0x60, 0x5f, 0x1e, 0xc1, 0x6e, 0xf2, 0xa7, 0xe6, 0x36, 0x55,
+	0x1d, 0xaa, 0x33, 0xc7, 0x08, 0xc5, 0xc8, 0x6f, 0x10, 0xcc, 0x3d, 0x71, 0xa9, 0xb3, 0x2e, 0xb4,
+	0xb9, 0x0a, 0xdd, 0xf2, 0xa9, 0xeb, 0xe1, 0x6b, 0x70, 0x42, 0x33, 0x0c, 0x87, 0xba, 0xee, 0x02,
+	0xba, 0x82, 0x16, 0xf3, 0x55, 0xbc, 0xd7, 0x2d, 0x9d, 0xd9, 0xd5, 0xda, 0xd6, 0x5d, 0x22, 0x08,
+	0x44, 0x91, 0x2c, 0xf8, 0x2a, 0x9c, 0xe8, 0x30, 0x66, 0xa9, 0xa6, 0xb1, 0x90, 0xbb, 0x82, 0x16,
+	0x8f, 0x25, 0xb9, 0x05, 0x81, 0x28, 0x53, 0xc1, 0xaf, 0xba, 0x81, 0xd7, 0x00, 0xe2, 0x14, 0x2c,
+	0x1c, 0xbd, 0x82, 0x16, 0x4f, 0xdd, 0x78, 0xa5, 0x2c, 0xa2, 0x17, 0xe4, 0xab, 0x1c, 0x56, 0xa0,
+	0xc8, 0x57, 0x79, 0x5d, 0x6b, 0x52, 0xe1, 0x96, 0x92, 0x90, 0x24, 0xbf, 0x47, 0x70, 0xbe, 0xcf,
+	0x77, 0xb7, 0xc3, 0x6c, 0x97, 0xe2, 0xef, 0x40, 0x5e, 0x86, 0x27, 0x70, 0xff, 0xe8, 0xe2, 0xa9,
+	0x1b, 0xf7, 0xcb, 0x99, 0x2a, 0xb9, 0xbc, 0xe6, 0x5b, 0x96, 0x54, 0x58, 0x75, 0xa8, 0xd6, 0x32,
+	0xd8, 0x8e, 0x5d, 0x3d, 0xf6, 0xac, 0x5b, 0x3a, 0xa2, 0xc4, 0x4a, 0xf1, 0x83, 0x1e, 0x0c, 0x39,
+	0x8e, 0xe1, 0xd5, 0x91, 0x18, 0x42, 0xf7, 0x7a, 0x40, 0x3c, 0x82, 0xd9, 0xc8, 0xdc, 0x6e, 0xdd,
+	0x90, 0xe1, 0xbf, 0x0d, 0xa7, 0xa4, 0xb1, 0x20, 0xa8, 0x88, 0x07, 0x75, 0x7e, 0xaf, 0x5b, 0xc2,
+	0x32, 0xa8, 0x11, 0x91, 0x28, 0x20, 0x4f, 0x75, 0x83, 0x6c, 0xc3, 0x5c, 0xaf, 0x3e, 0x11, 0x92,
+	0x6f, 0xc3, 0x49, 0xc9, 0xc5, 0xb5, 0x1d, 0x4e, 0x44, 0x22, 0x9d, 0xe4, 0xeb, 0x30, 0xbd, 0xce,
+	0x98, 0x15, 0xd5, 0xcf, 0x5a, 0x4a, 0x80, 0x26, 0x49, 0xf2, 0x8f, 0x10, 0x9c, 0x16, 0x8a, 0x05,
+	0x92, 0x65, 0x38, 0x1e, 0x14, 0x92, 0x4c, 0xec, 0x5c, 0x39, 0xbc, 0x48, 0x65, 0x79, 0x91, 0xca,
+	0x2b, 0xf6, 0x6e, 0x35, 0xff, 0xc7, 0x5f, 0x2d, 0x1d, 0x0f, 0xe4, 0xea, 0x4a, 0xc8, 0x7d, 0x78,
+	0x19, 0x3b, 0x0b, 0xa7, 0xd7, 0x79, 0xe3, 0x12, 0xee, 0x92, 0x27, 0x70, 0x46, 0x3e, 0x10, 0x2e,
+	0xd6, 0x60, 0x2a, 0xec, 0x6d, 0x22, 0xd4, 0x2f, 0x8f, 0x08, 0x75, 0x28, 0x2e, 0x62, 0x2a, 0x44,
+	0xc9, 0xaf, 0x11, 0xcc, 0x3c, 0x36, 0xf5, 0xd6, 0x43, 0xc9, 0xf6, 0x88, 0x7a, 0xb8, 0x05, 0xa7,
+	0x23, 0x31, 0xd5, 0xa6, 0x9e, 0xb8, 0x9c, 0x6b, 0x81, 0xe4, 0x5f, 0xbb, 0xa5, 0x57, 0x9a, 0xa6,
+	0xb7, 0xe9, 0x37, 0xca, 0x3a, 0x6b, 0x8b, 0x76, 0x24, 0xfe, 0x2c, 0xb9, 0x46, 0xab, 0xe2, 0xed,
+	0x76, 0xa8, 0x5b, 0x5e, 0xa5, 0xfa, 0x5e, 0xb7, 0x34, 0x17, 0xd6, 0x51, 0x8f, 0x32, 0xa2, 0x4c,
+	0x5b, 0x49, 0x63, 0xb7, 0x00, 0x82, 0xae, 0xab, 0x9a, 0xb6, 0x41, 0x3f, 0xe0, 0x21, 0x3b, 0x5a,
+	0x3d, 0xbf, 0xd7, 0x2d, 0x9d, 0x0b, 0x65, 0x63, 0x1a, 0x51, 0xf2, 0x61, 0x7b, 0x0e, 0x7e, 0xff,
+	0x17, 0xc1, 0x85, 0xc8, 0xe7, 0x55, 0xda, 0xf1, 0x36, 0xbf, 0x61, 0x7a, 0x9b, 0x8a, 0x66, 0x37,
+	0x29, 0xde, 0x82, 0x99, 0xd8, 0xa2, 0xd6, 0x66, 0xbe, 0x7d, 0xd8, 0x08, 0xce, 0x46, 0xe7, 0x15,
+	0xae, 0x3e, 0x00, 0x61, 0xb1, 0x1d, 0xea, 0xa8, 0x81, 0x87, 0x83, 0x20, 0x62, 0x1a, 0x51, 0xf2,
+	0xfc, 0x10, 0xc4, 0x3c, 0x90, 0xf2, 0x3b, 0x1d, 0x29, 0x75, 0xb4, 0x5f, 0x2a, 0xa6, 0x11, 0x25,
+	0xcf, 0x0f, 0x81, 0x14, 0xf9, 0x2c, 0x07, 0xc5, 0x64, 0xba, 0xea, 0xf6, 0xaa, 0xe9, 0x50, 0x3d,
+	0x28, 0x1b, 0x79, 0x2f, 0x12, 0x9d, 0x12, 0x8d, 0xec, 0x94, 0x65, 0x38, 0xe9, 0xb1, 0x16, 0xb5,
+	0x55, 0x33, 0xac, 0xd8, 0x7c, 0x75, 0x76, 0xaf, 0x5b, 0x3a, 0x2b, 0xc2, 0x2f, 0x28, 0x44, 0x39,
+	0xc1, 0x7f, 0xd6, 0xed, 0xc0, 0x6b, 0xd7, 0xd3, 0x1c, 0x6f, 0x88, 0xd7, 0x31, 0x8d, 0x28, 0x79,
+	0x7e, 0xe0, 0x58, 0xef, 0xc0, 0xb4, 0xef, 0x52, 0x55, 0xf7, 0x05, 0xda, 0x63, 0x57, 0xd0, 0xe2,
+	0xc9, 0xea, 0x85, 0xbd, 0x6e, 0x69, 0x56, 0xa0, 0x4d, 0x50, 0x89, 0x02, 0xbe, 0x4b, 0x6b, 0x7e,
+	0x14, 0xa6, 0x06, 0xf3, 0x6d, 0x23, 0x14, 0x3c, 0xde, 0x6f, 0x30, 0xa6, 0x11, 0x25, 0xcf, 0x0f,
+	0x49, 0x83, 0x36, 0x53, 0xf9, 0xb3, 0x85, 0xa9, 0x34, 0x83, 0x92, 0x1a, 0x1a, 0x7c, 0xc4, 0xaa,
+	0xfc, 0xf0, 0xb3, 0x1c, 0x94, 0x86, 0x46, 0x58, 0xdc, 0xbe, 0xcd, 0x64, 0x91, 0x19, 0x41, 0x01,
+	0xca, 0x5e, 0x71, 0x3b, 0x63, 0xcb, 0xeb, 0xbf, 0x76, 0xe2, 0x66, 0xc6, 0xb5, 0xc5, 0xcb, 0xda,
+	0xc5, 0x5f, 0x80, 0x69, 0xdd, 0x77, 0x1c, 0x6a, 0x7b, 0x89, 0xea, 0x52, 0x4e, 0x89, 0x67, 0x1c,
+	0xeb, 0x0e, 0x9c, 0x93, 0x2c, 0x91, 0x34, 0xcf, 0x4c, 0xbe, 0xfa, 0xd5, 0xb1, 0x4b, 0x7e, 0x21,
+	0x0c, 0xcf, 0x80, 0x42, 0xa2, 0xcc, 0x88, 0x67, 0x91, 0xd7, 0xe4, 0x6b, 0x70, 0x29, 0x3a, 0xac,
+	0x87, 0xf5, 0xc9, 0xef, 0xe0, 0x24, 0x85, 0x48, 0x3e, 0x42, 0x70, 0x79, 0x88, 0x36, 0x11, 0xf4,
+	0x06, 0xe4, 0x63, 0x7c, 0x61, 0xb4, 0xdf, 0xcc, 0x18, 0xed, 0x21, 0xcd, 0x42, 0xbe, 0x74, 0x63,
+	0x94, 0xdf, 0x84, 0xcb, 0x35, 0x4b, 0x33, 0xdb, 0x5a, 0xc3, 0xa2, 0xef, 0x77, 0x1c, 0xaa, 0x19,
+	0x0a, 0xdd, 0xd1, 0x1c, 0xc3, 0x3d, 0xf0, 0x5b, 0xf3, 0x27, 0x08, 0x8a, 0xc3, 0x54, 0x0b, 0x80,
+	0xdf, 0x85, 0x05, 0x5d, 0x72, 0xa8, 0x2e, 0x67, 0x51, 0x9d, 0x90, 0x47, 0xe0, 0x7d, 0xa9, 0xe7,
+	0x6d, 0x22, 0xd1, 0xd5, 0x98, 0x69, 0x57, 0x5f, 0x0d, 0xa0, 0xec, 0x75, 0x4b, 0x25, 0x91, 0xc0,
+	0x21, 0x8a, 0x88, 0x32, 0xaf, 0xa7, 0x7a, 0x41, 0x9e, 0x40, 0x21, 0xf2, 0xaf, 0x2e, 0x47, 0xb9,
+	0x83, 0xe3, 0xfe, 0x28, 0x07, 0x17, 0x53, 0xf5, 0x0a, 0xd0, 0x5b, 0x30, 0x17, 0xfb, 0x1a, 0x8d,
+	0x90, 0x19, 0x00, 0x7f, 0x51, 0x00, 0xbe, 0xd8, 0x0f, 0x38, 0x56, 0x42, 0x94, 0x59, 0x7d, 0xd0,
+	0x74, 0x60, 0x72, 0x83, 0x39, 0x1b, 0xd4, 0xf4, 0xa8, 0x91, 0x34, 0x99, 0x1b, 0xd3, 0x64, 0x9a,
+	0x12, 0xa2, 0xcc, 0x46, 0x8f, 0x63, 0x93, 0xe4, 0x21, 0x5c, 0x0e, 0x46, 0x85, 0x15, 0x5d, 0xf7,
+	0xdb, 0xbe, 0xa5, 0x79, 0xcc, 0xe9, 0xab, 0xab, 0xb1, 0xee, 0xca, 0xef, 0x72, 0x50, 0x1c, 0xa6,
+	0x4e, 0x84, 0xf5, 0x63, 0x04, 0x17, 0x7b, 0x32, 0xaf, 0x36, 0x1d, 0xb6, 0xe3, 0x6d, 0xaa, 0x4d,
+	0x8b, 0x35, 0x34, 0x4b, 0x84, 0xf7, 0x52, 0x2a, 0xd6, 0x55, 0xaa, 0x73, 0xb8, 0x37, 0x03, 0xb8,
+	0xbf, 0xf8, 0xac, 0x74, 0x35, 0x5b, 0xf7, 0x08, 0x64, 0x5c, 0x65, 0xc1, 0x4d, 0x54, 0xd5, 0x03,
+	0x6e, 0xf3, 0x01, 0x37, 0x89, 0x7f, 0x80, 0x60, 0xce, 0xef, 0x04, 0x4b, 0x4a, 0x9f, 0x2f, 0x61,
+	0xdc, 0x6f, 0x65, 0xbc, 0xcb, 0x4f, 0xb8, 0x8a, 0xc7, 0x8e, 0xa6, 0xb7, 0xa8, 0xd3, 0x9f, 0x92,
+	0x34, 0xfd, 0x44, 0xc1, 0xe1, 0xe3, 0xa4, 0x37, 0x41, 0xbf, 0x29, 0x06, 0x3d, 0x26, 0x11, 0x43,
+	0xa1, 0x73, 0xa2, 0x9c, 0x4c, 0x38, 0xc9, 0x7c, 0x9e, 0x83, 0xd2, 0x50, 0x2f, 0x44, 0x2a, 0x9f,
+	0x21, 0xb8, 0x93, 0x9a, 0x4a, 0xd6, 0xe1, 0xf7, 0x8c, 0xaa, 0x86, 0x7c, 0x41, 0xa9, 0x6c, 0x43,
+	0xb5, 0x34, 0xd7, 0x53, 0x3d, 0x47, 0xdb, 0xa6, 0x8e, 0xfb, 0xff, 0x4c, 0xf4, 0x8d, 0xc1, 0x44,
+	0xbf, 0x2b, 0x1c, 0x8a, 0x5e, 0x98, 0xef, 0x6e, 0x3c, 0xd4, 0x5c, 0xef, 0xb1, 0x74, 0x06, 0x3f,
+	0x85, 0xb3, 0x22, 0x43, 0x9e, 0x40, 0x79, 0xa0, 0xe4, 0x17, 0x45, 0xf2, 0xe7, 0x7b, 0x92, 0x2f,
+	0x55, 0x13, 0xe5, 0x8c, 0x9f, 0x64, 0x77, 0xc9, 0x0f, 0x11, 0x5c, 0x88, 0x2e, 0xa5, 0xc2, 0x97,
+	0xd4, 0xc9, 0x92, 0x7d, 0x58, 0xab, 0xc7, 0x27, 0x08, 0x16, 0x06, 0x1d, 0x12, 0x79, 0x37, 0xe1,
+	0x5c, 0xff, 0x4a, 0x2d, 0xdb, 0xe2, 0xeb, 0x19, 0xc3, 0xd5, 0xa7, 0x5b, 0xbc, 0xef, 0x66, 0xcc,
+	0x3e, 0x93, 0x87, 0xb7, 0xb9, 0x7c, 0x0f, 0xc1, 0xd5, 0xda, 0xda, 0x3b, 0xef, 0xf0, 0xbd, 0xc8,
+	0x78, 0x68, 0xda, 0xad, 0x35, 0x87, 0xb5, 0x6b, 0x09, 0x27, 0x43, 0x8a, 0x8c, 0xfa, 0x7b, 0x30,
+	0x97, 0x44, 0xa0, 0xf6, 0xa6, 0xa0, 0x94, 0x68, 0xef, 0x29, 0x5c, 0x44, 0xc1, 0xfa, 0x80, 0x66,
+	0x62, 0xc2, 0xb5, 0x6c, 0x1e, 0x88, 0x30, 0xdf, 0x81, 0x69, 0x7d, 0xa3, 0xdd, 0xee, 0x33, 0x9d,
+	0x18, 0x15, 0x93, 0x54, 0xa2, 0x40, 0x70, 0x0c, 0x55, 0xdc, 0xf8, 0xe9, 0x79, 0x38, 0xfe, 0x5e,
+	0x10, 0x18, 0xfc, 0x73, 0x04, 0x7c, 0x17, 0x74, 0xf1, 0xcd, 0x8c, 0xa9, 0x49, 0xae, 0xb2, 0x85,
+	0x5b, 0xe3, 0x09, 0x85, 0x9e, 0x93, 0x5b, 0xdf, 0xff, 0xd3, 0x3f, 0x7e, 0x9c, 0x2b, 0xe3, 0x6b,
+	0x95, 0xb4, 0x2f, 0x33, 0xf1, 0x87, 0x99, 0xe8, 0xab, 0x14, 0x77, 0xf0, 0x97, 0x08, 0xa6, 0xc2,
+	0x6d, 0x10, 0x67, 0x36, 0x9b, 0x5c, 0x46, 0x0b, 0xcb, 0x63, 0x4a, 0x09, 0x6f, 0x97, 0xb9, 0xb7,
+	0x15, 0xbc, 0x94, 0xd5, 0xdb, 0xd0, 0xc7, 0x4f, 0x10, 0x9c, 0xee, 0xf9, 0x04, 0x83, 0xef, 0x65,
+	0xed, 0x15, 0x29, 0x1f, 0x9d, 0x0a, 0xf7, 0x27, 0x13, 0x16, 0x18, 0xaa, 0x1c, 0xc3, 0x7d, 0x7c,
+	0x37, 0x73, 0xc4, 0x85, 0x86, 0xca, 0x87, 0xe2, 0x3b, 0xd6, 0x53, 0xfc, 0x39, 0x82, 0xf3, 0xa9,
+	0x83, 0x2e, 0xae, 0x8d, 0x3b, 0xcd, 0xa6, 0x0c, 0xdd, 0x85, 0xd5, 0x83, 0x29, 0x11, 0x40, 0x1f,
+	0x70, 0xa0, 0x2b, 0xf8, 0xad, 0x8c, 0x40, 0xe3, 0x6d, 0x48, 0x6e, 0xad, 0xaa, 0xc3, 0x31, 0xfd,
+	0x27, 0xb9, 0xaa, 0xf7, 0x6e, 0x53, 0xf8, 0xed, 0x71, 0x5d, 0x4d, 0xdd, 0x77, 0x0b, 0x6b, 0x07,
+	0x55, 0x23, 0x30, 0xd7, 0x39, 0xe6, 0x1a, 0x5e, 0x19, 0x1b, 0xb3, 0x4d, 0x3d, 0xd5, 0xb4, 0xe3,
+	0xd7, 0x30, 0xfe, 0x37, 0x82, 0xf9, 0xf4, 0x61, 0x1f, 0x67, 0xcd, 0xcf, 0xbe, 0x6b, 0x48, 0xe1,
+	0xed, 0x03, 0x6a, 0x99, 0x30, 0xcd, 0xc3, 0xb6, 0x0a, 0xfc, 0x77, 0x04, 0xb3, 0x29, 0x53, 0x3e,
+	0x5e, 0x19, 0xd7, 0xcf, 0x81, 0xcd, 0xa3, 0x50, 0x3d, 0x88, 0x0a, 0x81, 0xb3, 0xc6, 0x71, 0xbe,
+	0x81, 0xef, 0x8d, 0x8d, 0x33, 0x9e, 0xec, 0xf1, 0x1f, 0x10, 0x4c, 0x27, 0x3f, 0x7c, 0xe2, 0xbb,
+	0x99, 0xbb, 0xf6, 0xc0, 0xd7, 0xd7, 0xc2, 0xbd, 0x89, 0x64, 0x05, 0x9c, 0x37, 0x38, 0x9c, 0xdb,
+	0x78, 0x79, 0xcc, 0x36, 0xa4, 0x36, 0x76, 0x55, 0xd3, 0xc0, 0xff, 0x44, 0x30, 0x9f, 0xbe, 0x3e,
+	0x64, 0xae, 0xce, 0x7d, 0x97, 0x99, 0xcc, 0xd5, 0xb9, 0xff, 0x0e, 0x43, 0x56, 0x38, 0xcc, 0x7b,
+	0xf8, 0xce, 0x18, 0xef, 0x37, 0x55, 0x0b, 0xf4, 0x45, 0x75, 0xf9, 0x67, 0x04, 0x33, 0xfd, 0x03,
+	0x16, 0x7e, 0x73, 0xb2, 0xe9, 0x29, 0x82, 0xf7, 0xd6, 0xc4, 0xf2, 0x02, 0xd8, 0x57, 0x38, 0xb0,
+	0xbb, 0xf8, 0xcb, 0x19, 0x81, 0x0d, 0x8c, 0x81, 0xf8, 0x5f, 0x08, 0x2e, 0x0c, 0xd9, 0x1b, 0x32,
+	0xb7, 0xd5, 0xfd, 0xb7, 0x9f, 0xcc, 0x6d, 0x75, 0xc4, 0xfa, 0x32, 0xf6, 0x3b, 0x93, 0xbf, 0x3c,
+	0xc2, 0x2c, 0xca, 0x49, 0x1e, 0xff, 0x36, 0x07, 0x5f, 0xca, 0x32, 0xd4, 0x61, 0x25, 0x6b, 0xb3,
+	0xc8, 0x3e, 0xa3, 0x16, 0xde, 0x3f, 0x54, 0x9d, 0x22, 0x2a, 0x26, 0x8f, 0x8a, 0x8e, 0xb5, 0xac,
+	0x1d, 0x29, 0x31, 0x84, 0xaa, 0x96, 0x69, 0xb7, 0xd4, 0x0d, 0x87, 0xb5, 0xd5, 0xa4, 0x50, 0xe5,
+	0xc3, 0xb4, 0x21, 0xf9, 0x69, 0x75, 0xf3, 0xd9, 0xf3, 0x22, 0xfa, 0xf4, 0x79, 0x11, 0xfd, 0xed,
+	0x79, 0x11, 0x7d, 0xfc, 0xa2, 0x78, 0xe4, 0xd3, 0x17, 0xc5, 0x23, 0x7f, 0x79, 0x51, 0x3c, 0xf2,
+	0xad, 0x47, 0x89, 0x7d, 0x4f, 0xb8, 0xb1, 0x64, 0x69, 0x0d, 0x37, 0xf2, 0x69, 0xfb, 0xfa, 0xeb,
+	0x95, 0x0f, 0x86, 0xfd, 0xbf, 0x4f, 0xb7, 0x4c, 0x6a, 0x7b, 0xe1, 0x7f, 0x3e, 0xc3, 0xff, 0x8c,
+	0x4c, 0xf1, 0x3f, 0x37, 0xff, 0x17, 0x00, 0x00, 0xff, 0xff, 0xde, 0xac, 0x45, 0x27, 0xff, 0x1d,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1066,6 +1528,17 @@ type QueryClient interface {
 	ClaimableIncentives(ctx context.Context, in *ClaimableIncentivesRequest, opts ...grpc.CallOption) (*ClaimableIncentivesResponse, error)
 	// PositionById returns a position with the given id.
 	PositionById(ctx context.Context, in *PositionByIdRequest, opts ...grpc.CallOption) (*PositionByIdResponse, error)
+	// PoolAccumulatorRewards returns the pool-global accumulator rewards.
+	// Contains spread factor rewards and uptime rewards.
+	PoolAccumulatorRewards(ctx context.Context, in *PoolAccumulatorRewardsRequest, opts ...grpc.CallOption) (*PoolAccumulatorRewardsResponse, error)
+	// IncentiveRecords returns the incentive records for a given poolId
+	IncentiveRecords(ctx context.Context, in *IncentiveRecordsRequest, opts ...grpc.CallOption) (*IncentiveRecordsResponse, error)
+	// TickAccumulatorTrackers returns the tick accumulator trackers.
+	// Contains spread factor and uptime accumulator trackers.
+	TickAccumulatorTrackers(ctx context.Context, in *TickAccumulatorTrackersRequest, opts ...grpc.CallOption) (*TickAccumulatorTrackersResponse, error)
+	// CFMMPoolIdLinkFromConcentratedPoolId returns the pool id of the CFMM
+	// pool that is linked with the given concentrated pool.
+	CFMMPoolIdLinkFromConcentratedPoolId(ctx context.Context, in *CFMMPoolIdLinkFromConcentratedPoolIdRequest, opts ...grpc.CallOption) (*CFMMPoolIdLinkFromConcentratedPoolIdResponse, error)
 }
 
 type queryClient struct {
@@ -1148,6 +1621,42 @@ func (c *queryClient) PositionById(ctx context.Context, in *PositionByIdRequest,
 	return out, nil
 }
 
+func (c *queryClient) PoolAccumulatorRewards(ctx context.Context, in *PoolAccumulatorRewardsRequest, opts ...grpc.CallOption) (*PoolAccumulatorRewardsResponse, error) {
+	out := new(PoolAccumulatorRewardsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.concentratedliquidity.v1beta1.Query/PoolAccumulatorRewards", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) IncentiveRecords(ctx context.Context, in *IncentiveRecordsRequest, opts ...grpc.CallOption) (*IncentiveRecordsResponse, error) {
+	out := new(IncentiveRecordsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.concentratedliquidity.v1beta1.Query/IncentiveRecords", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) TickAccumulatorTrackers(ctx context.Context, in *TickAccumulatorTrackersRequest, opts ...grpc.CallOption) (*TickAccumulatorTrackersResponse, error) {
+	out := new(TickAccumulatorTrackersResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.concentratedliquidity.v1beta1.Query/TickAccumulatorTrackers", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) CFMMPoolIdLinkFromConcentratedPoolId(ctx context.Context, in *CFMMPoolIdLinkFromConcentratedPoolIdRequest, opts ...grpc.CallOption) (*CFMMPoolIdLinkFromConcentratedPoolIdResponse, error) {
+	out := new(CFMMPoolIdLinkFromConcentratedPoolIdResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.concentratedliquidity.v1beta1.Query/CFMMPoolIdLinkFromConcentratedPoolId", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Pools returns all concentrated liquidity pools
@@ -1171,6 +1680,17 @@ type QueryServer interface {
 	ClaimableIncentives(context.Context, *ClaimableIncentivesRequest) (*ClaimableIncentivesResponse, error)
 	// PositionById returns a position with the given id.
 	PositionById(context.Context, *PositionByIdRequest) (*PositionByIdResponse, error)
+	// PoolAccumulatorRewards returns the pool-global accumulator rewards.
+	// Contains spread factor rewards and uptime rewards.
+	PoolAccumulatorRewards(context.Context, *PoolAccumulatorRewardsRequest) (*PoolAccumulatorRewardsResponse, error)
+	// IncentiveRecords returns the incentive records for a given poolId
+	IncentiveRecords(context.Context, *IncentiveRecordsRequest) (*IncentiveRecordsResponse, error)
+	// TickAccumulatorTrackers returns the tick accumulator trackers.
+	// Contains spread factor and uptime accumulator trackers.
+	TickAccumulatorTrackers(context.Context, *TickAccumulatorTrackersRequest) (*TickAccumulatorTrackersResponse, error)
+	// CFMMPoolIdLinkFromConcentratedPoolId returns the pool id of the CFMM
+	// pool that is linked with the given concentrated pool.
+	CFMMPoolIdLinkFromConcentratedPoolId(context.Context, *CFMMPoolIdLinkFromConcentratedPoolIdRequest) (*CFMMPoolIdLinkFromConcentratedPoolIdResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -1200,6 +1720,18 @@ func (*UnimplementedQueryServer) ClaimableIncentives(ctx context.Context, req *C
 }
 func (*UnimplementedQueryServer) PositionById(ctx context.Context, req *PositionByIdRequest) (*PositionByIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PositionById not implemented")
+}
+func (*UnimplementedQueryServer) PoolAccumulatorRewards(ctx context.Context, req *PoolAccumulatorRewardsRequest) (*PoolAccumulatorRewardsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PoolAccumulatorRewards not implemented")
+}
+func (*UnimplementedQueryServer) IncentiveRecords(ctx context.Context, req *IncentiveRecordsRequest) (*IncentiveRecordsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IncentiveRecords not implemented")
+}
+func (*UnimplementedQueryServer) TickAccumulatorTrackers(ctx context.Context, req *TickAccumulatorTrackersRequest) (*TickAccumulatorTrackersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TickAccumulatorTrackers not implemented")
+}
+func (*UnimplementedQueryServer) CFMMPoolIdLinkFromConcentratedPoolId(ctx context.Context, req *CFMMPoolIdLinkFromConcentratedPoolIdRequest) (*CFMMPoolIdLinkFromConcentratedPoolIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CFMMPoolIdLinkFromConcentratedPoolId not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -1350,6 +1882,78 @@ func _Query_PositionById_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_PoolAccumulatorRewards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PoolAccumulatorRewardsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).PoolAccumulatorRewards(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.concentratedliquidity.v1beta1.Query/PoolAccumulatorRewards",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).PoolAccumulatorRewards(ctx, req.(*PoolAccumulatorRewardsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_IncentiveRecords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IncentiveRecordsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).IncentiveRecords(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.concentratedliquidity.v1beta1.Query/IncentiveRecords",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).IncentiveRecords(ctx, req.(*IncentiveRecordsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_TickAccumulatorTrackers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TickAccumulatorTrackersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TickAccumulatorTrackers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.concentratedliquidity.v1beta1.Query/TickAccumulatorTrackers",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TickAccumulatorTrackers(ctx, req.(*TickAccumulatorTrackersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_CFMMPoolIdLinkFromConcentratedPoolId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CFMMPoolIdLinkFromConcentratedPoolIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).CFMMPoolIdLinkFromConcentratedPoolId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.concentratedliquidity.v1beta1.Query/CFMMPoolIdLinkFromConcentratedPoolId",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).CFMMPoolIdLinkFromConcentratedPoolId(ctx, req.(*CFMMPoolIdLinkFromConcentratedPoolIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.concentratedliquidity.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -1386,6 +1990,22 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			MethodName: "PositionById",
 			Handler:    _Query_PositionById_Handler,
 		},
+		{
+			MethodName: "PoolAccumulatorRewards",
+			Handler:    _Query_PoolAccumulatorRewards_Handler,
+		},
+		{
+			MethodName: "IncentiveRecords",
+			Handler:    _Query_IncentiveRecords_Handler,
+		},
+		{
+			MethodName: "TickAccumulatorTrackers",
+			Handler:    _Query_TickAccumulatorTrackers_Handler,
+		},
+		{
+			MethodName: "CFMMPoolIdLinkFromConcentratedPoolId",
+			Handler:    _Query_CFMMPoolIdLinkFromConcentratedPoolId_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "osmosis/concentrated-liquidity/query.proto",
@@ -1411,6 +2031,18 @@ func (m *UserPositionsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
 	if m.PoolId != 0 {
 		i = encodeVarintQuery(dAtA, i, uint64(m.PoolId))
 		i--
@@ -1446,6 +2078,18 @@ func (m *UserPositionsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
 	if len(m.Positions) > 0 {
 		for iNdEx := len(m.Positions) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -2071,6 +2715,314 @@ func (m *ClaimableIncentivesResponse) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
+func (m *PoolAccumulatorRewardsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PoolAccumulatorRewardsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PoolAccumulatorRewardsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.PoolId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.PoolId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *PoolAccumulatorRewardsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PoolAccumulatorRewardsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PoolAccumulatorRewardsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.UptimeGrowthGlobal) > 0 {
+		for iNdEx := len(m.UptimeGrowthGlobal) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.UptimeGrowthGlobal[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.SpreadRewardGrowthGlobal) > 0 {
+		for iNdEx := len(m.SpreadRewardGrowthGlobal) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.SpreadRewardGrowthGlobal[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TickAccumulatorTrackersRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TickAccumulatorTrackersRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TickAccumulatorTrackersRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.TickIndex != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.TickIndex))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.PoolId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.PoolId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TickAccumulatorTrackersResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TickAccumulatorTrackersResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TickAccumulatorTrackersResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.UptimeTrackers) > 0 {
+		for iNdEx := len(m.UptimeTrackers) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.UptimeTrackers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.SpreadRewardGrowthOppositeDirectionOfLastTraversal) > 0 {
+		for iNdEx := len(m.SpreadRewardGrowthOppositeDirectionOfLastTraversal) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.SpreadRewardGrowthOppositeDirectionOfLastTraversal[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *IncentiveRecordsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IncentiveRecordsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *IncentiveRecordsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.PoolId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.PoolId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *IncentiveRecordsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IncentiveRecordsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *IncentiveRecordsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.IncentiveRecords) > 0 {
+		for iNdEx := len(m.IncentiveRecords) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.IncentiveRecords[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ConcentratedPoolId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ConcentratedPoolId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.CfmmPoolId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.CfmmPoolId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -2095,6 +3047,10 @@ func (m *UserPositionsRequest) Size() (n int) {
 	if m.PoolId != 0 {
 		n += 1 + sovQuery(uint64(m.PoolId))
 	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
 	return n
 }
 
@@ -2109,6 +3065,10 @@ func (m *UserPositionsResponse) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
 }
@@ -2354,6 +3314,134 @@ func (m *ClaimableIncentivesResponse) Size() (n int) {
 	return n
 }
 
+func (m *PoolAccumulatorRewardsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PoolId != 0 {
+		n += 1 + sovQuery(uint64(m.PoolId))
+	}
+	return n
+}
+
+func (m *PoolAccumulatorRewardsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.SpreadRewardGrowthGlobal) > 0 {
+		for _, e := range m.SpreadRewardGrowthGlobal {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if len(m.UptimeGrowthGlobal) > 0 {
+		for _, e := range m.UptimeGrowthGlobal {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TickAccumulatorTrackersRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PoolId != 0 {
+		n += 1 + sovQuery(uint64(m.PoolId))
+	}
+	if m.TickIndex != 0 {
+		n += 1 + sovQuery(uint64(m.TickIndex))
+	}
+	return n
+}
+
+func (m *TickAccumulatorTrackersResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.SpreadRewardGrowthOppositeDirectionOfLastTraversal) > 0 {
+		for _, e := range m.SpreadRewardGrowthOppositeDirectionOfLastTraversal {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if len(m.UptimeTrackers) > 0 {
+		for _, e := range m.UptimeTrackers {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *IncentiveRecordsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PoolId != 0 {
+		n += 1 + sovQuery(uint64(m.PoolId))
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *IncentiveRecordsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.IncentiveRecords) > 0 {
+		for _, e := range m.IncentiveRecords {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ConcentratedPoolId != 0 {
+		n += 1 + sovQuery(uint64(m.ConcentratedPoolId))
+	}
+	return n
+}
+
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.CfmmPoolId != 0 {
+		n += 1 + sovQuery(uint64(m.CfmmPoolId))
+	}
+	return n
+}
+
 func sovQuery(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
@@ -2440,6 +3528,42 @@ func (m *UserPositionsRequest) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -2521,6 +3645,42 @@ func (m *UserPositionsResponse) Unmarshal(dAtA []byte) error {
 			}
 			m.Positions = append(m.Positions, model.FullPositionBreakdown{})
 			if err := m.Positions[len(m.Positions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -4049,6 +5209,762 @@ func (m *ClaimableIncentivesResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PoolAccumulatorRewardsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PoolAccumulatorRewardsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PoolAccumulatorRewardsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+			}
+			m.PoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PoolAccumulatorRewardsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PoolAccumulatorRewardsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PoolAccumulatorRewardsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SpreadRewardGrowthGlobal", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SpreadRewardGrowthGlobal = append(m.SpreadRewardGrowthGlobal, types2.DecCoin{})
+			if err := m.SpreadRewardGrowthGlobal[len(m.SpreadRewardGrowthGlobal)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UptimeGrowthGlobal", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UptimeGrowthGlobal = append(m.UptimeGrowthGlobal, model.UptimeTracker{})
+			if err := m.UptimeGrowthGlobal[len(m.UptimeGrowthGlobal)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TickAccumulatorTrackersRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TickAccumulatorTrackersRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TickAccumulatorTrackersRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+			}
+			m.PoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TickIndex", wireType)
+			}
+			m.TickIndex = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TickIndex |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TickAccumulatorTrackersResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TickAccumulatorTrackersResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TickAccumulatorTrackersResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SpreadRewardGrowthOppositeDirectionOfLastTraversal", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SpreadRewardGrowthOppositeDirectionOfLastTraversal = append(m.SpreadRewardGrowthOppositeDirectionOfLastTraversal, types2.DecCoin{})
+			if err := m.SpreadRewardGrowthOppositeDirectionOfLastTraversal[len(m.SpreadRewardGrowthOppositeDirectionOfLastTraversal)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UptimeTrackers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UptimeTrackers = append(m.UptimeTrackers, model.UptimeTracker{})
+			if err := m.UptimeTrackers[len(m.UptimeTrackers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IncentiveRecordsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IncentiveRecordsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IncentiveRecordsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+			}
+			m.PoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IncentiveRecordsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IncentiveRecordsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IncentiveRecordsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IncentiveRecords", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.IncentiveRecords = append(m.IncentiveRecords, types1.IncentiveRecord{})
+			if err := m.IncentiveRecords[len(m.IncentiveRecords)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CFMMPoolIdLinkFromConcentratedPoolIdRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CFMMPoolIdLinkFromConcentratedPoolIdRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConcentratedPoolId", wireType)
+			}
+			m.ConcentratedPoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ConcentratedPoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CFMMPoolIdLinkFromConcentratedPoolIdResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CFMMPoolIdLinkFromConcentratedPoolIdResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CFMMPoolIdLinkFromConcentratedPoolIdResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CfmmPoolId", wireType)
+			}
+			m.CfmmPoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.CfmmPoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])

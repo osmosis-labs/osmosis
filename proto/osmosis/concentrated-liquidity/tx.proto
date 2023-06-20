@@ -6,7 +6,7 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types";
+option go_package = "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types";
 
 service Msg {
   rpc CreatePosition(MsgCreatePosition) returns (MsgCreatePositionResponse);
@@ -22,8 +22,6 @@ service Msg {
       returns (MsgCollectSpreadRewardsResponse);
   rpc CollectIncentives(MsgCollectIncentives)
       returns (MsgCollectIncentivesResponse);
-  rpc FungifyChargedPositions(MsgFungifyChargedPositions)
-      returns (MsgFungifyChargedPositionsResponse);
 }
 
 // ===================== MsgCreatePosition
@@ -64,11 +62,6 @@ message MsgCreatePositionResponse {
     (gogoproto.moretags) = "yaml:\"amount1\"",
     (gogoproto.nullable) = false
   ];
-  google.protobuf.Timestamp join_time = 4 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdtime) = true,
-    (gogoproto.moretags) = "yaml:\"join_time\""
-  ];
   string liquidity_created = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity_created\"",
@@ -95,13 +88,13 @@ message MsgAddToPosition {
   // amount1 represents the amount of token1 willing to put in.
   string amount1 = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"amount1\"",
+    (gogoproto.moretags) = "yaml:\"amount_1\"",
     (gogoproto.nullable) = false
   ];
   // token_min_amount0 represents the minimum amount of token0 desired from the
   // new position being created. Note that this field indicates the min amount0
-  // corresponding to the total liquidity of the position, not just the
-  // liquidity that is being added.
+  // corresponding to the liquidity that is being added, not the total
+  // liquidity of the position.
   string token_min_amount0 = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_min_amount0\"",
@@ -109,8 +102,8 @@ message MsgAddToPosition {
   ];
   // token_min_amount1 represents the minimum amount of token1 desired from the
   // new position being created. Note that this field indicates the min amount1
-  // corresponding to the total liquidity of the position, not just the
-  // liquidity that is being added.
+  // corresponding to the liquidity that is being added, not the total
+  // liquidity of the position.
   string token_min_amount1 = 6 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_min_amount1\"",
@@ -165,6 +158,7 @@ message MsgCollectSpreadRewards {
 
 message MsgCollectSpreadRewardsResponse {
   repeated cosmos.base.v1beta1.Coin collected_spread_rewards = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"collected_spread_rewards\"",
     (gogoproto.nullable) = false
   ];
@@ -179,10 +173,12 @@ message MsgCollectIncentives {
 
 message MsgCollectIncentivesResponse {
   repeated cosmos.base.v1beta1.Coin collected_incentives = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"collected_incentives\"",
     (gogoproto.nullable) = false
   ];
   repeated cosmos.base.v1beta1.Coin forfeited_incentives = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"forfeited_incentives\"",
     (gogoproto.nullable) = false
   ];

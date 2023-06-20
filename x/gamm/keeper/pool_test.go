@@ -7,12 +7,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/golang/mock/gomock"
 
-	"github.com/osmosis-labs/osmosis/v15/tests/mocks"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/tests/mocks"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 var (
@@ -30,7 +30,7 @@ var (
 // 	"github.com/cosmos/cosmos-sdk/simapp"
 // 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-// 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+// 	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 // )
 
 // func (s *KeeperTestSuite) TestCleanupPool() {
@@ -329,7 +329,7 @@ func (s *KeeperTestSuite) TestGetPoolAndPoke() {
 	}
 }
 
-func (s *KeeperTestSuite) TestConvertToCFMMPool() {
+func (s *KeeperTestSuite) TestAsCFMMPool() {
 	ctrl := gomock.NewController(s.T())
 
 	tests := map[string]struct {
@@ -349,7 +349,7 @@ func (s *KeeperTestSuite) TestConvertToCFMMPool() {
 		s.Run(name, func() {
 			s.SetupTest()
 
-			pool, err := keeper.ConvertToCFMMPool(tc.pool)
+			pool, err := keeper.AsCFMMPool(tc.pool)
 
 			if tc.expectError {
 				s.Require().Error(err)
@@ -523,7 +523,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 		poolId              uint64
 		shareOutAmount      sdk.Int
 		expectedLpLiquidity sdk.Coins
-		err				error
+		err                 error
 	}{
 		"Balancer pool: Share ratio is zero": {
 			poolId: suite.prepareCustomBalancerPool(defaultAcctFunds, defaultPoolAssets, balancer.PoolParams{
@@ -531,7 +531,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 				ExitFee: defaultZeroExitFee,
 			}),
 			shareOutAmount: sdk.ZeroInt(),
-			err: types.ErrInvalidMathApprox,
+			err:            types.ErrInvalidMathApprox,
 		},
 
 		"Balancer pool: Share ratio is negative": {
@@ -540,7 +540,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 				ExitFee: defaultZeroExitFee,
 			}),
 			shareOutAmount: sdk.NewInt(-1),
-			err: types.ErrInvalidMathApprox,
+			err:            types.ErrInvalidMathApprox,
 		},
 
 		"Balancer pool: Pass": {
@@ -583,67 +583,67 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 
 		"Stableswap pool: Share ratio is zero with even two-asset": {
 			poolId: suite.prepareCustomStableswapPool(
-				defaultAcctFunds, 
+				defaultAcctFunds,
 				stableswap.PoolParams{
 					SwapFee: defaultSpreadFactor,
 					ExitFee: defaultZeroExitFee,
-				}, 
+				},
 				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
 				[]uint64{1, 1},
 			),
 			shareOutAmount: sdk.ZeroInt(),
-			err: types.ErrInvalidMathApprox,
+			err:            types.ErrInvalidMathApprox,
 		},
 
 		"Stableswap pool: Share ratio is zero with uneven two-asset": {
 			poolId: suite.prepareCustomStableswapPool(
-				defaultAcctFunds, 
+				defaultAcctFunds,
 				stableswap.PoolParams{
 					SwapFee: defaultSpreadFactor,
 					ExitFee: defaultZeroExitFee,
-				}, 
+				},
 				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
 				[]uint64{1, 1},
 			),
 			shareOutAmount: sdk.ZeroInt(),
-			err: types.ErrInvalidMathApprox,
+			err:            types.ErrInvalidMathApprox,
 		},
 
 		"Stableswap pool: Share ratio is negative with even two-asset": {
 			poolId: suite.prepareCustomStableswapPool(
-				defaultAcctFunds, 
+				defaultAcctFunds,
 				stableswap.PoolParams{
 					SwapFee: defaultSpreadFactor,
 					ExitFee: defaultZeroExitFee,
-				}, 
+				},
 				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
 				[]uint64{1, 1},
 			),
 			shareOutAmount: sdk.NewInt(-1),
-			err: types.ErrInvalidMathApprox,
+			err:            types.ErrInvalidMathApprox,
 		},
 
 		"Stableswap pool: Share ratio is negative with uneven two-asset": {
 			poolId: suite.prepareCustomStableswapPool(
-				defaultAcctFunds, 
+				defaultAcctFunds,
 				stableswap.PoolParams{
 					SwapFee: defaultSpreadFactor,
 					ExitFee: defaultZeroExitFee,
-				}, 
+				},
 				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
 				[]uint64{1, 1},
 			),
 			shareOutAmount: sdk.NewInt(-1),
-			err: types.ErrInvalidMathApprox,
+			err:            types.ErrInvalidMathApprox,
 		},
 
 		"Stableswap pool: Pass with even two-asset": {
 			poolId: suite.prepareCustomStableswapPool(
-				defaultAcctFunds, 
+				defaultAcctFunds,
 				stableswap.PoolParams{
 					SwapFee: defaultSpreadFactor,
 					ExitFee: defaultZeroExitFee,
-				}, 
+				},
 				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
 				[]uint64{1, 1},
 			),
@@ -656,11 +656,11 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 
 		"Stableswap pool: Pass with even two-asset, ceiling result": {
 			poolId: suite.prepareCustomStableswapPool(
-				defaultAcctFunds, 
+				defaultAcctFunds,
 				stableswap.PoolParams{
 					SwapFee: defaultSpreadFactor,
 					ExitFee: defaultZeroExitFee,
-				}, 
+				},
 				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
 				[]uint64{1, 1},
 			),
@@ -679,11 +679,11 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 
 		"Stableswap pool: Pass with uneven two-asset": {
 			poolId: suite.prepareCustomStableswapPool(
-				defaultAcctFunds, 
+				defaultAcctFunds,
 				stableswap.PoolParams{
 					SwapFee: defaultSpreadFactor,
 					ExitFee: defaultZeroExitFee,
-				}, 
+				},
 				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
 				[]uint64{1, 1},
 			),
@@ -696,11 +696,11 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 
 		"Stableswap pool: Pass with uneven two-asset, ceiling result": {
 			poolId: suite.prepareCustomStableswapPool(
-				defaultAcctFunds, 
+				defaultAcctFunds,
 				stableswap.PoolParams{
 					SwapFee: defaultSpreadFactor,
 					ExitFee: defaultZeroExitFee,
-				}, 
+				},
 				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
 				[]uint64{1, 1},
 			),

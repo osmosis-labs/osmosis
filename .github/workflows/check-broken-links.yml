@@ -25,4 +25,4 @@ jobs:
         with:
           title: Broken Links Detected
           content-filepath: ./lychee/out.md
-          labels: report, automated issue
+          labels: report, automated issue, Good first issue, Help wanted

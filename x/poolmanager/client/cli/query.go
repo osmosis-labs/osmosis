@@ -8,8 +8,8 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 var customRouterFlagOverride = map[string]string{
@@ -28,6 +28,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdSpotPrice)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTotalPoolLiquidity)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdAllPools)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdPool)
 
 	return cmd
 }

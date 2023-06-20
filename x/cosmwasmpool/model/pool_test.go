@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 )
 
 type CosmWasmPoolSuite struct {
@@ -19,9 +19,6 @@ const (
 )
 
 func TestPoolModuleSuite(t *testing.T) {
-
-	t.Skip("Skipping test until https://github.com/osmosis-labs/osmosis/issues/5329 is completed")
-
 	suite.Run(t, new(CosmWasmPoolSuite))
 }
 

@@ -18,5 +18,4 @@ const (
 	AttributeAmount0    = "amount0"
 	AttributeAmount1    = "amount1"
 	AttributeLiquidity  = "liquidity"
-	AttributeJoinTime   = "join_time"
 )

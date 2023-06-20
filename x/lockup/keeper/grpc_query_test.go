@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 )
 
 func (s *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
@@ -359,6 +359,31 @@ func (s *KeeperTestSuite) TestLockedByID() {
 	s.Require().Equal(res.Lock.Duration, time.Second)
 	s.Require().Equal(res.Lock.EndTime, time.Time{})
 	s.Require().Equal(res.Lock.IsUnlocking(), false)
+}
+
+func (s *KeeperTestSuite) TestLockRewardReceiver() {
+	s.SetupTest()
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	addr2 := sdk.AccAddress([]byte("addr2---------------"))
+
+	// lock coins
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	s.LockTokens(addr1, coins, time.Second)
+
+	res, err := s.querier.LockRewardReceiver(sdk.WrapSDKContext(s.Ctx), &types.LockRewardReceiverRequest{LockId: 1})
+	s.Require().NoError(err)
+	s.Require().Equal(res.RewardReceiver, addr1.String())
+
+	// now change lock reward receiver and then query again
+	s.App.LockupKeeper.SetLockRewardReceiverAddress(s.Ctx, 1, addr1, addr2.String())
+	res, err = s.querier.LockRewardReceiver(sdk.WrapSDKContext(s.Ctx), &types.LockRewardReceiverRequest{LockId: 1})
+	s.Require().NoError(err)
+	s.Require().Equal(res.RewardReceiver, addr2.String())
+
+	// try getting lock reward receiver for invalid lock id, this should error
+	res, err = s.querier.LockRewardReceiver(sdk.WrapSDKContext(s.Ctx), &types.LockRewardReceiverRequest{LockId: 10})
+	s.Require().Error(err)
+	s.Require().Equal(res.RewardReceiver, "")
 }
 
 func (s *KeeperTestSuite) TestNextLockID() {

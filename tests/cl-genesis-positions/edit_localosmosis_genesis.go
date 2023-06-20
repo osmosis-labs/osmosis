@@ -16,12 +16,12 @@ import (
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	osmosisApp "github.com/osmosis-labs/osmosis/v15/app"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	osmosisApp "github.com/osmosis-labs/osmosis/v16/app"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	clgenesis "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	clgenesis "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types/genesis"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBankGenesis *banktypes.GenesisState) {
@@ -59,15 +59,7 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 	})
 	appState[poolmanagertypes.ModuleName] = cdc.MustMarshalJSON(&localOsmosisPoolManagerGenesis)
 
-	// Copy positions
 	largestPositionId := uint64(0)
-	for _, positionData := range updatedCLGenesis.PositionData {
-		positionData.Position.PoolId = nextPoolId
-		localOsmosisCLGenesis.PositionData = append(localOsmosisCLGenesis.PositionData, positionData)
-		if positionData.Position.PositionId > largestPositionId {
-			largestPositionId = positionData.Position.PositionId
-		}
-	}
 
 	// Create map of pool balances
 	balancesMap := map[string][]banktypes.Balance{}
@@ -100,10 +92,6 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 		}
 		anyCopy := *any
 
-		for i := range pool.Ticks {
-			pool.Ticks[i].PoolId = nextPoolId
-		}
-
 		for i := range pool.IncentiveRecords {
 			pool.IncentiveRecords[i].PoolId = nextPoolId
 		}
@@ -112,7 +100,13 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 			pool.IncentivesAccumulators[i].Name = cltypes.KeyUptimeAccumulator(nextPoolId, uint64(i))
 		}
 
-		updatedPoolData := clgenesis.PoolData{
+		for _, pos := range pool.PositionData {
+			if pos.Position.PositionId > largestPositionId {
+				largestPositionId = pos.Position.PositionId
+			}
+		}
+
+		updatedPoolData := clgenesis.GenesisPoolData{
 			Pool:                   &anyCopy,
 			Ticks:                  pool.Ticks,
 			IncentivesAccumulators: pool.IncentivesAccumulators,
@@ -121,6 +115,7 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 				Name:         cltypes.KeySpreadRewardPoolAccumulator(nextPoolId),
 				AccumContent: pool.SpreadRewardAccumulator.AccumContent,
 			},
+			PositionData: pool.PositionData,
 		}
 
 		// Update bank genesis with balances

@@ -42,6 +42,26 @@ There are two kinds of gauges: **`perpetual`** and **`non-perpetual`**:
 
 - **`Perpetual gauges`** distribute all their tokens at a single time and only distribute their tokens again once the gauge is refilled (this is mainly used to distribute minted OSMO tokens to LP token stakers). Perpetual gauges persist and will re-disburse tokens when refilled (there is no "active" period)
 
+Besides the perpetual and non-perpetual categorization, gauges can also be grouped across another dimension - `ByDuration` or `NoLock`.
+This is set on the `DistrTo.LockQueryType` field of the `MsgCreateGauge`.
+
+- **ByDuration** when the gauge of this kind is created, it is meant to incentivize locks. When it is set,
+the `PoolId` field of the `MsgCreateGauge` must be zero.
+
+- **NoLock** when the gauge of this kind is created, it is meant to incentivize pools directly. When it is set,
+the `PoolId` field of the `MsgCreateGauge` must be non-zero. Additionally, it must be associated with a CL
+pool at launch. Moreover, the `DistrTo.Denom` field must be set to empty string in such a case.
+
+Each of the `ByDuration` and `NoLock` gauges can be perpetual or non-perpetual and function according to the
+conventional rules of the respective gauge type.
+
+
+Additionally, for `NoLock` gauges, lockuptypes.Denom must be either an empty string, signifying that
+this is an external gauge, or be equal to types.NoLockInternalGaugeDenom(poolId) (when created from the `AfterPoolCreatedHook`)
+If the denom is empty, it will get overwritten to types.NoLockExternalGaugeDenom(poolId).
+This denom formatting is useful for querying internal vs external gauges associated with a pool since the denom prefix is
+appended into the store prefix.
+
 ## State
 
 ### Incentives management
@@ -135,6 +155,7 @@ type MsgCreateGauge struct {
   Rewards           sdk.Coins
   StartTime         time.Time // start time to start distribution
   NumEpochsPaidOver uint64 // number of epochs distribution will be done
+  PoolID            uint64 // pool id of the gauge. This should only be non-zero if DistributeTo.LockQueryType is NoLock
 }
 ```
 

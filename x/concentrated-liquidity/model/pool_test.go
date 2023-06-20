@@ -4,14 +4,16 @@ import (
 	fmt "fmt"
 	"math"
 	"testing"
+	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	clmath "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	clmath "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
 const (
@@ -39,6 +41,99 @@ type ConcentratedPoolTestSuite struct {
 
 func TestConcentratedPoolTestSuite(t *testing.T) {
 	suite.Run(t, new(ConcentratedPoolTestSuite))
+}
+
+// TestGetAddress tests the GetAddress method of pool
+func (s *ConcentratedPoolTestSuite) TestGetAddress() {
+
+	tests := []struct {
+		name          string
+		expectedPanic bool
+	}{
+		{
+			name: "Happy path",
+		},
+		{
+			name:          "Unhappy path: wrong bech32 encoded address",
+			expectedPanic: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// Init suite for each test.
+			s.Setup()
+
+			address := s.TestAccs[0].String()
+
+			// if the test case is expected to panic, we use wrong bech32 encoded address instead
+			if tc.expectedPanic {
+				address = "osmo15l7yueqf3tx4cvpt6njvj7zxmvuhkwyrr509e9"
+			}
+			mock_pool := model.Pool{
+				Id:      1,
+				Address: address,
+			}
+
+			// Check that the returned address is backward compatible
+			osmoassert.ConditionalPanic(s.T(), tc.expectedPanic, func() {
+				addr := mock_pool.GetAddress()
+				s.Require().Equal(addr, s.TestAccs[0])
+			})
+		})
+	}
+}
+
+// TestGetIncentivesAddress tests the GetIncentivesAddress method of pool
+func (s *ConcentratedPoolTestSuite) TestGetIncentivesAddress() {
+
+	tests := []struct {
+		name          string
+		expectedPanic bool
+	}{
+		{
+			name: "Happy path",
+		},
+		{
+			name:          "Unhappy path: wrong bech32 encoded address",
+			expectedPanic: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// Init suite for each test.
+			s.Setup()
+
+			// Create a concentrated liquidity pool struct instance
+			address := s.TestAccs[0].String()
+
+			// if the test case is expected to panic, we use wrong bech32 encoded address instead
+			if tc.expectedPanic {
+				address = "osmo15l7yueqf3tx4cvpt6njvj7zxmvuhkwyrr509e9"
+			}
+			mock_pool := model.Pool{
+				Id:                1,
+				IncentivesAddress: address,
+			}
+
+			// Check that the returned address is backward compatible
+			osmoassert.ConditionalPanic(s.T(), tc.expectedPanic, func() {
+				addr := mock_pool.GetIncentivesAddress()
+				s.Require().Equal(addr, s.TestAccs[0])
+			})
+		})
+	}
+}
+
+// TestString tests if String method of the pool correctly json marshals the pool object
+func (s *ConcentratedPoolTestSuite) TestString() {
+	s.Setup()
+
+	pool, err := model.NewConcentratedLiquidityPool(1, "foo", "bar", DefaultTickSpacing, DefaultSpreadFactor)
+	s.Require().NoError(err)
+	poolString := pool.String()
+	s.Require().Equal(poolString, "{\"address\":\"osmo19e2mf7cywkv7zaug6nk5f87d07fxrdgrladvymh2gwv5crvm3vnsuewhh7\",\"incentives_address\":\"osmo156gncm3w2hdvuxxaejue8nejxgdgsrvdf7jftntuhxnaarhxcuas4ywjxf\",\"spread_rewards_address\":\"osmo10t3u6ze74jn7et6rluuxyf9vr2arykewmhcx67svg6heuu0gte2syfudcv\",\"id\":1,\"current_tick_liquidity\":\"0.000000000000000000\",\"token0\":\"foo\",\"token1\":\"bar\",\"current_sqrt_price\":\"0.000000000000000000\",\"tick_spacing\":1,\"exponent_at_price_one\":-6,\"spread_factor\":\"0.010000000000000000\",\"last_liquidity_update\":\"0001-01-01T00:00:00Z\"}")
 }
 
 // TestSpotPrice tests the SpotPrice method of the ConcentratedPoolTestSuite.
@@ -173,6 +268,18 @@ func (s *ConcentratedPoolTestSuite) TestIsCurrentTickInRange() {
 			false,
 		},
 		{
+			"only lower tick is equal to the pool tick",
+			DefaultCurrTick,
+			DefaultCurrTick + 3,
+			true,
+		},
+		{
+			"only upper tick is equal to the pool tick",
+			DefaultCurrTick - 3,
+			DefaultCurrTick,
+			false,
+		},
+		{
 			"lower tick is greater then pool tick",
 			DefaultCurrTick + 1,
 			DefaultCurrTick + 3,
@@ -250,7 +357,27 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			expectErr:        types.SqrtPriceNegativeError{ProvidedSqrtPrice: negativeOne},
 		},
 		{
-			name:             "upper tick too big",
+			name:             "new tick is equal to max tick",
+			currentLiquidity: DefaultLiquidityAmt,
+			currentTick:      DefaultCurrTick,
+			currentSqrtPrice: DefaultCurrSqrtPrice,
+			newLiquidity:     DefaultLiquidityAmt,
+			newTick:          types.MaxTick,
+			newSqrtPrice:     DefaultCurrSqrtPrice,
+			expectErr:        nil,
+		},
+		{
+			name:             "new tick is equal to min tick",
+			currentLiquidity: DefaultLiquidityAmt,
+			currentTick:      DefaultCurrTick,
+			currentSqrtPrice: DefaultCurrSqrtPrice,
+			newLiquidity:     DefaultLiquidityAmt,
+			newTick:          types.MinTick,
+			newSqrtPrice:     DefaultCurrSqrtPrice,
+			expectErr:        nil,
+		},
+		{
+			name:             "error: upper tick is greater than max tick",
 			currentLiquidity: DefaultLiquidityAmt,
 			currentTick:      1,
 			currentSqrtPrice: DefaultCurrSqrtPrice,
@@ -264,7 +391,7 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			},
 		},
 		{
-			name:             "lower tick too small",
+			name:             "error: lower tick is smaller than min tick",
 			currentLiquidity: DefaultLiquidityAmt,
 			currentTick:      1,
 			currentSqrtPrice: DefaultCurrSqrtPrice,
@@ -519,6 +646,22 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 
 			expectError: types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: lowerTick},
 		},
+		"error: lower tick is greater than upper tick": {
+			currentTick:    lowerTick,
+			lowerTick:      lowerTick + 1,
+			upperTick:      lowerTick,
+			liquidityDelta: defaultLiquidityDelta,
+
+			expectError: types.InvalidLowerUpperTickError{LowerTick: lowerTick + 1, UpperTick: lowerTick},
+		},
+		"error: lower tick is equal to upper tick": {
+			currentTick:    lowerTick,
+			lowerTick:      lowerTick,
+			upperTick:      lowerTick,
+			liquidityDelta: defaultLiquidityDelta,
+
+			expectError: types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: lowerTick},
+		},
 	}
 
 	for name, tc := range tests {
@@ -634,6 +777,56 @@ func (suite *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 				suite.Require().False(wasUpdated)
 				suite.Require().Equal(defaultLiquidityAmt, pool.CurrentTickLiquidity)
 			}
+		})
+	}
+}
+
+func (suite *ConcentratedPoolTestSuite) TestPoolSetMethods() {
+	var (
+		newCurrentTick      = DefaultCurrTick
+		newCurrentSqrtPrice = DefaultCurrSqrtPrice
+		newTickSpacing      = DefaultTickSpacing
+	)
+
+	tests := map[string]struct {
+		currentTick              int64
+		currentSqrtPrice         sdk.Dec
+		tickSpacing              uint64
+		lastLiquidityUpdateDelta time.Duration
+	}{
+		"happy path": {
+			currentTick:              newCurrentTick,
+			currentSqrtPrice:         newCurrentSqrtPrice,
+			tickSpacing:              newTickSpacing,
+			lastLiquidityUpdateDelta: time.Hour,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.Setup()
+
+			currentBlockTime := suite.Ctx.BlockTime()
+
+			// Create the pool and check that the initial values are not equal to the new values we will set.
+			clPool := suite.PrepareConcentratedPool()
+			suite.Require().NotEqual(tc.currentTick, clPool.GetCurrentTick())
+			suite.Require().NotEqual(tc.currentSqrtPrice, clPool.GetCurrentSqrtPrice())
+			suite.Require().NotEqual(tc.tickSpacing, clPool.GetTickSpacing())
+			suite.Require().NotEqual(currentBlockTime.Add(tc.lastLiquidityUpdateDelta), clPool.GetLastLiquidityUpdate())
+
+			// Run the setters.
+			clPool.SetCurrentTick(tc.currentTick)
+			clPool.SetCurrentSqrtPrice(tc.currentSqrtPrice)
+			clPool.SetTickSpacing(tc.tickSpacing)
+			clPool.SetLastLiquidityUpdate(currentBlockTime.Add(tc.lastLiquidityUpdateDelta))
+
+			// Check that the values are now equal to the new values.
+			suite.Require().Equal(tc.currentTick, clPool.GetCurrentTick())
+			suite.Require().Equal(tc.currentSqrtPrice, clPool.GetCurrentSqrtPrice())
+			suite.Require().Equal(tc.tickSpacing, clPool.GetTickSpacing())
+			suite.Require().Equal(currentBlockTime.Add(tc.lastLiquidityUpdateDelta), clPool.GetLastLiquidityUpdate())
 		})
 	}
 }

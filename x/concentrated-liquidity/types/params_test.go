@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
 func TestValidateTicks(t *testing.T) {
@@ -37,8 +37,16 @@ func TestValidateTicks(t *testing.T) {
 			i:           []int64{types.MaxTick * 2},
 			expectError: true,
 		},
+		"error: is max tick": {
+			i:           []int64{types.MaxTick},
+			expectError: true,
+		},
 		"error: smaller than min tick": {
 			i:           []int64{types.MinTick * 2},
+			expectError: true,
+		},
+		"error: is min tick": {
+			i:           []int64{types.MinTick},
 			expectError: true,
 		},
 	}

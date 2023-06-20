@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,9 +34,11 @@ type Keeper struct {
 	communityPoolKeeper         types.CommunityPoolKeeper
 	poolManager                 types.PoolManager
 	concentratedLiquidityKeeper types.ConcentratedLiquidityKeeper
+	poolIncentivesKeeper        types.PoolIncentivesKeeper
+	incentivesKeeper            types.IncentivesKeeper
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, communityPoolKeeper types.CommunityPoolKeeper, concentratedLiquidityKeeper types.ConcentratedLiquidityKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, communityPoolKeeper types.CommunityPoolKeeper, concentratedLiquidityKeeper types.ConcentratedLiquidityKeeper, poolIncentivesKeeper types.PoolIncentivesKeeper, incentivesKeeper types.IncentivesKeeper) Keeper {
 	// Ensure that the module account are set.
 	moduleAddr, perms := accountKeeper.GetModuleAddressAndPermissions(types.ModuleName)
 	if moduleAddr == nil {
@@ -60,6 +62,8 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtyp
 		bankKeeper:                  bankKeeper,
 		communityPoolKeeper:         communityPoolKeeper,
 		concentratedLiquidityKeeper: concentratedLiquidityKeeper,
+		poolIncentivesKeeper:        poolIncentivesKeeper,
+		incentivesKeeper:            incentivesKeeper,
 	}
 }
 
@@ -93,4 +97,14 @@ func (k Keeper) setParams(ctx sdk.Context, params types.Params) {
 // Pools in gamm module have permissionless pool creation enabled, thus always return nil.
 func (k Keeper) ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error {
 	return nil
+}
+
+// Set the pool incentives keeper.
+func (k *Keeper) SetPoolIncentivesKeeper(poolIncentivesKeeper types.PoolIncentivesKeeper) {
+	k.poolIncentivesKeeper = poolIncentivesKeeper
+}
+
+// Set the incentives keeper.
+func (k *Keeper) SetIncentivesKeeper(incentivesKeeper types.IncentivesKeeper) {
+	k.incentivesKeeper = incentivesKeeper
 }

@@ -7,14 +7,11 @@ import "osmosis/gamm/pool-models/balancer/balancerPool.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer";
+option go_package = "github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer";
 
 service Msg {
   rpc CreateBalancerPool(MsgCreateBalancerPool)
       returns (MsgCreateBalancerPoolResponse);
-  rpc MigrateSharesToFullRangeConcentratedPosition(
-      MsgMigrateSharesToFullRangeConcentratedPosition)
-      returns (MsgMigrateSharesToFullRangeConcentratedPositionResponse);
 }
 
 // ===================== MsgCreatePool
@@ -36,44 +33,4 @@ message MsgCreateBalancerPool {
 // Returns the poolID
 message MsgCreateBalancerPoolResponse {
   uint64 pool_id = 1 [ (gogoproto.customname) = "PoolID" ];
-}
-
-// ===================== MsgMigrateSharesToFullRangeConcentratedPosition
-message MsgMigrateSharesToFullRangeConcentratedPosition {
-  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-
-  // shares_to_migrate indicates number of shares to migrate.
-  cosmos.base.v1beta1.Coin shares_to_migrate = 2 [
-    (gogoproto.moretags) = "yaml:\"shares_to_migrate\"",
-    (gogoproto.nullable) = false
-  ];
-
-  // token_out_mins indicates minimum token to exit Balancer pool with.
-  repeated cosmos.base.v1beta1.Coin token_out_mins = 3 [
-    (gogoproto.moretags) = "yaml:\"token_out_min_amounts\"",
-    (gogoproto.nullable) = false
-  ];
-}
-
-message MsgMigrateSharesToFullRangeConcentratedPositionResponse {
-  string amount0 = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"amount0\"",
-    (gogoproto.nullable) = false
-  ];
-  string amount1 = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"amount1\"",
-    (gogoproto.nullable) = false
-  ];
-  string liquidity_created = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"liquidity_created\"",
-    (gogoproto.nullable) = false
-  ];
-  google.protobuf.Timestamp join_time = 4 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdtime) = true,
-    (gogoproto.moretags) = "yaml:\"join_time\""
-  ];
 }
