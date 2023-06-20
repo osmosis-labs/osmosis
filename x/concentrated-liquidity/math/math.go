@@ -134,8 +134,9 @@ func GetNextSqrtPriceFromAmount0InRoundingUp(sqrtPriceCurrent, liquidity, amount
 
 	product := amountZeroRemainingIn.Mul(sqrtPriceCurrent)
 	// denominator = product + liquidity
-	product.AddMut(liquidity)
-	return liquidity.Mul(sqrtPriceCurrent).QuoRoundupMut(product)
+	denominator := product
+	denominator.AddMut(liquidity)
+	return liquidity.Mul(sqrtPriceCurrent).QuoRoundupMut(denominator)
 }
 
 // GetNextSqrtPriceFromAmount0OutRoundingUp utilizes sqrtPriceCurrent, liquidity, and amount of denom0 that still needs
