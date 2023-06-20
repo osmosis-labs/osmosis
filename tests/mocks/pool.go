@@ -35,6 +35,20 @@ func (m *MockPoolI) EXPECT() *MockPoolIMockRecorder {
 	return m.recorder
 }
 
+// AsSerializablePool mocks base method.
+func (m *MockPoolI) AsSerializablePool() types0.PoolI {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AsSerializablePool")
+	ret0, _ := ret[0].(types0.PoolI)
+	return ret0
+}
+
+// AsSerializablePool indicates an expected call of AsSerializablePool.
+func (mr *MockPoolIMockRecorder) AsSerializablePool() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AsSerializablePool", reflect.TypeOf((*MockPoolI)(nil).AsSerializablePool))
+}
+
 // GetAddress mocks base method.
 func (m *MockPoolI) GetAddress() types.AccAddress {
 	m.ctrl.T.Helper()

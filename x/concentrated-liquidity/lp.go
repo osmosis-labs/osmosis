@@ -66,13 +66,13 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// Transform the provided ticks into their corresponding sqrtPrices.
-	priceLowerTick, priceUpperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
+	_, _, sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
 
 	// If multiple ticks can represent the same spot price, ensure we are using the largest of those ticks.
-	lowerTick, upperTick, err = roundTickToCanonicalPriceTick(lowerTick, upperTick, priceLowerTick, priceUpperTick, pool.GetTickSpacing())
+	lowerTick, upperTick, err = roundTickToCanonicalPriceTick(lowerTick, upperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, pool.GetTickSpacing())
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
@@ -282,7 +282,7 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 // For the sake of backwards-compatibility with future implementations of charging, this function deletes the old position and creates
 // a new one with the resulting amount after addition. Note that due to truncation after `withdrawPosition`, there is some rounding error
 // that is upper bounded by 1 unit of the more valuable token.
-// Uses the amount0MinGiven,amount1MinGiven as the minimum token out for creating the new position.
+// Uses the amount0MinGiven + withdrawn amount0, amount1MinGiven + withdrawn amount1 as the minimum token out for creating the new position.
 // Note that these field indicates the min amount corresponding to the total liquidity of the position,
 // not only for the liquidity amount that is being added.
 // Uses amounts withdrawn from the original position if provided min amount is zero.
@@ -348,10 +348,10 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 	minimumAmount1 := amount1Withdrawn
 
 	if !amount0MinGiven.IsZero() {
-		minimumAmount0 = amount0MinGiven
+		minimumAmount0 = amount0Withdrawn.Add(amount0MinGiven)
 	}
 	if !amount1MinGiven.IsZero() {
-		minimumAmount1 = amount1MinGiven
+		minimumAmount1 = amount1Withdrawn.Add(amount1MinGiven)
 	}
 	newPositionId, actualAmount0, actualAmount1, _, _, _, err := k.createPosition(ctx, position.PoolId, owner, tokensProvided, minimumAmount0, minimumAmount1, position.LowerTick, position.UpperTick)
 	if err != nil {
@@ -475,7 +475,7 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	// Calculate the initial tick from the initial spot price
 	// We round down here so that the tick is rounded to
 	// the nearest possible value given the tick spacing.
-	initialTick, err := math.PriceToTickRoundDown(initialSpotPrice, pool.GetTickSpacing())
+	initialTick, err := math.SqrtPriceToTickRoundDownSpacing(initialCurSqrtPrice, pool.GetTickSpacing())
 	if err != nil {
 		return err
 	}
@@ -584,7 +584,7 @@ func (k Keeper) validatePositionUpdateById(ctx sdk.Context, positionId uint64, u
 		}
 
 		if liquidityDeltaGiven.IsNegative() && position.Liquidity.LT(liquidityDeltaGiven.Abs()) {
-			return types.LiquidityWithdrawalError{PositionID: positionId, RequestedAmount: liquidityDeltaGiven, CurrentLiquidity: position.Liquidity}
+			return types.LiquidityWithdrawalError{PositionID: positionId, RequestedAmount: liquidityDeltaGiven.Abs(), CurrentLiquidity: position.Liquidity}
 		}
 
 		if position.JoinTime.UTC() != joinTimeGiven.UTC() {

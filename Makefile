@@ -505,6 +505,8 @@ cl-create-bigbang-config:
 go-mock-update:
 	mockgen -source=x/poolmanager/types/routes.go -destination=tests/mocks/pool_module.go -package=mocks
 	mockgen -source=x/poolmanager/types/pool.go -destination=tests/mocks/pool.go -package=mocks
+	mockgen -source=x/gamm/types/pool.go -destination=tests/mocks/cfmm_pool.go -package=mocks
+	mockgen -source=x/concentrated-liquidity/types/cl_pool_extensionI.go -destination=tests/mocks/cl_pool.go -package=mocks
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \

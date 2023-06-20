@@ -225,6 +225,7 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 	}
 
 	for name, tc := range tests {
+		tc := tc
 		s.Run(name, func() {
 			// setup test
 			s.SetupTest()
@@ -273,14 +274,16 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 				balance := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(types.ModuleName))
 				s.Require().Equal(coinsToMint, balance)
 
-				for _, gauge := range gauges {
-					for _, coin := range gauge.Coins {
+				for i, gauge := range gauges {
+					for j := range gauge.Coins {
+						incentiveId := i*len(gauge.Coins) + j + 1
+
 						// get poolId from GaugeId
 						poolId, err := s.App.PoolIncentivesKeeper.GetPoolIdFromGaugeId(s.Ctx, gauge.GetId(), currentEpoch.Duration)
 						s.Require().NoError(err)
 
 						// check that incentive record wasn't created
-						_, err = s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, poolId, coin.Denom, currentEpoch.Duration, s.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+						_, err = s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, poolId, currentEpoch.Duration, uint64(incentiveId))
 						s.Require().Error(err)
 					}
 				}
@@ -297,8 +300,10 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 					s.Require().Equal(tc.expectedDistributions.AmountOf(coin.Denom).Add(sdk.ZeroInt()), actualbalanceAfterDistribution.Add(sdk.ZeroInt()))
 				}
 
-				for _, gauge := range gauges {
-					for _, coin := range gauge.Coins {
+				for i, gauge := range gauges {
+					for j, coin := range gauge.Coins {
+						incentiveId := i*len(gauge.Coins) + j + 1
+
 						gaugeId := gauge.GetId()
 
 						// get poolId from GaugeId
@@ -306,7 +311,7 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 						s.Require().NoError(err)
 
 						// GetIncentiveRecord to see if pools received incentives properly
-						incentiveRecord, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, poolId, defaultRewardDenom, types.DefaultConcentratedUptime, s.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+						incentiveRecord, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, poolId, types.DefaultConcentratedUptime, uint64(incentiveId))
 						s.Require().NoError(err)
 
 						expectedEmissionRate := sdk.NewDecFromInt(coin.Amount).QuoTruncate(sdk.NewDec(int64(currentEpoch.Duration.Seconds())))
@@ -315,13 +320,13 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 						s.ValidateDistributedGauge(gaugeId, 1, tc.gaugeCoins)
 
 						// check every parameter in incentiveRecord so that it matches what we created
+						incentiveRecordBody := incentiveRecord.GetIncentiveRecordBody()
 						s.Require().Equal(poolId, incentiveRecord.PoolId)
-						s.Require().Equal(defaultRewardDenom, incentiveRecord.IncentiveDenom)
-						s.Require().Equal(s.App.AccountKeeper.GetModuleAddress(types.ModuleName).String(), incentiveRecord.IncentiveCreatorAddr)
-						s.Require().Equal(expectedEmissionRate, incentiveRecord.GetIncentiveRecordBody().EmissionRate)
-						s.Require().Equal(s.Ctx.BlockTime().UTC().String(), incentiveRecord.GetIncentiveRecordBody().StartTime.UTC().String())
+						s.Require().Equal(expectedEmissionRate, incentiveRecordBody.EmissionRate)
+						s.Require().Equal(s.Ctx.BlockTime().UTC().String(), incentiveRecordBody.StartTime.UTC().String())
 						s.Require().Equal(types.DefaultConcentratedUptime, incentiveRecord.MinUptime)
-						s.Require().Equal(fiveKRewardCoins.Amount, incentiveRecord.GetIncentiveRecordBody().RemainingAmount.RoundInt())
+						s.Require().Equal(coin.Amount, incentiveRecordBody.RemainingCoin.Amount.TruncateInt())
+						s.Require().Equal(coin.Denom, incentiveRecordBody.RemainingCoin.Denom)
 					}
 				}
 				// check the totalAmount of tokens distributed, for both lock gauges and CL pool gauges
@@ -489,24 +494,19 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 				// check the totalAmount of tokens distributed, for both lock gauges and CL pool gauges
 				s.Require().Equal(tc.expectedDistributions, totalDistributedCoins)
 
-				// Get module account
-				moduleAccount := s.App.AccountKeeper.GetModuleAccount(s.Ctx, types.ModuleName)
-				incentiveModuleAddress := moduleAccount.GetAddress()
-
 				incentivesEpochDuration := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration
 				incentivesEpochDurationSeconds := sdk.NewDec(incentivesEpochDuration.Milliseconds()).QuoInt(sdk.NewInt(1000))
 
 				// Check that incentive records were created
 				for i, coin := range tc.expectedDistributions {
-					incentiveRecords, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, coin.Denom, time.Nanosecond, incentiveModuleAddress)
+					incentiveRecords, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, time.Nanosecond, uint64(i+1))
 					s.Require().NoError(err)
 
 					expectedEmissionRatePerEpoch := coin.Amount.ToDec().QuoTruncate(incentivesEpochDurationSeconds)
 
-					s.Require().Equal(incentiveModuleAddress.String(), incentiveRecords.IncentiveCreatorAddr)
 					s.Require().Equal(tc.startTime.UTC(), incentiveRecords.IncentiveRecordBody.StartTime.UTC())
-					s.Require().Equal(coin.Denom, incentiveRecords.IncentiveDenom)
-					s.Require().Equal(tc.expectedRemainingAmountIncentiveRecord[i], incentiveRecords.IncentiveRecordBody.RemainingAmount)
+					s.Require().Equal(coin.Denom, incentiveRecords.IncentiveRecordBody.RemainingCoin.Denom)
+					s.Require().Equal(tc.expectedRemainingAmountIncentiveRecord[i], incentiveRecords.IncentiveRecordBody.RemainingCoin.Amount)
 					s.Require().Equal(expectedEmissionRatePerEpoch, incentiveRecords.IncentiveRecordBody.EmissionRate)
 					s.Require().Equal(time.Nanosecond, incentiveRecords.MinUptime)
 				}

@@ -29,6 +29,8 @@ type PoolI interface {
 	SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom string) (sdk.Dec, error)
 	// GetType returns the type of the pool (Balancer, Stableswap, Concentrated, etc.)
 	GetType() PoolType
+	// AsSerializablePool returns the pool in a serializable form (useful when a model wraps the proto)
+	AsSerializablePool() PoolI
 }
 
 // NewPoolAddress returns an address for a pool from a given id.

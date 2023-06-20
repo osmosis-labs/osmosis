@@ -10,7 +10,7 @@ import (
 
 func (suite *StrategyTestSuite) setupNewOneForZeroSwapStrategy(sqrtPriceLimit sdk.Dec, spread sdk.Dec) swapstrategy.SwapStrategy {
 	suite.SetupTest()
-	return swapstrategy.New(false, sqrtPriceLimit, suite.App.GetKey(types.ModuleName), spread, defaultTickSpacing)
+	return swapstrategy.New(false, sqrtPriceLimit, suite.App.GetKey(types.ModuleName), spread)
 }
 
 func (suite *StrategyTestSuite) TestGetSqrtTargetPrice_OneForZero() {
@@ -153,7 +153,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 		tc := tc
 		suite.Run(name, func() {
 			strategy := suite.setupNewOneForZeroSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
-			sqrtPriceNext, amountInConsumed, amountZeroOut, spreadRewardChargeTotal := strategy.ComputeSwapStepOutGivenIn(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, tc.amountOneInRemaining)
+			sqrtPriceNext, amountInConsumed, amountZeroOut, spreadRewardChargeTotal := strategy.ComputeSwapWithinBucketOutGivenIn(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, tc.amountOneInRemaining)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
 			suite.Require().Equal(tc.expectedAmountInConsumed, amountInConsumed)
@@ -241,7 +241,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 	for name, tc := range tests {
 		suite.Run(name, func() {
 			strategy := suite.setupNewOneForZeroSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
-			sqrtPriceNext, amountZeroOutConsumed, amountOneIn, spreadRewardChargeTotal := strategy.ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, defaultLiquidity, tc.amountZeroOutRemaining)
+			sqrtPriceNext, amountZeroOutConsumed, amountOneIn, spreadRewardChargeTotal := strategy.ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, defaultLiquidity, tc.amountZeroOutRemaining)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
 			suite.Require().Equal(tc.expectedAmountZeroOutConsumed, amountZeroOutConsumed)
@@ -260,6 +260,7 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_OneForZero() {
 					upperTick: 100,
 				},
 			},
+			tickSpacing:    defaultTickSpacing,
 			expectIsValid:  true,
 			expectNextTick: 100,
 		},
@@ -274,6 +275,7 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_OneForZero() {
 					upperTick: 200,
 				},
 			},
+			tickSpacing:    defaultTickSpacing,
 			expectIsValid:  true,
 			expectNextTick: 200,
 		},
@@ -284,6 +286,7 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_OneForZero() {
 					upperTick: 100,
 				},
 			},
+			tickSpacing:    defaultTickSpacing,
 			expectIsValid:  true,
 			expectNextTick: 100,
 		},
@@ -298,11 +301,91 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_OneForZero() {
 					upperTick: 200,
 				},
 			},
+			tickSpacing:    defaultTickSpacing,
 			expectIsValid:  true,
 			expectNextTick: 100,
 		},
 		"no ticks, one for zero": {
+			tickSpacing:   defaultTickSpacing,
 			expectIsValid: false,
+		},
+
+		// Non-default tick spacing
+
+		"1 position, 1 tick spacing": {
+			preSetPositions: []position{
+				{
+					lowerTick: -1,
+					upperTick: 1,
+				},
+			},
+			tickSpacing:    1,
+			expectIsValid:  true,
+			expectNextTick: 1,
+		},
+		"2 positions, 1 tick spacing": {
+			preSetPositions: []position{
+				{
+					lowerTick: -4,
+					upperTick: 3,
+				},
+				{
+					lowerTick: -2,
+					upperTick: 2,
+				},
+			},
+			tickSpacing:    1,
+			expectIsValid:  true,
+			expectNextTick: 2,
+		},
+		"lower tick lands on current tick, 1 tick spacing": {
+			preSetPositions: []position{
+				{
+					lowerTick: 0,
+					upperTick: 1,
+				},
+			},
+			tickSpacing:    1,
+			expectIsValid:  true,
+			expectNextTick: 1,
+		},
+		"upper tick lands on current tick, 1 tick spacing": {
+			preSetPositions: []position{
+				{
+					lowerTick: -1,
+					upperTick: 0,
+				},
+				{
+					lowerTick: 1,
+					upperTick: 2,
+				},
+			},
+			tickSpacing:    1,
+			expectIsValid:  true,
+			expectNextTick: 1,
+		},
+
+		"sanity check: 1 position, 10 tick spacing": {
+			preSetPositions: []position{
+				{
+					lowerTick: -10,
+					upperTick: 10,
+				},
+			},
+			tickSpacing:    10,
+			expectIsValid:  true,
+			expectNextTick: 10,
+		},
+		"sanity check: 1 position, 1000 tick spacing": {
+			preSetPositions: []position{
+				{
+					lowerTick: -1000,
+					upperTick: 1000,
+				},
+			},
+			tickSpacing:    1000,
+			expectIsValid:  true,
+			expectNextTick: 1000,
 		},
 	}
 

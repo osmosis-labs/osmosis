@@ -40,6 +40,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### State Breaking
+
+* [#5532](https://github.com/osmosis-labs/osmosis/pull/5532) fix: Fix x/tokenfactory genesis import denoms reset x/bank existing denom metadata
+
 ## v16.0.0
 Osmosis Labs is excited to announce the release of v16.0.0, a major upgrade that includes a number of new features and improvements like introduction of new modules, updates existing APIs, and dependency updates. This upgrade aims to enhance capital efficiency by introducing SuperCharged Liquidity, introduce custom liquidity pools backed by CosmWasm smart contracts, and improve overall functionality.
 
@@ -89,13 +95,15 @@ and control over token transfers.
   * [#5138](https://github.com/osmosis-labs/osmosis/pull/5138) refactor: rename swap fee to spread factor
   * [#5020](https://github.com/osmosis-labs/osmosis/pull/5020) Add gas config to the client.toml
   * [#5459](https://github.com/osmosis-labs/osmosis/pull/5459) Create locktypes.LockQueryType.NoLock gauge. MsgCreateGauge takes pool id for new gauge type.
+  * [#5503](https://github.com/osmosis-labs/osmosis/pull/5503) Deprecate gamm spot price query and add pool manager spot price query to stargate query whitelist.
 
 ## State Breaking
   * [#5380](https://github.com/osmosis-labs/osmosis/pull/5380) feat: add ica authorized messages in upgrade handler
   * [#5363](https://github.com/osmosis-labs/osmosis/pull/5363) fix: twap record upgrade handler
   * [#5265](https://github.com/osmosis-labs/osmosis/pull/5265) fix: expect single synthetic lock per native lock ID 
   * [#4983](https://github.com/osmosis-labs/osmosis/pull/4983) implement gas consume on denom creation
-  * [#4830](https://github.com/osmosis-labs/osmosis/pull/4830) Scale gas costs by denoms in gauge
+  * [#4830](https://github.com/osmosis-labs/osmosis/pull/4830) Scale gas costs by denoms in gauge (AddToGaugeReward)
+  * [#5511](https://github.com/osmosis-labs/osmosis/pull/5511) Scale gas costs by denoms in gauge (CreateGauge)
   * [#4336](https://github.com/osmosis-labs/osmosis/pull/4336) feat: make epochs standalone
   * [#4801](https://github.com/osmosis-labs/osmosis/pull/4801) refactor: remove GetTotalShares, GetTotalLiquidity and GetExitFee from PoolI
   * [#4951](https://github.com/osmosis-labs/osmosis/pull/4951) feat: implement pool liquidity query in pool manager, deprecate the one in gamm

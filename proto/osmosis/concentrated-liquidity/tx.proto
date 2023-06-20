@@ -93,8 +93,8 @@ message MsgAddToPosition {
   ];
   // token_min_amount0 represents the minimum amount of token0 desired from the
   // new position being created. Note that this field indicates the min amount0
-  // corresponding to the total liquidity of the position, not just the
-  // liquidity that is being added.
+  // corresponding to the liquidity that is being added, not the total
+  // liquidity of the position.
   string token_min_amount0 = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_min_amount0\"",
@@ -102,8 +102,8 @@ message MsgAddToPosition {
   ];
   // token_min_amount1 represents the minimum amount of token1 desired from the
   // new position being created. Note that this field indicates the min amount1
-  // corresponding to the total liquidity of the position, not just the
-  // liquidity that is being added.
+  // corresponding to the liquidity that is being added, not the total
+  // liquidity of the position.
   string token_min_amount1 = 6 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_min_amount1\"",
@@ -158,6 +158,7 @@ message MsgCollectSpreadRewards {
 
 message MsgCollectSpreadRewardsResponse {
   repeated cosmos.base.v1beta1.Coin collected_spread_rewards = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"collected_spread_rewards\"",
     (gogoproto.nullable) = false
   ];
@@ -172,11 +173,12 @@ message MsgCollectIncentives {
 
 message MsgCollectIncentivesResponse {
   repeated cosmos.base.v1beta1.Coin collected_incentives = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"collected_incentives\"",
     (gogoproto.nullable) = false
   ];
-  repeated cosmos.base.v1beta1.DecCoin forfeited_incentives = 2 [
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+  repeated cosmos.base.v1beta1.Coin forfeited_incentives = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"forfeited_incentives\"",
     (gogoproto.nullable) = false
   ];

@@ -31,7 +31,7 @@ func (s *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			expectedPoolCreatedEvent: 1,
 			expectedMessageEvents:    4, // 1 for pool created, 1 for coin spent, 1 for coin received, 1 for after pool create hook
 		},
-		"error: tickSpacing not positive": {
+		"error: tickSpacing zero": {
 			denom0:        ETH,
 			denom1:        USDC,
 			tickSpacing:   0,
@@ -122,7 +122,7 @@ func (s *KeeperTestSuite) TestCreatePositionMsg() {
 			s.PrepareConcentratedPool()
 			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 
-			// fund sender to create position
+			// fund Sender to create position
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
 
 			msg := &types.MsgCreatePosition{
@@ -294,11 +294,32 @@ func (s *KeeperTestSuite) TestCollectSpreadRewards_Events() {
 				PositionIds: tc.positionIds,
 			}
 
+			// Add spread rewards to the pool's accum so we aren't just claiming 0 rewards.
+			// Claiming 0 rewards is still a valid message, but is not as valuable for testing.
+			s.AddToSpreadRewardAccumulator(validPoolId, sdk.NewDecCoin(ETH, sdk.NewInt(1)))
+
+			// Determine expected rewards from all provided positions without modifying state.
+			expectedTotalSpreadRewards := sdk.Coins(nil)
+			cacheCtx, _ := s.Ctx.CacheContext()
+			for _, positionId := range tc.positionIds {
+				spreadRewardsClaimed, _ := s.App.ConcentratedLiquidityKeeper.PrepareClaimableSpreadRewards(cacheCtx, positionId)
+				expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(spreadRewardsClaimed...)
+			}
+
+			// Fund the spread rewards account with the expected rewards (not testing the distribution algorithm here, just the events, so this is okay)
+			s.FundAcc(pool.GetSpreadRewardsAddress(), sdk.NewCoins(sdk.NewCoin(ETH, expectedTotalSpreadRewards[0].Amount)))
+
+			// Reset event counts to 0 by creating a new manager.
+			s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
+			s.Equal(0, len(s.Ctx.EventManager().Events()))
+
+			// System under test.
 			response, err := msgServer.CollectSpreadRewards(sdk.WrapSDKContext(s.Ctx), msg)
 
 			if tc.expectedError == nil {
 				s.Require().NoError(err)
 				s.Require().NotNil(response)
+				s.Require().Equal(expectedTotalSpreadRewards, response.CollectedSpreadRewards)
 				s.AssertEventEmitted(s.Ctx, types.TypeEvtTotalCollectSpreadRewards, tc.expectedTotalCollectSpreadRewardsEvent)
 				s.AssertEventEmitted(s.Ctx, types.TypeEvtCollectSpreadRewards, tc.expectedCollectSpreadRewardsEvent)
 				s.AssertEventEmitted(s.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
@@ -315,6 +336,7 @@ func (s *KeeperTestSuite) TestCollectSpreadRewards_Events() {
 // when calling CollectIncentives.
 func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 	uptimeHelper := getExpectedUptimes()
+	twoWeeks := time.Hour * 24 * 14
 	testcases := map[string]struct {
 		upperTick                           int64
 		lowerTick                           int64
@@ -333,7 +355,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                1,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      1,
-			expectedMessageEvents:               2, // 1 for collect incentives, 1 for send message
+			expectedMessageEvents:               3, // 1 for collect incentives, 1 for collect send, 1 for forfeit send
 		},
 		"two position IDs": {
 			upperTick:                           DefaultUpperTick,
@@ -342,7 +364,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                2,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      2,
-			expectedMessageEvents:               3, // 1 for collect incentives, 2 for send messages
+			expectedMessageEvents:               5, // 1 for collect incentives, 2 for collect send, 2 for forfeit send
 		},
 		"three position IDs": {
 			upperTick:                           DefaultUpperTick,
@@ -351,7 +373,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			numPositionsToCreate:                3,
 			expectedTotalCollectIncentivesEvent: 1,
 			expectedCollectIncentivesEvent:      3,
-			expectedMessageEvents:               4, // 1 for collect incentives, 3 for send messages
+			expectedMessageEvents:               7, // 1 for collect incentives, 3 for collect send, 3 for forfeit send
 		},
 		"error: three position IDs - not an owner": {
 			upperTick:                  DefaultUpperTick,
@@ -396,7 +418,15 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			// Set up accrued incentives
 			err = addToUptimeAccums(ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, uptimeHelper.hundredTokensMultiDenom)
 			s.Require().NoError(err)
-			s.FundAcc(pool.GetIncentivesAddress(), expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, positionAge, sdk.NewInt(int64(len(tc.positionIds)))))
+
+			numPositions := sdk.NewInt(int64(len(tc.positionIds)))
+			// Fund the incentives address with the amount of incentives we expect the positions to both claim and forfeit.
+			// The claim amount must be funded to the incentives address in order for the rewards to be sent to the user.
+			// The forfeited about must be funded to the incentives address in order for the forfeited rewards to be sent to the community pool.
+			incentivesToBeSentToUsers := expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, positionAge, numPositions)
+			incentivesToBeSentToCommunityPool := expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, twoWeeks, numPositions).Sub(incentivesToBeSentToUsers)
+			totalAmountToFund := incentivesToBeSentToUsers.Add(incentivesToBeSentToCommunityPool...)
+			s.FundAcc(pool.GetIncentivesAddress(), totalAmountToFund)
 
 			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 
