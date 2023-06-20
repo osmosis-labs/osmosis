@@ -2791,14 +2791,8 @@ func (s *KeeperTestSuite) validateAmountsWithTolerance(amountA sdk.Int, amountB 
 }
 
 func (s *KeeperTestSuite) TestFunctionalSwaps() {
-	positions := Positions{
-		numSwaps:       5,
-		numAccounts:    5,
-		numFullRange:   4,
-		numNarrowRange: 3,
-		numConsecutive: 2,
-		numOverlapping: 1,
-	}
+	positions := NewRandomizedPositions(10)
+
 	// Init s.
 	s.SetupTest()
 

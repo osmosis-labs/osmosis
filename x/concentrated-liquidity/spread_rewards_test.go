@@ -1359,11 +1359,16 @@ func (s *KeeperTestSuite) TestUpdatePosValueToInitValuePlusGrowthOutside() {
 	}
 }
 
-func NewRandomizedPositions() Positions {
-	rand.Seed(time.Now().UnixNano())
+// NewRandomizedPositions creates a randomized Positions struct for randomization in tests.
+// Constraint: numAccounts >= (numFullRange or numNarrowRange or numConsecutive or numOverlapping)
+// Reason: you need to have at least X accounts to create X positions
+// Parameter cap is used to set maximum possible value of any field of returning struct
+func NewRandomizedPositions(cap int) Positions {
+	// Preset seed to ensure deterministic test runs.
+	rand.Seed(2)
 
-	numSwaps := 2 + rand.Intn(99) // Random number between 2 and 100
-	numAccounts := 2 + rand.Intn(99)
+	numSwaps := 2 + rand.Intn(cap) // Random number between 2 and 100, modulo cap to cap the max possible value
+	numAccounts := 2 + rand.Intn(cap)
 
 	numFullRange := rand.Intn(numAccounts + 1) // Random number between 0 and numAccounts inclusive
 	numNarrowRange := rand.Intn(numAccounts + 1)
@@ -1390,14 +1395,7 @@ type Positions struct {
 }
 
 func (s *KeeperTestSuite) TestFunctional_SpreadRewards_Swaps() {
-	positions := Positions{
-		numSwaps:       7,
-		numAccounts:    5,
-		numFullRange:   4,
-		numNarrowRange: 3,
-		numConsecutive: 2,
-		numOverlapping: 1,
-	}
+	positions := NewRandomizedPositions(10)
 	// Init suite.
 	s.SetupTest()
 
