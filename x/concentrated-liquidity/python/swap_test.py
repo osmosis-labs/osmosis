@@ -2,17 +2,23 @@ from decimal import Decimal, getcontext
 from clmath import *
 from math import *
 
+# Precomputed sqrt values to mirror precision
+sqrt4545 = Decimal("67.416615162732695594")
+sqrt5000 = Decimal("70.710678118654752440")
+sqrt5500 = Decimal("74.161984870956629487")
+
+# Default pool values
 DefaultPoolLiq0 = 1000000
 DefaultPoolLiq1 = 5000000000
 DefaultLowerPrice     = Decimal(4545)
-DefaultSqrtLowerPrice = DefaultLowerPrice.sqrt()
+DefaultSqrtLowerPrice = sqrt4545
 DefaultLowerTick      = (30545000)
 DefaultUpperPrice     = Decimal(5500)
-DefaultSqrtUpperPrice = DefaultUpperPrice.sqrt()
+DefaultSqrtUpperPrice = sqrt5500
 DefaultUpperTick      = 31500000
 DefaultCurrPrice      = Decimal(5000)
-DefaultCurrTick                                 = 31000000
-DefaultCurrSqrtPrice                              = Decimal("70.710678118654752440")
+DefaultCurrTick       = 31000000
+DefaultCurrSqrtPrice  = sqrt5000
 
 DefaultLiquidity = Decimal("1517882343.751510418088349649")
 correctDefaultLiquidity = get_liquidity_from_amounts(DefaultCurrSqrtPrice, DefaultSqrtLowerPrice, DefaultSqrtUpperPrice, DefaultPoolLiq0, DefaultPoolLiq1)

@@ -1,4 +1,4 @@
-from decimal import Decimal, getcontext
+from decimal import Decimal, ROUND_FLOOR, ROUND_CEILING, getcontext
 
 class Coin:
     # Define this class based on what fields sdk.Coin has.
@@ -15,6 +15,23 @@ class DecCoins:
 
 getcontext().prec = 60
 
+# --- General rounding helper ---
+
+def round_decimal(number: Decimal, places, rounding):
+    """Round a Decimal to the given number of decimal places."""
+    format_string = f'0.{"0" * places}'  # build a string like '0.00' for 2 places
+    return number.quantize(Decimal(format_string), rounding=rounding)
+
+# --- SDK precision based rounding helpers ---
+
+def round_sdk_prec_down(number: Decimal):
+    return round_decimal(number, 18, ROUND_FLOOR)
+
+def round_sdk_prec_up(number: Decimal):
+    return round_decimal(number, 18, ROUND_CEILING)
+
+# --- CL liquidity functions ---
+
 def liquidity0(amount: int, sqrt_price_a: Decimal, sqrt_price_b: Decimal) -> Decimal:
     # Swap if sqrt_price_a is greater than sqrt_price_b
     if sqrt_price_a > sqrt_price_b:
@@ -27,7 +44,9 @@ def liquidity0(amount: int, sqrt_price_a: Decimal, sqrt_price_b: Decimal) -> Dec
     if diff == Decimal(0):
         raise Exception(f"liquidity0 diff is zero: sqrtPriceA {sqrt_price_a} sqrtPriceB {sqrt_price_b}")
 
-    return (amount_big_dec * product) / diff
+    result = (amount_big_dec * product) / diff
+
+    return round_sdk_prec_down(result)
 
 def liquidity1(amount: int, sqrt_price_a: Decimal, sqrt_price_b: Decimal) -> Decimal:
     # Swap if sqrt_price_a is greater than sqrt_price_b
@@ -39,8 +58,10 @@ def liquidity1(amount: int, sqrt_price_a: Decimal, sqrt_price_b: Decimal) -> Dec
     diff = sqrt_price_b - sqrt_price_a
     if diff == Decimal(0):
         raise Exception(f"liquidity1 diff is zero: sqrtPriceA {sqrt_price_a} sqrtPriceB {sqrt_price_b}")
+    
+    result = amount_big_dec / diff
 
-    return amount_big_dec / diff
+    return round_sdk_prec_down(result, 18, ROUND_FLOOR)
 
 def get_liquidity_from_amounts(sqrt_price, sqrt_price_a, sqrt_price_b, amount0, amount1):
     # Reorder the prices so that sqrt_price_a is the smaller of the two
