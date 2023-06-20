@@ -52,10 +52,15 @@ var (
 	FullRangeLiquidityAmt                                = sdk.MustNewDecFromStr("70710678.118654752940000000")
 	DefaultTickSpacing                                   = uint64(100)
 	PoolCreationFee                                      = poolmanagertypes.DefaultParams().PoolCreationFee
-	DefaultExponentConsecutivePositionLowerTick, _       = math.PriceToTickRoundDown(sdk.NewDec(5500), DefaultTickSpacing)
-	DefaultExponentConsecutivePositionUpperTick, _       = math.PriceToTickRoundDown(sdk.NewDec(6250), DefaultTickSpacing)
-	DefaultExponentOverlappingPositionLowerTick, _       = math.PriceToTickRoundDown(sdk.NewDec(4000), DefaultTickSpacing)
-	DefaultExponentOverlappingPositionUpperTick, _       = math.PriceToTickRoundDown(sdk.NewDec(4999), DefaultTickSpacing)
+	sqrt4000                                             = sdk.MustNewDecFromStr("63.245553203367586640")
+	sqrt4994                                             = sdk.MustNewDecFromStr("70.668238976219012614")
+	sqrt4999                                             = sdk.MustNewDecFromStr("70.703606697254136612")
+	sqrt5500                                             = sdk.MustNewDecFromStr("74.161984870956629487")
+	sqrt6250                                             = sdk.MustNewDecFromStr("79.056941504209483300")
+	DefaultExponentConsecutivePositionLowerTick, _       = math.SqrtPriceToTickRoundDownSpacing(sqrt5500, DefaultTickSpacing)
+	DefaultExponentConsecutivePositionUpperTick, _       = math.SqrtPriceToTickRoundDownSpacing(sqrt6250, DefaultTickSpacing)
+	DefaultExponentOverlappingPositionLowerTick, _       = math.SqrtPriceToTickRoundDownSpacing(sqrt4000, DefaultTickSpacing)
+	DefaultExponentOverlappingPositionUpperTick, _       = math.SqrtPriceToTickRoundDownSpacing(sqrt4999, DefaultTickSpacing)
 	BAR                                                  = "bar"
 	FOO                                                  = "foo"
 	InsufficientFundsError                               = fmt.Errorf("insufficient funds")
@@ -162,7 +167,7 @@ func (s *KeeperTestSuite) validatePositionUpdate(ctx sdk.Context, positionId uin
 }
 
 // validateTickUpdates validates that ticks with the given parameters have expectedRemainingLiquidity left.
-func (s *KeeperTestSuite) validateTickUpdates(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, expectedRemainingLiquidity sdk.Dec, expectedLowerSpreadRewardGrowthOppositeDirectionOfLastTraversal, expectedUpperSpreadRewardGrowthOppositeDirectionOfLastTraversal sdk.DecCoins) {
+func (s *KeeperTestSuite) validateTickUpdates(poolId uint64, lowerTick int64, upperTick int64, expectedRemainingLiquidity sdk.Dec, expectedLowerSpreadRewardGrowthOppositeDirectionOfLastTraversal, expectedUpperSpreadRewardGrowthOppositeDirectionOfLastTraversal sdk.DecCoins) {
 	lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, poolId, lowerTick)
 	s.Require().NoError(err)
 	s.Require().Equal(expectedRemainingLiquidity.String(), lowerTickInfo.LiquidityGross.String())

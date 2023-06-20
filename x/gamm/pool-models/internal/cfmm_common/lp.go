@@ -25,7 +25,7 @@ func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares sdk.Int, 
 	var refundedShares sdk.Dec
 	if !exitFee.IsZero() {
 		// exitingShares * (1 - exit fee)
-		oneSubExitFee := sdk.OneDec().SubMut(exitFee)
+		oneSubExitFee := sdk.OneDec().Sub(exitFee)
 		refundedShares = oneSubExitFee.MulIntMut(exitingShares)
 	} else {
 		refundedShares = exitingShares.ToDec()

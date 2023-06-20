@@ -66,7 +66,7 @@ func (k Keeper) initOrUpdatePosition(
 		return types.NegativeLiquidityError{Liquidity: liquidity}
 	}
 
-	err = k.initOrUpdatePositionUptimeAccumulators(ctx, poolId, liquidity, owner, lowerTick, upperTick, liquidityDelta, positionId)
+	err = k.initOrUpdatePositionUptimeAccumulators(ctx, poolId, liquidity, lowerTick, upperTick, liquidityDelta, positionId)
 	if err != nil {
 		return err
 	}
@@ -97,22 +97,6 @@ func (k Keeper) HasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, err
 		return bz[0] != 0, nil
 	}
 	return osmoutils.HasAnyAtPrefix(store, poolPositionKey, parse)
-}
-
-func (k Keeper) ensurePositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, positionId uint64) error {
-	isOwner := k.isPositionOwner(ctx, sender, poolId, positionId)
-	if !isOwner {
-		return types.NotPositionOwnerError{
-			PositionId: positionId,
-			Address:    sender.String(),
-		}
-	}
-	return nil
-}
-
-// isPositionOwner returns true if the given positionId is owned by the given sender inside the given pool.
-func (k Keeper) isPositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, positionId uint64) bool {
-	return ctx.KVStore(k.storeKey).Has(types.KeyAddressPoolIdPositionId(sender, poolId, positionId))
 }
 
 // GetAllPositionsForPoolId gets all the position for a specific poolId and store prefix.
@@ -628,14 +612,14 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 		for uptimeIndex, uptimeAccum := range uptimeAccumulators {
 			// Move rewards into the new uptime accumulator and delete the old uptime accumulator.
 			oldPositionName := string(types.KeyPositionId(oldPositionId))
-			if err := moveRewardsToNewPositionAndDeleteOldAcc(ctx, uptimeAccum, oldPositionName, newPositionUptimeAccName, uptimeGrowthOutside[uptimeIndex]); err != nil {
+			if err := moveRewardsToNewPositionAndDeleteOldAcc(uptimeAccum, oldPositionName, newPositionUptimeAccName, uptimeGrowthOutside[uptimeIndex]); err != nil {
 				return 0, err
 			}
 		}
 
 		// Move spread rewards into the new spread reward accumulator and delete the old spread reward accumulator.
 		oldPositionSpreadRewardName := types.KeySpreadRewardPositionAccumulator(oldPositionId)
-		if err := moveRewardsToNewPositionAndDeleteOldAcc(ctx, spreadRewardAccumulator, oldPositionSpreadRewardName, newPositionSpreadRewardAccName, spreadRewardGrowthOutside); err != nil {
+		if err := moveRewardsToNewPositionAndDeleteOldAcc(spreadRewardAccumulator, oldPositionSpreadRewardName, newPositionSpreadRewardAccName, spreadRewardGrowthOutside); err != nil {
 			return 0, err
 		}
 

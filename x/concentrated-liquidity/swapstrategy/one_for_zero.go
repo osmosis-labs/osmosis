@@ -35,7 +35,7 @@ func (s oneForZeroStrategy) GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.De
 	return nextTickSqrtPrice
 }
 
-// ComputeSwapStepOutGivenIn calculates the next sqrt price, the amount of token in consumed, the amount out to return to the user, and total spread reward charge on token in.
+// ComputeSwapWithinBucketOutGivenIn calculates the next sqrt price, the amount of token in consumed, the amount out to return to the user, and total spread reward charge on token in.
 // Parameters:
 //   - sqrtPriceCurrent is the current sqrt price.
 //   - sqrtPriceTarget is the target sqrt price computed with GetSqrtTargetPrice(). It must be one of:
@@ -54,7 +54,7 @@ func (s oneForZeroStrategy) GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.De
 //
 // OneForZero details:
 // - oneForZeroStrategy assumes moving to the right of the current square root price.
-func (s oneForZeroStrategy) ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountOneInRemaining sdk.Dec) (sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec) {
+func (s oneForZeroStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountOneInRemaining sdk.Dec) (sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec) {
 	// Estimate the amount of token one needed until the target sqrt price is reached.
 	amountOneIn := math.CalcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
 
@@ -90,11 +90,12 @@ func (s oneForZeroStrategy) ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPric
 	return sqrtPriceNext, amountOneIn, amountZeroOut, spreadRewardChargeTotal
 }
 
-// ComputeSwapStepInGivenOut calculates the next sqrt price, the amount of token out consumed, the amount in to charge to the user for requested out, and total spread reward charge on token in.
+// ComputeSwapWithinBucketInGivenOut calculates the next sqrt price, the amount of token out consumed, the amount in to charge to the user for requested out, and total spread reward charge on token in.
+// This assumes swapping over a single bucket where the liqudiity stays constant until we cross the next initialized tick of the next bucket.
 // Parameters:
 //   - sqrtPriceCurrent is the current sqrt price.
 //   - sqrtPriceTarget is the target sqrt price computed with GetSqrtTargetPrice(). It must be one of:
-//     1. Next tick sqrt price.
+//     1. Next initialized tick sqrt price.
 //     2. Sqrt price limit representing price impact protection.
 //   - liquidity is the amount of liquidity between the sqrt price current and sqrt price target.
 //   - amountZeroRemainingOut is the amount of token zero out remaining to be swapped to estimate how much of token one in is needed to be charged.
@@ -109,7 +110,7 @@ func (s oneForZeroStrategy) ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPric
 //
 // OneForZero details:
 // - oneForZeroStrategy assumes moving to the right of the current square root price.
-func (s oneForZeroStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountZeroRemainingOut sdk.Dec) (sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec) {
+func (s oneForZeroStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountZeroRemainingOut sdk.Dec) (sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec) {
 	// Estimate the amount of token zero needed until the target sqrt price is reached.
 	// N.B.: contrary to out given in, we do not round up because we do not want to exceed the initial amount out at the end.
 	amountZeroOut := math.CalcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, false)
@@ -148,13 +149,18 @@ func (s oneForZeroStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPric
 }
 
 // InitializeNextTickIterator returns iterator that seeks to the next tick from the given tickIndex.
-// If nex tick relative to tickINdex does not exist in the store, it will return an invalid iterator.
+// In one for zero direction, the search is EXCLUSIVE of the current tick index.
+// If next tick relative to currentTickIndex is not initialized (does not exist in the store),
+// it will return an invalid iterator.
+// This is a requirement to satisfy our "active range" invariant of "lower tick <= current tick < upper tick".
+// If we swap twice and the first swap crosses tick X, we do not want the second swap to cross tick X again
+// so we search from X + 1.
 //
 // oneForZeroStrategy assumes moving to the right of the current square root price.
 // As a result, we use forward iterator to seek to the next tick index relative to the currentTickIndex.
-// Since start key of the forward iterator is inclusive, we search directly from the tickIndex
+// Since start key of the forward iterator is inclusive, we search directly from the currentTickIndex
 // forwards in increasing lexicographic order until a tick greater than currentTickIndex is found.
-// Returns an invalid iterator if tickIndex is not in the store.
+// Returns an invalid iterator if no tick greater than currentTickIndex is found in the store.
 // Panics if fails to parse tick index from bytes.
 // The caller is responsible for closing the iterator on success.
 func (s oneForZeroStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId uint64, currentTickIndex int64) dbm.Iterator {
@@ -180,19 +186,6 @@ func (s oneForZeroStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId u
 	return iter
 }
 
-// InitializeTickValue returns the initial tick value for computing swaps based
-// on the actual current tick.
-//
-// oneForZeroStrategy assumes moving to the right of the current square root price.
-// As a result, we use forward iterator in InitializeNextTickIterator to find the next
-// tick to the left of current. The end cursor for forward iteration is inclusive.
-// Therefore, this method is, essentially a no-op. The logic is reversed for
-// zeroForOneStrategy where we use reverse iterator and have to add one to
-// the input. Therefore, we define this method to account for different strategies.
-func (s oneForZeroStrategy) InitializeTickValue(currentTick int64) int64 {
-	return currentTick
-}
-
 // SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.
 // This is called when consuming all liquidity.
 // When a position is created, we add liquidity to lower tick
@@ -207,6 +200,17 @@ func (s oneForZeroStrategy) InitializeTickValue(currentTick int64) int64 {
 // positive.
 func (s oneForZeroStrategy) SetLiquidityDeltaSign(deltaLiquidity sdk.Dec) sdk.Dec {
 	return deltaLiquidity
+}
+
+// UpdateTickAfterCrossing updates the next tick after crossing
+// to satisfy our "position in-range" invariant which is:
+// lower tick <= current tick < upper tick.
+// When crossing a tick in one for zero direction, we move
+// right on the range. As a result, we end up crossing the upper tick
+// that is exclusive. Therefore, we leave the next tick as is since
+// it is already excluded from the current range.
+func (s oneForZeroStrategy) UpdateTickAfterCrossing(nextTick int64) int64 {
+	return nextTick
 }
 
 // ValidateSqrtPrice validates the given square root price

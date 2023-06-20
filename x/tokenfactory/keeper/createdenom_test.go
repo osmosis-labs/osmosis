@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
@@ -164,6 +165,17 @@ func (s *KeeperTestSuite) TestCreateDenom() {
 
 				s.Require().NoError(err)
 				s.Require().Equal(s.TestAccs[0].String(), queryRes.AuthorityMetadata.Admin)
+
+				// Make sure that the denom metadata is initialized correctly
+				metadata, found := bankKeeper.GetDenomMetaData(s.Ctx, res.GetNewTokenDenom())
+				s.Require().True(found)
+				s.Require().Equal(banktypes.Metadata{
+					DenomUnits: []*banktypes.DenomUnit{{
+						Denom:    res.GetNewTokenDenom(),
+						Exponent: 0,
+					}},
+					Base: res.GetNewTokenDenom(),
+				}, metadata)
 			} else {
 				s.Require().Error(err)
 				// Ensure we don't charge if we expect an error

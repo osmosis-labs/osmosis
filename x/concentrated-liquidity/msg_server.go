@@ -19,15 +19,15 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	}
 }
 
-func NewMsgCreatorServerImpl(keeper *Keeper) clmodel.MsgCreatorServer {
+func NewMsgCreatorServerImpl(keeper *Keeper) clmodel.MsgServer {
 	return &msgServer{
 		keeper: keeper,
 	}
 }
 
 var (
-	_ types.MsgServer          = msgServer{}
-	_ clmodel.MsgCreatorServer = msgServer{}
+	_ types.MsgServer   = msgServer{}
+	_ clmodel.MsgServer = msgServer{}
 )
 
 // CreateConcentratedPool attempts to create a concentrated liquidity pool via the poolmanager module, returning a MsgCreateConcentratedPoolResponse or an error upon failure.
