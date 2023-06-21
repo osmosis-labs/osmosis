@@ -767,7 +767,7 @@ var (
 			// print(token_in)
 			expectedTokenOut:  sdk.NewCoin(USDC, sdk.NewInt(42000000)),
 			expectedTokenIn:   sdk.NewCoin(ETH, sdk.NewInt(8404)),
-			expectedTick:      30996000,
+			expectedTick:      30996087,
 			expectedSqrtPrice: sdk.MustNewDecFromStr("70.683007989825007163"),
 		},
 		"single position within one tick: usdc (in) -> eth (out) ofz": {
@@ -786,7 +786,7 @@ var (
 			// print(token_in)
 			expectedTokenOut: sdk.NewCoin(ETH, sdk.NewInt(13370)),
 			expectedTokenIn:  sdk.NewCoin(USDC, sdk.NewInt(66891663)),
-			expectedTick:     31006200,
+			expectedTick:     31006234,
 			// True value with arbitrary precision: 70.7547471884689004674...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 70.754747188468900468
 			expectedSqrtPrice: sdk.MustNewDecFromStr("70.754747188468900468"),
@@ -818,7 +818,7 @@ var (
 			// print(token_in)
 			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66829187)),
 			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(13370)),
-			expectedTick:     30996800,
+			expectedTick:     30996887,
 			// This value is the direct output of sqrt_next in the script above.
 			// The precision is exact because we properly handle rounding behavior in intermediate steps.
 			expectedSqrtPrice: sdk.MustNewDecFromStr("70.688664163727643651"),
@@ -844,7 +844,7 @@ var (
 			// print(token_in)
 			expectedTokenOut:  sdk.NewCoin("eth", sdk.NewInt(8398)),
 			expectedTokenIn:   sdk.NewCoin("usdc", sdk.NewInt(41998216)),
-			expectedTick:      31001900,
+			expectedTick:      31001956,
 			expectedSqrtPrice: sdk.MustNewDecFromStr("70.724512595179305567"),
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
@@ -887,7 +887,7 @@ var (
 			// print(token_in)
 			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(9103422788)),
 			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(2000000)),
-			expectedTick:     30095100,
+			expectedTick:     30095166,
 
 			expectedSqrtPrice:                         sdk.MustNewDecFromStr("63.993489023888951975"),
 			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
@@ -937,7 +937,7 @@ var (
 			// print(token_in)
 			expectedTokenOut: sdk.NewCoin(ETH, sdk.NewInt(1820630)),
 			expectedTokenIn:  sdk.NewCoin(USDC, sdk.NewInt(9999999570)),
-			expectedTick:     32105400,
+			expectedTick:     32105414,
 			// True value with arbitrary precision: 78.1371488370367515544...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 78.137148837036751555
 			expectedSqrtPrice:                         sdk.MustNewDecFromStr("78.137148837036751555"),
@@ -994,7 +994,7 @@ var (
 			// print(token_in)
 			expectedTokenIn:   sdk.NewCoin("eth", sdk.NewInt(2000000)),
 			expectedTokenOut:  sdk.NewCoin("usdc", sdk.NewInt(9321276930)),
-			expectedTick:      30129000,
+			expectedTick:      30129083,
 			expectedSqrtPrice: sdk.MustNewDecFromStr("64.257943796086567725"),
 			// Started from DefaultSpreadRewardAccumCoins * 3, crossed tick once, thus becoming
 			// DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins = DefaultSpreadRewardAccumCoins * 2
@@ -1050,7 +1050,7 @@ var (
 			// print(token_in)
 			expectedTokenIn:   sdk.NewCoin(ETH, sdk.NewInt(1800000)),
 			expectedTokenOut:  sdk.NewCoin(USDC, sdk.NewInt(8479320318)),
-			expectedTick:      30292000,
+			expectedTick:      30292059,
 			expectedSqrtPrice: sdk.MustNewDecFromStr("65.513815286452064191"),
 			// Started from DefaultSpreadRewardAccumCoins * 3, crossed tick once, thus becoming
 			// DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins = DefaultSpreadRewardAccumCoins * 2
@@ -1111,7 +1111,7 @@ var (
 			// print(token_in)
 			expectedTokenIn:  sdk.NewCoin(USDC, sdk.NewInt(9999994688)),
 			expectedTokenOut: sdk.NewCoin(ETH, sdk.NewInt(1864161)),
-			expectedTick:     32055900,
+			expectedTick:     32055918,
 			// True value with arbitrary precision: 77.8197817118765535784...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 77.819781711876553579
 			expectedSqrtPrice:                         sdk.MustNewDecFromStr("77.819781711876553579"),
@@ -1165,7 +1165,7 @@ var (
 			expectedTokenOut: sdk.NewCoin(ETH, sdk.NewInt(1609138)),
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 310010, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
-			expectedTick: 31712600,
+			expectedTick: 31712695,
 			// True value with arbitrary precision: 75.5823723551285943429...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 75.582372355128594343
 			expectedSqrtPrice: sdk.MustNewDecFromStr("75.582372355128594343"),
@@ -1212,7 +1212,7 @@ var (
 			// print(token_in)
 			expectedTokenOut: sdk.NewCoin(ETH, sdk.NewInt(1820545)),
 			expectedTokenIn:  sdk.NewCoin(USDC, sdk.NewInt(9999994756)),
-			expectedTick:     32105500,
+			expectedTick:     32105554,
 			// True value with arbitrary precision: 78.1380507971736470319
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 78.138050797173647032
 			expectedSqrtPrice:                         sdk.MustNewDecFromStr("78.138050797173647032"),
@@ -1278,7 +1278,7 @@ var (
 			// print(spread_rewards_growth)
 			expectedTokenOut: sdk.NewCoin(USDC, sdk.NewInt(42000000)),
 			expectedTokenIn:  sdk.NewCoin(ETH, sdk.NewInt(8489)),
-			expectedTick:     30996000,
+			expectedTick:     30996087,
 			// This value is the direct output of sqrt_next in the script above.
 			// The precision is exact because we properly handle rounding behavior in intermediate steps.
 			expectedSqrtPrice:                          sdk.MustNewDecFromStr("70.683007989825007163"),
@@ -1310,7 +1310,7 @@ var (
 			// print(spread_rewards_growth)
 			expectedTokenOut: sdk.NewCoin(ETH, sdk.NewInt(8398)),
 			expectedTokenIn:  sdk.NewCoin(USDC, sdk.NewInt(43297130)),
-			expectedTick:     31001900,
+			expectedTick:     31001956,
 			// True value with arbitrary precision: 70.7245125951793055663...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 70.724512595179305567
 			expectedSqrtPrice: sdk.MustNewDecFromStr("70.724512595179305567"),
@@ -1360,7 +1360,7 @@ var (
 			// print(spread_rewards_growth)
 			expectedTokenOut: sdk.NewCoin(ETH, sdk.NewInt(1820630)),
 			expectedTokenIn:  sdk.NewCoin(USDC, sdk.NewInt(10010009580)),
-			expectedTick:     32105400,
+			expectedTick:     32105414,
 			// True value with arbitrary precision is 78.1371488370367515544...,
 			// which we expect to be pushed up to 78.137148837036751555 given our
 			// sqrt function's >= true value guarantee
@@ -1419,7 +1419,7 @@ var (
 			// print(spread_rewards_growth)
 			expectedTokenIn:   sdk.NewCoin("eth", sdk.NewInt(2222223)),
 			expectedTokenOut:  sdk.NewCoin("usdc", sdk.NewInt(9321276930)),
-			expectedTick:      30129000,
+			expectedTick:      30129083,
 			expectedSqrtPrice: sdk.MustNewDecFromStr("64.257943796086567725"),
 			// Started from DefaultSpreadRewardAccumCoins * 3, crossed tick once, thus becoming
 			// DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins = DefaultSpreadRewardAccumCoins * 2
@@ -1482,7 +1482,7 @@ var (
 			expectedTokenOut: sdk.NewCoin(ETH, sdk.NewInt(1609138)),
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 310010, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
-			expectedTick: 31712600,
+			expectedTick: 31712695,
 			// True value with arbitrary precision: 75.5823723551285943429...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 75.582372355128594343
 			expectedSqrtPrice: sdk.MustNewDecFromStr("75.582372355128594343"),
@@ -1528,7 +1528,7 @@ var (
 			// print(spread_rewards_growth)
 			expectedTokenOut: sdk.NewCoin(ETH, sdk.NewInt(1820545)),
 			expectedTokenIn:  sdk.NewCoin(USDC, sdk.NewInt(10002995655)),
-			expectedTick:     32105500,
+			expectedTick:     32105554,
 			// True value with arbitrary precision: 78.13805079717364703195...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 78.138050797173647032
 			expectedSqrtPrice:                          sdk.MustNewDecFromStr("78.138050797173647032"),
