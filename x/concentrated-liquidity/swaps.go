@@ -500,10 +500,14 @@ func (k Keeper) computeInAmtGivenOut(
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 			}
+			// TODO: remmove this after merging `main`
+			// `main` already has this logic included:
+			// https://github.com/osmosis-labs/osmosis/pull/5591
+			swapState.tick = swapStrategy.UpdateTickAfterCrossing(nextInitializedTick)
 		} else if !sqrtPriceStart.Equal(computedSqrtPrice) {
 			// Otherwise, if the computedSqrtPrice calculated from ComputeSwapWithinBucketInGivenOut(...) does not equal the sqrtPriceStart we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the computedSqrtPrice calculated from ComputeSwapWithinBucketInGivenOut(...)
-			swapState.tick, err = math.SqrtPriceToTickRoundDownSpacing(computedSqrtPrice, p.GetTickSpacing())
+			swapState.tick, err = math.CalculateSqrtPriceToTick(computedSqrtPrice)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 			}
