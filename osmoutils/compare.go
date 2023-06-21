@@ -1,7 +1,5 @@
 package osmoutils
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
-
 // Max returns the maximum value among the given values of any type that supports comparison.
 func Max(values ...interface{}) interface{} {
 	if len(values) == 0 {
@@ -53,14 +51,6 @@ func Max(values ...interface{}) interface{} {
 			}
 		case uintptr:
 			if uintptrValue, ok := max.(uintptr); ok && value > uintptrValue {
-				max = value
-			}
-		case sdk.Int:
-			if sdkIntValue, ok := max.(sdk.Int); ok && value.GT(sdkIntValue) {
-				max = value
-			}
-		case sdk.Dec:
-			if sdkDecValue, ok := max.(sdk.Dec); ok && value.GT(sdkDecValue) {
 				max = value
 			}
 		}
