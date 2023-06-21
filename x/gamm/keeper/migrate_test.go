@@ -17,8 +17,27 @@ func (s *KeeperTestSuite) TestMigrate() {
 	defaultGammShares := sdk.NewCoin("gamm/pool/1", sdk.MustNewDecFromStr("100000000000000000000").RoundInt())
 	invalidGammShares := sdk.NewCoin("gamm/pool/1", sdk.MustNewDecFromStr("190000000000000000001").RoundInt())
 	defaultAccountFunds := sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(200000000000)), sdk.NewCoin("usdc", sdk.NewInt(200000000000)))
+
+	// Explanation of additive tolerance of 100000:
+	//
+	// The balance in the CL pool should be equal to the portion of the user's previous GAMM balances that could be
+	// joined into a full range CL position. These are not exactly equivalent because GAMM pools covers prices (0, inf)
+	// while CL pools cover prices (minSpotPrice, maxSpotPrice), where minSpotPrice and maxSpotPrice are close to the GAMM
+	// boundaries but not exactly on them.
+	//
+	// # Base equations for full range asset amounts:
+	// Expected amount of asset 0: (liquidity * (maxSqrtPrice - curSqrtPrice)) / (maxSqrtPrice * curSqrtPrice)
+	// Expected amount of asset 1: liquidity * (curSqrtPrice - minSqrtPrice)
+	//
+	// # Using scripts in x/concentrated-liquidity/python/swap_test.py, we compute the following:
+	// expectedAsset0 = floor((liquidity * (maxSqrtPrice - curSqrtPrice)) / (maxSqrtPrice * curSqrtPrice)) = 99999999999.000000000000000000
+	// expectedAsset1 = floor(liquidity * (curSqrtPrice - minSqrtPrice)) = 99999900000.000000000000000000
+	//
+	// We add 1 to account for ExitPool rounding exit amount up. This is not an issue since the balance is deducted from the user regardless.
+	// These leaves us with full transfer of asset 0 and a (correct) transfer of asset 1 amounting to full GAMM balance minus 100000.
+	// We expect this tolerance to be sufficient as long as our test cases are on the same order of magnitude.
 	defaultErrorTolerance := osmomath.ErrTolerance{
-		AdditiveTolerance: sdk.NewDec(100),
+		AdditiveTolerance: sdk.NewDec(100000),
 		RoundingDir:       osmomath.RoundDown,
 	}
 	defaultJoinTime := s.Ctx.BlockTime()
