@@ -179,7 +179,7 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 			}
 
 			// Determine the duration of the incentivized pool.
-			duration := lockableDurations[0]
+			duration := lockableDurations[len(lockableDurations)-1]
 			for _, pool := range incentivizedPools {
 				if pool.PoolId == record.ClPoolId {
 					duration = pool.LockableDuration
