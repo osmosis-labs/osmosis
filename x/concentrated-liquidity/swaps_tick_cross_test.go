@@ -26,7 +26,7 @@ const (
 	tickSpacing100 = 100
 )
 
-// This configuratio is expected to generate the position layout below:
+// This configuration is expected to generate the position layout below:
 //
 //	                                 original_cur_tick
 //		                                    ///               (NR4)
