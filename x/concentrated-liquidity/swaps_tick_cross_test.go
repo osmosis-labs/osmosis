@@ -951,6 +951,9 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 		s.swapOneForZeroRight(poolId, sdk.NewCoin(tokeOneDenom, tokenIn.Ceil().TruncateInt()))
 
 		// Assert that max tick is crossed and liquidity is zero.
+		// N.B.: Since we can only have upper ticks of positions be initialized on the max tick,
+		// the liquidity net amounts on MaxTick are always negative. Therefore, when swapping one
+		// for zero and crossing a max tick to be "within in", we always end up with a current liquidity of zero.
 		s.assertPoolTickEquals(poolId, types.MaxTick)
 		s.assertPoolLiquidityEquals(poolId, sdk.ZeroDec())
 
