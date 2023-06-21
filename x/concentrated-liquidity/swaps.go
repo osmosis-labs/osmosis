@@ -500,6 +500,8 @@ func (k Keeper) computeInAmtGivenOut(
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 			}
+
+			// DO NOT MERGE WITH THIS LOGIC
 			// TODO: remmove this after merging `main`
 			// `main` already has this logic included:
 			// https://github.com/osmosis-labs/osmosis/pull/5591
