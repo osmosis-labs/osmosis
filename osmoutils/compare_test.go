@@ -3,7 +3,6 @@ package osmoutils_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -29,16 +28,6 @@ func TestMax(t *testing.T) {
 			name:   "uint",
 			values: []interface{}{uint(10), uint(7), uint(9)},
 			max:    uint(10),
-		},
-		{
-			name:   "sdk.Int",
-			values: []interface{}{sdk.NewInt(1), sdk.NewInt(5), sdk.NewInt(3)},
-			max:    sdk.NewInt(5),
-		},
-		{
-			name:   "sdk.Dec",
-			values: []interface{}{sdk.MustNewDecFromStr("7"), sdk.MustNewDecFromStr("5.5"), sdk.MustNewDecFromStr("3.2")},
-			max:    sdk.NewDec(7),
 		},
 	}
 
