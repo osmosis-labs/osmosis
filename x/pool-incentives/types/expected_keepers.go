@@ -31,7 +31,6 @@ type PoolManagerKeeper interface {
 	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
 }
 
-// PoolManagerKeeper gets the pool interface from poolID.
 type GAMMKeeper interface {
 	GetAllMigrationInfo(ctx sdk.Context) (gammmigration.MigrationRecords, error)
 }
