@@ -828,7 +828,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 				// 1998976eth (amount withdrawn with rounded down amounts) + 998977(token amount in)
 				amount0Expected: sdk.NewInt(2997953),
 				// tokens Provided for token1 is 9999999999 (amount withdrawn) + 5000000000 = 14999999999usdc.
-				// We calcualte calc amount1 by using the following equation:
+				// We calculate calc amount1 by using the following equation:
 				// liq * (sqrtPriceB - sqrtPriceA), where liq is equal to the original joined liq + added liq, sqrtPriceB is current sqrt price, and sqrtPriceA is min sqrt price.
 				// Note that these numbers were calculated using `GetLiquidityFromAmounts` and `TickToSqrtPrice` and thus assume correctness of those functions.
 				// https://www.wolframalpha.com/input?i=212041526.154556192317664016+*+%2870.728769315114743566+-+0.000001000000000000%29
