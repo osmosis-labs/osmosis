@@ -1545,7 +1545,7 @@ func (s *IntegrationTestSuite) StateSync() {
 	)
 	s.Require().NoError(err)
 
-	stateSynchingNode := chainA.CreateNodeNoAdd(nodeInit)
+	stateSynchingNode := chainA.CreateNodeTemp(nodeInit)
 
 	// ensure that the running node has snapshots at a height > trustHeight.
 	hasSnapshotsAvailable := func(syncInfo coretypes.SyncInfo) bool {
@@ -1586,7 +1586,7 @@ func (s *IntegrationTestSuite) StateSync() {
 	)
 
 	// stop the state synching node.
-	err = chainA.RemoveNode(stateSynchingNode.Name)
+	err = chainA.RemoveTempNode(stateSynchingNode.Name)
 	s.Require().NoError(err)
 }
 

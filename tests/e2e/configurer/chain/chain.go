@@ -39,6 +39,7 @@ type Config struct {
 	LatestProposalNumber int
 	LatestLockNumber     int
 	NodeConfigs          []*NodeConfig
+	NodeTempConfigs      []*NodeConfig
 
 	LatestCodeId int
 
@@ -86,13 +87,14 @@ func (c *Config) CreateNode(initNode *initialization.Node) *NodeConfig {
 }
 
 // CreateNode returns new initialized NodeConfig.
-func (c *Config) CreateNodeNoAdd(initNode *initialization.Node) *NodeConfig {
+func (c *Config) CreateNodeTemp(initNode *initialization.Node) *NodeConfig {
 	nodeConfig := &NodeConfig{
 		Node:             *initNode,
 		chainId:          c.Id,
 		containerManager: c.containerManager,
 		t:                c.t,
 	}
+	c.NodeTempConfigs = append(c.NodeTempConfigs, nodeConfig)
 	return nodeConfig
 }
 
@@ -101,6 +103,17 @@ func (c *Config) RemoveNode(nodeName string) error {
 	for i, node := range c.NodeConfigs {
 		if node.Name == nodeName {
 			c.NodeConfigs = append(c.NodeConfigs[:i], c.NodeConfigs[i+1:]...)
+			return node.Stop()
+		}
+	}
+	return fmt.Errorf("node %s not found", nodeName)
+}
+
+// RemoveNode removes node and stops it from running.
+func (c *Config) RemoveTempNode(nodeName string) error {
+	for i, node := range c.NodeConfigs {
+		if node.Name == nodeName {
+			c.NodeTempConfigs = append(c.NodeTempConfigs[:i], c.NodeTempConfigs[i+1:]...)
 			return node.Stop()
 		}
 	}
