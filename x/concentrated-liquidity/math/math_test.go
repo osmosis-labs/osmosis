@@ -328,7 +328,7 @@ func (suite *ConcentratedMathTestSuite) TestCalcAmount1Delta() {
 
 func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
 	sqrt := func(x sdk.Dec) sdk.Dec {
-		sqrt, err := x.ApproxSqrt()
+		sqrt, err := osmomath.MonotonicSqrt(x)
 		suite.Require().NoError(err)
 		return sqrt
 	}
@@ -412,6 +412,16 @@ func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
 			expectedLiquidity:  sdk.MustNewDecFromStr("4.828427124746190095").String(),
 			expectedLiquidity0: sdk.MustNewDecFromStr("7.706742302257039729"),
 			expectedLiquidity1: sdk.MustNewDecFromStr("4.828427124746190095"),
+		},
+		"current sqrt price on upper bound": {
+			currentSqrtP:   sqrt5500,
+			sqrtPHigh:      sqrt5500,
+			sqrtPLow:       sqrt4545,
+			amount0Desired: sdk.ZeroInt(),
+			amount1Desired: sdk.NewInt(1000000),
+			// Liquidity1 = amount1 / (sqrtPriceB - sqrtPriceA)
+			// https://www.wolframalpha.com/input?i=1000000%2F%2874.161984870956629487-67.416615162732695594%29
+			expectedLiquidity: "148249.842967213952971325",
 		},
 	}
 

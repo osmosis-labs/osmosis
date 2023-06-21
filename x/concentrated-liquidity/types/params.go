@@ -187,7 +187,7 @@ func validateBalancerSharesDiscount(i interface{}) error {
 	}
 
 	// Ensure that the passed in discount rate is between 0 and 1.
-	if balancerSharesRewardDiscount.LT(sdk.ZeroDec()) || balancerSharesRewardDiscount.GT(sdk.OneDec()) {
+	if balancerSharesRewardDiscount.IsNegative() || balancerSharesRewardDiscount.GT(sdk.OneDec()) {
 		return InvalidDiscountRateError{DiscountRate: balancerSharesRewardDiscount}
 	}
 

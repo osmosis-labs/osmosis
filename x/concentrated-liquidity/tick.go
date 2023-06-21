@@ -16,7 +16,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types/genesis"
 )
 
 // initOrUpdateTick retrieves the tickInfo from the specified tickIndex and updates both the liquidityNet and LiquidityGross.
@@ -62,9 +61,9 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 
 	// calculate liquidityNet, which we take into account and track depending on whether liquidityIn is positive or negative
 	if upper {
-		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Sub(liquidityDelta)
+		tickInfo.LiquidityNet.SubMut(liquidityDelta)
 	} else {
-		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Add(liquidityDelta)
+		tickInfo.LiquidityNet.AddMut(liquidityDelta)
 	}
 
 	k.SetTickInfo(ctx, poolId, tickIndex, &tickInfo)
@@ -159,10 +158,6 @@ func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tic
 	osmoutils.MustSet(store, key, tickInfo)
 }
 
-func (k Keeper) GetAllInitializedTicksForPool(ctx sdk.Context, poolId uint64) ([]genesis.FullTick, error) {
-	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyTickPrefixByPoolId(poolId), ParseFullTickFromBytes)
-}
-
 // validateTickInRangeIsValid validates that given ticks are valid. That is:
 // - both lower and upper ticks are divisible by the tick spacing
 // - both lower and upper ticks are within MinTick and MaxTick range
@@ -200,12 +195,12 @@ func validateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int
 // the first tick (given our precision) that is able to represent this price is -161000000, so we use this tick instead.
 //
 // This really only applies to very small tick values, as the increment of a single tick continues to get smaller as the tick value gets smaller.
-func roundTickToCanonicalPriceTick(lowerTick, upperTick int64, priceTickLower, priceTickUpper sdk.Dec, tickSpacing uint64) (int64, int64, error) {
-	newLowerTick, err := math.PriceToTickRoundDown(priceTickLower, tickSpacing)
+func roundTickToCanonicalPriceTick(lowerTick, upperTick int64, sqrtPriceTickLower, sqrtPriceTickUpper sdk.Dec, tickSpacing uint64) (int64, int64, error) {
+	newLowerTick, err := math.SqrtPriceToTickRoundDownSpacing(sqrtPriceTickLower, tickSpacing)
 	if err != nil {
 		return 0, 0, err
 	}
-	newUpperTick, err := math.PriceToTickRoundDown(priceTickUpper, tickSpacing)
+	newUpperTick, err := math.SqrtPriceToTickRoundDownSpacing(sqrtPriceTickUpper, tickSpacing)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -390,6 +385,15 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	store := ctx.KVStore(k.storeKey)
 	prefixBz := types.KeyTickPrefixByPoolId(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
+
+	// If zero for one, we use reverse iterator. As a result, we need to increment the start tick by 1
+	// so that we include the start tick in the search.
+	//
+	// If one for zero, we use forward iterator. However, our definition of the active range is inclusive
+	// of the lower bound. As a result, current liquidity must already include the lower bound tick
+	// so we skip it.
+	startTick = startTick + 1
+
 	startTickKey := types.TickIndexToBytes(startTick)
 	boundTickKey := types.TickIndexToBytes(boundTick.Int64())
 

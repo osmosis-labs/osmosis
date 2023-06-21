@@ -154,7 +154,7 @@ func validateGenesisEpochProvisions(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.LT(sdk.ZeroDec()) {
+	if v.IsNegative() {
 		return fmt.Errorf("genesis epoch provision must be non-negative")
 	}
 
