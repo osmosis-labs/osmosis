@@ -282,7 +282,7 @@ func (s *SwapTickCrossTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice 
 			if amountIn.IsZero() && isWithinDesiredBucketAfterSwap {
 				nextInitTickSqrtPrice := s.tickToSqrtPrice(liquidityNetAmounts[i+1].TickIndex)
 
-				// We discound by two so that we do no cross any tick and remain in the same bucket.
+				// We discount by half so that we do no cross any tick and remain in the same bucket.
 				curAmountIn := math.CalcAmount0Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, true).QuoInt64(2)
 				amountIn = amountIn.Add(curAmountIn)
 			}
