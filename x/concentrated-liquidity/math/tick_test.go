@@ -537,11 +537,11 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			price:        sdk.MustNewDecFromStr("0.000001000000000000"),
 			tickExpected: types.MinTick + (6 * 9 * 1e6),
 		},
-		"smallest + min price * increment 10^11": {
+		"min price * increment 10^11": {
 			price:        sdk.MustNewDecFromStr("0.100000000000000000"),
 			tickExpected: -9000000,
 		},
-		"smallest + min price * increment 10^12": {
+		"min price * increment 10^12": {
 			price:        sdk.MustNewDecFromStr("1.000000000000000000"),
 			tickExpected: 0,
 		},
