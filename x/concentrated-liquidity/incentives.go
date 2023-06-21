@@ -221,11 +221,14 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64,
 	// Add full range equivalent shares to each uptime accumulator.
 	// Note that we expect spot price divergence between the CL and balancer pools to be handled by `GetLiquidityFromAmounts`
 	// returning a lower bound on qualifying liquidity.
-	for uptimeIndex := range uptimeAccums {
-		balancerPositionName := string(types.KeyBalancerFullRange(clPoolId, canonicalBalancerPoolId, uint64(uptimeIndex)))
-		err := uptimeAccums[uptimeIndex].NewPosition(balancerPositionName, qualifyingFullRangeShares, nil)
-		if err != nil {
-			return 0, sdk.ZeroDec(), err
+	// We only create accumulator positions if the qualifying full range share is non-zero.
+	if !qualifyingFullRangeShares.IsZero() {
+		for uptimeIndex := range uptimeAccums {
+			balancerPositionName := string(types.KeyBalancerFullRange(clPoolId, canonicalBalancerPoolId, uint64(uptimeIndex)))
+			err := uptimeAccums[uptimeIndex].NewPosition(balancerPositionName, qualifyingFullRangeShares, nil)
+			if err != nil {
+				return 0, sdk.ZeroDec(), err
+			}
 		}
 	}
 
@@ -358,6 +361,7 @@ var dec1e9 = sdk.NewDec(1e9)
 // Specifically, it gets the time elapsed since the last update and divides it
 // by the qualifying liquidity for each uptime. It then adds this value to the
 // respective accumulator and updates relevant time trackers accordingly.
+// This method also serves the purpose of correctly splitting rewards between the linked balancer pool and the cl pool.
 // CONTRACT: the caller validates that the pool with the given id exists.
 // CONTRACT: given uptimeAccums are associated with the given pool id.
 // CONTRACT: caller is responsible for the uptimeAccums to be up-to-date.
