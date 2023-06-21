@@ -1713,8 +1713,9 @@ creates a position with amounts such that the current tick is 155 between ticks 
 Note, that the current tick of 155 is defined inside the bucket over a range of 100 to 200.
 
 - `Initialized Tick` - a tick at which LPs can provide liquidity. Some ticks cannot be
-due to tick spacing. `MinCurrentTick` is also an exception due to being 1 tick below
-`MinInitializedTick`.
+initialized due to tick spacing. `MinCurrentTick` is an exception due to being 1 tick below
+`MinInitializedTick`. Only initialized ticks are crossed during a swap (see "Crossing Tick")
+for details.
 
 - `MinInitializedTick` - the minimum tick at which a position can be initialized. When this tick is
 crossed, all liquidity is consumed at the tick ends up on `MinCurrentTick`. At that point, there
