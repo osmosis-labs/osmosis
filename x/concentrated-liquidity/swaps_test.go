@@ -2841,9 +2841,16 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	//                                 |
 	//                              5000
 
+	clPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+	liq := clPool.GetLiquidity()
+	sqrtPriceCurr := clPool.GetCurrentSqrtPrice()
+	tokenInAmt := swapCoin1.Amount.Mul(sdk.NewInt(int64(positions.numSwaps))).ToDec()
+	spreadFactor := clPool.GetSpreadFactor(s.Ctx)
+	tokenInAfterSpreadFactors := tokenInAmt.Mul(sdk.OneDec().Sub(spreadFactor))
+
 	// Swap multiple times USDC for ETH, therefore increasing the spot price
 	_, _, totalTokenIn, totalTokenOut := s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin1, ETH, types.MaxSpotPrice, positions.numSwaps)
-	clPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 	s.Require().NoError(err)
 
 	// Depiction of the pool after the swaps (from 5000 to 5146), increasing the spot price
@@ -2870,10 +2877,10 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// print(token_out) # 982676.1324268988579833395181
 
 	// Get expected values from the calculations above
-	expectedSqrtPrice := osmomath.MustNewDecFromStr("71.74138432587113364823838192")
+	expectedSqrtPrice := osmomath.BigDecFromSDKDec(sqrtPriceCurr.Add(tokenInAfterSpreadFactors.Quo(liq)))
 	actualSqrtPrice := osmomath.BigDecFromSDKDec(clPool.GetCurrentSqrtPrice())
 	expectedTokenIn := swapCoin1.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
-	expectedTokenOut := sdk.NewInt(982676)
+	expectedTokenOut := liq.Mul(expectedSqrtPrice.SDKDec().Sub(sqrtPriceCurr)).Quo(sqrtPriceCurr.Mul(expectedSqrtPrice.SDKDec())).TruncateInt()
 
 	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
 	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice), "expected sqrt price: %s, actual sqrt price: %s", expectedSqrtPrice, actualSqrtPrice)
