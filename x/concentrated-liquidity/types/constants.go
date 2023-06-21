@@ -14,6 +14,9 @@ const (
 	// However, note that this tick cannot be crossed. If current tick
 	// equals to this tick, it is only possible to swap in the right (one for zero)
 	// direction.
+	// Note, that this behavior is different from MaxTick since our "active range"
+	// invariant is [lower tick, uppper tick). As a result, when we consume all lower
+	// tick liquiditty, we must cross it and get kicked out of it.
 	MinCurrentTick                int64 = MinInitializedTick - 1
 	ExponentAtPriceOne            int64 = -6
 	ConcentratedGasFeeForSwap           = 10_000
