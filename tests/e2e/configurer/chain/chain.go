@@ -85,6 +85,17 @@ func (c *Config) CreateNode(initNode *initialization.Node) *NodeConfig {
 	return nodeConfig
 }
 
+// CreateNode returns new initialized NodeConfig.
+func (c *Config) CreateNodeNoAdd(initNode *initialization.Node) *NodeConfig {
+	nodeConfig := &NodeConfig{
+		Node:             *initNode,
+		chainId:          c.Id,
+		containerManager: c.containerManager,
+		t:                c.t,
+	}
+	return nodeConfig
+}
+
 // RemoveNode removes node and stops it from running.
 func (c *Config) RemoveNode(nodeName string) error {
 	for i, node := range c.NodeConfigs {

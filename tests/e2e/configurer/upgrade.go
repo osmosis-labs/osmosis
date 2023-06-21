@@ -109,6 +109,8 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 }
 
 func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
+	uc.configMutex.Lock()
+	defer uc.configMutex.Unlock()
 	chainA := uc.chainConfigs[0]
 	chainANode, err := chainA.GetDefaultNode()
 	if err != nil {

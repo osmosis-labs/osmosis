@@ -1545,7 +1545,7 @@ func (s *IntegrationTestSuite) StateSync() {
 	)
 	s.Require().NoError(err)
 
-	stateSynchingNode := chainA.CreateNode(nodeInit)
+	stateSynchingNode := chainA.CreateNodeNoAdd(nodeInit)
 
 	// ensure that the running node has snapshots at a height > trustHeight.
 	hasSnapshotsAvailable := func(syncInfo coretypes.SyncInfo) bool {
