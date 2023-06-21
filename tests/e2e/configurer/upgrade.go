@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -26,6 +27,7 @@ type UpgradeConfigurer struct {
 	baseConfigurer
 	upgradeVersion string
 	forkHeight     int64 // forkHeight > 0 implies that this is a fork upgrade. Otherwise, proposal upgrade.
+	configMutex    sync.Mutex
 }
 
 var _ Configurer = (*UpgradeConfigurer)(nil)
