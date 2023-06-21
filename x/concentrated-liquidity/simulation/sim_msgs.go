@@ -371,7 +371,7 @@ func RandomPrepareCreatePositionFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, 
 	}
 
 	//  Retrieve minTick and maxTick from kprecision factor
-	minTick, maxTick := cltypes.MinTick, cltypes.MaxTick
+	minTick, maxTick := cltypes.MinInitializedTick, cltypes.MaxTick
 
 	// Randomize lowerTick and upperTick from max values to create position
 	lowerTick, upperTick, err := getRandomTickPositions(sim, minTick, maxTick, clPool.GetTickSpacing())

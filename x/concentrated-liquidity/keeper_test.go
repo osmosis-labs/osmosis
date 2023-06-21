@@ -26,7 +26,7 @@ import (
 )
 
 var (
-	DefaultMinTick, DefaultMaxTick       = types.MinTick, types.MaxTick
+	DefaultMinTick, DefaultMaxTick       = types.MinInitializedTick, types.MaxTick
 	DefaultLowerPrice                    = sdk.NewDec(4545)
 	DefaultLowerTick                     = int64(30545000)
 	DefaultUpperPrice                    = sdk.NewDec(5500)

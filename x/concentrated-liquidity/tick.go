@@ -171,13 +171,13 @@ func validateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int
 	}
 
 	// Check if the lower tick value is within the valid range of MinTick to MaxTick.
-	if lowerTick < types.MinTick || lowerTick >= types.MaxTick {
-		return types.InvalidTickError{Tick: lowerTick, IsLower: true, MinTick: types.MinTick, MaxTick: types.MaxTick}
+	if lowerTick < types.MinInitializedTick || lowerTick >= types.MaxTick {
+		return types.InvalidTickError{Tick: lowerTick, IsLower: true, MinTick: types.MinInitializedTick, MaxTick: types.MaxTick}
 	}
 
 	// Check if the upper tick value is within the valid range of MinTick to MaxTick.
-	if upperTick > types.MaxTick || upperTick <= types.MinTick {
-		return types.InvalidTickError{Tick: upperTick, IsLower: false, MinTick: types.MinTick, MaxTick: types.MaxTick}
+	if upperTick > types.MaxTick || upperTick <= types.MinInitializedTick {
+		return types.InvalidTickError{Tick: upperTick, IsLower: false, MinTick: types.MinInitializedTick, MaxTick: types.MaxTick}
 	}
 
 	// Check if the lower tick value is greater than or equal to the upper tick value.
@@ -223,7 +223,7 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 
 	// set current tick to min tick, and find the first initialized tick starting from min tick -1.
 	// we do -1 to make min tick inclusive.
-	currentTick := types.MinTick - 1
+	currentTick := types.MinCurrentTick
 
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, currentTick)
 	defer nextTickIter.Close()
@@ -333,12 +333,12 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 
 	// use max or min tick if provided bound is nil
 
-	ctx.Logger().Debug(fmt.Sprintf("min_tick %d\n", types.MinTick))
+	ctx.Logger().Debug(fmt.Sprintf("min_tick %d\n", types.MinInitializedTick))
 	ctx.Logger().Debug(fmt.Sprintf("max_tick %d\n", types.MaxTick))
 
 	if boundTick.IsNil() {
 		if zeroForOne {
-			boundTick = sdk.NewInt(types.MinTick)
+			boundTick = sdk.NewInt(types.MinInitializedTick)
 		} else {
 			boundTick = sdk.NewInt(types.MaxTick)
 		}
