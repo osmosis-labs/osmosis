@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 	clmath "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
@@ -27,11 +28,11 @@ const (
 var (
 	DefaultSpotPrice              = sdk.MustNewDecFromStr("0.2")
 	DefaultReverseSpotPrice       = sdk.NewDec(1).Quo(DefaultSpotPrice)
-	DefaultSqrtSpotPrice, _       = DefaultSpotPrice.ApproxSqrt()
+	DefaultSqrtSpotPrice, _       = osmomath.MonotonicSqrt(DefaultSpotPrice)
 	DefaultLiquidityAmt           = sdk.MustNewDecFromStr("1517882343.751510418088349649")
 	DefaultCurrTick         int64 = 310000
 	DefaultCurrPrice              = sdk.NewDec(5000)
-	DefaultCurrSqrtPrice, _       = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
+	DefaultCurrSqrtPrice, _       = osmomath.MonotonicSqrt(DefaultCurrPrice) // 70.710678118654752440
 	DefaultSpreadFactor           = sdk.MustNewDecFromStr("0.01")
 )
 

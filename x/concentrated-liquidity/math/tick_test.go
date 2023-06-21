@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
@@ -191,7 +192,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 				return
 			}
 			suite.Require().NoError(err)
-			expectedSqrtPrice, err := tc.expectedPrice.ApproxSqrt()
+			expectedSqrtPrice, err := osmomath.MonotonicSqrt(tc.expectedPrice)
 			suite.Require().NoError(err)
 
 			suite.Require().Equal(tc.expectedPrice.String(), price.String())
@@ -267,9 +268,9 @@ func (suite *ConcentratedMathTestSuite) TestTicksToSqrtPrice() {
 			suite.Require().NoError(err)
 
 			// convert test case's prices to sqrt price
-			expectedLowerSqrtPrice, err := tc.expectedLowerPrice.ApproxSqrt()
+			expectedLowerSqrtPrice, err := osmomath.MonotonicSqrt(tc.expectedLowerPrice)
 			suite.Require().NoError(err)
-			expectedUpperSqrtPrice, err := tc.expectedUpperPrice.ApproxSqrt()
+			expectedUpperSqrtPrice, err := osmomath.MonotonicSqrt(tc.expectedUpperPrice)
 			suite.Require().NoError(err)
 
 			suite.Require().Equal(tc.expectedLowerPrice.String(), priceLower.String())
@@ -741,6 +742,20 @@ func (suite *ConcentratedMathTestSuite) TestPowTenInternal() {
 }
 
 func (s *ConcentratedMathTestSuite) TestSqrtPriceToTickRoundDownSpacing() {
+	// Compute reference values that need to be satisfied
+	_, sqp1, err := math.TickToSqrtPrice(1)
+	s.Require().NoError(err)
+	_, sqp99, err := math.TickToSqrtPrice(99)
+	s.Require().NoError(err)
+	_, sqp100, err := math.TickToSqrtPrice(100)
+	s.Require().NoError(err)
+	_, sqpn100, err := math.TickToSqrtPrice(-100)
+	s.Require().NoError(err)
+	_, sqpn101, err := math.TickToSqrtPrice(-101)
+	s.Require().NoError(err)
+	_, sqpMaxTickSubOne, err := math.TickToSqrtPrice(types.MaxTick - 1)
+	s.Require().NoError(err)
+
 	testCases := map[string]struct {
 		sqrtPrice    sdk.Dec
 		tickSpacing  uint64
@@ -752,42 +767,42 @@ func (s *ConcentratedMathTestSuite) TestSqrtPriceToTickRoundDownSpacing() {
 			tickExpected: 0,
 		},
 		"sqrt price exactly on boundary of next tick (tick spacing 1)": {
-			sqrtPrice:    sdk.MustNewDecFromStr("1.000000499999875000"),
+			sqrtPrice:    sqp1,
 			tickSpacing:  1,
 			tickExpected: 1,
 		},
 		"sqrt price one ULP below boundary of next tick (tick spacing 1)": {
-			sqrtPrice:    sdk.MustNewDecFromStr("1.000000499999874999"),
+			sqrtPrice:    sqp1.Sub(sdk.SmallestDec()),
 			tickSpacing:  1,
 			tickExpected: 0,
 		},
 		"sqrt price corresponding to bucket 99 (tick spacing 100)": {
-			sqrtPrice:    sdk.MustNewDecFromStr("1.000049498774935650"),
+			sqrtPrice:    sqp99,
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: 0,
 		},
 		"sqrt price exactly on bucket 100 (tick spacing 100)": {
-			sqrtPrice:    sdk.MustNewDecFromStr("1.000049998750062496"),
+			sqrtPrice:    sqp100,
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: 100,
 		},
 		"sqrt price one ULP below bucket 100 (tick spacing 100)": {
-			sqrtPrice:    sdk.MustNewDecFromStr("1.000049998750062495"),
+			sqrtPrice:    sqp100.Sub(sdk.SmallestDec()),
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: 0,
 		},
 		"sqrt price exactly on bucket -100 (tick spacing 100)": {
-			sqrtPrice:    sdk.MustNewDecFromStr("0.999994999987499937"),
+			sqrtPrice:    sqpn100,
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: -100,
 		},
 		"sqrt price one ULP below bucket -100 (tick spacing 100)": {
-			sqrtPrice:    sdk.MustNewDecFromStr("0.999994999987499936"),
+			sqrtPrice:    sqpn100.Sub(sdk.SmallestDec()),
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: -200,
 		},
 		"sqrt price exactly on tick -101 (tick spacing 100)": {
-			sqrtPrice:    sdk.MustNewDecFromStr("0.999994949987248685"),
+			sqrtPrice:    sqpn101,
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: -200,
 		},
@@ -807,20 +822,17 @@ func (s *ConcentratedMathTestSuite) TestSqrtPriceToTickRoundDownSpacing() {
 			tickExpected: types.MaxTick - defaultTickSpacing,
 		},
 		"sqrt price corresponds exactly to max tick - 1 (tick spacing 1)": {
-			// Calculated using TickToSqrtPrice(types.MaxTick - 1)
-			sqrtPrice:    sdk.MustNewDecFromStr("9999999499999987499.999374999960937497"),
+			sqrtPrice:    sqpMaxTickSubOne,
 			tickSpacing:  1,
 			tickExpected: types.MaxTick - 1,
 		},
 		"sqrt price one ULP below max tick - 1 (tick spacing 1)": {
-			// Calculated using TickToSqrtPrice(types.MaxTick - 1) - 1 ULP
-			sqrtPrice:    sdk.MustNewDecFromStr("9999999499999987499.999374999960937496"),
+			sqrtPrice:    sqpMaxTickSubOne.Sub(sdk.SmallestDec()),
 			tickSpacing:  1,
 			tickExpected: types.MaxTick - 2,
 		},
 		"sqrt price one ULP below max tick - 1 (tick spacing 100)": {
-			// Calculated using TickToSqrtPrice(types.MaxTick - 1) - 1 ULP
-			sqrtPrice:    sdk.MustNewDecFromStr("9999999499999987499.999374999960937496"),
+			sqrtPrice:    sqpMaxTickSubOne.Sub(sdk.SmallestDec()),
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: types.MaxTick - defaultTickSpacing,
 		},

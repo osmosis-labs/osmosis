@@ -48,3 +48,12 @@ func MonotonicSqrt(d sdk.Dec) (sdk.Dec, error) {
 
 	return root, nil
 }
+
+// MustMonotonicSqrt returns the output of MonotonicSqrt, panicking on error.
+func MustMonotonicSqrt(d sdk.Dec) sdk.Dec {
+	sqrt, err := MonotonicSqrt(d)
+	if err != nil {
+		panic(err)
+	}
+	return sqrt
+}

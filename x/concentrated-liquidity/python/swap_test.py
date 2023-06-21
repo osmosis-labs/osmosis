@@ -2,10 +2,19 @@ from decimal import Decimal, getcontext
 from clmath import *
 from math import *
 
-# Precomputed sqrt values to mirror precision
+# Precomputed sqrt values using osmomath.MonotonicSqrt
+minSqrtPrice = Decimal("0.000000001000000000")
+sqrt4000 = Decimal("63.245553203367586640")
 sqrt4545 = Decimal("67.416615162732695594")
-sqrt5000 = Decimal("70.710678118654752440")
-sqrt5500 = Decimal("74.161984870956629487")
+sqrt4994 = Decimal("70.668238976219012614")
+sqrt4999 = Decimal("70.703606697254136613")
+sqrt5000 = Decimal("70.710678118654752441")
+sqrt5001 = Decimal("70.717748832948578243")
+sqrt5002 = Decimal("70.724818840347693040")
+sqrt5500 = Decimal("74.161984870956629488")
+sqrt5501 = Decimal("74.168726563154635304")
+sqrt6250 = Decimal("79.056941504209483300")
+maxSqrtPrice = Decimal("10000000000000000000.000000000000000000")
 
 # Default pool values
 DefaultPoolLiq0 = 1000000
@@ -23,6 +32,8 @@ DefaultCurrSqrtPrice  = sqrt5000
 DefaultLiquidity = Decimal("1517882343.751510418088349649")
 correctDefaultLiquidity = get_liquidity_from_amounts(DefaultCurrSqrtPrice, DefaultSqrtLowerPrice, DefaultSqrtUpperPrice, DefaultPoolLiq0, DefaultPoolLiq1)
 print("used default liquidity:\n", DefaultLiquidity, "\ncorrect default liquidity:\n", correctDefaultLiquidity)
+
+DefaultFullRangeLiquidity = get_liquidity_from_amounts(DefaultCurrSqrtPrice, minSqrtPrice, maxSqrtPrice, DefaultPoolLiq0, DefaultPoolLiq1)
 
 class SecondPosition:
     # Define this class based on what fields secondPosition has.
