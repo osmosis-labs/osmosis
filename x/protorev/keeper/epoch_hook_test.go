@@ -177,8 +177,6 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 
 			err := s.App.ProtoRevKeeper.UpdateHighestLiquidityPools(s.Ctx, tc.inputBaseDenomPools)
 			s.Require().NoError(err)
-			fmt.Println("tc.inputBaseDenomPools: ", tc.inputBaseDenomPools)
-			fmt.Println("tc.expectedBaseDenomPools: ", tc.expectedBaseDenomPools)
 			s.Require().Equal(tc.inputBaseDenomPools, tc.expectedBaseDenomPools)
 		})
 	}

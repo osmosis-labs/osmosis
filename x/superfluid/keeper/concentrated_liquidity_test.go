@@ -155,8 +155,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			}
 			s.Require().NoError(err)
 
-			// We allow for an downward additive tolerance of 101 to accommodate our single happy path case while efficiently checking exact
-			// balance diffs.
+			// We allow for an downward additive tolerance of 101 to accommodate our single happy path case while efficiently checking exact balance diffs.
 			//
 			// Using our full range asset amount equations, we get the following:
 			//
