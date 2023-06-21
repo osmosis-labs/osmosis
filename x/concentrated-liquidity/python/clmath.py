@@ -1,4 +1,4 @@
-from decimal import Decimal, ROUND_FLOOR, ROUND_HALF_EVEN, ROUND_CEILING, getcontext
+from decimal import Decimal, ROUND_FLOOR, ROUND_CEILING, getcontext
 
 class Coin:
     # Define this class based on what fields sdk.Coin has.
@@ -17,7 +17,7 @@ getcontext().prec = 60
 
 # --- General rounding helper ---
 
-def round_decimal(number: Decimal, places, rounding=ROUND_HALF_EVEN):
+def round_decimal(number: Decimal, places, rounding):
     """Round a Decimal to the given number of decimal places."""
     format_string = f'0.{"0" * places}'  # build a string like '0.00' for 2 places
     return number.quantize(Decimal(format_string), rounding=rounding)
