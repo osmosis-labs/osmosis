@@ -179,7 +179,11 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 			}
 
 			// Determine the duration of the incentivized pool.
-			duration := lockableDurations[len(lockableDurations)-1]
+			duration, err := q.Keeper.GetLongestLockableDuration(sdkCtx)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+
 			for _, pool := range incentivizedPools {
 				if pool.PoolId == record.ClPoolId {
 					duration = pool.LockableDuration
