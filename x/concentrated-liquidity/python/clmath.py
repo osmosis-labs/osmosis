@@ -1,4 +1,4 @@
-from decimal import Decimal, ROUND_FLOOR, ROUND_CEILING, getcontext
+from decimal import Decimal, ROUND_FLOOR, ROUND_HALF_EVEN, ROUND_CEILING, getcontext
 
 class Coin:
     # Define this class based on what fields sdk.Coin has.
@@ -17,7 +17,7 @@ getcontext().prec = 60
 
 # --- General rounding helper ---
 
-def round_decimal(number: Decimal, places, rounding):
+def round_decimal(number: Decimal, places, rounding=ROUND_HALF_EVEN):
     """Round a Decimal to the given number of decimal places."""
     format_string = f'0.{"0" * places}'  # build a string like '0.00' for 2 places
     return number.quantize(Decimal(format_string), rounding=rounding)
@@ -61,7 +61,7 @@ def liquidity1(amount: int, sqrt_price_a: Decimal, sqrt_price_b: Decimal) -> Dec
     
     result = amount_big_dec / diff
 
-    return round_sdk_prec_down(result, 18, ROUND_FLOOR)
+    return round_sdk_prec_down(result)
 
 def get_liquidity_from_amounts(sqrt_price, sqrt_price_a, sqrt_price_b, amount0, amount1):
     # Reorder the prices so that sqrt_price_a is the smaller of the two

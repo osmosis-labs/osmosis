@@ -173,13 +173,25 @@ func BenchmarkMonotonicSqrt(b *testing.B) {
 }
 
 func TestSqrtOutput(t *testing.T) {
+	sqrt4000, err := MonotonicSqrt(sdk.NewDec(4000))
+	require.NoError(t, err)
+
 	sqrt4545, err := MonotonicSqrt(sdk.NewDec(4545))
+	require.NoError(t, err)
+
+	sqrt4999, err := MonotonicSqrt(sdk.NewDec(4999))
+	require.NoError(t, err)
+
+	sqrt4994, err := MonotonicSqrt(sdk.NewDec(4994))
 	require.NoError(t, err)
 
 	sqrt5000, err := MonotonicSqrt(sdk.NewDec(5000))
 	require.NoError(t, err)
 
 	sqrt5001, err := MonotonicSqrt(sdk.NewDec(5001))
+	require.NoError(t, err)
+
+	sqrt5002, err := MonotonicSqrt(sdk.NewDec(5002))
 	require.NoError(t, err)
 
 	sqrt5501, err := MonotonicSqrt(sdk.NewDec(5501))
@@ -191,9 +203,21 @@ func TestSqrtOutput(t *testing.T) {
 	sqrt6250, err := MonotonicSqrt(sdk.NewDec(6250))
 	require.NoError(t, err)
 
+	minSqrtPrice, err := MonotonicSqrt(sdk.MustNewDecFromStr("0.000000000000000001"))
+	require.NoError(t, err)
+
+	maxSqrtPrice, err := MonotonicSqrt(sdk.MustNewDecFromStr("100000000000000000000000000000000000000"))
+	require.NoError(t, err)
+
+	fmt.Println("minSqrtPrice: ", minSqrtPrice)
+	fmt.Println("maxSqrtPrice: ", maxSqrtPrice)
+	fmt.Println("sqrt4000: ", sqrt4000)
 	fmt.Println("sqrt4545: ", sqrt4545)
+	fmt.Println("sqrt4994: ", sqrt4994)
+	fmt.Println("sqrt4999: ", sqrt4999)
 	fmt.Println("sqrt5000: ", sqrt5000)
 	fmt.Println("sqrt5001: ", sqrt5001)
+	fmt.Println("sqrt5002: ", sqrt5002)
 	fmt.Println("sqrt5500: ", sqrt5500)
 	fmt.Println("sqrt5501: ", sqrt5501)
 	fmt.Println("sqrt6250: ", sqrt6250)
