@@ -10,7 +10,7 @@ import (
 
 const (
 	// Precomputed values for min and max tick
-	MinTick, MaxTick              int64 = -162000000, 342000000
+	MinTick, MaxTick              int64 = -108000000, 342000000
 	ExponentAtPriceOne            int64 = -6
 	ConcentratedGasFeeForSwap           = 10_000
 	BaseGasFeeForNewIncentive           = 10_000
@@ -19,7 +19,7 @@ const (
 
 var (
 	MaxSpotPrice = sdk.MustNewDecFromStr("100000000000000000000000000000000000000")
-	MinSpotPrice = sdk.MustNewDecFromStr("0.000000000000000001") // 10^-18
+	MinSpotPrice = sdk.MustNewDecFromStr("0.000000000001") // 10^-12
 	MaxSqrtPrice = osmomath.MustMonotonicSqrt(MaxSpotPrice)
 	MinSqrtPrice = osmomath.MustMonotonicSqrt(MinSpotPrice)
 	// Supported uptimes preset to 1 ns, 1 min, 1 hr, 1D, 1W, 2W
