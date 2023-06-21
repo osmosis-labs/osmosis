@@ -1725,13 +1725,15 @@ defined, `MinInitializedTick` will be the first such tick.
 
 - `MinCurrentTick` - is the minimum value that a current tick can take. If we consume all liquidity and
 cross the min initialized tick, our current tick will equal to MinInitializedTick - 1 (MinCurrentTick)
-with zero liquidity. However, note that this tick cannot be crossed. If current tick equals to this tick,
-it is only possible to swap in the right (one for zero) direction.
+with zero liquidity. However, note that this `MinCurrentTick` cannot be crossed. If current tick equals
+to this tick, it is only possible to swap in the right (one for zero) direction.
 
 - MaxTick` - is the maximum tick at which a position can be initialized. It is also the maximum value that
 a current tick can be. Note that this is different from the `MinInitializedTick` and `MinCurrentTick` due
 to our definition of the full range (see below). The full range is inclusive of the lower tick but exclusive
-of the upper tick. As a result, we do not need to differentiate between the two for the max.
+of the upper tick. As a result, we do not need to differentiate between the two for the max. When the pool
+is on the `MaxTick`, there is no liquidity. To kick in the liquidity, a swap left must be done to cross
+the `MaxTick` and enter the last bucket (when sequencing from left to right).
 
 - `Initialized Range` - the range of ticks that can be initialized: `[MinInitializedTick, MaxTick]`
 
