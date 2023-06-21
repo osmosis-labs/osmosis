@@ -183,7 +183,7 @@ func (s *SwapTickCrossTestSuite) setupPoolAndPositions(testTickSpacing uint64, p
 	positionMetas := make([]positionMeta, len(positionTickSpacingsFromCurrTick))
 	liquidityAllPositions := liquidityFullRange
 	for i, tickSpacingsAway := range positionTickSpacingsFromCurrTick {
-		// Create narrow range position 2 tick spacings away the current tick
+		// Create narrow range position tickSpacingsAway from the current tick
 		positionMetas[i] = s.CreatePositionTickSpacingsFromCurrentTick(poolId, tickSpacingsAway)
 
 		// Update total liquidity
