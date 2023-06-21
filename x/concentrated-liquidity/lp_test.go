@@ -1663,7 +1663,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 
 func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 	sqrt := func(x int64) sdk.Dec {
-		sqrt, err := sdk.NewDec(x).ApproxSqrt()
+		sqrt, err := osmomath.MonotonicSqrt(sdk.NewDec(x))
 		s.Require().NoError(err)
 		return sqrt
 	}

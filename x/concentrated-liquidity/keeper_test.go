@@ -7,8 +7,10 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	concentrated_liquidity "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
@@ -24,49 +26,60 @@ import (
 )
 
 var (
-	DefaultMinTick, DefaultMaxTick                       = types.MinTick, types.MaxTick
-	DefaultLowerPrice                                    = sdk.NewDec(4545)
-	DefaultLowerTick                                     = int64(30545000)
-	DefaultUpperPrice                                    = sdk.NewDec(5500)
-	DefaultUpperTick                                     = int64(31500000)
-	DefaultCurrPrice                                     = sdk.NewDec(5000)
-	DefaultCurrTick                                int64 = 31000000
-	DefaultCurrSqrtPrice, _                              = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
-	DefaultZeroSpreadFactor                              = sdk.ZeroDec()
-	DefaultSpreadRewardAccumCoins                        = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
-	DefaultPositionId                                    = uint64(1)
-	DefaultUnderlyingLockId                              = uint64(0)
-	DefaultJoinTime                                      = time.Unix(0, 0).UTC()
-	ETH                                                  = "eth"
-	DefaultAmt0                                          = sdk.NewInt(1000000)
-	DefaultAmt0Expected                                  = sdk.NewInt(998976)
-	DefaultCoin0                                         = sdk.NewCoin(ETH, DefaultAmt0)
-	USDC                                                 = "usdc"
-	DefaultAmt1                                          = sdk.NewInt(5000000000)
-	DefaultAmt1Expected                                  = sdk.NewInt(5000000000)
-	DefaultCoin1                                         = sdk.NewCoin(USDC, DefaultAmt1)
-	DefaultCoins                                         = sdk.NewCoins(DefaultCoin0, DefaultCoin1)
-	DefaultLiquidityAmt                                  = sdk.MustNewDecFromStr("1517882343.751510418088349649")
-	FullRangeLiquidityAmt                                = sdk.MustNewDecFromStr("70710678.118654752940000000")
-	DefaultTickSpacing                                   = uint64(100)
-	PoolCreationFee                                      = poolmanagertypes.DefaultParams().PoolCreationFee
-	sqrt4000                                             = sdk.MustNewDecFromStr("63.245553203367586640")
-	sqrt4994                                             = sdk.MustNewDecFromStr("70.668238976219012614")
-	sqrt4999                                             = sdk.MustNewDecFromStr("70.703606697254136612")
-	sqrt5500                                             = sdk.MustNewDecFromStr("74.161984870956629487")
-	sqrt6250                                             = sdk.MustNewDecFromStr("79.056941504209483300")
-	DefaultExponentConsecutivePositionLowerTick, _       = math.SqrtPriceToTickRoundDownSpacing(sqrt5500, DefaultTickSpacing)
-	DefaultExponentConsecutivePositionUpperTick, _       = math.SqrtPriceToTickRoundDownSpacing(sqrt6250, DefaultTickSpacing)
-	DefaultExponentOverlappingPositionLowerTick, _       = math.SqrtPriceToTickRoundDownSpacing(sqrt4000, DefaultTickSpacing)
-	DefaultExponentOverlappingPositionUpperTick, _       = math.SqrtPriceToTickRoundDownSpacing(sqrt4999, DefaultTickSpacing)
-	BAR                                                  = "bar"
-	FOO                                                  = "foo"
-	InsufficientFundsError                               = fmt.Errorf("insufficient funds")
-	DefaultAuthorizedUptimes                             = []time.Duration{time.Nanosecond}
-	ThreeOrderedConsecutiveAuthorizedUptimes             = []time.Duration{time.Nanosecond, time.Minute, time.Hour, time.Hour * 24}
-	ThreeUnorderedNonConsecutiveAuthorizedUptimes        = []time.Duration{time.Nanosecond, time.Hour * 24 * 7, time.Minute}
-	AllUptimesAuthorized                                 = types.SupportedUptimes
+	DefaultMinTick, DefaultMaxTick       = types.MinTick, types.MaxTick
+	DefaultLowerPrice                    = sdk.NewDec(4545)
+	DefaultLowerTick                     = int64(30545000)
+	DefaultUpperPrice                    = sdk.NewDec(5500)
+	DefaultUpperTick                     = int64(31500000)
+	DefaultCurrPrice                     = sdk.NewDec(5000)
+	DefaultCurrTick                int64 = 31000000
+	DefaultCurrSqrtPrice, _              = osmomath.MonotonicSqrt(DefaultCurrPrice) // 70.710678118654752440
+	DefaultZeroSpreadFactor              = sdk.ZeroDec()
+	DefaultSpreadRewardAccumCoins        = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
+	DefaultPositionId                    = uint64(1)
+	DefaultUnderlyingLockId              = uint64(0)
+	DefaultJoinTime                      = time.Unix(0, 0).UTC()
+	ETH                                  = "eth"
+	DefaultAmt0                          = sdk.NewInt(1000000)
+	DefaultAmt0Expected                  = sdk.NewInt(998976)
+	DefaultCoin0                         = sdk.NewCoin(ETH, DefaultAmt0)
+	USDC                                 = "usdc"
+	DefaultAmt1                          = sdk.NewInt(5000000000)
+	DefaultAmt1Expected                  = sdk.NewInt(5000000000)
+	DefaultCoin1                         = sdk.NewCoin(USDC, DefaultAmt1)
+	DefaultCoins                         = sdk.NewCoins(DefaultCoin0, DefaultCoin1)
+
+	// Both of the following liquidity values are calculated in x/concentrated-liquidity/python/swap_test.py
+	DefaultLiquidityAmt   = sdk.MustNewDecFromStr("1517882343.751510417627556287")
+	FullRangeLiquidityAmt = sdk.MustNewDecFromStr("70710678.118654752941000000")
+
+	DefaultTickSpacing                             = uint64(100)
+	PoolCreationFee                                = poolmanagertypes.DefaultParams().PoolCreationFee
+	sqrt4000                                       = sdk.MustNewDecFromStr("63.245553203367586640")
+	sqrt4994                                       = sdk.MustNewDecFromStr("70.668238976219012614")
+	sqrt4999                                       = sdk.MustNewDecFromStr("70.703606697254136613")
+	sqrt5500                                       = sdk.MustNewDecFromStr("74.161984870956629488")
+	sqrt6250                                       = sdk.MustNewDecFromStr("79.056941504209483300")
+	DefaultExponentConsecutivePositionLowerTick, _ = math.SqrtPriceToTickRoundDownSpacing(sqrt5500, DefaultTickSpacing)
+	DefaultExponentConsecutivePositionUpperTick, _ = math.SqrtPriceToTickRoundDownSpacing(sqrt6250, DefaultTickSpacing)
+	DefaultExponentOverlappingPositionLowerTick, _ = math.SqrtPriceToTickRoundDownSpacing(sqrt4000, DefaultTickSpacing)
+	DefaultExponentOverlappingPositionUpperTick, _ = math.SqrtPriceToTickRoundDownSpacing(sqrt4999, DefaultTickSpacing)
+	BAR                                            = "bar"
+	FOO                                            = "foo"
+	InsufficientFundsError                         = fmt.Errorf("insufficient funds")
+	DefaultAuthorizedUptimes                       = []time.Duration{time.Nanosecond}
+	ThreeOrderedConsecutiveAuthorizedUptimes       = []time.Duration{time.Nanosecond, time.Minute, time.Hour, time.Hour * 24}
+	ThreeUnorderedNonConsecutiveAuthorizedUptimes  = []time.Duration{time.Nanosecond, time.Hour * 24 * 7, time.Minute}
+	AllUptimesAuthorized                           = types.SupportedUptimes
 )
+
+func TestConstants(t *testing.T) {
+	lowerSqrtPrice, _ := osmomath.MonotonicSqrt(DefaultLowerPrice)
+	upperSqrtPrice, _ := osmomath.MonotonicSqrt(DefaultUpperPrice)
+	liq := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice,
+		lowerSqrtPrice, upperSqrtPrice, DefaultAmt0, DefaultAmt1)
+	require.Equal(t, DefaultLiquidityAmt, liq)
+}
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
