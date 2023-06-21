@@ -1077,6 +1077,10 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			boundTick:       sdk.NewInt(-15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
+					LiquidityNet: sdk.NewDec(-20),
+					TickIndex:    10,
+				},
+				{
 					LiquidityNet: sdk.NewDec(20),
 					TickIndex:    -10,
 				},
@@ -1096,13 +1100,19 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			boundTick:       sdk.NewInt(-15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
+
+					LiquidityNet: sdk.NewDec(-20),
+					TickIndex:    10,
+				},
+				{
+
 					LiquidityNet: sdk.NewDec(20),
 					TickIndex:    -10,
 				},
 			},
 		},
 		{
-			name: "11: current pool tick == start tick, one for zero",
+			name: "current pool tick == start tick, one for zero",
 			presetTicks: []genesis.FullTick{
 				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
 				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
@@ -1274,7 +1284,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			}
 
 			s.Require().NoError(err)
-			s.Require().Equal(liquidityForRange, test.expectedLiquidityDepths)
+			s.Require().Equal(test.expectedLiquidityDepths, liquidityForRange)
 		})
 	}
 }

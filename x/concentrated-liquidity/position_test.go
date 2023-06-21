@@ -313,7 +313,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				if test.positionExists {
 					// Track how much the current uptime accum has grown by
 					actualUptimeAccumDelta[uptimeIndex] = newUptimeAccumValues[uptimeIndex].Sub(initUptimeAccumValues[uptimeIndex])
-					if timeElapsedSec.GT(sdk.ZeroDec()) {
+					if timeElapsedSec.IsPositive() {
 						expectedGrowthCurAccum, _, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, uptime, test.param.liquidityDelta, timeElapsedSec, expectedIncentiveRecords)
 						s.Require().NoError(err)
 						expectedUptimeAccumValueGrowth[uptimeIndex] = expectedGrowthCurAccum
@@ -408,103 +408,6 @@ type positionOwnershipTest struct {
 
 	setupPositions []sdk.AccAddress
 	poolId         uint64
-}
-
-func (s *KeeperTestSuite) runIsPositionOwnerTest(test positionOwnershipTest) {
-	s.SetupTest()
-	p := s.PrepareConcentratedPool()
-	for i, owner := range test.setupPositions {
-		err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, p.GetId(), owner, DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, uint64(i))
-		s.Require().NoError(err)
-	}
-	err := s.App.ConcentratedLiquidityKeeper.EnsurePositionOwner(s.Ctx, test.queryPositionOwner, test.poolId, test.queryPositionId)
-	if test.expPass {
-		s.Require().NoError(err)
-	} else {
-		s.Require().Error(err)
-	}
-
-}
-
-func (s *KeeperTestSuite) TestIsPositionOwnerMultiPosition() {
-	tenAddrOneAddr := []sdk.AccAddress{}
-	for i := 0; i < 10; i++ {
-		tenAddrOneAddr = append(tenAddrOneAddr, s.TestAccs[0])
-	}
-	tenAddrOneAddr = append(tenAddrOneAddr, s.TestAccs[1])
-	tests := map[string]positionOwnershipTest{
-		"prefix malleability (prior bug)": {
-			queryPositionOwner: s.TestAccs[1],
-			queryPositionId:    1, expPass: false,
-			setupPositions: tenAddrOneAddr,
-		},
-		"things work": {
-			queryPositionOwner: s.TestAccs[1],
-			queryPositionId:    10, expPass: true,
-			setupPositions: tenAddrOneAddr,
-		},
-	}
-	for name, test := range tests {
-		s.Run(name, func() {
-			test.poolId = 1
-			s.runIsPositionOwnerTest(test)
-		})
-	}
-}
-
-func (s *KeeperTestSuite) TestIsPositionOwner() {
-	actualOwner := s.TestAccs[0]
-	nonOwner := s.TestAccs[1]
-
-	tests := []struct {
-		name         string
-		ownerToQuery sdk.AccAddress
-		poolId       uint64
-		positionId   uint64
-		isOwner      bool
-	}{
-		{
-			name:         "Happy path",
-			ownerToQuery: actualOwner,
-			poolId:       1,
-			positionId:   DefaultPositionId,
-			isOwner:      true,
-		},
-		{
-			name:         "query non owner",
-			ownerToQuery: nonOwner,
-			poolId:       1,
-			positionId:   DefaultPositionId,
-			isOwner:      false,
-		},
-		{
-			name:         "different pool ID, not the owner",
-			ownerToQuery: actualOwner,
-			poolId:       2,
-			positionId:   DefaultPositionId,
-			isOwner:      false,
-		},
-		{
-			name:         "different position ID, not the owner",
-			ownerToQuery: actualOwner,
-			poolId:       1,
-			positionId:   DefaultPositionId + 1,
-			isOwner:      false,
-		},
-	}
-
-	for _, test := range tests {
-		s.Run(test.name, func() {
-			s.runIsPositionOwnerTest(positionOwnershipTest{
-				queryPositionOwner: test.ownerToQuery,
-				queryPositionId:    test.positionId,
-				expPass:            test.isOwner,
-				// positions 0 and 1 are owned by actualOwner
-				setupPositions: []sdk.AccAddress{actualOwner, actualOwner},
-				poolId:         test.poolId,
-			})
-		})
-	}
 }
 
 func (s *KeeperTestSuite) TestGetUserPositions() {
@@ -1547,7 +1450,7 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 
 	s.TestAccs = apptesting.CreateRandomAccounts(5)
 	s.FundAcc(s.TestAccs[4], ethFunded)
-	coinIn, _, _, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, s.TestAccs[4], pool, usdcSupply, ETH, DefaultSpreadFactor, types.MinSpotPrice)
+	coinIn, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, s.TestAccs[4], pool, usdcSupply, ETH, DefaultSpreadFactor, types.MinSpotPrice)
 	s.Require().NoError(err)
 
 	// --- Set up expected spread rewards and incentives ---
@@ -2525,7 +2428,7 @@ func (s *KeeperTestSuite) TestTickRoundingEdgeCase() {
 	swapAddr := testAccs[2]
 	desiredTokenOut := sdk.NewCoin(USDC, sdk.NewInt(10000))
 	s.FundAcc(swapAddr, sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(1000000000000000000))))
-	_, _, _, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddr, pool, desiredTokenOut, ETH, sdk.ZeroDec(), sdk.ZeroDec())
+	_, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddr, pool, desiredTokenOut, ETH, sdk.ZeroDec(), sdk.ZeroDec())
 	s.Require().NoError(err)
 
 	// Both positions should be able to withdraw successfully

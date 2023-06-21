@@ -972,7 +972,7 @@ func (suite *AccumTestSuite) TestRemoveFromPosition() {
 				suite.Require().Equal(tc.startingUnclaimedRewards.Add(tc.expAccumDelta.MulDec(tc.startingNumShares)...), newPosition.UnclaimedRewardsTotal)
 
 				// Ensure address's position properly reflects new number of shares
-				if (tc.startingNumShares.Sub(tc.removedShares)).Equal(sdk.ZeroDec()) {
+				if (tc.startingNumShares.Sub(tc.removedShares)).IsZero() {
 					suite.Require().Equal(emptyDec, newPosition.NumShares)
 				} else {
 					suite.Require().Equal(tc.startingNumShares.Sub(tc.removedShares), newPosition.NumShares)
@@ -1163,7 +1163,7 @@ func (suite *AccumTestSuite) TestGetPositionSize() {
 			// Get position size from valid address (or from nonexistant if address does not exist)
 			positionSize, err := curAccum.GetPositionSize(positionName)
 
-			if tc.changedShares.GT(sdk.ZeroDec()) {
+			if tc.changedShares.IsPositive() {
 				accumPackage.InitOrUpdatePosition(curAccum, curAccum.GetValue(), positionName, tc.numShares.Add(tc.changedShares), sdk.NewDecCoins(), nil)
 			}
 
@@ -1613,14 +1613,14 @@ func (suite *AccumTestSuite) TestGetTotalShares() {
 
 		// Half the time, we add to the new position
 		addAmt := baseAmt.Mul(addShares)
-		if addAmt.GT(sdk.ZeroDec()) {
+		if addAmt.IsPositive() {
 			err = curAccum.AddToPosition(curAddr, addAmt)
 			suite.Require().NoError(err)
 		}
 
 		// Half the time, we remove one share from the position
 		amtToRemove := sdk.OneDec().Mul(removeShares)
-		if amtToRemove.GT(sdk.ZeroDec()) {
+		if amtToRemove.IsPositive() {
 			err = curAccum.RemoveFromPosition(curAddr, amtToRemove)
 			suite.Require().NoError(err)
 		}
