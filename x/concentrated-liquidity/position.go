@@ -484,8 +484,7 @@ func (k Keeper) mintSharesAndLock(ctx sdk.Context, concentratedPoolId, positionI
 	// Create a coin object to represent the underlying liquidity for the cl position.
 	underlyingLiquidityTokenized = sdk.NewCoins(sdk.NewCoin(types.GetConcentratedLockupDenomFromPoolId(concentratedPoolId), position.Liquidity.TruncateInt()))
 
-	// Mint the underlying liquidity as a token and send to the owner.
-	// TODO @stack: it is not being sent to the owner
+	// Mint the underlying liquidity as a token
 	err = k.bankKeeper.MintCoins(ctx, lockuptypes.ModuleName, underlyingLiquidityTokenized)
 	if err != nil {
 		return 0, sdk.Coins{}, err

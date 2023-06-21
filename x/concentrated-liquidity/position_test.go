@@ -2408,10 +2408,12 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 			concentratedLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, concentratedLockId)
 			s.Require().NoError(err)
 
+			// TODO: @stack, add assertion around what happens to the lock tokens once it expires
+			// TODO: @stack: Add assertions to check if the module aaccount recieved correct liquidity
 			moduleAccAddr := s.App.AccountKeeper.GetModuleAccount(s.Ctx, lockuptypes.ModuleName)
 
 			moduleCoins := s.App.BankKeeper.GetAllBalances(s.Ctx, moduleAccAddr.GetAddress())
-			ownerCoins := s.App.BankKeeper.GetAllBalances(s.Ctx, defaultAddress)
+			ownerCoins := s.App.BankKeeper.GetAllBalances(s.Ctx, sdk.AccAddress([]byte(position.Address)))
 
 			fmt.Println("LOCK MODULE COINS: ", moduleCoins) // 70710678cl/pool/1
 			fmt.Println("LOCK OWNER COINS: ", ownerCoins)   // 10000000000bar,10000000000baz,10000000000foo,9000000000uosmo
