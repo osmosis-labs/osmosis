@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "osmosis/gamm/v1beta1/shared.proto";
 
 // Params holds parameters for the incentives module
 message Params {
@@ -25,23 +26,4 @@ message GenesisState {
   uint64 next_pool_number = 2;
   Params params = 3 [ (gogoproto.nullable) = false ];
   MigrationRecords migration_records = 4;
-}
-
-// MigrationRecords contains all the links between balancer and concentrated
-// pools
-message MigrationRecords {
-  repeated BalancerToConcentratedPoolLink balancer_to_concentrated_pool_links =
-      1 [ (gogoproto.nullable) = false ];
-}
-
-// BalancerToConcentratedPoolLink defines a single link between a single
-// balancer pool and a single concentrated liquidity pool. This link is used to
-// allow a balancer pool to migrate to a single canonical full range
-// concentrated liquidity pool position
-// A balancer pool can be linked to a maximum of one cl pool, and a cl pool can
-// be linked to a maximum of one balancer pool.
-message BalancerToConcentratedPoolLink {
-  option (gogoproto.equal) = true;
-  uint64 balancer_pool_id = 1;
-  uint64 cl_pool_id = 2;
 }
