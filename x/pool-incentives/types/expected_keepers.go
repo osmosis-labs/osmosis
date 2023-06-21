@@ -7,6 +7,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
+	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 	incentivestypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
@@ -30,6 +31,11 @@ type PoolManagerKeeper interface {
 	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
 }
 
+// PoolManagerKeeper gets the pool interface from poolID.
+type GAMMKeeper interface {
+	GetAllMigrationInfo(ctx sdk.Context) (gammmigration.MigrationRecords, error)
+}
+
 // IncentivesKeeper creates and gets gauges, and also allows additions to gauge rewards.
 type IncentivesKeeper interface {
 	CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64, poolId uint64) (uint64, error)
@@ -49,8 +55,4 @@ type DistrKeeper interface {
 
 type EpochKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
-}
-
-type SuperfluidKeeper interface {
-	GetAllMigrationInfo(ctx sdk.Context) (MigrationRecords, error)
 }

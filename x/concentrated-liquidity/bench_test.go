@@ -16,7 +16,7 @@ import (
 	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 )
 
 type BenchTestSuite struct {
@@ -102,8 +102,8 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 		gammKeeper := s.App.GAMMKeeper
 
 		// Create a link between the balancer and cl pool.
-		record := gammtypes.BalancerToConcentratedPoolLink{BalancerPoolId: gammPoolId, ClPoolId: clPoolId}
-		err = gammKeeper.ReplaceMigrationRecords(s.Ctx, []gammtypes.BalancerToConcentratedPoolLink{record})
+		record := gammmigration.BalancerToConcentratedPoolLink{BalancerPoolId: gammPoolId, ClPoolId: clPoolId}
+		err = gammKeeper.ReplaceMigrationRecords(s.Ctx, []gammmigration.BalancerToConcentratedPoolLink{record})
 		s.Require().NoError(err)
 
 		_, err = gammKeeper.GetLinkedConcentratedPoolID(s.Ctx, gammPoolId)

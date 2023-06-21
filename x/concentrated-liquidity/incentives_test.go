@@ -18,6 +18,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
 )
 
@@ -1019,8 +1020,8 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 					// Create balancer pool and bond its shares
 					balancerPoolId = s.setupBalancerPoolWithFractionLocked(tc.canonicalBalancerPoolAssets, sdk.OneDec())
 					s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
-						gammtypes.MigrationRecords{
-							BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
+						gammmigration.MigrationRecords{
+							BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 								{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()},
 							},
 						},
@@ -3589,8 +3590,8 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 					balancerPoolId = 0
 				} else {
 					s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
-						gammtypes.MigrationRecords{
-							BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
+						gammmigration.MigrationRecords{
+							BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 								{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()},
 							},
 						},
@@ -3723,8 +3724,8 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRangeWithNonExistentPools
 				}
 
 				s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
-					gammtypes.MigrationRecords{
-						BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
+					gammmigration.MigrationRecords{
+						BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 							{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()},
 						},
 					},
@@ -3891,8 +3892,8 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 
 				// Link the balancer and CL pools
 				s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
-					gammtypes.MigrationRecords{
-						BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
+					gammmigration.MigrationRecords{
+						BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 							{BalancerPoolId: balancerPoolId, ClPoolId: clPoolId},
 						},
 					})

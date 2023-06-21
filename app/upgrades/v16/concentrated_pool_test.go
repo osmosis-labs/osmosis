@@ -9,7 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 	v16 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v16"
-	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
 )
 
@@ -244,8 +244,8 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiquid
 			// Validate migration record.
 			migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
 			suite.Require().NoError(err)
-			suite.Require().Equal(migrationInfo, gammtypes.MigrationRecords{
-				BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
+			suite.Require().Equal(migrationInfo, gammmigration.MigrationRecords{
+				BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 					{
 						BalancerPoolId: balancerId,
 						ClPoolId:       clPoolInState.GetId(),

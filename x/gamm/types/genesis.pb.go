@@ -11,6 +11,7 @@ import (
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
+	migration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -76,9 +77,9 @@ func (m *Params) GetPoolCreationFee() github_com_cosmos_cosmos_sdk_types.Coins {
 type GenesisState struct {
 	Pools []*types1.Any `protobuf:"bytes,1,rep,name=pools,proto3" json:"pools,omitempty"`
 	// will be renamed to next_pool_id in an upcoming version
-	NextPoolNumber   uint64            `protobuf:"varint,2,opt,name=next_pool_number,json=nextPoolNumber,proto3" json:"next_pool_number,omitempty"`
-	Params           Params            `protobuf:"bytes,3,opt,name=params,proto3" json:"params"`
-	MigrationRecords *MigrationRecords `protobuf:"bytes,4,opt,name=migration_records,json=migrationRecords,proto3" json:"migration_records,omitempty"`
+	NextPoolNumber   uint64                      `protobuf:"varint,2,opt,name=next_pool_number,json=nextPoolNumber,proto3" json:"next_pool_number,omitempty"`
+	Params           Params                      `protobuf:"bytes,3,opt,name=params,proto3" json:"params"`
+	MigrationRecords *migration.MigrationRecords `protobuf:"bytes,4,opt,name=migration_records,json=migrationRecords,proto3" json:"migration_records,omitempty"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -135,7 +136,7 @@ func (m *GenesisState) GetParams() Params {
 	return Params{}
 }
 
-func (m *GenesisState) GetMigrationRecords() *MigrationRecords {
+func (m *GenesisState) GetMigrationRecords() *migration.MigrationRecords {
 	if m != nil {
 		return m.MigrationRecords
 	}
@@ -569,7 +570,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.MigrationRecords == nil {
-				m.MigrationRecords = &MigrationRecords{}
+				m.MigrationRecords = &migration.MigrationRecords{}
 			}
 			if err := m.MigrationRecords.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
