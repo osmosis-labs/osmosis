@@ -1696,6 +1696,12 @@ func (s *IntegrationTestSuite) TestAConcentratedLiquidity_CanonicalPool_And_Para
 	osmoassert.DecApproxEq(s.T(), expectedSpotPrice, concentratedPool.GetCurrentSqrtPrice().Power(2), sdk.NewDecWithPrec(1, 3))
 }
 
+// TestPoolMigration ensures that message `UnlockAndMigrateSharesToFullRangeConcentratedPosition` performs as expected by
+// testing four cases (superfluid bonded, superfluid unbonding, unlocked) with each cases testing and ensuring the following upon the message being called:
+// - ensure that existing delegation amount post migration is as expected
+// - ensure that new delegation post migration in the intermediary account is as expected
+// - ensure that the amount locked in old lock post migration is as expected
+// - ensure that the amount locked in the new lock that has been created from lock is as expected.
 func (s *IntegrationTestSuite) TestPoolMigration() {
 	chain := s.configurer.GetChainConfig(0)
 	node, err := chain.GetDefaultNode()
@@ -1723,10 +1729,10 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 
 	// Case 1: SuperfluidBonded
 	var (
-		superfluidDelegated = true
+		superfluidDelegated    = true
 		superfluidUndelegating = false
-		unlocking = false
-		noLock = false
+		unlocking              = false
+		noLock                 = false
 	)
 	s.testPoolMigration(chain, poolJoinAddress, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate, tokenOutMins)
 

@@ -2,10 +2,14 @@ package e2e
 
 import (
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"strconv"
 	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
+
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/chain"
@@ -13,11 +17,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/initialization"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
-	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var defaultFeePerTx = sdk.NewInt(1000)
@@ -111,6 +114,11 @@ func (s *IntegrationTestSuite) validateCLPosition(position model.Position, poolI
 	s.Require().Equal(position.UpperTick, upperTick)
 }
 
+// validateMigrateResult ensures
+// - given liquidityMigrated matches that of liquidity in the position.
+// - given pool id leaving matches the balancer pool id
+// - given pool id entering matches the cl pool id
+// - given amount0 and amount1 matches the amount of shares that we migrated from the original amount we have joined Balancer pool with.
 func (s *IntegrationTestSuite) validateMigrateResult(
 	node *chain.NodeConfig,
 	positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering uint64,
@@ -160,6 +168,8 @@ func (s *IntegrationTestSuite) createFullRangePosition(node *chain.NodeConfig, f
 	return positionId
 }
 
+// setupMigrationTest creates a balancer pool, joins a pool with an account to the original pool, locks and superfluid delegate, unlock (depending on the param given),
+// then creates a cl pool, create a full range position with the same account.
 func (s *IntegrationTestSuite) setupMigrationTest(
 	chain *chain.Config,
 	poolJoinAddress string,
@@ -170,8 +180,8 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 	s.NoError(err)
 
 	fullRangeCoins := sdk.NewCoins(
-		sdk.NewInt64Coin("uosmo",499404),
-		sdk.NewInt64Coin("stake",500000),
+		sdk.NewInt64Coin("uosmo", 499404),
+		sdk.NewInt64Coin("stake", 500000),
 	)
 
 	valAddr, err = sdk.ValAddressFromBech32(chain.NodeConfigs[1].OperatorAddress)
@@ -270,7 +280,7 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 	if !noLock {
 		balancerLock = node.QueryLockedById(fmt.Sprintf("%d", originalGammLockId))
 	}
-	
+
 	// Create a full range position in the concentrated liquidity pool.
 	s.createFullRangePosition(node, sdk.MustAccAddressFromBech32(poolJoinAddress), fullRangeCoins, clPoolId)
 
@@ -291,11 +301,12 @@ func (s *IntegrationTestSuite) testPoolMigration(
 	node, err := chain.GetDefaultNode()
 	s.NoError(err)
 
-	joinPoolAmt, balancerIntermediaryAcc, balancerLock, _, _, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := s.setupMigrationTest(chain, poolJoinAddress, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate)
+	// by calling this method, we prepare balancer pool and its according lock(depending on the test setting), cl pool, and a cl full range position.
+	joinPoolAmt, balancerIntermediaryAcc, balancerLock, _, _, balancerPooId, clPoolId, totalBalancerPoolShare, valAddr := s.setupMigrationTest(chain, poolJoinAddress, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate)
 	originalGammLockId := balancerLock.GetID()
 
 	// we attempt to migrate a subset of the balancer LP tokens we originally created.
-	coinsToMigrate := balancerPoolShareOut
+	coinsToMigrate := totalBalancerPoolShare
 	coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(percentOfSharesToMigrate).RoundInt()
 
 	balancerDelegationPre := stakingtypes.Delegation{}
@@ -303,13 +314,17 @@ func (s *IntegrationTestSuite) testPoolMigration(
 		delegationResp, err := node.QueryIntermediaryAccount(balancerIntermediaryAcc.Denom, chain.NodeConfigs[1].OperatorAddress)
 		s.NoError(err)
 		balancerDelegationPre = delegationResp.GetDelegation()
-	}	
-	// Note balancer pool balance after joining balancer pool
-	positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, concentratedLockId := node.UnlockAndMigrateSharesToFullRangeConcentratedPosition(poolJoinAddress, fmt.Sprintf("%d", originalGammLockId) ,tokenOutMins.String(), coinsToMigrate.String())
+	}
 
-	s.validateMigrateResult(node, positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering, percentOfSharesToMigrate, liquidity, joinPoolAmt, amount0, amount1 )
+	// System Under Test.
+	positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, concentratedLockId := node.UnlockAndMigrateSharesToFullRangeConcentratedPosition(poolJoinAddress, fmt.Sprintf("%d", originalGammLockId), tokenOutMins.String(), coinsToMigrate.String())
 
-	// If the lock was superfluid delegated:
+	s.validateMigrateResult(node, positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering, percentOfSharesToMigrate, liquidity, joinPoolAmt, amount0, amount1)
+
+	// If the lock was superfluid delegated, check the following
+	// - Correct amount remained delegated to the original Balancer intermediary account
+	// - Correct amount of Balancer pool shares remain in the original lock.
+	// - Correct amount is delegated to the cl intermediary account.
 	if superfluidDelegated && !superfluidUndelegating {
 		// If we migrated part of the shares:
 		// The intermediary account connection to the old gamm lock should still be present.
@@ -321,11 +336,13 @@ func (s *IntegrationTestSuite) testPoolMigration(
 
 		delegationResp, _ := node.QueryIntermediaryAccount(balancerIntermediaryAcc.Denom, chain.NodeConfigs[1].OperatorAddress)
 		delegation := delegationResp.GetDelegation()
+		// delegation amount remaining in the original balancer intermediary account should be equal to (original delegation amount - (original delegation amount * percent migrated))
 		s.Require().Equal(balancerDelegationPre.Shares.Sub(balancerDelegationPre.Shares.Mul(percentOfSharesToMigrate)).RoundInt().String(), delegation.Shares.RoundInt().String())
-		
+
 		lock := node.QueryLockedById(fmt.Sprintf("%d", originalGammLockId))
-		s.Require().Equal(balancerPoolShareOut.Amount.Sub(coinsToMigrate.Amount).String(), lock.Coins[0].Amount.String())
-		
+		// amount in original balancer lock should be equivalent to (total balancer share - coins migrated)
+		s.Require().Equal(totalBalancerPoolShare.Amount.Sub(coinsToMigrate.Amount).String(), lock.Coins[0].Amount.String())
+
 		// Check the new superfluid staked amount.
 		clIntermediaryAcc := node.QueryConnectedIntermediaryAccount(fmt.Sprintf("%d", concentratedLockId))
 		delegationResp, _ = node.QueryIntermediaryAccount(clIntermediaryAcc.Denom, chain.NodeConfigs[1].OperatorAddress)
