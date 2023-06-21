@@ -2466,11 +2466,13 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 			tickRanges: [][]int64{
 				{207000000, 207000000 + 100},
 			},
+			rangeTestParams: DefaultRangeTestParams,
 		},
 		"one range on small tick": {
 			tickRanges: [][]int64{
 				{-107000000, -107000000 + 100},
 			},
+			rangeTestParams: DefaultRangeTestParams,
 		},
 	}
 
