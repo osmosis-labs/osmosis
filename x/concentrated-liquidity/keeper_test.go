@@ -57,8 +57,8 @@ var (
 	PoolCreationFee                                = poolmanagertypes.DefaultParams().PoolCreationFee
 	sqrt4000                                       = sdk.MustNewDecFromStr("63.245553203367586640")
 	sqrt4994                                       = sdk.MustNewDecFromStr("70.668238976219012614")
-	sqrt4999                                       = sdk.MustNewDecFromStr("70.703606697254136612")
-	sqrt5500                                       = sdk.MustNewDecFromStr("74.161984870956629487")
+	sqrt4999                                       = sdk.MustNewDecFromStr("70.703606697254136613")
+	sqrt5500                                       = sdk.MustNewDecFromStr("74.161984870956629488")
 	sqrt6250                                       = sdk.MustNewDecFromStr("79.056941504209483300")
 	DefaultExponentConsecutivePositionLowerTick, _ = math.SqrtPriceToTickRoundDownSpacing(sqrt5500, DefaultTickSpacing)
 	DefaultExponentConsecutivePositionUpperTick, _ = math.SqrtPriceToTickRoundDownSpacing(sqrt6250, DefaultTickSpacing)
