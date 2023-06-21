@@ -163,8 +163,6 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 	// Only run the following if the above loop determined there were incentivized pools.
 	if len(incentivizedPoolIDs) > 0 {
 		// Retrieve the migration records between balancer pools and concentrated liquidity pools.
-		// This comes from the superfluid keeper, since superfluid is the only pool incentives connected
-		// module that has access to the gamm modules store.
 		migrationRecords, err := q.gammKeeper.GetAllMigrationInfo(sdkCtx)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
