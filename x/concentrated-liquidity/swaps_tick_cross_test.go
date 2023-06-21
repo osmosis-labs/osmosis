@@ -1252,14 +1252,14 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_GetLiquidityFromAmountsPosit
 	// See definiton of defaultTickSpacingsAway for position layout diagram.
 	poolId, positions := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
 	var (
-		// 3 tick spacings away [30999997, 31000003) (3TS)
+		// 3 tick spacings away [30999997, 31000003) (3TS) from the original current tick (31000000)
 		positionThreeTS               = positions[1]
 		positionThreeTSLowerTick      = positionThreeTS.lowerTick
 		positionThreeTSUpperTick      = positionThreeTS.upperTick
 		positionThreeTSLowerSqrtPrice = s.tickToSqrtPrice(positionThreeTSLowerTick)
 		positionThreeTSUpperSqrtPrice = s.tickToSqrtPrice(positionThreeTSUpperTick)
 
-		// 2 tick spacings away [30999998, 31000002) (2TS)
+		// 2 tick spacings away [30999998, 31000002) (2TS) from the original current tick (31000000)
 		positionTwoTS               = positions[2]
 		positionTwoTSLowerTick      = positionTwoTS.lowerTick
 		positionTwoTSUpperTick      = positionTwoTS.upperTick
