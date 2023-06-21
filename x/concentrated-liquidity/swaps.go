@@ -3,7 +3,6 @@ package concentrated_liquidity
 import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	db "github.com/tendermint/tm-db"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
@@ -447,8 +446,7 @@ func (k Keeper) computeOutAmtGivenIn(
 			// If ComputeSwapWithinBucketOutGivenIn(...) calculated a computedSqrtPrice that is equal to the nextInitializedTickSqrtPrice, this means all liquidity in the current
 			// bucket has been consumed, and we must move on to the next bucket to complete the swap
 			if computationState.nextInitializedTickSqrtPrice.Equal(computationState.computedSqrtPrice) {
-				swapState, err = k.swapCrossTickLogic(ctx, swapState,
-					computationState.nextTick, computationState.nextInitTickIter, computationState.pool, computationState.accumulators.spreadRewardAccumulator, computationState.accumulators.uptimeAccums, tokenInMin.Denom)
+				err = k.swapCrossTickLogic(ctx, swapState, computationState, tokenInMin.Denom)
 				if err != nil {
 					return err
 				}
@@ -524,8 +522,7 @@ func (k Keeper) computeInAmtGivenOut(
 			// If the ComputeSwapWithinBucketInGivenOut(...) calculated a computedSqrtPrice that is equal to the nextInitializedTickSqrtPrice, this means all liquidity in the current
 			// bucket has been consumed and we must move on to the next bucket by crossing a tick to complete the swap
 			if computationState.nextInitializedTickSqrtPrice.Equal(computationState.computedSqrtPrice) {
-				swapState, err = k.swapCrossTickLogic(ctx, swapState,
-					computationState.nextTick, computationState.nextInitTickIter, computationState.pool, computationState.accumulators.spreadRewardAccumulator, computationState.accumulators.uptimeAccums, tokenInDenom)
+				err = k.swapCrossTickLogic(ctx, swapState, computationState, tokenInDenom)
 				if err != nil {
 					return err
 				}
@@ -590,6 +587,7 @@ func (k Keeper) computeInAmtGivenOutOld(
 		sqrtPriceStart := swapState.sqrtPrice
 
 		nextTick, nextInitializedTickSqrtPrice, sqrtPriceTarget, err := getNextTicks(&computationState)
+		fmt.Println("nextTick", nextTick)
 		if err != nil {
 			return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 		}
@@ -616,8 +614,8 @@ func (k Keeper) computeInAmtGivenOutOld(
 		// If the ComputeSwapWithinBucketInGivenOut(...) calculated a computedSqrtPrice that is equal to the nextInitializedTickSqrtPrice, this means all liquidity in the current
 		// bucket has been consumed and we must move on to the next bucket by crossing a tick to complete the swap
 		if nextInitializedTickSqrtPrice.Equal(computedSqrtPrice) {
-			swapState, err = k.swapCrossTickLogic(ctx, swapState,
-				nextTick, nextInitTickIter, computationState.pool, computationState.accumulators.spreadRewardAccumulator, computationState.accumulators.uptimeAccums, tokenInDenom)
+			//err = k.swapCrossTickLogic(ctx, swapState, computationState, tokenInDenom)
+			// Thius was the old swapcrossticklogic
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 			}
@@ -669,33 +667,31 @@ func emitSwapDebugLogs(ctx sdk.Context, swapState SwapState, reachedPrice, amoun
 // logic for crossing a tick during a swap
 func (k Keeper) swapCrossTickLogic(ctx sdk.Context,
 	swapState *SwapState,
-	nextInitializedTick int64, nextTickIter db.Iterator,
-	p types.ConcentratedPoolExtension,
-	spreadRewardAccum accum.AccumulatorObject, uptimeAccums []accum.AccumulatorObject,
-	tokenInDenom string) (*SwapState, error) {
-	nextInitializedTickInfo, err := ParseTickFromBz(nextTickIter.Value())
+	computationState *computationState,
+	tokenInDenom string) error {
+	nextInitializedTickInfo, err := ParseTickFromBz(computationState.nextInitTickIter.Value())
 	if err != nil {
-		return swapState, err
+		return err
 	}
 
-	if err := k.updateGivenPoolUptimeAccumulatorsToNow(ctx, p, uptimeAccums); err != nil {
-		return swapState, err
+	if err := k.updateGivenPoolUptimeAccumulatorsToNow(ctx, computationState.pool, computationState.accumulators.uptimeAccums); err != nil {
+		return err
 	}
 
 	// Retrieve the liquidity held in the next closest initialized tick
-	liquidityNet, err := k.crossTick(ctx, p.GetId(), nextInitializedTick, &nextInitializedTickInfo, sdk.NewDecCoinFromDec(tokenInDenom, swapState.globalSpreadRewardGrowthPerUnitLiquidity), spreadRewardAccum.GetValue(), uptimeAccums)
+	liquidityNet, err := k.crossTick(ctx, computationState.pool.GetId(), computationState.nextTick, &nextInitializedTickInfo, sdk.NewDecCoinFromDec(tokenInDenom, swapState.globalSpreadRewardGrowthPerUnitLiquidity), computationState.accumulators.spreadRewardAccumulator.GetValue(), computationState.accumulators.uptimeAccums)
 	if err != nil {
-		return swapState, err
+		return err
 	}
 
 	// Move next tick iterator to the next tick as the tick is crossed.
-	nextTickIter.Next()
+	computationState.nextInitTickIter.Next()
 
 	liquidityNet = swapState.swapStrategy.SetLiquidityDeltaSign(liquidityNet)
 	// Update the swapState's liquidity with the new tick's liquidity
 	swapState.liquidity.AddMut(liquidityNet)
 
-	return swapState, nil
+	return nil
 }
 
 // updatePoolForSwap updates the given pool object with the results of a swap operation.
