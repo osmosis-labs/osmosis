@@ -111,7 +111,7 @@ func (c *Config) RemoveNode(nodeName string) error {
 
 // RemoveNode removes node and stops it from running.
 func (c *Config) RemoveTempNode(nodeName string) error {
-	for i, node := range c.NodeConfigs {
+	for i, node := range c.NodeTempConfigs {
 		if node.Name == nodeName {
 			c.NodeTempConfigs = append(c.NodeTempConfigs[:i], c.NodeTempConfigs[i+1:]...)
 			return node.Stop()
