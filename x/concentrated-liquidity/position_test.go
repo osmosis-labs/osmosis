@@ -2413,8 +2413,8 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 			moduleCoins := s.App.BankKeeper.GetAllBalances(s.Ctx, moduleAccAddr.GetAddress())
 			ownerCoins := s.App.BankKeeper.GetAllBalances(s.Ctx, defaultAddress)
 
-			fmt.Println("LOCK MODULE COINS: ", moduleCoins)
-			fmt.Println("LOCK OWNER COINS: ", ownerCoins)
+			fmt.Println("LOCK MODULE COINS: ", moduleCoins) // 70710678cl/pool/1
+			fmt.Println("LOCK OWNER COINS: ", ownerCoins)   // 10000000000bar,10000000000baz,10000000000foo,9000000000uosmo
 
 			s.Require().Equal(concentratedLock.Coins[0].Amount.String(), liquidity.TruncateInt().String())
 			s.Require().False(concentratedLock.IsUnlocking())
