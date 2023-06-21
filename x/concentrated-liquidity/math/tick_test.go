@@ -749,6 +749,10 @@ func (s *ConcentratedMathTestSuite) TestSqrtPriceToTickRoundDownSpacing() {
 	s.Require().NoError(err)
 	_, sqpMaxTickSubOne, err := math.TickToSqrtPrice(types.MaxTick - 1)
 	s.Require().NoError(err)
+	_, sqpMinTickPlusOne, err := math.TickToSqrtPrice(types.MinTick + 1)
+	s.Require().NoError(err)
+	_, sqpMinTickPlusTwo, err := math.TickToSqrtPrice(types.MinTick + 2)
+	s.Require().NoError(err)
 
 	testCases := map[string]struct {
 		sqrtPrice    sdk.Dec
@@ -831,38 +835,36 @@ func (s *ConcentratedMathTestSuite) TestSqrtPriceToTickRoundDownSpacing() {
 			tickExpected: types.MaxTick - defaultTickSpacing,
 		},
 		"sqrt price corresponds exactly to min tick + 1 (tick spacing 1)": {
-			// Calculated using TickToSqrtPrice(types.MinTick + 1)
-			sqrtPrice:    sdk.MustNewDecFromStr("0.000001000000500000"),
+			sqrtPrice:    sqpMinTickPlusOne,
 			tickSpacing:  1,
 			tickExpected: types.MinTick + 1,
 		},
 		"sqrt price corresponds exactly to min tick + 1 minus 1 ULP (tick spacing 1)": {
 			// Calculated using TickToSqrtPrice(types.MinTick + 1) - 1 ULP
-			sqrtPrice:    sdk.MustNewDecFromStr("0.000001000000499999"),
+			sqrtPrice:    sqpMinTickPlusOne.Sub(sdk.SmallestDec()),
 			tickSpacing:  1,
 			tickExpected: types.MinTick,
 		},
 		"sqrt price corresponds exactly to min tick + 1 plus 1 ULP (tick spacing 1)": {
 			// Calculated using TickToSqrtPrice(types.MinTick + 1) + 1 ULP
-			sqrtPrice:    sdk.MustNewDecFromStr("0.000001000000500001"),
+			sqrtPrice:    sqpMinTickPlusOne.Add(sdk.SmallestDec()),
 			tickSpacing:  1,
 			tickExpected: types.MinTick + 1,
 		},
 		"sqrt price corresponds exactly to min tick + 2 (tick spacing 1)": {
-			// Calculated using TickToSqrtPrice(types.MinTick + 2)
-			sqrtPrice:    sdk.MustNewDecFromStr("0.000001000000999999"),
+			sqrtPrice:    sqpMinTickPlusTwo,
 			tickSpacing:  1,
 			tickExpected: types.MinTick + 2,
 		},
 		"sqrt price corresponds exactly to min tick + 2 plus 1 ULP (tick spacing 1)": {
 			// Calculated using TickToSqrtPrice(types.MinTick + 2) + 1 ULP
-			sqrtPrice:    sdk.MustNewDecFromStr("0.000001000000999999").Add(sdk.SmallestDec()),
+			sqrtPrice:    sqpMinTickPlusTwo.Add(sdk.SmallestDec()),
 			tickSpacing:  1,
 			tickExpected: types.MinTick + 2,
 		},
 		"sqrt price corresponds exactly to min tick + 2 minus 1 ULP (tick spacing 1)": {
 			// Calculated using TickToSqrtPrice(types.MinTick + 2) - 1 ULP
-			sqrtPrice:    sdk.MustNewDecFromStr("0.000001000000999999").Sub(sdk.SmallestDec()),
+			sqrtPrice:    sqpMinTickPlusTwo.Sub(sdk.SmallestDec()),
 			tickSpacing:  1,
 			tickExpected: types.MinTick + 1,
 		},
