@@ -11,6 +11,7 @@ import (
 type ConcentratedPoolExtension interface {
 	poolmanagertypes.PoolI
 
+	IsCurrentTickInRange(lowerTick, upperTick int64) bool
 	GetIncentivesAddress() sdk.AccAddress
 	GetSpreadRewardsAddress() sdk.AccAddress
 	GetToken0() string

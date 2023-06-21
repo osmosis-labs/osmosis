@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 	clmath "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
@@ -27,11 +28,11 @@ const (
 var (
 	DefaultSpotPrice              = sdk.MustNewDecFromStr("0.2")
 	DefaultReverseSpotPrice       = sdk.NewDec(1).Quo(DefaultSpotPrice)
-	DefaultSqrtSpotPrice, _       = DefaultSpotPrice.ApproxSqrt()
+	DefaultSqrtSpotPrice, _       = osmomath.MonotonicSqrt(DefaultSpotPrice)
 	DefaultLiquidityAmt           = sdk.MustNewDecFromStr("1517882343.751510418088349649")
 	DefaultCurrTick         int64 = 310000
 	DefaultCurrPrice              = sdk.NewDec(5000)
-	DefaultCurrSqrtPrice, _       = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
+	DefaultCurrSqrtPrice, _       = osmomath.MonotonicSqrt(DefaultCurrPrice) // 70.710678118654752440
 	DefaultSpreadFactor           = sdk.MustNewDecFromStr("0.01")
 )
 
@@ -654,6 +655,14 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 
 			expectError: types.InvalidLowerUpperTickError{LowerTick: lowerTick + 1, UpperTick: lowerTick},
 		},
+		"error: lower tick is equal to upper tick": {
+			currentTick:    lowerTick,
+			lowerTick:      lowerTick,
+			upperTick:      lowerTick,
+			liquidityDelta: defaultLiquidityDelta,
+
+			expectError: types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: lowerTick},
+		},
 	}
 
 	for name, tc := range tests {
@@ -687,8 +696,8 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 				amt1Diff := actualAmount1.Sub(actualAmount1Neg.Neg())
 
 				// Difference is between 0 and 1 due to positive liquidity rounding up and negative liquidity performing math normally.
-				suite.Require().True(amt0Diff.GT(sdk.ZeroDec()) && amt0Diff.LT(sdk.OneDec()))
-				suite.Require().True(amt1Diff.GT(sdk.ZeroDec()) && amt1Diff.LT(sdk.OneDec()))
+				suite.Require().True(amt0Diff.IsPositive() && amt0Diff.LT(sdk.OneDec()))
+				suite.Require().True(amt1Diff.IsPositive() && amt1Diff.LT(sdk.OneDec()))
 			}
 		})
 	}

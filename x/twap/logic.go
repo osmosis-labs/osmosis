@@ -164,8 +164,8 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) (types.Tw
 	// Incase record height should equal to ctx height
 	// But ArithmeticTwapAccumulators should be zero
 	if (record.Height == ctx.BlockHeight() || record.Time.Equal(ctx.BlockTime())) &&
-		!record.P1ArithmeticTwapAccumulator.Equal(sdk.ZeroDec()) &&
-		!record.P0ArithmeticTwapAccumulator.Equal(sdk.ZeroDec()) {
+		!record.P1ArithmeticTwapAccumulator.IsZero() &&
+		!record.P0ArithmeticTwapAccumulator.IsZero() {
 		return types.TwapRecord{}, types.InvalidUpdateRecordError{}
 	} else if record.Height > ctx.BlockHeight() || record.Time.After(ctx.BlockTime()) {
 		// Normal case, ctx should be after record height & time
