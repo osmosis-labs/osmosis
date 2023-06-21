@@ -2364,8 +2364,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 				validPool := s.PrepareConcentratedPool()
 				validPoolId := validPool.GetId()
 
-				fmt.Println("expected incentives claimed for: ", name, " ", tc.expectedIncentivesClaimed.String())
-
 				// Fund the incentives address with amount we intend to claim and forfeit.
 				s.FundAcc(validPool.GetIncentivesAddress(), tc.expectedIncentivesClaimed.Add(tc.expectedForfeitedIncentives...))
 
