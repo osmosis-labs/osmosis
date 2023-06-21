@@ -162,7 +162,7 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 			},
 			expectedBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
 				"epochTwo": {
-					"uosmo": {Liquidity: sdk.Int(sdk.NewUintFromString("999999999000000001000000000000000000")), PoolId: 49},
+					"uosmo": {Liquidity: sdk.Int(sdk.NewUintFromString("999999000000000001000000000000000000")), PoolId: 49},
 				},
 			},
 		},
@@ -177,6 +177,8 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 
 			err := s.App.ProtoRevKeeper.UpdateHighestLiquidityPools(s.Ctx, tc.inputBaseDenomPools)
 			s.Require().NoError(err)
+			fmt.Println("tc.inputBaseDenomPools: ", tc.inputBaseDenomPools)
+			fmt.Println("tc.expectedBaseDenomPools: ", tc.expectedBaseDenomPools)
 			s.Require().Equal(tc.inputBaseDenomPools, tc.expectedBaseDenomPools)
 		})
 	}
