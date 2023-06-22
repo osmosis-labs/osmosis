@@ -241,7 +241,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 
@@ -525,7 +525,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		tc := tc
 		s.Run(name, func() {
 			// Setup.
-			s.ResetTest()
+			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
 			var (
@@ -1016,7 +1016,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 		tc := tc
 		s.Run(name, func() {
 			// --- Setup ---
-			s.ResetTest()
+			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
 			var (
@@ -1161,7 +1161,7 @@ func (s *KeeperTestSuite) TestSingleSidedAddToPosition() {
 		tc := tc
 		s.Run(name, func() {
 			// --- Setup ---
-			s.ResetTest()
+			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
 			var (
@@ -1404,7 +1404,7 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 	for name, tc := range tests {
 		s.Run(name, func() {
 			tc := tc
-			s.ResetTest()
+			s.SetupTest()
 
 			// create a CL pool
 			s.PrepareConcentratedPool()
@@ -1570,7 +1570,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 	for name, tc := range tests {
 		s.Run(name, func() {
 			tc := tc
-			s.ResetTest()
+			s.SetupTest()
 
 			s.Ctx = s.Ctx.WithBlockTime(time.Unix(0, 0))
 
@@ -1727,7 +1727,7 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 	for name, tc := range tests {
 		s.Run(name, func() {
 			tc := tc
-			s.ResetTest()
+			s.SetupTest()
 
 			// create a CL pool
 			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, sdk.ZeroDec())
@@ -1763,7 +1763,7 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 			// Merge tc with baseCase and update tc to the merged result. This is done to reduce the amount of boilerplate in test cases.
 			baseConfigCopy := *baseCase
@@ -1878,7 +1878,7 @@ func (s *KeeperTestSuite) TestUninitializePool() {
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 
 			pool := s.PrepareConcentratedPool()
@@ -1948,7 +1948,7 @@ func (s *KeeperTestSuite) TestIsLockMature() {
 				concentratedLockId uint64
 				err                error
 			)
-			s.ResetTest()
+			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
 			// create a CL pool and fund account
@@ -2114,7 +2114,7 @@ func (s *KeeperTestSuite) TestValidatePositionUpdateById() {
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-			s.ResetTest()
+			s.SetupTest()
 
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 

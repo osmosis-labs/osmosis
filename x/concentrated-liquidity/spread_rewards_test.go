@@ -62,7 +62,7 @@ func (s *KeeperTestSuite) TestCreateAndGetSpreadRewardAccumulator() {
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 
 			// system under test
@@ -87,7 +87,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionSpreadRewardAccumulator() {
 	// the relationship between test cases.
 	// For example, that positions with non-zero liquidity
 	// cannot be overridden.
-	s.ResetTest()
+	s.SetupTest()
 	s.PrepareConcentratedPool()
 
 	defaultAccount := s.TestAccs[0]
@@ -395,7 +395,7 @@ func (s *KeeperTestSuite) TestGetSpreadRewardGrowthOutside() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			s.ResetTest()
+			s.SetupTest()
 
 			// if pool set up true, set up default pool
 			var pool types.ConcentratedPoolExtension
@@ -464,7 +464,7 @@ func (s *KeeperTestSuite) TestCalculateSpreadRewardGrowth() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			var targetTick int64
 			if tc.isCurrentTickGTETargetTick {
 				targetTick = defaultSmallerTargetTick
@@ -541,7 +541,7 @@ func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLas
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			ctx := s.Ctx
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 
@@ -823,7 +823,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectSpreadRewards() {
 	for name, tc := range tests {
 		s.Run(name, func() {
 			tc := tc
-			s.ResetTest()
+			s.SetupTest()
 
 			validPool := s.PrepareConcentratedPool()
 			validPoolId := validPool.GetId()
@@ -1112,7 +1112,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 	for name, tc := range tests {
 		s.Run(name, func() {
 			tc := tc
-			s.ResetTest()
+			s.SetupTest()
 
 			validPool := s.PrepareConcentratedPool()
 			validPoolId := validPool.GetId()
@@ -1231,7 +1231,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateSpreadRewardAccumulatorPosition_Updati
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			s.ResetTest()
+			s.SetupTest()
 
 			pool := s.PrepareConcentratedPool()
 			poolId := pool.GetId()
@@ -1317,7 +1317,7 @@ func (s *KeeperTestSuite) TestUpdatePosValueToInitValuePlusGrowthOutside() {
 		tc := tc
 		s.Run(tc.name, func() {
 			// Setup test env.
-			s.ResetTest()
+			s.SetupTest()
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 			s.PrepareConcentratedPool()
 			poolSpreadRewardAccumulator, err := clKeeper.GetSpreadRewardAccumulator(s.Ctx, defaultPoolId)
@@ -1377,7 +1377,7 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_Swaps() {
 		numOverlapping: 1,
 	}
 	// Init suite.
-	s.ResetTest()
+	s.SetupTest()
 
 	// Default setup only creates 3 accounts, but we need 5 for this test.
 	s.TestAccs = apptesting.CreateRandomAccounts(positions.numAccounts)
@@ -1439,7 +1439,7 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_Swaps() {
 // - withdrawing partial liquidity does not withdraw but still lets spread reward claim as desired.
 func (s *KeeperTestSuite) TestFunctional_SpreadRewards_LP() {
 	// Setup.
-	s.ResetTest()
+	s.SetupTest()
 	s.TestAccs = apptesting.CreateRandomAccounts(5)
 
 	var (

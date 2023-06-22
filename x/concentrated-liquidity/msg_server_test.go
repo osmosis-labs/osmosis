@@ -47,7 +47,7 @@ func (s *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			ctx := s.Ctx
 
 			// Retrieve the pool creation fee from poolmanager params.
@@ -108,7 +108,7 @@ func (s *KeeperTestSuite) TestCreatePositionMsg() {
 	}
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			ctx := s.Ctx
 
 			baseConfigCopy := *baseCase
@@ -169,7 +169,7 @@ func (s *KeeperTestSuite) TestAddToPosition_Events() {
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.ResetTest()
+			s.SetupTest()
 
 			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 
@@ -270,7 +270,7 @@ func (s *KeeperTestSuite) TestCollectSpreadRewards_Events() {
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.ResetTest()
+			s.SetupTest()
 
 			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 
@@ -396,7 +396,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			ctx := s.Ctx
 
 			// Create a cl pool with a default position
@@ -498,7 +498,7 @@ func (s *KeeperTestSuite) TestFungify_Events() {
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.ResetTest()
+			s.SetupTest()
 
 			// msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 

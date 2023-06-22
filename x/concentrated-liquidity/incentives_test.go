@@ -293,7 +293,7 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 		for name, tc := range tests {
 			tc := tc
 			s.Run(name, func() {
-				s.ResetTest()
+				s.SetupTest()
 				clKeeper := s.App.ConcentratedLiquidityKeeper
 
 				// system under test
@@ -355,7 +355,7 @@ func (s *KeeperTestSuite) TestGetUptimeAccumulatorName() {
 		for name, tc := range tests {
 			tc := tc
 			s.Run(name, func() {
-				s.ResetTest()
+				s.SetupTest()
 
 				// system under test
 				accumName := types.KeyUptimeAccumulator(tc.poolId, tc.uptimeIndex)
@@ -447,7 +447,7 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulatorValues() {
 		for name, tc := range tests {
 			tc := tc
 			s.Run(name, func() {
-				s.ResetTest()
+				s.SetupTest()
 				clKeeper := s.App.ConcentratedLiquidityKeeper
 
 				// system under test
@@ -708,7 +708,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 		for name, tc := range tests {
 			tc := tc
 			s.Run(name, func() {
-				s.ResetTest()
+				s.SetupTest()
 				s.Ctx = s.Ctx.WithBlockTime(defaultStartTime.Add(tc.timeElapsed))
 
 				s.PrepareConcentratedPool()
@@ -1007,7 +1007,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 		for name, tc := range tests {
 			tc := tc
 			s.Run(name, func() {
-				s.ResetTest()
+				s.SetupTest()
 				clKeeper := s.App.ConcentratedLiquidityKeeper
 				s.Ctx = s.Ctx.WithBlockTime(defaultStartTime)
 
@@ -1113,7 +1113,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 // This test aims to cover the behavior of a series of state read/writes relating to incentive records.
 // Since these are lower level functions, we expect that validation logic for authorized uptimes is done at a higher level (see `TestCreateIncentive` tests).
 func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
-	s.ResetTest()
+	s.SetupTest()
 	clKeeper := s.App.ConcentratedLiquidityKeeper
 	s.Ctx = s.Ctx.WithBlockTime(defaultStartTime)
 	emptyIncentiveRecords := []types.IncentiveRecord{}
@@ -1201,7 +1201,7 @@ func (s *KeeperTestSuite) TestGetInitialUptimeGrowthOppositeDirectionOfLastTrave
 			tc := tc
 
 			s.Run(name, func() {
-				s.ResetTest()
+				s.SetupTest()
 				clKeeper := s.App.ConcentratedLiquidityKeeper
 
 				// create 2 pools
@@ -1515,7 +1515,7 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthRange() {
 	s.runMultipleAuthorizedUptimes(func() {
 		for name, tc := range tests {
 			s.Run(name, func() {
-				s.ResetTest()
+				s.SetupTest()
 
 				pool := s.PrepareConcentratedPool()
 				currentTick := pool.GetCurrentTick()
@@ -1783,7 +1783,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 				// --- Setup ---
 
 				// Init suite for each test.
-				s.ResetTest()
+				s.SetupTest()
 
 				// Set blocktime to fixed UTC value for consistency
 				s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
@@ -2357,7 +2357,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		for name, tc := range tests {
 			s.Run(name, func() {
 				tc := tc
-				s.ResetTest()
+				s.SetupTest()
 
 				// We fix join time so tests are deterministic
 				s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime)
@@ -2677,7 +2677,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 		for name, tc := range tests {
 			tc := tc
 			s.Run(name, func() {
-				s.ResetTest()
+				s.SetupTest()
 
 				// We fix blocktime to ensure tests are deterministic
 				s.Ctx = s.Ctx.WithBlockTime(defaultBlockTime)
@@ -2759,7 +2759,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 // when and a completely new incentive record is created even when the
 // exact same parameters are used.
 func (s *KeeperTestSuite) TestCreateIncentive_NewId() {
-	s.ResetTest()
+	s.SetupTest()
 
 	// Initialize test parameters
 	var (
@@ -2843,7 +2843,7 @@ func (s *KeeperTestSuite) TestUpdateAccumAndClaimRewards() {
 		for name, tc := range tests {
 			tc := tc
 			s.Run(name, func() {
-				s.ResetTest()
+				s.SetupTest()
 				poolSpreadRewardsAccumulator := s.prepareSpreadRewardsAccumulator()
 				positionKey := validPositionKey
 
@@ -2965,7 +2965,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 		for name, tc := range tests {
 			tc := tc
 			s.Run(name, func() {
-				s.ResetTest()
+				s.SetupTest()
 				clPool := s.PrepareConcentratedPool()
 				bankKeeper := s.App.BankKeeper
 				accountKeeper := s.App.AccountKeeper
@@ -3124,7 +3124,7 @@ func (s *KeeperTestSuite) TestPrepareClaimAllIncentivesForPosition() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			// Init suite for the test.
-			s.ResetTest()
+			s.SetupTest()
 
 			requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(1_000_000)), sdk.NewCoin(USDC, sdk.NewInt(5_000_000_000)))
 			s.FundAcc(s.TestAccs[0], requiredBalances)
@@ -3221,7 +3221,7 @@ func (s *KeeperTestSuite) TestPrepareClaimAllIncentivesForPosition() {
 func (s *KeeperTestSuite) TestFunctional_ClaimIncentives_LiquidityChange_VaryingTime() {
 	s.runMultipleAuthorizedUptimes(func() {
 		// Init suite for the test.
-		s.ResetTest()
+		s.SetupTest()
 
 		const (
 			testFullChargeDuration = 24 * time.Hour
@@ -3382,7 +3382,7 @@ func (s *KeeperTestSuite) TestGetAllIncentiveRecordsForUptime() {
 			s.Run(name, func() {
 				// --- Setup test env ---
 
-				s.ResetTest()
+				s.SetupTest()
 				clKeeper := s.App.ConcentratedLiquidityKeeper
 
 				// Set up pool and records unless tests requests invalid pool
@@ -3568,7 +3568,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		for name, tc := range tests {
 			s.Run(name, func() {
 				// --- Setup test env ---
-				s.ResetTest()
+				s.SetupTest()
 				tc = initTestCase(tc)
 
 				balancerPoolId := s.setupBalancerPoolWithFractionLocked(tc.balancerPoolAssets, tc.portionOfSharesBonded)
@@ -3704,7 +3704,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRangeWithNonExistentPools
 	s.runMultipleAuthorizedUptimes(func() {
 		for name, tc := range tests {
 			s.Run(name, func() {
-				s.ResetTest()
+				s.SetupTest()
 				if len(tc.balancerPoolAssets) == 0 {
 					tc.balancerPoolAssets = defaultBalancerAssets
 				}
@@ -3868,7 +3868,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 				// --- Setup ---
 
 				// Set up CL pool with appropriate liquidity
-				s.ResetTest()
+				s.SetupTest()
 				clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, sdk.ZeroDec())
 				clPoolId := clPool.GetId()
 
@@ -4060,7 +4060,7 @@ func (s *KeeperTestSuite) TestGetLargestAuthorizedAndSupportedUptimes() {
 		for name, tc := range tests {
 			tc := tc
 			s.Run(name, func() {
-				s.ResetTest()
+				s.SetupTest()
 
 				clParams := s.clk.GetParams(s.Ctx)
 				clParams.AuthorizedUptimes = tc.preSetAuthorizedParams
@@ -4122,7 +4122,7 @@ func (s *KeeperTestSuite) TestMoveRewardsToNewPositionAndDeleteOldAcc() {
 		for name, tc := range tests {
 			tc := tc
 			s.Run(name, func() {
-				s.ResetTest()
+				s.SetupTest()
 
 				// Get accumulator. The fact that its a fee accumulator is irrelevant for this test.
 				testAccumulator := s.prepareSpreadRewardsAccumulator()
@@ -4242,7 +4242,7 @@ func (s *KeeperTestSuite) TestGetIncentiveRecordSerialized() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 
-			s.ResetTest()
+			s.SetupTest()
 			k := s.App.ConcentratedLiquidityKeeper
 
 			pool := s.PrepareConcentratedPool()

@@ -78,7 +78,7 @@ func (s *KeeperTestSuite) TestInitializePool() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			s.ResetTest()
+			s.SetupTest()
 
 			if len(test.authorizedDenomsOverwrite) > 0 {
 				params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
@@ -147,7 +147,7 @@ func (s *KeeperTestSuite) TestGetPoolById() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			s.ResetTest()
+			s.SetupTest()
 
 			// Create default CL pool
 			pool := s.PrepareConcentratedPool()
@@ -178,7 +178,7 @@ func (s *KeeperTestSuite) TestGetPoolById() {
 }
 
 func (s *KeeperTestSuite) TestAsPoolI() {
-	s.ResetTest()
+	s.SetupTest()
 
 	// Create default CL pool
 	concentratedPool := s.PrepareConcentratedPool()
@@ -189,7 +189,7 @@ func (s *KeeperTestSuite) TestAsPoolI() {
 }
 
 func (s *KeeperTestSuite) TestPoolIToConcentratedPool() {
-	s.ResetTest()
+	s.SetupTest()
 
 	// Create default CL pool
 	concentratedPool := s.PrepareConcentratedPool()
@@ -212,7 +212,7 @@ func (s *KeeperTestSuite) TestPoolIToConcentratedPool() {
 }
 
 func (s *KeeperTestSuite) TestGetPoolDenoms() {
-	s.ResetTest()
+	s.SetupTest()
 
 	// Create default CL pool
 	concentratedPool := s.PrepareConcentratedPool()
@@ -230,7 +230,7 @@ func (s *KeeperTestSuite) TestGetPoolDenoms() {
 }
 
 func (s *KeeperTestSuite) TestCalculateSpotPrice() {
-	s.ResetTest()
+	s.SetupTest()
 
 	// Create default CL pool
 	concentratedPool := s.PrepareConcentratedPool()
@@ -261,7 +261,7 @@ func (s *KeeperTestSuite) TestCalculateSpotPrice() {
 }
 
 func (s *KeeperTestSuite) TestValidateSpreadFactor() {
-	s.ResetTest()
+	s.SetupTest()
 	params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
 	tests := []struct {
 		name         string
@@ -291,7 +291,7 @@ func (s *KeeperTestSuite) TestValidateSpreadFactor() {
 }
 
 func (s *KeeperTestSuite) TestValidateTickSpacing() {
-	s.ResetTest()
+	s.SetupTest()
 	params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
 	tests := []struct {
 		name        string
@@ -354,7 +354,7 @@ func (s *KeeperTestSuite) TestSetPool() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			s.ResetTest()
+			s.SetupTest()
 
 			// Retrieving the pool by ID should return an error.
 			retrievedPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, 1)
@@ -401,7 +401,7 @@ func (s *KeeperTestSuite) TestValidateAuthorizedQuoteDenoms() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			s.ResetTest()
+			s.SetupTest()
 
 			// Method under test.
 			isValid := cl.ValidateAuthorizedQuoteDenoms(s.Ctx, test.quoteDenom, test.authorizedQuoteDenoms)
@@ -457,7 +457,7 @@ func (s *KeeperTestSuite) TestDecreaseConcentratedPoolTickSpacing() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			owner := s.TestAccs[0]
 
 			// Create OSMO <> USDC pool with tick spacing of 100
@@ -545,7 +545,7 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 	for _, tc := range tests {
 		tc := tc
 		s.Run(tc.name, func() {
-			s.ResetTest()
+			s.SetupTest()
 
 			// Create default CL pool
 			pool := s.PrepareConcentratedPool()
@@ -594,7 +594,7 @@ func (s *KeeperTestSuite) TestValidateTickSpacingUpdate() {
 	for _, tc := range tests {
 		tc := tc
 		s.Run(tc.name, func() {
-			s.ResetTest()
+			s.SetupTest()
 
 			// Create default CL pool
 			// default pool tick spacing is 100.

@@ -51,7 +51,7 @@ func withLiquidityNetandTickIndex(tick genesis.FullTick, tickIndex int64, liquid
 }
 
 func (s *KeeperTestSuite) TestTickOrdering() {
-	s.ResetTest()
+	s.SetupTest()
 
 	storeKey := sdk.NewKVStoreKey("concentrated_liquidity")
 	tKey := sdk.NewTransientStoreKey("transient_test")
@@ -291,7 +291,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.ResetTest()
+			s.SetupTest()
 
 			// Create a default CL pool
 			pool := s.PrepareConcentratedPool()
@@ -456,7 +456,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.ResetTest()
+			s.SetupTest()
 
 			// Create a default CL pool
 			clPool := s.PrepareConcentratedPool()
@@ -613,7 +613,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.ResetTest()
+			s.SetupTest()
 
 			// Create a default CL pool
 			clPool := s.PrepareConcentratedPool()
@@ -844,7 +844,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.ResetTest()
+			s.SetupTest()
 
 			// Create a default CL pool
 			pool := s.PrepareConcentratedPool()
@@ -1247,7 +1247,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		test := test
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.ResetTest()
+			s.SetupTest()
 
 			// Create a default CL pool
 			pool := s.PrepareConcentratedPool()
@@ -1386,7 +1386,7 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			s.ResetTest()
+			s.SetupTest()
 
 			tickSpacing := defaultTickSpacing
 			if test.tickSpacing != uint64(0) {

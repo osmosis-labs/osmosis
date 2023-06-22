@@ -990,7 +990,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickSpacingO
 
 		for name, tc := range testcases {
 			s.Run(name, func() {
-				s.ResetTest()
+				s.SetupTest()
 
 				poolId, positionMeta := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
 				s.Require().Equal(len(tc.isPositionActiveFlag), len(positionMeta))
@@ -1079,7 +1079,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 	// At the same time, it validates that the liquidity and current tick are updated correctly.
 	// Additionally, it validates that it is still possible to swap right.
 	s.Run("to min tick", func() {
-		s.ResetTest()
+		s.SetupTest()
 
 		poolId, _ := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
 
@@ -1119,7 +1119,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 	// At the same time, it validates that the liquidity and current tick are updated correctly.
 	// Additionally, it validates that it is still possible to swap left.
 	s.Run("to max tick", func() {
-		s.ResetTest()
+		s.SetupTest()
 
 		poolId, _ := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
 

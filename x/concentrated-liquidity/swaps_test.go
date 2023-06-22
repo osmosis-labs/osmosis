@@ -1613,7 +1613,7 @@ func populateSwapTestFields(cases map[string]SwapTest) {
 }
 
 func (s *KeeperTestSuite) setupAndFundSwapTest() {
-	s.ResetTest()
+	s.SetupTest()
 	s.FundAcc(s.TestAccs[0], swapFundCoins)
 	s.FundAcc(s.TestAccs[1], swapFundCoins)
 }
@@ -2123,7 +2123,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			pool := s.preparePoolAndDefaultPosition()
 
 			// Check the test case to see if we are swapping asset0 for asset1 or vice versa
@@ -2297,7 +2297,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			pool := s.preparePoolAndDefaultPosition()
 
 			// Check the test case to see if we are swapping asset0 for asset1 or vice versa
@@ -2545,7 +2545,7 @@ func (s *KeeperTestSuite) TestUpdateSpreadRewardGrowthGlobal() {
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-			s.ResetTest()
+			s.SetupTest()
 
 			// Setup.
 			swapState := cl.SwapState{}
@@ -2657,7 +2657,7 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			pool := s.preparePoolWithCustSpread(tc.spreadFactor)
 
 			s.FundAcc(pool.GetAddress(), tc.poolInitialBalance)

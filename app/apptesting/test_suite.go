@@ -64,7 +64,7 @@ func (s *KeeperTestHelper) Setup() {
 	if err != nil {
 		panic(fmt.Sprintf("failed creating temporary directory: %v", err))
 	}
-	s.T().Cleanup(func() { os.RemoveAll(dir) })
+	s.T().Cleanup(func() { os.RemoveAll(dir); s.withCaching = false })
 	s.App = app.SetupWithCustomHome(false, dir)
 	s.setupGeneral()
 }
