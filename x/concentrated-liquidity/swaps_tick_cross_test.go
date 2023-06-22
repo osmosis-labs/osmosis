@@ -1169,3 +1169,154 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 		s.swapZeroForOneLeft(poolId, smallTokenZeroCoinIn)
 	})
 }
+
+// TestSwapOutGivenIn_GetLiquidityFromAmountsPositionBounds tests edge case behavior of swapping
+// in either direction and how it relates to the calculation of liquidity from amounts
+// and its bound checks.
+// The test generates 4 positions where each is 1 tick wider than the previous one.
+// Then, it swaps to lower edge of one position and runs some assertion on the way
+// that liquidiy is calculated for that position as well as the adjacent position on the swap path.
+// It then repeats this for the other direction.
+func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_GetLiquidityFromAmountsPositionBounds() {
+	s.SetupTest()
+
+	// See definiton of defaultTickSpacingsAway for position layout diagram.
+	poolId, positions := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
+	var (
+		// 3 tick spacings away [30999997, 31000003) (3TS) from the original current tick (31000000)
+		positionThreeTS               = positions[1]
+		positionThreeTSLowerTick      = positionThreeTS.lowerTick
+		positionThreeTSUpperTick      = positionThreeTS.upperTick
+		positionThreeTSLowerSqrtPrice = s.tickToSqrtPrice(positionThreeTSLowerTick)
+		positionThreeTSUpperSqrtPrice = s.tickToSqrtPrice(positionThreeTSUpperTick)
+
+		// 2 tick spacings away [30999998, 31000002) (2TS) from the original current tick (31000000)
+		positionTwoTS               = positions[2]
+		positionTwoTSLowerTick      = positionTwoTS.lowerTick
+		positionTwoTSUpperTick      = positionTwoTS.upperTick
+		positionTwoTSLowerSqrtPrice = s.tickToSqrtPrice(positionTwoTSLowerTick)
+		positionTwoTSUpperSqrtPrice = s.tickToSqrtPrice(positionTwoTSUpperTick)
+	)
+
+	// Assert that the liquidity computed from amounts utilized the "in-range" option.
+	validateInRangeLiquidityFromAmounts := func(currentSqrtPrice, lowerTickSqrtPrice, upperTickSqrtPrice sdk.Dec) {
+		liquidity0 := math.Liquidity0(DefaultAmt0, currentSqrtPrice, upperTickSqrtPrice)
+		liquidity1 := math.Liquidity1(DefaultAmt1, currentSqrtPrice, lowerTickSqrtPrice)
+		expectedLiquidity := sdk.MinDec(liquidity0, liquidity1)
+		actualLiquidity := math.GetLiquidityFromAmounts(currentSqrtPrice, lowerTickSqrtPrice, upperTickSqrtPrice, DefaultAmt0, DefaultAmt1)
+		s.Require().Equal(expectedLiquidity, actualLiquidity)
+	}
+
+	// Assert one tick difference
+	s.Require().Equal(positionThreeTSLowerTick, positionTwoTSLowerTick-tickSpacingOne)
+
+	// Fetch pool
+	p, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	tokenZero := p.GetToken0()
+	tokenOne := p.GetToken1()
+
+	// Persisting setup context to use
+	// for both zero for one and one for zero tests.
+	setupCtx := s.Ctx
+
+	s.Run("zero for one", func() {
+		// Set temporary cache context on the suite
+		// so that we can reuse test helpers without mutating
+		// the setup
+		cacheCtx, _ := s.Ctx.CacheContext()
+		s.Ctx = cacheCtx
+
+		// Compute tokenIn amount necessary to reach the lower tick of the 3TS position.
+		const (
+			isZeroForOne                  = true
+			shouldStayWithinTheSameBucket = false
+		)
+		tokenIn, _, _ := s.computeSwapAmounts(poolId, sdk.Dec{}, positionThreeTSLowerTick, isZeroForOne, shouldStayWithinTheSameBucket)
+
+		// Swap until the lower tick of the 3TS position is reached.
+		s.swapZeroForOneLeft(poolId, sdk.NewCoin(tokenZero, tokenIn.TruncateInt()))
+
+		// Assert that the desired tick is reached.
+		s.assertPoolTickEquals(poolId, positionThreeTSLowerTick)
+
+		// Refetch pool
+		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+		s.Require().NoError(err)
+
+		currentSqrtPrice := pool.GetCurrentSqrtPrice()
+
+		// Current sqrt price is still above the lower tick of the 3TS position.
+		s.Require().True(currentSqrtPrice.GT(positionThreeTSLowerSqrtPrice))
+
+		// Current sqrt price is directly on the lower tick sqrt price of the 2TS position.
+		s.Require().True(currentSqrtPrice.Equal(positionTwoTSLowerSqrtPrice))
+
+		// 3TS position is in range.
+		s.assertPositionInRange(poolId, positionThreeTSLowerTick, positionThreeTS.upperTick)
+
+		// Liquidity from amounts for position 3TS is computed using the in-range option.
+		validateInRangeLiquidityFromAmounts(currentSqrtPrice, positionThreeTSLowerSqrtPrice, positionThreeTSUpperSqrtPrice)
+
+		// 2TS position is out of range.
+		s.assertPositionOutOfRange(poolId, positionTwoTSLowerTick, positionTwoTS.upperTick)
+
+		// 2TS position should consist of token zero only as it is to the right of the active range.
+		liquidity02TS := math.Liquidity0(DefaultAmt0, currentSqrtPrice, positionTwoTSUpperSqrtPrice)
+		actualLiquidity2Ts := math.GetLiquidityFromAmounts(pool.GetCurrentSqrtPrice(), positionTwoTSLowerSqrtPrice, s.tickToSqrtPrice(positionTwoTS.upperTick), DefaultAmt0, DefaultAmt1)
+		s.Require().Equal(liquidity02TS, actualLiquidity2Ts)
+
+		// Reset suite context
+		s.Ctx = setupCtx
+	})
+
+	s.Run("one for zero", func() {
+		// Set temporary cache context on the suite
+		// so that we can reuse test helpers without mutating
+		// the setup
+		cacheCtx, _ := s.Ctx.CacheContext()
+		s.Ctx = cacheCtx
+
+		/// Compute tokenIn amount necessary to reach the upper tick of the 3TS position.
+		const (
+			isZeroForOne                  = false
+			shouldStayWithinTheSameBucket = false
+		)
+		tokenIn, _, _ := s.computeSwapAmounts(poolId, sdk.Dec{}, positionTwoTSUpperTick, isZeroForOne, shouldStayWithinTheSameBucket)
+
+		s.swapOneForZeroRight(poolId, sdk.NewCoin(tokenOne, tokenIn.TruncateInt()))
+
+		// Assert that the desired tick is reached.
+		s.assertPoolTickEquals(poolId, positionTwoTSUpperTick)
+
+		// Refetch pool
+		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+		s.Require().NoError(err)
+
+		currentSqrtPrice := pool.GetCurrentSqrtPrice()
+
+		// Current sqrt price equals to 2TS position's upper tick sqrt price.
+		s.Require().True(currentSqrtPrice.Equal(positionTwoTSUpperSqrtPrice))
+
+		// Current sqrt price is below the upper tick sqrt price of the 3TS position.
+		s.Require().True(currentSqrtPrice.LT(positionThreeTSUpperSqrtPrice))
+
+		// 3 TS position is in range.
+		s.assertPositionInRange(poolId, positionThreeTSLowerTick, positionThreeTS.upperTick)
+
+		// Liquidity from amounts for 3TS position is computed using the in-range option.
+		validateInRangeLiquidityFromAmounts(currentSqrtPrice, positionThreeTSLowerSqrtPrice, positionThreeTSUpperSqrtPrice)
+
+		// 2TS position is out of range.
+		s.assertPositionOutOfRange(poolId, positionTwoTSLowerTick, positionTwoTS.upperTick)
+
+		// 2TS should consist of token one only as it is to the right of the active range.
+		liquidity1Pos3 := math.Liquidity1(DefaultAmt1, currentSqrtPrice, positionTwoTSLowerSqrtPrice)
+		actualLiquidityPos3 := math.GetLiquidityFromAmounts(pool.GetCurrentSqrtPrice(), positionTwoTSLowerSqrtPrice, positionTwoTSUpperSqrtPrice, DefaultAmt0, DefaultAmt1)
+		s.Require().Equal(liquidity1Pos3, actualLiquidityPos3)
+
+		// Reset suite context
+		s.Ctx = setupCtx
+	})
+}
