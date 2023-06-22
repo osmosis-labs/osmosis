@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/swapstrategy"
@@ -1207,14 +1208,28 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_PriceLimit_TickCross_ZeroFor
 	s.FundAcc(s.TestAccs[0], coinsIn)
 
 	// Hand picked such that this is the largest possible price that translates to tickT (30999998)
-	sqrtPriceLimitT := sdk.MustNewDecFromStr("4999.999000000000000080")
+	// 4999.999000000000000115
+	// 4999.998000000000000100
+	priceLimitT := sdk.MustNewDecFromStr("4999.99900000000000012")
+
+	sqrtPT := s.tickToSqrtPrice(30999998)
+	sqrtPTPlusOne := s.tickToSqrtPrice(30999999)
+
+	fmt.Println("sqrtPT", sqrtPT)
+	fmt.Println("sqrtPTPlusOne", sqrtPTPlusOne)
+
+	sqrtA := osmomath.MustMonotonicSqrt(priceLimitT)
+	fmt.Println(sqrtA)
+
+	sqrtB := osmomath.MustMonotonicSqrt(priceLimitT.Add(sdk.SmallestDec()))
+	fmt.Println(sqrtB)
 
 	// Swap with cache context so that we can reuse the same setup logic for another swap
 	// with different price limit.
 	originalCtx := s.Ctx
 	s.Ctx, _ = s.Ctx.CacheContext()
 
-	_, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, s.TestAccs[0], pool, coinsIn[0], pool.GetToken1(), sdk.ZeroDec(), sqrtPriceLimitT)
+	_, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, s.TestAccs[0], pool, coinsIn[0], pool.GetToken1(), sdk.ZeroDec(), priceLimitT)
 	s.Require().NoError(err)
 
 	// Refetch pool
@@ -1228,11 +1243,11 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_PriceLimit_TickCross_ZeroFor
 	s.Require().NotEqual(initialLiquidity, pool.GetLiquidity())
 
 	// Hand picked such that this is the smallest possible price that translates to tick tPlusOne (30999999)
-	sqrtPriceLimitTPlusOne := sqrtPriceLimitT.Add(sdk.SmallestDec())
+	priceLimitTPlusOne := priceLimitT.Add(sdk.SmallestDec())
 
 	// Replace original context back so that we can repeat the scenario with a different price limit.
 	s.Ctx = originalCtx
-	_, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, s.TestAccs[0], pool, coinsIn[0], pool.GetToken1(), sdk.ZeroDec(), sqrtPriceLimitTPlusOne)
+	_, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, s.TestAccs[0], pool, coinsIn[0], pool.GetToken1(), sdk.ZeroDec(), priceLimitTPlusOne)
 	s.Require().NoError(err)
 	s.assertPoolTickEquals(poolId, tickTPlusOne)
 
