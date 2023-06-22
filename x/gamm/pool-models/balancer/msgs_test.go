@@ -243,7 +243,6 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) TestMsgCreateBalancerPool() {
-	s.SetupTest()
 	tests := map[string]struct {
 		msg         balancer.MsgCreateBalancerPool
 		poolId      uint64
