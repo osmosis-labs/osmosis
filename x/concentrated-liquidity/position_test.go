@@ -313,7 +313,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				if test.positionExists {
 					// Track how much the current uptime accum has grown by
 					actualUptimeAccumDelta[uptimeIndex] = newUptimeAccumValues[uptimeIndex].Sub(initUptimeAccumValues[uptimeIndex])
-					if timeElapsedSec.GT(sdk.ZeroDec()) {
+					if timeElapsedSec.IsPositive() {
 						expectedGrowthCurAccum, _, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, uptime, test.param.liquidityDelta, timeElapsedSec, expectedIncentiveRecords)
 						s.Require().NoError(err)
 						expectedUptimeAccumValueGrowth[uptimeIndex] = expectedGrowthCurAccum
@@ -408,103 +408,6 @@ type positionOwnershipTest struct {
 
 	setupPositions []sdk.AccAddress
 	poolId         uint64
-}
-
-func (s *KeeperTestSuite) runIsPositionOwnerTest(test positionOwnershipTest) {
-	s.SetupTest()
-	p := s.PrepareConcentratedPool()
-	for i, owner := range test.setupPositions {
-		err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, p.GetId(), owner, DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, uint64(i))
-		s.Require().NoError(err)
-	}
-	err := s.App.ConcentratedLiquidityKeeper.EnsurePositionOwner(s.Ctx, test.queryPositionOwner, test.poolId, test.queryPositionId)
-	if test.expPass {
-		s.Require().NoError(err)
-	} else {
-		s.Require().Error(err)
-	}
-
-}
-
-func (s *KeeperTestSuite) TestIsPositionOwnerMultiPosition() {
-	tenAddrOneAddr := []sdk.AccAddress{}
-	for i := 0; i < 10; i++ {
-		tenAddrOneAddr = append(tenAddrOneAddr, s.TestAccs[0])
-	}
-	tenAddrOneAddr = append(tenAddrOneAddr, s.TestAccs[1])
-	tests := map[string]positionOwnershipTest{
-		"prefix malleability (prior bug)": {
-			queryPositionOwner: s.TestAccs[1],
-			queryPositionId:    1, expPass: false,
-			setupPositions: tenAddrOneAddr,
-		},
-		"things work": {
-			queryPositionOwner: s.TestAccs[1],
-			queryPositionId:    10, expPass: true,
-			setupPositions: tenAddrOneAddr,
-		},
-	}
-	for name, test := range tests {
-		s.Run(name, func() {
-			test.poolId = 1
-			s.runIsPositionOwnerTest(test)
-		})
-	}
-}
-
-func (s *KeeperTestSuite) TestIsPositionOwner() {
-	actualOwner := s.TestAccs[0]
-	nonOwner := s.TestAccs[1]
-
-	tests := []struct {
-		name         string
-		ownerToQuery sdk.AccAddress
-		poolId       uint64
-		positionId   uint64
-		isOwner      bool
-	}{
-		{
-			name:         "Happy path",
-			ownerToQuery: actualOwner,
-			poolId:       1,
-			positionId:   DefaultPositionId,
-			isOwner:      true,
-		},
-		{
-			name:         "query non owner",
-			ownerToQuery: nonOwner,
-			poolId:       1,
-			positionId:   DefaultPositionId,
-			isOwner:      false,
-		},
-		{
-			name:         "different pool ID, not the owner",
-			ownerToQuery: actualOwner,
-			poolId:       2,
-			positionId:   DefaultPositionId,
-			isOwner:      false,
-		},
-		{
-			name:         "different position ID, not the owner",
-			ownerToQuery: actualOwner,
-			poolId:       1,
-			positionId:   DefaultPositionId + 1,
-			isOwner:      false,
-		},
-	}
-
-	for _, test := range tests {
-		s.Run(test.name, func() {
-			s.runIsPositionOwnerTest(positionOwnershipTest{
-				queryPositionOwner: test.ownerToQuery,
-				queryPositionId:    test.positionId,
-				expPass:            test.isOwner,
-				// positions 0 and 1 are owned by actualOwner
-				setupPositions: []sdk.AccAddress{actualOwner, actualOwner},
-				poolId:         test.poolId,
-			})
-		})
-	}
 }
 
 func (s *KeeperTestSuite) TestGetUserPositions() {
@@ -1069,9 +972,9 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		{
 			name: "Error: one of the full range positions is locked",
 			setupFullyChargedPositions: []position{
-				{1, defaultPoolId, defaultAddress, DefaultCoins, types.MinTick, types.MaxTick, unlocked},
-				{2, defaultPoolId, defaultAddress, DefaultCoins, types.MinTick, types.MaxTick, locked},
-				{3, defaultPoolId, defaultAddress, DefaultCoins, types.MinTick, types.MaxTick, unlocked},
+				{1, defaultPoolId, defaultAddress, DefaultCoins, types.MinInitializedTick, types.MaxTick, unlocked},
+				{2, defaultPoolId, defaultAddress, DefaultCoins, types.MinInitializedTick, types.MaxTick, locked},
+				{3, defaultPoolId, defaultAddress, DefaultCoins, types.MinInitializedTick, types.MaxTick, unlocked},
 			},
 			lockPositionIds:         []uint64{2},
 			positionIdsToMigrate:    []uint64{1, 2, 3},
@@ -1082,9 +985,9 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		{
 			name: "Pass: one of the full range positions was locked but got unlocked 1ms before fungification",
 			setupFullyChargedPositions: []position{
-				{1, defaultPoolId, defaultAddress, DefaultCoins, types.MinTick, types.MaxTick, unlocked},
-				{2, defaultPoolId, defaultAddress, DefaultCoins, types.MinTick, types.MaxTick, locked},
-				{3, defaultPoolId, defaultAddress, DefaultCoins, types.MinTick, types.MaxTick, unlocked},
+				{1, defaultPoolId, defaultAddress, DefaultCoins, types.MinInitializedTick, types.MaxTick, unlocked},
+				{2, defaultPoolId, defaultAddress, DefaultCoins, types.MinInitializedTick, types.MaxTick, locked},
+				{3, defaultPoolId, defaultAddress, DefaultCoins, types.MinInitializedTick, types.MaxTick, unlocked},
 			},
 
 			lockPositionIds:         []uint64{2},
@@ -1840,10 +1743,10 @@ func (s *KeeperTestSuite) TestMintSharesAndLock() {
 			name:                    "err: upper tick is not max tick",
 			owner:                   defaultAddress,
 			createFullRangePosition: false,
-			lowerTick:               types.MinTick,
+			lowerTick:               types.MinInitializedTick,
 			upperTick:               DefaultUpperTick,
 			remainingLockDuration:   24 * time.Hour,
-			expectedErr:             types.PositionNotFullRangeError{PositionId: 1, LowerTick: types.MinTick, UpperTick: DefaultUpperTick},
+			expectedErr:             types.PositionNotFullRangeError{PositionId: 1, LowerTick: types.MinInitializedTick, UpperTick: DefaultUpperTick},
 		},
 	}
 
@@ -2494,7 +2397,7 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 			s.Require().NoError(err)
 			s.Require().Equal(s.Ctx.BlockTime(), position.JoinTime)
 			s.Require().Equal(types.MaxTick, position.UpperTick)
-			s.Require().Equal(types.MinTick, position.LowerTick)
+			s.Require().Equal(types.MinInitializedTick, position.LowerTick)
 			s.Require().Equal(liquidity, position.Liquidity)
 
 			// Check locked

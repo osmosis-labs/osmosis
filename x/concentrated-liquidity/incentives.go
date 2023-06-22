@@ -221,11 +221,14 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64,
 	// Add full range equivalent shares to each uptime accumulator.
 	// Note that we expect spot price divergence between the CL and balancer pools to be handled by `GetLiquidityFromAmounts`
 	// returning a lower bound on qualifying liquidity.
-	for uptimeIndex := range uptimeAccums {
-		balancerPositionName := string(types.KeyBalancerFullRange(clPoolId, canonicalBalancerPoolId, uint64(uptimeIndex)))
-		err := uptimeAccums[uptimeIndex].NewPosition(balancerPositionName, qualifyingFullRangeShares, nil)
-		if err != nil {
-			return 0, sdk.ZeroDec(), err
+	// We only create accumulator positions if the qualifying full range share is non-zero.
+	if !qualifyingFullRangeShares.IsZero() {
+		for uptimeIndex := range uptimeAccums {
+			balancerPositionName := string(types.KeyBalancerFullRange(clPoolId, canonicalBalancerPoolId, uint64(uptimeIndex)))
+			err := uptimeAccums[uptimeIndex].NewPosition(balancerPositionName, qualifyingFullRangeShares, nil)
+			if err != nil {
+				return 0, sdk.ZeroDec(), err
+			}
 		}
 	}
 
@@ -358,6 +361,7 @@ var dec1e9 = sdk.NewDec(1e9)
 // Specifically, it gets the time elapsed since the last update and divides it
 // by the qualifying liquidity for each uptime. It then adds this value to the
 // respective accumulator and updates relevant time trackers accordingly.
+// This method also serves the purpose of correctly splitting rewards between the linked balancer pool and the cl pool.
 // CONTRACT: the caller validates that the pool with the given id exists.
 // CONTRACT: given uptimeAccums are associated with the given pool id.
 // CONTRACT: caller is responsible for the uptimeAccums to be up-to-date.
@@ -403,27 +407,24 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 
 	// We optimistically assume that all liquidity on the active tick qualifies and handle
 	// uptime-related checks in forfeiting logic.
+
+	// If there is no share to be incentivized for the current uptime accumulator, we leave it unchanged
 	qualifyingLiquidity := pool.GetLiquidity().Add(qualifyingBalancerShares)
+	if !qualifyingLiquidity.LT(sdk.OneDec()) {
+		for uptimeIndex := range uptimeAccums {
+			// Get relevant uptime-level values
+			curUptimeDuration := types.SupportedUptimes[uptimeIndex]
+			incentivesToAddToCurAccum, updatedPoolRecords, err := calcAccruedIncentivesForAccum(ctx, curUptimeDuration, qualifyingLiquidity, timeElapsedSec, poolIncentiveRecords)
+			if err != nil {
+				return err
+			}
 
-	for uptimeIndex := range uptimeAccums {
-		// Get relevant uptime-level values
-		curUptimeDuration := types.SupportedUptimes[uptimeIndex]
+			// Emit incentives to current uptime accumulator
+			uptimeAccums[uptimeIndex].AddToAccumulator(incentivesToAddToCurAccum)
 
-		// If there is no share to be incentivized for the current uptime accumulator, we leave it unchanged
-		if qualifyingLiquidity.LT(sdk.OneDec()) {
-			continue
+			// Update pool records (stored in state after loop)
+			poolIncentiveRecords = updatedPoolRecords
 		}
-
-		incentivesToAddToCurAccum, updatedPoolRecords, err := calcAccruedIncentivesForAccum(ctx, curUptimeDuration, qualifyingLiquidity, timeElapsedSec, poolIncentiveRecords)
-		if err != nil {
-			return err
-		}
-
-		// Emit incentives to current uptime accumulator
-		uptimeAccums[uptimeIndex].AddToAccumulator(incentivesToAddToCurAccum)
-
-		// Update pool records (stored in state after loop)
-		poolIncentiveRecords = updatedPoolRecords
 	}
 
 	// Update pool incentive records and LastLiquidityUpdate time in state to reflect emitted incentives
@@ -538,7 +539,7 @@ func (k Keeper) setIncentiveRecord(ctx sdk.Context, incentiveRecord types.Incent
 	// In all other cases, we update the record in state
 	if store.Has(key) && incentiveRecordBody.RemainingCoin.IsZero() {
 		store.Delete(key)
-	} else if incentiveRecordBody.RemainingCoin.Amount.GT(sdk.ZeroDec()) {
+	} else if incentiveRecordBody.RemainingCoin.Amount.IsPositive() {
 		osmoutils.MustSet(store, key, &incentiveRecordBody)
 	}
 
@@ -972,9 +973,11 @@ func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positi
 		return sdk.Coins{}, sdk.Coins{}, err
 	}
 
-	err = k.ensurePositionOwner(ctx, sender, position.PoolId, positionId)
-	if err != nil {
-		return sdk.Coins{}, sdk.Coins{}, err
+	if sender.String() != position.Address {
+		return sdk.Coins{}, sdk.Coins{}, types.NotPositionOwnerError{
+			PositionId: positionId,
+			Address:    sender.String(),
+		}
 	}
 
 	// Claim all incentives for the position.

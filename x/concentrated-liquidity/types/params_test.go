@@ -30,7 +30,7 @@ func TestValidateTicks(t *testing.T) {
 			expectError: true,
 		},
 		"error: not a multiple of min tick": {
-			i:           []int64{types.MinTick + 1},
+			i:           []int64{types.MinInitializedTick + 1},
 			expectError: true,
 		},
 		"error: greater than max tick": {
@@ -42,11 +42,11 @@ func TestValidateTicks(t *testing.T) {
 			expectError: true,
 		},
 		"error: smaller than min tick": {
-			i:           []int64{types.MinTick * 2},
+			i:           []int64{types.MinInitializedTick * 2},
 			expectError: true,
 		},
 		"error: is min tick": {
-			i:           []int64{types.MinTick},
+			i:           []int64{types.MinInitializedTick},
 			expectError: true,
 		},
 	}

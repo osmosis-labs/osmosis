@@ -118,10 +118,6 @@ func (k Keeper) CollectSpreadRewards(ctx sdk.Context, owner sdk.AccAddress, posi
 	return k.collectSpreadRewards(ctx, owner, positionId)
 }
 
-func (k Keeper) EnsurePositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, positionId uint64) error {
-	return k.ensurePositionOwner(ctx, sender, poolId, positionId)
-}
-
 func (k Keeper) PrepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
 	return k.prepareClaimableSpreadRewards(ctx, positionId)
 }

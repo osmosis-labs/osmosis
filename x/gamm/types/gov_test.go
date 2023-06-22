@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 )
 
 func TestUpdateMigrationRecordsProposalMarshalUnmarshal(t *testing.T) {
@@ -17,28 +18,28 @@ func TestUpdateMigrationRecordsProposalMarshalUnmarshal(t *testing.T) {
 			proposal: &types.UpdateMigrationRecordsProposal{
 				Title:       "",
 				Description: "proposal to update migration records",
-				Records:     []types.BalancerToConcentratedPoolLink(nil),
+				Records:     []gammmigration.BalancerToConcentratedPoolLink(nil),
 			},
 		},
 		{ // empty description
 			proposal: &types.UpdateMigrationRecordsProposal{
 				Title:       "title",
 				Description: "",
-				Records:     []types.BalancerToConcentratedPoolLink(nil),
+				Records:     []gammmigration.BalancerToConcentratedPoolLink(nil),
 			},
 		},
 		{ // empty records
 			proposal: &types.UpdateMigrationRecordsProposal{
 				Title:       "title",
 				Description: "proposal to update migration records",
-				Records:     []types.BalancerToConcentratedPoolLink(nil),
+				Records:     []gammmigration.BalancerToConcentratedPoolLink(nil),
 			},
 		},
 		{ // one record
 			proposal: &types.UpdateMigrationRecordsProposal{
 				Title:       "title",
 				Description: "proposal to update migration records",
-				Records: []types.BalancerToConcentratedPoolLink{
+				Records: []gammmigration.BalancerToConcentratedPoolLink{
 					{
 						BalancerPoolId: 1,
 						ClPoolId:       5,
@@ -50,7 +51,7 @@ func TestUpdateMigrationRecordsProposalMarshalUnmarshal(t *testing.T) {
 			proposal: &types.UpdateMigrationRecordsProposal{
 				Title:       "title",
 				Description: "proposal to update migration records",
-				Records: []types.BalancerToConcentratedPoolLink{
+				Records: []gammmigration.BalancerToConcentratedPoolLink{
 					{
 						BalancerPoolId: 1,
 						ClPoolId:       5,
