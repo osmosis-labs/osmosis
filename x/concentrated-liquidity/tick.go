@@ -311,7 +311,7 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 // Errors:
 // * types.PoolNotFoundError: If the given pool does not exist.
 // * types.TokenInDenomNotInPoolError: If the given tokenIn is not an asset in the pool.
-func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, tokenIn string, userGivenStartTick sdk.Int, boundTick sdk.Int) (liquidityDepths []queryproto.TickLiquidityNet, startTick int64, startTickLiquidity sdk.Dec, err error) {
+func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, tokenIn string, userGivenStartTick sdk.Int, boundTick sdk.Int) (liquidityDepths []queryproto.TickLiquidityNet, iteratorStartTick int64, startTickLiquidity sdk.Dec, err error) {
 	// get min and max tick for the pool
 	p, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -320,7 +320,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 
 	ctx.Logger().Debug(fmt.Sprintf("userGivenStartTick %s, boundTick %s, currentTick %d\n", userGivenStartTick, boundTick, p.GetCurrentTick()))
 
-	startTick = p.GetCurrentTick()
+	startTick := p.GetCurrentTick()
 	// If start tick is set, use it as the current tick for grabbing liquidities from.
 	if !userGivenStartTick.IsNil() {
 		startTick = userGivenStartTick.Int64()
@@ -383,7 +383,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 
 	ctx.Logger().Debug("validating start tick")
 	if err := validateTickIsInValidRange(sdk.NewInt(startTick)); err != nil {
-		return []queryproto.TickLiquidityNet{}, 0, sdk.Dec{}, fmt.Errorf("failed validating start tick (%d) with current sqrt price of (%s): %w", startTick, currentTickSqrtPrice, err)
+		return []queryproto.TickLiquidityNet{}, 0, sdk.Dec{}, fmt.Errorf("failed validating start tick (%d) with current sqrt price of (%s): %w", iteratorStartTick, currentTickSqrtPrice, err)
 	}
 
 	// iterator assignments
@@ -397,9 +397,9 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	// If one for zero, we use forward iterator. However, our definition of the active range is inclusive
 	// of the lower bound. As a result, current liquidity must already include the lower bound tick
 	// so we skip it.
-	startTick = startTick + 1
+	iteratorStartTick = startTick + 1
 
-	startTickKey := types.TickIndexToBytes(startTick)
+	startTickKey := types.TickIndexToBytes(iteratorStartTick)
 	boundTickKey := types.TickIndexToBytes(boundTick.Int64())
 
 	// define iterator depending on swap strategy
@@ -425,11 +425,11 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 		}
 
 		if zeroForOne {
-			if tickIndex < startTick {
+			if tickIndex < iteratorStartTick {
 				break
 			}
 		} else {
-			if tickIndex > startTick {
+			if tickIndex > iteratorStartTick {
 				break
 			}
 		}

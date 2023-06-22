@@ -1325,7 +1325,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			s.Require().NoError(err)
 
 			// system under test
-			liquidityForRange, _, startTickLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityNetInDirection(s.Ctx, test.poolId, test.tokenIn, test.startTick, test.boundTick)
+			liquidityForRange, startTick, startTickLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityNetInDirection(s.Ctx, test.poolId, test.tokenIn, test.startTick, test.boundTick)
 			if test.expectedError {
 				s.Require().Error(err)
 				return
@@ -1333,11 +1333,12 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			s.Require().NoError(err)
 			s.Require().Equal(test.expectedLiquidityDepths, liquidityForRange)
-			// if startTick != 0 {
-			// 	s.Require().Equal(test.startTick.Int64(), startTick)
-			// } else {
-			// 	s.Require().Equal(curTick, startTick)
-			// }
+
+			if test.startTick.IsNil() {
+				s.Require().Equal(curTick, startTick)
+			} else {
+				s.Require().Equal(test.startTick.Int64(), startTick)
+			}
 
 			s.Require().Equal(test.expectedStartTickLiquidity, startTickLiquidity)
 		})
