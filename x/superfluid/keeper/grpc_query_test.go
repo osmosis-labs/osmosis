@@ -2,12 +2,11 @@ package keeper_test
 
 import (
 	"fmt"
-	"reflect"
-	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 )
@@ -368,8 +367,9 @@ func (s *KeeperTestSuite) TestUserSuperfluidPositionsPerConcentratedPoolBreakdow
 		actualLockIds = append(actualLockIds, record.LockId)
 		actualTotalSharesLocked = actualTotalSharesLocked.Add(record.DelegationAmount)
 	}
-	s.Require().True(arraysMatch(expectedPositionIds, actualPositionIds))
-	s.Require().True(arraysMatch(expectedLockIds, actualLockIds))
+
+	s.Require().True(osmoutils.ContainsDuplicateDeepEqual([]interface{}{expectedPositionIds, actualPositionIds}))
+	s.Require().True(osmoutils.ContainsDuplicateDeepEqual([]interface{}{expectedLockIds, actualLockIds}))
 	s.Require().Equal(expectedTotalSharesLocked, actualTotalSharesLocked)
 }
 
@@ -432,22 +432,4 @@ func (s *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
 
 		s.Require().True(res.TotalEquivalentStakedAmount.IsEqual(total_osmo_equivalent))
 	}
-}
-
-func arraysMatch(arr1, arr2 []uint64) bool {
-	// Sort both arrays
-	sortedArr1 := make([]uint64, len(arr1))
-	copy(sortedArr1, arr1)
-	sort.Slice(sortedArr1, func(i, j int) bool {
-		return sortedArr1[i] < sortedArr1[j]
-	})
-
-	sortedArr2 := make([]uint64, len(arr2))
-	copy(sortedArr2, arr2)
-	sort.Slice(sortedArr2, func(i, j int) bool {
-		return sortedArr2[i] < sortedArr2[j]
-	})
-
-	// Compare sorted arrays
-	return reflect.DeepEqual(sortedArr1, sortedArr2)
 }
