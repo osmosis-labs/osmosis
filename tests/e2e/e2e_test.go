@@ -350,7 +350,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 
 	// Create 2 positions for address3: overlap together, overlap with 2 address1 positions, one position starts from minimum
 	chainANode.CreateConcentratedPosition(address3, "[-160000]", "[-20000]", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
-	chainANode.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", cltypes.MinTick), "140000", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
+	chainANode.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", cltypes.MinInitializedTick), "140000", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
 
 	// Get newly created positions
 	positionsAddress1 := chainANode.QueryConcentratedPositions(address1)
@@ -383,7 +383,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// First position third address
 	s.validateCLPosition(addr3position1, poolID, -160000, -20000)
 	// Second position third address
-	s.validateCLPosition(addr3position2, poolID, cltypes.MinTick, 140000)
+	s.validateCLPosition(addr3position2, poolID, cltypes.MinInitializedTick, 140000)
 
 	// Collect SpreadRewards
 

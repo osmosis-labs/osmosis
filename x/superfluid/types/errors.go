@@ -87,7 +87,7 @@ type ConcentratedTickRangeNotFullError struct {
 }
 
 func (e ConcentratedTickRangeNotFullError) Error() string {
-	return fmt.Sprintf("position must be full range. Lower tick (%d) must be (%d). Upper tick (%d) must be (%d)", e.ActualLowerTick, e.ActualUpperTick, cltypes.MinTick, cltypes.MaxTick)
+	return fmt.Sprintf("position must be full range. Lower tick (%d) must be (%d). Upper tick (%d) must be (%d)", e.ActualLowerTick, e.ActualUpperTick, cltypes.MinInitializedTick, cltypes.MaxTick)
 }
 
 type NegativeDurationError struct {

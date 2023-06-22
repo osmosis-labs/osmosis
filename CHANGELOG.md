@@ -28,7 +28,7 @@ Types of changes (Stanzas):
 "Bug Fixes" for any bug fixes.
 "Client Breaking" for breaking CLI commands and REST routes used by end-users.
 "API Breaking" for breaking exported APIs used by developers building on SDK.
-"State Machine Breaking" for any changes that result in a different AppState 
+"State Machine Breaking" for any changes that result in a different AppState
 given same genesisState and txList.
 Ref: https://keepachangelog.com/en/1.0.0/
 -->
@@ -65,8 +65,8 @@ ProtoRev Changes (x/protorev):
 - Modifies the payment schedule for the dev account from weekly to after every trade.
 - Triggers backruns, joinPool, and exitPool using hooks.
 
-TokenFactory before send hooks (x/tokenfactory): 
-- This enhancement allows for executing custom logic before sending tokens, providing more flexibility 
+TokenFactory before send hooks (x/tokenfactory):
+- This enhancement allows for executing custom logic before sending tokens, providing more flexibility
 and control over token transfers.
 
 
@@ -104,7 +104,7 @@ and control over token transfers.
 ## State Breaking
   * [#5380](https://github.com/osmosis-labs/osmosis/pull/5380) feat: add ica authorized messages in upgrade handler
   * [#5363](https://github.com/osmosis-labs/osmosis/pull/5363) fix: twap record upgrade handler
-  * [#5265](https://github.com/osmosis-labs/osmosis/pull/5265) fix: expect single synthetic lock per native lock ID 
+  * [#5265](https://github.com/osmosis-labs/osmosis/pull/5265) fix: expect single synthetic lock per native lock ID
   * [#4983](https://github.com/osmosis-labs/osmosis/pull/4983) implement gas consume on denom creation
   * [#4830](https://github.com/osmosis-labs/osmosis/pull/4830) Scale gas costs by denoms in gauge (AddToGaugeReward)
   * [#5511](https://github.com/osmosis-labs/osmosis/pull/5511) Scale gas costs by denoms in gauge (CreateGauge)
@@ -115,12 +115,11 @@ and control over token transfers.
   * [#5468](https://github.com/osmosis-labs/osmosis/pull/5468) fix: Reduce tokenfactory denom creation gas fee to 1_000_000
 
 ## Dependencies
-  * [#4783](https://github.com/osmosis-labs/osmosis/pull/4783) Update wasmd to 0.31 
-  * [#5404](https://github.com/osmosis-labs/osmosis/pull/5404) Cosmwasm Cherry security patch 
+  * [#4783](https://github.com/osmosis-labs/osmosis/pull/4783) Update wasmd to 0.31
+  * [#5404](https://github.com/osmosis-labs/osmosis/pull/5404) Cosmwasm Cherry security patch
   * [#5320](https://github.com/osmosis-labs/osmosis/pull/5320) minor: huckleberry ibc patch
 
 ### Misc Improvements
- 
   * [#5356](https://github.com/osmosis-labs/osmosis/pull/5356) Fix wrong restHandler for ReplaceMigrationRecordsProposal
   * [#5020](https://github.com/osmosis-labs/osmosis/pull/5020) Add gas config to the client.toml
   * [#5105](https://github.com/osmosis-labs/osmosis/pull/5105) Lint stableswap in the same manner as all of Osmosis
@@ -140,11 +139,12 @@ and control over token transfers.
   * [#5239](https://github.com/osmosis-labs/osmosis/pull/5239) Implement `GetTotalPoolShares` public keeper function for GAMM.
   * [#5261](https://github.com/osmosis-labs/osmosis/pull/5261) Allows `UpdateFeeTokenProposal` to take in multiple fee tokens instead of just one.
   * [#5265](https://github.com/osmosis-labs/osmosis/pull/5265) Ensure a lock cannot point to multiple synthetic locks. Deprecates `SyntheticLockupsByLockupID` in favor of `SyntheticLockupByLockupID`.
-  * [#4950] (https://github.com/osmosis-labs/osmosis/pull/4950) Add in/out tokens to Concentrated Liquidity's AfterConcentratedPoolSwap hook
+  * [#4950](https://github.com/osmosis-labs/osmosis/pull/4950) Add in/out tokens to Concentrated Liquidity's AfterConcentratedPoolSwap hook
   * [#4629](https://github.com/osmosis-labs/osmosis/pull/4629) Add amino proto annotations
   * [#4830](https://github.com/osmosis-labs/osmosis/pull/4830) Add gas cost when we AddToGaugeRewards, linearly increase with coins to add
   * [#5000](https://github.com/osmosis-labs/osmosis/pull/5000) osmomath.Power panics for base < 1 to temporarily restrict broken logic for such base.
   * [#4336](https://github.com/osmosis-labs/osmosis/pull/4336) Move epochs module into its own go.mod
+  * [#5589](https://github.com/osmosis-labs/osmosis/pull/5589) Include linked balancer pool in incentivized pools query
 
 
 

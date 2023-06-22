@@ -1373,14 +1373,14 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 			lowerTick: types.MaxTick,
 			upperTick: types.MaxTick,
 
-			expectedError: types.InvalidTickError{Tick: types.MaxTick, IsLower: true, MinTick: types.MinTick, MaxTick: types.MaxTick},
+			expectedError: types.InvalidTickError{Tick: types.MaxTick, IsLower: true, MinTick: types.MinInitializedTick, MaxTick: types.MaxTick},
 		},
 		{
 			name:      "upper tick is equal to min tick.",
-			lowerTick: types.MinTick,
-			upperTick: types.MinTick,
+			lowerTick: types.MinInitializedTick,
+			upperTick: types.MinInitializedTick,
 
-			expectedError: types.InvalidTickError{Tick: types.MinTick, IsLower: false, MinTick: types.MinTick, MaxTick: types.MaxTick},
+			expectedError: types.InvalidTickError{Tick: types.MinInitializedTick, IsLower: false, MinTick: types.MinInitializedTick, MaxTick: types.MaxTick},
 		},
 	}
 
@@ -1401,92 +1401,6 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 				s.Require().ErrorContains(err, test.expectedError.Error())
 			} else {
 				s.Require().NoError(err)
-			}
-		})
-	}
-}
-
-func (s *KeeperTestSuite) TestRoundTickToCanonicalPriceTick() {
-	tests := []struct {
-		name                 string
-		lowerTick            int64
-		upperTick            int64
-		expectedNewLowerTick int64
-		expectedNewUpperTick int64
-		expectedError        error
-	}{
-		{
-			name:                 "exact upper tick for 0.000000000000000003 to exact lower tick for 0.000000000000000002",
-			lowerTick:            -161000000,
-			expectedNewLowerTick: -161000000,
-			upperTick:            -160000000,
-			expectedNewUpperTick: -160000000,
-		},
-		{
-			name:                 "exact upper tick for 0.000000000000000003 to inexact lower tick for 0.000000000000000002",
-			lowerTick:            -161001234,
-			expectedNewLowerTick: -161000000,
-			upperTick:            -160000000,
-			expectedNewUpperTick: -160000000,
-		},
-		{
-			name:                 "inexact upper tick for 0.000000000000000003 to exact lower tick for 0.000000000000000002",
-			lowerTick:            -161000000,
-			expectedNewLowerTick: -161000000,
-			upperTick:            -160001234,
-			expectedNewUpperTick: -160000000,
-		},
-		{
-			name:                 "inexact upper tick for 0.000000000000000003 to inexact lower tick for 0.000000000000000002",
-			lowerTick:            -161001234,
-			expectedNewLowerTick: -161000000,
-			upperTick:            -160001234,
-			expectedNewUpperTick: -160000000,
-		},
-		{
-			name:                 "upper tick one tick away from lower tick",
-			lowerTick:            -161001234,
-			expectedNewLowerTick: -161000000,
-			upperTick:            -160999999,
-			expectedNewUpperTick: -160000000,
-		},
-		{
-			name:                 "error: new upper tick is lower than new lower tick",
-			lowerTick:            -160001234,
-			expectedNewLowerTick: -160000000,
-			upperTick:            -161001234,
-			expectedNewUpperTick: -161000000,
-			expectedError:        types.InvalidLowerUpperTickError{LowerTick: -160000000, UpperTick: -161000000},
-		},
-		{
-			name:                 "error: new upper tick is the same as new lower tick",
-			lowerTick:            -160001234,
-			expectedNewLowerTick: -160000000,
-			upperTick:            -160000000,
-			expectedNewUpperTick: -160000000,
-			expectedError:        types.InvalidLowerUpperTickError{LowerTick: -160000000, UpperTick: -160000000},
-		},
-	}
-
-	for _, test := range tests {
-		s.Run(test.name, func() {
-			s.SetupTest()
-
-			_, sqrtPriceTickLower, err := math.TickToSqrtPrice(test.lowerTick)
-			s.Require().NoError(err)
-			_, sqrtPriceTickUpper, err := math.TickToSqrtPrice(test.upperTick)
-			s.Require().NoError(err)
-
-			// System Under Test
-			newLowerTick, newUpperTick, err := cl.RoundTickToCanonicalPriceTick(test.lowerTick, test.upperTick, sqrtPriceTickLower, sqrtPriceTickUpper, DefaultTickSpacing)
-
-			if test.expectedError != nil {
-				s.Require().Error(err)
-				s.Require().ErrorContains(err, test.expectedError.Error())
-			} else {
-				s.Require().NoError(err)
-				s.Require().Equal(test.expectedNewLowerTick, newLowerTick)
-				s.Require().Equal(test.expectedNewUpperTick, newUpperTick)
 			}
 		})
 	}

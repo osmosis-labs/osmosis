@@ -381,21 +381,7 @@ func (k Keeper) computeOutAmtGivenIn(
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 			}
-
-			// TEMPORARY HACK: this is to fix tick rounding error where
-			// the tick is off by 1 due to banker's rounding error in CalculatePriceToTick
-			// TODO: if this is to remain in the codebase, consider abstracting this into a
-			// method of swap strategy.
-			isZeroForOne := getZeroForOne(tokenInMin.Denom, p.GetToken0())
-			if isZeroForOne {
-				if newTick <= swapState.tick {
-					swapState.tick = newTick
-				}
-			} else {
-				if newTick > swapState.tick {
-					swapState.tick = newTick
-				}
-			}
+			swapState.tick = newTick
 		}
 	}
 
