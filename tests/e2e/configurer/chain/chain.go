@@ -248,7 +248,7 @@ func (c *Config) LockAndAddToExistingLock(amount sdk.Int, denom, lockupWalletAdd
 // GetDefaultNode returns the default node of the chain.
 // The default node is the first one created. Returns error if no
 // ndoes created.
-func (c *Config) GetDefaultNode() (NodeConfig, error) {
+func (c *Config) GetDefaultNode() (*NodeConfig, error) {
 	return c.getNodeAtIndex(defaultNodeIndex)
 }
 
@@ -263,15 +263,15 @@ func (c *Config) GetPersistentPeers() []string {
 }
 
 // Returns the nodeIndex'th node on the chain
-func (c *Config) GetNodeAtIndex(nodeIndex int) (NodeConfig, error) {
+func (c *Config) GetNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 	return c.getNodeAtIndex(nodeIndex)
 }
 
-func (c *Config) getNodeAtIndex(nodeIndex int) (NodeConfig, error) {
+func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 	if nodeIndex > len(c.NodeConfigs) {
-		return NodeConfig{}, fmt.Errorf("node index (%d) is greter than the number of nodes available (%d)", nodeIndex, len(c.NodeConfigs))
+		return nil, fmt.Errorf("node index (%d) is greter than the number of nodes available (%d)", nodeIndex, len(c.NodeConfigs))
 	}
-	return *c.NodeConfigs[nodeIndex], nil
+	return c.NodeConfigs[nodeIndex], nil
 }
 
 func (c *Config) SubmitParamChangeProposal(subspace, key string, value []byte) error {
@@ -299,12 +299,14 @@ func (c *Config) SubmitParamChangeProposal(subspace, key string, value []byte) e
 	node.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
 	c.LatestProposalNumber += 1
 
+	propNumber := c.LatestProposalNumber
+
 	for _, n := range c.NodeConfigs {
-		n.VoteYesProposal(initialization.ValidatorWalletName, c.LatestProposalNumber)
+		n.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
 	}
 
 	require.Eventually(c.t, func() bool {
-		status, err := node.QueryPropStatus(c.LatestProposalNumber)
+		status, err := node.QueryPropStatus(propNumber)
 		if err != nil {
 			return false
 		}
@@ -321,14 +323,16 @@ func (c *Config) SubmitCreateConcentratedPoolProposal() error {
 
 	node.SubmitCreateConcentratedPoolProposal(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 	c.LatestProposalNumber += 1
-	node.DepositProposal(c.LatestProposalNumber, false)
+
+	propNumber := c.LatestProposalNumber
+	node.DepositProposal(propNumber, false)
 
 	for _, n := range c.NodeConfigs {
-		n.VoteYesProposal(initialization.ValidatorWalletName, c.LatestProposalNumber)
+		n.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
 	}
 
 	require.Eventually(c.t, func() bool {
-		status, err := node.QueryPropStatus(c.LatestProposalNumber)
+		status, err := node.QueryPropStatus(propNumber)
 		if err != nil {
 			return false
 		}

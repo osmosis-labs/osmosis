@@ -48,9 +48,6 @@ func (bc *baseConfigurer) ClearResources() error {
 }
 
 func (bc *baseConfigurer) GetChainConfig(chainIndex int) *chain.Config {
-	if chainIndex < 0 || chainIndex >= len(bc.chainConfigs) {
-		return nil
-	}
 	return bc.chainConfigs[chainIndex]
 }
 

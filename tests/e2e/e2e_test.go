@@ -25,6 +25,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/initialization"
 	clmath "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
@@ -183,7 +184,7 @@ func (s *IntegrationTestSuite) ProtoRev() {
 		epochIdentifier = "week"
 	)
 
-	chainA := s.configurer.GetChainConfig(0)
+	chainA := s.GetChainAConfig0()
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
 
@@ -287,7 +288,7 @@ func (s *IntegrationTestSuite) ProtoRev() {
 }
 
 func (s *IntegrationTestSuite) ConcentratedLiquidity() {
-	chainA := s.configurer.GetChainConfig(0)
+	chainA := s.GetChainAConfig0()
 	chainANode, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
 
@@ -821,11 +822,13 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Run the tick spacing reduction proposal
 	chainANode.SubmitTickSpacingReductionProposal(fmt.Sprintf("%d,%d", poolID, newTickSpacing), sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
 	chainA.LatestProposalNumber += 1
-	chainANode.DepositProposal(chainA.LatestProposalNumber, true)
+	latestPropNumber := chainA.LatestProposalNumber
+
+	chainANode.DepositProposal(latestPropNumber, true)
 	totalTimeChan := make(chan time.Duration, 1)
-	go chainANode.QueryPropStatusTimed(chainA.LatestProposalNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
+	go chainANode.QueryPropStatusTimed(latestPropNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
 	for _, node := range chainA.NodeConfigs {
-		node.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
+		node.VoteYesProposal(initialization.ValidatorWalletName, latestPropNumber)
 	}
 
 	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
@@ -848,7 +851,7 @@ func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
 		s.T().Skip("Skipping StableSwapPostUpgrade test")
 	}
 
-	chainA := s.configurer.GetChainConfig(0)
+	chainA := s.GetChainAConfig0()
 	chainANode, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
 
@@ -891,7 +894,7 @@ func (s *IntegrationTestSuite) GeometricTwapMigration() {
 		migrationWallet = "migration"
 	)
 
-	chainA := s.configurer.GetChainConfig(0)
+	chainA := s.GetChainAConfig0()
 	node, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
 
@@ -911,8 +914,8 @@ func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
-	chainA := s.configurer.GetChainConfig(0)
-	chainB := s.configurer.GetChainConfig(1)
+	chainA := s.GetChainAConfig0()
+	chainB := s.GetChainBConfig1()
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
@@ -931,7 +934,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 // - voting no on the proposal from the delegator wallet
 // - ensuring that delegator's wallet overwrites the validator's vote
 func (s *IntegrationTestSuite) SuperfluidVoting() {
-	chainA := s.configurer.GetChainConfig(0)
+	chainA := s.GetChainAConfig0()
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
 
@@ -950,17 +953,19 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 	// create a text prop, deposit and vote yes
 	chainANode.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)), false)
 	chainA.LatestProposalNumber += 1
-	chainANode.DepositProposal(chainA.LatestProposalNumber, false)
+	latestPropNumber := chainA.LatestProposalNumber
+
+	chainANode.DepositProposal(latestPropNumber, false)
 	for _, node := range chainA.NodeConfigs {
-		node.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
+		node.VoteYesProposal(initialization.ValidatorWalletName, latestPropNumber)
 	}
 
 	// set delegator vote to no
-	chainANode.VoteNoProposal(superfluidVotingWallet, chainA.LatestProposalNumber)
+	chainANode.VoteNoProposal(superfluidVotingWallet, latestPropNumber)
 
 	s.Eventually(
 		func() bool {
-			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := chainANode.QueryPropTally(chainA.LatestProposalNumber)
+			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := chainANode.QueryPropTally(latestPropNumber)
 			if err != nil {
 				return false
 			}
@@ -973,7 +978,7 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 		10*time.Millisecond,
 		"Osmosis node failed to retrieve prop tally",
 	)
-	noTotal, _, _, _, _ := chainANode.QueryPropTally(chainA.LatestProposalNumber)
+	noTotal, _, _, _, _ := chainANode.QueryPropTally(latestPropNumber)
 	noTotalFinal, err := strconv.Atoi(noTotal.String())
 	s.NoError(err)
 
@@ -997,7 +1002,7 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 }
 
 func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() {
-	chainA := s.configurer.GetChainConfig(0)
+	chainA := s.GetChainAConfig0()
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
 
@@ -1103,8 +1108,8 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
-	chainA := s.configurer.GetChainConfig(0)
-	chainB := s.configurer.GetChainConfig(1)
+	chainA := s.GetChainAConfig0()
+	chainB := s.GetChainBConfig1()
 
 	node, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
@@ -1162,7 +1167,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 }
 
 func (s *IntegrationTestSuite) LargeWasmUpload() {
-	chainA := s.configurer.GetChainConfig(0)
+	chainA := s.GetChainAConfig0()
 	node, err := chainA.GetDefaultNode()
 	s.NoError(err)
 	node.StoreWasmCode("bytecode/large.wasm", initialization.ValidatorWalletName)
@@ -1172,8 +1177,8 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
-	chainA := s.configurer.GetChainConfig(0)
-	chainB := s.configurer.GetChainConfig(1)
+	chainA := s.GetChainAConfig0()
+	chainB := s.GetChainBConfig1()
 
 	nodeA, err := chainA.GetDefaultNode()
 	s.NoError(err)
@@ -1237,7 +1242,7 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
-	chainA := s.configurer.GetChainConfig(0)
+	chainA := s.GetChainAConfig0()
 
 	nodeA, err := chainA.GetDefaultNode()
 	s.NoError(err)
@@ -1289,7 +1294,7 @@ func (s *IntegrationTestSuite) AddToExistingLockPostUpgrade() {
 	if s.skipUpgrade {
 		s.T().Skip("Skipping AddToExistingLockPostUpgrade test")
 	}
-	chainA := s.configurer.GetChainConfig(0)
+	chainA := s.GetChainAConfig0()
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
 	// ensure we can add to existing locks and superfluid locks that existed pre upgrade on chainA
@@ -1303,7 +1308,7 @@ func (s *IntegrationTestSuite) AddToExistingLockPostUpgrade() {
 
 // TestAddToExistingLock tests lockups to both regular and superfluid locks.
 func (s *IntegrationTestSuite) AddToExistingLock() {
-	chainA := s.configurer.GetChainConfig(0)
+	chainA := s.GetChainAConfig0()
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
 	funder := chainA.NodeConfigs[0].PublicAddress
@@ -1346,7 +1351,7 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 
 	coinAIn, coinBIn, coinCIn := fmt.Sprintf("2000000%s", denomA), fmt.Sprintf("2000000%s", denomB), fmt.Sprintf("2000000%s", denomC)
 
-	chainA := s.configurer.GetChainConfig(0)
+	chainA := s.GetChainAConfig0()
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
 
@@ -1502,7 +1507,7 @@ func (s *IntegrationTestSuite) StateSync() {
 		s.T().Skip()
 	}
 
-	chainA := s.configurer.GetChainConfig(0)
+	chainA := s.GetChainAConfig0()
 	runningNode, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
 
@@ -1591,17 +1596,19 @@ func (s *IntegrationTestSuite) StateSync() {
 }
 
 func (s *IntegrationTestSuite) ExpeditedProposals() {
-	chainA := s.configurer.GetChainConfig(0)
+	chainA := s.GetChainAConfig0()
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
 
 	chainANode.SubmitTextProposal("expedited text proposal", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
 	chainA.LatestProposalNumber += 1
-	chainANode.DepositProposal(chainA.LatestProposalNumber, true)
+	latestPropNumber := chainA.LatestProposalNumber
+
+	chainANode.DepositProposal(latestPropNumber, true)
 	totalTimeChan := make(chan time.Duration, 1)
-	go chainANode.QueryPropStatusTimed(chainA.LatestProposalNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
+	go chainANode.QueryPropStatusTimed(latestPropNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
 	for _, node := range chainA.NodeConfigs {
-		node.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
+		node.VoteYesProposal(initialization.ValidatorWalletName, latestPropNumber)
 	}
 	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
 	var elapsed time.Duration
@@ -1642,7 +1649,7 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 		minAmountOut = "1"
 	)
 
-	chainA := s.configurer.GetChainConfig(0)
+	chainA := s.GetChainAConfig0()
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
 
@@ -1771,3 +1778,27 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 // 	s.Require().NoError(err)
 // 	osmoassert.DecApproxEq(s.T(), expectedSpotPrice, concentratedPool.GetCurrentSqrtPrice().Power(2), sdk.NewDecWithPrec(1, 3))
 // }
+
+func (s *IntegrationTestSuite) GetChainAConfig0() *chain.Config {
+	s.chainAConfig0Mutex.Lock()
+	defer s.chainAConfig0Mutex.Unlock()
+
+	if s.chainAConfig0 == nil {
+		chainA := s.configurer.GetChainConfig(0)
+		s.chainAConfig0 = chainA
+	}
+
+	return s.chainAConfig0
+}
+
+func (s *IntegrationTestSuite) GetChainBConfig1() *chain.Config {
+	s.chainBConfig1Mutex.Lock()
+	defer s.chainBConfig1Mutex.Unlock()
+
+	if s.chainBConfig1 == nil {
+		chainA := s.configurer.GetChainConfig(0)
+		s.chainBConfig1 = chainA
+	}
+
+	return s.chainBConfig1
+}
