@@ -52,16 +52,19 @@ func (p *UpdateFeeTokenProposal) ValidateBasic() error {
 }
 
 func (p UpdateFeeTokenProposal) String() string {
-	recordsStr := ""
+	var b strings.Builder
 	for _, feeToken := range p.Feetokens {
-		recordsStr = recordsStr + fmt.Sprintf("(Denom: %s, PoolID: %d) ", feeToken.Denom, feeToken.PoolID)
+		b.WriteString(fmt.Sprintf("(Denom: %s, PoolID: %d) ", feeToken.Denom, feeToken.PoolID))
 	}
 
-	var b strings.Builder
+	recordsStr := b.String()
+	b.Reset()
+
 	b.WriteString(fmt.Sprintf(`Update Fee Token Proposal:
   Title:       %s
   Description: %s
   Records:     %s
 `, p.Title, p.Description, recordsStr))
+
 	return b.String()
 }

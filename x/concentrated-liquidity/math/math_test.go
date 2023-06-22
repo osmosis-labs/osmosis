@@ -328,7 +328,7 @@ func (suite *ConcentratedMathTestSuite) TestCalcAmount1Delta() {
 
 func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
 	sqrt := func(x sdk.Dec) sdk.Dec {
-		sqrt, err := x.ApproxSqrt()
+		sqrt, err := osmomath.MonotonicSqrt(x)
 		suite.Require().NoError(err)
 		return sqrt
 	}

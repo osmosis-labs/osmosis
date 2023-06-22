@@ -405,6 +405,9 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 
 	withNumEpochs := func(tc test, numEpochs uint64) test {
 		tc.numEpochsPaidOver = numEpochs
+		if numEpochs == uint64(0) {
+			return tc
+		}
 
 		// Do deep copies
 		tempDistributions := make(sdk.Coins, len(tc.expectedDistributions))
@@ -433,6 +436,10 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 			tc.distrTo.Duration = time.Hour
 		}
 		tc.poolId = poolId
+		return tc
+	}
+
+	withError := func(tc test) test {
 		tc.expectErr = true
 		return tc
 	}
@@ -444,7 +451,8 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 		"perpetual, 2 coins, paid over 1 epoch":      withIsPerpetual(withGaugeCoins(defaultTest, defaultBothCoins), true),
 		"non-perpetual, 1 coin, paid over 2 epochs":  withNumEpochs(defaultTest, 2),
 		"non-perpetual, 2 coins, paid over 3 epochs": withNumEpochs(withGaugeCoins(defaultTest, defaultBothCoins), 3),
-		"error: balancer pool id":                    withPoolId(defaultTest, defaultBalancerPool),
+		"error: balancer pool id":                    withError(withPoolId(defaultTest, defaultBalancerPool)),
+		"error: inactive gauge":                      withError(withNumEpochs(defaultTest, 0)),
 	}
 
 	for name, tc := range tests {

@@ -28,7 +28,7 @@ const (
 	tickSpacing100 = 100
 )
 
-// This configuratio is expected to generate the position layout below:
+// This configuration is expected to generate the position layout below:
 //
 //	                                 original_cur_tick
 //		                                    ///               (NR4)
@@ -185,7 +185,7 @@ func (s *SwapTickCrossTestSuite) setupPoolAndPositions(testTickSpacing uint64, p
 	positionMetas := make([]positionMeta, len(positionTickSpacingsFromCurrTick))
 	liquidityAllPositions := liquidityFullRange
 	for i, tickSpacingsAway := range positionTickSpacingsFromCurrTick {
-		// Create narrow range position 2 tick spacings away the current tick
+		// Create narrow range position tickSpacingsAway from the current tick
 		positionMetas[i] = s.CreatePositionTickSpacingsFromCurrentTick(poolId, tickSpacingsAway)
 
 		// Update total liquidity
@@ -284,7 +284,7 @@ func (s *SwapTickCrossTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice 
 			if amountIn.IsZero() && isWithinDesiredBucketAfterSwap {
 				nextInitTickSqrtPrice := s.tickToSqrtPrice(liquidityNetAmounts[i+1].TickIndex)
 
-				// We discound by two so that we do no cross any tick and remain in the same bucket.
+				// We discount by half so that we do no cross any tick and remain in the same bucket.
 				curAmountIn := math.CalcAmount0Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, true).QuoInt64(2)
 				amountIn = amountIn.Add(curAmountIn)
 			}
@@ -1146,6 +1146,9 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 		s.swapOneForZeroRight(poolId, sdk.NewCoin(tokeOneDenom, tokenIn.Ceil().TruncateInt()))
 
 		// Assert that max tick is crossed and liquidity is zero.
+		// N.B.: Since we can only have upper ticks of positions be initialized on the max tick,
+		// the liquidity net amounts on MaxTick are always negative. Therefore, when swapping one
+		// for zero and crossing a max tick to be "within in", we always end up with a current liquidity of zero.
 		s.assertPoolTickEquals(poolId, types.MaxTick)
 		s.assertPoolLiquidityEquals(poolId, sdk.ZeroDec())
 
