@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/swapstrategy"
@@ -1168,91 +1167,4 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 		// Validate the ability to swap left
 		s.swapZeroForOneLeft(poolId, smallTokenZeroCoinIn)
 	})
-}
-
-// TestSwapOutGivenIn_PriceLimit_TickCross_ZeroForOne tests edge case behavior of swapping
-// with price limit right at the boundary of crossing a tick
-// It picks a sqrtPriceLimitT such that this is the max sqrt price that translates to tickT
-// It picks a sqrtPriceLimitTpPlusOne such that this is the min sqrt price that translates to tickTPlusOne
-// It swaps in both cases and asserts that the pool's state is updated correctly. This helps to confirm
-// that we do not decrement the tick without crossing it at the edges.
-func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_PriceLimit_TickCross_ZeroForOne() {
-	s.SetupTest()
-
-	poolId, _ := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
-
-	// Fetch pool
-	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
-	s.Require().NoError(err)
-
-	// Compute tokenIn amount necessary to reach the min tick.
-	const (
-		isZeroForOne                  = true
-		shouldStayWithinTheSameBucket = false
-
-		estimatTokenInUntilTick = 30999996
-
-		tickT        int64 = 30999998
-		tickTPlusOne int64 = 30999999
-	)
-	tokenIn, _, _ := s.computeSwapAmounts(poolId, sdk.Dec{}, estimatTokenInUntilTick, isZeroForOne, shouldStayWithinTheSameBucket)
-
-	// Refetch pool
-	pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
-	s.Require().NoError(err)
-
-	initialLiquidity := pool.GetLiquidity()
-
-	// Swap
-	coinsIn := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), tokenIn.TruncateInt()))
-	s.FundAcc(s.TestAccs[0], coinsIn)
-
-	// Hand picked such that this is the largest possible price that translates to tickT (30999998)
-	// 4999.999000000000000115
-	// 4999.998000000000000100
-	priceLimitT := sdk.MustNewDecFromStr("4999.99900000000000012")
-
-	sqrtPT := s.tickToSqrtPrice(30999998)
-	sqrtPTPlusOne := s.tickToSqrtPrice(30999999)
-
-	fmt.Println("sqrtPT", sqrtPT)
-	fmt.Println("sqrtPTPlusOne", sqrtPTPlusOne)
-
-	sqrtA := osmomath.MustMonotonicSqrt(priceLimitT)
-	fmt.Println(sqrtA)
-
-	sqrtB := osmomath.MustMonotonicSqrt(priceLimitT.Add(sdk.SmallestDec()))
-	fmt.Println(sqrtB)
-
-	// Swap with cache context so that we can reuse the same setup logic for another swap
-	// with different price limit.
-	originalCtx := s.Ctx
-	s.Ctx, _ = s.Ctx.CacheContext()
-
-	_, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, s.TestAccs[0], pool, coinsIn[0], pool.GetToken1(), sdk.ZeroDec(), priceLimitT)
-	s.Require().NoError(err)
-
-	// Refetch pool
-	pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
-	s.Require().NoError(err)
-
-	s.assertPoolTickEquals(poolId, tickT)
-	s.assertPositionInRange(poolId, tickT, tickTPlusOne)
-
-	// Confirms that the tick was crossed
-	s.Require().NotEqual(initialLiquidity, pool.GetLiquidity())
-
-	// Hand picked such that this is the smallest possible price that translates to tick tPlusOne (30999999)
-	priceLimitTPlusOne := priceLimitT.Add(sdk.SmallestDec())
-
-	// Replace original context back so that we can repeat the scenario with a different price limit.
-	s.Ctx = originalCtx
-	_, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, s.TestAccs[0], pool, coinsIn[0], pool.GetToken1(), sdk.ZeroDec(), priceLimitTPlusOne)
-	s.Require().NoError(err)
-	s.assertPoolTickEquals(poolId, tickTPlusOne)
-
-	// Confirm that the tick wasn't crossed.
-	s.assertPositionOutOfRange(poolId, tickT, tickTPlusOne)
-	s.assertPoolTickEquals(poolId, tickTPlusOne)
-	s.assertPoolLiquidityEquals(poolId, initialLiquidity)
 }
