@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"sync"
 	"testing"
 	"time"
 
@@ -30,15 +29,12 @@ type baseConfigurer struct {
 	setupTests       setupFn
 	syncUntilHeight  int64 // the height until which to wait for validators to sync when first started.
 	t                *testing.T
-	configMutex      sync.Mutex
 }
 
 // defaultSyncUntilHeight arbitrary small height to make sure the chain is making progress.
 const defaultSyncUntilHeight = 3
 
 func (bc *baseConfigurer) ClearResources() error {
-	bc.configMutex.Lock()
-	defer bc.configMutex.Unlock()
 	bc.t.Log("tearing down e2e integration test suite...")
 
 	if err := bc.containerManager.ClearResources(); err != nil {
@@ -52,8 +48,6 @@ func (bc *baseConfigurer) ClearResources() error {
 }
 
 func (bc *baseConfigurer) GetChainConfig(chainIndex int) *chain.Config {
-	bc.configMutex.Lock()
-	defer bc.configMutex.Unlock()
 	if chainIndex < 0 || chainIndex >= len(bc.chainConfigs) {
 		return nil
 	}
@@ -61,8 +55,6 @@ func (bc *baseConfigurer) GetChainConfig(chainIndex int) *chain.Config {
 }
 
 func (bc *baseConfigurer) RunValidators() error {
-	bc.configMutex.Lock()
-	defer bc.configMutex.Unlock()
 	for _, chainConfig := range bc.chainConfigs {
 		if err := bc.runValidators(chainConfig); err != nil {
 			return err
@@ -72,8 +64,6 @@ func (bc *baseConfigurer) RunValidators() error {
 }
 
 func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
-	bc.configMutex.Lock()
-	defer bc.configMutex.Unlock()
 	bc.t.Logf("starting %s validator containers...", chainConfig.Id)
 	for _, node := range chainConfig.NodeConfigs {
 		if err := node.Run(); err != nil {
@@ -84,8 +74,6 @@ func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
 }
 
 func (bc *baseConfigurer) RunIBC() error {
-	bc.configMutex.Lock()
-	defer bc.configMutex.Unlock()
 	// Run a relayer between every possible pair of chains.
 	for i := 0; i < len(bc.chainConfigs); i++ {
 		for j := i + 1; j < len(bc.chainConfigs); j++ {
@@ -98,8 +86,6 @@ func (bc *baseConfigurer) RunIBC() error {
 }
 
 func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB *chain.Config) error {
-	bc.configMutex.Lock()
-	defer bc.configMutex.Unlock()
 	bc.t.Log("starting Hermes relayer container...")
 
 	tmpDir, err := os.MkdirTemp("", "osmosis-e2e-testnet-hermes-")
@@ -181,8 +167,6 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 }
 
 func (bc *baseConfigurer) connectIBCChains(chainA *chain.Config, chainB *chain.Config) error {
-	bc.configMutex.Lock()
-	defer bc.configMutex.Unlock()
 	bc.t.Logf("connecting %s and %s chains via IBC", chainA.ChainMeta.Id, chainB.ChainMeta.Id)
 	cmd := []string{"hermes", "create", "channel", "--a-chain", chainA.ChainMeta.Id, "--b-chain", chainB.ChainMeta.Id, "--a-port", "transfer", "--b-port", "transfer", "--new-client-connection", "--yes"}
 	bc.t.Log(cmd)
@@ -195,8 +179,6 @@ func (bc *baseConfigurer) connectIBCChains(chainA *chain.Config, chainB *chain.C
 }
 
 func (bc *baseConfigurer) initializeChainConfigFromInitChain(initializedChain *initialization.Chain, chainConfig *chain.Config) {
-	bc.configMutex.Lock()
-	defer bc.configMutex.Unlock()
 	chainConfig.ChainMeta = initializedChain.ChainMeta
 	chainConfig.NodeConfigs = make([]*chain.NodeConfig, 0, len(initializedChain.Nodes))
 	setupTime := time.Now()

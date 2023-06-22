@@ -248,7 +248,7 @@ func (c *Config) LockAndAddToExistingLock(amount sdk.Int, denom, lockupWalletAdd
 // GetDefaultNode returns the default node of the chain.
 // The default node is the first one created. Returns error if no
 // ndoes created.
-func (c *Config) GetDefaultNode() (*NodeConfig, error) {
+func (c *Config) GetDefaultNode() (NodeConfig, error) {
 	return c.getNodeAtIndex(defaultNodeIndex)
 }
 
@@ -263,15 +263,15 @@ func (c *Config) GetPersistentPeers() []string {
 }
 
 // Returns the nodeIndex'th node on the chain
-func (c *Config) GetNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
+func (c *Config) GetNodeAtIndex(nodeIndex int) (NodeConfig, error) {
 	return c.getNodeAtIndex(nodeIndex)
 }
 
-func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
+func (c *Config) getNodeAtIndex(nodeIndex int) (NodeConfig, error) {
 	if nodeIndex > len(c.NodeConfigs) {
-		return nil, fmt.Errorf("node index (%d) is greter than the number of nodes available (%d)", nodeIndex, len(c.NodeConfigs))
+		return NodeConfig{}, fmt.Errorf("node index (%d) is greter than the number of nodes available (%d)", nodeIndex, len(c.NodeConfigs))
 	}
-	return c.NodeConfigs[nodeIndex], nil
+	return *c.NodeConfigs[nodeIndex], nil
 }
 
 func (c *Config) SubmitParamChangeProposal(subspace, key string, value []byte) error {
@@ -310,7 +310,7 @@ func (c *Config) SubmitParamChangeProposal(subspace, key string, value []byte) e
 			return false
 		}
 		return status == proposalStatusPassed
-	}, time.Second*30, time.Millisecond*500)
+	}, time.Minute*30, time.Millisecond*500)
 	return nil
 }
 

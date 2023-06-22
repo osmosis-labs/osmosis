@@ -56,7 +56,7 @@ func (s *IntegrationTestSuite) assertBalancesInvariants(balancesBefore, balances
 }
 
 // Get balances for address
-func (s *IntegrationTestSuite) addrBalance(node *chain.NodeConfig, address string) sdk.Coins {
+func (s *IntegrationTestSuite) addrBalance(node chain.NodeConfig, address string) sdk.Coins {
 	addrBalances, err := node.QueryBalances(address)
 	s.Require().NoError(err)
 	return addrBalances
@@ -81,13 +81,13 @@ func calculateUncollectedSpreadRewards(positionLiquidity, spreadRewardGrowthBelo
 }
 
 // Get current (updated) pool
-func (s *IntegrationTestSuite) updatedConcentratedPool(node *chain.NodeConfig, poolId uint64) types.ConcentratedPoolExtension {
+func (s *IntegrationTestSuite) updatedConcentratedPool(node chain.NodeConfig, poolId uint64) types.ConcentratedPoolExtension {
 	concentratedPool, err := node.QueryConcentratedPool(poolId)
 	s.Require().NoError(err)
 	return concentratedPool
 }
 
-func (s *IntegrationTestSuite) updatedCFMMPool(node *chain.NodeConfig, poolId uint64) gammtypes.CFMMPoolI {
+func (s *IntegrationTestSuite) updatedCFMMPool(node chain.NodeConfig, poolId uint64) gammtypes.CFMMPoolI {
 	cfmmPool, err := node.QueryCFMMPool(poolId)
 	s.Require().NoError(err)
 	return cfmmPool
@@ -101,7 +101,7 @@ func (s *IntegrationTestSuite) validateCLPosition(position model.Position, poolI
 }
 
 // CheckBalance Checks the balance of an address
-func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr, denom string, amount int64) {
+func (s *IntegrationTestSuite) CheckBalance(node chain.NodeConfig, addr, denom string, amount int64) {
 	// check the balance of the contract
 	s.Require().Eventually(func() bool {
 		balance, err := node.QueryBalances(addr)
