@@ -272,14 +272,14 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 		if superfluidUndelegating {
 			node.SuperfluidUnbondLock(int(originalGammLockId), poolJoinAcc.String())
 		} else {
-			lock := node.QueryLockedById(fmt.Sprintf("%d", originalGammLockId))
+			lock := node.QueryLockById(fmt.Sprintf("%d", originalGammLockId))
 			node.LockupBeginUnlock(int(originalGammLockId), poolJoinAcc.String(), lock.Coins.String())
 		}
 	}
 
 	balancerLock = &lockuptypes.PeriodLock{}
 	if !noLock {
-		balancerLock = node.QueryLockedById(fmt.Sprintf("%d", originalGammLockId))
+		balancerLock = node.QueryLockById(fmt.Sprintf("%d", originalGammLockId))
 	}
 
 	// Create a full range position in the concentrated liquidity pool.
@@ -340,7 +340,7 @@ func (s *IntegrationTestSuite) testPoolMigration(
 		// delegation amount remaining in the original balancer intermediary account should be equal to (original delegation amount - (original delegation amount * percent migrated))
 		s.Require().Equal(balancerDelegationPre.Shares.Sub(balancerDelegationPre.Shares.Mul(percentOfSharesToMigrate)).RoundInt().String(), delegation.Shares.RoundInt().String())
 
-		lock := node.QueryLockedById(fmt.Sprintf("%d", originalGammLockId))
+		lock := node.QueryLockById(fmt.Sprintf("%d", originalGammLockId))
 		// amount in original balancer lock should be equivalent to (total balancer share - coins migrated)
 		s.Require().Equal(totalBalancerPoolShare.Amount.Sub(coinsToMigrate.Amount).String(), lock.Coins[0].Amount.String())
 
@@ -351,7 +351,7 @@ func (s *IntegrationTestSuite) testPoolMigration(
 		s.Require().Equal(balancerDelegationPre.Shares.Mul(percentOfSharesToMigrate).RoundInt().String(), delegation.Shares.RoundInt().String())
 
 		// Check amount in the new lock
-		concentratedLock := node.QueryLockedById(fmt.Sprintf("%d", concentratedLockId))
+		concentratedLock := node.QueryLockById(fmt.Sprintf("%d", concentratedLockId))
 		position := node.QueryPositionById(positionId)
 		underlyingLiquidityTokenized := sdk.NewCoins(sdk.NewCoin(cltypes.GetConcentratedLockupDenomFromPoolId(clPoolId), position.Liquidity.TruncateInt()))
 		s.Require().Equal(underlyingLiquidityTokenized[0].Amount.String(), concentratedLock.Coins[0].Amount.String())
@@ -364,7 +364,7 @@ func (s *IntegrationTestSuite) testPoolMigration(
 		s.Require().Equal(connectedIntermediaryAccount.Address, "")
 
 		// Check amount left in lock
-		gammlock := node.QueryLockedById(fmt.Sprintf("%d", originalGammLockId))
+		gammlock := node.QueryLockById(fmt.Sprintf("%d", originalGammLockId))
 		balancerPoolShareRemain := sdk.OneDec().Sub(percentOfSharesToMigrate).RoundInt()
 		s.Require().Equal(totalBalancerPoolShare.Amount.Mul(balancerPoolShareRemain), gammlock.Coins[0].Amount.MulRaw(10).String())
 	}

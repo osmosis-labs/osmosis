@@ -402,7 +402,7 @@ func (n *NodeConfig) LockTokens(tokens string, duration string, from string) uin
 	err = json.Unmarshal(outJson.Bytes(), &txResponse)
 	require.NoError(n.t, err)
 
-	periodLockIDString, err := GetPeriodLockID(txResponse)
+	periodLockIDString, err := GetPeriodLockIDFromResponse(txResponse)
 	require.NoError(n.t, err)
 
 	periodLockID, err := strconv.ParseUint(periodLockIDString, 10, 64)
@@ -725,7 +725,7 @@ func GetDataReponseUnlockAndMigrateSharesToFullRangeConcentratedPosition(respons
 	return nil, fmt.Errorf("position_id field not found in response")
 }
 
-func GetPeriodLockID(responseJson map[string]interface{}) (string, error) {
+func GetPeriodLockIDFromResponse(responseJson map[string]interface{}) (string, error) {
 	logs, ok := responseJson["logs"].([]interface{})
 	if !ok {
 		return "", fmt.Errorf("logs field not found in response")

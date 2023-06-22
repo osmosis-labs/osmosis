@@ -495,7 +495,7 @@ func (n *NodeConfig) QueryConnectedIntermediaryAccount(lockId string) *superflui
 	return connectedIntermediaryAccount
 }
 
-func (n *NodeConfig) QueryLockedById(lockId string) *lockuptypes.PeriodLock {
+func (n *NodeConfig) QueryLockById(lockId string) *lockuptypes.PeriodLock {
 	path := fmt.Sprintf("/osmosis/lockup/v1beta1/locked_by_id/%s", lockId)
 
 	bz, err := n.QueryGRPCGateway(path)
