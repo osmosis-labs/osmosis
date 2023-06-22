@@ -933,7 +933,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickS
 		return expectedSwapEndTicks
 	}
 
-	// computeExpectedValuesForTestOneForZero returns the tick to swap to during estimate computation and amountIn multiplier.
+	// computeNextTickToReachAndMultiplier returns the tick to swap to during estimate computation and amountIn multiplier.
 	// It most cases, the tick to swap to is the same as the expected tick to reach after the swap and the multiplier is 1.
 	// The only exception is when performing a second swap in the same direction within the same tick.
 	// In such a case, we need to run our estimate logic one tick further to ensure that our estimate is non-zero.
