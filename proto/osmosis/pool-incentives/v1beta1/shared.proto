@@ -1,0 +1,33 @@
+syntax = "proto3";
+package osmosis.poolincentives.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "osmosis/pool-incentives/v1beta1/incentives.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types";
+
+// MigrationRecords contains all the links between balancer and concentrated
+// pools.
+//
+// This is copied over from the gamm proto file in order to circumnavigate
+// the circular dependency between the two modules.
+message MigrationRecords {
+  repeated BalancerToConcentratedPoolLink balancer_to_concentrated_pool_links =
+      1 [ (gogoproto.nullable) = false ];
+}
+
+// BalancerToConcentratedPoolLink defines a single link between a single
+// balancer pool and a single concentrated liquidity pool. This link is used to
+// allow a balancer pool to migrate to a single canonical full range
+// concentrated liquidity pool position
+// A balancer pool can be linked to a maximum of one cl pool, and a cl pool can
+// be linked to a maximum of one balancer pool.
+//
+// This is copied over from the gamm proto file in order to circumnavigate
+// the circular dependency between the two modules.
+message BalancerToConcentratedPoolLink {
+  option (gogoproto.equal) = true;
+  uint64 balancer_pool_id = 1;
+  uint64 cl_pool_id = 2;
+}
