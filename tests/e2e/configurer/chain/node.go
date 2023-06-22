@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -17,6 +18,8 @@ import (
 )
 
 type NodeConfig struct {
+	mu sync.Mutex
+
 	initialization.Node
 
 	OperatorAddress  string
@@ -47,6 +50,8 @@ func NewNodeConfig(t *testing.T, initNode *initialization.Node, initConfig *init
 // The node configuration must be already added to the chain config prior to calling this
 // method.
 func (n *NodeConfig) Run() error {
+	n.mu.Lock()
+	defer n.mu.Unlock()
 	n.t.Logf("starting node container: %s", n.Name)
 	resource, err := n.containerManager.RunNodeResource(n.chainId, n.Name, n.ConfigDir)
 	if err != nil {
@@ -86,6 +91,8 @@ func (n *NodeConfig) Run() error {
 
 // Stop stops the node from running and removes its container.
 func (n *NodeConfig) Stop() error {
+	n.mu.Lock()
+	defer n.mu.Unlock()
 	n.t.Logf("stopping node container: %s", n.Name)
 	if err := n.containerManager.RemoveNodeResource(n.Name); err != nil {
 		return err
@@ -97,6 +104,8 @@ func (n *NodeConfig) Stop() error {
 // WaitUntil waits until node reaches doneCondition. Return nil
 // if reached, error otherwise.
 func (n *NodeConfig) WaitUntil(doneCondition func(syncInfo coretypes.SyncInfo) bool) {
+	n.mu.Lock()
+	defer n.mu.Unlock()
 	var latestBlockHeight int64
 	for i := 0; i < waitUntilrepeatMax; i++ {
 		status, err := n.rpcClient.Status(context.Background())
@@ -113,6 +122,8 @@ func (n *NodeConfig) WaitUntil(doneCondition func(syncInfo coretypes.SyncInfo) b
 }
 
 func (n *NodeConfig) extractOperatorAddressIfValidator() error {
+	n.mu.Lock()
+	defer n.mu.Unlock()
 	if !n.IsValidator {
 		n.t.Logf("node (%s) is not a validator, skipping", n.Name)
 		return nil
@@ -131,15 +142,21 @@ func (n *NodeConfig) extractOperatorAddressIfValidator() error {
 }
 
 func (n *NodeConfig) GetHostPort(portId string) (string, error) {
+	n.mu.Lock()
+	defer n.mu.Unlock()
 	return n.containerManager.GetHostPort(n.Name, portId)
 }
 
 func (n *NodeConfig) WithSetupTime(t time.Time) *NodeConfig {
+	n.mu.Lock()
+	defer n.mu.Unlock()
 	n.setupTime = t
 	return n
 }
 
 func (n *NodeConfig) LogActionF(msg string, args ...interface{}) {
+	n.mu.Lock()
+	defer n.mu.Unlock()
 	timeSinceStart := time.Since(n.setupTime).Round(time.Millisecond)
 	s := fmt.Sprintf(msg, args...)
 	n.t.Logf("[%s] %s. From container %s", timeSinceStart, s, n.Name)
