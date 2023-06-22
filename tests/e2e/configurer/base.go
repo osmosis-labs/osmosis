@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"sync"
 	"testing"
 	"time"
 
@@ -30,7 +29,6 @@ type baseConfigurer struct {
 	setupTests       setupFn
 	syncUntilHeight  int64 // the height until which to wait for validators to sync when first started.
 	t                *testing.T
-	configMutex      sync.Mutex
 }
 
 // defaultSyncUntilHeight arbitrary small height to make sure the chain is making progress.
@@ -50,8 +48,6 @@ func (bc *baseConfigurer) ClearResources() error {
 }
 
 func (bc *baseConfigurer) GetChainConfig(chainIndex int) *chain.Config {
-	bc.configMutex.Lock()
-	defer bc.configMutex.Unlock()
 	if chainIndex < 0 || chainIndex >= len(bc.chainConfigs) {
 		return nil
 	}
@@ -78,9 +74,6 @@ func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
 }
 
 func (bc *baseConfigurer) RunIBC() error {
-	bc.configMutex.Lock()
-	defer bc.configMutex.Unlock()
-
 	// Run a relayer between every possible pair of chains.
 	for i := 0; i < len(bc.chainConfigs); i++ {
 		for j := i + 1; j < len(bc.chainConfigs); j++ {

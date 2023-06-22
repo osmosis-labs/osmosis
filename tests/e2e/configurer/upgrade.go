@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"sync"
 	"testing"
 	"time"
 
@@ -27,7 +26,6 @@ type UpgradeConfigurer struct {
 	baseConfigurer
 	upgradeVersion string
 	forkHeight     int64 // forkHeight > 0 implies that this is a fork upgrade. Otherwise, proposal upgrade.
-	configMutex    sync.Mutex
 }
 
 var _ Configurer = (*UpgradeConfigurer)(nil)
@@ -109,8 +107,6 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 }
 
 func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
-	uc.configMutex.Lock()
-	defer uc.configMutex.Unlock()
 	chainA := uc.chainConfigs[0]
 	chainANode, err := chainA.GetDefaultNode()
 	if err != nil {
