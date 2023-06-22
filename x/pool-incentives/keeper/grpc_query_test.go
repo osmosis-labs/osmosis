@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
 )
@@ -279,8 +279,8 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 
 				// Create a link between the balancer pool and the cl pool if required.
 				if tc.setupPoolMigrationLink {
-					record := gammtypes.BalancerToConcentratedPoolLink{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()}
-					err := s.App.GAMMKeeper.ReplaceMigrationRecords(s.Ctx, []gammtypes.BalancerToConcentratedPoolLink{record})
+					record := gammmigration.BalancerToConcentratedPoolLink{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()}
+					err := s.App.GAMMKeeper.ReplaceMigrationRecords(s.Ctx, []gammmigration.BalancerToConcentratedPoolLink{record})
 					s.Require().NoError(err)
 				}
 			}

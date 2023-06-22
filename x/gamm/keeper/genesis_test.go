@@ -7,9 +7,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 )
 
-var DefaultMigrationRecords = types.MigrationRecords{BalancerToConcentratedPoolLinks: []types.BalancerToConcentratedPoolLink{
+var DefaultMigrationRecords = gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 	{BalancerPoolId: 1, ClPoolId: 4},
 	{BalancerPoolId: 2, ClPoolId: 5},
 	{BalancerPoolId: 3, ClPoolId: 6},

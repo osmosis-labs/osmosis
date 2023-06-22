@@ -2,6 +2,7 @@ package types
 
 import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 )
 
 // DefaultGenesis creates a default GenesisState object.
@@ -10,7 +11,7 @@ func DefaultGenesis() *GenesisState {
 		Pools:            []*codectypes.Any{},
 		NextPoolNumber:   1,
 		Params:           DefaultParams(),
-		MigrationRecords: &MigrationRecords{},
+		MigrationRecords: &gammmigration.MigrationRecords{},
 	}
 }
 

@@ -9,6 +9,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
+	migration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -31,9 +32,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // Each record specifies a single connection between a single balancer pool and
 // a single concentrated pool.
 type ReplaceMigrationRecordsProposal struct {
-	Title       string                           `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description string                           `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Records     []BalancerToConcentratedPoolLink `protobuf:"bytes,3,rep,name=records,proto3" json:"records"`
+	Title       string                                     `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description string                                     `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Records     []migration.BalancerToConcentratedPoolLink `protobuf:"bytes,3,rep,name=records,proto3" json:"records"`
 }
 
 func (m *ReplaceMigrationRecordsProposal) Reset()      { *m = ReplaceMigrationRecordsProposal{} }
@@ -77,9 +78,9 @@ var xxx_messageInfo_ReplaceMigrationRecordsProposal proto.InternalMessageInfo
 // The result MigrationRecords in state would be:
 // [(Balancer 1, CL 5), (Balancer 3, CL 4), (Balancer 4, CL 10)]
 type UpdateMigrationRecordsProposal struct {
-	Title       string                           `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description string                           `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Records     []BalancerToConcentratedPoolLink `protobuf:"bytes,3,rep,name=records,proto3" json:"records"`
+	Title       string                                     `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description string                                     `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Records     []migration.BalancerToConcentratedPoolLink `protobuf:"bytes,3,rep,name=records,proto3" json:"records"`
 }
 
 func (m *UpdateMigrationRecordsProposal) Reset()      { *m = UpdateMigrationRecordsProposal{} }
@@ -507,7 +508,7 @@ func (m *ReplaceMigrationRecordsProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Records = append(m.Records, BalancerToConcentratedPoolLink{})
+			m.Records = append(m.Records, migration.BalancerToConcentratedPoolLink{})
 			if err := m.Records[len(m.Records)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -655,7 +656,7 @@ func (m *UpdateMigrationRecordsProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Records = append(m.Records, BalancerToConcentratedPoolLink{})
+			m.Records = append(m.Records, migration.BalancerToConcentratedPoolLink{})
 			if err := m.Records[len(m.Records)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
