@@ -124,6 +124,14 @@ service Query {
     option (google.api.http).get = "/osmosis/superfluid/v1beta1/"
                                    "unpool_whitelist";
   }
+
+  rpc UserSuperfluidPositionsPerConcentratedPoolBreakdown(
+      UserSuperfluidPositionsPerConcentratedPoolBreakdownRequest)
+      returns (UserSuperfluidPositionsPerConcentratedPoolBreakdownResponse) {
+    option (google.api.http).get = "/osmosis/superfluid/v1beta1/"
+                                   "user_superfluid_positions_per_pool/"
+                                   "{delegator_address}/{concentrated_pool_id}";
+  }
 }
 
 message QueryParamsRequest {}
@@ -282,3 +290,16 @@ message QueryTotalDelegationByDelegatorResponse {
 message QueryUnpoolWhitelistRequest {}
 
 message QueryUnpoolWhitelistResponse { repeated uint64 pool_ids = 1; }
+
+//===============================
+// UserSuperfluidPositionsPerConcentratedPoolBreakdown
+message UserSuperfluidPositionsPerConcentratedPoolBreakdownRequest {
+  string delegator_address = 1;
+  uint64 concentrated_pool_id = 2
+      [ (gogoproto.moretags) = "yaml:\"concentrated_pool_id\"" ];
+}
+
+message UserSuperfluidPositionsPerConcentratedPoolBreakdownResponse {
+  repeated ConcentratedPoolUserPositionRecord cl_pool_user_position_records = 1
+      [ (gogoproto.nullable) = false ];
+}
