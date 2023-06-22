@@ -410,7 +410,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.DistrKeeper,
 		appKeepers.PoolManagerKeeper,
 		appKeepers.EpochsKeeper,
-		appKeepers.SuperfluidKeeper,
+		appKeepers.GAMMKeeper,
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
 	appKeepers.PoolManagerKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
