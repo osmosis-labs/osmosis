@@ -328,7 +328,7 @@ func (s *KeeperTestSuite) TestUserSuperfluidPositionsPerConcentratedPoolBreakdow
 	}
 
 	// Create 1 position in pool 1 that is not superfluid delegated.
-	_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPoolId, s.TestAccs[0], coins, duration)
+	_, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId, s.TestAccs[0], coins)
 	s.Require().NoError(err)
 
 	// Create 4 positions in pool 2 that are superfluid delegated.
@@ -344,7 +344,7 @@ func (s *KeeperTestSuite) TestUserSuperfluidPositionsPerConcentratedPoolBreakdow
 	}
 
 	// Create 1 position in pool 2 that is not superfluid delegated.
-	_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPoolId2, s.TestAccs[0], coins, duration)
+	_, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId2, s.TestAccs[0], coins)
 	s.Require().NoError(err)
 
 	res, err := s.queryClient.UserSuperfluidPositionsPerConcentratedPoolBreakdown(sdk.WrapSDKContext(s.Ctx), &types.UserSuperfluidPositionsPerConcentratedPoolBreakdownRequest{

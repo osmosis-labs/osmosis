@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -314,7 +315,7 @@ func (q Querier) UserSuperfluidPositionsPerConcentratedPoolBreakdown(goCtx conte
 			}
 
 			if syntheticLock.UnderlyingLockId == 0 {
-				continue
+				return nil, fmt.Errorf("synthetic lockup with underlying lock ID %d not found", lockId)
 			}
 
 			valAddr, err := ValidatorAddressFromSyntheticDenom(syntheticLock.SynthDenom)
