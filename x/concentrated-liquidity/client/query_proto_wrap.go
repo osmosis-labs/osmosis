@@ -129,14 +129,9 @@ func (q Querier) LiquidityNetInDirection(ctx sdk.Context, req clquery.LiquidityN
 		return nil, status.Error(codes.InvalidArgument, "tokenIn is empty")
 	}
 
-	pool, err := q.Keeper.GetConcentratedPoolById(ctx, req.PoolId)
-	if err != nil {
-		return nil, err
-	}
-
-	startTick := pool.GetCurrentTick()
+	var requestedStartTick sdk.Int
 	if !req.UseCurTick {
-		startTick = req.StartTick
+		requestedStartTick = sdk.NewInt(req.StartTick)
 	}
 
 	var boundTick sdk.Int
@@ -144,18 +139,18 @@ func (q Querier) LiquidityNetInDirection(ctx sdk.Context, req clquery.LiquidityN
 		boundTick = sdk.NewInt(req.BoundTick)
 	}
 
-	liquidityDepths, startTick, startTickLiquidity, err := q.Keeper.GetTickLiquidityNetInDirection(
+	liquidityDepths, actualStartTick, startTickLiquidity, err := q.Keeper.GetTickLiquidityNetInDirection(
 		ctx,
 		req.PoolId,
 		req.TokenIn,
-		sdk.NewInt(startTick),
+		requestedStartTick,
 		boundTick,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	return &clquery.LiquidityNetInDirectionResponse{LiquidityDepths: liquidityDepths, StartTickLiquidity: startTickLiquidity, StartTick: startTick}, nil
+	return &clquery.LiquidityNetInDirectionResponse{LiquidityDepths: liquidityDepths, StartTickLiquidity: startTickLiquidity, StartTick: actualStartTick}, nil
 }
 
 func (q Querier) ClaimableSpreadRewards(ctx sdk.Context, req clquery.ClaimableSpreadRewardsRequest) (*clquery.ClaimableSpreadRewardsResponse, error) {
