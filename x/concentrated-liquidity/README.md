@@ -1712,6 +1712,42 @@ creates a position with amounts such that the current tick is 155 between ticks 
 
 Note, that the current tick of 155 is defined inside the bucket over a range of 100 to 200.
 
+- `Initialized Tick` - a tick at which LPs can provide liquidity. Some ticks cannot be
+initialized due to tick spacing. `MinCurrentTick` is an exception due to being 1 tick below
+`MinInitializedTick`. Only initialized ticks are crossed during a swap (see "Crossing Tick")
+for details.
+
+- `MinInitializedTick` - the minimum tick at which a position can be initialized. When this tick is
+crossed, all liquidity is consumed at the tick ends up on `MinCurrentTick`. At that point, there
+is no liquidity and the pool is in no bucket. To enter the first bucket, a swap right must be done
+to cross the next initialized tick and kick in the liquidity. If at least one full range position is
+defined, `MinInitializedTick` will be the first such tick.
+
+- `MinCurrentTick` - is the minimum value that a current tick can take. If we consume all liquidity and
+cross the min initialized tick, our current tick will equal to MinInitializedTick - 1 (MinCurrentTick)
+with zero liquidity. However, note that this `MinCurrentTick` cannot be crossed. If current tick equals
+to this tick, it is only possible to swap in the right (one for zero) direction.
+
+- MaxTick` - is the maximum tick at which a position can be initialized. It is also the maximum value that
+a current tick can be. Note that this is different from the `MinInitializedTick` and `MinCurrentTick` due
+to our definition of the full range (see below). The full range is inclusive of the lower tick but exclusive
+of the upper tick. As a result, we do not need to differentiate between the two for the max. When the pool
+is on the `MaxTick`, there is no liquidity. To kick in the liquidity, a swap left must be done to cross
+the `MaxTick` and enter the last bucket (when sequencing from left to right).
+
+- `Initialized Range` - the range of ticks that can be initialized: `[MinInitializedTick, MaxTick]`
+
+- `Full Range` - the maximum range at which a position can be defined: `[MinInitializedTick, MaxTick)`
+
+- `Crossing Tick` - crossing a tick means leaving one bucket and entering another. Each tick has a liquidity
+net value defined. This value measures "how much of liquidity needs to be added to the current when crossing
+a tick going left-to-right and entering a new bucket". This value is positive for lower ticks of a position
+and negative for higher. When going left-to-right, instead of adding, we subtract this value from the current liquidity.
+There are two edge cases. First, when pool crosses a `MinInitializedTick`, the pool does not enter any bucket.
+since it is now outside of the `Full Range`. Second, when pool crossed a `MaxTick`, the pool does not enter
+any bucket since it is now outside of the `Full Range`. Instead, we treat this being directly on either
+the `MinCurrentTick` or `MaxTick`.
+
 ## External Sources
 
 - [Uniswap V3 Whitepaper](https://uniswap.org/whitepaper-v3.pdf)

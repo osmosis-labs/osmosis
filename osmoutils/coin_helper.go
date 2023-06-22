@@ -68,3 +68,12 @@ func CollapseDecCoinsArray(decCoinsArray []sdk.DecCoins) sdk.DecCoins {
 	}
 	return finalDecCoins
 }
+
+// ConvertCoinsToDecCoins takes sdk.Coins and converts it to sdk.DecCoins
+func ConvertCoinsToDecCoins(coins sdk.Coins) sdk.DecCoins {
+	decCoins := sdk.DecCoins{}
+	for _, coin := range coins {
+		decCoins = append(decCoins, sdk.NewDecCoin(coin.Denom, coin.Amount))
+	}
+	return decCoins
+}

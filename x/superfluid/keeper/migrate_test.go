@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
@@ -1222,65 +1224,6 @@ type Positions struct {
 	numNoLock                       int
 }
 
-// Populate a Balancer pool with multiple positions
-// Positions should be spread between:
-// - Bonded superfluid
-// - Unbonded superfluid (locked)
-// - Unbonded superfluid (unlocking)
-// - Vanilla lock (locked)
-// - Vanilla lock (unlocking)
-// - No lock
-//
-// After each position is created, we track the position info in a slice of slices.
-// This allows us to easily iterate through all positions and test migration for each position later.
-func (s *KeeperTestSuite) buildPositions(balancerPoolId uint64, positions Positions) [][]positionInfo {
-	balancerPoolShareDenom := fmt.Sprintf("gamm/pool/%d", balancerPoolId)
-	unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
-
-	positionInfos := make([][]positionInfo, 6)
-
-	for i := 0; i < positions.numBondedSuperfluid; i++ {
-		posInfoInternal := s.createBalancerPosition(s.TestAccs[i+1], balancerPoolId, unbondingDuration, balancerPoolShareDenom, DefaultCoins, positions.numAccounts-i, true)
-		positionInfos[0] = append(positionInfos[0], posInfoInternal)
-	}
-
-	for i := 0; i < positions.numUnbondingSuperfluidLocked; i++ {
-		posInfoInternal := s.createBalancerPosition(s.TestAccs[i+1], balancerPoolId, unbondingDuration+time.Nanosecond, balancerPoolShareDenom, DefaultCoins, positions.numAccounts-i, true)
-		err := s.App.SuperfluidKeeper.SuperfluidUndelegate(s.Ctx, s.TestAccs[i+1].String(), posInfoInternal.lockId)
-		s.Require().NoError(err)
-		positionInfos[1] = append(positionInfos[1], posInfoInternal)
-	}
-
-	for i := 0; i < positions.numUnbondingSuperfluidUnlocking; i++ {
-		posInfoInternal := s.createBalancerPosition(s.TestAccs[i+1], balancerPoolId, unbondingDuration+time.Nanosecond*2, balancerPoolShareDenom, DefaultCoins, positions.numAccounts-i, true)
-		err := s.App.SuperfluidKeeper.SuperfluidUndelegate(s.Ctx, s.TestAccs[i+1].String(), posInfoInternal.lockId)
-		s.Require().NoError(err)
-		err = s.App.SuperfluidKeeper.SuperfluidUnbondLock(s.Ctx, posInfoInternal.lockId, s.TestAccs[i+1].String())
-		s.Require().NoError(err)
-		positionInfos[2] = append(positionInfos[2], posInfoInternal)
-	}
-
-	for i := 0; i < positions.numVanillaLockLocked; i++ {
-		posInfoInternal := s.createBalancerPosition(s.TestAccs[i+1], balancerPoolId, unbondingDuration+time.Nanosecond*3, balancerPoolShareDenom, DefaultCoins, positions.numAccounts-i, false)
-		positionInfos[3] = append(positionInfos[3], posInfoInternal)
-	}
-
-	for i := 0; i < positions.numVanillaLockUnlocking; i++ {
-		posInfoInternal := s.createBalancerPosition(s.TestAccs[i+1], balancerPoolId, unbondingDuration+time.Nanosecond*4, balancerPoolShareDenom, DefaultCoins, positions.numAccounts-i, false)
-		lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, posInfoInternal.lockId)
-		s.Require().NoError(err)
-		_, err = s.App.LockupKeeper.BeginUnlock(s.Ctx, posInfoInternal.lockId, lock.Coins)
-		s.Require().NoError(err)
-		positionInfos[4] = append(positionInfos[4], posInfoInternal)
-	}
-
-	for i := 0; i < positions.numNoLock; i++ {
-		posInfoInternal := s.createBalancerPosition(s.TestAccs[i+1], balancerPoolId, time.Duration(0), balancerPoolShareDenom, DefaultCoins, positions.numAccounts-i, false)
-		positionInfos[5] = append(positionInfos[5], posInfoInternal)
-	}
-	return positionInfos
-}
-
 type positionInfo struct {
 	joinPoolCoins sdk.Coins
 	coin          sdk.Coin
@@ -1288,127 +1231,215 @@ type positionInfo struct {
 	lockId        uint64
 }
 
-// Test that during a migration, all coins are either migrated or sent back to user.
-// Repeats this test for many different balancer positions.
+type PositionType int
+
+const (
+	BondedSuperfluid PositionType = iota
+	UnbondingSuperfluidLocked
+	UnbondingSuperfluidUnlocking
+	VanillaLockLocked
+	VanillaLockUnlocking
+	NoLock
+)
+
+// TestFunctional_VaryingPositions_Migrations proves that, given a set of balancer pool positions of various types, the migration process works as expected.
+// By "works as expected", we mean that after we migrate a position, the funds that:
+// - get moved to the new cl positions
+// - get left behind in the balancer pool
+// - get sent back to the user
+// all add up to the amount that the user originally had in the balancer pool.
+//
+// This test also asserts this same invariant at the very end, to ensure that all coins the accounts were funded with are accounted for.
 func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
-	positions := Positions{
-		numAccounts:                     7,
-		numBondedSuperfluid:             6,
-		numUnbondingSuperfluidLocked:    5,
-		numUnbondingSuperfluidUnlocking: 4,
-		numVanillaLockLocked:            3,
-		numVanillaLockUnlocking:         2,
-		numNoLock:                       1,
-	}
-	s.SetupTest()
-	s.TestAccs = apptesting.CreateRandomAccounts(positions.numAccounts)
+	for i := 0; i < 10; i++ {
+		rand.Seed(time.Now().UnixNano() + int64(i))
 
-	// Fund all accounts with default coins. Keeps track of total funds to be used for position creation (does not include first account in tracker, since this account is only used for pool creation).
-	// After all methods are tested, we should have total accountability of these funds.
-	totalFundsForPositionCreation := sdk.NewCoins()
-	for i := 0; i < positions.numAccounts; i++ {
-		s.FundAcc(s.TestAccs[i], DefaultCoins)
-		if i != 0 {
-			totalFundsForPositionCreation = totalFundsForPositionCreation.Add(DefaultCoins...)
+		// Generate random value from 0 to 50 for each position field
+		// This is how many positions of each type we will create and migrate
+		maxValue := 51
+		numBondedSuperfluid := rand.Intn(maxValue)
+		numUnbondingSuperfluidLocked := rand.Intn(maxValue)
+		numUnbondingSuperfluidUnlocking := rand.Intn(maxValue)
+		numVanillaLockLocked := rand.Intn(maxValue)
+		numVanillaLockUnlocking := rand.Intn(maxValue)
+		numNoLock := rand.Intn(maxValue)
+
+		// Find the largest numPosition value and set numAccounts to be one greater than the largest position value
+		// The first account is used to create pools and the rest are used to create positions
+		largestPositionValue := osmoutils.Max(numBondedSuperfluid, numUnbondingSuperfluidLocked, numUnbondingSuperfluidUnlocking, numVanillaLockLocked, numVanillaLockUnlocking, numNoLock)
+		numAccounts := largestPositionValue.(int) + 1
+
+		positions := Positions{
+			numAccounts:                     numAccounts,
+			numBondedSuperfluid:             numBondedSuperfluid,
+			numUnbondingSuperfluidLocked:    numUnbondingSuperfluidLocked,
+			numUnbondingSuperfluidUnlocking: numUnbondingSuperfluidUnlocking,
+			numVanillaLockLocked:            numVanillaLockLocked,
+			numVanillaLockUnlocking:         numVanillaLockUnlocking,
+			numNoLock:                       numNoLock,
 		}
-	}
 
-	// Create a balancer pool (includes staking denom to be superfluid compatible).
-	balancerPoolId := s.PrepareBalancerPoolWithCoins(DefaultCoins...)
-	positionInfos := s.buildPositions(balancerPoolId, positions)
+		s.SetupTest()
+		s.TestAccs = apptesting.CreateRandomAccounts(positions.numAccounts)
 
-	// Some funds might not have been completely used when creating the above positions.
-	// We note them here and use them when tracking invariants at the very end.
-	unusedPositionCreationFunds := s.calculateUnusedPositionCreationFunds(positions.numAccounts, positions.numNoLock, DefaultCoin0.Denom, DefaultCoin1.Denom)
+		// Create a balancer pool (includes staking denom to be superfluid compatible).
+		balancerPoolId := s.PrepareBalancerPoolWithCoins(DefaultCoins...)
+		balancerPoolShareDenom := fmt.Sprintf("gamm/pool/%d", balancerPoolId)
+		unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
 
-	// Create CL pool
-	clPool := s.PrepareConcentratedPoolWithCoins(DefaultCoin0.Denom, DefaultCoin1.Denom)
-	clPoolId := clPool.GetId()
+		positionInfos := make([][]positionInfo, 6)
+		maxDivisor := 10
 
-	// Match the spot price of the CL pool to the balancer pool
-	balancerPool, err := s.App.GAMMKeeper.GetCFMMPool(s.Ctx, balancerPoolId)
-	s.Require().NoError(err)
-	balancerSpotPrice, err := balancerPool.SpotPrice(s.Ctx, DefaultCoin1.Denom, DefaultCoin0.Denom)
-	s.Require().NoError(err)
-	// TODO: investigate why we need a full range position to add as superfluid asset.
-	coin0 := sdk.NewCoin(DefaultCoin0.Denom, sdk.NewInt(100000000))
-	coin1 := sdk.NewCoin(DefaultCoin1.Denom, sdk.NewDec(100000000).Mul(balancerSpotPrice).TruncateInt())
-	s.CreateFullRangePosition(clPool, sdk.NewCoins(coin0, coin1))
+		// Create Balancer pool with multiple positions
+		// Positions should be spread between:
+		// - Bonded superfluid
+		// - Unbonded superfluid (locked)
+		// - Unbonded superfluid (unlocking)
+		// - Vanilla lock (locked)
+		// - Vanilla lock (unlocking)
+		// - No lock
+		//
+		// After each position is created, we track the position info in a slice of slices.
+		// This allows us to easily iterate through all positions and test migration for each position later.
+		//
+		// Note: you may notice we add one nanosecond to the lock duration between position types. This is so
+		// we don't reuse the same lock, since under the hood if an account tries to lock twice with the same
+		// lock duration, an "add to lock" call will happen rather than creating a new lock.
 
-	// Add a gov sanctioned link between the balancer and concentrated liquidity pool.
-	migrationRecord := gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
-		{BalancerPoolId: balancerPoolId, ClPoolId: clPoolId},
-	}}
-	s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, migrationRecord)
-
-	// Register the CL denom as superfluid.
-	clPoolDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPoolId)
-	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{
-		Denom:     clPoolDenom,
-		AssetType: types.SuperfluidAssetTypeConcentratedShare,
-	})
-	s.Require().NoError(err)
-
-	// All the following values will be tracked as we migrate each position. We will check them against the invariants at the end.
-	totalAmount0Migrated := sdk.ZeroInt()
-	totalAmount1Migrated := sdk.ZeroInt()
-	totalSentBackToOwnersAmount0 := sdk.ZeroInt()
-	totalSentBackToOwnersAmount1 := sdk.ZeroInt()
-	totalBalancerPoolFundsLeftBehindAmount0 := sdk.ZeroInt()
-	totalBalancerPoolFundsLeftBehindAmount1 := sdk.ZeroInt()
-	amount0AccountFor := sdk.ZeroInt()
-	amount1AccountFor := sdk.ZeroInt()
-
-	// Migrate all the positions.
-	// We will check certain invariants after each individual migration.
-	for _, positionInfo := range positionInfos {
-		for i, posInfo := range positionInfo {
-			balancerPool, err = s.App.GAMMKeeper.GetCFMMPool(s.Ctx, balancerPoolId)
-			s.Require().NoError(err)
-
-			// Note owner and balancer pool balances before migration.
-			preClaimOwnerBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[i+1])
-			preClaimBalancerPoolBalance := balancerPool.GetTotalPoolLiquidity(s.Ctx)
-
-			// Run the migration.
-			_, amount0, amount1, _, _, _, _, err := s.App.SuperfluidKeeper.RouteLockedBalancerToConcentratedMigration(s.Ctx, s.TestAccs[i+1], posInfo.lockId, posInfo.coin, sdk.Coins{})
-			s.Require().NoError(err)
-
-			// Note how much of amount0 and amount1 was actually created in the CL pool from the migration.
-			clJoinPoolAmt := sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), amount0), sdk.NewCoin(clPool.GetToken1(), amount1))
-
-			// Note owner and balancer pool balances after migration.
-			balancerPool, err = s.App.GAMMKeeper.GetCFMMPool(s.Ctx, balancerPoolId)
-			s.Require().NoError(err)
-			postClaimOwnerBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[i+1])
-			postClaimBalancerPoolBalance := balancerPool.GetTotalPoolLiquidity(s.Ctx)
-
-			// Check that the diff between the initial balancer position and the new CL position is equal to the amount that was left behind in the balancer pool and the amount that was sent back to the owner.
-			for i := range posInfo.joinPoolCoins {
-				balancerToClBalanceDelta := posInfo.joinPoolCoins[i].Amount.Sub(clJoinPoolAmt.AmountOf(posInfo.joinPoolCoins[i].Denom))
-				userBalanceDelta := postClaimOwnerBalance.AmountOf(posInfo.joinPoolCoins[i].Denom).Sub(preClaimOwnerBalance.AmountOf(posInfo.joinPoolCoins[i].Denom))
-				balancerPoolDelta := posInfo.joinPoolCoins[i].Amount.Sub(preClaimBalancerPoolBalance.AmountOf(posInfo.joinPoolCoins[i].Denom).Sub(postClaimBalancerPoolBalance.AmountOf(posInfo.joinPoolCoins[i].Denom)))
-				if i == 0 {
-					totalBalancerPoolFundsLeftBehindAmount0 = totalBalancerPoolFundsLeftBehindAmount0.Add(balancerPoolDelta)
-				} else {
-					totalBalancerPoolFundsLeftBehindAmount1 = totalBalancerPoolFundsLeftBehindAmount1.Add(balancerPoolDelta)
-				}
-				s.Require().Equal(balancerToClBalanceDelta.String(), userBalanceDelta.Add(balancerPoolDelta).String())
+		totalFundsForPositionCreation := sdk.NewCoins()
+		createPositions := func(posType PositionType, numPositions int, lockDurationFn func(int) time.Duration, superfluidDelegate bool, callbackFn func(int, positionInfo)) {
+			for i := 0; i < numPositions; i++ {
+				index := i + 1                              // Skip the first account, which is used for pool creation
+				divisor := int64(rand.Intn(maxDivisor)) + 1 // Randomly generate a divisor between 1 and maxDivisor
+				coin0Amt := DefaultAmt0.QuoRaw(divisor)     // Divide amount0 by the divisor to add some entropy to the position creation
+				coin1Amt := DefaultAmt1.QuoRaw(divisor)     // Divide amount1 by the divisor to add some entropy to the position creation
+				positionCoins := sdk.NewCoins(sdk.NewCoin(DefaultCoin0.Denom, coin0Amt), sdk.NewCoin(DefaultCoin1.Denom, coin1Amt))
+				s.FundAcc(s.TestAccs[index], positionCoins)
+				totalFundsForPositionCreation = totalFundsForPositionCreation.Add(positionCoins...) // Track total funds used for position creation, to be used by invariant checks later
+				posInfoInternal := s.createBalancerPosition(s.TestAccs[index], balancerPoolId, lockDurationFn(i), balancerPoolShareDenom, positionCoins, positions.numAccounts-i, superfluidDelegate)
+				positionInfos[posType] = append(positionInfos[posType], posInfoInternal) // Track position info for invariant checks later
+				callbackFn(index, posInfoInternal)
 			}
-
-			// Add to the total amounts that were migrated and sent back to the owners.
-			totalAmount0Migrated = totalAmount0Migrated.Add(amount0)
-			totalAmount1Migrated = totalAmount1Migrated.Add(amount1)
-			totalSentBackToOwnersAmount0 = totalSentBackToOwnersAmount0.Add(postClaimOwnerBalance.AmountOf(DefaultCoin0.Denom).Sub(preClaimOwnerBalance.AmountOf(DefaultCoin0.Denom)))
-			totalSentBackToOwnersAmount1 = totalSentBackToOwnersAmount1.Add(postClaimOwnerBalance.AmountOf(DefaultCoin1.Denom).Sub(preClaimOwnerBalance.AmountOf(DefaultCoin1.Denom)))
 		}
-	}
 
-	// Check that we have account for all the funds that were used to create the positions.
-	amount0AccountFor = totalAmount0Migrated.Add(totalSentBackToOwnersAmount0).Add(totalBalancerPoolFundsLeftBehindAmount0).Add(unusedPositionCreationFunds.AmountOf(DefaultCoin0.Denom))
-	amount1AccountFor = totalAmount1Migrated.Add(totalSentBackToOwnersAmount1).Add(totalBalancerPoolFundsLeftBehindAmount1).Add(unusedPositionCreationFunds.AmountOf(DefaultCoin1.Denom))
-	s.Require().Equal(totalFundsForPositionCreation.AmountOf(DefaultCoin0.Denom), amount0AccountFor)
-	s.Require().Equal(totalFundsForPositionCreation.AmountOf(DefaultCoin1.Denom), amount1AccountFor)
+		createPositions(BondedSuperfluid, positions.numBondedSuperfluid, func(int) time.Duration { return unbondingDuration }, true, func(index int, posInfoInternal positionInfo) {
+		})
+
+		createPositions(UnbondingSuperfluidLocked, positions.numUnbondingSuperfluidLocked, func(int) time.Duration { return unbondingDuration + time.Nanosecond }, true, func(index int, posInfoInternal positionInfo) {
+			err := s.App.SuperfluidKeeper.SuperfluidUndelegate(s.Ctx, s.TestAccs[index].String(), posInfoInternal.lockId)
+			s.Require().NoError(err)
+		})
+
+		createPositions(UnbondingSuperfluidUnlocking, positions.numUnbondingSuperfluidUnlocking, func(int) time.Duration { return unbondingDuration + time.Nanosecond*2 }, true, func(index int, posInfoInternal positionInfo) {
+			err := s.App.SuperfluidKeeper.SuperfluidUndelegate(s.Ctx, s.TestAccs[index].String(), posInfoInternal.lockId)
+			s.Require().NoError(err)
+			err = s.App.SuperfluidKeeper.SuperfluidUnbondLock(s.Ctx, posInfoInternal.lockId, s.TestAccs[index].String())
+			s.Require().NoError(err)
+		})
+
+		createPositions(VanillaLockLocked, positions.numVanillaLockLocked, func(int) time.Duration { return unbondingDuration + time.Nanosecond*3 }, false, func(index int, posInfoInternal positionInfo) {
+		})
+
+		createPositions(VanillaLockUnlocking, positions.numVanillaLockUnlocking, func(int) time.Duration { return unbondingDuration + time.Nanosecond*4 }, false, func(index int, posInfoInternal positionInfo) {
+			lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, posInfoInternal.lockId)
+			s.Require().NoError(err)
+			_, err = s.App.LockupKeeper.BeginUnlock(s.Ctx, posInfoInternal.lockId, lock.Coins)
+			s.Require().NoError(err)
+		})
+
+		createPositions(NoLock, positions.numNoLock, func(int) time.Duration { return time.Duration(0) }, false, func(index int, posInfoInternal positionInfo) {
+		})
+
+		// Some funds might not have been completely used when creating the above positions.
+		// We note them here and use them when tracking invariants at the very end.
+		unusedPositionCreationFunds := s.calculateUnusedPositionCreationFunds(positions.numAccounts, positions.numNoLock, DefaultCoin0.Denom, DefaultCoin1.Denom)
+
+		// Create CL pool
+		clPool := s.PrepareConcentratedPoolWithCoins(DefaultCoin0.Denom, DefaultCoin1.Denom)
+		clPoolId := clPool.GetId()
+
+		// Match the spot price of the CL pool to the balancer pool by creating a position with the same ratio.
+		balancerPool, err := s.App.GAMMKeeper.GetCFMMPool(s.Ctx, balancerPoolId)
+		s.Require().NoError(err)
+		balancerSpotPrice, err := balancerPool.SpotPrice(s.Ctx, DefaultCoin1.Denom, DefaultCoin0.Denom)
+		s.Require().NoError(err)
+		s.CreateFullRangePosition(clPool, sdk.NewCoins(sdk.NewCoin(DefaultCoin0.Denom, sdk.NewInt(100000000)), sdk.NewCoin(DefaultCoin1.Denom, sdk.NewDec(100000000).Mul(balancerSpotPrice).TruncateInt())))
+
+		// Add a gov sanctioned link between the balancer and concentrated liquidity pool.
+		migrationRecord := gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
+			{BalancerPoolId: balancerPoolId, ClPoolId: clPoolId},
+		}}
+		s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, migrationRecord)
+
+		// Register the CL denom as superfluid.
+		clPoolDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPoolId)
+		err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{
+			Denom:     clPoolDenom,
+			AssetType: types.SuperfluidAssetTypeConcentratedShare,
+		})
+		s.Require().NoError(err)
+
+		// All the following values will be tracked as we migrate each position. We will check them against the invariants at the end.
+		totalAmount0Migrated := sdk.ZeroInt()
+		totalAmount1Migrated := sdk.ZeroInt()
+		totalSentBackToOwnersAmount0 := sdk.ZeroInt()
+		totalSentBackToOwnersAmount1 := sdk.ZeroInt()
+		totalBalancerPoolFundsLeftBehindAmount0 := sdk.ZeroInt()
+		totalBalancerPoolFundsLeftBehindAmount1 := sdk.ZeroInt()
+		amount0AccountFor := sdk.ZeroInt()
+		amount1AccountFor := sdk.ZeroInt()
+
+		// Migrate all the positions.
+		// We will check certain invariants after each individual migration.
+		for _, positionInfo := range positionInfos {
+			for i, posInfo := range positionInfo {
+				balancerPool, err = s.App.GAMMKeeper.GetCFMMPool(s.Ctx, balancerPoolId)
+				s.Require().NoError(err)
+
+				// Note owner and balancer pool balances before migration.
+				preClaimOwnerBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[i+1])
+				preClaimBalancerPoolBalance := balancerPool.GetTotalPoolLiquidity(s.Ctx)
+
+				// Run the migration.
+				_, amount0, amount1, _, _, _, _, err := s.App.SuperfluidKeeper.RouteLockedBalancerToConcentratedMigration(s.Ctx, s.TestAccs[i+1], posInfo.lockId, posInfo.coin, sdk.Coins{})
+				s.Require().NoError(err)
+
+				// Note how much of amount0 and amount1 was actually created in the CL pool from the migration.
+				clJoinPoolAmt := sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), amount0), sdk.NewCoin(clPool.GetToken1(), amount1))
+
+				// Note owner and balancer pool balances after migration.
+				balancerPool, err = s.App.GAMMKeeper.GetCFMMPool(s.Ctx, balancerPoolId)
+				s.Require().NoError(err)
+				postClaimOwnerBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[i+1])
+				postClaimBalancerPoolBalance := balancerPool.GetTotalPoolLiquidity(s.Ctx)
+
+				// Check that the diff between the initial balancer position and the new CL position is equal to the amount that was left behind in the balancer pool and the amount that was sent back to the owner.
+				for i := range posInfo.joinPoolCoins {
+					balancerToClBalanceDelta := posInfo.joinPoolCoins[i].Amount.Sub(clJoinPoolAmt.AmountOf(posInfo.joinPoolCoins[i].Denom))
+					userBalanceDelta := postClaimOwnerBalance.AmountOf(posInfo.joinPoolCoins[i].Denom).Sub(preClaimOwnerBalance.AmountOf(posInfo.joinPoolCoins[i].Denom))
+					balancerPoolDelta := posInfo.joinPoolCoins[i].Amount.Sub(preClaimBalancerPoolBalance.AmountOf(posInfo.joinPoolCoins[i].Denom).Sub(postClaimBalancerPoolBalance.AmountOf(posInfo.joinPoolCoins[i].Denom)))
+					if i == 0 {
+						totalBalancerPoolFundsLeftBehindAmount0 = totalBalancerPoolFundsLeftBehindAmount0.Add(balancerPoolDelta)
+					} else {
+						totalBalancerPoolFundsLeftBehindAmount1 = totalBalancerPoolFundsLeftBehindAmount1.Add(balancerPoolDelta)
+					}
+					s.Require().Equal(balancerToClBalanceDelta.String(), userBalanceDelta.Add(balancerPoolDelta).String())
+				}
+
+				// Add to the total amounts that were migrated and sent back to the owners.
+				totalAmount0Migrated = totalAmount0Migrated.Add(amount0)
+				totalAmount1Migrated = totalAmount1Migrated.Add(amount1)
+				totalSentBackToOwnersAmount0 = totalSentBackToOwnersAmount0.Add(postClaimOwnerBalance.AmountOf(DefaultCoin0.Denom).Sub(preClaimOwnerBalance.AmountOf(DefaultCoin0.Denom)))
+				totalSentBackToOwnersAmount1 = totalSentBackToOwnersAmount1.Add(postClaimOwnerBalance.AmountOf(DefaultCoin1.Denom).Sub(preClaimOwnerBalance.AmountOf(DefaultCoin1.Denom)))
+			}
+		}
+
+		// Check that we have account for all the funds that were used to create the positions.
+		amount0AccountFor = totalAmount0Migrated.Add(totalSentBackToOwnersAmount0).Add(totalBalancerPoolFundsLeftBehindAmount0).Add(unusedPositionCreationFunds.AmountOf(DefaultCoin0.Denom))
+		amount1AccountFor = totalAmount1Migrated.Add(totalSentBackToOwnersAmount1).Add(totalBalancerPoolFundsLeftBehindAmount1).Add(unusedPositionCreationFunds.AmountOf(DefaultCoin1.Denom))
+		s.Require().Equal(totalFundsForPositionCreation.AmountOf(DefaultCoin0.Denom), amount0AccountFor)
+		s.Require().Equal(totalFundsForPositionCreation.AmountOf(DefaultCoin1.Denom), amount1AccountFor)
+	}
 }
 
 // createBalancerPosition creates a position in a Balancer pool for a given account with optional superfluid delegation.
@@ -1422,11 +1453,7 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 //
 // The function returns a `positionInfo` struct with the created position's information.
 func (s *KeeperTestSuite) createBalancerPosition(acc sdk.AccAddress, balancerPoolId uint64, unbondingDuration time.Duration, balancerPoolShareDenom string, coins sdk.Coins, i int, superfluidDelegate bool) positionInfo {
-	coin0, coin1 := DefaultCoin0, DefaultCoin1
-	coin0.Amount, coin1.Amount = coin0.Amount.QuoRaw(int64(i)), coin1.Amount.QuoRaw(int64(i))
-	joinPoolCoins := sdk.NewCoins(coin0, coin1)
-
-	sharesOut, err := s.App.GAMMKeeper.JoinSwapExactAmountIn(s.Ctx, acc, balancerPoolId, joinPoolCoins, sdk.OneInt())
+	sharesOut, err := s.App.GAMMKeeper.JoinSwapExactAmountIn(s.Ctx, acc, balancerPoolId, coins, sdk.OneInt())
 	s.Require().NoError(err)
 	shareCoins := sdk.NewCoins(sdk.NewCoin(balancerPoolShareDenom, sharesOut))
 
@@ -1445,7 +1472,7 @@ func (s *KeeperTestSuite) createBalancerPosition(acc sdk.AccAddress, balancerPoo
 	sharesOutCoin := sdk.NewCoin(balancerPoolShareDenom, sharesOut)
 
 	posInfoInternal := positionInfo{
-		joinPoolCoins: joinPoolCoins,
+		joinPoolCoins: coins,
 		coin:          sharesOutCoin,
 		shares:        sharesOut,
 		lockId:        lockId,

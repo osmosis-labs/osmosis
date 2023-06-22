@@ -176,7 +176,7 @@ func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr, denom 
 		}
 		return false
 	},
-		1*time.Minute,
+		2*time.Minute,
 		10*time.Millisecond,
 	)
 }

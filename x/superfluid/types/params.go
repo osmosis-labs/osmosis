@@ -50,7 +50,7 @@ func ValidateMinimumRiskFactor(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.LT(sdk.ZeroDec()) || v.GT(sdk.NewDec(100)) {
+	if v.IsNegative() || v.GT(sdk.NewDec(100)) {
 		return fmt.Errorf("minimum risk factor should be between 0 - 100: %s", v.String())
 	}
 

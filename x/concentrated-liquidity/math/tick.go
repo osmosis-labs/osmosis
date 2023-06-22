@@ -38,7 +38,7 @@ func TickToSqrtPrice(tickIndex int64) (sdk.Dec, sdk.Dec, error) {
 	}
 
 	// Determine the sqrtPrice from the price
-	sqrtPrice, err := price.ApproxSqrt()
+	sqrtPrice, err := osmomath.MonotonicSqrt(price)
 	if err != nil {
 		return sdk.Dec{}, sdk.Dec{}, err
 	}
