@@ -317,6 +317,10 @@ func (q Querier) UserSuperfluidPositionsPerConcentratedPoolBreakdown(goCtx conte
 				return nil, err
 			}
 
+			if syntheticLock.UnderlyingLockId == 0 {
+				continue
+			}
+
 			valAddr, err := ValidatorAddressFromSyntheticDenom(syntheticLock.SynthDenom)
 			if err != nil {
 				return nil, err
