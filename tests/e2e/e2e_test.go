@@ -1727,7 +1727,7 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 
 	tokenOutMins := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(200000)), sdk.NewCoin("stake", sdk.NewInt(200000)))
 
-	// Case 1: SuperfluidBonded
+	// Case 1: Bonded superfluid
 	var (
 		superfluidDelegated    = true
 		superfluidUndelegating = false
@@ -1736,21 +1736,37 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 	)
 	s.testPoolMigration(chain, poolJoinAddress, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate, tokenOutMins)
 
-	// Case 2: SuperfluidUnbonding
+	// Case 2: Unbonded superfluid (locked)
+	superfluidDelegated = true
+	superfluidUndelegating = true
+	unlocking = false
+	noLock = false
+	s.testPoolMigration(chain, poolJoinAddress, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate, tokenOutMins)
+
+	// Case 3: Unbonded superfluid (unlocking)
 	superfluidDelegated = true
 	superfluidUndelegating = true
 	unlocking = true
 	noLock = false
 	s.testPoolMigration(chain, poolJoinAddress, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate, tokenOutMins)
 
-	// Case 3: NonSuperfluid
+
+	// Case 4: Vanilla lock (locked)
+	superfluidDelegated = false
+	superfluidUndelegating = false
+	unlocking = false
+	noLock = false
+	s.testPoolMigration(chain, poolJoinAddress, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate, tokenOutMins)
+
+	// Case 5: Vanilla lock (unlocking)
 	superfluidDelegated = false
 	superfluidUndelegating = false
 	unlocking = true
 	noLock = false
 	s.testPoolMigration(chain, poolJoinAddress, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate, tokenOutMins)
 
-	// Case 4: Unlocked
+
+	// Case 6: Unlocked
 	superfluidDelegated = false
 	superfluidUndelegating = false
 	unlocking = false
