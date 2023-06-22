@@ -90,7 +90,6 @@ func (s *KeeperTestHelper) SetupWithLevelDb() func() {
 
 func (s *KeeperTestHelper) setupGeneral() {
 	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
-	fmt.Println("with caching:", s.withCaching)
 	if s.withCaching {
 		s.Ctx, _ = s.Ctx.CacheContext()
 	}
