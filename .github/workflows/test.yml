@@ -34,6 +34,8 @@ jobs:
       git_diff: ${{ env.GIT_DIFF }}
 
   go-split-test-files:
+    needs: get_diff
+    if: needs.get_diff.outputs.git_diff
     runs-on: ubuntu-latest
     steps:
       -
