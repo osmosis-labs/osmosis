@@ -299,7 +299,9 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 // ([]queryproto.TickLiquidityNet): An array of TickLiquidityNet objects representing the net liquidity in the specified direction.
 //
 //	Note that the start tick is never included if given. The same goes for the current tick.
-//	Returns liquidity net amounts starting from the next tick relative to start/current tick
+//	Returns:
+//
+// liquidity net amounts starting from the next tick relative to start/current tick
 //
 // startTick (int64): The tick index of the first tick used to calculate the liquidity net. This is returned because, if the userGivenStartTick is not provided, the pools current tick is used.
 //
