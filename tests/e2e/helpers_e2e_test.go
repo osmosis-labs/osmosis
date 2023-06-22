@@ -366,6 +366,6 @@ func (s *IntegrationTestSuite) testPoolMigration(
 		// Check amount left in lock
 		gammlock := node.QueryLockById(fmt.Sprintf("%d", originalGammLockId))
 		balancerPoolShareRemain := sdk.OneDec().Sub(percentOfSharesToMigrate).RoundInt()
-		s.Require().Equal(totalBalancerPoolShare.Amount.Mul(balancerPoolShareRemain), gammlock.Coins[0].Amount.MulRaw(10).String())
+		s.Require().Equal(totalBalancerPoolShare.Amount.Mul(balancerPoolShareRemain).String(), gammlock.Coins[0].Amount.MulRaw(10).String())
 	}
 }
