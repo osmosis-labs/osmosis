@@ -1,6 +1,7 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -2474,4 +2475,43 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 			s.runMultiplePositionRanges(tc.tickRanges, tc.rangeTestParams)
 		})
 	}
+}
+
+// TestBrokenPositionInverse demonstrates a case where:
+// 1. A position is created then withdrawn & yields less assets than expected
+// 2. All the positions in a pool are removed but the pool still has assets far beyond an additive rounding error
+func (s *KeeperTestSuite) TestBrokenPositionInverse() {
+	s.SetupTest()
+	pool := s.PrepareConcentratedPool()
+
+	testAccs := apptesting.CreateRandomAccounts(2)
+	positionOwner := testAccs[0]
+
+	// Create position near min tick
+	s.FundAcc(positionOwner, DefaultRangeTestParams.baseAssets.Add(DefaultRangeTestParams.baseAssets...))
+	posId, _, _, posLiquidity, _, _, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), positionOwner, DefaultRangeTestParams.baseAssets, sdk.ZeroInt(), sdk.ZeroInt(), -108000000, -107999900)
+	s.Require().NoError(err)
+
+	// Swap small amount to get current tick to position above, triggering the problematic function/branch (CalcAmount0Delta)
+	swapAddress := testAccs[1]
+	swapInFunded := sdk.NewCoin(ETH, sdk.Int(sdk.MustNewDecFromStr("10000000000000000000000000000000000000000")))
+	s.FundAcc(swapAddress, sdk.NewCoins(swapInFunded))
+	s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, sdk.NewCoin(USDC, sdk.NewInt(10000)), ETH, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
+
+	// Withdraw full position
+	_, _, err = s.clk.WithdrawPosition(s.Ctx, positionOwner, posId, posLiquidity)
+	s.Require().NoError(err)
+
+	// Check pool state to see that assets were underclaimed
+	pool, _ = s.clk.GetPoolById(s.Ctx, pool.GetId())
+
+	// The pool has no remaining positions
+	hasPos, _ := s.clk.HasAnyPositionForPool(s.Ctx, pool.GetId())
+	fmt.Println("Pool has remaining positions: ", hasPos)
+
+	// We expect all the liquidity in the pool to be claimed since the last position was withdrawn.
+	// And yet there is a meaningful amount of assets left in the pool: 9998260055eth,1usdc
+	// This is of course beyond an additive rounding error, which is why this is flagged as an issue.
+	// NOTE: this seems to come out to ~0.0001% of the liquidity the LP was entitled to, which might be acceptable tolerance.
+	fmt.Println("Pool liq after swap & withdraw: ", s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress()))
 }
