@@ -181,7 +181,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.SetupTest()
+			s.ResetTest()
 
 			// Set blocktime to fixed UTC value for consistency
 			s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime)
@@ -358,7 +358,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.SetupTest()
+			s.ResetTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
 			// Create a default CL pool
@@ -384,7 +384,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 
 func (s *KeeperTestSuite) TestGetNextPositionAndIncrement() {
 	// Init suite for each test.
-	s.SetupTest()
+	s.ResetTest()
 	s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 	// Create a default CL pool
 	pool := s.PrepareConcentratedPool()
@@ -471,7 +471,7 @@ func (s *KeeperTestSuite) TestGetUserPositions() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.SetupTest()
+			s.ResetTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
 			// Create a default CL pools
@@ -570,7 +570,7 @@ func (s *KeeperTestSuite) TestGetUserPositionsSerialized() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 
-			s.SetupTest()
+			s.ResetTest()
 			k := s.App.ConcentratedLiquidityKeeper
 
 			//s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1)))
@@ -690,7 +690,7 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.SetupTest()
+			s.ResetTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 			store := s.Ctx.KVStore(s.App.GetKey(types.StoreKey))
 
@@ -1003,7 +1003,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.SetupTest()
+			s.ResetTest()
 			s.Ctx = s.Ctx.WithBlockTime(defaultBlockTime)
 			totalPositionsToCreate := sdk.NewInt(int64(len(test.setupFullyChargedPositions) + len(test.setupUnchargedPositions)))
 			requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0.Mul(totalPositionsToCreate)), sdk.NewCoin(USDC, DefaultAmt1.Mul(totalPositionsToCreate)))
@@ -1151,7 +1151,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 }
 
 func (s *KeeperTestSuite) TestHasAnyPositionForPool() {
-	s.SetupTest()
+	s.ResetTest()
 	defaultAddress := s.TestAccs[0]
 	DefaultJoinTime := s.Ctx.BlockTime()
 
@@ -1228,7 +1228,7 @@ func (s *KeeperTestSuite) TestHasAnyPositionForPool() {
 		test := test
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.SetupTest()
+			s.ResetTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
 			// Create a default CL pools
@@ -1251,7 +1251,7 @@ func (s *KeeperTestSuite) TestHasAnyPositionForPool() {
 // after fungifying positions.
 func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimSpreadRewards() {
 	// Init suite for the test.
-	s.SetupTest()
+	s.ResetTest()
 
 	const swapAmount = 1_000_000
 	var defaultAddress = s.TestAccs[0]
@@ -1308,7 +1308,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimSpreadRewards(
 
 func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 	// Init suite for the test.
-	s.SetupTest()
+	s.ResetTest()
 	var defaultAddress = s.TestAccs[0]
 
 	// Set incentives for pool to ensure accumulators work correctly
@@ -1393,7 +1393,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 // 5. Fungify each set of positions
 // 6. Collect all spread rewards and incentives on and make assertions
 func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
-	s.SetupTest()
+	s.ResetTest()
 	s.Ctx = s.Ctx.WithBlockTime(defaultBlockTime)
 
 	// Set incentives for pool to ensure accumulators work correctly
@@ -1658,7 +1658,7 @@ func (s *KeeperTestSuite) TestCreateFullRangePosition() {
 		test := test
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.SetupTest()
+			s.ResetTest()
 			DefaultJoinTime := s.Ctx.BlockTime()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
@@ -1754,7 +1754,7 @@ func (s *KeeperTestSuite) TestMintSharesAndLock() {
 		test := test
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.SetupTest()
+			s.ResetTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
 			// Create a default CL pools
@@ -2081,7 +2081,7 @@ func (s *KeeperTestSuite) TestPositionHasActiveUnderlyingLockAndUpdate() {
 // Tests Set, Get, and Remove methods for positionId -> lockId mappings
 func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	// Init suite for each test.
-	s.SetupTest()
+	s.ResetTest()
 	s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 	owner := s.TestAccs[0]
 	remainingLockDuration := 24 * time.Hour
@@ -2179,7 +2179,7 @@ func (s *KeeperTestSuite) TestSetPosition() {
 
 	// Loop through test cases.
 	for _, tc := range testCases {
-		s.SetupTest()
+		s.ResetTest()
 		s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 		store := s.Ctx.KVStore(s.App.GetKey(types.StoreKey))
 		s.PrepareConcentratedPool()
@@ -2255,7 +2255,7 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 	}
 
 	for _, tc := range testCases {
-		s.SetupTest()
+		s.ResetTest()
 		s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 		owner := s.TestAccs[0]
 		s.FundAcc(owner, tc.positionCoins)
@@ -2296,7 +2296,7 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 }
 
 func (s *KeeperTestSuite) TestGetAllPositionIdsForPoolId() {
-	s.SetupTest()
+	s.ResetTest()
 	clKeeper := s.App.ConcentratedLiquidityKeeper
 	s.Ctx = s.Ctx.WithBlockTime(defaultStartTime)
 
@@ -2373,7 +2373,7 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 		test := test
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.SetupTest()
+			s.ResetTest()
 
 			// Create a default CL pool
 			clPool := s.PrepareConcentratedPoolWithCoins(ETH, USDC)
@@ -2411,7 +2411,7 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 
 // TestTickRoundingEdgeCase tests an edge case where incorrect tick rounding would cause LP funds to be drained.
 func (s *KeeperTestSuite) TestTickRoundingEdgeCase() {
-	s.SetupTest()
+	s.ResetTest()
 	pool := s.PrepareConcentratedPool()
 
 	testAccs := apptesting.CreateRandomAccounts(3)
@@ -2470,7 +2470,7 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			s.SetupTest()
+			s.ResetTest()
 			s.runMultiplePositionRanges(tc.tickRanges, tc.rangeTestParams)
 		})
 	}

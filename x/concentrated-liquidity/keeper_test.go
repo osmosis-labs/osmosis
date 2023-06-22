@@ -93,6 +93,15 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (s *KeeperTestSuite) SetupTest() {
 	s.Setup()
+	s.setupClGeneral()
+}
+
+func (s *KeeperTestSuite) ResetTest() {
+	s.Reset()
+	s.setupClGeneral()
+}
+
+func (s *KeeperTestSuite) setupClGeneral() {
 	s.clk = s.App.ConcentratedLiquidityKeeper
 
 	if s.authorizedUptimes != nil {
