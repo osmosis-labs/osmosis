@@ -279,7 +279,7 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 	return &res, nil
 }
 
-// SuperfluidDelegationsByValidator returns all the cl superfluid positions for the specified delegator in the specified pool.
+// UserSuperfluidPositionsPerConcentratedPoolBreakdown returns all the cl superfluid positions for the specified delegator in the specified concentrated liquidity pool.
 func (q Querier) UserSuperfluidPositionsPerConcentratedPoolBreakdown(goCtx context.Context, req *types.UserSuperfluidPositionsPerConcentratedPoolBreakdownRequest) (*types.UserSuperfluidPositionsPerConcentratedPoolBreakdownResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
