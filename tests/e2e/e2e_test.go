@@ -1697,7 +1697,7 @@ func (s *IntegrationTestSuite) TestAConcentratedLiquidity_CanonicalPool_And_Para
 }
 
 // TestPoolMigration ensures that message `UnlockAndMigrateSharesToFullRangeConcentratedPosition` performs as expected by
-// testing four cases (superfluid bonded, superfluid unbonding, unlocked) with each cases testing and ensuring the following upon the message being called:
+// testing six cases (superfluid bonded, superfluid unbonding, vanilla lock, unlocked) with each cases testing and ensuring the following upon the message being called:
 // - ensure that existing delegation amount post migration is as expected
 // - ensure that new delegation post migration in the intermediary account is as expected
 // - ensure that the amount locked in old lock post migration is as expected
