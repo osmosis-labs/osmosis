@@ -186,7 +186,7 @@ func (s *KeeperTestSuite) TestCreateBalancerPool() {
 	}
 
 	for _, test := range tests {
-		s.ResetTest()
+		s.SetupTest()
 		gammKeeper := s.App.GAMMKeeper
 		poolmanagerKeeper := s.App.PoolManagerKeeper
 		distributionKeeper := s.App.DistrKeeper
@@ -310,7 +310,7 @@ func (s *KeeperTestSuite) TestInitializePool() {
 	for _, test := range tests {
 		test := test
 		s.Run(test.name, func() {
-			s.ResetTest()
+			s.SetupTest()
 
 			gammKeeper := s.App.GAMMKeeper
 			bankKeeper := s.App.BankKeeper
@@ -516,7 +516,7 @@ func (s *KeeperTestSuite) TestJoinPoolNoSwap() {
 	}
 
 	for _, test := range tests {
-		s.ResetTest()
+		s.SetupTest()
 
 		ctx := s.Ctx
 		gammKeeper := s.App.GAMMKeeper
@@ -628,7 +628,7 @@ func (s *KeeperTestSuite) TestExitPool() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			ctx := s.Ctx
 
 			gammKeeper := s.App.GAMMKeeper
@@ -721,7 +721,7 @@ func (s *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 	}
 
 	for _, tc := range testCases {
-		s.ResetTest()
+		s.SetupTest()
 
 		s.Run(tc.name, func() {
 			ctx := s.Ctx
@@ -777,7 +777,7 @@ func (s *KeeperTestSuite) TestActiveBalancerPool() {
 
 	for _, tc := range testCases {
 		s.Run("", func() {
-			s.ResetTest()
+			s.SetupTest()
 
 			ctx := s.Ctx
 			gammKeeper := s.App.GAMMKeeper
@@ -866,7 +866,7 @@ func (s *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			ctx := s.Ctx
 			gammKeeper := s.App.GAMMKeeper
 			testAccount := s.TestAccs[0]

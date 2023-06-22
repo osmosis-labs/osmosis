@@ -29,11 +29,6 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	s.Setup()
-	s.queryClient = types.NewQueryClient(s.QueryHelper)
-}
-
-func (s *KeeperTestSuite) ResetTest() {
 	s.Reset()
 	s.queryClient = types.NewQueryClient(s.QueryHelper)
 }

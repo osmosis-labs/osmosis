@@ -121,7 +121,7 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 		test := test
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.ResetTest()
+			s.SetupTest()
 			spreadFactor := sdk.ZeroDec()
 			if !test.spreadFactorOverwrite.IsNil() {
 				spreadFactor = test.spreadFactorOverwrite
@@ -207,7 +207,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.ResetTest()
+			s.SetupTest()
 			keeper := s.App.GAMMKeeper
 			ctx := s.Ctx
 
@@ -271,7 +271,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			keeper := s.App.GAMMKeeper
 			ctx := s.Ctx
 
@@ -382,7 +382,7 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.ResetTest()
+			s.SetupTest()
 			poolId := s.PrepareBalancerPool()
 
 			keeper := s.App.GAMMKeeper
@@ -434,7 +434,7 @@ func (s *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 	}
 
 	for _, tc := range testCases {
-		s.ResetTest()
+		s.SetupTest()
 
 		// Mint some assets to the accounts.
 		for _, acc := range s.TestAccs {
@@ -475,7 +475,7 @@ func (s *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 // More info at https://github.com/golang/mock
 func (s *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	// Setup test
-	s.ResetTest()
+	s.SetupTest()
 	testCoin := sdk.NewCoin("foo", sdk.NewInt(10))
 	s.FundAcc(s.TestAccs[0], defaultAcctFunds)
 

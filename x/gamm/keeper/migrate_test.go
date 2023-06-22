@@ -169,7 +169,7 @@ func (s *KeeperTestSuite) TestMigrate() {
 	}
 
 	for _, test := range tests {
-		s.ResetTest()
+		s.SetupTest()
 		s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime)
 		keeper := s.App.GAMMKeeper
 
@@ -410,7 +410,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 	for _, test := range tests {
 		test := test
 		s.Run(test.name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			keeper := s.App.GAMMKeeper
 
 			defaultBalancerCoin0 := sdk.NewCoin(ETH, sdk.NewInt(1000000000))
@@ -669,7 +669,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			keeper := s.App.GAMMKeeper
 
 			defaultBalancerCoin0 := sdk.NewCoin(ETH, sdk.NewInt(1000000000))
@@ -762,7 +762,7 @@ func (s *KeeperTestSuite) TestGetLinkedConcentratedPoolID() {
 	for _, test := range tests {
 		test := test
 		s.Run(test.name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			keeper := s.App.GAMMKeeper
 
 			// Our testing environment is as follows:
@@ -828,7 +828,7 @@ func (s *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 	for _, test := range tests {
 		test := test
 		s.Run(test.name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			keeper := s.App.GAMMKeeper
 
 			// Our testing environment is as follows:
@@ -874,7 +874,7 @@ func (s *KeeperTestSuite) TestGetAllMigrationInfo() {
 	for _, test := range tests {
 		test := test
 		s.Run(test.name, func() {
-			s.ResetTest()
+			s.SetupTest()
 			keeper := s.App.GAMMKeeper
 
 			// Our testing environment is as follows:
@@ -939,7 +939,7 @@ func (suite *KeeperTestSuite) TestRedirectDistributionRecord() {
 	for name, tc := range tests {
 		tc := tc
 		suite.Run(name, func() {
-			suite.ResetTest()
+			suite.SetupTest()
 
 			// Create primary balancer pool.
 			balancerId := suite.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
