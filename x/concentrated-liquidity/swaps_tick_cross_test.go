@@ -1002,7 +1002,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickS
 
 		for name, tc := range testcases {
 			s.Run(name, func() {
-				s.SetupTest()
+				s.ResetTest()
 
 				poolId, positionMeta := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
 				s.Require().Equal(len(tc.isPositionActiveFlag), len(positionMeta))
@@ -1091,7 +1091,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 	// At the same time, it validates that the liquidity and current tick are updated correctly.
 	// Additionally, it validates that it is still possible to swap right.
 	s.Run("to min tick", func() {
-		s.SetupTest()
+		s.ResetTest()
 
 		poolId, _ := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
 
@@ -1131,7 +1131,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 	// At the same time, it validates that the liquidity and current tick are updated correctly.
 	// Additionally, it validates that it is still possible to swap left.
 	s.Run("to max tick", func() {
-		s.SetupTest()
+		s.ResetTest()
 
 		poolId, _ := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
 
@@ -1178,7 +1178,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 // that liquidiy is calculated for that position as well as the adjacent position on the swap path.
 // It then repeats this for the other direction.
 func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_GetLiquidityFromAmountsPositionBounds() {
-	s.SetupTest()
+	s.ResetTest()
 
 	// See definiton of defaultTickSpacingsAway for position layout diagram.
 	poolId, positions := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
