@@ -403,14 +403,8 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	// define iterator depending on swap strategy
 	var iterator db.Iterator
 	if zeroForOne {
-		// If zero for one, we use reverse iterator. As a result, we need to increment the start tick by 1
-		// so that we include the start tick in the search.
 		iterator = prefixStore.ReverseIterator(boundTickKey, startTickKey)
 	} else {
-		//
-		// If one for zero, we use forward iterator. However, our definition of the active range is inclusive
-		// of the lower bound. As a result, current liquidity must already include the lower bound tick
-		// so we skip it.
 		iterator = prefixStore.Iterator(startTickKey, storetypes.InclusiveEndBytes(boundTickKey))
 	}
 	defer iterator.Close()
