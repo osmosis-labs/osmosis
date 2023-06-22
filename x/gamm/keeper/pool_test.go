@@ -347,7 +347,7 @@ func (s *KeeperTestSuite) TestAsCFMMPool() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			s.SetupTest()
+			s.ResetTest()
 
 			pool, err := keeper.AsCFMMPool(tc.pool)
 
@@ -369,7 +369,7 @@ func (s *KeeperTestSuite) TestAsCFMMPool() {
 // change the underlying bytes. This shows that migrations are
 // not necessary.
 func (s *KeeperTestSuite) TestMarshalUnmarshalPool() {
-	s.SetupTest()
+	s.ResetTest()
 	k := s.App.GAMMKeeper
 
 	balancerPoolId := s.PrepareBalancerPool()
@@ -397,7 +397,7 @@ func (s *KeeperTestSuite) TestMarshalUnmarshalPool() {
 	for _, tc := range tests {
 		tc := tc
 		s.Run(tc.name, func() {
-			s.SetupTest()
+			s.ResetTest()
 
 			var poolI poolmanagertypes.PoolI = tc.pool
 			var cfmmPoolI types.CFMMPoolI = tc.pool
@@ -485,7 +485,7 @@ func (s *KeeperTestSuite) TestSetStableSwapScalingFactors() {
 	}
 	for _, tc := range testcases {
 		s.Run(tc.name, func() {
-			s.SetupTest()
+			s.ResetTest()
 			if tc.isStableSwapPool == true {
 				poolId := s.prepareCustomStableswapPool(
 					defaultAcctFunds,
@@ -761,7 +761,7 @@ func (suite *KeeperTestSuite) TestGetTotalPoolShares() {
 
 	for name, tc := range tests {
 		suite.Run(name, func() {
-			suite.SetupTest()
+			suite.ResetTest()
 			gammKeeper := suite.App.GAMMKeeper
 			testAccount := suite.TestAccs[0]
 
