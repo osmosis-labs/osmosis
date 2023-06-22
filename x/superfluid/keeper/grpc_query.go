@@ -303,10 +303,6 @@ func (q Querier) UserSuperfluidPositionsPerConcentratedPoolBreakdown(goCtx conte
 		case cltypes.PositionIdToLockNotFoundError:
 			continue
 		case nil:
-			if lockId == 0 {
-				continue
-			}
-
 			lock, err := q.Keeper.lk.GetLockByID(ctx, lockId)
 			if err != nil {
 				return nil, err
