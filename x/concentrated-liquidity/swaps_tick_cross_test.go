@@ -947,6 +947,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickS
 				nextTickToReachInCompute = nextTickToReachInCompute + 1
 			}
 
+			// Note: 50% is chosen arbitrarily to ensure that we stay within a bucket.
 			return nextTickToReachInCompute, sdk.NewDecWithPrec(5, 1)
 		}
 
