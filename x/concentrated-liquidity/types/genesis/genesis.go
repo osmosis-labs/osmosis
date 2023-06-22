@@ -25,6 +25,5 @@ func (gs GenesisState) Validate() error {
 	if gs.NextIncentiveRecordId == 0 {
 		return types.InvalidNextIncentiveRecordIdError{NextIncentiveRecordId: gs.NextIncentiveRecordId}
 	}
-
 	return nil
 }

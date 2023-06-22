@@ -242,7 +242,7 @@ func (accum *AccumulatorObject) RemoveFromPosition(name string, numSharesToRemov
 // old accumulator value associated with the position.
 func (accum *AccumulatorObject) RemoveFromPositionIntervalAccumulation(name string, numSharesToRemove sdk.Dec, intervalAccumulationPerShare sdk.DecCoins) error {
 	// Cannot remove zero or negative shares
-	if numSharesToRemove.LTE(sdk.ZeroDec()) {
+	if !numSharesToRemove.IsPositive() {
 		return fmt.Errorf("Attempted to remove no/negative shares (%s)", numSharesToRemove)
 	}
 
@@ -294,7 +294,7 @@ func (accum *AccumulatorObject) UpdatePosition(name string, numShares sdk.Dec) e
 // All intervalAccumulationPerShare DecCoin value must be non-negative. They must also be a superset of the
 // old accumulator value associated with the position.
 func (accum *AccumulatorObject) UpdatePositionIntervalAccumulation(name string, numShares sdk.Dec, intervalAccumulationPerShare sdk.DecCoins) error {
-	if numShares.Equal(sdk.ZeroDec()) {
+	if numShares.IsZero() {
 		return ZeroSharesError
 	}
 
@@ -422,7 +422,7 @@ func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, sdk
 	// This is acceptable because we round in favor of the protocol.
 	truncatedRewardsTotal, dust := totalRewards.TruncateDecimal()
 
-	if position.NumShares.Equal(sdk.ZeroDec()) {
+	if position.NumShares.IsZero() {
 		// remove the position from state entirely if numShares = zero
 		accum.deletePosition(positionName)
 	} else {

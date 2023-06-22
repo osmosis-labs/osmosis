@@ -122,7 +122,7 @@ func (s *KeeperTestSuite) TestCreatePositionMsg() {
 			s.PrepareConcentratedPool()
 			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 
-			// fund sender to create position
+			// fund Sender to create position
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
 
 			msg := &types.MsgCreatePosition{

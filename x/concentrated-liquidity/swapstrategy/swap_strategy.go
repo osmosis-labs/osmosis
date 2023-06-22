@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
@@ -111,5 +112,5 @@ func GetSqrtPriceLimit(priceLimit sdk.Dec, zeroForOne bool) (sdk.Dec, error) {
 		}
 		return types.MaxSqrtPrice, nil
 	}
-	return priceLimit.ApproxSqrt()
+	return osmomath.MonotonicSqrt(priceLimit)
 }

@@ -73,6 +73,9 @@ func (s *KeeperTestSuite) CreateDefaultDenom() {
 func (s *KeeperTestSuite) TestCreateModuleAccount() {
 	app := s.App
 
+	// setup new next account number
+	nextAccountNumber := app.AccountKeeper.GetNextAccountNumber(s.Ctx)
+
 	// remove module account
 	tokenfactoryModuleAccount := app.AccountKeeper.GetAccount(s.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
 	app.AccountKeeper.RemoveAccount(s.Ctx, tokenfactoryModuleAccount)
@@ -88,4 +91,7 @@ func (s *KeeperTestSuite) TestCreateModuleAccount() {
 	// check that the module account is now initialized
 	tokenfactoryModuleAccount = app.AccountKeeper.GetAccount(s.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
 	s.Require().NotNil(tokenfactoryModuleAccount)
+
+	// check that the account number of the module account is now initialized correctly
+	s.Require().Equal(nextAccountNumber+1, tokenfactoryModuleAccount.GetAccountNumber())
 }

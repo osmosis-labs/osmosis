@@ -61,9 +61,9 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 
 	// calculate liquidityNet, which we take into account and track depending on whether liquidityIn is positive or negative
 	if upper {
-		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Sub(liquidityDelta)
+		tickInfo.LiquidityNet.SubMut(liquidityDelta)
 	} else {
-		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Add(liquidityDelta)
+		tickInfo.LiquidityNet.AddMut(liquidityDelta)
 	}
 
 	k.SetTickInfo(ctx, poolId, tickIndex, &tickInfo)
@@ -171,13 +171,13 @@ func validateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int
 	}
 
 	// Check if the lower tick value is within the valid range of MinTick to MaxTick.
-	if lowerTick < types.MinTick || lowerTick >= types.MaxTick {
-		return types.InvalidTickError{Tick: lowerTick, IsLower: true, MinTick: types.MinTick, MaxTick: types.MaxTick}
+	if lowerTick < types.MinInitializedTick || lowerTick >= types.MaxTick {
+		return types.InvalidTickError{Tick: lowerTick, IsLower: true, MinTick: types.MinInitializedTick, MaxTick: types.MaxTick}
 	}
 
 	// Check if the upper tick value is within the valid range of MinTick to MaxTick.
-	if upperTick > types.MaxTick || upperTick <= types.MinTick {
-		return types.InvalidTickError{Tick: upperTick, IsLower: false, MinTick: types.MinTick, MaxTick: types.MaxTick}
+	if upperTick > types.MaxTick || upperTick <= types.MinInitializedTick {
+		return types.InvalidTickError{Tick: upperTick, IsLower: false, MinTick: types.MinInitializedTick, MaxTick: types.MaxTick}
 	}
 
 	// Check if the lower tick value is greater than or equal to the upper tick value.
@@ -223,7 +223,7 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 
 	// set current tick to min tick, and find the first initialized tick starting from min tick -1.
 	// we do -1 to make min tick inclusive.
-	currentTick := types.MinTick - 1
+	currentTick := types.MinCurrentTick
 
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, currentTick)
 	defer nextTickIter.Close()
@@ -337,12 +337,12 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 
 	// use max or min tick if provided bound is nil
 
-	ctx.Logger().Debug(fmt.Sprintf("min_tick %d\n", types.MinTick))
+	ctx.Logger().Debug(fmt.Sprintf("min_tick %d\n", types.MinInitializedTick))
 	ctx.Logger().Debug(fmt.Sprintf("max_tick %d\n", types.MaxTick))
 
 	if boundTick.IsNil() {
 		if zeroForOne {
-			boundTick = sdk.NewInt(types.MinTick)
+			boundTick = sdk.NewInt(types.MinInitializedTick)
 		} else {
 			boundTick = sdk.NewInt(types.MaxTick)
 		}
@@ -388,6 +388,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	store := ctx.KVStore(k.storeKey)
 	prefixBz := types.KeyTickPrefixByPoolId(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
+
 	startTickKey := types.TickIndexToBytes(startTick)
 	boundTickKey := types.TickIndexToBytes(boundTick.Int64())
 
@@ -399,8 +400,15 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	// define iterator depending on swap strategy
 	var iterator db.Iterator
 	if zeroForOne {
+		// If zero for one, we use reverse iterator. As a result, we need to increment the start tick by 1
+		// so that we include the start tick in the search.
+		startTick = startTick + 1
 		iterator = prefixStore.ReverseIterator(boundTickKey, startTickKey)
 	} else {
+		//
+		// If one for zero, we use forward iterator. However, our definition of the active range is inclusive
+		// of the lower bound. As a result, current liquidity must already include the lower bound tick
+		// so we skip it.
 		iterator = prefixStore.Iterator(startTickKey, storetypes.InclusiveEndBytes(boundTickKey))
 	}
 
@@ -429,11 +437,11 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 
 		// Otherwise, depending on the swap direction, we need to accumulate liquidity values to determine the liquidity at the start tick.
 		if zeroForOne {
-			if liquidityDepth.TickIndex < currentTick {
+			if currentTick >= liquidityDepth.TickIndex {
 				startTickLiquidity = startTickLiquidity.Add(liquidityDepth.LiquidityNet)
 			}
 		} else {
-			if liquidityDepth.TickIndex > currentTick {
+			if currentTick < liquidityDepth.TickIndex {
 				startTickLiquidity = startTickLiquidity.Sub(liquidityDepth.LiquidityNet)
 			}
 		}

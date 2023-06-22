@@ -49,7 +49,7 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, se
 	}
 
 	// Defense in depth making sure that the position is full-range.
-	if position.LowerTick != cltypes.MinTick || position.UpperTick != cltypes.MaxTick {
+	if position.LowerTick != cltypes.MinInitializedTick || position.UpperTick != cltypes.MaxTick {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, types.ConcentratedTickRangeNotFullError{ActualLowerTick: position.LowerTick, ActualUpperTick: position.UpperTick}
 	}
 

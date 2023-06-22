@@ -50,3 +50,7 @@ type DistrKeeper interface {
 type EpochKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
 }
+
+type SuperfluidKeeper interface {
+	GetAllMigrationInfo(ctx sdk.Context) (MigrationRecords, error)
+}
