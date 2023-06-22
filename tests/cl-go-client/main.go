@@ -143,7 +143,7 @@ func main() {
 }
 
 func createManyRandomPositions(igniteClient cosmosclient.Client, poolId uint64, numPositions int) {
-	minTick, maxTick := cltypes.MinTick, cltypes.MaxTick
+	minTick, maxTick := cltypes.MinInitializedTick, cltypes.MaxTick
 	log.Println(minTick, " ", maxTick)
 	for i := 0; i < numPositions; i++ {
 		var (

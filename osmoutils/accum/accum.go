@@ -242,7 +242,7 @@ func (accum *AccumulatorObject) RemoveFromPosition(name string, numSharesToRemov
 // old accumulator value associated with the position.
 func (accum *AccumulatorObject) RemoveFromPositionIntervalAccumulation(name string, numSharesToRemove sdk.Dec, intervalAccumulationPerShare sdk.DecCoins) error {
 	// Cannot remove zero or negative shares
-	if numSharesToRemove.LTE(sdk.ZeroDec()) {
+	if !numSharesToRemove.IsPositive() {
 		return fmt.Errorf("Attempted to remove no/negative shares (%s)", numSharesToRemove)
 	}
 

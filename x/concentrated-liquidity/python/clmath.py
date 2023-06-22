@@ -61,7 +61,7 @@ def liquidity1(amount: int, sqrt_price_a: Decimal, sqrt_price_b: Decimal) -> Dec
     
     result = amount_big_dec / diff
 
-    return round_sdk_prec_down(result, 18, ROUND_FLOOR)
+    return round_sdk_prec_down(result)
 
 def get_liquidity_from_amounts(sqrt_price, sqrt_price_a, sqrt_price_b, amount0, amount1):
     # Reorder the prices so that sqrt_price_a is the smaller of the two

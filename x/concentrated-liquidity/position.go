@@ -329,7 +329,7 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 	}
 
 	// If position is full range, update the pool ID to total full range liquidity mapping.
-	if lowerTick == types.MinTick && upperTick == types.MaxTick {
+	if lowerTick == types.MinInitializedTick && upperTick == types.MaxTick {
 		err := k.updateFullRangeLiquidityInPool(ctx, poolId, liquidity)
 		if err != nil {
 			return err
@@ -413,7 +413,7 @@ func (k Keeper) CreateFullRangePosition(ctx sdk.Context, poolId uint64, owner sd
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position.
-	positionId, amount0, amount1, liquidity, _, _, err = k.createPosition(ctx, concentratedPool.GetId(), owner, coins, sdk.ZeroInt(), sdk.ZeroInt(), types.MinTick, types.MaxTick)
+	positionId, amount0, amount1, liquidity, _, _, err = k.createPosition(ctx, concentratedPool.GetId(), owner, coins, sdk.ZeroInt(), sdk.ZeroInt(), types.MinInitializedTick, types.MaxTick)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
@@ -477,7 +477,7 @@ func (k Keeper) mintSharesAndLock(ctx sdk.Context, concentratedPoolId, positionI
 	if err != nil {
 		return 0, sdk.Coins{}, err
 	}
-	if position.LowerTick != types.MinTick || position.UpperTick != types.MaxTick {
+	if position.LowerTick != types.MinInitializedTick || position.UpperTick != types.MaxTick {
 		return 0, sdk.Coins{}, types.PositionNotFullRangeError{PositionId: positionId, LowerTick: position.LowerTick, UpperTick: position.UpperTick}
 	}
 

@@ -153,7 +153,7 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		}
 
 		position := model.Position{
-			LowerTick: cltypes.MinTick,
+			LowerTick: cltypes.MinInitializedTick,
 			UpperTick: cltypes.MaxTick,
 			Liquidity: fullRangeLiquidity,
 		}

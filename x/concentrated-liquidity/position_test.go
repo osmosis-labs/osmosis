@@ -972,9 +972,9 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		{
 			name: "Error: one of the full range positions is locked",
 			setupFullyChargedPositions: []position{
-				{1, defaultPoolId, defaultAddress, DefaultCoins, types.MinTick, types.MaxTick, unlocked},
-				{2, defaultPoolId, defaultAddress, DefaultCoins, types.MinTick, types.MaxTick, locked},
-				{3, defaultPoolId, defaultAddress, DefaultCoins, types.MinTick, types.MaxTick, unlocked},
+				{1, defaultPoolId, defaultAddress, DefaultCoins, types.MinInitializedTick, types.MaxTick, unlocked},
+				{2, defaultPoolId, defaultAddress, DefaultCoins, types.MinInitializedTick, types.MaxTick, locked},
+				{3, defaultPoolId, defaultAddress, DefaultCoins, types.MinInitializedTick, types.MaxTick, unlocked},
 			},
 			lockPositionIds:         []uint64{2},
 			positionIdsToMigrate:    []uint64{1, 2, 3},
@@ -985,9 +985,9 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		{
 			name: "Pass: one of the full range positions was locked but got unlocked 1ms before fungification",
 			setupFullyChargedPositions: []position{
-				{1, defaultPoolId, defaultAddress, DefaultCoins, types.MinTick, types.MaxTick, unlocked},
-				{2, defaultPoolId, defaultAddress, DefaultCoins, types.MinTick, types.MaxTick, locked},
-				{3, defaultPoolId, defaultAddress, DefaultCoins, types.MinTick, types.MaxTick, unlocked},
+				{1, defaultPoolId, defaultAddress, DefaultCoins, types.MinInitializedTick, types.MaxTick, unlocked},
+				{2, defaultPoolId, defaultAddress, DefaultCoins, types.MinInitializedTick, types.MaxTick, locked},
+				{3, defaultPoolId, defaultAddress, DefaultCoins, types.MinInitializedTick, types.MaxTick, unlocked},
 			},
 
 			lockPositionIds:         []uint64{2},
@@ -1743,10 +1743,10 @@ func (s *KeeperTestSuite) TestMintSharesAndLock() {
 			name:                    "err: upper tick is not max tick",
 			owner:                   defaultAddress,
 			createFullRangePosition: false,
-			lowerTick:               types.MinTick,
+			lowerTick:               types.MinInitializedTick,
 			upperTick:               DefaultUpperTick,
 			remainingLockDuration:   24 * time.Hour,
-			expectedErr:             types.PositionNotFullRangeError{PositionId: 1, LowerTick: types.MinTick, UpperTick: DefaultUpperTick},
+			expectedErr:             types.PositionNotFullRangeError{PositionId: 1, LowerTick: types.MinInitializedTick, UpperTick: DefaultUpperTick},
 		},
 	}
 
@@ -2397,7 +2397,7 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 			s.Require().NoError(err)
 			s.Require().Equal(s.Ctx.BlockTime(), position.JoinTime)
 			s.Require().Equal(types.MaxTick, position.UpperTick)
-			s.Require().Equal(types.MinTick, position.LowerTick)
+			s.Require().Equal(types.MinInitializedTick, position.LowerTick)
 			s.Require().Equal(liquidity, position.Liquidity)
 
 			// Check locked
