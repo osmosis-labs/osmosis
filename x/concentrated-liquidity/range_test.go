@@ -26,6 +26,8 @@ type RangeTestParams struct {
 	baseIncentiveAmount sdk.Int
 	// Base emission rate per second for incentive
 	baseEmissionRate sdk.Dec
+	// Base denom for each incentive record (ID appended to this)
+	baseIncentiveDenom string
 	// List of addresses to swap from (randomly selected for each swap)
 	numSwapAddresses int
 
@@ -57,6 +59,7 @@ var (
 		numSwapAddresses:     10,
 		baseIncentiveAmount:  sdk.NewInt(1000000000000000000),
 		baseEmissionRate:     sdk.NewDec(1),
+		baseIncentiveDenom:   "incentiveDenom",
 
 		// Fuzz params
 		fuzzNumPositions:     true,
@@ -88,14 +91,15 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 
 	// --- Incentive setup ---
 
-	// TODO: Move this into a conditional specified by test params
-	incentiveAddr := apptesting.CreateRandomAccounts(1)[0]
-	incentiveAmt := testParams.baseIncentiveAmount
-	emissionRate := testParams.baseEmissionRate
-	incentiveCoin := sdk.NewCoin("incentiveDenom1", incentiveAmt)
-	s.FundAcc(incentiveAddr, sdk.NewCoins(incentiveCoin))
-	_, err := s.clk.CreateIncentive(s.Ctx, pool.GetId(), incentiveAddr, incentiveCoin, emissionRate, s.Ctx.BlockTime(), types.DefaultAuthorizedUptimes[0])
-	s.Require().NoError(err)
+	if testParams.baseIncentiveAmount != (sdk.Int{}) {
+		incentiveAddr := apptesting.CreateRandomAccounts(1)[0]
+		incentiveAmt := testParams.baseIncentiveAmount
+		emissionRate := testParams.baseEmissionRate
+		incentiveCoin := sdk.NewCoin(fmt.Sprintf("%s%d", testParams.baseIncentiveDenom, 0), incentiveAmt)
+		s.FundAcc(incentiveAddr, sdk.NewCoins(incentiveCoin))
+		_, err := s.clk.CreateIncentive(s.Ctx, pool.GetId(), incentiveAddr, incentiveCoin, emissionRate, s.Ctx.BlockTime(), types.DefaultAuthorizedUptimes[0])
+		s.Require().NoError(err)
+	}
 
 	// --- Position setup ---
 
@@ -136,14 +140,14 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 			// Ensure position was set up correctly and didn't break global invariants
 			s.Require().Equal(ranges[curRange][0], actualLowerTick)
 			s.Require().Equal(ranges[curRange][1], actualUpperTick)
-			s.assertGlobalInvariants()
+			s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
 
 			// Let time elapse after join if applicable
 			timeElapsed := s.addRandomizedBlockTime(testParams.baseTimeBetweenJoins, testParams.fuzzTimeBetweenJoins)
 
 			// Execute swap against pool if applicable
 			swappedIn, swappedOut := s.executeRandomizedSwap(pool, swapAddresses, testParams.baseSwapAmount, testParams.fuzzSwapAmounts)
-			s.assertGlobalInvariants()
+			s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
 
 			// Track changes to state
 			actualAddedCoins := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), actualAmt0), sdk.NewCoin(pool.GetToken1(), actualAmt1))
@@ -171,9 +175,14 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 	s.Require().Equal(sdk.NewCoins(totalAssets...), sdk.NewCoins(poolAssets.Add(poolSpreadRewards...)...))
 
 	fmt.Println("cumulative emitted incentives: ", cumulativeEmittedIncentives)
-	// Do a final checkpoint for incentives
+	// Do a final checkpoint for incentives and then run assertions on expected global claimable value
 	cumulativeEmittedIncentives, lastIncentiveTrackerUpdate = s.trackEmittedIncentives(cumulativeEmittedIncentives, lastIncentiveTrackerUpdate)
-	// TODO: s.claimAndAssertTotalIncentives(cumulativeEmittedIncentives)
+	truncatedEmissions, _ := cumulativeEmittedIncentives.TruncateDecimal()
+
+	// Run global assertions with an optional parameter specifying the expected incentive amount claimable by all positions.
+	// We specifically need to do this for incentives because all the emissions are pre-loaded into the incentive address, making
+	// balance assertions pass trivially in most cases.
+	s.assertGlobalInvariants(ExpectedGlobalRewardValues{TotalIncentives: truncatedEmissions})
 }
 
 // numPositionSlice prepares a slice tracking the number of positions to create on each range, fuzzing the number at each step if applicable.
@@ -325,12 +334,6 @@ func (s *KeeperTestSuite) trackEmittedIncentives(cumulativeTrackedIncentives sdk
 
 	return updatedTrackedIncentives, s.Ctx.BlockTime()
 }
-
-// claimAndAssertTotalIncentives – refer to ExecuteAndValidateSuccessfulIncentiveClaim for setup
-// TODO: implement this
-// 1. Get all positions & incentives address balances for all pools (use invariant_test.go helper)
-// 2. Claim all incentives mutatively
-// 3. Assert that the total amount of incentives claimed is LTE emitted incentives (hard to do additive error tolerance here)
 
 // getFuzzedAssets returns the base asset amount, fuzzing each asset if applicable
 func getRandomizedAssets(baseAssets sdk.Coins, fuzzAssets bool) sdk.Coins {

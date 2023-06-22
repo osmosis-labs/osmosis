@@ -485,5 +485,5 @@ func (s *KeeperTestSuite) runMultiplePositionRanges(ranges [][]int64, rangeTestP
 	s.setupRangesAndAssertInvariants(pool, ranges, rangeTestParams)
 
 	// Assert global invariants on final state
-	s.assertGlobalInvariants()
+	s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
 }
