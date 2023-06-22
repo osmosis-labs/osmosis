@@ -164,7 +164,7 @@ func (s *IntegrationTestSuite) createFullRangePosition(node *chain.NodeConfig, f
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position.
-	positionId := node.CreateConcentratedPosition(from.String(), fmt.Sprintf("[%d]", cltypes.MinTick), fmt.Sprintf("%d", cltypes.MaxTick), tokens.String(), 0, 0, poolId)
+	positionId := node.CreateConcentratedPosition(from.String(), fmt.Sprintf("[%d]", cltypes.MinInitializedTick), fmt.Sprintf("%d", cltypes.MaxTick), tokens.String(), 0, 0, poolId)
 
 	return positionId
 }
