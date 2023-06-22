@@ -275,11 +275,6 @@ func (c *Config) getNodeAtIndex(nodeIndex int) (NodeConfig, error) {
 }
 
 func (c *Config) SubmitParamChangeProposal(subspace, key string, value []byte) error {
-	node, err := c.GetDefaultNode()
-	if err != nil {
-		return err
-	}
-
 	proposal := paramsutils.ParamChangeProposalJSON{
 		Title:       "Param Change",
 		Description: fmt.Sprintf("Changing the %s param", key),
@@ -297,6 +292,10 @@ func (c *Config) SubmitParamChangeProposal(subspace, key string, value []byte) e
 		return err
 	}
 
+	node, err := c.GetDefaultNode()
+	if err != nil {
+		return err
+	}
 	node.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
 	c.LatestProposalNumber += 1
 
