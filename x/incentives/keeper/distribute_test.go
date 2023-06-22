@@ -1154,7 +1154,8 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalGammGauge() {
 	lockableDurations := s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)
 
 	// 3. Create external lock gauges for CL pools
-	gammPoolExternalGaugeId, gammPoolExternalGaugeId1 := s.CreateLockExternalGauges(externalGaugeCoins, lockableDurations)
+	gammPoolExternalGaugeId, _, _, _ := s.setupNewGaugeWithDuration(true, externalGaugeCoins, lockableDurations[0], externalGaugeCoins[0].Denom)
+	gammPoolExternalGaugeId1, _, _, _ := s.setupNewGaugeWithDuration(false, externalGaugeCoins, lockableDurations[1], externalGaugeCoins[1].Denom)
 
 	// 4. Setup User locks
 	_ = s.SetupUserLocks([]userLocks{{
@@ -1188,13 +1189,6 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalGammGauge() {
 	s.ValidateDistributedGauge(gammPoolExternalGaugeId, 2, externalGaugeCoins)
 	s.ValidateDistributedGauge(gammPoolExternalGaugeId1, 2, externalGaugeCoins)
 
-}
-
-func (s *KeeperTestSuite) CreateLockExternalGauges(externalGaugeCoins sdk.Coins, lockableDurations []time.Duration) (uint64, uint64) {
-	// Create 1 external no-lock gauge perpetual over 1 epochs MsgCreateGauge
-	gaugeId, _, _, _ := s.setupNewGaugeWithDuration(true, externalGaugeCoins, lockableDurations[0], externalGaugeCoins[0].Denom)
-	gaugeId1, _, _, _ := s.setupNewGaugeWithDuration(false, externalGaugeCoins, lockableDurations[1], externalGaugeCoins[1].Denom)
-	return gaugeId, gaugeId1
 }
 
 func (s *KeeperTestSuite) IncentivizeInternalGaugeGamm(poolId1, poolId2 uint64, removeDistrRecord bool) {
