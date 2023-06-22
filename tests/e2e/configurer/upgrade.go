@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"sync"
 	"testing"
 	"time"
 
@@ -27,7 +26,6 @@ type UpgradeConfigurer struct {
 	baseConfigurer
 	upgradeVersion string
 	forkHeight     int64 // forkHeight > 0 implies that this is a fork upgrade. Otherwise, proposal upgrade.
-	configMutex    sync.Mutex
 }
 
 var _ Configurer = (*UpgradeConfigurer)(nil)
@@ -48,8 +46,6 @@ func NewUpgradeConfigurer(t *testing.T, chainConfigs []*chain.Config, setupTests
 }
 
 func (uc *UpgradeConfigurer) ConfigureChains() error {
-	uc.configMutex.Lock()
-	defer uc.configMutex.Unlock()
 	for _, chainConfig := range uc.chainConfigs {
 		if err := uc.ConfigureChain(chainConfig); err != nil {
 			return err
@@ -59,8 +55,6 @@ func (uc *UpgradeConfigurer) ConfigureChains() error {
 }
 
 func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
-	uc.configMutex.Lock()
-	defer uc.configMutex.Unlock()
 	uc.t.Logf("starting upgrade e2e infrastructure for chain-id: %s", chainConfig.Id)
 	tmpDir, err := os.MkdirTemp("", "osmosis-e2e-testnet-")
 	if err != nil {
@@ -113,8 +107,6 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 }
 
 func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
-	uc.configMutex.Lock()
-	defer uc.configMutex.Unlock()
 	chainA := uc.chainConfigs[0]
 	chainANode, err := chainA.GetDefaultNode()
 	if err != nil {
@@ -181,14 +173,10 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 }
 
 func (uc *UpgradeConfigurer) RunSetup() error {
-	uc.configMutex.Lock()
-	defer uc.configMutex.Unlock()
 	return uc.setupTests(uc)
 }
 
 func (uc *UpgradeConfigurer) RunUpgrade() error {
-	uc.configMutex.Lock()
-	defer uc.configMutex.Unlock()
 	var err error
 	if uc.forkHeight > 0 {
 		err = uc.runForkUpgrade()
@@ -217,8 +205,6 @@ func (uc *UpgradeConfigurer) RunUpgrade() error {
 }
 
 func (uc *UpgradeConfigurer) runProposalUpgrade() error {
-	uc.configMutex.Lock()
-	defer uc.configMutex.Unlock()
 	// submit, deposit, and vote for upgrade proposal
 	// prop height = current height + voting period + time it takes to submit proposal + small buffer
 	for _, chainConfig := range uc.chainConfigs {
@@ -264,8 +250,6 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 }
 
 func (uc *UpgradeConfigurer) runForkUpgrade() error {
-	uc.configMutex.Lock()
-	defer uc.configMutex.Unlock()
 	for _, chainConfig := range uc.chainConfigs {
 		uc.t.Logf("waiting to reach fork height on chain %s", chainConfig.Id)
 		chainConfig.WaitUntilHeight(uc.forkHeight)
@@ -275,8 +259,6 @@ func (uc *UpgradeConfigurer) runForkUpgrade() error {
 }
 
 func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHeight int64) error {
-	uc.configMutex.Lock()
-	defer uc.configMutex.Unlock()
 	// upgrade containers to the locally compiled daemon
 	uc.t.Logf("starting upgrade for chain-id: %s...", chainConfig.Id)
 	uc.containerManager.OsmosisRepository = containers.CurrentBranchOsmoRepository
