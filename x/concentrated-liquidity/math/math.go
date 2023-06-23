@@ -163,6 +163,10 @@ func GetNextSqrtPriceFromAmount1InRoundingDown(sqrtPriceCurrent, liquidity, amou
 	return sqrtPriceCurrent.Add(amountOneRemainingIn.QuoTruncate(liquidity))
 }
 
+func GetNextSqrtPriceFromAmount1InRoundingDown2(sqrtPriceCurrent, liquidity, amountOneRemainingIn sdk.Dec) (sqrtPriceNext osmomath.BigDec) {
+	return osmomath.BigDecFromSDKDec(sqrtPriceCurrent).Add(osmomath.BigDecFromSDKDec(amountOneRemainingIn).QuoTruncate(osmomath.BigDecFromSDKDec(liquidity)))
+}
+
 // GetNextSqrtPriceFromAmount1OutRoundingDown utilizes the current sqrtPriceCurrent, liquidity, and amount of denom1 that still needs
 // to be swapped out order to determine the sqrtPriceNext.
 // When we swap for token zero in given token one out, the price is decrearing and we need to move the price down enough
