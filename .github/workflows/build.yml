@@ -49,10 +49,9 @@ jobs:
           PATTERNS: |
             **/**.wasm
             **/**.go
-            **/**.mod
-            **/**.sum
+            go.mod
+            go.sum
             Makefile
-            Dockerfile
             .github/workflows/build.yml
       -
         name: 🐿 Setup Golang
