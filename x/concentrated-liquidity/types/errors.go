@@ -840,20 +840,3 @@ type TickToSqrtPriceConversionError struct {
 func (e TickToSqrtPriceConversionError) Error() string {
 	return fmt.Sprintf("could not convert next tick  to nextSqrtPrice (%v)", e.NextTick)
 }
-
-// This error occurs when we are unable to make progress in swap step due to
-// internal math error. This error stems from the cur sqrt price and next sqrt
-// being by an infinitesimally small amount away from each other but not being equal.
-// This leads to calculating an amountIn of zero during the swap step while having
-// more amountInRemaining to swap. Without this error, we would be stuck in an
-// infinite loop trying to swap the remaining amount in
-type UnableToProgressSwapStep struct {
-	Tick              int64
-	AmountInRemaining sdk.Dec
-	SqrtPriceCur      sdk.Dec
-	SqrtPriceNext     sdk.Dec
-}
-
-func (e UnableToProgressSwapStep) Error() string {
-	return fmt.Sprintf("could not complete swap due to inability to make progress with internal math error around tick (%d), amountInRemaining (%s), sqrtPriceCur (%s), sqrtPriceNext (%s)", e.Tick, e.AmountInRemaining, e.SqrtPriceCur, e.SqrtPriceNext)
-}
