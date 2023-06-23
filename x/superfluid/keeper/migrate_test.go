@@ -1557,7 +1557,9 @@ func (s *KeeperTestSuite) TestSimplifyMigrateUnlockedPositionFromBalancerToConce
 
 	// 4. Lock the LP shares
 	unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
-	originalGammLockId := s.LockTokens(poolJoinAcc, sdk.NewCoins(balancerPoolShareOut), unbondingDuration)
+	// TODO: Add lock tokens directluy from lock.go
+	originalGammLockId := s.LockTokensNoFund(poolJoinAcc, sdk.NewCoins(balancerPoolShareOut), unbondingDuration)
+
 	balancerLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, originalGammLockId)
 	s.Require().NoError(err)
 
@@ -1585,6 +1587,7 @@ func (s *KeeperTestSuite) TestSimplifyMigrateUnlockedPositionFromBalancerToConce
 
 	fmt.Println("BALANCER LOCK AFTER MIGRATION", balancerLockAfterMigration)
 
+	// Create another position
 	_, _, _, _, _, _, _, err = s.App.SuperfluidKeeper.MigrateNonSuperfluidLockBalancerToConcentrated(s.Ctx, poolJoinAcc, originalGammLockId, balancerPoolShareOut, sdk.NewCoins())
 	s.Require().NoError(err)
 
