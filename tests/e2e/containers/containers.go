@@ -154,8 +154,10 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 			}
 
 			errBufString := errBuf.String()
-			if errBufString != "" {
-				fmt.Println("adam", errBufString)
+			if len(command) > 2 {
+				if command[2] == "wasm" && errBufString != "" {
+					fmt.Println("adam", errBufString)
+				}
 			}
 
 			// Note that this does not match all errors.

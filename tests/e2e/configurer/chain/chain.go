@@ -180,7 +180,13 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	// send uosmo between accounts while this test is running. Since we don't care about
 	// non ibc denoms, its safe to filter uosmo out.
 	removeFeeTokenFromBalance := func(balance sdk.Coins) sdk.Coins {
-		feeRewardTokenBalance := balance.FilterDenoms([]string{initialization.E2EFeeToken, "uosmo"})
+		filteredCoinDenoms := []string{}
+		for _, coin := range balance {
+			if !strings.HasPrefix(coin.Denom, "ibc/") {
+				filteredCoinDenoms = append(filteredCoinDenoms, coin.Denom)
+			}
+		}
+		feeRewardTokenBalance := balance.FilterDenoms(filteredCoinDenoms)
 		return balance.Sub(feeRewardTokenBalance)
 	}
 
@@ -245,12 +251,14 @@ func (c *Config) LockAndAddToExistingLock(amount sdk.Int, denom, lockupWalletAdd
 	// lock tokens
 	chain.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletAddr)
 	c.LatestLockNumber += 1
+	fmt.Println("lock number: ", c.LatestLockNumber)
 	// add to existing lock
 	chain.AddToExistingLock(amount, denom, "240s", lockupWalletAddr)
 
 	// superfluid lock tokens
 	chain.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletSuperfluidAddr)
 	c.LatestLockNumber += 1
+	fmt.Println("lock number: ", c.LatestLockNumber)
 	chain.SuperfluidDelegate(c.LatestLockNumber, c.NodeConfigs[1].OperatorAddress, lockupWalletSuperfluidAddr)
 	// add to existing lock
 	chain.AddToExistingLock(amount, denom, "240s", lockupWalletSuperfluidAddr)
