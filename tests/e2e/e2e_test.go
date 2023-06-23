@@ -1736,14 +1736,14 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 	)
 	s.testPoolMigration(chain, poolJoinAddress, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate, tokenOutMins)
 
-	// Case 2: Unbonded superfluid (locked)
+	// Case 2: Unbonding superfluid (locked)
 	superfluidDelegated = true
 	superfluidUndelegating = true
 	unlocking = false
 	noLock = false
 	s.testPoolMigration(chain, poolJoinAddress, superfluidDelegated, superfluidUndelegating, unlocking, noLock, percentOfSharesToMigrate, tokenOutMins)
 
-	// Case 3: Unbonded superfluid (unlocking)
+	// Case 3: Unbonding superfluid (unlocking)
 	superfluidDelegated = true
 	superfluidUndelegating = true
 	unlocking = true

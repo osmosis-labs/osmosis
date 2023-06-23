@@ -7,8 +7,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
-
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
@@ -128,7 +126,6 @@ func (s *IntegrationTestSuite) validateMigrateResult(
 ) {
 	// Check that the concentrated liquidity match what we expect
 	position := node.QueryPositionById(positionId)
-	println("get out: ", position.Liquidity.String())
 	s.Require().Equal(liquidityMigrated, position.Liquidity)
 
 	// Expect the poolIdLeaving to be the balancer pool id
@@ -136,14 +133,8 @@ func (s *IntegrationTestSuite) validateMigrateResult(
 	s.Require().Equal(balancerPooId, poolIdLeaving)
 	s.Require().Equal(clPoolId, poolIdEntering)
 
-	// exitPool has rounding difference.
-	// We test if correct amt has been exited and frozen by comparing with rounding tolerance.
-	defaultErrorTolerance := osmomath.ErrTolerance{
-		AdditiveTolerance: sdk.NewDec(2),
-		RoundingDir:       osmomath.RoundDown,
-	}
-	s.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf("stake").ToDec().Mul(percentOfSharesToMigrate).RoundInt(), amount0))
-	s.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf("uosmo").ToDec().Mul(percentOfSharesToMigrate).RoundInt(), amount1))
+	s.Require().Equal(joinPoolAmt.AmountOf("stake").ToDec().Mul(percentOfSharesToMigrate).TruncateInt().String(), amount0.String())
+	s.Require().Equal(joinPoolAmt.AmountOf("uosmo").ToDec().Mul(percentOfSharesToMigrate).TruncateInt().String(), amount1.String())
 }
 
 func (s *IntegrationTestSuite) createFullRangePosition(node *chain.NodeConfig, from sdk.AccAddress, tokens sdk.Coins, poolId uint64) uint64 {
@@ -237,8 +228,8 @@ func (s *IntegrationTestSuite) setupMigrationTest(
 	}
 
 	// The unbonding duration is the same as the staking module's unbonding duration.
-	// hardcore this, data get from config file
-	unbondingDuration := time.Duration(240000000000)
+	unbondingDuration, err := node.QueryUnbondingTime()
+	s.Require().NoError(err)
 
 	// Lock the LP tokens for the duration of the unbonding provided asset is not supported for superfluid staking.
 	originalGammLockId := uint64(0)

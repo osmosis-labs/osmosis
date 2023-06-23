@@ -364,6 +364,18 @@ func (n *NodeConfig) QuerySupply() (sdk.Coins, error) {
 	return supplyResp.Supply, nil
 }
 
+func (n *NodeConfig) QueryUnbondingTime() (time.Duration, error) {
+	path := "/cosmos/staking/v1beta1/params"
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var unbondingResp stakingtypes.QueryParamsResponse
+	if err := util.Cdc.UnmarshalJSON(bz, &unbondingResp); err != nil {
+		return time.Duration(0), err
+	}
+	return unbondingResp.Params.UnbondingTime, nil
+}
+
 func (n *NodeConfig) QueryContractsFromId(codeId int) ([]string, error) {
 	path := fmt.Sprintf("/cosmwasm/wasm/v1/code/%d/contracts", codeId)
 	bz, err := n.QueryGRPCGateway(path)
