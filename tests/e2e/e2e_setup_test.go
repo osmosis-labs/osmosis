@@ -42,6 +42,9 @@ type IntegrationTestSuite struct {
 
 	chainBConfig1Mutex sync.Mutex
 	chainBConfig1      *chain.Config
+
+	defaultNodeConfig *chain.NodeConfig
+	defaultNodeMutex  sync.Mutex
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

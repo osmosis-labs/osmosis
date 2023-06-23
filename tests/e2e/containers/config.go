@@ -29,8 +29,8 @@ const (
 	previousVersionInitRepository = "osmolabs/osmosis-e2e-init-chain"
 	previousVersionInitTag        = "v15.x-63e3f053-1685053483"
 	// Hermes repo/version for relayer
-	relayerRepository = "osmolabs/hermes"
-	relayerTag        = "1.3.0"
+	relayerRepository = "informalsystems/hermes"
+	relayerTag        = "1.5.1"
 )
 
 // Returns ImageConfig needed for running e2e test.

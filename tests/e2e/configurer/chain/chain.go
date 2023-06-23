@@ -176,30 +176,41 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	require.NoError(c.t, err)
 
 	// removes the fee token from balances for calculating the difference in other tokens
-	// before and after the IBC send.
+	// before and after the IBC send. Since we run tests in parallel now, some tests may
+	// send uosmo between accounts while this test is running. Since we don't care about
+	// non ibc denoms, its safe to filter uosmo out.
 	removeFeeTokenFromBalance := func(balance sdk.Coins) sdk.Coins {
-		feeRewardTokenBalance := balance.FilterDenoms([]string{initialization.E2EFeeToken})
+		feeRewardTokenBalance := balance.FilterDenoms([]string{initialization.E2EFeeToken, "uosmo"})
 		return balance.Sub(feeRewardTokenBalance)
 	}
 
 	balancesDstPreWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
 	require.NoError(c.t, err)
+	fmt.Println("balancesDstPre with no fee removed: ", balancesDstPreWithTxFeeBalance)
 	balancesDstPre := removeFeeTokenFromBalance(balancesDstPreWithTxFeeBalance)
 	cmd := []string{"hermes", "tx", "ft-transfer", "--dst-chain", dstChain.Id, "--src-chain", c.Id, "--src-port", "transfer", "--src-channel", "channel-0", "--amount", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000"}
 	_, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
 	require.NoError(c.t, err)
+	fmt.Println("IBC send successful after exec ADAM")
 
 	require.Eventually(
 		c.t,
 		func() bool {
+			fmt.Println("IBC send successful in eventual loop ADAM")
 			balancesDstPostWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
 			require.NoError(c.t, err)
+			fmt.Println("balancesDstPost with no fee removed: ", balancesDstPostWithTxFeeBalance)
 
 			balancesDstPost := removeFeeTokenFromBalance(balancesDstPostWithTxFeeBalance)
+
+			fmt.Println("balancesDstPost with fee removed: ", balancesDstPost)
+
+			fmt.Println("balancesDstPre with fee removed: ", balancesDstPre)
 
 			ibcCoin := balancesDstPost.Sub(balancesDstPre)
 			if ibcCoin.Len() == 1 {
 				tokenPre := balancesDstPre.AmountOfNoDenomValidation(ibcCoin[0].Denom)
+				fmt.Println("tokenPre: ", tokenPre)
 				tokenPost := balancesDstPost.AmountOfNoDenomValidation(ibcCoin[0].Denom)
 				resPre := token.Amount
 				resPost := tokenPost.Sub(tokenPre)
@@ -362,12 +373,13 @@ func (c *Config) SetupRateLimiting(paths, gov_addr string) (string, error) {
 
 	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
 	c.LatestCodeId = int(node.QueryLatestWasmCodeID())
+	latestCodeId := c.LatestCodeId
 	node.InstantiateWasmContract(
-		strconv.Itoa(c.LatestCodeId),
+		strconv.Itoa(latestCodeId),
 		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [%s] }`, gov_addr, node.PublicAddress, paths),
 		initialization.ValidatorWalletName)
 
-	contracts, err := node.QueryContractsFromId(c.LatestCodeId)
+	contracts, err := node.QueryContractsFromId(latestCodeId)
 	if err != nil {
 		return "", err
 	}

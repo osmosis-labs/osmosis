@@ -154,7 +154,10 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 			}
 
 			errBufString := errBuf.String()
-			fmt.Println("ADAM", errBufString)
+			if errBufString != "" {
+				fmt.Println("adam", errBufString)
+			}
+
 			// Note that this does not match all errors.
 			// This only works if CLI outpurs "Error" or "error"
 			// to stderr.

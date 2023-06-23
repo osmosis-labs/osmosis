@@ -135,12 +135,13 @@ func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) 
 
 	node.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
 	chain.LatestCodeId = int(node.QueryLatestWasmCodeID())
+	latestCodeId := chain.LatestCodeId
 	node.InstantiateWasmContract(
-		strconv.Itoa(chain.LatestCodeId),
+		strconv.Itoa(latestCodeId),
 		`{"count": 0}`,
 		initialization.ValidatorWalletName)
 
-	contracts, err := node.QueryContractsFromId(chain.LatestCodeId)
+	contracts, err := node.QueryContractsFromId(latestCodeId)
 	s.NoError(err)
 	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
 	contractAddr := contracts[0]
