@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 )
@@ -276,6 +278,74 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 	}
 
 	return &res, nil
+}
+
+// UserSuperfluidPositionsPerConcentratedPoolBreakdown returns all the cl superfluid positions for the specified delegator in the specified concentrated liquidity pool.
+func (q Querier) UserSuperfluidPositionsPerConcentratedPoolBreakdown(goCtx context.Context, req *types.UserSuperfluidPositionsPerConcentratedPoolBreakdownRequest) (*types.UserSuperfluidPositionsPerConcentratedPoolBreakdownResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the position IDs for the specified pool ID and user address.
+	positions, err := q.Keeper.clk.GetUserPositions(ctx, delAddr, req.ConcentratedPoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	// Query each position ID and determine if it has a lock ID associated with it, which implies the position is superfluid staked.
+	// Construct a response with the position ID, lock ID, the amount of cl shares staked, and what those shares are worth in staked osmo tokens.
+	var clPoolUserPositionRecords []types.ConcentratedPoolUserPositionRecord
+	for _, pos := range positions {
+		lockId, err := q.Keeper.clk.GetLockIdFromPositionId(ctx, pos.PositionId)
+		switch err.(type) {
+		case cltypes.PositionIdToLockNotFoundError:
+			continue
+		case nil:
+			lock, err := q.Keeper.lk.GetLockByID(ctx, lockId)
+			if err != nil {
+				return nil, err
+			}
+
+			syntheticLock, err := q.Keeper.lk.GetSyntheticLockupByUnderlyingLockId(ctx, lockId)
+			if err != nil {
+				return nil, err
+			}
+
+			if syntheticLock.UnderlyingLockId == 0 {
+				return nil, fmt.Errorf("synthetic lockup with underlying lock ID %d not found", lockId)
+			}
+
+			valAddr, err := ValidatorAddressFromSyntheticDenom(syntheticLock.SynthDenom)
+			if err != nil {
+				return nil, err
+			}
+
+			baseDenom := lock.Coins.GetDenomByIndex(0)
+			lockedCoins := sdk.NewCoin(baseDenom, lock.GetCoins().AmountOf(baseDenom))
+			equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
+			if err != nil {
+				return nil, err
+			}
+			coin := sdk.NewCoin(appparams.BaseCoinUnit, equivalentAmount)
+
+			clPoolUserPositionRecords = append(clPoolUserPositionRecords, types.ConcentratedPoolUserPositionRecord{
+				ValidatorAddress:       valAddr,
+				PositionId:             pos.PositionId,
+				LockId:                 lockId,
+				DelegationAmount:       lockedCoins,
+				EquivalentStakedAmount: &coin,
+			})
+		default:
+			continue
+		}
+	}
+
+	return &types.UserSuperfluidPositionsPerConcentratedPoolBreakdownResponse{
+		ClPoolUserPositionRecords: clPoolUserPositionRecords,
+	}, nil
 }
 
 // SuperfluidUndelegationsByDelegator returns total amount undelegating by delegator.
