@@ -24,9 +24,19 @@ const (
 )
 
 // RouteLockedBalancerToConcentratedMigration routes the provided lock to the proper migration function based on the lock status.
-// If the lock is superfluid delegated, it will instantly undelegate the superfluid position and redelegate it as a concentrated liquidity position.
-// If the lock is superfluid undelegating, it will instantly undelegate the superfluid position and redelegate it as a concentrated liquidity position, but continue to unlock where it left off.
-// If the lock is locked or unlocking but not superfluid delegated/undelegating, it will migrate the position and either start unlocking or continue unlocking where it left off.
+
+// Lock Status = Superfluid delegated
+// - Instantly undelegate which will bypass unbonding time.
+// - Create new CL Lock and Re-delegate it as a concentrated liquidity position.
+//
+// Lock Status = Superfluid undelegating
+// - Continue undelegating as superfluid unbonding CL Position.
+// - Lock the tokens and create an unlocking syntheticLock (to handle cases of slashing)
+//
+// Lock Status = Locked or unlocking (no superfluid delegation/undelegation)
+// - Force unlock tokens from gamm shares.
+// - Create new CL lock and starts unlocking or unlocking where it left off.
+//
 // Errors if the lock is not found, if the lock is not a balancer pool lock, or if the lock is not owned by the sender.
 func (k Keeper) RouteLockedBalancerToConcentratedMigration(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin, tokenOutMins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, poolIdLeaving, poolIdEntering, concentratedLockId uint64, err error) {
 	synthLockBeforeMigration, migrationType, err := k.routeMigration(ctx, sender, lockId, sharesToMigrate)
@@ -42,7 +52,6 @@ func (k Keeper) RouteLockedBalancerToConcentratedMigration(ctx sdk.Context, send
 	case NonSuperfluid:
 		positionId, amount0, amount1, liquidity, concentratedLockId, poolIdLeaving, poolIdEntering, err = k.migrateNonSuperfluidLockBalancerToConcentrated(ctx, sender, lockId, sharesToMigrate, tokenOutMins)
 	case Unlocked:
-		// TODO @stakman, what is an unlocked position? Isn't balancer lock (either locked or unlocking only) ?
 		positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, err = k.gk.MigrateUnlockedPositionFromBalancerToConcentrated(ctx, sender, sharesToMigrate, tokenOutMins)
 		concentratedLockId = 0
 	default:
@@ -67,12 +76,9 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
 	}
-	fmt.Println("SHARES TO MIGRATE: ", sharesToMigrate)
 
 	isPartialMigration := sharesToMigrate.Amount.LT(preMigrationLock.Coins[0].Amount)
 
-	fmt.Println("SYNTH DENOM", synthDenomBeforeMigration)
-	// TODO: @stackman: figure out if there is a better way to get ValAddr
 	// Get the validator address from the synth denom and ensure it is a valid address.
 	valAddr := strings.Split(synthDenomBeforeMigration, "/")[4]
 	_, err = sdk.ValAddressFromBech32(valAddr)
@@ -101,7 +107,6 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 		}
 	}
 
-	fmt.Println("LOCK TO MIGRATE: ", gammLockToMigrate)
 	// Force unlock, validate the provided sharesToMigrate, and exit the balancer pool.
 	// This will return the coins that will be used to create the concentrated liquidity position.
 	// It also returns the lock object that contains the remaining shares that were not used in this migration.
@@ -110,15 +115,12 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
 	}
 
-	fmt.Println("SHARES TO MIGRATE POST: ", exitCoins)
-
 	// Create a full range (min to max tick) concentrated liquidity position, lock it, and superfluid delegate it.
 	positionId, amount0, amount1, liquidity, concentratedLockId, err = k.clk.CreateFullRangePositionLocked(ctx, poolIdEntering, sender, exitCoins, remainingLockTime)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
 	}
-
-	// TODO @stack: Does this take care of 21 days undelegate time?
+	// TODO @stack, if someone migrates delegated position -> undelegates (but still locked) -> can they get their tokens back?
 	err = k.SuperfluidDelegate(ctx, sender.String(), concentratedLockId, intermediateAccount.ValAddr)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
@@ -160,7 +162,6 @@ func (k Keeper) migrateSuperfluidUnbondingBalancerToConcentrated(ctx sdk.Context
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position.
-	// If the lock was unlocking, we create a new lock that is unlocking for the remaining time of the old lock.
 	positionId, amount0, amount1, liquidity, concentratedLockId, err = k.clk.CreateFullRangePositionUnlocking(ctx, poolIdEntering, sender, exitCoins, remainingLockTime)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
@@ -175,7 +176,8 @@ func (k Keeper) migrateSuperfluidUnbondingBalancerToConcentrated(ctx sdk.Context
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
 	}
 
-	// TODO @stackman: Why not just call BeginUnlock or CreateFullRangePositionUnlocking?
+	// TODO @stackman: removing the synthetic lock created after undelegating? - yes force unlock removes the synth lock associated with the lock
+	// Synthetic lock is created to indicate unbonding position. The synthetic lock will be in unbonding period for remainingLockTime.
 	// Create a new synthetic lockup for the new intermediary account in an unlocking status for the remaining duration.
 	// TODO: Check slashing
 	// ? check event in slashing
@@ -202,6 +204,7 @@ func (k Keeper) migrateNonSuperfluidLockBalancerToConcentrated(ctx sdk.Context,
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
 	}
 
+	// TODO @STACK: do we need to forceUnlock for cases where it's already unlocking?
 	// Force unlock, validate the provided sharesToMigrate, and exit the balancer pool.
 	// This will return the coins that will be used to create the concentrated liquidity position.
 	// It also returns the lock object that contains the remaining shares that were not used in this migration.

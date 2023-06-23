@@ -387,6 +387,7 @@ func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 		return err
 	}
 	if !synthLock.IsNil() {
+		fmt.Println("REMOVEEE SYNTHETIC LOCKUPPP")
 		err = k.DeleteSyntheticLockup(ctx, lock.ID, synthLock.SynthDenom)
 		if err != nil {
 			return err
