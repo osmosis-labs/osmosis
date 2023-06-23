@@ -1840,9 +1840,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 
 				// Ensure records are properly updated for each supported uptime
 				for uptimeIndex := range types.SupportedUptimes {
-					recordExists, err := uptimeAccums[uptimeIndex].HasPosition(positionName)
-					s.Require().NoError(err)
-
+					recordExists := uptimeAccums[uptimeIndex].HasPosition(positionName)
 					s.Require().True(recordExists)
 
 					// Ensure position's record has correct values
@@ -3169,9 +3167,7 @@ func (s *KeeperTestSuite) TestPrepareClaimAllIncentivesForPosition() {
 				for _, uptimeAccum := range uptimeAccumulatorsPreClaim {
 					newPositionName := string(types.KeyPositionId(positionIdOne))
 					// Check if the accumulator contains the position.
-					hasPosition, err := uptimeAccum.HasPosition(newPositionName)
-					s.Require().NoError(err)
-
+					hasPosition := uptimeAccum.HasPosition(newPositionName)
 					if hasPosition {
 						position, err := accum.GetPosition(uptimeAccum, newPositionName)
 						s.Require().NoError(err)
@@ -4141,8 +4137,7 @@ func (s *KeeperTestSuite) TestMoveRewardsToNewPositionAndDeleteOldAcc() {
 				s.Require().NoError(err)
 
 				// Check the old accumulator is now deleted.
-				hasPosition, err := testAccumulator.HasPosition(oldPos)
-				s.Require().NoError(err)
+				hasPosition := testAccumulator.HasPosition(oldPos)
 				s.Require().False(hasPosition)
 
 				// Check that the new accumulator has the correct amount of rewards in unclaimed rewards.
