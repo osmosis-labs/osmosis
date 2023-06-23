@@ -1135,43 +1135,67 @@ func (s *KeeperTestSuite) IncentivizeInternalGauge(poolIds []uint64, epochDurati
 func (s *KeeperTestSuite) TestFunctionalInternalExternalGammGauge() {
 	// 1. Initialize variables
 	s.SetupTest()
+	const (
+		defaultExternalGaugeValue int64 = 1_000_000
+		defaultInternalGaugeValue int64 = 250_000
+		numEpochsPaidOverGaugeTwo int64 = 2
+	)
 
-	requiredBalances := sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1_000_000_000)), sdk.NewCoin("usdc", sdk.NewInt(1_000_000_000)), sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000)))
-	_ = sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(250_000)))                                                                 // distributed full sum at epoch
-	externalGaugeCoins := sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1_000_000)), sdk.NewCoin("usdc", sdk.NewInt(1_000_000)))   // distributed full sum at epoch
-	halfOfExternalGaugeCoins := sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(500_000)), sdk.NewCoin("usdc", sdk.NewInt(500_000))) // distributed at each epoch for non-perp gauge with numEpoch = 2
+	var (
+		requiredBalances             = sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(defaultExternalGaugeValue)), sdk.NewCoin("usdc", sdk.NewInt(defaultExternalGaugeValue)))
+		externalGaugeCoins           = sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(defaultExternalGaugeValue)), sdk.NewCoin("usdc", sdk.NewInt(defaultExternalGaugeValue)))     // distributed full sum at epoch
+		halfOfExternalGaugeCoins     = sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(defaultExternalGaugeValue/2)), sdk.NewCoin("usdc", sdk.NewInt(defaultExternalGaugeValue/2))) // distributed at each epoch for non-perp gauge with numEpoch = 2
+		internalGaugeLockCoinsDenom1 = sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(defaultInternalGaugeValue)))                                                         // distributed full sum at epoch
+		internalGaugeLockCoinsDenom2 = sdk.NewCoins(sdk.NewCoin("gamm/pool/2", sdk.NewInt(defaultInternalGaugeValue)))                                                         // distributed full sum at epoch
+
+		// 1_500_000 minted and distributed across each 6 gauge equally. 1_500_000 / 6 = 250_000
+		internalGaugeDistributedCoins = sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(defaultInternalGaugeValue))) // distributed full sum at epoch
+	)
 
 	s.FundAcc(s.TestAccs[0], requiredBalances)
 	s.FundAcc(s.TestAccs[1], requiredBalances)
 	s.FundAcc(s.TestAccs[2], requiredBalances)
 	s.FundModuleAcc(incentivetypes.ModuleName, requiredBalances)
 
-	// 2. Setup GAMM pool and gauge (gauge automatically gets created at the end of GAMM pool creation).
+	// Setup GAMM pool and gauge (gauge automatically gets created at the end of GAMM pool creation).
 	gammPoolId1 := s.PrepareBalancerPool() // creates internal lock gauge
 	gammPoolId2 := s.PrepareBalancerPool() // creates internal lock gauge
-	_ = s.PrepareBalancerPool()            // creates internal lock gauge
+	_ = s.PrepareBalancerPool()            // creates internal lock gauge (this gauge will not be internally or externally incentivized)
 
 	epochInfo := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx)
-	lockableDurations := s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)
+	lockableDurations := s.App.PoolIncentivesKeeper.GetLockableDurations(s.Ctx)
 
-	// 3. Create external lock gauges for CL pools
+	// Create external lock gauges for CL pools
 	gammPoolExternalGaugeId, _, _, _ := s.setupNewGaugeWithDuration(true, externalGaugeCoins, lockableDurations[0], externalGaugeCoins[0].Denom)
 	gammPoolExternalGaugeId1, _, _, _ := s.setupNewGaugeWithDuration(false, externalGaugeCoins, lockableDurations[1], externalGaugeCoins[1].Denom)
-	gammPoolExternalGaugeId2, _, _, _ := s.setupNewGaugeWithDuration(true, externalGaugeCoins, lockableDurations[2], externalGaugeCoins[1].Denom)
+	gammPoolExternalGaugeId2, _, _, _ := s.setupNewGaugeWithDuration(true, externalGaugeCoins, lockableDurations[0], externalGaugeCoins[0].Denom)
 
-	// 4. Setup User locks
-	_ = s.SetupUserLocks([]userLocks{{
-		lockDurations: []time.Duration{lockableDurations[0]},
-		lockAmounts:   []sdk.Coins{externalGaugeCoins},
-	}, {
-		lockDurations: []time.Duration{lockableDurations[1]},
-		lockAmounts:   []sdk.Coins{externalGaugeCoins},
-	}})
+	// Setup User locks
+	_ = s.SetupUserLocks([]userLocks{
+		{
 
-	// 5. Create Distribution records to incentivize internal gamm lock gauges
+			lockDurations: []time.Duration{lockableDurations[0]}, // this is 0 because we create ExternalGaugeId with lockableDurations[0]
+			lockAmounts:   []sdk.Coins{externalGaugeCoins},
+		},
+		{
+
+			lockDurations: []time.Duration{lockableDurations[1]}, // this is 1 because we create ExternalGaugeId1 with lockableDurations[1]
+			lockAmounts:   []sdk.Coins{externalGaugeCoins},
+		},
+		{
+			lockDurations: []time.Duration{lockableDurations[0], lockableDurations[1], lockableDurations[2]}, // this is [0,1,2] because we create InternalGauge1 with lockableDurations[0],[1],[2]
+			lockAmounts:   []sdk.Coins{internalGaugeLockCoinsDenom1, internalGaugeLockCoinsDenom1, internalGaugeLockCoinsDenom1},
+		},
+		{
+			lockDurations: []time.Duration{lockableDurations[0], lockableDurations[1], lockableDurations[2]}, // this is [0,1,2] because we create InternalGauge2 with lockableDurations[0],[1],[2]
+			lockAmounts:   []sdk.Coins{internalGaugeLockCoinsDenom2, internalGaugeLockCoinsDenom2, internalGaugeLockCoinsDenom2},
+		},
+	})
+
+	// Create Distribution records to incentivize internal gamm lock gauges
 	s.IncentivizeInternalGaugeGamm([]uint64{gammPoolId1, gammPoolId2}, false)
 
-	// 5. let epoch 1 pass
+	// let epoch 1 pass
 	// ******************** EPOCH 1 *********************
 	// let 1 epoch pass
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(epochInfo.Duration))
@@ -1185,31 +1209,44 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalGammGauge() {
 
 	s.IncentivizeInternalGaugeGamm([]uint64{gammPoolId1, gammPoolId2}, true)
 
-	// 5. let epoch 2 pass
+	// let epoch 2 pass
 	// ******************** EPOCH 2 *********************
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(epochInfo.Duration))
-	s.App.EpochsKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), 1)
+	s.App.EpochsKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), 2)
 
-	s.ValidateDistributedGauge(gammPoolExternalGaugeId, 2, externalGaugeCoins)
-	s.ValidateDistributedGauge(gammPoolExternalGaugeId, 2, externalGaugeCoins)
-
-	s.ValidateDistributedGauge(gammPoolExternalGaugeId1, 2, externalGaugeCoins)
 	s.ValidateDistributedGauge(gammPoolExternalGaugeId, 2, externalGaugeCoins)
 	s.ValidateDistributedGauge(gammPoolExternalGaugeId1, 2, externalGaugeCoins)
+	s.ValidateDistributedGauge(gammPoolExternalGaugeId2, 2, externalGaugeCoins)
 
-	// 5. let epoch 2 pass
+	// check internal gauges have distributed coins
+	gaugesForPoolId1, err := s.App.PoolIncentivesKeeper.GetGaugesForCFMMPool(s.Ctx, gammPoolId1)
+	s.Require().NoError(err)
+
+	gaugesForPoolId2, err := s.App.PoolIncentivesKeeper.GetGaugesForCFMMPool(s.Ctx, gammPoolId2)
+	s.Require().NoError(err)
+
+	for _, gauge := range gaugesForPoolId1 {
+		s.ValidateDistributedGauge(gauge.Id, 1, internalGaugeDistributedCoins)
+	}
+
+	for _, gauge := range gaugesForPoolId2 {
+		s.ValidateDistributedGauge(gauge.Id, 1, internalGaugeDistributedCoins)
+	}
+
+	// let epoch 3 pass
 	// ******************** EPOCH 3 *********************
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(epochInfo.Duration))
-	s.App.EpochsKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), 1)
+	s.App.EpochsKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), 3)
 
-	s.ValidateDistributedGauge(gammPoolExternalGaugeId, 2, externalGaugeCoins)
+	s.ValidateDistributedGauge(gammPoolExternalGaugeId, 3, externalGaugeCoins)
 	s.ValidateDistributedGauge(gammPoolExternalGaugeId1, 2, externalGaugeCoins)
+	s.ValidateDistributedGauge(gammPoolExternalGaugeId2, 3, externalGaugeCoins)
 }
 
 func (s *KeeperTestSuite) IncentivizeInternalGaugeGamm(poolIds []uint64, removeDistrRecord bool) {
 	var weight sdk.Int
 	if !removeDistrRecord {
-		weight = sdk.NewInt(166)
+		weight = sdk.NewInt(166) // 6 total records to distribute to 100/6 = 16.66
 	} else {
 		weight = sdk.ZeroInt()
 	}

@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v16/x/incentives/keeper"
@@ -39,8 +40,18 @@ func (s *KeeperTestSuite) ValidateDistributedGauge(gaugeID uint64, expectedFille
 	s.Require().NoError(err)
 	s.Require().Equal(expectedFilledEpoch, gauge.FilledEpochs)
 
+	defaultErrorTolerance := osmomath.ErrTolerance{
+		AdditiveTolerance: sdk.NewDec(1),
+		RoundingDir:       osmomath.RoundDown,
+	}
+
+	s.Require().Equal(len(expectedDistributions), len(gauge.DistributedCoins))
+
 	// Check that distributed coins is not updated
-	s.Require().Equal(expectedDistributions, gauge.DistributedCoins)
+	for idx, coin := range expectedDistributions {
+		s.Require().Equal(0, defaultErrorTolerance.Compare(coin.Amount, gauge.DistributedCoins[idx].Amount))
+
+	}
 }
 
 // ValidateNotDistributedGauge checks that the gauge is not updated after distribution
