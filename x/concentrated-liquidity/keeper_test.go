@@ -92,7 +92,11 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	s.Setup()
+	s.Reset()
+	s.setupClGeneral()
+}
+
+func (s *KeeperTestSuite) setupClGeneral() {
 	s.clk = s.App.ConcentratedLiquidityKeeper
 
 	if s.authorizedUptimes != nil {
@@ -404,7 +408,6 @@ func (s *KeeperTestSuite) AddBlockTime(timeToAdd time.Duration) {
 }
 
 func (s *KeeperTestSuite) TestValidatePermissionlessPoolCreationEnabled() {
-	s.SetupTest()
 	// Normally, by default, permissionless pool creation is disabled.
 	// SetupTest, however, calls SetupConcentratedLiquidityDenomsAndPoolCreation which enables permissionless pool creation.
 	s.Require().NoError(s.App.ConcentratedLiquidityKeeper.ValidatePermissionlessPoolCreationEnabled(s.Ctx))

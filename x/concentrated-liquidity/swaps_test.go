@@ -2123,7 +2123,6 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			// Init suite for each test.
 			s.SetupTest()
 			pool := s.preparePoolAndDefaultPosition()
 
@@ -2298,7 +2297,6 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			// Init suite for each test.
 			s.SetupTest()
 			pool := s.preparePoolAndDefaultPosition()
 
@@ -2660,7 +2658,6 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
-			concentratedLiquidityKeeper := s.App.ConcentratedLiquidityKeeper
 			pool := s.preparePoolWithCustSpread(tc.spreadFactor)
 
 			s.FundAcc(pool.GetAddress(), tc.poolInitialBalance)
@@ -2673,7 +2670,7 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			s.Require().NoError(err)
 
 			// Write default pool to state.
-			err = concentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+			err = s.clk.SetPool(s.Ctx, pool)
 			s.Require().NoError(err)
 
 			// Set mock listener to make sure that is is called when desired.
@@ -2683,10 +2680,10 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			expectedSpreadFactorsCoins := sdk.NewCoins(sdk.NewCoin(tc.tokenIn.Denom, expectedSpreadFactors.TruncateInt()))
 			swapDetails := cl.SwapDetails{sender, tc.tokenIn, tc.tokenOut}
 			poolUpdates := cl.PoolUpdates{tc.newCurrentTick, tc.newLiquidity, tc.newSqrtPrice}
-			err = concentratedLiquidityKeeper.UpdatePoolForSwap(s.Ctx, pool, swapDetails, poolUpdates, expectedSpreadFactors)
+			err = s.clk.UpdatePoolForSwap(s.Ctx, pool, swapDetails, poolUpdates, expectedSpreadFactors)
 
 			// Test that pool is updated
-			poolAfterUpdate, err2 := concentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			poolAfterUpdate, err2 := s.clk.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err2)
 
 			if tc.expectError != nil {

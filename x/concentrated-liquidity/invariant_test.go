@@ -31,8 +31,10 @@ func (s *KeeperTestSuite) getAllPositionsAndPoolBalances(ctx sdk.Context) ([]mod
 	for _, pool := range allPools {
 		clPool, ok := pool.(types.ConcentratedPoolExtension)
 		s.Require().True(ok)
-		totalPoolAssets = totalPoolAssets.Add(s.App.BankKeeper.GetAllBalances(ctx, clPool.GetAddress())...)
-		totalSpreadRewards = totalSpreadRewards.Add(s.App.BankKeeper.GetAllBalances(ctx, clPool.GetSpreadRewardsAddress())...)
+		totalPoolAssets = totalPoolAssets.Add(s.App.BankKeeper.GetBalance(ctx, clPool.GetAddress(), clPool.GetToken0()))
+		totalPoolAssets = totalPoolAssets.Add(s.App.BankKeeper.GetBalance(ctx, clPool.GetAddress(), clPool.GetToken1()))
+		totalSpreadRewards = totalSpreadRewards.Add(s.App.BankKeeper.GetBalance(ctx, clPool.GetSpreadRewardsAddress(), clPool.GetToken0()))
+		totalSpreadRewards = totalSpreadRewards.Add(s.App.BankKeeper.GetBalance(ctx, clPool.GetSpreadRewardsAddress(), clPool.GetToken1()))
 		totalIncentives = totalIncentives.Add(s.App.BankKeeper.GetAllBalances(ctx, clPool.GetIncentivesAddress())...)
 	}
 
