@@ -183,24 +183,6 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 
 			balancerDelegationPre, _ := stakingKeeper.GetDelegation(s.Ctx, balancerIntermediaryAcc.GetAccAddress(), valAddr)
 
-			//TODO check that there is a superfluid delegation that is undelegating
-			lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, originalGammLockId)
-			s.Require().NoError(err)
-
-			delegations := stakingKeeper.GetAllDelegations(s.Ctx)
-			fmt.Println("DELEGATIONS: ", delegations)
-			fmt.Println("LOCKKK: ", lock)
-
-			unbondingDelegations := stakingKeeper.GetAllUnbondingDelegations(s.Ctx, poolJoinAcc)
-			fmt.Println("UNBONDING DELEGATIONS: ", unbondingDelegations)
-
-			synthLock, err := lockupKeeper.GetSyntheticLockupByUnderlyingLockId(s.Ctx, originalGammLockId)
-			s.Require().NoError(err)
-
-			fmt.Println("SYNTH LOCK: ", synthLock)
-
-			//TODO check that the superfluid delegation is locked
-
 			// Run the migration logic.
 			positionId, amount0, amount1, liquidityMigrated, poolIdLeaving, poolIdEntering, concentratedLockId, err := superfluidKeeper.RouteLockedBalancerToConcentratedMigration(s.Ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, tc.minExitCoins)
 			if tc.expectedError != nil {
@@ -309,25 +291,25 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 		"lock that is superfluid delegated, not unlocking (partial shares)": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.5"),
 		},
-		// "error: migrate more shares than lock has": {
-		// 	percentOfSharesToMigrate: sdk.MustNewDecFromStr("1.1"),
-		// 	expectedError:            types.MigrateMoreSharesThanLockHasError{SharesToMigrate: "55000000000000000000", SharesInLock: "50000000000000000000"},
-		// },
-		// "error: invalid validator address": {
-		// 	overwriteValidatorAddress: true,
-		// 	percentOfSharesToMigrate:  sdk.MustNewDecFromStr("1"),
-		// 	expectedError:             fmt.Errorf("decoding bech32 failed: invalid checksum"),
-		// },
-		// "error: non-existent lock ID": {
-		// 	overwriteLockId:          true,
-		// 	percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-		// 	expectedError:            lockuptypes.ErrLockupNotFound,
-		// },
-		// "error: lock that is superfluid delegated, not unlocking (full shares), token out mins is more than exit coins": {
-		// 	percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-		// 	tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100000))),
-		// 	expectedError:            gammtypes.ErrLimitMinAmount,
-		// },
+		"error: migrate more shares than lock has": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1.1"),
+			expectedError:            types.MigrateMoreSharesThanLockHasError{SharesToMigrate: "55000000000000000000", SharesInLock: "50000000000000000000"},
+		},
+		"error: invalid validator address": {
+			overwriteValidatorAddress: true,
+			percentOfSharesToMigrate:  sdk.MustNewDecFromStr("1"),
+			expectedError:             fmt.Errorf("decoding bech32 failed: invalid checksum"),
+		},
+		"error: non-existent lock ID": {
+			overwriteLockId:          true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			expectedError:            lockuptypes.ErrLockupNotFound,
+		},
+		"error: lock that is superfluid delegated, not unlocking (full shares), token out mins is more than exit coins": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100000))),
+			expectedError:            gammtypes.ErrLimitMinAmount,
+		},
 	}
 
 	for name, tc := range testCases {
@@ -429,7 +411,6 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 			clIntermediaryAcc := superfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, concentratedLockId)
 			delegation, found := stakingKeeper.GetDelegation(s.Ctx, clIntermediaryAcc, valAddr)
 			s.Require().True(found, "expected delegation, found delegation no delegation")
-			fmt.Println("SHARES: ", balancerDelegationPre.Shares, tc.percentOfSharesToMigrate, delegation.Shares)
 			s.Require().Equal(balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().Sub(sdk.OneInt()).String(), delegation.Shares.RoundInt().String(), "expected %d shares, found %d shares",
 				balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().String(), delegation.Shares.String())
 
@@ -440,6 +421,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 			// Check newly created concentrated lock.
 			concentratedLock, err := lockupKeeper.GetLockByID(s.Ctx, concentratedLockId)
 			s.Require().NoError(err)
+			// ? This is off by one 5000 -> 4999
 			fmt.Println("LIQUIDITY", liquidityMigrated, coinsToMigrate, concentratedLock.Coins[0])
 			s.Require().Equal(liquidityMigrated.TruncateInt().String(), concentratedLock.Coins[0].Amount.String(), "expected %s shares, found %s shares", coinsToMigrate.Amount.String(), concentratedLock.Coins[0].Amount.String())
 			s.Require().Equal(balancerLock.Duration, concentratedLock.Duration)
@@ -1525,24 +1507,13 @@ func (s *KeeperTestSuite) calculateUnusedPositionCreationFunds(numAccounts, numN
 	return unusedPositionCreationFunds
 }
 
-func (s *KeeperTestSuite) TestSimplifyMigrateSuperfluidBondedBalancerToConcentrated() {
+func (s *KeeperTestSuite) TestSimplifyMigrateUnlockedPositionFromBalancerToConcentrated() {
+
 	s.SetupTest()
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime())
 
-	superfluidKeeper := s.App.SuperfluidKeeper
-
-	// Setup superfluid delegated
-	joinPoolAmt, balancerIntermediaryAcc, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := s.SetupMigrationTest(s.Ctx, true, false, false, false, sdk.OneDec())
-	originalGammLockId := balancerLock.GetID()
-
-	coinsToMigrate := balancerPoolShareOut
-	coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(sdk.OneDec()).RoundInt()
-
-	// RouteMigration is called via the migration message router and is always run prior to the migration itself.
-	// We use it here just to retrieve the synthetic lock before the migration.
-	synthLockBeforeMigration, migrationType, err := superfluidKeeper.RouteMigration(s.Ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
-	s.Require().NoError(err)
-	s.Require().Equal(migrationType, keeper.SuperfluidBonded)
+	// Setup locked LP shares
+	joinPoolAmt, balancerIntermediaryAcc, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := s.SetupMigrationTest(s.Ctx, false, false, false, false, sdk.OneDec())
 
 	fmt.Println("***************************")
 	fmt.Println("joinPoolAmt: ", joinPoolAmt)
@@ -1555,7 +1526,8 @@ func (s *KeeperTestSuite) TestSimplifyMigrateSuperfluidBondedBalancerToConcentra
 	fmt.Println("valAddr", valAddr)
 
 	// System under test.
-	positionId, amount0, amount1, liquidityMigrated, concentratedLockId, poolIdLeaving, poolIdEntering, err := superfluidKeeper.MigrateSuperfluidBondedBalancerToConcentrated(s.Ctx, poolJoinAcc, originalGammLockId, balancerPoolShareOut, synthLockBeforeMigration.SynthDenom, sdk.NewCoins())
+	// attempting to run this with locked LP shares
+	positionId, amount0, amount1, liquidityMigrated, poolIdLeaving, poolIdEntering, err := s.App.GAMMKeeper.MigrateUnlockedPositionFromBalancerToConcentrated(s.Ctx, poolJoinAcc, balancerPoolShareOut, sdk.NewCoins())
 	s.Require().NoError(err)
 
 	fmt.Println("***************************")
@@ -1563,20 +1535,8 @@ func (s *KeeperTestSuite) TestSimplifyMigrateSuperfluidBondedBalancerToConcentra
 	fmt.Println("amount0: ", amount0)
 	fmt.Println("amount1: ", amount1)
 	fmt.Println("liquidityMigrated: ", liquidityMigrated)
-	fmt.Println("concentratedLockId: ", concentratedLockId)
 	fmt.Println("poolIdLeaving: ", poolIdLeaving)
 	fmt.Println("poolIdEntering: ", poolIdEntering)
 	fmt.Println("***************************")
-
-	//TODO undelegate the tokens now
-	err = superfluidKeeper.SuperfluidUndelegate(s.Ctx, poolJoinAcc.String(), concentratedLockId)
-	s.Require().NoError(err)
-
-	//TODO check if clLock still exist or not
-	// ? what to do with this lock?
-	clLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, concentratedLockId)
-	s.Require().NoError(err)
-
-	fmt.Println(clLock)
 
 }
