@@ -353,6 +353,10 @@ func (k Keeper) computeOutAmtGivenIn(
 			swapState.amountSpecifiedRemaining,
 		)
 
+		// if computedSqrtPrice == sqrtPriceStart && amountIn == zero => set swapState.amountSpecifiedRemaining to zero
+
+		// if did not move and amountIn == zero, then amount specified remaining = amount in and amount out = amount in *  ( (sqrt price - 1 ULP)^2 )
+
 		// Update the spread reward growth for the entire swap using the total spread factors charged.
 		swapState.updateSpreadRewardGrowthGlobal(spreadRewardCharge)
 
@@ -477,8 +481,10 @@ func (k Keeper) computeInAmtGivenOut(
 			swapState.sqrtPrice,
 			sqrtPriceTarget,
 			swapState.liquidity,
-			swapState.amountSpecifiedRemaining,
+			swapState.amountSpecifiedRemaining, // amount out
 		)
+
+		// if amount out is zero -charge at spot price + 1 ULP
 
 		swapState.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal)
 
