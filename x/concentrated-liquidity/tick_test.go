@@ -598,7 +598,6 @@ func (s *KeeperTestSuite) TestCrossTick() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			// Init suite for each test.
 			s.SetupTest()
 
 			// Create a default CL pool
