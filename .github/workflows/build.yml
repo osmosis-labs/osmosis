@@ -10,7 +10,7 @@
 # ensuring that the cache will be invalidated when your dependencies change.
 # The cache will be stored on a per-branch basis, which should prevent cache pollution issues between different branches.
 
-name: Build Osmosis
+name: Build osmosisd
 
 on:
   pull_request:
@@ -21,6 +21,9 @@ on:
       - "main"
       - "v[0-9]**"
   workflow_dispatch:
+
+env:
+  GO_VERSION: '1.20.5'
 
 jobs:
   build:
@@ -36,52 +39,42 @@ jobs:
             arch: arm64
 
     steps:
-      # Checkout the code
-      - name: Checkout code
+      -
+        name: Check out repository code
         uses: actions/checkout@v3
-
-      # Get the git diff for the specified patterns
-      - name: Get git diff
+      -
+        name: Get git diff
         uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
             **/**.wasm
-            **/**!(test).go
+            **/**.go
             go.mod
             go.sum
             Makefile
-
-      # Cache the Go modules
-      - name: Cache Go modules
-        uses: actions/cache@v2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      # Setup Golang environment
-      - name: Setup Golang
+            .github/workflows/build.yml
+      -
+        name: 🐿 Setup Golang
         uses: actions/setup-go@v4
+        if: env.GIT_DIFF
         with:
-          go-version: '^1.20'
+          go-version: ${{env.GO_VERSION}}
         env:
           GOOS: ${{ matrix.targetos }}
           GOARCH: ${{ matrix.arch }}
+      -
+        name: Download Dependencies
         if: env.GIT_DIFF
-
-      # Compile Osmosis if there is a GIT_DIFF
-      - name: Compile osmosis
+        run: go mod download
+      -
+        name: Build osmosisd
+        if: env.GIT_DIFF
         run: |
-          go mod download
-          cd cmd/osmosisd
-          GOWRK=off go build .
+          GOWRK=off go build cmd/osmosisd/main.go
+      -
+        name: Upload osmosisd artifact
         if: env.GIT_DIFF
-
-      # Upload the compiled artifact if there is a GIT_DIFF
-      - name: Upload osmosisd artifact
         uses: actions/upload-artifact@v3
         with:
           name: osmosisd-${{ matrix.targetos }}-${{ matrix.arch }}
           path: cmd/osmosisd/osmosisd
-        if: env.GIT_DIFF
