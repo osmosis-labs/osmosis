@@ -2,26 +2,14 @@ package concentrated_liquidity_test
 
 import (
 	"fmt"
-	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
-
-// SwapTickCrossTestSuite tests that the ticks are
-// updated correctly after swapping in various scenarios.
-type SwapTickCrossTestSuite struct {
-	KeeperTestSuite
-}
-
-func TestSwapTickCrossTestSuite(t *testing.T) {
-	suite.Run(t, new(SwapTickCrossTestSuite))
-}
 
 const (
 	tickSpacingOne = 1
@@ -42,7 +30,7 @@ var (
 )
 
 // CreatePositionTickSpacingsFromCurrentTick creates a position with the passed in tick spacings away from the current tick.
-func (s *SwapTickCrossTestSuite) CreatePositionTickSpacingsFromCurrentTick(poolId uint64, tickSpacingsAwayFromCurrentTick uint64) positionMeta {
+func (s *KeeperTestSuite) CreatePositionTickSpacingsFromCurrentTick(poolId uint64, tickSpacingsAwayFromCurrentTick uint64) positionMeta {
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
@@ -68,7 +56,7 @@ func (s *SwapTickCrossTestSuite) CreatePositionTickSpacingsFromCurrentTick(poolI
 }
 
 // tickToSqrtPrice a helper to convert a tick to a sqrt price.
-func (s *SwapTickCrossTestSuite) tickToSqrtPrice(tick int64) sdk.Dec {
+func (s *KeeperTestSuite) tickToSqrtPrice(tick int64) sdk.Dec {
 	_, sqrtPrice, err := math.TickToSqrtPrice(tick)
 	s.Require().NoError(err)
 	return sqrtPrice
@@ -76,7 +64,7 @@ func (s *SwapTickCrossTestSuite) tickToSqrtPrice(tick int64) sdk.Dec {
 
 // validateIteratorLeftZeroForOne is a helper to validate the next initialized tick iterator
 // in the left (zfo) direction of the swap.
-func (s *SwapTickCrossTestSuite) validateIteratorLeftZeroForOne(poolId uint64, expectedTick int64) {
+func (s *KeeperTestSuite) validateIteratorLeftZeroForOne(poolId uint64, expectedTick int64) {
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
@@ -94,7 +82,7 @@ func (s *SwapTickCrossTestSuite) validateIteratorLeftZeroForOne(poolId uint64, e
 
 // validateIteratorRightOneForZero is a helper to validate the next initialized tick iterator
 // in the right (ofz) direction of the swap.
-func (s *SwapTickCrossTestSuite) validateIteratorRightOneForZero(poolId uint64, expectedTick int64) {
+func (s *KeeperTestSuite) validateIteratorRightOneForZero(poolId uint64, expectedTick int64) {
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
@@ -112,7 +100,7 @@ func (s *SwapTickCrossTestSuite) validateIteratorRightOneForZero(poolId uint64, 
 }
 
 // assertPositionInRange a helper to assert that a position with the given lowerTick and upperTick is in range.
-func (s *SwapTickCrossTestSuite) assertPositionInRange(poolId uint64, lowerTick int64, upperTick int64) {
+func (s *KeeperTestSuite) assertPositionInRange(poolId uint64, lowerTick int64, upperTick int64) {
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
@@ -121,7 +109,7 @@ func (s *SwapTickCrossTestSuite) assertPositionInRange(poolId uint64, lowerTick 
 }
 
 // assertPositionOutOfRange a helper to assert that a position with the given lowerTick and upperTick is out of range.
-func (s *SwapTickCrossTestSuite) assertPositionOutOfRange(poolId uint64, lowerTick int64, upperTick int64) {
+func (s *KeeperTestSuite) assertPositionOutOfRange(poolId uint64, lowerTick int64, upperTick int64) {
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
@@ -131,7 +119,7 @@ func (s *SwapTickCrossTestSuite) assertPositionOutOfRange(poolId uint64, lowerTi
 
 // assertPositionRangeConditional a helper to assert that a position with the given lowerTick and upperTick is in or out of range
 // depending on the isOutOfRangeExpected flag.
-func (s *SwapTickCrossTestSuite) assertPositionRangeConditional(poolId uint64, isOutOfRangeExpected bool, lowerTick int64, upperTick int64) {
+func (s *KeeperTestSuite) assertPositionRangeConditional(poolId uint64, isOutOfRangeExpected bool, lowerTick int64, upperTick int64) {
 	if isOutOfRangeExpected {
 		s.assertPositionOutOfRange(poolId, lowerTick, upperTick)
 	} else {
@@ -141,7 +129,7 @@ func (s *SwapTickCrossTestSuite) assertPositionRangeConditional(poolId uint64, i
 
 // swapZeroForOneLeft swaps amount in the left (zfo) direction of the swap.
 // Asserts that no error is returned.
-func (s *SwapTickCrossTestSuite) swapZeroForOneLeft(poolId uint64, amount sdk.Coin) {
+func (s *KeeperTestSuite) swapZeroForOneLeft(poolId uint64, amount sdk.Coin) {
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
@@ -152,7 +140,7 @@ func (s *SwapTickCrossTestSuite) swapZeroForOneLeft(poolId uint64, amount sdk.Co
 
 // swapOneForZeroRight swaps amount in the right (ofz) direction of the swap.
 // Asserts that no error is returned.
-func (s *SwapTickCrossTestSuite) swapOneForZeroRight(poolId uint64, amount sdk.Coin) {
+func (s *KeeperTestSuite) swapOneForZeroRight(poolId uint64, amount sdk.Coin) {
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
@@ -167,7 +155,7 @@ func (s *SwapTickCrossTestSuite) swapOneForZeroRight(poolId uint64, amount sdk.C
 // t tick spacings away from the current tick.
 //
 // Returns the pool id and the narrow range position metadata.
-func (s *SwapTickCrossTestSuite) setupPoolAndPositions(testTickSpacing uint64, positionTickSpacingsFromCurrTick []uint64, initialCoins sdk.Coins) (uint64, []positionMeta) {
+func (s *KeeperTestSuite) setupPoolAndPositions(testTickSpacing uint64, positionTickSpacingsFromCurrTick []uint64, initialCoins sdk.Coins) (uint64, []positionMeta) {
 	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, testTickSpacing, sdk.ZeroDec())
 	poolId := pool.GetId()
 
@@ -203,7 +191,7 @@ func (s *SwapTickCrossTestSuite) setupPoolAndPositions(testTickSpacing uint64, p
 }
 
 // assertPoolLiquidityEquals a helper to assert that the liquidity of a pool is equal to the expected value.
-func (s *SwapTickCrossTestSuite) assertPoolLiquidityEquals(poolId uint64, expectedLiquidity sdk.Dec) {
+func (s *KeeperTestSuite) assertPoolLiquidityEquals(poolId uint64, expectedLiquidity sdk.Dec) {
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
@@ -211,7 +199,7 @@ func (s *SwapTickCrossTestSuite) assertPoolLiquidityEquals(poolId uint64, expect
 }
 
 // assertPoolTickEquals a helper to assert that the current tick of a pool is equal to the expected value.
-func (s *SwapTickCrossTestSuite) assertPoolTickEquals(poolId uint64, expectedTick int64) {
+func (s *KeeperTestSuite) assertPoolTickEquals(poolId uint64, expectedTick int64) {
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
@@ -227,7 +215,7 @@ func (s *SwapTickCrossTestSuite) assertPoolTickEquals(poolId uint64, expectedTic
 // bucket.
 //
 // Note, that this logic runs quote estimation. Our frontend logic runs a similar algorithm.
-func (s *SwapTickCrossTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice sdk.Dec, expectedTickToSwapTo int64, isZeroForOne bool, shouldStayWithinTheSameBucket bool) (sdk.Dec, sdk.Dec, sdk.Dec) {
+func (s *KeeperTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice sdk.Dec, expectedTickToSwapTo int64, isZeroForOne bool, shouldStayWithinTheSameBucket bool) (sdk.Dec, sdk.Dec, sdk.Dec) {
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
@@ -388,7 +376,7 @@ func (s *SwapTickCrossTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice 
 // tick we already crossed (be off by 1). As a result, inactive positions are treated as active
 // The solution is to avoid tick update if the swap state's tick is smaller than the tick computed
 // from the sqrt price. That is, if we already seen a further tick, we do not update it to an earlier one.
-func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() {
+func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() {
 	s.Setup()
 
 	// testCase defines the test case configuration
@@ -884,7 +872,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Cros
 // when there are contiguous ticks initialized on a swap range in a pool with tick spacing of 1.
 // For position layout, see diagram above the definition of defaultTickSpacingsAway variable.
 // For specific test vectors, follow the table-driven names below.
-func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickSpacingOne() {
+func (s *KeeperTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickSpacingOne() {
 	// defines an individual test case
 	type continugousTestCase struct {
 		// This defines how many ticks away from current the swap should reach
@@ -1076,7 +1064,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickS
 
 // TestSwapOutGivenIn_SwapToAllowedBoundaries tests edge case behavior of swapping
 // to min and max ticks.
-func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
+func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 	const shouldStayWithinTheSameBucket = false
 
 	var (
@@ -1177,7 +1165,7 @@ func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 // Then, it swaps to lower edge of one position and runs some assertion on the way
 // that liquidiy is calculated for that position as well as the adjacent position on the swap path.
 // It then repeats this for the other direction.
-func (s *SwapTickCrossTestSuite) TestSwapOutGivenIn_GetLiquidityFromAmountsPositionBounds() {
+func (s *KeeperTestSuite) TestSwapOutGivenIn_GetLiquidityFromAmountsPositionBounds() {
 	s.SetupTest()
 
 	// See definiton of defaultTickSpacingsAway for position layout diagram.
