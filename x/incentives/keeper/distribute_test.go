@@ -1147,8 +1147,9 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalGammGauge() {
 	s.FundModuleAcc(incentivetypes.ModuleName, requiredBalances)
 
 	// 2. Setup GAMM pool and gauge (gauge automatically gets created at the end of GAMM pool creation).
-	gammPoolId1 := s.PrepareBalancerPool() // creates internal lock gauge id = 1
-	gammPoolId2 := s.PrepareBalancerPool() // creates internal lock gauge id = 2
+	gammPoolId1 := s.PrepareBalancerPool() // creates internal lock gauge
+	gammPoolId2 := s.PrepareBalancerPool() // creates internal lock gauge
+	_ = s.PrepareBalancerPool()            // creates internal lock gauge
 
 	epochInfo := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx)
 	lockableDurations := s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)
@@ -1156,6 +1157,7 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalGammGauge() {
 	// 3. Create external lock gauges for CL pools
 	gammPoolExternalGaugeId, _, _, _ := s.setupNewGaugeWithDuration(true, externalGaugeCoins, lockableDurations[0], externalGaugeCoins[0].Denom)
 	gammPoolExternalGaugeId1, _, _, _ := s.setupNewGaugeWithDuration(false, externalGaugeCoins, lockableDurations[1], externalGaugeCoins[1].Denom)
+	gammPoolExternalGaugeId2, _, _, _ := s.setupNewGaugeWithDuration(true, externalGaugeCoins, lockableDurations[2], externalGaugeCoins[1].Denom)
 
 	// 4. Setup User locks
 	_ = s.SetupUserLocks([]userLocks{{
@@ -1167,7 +1169,7 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalGammGauge() {
 	}})
 
 	// 5. Create Distribution records to incentivize internal gamm lock gauges
-	s.IncentivizeInternalGaugeGamm(gammPoolId1, gammPoolId2, false)
+	s.IncentivizeInternalGaugeGamm([]uint64{gammPoolId1, gammPoolId2}, false)
 
 	// 5. let epoch 1 pass
 	// ******************** EPOCH 1 *********************
@@ -1179,61 +1181,60 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalGammGauge() {
 	// External gauges
 	s.ValidateDistributedGauge(gammPoolExternalGaugeId, 1, externalGaugeCoins)
 	s.ValidateDistributedGauge(gammPoolExternalGaugeId1, 1, halfOfExternalGaugeCoins)
+	s.ValidateDistributedGauge(gammPoolExternalGaugeId2, 1, externalGaugeCoins)
 
-	s.IncentivizeInternalGaugeGamm(gammPoolId1, gammPoolId2, true)
+	s.IncentivizeInternalGaugeGamm([]uint64{gammPoolId1, gammPoolId2}, true)
+
 	// 5. let epoch 2 pass
 	// ******************** EPOCH 2 *********************
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(epochInfo.Duration))
 	s.App.EpochsKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), 1)
 
 	s.ValidateDistributedGauge(gammPoolExternalGaugeId, 2, externalGaugeCoins)
+	s.ValidateDistributedGauge(gammPoolExternalGaugeId, 2, externalGaugeCoins)
+
+	s.ValidateDistributedGauge(gammPoolExternalGaugeId1, 2, externalGaugeCoins)
+	s.ValidateDistributedGauge(gammPoolExternalGaugeId, 2, externalGaugeCoins)
 	s.ValidateDistributedGauge(gammPoolExternalGaugeId1, 2, externalGaugeCoins)
 
+	// 5. let epoch 2 pass
+	// ******************** EPOCH 3 *********************
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(epochInfo.Duration))
+	s.App.EpochsKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), 1)
+
+	s.ValidateDistributedGauge(gammPoolExternalGaugeId, 2, externalGaugeCoins)
+	s.ValidateDistributedGauge(gammPoolExternalGaugeId1, 2, externalGaugeCoins)
 }
 
-func (s *KeeperTestSuite) IncentivizeInternalGaugeGamm(poolId1, poolId2 uint64, removeDistrRecord bool) {
+func (s *KeeperTestSuite) IncentivizeInternalGaugeGamm(poolIds []uint64, removeDistrRecord bool) {
 	var weight sdk.Int
 	if !removeDistrRecord {
 		weight = sdk.NewInt(166)
 	} else {
 		weight = sdk.ZeroInt()
 	}
-	gaugesForGammPool1, err := s.App.PoolIncentivesKeeper.GetGaugesForCFMMPool(s.Ctx, poolId1)
-	s.Require().NoError(err)
 
-	gaugesForGammPool2, err := s.App.PoolIncentivesKeeper.GetGaugesForCFMMPool(s.Ctx, poolId2)
-	s.Require().NoError(err)
+	var gaugeIds []uint64
+	var poolIncentiveRecords []poolincentivetypes.DistrRecord
+	for _, poolId := range poolIds {
+		gaugesForPoolId, err := s.App.PoolIncentivesKeeper.GetGaugesForCFMMPool(s.Ctx, poolId)
+		s.Require().NoError(err)
+
+		for _, gauge := range gaugesForPoolId {
+			gaugeIds = append(gaugeIds, gauge.GetId())
+			poolIncentiveRecords = append(poolIncentiveRecords, poolincentivetypes.DistrRecord{
+				GaugeId: gauge.GetId(),
+				Weight:  weight,
+			})
+		}
+
+	}
 
 	// incentivize both CL pools to recieve internal incentives
-	err = s.App.PoolIncentivesKeeper.HandleReplacePoolIncentivesProposal(s.Ctx, &poolincentivetypes.ReplacePoolIncentivesProposal{
+	err := s.App.PoolIncentivesKeeper.HandleReplacePoolIncentivesProposal(s.Ctx, &poolincentivetypes.ReplacePoolIncentivesProposal{
 		Title:       "",
 		Description: "",
-		Records: []poolincentivetypes.DistrRecord{
-			{
-				GaugeId: gaugesForGammPool1[0].Id,
-				Weight:  weight,
-			},
-			{
-				GaugeId: gaugesForGammPool1[1].Id,
-				Weight:  weight,
-			},
-			{
-				GaugeId: gaugesForGammPool1[2].Id,
-				Weight:  weight,
-			},
-			{
-				GaugeId: gaugesForGammPool2[0].Id,
-				Weight:  weight,
-			},
-			{
-				GaugeId: gaugesForGammPool2[1].Id,
-				Weight:  weight,
-			},
-			{
-				GaugeId: gaugesForGammPool2[2].Id,
-				Weight:  weight,
-			},
-		},
+		Records:     poolIncentiveRecords,
 	},
 	)
 	s.Require().NoError(err)
