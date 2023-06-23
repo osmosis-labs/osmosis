@@ -2898,17 +2898,27 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	}
 
 	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
-	liq = clPool.GetLiquidity()
+	liq_1 := clPool.GetLiquidity()
 	sqrtPriceCurr = clPool.GetCurrentSqrtPrice()
 	tokenInAmt = swapCoin0.Amount.Mul(sdk.NewInt(int64(positions.numSwaps))).ToDec()
 	spreadFactor = clPool.GetSpreadFactor(s.Ctx)
 	tokenInAfterSpreadFactors = tokenInAmt.Mul(sdk.OneDec().Sub(spreadFactor))
-	fmt.Println(tokenInAmt, spreadFactor, tokenInAfterSpreadFactors, liq)
+
+	// Range 1
+	tokenOut1 := liq_1.Mul(sqrtPriceCurr.Sub(sqrt4999)).TruncateInt()
+	tokenIn1 := liq_1.MulRoundUp(sqrtPriceCurr.Sub(sqrt4999).Quo(sqrt4999.Mul(sqrtPriceCurr)))
+
+	tokenIn := tokenInAfterSpreadFactors.Sub(tokenIn1)
 
 	// Swap multiple times ETH for USDC, therefore decreasing the spot price
 	_, _, totalTokenIn, totalTokenOut = s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin0, USDC, types.MinSpotPrice, positions.numSwaps)
 	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 	s.Require().NoError(err)
+
+	// Range 2
+	liq_2 := clPool.GetLiquidity()
+	sqrtNext2 := liq_2.Quo(liq_2.Quo(sqrt4999).Add(tokenIn))
+	tokenOut2 := liq_2.Mul(sqrt4999.Sub(sqrtNext2)).TruncateInt()
 
 	// Depiction of the pool after the swaps (from 5146 to 4990), decreasing the spot price
 	//								   <
@@ -2948,7 +2958,8 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	expectedSqrtPrice = osmomath.BigDecFromSDKDec(sqrtPriceCurr.Add(tokenInAfterSpreadFactors.Quo(liq)))
 	actualSqrtPrice = osmomath.BigDecFromSDKDec(clPool.GetCurrentSqrtPrice())
 	expectedTokenIn = swapCoin0.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
-	expectedTokenOut = liq.Mul(expectedSqrtPrice.SDKDec().Sub(sqrtPriceCurr)).Quo(sqrtPriceCurr.Mul(expectedSqrtPrice.SDKDec())).TruncateInt()
+	expectedTokenOut = tokenOut1.Add(tokenOut2)
+	fmt.Println(expectedTokenOut, totalTokenOut.Amount) // 5028381999 5028378430
 
 	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
 	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice))
