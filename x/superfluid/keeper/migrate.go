@@ -76,7 +76,8 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
 	}
-
+	fmt.Println("PRE MIGRATION SHARES: ", sharesToMigrate)
+	fmt.Println("PRE MIGRATION", preMigrationLock.Coins)
 	isPartialMigration := sharesToMigrate.Amount.LT(preMigrationLock.Coins[0].Amount)
 
 	// Get the validator address from the synth denom and ensure it is a valid address.
@@ -91,6 +92,7 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 	intermediateAccount := types.SuperfluidIntermediaryAccount{}
 	var gammLockToMigrate *lockuptypes.PeriodLock
 	if isPartialMigration {
+
 		// Note that lock's id is different from the originalLockId since it was split.
 		// The original lock id stays in gamm.
 		intermediateAccount, gammLockToMigrate, err = k.partialSuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), originalLockId, sharesToMigrate)
@@ -106,7 +108,8 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
 		}
 	}
-
+	fmt.Println("SHARES TO MIGRATE: ", sharesToMigrate)
+	fmt.Println("GAMM LOCK TO MIGRTE: ", gammLockToMigrate)
 	// Force unlock, validate the provided sharesToMigrate, and exit the balancer pool.
 	// This will return the coins that will be used to create the concentrated liquidity position.
 	// It also returns the lock object that contains the remaining shares that were not used in this migration.
@@ -114,12 +117,20 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
 	}
-
+	fmt.Println("EXIT COIN: ", exitCoins)
 	// Create a full range (min to max tick) concentrated liquidity position, lock it, and superfluid delegate it.
 	positionId, amount0, amount1, liquidity, concentratedLockId, err = k.clk.CreateFullRangePositionLocked(ctx, poolIdEntering, sender, exitCoins, remainingLockTime)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
 	}
+
+	clLock, err := k.lk.GetLockByID(ctx, concentratedLockId)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
+	}
+	fmt.Println("POST MIGRATION SHARES: ", exitCoins)
+	fmt.Println("POST MIGRATION", clLock.Coins)
+
 	// TODO @stack, if someone migrates delegated position -> undelegates (but still locked) -> can they get their tokens back?
 	err = k.SuperfluidDelegate(ctx, sender.String(), concentratedLockId, intermediateAccount.ValAddr)
 	if err != nil {

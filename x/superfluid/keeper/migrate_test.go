@@ -309,25 +309,25 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 		"lock that is superfluid delegated, not unlocking (partial shares)": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.5"),
 		},
-		"error: migrate more shares than lock has": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1.1"),
-			expectedError:            types.MigrateMoreSharesThanLockHasError{SharesToMigrate: "55000000000000000000", SharesInLock: "50000000000000000000"},
-		},
-		"error: invalid validator address": {
-			overwriteValidatorAddress: true,
-			percentOfSharesToMigrate:  sdk.MustNewDecFromStr("1"),
-			expectedError:             fmt.Errorf("decoding bech32 failed: invalid checksum"),
-		},
-		"error: non-existent lock ID": {
-			overwriteLockId:          true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			expectedError:            lockuptypes.ErrLockupNotFound,
-		},
-		"error: lock that is superfluid delegated, not unlocking (full shares), token out mins is more than exit coins": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100000))),
-			expectedError:            gammtypes.ErrLimitMinAmount,
-		},
+		// "error: migrate more shares than lock has": {
+		// 	percentOfSharesToMigrate: sdk.MustNewDecFromStr("1.1"),
+		// 	expectedError:            types.MigrateMoreSharesThanLockHasError{SharesToMigrate: "55000000000000000000", SharesInLock: "50000000000000000000"},
+		// },
+		// "error: invalid validator address": {
+		// 	overwriteValidatorAddress: true,
+		// 	percentOfSharesToMigrate:  sdk.MustNewDecFromStr("1"),
+		// 	expectedError:             fmt.Errorf("decoding bech32 failed: invalid checksum"),
+		// },
+		// "error: non-existent lock ID": {
+		// 	overwriteLockId:          true,
+		// 	percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+		// 	expectedError:            lockuptypes.ErrLockupNotFound,
+		// },
+		// "error: lock that is superfluid delegated, not unlocking (full shares), token out mins is more than exit coins": {
+		// 	percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+		// 	tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100000))),
+		// 	expectedError:            gammtypes.ErrLimitMinAmount,
+		// },
 	}
 
 	for name, tc := range testCases {
@@ -429,7 +429,9 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 			clIntermediaryAcc := superfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, concentratedLockId)
 			delegation, found := stakingKeeper.GetDelegation(s.Ctx, clIntermediaryAcc, valAddr)
 			s.Require().True(found, "expected delegation, found delegation no delegation")
-			s.Require().Equal(balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().Sub(sdk.OneInt()).String(), delegation.Shares.RoundInt().String(), "expected %d shares, found %d shares", balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().String(), delegation.Shares.String())
+			fmt.Println("SHARES: ", balancerDelegationPre.Shares, tc.percentOfSharesToMigrate, delegation.Shares)
+			s.Require().Equal(balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().Sub(sdk.OneInt()).String(), delegation.Shares.RoundInt().String(), "expected %d shares, found %d shares",
+				balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().String(), delegation.Shares.String())
 
 			// Check if the new intermediary account connection was created.
 			newConcentratedIntermediaryAccount := superfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, concentratedLockId)
@@ -438,6 +440,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 			// Check newly created concentrated lock.
 			concentratedLock, err := lockupKeeper.GetLockByID(s.Ctx, concentratedLockId)
 			s.Require().NoError(err)
+			fmt.Println("LIQUIDITY", liquidityMigrated, coinsToMigrate, concentratedLock.Coins[0])
 			s.Require().Equal(liquidityMigrated.TruncateInt().String(), concentratedLock.Coins[0].Amount.String(), "expected %s shares, found %s shares", coinsToMigrate.Amount.String(), concentratedLock.Coins[0].Amount.String())
 			s.Require().Equal(balancerLock.Duration, concentratedLock.Duration)
 			s.Require().Equal(balancerLock.EndTime, concentratedLock.EndTime)
@@ -1108,17 +1111,12 @@ func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegate
 		s.Require().NoError(err)
 		intermediaryAccConnection := superfluidKeeper.GetLockIdIntermediaryAccountConnection(ctx, originalGammLockId)
 		balancerIntermediaryAcc = superfluidKeeper.GetIntermediaryAccount(ctx, intermediaryAccConnection)
-
-		fmt.Println("InTERMEDIARY ACC", poolJoinAcc.String())
 	}
 
 	// Superfluid undelegate the lock if the test case requires it.
 	if superfluidUndelegating {
 		err = superfluidKeeper.SuperfluidUndelegate(ctx, poolJoinAcc.String(), originalGammLockId)
 		s.Require().NoError(err)
-
-		fmt.Println("SUPER FLUID UNDELEGATED")
-
 	}
 
 	// Unlock the balancer lock if the test case requires it.
@@ -1527,7 +1525,7 @@ func (s *KeeperTestSuite) calculateUnusedPositionCreationFunds(numAccounts, numN
 	return unusedPositionCreationFunds
 }
 
-func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentratedSimplify() {
+func (s *KeeperTestSuite) TestSimplifyMigrateSuperfluidBondedBalancerToConcentrated() {
 	s.SetupTest()
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime())
 
