@@ -382,15 +382,6 @@ func (k Keeper) computeOutAmtGivenIn(
 				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 			}
 			swapState.tick = newTick
-
-			// if swapState.liquidity.IsPositive() && amountIn.IsZero() && !swapState.amountSpecifiedRemaining.IsZero() {
-			// 	return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, types.UnableToProgressSwapStep{
-			// 		Tick:              nextInitializedTick,
-			// 		SqrtPriceCur:      swapState.sqrtPrice,
-			// 		SqrtPriceNext:     computedSqrtPrice,
-			// 		AmountInRemaining: swapState.amountSpecifiedRemaining,
-			// 	}
-			// }
 		}
 	}
 
@@ -514,15 +505,6 @@ func (k Keeper) computeInAmtGivenOut(
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 			}
-
-			// if swapState.liquidity.IsPositive() && amountOut.IsZero() && !swapState.amountSpecifiedRemaining.IsZero() {
-			// 	return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, types.UnableToProgressSwapStep{
-			// 		Tick:              nextInitializedTick,
-			// 		SqrtPriceCur:      swapState.sqrtPrice,
-			// 		SqrtPriceNext:     computedSqrtPrice,
-			// 		AmountInRemaining: swapState.amountSpecifiedRemaining,
-			// 	}
-			// }
 		}
 	}
 
