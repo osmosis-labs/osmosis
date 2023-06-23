@@ -1512,18 +1512,56 @@ func (s *KeeperTestSuite) TestSimplifyMigrateUnlockedPositionFromBalancerToConce
 	s.SetupTest()
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime())
 
-	// Setup locked LP shares
-	joinPoolAmt, balancerIntermediaryAcc, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := s.SetupMigrationTest(s.Ctx, false, false, false, false, sdk.OneDec())
+	delAddrs := CreateRandomAccounts(2)
+	poolCreateAcc := delAddrs[0]
+	poolJoinAcc := delAddrs[1]
+	for _, acc := range delAddrs {
+		err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, defaultAcctFunds)
+		s.Require().NoError(err)
+	}
 
-	fmt.Println("***************************")
-	fmt.Println("joinPoolAmt: ", joinPoolAmt)
-	fmt.Println("balancerIntermediaryAcc: ", balancerIntermediaryAcc)
-	fmt.Println("balancerLock: ", balancerLock)
-	fmt.Println("poolJoinAcc: ", poolJoinAcc)
-	fmt.Println("balancerPooId: ", balancerPooId)
-	fmt.Println("clPoolId: ", clPoolId)
-	fmt.Println("balancerPoolShareOut: ", balancerPoolShareOut)
-	fmt.Println("valAddr", valAddr)
+	//1. pool with 2 denom: foo and stake
+	msg := balancer.NewMsgCreateBalancerPool(poolCreateAcc, balancer.PoolParams{
+		SwapFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.NewDec(0),
+	}, defaultPoolAssets, defaultFutureGovernor)
+	balancerPooId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, msg)
+	s.Require().NoError(err)
+
+	//2. Join the Pool
+	balanceBeforeJoin := s.App.BankKeeper.GetAllBalances(s.Ctx, poolJoinAcc)
+	_, _, err = s.App.GAMMKeeper.JoinPoolNoSwap(s.Ctx, poolJoinAcc, balancerPooId, gammtypes.OneShare.MulRaw(50), sdk.Coins{})
+	s.Require().NoError(err)
+	balanceAfterJoin := s.App.BankKeeper.GetAllBalances(s.Ctx, poolJoinAcc)
+
+	// Determine the balancer pool's LP token denomination.
+	balancerPoolDenom := gammtypes.GetPoolShareDenom(balancerPooId)
+
+	// Note how much of the balancer pool's LP token the account that joined the pool has.
+	balancerPoolShareOut := s.App.BankKeeper.GetBalance(s.Ctx, poolJoinAcc, balancerPoolDenom)
+
+	//3. link cannonical CL Pool
+	// Create a cl pool with the same underlying assets as the balancer pool (with  foo and stake)
+	clPool := s.PrepareCustomConcentratedPool(poolCreateAcc, defaultPoolAssets[0].Token.Denom, defaultPoolAssets[1].Token.Denom, 1, sdk.ZeroDec())
+	clPoolId := clPool.GetId()
+
+	// Add a gov sanctioned link between the balancer and concentrated liquidity pool.
+	migrationRecord := gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
+		{BalancerPoolId: balancerPooId, ClPoolId: clPoolId},
+	}}
+	s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, migrationRecord)
+
+	fmt.Println("BEFORE JOIN BALANCE: ", balanceBeforeJoin)
+	fmt.Println("BALANCE AFTER JOIN: ", balanceAfterJoin)
+	fmt.Println("BALANCER POOL SHARE OUT: ", balancerPoolShareOut)
+
+	// 4. Lock the LP shares
+	unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
+	originalGammLockId := s.LockTokens(poolJoinAcc, sdk.NewCoins(balancerPoolShareOut), unbondingDuration)
+	balancerLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, originalGammLockId)
+	s.Require().NoError(err)
+
+	fmt.Println("BALANCER LOCK: ", balancerLock)
 
 	// System under test.
 	// attempting to run this with locked LP shares
@@ -1539,4 +1577,19 @@ func (s *KeeperTestSuite) TestSimplifyMigrateUnlockedPositionFromBalancerToConce
 	fmt.Println("poolIdEntering: ", poolIdEntering)
 	fmt.Println("***************************")
 
+	balanceAfterMigration := s.App.BankKeeper.GetAllBalances(s.Ctx, poolJoinAcc)
+	fmt.Println("BALANCE AFTER MIGRATION", balanceAfterMigration)
+
+	balancerLockAfterMigration, err := s.App.LockupKeeper.GetLockByID(s.Ctx, originalGammLockId)
+	s.Require().NoError(err)
+
+	fmt.Println("BALANCER LOCK AFTER MIGRATION", balancerLockAfterMigration)
+
+	_, _, _, _, _, _, _, err = s.App.SuperfluidKeeper.MigrateNonSuperfluidLockBalancerToConcentrated(s.Ctx, poolJoinAcc, originalGammLockId, balancerPoolShareOut, sdk.NewCoins())
+	s.Require().NoError(err)
+
+	positions, err := s.App.ConcentratedLiquidityKeeper.GetUserPositions(s.Ctx, poolJoinAcc, clPoolId)
+	s.Require().NoError(err)
+
+	fmt.Println("POSITIONS: ", positions)
 }
