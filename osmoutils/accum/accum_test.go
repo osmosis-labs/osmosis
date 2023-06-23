@@ -1685,8 +1685,6 @@ func (suite *AccumTestSuite) TestAddToUnclaimedRewards() {
 
 	for name, tc := range tests {
 		suite.Run(name, func() {
-
-			// Setup
 			err := accObject.NewPositionIntervalAccumulation(validPositionName, sdk.OneDec(), initialCoinsDenomOne, nil)
 			suite.Require().NoError(err)
 
@@ -1746,7 +1744,6 @@ func (suite *AccumTestSuite) TestDeletePosition() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		suite.Run(name, func() {
 			suite.SetupTest()
 
