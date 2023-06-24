@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
@@ -104,12 +105,17 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 
 		// sqrt price is amount 1 / amount 0
 		// How many tokens 1 do we need to get 1 token 0?
+
 		priceOneOverZero := sqrtPriceCurrent.MulRoundUp(sqrtPriceCurrent)
 
 		// how many tokens 0 do we get for 1 token 1?
-		priceZeroOverOne := sdk.OneDec().QuoTruncate(priceOneOverZero)
+		priceZeroOverOne := osmomath.OneDec().QuoTruncate(osmomath.BigDecFromSDKDec(priceOneOverZero))
 
-		amountZeroOut = amountOneIn.Mul(priceZeroOverOne)
+		if priceZeroOverOne.IsZero() {
+			panic("priceZeroOverOne is zero")
+		}
+
+		amountZeroOut = osmomath.BigDecFromSDKDec(amountOneIn).MulTruncate(priceZeroOverOne).SDKDec()
 	}
 
 	return sqrtPriceNext, amountOneIn, amountZeroOut, spreadRewardChargeTotal
