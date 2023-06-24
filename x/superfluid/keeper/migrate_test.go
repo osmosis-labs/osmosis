@@ -411,8 +411,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 			clIntermediaryAcc := superfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, concentratedLockId)
 			delegation, found := stakingKeeper.GetDelegation(s.Ctx, clIntermediaryAcc, valAddr)
 			s.Require().True(found, "expected delegation, found delegation no delegation")
-			s.Require().Equal(balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().Sub(sdk.OneInt()).String(), delegation.Shares.RoundInt().String(), "expected %d shares, found %d shares",
-				balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().String(), delegation.Shares.String())
+			s.Require().Equal(balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().Sub(sdk.OneInt()).String(), delegation.Shares.RoundInt().String(), "expected %d shares, found %d shares", balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().String(), delegation.Shares.String())
 
 			// Check if the new intermediary account connection was created.
 			newConcentratedIntermediaryAccount := superfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, concentratedLockId)
@@ -421,8 +420,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 			// Check newly created concentrated lock.
 			concentratedLock, err := lockupKeeper.GetLockByID(s.Ctx, concentratedLockId)
 			s.Require().NoError(err)
-			// ? This is off by one 5000 -> 4999
-			fmt.Println("LIQUIDITY", liquidityMigrated, coinsToMigrate, concentratedLock.Coins[0])
+
 			s.Require().Equal(liquidityMigrated.TruncateInt().String(), concentratedLock.Coins[0].Amount.String(), "expected %s shares, found %s shares", coinsToMigrate.Amount.String(), concentratedLock.Coins[0].Amount.String())
 			s.Require().Equal(balancerLock.Duration, concentratedLock.Duration)
 			s.Require().Equal(balancerLock.EndTime, concentratedLock.EndTime)

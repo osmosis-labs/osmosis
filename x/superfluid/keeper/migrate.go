@@ -56,7 +56,6 @@ func (k Keeper) RouteLockedBalancerToConcentratedMigration(ctx sdk.Context, send
 	case NonSuperfluid:
 		positionId, amount0, amount1, liquidity, concentratedLockId, poolIdLeaving, poolIdEntering, err = k.migrateNonSuperfluidLockBalancerToConcentrated(ctx, sender, lockId, sharesToMigrate, tokenOutMins)
 	case Unlocked:
-		fmt.Println("unlocked case")
 		positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, err = k.gk.MigrateUnlockedPositionFromBalancerToConcentrated(ctx, sender, sharesToMigrate, tokenOutMins)
 		concentratedLockId = 0
 	default:
