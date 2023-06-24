@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -16,6 +17,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/initialization"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/util"
 
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -531,4 +533,153 @@ func GetPositionID(responseJson map[string]interface{}) (string, error) {
 	}
 
 	return "", fmt.Errorf("position_id field not found in response")
+}
+
+func (n *NodeConfig) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
+	n.t.Logf("IBC sending %s from %s to %s (%s)", token, n.chainId, dstChain.Id, recipient)
+
+	dstNode, err := dstChain.GetDefaultNode()
+	require.NoError(n.t, err)
+
+	// removes the fee token from balances for calculating the difference in other tokens
+	// before and after the IBC send. Since we run tests in parallel now, some tests may
+	// send uosmo between accounts while this test is running. Since we don't care about
+	// non ibc denoms, its safe to filter uosmo out.
+	removeFeeTokenFromBalance := func(balance sdk.Coins) sdk.Coins {
+		filteredCoinDenoms := []string{}
+		for _, coin := range balance {
+			if !strings.HasPrefix(coin.Denom, "ibc/") {
+				filteredCoinDenoms = append(filteredCoinDenoms, coin.Denom)
+			}
+		}
+		feeRewardTokenBalance := balance.FilterDenoms(filteredCoinDenoms)
+		return balance.Sub(feeRewardTokenBalance)
+	}
+
+	balancesDstPreWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
+	require.NoError(n.t, err)
+	fmt.Println("balancesDstPre with no fee removed: ", balancesDstPreWithTxFeeBalance)
+	balancesDstPre := removeFeeTokenFromBalance(balancesDstPreWithTxFeeBalance)
+	cmd := []string{"hermes", "tx", "ft-transfer", "--dst-chain", dstChain.Id, "--src-chain", n.chainId, "--src-port", "transfer", "--src-channel", "channel-0", "--amount", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000"}
+	_, _, err = n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
+	require.NoError(n.t, err)
+	fmt.Println("IBC send successful after exec ADAM")
+
+	require.Eventually(
+		n.t,
+		func() bool {
+			fmt.Println("IBC send successful in eventual loop ADAM")
+			balancesDstPostWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
+			require.NoError(n.t, err)
+			fmt.Println("balancesDstPost with no fee removed: ", balancesDstPostWithTxFeeBalance)
+
+			balancesDstPost := removeFeeTokenFromBalance(balancesDstPostWithTxFeeBalance)
+
+			fmt.Println("balancesDstPost with fee removed: ", balancesDstPost)
+
+			fmt.Println("balancesDstPre with fee removed: ", balancesDstPre)
+
+			ibcCoin := balancesDstPost.Sub(balancesDstPre)
+			if ibcCoin.Len() == 1 {
+				tokenPre := balancesDstPre.AmountOfNoDenomValidation(ibcCoin[0].Denom)
+				fmt.Println("tokenPre: ", tokenPre)
+				tokenPost := balancesDstPost.AmountOfNoDenomValidation(ibcCoin[0].Denom)
+				resPre := token.Amount
+				resPost := tokenPost.Sub(tokenPre)
+				return resPost.Uint64() == resPre.Uint64()
+			} else {
+				return false
+			}
+		},
+		5*time.Minute,
+		time.Second,
+		"tx not received on destination chain",
+	)
+
+	n.t.Log("successfully sent IBC tokens")
+}
+
+func (n *NodeConfig) EnableSuperfluidAsset(srcChain *Config, denom string) {
+	srcNode, err := srcChain.GetDefaultNode()
+	require.NoError(n.t, err)
+	srcNode.SubmitSuperfluidProposal(denom, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+	srcChain.LatestProposalNumber += 1
+	propNumber := srcChain.LatestProposalNumber
+	srcNode.DepositProposal(propNumber, false)
+	for _, node := range srcChain.NodeConfigs {
+		node.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
+	}
+}
+
+func (n *NodeConfig) LockAndAddToExistingLock(srcChain *Config, amount sdk.Int, denom, lockupWalletAddr, lockupWalletSuperfluidAddr string) {
+	srcNode, err := srcChain.GetDefaultNode()
+	require.NoError(n.t, err)
+
+	// lock tokens
+	srcNode.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletAddr)
+	srcChain.LatestLockNumber += 1
+	fmt.Println("lock number: ", srcChain.LatestLockNumber)
+	// add to existing lock
+	srcNode.AddToExistingLock(amount, denom, "240s", lockupWalletAddr)
+
+	// superfluid lock tokens
+	srcNode.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletSuperfluidAddr)
+	srcChain.LatestLockNumber += 1
+	fmt.Println("lock number: ", srcChain.LatestLockNumber)
+	srcNode.SuperfluidDelegate(srcChain.LatestLockNumber, srcChain.NodeConfigs[1].OperatorAddress, lockupWalletSuperfluidAddr)
+	// add to existing lock
+	srcNode.AddToExistingLock(amount, denom, "240s", lockupWalletSuperfluidAddr)
+}
+
+func (n *NodeConfig) SetupRateLimiting(paths, gov_addr string, chain *Config) (string, error) {
+	srcNode, err := chain.GetDefaultNode()
+	require.NoError(n.t, err)
+
+	// copy the contract from x/rate-limit/testdata/
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	// go up two levels
+	projectDir := filepath.Dir(filepath.Dir(wd))
+	fmt.Println(wd, projectDir)
+	_, err = util.CopyFile(projectDir+"/x/ibc-rate-limit/bytecode/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
+	if err != nil {
+		return "", err
+	}
+
+	srcNode.StoreWasmCode("rate_limiter.wasm", srcNode.PublicAddress)
+	chain.LatestCodeId = int(srcNode.QueryLatestWasmCodeID())
+	latestCodeId := chain.LatestCodeId
+	srcNode.InstantiateWasmContract(
+		strconv.Itoa(latestCodeId),
+		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [%s] }`, gov_addr, srcNode.PublicAddress, paths),
+		srcNode.PublicAddress)
+
+	contracts, err := srcNode.QueryContractsFromId(latestCodeId)
+	if err != nil {
+		return "", err
+	}
+
+	contract := contracts[len(contracts)-1]
+
+	err = chain.SubmitParamChangeProposal(
+		ibcratelimittypes.ModuleName,
+		string(ibcratelimittypes.KeyContractAddress),
+		[]byte(fmt.Sprintf(`"%s"`, contract)),
+	)
+	if err != nil {
+		return "", err
+	}
+	require.Eventually(
+		n.t,
+		func() bool {
+			val := srcNode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+			return strings.Contains(val, contract)
+		},
+		1*time.Minute,
+		10*time.Millisecond,
+	)
+	fmt.Println("contract address set to", contract)
+	return contract, nil
 }

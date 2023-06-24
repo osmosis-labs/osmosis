@@ -126,11 +126,11 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	// Create DAI/OSMO pool from v16 migration testing with superfluid enabled.
 	config.DaiOsmoPoolIdv16 = chainANode.CreateBalancerPool("daiosmov16.json", initialization.ValidatorWalletName)
 	daiOsmoShareDenom := fmt.Sprintf("gamm/pool/%d", config.DaiOsmoPoolIdv16)
-	chainA.EnableSuperfluidAsset(daiOsmoShareDenom)
+	chainANode.EnableSuperfluidAsset(chainA, daiOsmoShareDenom)
 
 	// Do the same for chain b.
 	chainBNode.CreateBalancerPool("daiosmov16.json", initialization.ValidatorWalletName)
-	chainA.EnableSuperfluidAsset(daiOsmoShareDenom)
+	chainANode.EnableSuperfluidAsset(chainA, daiOsmoShareDenom)
 
 	config.PreUpgradePoolId = chainANode.CreateBalancerPool("pool1A.json", initialization.ValidatorWalletName)
 	poolShareDenom := fmt.Sprintf("gamm/pool/%d", config.PreUpgradePoolId)
@@ -139,7 +139,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	chainBNode.CreateStableswapPool("stablePool.json", initialization.ValidatorWalletName)
 
 	// enable superfluid assets on chainA
-	chainA.EnableSuperfluidAsset(poolShareDenom)
+	chainANode.EnableSuperfluidAsset(chainA, poolShareDenom)
 
 	// Setup wallets and send tokens to wallets (only chainA)
 	config.LockupWallet = chainANode.CreateWalletAndFund(config.LockupWallet, []string{
@@ -157,17 +157,17 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	// Upload the rate limiting contract to both chains (as they both will be updated)
 	uc.t.Logf("Uploading rate limiting contract to both chains")
-	_, err = chainA.SetupRateLimiting("", chainANode.QueryGovModuleAccount())
+	_, err = chainANode.SetupRateLimiting("", chainANode.QueryGovModuleAccount(), chainA)
 	if err != nil {
 		return err
 	}
-	_, _ = chainB.SetupRateLimiting("", chainBNode.QueryGovModuleAccount())
+	_, _ = chainBNode.SetupRateLimiting("", chainBNode.QueryGovModuleAccount(), chainB)
 	if err != nil {
 		return err
 	}
 
 	// test lock and add to existing lock for both regular and superfluid lockups (only chainA)
-	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), poolShareDenom, config.LockupWallet, config.LockupWalletSuperfluid)
+	chainANode.LockAndAddToExistingLock(chainA, sdk.NewInt(1000000000000000000), poolShareDenom, config.LockupWallet, config.LockupWalletSuperfluid)
 
 	return nil
 }

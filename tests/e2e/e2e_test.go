@@ -928,13 +928,14 @@ func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 	}
 	chainA := s.GetChainAConfig0()
 	chainB := s.GetChainBConfig1()
-	fmt.Println("Sending IBC tokens IBCTokenTransferAndCreatePool")
-	chainA.SendIBC(chainB, chainB.NodeConfigs[1].PublicAddress, initialization.OsmoToken)
-	chainB.SendIBC(chainA, chainA.NodeConfigs[1].PublicAddress, initialization.OsmoToken)
-	chainA.SendIBC(chainB, chainB.NodeConfigs[1].PublicAddress, initialization.StakeToken)
-	chainB.SendIBC(chainA, chainA.NodeConfigs[1].PublicAddress, initialization.StakeToken)
-
 	chainANode := s.GetDefaultNodeMutex()
+	chainBNode := s.GetDefaultNodeBMutex()
+	fmt.Println("Sending IBC tokens IBCTokenTransferAndCreatePool")
+	chainANode.SendIBC(chainB, chainB.NodeConfigs[1].PublicAddress, initialization.OsmoToken)
+	chainBNode.SendIBC(chainA, chainA.NodeConfigs[1].PublicAddress, initialization.OsmoToken)
+	chainANode.SendIBC(chainB, chainB.NodeConfigs[1].PublicAddress, initialization.StakeToken)
+	chainBNode.SendIBC(chainA, chainA.NodeConfigs[1].PublicAddress, initialization.StakeToken)
+
 	chainANode.CreateBalancerPool("ibcDenomPool.json", initialization.ValidatorWalletName)
 }
 
@@ -952,7 +953,7 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 	poolId := chainANode.CreateBalancerPool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
 
 	// enable superfluid assets
-	chainA.EnableSuperfluidAsset(fmt.Sprintf("gamm/pool/%d", poolId))
+	chainANode.EnableSuperfluidAsset(chainA, fmt.Sprintf("gamm/pool/%d", poolId))
 
 	// setup wallets and send gamm tokens to these wallets (both chains)
 	superfluidVotingWallet := chainANode.CreateWallet("TestSuperfluidVoting")
@@ -1140,9 +1141,9 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 
 	// Sending >1%
 	fmt.Println("Sending >1%")
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
+	node.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
 
-	contract, err := chainA.SetupRateLimiting(paths, chainA.NodeConfigs[0].PublicAddress)
+	contract, err := node.SetupRateLimiting(paths, chainA.NodeConfigs[0].PublicAddress, chainA)
 	s.Require().NoError(err)
 
 	s.Eventually(
@@ -1157,7 +1158,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 
 	// Sending <1%. Should work
 	fmt.Println("Sending <1%. Should work")
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
+	node.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
 	// Sending >1%. Should fail
 	fmt.Println("Sending >1%. Should fail")
 	node.FailIBCTransfer(initialization.ValidatorWalletName, chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(over)))
@@ -1191,11 +1192,9 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 		s.T().Skip("Skipping IBC tests")
 	}
 	chainA := s.GetChainAConfig0()
-	chainB := s.GetChainBConfig1()
 
 	nodeA := s.GetDefaultNodeMutex()
-	nodeB, err := chainB.GetDefaultNode()
-	s.NoError(err)
+	nodeB := s.GetDefaultNodeBMutex()
 
 	contractAddr := s.UploadAndInstantiateCounter(chainA)
 
@@ -1326,7 +1325,7 @@ func (s *IntegrationTestSuite) AddToExistingLock() {
 	// ensure we can add to new locks and superfluid locks
 	// create pool and enable superfluid assets
 	poolId := chainANode.CreateBalancerPool("nativeDenomPool.json", funder)
-	chainA.EnableSuperfluidAsset(fmt.Sprintf("gamm/pool/%d", poolId))
+	chainANode.EnableSuperfluidAsset(chainA, fmt.Sprintf("gamm/pool/%d", poolId))
 
 	// setup wallets and send gamm tokens to these wallets on chainA
 	gammShares := fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId)
@@ -1335,7 +1334,7 @@ func (s *IntegrationTestSuite) AddToExistingLock() {
 	lockupWalletSuperfluidAddr := chainANode.CreateWalletAndFundFrom("TestAddToExistingLockSuperfluid", funder, fundTokens)
 
 	// ensure we can add to new locks and superfluid locks on chainA
-	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId), lockupWalletAddr, lockupWalletSuperfluidAddr)
+	chainANode.LockAndAddToExistingLock(chainA, sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId), lockupWalletAddr, lockupWalletSuperfluidAddr)
 }
 
 // TestArithmeticTWAP tests TWAP by creating a pool, performing a swap.
