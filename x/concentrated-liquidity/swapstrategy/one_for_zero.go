@@ -87,6 +87,23 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 	// Note that spread reward is always charged on the amount in.
 	spreadRewardChargeTotal := computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget, amountOneIn, amountOneInRemaining, s.spreadFactor)
 
+	fmt.Println("amountOneIn", amountOneIn)
+	fmt.Println("amountOneInRemaining", amountOneInRemaining)
+	fmt.Println("sqrtPriceCurrent", sqrtPriceCurrent)
+	fmt.Println("sqrtPriceNext", sqrtPriceNext)
+
+	// This covers an edge case where due to the lack of precision, the difference between the current sqrt price and the next sqrt price is so small that
+	// it ends up being rounded down to zero. This leads to an infinite loop in the swap algorithm. From knowing that this is a case where !hasReachedTarget,
+	//(that is the swap stops within a bucket), we charge the full amount remaining in to the user and infer the amount out from the sqrt price truncated
+	// in favor of the pool.
+	if !hasReachedTarget && sqrtPriceCurrent.Equal(sqrtPriceNext) && amountOneIn.IsZero() && !amountOneInRemaining.IsZero() {
+		amountOneIn = amountOneInRemaining
+		// Subtract 1 ULP so that the amount out is rounded in favor of the pool.
+		// TODO: figure out precision difference in the denominations of two tokens,
+		// leading to incorrect spot price in out core logic.
+		amountZeroOut = sqrtPriceCurrent.Sub(oneULP).PowerMut(2)
+	}
+
 	return sqrtPriceNext, amountOneIn, amountZeroOut, spreadRewardChargeTotal
 }
 
@@ -144,6 +161,22 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, 
 	// Handle spread rewards.
 	// Note that spread reward is always charged on the amount in.
 	spreadRewardChargeTotal := computeSpreadRewardChargeFromAmountIn(amountOneIn, s.spreadFactor)
+
+	fmt.Println("amountOneIn", amountOneIn)
+	fmt.Println("amountOneInRemaining", amountZeroRemainingOut)
+	fmt.Println("sqrtPriceCurrent", sqrtPriceCurrent)
+	fmt.Println("sqrtPriceNext", sqrtPriceNext)
+
+	// This covers an edge case where due to the lack of precision, the difference between the current sqrt price and the next sqrt price is so small that
+	// it ends up being rounded down to zero. This leads to an infinite loop in the swap algorithm. From knowing that this is a case where !hasReachedTarget,
+	// (that is the swap stops within a bucket), we charge the full amount remaining in to the user and infer the amount in from calculation where the next
+	// sqrt price is increased by one ULP.
+	if !hasReachedTarget && sqrtPriceCurrent.Equal(sqrtPriceNext) && amountOneIn.IsZero() && !amountZeroRemainingOut.IsZero() {
+		// Up charge amount one in in favor of the pool by adding 1 ULP to the next sqrt price.
+		amountOneIn = math.CalcAmount1Delta(liquidity, sqrtPriceNext.Add(oneULP), sqrtPriceCurrent, true)
+		// Consume the full remaining amount out to stop the swap.
+		amountZeroOut = amountZeroRemainingOut
+	}
 
 	return sqrtPriceNext, amountZeroOut, amountOneIn, spreadRewardChargeTotal
 }
