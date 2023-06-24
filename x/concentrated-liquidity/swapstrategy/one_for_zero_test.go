@@ -163,10 +163,27 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			expectedAmountOut:               sdk.ZeroDec(),
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
 		},
-		"7: zero invalid zero difference between sqrt price current and sqrt price next due to precision loss, full amount remaining in is charged and amount out calculated from sqrt price": {
+		"7: invalid zero difference between sqrt price current and sqrt price next due to precision loss, full amount remaining in is charged and amount out calculated from sqrt price": {
 			// Note the numbers are hand-picked to reproduce this specific case.
 			sqrtPriceCurrent: sdk.MustNewDecFromStr("0.000001000049998750"),
 			sqrtPriceTarget:  sdk.MustNewDecFromStr("0.000001000049998751"),
+			liquidity:        sdk.MustNewDecFromStr("100002498062401598791.937822606808718081"),
+
+			amountOneInRemaining: sdk.NewDec(99),
+			spreadFactor:         sdk.ZeroDec(),
+
+			expectedSqrtPriceNext: sdk.MustNewDecFromStr("0.000001000049998750"),
+
+			expectedAmountInConsumed: sdk.NewDec(99),
+			// (sqrt price - 1 ULP)^2
+			// TODO: review
+			expectedAmountOut:               sdk.NewDec(99).MulTruncate(sdk.OneDec().Quo(sdk.MustNewDecFromStr("0.000001000049998750").Sub(sdk.SmallestDec()).PowerMut(2))),
+			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
+		},
+		"8: invalid zero difference between sqrt price current and sqrt price next due to precision loss, full amount remaining in is charged and amount out calculated from sqrt price (near max sqrt price)": {
+			// Note the numbers are hand-picked to reproduce this specific case.
+			sqrtPriceCurrent: types.MaxSqrtPrice.Sub(sdk.SmallestDec()),
+			sqrtPriceTarget:  types.MaxSqrtPrice,
 			liquidity:        sdk.MustNewDecFromStr("100002498062401598791.937822606808718081"),
 
 			amountOneInRemaining: sdk.NewDec(99),

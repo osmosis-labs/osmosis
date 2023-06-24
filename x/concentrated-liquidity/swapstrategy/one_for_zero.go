@@ -84,15 +84,6 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 	// Calculate the amount of the other token given the sqrt price range.
 	amountZeroOut := math.CalcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
 
-	// Handle spread rewards.
-	// Note that spread reward is always charged on the amount in.
-	spreadRewardChargeTotal := computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget, amountOneIn, amountOneInRemaining, s.spreadFactor)
-
-	fmt.Println("amountOneIn", amountOneIn)
-	fmt.Println("amountOneInRemaining", amountOneInRemaining)
-	fmt.Println("sqrtPriceCurrent", sqrtPriceCurrent)
-	fmt.Println("sqrtPriceNext", sqrtPriceNext)
-
 	// This covers an edge case where due to the lack of precision, the difference between the current sqrt price and the next sqrt price is so small that
 	// it ends up being rounded down to zero. This leads to an infinite loop in the swap algorithm. From knowing that this is a case where !hasReachedTarget,
 	//(that is the swap stops within a bucket), we charge the full amount remaining in to the user and infer the amount out from the sqrt price truncated
@@ -117,6 +108,15 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 
 		amountZeroOut = osmomath.BigDecFromSDKDec(amountOneIn).MulTruncate(priceZeroOverOne).SDKDec()
 	}
+
+	// Handle spread rewards.
+	// Note that spread reward is always charged on the amount in.
+	spreadRewardChargeTotal := computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget, amountOneIn, amountOneInRemaining, s.spreadFactor)
+
+	fmt.Println("amountOneIn", amountOneIn)
+	fmt.Println("amountOneInRemaining", amountOneInRemaining)
+	fmt.Println("sqrtPriceCurrent", sqrtPriceCurrent)
+	fmt.Println("sqrtPriceNext", sqrtPriceNext)
 
 	return sqrtPriceNext, amountOneIn, amountZeroOut, spreadRewardChargeTotal
 }
@@ -172,15 +172,6 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, 
 	// Calculate the amount of the other token given the sqrt price range.
 	amountOneIn := math.CalcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, true)
 
-	// Handle spread rewards.
-	// Note that spread reward is always charged on the amount in.
-	spreadRewardChargeTotal := computeSpreadRewardChargeFromAmountIn(amountOneIn, s.spreadFactor)
-
-	fmt.Println("amountOneIn", amountOneIn)
-	fmt.Println("amountOneInRemaining", amountZeroRemainingOut)
-	fmt.Println("sqrtPriceCurrent", sqrtPriceCurrent)
-	fmt.Println("sqrtPriceNext", sqrtPriceNext)
-
 	// This covers an edge case where due to the lack of precision, the difference between the current sqrt price and the next sqrt price is so small that
 	// it ends up being rounded down to zero. This leads to an infinite loop in the swap algorithm. From knowing that this is a case where !hasReachedTarget,
 	// (that is the swap stops within a bucket), we charge the full amount remaining in to the user and infer the amount in from calculation where the next
@@ -191,6 +182,15 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, 
 		// Consume the full remaining amount out to stop the swap.
 		amountZeroOut = amountZeroRemainingOut
 	}
+
+	// Handle spread rewards.
+	// Note that spread reward is always charged on the amount in.
+	spreadRewardChargeTotal := computeSpreadRewardChargeFromAmountIn(amountOneIn, s.spreadFactor)
+
+	fmt.Println("amountOneIn", amountOneIn)
+	fmt.Println("amountOneInRemaining", amountZeroRemainingOut)
+	fmt.Println("sqrtPriceCurrent", sqrtPriceCurrent)
+	fmt.Println("sqrtPriceNext", sqrtPriceNext)
 
 	return sqrtPriceNext, amountZeroOut, amountOneIn, spreadRewardChargeTotal
 }
