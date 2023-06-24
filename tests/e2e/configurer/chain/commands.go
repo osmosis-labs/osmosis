@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/tendermint/tendermint/libs/bytes"
@@ -606,9 +607,19 @@ func (n *NodeConfig) EnableSuperfluidAsset(srcChain *Config, denom string) {
 	srcChain.LatestProposalNumber += 1
 	propNumber := srcChain.LatestProposalNumber
 	srcNode.DepositProposal(propNumber, false)
-	for _, node := range srcChain.NodeConfigs {
-		node.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
+
+	var wg sync.WaitGroup
+
+	wg.Add(len(srcChain.NodeConfigs))
+
+	for _, n := range srcChain.NodeConfigs {
+		go func(node *NodeConfig) {
+			defer wg.Done()
+			node.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
+		}(n)
 	}
+
+	wg.Wait()
 }
 
 func (n *NodeConfig) LockAndAddToExistingLock(srcChain *Config, amount sdk.Int, denom, lockupWalletAddr, lockupWalletSuperfluidAddr string) {

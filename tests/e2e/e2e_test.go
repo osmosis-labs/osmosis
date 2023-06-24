@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -841,9 +842,18 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	chainANode.DepositProposal(latestPropNumber, true)
 	totalTimeChan := make(chan time.Duration, 1)
 	go chainANode.QueryPropStatusTimed(latestPropNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
-	for _, node := range chainA.NodeConfigs {
-		node.VoteYesProposal(initialization.ValidatorWalletName, latestPropNumber)
+	var wg sync.WaitGroup
+
+	wg.Add(len(chainA.NodeConfigs))
+
+	for _, n := range chainA.NodeConfigs {
+		go func(nodeConfig *chain.NodeConfig) {
+			defer wg.Done()
+			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, latestPropNumber)
+		}(n)
 	}
+
+	wg.Wait()
 
 	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
 	timeoutPeriod := 2 * time.Minute
@@ -969,9 +979,17 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 
 	chainANode.DepositProposal(chainA.LatestProposalNumber, false)
 	latestPropNumber := chainA.LatestProposalNumber
-	for _, node := range chainA.NodeConfigs {
-		node.VoteYesProposal(initialization.ValidatorWalletName, latestPropNumber)
+	var wg sync.WaitGroup
+	wg.Add(len(chainA.NodeConfigs))
+
+	for _, n := range chainA.NodeConfigs {
+		go func(nodeConfig *chain.NodeConfig) {
+			defer wg.Done()
+			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, latestPropNumber)
+		}(n)
 	}
+
+	wg.Wait()
 
 	// set delegator vote to no
 	chainANode.VoteNoProposal(superfluidVotingWallet, latestPropNumber)
@@ -1614,9 +1632,18 @@ func (s *IntegrationTestSuite) ExpeditedProposals() {
 	chainANode.DepositProposal(latestPropNumber, true)
 	totalTimeChan := make(chan time.Duration, 1)
 	go chainANode.QueryPropStatusTimed(latestPropNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
-	for _, node := range chainA.NodeConfigs {
-		node.VoteYesProposal(initialization.ValidatorWalletName, latestPropNumber)
+
+	var wg sync.WaitGroup
+	wg.Add(len(chainA.NodeConfigs))
+
+	for _, n := range chainA.NodeConfigs {
+		go func(nodeConfig *chain.NodeConfig) {
+			defer wg.Done()
+			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, latestPropNumber)
+		}(n)
 	}
+
+	wg.Wait()
 	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
 	var elapsed time.Duration
 	timeoutPeriod := 2 * time.Minute

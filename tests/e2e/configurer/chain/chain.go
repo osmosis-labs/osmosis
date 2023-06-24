@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -238,10 +239,19 @@ func (c *Config) EnableSuperfluidAsset(denom string) {
 	require.NoError(c.t, err)
 	chain.SubmitSuperfluidProposal(denom, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 	c.LatestProposalNumber += 1
-	chain.DepositProposal(c.LatestProposalNumber, false)
-	for _, node := range c.NodeConfigs {
-		node.VoteYesProposal(initialization.ValidatorWalletName, c.LatestProposalNumber)
+	propNumber := c.LatestProposalNumber
+	chain.DepositProposal(propNumber, false)
+	var wg sync.WaitGroup
+
+	for _, n := range c.NodeConfigs {
+		wg.Add(1)
+		go func(nodeConfig *NodeConfig) {
+			defer wg.Done()
+			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
+		}(n)
 	}
+
+	wg.Wait()
 }
 
 func (c *Config) LockAndAddToExistingLock(amount sdk.Int, denom, lockupWalletAddr, lockupWalletSuperfluidAddr string) {
@@ -320,9 +330,17 @@ func (c *Config) SubmitParamChangeProposal(subspace, key string, value []byte) e
 
 	propNumber := c.LatestProposalNumber
 
+	var wg sync.WaitGroup
+
 	for _, n := range c.NodeConfigs {
-		n.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
+		wg.Add(1)
+		go func(nodeConfig *NodeConfig) {
+			defer wg.Done()
+			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
+		}(n)
 	}
+
+	wg.Wait()
 
 	require.Eventually(c.t, func() bool {
 		status, err := node.QueryPropStatus(propNumber)
@@ -346,9 +364,17 @@ func (c *Config) SubmitCreateConcentratedPoolProposal() error {
 	propNumber := c.LatestProposalNumber
 	node.DepositProposal(propNumber, false)
 
+	var wg sync.WaitGroup
+
 	for _, n := range c.NodeConfigs {
-		n.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
+		wg.Add(1)
+		go func(nodeConfig *NodeConfig) {
+			defer wg.Done()
+			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
+		}(n)
 	}
+
+	wg.Wait()
 
 	require.Eventually(c.t, func() bool {
 		status, err := node.QueryPropStatus(propNumber)
