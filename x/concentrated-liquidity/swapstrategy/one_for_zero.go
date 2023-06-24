@@ -101,7 +101,7 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 		// Subtract 1 ULP so that the amount out is rounded in favor of the pool.
 		// TODO: figure out precision difference in the denominations of two tokens,
 		// leading to incorrect spot price in out core logic.
-		amountZeroOut = sqrtPriceCurrent.Sub(oneULP).PowerMut(2)
+		amountZeroOut = sqrtPriceCurrent.Sub(oneULP).PowerMut(2).MulTruncate(amountOneIn)
 	}
 
 	return sqrtPriceNext, amountOneIn, amountZeroOut, spreadRewardChargeTotal

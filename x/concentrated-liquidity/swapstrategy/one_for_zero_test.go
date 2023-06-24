@@ -176,7 +176,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 
 			expectedAmountInConsumed: sdk.NewDec(99),
 			// (sqrt price - 1 ULP)^2
-			expectedAmountOut:               sdk.MustNewDecFromStr("0.000001000049998750").Sub(sdk.SmallestDec()).PowerMut(2),
+			expectedAmountOut:               sdk.NewDec(99).MulTruncate(sdk.MustNewDecFromStr("0.000001000049998750").Sub(sdk.SmallestDec()).PowerMut(2)),
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
 		},
 	}
