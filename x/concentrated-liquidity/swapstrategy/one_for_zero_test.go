@@ -172,12 +172,19 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			amountOneInRemaining: sdk.NewDec(99),
 			spreadFactor:         sdk.ZeroDec(),
 
-			expectedSqrtPriceNext: sdk.MustNewDecFromStr("0.000001000049998750"),
+			// computed with x/concentrated-liquidity/python/clmath.py
+			// sqrtPriceCurrent + token_in / liquidity
+			expectedSqrtPriceNext: osmomath.MustNewDecFromStr("0.0000010000499987509899752698").SDKDec(),
 
 			expectedAmountInConsumed: sdk.NewDec(99),
-			// (sqrt price - 1 ULP)^2
-			// TODO: review
-			expectedAmountOut:               sdk.MustNewDecFromStr("98990100989913.365181108510691228"),
+			// liquidity * (sqrtPriceNext - sqrtPriceCurrent) / (sqrtPriceNext * sqrtPriceCurrent)
+			// calculated with x/concentrated-liquidity/python/clmath.py
+			// diff = (sqrtPriceNext - sqrtPriceCurrent)
+			// diff = round_decimal(diff, 36, ROUND_FLOOR) (0.000000000000000000989975269800000000)
+			// mul = (sqrtPriceNext * sqrtPriceCurrent)
+			// mul = round_decimal(mul, 36, ROUND_CEILING) (0.000000000001000100000000865026329827)
+			//  round_decimal(liquidity * diff / mul, 36, ROUND_FLOOR)
+			expectedAmountOut:               osmomath.MustNewDecFromStr("98990100989815.389417309844929293132374729779331247").SDKDec(),
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
 		},
 		"8: invalid zero difference between sqrt price current and sqrt price next due to precision loss, full amount remaining in is charged and amount out calculated from sqrt price (near max sqrt price)": {
@@ -189,12 +196,10 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			amountOneInRemaining: sdk.NewDec(99),
 			spreadFactor:         sdk.ZeroDec(),
 
-			expectedSqrtPriceNext: sdk.MustNewDecFromStr("0.000001000049998750"),
+			expectedSqrtPriceNext: types.MaxSqrtPrice.Sub(sdk.SmallestDec()),
 
-			expectedAmountInConsumed: sdk.NewDec(99),
-			// (sqrt price - 1 ULP)^2
-			// TODO: review
-			expectedAmountOut:               sdk.NewDec(99).MulTruncate(sdk.OneDec().Quo(sdk.MustNewDecFromStr("0.000001000049998750").Sub(sdk.SmallestDec()).PowerMut(2))),
+			expectedAmountInConsumed:        sdk.NewDec(99),
+			expectedAmountOut:               sdk.ZeroDec(),
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
 		},
 	}
