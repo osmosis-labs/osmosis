@@ -36,7 +36,24 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestKeeperTestSuite/TestYourName",
+                // TestKeeperTestSuite/TestInfiniteSwapLoop 
+                "TestKeeperTestSuite/TestSwapOutGivenIn_Contiguous_Initialized_TickSpacingOne/tick_spacing_one,_contiguosly_initialized/zero_for_one,_swap_to_the_middle_tick_to_the_left_of_the_original_current",
+                // "TestKeeperTestSuite/TestInfiniteSwapLoop",
+                "-test.v"
+            ],
+        },
+        {
+            "name": "x/concentrated-liquidity/swapstrategy",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/x/concentrated-liquidity/swapstrategy",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestStrategyTestSuite/TestComputeSwapStepInGivenOut_OneForZero/7",
+                // "TestStrategyTestSuite/TestComputeSwapStepOutGivenIn_OneForZero/7",
                 "-test.v"
             ],
         },

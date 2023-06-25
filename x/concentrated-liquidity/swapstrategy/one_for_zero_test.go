@@ -226,14 +226,15 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 		// Target is not reached means that we stop at the sqrt price earlier
 		// than expected. As a result, we recalculate the amount out and amount in
 		// necessary to reach the earlier target.
-		// sqrt_next = liq * sqrt_cur / (liq  - token_out * sqrt_cur) quo round up
-		sqrtPriceTargetNotReached = sdk.MustNewDecFromStr("70.709031125539448610")
-		// liq * (sqrt_next - sqrt_cur)
+		// sqrtPriceNext = liquidity * sqrtPriceCurrent / (liquidity  - tokenOut * sqrtPriceCurrent)
+		// product_num = liquidity * sqrtPriceCurrent
+		// product_num = round_decimal(product_num, 36, ROUND_CEILING)
+		// product_den =  tokenOut * sqrtPriceCurrent
+		// product_den = round_decimal(product_den, 36, ROUND_CEILING)
+		// round_decimal(product_num / (liquidity - product_den), 36, ROUND_FLOOR)
+		sqrtPriceTargetNotReached = sdk.MustNewDecFromStr("70.709031125539448609")
+		// liq * (sqrtPriceNext - sqrtPriceCurrent)
 		amountOneTargetNotReached = sdk.MustNewDecFromStr("61829304.427824073089251659")
-		// N.B.: approx eq = defaultAmountZero.Sub(sdk.NewDec(1000))
-		// slight variance due to recomputing amount out when target is not reached.
-		// liq * (sqrt_next - sqrt_cur) / (sqrt_next * sqrt_cur)
-		amountZeroTargetNotReached = sdk.MustNewDecFromStr("12369.999999999999293322")
 	)
 
 	// sqrtPriceCurrent, sqrtPriceTarget, liquidity are all set to defaults defined above.
@@ -263,8 +264,18 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 
 			expectedSqrtPriceNext: defaultSqrtPriceUpper,
 			// Reached target, so 100 is not consumed.
-			expectedAmountZeroOutConsumed: defaultAmountZero.Sub(sdk.SmallestDec()), // subtracting smallest dec to account for truncations in favor of the pool.
-			// liquidity * (sqrtPriceNext - sqrtPriceCurrent)
+			// computed with x/concentrated-liquidity/python/clmath.py
+			// (liquidity * (sqrtPriceTarget - sqrtPriceCurrent)) / (sqrtPriceCurrent * sqrtPriceTarget)
+			// diff = (sqrtPriceTarget - sqrtPriceCurrent)
+			// diff = round_decimal(diff, 36, ROUND_FLOOR)
+			// mul_denom = (sqrtPriceTarget * sqrtPriceCurrent)
+			// mul_denom = round_decimal(mul_denom, 36, ROUND_CEILING)
+			// mul_numer = (liquidity * diff)
+			// mul_numer = round_decimal(mul_numer, 36, ROUND_FLOOR)
+			// round_decimal(mul_numer / mul_denom, 18, ROUND_FLOOR)
+			// 13369.999999999998920003
+			// Added 1 ULP per calculations above
+			expectedAmountZeroOutConsumed:   defaultAmountZero.Add(oneULPDec),
 			expectedAmountOneIn:             defaultAmountOne.Ceil(),
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
 		},
@@ -278,8 +289,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 
 			expectedSqrtPriceNext: sqrtPriceTargetNotReached,
 
-			// subtracting 3 * smallest dec to account for truncations in favor of the pool.
-			expectedAmountZeroOutConsumed: amountZeroTargetNotReached.Sub(sdk.SmallestDec().MulInt64(3)),
+			expectedAmountZeroOutConsumed: defaultAmountZero.Sub(sdk.NewDec(1000)),
 
 			expectedAmountOneIn:             amountOneTargetNotReached.Ceil(),
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
@@ -292,8 +302,20 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 			amountZeroOutRemaining: defaultAmountZero.Quo(sdk.OneDec().Sub(defaultSpreadReward)),
 			spreadFactor:           defaultSpreadReward,
 
-			expectedSqrtPriceNext:           defaultSqrtPriceUpper,
-			expectedAmountZeroOutConsumed:   defaultAmountZero.Sub(sdk.SmallestDec()), // subtracting smallest dec to account for truncations in favor of the pool.
+			expectedSqrtPriceNext: defaultSqrtPriceUpper,
+			// Reached target, so 100 is not consumed.
+			// computed with x/concentrated-liquidity/python/clmath.py
+			// (liquidity * (sqrtPriceTarget - sqrtPriceCurrent)) / (sqrtPriceCurrent * sqrtPriceTarget)
+			// diff = (sqrtPriceTarget - sqrtPriceCurrent)
+			// diff = round_decimal(diff, 36, ROUND_FLOOR)
+			// mul_denom = (sqrtPriceTarget * sqrtPriceCurrent)
+			// mul_denom = round_decimal(mul_denom, 36, ROUND_CEILING)
+			// mul_numer = (liquidity * diff)
+			// mul_numer = round_decimal(mul_numer, 36, ROUND_FLOOR)
+			// round_decimal(mul_numer / mul_denom, 18, ROUND_FLOOR)
+			// 13369.999999999998920003
+			// Added 1 ULP per calculations above
+			expectedAmountZeroOutConsumed:   defaultAmountZero.Add(oneULPDec),
 			expectedAmountOneIn:             defaultAmountOne.Ceil(),
 			expectedSpreadRewardChargeTotal: swapstrategy.ComputeSpreadRewardChargeFromAmountIn(defaultAmountOne.Ceil(), defaultSpreadReward),
 		},
@@ -305,9 +327,8 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 			amountZeroOutRemaining: defaultAmountZero.Sub(sdk.NewDec(1000)),
 			spreadFactor:           defaultSpreadReward,
 
-			expectedSqrtPriceNext: sqrtPriceTargetNotReached,
-			// subtracting 3 * smallest dec to account for truncations in favor of the pool.
-			expectedAmountZeroOutConsumed:   amountZeroTargetNotReached.Sub(sdk.SmallestDec().MulInt64(3)),
+			expectedSqrtPriceNext:           sqrtPriceTargetNotReached,
+			expectedAmountZeroOutConsumed:   defaultAmountZero.Sub(sdk.NewDec(1000)),
 			expectedAmountOneIn:             amountOneTargetNotReached.Ceil(),
 			expectedSpreadRewardChargeTotal: swapstrategy.ComputeSpreadRewardChargeFromAmountIn(amountOneTargetNotReached.Ceil(), defaultSpreadReward),
 		},
@@ -335,8 +356,16 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 			amountZeroOutRemaining: sdk.SmallestDec(),
 			spreadFactor:           sdk.ZeroDec(),
 
+			// computed with x/concentrated-liquidity/python/clmath.py
+			// sqrtPriceNext = liquidity * sqrtPriceCurrent / (liquidity  - tokenOut * sqrtPriceCurrent)
+			// product_num = liquidity * sqrtPriceCurrent
+			// product_num = round_decimal(product_num, 36, ROUND_CEILING)
+			// product_den =  tokenOut * sqrtPriceCurrent
+			// product_den = round_decimal(product_den, 36, ROUND_CEILING)
+			// round_decimal(product_num / (liquidity - product_den), 36, ROUND_FLOOR)
 			expectedSqrtPriceNext: sdk.MustNewDecFromStr("0.000001000049998750"),
 
+			// liquidity * (sqrtPriceNext - sqrtPriceCurrent) / (sqrtPriceNext * sqrtPriceCurrent)
 			expectedAmountZeroOutConsumed: sdk.SmallestDec(),
 			// ceil(liq * (sqrtPriceNext + 1 ULP - sqrtPriceCurrent))
 			expectedAmountOneIn:             sdk.NewDec(101),
