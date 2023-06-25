@@ -91,18 +91,19 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 	if !hasReachedTarget && sqrtPriceCurrent.Equal(sqrtPriceNext) && amountOneIn.IsZero() && !amountOneInRemaining.IsZero() {
 		amountOneIn = amountOneInRemaining
 
-		// sqrt price is amount 1 / amount 0
-		// for 1 token zero, get X token 1
-		priceOneOverZero := sqrtPriceCurrent.MulRoundUp(sqrtPriceCurrent)
+		// CalcAmount0Delta with roundUp flag as false.
+		// Recalculate the amount out with increased precision.
+		liquidityBigDec := osmomath.BigDecFromSDKDec(liquidity)
+		sqrtPriceCurrentBigDec := osmomath.BigDecFromSDKDec(sqrtPriceCurrent)
+		sqrtPriceNextBigDec := math.GetNextSqrtPriceFromAmount1InRoundingDownBigDec(sqrtPriceCurrentBigDec, liquidityBigDec, osmomath.BigDecFromSDKDec(amountOneIn))
 
-		// for 1 token one, get X token 0
-		priceZeroOverOne := osmomath.OneDec().QuoTruncate(osmomath.BigDecFromSDKDec(priceOneOverZero))
+		denom := sqrtPriceNextBigDec.MulRoundUp(sqrtPriceCurrentBigDec)
+		// TODO: it might still be possible to get zero here and end up returning nothing to the user. Is this a problem?
+		// Mayne try constructing an example where this breaks. A posibility is to use Mul or MulRoundUp in the calculation below
+		// instead: liquidityBigDec.MulTruncate(diff). However, the problem then is that the rounding does not happen in favor of the pool anymore
+		diff := sqrtPriceNextBigDec.Sub(sqrtPriceCurrentBigDec)
 
-		if priceZeroOverOne.IsZero() {
-			panic("priceZeroOverOne is zero")
-		}
-
-		amountZeroOut = osmomath.BigDecFromSDKDec(amountOneIn).MulTruncate(priceZeroOverOne).SDKDec()
+		amountZeroOut = liquidityBigDec.MulTruncate(diff).QuoTruncate(denom).SDKDec()
 	}
 
 	// Handle spread rewards.

@@ -177,7 +177,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			expectedAmountInConsumed: sdk.NewDec(99),
 			// (sqrt price - 1 ULP)^2
 			// TODO: review
-			expectedAmountOut:               sdk.NewDec(99).MulTruncate(sdk.OneDec().Quo(sdk.MustNewDecFromStr("0.000001000049998750").Sub(sdk.SmallestDec()).PowerMut(2))),
+			expectedAmountOut:               sdk.MustNewDecFromStr("98990100989913.365181108510691228"),
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
 		},
 		"8: invalid zero difference between sqrt price current and sqrt price next due to precision loss, full amount remaining in is charged and amount out calculated from sqrt price (near max sqrt price)": {
