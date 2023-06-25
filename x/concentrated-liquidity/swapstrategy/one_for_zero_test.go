@@ -187,7 +187,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			expectedAmountOut:               osmomath.MustNewDecFromStr("98990100989815.389417309844929293132374729779331247").SDKDec(),
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
 		},
-		"8: invalid zero difference between sqrt price current and sqrt price next due to precision loss, full amount remaining in is charged and amount out calculated from sqrt price (near max sqrt price)": {
+		"8: invalid zero difference between sqrt price current and sqrt price next due to precision loss, full amount remaining in is charged and amount out calculated with increased precision": {
 			// Note the numbers are hand-picked to reproduce this specific case.
 			sqrtPriceCurrent: types.MaxSqrtPrice.Sub(sdk.SmallestDec()),
 			sqrtPriceTarget:  types.MaxSqrtPrice,
@@ -335,28 +335,38 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 			amountZeroOutRemaining: sdk.SmallestDec(),
 			spreadFactor:           sdk.ZeroDec(),
 
+			// computed with x/concentrated-liquidity/python/clmath.py
+			// sqrtPriceNext = liquidity * sqrtPriceCurrent / (liquidity  - tokenOut * sqrtPriceCurrent)
+			// product_num = liquidity * sqrtPriceCurrent
+			// product_num = round_decimal(product_num, 36, ROUND_CEILING)
+			// product_den =  tokenOut * sqrtPriceCurrent
+			// product_den = round_decimal(product_den, 36, ROUND_CEILING)
+			// round_decimal(product_num / (liquidity - product_den), 36, ROUND_FLOOR)
 			expectedSqrtPriceNext: sdk.MustNewDecFromStr("0.000001000049998750"),
 
+			// liquidity * (sqrtPriceNext - sqrtPriceCurrent) / (sqrtPriceNext * sqrtPriceCurrent)
 			expectedAmountZeroOutConsumed: sdk.SmallestDec(),
 			// ceil(liq * (sqrtPriceNext + 1 ULP - sqrtPriceCurrent))
 			expectedAmountOneIn:             sdk.NewDec(101),
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
 		},
-		"8: invalid zero difference between sqrt price current and sqrt price next due to precision loss, full amount remaining in is charged and amount out calculated from sqrt price (near max sqrt price)": {
+		"8: zero difference between sqrt price current and sqrt price next does not occur due to next sqrt price being rounded up by 1 ULP, the target is reached and progress made": {
 			// Note the numbers are hand-picked to reproduce this specific case.
 			sqrtPriceCurrent: types.MaxSqrtPrice.Sub(sdk.SmallestDec()),
 			sqrtPriceTarget:  types.MaxSqrtPrice,
-			liquidity:        sdk.MustNewDecFromStr("1000024980624015987911251251212575125490.937822606808718081"),
+			liquidity:        sdk.MustNewDecFromStr("100002498062401598791.937822606808718081"),
 
 			amountZeroOutRemaining: sdk.SmallestDec(),
 			spreadFactor:           sdk.ZeroDec(),
 
-			expectedSqrtPriceNext: sdk.MustNewDecFromStr("0.000001000049998750"),
+			// Contrary to swap out given in, reaches the max sqrt price with similar amounts due to rounding up
+			// next sqrt price in favor of the pool.
+			expectedSqrtPriceNext: types.MaxSqrtPrice,
 
-			expectedAmountZeroOutConsumed: sdk.NewDec(99),
-			// (sqrt price - 1 ULP)^2
-			// TODO: review
-			expectedAmountOneIn:             sdk.NewDec(99).MulTruncate(sdk.OneDec().Quo(sdk.MustNewDecFromStr("0.000001000049998750").Sub(sdk.SmallestDec()).PowerMut(2))),
+			// It does not consume the full amount remaining out give. However, since the next sqrt price
+			// is updated, the progress is made, preventing an infinite loop in swap step..
+			expectedAmountZeroOutConsumed:   sdk.ZeroDec(),
+			expectedAmountOneIn:             sdk.NewDec(101),
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
 		},
 	}
