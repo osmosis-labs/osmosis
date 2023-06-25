@@ -31,22 +31,23 @@ const (
 )
 
 var (
-	zero                  = sdk.NewDec(0)
-	one                   = sdk.NewDec(1)
-	two                   = sdk.NewDec(2)
-	three                 = sdk.NewDec(3)
-	four                  = sdk.NewDec(4)
-	five                  = sdk.NewDec(5)
-	sqrt5000              = sdk.MustNewDecFromStr("70.710678118654752440") // 5000
-	defaultSqrtPriceLower = sdk.MustNewDecFromStr("70.688664163408836321") // approx 4996.89
-	defaultSqrtPriceUpper = sqrt5000
-	defaultAmountOne      = sdk.MustNewDecFromStr("66829187.967824033199646915")
-	defaultAmountZero     = sdk.MustNewDecFromStr("13369.999999999998920002")
-	defaultLiquidity      = sdk.MustNewDecFromStr("3035764687.503020836176699298")
-	defaultSpreadReward   = sdk.MustNewDecFromStr("0.03")
-	defaultTickSpacing    = uint64(100)
-	defaultAmountReserves = sdk.NewInt(1_000_000_000)
-	DefaultCoins          = sdk.NewCoins(sdk.NewCoin(ETH, defaultAmountReserves), sdk.NewCoin(USDC, defaultAmountReserves))
+	zero                    = sdk.NewDec(0)
+	one                     = sdk.NewDec(1)
+	two                     = sdk.NewDec(2)
+	three                   = sdk.NewDec(3)
+	four                    = sdk.NewDec(4)
+	five                    = sdk.NewDec(5)
+	sqrt5000                = sdk.MustNewDecFromStr("70.710678118654752440") // 5000
+	defaultSqrtPriceLower   = sdk.MustNewDecFromStr("70.688664163408836321") // approx 4996.89
+	defaultSqrtPriceUpper   = sqrt5000
+	defaultAmountOne        = sdk.MustNewDecFromStr("66829187.967824033199646915")
+	defaultAmountZero       = sdk.MustNewDecFromStr("13369.999999999998920002")
+	defaultAmountZeroBigDec = osmomath.MustNewDecFromStr("13369.999999999998920003259839786649584880")
+	defaultLiquidity        = sdk.MustNewDecFromStr("3035764687.503020836176699298")
+	defaultSpreadReward     = sdk.MustNewDecFromStr("0.03")
+	defaultTickSpacing      = uint64(100)
+	defaultAmountReserves   = sdk.NewInt(1_000_000_000)
+	DefaultCoins            = sdk.NewCoins(sdk.NewCoin(ETH, defaultAmountReserves), sdk.NewCoin(USDC, defaultAmountReserves))
 )
 
 func TestStrategyTestSuite(t *testing.T) {
@@ -153,7 +154,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			expectedAmountIn:  sdk.NewDec(42000000),
 			expectedAmountOut: sdk.NewDec(8398),
 		},
-		"2: zero_for_one__not_equal_target__no_spread_reward": {
+		"2: zero_for_one__not_equal_target_no_spread_reward": {
 			sqrtPriceCurrent: sqrt5000,                                       // 5000
 			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.682388188289167342"), // 4996
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),

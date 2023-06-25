@@ -85,6 +85,10 @@ type SwapStrategy interface {
 	ValidateSqrtPrice(sqrtPriceLimit, currentSqrtPrice sdk.Dec) error
 }
 
+var (
+	oneBigDec = osmomath.OneDec()
+)
+
 // New returns a swap strategy based on the provided zeroForOne parameter
 // with sqrtPriceLimit for the maximum square root price until which to perform
 // the swap and the stor key of the module that stores swap data.

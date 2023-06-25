@@ -305,6 +305,17 @@ func (d BigDec) MulTruncate(d2 BigDec) BigDec {
 	return BigDec{chopped}
 }
 
+// multiplication round up
+func (d BigDec) MulRoundUp(d2 BigDec) BigDec {
+	mul := new(big.Int).Mul(d.i, d2.i)
+	chopped := chopPrecisionAndRoundUp(mul)
+
+	if chopped.BitLen() > maxDecBitLen {
+		panic("Int overflow")
+	}
+	return BigDec{chopped}
+}
+
 // multiplication
 func (d BigDec) MulInt(i BigInt) BigDec {
 	mul := new(big.Int).Mul(d.i, i.i)
