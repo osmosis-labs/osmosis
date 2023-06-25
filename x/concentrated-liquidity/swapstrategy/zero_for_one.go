@@ -89,7 +89,7 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 	if !hasReachedTarget && sqrtPriceCurrent.Equal(sqrtPriceNext) && amountZeroIn.IsZero() && !amountZeroInRemaining.IsZero() {
 		amountZeroIn = amountZeroInRemaining
 
-		sqrtPriceMinOneULP := sqrtPriceNext.Sub(oneULP)
+		sqrtPriceMinOneULP := sqrtPriceCurrent.Sub(oneULP)
 		amountOneOut = sqrtPriceMinOneULP.MulTruncate(sqrtPriceMinOneULP).Mul(amountZeroIn)
 	}
 

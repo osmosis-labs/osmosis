@@ -48,9 +48,7 @@ func (suite *StrategyTestSuite) TestGetSqrtTargetPrice_ZeroForOne() {
 
 func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 	var (
-		sqrtPriceCurrent = defaultSqrtPriceUpper
-		sqrtPriceNext    = defaultSqrtPriceLower
-		sqrtPriceTarget  = sqrtPriceNext
+		sqrtPriceNext = defaultSqrtPriceLower
 
 		// liquidity * sqrtPriceCurrent / (liquidity + amount in * sqrtPriceCurrent)
 		sqrtPriceTargetNotReached = sdk.MustNewDecFromStr("70.688828764403676330")
@@ -60,6 +58,10 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 
 	// sqrtPriceCurrent, sqrtPriceTarget, liquidity are all set to defaults defined above.
 	tests := map[string]struct {
+		sqrtPriceCurrent sdk.Dec
+		sqrtPriceTarget  sdk.Dec
+		liquidity        sdk.Dec
+
 		amountZeroInRemaining sdk.Dec
 		spreadFactor          sdk.Dec
 
@@ -71,6 +73,10 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 		expectError error
 	}{
 		"1: no spread reward - reach target": {
+			sqrtPriceCurrent: defaultSqrtPriceUpper,
+			sqrtPriceTarget:  defaultSqrtPriceLower,
+			liquidity:        defaultLiquidity,
+
 			// add 100 more
 			amountZeroInRemaining: defaultAmountZero.Add(sdk.NewDec(100)),
 			spreadFactor:          sdk.ZeroDec(),
@@ -83,6 +89,10 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
 		},
 		"2: no spread reward - do not reach target": {
+			sqrtPriceCurrent: defaultSqrtPriceUpper,
+			sqrtPriceTarget:  defaultSqrtPriceLower,
+			liquidity:        defaultLiquidity,
+
 			amountZeroInRemaining: defaultAmountZero.Sub(sdk.NewDec(100)),
 			spreadFactor:          sdk.ZeroDec(),
 
@@ -93,6 +103,10 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
 		},
 		"3: 3% spread reward - reach target": {
+			sqrtPriceCurrent: defaultSqrtPriceUpper,
+			sqrtPriceTarget:  defaultSqrtPriceLower,
+			liquidity:        defaultLiquidity,
+
 			// add 100 more
 			amountZeroInRemaining: defaultAmountZero.Add(sdk.NewDec(100)).Quo(one.Sub(defaultSpreadReward)),
 			spreadFactor:          defaultSpreadReward,
@@ -105,6 +119,10 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 			expectedSpreadRewardChargeTotal: defaultAmountZero.Ceil().Quo(one.Sub(defaultSpreadReward)).Mul(defaultSpreadReward),
 		},
 		"4: 3% spread reward - do not reach target": {
+			sqrtPriceCurrent: defaultSqrtPriceUpper,
+			sqrtPriceTarget:  defaultSqrtPriceLower,
+			liquidity:        defaultLiquidity,
+
 			amountZeroInRemaining: defaultAmountZero.Sub(sdk.NewDec(100)).Quo(one.Sub(defaultSpreadReward)),
 			spreadFactor:          defaultSpreadReward,
 
@@ -114,12 +132,33 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 			// Difference between amount in given and actually consumed.
 			expectedSpreadRewardChargeTotal: defaultAmountZero.Sub(sdk.NewDec(100)).Quo(one.Sub(defaultSpreadReward)).Sub(defaultAmountZero.Sub(sdk.NewDec(100)).Ceil()),
 		},
+		"5: invalid zero difference between sqrt price current and sqrt price next due to precision loss, full amount remaining in is charged and amount out calculated from sqrt price": {
+			// Note the numbers are hand-picked to reproduce this specific case.
+			sqrtPriceCurrent: sdk.MustNewDecFromStr("0.000001000049998751"),
+			sqrtPriceTarget:  sdk.MustNewDecFromStr("0.000001000049998750"),
+			liquidity:        sdk.MustNewDecFromStr("100002498062401598791.937822606808718081"),
+
+			amountZeroInRemaining: sdk.NewDec(99),
+			spreadFactor:          sdk.ZeroDec(),
+
+			// computed with x/concentrated-liquidity/python/clmath.py
+			// sqrtPriceNext = liquidity * sqrtPriceCurrent / (liquidity + tokenIn * sqrtPriceCurrent)
+			// sqrtPriceNext = round_decimal(sqrtPriceNext, 18, ROUND_CEILING)
+			expectedSqrtPriceNext: sdk.MustNewDecFromStr("0.000001000049998751"),
+
+			amountZeroInConsumed: sdk.NewDec(99),
+			// diff = sqrtPriceCurrent - oneULPDec
+			// price = round_decimal(diff * diff, 18, ROUND_FLOOR)
+			// round_decimal(amountZeroInRemaining * price, 18, ROUND_FLOOR)
+			expectedAmountOneOut:            sdk.MustNewDecFromStr("0.000000000099009801"),
+			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
+		},
 	}
 
 	for name, tc := range tests {
 		suite.Run(name, func() {
 			strategy := suite.setupNewZeroForOneSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
-			sqrtPriceNext, amountZeroIn, amountOneOut, spreadRewardChargeTotal := strategy.ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget, defaultLiquidity, tc.amountZeroInRemaining)
+			sqrtPriceNext, amountZeroIn, amountOneOut, spreadRewardChargeTotal := strategy.ComputeSwapWithinBucketOutGivenIn(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, tc.amountZeroInRemaining)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
 			suite.Require().Equal(tc.amountZeroInConsumed, amountZeroIn)
