@@ -36,7 +36,21 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestKeeperTestSuite/TestYourName",
+                "TestKeeperTestSuite/TestInfiniteSwapLoop",
+                "-test.v"
+            ],
+        },
+        {
+            "name": "x/concentrated-liquidity/swapstrategy",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/x/concentrated-liquidity/swapstrategy",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestStrategyTestSuite/TestComputeSwapStepOutGivenIn_OneForZero/7",
                 "-test.v"
             ],
         },
