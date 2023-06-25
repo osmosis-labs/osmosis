@@ -337,6 +337,23 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 			expectedAmountOneIn:             sdk.NewDec(101),
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
 		},
+		"8: invalid zero difference between sqrt price current and sqrt price next due to precision loss, full amount remaining in is charged and amount out calculated from sqrt price (near max sqrt price)": {
+			// Note the numbers are hand-picked to reproduce this specific case.
+			sqrtPriceCurrent: types.MaxSqrtPrice.Sub(sdk.SmallestDec()),
+			sqrtPriceTarget:  types.MaxSqrtPrice,
+			liquidity:        sdk.MustNewDecFromStr("1000024980624015987911251251212575125490.937822606808718081"),
+
+			amountZeroOutRemaining: sdk.SmallestDec(),
+			spreadFactor:           sdk.ZeroDec(),
+
+			expectedSqrtPriceNext: sdk.MustNewDecFromStr("0.000001000049998750"),
+
+			expectedAmountZeroOutConsumed: sdk.NewDec(99),
+			// (sqrt price - 1 ULP)^2
+			// TODO: review
+			expectedAmountOneIn:             sdk.NewDec(99).MulTruncate(sdk.OneDec().Quo(sdk.MustNewDecFromStr("0.000001000049998750").Sub(sdk.SmallestDec()).PowerMut(2))),
+			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
+		},
 	}
 
 	for name, tc := range tests {

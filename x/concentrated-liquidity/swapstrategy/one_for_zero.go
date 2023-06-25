@@ -90,16 +90,12 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 	// in favor of the pool.
 	if !hasReachedTarget && sqrtPriceCurrent.Equal(sqrtPriceNext) && amountOneIn.IsZero() && !amountOneInRemaining.IsZero() {
 		amountOneIn = amountOneInRemaining
-		// Subtract 1 ULP so that the amount out is rounded in favor of the pool.
-		// TODO: figure out precision difference in the denominations of two tokens,
-		// leading to incorrect spot price in out core logic.
 
 		// sqrt price is amount 1 / amount 0
-		// How many tokens 1 do we need to get 1 token 0?
-
+		// for 1 token zero, get X token 1
 		priceOneOverZero := sqrtPriceCurrent.MulRoundUp(sqrtPriceCurrent)
 
-		// how many tokens 0 do we get for 1 token 1?
+		// for 1 token one, get X token 0
 		priceZeroOverOne := osmomath.OneDec().QuoTruncate(osmomath.BigDecFromSDKDec(priceOneOverZero))
 
 		if priceZeroOverOne.IsZero() {
@@ -187,8 +183,9 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, 
 	// Note that spread reward is always charged on the amount in.
 	spreadRewardChargeTotal := computeSpreadRewardChargeFromAmountIn(amountOneIn, s.spreadFactor)
 
+	fmt.Println("amountZeroOut", amountZeroOut)
+	fmt.Println("amountZeroRemainingOut", amountZeroRemainingOut)
 	fmt.Println("amountOneIn", amountOneIn)
-	fmt.Println("amountOneInRemaining", amountZeroRemainingOut)
 	fmt.Println("sqrtPriceCurrent", sqrtPriceCurrent)
 	fmt.Println("sqrtPriceNext", sqrtPriceNext)
 
