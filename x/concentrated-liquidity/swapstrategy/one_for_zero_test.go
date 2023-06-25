@@ -178,7 +178,13 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 
 			expectedAmountInConsumed: sdk.NewDec(99),
 			// liquidity * (sqrtPriceNext - sqrtPriceCurrent) / (sqrtPriceNext * sqrtPriceCurrent)
-			expectedAmountOut:               osmomath.MustNewDecFromStr("98990100989815.389417309941839547862159318917464792").SDKDec(),
+			// calculated with x/concentrated-liquidity/python/clmath.py
+			// diff = (sqrtPriceNext - sqrtPriceCurrent)
+			// diff = round_decimal(diff, 36, ROUND_FLOOR) (0.000000000000000000989975269800000000)
+			// mul = (sqrtPriceNext * sqrtPriceCurrent)
+			// mul = round_decimal(mul, 36, ROUND_CEILING) (0.000000000001000100000000865026329827)
+			//  round_decimal(liquidity * diff / mul, 36, ROUND_FLOOR)
+			expectedAmountOut:               osmomath.MustNewDecFromStr("98990100989815.389417309844929293132374729779331247").SDKDec(),
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
 		},
 		"8: invalid zero difference between sqrt price current and sqrt price next due to precision loss, full amount remaining in is charged and amount out calculated from sqrt price (near max sqrt price)": {
