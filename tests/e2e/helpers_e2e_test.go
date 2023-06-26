@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -117,7 +118,7 @@ func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr, denom 
 		}
 		return false
 	},
-		1*time.Minute,
+		2*time.Minute,
 		10*time.Millisecond,
 	)
 }
@@ -130,17 +131,19 @@ func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) 
 	projectDir := filepath.Dir(filepath.Dir(wd))
 	_, err = util.CopyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
 	s.NoError(err)
-	node := s.GetDefaultNodeMutex()
+	node, err := s.configurer.GetChainConfig(0).GetNodeAtIndex(0)
+	s.NoError(err)
 
-	node.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
+	codeId := node.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
 	chain.LatestCodeId = int(node.QueryLatestWasmCodeID())
-	latestCodeId := chain.LatestCodeId
 	node.InstantiateWasmContract(
-		strconv.Itoa(latestCodeId),
+		strconv.Itoa(codeId),
 		`{"count": 0}`,
 		initialization.ValidatorWalletName)
 
-	contracts, err := node.QueryContractsFromId(latestCodeId)
+	fmt.Println("codeId", codeId)
+	contracts, err := node.QueryContractsFromId(codeId)
+	fmt.Println("contracts", contracts)
 	s.NoError(err)
 	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
 	contractAddr := contracts[0]

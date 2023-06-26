@@ -1,25 +1,15 @@
 package chain
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
-	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
-
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-
-	"github.com/osmosis-labs/osmosis/v16/tests/e2e/util"
 
 	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/config"
@@ -198,6 +188,12 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	cmd := []string{"hermes", "tx", "ft-transfer", "--dst-chain", dstChain.Id, "--src-chain", c.Id, "--src-port", "transfer", "--src-channel", "channel-0", "--amount", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000"}
 	_, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
 	require.NoError(c.t, err)
+	// cmd = []string{"hermes", "clear", "packets", "--chain", dstChain.Id, "--port", "transfer", "--channel", "channel-0"}
+	// _, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
+	// require.NoError(c.t, err)
+	// cmd = []string{"hermes", "clear", "packets", "--chain", c.Id, "--port", "transfer", "--channel", "channel-0"}
+	// _, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
+	// require.NoError(c.t, err)
 	fmt.Println("IBC send successful after exec ADAM")
 
 	require.Eventually(
@@ -303,65 +299,63 @@ func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 	return c.NodeConfigs[nodeIndex], nil
 }
 
-func (c *Config) SubmitParamChangeProposal(subspace, key string, value []byte) error {
-	proposal := paramsutils.ParamChangeProposalJSON{
-		Title:       "Param Change",
-		Description: fmt.Sprintf("Changing the %s param", key),
-		Changes: paramsutils.ParamChangesJSON{
-			paramsutils.ParamChangeJSON{
-				Subspace: subspace,
-				Key:      key,
-				Value:    value,
-			},
-		},
-		Deposit: "625000000uosmo",
-	}
-	proposalJson, err := json.Marshal(proposal)
-	if err != nil {
-		return err
-	}
+// func (c *Config) SubmitParamChangeProposal(subspace, key string, value []byte) error {
+// 	proposal := paramsutils.ParamChangeProposalJSON{
+// 		Title:       "Param Change",
+// 		Description: fmt.Sprintf("Changing the %s param", key),
+// 		Changes: paramsutils.ParamChangesJSON{
+// 			paramsutils.ParamChangeJSON{
+// 				Subspace: subspace,
+// 				Key:      key,
+// 				Value:    value,
+// 			},
+// 		},
+// 		Deposit: "625000000uosmo",
+// 	}
+// 	proposalJson, err := json.Marshal(proposal)
+// 	if err != nil {
+// 		return err
+// 	}
 
+// 	node, err := c.GetDefaultNode()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	propNumber := node.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
+// 	c.LatestProposalNumber += 1
+
+// 	var wg sync.WaitGroup
+
+// 	for _, n := range c.NodeConfigs {
+// 		wg.Add(1)
+// 		go func(nodeConfig *NodeConfig) {
+// 			defer wg.Done()
+// 			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
+// 		}(n)
+// 	}
+
+// 	wg.Wait()
+
+// 	require.Eventually(c.t, func() bool {
+// 		status, err := node.QueryPropStatus(propNumber)
+// 		if err != nil {
+// 			return false
+// 		}
+// 		return status == proposalStatusPassed
+// 	}, time.Minute*30, time.Millisecond*500)
+// 	return nil
+// }
+
+func (c *Config) SubmitCreateConcentratedPoolProposal() (uint64, error) {
 	node, err := c.GetDefaultNode()
 	if err != nil {
-		return err
+		return 0, err
 	}
-	node.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
+
+	propId := node.SubmitCreateConcentratedPoolProposal(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 	c.LatestProposalNumber += 1
 
-	propNumber := c.LatestProposalNumber
-
-	var wg sync.WaitGroup
-
-	for _, n := range c.NodeConfigs {
-		wg.Add(1)
-		go func(nodeConfig *NodeConfig) {
-			defer wg.Done()
-			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
-		}(n)
-	}
-
-	wg.Wait()
-
-	require.Eventually(c.t, func() bool {
-		status, err := node.QueryPropStatus(propNumber)
-		if err != nil {
-			return false
-		}
-		return status == proposalStatusPassed
-	}, time.Minute*30, time.Millisecond*500)
-	return nil
-}
-
-func (c *Config) SubmitCreateConcentratedPoolProposal() error {
-	node, err := c.GetDefaultNode()
-	if err != nil {
-		return err
-	}
-
-	node.SubmitCreateConcentratedPoolProposal(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
-	c.LatestProposalNumber += 1
-
-	propNumber := c.LatestProposalNumber
+	propNumber := propId
 	node.DepositProposal(propNumber, false)
 
 	var wg sync.WaitGroup
@@ -383,55 +377,55 @@ func (c *Config) SubmitCreateConcentratedPoolProposal() error {
 		}
 		return status == proposalStatusPassed
 	}, time.Second*30, time.Millisecond*500)
-	return nil
+	poolId := node.QueryNumPools()
+	return poolId, nil
 }
 
-func (c *Config) SetupRateLimiting(paths, gov_addr string) (string, error) {
-	node, err := c.GetDefaultNode()
-	if err != nil {
-		return "", err
-	}
+// func (c *Config) SetupRateLimiting(paths, gov_addr string) (string, error) {
+// 	node, err := c.GetDefaultNode()
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	// copy the contract from x/rate-limit/testdata/
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	// go up two levels
-	projectDir := filepath.Dir(filepath.Dir(wd))
-	fmt.Println(wd, projectDir)
-	_, err = util.CopyFile(projectDir+"/x/ibc-rate-limit/bytecode/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
-	if err != nil {
-		return "", err
-	}
+// 	// copy the contract from x/rate-limit/testdata/
+// 	wd, err := os.Getwd()
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	// go up two levels
+// 	projectDir := filepath.Dir(filepath.Dir(wd))
+// 	fmt.Println(wd, projectDir)
+// 	_, err = util.CopyFile(projectDir+"/x/ibc-rate-limit/bytecode/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
-	c.LatestCodeId = int(node.QueryLatestWasmCodeID())
-	latestCodeId := c.LatestCodeId
-	node.InstantiateWasmContract(
-		strconv.Itoa(latestCodeId),
-		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [%s] }`, gov_addr, node.PublicAddress, paths),
-		initialization.ValidatorWalletName)
+// 	codeId := node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
+// 	c.LatestCodeId = int(node.QueryLatestWasmCodeID())
+// 	node.InstantiateWasmContract(
+// 		strconv.Itoa(codeId),
+// 		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [%s] }`, gov_addr, node.PublicAddress, paths),
+// 		initialization.ValidatorWalletName)
 
-	contracts, err := node.QueryContractsFromId(latestCodeId)
-	if err != nil {
-		return "", err
-	}
+// 	contracts, err := node.QueryContractsFromId(codeId)
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	contract := contracts[len(contracts)-1]
+// 	contract := contracts[len(contracts)-1]
 
-	err = c.SubmitParamChangeProposal(
-		ibcratelimittypes.ModuleName,
-		string(ibcratelimittypes.KeyContractAddress),
-		[]byte(fmt.Sprintf(`"%s"`, contract)),
-	)
-	if err != nil {
-		return "", err
-	}
-	require.Eventually(c.t, func() bool {
-		val := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
-		return strings.Contains(val, contract)
-	}, time.Second*30, time.Millisecond*500)
-	fmt.Println("contract address set to", contract)
-	return contract, nil
-}
+// 	err = c.SubmitParamChangeProposal(
+// 		ibcratelimittypes.ModuleName,
+// 		string(ibcratelimittypes.KeyContractAddress),
+// 		[]byte(fmt.Sprintf(`"%s"`, contract)),
+// 	)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	require.Eventually(c.t, func() bool {
+// 		val := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+// 		return strings.Contains(val, contract)
+// 	}, time.Second*30, time.Millisecond*500)
+// 	fmt.Println("contract address set to", contract)
+// 	return contract, nil
+// }

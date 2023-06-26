@@ -129,10 +129,12 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	wg.Add(2)
 
+	var daiOsmoPoolIdv16 uint64
+
 	go func() {
 		defer wg.Done()
-		config.DaiOsmoPoolIdv16 = chainANode.CreateBalancerPool("daiosmov16.json", initialization.ValidatorWalletName)
-		daiOsmoShareDenom := fmt.Sprintf("gamm/pool/%d", config.DaiOsmoPoolIdv16)
+		daiOsmoPoolIdv16 = chainANode.CreateBalancerPool("daiosmov16.json", initialization.ValidatorWalletName)
+		daiOsmoShareDenom := fmt.Sprintf("gamm/pool/%d", daiOsmoPoolIdv16)
 		chainANode.EnableSuperfluidAsset(chainA, daiOsmoShareDenom)
 	}()
 
@@ -145,19 +147,21 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	// Wait for all goroutines to complete
 	wg.Wait()
 
+	config.DaiOsmoPoolIdv16 = daiOsmoPoolIdv16
+
 	var poolShareDenom string
 	var preUpgradePoolId uint64
 	var preUpgradeStableSwapPoolId uint64
 
 	// Increment the WaitGroup counter for each goroutine
-	wg.Add(5)
+	wg.Add(4)
 
-	go func() {
-		defer wg.Done()
-		poolId := chainBNode.CreateBalancerPool("daiosmov16.json", initialization.ValidatorWalletName)
-		daiOsmoShareDenom := fmt.Sprintf("gamm/pool/%d", poolId)
-		chainANode.EnableSuperfluidAsset(chainA, daiOsmoShareDenom)
-	}()
+	// go func() {
+	// 	defer wg.Done()
+	// 	poolId := chainBNode.CreateBalancerPool("daiosmov16.json", initialization.ValidatorWalletName)
+	// 	daiOsmoShareDenom := fmt.Sprintf("gamm/pool/%d", poolId)
+	// 	chainANode.EnableSuperfluidAsset(chainA, daiOsmoShareDenom)
+	// }()
 
 	go func() {
 		defer wg.Done()
@@ -200,22 +204,46 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 		"100000stake",
 	})
 
-	// test swap exact amount in for stable swap pool (only chainA)A
-	chainANode.SwapExactAmountIn("2000stake", "1", fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId), "uosmo", config.StableswapWallet)
+	wg.Add(4)
+
+	var errCh = make(chan error, 2)
+
+	go func() {
+		defer wg.Done()
+		// test swap exact amount in for stable swap pool (only chainA)A
+		chainANode.SwapExactAmountIn("2000stake", "1", fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId), "uosmo", config.StableswapWallet)
+	}()
 
 	// Upload the rate limiting contract to both chains (as they both will be updated)
-	uc.t.Logf("Uploading rate limiting contract to both chains")
-	_, err = chainANode.SetupRateLimiting("", chainANode.QueryGovModuleAccount(), chainA)
-	if err != nil {
-		return err
-	}
-	_, _ = chainBNode.SetupRateLimiting("", chainBNode.QueryGovModuleAccount(), chainB)
-	if err != nil {
-		return err
-	}
+	go func() {
+		defer wg.Done()
+		uc.t.Logf("Uploading rate limiting contract to both chains")
+		_, err := chainANode.SetupRateLimiting("", chainANode.QueryGovModuleAccount(), chainA)
+		errCh <- err
+	}()
 
-	// test lock and add to existing lock for both regular and superfluid lockups (only chainA)
-	chainANode.LockAndAddToExistingLock(chainA, sdk.NewInt(1000000000000000000), poolShareDenom, config.LockupWallet, config.LockupWalletSuperfluid)
+	go func() {
+		defer wg.Done()
+		uc.t.Logf("Uploading rate limiting contract to both chains")
+		_, err := chainBNode.SetupRateLimiting("", chainBNode.QueryGovModuleAccount(), chainB)
+		errCh <- err
+	}()
+
+	go func() {
+		defer wg.Done()
+		// test lock and add to existing lock for both regular and superfluid lockups (only chainA)
+		chainANode.LockAndAddToExistingLock(chainA, sdk.NewInt(1000000000000000000), poolShareDenom, config.LockupWallet, config.LockupWalletSuperfluid)
+	}()
+
+	wg.Wait()
+
+	close(errCh)
+
+	for err := range errCh {
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -268,22 +296,20 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 		node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 		chainConfig.LatestProposalNumber += 1
 		node.DepositProposal(chainConfig.LatestProposalNumber, false)
-	}
+		propNumber := chainConfig.LatestProposalNumber
 
-	var wg sync.WaitGroup
+		var wg sync.WaitGroup
 
-	for _, chainConfig := range uc.chainConfigs {
 		for _, node := range chainConfig.NodeConfigs {
 			wg.Add(1)
-			propNumber := chainConfig.LatestProposalNumber
 			go func(nodeConfig *chain.NodeConfig) {
 				defer wg.Done()
 				nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
 			}(node)
 		}
-	}
 
-	wg.Wait()
+		wg.Wait()
+	}
 
 	// wait till all chains halt at upgrade height
 	for _, chainConfig := range uc.chainConfigs {

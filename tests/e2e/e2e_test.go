@@ -37,6 +37,11 @@ import (
 func (s *IntegrationTestSuite) TestMyFunction() {
 	time.Sleep(5 * time.Second)
 
+	s.T().Run("ProtoRev", func(t *testing.T) {
+		t.Parallel()
+		s.ProtoRev()
+	})
+
 	// State Sync Dependent Tests
 
 	// State sync test must be run first, as it creates a new node that the other tests expect to be running
@@ -49,11 +54,6 @@ func (s *IntegrationTestSuite) TestMyFunction() {
 			s.StateSync()
 		})
 	}
-
-	s.T().Run("ProtoRev", func(t *testing.T) {
-		t.Parallel()
-		s.ProtoRev()
-	})
 
 	s.T().Run("ConcentratedLiquidity", func(t *testing.T) {
 		t.Parallel()
@@ -322,7 +322,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	}
 
 	// Change the parameter to enable permisionless pool creation.
-	err := chainA.SubmitParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"))
+	err := chainANode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainA)
 	s.Require().NoError(err)
 
 	// Confirm that the parameter has been changed.
@@ -844,9 +844,8 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	go chainANode.QueryPropStatusTimed(latestPropNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
 	var wg sync.WaitGroup
 
-	wg.Add(len(chainA.NodeConfigs))
-
 	for _, n := range chainA.NodeConfigs {
+		wg.Add(1)
 		go func(nodeConfig *chain.NodeConfig) {
 			defer wg.Done()
 			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, latestPropNumber)
@@ -941,10 +940,10 @@ func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 	chainANode := s.GetDefaultNodeMutex()
 	chainBNode := s.GetDefaultNodeBMutex()
 	fmt.Println("Sending IBC tokens IBCTokenTransferAndCreatePool")
-	chainANode.SendIBC(chainB, chainB.NodeConfigs[1].PublicAddress, initialization.OsmoToken)
-	chainBNode.SendIBC(chainA, chainA.NodeConfigs[1].PublicAddress, initialization.OsmoToken)
-	chainANode.SendIBC(chainB, chainB.NodeConfigs[1].PublicAddress, initialization.StakeToken)
-	chainBNode.SendIBC(chainA, chainA.NodeConfigs[1].PublicAddress, initialization.StakeToken)
+	chainANode.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+	chainBNode.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+	chainANode.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
+	chainBNode.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 
 	chainANode.CreateBalancerPool("ibcDenomPool.json", initialization.ValidatorWalletName)
 }
@@ -957,21 +956,26 @@ func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 // - voting no on the proposal from the delegator wallet
 // - ensuring that delegator's wallet overwrites the validator's vote
 func (s *IntegrationTestSuite) SuperfluidVoting() {
-	chainA := s.GetChainAConfig0()
-	chainANode := s.GetDefaultNodeMutex()
+	// chainA := s.GetChainAConfig0()
+	// chainANode := s.GetDefaultNodeMutex()
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetNodeAtIndex(2)
+	s.Require().NoError(err)
 
-	poolId := chainANode.CreateBalancerPool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
+	poolId := chainANode.CreateBalancerPool("nativeDenomPool.json", chainA.NodeConfigs[2].PublicAddress)
 
 	// enable superfluid assets
 	chainANode.EnableSuperfluidAsset(chainA, fmt.Sprintf("gamm/pool/%d", poolId))
 
+	fmt.Println("enable superfluid asset ")
+
 	// setup wallets and send gamm tokens to these wallets (both chains)
 	superfluidVotingWallet := chainANode.CreateWallet("TestSuperfluidVoting")
-	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, superfluidVotingWallet)
+	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[2].PublicAddress, superfluidVotingWallet)
 	chainANode.LockTokens(fmt.Sprintf("%v%s", sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluidVotingWallet)
 	chainA.LatestLockNumber += 1
 	lastLockNumber := chainA.LatestLockNumber
-	chainANode.SuperfluidDelegate(lastLockNumber, chainA.NodeConfigs[1].OperatorAddress, superfluidVotingWallet)
+	chainANode.SuperfluidDelegate(lastLockNumber, chainA.NodeConfigs[2].OperatorAddress, superfluidVotingWallet)
 
 	// create a text prop, deposit and vote yes
 	chainANode.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)), false)
@@ -980,9 +984,9 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 	chainANode.DepositProposal(chainA.LatestProposalNumber, false)
 	latestPropNumber := chainA.LatestProposalNumber
 	var wg sync.WaitGroup
-	wg.Add(len(chainA.NodeConfigs))
 
 	for _, n := range chainA.NodeConfigs {
+		wg.Add(1)
 		go func(nodeConfig *chain.NodeConfig) {
 			defer wg.Done()
 			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, latestPropNumber)
@@ -1015,7 +1019,7 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 
 	s.Eventually(
 		func() bool {
-			intAccountBalance, err := chainANode.QueryIntermediaryAccount(fmt.Sprintf("gamm/pool/%d", poolId), chainA.NodeConfigs[1].OperatorAddress)
+			intAccountBalance, err := chainANode.QueryIntermediaryAccount(fmt.Sprintf("gamm/pool/%d", poolId), chainA.NodeConfigs[2].OperatorAddress)
 			s.Require().NoError(err)
 			if err != nil {
 				return false
@@ -1036,8 +1040,9 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	chainA := s.GetChainAConfig0()
 	chainANode := s.GetDefaultNodeMutex()
 
-	err := chainA.SubmitCreateConcentratedPoolProposal()
+	poolId, err := chainA.SubmitCreateConcentratedPoolProposal()
 	s.NoError(err)
+	fmt.Println("poolId", poolId)
 
 	var (
 		expectedDenom0       = "stake"
@@ -1049,7 +1054,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	var concentratedPool cltypes.ConcentratedPoolExtension
 	s.Eventually(
 		func() bool {
-			poolId := chainANode.QueryNumPools()
+			// poolId := chainANode.QueryNumPools()
 			concentratedPool = s.updatedConcentratedPool(chainANode, poolId)
 			s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
 			s.Require().Equal(expectedDenom0, concentratedPool.GetToken0())
@@ -1141,7 +1146,8 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 	chainA := s.GetChainAConfig0()
 	chainB := s.GetChainBConfig1()
 
-	node := s.GetDefaultNodeMutex()
+	node, err := chainA.GetNodeAtIndex(1)
+	s.Require().NoError(err)
 
 	// If the RL param is already set. Remember it to set it back at the end
 	param := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
@@ -1161,7 +1167,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 	fmt.Println("Sending >1%")
 	node.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
 
-	contract, err := node.SetupRateLimiting(paths, chainA.NodeConfigs[0].PublicAddress, chainA)
+	contract, err := node.SetupRateLimiting(paths, chainA.NodeConfigs[1].PublicAddress, chainA)
 	s.Require().NoError(err)
 
 	s.Eventually(
@@ -1179,16 +1185,17 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 	node.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
 	// Sending >1%. Should fail
 	fmt.Println("Sending >1%. Should fail")
-	node.FailIBCTransfer(initialization.ValidatorWalletName, chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(over)))
+	node.FailIBCTransfer(initialization.ValidatorWalletName, chainB.NodeConfigs[1].PublicAddress, fmt.Sprintf("%duosmo", int(over)))
 
 	// Removing the rate limit so it doesn't affect other tests
 	node.WasmExecute(contract, `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
 	// reset the param to the original contract if it existed
 	if param != "" {
-		err = chainA.SubmitParamChangeProposal(
+		err = node.ParamChangeProposal(
 			ibcratelimittypes.ModuleName,
 			string(ibcratelimittypes.KeyContractAddress),
 			[]byte(param),
+			chainA,
 		)
 		s.Require().NoError(err)
 		s.Eventually(func() bool {
@@ -1210,17 +1217,18 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 		s.T().Skip("Skipping IBC tests")
 	}
 	chainA := s.GetChainAConfig0()
-
 	nodeA := s.GetDefaultNodeMutex()
 	nodeB := s.GetDefaultNodeBMutex()
 
 	contractAddr := s.UploadAndInstantiateCounter(chainA)
+	fmt.Println("contractAddr", contractAddr)
 
 	transferAmount := int64(10)
 	validatorAddr := nodeB.GetWallet(initialization.ValidatorWalletName)
 	fmt.Println("Sending IBC transfer IBCWasmHooks")
-	nodeB.SendIBCTransfer(validatorAddr, contractAddr, fmt.Sprintf("%duosmo", transferAmount),
-		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr))
+	coin := sdk.NewCoin("uosmo", sdk.NewInt(transferAmount))
+	nodeB.SendIBCTransfer(chainA, validatorAddr, contractAddr,
+		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr), coin)
 
 	// check the balance of the contract
 	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "uosmo"))
@@ -1273,11 +1281,12 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 		s.T().Skip("Skipping IBC tests")
 	}
 	chainA := s.GetChainAConfig0()
-
 	nodeA := s.GetDefaultNodeMutex()
+	chainB := s.GetChainBConfig1()
 
 	// Instantiate the counter contract on chain A
 	contractAddr := s.UploadAndInstantiateCounter(chainA)
+	fmt.Println("contractAddr PacketForwarding", contractAddr)
 
 	transferAmount := int64(10)
 	validatorAddr := nodeA.GetWallet(initialization.ValidatorWalletName)
@@ -1295,9 +1304,11 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 	s.NoError(err)
 	// Send the transfer from chainA to chainB. ChainB will parse the memo and forward the packet back to chainA
 	fmt.Println("Sending IBC transfer packet fwd")
-	nodeA.SendIBCTransfer(validatorAddr, validatorAddr, fmt.Sprintf("%duosmo", transferAmount), string(forwardMemo))
+	coin := sdk.NewCoin("uosmo", sdk.NewInt(transferAmount))
+	nodeA.SendIBCTransfer(chainB, validatorAddr, validatorAddr, string(forwardMemo), coin)
 
 	// check the balance of the contract
+	// TODO issue here, doesnt send to address
 	s.CheckBalance(nodeA, contractAddr, "uosmo", transferAmount)
 
 	// sender wasm addr
@@ -1337,9 +1348,10 @@ func (s *IntegrationTestSuite) AddToExistingLockPostUpgrade() {
 
 // TestAddToExistingLock tests lockups to both regular and superfluid locks.
 func (s *IntegrationTestSuite) AddToExistingLock() {
-	chainA := s.GetChainAConfig0()
-	chainANode := s.GetDefaultNodeMutex()
-	funder := chainA.NodeConfigs[0].PublicAddress
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetNodeAtIndex(2)
+	s.Require().NoError(err)
+	funder := chainANode.PublicAddress
 	// ensure we can add to new locks and superfluid locks
 	// create pool and enable superfluid assets
 	poolId := chainANode.CreateBalancerPool("nativeDenomPool.json", funder)
@@ -1625,18 +1637,17 @@ func (s *IntegrationTestSuite) ExpeditedProposals() {
 	chainA := s.GetChainAConfig0()
 	chainANode := s.GetDefaultNodeMutex()
 
-	chainANode.SubmitTextProposal("expedited text proposal", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
+	latestPropNumber := chainANode.SubmitTextProposal("expedited text proposal", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
 	chainA.LatestProposalNumber += 1
-	latestPropNumber := chainA.LatestProposalNumber
 
 	chainANode.DepositProposal(latestPropNumber, true)
 	totalTimeChan := make(chan time.Duration, 1)
 	go chainANode.QueryPropStatusTimed(latestPropNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
 
 	var wg sync.WaitGroup
-	wg.Add(len(chainA.NodeConfigs))
 
 	for _, n := range chainA.NodeConfigs {
+		wg.Add(1)
 		go func(nodeConfig *chain.NodeConfig) {
 			defer wg.Done()
 			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, latestPropNumber)
@@ -1644,6 +1655,7 @@ func (s *IntegrationTestSuite) ExpeditedProposals() {
 	}
 
 	wg.Wait()
+
 	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
 	var elapsed time.Duration
 	timeoutPeriod := 2 * time.Minute
@@ -1688,6 +1700,7 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 
 	// Triggers the creation of TWAP records.
 	poolId := chainANode.CreateBalancerPool(poolFile, initialization.ValidatorWalletName)
+	fmt.Println("poolId", poolId)
 	swapWalletAddr := chainANode.CreateWalletAndFund(walletName, []string{initialization.WalletFeeTokens.String()})
 
 	// We add 5 ms to avoid landing directly on block time in twap. If block time

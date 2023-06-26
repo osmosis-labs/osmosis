@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -128,11 +129,17 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 	}
 	maxDebugLogTriesLeft := maxDebugLogsPerCommand
 
+	expectedSequence := 0
+	var sequenceMismatchRegex = regexp.MustCompile(`account sequence mismatch, expected (\d+),`)
+
 	// We use the `require.Eventually` function because it is only allowed to do one transaction per block without
 	// sequence numbers. For simplicity, we avoid keeping track of the sequence number and just use the `require.Eventually`.
 	require.Eventually(
 		t,
 		func() bool {
+			// outBuf.Reset()
+			// errBuf.Reset()
+			// fmt.Println("ADAM COMMAND", command)
 			exec, err := m.pool.Client.CreateExec(docker.CreateExecOptions{
 				Context:      ctx,
 				AttachStdout: true,
@@ -150,13 +157,47 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 				ErrorStream:  &errBuf,
 			})
 			if err != nil {
+				fmt.Println("ERR START EXEC", err)
 				return false
 			}
 
 			errBufString := errBuf.String()
-			if len(command) > 2 {
-				if command[2] == "wasm" && errBufString != "" {
-					fmt.Println("adam", errBufString)
+			// fmt.Println("ERR BUF STRING", errBufString)
+			// fmt.Println("outBuf.String()", outBuf.String())
+			if (errBufString != "" || outBuf.String() != "") && containerName != hermesContainerName {
+				fmt.Println("ADAM COMMAND", command)
+				fmt.Println("Error:", errBufString)
+				// fmt.Println(errBufString)
+				// Check if the error message matches the expected pattern
+				matches := sequenceMismatchRegex.FindAllStringSubmatch(errBufString, -1)
+				fmt.Println("Matches:", matches)
+				if len(matches) > 0 {
+					lastArg := command[len(command)-1]
+					if strings.Contains(lastArg, "--sequence") {
+						// Remove the last argument from the command
+						command = command[:len(command)-1]
+					}
+					expectedSequenceStr := matches[len(matches)-1][1]
+					expectedSequence, _ = strconv.Atoi(expectedSequenceStr)
+					fmt.Println("Expected sequence:", expectedSequence)
+					modifiedCommand := append(command, fmt.Sprintf("--sequence=%d", expectedSequence))
+					// Update the command for the next iteration
+					command = modifiedCommand
+				}
+				matches = sequenceMismatchRegex.FindAllStringSubmatch(outBuf.String(), -1)
+				fmt.Println("Matches:", matches)
+				if len(matches) > 0 {
+					lastArg := command[len(command)-1]
+					if strings.Contains(lastArg, "--sequence") {
+						// Remove the last argument from the command
+						command = command[:len(command)-1]
+					}
+					expectedSequenceStr := matches[len(matches)-1][1]
+					expectedSequence, _ = strconv.Atoi(expectedSequenceStr)
+					fmt.Println("Expected sequence:", expectedSequence)
+					modifiedCommand := append(command, fmt.Sprintf("--sequence=%d", expectedSequence))
+					// Update the command for the next iteration
+					command = modifiedCommand
 				}
 			}
 
