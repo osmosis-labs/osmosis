@@ -35,11 +35,14 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestMyFunction() {
-	time.Sleep(5 * time.Second)
-
 	s.T().Run("ProtoRev", func(t *testing.T) {
 		t.Parallel()
 		s.ProtoRev()
+	})
+
+	s.T().Run("ConcentratedLiquidity", func(t *testing.T) {
+		t.Parallel()
+		s.ConcentratedLiquidity()
 	})
 
 	// State Sync Dependent Tests
@@ -54,11 +57,6 @@ func (s *IntegrationTestSuite) TestMyFunction() {
 			s.StateSync()
 		})
 	}
-
-	s.T().Run("ConcentratedLiquidity", func(t *testing.T) {
-		t.Parallel()
-		s.ConcentratedLiquidity()
-	})
 
 	// TEMP DISABLE
 	s.T().Run("SuperfluidVoting", func(t *testing.T) {
@@ -940,16 +938,16 @@ func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 		s.T().Skip("Skipping IBC tests")
 	}
 	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
+	chainANode, err := chainA.GetNodeAtIndex(1)
 	s.Require().NoError(err)
 	chainB := s.configurer.GetChainConfig(1)
-	chainBNode, err := chainB.GetDefaultNode()
+	chainBNode, err := chainB.GetNodeAtIndex(1)
 	s.Require().NoError(err)
 	fmt.Println("Sending IBC tokens IBCTokenTransferAndCreatePool")
-	chainANode.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
-	chainBNode.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
-	chainANode.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
-	chainBNode.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
+	chainANode.SendIBC(chainB, chainB.NodeConfigs[1].PublicAddress, initialization.OsmoToken)
+	chainBNode.SendIBC(chainA, chainA.NodeConfigs[1].PublicAddress, initialization.OsmoToken)
+	chainANode.SendIBC(chainB, chainB.NodeConfigs[1].PublicAddress, initialization.StakeToken)
+	chainBNode.SendIBC(chainA, chainA.NodeConfigs[1].PublicAddress, initialization.StakeToken)
 
 	chainANode.CreateBalancerPool("ibcDenomPool.json", initialization.ValidatorWalletName)
 }

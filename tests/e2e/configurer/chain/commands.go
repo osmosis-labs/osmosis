@@ -234,7 +234,8 @@ func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) int {
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	os.Remove(localProposalFile)
+	err = os.Remove(localProposalFile)
+	require.NoError(n.t, err)
 
 	startIndex := strings.Index(resp.String(), `[{"key":"proposal_id","value":"`) + len(`[{"key":"proposal_id","value":"`)
 	endIndex := strings.Index(resp.String()[startIndex:], `"`)
@@ -252,10 +253,6 @@ func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) int {
 
 func (n *NodeConfig) SendIBCTransfer(dstChain *Config, from, recipient, memo string, token sdk.Coin) {
 	n.LogActionF("IBC sending %s from %s to %s. memo: %s", token.Amount.String(), from, recipient, memo)
-
-	// cmd := []string{"osmosisd", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recipient, amount, fmt.Sprintf("--from=%s", from), "--memo", memo}
-
-	// _, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 
 	cmd := []string{"hermes", "tx", "ft-transfer", "--dst-chain", dstChain.Id, "--src-chain", n.chainId, "--src-port", "transfer", "--src-channel", "channel-0", "--amount", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000", "--memo", memo}
 	_, _, err := n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
@@ -629,25 +626,25 @@ func (n *NodeConfig) SendIBC(dstChain *Config, recipient string, token sdk.Coin)
 	dstNode, err := dstChain.GetDefaultNode()
 	require.NoError(n.t, err)
 
-	// // removes the fee token from balances for calculating the difference in other tokens
-	// // before and after the IBC send. Since we run tests in parallel now, some tests may
-	// // send uosmo between accounts while this test is running. Since we don't care about
-	// // non ibc denoms, its safe to filter uosmo out.
-	// removeFeeTokenFromBalance := func(balance sdk.Coins) sdk.Coins {
-	// 	filteredCoinDenoms := []string{}
-	// 	for _, coin := range balance {
-	// 		if !strings.HasPrefix(coin.Denom, "ibc/") {
-	// 			filteredCoinDenoms = append(filteredCoinDenoms, coin.Denom)
-	// 		}
-	// 	}
-	// 	feeRewardTokenBalance := balance.FilterDenoms(filteredCoinDenoms)
-	// 	return balance.Sub(feeRewardTokenBalance)
-	// }
+	// removes the fee token from balances for calculating the difference in other tokens
+	// before and after the IBC send. Since we run tests in parallel now, some tests may
+	// send uosmo between accounts while this test is running. Since we don't care about
+	// non ibc denoms, its safe to filter uosmo out.
+	removeFeeTokenFromBalance := func(balance sdk.Coins) sdk.Coins {
+		filteredCoinDenoms := []string{}
+		for _, coin := range balance {
+			if !strings.HasPrefix(coin.Denom, "ibc/") {
+				filteredCoinDenoms = append(filteredCoinDenoms, coin.Denom)
+			}
+		}
+		feeRewardTokenBalance := balance.FilterDenoms(filteredCoinDenoms)
+		return balance.Sub(feeRewardTokenBalance)
+	}
 
 	balancesDstPreWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
 	require.NoError(n.t, err)
 	fmt.Println("balancesDstPre with no fee removed: ", balancesDstPreWithTxFeeBalance)
-	//balancesDstPre := removeFeeTokenFromBalance(balancesDstPreWithTxFeeBalance)
+	balancesDstPre := removeFeeTokenFromBalance(balancesDstPreWithTxFeeBalance)
 	cmd := []string{"hermes", "tx", "ft-transfer", "--dst-chain", dstChain.Id, "--src-chain", n.chainId, "--src-port", "transfer", "--src-channel", "channel-0", "--amount", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000"}
 	_, _, err = n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
 	// cmd := []string{"osmosisd", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recipient, token.String(), fmt.Sprintf("--from=%s", initialization.ValidatorWalletName)}
@@ -661,36 +658,36 @@ func (n *NodeConfig) SendIBC(dstChain *Config, recipient string, token sdk.Coin)
 	// require.NoError(n.t, err)
 	fmt.Println("IBC send successful after exec ADAM")
 
-	// require.Eventually(
-	// 	n.t,
-	// 	func() bool {
-	// 		fmt.Println("IBC send successful in eventual loop ADAM")
-	// 		balancesDstPostWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
-	// 		require.NoError(n.t, err)
-	// 		fmt.Println("balancesDstPost with no fee removed: ", balancesDstPostWithTxFeeBalance)
+	require.Eventually(
+		n.t,
+		func() bool {
+			fmt.Println("IBC send successful in eventual loop ADAM")
+			balancesDstPostWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
+			require.NoError(n.t, err)
+			fmt.Println("balancesDstPost with no fee removed: ", balancesDstPostWithTxFeeBalance)
 
-	// 		balancesDstPost := removeFeeTokenFromBalance(balancesDstPostWithTxFeeBalance)
+			balancesDstPost := removeFeeTokenFromBalance(balancesDstPostWithTxFeeBalance)
 
-	// 		fmt.Println("balancesDstPost with fee removed: ", balancesDstPost)
+			fmt.Println("balancesDstPost with fee removed: ", balancesDstPost)
 
-	// 		fmt.Println("balancesDstPre with fee removed: ", balancesDstPre)
+			fmt.Println("balancesDstPre with fee removed: ", balancesDstPre)
 
-	// 		ibcCoin := balancesDstPost.Sub(balancesDstPre)
-	// 		if ibcCoin.Len() == 1 {
-	// 			tokenPre := balancesDstPre.AmountOfNoDenomValidation(ibcCoin[0].Denom)
-	// 			fmt.Println("tokenPre: ", tokenPre)
-	// 			tokenPost := balancesDstPost.AmountOfNoDenomValidation(ibcCoin[0].Denom)
-	// 			resPre := token.Amount
-	// 			resPost := tokenPost.Sub(tokenPre)
-	// 			return resPost.Uint64() == resPre.Uint64()
-	// 		} else {
-	// 			return false
-	// 		}
-	// 	},
-	// 	5*time.Minute,
-	// 	time.Second,
-	// 	"tx not received on destination chain",
-	// )
+			ibcCoin := balancesDstPost.Sub(balancesDstPre)
+			if ibcCoin.Len() == 1 {
+				tokenPre := balancesDstPre.AmountOfNoDenomValidation(ibcCoin[0].Denom)
+				fmt.Println("tokenPre: ", tokenPre)
+				tokenPost := balancesDstPost.AmountOfNoDenomValidation(ibcCoin[0].Denom)
+				resPre := token.Amount
+				resPost := tokenPost.Sub(tokenPre)
+				return resPost.Uint64() == resPre.Uint64()
+			} else {
+				return false
+			}
+		},
+		5*time.Minute,
+		time.Second,
+		"tx not received on destination chain",
+	)
 
 	n.t.Log("successfully sent IBC tokens")
 }

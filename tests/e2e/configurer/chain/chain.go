@@ -183,32 +183,17 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 
 	balancesDstPreWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
 	require.NoError(c.t, err)
-	fmt.Println("balancesDstPre with no fee removed: ", balancesDstPreWithTxFeeBalance)
 	balancesDstPre := removeFeeTokenFromBalance(balancesDstPreWithTxFeeBalance)
 	cmd := []string{"hermes", "tx", "ft-transfer", "--dst-chain", dstChain.Id, "--src-chain", c.Id, "--src-port", "transfer", "--src-channel", "channel-0", "--amount", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000"}
 	_, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
 	require.NoError(c.t, err)
-	// cmd = []string{"hermes", "clear", "packets", "--chain", dstChain.Id, "--port", "transfer", "--channel", "channel-0"}
-	// _, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
-	// require.NoError(c.t, err)
-	// cmd = []string{"hermes", "clear", "packets", "--chain", c.Id, "--port", "transfer", "--channel", "channel-0"}
-	// _, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
-	// require.NoError(c.t, err)
-	fmt.Println("IBC send successful after exec ADAM")
 
 	require.Eventually(
 		c.t,
 		func() bool {
-			fmt.Println("IBC send successful in eventual loop ADAM")
 			balancesDstPostWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
 			require.NoError(c.t, err)
-			fmt.Println("balancesDstPost with no fee removed: ", balancesDstPostWithTxFeeBalance)
-
 			balancesDstPost := removeFeeTokenFromBalance(balancesDstPostWithTxFeeBalance)
-
-			fmt.Println("balancesDstPost with fee removed: ", balancesDstPost)
-
-			fmt.Println("balancesDstPre with fee removed: ", balancesDstPre)
 
 			ibcCoin := balancesDstPost.Sub(balancesDstPre)
 			if ibcCoin.Len() == 1 {
@@ -292,52 +277,3 @@ func (c *Config) SubmitCreateConcentratedPoolProposal() (uint64, error) {
 	poolId := node.QueryNumPools()
 	return poolId, nil
 }
-
-// func (c *Config) SetupRateLimiting(paths, gov_addr string) (string, error) {
-// 	node, err := c.GetDefaultNode()
-// 	if err != nil {
-// 		return "", err
-// 	}
-
-// 	// copy the contract from x/rate-limit/testdata/
-// 	wd, err := os.Getwd()
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	// go up two levels
-// 	projectDir := filepath.Dir(filepath.Dir(wd))
-// 	fmt.Println(wd, projectDir)
-// 	_, err = util.CopyFile(projectDir+"/x/ibc-rate-limit/bytecode/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
-// 	if err != nil {
-// 		return "", err
-// 	}
-
-// 	codeId := node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
-// 	c.LatestCodeId = int(node.QueryLatestWasmCodeID())
-// 	node.InstantiateWasmContract(
-// 		strconv.Itoa(codeId),
-// 		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [%s] }`, gov_addr, node.PublicAddress, paths),
-// 		initialization.ValidatorWalletName)
-
-// 	contracts, err := node.QueryContractsFromId(codeId)
-// 	if err != nil {
-// 		return "", err
-// 	}
-
-// 	contract := contracts[len(contracts)-1]
-
-// 	err = c.SubmitParamChangeProposal(
-// 		ibcratelimittypes.ModuleName,
-// 		string(ibcratelimittypes.KeyContractAddress),
-// 		[]byte(fmt.Sprintf(`"%s"`, contract)),
-// 	)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	require.Eventually(c.t, func() bool {
-// 		val := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
-// 		return strings.Contains(val, contract)
-// 	}, time.Second*30, time.Millisecond*500)
-// 	fmt.Println("contract address set to", contract)
-// 	return contract, nil
-// }
