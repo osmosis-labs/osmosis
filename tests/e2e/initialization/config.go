@@ -71,6 +71,7 @@ const (
 	StakeAmountA  = 100000000000
 	UstBalanceA   = 500000000000000
 	LuncBalanceA  = 500000000000000
+	DaiBalanceA   = "100000000000000000000000"
 	// chainB
 	ChainBID          = "osmo-test-b"
 	OsmoBalanceB      = 500000000000
@@ -93,9 +94,7 @@ var (
 	StakeAmountIntB  = sdk.NewInt(StakeAmountB)
 	StakeAmountCoinB = sdk.NewCoin(OsmoDenom, StakeAmountIntB)
 
-	// Pool balances for testing Stride migration in v15.
-	// Can be removed after v15 upgrade.
-	DaiOsmoPoolBalances = fmt.Sprintf("%d%s", LuncBalanceA, DaiDenom)
+	DaiOsmoPoolBalances = fmt.Sprintf("%s%s", DaiBalanceA, DaiDenom)
 
 	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom, IonBalanceA, IonDenom, UstBalanceA, UstIBCDenom, LuncBalanceA, LuncIBCDenom)
 	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom, IonBalanceB, IonDenom)
