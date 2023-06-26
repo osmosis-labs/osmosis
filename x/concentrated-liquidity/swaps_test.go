@@ -2791,7 +2791,14 @@ func (s *KeeperTestSuite) validateAmountsWithTolerance(amountA sdk.Int, amountB 
 }
 
 func (s *KeeperTestSuite) TestFunctionalSwaps() {
-	positions := NewRandomizedPositions(10)
+	positions := Positions{
+		numSwaps:       5,
+		numAccounts:    5,
+		numFullRange:   4,
+		numNarrowRange: 3,
+		numConsecutive: 2,
+		numOverlapping: 1,
+	}
 
 	// Init s.
 	s.SetupTest()
@@ -2905,10 +2912,10 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	tokenInAfterSpreadFactors = tokenInAmt.Mul(sdk.OneDec().Sub(spreadFactor))
 
 	// Range 1
-	tokenOut1 := liq_1.Mul(sqrtPriceCurr.Sub(sqrt4999)).TruncateInt()
-	tokenIn1 := liq_1.MulRoundUp(sqrtPriceCurr.Sub(sqrt4999).Quo(sqrt4999.Mul(sqrtPriceCurr)))
+	tokenOut1 := liq_1.Mul(sqrtPriceCurr.Sub(sqrt4999))
+	tokenIn1 := liq_1.Mul(sqrtPriceCurr.Sub(sqrt4999).Quo(sqrt4999.Mul(sqrtPriceCurr)))
 
-	tokenIn := tokenInAfterSpreadFactors.Sub(tokenIn1)
+	tokenIn := tokenInAfterSpreadFactors.Sub(tokenIn1).TruncateDec()
 
 	// Swap multiple times ETH for USDC, therefore decreasing the spot price
 	_, _, totalTokenIn, totalTokenOut = s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin0, USDC, types.MinSpotPrice, positions.numSwaps)
@@ -2918,7 +2925,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// Range 2
 	liq_2 := clPool.GetLiquidity()
 	sqrtNext2 := liq_2.Quo(liq_2.Quo(sqrt4999).Add(tokenIn))
-	tokenOut2 := liq_2.Mul(sqrt4999.Sub(sqrtNext2)).TruncateInt()
+	tokenOut2 := liq_2.Mul(sqrt4999.Sub(sqrtNext2))
 
 	// Depiction of the pool after the swaps (from 5146 to 4990), decreasing the spot price
 	//								   <
@@ -2955,11 +2962,10 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// print(token_out)    # 5052068983.121266708067570832
 
 	// Get expected values from the calculations above
-	expectedSqrtPrice = osmomath.BigDecFromSDKDec(sqrtPriceCurr.Add(tokenInAfterSpreadFactors.Quo(liq)))
+	expectedSqrtPrice = osmomath.BigDecFromSDKDec(sqrtNext2)
 	actualSqrtPrice = osmomath.BigDecFromSDKDec(clPool.GetCurrentSqrtPrice())
 	expectedTokenIn = swapCoin0.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
-	expectedTokenOut = tokenOut1.Add(tokenOut2)
-	fmt.Println(expectedTokenOut, totalTokenOut.Amount) // 5028381999 5028378430
+	expectedTokenOut = tokenOut1.Add(tokenOut2).TruncateInt()
 
 	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
 	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice))
