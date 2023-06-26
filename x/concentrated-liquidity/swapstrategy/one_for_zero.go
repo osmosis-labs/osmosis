@@ -87,9 +87,9 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 	// This covers an edge case where due to the lack of precision, the difference between the current sqrt price and the next sqrt price is so small that
 	// it ends up being rounded down to zero. This leads to an infinite loop in the swap algorithm. From knowing that this is a case where !hasReachedTarget,
 	// (that is, the swap stops within a bucket), we charge the full amount remaining in to the user and recalculate the amount out with higher precision.
-	// Notice, that in the zero for one direction we instead use the sqrtPriceCurrent to calculate the amount out. We cannot do that here because that
-	// would require us inverting the current price. Due to our internal fixed point math, inverting it would lead to a price of zero, breaking the calculation.
-	// As a result, we recalculate in sqrt price domain with higher precision.
+	// Notice, that in the zero for one direction we instead use the sqrtPriceCurrent to calculate the current price to get the amount out from amount in.
+	// We cannot do that here because that would require us inverting the current price. Due to our internal fixed point math, inverting it would lead to a price of zero,
+	// breaking the calculation. As a result, we recalculate the amount out in sqrt price domain with higher precision here.
 	if !hasReachedTarget && sqrtPriceCurrent.Equal(sqrtPriceNext) && amountOneIn.IsZero() && !amountOneInRemaining.IsZero() {
 		amountOneIn = amountOneInRemaining
 
