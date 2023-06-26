@@ -198,7 +198,8 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 
 			expectedSqrtPriceNext: types.MaxSqrtPrice.Sub(sdk.SmallestDec()),
 
-			expectedAmountInConsumed:        sdk.NewDec(99),
+			expectedAmountInConsumed: sdk.NewDec(99),
+			// Zero since the computed value is so small that it is rounded to zero.
 			expectedAmountOut:               sdk.ZeroDec(),
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
 		},
@@ -220,9 +221,6 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 
 func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 	var (
-		// sqrtPriceCurrent = defaultSqrtPriceLower
-		// sqrtPriceNext    = defaultSqrtPriceUpper
-		// sqrtPriceTarget  = sqrtPriceNext
 		// Target is not reached means that we stop at the sqrt price earlier
 		// than expected. As a result, we recalculate the amount out and amount in
 		// necessary to reach the earlier target.
@@ -350,7 +348,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 			expectedAmountOneIn:             sdk.NewDec(101),
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
 		},
-		"8: zero difference between sqrt price current and sqrt price next does not occur due to next sqrt price being rounded up by 1 ULP, the target is reached and progress made": {
+		"8: zero difference between sqrt price current and sqrt price next does not occur due to next sqrt price being rounded up by 1 ULP, the target is reached": {
 			// Note the numbers are hand-picked to reproduce this specific case.
 			sqrtPriceCurrent: types.MaxSqrtPrice.Sub(sdk.SmallestDec()),
 			sqrtPriceTarget:  types.MaxSqrtPrice,
@@ -363,8 +361,8 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 			// next sqrt price in favor of the pool.
 			expectedSqrtPriceNext: types.MaxSqrtPrice,
 
-			// It does not consume the full amount remaining out give. However, since the next sqrt price
-			// is updated, the progress is made, preventing an infinite loop in swap step..
+			// It does not consume the full amount remaining out given. However, since the next sqrt price
+			// is updated, the progress is made, preventing an infinite loop in swap step.
 			expectedAmountZeroOutConsumed:   sdk.ZeroDec(),
 			expectedAmountOneIn:             sdk.NewDec(101),
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
