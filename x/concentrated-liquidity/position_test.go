@@ -35,8 +35,7 @@ func (s *KeeperTestSuite) AssertPositionsDoNotExist(positionIds []uint64) {
 		oldPositionName := string(types.KeyPositionId(positionId))
 		for _, uptimeAccum := range uptimeAccumulators {
 			// Check if the accumulator contains the position.
-			hasPosition, err := uptimeAccum.HasPosition(oldPositionName)
-			s.Require().NoError(err)
+			hasPosition := uptimeAccum.HasPosition(oldPositionName)
 			s.Require().False(hasPosition)
 		}
 
@@ -57,9 +56,7 @@ func (s *KeeperTestSuite) GetTotalAccruedRewardsByAccumulator(positionId uint64,
 	for i, uptimeAccum := range uptimeAccumulators {
 		newPositionName := string(types.KeyPositionId(positionId))
 		// Check if the accumulator contains the position.
-		hasPosition, err := uptimeAccum.HasPosition(newPositionName)
-		s.Require().NoError(err)
-
+		hasPosition := uptimeAccum.HasPosition(newPositionName)
 		if requireHasPosition {
 			s.Require().True(hasPosition)
 		}
@@ -296,8 +293,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			for uptimeIndex, uptime := range supportedUptimes {
 				// Position-related checks
 
-				recordExists, err := newUptimeAccums[uptimeIndex].HasPosition(positionName)
-				s.Require().NoError(err)
+				recordExists := newUptimeAccums[uptimeIndex].HasPosition(positionName)
 				s.Require().True(recordExists)
 
 				// Ensure position's record has correct values
@@ -1300,8 +1296,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimSpreadRewards(
 		hasPosition := s.clk.HasPosition(s.Ctx, oldPositionId)
 		s.Require().False(hasPosition)
 
-		hasSpreadRewardPositionTracker, err := spreadRewardAccum.HasPosition(types.KeySpreadRewardPositionAccumulator(oldPositionId))
-		s.Require().NoError(err)
+		hasSpreadRewardPositionTracker := spreadRewardAccum.HasPosition(types.KeySpreadRewardPositionAccumulator(oldPositionId))
 		s.Require().False(hasSpreadRewardPositionTracker)
 	}
 }
