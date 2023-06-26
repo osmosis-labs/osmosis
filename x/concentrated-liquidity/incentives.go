@@ -273,10 +273,7 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 		// Ensure that the given balancer pool has a record on the given uptime accumulator.
 		// We expect this to have been set in a prior call to `prepareBalancerAsFullRange`, which
 		// should precede all calls of `claimAndResetFullRangeBalancerPool`
-		recordExists, err := uptimeAccums[uptimeIndex].HasPosition(balancerPositionName)
-		if err != nil {
-			return sdk.Coins{}, err
-		}
+		recordExists := uptimeAccums[uptimeIndex].HasPosition(balancerPositionName)
 		if !recordExists {
 			return sdk.Coins{}, types.BalancerRecordNotFoundError{ClPoolId: clPoolId, BalancerPoolId: balPoolId, UptimeIndex: uint64(uptimeIndex)}
 		}
@@ -301,10 +298,7 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 		totalRewards = totalRewards.Add(claimedRewards...)
 
 		// Ensure record was deleted
-		recordExists, err = uptimeAccums[uptimeIndex].HasPosition(balancerPositionName)
-		if err != nil {
-			return sdk.Coins{}, err
-		}
+		recordExists = uptimeAccums[uptimeIndex].HasPosition(balancerPositionName)
 		if recordExists {
 			return sdk.Coins{}, types.BalancerRecordNotClearedError{ClPoolId: clPoolId, BalancerPoolId: balPoolId, UptimeIndex: uint64(uptimeIndex)}
 		}
@@ -752,10 +746,7 @@ func (k Keeper) initOrUpdatePositionUptimeAccumulators(ctx sdk.Context, poolId u
 	for uptimeIndex, curUptimeAccum := range uptimeAccumulators {
 		// If a record does not exist for this uptime accumulator, create a new position.
 		// Otherwise, add to existing record.
-		recordExists, err := curUptimeAccum.HasPosition(positionName)
-		if err != nil {
-			return err
-		}
+		recordExists := curUptimeAccum.HasPosition(positionName)
 
 		if !recordExists {
 			// Liquidity cannot be negative for a new position
@@ -812,10 +803,7 @@ func updateAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey strin
 	}
 
 	// Check if position record was deleted after claiming rewards.
-	hasPosition, err := accum.HasPosition(positionKey)
-	if err != nil {
-		return sdk.Coins{}, sdk.DecCoins{}, err
-	}
+	hasPosition := accum.HasPosition(positionKey)
 
 	// If position still exists, we update the position's accumulator value to be the current accumulator value minus the growth outside.
 	if hasPosition {
@@ -845,10 +833,7 @@ func moveRewardsToNewPositionAndDeleteOldAcc(accum accum.AccumulatorObject, oldP
 		return types.ModifySamePositionAccumulatorError{PositionAccName: oldPositionName}
 	}
 
-	hasPosition, err := accum.HasPosition(oldPositionName)
-	if err != nil {
-		return err
-	}
+	hasPosition := accum.HasPosition(oldPositionName)
 	if !hasPosition {
 		return fmt.Errorf("position %s does not exist", oldPositionName)
 	}
@@ -927,10 +912,7 @@ func (k Keeper) prepareClaimAllIncentivesForPosition(ctx sdk.Context, positionId
 	for uptimeIndex, uptimeAccum := range uptimeAccumulators {
 		// Check if the accumulator contains the position.
 		// There should never be a case where you can have a position for 1 accumulator, and not the rest.
-		hasPosition, err := uptimeAccum.HasPosition(positionName)
-		if err != nil {
-			return sdk.Coins{}, sdk.Coins{}, err
-		}
+		hasPosition := uptimeAccum.HasPosition(positionName)
 
 		// If the accumulator contains the position, claim the position's incentives.
 		if hasPosition {
