@@ -140,8 +140,8 @@ func CreateUpgradeHandler(
 		}
 
 		// Swap one DAI for OSMO from the community pool.
-		oneDai := sdk.NewCoin(DAIIBCDenom, sdk.NewInt(1000000))
-		tokenInAmt, err := keepers.GAMMKeeper.SwapExactAmountOut(ctx, communityPoolAddress, daiOsmoPool, DesiredDenom0, sdk.NewInt(10000000), oneDai, sdk.ZeroDec())
+		oneDai := sdk.NewCoin(DAIIBCDenom, sdk.NewInt(1000000000000000000))
+		tokenInAmt, err := keepers.GAMMKeeper.SwapExactAmountOut(ctx, communityPoolAddress, daiOsmoPool, DesiredDenom0, sdk.NewInt(1000000), oneDai, sdk.ZeroDec())
 		if err != nil {
 			return nil, err
 		}
