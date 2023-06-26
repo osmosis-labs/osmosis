@@ -168,8 +168,9 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, 
 	// This is acceptable as the order of magnitude of liquidity would have to be greater than 18 for the changes to start being significant.
 	// For the difference to be greater than 1, the order of magnitude of liquidity would have to be greater than 18 + 6 = 24 (6 is due to precision).
 	if !hasReachedTarget && sqrtPriceCurrent.Equal(sqrtPriceNext) && amountZeroOut.IsZero() && !amountZeroRemainingOut.IsZero() {
-		// Up charge amount one in in favor of the pool by adding 1 ULP to the next sqrt price.
-		amountOneIn = math.CalcAmount1Delta(liquidity, sqrtPriceNext.Add(oneULP), sqrtPriceCurrent, true)
+		// Up charge amount one in in favor of the pool by adding 1 ULP to the current sqrt price.
+		// This makes it as if the sqrt price next was re-calculated with 1 additional ULP closer to sqrtPriceTarget.
+		amountOneIn = math.CalcAmount1Delta(liquidity, sqrtPriceCurrent.Add(oneULP), sqrtPriceCurrent, true)
 		// Consume the full remaining amount out to stop the swap.
 		amountZeroOut = amountZeroRemainingOut
 	}
