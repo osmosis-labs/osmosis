@@ -86,24 +86,18 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 
 	// This covers an edge case where due to the lack of precision, the difference between the current sqrt price and the next sqrt price is so small that
 	// it ends up being rounded down to zero. This leads to an infinite loop in the swap algorithm. From knowing that this is a case where !hasReachedTarget,
-	//(that is the swap stops within a bucket), we charge the full amount remaining in to the user and infer the amount out from the sqrt price truncated
+	// (that is the swap stops within a bucket), we charge the full amount remaining in to the user and infer the amount out from the sqrt price truncated
 	// in favor of the pool.
 	if !hasReachedTarget && sqrtPriceCurrent.Equal(sqrtPriceNext) && amountOneIn.IsZero() && !amountOneInRemaining.IsZero() {
 		amountOneIn = amountOneInRemaining
 
-		// CalcAmount0Delta with roundUp flag as false.
-		// Recalculate the amount out with increased precision.
+		// Recalculate sqrtPriceNext with higher precision.
 		liquidityBigDec := osmomath.BigDecFromSDKDec(liquidity)
 		sqrtPriceCurrentBigDec := osmomath.BigDecFromSDKDec(sqrtPriceCurrent)
 		sqrtPriceNextBigDec := math.GetNextSqrtPriceFromAmount1InRoundingDownBigDec(sqrtPriceCurrentBigDec, liquidityBigDec, osmomath.BigDecFromSDKDec(amountOneIn))
 
-		denom := sqrtPriceNextBigDec.MulRoundUp(sqrtPriceCurrentBigDec)
-		// TODO: it might still be possible to get zero here and end up returning nothing to the user. Is this a problem?
-		// Mayne try constructing an example where this breaks. A posibility is to use Mul or MulRoundUp in the calculation below
-		// instead: liquidityBigDec.MulTruncate(diff). However, the problem then is that the rounding does not happen in favor of the pool anymore
-		diff := sqrtPriceNextBigDec.Sub(sqrtPriceCurrentBigDec)
-
-		amountZeroOut = liquidityBigDec.MulTruncate(diff).QuoTruncate(denom).SDKDec()
+		// SDKDec() truncates which is desired.
+		amountZeroOut = math.CalcAmount0DeltaBigDec(liquidityBigDec, sqrtPriceNextBigDec, sqrtPriceCurrentBigDec, false).SDKDec()
 	}
 
 	// Handle spread rewards.
