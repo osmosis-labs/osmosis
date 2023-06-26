@@ -234,7 +234,7 @@ pub fn denom_alias_operations(
                 }
 
                 DENOM_ALIAS_MAP.save(deps.storage, &path, &(denom_alias.clone(), true).into())?;
-                DENOM_ALIAS_REVERSE_MAP.save(deps.storage, &denom_alias, &path)?;
+                DENOM_ALIAS_REVERSE_MAP.save(deps.storage, &denom_alias, &(&path, true).into())?;
 
                 response =
                     response.add_attribute("set_denom_alias", format!("{denom_alias} <=> {path}"));
@@ -259,7 +259,7 @@ pub fn denom_alias_operations(
 
                 DENOM_ALIAS_MAP.save(deps.storage, &path, &(&new_alias, is_enabled).into())?;
                 DENOM_ALIAS_REVERSE_MAP.remove(deps.storage, &map_entry.value);
-                DENOM_ALIAS_REVERSE_MAP.save(deps.storage, &new_alias, &path)?;
+                DENOM_ALIAS_REVERSE_MAP.save(deps.storage, &new_alias, &(&path, true).into())?;
 
                 response = response
                     .add_attribute("change_denom_alias", format!("{new_alias} <=> {}", path));
@@ -287,7 +287,11 @@ pub fn denom_alias_operations(
                     &(map_entry.value.clone(), true).into(),
                 )?;
                 // Add to the enabled alias to the reverse map
-                DENOM_ALIAS_REVERSE_MAP.save(deps.storage, &map_entry.value, &path)?;
+                DENOM_ALIAS_REVERSE_MAP.save(
+                    deps.storage,
+                    &map_entry.value,
+                    &(&path, true).into(),
+                )?;
 
                 response = response.add_attribute(
                     "enable_denom_alias",
@@ -303,8 +307,12 @@ pub fn denom_alias_operations(
                     &path,
                     &(map_entry.value.clone(), false).into(),
                 )?;
-                // Remove the disabled alias from the reverse map
-                DENOM_ALIAS_REVERSE_MAP.remove(deps.storage, &map_entry.value);
+                // Disable the  alias on the reverse map
+                DENOM_ALIAS_REVERSE_MAP.save(
+                    deps.storage,
+                    &map_entry.value,
+                    &(&path, false).into(),
+                )?;
 
                 response = response
                     .add_attribute("disable_denom_alias", format!("{denom_alias} <=> {path}"));
@@ -1644,7 +1652,7 @@ mod tests {
             DENOM_ALIAS_REVERSE_MAP
                 .may_load(deps.as_ref().storage, "alias1")
                 .unwrap(),
-            Some(path1.to_string())
+            Some((path1.to_string(), true).into())
         );
         assert_eq!(
             res.attributes,
@@ -1691,7 +1699,7 @@ mod tests {
             DENOM_ALIAS_REVERSE_MAP
                 .may_load(deps.as_ref().storage, "newalias1")
                 .unwrap(),
-            Some(path1.to_string())
+            Some((path1.to_string(), true).into())
         );
 
         assert_eq!(
@@ -1735,9 +1743,9 @@ mod tests {
         );
         assert_eq!(
             DENOM_ALIAS_REVERSE_MAP
-                .may_load(deps.as_ref().storage, "alias3")
+                .may_load(deps.as_ref().storage, "newalias1")
                 .unwrap(),
-            None
+            Some((path1.to_string(), false).into())
         );
 
         assert_eq!(
@@ -1775,7 +1783,7 @@ mod tests {
             DENOM_ALIAS_REVERSE_MAP
                 .may_load(deps.as_ref().storage, "newalias1")
                 .unwrap(),
-            Some(path1.to_string())
+            Some((path1.to_string(), true).into())
         );
 
         assert_eq!(

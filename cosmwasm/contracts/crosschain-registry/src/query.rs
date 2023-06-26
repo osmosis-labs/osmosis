@@ -102,11 +102,19 @@ pub fn query_chain_has_pfm(deps: Deps, chain: String) -> bool {
 }
 
 pub fn query_denom_path_for_alias(deps: Deps, alias: &str) -> Result<String, StdError> {
-    Ok(DENOM_ALIAS_REVERSE_MAP
+    let path = DENOM_ALIAS_REVERSE_MAP
         .load(deps.storage, alias)
         .map_err(|_| StdError::GenericErr {
             msg: format!("alias {alias} cannot be found"),
-        })?)
+        })?;
+
+    if !path.enabled {
+        return Err(StdError::GenericErr {
+            msg: format!("alias {alias} is disabled"),
+        });
+    }
+
+    Ok(path.value)
 }
 
 pub fn query_alias_for_denom_path(deps: Deps, denom_path: &str) -> Result<String, StdError> {
@@ -114,7 +122,7 @@ pub fn query_alias_for_denom_path(deps: Deps, denom_path: &str) -> Result<String
 
     if !alias.enabled {
         return Err(StdError::generic_err(format!(
-            "Alias for path {denom_path} is disabled"
+            "alias for path {denom_path} is disabled"
         )));
     }
 
