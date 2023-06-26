@@ -261,8 +261,8 @@ pub fn denom_alias_operations(
                 DENOM_ALIAS_REVERSE_MAP.remove(deps.storage, &map_entry.value);
                 DENOM_ALIAS_REVERSE_MAP.save(deps.storage, &new_alias, &(&path, true).into())?;
 
-                response = response
-                    .add_attribute("change_denom_alias", format!("{new_alias} <=> {path}"));
+                response =
+                    response.add_attribute("change_denom_alias", format!("{new_alias} <=> {path}"));
             }
             FullOperation::Remove => {
                 if !is_owner {
@@ -1732,8 +1732,7 @@ mod tests {
 
         let disable_info = mock_info(CREATOR_ADDRESS, &[]);
         let disable_res =
-            contract::execute(deps.as_mut(), mock_env(), disable_info, disable_msg)
-                .unwrap();
+            contract::execute(deps.as_mut(), mock_env(), disable_info, disable_msg).unwrap();
 
         assert_eq!(
             DENOM_ALIAS_MAP
