@@ -284,6 +284,29 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 			expectedAmountInZero:            amountZeroTargetNotReached.Ceil(),
 			expectedSpreadRewardChargeTotal: swapstrategy.ComputeSpreadRewardChargeFromAmountIn(amountZeroTargetNotReached.Ceil(), defaultSpreadReward),
 		},
+		"5: invalid zero difference between sqrt price current and sqrt price next due to precision loss, full amount remaining in is charged and amount out calculated from difference between current and target": {
+			// Note the numbers are hand-picked to reproduce this specific case.
+			sqrtPriceCurrent: sdk.MustNewDecFromStr("0.000001000049998751"),
+			sqrtPriceTarget:  sdk.MustNewDecFromStr("0.000001000049998750"),
+			// Chosen to be large with the goal of making sqrt price next be equal to sqrt price current.
+			// This is due to the fact that sqrtPriceNext = sqrtPriceCurrent - tokenOut / liquidity (quo round up).
+			liquidity: sdk.MustNewDecFromStr("10000000000000000000.937822606808718081"),
+
+			// Chosen to be small with the goal of making sqrt price next be equal to sqrt price current.
+			// This is due to the fact that sqrtPriceNext = sqrtPriceCurrent - tokenOut / liquidity (quo round up).
+			amountOneOutRemaining: sdk.SmallestDec(),
+			spreadFactor:          sdk.ZeroDec(),
+
+			// Brute forced to be equal to sqrtPriceCurrent by increasing/decreasing the numbers in the formula:
+			// sqrtPriceCurrent - tokenOut / liquidity (quo round up).
+			expectedSqrtPriceNext: sdk.MustNewDecFromStr("0.000001000049998751"),
+
+			amountOneOutConsumed: sdk.SmallestDec(),
+			// (liquidity * (sqrtPriceCurrent - sqrtPriceTarget)) / (sqrtPriceCurrent * sqrtPriceTarget)
+			// math.ceil(round_decimal(liquidity * (sqrtPriceCurrent - sqrtPriceTarget), 18, ROUND_CEILING) / round_decimal(sqrtPriceCurrent * sqrtPriceTarget, 18, ROUND_FLOOR))
+			expectedAmountInZero:            sdk.MustNewDecFromStr("9999000099991"),
+			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
+		},
 	}
 
 	for name, tc := range tests {
