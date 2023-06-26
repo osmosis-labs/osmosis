@@ -2443,6 +2443,12 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 		tickRanges      [][]int64
 		rangeTestParams RangeTestParams
 	}{
+		"one range, default params": {
+			tickRanges: [][]int64{
+				{0, 10000},
+			},
+			rangeTestParams: DefaultRangeTestParams,
+		},
 		"one min width range": {
 			tickRanges: [][]int64{
 				{0, 100},

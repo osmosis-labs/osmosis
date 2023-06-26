@@ -1,6 +1,7 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -21,8 +22,12 @@ type RangeTestParams struct {
 	baseSwapAmount sdk.Int
 	// Base amount to add after each new position
 	baseTimeBetweenJoins time.Duration
-	// Base incentive records to have on pool
-	baseIncentiveRecords []types.IncentiveRecord
+	// Base incentive amount to have on each incentive record
+	baseIncentiveAmount sdk.Int
+	// Base emission rate per second for incentive
+	baseEmissionRate sdk.Dec
+	// Base denom for each incentive record (ID appended to this)
+	baseIncentiveDenom string
 	// List of addresses to swap from (randomly selected for each swap)
 	numSwapAddresses int
 
@@ -52,6 +57,9 @@ var (
 		baseTimeBetweenJoins: time.Hour,
 		baseSwapAmount:       sdk.NewInt(10000000),
 		numSwapAddresses:     10,
+		baseIncentiveAmount:  sdk.NewInt(1000000000000000000),
+		baseEmissionRate:     sdk.NewDec(1),
+		baseIncentiveDenom:   "incentiveDenom",
 
 		// Fuzz params
 		fuzzNumPositions:     true,
@@ -83,7 +91,15 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 
 	// --- Incentive setup ---
 
-	// TODO: support incentive fuzzing (use to `totalTimeElapsed` to track emitted amounts)
+	if testParams.baseIncentiveAmount != (sdk.Int{}) {
+		incentiveAddr := apptesting.CreateRandomAccounts(1)[0]
+		incentiveAmt := testParams.baseIncentiveAmount
+		emissionRate := testParams.baseEmissionRate
+		incentiveCoin := sdk.NewCoin(fmt.Sprintf("%s%d", testParams.baseIncentiveDenom, 0), incentiveAmt)
+		s.FundAcc(incentiveAddr, sdk.NewCoins(incentiveCoin))
+		_, err := s.clk.CreateIncentive(s.Ctx, pool.GetId(), incentiveAddr, incentiveCoin, emissionRate, s.Ctx.BlockTime(), types.DefaultAuthorizedUptimes[0])
+		s.Require().NoError(err)
+	}
 
 	// --- Position setup ---
 
@@ -91,7 +107,7 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 	// 1. Set up a position
 	// 2. Let time elapse
 	// 3. Execute a swap
-	totalLiquidity, totalAssets, totalTimeElapsed, allPositionIds, lastVisitedBlockIndex := sdk.ZeroDec(), sdk.NewCoins(), time.Duration(0), []uint64{}, 0
+	totalLiquidity, totalAssets, totalTimeElapsed, allPositionIds, lastVisitedBlockIndex, cumulativeEmittedIncentives, lastIncentiveTrackerUpdate := sdk.ZeroDec(), sdk.NewCoins(), time.Duration(0), []uint64{}, 0, sdk.DecCoins{}, s.Ctx.BlockTime()
 	for curRange := range ranges {
 		curBlock := 0
 		startNumPositions := len(allPositionIds)
@@ -112,6 +128,11 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 			roundingError := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), sdk.OneInt()), sdk.NewCoin(pool.GetToken1(), sdk.OneInt()))
 			s.FundAcc(curAddr, curAssets.Add(roundingError...))
 
+			// TODO: implement intermediate record creation with fuzzing
+
+			// Track emitted incentives here
+			cumulativeEmittedIncentives, lastIncentiveTrackerUpdate = s.trackEmittedIncentives(cumulativeEmittedIncentives, lastIncentiveTrackerUpdate)
+
 			// Set up position
 			curPositionId, actualAmt0, actualAmt1, curLiquidity, actualLowerTick, actualUpperTick, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), curAddr, curAssets, sdk.ZeroInt(), sdk.ZeroInt(), ranges[curRange][0], ranges[curRange][1])
 			s.Require().NoError(err)
@@ -119,14 +140,14 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 			// Ensure position was set up correctly and didn't break global invariants
 			s.Require().Equal(ranges[curRange][0], actualLowerTick)
 			s.Require().Equal(ranges[curRange][1], actualUpperTick)
-			s.assertGlobalInvariants()
+			s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
 
 			// Let time elapse after join if applicable
 			timeElapsed := s.addRandomizedBlockTime(testParams.baseTimeBetweenJoins, testParams.fuzzTimeBetweenJoins)
 
 			// Execute swap against pool if applicable
 			swappedIn, swappedOut := s.executeRandomizedSwap(pool, swapAddresses, testParams.baseSwapAmount, testParams.fuzzSwapAmounts)
-			s.assertGlobalInvariants()
+			s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
 
 			// Track changes to state
 			actualAddedCoins := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), actualAmt0), sdk.NewCoin(pool.GetToken1(), actualAmt1))
@@ -152,6 +173,16 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 	poolSpreadRewards := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetSpreadRewardsAddress())
 	// We rebuild coins to handle nil cases cleanly
 	s.Require().Equal(sdk.NewCoins(totalAssets...), sdk.NewCoins(poolAssets.Add(poolSpreadRewards...)...))
+
+	fmt.Println("cumulative emitted incentives: ", cumulativeEmittedIncentives)
+	// Do a final checkpoint for incentives and then run assertions on expected global claimable value
+	cumulativeEmittedIncentives, lastIncentiveTrackerUpdate = s.trackEmittedIncentives(cumulativeEmittedIncentives, lastIncentiveTrackerUpdate)
+	truncatedEmissions, _ := cumulativeEmittedIncentives.TruncateDecimal()
+
+	// Run global assertions with an optional parameter specifying the expected incentive amount claimable by all positions.
+	// We specifically need to do this for incentives because all the emissions are pre-loaded into the incentive address, making
+	// balance assertions pass trivially in most cases.
+	s.assertGlobalInvariants(ExpectedGlobalRewardValues{TotalIncentives: truncatedEmissions})
 }
 
 // numPositionSlice prepares a slice tracking the number of positions to create on each range, fuzzing the number at each step if applicable.
@@ -255,6 +286,53 @@ func (s *KeeperTestSuite) addRandomizedBlockTime(baseTimeToAdd time.Duration, fu
 	}
 
 	return baseTimeToAdd
+}
+
+// trackEmittedIncentives takes in a cumulative incentives distributed and the last time this number was updated.
+// CONTRACT: cumulativeTrackedIncentives has been updated immediately before each new incentive record that was created
+func (s *KeeperTestSuite) trackEmittedIncentives(cumulativeTrackedIncentives sdk.DecCoins, lastTrackerUpdateTime time.Time) (sdk.DecCoins, time.Time) {
+	// Fetch all incentive records across all pools
+	allPools, err := s.clk.GetPools(s.Ctx)
+	s.Require().NoError(err)
+	allIncentiveRecords := make([]types.IncentiveRecord, 0)
+	for _, pool := range allPools {
+		curPoolRecords, err := s.clk.GetAllIncentiveRecordsForPool(s.Ctx, pool.GetId())
+		s.Require().NoError(err)
+
+		allIncentiveRecords = append(allIncentiveRecords, curPoolRecords...)
+	}
+
+	// Track new emissions since last checkpoint, factoring in when each incentive record started emitting
+	updatedTrackedIncentives := cumulativeTrackedIncentives
+	for _, incentiveRecord := range allIncentiveRecords {
+		recordStartTime := incentiveRecord.IncentiveRecordBody.StartTime
+
+		// If the record hasn't started emitting yet, skip it
+		if recordStartTime.After(s.Ctx.BlockTime()) {
+			continue
+		}
+
+		secondsEmitted := int64(0)
+		if recordStartTime.Before(lastTrackerUpdateTime) {
+			// If the record started emitting prior to the last incentiveCreationTime (the last time we checkpointed),
+			// then we assume it has been emitting for the whole period since then.
+			secondsEmitted = int64(s.Ctx.BlockTime().Sub(lastTrackerUpdateTime).Seconds())
+		} else if recordStartTime.Before(s.Ctx.BlockTime()) {
+			// If the record started emitting between the last incentiveCreationTime and now, then we only track the
+			// emissions between when it started and now.
+			secondsEmitted = int64(s.Ctx.BlockTime().Sub(recordStartTime).Seconds())
+		}
+
+		emissionRate := incentiveRecord.IncentiveRecordBody.EmissionRate
+		incentiveDenom := incentiveRecord.IncentiveRecordBody.RemainingCoin.Denom
+
+		// Track emissions for the current record
+		emittedAmount := emissionRate.MulInt64(secondsEmitted)
+		emittedDecCoin := sdk.NewDecCoinFromDec(incentiveDenom, emittedAmount)
+		updatedTrackedIncentives = updatedTrackedIncentives.Add(emittedDecCoin)
+	}
+
+	return updatedTrackedIncentives, s.Ctx.BlockTime()
 }
 
 // getFuzzedAssets returns the base asset amount, fuzzing each asset if applicable
