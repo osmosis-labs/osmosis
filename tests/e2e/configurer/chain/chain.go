@@ -2,6 +2,7 @@ package chain
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -159,44 +160,74 @@ func (c *Config) WaitForNumHeights(heightsToWait int64) {
 	c.WaitUntilHeight(currentHeight + heightsToWait)
 }
 
-func (c *Config) EnableSuperfluidAsset(denom string) {
-	chain, err := c.GetDefaultNode()
-	require.NoError(c.t, err)
-	chain.SubmitSuperfluidProposal(denom, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
-	c.LatestProposalNumber += 1
-	propNumber := c.LatestProposalNumber
-	chain.DepositProposal(propNumber, false)
-	var wg sync.WaitGroup
+func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
+	c.t.Logf("IBC sending %s from %s to %s (%s)", token, c.Id, dstChain.Id, recipient)
 
-	for _, n := range c.NodeConfigs {
-		wg.Add(1)
-		go func(nodeConfig *NodeConfig) {
-			defer wg.Done()
-			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
-		}(n)
+	dstNode, err := dstChain.GetDefaultNode()
+	require.NoError(c.t, err)
+
+	// removes the fee token from balances for calculating the difference in other tokens
+	// before and after the IBC send. Since we run tests in parallel now, some tests may
+	// send uosmo between accounts while this test is running. Since we don't care about
+	// non ibc denoms, its safe to filter uosmo out.
+	removeFeeTokenFromBalance := func(balance sdk.Coins) sdk.Coins {
+		filteredCoinDenoms := []string{}
+		for _, coin := range balance {
+			if !strings.HasPrefix(coin.Denom, "ibc/") {
+				filteredCoinDenoms = append(filteredCoinDenoms, coin.Denom)
+			}
+		}
+		feeRewardTokenBalance := balance.FilterDenoms(filteredCoinDenoms)
+		return balance.Sub(feeRewardTokenBalance)
 	}
 
-	wg.Wait()
-}
-
-func (c *Config) LockAndAddToExistingLock(amount sdk.Int, denom, lockupWalletAddr, lockupWalletSuperfluidAddr string) {
-	chain, err := c.GetDefaultNode()
+	balancesDstPreWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
 	require.NoError(c.t, err)
+	fmt.Println("balancesDstPre with no fee removed: ", balancesDstPreWithTxFeeBalance)
+	balancesDstPre := removeFeeTokenFromBalance(balancesDstPreWithTxFeeBalance)
+	cmd := []string{"hermes", "tx", "ft-transfer", "--dst-chain", dstChain.Id, "--src-chain", c.Id, "--src-port", "transfer", "--src-channel", "channel-0", "--amount", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000"}
+	_, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
+	require.NoError(c.t, err)
+	// cmd = []string{"hermes", "clear", "packets", "--chain", dstChain.Id, "--port", "transfer", "--channel", "channel-0"}
+	// _, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
+	// require.NoError(c.t, err)
+	// cmd = []string{"hermes", "clear", "packets", "--chain", c.Id, "--port", "transfer", "--channel", "channel-0"}
+	// _, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
+	// require.NoError(c.t, err)
+	fmt.Println("IBC send successful after exec ADAM")
 
-	// lock tokens
-	chain.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletAddr)
-	c.LatestLockNumber += 1
-	fmt.Println("lock number: ", c.LatestLockNumber)
-	// add to existing lock
-	chain.AddToExistingLock(amount, denom, "240s", lockupWalletAddr)
+	require.Eventually(
+		c.t,
+		func() bool {
+			fmt.Println("IBC send successful in eventual loop ADAM")
+			balancesDstPostWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
+			require.NoError(c.t, err)
+			fmt.Println("balancesDstPost with no fee removed: ", balancesDstPostWithTxFeeBalance)
 
-	// superfluid lock tokens
-	chain.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletSuperfluidAddr)
-	c.LatestLockNumber += 1
-	fmt.Println("lock number: ", c.LatestLockNumber)
-	chain.SuperfluidDelegate(c.LatestLockNumber, c.NodeConfigs[1].OperatorAddress, lockupWalletSuperfluidAddr)
-	// add to existing lock
-	chain.AddToExistingLock(amount, denom, "240s", lockupWalletSuperfluidAddr)
+			balancesDstPost := removeFeeTokenFromBalance(balancesDstPostWithTxFeeBalance)
+
+			fmt.Println("balancesDstPost with fee removed: ", balancesDstPost)
+
+			fmt.Println("balancesDstPre with fee removed: ", balancesDstPre)
+
+			ibcCoin := balancesDstPost.Sub(balancesDstPre)
+			if ibcCoin.Len() == 1 {
+				tokenPre := balancesDstPre.AmountOfNoDenomValidation(ibcCoin[0].Denom)
+				fmt.Println("tokenPre: ", tokenPre)
+				tokenPost := balancesDstPost.AmountOfNoDenomValidation(ibcCoin[0].Denom)
+				resPre := token.Amount
+				resPost := tokenPost.Sub(tokenPre)
+				return resPost.Uint64() == resPre.Uint64()
+			} else {
+				return false
+			}
+		},
+		5*time.Minute,
+		time.Second,
+		"tx not received on destination chain",
+	)
+
+	c.t.Log("successfully sent IBC tokens")
 }
 
 // GetDefaultNode returns the default node of the chain.
@@ -228,63 +259,15 @@ func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 	return c.NodeConfigs[nodeIndex], nil
 }
 
-// func (c *Config) SubmitParamChangeProposal(subspace, key string, value []byte) error {
-// 	proposal := paramsutils.ParamChangeProposalJSON{
-// 		Title:       "Param Change",
-// 		Description: fmt.Sprintf("Changing the %s param", key),
-// 		Changes: paramsutils.ParamChangesJSON{
-// 			paramsutils.ParamChangeJSON{
-// 				Subspace: subspace,
-// 				Key:      key,
-// 				Value:    value,
-// 			},
-// 		},
-// 		Deposit: "625000000uosmo",
-// 	}
-// 	proposalJson, err := json.Marshal(proposal)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	node, err := c.GetDefaultNode()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	propNumber := node.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
-// 	c.LatestProposalNumber += 1
-
-// 	var wg sync.WaitGroup
-
-// 	for _, n := range c.NodeConfigs {
-// 		wg.Add(1)
-// 		go func(nodeConfig *NodeConfig) {
-// 			defer wg.Done()
-// 			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
-// 		}(n)
-// 	}
-
-// 	wg.Wait()
-
-// 	require.Eventually(c.t, func() bool {
-// 		status, err := node.QueryPropStatus(propNumber)
-// 		if err != nil {
-// 			return false
-// 		}
-// 		return status == proposalStatusPassed
-// 	}, time.Minute*30, time.Millisecond*500)
-// 	return nil
-// }
-
 func (c *Config) SubmitCreateConcentratedPoolProposal() (uint64, error) {
 	node, err := c.GetDefaultNode()
 	if err != nil {
 		return 0, err
 	}
 
-	propId := node.SubmitCreateConcentratedPoolProposal(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+	propNumber := node.SubmitCreateConcentratedPoolProposal(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 	c.LatestProposalNumber += 1
 
-	propNumber := propId
 	node.DepositProposal(propNumber, false)
 
 	var wg sync.WaitGroup
