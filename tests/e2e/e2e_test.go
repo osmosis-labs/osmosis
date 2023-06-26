@@ -1604,6 +1604,8 @@ func (s *IntegrationTestSuite) StateSync() {
 	)
 	s.Require().NoError(err)
 
+	// Call tempNode method here to not add the node to the list of nodes.
+	// This messes with the nodes running in parallel if we add it to the regular list.
 	stateSynchingNode := chainA.CreateNodeTemp(nodeInit)
 
 	// ensure that the running node has snapshots at a height > trustHeight.

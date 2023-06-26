@@ -119,10 +119,10 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 		return err
 	}
 
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
-	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
-	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
+	chainANode.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+	chainANode.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
+	chainBNode.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+	chainBNode.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 
 	// Create a WaitGroup to wait for all goroutines to complete
 	var wg sync.WaitGroup
