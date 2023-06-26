@@ -104,11 +104,6 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 	// Note that spread reward is always charged on the amount in.
 	spreadRewardChargeTotal := computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget, amountOneIn, amountOneInRemaining, s.spreadFactor)
 
-	fmt.Println("amountOneIn", amountOneIn)
-	fmt.Println("amountOneInRemaining", amountOneInRemaining)
-	fmt.Println("sqrtPriceCurrent", sqrtPriceCurrent)
-	fmt.Println("sqrtPriceNext", sqrtPriceNext)
-
 	return sqrtPriceNext, amountOneIn, amountZeroOut, spreadRewardChargeTotal
 }
 
@@ -177,12 +172,6 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, 
 	// Handle spread rewards.
 	// Note that spread reward is always charged on the amount in.
 	spreadRewardChargeTotal := computeSpreadRewardChargeFromAmountIn(amountOneIn, s.spreadFactor)
-
-	fmt.Println("amountZeroOut", amountZeroOut)
-	fmt.Println("amountZeroRemainingOut", amountZeroRemainingOut)
-	fmt.Println("amountOneIn", amountOneIn)
-	fmt.Println("sqrtPriceCurrent", sqrtPriceCurrent)
-	fmt.Println("sqrtPriceNext", sqrtPriceNext)
 
 	return sqrtPriceNext, amountZeroOut, amountOneIn, spreadRewardChargeTotal
 }
