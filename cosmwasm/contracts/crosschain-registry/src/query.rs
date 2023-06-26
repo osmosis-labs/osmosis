@@ -118,7 +118,7 @@ pub fn query_denom_path_for_alias(deps: Deps, alias: &str) -> Result<String, Std
 }
 
 pub fn query_alias_for_denom_path(deps: Deps, denom_path: &str) -> Result<String, StdError> {
-    let alias = DENOM_ALIAS_MAP.load(deps.storage, &denom_path)?;
+    let alias = DENOM_ALIAS_MAP.load(deps.storage, denom_path)?;
 
     if !alias.enabled {
         return Err(StdError::generic_err(format!(

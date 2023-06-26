@@ -262,7 +262,7 @@ pub fn denom_alias_operations(
                 DENOM_ALIAS_REVERSE_MAP.save(deps.storage, &new_alias, &(&path, true).into())?;
 
                 response = response
-                    .add_attribute("change_denom_alias", format!("{new_alias} <=> {}", path));
+                    .add_attribute("change_denom_alias", format!("{new_alias} <=> {path}"));
             }
             FullOperation::Remove => {
                 if !is_owner {
@@ -1640,11 +1640,11 @@ mod tests {
 
         // Test case: Set an alias
         let info = mock_info(CREATOR_ADDRESS, &[]);
-        let res = contract::execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+        let res = contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         assert_eq!(
             DENOM_ALIAS_MAP
-                .may_load(deps.as_ref().storage, &path1)
+                .may_load(deps.as_ref().storage, path1)
                 .unwrap(),
             Some(("alias1".to_string(), true).into())
         );
@@ -1681,11 +1681,11 @@ mod tests {
         let change_info = mock_info(CREATOR_ADDRESS, &[]);
 
         let change_res =
-            contract::execute(deps.as_mut(), mock_env(), change_info.clone(), change_msg).unwrap();
+            contract::execute(deps.as_mut(), mock_env(), change_info, change_msg).unwrap();
 
         assert_eq!(
             DENOM_ALIAS_MAP
-                .may_load(deps.as_ref().storage, &path1)
+                .may_load(deps.as_ref().storage, path1)
                 .unwrap(),
             Some(("newalias1".to_string(), true).into())
         );
@@ -1732,12 +1732,12 @@ mod tests {
 
         let disable_info = mock_info(CREATOR_ADDRESS, &[]);
         let disable_res =
-            contract::execute(deps.as_mut(), mock_env(), disable_info.clone(), disable_msg)
+            contract::execute(deps.as_mut(), mock_env(), disable_info, disable_msg)
                 .unwrap();
 
         assert_eq!(
             DENOM_ALIAS_MAP
-                .may_load(deps.as_ref().storage, &path1)
+                .may_load(deps.as_ref().storage, path1)
                 .unwrap(),
             Some(("newalias1".to_string(), false).into())
         );
@@ -1771,11 +1771,11 @@ mod tests {
 
         let enable_info = mock_info(CREATOR_ADDRESS, &[]);
         let enable_res =
-            contract::execute(deps.as_mut(), mock_env(), enable_info.clone(), enable_msg).unwrap();
+            contract::execute(deps.as_mut(), mock_env(), enable_info, enable_msg).unwrap();
 
         assert_eq!(
             DENOM_ALIAS_MAP
-                .may_load(deps.as_ref().storage, &path1)
+                .may_load(deps.as_ref().storage, path1)
                 .unwrap(),
             Some(("newalias1", true).into())
         );
@@ -1790,7 +1790,7 @@ mod tests {
             enable_res.attributes,
             vec![(
                 "enable_denom_alias".to_string(),
-                format!("newalias1 <=> {}", path1)
+                format!("newalias1 <=> {path1}")
             )]
         );
 
@@ -1814,11 +1814,11 @@ mod tests {
 
         let remove_info = mock_info(CREATOR_ADDRESS, &[]);
         let remove_res =
-            contract::execute(deps.as_mut(), mock_env(), remove_info.clone(), remove_msg).unwrap();
+            contract::execute(deps.as_mut(), mock_env(), remove_info, remove_msg).unwrap();
 
         assert_eq!(
             DENOM_ALIAS_MAP
-                .may_load(deps.as_ref().storage, &path1)
+                .may_load(deps.as_ref().storage, path1)
                 .unwrap(),
             None
         );

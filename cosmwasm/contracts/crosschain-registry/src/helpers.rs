@@ -148,12 +148,12 @@ fn is_alphanumeric(string: &str) -> bool {
 }
 
 pub fn normalize_alias(alias: &str) -> Result<String, ContractError> {
-    if !is_alphanumeric(&alias) {
+    if !is_alphanumeric(alias) {
         return Err(ContractError::InvalidAlias {
             alias: alias.into(),
         });
     }
-    if alias.len() == 0 {
+    if alias.is_empty() {
         return Err(ContractError::MissingField {
             field: "new_alias".to_string(),
         });
