@@ -84,7 +84,7 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 
 	// This covers an edge case where due to the lack of precision, the difference between the current sqrt price and the next sqrt price is so small that
 	// it ends up being rounded down to zero. This leads to an infinite loop in the swap algorithm. From knowing that this is a case where !hasReachedTarget,
-	//(that is the swap stops within a bucket), we charge the full amount remaining in to the user and infer the amount out from the sqrt price truncated
+	//(that is, the swap stops within a bucket), we charge the full amount remaining in to the user and infer the amount out from the sqrt price truncated
 	// in favor of the pool.
 	if !hasReachedTarget && sqrtPriceCurrent.Equal(sqrtPriceNext) && amountZeroIn.IsZero() && !amountZeroInRemaining.IsZero() {
 		amountZeroIn = amountZeroInRemaining
@@ -151,7 +151,7 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, 
 
 	// This covers an edge case where due to the lack of precision, the difference between the current sqrt price and the next sqrt price is so small that
 	// it ends up being rounded down to zero. This leads to an infinite loop in the swap algorithm. From knowing that this is a case where !hasReachedTarget,
-	// (that is the swap stops within a bucket), we charge the full amount remaining in to the user and infer the amount in from calculation where the next
+	// (that is, the swap stops within a bucket), we charge the full amount remaining in to the user and infer the amount in from calculation where the next
 	// sqrt price is increased by one ULP.
 	if !hasReachedTarget && sqrtPriceCurrent.Equal(sqrtPriceNext) && amountZeroIn.IsZero() && !amountOneRemainingOut.IsZero() {
 		// Up charge amount one in in favor of the pool by adding 1 ULP to the next sqrt price.

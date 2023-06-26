@@ -86,8 +86,10 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 
 	// This covers an edge case where due to the lack of precision, the difference between the current sqrt price and the next sqrt price is so small that
 	// it ends up being rounded down to zero. This leads to an infinite loop in the swap algorithm. From knowing that this is a case where !hasReachedTarget,
-	// (that is the swap stops within a bucket), we charge the full amount remaining in to the user and infer the amount out from the sqrt price truncated
-	// in favor of the pool.
+	// (that is, the swap stops within a bucket), we charge the full amount remaining in to the user and recalculate the amount out with higher precision.
+	// Notice, that in the zero for one direction we instead use the sqrtPriceCurrent to calculate the amount out. We cannot do that here because that
+	// would require us inverting the current price. Due to our internal fixed point math, inverting it would lead to a price of zero, breaking the calculation.
+	// As a result, we recalculate in sqrt price domain with higher precision.
 	if !hasReachedTarget && sqrtPriceCurrent.Equal(sqrtPriceNext) && amountOneIn.IsZero() && !amountOneInRemaining.IsZero() {
 		amountOneIn = amountOneInRemaining
 
@@ -160,7 +162,7 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, 
 
 	// This covers an edge case where due to the lack of precision, the difference between the current sqrt price and the next sqrt price is so small that
 	// it ends up being rounded down to zero. This leads to an infinite loop in the swap algorithm. From knowing that this is a case where !hasReachedTarget,
-	// (that is the swap stops within a bucket), we charge the full amount remaining in to the user and infer the amount in from calculation where the next
+	// (that is, the swap stops within a bucket), we charge the full amount remaining in to the user and infer the amount in from calculation where the next
 	// sqrt price is increased by one ULP.
 	if !hasReachedTarget && sqrtPriceCurrent.Equal(sqrtPriceNext) && amountZeroOut.IsZero() && !amountZeroRemainingOut.IsZero() {
 		// Up charge amount one in in favor of the pool by adding 1 ULP to the next sqrt price.
