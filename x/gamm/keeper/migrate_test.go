@@ -8,13 +8,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
 )
 
 func (s *KeeperTestSuite) TestMigrate() {
-	defaultAccount := s.TestAccs[0]
+	defaultAccount := apptesting.CreateRandomAccounts(1)[0]
 	defaultGammShares := sdk.NewCoin("gamm/pool/1", sdk.MustNewDecFromStr("100000000000000000000").RoundInt())
 	invalidGammShares := sdk.NewCoin("gamm/pool/1", sdk.MustNewDecFromStr("190000000000000000001").RoundInt())
 	defaultAccountFunds := sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(200000000000)), sdk.NewCoin("usdc", sdk.NewInt(200000000000)))
