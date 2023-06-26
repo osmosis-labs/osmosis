@@ -50,7 +50,10 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestStrategyTestSuite/TestComputeSwapStepOutGivenIn_OneForZero/7",
+                // "TestStrategyTestSuite/TestComputeSwapStepOutGivenIn_OneForZero/7",
+                // "TestStrategyTestSuite/TestComputeSwapStepInGivenOut_OneForZero/6",
+                // "TestStrategyTestSuite/TestComputeSwapStepOutGivenIn_ZeroForOne/6",
+                "TestStrategyTestSuite/TestComputeSwapStepInGivenOut_ZeroForOne/5",
                 "-test.v"
             ],
         },
