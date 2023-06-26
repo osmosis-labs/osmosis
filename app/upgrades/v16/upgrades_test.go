@@ -105,7 +105,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 				// Allow 0.02% margin of error.
 				multiplicativeTolerance := osmomath.ErrTolerance{
-					MultiplicativeTolerance: sdk.MustNewDecFromStr("0.0002"),
+					MultiplicativeTolerance: sdk.MustNewDecFromStr("0.0001"),
 				}
 
 				// Validate that the spot price of the CL pool is what we expect
