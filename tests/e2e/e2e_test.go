@@ -186,7 +186,7 @@ func (s *IntegrationTestSuite) ProtoRev() {
 		amount       = "10000"
 		minAmountOut = "1"
 
-		epochIdentifier = "week"
+		epochIdentifier = "day"
 	)
 
 	chainA := s.configurer.GetChainConfig(0)
@@ -242,7 +242,7 @@ func (s *IntegrationTestSuite) ProtoRev() {
 
 	// Wait for the creation to be propogated to the other nodes + for the protorev module to
 	// correctly update the highest liquidity pools.
-	s.T().Logf("waiting for the protorev module to update the highest liquidity pools (wait %.f sec) after the week epoch duration", initialization.EpochWeekDuration.Seconds())
+	s.T().Logf("waiting for the protorev module to update the highest liquidity pools (wait %.f sec) after the week epoch duration", initialization.EpochDayDuration.Seconds())
 	chainA.WaitForNumEpochs(1, epochIdentifier)
 
 	// Create a wallet to use for the swap txs.
