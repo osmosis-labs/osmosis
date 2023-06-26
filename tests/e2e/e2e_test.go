@@ -35,13 +35,16 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestMyFunction() {
-	// Frontload protorev and concentrated liquidity tests since they take the longest
+	// Frontload longer tests
 	s.T().Run("ProtoRev", func(t *testing.T) {
 		t.Parallel()
 		s.ProtoRev()
 	})
 
-	// State Sync Dependent Tests
+	s.T().Run("ConcentratedLiquidity", func(t *testing.T) {
+		t.Parallel()
+		s.ConcentratedLiquidity()
+	})
 
 	if s.skipStateSync {
 		s.T().Skip()
@@ -52,20 +55,24 @@ func (s *IntegrationTestSuite) TestMyFunction() {
 		})
 	}
 
-	s.T().Run("ConcentratedLiquidity", func(t *testing.T) {
+	if s.skipIBC {
+		s.T().Skip("Skipping IBC tests")
+	} else {
+		s.T().Run("IBCTokenTransferRateLimiting", func(t *testing.T) {
+			t.Parallel()
+			s.IBCTokenTransferRateLimiting()
+		})
+	}
+
+	s.T().Run("CreateConcentratedLiquidityPoolVoting_And_TWAP", func(t *testing.T) {
 		t.Parallel()
-		s.ConcentratedLiquidity()
+		s.CreateConcentratedLiquidityPoolVoting_And_TWAP()
 	})
 
 	// Zero Dependent Tests
 	s.T().Run("SuperfluidVoting", func(t *testing.T) {
 		t.Parallel()
 		s.SuperfluidVoting()
-	})
-
-	s.T().Run("CreateConcentratedLiquidityPoolVoting_And_TWAP", func(t *testing.T) {
-		t.Parallel()
-		s.CreateConcentratedLiquidityPoolVoting_And_TWAP()
 	})
 
 	s.T().Run("AddToExistingLock", func(t *testing.T) {
@@ -140,15 +147,6 @@ func (s *IntegrationTestSuite) TestMyFunction() {
 		s.T().Run("IBCTokenTransferAndCreatePool", func(t *testing.T) {
 			t.Parallel()
 			s.IBCTokenTransferAndCreatePool()
-		})
-	}
-
-	if s.skipIBC {
-		s.T().Skip("Skipping IBC tests")
-	} else {
-		s.T().Run("IBCTokenTransferRateLimiting", func(t *testing.T) {
-			t.Parallel()
-			s.IBCTokenTransferRateLimiting()
 		})
 	}
 
