@@ -95,7 +95,6 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 	intermediateAccount := types.SuperfluidIntermediaryAccount{}
 	var gammLockToMigrate *lockuptypes.PeriodLock
 	if isPartialMigration {
-
 		// Note that lock's id is different from the originalLockId since it was split.
 		// The original lock id stays in gamm.
 		intermediateAccount, gammLockToMigrate, err = k.partialSuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), originalLockId, sharesToMigrate)
