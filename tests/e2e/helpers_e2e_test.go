@@ -1,7 +1,6 @@
 package e2e
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -135,15 +134,13 @@ func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) 
 	s.NoError(err)
 
 	codeId := node.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
-	chain.LatestCodeId = int(node.QueryLatestWasmCodeID())
+	chain.LatestCodeId++
 	node.InstantiateWasmContract(
 		strconv.Itoa(codeId),
 		`{"count": 0}`,
 		initialization.ValidatorWalletName)
 
-	fmt.Println("codeId", codeId)
 	contracts, err := node.QueryContractsFromId(codeId)
-	fmt.Println("contracts", contracts)
 	s.NoError(err)
 	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
 	contractAddr := contracts[0]

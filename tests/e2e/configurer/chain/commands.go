@@ -647,35 +647,18 @@ func (n *NodeConfig) SendIBC(dstChain *Config, recipient string, token sdk.Coin)
 	balancesDstPre := removeFeeTokenFromBalance(balancesDstPreWithTxFeeBalance)
 	cmd := []string{"hermes", "tx", "ft-transfer", "--dst-chain", dstChain.Id, "--src-chain", n.chainId, "--src-port", "transfer", "--src-channel", "channel-0", "--amount", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000"}
 	_, _, err = n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
-	// cmd := []string{"osmosisd", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recipient, token.String(), fmt.Sprintf("--from=%s", initialization.ValidatorWalletName)}
-	// _, _, err = n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
-	// cmd = []string{"hermes", "clear", "packets", "--chain", dstChain.Id, "--port", "transfer", "--channel", "channel-0"}
-	// _, _, err = n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
-	// require.NoError(n.t, err)
-	// cmd = []string{"hermes", "clear", "packets", "--chain", n.chainId, "--port", "transfer", "--channel", "channel-0"}
-	// _, _, err = n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
-	// require.NoError(n.t, err)
-	fmt.Println("IBC send successful after exec ADAM")
 
 	require.Eventually(
 		n.t,
 		func() bool {
-			fmt.Println("IBC send successful in eventual loop ADAM")
 			balancesDstPostWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
 			require.NoError(n.t, err)
-			fmt.Println("balancesDstPost with no fee removed: ", balancesDstPostWithTxFeeBalance)
-
 			balancesDstPost := removeFeeTokenFromBalance(balancesDstPostWithTxFeeBalance)
-
-			fmt.Println("balancesDstPost with fee removed: ", balancesDstPost)
-
-			fmt.Println("balancesDstPre with fee removed: ", balancesDstPre)
 
 			ibcCoin := balancesDstPost.Sub(balancesDstPre)
 			if ibcCoin.Len() == 1 {
 				tokenPre := balancesDstPre.AmountOfNoDenomValidation(ibcCoin[0].Denom)
-				fmt.Println("tokenPre: ", tokenPre)
 				tokenPost := balancesDstPost.AmountOfNoDenomValidation(ibcCoin[0].Denom)
 				resPre := token.Amount
 				resPost := tokenPost.Sub(tokenPre)
@@ -693,8 +676,6 @@ func (n *NodeConfig) SendIBC(dstChain *Config, recipient string, token sdk.Coin)
 }
 
 func (n *NodeConfig) EnableSuperfluidAsset(srcChain *Config, denom string) {
-	// srcNode, err := srcChain.GetDefaultNode()
-	// require.NoError(n.t, err)
 	propNumber := n.SubmitSuperfluidProposal(denom, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 	srcChain.LatestProposalNumber += 1
 	n.DepositProposal(propNumber, false)
@@ -713,9 +694,6 @@ func (n *NodeConfig) EnableSuperfluidAsset(srcChain *Config, denom string) {
 }
 
 func (n *NodeConfig) LockAndAddToExistingLock(srcChain *Config, amount sdk.Int, denom, lockupWalletAddr, lockupWalletSuperfluidAddr string) {
-	// srcNode, err := srcChain.GetDefaultNode()
-	// require.NoError(n.t, err)
-
 	// lock tokens
 	n.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletAddr)
 	srcChain.LatestLockNumber += 1
@@ -732,6 +710,7 @@ func (n *NodeConfig) LockAndAddToExistingLock(srcChain *Config, amount sdk.Int, 
 	n.AddToExistingLock(amount, denom, "240s", lockupWalletSuperfluidAddr)
 }
 
+// TODO remove chain from this as input
 func (n *NodeConfig) SetupRateLimiting(paths, gov_addr string, chain *Config) (string, error) {
 	srcNode, err := chain.GetNodeAtIndex(1)
 	require.NoError(n.t, err)

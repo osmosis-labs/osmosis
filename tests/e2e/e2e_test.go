@@ -35,20 +35,14 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestMyFunction() {
+	// Frontload protorev and concentrated liquidity tests since they take the longest
 	s.T().Run("ProtoRev", func(t *testing.T) {
 		t.Parallel()
 		s.ProtoRev()
 	})
 
-	s.T().Run("ConcentratedLiquidity", func(t *testing.T) {
-		t.Parallel()
-		s.ConcentratedLiquidity()
-	})
-
 	// State Sync Dependent Tests
 
-	// State sync test must be run first, as it creates a new node that the other tests expect to be running
-	// when voting for various proposals.
 	if s.skipStateSync {
 		s.T().Skip()
 	} else {
@@ -58,7 +52,12 @@ func (s *IntegrationTestSuite) TestMyFunction() {
 		})
 	}
 
-	// TEMP DISABLE
+	s.T().Run("ConcentratedLiquidity", func(t *testing.T) {
+		t.Parallel()
+		s.ConcentratedLiquidity()
+	})
+
+	// Zero Dependent Tests
 	s.T().Run("SuperfluidVoting", func(t *testing.T) {
 		t.Parallel()
 		s.SuperfluidVoting()
@@ -69,7 +68,6 @@ func (s *IntegrationTestSuite) TestMyFunction() {
 		s.CreateConcentratedLiquidityPoolVoting_And_TWAP()
 	})
 
-	// TEMP DISABLE
 	s.T().Run("AddToExistingLock", func(t *testing.T) {
 		t.Parallel()
 		s.AddToExistingLock()
@@ -85,7 +83,6 @@ func (s *IntegrationTestSuite) TestMyFunction() {
 		s.GeometricTWAP()
 	})
 
-	// Erroring
 	s.T().Run("LargeWasmUpload", func(t *testing.T) {
 		t.Parallel()
 		s.LargeWasmUpload()
@@ -126,7 +123,6 @@ func (s *IntegrationTestSuite) TestMyFunction() {
 		})
 	}
 
-	// NOT YET TESTED
 	if s.skipUpgrade {
 		s.T().Skip("Skipping ConcentratedLiquidity_CanonicalPool_And_Parameters test")
 	} else {
@@ -147,7 +143,6 @@ func (s *IntegrationTestSuite) TestMyFunction() {
 		})
 	}
 
-	// TEMP DISABLE
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	} else {
@@ -174,7 +169,6 @@ func (s *IntegrationTestSuite) TestMyFunction() {
 			s.PacketForwarding()
 		})
 	}
-
 }
 
 // TestProtoRev is a test that ensures that the protorev module is working as expected. In particular, this tests and ensures that:
@@ -296,8 +290,6 @@ func (s *IntegrationTestSuite) ProtoRev() {
 	s.Require().NotNil(routeStats)
 	s.Require().Len(routeStats, 1)
 	s.Require().Equal(sdk.OneInt(), routeStats[0].NumberOfTrades)
-	fmt.Println("[]uint64{swapPoolId - 1, swapPoolId, swapPoolId + 1}", []uint64{swapPoolId1, swapPoolId2, swapPoolId3})
-	fmt.Println("routeStats[0].Route", routeStats[0].Route)
 	s.Require().Equal([]uint64{swapPoolId1, swapPoolId2, swapPoolId3}, routeStats[0].Route)
 	s.Require().Equal(profits, routeStats[0].Profits)
 }
@@ -943,7 +935,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 	chainB := s.configurer.GetChainConfig(1)
 	chainBNode, err := chainB.GetNodeAtIndex(1)
 	s.Require().NoError(err)
-	fmt.Println("Sending IBC tokens IBCTokenTransferAndCreatePool")
+
 	chainANode.SendIBC(chainB, chainB.NodeConfigs[1].PublicAddress, initialization.OsmoToken)
 	chainBNode.SendIBC(chainA, chainA.NodeConfigs[1].PublicAddress, initialization.OsmoToken)
 	chainANode.SendIBC(chainB, chainB.NodeConfigs[1].PublicAddress, initialization.StakeToken)
@@ -960,8 +952,6 @@ func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 // - voting no on the proposal from the delegator wallet
 // - ensuring that delegator's wallet overwrites the validator's vote
 func (s *IntegrationTestSuite) SuperfluidVoting() {
-	// chainA := s.GetChainAConfig0()
-	// chainANode := s.GetDefaultNodeMutex()
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetNodeAtIndex(2)
 	s.Require().NoError(err)
@@ -970,8 +960,6 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 
 	// enable superfluid assets
 	chainANode.EnableSuperfluidAsset(chainA, fmt.Sprintf("gamm/pool/%d", poolId))
-
-	fmt.Println("enable superfluid asset ")
 
 	// setup wallets and send gamm tokens to these wallets (both chains)
 	superfluidVotingWallet := chainANode.CreateWallet("TestSuperfluidVoting")
@@ -1059,7 +1047,6 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	var concentratedPool cltypes.ConcentratedPoolExtension
 	s.Eventually(
 		func() bool {
-			// poolId := chainANode.QueryNumPools()
 			concentratedPool = s.updatedConcentratedPool(chainANode, poolId)
 			s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
 			s.Require().Equal(expectedDenom0, concentratedPool.GetToken0())
@@ -1211,7 +1198,6 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 }
 
 func (s *IntegrationTestSuite) LargeWasmUpload() {
-	// chainA := s.GetChainAConfig0()
 	chainB := s.configurer.GetChainConfig(1)
 	chainBNode, err := chainB.GetDefaultNode()
 	s.Require().NoError(err)
@@ -1231,7 +1217,6 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 	s.Require().NoError(err)
 
 	contractAddr := s.UploadAndInstantiateCounter(chainA)
-	fmt.Println("contractAddr", contractAddr)
 
 	transferAmount := int64(10)
 	validatorAddr := chainBNode.GetWallet(initialization.ValidatorWalletName)
@@ -1314,12 +1299,10 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 	forwardMemo, err := json.Marshal(memoData)
 	s.NoError(err)
 	// Send the transfer from chainA to chainB. ChainB will parse the memo and forward the packet back to chainA
-	fmt.Println("Sending IBC transfer packet fwd")
 	coin := sdk.NewCoin("uosmo", sdk.NewInt(transferAmount))
 	chainANode.SendIBCTransfer(chainB, validatorAddr, validatorAddr, string(forwardMemo), coin)
 
 	// check the balance of the contract
-	// TODO issue here, doesnt send to address
 	s.CheckBalance(chainANode, contractAddr, "uosmo", transferAmount)
 
 	// sender wasm addr
@@ -1811,12 +1794,6 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPool_And_Parameter
 	s.Require().Equal(v16.DAIIBCDenom, concentratedPool.GetToken1())
 	s.Require().Equal(uint64(v16.TickSpacing), concentratedPool.GetTickSpacing())
 	s.Require().Equal(expectedSpreadReward.String(), concentratedPool.GetSpreadFactor(sdk.Context{}).String())
-
-	// // Get the permisionless pool creation parameter.
-	// isPermisionlessCreationEnabledStr := chainANode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
-	// if !strings.EqualFold(isPermisionlessCreationEnabledStr, "false") {
-	// 	s.T().Fatal("concentrated liquidity pool creation is enabled when should not have been after v16 upgrade")
-	// }
 
 	// Check that the cl pool denom is now an authorized superfluid denom.
 	superfluidAssets := chainANode.QueryAllSuperfluidAssets()

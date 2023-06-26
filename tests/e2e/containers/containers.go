@@ -162,12 +162,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 			}
 
 			errBufString := errBuf.String()
-			// fmt.Println("ERR BUF STRING", errBufString)
-			// fmt.Println("outBuf.String()", outBuf.String())
 			if (errBufString != "" || outBuf.String() != "") && containerName != hermesContainerName {
-				fmt.Println("ADAM COMMAND", command)
-				fmt.Println("Error:", errBufString)
-				// fmt.Println(errBufString)
 				// Check if the error message matches the expected pattern
 				errBufMatches := sequenceMismatchRegex.FindAllStringSubmatch(errBufString, -1)
 				fmt.Println("Matches:", errBufMatches)
@@ -181,7 +176,6 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 					}
 					expectedSequenceStr := errBufMatches[len(errBufMatches)-1][1]
 					expectedSequence, _ = strconv.Atoi(expectedSequenceStr)
-					fmt.Println("Expected sequence:", expectedSequence)
 					modifiedCommand := append(command, fmt.Sprintf("--sequence=%d", expectedSequence))
 					// Update the command for the next iteration
 					command = modifiedCommand
@@ -193,7 +187,6 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 					}
 					expectedSequenceStr := outBufMatches[len(outBufMatches)-1][1]
 					expectedSequence, _ = strconv.Atoi(expectedSequenceStr)
-					fmt.Println("Expected sequence:", expectedSequence)
 					modifiedCommand := append(command, fmt.Sprintf("--sequence=%d", expectedSequence))
 					// Update the command for the next iteration
 					command = modifiedCommand

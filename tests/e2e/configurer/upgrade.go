@@ -120,8 +120,8 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	}
 
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 
 	// Create a WaitGroup to wait for all goroutines to complete
@@ -141,7 +141,6 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	go func() {
 		defer wg.Done()
 		chainBNode.CreateBalancerPool("daiosmov16.json", initialization.ValidatorWalletName)
-		//chainANode.EnableSuperfluidAsset(chainA, daiOsmoShareDenom)
 	}()
 
 	// Wait for all goroutines to complete
@@ -149,19 +148,14 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	config.DaiOsmoPoolIdv16 = daiOsmoPoolIdv16
 
-	var poolShareDenom string
-	var preUpgradePoolId uint64
-	var preUpgradeStableSwapPoolId uint64
+	var (
+		poolShareDenom             string
+		preUpgradePoolId           uint64
+		preUpgradeStableSwapPoolId uint64
+	)
 
 	// Increment the WaitGroup counter for each goroutine
 	wg.Add(4)
-
-	// go func() {
-	// 	defer wg.Done()
-	// 	poolId := chainBNode.CreateBalancerPool("daiosmov16.json", initialization.ValidatorWalletName)
-	// 	daiOsmoShareDenom := fmt.Sprintf("gamm/pool/%d", poolId)
-	// 	chainANode.EnableSuperfluidAsset(chainA, daiOsmoShareDenom)
-	// }()
 
 	go func() {
 		defer wg.Done()
