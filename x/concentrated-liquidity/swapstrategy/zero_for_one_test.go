@@ -195,9 +195,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 
 func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 	var (
-		sqrtPriceCurrent = defaultSqrtPriceUpper
-		sqrtPriceNext    = defaultSqrtPriceLower
-		sqrtPriceTarget  = sqrtPriceNext
+		sqrtPriceNext = defaultSqrtPriceLower
 
 		// sqrt_cur - amt_one / liq quo round up
 		sqrtPriceTargetNotReached = sdk.MustNewDecFromStr("70.688667457471792243")
@@ -212,6 +210,9 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 
 	// sqrtPriceCurrent, sqrtPriceTarget, liquidity are all set to defaults defined above.
 	tests := map[string]struct {
+		sqrtPriceCurrent sdk.Dec
+		sqrtPriceTarget  sdk.Dec
+
 		amountOneOutRemaining sdk.Dec
 		spreadFactor          sdk.Dec
 
@@ -223,6 +224,9 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 		expectError error
 	}{
 		"1: no spread reward - reach target": {
+			sqrtPriceCurrent: defaultSqrtPriceUpper,
+			sqrtPriceTarget:  sqrtPriceNext,
+
 			// Add 100.
 			amountOneOutRemaining: defaultAmountOne.Add(sdk.NewDec(100)),
 			spreadFactor:          zero,
@@ -234,6 +238,9 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 			expectedSpreadRewardChargeTotal: zero,
 		},
 		"2: no spread reward - do not reach target": {
+			sqrtPriceCurrent: defaultSqrtPriceUpper,
+			sqrtPriceTarget:  sqrtPriceNext,
+
 			amountOneOutRemaining: defaultAmountOne.Sub(sdk.NewDec(10000)),
 			spreadFactor:          zero,
 
@@ -245,6 +252,9 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 			expectedSpreadRewardChargeTotal: zero,
 		},
 		"3: 3% spread reward - reach target": {
+			sqrtPriceCurrent: defaultSqrtPriceUpper,
+			sqrtPriceTarget:  sqrtPriceNext,
+
 			// Add 100.
 			amountOneOutRemaining: defaultAmountOne.Quo(one.Sub(defaultSpreadReward)),
 			spreadFactor:          defaultSpreadReward,
@@ -257,6 +267,9 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 			expectedSpreadRewardChargeTotal: swapstrategy.ComputeSpreadRewardChargeFromAmountIn(defaultAmountZero.Ceil(), defaultSpreadReward),
 		},
 		"4: 3% spread reward - do not reach target": {
+			sqrtPriceCurrent: defaultSqrtPriceUpper,
+			sqrtPriceTarget:  sqrtPriceNext,
+
 			amountOneOutRemaining: defaultAmountOne.Sub(sdk.NewDec(10000)),
 			spreadFactor:          defaultSpreadReward,
 
@@ -271,7 +284,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 	for name, tc := range tests {
 		suite.Run(name, func() {
 			strategy := suite.setupNewZeroForOneSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
-			sqrtPriceNext, amountOneOut, amountZeroIn, spreadRewardChargeTotal := strategy.ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, defaultLiquidity, tc.amountOneOutRemaining)
+			sqrtPriceNext, amountOneOut, amountZeroIn, spreadRewardChargeTotal := strategy.ComputeSwapWithinBucketInGivenOut(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, defaultLiquidity, tc.amountOneOutRemaining)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
 			suite.Require().Equal(tc.amountOneOutConsumed, amountOneOut)
