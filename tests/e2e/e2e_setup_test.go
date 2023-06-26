@@ -3,13 +3,11 @@ package e2e
 import (
 	"os"
 	"strconv"
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 
 	configurer "github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer"
-	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/chain"
 )
 
 const (
@@ -36,18 +34,6 @@ type IntegrationTestSuite struct {
 	skipUpgrade   bool
 	skipIBC       bool
 	skipStateSync bool
-
-	chainAConfig0Mutex sync.Mutex
-	chainAConfig0      *chain.Config
-
-	chainBConfig1Mutex sync.Mutex
-	chainBConfig1      *chain.Config
-
-	defaultNodeConfig *chain.NodeConfig
-	defaultNodeMutex  sync.Mutex
-
-	defaultNodeBConfig *chain.NodeConfig
-	defaultNodeBMutex  sync.Mutex
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

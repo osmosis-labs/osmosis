@@ -78,7 +78,6 @@ func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
 			return err
 		}
 	}
-
 	return nil
 }
 

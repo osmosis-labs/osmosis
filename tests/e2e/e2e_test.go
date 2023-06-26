@@ -199,8 +199,9 @@ func (s *IntegrationTestSuite) ProtoRev() {
 		epochIdentifier = "week"
 	)
 
-	chainA := s.GetChainAConfig0()
-	chainANode := s.GetDefaultNodeMutex()
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
 
 	// --------------- Module init checks ---------------- //
 	// The module should be enabled by default.
@@ -304,8 +305,9 @@ func (s *IntegrationTestSuite) ProtoRev() {
 }
 
 func (s *IntegrationTestSuite) ConcentratedLiquidity() {
-	chainA := s.GetChainAConfig0()
-	chainANode := s.GetDefaultNodeMutex()
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
 
 	var (
 		denom0                 = "uion"
@@ -322,7 +324,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	}
 
 	// Change the parameter to enable permisionless pool creation.
-	err := chainANode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainA)
+	err = chainANode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainA)
 	s.Require().NoError(err)
 
 	// Confirm that the parameter has been changed.
@@ -874,8 +876,9 @@ func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
 		s.T().Skip("Skipping StableSwapPostUpgrade test")
 	}
 
-	chainA := s.GetChainAConfig0()
-	chainANode := s.GetDefaultNodeMutex()
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
 
 	const (
 		denomA = "stake"
@@ -916,17 +919,18 @@ func (s *IntegrationTestSuite) GeometricTwapMigration() {
 		migrationWallet = "migration"
 	)
 
-	chainA := s.GetChainAConfig0()
-	node := s.GetDefaultNodeMutex()
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
 
 	uosmoIn := fmt.Sprintf("1000000%s", "uosmo")
 
-	swapWalletAddr := node.CreateWallet(migrationWallet)
+	swapWalletAddr := chainANode.CreateWallet(migrationWallet)
 
-	node.BankSend(uosmoIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+	chainANode.BankSend(uosmoIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
 
 	// Swap to create new twap records on the pool that was created pre-upgrade.
-	node.SwapExactAmountIn(uosmoIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradePoolId), otherDenom, swapWalletAddr)
+	chainANode.SwapExactAmountIn(uosmoIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradePoolId), otherDenom, swapWalletAddr)
 }
 
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
@@ -935,10 +939,12 @@ func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
-	chainA := s.GetChainAConfig0()
-	chainB := s.GetChainBConfig1()
-	chainANode := s.GetDefaultNodeMutex()
-	chainBNode := s.GetDefaultNodeBMutex()
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+	chainB := s.configurer.GetChainConfig(1)
+	chainBNode, err := chainB.GetDefaultNode()
+	s.Require().NoError(err)
 	fmt.Println("Sending IBC tokens IBCTokenTransferAndCreatePool")
 	chainANode.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
 	chainBNode.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
@@ -1037,8 +1043,9 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 }
 
 func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() {
-	chainA := s.GetChainAConfig0()
-	chainANode := s.GetDefaultNodeMutex()
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
 
 	poolId, err := chainA.SubmitCreateConcentratedPoolProposal()
 	s.NoError(err)
@@ -1143,17 +1150,17 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
-	chainA := s.GetChainAConfig0()
-	chainB := s.GetChainBConfig1()
+	chainA := s.configurer.GetChainConfig(0)
+	chainB := s.configurer.GetChainConfig(1)
 
-	node, err := chainA.GetNodeAtIndex(1)
+	chainANode, err := chainA.GetNodeAtIndex(1)
 	s.Require().NoError(err)
 
 	// If the RL param is already set. Remember it to set it back at the end
-	param := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+	param := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
 	fmt.Println("param", param)
 
-	osmoSupply, err := node.QuerySupplyOf("uosmo")
+	osmoSupply, err := chainANode.QuerySupplyOf("uosmo")
 	s.Require().NoError(err)
 
 	f, err := osmoSupply.ToDec().Float64()
@@ -1165,14 +1172,14 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 
 	// Sending >1%
 	fmt.Println("Sending >1%")
-	node.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
+	chainANode.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
 
-	contract, err := node.SetupRateLimiting(paths, chainA.NodeConfigs[1].PublicAddress, chainA)
+	contract, err := chainANode.SetupRateLimiting(paths, chainA.NodeConfigs[1].PublicAddress, chainA)
 	s.Require().NoError(err)
 
 	s.Eventually(
 		func() bool {
-			val := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+			val := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
 			return strings.Contains(val, contract)
 		},
 		1*time.Minute,
@@ -1182,16 +1189,16 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 
 	// Sending <1%. Should work
 	fmt.Println("Sending <1%. Should work")
-	node.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
+	chainANode.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
 	// Sending >1%. Should fail
 	fmt.Println("Sending >1%. Should fail")
-	node.FailIBCTransfer(initialization.ValidatorWalletName, chainB.NodeConfigs[1].PublicAddress, fmt.Sprintf("%duosmo", int(over)))
+	chainANode.FailIBCTransfer(initialization.ValidatorWalletName, chainB.NodeConfigs[1].PublicAddress, fmt.Sprintf("%duosmo", int(over)))
 
 	// Removing the rate limit so it doesn't affect other tests
-	node.WasmExecute(contract, `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
+	chainANode.WasmExecute(contract, `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
 	// reset the param to the original contract if it existed
 	if param != "" {
-		err = node.ParamChangeProposal(
+		err = chainANode.ParamChangeProposal(
 			ibcratelimittypes.ModuleName,
 			string(ibcratelimittypes.KeyContractAddress),
 			[]byte(param),
@@ -1199,7 +1206,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 		)
 		s.Require().NoError(err)
 		s.Eventually(func() bool {
-			val := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+			val := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
 			return strings.Contains(val, param)
 		}, time.Second*30, time.Millisecond*500)
 	}
@@ -1207,40 +1214,45 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 
 func (s *IntegrationTestSuite) LargeWasmUpload() {
 	// chainA := s.GetChainAConfig0()
-	node := s.GetDefaultNodeBMutex()
-	validatorAddr := node.GetWallet(initialization.ValidatorWalletName)
-	node.StoreWasmCode("bytecode/large.wasm", validatorAddr)
+	chainB := s.configurer.GetChainConfig(1)
+	chainBNode, err := chainB.GetDefaultNode()
+	s.Require().NoError(err)
+	validatorAddr := chainBNode.GetWallet(initialization.ValidatorWalletName)
+	chainBNode.StoreWasmCode("bytecode/large.wasm", validatorAddr)
 }
 
 func (s *IntegrationTestSuite) IBCWasmHooks() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
-	chainA := s.GetChainAConfig0()
-	nodeA := s.GetDefaultNodeMutex()
-	nodeB := s.GetDefaultNodeBMutex()
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+	chainB := s.configurer.GetChainConfig(1)
+	chainBNode, err := chainB.GetDefaultNode()
+	s.Require().NoError(err)
 
 	contractAddr := s.UploadAndInstantiateCounter(chainA)
 	fmt.Println("contractAddr", contractAddr)
 
 	transferAmount := int64(10)
-	validatorAddr := nodeB.GetWallet(initialization.ValidatorWalletName)
+	validatorAddr := chainBNode.GetWallet(initialization.ValidatorWalletName)
 	fmt.Println("Sending IBC transfer IBCWasmHooks")
 	coin := sdk.NewCoin("uosmo", sdk.NewInt(transferAmount))
-	nodeB.SendIBCTransfer(chainA, validatorAddr, contractAddr,
+	chainBNode.SendIBCTransfer(chainA, validatorAddr, contractAddr,
 		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr), coin)
 
 	// check the balance of the contract
 	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "uosmo"))
 	ibcDenom := denomTrace.IBCDenom()
-	s.CheckBalance(nodeA, contractAddr, ibcDenom, transferAmount)
+	s.CheckBalance(chainANode, contractAddr, ibcDenom, transferAmount)
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
 
 	var response map[string]interface{}
 	s.Require().Eventually(func() bool {
-		response, err = nodeA.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
+		response, err = chainANode.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
 		if err != nil {
 			return false
 		}
@@ -1280,16 +1292,17 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
-	chainA := s.GetChainAConfig0()
-	nodeA := s.GetDefaultNodeMutex()
-	chainB := s.GetChainBConfig1()
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+	chainB := s.configurer.GetChainConfig(1)
 
 	// Instantiate the counter contract on chain A
 	contractAddr := s.UploadAndInstantiateCounter(chainA)
 	fmt.Println("contractAddr PacketForwarding", contractAddr)
 
 	transferAmount := int64(10)
-	validatorAddr := nodeA.GetWallet(initialization.ValidatorWalletName)
+	validatorAddr := chainANode.GetWallet(initialization.ValidatorWalletName)
 	// Specify that the counter contract should be called on chain A when the packet is received
 	contractCallMemo := []byte(fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr))
 	// Generate the forward metadata
@@ -1305,17 +1318,17 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 	// Send the transfer from chainA to chainB. ChainB will parse the memo and forward the packet back to chainA
 	fmt.Println("Sending IBC transfer packet fwd")
 	coin := sdk.NewCoin("uosmo", sdk.NewInt(transferAmount))
-	nodeA.SendIBCTransfer(chainB, validatorAddr, validatorAddr, string(forwardMemo), coin)
+	chainANode.SendIBCTransfer(chainB, validatorAddr, validatorAddr, string(forwardMemo), coin)
 
 	// check the balance of the contract
 	// TODO issue here, doesnt send to address
-	s.CheckBalance(nodeA, contractAddr, "uosmo", transferAmount)
+	s.CheckBalance(chainANode, contractAddr, "uosmo", transferAmount)
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
 	s.Require().NoError(err)
 	s.Require().Eventually(func() bool {
-		response, err := nodeA.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, senderBech32))
+		response, err := chainANode.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, senderBech32))
 		if err != nil {
 			return false
 		}
@@ -1335,8 +1348,9 @@ func (s *IntegrationTestSuite) AddToExistingLockPostUpgrade() {
 	if s.skipUpgrade {
 		s.T().Skip("Skipping AddToExistingLockPostUpgrade test")
 	}
-	//chainA := s.GetChainAConfig0()
-	chainANode := s.GetDefaultNodeMutex()
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
 	// ensure we can add to existing locks and superfluid locks that existed pre upgrade on chainA
 	// we use the hardcoded gamm/pool/1 and these specific wallet names to match what was created pre upgrade
 	preUpgradePoolShareDenom := fmt.Sprintf("gamm/pool/%d", config.PreUpgradePoolId)
@@ -1391,8 +1405,9 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 
 	coinAIn, coinBIn, coinCIn := fmt.Sprintf("2000000%s", denomA), fmt.Sprintf("2000000%s", denomB), fmt.Sprintf("2000000%s", denomC)
 
-	chainA := s.GetChainAConfig0()
-	chainANode := s.GetDefaultNodeMutex()
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
 
 	// Triggers the creation of TWAP records.
 	poolId := chainANode.CreateBalancerPool(poolFile, initialization.ValidatorWalletName)
@@ -1546,19 +1561,20 @@ func (s *IntegrationTestSuite) StateSync() {
 		s.T().Skip()
 	}
 
-	chainA := s.GetChainAConfig0()
-	runningNode := s.GetDefaultNodeMutex()
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
 
 	persistentPeers := chainA.GetPersistentPeers()
 
-	stateSyncHostPort := fmt.Sprintf("%s:26657", runningNode.Name)
+	stateSyncHostPort := fmt.Sprintf("%s:26657", chainANode.Name)
 	stateSyncRPCServers := []string{stateSyncHostPort, stateSyncHostPort}
 
 	// get trust height and trust hash.
-	trustHeight, err := runningNode.QueryCurrentHeight()
+	trustHeight, err := chainANode.QueryCurrentHeight()
 	s.Require().NoError(err)
 
-	trustHash, err := runningNode.QueryHashFromBlock(trustHeight)
+	trustHash, err := chainANode.QueryHashFromBlock(trustHeight)
 	s.Require().NoError(err)
 
 	stateSynchingNodeConfig := &initialization.NodeConfig{
@@ -1577,7 +1593,7 @@ func (s *IntegrationTestSuite) StateSync() {
 	nodeInit, err := initialization.InitSingleNode(
 		chainA.Id,
 		tempDir,
-		filepath.Join(runningNode.ConfigDir, "config", "genesis.json"),
+		filepath.Join(chainANode.ConfigDir, "config", "genesis.json"),
 		stateSynchingNodeConfig,
 		time.Duration(chainA.VotingPeriod),
 		// time.Duration(chainA.ExpeditedVotingPeriod),
@@ -1592,13 +1608,13 @@ func (s *IntegrationTestSuite) StateSync() {
 
 	// ensure that the running node has snapshots at a height > trustHeight.
 	hasSnapshotsAvailable := func(syncInfo coretypes.SyncInfo) bool {
-		snapshotHeight := runningNode.SnapshotInterval
+		snapshotHeight := chainANode.SnapshotInterval
 		if uint64(syncInfo.LatestBlockHeight) < snapshotHeight {
 			s.T().Logf("snapshot height is not reached yet, current (%d), need (%d)", syncInfo.LatestBlockHeight, snapshotHeight)
 			return false
 		}
 
-		snapshots, err := runningNode.QueryListSnapshots()
+		snapshots, err := chainANode.QueryListSnapshots()
 		s.Require().NoError(err)
 
 		for _, snapshot := range snapshots {
@@ -1610,7 +1626,7 @@ func (s *IntegrationTestSuite) StateSync() {
 		s.T().Log("state sync snashot after trust height is not found")
 		return false
 	}
-	runningNode.WaitUntil(hasSnapshotsAvailable)
+	chainANode.WaitUntil(hasSnapshotsAvailable)
 
 	// start the state synchin node.
 	err = stateSynchingNode.Run()
@@ -1620,7 +1636,7 @@ func (s *IntegrationTestSuite) StateSync() {
 	s.Require().Eventually(func() bool {
 		stateSyncNodeHeight, err := stateSynchingNode.QueryCurrentHeight()
 		s.Require().NoError(err)
-		runningNodeHeight, err := runningNode.QueryCurrentHeight()
+		runningNodeHeight, err := chainANode.QueryCurrentHeight()
 		s.Require().NoError(err)
 		return stateSyncNodeHeight == runningNodeHeight
 	},
@@ -1634,8 +1650,9 @@ func (s *IntegrationTestSuite) StateSync() {
 }
 
 func (s *IntegrationTestSuite) ExpeditedProposals() {
-	chainA := s.GetChainAConfig0()
-	chainANode := s.GetDefaultNodeMutex()
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
 
 	latestPropNumber := chainANode.SubmitTextProposal("expedited text proposal", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
 	chainA.LatestProposalNumber += 1
@@ -1695,8 +1712,9 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 		minAmountOut = "1"
 	)
 
-	chainA := s.GetChainAConfig0()
-	chainANode := s.GetDefaultNodeMutex()
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
 
 	// Triggers the creation of TWAP records.
 	poolId := chainANode.CreateBalancerPool(poolFile, initialization.ValidatorWalletName)
@@ -1779,8 +1797,9 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPool_And_Parameter
 
 	expectedSpreadReward := sdk.MustNewDecFromStr("0.002")
 
-	//chainA := s.configurer.GetChainConfig(0)
-	chainANode := s.GetDefaultNodeMutex()
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
 
 	// Taken from: https://app.osmosis.zone/pool/674
 	concentratedPoolId := chainANode.QueryConcentratedPooIdLinkFromCFMM(config.DaiOsmoPoolIdv16)
@@ -1822,56 +1841,4 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPool_And_Parameter
 	expectedSpotPrice, err := balancerDaiOsmoPool.SpotPrice(sdk.Context{}, v16.DAIIBCDenom, v16.DesiredDenom0)
 	s.Require().NoError(err)
 	osmoassert.DecApproxEq(s.T(), expectedSpotPrice, concentratedPool.GetCurrentSqrtPrice().Power(2), sdk.NewDecWithPrec(1, 3))
-}
-
-func (s *IntegrationTestSuite) GetChainAConfig0() *chain.Config {
-	s.chainAConfig0Mutex.Lock()
-	defer s.chainAConfig0Mutex.Unlock()
-
-	if s.chainAConfig0 == nil {
-		chainA := s.configurer.GetChainConfig(0)
-		s.chainAConfig0 = chainA
-	}
-
-	return s.chainAConfig0
-}
-
-func (s *IntegrationTestSuite) GetChainBConfig1() *chain.Config {
-	s.chainBConfig1Mutex.Lock()
-	defer s.chainBConfig1Mutex.Unlock()
-
-	if s.chainBConfig1 == nil {
-		chainB := s.configurer.GetChainConfig(1)
-		s.chainBConfig1 = chainB
-	}
-
-	return s.chainBConfig1
-}
-
-func (s *IntegrationTestSuite) GetDefaultNodeMutex() *chain.NodeConfig {
-	s.defaultNodeMutex.Lock()
-	defer s.defaultNodeMutex.Unlock()
-
-	var err error
-	if s.defaultNodeConfig == nil {
-		chainA := s.GetChainAConfig0()
-		s.defaultNodeConfig, err = chainA.GetDefaultNode()
-		s.Require().NoError(err)
-	}
-
-	return s.defaultNodeConfig
-}
-
-func (s *IntegrationTestSuite) GetDefaultNodeBMutex() *chain.NodeConfig {
-	s.defaultNodeBMutex.Lock()
-	defer s.defaultNodeBMutex.Unlock()
-
-	var err error
-	if s.defaultNodeBConfig == nil {
-		chainB := s.GetChainBConfig1()
-		s.defaultNodeBConfig, err = chainB.GetDefaultNode()
-		s.Require().NoError(err)
-	}
-
-	return s.defaultNodeBConfig
 }
