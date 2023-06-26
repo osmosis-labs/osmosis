@@ -139,7 +139,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 		func() bool {
 			outBuf.Reset()
 			errBuf.Reset()
-			// fmt.Println("ADAM COMMAND", command)
+
 			exec, err := m.pool.Client.CreateExec(docker.CreateExecOptions{
 				Context:      ctx,
 				AttachStdout: true,
@@ -157,7 +157,6 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 				ErrorStream:  &errBuf,
 			})
 			if err != nil {
-				fmt.Println("ERR START EXEC", err)
 				return false
 			}
 
@@ -165,9 +164,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 			if (errBufString != "" || outBuf.String() != "") && containerName != hermesContainerName {
 				// Check if the error message matches the expected pattern
 				errBufMatches := sequenceMismatchRegex.FindAllStringSubmatch(errBufString, -1)
-				fmt.Println("Matches:", errBufMatches)
 				outBufMatches := sequenceMismatchRegex.FindAllStringSubmatch(outBuf.String(), -1)
-				fmt.Println("Matches:", outBufMatches)
 				if len(errBufMatches) > 0 {
 					lastArg := command[len(command)-1]
 					if strings.Contains(lastArg, "--sequence") {

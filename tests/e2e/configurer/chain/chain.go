@@ -198,7 +198,6 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 			ibcCoin := balancesDstPost.Sub(balancesDstPre)
 			if ibcCoin.Len() == 1 {
 				tokenPre := balancesDstPre.AmountOfNoDenomValidation(ibcCoin[0].Denom)
-				fmt.Println("tokenPre: ", tokenPre)
 				tokenPost := balancesDstPost.AmountOfNoDenomValidation(ibcCoin[0].Denom)
 				resPre := token.Amount
 				resPost := tokenPost.Sub(tokenPre)

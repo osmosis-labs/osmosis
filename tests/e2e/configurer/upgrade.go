@@ -108,6 +108,8 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 }
 
 func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
+	// Create a WaitGroup to wait for all goroutines to complete
+	var wg sync.WaitGroup
 	chainA := uc.chainConfigs[0]
 	chainANode, err := chainA.GetDefaultNode()
 	if err != nil {
@@ -119,13 +121,22 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 		return err
 	}
 
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
-	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
-	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
+	wg.Add(2)
 
-	// Create a WaitGroup to wait for all goroutines to complete
-	var wg sync.WaitGroup
+	go func() {
+		defer wg.Done()
+		chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+		chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
+	}()
+
+	go func() {
+		defer wg.Done()
+		chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+		chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
+	}()
+
+	// Wait for all goroutines to complete
+	wg.Wait()
 
 	wg.Add(2)
 
@@ -187,16 +198,42 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	fmt.Println("poolShareDenom: ", poolShareDenom)
 
-	// Setup wallets and send tokens to wallets (only chainA)
-	config.LockupWallet = chainANode.CreateWalletAndFund(config.LockupWallet, []string{
-		"10000000000000000000" + poolShareDenom,
-	})
-	config.LockupWalletSuperfluid = chainANode.CreateWalletAndFund(config.LockupWalletSuperfluid, []string{
-		"10000000000000000000" + poolShareDenom,
-	})
-	config.StableswapWallet = chainANode.CreateWalletAndFund(config.LockupWalletSuperfluid, []string{
-		"100000stake",
-	})
+	var (
+		lockupWallet           string
+		lockupWalletSuperfluid string
+		stableswapWallet       string
+	)
+
+	wg.Add(3)
+
+	go func() {
+		defer wg.Done()
+		// Setup wallets and send tokens to wallets (only chainA)
+		lockupWallet = chainANode.CreateWalletAndFund(config.LockupWallet, []string{
+			"10000000000000000000" + poolShareDenom,
+		})
+	}()
+
+	go func() {
+		defer wg.Done()
+		lockupWalletSuperfluid = chainANode.CreateWalletAndFund(config.LockupWalletSuperfluid, []string{
+			"10000000000000000000" + poolShareDenom,
+		})
+	}()
+
+	go func() {
+		defer wg.Done()
+		stableswapWallet = chainANode.CreateWalletAndFund(config.StableswapWallet, []string{
+			"100000stake",
+		})
+	}()
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+
+	config.LockupWallet = lockupWallet
+	config.LockupWalletSuperfluid = lockupWalletSuperfluid
+	config.StableswapWallet = stableswapWallet
 
 	wg.Add(4)
 
