@@ -9,11 +9,12 @@ import (
 	ibcexported "github.com/cosmos/ibc-go/v4/modules/core/exported"
 )
 
+const IbcAcknowledgementErrorType = "ibc-acknowledgement-error"
+
 // NewEmitErrorAcknowledgement creates a new error acknowledgement after having emitted an event with the
 // details of the error.
 func NewEmitErrorAcknowledgement(ctx sdk.Context, err error, errorContexts ...string) channeltypes.Acknowledgement {
-	errorType := "ibc-acknowledgement-error"
-	logger := ctx.Logger().With("module", errorType)
+	logger := ctx.Logger().With("module", IbcAcknowledgementErrorType)
 
 	attributes := make([]sdk.Attribute, len(errorContexts)+1)
 	attributes[0] = sdk.NewAttribute("error", err.Error())
@@ -24,7 +25,7 @@ func NewEmitErrorAcknowledgement(ctx sdk.Context, err error, errorContexts ...st
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			errorType,
+			IbcAcknowledgementErrorType,
 			attributes...,
 		),
 	})
