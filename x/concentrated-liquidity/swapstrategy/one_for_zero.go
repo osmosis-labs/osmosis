@@ -163,7 +163,10 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, 
 	// This covers an edge case where due to the lack of precision, the difference between the current sqrt price and the next sqrt price is so small that
 	// it ends up being rounded down to zero. This leads to an infinite loop in the swap algorithm. From knowing that this is a case where !hasReachedTarget,
 	// (that is, the swap stops within a bucket), we charge the full amount remaining in to the user and infer the amount in from calculation where the next
-	// sqrt price is increased by one ULP.
+	// sqrt price is increased by one ULP. We might over-charge the amount in on the user.
+	// We use this calculation fo amount in: liq * 10^(-18)
+	// This is acceptable as the order of magnitude of liquidity would have to be greater than 18 for the changes to start being significant.
+	// For the difference to be greater than 1, the order of magnitude of liquidity would have to be greater than 18 + 6 = 24 due to precision.
 	if !hasReachedTarget && sqrtPriceCurrent.Equal(sqrtPriceNext) && amountZeroOut.IsZero() && !amountZeroRemainingOut.IsZero() {
 		// Up charge amount one in in favor of the pool by adding 1 ULP to the next sqrt price.
 		amountOneIn = math.CalcAmount1Delta(liquidity, sqrtPriceNext.Add(oneULP), sqrtPriceCurrent, true)
