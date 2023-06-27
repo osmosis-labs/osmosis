@@ -103,7 +103,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				suite.Require().Equal(v16.DesiredDenom0, concentratedTypePool.GetToken0())
 				suite.Require().Equal(v16.DAIIBCDenom, concentratedTypePool.GetToken1())
 
-				// Allow 0.02% margin of error.
+				// Allow 0.01% margin of error.
 				multiplicativeTolerance := osmomath.ErrTolerance{
 					MultiplicativeTolerance: sdk.MustNewDecFromStr("0.0001"),
 				}
