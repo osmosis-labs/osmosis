@@ -66,7 +66,7 @@ type SwapState struct {
 // Note, the value is chosen arbitrarily.
 // From tests, there should be no reason for a swap to make more than 2 iterations without
 // progress. However, we leave a buffer of 1_000 to account for any unforeseen edge cases.
-const swapNoProgressLimit = 1_000
+const swapNoProgressLimit = 100
 
 func newSwapState(specifiedAmount sdk.Int, p types.ConcentratedPoolExtension, strategy swapstrategy.SwapStrategy) SwapState {
 	return SwapState{
