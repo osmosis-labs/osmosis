@@ -171,7 +171,7 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return sdk.Int{}, sdk.Int{}, types.NotPositionOwnerError{PositionId: positionId, Address: owner.String()}
 	}
 
-	// Defense in depth, requestedLiquidityAmountToWithdraw should always be a positive value.
+	// Defense in depth, requestedLiquidityAmountToWithdraw should always be a value that is GE than 0.
 	if requestedLiquidityAmountToWithdraw.IsNegative() {
 		return sdk.Int{}, sdk.Int{}, types.InsufficientLiquidityError{Actual: requestedLiquidityAmountToWithdraw, Available: position.Liquidity}
 	}
@@ -194,21 +194,15 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	// Retrieve the position in the pool for the provided owner and tick range.
-	positionLiquidity, err := k.GetPositionLiquidity(ctx, positionId)
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, err
+	// Check if the requested liquidity amount to withdraw is less than or equal to the available liquidity for the position.
+	// If it is greater than the available liquidity, return an error.
+	if requestedLiquidityAmountToWithdraw.GT(position.Liquidity) {
+		return sdk.Int{}, sdk.Int{}, types.InsufficientLiquidityError{Actual: requestedLiquidityAmountToWithdraw, Available: position.Liquidity}
 	}
 
 	_, _, err = k.collectIncentives(ctx, owner, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
-	}
-
-	// Check if the requested liquidity amount to withdraw is less than or equal to the available liquidity for the position.
-	// If it is greater than the available liquidity, return an error.
-	if requestedLiquidityAmountToWithdraw.GT(positionLiquidity) {
-		return sdk.Int{}, sdk.Int{}, types.InsufficientLiquidityError{Actual: requestedLiquidityAmountToWithdraw, Available: positionLiquidity}
 	}
 
 	// Calculate the change in liquidity for the pool based on the requested amount to withdraw.
@@ -230,7 +224,7 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	// If the requested liquidity amount to withdraw is equal to the available liquidity, delete the position from state.
 	// Ensure we collect any outstanding spread factors and incentives prior to deleting the position from state. This claiming
 	// process also clears position records from spread factor and incentive accumulators.
-	if requestedLiquidityAmountToWithdraw.Equal(positionLiquidity) {
+	if requestedLiquidityAmountToWithdraw.Equal(position.Liquidity) {
 		if _, err := k.collectSpreadRewards(ctx, owner, positionId); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
