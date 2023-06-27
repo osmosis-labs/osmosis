@@ -1840,9 +1840,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 
 				// Ensure records are properly updated for each supported uptime
 				for uptimeIndex := range types.SupportedUptimes {
-					recordExists, err := uptimeAccums[uptimeIndex].HasPosition(positionName)
-					s.Require().NoError(err)
-
+					recordExists := uptimeAccums[uptimeIndex].HasPosition(positionName)
 					s.Require().True(recordExists)
 
 					// Ensure position's record has correct values
@@ -2965,11 +2963,8 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 		for name, tc := range tests {
 			tc := tc
 			s.Run(name, func() {
-				// --- Setup test env ---
-
 				s.SetupTest()
 				clPool := s.PrepareConcentratedPool()
-				clKeeper := s.App.ConcentratedLiquidityKeeper
 				bankKeeper := s.App.BankKeeper
 				accountKeeper := s.App.AccountKeeper
 
@@ -2979,7 +2974,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 				}
 
 				// Initialize position
-				err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, tc.numShares, joinTime, tc.positionIdCreate)
+				err := s.clk.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, tc.numShares, joinTime, tc.positionIdCreate)
 				s.Require().NoError(err)
 
 				clPool.SetCurrentTick(DefaultCurrTick)
@@ -2991,7 +2986,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 					s.addUptimeGrowthInsideRange(s.Ctx, validPoolId, defaultSender, DefaultCurrTick, DefaultLowerTick, DefaultUpperTick, tc.growthInside)
 				}
 
-				err = clKeeper.SetPool(s.Ctx, clPool)
+				err = s.clk.SetPool(s.Ctx, clPool)
 				s.Require().NoError(err)
 
 				preCommunityPoolBalance := bankKeeper.GetAllBalances(s.Ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName))
@@ -3007,7 +3002,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 				}
 
 				// --- System under test ---
-				amountClaimedQuery, amountForfeitedQuery, err := clKeeper.GetClaimableIncentives(s.Ctx, tc.positionIdClaim)
+				amountClaimedQuery, amountForfeitedQuery, err := s.clk.GetClaimableIncentives(s.Ctx, tc.positionIdClaim)
 
 				// Pull new balances for comparison
 				newSenderBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, defaultSender)
@@ -3021,7 +3016,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 				s.Require().Equal(initSenderBalances, newSenderBalances)
 				s.Require().Equal(initPoolBalances, newPoolBalances)
 
-				amountClaimed, amountForfeited, err := clKeeper.PrepareClaimAllIncentivesForPosition(s.Ctx, tc.positionIdClaim)
+				amountClaimed, amountForfeited, err := s.clk.PrepareClaimAllIncentivesForPosition(s.Ctx, tc.positionIdClaim)
 
 				// --- Assertions ---
 
@@ -3172,9 +3167,7 @@ func (s *KeeperTestSuite) TestPrepareClaimAllIncentivesForPosition() {
 				for _, uptimeAccum := range uptimeAccumulatorsPreClaim {
 					newPositionName := string(types.KeyPositionId(positionIdOne))
 					// Check if the accumulator contains the position.
-					hasPosition, err := uptimeAccum.HasPosition(newPositionName)
-					s.Require().NoError(err)
-
+					hasPosition := uptimeAccum.HasPosition(newPositionName)
 					if hasPosition {
 						position, err := accum.GetPosition(uptimeAccum, newPositionName)
 						s.Require().NoError(err)
@@ -4144,8 +4137,7 @@ func (s *KeeperTestSuite) TestMoveRewardsToNewPositionAndDeleteOldAcc() {
 				s.Require().NoError(err)
 
 				// Check the old accumulator is now deleted.
-				hasPosition, err := testAccumulator.HasPosition(oldPos)
-				s.Require().NoError(err)
+				hasPosition := testAccumulator.HasPosition(oldPos)
 				s.Require().False(hasPosition)
 
 				// Check that the new accumulator has the correct amount of rewards in unclaimed rewards.

@@ -118,4 +118,6 @@ type ConcentratedKeeper interface {
 	PositionHasActiveUnderlyingLock(ctx sdk.Context, positionId uint64) (bool, uint64, error)
 	HasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, error)
 	WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error)
+	GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId uint64) ([]model.Position, error)
+	GetLockIdFromPositionId(ctx sdk.Context, positionId uint64) (uint64, error)
 }

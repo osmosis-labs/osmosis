@@ -192,7 +192,6 @@ func setupGenesis(baseGenesis genesis.GenesisState, poolGenesisEntries []singleP
 // TestInitGenesis tests the InitGenesis function of the ConcentratedLiquidityKeeper.
 // It checks that the state is initialized correctly based on the provided genesis.
 func (s *KeeperTestSuite) TestInitGenesis() {
-	s.SetupTest()
 	poolE := s.PrepareConcentratedPool()
 	poolOne, ok := poolE.(*model.Pool)
 	s.Require().True(ok)
@@ -612,8 +611,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 // TestExportGenesis tests the ExportGenesis function of the ConcentratedLiquidityKeeper.
 // It checks that the correct genesis state is returned.
 func (s *KeeperTestSuite) TestExportGenesis() {
-	s.SetupTest()
-
 	poolE := s.PrepareConcentratedPool()
 	poolOne, ok := poolE.(*model.Pool)
 	s.Require().True(ok)
