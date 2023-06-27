@@ -322,10 +322,10 @@ func (k Keeper) computeOutAmtGivenIn(
 	defer nextInitTickIter.Close()
 
 	// Iterate and update swapState until we swap all tokenIn or we reach the specific sqrtPriceLimit
+	swapNoProgressIterationCount := 0
 	// TODO: for now, we check if amountSpecifiedRemaining is GT 0.0000001. This is because there are times when the remaining
 	// amount may be extremely small, and that small amount cannot generate and amountIn/amountOut and we are therefore left
 	// in an infinite loop.
-	swapNoProgressIterationCount := 0
 	for swapState.amountSpecifiedRemaining.GT(smallestDec) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
 		// Log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
@@ -460,9 +460,10 @@ func (k Keeper) computeInAmtGivenOut(
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 	}
 
-	// TODO: This should be GT 0 but some instances have very small remainder
-	// need to look into fixing this
 	swapNoProgressIterationCount := 0
+	// TODO: for now, we check if amountSpecifiedRemaining is GT 0.0000001. This is because there are times when the remaining
+	// amount may be extremely small, and that small amount cannot generate and amountIn/amountOut and we are therefore left
+	// in an infinite loop.
 	for swapState.amountSpecifiedRemaining.GT(smallestDec) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
 		// log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
