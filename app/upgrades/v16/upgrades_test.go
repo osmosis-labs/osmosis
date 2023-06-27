@@ -83,6 +83,14 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				stakingParams := suite.App.StakingKeeper.GetParams(suite.Ctx)
 				stakingParams.BondDenom = "uosmo"
 				suite.App.StakingKeeper.SetParams(suite.Ctx, stakingParams)
+
+				// Send one dai to the community pool (this is true in current mainnet)
+				oneDai := sdk.NewCoins(sdk.NewCoin(v16.DAIIBCDenom, sdk.NewInt(1000000000000000000)))
+				suite.FundAcc(suite.TestAccs[0], oneDai)
+
+				err := suite.App.DistrKeeper.FundCommunityPool(suite.Ctx, oneDai, suite.TestAccs[0])
+				suite.Require().NoError(err)
+
 				dummyUpgrade(suite)
 				suite.Require().NotPanics(func() {
 					suite.App.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{})
