@@ -708,8 +708,9 @@ func (s *KeeperTestSuite) TestCrossTick() {
 
 func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 	tests := []struct {
-		name        string
-		presetTicks []genesis.FullTick
+		name                 string
+		presetTicks          []genesis.FullTick
+		preSetStartLiquidity sdk.Dec
 
 		expectedLiquidityDepthForRange []queryproto.LiquidityDepthWithRange
 	}{
@@ -864,11 +865,12 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		presetTicks []genesis.FullTick
 
 		// testing params
-		poolId          uint64
-		tokenIn         string
-		currentPoolTick int64
-		startTick       sdk.Int
-		boundTick       sdk.Int
+		poolId               uint64
+		tokenIn              string
+		currentPoolTick      int64
+		startTick            sdk.Int
+		boundTick            sdk.Int
+		preSetStartLiquidity sdk.Dec
 
 		// expected values
 		expectedStartTickLiquidity sdk.Dec
@@ -1191,6 +1193,251 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			},
 		},
 
+		// start tick edge cases for zero for one
+
+		{
+			name: "one narrow range position, zero for one, upper tick on current tick, start tick is current tick",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -15, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, 0, sdk.NewDec(-10)),
+			},
+
+			poolId:    defaultPoolId,
+			tokenIn:   ETH,
+			boundTick: sdk.Int{},
+
+			// Zero because current tick is upper tick and upper tick is exclusive.
+			preSetStartLiquidity: sdk.ZeroDec(),
+
+			expectedStartTickLiquidity: sdk.ZeroDec(),
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(-10),
+					TickIndex:    0,
+				},
+				{
+					LiquidityNet: sdk.NewDec(10),
+					TickIndex:    -15,
+				},
+			},
+		},
+		{
+			name: "one narrow range position, zero for one, upper tick on start tick, current tick > start tick",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -15, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, -5, sdk.NewDec(-10)),
+			},
+
+			poolId:                     defaultPoolId,
+			tokenIn:                    ETH,
+			startTick:                  sdk.NewInt(-5),
+			boundTick:                  sdk.Int{},
+			expectedStartTickLiquidity: sdk.ZeroDec(),
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(-10),
+					TickIndex:    -5,
+				},
+				{
+					LiquidityNet: sdk.NewDec(10),
+					TickIndex:    -15,
+				},
+			},
+		},
+		{
+			name: "one narrow range position, zero for one, upper tick on start tick, current tick < start tick",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -15, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(-10)),
+			},
+
+			poolId:                     defaultPoolId,
+			tokenIn:                    ETH,
+			startTick:                  sdk.NewInt(5),
+			boundTick:                  sdk.Int{},
+			expectedStartTickLiquidity: sdk.ZeroDec(),
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(-10),
+					TickIndex:    5,
+				},
+				{
+					LiquidityNet: sdk.NewDec(10),
+					TickIndex:    -15,
+				},
+			},
+		},
+		{
+			name: "one narrow range position, zero for one, lower tick on current tick, start tick is current tick",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, 0, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(-10)),
+			},
+
+			poolId:                     defaultPoolId,
+			tokenIn:                    ETH,
+			boundTick:                  sdk.Int{},
+			expectedStartTickLiquidity: sdk.NewDec(10),
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(10),
+					TickIndex:    0,
+				},
+			},
+		},
+		{
+			name: "one narrow range position, zero for one, lower tick on start tick, current tick > start tick",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -5, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(-10)),
+			},
+
+			poolId:               defaultPoolId,
+			tokenIn:              ETH,
+			startTick:            sdk.NewInt(-5),
+			boundTick:            sdk.Int{},
+			preSetStartLiquidity: sdk.NewDec(10),
+
+			expectedStartTickLiquidity: sdk.NewDec(10),
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(10),
+					TickIndex:    -5,
+				},
+			},
+		},
+		{
+			name: "one narrow range position, zero for one, lower tick on start tick, current tick < start tick",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-10)),
+			},
+
+			poolId:               defaultPoolId,
+			tokenIn:              ETH,
+			startTick:            sdk.NewInt(5),
+			boundTick:            sdk.Int{},
+			preSetStartLiquidity: sdk.NewDec(0),
+
+			expectedStartTickLiquidity: sdk.NewDec(10),
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(10),
+					TickIndex:    5,
+				},
+			},
+		},
+
+		// start tick edge cases for one for zero
+
+		{
+			name: "one narrow range position, one for zero, upper tick on current tick, start tick is current tick",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -15, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, 0, sdk.NewDec(-10)),
+			},
+
+			poolId:    defaultPoolId,
+			tokenIn:   USDC,
+			boundTick: sdk.Int{},
+
+			// Zero because current tick is upper tick and upper tick is exclusive.
+			preSetStartLiquidity: sdk.ZeroDec(),
+
+			expectedStartTickLiquidity: sdk.ZeroDec(),
+			expectedLiquidityDepths:    []queryproto.TickLiquidityNet(nil),
+		},
+		{
+			name: "one narrow range position, one for zero, upper tick on start tick, current tick > start tick",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -15, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, -5, sdk.NewDec(-10)),
+			},
+
+			poolId:                     defaultPoolId,
+			tokenIn:                    USDC,
+			startTick:                  sdk.NewInt(-5),
+			boundTick:                  sdk.Int{},
+			expectedStartTickLiquidity: sdk.ZeroDec(),
+			expectedLiquidityDepths:    []queryproto.TickLiquidityNet(nil),
+		},
+
+		{
+			name: "one narrow range position, one for zero, upper tick on start tick, current tick < start tick",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -15, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(-10)),
+			},
+
+			poolId:                     defaultPoolId,
+			tokenIn:                    USDC,
+			startTick:                  sdk.NewInt(5),
+			boundTick:                  sdk.Int{},
+			expectedStartTickLiquidity: sdk.ZeroDec(),
+			expectedLiquidityDepths:    []queryproto.TickLiquidityNet(nil),
+		},
+
+		{
+			name: "one narrow range position, one for zero, lower tick on current tick, start tick is current tick",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, 0, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(-10)),
+			},
+
+			poolId:                     defaultPoolId,
+			tokenIn:                    USDC,
+			boundTick:                  sdk.Int{},
+			expectedStartTickLiquidity: sdk.NewDec(10),
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(-10),
+					TickIndex:    5,
+				},
+			},
+		},
+		{
+			name: "one narrow range position, one for zero, lower tick on start tick, current tick > start tick",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -5, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(-10)),
+			},
+
+			poolId:               defaultPoolId,
+			tokenIn:              USDC,
+			startTick:            sdk.NewInt(-5),
+			boundTick:            sdk.Int{},
+			preSetStartLiquidity: sdk.NewDec(10),
+
+			expectedStartTickLiquidity: sdk.NewDec(10),
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(-10),
+					TickIndex:    5,
+				},
+			},
+		},
+		{
+			name: "one narrow range position, one for zero, lower tick on start tick, current tick < start tick",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-10)),
+			},
+
+			poolId:               defaultPoolId,
+			tokenIn:              USDC,
+			startTick:            sdk.NewInt(5),
+			boundTick:            sdk.Int{},
+			preSetStartLiquidity: sdk.NewDec(0),
+
+			expectedStartTickLiquidity: sdk.NewDec(10),
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(-10),
+					TickIndex:    10,
+				},
+			},
+		},
+
 		// error cases
 		{
 			name: "error: invalid pool id",
@@ -1304,7 +1551,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			currentTickLiquidity := sdk.ZeroDec()
 			for _, tick := range test.presetTicks {
 				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, test.poolId, tick.TickIndex, &tick.Info)
-				if tick.TickIndex < curTick {
+
+				if tick.TickIndex <= curTick {
 					currentTickLiquidity = currentTickLiquidity.Add(tick.Info.LiquidityNet)
 				}
 			}
@@ -1318,7 +1566,14 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			}
 			pool.SetCurrentSqrtPrice(curPrice)
 			pool.SetCurrentTick(curTick)
-			pool.UpdateLiquidity(currentTickLiquidity)
+
+			// Note there are some edge cases around the start tick liquidity
+			// so we manually overwrite them via test.preSetStartLiquidity if provided.
+			if !test.preSetStartLiquidity.IsNil() {
+				pool.UpdateLiquidity(test.preSetStartLiquidity)
+			} else {
+				pool.UpdateLiquidity(currentTickLiquidity)
+			}
 
 			err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
 			s.Require().NoError(err)
@@ -1339,7 +1594,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 				s.Require().Equal(test.startTick.Int64(), startTick)
 			}
 
-			s.Require().Equal(test.expectedStartTickLiquidity, startTickLiquidity)
+			s.Require().Equal(test.expectedStartTickLiquidity.String(), startTickLiquidity.String())
 		})
 	}
 }

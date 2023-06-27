@@ -382,7 +382,8 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	}
 
 	ctx.Logger().Debug("validating start tick")
-	if err := validateTickIsInValidRange(sdk.NewInt(startTick)); err != nil {
+	// start tick is allowed to seek anywhere
+	if startTick < types.MinInitializedTick || startTick > types.MaxTick {
 		return []queryproto.TickLiquidityNet{}, 0, sdk.Dec{}, fmt.Errorf("failed validating start tick (%d) with current sqrt price of (%s): %w", iteratorStartTick, currentTickSqrtPrice, err)
 	}
 
@@ -411,29 +412,10 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	}
 	defer iterator.Close()
 
-	startTickLiquidity = p.GetLiquidity()
 	// Walk start tick and update start tick liquidity
-	for ; iterator.Valid(); iterator.Next() {
-		tickIndex, err := types.TickIndexFromBytes(iterator.Key())
-		if err != nil {
-			return []queryproto.TickLiquidityNet{}, 0, sdk.Dec{}, err
-		}
-
-		tickStruct, err := ParseTickFromBz(iterator.Value())
-		if err != nil {
-			return []queryproto.TickLiquidityNet{}, 0, sdk.Dec{}, err
-		}
-
-		if zeroForOne {
-			if tickIndex < iteratorStartTick {
-				break
-			}
-		} else {
-			if tickIndex >= iteratorStartTick {
-				break
-			}
-		}
-		startTickLiquidity = startTickLiquidity.Add(tickStruct.LiquidityNet)
+	startTickLiquidity, err = k.seekStartTickLiquidity(prefixStore, zeroForOne, startTick, p.GetCurrentTick(), p.GetLiquidity())
+	if err != nil {
+		return []queryproto.TickLiquidityNet{}, 0, sdk.Dec{}, err
 	}
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -456,6 +438,54 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	}
 
 	return liquidityDepths, startTick, startTickLiquidity, nil
+}
+
+func (k Keeper) seekStartTickLiquidity(prefixStore prefix.Store, zeroForOne bool, startTick int64, curentTick int64, currentTickLiquidity sdk.Dec) (sdk.Dec, error) {
+	startTickKey := types.TickIndexToBytes(curentTick + 1)
+
+	isSeekZeroForOne := zeroForOne
+	if startTick != curentTick {
+		isSeekZeroForOne = startTick < curentTick
+	}
+
+	// define iterator depending on swap strategy
+	var iterator db.Iterator
+	if isSeekZeroForOne {
+		iterator = prefixStore.ReverseIterator(nil, startTickKey)
+	} else {
+		iterator = prefixStore.Iterator(startTickKey, nil)
+	}
+	defer iterator.Close()
+
+	// Walk start tick and update start tick liquidity
+	for ; iterator.Valid(); iterator.Next() {
+		tickIndex, err := types.TickIndexFromBytes(iterator.Key())
+		if err != nil {
+			return sdk.Dec{}, err
+		}
+
+		tickStruct, err := ParseTickFromBz(iterator.Value())
+		if err != nil {
+			return sdk.Dec{}, err
+		}
+
+		if isSeekZeroForOne {
+			if tickIndex <= startTick {
+				break
+			}
+		} else {
+			if startTick == curentTick && tickIndex == startTick {
+				break
+			}
+
+			if tickIndex > startTick {
+				break
+			}
+		}
+		currentTickLiquidity = currentTickLiquidity.Add(tickStruct.LiquidityNet)
+	}
+
+	return currentTickLiquidity, nil
 }
 
 func (k Keeper) getTickByTickIndex(ctx sdk.Context, poolId uint64, tickIndex int64) (model.TickInfo, error) {
