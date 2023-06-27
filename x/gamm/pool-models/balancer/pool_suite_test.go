@@ -619,6 +619,13 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.Ctx = s.Ctx.WithBlockHeight(v10.ForkHeight)
 }
 
+func (s *KeeperTestSuite) ResetTest() {
+	s.Reset()
+	s.queryClient = types.NewQueryClient(s.QueryHelper)
+	// be post-bug
+	s.Ctx = s.Ctx.WithBlockHeight(v10.ForkHeight)
+}
+
 // This test sets up 2 asset pools, and then checks the spot price on them.
 // It uses the pools spot price method, rather than the Gamm keepers spot price method.
 func (s *KeeperTestSuite) TestBalancerSpotPrice() {
@@ -677,7 +684,7 @@ func (s *KeeperTestSuite) TestBalancerSpotPrice() {
 	}
 
 	for _, tc := range tests {
-		s.SetupTest()
+		s.ResetTest()
 		s.Run(tc.name, func() {
 			poolId := s.PrepareBalancerPoolWithCoins(tc.baseDenomPoolInput, tc.quoteDenomPoolInput)
 
@@ -785,7 +792,7 @@ func (s *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 	}
 
 	for _, tc := range tests {
-		s.SetupTest()
+		s.ResetTest()
 		s.Run(tc.name, func() {
 			// pool assets
 			defaultBaseAsset := balancer.PoolAsset{

@@ -376,19 +376,10 @@ func (accum AccumulatorObject) GetPositionSize(name string) (sdk.Dec, error) {
 }
 
 // HasPosition returns true if a position with the given name exists,
-// false otherwise. Returns error if internal database error occurs.
-func (accum AccumulatorObject) HasPosition(name string) (bool, error) {
-	_, err := GetPosition(accum, name)
-
-	if err != nil {
-		isNoPositionError := errors.Is(err, NoPositionError{Name: name})
-		if isNoPositionError {
-			return false, nil
-		}
-		return false, err
-	}
-
-	return true, nil
+// false otherwise.
+func (accum AccumulatorObject) HasPosition(name string) bool {
+	containsKey := accum.store.Has(FormatPositionPrefixKey(accum.name, name))
+	return containsKey
 }
 
 // GetValue returns the current value of the accumulator.

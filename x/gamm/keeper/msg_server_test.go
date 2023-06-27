@@ -182,7 +182,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.Setup()
+			s.Reset()
 			ctx := s.Ctx
 
 			s.PrepareBalancerPool()
@@ -250,7 +250,7 @@ func (s *KeeperTestSuite) TestJoinPool_Events() {
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.Setup()
+			s.Reset()
 			ctx := s.Ctx
 
 			s.PrepareBalancerPool()
@@ -312,7 +312,7 @@ func (s *KeeperTestSuite) TestExitPool_Events() {
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.Setup()
+			s.Reset()
 			ctx := s.Ctx
 
 			s.PrepareBalancerPool()

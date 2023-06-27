@@ -91,7 +91,7 @@ func (s *KeeperTestSuite) TestEnsureDenomInPool() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			s.SetupTest()
+			s.ResetTest()
 
 			poolAssetsByDenom, err := balancer.GetPoolAssetsByDenom(tc.poolAssets)
 			s.Require().NoError(err, "test: %s", name)
