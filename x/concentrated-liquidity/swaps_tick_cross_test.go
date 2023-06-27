@@ -227,7 +227,7 @@ func (s *KeeperTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice sdk.Dec
 	}
 
 	// Get liquidity net amounts for tokenIn estimation.
-	liquidityNetAmounts, _, _, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityNetInDirection(s.Ctx, poolId, tokenInDenom, sdk.Int{}, sdk.Int{})
+	liquidityNetAmounts, _, currentLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityNetInDirection(s.Ctx, poolId, tokenInDenom, sdk.Int{}, sdk.Int{})
 	s.Require().NoError(err)
 
 	currentTick := originalCurrentTick
@@ -237,7 +237,6 @@ func (s *KeeperTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice sdk.Dec
 	}
 
 	// Start from current pool liquidity and zero amount in.
-	currentLiquidity := pool.GetLiquidity()
 	amountIn := sdk.ZeroDec()
 
 	for i, liquidityNetEntry := range liquidityNetAmounts {
@@ -965,20 +964,20 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickSpacingO
 				isPositionActiveFlag:                []bool{false, false, false, false},
 			},
 
-			"one for zero, swap to the middle tick to the left of the original current, then swap again to the leftmost tick": {
+			"one for zero, swap to the middle tick to the right of the original current, then swap again to the rigthmost tick": {
 				swapEndTicksAwayFromOriginalCurrent: []int64{2, 3},
 				isPositionActiveFlag:                []bool{true, false, false, false},
 			},
-			"one for zero, swap to the middle tick to the left of the original current, then swap again to the rightmost tick smaller than the original current": {
+			"one for zero, swap to the middle tick to the right of the original current, then swap again to the leftmost tick smaller than the original current": {
 				swapEndTicksAwayFromOriginalCurrent: []int64{2, 1},
 				isPositionActiveFlag:                []bool{true, true, true, false},
 			},
-			"one for zero, swap to the middle tick to the left of the original current and swap again but stay within the same initialized tick": {
+			"one for zero, swap to the middle tick to the right of the original current and swap again but stay within the same initialized tick": {
 				swapEndTicksAwayFromOriginalCurrent: []int64{2, 2},
 				isOneForZeroWithinSameTick:          true,
 				isPositionActiveFlag:                []bool{true, true, false, false},
 			},
-			"one for zero, swap to the middle tick to the left of the original current and then swap all the way back to the right of the original current tick": {
+			"one for zero, swap to the middle tick to the right of the original current and then swap all the way to the left of the original current tick": {
 				swapEndTicksAwayFromOriginalCurrent: []int64{2, -2},
 				isPositionActiveFlag:                []bool{true, true, true, false},
 			},

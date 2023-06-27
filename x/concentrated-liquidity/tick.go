@@ -429,7 +429,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 				break
 			}
 		} else {
-			if tickIndex > iteratorStartTick {
+			if tickIndex >= iteratorStartTick {
 				break
 			}
 		}
