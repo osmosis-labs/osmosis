@@ -2999,7 +2999,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	_, _, totalTokenIn, totalTokenOut = s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin1, ETH, types.MaxSpotPrice, positions.numSwaps)
 	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 	s.Require().NoError(err)
-
+	fmt.Println(clPool.GetCurrentTick())
 	// Range 2
 	liq_2 = clPool.GetLiquidity()
 	sqrtNext2 = sqrt5500.Add(tokenIn.Quo(liq_2))
@@ -3066,7 +3066,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	tokenInAmt = swapCoin0.Amount.Mul(sdk.NewInt(int64(positions.numSwaps))).ToDec()
 	spreadFactor = clPool.GetSpreadFactor(s.Ctx)
 	tokenInAfterSpreadFactors = tokenInAmt.Mul(sdk.OneDec().Sub(spreadFactor))
-
+	fmt.Println(liq) // 0
 	// Swap multiple times ETH for USDC, therefore decreasing the spot price
 	_, _, totalTokenIn, totalTokenOut = s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin0, USDC, types.MinSpotPrice, positions.numSwaps)
 	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
