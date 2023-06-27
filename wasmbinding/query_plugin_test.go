@@ -148,7 +148,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(10))})
 				suite.Require().NoError(err)
 
-				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
+				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", func() codec.ProtoMarshaler { return &banktypes.QueryAllBalancesResponse{} })
 			},
 			path: "/cosmos.bank.v1beta1.Query/AllBalances",
 			requestData: func() []byte {
@@ -171,7 +171,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(10))})
 				suite.Require().NoError(err)
 
-				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
+				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", func() codec.ProtoMarshaler { return &banktypes.QueryAllBalancesResponse{} })
 			},
 			path: "/cosmos.bank.v1beta1.Query/AllBalances",
 			requestData: func() []byte {
@@ -188,7 +188,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 		{
 			name: "invalid query router route",
 			testSetup: func() {
-				wasmbinding.SetWhitelistedQuery("invalid/query/router/route", &epochtypes.QueryEpochsInfoRequest{})
+				wasmbinding.SetWhitelistedQuery("invalid/query/router/route", func() codec.ProtoMarshaler { return &epochtypes.QueryEpochsInfoRequest{} })
 			},
 			path: "invalid/query/router/route",
 			requestData: func() []byte {
@@ -213,7 +213,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			// set up whitelist with wrong data
 			testSetup: func() {
 				wasmbinding.SetWhitelistedQuery("/osmosis.epochs.v1beta1.Query/EpochInfos",
-					&banktypes.QueryAllBalancesResponse{})
+					func() codec.ProtoMarshaler { return &banktypes.QueryAllBalancesResponse{} })
 			},
 			path: "/osmosis.epochs.v1beta1.Query/EpochInfos",
 			requestData: func() []byte {
@@ -226,7 +226,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			name: "error in grpc querier",
 			// set up whitelist with wrong data
 			testSetup: func() {
-				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesRequest{})
+				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", func() codec.ProtoMarshaler { return &banktypes.QueryAllBalancesRequest{} })
 			},
 			path: "/cosmos.bank.v1beta1.Query/AllBalances",
 			requestData: func() []byte {
@@ -386,7 +386,7 @@ func (suite *StargateTestSuite) TestDeterministicJsonMarshal() {
 		{
 			"Query All Balances",
 			func() {
-				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
+				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", func() codec.ProtoMarshaler { return &banktypes.QueryAllBalancesResponse{} })
 			},
 			[]byte{10, 9, 10, 3, 98, 97, 114, 18, 2, 51, 48, 18, 5, 10, 3, 102, 111, 111},
 			[]byte{
