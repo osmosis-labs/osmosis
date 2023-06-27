@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 	v16 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v16"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
@@ -103,8 +103,13 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				suite.Require().Equal(v16.DesiredDenom0, concentratedTypePool.GetToken0())
 				suite.Require().Equal(v16.DAIIBCDenom, concentratedTypePool.GetToken1())
 
+				// Allow 0.01% margin of error.
+				multiplicativeTolerance := osmomath.ErrTolerance{
+					MultiplicativeTolerance: sdk.MustNewDecFromStr("0.0001"),
+				}
+
 				// Validate that the spot price of the CL pool is what we expect
-				osmoassert.DecApproxEq(suite.T(), concentratedTypePool.GetCurrentSqrtPrice().Power(2), balancerSpotPrice, sdk.NewDec(4))
+				suite.Require().Equal(0, multiplicativeTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(concentratedTypePool.GetCurrentSqrtPrice().Power(2)), osmomath.BigDecFromSDKDec(balancerSpotPrice)))
 
 				// Validate that link was created.
 				migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
