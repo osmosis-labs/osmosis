@@ -171,7 +171,7 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return sdk.Int{}, sdk.Int{}, types.NotPositionOwnerError{PositionId: positionId, Address: owner.String()}
 	}
 
-	// Defense in depth, requestedLiquidityAmountToWithdraw should always be a value that is BGE than 0.
+	// Defense in depth, requestedLiquidityAmountToWithdraw should always be a value that is GE than 0.
 	if requestedLiquidityAmountToWithdraw.IsNegative() {
 		return sdk.Int{}, sdk.Int{}, types.InsufficientLiquidityError{Actual: requestedLiquidityAmountToWithdraw, Available: position.Liquidity}
 	}
