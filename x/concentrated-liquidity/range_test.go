@@ -412,11 +412,11 @@ func (s *KeeperTestSuite) trackEmittedIncentives(cumulativeTrackedIncentives sdk
 		if recordStartTime.Before(lastTrackerUpdateTime) {
 			// If the record started emitting prior to the last incentiveCreationTime (the last time we checkpointed),
 			// then we assume it has been emitting for the whole period since then.
-			secondsEmitted = sdk.NewDec(int64(s.Ctx.BlockTime().Sub(lastTrackerUpdateTime))).Quo(sdk.MustNewDecFromStr("1000000000"))
+			secondsEmitted = sdk.NewDec(int64(s.Ctx.BlockTime().Sub(lastTrackerUpdateTime))).QuoInt64(int64(time.Second))
 		} else if recordStartTime.Before(s.Ctx.BlockTime()) {
 			// If the record started emitting between the last incentiveCreationTime and now, then we only track the
 			// emissions between when it started and now.
-			secondsEmitted = sdk.NewDec(int64(s.Ctx.BlockTime().Sub(recordStartTime))).Quo(sdk.MustNewDecFromStr("1000000000"))
+			secondsEmitted = sdk.NewDec(int64(s.Ctx.BlockTime().Sub(recordStartTime))).QuoInt64(int64(time.Second))
 		}
 
 		emissionRate := incentiveRecord.IncentiveRecordBody.EmissionRate

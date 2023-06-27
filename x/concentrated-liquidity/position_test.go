@@ -2448,7 +2448,7 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 			tickRanges: [][]int64{
 				{0, 100},
 			},
-			rangeTestParams: withTickSpacing(DefaultRangeTestParams, uint64(100)),
+			rangeTestParams: withTickSpacing(DefaultRangeTestParams, DefaultTickSpacing),
 		},
 		"two adjacent ranges": {
 			tickRanges: [][]int64{
@@ -2510,7 +2510,7 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 			tickRanges: [][]int64{
 				{207000000, 207000000 + 100},
 			},
-			rangeTestParams: withTickSpacing(DefaultRangeTestParams, uint64(100)),
+			rangeTestParams: withTickSpacing(DefaultRangeTestParams, DefaultTickSpacing),
 		},
 		"one position adjacent to left of current tick (no swaps)": {
 			tickRanges: [][]int64{
@@ -2583,7 +2583,7 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 			tickRanges: [][]int64{
 				{types.MaxTick - 100, types.MaxTick},
 			},
-			rangeTestParams: withTickSpacing(DefaultRangeTestParams, uint64(100)),
+			rangeTestParams: withTickSpacing(DefaultRangeTestParams, DefaultTickSpacing),
 		},
 		"initial current tick equal to max tick": {
 			tickRanges: [][]int64{
