@@ -3075,7 +3075,6 @@ func (s *KeeperTestSuite) TestInfiniteSwapLoop_OutGivenIn() {
 	_, tokenOut, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, sdk.NewCoin(USDC, sdk.NewInt(10000)), ETH, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
 
 	// Swap back in the amount that was swapped out to test the inverse relationship
-	// This line is commented out as it triggers an infinite loop.
 	_, _, _, err = s.clk.SwapOutAmtGivenIn(s.Ctx, swapAddress, pool, tokenOut, ETH, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
 	s.Require().Error(err)
 	s.Require().ErrorIs(err, types.SwapNoProgressError{PoolId: pool.GetId(), UserProvidedCoin: tokenOut})
