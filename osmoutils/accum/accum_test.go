@@ -1478,9 +1478,7 @@ func (suite *AccumTestSuite) TestHasPosition() {
 				suite.Require().NoError(err)
 			}
 
-			hasPosition, err := accObject.HasPosition(defaultPositionName)
-			suite.NoError(err)
-
+			hasPosition := accObject.HasPosition(defaultPositionName)
 			suite.Equal(tc.preCreatePosition, hasPosition)
 		})
 	}
@@ -1599,8 +1597,7 @@ func (suite *AccumTestSuite) TestGetTotalShares() {
 		baseAmt := sdk.NewDec(int64(i)).Mul(sdk.NewDec(10))
 
 		// If addr doesn't have a position yet, we make one
-		positionExists, err := curAccum.HasPosition(curAddr)
-		suite.Require().NoError(err)
+		positionExists := curAccum.HasPosition(curAddr)
 		if !positionExists {
 			err = curAccum.NewPosition(curAddr, baseAmt, nil)
 			suite.Require().NoError(err)
@@ -1770,8 +1767,7 @@ func (suite *AccumTestSuite) TestDeletePosition() {
 			}
 			suite.Require().NoError(err)
 
-			hasPosition, err := accObject.HasPosition(tc.positionName)
-			suite.Require().NoError(err)
+			hasPosition := accObject.HasPosition(tc.positionName)
 			suite.Require().False(hasPosition)
 
 			// Check rewards.

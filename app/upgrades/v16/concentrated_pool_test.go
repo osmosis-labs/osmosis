@@ -22,12 +22,12 @@ const (
 )
 
 var (
-	defaultDaiAmount   = sdk.NewInt(7300000000)
-	defaultDenom0mount = sdk.NewInt(10000000000)
-	desiredDenom0      = v16.DesiredDenom0
-	desiredDenom0Coin  = sdk.NewCoin(desiredDenom0, defaultDenom0mount)
-	daiCoin            = sdk.NewCoin(v16.DAIIBCDenom, defaultDaiAmount)
-	usdcCoin           = sdk.NewCoin(v16.USDCIBCDenom, defaultDaiAmount)
+	defaultDaiAmount, _ = sdk.NewIntFromString("73000000000000000000000")
+	defaultDenom0mount  = sdk.NewInt(10000000000)
+	desiredDenom0       = v16.DesiredDenom0
+	desiredDenom0Coin   = sdk.NewCoin(desiredDenom0, defaultDenom0mount)
+	daiCoin             = sdk.NewCoin(v16.DAIIBCDenom, defaultDaiAmount)
+	usdcCoin            = sdk.NewCoin(v16.USDCIBCDenom, defaultDaiAmount)
 )
 
 func (suite *ConcentratedUpgradeTestSuite) SetupTest() {
