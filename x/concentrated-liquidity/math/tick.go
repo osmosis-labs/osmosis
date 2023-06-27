@@ -257,3 +257,8 @@ func CalculateSqrtPriceToTick(sqrtPrice sdk.Dec) (tickIndex int64, err error) {
 	}
 	return truncatedTick - 1, nil
 }
+
+// This is a temporary function that is a hack to fix that we have tests right now that use the wrong bucket defn.
+func TestingOnlyTickDecToBucket(tickDec sdk.Dec) (bucket int64) {
+	return tickDec.RoundInt64()
+}

@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
@@ -1260,7 +1261,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			curPrice := sdk.OneDec()
 			// TODO: consider adding tests for GetTickLiquidityNetInDirection
 			// with tick spacing > 1, requiring price to tick conversion with rounding.
-			curTick, err := s.PriceToTick(curPrice)
+			curTick, err := math.CalculateSqrtPriceToTick(osmomath.MustMonotonicSqrt(curPrice))
 			s.Require().NoError(err)
 			if test.currentPoolTick > 0 {
 				_, sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)

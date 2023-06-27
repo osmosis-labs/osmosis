@@ -2,8 +2,10 @@ package math_test
 
 import (
 	"fmt"
+	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
@@ -22,6 +24,60 @@ var (
 	closestTickAboveMinPriceDefaultTickSpacing = sdk.NewInt(types.MinInitializedTick).Add(sdk.NewInt(10).ToDec().Power(uint64(types.ExponentAtPriceOne * -1)).TruncateInt())
 )
 
+// CalculatePriceToTick takes in a price and returns the corresponding tick index.
+// This function does not take into consideration tick spacing.
+// NOTE: This is really returning a "Bucket index". Bucket index `b` corresponds to
+// all prices in range [TickToSqrtPrice(b), TickToSqrtPrice(b+1)).
+// We make an erroneous assumption here, that bucket index `b` corresponds to
+// all prices in range [TickToPrice(b), TickToPrice(b+1)).
+// This currently makes this function unsuitable for the state machine.
+func TestingErrCalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
+	// TODO: Make truncate, since this defines buckets as
+	// [TickToPrice(b - .5), TickToPrice(b+.5))
+	return math.CalculatePriceToTickDec(price).RoundInt64()
+}
+
+// TestingErrPriceToTick takes a price and returns the corresponding tick index assuming
+// tick spacing of 1.
+func TestingErrPriceToTick(price sdk.Dec) (int64, error) {
+	if price.Equal(sdk.OneDec()) {
+		return 0, nil
+	}
+
+	if price.IsNegative() {
+		return 0, fmt.Errorf("price must be greater than zero")
+	}
+
+	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
+		return 0, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
+	}
+
+	// Determine the tick that corresponds to the price
+	// This does not take into account the tickSpacing
+	tickIndex := math.CalculatePriceToTickDec(price).RoundInt64()
+
+	return tickIndex, nil
+}
+
+// PriceToTickRoundDown takes a price and returns the corresponding tick index.
+// If tickSpacing is provided, the tick index will be rounded down to the nearest multiple of tickSpacing.
+// CONTRACT: tickSpacing must be smaller or equal to the max of 1 << 63 - 1.
+// This is not a concern because we have authorized tick spacings that are smaller than this max,
+// and we don't expect to ever require it to be this large.
+func TestingErrPriceToTickRoundDownSpacing(price sdk.Dec, tickSpacing uint64) (int64, error) {
+	tickIndex, err := TestingErrPriceToTick(price)
+	if err != nil {
+		return 0, err
+	}
+
+	tickIndex, err = math.RoundDownTickToSpacing(tickIndex, int64(tickSpacing))
+	if err != nil {
+		return 0, err
+	}
+
+	return tickIndex, nil
+}
+
 // use following equations to test testing vectors using sage
 // geometricExponentIncrementDistanceInTicks(exponentAtPriceOne) = (9 * (10^(-exponentAtPriceOne)))
 // geometricExponentDelta(tickIndex, exponentAtPriceOne)  = floor(tickIndex / geometricExponentIncrementDistanceInTicks(exponentAtPriceOne))
@@ -30,7 +86,7 @@ var (
 // numAdditiveTicks(tickIndex, exponentAtPriceOne) = tickIndex - (geometricExponentDelta(tickIndex, exponentAtPriceOne) * geometricExponentIncrementDistanceInTicks(exponentAtPriceOne)
 // price(tickIndex, exponentAtPriceOne) = pow(10, geometricExponentDelta(tickIndex, exponentAtPriceOne)) +
 // (numAdditiveTicks(tickIndex, exponentAtPriceOne) * currentAdditiveIncrementInTicks(tickIndex, exponentAtPriceOne))
-func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
+func TestTickToSqrtPrice(t *testing.T) {
 	testCases := map[string]struct {
 		tickIndex     int64
 		expectedPrice sdk.Dec
@@ -183,25 +239,24 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
-		suite.Run(name, func() {
+		t.Run(name, func(t *testing.T) {
 			price, sqrtPrice, err := math.TickToSqrtPrice(tc.tickIndex)
 			if tc.expectedError != nil {
-				suite.Require().Error(err)
-				suite.Require().Equal(tc.expectedError.Error(), err.Error())
+				require.Error(t, err)
+				require.Equal(t, tc.expectedError.Error(), err.Error())
 				return
 			}
-			suite.Require().NoError(err)
+			require.NoError(t, err)
 			expectedSqrtPrice, err := osmomath.MonotonicSqrt(tc.expectedPrice)
-			suite.Require().NoError(err)
+			require.NoError(t, err)
 
-			suite.Require().Equal(tc.expectedPrice.String(), price.String())
-			suite.Require().Equal(expectedSqrtPrice.String(), sqrtPrice.String())
+			require.Equal(t, tc.expectedPrice.String(), price.String())
+			require.Equal(t, expectedSqrtPrice.String(), sqrtPrice.String())
 		})
 	}
 }
 
-func (suite *ConcentratedMathTestSuite) TestTicksToSqrtPrice() {
+func TestTicksToSqrtPrice(t *testing.T) {
 	testCases := map[string]struct {
 		lowerTickIndex     sdk.Int
 		upperTickIndex     sdk.Int
@@ -258,30 +313,30 @@ func (suite *ConcentratedMathTestSuite) TestTicksToSqrtPrice() {
 
 	for name, tc := range testCases {
 		tc := tc
-		suite.Run(name, func() {
+		t.Run(name, func(t *testing.T) {
 			priceLower, priceUpper, lowerSqrtPrice, upperSqrtPrice, err := math.TicksToSqrtPrice(tc.lowerTickIndex.Int64(), tc.upperTickIndex.Int64())
 			if tc.expectedError != nil {
-				suite.Require().Error(err)
-				suite.Require().Equal(tc.expectedError.Error(), err.Error())
+				require.Error(t, err)
+				require.Equal(t, tc.expectedError.Error(), err.Error())
 				return
 			}
-			suite.Require().NoError(err)
+			require.NoError(t, err)
 
 			// convert test case's prices to sqrt price
 			expectedLowerSqrtPrice, err := osmomath.MonotonicSqrt(tc.expectedLowerPrice)
-			suite.Require().NoError(err)
+			require.NoError(t, err)
 			expectedUpperSqrtPrice, err := osmomath.MonotonicSqrt(tc.expectedUpperPrice)
-			suite.Require().NoError(err)
+			require.NoError(t, err)
 
-			suite.Require().Equal(tc.expectedLowerPrice.String(), priceLower.String())
-			suite.Require().Equal(tc.expectedUpperPrice.String(), priceUpper.String())
-			suite.Require().Equal(expectedLowerSqrtPrice.String(), lowerSqrtPrice.String())
-			suite.Require().Equal(expectedUpperSqrtPrice.String(), upperSqrtPrice.String())
+			require.Equal(t, tc.expectedLowerPrice.String(), priceLower.String())
+			require.Equal(t, tc.expectedUpperPrice.String(), priceUpper.String())
+			require.Equal(t, expectedLowerSqrtPrice.String(), lowerSqrtPrice.String())
+			require.Equal(t, expectedUpperSqrtPrice.String(), upperSqrtPrice.String())
 		})
 	}
 }
 
-func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
+func TestPriceToTick(t *testing.T) {
 	const (
 		one = uint64(1)
 	)
@@ -375,25 +430,25 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 	for name, tc := range testCases {
 		tc := tc
 
-		suite.Run(name, func() {
+		t.Run(name, func(t *testing.T) {
 			// surpress error here, we only listen to errors from system under test.
-			tick, _ := suite.PriceToTick(tc.price)
+			tick, _ := TestingErrPriceToTick(tc.price)
 
 			// With tick spacing of one, no rounding should occur.
-			tickRoundDown, err := suite.PriceToTickRoundDownSpacing(tc.price, one)
+			tickRoundDown, err := TestingErrPriceToTickRoundDownSpacing(tc.price, one)
 			if tc.expectedError != nil {
-				suite.Require().Error(err)
-				suite.Require().ErrorContains(err, tc.expectedError.Error())
+				require.Error(t, err)
+				require.ErrorContains(t, err, tc.expectedError.Error())
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.tickExpected, tick)
-			suite.Require().Equal(tc.tickExpected, tickRoundDown)
+			require.NoError(t, err)
+			require.Equal(t, tc.tickExpected, tick)
+			require.Equal(t, tc.tickExpected, tickRoundDown)
 		})
 	}
 }
 
-func (suite *ConcentratedMathTestSuite) TestPriceToTickRoundDown() {
+func TestPriceToTickRoundDown(t *testing.T) {
 	testCases := map[string]struct {
 		price        sdk.Dec
 		tickSpacing  uint64
@@ -453,20 +508,18 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTickRoundDown() {
 		},
 	}
 	for name, tc := range testCases {
-		tc := tc
+		t.Run(name, func(t *testing.T) {
+			tick, err := TestingErrPriceToTickRoundDownSpacing(tc.price, tc.tickSpacing)
 
-		suite.Run(name, func() {
-			tick, err := suite.PriceToTickRoundDownSpacing(tc.price, tc.tickSpacing)
-
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.tickExpected, tick)
+			require.NoError(t, err)
+			require.Equal(t, tc.tickExpected, tick)
 		})
 	}
 }
 
 // TestTickToSqrtPricePriceToTick_InverseRelationship tests that ensuring the inverse calculation
 // between the two methods: tick to square root price to power of 2 and price to tick
-func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRelationship() {
+func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
 	testCases := map[string]struct {
 		price          sdk.Dec
 		truncatedPrice sdk.Dec
@@ -582,52 +635,52 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 	for name, tc := range testCases {
 		tc := tc
 
-		suite.Run(name, func() {
+		t.Run(name, func(t *testing.T) {
 			tickSpacing := uint64(1)
 
 			// 1. Compute tick from price.
-			tickFromPrice, err := suite.PriceToTickRoundDownSpacing(tc.price, tickSpacing)
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.tickExpected, tickFromPrice)
+			tickFromPrice, err := TestingErrPriceToTickRoundDownSpacing(tc.price, tickSpacing)
+			require.NoError(t, err)
+			require.Equal(t, tc.tickExpected, tickFromPrice)
 
 			// 2. Compute price from tick (inverse price)
 			price, err := math.TickToPrice(tickFromPrice)
-			suite.Require().NoError(err)
+			require.NoError(t, err)
 
 			// Make sure inverse price is correct.
 			expectedPrice := tc.price
 			if !tc.truncatedPrice.IsNil() {
 				expectedPrice = tc.truncatedPrice
 			}
-			suite.Require().Equal(expectedPrice, price)
+			require.Equal(t, expectedPrice, price)
 
 			// 3. Compute tick from inverse price (inverse tick)
-			inverseTickFromPrice, err := suite.PriceToTickRoundDownSpacing(price, tickSpacing)
-			suite.Require().NoError(err)
+			inverseTickFromPrice, err := TestingErrPriceToTickRoundDownSpacing(price, tickSpacing)
+			require.NoError(t, err)
 
 			// Make sure original tick and inverse tick match.
-			suite.Require().Equal(tickFromPrice, inverseTickFromPrice)
+			require.Equal(t, tickFromPrice, inverseTickFromPrice)
 
 			// 4. Validate PriceToTick and TickToSqrtPrice functions
 			_, sqrtPrice, err := math.TickToSqrtPrice(tickFromPrice)
-			suite.Require().NoError(err)
+			require.NoError(t, err)
 
 			priceFromSqrtPrice := sqrtPrice.Power(2)
 
 			// TODO: investigate this separately
 			// https://github.com/osmosis-labs/osmosis/issues/4925
-			// suite.Require().Equal(expectedPrice.String(), priceFromSqrtPrice.String())
+			// require.Equal(t, expectedPrice.String(), priceFromSqrtPrice.String())
 
 			// 5. Compute tick from sqrt price from the original tick.
-			inverseTickFromSqrtPrice, err := suite.PriceToTickRoundDownSpacing(priceFromSqrtPrice, tickSpacing)
-			suite.Require().NoError(err)
+			inverseTickFromSqrtPrice, err := TestingErrPriceToTickRoundDownSpacing(priceFromSqrtPrice, tickSpacing)
+			require.NoError(t, err)
 
-			suite.Require().Equal(tickFromPrice, inverseTickFromSqrtPrice, "expected: %s, actual: %s", tickFromPrice, inverseTickFromSqrtPrice)
+			require.Equal(t, tickFromPrice, inverseTickFromSqrtPrice, "expected: %s, actual: %s", tickFromPrice, inverseTickFromSqrtPrice)
 		})
 	}
 }
 
-func (suite *ConcentratedMathTestSuite) TestPriceToTick_ErrorCases() {
+func TestPriceToTick_ErrorCases(t *testing.T) {
 	testCases := map[string]struct {
 		price sdk.Dec
 	}{
@@ -644,14 +697,14 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick_ErrorCases() {
 	for name, tc := range testCases {
 		tc := tc
 
-		suite.Run(name, func() {
-			tickFromPrice, err := suite.PriceToTick(tc.price)
-			suite.Require().Error(err)
-			suite.Require().Equal(tickFromPrice, int64(0))
+		t.Run(name, func(t *testing.T) {
+			tickFromPrice, err := TestingErrPriceToTick(tc.price)
+			require.Error(t, err)
+			require.Equal(t, tickFromPrice, int64(0))
 		})
 	}
 }
-func (suite *ConcentratedMathTestSuite) TestTickToPrice_ErrorCases() {
+func TestTickToPrice_ErrorCases(t *testing.T) {
 	testCases := map[string]struct {
 		tickIndex int64
 	}{
@@ -665,14 +718,14 @@ func (suite *ConcentratedMathTestSuite) TestTickToPrice_ErrorCases() {
 	for name, tc := range testCases {
 		tc := tc
 
-		suite.Run(name, func() {
+		t.Run(name, func(t *testing.T) {
 			_, err := math.TickToPrice(tc.tickIndex)
-			suite.Require().Error(err)
+			require.Error(t, err)
 		})
 	}
 }
 
-func (suite *ConcentratedMathTestSuite) TestCalculatePriceToTick() {
+func TestCalculatePriceToTick(t *testing.T) {
 	testCases := map[string]struct {
 		price             sdk.Dec
 		expectedTickIndex int64
@@ -702,14 +755,14 @@ func (suite *ConcentratedMathTestSuite) TestCalculatePriceToTick() {
 			expectedTickIndex: 72000001,
 		},
 	}
-	for name, t := range testCases {
-		suite.Run(name, func() {
-			tickIndex := suite.CalculatePriceToTick(t.price)
-			suite.Require().Equal(t.expectedTickIndex, tickIndex)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			tickIndex := TestingErrCalculatePriceToTick(tc.price)
+			require.Equal(t, tc.expectedTickIndex, tickIndex)
 		})
 	}
 }
-func (suite *ConcentratedMathTestSuite) TestPowTenInternal() {
+func TestPowTenInternal(t *testing.T) {
 	testCases := map[string]struct {
 		exponent             int64
 		expectedPowTenResult sdk.Dec
@@ -727,32 +780,32 @@ func (suite *ConcentratedMathTestSuite) TestPowTenInternal() {
 			expectedPowTenResult: sdk.MustNewDecFromStr("0.00001"),
 		},
 	}
-	for name, t := range testCases {
-		suite.Run(name, func() {
-			powTenResult := math.PowTenInternal(t.exponent)
-			suite.Require().Equal(t.expectedPowTenResult, powTenResult)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			powTenResult := math.PowTenInternal(tc.exponent)
+			require.Equal(t, tc.expectedPowTenResult, powTenResult)
 		})
 	}
 }
 
-func (s *ConcentratedMathTestSuite) TestSqrtPriceToTickRoundDownSpacing() {
+func TestSqrtPriceToTickRoundDownSpacing(t *testing.T) {
 	// Compute reference values that need to be satisfied
 	_, sqp1, err := math.TickToSqrtPrice(1)
-	s.Require().NoError(err)
+	require.NoError(t, err)
 	_, sqp99, err := math.TickToSqrtPrice(99)
-	s.Require().NoError(err)
+	require.NoError(t, err)
 	_, sqp100, err := math.TickToSqrtPrice(100)
-	s.Require().NoError(err)
+	require.NoError(t, err)
 	_, sqpn100, err := math.TickToSqrtPrice(-100)
-	s.Require().NoError(err)
+	require.NoError(t, err)
 	_, sqpn101, err := math.TickToSqrtPrice(-101)
-	s.Require().NoError(err)
+	require.NoError(t, err)
 	_, sqpMaxTickSubOne, err := math.TickToSqrtPrice(types.MaxTick - 1)
-	s.Require().NoError(err)
+	require.NoError(t, err)
 	_, sqpMinTickPlusOne, err := math.TickToSqrtPrice(types.MinInitializedTick + 1)
-	s.Require().NoError(err)
+	require.NoError(t, err)
 	_, sqpMinTickPlusTwo, err := math.TickToSqrtPrice(types.MinInitializedTick + 2)
-	s.Require().NoError(err)
+	require.NoError(t, err)
 
 	testCases := map[string]struct {
 		sqrtPrice    sdk.Dec
@@ -870,21 +923,21 @@ func (s *ConcentratedMathTestSuite) TestSqrtPriceToTickRoundDownSpacing() {
 		},
 	}
 	for name, tc := range testCases {
-		s.Run(name, func() {
+		t.Run(name, func(t *testing.T) {
 			tickIndex, err := math.SqrtPriceToTickRoundDownSpacing(tc.sqrtPrice, tc.tickSpacing)
-			s.Require().NoError(err)
-			s.Require().Equal(tc.tickExpected, tickIndex)
+			require.NoError(t, err)
+			require.Equal(t, tc.tickExpected, tickIndex)
 
 			// Ensure returned bucket properly encapsulates given sqrt price, skipping the upper bound
 			// check if we're on the max tick
 			_, inverseSqrtPrice, err := math.TickToSqrtPrice(tickIndex)
-			s.Require().NoError(err)
-			s.Require().True(inverseSqrtPrice.LTE(tc.sqrtPrice))
+			require.NoError(t, err)
+			require.True(t, inverseSqrtPrice.LTE(tc.sqrtPrice))
 
 			if tc.tickExpected != types.MaxTick {
 				_, inverseSqrtPriceTickAbove, err := math.TickToSqrtPrice(tickIndex + int64(tc.tickSpacing))
-				s.Require().NoError(err)
-				s.Require().True(inverseSqrtPriceTickAbove.GT(tc.sqrtPrice))
+				require.NoError(t, err)
+				require.True(t, inverseSqrtPriceTickAbove.GT(tc.sqrtPrice))
 			}
 		})
 	}

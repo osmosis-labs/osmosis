@@ -224,7 +224,6 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 		return sdk.Coin{}, sdk.Coin{}
 	}
 
-	binaryFlip := rand.Int() % 2
 	poolLiquidity := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
 	s.Require().True(len(poolLiquidity) == 1 || len(poolLiquidity) == 2, "Pool liquidity should be in one or two tokens")
 
@@ -245,13 +244,7 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 		}
 	} else {
 		// Otherwise, randomly determine which denom to swap in & out
-		if binaryFlip == 0 {
-			swapInDenom = pool.GetToken0()
-			swapOutDenom = pool.GetToken1()
-		} else {
-			swapInDenom = pool.GetToken1()
-			swapOutDenom = pool.GetToken0()
-		}
+		swapInDenom, swapOutDenom = randOrder(pool.GetToken0(), pool.GetToken1())
 	}
 
 	// TODO: pick a more granular amount to fund without losing ability to swap at really high/low ticks
@@ -271,6 +264,13 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 	s.Require().NoError(err)
 
 	return swappedIn, swappedOut
+}
+
+func randOrder[T any](a, b T) (T, T) {
+	if rand.Int()%2 == 0 {
+		return a, b
+	}
+	return b, a
 }
 
 // addRandomizedBlockTime adds the given block time to the context, fuzzing the added time if applicable.
