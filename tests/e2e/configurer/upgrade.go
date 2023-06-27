@@ -177,6 +177,11 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	})
 	chainANode.FundCommunityPool(communityPoolFunder, oneDai.String())
 
+	communityPoolFunder = chainBNode.CreateWalletAndFund("communityPoolFunder", []string{
+		oneDai.String(),
+	})
+	chainBNode.FundCommunityPool(communityPoolFunder, oneDai.String())
+
 	return nil
 }
 
