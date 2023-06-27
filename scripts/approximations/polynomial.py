@@ -34,9 +34,9 @@ def evaluate(x, coeffs):
     """
     y = []
     for x_i in x:
-        y_i = 0
-        x_pow = 1
-        for i in range(len(coeffs)):
+        y_i = coeffs[0]
+        x_pow = x_i
+        for i in range(1, len(coeffs)):
             y_i += coeffs[i] * x_pow
             x_pow *= x_i
         y.append(y_i)
