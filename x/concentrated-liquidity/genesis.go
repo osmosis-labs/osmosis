@@ -1,8 +1,8 @@
 package concentrated_liquidity
 
 import (
+	"bytes"
 	"errors"
-	"fmt"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,7 +20,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 	k.SetNextIncentiveRecordId(ctx, genState.NextIncentiveRecordId)
 	// Initialize pools
 	var unpacker codectypes.AnyUnpacker = k.cdc
-	seenPoolIds := map[uint64]struct{}{}
 	for _, poolData := range genState.PoolData {
 		var pool types.ConcentratedPoolExtension
 		err := unpacker.UnpackAny(poolData.Pool, &pool)
@@ -37,7 +36,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		for _, tick := range poolTicks {
 			k.SetTickInfo(ctx, poolId, tick.TickIndex, &tick.Info)
 		}
-		seenPoolIds[poolId] = struct{}{}
 
 		// set up spread reward accumulators
 		store := ctx.KVStore(k.storeKey)
@@ -59,48 +57,112 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-	}
 
-	// set positions for pool
-	for _, positionWrapper := range genState.PositionData {
-		if _, ok := seenPoolIds[positionWrapper.Position.PoolId]; !ok {
-			panic(fmt.Sprintf("found position with pool id (%d) but there is no pool with such id that exists", positionWrapper.Position.PoolId))
-		}
+		// set positions for pool
+		for _, positionWrapper := range poolData.PositionData {
+			err := k.SetPosition(ctx, poolId, sdk.MustAccAddressFromBech32(positionWrapper.Position.Address), positionWrapper.Position.LowerTick, positionWrapper.Position.UpperTick, positionWrapper.Position.JoinTime, positionWrapper.Position.Liquidity, positionWrapper.Position.PositionId, positionWrapper.LockId)
+			if err != nil {
+				panic(err)
+			}
 
-		err := k.SetPosition(ctx, positionWrapper.Position.PoolId, sdk.MustAccAddressFromBech32(positionWrapper.Position.Address), positionWrapper.Position.LowerTick, positionWrapper.Position.UpperTick, positionWrapper.Position.JoinTime, positionWrapper.Position.Liquidity, positionWrapper.Position.PositionId, positionWrapper.LockId)
-		if err != nil {
-			panic(err)
-		}
+			// set individual spread reward accumulator state position
+			spreadRewardAccumObject, err := k.GetSpreadRewardAccumulator(ctx, poolId)
+			if err != nil {
+				panic(err)
+			}
+			spreadRewardPositionKey := types.KeySpreadRewardPositionAccumulator(positionWrapper.Position.PositionId)
 
-		// set individual spread reward accumulator state position
-		spreadRewardAccumObject, err := k.GetSpreadRewardAccumulator(ctx, positionWrapper.Position.PoolId)
-		if err != nil {
-			panic(err)
-		}
-		spreadRewardPositionKey := types.KeySpreadRewardPositionAccumulator(positionWrapper.Position.PositionId)
+			k.initOrUpdateAccumPosition(ctx, spreadRewardAccumObject, positionWrapper.SpreadRewardAccumRecord.AccumValuePerShare, spreadRewardPositionKey, positionWrapper.SpreadRewardAccumRecord.NumShares, positionWrapper.SpreadRewardAccumRecord.UnclaimedRewardsTotal, positionWrapper.SpreadRewardAccumRecord.Options)
 
-		k.initOrUpdateAccumPosition(ctx, spreadRewardAccumObject, positionWrapper.SpreadRewardAccumRecord.AccumValuePerShare, spreadRewardPositionKey, positionWrapper.SpreadRewardAccumRecord.NumShares, positionWrapper.SpreadRewardAccumRecord.UnclaimedRewardsTotal, positionWrapper.SpreadRewardAccumRecord.Options)
+			positionName := string(types.KeyPositionId(positionWrapper.Position.PositionId))
+			uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, poolId)
+			if err != nil {
+				panic(err)
+			}
 
-		positionName := string(types.KeyPositionId(positionWrapper.Position.PositionId))
-		uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, positionWrapper.Position.PoolId)
-		if err != nil {
-			panic(err)
-		}
-
-		for uptimeIndex, uptimeRecord := range positionWrapper.UptimeAccumRecords {
-			k.initOrUpdateAccumPosition(ctx, uptimeAccumulators[uptimeIndex], uptimeRecord.AccumValuePerShare, positionName, uptimeRecord.NumShares, uptimeRecord.UnclaimedRewardsTotal, uptimeRecord.Options)
+			for uptimeIndex, uptimeRecord := range positionWrapper.UptimeAccumRecords {
+				k.initOrUpdateAccumPosition(ctx, uptimeAccumulators[uptimeIndex], uptimeRecord.AccumValuePerShare, positionName, uptimeRecord.NumShares, uptimeRecord.UnclaimedRewardsTotal, uptimeRecord.Options)
+			}
 		}
 	}
 }
 
 // ExportGenesis returns the concentrated-liquidity module's exported genesis state.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
+	positions, err := k.getAllPositions(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	positionDataMap := map[uint64][]genesis.PositionData{}
+	for _, position := range positions {
+		position, err := k.GetPosition(ctx, position.PositionId)
+		if err != nil {
+			panic(err)
+		}
+		positionWithoutPoolId := genesis.PositionWithoutPoolId{}
+		positionWithoutPoolId.Address = position.Address
+		positionWithoutPoolId.JoinTime = position.JoinTime
+		positionWithoutPoolId.Liquidity = position.Liquidity
+		positionWithoutPoolId.LowerTick = position.LowerTick
+		positionWithoutPoolId.UpperTick = position.UpperTick
+		positionWithoutPoolId.PositionId = position.PositionId
+
+		lockId, err := k.GetLockIdFromPositionId(ctx, position.PositionId)
+		if err != nil {
+			if errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: position.PositionId}) {
+				lockId = 0
+			} else {
+				panic(err)
+			}
+		}
+
+		// Retrieve spread reward accumulator state for position
+		spreadRewardPositionKey := types.KeySpreadRewardPositionAccumulator(position.PositionId)
+		spreadRewardAccumObject, err := k.GetSpreadRewardAccumulator(ctx, position.PoolId)
+		if err != nil {
+			panic(err)
+		}
+		spreadRewardAccumPositionRecord, err := spreadRewardAccumObject.GetPosition(spreadRewardPositionKey)
+		if err != nil {
+			panic(err)
+		}
+
+		// Retrieve uptime incentive accumulator state for position
+		positionName := string(types.KeyPositionId(position.PositionId))
+		uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, position.PoolId)
+		if err != nil {
+			panic(err)
+		}
+
+		uptimeAccumObject := make([]accum.Record, len(uptimeAccumulators))
+		for uptimeIndex := range types.SupportedUptimes {
+			accumRecord, err := uptimeAccumulators[uptimeIndex].GetPosition(positionName)
+			if err != nil {
+				panic(err)
+			}
+
+			uptimeAccumObject[uptimeIndex] = accumRecord
+		}
+
+		if positionDataMap[position.PoolId] == nil {
+			positionDataMap[position.PoolId] = make([]genesis.PositionData, 0)
+		}
+
+		positionDataMap[position.PoolId] = append(positionDataMap[position.PoolId], genesis.PositionData{
+			LockId:                  lockId,
+			Position:                &positionWithoutPoolId,
+			SpreadRewardAccumRecord: spreadRewardAccumPositionRecord,
+			UptimeAccumRecords:      uptimeAccumObject,
+		})
+	}
+
 	pools, err := k.GetPools(ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	poolData := make([]genesis.PoolData, 0, len(pools))
+	poolData := make([]genesis.GenesisPoolData, 0, len(pools))
 
 	for _, poolI := range pools {
 		poolI := poolI
@@ -110,7 +172,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		}
 		anyCopy := *any
 
-		ticks, err := k.GetAllInitializedTicksForPool(ctx, poolI.GetId())
+		ticks, err := k.GetAllInitializedTicksForPoolWithoutPoolId(ctx, poolI.GetId())
 		if err != nil {
 			panic(err)
 		}
@@ -159,8 +221,14 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 			incentivesAccumObject[i] = genesisAccum
 		}
 
-		poolData = append(poolData, genesis.PoolData{
+		positionData := make([]genesis.PositionData, 0)
+		if len(positionDataMap[poolId]) > 0 {
+			positionData = positionDataMap[poolId]
+		}
+
+		poolData = append(poolData, genesis.GenesisPoolData{
 			Pool:                    &anyCopy,
+			PositionData:            positionData,
 			Ticks:                   ticks,
 			SpreadRewardAccumulator: spreadRewardAccumObject,
 			IncentivesAccumulators:  incentivesAccumObject,
@@ -168,65 +236,9 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		})
 	}
 
-	positions, err := k.getAllPositions(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	positionData := make([]genesis.PositionData, 0, len(positions))
-	for _, position := range positions {
-		position, err := k.GetPosition(ctx, position.PositionId)
-		if err != nil {
-			panic(err)
-		}
-
-		lockId, err := k.GetLockIdFromPositionId(ctx, position.PositionId)
-		if err != nil {
-			if !errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: position.PositionId}) {
-				panic(err)
-			}
-		}
-
-		// Retrieve spread reward accumulator state for position
-		spreadRewardPositionKey := types.KeySpreadRewardPositionAccumulator(position.PositionId)
-		spreadRewardAccumObject, err := k.GetSpreadRewardAccumulator(ctx, position.PoolId)
-		if err != nil {
-			panic(err)
-		}
-		spreadRewardAccumPositionRecord, err := spreadRewardAccumObject.GetPosition(spreadRewardPositionKey)
-		if err != nil {
-			panic(err)
-		}
-
-		// Retrieve uptime incentive accumulator state for position
-		positionName := string(types.KeyPositionId(position.PositionId))
-		uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, position.PoolId)
-		if err != nil {
-			panic(err)
-		}
-
-		uptimeAccumObject := make([]accum.Record, len(uptimeAccumulators))
-		for uptimeIndex := range types.SupportedUptimes {
-			accumRecord, err := uptimeAccumulators[uptimeIndex].GetPosition(positionName)
-			if err != nil {
-				panic(err)
-			}
-
-			uptimeAccumObject[uptimeIndex] = accumRecord
-		}
-
-		positionData = append(positionData, genesis.PositionData{
-			LockId:                  lockId,
-			Position:                &position,
-			SpreadRewardAccumRecord: spreadRewardAccumPositionRecord,
-			UptimeAccumRecords:      uptimeAccumObject,
-		})
-	}
-
 	return &genesis.GenesisState{
 		Params:                k.GetParams(ctx),
 		PoolData:              poolData,
-		PositionData:          positionData,
 		NextPositionId:        k.GetNextPositionId(ctx),
 		NextIncentiveRecordId: k.GetNextIncentiveRecordId(ctx),
 	}
@@ -243,4 +255,64 @@ func (k Keeper) initOrUpdateAccumPosition(ctx sdk.Context, accumumulator accum.A
 	}
 
 	osmoutils.MustSet(ctx.KVStore(k.storeKey), accum.FormatPositionPrefixKey(accumumulator.GetName(), index), &position)
+}
+
+// GetAllInitializedTicksForPoolWithoutPoolId returns all ticks in FullTick struct, without the pool id.
+func (k Keeper) GetAllInitializedTicksForPoolWithoutPoolId(ctx sdk.Context, poolId uint64) ([]genesis.FullTick, error) {
+	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyTickPrefixByPoolId(poolId), ParseFullTickFromBytes)
+}
+
+// ParseFullTickFromBytes takes key and value byte slices and attempts to parse
+// them into a FullTick struct. If the key or value is not valid, an appropriate
+// error is returned. The function expects the key to have three components
+// 1. The tick prefix (1 byte)
+// 2. The pool id (8 bytes)
+// 3. The tick index (1 byte for sign + 8 bytes for unsigned integer)
+//
+// The function returns a FullTick struct containing the tick index, and
+// tick information.
+//
+// Parameters:
+// - key ([]byte): A byte slice representing the key.
+// - value ([]byte): A byte slice representing the value.
+//
+// Returns:
+// - genesis.FullTick: A struct containing the tick index, and tick information.
+// - error: An error if the key or value is not valid or if the parsing fails.
+func ParseFullTickFromBytes(key, value []byte) (tick genesis.FullTick, err error) {
+	if len(key) == 0 {
+		return genesis.FullTick{}, types.ErrKeyNotFound
+	}
+	if len(value) == 0 {
+		return genesis.FullTick{}, types.ValueNotFoundForKeyError{Key: key}
+	}
+
+	if len(key) != types.KeyTickLengthBytes {
+		return genesis.FullTick{}, types.InvalidTickKeyByteLengthError{Length: len(key)}
+	}
+
+	prefix := key[0:len(types.TickPrefix)]
+	if !bytes.Equal(types.TickPrefix, prefix) {
+		return genesis.FullTick{}, types.InvalidPrefixError{Actual: string(prefix), Expected: string(types.TickPrefix)}
+	}
+
+	key = key[len(types.TickPrefix):]
+
+	// We only care about the last componenent, which is the tick index
+	key = key[uint64Bytes:]
+
+	tickIndex, err := types.TickIndexFromBytes(key)
+	if err != nil {
+		return genesis.FullTick{}, err
+	}
+
+	tickInfo, err := ParseTickFromBzAndRemoveUnInitializedUptimeTrackers(value)
+	if err != nil {
+		return genesis.FullTick{}, types.ValueParseError{Wrapped: err}
+	}
+
+	return genesis.FullTick{
+		TickIndex: tickIndex,
+		Info:      tickInfo,
+	}, nil
 }
