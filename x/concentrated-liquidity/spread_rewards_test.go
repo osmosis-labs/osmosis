@@ -1475,7 +1475,7 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_LP() {
 	spreadRewardsCollected := s.collectSpreadRewardsAndCheckInvariance(ctx, 0, DefaultMinTick, DefaultMaxTick, positionIdOne, sdk.NewCoins(), []string{USDC}, [][]int64{ticksActivatedAfterEachSwap})
 	expectedSpreadRewardsTruncated := totalSpreadRewardsExpected
 	for i, spreadRewardToken := range totalSpreadRewardsExpected {
-		// We run expected spread rewards through a cycle of divison and multiplication by liquidity to capture appropriate rounding behavior
+		// We run expected spread rewards through a cycle of division and multiplication by liquidity to capture appropriate rounding behavior
 		expectedSpreadRewardsTruncated[i] = sdk.NewCoin(spreadRewardToken.Denom, spreadRewardToken.Amount.ToDec().QuoTruncate(liquidity).MulTruncate(liquidity).TruncateInt())
 	}
 	s.Require().Equal(expectedSpreadRewardsTruncated, spreadRewardsCollected)

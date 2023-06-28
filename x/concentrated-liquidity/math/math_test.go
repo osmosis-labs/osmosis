@@ -439,6 +439,7 @@ func runSqrtRoundingTestCase(
 	fn func(sdk.Dec, sdk.Dec, sdk.Dec) sdk.Dec,
 	cases map[string]sqrtRoundingTestCase,
 ) {
+	t.Helper()
 	for name, tc := range cases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {

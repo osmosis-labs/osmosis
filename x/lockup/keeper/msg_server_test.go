@@ -546,6 +546,5 @@ func (s *KeeperTestSuite) TestSetRewardReceiverAddress() {
 		} else {
 			s.Require().Equal(s.TestAccs[1].String(), newLock.RewardReceiverAddress)
 		}
-
 	}
 }

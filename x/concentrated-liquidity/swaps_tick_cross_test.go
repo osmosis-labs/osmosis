@@ -823,7 +823,6 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		for name, tc := range testCases {
 			tc := tc
 			s.Run(name, func() {
-
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				// 1. Prepare pool and positions for test
 
@@ -888,7 +887,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickSpacingO
 		// at the end of configured swaps of the test.
 		// See diagram above the definition of defaultTickSpacingsAway variable for layout.
 		// The first position is NR1, the second position is NR2 etc.
-		// That is, the wider range position is preceeds the narrower range position.
+		// That is, the wider range position is precedes the narrower range position.
 		isPositionActiveFlag []bool
 	}
 
@@ -1053,7 +1052,6 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickSpacingO
 				// Validate the positions
 				s.Require().NotEmpty(tc.isPositionActiveFlag)
 				for i, expectedActivePositionIndex := range tc.isPositionActiveFlag {
-
 					isInRange := pool.IsCurrentTickInRange(positionMeta[i].lowerTick, positionMeta[i].upperTick)
 					s.Require().Equal(expectedActivePositionIndex, isInRange, fmt.Sprintf("position %d", i))
 				}
@@ -1166,7 +1164,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 // that liquidiy is calculated for that position as well as the adjacent position on the swap path.
 // It then repeats this for the other direction.
 func (s *KeeperTestSuite) TestSwapOutGivenIn_GetLiquidityFromAmountsPositionBounds() {
-	// See definiton of defaultTickSpacingsAway for position layout diagram.
+	// See definition of defaultTickSpacingsAway for position layout diagram.
 	poolId, positions := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
 	var (
 		// 3 tick spacings away [30999997, 31000003) (3TS) from the original current tick (31000000)

@@ -435,7 +435,6 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 			// Check the dev account was paid the correct amount
 			developerAccBalance := s.App.AppKeepers.BankKeeper.GetBalance(s.Ctx, devAccount, test.arbDenom)
 			s.Require().Equal(test.param.expectedProfit.MulRaw(types.ProfitSplitPhase1).QuoRaw(100), developerAccBalance.Amount)
-
 		} else {
 			s.Require().Error(err)
 		}

@@ -565,7 +565,6 @@ func (s *KeeperTestSuite) TestGetUserPositionsSerialized() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-
 			s.SetupTest()
 			k := s.App.ConcentratedLiquidityKeeper
 
@@ -1258,7 +1257,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimSpreadRewards(
 	// Perform a swap to earn spread rewards
 	swapAmountIn := sdk.NewCoin(ETH, sdk.NewInt(swapAmount))
 	expectedSpreadReward := swapAmountIn.Amount.ToDec().Mul(DefaultSpreadFactor)
-	// We run expected spread rewards through a cycle of divison and multiplication by liquidity to capture appropriate rounding behavior.
+	// We run expected spread rewards through a cycle of division and multiplication by liquidity to capture appropriate rounding behavior.
 	// Note that we truncate the int at the end since it is not possible to have a decimal spread reward amount collected (the QuoTruncate
 	// and MulTruncates are much smaller operations that round down for values past the 18th decimal place).
 	expectedSpreadRewardTruncated := expectedSpreadReward.QuoTruncate(totalLiquidity).MulTruncate(totalLiquidity).TruncateInt()

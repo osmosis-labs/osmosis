@@ -361,7 +361,6 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			} else {
 				s.Require().True(gasConsumed < uint64(types.BaseGasFeeForInitializingTick))
 			}
-
 		})
 	}
 }

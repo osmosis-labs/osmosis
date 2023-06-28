@@ -612,10 +612,8 @@ func (s *KeeperTestSuite) TestSetLockRewardReceiverAddress() {
 				s.Require().NoError(err)
 				s.Require().Equal(lock.RewardReceiverAddress, newReceiver.String())
 			}
-
 		})
 	}
-
 }
 
 func (s *KeeperTestSuite) TestCreateLockNoSend() {
@@ -1045,7 +1043,6 @@ func (s *KeeperTestSuite) AddTokensToLockForSynth() {
 			synthlockByLockup, err := s.App.LockupKeeper.GetSyntheticLockupByUnderlyingLockId(s.Ctx, i)
 			s.Require().NoError(err)
 			s.Require().Equal(synthlockByLockup, synthlocks[(int(i)-1)*3+int(i)])
-
 		}
 		// by GetAllSyntheticLockupsByAddr
 		for i, synthlock := range s.App.LockupKeeper.GetAllSyntheticLockupsByAddr(s.Ctx, addr1) {

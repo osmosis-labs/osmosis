@@ -18,7 +18,7 @@ const (
 	denomA        = apptesting.DefaultTransmuterDenomA
 	denomB        = apptesting.DefaultTransmuterDenomB
 	validCodeId   = uint64(1)
-	invalidCodeId        = validCodeId + 1
+	invalidCodeId = validCodeId + 1
 	defaultPoolId = uint64(1)
 	nonZeroFeeStr = "0.01"
 )

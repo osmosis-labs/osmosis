@@ -34,7 +34,6 @@ func TestCWPoolGovSuite(t *testing.T) {
 // 5. Invalid byte code uploaded - error.
 // 6. For success cases, tests that relevant event is emitted.
 func (s *CWPoolGovSuite) TestUploadCodeIdAndWhitelist() {
-
 	// Note that setup is done once and the state is shared between the test cases.
 	s.Setup()
 

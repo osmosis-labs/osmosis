@@ -545,7 +545,6 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges_NoLock() {
 
 			// Pre-create external gauges
 			for _, gauge := range tc.gaugesToCreate {
-
 				// Fund creator
 				s.FundAcc(s.TestAccs[0], defaultCoins)
 

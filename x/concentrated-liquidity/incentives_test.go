@@ -3078,13 +3078,13 @@ func (s *KeeperTestSuite) TestPrepareClaimAllIncentivesForPosition() {
 		{
 			name:                     "Claim after 1 minute, 1ns uptime",
 			blockTimeElapsed:         time.Minute,
-			expectedCoins:            sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(59))), //  after 1min = 59.999999999901820104usdc ~ 59usdc becasue 1usdc emitted every second
+			expectedCoins:            sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(59))), //  after 1min = 59.999999999901820104usdc ~ 59usdc because 1usdc emitted every second
 			minUptimeIncentiveRecord: time.Nanosecond,
 		},
 		{
 			name:                     "Claim after 1 hr, 1ns uptime",
 			blockTimeElapsed:         time.Hour,
-			expectedCoins:            sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(3599))), //  after 1min = 59.999999999901820104usdc ~ 59usdc becasue 1usdc emitted every second
+			expectedCoins:            sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(3599))), //  after 1min = 59.999999999901820104usdc ~ 59usdc because 1usdc emitted every second
 			minUptimeIncentiveRecord: time.Nanosecond,
 		},
 		{

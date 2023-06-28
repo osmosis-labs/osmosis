@@ -620,7 +620,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			ownerBalancerAfterWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, owner)
 			communityPoolBalanceAfter := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
 
-			// owner should only have tokens equivilent to the delta balance of the pool
+			// owner should only have tokens equivalent to the delta balance of the pool
 			expectedOwnerBalanceDelta := expectedPoolBalanceDelta.Add(expectedIncentivesClaimed...).Add(expectedSpreadRewardsClaimed...)
 			actualOwnerBalancerDelta := ownerBalancerAfterWithdraw.Sub(ownerBalancerBeforeWithdraw)
 

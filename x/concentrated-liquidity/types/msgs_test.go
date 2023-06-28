@@ -31,6 +31,7 @@ func init() {
 }
 
 func runValidateBasicTest(t *testing.T, name string, msg extMsg, expectPass bool, expType string) {
+	t.Helper()
 	if expectPass {
 		require.NoError(t, msg.ValidateBasic(), "test: %v", name)
 		require.Equal(t, msg.Route(), types.RouterKey)
