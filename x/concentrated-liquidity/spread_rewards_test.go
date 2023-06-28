@@ -1655,6 +1655,7 @@ func (s *KeeperTestSuite) TestGetClaimableSpreadRewards() {
 	clPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 	s.Require().NoError(err)
 
+	// currentTick (31000000)
 	fmt.Println("CURRENT TICK BEFORE SWAP", clPool.GetCurrentTick())
 
 	// check fees
@@ -1663,11 +1664,8 @@ func (s *KeeperTestSuite) TestGetClaimableSpreadRewards() {
 
 	// perform a  swap
 	spreadFactor := clPool.GetSpreadFactor(s.Ctx)
-	coinIn, coinOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(s.Ctx, s.TestAccs[1], clPool, sdk.NewCoin(ETH, sdk.NewInt(500)), USDC, spreadFactor, sdk.ZeroDec())
+	coinIn, coinOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, s.TestAccs[1], clPool, sdk.NewCoin(USDC, sdk.NewInt(10_000_000)), ETH, spreadFactor, types.MaxSpotPrice)
 	s.Require().NoError(err)
-
-	// coinIn, coinOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, s.TestAccs[1], clPool, sdk.NewCoin(USDC, sdk.NewInt(500_000)), ETH, spreadFactor, types.MaxSpotPrice)
-	// s.Require().NoError(err)
 
 	fmt.Println("********* POST TRADE ********")
 	fmt.Println("SWAP RESULT: coinIn , coinOut, spreadFactor:", coinIn, coinOut, spreadFactor)
@@ -1675,6 +1673,7 @@ func (s *KeeperTestSuite) TestGetClaimableSpreadRewards() {
 	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 	s.Require().NoError(err)
 
+	// currentTick (31000900)
 	fmt.Println("CURRENT TICK AFTER SWAP", clPool.GetCurrentTick())
 
 	// check fees
