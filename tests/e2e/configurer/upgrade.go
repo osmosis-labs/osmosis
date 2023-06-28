@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
+	v16 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v16"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/containers"
@@ -168,6 +169,18 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	// test lock and add to existing lock for both regular and superfluid lockups (only chainA)
 	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), poolShareDenom, config.LockupWallet, config.LockupWalletSuperfluid)
+
+	// fund the community pool with one dai
+	oneDai := sdk.NewCoin(v16.DAIIBCDenom, sdk.NewInt(1000000000000000000))
+	communityPoolFunder := chainANode.CreateWalletAndFund("communityPoolFunder", []string{
+		oneDai.String(),
+	})
+	chainANode.FundCommunityPool(communityPoolFunder, oneDai.String())
+
+	communityPoolFunder = chainBNode.CreateWalletAndFund("communityPoolFunder", []string{
+		oneDai.String(),
+	})
+	chainBNode.FundCommunityPool(communityPoolFunder, oneDai.String())
 
 	return nil
 }
