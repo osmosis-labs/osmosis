@@ -2597,7 +2597,7 @@ func (s *KeeperTestSuite) TestGetOsmoRoutedMultihopTotalSpreadFactor() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestCreateMultihopExpectedSwapOuts() {
+func (s *KeeperTestSuite) TestCreateMultihopExpectedSwapOuts() {
 	tests := map[string]struct {
 		route                       []types.SwapAmountOutRoute
 		tokenOut                    sdk.Coin
@@ -2714,24 +2714,24 @@ func (suite *KeeperTestSuite) TestCreateMultihopExpectedSwapOuts() {
 	}
 
 	for name, tc := range tests {
-		suite.Run(name, func() {
-			suite.SetupTest()
+		s.Run(name, func() {
+			s.SetupTest()
 
-			suite.createBalancerPoolsFromCoins(tc.poolCoins)
+			s.createBalancerPoolsFromCoins(tc.poolCoins)
 
 			var actualSwapOuts []sdk.Int
 			var err error
 
 			if !tc.sumOfSpreadFactors.IsNil() && !tc.cumulativeRouteSpreadFactor.IsNil() {
-				actualSwapOuts, err = suite.App.PoolManagerKeeper.CreateOsmoMultihopExpectedSwapOuts(suite.Ctx, tc.route, tc.tokenOut, tc.cumulativeRouteSpreadFactor, tc.sumOfSpreadFactors)
+				actualSwapOuts, err = s.App.PoolManagerKeeper.CreateOsmoMultihopExpectedSwapOuts(s.Ctx, tc.route, tc.tokenOut, tc.cumulativeRouteSpreadFactor, tc.sumOfSpreadFactors)
 			} else {
-				actualSwapOuts, err = suite.App.PoolManagerKeeper.CreateMultihopExpectedSwapOuts(suite.Ctx, tc.route, tc.tokenOut)
+				actualSwapOuts, err = s.App.PoolManagerKeeper.CreateMultihopExpectedSwapOuts(s.Ctx, tc.route, tc.tokenOut)
 			}
 			if tc.expectedError {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			} else {
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.expectedSwapIns, actualSwapOuts)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expectedSwapIns, actualSwapOuts)
 			}
 		})
 	}

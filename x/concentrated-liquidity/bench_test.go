@@ -80,11 +80,12 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 		cleanup := s.SetupWithLevelDb()
 
 		for _, acc := range s.TestAccs {
-			simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, sdk.NewCoins(
+			err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, sdk.NewCoins(
 				sdk.NewCoin(denom0, maxAmountOfEachToken),
 				sdk.NewCoin(denom1, maxAmountOfEachToken),
 				sdk.NewCoin("uosmo", maxAmountOfEachToken),
 			))
+			noError(b, err)
 		}
 
 		// Create a balancer pool
@@ -176,7 +177,8 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 			tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
 			accountIndex := rand.Intn(len(s.TestAccs))
 			account := s.TestAccs[accountIndex]
-			simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
+			err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
+			noError(b, err)
 			s.createPosition(accountIndex, clPoolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
 		}
 		// Setup numberOfPositions full range positions for deeper liquidity.
@@ -236,7 +238,8 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 
 		liquidityNet, err := clKeeper.GetTickLiquidityNetInDirection(s.Ctx, pool.GetId(), largeSwapInCoin.Denom, sdk.NewInt(currentTick), sdk.Int{})
 		noError(b, err)
-		simapp.FundAccount(s.App.BankKeeper, s.Ctx, s.TestAccs[0], sdk.NewCoins(largeSwapInCoin))
+		err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, s.TestAccs[0], sdk.NewCoins(largeSwapInCoin))
+		noError(b, err)
 
 		b.StartTimer()
 

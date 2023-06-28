@@ -238,7 +238,7 @@ func verifyProtorevUpdateSuccess(suite *UpgradeTestSuite) {
 	suite.Require().Equal(suite.App.BankKeeper.GetBalance(suite.Ctx, devAcc, "uosmo"), sdk.NewCoin("uosmo", sdk.NewInt(1000000)))
 
 	// Ensure developer fees are empty
-	coins, err := suite.App.ProtoRevKeeper.GetAllDeveloperFees(suite.Ctx)
+	coins, err := suite.App.ProtoRevKeeper.GetAllDeveloperFees(suite.Ctx) //nolint:staticcheck // used for the v16 upgrade and can be removed in v17
 	suite.Require().NoError(err)
 	suite.Require().Equal(coins, []sdk.Coin{})
 }

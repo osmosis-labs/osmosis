@@ -1069,7 +1069,8 @@ func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegate
 	migrationRecord := gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 		{BalancerPoolId: balancerPooId, ClPoolId: clPoolId},
 	}}
-	gammKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, migrationRecord)
+	err = gammKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, migrationRecord)
+	s.Require().NoError(err)
 
 	// The unbonding duration is the same as the staking module's unbonding duration.
 	unbondingDuration := stakingKeeper.GetParams(ctx).UnbondingTime
@@ -1250,7 +1251,7 @@ const (
 // This test also asserts this same invariant at the very end, to ensure that all coins the accounts were funded with are accounted for.
 func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 	for i := 0; i < 10; i++ {
-		rand.Seed(time.Now().UnixNano() + int64(i))
+		rand.Seed(time.Now().UnixNano() + int64(i)) //nolint:staticcheck // Seed with time to get different results each time
 
 		// Generate random value from 0 to 50 for each position field
 		// This is how many positions of each type we will create and migrate

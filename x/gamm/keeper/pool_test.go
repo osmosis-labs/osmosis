@@ -518,7 +518,7 @@ func (s *KeeperTestSuite) TestSetStableSwapScalingFactors() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
+func (s *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 	tests := map[string]struct {
 		poolId              uint64
 		shareOutAmount      sdk.Int
@@ -526,7 +526,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 		err                 error
 	}{
 		"Balancer pool: Share ratio is zero": {
-			poolId: suite.prepareCustomBalancerPool(defaultAcctFunds, defaultPoolAssets, balancer.PoolParams{
+			poolId: s.prepareCustomBalancerPool(defaultAcctFunds, defaultPoolAssets, balancer.PoolParams{
 				SwapFee: defaultSpreadFactor,
 				ExitFee: defaultZeroExitFee,
 			}),
@@ -535,7 +535,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 		},
 
 		"Balancer pool: Share ratio is negative": {
-			poolId: suite.prepareCustomBalancerPool(defaultAcctFunds, defaultPoolAssets, balancer.PoolParams{
+			poolId: s.prepareCustomBalancerPool(defaultAcctFunds, defaultPoolAssets, balancer.PoolParams{
 				SwapFee: defaultSpreadFactor,
 				ExitFee: defaultZeroExitFee,
 			}),
@@ -544,7 +544,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 		},
 
 		"Balancer pool: Pass": {
-			poolId: suite.prepareCustomBalancerPool(defaultAcctFunds, defaultPoolAssets, balancer.PoolParams{
+			poolId: s.prepareCustomBalancerPool(defaultAcctFunds, defaultPoolAssets, balancer.PoolParams{
 				SwapFee: defaultSpreadFactor,
 				ExitFee: defaultZeroExitFee,
 			}),
@@ -563,7 +563,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 		},
 
 		"Balancer pool: Pass with ceiling result": {
-			poolId: suite.prepareCustomBalancerPool(defaultAcctFunds, defaultPoolAssets, balancer.PoolParams{
+			poolId: s.prepareCustomBalancerPool(defaultAcctFunds, defaultPoolAssets, balancer.PoolParams{
 				SwapFee: defaultSpreadFactor,
 				ExitFee: defaultZeroExitFee,
 			}),
@@ -582,7 +582,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 		},
 
 		"Stableswap pool: Share ratio is zero with even two-asset": {
-			poolId: suite.prepareCustomStableswapPool(
+			poolId: s.prepareCustomStableswapPool(
 				defaultAcctFunds,
 				stableswap.PoolParams{
 					SwapFee: defaultSpreadFactor,
@@ -596,7 +596,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 		},
 
 		"Stableswap pool: Share ratio is zero with uneven two-asset": {
-			poolId: suite.prepareCustomStableswapPool(
+			poolId: s.prepareCustomStableswapPool(
 				defaultAcctFunds,
 				stableswap.PoolParams{
 					SwapFee: defaultSpreadFactor,
@@ -610,7 +610,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 		},
 
 		"Stableswap pool: Share ratio is negative with even two-asset": {
-			poolId: suite.prepareCustomStableswapPool(
+			poolId: s.prepareCustomStableswapPool(
 				defaultAcctFunds,
 				stableswap.PoolParams{
 					SwapFee: defaultSpreadFactor,
@@ -624,7 +624,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 		},
 
 		"Stableswap pool: Share ratio is negative with uneven two-asset": {
-			poolId: suite.prepareCustomStableswapPool(
+			poolId: s.prepareCustomStableswapPool(
 				defaultAcctFunds,
 				stableswap.PoolParams{
 					SwapFee: defaultSpreadFactor,
@@ -638,7 +638,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 		},
 
 		"Stableswap pool: Pass with even two-asset": {
-			poolId: suite.prepareCustomStableswapPool(
+			poolId: s.prepareCustomStableswapPool(
 				defaultAcctFunds,
 				stableswap.PoolParams{
 					SwapFee: defaultSpreadFactor,
@@ -655,7 +655,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 		},
 
 		"Stableswap pool: Pass with even two-asset, ceiling result": {
-			poolId: suite.prepareCustomStableswapPool(
+			poolId: s.prepareCustomStableswapPool(
 				defaultAcctFunds,
 				stableswap.PoolParams{
 					SwapFee: defaultSpreadFactor,
@@ -678,7 +678,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 		},
 
 		"Stableswap pool: Pass with uneven two-asset": {
-			poolId: suite.prepareCustomStableswapPool(
+			poolId: s.prepareCustomStableswapPool(
 				defaultAcctFunds,
 				stableswap.PoolParams{
 					SwapFee: defaultSpreadFactor,
@@ -695,7 +695,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 		},
 
 		"Stableswap pool: Pass with uneven two-asset, ceiling result": {
-			poolId: suite.prepareCustomStableswapPool(
+			poolId: s.prepareCustomStableswapPool(
 				defaultAcctFunds,
 				stableswap.PoolParams{
 					SwapFee: defaultSpreadFactor,
@@ -718,27 +718,27 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 		},
 	}
 	for name, tc := range tests {
-		suite.Run(name, func() {
-			k := suite.App.GAMMKeeper
+		s.Run(name, func() {
+			k := s.App.GAMMKeeper
 
-			pool, err := k.GetPoolAndPoke(suite.Ctx, tc.poolId)
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.poolId, pool.GetId())
+			pool, err := k.GetPoolAndPoke(s.Ctx, tc.poolId)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.poolId, pool.GetId())
 
-			neededLpLiquidity, err := keeper.GetMaximalNoSwapLPAmount(suite.Ctx, pool, tc.shareOutAmount)
+			neededLpLiquidity, err := keeper.GetMaximalNoSwapLPAmount(s.Ctx, pool, tc.shareOutAmount)
 			if tc.err != nil {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 				msgError := fmt.Sprintf("Too few shares out wanted. (debug: getMaximalNoSwapLPAmount share ratio is zero or negative): %s", tc.err)
-				suite.Require().EqualError(err, msgError)
+				s.Require().EqualError(err, msgError)
 			} else {
-				suite.Require().NoError(err)
-				suite.Require().Equal(neededLpLiquidity, tc.expectedLpLiquidity)
+				s.Require().NoError(err)
+				s.Require().Equal(neededLpLiquidity, tc.expectedLpLiquidity)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestGetTotalPoolShares() {
+func (s *KeeperTestSuite) TestGetTotalPoolShares() {
 	tests := map[string]struct {
 		sharesJoined   sdk.Int
 		poolNotCreated bool
@@ -759,41 +759,41 @@ func (suite *KeeperTestSuite) TestGetTotalPoolShares() {
 	}
 
 	for name, tc := range tests {
-		suite.Run(name, func() {
-			suite.SetupTest()
-			gammKeeper := suite.App.GAMMKeeper
-			testAccount := suite.TestAccs[0]
+		s.Run(name, func() {
+			s.SetupTest()
+			gammKeeper := s.App.GAMMKeeper
+			testAccount := s.TestAccs[0]
 
 			// --- Setup ---
 
 			// Mint some assets to the accounts.
 			balancerPoolId := uint64(0)
 			if !tc.poolNotCreated {
-				balancerPoolId = suite.PrepareBalancerPool()
+				balancerPoolId = s.PrepareBalancerPool()
 			}
 
 			sharesJoined := sdk.ZeroInt()
 			if !tc.sharesJoined.Equal(sdk.ZeroInt()) {
-				suite.FundAcc(testAccount, defaultAcctFunds)
-				_, sharesActualJoined, err := gammKeeper.JoinPoolNoSwap(suite.Ctx, testAccount, balancerPoolId, tc.sharesJoined, sdk.Coins{})
-				suite.Require().NoError(err)
+				s.FundAcc(testAccount, defaultAcctFunds)
+				_, sharesActualJoined, err := gammKeeper.JoinPoolNoSwap(s.Ctx, testAccount, balancerPoolId, tc.sharesJoined, sdk.Coins{})
+				s.Require().NoError(err)
 				sharesJoined = sharesActualJoined
 			}
 
 			// --- System under test ---
 
-			totalShares, err := gammKeeper.GetTotalPoolShares(suite.Ctx, balancerPoolId)
+			totalShares, err := gammKeeper.GetTotalPoolShares(s.Ctx, balancerPoolId)
 
 			// --- Assertions ---
 
 			if tc.expectedError != nil {
-				suite.Require().Error(err)
-				suite.Require().ErrorContains(err, tc.expectedError.Error())
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
 				return
 			}
 
-			suite.Require().NoError(err)
-			suite.Require().Equal(types.InitPoolSharesSupply.Add(sharesJoined), totalShares)
+			s.Require().NoError(err)
+			s.Require().Equal(types.InitPoolSharesSupply.Add(sharesJoined), totalShares)
 		})
 	}
 }
