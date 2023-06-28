@@ -52,11 +52,23 @@ func (bc *baseConfigurer) GetChainConfig(chainIndex int) *chain.Config {
 }
 
 func (bc *baseConfigurer) RunValidators() error {
+	errChan := make(chan error, len(bc.chainConfigs))
+
+	// Launch goroutines for each chainConfig
 	for _, chainConfig := range bc.chainConfigs {
-		if err := bc.runValidators(chainConfig); err != nil {
+		go func(config *chain.Config) {
+			err := bc.runValidators(config)
+			errChan <- err
+		}(chainConfig)
+	}
+
+	// Collect errors from goroutines
+	for range bc.chainConfigs {
+		if err := <-errChan; err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
