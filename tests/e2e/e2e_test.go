@@ -16,6 +16,7 @@ import (
 
 	packetforwardingtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/types"
@@ -1815,5 +1816,11 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPool_And_Parameter
 	balancerDaiOsmoPool := s.updatedCFMMPool(chainANode, config.DaiOsmoPoolIdv16)
 	expectedSpotPrice, err := balancerDaiOsmoPool.SpotPrice(sdk.Context{}, v16.DAIIBCDenom, v16.DesiredDenom0)
 	s.Require().NoError(err)
-	osmoassert.DecApproxEq(s.T(), expectedSpotPrice, concentratedPool.GetCurrentSqrtPrice().Power(2), sdk.NewDecWithPrec(1, 3))
+
+	// Allow 0.01% margin of error.
+	multiplicativeTolerance := osmomath.ErrTolerance{
+		MultiplicativeTolerance: sdk.MustNewDecFromStr("0.0001"),
+	}
+
+	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(expectedSpotPrice), osmomath.BigDecFromSDKDec(concentratedPool.GetCurrentSqrtPrice().Power(2))))
 }

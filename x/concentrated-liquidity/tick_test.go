@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
@@ -17,29 +18,14 @@ import (
 )
 
 const validPoolId = 1
-const defaultTickIndex = 1
-
-var (
-	defaultTickInfo = model.TickInfo{
-		LiquidityGross: DefaultLiquidityAmt,
-		LiquidityNet:   DefaultLiquidityAmt,
-		SpreadRewardGrowthOppositeDirectionOfLastTraversal: DefaultSpreadRewardAccumCoins,
-		UptimeTrackers: model.UptimeTrackers{List: wrapUptimeTrackers(getExpectedUptimes().hundredTokensMultiDenom)},
-	}
-
-	defaultTick = genesis.FullTick{
-		TickIndex: defaultTickIndex,
-		Info:      defaultTickInfo,
-	}
-
-	defaultTickWithoutPoolId = genesis.FullTick{
-		TickIndex: defaultTickIndex,
-		Info:      defaultTickInfo,
-	}
-)
 
 func withTickIndex(tick genesis.FullTick, tickIndex int64) genesis.FullTick {
 	tick.TickIndex = tickIndex
+	return tick
+}
+
+func withPoolId(tick genesis.FullTick, poolId uint64) genesis.FullTick {
+	tick.PoolId = poolId
 	return tick
 }
 
@@ -612,7 +598,6 @@ func (s *KeeperTestSuite) TestCrossTick() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			// Init suite for each test.
 			s.SetupTest()
 
 			// Create a default CL pool
@@ -708,6 +693,8 @@ func (s *KeeperTestSuite) TestCrossTick() {
 }
 
 func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
+	defaultTick := withPoolId(defaultTick, defaultPoolId)
+
 	tests := []struct {
 		name        string
 		presetTicks []genesis.FullTick
@@ -847,9 +834,9 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 			s.SetupTest()
 
 			// Create a default CL pool
-			pool := s.PrepareConcentratedPool()
+			s.PrepareConcentratedPool()
 			for _, tick := range test.presetTicks {
-				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, pool.GetId(), tick.TickIndex, &tick.Info)
+				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, &tick.Info)
 			}
 
 			liquidityForRange, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityForFullRange(s.Ctx, defaultPoolId)
@@ -860,6 +847,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 }
 
 func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
+	defaultTick := withPoolId(defaultTick, defaultPoolId)
+
 	tests := []struct {
 		name        string
 		presetTicks []genesis.FullTick
@@ -1252,7 +1241,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			// Create a default CL pool
 			pool := s.PrepareConcentratedPool()
 			for _, tick := range test.presetTicks {
-				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, test.poolId, tick.TickIndex, &tick.Info)
+				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, &tick.Info)
 			}
 
 			// Force initialize current sqrt price to 1.
@@ -1261,7 +1250,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			curPrice := sdk.OneDec()
 			// TODO: consider adding tests for GetTickLiquidityNetInDirection
 			// with tick spacing > 1, requiring price to tick conversion with rounding.
-			curTick, err := s.PriceToTick(curPrice)
+			curTick, err := math.CalculateSqrtPriceToTick(osmomath.MustMonotonicSqrt(curPrice))
 			s.Require().NoError(err)
 			if test.currentPoolTick > 0 {
 				_, sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)

@@ -4,21 +4,12 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
+	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
-
-type ConcentratedMathTestSuite struct {
-	apptesting.KeeperTestHelper
-}
-
-func TestConcentratedTestSuite(t *testing.T) {
-	suite.Run(t, new(ConcentratedMathTestSuite))
-}
 
 var sqrt4545 = sdk.MustNewDecFromStr("67.416615162732695594")
 var sqrt5000 = sdk.MustNewDecFromStr("70.710678118654752440")
@@ -28,7 +19,7 @@ var sqrt5500 = sdk.MustNewDecFromStr("74.161984870956629487")
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // liquidity1 = amount1 / (sqrtPriceB - sqrtPriceA)
-func (suite *ConcentratedMathTestSuite) TestLiquidity1() {
+func TestLiquidity1(t *testing.T) {
 	testCases := map[string]struct {
 		currentSqrtP      sdk.Dec
 		sqrtPLow          sdk.Dec
@@ -47,9 +38,9 @@ func (suite *ConcentratedMathTestSuite) TestLiquidity1() {
 	for name, tc := range testCases {
 		tc := tc
 
-		suite.Run(name, func() {
+		t.Run(name, func(t *testing.T) {
 			liquidity := math.Liquidity1(tc.amount1Desired, tc.currentSqrtP, tc.sqrtPLow)
-			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
+			require.Equal(t, tc.expectedLiquidity, liquidity.String())
 		})
 	}
 }
@@ -58,7 +49,7 @@ func (suite *ConcentratedMathTestSuite) TestLiquidity1() {
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // liquidity0 = amount0 * (sqrtPriceA * sqrtPriceB) / (sqrtPriceB - sqrtPriceA)
-func (suite *ConcentratedMathTestSuite) TestLiquidity0() {
+func TestLiquidity0(t *testing.T) {
 	testCases := map[string]struct {
 		currentSqrtP      sdk.Dec
 		sqrtPHigh         sdk.Dec
@@ -82,11 +73,9 @@ func (suite *ConcentratedMathTestSuite) TestLiquidity0() {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
-
-		suite.Run(name, func() {
+		t.Run(name, func(t *testing.T) {
 			liquidity := math.Liquidity0(tc.amount0Desired, tc.currentSqrtP, tc.sqrtPHigh)
-			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
+			require.Equal(t, tc.expectedLiquidity, liquidity.String())
 		})
 	}
 }
@@ -100,7 +89,7 @@ func (suite *ConcentratedMathTestSuite) TestLiquidity0() {
 // PATH 2
 // else
 // sqrtPriceNext = ((liquidity)) / (((liquidity) / (sqrtPriceCurrent)) + (amountRemaining))
-func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount0RoundingUp() {
+func TestGetNextSqrtPriceFromAmount0RoundingUp(t *testing.T) {
 	testCases := map[string]struct {
 		liquidity             sdk.Dec
 		sqrtPCurrent          sdk.Dec
@@ -117,11 +106,9 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount0RoundingU
 	}
 
 	for name, tc := range testCases {
-		tc := tc
-
-		suite.Run(name, func() {
+		t.Run(name, func(t *testing.T) {
 			sqrtPriceNext := math.GetNextSqrtPriceFromAmount0InRoundingUp(tc.sqrtPCurrent, tc.liquidity, tc.amount0Remaining)
-			suite.Require().Equal(tc.sqrtPriceNextExpected, sqrtPriceNext.String())
+			require.Equal(t, tc.sqrtPriceNextExpected, sqrtPriceNext.String())
 		})
 	}
 }
@@ -130,7 +117,7 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount0RoundingU
 // utilizes the current squareRootPrice, liquidity of denom1, and amount of denom1 that still needs
 // to be swapped in order to determine the next squareRootPrice
 // sqrtPriceNext = sqrtPriceCurrent + (amount1Remaining / liquidity1)
-func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount1RoundingDown() {
+func TestGetNextSqrtPriceFromAmount1RoundingDown(t *testing.T) {
 	testCases := map[string]struct {
 		liquidity             sdk.Dec
 		sqrtPCurrent          sdk.Dec
@@ -149,9 +136,9 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount1RoundingD
 	for name, tc := range testCases {
 		tc := tc
 
-		suite.Run(name, func() {
+		t.Run(name, func(t *testing.T) {
 			sqrtPriceNext := math.GetNextSqrtPriceFromAmount1InRoundingDown(tc.sqrtPCurrent, tc.liquidity, tc.amount1Remaining)
-			suite.Require().Equal(tc.sqrtPriceNextExpected, sqrtPriceNext.String())
+			require.Equal(t, tc.sqrtPriceNextExpected, sqrtPriceNext.String())
 		})
 	}
 }
@@ -160,7 +147,7 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount1RoundingD
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // calcAmount0Delta = (liquidity * (sqrtPriceB - sqrtPriceA)) / (sqrtPriceB * sqrtPriceA)
-func (suite *ConcentratedMathTestSuite) TestCalcAmount0Delta() {
+func TestCalcAmount0Delta(t *testing.T) {
 	testCases := map[string]struct {
 		liquidity       sdk.Dec
 		sqrtPA          sdk.Dec
@@ -231,11 +218,11 @@ func (suite *ConcentratedMathTestSuite) TestCalcAmount0Delta() {
 	for name, tc := range testCases {
 		tc := tc
 
-		suite.Run(name, func() {
+		t.Run(name, func(t *testing.T) {
 			amount0 := math.CalcAmount0Delta(tc.liquidity, tc.sqrtPA, tc.sqrtPB, tc.roundUp)
 
 			if !tc.isWithTolerance {
-				suite.Require().Equal(tc.amount0Expected, amount0.String())
+				require.Equal(t, tc.amount0Expected, amount0.String())
 				return
 			}
 
@@ -251,7 +238,7 @@ func (suite *ConcentratedMathTestSuite) TestCalcAmount0Delta() {
 
 			res := tolerance.CompareBigDec(osmomath.MustNewDecFromStr(tc.amount0Expected), osmomath.BigDecFromSDKDec(amount0))
 
-			suite.Require().Equal(0, res, "amount0: %s, expected: %s", amount0, tc.amount0Expected)
+			require.Equal(t, 0, res, "amount0: %s, expected: %s", amount0, tc.amount0Expected)
 		})
 	}
 }
@@ -260,7 +247,7 @@ func (suite *ConcentratedMathTestSuite) TestCalcAmount0Delta() {
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // calcAmount1Delta = liq * (sqrtPriceB - sqrtPriceA)
-func (suite *ConcentratedMathTestSuite) TestCalcAmount1Delta() {
+func TestCalcAmount1Delta(t *testing.T) {
 	testCases := map[string]struct {
 		liquidity       sdk.Dec
 		sqrtPA          sdk.Dec
@@ -318,18 +305,18 @@ func (suite *ConcentratedMathTestSuite) TestCalcAmount1Delta() {
 	for name, tc := range testCases {
 		tc := tc
 
-		suite.Run(name, func() {
+		t.Run(name, func(t *testing.T) {
 			amount1 := math.CalcAmount1Delta(tc.liquidity, tc.sqrtPA, tc.sqrtPB, tc.roundUp)
 
-			suite.Require().Equal(tc.amount1Expected, amount1.String())
+			require.Equal(t, tc.amount1Expected, amount1.String())
 		})
 	}
 }
 
-func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
+func TestGetLiquidityFromAmounts(t *testing.T) {
 	sqrt := func(x sdk.Dec) sdk.Dec {
 		sqrt, err := osmomath.MonotonicSqrt(x)
-		suite.Require().NoError(err)
+		require.NoError(t, err)
 		return sqrt
 	}
 
@@ -428,13 +415,13 @@ func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
 	for name, tc := range testCases {
 		tc := tc
 
-		suite.Run(name, func() {
+		t.Run(name, func(t *testing.T) {
 			// CASE A: if the currentSqrtP is less than the sqrtPLow, all the liquidity is in asset0, so GetLiquidityFromAmounts returns the liquidity of asset0
 			// CASE B: if the currentSqrtP is less than the sqrtPHigh but greater than sqrtPLow, the liquidity is split between asset0 and asset1,
 			// so GetLiquidityFromAmounts returns the smaller liquidity of asset0 and asset1
 			// CASE C: if the currentSqrtP is greater than the sqrtPHigh, all the liquidity is in asset1, so GetLiquidityFromAmounts returns the liquidity of asset1
 			liquidity := math.GetLiquidityFromAmounts(tc.currentSqrtP, tc.sqrtPLow, tc.sqrtPHigh, tc.amount0Desired, tc.amount1Desired)
-			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
+			require.Equal(t, tc.expectedLiquidity, liquidity.String())
 		})
 	}
 }
@@ -446,21 +433,22 @@ type sqrtRoundingTestCase struct {
 	expected         sdk.Dec
 }
 
-func (suite *ConcentratedMathTestSuite) runSqrtRoundingTestCase(
+func runSqrtRoundingTestCase(
+	t *testing.T,
 	name string,
 	fn func(sdk.Dec, sdk.Dec, sdk.Dec) sdk.Dec,
 	cases map[string]sqrtRoundingTestCase,
 ) {
 	for name, tc := range cases {
 		tc := tc
-		suite.Run(name, func() {
+		t.Run(name, func(t *testing.T) {
 			sqrtPriceNext := fn(tc.sqrtPriceCurrent, tc.liquidity, tc.amountRemaining)
-			suite.Require().Equal(tc.expected.String(), sqrtPriceNext.String())
+			require.Equal(t, tc.expected.String(), sqrtPriceNext.String())
 		})
 	}
 }
 
-func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount0InRoundingUp() {
+func TestGetNextSqrtPriceFromAmount0InRoundingUp(t *testing.T) {
 	tests := map[string]sqrtRoundingTestCase{
 		"rounded up at precision end": {
 			sqrtPriceCurrent: sqrt5000,
@@ -477,10 +465,10 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount0InRoundin
 			expected: sdk.MustNewDecFromStr("0.5"),
 		},
 	}
-	suite.runSqrtRoundingTestCase("TestGetNextSqrtPriceFromAmount0InRoundingUp", math.GetNextSqrtPriceFromAmount0InRoundingUp, tests)
+	runSqrtRoundingTestCase(t, "TestGetNextSqrtPriceFromAmount0InRoundingUp", math.GetNextSqrtPriceFromAmount0InRoundingUp, tests)
 }
 
-func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount0OutRoundingUp() {
+func TestGetNextSqrtPriceFromAmount0OutRoundingUp(t *testing.T) {
 	tests := map[string]sqrtRoundingTestCase{
 		"rounded up at precision end": {
 			sqrtPriceCurrent: sqrt5000,
@@ -497,10 +485,10 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount0OutRoundi
 			expected: sdk.MustNewDecFromStr("2.5"),
 		},
 	}
-	suite.runSqrtRoundingTestCase("TestGetNextSqrtPriceFromAmount0OutRoundingUp", math.GetNextSqrtPriceFromAmount0OutRoundingUp, tests)
+	runSqrtRoundingTestCase(t, "TestGetNextSqrtPriceFromAmount0OutRoundingUp", math.GetNextSqrtPriceFromAmount0OutRoundingUp, tests)
 }
 
-func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount1InRoundingDown() {
+func TestGetNextSqrtPriceFromAmount1InRoundingDown(t *testing.T) {
 	tests := map[string]sqrtRoundingTestCase{
 		"rounded down at precision end": {
 			sqrtPriceCurrent: sqrt5000,
@@ -517,10 +505,10 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount1InRoundin
 			expected: sdk.MustNewDecFromStr("12.5"),
 		},
 	}
-	suite.runSqrtRoundingTestCase("TestGetNextSqrtPriceFromAmount1InRoundingDown", math.GetNextSqrtPriceFromAmount1InRoundingDown, tests)
+	runSqrtRoundingTestCase(t, "TestGetNextSqrtPriceFromAmount1InRoundingDown", math.GetNextSqrtPriceFromAmount1InRoundingDown, tests)
 }
 
-func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount1OutRoundingDown() {
+func TestGetNextSqrtPriceFromAmount1OutRoundingDown(t *testing.T) {
 	tests := map[string]sqrtRoundingTestCase{
 		"rounded down at precision end": {
 			sqrtPriceCurrent: sqrt5000,
@@ -537,5 +525,5 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount1OutRoundi
 			expected: sdk.MustNewDecFromStr("2.5"),
 		},
 	}
-	suite.runSqrtRoundingTestCase("TestGetNextSqrtPriceFromAmount1OutRoundingDown", math.GetNextSqrtPriceFromAmount1OutRoundingDown, tests)
+	runSqrtRoundingTestCase(t, "TestGetNextSqrtPriceFromAmount1OutRoundingDown", math.GetNextSqrtPriceFromAmount1OutRoundingDown, tests)
 }

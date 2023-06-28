@@ -1,12 +1,10 @@
 package apptesting
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	clmath "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 
@@ -142,58 +140,4 @@ func (s *KeeperTestHelper) SetupConcentratedLiquidityDenomsAndPoolCreation() {
 	defaultParams.IsPermissionlessPoolCreationEnabled = true
 	defaultParams.AuthorizedQuoteDenoms = append(defaultParams.AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, UOSMO, STAKE)
 	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, defaultParams)
-}
-
-// PriceToTickRoundDown takes a price and returns the corresponding tick index.
-// If tickSpacing is provided, the tick index will be rounded down to the nearest multiple of tickSpacing.
-// CONTRACT: tickSpacing must be smaller or equal to the max of 1 << 63 - 1.
-// This is not a concern because we have authorized tick spacings that are smaller than this max,
-// and we don't expect to ever require it to be this large.
-func (s *KeeperTestHelper) PriceToTickRoundDownSpacing(price sdk.Dec, tickSpacing uint64) (int64, error) {
-	tickIndex, err := s.PriceToTick(price)
-	if err != nil {
-		return 0, err
-	}
-
-	tickIndex, err = clmath.RoundDownTickToSpacing(tickIndex, int64(tickSpacing))
-	if err != nil {
-		return 0, err
-	}
-
-	return tickIndex, nil
-}
-
-// CalculatePriceToTick takes in a price and returns the corresponding tick index.
-// This function does not take into consideration tick spacing.
-// NOTE: This is really returning a "Bucket index". Bucket index `b` corresponds to
-// all prices in range [TickToSqrtPrice(b), TickToSqrtPrice(b+1)).
-// We make an erroneous assumption here, that bucket index `b` corresponds to
-// all prices in range [TickToPrice(b), TickToPrice(b+1)).
-// This currently makes this function unsuitable for the state machine.
-func (s *KeeperTestHelper) CalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
-	// TODO: Make truncate, since this defines buckets as
-	// [TickToPrice(b - .5), TickToPrice(b+.5))
-	return clmath.CalculatePriceToTickDec(price).RoundInt64()
-}
-
-// PriceToTick takes a price and returns the corresponding tick index assuming
-// tick spacing of 1.
-func (s *KeeperTestHelper) PriceToTick(price sdk.Dec) (int64, error) {
-	if price.Equal(sdk.OneDec()) {
-		return 0, nil
-	}
-
-	if price.IsNegative() {
-		return 0, fmt.Errorf("price must be greater than zero")
-	}
-
-	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
-		return 0, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
-	}
-
-	// Determine the tick that corresponds to the price
-	// This does not take into account the tickSpacing
-	tickIndex := s.CalculatePriceToTick(price)
-
-	return tickIndex, nil
 }
