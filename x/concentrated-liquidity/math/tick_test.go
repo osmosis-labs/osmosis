@@ -34,38 +34,21 @@ var (
 func TestingErrCalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
 	// TODO: Make truncate, since this defines buckets as
 	// [TickToPrice(b - .5), TickToPrice(b+.5))
-	return math.CalculatePriceToTickDec(price).RoundInt64()
+	v, _ := math.CalculatePriceToTickDec(price)
+	return v.RoundInt64()
 }
 
-// TestingErrPriceToTick takes a price and returns the corresponding tick index assuming
-// tick spacing of 1.
-func TestingErrPriceToTick(price sdk.Dec) (int64, error) {
-	if price.Equal(sdk.OneDec()) {
-		return 0, nil
-	}
-
-	if price.IsNegative() {
-		return 0, fmt.Errorf("price must be greater than zero")
-	}
-
-	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
-		return 0, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
-	}
-
-	// Determine the tick that corresponds to the price
-	// This does not take into account the tickSpacing
-	tickIndex := math.CalculatePriceToTickDec(price).RoundInt64()
-
-	return tickIndex, nil
+// testing helper for price to tick, state machine only implements sqrt price to tick.
+func PriceToTick(price sdk.Dec) (int64, error) {
+	tickDec, err := math.CalculatePriceToTickDec(price)
+	tickIndex := tickDec.TruncateInt64()
+	return tickIndex, err
 }
 
-// PriceToTickRoundDown takes a price and returns the corresponding tick index.
-// If tickSpacing is provided, the tick index will be rounded down to the nearest multiple of tickSpacing.
-// CONTRACT: tickSpacing must be smaller or equal to the max of 1 << 63 - 1.
-// This is not a concern because we have authorized tick spacings that are smaller than this max,
-// and we don't expect to ever require it to be this large.
-func TestingErrPriceToTickRoundDownSpacing(price sdk.Dec, tickSpacing uint64) (int64, error) {
-	tickIndex, err := TestingErrPriceToTick(price)
+// testing helper for price to tick round down spacing,
+// state machine only implements sqrt price to tick round dow spacing.
+func PriceToTickRoundDownSpacing(price sdk.Dec, tickSpacing uint64) (int64, error) {
+	tickIndex, err := PriceToTick(price)
 	if err != nil {
 		return 0, err
 	}
@@ -432,10 +415,10 @@ func TestPriceToTick(t *testing.T) {
 
 		t.Run(name, func(t *testing.T) {
 			// surpress error here, we only listen to errors from system under test.
-			tick, _ := TestingErrPriceToTick(tc.price)
+			tick, _ := PriceToTick(tc.price)
 
 			// With tick spacing of one, no rounding should occur.
-			tickRoundDown, err := TestingErrPriceToTickRoundDownSpacing(tc.price, one)
+			tickRoundDown, err := PriceToTickRoundDownSpacing(tc.price, one)
 			if tc.expectedError != nil {
 				require.Error(t, err)
 				require.ErrorContains(t, err, tc.expectedError.Error())
@@ -501,15 +484,20 @@ func TestPriceToTickRoundDown(t *testing.T) {
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: 72000000,
 		},
-		"tick spacing 1, Spot price 100_000_051 -> 72000001 no tick spacing rounding": {
+		"tick spacing 1, Spot price 100_000_051 -> 72000000 no tick spacing rounding": {
 			price:        sdk.NewDec(100_000_051),
+			tickSpacing:  1,
+			tickExpected: 72000000,
+		},
+		"tick spacing 1, Spot price 100_000_101 -> 72000001 no tick spacing rounding": {
+			price:        sdk.NewDec(100_000_101),
 			tickSpacing:  1,
 			tickExpected: 72000001,
 		},
 	}
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			tick, err := TestingErrPriceToTickRoundDownSpacing(tc.price, tc.tickSpacing)
+			tick, err := PriceToTickRoundDownSpacing(tc.price, tc.tickSpacing)
 
 			require.NoError(t, err)
 			require.Equal(t, tc.tickExpected, tick)
@@ -518,7 +506,10 @@ func TestPriceToTickRoundDown(t *testing.T) {
 }
 
 // TestTickToSqrtPricePriceToTick_InverseRelationship tests that ensuring the inverse calculation
-// between the two methods: tick to square root price to power of 2 and price to tick
+// between the following methods:
+// 1) price -> tick, tick -> price yields expected
+// 2) tick -> sqrt price, sqrt price -> tick yields expected
+// TODO: Revisit this test, under the lens of bucket index.
 func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
 	testCases := map[string]struct {
 		price          sdk.Dec
@@ -620,8 +611,8 @@ func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
 		},
 		"at price level of 1_000_000_000 - in-between supported": {
 			price:          sdk.MustNewDecFromStr("1234567500"),
-			tickExpected:   81234568,
-			truncatedPrice: sdk.MustNewDecFromStr("1234568000"),
+			tickExpected:   81234567,
+			truncatedPrice: sdk.MustNewDecFromStr("1234567000"),
 		},
 		"at price level of 1_000_000_000 - even end": {
 			price:        sdk.MustNewDecFromStr("1234568000"),
@@ -639,7 +630,7 @@ func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
 			tickSpacing := uint64(1)
 
 			// 1. Compute tick from price.
-			tickFromPrice, err := TestingErrPriceToTickRoundDownSpacing(tc.price, tickSpacing)
+			tickFromPrice, err := PriceToTickRoundDownSpacing(tc.price, tickSpacing)
 			require.NoError(t, err)
 			require.Equal(t, tc.tickExpected, tickFromPrice)
 
@@ -655,7 +646,7 @@ func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
 			require.Equal(t, expectedPrice, price)
 
 			// 3. Compute tick from inverse price (inverse tick)
-			inverseTickFromPrice, err := TestingErrPriceToTickRoundDownSpacing(price, tickSpacing)
+			inverseTickFromPrice, err := PriceToTickRoundDownSpacing(price, tickSpacing)
 			require.NoError(t, err)
 
 			// Make sure original tick and inverse tick match.
@@ -665,14 +656,12 @@ func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
 			_, sqrtPrice, err := math.TickToSqrtPrice(tickFromPrice)
 			require.NoError(t, err)
 
-			priceFromSqrtPrice := sqrtPrice.Power(2)
-
 			// TODO: investigate this separately
 			// https://github.com/osmosis-labs/osmosis/issues/4925
 			// require.Equal(t, expectedPrice.String(), priceFromSqrtPrice.String())
 
 			// 5. Compute tick from sqrt price from the original tick.
-			inverseTickFromSqrtPrice, err := TestingErrPriceToTickRoundDownSpacing(priceFromSqrtPrice, tickSpacing)
+			inverseTickFromSqrtPrice, err := math.SqrtPriceToTickRoundDownSpacing(sqrtPrice, tickSpacing)
 			require.NoError(t, err)
 
 			require.Equal(t, tickFromPrice, inverseTickFromSqrtPrice, "expected: %s, actual: %s", tickFromPrice, inverseTickFromSqrtPrice)
@@ -698,7 +687,7 @@ func TestPriceToTick_ErrorCases(t *testing.T) {
 		tc := tc
 
 		t.Run(name, func(t *testing.T) {
-			tickFromPrice, err := TestingErrPriceToTick(tc.price)
+			tickFromPrice, err := PriceToTick(tc.price)
 			require.Error(t, err)
 			require.Equal(t, tickFromPrice, int64(0))
 		})
