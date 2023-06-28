@@ -587,13 +587,9 @@ func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
 		powTen *= 10
 	}
 	for name, tc := range testCases {
-		tc := tc
-
 		t.Run(name, func(t *testing.T) {
-			tickSpacing := uint64(1)
-
 			// 1. Compute tick from price.
-			tickFromPrice, err := PriceToTickRoundDownSpacing(tc.price, tickSpacing)
+			tickFromPrice, err := PriceToTick(tc.price)
 			require.NoError(t, err)
 			require.Equal(t, tc.tickExpected, tickFromPrice)
 
@@ -609,7 +605,7 @@ func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
 			require.Equal(t, expectedPrice, price)
 
 			// 3. Compute tick from inverse price (inverse tick)
-			inverseTickFromPrice, err := PriceToTickRoundDownSpacing(price, tickSpacing)
+			inverseTickFromPrice, err := PriceToTick(price)
 			require.NoError(t, err)
 
 			// Make sure original tick and inverse tick match.
@@ -624,7 +620,7 @@ func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
 			// require.Equal(t, expectedPrice.String(), priceFromSqrtPrice.String())
 
 			// 5. Compute tick from sqrt price from the original tick.
-			inverseTickFromSqrtPrice, err := math.SqrtPriceToTickRoundDownSpacing(sqrtPrice, tickSpacing)
+			inverseTickFromSqrtPrice, err := math.CalculateSqrtPriceToTick(sqrtPrice)
 			require.NoError(t, err)
 
 			require.Equal(t, tickFromPrice, inverseTickFromSqrtPrice, "expected: %s, actual: %s", tickFromPrice, inverseTickFromSqrtPrice)
