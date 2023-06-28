@@ -88,12 +88,16 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 	// Calculate the amount of the other token given the sqrt price range.
 	amountZeroOut := math.CalcAmount0DeltaBigDec(liquidityBigDec, sqrtPriceNext, sqrtPriceCurrentBigDec, false)
 
-	amountInDecFinal := amountOneInBigDec.SDKDec()
+	// Round up to charge user more in pool's favor.
+	amountInDecFinal := amountOneInBigDec.SDKDecRoundUp()
 
 	// Handle spread rewards.
 	// Note that spread reward is always charged on the amount in.
 	spreadRewardChargeTotal := computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget, amountInDecFinal, amountOneInRemaining, s.spreadFactor)
 
+	// Round down sqrt price since we are moving left to right on the price range. We would like for a
+	// given swap to move the sqrt price less.
+	// Round down amount out to give user less in pool's favor.
 	return sqrtPriceNext.SDKDec(), amountInDecFinal, amountZeroOut.SDKDec(), spreadRewardChargeTotal
 }
 
@@ -153,12 +157,16 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, 
 	// Calculate the amount of the other token given the sqrt price range.
 	amountOneIn := math.CalcAmount1DeltaBigDec(liquidityBigDec, sqrtPriceNext, sqrtPriceCurrentBigDec, true)
 
-	amountOneInFinal := amountOneIn.SDKDec()
+	// Round up to charge user more in pool's favor.
+	amountOneInFinal := amountOneIn.SDKDecRoundUp()
 
 	// Handle spread rewards.
 	// Note that spread reward is always charged on the amount in.
 	spreadRewardChargeTotal := computeSpreadRewardChargeFromAmountIn(amountOneInFinal, s.spreadFactor)
 
+	// Round down sqrt price since we are moving left to right on the price range. We would like for a
+	// given swap to move the sqrt price less.
+	// Round down amount out to give user less in pool's favor.
 	return sqrtPriceNext.SDKDec(), amountZeroOut.SDKDec(), amountOneInFinal, spreadRewardChargeTotal
 }
 

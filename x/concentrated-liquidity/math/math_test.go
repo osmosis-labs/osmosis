@@ -119,6 +119,39 @@ func TestGetNextSqrtPriceFromAmount0RoundingUp(t *testing.T) {
 	}
 }
 
+// TestGetNextSqrtPriceFromAmount0RoundingUpBigDec tests that getNextSqrtPriceFromAmount0RoundingUp utilizes
+// the current squareRootPrice, liquidity of denom0, and amount of denom0 that still needs
+// to be swapped in order to determine the next squareRootPrice
+// PATH 1
+// if (amountRemaining * sqrtPriceCurrent) / amountRemaining  == sqrtPriceCurrent AND (liquidity) + (amountRemaining * sqrtPriceCurrent) >= (liquidity)
+// sqrtPriceNext = (liquidity * sqrtPriceCurrent) / ((liquidity) + (amountRemaining * sqrtPriceCurrent))
+// PATH 2
+// else
+// sqrtPriceNext = ((liquidity)) / (((liquidity) / (sqrtPriceCurrent)) + (amountRemaining))
+func TestGetNextSqrtPriceFromAmount0RoundingUpBigDec(t *testing.T) {
+	testCases := map[string]struct {
+		liquidity             osmomath.BigDec
+		sqrtPCurrent          osmomath.BigDec
+		amount0Remaining      osmomath.BigDec
+		sqrtPriceNextExpected string
+	}{
+		"happy path": {
+			liquidity:        osmomath.MustNewDecFromStr("1517882343.751510418088349649"), // liquidity0 calculated above
+			sqrtPCurrent:     sqrt5000BigDec,
+			amount0Remaining: osmomath.NewBigDec(13370),
+			// round_osmo_prec_up(liquidity / (round_osmo_prec_down(liquidity / sqrtPriceCurrent) + amountRemaining))
+			sqrtPriceNextExpected: "70.666663910857144331148691821263626767",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			sqrtPriceNext := math.GetNextSqrtPriceFromAmount0InRoundingUpBigDec(tc.sqrtPCurrent, tc.liquidity, tc.amount0Remaining)
+			require.Equal(t, tc.sqrtPriceNextExpected, sqrtPriceNext.String())
+		})
+	}
+}
+
 // TestGetNextSqrtPriceFromAmount1RoundingDown tests that getNextSqrtPriceFromAmount1RoundingDown
 // utilizes the current squareRootPrice, liquidity of denom1, and amount of denom1 that still needs
 // to be swapped in order to determine the next squareRootPrice

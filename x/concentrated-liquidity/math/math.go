@@ -209,6 +209,23 @@ func GetNextSqrtPriceFromAmount0InRoundingUp(sqrtPriceCurrent, liquidity, amount
 	return liquidity.Mul(sqrtPriceCurrent).QuoRoundupMut(denominator)
 }
 
+// GetNextSqrtPriceFromAmount0InRoundingUpBigDec utilizes sqrtPriceCurrent, liquidity, and amount of denom0 that still needs
+// to be swapped in order to determine the sqrtPriceNext.
+// When we swap for token one out given token zero in, the price is decreasing, and we need to move the sqrt price (decrease it) less
+// to avoid overpaying the amount out of the pool. Therefore, we round up.
+// sqrt_next = liq * sqrt_cur / (liq + token_in * sqrt_cur)
+func GetNextSqrtPriceFromAmount0InRoundingUpBigDec(sqrtPriceCurrent, liquidity, amountZeroRemainingIn osmomath.BigDec) (sqrtPriceNext osmomath.BigDec) {
+	if amountZeroRemainingIn.IsZero() {
+		return sqrtPriceCurrent
+	}
+
+	product := amountZeroRemainingIn.Mul(sqrtPriceCurrent)
+	// denominator = product + liquidity
+	denominator := product
+	denominator.AddMut(liquidity)
+	return liquidity.Mul(sqrtPriceCurrent).QuoRoundUp(denominator)
+}
+
 // GetNextSqrtPriceFromAmount0OutRoundingUp utilizes sqrtPriceCurrent, liquidity, and amount of denom0 that still needs
 // to be swapped out order to determine the sqrtPriceNext.
 // When we swap for token one in given token zero out, the price is increasing and we need to move the price up enough
