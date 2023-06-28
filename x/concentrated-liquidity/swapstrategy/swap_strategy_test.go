@@ -215,10 +215,12 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 		tc := tc
 		suite.Run(name, func() {
 			sut := swapstrategy.New(tc.zeroForOne, sdk.ZeroDec(), suite.App.GetKey(types.ModuleName), sdk.ZeroDec())
-			sqrtPriceNextOutGivenIn, amountInOutGivenIn, amountOutOutGivenIn, _ := sut.ComputeSwapWithinBucketOutGivenIn(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, tc.amountIn)
+			// TODO: revisit each test case and review sqrt price current
+			sqrtPriceNextOutGivenIn, amountInOutGivenIn, amountOutOutGivenIn, _ := sut.ComputeSwapWithinBucketOutGivenIn(osmomath.BigDecFromSDKDec(tc.sqrtPriceCurrent), tc.sqrtPriceTarget, tc.liquidity, tc.amountIn)
 			suite.Require().Equal(tc.expectedSqrtPriceNextOutGivenIn.String(), sqrtPriceNextOutGivenIn.String())
 
-			sqrtPriceNextInGivenOut, amountOutInGivenOut, amountInInGivenOut, _ := sut.ComputeSwapWithinBucketInGivenOut(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, amountOutOutGivenIn)
+			// TODO: revisit each test case and review sqrt price current
+			sqrtPriceNextInGivenOut, amountOutInGivenOut, amountInInGivenOut, _ := sut.ComputeSwapWithinBucketInGivenOut(osmomath.BigDecFromSDKDec(tc.sqrtPriceCurrent), tc.sqrtPriceTarget, tc.liquidity, amountOutOutGivenIn)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNextInGivenOut.String(), sqrtPriceNextInGivenOut.String())
 

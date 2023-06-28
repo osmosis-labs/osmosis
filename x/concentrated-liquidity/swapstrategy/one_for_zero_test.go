@@ -65,7 +65,8 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 	)
 
 	tests := map[string]struct {
-		sqrtPriceCurrent     sdk.Dec
+		// TODO revisit each test case and review values
+		sqrtPriceCurrent     osmomath.BigDec
 		sqrtPriceTarget      sdk.Dec
 		liquidity            sdk.Dec
 		amountOneInRemaining sdk.Dec
@@ -79,7 +80,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 		expectError error
 	}{
 		"1: no spread factor - reach target": {
-			sqrtPriceCurrent: sqrtPriceCurrent,
+			sqrtPriceCurrent: osmomath.BigDecFromSDKDec(sqrtPriceCurrent),
 			sqrtPriceTarget:  sqrtPriceNext,
 			liquidity:        defaultLiquidity,
 			// Add 100.
@@ -94,7 +95,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
 		},
 		"2: no spread factor - do not reach target": {
-			sqrtPriceCurrent:     sqrtPriceCurrent,
+			sqrtPriceCurrent:     osmomath.BigDecFromSDKDec(sqrtPriceCurrent),
 			sqrtPriceTarget:      sqrtPriceNext,
 			liquidity:            defaultLiquidity,
 			amountOneInRemaining: defaultAmountOne.Sub(sdk.NewDec(100)),
@@ -107,7 +108,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
 		},
 		"3: 3% spread factor - reach target": {
-			sqrtPriceCurrent:     sqrtPriceCurrent,
+			sqrtPriceCurrent:     osmomath.BigDecFromSDKDec(sqrtPriceCurrent),
 			sqrtPriceTarget:      sqrtPriceNext,
 			liquidity:            defaultLiquidity,
 			amountOneInRemaining: defaultAmountOne.Add(sdk.NewDec(100)).Quo(sdk.OneDec().Sub(defaultSpreadReward)),
@@ -120,7 +121,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			expectedSpreadRewardChargeTotal: swapstrategy.ComputeSpreadRewardChargeFromAmountIn(defaultAmountOne.Ceil(), defaultSpreadReward),
 		},
 		"4: 3% spread factor - do not reach target": {
-			sqrtPriceCurrent:     sqrtPriceCurrent,
+			sqrtPriceCurrent:     osmomath.BigDecFromSDKDec(sqrtPriceCurrent),
 			sqrtPriceTarget:      sqrtPriceNext,
 			liquidity:            defaultLiquidity,
 			amountOneInRemaining: defaultAmountOne.Sub(sdk.NewDec(100)).Quo(sdk.OneDec().Sub(defaultSpreadReward)),
@@ -133,7 +134,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			expectedSpreadRewardChargeTotal: defaultAmountOne.Sub(sdk.NewDec(100)).Quo(sdk.OneDec().Sub(defaultSpreadReward)).Sub(defaultAmountOne.Sub(sdk.NewDec(100)).Ceil()),
 		},
 		"5: custom amounts at high price levels - reach target": {
-			sqrtPriceCurrent: sqrt(100_000_000),
+			sqrtPriceCurrent: osmomath.BigDecFromSDKDec(sqrt(100_000_000)),
 			sqrtPriceTarget:  sqrt(100_000_100),
 			liquidity:        math.GetLiquidityFromAmounts(sqrt(1), sqrt(100_000_000), sqrt(100_000_100), defaultAmountZero.TruncateInt(), defaultAmountOne.TruncateInt()),
 
@@ -150,7 +151,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 		},
 		"6: valid zero difference between sqrt price current and sqrt price next, amount zero in is charged": {
 			// Note the numbers are hand-picked to reproduce this specific case.
-			sqrtPriceCurrent: sdk.MustNewDecFromStr("70.710663976517714496"),
+			sqrtPriceCurrent: osmomath.BigDecFromSDKDec(sdk.MustNewDecFromStr("70.710663976517714496")),
 			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.710663976517714496"),
 			liquidity:        sdk.MustNewDecFromStr("412478955692135.521499519343199632"),
 
@@ -165,7 +166,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 		},
 		"7: invalid zero difference between sqrt price current and sqrt price next due to precision loss, full amount remaining in is charged and amount out calculated from sqrt price": {
 			// Note the numbers are hand-picked to reproduce this specific case.
-			sqrtPriceCurrent: sdk.MustNewDecFromStr("0.000001000049998750"),
+			sqrtPriceCurrent: osmomath.BigDecFromSDKDec(sdk.MustNewDecFromStr("0.000001000049998750")),
 			sqrtPriceTarget:  sdk.MustNewDecFromStr("0.000001000049998751"),
 			liquidity:        sdk.MustNewDecFromStr("100002498062401598791.937822606808718081"),
 
@@ -189,7 +190,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 		},
 		"8: invalid zero difference between sqrt price current and sqrt price next due to precision loss, full amount remaining in is charged and amount out calculated from sqrt price (near max sqrt price)": {
 			// Note the numbers are hand-picked to reproduce this specific case.
-			sqrtPriceCurrent: types.MaxSqrtPrice.Sub(sdk.SmallestDec()),
+			sqrtPriceCurrent: osmomath.BigDecFromSDKDec(types.MaxSqrtPrice.Sub(sdk.SmallestDec())),
 			sqrtPriceTarget:  types.MaxSqrtPrice,
 			liquidity:        sdk.MustNewDecFromStr("100002498062401598791.937822606808718081"),
 
@@ -254,6 +255,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 		expectError error
 	}{
 		"1: no spread reward - reach target": {
+			// TODO: revisit each test case and review sqrt price current
 			sqrtPriceCurrent: defaultSqrtPriceLower,
 			sqrtPriceTarget:  defaultSqrtPriceUpper,
 			liquidity:        defaultLiquidity,
@@ -376,7 +378,8 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 	for name, tc := range tests {
 		suite.Run(name, func() {
 			strategy := suite.setupNewOneForZeroSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
-			sqrtPriceNext, amountZeroOutConsumed, amountOneIn, spreadRewardChargeTotal := strategy.ComputeSwapWithinBucketInGivenOut(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, tc.amountZeroOutRemaining)
+			// TODO: revisit each test case and review sqrt price current
+			sqrtPriceNext, amountZeroOutConsumed, amountOneIn, spreadRewardChargeTotal := strategy.ComputeSwapWithinBucketInGivenOut(osmomath.BigDecFromSDKDec(tc.sqrtPriceCurrent), tc.sqrtPriceTarget, tc.liquidity, tc.amountZeroOutRemaining)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
 			suite.Require().Equal(tc.expectedAmountZeroOutConsumed.String(), amountZeroOutConsumed.String())
