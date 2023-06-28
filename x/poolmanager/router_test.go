@@ -1772,7 +1772,7 @@ func (s *KeeperTestSuite) setupPools(poolType types.PoolType, poolDefaultSpreadF
 		firstEstimatePoolId = s.PrepareBasicStableswapPool()
 
 		secondEstimatePoolId = s.PrepareBasicStableswapPool()
-		return
+		return firstEstimatePoolId, secondEstimatePoolId
 	default:
 		// Prepare 4 pools,
 		// Two pools for calculating `MultihopSwapExactAmountOut`
@@ -1795,7 +1795,7 @@ func (s *KeeperTestSuite) setupPools(poolType types.PoolType, poolDefaultSpreadF
 			SwapFee: poolDefaultSpreadFactor,
 			ExitFee: sdk.NewDec(0),
 		})
-		return
+		return firstEstimatePoolId, secondEstimatePoolId
 	}
 }
 
