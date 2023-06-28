@@ -497,11 +497,12 @@ func TestPriceToTickRoundDown(t *testing.T) {
 // 2) tick -> sqrt price, sqrt price -> tick yields expected
 // TODO: Revisit this test, under the lens of bucket index.
 func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
-	testCases := map[string]struct {
+	type testcase struct {
 		price          sdk.Dec
 		truncatedPrice sdk.Dec
 		tickExpected   int64
-	}{
+	}
+	testCases := map[string]testcase{
 		"50000 to tick": {
 			price:        sdk.MustNewDecFromStr("50000"),
 			tickExpected: 40000000,
@@ -543,38 +544,6 @@ func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
 			price:        sdk.MustNewDecFromStr("0.000000000001000001"),
 			tickExpected: types.MinInitializedTick + 1,
 		},
-		"min price increment 10^1": {
-			price:        sdk.MustNewDecFromStr("0.000000000010000000"),
-			tickExpected: types.MinInitializedTick + (9 * 1e6),
-		},
-		"min price increment 10^2": {
-			price:        sdk.MustNewDecFromStr("0.000000000100000000"),
-			tickExpected: types.MinInitializedTick + (2 * 9 * 1e6),
-		},
-		"min price increment 10^3": {
-			price:        sdk.MustNewDecFromStr("0.000000001000000000"),
-			tickExpected: types.MinInitializedTick + (3 * 9 * 1e6),
-		},
-		"min price increment 10^4": {
-			price:        sdk.MustNewDecFromStr("0.000000010000000000"),
-			tickExpected: types.MinInitializedTick + (4 * 9 * 1e6),
-		},
-		"min price increment 10^5": {
-			price:        sdk.MustNewDecFromStr("0.000000100000000000"),
-			tickExpected: types.MinInitializedTick + (5 * 9 * 1e6),
-		},
-		"min price increment 10^6": {
-			price:        sdk.MustNewDecFromStr("0.000001000000000000"),
-			tickExpected: types.MinInitializedTick + (6 * 9 * 1e6),
-		},
-		"min price * increment 10^11": {
-			price:        sdk.MustNewDecFromStr("0.100000000000000000"),
-			tickExpected: -9000000,
-		},
-		"min price * increment 10^12": {
-			price:        sdk.MustNewDecFromStr("1.000000000000000000"),
-			tickExpected: 0,
-		},
 		"at price level of 0.01 - odd": {
 			price:        sdk.MustNewDecFromStr("0.012345670000000000"),
 			tickExpected: -17765433,
@@ -608,6 +577,14 @@ func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
 			price:        sdk.OneDec(),
 			tickExpected: 0,
 		},
+	}
+	var powTen int64 = 10
+	for i := 1; i < 13; i++ {
+		testCases[fmt.Sprintf("min spot price * 10^%d", i)] = testcase{
+			price:        types.MinSpotPrice.MulInt64(powTen),
+			tickExpected: types.MinInitializedTick + (int64(i) * 9e6),
+		}
+		powTen *= 10
 	}
 	for name, tc := range testCases {
 		tc := tc
