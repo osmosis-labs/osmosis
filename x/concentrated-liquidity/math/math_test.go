@@ -658,6 +658,28 @@ func runSqrtRoundingTestCase(
 	}
 }
 
+type sqrtRoundingTestCaseBigDec struct {
+	sqrtPriceCurrent osmomath.BigDec
+	liquidity        osmomath.BigDec
+	amountRemaining  osmomath.BigDec
+	expected         osmomath.BigDec
+}
+
+func runSqrtRoundingTestCaseBigDec(
+	t *testing.T,
+	name string,
+	fn func(osmomath.BigDec, osmomath.BigDec, osmomath.BigDec) osmomath.BigDec,
+	cases map[string]sqrtRoundingTestCaseBigDec,
+) {
+	for name, tc := range cases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			sqrtPriceNext := fn(tc.sqrtPriceCurrent, tc.liquidity, tc.amountRemaining)
+			require.Equal(t, tc.expected.String(), sqrtPriceNext.String())
+		})
+	}
+}
+
 func TestGetNextSqrtPriceFromAmount0InRoundingUp(t *testing.T) {
 	tests := map[string]sqrtRoundingTestCase{
 		"rounded up at precision end": {
@@ -736,4 +758,24 @@ func TestGetNextSqrtPriceFromAmount1OutRoundingDown(t *testing.T) {
 		},
 	}
 	runSqrtRoundingTestCase(t, "TestGetNextSqrtPriceFromAmount1OutRoundingDown", math.GetNextSqrtPriceFromAmount1OutRoundingDown, tests)
+}
+
+func TestGetNextSqrtPriceFromAmount1OutRoundingDownBigDec(t *testing.T) {
+	tests := map[string]sqrtRoundingTestCaseBigDec{
+		"rounded down at precision end": {
+			sqrtPriceCurrent: sqrt5000BigDec,
+			liquidity:        osmomath.MustNewDecFromStr("3035764687.503020836176699298"),
+			amountRemaining:  osmomath.MustNewDecFromStr("8398"),
+			// round_osmo_prec_down(sqrtPriceCurrent - round_osmo_prec_up(tokenOut / liquidity))
+			expected: osmomath.MustNewDecFromStr("70.710675352300682056656660729199999832"),
+		},
+		"no round up due zeroes at precision end": {
+			sqrtPriceCurrent: osmomath.MustNewDecFromStr("12.5"),
+			liquidity:        osmomath.MustNewDecFromStr("1"),
+			amountRemaining:  osmomath.MustNewDecFromStr("10"),
+			// round_osmo_prec_down(sqrtPriceCurrent - round_osmo_prec_up(tokenOut / liquidity))
+			expected: osmomath.MustNewDecFromStr("2.5"),
+		},
+	}
+	runSqrtRoundingTestCaseBigDec(t, "TestGetNextSqrtPriceFromAmount1OutRoundingDown", math.GetNextSqrtPriceFromAmount1OutRoundingDownBigDec, tests)
 }

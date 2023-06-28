@@ -30,6 +30,12 @@ def round_sdk_prec_down(number: Decimal):
 def round_sdk_prec_up(number: Decimal):
     return round_decimal(number, 18, ROUND_CEILING)
 
+def round_osmo_prec_down(number: Decimal):
+    return round_decimal(number, 36, ROUND_FLOOR)
+
+def round_osmo_prec_up(number: Decimal):
+    return round_decimal(number, 36, ROUND_CEILING)
+
 # --- CL liquidity functions ---
 
 def liquidity0(amount: int, sqrt_price_a: Decimal, sqrt_price_b: Decimal) -> Decimal:
