@@ -381,8 +381,9 @@ func (k Keeper) computeOutAmtGivenIn(
 		} else if !sqrtPriceStart.Equal(computedSqrtPrice) {
 			// Otherwise if the sqrtPrice calculated from ComputeSwapWithinBucketOutGivenIn(...) does not equal the sqrtPriceStart we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the computedSqrtPrice calculated from ComputeSwapWithinBucketOutGivenIn(...)
-			// TODO: this cannot be simply truncated. Decide what to do here.
-			newTick, err := math.CalculateSqrtPriceToTick(computedSqrtPrice.SDKDec())
+			// TODO: this cannot be simply truncated. Decide what to do here. Does this re-implemented
+			// BigDec version make sense?
+			newTick, err := math.CalculateSqrtPriceToTickBigDec(computedSqrtPrice)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 			}
@@ -509,8 +510,9 @@ func (k Keeper) computeInAmtGivenOut(
 		} else if !sqrtPriceStart.Equal(computedSqrtPrice) {
 			// Otherwise, if the computedSqrtPrice calculated from ComputeSwapWithinBucketInGivenOut(...) does not equal the sqrtPriceStart we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the computedSqrtPrice calculated from ComputeSwapWithinBucketInGivenOut(...)
-			// TODO: this cannot be simply truncated. Decide what to do here.
-			swapState.tick, err = math.CalculateSqrtPriceToTick(computedSqrtPrice.SDKDec())
+			// TODO: this cannot be simply truncated. Decide what to do here. Does this re-implemented
+			// BigDec version make sense?
+			swapState.tick, err = math.CalculateSqrtPriceToTickBigDec(computedSqrtPrice)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 			}
