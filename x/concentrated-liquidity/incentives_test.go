@@ -1015,13 +1015,14 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				if tc.canonicalBalancerPoolAssets != nil {
 					// Create balancer pool and bond its shares
 					balancerPoolId = s.setupBalancerPoolWithFractionLocked(tc.canonicalBalancerPoolAssets, sdk.OneDec())
-					s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
+					err = s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
 						gammmigration.MigrationRecords{
 							BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 								{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()},
 							},
 						},
 					)
+					s.Require().NoError(err)
 				}
 
 				// Initialize test incentives on the pool.

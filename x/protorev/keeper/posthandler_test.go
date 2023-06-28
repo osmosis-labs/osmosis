@@ -414,7 +414,8 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 			s.Ctx.GasMeter().ConsumeGas(halfGas, "consume half gas")
 
 			// Set pools to backrun
-			s.App.AppKeepers.ProtoRevKeeper.AddSwapsToSwapsToBackrun(s.Ctx, tc.params.trades)
+			err = s.App.AppKeepers.ProtoRevKeeper.AddSwapsToSwapsToBackrun(s.Ctx, tc.params.trades)
+			s.Require().NoError(err)
 
 			gasBefore := s.Ctx.GasMeter().GasConsumed()
 			gasLimitBefore := s.Ctx.GasMeter().Limit()

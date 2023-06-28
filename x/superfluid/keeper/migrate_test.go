@@ -1368,7 +1368,8 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 		migrationRecord := gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 			{BalancerPoolId: balancerPoolId, ClPoolId: clPoolId},
 		}}
-		s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, migrationRecord)
+		err = s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, migrationRecord)
+		s.Require().NoError(err)
 
 		// Register the CL denom as superfluid.
 		clPoolDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPoolId)

@@ -13,7 +13,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	concentrated_liquidity "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/clmocks"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
@@ -66,7 +65,7 @@ var (
 	DefaultExponentOverlappingPositionUpperTick, _ = math.SqrtPriceToTickRoundDownSpacing(sqrt4999, DefaultTickSpacing)
 	BAR                                            = "bar"
 	FOO                                            = "foo"
-	InsufficientFundsError                         = fmt.Errorf("insufficient funds")
+	ErrInsufficientFunds                           = fmt.Errorf("insufficient funds")
 	DefaultAuthorizedUptimes                       = []time.Duration{time.Nanosecond}
 	ThreeOrderedConsecutiveAuthorizedUptimes       = []time.Duration{time.Nanosecond, time.Minute, time.Hour, time.Hour * 24}
 	ThreeUnorderedNonConsecutiveAuthorizedUptimes  = []time.Duration{time.Nanosecond, time.Hour * 24 * 7, time.Minute}
@@ -83,7 +82,7 @@ func TestConstants(t *testing.T) {
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
-	clk               *concentrated_liquidity.Keeper
+	clk               *cl.Keeper
 	authorizedUptimes []time.Duration
 }
 

@@ -375,7 +375,8 @@ func (s *KeeperTestSuite) TestLockRewardReceiver() {
 	s.Require().Equal(res.RewardReceiver, addr1.String())
 
 	// now change lock reward receiver and then query again
-	s.App.LockupKeeper.SetLockRewardReceiverAddress(s.Ctx, 1, addr1, addr2.String())
+	err = s.App.LockupKeeper.SetLockRewardReceiverAddress(s.Ctx, 1, addr1, addr2.String())
+	s.Require().NoError(err)
 	res, err = s.querier.LockRewardReceiver(sdk.WrapSDKContext(s.Ctx), &types.LockRewardReceiverRequest{LockId: 1})
 	s.Require().NoError(err)
 	s.Require().Equal(res.RewardReceiver, addr2.String())
