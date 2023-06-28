@@ -29,7 +29,7 @@ func TestReverseRelationTickIndexToBytes(t *testing.T) {
 			tickIndex: types.MaxTick,
 		},
 		"minimum tick index": {
-			tickIndex: types.MinTick,
+			tickIndex: types.MinInitializedTick,
 		},
 	}
 
@@ -42,6 +42,59 @@ func TestReverseRelationTickIndexToBytes(t *testing.T) {
 			tickIndexConverted, err := types.TickIndexFromBytes(tickIndexBytes)
 			require.NoError(t, err)
 			require.Equal(t, tc.tickIndex, tickIndexConverted)
+		})
+	}
+}
+
+func TestTickIndexFromBytes_ErrorCases(t *testing.T) {
+	tests := map[string]struct {
+		incorrectByteLength     bool
+		incorrectNegativePrefix bool
+		testZero                bool
+	}{
+		"use incorrect byte length": {
+			incorrectByteLength: true,
+		},
+		"use incorrect negative prefix": {
+			incorrectNegativePrefix: true,
+		},
+		"use incorrect positive prefix for positive number": {
+			incorrectNegativePrefix: false,
+		},
+		"use incorrect positive prefix for zero": {
+			incorrectNegativePrefix: false,
+			testZero:                true,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			var tickIndexByte []byte
+			if tc.incorrectByteLength {
+				tickIndexByte = make([]byte, 10)
+			} else if tc.incorrectNegativePrefix {
+				// first create correct negative tick index byte using TickIndexToBytes
+				correctTickIndexByte := types.TickIndexToBytes(-2)
+
+				// now manually change it to have positive prefix
+				correctTickIndexByte[0] = types.TickPositivePrefix[0]
+				tickIndexByte = correctTickIndexByte
+			} else {
+				var correctTickIndexByte []byte
+				if tc.testZero {
+					correctTickIndexByte = types.TickIndexToBytes(0)
+				} else {
+					correctTickIndexByte = types.TickIndexToBytes(2)
+				}
+
+				// now manually change it to have negative prefix
+				correctTickIndexByte[0] = types.TickNegativePrefix[0]
+				tickIndexByte = correctTickIndexByte
+			}
+			tickIndex, err := types.TickIndexFromBytes(tickIndexByte)
+			require.Error(t, err)
+			require.Equal(t, int64(0), tickIndex)
 		})
 	}
 }

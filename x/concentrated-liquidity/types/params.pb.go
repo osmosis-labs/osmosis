@@ -40,6 +40,8 @@ type Params struct {
 	// from CL to Balancer pools will be discounted to encourage LPs to migrate.
 	// e.g. a rate of 0.05 means Balancer LPs get 5% less incentives than full
 	// range CL LPs.
+	// This field can range from (0,1]. If set to 1, it indicates that all
+	// incentives stay at cl pool.
 	BalancerSharesRewardDiscount github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=balancer_shares_reward_discount,json=balancerSharesRewardDiscount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"balancer_shares_reward_discount" yaml:"balancer_shares_reward_discount"`
 	// authorized_quote_denoms is a list of quote denoms that can be used as
 	// token1 when creating a pool. We limit the quote assets to a small set for

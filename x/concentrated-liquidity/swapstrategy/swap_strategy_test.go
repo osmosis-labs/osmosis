@@ -78,8 +78,7 @@ func (suite *StrategyTestSuite) runTickIteratorTest(strategy swapstrategy.SwapSt
 	currentTick := pool.GetCurrentTick()
 	suite.Require().Equal(int64(0), currentTick)
 
-	tickIndex := strategy.InitializeTickValue(currentTick)
-	iter := strategy.InitializeNextTickIterator(suite.Ctx, defaultPoolId, tickIndex)
+	iter := strategy.InitializeNextTickIterator(suite.Ctx, defaultPoolId, currentTick)
 	defer iter.Close()
 
 	suite.Require().Equal(tc.expectIsValid, iter.Valid())

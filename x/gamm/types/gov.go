@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 )
 
 const (
@@ -26,7 +27,7 @@ var (
 )
 
 // NewReplacePoolIncentivesProposal returns a new instance of a replace migration record's proposal struct.
-func NewReplaceMigrationRecordsProposal(title, description string, records []BalancerToConcentratedPoolLink) govtypes.Content {
+func NewReplaceMigrationRecordsProposal(title, description string, records []gammmigration.BalancerToConcentratedPoolLink) govtypes.Content {
 	return &ReplaceMigrationRecordsProposal{
 		Title:       title,
 		Description: description,
@@ -78,7 +79,7 @@ func (p ReplaceMigrationRecordsProposal) String() string {
 }
 
 // NewReplacePoolIncentivesProposal returns a new instance of a replace migration record's proposal struct.
-func NewUpdatePoolIncentivesProposal(title, description string, records []BalancerToConcentratedPoolLink) govtypes.Content {
+func NewUpdatePoolIncentivesProposal(title, description string, records []gammmigration.BalancerToConcentratedPoolLink) govtypes.Content {
 	return &UpdateMigrationRecordsProposal{
 		Title:       title,
 		Description: description,

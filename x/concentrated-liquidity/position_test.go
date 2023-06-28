@@ -35,8 +35,7 @@ func (s *KeeperTestSuite) AssertPositionsDoNotExist(positionIds []uint64) {
 		oldPositionName := string(types.KeyPositionId(positionId))
 		for _, uptimeAccum := range uptimeAccumulators {
 			// Check if the accumulator contains the position.
-			hasPosition, err := uptimeAccum.HasPosition(oldPositionName)
-			s.Require().NoError(err)
+			hasPosition := uptimeAccum.HasPosition(oldPositionName)
 			s.Require().False(hasPosition)
 		}
 
@@ -57,9 +56,7 @@ func (s *KeeperTestSuite) GetTotalAccruedRewardsByAccumulator(positionId uint64,
 	for i, uptimeAccum := range uptimeAccumulators {
 		newPositionName := string(types.KeyPositionId(positionId))
 		// Check if the accumulator contains the position.
-		hasPosition, err := uptimeAccum.HasPosition(newPositionName)
-		s.Require().NoError(err)
-
+		hasPosition := uptimeAccum.HasPosition(newPositionName)
 		if requireHasPosition {
 			s.Require().True(hasPosition)
 		}
@@ -296,8 +293,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			for uptimeIndex, uptime := range supportedUptimes {
 				// Position-related checks
 
-				recordExists, err := newUptimeAccums[uptimeIndex].HasPosition(positionName)
-				s.Require().NoError(err)
+				recordExists := newUptimeAccums[uptimeIndex].HasPosition(positionName)
 				s.Require().True(recordExists)
 
 				// Ensure position's record has correct values
@@ -313,7 +309,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				if test.positionExists {
 					// Track how much the current uptime accum has grown by
 					actualUptimeAccumDelta[uptimeIndex] = newUptimeAccumValues[uptimeIndex].Sub(initUptimeAccumValues[uptimeIndex])
-					if timeElapsedSec.GT(sdk.ZeroDec()) {
+					if timeElapsedSec.IsPositive() {
 						expectedGrowthCurAccum, _, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, uptime, test.param.liquidityDelta, timeElapsedSec, expectedIncentiveRecords)
 						s.Require().NoError(err)
 						expectedUptimeAccumValueGrowth[uptimeIndex] = expectedGrowthCurAccum
@@ -408,103 +404,6 @@ type positionOwnershipTest struct {
 
 	setupPositions []sdk.AccAddress
 	poolId         uint64
-}
-
-func (s *KeeperTestSuite) runIsPositionOwnerTest(test positionOwnershipTest) {
-	s.SetupTest()
-	p := s.PrepareConcentratedPool()
-	for i, owner := range test.setupPositions {
-		err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, p.GetId(), owner, DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, uint64(i))
-		s.Require().NoError(err)
-	}
-	err := s.App.ConcentratedLiquidityKeeper.EnsurePositionOwner(s.Ctx, test.queryPositionOwner, test.poolId, test.queryPositionId)
-	if test.expPass {
-		s.Require().NoError(err)
-	} else {
-		s.Require().Error(err)
-	}
-
-}
-
-func (s *KeeperTestSuite) TestIsPositionOwnerMultiPosition() {
-	tenAddrOneAddr := []sdk.AccAddress{}
-	for i := 0; i < 10; i++ {
-		tenAddrOneAddr = append(tenAddrOneAddr, s.TestAccs[0])
-	}
-	tenAddrOneAddr = append(tenAddrOneAddr, s.TestAccs[1])
-	tests := map[string]positionOwnershipTest{
-		"prefix malleability (prior bug)": {
-			queryPositionOwner: s.TestAccs[1],
-			queryPositionId:    1, expPass: false,
-			setupPositions: tenAddrOneAddr,
-		},
-		"things work": {
-			queryPositionOwner: s.TestAccs[1],
-			queryPositionId:    10, expPass: true,
-			setupPositions: tenAddrOneAddr,
-		},
-	}
-	for name, test := range tests {
-		s.Run(name, func() {
-			test.poolId = 1
-			s.runIsPositionOwnerTest(test)
-		})
-	}
-}
-
-func (s *KeeperTestSuite) TestIsPositionOwner() {
-	actualOwner := s.TestAccs[0]
-	nonOwner := s.TestAccs[1]
-
-	tests := []struct {
-		name         string
-		ownerToQuery sdk.AccAddress
-		poolId       uint64
-		positionId   uint64
-		isOwner      bool
-	}{
-		{
-			name:         "Happy path",
-			ownerToQuery: actualOwner,
-			poolId:       1,
-			positionId:   DefaultPositionId,
-			isOwner:      true,
-		},
-		{
-			name:         "query non owner",
-			ownerToQuery: nonOwner,
-			poolId:       1,
-			positionId:   DefaultPositionId,
-			isOwner:      false,
-		},
-		{
-			name:         "different pool ID, not the owner",
-			ownerToQuery: actualOwner,
-			poolId:       2,
-			positionId:   DefaultPositionId,
-			isOwner:      false,
-		},
-		{
-			name:         "different position ID, not the owner",
-			ownerToQuery: actualOwner,
-			poolId:       1,
-			positionId:   DefaultPositionId + 1,
-			isOwner:      false,
-		},
-	}
-
-	for _, test := range tests {
-		s.Run(test.name, func() {
-			s.runIsPositionOwnerTest(positionOwnershipTest{
-				queryPositionOwner: test.ownerToQuery,
-				queryPositionId:    test.positionId,
-				expPass:            test.isOwner,
-				// positions 0 and 1 are owned by actualOwner
-				setupPositions: []sdk.AccAddress{actualOwner, actualOwner},
-				poolId:         test.poolId,
-			})
-		})
-	}
 }
 
 func (s *KeeperTestSuite) TestGetUserPositions() {
@@ -1069,9 +968,9 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		{
 			name: "Error: one of the full range positions is locked",
 			setupFullyChargedPositions: []position{
-				{1, defaultPoolId, defaultAddress, DefaultCoins, types.MinTick, types.MaxTick, unlocked},
-				{2, defaultPoolId, defaultAddress, DefaultCoins, types.MinTick, types.MaxTick, locked},
-				{3, defaultPoolId, defaultAddress, DefaultCoins, types.MinTick, types.MaxTick, unlocked},
+				{1, defaultPoolId, defaultAddress, DefaultCoins, types.MinInitializedTick, types.MaxTick, unlocked},
+				{2, defaultPoolId, defaultAddress, DefaultCoins, types.MinInitializedTick, types.MaxTick, locked},
+				{3, defaultPoolId, defaultAddress, DefaultCoins, types.MinInitializedTick, types.MaxTick, unlocked},
 			},
 			lockPositionIds:         []uint64{2},
 			positionIdsToMigrate:    []uint64{1, 2, 3},
@@ -1082,9 +981,9 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		{
 			name: "Pass: one of the full range positions was locked but got unlocked 1ms before fungification",
 			setupFullyChargedPositions: []position{
-				{1, defaultPoolId, defaultAddress, DefaultCoins, types.MinTick, types.MaxTick, unlocked},
-				{2, defaultPoolId, defaultAddress, DefaultCoins, types.MinTick, types.MaxTick, locked},
-				{3, defaultPoolId, defaultAddress, DefaultCoins, types.MinTick, types.MaxTick, unlocked},
+				{1, defaultPoolId, defaultAddress, DefaultCoins, types.MinInitializedTick, types.MaxTick, unlocked},
+				{2, defaultPoolId, defaultAddress, DefaultCoins, types.MinInitializedTick, types.MaxTick, locked},
+				{3, defaultPoolId, defaultAddress, DefaultCoins, types.MinInitializedTick, types.MaxTick, unlocked},
 			},
 
 			lockPositionIds:         []uint64{2},
@@ -1397,8 +1296,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimSpreadRewards(
 		hasPosition := s.clk.HasPosition(s.Ctx, oldPositionId)
 		s.Require().False(hasPosition)
 
-		hasSpreadRewardPositionTracker, err := spreadRewardAccum.HasPosition(types.KeySpreadRewardPositionAccumulator(oldPositionId))
-		s.Require().NoError(err)
+		hasSpreadRewardPositionTracker := spreadRewardAccum.HasPosition(types.KeySpreadRewardPositionAccumulator(oldPositionId))
 		s.Require().False(hasSpreadRewardPositionTracker)
 	}
 }
@@ -1547,7 +1445,7 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 
 	s.TestAccs = apptesting.CreateRandomAccounts(5)
 	s.FundAcc(s.TestAccs[4], ethFunded)
-	coinIn, _, _, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, s.TestAccs[4], pool, usdcSupply, ETH, DefaultSpreadFactor, types.MinSpotPrice)
+	coinIn, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, s.TestAccs[4], pool, usdcSupply, ETH, DefaultSpreadFactor, types.MinSpotPrice)
 	s.Require().NoError(err)
 
 	// --- Set up expected spread rewards and incentives ---
@@ -1840,10 +1738,10 @@ func (s *KeeperTestSuite) TestMintSharesAndLock() {
 			name:                    "err: upper tick is not max tick",
 			owner:                   defaultAddress,
 			createFullRangePosition: false,
-			lowerTick:               types.MinTick,
+			lowerTick:               types.MinInitializedTick,
 			upperTick:               DefaultUpperTick,
 			remainingLockDuration:   24 * time.Hour,
-			expectedErr:             types.PositionNotFullRangeError{PositionId: 1, LowerTick: types.MinTick, UpperTick: DefaultUpperTick},
+			expectedErr:             types.PositionNotFullRangeError{PositionId: 1, LowerTick: types.MinInitializedTick, UpperTick: DefaultUpperTick},
 		},
 	}
 
@@ -2494,7 +2392,7 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 			s.Require().NoError(err)
 			s.Require().Equal(s.Ctx.BlockTime(), position.JoinTime)
 			s.Require().Equal(types.MaxTick, position.UpperTick)
-			s.Require().Equal(types.MinTick, position.LowerTick)
+			s.Require().Equal(types.MinInitializedTick, position.LowerTick)
 			s.Require().Equal(liquidity, position.Liquidity)
 
 			// Check locked
@@ -2506,42 +2404,69 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 	}
 }
 
+// TestTickRoundingEdgeCase tests an edge case where incorrect tick rounding would cause LP funds to be drained.
+func (s *KeeperTestSuite) TestTickRoundingEdgeCase() {
+	s.SetupTest()
+	pool := s.PrepareConcentratedPool()
+
+	testAccs := apptesting.CreateRandomAccounts(3)
+	firstPositionAddr := testAccs[0]
+	secondPositionAddr := testAccs[1]
+
+	// Create two identical positions with the initial assets set such that both positions are fully in one asset
+	firstPositionAssets := sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(9823358512)), sdk.NewCoin(USDC, sdk.NewInt(8985893232)))
+	firstPosLiq, firstPosId := s.SetupPosition(pool.GetId(), firstPositionAddr, firstPositionAssets, -68720000, -68710000, true)
+	secondPositionAssets := sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(9823358512)), sdk.NewCoin(USDC, sdk.NewInt(8985893232)))
+	secondPosLiq, secondPosId := s.SetupPosition(pool.GetId(), secondPositionAddr, secondPositionAssets, -68720000, -68710000, true)
+
+	// Execute a swap that brings the price close enough to the edge of a tick to trigger bankers rounding
+	swapAddr := testAccs[2]
+	desiredTokenOut := sdk.NewCoin(USDC, sdk.NewInt(10000))
+	s.FundAcc(swapAddr, sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(1000000000000000000))))
+	_, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddr, pool, desiredTokenOut, ETH, sdk.ZeroDec(), sdk.ZeroDec())
+	s.Require().NoError(err)
+
+	// Both positions should be able to withdraw successfully
+	_, _, err = s.clk.WithdrawPosition(s.Ctx, firstPositionAddr, firstPosId, firstPosLiq)
+	s.Require().NoError(err)
+	_, _, err = s.clk.WithdrawPosition(s.Ctx, secondPositionAddr, secondPosId, secondPosLiq)
+	s.Require().NoError(err)
+}
+
 func (s *KeeperTestSuite) TestMultipleRanges() {
 	tests := map[string]struct {
 		tickRanges      [][]int64
 		rangeTestParams RangeTestParams
 	}{
-		// The following two tests will fail until the tick rounding bug is fixed (and should pass after):
-		// https://github.com/osmosis-labs/osmosis/issues/5516
-		//
-		// "one min width range": {
-		// 	tickRanges: [][]int64{
-		// 		{0, 100},
-		// 	},
-		// 	rangeTestParams: DefaultRangeTestParams,
-		// },
-		// "two adjacent ranges": {
-		// 	tickRanges: [][]int64{
-		// 		{-10000, 10000},
-		// 		{10000, 20000},
-		// 	},
-		// 	rangeTestParams: DefaultRangeTestParams,
-		// },
-
-		// Both of these lead to underclaiming of fees greater than additive
-		// error tolerance of 1 per token per position. Increasing ticks increases
-		// error disproportionally, while increasing tick range decreases error proportionally.
-		//
-		// "one range on large tick": {
-		// 	tickRanges: [][]int64{
-		// 		{207000000, 207000000 + 100},
-		// 	},
-		// },
-		// "one range on small tick": {
-		// 	tickRanges: [][]int64{
-		// 		{-107000000, -107000000 + 100},
-		// 	},
-		// },
+		"one range, default params": {
+			tickRanges: [][]int64{
+				{0, 10000},
+			},
+			rangeTestParams: DefaultRangeTestParams,
+		},
+		"one min width range": {
+			tickRanges: [][]int64{
+				{0, 100},
+			},
+			rangeTestParams: DefaultRangeTestParams,
+		},
+		"two adjacent ranges": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{10000, 20000},
+			},
+			rangeTestParams: DefaultRangeTestParams,
+		},
+		"one range on large tick": {
+			tickRanges: [][]int64{
+				{207000000, 207000000 + 100},
+			},
+		},
+		"one range on small tick": {
+			tickRanges: [][]int64{
+				{-107000000, -107000000 + 100},
+			},
+		},
 	}
 
 	for name, tc := range tests {

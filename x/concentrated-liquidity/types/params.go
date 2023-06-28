@@ -110,16 +110,16 @@ func validateTicks(i interface{}) error {
 		if MaxTick%tickSpacingInt64 != 0 {
 			return fmt.Errorf("max tick (%d) is not a multiple of tick spacing (%d)", MaxTick, tickSpacing)
 		}
-		if MinTick%tickSpacingInt64 != 0 {
-			return fmt.Errorf("in tick (%d) is not a multiple of tick spacing (%d)", MinTick, tickSpacing)
+		if MinInitializedTick%tickSpacingInt64 != 0 {
+			return fmt.Errorf("in tick (%d) is not a multiple of tick spacing (%d)", MinInitializedTick, tickSpacing)
 		}
 
 		if tickSpacingInt64 > MaxTick {
 			return fmt.Errorf("tick spacing (%d) cannot be greater than max tick spacing (%d)", tickSpacing, MaxTick)
 		}
 
-		if tickSpacingInt64 < MinTick {
-			return fmt.Errorf("tick spacing (%d) cannot be less than min tick spacing (%d)", tickSpacing, MinTick)
+		if tickSpacingInt64 < MinInitializedTick {
+			return fmt.Errorf("tick spacing (%d) cannot be less than min tick spacing (%d)", tickSpacing, MinInitializedTick)
 		}
 	}
 
@@ -187,7 +187,7 @@ func validateBalancerSharesDiscount(i interface{}) error {
 	}
 
 	// Ensure that the passed in discount rate is between 0 and 1.
-	if balancerSharesRewardDiscount.LT(sdk.ZeroDec()) || balancerSharesRewardDiscount.GT(sdk.OneDec()) {
+	if balancerSharesRewardDiscount.IsNegative() || balancerSharesRewardDiscount.GT(sdk.OneDec()) {
 		return InvalidDiscountRateError{DiscountRate: balancerSharesRewardDiscount}
 	}
 

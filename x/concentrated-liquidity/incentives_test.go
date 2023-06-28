@@ -18,6 +18,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
 )
 
@@ -1019,8 +1020,8 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 					// Create balancer pool and bond its shares
 					balancerPoolId = s.setupBalancerPoolWithFractionLocked(tc.canonicalBalancerPoolAssets, sdk.OneDec())
 					s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
-						gammtypes.MigrationRecords{
-							BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
+						gammmigration.MigrationRecords{
+							BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 								{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()},
 							},
 						},
@@ -1058,7 +1059,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 						qualifyingBalancerLiquidity = (sdk.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingBalancerLiquidityPreDiscount)
 						qualifyingLiquidity = qualifyingLiquidity.Add(qualifyingBalancerLiquidity)
 
-						actualLiquidityAdded0, actualLiquidityAdded1, err := clPool.CalcActualAmounts(s.Ctx, types.MinTick, types.MaxTick, qualifyingBalancerLiquidity)
+						actualLiquidityAdded0, actualLiquidityAdded1, err := clPool.CalcActualAmounts(s.Ctx, types.MinInitializedTick, types.MaxTick, qualifyingBalancerLiquidity)
 						s.Require().NoError(err)
 						s.FundAcc(clPool.GetIncentivesAddress(), sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), actualLiquidityAdded0.TruncateInt()), sdk.NewCoin(clPool.GetToken1(), actualLiquidityAdded1.TruncateInt())))
 					}
@@ -1802,7 +1803,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 
 				// If applicable, set up existing position and update ticks & global accums
 				if test.existingPosition {
-					err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptimeAccumulators(s.Ctx, clPool.GetId(), test.positionLiquidity, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultPositionId)
+					err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptimeAccumulators(s.Ctx, clPool.GetId(), test.positionLiquidity, test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultPositionId)
 					s.Require().NoError(err)
 					err = s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, clPool.GetId(), s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, DefaultJoinTime, test.positionLiquidity, DefaultPositionId, DefaultUnderlyingLockId)
 					s.Require().NoError(err)
@@ -1819,7 +1820,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 
 				// --- System under test ---
 
-				err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptimeAccumulators(s.Ctx, clPool.GetId(), test.positionLiquidity, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultPositionId)
+				err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptimeAccumulators(s.Ctx, clPool.GetId(), test.positionLiquidity, test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultPositionId)
 
 				// --- Error catching ---
 
@@ -1839,9 +1840,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 
 				// Ensure records are properly updated for each supported uptime
 				for uptimeIndex := range types.SupportedUptimes {
-					recordExists, err := uptimeAccums[uptimeIndex].HasPosition(positionName)
-					s.Require().NoError(err)
-
+					recordExists := uptimeAccums[uptimeIndex].HasPosition(positionName)
 					s.Require().True(recordExists)
 
 					// Ensure position's record has correct values
@@ -2363,8 +2362,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 
 				validPool := s.PrepareConcentratedPool()
 				validPoolId := validPool.GetId()
-
-				fmt.Println("expected incentives claimed for: ", name, " ", tc.expectedIncentivesClaimed.String())
 
 				// Fund the incentives address with amount we intend to claim and forfeit.
 				s.FundAcc(validPool.GetIncentivesAddress(), tc.expectedIncentivesClaimed.Add(tc.expectedForfeitedIncentives...))
@@ -2966,11 +2963,8 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 		for name, tc := range tests {
 			tc := tc
 			s.Run(name, func() {
-				// --- Setup test env ---
-
 				s.SetupTest()
 				clPool := s.PrepareConcentratedPool()
-				clKeeper := s.App.ConcentratedLiquidityKeeper
 				bankKeeper := s.App.BankKeeper
 				accountKeeper := s.App.AccountKeeper
 
@@ -2980,7 +2974,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 				}
 
 				// Initialize position
-				err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, tc.numShares, joinTime, tc.positionIdCreate)
+				err := s.clk.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, tc.numShares, joinTime, tc.positionIdCreate)
 				s.Require().NoError(err)
 
 				clPool.SetCurrentTick(DefaultCurrTick)
@@ -2992,7 +2986,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 					s.addUptimeGrowthInsideRange(s.Ctx, validPoolId, defaultSender, DefaultCurrTick, DefaultLowerTick, DefaultUpperTick, tc.growthInside)
 				}
 
-				err = clKeeper.SetPool(s.Ctx, clPool)
+				err = s.clk.SetPool(s.Ctx, clPool)
 				s.Require().NoError(err)
 
 				preCommunityPoolBalance := bankKeeper.GetAllBalances(s.Ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName))
@@ -3008,7 +3002,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 				}
 
 				// --- System under test ---
-				amountClaimedQuery, amountForfeitedQuery, err := clKeeper.GetClaimableIncentives(s.Ctx, tc.positionIdClaim)
+				amountClaimedQuery, amountForfeitedQuery, err := s.clk.GetClaimableIncentives(s.Ctx, tc.positionIdClaim)
 
 				// Pull new balances for comparison
 				newSenderBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, defaultSender)
@@ -3022,7 +3016,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 				s.Require().Equal(initSenderBalances, newSenderBalances)
 				s.Require().Equal(initPoolBalances, newPoolBalances)
 
-				amountClaimed, amountForfeited, err := clKeeper.PrepareClaimAllIncentivesForPosition(s.Ctx, tc.positionIdClaim)
+				amountClaimed, amountForfeited, err := s.clk.PrepareClaimAllIncentivesForPosition(s.Ctx, tc.positionIdClaim)
 
 				// --- Assertions ---
 
@@ -3173,9 +3167,7 @@ func (s *KeeperTestSuite) TestPrepareClaimAllIncentivesForPosition() {
 				for _, uptimeAccum := range uptimeAccumulatorsPreClaim {
 					newPositionName := string(types.KeyPositionId(positionIdOne))
 					// Check if the accumulator contains the position.
-					hasPosition, err := uptimeAccum.HasPosition(newPositionName)
-					s.Require().NoError(err)
-
+					hasPosition := uptimeAccum.HasPosition(newPositionName)
 					if hasPosition {
 						position, err := accum.GetPosition(uptimeAccum, newPositionName)
 						s.Require().NoError(err)
@@ -3590,8 +3582,8 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 					balancerPoolId = 0
 				} else {
 					s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
-						gammtypes.MigrationRecords{
-							BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
+						gammmigration.MigrationRecords{
+							BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 								{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()},
 							},
 						},
@@ -3724,8 +3716,8 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRangeWithNonExistentPools
 				}
 
 				s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
-					gammtypes.MigrationRecords{
-						BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
+					gammmigration.MigrationRecords{
+						BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 							{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()},
 						},
 					},
@@ -3892,8 +3884,8 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 
 				// Link the balancer and CL pools
 				s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
-					gammtypes.MigrationRecords{
-						BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
+					gammmigration.MigrationRecords{
+						BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 							{BalancerPoolId: balancerPoolId, ClPoolId: clPoolId},
 						},
 					})
@@ -4144,8 +4136,7 @@ func (s *KeeperTestSuite) TestMoveRewardsToNewPositionAndDeleteOldAcc() {
 				s.Require().NoError(err)
 
 				// Check the old accumulator is now deleted.
-				hasPosition, err := testAccumulator.HasPosition(oldPos)
-				s.Require().NoError(err)
+				hasPosition := testAccumulator.HasPosition(oldPos)
 				s.Require().False(hasPosition)
 
 				// Check that the new accumulator has the correct amount of rewards in unclaimed rewards.
