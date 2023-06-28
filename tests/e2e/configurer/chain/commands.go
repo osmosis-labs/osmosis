@@ -46,6 +46,7 @@ func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
+	// TODO: create a helper function for parsing pool ID and prop ID from the response
 	startIndex := strings.Index(resp.String(), `{"key":"pool_id","value":"`) + len(`{"key":"pool_id","value":"`)
 	endIndex := strings.Index(resp.String()[startIndex:], `"`)
 

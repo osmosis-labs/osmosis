@@ -78,6 +78,8 @@ func (c *Config) CreateNode(initNode *initialization.Node) *NodeConfig {
 }
 
 // CreateNodeTemp returns new initialized NodeConfig and appends it to a separate list of temporary nodes.
+// This is used for nodes that are intended to only exist for a single test. Without this separation,
+// parallel tests will try and use this node and fail.
 func (c *Config) CreateNodeTemp(initNode *initialization.Node) *NodeConfig {
 	nodeConfig := &NodeConfig{
 		Node:             *initNode,
@@ -100,7 +102,7 @@ func (c *Config) RemoveNode(nodeName string) error {
 	return fmt.Errorf("node %s not found", nodeName)
 }
 
-// RemoveTempNode removes temporary node and stops it from running.
+// RemoveTempNode removes a temporary node and stops it from running.
 func (c *Config) RemoveTempNode(nodeName string) error {
 	for i, node := range c.NodeTempConfigs {
 		if node.Name == nodeName {
@@ -170,6 +172,9 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	// before and after the IBC send. Since we run tests in parallel now, some tests may
 	// send uosmo between accounts while this test is running. Since we don't care about
 	// non ibc denoms, its safe to filter uosmo out.
+	// TODO: we can probably improve this by specifying the denom we expect to be received
+	// and just look out for that. This wasn't required prior to parallel tests, but
+	// would be useful now.
 	removeFeeTokenFromBalance := func(balance sdk.Coins) sdk.Coins {
 		filteredCoinDenoms := []string{}
 		for _, coin := range balance {

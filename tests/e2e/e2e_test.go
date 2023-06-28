@@ -827,6 +827,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 
 	// Run the tick spacing reduction proposal
 	chainANode.SubmitTickSpacingReductionProposal(fmt.Sprintf("%d,%d", poolID, newTickSpacing), sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
+	// TODO: We should remove every instance of prop number inc and just parse from tx response
 	chainA.LatestProposalNumber += 1
 	latestPropNumber := chainA.LatestProposalNumber
 
@@ -835,6 +836,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	go chainANode.QueryPropStatusTimed(latestPropNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
 	var wg sync.WaitGroup
 
+	// TODO: create a helper function for all these go routine yes vote calls.
 	for _, n := range chainA.NodeConfigs {
 		wg.Add(1)
 		go func(nodeConfig *chain.NodeConfig) {
