@@ -236,9 +236,11 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	config.LockupWalletSuperfluid = lockupWalletSuperfluid
 	config.StableswapWallet = stableswapWallet
 
-	wg.Add(4)
+	wg.Add(6)
 
 	var errCh = make(chan error, 2)
+
+	oneDai := sdk.NewCoin(v16.DAIIBCDenom, sdk.NewInt(1000000000000000000))
 
 	go func() {
 		defer wg.Done()
@@ -249,22 +251,40 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	// Upload the rate limiting contract to both chains (as they both will be updated)
 	go func() {
 		defer wg.Done()
-		uc.t.Logf("Uploading rate limiting contract to both chains")
+		uc.t.Logf("Uploading rate limiting contract to chainA")
 		_, err := chainANode.SetupRateLimiting("", chainANode.QueryGovModuleAccount(), chainA)
 		errCh <- err
 	}()
 
 	go func() {
 		defer wg.Done()
-		uc.t.Logf("Uploading rate limiting contract to both chains")
+		uc.t.Logf("Uploading rate limiting contract to chainB")
 		_, err := chainBNode.SetupRateLimiting("", chainBNode.QueryGovModuleAccount(), chainB)
 		errCh <- err
 	}()
 
 	go func() {
 		defer wg.Done()
-		// test lock and add to existing lock for both regular and superfluid lockups (only chainA)
+		uc.t.Logf("Lock and add to existing lock for both regular and superfluid lockups on chainA")
 		chainANode.LockAndAddToExistingLock(chainA, sdk.NewInt(1000000000000000000), poolShareDenom, config.LockupWallet, config.LockupWalletSuperfluid)
+	}()
+
+	go func() {
+		defer wg.Done()
+		uc.t.Logf("Funding chainA's community pool with 1 DAI to be used for the upgrade")
+		communityPoolFunder := chainANode.CreateWalletAndFund("communityPoolFunder", []string{
+			oneDai.String(),
+		})
+		chainANode.FundCommunityPool(communityPoolFunder, oneDai.String())
+	}()
+
+	go func() {
+		defer wg.Done()
+		uc.t.Logf("Funding chainB's community pool with 1 DAI to be used for the upgrade")
+		communityPoolFunder := chainBNode.CreateWalletAndFund("communityPoolFunder", []string{
+			oneDai.String(),
+		})
+		chainBNode.FundCommunityPool(communityPoolFunder, oneDai.String())
 	}()
 
 	wg.Wait()
@@ -276,18 +296,6 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 			return err
 		}
 	}
-
-	// fund the community pool with one dai
-	oneDai := sdk.NewCoin(v16.DAIIBCDenom, sdk.NewInt(1000000000000000000))
-	communityPoolFunder := chainANode.CreateWalletAndFund("communityPoolFunder", []string{
-		oneDai.String(),
-	})
-	chainANode.FundCommunityPool(communityPoolFunder, oneDai.String())
-
-	communityPoolFunder = chainBNode.CreateWalletAndFund("communityPoolFunder", []string{
-		oneDai.String(),
-	})
-	chainBNode.FundCommunityPool(communityPoolFunder, oneDai.String())
 
 	return nil
 }
