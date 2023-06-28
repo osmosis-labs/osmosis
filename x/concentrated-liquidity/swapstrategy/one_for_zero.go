@@ -63,7 +63,7 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent o
 	amountOneInBigDec := math.CalcAmount1DeltaBigDec(liquidityBigDec, sqrtPriceTargetBigDec, sqrtPriceCurrent, true)
 
 	// Calculate sqrtPriceNext on the amount of token remaining after spread reward.
-	amountOneInRemainingLessSpreadReward := osmomath.BigDecFromSDKDec(amountOneInRemaining).Mul(oneBigDec.Sub(osmomath.BigDecFromSDKDec(s.spreadFactor)))
+	amountOneInRemainingLessSpreadReward := osmomath.BigDecFromSDKDec(amountOneInRemaining).MulTruncate(oneBigDec.Sub(osmomath.BigDecFromSDKDec(s.spreadFactor)))
 
 	var sqrtPriceNext osmomath.BigDec
 	// If have more of the amount remaining after spread reward than estimated until target,
