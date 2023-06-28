@@ -153,9 +153,15 @@ func powTenBigDec(exponent int64) osmomath.BigDec {
 	return bigNegPowersOfTen[-exponent]
 }
 
-func CalculatePriceToTickDec(price sdk.Dec) (tickIndex sdk.Dec) {
+func CalculatePriceToTickDec(price sdk.Dec) (tickIndex sdk.Dec, err error) {
+	if price.IsNegative() {
+		return sdk.ZeroDec(), fmt.Errorf("price must be greater than zero")
+	}
+	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
+		return sdk.ZeroDec(), types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
+	}
 	if price.Equal(sdkOneDec) {
-		return sdk.ZeroDec()
+		return sdk.ZeroDec(), nil
 	}
 
 	// The approach here is to try determine which "geometric spacing" are we in.
@@ -193,7 +199,7 @@ func CalculatePriceToTickDec(price sdk.Dec) (tickIndex sdk.Dec) {
 	// which would be truncation. However price may have errors, hence it being callers job)
 	tickIndex = ticksFilledByCurrentSpacing.SDKDec()
 	tickIndex = tickIndex.Add(sdk.NewDec(geoSpacing.initialTick))
-	return tickIndex
+	return tickIndex, nil
 }
 
 // CalculateSqrtPriceToTick takes in a square root and returns the corresponding tick index.
@@ -202,7 +208,10 @@ func CalculateSqrtPriceToTick(sqrtPrice sdk.Dec) (tickIndex int64, err error) {
 	// SqrtPrice may have errors, so we take the tick obtained from the price
 	// and move it in a +/- 1 tick range based on the sqrt price those ticks would imply.
 	price := sqrtPrice.Mul(sqrtPrice)
-	tick := CalculatePriceToTickDec(price)
+	tick, err := CalculatePriceToTickDec(price)
+	if err != nil {
+		return 0, err
+	}
 	truncatedTick := tick.TruncateInt64()
 
 	// We have a candidate bucket index `t`. We discern here if:
