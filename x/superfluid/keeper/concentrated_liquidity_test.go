@@ -135,7 +135,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			if !tc.isLastPositionInPool {
 				fundCoins := sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), sdk.NewInt(100000000)), sdk.NewCoin(clPool.GetToken1(), sdk.NewInt(100000000)))
 				s.FundAcc(nonOwner, fundCoins)
-				_, _, _, _, _, err := concentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPool.GetId(), nonOwner, fundCoins)
+				_, _, _, _, err := concentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPool.GetId(), nonOwner, fundCoins)
 				s.Require().NoError(err)
 			}
 
@@ -155,9 +155,16 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			}
 			s.Require().NoError(err)
 
-			// Define error tolerance
+			// We allow for an downward additive tolerance of 101 to accommodate our single happy path case while efficiently checking exact balance diffs.
+			//
+			// Using our full range asset amount equations, we get the following:
+			//
+			// expectedAsset0 = floor((liquidityDelta * (maxSqrtPrice - curSqrtPrice)) / (maxSqrtPrice * curSqrtPrice)) = 99999998.000000000000000000
+			// expectedAsset1 = floor(liquidityDelta * (curSqrtPrice - minSqrtPrice)) =  99999899.000000000000000000
+			//
+			// Note that the expected difference valid additive difference of 101 on asset 1.
 			var errTolerance osmomath.ErrTolerance
-			errTolerance.AdditiveTolerance = sdk.NewDec(1)
+			errTolerance.AdditiveTolerance = sdk.NewDec(101)
 			errTolerance.RoundingDir = osmomath.RoundDown
 
 			postAddToPositionStakeSupply := bankKeeper.GetSupply(ctx, bondDenom)
@@ -256,7 +263,7 @@ func (s *KeeperTestSuite) SetupSuperfluidConcentratedPosition(ctx sdk.Context, s
 	unbondingDuration := stakingKeeper.GetParams(ctx).UnbondingTime
 
 	// Create a full range position in the concentrated liquidity pool.
-	positionId, amount0, amount1, _, _, lockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPoolId, poolJoinAcc, fullRangeCoins, unbondingDuration)
+	positionId, amount0, amount1, _, lockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPoolId, poolJoinAcc, fullRangeCoins, unbondingDuration)
 	s.Require().NoError(err)
 
 	// Register the CL full range LP tokens as a superfluid asset.

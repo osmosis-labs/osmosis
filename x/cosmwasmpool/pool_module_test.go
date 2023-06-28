@@ -15,8 +15,12 @@ import (
 )
 
 const (
-	denomA = apptesting.DefaultTransmuterDenomA
-	denomB = apptesting.DefaultTransmuterDenomB
+	denomA        = apptesting.DefaultTransmuterDenomA
+	denomB        = apptesting.DefaultTransmuterDenomB
+	validCodeId   = uint64(1)
+	invalidCodeId        = validCodeId + 1
+	defaultPoolId = uint64(1)
+	nonZeroFeeStr = "0.01"
 )
 
 type PoolModuleSuite struct {
@@ -24,10 +28,8 @@ type PoolModuleSuite struct {
 }
 
 var (
-	defaultPoolId       = uint64(1)
 	defaultAmount       = sdk.NewInt(100)
 	initalDefaultSupply = sdk.NewCoins(sdk.NewCoin(denomA, defaultAmount), sdk.NewCoin(denomB, defaultAmount))
-	nonZeroFeeStr       = "0.01"
 
 	defaultDenoms = []string{denomA, denomB}
 )
@@ -36,34 +38,36 @@ func TestPoolModuleSuite(t *testing.T) {
 	suite.Run(t, new(PoolModuleSuite))
 }
 
-func (suite *PoolModuleSuite) SetupTest() {
-	suite.Setup()
-}
-
 func (s *PoolModuleSuite) TestInitializePool() {
-	var (
-		validCodeId          = uint64(1)
-		invalidCodeId        = validCodeId + 1
-		validInstantitateMsg = s.GetTransmuterInstantiateMsgBytes(defaultDenoms)
-	)
+	validInstantitateMsg := s.GetTransmuterInstantiateMsgBytes(defaultDenoms)
 
 	tests := map[string]struct {
 		codeid            uint64
 		instantiateMsg    []byte
 		isInvalidPoolType bool
+		isWhitelisted     bool
 		expectError       bool
 	}{
-		"valid pool": {
+		"valid pool, whitelisted": {
 			codeid:         validCodeId,
 			instantiateMsg: validInstantitateMsg,
+			isWhitelisted:  true,
+		},
+		"valid pool, not whitelisted": {
+			codeid:         validCodeId,
+			instantiateMsg: validInstantitateMsg,
+			isWhitelisted:  false,
+			expectError:    true,
 		},
 		"error: invalid code id": {
 			codeid:         invalidCodeId,
 			instantiateMsg: validInstantitateMsg,
+			isWhitelisted:  true,
 			expectError:    true,
 		},
 		"invalid pool type": {
 			isInvalidPoolType: true,
+			isWhitelisted:     true,
 			expectError:       true,
 		},
 	}
@@ -71,7 +75,7 @@ func (s *PoolModuleSuite) TestInitializePool() {
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-			s.SetupTest()
+			s.Setup()
 			cosmwasmPoolKeeper := s.App.CosmwasmPoolKeeper
 
 			s.StoreCosmWasmPoolContractCode(apptesting.TransmuterContractName)
@@ -83,6 +87,10 @@ func (s *PoolModuleSuite) TestInitializePool() {
 				testPool = s.PrepareConcentratedPool()
 			}
 
+			if tc.isWhitelisted {
+				s.App.CosmwasmPoolKeeper.WhitelistCodeId(s.Ctx, tc.codeid)
+			}
+
 			err := cosmwasmPoolKeeper.InitializePool(s.Ctx, testPool, s.TestAccs[0])
 
 			if tc.expectError {
@@ -91,7 +99,7 @@ func (s *PoolModuleSuite) TestInitializePool() {
 			}
 			s.Require().NoError(err)
 
-			pool, err := cosmwasmPoolKeeper.GetPool(s.Ctx, defaultPoolId)
+			pool, err := cosmwasmPoolKeeper.GetPoolById(s.Ctx, defaultPoolId)
 			s.Require().NoError(err)
 
 			cosmWasmPool, ok := pool.(*model.Pool)
@@ -137,7 +145,7 @@ func (s *PoolModuleSuite) TestGetPoolDenoms() {
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-			s.SetupTest()
+			s.Setup()
 			cosmwasmPoolKeeper := s.App.CosmwasmPoolKeeper
 
 			s.PrepareCosmWasmPool()
@@ -209,13 +217,11 @@ func (s *PoolModuleSuite) TestCalcOutAmtGivenIn_SwapOutAmtGivenIn() {
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-			s.SetupTest()
+			s.Setup()
 
 			cosmwasmPoolKeeper := s.App.CosmwasmPoolKeeper
 
-			// fund pool joiner
 			s.FundAcc(s.TestAccs[0], tc.initialCoins)
-
 			// get initial denom from coins specified in the test case
 			initialDenoms := []string{}
 			for _, coin := range tc.initialCoins {
@@ -334,7 +340,7 @@ func (s *PoolModuleSuite) TestCalcInAmtGivenOut_SwapInAmtGivenOut() {
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-			s.SetupTest()
+			s.Setup()
 
 			cosmwasmPoolKeeper := s.App.CosmwasmPoolKeeper
 
@@ -435,7 +441,7 @@ func (s *PoolModuleSuite) TestGetTotalPoolLiquidity() {
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-			s.SetupTest()
+			s.Setup()
 
 			cosmwasmPoolKeeper := s.App.CosmwasmPoolKeeper
 

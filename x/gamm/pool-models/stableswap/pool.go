@@ -484,3 +484,7 @@ func applyScalingFactorMultiplier(scalingFactors []uint64) ([]uint64, error) {
 
 	return newScalingFactors, nil
 }
+
+func (p *Pool) AsSerializablePool() poolmanagertypes.PoolI {
+	return p
+}

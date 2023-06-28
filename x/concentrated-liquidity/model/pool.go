@@ -226,10 +226,6 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 		return sdk.Dec{}, sdk.Dec{}, types.ErrZeroLiquidity
 	}
 
-	if lowerTick >= upperTick {
-		return sdk.Dec{}, sdk.Dec{}, types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
-	}
-
 	// Transform the provided ticks into their corresponding sqrtPrices.
 	_, _, sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
 	if err != nil {
@@ -287,10 +283,10 @@ func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick int64, newCurrentS
 	}
 
 	// Check if the new tick provided is within boundaries of the pool's precision factor.
-	if newCurrentTick < types.MinTick || newCurrentTick > types.MaxTick {
+	if newCurrentTick < types.MinCurrentTick || newCurrentTick > types.MaxTick {
 		return types.TickIndexNotWithinBoundariesError{
 			MaxTick:    types.MaxTick,
-			MinTick:    types.MinTick,
+			MinTick:    types.MinCurrentTick,
 			ActualTick: newCurrentTick,
 		}
 	}
@@ -300,4 +296,8 @@ func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick int64, newCurrentS
 	p.CurrentSqrtPrice = newCurrentSqrtPrice
 
 	return nil
+}
+
+func (p *Pool) AsSerializablePool() poolmanagertypes.PoolI {
+	return p
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -610,7 +611,7 @@ func ParseCoinsNoSort(coinsStr string) (sdk.Coins, error) {
 	return sdk.NormalizeCoins(decCoins), nil
 }
 
-func parseMigrationRecords(fs *flag.FlagSet) ([]types.BalancerToConcentratedPoolLink, error) {
+func parseMigrationRecords(fs *flag.FlagSet) ([]gammmigration.BalancerToConcentratedPoolLink, error) {
 	assetsStr, err := fs.GetString(FlagMigrationRecords)
 	if err != nil {
 		return nil, err
@@ -622,7 +623,7 @@ func parseMigrationRecords(fs *flag.FlagSet) ([]types.BalancerToConcentratedPool
 		return nil, errors.New("migration records should be a list of balancer pool id and concentrated pool id pairs")
 	}
 
-	replaceMigrations := []types.BalancerToConcentratedPoolLink{}
+	replaceMigrations := []gammmigration.BalancerToConcentratedPoolLink{}
 	i := 0
 	for i < len(assets) {
 		balancerPoolId, err := strconv.Atoi(assets[i])
@@ -634,7 +635,7 @@ func parseMigrationRecords(fs *flag.FlagSet) ([]types.BalancerToConcentratedPool
 			return nil, err
 		}
 
-		replaceMigrations = append(replaceMigrations, types.BalancerToConcentratedPoolLink{
+		replaceMigrations = append(replaceMigrations, gammmigration.BalancerToConcentratedPoolLink{
 			BalancerPoolId: uint64(balancerPoolId),
 			ClPoolId:       uint64(clPoolId),
 		})

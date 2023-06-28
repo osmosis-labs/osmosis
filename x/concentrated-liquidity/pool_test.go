@@ -464,11 +464,11 @@ func (s *KeeperTestSuite) TestDecreaseConcentratedPoolTickSpacing() {
 			concentratedPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(ETH, USDC)
 
 			// Create a position in the pool that is divisible by the tick spacing
-			_, _, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), -100, 100)
+			_, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), -100, 100)
 			s.Require().NoError(err)
 
 			// Attempt to create a position that is not divisible by the tick spacing
-			_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), test.position.lowerTick, test.position.upperTick)
+			_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), test.position.lowerTick, test.position.upperTick)
 			s.Require().Error(err)
 
 			// Alter the tick spacing of the pool
@@ -481,7 +481,7 @@ func (s *KeeperTestSuite) TestDecreaseConcentratedPoolTickSpacing() {
 			s.Require().NoError(err)
 
 			// Attempt to create a position that was previously not divisible by the tick spacing but now is
-			_, _, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), test.position.lowerTick, test.position.upperTick)
+			_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), test.position.lowerTick, test.position.upperTick)
 			if test.expectedCreatePositionErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, test.expectedCreatePositionErr.Error())
@@ -564,6 +564,49 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedResult, actual)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestValidateTickSpacingUpdate() {
+	tests := []struct {
+		name                     string
+		newTickSpacing           uint64
+		expectedValidationResult bool
+	}{
+		{
+			name:                     "happy case: reduce tick spacing to smaller tick",
+			newTickSpacing:           1,
+			expectedValidationResult: true,
+		},
+		{
+			name:                     "validation fail: try reducing unauthorized tick spacing",
+			newTickSpacing:           3,
+			expectedValidationResult: false,
+		},
+		{
+			name:                     "validation fail: try increasing tick spacing",
+			newTickSpacing:           500,
+			expectedValidationResult: false,
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			// Create default CL pool
+			// default pool tick spacing is 100.
+			pool := s.PrepareConcentratedPool()
+
+			params := types.DefaultParams()
+			validationResult := s.App.ConcentratedLiquidityKeeper.ValidateTickSpacingUpdate(s.Ctx, pool, params, tc.newTickSpacing)
+			if tc.expectedValidationResult {
+				s.Require().True(validationResult)
+			} else {
+				s.Require().False(validationResult)
+			}
 		})
 	}
 }

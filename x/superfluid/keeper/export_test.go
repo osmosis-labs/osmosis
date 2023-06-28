@@ -22,15 +22,15 @@ func (k Keeper) PrepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptyp
 	return k.prepareConcentratedLockForSlash(ctx, lock, slashAmt)
 }
 
-func (k Keeper) MigrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin, synthDenomBeforeMigration string, tokenOutMins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, concentratedLockId, poolIdLeaving, poolIdEntering uint64, err error) {
+func (k Keeper) MigrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin, synthDenomBeforeMigration string, tokenOutMins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, concentratedLockId, poolIdLeaving, poolIdEntering uint64, err error) {
 	return k.migrateSuperfluidBondedBalancerToConcentrated(ctx, sender, lockId, sharesToMigrate, synthDenomBeforeMigration, tokenOutMins)
 }
 
-func (k Keeper) MigrateSuperfluidUnbondingBalancerToConcentrated(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin, synthDenomBeforeMigration string, tokenOutMins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, concentratedLockId, poolIdLeaving, poolIdEntering uint64, err error) {
+func (k Keeper) MigrateSuperfluidUnbondingBalancerToConcentrated(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin, synthDenomBeforeMigration string, tokenOutMins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, concentratedLockId, poolIdLeaving, poolIdEntering uint64, err error) {
 	return k.migrateSuperfluidUnbondingBalancerToConcentrated(ctx, sender, lockId, sharesToMigrate, synthDenomBeforeMigration, tokenOutMins)
 }
 
-func (k Keeper) MigrateNonSuperfluidLockBalancerToConcentrated(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin, tokenOutMins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, concentratedLockId, poolIdLeaving, poolIdEntering uint64, err error) {
+func (k Keeper) MigrateNonSuperfluidLockBalancerToConcentrated(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin, tokenOutMins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, concentratedLockId, poolIdLeaving, poolIdEntering uint64, err error) {
 	return k.migrateNonSuperfluidLockBalancerToConcentrated(ctx, sender, lockId, sharesToMigrate, tokenOutMins)
 }
 
@@ -60,4 +60,8 @@ func (k Keeper) GetExistingLockRemainingDuration(ctx sdk.Context, lock *lockupty
 
 func (k Keeper) PartialSuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, sender string, lockID uint64, amountToUndelegate sdk.Coin) (intermediaryAcc types.SuperfluidIntermediaryAccount, newlock *lockuptypes.PeriodLock, err error) {
 	return k.partialSuperfluidUndelegateToConcentratedPosition(ctx, sender, lockID, amountToUndelegate)
+}
+
+func (k Keeper) DistributeSuperfluidGauges(ctx sdk.Context) {
+	k.distributeSuperfluidGauges(ctx)
 }

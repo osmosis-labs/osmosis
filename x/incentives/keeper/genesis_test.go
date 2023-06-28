@@ -44,7 +44,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 
 	// create a gauge that distributes coins to earlier created LP token and duration
 	startTime := time.Now()
-	gaugeID, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, startTime, 1)
+	gaugeID, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, startTime, 1, 0)
 	require.NoError(t, err)
 
 	// export genesis using default configurations

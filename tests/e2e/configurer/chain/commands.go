@@ -391,6 +391,14 @@ func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress 
 	n.LogActionF("successfully sent bank sent %s from address %s to %s", amount, sendAddress, receiveAddress)
 }
 
+func (n *NodeConfig) FundCommunityPool(sendAddress string, funds string) {
+	n.LogActionF("funding community pool from address %s with %s", sendAddress, funds)
+	cmd := []string{"osmosisd", "tx", "distribution", "fund-community-pool", funds, fmt.Sprintf("--from=%s", sendAddress)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully funded community pool from address %s with %s", sendAddress, funds)
+}
+
 // This method also funds fee tokens from the `initialization.ValidatorWalletName` account.
 // TODO: Abstract this to be a fee token provider account.
 func (n *NodeConfig) CreateWallet(walletName string) string {

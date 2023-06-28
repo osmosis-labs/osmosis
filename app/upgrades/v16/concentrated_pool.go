@@ -7,7 +7,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/app/keepers"
 	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	gammkeeper "github.com/osmosis-labs/osmosis/v16/x/gamm/keeper"
-	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 	"github.com/osmosis-labs/osmosis/v16/x/poolmanager"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
@@ -70,8 +70,8 @@ func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, c
 
 	// Set the migration link in x/gamm.
 	// This will also migrate the CFMM distribution records to point to the new CL pool.
-	err = keepers.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, gammtypes.MigrationRecords{
-		BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
+	err = keepers.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, gammmigration.MigrationRecords{
+		BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 			{
 				BalancerPoolId: cfmmPoolId,
 				ClPoolId:       concentratedPool.GetId(),

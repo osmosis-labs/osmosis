@@ -23,3 +23,24 @@ func (q Querier) Params(ctx sdk.Context,
 	params := q.K.GetParams(ctx)
 	return &queryproto.ParamsResponse{Params: params}, nil
 }
+
+func (q Querier) Pools(ctx sdk.Context,
+	req queryproto.PoolsRequest,
+) (*queryproto.PoolsResponse, error) {
+	pools, pageResponse, err := q.K.GetSerializedPools(ctx, req.Pagination)
+	if err != nil {
+		return nil, err
+	}
+	return &queryproto.PoolsResponse{Pools: pools, Pagination: pageResponse}, nil
+}
+
+func (q Querier) ContractInfoByPoolId(ctx sdk.Context,
+	req queryproto.ContractInfoByPoolIdRequest,
+) (*queryproto.ContractInfoByPoolIdResponse, error) {
+	pool, err := q.K.GetPoolById(ctx, req.PoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &queryproto.ContractInfoByPoolIdResponse{ContractAddress: pool.GetContractAddress()}, nil
+}

@@ -95,6 +95,8 @@ func (k Keeper) distributeSuperfluidGauges(ctx sdk.Context) {
 	// only distribute to active gauges that are for perpetual synthetic denoms
 	distrGauges := []incentivestypes.Gauge{}
 	for _, gauge := range gauges {
+		// we filter superfluid gauges by using the distributeTo denom in the gauge.
+		// If the denom in the gauge is a synthetic denom, we append the gauge to the gauge list to distribute to.
 		isSynthetic := lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom)
 		if isSynthetic && gauge.IsPerpetual {
 			distrGauges = append(distrGauges, gauge)
@@ -153,7 +155,7 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		}
 
 		position := model.Position{
-			LowerTick: cltypes.MinTick,
+			LowerTick: cltypes.MinInitializedTick,
 			UpperTick: cltypes.MaxTick,
 			Liquidity: fullRangeLiquidity,
 		}

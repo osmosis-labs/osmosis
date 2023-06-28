@@ -3,6 +3,7 @@ package osmosis.gamm.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "osmosis/gamm/v1beta1/genesis.proto";
+import "osmosis/gamm/v1beta1/shared.proto";
 import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
 

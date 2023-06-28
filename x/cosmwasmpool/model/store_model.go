@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
@@ -27,7 +26,7 @@ func (p CosmWasmPool) String() string {
 // poolmanager.PoolI interface implementation
 
 func (p CosmWasmPool) GetAddress() sdk.AccAddress {
-	panic("CosmWasmPool.GetAddress not implemented")
+	return sdk.MustAccAddressFromBech32(p.ContractAddress)
 }
 
 func (p CosmWasmPool) GetId() uint64 {
@@ -51,7 +50,7 @@ func (p CosmWasmPool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAss
 }
 
 func (p CosmWasmPool) GetType() poolmanagertypes.PoolType {
-	panic("CosmWasmPool.GetType not implemented")
+	return poolmanagertypes.CosmWasm
 }
 
 func (p CosmWasmPool) GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins {
@@ -61,23 +60,23 @@ func (p CosmWasmPool) GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins {
 // types.CosmWasmExtension interface implementation
 
 func (p CosmWasmPool) GetCodeId() uint64 {
-	panic("CosmWasmPool.GetType not implemented")
+	return p.CodeId
 }
 
 func (p CosmWasmPool) GetInstantiateMsg() []byte {
-	panic("CosmWasmPool.GetInstantiateMsg not implemented")
+	return p.InstantiateMsg
 }
 
 func (p CosmWasmPool) GetContractAddress() string {
-	panic("CosmWasmPool.GetContractAddress not implemented")
+	return p.ContractAddress
 }
 
-func (p CosmWasmPool) SetContractAddress(contractAddress string) {
-	panic("CosmWasmPool.SetContractAddress not implemented")
+func (p *CosmWasmPool) SetContractAddress(contractAddress string) {
+	p.ContractAddress = contractAddress
 }
 
-func (p CosmWasmPool) GetStoreModel() proto.Message {
-	panic("CosmWasmPool.GetStoreModel not implemented")
+func (p CosmWasmPool) GetStoreModel() poolmanagertypes.PoolI {
+	return &p
 }
 
 func (p CosmWasmPool) SetWasmKeeper(wasmKeeper types.WasmKeeper) {

@@ -98,6 +98,16 @@ service Query {
     option (google.api.http).get =
         "/osmosis/concentratedliquidity/v1beta1/tick_accum_trackers";
   };
+
+  // CFMMPoolIdLinkFromConcentratedPoolId returns the pool id of the CFMM
+  // pool that is linked with the given concentrated pool.
+  rpc CFMMPoolIdLinkFromConcentratedPoolId(
+      CFMMPoolIdLinkFromConcentratedPoolIdRequest)
+      returns (CFMMPoolIdLinkFromConcentratedPoolIdResponse) {
+    option (google.api.http).get = "/osmosis/concentratedliquidity/v1beta1/"
+                                   "cfmm_pool_id_link_from_concentrated/"
+                                   "{concentrated_pool_id}";
+  }
 }
 
 //=============================== UserPositions
@@ -259,4 +269,14 @@ message IncentiveRecordsResponse {
       [ (gogoproto.nullable) = false ];
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+//=============================== CFMMPoolIdLinkFromConcentratedPoolId
+message CFMMPoolIdLinkFromConcentratedPoolIdRequest {
+  uint64 concentrated_pool_id = 1
+      [ (gogoproto.moretags) = "yaml:\"concentrated_pool_id\"" ];
+}
+
+message CFMMPoolIdLinkFromConcentratedPoolIdResponse {
+  uint64 cfmm_pool_id = 1 [ (gogoproto.moretags) = "yaml:\"cfmm_pool_id\"" ];
 }

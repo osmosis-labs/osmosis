@@ -8,7 +8,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
 
 	errorsmod "cosmossdk.io/errors"
-	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 )
 
@@ -65,30 +64,29 @@ func CWCoinFromSDKCoin(in sdk.Coin) wasmvmtypes.Coin {
 
 // Hooks wrapper struct for bank keeper
 type Hooks struct {
-	k          Keeper
-	wasmkeeper wasmKeeper.Keeper
+	k Keeper
 }
 
 var _ types.BankHooks = Hooks{}
 
 // Return the wrapper struct
-func (k Keeper) Hooks(wasmkeeper wasmKeeper.Keeper) Hooks {
-	return Hooks{k, wasmkeeper}
+func (k Keeper) Hooks() Hooks {
+	return Hooks{k}
 }
 
 // TrackBeforeSend calls the before send listener contract surpresses any errors
 func (h Hooks) TrackBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) {
-	_ = h.k.callBeforeSendListener(ctx, h.wasmkeeper, from, to, amount, false)
+	_ = h.k.callBeforeSendListener(ctx, from, to, amount, false)
 }
 
 // TrackBeforeSend calls the before send listener contract returns any errors
 func (h Hooks) BlockBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) error {
-	return h.k.callBeforeSendListener(ctx, h.wasmkeeper, from, to, amount, true)
+	return h.k.callBeforeSendListener(ctx, from, to, amount, true)
 }
 
 // callBeforeSendListener iterates over each coin and sends corresponding sudo msg to the contract address stored in state.
 // If blockBeforeSend is true, sudoMsg wraps BlockBeforeSendMsg, otherwise sudoMsg wraps TrackBeforeSendMsg.
-func (k Keeper) callBeforeSendListener(ctx sdk.Context, wasmKeeper wasmKeeper.Keeper, from, to sdk.AccAddress, amount sdk.Coins, blockBeforeSend bool) error {
+func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins, blockBeforeSend bool) error {
 	for _, coin := range amount {
 		cosmwasmAddress := k.GetBeforeSendHook(ctx, coin.Denom)
 		if cosmwasmAddress != "" {
@@ -125,7 +123,7 @@ func (k Keeper) callBeforeSendListener(ctx sdk.Context, wasmKeeper wasmKeeper.Ke
 
 			em := sdk.NewEventManager()
 
-			_, err = wasmKeeper.Sudo(ctx.WithEventManager(em), cwAddr, msgBz)
+			_, err = k.contractKeeper.Sudo(ctx.WithEventManager(em), cwAddr, msgBz)
 			if err != nil {
 				return errorsmod.Wrapf(err, "failed to call before send hook for denom %s", coin.Denom)
 			}

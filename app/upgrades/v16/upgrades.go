@@ -1,6 +1,7 @@
 package v16
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,6 +15,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v16/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
@@ -84,6 +86,12 @@ func CreateUpgradeHandler(
 		params.ExpeditedQuorum = sdk.NewDec(2).Quo(sdk.NewDec(3))
 		keepers.GovKeeper.SetTallyParams(ctx, params)
 
+		// Add cosmwasmpool module address to the list of allowed addresses to upload contract code.
+		cwPoolModuleAddress := keepers.AccountKeeper.GetModuleAddress(cosmwasmpooltypes.ModuleName)
+		wasmParams := keepers.WasmKeeper.GetParams(ctx)
+		wasmParams.CodeUploadAccess.Addresses = append(wasmParams.CodeUploadAccess.Addresses, cwPoolModuleAddress.String())
+		keepers.WasmKeeper.SetParams(ctx, wasmParams)
+
 		// Add both MsgExecuteContract and MsgInstantiateContract to the list of allowed messages.
 		hostParams := keepers.ICAHostKeeper.GetParams(ctx)
 		msgExecuteContractExists := false
@@ -127,24 +135,38 @@ func CreateUpgradeHandler(
 
 		// Get community pool and DAI/OSMO pool address.
 		communityPoolAddress := keepers.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
-		daiOsmoPool, err := keepers.PoolManagerKeeper.GetPool(ctx, DaiOsmoPoolId)
+
+		// Determine the amount of OSMO that can be bought with 1 DAI.
+		oneDai := sdk.NewCoin(DAIIBCDenom, sdk.NewInt(1000000000000000000))
+		daiOsmoGammPool, err := keepers.PoolManagerKeeper.GetPool(ctx, DaiOsmoPoolId)
 		if err != nil {
 			return nil, err
 		}
-
-		// Swap one DAI for OSMO from the community pool.
-		oneDai := sdk.NewCoin(DAIIBCDenom, sdk.NewInt(1000000))
-		tokenInAmt, err := keepers.GAMMKeeper.SwapExactAmountOut(ctx, communityPoolAddress, daiOsmoPool, DesiredDenom0, sdk.NewInt(10000000), oneDai, sdk.ZeroDec())
+		respectiveOsmo, err := keepers.GAMMKeeper.CalcOutAmtGivenIn(ctx, daiOsmoGammPool, oneDai, DesiredDenom0, sdk.ZeroDec())
 		if err != nil {
 			return nil, err
 		}
 
 		// Create a full range position via the community pool with the funds that were swapped.
-		fullRangeOsmoDaiCoins := sdk.NewCoins(sdk.NewCoin(DesiredDenom0, tokenInAmt), oneDai)
-		_, _, _, _, _, err = keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeOsmoDaiCoins)
+		fullRangeOsmoDaiCoins := sdk.NewCoins(respectiveOsmo, oneDai)
+		_, actualOsmoAmtUsed, actualDaiAmtUsed, _, err := keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeOsmoDaiCoins)
 		if err != nil {
 			return nil, err
 		}
+
+		// Because we are doing a direct send from the community pool, we need to manually change the fee pool to reflect the change.
+
+		// Remove coins we used from the community pool to make the CL position
+		feePool := keepers.DistrKeeper.GetFeePool(ctx)
+		fulllRangeOsmoDaiCoinsUsed := sdk.NewCoins(sdk.NewCoin(DesiredDenom0, actualOsmoAmtUsed), sdk.NewCoin(DAIIBCDenom, actualDaiAmtUsed))
+		newPool, negative := feePool.CommunityPool.SafeSub(sdk.NewDecCoinsFromCoins(fulllRangeOsmoDaiCoinsUsed...))
+		if negative {
+			return nil, fmt.Errorf("community pool cannot be negative: %s", newPool)
+		}
+
+		// Update and set the new fee pool
+		feePool.CommunityPool = newPool
+		keepers.DistrKeeper.SetFeePool(ctx, feePool)
 
 		// Add the cl pool's full range denom as an authorized superfluid asset.
 		superfluidAsset := superfluidtypes.SuperfluidAsset{
