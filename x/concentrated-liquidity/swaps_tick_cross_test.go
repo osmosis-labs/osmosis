@@ -1081,7 +1081,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 		poolId, _ := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
 
 		// Fetch pool
-		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+		_, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 		s.Require().NoError(err)
 
 		// Compute tokenIn amount necessary to reach the min tick.
@@ -1099,7 +1099,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 		s.assertPositionOutOfRange(poolId, types.MinInitializedTick, types.MaxTick)
 
 		// Refetch pool
-		pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 		s.Require().NoError(err)
 
 		// Validate cannot swap left again
@@ -1121,7 +1121,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 		poolId, _ := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
 
 		// Fetch pool
-		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+		_, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 		s.Require().NoError(err)
 
 		// Compute tokenIn amount necessary to reach the max tick.
@@ -1142,7 +1142,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 		s.assertPositionOutOfRange(poolId, types.MinInitializedTick, types.MaxTick)
 
 		// Refetch pool
-		pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 		s.Require().NoError(err)
 
 		// Validate cannot swap right again

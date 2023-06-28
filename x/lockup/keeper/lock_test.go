@@ -238,7 +238,6 @@ func (s *KeeperTestSuite) TestUnlock() {
 		ctx := s.Ctx
 
 		addr1 := sdk.AccAddress([]byte("addr1---------------"))
-		lock := types.NewPeriodLock(1, addr1, addr1.String(), time.Second, time.Time{}, tc.fundAcc)
 
 		// lock with balance
 		s.FundAcc(addr1, tc.fundAcc)
@@ -978,6 +977,7 @@ func (s *KeeperTestSuite) TestSplitLock() {
 
 		// now check if the old lock has correctly updated state
 		updatedOriginalLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
+		s.Require().NoError(err)
 		s.Require().Equal(updatedOriginalLock.ID, lock.ID)
 		s.Require().Equal(updatedOriginalLock.Owner, lock.Owner)
 		s.Require().Equal(updatedOriginalLock.Duration, lock.Duration)

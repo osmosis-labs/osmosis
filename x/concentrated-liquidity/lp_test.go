@@ -529,7 +529,6 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			var (
 				concentratedLiquidityKeeper = s.App.ConcentratedLiquidityKeeper
-				liquidityCreated            = sdk.ZeroDec()
 				owner                       = s.TestAccs[0]
 				config                      = *tc.setupConfig
 				err                         error
@@ -543,7 +542,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			fundCoins := config.tokensProvided
 			s.FundAcc(owner, fundCoins)
 
-			_, liquidityCreated = s.createPositionWithLockState(tc.createLockState, pool.GetId(), owner, fundCoins, tc.timeElapsed)
+			_, liquidityCreated := s.createPositionWithLockState(tc.createLockState, pool.GetId(), owner, fundCoins, tc.timeElapsed)
 
 			// Set mock listener to make sure that is is called when desired.
 			// It must be set after test position creation so that we do not record the call

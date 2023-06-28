@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/v16/x/lockup/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -144,7 +143,7 @@ func (s *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 	s.Require().Equal(expectedSynthLock, actualSynthLock)
 
 	allSynthLocks := s.App.LockupKeeper.GetAllSyntheticLockups(s.Ctx)
-	s.Require().Equal([]lockuptypes.SyntheticLock{expectedSynthLock}, allSynthLocks)
+	s.Require().Equal([]types.SyntheticLock{expectedSynthLock}, allSynthLocks)
 
 	// check accumulation store is correctly updated for synthetic lockup
 	accum = s.App.LockupKeeper.GetPeriodLocksAccumulation(s.Ctx, types.QueryCondition{

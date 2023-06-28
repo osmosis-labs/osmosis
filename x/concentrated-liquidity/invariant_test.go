@@ -30,6 +30,7 @@ func (s *KeeperTestSuite) assertGlobalInvariants(expectedGlobalRewardValues Expe
 func (s *KeeperTestSuite) getAllPositionsAndPoolBalances(ctx sdk.Context) ([]model.Position, sdk.Coins, sdk.Coins, sdk.Coins) {
 	// Get total spread rewards distributed to all pools
 	allPools, err := s.clk.GetPools(ctx)
+	s.Require().NoError(err)
 	totalPoolAssets, totalSpreadRewards, totalIncentives := sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins()
 
 	// Sum up pool balances across all pools

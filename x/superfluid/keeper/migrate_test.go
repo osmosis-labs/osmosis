@@ -1385,8 +1385,6 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 		totalSentBackToOwnersAmount1 := sdk.ZeroInt()
 		totalBalancerPoolFundsLeftBehindAmount0 := sdk.ZeroInt()
 		totalBalancerPoolFundsLeftBehindAmount1 := sdk.ZeroInt()
-		amount0AccountFor := sdk.ZeroInt()
-		amount1AccountFor := sdk.ZeroInt()
 
 		// Migrate all the positions.
 		// We will check certain invariants after each individual migration.
@@ -1434,8 +1432,8 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 		}
 
 		// Check that we have account for all the funds that were used to create the positions.
-		amount0AccountFor = totalAmount0Migrated.Add(totalSentBackToOwnersAmount0).Add(totalBalancerPoolFundsLeftBehindAmount0).Add(unusedPositionCreationFunds.AmountOf(DefaultCoin0.Denom))
-		amount1AccountFor = totalAmount1Migrated.Add(totalSentBackToOwnersAmount1).Add(totalBalancerPoolFundsLeftBehindAmount1).Add(unusedPositionCreationFunds.AmountOf(DefaultCoin1.Denom))
+		amount0AccountFor := totalAmount0Migrated.Add(totalSentBackToOwnersAmount0).Add(totalBalancerPoolFundsLeftBehindAmount0).Add(unusedPositionCreationFunds.AmountOf(DefaultCoin0.Denom))
+		amount1AccountFor := totalAmount1Migrated.Add(totalSentBackToOwnersAmount1).Add(totalBalancerPoolFundsLeftBehindAmount1).Add(unusedPositionCreationFunds.AmountOf(DefaultCoin1.Denom))
 		s.Require().Equal(totalFundsForPositionCreation.AmountOf(DefaultCoin0.Denom), amount0AccountFor)
 		s.Require().Equal(totalFundsForPositionCreation.AmountOf(DefaultCoin1.Denom), amount1AccountFor)
 	}

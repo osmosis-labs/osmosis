@@ -1529,6 +1529,7 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 	fungifiedMiddle, err := s.clk.FungifyChargedPosition(s.Ctx, middleAddress, middlePositionIds)
 	s.Require().NoError(err)
 	fungifiedRight, err := s.clk.FungifyChargedPosition(s.Ctx, rightAddress, []uint64{rightOne, rightTwo})
+	s.Require().NoError(err)
 
 	// --- Spread reward assertions on fungified positions ---
 

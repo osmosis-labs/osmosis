@@ -3631,6 +3631,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 
 					// Also validate uptime accumulators passed in as parameter.
 					currAccumShares, err = uptimeAccums[uptimeIdx].GetTotalShares()
+					s.Require().NoError(err)
 					s.Require().Equal(expectedShares, currAccumShares)
 				}
 
@@ -3952,6 +3953,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 
 						// Also validate uptime accumulators passed in as parameter.
 						currAccumShares, err = uptimeAccums[uptimeIdx].GetTotalShares()
+						s.Require().NoError(err)
 						s.Require().Equal(expectedLiquidity, currAccumShares)
 					}
 

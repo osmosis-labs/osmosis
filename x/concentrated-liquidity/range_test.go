@@ -170,7 +170,7 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 
 	fmt.Println("cumulative emitted incentives: ", cumulativeEmittedIncentives)
 	// Do a final checkpoint for incentives and then run assertions on expected global claimable value
-	cumulativeEmittedIncentives, lastIncentiveTrackerUpdate = s.trackEmittedIncentives(cumulativeEmittedIncentives, lastIncentiveTrackerUpdate)
+	cumulativeEmittedIncentives, _ = s.trackEmittedIncentives(cumulativeEmittedIncentives, lastIncentiveTrackerUpdate)
 	truncatedEmissions, _ := cumulativeEmittedIncentives.TruncateDecimal()
 
 	// Run global assertions with an optional parameter specifying the expected incentive amount claimable by all positions.
