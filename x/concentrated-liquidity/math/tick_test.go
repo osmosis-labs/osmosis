@@ -24,20 +24,6 @@ var (
 	closestTickAboveMinPriceDefaultTickSpacing = sdk.NewInt(types.MinInitializedTick).Add(sdk.NewInt(10).ToDec().Power(uint64(types.ExponentAtPriceOne * -1)).TruncateInt())
 )
 
-// CalculatePriceToTick takes in a price and returns the corresponding tick index.
-// This function does not take into consideration tick spacing.
-// NOTE: This is really returning a "Bucket index". Bucket index `b` corresponds to
-// all prices in range [TickToSqrtPrice(b), TickToSqrtPrice(b+1)).
-// We make an erroneous assumption here, that bucket index `b` corresponds to
-// all prices in range [TickToPrice(b), TickToPrice(b+1)).
-// This currently makes this function unsuitable for the state machine.
-func TestingErrCalculatePriceToTick(price sdk.Dec) (tickIndex int64) {
-	// TODO: Make truncate, since this defines buckets as
-	// [TickToPrice(b - .5), TickToPrice(b+.5))
-	v, _ := math.CalculatePriceToTickDec(price)
-	return v.RoundInt64()
-}
-
 // testing helper for price to tick, state machine only implements sqrt price to tick.
 func PriceToTick(price sdk.Dec) (int64, error) {
 	tickDec, err := math.CalculatePriceToTickDec(price)
@@ -735,9 +721,9 @@ func TestCalculatePriceToTick(t *testing.T) {
 			price:             sdk.NewDec(100_000_050),
 			expectedTickIndex: 72000000,
 		},
-		"100_000_051 -> 72000001": {
+		"100_000_051 -> 72000000": {
 			price:             sdk.NewDec(100_000_051),
-			expectedTickIndex: 72000001,
+			expectedTickIndex: 72000000,
 		},
 		"100_000_100 -> 72000001": {
 			price:             sdk.NewDec(100_000_100),
@@ -746,8 +732,9 @@ func TestCalculatePriceToTick(t *testing.T) {
 	}
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			tickIndex := TestingErrCalculatePriceToTick(tc.price)
+			tickIndex, err := PriceToTick(tc.price)
 			require.Equal(t, tc.expectedTickIndex, tickIndex)
+			require.NoError(t, err)
 		})
 	}
 }
