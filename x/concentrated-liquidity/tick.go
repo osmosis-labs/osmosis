@@ -392,6 +392,12 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	prefixBz := types.KeyTickPrefixByPoolId(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
 
+	// Walk start tick and update start tick liquidity
+	startTickLiquidity, err = k.seekStartTickLiquidity(ctx, poolId, prefixStore, zeroForOne, startTick, p.GetCurrentTick(), p.GetLiquidity())
+	if err != nil {
+		return []queryproto.TickLiquidityNet{}, 0, sdk.Dec{}, err
+	}
+
 	// If zero for one, we use reverse iterator. As a result, we need to increment the start tick by 1
 	// so that we include the start tick in the search.
 	//
@@ -411,12 +417,6 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 		iterator = prefixStore.Iterator(startTickKey, storetypes.InclusiveEndBytes(boundTickKey))
 	}
 	defer iterator.Close()
-
-	// Walk start tick and update start tick liquidity
-	startTickLiquidity, err = k.seekStartTickLiquidity(prefixStore, zeroForOne, startTick, p.GetCurrentTick(), p.GetLiquidity())
-	if err != nil {
-		return []queryproto.TickLiquidityNet{}, 0, sdk.Dec{}, err
-	}
 
 	for ; iterator.Valid(); iterator.Next() {
 		tickIndex, err := types.TickIndexFromBytes(iterator.Key())
@@ -440,21 +440,17 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	return liquidityDepths, startTick, startTickLiquidity, nil
 }
 
-func (k Keeper) seekStartTickLiquidity(prefixStore prefix.Store, zeroForOne bool, startTick int64, curentTick int64, currentTickLiquidity sdk.Dec) (sdk.Dec, error) {
-	startTickKey := types.TickIndexToBytes(curentTick + 1)
+func (k Keeper) seekStartTickLiquidity(ctx sdk.Context, poolId uint64, prefixStore prefix.Store, zeroForOne bool, startTick int64, curentTick int64, currentTickLiquidity sdk.Dec) (sdk.Dec, error) {
+
+	// startTickKey := types.TickIndexToBytes(curentTick + 1)
 
 	isSeekZeroForOne := zeroForOne
 	if startTick != curentTick {
 		isSeekZeroForOne = startTick < curentTick
 	}
 
-	// define iterator depending on swap strategy
-	var iterator db.Iterator
-	if isSeekZeroForOne {
-		iterator = prefixStore.ReverseIterator(nil, startTickKey)
-	} else {
-		iterator = prefixStore.Iterator(startTickKey, nil)
-	}
+	swapStrategy := swapstrategy.New(isSeekZeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
+	iterator := swapStrategy.InitializeNextTickIterator(ctx, poolId, curentTick)
 	defer iterator.Close()
 
 	// Walk start tick and update start tick liquidity

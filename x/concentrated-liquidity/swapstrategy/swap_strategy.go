@@ -54,7 +54,7 @@ type SwapStrategy interface {
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemainingOut sdk.Dec) (sqrtPriceNext, amountOutConsumed, amountInComputed, spreadRewardChargeTotal sdk.Dec)
 	// InitializeNextTickIterator returns iterator that seeks to the next tick from the given tickIndex.
-	// If nex tick relative to tickINdex does not exist in the store, it will return an invalid iterator.
+	// If next tick relative to tickINdex does not exist in the store, it will return an invalid iterator.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	InitializeNextTickIterator(ctx sdk.Context, poolId uint64, tickIndex int64) dbm.Iterator
 	// SetLiquidityDeltaSign sets the liquidity delta sign for the given liquidity delta.
