@@ -92,13 +92,7 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 	// --- Incentive setup ---
 
 	if testParams.baseIncentiveAmount != (sdk.Int{}) {
-		incentiveAddr := apptesting.CreateRandomAccounts(1)[0]
-		incentiveAmt := testParams.baseIncentiveAmount
-		emissionRate := testParams.baseEmissionRate
-		incentiveCoin := sdk.NewCoin(fmt.Sprintf("%s%d", testParams.baseIncentiveDenom, 0), incentiveAmt)
-		s.FundAcc(incentiveAddr, sdk.NewCoins(incentiveCoin))
-		_, err := s.clk.CreateIncentive(s.Ctx, pool.GetId(), incentiveAddr, incentiveCoin, emissionRate, s.Ctx.BlockTime(), types.DefaultAuthorizedUptimes[0])
-		s.Require().NoError(err)
+		s.createRandomizedIncentiveRecord(pool, testParams)
 	}
 
 	// --- Position setup ---
@@ -145,6 +139,11 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 			// Let time elapse after join if applicable
 			timeElapsed := s.addRandomizedBlockTime(testParams.baseTimeBetweenJoins, testParams.fuzzTimeBetweenJoins)
 
+			// Create new incentive record between joins if applicable
+			if testParams.newActiveIncentivesBetweenJoins || testParams.newInactiveIncentivesBetweenJoins {
+				s.createRandomizedIncentiveRecord(pool, testParams)
+			}
+
 			// Execute swap against pool if applicable
 			swappedIn, swappedOut := s.executeRandomizedSwap(pool, swapAddresses, testParams.baseSwapAmount, testParams.fuzzSwapAmounts)
 			s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
@@ -178,6 +177,8 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 	// Do a final checkpoint for incentives and then run assertions on expected global claimable value
 	cumulativeEmittedIncentives, lastIncentiveTrackerUpdate = s.trackEmittedIncentives(cumulativeEmittedIncentives, lastIncentiveTrackerUpdate)
 	truncatedEmissions, _ := cumulativeEmittedIncentives.TruncateDecimal()
+
+	fmt.Println("truncated emissions: ", truncatedEmissions)
 
 	// Run global assertions with an optional parameter specifying the expected incentive amount claimable by all positions.
 	// We specifically need to do this for incentives because all the emissions are pre-loaded into the incentive address, making
@@ -286,6 +287,35 @@ func (s *KeeperTestSuite) addRandomizedBlockTime(baseTimeToAdd time.Duration, fu
 	}
 
 	return baseTimeToAdd
+}
+
+// addRandomizedBlockTime adds the given block time to the context, fuzzing the added time if applicable.
+func (s *KeeperTestSuite) createRandomizedIncentiveRecord(pool types.ConcentratedPoolExtension, tp RangeTestParams) {
+	incentiveAddr := apptesting.CreateRandomAccounts(1)[0]
+	curPoolRecords, err := s.clk.GetAllIncentiveRecordsForPool(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+
+	incentiveAmount := tp.baseIncentiveAmount
+	emissionRate := tp.baseEmissionRate
+
+	if tp.fuzzIncentiveRecords {
+		incentiveAmount = sdk.NewInt(fuzzInt64(tp.baseIncentiveAmount.Int64(), 2))
+		emissionFuzzRatio := sdk.NewDec(fuzzInt64(100, 2)).QuoInt64(fuzzInt64(100, 2))
+		emissionRate = tp.baseEmissionRate.Mul(emissionFuzzRatio)
+	}
+
+	// If applicable, move up start time so the record is not immediately active.
+	// This is set to a value that is greater than the max time that can elapse between
+	// two joins with default settings.
+	startTime := s.Ctx.BlockTime()
+	if tp.newInactiveIncentivesBetweenJoins {
+		startTime = startTime.Add(time.Hour * 3)
+	}
+
+	incentiveCoin := sdk.NewCoin(fmt.Sprintf("%s%d", tp.baseIncentiveDenom, len(curPoolRecords)), incentiveAmount)
+	s.FundAcc(incentiveAddr, sdk.NewCoins(incentiveCoin))
+	_, err = s.clk.CreateIncentive(s.Ctx, pool.GetId(), incentiveAddr, incentiveCoin, emissionRate, startTime, types.DefaultAuthorizedUptimes[0])
+	s.Require().NoError(err)
 }
 
 // trackEmittedIncentives takes in a cumulative incentives distributed and the last time this number was updated.
