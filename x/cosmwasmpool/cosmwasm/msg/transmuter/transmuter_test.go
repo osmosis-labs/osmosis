@@ -29,8 +29,6 @@ var (
 	defaultAmount       = sdk.NewInt(100)
 	initalDefaultSupply = sdk.NewCoins(sdk.NewCoin(denomA, defaultAmount), sdk.NewCoin(denomB, defaultAmount))
 	uosmo               = "uosmo"
-
-	defaultDenoms = []string{denomA, denomB}
 )
 
 func TestTransmuterSuite(t *testing.T) {

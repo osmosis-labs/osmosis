@@ -71,7 +71,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 		defaultPoolAssets = []balancer.PoolAsset{defaultDenom0Asset, defaultDenom1Asset}
 	)
 
-	rand.Seed(seed)
+	rand.Seed(seed) //nolint:staticcheck // this can't have a security impact since it is part of a benchmark test
 
 	b.ResetTimer()
 

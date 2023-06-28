@@ -58,13 +58,11 @@ func (suite *StrategyTestSuite) SetupTest() {
 }
 
 type tickIteratorTest struct {
-	currentTick     int64
 	preSetPositions []position
 	tickSpacing     uint64
 
 	expectIsValid  bool
 	expectNextTick int64
-	expectError    error
 }
 
 func (suite *StrategyTestSuite) runTickIteratorTest(strategy swapstrategy.SwapStrategy, tc tickIteratorTest) {

@@ -381,7 +381,6 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 
 	// testCase defines the test case configuration
 	type testCase struct {
-		name        string
 		tickSpacing uint64
 
 		swapTicksAway                  int64

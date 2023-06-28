@@ -397,15 +397,6 @@ func (s *KeeperTestSuite) TestGetNextPositionAndIncrement() {
 	s.Require().Equal(positionId, uint64(3))
 }
 
-type positionOwnershipTest struct {
-	queryPositionOwner sdk.AccAddress
-	queryPositionId    uint64
-	expPass            bool
-
-	setupPositions []sdk.AccAddress
-	poolId         uint64
-}
-
 func (s *KeeperTestSuite) TestGetUserPositions() {
 	s.Setup()
 	defaultAddress := s.TestAccs[0]

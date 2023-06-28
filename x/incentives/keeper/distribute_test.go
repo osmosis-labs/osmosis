@@ -362,14 +362,13 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 
 	type test struct {
 		// setup
-		isPerpertual       bool
-		tokensToAddToGauge sdk.Coins
-		gaugeStartTime     time.Time
-		gaugeCoins         sdk.Coins
-		distrTo            lockuptypes.QueryCondition
-		startTime          time.Time
-		numEpochsPaidOver  uint64
-		poolId             uint64
+		isPerpertual      bool
+		gaugeStartTime    time.Time
+		gaugeCoins        sdk.Coins
+		distrTo           lockuptypes.QueryCondition
+		startTime         time.Time
+		numEpochsPaidOver uint64
+		poolId            uint64
 
 		// expected
 		expectErr                              bool

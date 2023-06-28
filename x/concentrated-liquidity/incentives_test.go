@@ -26,10 +26,7 @@ var (
 	defaultPoolId     = uint64(1)
 	defaultMultiplier = sdk.OneInt()
 
-	testAddressOne   = sdk.MustAccAddressFromBech32("osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks")
-	testAddressTwo   = sdk.MustAccAddressFromBech32("osmo18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv")
-	testAddressThree = sdk.MustAccAddressFromBech32("osmo1qwexv7c6sm95lwhzn9027vyu2ccneaqad4w8ka")
-	testAddressFour  = sdk.MustAccAddressFromBech32("osmo14hcxlnwlqtq75ttaxf674vk6mafspg8xwgnn53")
+	testAddressOne = sdk.MustAccAddressFromBech32("osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks")
 
 	// Note: lexicographic order is denomFour, denomOne, denomThree, denomTwo
 	testDenomOne   = "denomOne"
@@ -122,7 +119,6 @@ var (
 
 type ExpectedUptimes struct {
 	emptyExpectedAccumValues     []sdk.DecCoins
-	fiveHundredAccumValues       []sdk.DecCoins
 	hundredTokensSingleDenom     []sdk.DecCoins
 	hundredTokensMultiDenom      []sdk.DecCoins
 	twoHundredTokensMultiDenom   []sdk.DecCoins
@@ -3481,7 +3477,6 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 
 		noCanonicalBalancerPool bool
 		flipAsset0And1          bool
-		expectedError           error
 	}
 	initTestCase := func(tc testcase) testcase {
 		if tc.existingConcentratedLiquidity.Empty() {

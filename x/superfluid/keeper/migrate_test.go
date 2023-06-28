@@ -653,7 +653,6 @@ func (s *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated() {
 func (s *KeeperTestSuite) TestMigrateUnlockedPositionFromBalancerToConcentrated() {
 	defaultJoinTime := s.Ctx.BlockTime()
 	type sendTest struct {
-		unlocking                bool
 		percentOfSharesToMigrate sdk.Dec
 		tokenOutMins             sdk.Coins
 		expectedError            error
@@ -728,12 +727,10 @@ func (s *KeeperTestSuite) TestValidateMigration() {
 		isSuperfluidDelegated     bool
 		isSuperfluidUndelegating  bool
 		unlocking                 bool
-		overwritePreMigrationLock bool
 		overwriteSender           bool
 		overwriteSharesDenomValue string
 		overwriteLockId           bool
 		percentOfSharesToMigrate  sdk.Dec
-		tokenOutMins              sdk.Coins
 		expectedError             error
 	}
 	testCases := map[string]sendTest{

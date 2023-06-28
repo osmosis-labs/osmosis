@@ -37,16 +37,11 @@ type RangeTestParams struct {
 	fuzzNumPositions     bool
 	fuzzSwapAmounts      bool
 	fuzzTimeBetweenJoins bool
-	fuzzIncentiveRecords bool
 
 	// -- Optional additional test dimensions --
 
 	// Have a single address for all positions in each range
 	singleAddrPerRange bool
-	// Create new active incentive records between each join
-	newActiveIncentivesBetweenJoins bool
-	// Create new inactive incentive records between each join
-	newInactiveIncentivesBetweenJoins bool
 }
 
 var (
