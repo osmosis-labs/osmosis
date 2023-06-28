@@ -376,6 +376,52 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 			expectedAmountOneIn:             sdk.OneDec(),
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
 		},
+		"8: swapping 1 ULP of sdk.Dec leads to zero out being consumed (no progress made)": {
+			// Note the numbers are hand-picked to reproduce this specific case.
+			sqrtPriceCurrent: types.MaxSqrtPriceBigDec.Sub(osmomath.SmallestDec()),
+			sqrtPriceTarget:  types.MaxSqrtPrice,
+			liquidity:        sdk.MustNewDecFromStr("100002498062401598791.937822606808718081"),
+
+			amountZeroOutRemaining: sdk.SmallestDec(),
+			spreadFactor:           sdk.ZeroDec(),
+
+			// product_num = liquidity * sqrtPriceCurrent
+			// product_den =  tokenOut * sqrtPriceCurrent
+			// product_den = round_osmo_prec_up(product_den)
+			// round_osmo_prec_up(product_num / (liquidity - product_den))
+			expectedSqrtPriceNext: types.MaxSqrtPriceBigDec,
+
+			expectedAmountZeroOutConsumed: sdk.ZeroDec(),
+			// Rounded up to 1.
+			expectedAmountOneIn:             sdk.NewDec(1),
+			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
+		},
+		"9: swapping 1 ULP of sdk.Dec with high liquidity leads to an amount consumed being greater than amount remaining": {
+			// Note the numbers are hand-picked to reproduce this specific case.
+			sqrtPriceCurrent: types.MaxSqrtPriceBigDec.Sub(osmomath.SmallestDec()),
+			sqrtPriceTarget:  types.MaxSqrtPrice,
+			// Choose large liquidity on purpose
+			liquidity: sdk.MustNewDecFromStr("9999999999999999999999999999999999999999999999999999999999.937822606808718081"),
+
+			amountZeroOutRemaining: sdk.SmallestDec(),
+			spreadFactor:           sdk.ZeroDec(),
+
+			// product_num = liquidity * sqrtPriceCurrent
+			// product_den =  tokenOut * sqrtPriceCurrent
+			// product_den = round_osmo_prec_up(product_den)
+			// round_osmo_prec_up(product_num / (liquidity - product_den))
+			expectedSqrtPriceNext: types.MaxSqrtPriceBigDec,
+
+			// product_num = liquidity * diff
+			// product_denom = sqrtPriceA * sqrtPriceB
+			// produce _num / producy_denom
+			// Note, that this amount is greater than the amount remaining.
+			expectedAmountZeroOutConsumed: sdk.MustNewDecFromStr("0.0000000000000001"),
+
+			// calc_amount_one_delta(liquidity, sqrtPriceCurrent, sqrtPriceNext, True)
+			expectedAmountOneIn:             sdk.MustNewDecFromStr("10000000000000000000000"),
+			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
+		},
 	}
 
 	for name, tc := range tests {
