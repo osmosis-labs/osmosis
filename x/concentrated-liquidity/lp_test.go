@@ -987,10 +987,11 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			// system under test parameters
 			sutConfigOverwrite: &lpTest{
-				amount0Minimum: sdk.NewInt(1997960),
+				amount0Minimum: sdk.NewInt(1000000),
 				expectedError: types.InsufficientLiquidityCreatedError{
-					Actual:      sdk.NewInt(1997954),
-					Minimum:     sdk.NewInt(1997960),
+					Actual: sdk.NewInt(1997954),
+					//  minimum amount we have input becomes default amt 0 expected (from original position withdraw) + 1000000 (input)
+					Minimum:     DefaultAmt0Expected.Add(sdk.NewInt(1000000)),
 					IsTokenZero: true,
 				},
 			},
@@ -1004,10 +1005,11 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			// system under test parameters
 			sutConfigOverwrite: &lpTest{
-				amount1Minimum: sdk.NewInt(9999998916),
+				amount1Minimum: sdk.NewInt(10000000000),
 				expectedError: types.InsufficientLiquidityCreatedError{
-					Actual:      sdk.NewInt(9999998816),
-					Minimum:     sdk.NewInt(9999998916),
+					Actual: sdk.NewInt(9999998816),
+					// minimum amount we have input becomes default amt 1 expected (from original position withdraw) + 10000000000 (input) - 1 (rounding)
+					Minimum:     DefaultAmt1Expected.Add(sdk.NewInt(10000000000)).Sub(sdk.OneInt()),
 					IsTokenZero: false,
 				},
 			},

@@ -1571,17 +1571,37 @@ The following are the state entries (key and value pairs) stored for the concent
 Note that for storing ticks, we use 9 bytes instead of directly using uint64, first byte being reserved for the Negative / Positive prefix, and the remaining 8 bytes being reserved for the tick itself, which is of uint64. Although we directly store signed integers as values, we use the first byte to indicate and re-arrange tick indexes from negative to positive.
 
 
+## State and Keys
+
+### Incentive Records
+
+- `KeyIncentiveRecord`
+
+`0x04|` || `string encoding of pool ID` || `|` || `string encoding of min uptime index` || `|` || `string encoding of incentive ID`
+
+Note that the reason for having pool ID and min uptime index is so that we can retrieve
+all incentive records for a given pool ID and min uptime index by performing prefix iteration.
+
 ## Terminology
 
-We will use the following terms throughout the document:
+We will use the following terms throughout the document and our codebase:
 
-- `Virtual Reserves` - TODO
+- `Tick` - a unit that has a 1:1 mapping with price
 
-- `Real Reserves` - TODO
+- `Bucket` - an area between two initialized ticks.
 
-- `Tick` - TODO
+- `Tick Range` - a general term to describe a concept with lower and upper bound.
+  * Position is defined on a tick range.
+  * Bucket is defined on a tick range.
+  * A trader performs a swap over a tick range.
 
-- `Range` - TODO
+- `Tick Spacing` - the distance between two ticks that can be initialized. This is
+what defines the minimum bucket size.
+
+Note that ticks are defined inside buckets. Assume tick spacing is 100. A liquidity provider
+creates a position with amounts such that the current tick is 155 between ticks 100 and 200.
+
+Note, that the current tick of 155 is defined inside the bucket over a range of 100 to 200.
 
 ## External Sources
 

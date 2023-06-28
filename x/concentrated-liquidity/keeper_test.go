@@ -2,6 +2,7 @@ package concentrated_liquidity_test
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -452,4 +453,19 @@ func (s *KeeperTestSuite) runMultipleAuthorizedUptimes(tests func()) {
 		s.authorizedUptimes = curAuthorizedUptimes
 		tests()
 	}
+}
+
+// runMultiplePositionRanges runs various test constructions and invariants on the given position ranges.
+func (s *KeeperTestSuite) runMultiplePositionRanges(ranges [][]int64, rangeTestParams RangeTestParams) {
+	// Preset seed to ensure deterministic test runs.
+	rand.Seed(2)
+
+	// TODO: add pool-related fuzz params (spread factor & number of pools)
+	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultSpreadFactor)
+
+	// Run full state determined by params while asserting invariants at each intermediate step
+	s.setupRangesAndAssertInvariants(pool, ranges, rangeTestParams)
+
+	// Assert global invariants on final state
+	s.assertGlobalInvariants()
 }

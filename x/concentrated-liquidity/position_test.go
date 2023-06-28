@@ -81,16 +81,16 @@ func (s *KeeperTestSuite) GetTotalAccruedRewardsByAccumulator(positionId uint64,
 
 // ExecuteAndValidateSuccessfulIncentiveClaim claims incentives for position Id and asserts its output is as expected.
 // It also asserts that no more incentives can be claimed for the position.
-func (s *KeeperTestSuite) ExecuteAndValidateSuccessfulIncentiveClaim(positionId uint64, expectedRewards sdk.Coins, expectedForfeited sdk.DecCoins) {
+func (s *KeeperTestSuite) ExecuteAndValidateSuccessfulIncentiveClaim(positionId uint64, expectedRewards sdk.Coins, expectedForfeited sdk.Coins) {
 	// Initial claim and assertion
-	claimedRewards, forfeitedRewards, err := s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionId)
+	claimedRewards, forfeitedRewards, err := s.clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionId)
 	s.Require().NoError(err)
 
 	s.Require().Equal(expectedRewards, claimedRewards)
 	s.Require().Equal(expectedForfeited, forfeitedRewards)
 
 	// Sanity check that cannot claim again.
-	claimedRewards, _, err = s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionId)
+	claimedRewards, _, err = s.clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionId)
 	s.Require().NoError(err)
 
 	s.Require().Equal(sdk.Coins(nil), claimedRewards)
@@ -1235,11 +1235,11 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 				expectedRewardsToClaim, _ := osmoutils.CollapseDecCoinsArray(unclaimedRewardsForEachUptimeAcrossAllOldPositions).TruncateDecimal()
 
 				// Claim all the rewards for the new position and check that the rewards match the unclaimed rewards.
-				s.ExecuteAndValidateSuccessfulIncentiveClaim(newPositionId, expectedRewardsToClaim, sdk.DecCoins{})
+				s.ExecuteAndValidateSuccessfulIncentiveClaim(newPositionId, expectedRewardsToClaim, sdk.Coins(nil))
 
 				// Check that cannot claim rewards for the old positions.
 				for _, positionId := range test.positionIdsToMigrate {
-					_, _, err := s.clk.ClaimAllIncentivesForPosition(s.Ctx, positionId)
+					_, _, err := s.clk.PrepareClaimAllIncentivesForPosition(s.Ctx, positionId)
 					s.Require().Error(err)
 				}
 			}
@@ -1410,13 +1410,11 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 
 	// Set incentives for pool to ensure accumulators work correctly
 	testIncentiveRecord := types.IncentiveRecord{
-		PoolId:               1,
-		IncentiveDenom:       USDC,
-		IncentiveCreatorAddr: s.TestAccs[0].String(),
+		PoolId: 1,
 		IncentiveRecordBody: types.IncentiveRecordBody{
-			RemainingAmount: sdk.NewDec(1000000000000000000),
-			EmissionRate:    sdk.NewDec(1), // 1 per second
-			StartTime:       defaultBlockTime,
+			RemainingCoin: sdk.NewDecCoinFromDec(USDC, sdk.NewDec(1000000000000000000)),
+			EmissionRate:  sdk.NewDec(1), // 1 per second
+			StartTime:     defaultBlockTime,
 		},
 		MinUptime: time.Nanosecond,
 	}
@@ -1448,7 +1446,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 	for i := 0; i < DefaultFungifyNumPositions; i++ {
 		positionIncentives, forfeitedIncentives, err := s.clk.GetClaimableIncentives(cacheCtx, uint64(i+1))
 		s.Require().NoError(err)
-		s.Require().Equal(sdk.DecCoins{}, forfeitedIncentives)
+		s.Require().Equal(sdk.Coins(nil), forfeitedIncentives)
 		claimableIncentives = claimableIncentives.Add(positionIncentives...)
 	}
 
@@ -1497,13 +1495,11 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 
 	// Set incentives for pool to ensure accumulators work correctly
 	testIncentiveRecord := types.IncentiveRecord{
-		PoolId:               1,
-		IncentiveDenom:       USDC,
-		IncentiveCreatorAddr: s.TestAccs[0].String(),
+		PoolId: 1,
 		IncentiveRecordBody: types.IncentiveRecordBody{
-			RemainingAmount: sdk.NewDec(1000000000000000000),
-			EmissionRate:    sdk.NewDec(1), // 1 per second
-			StartTime:       defaultBlockTime,
+			RemainingCoin: sdk.NewDecCoinFromDec(USDC, sdk.NewDec(1000000000000000000)),
+			EmissionRate:  sdk.NewDec(1), // 1 per second
+			StartTime:     defaultBlockTime,
 		},
 		MinUptime: time.Nanosecond,
 	}
@@ -2506,6 +2502,52 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 			s.Require().NoError(err)
 			s.Require().Equal(concentratedLock.Coins[0].Amount.String(), liquidity.TruncateInt().String())
 			s.Require().False(concentratedLock.IsUnlocking())
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestMultipleRanges() {
+	tests := map[string]struct {
+		tickRanges      [][]int64
+		rangeTestParams RangeTestParams
+	}{
+		// The following two tests will fail until the tick rounding bug is fixed (and should pass after):
+		// https://github.com/osmosis-labs/osmosis/issues/5516
+		//
+		// "one min width range": {
+		// 	tickRanges: [][]int64{
+		// 		{0, 100},
+		// 	},
+		// 	rangeTestParams: DefaultRangeTestParams,
+		// },
+		// "two adjacent ranges": {
+		// 	tickRanges: [][]int64{
+		// 		{-10000, 10000},
+		// 		{10000, 20000},
+		// 	},
+		// 	rangeTestParams: DefaultRangeTestParams,
+		// },
+
+		// Both of these lead to underclaiming of fees greater than additive
+		// error tolerance of 1 per token per position. Increasing ticks increases
+		// error disproportionally, while increasing tick range decreases error proportionally.
+		//
+		// "one range on large tick": {
+		// 	tickRanges: [][]int64{
+		// 		{207000000, 207000000 + 100},
+		// 	},
+		// },
+		// "one range on small tick": {
+		// 	tickRanges: [][]int64{
+		// 		{-107000000, -107000000 + 100},
+		// 	},
+		// },
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			s.runMultiplePositionRanges(tc.tickRanges, tc.rangeTestParams)
 		})
 	}
 }
