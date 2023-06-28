@@ -3577,13 +3577,14 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 				if tc.noCanonicalBalancerPool {
 					balancerPoolId = 0
 				} else {
-					s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
+					err := s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
 						gammmigration.MigrationRecords{
 							BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 								{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()},
 							},
 						},
 					)
+					s.Require().NoError(err)
 				}
 
 				// Calculate balancer share amount for full range
@@ -3712,7 +3713,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRangeWithNonExistentPools
 					balancerPoolId = invalidPoolId
 				}
 
-				s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
+				_ = s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
 					gammmigration.MigrationRecords{
 						BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 							{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()},
@@ -3880,7 +3881,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 				}
 
 				// Link the balancer and CL pools
-				s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
+				_ = s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
 					gammmigration.MigrationRecords{
 						BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 							{BalancerPoolId: balancerPoolId, ClPoolId: clPoolId},
@@ -3913,7 +3914,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 						s.FundAcc(clPool.GetIncentivesAddress(), normalizedEmissions)
 					}
 				}
-				err := addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.uptimeGrowth)
+				err = addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.uptimeGrowth)
 				s.Require().NoError(err)
 
 				// --- System under test ---

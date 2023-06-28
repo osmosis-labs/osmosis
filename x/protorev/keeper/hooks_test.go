@@ -426,7 +426,7 @@ func (s *KeeperTestSuite) TestStoreSwap() {
 					TokenOut: "test",
 				},
 				prepareState: func() {
-					s.App.ProtoRevKeeper.SetSwapsToBackrun(s.Ctx, types.Route{
+					err := s.App.ProtoRevKeeper.SetSwapsToBackrun(s.Ctx, types.Route{
 						Trades: []types.Trade{
 							{
 								Pool:     1,
@@ -436,6 +436,7 @@ func (s *KeeperTestSuite) TestStoreSwap() {
 						},
 						StepSize: sdk.NewInt(1),
 					})
+					s.Require().NoError(err)
 				},
 				expectedSwapsStoredLen: 2,
 			},

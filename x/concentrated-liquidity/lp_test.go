@@ -564,7 +564,6 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			expectedRemainingLiquidity := liquidityCreated.Sub(config.liquidityAmount)
 
 			expectedSpreadRewardsClaimed := sdk.NewCoins()
-			expectedIncentivesClaimed := sdk.NewCoins()
 			// Set the expected spread rewards claimed to the amount of liquidity created since the global spread reward growth is 1.
 			// Fund the pool account with the expected spread rewards claimed.
 			if expectedRemainingLiquidity.IsZero() {
@@ -575,7 +574,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			communityPoolBalanceBefore := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
 
 			// Set expected incentives and fund pool with appropriate amount
-			expectedIncentivesClaimed = expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, tc.timeElapsed, defaultMultiplier)
+			expectedIncentivesClaimed := expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, tc.timeElapsed, defaultMultiplier)
 
 			// Fund full amount since forfeited incentives for the last position are sent to the community pool.
 			largestSupportedUptime := s.clk.GetLargestSupportedUptimeDuration(s.Ctx)
@@ -2137,7 +2136,8 @@ func (s *KeeperTestSuite) TestValidatePositionUpdateById() {
 				s.Require().NoError(err)
 				owner, err := sdk.AccAddressFromBech32(position.Address)
 				s.Require().NoError(err)
-				s.clk.SetPosition(s.Ctx, defaultPoolId, owner, position.LowerTick, position.UpperTick, position.JoinTime, sdk.OneDec(), position.PositionId, 0)
+				err = s.clk.SetPosition(s.Ctx, defaultPoolId, owner, position.LowerTick, position.UpperTick, position.JoinTime, sdk.OneDec(), position.PositionId, 0)
+				s.Require().NoError(err)
 			}
 
 			err := clKeeper.ValidatePositionUpdateById(s.Ctx, tc.positionId, updateInitiator, tc.lowerTickGiven, tc.upperTickGiven, tc.liquidityDeltaGiven, tc.joinTimeGiven, tc.poolIdGiven)

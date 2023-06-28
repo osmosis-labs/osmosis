@@ -10,7 +10,6 @@ import (
 	osmoutils "github.com/osmosis-labs/osmosis/osmoutils"
 	appParams "github.com/osmosis-labs/osmosis/v16/app/params"
 	"github.com/osmosis-labs/osmosis/v16/x/incentives/types"
-	incentivetypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 	poolincentivetypes "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
@@ -934,7 +933,7 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 
 	s.FundAcc(s.TestAccs[1], requiredBalances)
 	s.FundAcc(s.TestAccs[2], requiredBalances)
-	s.FundModuleAcc(incentivetypes.ModuleName, requiredBalances)
+	s.FundModuleAcc(types.ModuleName, requiredBalances)
 
 	// 2. Setup CL pool and gauge (gauge automatically gets created at the end of CL pool creation).
 	clPoolId1 := s.PrepareConcentratedPool() // creates internal no-lock gauge id = 1

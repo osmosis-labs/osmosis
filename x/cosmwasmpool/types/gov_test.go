@@ -36,7 +36,7 @@ func (s *CWPoolGovTypesSuite) TestValidateMigrationProposalCondiguration() {
 	)
 
 	var (
-		emptyByteCode           []byte = []byte{}
+		emptyByteCode           = []byte{}
 		emptyPoolIds            []uint64
 		defaultPoolIdsToMigrate = []uint64{1, 2, 3}
 	)

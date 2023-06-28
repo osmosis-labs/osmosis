@@ -155,8 +155,8 @@ func (s *CWPoolGovSuite) TestMigrateCosmwasmPools() {
 	s.Require().NoError(err)
 
 	var (
-		emptyByteCode           []byte = []byte{}
-		defaultPoolIdsToMigrate        = []uint64{1, 2, 3}
+		emptyByteCode           = []byte{}
+		defaultPoolIdsToMigrate = []uint64{1, 2, 3}
 	)
 
 	tests := []struct {

@@ -643,7 +643,8 @@ func (s *KeeperTestSuite) TestExtractSwappedPools() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			for _, swap := range tc.params.expectedSwappedPools {
-				s.App.ProtoRevKeeper.AddSwapsToSwapsToBackrun(s.Ctx, []types.Trade{{Pool: swap.PoolId, TokenIn: swap.TokenInDenom, TokenOut: swap.TokenOutDenom}})
+				err := s.App.ProtoRevKeeper.AddSwapsToSwapsToBackrun(s.Ctx, []types.Trade{{Pool: swap.PoolId, TokenIn: swap.TokenInDenom, TokenOut: swap.TokenOutDenom}})
+				s.Require().NoError(err)
 			}
 
 			swappedPools := s.App.ProtoRevKeeper.ExtractSwappedPools(s.Ctx)

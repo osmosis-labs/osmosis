@@ -165,7 +165,7 @@ func (s *KeeperTestSuite) setupPoolAndPositions(testTickSpacing uint64, position
 	s.Require().NoError(err)
 
 	// Refetch pool as the first position updated its state.
-	pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+	_, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 	s.Require().NoError(err)
 
 	// Create all narrow range positions per given tick spacings away from the current tick
@@ -502,8 +502,8 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		s.Require().True(isNarrowInRange)
 
 		var (
-			amountZeroIn   sdk.Dec = sdk.ZeroDec()
-			sqrtPriceStart sdk.Dec = pool.GetCurrentSqrtPrice()
+			amountZeroIn   = sdk.ZeroDec()
+			sqrtPriceStart = pool.GetCurrentSqrtPrice()
 
 			liquidity = pool.GetLiquidity()
 		)
@@ -594,9 +594,9 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		s.Require().NoError(err)
 
 		var (
-			amountOneIn    sdk.Dec = sdk.ZeroDec()
-			sqrtPriceStart sdk.Dec = pool.GetCurrentSqrtPrice()
-			liquidity              = pool.GetLiquidity()
+			amountOneIn    = sdk.ZeroDec()
+			sqrtPriceStart = pool.GetCurrentSqrtPrice()
+			liquidity      = pool.GetLiquidity()
 		)
 
 		if tickToSwapTo >= nr1Position.upperTick {

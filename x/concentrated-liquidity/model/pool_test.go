@@ -790,7 +790,7 @@ func (s *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 	}
 }
 
-func (suite *ConcentratedPoolTestSuite) TestPoolSetMethods() {
+func (s *ConcentratedPoolTestSuite) TestPoolSetMethods() {
 	var (
 		newCurrentTick      = DefaultCurrTick
 		newCurrentSqrtPrice = DefaultCurrSqrtPrice
@@ -813,17 +813,17 @@ func (suite *ConcentratedPoolTestSuite) TestPoolSetMethods() {
 
 	for name, tc := range tests {
 		tc := tc
-		suite.Run(name, func() {
-			suite.Setup()
+		s.Run(name, func() {
+			s.Setup()
 
-			currentBlockTime := suite.Ctx.BlockTime()
+			currentBlockTime := s.Ctx.BlockTime()
 
 			// Create the pool and check that the initial values are not equal to the new values we will set.
-			clPool := suite.PrepareConcentratedPool()
-			suite.Require().NotEqual(tc.currentTick, clPool.GetCurrentTick())
-			suite.Require().NotEqual(tc.currentSqrtPrice, clPool.GetCurrentSqrtPrice())
-			suite.Require().NotEqual(tc.tickSpacing, clPool.GetTickSpacing())
-			suite.Require().NotEqual(currentBlockTime.Add(tc.lastLiquidityUpdateDelta), clPool.GetLastLiquidityUpdate())
+			clPool := s.PrepareConcentratedPool()
+			s.Require().NotEqual(tc.currentTick, clPool.GetCurrentTick())
+			s.Require().NotEqual(tc.currentSqrtPrice, clPool.GetCurrentSqrtPrice())
+			s.Require().NotEqual(tc.tickSpacing, clPool.GetTickSpacing())
+			s.Require().NotEqual(currentBlockTime.Add(tc.lastLiquidityUpdateDelta), clPool.GetLastLiquidityUpdate())
 
 			// Run the setters.
 			clPool.SetCurrentTick(tc.currentTick)
@@ -832,10 +832,10 @@ func (suite *ConcentratedPoolTestSuite) TestPoolSetMethods() {
 			clPool.SetLastLiquidityUpdate(currentBlockTime.Add(tc.lastLiquidityUpdateDelta))
 
 			// Check that the values are now equal to the new values.
-			suite.Require().Equal(tc.currentTick, clPool.GetCurrentTick())
-			suite.Require().Equal(tc.currentSqrtPrice, clPool.GetCurrentSqrtPrice())
-			suite.Require().Equal(tc.tickSpacing, clPool.GetTickSpacing())
-			suite.Require().Equal(currentBlockTime.Add(tc.lastLiquidityUpdateDelta), clPool.GetLastLiquidityUpdate())
+			s.Require().Equal(tc.currentTick, clPool.GetCurrentTick())
+			s.Require().Equal(tc.currentSqrtPrice, clPool.GetCurrentSqrtPrice())
+			s.Require().Equal(tc.tickSpacing, clPool.GetTickSpacing())
+			s.Require().Equal(currentBlockTime.Add(tc.lastLiquidityUpdateDelta), clPool.GetLastLiquidityUpdate())
 		})
 	}
 }

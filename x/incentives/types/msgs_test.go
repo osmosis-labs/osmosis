@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v16/x/incentives/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
 
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 
@@ -25,14 +24,14 @@ func TestMsgCreateGauge(t *testing.T) {
 	addr1 := sdk.AccAddress(pk1.Address())
 
 	// make a proper createPool message
-	createMsg := func(after func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+	createMsg := func(after func(msg types.MsgCreateGauge) types.MsgCreateGauge) types.MsgCreateGauge {
 		distributeTo := lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         "lptoken",
 			Duration:      time.Second,
 		}
 
-		properMsg := *incentivestypes.NewMsgCreateGauge(
+		properMsg := *types.NewMsgCreateGauge(
 			false,
 			addr1,
 			distributeTo,
@@ -46,10 +45,10 @@ func TestMsgCreateGauge(t *testing.T) {
 	}
 
 	// validate createPool message was created as intended
-	msg := createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+	msg := createMsg(func(msg types.MsgCreateGauge) types.MsgCreateGauge {
 		return msg
 	})
-	require.Equal(t, msg.Route(), incentivestypes.RouterKey)
+	require.Equal(t, msg.Route(), types.RouterKey)
 	require.Equal(t, msg.Type(), "create_gauge")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
@@ -57,19 +56,19 @@ func TestMsgCreateGauge(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		msg        incentivestypes.MsgCreateGauge
+		msg        types.MsgCreateGauge
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+			msg: createMsg(func(msg types.MsgCreateGauge) types.MsgCreateGauge {
 				return msg
 			}),
 			expectPass: true,
 		},
 		{
 			name: "empty owner",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+			msg: createMsg(func(msg types.MsgCreateGauge) types.MsgCreateGauge {
 				msg.Owner = ""
 				return msg
 			}),
@@ -77,7 +76,7 @@ func TestMsgCreateGauge(t *testing.T) {
 		},
 		{
 			name: "empty distribution denom",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+			msg: createMsg(func(msg types.MsgCreateGauge) types.MsgCreateGauge {
 				msg.DistributeTo.Denom = ""
 				return msg
 			}),
@@ -85,7 +84,7 @@ func TestMsgCreateGauge(t *testing.T) {
 		},
 		{
 			name: "invalid distribution denom",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+			msg: createMsg(func(msg types.MsgCreateGauge) types.MsgCreateGauge {
 				msg.DistributeTo.Denom = "111"
 				return msg
 			}),
@@ -93,7 +92,7 @@ func TestMsgCreateGauge(t *testing.T) {
 		},
 		{
 			name: "invalid lock query type",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+			msg: createMsg(func(msg types.MsgCreateGauge) types.MsgCreateGauge {
 				msg.DistributeTo.LockQueryType = -1
 				return msg
 			}),
@@ -101,7 +100,7 @@ func TestMsgCreateGauge(t *testing.T) {
 		},
 		{
 			name: "invalid lock query type",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+			msg: createMsg(func(msg types.MsgCreateGauge) types.MsgCreateGauge {
 				msg.DistributeTo.LockQueryType = -1
 				return msg
 			}),
@@ -109,7 +108,7 @@ func TestMsgCreateGauge(t *testing.T) {
 		},
 		{
 			name: "invalid distribution start time",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+			msg: createMsg(func(msg types.MsgCreateGauge) types.MsgCreateGauge {
 				msg.StartTime = time.Time{}
 				return msg
 			}),
@@ -117,7 +116,7 @@ func TestMsgCreateGauge(t *testing.T) {
 		},
 		{
 			name: "invalid num epochs paid over",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+			msg: createMsg(func(msg types.MsgCreateGauge) types.MsgCreateGauge {
 				msg.NumEpochsPaidOver = 0
 				return msg
 			}),
@@ -125,7 +124,7 @@ func TestMsgCreateGauge(t *testing.T) {
 		},
 		{
 			name: "invalid num epochs paid over for perpetual gauge",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+			msg: createMsg(func(msg types.MsgCreateGauge) types.MsgCreateGauge {
 				msg.NumEpochsPaidOver = 2
 				msg.IsPerpetual = true
 				return msg
@@ -134,7 +133,7 @@ func TestMsgCreateGauge(t *testing.T) {
 		},
 		{
 			name: "valid num epochs paid over for perpetual gauge",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+			msg: createMsg(func(msg types.MsgCreateGauge) types.MsgCreateGauge {
 				msg.NumEpochsPaidOver = 1
 				msg.IsPerpetual = true
 				return msg
@@ -143,7 +142,7 @@ func TestMsgCreateGauge(t *testing.T) {
 		},
 		{
 			name: "invalid: by time lock type",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+			msg: createMsg(func(msg types.MsgCreateGauge) types.MsgCreateGauge {
 				msg.DistributeTo.LockQueryType = lockuptypes.ByTime
 				return msg
 			}),
@@ -151,7 +150,7 @@ func TestMsgCreateGauge(t *testing.T) {
 		},
 		{
 			name: "invalid: by duration with pool id set",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+			msg: createMsg(func(msg types.MsgCreateGauge) types.MsgCreateGauge {
 				msg.DistributeTo.LockQueryType = lockuptypes.ByDuration
 				msg.PoolId = 1
 				return msg
@@ -160,7 +159,7 @@ func TestMsgCreateGauge(t *testing.T) {
 		},
 		{
 			name: "invalid: no lock with pool id unset",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+			msg: createMsg(func(msg types.MsgCreateGauge) types.MsgCreateGauge {
 				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
 				msg.PoolId = 0
 				return msg
@@ -169,7 +168,7 @@ func TestMsgCreateGauge(t *testing.T) {
 		},
 		{
 			name: "valid no lock with pool id unset",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+			msg: createMsg(func(msg types.MsgCreateGauge) types.MsgCreateGauge {
 				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
 				msg.DistributeTo.Denom = ""
 				msg.DistributeTo.Duration = 0
@@ -180,7 +179,7 @@ func TestMsgCreateGauge(t *testing.T) {
 		},
 		{
 			name: "invalid due to denom being set",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+			msg: createMsg(func(msg types.MsgCreateGauge) types.MsgCreateGauge {
 				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
 				msg.DistributeTo.Denom = "stake"
 				return msg
@@ -189,7 +188,7 @@ func TestMsgCreateGauge(t *testing.T) {
 		},
 		{
 			name: "invalid due to external denom being set",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+			msg: createMsg(func(msg types.MsgCreateGauge) types.MsgCreateGauge {
 				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
 				// This is set by the system. Client should provide empty string.
 				msg.DistributeTo.Denom = types.NoLockExternalGaugeDenom(1)
@@ -199,7 +198,7 @@ func TestMsgCreateGauge(t *testing.T) {
 		},
 		{
 			name: "invalid due to internal denom being set",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+			msg: createMsg(func(msg types.MsgCreateGauge) types.MsgCreateGauge {
 				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
 				// This is set by the system when creating internal gauges.
 				// Client should provide empty string.
@@ -210,7 +209,7 @@ func TestMsgCreateGauge(t *testing.T) {
 		},
 		{
 			name: "invalid due to no lock with non-zero lock duration",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
+			msg: createMsg(func(msg types.MsgCreateGauge) types.MsgCreateGauge {
 				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
 				msg.DistributeTo.Denom = ""
 				msg.PoolId = 1
@@ -242,8 +241,8 @@ func TestMsgAddToGauge(t *testing.T) {
 	addr1 := sdk.AccAddress(pk1.Address())
 
 	// make a proper addToGauge message
-	createMsg := func(after func(msg incentivestypes.MsgAddToGauge) incentivestypes.MsgAddToGauge) incentivestypes.MsgAddToGauge {
-		properMsg := *incentivestypes.NewMsgAddToGauge(
+	createMsg := func(after func(msg types.MsgAddToGauge) types.MsgAddToGauge) types.MsgAddToGauge {
+		properMsg := *types.NewMsgAddToGauge(
 			addr1,
 			1,
 			sdk.Coins{sdk.NewInt64Coin("stake", 10)},
@@ -253,10 +252,10 @@ func TestMsgAddToGauge(t *testing.T) {
 	}
 
 	// validate addToGauge message was created as intended
-	msg := createMsg(func(msg incentivestypes.MsgAddToGauge) incentivestypes.MsgAddToGauge {
+	msg := createMsg(func(msg types.MsgAddToGauge) types.MsgAddToGauge {
 		return msg
 	})
-	require.Equal(t, msg.Route(), incentivestypes.RouterKey)
+	require.Equal(t, msg.Route(), types.RouterKey)
 	require.Equal(t, msg.Type(), "add_to_gauge")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
@@ -264,19 +263,19 @@ func TestMsgAddToGauge(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		msg        incentivestypes.MsgAddToGauge
+		msg        types.MsgAddToGauge
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: createMsg(func(msg incentivestypes.MsgAddToGauge) incentivestypes.MsgAddToGauge {
+			msg: createMsg(func(msg types.MsgAddToGauge) types.MsgAddToGauge {
 				return msg
 			}),
 			expectPass: true,
 		},
 		{
 			name: "empty owner",
-			msg: createMsg(func(msg incentivestypes.MsgAddToGauge) incentivestypes.MsgAddToGauge {
+			msg: createMsg(func(msg types.MsgAddToGauge) types.MsgAddToGauge {
 				msg.Owner = ""
 				return msg
 			}),
@@ -284,7 +283,7 @@ func TestMsgAddToGauge(t *testing.T) {
 		},
 		{
 			name: "empty rewards",
-			msg: createMsg(func(msg incentivestypes.MsgAddToGauge) incentivestypes.MsgAddToGauge {
+			msg: createMsg(func(msg types.MsgAddToGauge) types.MsgAddToGauge {
 				msg.Rewards = sdk.Coins{}
 				return msg
 			}),
@@ -315,7 +314,7 @@ func TestAuthzMsg(t *testing.T) {
 	}{
 		{
 			name: "MsgAddToGauge",
-			incentivesMsg: &incentivestypes.MsgAddToGauge{
+			incentivesMsg: &types.MsgAddToGauge{
 				Owner:   addr1,
 				GaugeId: 1,
 				Rewards: sdk.NewCoins(coin),
@@ -323,7 +322,7 @@ func TestAuthzMsg(t *testing.T) {
 		},
 		{
 			name: "MsgCreateGauge",
-			incentivesMsg: &incentivestypes.MsgCreateGauge{
+			incentivesMsg: &types.MsgCreateGauge{
 				IsPerpetual: false,
 				Owner:       addr1,
 				DistributeTo: lockuptypes.QueryCondition{
