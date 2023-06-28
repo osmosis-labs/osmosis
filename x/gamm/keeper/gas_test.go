@@ -54,7 +54,6 @@ func (s *KeeperTestSuite) measureAvgAndMaxJoinPoolGas(
 // This maintains hard coded gas test vector changes,
 // so we can easily track changes
 func (s *KeeperTestSuite) TestJoinPoolGas() {
-	s.SetupTest()
 	poolId := s.PrepareBalancerPool()
 
 	poolIDFn := func(int) uint64 { return poolId }
@@ -86,8 +85,6 @@ func (s *KeeperTestSuite) TestJoinPoolGas() {
 }
 
 func (s *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
-	s.SetupTest()
-
 	// mint some usomo to account
 	s.FundAcc(defaultAddr, sdk.NewCoins(
 		sdk.NewCoin("uosmo", sdk.NewInt(1000000000000000000)),

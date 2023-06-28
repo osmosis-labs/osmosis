@@ -44,6 +44,15 @@ import (
 type KeeperTestHelper struct {
 	suite.Suite
 
+	// defaults to false,
+	// set to true if any method that potentially alters baseapp/abci is used.
+	// this controls whether or not we can re-use the app instance, or have to set a new one.
+	hasUsedAbci bool
+	// defaults to false, set to true if we want to use a new app instance with caching enabled.
+	// then on new setup test call, we just drop the current cache.
+	// this is not always enabled, because some tests may take a painful performance hit due to CacheKv.
+	withCaching bool
+
 	App         *app.OsmosisApp
 	Ctx         sdk.Context
 	QueryHelper *baseapp.QueryServiceTestHelper
@@ -56,14 +65,30 @@ var (
 )
 
 // Setup sets up basic environment for suite (App, Ctx, and test accounts)
+// preserves the caching enabled/disabled state.
 func (s *KeeperTestHelper) Setup() {
 	dir, err := os.MkdirTemp("", "osmosisd-test-home")
 	if err != nil {
 		panic(fmt.Sprintf("failed creating temporary directory: %v", err))
 	}
-	s.T().Cleanup(func() { os.RemoveAll(dir) })
+	s.T().Cleanup(func() { os.RemoveAll(dir); s.withCaching = false })
 	s.App = app.SetupWithCustomHome(false, dir)
 	s.setupGeneral()
+}
+
+// resets the test environment
+// requires that all commits go through helpers in s.
+// On first reset, will instantiate a new app, with caching enabled.
+// NOTE: If you are using ABCI methods, usage of Reset vs Setup has not been well tested.
+// It is believed to work, but if you get an odd error, try changing the call to this for setup to sanity check.
+// whats supposed to happen is a new setup call, and reset just does that in such a case.
+func (s *KeeperTestHelper) Reset() {
+	if s.hasUsedAbci || !s.withCaching {
+		s.withCaching = true
+		s.Setup()
+	} else {
+		s.setupGeneral()
+	}
 }
 
 func (s *KeeperTestHelper) SetupWithLevelDb() func() {
@@ -75,6 +100,9 @@ func (s *KeeperTestHelper) SetupWithLevelDb() func() {
 
 func (s *KeeperTestHelper) setupGeneral() {
 	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	if s.withCaching {
+		s.Ctx, _ = s.Ctx.CacheContext()
+	}
 	s.QueryHelper = &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: s.App.GRPCQueryRouter(),
 		Ctx:             s.Ctx,
@@ -83,12 +111,15 @@ func (s *KeeperTestHelper) setupGeneral() {
 	s.SetEpochStartTime()
 	s.TestAccs = CreateRandomAccounts(3)
 	s.SetupConcentratedLiquidityDenomsAndPoolCreation()
+	s.hasUsedAbci = false
 }
 
 func (s *KeeperTestHelper) SetupTestForInitGenesis() {
 	// Setting to True, leads to init genesis not running
 	s.App = app.Setup(true)
 	s.Ctx = s.App.BaseApp.NewContext(true, tmtypes.Header{})
+	// TODO: not sure
+	s.hasUsedAbci = true
 }
 
 func (s *KeeperTestHelper) SetEpochStartTime() {
@@ -128,6 +159,8 @@ func (s *KeeperTestHelper) Commit() {
 	newHeader := tmtypes.Header{Height: oldHeight + 1, ChainID: oldHeader.ChainID, Time: oldHeader.Time.Add(time.Second)}
 	s.App.BeginBlock(abci.RequestBeginBlock{Header: newHeader})
 	s.Ctx = s.App.GetBaseApp().NewContext(false, newHeader)
+
+	s.hasUsedAbci = true
 }
 
 // FundAcc funds target address with specified amount.
@@ -247,12 +280,14 @@ func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, prop
 	fmt.Println("beginning block ", s.Ctx.BlockHeight())
 	s.App.BeginBlocker(s.Ctx, reqBeginBlock)
 	s.Ctx = s.App.NewContext(false, reqBeginBlock.Header)
+	s.hasUsedAbci = true
 }
 
 // EndBlock ends the block, and runs commit
 func (s *KeeperTestHelper) EndBlock() {
 	reqEndBlock := abci.RequestEndBlock{Height: s.Ctx.BlockHeight()}
 	s.App.EndBlocker(s.Ctx, reqEndBlock)
+	s.hasUsedAbci = true
 }
 
 func (s *KeeperTestHelper) RunMsg(msg sdk.Msg) (*sdk.Result, error) {
@@ -263,6 +298,7 @@ func (s *KeeperTestHelper) RunMsg(msg sdk.Msg) (*sdk.Result, error) {
 		return handler(s.Ctx, msg)
 	}
 	s.FailNow("msg %v could not be ran", msg)
+	s.hasUsedAbci = true
 	return nil, fmt.Errorf("msg %v could not be ran", msg)
 }
 
@@ -411,6 +447,7 @@ func (s *KeeperTestHelper) StateNotAltered() {
 	s.App.Commit()
 	newState := s.App.ExportState(s.Ctx)
 	s.Require().Equal(oldState, newState)
+	s.hasUsedAbci = true
 }
 
 func (s *KeeperTestHelper) SkipIfWSL() {

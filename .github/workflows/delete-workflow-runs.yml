@@ -1,0 +1,73 @@
+# This workflow deletes old workflow runs in a repository.
+# It runs on a schedule and allows manual triggering with customizable options.
+
+name: Delete old workflow runs
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"  # Run at 00:00 UTC every Sunday
+
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Number of days.'
+        required: true
+      minimum_runs:
+        description: 'The minimum runs to keep for each workflow.'
+        required: true
+      delete_workflow_pattern:
+        description: 'The name or filename of the workflow. if not set then it will target all workflows.'
+        required: false
+        default: 'all'
+      delete_workflow_by_state_pattern:
+        description: 'Remove workflow by state: active, deleted, disabled_fork, disabled_inactivity, disabled_manually'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - active
+          - deleted
+          - disabled_inactivity
+          - disabled_manually
+      delete_run_by_conclusion_pattern:
+        description: 'Remove workflow by conclusion: action_required, cancelled, failure, skipped, success'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - action_required
+          - cancelled
+          - failure
+          - skipped
+          - success
+      dry_run:
+        description: 'Only log actions, do not perform any delete operations.'
+        required: false
+        default: false
+
+jobs:
+  del_runs:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - 
+        name: Set defaults for scheduled runs
+        if: github.event_name == 'schedule'
+        run: |
+          echo "::set-input name=days::30"
+          echo "::set-input name=minimum_runs::6"
+      - 
+        name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: ${{ github.event.inputs.days }}
+          keep_minimum_runs: ${{ github.event.inputs.minimum_runs }}
+          delete_workflow_pattern: ${{ github.event.inputs.delete_workflow_pattern }}
+          delete_workflow_by_state_pattern: ${{ github.event.inputs.delete_workflow_by_state_pattern }}
+          delete_run_by_conclusion_pattern: ${{ github.event.inputs.delete_run_by_conclusion_pattern }}
+          dry_run: ${{ github.event.inputs.dry_run }}

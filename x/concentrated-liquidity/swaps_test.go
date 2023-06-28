@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
+	clmath "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
@@ -1697,10 +1698,7 @@ func (s *KeeperTestSuite) getExpectedLiquidity(test SwapTest, pool types.Concent
 		test.newUpperPrice = DefaultUpperPrice
 	}
 
-	newLowerTick, err := s.PriceToTickRoundDownSpacing(test.newLowerPrice, pool.GetTickSpacing())
-	s.Require().NoError(err)
-	newUpperTick, err := s.PriceToTickRoundDownSpacing(test.newUpperPrice, pool.GetTickSpacing())
-	s.Require().NoError(err)
+	newLowerTick, newUpperTick := s.lowerUpperPricesToTick(test.newLowerPrice, test.newUpperPrice, pool.GetTickSpacing())
 
 	_, lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick)
 	s.Require().NoError(err)
@@ -1714,6 +1712,16 @@ func (s *KeeperTestSuite) getExpectedLiquidity(test SwapTest, pool types.Concent
 
 	expectedLiquidity := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
 	return expectedLiquidity
+}
+
+func (s *KeeperTestSuite) lowerUpperPricesToTick(lowerPrice, upperPrice sdk.Dec, tickSpacing uint64) (int64, int64) {
+	lowerSqrtPrice := osmomath.MustMonotonicSqrt(lowerPrice)
+	newLowerTick, err := clmath.SqrtPriceToTickRoundDownSpacing(lowerSqrtPrice, tickSpacing)
+	s.Require().NoError(err)
+	upperSqrtPrice := osmomath.MustMonotonicSqrt(upperPrice)
+	newUpperTick, err := clmath.SqrtPriceToTickRoundDownSpacing(upperSqrtPrice, tickSpacing)
+	s.Require().NoError(err)
+	return newLowerTick, newUpperTick
 }
 
 func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
@@ -2123,7 +2131,6 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			// Init suite for each test.
 			s.SetupTest()
 			pool := s.preparePoolAndDefaultPosition()
 
@@ -2298,7 +2305,6 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			// Init suite for each test.
 			s.SetupTest()
 			pool := s.preparePoolAndDefaultPosition()
 
@@ -2426,12 +2432,9 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn_NonMutative() {
 
 func (s *KeeperTestSuite) setupSecondPosition(test SwapTest, pool types.ConcentratedPoolExtension) {
 	if !test.secondPositionLowerPrice.IsNil() {
-		newLowerTick, err := s.PriceToTickRoundDownSpacing(test.secondPositionLowerPrice, pool.GetTickSpacing())
-		s.Require().NoError(err)
-		newUpperTick, err := s.PriceToTickRoundDownSpacing(test.secondPositionUpperPrice, pool.GetTickSpacing())
-		s.Require().NoError(err)
+		newLowerTick, newUpperTick := s.lowerUpperPricesToTick(test.secondPositionLowerPrice, test.secondPositionUpperPrice, pool.GetTickSpacing())
 
-		_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
+		_, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
 		s.Require().NoError(err)
 	}
 }
@@ -2660,7 +2663,6 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
-			concentratedLiquidityKeeper := s.App.ConcentratedLiquidityKeeper
 			pool := s.preparePoolWithCustSpread(tc.spreadFactor)
 
 			s.FundAcc(pool.GetAddress(), tc.poolInitialBalance)
@@ -2673,7 +2675,7 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			s.Require().NoError(err)
 
 			// Write default pool to state.
-			err = concentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+			err = s.clk.SetPool(s.Ctx, pool)
 			s.Require().NoError(err)
 
 			// Set mock listener to make sure that is is called when desired.
@@ -2683,10 +2685,10 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			expectedSpreadFactorsCoins := sdk.NewCoins(sdk.NewCoin(tc.tokenIn.Denom, expectedSpreadFactors.TruncateInt()))
 			swapDetails := cl.SwapDetails{sender, tc.tokenIn, tc.tokenOut}
 			poolUpdates := cl.PoolUpdates{tc.newCurrentTick, tc.newLiquidity, tc.newSqrtPrice}
-			err = concentratedLiquidityKeeper.UpdatePoolForSwap(s.Ctx, pool, swapDetails, poolUpdates, expectedSpreadFactors)
+			err = s.clk.UpdatePoolForSwap(s.Ctx, pool, swapDetails, poolUpdates, expectedSpreadFactors)
 
 			// Test that pool is updated
-			poolAfterUpdate, err2 := concentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			poolAfterUpdate, err2 := s.clk.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err2)
 
 			if tc.expectError != nil {
@@ -3080,6 +3082,7 @@ func (s *KeeperTestSuite) TestInfiniteSwapLoop() {
 
 	// Swap back in the amount that was swapped out to test the inverse relationship
 	// This line is commented out as it triggers an infinite loop.
+
 	_, _, _, err = s.clk.SwapOutAmtGivenIn(s.Ctx, swapAddress, pool, tokenOut, ETH, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
 	s.Require().NoError(err)
 }

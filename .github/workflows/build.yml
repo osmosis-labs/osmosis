@@ -1,59 +1,80 @@
-name: Compile Osmosis
+# This workflow builds the osmosisd binary for amd64 and arm64 on Darwin and Linux.
+#
+# This workflow runs:
+# - on pushes to main
+# - on every pull requests
+# - when manually triggered
+#
+# Caching strategy
+# This code will store the Go modules cache based on the hash of your go.sum file,
+# ensuring that the cache will be invalidated when your dependencies change.
+# The cache will be stored on a per-branch basis, which should prevent cache pollution issues between different branches.
 
-# Controls when the action will run.
-#  This workflow runr on pushes to master & every Pull Requests. (Or when manually triggered)
+name: Build osmosisd
+
 on:
   pull_request:
+    branches:
+      - "**"
   push:
     branches:
-      - main
+      - "main"
+      - "v[0-9]**"
   workflow_dispatch:
 
-# This workflow makes x86_64 binaries for mac, windows, and linux.
+env:
+  GO_VERSION: '1.20.5'
+
 jobs:
   build:
+    name: osmosisd-${{ matrix.targetos }}-${{ matrix.arch }}
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
-        arch: [amd64]
+        arch: [amd64, arm64]
         targetos: [darwin, linux]
         include:
           - targetos: darwin
             arch: arm64
-#        include:
-#          - targetos: windows
-#            arch: amd64
-    name: osmosis ${{ matrix.arch }} for ${{ matrix.targetos }}
+
     steps:
-      - uses: actions/checkout@v3
-      - name: Get git diff
+      -
+        name: Check out repository code
+        uses: actions/checkout@v3
+      -
+        name: Get git diff
         uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
             **/**.wasm
-            **/**!(test).go
+            **/**.go
             go.mod
             go.sum
             Makefile
-      - 
+            .github/workflows/build.yml
+      -
         name: 🐿 Setup Golang
         uses: actions/setup-go@v4
+        if: env.GIT_DIFF
         with:
-          go-version: '^1.20'
+          go-version: ${{env.GO_VERSION}}
         env:
           GOOS: ${{ matrix.targetos }}
           GOARCH: ${{ matrix.arch }}
+      -
+        name: Download Dependencies
         if: env.GIT_DIFF
-
-      - name: Compile osmosis
+        run: go mod download
+      -
+        name: Build osmosisd
+        if: env.GIT_DIFF
         run: |
-          go mod download
-          cd cmd/osmosisd
-          GOWRK=off go build .
+          GOWRK=off go build cmd/osmosisd/main.go
+      -
+        name: Upload osmosisd artifact
         if: env.GIT_DIFF
-
-      - uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3
         with:
-          name: osmosisd ${{ matrix.targetos }} ${{ matrix.arch }}
+          name: osmosisd-${{ matrix.targetos }}-${{ matrix.arch }}
           path: cmd/osmosisd/osmosisd
-        if: env.GIT_DIFF
