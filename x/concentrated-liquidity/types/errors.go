@@ -847,5 +847,5 @@ type SwapNoProgressError struct {
 }
 
 func (e SwapNoProgressError) Error() string {
-	return fmt.Sprintf("ran out of iterations during swap. Possibly entered an inifinite loop. Pool id (%d), user provided coin (%s)", e.PoolId, e.UserProvidedCoin)
+	return fmt.Sprintf("ran out of iterations during swap. Possibly entered an infinite loop. Pool id (%d), user provided coin (%s)", e.PoolId, e.UserProvidedCoin)
 }
