@@ -888,7 +888,7 @@ If the direction is one for zero, the liquidity for the bucket in the designated
 where L<sub>0</sub> is the global(cumulative liquidity).
 
 ### Deducing the quantity of tokens X and Y for a tick range.
-Having obtained the liquidity depths for each liquidity buckets in the pool , we can derive an equation to calculate the quantity of each token locked for a certain price range. Let *i* and *j* be the indexes of lower and upper tick boundaries of the range we want to calculat, let P<sub>0</sub> be current price and P<sub>a</sub>, P<sub>b</sub> prices for lower tick and upper tick respectively, where P<sub>a</sub>, P<sub>b</sub> are defined as the following:
+Having obtained the liquidity depths for each liquidity buckets in the pool, we can derive an equation to calculate the quantity of each token locked for a certain price range. Let *i* and *j* be the indexes of lower and upper tick boundaries of the range we want to calculate, let P<sub>0</sub> be current price and P<sub>a</sub>, P<sub>b</sub> prices for lower tick and upper tick respectively, where P<sub>a</sub>, P<sub>b</sub> are defined as the following:
 <p align="center"> 
 P<sub>a</sub> = 1.0001<sup>i</sup>, P<sub>b</sub> = 1.0001<sup>j</sup>
 </p>
@@ -938,7 +938,7 @@ e.g. $d = -513$ for $\delta = -5\%$
 
 Note that as the current price formally belongs only to the first range [s<sub>0</sub>, s<sub>1</sub>] or [s<sub>1</sub>, s<sub>0</sub>], where s<sub>0</sub> is the left (when the price grows) or the right (when the price drops) boundary of the current liquidity segment (segment that contains the current price). Mathematically, as we always start calculations from the current price, when recovering the token amounts, all ranges contain only one of the tokens (X or Y depending on the direction of the price change). When swapping, one of the tokens is exchanged for the token being sold. We need to find how much we can swap until the price reaches a certain level.
 
-The Pool Depths exoressed in units of asset X or Y in calculated as follows:
+The Pool Depths expressed in units of asset X or Y in calculated as follows:
 
 $Depth_{x}(\delta) = \sum_{i=0}^{n}x_{i}$
 $Depth_{y}(\delta) = \sum_{i=0}^{n}y_{i}$
@@ -950,7 +950,6 @@ $y_i = L_i \left(\sqrt{P_{b}(i)} - \sqrt{P_{a}(i)}\right), i = 0, \dots, n$
 
 ### Calculating Liquidator Depths
 Liquidator Depth refers to the real price slippage, the real price slippage (average execution price in relation to the current price) from the liquidator's point of view. That is, the amount of tokens that can be liquidated so that the real price slippage does not exceed certain level.
-
 
 The idea to determine the depth is to swap the maximum possible amount per each liquidity segment until a realized slippage doesn’t exceed a desired level. For the last segment the procedure is repeated per tick until the desired realized slippage is achieved.
 Maximum token amounts that can be locked within each segment or tick (and exchanged for another token when the price crosses the ticks) can be derived as follows:
