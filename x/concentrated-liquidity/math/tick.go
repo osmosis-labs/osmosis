@@ -170,9 +170,15 @@ func powTenBigDec(exponent int64) osmomath.BigDec {
 	return bigNegPowersOfTen[-exponent]
 }
 
-func CalculatePriceToTickDec(price sdk.Dec) (tickIndex sdk.Dec) {
+func CalculatePriceToTickDec(price sdk.Dec) (tickIndex sdk.Dec, err error) {
+	if price.IsNegative() {
+		return sdk.ZeroDec(), fmt.Errorf("price must be greater than zero")
+	}
+	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
+		return sdk.ZeroDec(), types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
+	}
 	if price.Equal(sdkOneDec) {
-		return sdk.ZeroDec()
+		return sdk.ZeroDec(), nil
 	}
 
 	// The approach here is to try determine which "geometric spacing" are we in.
@@ -210,7 +216,7 @@ func CalculatePriceToTickDec(price sdk.Dec) (tickIndex sdk.Dec) {
 	// which would be truncation. However price may have errors, hence it being callers job)
 	tickIndex = ticksFilledByCurrentSpacing.SDKDec()
 	tickIndex = tickIndex.Add(sdk.NewDec(geoSpacing.initialTick))
-	return tickIndex
+	return tickIndex, nil
 }
 
 // CalculateSqrtPriceToTick takes in a square root and returns the corresponding tick index.
@@ -224,7 +230,11 @@ func CalculateSqrtPriceToTickBigDec(sqrtPrice osmomath.BigDec) (tickIndex int64,
 	// 10**-12 which is above the smallest value of sdk.Dec.
 	priceDec := price.SDKDec()
 
-	tick := CalculatePriceToTickDec(priceDec)
+	tick, err := CalculatePriceToTickDec(priceDec)
+	if err != nil {
+		return 0, err
+	}
+
 	truncatedTick := tick.TruncateInt64()
 
 	// We have a candidate bucket index `t`. We discern here if:

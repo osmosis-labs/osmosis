@@ -2327,6 +2327,8 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 	invalidCoin1Denom := sdk.NewCoins(DefaultCoin0, sdk.NewCoin("invalidDenom", sdk.NewInt(1000000000000000000)))
 	zeroCoins := sdk.NewCoins()
 
+	defaultRemainingLockDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
+
 	tests := []struct {
 		name                  string
 		remainingLockDuration time.Duration
@@ -2335,30 +2337,30 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 	}{
 		{
 			name:                  "valid test",
-			remainingLockDuration: 24 * time.Hour * 14,
+			remainingLockDuration: defaultRemainingLockDuration,
 			coinsForPosition:      DefaultCoins,
 		},
 		{
 			name:                  "invalid coin0 denom",
-			remainingLockDuration: 24 * time.Hour * 14,
+			remainingLockDuration: defaultRemainingLockDuration,
 			coinsForPosition:      invalidCoin0Denom,
 			expectedErr:           types.Amount0IsNegativeError{Amount0: sdk.ZeroInt()},
 		},
 		{
 			name:                  "invalid coin1 denom",
-			remainingLockDuration: 24 * time.Hour * 14,
+			remainingLockDuration: defaultRemainingLockDuration,
 			coinsForPosition:      invalidCoin1Denom,
 			expectedErr:           types.Amount1IsNegativeError{Amount1: sdk.ZeroInt()},
 		},
 		{
 			name:                  "invalid coins amount",
-			remainingLockDuration: 24 * time.Hour * 14,
+			remainingLockDuration: defaultRemainingLockDuration,
 			coinsForPosition:      invalidCoinsAmount,
 			expectedErr:           types.NumCoinsError{NumCoins: len(invalidCoinsAmount)},
 		},
 		{
 			name:                  "edge: both coins amounts' are zero",
-			remainingLockDuration: 24 * time.Hour * 14,
+			remainingLockDuration: defaultRemainingLockDuration,
 			coinsForPosition:      zeroCoins,
 			expectedErr:           types.NumCoinsError{NumCoins: 0},
 		},
@@ -2398,6 +2400,7 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 			// Check locked
 			concentratedLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, concentratedLockId)
 			s.Require().NoError(err)
+
 			s.Require().Equal(concentratedLock.Coins[0].Amount.String(), liquidity.TruncateInt().String())
 			s.Require().False(concentratedLock.IsUnlocking())
 		})
