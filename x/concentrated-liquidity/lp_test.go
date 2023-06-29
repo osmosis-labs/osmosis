@@ -1131,7 +1131,15 @@ func (s *KeeperTestSuite) TestSingleSidedAddToPosition() {
 
 			// system under test parameters
 			sutConfigOverwrite: &lpTest{
-				amount0Expected: DefaultAmt0.Add(DefaultAmt0),
+				// calculated with x/concentrated-liquidity/python/clmath.py
+				// The input values are taken from debugger assumming the rest of the system is correct:
+				// sqrtPriceLowerTick = Decimal("1.000049998750062497000000000000000000")
+				// sqrtPriceUpperTick = Decimal("1.000099995000499938000000000000000000")
+				// liquidity = Decimal("20004500137.498290928785113714000000000000000000")
+				// calc_amount_zero_delta(liquidity, sqrtPriceLowerTick, sqrtPriceUpperTick, False)
+				// Decimal('999999.999999999999999999999957642595723576')
+				// The value above gets rounded down to DefaultAmt0.Sub(sdk.OneInt()). Then, we add DefaultAmt0.
+				amount0Expected: DefaultAmt0.Sub(sdk.OneInt()).Add(DefaultAmt0),
 				amount1Expected: sdk.ZeroInt(),
 				// current tick is 0, so create the position completely above it
 				lowerTick: 100,
