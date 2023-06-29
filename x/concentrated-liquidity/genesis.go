@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types/genesis"
 )
@@ -34,6 +35,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		poolId := pool.GetId()
 		poolTicks := poolData.Ticks
 		for _, tick := range poolTicks {
+			// due to how proto marshalling / unmarshalling works, we need to initialize the list
+			// with nil values.
+			if len(tick.Info.UptimeTrackers.List) == 0 {
+				tick.Info = InitializeTickUptimeTrackers(tick.Info)
+			}
 			k.SetTickInfo(ctx, poolId, tick.TickIndex, &tick.Info)
 		}
 
@@ -315,4 +321,21 @@ func ParseFullTickFromBytes(key, value []byte) (tick genesis.FullTick, err error
 		TickIndex: tickIndex,
 		Info:      tickInfo,
 	}, nil
+}
+
+// InitializeTickUptimeTrackers initializes the uptimeTrackers of the given tick
+// with 6 empty structs of uptime trackers.
+func InitializeTickUptimeTrackers(tick model.TickInfo) model.TickInfo {
+	length, initLength := 0, 6
+	emptyCoins := sdk.DecCoins(nil)
+	newUptimeTrackers := []model.UptimeTracker{}
+	for length < initLength {
+		newUptimeTracker := model.UptimeTracker{}
+		newUptimeTracker.UptimeGrowthOutside = emptyCoins
+		newUptimeTrackers = append(newUptimeTrackers, newUptimeTracker)
+		length++
+	}
+
+	tick.UptimeTrackers.List = newUptimeTrackers
+	return tick
 }

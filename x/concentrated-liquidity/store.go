@@ -77,15 +77,12 @@ func ParseTickFromBzAndRemoveUnInitializedUptimeTrackers(bz []byte) (model.TickI
 	if err != nil {
 		return model.TickInfo{}, nil
 	}
-
 	newTickInfo := model.TickInfo{}
 	newTickInfo.LiquidityGross = tick.LiquidityGross
 	newTickInfo.LiquidityNet = tick.LiquidityNet
 	newTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal = tick.SpreadRewardGrowthOppositeDirectionOfLastTraversal
-	for _, list := range tick.UptimeTrackers.List {
-		if list.UptimeGrowthOutside.Len() != 0 {
-			newTickInfo.UptimeTrackers = tick.UptimeTrackers
-		}
+	if len(tick.UptimeTrackers.List) != 0 {
+		newTickInfo.UptimeTrackers = tick.UptimeTrackers
 	}
 
 	return newTickInfo, nil
