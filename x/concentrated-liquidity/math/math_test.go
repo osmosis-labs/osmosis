@@ -86,37 +86,6 @@ func TestLiquidity0(t *testing.T) {
 	}
 }
 
-// TestGetNextSqrtPriceFromAmount1RoundingDownBigDec tests that getNextSqrtPriceFromAmount1RoundingDown
-// utilizes the current squareRootPrice, liquidity of denom1, and amount of denom1 that still needs
-// to be swapped in order to determine the next squareRootPrice
-// sqrtPriceNext = sqrtPriceCurrent + (amount1Remaining / liquidity1)
-func TestGetNextSqrtPriceFromAmount1RoundingDownBigDec(t *testing.T) {
-	testCases := map[string]struct {
-		liquidity             osmomath.BigDec
-		sqrtPCurrent          osmomath.BigDec
-		amount1Remaining      osmomath.BigDec
-		sqrtPriceNextExpected string
-	}{
-		"happy path": {
-			liquidity:        osmomath.MustNewDecFromStr("1519437308.014768571721000000"), // liquidity1 calculated above
-			sqrtPCurrent:     sqrt5000BigDec,                                              // 5000000000
-			amount1Remaining: osmomath.NewBigDec(42000000),
-			// sqrt_next = sqrt_cur + token_in / liq
-			// calculated with x/concentrated-liquidity/python/clmath.py  round_decimal(sqrt_next, 36, ROUND_FLOOR)
-			sqrtPriceNextExpected: "70.738319930382329008049494613660784220",
-		},
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-
-		t.Run(name, func(t *testing.T) {
-			sqrtPriceNext := math.GetNextSqrtPriceFromAmount1InRoundingDown(tc.sqrtPCurrent, tc.liquidity, tc.amount1Remaining)
-			require.Equal(t, tc.sqrtPriceNextExpected, sqrtPriceNext.String())
-		})
-	}
-}
-
 // TestCalcAmount0Delta tests that calcAmount0 takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 0
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
@@ -660,6 +629,14 @@ func TestGetNextSqrtPriceFromAmount1InRoundingDown(t *testing.T) {
 			amountRemaining:  osmomath.MustNewDecFromStr("10"),
 			// sqrt_next = sqrt_cur + token_in / liq
 			expected: osmomath.MustNewDecFromStr("12.5"),
+		},
+		"happy path": {
+			liquidity:        osmomath.MustNewDecFromStr("1519437308.014768571721000000"), // liquidity1 calculated above
+			sqrtPriceCurrent: sqrt5000BigDec,                                              // 5000000000
+			amountRemaining:  osmomath.NewBigDec(42000000),
+			// sqrt_next = sqrt_cur + token_in / liq
+			// calculated with x/concentrated-liquidity/python/clmath.py  round_decimal(sqrt_next, 36, ROUND_FLOOR)
+			expected: osmomath.MustNewDecFromStr("70.738319930382329008049494613660784220"),
 		},
 	}
 	runSqrtRoundingTestCase(t, "TestGetNextSqrtPriceFromAmount1InRoundingDown", math.GetNextSqrtPriceFromAmount1InRoundingDown, tests)
