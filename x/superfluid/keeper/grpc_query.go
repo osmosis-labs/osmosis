@@ -304,7 +304,12 @@ func (q Querier) UserSuperfluidPositionsPerConcentratedPoolBreakdown(goCtx conte
 		case cltypes.PositionIdToLockNotFoundError:
 			continue
 		case nil:
+			// If we have hit this logic branch, it means that, at one point, the lockId provided existed. If we fetch it again
+			// and it doesn't exist, that means that the lock has matured.
 			lock, err := q.Keeper.lk.GetLockByID(ctx, lockId)
+			if err == errorsmod.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", lock.GetID())) {
+				continue
+			}
 			if err != nil {
 				return nil, err
 			}
