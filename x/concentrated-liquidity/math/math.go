@@ -254,15 +254,6 @@ func GetNextSqrtPriceFromAmount0OutRoundingUpBigDec(sqrtPriceCurrent, liquidity,
 	return liquidity.MulRoundUp(sqrtPriceCurrent).QuoRoundUp(denominator)
 }
 
-// GetNextSqrtPriceFromAmount1InRoundingDown utilizes the current sqrtPriceCurrent, liquidity, and amount of denom1 that still needs
-// to be swapped in order to determine the sqrtPriceNext.
-// When we swap for token zero out given token one in, the price is increasing and we need to move the sqrt price (increase it) less to
-// avoid overpaying out of the pool. Therefore, we round down.
-// sqrt_next = sqrt_cur + token_in / liq
-func GetNextSqrtPriceFromAmount1InRoundingDown(sqrtPriceCurrent, liquidity, amountOneRemainingIn sdk.Dec) (sqrtPriceNext sdk.Dec) {
-	return sqrtPriceCurrent.Add(amountOneRemainingIn.QuoTruncate(liquidity))
-}
-
 // GetNextSqrtPriceFromAmount1InRoundingDownBigDec utilizes the current sqrtPriceCurrent, liquidity, and amount of denom1 that still needs
 // to be swapped in order to determine the sqrtPriceNext.
 // When we swap for token zero out given token one in, the price is increasing and we need to move the sqrt price (increase it) less to
