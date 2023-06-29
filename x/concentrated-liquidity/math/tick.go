@@ -141,7 +141,7 @@ func RoundDownTickToSpacing(tickIndex int64, tickSpacing int64) (int64, error) {
 // SqrtPriceToTickRoundDown converts the given sqrt price to its corresponding tick rounded down
 // to the nearest tick spacing.
 func SqrtPriceToTickRoundDownSpacing(sqrtPrice sdk.Dec, tickSpacing uint64) (int64, error) {
-	tickIndex, err := CalculateSqrtPriceToTick(sqrtPrice)
+	tickIndex, err := CalculateSqrtPriceToTickBigDec(osmomath.BigDecFromSDKDec(sqrtPrice))
 	if err != nil {
 		return 0, err
 	}
@@ -211,68 +211,6 @@ func CalculatePriceToTickDec(price sdk.Dec) (tickIndex sdk.Dec) {
 	tickIndex = ticksFilledByCurrentSpacing.SDKDec()
 	tickIndex = tickIndex.Add(sdk.NewDec(geoSpacing.initialTick))
 	return tickIndex
-}
-
-// CalculateSqrtPriceToTick takes in a square root and returns the corresponding tick index.
-// This function does not take into consideration tick spacing.
-func CalculateSqrtPriceToTick(sqrtPrice sdk.Dec) (tickIndex int64, err error) {
-	// SqrtPrice may have errors, so we take the tick obtained from the price
-	// and move it in a +/- 1 tick range based on the sqrt price those ticks would imply.
-	price := sqrtPrice.Mul(sqrtPrice)
-	tick := CalculatePriceToTickDec(price)
-	truncatedTick := tick.TruncateInt64()
-
-	// We have a candidate bucket index `t`. We discern here if:
-	// * sqrtPrice in [TickToSqrtPrice(t - 1), TickToSqrtPrice(t))
-	// * sqrtPrice in [TickToSqrtPrice(t), TickToSqrtPrice(t + 1))
-	// * sqrtPrice in [TickToSqrtPrice(t+1), TickToSqrtPrice(t + 2))
-	// * sqrtPrice not in either.
-	// We handle boundary checks, by saying that if our candidate is the min tick,
-	// set the candidate to min tick + 1.
-	// If our candidate is at or above max tick - 1, set the candidate to max tick - 2.
-	// This is because to check tick t + 1, we need to go to t + 2, so to not go over
-	// max tick during these checks, we need to shift it down by 2.
-	// We check this at max tick - 1 instead of max tick, since we expect the output to
-	// have some error that can push us over the tick boundary.
-	outOfBounds := false
-	if truncatedTick <= types.MinInitializedTick {
-		truncatedTick = types.MinInitializedTick + 1
-		outOfBounds = true
-	} else if truncatedTick >= types.MaxTick-1 {
-		truncatedTick = types.MaxTick - 2
-		outOfBounds = true
-	}
-
-	_, sqrtPriceTmin1, errM1 := TickToSqrtPrice(truncatedTick - 1)
-	_, sqrtPriceT, errT := TickToSqrtPrice(truncatedTick)
-	_, sqrtPriceTplus1, errP1 := TickToSqrtPrice(truncatedTick + 1)
-	_, sqrtPriceTplus2, errP2 := TickToSqrtPrice(truncatedTick + 2)
-	if errM1 != nil || errT != nil || errP1 != nil || errP2 != nil {
-		return 0, errors.New("internal error in computing square roots within CalculateSqrtPriceToTick")
-	}
-
-	// We error if sqrtPriceT is above sqrtPriceTplus2 or below sqrtPriceTmin1.
-	// For cases where calculated tick does not fall on a limit (min/max tick), the upper end is exclusive.
-	// For cases where calculated tick falls on a limit, the upper end is inclusive, since the actual tick is
-	// already shifted and making it exclusive would make min/max tick impossible to reach by construction.
-	// We do this primary for code simplicity, as alternatives would require more branching and special cases.
-	if (!outOfBounds && sqrtPrice.GTE(sqrtPriceTplus2)) || (outOfBounds && sqrtPrice.GT(sqrtPriceTplus2)) || sqrtPrice.LT(sqrtPriceTmin1) {
-		return 0, fmt.Errorf("sqrt price to tick could not find a satisfying tick index. Hit bounds: %v", outOfBounds)
-	}
-
-	// We expect this case to only be hit when the original provided sqrt price is exactly equal to the max sqrt price.
-	if sqrtPrice.Equal(sqrtPriceTplus2) {
-		return truncatedTick + 2, nil
-	}
-
-	// The remaining cases handle shifting tick index by +/- 1.
-	if sqrtPrice.GTE(sqrtPriceTplus1) {
-		return truncatedTick + 1, nil
-	}
-	if sqrtPrice.GTE(sqrtPriceT) {
-		return truncatedTick, nil
-	}
-	return truncatedTick - 1, nil
 }
 
 // CalculateSqrtPriceToTick takes in a square root and returns the corresponding tick index.
