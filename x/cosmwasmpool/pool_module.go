@@ -338,3 +338,23 @@ func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins
 	}
 	return pool.GetTotalPoolLiquidity(ctx), nil
 }
+
+// GetTotalLiquidity retrieves the total liquidity of all cw pools.
+func (k Keeper) GetTotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
+	totalLiquidity := sdk.Coins{}
+	pools, err := k.GetPools(ctx)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+	for _, poolI := range pools {
+		cosmwasmPool, ok := poolI.(types.CosmWasmExtension)
+		if !ok {
+			return nil, types.InvalidPoolTypeError{
+				ActualPool: poolI,
+			}
+		}
+		totalPoolLiquidity := cosmwasmPool.GetTotalPoolLiquidity(ctx)
+		totalLiquidity = totalLiquidity.Add(totalPoolLiquidity...)
+	}
+	return sdk.Coins{}, nil
+}

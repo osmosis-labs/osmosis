@@ -7,13 +7,13 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 )
 
-func (k Keeper) GetTotalLiquidity(ctx sdk.Context) sdk.Coins {
+func (k Keeper) GetTotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 	coins := sdk.Coins{}
 	k.IterateDenomLiquidity(ctx, func(coin sdk.Coin) bool {
 		coins = coins.Add(coin)
 		return false
 	})
-	return coins
+	return coins, nil
 }
 
 func (k Keeper) setTotalLiquidity(ctx sdk.Context, coins sdk.Coins) {

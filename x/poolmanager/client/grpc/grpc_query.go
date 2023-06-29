@@ -20,6 +20,16 @@ type Querier struct {
 
 var _ queryproto.QueryServer = Querier{}
 
+func (q Querier) TotalLiquidity(grpcCtx context.Context,
+	req *queryproto.TotalLiquidityRequest,
+) (*queryproto.TotalLiquidityResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.TotalLiquidity(ctx, *req)
+}
+
 func (q Querier) TotalPoolLiquidity(grpcCtx context.Context,
 	req *queryproto.TotalPoolLiquidityRequest,
 ) (*queryproto.TotalPoolLiquidityResponse, error) {
