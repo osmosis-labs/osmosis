@@ -102,7 +102,10 @@ def get_next_sqrt_price_from_amount0_in_round_up(liquidity, sqrtPriceCurrent, to
     return round_osmo_prec_up(round_osmo_prec_up(liquidity * sqrtPriceCurrent) / (liquidity + round_osmo_prec_down(tokenIn * sqrtPriceCurrent)))
 
 def get_next_sqrt_price_from_amount1_out_round_down(liquidity, sqrtPriceCurrent, tokenOut):
-    return sqrtPriceCurrent - round_osmo_prec_up(tokenOut / liquidity)
+    return round_osmo_prec_down(sqrtPriceCurrent - round_osmo_prec_up(tokenOut / liquidity))
+
+def get_next_sqrt_price_from_amount1_in_round_down(liquidity, sqrtPriceCurrent, tokenIn):
+    return sqrtPriceCurrent + round_osmo_prec_down(tokenIn / liquidity)
 
 def calc_amount_zero_delta(liquidity, sqrtPriceA, sqrtPriceB, roundUp):
     if sqrtPriceB > sqrtPriceA:
