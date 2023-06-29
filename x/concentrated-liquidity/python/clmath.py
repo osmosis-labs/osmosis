@@ -91,12 +91,15 @@ def get_liquidity_from_amounts(sqrt_price, sqrt_price_a, sqrt_price_b, amount0, 
 
     return liquidity
 
-def get_next_sqrt_price_from_amount0_round_up(liquidity, sqrtPriceCurrent, tokenOut):
+def get_next_sqrt_price_from_amount0_out_round_up(liquidity, sqrtPriceCurrent, tokenOut):
     product_num = liquidity * sqrtPriceCurrent
     product_num = round_osmo_prec_up(product_num)
     product_den =  tokenOut * sqrtPriceCurrent
     product_den = round_osmo_prec_up(product_den)
     return round_osmo_prec_up(product_num / (liquidity - product_den))
+
+def get_next_sqrt_price_from_amount0_in_round_up(liquidity, sqrtPriceCurrent, tokenIn):
+    return round_osmo_prec_up(round_osmo_prec_up(liquidity * sqrtPriceCurrent) / (liquidity + round_osmo_prec_down(tokenIn * sqrtPriceCurrent)))
 
 def calc_amount_zero_delta(liquidity, sqrtPriceA, sqrtPriceB, roundUp):
     if sqrtPriceB > sqrtPriceA:
