@@ -295,17 +295,11 @@ func (q Querier) UserSuperfluidPositionsPerConcentratedPoolBreakdown(goCtx conte
 		return nil, err
 	}
 
-	fmt.Println("POSITIONS", positions)
-
 	// Query each position ID and determine if it has a lock ID associated with it, which implies the position is superfluid staked.
 	// Construct a response with the position ID, lock ID, the amount of cl shares staked, and what those shares are worth in staked osmo tokens.
 	var clPoolUserPositionRecords []types.ConcentratedPoolUserPositionRecord
 	for _, pos := range positions {
-		fmt.Println("pos", pos)
-		// TODO: change query or hooks??
 		lockId, err := q.Keeper.clk.GetLockIdFromPositionId(ctx, pos.PositionId)
-		fmt.Println("lockId", lockId)
-		fmt.Println("err", err)
 		switch err.(type) {
 		case cltypes.PositionIdToLockNotFoundError:
 			continue
