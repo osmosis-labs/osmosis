@@ -40,7 +40,7 @@ type SwapTest struct {
 	expectedTokenIn                            sdk.Coin
 	expectedTokenOut                           sdk.Coin
 	expectedTick                               int64
-	expectedSqrtPrice                          sdk.Dec
+	expectedSqrtPrice                          osmomath.BigDec
 	expectedLowerTickSpreadRewardGrowth        sdk.DecCoins
 	expectedUpperTickSpreadRewardGrowth        sdk.DecCoins
 	expectedSpreadRewardGrowthAccumulatorValue sdk.Dec
@@ -108,7 +108,7 @@ var (
 			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(8396)),
 			expectedTick:     31003913,
 			// Corresponds to sqrt_next in script above
-			expectedSqrtPrice: sdk.MustNewDecFromStr("70.738348247484497718"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.738348247484497718"),
 			// tick's accum coins stay same since crossing tick does not occur in this case
 		},
 		"single position within one tick: usdc -> eth, with zero price limit": {
@@ -138,7 +138,7 @@ var (
 			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(8396)),
 			expectedTick:     31003913,
 			// Corresponds to sqrt_next in script above
-			expectedSqrtPrice: sdk.MustNewDecFromStr("70.738348247484497718"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.738348247484497718"),
 			// tick's accum coins stay same since crossing tick does not occur in this case
 		},
 		"single position within one tick: eth -> usdc": {
@@ -169,7 +169,7 @@ var (
 			expectedTick:     30993777,
 			// True value with arbitrary precision: 70.6666639108571443321...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 70.666663910857144333
-			expectedSqrtPrice: sdk.MustNewDecFromStr("70.666663910857144333"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.666663910857144333"),
 		},
 		"single position within one tick: eth -> usdc, with zero price limit": {
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
@@ -199,7 +199,7 @@ var (
 			expectedTick:     30993777,
 			// True value with arbitrary precision: 70.6666639108571443321...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 70.666663910857144333
-			expectedSqrtPrice: sdk.MustNewDecFromStr("70.666663910857144333"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.666663910857144333"),
 		},
 		//  Two equal price ranges
 		//
@@ -235,7 +235,7 @@ var (
 			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(8398)),
 			expectedTick:     31001956,
 			// Corresponds to sqrt_next in script above
-			expectedSqrtPrice: sdk.MustNewDecFromStr("70.724513183069625079"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.724513183069625079"),
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
 			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
@@ -270,7 +270,7 @@ var (
 			expectedTick:     30996887,
 			// True value with arbitrary precision: 70.6886641634088363202...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 70.688664163408836321
-			expectedSqrtPrice: sdk.MustNewDecFromStr("70.688664163408836321"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.688664163408836321"),
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
 			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
@@ -323,7 +323,7 @@ var (
 			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1820630)),
 			expectedTick:     32105414,
 			// Equivalent to sqrt_next_2 in the script above
-			expectedSqrtPrice: sdk.MustNewDecFromStr("78.137149196095607130"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("78.137149196095607130"),
 			//  second positions both have greater tick than the current tick, thus never initialized
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 315000, expectedSpreadRewardGrowth: cl.EmptyCoins},
@@ -347,7 +347,7 @@ var (
 			expectedTokenOut:         sdk.NewCoin("usdc", sdk.NewInt(9103422788)),
 			// crosses one tick with spread reward growth outside
 			expectedTick:      30095166,
-			expectedSqrtPrice: sdk.MustNewDecFromStr("63.993489023323078693"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("63.993489023323078693"),
 			// crossing tick happens single time for each upper tick and lower tick.
 			// Thus the tick's spread reward growth is DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins
 			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
@@ -374,7 +374,7 @@ var (
 			expectedTokenIn:                     sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			expectedTokenOut:                    sdk.NewCoin("eth", sdk.NewInt(1864161)),
 			expectedTick:                        32055919,
-			expectedSqrtPrice:                   sdk.MustNewDecFromStr("77.819789636800169393"),
+			expectedSqrtPrice:                   osmomath.MustNewDecFromStr("77.819789636800169393"),
 			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 			expectedUpperTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 310010, expectedSpreadRewardGrowth: cl.EmptyCoins},
@@ -437,7 +437,7 @@ var (
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedTick:                              31712695,
 			// Corresponds to sqrt_next_3 in the script above
-			expectedSqrtPrice: sdk.MustNewDecFromStr("75.582373164412551492"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("75.582373164412551492"),
 			newLowerPrice:     sdk.NewDec(5001),
 			newUpperPrice:     sdk.NewDec(6250),
 		},
@@ -497,7 +497,7 @@ var (
 			expectedTokenOut:         sdk.NewCoin("usdc", sdk.NewInt(9321276930)),
 			expectedTick:             30129083,
 			// Corresponds to sqrt_next_2 in the script above
-			expectedSqrtPrice: sdk.MustNewDecFromStr("64.257943794993248954"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("64.257943794993248954"),
 			// Started from DefaultSpreadRewardAccumCoins * 3, crossed tick once, thus becoming
 			// DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins = DefaultSpreadRewardAccumCoins * 2
 			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
@@ -520,7 +520,7 @@ var (
 			expectedTokenIn:          sdk.NewCoin("eth", sdk.NewInt(1800000)),
 			expectedTokenOut:         sdk.NewCoin("usdc", sdk.NewInt(8479320318)),
 			expectedTick:             30292059,
-			expectedSqrtPrice:        sdk.MustNewDecFromStr("65.513815285481060960"),
+			expectedSqrtPrice:        osmomath.MustNewDecFromStr("65.513815285481060960"),
 			// Started from DefaultSpreadRewardAccumCoins * 3, crossed tick once, thus becoming
 			// DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins = DefaultSpreadRewardAccumCoins * 2
 			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
@@ -546,7 +546,7 @@ var (
 			expectedTokenIn:                     sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			expectedTokenOut:                    sdk.NewCoin("eth", sdk.NewInt(1820545)),
 			expectedTick:                        32105555,
-			expectedSqrtPrice:                   sdk.MustNewDecFromStr("78.138055169663761658"),
+			expectedSqrtPrice:                   osmomath.MustNewDecFromStr("78.138055169663761658"),
 			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 			expectedUpperTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins,
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 315010, expectedSpreadRewardGrowth: cl.EmptyCoins},
@@ -588,7 +588,7 @@ var (
 				return tick
 			}(),
 			// Since the next sqrt price is based on the price limit, we can calculate this directly.
-			expectedSqrtPrice: osmomath.MustMonotonicSqrt(sdk.NewDec(4994)),
+			expectedSqrtPrice: osmomath.BigDecFromSDKDec(osmomath.MustMonotonicSqrt(sdk.NewDec(4994))),
 		},
 	}
 
@@ -605,7 +605,7 @@ var (
 			expectedTokenIn:   sdk.NewCoin("usdc", sdk.NewInt(42000000)),
 			expectedTokenOut:  sdk.NewCoin("eth", sdk.NewInt(8312)),
 			expectedTick:      31003800,
-			expectedSqrtPrice: sdk.MustNewDecFromStr("70.738071546196200264"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.738071546196200264"),
 			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000276701288297452"),
 		},
 		//          5000
@@ -623,7 +623,7 @@ var (
 			expectedTokenIn:          sdk.NewCoin("eth", sdk.NewInt(13370)),
 			expectedTokenOut:         sdk.NewCoin("usdc", sdk.NewInt(64824917)),
 			expectedTick:             30996900,
-			expectedSqrtPrice:        sdk.MustNewDecFromStr("70.689324382628080102"),
+			expectedSqrtPrice:        osmomath.MustNewDecFromStr("70.689324382628080102"),
 			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000132091924532"),
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
@@ -645,7 +645,7 @@ var (
 			expectedTokenOut:         sdk.NewCoin("usdc", sdk.NewInt(8691708221)),
 			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000073738597832046"),
 			expectedTick:      30139200,
-			expectedSqrtPrice: sdk.MustNewDecFromStr("64.336946417392457832"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("64.336946417392457832"),
 			newLowerPrice:     sdk.NewDec(4000),
 			newUpperPrice:     sdk.NewDec(4545),
 		},
@@ -665,7 +665,7 @@ var (
 			expectedTokenOut:         sdk.NewCoin("eth", sdk.NewInt(1695807)),
 			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.624166726347032857"),
 			expectedTick:      31825900,
-			expectedSqrtPrice: sdk.MustNewDecFromStr("76.328178655208424124"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("76.328178655208424124"),
 			newLowerPrice:     sdk.NewDec(5001),
 			newUpperPrice:     sdk.NewDec(6250),
 		},
@@ -685,7 +685,7 @@ var (
 			expectedTokenOut:         sdk.NewCoin("usdc", sdk.NewInt(8440657775)),
 			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000005569829831408"),
 			expectedTick:      30299600,
-			expectedSqrtPrice: sdk.MustNewDecFromStr("65.571484748647169032"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("65.571484748647169032"),
 			newLowerPrice:     sdk.NewDec(4000),
 			newUpperPrice:     sdk.NewDec(4999),
 		},
@@ -705,7 +705,7 @@ var (
 			expectedTokenOut:         sdk.NewCoin("eth", sdk.NewInt(1771252)),
 			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.221769187794051751"),
 			expectedTick:      32066500,
-			expectedSqrtPrice: sdk.MustNewDecFromStr("77.887956882326389372"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("77.887956882326389372"),
 			newLowerPrice:     sdk.NewDec(5501),
 			newUpperPrice:     sdk.NewDec(6250),
 		},
@@ -725,7 +725,7 @@ var (
 				tick, _ := math.SqrtPriceToTickRoundDownSpacing(sqrt4994, DefaultTickSpacing)
 				return tick
 			}(),
-			expectedSqrtPrice: sdk.MustNewDecFromStr("70.668238976219012614"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.668238976219012614"),
 		},
 	}
 
@@ -769,7 +769,7 @@ var (
 			expectedTokenOut:  sdk.NewCoin(USDC, sdk.NewInt(42000000)),
 			expectedTokenIn:   sdk.NewCoin(ETH, sdk.NewInt(8404)),
 			expectedTick:      30996087,
-			expectedSqrtPrice: sdk.MustNewDecFromStr("70.683007989825007163"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.683007989825007163"),
 		},
 		"single position within one tick: usdc (in) -> eth (out) ofz": {
 			tokenOut:     sdk.NewCoin(ETH, sdk.NewInt(13370)),
@@ -790,7 +790,7 @@ var (
 			expectedTick:     31006234,
 			// True value with arbitrary precision: 70.7547471884689004674...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 70.754747188468900468
-			expectedSqrtPrice: sdk.MustNewDecFromStr("70.754747188468900468"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.754747188468900468"),
 		},
 		//  Two equal price ranges
 		//
@@ -822,7 +822,7 @@ var (
 			expectedTick:     30996887,
 			// This value is the direct output of sqrt_next in the script above.
 			// The precision is exact because we properly handle rounding behavior in intermediate steps.
-			expectedSqrtPrice: sdk.MustNewDecFromStr("70.688664163727643651"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.688664163727643651"),
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
 			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
@@ -846,7 +846,7 @@ var (
 			expectedTokenOut:  sdk.NewCoin("eth", sdk.NewInt(8398)),
 			expectedTokenIn:   sdk.NewCoin("usdc", sdk.NewInt(41998216)),
 			expectedTick:      31001956,
-			expectedSqrtPrice: sdk.MustNewDecFromStr("70.724512595179305567"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.724512595179305567"),
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
 			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
@@ -890,7 +890,7 @@ var (
 			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(2000000)),
 			expectedTick:     30095166,
 
-			expectedSqrtPrice:                         sdk.MustNewDecFromStr("63.993489023888951975"),
+			expectedSqrtPrice:                         osmomath.MustNewDecFromStr("63.993489023888951975"),
 			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
 			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 315000, expectedSpreadRewardGrowth: cl.EmptyCoins},
@@ -941,7 +941,7 @@ var (
 			expectedTick:     32105414,
 			// True value with arbitrary precision: 78.1371488370367515544...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 78.137148837036751555
-			expectedSqrtPrice:                         sdk.MustNewDecFromStr("78.137148837036751555"),
+			expectedSqrtPrice:                         osmomath.MustNewDecFromStr("78.137148837036751555"),
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 315000, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			newLowerPrice:                             sdk.NewDec(5500),
@@ -996,7 +996,7 @@ var (
 			expectedTokenIn:   sdk.NewCoin("eth", sdk.NewInt(2000000)),
 			expectedTokenOut:  sdk.NewCoin("usdc", sdk.NewInt(9321276930)),
 			expectedTick:      30129083,
-			expectedSqrtPrice: sdk.MustNewDecFromStr("64.257943796086567725"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("64.257943796086567725"),
 			// Started from DefaultSpreadRewardAccumCoins * 3, crossed tick once, thus becoming
 			// DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins = DefaultSpreadRewardAccumCoins * 2
 			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
@@ -1052,7 +1052,7 @@ var (
 			expectedTokenIn:   sdk.NewCoin(ETH, sdk.NewInt(1800000)),
 			expectedTokenOut:  sdk.NewCoin(USDC, sdk.NewInt(8479320318)),
 			expectedTick:      30292059,
-			expectedSqrtPrice: sdk.MustNewDecFromStr("65.513815286452064191"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("65.513815286452064191"),
 			// Started from DefaultSpreadRewardAccumCoins * 3, crossed tick once, thus becoming
 			// DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins = DefaultSpreadRewardAccumCoins * 2
 			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
@@ -1115,7 +1115,7 @@ var (
 			expectedTick:     32055918,
 			// True value with arbitrary precision: 77.8197817118765535784...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 77.819781711876553579
-			expectedSqrtPrice:                         sdk.MustNewDecFromStr("77.819781711876553579"),
+			expectedSqrtPrice:                         osmomath.MustNewDecFromStr("77.819781711876553579"),
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 310010, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			newLowerPrice:                             sdk.NewDec(5001),
@@ -1169,7 +1169,7 @@ var (
 			expectedTick: 31712695,
 			// True value with arbitrary precision: 75.5823723551285943429...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 75.582372355128594343
-			expectedSqrtPrice: sdk.MustNewDecFromStr("75.582372355128594343"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("75.582372355128594343"),
 			newLowerPrice:     sdk.NewDec(5001),
 			newUpperPrice:     sdk.NewDec(6250),
 		},
@@ -1216,7 +1216,7 @@ var (
 			expectedTick:     32105554,
 			// True value with arbitrary precision: 78.1380507971736470319
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 78.138050797173647032
-			expectedSqrtPrice:                         sdk.MustNewDecFromStr("78.138050797173647032"),
+			expectedSqrtPrice:                         osmomath.MustNewDecFromStr("78.138050797173647032"),
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 315010, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			newLowerPrice:                             sdk.NewDec(5501),
@@ -1246,7 +1246,7 @@ var (
 			expectedTokenIn:  sdk.NewCoin(USDC, sdk.NewInt(21463952)),
 			expectedTick:     31002000,
 			// Since we know we're going up to the price limit, we can calculate the sqrt price exactly.
-			expectedSqrtPrice: osmomath.MustMonotonicSqrt(sdk.NewDec(5002)),
+			expectedSqrtPrice: osmomath.BigDecFromSDKDec(osmomath.MustMonotonicSqrt(sdk.NewDec(5002))),
 		},
 	}
 
@@ -1282,7 +1282,7 @@ var (
 			expectedTick:     30996087,
 			// This value is the direct output of sqrt_next in the script above.
 			// The precision is exact because we properly handle rounding behavior in intermediate steps.
-			expectedSqrtPrice:                          sdk.MustNewDecFromStr("70.683007989825007163"),
+			expectedSqrtPrice:                          osmomath.MustNewDecFromStr("70.683007989825007163"),
 			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000055925868851"),
 		},
 		"spread factor 2: two positions within one tick: usdc (in) -> eth (out) (3% spread factor) | ofz": {
@@ -1314,7 +1314,7 @@ var (
 			expectedTick:     31001956,
 			// True value with arbitrary precision: 70.7245125951793055663...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 70.724512595179305567
-			expectedSqrtPrice: sdk.MustNewDecFromStr("70.724512595179305567"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.724512595179305567"),
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
 			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
@@ -1365,7 +1365,7 @@ var (
 			// True value with arbitrary precision is 78.1371488370367515544...,
 			// which we expect to be pushed up to 78.137148837036751555 given our
 			// sqrt function's >= true value guarantee
-			expectedSqrtPrice:                          sdk.MustNewDecFromStr("78.137148837036751555"),
+			expectedSqrtPrice:                          osmomath.MustNewDecFromStr("78.137148837036751555"),
 			expectedSecondLowerTickSpreadRewardGrowth:  secondPosition{tickIndex: 315000, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth:  secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			newLowerPrice:                              sdk.NewDec(5500),
@@ -1421,7 +1421,7 @@ var (
 			expectedTokenIn:   sdk.NewCoin("eth", sdk.NewInt(2222223)),
 			expectedTokenOut:  sdk.NewCoin("usdc", sdk.NewInt(9321276930)),
 			expectedTick:      30129083,
-			expectedSqrtPrice: sdk.MustNewDecFromStr("64.257943796086567725"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("64.257943796086567725"),
 			// Started from DefaultSpreadRewardAccumCoins * 3, crossed tick once, thus becoming
 			// DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins = DefaultSpreadRewardAccumCoins * 2
 			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
@@ -1486,7 +1486,7 @@ var (
 			expectedTick: 31712695,
 			// True value with arbitrary precision: 75.5823723551285943429...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 75.582372355128594343
-			expectedSqrtPrice: sdk.MustNewDecFromStr("75.582372355128594343"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("75.582372355128594343"),
 			newLowerPrice:     sdk.NewDec(5001),
 			newUpperPrice:     sdk.NewDec(6250),
 			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.256404959888119530"),
@@ -1532,7 +1532,7 @@ var (
 			expectedTick:     32105554,
 			// True value with arbitrary precision: 78.13805079717364703195...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 78.138050797173647032
-			expectedSqrtPrice:                          sdk.MustNewDecFromStr("78.138050797173647032"),
+			expectedSqrtPrice:                          osmomath.MustNewDecFromStr("78.138050797173647032"),
 			expectedSecondLowerTickSpreadRewardGrowth:  secondPosition{tickIndex: 315010, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth:  secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			newLowerPrice:                              sdk.NewDec(5501),
@@ -1566,7 +1566,7 @@ var (
 			expectedTokenOut:  sdk.NewCoin(ETH, sdk.NewInt(4291)),
 			expectedTokenIn:   sdk.NewCoin(USDC, sdk.NewInt(21680760)),
 			expectedTick:      31002000,
-			expectedSqrtPrice: sdk.MustNewDecFromStr("70.724818840347693040"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.724818840347693040"),
 			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000142835574082604"),
 		},
 	}
