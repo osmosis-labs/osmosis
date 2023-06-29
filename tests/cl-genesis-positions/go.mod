@@ -10,7 +10,7 @@ require (
 	github.com/tendermint/tendermint v0.37.0-rc1
 )
 
-require github.com/osmosis-labs/osmosis/v16 v16.0.0-20230629140447-0a867a8e535e
+require github.com/osmosis-labs/osmosis/v16 v16.0.0-20230629152807-14af337f95c6
 
 require (
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
