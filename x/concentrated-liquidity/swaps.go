@@ -380,8 +380,6 @@ func (k Keeper) computeOutAmtGivenIn(
 		} else if !sqrtPriceStart.Equal(computedSqrtPrice) {
 			// Otherwise if the sqrtPrice calculated from ComputeSwapWithinBucketOutGivenIn(...) does not equal the sqrtPriceStart we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the computedSqrtPrice calculated from ComputeSwapWithinBucketOutGivenIn(...)
-			// TODO: this cannot be simply truncated. Decide what to do here. Does this re-implemented
-			// BigDec version make sense?
 			newTick, err := math.CalculateSqrtPriceToTickBigDec(computedSqrtPrice)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
@@ -450,7 +448,6 @@ func (k Keeper) computeInAmtGivenOut(
 
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
-	// TODO: revisit equality with sqrtPriceLimit here.
 	for swapState.amountSpecifiedRemaining.GT(smallestDec) && !swapState.sqrtPrice.Equal(osmomath.BigDecFromSDKDec(sqrtPriceLimit)) {
 		// log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
@@ -499,7 +496,6 @@ func (k Keeper) computeInAmtGivenOut(
 
 		// If the ComputeSwapWithinBucketInGivenOut(...) calculated a computedSqrtPrice that is equal to the nextInitializedTickSqrtPrice, this means all liquidity in the current
 		// bucket has been consumed and we must move on to the next bucket by crossing a tick to complete the swap
-		// TODO: review equality here
 		if osmomath.BigDecFromSDKDec(nextInitializedTickSqrtPrice).Equal(computedSqrtPrice) {
 			swapState, err = k.swapCrossTickLogic(ctx, swapState, swapStrategy,
 				nextInitializedTick, nextInitTickIter, p, spreadRewardAccumulator, uptimeAccums, tokenInDenom)
@@ -509,8 +505,6 @@ func (k Keeper) computeInAmtGivenOut(
 		} else if !sqrtPriceStart.Equal(computedSqrtPrice) {
 			// Otherwise, if the computedSqrtPrice calculated from ComputeSwapWithinBucketInGivenOut(...) does not equal the sqrtPriceStart we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the computedSqrtPrice calculated from ComputeSwapWithinBucketInGivenOut(...)
-			// TODO: this cannot be simply truncated. Decide what to do here. Does this re-implemented
-			// BigDec version make sense?
 			swapState.tick, err = math.CalculateSqrtPriceToTickBigDec(computedSqrtPrice)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
