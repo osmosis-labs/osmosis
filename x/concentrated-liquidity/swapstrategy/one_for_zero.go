@@ -75,7 +75,7 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent o
 		sqrtPriceNext = math.GetNextSqrtPriceFromAmount1InRoundingDown(sqrtPriceCurrent, liquidityBigDec, amountOneInRemainingLessSpreadReward)
 	}
 
-	hasReachedTarget := sqrtPriceTargetBigDec == sqrtPriceNext
+	hasReachedTarget := sqrtPriceTargetBigDec.Equal(sqrtPriceNext)
 
 	// If the sqrt price target was not reached, recalculate how much of the amount remaining after spread reward was needed
 	// to complete the swap step. This implies that some of the amount remaining after spread reward is left over after the
