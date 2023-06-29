@@ -1913,7 +1913,7 @@ func (s *KeeperTestSuite) TestUninitializePool() {
 
 			actualSqrtPrice := pool.GetCurrentSqrtPrice()
 			actualTick := pool.GetCurrentTick()
-			s.Require().Equal(sdk.ZeroDec(), actualSqrtPrice)
+			s.Require().Equal(osmomath.ZeroDec(), actualSqrtPrice)
 			s.Require().Equal(int64(0), actualTick)
 		})
 	}
