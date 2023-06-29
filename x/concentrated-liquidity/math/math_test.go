@@ -86,39 +86,6 @@ func TestLiquidity0(t *testing.T) {
 	}
 }
 
-// TestGetNextSqrtPriceFromAmount0RoundingUp tests that getNextSqrtPriceFromAmount0RoundingUp utilizes
-// the current squareRootPrice, liquidity of denom0, and amount of denom0 that still needs
-// to be swapped in order to determine the next squareRootPrice
-// PATH 1
-// if (amountRemaining * sqrtPriceCurrent) / amountRemaining  == sqrtPriceCurrent AND (liquidity) + (amountRemaining * sqrtPriceCurrent) >= (liquidity)
-// sqrtPriceNext = (liquidity * sqrtPriceCurrent) / ((liquidity) + (amountRemaining * sqrtPriceCurrent))
-// PATH 2
-// else
-// sqrtPriceNext = ((liquidity)) / (((liquidity) / (sqrtPriceCurrent)) + (amountRemaining))
-func TestGetNextSqrtPriceFromAmount0RoundingUp(t *testing.T) {
-	testCases := map[string]struct {
-		liquidity             sdk.Dec
-		sqrtPCurrent          sdk.Dec
-		amount0Remaining      sdk.Dec
-		sqrtPriceNextExpected string
-	}{
-		"happy path": {
-			liquidity:             sdk.MustNewDecFromStr("1517882343.751510418088349649"), // liquidity0 calculated above
-			sqrtPCurrent:          sqrt5000,
-			amount0Remaining:      sdk.NewDec(13370),
-			sqrtPriceNextExpected: "70.666663910857144332",
-			// https://www.wolframalpha.com/input?i=%28%281517882343.751510418088349649%29%29+%2F+%28%28%281517882343.751510418088349649%29+%2F+%2870.710678118654752440%29%29+%2B+%2813370%29%29
-		},
-	}
-
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			sqrtPriceNext := math.GetNextSqrtPriceFromAmount0InRoundingUp(tc.sqrtPCurrent, tc.liquidity, tc.amount0Remaining)
-			require.Equal(t, tc.sqrtPriceNextExpected, sqrtPriceNext.String())
-		})
-	}
-}
-
 // TestGetNextSqrtPriceFromAmount0RoundingUpBigDec tests that getNextSqrtPriceFromAmount0RoundingUp utilizes
 // the current squareRootPrice, liquidity of denom0, and amount of denom0 that still needs
 // to be swapped in order to determine the next squareRootPrice
@@ -128,7 +95,7 @@ func TestGetNextSqrtPriceFromAmount0RoundingUp(t *testing.T) {
 // PATH 2
 // else
 // sqrtPriceNext = ((liquidity)) / (((liquidity) / (sqrtPriceCurrent)) + (amountRemaining))
-func TestGetNextSqrtPriceFromAmount0RoundingUpBigDec(t *testing.T) {
+func TestGetNextSqrtPriceFromAmount0InRoundingUpBigDec(t *testing.T) {
 	testCases := map[string]struct {
 		liquidity             osmomath.BigDec
 		sqrtPCurrent          osmomath.BigDec
@@ -683,24 +650,25 @@ func runSqrtRoundingTestCaseBigDec(
 	}
 }
 
+// Estimates are computed with x/concentrated-liquidity/python/clmath.py
 func TestGetNextSqrtPriceFromAmount0InRoundingUp(t *testing.T) {
-	tests := map[string]sqrtRoundingTestCase{
+	tests := map[string]sqrtRoundingTestCaseBigDec{
 		"rounded up at precision end": {
-			sqrtPriceCurrent: sqrt5000,
-			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
-			amountRemaining:  sdk.MustNewDecFromStr("8398"),
+			sqrtPriceCurrent: sqrt5000BigDec,
+			liquidity:        osmomath.MustNewDecFromStr("3035764687.503020836176699298"),
+			amountRemaining:  osmomath.MustNewDecFromStr("8398"),
 			// liq * sqrt_cur / (liq + token_in * sqrt_cur) = 70.69684905341696614869539245
-			expected: sdk.MustNewDecFromStr("70.696849053416966149"),
+			expected: osmomath.MustNewDecFromStr("70.696849053416966148695392456511981401"),
 		},
 		"no round up due zeroes at precision end": {
-			sqrtPriceCurrent: sdk.MustNewDecFromStr("2"),
-			liquidity:        sdk.MustNewDecFromStr("10"),
-			amountRemaining:  sdk.MustNewDecFromStr("15"),
+			sqrtPriceCurrent: osmomath.MustNewDecFromStr("2"),
+			liquidity:        osmomath.MustNewDecFromStr("10"),
+			amountRemaining:  osmomath.MustNewDecFromStr("15"),
 			// liq * sqrt_cur / (liq + token_in * sqrt_cur) = 0.5
-			expected: sdk.MustNewDecFromStr("0.5"),
+			expected: osmomath.MustNewDecFromStr("0.5"),
 		},
 	}
-	runSqrtRoundingTestCase(t, "TestGetNextSqrtPriceFromAmount0InRoundingUp", math.GetNextSqrtPriceFromAmount0InRoundingUp, tests)
+	runSqrtRoundingTestCaseBigDec(t, "TestGetNextSqrtPriceFromAmount0InRoundingUp", math.GetNextSqrtPriceFromAmount0InRoundingUpBigDec, tests)
 }
 
 func TestGetNextSqrtPriceFromAmount0OutRoundingUp(t *testing.T) {
