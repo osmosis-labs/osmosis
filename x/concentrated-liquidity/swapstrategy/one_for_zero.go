@@ -72,7 +72,7 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent o
 		sqrtPriceNext = sqrtPriceTargetBigDec
 	} else {
 		// Otherwise, compute the next sqrt price based on the amount remaining after spread reward.
-		sqrtPriceNext = math.GetNextSqrtPriceFromAmount1InRoundingDownBigDec(sqrtPriceCurrent, liquidityBigDec, amountOneInRemainingLessSpreadReward)
+		sqrtPriceNext = math.GetNextSqrtPriceFromAmount1InRoundingDown(sqrtPriceCurrent, liquidityBigDec, amountOneInRemainingLessSpreadReward)
 	}
 
 	hasReachedTarget := sqrtPriceTargetBigDec == sqrtPriceNext
@@ -137,7 +137,7 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent o
 		sqrtPriceNext = sqrtPriceTargetBigDec
 	} else {
 		// Otherwise, compute the next sqrt price based on the amount remaining after spread reward.
-		sqrtPriceNext = math.GetNextSqrtPriceFromAmount0OutRoundingUpBigDec(sqrtPriceCurrent, liquidityBigDec, amountZeroRemainingOutBigDec)
+		sqrtPriceNext = math.GetNextSqrtPriceFromAmount0OutRoundingUp(sqrtPriceCurrent, liquidityBigDec, amountZeroRemainingOutBigDec)
 	}
 
 	hasReachedTarget := sqrtPriceTargetBigDec == sqrtPriceNext
