@@ -12,8 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	errorsmod "cosmossdk.io/errors"
-
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
@@ -731,16 +729,6 @@ func (k Keeper) GetLockIdFromPositionId(ctx sdk.Context, positionId uint64) (uin
 	value := store.Get(positionIdLockKey)
 	if value == nil {
 		return 0, types.PositionIdToLockNotFoundError{PositionId: positionId}
-	}
-
-	// Check if lock ID still exists (i.e. has not matured). In this context, the KVStore value is the source of truth
-	// that the lockID existed. Therefore, if the lock ID does not exist, it means it did exist at one point but has now matured.
-	// If it has matured, return an error. (We do not want to mutate state here in the getter)
-	lock, err := k.lockupKeeper.GetLockByID(ctx, sdk.BigEndianToUint64(value))
-	if err == errorsmod.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", lock.GetID())) {
-		return 0, fmt.Errorf("lock ID %d is mature", sdk.BigEndianToUint64(value))
-	} else if err != nil {
-		return 0, err
 	}
 
 	return sdk.BigEndianToUint64(value), nil
