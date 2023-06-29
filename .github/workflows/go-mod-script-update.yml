@@ -16,12 +16,6 @@ jobs:
         id: commit
         run: echo "::set-output name=commit_hash::$(git rev-parse HEAD)"
 
-      - name: Create or switch to branch
-        run: |
-          branch_name="go-mod-update-${{ github.run_number }}"
-          git checkout -B "$branch_name"
-          git branch --set-upstream-to=origin/"${{ github.base_ref }}" "$branch_name"
-
       - name: Update go.mod
         run: |
           commit_hash="${{ steps.commit.outputs.commit_hash }}"
@@ -32,5 +26,5 @@ jobs:
       - name: Push changes
         uses: ad-m/github-push-action@v0.6.0
         with:
-          branch: "${{ github.ref }}"
+          branch: ${{ github.ref }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
