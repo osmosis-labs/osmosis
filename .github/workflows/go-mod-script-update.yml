@@ -1,8 +1,7 @@
 name: Update go.mod
 
 on:
-  pull_request:
-    types: [opened, synchronize]
+  workflow_dispatch:
 
 jobs:
   update_go_mod:
@@ -14,13 +13,24 @@ jobs:
 
       - name: Update go.mod
         run: |
-          commit_hash="${{ github.event.pull_request.head.sha }}"
-          go get "github.com/osmosis-labs/osmosis/v16@$commit_hash"
-          git add go.mod
-          git commit -m "Update go.mod with latest commit hash"
+          cd osmosis/tests/cl-go-client/
+          go get -u github.com/osmosis-labs/osmosis/v16@latest
 
-      - name: Push changes
-        uses: ad-m/github-push-action@v0.6.0
+      - name: Commit and push changes
+        run: |
+          cd osmosis/tests/cl-go-client/
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add go.mod
+          git commit -m "Update go.mod with latest osmosis/v16 dependency"
+          git push origin ${{ github.ref }}
+
+      - name: Open pull request
+        uses: peter-evans/create-pull-request@v3
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: Update go.mod with latest osmosis/v16 dependency
           branch: ${{ github.ref }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          title: Update go.mod
+          body: |
+            This pull request updates the `github.com/osmosis-labs/osmosis/v16` dependency in the `go.mod` file to the latest version.
