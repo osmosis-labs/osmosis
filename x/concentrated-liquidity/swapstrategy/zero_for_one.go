@@ -94,8 +94,6 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent o
 	// Note that spread reward is always charged on the amount in.
 	spreadRewardChargeTotal := computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget, amountZeroInFinal, amountZeroInRemaining, s.spreadFactor)
 
-	// Round up sqrt price since we are moving right to left on the price range. We would like for a
-	// given swap to move the sqrt price less.
 	// Round down amount out to give user less in pool's favor.
 	return sqrtPriceNext, amountZeroInFinal, amountOneOut.SDKDec(), spreadRewardChargeTotal
 }
