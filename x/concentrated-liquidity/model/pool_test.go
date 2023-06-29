@@ -568,16 +568,17 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			return sqrtPrice
 		}
 
-		defaultLiquidityDelta = sdk.NewDec(1000)
+		defaultLiquidityDelta       = sdk.NewDec(1000)
+		defaultLiquidityDeltaBigDec = osmomath.NewBigDec(1000)
 
-		lowerTick      = int64(-99)
-		lowerSqrtPrice = tickToSqrtPrice(lowerTick)
+		lowerTick            = int64(-99)
+		lowerSqrtPriceBigDec = osmomath.BigDecFromSDKDec(tickToSqrtPrice(lowerTick))
 
-		midtick      = int64(2)
-		midSqrtPrice = tickToSqrtPrice(midtick)
+		midtick            = int64(2)
+		midSqrtPriceBigDec = osmomath.BigDecFromSDKDec(tickToSqrtPrice(midtick))
 
-		uppertick      = int64(74)
-		upperSqrtPrice = tickToSqrtPrice(uppertick)
+		uppertick            = int64(74)
+		upperSqrtPriceBigDec = osmomath.BigDecFromSDKDec(tickToSqrtPrice(uppertick))
 	)
 
 	tests := map[string]struct {
@@ -598,8 +599,8 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			liquidityDelta:              defaultLiquidityDelta,
 			shouldTestRoundingInvariant: true,
 
-			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDelta, midSqrtPrice, upperSqrtPrice, true),
-			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDelta, midSqrtPrice, lowerSqrtPrice, true),
+			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDeltaBigDec, midSqrtPriceBigDec, upperSqrtPriceBigDec, true).SDKDec(),
+			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDeltaBigDec, midSqrtPriceBigDec, lowerSqrtPriceBigDec, true).SDKDec(),
 		},
 		"current in range, negative liquidity": {
 			currentTick:    midtick,
@@ -607,8 +608,8 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			upperTick:      uppertick,
 			liquidityDelta: defaultLiquidityDelta.Neg(),
 
-			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDelta.Neg(), midSqrtPrice, upperSqrtPrice, false),
-			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDelta.Neg(), midSqrtPrice, lowerSqrtPrice, false),
+			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDeltaBigDec.Neg(), midSqrtPriceBigDec, upperSqrtPriceBigDec, false).SDKDec(),
+			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDeltaBigDec.Neg(), midSqrtPriceBigDec, lowerSqrtPriceBigDec, false).SDKDec(),
 		},
 		"current below range, positive liquidity": {
 			currentTick:    lowerTick,
@@ -616,7 +617,7 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			upperTick:      uppertick,
 			liquidityDelta: defaultLiquidityDelta,
 
-			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDelta, midSqrtPrice, upperSqrtPrice, true),
+			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDeltaBigDec, midSqrtPriceBigDec, upperSqrtPriceBigDec, true).SDKDec(),
 			expectedAmount1: sdk.ZeroDec(),
 		},
 		"current below range, negative liquidity": {
@@ -625,7 +626,7 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			upperTick:      uppertick,
 			liquidityDelta: defaultLiquidityDelta.Neg(),
 
-			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDelta.Neg(), midSqrtPrice, upperSqrtPrice, false),
+			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDeltaBigDec.Neg(), midSqrtPriceBigDec, upperSqrtPriceBigDec, false).SDKDec(),
 			expectedAmount1: sdk.ZeroDec(),
 		},
 		"current above range, positive liquidity": {
@@ -635,7 +636,7 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			liquidityDelta: defaultLiquidityDelta,
 
 			expectedAmount0: sdk.ZeroDec(),
-			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDelta, lowerSqrtPrice, midSqrtPrice, true),
+			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDeltaBigDec, lowerSqrtPriceBigDec, midSqrtPriceBigDec, true).SDKDec(),
 		},
 		"current above range, negative liquidity": {
 			currentTick:    uppertick,
@@ -644,7 +645,7 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			liquidityDelta: defaultLiquidityDelta.Neg(),
 
 			expectedAmount0: sdk.ZeroDec(),
-			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDelta.Neg(), tickToSqrtPrice(lowerTick), midSqrtPrice, false),
+			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDeltaBigDec.Neg(), lowerSqrtPriceBigDec, midSqrtPriceBigDec, false).SDKDec(),
 		},
 
 		// errors

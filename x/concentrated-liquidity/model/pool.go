@@ -255,18 +255,18 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 		// if this is the case, we attempt to provide liquidity evenly between asset0 and asset1
 		// we also update the pool liquidity since the virtual liquidity is modified by this position's creation
 		currentSqrtPrice := p.CurrentSqrtPrice
-		actualAmountDenom0 = math.CalcAmount0DeltaBigDec(liquidityDeltaBigDec, currentSqrtPrice, sqrtPriceUpperTickBigDec, roundUp)
-		actualAmountDenom1 = math.CalcAmount1DeltaBigDec(liquidityDeltaBigDec, currentSqrtPrice, sqrtPriceLowerTickBigDec, roundUp)
+		actualAmountDenom0 = math.CalcAmount0Delta(liquidityDeltaBigDec, currentSqrtPrice, sqrtPriceUpperTickBigDec, roundUp)
+		actualAmountDenom1 = math.CalcAmount1Delta(liquidityDeltaBigDec, currentSqrtPrice, sqrtPriceLowerTickBigDec, roundUp)
 	} else if p.CurrentTick < lowerTick {
 		// outcome two: position is below current price
 		// this means position is solely made up of asset0
 		actualAmountDenom1 = osmomath.ZeroDec()
-		actualAmountDenom0 = math.CalcAmount0DeltaBigDec(liquidityDeltaBigDec, sqrtPriceLowerTickBigDec, sqrtPriceUpperTickBigDec, roundUp)
+		actualAmountDenom0 = math.CalcAmount0Delta(liquidityDeltaBigDec, sqrtPriceLowerTickBigDec, sqrtPriceUpperTickBigDec, roundUp)
 	} else {
 		// outcome three: position is above current price
 		// this means position is solely made up of asset1
 		actualAmountDenom0 = osmomath.ZeroDec()
-		actualAmountDenom1 = math.CalcAmount1DeltaBigDec(liquidityDeltaBigDec, sqrtPriceLowerTickBigDec, sqrtPriceUpperTickBigDec, roundUp)
+		actualAmountDenom1 = math.CalcAmount1Delta(liquidityDeltaBigDec, sqrtPriceLowerTickBigDec, sqrtPriceUpperTickBigDec, roundUp)
 	}
 
 	if roundUp {

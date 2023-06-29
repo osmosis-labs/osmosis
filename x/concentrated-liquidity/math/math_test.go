@@ -92,106 +92,6 @@ func TestLiquidity0(t *testing.T) {
 // calcAmount0Delta = (liquidity * (sqrtPriceB - sqrtPriceA)) / (sqrtPriceB * sqrtPriceA)
 func TestCalcAmount0Delta(t *testing.T) {
 	testCases := map[string]struct {
-		liquidity       sdk.Dec
-		sqrtPA          sdk.Dec
-		sqrtPB          sdk.Dec
-		isWithTolerance bool
-		roundUp         bool
-		amount0Expected string
-	}{
-		"happy path": {
-			liquidity:       sdk.MustNewDecFromStr("1517882343.751510418088349649"), // we use the smaller liquidity between liq0 and liq1
-			sqrtPA:          sqrt5000,                                               // 5000
-			sqrtPB:          sqrt5500,                                               // 5500
-			roundUp:         false,
-			amount0Expected: "998976.618347426388356619", // truncated at precision end.
-			isWithTolerance: false,
-			// https://www.wolframalpha.com/input?i=%281517882343.751510418088349649+*+%2874.161984870956629487+-+70.710678118654752440+%29%29+%2F+%2870.710678118654752440+*+74.161984870956629487%29
-		},
-		"happy path, sqrtPriceA greater than sqrtPrice B": { // commute prior vector
-			liquidity:       sdk.MustNewDecFromStr("1517882343.751510418088349649"),
-			sqrtPA:          sqrt5500,
-			sqrtPB:          sqrt5000,
-			roundUp:         false,
-			amount0Expected: "998976.618347426388356619",
-			isWithTolerance: false,
-		},
-		"round down: large liquidity amount in wide price range": {
-			// Note the values are hand-picked to cause multiplication of 2 large numbers
-			// causing the magnitude of truncations to be larger
-			// while staying under bit length of sdk.Dec
-			// from decimal import *
-			// from math import *
-			// getcontext().prec = 100
-			// max_sqrt_p = Decimal("30860351331.852813530648276680")
-			// min_sqrt_p = Decimal("0.000000152731791058")
-			// liq = Decimal("931361973132462178951297")
-			// liq * (max_sqrt_p - min_sqrt_p) / (max_sqrt_p * min_sqrt_p)
-			liquidity: sdk.MustNewDecFromStr("931361973132462178951297"),
-			// price: 0.000000000000023327
-			sqrtPA: sdk.MustNewDecFromStr("0.000000152731791058"),
-			// price: 952361284325389721913
-			sqrtPB:          sdk.MustNewDecFromStr("30860351331.852813530648276680"),
-			roundUp:         false,
-			amount0Expected: sdk.MustNewDecFromStr("6098022989717817431593106314408.888128101590393209").String(), // truncated at precision end.
-			isWithTolerance: true,
-		},
-		"round up: large liquidity amount in wide price range": {
-			// Note the values are hand-picked to cause multiplication of 2 large numbers
-			// causing the magnitude of truncations to be larger
-			// while staying under bit length of sdk.Dec
-			// from decimal import *
-			// from math import *
-			// getcontext().prec = 100
-			// max_sqrt_p = Decimal("30860351331.852813530648276680")
-			// min_sqrt_p = Decimal("0.000000152731791058")
-			// liq = Decimal("931361973132462178951297")
-			// liq * (max_sqrt_p - min_sqrt_p) / (max_sqrt_p * min_sqrt_p)
-			liquidity: sdk.MustNewDecFromStr("931361973132462178951297"),
-			// price: 0.000000000000023327
-			sqrtPA: sdk.MustNewDecFromStr("0.000000152731791058"),
-			// price: 952361284325389721913
-			sqrtPB:          sdk.MustNewDecFromStr("30860351331.852813530648276680"),
-			roundUp:         true,
-			amount0Expected: sdk.MustNewDecFromStr("6098022989717817431593106314408.888128101590393209").Ceil().String(), // rounded up at precision end.
-			isWithTolerance: true,
-		},
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-
-		t.Run(name, func(t *testing.T) {
-			amount0 := math.CalcAmount0Delta(tc.liquidity, tc.sqrtPA, tc.sqrtPB, tc.roundUp)
-
-			if !tc.isWithTolerance {
-				require.Equal(t, tc.amount0Expected, amount0.String())
-				return
-			}
-
-			roundingDir := osmomath.RoundUp
-			if !tc.roundUp {
-				roundingDir = osmomath.RoundDown
-			}
-
-			tolerance := osmomath.ErrTolerance{
-				MultiplicativeTolerance: sdk.SmallestDec(),
-				RoundingDir:             roundingDir,
-			}
-
-			res := tolerance.CompareBigDec(osmomath.MustNewDecFromStr(tc.amount0Expected), osmomath.BigDecFromSDKDec(amount0))
-
-			require.Equal(t, 0, res, "amount0: %s, expected: %s", amount0, tc.amount0Expected)
-		})
-	}
-}
-
-// TestCalcAmount0DeltaBigDec tests that calcAmount0 takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 0
-// sqrtPriceA is the smaller of sqrtpCur and the nextPrice
-// sqrtPriceB is the larger of sqrtpCur and the nextPrice
-// calcAmount0Delta = (liquidity * (sqrtPriceB - sqrtPriceA)) / (sqrtPriceB * sqrtPriceA)
-func TestCalcAmount0DeltaBigDec(t *testing.T) {
-	testCases := map[string]struct {
 		liquidity       osmomath.BigDec
 		sqrtPA          osmomath.BigDec
 		sqrtPB          osmomath.BigDec
@@ -264,7 +164,7 @@ func TestCalcAmount0DeltaBigDec(t *testing.T) {
 		tc := tc
 
 		t.Run(name, func(t *testing.T) {
-			amount0 := math.CalcAmount0DeltaBigDec(tc.liquidity, tc.sqrtPA, tc.sqrtPB, tc.roundUp)
+			amount0 := math.CalcAmount0Delta(tc.liquidity, tc.sqrtPA, tc.sqrtPB, tc.roundUp)
 
 			if !tc.isWithTolerance {
 				require.Equal(t, tc.amount0Expected, amount0)
@@ -293,76 +193,6 @@ func TestCalcAmount0DeltaBigDec(t *testing.T) {
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // calcAmount1Delta = liq * (sqrtPriceB - sqrtPriceA)
 func TestCalcAmount1Delta(t *testing.T) {
-	testCases := map[string]struct {
-		liquidity       sdk.Dec
-		sqrtPA          sdk.Dec
-		sqrtPB          sdk.Dec
-		exactEqual      bool
-		roundUp         bool
-		amount1Expected string
-	}{
-		"round down": {
-			liquidity:       sdk.MustNewDecFromStr("1517882343.751510418088349649"), // we use the smaller liquidity between liq0 and liq1
-			sqrtPA:          sqrt5000,                                               // 5000
-			sqrtPB:          sqrt4545,                                               // 4545
-			roundUp:         false,
-			amount1Expected: sdk.MustNewDecFromStr("5000000000.000000000000000000").Sub(sdk.SmallestDec()).String(),
-			// https://www.wolframalpha.com/input?i=1517882343.751510418088349649+*+%2870.710678118654752440+-+67.416615162732695594%29
-		},
-		"round down: large liquidity amount in wide price range": {
-			// Note the values are hand-picked to cause multiplication of 2 large numbers
-			// while staying under bit length of sdk.Dec
-			// from decimal import *
-			// from math import *
-			// getcontext().prec = 100
-			// max_sqrt_p = Decimal("30860351331.852813530648276680")
-			// min_sqrt_p = Decimal("0.000000152731791058")
-			// liq = Decimal("931361973132462178951297")
-			// liq * (max_sqrt_p - min_sqrt_p)
-			liquidity: sdk.MustNewDecFromStr("931361973132462178951297"),
-			// price: 0.000000000000023327
-			sqrtPA: sdk.MustNewDecFromStr("0.000000152731791058"),
-			// price: 952361284325389721913
-			sqrtPB:          sdk.MustNewDecFromStr("30860351331.852813530648276680"),
-			roundUp:         false,
-			amount1Expected: sdk.MustNewDecFromStr("28742157707995443393876876754535992.801567623738751734").String(), // truncated at precision end.
-		},
-		"round up: large liquidity amount in wide price range": {
-			// Note the values are hand-picked to cause multiplication of 2 large numbers
-			// while staying under bit length of sdk.Dec
-			// from decimal import *
-			// from math import *
-			// getcontext().prec = 100
-			// max_sqrt_p = Decimal("30860351331.852813530648276680")
-			// min_sqrt_p = Decimal("0.000000152731791058")
-			// liq = Decimal("931361973132462178951297")
-			// liq * (max_sqrt_p - min_sqrt_p)
-			liquidity: sdk.MustNewDecFromStr("931361973132462178951297"),
-			// price: 0.000000000000023327
-			sqrtPA: sdk.MustNewDecFromStr("0.000000152731791058"),
-			// price: 952361284325389721913
-			sqrtPB:          sdk.MustNewDecFromStr("30860351331.852813530648276680"),
-			roundUp:         true,
-			amount1Expected: sdk.MustNewDecFromStr("28742157707995443393876876754535992.801567623738751734").Ceil().String(), // round up at precision end.
-		},
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-
-		t.Run(name, func(t *testing.T) {
-			amount1 := math.CalcAmount1Delta(tc.liquidity, tc.sqrtPA, tc.sqrtPB, tc.roundUp)
-
-			require.Equal(t, tc.amount1Expected, amount1.String())
-		})
-	}
-}
-
-// TestCalcAmount1DeltaBigDec tests that calcAmount1 takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 1
-// sqrtPriceA is the smaller of sqrtpCur and the nextPrice
-// sqrtPriceB is the larger of sqrtpCur and the nextPrice
-// calcAmount1Delta = liq * (sqrtPriceB - sqrtPriceA)
-func TestCalcAmount1DeltaBigDec(t *testing.T) {
 	testCases := map[string]struct {
 		liquidity       osmomath.BigDec
 		sqrtPA          osmomath.BigDec
@@ -422,7 +252,7 @@ func TestCalcAmount1DeltaBigDec(t *testing.T) {
 		tc := tc
 
 		t.Run(name, func(t *testing.T) {
-			amount1 := math.CalcAmount1DeltaBigDec(tc.liquidity, tc.sqrtPA, tc.sqrtPB, tc.roundUp)
+			amount1 := math.CalcAmount1Delta(tc.liquidity, tc.sqrtPA, tc.sqrtPB, tc.roundUp)
 
 			require.Equal(t, tc.amount1Expected, amount1)
 		})
