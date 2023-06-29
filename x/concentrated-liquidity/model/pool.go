@@ -273,6 +273,7 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 		return actualAmountDenom0.SDKDecRoundUp(), actualAmountDenom1.SDKDecRoundUp(), nil
 	}
 
+	// Note that these truncate at precision end in pool's favor.
 	return actualAmountDenom0.SDKDec(), actualAmountDenom1.SDKDec(), nil
 }
 
