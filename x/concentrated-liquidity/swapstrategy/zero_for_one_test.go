@@ -147,29 +147,34 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 	}
 }
 
+// Estimates are computed using x/concentrated-liquidity/python/clmath.py
 func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 	var (
-		sqrtPriceCurrent = defaultSqrtPriceUpper
-		sqrtPriceNext    = defaultSqrtPriceLower
-		sqrtPriceTarget  = sqrtPriceNext
+		sqrtPriceCurrent = osmomath.BigDecFromSDKDec(defaultSqrtPriceUpper)
+		sqrtPriceNext    = osmomath.BigDecFromSDKDec(defaultSqrtPriceLower)
+		sqrtPriceTarget  = sqrtPriceNext.SDKDec()
 
-		// sqrt_cur - amt_one / liq quo round up
-		sqrtPriceTargetNotReached = sdk.MustNewDecFromStr("70.688667457471792243")
-		// liq * (sqrt_cur - sqrt_next) / (sqrt_cur * sqrt_next)
-		amountZeroTargetNotReached = sdk.MustNewDecFromStr("13367.998754214115430370")
+		// get_next_sqrt_price_from_amount1_out_round_down(liquidity, sqrtPriceCurrent, tokenOut)
+		sqrtPriceTargetNotReached = osmomath.MustNewDecFromStr("70.688667457471792243056846000067005485")
+		// round_sdk_prec_up(calc_amount_zero_delta(liquidity, sqrtPriceCurrent, Decimal("70.688667457471792243056846000067005485"), True))
+		amountZeroTargetNotReached = sdk.MustNewDecFromStr("13367.998754214114788303")
 
 		// N.B.: approx eq = defaultAmountOneZfo.Sub(sdk.NewDec(10000))
 		// slight variance due to recomputing amount out when target is not reached.
 		// liq * (sqrt_cur - sqrt_next)
-		amountOneOutTargetNotReached = sdk.MustNewDecFromStr("66819187.967824033372217995")
+		// round_sdk_prec_down(calc_amount_one_delta(liquidity, sqrtPriceCurrent, Decimal("70.688667457471792243056846000067005485"), False))
+		amountOneOutTargetNotReached = sdk.MustNewDecFromStr("66819187.967824033199646915")
 	)
 
 	// sqrtPriceCurrent, sqrtPriceTarget, liquidity are all set to defaults defined above.
 	tests := map[string]struct {
+		sqrtPriceCurrent osmomath.BigDec
+		sqrtPriceTarget  sdk.Dec
+
 		amountOneOutRemaining sdk.Dec
 		spreadFactor          sdk.Dec
 
-		expectedSqrtPriceNext           sdk.Dec
+		expectedSqrtPriceNext           osmomath.BigDec
 		amountOneOutConsumed            sdk.Dec
 		expectedAmountInZero            sdk.Dec
 		expectedSpreadRewardChargeTotal sdk.Dec
@@ -177,6 +182,9 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 		expectError error
 	}{
 		"1: no spread reward - reach target": {
+			sqrtPriceCurrent: sqrtPriceCurrent,
+			sqrtPriceTarget:  sqrtPriceTarget,
+
 			// Add 100.
 			amountOneOutRemaining: defaultAmountOne.Add(sdk.NewDec(100)),
 			spreadFactor:          zero,
@@ -188,17 +196,22 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 			expectedSpreadRewardChargeTotal: zero,
 		},
 		"2: no spread reward - do not reach target": {
+			sqrtPriceCurrent: sqrtPriceCurrent,
+			sqrtPriceTarget:  sqrtPriceTarget,
+
 			amountOneOutRemaining: defaultAmountOne.Sub(sdk.NewDec(10000)),
 			spreadFactor:          zero,
 
 			// sqrt_cur - amt_one / liq quo round up
-			expectedSqrtPriceNext: sqrtPriceTargetNotReached,
-			// subtracting 1 * smallest dec to account for truncations in favor of the pool.
-			amountOneOutConsumed:            amountOneOutTargetNotReached.Sub(sdk.SmallestDec()),
+			expectedSqrtPriceNext:           sqrtPriceTargetNotReached,
+			amountOneOutConsumed:            amountOneOutTargetNotReached,
 			expectedAmountInZero:            amountZeroTargetNotReached.Ceil(),
 			expectedSpreadRewardChargeTotal: zero,
 		},
 		"3: 3% spread reward - reach target": {
+			sqrtPriceCurrent: sqrtPriceCurrent,
+			sqrtPriceTarget:  sqrtPriceTarget,
+
 			// Add 100.
 			amountOneOutRemaining: defaultAmountOne.Quo(one.Sub(defaultSpreadReward)),
 			spreadFactor:          defaultSpreadReward,
@@ -211,12 +224,14 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 			expectedSpreadRewardChargeTotal: swapstrategy.ComputeSpreadRewardChargeFromAmountIn(defaultAmountZero.Ceil(), defaultSpreadReward),
 		},
 		"4: 3% spread reward - do not reach target": {
+			sqrtPriceCurrent: sqrtPriceCurrent,
+			sqrtPriceTarget:  sqrtPriceTarget,
+
 			amountOneOutRemaining: defaultAmountOne.Sub(sdk.NewDec(10000)),
 			spreadFactor:          defaultSpreadReward,
 
-			expectedSqrtPriceNext: sqrtPriceTargetNotReached,
-			// subtracting 1 * smallest dec to account for truncations in favor of the pool.
-			amountOneOutConsumed:            amountOneOutTargetNotReached.Sub(sdk.SmallestDec()),
+			expectedSqrtPriceNext:           sqrtPriceTargetNotReached,
+			amountOneOutConsumed:            amountOneOutTargetNotReached,
 			expectedAmountInZero:            amountZeroTargetNotReached.Ceil(),
 			expectedSpreadRewardChargeTotal: swapstrategy.ComputeSpreadRewardChargeFromAmountIn(amountZeroTargetNotReached.Ceil(), defaultSpreadReward),
 		},
@@ -226,7 +241,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 		suite.Run(name, func() {
 			strategy := suite.setupNewZeroForOneSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
 			// TODO: revisit each test case and review sqrt price current
-			sqrtPriceNext, amountOneOut, amountZeroIn, spreadRewardChargeTotal := strategy.ComputeSwapWithinBucketInGivenOut(osmomath.BigDecFromSDKDec(sqrtPriceCurrent), sqrtPriceTarget, defaultLiquidity, tc.amountOneOutRemaining)
+			sqrtPriceNext, amountOneOut, amountZeroIn, spreadRewardChargeTotal := strategy.ComputeSwapWithinBucketInGivenOut(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, defaultLiquidity, tc.amountOneOutRemaining)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
 			suite.Require().Equal(tc.amountOneOutConsumed, amountOneOut)

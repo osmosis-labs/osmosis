@@ -101,6 +101,9 @@ def get_next_sqrt_price_from_amount0_out_round_up(liquidity, sqrtPriceCurrent, t
 def get_next_sqrt_price_from_amount0_in_round_up(liquidity, sqrtPriceCurrent, tokenIn):
     return round_osmo_prec_up(round_osmo_prec_up(liquidity * sqrtPriceCurrent) / (liquidity + round_osmo_prec_down(tokenIn * sqrtPriceCurrent)))
 
+def get_next_sqrt_price_from_amount1_out_round_down(liquidity, sqrtPriceCurrent, tokenOut):
+    return sqrtPriceCurrent - round_osmo_prec_up(tokenOut / liquidity)
+
 def calc_amount_zero_delta(liquidity, sqrtPriceA, sqrtPriceB, roundUp):
     if sqrtPriceB > sqrtPriceA:
         sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
