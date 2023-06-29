@@ -402,7 +402,6 @@ func (k Keeper) computeOutAmtGivenIn(
 	tokenIn = sdk.NewCoin(tokenInMin.Denom, amt0)
 	tokenOut = sdk.NewCoin(tokenOutDenom, amt1)
 
-	// TODO: conert returned sqrt price to osmomath.BigDec
 	return tokenIn, tokenOut, PoolUpdates{swapState.tick, swapState.liquidity, swapState.sqrtPrice}, swapState.globalSpreadRewardGrowth, nil
 }
 
@@ -525,7 +524,6 @@ func (k Keeper) computeInAmtGivenOut(
 	tokenIn = sdk.NewCoin(tokenInDenom, amt0)
 	tokenOut = sdk.NewCoin(desiredTokenOut.Denom, amt1)
 
-	// TODO: conert returned sqrt price to osmomath.BigDec
 	return tokenIn, tokenOut, PoolUpdates{swapState.tick, swapState.liquidity, swapState.sqrtPrice}, swapState.globalSpreadRewardGrowth, nil
 }
 
