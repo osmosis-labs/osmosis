@@ -12,13 +12,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Fetch latest commit hash
-        id: commit
-        run: echo "::set-output name=commit_hash::$(git rev-parse HEAD)"
-
       - name: Update go.mod
         run: |
-          commit_hash="${{ steps.commit.outputs.commit_hash }}"
+          commit_hash="${{ github.sha }}"
           go get "github.com/osmosis-labs/osmosis/v16@$commit_hash"
           git add go.mod
           git commit -m "Update go.mod with latest commit hash"
