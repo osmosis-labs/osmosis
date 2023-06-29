@@ -744,26 +744,6 @@ func TestGetNextSqrtPriceFromAmount1InRoundingDown(t *testing.T) {
 	runSqrtRoundingTestCaseBigDec(t, "TestGetNextSqrtPriceFromAmount1InRoundingDown", math.GetNextSqrtPriceFromAmount1InRoundingDownBigDec, tests)
 }
 
-func TestGetNextSqrtPriceFromAmount1OutRoundingDown(t *testing.T) {
-	tests := map[string]sqrtRoundingTestCase{
-		"rounded down at precision end": {
-			sqrtPriceCurrent: sqrt5000,
-			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
-			amountRemaining:  sdk.MustNewDecFromStr("8398"),
-			// sqrt_next = sqrt_cur - token_out / liq = 70.71067535230068205665666073
-			expected: sdk.MustNewDecFromStr("70.710675352300682056"),
-		},
-		"no round up due zeroes at precision end": {
-			sqrtPriceCurrent: sdk.MustNewDecFromStr("12.5"),
-			liquidity:        sdk.MustNewDecFromStr("1"),
-			amountRemaining:  sdk.MustNewDecFromStr("10"),
-			// sqrt_next = sqrt_cur - token_out / liq
-			expected: sdk.MustNewDecFromStr("2.5"),
-		},
-	}
-	runSqrtRoundingTestCase(t, "TestGetNextSqrtPriceFromAmount1OutRoundingDown", math.GetNextSqrtPriceFromAmount1OutRoundingDown, tests)
-}
-
 func TestGetNextSqrtPriceFromAmount1OutRoundingDownBigDec(t *testing.T) {
 	tests := map[string]sqrtRoundingTestCaseBigDec{
 		"rounded down at precision end": {
