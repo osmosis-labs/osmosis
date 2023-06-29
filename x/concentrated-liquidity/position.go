@@ -734,7 +734,7 @@ func (k Keeper) GetLockIdFromPositionId(ctx sdk.Context, positionId uint64) (uin
 	}
 
 	// Check if lock ID still exists (i.e. has not matured). In this context, the KVStore value is the source of truth
-	//that the lockID existed. Therefore, if the lock ID does not exist, it means it did exist at one point but has now matured.
+	// that the lockID existed. Therefore, if the lock ID does not exist, it means it did exist at one point but has now matured.
 	// If it has matured, return an error. (We do not want to mutate state here in the getter)
 	lock, err := k.lockupKeeper.GetLockByID(ctx, sdk.BigEndianToUint64(value))
 	if err == errorsmod.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", lock.GetID())) {
