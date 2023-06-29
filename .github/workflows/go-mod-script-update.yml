@@ -14,7 +14,7 @@ jobs:
 
       - name: Update go.mod
         run: |
-          commit_hash="${{ github.sha }}"
+          commit_hash="${{ github.event.pull_request.head.sha }}"
           go get "github.com/osmosis-labs/osmosis/v16@$commit_hash"
           git add go.mod
           git commit -m "Update go.mod with latest commit hash"
