@@ -887,7 +887,7 @@ If the direction is one for zero, the liquidity for the bucket in the designated
 
 where L<sub>0</sub> is the global(cumulative liquidity).
 
-### Deducing the quantity of tokens X and Y for a tick range.
+### Deducing the quantity of tokens X and Y for a tick range
 Having obtained the liquidity depths for each liquidity buckets in the pool, we can derive an equation to calculate the quantity of each token locked for a certain price range. Let *i* and *j* be the indexes of lower and upper tick boundaries of the range we want to calculate, let P<sub>0</sub> be current price and P<sub>a</sub>, P<sub>b</sub> prices for lower tick and upper tick respectively, where P<sub>a</sub>, P<sub>b</sub> are defined as the following:
 <p align="center"> 
 P<sub>a</sub> = 1.0001<sup>i</sup>, P<sub>b</sub> = 1.0001<sup>j</sup>
