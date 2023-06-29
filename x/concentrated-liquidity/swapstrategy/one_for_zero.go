@@ -236,10 +236,12 @@ func (s oneForZeroStrategy) UpdateTickAfterCrossing(nextTick int64) int64 {
 // oneForZeroStrategy assumes moving to the right of the current square root price.
 // Therefore, the following invariant must hold:
 // current square root price <= sqrtPrice <= types.MaxSqrtRatio
-func (s oneForZeroStrategy) ValidateSqrtPrice(sqrtPrice, currentSqrtPrice sdk.Dec) error {
+func (s oneForZeroStrategy) ValidateSqrtPrice(sqrtPrice sdk.Dec, currentSqrtPrice osmomath.BigDec) error {
+	sqrtPriceBigDec := osmomath.BigDecFromSDKDec(sqrtPrice)
+
 	// check that the price limit is above the current sqrt price but lower than the maximum sqrt price since we are swapping asset1 for asset0
-	if sqrtPrice.LT(currentSqrtPrice) || sqrtPrice.GT(types.MaxSqrtPrice) {
-		return types.SqrtPriceValidationError{SqrtPriceLimit: sqrtPrice, LowerBound: currentSqrtPrice, UpperBound: types.MaxSqrtPrice}
+	if sqrtPriceBigDec.LT(currentSqrtPrice) || sqrtPriceBigDec.GT(types.MaxSqrtPriceBigDec) {
+		return types.SqrtPriceValidationError{SqrtPriceLimit: sqrtPriceBigDec, LowerBound: currentSqrtPrice, UpperBound: types.MaxSqrtPriceBigDec}
 	}
 	return nil
 }

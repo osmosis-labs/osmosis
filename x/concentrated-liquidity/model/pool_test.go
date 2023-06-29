@@ -26,14 +26,21 @@ const (
 )
 
 var (
-	DefaultSpotPrice              = sdk.MustNewDecFromStr("0.2")
-	DefaultReverseSpotPrice       = sdk.NewDec(1).Quo(DefaultSpotPrice)
-	DefaultSqrtSpotPrice, _       = osmomath.MonotonicSqrt(DefaultSpotPrice)
-	DefaultLiquidityAmt           = sdk.MustNewDecFromStr("1517882343.751510418088349649")
-	DefaultCurrTick         int64 = 310000
-	DefaultCurrPrice              = sdk.NewDec(5000)
-	DefaultCurrSqrtPrice, _       = osmomath.MonotonicSqrt(DefaultCurrPrice) // 70.710678118654752440
-	DefaultSpreadFactor           = sdk.MustNewDecFromStr("0.01")
+	DefaultSpotPrice        = sdk.MustNewDecFromStr("0.2")
+	DefaultReverseSpotPrice = sdk.NewDec(1).Quo(DefaultSpotPrice)
+	DefaultSqrtSpotPrice    = func() osmomath.BigDec {
+		sqrtPrice, _ := osmomath.MonotonicSqrt(DefaultSpotPrice)
+		return osmomath.BigDecFromSDKDec(sqrtPrice)
+	}()
+	DefaultLiquidityAmt        = sdk.MustNewDecFromStr("1517882343.751510418088349649")
+	DefaultCurrTick      int64 = 310000
+	DefaultCurrPrice           = sdk.NewDec(5000)
+	DefaultCurrSqrtPrice       = func() osmomath.BigDec {
+		sqrtPrice, _ := osmomath.MonotonicSqrt(DefaultCurrPrice)
+		return osmomath.BigDecFromSDKDec(sqrtPrice)
+	}() // 70.710678118654752440
+
+	DefaultSpreadFactor = sdk.MustNewDecFromStr("0.01")
 )
 
 type ConcentratedPoolTestSuite struct {
@@ -316,15 +323,15 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 	// Set up the test suite.
 	s.Setup()
 
-	negativeOne := sdk.NewDec(-1)
+	negativeOne := osmomath.NewBigDec(-1)
 	tests := []struct {
 		name             string
 		currentLiquidity sdk.Dec
 		currentTick      int64
-		currentSqrtPrice sdk.Dec
+		currentSqrtPrice osmomath.BigDec
 		newLiquidity     sdk.Dec
 		newTick          int64
-		newSqrtPrice     sdk.Dec
+		newSqrtPrice     osmomath.BigDec
 		expectErr        error
 	}{
 		{
@@ -332,9 +339,9 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			currentLiquidity: DefaultLiquidityAmt,
 			currentTick:      DefaultCurrTick,
 			currentSqrtPrice: DefaultCurrSqrtPrice,
-			newLiquidity:     DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
+			newLiquidity:     DefaultLiquidityAmt.MulInt64(2),
 			newTick:          DefaultCurrTick * 2,
-			newSqrtPrice:     DefaultCurrSqrtPrice.Mul(sdk.NewDec(2)),
+			newSqrtPrice:     DefaultCurrSqrtPrice.MulInt64(2),
 			expectErr:        nil,
 		},
 		{
@@ -342,10 +349,10 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			currentLiquidity: DefaultLiquidityAmt,
 			currentTick:      DefaultCurrTick,
 			currentSqrtPrice: DefaultCurrSqrtPrice,
-			newLiquidity:     negativeOne,
+			newLiquidity:     sdk.OneDec().Neg(),
 			newTick:          DefaultCurrTick,
 			newSqrtPrice:     DefaultCurrSqrtPrice,
-			expectErr:        types.NegativeLiquidityError{Liquidity: negativeOne},
+			expectErr:        types.NegativeLiquidityError{Liquidity: sdk.OneDec().Neg()},
 		},
 		{
 			name:             "negative square root price",
@@ -683,7 +690,8 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			pool := model.Pool{
 				CurrentTick: tc.currentTick,
 			}
-			_, pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick)
+			_, currenTicktSqrtPrice, _ := clmath.TickToSqrtPrice(pool.CurrentTick)
+			pool.CurrentSqrtPrice = osmomath.BigDecFromSDKDec(currenTicktSqrtPrice)
 
 			actualAmount0, actualAmount1, err := pool.CalcActualAmounts(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
 
@@ -777,7 +785,8 @@ func (suite *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 				CurrentTick:          tc.currentTick,
 				CurrentTickLiquidity: defaultLiquidityAmt,
 			}
-			_, pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick)
+			_, currenTicktSqrtPrice, _ := clmath.TickToSqrtPrice(pool.CurrentTick)
+			pool.CurrentSqrtPrice = osmomath.BigDecFromSDKDec(currenTicktSqrtPrice)
 
 			wasUpdated := pool.UpdateLiquidityIfActivePosition(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
 			if tc.lowerTick <= tc.currentTick && tc.currentTick <= tc.upperTick {
@@ -801,7 +810,7 @@ func (suite *ConcentratedPoolTestSuite) TestPoolSetMethods() {
 
 	tests := map[string]struct {
 		currentTick              int64
-		currentSqrtPrice         sdk.Dec
+		currentSqrtPrice         osmomath.BigDec
 		tickSpacing              uint64
 		lastLiquidityUpdateDelta time.Duration
 	}{

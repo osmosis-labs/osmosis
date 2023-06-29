@@ -82,7 +82,7 @@ type SwapStrategy interface {
 	// relative to the current square root price on one side of the bound
 	// and the min/max sqrt price on the other side.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	ValidateSqrtPrice(sqrtPriceLimit, currentSqrtPrice sdk.Dec) error
+	ValidateSqrtPrice(sqrtPriceLimit sdk.Dec, currentSqrtPrice osmomath.BigDec) error
 }
 
 var (

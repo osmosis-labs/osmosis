@@ -2156,7 +2156,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			s.Require().NoError(err)
 
 			// Note spot price and gas used prior to swap
-			spotPriceBefore := pool.GetCurrentSqrtPrice().Power(2)
+			spotPriceBefore := pool.GetCurrentSqrtPrice().PowerInteger(2)
 			prevGasConsumed := s.Ctx.GasMeter().GasConsumed()
 
 			// Execute the swap directed in the test case
@@ -2182,18 +2182,18 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
 
-			spotPriceAfter := pool.GetCurrentSqrtPrice().Power(2)
+			spotPriceAfter := pool.GetCurrentSqrtPrice().PowerInteger(2)
 
 			// Ratio of the token out should be between the before spot price and after spot price.
 			tradeAvgPrice := tokenOutAmount.ToDec().Quo(test.param.tokenIn.Amount.ToDec())
 
 			if zeroForOne {
-				s.Require().True(tradeAvgPrice.LT(spotPriceBefore))
-				s.Require().True(tradeAvgPrice.GT(spotPriceAfter))
+				s.Require().True(tradeAvgPrice.LT(spotPriceBefore.SDKDec()))
+				s.Require().True(tradeAvgPrice.GT(spotPriceAfter.SDKDec()))
 			} else {
 				tradeAvgPrice = sdk.OneDec().Quo(tradeAvgPrice)
-				s.Require().True(tradeAvgPrice.GT(spotPriceBefore))
-				s.Require().True(tradeAvgPrice.LT(spotPriceAfter))
+				s.Require().True(tradeAvgPrice.GT(spotPriceBefore.SDKDec()))
+				s.Require().True(tradeAvgPrice.LT(spotPriceAfter.SDKDec()))
 			}
 
 			// Validate that listeners were called the desired number of times
@@ -2326,7 +2326,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			s.Require().NoError(err)
 
 			// Note spot price and gas used prior to swap
-			spotPriceBefore := pool.GetCurrentSqrtPrice().Power(2)
+			spotPriceBefore := pool.GetCurrentSqrtPrice().PowerInteger(2)
 			prevGasConsumed := s.Ctx.GasMeter().GasConsumed()
 
 			// Execute the swap directed in the test case
@@ -2352,7 +2352,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
 
-			spotPriceAfter := pool.GetCurrentSqrtPrice().Power(2)
+			spotPriceAfter := pool.GetCurrentSqrtPrice().PowerInteger(2)
 
 			// Ratio of the token out should be between the before spot price and after spot price.
 			tradeAvgPrice := tokenIn.ToDec().Quo(test.param.tokenOut.Amount.ToDec())
@@ -2360,12 +2360,12 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			if zeroForOne {
 				// token in is token zero, token out is token one
 				tradeAvgPrice = sdk.OneDec().Quo(tradeAvgPrice)
-				s.Require().True(tradeAvgPrice.LT(spotPriceBefore), fmt.Sprintf("tradeAvgPrice: %s, spotPriceBefore: %s", tradeAvgPrice, spotPriceBefore))
-				s.Require().True(tradeAvgPrice.GT(spotPriceAfter), fmt.Sprintf("tradeAvgPrice: %s, spotPriceAfter: %s", tradeAvgPrice, spotPriceAfter))
+				s.Require().True(tradeAvgPrice.LT(spotPriceBefore.SDKDec()), fmt.Sprintf("tradeAvgPrice: %s, spotPriceBefore: %s", tradeAvgPrice, spotPriceBefore))
+				s.Require().True(tradeAvgPrice.GT(spotPriceAfter.SDKDec()), fmt.Sprintf("tradeAvgPrice: %s, spotPriceAfter: %s", tradeAvgPrice, spotPriceAfter))
 			} else {
 				// token in is token one, token out is token zero
-				s.Require().True(tradeAvgPrice.GT(spotPriceBefore), fmt.Sprintf("tradeAvgPrice: %s, spotPriceBefore: %s", tradeAvgPrice, spotPriceBefore))
-				s.Require().True(tradeAvgPrice.LT(spotPriceAfter), fmt.Sprintf("tradeAvgPrice: %s, spotPriceAfter: %s", tradeAvgPrice, spotPriceAfter))
+				s.Require().True(tradeAvgPrice.GT(spotPriceBefore.SDKDec()), fmt.Sprintf("tradeAvgPrice: %s, spotPriceBefore: %s", tradeAvgPrice, spotPriceBefore))
+				s.Require().True(tradeAvgPrice.LT(spotPriceAfter.SDKDec()), fmt.Sprintf("tradeAvgPrice: %s, spotPriceAfter: %s", tradeAvgPrice, spotPriceAfter))
 			}
 
 			// Validate that listeners were called the desired number of times
@@ -2612,7 +2612,7 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 		spreadFactor         sdk.Dec
 		newCurrentTick       int64
 		newLiquidity         sdk.Dec
-		newSqrtPrice         sdk.Dec
+		newSqrtPrice         osmomath.BigDec
 		expectError          error
 	}{
 		"success case": {
@@ -2623,7 +2623,7 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			spreadFactor:         sdk.MustNewDecFromStr("0.003"), // 0.3%
 			newCurrentTick:       2,
 			newLiquidity:         sdk.NewDec(2),
-			newSqrtPrice:         sdk.NewDec(2),
+			newSqrtPrice:         osmomath.NewBigDec(2),
 		},
 		"success case with different/uneven numbers": {
 			senderInitialBalance: defaultInitialBalance.Add(defaultInitialBalance...),
@@ -2633,7 +2633,7 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			spreadFactor:         sdk.MustNewDecFromStr("0.002"), // 0.2%
 			newCurrentTick:       8,
 			newLiquidity:         sdk.NewDec(37),
-			newSqrtPrice:         sdk.NewDec(91),
+			newSqrtPrice:         osmomath.NewBigDec(91),
 		},
 		"sender does not have enough balance": {
 			senderInitialBalance: defaultInitialBalance,
@@ -2643,7 +2643,7 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			spreadFactor:         sdk.MustNewDecFromStr("0.003"),
 			newCurrentTick:       2,
 			newLiquidity:         sdk.NewDec(2),
-			newSqrtPrice:         sdk.NewDec(2),
+			newSqrtPrice:         osmomath.NewBigDec(2),
 			expectError:          types.InsufficientUserBalanceError{},
 		},
 		"pool does not have enough balance": {
@@ -2654,7 +2654,7 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			spreadFactor:         sdk.MustNewDecFromStr("0.003"),
 			newCurrentTick:       2,
 			newLiquidity:         sdk.NewDec(2),
-			newSqrtPrice:         sdk.NewDec(2),
+			newSqrtPrice:         osmomath.NewBigDec(2),
 			expectError:          types.InsufficientPoolBalanceError{},
 		},
 	}
@@ -2671,7 +2671,7 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			s.FundAcc(sender, tc.senderInitialBalance)
 
 			// Default pool values are initialized to one.
-			err := pool.ApplySwap(sdk.OneDec(), 1, sdk.OneDec())
+			err := pool.ApplySwap(sdk.OneDec(), 1, osmomath.OneDec())
 			s.Require().NoError(err)
 
 			// Write default pool to state.
@@ -2882,7 +2882,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 
 	// Get expected values from the calculations above
 	expectedSqrtPrice := osmomath.MustNewDecFromStr("71.74138432587113364823838192")
-	actualSqrtPrice := osmomath.BigDecFromSDKDec(clPool.GetCurrentSqrtPrice())
+	actualSqrtPrice := clPool.GetCurrentSqrtPrice()
 	expectedTokenIn := swapCoin1.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
 	expectedTokenOut := sdk.NewInt(982676)
 
@@ -2942,7 +2942,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 
 	// Get expected values from the calculations above
 	expectedSqrtPrice = osmomath.MustNewDecFromStr("70.64112736841825140176332377")
-	actualSqrtPrice = osmomath.BigDecFromSDKDec(clPool.GetCurrentSqrtPrice())
+	actualSqrtPrice = clPool.GetCurrentSqrtPrice()
 	expectedTokenIn = swapCoin0.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
 	expectedTokenOut = sdk.NewInt(5052068983)
 
@@ -3002,7 +3002,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 
 	// Get expected values from the calculations above
 	expectedSqrtPrice = osmomath.MustNewDecFromStr("76.22545423006231767390422658")
-	actualSqrtPrice = osmomath.BigDecFromSDKDec(clPool.GetCurrentSqrtPrice())
+	actualSqrtPrice = clPool.GetCurrentSqrtPrice()
 	expectedTokenIn = swapCoin1.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
 	expectedTokenOut = sdk.NewInt(882804)
 
@@ -3048,7 +3048,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 
 	// Get expected values from the calculations above
 	expectedSqrtPrice = osmomath.MustNewDecFromStr("63.97671895942244949922335999")
-	actualSqrtPrice = osmomath.BigDecFromSDKDec(clPool.GetCurrentSqrtPrice())
+	actualSqrtPrice = clPool.GetCurrentSqrtPrice()
 	expectedTokenIn = swapCoin0.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
 	expectedTokenOut = sdk.NewInt(4509814620)
 

@@ -25,7 +25,7 @@ type lpTest struct {
 	joinTime                          time.Time
 	positionId                        uint64
 	underlyingLockId                  uint64
-	currentSqrtP                      sdk.Dec
+	currentSqrtP                      osmomath.BigDec
 	tokensProvided                    sdk.Coins
 	customTokensProvided              bool
 	amount0Minimum                    sdk.Int
@@ -1658,17 +1658,17 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 }
 
 func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
-	sqrt := func(x int64) sdk.Dec {
+	sqrt := func(x int64) osmomath.BigDec {
 		sqrt, err := osmomath.MonotonicSqrt(sdk.NewDec(x))
 		s.Require().NoError(err)
-		return sqrt
+		return osmomath.BigDecFromSDKDec(sqrt)
 	}
 
 	type sendTest struct {
 		amount0Desired        sdk.Int
 		amount1Desired        sdk.Int
 		tickSpacing           uint64
-		expectedCurrSqrtPrice sdk.Dec
+		expectedCurrSqrtPrice osmomath.BigDec
 		expectedTick          int64
 		expectedError         error
 	}

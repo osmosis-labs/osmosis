@@ -6,6 +6,8 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 var (
@@ -189,9 +191,9 @@ func (e TokenOutDenomNotInPoolError) Error() string {
 }
 
 type SqrtPriceValidationError struct {
-	SqrtPriceLimit sdk.Dec
-	LowerBound     sdk.Dec
-	UpperBound     sdk.Dec
+	SqrtPriceLimit osmomath.BigDec
+	LowerBound     osmomath.BigDec
+	UpperBound     osmomath.BigDec
 }
 
 func (e SqrtPriceValidationError) Error() string {
@@ -280,7 +282,7 @@ func (e SpotPriceNegativeError) Error() string {
 }
 
 type SqrtPriceNegativeError struct {
-	ProvidedSqrtPrice sdk.Dec
+	ProvidedSqrtPrice osmomath.BigDec
 }
 
 func (e SqrtPriceNegativeError) Error() string {

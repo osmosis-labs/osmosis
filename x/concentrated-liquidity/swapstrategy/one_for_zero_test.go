@@ -135,7 +135,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 		"5: custom amounts at high price levels - reach target": {
 			sqrtPriceCurrent: osmomath.BigDecFromSDKDec(sqrt(100_000_000)),
 			sqrtPriceTarget:  sqrt(100_000_100),
-			liquidity:        math.GetLiquidityFromAmounts(sqrt(1), sqrt(100_000_000), sqrt(100_000_100), defaultAmountZero.TruncateInt(), defaultAmountOne.TruncateInt()),
+			liquidity:        math.GetLiquidityFromAmounts(osmomath.OneDec(), sqrt(100_000_000), sqrt(100_000_100), defaultAmountZero.TruncateInt(), defaultAmountOne.TruncateInt()),
 
 			// this value is exactly enough to reach the target
 			amountOneInRemaining: sdk.NewDec(1336900668450),

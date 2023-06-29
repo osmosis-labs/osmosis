@@ -63,10 +63,9 @@ type SwapState struct {
 
 func newSwapState(specifiedAmount sdk.Int, p types.ConcentratedPoolExtension, strategy swapstrategy.SwapStrategy) SwapState {
 	return SwapState{
-		amountSpecifiedRemaining: specifiedAmount.ToDec(),
-		amountCalculated:         sdk.ZeroDec(),
-		// TODO: change sqrt price to big
-		sqrtPrice:                                osmomath.BigDecFromSDKDec(p.GetCurrentSqrtPrice()),
+		amountSpecifiedRemaining:                 specifiedAmount.ToDec(),
+		amountCalculated:                         sdk.ZeroDec(),
+		sqrtPrice:                                p.GetCurrentSqrtPrice(),
 		tick:                                     p.GetCurrentTick(),
 		liquidity:                                p.GetLiquidity(),
 		globalSpreadRewardGrowthPerUnitLiquidity: sdk.ZeroDec(),
@@ -84,7 +83,7 @@ type SwapDetails struct {
 type PoolUpdates struct {
 	NewCurrentTick int64
 	NewLiquidity   sdk.Dec
-	NewSqrtPrice   sdk.Dec
+	NewSqrtPrice   osmomath.BigDec
 }
 
 var (
@@ -408,7 +407,7 @@ func (k Keeper) computeOutAmtGivenIn(
 	tokenOut = sdk.NewCoin(tokenOutDenom, amt1)
 
 	// TODO: conert returned sqrt price to osmomath.BigDec
-	return tokenIn, tokenOut, PoolUpdates{swapState.tick, swapState.liquidity, swapState.sqrtPrice.SDKDec()}, swapState.globalSpreadRewardGrowth, nil
+	return tokenIn, tokenOut, PoolUpdates{swapState.tick, swapState.liquidity, swapState.sqrtPrice}, swapState.globalSpreadRewardGrowth, nil
 }
 
 // computeInAmtGivenOut calculates tokens to be swapped in given the desired token out and spread factor deducted. It also returns
@@ -535,7 +534,7 @@ func (k Keeper) computeInAmtGivenOut(
 	tokenOut = sdk.NewCoin(desiredTokenOut.Denom, amt1)
 
 	// TODO: conert returned sqrt price to osmomath.BigDec
-	return tokenIn, tokenOut, PoolUpdates{swapState.tick, swapState.liquidity, swapState.sqrtPrice.SDKDec()}, swapState.globalSpreadRewardGrowth, nil
+	return tokenIn, tokenOut, PoolUpdates{swapState.tick, swapState.liquidity, swapState.sqrtPrice}, swapState.globalSpreadRewardGrowth, nil
 }
 
 func emitSwapDebugLogs(ctx sdk.Context, swapState SwapState, reachedPrice osmomath.BigDec, amountIn, amountOut, spreadCharge sdk.Dec) {
