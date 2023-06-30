@@ -295,7 +295,7 @@ func (q Querier) UserSuperfluidPositionsPerConcentratedPoolBreakdown(goCtx conte
 		return nil, err
 	}
 
-	// Query each position ID and determine if it has a lock ID associated with it, which implies the position is superfluid staked.
+	// Query each position ID and determine if it has a lock ID associated with it.
 	// Construct a response with the position ID, lock ID, the amount of cl shares staked, and what those shares are worth in staked osmo tokens.
 	var clPoolUserPositionRecords []types.ConcentratedPoolUserPositionRecord
 	for _, pos := range positions {
