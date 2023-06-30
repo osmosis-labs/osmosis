@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
@@ -280,8 +281,8 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 	return &res, nil
 }
 
-// UserSuperfluidPositionsPerConcentratedPoolBreakdown returns all the cl superfluid positions for the specified delegator in the specified concentrated liquidity pool.
-func (q Querier) UserSuperfluidPositionsPerConcentratedPoolBreakdown(goCtx context.Context, req *types.UserSuperfluidPositionsPerConcentratedPoolBreakdownRequest) (*types.UserSuperfluidPositionsPerConcentratedPoolBreakdownResponse, error) {
+// UserConcentratedSuperfluidPositionsBonded returns all the cl superfluid positions for the specified delegator in the specified concentrated liquidity pool that are bonded.
+func (q Querier) UserConcentratedSuperfluidPositionsBonded(goCtx context.Context, req *types.UserConcentratedSuperfluidPositionsBondedRequest) (*types.UserConcentratedSuperfluidPositionsBondedResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
@@ -289,68 +290,47 @@ func (q Querier) UserSuperfluidPositionsPerConcentratedPoolBreakdown(goCtx conte
 		return nil, err
 	}
 
-	// Get the position IDs for the specified pool ID and user address.
-	positions, err := q.Keeper.clk.GetUserPositions(ctx, delAddr, req.ConcentratedPoolId)
+	// Get the position IDs across all pools for the given user address.
+	positions, err := q.Keeper.clk.GetUserPositions(ctx, delAddr, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	// Query each position ID and determine if it has a lock ID associated with it.
 	// Construct a response with the position ID, lock ID, the amount of cl shares staked, and what those shares are worth in staked osmo tokens.
-	var clPoolUserPositionRecords []types.ConcentratedPoolUserPositionRecord
-	for _, pos := range positions {
-		lockId, err := q.Keeper.clk.GetLockIdFromPositionId(ctx, pos.PositionId)
-		switch err.(type) {
-		case cltypes.PositionIdToLockNotFoundError:
-			continue
-		case nil:
-			// If we have hit this logic branch, it means that, at one point, the lockId provided existed. If we fetch it again
-			// and it doesn't exist, that means that the lock has matured.
-			lock, err := q.Keeper.lk.GetLockByID(ctx, lockId)
-			if err == errorsmod.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", lock.GetID())) {
-				continue
-			}
-			if err != nil {
-				return nil, err
-			}
-
-			syntheticLock, err := q.Keeper.lk.GetSyntheticLockupByUnderlyingLockId(ctx, lockId)
-			if err != nil {
-				return nil, err
-			}
-
-			// Its possible for a non superfluid lock to be attached to a position. This can happen for users migrating non superfluid positions that
-			// they intend to let mature so they can eventually set non full range positions.
-			if syntheticLock.UnderlyingLockId == 0 {
-				continue
-			}
-
-			valAddr, err := ValidatorAddressFromSyntheticDenom(syntheticLock.SynthDenom)
-			if err != nil {
-				return nil, err
-			}
-
-			baseDenom := lock.Coins.GetDenomByIndex(0)
-			lockedCoins := sdk.NewCoin(baseDenom, lock.GetCoins().AmountOf(baseDenom))
-			equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
-			if err != nil {
-				return nil, err
-			}
-			coin := sdk.NewCoin(appparams.BaseCoinUnit, equivalentAmount)
-
-			clPoolUserPositionRecords = append(clPoolUserPositionRecords, types.ConcentratedPoolUserPositionRecord{
-				ValidatorAddress:       valAddr,
-				PositionId:             pos.PositionId,
-				LockId:                 lockId,
-				DelegationAmount:       lockedCoins,
-				EquivalentStakedAmount: &coin,
-			})
-		default:
-			continue
-		}
+	clPoolUserPositionRecords, err := q.filterConcentratedPositionLocks(ctx, positions, false)
+	if err != nil {
+		return nil, err
 	}
 
-	return &types.UserSuperfluidPositionsPerConcentratedPoolBreakdownResponse{
+	return &types.UserConcentratedSuperfluidPositionsBondedResponse{
+		ClPoolUserPositionRecords: clPoolUserPositionRecords,
+	}, nil
+}
+
+// UserConcentratedSuperfluidPositionsUnbonding returns all the cl superfluid positions for the specified delegator in the specified concentrated liquidity pool that are unbonding.
+func (q Querier) UserConcentratedSuperfluidPositionsUnbonding(goCtx context.Context, req *types.UserConcentratedSuperfluidPositionsUnbondingRequest) (*types.UserConcentratedSuperfluidPositionsUnbondingResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the position IDs across all pools for the given user address.
+	positions, err := q.Keeper.clk.GetUserPositions(ctx, delAddr, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	// Query each position ID and determine if it has a lock ID associated with it.
+	// Construct a response with the position ID, lock ID, the amount of cl shares staked, and what those shares are worth in staked osmo tokens.
+	clPoolUserPositionRecords, err := q.filterConcentratedPositionLocks(ctx, positions, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.UserConcentratedSuperfluidPositionsUnbondingResponse{
 		ClPoolUserPositionRecords: clPoolUserPositionRecords,
 	}, nil
 }
@@ -652,4 +632,74 @@ func (q Querier) UnpoolWhitelist(goCtx context.Context, req *types.QueryUnpoolWh
 	return &types.QueryUnpoolWhitelistResponse{
 		PoolIds: allowedPools,
 	}, nil
+}
+
+func (q Querier) filterConcentratedPositionLocks(ctx sdk.Context, positions []model.Position, isUnbonding bool) ([]types.ConcentratedPoolUserPositionRecord, error) {
+	// Query each position ID and determine if it has a lock ID associated with it.
+	// Construct a response with the position ID, lock ID, the amount of cl shares staked, and what those shares are worth in staked osmo tokens.
+	var clPoolUserPositionRecords []types.ConcentratedPoolUserPositionRecord
+	for _, pos := range positions {
+		lockId, err := q.Keeper.clk.GetLockIdFromPositionId(ctx, pos.PositionId)
+		switch err.(type) {
+		case cltypes.PositionIdToLockNotFoundError:
+			continue
+		case nil:
+			// If we have hit this logic branch, it means that, at one point, the lockId provided existed. If we fetch it again
+			// and it doesn't exist, that means that the lock has matured.
+			lock, err := q.Keeper.lk.GetLockByID(ctx, lockId)
+			if err == errorsmod.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", lock.GetID())) {
+				continue
+			}
+			if err != nil {
+				return nil, err
+			}
+
+			syntheticLock, err := q.Keeper.lk.GetSyntheticLockupByUnderlyingLockId(ctx, lockId)
+			if err != nil {
+				return nil, err
+			}
+
+			// Its possible for a non superfluid lock to be attached to a position. This can happen for users migrating non superfluid positions that
+			// they intend to let mature so they can eventually set non full range positions.
+			if syntheticLock.UnderlyingLockId == 0 {
+				continue
+			}
+
+			if isUnbonding {
+				// We only want to return unbonding positions.
+				if !strings.Contains(syntheticLock.SynthDenom, "/superunbonding") {
+					continue
+				}
+			} else {
+				// We only want to return bonding positions.
+				if !strings.Contains(syntheticLock.SynthDenom, "/superbonding") {
+					continue
+				}
+			}
+
+			valAddr, err := ValidatorAddressFromSyntheticDenom(syntheticLock.SynthDenom)
+			if err != nil {
+				return nil, err
+			}
+
+			baseDenom := lock.Coins.GetDenomByIndex(0)
+			lockedCoins := sdk.NewCoin(baseDenom, lock.GetCoins().AmountOf(baseDenom))
+			equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
+			if err != nil {
+				return nil, err
+			}
+			coin := sdk.NewCoin(appparams.BaseCoinUnit, equivalentAmount)
+
+			clPoolUserPositionRecords = append(clPoolUserPositionRecords, types.ConcentratedPoolUserPositionRecord{
+				ValidatorAddress:       valAddr,
+				PositionId:             pos.PositionId,
+				LockId:                 lockId,
+				DelegationAmount:       lockedCoins,
+				EquivalentStakedAmount: &coin,
+			})
+		default:
+			continue
+		}
+	}
+	return clPoolUserPositionRecords, nil
 }
