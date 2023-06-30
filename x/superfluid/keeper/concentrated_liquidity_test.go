@@ -8,6 +8,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v16/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
@@ -15,8 +16,7 @@ import (
 
 func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 	defaultJoinTime := s.Ctx.BlockTime()
-	owner := s.TestAccs[0]
-	nonOwner := s.TestAccs[1]
+	owner, nonOwner := apptesting.CreateRandomAccounts(1)[0], apptesting.CreateRandomAccounts(1)[0]
 	type sendTest struct {
 		superfluidDelegated    bool
 		superfluidUndelegating bool
