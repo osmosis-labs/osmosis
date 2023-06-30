@@ -178,18 +178,21 @@ var (
 			spreadFactor:  sdk.ZeroDec(),
 			// from math import *
 			// from decimal import *
-			//
+
+			// getcontext().prec = 60
+			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
+
 			// liquidity = Decimal("1517882343.751510417627556287")
 			// sqrt_cur = Decimal("70.710678118654752441") # sqrt5000
 			// token_in = 13370
-			//
-			// sqrt_next = liquidity * sqrt_cur / (liquidity + token_in * sqrt_cur)
-			//
+
+			// sqrt_next = (liquidity * sqrt_cur / (liquidity + token_in * sqrt_cur)).quantize(precision, rounding=ROUND_UP)
+
 			// # CalcAmount0Delta rounded up
 			// expectedTokenIn = ((liquidity * (sqrt_cur - sqrt_next)) / (sqrt_cur * sqrt_next)).quantize(Decimal('1'), rounding=ROUND_UP)
 			// # CalcAmount1Delta rounded down
 			// expectedTokenOut = (liquidity * (sqrt_cur - sqrt_next)).quantize(Decimal('1'), rounding=ROUND_DOWN)
-			//
+
 			// # Summary
 			// print(sqrt_next)
 			// print(expectedTokenIn)
@@ -199,7 +202,7 @@ var (
 			expectedTick:     30993777,
 			// True value with arbitrary precision: 70.6666639108571443321...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 70.666663910857144333
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.666663910857144333"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.666663910857144332134093938182290274"),
 		},
 		//  Two equal price ranges
 		//
@@ -215,12 +218,14 @@ var (
 			secondPositionUpperPrice: DefaultUpperPrice,
 			// from math import *
 			// from decimal import *
-			//
+
+			// getcontext().prec = 60
+			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
+
 			// token_in = Decimal("42000000")
 			// liq = 2 * Decimal("1517882343.751510417627556287")
 			// sqrt_cur = Decimal("70.710678118654752441") # sqrt5000
 
-			// precision = Decimal('1.000000000000000000') # 18 decimal precision
 			// rounding_direction = ROUND_DOWN # round delta down since we're swapping asset 1 in
 			// sqrt_delta = (token_in / liq).quantize(precision, rounding=rounding_direction)
 			// sqrt_next = sqrt_cur + sqrt_delta
@@ -235,7 +240,7 @@ var (
 			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(8398)),
 			expectedTick:     31001956,
 			// Corresponds to sqrt_next in script above
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.724513183069625079"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.724513183069625079757400000001800313"),
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
 			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
@@ -1263,11 +1268,14 @@ var (
 			spreadFactor: sdk.MustNewDecFromStr("0.01"),
 			// from math import *
 			// from decimal import *
+
+			// getcontext().prec = 60
+			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
+
 			// token_out = Decimal("42000000")
 			// liq = Decimal("1517882343.751510417627556287")
 			// sqrt_cur = Decimal("70.710678118654752441") # sqrt5000
 
-			// precision = Decimal('1.000000000000000000') # 18 decimal precision
 			// rounding_direction = ROUND_UP # round up since we're swapping asset 0 in
 			// sqrt_delta = (token_out / liq).quantize(precision, rounding=rounding_direction)
 			// sqrt_next = sqrt_cur - sqrt_delta
@@ -1287,7 +1295,7 @@ var (
 			expectedTick:     30996087,
 			// This value is the direct output of sqrt_next in the script above.
 			// The precision is exact because we properly handle rounding behavior in intermediate steps.
-			expectedSqrtPrice:                          osmomath.MustNewDecFromStr("70.683007989825007163"),
+			expectedSqrtPrice:                          osmomath.MustNewDecFromStr("70.683007989825007163485199999996399373"),
 			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000055925868851"),
 		},
 		"spread factor 2: two positions within one tick: usdc (in) -> eth (out) (3% spread factor) | ofz": {
