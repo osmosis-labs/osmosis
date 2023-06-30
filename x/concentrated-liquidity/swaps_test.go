@@ -3058,8 +3058,9 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	s.Require().Equal(0, multiplicativeTolerance.Compare(expectedTokenOut, totalTokenOut.Amount))
 }
 
-// TestInfiniteSwapLoop demonstrates a case where an infinite loop can be triggered in swap logic.
-func (s *KeeperTestSuite) TestInfiniteSwapLoop() {
+// TestInfiniteSwapLoop_OutGivenIn demonstrates a case where an infinite loop can be triggered in swap logic if no
+// swap limit and other constraints are applied.
+func (s *KeeperTestSuite) TestInfiniteSwapLoop_OutGivenIn() {
 	s.SetupTest()
 	pool := s.PrepareConcentratedPool()
 
@@ -3077,10 +3078,9 @@ func (s *KeeperTestSuite) TestInfiniteSwapLoop() {
 	swapUSDCFunded := sdk.NewCoin(USDC, sdk.Int(sdk.MustNewDecFromStr("10000")))
 	s.FundAcc(swapAddress, sdk.NewCoins(swapEthFunded, swapUSDCFunded))
 	_, tokenOut, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, sdk.NewCoin(USDC, sdk.NewInt(10000)), ETH, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
-	fmt.Println("Token swapped out: ", tokenOut)
 
 	// Swap back in the amount that was swapped out to test the inverse relationship
-	// This line is commented out as it triggers an infinite loop.
-	// _, _, _, err = s.clk.SwapOutAmtGivenIn(s.Ctx, swapAddress, pool, tokenOut, ETH, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
-	s.Require().NoError(err)
+	_, _, _, err = s.clk.SwapOutAmtGivenIn(s.Ctx, swapAddress, pool, tokenOut, ETH, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
+	s.Require().Error(err)
+	s.Require().ErrorIs(err, types.SwapNoProgressError{PoolId: pool.GetId(), UserProvidedCoin: tokenOut})
 }
