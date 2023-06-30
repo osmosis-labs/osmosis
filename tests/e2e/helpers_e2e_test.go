@@ -111,6 +111,7 @@ func (s *IntegrationTestSuite) validateCLPosition(position model.Position, poolI
 func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr, denom string, amount int64) {
 	// check the balance of the contract
 	s.Require().Eventually(func() bool {
+		// TODO: Change to QueryBalance(addr, denom)
 		balance, err := node.QueryBalances(addr)
 		s.Require().NoError(err)
 		if len(balance) == 0 {
