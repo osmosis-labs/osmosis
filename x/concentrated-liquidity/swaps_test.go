@@ -342,7 +342,7 @@ var (
 			// # Using clmath.py scripts: get_liquidity_from_amounts(DefaultCurrSqrtPrice, sqrt5500, sqrt6250, DefaultPoolLiq0, DefaultPoolLiq1)
 			// liq_2 = Decimal("1197767444.955508123483846019")
 
-			// precision = Decimal('1.000000000000000000') # 18 decimal precision
+			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
 			// rounding_direction = ROUND_DOWN # round delta down since we're swapping asset 1 in
 			// sqrt_delta = (token_in / liq_2).quantize(precision, rounding=rounding_direction)
 			// sqrt_next_2 = sqrt_next_1 + sqrt_delta
@@ -516,7 +516,7 @@ var (
 
 			// # Range 3: from 5500 till end
 			// liq_3 = second_pos_liq
-			// precision = Decimal('1.000000000000000000000000000000000000') # 18 decimal precision
+			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
 			// rounding_direction = ROUND_DOWN # round delta down since we're swapping asset 1 in
 			// sqrt_delta = (token_in / liq_3).quantize(precision, rounding=rounding_direction)
 			// sqrt_next_3 = sqrt_next_2 + sqrt_delta

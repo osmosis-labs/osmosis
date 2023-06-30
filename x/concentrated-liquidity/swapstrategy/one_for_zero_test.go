@@ -248,7 +248,6 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 		expectError error
 	}{
 		"1: no spread reward - reach target": {
-			// TODO: revisit each test case and review sqrt price current
 			sqrtPriceCurrent: osmomath.BigDecFromSDKDec(defaultSqrtPriceLower),
 			sqrtPriceTarget:  defaultSqrtPriceUpper,
 			liquidity:        defaultLiquidity,

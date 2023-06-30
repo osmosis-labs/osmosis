@@ -54,7 +54,6 @@ func TickToSqrtPriceBigDec(tickIndex int64) (osmomath.BigDec, error) {
 	}
 
 	// Determine the sqrtPrice from the price
-	// TODO: should we use MonotonicSqrtBigDec here?
 	sqrtPrice, err := osmomath.MonotonicSqrt(price)
 	if err != nil {
 		return osmomath.BigDec{}, err
@@ -141,7 +140,7 @@ func RoundDownTickToSpacing(tickIndex int64, tickSpacing int64) (int64, error) {
 // SqrtPriceToTickRoundDown converts the given sqrt price to its corresponding tick rounded down
 // to the nearest tick spacing.
 func SqrtPriceToTickRoundDownSpacing(sqrtPrice sdk.Dec, tickSpacing uint64) (int64, error) {
-	tickIndex, err := CalculateSqrtPriceToTickBigDec(osmomath.BigDecFromSDKDec(sqrtPrice))
+	tickIndex, err := CalculateSqrtPriceToTick(osmomath.BigDecFromSDKDec(sqrtPrice))
 	if err != nil {
 		return 0, err
 	}
@@ -221,7 +220,7 @@ func CalculatePriceToTickDec(price sdk.Dec) (tickIndex sdk.Dec, err error) {
 
 // CalculateSqrtPriceToTick takes in a square root and returns the corresponding tick index.
 // This function does not take into consideration tick spacing.
-func CalculateSqrtPriceToTickBigDec(sqrtPrice osmomath.BigDec) (tickIndex int64, err error) {
+func CalculateSqrtPriceToTick(sqrtPrice osmomath.BigDec) (tickIndex int64, err error) {
 	// SqrtPrice may have errors, so we take the tick obtained from the price
 	// and move it in a +/- 1 tick range based on the sqrt price those ticks would imply.
 	price := sqrtPrice.Mul(sqrtPrice)

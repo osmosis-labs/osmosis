@@ -378,7 +378,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		} else if !sqrtPriceStart.Equal(computedSqrtPrice) {
 			// Otherwise if the sqrtPrice calculated from ComputeSwapWithinBucketOutGivenIn(...) does not equal the sqrtPriceStart we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the computedSqrtPrice calculated from ComputeSwapWithinBucketOutGivenIn(...)
-			newTick, err := math.CalculateSqrtPriceToTickBigDec(computedSqrtPrice)
+			newTick, err := math.CalculateSqrtPriceToTick(computedSqrtPrice)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 			}
@@ -502,7 +502,7 @@ func (k Keeper) computeInAmtGivenOut(
 		} else if !sqrtPriceStart.Equal(computedSqrtPrice) {
 			// Otherwise, if the computedSqrtPrice calculated from ComputeSwapWithinBucketInGivenOut(...) does not equal the sqrtPriceStart we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the computedSqrtPrice calculated from ComputeSwapWithinBucketInGivenOut(...)
-			swapState.tick, err = math.CalculateSqrtPriceToTickBigDec(computedSqrtPrice)
+			swapState.tick, err = math.CalculateSqrtPriceToTick(computedSqrtPrice)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 			}
