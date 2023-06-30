@@ -108,6 +108,13 @@ service Query {
                                    "cfmm_pool_id_link_from_concentrated/"
                                    "{concentrated_pool_id}";
   }
+
+  rpc UserUnbondingPositions(UserUnbondingPositionsRequest)
+      returns (UserUnbondingPositionsResponse) {
+    option (google.api.http).get = "/osmosis/concentratedliquidity/v1beta1/"
+                                   "user_unbonding_positions/"
+                                   "{address}";
+  }
 }
 
 //=============================== UserPositions
@@ -279,4 +286,14 @@ message CFMMPoolIdLinkFromConcentratedPoolIdRequest {
 
 message CFMMPoolIdLinkFromConcentratedPoolIdResponse {
   uint64 cfmm_pool_id = 1 [ (gogoproto.moretags) = "yaml:\"cfmm_pool_id\"" ];
+}
+
+//=============================== UserUnbondingPositions
+message UserUnbondingPositionsRequest {
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+}
+
+message UserUnbondingPositionsResponse {
+  repeated PositionWithPeriodLock positions_with_period_lock = 1
+      [ (gogoproto.nullable) = false ];
 }

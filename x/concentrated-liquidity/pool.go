@@ -9,9 +9,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
@@ -339,4 +342,41 @@ func validateAuthorizedQuoteDenoms(ctx sdk.Context, denom1 string, authorizedQuo
 // Without this function, both pool link query functions would have to live in the gamm module which is unintuitive.
 func (k Keeper) GetLinkedBalancerPoolID(ctx sdk.Context, concentratedPoolId uint64) (uint64, error) {
 	return k.gammKeeper.GetLinkedBalancerPoolID(ctx, concentratedPoolId)
+}
+
+func (k Keeper) GetUserUnbondingPositions(ctx sdk.Context, address sdk.AccAddress) ([]model.PositionWithPeriodLock, error) {
+	// Get the position IDs for the specified user address.
+	positions, err := k.GetUserPositions(ctx, address, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	// Query each position ID and determine if it has a lock ID associated with it.
+	// Construct a response with the position as well as the lock's info.
+	var userPositionsWithPeriodLocks []model.PositionWithPeriodLock
+	for _, pos := range positions {
+		lockId, err := k.GetLockIdFromPositionId(ctx, pos.PositionId)
+		switch err.(type) {
+		case types.PositionIdToLockNotFoundError:
+			continue
+		case nil:
+			// If we have hit this logic branch, it means that, at one point, the lockId provided existed. If we fetch it again
+			// and it doesn't exist, that means that the lock has matured.
+			lock, err := k.lockupKeeper.GetLockByID(ctx, lockId)
+			if err == errorsmod.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", lock.GetID())) {
+				continue
+			}
+			if err != nil {
+				return nil, err
+			}
+
+			userPositionsWithPeriodLocks = append(userPositionsWithPeriodLocks, model.PositionWithPeriodLock{
+				Position: pos,
+				Locks:    *lock,
+			})
+		default:
+			continue
+		}
+	}
+	return userPositionsWithPeriodLocks, nil
 }
