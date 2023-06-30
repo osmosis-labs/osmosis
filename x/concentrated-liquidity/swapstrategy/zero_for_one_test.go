@@ -125,9 +125,12 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 			amountZeroInRemaining: defaultAmountZero.Sub(sdk.NewDec(100)).Quo(one.Sub(defaultSpreadReward)),
 			spreadFactor:          defaultSpreadReward,
 
-			expectedSqrtPriceNext: sqrtPriceTargetNotReached,
+			// tokenIn = Decimal("13269.999999999998920002290000000000000000")
+			// sqrtPriceNext = get_next_sqrt_price_from_amount0_in_round_up(liquidity, sqrtPriceCurrent, tokenIn)
+			expectedSqrtPriceNext: osmomath.MustNewDecFromStr("70.688828764403676329447108989075854947"),
 			amountZeroInConsumed:  defaultAmountZero.Sub(sdk.NewDec(100)).Ceil(),
-			expectedAmountOneOut:  amountOneTargetNotReached,
+			// round_sdk_prec_down(calc_amount_one_delta(liquidity, sqrtPriceCurrent, sqrtPriceNext, False))
+			expectedAmountOneOut: sdk.MustNewDecFromStr("66329498.080160868611071801"),
 			// Difference between amount in given and actually consumed.
 			expectedSpreadRewardChargeTotal: defaultAmountZero.Sub(sdk.NewDec(100)).Quo(one.Sub(defaultSpreadReward)).Sub(defaultAmountZero.Sub(sdk.NewDec(100)).Ceil()),
 		},

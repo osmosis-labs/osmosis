@@ -1140,13 +1140,23 @@ var (
 			secondPositionUpperPrice: sdk.NewDec(6250),
 			// from math import *
 			// from decimal import *
+
+			// import sys
+
+			// # import custom CL script
+			// sys.path.insert(0, 'x/concentrated-liquidity/python')
+			// from clmath import *
+
+			// getcontext().prec = 60
+			// precision = Decimal('1.000000000000000000000000000000000000') # 36 decimal precision
+
 			// # Range 1: From 5000 to 5001
 			// token_out = Decimal("1609138")
 			// liq_1 = Decimal("1517882343.751510417627556287")
 			// sqrt_cur = Decimal("70.710678118654752441") # sqrt5000
 			// sqrt_next_1 = Decimal("70.717748832948578243") # sqrt5001
 
-			// token_out_1 = liq_1 * (sqrt_next_1 - sqrt_cur ) / (sqrt_next_1 * sqrt_cur)
+			// token_out_1 = round_sdk_prec_down(calc_amount_zero_delta(liq_1, sqrt_cur, sqrt_next_1, False))
 			// token_in_1 = ceil(liq_1 * (sqrt_next_1 - sqrt_cur ))
 
 			// token_out = token_out - token_out_1
@@ -1156,14 +1166,15 @@ var (
 			// liq_2 = liq_1 + second_pos_liq
 			// sqrt_next_2 = Decimal("74.161984870956629488") # sqrt5500
 
-			// token_out_2 = liq_2 * (sqrt_next_2 - sqrt_next_1 ) / (sqrt_next_1 * sqrt_next_2)
+			// token_out_2 = round_sdk_prec_down(calc_amount_zero_delta(liq_2, sqrt_next_1, sqrt_next_2, False))
 			// token_in_2 = ceil(liq_2 * (sqrt_next_2 - sqrt_next_1 ))
 
 			// token_out = token_out - token_out_2
 
 			// # Range 3: from 5500 till end
 			// liq_3 = second_pos_liq
-			// sqrt_next_3 = liq_3 * sqrt_next_2 / (liq_3 - token_out * sqrt_next_2)
+			// print(token_out)
+			// sqrt_next_3 = ((liq_3 * sqrt_next_2).quantize(precision, ROUND_UP) / (liq_3 - (token_out * sqrt_next_2).quantize(precision, ROUND_UP))).quantize(precision, ROUND_UP)
 
 			// token_out_3 = liq_3 * (sqrt_next_3 - sqrt_next_2 ) / (sqrt_next_3 * sqrt_next_2)
 			// token_in_3 = ceil(liq_3 * (sqrt_next_3 - sqrt_next_2 ))
@@ -1179,7 +1190,7 @@ var (
 			expectedTick: 31712695,
 			// True value with arbitrary precision: 75.5823723551285943429...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 75.582372355128594343
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("75.582372355128594343"),
+			expectedSqrtPrice: osmomath.MustNewDecFromStr("75.582372355128594342857800328292876450"),
 			newLowerPrice:     sdk.NewDec(5001),
 			newUpperPrice:     sdk.NewDec(6250),
 		},

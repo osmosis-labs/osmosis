@@ -58,12 +58,21 @@ func (s zeroForOneStrategy) GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.De
 func (s zeroForOneStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent osmomath.BigDec, sqrtPriceTarget, liquidity, amountZeroInRemaining sdk.Dec) (osmomath.BigDec, sdk.Dec, sdk.Dec, sdk.Dec) {
 	liquidityBigDec := osmomath.BigDecFromSDKDec(liquidity)
 	sqrtPriceTargetBigDec := osmomath.BigDecFromSDKDec(sqrtPriceTarget)
+	amountZeroInRemainingBigDec := osmomath.BigDecFromSDKDec(amountZeroInRemaining)
 
 	// Estimate the amount of token zero needed until the target sqrt price is reached.
 	amountZeroIn := math.CalcAmount0Delta(liquidityBigDec, sqrtPriceTargetBigDec, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
 
+	fmt.Println("amountZeroInRemainingBigDec before fee", amountZeroInRemainingBigDec)
+
 	// Calculate sqrtPriceNext on the amount of token remaining after spread reward.
-	amountZeroInRemainingLessSpreadReward := osmomath.BigDecFromSDKDec(amountZeroInRemaining.Mul(sdk.OneDec().Sub(s.spreadFactor)))
+	amountZeroInRemainingLessSpreadReward := amountZeroInRemainingBigDec.Mul(oneBigDec.Sub(osmomath.BigDecFromSDKDec(s.spreadFactor)))
+
+	fmt.Println("sqrtPriceCurrent", sqrtPriceCurrent)
+	fmt.Println("sqrtPriceTarget", sqrtPriceTarget)
+
+	fmt.Println("amountZeroInRemainingLessSpreadReward", amountZeroInRemainingLessSpreadReward)
+	fmt.Println("amountZeroIn start", amountZeroIn)
 
 	var sqrtPriceNext osmomath.BigDec
 	// If have more of the amount remaining after spread reward than estimated until target,
@@ -83,6 +92,10 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent o
 	if !hasReachedTarget {
 		amountZeroIn = math.CalcAmount0Delta(liquidityBigDec, sqrtPriceNext, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
 	}
+
+	fmt.Println("hasReachedTarget", hasReachedTarget)
+	fmt.Println("sqrtPriceNext", sqrtPriceNext)
+	fmt.Println("amountZeroIn end", amountZeroIn)
 
 	// Calculate the amount of the other token given the sqrt price range.
 	amountOneOut := math.CalcAmount1Delta(liquidityBigDec, sqrtPriceNext, sqrtPriceCurrent, false)
