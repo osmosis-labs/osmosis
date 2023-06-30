@@ -9,6 +9,7 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v16/app"
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 )
 
 func (suite *HooksTestSuite) forceContractToEmitAckForPacket(osmosisApp *app.OsmosisApp, ctx sdk.Context, contractAddr sdk.AccAddress, packet channeltypes.Packet, success bool) ([]byte, error) {
@@ -63,6 +64,10 @@ func (suite *HooksTestSuite) TestWasmHooksAsyncAcks() {
 
 	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
 	suite.Require().NoError(err)
+
+	params := types.DefaultParams()
+	params.AllowedAsyncAckContracts = []string{contractAddr.String()}
+	osmosisApp.IBCHooksKeeper.SetParams(suite.Ctx, params)
 
 	receiveResult = suite.RelayPacketNoAck(packet, BtoA)
 	newAck, err := ibctesting.ParseAckFromEvents(receiveResult.GetEvents())

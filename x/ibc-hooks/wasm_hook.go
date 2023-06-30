@@ -117,7 +117,10 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	if err == nil {
 		// If unmarshalling succeeds, the contract is requesting for the ack to be async.
 		if asyncAckRequest.IsAsyncAck { // in which case IsAsyncAck is expected to be set to true
-			// TODO: Do we want to check that only whitelisted contracts can do AsyncAcks?
+			if !h.ibcHooksKeeper.IsInAllowList(ctx, contractAddr.String()) {
+				// Only allowed contracts can send async acks
+				return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrAsyncAckNotAllowed)
+			}
 			// Store the contract as the packet's ack actor and return nil
 			h.ibcHooksKeeper.StorePacketAckActor(ctx, packet.GetSourceChannel(), packet.GetSequence(), contractAddr.String())
 			return nil
