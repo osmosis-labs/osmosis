@@ -3408,8 +3408,6 @@ func (s *KeeperTestSuite) TestInfiniteSwapLoop() {
 	fmt.Println("Token swapped out: ", tokenOut)
 
 	// Swap back in the amount that was swapped out to test the inverse relationship
-	// This line is commented out as it triggers an infinite loop.
-
 	_, _, _, err = s.clk.SwapOutAmtGivenIn(s.Ctx, swapAddress, pool, tokenOut, ETH, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
 	s.Require().NoError(err)
 }
