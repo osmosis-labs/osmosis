@@ -139,6 +139,7 @@ func (s oneForZeroStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent o
 	// N.B.: contrary to out given in, we do not round up because we do not want to exceed the initial amount out at the end.
 	amountZeroOut := math.CalcAmount0Delta(liquidityBigDec, sqrtPriceTargetBigDec, sqrtPriceCurrent, false)
 
+	fmt.Println("liquidity", liquidity)
 	fmt.Println("sqrtPriceCurrent", sqrtPriceCurrent)
 	fmt.Println("sqrtPriceTarget", sqrtPriceTarget)
 
