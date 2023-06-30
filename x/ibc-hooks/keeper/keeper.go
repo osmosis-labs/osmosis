@@ -33,11 +33,11 @@ func NewKeeper(
 	paramSpace paramtypes.Subspace,
 	channelKeeper types.ChannelKeeper,
 	contractKeeper *wasmkeeper.PermissionedKeeper,
-) Keeper {
+) *Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
-	return Keeper{
+	return &Keeper{
 		storeKey:       storeKey,
 		paramSpace:     paramSpace,
 		channelKeeper:  channelKeeper,

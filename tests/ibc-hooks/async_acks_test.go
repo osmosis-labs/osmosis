@@ -67,7 +67,7 @@ func (suite *HooksTestSuite) TestWasmHooksAsyncAcks() {
 
 	params := types.DefaultParams()
 	params.AllowedAsyncAckContracts = []string{contractAddr.String()}
-	osmosisApp.IBCHooksKeeper.SetParams(suite.Ctx, params)
+	osmosisApp.IBCHooksKeeper.SetParams(suite.chainA.GetContext(), params)
 
 	receiveResult = suite.RelayPacketNoAck(packet, BtoA)
 	newAck, err := ibctesting.ParseAckFromEvents(receiveResult.GetEvents())
@@ -132,6 +132,10 @@ func (suite *HooksTestSuite) TestWasmHooksAsyncErrorAcks() {
 
 	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
 	suite.Require().NoError(err)
+
+	params := types.DefaultParams()
+	params.AllowedAsyncAckContracts = []string{contractAddr.String()}
+	osmosisApp.IBCHooksKeeper.SetParams(suite.chainA.GetContext(), params)
 
 	receiveResult = suite.RelayPacketNoAck(packet, BtoA)
 	newAck, err := ibctesting.ParseAckFromEvents(receiveResult.GetEvents())

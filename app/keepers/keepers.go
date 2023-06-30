@@ -250,7 +250,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.IBCKeeper.ChannelKeeper,
 		nil,
 	)
-	appKeepers.IBCHooksKeeper = &hooksKeeper
+	appKeepers.IBCHooksKeeper = hooksKeeper
 
 	appKeepers.WireICS20PreWasmKeeper(appCodec, bApp, appKeepers.IBCHooksKeeper)
 
