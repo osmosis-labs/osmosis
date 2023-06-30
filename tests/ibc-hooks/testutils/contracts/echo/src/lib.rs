@@ -4,7 +4,7 @@ use cosmwasm_schema::cw_serde;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_binary, DepsMut, Env, MessageInfo, Response, StdError};
-use ibc::{ContractAck, IBCAck, IBCAckResponse, IBCAckError, IBCAsyncOptions, OnRecvPacketAsyncResponse, Packet};
+use ibc::{ContractAck, IBCAck, IBCAsyncOptions, OnRecvPacketAsyncResponse, Packet};
 use osmosis_std_derive::CosmwasmExt;
 use state::INFLIGHT_PACKETS;
 
@@ -115,17 +115,17 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, StdError
         }) => {
             let (packet, success) = INFLIGHT_PACKETS.load(deps.storage, (&source_channel, packet_sequence))?;
             let data = match success {
-                true => to_binary(&IBCAck::AckResponse(IBCAckResponse {
+                true => to_binary(&IBCAck::AckResponse {
                     packet,
                     contract_ack: ContractAck {
                         contract_result: base64::encode("success"),
                         ibc_ack: base64::encode("ack"),
                     },
-                }))?,
-                false => to_binary(&IBCAck::AckError(IBCAckError {
+                })?,
+                false => to_binary(&IBCAck::AckError {
                     packet,
                     contract_error: "forced error".to_string(),
-                }))?
+                })?
             };
             Ok(Response::new().set_data(data))},
     }
