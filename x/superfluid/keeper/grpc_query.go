@@ -319,8 +319,10 @@ func (q Querier) UserSuperfluidPositionsPerConcentratedPoolBreakdown(goCtx conte
 				return nil, err
 			}
 
+			// Its possible for a non superfluid lock to be attached to a position. This can happen for users migrating non superfluid positions that
+			// they intend to let mature so they can eventually set non full range positions.
 			if syntheticLock.UnderlyingLockId == 0 {
-				return nil, fmt.Errorf("synthetic lockup with underlying lock ID %d not found", lockId)
+				continue
 			}
 
 			valAddr, err := ValidatorAddressFromSyntheticDenom(syntheticLock.SynthDenom)

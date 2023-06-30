@@ -840,3 +840,12 @@ type TickToSqrtPriceConversionError struct {
 func (e TickToSqrtPriceConversionError) Error() string {
 	return fmt.Sprintf("could not convert next tick  to nextSqrtPrice (%v)", e.NextTick)
 }
+
+type SwapNoProgressError struct {
+	PoolId           uint64
+	UserProvidedCoin sdk.Coin
+}
+
+func (e SwapNoProgressError) Error() string {
+	return fmt.Sprintf("ran out of iterations during swap. Possibly entered an infinite loop. Pool id (%d), user provided coin (%s)", e.PoolId, e.UserProvidedCoin)
+}
