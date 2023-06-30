@@ -83,9 +83,6 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool)
 	// The denominator is rounded up to get a smaller final amount.
 	denom := sqrtPriceA.MulRoundUp(sqrtPriceB)
 
-	fmt.Println("liq", liq)
-	fmt.Println("diff", diff)
-	fmt.Println("denom", denom)
 	return liq.MulTruncate(diff).QuoTruncate(denom)
 }
 
