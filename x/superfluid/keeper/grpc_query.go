@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"strings"
 	"time"
 
@@ -640,66 +640,64 @@ func (q Querier) filterConcentratedPositionLocks(ctx sdk.Context, positions []mo
 	var clPoolUserPositionRecords []types.ConcentratedPoolUserPositionRecord
 	for _, pos := range positions {
 		lockId, err := q.Keeper.clk.GetLockIdFromPositionId(ctx, pos.PositionId)
-		switch err.(type) {
-		case cltypes.PositionIdToLockNotFoundError:
+		if errors.Is(err, cltypes.PositionIdToLockNotFoundError{}) {
 			continue
-		case nil:
-			// If we have hit this logic branch, it means that, at one point, the lockId provided existed. If we fetch it again
-			// and it doesn't exist, that means that the lock has matured.
-			lock, err := q.Keeper.lk.GetLockByID(ctx, lockId)
-			if err == errorsmod.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", lock.GetID())) {
-				continue
-			}
-			if err != nil {
-				return nil, err
-			}
+		} else if err != nil {
+			return nil, err
+		}
 
-			syntheticLock, err := q.Keeper.lk.GetSyntheticLockupByUnderlyingLockId(ctx, lockId)
-			if err != nil {
-				return nil, err
-			}
+		// If we have hit this logic branch, it means that, at one point, the lockId provided existed. If we fetch it again
+		// and it doesn't exist, that means that the lock has matured.
+		lock, err := q.Keeper.lk.GetLockByID(ctx, lockId)
+		if errors.Is(err, lockuptypes.ErrLockupNotFound) {
+			continue
+		} else if err != nil {
+			return nil, err
+		}
 
-			// Its possible for a non superfluid lock to be attached to a position. This can happen for users migrating non superfluid positions that
-			// they intend to let mature so they can eventually set non full range positions.
-			if syntheticLock.UnderlyingLockId == 0 {
-				continue
-			}
+		syntheticLock, err := q.Keeper.lk.GetSyntheticLockupByUnderlyingLockId(ctx, lockId)
+		if err != nil {
+			return nil, err
+		}
 
-			if isUnbonding {
-				// We only want to return unbonding positions.
-				if !strings.Contains(syntheticLock.SynthDenom, "/superunbonding") {
-					continue
-				}
-			} else {
-				// We only want to return bonding positions.
-				if !strings.Contains(syntheticLock.SynthDenom, "/superbonding") {
-					continue
-				}
-			}
-
-			valAddr, err := ValidatorAddressFromSyntheticDenom(syntheticLock.SynthDenom)
-			if err != nil {
-				return nil, err
-			}
-
-			baseDenom := lock.Coins.GetDenomByIndex(0)
-			lockedCoins := sdk.NewCoin(baseDenom, lock.GetCoins().AmountOf(baseDenom))
-			equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
-			if err != nil {
-				return nil, err
-			}
-			coin := sdk.NewCoin(appparams.BaseCoinUnit, equivalentAmount)
-
-			clPoolUserPositionRecords = append(clPoolUserPositionRecords, types.ConcentratedPoolUserPositionRecord{
-				ValidatorAddress:       valAddr,
-				PositionId:             pos.PositionId,
-				LockId:                 lockId,
-				DelegationAmount:       lockedCoins,
-				EquivalentStakedAmount: &coin,
-			})
-		default:
+		// Its possible for a non superfluid lock to be attached to a position. This can happen for users migrating non superfluid positions that
+		// they intend to let mature so they can eventually set non full range positions.
+		if syntheticLock.UnderlyingLockId == 0 {
 			continue
 		}
+
+		if isUnbonding {
+			// We only want to return unbonding positions.
+			if !strings.Contains(syntheticLock.SynthDenom, "/superunbonding") {
+				continue
+			}
+		} else {
+			// We only want to return bonding positions.
+			if !strings.Contains(syntheticLock.SynthDenom, "/superbonding") {
+				continue
+			}
+		}
+
+		valAddr, err := ValidatorAddressFromSyntheticDenom(syntheticLock.SynthDenom)
+		if err != nil {
+			return nil, err
+		}
+
+		baseDenom := lock.Coins.GetDenomByIndex(0)
+		lockedCoins := sdk.NewCoin(baseDenom, lock.GetCoins().AmountOf(baseDenom))
+		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
+		if err != nil {
+			return nil, err
+		}
+		coin := sdk.NewCoin(appparams.BaseCoinUnit, equivalentAmount)
+
+		clPoolUserPositionRecords = append(clPoolUserPositionRecords, types.ConcentratedPoolUserPositionRecord{
+			ValidatorAddress:       valAddr,
+			PositionId:             pos.PositionId,
+			LockId:                 lockId,
+			DelegationAmount:       lockedCoins,
+			EquivalentStakedAmount: &coin,
+		})
 	}
 	return clPoolUserPositionRecords, nil
 }
