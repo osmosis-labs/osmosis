@@ -304,7 +304,12 @@ func (q Querier) UserSuperfluidPositionsPerConcentratedPoolBreakdown(goCtx conte
 		case cltypes.PositionIdToLockNotFoundError:
 			continue
 		case nil:
+			// If we have hit this logic branch, it means that, at one point, the lockId provided existed. If we fetch it again
+			// and it doesn't exist, that means that the lock has matured.
 			lock, err := q.Keeper.lk.GetLockByID(ctx, lockId)
+			if err == errorsmod.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", lock.GetID())) {
+				continue
+			}
 			if err != nil {
 				return nil, err
 			}
@@ -314,8 +319,10 @@ func (q Querier) UserSuperfluidPositionsPerConcentratedPoolBreakdown(goCtx conte
 				return nil, err
 			}
 
+			// Its possible for a non superfluid lock to be attached to a position. This can happen for users migrating non superfluid positions that
+			// they intend to let mature so they can eventually set non full range positions.
 			if syntheticLock.UnderlyingLockId == 0 {
-				return nil, fmt.Errorf("synthetic lockup with underlying lock ID %d not found", lockId)
+				continue
 			}
 
 			valAddr, err := ValidatorAddressFromSyntheticDenom(syntheticLock.SynthDenom)

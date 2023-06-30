@@ -143,7 +143,6 @@ func (s *KeeperTestSuite) TestGetPoolModule() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 			poolmanagerKeeper := s.App.PoolManagerKeeper
@@ -219,7 +218,6 @@ func (s *KeeperTestSuite) TestRouteGetPoolDenoms() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 			poolmanagerKeeper := s.App.PoolManagerKeeper
