@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -640,7 +641,7 @@ func (q Querier) filterConcentratedPositionLocks(ctx sdk.Context, positions []mo
 	var clPoolUserPositionRecords []types.ConcentratedPoolUserPositionRecord
 	for _, pos := range positions {
 		lockId, err := q.Keeper.clk.GetLockIdFromPositionId(ctx, pos.PositionId)
-		if errors.Is(err, cltypes.PositionIdToLockNotFoundError{}) {
+		if errors.Is(err, cltypes.PositionIdToLockNotFoundError{PositionId: pos.PositionId}) {
 			continue
 		} else if err != nil {
 			return nil, err
@@ -649,7 +650,7 @@ func (q Querier) filterConcentratedPositionLocks(ctx sdk.Context, positions []mo
 		// If we have hit this logic branch, it means that, at one point, the lockId provided existed. If we fetch it again
 		// and it doesn't exist, that means that the lock has matured.
 		lock, err := q.Keeper.lk.GetLockByID(ctx, lockId)
-		if errors.Is(err, lockuptypes.ErrLockupNotFound) {
+		if errors.Is(err, errorsmod.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", lock.GetID()))) {
 			continue
 		} else if err != nil {
 			return nil, err
