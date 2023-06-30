@@ -137,7 +137,7 @@ service Query {
       UserConcentratedSuperfluidPositionsUnbondingRequest)
       returns (UserConcentratedSuperfluidPositionsUnbondingResponse) {
     option (google.api.http).get = "/osmosis/superfluid/v1beta1/"
-                                   "user_cl_superfluid_positions_unbonding/"
+                                   "account_undelegating_cl_positions/"
                                    "{delegator_address}";
   }
 }
