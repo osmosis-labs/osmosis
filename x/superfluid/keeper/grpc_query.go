@@ -281,7 +281,7 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 	return &res, nil
 }
 
-// UserConcentratedSuperfluidPositionsBonded returns all the cl superfluid positions for the specified delegator in the specified concentrated liquidity pool that are bonded.
+// UserConcentratedSuperfluidPositionsBonded returns all the cl superfluid positions for the specified delegator across all concentrated pools that are bonded.
 func (q Querier) UserConcentratedSuperfluidPositionsBonded(goCtx context.Context, req *types.UserConcentratedSuperfluidPositionsBondedRequest) (*types.UserConcentratedSuperfluidPositionsBondedResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -308,7 +308,7 @@ func (q Querier) UserConcentratedSuperfluidPositionsBonded(goCtx context.Context
 	}, nil
 }
 
-// UserConcentratedSuperfluidPositionsUnbonding returns all the cl superfluid positions for the specified delegator in the specified concentrated liquidity pool that are unbonding.
+// UserConcentratedSuperfluidPositionsUnbonding returns all the cl superfluid positions for the specified delegator across all concentrated pools that are unbonding.
 func (q Querier) UserConcentratedSuperfluidPositionsUnbonding(goCtx context.Context, req *types.UserConcentratedSuperfluidPositionsUnbondingRequest) (*types.UserConcentratedSuperfluidPositionsUnbondingResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
