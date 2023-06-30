@@ -296,7 +296,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	var (
 		// Swap parameters
 		uosmoInDec_Swap1 = osmomath.NewBigDec(3465198)
-		uosmoIn_Swap1    = fmt.Sprintf("%suosmo", uosmoInDec_Swap1.String())
+		uosmoIn_Swap1    = fmt.Sprintf("%suosmo", uosmoInDec_Swap1.SDKDec().String())
 	)
 	// Perform swap (not crossing initialized ticks)
 	chainANode.SwapExactAmountIn(uosmoIn_Swap1, outMinAmt, fmt.Sprintf("%d", poolID), denom0, initialization.ValidatorWalletName)
