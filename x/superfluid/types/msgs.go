@@ -268,11 +268,12 @@ func (msg MsgUnPoolWhitelistedPool) GetSigners() []sdk.AccAddress {
 
 var _ sdk.Msg = &MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{}
 
-func NewMsgUnlockAndMigrateSharesToFullRangeConcentratedPosition(sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition {
+func NewMsgUnlockAndMigrateSharesToFullRangeConcentratedPosition(sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin, tokenOutMins sdk.Coins) *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition {
 	return &MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{
 		Sender:          sender.String(),
 		LockId:          lockId,
 		SharesToMigrate: sharesToMigrate,
+		TokenOutMins:    tokenOutMins,
 	}
 }
 
