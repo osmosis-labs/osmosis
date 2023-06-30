@@ -572,7 +572,6 @@ func (d BigDec) SDKDec() sdk.Dec {
 // SDKDecRoundUp returns the Sdk.Dec representation of a BigDec.
 // Round up at precision end.
 // Values in any additional decimal places are truncated.
-// TODO: test
 func (d BigDec) SDKDecRoundUp() sdk.Dec {
 	return sdk.NewDecFromBigIntWithPrec(chopPrecisionAndRoundUpSDKDec(d.i), sdk.Precision)
 }

@@ -244,6 +244,32 @@ func (s *decimalTestSuite) TestSdkDec() {
 	}
 }
 
+func (s *decimalTestSuite) TestSdkDecRoundUp() {
+	tests := []struct {
+		d        osmomath.BigDec
+		want     sdk.Dec
+		expPanic bool
+	}{
+		{osmomath.NewBigDec(0), sdk.MustNewDecFromStr("0.000000000000000000"), false},
+		{osmomath.NewBigDec(1), sdk.MustNewDecFromStr("1.000000000000000000"), false},
+		{osmomath.NewBigDec(10), sdk.MustNewDecFromStr("10.000000000000000000"), false},
+		{osmomath.NewBigDec(12340), sdk.MustNewDecFromStr("12340.000000000000000000"), false},
+		{osmomath.NewDecWithPrec(12340, 4), sdk.MustNewDecFromStr("1.234000000000000000"), false},
+		{osmomath.NewDecWithPrec(12340, 5), sdk.MustNewDecFromStr("0.123400000000000000"), false},
+		{osmomath.NewDecWithPrec(12340, 8), sdk.MustNewDecFromStr("0.000123400000000000"), false},
+		{osmomath.NewDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), false},
+		{osmomath.NewDecWithPrec(1009009009009009009, 19), sdk.MustNewDecFromStr("0.100900900900900901"), false},
+	}
+	for tcIndex, tc := range tests {
+		if tc.expPanic {
+			s.Require().Panics(func() { tc.d.SDKDecRoundUp() })
+		} else {
+			value := tc.d.SDKDecRoundUp()
+			s.Require().Equal(tc.want, value, "bad SdkDec(), index: %v", tcIndex)
+		}
+	}
+}
+
 func (s *decimalTestSuite) TestBigDecFromSdkDec() {
 	tests := []struct {
 		d        sdk.Dec
