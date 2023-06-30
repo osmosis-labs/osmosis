@@ -59,3 +59,8 @@ queries:
       query_func: "k.CFMMPoolIdLinkFromConcentratedPoolId"
     cli:
       cmd: "CFMMPoolIdLinkFromConcentratedPoolId"
+  UserUnbondingPositions:
+    proto_wrapper:
+      query_func: "k.UserUnbondingPositions"
+    cli:
+      cmd: "UserUnbondingPositions"
