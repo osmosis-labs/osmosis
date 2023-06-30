@@ -71,12 +71,6 @@ message GenesisState {
 
   uint64 next_incentive_record_id = 5
       [ (gogoproto.moretags) = "yaml:\"next_incentive_record_id\"" ];
-
-  repeated cosmos.base.v1beta1.Coin total_liquidity = 6 [
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags) = "yaml:\"total_liquidity\"",
-    (gogoproto.nullable) = false
-  ];
 }
 
 message AccumObject {
