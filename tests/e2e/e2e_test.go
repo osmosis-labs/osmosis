@@ -105,35 +105,20 @@ func (s *IntegrationTestSuite) TestMyFunction() {
 	// Upgrade Dependent Tests
 
 	if s.skipUpgrade {
-		s.T().Skip("Skipping StableSwapPostUpgrade test")
+		s.T().Skip("Skipping AddToExistingLockPostUpgrade test")
 	} else {
 		s.T().Run("StableSwapPostUpgrade", func(t *testing.T) {
 			t.Parallel()
 			s.StableSwapPostUpgrade()
 		})
-	}
-
-	if s.skipUpgrade {
-		s.T().Skip("Skipping GeometricTwapMigration test")
-	} else {
 		s.T().Run("GeometricTwapMigration", func(t *testing.T) {
 			t.Parallel()
 			s.GeometricTwapMigration()
 		})
-	}
-
-	if s.skipUpgrade {
-		s.T().Skip("Skipping AddToExistingLockPostUpgrade test")
-	} else {
 		s.T().Run("AddToExistingLockPostUpgrade", func(t *testing.T) {
 			t.Parallel()
 			s.AddToExistingLockPostUpgrade()
 		})
-	}
-
-	if s.skipUpgrade {
-		s.T().Skip("Skipping ConcentratedLiquidity_CanonicalPool_And_Parameters test")
-	} else {
 		s.T().Run("ConcentratedLiquidity_CanonicalPool_And_Parameters", func(t *testing.T) {
 			t.Parallel()
 			s.ConcentratedLiquidity_CanonicalPool_And_Parameters()
@@ -149,20 +134,10 @@ func (s *IntegrationTestSuite) TestMyFunction() {
 			t.Parallel()
 			s.IBCTokenTransferAndCreatePool()
 		})
-	}
-
-	if s.skipIBC {
-		s.T().Skip("Skipping IBC tests")
-	} else {
 		s.T().Run("IBCWasmHooks", func(t *testing.T) {
 			t.Parallel()
 			s.IBCWasmHooks()
 		})
-	}
-
-	if s.skipIBC {
-		s.T().Skip("Skipping IBC tests")
-	} else {
 		s.T().Run("PacketForwarding", func(t *testing.T) {
 			t.Parallel()
 			s.PacketForwarding()
