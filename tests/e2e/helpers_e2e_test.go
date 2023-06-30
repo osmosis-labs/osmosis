@@ -62,6 +62,13 @@ func (s *IntegrationTestSuite) addrBalance(node *chain.NodeConfig, address strin
 	return addrBalances
 }
 
+func (s *IntegrationTestSuite) getChainACfgs() (*chain.Config, *chain.NodeConfig) {
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+	return chainA, chainANode
+}
+
 // Helper function for calculating uncollected spread rewards since the time that spreadRewardGrowthInsideLast corresponds to
 // positionLiquidity - current position liquidity
 // spreadRewardGrowthBelow - spread reward growth below lower tick
