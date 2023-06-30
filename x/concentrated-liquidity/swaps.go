@@ -60,6 +60,14 @@ type SwapState struct {
 	swapStrategy swapstrategy.SwapStrategy
 }
 
+// swapNoProgressLimit is the maximum number of iterations that can be performed
+// without progressing the swap state. If this limit is reached, the swap is
+// considered to have failed.
+// Note, the value is chosen arbitrarily.
+// From tests, there should be no reason for a swap to make more than 2 iterations without
+// progress. However, we leave a buffer of 1_000 to account for any unforeseen edge cases.
+const swapNoProgressLimit = 100
+
 func newSwapState(specifiedAmount sdk.Int, p types.ConcentratedPoolExtension, strategy swapstrategy.SwapStrategy) SwapState {
 	return SwapState{
 		amountSpecifiedRemaining:                 specifiedAmount.ToDec(),
@@ -314,6 +322,7 @@ func (k Keeper) computeOutAmtGivenIn(
 	defer nextInitTickIter.Close()
 
 	// Iterate and update swapState until we swap all tokenIn or we reach the specific sqrtPriceLimit
+	swapNoProgressIterationCount := 0
 	// TODO: for now, we check if amountSpecifiedRemaining is GT 0.0000001. This is because there are times when the remaining
 	// amount may be extremely small, and that small amount cannot generate and amountIn/amountOut and we are therefore left
 	// in an infinite loop.
@@ -383,6 +392,15 @@ func (k Keeper) computeOutAmtGivenIn(
 			}
 			swapState.tick = newTick
 		}
+
+		// If nothing was consumed from swapState.amountSpecifiedRemaining, we increment the swapNoProgressIterationCount.
+		// See definition of swapNoProgressLimit for more details.
+		if amountIn.IsZero() {
+			if swapNoProgressIterationCount >= swapNoProgressLimit {
+				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, types.SwapNoProgressError{PoolId: poolId, UserProvidedCoin: tokenInMin}
+			}
+			swapNoProgressIterationCount++
+		}
 	}
 
 	// Add spread reward growth per share to the pool-global spread reward accumulator.
@@ -442,8 +460,10 @@ func (k Keeper) computeInAmtGivenOut(
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 	}
 
-	// TODO: This should be GT 0 but some instances have very small remainder
-	// need to look into fixing this
+	swapNoProgressIterationCount := 0
+	// TODO: for now, we check if amountSpecifiedRemaining is GT 10^-18. This is because there are times when the remaining
+	// amount may be extremely small, and that small amount cannot generate and amountIn/amountOut and we are therefore left
+	// in an infinite loop.
 	for swapState.amountSpecifiedRemaining.GT(smallestDec) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
 		// log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
@@ -505,6 +525,15 @@ func (k Keeper) computeInAmtGivenOut(
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 			}
+		}
+
+		// If nothing was consumed from swapState.amountSpecifiedRemaining, we increment the swapNoProgressIterationCount.
+		// See definition of swapNoProgressLimit for more details.
+		if amountOut.IsZero() {
+			if swapNoProgressIterationCount >= swapNoProgressLimit {
+				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, types.SwapNoProgressError{PoolId: poolId, UserProvidedCoin: desiredTokenOut}
+			}
+			swapNoProgressIterationCount++
 		}
 	}
 
