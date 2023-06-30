@@ -125,17 +125,17 @@ service Query {
                                    "unpool_whitelist";
   }
 
-  rpc UserConcentratedSuperfluidPositionsBonded(
-      UserConcentratedSuperfluidPositionsBondedRequest)
-      returns (UserConcentratedSuperfluidPositionsBondedResponse) {
+  rpc UserConcentratedSuperfluidPositionsDelegated(
+      UserConcentratedSuperfluidPositionsDelegatedRequest)
+      returns (UserConcentratedSuperfluidPositionsDelegatedResponse) {
     option (google.api.http).get = "/osmosis/superfluid/v1beta1/"
                                    "account_delegated_cl_positions/"
                                    "{delegator_address}";
   }
 
-  rpc UserConcentratedSuperfluidPositionsUnbonding(
-      UserConcentratedSuperfluidPositionsUnbondingRequest)
-      returns (UserConcentratedSuperfluidPositionsUnbondingResponse) {
+  rpc UserConcentratedSuperfluidPositionsUndelegating(
+      UserConcentratedSuperfluidPositionsUndelegatingRequest)
+      returns (UserConcentratedSuperfluidPositionsUndelegatingResponse) {
     option (google.api.http).get = "/osmosis/superfluid/v1beta1/"
                                    "account_undelegating_cl_positions/"
                                    "{delegator_address}";
@@ -299,20 +299,20 @@ message QueryUnpoolWhitelistRequest {}
 
 message QueryUnpoolWhitelistResponse { repeated uint64 pool_ids = 1; }
 
-message UserConcentratedSuperfluidPositionsBondedRequest {
+message UserConcentratedSuperfluidPositionsDelegatedRequest {
   string delegator_address = 1;
 }
 
-message UserConcentratedSuperfluidPositionsBondedResponse {
+message UserConcentratedSuperfluidPositionsDelegatedResponse {
   repeated ConcentratedPoolUserPositionRecord cl_pool_user_position_records = 1
       [ (gogoproto.nullable) = false ];
 }
 
-message UserConcentratedSuperfluidPositionsUnbondingRequest {
+message UserConcentratedSuperfluidPositionsUndelegatingRequest {
   string delegator_address = 1;
 }
 
-message UserConcentratedSuperfluidPositionsUnbondingResponse {
+message UserConcentratedSuperfluidPositionsUndelegatingResponse {
   repeated ConcentratedPoolUserPositionRecord cl_pool_user_position_records = 1
       [ (gogoproto.nullable) = false ];
 }

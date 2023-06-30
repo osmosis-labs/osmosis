@@ -281,8 +281,8 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 	return &res, nil
 }
 
-// UserConcentratedSuperfluidPositionsBonded returns all the cl superfluid positions for the specified delegator across all concentrated pools that are bonded.
-func (q Querier) UserConcentratedSuperfluidPositionsBonded(goCtx context.Context, req *types.UserConcentratedSuperfluidPositionsBondedRequest) (*types.UserConcentratedSuperfluidPositionsBondedResponse, error) {
+// UserConcentratedSuperfluidPositionsDelegated returns all the cl superfluid positions for the specified delegator across all concentrated pools that are bonded.
+func (q Querier) UserConcentratedSuperfluidPositionsDelegated(goCtx context.Context, req *types.UserConcentratedSuperfluidPositionsDelegatedRequest) (*types.UserConcentratedSuperfluidPositionsDelegatedResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
@@ -303,13 +303,13 @@ func (q Querier) UserConcentratedSuperfluidPositionsBonded(goCtx context.Context
 		return nil, err
 	}
 
-	return &types.UserConcentratedSuperfluidPositionsBondedResponse{
+	return &types.UserConcentratedSuperfluidPositionsDelegatedResponse{
 		ClPoolUserPositionRecords: clPoolUserPositionRecords,
 	}, nil
 }
 
-// UserConcentratedSuperfluidPositionsUnbonding returns all the cl superfluid positions for the specified delegator across all concentrated pools that are unbonding.
-func (q Querier) UserConcentratedSuperfluidPositionsUnbonding(goCtx context.Context, req *types.UserConcentratedSuperfluidPositionsUnbondingRequest) (*types.UserConcentratedSuperfluidPositionsUnbondingResponse, error) {
+// UserConcentratedSuperfluidPositionsUndelegating returns all the cl superfluid positions for the specified delegator across all concentrated pools that are unbonding.
+func (q Querier) UserConcentratedSuperfluidPositionsUndelegating(goCtx context.Context, req *types.UserConcentratedSuperfluidPositionsUndelegatingRequest) (*types.UserConcentratedSuperfluidPositionsUndelegatingResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
@@ -330,7 +330,7 @@ func (q Querier) UserConcentratedSuperfluidPositionsUnbonding(goCtx context.Cont
 		return nil, err
 	}
 
-	return &types.UserConcentratedSuperfluidPositionsUnbondingResponse{
+	return &types.UserConcentratedSuperfluidPositionsUndelegatingResponse{
 		ClPoolUserPositionRecords: clPoolUserPositionRecords,
 	}, nil
 }

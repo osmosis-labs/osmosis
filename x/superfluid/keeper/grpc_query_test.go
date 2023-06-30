@@ -358,7 +358,7 @@ func (s *KeeperTestSuite) TestUserConcentratedSuperfluidPositionsBondedAndUnbond
 	s.Require().NoError(err)
 
 	// Query the bonded positions.
-	bondedRes, err := s.queryClient.UserConcentratedSuperfluidPositionsBonded(sdk.WrapSDKContext(s.Ctx), &types.UserConcentratedSuperfluidPositionsBondedRequest{
+	bondedRes, err := s.queryClient.UserConcentratedSuperfluidPositionsDelegated(sdk.WrapSDKContext(s.Ctx), &types.UserConcentratedSuperfluidPositionsDelegatedRequest{
 		DelegatorAddress: s.TestAccs[0].String(),
 	})
 	s.Require().NoError(err)
@@ -383,7 +383,7 @@ func (s *KeeperTestSuite) TestUserConcentratedSuperfluidPositionsBondedAndUnbond
 	s.Require().Equal(expectedBondedTotalSharesLocked, actualBondedTotalSharesLocked)
 
 	// Query the unbonding positions.
-	unbondingRes, err := s.queryClient.UserConcentratedSuperfluidPositionsUnbonding(sdk.WrapSDKContext(s.Ctx), &types.UserConcentratedSuperfluidPositionsUnbondingRequest{
+	unbondingRes, err := s.queryClient.UserConcentratedSuperfluidPositionsUndelegating(sdk.WrapSDKContext(s.Ctx), &types.UserConcentratedSuperfluidPositionsUndelegatingRequest{
 		DelegatorAddress: s.TestAccs[0].String(),
 	})
 	s.Require().NoError(err)
