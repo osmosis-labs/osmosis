@@ -96,7 +96,7 @@ func (s *IntegrationTestSuite) TestMyFunction() {
 		s.LargeWasmUpload()
 	})
 
-	// Test current disabled
+	// Test currently disabled
 	// s.T().Run("ArithmeticTWAP", func(t *testing.T) {
 	// 	t.Parallel()
 	// 	s.ArithmeticTWAP()
