@@ -91,6 +91,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 			k.initOrUpdateAccumPosition(ctx, uptimeAccumulators[uptimeIndex], uptimeRecord.AccumValuePerShare, positionName, uptimeRecord.NumShares, uptimeRecord.UnclaimedRewardsTotal, uptimeRecord.Options)
 		}
 	}
+
+	// set total liquidity
+	k.setTotalLiquidity(ctx, genState.TotalLiquidity)
 }
 
 // ExportGenesis returns the concentrated-liquidity module's exported genesis state.
@@ -223,12 +226,18 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		})
 	}
 
+	totalLiquidity, err := k.GetTotalLiquidity(ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	return &genesis.GenesisState{
 		Params:                k.GetParams(ctx),
 		PoolData:              poolData,
 		PositionData:          positionData,
 		NextPositionId:        k.GetNextPositionId(ctx),
 		NextIncentiveRecordId: k.GetNextIncentiveRecordId(ctx),
+		TotalLiquidity:        totalLiquidity,
 	}
 }
 

@@ -340,22 +340,3 @@ func validateAuthorizedQuoteDenoms(ctx sdk.Context, denom1 string, authorizedQuo
 func (k Keeper) GetLinkedBalancerPoolID(ctx sdk.Context, concentratedPoolId uint64) (uint64, error) {
 	return k.gammKeeper.GetLinkedBalancerPoolID(ctx, concentratedPoolId)
 }
-
-// GetTotalLiquidity gets the total liquidity across all concentrated pools.
-func (k Keeper) GetTotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
-	coins := sdk.Coins{}
-	pools, err := k.GetPools(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for _, poolI := range pools {
-		pool, ok := poolI.(types.ConcentratedPoolExtension)
-		if !ok {
-			return nil, fmt.Errorf("pool is not a concentrated pool")
-		}
-		poolAddress := pool.GetAddress()
-		poolLiquidity := k.bankKeeper.GetAllBalances(ctx, poolAddress)
-		coins = coins.Add(poolLiquidity...)
-	}
-	return coins, nil
-}
