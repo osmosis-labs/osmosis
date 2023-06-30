@@ -370,6 +370,11 @@ func (k Keeper) GetUserUnbondingPositions(ctx sdk.Context, address sdk.AccAddres
 				return nil, err
 			}
 
+			// Don't include locks that aren't unlocking
+			if lock.EndTime.IsZero() {
+				continue
+			}
+
 			userPositionsWithPeriodLocks = append(userPositionsWithPeriodLocks, model.PositionWithPeriodLock{
 				Position: pos,
 				Locks:    *lock,
