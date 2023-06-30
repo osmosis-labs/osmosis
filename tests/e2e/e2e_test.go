@@ -149,20 +149,10 @@ func (s *IntegrationTestSuite) TestMyFunction() {
 			t.Parallel()
 			s.IBCTokenTransferAndCreatePool()
 		})
-	}
-
-	if s.skipIBC {
-		s.T().Skip("Skipping IBC tests")
-	} else {
 		s.T().Run("IBCWasmHooks", func(t *testing.T) {
 			t.Parallel()
 			s.IBCWasmHooks()
 		})
-	}
-
-	if s.skipIBC {
-		s.T().Skip("Skipping IBC tests")
-	} else {
 		s.T().Run("PacketForwarding", func(t *testing.T) {
 			t.Parallel()
 			s.PacketForwarding()
@@ -190,9 +180,7 @@ func (s *IntegrationTestSuite) ProtoRev() {
 		epochIdentifier = "day"
 	)
 
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
+	chainA, chainANode := s.getChainACfgs()
 
 	// --------------- Module init checks ---------------- //
 	// The module should be enabled by default.
@@ -294,10 +282,7 @@ func (s *IntegrationTestSuite) ProtoRev() {
 }
 
 func (s *IntegrationTestSuite) ConcentratedLiquidity() {
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
-
+	chainA, chainANode := s.getChainACfgs()
 	var (
 		denom0                 = "uion"
 		denom1                 = "uosmo"
@@ -313,7 +298,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	}
 
 	// Change the parameter to enable permisionless pool creation.
-	err = chainANode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainA)
+	err := chainANode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainA)
 	s.Require().NoError(err)
 
 	// Confirm that the parameter has been changed.
@@ -867,9 +852,7 @@ func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
 		s.T().Skip("Skipping StableSwapPostUpgrade test")
 	}
 
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
+	chainA, chainANode := s.getChainACfgs()
 
 	const (
 		denomA = "stake"
@@ -910,9 +893,7 @@ func (s *IntegrationTestSuite) GeometricTwapMigration() {
 		migrationWallet = "migration"
 	)
 
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
+	chainA, chainANode := s.getChainACfgs()
 
 	uosmoIn := fmt.Sprintf("1000000%s", "uosmo")
 
@@ -1030,9 +1011,7 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 }
 
 func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() {
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
+	chainA, chainANode := s.getChainACfgs()
 
 	poolId, err := chainA.SubmitCreateConcentratedPoolProposal()
 	s.NoError(err)
@@ -1210,9 +1189,7 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
+	chainA, chainANode := s.getChainACfgs()
 	chainB := s.configurer.GetChainConfig(1)
 	chainBNode, err := chainB.GetDefaultNode()
 	s.Require().NoError(err)
@@ -1276,9 +1253,7 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
+	chainA, chainANode := s.getChainACfgs()
 	chainB := s.configurer.GetChainConfig(1)
 
 	// Instantiate the counter contract on chain A
@@ -1330,9 +1305,7 @@ func (s *IntegrationTestSuite) AddToExistingLockPostUpgrade() {
 	if s.skipUpgrade {
 		s.T().Skip("Skipping AddToExistingLockPostUpgrade test")
 	}
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
+	_, chainANode := s.getChainACfgs()
 	// ensure we can add to existing locks and superfluid locks that existed pre upgrade on chainA
 	// we use the hardcoded gamm/pool/1 and these specific wallet names to match what was created pre upgrade
 	preUpgradePoolShareDenom := fmt.Sprintf("gamm/pool/%d", config.PreUpgradePoolId)
@@ -1387,9 +1360,7 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 
 	coinAIn, coinBIn, coinCIn := fmt.Sprintf("2000000%s", denomA), fmt.Sprintf("2000000%s", denomB), fmt.Sprintf("2000000%s", denomC)
 
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
+	chainA, chainANode := s.getChainACfgs()
 
 	// Triggers the creation of TWAP records.
 	poolId := chainANode.CreateBalancerPool(poolFile, initialization.ValidatorWalletName)
@@ -1543,9 +1514,7 @@ func (s *IntegrationTestSuite) StateSync() {
 		s.T().Skip()
 	}
 
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
+	chainA, chainANode := s.getChainACfgs()
 
 	persistentPeers := chainA.GetPersistentPeers()
 
@@ -1634,9 +1603,7 @@ func (s *IntegrationTestSuite) StateSync() {
 }
 
 func (s *IntegrationTestSuite) ExpeditedProposals() {
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
+	chainA, chainANode := s.getChainACfgs()
 
 	latestPropNumber := chainANode.SubmitTextProposal("expedited text proposal", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
 	chainA.LatestProposalNumber += 1
@@ -1696,9 +1663,7 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 		minAmountOut = "1"
 	)
 
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
+	chainA, chainANode := s.getChainACfgs()
 
 	// Triggers the creation of TWAP records.
 	poolId := chainANode.CreateBalancerPool(poolFile, initialization.ValidatorWalletName)
@@ -1781,9 +1746,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPool_And_Parameter
 
 	expectedSpreadReward := sdk.MustNewDecFromStr("0.002")
 
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
+	_, chainANode := s.getChainACfgs()
 
 	// Taken from: https://app.osmosis.zone/pool/674
 	concentratedPoolId := chainANode.QueryConcentratedPooIdLinkFromCFMM(config.DaiOsmoPoolIdv16)
