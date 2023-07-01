@@ -30,7 +30,9 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	cdc codec.Codec
+}
 
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
@@ -118,7 +120,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
 	var genState types.GenesisState
 	cdc.MustUnmarshalJSON(gs, &genState)
-	am.k.InitGenesis(ctx, &genState)
+	am.k.InitGenesis(ctx, &genState, am.cdc)
 	return []abci.ValidatorUpdate{}
 }
 
