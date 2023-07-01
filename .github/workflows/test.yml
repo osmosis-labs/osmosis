@@ -15,7 +15,7 @@ env:
   GO_VERSION: '1.20.5'
 
 jobs:
-  get_diff:
+  get-diff:
     runs-on: ubuntu-latest
     steps:
       -
@@ -37,8 +37,8 @@ jobs:
       git_diff: ${{ env.GIT_DIFF }}
 
   go-split-test-files:
-    needs: get_diff
-    if: needs.get_diff.outputs.git_diff
+    needs: get-diff
+    if: needs.get-diff.outputs.git_diff
     runs-on: ubuntu-latest
     steps:
       -
@@ -77,8 +77,9 @@ jobs:
           path: ./pkgs.txt.part.03
 
   go:
-    needs: [go-split-test-files, get_diff]
-    if: needs.get_diff.outputs.git_diff
+    name: tests-go-${{ matrix.part }}
+    needs: [go-split-test-files, get-diff]
+    if: needs.get-diff.outputs.git_diff
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -109,8 +110,9 @@ jobs:
           VERSION=$VERSION SKIP_WASM_WSL_TESTS="false" go test -mod=readonly -tags='ledger test_ledger_mock norace' $TESTS
 
   e2e:
-    needs: get_diff
-    if: needs.get_diff.outputs.git_diff
+    name: tests-e2e
+    needs: get-diff
+    if: needs.get-diff.outputs.git_diff
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:

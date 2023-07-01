@@ -9,7 +9,7 @@ env:
   GO_VERSION: '1.20.5'
 
 jobs:
-  e2e:
+  test-e2e-makefile:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
