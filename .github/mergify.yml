@@ -12,9 +12,42 @@ queue_rules:
 pull_request_rules:
   - name: automerge to the base branch with label automerge and branch protection passing
     conditions:
-      - "#approved-reviews-by>=1"
+      # Pull requests targeting `main` branch that have `A:automerge` label
       - base=main
       - label=A:automerge
+      # with 2 reviews and 0 changes requested left
+      - "#approved-reviews-by>=2"
+      - "#changes-requested-reviews-by=0"
+      # with the following workflows successful: 
+      - check-success=add-to-project
+      - check-success=build-darwin-amd64
+      - check-success=build-darwin-arm64
+      - check-success=build-linux-amd64
+      - check-success=build-linux-arm64
+      - check-success=changelog-reminder
+      - check-success=check-generated-protobuf
+      - check-success=optimize-contract-rate-limiter
+      - check-success=optimize-contract-crosschain-swaps
+      - check-success=optimize-contract-swaprouter
+      - check-success=optimize-contract-outpost
+      - check-success=test-contract-rate-limiter
+      - check-success=test-contract-crosschain-swaps
+      - check-success=test-contract-swaprouter
+      - check-success=test-contract-outpost
+      - check-success=lint-contract-ibc-rate-limit
+      - check-success=lint-contract-cosmwasm
+      - check-success=lint-golangci
+      - check-success=lint-documentation-linter
+      - check-success=push-docker-images
+      - check-success=push-dev-docker-images
+      - check-success=check-required-labels
+      - check-success=run-simulation-tests
+      - check-success=tests-e2e
+      - check-success=tests-go-00
+      - check-success=tests-go-01
+      - check-success=tests-go-02
+      - check-success=tests-go-03
+      - check-success=test-e2e-makefile
     actions:
       queue:
         name: default
