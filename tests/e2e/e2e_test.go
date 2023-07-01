@@ -37,7 +37,12 @@ import (
 
 // TODO: Find more scalable way to do this
 func (s *IntegrationTestSuite) TestAllE2E() {
-	// Frontload longer tests
+	// Zero Dependent Tests
+	s.T().Run("CreateConcentratedLiquidityPoolVoting_And_TWAP", func(t *testing.T) {
+		t.Parallel()
+		s.CreateConcentratedLiquidityPoolVoting_And_TWAP()
+	})
+
 	s.T().Run("ProtoRev", func(t *testing.T) {
 		t.Parallel()
 		s.ProtoRev()
@@ -48,30 +53,6 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 		s.ConcentratedLiquidity()
 	})
 
-	if s.skipStateSync {
-		s.T().Skip()
-	} else {
-		s.T().Run("StateSync", func(t *testing.T) {
-			t.Parallel()
-			s.StateSync()
-		})
-	}
-
-	if s.skipIBC {
-		s.T().Skip("Skipping IBC tests")
-	} else {
-		s.T().Run("IBCTokenTransferRateLimiting", func(t *testing.T) {
-			t.Parallel()
-			s.IBCTokenTransferRateLimiting()
-		})
-	}
-
-	s.T().Run("CreateConcentratedLiquidityPoolVoting_And_TWAP", func(t *testing.T) {
-		t.Parallel()
-		s.CreateConcentratedLiquidityPoolVoting_And_TWAP()
-	})
-
-	// Zero Dependent Tests
 	s.T().Run("SuperfluidVoting", func(t *testing.T) {
 		t.Parallel()
 		s.SuperfluidVoting()
@@ -102,6 +83,17 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 	// 	t.Parallel()
 	// 	s.ArithmeticTWAP()
 	// })
+
+	// State Sync Dependent Tests
+
+	if s.skipStateSync {
+		s.T().Skip()
+	} else {
+		s.T().Run("StateSync", func(t *testing.T) {
+			t.Parallel()
+			s.StateSync()
+		})
+	}
 
 	// Upgrade Dependent Tests
 
@@ -146,14 +138,33 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	} else {
+		s.T().Run("IBCTokenTransferRateLimiting", func(t *testing.T) {
+			t.Parallel()
+			s.IBCTokenTransferRateLimiting()
+		})
+	}
+
+	if s.skipIBC {
+		s.T().Skip("Skipping IBC tests")
+	} else {
 		s.T().Run("IBCTokenTransferAndCreatePool", func(t *testing.T) {
 			t.Parallel()
 			s.IBCTokenTransferAndCreatePool()
 		})
+	}
+
+	if s.skipIBC {
+		s.T().Skip("Skipping IBC tests")
+	} else {
 		s.T().Run("IBCWasmHooks", func(t *testing.T) {
 			t.Parallel()
 			s.IBCWasmHooks()
 		})
+	}
+
+	if s.skipIBC {
+		s.T().Skip("Skipping IBC tests")
+	} else {
 		s.T().Run("PacketForwarding", func(t *testing.T) {
 			t.Parallel()
 			s.PacketForwarding()
