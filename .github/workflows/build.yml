@@ -1,11 +1,14 @@
+# Build osmosisd binary
+#
 # This workflow builds the osmosisd binary for amd64 and arm64 on Darwin and Linux.
 #
-# This workflow runs:
-# - on pushes to main
+# Triggers
+# - on pushes to main and  "v[0-9]**" branches
 # - on every pull requests
 # - when manually triggered
 #
 # Caching strategy
+#
 # This code will store the Go modules cache based on the hash of your go.sum file,
 # ensuring that the cache will be invalidated when your dependencies change.
 # The cache will be stored on a per-branch basis, which should prevent cache pollution issues between different branches.
@@ -27,7 +30,7 @@ env:
 
 jobs:
   build:
-    name: osmosisd-${{ matrix.targetos }}-${{ matrix.arch }}
+    name: build-${{ matrix.targetos }}-${{ matrix.arch }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -40,7 +43,7 @@ jobs:
 
     steps:
       -
-        name: Check out repository code
+        name: Check out repository
         uses: actions/checkout@v3
       -
         name: Get git diff
