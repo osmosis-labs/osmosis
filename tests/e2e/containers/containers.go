@@ -161,6 +161,10 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 			}
 
 			errBufString := errBuf.String()
+			// When a validator attempts to send multiple transactions in the same block, the expected sequence number
+			// will be thrown off, causing the transaction to fail. It will eventually clear, but what the following code
+			// does is it takes the expected sequence number from the error message, adds a sequence number flag with that
+			// number, and retries the transaction. This allows for multiple txs from the same validator to be committed in the same block.
 			if (errBufString != "" || outBuf.String() != "") && containerName != hermesContainerName {
 				// Check if the error message matches the expected pattern
 				errBufMatches := sequenceMismatchRegex.FindAllStringSubmatch(errBufString, -1)
