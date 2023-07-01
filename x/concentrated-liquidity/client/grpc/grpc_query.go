@@ -110,6 +110,16 @@ func (q Querier) IncentiveRecords(grpcCtx context.Context,
 	return q.Q.IncentiveRecords(ctx, *req)
 }
 
+func (q Querier) GetTotalLiquidity(grpcCtx context.Context,
+	req *queryproto.GetTotalLiquidityRequest,
+) (*queryproto.GetTotalLiquidityResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.GetTotalLiquidity(ctx, *req)
+}
+
 func (q Querier) ClaimableSpreadRewards(grpcCtx context.Context,
 	req *queryproto.ClaimableSpreadRewardsRequest,
 ) (*queryproto.ClaimableSpreadRewardsResponse, error) {
