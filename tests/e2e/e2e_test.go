@@ -36,7 +36,7 @@ import (
 )
 
 // TODO: Find more scalable way to do this
-func (s *IntegrationTestSuite) TestMyFunction() {
+func (s *IntegrationTestSuite) TestAllE2E() {
 	// Frontload longer tests
 	s.T().Run("ProtoRev", func(t *testing.T) {
 		t.Parallel()
