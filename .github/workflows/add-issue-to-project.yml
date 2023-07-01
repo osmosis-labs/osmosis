@@ -1,12 +1,23 @@
+# Add New Issues to Project Workflow
+#
+# Automatically adds newly opened issues to the "Chain Dev" project.
+#
+# Trigger:
+# - Runs on new issue openings.
+#
+# Required Secrets:
+# - ADD_TO_PROJECT_PAT: A personal access token with access to the project board.
+
 name: Add new issues to project
 
 on:
   issues:
     types:
       - opened
+
 jobs:
-  add-to-project:
-    name: Add issue to chain dev project
+  add-issue-to-project:
+    name: add-issue-to-project
     runs-on: ubuntu-latest
     steps:
       - uses: actions/add-to-project@main
