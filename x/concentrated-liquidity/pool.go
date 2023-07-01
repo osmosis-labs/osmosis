@@ -356,32 +356,30 @@ func (k Keeper) GetUserUnbondingPositions(ctx sdk.Context, address sdk.AccAddres
 	var userPositionsWithPeriodLocks []model.PositionWithPeriodLock
 	for _, pos := range positions {
 		lockId, err := k.GetLockIdFromPositionId(ctx, pos.PositionId)
-		switch err.(type) {
-		case types.PositionIdToLockNotFoundError:
+		if errors.Is(err, types.PositionIdToLockNotFoundError{}) {
 			continue
-		case nil:
-			// If we have hit this logic branch, it means that, at one point, the lockId provided existed. If we fetch it again
-			// and it doesn't exist, that means that the lock has matured.
-			lock, err := k.lockupKeeper.GetLockByID(ctx, lockId)
-			if err == errorsmod.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", lock.GetID())) {
-				continue
-			}
-			if err != nil {
-				return nil, err
-			}
-
-			// Don't include locks that aren't unlocking
-			if lock.EndTime.IsZero() {
-				continue
-			}
-
-			userPositionsWithPeriodLocks = append(userPositionsWithPeriodLocks, model.PositionWithPeriodLock{
-				Position: pos,
-				Locks:    *lock,
-			})
-		default:
+		} else if err != nil {
+			return nil, err
+		}
+		// If we have hit this logic branch, it means that, at one point, the lockId provided existed. If we fetch it again
+		// and it doesn't exist, that means that the lock has matured.
+		lock, err := k.lockupKeeper.GetLockByID(ctx, lockId)
+		if err == errorsmod.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", lock.GetID())) {
 			continue
 		}
+		if err != nil {
+			return nil, err
+		}
+
+		// Don't include locks that aren't unlocking
+		if lock.EndTime.IsZero() {
+			continue
+		}
+
+		userPositionsWithPeriodLocks = append(userPositionsWithPeriodLocks, model.PositionWithPeriodLock{
+			Position: pos,
+			Locks:    *lock,
+		})
 	}
 	return userPositionsWithPeriodLocks, nil
 }
