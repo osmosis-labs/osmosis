@@ -1,4 +1,21 @@
+# Lint Workflow
+#
+# This workflow runs various linters on the codebase to ensure code quality 
+# and documentation compliance.
+#
+# Triggers:
+# - pull_request: Triggered on pull requests.
+# - push: Triggered on pushes to the main and concentrated-liquidity-main branches.
+#
+# Environment Variables:
+# - GO_VERSION: Specifies the Go version to use for the golangci-lint job.
+#
+# Jobs:
+# - golangci: Runs golangci-lint on the codebase.
+# - documentation-linter: Runs a documentation linter on the codebase.
+
 name: Lint
+
 on:
   pull_request:
   push:
@@ -11,7 +28,7 @@ env:
 
 jobs:
   golangci:
-    name: Run golangci-lint
+    name: lint-golangci
     runs-on: ubuntu-latest
     steps:
       -
@@ -38,7 +55,7 @@ jobs:
         run: make lint
 
   documentation-linter:
-    name: Run super-linter
+    name: lint-documentation-linter
     runs-on: ubuntu-latest
     steps:
       -
