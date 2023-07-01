@@ -184,7 +184,7 @@ func appModules(
 		ibc_hooks.NewAppModule(app.AccountKeeper),
 		icq.NewAppModule(*app.AppKeepers.ICQKeeper),
 		packetforward.NewAppModule(app.PacketForwardKeeper),
-		cwpoolmodule.NewAppModule(*app.CosmwasmPoolKeeper),
+		cwpoolmodule.NewAppModule(appCodec, *app.CosmwasmPoolKeeper),
 	}
 }
 

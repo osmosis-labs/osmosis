@@ -91,9 +91,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: moduleclient.NewQuerier(am.k)})
 }
 
-func NewAppModule(cosmwasmpoolKeeper cosmwasmpool.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, cosmwasmpoolKeeper cosmwasmpool.Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		k:              cosmwasmpoolKeeper,
 	}
 }
