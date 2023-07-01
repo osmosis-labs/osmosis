@@ -18,14 +18,7 @@ var (
 
 	// CodeIdWhiteListKey defines the store key for code id whitelist.
 	CodeIdWhiteListKey = []byte{0x02}
-
-	// KeyTotalLiquidity defines key to store total liquidity.
-	KeyTotalLiquidity = []byte{0x03}
 )
-
-func GetDenomPrefix(denom string) []byte {
-	return append(KeyTotalLiquidity, []byte(denom)...)
-}
 
 func FormatPoolsPrefix(poolId uint64) []byte {
 	return append(PoolsKey, sdk.Uint64ToBigEndian(poolId)...)
