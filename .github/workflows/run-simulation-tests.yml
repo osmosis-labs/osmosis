@@ -1,13 +1,20 @@
-name: Simulation
-#  Simulation workflow runs simulation test
-#  This workflow is run on pushes to master & every Pull Requests where a .go, .mod, .sum have been changed
+# Simulation Workflow
+#
+# This workflow runs simulation tests
+#
+# Triggers:
+# - all pull requests.
+# - pushes to the main branch.
+
+name: Run Simulation Tests
+
 on:
   pull_request:
   push:
     branches:
       - main
 jobs:
-  test:
+  run-simulation-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -27,12 +34,13 @@ jobs:
             go.mod
             go.sum
             Makefile
-      - name: Run full application simulation
+      - 
+        name: Run full application simulation
+        if: env.GIT_DIFF
         run: |
           make test-sim-app
+      - 
+        name: Run simulation determinism check
         if: env.GIT_DIFF
-
-      - name: Run simulation determinism check
         run: |
           make test-sim-determinism
-        if: env.GIT_DIFF
