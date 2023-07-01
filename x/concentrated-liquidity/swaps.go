@@ -562,7 +562,7 @@ func (k Keeper) computeInAmtGivenOut(
 	// Round amount in up to avoid under charging the user.
 	amt0 := swapState.amountCalculated.Ceil().TruncateInt()
 
-	// TODO: given that we can have a ne
+	// TODO: given that we can have a negative amount specified remaining, should at the minimum revisit the rounding logic here
 	// Round amount out down to avoid over charging the pool.
 	amt1 := desiredTokenOut.Amount.ToDec().Sub(swapState.amountSpecifiedRemaining).TruncateInt()
 
