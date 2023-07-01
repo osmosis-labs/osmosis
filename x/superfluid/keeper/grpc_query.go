@@ -696,6 +696,7 @@ func (q Querier) filterConcentratedPositionLocks(ctx sdk.Context, positions []mo
 			ValidatorAddress:       valAddr,
 			PositionId:             pos.PositionId,
 			LockId:                 lockId,
+			SyntheticLock:          syntheticLock,
 			DelegationAmount:       lockedCoins,
 			EquivalentStakedAmount: &coin,
 		})
