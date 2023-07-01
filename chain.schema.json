@@ -91,7 +91,6 @@
         "compatible_versions": [
           "v15.2.0",
           "v15.1.2",
-          "v15.1.0",
           "v15.0.0"
         ],
         "cosmos_sdk_version": "0.46.10",
