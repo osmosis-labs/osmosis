@@ -108,6 +108,13 @@ service Query {
                                    "cfmm_pool_id_link_from_concentrated/"
                                    "{concentrated_pool_id}";
   }
+
+  // GetTotalLiquidity returns total liquidity across all cl pools.
+  rpc GetTotalLiquidity(GetTotalLiquidityRequest)
+      returns (GetTotalLiquidityResponse) {
+    option (google.api.http).get =
+        "/osmosis/concentratedliquidity/v1beta1/get_total_liquidity";
+  }
 }
 
 //=============================== UserPositions
@@ -279,4 +286,13 @@ message CFMMPoolIdLinkFromConcentratedPoolIdRequest {
 
 message CFMMPoolIdLinkFromConcentratedPoolIdResponse {
   uint64 cfmm_pool_id = 1 [ (gogoproto.moretags) = "yaml:\"cfmm_pool_id\"" ];
+}
+
+//=============================== GetTotalLiquidity
+message GetTotalLiquidityRequest {}
+message GetTotalLiquidityResponse {
+  repeated cosmos.base.v1beta1.Coin total_liquidity = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }

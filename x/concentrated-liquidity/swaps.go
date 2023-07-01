@@ -151,6 +151,9 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, types.AmountLessThanMinError{TokenAmount: tokenOutAmount, TokenMin: tokenOutMinAmount}
 	}
 
+	k.RecordTotalLiquidityIncrease(ctx, sdk.NewCoins(tokenIn))
+	k.RecordTotalLiquidityDecrease(ctx, sdk.NewCoins(tokenOut))
+
 	return tokenOutAmount, nil
 }
 
@@ -189,6 +192,9 @@ func (k Keeper) SwapExactAmountOut(
 	if tokenInAmount.GT(tokenInMaxAmount) {
 		return sdk.Int{}, types.AmountGreaterThanMaxError{TokenAmount: tokenInAmount, TokenMax: tokenInMaxAmount}
 	}
+
+	k.RecordTotalLiquidityIncrease(ctx, sdk.NewCoins(tokenIn))
+	k.RecordTotalLiquidityDecrease(ctx, sdk.NewCoins(tokenOut))
 
 	return tokenInAmount, nil
 }

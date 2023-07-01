@@ -196,11 +196,11 @@ func GetCmdLockedByID() *cobra.Command {
 // GetCmdLockRewardReceiver returns reward receiver for the given lock id
 func GetCmdLockRewardReceiver() *cobra.Command {
 	q := osmocli.QueryDescriptor{
-		Use:   "lock-reward-receiver <id>",
+		Use:   "lock-reward-receiver <lock-id>",
 		Short: "Query lock's reward receiver",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} lock-reward-receiver 1`,
-		QueryFnName: "LockedByID",
+		QueryFnName: "LockRewardReceiver",
 	}
 	q.Long = osmocli.FormatLongDesc(q.Long, osmocli.NewLongMetadata(types.ModuleName).WithShort(q.Short))
 	return osmocli.BuildQueryCli[*types.LockRewardReceiverRequest](&q, types.NewQueryClient)
