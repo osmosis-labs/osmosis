@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"errors"
 	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -408,6 +409,10 @@ func (k Keeper) computeOutAmtGivenIn(
 		}
 	}
 
+	if swapState.amountSpecifiedRemaining.IsNegative() {
+		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, errors.New("problem 1")
+	}
+
 	// Add spread reward growth per share to the pool-global spread reward accumulator.
 	spreadRewardGrowth := sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.globalSpreadRewardGrowthPerUnitLiquidity)
 	spreadRewardAccumulator.AddToAccumulator(sdk.NewDecCoins(spreadRewardGrowth))
@@ -546,12 +551,18 @@ func (k Keeper) computeInAmtGivenOut(
 		}
 	}
 
+	if swapState.amountSpecifiedRemaining.IsNegative() {
+		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, fmt.Errorf("over charged problem in given out by %s", swapState.amountSpecifiedRemaining)
+	}
+
 	// Add spread reward growth per share to the pool-global spread reward accumulator.
 	spreadRewardAccumulator.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec(tokenInDenom, swapState.globalSpreadRewardGrowthPerUnitLiquidity)))
 
 	// coin amounts require int values
 	// Round amount in up to avoid under charging the user.
 	amt0 := swapState.amountCalculated.Ceil().TruncateInt()
+
+	// TODO: given that we can have a ne
 	// Round amount out down to avoid over charging the pool.
 	amt1 := desiredTokenOut.Amount.ToDec().Sub(swapState.amountSpecifiedRemaining).TruncateInt()
 
