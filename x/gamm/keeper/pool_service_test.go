@@ -233,7 +233,8 @@ func (s *KeeperTestSuite) TestCreateBalancerPool() {
 			s.Require().Equal(senderBal.String(), expectedSenderBal.String())
 
 			// check pool's liquidity is correctly increased
-			liquidity := gammKeeper.GetTotalLiquidity(s.Ctx)
+			liquidity, err := gammKeeper.GetTotalLiquidity(s.Ctx)
+			s.Require().NoError(err, "test: %v", test.name)
 			s.Require().Equal(expectedPoolTokens.String(), liquidity.String())
 		} else {
 			s.Require().Error(err, "test: %v", test.name)
@@ -550,7 +551,8 @@ func (s *KeeperTestSuite) TestJoinPoolNoSwap() {
 			s.Require().Equal("5000", deltaBalances.AmountOf("foo").String())
 			s.Require().Equal("5000", deltaBalances.AmountOf("bar").String())
 
-			liquidity := gammKeeper.GetTotalLiquidity(s.Ctx)
+			liquidity, err := gammKeeper.GetTotalLiquidity(s.Ctx)
+			s.Require().NoError(err, "test: %v", test.name)
 			s.Require().Equal("15000bar,15000foo", liquidity.String())
 
 			s.AssertEventEmitted(ctx, types.TypeEvtPoolJoined, 1)
@@ -664,7 +666,8 @@ func (s *KeeperTestSuite) TestExitPool() {
 				s.Require().Equal("-5000", deltaBalances.AmountOf("foo").String())
 				s.Require().Equal("-5000", deltaBalances.AmountOf("bar").String())
 
-				liquidity := gammKeeper.GetTotalLiquidity(ctx)
+				liquidity, err := gammKeeper.GetTotalLiquidity(ctx)
+				s.Require().NoError(err)
 				s.Require().Equal("5000bar,5000foo", liquidity.String())
 
 				s.AssertEventEmitted(ctx, types.TypeEvtPoolExited, 1)

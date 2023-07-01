@@ -415,12 +415,16 @@ func (q QuerierV2) SpotPrice(ctx context.Context, req *v2types.QuerySpotPriceReq
 	}, nil
 }
 
-// TotalLiquidity returns total liquidity across all pools.
+// TotalLiquidity returns total liquidity across all gamm pools.
 func (q Querier) TotalLiquidity(ctx context.Context, _ *types.QueryTotalLiquidityRequest) (*types.QueryTotalLiquidityResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	totalLiquidity, err := q.Keeper.GetTotalLiquidity(sdkCtx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 
 	return &types.QueryTotalLiquidityResponse{
-		Liquidity: q.Keeper.GetTotalLiquidity(sdkCtx),
+		Liquidity: totalLiquidity,
 	}, nil
 }
 

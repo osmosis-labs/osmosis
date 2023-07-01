@@ -178,3 +178,14 @@ func (q Querier) TotalPoolLiquidity(ctx sdk.Context, req queryproto.TotalPoolLiq
 		Liquidity: coins,
 	}, nil
 }
+
+// TotalLiquidity returns the total liquidity across all pools.
+func (q Querier) TotalLiquidity(ctx sdk.Context, req queryproto.TotalLiquidityRequest) (*queryproto.TotalLiquidityResponse, error) {
+	totalLiquidity, err := q.K.TotalLiquidity(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &queryproto.TotalLiquidityResponse{
+		Liquidity: totalLiquidity,
+	}, nil
+}
