@@ -70,7 +70,8 @@ func (s *KeeperTestSuite) TestGammInitGenesis() {
 	_, err = s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, 7)
 	s.Require().Error(err)
 
-	liquidity := s.App.GAMMKeeper.GetTotalLiquidity(s.Ctx)
+	liquidity, err := s.App.GAMMKeeper.GetTotalLiquidity(s.Ctx)
+	s.Require().NoError(err)
 	expectedLiquidity := sdk.NewCoins(sdk.NewInt64Coin("bar", 15000000), sdk.NewInt64Coin("baz", 15000000), sdk.NewInt64Coin("foo", 15000000), sdk.NewInt64Coin("uosmo", 15000000))
 	s.Require().Equal(expectedLiquidity.String(), liquidity.String())
 
