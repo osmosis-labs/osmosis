@@ -356,7 +356,7 @@ func (k Keeper) GetUserUnbondingPositions(ctx sdk.Context, address sdk.AccAddres
 	var userPositionsWithPeriodLocks []model.PositionWithPeriodLock
 	for _, pos := range positions {
 		lockId, err := k.GetLockIdFromPositionId(ctx, pos.PositionId)
-		if errors.Is(err, types.PositionIdToLockNotFoundError{}) {
+		if errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: pos.PositionId}) {
 			continue
 		} else if err != nil {
 			return nil, err
