@@ -35,6 +35,7 @@ import (
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
+// TODO: Find more scalable way to do this
 func (s *IntegrationTestSuite) TestMyFunction() {
 	// Frontload longer tests
 	s.T().Run("ProtoRev", func(t *testing.T) {
