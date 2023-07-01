@@ -1,18 +1,35 @@
-name: required labels
+# Check Required Labels Workflow
+#
+# The workflow ensures that the required labels are present on the pull request and returns a success result if they are.
+# It ignores changes that only affect Markdown files (.md), test files (*_test.go), and workflow files (*.yml).
+#
+# Triggers:
+# - pull_request:
+#   - types: Triggered on the types 'opened', 'labeled', 'unlabeled', and 'synchronize'.
+#   - branches: Triggered on the 'main' branch.
+
+name: Check Required Labels
 
 on:
   pull_request:
-    types: [opened, labeled, unlabeled, synchronize]
+    types: 
+      - opened
+      - labeled
+      - unlabeled
+      - synchronize
     branches:
       - 'main'
 
 jobs:
-  state_compatability_labels:
+  check-required-labels:
     runs-on: ubuntu-latest
+    name: check-required-labels
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Get changed files
+      -
+        name: Check out repository
+        uses: actions/checkout@v3
+      - 
+        name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@v37.0.2
         with:
@@ -20,8 +37,8 @@ jobs:
             **/*.md
             **/*_test.go
             .github/workflows/*.yml
-
-      - name: Check required labels
+      - 
+        name: Check required labels
         # Skip this step and return success result for markdown only changes
         if: |
           steps.changed-files.outputs.any_changed == 'true' ||
