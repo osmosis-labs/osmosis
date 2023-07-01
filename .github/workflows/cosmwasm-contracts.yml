@@ -1,0 +1,199 @@
+# Cosmwasm Contracts Workflow
+#
+# This workflow performs various tasks related to the Cosmwasm contracts.
+# It includes steps for optimizing contracts, running tests, and checking lints.
+#
+# Jobs:
+# - optimize-contracts: Optimizes the Cosmwasm contracts and uploads optimized artifacts.
+# - test-contracts: Tests the Cosmwasm contracts and checks for any differences in bytecode.
+# - lint-contracts: Runs formatting and linting checks on the Cosmwasm contracts.
+#
+# Triggers:
+# - pull_request: Triggered on pull requests to any branch.
+#   - branches: Triggered on all branches.
+# - push: Triggered on pushes to the main branch and any branch that matches the pattern "v[0-9]**".
+# - workflow_dispatch: Manual triggering of the workflow.
+
+name: Cosmwasm Contracts
+
+on:
+  pull_request:
+    branches:
+      - "**"
+  push:
+    branches:
+      - "main"
+      - "v[0-9]**"
+  workflow_dispatch:
+
+jobs:
+
+  optimize-contracts:
+    name: optimize-contract-${{ matrix.contract.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        contract: 
+          - 
+            name: rate-limiter
+            workdir: ./x/ibc-rate-limit/
+            bytecode: x/ibc-rate-limit/bytecode/rate_limiter.wasm
+            build: artifacts/rate_limiter.wasm
+          - 
+            name: crosschain-swaps
+            workdir: ./cosmwasm/
+            bytecode: tests/ibc-hooks/bytecode/crosschain_swaps.wasm
+            build: artifacts/crosschain_swaps.wasm
+          - 
+            name: swaprouter
+            workdir: ./cosmwasm/
+            bytecode: tests/ibc-hooks/bytecode/swaprouter.wasm
+            build: artifacts/swaprouter.wasm
+          - 
+            name: outpost
+            workdir: ./cosmwasm/
+            bytecode: tests/ibc-hooks/bytecode/outpost.wasm
+            build: artifacts/outpost.wasm
+    steps:
+      -
+        name: Check out repository
+        uses: actions/checkout@v3
+      - 
+        uses: technote-space/get-diff-action@v6.1.2
+        with:
+          PATTERNS: |
+            **/**/*.wasm
+            **/**.rs
+            **/**Cargo.toml
+            **/**Cargo.lock
+      - 
+        name: Optimize
+        if: env.GIT_DIFF
+        working-directory: ${{ matrix.contract.workdir }}
+        run: >
+          docker run --rm -v "$(pwd)":/code \
+            -e REGISTRY_CONTRACT=osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9 \
+            --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+            --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+            cosmwasm/workspace-optimizer:0.12.10
+      - 
+        name: 'Upload optimized contract artifact'
+        if: env.GIT_DIFF
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.contract.name }}
+          path: ${{ matrix.contract.workdir }}${{ matrix.contract.build }}
+          retention-days: 1
+      - 
+        name: 'Upload Cargo.lock artifact'
+        if: env.GIT_DIFF
+        uses: actions/upload-artifact@v3
+        with:
+          name: Cargo.lock
+          path: ${{ matrix.contract.workdir }}Cargo.lock
+          retention-days: 1
+      # TODO: workspace optimizer compiles all contracts in the workspace, so we could just run that once
+      # and then check the diff of all the bytecode files
+      - 
+        name: Check Test Data
+        if: env.GIT_DIFF
+        working-directory: ${{ matrix.contract.workdir }}
+        run: >
+          diff "${GITHUB_WORKSPACE}/${{ matrix.contract.bytecode }}" ${{ matrix.contract.build }}
+
+  test-contracts:
+    name: optimize-contract-${{ matrix.contract.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        contract: 
+          - 
+            name: rate-limiter
+            workdir: ./x/ibc-rate-limit/
+            bytecode: x/ibc-rate-limit/bytecode/rate_limiter.wasm
+            build: artifacts/rate_limiter.wasm
+          - 
+            name: crosschain-swaps
+            workdir: ./cosmwasm/
+            bytecode: tests/ibc-hooks/bytecode/crosschain_swaps.wasm
+            build: artifacts/crosschain_swaps.wasm
+          - 
+            name: swaprouter
+            workdir: ./cosmwasm/
+            bytecode: tests/ibc-hooks/bytecode/swaprouter.wasm
+            build: artifacts/swaprouter.wasm
+          - 
+            name: outpost
+            workdir: ./cosmwasm/
+            bytecode: tests/ibc-hooks/bytecode/outpost.wasm
+            build: artifacts/outpost.wasm
+    steps:
+      -
+        name: Check out repository
+        uses: actions/checkout@v3
+      - 
+        uses: technote-space/get-diff-action@v6.1.2
+        with:
+          PATTERNS: |
+            **/bytecode/*.wasm
+            **/**.rs
+            **/**Cargo.toml
+            **/**Cargo.lock
+      - 
+        name: Install toolchain
+        if: env.GIT_DIFF
+        uses: dtolnay/rust-toolchain@1.69.0
+        with:
+          target: wasm32-unknown-unknown
+      - 
+        name: Add the wasm target
+        if: env.GIT_DIFF
+        working-directory: ${{ matrix.contract.workdir }}
+        run: >
+          rustup target add wasm32-unknown-unknown;
+      - 
+        name: Test
+        if: env.GIT_DIFF
+        working-directory: ${{ matrix.contract.workdir }}
+        run: >
+          cargo test
+
+  lint-contracts:
+    runs-on: ubuntu-latest
+    name: lint-contract-${{ matrix.folder.name }}
+    strategy:
+      matrix:
+        folder:
+          - workdir: ./x/ibc-rate-limit
+            name: ibc-rate-limit
+          - wokerdir: ./cosmwasm
+            name: cosmwasm
+    steps:
+      -
+        name: Check out repository
+        uses: actions/checkout@v3
+      - 
+        uses: technote-space/get-diff-action@v6.1.2
+        with:
+          PATTERNS: |
+            **/**.rs
+            **/**Cargo.toml
+            **/**Cargo.lock
+      - 
+        name: Install toolchain
+        if: env.GIT_DIFF
+        uses: dtolnay/rust-toolchain@1.69.0
+        with:
+          components: rustfmt, clippy
+      - 
+        name: Format
+        if: env.GIT_DIFF
+        working-directory: ${{ matrix.folder.workdir }}
+        run: >
+          cargo fmt --all -- --check
+      -
+        name: run cargo clippy
+        if: env.GIT_DIFF
+        working-directory: ${{ matrix.folder.workdir }}
+        run: >
+          cargo clippy -- -D warnings
