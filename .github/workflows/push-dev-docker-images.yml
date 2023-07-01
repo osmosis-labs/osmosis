@@ -28,7 +28,7 @@ env:
   OSMOSIS_INIT_CHAIN_IMAGE_REPOSITORY: osmolabs/osmosis-e2e-init-chain
 
 jobs:
-  docker:
+  push-dev-docker-images:
     runs-on: self-hosted
     steps:
     - 
