@@ -1,18 +1,40 @@
+# Changelog Reminder Workflow
+#
+# Ensures that a changelog entry is included in pull requests on the main branch.
+# It checks for changes and verifies the presence of a changelog entry in the CHANGELOG.md file.
+# If no entry is found, it adds a notification to remind the contributor.
+#
+# Triggers:
+# - Triggered on any pull request events that targets the main branch
+# 
+# Required Secrets:
+# - GITHUB_TOKEN: A token with repository access to commit the changelog reminder.
+
 name: Changelog Reminder
+
 on:
   pull_request:
-    types: [assigned, opened, synchronize, reopened, labeled, unlabeled]
+    types: 
+    - assigned
+    - opened
+    - synchronize
+    - reopened
+    - labeled
+    - unlabeled
     branches:
       - main
 
 jobs:
-  build:
-    name: Check Actions
+
+  changelog-reminder:
+    name: changelog-reminder
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Get changed files
+      -
+        name: Check out repository
+        uses: actions/checkout@v3
+      - 
+        name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@v37.0.2
         with:
@@ -20,8 +42,8 @@ jobs:
             **/*.md
             **/*_test.go
             .github/workflows/*.yml
-
-      - name: Changelog check
+      - 
+        name: Changelog check
         # Skip this step and return success result for markdown only changes
         if: |
           steps.changed-files.outputs.any_changed == 'true' ||
