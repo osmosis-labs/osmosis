@@ -55,3 +55,8 @@ queries:
       query_func: "k.TotalPoolLiquidity"
     cli:
       cmd: "TotalPoolLiquidity"
+  TotalLiquidity:
+    proto_wrapper:
+      query_func: "k.TotalLiquidity"
+    cli:
+      cmd: "TotalLiquidity"
