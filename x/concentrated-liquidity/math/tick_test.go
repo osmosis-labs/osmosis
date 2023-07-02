@@ -620,7 +620,7 @@ func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
 			// require.Equal(t, expectedPrice.String(), priceFromSqrtPrice.String())
 
 			// 5. Compute tick from sqrt price from the original tick.
-			inverseTickFromSqrtPrice, err := math.CalculateSqrtPriceToTick(sqrtPrice)
+			inverseTickFromSqrtPrice, err := math.CalculateSqrtPriceToTick(osmomath.BigDecFromSDKDec(sqrtPrice))
 			require.NoError(t, err)
 
 			require.Equal(t, tickFromPrice, inverseTickFromSqrtPrice, "expected: %s, actual: %s", tickFromPrice, inverseTickFromSqrtPrice)

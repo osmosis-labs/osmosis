@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	events "github.com/osmosis-labs/osmosis/v16/x/poolmanager/events"
 
@@ -38,7 +39,7 @@ type SwapState struct {
 	// Current sqrt price while calculating swap.
 	// Initialized to the pool's current sqrt price.
 	// Updated after every swap step.
-	sqrtPrice sdk.Dec
+	sqrtPrice osmomath.BigDec
 
 	// Current tick while calculating swap.
 	// Initialized to the pool's current tick.
@@ -90,7 +91,7 @@ type SwapDetails struct {
 type PoolUpdates struct {
 	NewCurrentTick int64
 	NewLiquidity   sdk.Dec
-	NewSqrtPrice   sdk.Dec
+	NewSqrtPrice   osmomath.BigDec
 }
 
 var (
@@ -332,7 +333,7 @@ func (k Keeper) computeOutAmtGivenIn(
 	// TODO: for now, we check if amountSpecifiedRemaining is GT 0.0000001. This is because there are times when the remaining
 	// amount may be extremely small, and that small amount cannot generate and amountIn/amountOut and we are therefore left
 	// in an infinite loop.
-	for swapState.amountSpecifiedRemaining.GT(smallestDec) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
+	for swapState.amountSpecifiedRemaining.GT(smallestDec) && !swapState.sqrtPrice.Equal(osmomath.BigDecFromSDKDec(sqrtPriceLimit)) {
 		// Log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
 
@@ -383,7 +384,7 @@ func (k Keeper) computeOutAmtGivenIn(
 
 		// If ComputeSwapWithinBucketOutGivenIn(...) calculated a computedSqrtPrice that is equal to the nextInitializedTickSqrtPrice, this means all liquidity in the current
 		// bucket has been consumed and we must move on to the next bucket to complete the swap
-		if nextInitializedTickSqrtPrice.Equal(computedSqrtPrice) {
+		if osmomath.BigDecFromSDKDec(nextInitializedTickSqrtPrice).Equal(computedSqrtPrice) {
 			swapState, err = k.swapCrossTickLogic(ctx, swapState, swapStrategy,
 				nextInitializedTick, nextInitTickIter, p, spreadRewardAccumulator, uptimeAccums, tokenInMin.Denom)
 			if err != nil {
@@ -470,7 +471,7 @@ func (k Keeper) computeInAmtGivenOut(
 	// TODO: for now, we check if amountSpecifiedRemaining is GT 10^-18. This is because there are times when the remaining
 	// amount may be extremely small, and that small amount cannot generate and amountIn/amountOut and we are therefore left
 	// in an infinite loop.
-	for swapState.amountSpecifiedRemaining.GT(smallestDec) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
+	for swapState.amountSpecifiedRemaining.GT(smallestDec) && !swapState.sqrtPrice.Equal(osmomath.BigDecFromSDKDec(sqrtPriceLimit)) {
 		// log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
 
@@ -518,7 +519,7 @@ func (k Keeper) computeInAmtGivenOut(
 
 		// If the ComputeSwapWithinBucketInGivenOut(...) calculated a computedSqrtPrice that is equal to the nextInitializedTickSqrtPrice, this means all liquidity in the current
 		// bucket has been consumed and we must move on to the next bucket by crossing a tick to complete the swap
-		if nextInitializedTickSqrtPrice.Equal(computedSqrtPrice) {
+		if osmomath.BigDecFromSDKDec(nextInitializedTickSqrtPrice).Equal(computedSqrtPrice) {
 			swapState, err = k.swapCrossTickLogic(ctx, swapState, swapStrategy,
 				nextInitializedTick, nextInitTickIter, p, spreadRewardAccumulator, uptimeAccums, tokenInDenom)
 			if err != nil {
@@ -561,7 +562,7 @@ func (k Keeper) computeInAmtGivenOut(
 	return tokenIn, tokenOut, PoolUpdates{swapState.tick, swapState.liquidity, swapState.sqrtPrice}, swapState.globalSpreadRewardGrowth, nil
 }
 
-func emitSwapDebugLogs(ctx sdk.Context, swapState SwapState, reachedPrice, amountIn, amountOut, spreadCharge sdk.Dec) {
+func emitSwapDebugLogs(ctx sdk.Context, swapState SwapState, reachedPrice osmomath.BigDec, amountIn, amountOut, spreadCharge sdk.Dec) {
 	ctx.Logger().Debug("start sqrt price", swapState.sqrtPrice)
 	ctx.Logger().Debug("reached sqrt price", reachedPrice)
 	ctx.Logger().Debug("liquidity", swapState.liquidity)

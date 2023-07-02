@@ -25,7 +25,7 @@ type lpTest struct {
 	joinTime                          time.Time
 	positionId                        uint64
 	underlyingLockId                  uint64
-	currentSqrtP                      sdk.Dec
+	currentSqrtP                      osmomath.BigDec
 	tokensProvided                    sdk.Coins
 	customTokensProvided              bool
 	amount0Minimum                    sdk.Int
@@ -759,7 +759,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			// system under test parameters
 			sutConfigOverwrite: &lpTest{
-				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio),
+				amount0Expected: DefaultAmt0Expected.Add(amount0PerfectRatio),
 				// Since we round on the other the asset when we withdraw, asset0 turns into the bottleneck and
 				// thus we cannot use the full amount of asset1. We calculate the below using the following formula and rounding up:
 				// amount1 = L * (sqrtPriceUpper - sqrtPriceLower)
@@ -793,7 +793,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			// system under test parameters
 			sutConfigOverwrite: &lpTest{
-				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio.QuoRaw(2)),
+				amount0Expected: DefaultAmt0Expected.Add(amount0PerfectRatio.QuoRaw(2)),
 				// Since we round on the other the asset when we withdraw, asset0 turns into the bottleneck and
 				// thus we cannot use the full amount of asset1. We calculate the below using the following formula and rounding up:
 				// amount1 = L * (sqrtPriceUpper - sqrtPriceLower)
@@ -982,7 +982,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			sutConfigOverwrite: &lpTest{
 				amount0Minimum: sdk.NewInt(1000000),
 				expectedError: types.InsufficientLiquidityCreatedError{
-					Actual: sdk.NewInt(1997954),
+					Actual: sdk.NewInt(1997954).Sub(roundingError),
 					//  minimum amount we have input becomes default amt 0 expected (from original position withdraw) + 1000000 (input)
 					Minimum:     DefaultAmt0Expected.Add(sdk.NewInt(1000000)),
 					IsTokenZero: true,
@@ -1131,7 +1131,15 @@ func (s *KeeperTestSuite) TestSingleSidedAddToPosition() {
 
 			// system under test parameters
 			sutConfigOverwrite: &lpTest{
-				amount0Expected: DefaultAmt0.Add(DefaultAmt0),
+				// calculated with x/concentrated-liquidity/python/clmath.py
+				// The input values are taken from debugger assumming the rest of the system is correct:
+				// sqrtPriceLowerTick = Decimal("1.000049998750062497000000000000000000")
+				// sqrtPriceUpperTick = Decimal("1.000099995000499938000000000000000000")
+				// liquidity = Decimal("20004500137.498290928785113714000000000000000000")
+				// calc_amount_zero_delta(liquidity, sqrtPriceLowerTick, sqrtPriceUpperTick, False)
+				// Decimal('999999.999999999999999999999957642595723576')
+				// The value above gets rounded down to DefaultAmt0.Sub(sdk.OneInt()). Then, we add DefaultAmt0.
+				amount0Expected: DefaultAmt0.Sub(sdk.OneInt()).Add(DefaultAmt0),
 				amount1Expected: sdk.ZeroInt(),
 				// current tick is 0, so create the position completely above it
 				lowerTick: 100,
@@ -1658,17 +1666,17 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 }
 
 func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
-	sqrt := func(x int64) sdk.Dec {
+	sqrt := func(x int64) osmomath.BigDec {
 		sqrt, err := osmomath.MonotonicSqrt(sdk.NewDec(x))
 		s.Require().NoError(err)
-		return sqrt
+		return osmomath.BigDecFromSDKDec(sqrt)
 	}
 
 	type sendTest struct {
 		amount0Desired        sdk.Int
 		amount1Desired        sdk.Int
 		tickSpacing           uint64
-		expectedCurrSqrtPrice sdk.Dec
+		expectedCurrSqrtPrice osmomath.BigDec
 		expectedTick          int64
 		expectedError         error
 	}
@@ -1905,7 +1913,7 @@ func (s *KeeperTestSuite) TestUninitializePool() {
 
 			actualSqrtPrice := pool.GetCurrentSqrtPrice()
 			actualTick := pool.GetCurrentTick()
-			s.Require().Equal(sdk.ZeroDec(), actualSqrtPrice)
+			s.Require().Equal(osmomath.ZeroDec(), actualSqrtPrice)
 			s.Require().Equal(int64(0), actualTick)
 		})
 	}
