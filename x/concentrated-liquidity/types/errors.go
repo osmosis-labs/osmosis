@@ -851,3 +851,13 @@ type SwapNoProgressError struct {
 func (e SwapNoProgressError) Error() string {
 	return fmt.Sprintf("ran out of iterations during swap. Possibly entered an infinite loop. Pool id (%d), user provided coin (%s)", e.PoolId, e.UserProvidedCoin)
 }
+
+type SwapNoProgressWithConsumptionError struct {
+	ComputedSqrtPrice osmomath.BigDec
+	AmountIn          sdk.Dec
+	AmountOut         sdk.Dec
+}
+
+func (e SwapNoProgressWithConsumptionError) Error() string {
+	return fmt.Sprintf("did not advance sqrt price after swap step %s, with amounts in (%s), out (%s)", e.ComputedSqrtPrice, e.AmountIn, e.AmountOut)
+}
