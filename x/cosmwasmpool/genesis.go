@@ -18,7 +18,6 @@ func (k *Keeper) InitGenesis(ctx sdk.Context, gen *types.GenesisState, unpacker 
 		if err != nil {
 			panic(err)
 		}
-		pool.SetWasmKeeper(k.wasmKeeper)
 		k.SetPool(ctx, pool)
 	}
 }
