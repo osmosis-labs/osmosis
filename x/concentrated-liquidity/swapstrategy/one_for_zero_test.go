@@ -363,9 +363,9 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 			// product_num / (liquidity - product_den)
 			// '0.00000100004999875000000000000000000000000000000001000075017501875'
 			// This can lead to negative amount zero in swaps.
-			// As a result, we should add an additional error check in swaps. If amount consumed greater
-			// than amount remaining, fail the swap.
-			expectedAmountZeroOutConsumed: sdk.MustNewDecFromStr("0.000099992498812532"),
+			// As a result, force the amountOut to be amountZeroOutRemaining.
+			// See code comments in ComputeSwapWithinBucketInGivenOut(...)
+			expectedAmountZeroOutConsumed: sdk.SmallestDec(),
 			// calc_amount_one_delta(liquidity, sqrtPriceCurrent, sqrtPriceNext, True)
 			// math.ceil(calc_amount_one_delta(liquidity, sqrtPriceCurrent, sqrtPriceNext, True))
 			expectedAmountOneIn:             sdk.OneDec(),
@@ -410,8 +410,10 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 			// product_num = liquidity * diff
 			// product_denom = sqrtPriceA * sqrtPriceB
 			// produce _num / producy_denom
-			// Note, that this amount is greater than the amount remaining.
-			expectedAmountZeroOutConsumed: sdk.MustNewDecFromStr("0.0000000000000001"),
+			// Results in 0.0000000000000001
+			// Note, that this amount is greater than the amount remaining but amountRemaining gets chosen over it
+			// See code comments in ComputeSwapWithinBucketInGivenOut(...)
+			expectedAmountZeroOutConsumed: sdk.SmallestDec(),
 
 			// calc_amount_one_delta(liquidity, sqrtPriceCurrent, sqrtPriceNext, True)
 			expectedAmountOneIn:             sdk.MustNewDecFromStr("10000000000000000000000"),

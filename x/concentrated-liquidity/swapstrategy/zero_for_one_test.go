@@ -320,7 +320,10 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 			expectedSqrtPriceNext: osmomath.MustNewDecFromStr("0.000001000049998750999999999999999999"),
 
 			// round_sdk_prec_up(calc_amount_one_delta(liquidity, sqrtPriceCurrent, sqrtPriceNext, False))
-			amountOneOutConsumed: sdk.MustNewDecFromStr("0.000000000000000010"),
+			// Results in 0.000000000000000010. However, notice that this value is greater than amountRemaining.
+			// Therefore, the amountOut consumed gets reset to amountOutRemaining.
+			// See code comments in ComputeSwapWithinBucketInGivenOut(...)
+			amountOneOutConsumed: sdk.SmallestDec(),
 			// round_sdk_prec_down(calc_amount_zero_delta(liquidity, sqrtPriceCurrent, sqrtPriceNext, True))
 			expectedAmountInZero:            sdk.MustNewDecFromStr("0.000099992498812332").Ceil(),
 			expectedSpreadRewardChargeTotal: sdk.ZeroDec(),
