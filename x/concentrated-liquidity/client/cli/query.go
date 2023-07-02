@@ -92,3 +92,12 @@ func GetCFMMPoolIdLinkFromConcentratedPoolId() (*osmocli.QueryDescriptor, *query
 {{.CommandPrefix}} cfmm-pool-link-from-cl 1`,
 	}, &queryproto.CFMMPoolIdLinkFromConcentratedPoolIdRequest{}
 }
+
+func GetTotalLiquidity() (*osmocli.QueryDescriptor, *queryproto.GetTotalLiquidityRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "total-liquidity",
+		Short: "Query total liquidity across all concentrated pool",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} total-liquidity 1`,
+	}, &queryproto.GetTotalLiquidityRequest{}
+}
