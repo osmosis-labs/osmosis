@@ -62,7 +62,7 @@ func (s *PoolModuleSuite) TestInitGenesis() {
 		Pools:  poolAnys,
 	}, s.App.AppCodec())
 
-	poolStored, err := s.App.CosmwasmPoolKeeper.GetPool(s.Ctx, 1)
+	poolStored, err := s.App.CosmwasmPoolKeeper.GetPoolById(s.Ctx, 1)
 	s.Require().NoError(err)
 	s.Require().Equal(cosmwasmPoolPreInit.GetId(), poolStored.GetId())
 	s.Require().Equal(cosmwasmPoolPreInit.GetAddress(), poolStored.GetAddress())

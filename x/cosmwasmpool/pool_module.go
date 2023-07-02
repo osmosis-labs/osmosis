@@ -58,10 +58,7 @@ func (k Keeper) InitializePool(ctx sdk.Context, pool poolmanagertypes.PoolI, cre
 	cosmwasmPool.SetContractAddress(contractAddress.String())
 
 	// Store the pool model
-	err = k.SetPool(ctx, cosmwasmPool)
-	if err != nil {
-		return err
-	}
+	k.SetPool(ctx, cosmwasmPool)
 
 	return nil
 }

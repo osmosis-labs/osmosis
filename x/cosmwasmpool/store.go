@@ -1,8 +1,6 @@
 package cosmwasmpool
 
 import (
-	"errors"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,15 +12,9 @@ import (
 )
 
 // SetPool stores the given pool in state.
-func (k Keeper) SetPool(ctx sdk.Context, pool types.CosmWasmExtension) error {
-	poolModel, ok := pool.(*model.Pool)
-	if !ok {
-		return errors.New("invalid pool type when setting cosmwasm pool")
-	}
+func (k Keeper) SetPool(ctx sdk.Context, pool types.CosmWasmExtension) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.FormatPoolsPrefix(pool.GetId())
-	osmoutils.MustSet(store, key, poolModel)
-	return nil
+	osmoutils.MustSet(store, types.FormatPoolsPrefix(pool.GetId()), pool.GetStoreModel())
 }
 
 // GetPoolById returns a CosmWasmExtension that corresponds to the requested pool id. Returns error if pool id is not found.
