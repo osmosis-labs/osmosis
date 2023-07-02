@@ -26,6 +26,10 @@ func (s *PoolModuleSuite) TestInitGenesis() {
 	}
 
 	cosmwasmPoolPreInit := pools[0]
+	oldId := cosmwasmPoolPreInit.GetId()
+	oldAddress := cosmwasmPoolPreInit.GetAddress()
+	oldSpreadFactor := cosmwasmPoolPreInit.GetSpreadFactor(s.Ctx)
+	oldString := cosmwasmPoolPreInit.String()
 
 	poolAnys := []*codectypes.Any{}
 	for _, poolI := range pools {
@@ -64,10 +68,10 @@ func (s *PoolModuleSuite) TestInitGenesis() {
 
 	poolStored, err := s.App.CosmwasmPoolKeeper.GetPoolById(s.Ctx, 1)
 	s.Require().NoError(err)
-	s.Require().Equal(cosmwasmPoolPreInit.GetId(), poolStored.GetId())
-	s.Require().Equal(cosmwasmPoolPreInit.GetAddress(), poolStored.GetAddress())
-	s.Require().Equal(cosmwasmPoolPreInit.GetSpreadFactor(s.Ctx), poolStored.GetSpreadFactor(s.Ctx))
-	s.Require().Equal(cosmwasmPoolPreInit.String(), poolStored.String())
+	s.Require().Equal(oldId, poolStored.GetId())
+	s.Require().Equal(oldAddress, poolStored.GetAddress())
+	s.Require().Equal(oldSpreadFactor, poolStored.GetSpreadFactor(s.Ctx))
+	s.Require().Equal(oldString, poolStored.String())
 
 	_, err = s.App.CosmwasmPoolKeeper.GetPoolById(s.Ctx, 4)
 	s.Require().Error(err)
