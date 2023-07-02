@@ -24,7 +24,7 @@ const (
 )
 
 // RouteLockedBalancerToConcentratedMigration routes the provided lock to the proper migration function based on the lock status.
-// The testing conditions and scope for the different lock status are as follows: 
+// The testing conditions and scope for the different lock status are as follows:
 // Lock Status = Superfluid delegated
 // - Instantly undelegate which will bypass unbonding time.
 // - Create new CL Lock and Re-delegate it as a concentrated liquidity position.

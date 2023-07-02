@@ -15,4 +15,6 @@ option go_package = "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types";
 message GenesisState {
   // params is the container of cosmwasmpool parameters.
   Params params = 1 [ (gogoproto.nullable) = false ];
+  repeated google.protobuf.Any pools = 2
+      [ (cosmos_proto.accepts_interface) = "PoolI" ];
 }
