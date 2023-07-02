@@ -24,9 +24,29 @@ const (
 )
 
 // RouteLockedBalancerToConcentratedMigration routes the provided lock to the proper migration function based on the lock status.
+<<<<<<< HEAD
 // If the lock is superfluid delegated, it will instantly undelegate the superfluid position and redelegate it as a concentrated liquidity position.
 // If the lock is superfluid undelegating, it will instantly undelegate the superfluid position and redelegate it as a concentrated liquidity position, but continue to unlock where it left off.
 // If the lock is locked or unlocking but not superfluid delegated/undelegating, it will migrate the position and either start unlocking or continue unlocking where it left off.
+=======
+// The testing conditions and scope for the different lock status are as follows:
+// Lock Status = Superfluid delegated
+// - Instantly undelegate which will bypass unbonding time.
+// - Create new CL Lock and Re-delegate it as a concentrated liquidity position.
+//
+// Lock Status = Superfluid undelegating
+// - Continue undelegating as superfluid unbonding CL Position.
+// - Lock the tokens and create an unlocking syntheticLock (to handle cases of slashing)
+//
+// Lock Status = Locked or unlocking (no superfluid delegation/undelegation)
+// - Force unlock tokens from gamm shares.
+// - Create new CL lock and starts unlocking or unlocking where it left off.
+//
+// Lock Status = Unlocked
+// - For ex: LP shares
+// - Create new CL lock and starts unlocking or unlocking where it left off.
+//
+>>>>>>> d0a851b5 (fix: cw pool import export genesis (#5696))
 // Errors if the lock is not found, if the lock is not a balancer pool lock, or if the lock is not owned by the sender.
 func (k Keeper) RouteLockedBalancerToConcentratedMigration(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin, tokenOutMins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, poolIdLeaving, poolIdEntering, concentratedLockId uint64, err error) {
 	synthLockBeforeMigration, migrationType, err := k.routeMigration(ctx, sender, lockId, sharesToMigrate)

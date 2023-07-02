@@ -109,6 +109,23 @@ func (k Keeper) GetPools(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
 	)
 }
 
+// GetPoolsWithWasmKeeper behaves the same as GetPools, but it also sets the WasmKeeper field of the pool.
+func (k Keeper) GetPoolsWithWasmKeeper(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
+	return osmoutils.GatherValuesFromStorePrefix(
+		ctx.KVStore(k.storeKey), types.PoolsKey, func(value []byte) (poolmanagertypes.PoolI, error) {
+			pool := model.CosmWasmPool{}
+			err := k.cdc.Unmarshal(value, &pool)
+			if err != nil {
+				return nil, err
+			}
+			return &model.Pool{
+				CosmWasmPool: pool,
+				WasmKeeper:   k.wasmKeeper,
+			}, nil
+		},
+	)
+}
+
 // GetPoolDenoms retrieves the list of asset denoms in a CosmWasm-based liquidity pool given its ID.
 //
 // Parameters:
@@ -342,7 +359,7 @@ func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins
 // GetTotalLiquidity retrieves the total liquidity of all cw pools.
 func (k Keeper) GetTotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 	totalLiquidity := sdk.Coins{}
-	pools, err := k.GetPools(ctx)
+	pools, err := k.GetPoolsWithWasmKeeper(ctx)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -356,5 +373,5 @@ func (k Keeper) GetTotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 		totalPoolLiquidity := cosmwasmPool.GetTotalPoolLiquidity(ctx)
 		totalLiquidity = totalLiquidity.Add(totalPoolLiquidity...)
 	}
-	return sdk.Coins{}, nil
+	return totalLiquidity, nil
 }
