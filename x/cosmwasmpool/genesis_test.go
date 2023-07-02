@@ -20,7 +20,7 @@ func (s *PoolModuleSuite) TestInitGenesis() {
 		expectedTotalLiquidity = expectedTotalLiquidity.Add(initalDefaultSupply...)
 	}
 
-	pools, err := s.App.CosmwasmPoolKeeper.GetPools(s.Ctx)
+	pools, err := s.App.CosmwasmPoolKeeper.GetPoolsWithWasmKeeper(s.Ctx)
 	if err != nil {
 		panic(err)
 	}
