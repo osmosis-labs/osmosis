@@ -369,6 +369,10 @@ func (k Keeper) computeOutAmtGivenIn(
 			swapState.amountSpecifiedRemaining,
 		)
 
+		if err := validateSwapProgressAndAmountConsumption(computedSqrtPrice, sqrtPriceStart, amountIn, amountOut); err != nil {
+			return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
+		}
+
 		// Update the spread reward growth for the entire swap using the total spread factors charged.
 		swapState.updateSpreadRewardGrowthGlobal(spreadRewardCharge)
 
@@ -506,6 +510,10 @@ func (k Keeper) computeInAmtGivenOut(
 			swapState.liquidity,
 			swapState.amountSpecifiedRemaining,
 		)
+
+		if err := validateSwapProgressAndAmountConsumption(computedSqrtPrice, sqrtPriceStart, amountIn, amountOut); err != nil {
+			return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
+		}
 
 		swapState.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal)
 
@@ -748,4 +756,23 @@ func (k Keeper) getSwapAccumulators(ctx sdk.Context, poolId uint64) (accum.Accum
 		return accum.AccumulatorObject{}, []accum.AccumulatorObject{}, err
 	}
 	return spreadAccum, uptimeAccums, nil
+}
+
+// validateSwapProgressAndAmountConsumption validates that the swap progress and amount consumption are valid. These are valid if:
+// - computedSqrtPrice is not equal to sqrtPriceStart (progress made)
+// - computedSqrtPrice is equals to sqrtPriceStart and both amountIn and amountOut are zero (progress not made AND amounts are not consumed)
+// If swap succeeded within the same ULP while consuming amounts, that would mean that a trader can exploit the pool to
+// continue getting the same execution price. To prevent that, we add this check that fails the swap if amounts
+// in or out are non-zero while swap does not move even by 1 ULP.
+// If no progress is made with zero amounts, there is a risk of running into an infinite loop which we prevent
+// by a constant bound on the the number of iterations without progress.
+// Note that having a single iteration without progress and zero amounts is correct. One good example
+// is swapping one for zero (right) directly to the tick. Then, immediately swapping zero for one (left).
+// After the first swap, our sqrtPriceCurrent is the crossed tick's sqrt price. Also sqrtPriceTarget is the crossed tick's sqrt price.
+// In such a case, no amounts are consumed and the swap step is allowed to succeed.
+func validateSwapProgressAndAmountConsumption(computedSqrtPrice, sqrtPriceStart osmomath.BigDec, amountIn, amountOut sdk.Dec) error {
+	if computedSqrtPrice.Equal(sqrtPriceStart) && !(amountIn.IsZero() && amountOut.IsZero()) {
+		return types.SwapNoProgressWithConsumptionError{ComputedSqrtPrice: computedSqrtPrice, AmountIn: amountIn, AmountOut: amountOut}
+	}
+	return nil
 }
