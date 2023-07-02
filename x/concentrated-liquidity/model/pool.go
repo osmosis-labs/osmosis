@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
@@ -42,7 +43,7 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 		IncentivesAddress:    osmoutils.NewModuleAddressWithPrefix(types.ModuleName, incentivesAddressPrefix, sdk.Uint64ToBigEndian(poolId)).String(),
 		SpreadRewardsAddress: osmoutils.NewModuleAddressWithPrefix(types.ModuleName, spreadRewardsAddressPrefix, sdk.Uint64ToBigEndian(poolId)).String(),
 		Id:                   poolId,
-		CurrentSqrtPrice:     sdk.ZeroDec(),
+		CurrentSqrtPrice:     osmomath.ZeroDec(),
 		CurrentTick:          0,
 		CurrentTickLiquidity: sdk.ZeroDec(),
 		Token0:               denom0,
@@ -118,9 +119,9 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom 
 	}
 
 	if baseAssetDenom == p.Token0 {
-		return p.CurrentSqrtPrice.Power(2), nil
+		return p.CurrentSqrtPrice.PowerInteger(2).SDKDec(), nil
 	}
-	return sdk.NewDec(1).Quo(p.CurrentSqrtPrice.Power(2)), nil
+	return osmomath.OneDec().Quo(p.CurrentSqrtPrice.PowerInteger(2)).SDKDec(), nil
 }
 
 // GetToken0 returns the token0 of the pool
@@ -134,7 +135,7 @@ func (p Pool) GetToken1() string {
 }
 
 // GetCurrentSqrtPrice returns the current sqrt price of the pool
-func (p Pool) GetCurrentSqrtPrice() sdk.Dec {
+func (p Pool) GetCurrentSqrtPrice() osmomath.BigDec {
 	return p.CurrentSqrtPrice
 }
 
@@ -173,7 +174,7 @@ func (p *Pool) UpdateLiquidity(newLiquidity sdk.Dec) {
 }
 
 // SetCurrentSqrtPrice updates the current sqrt price of the pool when the first position is created.
-func (p *Pool) SetCurrentSqrtPrice(newSqrtPrice sdk.Dec) {
+func (p *Pool) SetCurrentSqrtPrice(newSqrtPrice osmomath.BigDec) {
 	p.CurrentSqrtPrice = newSqrtPrice
 }
 
@@ -221,7 +222,7 @@ func (p *Pool) UpdateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upper
 // we request a user to add more liquidity in favor of the pool.
 // If negative, we assume, liquidity being removed. As a result, we round down so that
 // we request a user to remove less liquidity in favor of the pool.
-func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta sdk.Dec) (actualAmountDenom0 sdk.Dec, actualAmountDenom1 sdk.Dec, err error) {
+func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta sdk.Dec) (sdk.Dec, sdk.Dec, error) {
 	if liquidityDelta.IsZero() {
 		return sdk.Dec{}, sdk.Dec{}, types.ErrZeroLiquidity
 	}
@@ -240,26 +241,40 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 	// in favor of the pool.
 	roundUp := liquidityDelta.IsPositive()
 
+	var (
+		liquidityDeltaBigDec     = osmomath.BigDecFromSDKDec(liquidityDelta)
+		sqrtPriceLowerTickBigDec = osmomath.BigDecFromSDKDec(sqrtPriceLowerTick)
+		sqrtPriceUpperTickBigDec = osmomath.BigDecFromSDKDec(sqrtPriceUpperTick)
+
+		actualAmountDenom0 osmomath.BigDec
+		actualAmountDenom1 osmomath.BigDec
+	)
+
 	if p.IsCurrentTickInRange(lowerTick, upperTick) {
 		// outcome one: the current price falls within the position
 		// if this is the case, we attempt to provide liquidity evenly between asset0 and asset1
 		// we also update the pool liquidity since the virtual liquidity is modified by this position's creation
 		currentSqrtPrice := p.CurrentSqrtPrice
-		actualAmountDenom0 = math.CalcAmount0Delta(liquidityDelta, currentSqrtPrice, sqrtPriceUpperTick, roundUp)
-		actualAmountDenom1 = math.CalcAmount1Delta(liquidityDelta, currentSqrtPrice, sqrtPriceLowerTick, roundUp)
+		actualAmountDenom0 = math.CalcAmount0Delta(liquidityDeltaBigDec, currentSqrtPrice, sqrtPriceUpperTickBigDec, roundUp)
+		actualAmountDenom1 = math.CalcAmount1Delta(liquidityDeltaBigDec, currentSqrtPrice, sqrtPriceLowerTickBigDec, roundUp)
 	} else if p.CurrentTick < lowerTick {
 		// outcome two: position is below current price
 		// this means position is solely made up of asset0
-		actualAmountDenom1 = sdk.ZeroDec()
-		actualAmountDenom0 = math.CalcAmount0Delta(liquidityDelta, sqrtPriceLowerTick, sqrtPriceUpperTick, roundUp)
+		actualAmountDenom1 = osmomath.ZeroDec()
+		actualAmountDenom0 = math.CalcAmount0Delta(liquidityDeltaBigDec, sqrtPriceLowerTickBigDec, sqrtPriceUpperTickBigDec, roundUp)
 	} else {
 		// outcome three: position is above current price
 		// this means position is solely made up of asset1
-		actualAmountDenom0 = sdk.ZeroDec()
-		actualAmountDenom1 = math.CalcAmount1Delta(liquidityDelta, sqrtPriceLowerTick, sqrtPriceUpperTick, roundUp)
+		actualAmountDenom0 = osmomath.ZeroDec()
+		actualAmountDenom1 = math.CalcAmount1Delta(liquidityDeltaBigDec, sqrtPriceLowerTickBigDec, sqrtPriceUpperTickBigDec, roundUp)
 	}
 
-	return actualAmountDenom0, actualAmountDenom1, nil
+	if roundUp {
+		return actualAmountDenom0.SDKDecRoundUp(), actualAmountDenom1.SDKDecRoundUp(), nil
+	}
+
+	// Note that these truncate at precision end in pool's favor.
+	return actualAmountDenom0.SDKDec(), actualAmountDenom1.SDKDec(), nil
 }
 
 // isCurrentTickInRange returns true if pool's current tick is within
@@ -271,7 +286,7 @@ func (p Pool) IsCurrentTickInRange(lowerTick, upperTick int64) bool {
 // ApplySwap state of pool after swap.
 // It specifically overwrites the pool's liquidity, curr tick and the curr sqrt price.
 // Note that this method is mutative.
-func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick int64, newCurrentSqrtPrice sdk.Dec) error {
+func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick int64, newCurrentSqrtPrice osmomath.BigDec) error {
 	// Check if the new liquidity provided is not negative.
 	if newLiquidity.IsNegative() {
 		return types.NegativeLiquidityError{Liquidity: newLiquidity}

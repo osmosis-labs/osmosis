@@ -45,6 +45,22 @@ func TickToSqrtPrice(tickIndex int64) (sdk.Dec, sdk.Dec, error) {
 	return price, sqrtPrice, nil
 }
 
+// TickToSqrtPriceBigDec returns the sqrtPrice given a tickIndex
+// as a BigDec.
+func TickToSqrtPriceBigDec(tickIndex int64) (osmomath.BigDec, error) {
+	price, err := TickToPrice(tickIndex)
+	if err != nil {
+		return osmomath.BigDec{}, err
+	}
+
+	// Determine the sqrtPrice from the price
+	sqrtPrice, err := osmomath.MonotonicSqrt(price)
+	if err != nil {
+		return osmomath.BigDec{}, err
+	}
+	return osmomath.BigDecFromSDKDec(sqrtPrice), nil
+}
+
 // TickToPrice returns the price given a tickIndex
 // If tickIndex is zero, the function returns sdk.OneDec().
 func TickToPrice(tickIndex int64) (price sdk.Dec, err error) {
@@ -124,7 +140,7 @@ func RoundDownTickToSpacing(tickIndex int64, tickSpacing int64) (int64, error) {
 // SqrtPriceToTickRoundDown converts the given sqrt price to its corresponding tick rounded down
 // to the nearest tick spacing.
 func SqrtPriceToTickRoundDownSpacing(sqrtPrice sdk.Dec, tickSpacing uint64) (int64, error) {
-	tickIndex, err := CalculateSqrtPriceToTick(sqrtPrice)
+	tickIndex, err := CalculateSqrtPriceToTick(osmomath.BigDecFromSDKDec(sqrtPrice))
 	if err != nil {
 		return 0, err
 	}
@@ -204,14 +220,20 @@ func CalculatePriceToTickDec(price sdk.Dec) (tickIndex sdk.Dec, err error) {
 
 // CalculateSqrtPriceToTick takes in a square root and returns the corresponding tick index.
 // This function does not take into consideration tick spacing.
-func CalculateSqrtPriceToTick(sqrtPrice sdk.Dec) (tickIndex int64, err error) {
+func CalculateSqrtPriceToTick(sqrtPrice osmomath.BigDec) (tickIndex int64, err error) {
 	// SqrtPrice may have errors, so we take the tick obtained from the price
 	// and move it in a +/- 1 tick range based on the sqrt price those ticks would imply.
 	price := sqrtPrice.Mul(sqrtPrice)
-	tick, err := CalculatePriceToTickDec(price)
+
+	// It is acceptable to truncate price as the minimum we support is
+	// 10**-12 which is above the smallest value of sdk.Dec.
+	priceDec := price.SDKDec()
+
+	tick, err := CalculatePriceToTickDec(priceDec)
 	if err != nil {
 		return 0, err
 	}
+
 	truncatedTick := tick.TruncateInt64()
 
 	// We have a candidate bucket index `t`. We discern here if:
@@ -235,10 +257,10 @@ func CalculateSqrtPriceToTick(sqrtPrice sdk.Dec) (tickIndex int64, err error) {
 		outOfBounds = true
 	}
 
-	_, sqrtPriceTmin1, errM1 := TickToSqrtPrice(truncatedTick - 1)
-	_, sqrtPriceT, errT := TickToSqrtPrice(truncatedTick)
-	_, sqrtPriceTplus1, errP1 := TickToSqrtPrice(truncatedTick + 1)
-	_, sqrtPriceTplus2, errP2 := TickToSqrtPrice(truncatedTick + 2)
+	sqrtPriceTmin1, errM1 := TickToSqrtPriceBigDec(truncatedTick - 1)
+	sqrtPriceT, errT := TickToSqrtPriceBigDec(truncatedTick)
+	sqrtPriceTplus1, errP1 := TickToSqrtPriceBigDec(truncatedTick + 1)
+	sqrtPriceTplus2, errP2 := TickToSqrtPriceBigDec(truncatedTick + 2)
 	if errM1 != nil || errT != nil || errP1 != nil || errP2 != nil {
 		return 0, errors.New("internal error in computing square roots within CalculateSqrtPriceToTick")
 	}
