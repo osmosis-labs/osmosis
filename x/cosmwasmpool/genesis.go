@@ -26,7 +26,7 @@ func (k *Keeper) InitGenesis(ctx sdk.Context, gen *types.GenesisState, unpacker 
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	params := k.GetParams(ctx)
 
-	pools, err := k.GetPoolsWithWasmKeeper(ctx)
+	pools, err := k.GetPools(ctx)
 	if err != nil {
 		panic(err)
 	}
