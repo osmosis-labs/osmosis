@@ -109,8 +109,8 @@ service Query {
                                    "{concentrated_pool_id}";
   }
 
-  // UserUnbondingPositions returns the position and lock info of unbonding positions
-  // of the given address.
+  // UserUnbondingPositions returns the position and lock info of unbonding
+  // positions of the given address.
   rpc UserUnbondingPositions(UserUnbondingPositionsRequest)
       returns (UserUnbondingPositionsResponse) {
     option (google.api.http).get = "/osmosis/concentratedliquidity/v1beta1/"
