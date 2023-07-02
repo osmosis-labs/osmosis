@@ -463,7 +463,7 @@ func (s *decimalTestSuite) TestMulRoundUp_RoundingAtPrecisionEnd() {
 	s.Require().Equal(expectedRoundUp.String(), actualRoundUp.String(), "exp %v, res %v", expectedRoundUp, actualRoundUp)
 
 	actualTruncate := a.MulTruncate(b)
-	s.Require().Equal(expectedTruncate.String(), actualTruncate.String(), "exp %v, res %v", expectedRoundUp, actualTruncate)
+	s.Require().Equal(expectedTruncate.String(), actualTruncate.String(), "exp %v, res %v", expectedTruncate, actualTruncate)
 }
 
 func (s *decimalTestSuite) TestBankerRoundChop() {
