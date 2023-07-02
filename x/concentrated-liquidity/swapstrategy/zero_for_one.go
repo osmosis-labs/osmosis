@@ -162,6 +162,21 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent o
 	// Note that spread reward is always charged on the amount in.
 	spreadRewardChargeTotal := computeSpreadRewardChargeFromAmountIn(amountZeroInFinal, s.spreadFactor)
 
+	// Cap the output amount to not exceed the remaining output amount.
+	// The reason why we must do this for in given out and NOT out given in is the following:
+	// When swapping for exact out while not reaching sqrtPriceTarget, we calculate  sqrtPriceNext from the
+	// amountRemainingOut. While calculating it, we round sqrtPriceNext in the direction opposite from the sqrtPriceCurrent.
+	// This is because we need to move the price up enough so that we get the desired output amount out.
+	// From newly calculate sqrtPriceNext, we then re-calculate the amountOut actually consumed. In certain cases, this
+	// recalculation might lead to a slightly greater amount than remaining due to sqrtPriceNext having been rounded in
+	// the opposite direction of the sqrtPriceCurrent. Therefore, we force the amountOut consumed to equal to amountRemaining.
+	// This is acceptable since the former is calculated from the latter, and the only possible source of difference is rounding.
+	// Going back to the exact in swap, when calculating the sqrtPriceNext, we round it in the direction of the sqrtPriceCurrent.
+	// As a result, this rounding error should not be possible in its case.
+	if amountOneOut.GT(amountOneRemainingOutBigDec) {
+		amountOneOut = amountOneRemainingOutBigDec
+	}
+
 	// Round down amount out to give user less in pool's favor.
 	return sqrtPriceNext, amountOneOut.SDKDec(), amountZeroInFinal, spreadRewardChargeTotal
 }
