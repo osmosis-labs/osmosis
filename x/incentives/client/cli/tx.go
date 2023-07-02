@@ -32,8 +32,8 @@ func GetTxCmd() *cobra.Command {
 func NewCreateGaugeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-gauge [lockup_denom] [reward] [poolId] [flags]",
-		Short: "create a gauge to distribute rewards to users",
-		Args:  cobra.ExactArgs(2),
+		Short: "create a gauge to distribute rewards to users. For duration lock gauges set poolId = 0 and for all CL (no-lock) gauges set it to a CL poolId.",
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
