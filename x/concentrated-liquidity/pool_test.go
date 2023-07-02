@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
@@ -251,12 +252,12 @@ func (s *KeeperTestSuite) TestCalculateSpotPrice() {
 
 	spotPriceBaseUSDC, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId, ETH, USDC)
 	s.Require().NoError(err)
-	s.Require().Equal(spotPriceBaseUSDC, DefaultCurrSqrtPrice.Power(2))
+	s.Require().Equal(spotPriceBaseUSDC, DefaultCurrSqrtPrice.PowerInteger(2).SDKDec())
 
 	// test that we have correct values for reversed quote asset and base asset
 	spotPriceBaseETH, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId, USDC, ETH)
 	s.Require().NoError(err)
-	s.Require().Equal(spotPriceBaseETH, sdk.OneDec().Quo(DefaultCurrSqrtPrice.Power(2)))
+	s.Require().Equal(spotPriceBaseETH, osmomath.OneDec().Quo(DefaultCurrSqrtPrice.PowerInteger(2)).SDKDec())
 
 	// try getting spot price from a non-existent pool
 	spotPrice, err = s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId+1, USDC, ETH)
@@ -333,7 +334,7 @@ func (s *KeeperTestSuite) TestSetPool() {
 		CurrentTickLiquidity: sdk.ZeroDec(),
 		Token0:               ETH,
 		Token1:               USDC,
-		CurrentSqrtPrice:     sdk.OneDec(),
+		CurrentSqrtPrice:     osmomath.OneDec(),
 		CurrentTick:          0,
 		TickSpacing:          DefaultTickSpacing,
 		ExponentAtPriceOne:   -6,
