@@ -768,7 +768,7 @@ func (k Keeper) getSwapAccumulators(ctx sdk.Context, poolId uint64) (accum.Accum
 // by a constant bound on the the number of iterations without progress.
 // Note, that it is correct to have a single iteration without progress and zero amounts. One valid example
 // is swapping one for zero (right) directly to the tick. Then, immediately swapping zero for one (left).
-// After the fist swap, out sqrtPriceCurrent is the crossed tick's sqrt price. Also sqrtPriceTarget is the crossed tick's sqrt price.
+// After the first swap, our sqrtPriceCurrent is the crossed tick's sqrt price. Also sqrtPriceTarget is the crossed tick's sqrt price.
 // In such a case, no amounts are consumed and the swap step is allowed to succeed.
 func validateSwapProgressAndAmountConsumption(computedSqrtPrice, sqrtPriceStart osmomath.BigDec, amountIn, amountOut sdk.Dec) error {
 	if computedSqrtPrice.Equal(sqrtPriceStart) && !(amountIn.IsZero() && amountOut.IsZero()) {
