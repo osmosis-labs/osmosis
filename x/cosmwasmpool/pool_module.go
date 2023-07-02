@@ -58,7 +58,10 @@ func (k Keeper) InitializePool(ctx sdk.Context, pool poolmanagertypes.PoolI, cre
 	cosmwasmPool.SetContractAddress(contractAddress.String())
 
 	// Store the pool model
-	k.SetPool(ctx, cosmwasmPool)
+	err = k.SetPool(ctx, cosmwasmPool)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -99,12 +102,15 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI,
 func (k Keeper) GetPools(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
 	return osmoutils.GatherValuesFromStorePrefix(
 		ctx.KVStore(k.storeKey), types.PoolsKey, func(value []byte) (poolmanagertypes.PoolI, error) {
-			pool := model.Pool{}
+			pool := model.CosmWasmPool{}
 			err := k.cdc.Unmarshal(value, &pool)
 			if err != nil {
 				return nil, err
 			}
-			return &pool, nil
+			return &model.Pool{
+				CosmWasmPool: pool,
+				WasmKeeper:   k.wasmKeeper,
+			}, nil
 		},
 	)
 }
@@ -356,5 +362,5 @@ func (k Keeper) GetTotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 		totalPoolLiquidity := cosmwasmPool.GetTotalPoolLiquidity(ctx)
 		totalLiquidity = totalLiquidity.Add(totalPoolLiquidity...)
 	}
-	return sdk.Coins{}, nil
+	return totalLiquidity, nil
 }
