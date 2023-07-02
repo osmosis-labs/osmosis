@@ -142,6 +142,15 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		k.listeners.AfterInitialPoolPositionCreated(ctx, owner, poolId)
 	}
 
+	tokensAdded := sdk.Coins{}
+	if actualAmount0.IsPositive() {
+		tokensAdded = tokensAdded.Add(sdk.NewCoin(pool.GetToken0(), actualAmount0))
+	}
+	if actualAmount1.IsPositive() {
+		tokensAdded = tokensAdded.Add(sdk.NewCoin(pool.GetToken1(), actualAmount1))
+	}
+	k.RecordTotalLiquidityIncrease(ctx, tokensAdded)
+
 	return positionId, actualAmount0, actualAmount1, liquidityDelta, lowerTick, upperTick, nil
 }
 
@@ -256,6 +265,16 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 			k.listeners.AfterLastPoolPositionRemoved(ctx, owner, pool.GetId())
 		}
 	}
+
+	tokensRemoved := sdk.Coins{}
+	if actualAmount0.IsPositive() {
+		tokensRemoved = tokensRemoved.Add(sdk.NewCoin(pool.GetToken0(), actualAmount0))
+	}
+	if actualAmount1.IsPositive() {
+		tokensRemoved = tokensRemoved.Add(sdk.NewCoin(pool.GetToken1(), actualAmount1))
+	}
+	k.RecordTotalLiquidityDecrease(ctx, tokensRemoved)
+
 	event := &liquidityChangeEvent{
 		eventType:      types.TypeEvtWithdrawPosition,
 		positionId:     positionId,

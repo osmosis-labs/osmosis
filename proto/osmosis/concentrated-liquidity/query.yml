@@ -59,3 +59,8 @@ queries:
       query_func: "k.CFMMPoolIdLinkFromConcentratedPoolId"
     cli:
       cmd: "CFMMPoolIdLinkFromConcentratedPoolId"
+  GetTotalLiquidity:
+    proto_wrapper:
+      query_func: "k.GetTotalLiquidity"
+    cli:
+      cmd: "GetTotalLiquidity"

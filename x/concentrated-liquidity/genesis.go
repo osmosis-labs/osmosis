@@ -19,6 +19,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 	k.SetNextPositionId(ctx, genState.NextPositionId)
 	k.SetNextIncentiveRecordId(ctx, genState.NextIncentiveRecordId)
 	// Initialize pools
+	totalLiquidity := sdk.Coins{}
 	var unpacker codectypes.AnyUnpacker = k.cdc
 	seenPoolIds := map[uint64]struct{}{}
 	for _, poolData := range genState.PoolData {
@@ -38,6 +39,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 			k.SetTickInfo(ctx, poolId, tick.TickIndex, &tick.Info)
 		}
 		seenPoolIds[poolId] = struct{}{}
+
+		// add pools liquidity to total liquidity
+		poolLiquidity, err := k.GetTotalPoolLiquidity(ctx, poolId)
+		if err != nil {
+			panic(err)
+		}
+		totalLiquidity = totalLiquidity.Add(poolLiquidity...)
 
 		// set up spread reward accumulators
 		store := ctx.KVStore(k.storeKey)
@@ -91,6 +99,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 			k.initOrUpdateAccumPosition(ctx, uptimeAccumulators[uptimeIndex], uptimeRecord.AccumValuePerShare, positionName, uptimeRecord.NumShares, uptimeRecord.UnclaimedRewardsTotal, uptimeRecord.Options)
 		}
 	}
+
+	// set total liquidity
+	k.setTotalLiquidity(ctx, totalLiquidity)
 }
 
 // ExportGenesis returns the concentrated-liquidity module's exported genesis state.
