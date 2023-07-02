@@ -20,6 +20,16 @@ type Querier struct {
 
 var _ queryproto.QueryServer = Querier{}
 
+func (q Querier) UserUnbondingPositions(grpcCtx context.Context,
+	req *queryproto.UserUnbondingPositionsRequest,
+) (*queryproto.UserUnbondingPositionsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.UserUnbondingPositions(ctx, *req)
+}
+
 func (q Querier) UserPositions(grpcCtx context.Context,
 	req *queryproto.UserPositionsRequest,
 ) (*queryproto.UserPositionsResponse, error) {
