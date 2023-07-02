@@ -6,11 +6,11 @@ require (
 	github.com/cosmos/cosmos-sdk v0.47.3
 	github.com/ignite/cli v0.23.0
 	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230621002052-afb82fbaa312
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230622012610-25ef7aa8f2a5
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230623115558-38aaab07d343
 	github.com/tendermint/tendermint v0.37.0-rc1
 )
 
-require github.com/osmosis-labs/osmosis/v16 v16.0.0-20230623172200-24f580da1227
+require github.com/osmosis-labs/osmosis/v16 v16.0.0-20230629140447-0a867a8e535e
 
 require (
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
@@ -157,8 +157,8 @@ replace (
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.31.0-osmo-v16
 	// dragonberry
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v16.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/93d9d4851b92bcbc1ede8c031ca1559b35ecc708
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230603004404-93d9d4851b92
+	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v16.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/fe548cf52c6909047d27be552ff41dc634a69526
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230702211735-fe548cf52c69
 
 	// N.B. v0.19.5 contains a breaking change to the IAVL API
 	github.com/cosmos/iavl v0.19.5 => github.com/cosmos/iavl v0.19.4
