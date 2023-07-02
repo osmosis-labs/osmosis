@@ -44,7 +44,6 @@ message MsgCreateDenom {
 - Add denom to the `CreatorPrefixStore`, where a state of denoms created per
   creator is kept.
 
-![Schema](/x/tokenfactory/images/CreateDenom.png)
 ### Mint
 
 Minting of a specific denom is only allowed for the current admin.
@@ -67,7 +66,6 @@ message MsgMint {
   - Check that the sender of the message is the admin of the denom
 - Mint designated amount of tokens for the denom via `bank` module
 
-![Schema](/x/tokenfactory/images/Mint.png)
 ### Burn
 
 Burning of a specific denom is only allowed for the current admin.
@@ -90,7 +88,6 @@ message MsgBurn {
   - Check that the sender of the message is the admin of the denom
 - Burn designated amount of tokens for the denom via `bank` module
 
-![Schema](/x/tokenfactory/images/Burn.png)
 ### ChangeAdmin
 
 Change the admin of a denom. Note, this is only allowed to be called by the current admin of the denom.
@@ -103,7 +100,6 @@ message MsgChangeAdmin {
 }
 ```
 
-![Schema](/x/tokenfactory/images/ChangeAdmin.png)
 ### SetDenomMetadata
 
 Setting of metadata for a specific denom is only allowed for the admin of the denom.
@@ -121,7 +117,6 @@ message MsgChangeAdmin {
 - Check that sender of the message is the admin of denom
 - Modify `AuthorityMetadata` state entry to change the admin of the denom
 
-![Schema](/x/tokenfactory/images/SetDenomMetadata.png)
 ## Expectations from the chain
 
 The chain's bech32 prefix for addresses can be at most 16 characters long.
