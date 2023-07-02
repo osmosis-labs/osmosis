@@ -109,6 +109,15 @@ service Query {
                                    "{concentrated_pool_id}";
   }
 
+  // UserUnbondingPositions returns the position and lock info of unbonding
+  // positions of the given address.
+  rpc UserUnbondingPositions(UserUnbondingPositionsRequest)
+      returns (UserUnbondingPositionsResponse) {
+    option (google.api.http).get = "/osmosis/concentratedliquidity/v1beta1/"
+                                   "user_unbonding_positions/"
+                                   "{address}";
+  }
+
   // GetTotalLiquidity returns total liquidity across all cl pools.
   rpc GetTotalLiquidity(GetTotalLiquidityRequest)
       returns (GetTotalLiquidityResponse) {
@@ -286,6 +295,16 @@ message CFMMPoolIdLinkFromConcentratedPoolIdRequest {
 
 message CFMMPoolIdLinkFromConcentratedPoolIdResponse {
   uint64 cfmm_pool_id = 1 [ (gogoproto.moretags) = "yaml:\"cfmm_pool_id\"" ];
+}
+
+//=============================== UserUnbondingPositions
+message UserUnbondingPositionsRequest {
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+}
+
+message UserUnbondingPositionsResponse {
+  repeated PositionWithPeriodLock positions_with_period_lock = 1
+      [ (gogoproto.nullable) = false ];
 }
 
 //=============================== GetTotalLiquidity
