@@ -64,3 +64,8 @@ queries:
       query_func: "k.UserUnbondingPositions"
     cli:
       cmd: "UserUnbondingPositions"
+  GetTotalLiquidity:
+    proto_wrapper:
+      query_func: "k.GetTotalLiquidity"
+    cli:
+      cmd: "GetTotalLiquidity"
