@@ -73,8 +73,6 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 		expectedAmountInConsumed        sdk.Dec
 		expectedAmountOut               sdk.Dec
 		expectedSpreadRewardChargeTotal sdk.Dec
-
-		expectError error
 	}{
 		"1: no spread factor - reach target": {
 			sqrtPriceCurrent: osmomath.BigDecFromSDKDec(sqrtPriceCurrent),
@@ -244,8 +242,6 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 		expectedAmountZeroOutConsumed   sdk.Dec
 		expectedAmountOneIn             sdk.Dec
 		expectedSpreadRewardChargeTotal sdk.Dec
-
-		expectError error
 	}{
 		"1: no spread reward - reach target": {
 			sqrtPriceCurrent: osmomath.BigDecFromSDKDec(defaultSqrtPriceLower),

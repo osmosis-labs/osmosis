@@ -73,8 +73,6 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 		amountZeroInConsumed            sdk.Dec
 		expectedAmountOneOut            sdk.Dec
 		expectedSpreadRewardChargeTotal sdk.Dec
-
-		expectError error
 	}{
 		"1: no spread reward - reach target": {
 			sqrtPriceCurrent: sqrtPriceCurrent,
@@ -246,8 +244,6 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_ZeroForOne() {
 		amountOneOutConsumed            sdk.Dec
 		expectedAmountInZero            sdk.Dec
 		expectedSpreadRewardChargeTotal sdk.Dec
-
-		expectError error
 	}{
 		"1: no spread reward - reach target": {
 			sqrtPriceCurrent: sqrtPriceCurrent,
