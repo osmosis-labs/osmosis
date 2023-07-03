@@ -37,10 +37,8 @@ import (
 
 // TODO: Find more scalable way to do this
 func (s *IntegrationTestSuite) TestAllE2E() {
-	// If we skip the upgrade, we need to give our nodes time for their RPCs to come online, otherwise we get errors.
-	if s.skipUpgrade {
-		time.Sleep(3 * time.Second)
-	}
+	// There appears to be an E2E quirk that requires a sleep here
+	time.Sleep(3 * time.Second)
 
 	// Zero Dependent Tests
 	s.T().Run("CreateConcentratedLiquidityPoolVoting_And_TWAP", func(t *testing.T) {
