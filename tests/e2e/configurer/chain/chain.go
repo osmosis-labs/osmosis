@@ -1,24 +1,15 @@
 package chain
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
-	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
-
-	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
-
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-
-	"github.com/osmosis-labs/osmosis/v16/tests/e2e/util"
 
 	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/config"
@@ -39,6 +30,7 @@ type Config struct {
 	LatestProposalNumber int
 	LatestLockNumber     int
 	NodeConfigs          []*NodeConfig
+	NodeTempConfigs      []*NodeConfig
 
 	LatestCodeId int
 
@@ -85,11 +77,36 @@ func (c *Config) CreateNode(initNode *initialization.Node) *NodeConfig {
 	return nodeConfig
 }
 
+// CreateNodeTemp returns new initialized NodeConfig and appends it to a separate list of temporary nodes.
+// This is used for nodes that are intended to only exist for a single test. Without this separation,
+// parallel tests will try and use this node and fail.
+func (c *Config) CreateNodeTemp(initNode *initialization.Node) *NodeConfig {
+	nodeConfig := &NodeConfig{
+		Node:             *initNode,
+		chainId:          c.Id,
+		containerManager: c.containerManager,
+		t:                c.t,
+	}
+	c.NodeTempConfigs = append(c.NodeTempConfigs, nodeConfig)
+	return nodeConfig
+}
+
 // RemoveNode removes node and stops it from running.
 func (c *Config) RemoveNode(nodeName string) error {
 	for i, node := range c.NodeConfigs {
 		if node.Name == nodeName {
 			c.NodeConfigs = append(c.NodeConfigs[:i], c.NodeConfigs[i+1:]...)
+			return node.Stop()
+		}
+	}
+	return fmt.Errorf("node %s not found", nodeName)
+}
+
+// RemoveTempNode removes a temporary node and stops it from running.
+func (c *Config) RemoveTempNode(nodeName string) error {
+	for i, node := range c.NodeTempConfigs {
+		if node.Name == nodeName {
+			c.NodeTempConfigs = append(c.NodeTempConfigs[:i], c.NodeTempConfigs[i+1:]...)
 			return node.Stop()
 		}
 	}
@@ -152,9 +169,20 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	require.NoError(c.t, err)
 
 	// removes the fee token from balances for calculating the difference in other tokens
-	// before and after the IBC send.
+	// before and after the IBC send. Since we run tests in parallel now, some tests may
+	// send uosmo between accounts while this test is running. Since we don't care about
+	// non ibc denoms, its safe to filter uosmo out.
+	// TODO: we can probably improve this by specifying the denom we expect to be received
+	// and just look out for that. This wasn't required prior to parallel tests, but
+	// would be useful now.
 	removeFeeTokenFromBalance := func(balance sdk.Coins) sdk.Coins {
-		feeRewardTokenBalance := balance.FilterDenoms([]string{initialization.E2EFeeToken})
+		filteredCoinDenoms := []string{}
+		for _, coin := range balance {
+			if !strings.HasPrefix(coin.Denom, "ibc/") {
+				filteredCoinDenoms = append(filteredCoinDenoms, coin.Denom)
+			}
+		}
+		feeRewardTokenBalance := balance.FilterDenoms(filteredCoinDenoms)
 		return balance.Sub(feeRewardTokenBalance)
 	}
 
@@ -170,7 +198,6 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 		func() bool {
 			balancesDstPostWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
 			require.NoError(c.t, err)
-
 			balancesDstPost := removeFeeTokenFromBalance(balancesDstPostWithTxFeeBalance)
 
 			ibcCoin := balancesDstPost.Sub(balancesDstPre)
@@ -190,35 +217,6 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	)
 
 	c.t.Log("successfully sent IBC tokens")
-}
-
-func (c *Config) EnableSuperfluidAsset(denom string) {
-	chain, err := c.GetDefaultNode()
-	require.NoError(c.t, err)
-	chain.SubmitSuperfluidProposal(denom, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
-	c.LatestProposalNumber += 1
-	chain.DepositProposal(c.LatestProposalNumber, false)
-	for _, node := range c.NodeConfigs {
-		node.VoteYesProposal(initialization.ValidatorWalletName, c.LatestProposalNumber)
-	}
-}
-
-func (c *Config) LockAndAddToExistingLock(amount sdk.Int, denom, lockupWalletAddr, lockupWalletSuperfluidAddr string) {
-	chain, err := c.GetDefaultNode()
-	require.NoError(c.t, err)
-
-	// lock tokens
-	chain.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletAddr)
-	c.LatestLockNumber += 1
-	// add to existing lock
-	chain.AddToExistingLock(amount, denom, "240s", lockupWalletAddr)
-
-	// superfluid lock tokens
-	chain.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletSuperfluidAddr)
-	c.LatestLockNumber += 1
-	chain.SuperfluidDelegate(c.LatestLockNumber, c.NodeConfigs[1].OperatorAddress, lockupWalletSuperfluidAddr)
-	// add to existing lock
-	chain.AddToExistingLock(amount, denom, "240s", lockupWalletSuperfluidAddr)
 }
 
 // GetDefaultNode returns the default node of the chain.
@@ -250,115 +248,36 @@ func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 	return c.NodeConfigs[nodeIndex], nil
 }
 
-func (c *Config) SubmitParamChangeProposal(subspace, key string, value []byte) error {
+func (c *Config) SubmitCreateConcentratedPoolProposal() (uint64, error) {
 	node, err := c.GetDefaultNode()
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	proposal := paramsutils.ParamChangeProposalJSON{
-		Title:       "Param Change",
-		Description: fmt.Sprintf("Changing the %s param", key),
-		Changes: paramsutils.ParamChangesJSON{
-			paramsutils.ParamChangeJSON{
-				Subspace: subspace,
-				Key:      key,
-				Value:    value,
-			},
-		},
-		Deposit: "625000000uosmo",
-	}
-	proposalJson, err := json.Marshal(proposal)
-	if err != nil {
-		return err
-	}
-
-	node.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
+	propNumber := node.SubmitCreateConcentratedPoolProposal(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 	c.LatestProposalNumber += 1
 
+	node.DepositProposal(propNumber, false)
+
+	var wg sync.WaitGroup
+
 	for _, n := range c.NodeConfigs {
-		n.VoteYesProposal(initialization.ValidatorWalletName, c.LatestProposalNumber)
+		wg.Add(1)
+		go func(nodeConfig *NodeConfig) {
+			defer wg.Done()
+			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
+		}(n)
 	}
 
+	wg.Wait()
+
 	require.Eventually(c.t, func() bool {
-		status, err := node.QueryPropStatus(c.LatestProposalNumber)
+		status, err := node.QueryPropStatus(propNumber)
 		if err != nil {
 			return false
 		}
 		return status == proposalStatusPassed
 	}, time.Second*30, time.Millisecond*500)
-	return nil
-}
-
-func (c *Config) SubmitCreateConcentratedPoolProposal() error {
-	node, err := c.GetDefaultNode()
-	if err != nil {
-		return err
-	}
-
-	node.SubmitCreateConcentratedPoolProposal(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
-	c.LatestProposalNumber += 1
-	node.DepositProposal(c.LatestProposalNumber, false)
-
-	for _, n := range c.NodeConfigs {
-		n.VoteYesProposal(initialization.ValidatorWalletName, c.LatestProposalNumber)
-	}
-
-	require.Eventually(c.t, func() bool {
-		status, err := node.QueryPropStatus(c.LatestProposalNumber)
-		if err != nil {
-			return false
-		}
-		return status == proposalStatusPassed
-	}, time.Second*30, time.Millisecond*500)
-	return nil
-}
-
-func (c *Config) SetupRateLimiting(paths, gov_addr string) (string, error) {
-	node, err := c.GetDefaultNode()
-	if err != nil {
-		return "", err
-	}
-
-	// copy the contract from x/rate-limit/testdata/
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	// go up two levels
-	projectDir := filepath.Dir(filepath.Dir(wd))
-	fmt.Println(wd, projectDir)
-	_, err = util.CopyFile(projectDir+"/x/ibc-rate-limit/bytecode/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
-	if err != nil {
-		return "", err
-	}
-
-	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
-	c.LatestCodeId = int(node.QueryLatestWasmCodeID())
-	node.InstantiateWasmContract(
-		strconv.Itoa(c.LatestCodeId),
-		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [%s] }`, gov_addr, node.PublicAddress, paths),
-		initialization.ValidatorWalletName)
-
-	contracts, err := node.QueryContractsFromId(c.LatestCodeId)
-	if err != nil {
-		return "", err
-	}
-
-	contract := contracts[len(contracts)-1]
-
-	err = c.SubmitParamChangeProposal(
-		ibcratelimittypes.ModuleName,
-		string(ibcratelimittypes.KeyContractAddress),
-		[]byte(fmt.Sprintf(`"%s"`, contract)),
-	)
-	if err != nil {
-		return "", err
-	}
-	require.Eventually(c.t, func() bool {
-		val := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
-		return strings.Contains(val, contract)
-	}, time.Second*30, time.Millisecond*500)
-	fmt.Println("contract address set to", contract)
-	return contract, nil
+	poolId := node.QueryNumPools()
+	return poolId, nil
 }

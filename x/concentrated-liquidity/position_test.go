@@ -2451,7 +2451,7 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 			tickRanges: [][]int64{
 				{0, 100},
 			},
-			rangeTestParams: DefaultRangeTestParams,
+			rangeTestParams: withTickSpacing(DefaultRangeTestParams, DefaultTickSpacing),
 		},
 		"two adjacent ranges": {
 			tickRanges: [][]int64{
@@ -2460,16 +2460,141 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 			},
 			rangeTestParams: DefaultRangeTestParams,
 		},
+		"two adjacent ranges with current tick smaller than both": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{10000, 20000},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, -20000),
+		},
+		"two adjacent ranges with current tick larger than both": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{10000, 20000},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, 30000),
+		},
+		"two adjacent ranges with current tick exactly on lower bound": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{10000, 20000},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, -10000),
+		},
+		"two adjacent ranges with current tick exactly between both": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{10000, 20000},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, 10000),
+		},
+		"two adjacent ranges with current tick exactly on upper bound": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{10000, 20000},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, 20000),
+		},
+		"two non-adjacent ranges": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{20000, 30000},
+			},
+			rangeTestParams: DefaultRangeTestParams,
+		},
+		"two ranges with one tick gap in between, which is equal to current tick": {
+			tickRanges: [][]int64{
+				{799221, 799997},
+				{799997 + 2, 812343},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, 799997+1),
+		},
 		"one range on large tick": {
 			tickRanges: [][]int64{
 				{207000000, 207000000 + 100},
 			},
+			rangeTestParams: withTickSpacing(DefaultRangeTestParams, DefaultTickSpacing),
+		},
+		"one position adjacent to left of current tick (no swaps)": {
+			tickRanges: [][]int64{
+				{-1, 0},
+			},
+			rangeTestParams: RangeTestParamsNoFuzzNoSwap,
+		},
+		"one position on left of current tick with gap (no swaps)": {
+			tickRanges: [][]int64{
+				{-2, -1},
+			},
+			rangeTestParams: RangeTestParamsNoFuzzNoSwap,
+		},
+		"one position adjacent to right of current tick (no swaps)": {
+			tickRanges: [][]int64{
+				{0, 1},
+			},
+			rangeTestParams: RangeTestParamsNoFuzzNoSwap,
+		},
+		"one position on right of current tick with gap (no swaps)": {
+			tickRanges: [][]int64{
+				{1, 2},
+			},
+			rangeTestParams: RangeTestParamsNoFuzzNoSwap,
 		},
 		"one range on small tick": {
 			tickRanges: [][]int64{
 				{-107000000, -107000000 + 100},
 			},
+			rangeTestParams: withDoubleFundedLP(DefaultRangeTestParams),
 		},
+		"one range on min tick": {
+			tickRanges: [][]int64{
+				{types.MinInitializedTick, types.MinInitializedTick + 100},
+			},
+			rangeTestParams: withDoubleFundedLP(DefaultRangeTestParams),
+		},
+		"initial current tick equal to min initialized tick": {
+			tickRanges: [][]int64{
+				{0, 1},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, types.MinInitializedTick),
+		},
+		"three overlapping ranges with no swaps, current tick in one": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{0, 20000},
+				{-7300, 12345},
+			},
+			rangeTestParams: withNoSwap(withCurrentTick(DefaultRangeTestParams, -9000)),
+		},
+		"three overlapping ranges with no swaps, current tick in two of three": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{0, 20000},
+				{-7300, 12345},
+			},
+			rangeTestParams: withNoSwap(withCurrentTick(DefaultRangeTestParams, -7231)),
+		},
+		"three overlapping ranges with no swaps, current tick in all three": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{0, 20000},
+				{-7300, 12345},
+			},
+			rangeTestParams: withNoSwap(withCurrentTick(DefaultRangeTestParams, 109)),
+		},
+		/* TODO: uncomment when infinite loop bug is fixed
+		"one range on max tick": {
+			tickRanges: [][]int64{
+				{types.MaxTick - 100, types.MaxTick},
+			},
+			rangeTestParams: withTickSpacing(DefaultRangeTestParams, DefaultTickSpacing),
+		},
+		"initial current tick equal to max tick": {
+			tickRanges: [][]int64{
+				{0, 1},
+			},
+			rangeTestParams: withCurrentTick(withTickSpacing(DefaultRangeTestParams, uint64(1)), types.MaxTick),
+		},
+		*/
 	}
 
 	for name, tc := range tests {
