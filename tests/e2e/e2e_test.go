@@ -37,6 +37,9 @@ import (
 
 // TODO: Find more scalable way to do this
 func (s *IntegrationTestSuite) TestAllE2E() {
+	// There appears to be an E2E quirk that requires a sleep here
+	time.Sleep(3 * time.Second)
+
 	// Zero Dependent Tests
 	s.T().Run("CreateConcentratedLiquidityPoolVoting_And_TWAP", func(t *testing.T) {
 		t.Parallel()
@@ -1193,11 +1196,11 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 }
 
 func (s *IntegrationTestSuite) LargeWasmUpload() {
-	chainB := s.configurer.GetChainConfig(1)
-	chainBNode, err := chainB.GetDefaultNode()
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
-	validatorAddr := chainBNode.GetWallet(initialization.ValidatorWalletName)
-	chainBNode.StoreWasmCode("bytecode/large.wasm", validatorAddr)
+	validatorAddr := chainANode.GetWallet(initialization.ValidatorWalletName)
+	chainANode.StoreWasmCode("bytecode/large.wasm", validatorAddr)
 }
 
 func (s *IntegrationTestSuite) IBCWasmHooks() {
