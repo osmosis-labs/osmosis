@@ -1,10 +1,12 @@
-package keeper
+package concentrated_liquidity
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
 func (k Keeper) GetTotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
@@ -54,6 +56,7 @@ func (k Keeper) IterateDenomLiquidity(ctx sdk.Context, cb func(sdk.Coin) bool) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var amount sdk.Int
+		fmt.Println(iterator.Value())
 		if err := amount.Unmarshal(iterator.Value()); err != nil {
 			panic(err)
 		}

@@ -154,7 +154,7 @@ message MsgUnPoolWhitelistedPoolResponse {
 // MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition
 message MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  uint64 lock_id = 2 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
+  int64 lock_id = 2 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
   cosmos.base.v1beta1.Coin shares_to_migrate = 3 [
     (gogoproto.moretags) = "yaml:\"shares_to_migrate\"",
     (gogoproto.nullable) = false

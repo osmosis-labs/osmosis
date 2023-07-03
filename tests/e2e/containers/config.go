@@ -27,10 +27,10 @@ const (
 	previousVersionOsmoTag        = "v15.x-9fa047c2-1687827963"
 	// Pre-upgrade repo/tag for osmosis initialization (this should be one version below upgradeVersion)
 	previousVersionInitRepository = "osmolabs/osmosis-e2e-init-chain"
-	previousVersionInitTag        = "v15.x-9fa047c2-1687827963"
+	previousVersionInitTag        = "v15-fast-vote"
 	// Hermes repo/version for relayer
-	relayerRepository = "osmolabs/hermes"
-	relayerTag        = "1.3.0"
+	relayerRepository = "informalsystems/hermes"
+	relayerTag        = "1.5.1"
 )
 
 // Returns ImageConfig needed for running e2e test.

@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
+	v16 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v16"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/containers"
@@ -107,6 +109,8 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 }
 
 func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
+	// Create a WaitGroup to wait for all goroutines to complete
+	var wg sync.WaitGroup
 	chainA := uc.chainConfigs[0]
 	chainANode, err := chainA.GetDefaultNode()
 	if err != nil {
@@ -118,56 +122,180 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 		return err
 	}
 
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
-	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
-	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
+	wg.Add(2)
 
-	// Create DAI/OSMO pool from v16 migration testing with superfluid enabled.
-	config.DaiOsmoPoolIdv16 = chainANode.CreateBalancerPool("daiosmov16.json", initialization.ValidatorWalletName)
-	daiOsmoShareDenom := fmt.Sprintf("gamm/pool/%d", config.DaiOsmoPoolIdv16)
-	chainA.EnableSuperfluidAsset(daiOsmoShareDenom)
+	go func() {
+		defer wg.Done()
+		chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+		chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
+	}()
 
-	// Do the same for chain b.
-	chainBNode.CreateBalancerPool("daiosmov16.json", initialization.ValidatorWalletName)
-	chainA.EnableSuperfluidAsset(daiOsmoShareDenom)
+	go func() {
+		defer wg.Done()
+		chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+		chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
+	}()
 
-	config.PreUpgradePoolId = chainANode.CreateBalancerPool("pool1A.json", initialization.ValidatorWalletName)
-	poolShareDenom := fmt.Sprintf("gamm/pool/%d", config.PreUpgradePoolId)
-	chainBNode.CreateBalancerPool("pool1B.json", initialization.ValidatorWalletName)
-	config.PreUpgradeStableSwapPoolId = chainANode.CreateStableswapPool("stablePool.json", initialization.ValidatorWalletName)
-	chainBNode.CreateStableswapPool("stablePool.json", initialization.ValidatorWalletName)
+	// Wait for all goroutines to complete
+	wg.Wait()
 
-	// enable superfluid assets on chainA
-	chainA.EnableSuperfluidAsset(poolShareDenom)
+	wg.Add(2)
 
-	// Setup wallets and send tokens to wallets (only chainA)
-	config.LockupWallet = chainANode.CreateWalletAndFund(config.LockupWallet, []string{
-		"10000000000000000000" + poolShareDenom,
-	})
-	config.LockupWalletSuperfluid = chainANode.CreateWalletAndFund(config.LockupWalletSuperfluid, []string{
-		"10000000000000000000" + poolShareDenom,
-	})
-	config.StableswapWallet = chainANode.CreateWalletAndFund(config.LockupWalletSuperfluid, []string{
-		"100000stake",
-	})
+	var daiOsmoPoolIdv16 uint64
 
-	// test swap exact amount in for stable swap pool (only chainA)A
-	chainANode.SwapExactAmountIn("2000stake", "1", fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId), "uosmo", config.StableswapWallet)
+	go func() {
+		defer wg.Done()
+		daiOsmoPoolIdv16 = chainANode.CreateBalancerPool("daiosmov16.json", initialization.ValidatorWalletName)
+		daiOsmoShareDenom := fmt.Sprintf("gamm/pool/%d", daiOsmoPoolIdv16)
+		chainANode.EnableSuperfluidAsset(chainA, daiOsmoShareDenom)
+	}()
+
+	go func() {
+		defer wg.Done()
+		chainBNode.CreateBalancerPool("daiosmov16.json", initialization.ValidatorWalletName)
+	}()
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+
+	config.DaiOsmoPoolIdv16 = daiOsmoPoolIdv16
+
+	var (
+		poolShareDenom             string
+		preUpgradePoolId           uint64
+		preUpgradeStableSwapPoolId uint64
+	)
+
+	// Increment the WaitGroup counter for each goroutine
+	wg.Add(4)
+
+	go func() {
+		defer wg.Done()
+		preUpgradePoolId = chainANode.CreateBalancerPool("pool1A.json", initialization.ValidatorWalletName)
+		poolShareDenom = fmt.Sprintf("gamm/pool/%d", preUpgradePoolId)
+		chainANode.EnableSuperfluidAsset(chainA, poolShareDenom)
+	}()
+
+	go func() {
+		defer wg.Done()
+		chainBNode.CreateBalancerPool("pool1B.json", initialization.ValidatorWalletName)
+	}()
+
+	go func() {
+		defer wg.Done()
+		preUpgradeStableSwapPoolId = chainANode.CreateStableswapPool("stablePool.json", initialization.ValidatorWalletName)
+	}()
+
+	go func() {
+		defer wg.Done()
+		chainBNode.CreateStableswapPool("stablePool.json", initialization.ValidatorWalletName)
+	}()
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+
+	config.PreUpgradePoolId = preUpgradePoolId
+	config.PreUpgradeStableSwapPoolId = preUpgradeStableSwapPoolId
+
+	fmt.Println("poolShareDenom: ", poolShareDenom)
+
+	var (
+		lockupWallet           string
+		lockupWalletSuperfluid string
+		stableswapWallet       string
+	)
+
+	wg.Add(3)
+
+	go func() {
+		defer wg.Done()
+		// Setup wallets and send tokens to wallets (only chainA)
+		lockupWallet = chainANode.CreateWalletAndFund(config.LockupWallet, []string{
+			"10000000000000000000" + poolShareDenom,
+		})
+	}()
+
+	go func() {
+		defer wg.Done()
+		lockupWalletSuperfluid = chainANode.CreateWalletAndFund(config.LockupWalletSuperfluid, []string{
+			"10000000000000000000" + poolShareDenom,
+		})
+	}()
+
+	go func() {
+		defer wg.Done()
+		stableswapWallet = chainANode.CreateWalletAndFund(config.StableswapWallet, []string{
+			"100000stake",
+		})
+	}()
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+
+	config.LockupWallet = lockupWallet
+	config.LockupWalletSuperfluid = lockupWalletSuperfluid
+	config.StableswapWallet = stableswapWallet
+
+	wg.Add(6)
+
+	var errCh = make(chan error, 2)
+
+	oneDai := sdk.NewCoin(v16.DAIIBCDenom, sdk.NewInt(1000000000000000000))
+
+	go func() {
+		defer wg.Done()
+		// test swap exact amount in for stable swap pool (only chainA)A
+		chainANode.SwapExactAmountIn("2000stake", "1", fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId), "uosmo", config.StableswapWallet)
+	}()
 
 	// Upload the rate limiting contract to both chains (as they both will be updated)
-	uc.t.Logf("Uploading rate limiting contract to both chains")
-	_, err = chainA.SetupRateLimiting("", chainANode.QueryGovModuleAccount())
-	if err != nil {
-		return err
-	}
-	_, _ = chainB.SetupRateLimiting("", chainBNode.QueryGovModuleAccount())
-	if err != nil {
-		return err
-	}
+	go func() {
+		defer wg.Done()
+		uc.t.Logf("Uploading rate limiting contract to chainA")
+		_, err := chainANode.SetupRateLimiting("", chainANode.QueryGovModuleAccount(), chainA)
+		errCh <- err
+	}()
 
-	// test lock and add to existing lock for both regular and superfluid lockups (only chainA)
-	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), poolShareDenom, config.LockupWallet, config.LockupWalletSuperfluid)
+	go func() {
+		defer wg.Done()
+		uc.t.Logf("Uploading rate limiting contract to chainB")
+		_, err := chainBNode.SetupRateLimiting("", chainBNode.QueryGovModuleAccount(), chainB)
+		errCh <- err
+	}()
+
+	go func() {
+		defer wg.Done()
+		uc.t.Logf("Lock and add to existing lock for both regular and superfluid lockups on chainA")
+		chainANode.LockAndAddToExistingLock(chainA, sdk.NewInt(1000000000000000000), poolShareDenom, config.LockupWallet, config.LockupWalletSuperfluid)
+	}()
+
+	go func() {
+		defer wg.Done()
+		uc.t.Logf("Funding chainA's community pool with 1 DAI to be used for the upgrade")
+		communityPoolFunder := chainANode.CreateWalletAndFund("communityPoolFunder", []string{
+			oneDai.String(),
+		})
+		chainANode.FundCommunityPool(communityPoolFunder, oneDai.String())
+	}()
+
+	go func() {
+		defer wg.Done()
+		uc.t.Logf("Funding chainB's community pool with 1 DAI to be used for the upgrade")
+		communityPoolFunder := chainBNode.CreateWalletAndFund("communityPoolFunder", []string{
+			oneDai.String(),
+		})
+		chainBNode.FundCommunityPool(communityPoolFunder, oneDai.String())
+	}()
+
+	wg.Wait()
+
+	close(errCh)
+
+	for err := range errCh {
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -208,19 +336,31 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 	// submit, deposit, and vote for upgrade proposal
 	// prop height = current height + voting period + time it takes to submit proposal + small buffer
 	for _, chainConfig := range uc.chainConfigs {
-		for validatorIdx, node := range chainConfig.NodeConfigs {
-			if validatorIdx == 0 {
-				currentHeight, err := node.QueryCurrentHeight()
-				if err != nil {
-					return err
-				}
-				chainConfig.UpgradePropHeight = currentHeight + int64(chainConfig.VotingPeriod) + int64(config.PropSubmitBlocks) + int64(config.PropBufferBlocks)
-				node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
-				chainConfig.LatestProposalNumber += 1
-				node.DepositProposal(chainConfig.LatestProposalNumber, false)
-			}
-			node.VoteYesProposal(initialization.ValidatorWalletName, chainConfig.LatestProposalNumber)
+		node, err := chainConfig.GetDefaultNode()
+		if err != nil {
+			return err
 		}
+		currentHeight, err := node.QueryCurrentHeight()
+		if err != nil {
+			return err
+		}
+		chainConfig.UpgradePropHeight = currentHeight + int64(chainConfig.VotingPeriod) + int64(config.PropSubmitBlocks) + int64(config.PropBufferBlocks)
+		node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+		chainConfig.LatestProposalNumber += 1
+		node.DepositProposal(chainConfig.LatestProposalNumber, false)
+		propNumber := chainConfig.LatestProposalNumber
+
+		var wg sync.WaitGroup
+
+		for _, node := range chainConfig.NodeConfigs {
+			wg.Add(1)
+			go func(nodeConfig *chain.NodeConfig) {
+				defer wg.Done()
+				nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
+			}(node)
+		}
+
+		wg.Wait()
 	}
 
 	// wait till all chains halt at upgrade height

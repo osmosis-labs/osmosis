@@ -1,6 +1,7 @@
 package v16
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -134,24 +135,38 @@ func CreateUpgradeHandler(
 
 		// Get community pool and DAI/OSMO pool address.
 		communityPoolAddress := keepers.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
-		daiOsmoPool, err := keepers.PoolManagerKeeper.GetPool(ctx, DaiOsmoPoolId)
+
+		// Determine the amount of OSMO that can be bought with 1 DAI.
+		oneDai := sdk.NewCoin(DAIIBCDenom, sdk.NewInt(1000000000000000000))
+		daiOsmoGammPool, err := keepers.PoolManagerKeeper.GetPool(ctx, DaiOsmoPoolId)
 		if err != nil {
 			return nil, err
 		}
-
-		// Swap in a maximum of 10 OSMO for one DAI via the community pool.
-		oneDai := sdk.NewCoin(DAIIBCDenom, sdk.NewInt(1000000000000000000))
-		tokenInAmt, err := keepers.GAMMKeeper.SwapExactAmountOut(ctx, communityPoolAddress, daiOsmoPool, DesiredDenom0, sdk.NewInt(10000000), oneDai, sdk.ZeroDec())
+		respectiveOsmo, err := keepers.GAMMKeeper.CalcOutAmtGivenIn(ctx, daiOsmoGammPool, oneDai, DesiredDenom0, sdk.ZeroDec())
 		if err != nil {
 			return nil, err
 		}
 
 		// Create a full range position via the community pool with the funds that were swapped.
-		fullRangeOsmoDaiCoins := sdk.NewCoins(sdk.NewCoin(DesiredDenom0, tokenInAmt), oneDai)
-		_, _, _, _, err = keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeOsmoDaiCoins)
+		fullRangeOsmoDaiCoins := sdk.NewCoins(respectiveOsmo, oneDai)
+		_, actualOsmoAmtUsed, actualDaiAmtUsed, _, err := keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeOsmoDaiCoins)
 		if err != nil {
 			return nil, err
 		}
+
+		// Because we are doing a direct send from the community pool, we need to manually change the fee pool to reflect the change.
+
+		// Remove coins we used from the community pool to make the CL position
+		feePool := keepers.DistrKeeper.GetFeePool(ctx)
+		fulllRangeOsmoDaiCoinsUsed := sdk.NewCoins(sdk.NewCoin(DesiredDenom0, actualOsmoAmtUsed), sdk.NewCoin(DAIIBCDenom, actualDaiAmtUsed))
+		newPool, negative := feePool.CommunityPool.SafeSub(sdk.NewDecCoinsFromCoins(fulllRangeOsmoDaiCoinsUsed...))
+		if negative {
+			return nil, fmt.Errorf("community pool cannot be negative: %s", newPool)
+		}
+
+		// Update and set the new fee pool
+		feePool.CommunityPool = newPool
+		keepers.DistrKeeper.SetFeePool(ctx, feePool)
 
 		// Add the cl pool's full range denom as an authorized superfluid asset.
 		superfluidAsset := superfluidtypes.SuperfluidAsset{
@@ -179,6 +194,58 @@ func CreateUpgradeHandler(
 		if err := keepers.ProtoRevKeeper.SendDeveloperFeesToDeveloperAccount(ctx); err != nil {
 			return nil, err
 		}
+
+		ctx.Logger().Info(`
+        .:^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^:.
+    .~?5GBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBG5?~.
+.7PB#BG5J????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????J5GB#BP7.
+^PBBBJ^.                                                                                                                                .^JBBBP^
+:GBBP^                                                                                                                                      ^PBBG:
+JBBB^                                                           .^~~.     .~!77!^                                                            ^BBBJ
+5BBG.                                                          75YGB:    .JJ7!!JG5.                                                          .GBB5
+5BBG.                                                          :. PG:           J#7                                                          .GBB5
+5BBG.                                                             PG:          :PG^                                                          .GBB5
+5BBG.                                                             PG:         !G5:                                                           .GBB5
+5BBG.                                                             PG:      .!55~                                                             .GBB5
+5BBG.                                                             PB:    :?GG?^^^^^                                                          .GBB5
+5BBG.                                                             ?J.    ~JJ??JJJJ7                                                          .GBB5
+5BBG.                                                                                                                                        .GBB5
+5BBG.                                                                                                                                        .GBB5
+5BBG.                                                                                                                                        .GBB5
+5BBG.                                                                                                                                        .GBB5
+5BBG.                                                                                                                                        .GBB5
+5BBG.                                      .77777~                  ^77777^                                                                  .GBB5
+5BBG.                                      ~#BBBBB~                :P#BBB#?                                                                  .GBB5
+5BBG.                                      7BBBGBBP.               5BBGBBBY                                                                  .GBB5
+5BBG.                                      JBBB7GBBY              ?BBG!GBB5                                                                  .GBB5
+5BBG.                                      5BBB:JBBB7            !BBB7:GBBP.           .^!7?JJ?!^.  :!~!^                                    .GBB5
+5BBG.                                     .PBBG..GBBB~          ^GBB5 .GBBG:         ~JPB##BBBBBBGY:7#B#7                                    .GBB5
+5BBG.                                     :GBBP. !BBBP.        .PBBG: .GBBB^       ^5BBBGJ!^:::^75BGPBBB!                                    .GBB5
+5BBG.                                     ^BBBP   JBBBY        YBBB!   PBBB!      ^GBBBJ:         ~GBBBB!                                    .GBB5
+5BBG.                                     !BBB5   .PBBB7      7BBBJ    5BBB7     .PBBBY            ~BBBB!                                    .GBB5
+5BBG.                                     7BBBJ    ~BBBB^    ^BBB5     JBBBJ     !BBBB^            :GBBB!                                    .GBB5
+5BBG.                                     JBBB?     ?BBB5.  .PBBG:     ?BBB5     ?BBBG.            :GBBB!                                    .GBB5
+5BBG.                                     5BBB!      5BBB?  JBBB~      !BBBP.    !BBBB^            :GBBB!                                    .GBB5
+5BBG.                                    .PBBB^      :GBBG:^BBB7       ~BBBG.    .PBBB5.           ?BBBB!                                    .GBB5
+5BBG.                                    :GBBG:       !BBBY5BBY        ^BBBB^     ^PBBBP~        :JBBBBB!                                    .GBB5
+5BBG.                                    ^BBBG.        JBBBBBP.        :GBBB~      :JGBBBPJ7!!7?5BBJGBBB!                                    .GBB5
+5BBG.                                    !#B#P         .P#BBG^         .PBB#7        :7YPBBBBBBG57:.GBBB~                                    .GBB5
+5BBG.                                    !5Y5?          ^JJJ!           ?5Y5!           .:^^^^:.   ^BBBB:                                    .GBB5
+5BBG.                                                                                              YBBBY                                     .GBB5
+5BBG.                                                                               .:           ^YBBBP:                                     .GBB5
+5BBG.                                                                              .5BPY?7!!!!7JPB#BGJ.                                      .GBB5
+5BBG.                                                                              :J5GBBB#BBBBBGPJ!:                                        .GBB5
+5BBG.                                                                                                                                        .GBB5
+5BBG.                                                                                                                                        .GBB5
+5BBG.                                                                                                                                        .GBB5
+5BBG.                                                                                                                                        .GBB5
+JBBB^                                                                                                                                        ^BBBJ
+:GBBP^                                                                                                                                      ^PBBG:
+^PBBBJ^.                                                                                                                                .^JBBBP^
+.7PB#BG5J????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????J5GB#BP7.
+    .~?5GBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBG5?~.
+        .::^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^::.
+`)
 
 		return migrations, nil
 	}

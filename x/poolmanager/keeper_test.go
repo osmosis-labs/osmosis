@@ -66,8 +66,6 @@ func (s *KeeperTestSuite) createBalancerPoolsFromCoins(poolCoins []sdk.Coins) {
 }
 
 func (s *KeeperTestSuite) TestInitGenesis() {
-	s.Setup()
-
 	s.App.PoolManagerKeeper.InitGenesis(s.Ctx, &types.GenesisState{
 		Params: types.Params{
 			PoolCreationFee: testPoolCreationFee,
@@ -82,8 +80,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 }
 
 func (s *KeeperTestSuite) TestExportGenesis() {
-	s.Setup()
-
 	s.App.PoolManagerKeeper.InitGenesis(s.Ctx, &types.GenesisState{
 		Params: types.Params{
 			PoolCreationFee: testPoolCreationFee,
