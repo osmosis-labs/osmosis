@@ -1,6 +1,8 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -145,13 +147,21 @@ func (s *KeeperTestSuite) assertWithdrawAllInvariant() {
 
 	// Withdraw all assets for all positions and track output
 	totalWithdrawn := sdk.NewCoins()
-	for _, position := range allPositions {
+	for i, position := range allPositions {
+		isLastPosition := i == len(allPositions)-1
 		owner, err := sdk.AccAddressFromBech32(position.Address)
 		s.Require().NoError(err)
 
 		// Withdraw all assets from position
+		if isLastPosition {
+			poolId := position.PoolId
+			pool, _ := s.clk.GetPool(cachedCtx, poolId)
+			clpool := pool.(types.ConcentratedPoolExtension)
+			fmt.Println("addr:", s.App.BankKeeper.GetAllBalances(cachedCtx, clpool.GetAddress()))
+			fmt.Println("spread addr:", s.App.BankKeeper.GetAllBalances(cachedCtx, clpool.GetSpreadRewardsAddress()))
+		}
 		amt0Withdrawn, amt1Withdrawn, err := s.clk.WithdrawPosition(cachedCtx, owner, position.PositionId, position.Liquidity)
-		s.Require().NoError(err)
+		s.Require().NoError(err, "is last position: %v, position %d: %s", isLastPosition, i, position)
 
 		// Convert withdrawn assets to coins
 		positionPool, err := s.clk.GetPoolById(cachedCtx, position.PoolId)

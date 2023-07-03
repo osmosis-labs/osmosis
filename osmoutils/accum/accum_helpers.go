@@ -39,9 +39,14 @@ func GetTotalRewards(accum AccumulatorObject, position Record) sdk.DecCoins {
 	totalRewards := position.UnclaimedRewardsTotal
 
 	// TODO: add a check that accum.value is greater than position.InitAccumValue
-	fmt.Println("accum.valuePerShare", accum.valuePerShare)
-	fmt.Println("position.AccumValuePerShare", position.AccumValuePerShare)
-	accumulatorRewards := accum.valuePerShare.Sub(position.AccumValuePerShare).MulDec(position.NumShares)
+	// fmt.Println("accum.valuePerShare", accum.valuePerShare)
+	// fmt.Println("position.AccumValuePerShare", position.AccumValuePerShare)
+	globalVsPositionDiff, anyNegative := accum.valuePerShare.SafeSub(position.AccumValuePerShare)
+	if anyNegative {
+		panic(fmt.Sprintf("accum.valuePerShare must be greater than position.AccumValuePerShare.\n global: %v\n position: %v",
+			accum.valuePerShare, position.AccumValuePerShare))
+	}
+	accumulatorRewards := globalVsPositionDiff.MulDec(position.NumShares)
 	totalRewards = totalRewards.Add(accumulatorRewards...)
 
 	return totalRewards

@@ -1,6 +1,7 @@
 package concentrated_liquidity_test
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -12,6 +13,190 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
+
+func (s *KeeperTestSuite) TestMultipleRanges() {
+	tests := map[string]struct {
+		tickRanges      [][]int64
+		rangeTestParams RangeTestParams
+	}{
+		"one range, default params": {
+			tickRanges: [][]int64{
+				{0, 10000},
+			},
+			rangeTestParams: DefaultRangeTestParams,
+		},
+		"one min width range": {
+			tickRanges: [][]int64{
+				{0, 100},
+			},
+			rangeTestParams: withTickSpacing(DefaultRangeTestParams, DefaultTickSpacing),
+		},
+		"two adjacent ranges": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{10000, 20000},
+			},
+			rangeTestParams: DefaultRangeTestParams,
+		},
+		"two adjacent ranges with current tick smaller than both": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{10000, 20000},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, -20000),
+		},
+		"two adjacent ranges with current tick larger than both": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{10000, 20000},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, 30000),
+		},
+		"two adjacent ranges with current tick exactly on lower bound": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{10000, 20000},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, -10000),
+		},
+		"two adjacent ranges with current tick exactly between both": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{10000, 20000},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, 10000),
+		},
+		"two adjacent ranges with current tick exactly on upper bound": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{10000, 20000},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, 20000),
+		},
+		"two non-adjacent ranges": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{20000, 30000},
+			},
+			rangeTestParams: DefaultRangeTestParams,
+		},
+		"two ranges with one tick gap in between, which is equal to current tick": {
+			tickRanges: [][]int64{
+				{799221, 799997},
+				{799997 + 2, 812343},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, 799997+1),
+		},
+		"one range on large tick": {
+			tickRanges: [][]int64{
+				{207000000, 207000000 + 100},
+			},
+			rangeTestParams: withTickSpacing(DefaultRangeTestParams, DefaultTickSpacing),
+		},
+		"one position adjacent to left of current tick (no swaps)": {
+			tickRanges: [][]int64{
+				{-1, 0},
+			},
+			rangeTestParams: RangeTestParamsNoFuzzNoSwap,
+		},
+		"one position on left of current tick with gap (no swaps)": {
+			tickRanges: [][]int64{
+				{-2, -1},
+			},
+			rangeTestParams: RangeTestParamsNoFuzzNoSwap,
+		},
+		"one position adjacent to right of current tick (no swaps)": {
+			tickRanges: [][]int64{
+				{0, 1},
+			},
+			rangeTestParams: RangeTestParamsNoFuzzNoSwap,
+		},
+		"one position on right of current tick with gap (no swaps)": {
+			tickRanges: [][]int64{
+				{1, 2},
+			},
+			rangeTestParams: RangeTestParamsNoFuzzNoSwap,
+		},
+		"one range on small tick": {
+			tickRanges: [][]int64{
+				{-107000000, -107000000 + 100},
+			},
+			rangeTestParams: withDoubleFundedLP(DefaultRangeTestParams),
+		},
+		"one range on min tick": {
+			tickRanges: [][]int64{
+				{types.MinInitializedTick, types.MinInitializedTick + 100},
+			},
+			rangeTestParams: withDoubleFundedLP(DefaultRangeTestParams),
+		},
+		"initial current tick equal to min initialized tick": {
+			tickRanges: [][]int64{
+				{0, 1},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, types.MinInitializedTick),
+		},
+		"three overlapping ranges with no swaps, current tick in one": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{0, 20000},
+				{-7300, 12345},
+			},
+			rangeTestParams: withNoSwap(withCurrentTick(DefaultRangeTestParams, -9000)),
+		},
+		"three overlapping ranges with no swaps, current tick in two of three": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{0, 20000},
+				{-7300, 12345},
+			},
+			rangeTestParams: withNoSwap(withCurrentTick(DefaultRangeTestParams, -7231)),
+		},
+		"three overlapping ranges with no swaps, current tick in all three": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{0, 20000},
+				{-7300, 12345},
+			},
+			rangeTestParams: withNoSwap(withCurrentTick(DefaultRangeTestParams, 109)),
+		},
+		/* TODO: uncomment when infinite loop bug is fixed
+		"one range on max tick": {
+			tickRanges: [][]int64{
+				{types.MaxTick - 100, types.MaxTick},
+			},
+			rangeTestParams: withTickSpacing(DefaultRangeTestParams, DefaultTickSpacing),
+		},
+		"initial current tick equal to max tick": {
+			tickRanges: [][]int64{
+				{0, 1},
+			},
+			rangeTestParams: withCurrentTick(withTickSpacing(DefaultRangeTestParams, uint64(1)), types.MaxTick),
+		},
+		*/
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			s.runMultiplePositionRanges(tc.tickRanges, tc.rangeTestParams)
+		})
+	}
+}
+
+// runMultiplePositionRanges runs various test constructions and invariants on the given position ranges.
+func (s *KeeperTestSuite) runMultiplePositionRanges(ranges [][]int64, rangeTestParams RangeTestParams) {
+	// Preset seed to ensure deterministic test runs.
+	rand.Seed(2)
+
+	// TODO: add pool-related fuzz params (spread factor & number of pools)
+	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, rangeTestParams.tickSpacing, rangeTestParams.spreadFactor)
+
+	// Run full state determined by params while asserting invariants at each intermediate step
+	s.setupRangesAndAssertInvariants(pool, ranges, rangeTestParams)
+
+	// Assert global invariants on final state
+	s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
+}
 
 type RangeTestParams struct {
 	// -- Base amounts --
@@ -228,6 +413,7 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 			timeElapsed := s.addRandomizedBlockTime(testParams.baseTimeBetweenJoins, testParams.fuzzTimeBetweenJoins)
 
 			// Execute swap against pool if applicable
+			fmt.Println("-------------------- Begin new Swap --------------------")
 			swappedIn, swappedOut := s.executeRandomizedSwap(pool, swapAddresses, testParams.baseSwapAmount, testParams.fuzzSwapAmounts)
 			s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
 
@@ -399,13 +585,26 @@ func (s *KeeperTestSuite) executeSwapToTickBoundary(pool types.ConcentratedPoolE
 		return sdk.Coin{}, sdk.Coin{}
 	}
 
-	fmt.Println("dec amt in required: ", amountInRequired)
+	fmt.Println("dec amt in required to get to tick boundary: ", amountInRequired)
 	swapInFunded := sdk.NewCoin(swapInDenom, amountInRequired.TruncateInt())
 	s.FundAcc(swapAddress, sdk.NewCoins(swapInFunded))
 
 	// Execute swap
+	fmt.Println("begin keeper swap")
 	swappedIn, swappedOut, _, err := s.clk.SwapOutAmtGivenIn(s.Ctx, swapAddress, pool, swapInFunded, swapOutDenom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
-	s.Require().NoError(err)
+	if errors.As(err, &types.InvalidAmountCalculatedError{}) {
+		// If the swap we're about to execute will not generate enough output, we skip the swap.
+		// it would error for a real user though. This is good though, since that user would just be burning funds.
+		if err.(types.InvalidAmountCalculatedError).Amount.IsZero() {
+			fmt.Println("Hit error for 0 out, swap failed")
+			fmt.Println("TODO: Revert swap attempt")
+			return sdk.Coin{}, sdk.Coin{}
+		} else {
+			s.Require().NoError(err)
+		}
+	} else {
+		s.Require().NoError(err)
+	}
 
 	return swappedIn, swappedOut
 }

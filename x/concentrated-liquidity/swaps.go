@@ -113,6 +113,7 @@ func (ss *SwapState) updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal sdk.
 	// We round down here since we want to avoid overdistributing (the "spread factor charge" refers to
 	// the total spread factors that will be accrued to the spread factor accumulator)
 	spreadFactorsAccruedPerUnitOfLiquidity := spreadRewardChargeTotal.QuoTruncate(ss.liquidity)
+	fmt.Println("spreadFactorsAccruedPerUnitOfLiquidity", spreadFactorsAccruedPerUnitOfLiquidity)
 	ss.globalSpreadRewardGrowthPerUnitLiquidity.AddMut(spreadFactorsAccruedPerUnitOfLiquidity)
 }
 
@@ -404,6 +405,20 @@ func (k Keeper) computeOutAmtGivenIn(
 				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 			}
 			swapState.tick = newTick
+			// TEMPORARY HACK: this is to fix tick rounding error where
+			// the tick is off by 1 due to banker's rounding error in CalculatePriceToTick
+			// TODO: if this is to remain in the codebase, consider abstracting this into a
+			// method of swap strategy.
+			isZeroForOne := swapStrategy.ZeroForOne()
+			if isZeroForOne {
+				if newTick <= swapState.tick {
+					swapState.tick = newTick
+				}
+			} else {
+				if newTick > swapState.tick {
+					swapState.tick = newTick
+				}
+			}
 		}
 
 		// If nothing was consumed from swapState.amountSpecifiedRemaining, we increment the swapNoProgressIterationCount.

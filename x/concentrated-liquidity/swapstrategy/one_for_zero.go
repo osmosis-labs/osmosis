@@ -26,6 +26,8 @@ type oneForZeroStrategy struct {
 
 var _ SwapStrategy = (*oneForZeroStrategy)(nil)
 
+func (s oneForZeroStrategy) ZeroForOne() bool { return false }
+
 // GetSqrtTargetPrice returns the target square root price given the next tick square root price.
 // If the given nextTickSqrtPrice is greater than the sqrt price limit, the sqrt price limit is returned.
 // Otherwise, the input nextTickSqrtPrice is returned.
@@ -56,50 +58,71 @@ func (s oneForZeroStrategy) GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.De
 // OneForZero details:
 // - oneForZeroStrategy assumes moving to the right of the current square root price.
 func (s oneForZeroStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent osmomath.BigDec, sqrtPriceTarget, liquidity, amountOneInRemaining sdk.Dec) (osmomath.BigDec, sdk.Dec, sdk.Dec, sdk.Dec) {
+	fmt.Println("Moose", amountOneInRemaining)
 	sqrtPriceTargetBigDec := osmomath.BigDecFromSDKDec(sqrtPriceTarget)
 	liquidityBigDec := osmomath.BigDecFromSDKDec(liquidity)
 	amountOneInRemainingBigDec := osmomath.BigDecFromSDKDec(amountOneInRemaining)
 
 	// Estimate the amount of token one needed until the target sqrt price is reached.
-	amountOneIn := math.CalcAmount1Delta(liquidityBigDec, sqrtPriceTargetBigDec, sqrtPriceCurrent, true)
+	amountOneInToNextTick := math.CalcAmount1Delta(liquidityBigDec, sqrtPriceTargetBigDec, sqrtPriceCurrent, true)
 
 	// Calculate sqrtPriceNext on the amount of token remaining after spread reward.
+	// TODO: Move 1 - spread factor into strategy.
 	amountOneInRemainingLessSpreadReward := amountOneInRemainingBigDec.MulTruncate(oneBigDec.Sub(osmomath.BigDecFromSDKDec(s.spreadFactor)))
 
-	var sqrtPriceNext osmomath.BigDec
-	// If have more of the amount remaining after spread reward than estimated until target,
+	// optimization: If we have more of the amount remaining after spread reward than estimated until target,
 	// bound the next sqrtPriceNext by the target sqrt price.
-	if amountOneInRemainingLessSpreadReward.GTE(amountOneIn) {
-		sqrtPriceNext = sqrtPriceTargetBigDec
-	} else {
-		// Otherwise, compute the next sqrt price based on the amount remaining after spread reward.
+	// otherwise, we just compute the sqrt price next.
+	sqrtPriceNext := sqrtPriceTargetBigDec
+	hasConsumedEntireInput := false
+	if amountOneInRemainingLessSpreadReward.LT(amountOneInToNextTick) {
 		sqrtPriceNext = math.GetNextSqrtPriceFromAmount1InRoundingDown(sqrtPriceCurrent, liquidityBigDec, amountOneInRemainingLessSpreadReward)
+		hasConsumedEntireInput = true
 	}
 
+	// Now we need to see if we reached the target. Due to rounding of amountOneInToNextTick,
+	// we may have reached the target even if fee_adjusted_in_remaining < amountOneInToNextTick.
 	hasReachedTarget := sqrtPriceNext.GTE(sqrtPriceTargetBigDec)
+	if hasReachedTarget {
+		sqrtPriceNext = sqrtPriceTargetBigDec
+	}
 
 	// If the sqrt price target was not reached, recalculate how much of the amount remaining after spread reward was needed
 	// to complete the swap step. This implies that some of the amount remaining after spread reward is left over after the
 	// current swap step.
-	if !hasReachedTarget {
-		amountOneIn = math.CalcAmount1Delta(liquidityBigDec, sqrtPriceNext, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
+
+	// What is going on with amountOneInUsed?
+	// Well, we need to figure out, how much input did we actually use.
+	// If we didn't reach the target, we used all of the input.
+	var amountOneInUsedNoSpread sdk.Dec
+	var spreadRewardChargeTotal sdk.Dec
+	if hasConsumedEntireInput {
+		amountOneInUsedNoSpread = amountOneInRemainingLessSpreadReward.SDKDecRoundUp()
+		spreadRewardChargeTotal = amountOneInRemaining.Sub(amountOneInUsedNoSpread)
 	} else {
-		sqrtPriceNext = sqrtPriceTargetBigDec
-		amountOneIn = math.CalcAmount1Delta(liquidityBigDec, sqrtPriceNext, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
+		// reached target, without all of the input
+		amountOneInUsedNoSpread = amountOneInToNextTick.SDKDecRoundUp()
+		spreadRewardChargeTotal = computeSpreadRewardChargeFromAmountIn(amountOneInUsedNoSpread, s.spreadFactor)
 	}
+	// if !hasReachedTarget {
+	// 	amountOneInUsed = math.CalcAmount1Delta(liquidityBigDec, sqrtPriceNext, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
+	// } else {
+	// 	sqrtPriceNext = sqrtPriceTargetBigDec
+	// 	amountOneInUsed = math.CalcAmount1Delta(liquidityBigDec, sqrtPriceNext, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
+	// }
 
 	// Calculate the amount of the other token given the sqrt price range.
 	amountZeroOut := math.CalcAmount0Delta(liquidityBigDec, sqrtPriceNext, sqrtPriceCurrent, false)
 
 	// Round up to charge user more in pool's favor.
-	amountInDecFinal := amountOneIn.SDKDecRoundUp()
+	// amountInDecFinal := amountOneInUsedNoSpread.SDKDecRoundUp()
 
 	// Handle spread rewards.
 	// Note that spread reward is always charged on the amount in.
-	spreadRewardChargeTotal := computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget, amountInDecFinal, amountOneInRemaining, s.spreadFactor)
+	// spreadRewardChargeTotal = computeSpreadRewardChargePerSwapStepOutGivenIn(hasConsumedEntireInput, amountOneInUsedNoSpread, amountOneInRemaining, s.spreadFactor)
 
 	// Round down amount out to give user less in pool's favor.
-	return sqrtPriceNext, amountInDecFinal, amountZeroOut.SDKDec(), spreadRewardChargeTotal
+	return sqrtPriceNext, amountOneInUsedNoSpread, amountZeroOut.SDKDec(), spreadRewardChargeTotal
 }
 
 // ComputeSwapWithinBucketInGivenOut calculates the next sqrt price, the amount of token out consumed, the amount in to charge to the user for requested out, and total spread reward charge on token in.
