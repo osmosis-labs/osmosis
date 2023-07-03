@@ -35,7 +35,7 @@ Some important notes on joining as a genesis validator:
     of the Cosmos Hub from `cosmoshub-3` to `cosmoshub-4` will have
     recieve fairdrop OSMO. You can verify that a Cosmos address has
     received coins in the fairdrop by inputting an address here:
-    <https://airdrop.osmosis.zone/>.
+    <https://airdrop.osmosis.zone/>. # TODO: Is there an airdrop page anymore?
 
 ## Hardware
 
@@ -289,8 +289,7 @@ It will show an output something similar to:
 Genesis transaction written to "/Users/ubuntu/.osmosisd/config/gentx/gentx-eb3b1768d00e66ef83acb1eee59e1d3a35cf76fc.json"
 ```
 
-The result should look something like this [sample gentx
-file](%22/Users/sunnya97/.osmosisd/config/gentx/gentx-eb3b1768d00e66ef83acb1eee59e1d3a35cf76fc.json).
+The result should look something like this `/Users/sunnya97/.osmosisd/config/gentx/gentx-eb3b1768d00e66ef83acb1eee59e1d3a35cf76fc.json`.
 
 ### Submit Your GenTx
 
@@ -429,7 +428,7 @@ preinstall new binaries, and cosmovisor will automatically update them
 based on on-chain SoftwareUpgrade proposals.
 
 You should review the docs for cosmovisor located here:
-<https://docs.cosmos.network/master/run-node/cosmovisor.html>
+<https://docs.cosmos.network/main/tooling/cosmovisor>
 
 If you choose to use cosmovisor, please continue with these
 instructions:
@@ -488,6 +487,7 @@ you ran `osmosisd init` last time.
 
 A couple things to highlight especially:
 
+# TODO the paulloeveette.com skynet is not working.
 - In the `launch-gentxs` branch, we defaulted the tendermint fast-sync
     to be "v2". However, thanks to testing with partners from
     [Skynet](http://skynet.paullovette.com/) and [Akash
@@ -582,7 +582,7 @@ investors, and may not under any circumstances be relied upon when
 making investment decisions.*
 
 This work, ["Osmosis Genesis Validators
-Guide"](https://github.com/osmosis-labs/networks/genesis-validators.md),
+Guide"](https://github.com/osmosis-labs/networks/blob/main/genesis-validators.md),
 is a derivative of ["Agoric Validator
 Guide"](https://github.com/Agoric/agoric-sdk/wiki/Validator-Guide) used
 under [CC BY](http://creativecommons.org/licenses/by/4.0/). The Agoric

@@ -35,7 +35,7 @@ pre-install new binaries, and cosmovisor will automatically update them
 based on on-chain SoftwareUpgrade proposals.
 
 You should review the docs for cosmovisor located here:
-<https://docs.cosmos.network/master/run-node/cosmovisor.html>
+<https://docs.cosmos.network/main/tooling/cosmovisor>
 
 If you choose to use cosmovisor, please continue with these
 instructions:
