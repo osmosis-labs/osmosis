@@ -107,7 +107,8 @@ func (s *KeeperTestSuite) TestPoolCreationFee() {
 			s.Require().Equal(senderBal.String(), expectedSenderBal.String())
 
 			// check pool's liquidity is correctly increased
-			liquidity := gammKeeper.GetTotalLiquidity(s.Ctx)
+			liquidity, err := gammKeeper.GetTotalLiquidity(s.Ctx)
+			s.Require().NoError(err, "test: %v", test.name)
 			s.Require().Equal(expectedPoolTokens.String(), liquidity.String())
 		} else {
 			s.Require().Error(err, "test: %v", test.name)
@@ -221,8 +222,6 @@ func (s *KeeperTestSuite) TestCreatePool() {
 
 	for i, tc := range tests {
 		s.Run(tc.name, func() {
-			tc := tc
-
 			if tc.isPermissionlessPoolCreationDisabled {
 				params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
 				params.IsPermissionlessPoolCreationEnabled = false
@@ -262,8 +261,6 @@ func (s *KeeperTestSuite) TestCreatePool() {
 
 // Tests that only poolmanager as a pool creator can create a pool via CreatePoolZeroLiquidityNoCreationFee
 func (s *KeeperTestSuite) TestCreatePoolZeroLiquidityNoCreationFee() {
-	s.SetupTest()
-
 	poolManagerModuleAcc := s.App.AccountKeeper.GetModuleAccount(s.Ctx, types.ModuleName)
 
 	withCreator := func(msg clmodel.MsgCreateConcentratedPool, address sdk.AccAddress) clmodel.MsgCreateConcentratedPool {
@@ -309,8 +306,6 @@ func (s *KeeperTestSuite) TestCreatePoolZeroLiquidityNoCreationFee() {
 
 	for i, tc := range tests {
 		s.Run(tc.name, func() {
-			tc := tc
-
 			poolmanagerKeeper := s.App.PoolManagerKeeper
 			ctx := s.Ctx
 
@@ -394,8 +389,6 @@ func (s *KeeperTestSuite) TestSetAndGetAllPoolRoutes() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			tc := tc
-
 			s.Setup()
 			poolManagerKeeper := s.App.PoolManagerKeeper
 
@@ -429,7 +422,6 @@ func (s *KeeperTestSuite) TestGetNextPoolIdAndIncrement() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			tc := tc
 			s.Setup()
 
 			s.App.PoolManagerKeeper.SetNextPoolId(s.Ctx, tc.expectedNextPoolId)
@@ -480,7 +472,6 @@ func (s *KeeperTestSuite) TestValidateCreatedPool() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			tc := tc
 			s.Setup()
 
 			// System under test.

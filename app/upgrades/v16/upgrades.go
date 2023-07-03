@@ -195,6 +195,58 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		ctx.Logger().Info(`
+        .:^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^:.
+    .~?5GBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBG5?~.
+.7PB#BG5J????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????J5GB#BP7.
+^PBBBJ^.                                                                                                                                .^JBBBP^
+:GBBP^                                                                                                                                      ^PBBG:
+JBBB^                                                           .^~~.     .~!77!^                                                            ^BBBJ
+5BBG.                                                          75YGB:    .JJ7!!JG5.                                                          .GBB5
+5BBG.                                                          :. PG:           J#7                                                          .GBB5
+5BBG.                                                             PG:          :PG^                                                          .GBB5
+5BBG.                                                             PG:         !G5:                                                           .GBB5
+5BBG.                                                             PG:      .!55~                                                             .GBB5
+5BBG.                                                             PB:    :?GG?^^^^^                                                          .GBB5
+5BBG.                                                             ?J.    ~JJ??JJJJ7                                                          .GBB5
+5BBG.                                                                                                                                        .GBB5
+5BBG.                                                                                                                                        .GBB5
+5BBG.                                                                                                                                        .GBB5
+5BBG.                                                                                                                                        .GBB5
+5BBG.                                                                                                                                        .GBB5
+5BBG.                                      .77777~                  ^77777^                                                                  .GBB5
+5BBG.                                      ~#BBBBB~                :P#BBB#?                                                                  .GBB5
+5BBG.                                      7BBBGBBP.               5BBGBBBY                                                                  .GBB5
+5BBG.                                      JBBB7GBBY              ?BBG!GBB5                                                                  .GBB5
+5BBG.                                      5BBB:JBBB7            !BBB7:GBBP.           .^!7?JJ?!^.  :!~!^                                    .GBB5
+5BBG.                                     .PBBG..GBBB~          ^GBB5 .GBBG:         ~JPB##BBBBBBGY:7#B#7                                    .GBB5
+5BBG.                                     :GBBP. !BBBP.        .PBBG: .GBBB^       ^5BBBGJ!^:::^75BGPBBB!                                    .GBB5
+5BBG.                                     ^BBBP   JBBBY        YBBB!   PBBB!      ^GBBBJ:         ~GBBBB!                                    .GBB5
+5BBG.                                     !BBB5   .PBBB7      7BBBJ    5BBB7     .PBBBY            ~BBBB!                                    .GBB5
+5BBG.                                     7BBBJ    ~BBBB^    ^BBB5     JBBBJ     !BBBB^            :GBBB!                                    .GBB5
+5BBG.                                     JBBB?     ?BBB5.  .PBBG:     ?BBB5     ?BBBG.            :GBBB!                                    .GBB5
+5BBG.                                     5BBB!      5BBB?  JBBB~      !BBBP.    !BBBB^            :GBBB!                                    .GBB5
+5BBG.                                    .PBBB^      :GBBG:^BBB7       ~BBBG.    .PBBB5.           ?BBBB!                                    .GBB5
+5BBG.                                    :GBBG:       !BBBY5BBY        ^BBBB^     ^PBBBP~        :JBBBBB!                                    .GBB5
+5BBG.                                    ^BBBG.        JBBBBBP.        :GBBB~      :JGBBBPJ7!!7?5BBJGBBB!                                    .GBB5
+5BBG.                                    !#B#P         .P#BBG^         .PBB#7        :7YPBBBBBBG57:.GBBB~                                    .GBB5
+5BBG.                                    !5Y5?          ^JJJ!           ?5Y5!           .:^^^^:.   ^BBBB:                                    .GBB5
+5BBG.                                                                                              YBBBY                                     .GBB5
+5BBG.                                                                               .:           ^YBBBP:                                     .GBB5
+5BBG.                                                                              .5BPY?7!!!!7JPB#BGJ.                                      .GBB5
+5BBG.                                                                              :J5GBBB#BBBBBGPJ!:                                        .GBB5
+5BBG.                                                                                                                                        .GBB5
+5BBG.                                                                                                                                        .GBB5
+5BBG.                                                                                                                                        .GBB5
+5BBG.                                                                                                                                        .GBB5
+JBBB^                                                                                                                                        ^BBBJ
+:GBBP^                                                                                                                                      ^PBBG:
+^PBBBJ^.                                                                                                                                .^JBBBP^
+.7PB#BG5J????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????J5GB#BP7.
+    .~?5GBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBG5?~.
+        .::^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^::.
+`)
+
 		return migrations, nil
 	}
 }
