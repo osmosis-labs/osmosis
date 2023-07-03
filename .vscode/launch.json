@@ -36,7 +36,7 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestKeeperTestSuite/TestYourName",
+                "TestKeeperTestSuite/TestMultipleRanges/initial_current_tick_equal_to_min_initialized_tick",
                 "-test.v"
             ],
         },
