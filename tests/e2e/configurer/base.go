@@ -52,18 +52,41 @@ func (bc *baseConfigurer) GetChainConfig(chainIndex int) *chain.Config {
 }
 
 func (bc *baseConfigurer) RunValidators() error {
+	errChan := make(chan error, len(bc.chainConfigs))
+
+	// Launch goroutines for each chainConfig
 	for _, chainConfig := range bc.chainConfigs {
-		if err := bc.runValidators(chainConfig); err != nil {
+		go func(config *chain.Config) {
+			err := bc.runValidators(config)
+			errChan <- err
+		}(chainConfig)
+	}
+
+	// Collect errors from goroutines
+	for range bc.chainConfigs {
+		if err := <-errChan; err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
 func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
 	bc.t.Logf("starting %s validator containers...", chainConfig.Id)
+
+	errCh := make(chan error) // Channel to collect errors
+
+	// Iterate over each node
 	for _, node := range chainConfig.NodeConfigs {
-		if err := node.Run(); err != nil {
+		go func(n *chain.NodeConfig) {
+			errCh <- n.Run() // Run the node and send any error to the channel
+		}(node)
+	}
+
+	// Wait for goroutines to finish and collect errors
+	for range chainConfig.NodeConfigs {
+		if err := <-errCh; err != nil {
 			return err
 		}
 	}

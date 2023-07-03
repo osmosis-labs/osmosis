@@ -356,8 +356,8 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 		pool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
 		s.Require().NoError(err)
 
-		poolSpotPrice := pool.GetCurrentSqrtPrice().Power(osmomath.NewBigDec(2))
-		minSwapOutAmount := poolSpotPrice.Mul(osmomath.SmallestDec()).SDKDec().TruncateInt()
+		poolSpotPrice := pool.GetCurrentSqrtPrice().PowerInteger(2)
+		minSwapOutAmount := poolSpotPrice.Mul(osmomath.SmallestDec()).TruncateDec().SDKDec().TruncateInt()
 		poolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
 		if poolBalances.AmountOf(swapOutDenom).LTE(minSwapOutAmount) {
 			return sdk.Coin{}, sdk.Coin{}
