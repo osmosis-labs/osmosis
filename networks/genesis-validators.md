@@ -21,7 +21,7 @@ Some important notes on joining as a genesis validator:
     active operators of the network. As explained in the [Osmosis: A Hub
     AMM](https://medium.com/osmosis/osmosis-a-hub-amm-c4c12788f94c)
     post, Osmosis is intended to be a fast iterating platform that
-    regularly add new features and modules through software upgrades. A
+    regularly adds new features and modules through software upgrades. A
     precise timeline for upgrade schedules does not exist, but
     validators are expected to be ready to upgrade the network
     potentially as frequently as a monthly basis early on. Furthermore,
@@ -35,7 +35,8 @@ Some important notes on joining as a genesis validator:
     of the Cosmos Hub from `cosmoshub-3` to `cosmoshub-4` will have
     recieve fairdrop OSMO. You can verify that a Cosmos address has
     received coins in the fairdrop by inputting an address here:
-    <https://airdrop.osmosis.zone/>. # TODO: Is there an airdrop page anymore?
+    <https://airdrop.osmosis.zone/>.
+    - **Note: The airdrop URL has been deprecated.** 
 
 ## Hardware
 
@@ -487,7 +488,6 @@ you ran `osmosisd init` last time.
 
 A couple things to highlight especially:
 
-# TODO the paulloeveette.com skynet is not working.
 - In the `launch-gentxs` branch, we defaulted the tendermint fast-sync
     to be "v2". However, thanks to testing with partners from
     [Skynet](http://skynet.paullovette.com/) and [Akash

@@ -343,8 +343,7 @@ You can also feel free to do `make format` if you're getting errors related to `
 
 There are several steps that go into a major release
 
-# TODO - osmosis-ci DNE (unless it's private). Currently referencing the PR that removed the release workflow.
-- The GitHub release is handled by [osmosis-ci](https://github.com/osmosis-labs/osmosis/pull/2428).
+- The GitHub release is created in our private repo via this [GitHub workflow](https://github.com/osmosis-labs/osmosis-ci/blob/main/.github/workflows/create-release.yaml). The workflow is manually triggered from the [osmosis-ci repository](https://github.com/osmosis-labs/osmosis-ci). The workflow uses the `make build-reproducible` command to create the `osmosisd` binaries using the default [Makefile](https://github.com/osmosis-labs/osmosis/blob/main/Makefile#L99).
 
 - Make a PR to main, with a cosmovisor config, generated in tandem with the binaries from tool.
   - Should be its own PR, as it may get denied for Fork upgrades.
