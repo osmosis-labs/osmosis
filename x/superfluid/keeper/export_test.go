@@ -38,7 +38,7 @@ func (k Keeper) ValidateSharesToMigrateUnlockAndExitBalancerPool(ctx sdk.Context
 	return k.validateSharesToMigrateUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, lock, sharesToMigrate, tokenOutMins)
 }
 
-func (k Keeper) RouteMigration(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) (synthLockBeforeMigration lockuptypes.SyntheticLock, migrationType MigrationType, err error) {
+func (k Keeper) RouteMigration(ctx sdk.Context, sender sdk.AccAddress, lockId int64, sharesToMigrate sdk.Coin) (synthLockBeforeMigration lockuptypes.SyntheticLock, migrationType MigrationType, err error) {
 	return k.routeMigration(ctx, sender, lockId, sharesToMigrate)
 }
 

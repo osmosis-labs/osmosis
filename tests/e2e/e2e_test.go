@@ -219,7 +219,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Sanity check that pool initialized with valid parameters (the ones that we haven't explicitly specified)
 	s.Require().Equal(concentratedPool.GetCurrentTick(), int64(0))
-	s.Require().Equal(concentratedPool.GetCurrentSqrtPrice(), sdk.ZeroDec())
+	s.Require().Equal(concentratedPool.GetCurrentSqrtPrice(), osmomath.ZeroDec())
 	s.Require().Equal(concentratedPool.GetLiquidity(), sdk.ZeroDec())
 
 	// Assert contents of the pool are valid (that we explicitly specified)
@@ -295,13 +295,13 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Asserts that spread rewards are correctly collected for non cross-tick swaps
 	var (
 		// Swap parameters
-		uosmoInDec_Swap1 = sdk.NewDec(3465198)
-		uosmoIn_Swap1    = fmt.Sprintf("%suosmo", uosmoInDec_Swap1.String())
+		uosmoInDec_Swap1 = osmomath.NewBigDec(3465198)
+		uosmoIn_Swap1    = fmt.Sprintf("%suosmo", uosmoInDec_Swap1.SDKDec().String())
 	)
 	// Perform swap (not crossing initialized ticks)
 	chainANode.SwapExactAmountIn(uosmoIn_Swap1, outMinAmt, fmt.Sprintf("%d", poolID), denom0, initialization.ValidatorWalletName)
 	// Calculate and track global spread reward growth for swap 1
-	spreadRewardGrowthGlobal.AddMut(calculateSpreadRewardGrowthGlobal(uosmoInDec_Swap1, spreadFactorDec, concentratedPool.GetLiquidity()))
+	spreadRewardGrowthGlobal.AddMut(calculateSpreadRewardGrowthGlobal(uosmoInDec_Swap1.SDKDec(), spreadFactorDec, concentratedPool.GetLiquidity()))
 
 	// Update pool and track liquidity and sqrt price
 	liquidityBeforeSwap := concentratedPool.GetLiquidity()
@@ -316,8 +316,8 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().Equal(liquidityAfterSwap.String(), liquidityBeforeSwap.String())
 
 	// Assert current sqrt price
-	inAmountSubSpreadReward := uosmoInDec_Swap1.Mul(sdk.OneDec().Sub(spreadFactorDec))
-	expectedSqrtPriceDelta := inAmountSubSpreadReward.QuoTruncate(concentratedPool.GetLiquidity()) // Δ(sqrtPrice) = Δy / L
+	inAmountSubSpreadReward := uosmoInDec_Swap1.Mul(osmomath.OneDec().Sub(osmomath.BigDecFromSDKDec(spreadFactorDec)))
+	expectedSqrtPriceDelta := inAmountSubSpreadReward.QuoTruncate(osmomath.BigDecFromSDKDec(concentratedPool.GetLiquidity())) // Δ(sqrtPrice) = Δy / L
 	expectedSqrtPrice := sqrtPriceBeforeSwap.Add(expectedSqrtPriceDelta)
 
 	s.Require().Equal(expectedSqrtPrice.String(), sqrtPriceAfterSwap.String())
@@ -371,12 +371,14 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().NoError(err)
 	_, sqrtPriceAtNextInitializedTick, err := clmath.TickToSqrtPrice(nextInitTick)
 	s.Require().NoError(err)
+	sqrtPriceAfterNextInitializedTickBigDec := osmomath.BigDecFromSDKDec(sqrtPriceAfterNextInitializedTick)
+	sqrtPriceAtNextInitializedTickBigDec := osmomath.BigDecFromSDKDec(sqrtPriceAtNextInitializedTick)
 
 	// Calculate Δ(sqrtPrice):
 	// deltaSqrtPriceAfterNextInitializedTick = ΔsqrtP(40300) - ΔsqrtP(40000)
 	// deltaSqrtPriceAtNextInitializedTick = ΔsqrtP(40000) - ΔsqrtP(currentTick)
-	deltaSqrtPriceAfterNextInitializedTick := sqrtPriceAfterNextInitializedTick.Sub(sqrtPriceAtNextInitializedTick)
-	deltaSqrtPriceAtNextInitializedTick := sqrtPriceAtNextInitializedTick.Sub(sqrtPriceBeforeSwap)
+	deltaSqrtPriceAfterNextInitializedTick := sqrtPriceAfterNextInitializedTickBigDec.Sub(sqrtPriceAtNextInitializedTickBigDec).SDKDec()
+	deltaSqrtPriceAtNextInitializedTick := sqrtPriceAtNextInitializedTickBigDec.Sub(sqrtPriceBeforeSwap).SDKDec()
 
 	// Calculate the amount of osmo required to:
 	// * amountInToGetToTickAfterInitialized - move price from next initialized tick (40000) to destination tick (40000 + tickOffset)
@@ -513,14 +515,15 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().NoError(err)
 	_, sqrtPriceAtNextInitializedTick, err = clmath.TickToSqrtPrice(nextInitTick)
 	s.Require().NoError(err)
+	sqrtPriceAtNextInitializedTickBigDec = osmomath.BigDecFromSDKDec(sqrtPriceAtNextInitializedTick)
 
 	// Calculate numerators
 	numeratorBelowNextInitializedTick := sqrtPriceAtNextInitializedTick.Sub(sqrtPricebBelowNextInitializedTick)
-	numeratorNextInitializedTick := sqrtPriceBeforeSwap.Sub(sqrtPriceAtNextInitializedTick)
+	numeratorNextInitializedTick := sqrtPriceBeforeSwap.Sub(sqrtPriceAtNextInitializedTickBigDec)
 
 	// Calculate denominators
 	denominatorBelowNextInitializedTick := sqrtPriceAtNextInitializedTick.Mul(sqrtPricebBelowNextInitializedTick)
-	denominatorNextInitializedTick := sqrtPriceBeforeSwap.Mul(sqrtPriceAtNextInitializedTick)
+	denominatorNextInitializedTick := sqrtPriceBeforeSwap.Mul(sqrtPriceAtNextInitializedTickBigDec)
 
 	// Calculate fractions
 	fractionBelowNextInitializedTick := numeratorBelowNextInitializedTick.Quo(denominatorBelowNextInitializedTick)
@@ -528,7 +531,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Calculate amounts of uionIn needed
 	amountInToGetToTickBelowInitialized := liquidityBeforeSwap.Add(positionsAddress1[0].Position.Liquidity).Mul(fractionBelowNextInitializedTick)
-	amountInToGetToNextInitTick = liquidityBeforeSwap.Mul(fractionAtNextInitializedTick)
+	amountInToGetToNextInitTick = liquidityBeforeSwap.Mul(fractionAtNextInitializedTick.SDKDec())
 
 	var (
 		// Swap parameters
@@ -1697,5 +1700,5 @@ func (s *IntegrationTestSuite) TestAConcentratedLiquidity_CanonicalPool_And_Para
 		MultiplicativeTolerance: sdk.MustNewDecFromStr("0.0001"),
 	}
 
-	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(expectedSpotPrice), osmomath.BigDecFromSDKDec(concentratedPool.GetCurrentSqrtPrice().Power(2))))
+	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(expectedSpotPrice), concentratedPool.GetCurrentSqrtPrice().PowerInteger(2)))
 }
