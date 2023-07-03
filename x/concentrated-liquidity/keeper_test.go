@@ -486,7 +486,7 @@ func (s *KeeperTestSuite) runMultiplePositionRanges(ranges [][]int64, rangeTestP
 	rand.Seed(2)
 
 	// TODO: add pool-related fuzz params (spread factor & number of pools)
-	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultSpreadFactor)
+	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, rangeTestParams.tickSpacing, rangeTestParams.spreadFactor)
 
 	// Run full state determined by params while asserting invariants at each intermediate step
 	s.setupRangesAndAssertInvariants(pool, ranges, rangeTestParams)
