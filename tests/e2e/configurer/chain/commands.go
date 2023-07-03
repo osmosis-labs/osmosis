@@ -585,6 +585,10 @@ func (n *NodeConfig) Status() (resultStatus, error) {
 }
 
 func GetPositionID(responseJson map[string]interface{}) (string, error) {
+	return ParseEvent(responseJson, "position_id")
+}
+
+func ParseEvent(responseJson map[string]interface{}, field string) (string, error) {
 	logs, ok := responseJson["logs"].([]interface{})
 	if !ok {
 		return "", fmt.Errorf("logs field not found in response")
@@ -613,12 +617,12 @@ func GetPositionID(responseJson map[string]interface{}) (string, error) {
 		for _, attr := range attributes {
 			switch v := attr.(type) {
 			case map[string]interface{}:
-				if v["key"] == "position_id" {
-					positionID, ok := v["value"].(string)
+				if v["key"] == field {
+					fieldID, ok := v["value"].(string)
 					if !ok {
-						return "", fmt.Errorf("invalid format of position_id field")
+						return "", fmt.Errorf("invalid format of %s field", field)
 					}
-					return positionID, nil
+					return fieldID, nil
 				}
 			default:
 				return "", fmt.Errorf("invalid type for attributes field")
@@ -626,7 +630,7 @@ func GetPositionID(responseJson map[string]interface{}) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("position_id field not found in response")
+	return "", fmt.Errorf("%s field not found in response", field)
 }
 
 func (n *NodeConfig) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
