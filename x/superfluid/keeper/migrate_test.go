@@ -184,7 +184,7 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 			balancerDelegationPre, _ := stakingKeeper.GetDelegation(s.Ctx, balancerIntermediaryAcc.GetAccAddress(), valAddr)
 
 			// Run the migration logic.
-			positionId, amount0, amount1, liquidityMigrated, poolIdLeaving, poolIdEntering, concentratedLockId, err := superfluidKeeper.RouteLockedBalancerToConcentratedMigration(s.Ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, tc.minExitCoins)
+			positionId, amount0, amount1, liquidityMigrated, poolIdLeaving, poolIdEntering, concentratedLockId, err := superfluidKeeper.RouteLockedBalancerToConcentratedMigration(s.Ctx, poolJoinAcc, int64(originalGammLockId), coinsToMigrate, tc.minExitCoins)
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, tc.expectedError)
@@ -330,7 +330,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 
 			// RouteMigration is called via the migration message router and is always run prior to the migration itself.
 			// We use it here just to retrieve the synthetic lock before the migration.
-			synthLockBeforeMigration, migrationType, err := superfluidKeeper.RouteMigration(s.Ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
+			synthLockBeforeMigration, migrationType, err := superfluidKeeper.RouteMigration(s.Ctx, poolJoinAcc, int64(originalGammLockId), coinsToMigrate)
 			s.Require().NoError(err)
 			s.Require().Equal(migrationType, keeper.SuperfluidBonded)
 
@@ -492,7 +492,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrated()
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
 			// RouteMigration is called via the migration message router and is always run prior to the migration itself
-			synthLockBeforeMigration, migrationType, err := superfluidKeeper.RouteMigration(s.Ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
+			synthLockBeforeMigration, migrationType, err := superfluidKeeper.RouteMigration(s.Ctx, poolJoinAcc, int64(originalGammLockId), coinsToMigrate)
 			s.Require().NoError(err)
 			s.Require().Equal(migrationType, keeper.SuperfluidUnbonding)
 
@@ -614,7 +614,7 @@ func (s *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated() {
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
 			// RouteMigration is called via the migration message router and is always run prior to the migration itself
-			synthLockBeforeMigration, migrationType, err := superfluidKeeper.RouteMigration(s.Ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
+			synthLockBeforeMigration, migrationType, err := superfluidKeeper.RouteMigration(s.Ctx, poolJoinAcc, int64(originalGammLockId), coinsToMigrate)
 			s.Require().NoError(err)
 			s.Require().Equal((lockuptypes.SyntheticLock{}), synthLockBeforeMigration)
 			s.Require().Equal(migrationType, keeper.NonSuperfluid)
@@ -1403,7 +1403,7 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 				preClaimBalancerPoolBalance := balancerPool.GetTotalPoolLiquidity(s.Ctx)
 
 				// Run the migration.
-				_, amount0, amount1, _, _, _, _, err := s.App.SuperfluidKeeper.RouteLockedBalancerToConcentratedMigration(s.Ctx, s.TestAccs[i+1], posInfo.lockId, posInfo.coin, sdk.Coins{})
+				_, amount0, amount1, _, _, _, _, err := s.App.SuperfluidKeeper.RouteLockedBalancerToConcentratedMigration(s.Ctx, s.TestAccs[i+1], int64(posInfo.lockId), posInfo.coin, sdk.Coins{})
 				s.Require().NoError(err)
 
 				// Note how much of amount0 and amount1 was actually created in the CL pool from the migration.
