@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
@@ -22,8 +23,12 @@ type RangeTestParams struct {
 	baseSwapAmount sdk.Int
 	// Base amount to add after each new position
 	baseTimeBetweenJoins time.Duration
-	// Base incentive records to have on pool
-	baseIncentiveRecords []types.IncentiveRecord
+	// Base incentive amount to have on each incentive record
+	baseIncentiveAmount sdk.Int
+	// Base emission rate per second for incentive
+	baseEmissionRate sdk.Dec
+	// Base denom for each incentive record (ID appended to this)
+	baseIncentiveDenom string
 	// List of addresses to swap from (randomly selected for each swap)
 	numSwapAddresses int
 
@@ -161,7 +166,7 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 	// 1. Set up a position
 	// 2. Let time elapse
 	// 3. Execute a swap
-	totalLiquidity, totalAssets, totalTimeElapsed, allPositionIds, lastVisitedBlockIndex := sdk.ZeroDec(), sdk.NewCoins(), time.Duration(0), []uint64{}, 0
+	totalLiquidity, totalAssets, totalTimeElapsed, allPositionIds, lastVisitedBlockIndex, cumulativeEmittedIncentives, lastIncentiveTrackerUpdate := sdk.ZeroDec(), sdk.NewCoins(), time.Duration(0), []uint64{}, 0, sdk.DecCoins{}, s.Ctx.BlockTime()
 	for curRange := range ranges {
 		curBlock := 0
 		startNumPositions := len(allPositionIds)
@@ -188,8 +193,6 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 			roundingError := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), sdk.OneInt()), sdk.NewCoin(pool.GetToken1(), sdk.OneInt()))
 			s.FundAcc(curAddr, curAssets.Add(roundingError...))
 
-<<<<<<< HEAD
-=======
 			// Double fund LP address if applicable
 			if testParams.doubleFundPositionAddr {
 				s.FundAcc(curAddr, curAssets.Add(roundingError...))
@@ -200,7 +203,6 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 			// Track emitted incentives here
 			cumulativeEmittedIncentives, lastIncentiveTrackerUpdate = s.trackEmittedIncentives(cumulativeEmittedIncentives, lastIncentiveTrackerUpdate)
 
->>>>>>> 39a64b99 ([CL][tests]: Add all remaining intended test vectors from original tracking issue (#5655))
 			// Set up position
 			curPositionId, actualAmt0, actualAmt1, curLiquidity, actualLowerTick, actualUpperTick, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), curAddr, curAssets, sdk.ZeroInt(), sdk.ZeroInt(), ranges[curRange][0], ranges[curRange][1])
 			s.Require().NoError(err)
@@ -208,14 +210,14 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 			// Ensure position was set up correctly and didn't break global invariants
 			s.Require().Equal(ranges[curRange][0], actualLowerTick)
 			s.Require().Equal(ranges[curRange][1], actualUpperTick)
-			s.assertGlobalInvariants()
+			s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
 
 			// Let time elapse after join if applicable
 			timeElapsed := s.addRandomizedBlockTime(testParams.baseTimeBetweenJoins, testParams.fuzzTimeBetweenJoins)
 
 			// Execute swap against pool if applicable
 			swappedIn, swappedOut := s.executeRandomizedSwap(pool, swapAddresses, testParams.baseSwapAmount, testParams.fuzzSwapAmounts)
-			s.assertGlobalInvariants()
+			s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
 
 			// Track changes to state
 			actualAddedCoins := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), actualAmt0), sdk.NewCoin(pool.GetToken1(), actualAmt1))
@@ -244,8 +246,6 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 	poolSpreadRewards := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetSpreadRewardsAddress())
 	// We rebuild coins to handle nil cases cleanly
 	s.Require().Equal(sdk.NewCoins(totalAssets...), sdk.NewCoins(poolAssets.Add(poolSpreadRewards...)...))
-<<<<<<< HEAD
-=======
 
 	// Do a final checkpoint for incentives and then run assertions on expected global claimable value
 	cumulativeEmittedIncentives, lastIncentiveTrackerUpdate = s.trackEmittedIncentives(cumulativeEmittedIncentives, lastIncentiveTrackerUpdate)
@@ -255,7 +255,6 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 	// We specifically need to do this for incentives because all the emissions are pre-loaded into the incentive address, making
 	// balance assertions pass trivially in most cases.
 	s.assertGlobalInvariants(ExpectedGlobalRewardValues{TotalIncentives: truncatedEmissions})
->>>>>>> 39a64b99 ([CL][tests]: Add all remaining intended test vectors from original tracking issue (#5655))
 }
 
 // numPositionSlice prepares a slice tracking the number of positions to create on each range, fuzzing the number at each step if applicable.
@@ -337,8 +336,8 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 		pool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
 		s.Require().NoError(err)
 
-		poolSpotPrice := pool.GetCurrentSqrtPrice().Power(2)
-		minSwapOutAmount := poolSpotPrice.Mul(sdk.SmallestDec()).TruncateInt()
+		poolSpotPrice := pool.GetCurrentSqrtPrice().PowerInteger(2)
+		minSwapOutAmount := poolSpotPrice.Mul(osmomath.SmallestDec()).TruncateDec().SDKDec().TruncateInt()
 		poolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
 		if poolBalances.AmountOf(swapOutDenom).LTE(minSwapOutAmount) {
 			return sdk.Coin{}, sdk.Coin{}
@@ -374,8 +373,6 @@ func (s *KeeperTestSuite) addRandomizedBlockTime(baseTimeToAdd time.Duration, fu
 	return baseTimeToAdd
 }
 
-<<<<<<< HEAD
-=======
 // trackEmittedIncentives takes in a cumulative incentives distributed and the last time this number was updated.
 // CONTRACT: cumulativeTrackedIncentives has been updated immediately before each new incentive record that was created
 func (s *KeeperTestSuite) trackEmittedIncentives(cumulativeTrackedIncentives sdk.DecCoins, lastTrackerUpdateTime time.Time) (sdk.DecCoins, time.Time) {
@@ -440,7 +437,6 @@ func (s *KeeperTestSuite) getInitialPositionAssets(pool types.ConcentratedPoolEx
 	return assetCoins
 }
 
->>>>>>> 39a64b99 ([CL][tests]: Add all remaining intended test vectors from original tracking issue (#5655))
 // getFuzzedAssets returns the base asset amount, fuzzing each asset if applicable
 func getRandomizedAssets(baseAssets sdk.Coins, fuzzAssets bool) sdk.Coins {
 	finalAssets := baseAssets
