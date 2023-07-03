@@ -48,6 +48,7 @@ func (k Keeper) RouteLockedBalancerToConcentratedMigration(ctx sdk.Context, send
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
 	}
 
+	// As a hack around to get frontend working, we decided to allow negative values for the provided lock ID to indicate that the user wants to migrate shares that are not locked.
 	lockId := uint64(providedLockId)
 
 	switch migrationType {
@@ -229,6 +230,7 @@ func (k Keeper) migrateNonSuperfluidLockBalancerToConcentrated(ctx sdk.Context,
 // routeMigration determines the status of the provided lock which is used to determine the method for migration.
 // It also returns the underlying synthetic locks of the provided lock, if any exist.
 func (k Keeper) routeMigration(ctx sdk.Context, sender sdk.AccAddress, providedLockId int64, sharesToMigrate sdk.Coin) (synthLockBeforeMigration lockuptypes.SyntheticLock, migrationType MigrationType, err error) {
+	// As a hack around to get frontend working, we decided to allow negative values for the provided lock ID to indicate that the user wants to migrate shares that are not locked.
 	if providedLockId <= 0 {
 		return lockuptypes.SyntheticLock{}, Unlocked, nil
 	}
