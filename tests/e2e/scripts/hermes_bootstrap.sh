@@ -22,7 +22,7 @@ enabled = false
 enabled = true
 [mode.packets]
 enabled = true
-clear_interval = 100
+clear_interval = 1
 clear_on_start = true
 tx_confirmation = true
 [rest]
@@ -38,11 +38,11 @@ id = '$OSMO_A_E2E_CHAIN_ID'
 rpc_addr = 'http://$OSMO_A_E2E_VAL_HOST:26657'
 grpc_addr = 'http://$OSMO_A_E2E_VAL_HOST:9090'
 websocket_addr = 'ws://$OSMO_A_E2E_VAL_HOST:26657/websocket'
-rpc_timeout = '10s'
+rpc_timeout = '30s'
 account_prefix = 'osmo'
 key_name = 'val01-osmosis-a'
 store_prefix = 'ibc'
-max_gas = 6000000
+max_gas = 9000000
 gas_multiplier = 1.5
 default_gas = 400000
 gas_price = { price = 0.0025, denom = 'e2e-default-feetoken' }
@@ -54,11 +54,11 @@ id = '$OSMO_B_E2E_CHAIN_ID'
 rpc_addr = 'http://$OSMO_B_E2E_VAL_HOST:26657'
 grpc_addr = 'http://$OSMO_B_E2E_VAL_HOST:9090'
 websocket_addr = 'ws://$OSMO_B_E2E_VAL_HOST:26657/websocket'
-rpc_timeout = '10s'
+rpc_timeout = '30s'
 account_prefix = 'osmo'
 key_name = 'val01-osmosis-b'
 store_prefix = 'ibc'
-max_gas = 6000000
+max_gas = 9000000
 gas_multiplier = 1.5
 default_gas = 400000
 gas_price = { price = 0.0025, denom = 'e2e-default-feetoken' }
