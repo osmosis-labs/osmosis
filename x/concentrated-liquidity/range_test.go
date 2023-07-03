@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
@@ -228,6 +229,22 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 
 	swapOutCoin := sdk.NewCoin(swapOutDenom, baseSwapOutAmount)
 
+<<<<<<< HEAD
+=======
+	// If the swap we're about to execute will not generate enough input, we skip the swap.
+	if swapOutDenom == pool.GetToken1() {
+		pool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
+		s.Require().NoError(err)
+
+		poolSpotPrice := pool.GetCurrentSqrtPrice().PowerInteger(2)
+		minSwapOutAmount := poolSpotPrice.Mul(osmomath.SmallestDec()).TruncateDec().SDKDec().TruncateInt()
+		poolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
+		if poolBalances.AmountOf(swapOutDenom).LTE(minSwapOutAmount) {
+			return sdk.Coin{}, sdk.Coin{}
+		}
+	}
+
+>>>>>>> fad138ba (fix main (#5741))
 	// Note that we set the price limit to zero to ensure that the swap can execute in either direction (gets automatically set to correct limit)
 	swappedIn, swappedOut, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, swapOutCoin, swapInDenom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
 	s.Require().NoError(err)
