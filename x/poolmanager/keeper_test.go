@@ -6,9 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 type KeeperTestSuite struct {
@@ -35,43 +35,38 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
-	suite.Setup()
+func (s *KeeperTestSuite) SetupTest() {
+	s.Setup()
 }
 
-// createBalancerPoolsFromCoinsWithSwapFee creates balancer pools from given sets of coins and respective swap fees.
+// createBalancerPoolsFromCoinsWithSpreadFactor creates balancer pools from given sets of coins and respective spread factors.
 // Where element 1 of the input corresponds to the first pool created,
 // element 2 to the second pool created, up until the last element.
-func (suite *KeeperTestSuite) createBalancerPoolsFromCoinsWithSwapFee(poolCoins []sdk.Coins, swapFee []sdk.Dec) {
+func (s *KeeperTestSuite) createBalancerPoolsFromCoinsWithSpreadFactor(poolCoins []sdk.Coins, spreadFactor []sdk.Dec) {
 	for i, curPoolCoins := range poolCoins {
-		suite.FundAcc(suite.TestAccs[0], curPoolCoins)
-		suite.PrepareCustomBalancerPoolFromCoins(curPoolCoins, balancer.PoolParams{
-			SwapFee: swapFee[i],
+		s.FundAcc(s.TestAccs[0], curPoolCoins)
+		s.PrepareCustomBalancerPoolFromCoins(curPoolCoins, balancer.PoolParams{
+			SwapFee: spreadFactor[i],
 			ExitFee: sdk.ZeroDec(),
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestInitGenesis() {
-	suite.Setup()
-
-	suite.App.PoolManagerKeeper.InitGenesis(suite.Ctx, &types.GenesisState{
-		Params: types.Params{
-			PoolCreationFee: testPoolCreationFee,
-		},
-		NextPoolId: testExpectedPoolId,
-		PoolRoutes: testPoolRoute,
-	})
-
-	suite.Require().Equal(uint64(testExpectedPoolId), suite.App.PoolManagerKeeper.GetNextPoolId(suite.Ctx))
-	suite.Require().Equal(testPoolCreationFee, suite.App.PoolManagerKeeper.GetParams(suite.Ctx).PoolCreationFee)
-	suite.Require().Equal(testPoolRoute, suite.App.PoolManagerKeeper.GetAllPoolRoutes(suite.Ctx))
+// createBalancerPoolsFromCoins creates balancer pools from given sets of coins and zero swap fees.
+// Where element 1 of the input corresponds to the first pool created,
+// element 2 to the second pool created, up until the last element.
+func (s *KeeperTestSuite) createBalancerPoolsFromCoins(poolCoins []sdk.Coins) {
+	for _, curPoolCoins := range poolCoins {
+		s.FundAcc(s.TestAccs[0], curPoolCoins)
+		s.PrepareCustomBalancerPoolFromCoins(curPoolCoins, balancer.PoolParams{
+			SwapFee: sdk.ZeroDec(),
+			ExitFee: sdk.ZeroDec(),
+		})
+	}
 }
 
-func (suite *KeeperTestSuite) TestExportGenesis() {
-	suite.Setup()
-
-	suite.App.PoolManagerKeeper.InitGenesis(suite.Ctx, &types.GenesisState{
+func (s *KeeperTestSuite) TestInitGenesis() {
+	s.App.PoolManagerKeeper.InitGenesis(s.Ctx, &types.GenesisState{
 		Params: types.Params{
 			PoolCreationFee: testPoolCreationFee,
 		},
@@ -79,8 +74,22 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 		PoolRoutes: testPoolRoute,
 	})
 
-	genesis := suite.App.PoolManagerKeeper.ExportGenesis(suite.Ctx)
-	suite.Require().Equal(uint64(testExpectedPoolId), genesis.NextPoolId)
-	suite.Require().Equal(testPoolCreationFee, genesis.Params.PoolCreationFee)
-	suite.Require().Equal(testPoolRoute, genesis.PoolRoutes)
+	s.Require().Equal(uint64(testExpectedPoolId), s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx))
+	s.Require().Equal(testPoolCreationFee, s.App.PoolManagerKeeper.GetParams(s.Ctx).PoolCreationFee)
+	s.Require().Equal(testPoolRoute, s.App.PoolManagerKeeper.GetAllPoolRoutes(s.Ctx))
+}
+
+func (s *KeeperTestSuite) TestExportGenesis() {
+	s.App.PoolManagerKeeper.InitGenesis(s.Ctx, &types.GenesisState{
+		Params: types.Params{
+			PoolCreationFee: testPoolCreationFee,
+		},
+		NextPoolId: testExpectedPoolId,
+		PoolRoutes: testPoolRoute,
+	})
+
+	genesis := s.App.PoolManagerKeeper.ExportGenesis(s.Ctx)
+	s.Require().Equal(uint64(testExpectedPoolId), genesis.NextPoolId)
+	s.Require().Equal(testPoolCreationFee, genesis.Params.PoolCreationFee)
+	s.Require().Equal(testPoolRoute, genesis.PoolRoutes)
 }

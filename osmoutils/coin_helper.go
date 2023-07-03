@@ -44,3 +44,36 @@ func SubDecCoinArrays(decCoinsArrayA []sdk.DecCoins, decCoinsArrayB []sdk.DecCoi
 
 	return finalDecCoinArray, nil
 }
+
+// AddDecCoinArrays adds the contents of the second param from the first (decCoinsArrayA + decCoinsArrayB)
+// Note that this takes in two _arrays_ of DecCoins, meaning that each term itself is of type DecCoins (i.e. an array of DecCoin).
+func AddDecCoinArrays(decCoinsArrayA []sdk.DecCoins, decCoinsArrayB []sdk.DecCoins) ([]sdk.DecCoins, error) {
+	if len(decCoinsArrayA) != len(decCoinsArrayB) {
+		return []sdk.DecCoins{}, fmt.Errorf("DecCoin arrays must be of equal length to be added")
+	}
+
+	finalDecCoinArray := []sdk.DecCoins{}
+	for i := range decCoinsArrayA {
+		finalDecCoinArray = append(finalDecCoinArray, decCoinsArrayA[i].Add(decCoinsArrayB[i]...))
+	}
+
+	return finalDecCoinArray, nil
+}
+
+// CollapseDecCoinsArray takes an array of DecCoins and returns the sum of all the DecCoins in the array.
+func CollapseDecCoinsArray(decCoinsArray []sdk.DecCoins) sdk.DecCoins {
+	finalDecCoins := sdk.DecCoins{}
+	for _, decCoins := range decCoinsArray {
+		finalDecCoins = finalDecCoins.Add(decCoins...)
+	}
+	return finalDecCoins
+}
+
+// ConvertCoinsToDecCoins takes sdk.Coins and converts it to sdk.DecCoins
+func ConvertCoinsToDecCoins(coins sdk.Coins) sdk.DecCoins {
+	decCoins := sdk.DecCoins{}
+	for _, coin := range coins {
+		decCoins = append(decCoins, sdk.NewDecCoin(coin.Denom, coin.Amount))
+	}
+	return decCoins
+}

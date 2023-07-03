@@ -4,7 +4,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 )
 
 // InitGenesis initializes the x/gamm module's state from a provided genesis
@@ -36,15 +37,18 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState, unpack
 	k.setTotalLiquidity(ctx, liquidity)
 
 	if genState.MigrationRecords == nil {
-		k.SetMigrationInfo(ctx, types.MigrationRecords{})
+		k.SetMigrationRecords(ctx, gammmigration.MigrationRecords{})
 	} else {
-		k.SetMigrationInfo(ctx, *genState.MigrationRecords)
+		k.SetMigrationRecords(ctx, *genState.MigrationRecords)
 	}
 }
 
 // ExportGenesis returns the capability module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	migrationInfo := k.GetMigrationInfo(ctx)
+	migrationInfo, err := k.GetAllMigrationInfo(ctx)
+	if err != nil {
+		panic(err)
+	}
 	pools, err := k.GetPoolsAndPoke(ctx)
 	if err != nil {
 		panic(err)

@@ -11,8 +11,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app"
-	v4 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v4"
+	"github.com/osmosis-labs/osmosis/v16/app"
+	v4 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v4"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -66,7 +66,7 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 				plan := upgradetypes.Plan{Name: "v4", Height: dummyUpgradeHeight}
 				err := suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
 				suite.Require().NoError(err)
-				plan, exists := suite.app.UpgradeKeeper.GetUpgradePlan(suite.ctx)
+				_, exists := suite.app.UpgradeKeeper.GetUpgradePlan(suite.ctx)
 				suite.Require().True(exists)
 
 				suite.ctx = suite.ctx.WithBlockHeight(dummyUpgradeHeight)

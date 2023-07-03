@@ -1,7 +1,7 @@
 package clmocks
 
 import (
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -27,6 +27,6 @@ func (l *ConcentratedLiquidityListenerMock) AfterLastPoolPositionRemoved(ctx sdk
 	l.AfterLastPoolPositionRemovedCallCount += 1
 }
 
-func (l *ConcentratedLiquidityListenerMock) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+func (l *ConcentratedLiquidityListenerMock) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 	l.AfterConcentratedPoolSwapCallCount += 1
 }

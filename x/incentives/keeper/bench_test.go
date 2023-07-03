@@ -9,9 +9,9 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app"
-	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v16/app"
+	"github.com/osmosis-labs/osmosis/v16/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -69,7 +69,8 @@ func genQueryCondition(
 }
 
 // benchmarkDistributionLogic creates gauges with lockups that get distributed to. Benchmarks the performance of the distribution process.
-func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs int, b *testing.B) {
+func benchmarkDistributionLogic(b *testing.B, numAccts, numDenoms, numGauges, numLockups, numDistrs int) {
+	b.Helper()
 	b.StopTimer()
 
 	blockStartTime := time.Now().UTC()
@@ -113,7 +114,7 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 			numEpochsPaidOver = uint64(r.Int63n(durationMillisecs/millisecsPerEpoch)) + 1
 		}
 
-		gaugeId, err := app.IncentivesKeeper.CreateGauge(ctx, isPerpetual, addr, rewards, distributeTo, startTime, numEpochsPaidOver)
+		gaugeId, err := app.IncentivesKeeper.CreateGauge(ctx, isPerpetual, addr, rewards, distributeTo, startTime, numEpochsPaidOver, 0)
 		if err != nil {
 			fmt.Printf("Create Gauge, %v\n", err)
 			b.FailNow()
@@ -175,7 +176,7 @@ func BenchmarkDistributionLogicTiny(b *testing.B) {
 	numGauges := 1
 	numLockups := 1
 	numDistrs := 1
-	benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs, b)
+	benchmarkDistributionLogic(b, numAccts, numDenoms, numGauges, numLockups, numDistrs)
 }
 
 func BenchmarkDistributionLogicSmall(b *testing.B) {
@@ -184,7 +185,7 @@ func BenchmarkDistributionLogicSmall(b *testing.B) {
 	numGauges := 10
 	numLockups := 1000
 	numDistrs := 100
-	benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs, b)
+	benchmarkDistributionLogic(b, numAccts, numDenoms, numGauges, numLockups, numDistrs)
 }
 
 func BenchmarkDistributionLogicMedium(b *testing.B) {
@@ -194,7 +195,7 @@ func BenchmarkDistributionLogicMedium(b *testing.B) {
 	numLockups := 20000
 	numDistrs := 1
 
-	benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs, b)
+	benchmarkDistributionLogic(b, numAccts, numDenoms, numGauges, numLockups, numDistrs)
 }
 
 func BenchmarkDistributionLogicLarge(b *testing.B) {
@@ -204,7 +205,7 @@ func BenchmarkDistributionLogicLarge(b *testing.B) {
 	numLockups := 100000
 	numDistrs := 1
 
-	benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs, b)
+	benchmarkDistributionLogic(b, numAccts, numDenoms, numGauges, numLockups, numDistrs)
 }
 
 func BenchmarkDistributionLogicHuge(b *testing.B) {
@@ -213,5 +214,5 @@ func BenchmarkDistributionLogicHuge(b *testing.B) {
 	numGauges := 1000
 	numLockups := 1000
 	numDistrs := 30000
-	benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs, b)
+	benchmarkDistributionLogic(b, numAccts, numDenoms, numGauges, numLockups, numDistrs)
 }

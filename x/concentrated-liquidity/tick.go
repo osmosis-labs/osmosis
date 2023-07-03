@@ -2,130 +2,140 @@ package concentrated_liquidity
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
 	db "github.com/tendermint/tm-db"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types/genesis"
 )
 
 // initOrUpdateTick retrieves the tickInfo from the specified tickIndex and updates both the liquidityNet and LiquidityGross.
-// The given currentTick value is used to determine the strategy for updating the fee accumulator.
-// We update the tick's fee growth outside accumulator to the fee growth global when tick index is <= current tick.
+// The given currentTick value is used to determine the strategy for updating the spread factor accumulator.
+// We update the tick's spread reward growth opposite direction of last traversal accumulator to the spread reward growth global when tick index is <= current tick.
 // Otherwise, it is set to zero.
+// Note that liquidityDelta can be either positive or negative depending on whether we are adding or removing liquidity.
 // if we are initializing or updating an upper tick, we subtract the liquidityIn from the LiquidityNet
-// if we are initializing or updating an lower tick, we add the liquidityIn from the LiquidityNet
-func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
-	tickInfo, err := k.getTickInfo(ctx, poolId, tickIndex)
+// if we are initializing or updating a lower tick, we add the liquidityIn from the LiquidityNet
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
+func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int64, tickIndex int64, liquidityDelta sdk.Dec, upper bool) (err error) {
+	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
 		return err
+	}
+
+	// If both liquidity fields are zero, we consume the base gas spread factor for initializing a tick.
+	if tickInfo.LiquidityGross.IsZero() && tickInfo.LiquidityNet.IsZero() {
+		ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForInitializingTick), "initialize tick gas spread factor")
 	}
 
 	// calculate liquidityGross, which does not care about whether liquidityIn is positive or negative
 	liquidityBefore := tickInfo.LiquidityGross
 
 	// if given tickIndex is LTE to the current tick and the liquidityBefore is zero,
-	// set the tick's fee growth outside to the fee accumulator's value
+	// set the tick's spread reward growth opposite direction of last traversal to the spread factor accumulator's value
 	if liquidityBefore.IsZero() {
 		if tickIndex <= currentTick {
-			accum, err := k.getFeeAccumulator(ctx, poolId)
+			accum, err := k.GetSpreadRewardAccumulator(ctx, poolId)
 			if err != nil {
 				return err
 			}
 
-			tickInfo.FeeGrowthOutside = accum.GetValue()
+			tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal = accum.GetValue()
 		}
 	}
 
 	// note that liquidityIn can be either positive or negative.
 	// If negative, this would work as a subtraction from liquidityBefore
-	liquidityAfter := math.AddLiquidity(liquidityBefore, liquidityIn)
+	liquidityAfter := liquidityBefore.Add(liquidityDelta)
 
 	tickInfo.LiquidityGross = liquidityAfter
 
 	// calculate liquidityNet, which we take into account and track depending on whether liquidityIn is positive or negative
 	if upper {
-		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Sub(liquidityIn)
+		tickInfo.LiquidityNet.SubMut(liquidityDelta)
 	} else {
-		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Add(liquidityIn)
+		tickInfo.LiquidityNet.AddMut(liquidityDelta)
 	}
 
-	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
-
+	k.SetTickInfo(ctx, poolId, tickIndex, &tickInfo)
 	return nil
 }
 
-func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapStateFeeGrowth sdk.DecCoin) (liquidityDelta sdk.Dec, err error) {
-	tickInfo, err := k.getTickInfo(ctx, poolId, tickIndex)
-	if err != nil {
-		return sdk.Dec{}, err
+// crossTick crosses the given tick. The tick is specified by its index and tick info.
+// It updates the given tick's uptime and spread reward accumulators and writes it back to state.
+// Prior to updating the tick info and writing it to state, it updates the pool uptime accumulators until the current block time.
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
+// CONTRACT: the caller validates that the pool with the given id exists.
+// CONTRACT: caller is responsible for the uptimeAccums to be up-to-date.
+// CONTRACT: uptimeAccums are associated with the given pool id.
+func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo *model.TickInfo, swapStateSpreadRewardGrowth sdk.DecCoin, spreadRewardAccumValue sdk.DecCoins, uptimeAccums []accum.AccumulatorObject) (liquidityDelta sdk.Dec, err error) {
+	if tickInfo == nil {
+		return sdk.Dec{}, types.ErrNextTickInfoNil
 	}
 
-	feeAccum, err := k.getFeeAccumulator(ctx, poolId)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-
-	// subtract tick's fee growth outside from current fee growth global, including the fee growth of the current swap.
-	tickInfo.FeeGrowthOutside = feeAccum.GetValue().Add(swapStateFeeGrowth).Sub(tickInfo.FeeGrowthOutside)
-
-	// Update global accums to now before uptime outside changes
-	if err := k.updateUptimeAccumulatorsToNow(ctx, poolId); err != nil {
-		return sdk.Dec{}, err
-	}
-
-	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
+	// subtract tick's spread reward growth opposite direction of last traversal from current spread reward growth global, including the spread reward growth of the current swap.
+	tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal = spreadRewardAccumValue.Add(swapStateSpreadRewardGrowth).Sub(tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal)
 
 	// For each supported uptime, subtract tick's uptime growth outside from the respective uptime accumulator
 	// This is functionally equivalent to "flipping" the trackers once the tick is crossed
-	updatedUptimeTrackers := tickInfo.UptimeTrackers
-	for uptimeId, uptimeAccum := range uptimeAccums {
-		updatedUptimeTrackers[uptimeId].UptimeGrowthOutside = uptimeAccum.GetValue().Sub(updatedUptimeTrackers[uptimeId].UptimeGrowthOutside)
+	updatedUptimeTrackers := tickInfo.UptimeTrackers.List
+	for uptimeId := range uptimeAccums {
+		updatedUptimeTrackers[uptimeId].UptimeGrowthOutside = uptimeAccums[uptimeId].GetValue().Sub(updatedUptimeTrackers[uptimeId].UptimeGrowthOutside)
 	}
 
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtCrossTick,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
+			sdk.NewAttribute(types.AttributeKeyTickIndex, strconv.FormatInt(tickIndex, 10)),
+			sdk.NewAttribute(types.AttributeKeySpreadRewardGrowthOppositeDirectionOfLastTraversal, tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal.String()),
+			sdk.NewAttribute(types.AttributeKeyUptimeGrowthOppositeDirectionOfLastTraversal, tickInfo.UptimeTrackers.String()),
+		),
+	})
 
 	return tickInfo.LiquidityNet, nil
 }
 
-// getTickInfo gets tickInfo given poolId and tickIndex. Returns a boolean field that returns true if value is found for given key.
-func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo model.TickInfo, err error) {
+// GetTickInfo gets the tickInfo given a poolId and tickIndex. If the tick has not been initialized, it will initialize it.
+// If the tick has been initialized, it will return the tickInfo. If the pool does not exist, it will return an error.
+// CONTRACT: The caller must check that the pool with given id exists.
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
+func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo model.TickInfo, err error) {
 	store := ctx.KVStore(k.storeKey)
 	tickStruct := model.TickInfo{}
 	key := types.KeyTick(poolId, tickIndex)
-	if !k.poolExists(ctx, poolId) {
-		return model.TickInfo{}, types.PoolNotFoundError{PoolId: poolId}
-	}
 
 	found, err := osmoutils.Get(store, key, &tickStruct)
 	// return 0 values if key has not been initialized
 	if !found {
 		// If tick has not yet been initialized, we create a new one and initialize
-		// the fee growth outside.
-		initialFeeGrowthOutside, err := k.getInitialFeeGrowthOutsideForTick(ctx, poolId, tickIndex)
+		// the spread reward growth opposite direction of last traversal value.
+		initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, err := k.getInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx, poolId, tickIndex)
 		if err != nil {
 			return tickStruct, err
 		}
 
 		// Sync global uptime accumulators to ensure the uptime tracker init values are up to date.
-		if err := k.updateUptimeAccumulatorsToNow(ctx, poolId); err != nil {
+		if err := k.updatePoolUptimeAccumulatorsToNow(ctx, poolId); err != nil {
 			return tickStruct, err
 		}
 
 		// Initialize uptime trackers for the new tick to the appropriate starting values.
-		valuesToAdd, err := k.getInitialUptimeGrowthOutsidesForTick(ctx, poolId, tickIndex)
+		valuesToAdd, err := k.getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ctx, poolId, tickIndex)
 		if err != nil {
 			return tickStruct, err
 		}
@@ -135,7 +145,7 @@ func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 			initialUptimeTrackers = append(initialUptimeTrackers, model.UptimeTracker{UptimeGrowthOutside: uptimeTrackerValue})
 		}
 
-		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: initialFeeGrowthOutside, UptimeTrackers: initialUptimeTrackers}, nil
+		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, UptimeTrackers: model.UptimeTrackers{List: initialUptimeTrackers}}, nil
 	}
 	if err != nil {
 		return tickStruct, err
@@ -144,35 +154,36 @@ func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	return tickStruct, nil
 }
 
-func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo model.TickInfo) {
+func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo *model.TickInfo) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyTick(poolId, tickIndex)
-	osmoutils.MustSet(store, key, &tickInfo)
+	osmoutils.MustSet(store, key, tickInfo)
 }
 
 func (k Keeper) GetAllInitializedTicksForPool(ctx sdk.Context, poolId uint64) ([]genesis.FullTick, error) {
 	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyTickPrefixByPoolId(poolId), ParseFullTickFromBytes)
 }
 
-// validateTickInRangeIsValid validates that given ticks are valid.
-// That is, both lower and upper ticks are within MinTick and MaxTick range for the given exponentAtPriceOne.
-// Also, lower tick must be less than upper tick.
+// validateTickInRangeIsValid validates that given ticks are valid. That is:
+// - both lower and upper ticks are divisible by the tick spacing
+// - both lower and upper ticks are within MinTick and MaxTick range
+// - lower tick must be less than upper tick.
+//
 // Returns error if validation fails. Otherwise, nil.
-func validateTickRangeIsValid(tickSpacing uint64, exponentAtPriceOne sdk.Int, lowerTick int64, upperTick int64) error {
-	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
+func validateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int64) error {
 	// Check if the lower and upper tick values are divisible by the tick spacing.
 	if lowerTick%int64(tickSpacing) != 0 || upperTick%int64(tickSpacing) != 0 {
 		return types.TickSpacingError{LowerTick: lowerTick, UpperTick: upperTick, TickSpacing: tickSpacing}
 	}
 
 	// Check if the lower tick value is within the valid range of MinTick to MaxTick.
-	if lowerTick < minTick || lowerTick >= maxTick {
-		return types.InvalidTickError{Tick: lowerTick, IsLower: true, MinTick: minTick, MaxTick: maxTick}
+	if lowerTick < types.MinInitializedTick || lowerTick >= types.MaxTick {
+		return types.InvalidTickError{Tick: lowerTick, IsLower: true, MinTick: types.MinInitializedTick, MaxTick: types.MaxTick}
 	}
 
 	// Check if the upper tick value is within the valid range of MinTick to MaxTick.
-	if upperTick > maxTick || upperTick <= minTick {
-		return types.InvalidTickError{Tick: upperTick, IsLower: false, MinTick: minTick, MaxTick: maxTick}
+	if upperTick > types.MaxTick || upperTick <= types.MinInitializedTick {
+		return types.InvalidTickError{Tick: upperTick, IsLower: false, MinTick: types.MinInitializedTick, MaxTick: types.MaxTick}
 	}
 
 	// Check if the lower tick value is greater than or equal to the upper tick value.
@@ -182,79 +193,85 @@ func validateTickRangeIsValid(tickSpacing uint64, exponentAtPriceOne sdk.Int, lo
 	return nil
 }
 
-// GetMinAndMaxTicksFromExponentAtPriceOne determines min and max ticks allowed for a given exponentAtPriceOne value
-// This allows for a min spot price of 0.000000000000000001 and a max spot price of 100000000000000000000000000000000000000 for every exponentAtPriceOne value
-func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTick, maxTick int64) {
-	return math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
+// roundTickToCanonicalPriceTick takes a tick and determines if multiple ticks can represent the same price as the provided tick. If so, it
+// rounds that tick up to the largest tick that can represent the same price that the original tick corresponded to. If one of
+// the two ticks happen to be rounded, we re-validate the tick range to ensure that the tick range is still valid.
+//
+// i.e. the provided tick is -161795100. With our precision, this tick correlates to a sqrtPrice of 0.000000001414213563
+// the first tick (given our precision) that is able to represent this price is -161000000, so we use this tick instead.
+//
+// This really only applies to very small tick values, as the increment of a single tick continues to get smaller as the tick value gets smaller.
+func roundTickToCanonicalPriceTick(lowerTick, upperTick int64, sqrtPriceTickLower, sqrtPriceTickUpper sdk.Dec, tickSpacing uint64) (int64, int64, error) {
+	newLowerTick, err := math.SqrtPriceToTickRoundDownSpacing(sqrtPriceTickLower, tickSpacing)
+	if err != nil {
+		return 0, 0, err
+	}
+	newUpperTick, err := math.SqrtPriceToTickRoundDownSpacing(sqrtPriceTickUpper, tickSpacing)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	// If the lower or upper tick has changed, we need to re-validate the tick range.
+	if lowerTick != newLowerTick || upperTick != newUpperTick {
+		err := validateTickRangeIsValid(tickSpacing, newLowerTick, newUpperTick)
+		if err != nil {
+			return 0, 0, err
+		}
+	}
+	return newLowerTick, newUpperTick, nil
 }
 
 // GetTickLiquidityForFullRange returns an array of liquidity depth for all ticks existing from min tick ~ max tick.
-func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]query.LiquidityDepthWithRange, error) {
-	// sanity check that pool exists and upper tick is greater than lower tick
-	if !k.poolExists(ctx, poolId) {
-		return []query.LiquidityDepthWithRange{}, types.PoolNotFoundError{PoolId: poolId}
-	}
-
+func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]queryproto.LiquidityDepthWithRange, error) {
 	// use false for zeroForOne since we're going from lower tick -> upper tick
 	zeroForOne := false
 	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
 
-	// get min and max tick for the pool
-	p, err := k.getPoolById(ctx, poolId)
-	if err != nil {
-		return []query.LiquidityDepthWithRange{}, err
-	}
-	exponentAtPriceOne := p.GetExponentAtPriceOne()
-	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
-
 	// set current tick to min tick, and find the first initialized tick starting from min tick -1.
 	// we do -1 to make min tick inclusive.
-	currentTick := minTick - 1
+	currentTick := types.MinCurrentTick
 
-	nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
-	if !ok {
-		return []query.LiquidityDepthWithRange{}, types.InvalidTickError{Tick: currentTick, IsLower: false, MinTick: minTick, MaxTick: maxTick}
+	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, currentTick)
+	defer nextTickIter.Close()
+	if !nextTickIter.Valid() {
+		return []queryproto.LiquidityDepthWithRange{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
+	}
+
+	nextTick, err := types.TickIndexFromBytes(nextTickIter.Key())
+	if err != nil {
+		return []queryproto.LiquidityDepthWithRange{}, err
 	}
 
 	tick, err := k.getTickByTickIndex(ctx, poolId, nextTick)
 	if err != nil {
-		return []query.LiquidityDepthWithRange{}, err
+		return []queryproto.LiquidityDepthWithRange{}, err
 	}
 
-	liquidityDepthsForRange := []query.LiquidityDepthWithRange{}
+	liquidityDepthsForRange := []queryproto.LiquidityDepthWithRange{}
 
 	// use the smallest tick initialized as the starting point for calculating liquidity.
 	currentLiquidity := tick.LiquidityNet
-	currentTick = nextTick.Int64()
+	currentTick = nextTick
 	totalLiquidityWithinRange := currentLiquidity
 
-	// iterator assignments
-	store := ctx.KVStore(k.storeKey)
-	prefixBz := types.KeyTickPrefixByPoolId(poolId)
-	prefixStore := prefix.NewStore(store, prefixBz)
-	currentTickKey := types.TickIndexToBytes(currentTick)
-	maxTickKey := types.TickIndexToBytes(maxTick)
-	iterator := prefixStore.Iterator(currentTickKey, storetypes.InclusiveEndBytes(maxTickKey))
-	defer iterator.Close()
 	previousTickIndex := currentTick
 
 	// start from the next index so that the current tick can become lower tick.
-	iterator.Next()
-	for ; iterator.Valid(); iterator.Next() {
-		tickIndex, err := types.TickIndexFromBytes(iterator.Key())
+	nextTickIter.Next()
+	for ; nextTickIter.Valid(); nextTickIter.Next() {
+		tickIndex, err := types.TickIndexFromBytes(nextTickIter.Key())
 		if err != nil {
-			return []query.LiquidityDepthWithRange{}, err
+			return []queryproto.LiquidityDepthWithRange{}, err
 		}
 
-		tickStruct := model.TickInfo{}
-		err = proto.Unmarshal(iterator.Value(), &tickStruct)
+		tickStruct, err := ParseTickFromBz(nextTickIter.Value())
 		if err != nil {
-			return []query.LiquidityDepthWithRange{}, err
+			return []queryproto.LiquidityDepthWithRange{}, err
 		}
 
-		liquidityDepthForRange := query.LiquidityDepthWithRange{
-			LowerTick:       sdk.NewInt(previousTickIndex),
-			UpperTick:       sdk.NewInt(tickIndex),
+		liquidityDepthForRange := queryproto.LiquidityDepthWithRange{
+			LowerTick:       previousTickIndex,
+			UpperTick:       tickIndex,
 			LiquidityAmount: totalLiquidityWithinRange,
 		}
 		liquidityDepthsForRange = append(liquidityDepthsForRange, liquidityDepthForRange)
@@ -281,11 +298,11 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 // * poolId (uint64): The ID of the pool for which the liquidity needs to be checked.
 // * tokenIn (string): The token denom that determines the swap direction and strategy.
 // * userGivenStartTick (sdk.Int): The starting tick for grabbing liquidities. If not provided, the current tick of the pool is used.
-// * boundTick (sdk.Int): An optional bound tick to limit the range of the query. If not provided, the minimum or maximum tick will be used, depending on the strategy.
+// * boundTick (sdk.Int): An optional bound tick to limit the range of the queryproto. If not provided, the minimum or maximum tick will be used, depending on the strategy.
 //
 // Returns:
 
-// ([]query.TickLiquidityNet): An array of TickLiquidityNet objects representing the net liquidity in the specified direction.
+// ([]queryproto.TickLiquidityNet): An array of TickLiquidityNet objects representing the net liquidity in the specified direction.
 //
 //	Note that the start tick is never included if given. The same goes for the current tick.
 //	Returns liquidity net amounts starting from the next tick relative to start/current tick
@@ -294,30 +311,25 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 // Errors:
 // * types.PoolNotFoundError: If the given pool does not exist.
 // * types.TokenInDenomNotInPoolError: If the given tokenIn is not an asset in the pool.
-func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, tokenIn string, userGivenStartTick sdk.Int, boundTick sdk.Int) ([]query.TickLiquidityNet, error) {
-	// check if pool exists
-	if !k.poolExists(ctx, poolId) {
-		return []query.TickLiquidityNet{}, types.PoolNotFoundError{PoolId: poolId}
-	}
-
+func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, tokenIn string, userGivenStartTick sdk.Int, boundTick sdk.Int) ([]queryproto.TickLiquidityNet, error) {
 	// get min and max tick for the pool
 	p, err := k.getPoolById(ctx, poolId)
 	if err != nil {
-		return []query.TickLiquidityNet{}, err
+		return []queryproto.TickLiquidityNet{}, err
 	}
 
-	ctx.Logger().Debug(fmt.Sprintf("userGivenStartTick %s, boundTick %s, currentTick %s\n", userGivenStartTick, boundTick, p.GetCurrentTick()))
+	ctx.Logger().Debug(fmt.Sprintf("userGivenStartTick %s, boundTick %s, currentTick %d\n", userGivenStartTick, boundTick, p.GetCurrentTick()))
 
 	startTick := p.GetCurrentTick()
 	// If start tick is set, use it as the current tick for grabbing liquidities from.
 	if !userGivenStartTick.IsNil() {
-		startTick = userGivenStartTick
-		ctx.Logger().Debug(fmt.Sprintf("startTick %s set to user given\n", startTick))
+		startTick = userGivenStartTick.Int64()
+		ctx.Logger().Debug(fmt.Sprintf("startTick %d set to user given\n", startTick))
 	}
 
 	// sanity check that given tokenIn is an asset in pool.
 	if tokenIn != p.GetToken0() && tokenIn != p.GetToken1() {
-		return []query.TickLiquidityNet{}, types.TokenInDenomNotInPoolError{TokenInDenom: tokenIn}
+		return []queryproto.TickLiquidityNet{}, types.TokenInDenomNotInPoolError{TokenInDenom: tokenIn}
 	}
 
 	// figure out zero for one depending on the token in.
@@ -326,33 +338,39 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	ctx.Logger().Debug(fmt.Sprintf("is_zero_for_one %t\n", zeroForOne))
 
 	// use max or min tick if provided bound is nil
-	exponentAtPriceOne := p.GetExponentAtPriceOne()
-	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 
-	ctx.Logger().Debug(fmt.Sprintf("min_tick %d\n", minTick))
-	ctx.Logger().Debug(fmt.Sprintf("max_tick %d\n", maxTick))
+	ctx.Logger().Debug(fmt.Sprintf("min_tick %d\n", types.MinInitializedTick))
+	ctx.Logger().Debug(fmt.Sprintf("max_tick %d\n", types.MaxTick))
 
 	if boundTick.IsNil() {
 		if zeroForOne {
-			boundTick = sdk.NewInt(minTick)
+			boundTick = sdk.NewInt(types.MinInitializedTick)
 		} else {
-			boundTick = sdk.NewInt(maxTick)
+			boundTick = sdk.NewInt(types.MaxTick)
 		}
 	}
 
-	liquidityDepths := []query.TickLiquidityNet{}
+	liquidityDepths := []queryproto.TickLiquidityNet{}
 	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
+
+	currentTick := p.GetCurrentTick()
+	_, currentTickSqrtPrice, err := math.TickToSqrtPrice(currentTick)
+	if err != nil {
+		return []queryproto.TickLiquidityNet{}, err
+	}
+
+	ctx.Logger().Debug(fmt.Sprintf("currentTick %d; current tick's sqrt price%s\n", currentTick, currentTickSqrtPrice))
 
 	// function to validate that start tick and bound tick are
 	// between current tick and the min/max tick depending on the swap direction.
 	validateTickIsInValidRange := func(validateTick sdk.Int) error {
-		validateSqrtPrice, err := math.TickToSqrtPrice(validateTick, exponentAtPriceOne)
-		ctx.Logger().Debug(fmt.Sprintf("validateTick %s; validate sqrtPrice %s\n", validateTick.String(), validateSqrtPrice.String()))
+		_, validateSqrtPrice, err := math.TickToSqrtPrice(validateTick.Int64())
 		if err != nil {
 			return err
 		}
+		ctx.Logger().Debug(fmt.Sprintf("validateTick %s; validate sqrtPrice %s\n", validateTick.String(), validateSqrtPrice.String()))
 
-		if err := swapStrategy.ValidateSqrtPrice(validateSqrtPrice, p.GetCurrentSqrtPrice()); err != nil {
+		if err := swapStrategy.ValidateSqrtPrice(validateSqrtPrice, osmomath.BigDecFromSDKDec(currentTickSqrtPrice)); err != nil {
 			return err
 		}
 
@@ -361,19 +379,28 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 
 	ctx.Logger().Debug("validating bound tick")
 	if err := validateTickIsInValidRange(boundTick); err != nil {
-		return []query.TickLiquidityNet{}, err
+		return []queryproto.TickLiquidityNet{}, fmt.Errorf("failed validating bound tick (%s) with current sqrt price of (%s): %w", boundTick, currentTickSqrtPrice, err)
 	}
 
 	ctx.Logger().Debug("validating start tick")
-	if err := validateTickIsInValidRange(startTick); err != nil {
-		return []query.TickLiquidityNet{}, err
+	if err := validateTickIsInValidRange(sdk.NewInt(startTick)); err != nil {
+		return []queryproto.TickLiquidityNet{}, fmt.Errorf("failed validating start tick (%d) with current sqrt price of (%s): %w", startTick, currentTickSqrtPrice, err)
 	}
 
 	// iterator assignments
 	store := ctx.KVStore(k.storeKey)
 	prefixBz := types.KeyTickPrefixByPoolId(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
-	startTickKey := types.TickIndexToBytes(startTick.Int64())
+
+	// If zero for one, we use reverse iterator. As a result, we need to increment the start tick by 1
+	// so that we include the start tick in the search.
+	//
+	// If one for zero, we use forward iterator. However, our definition of the active range is inclusive
+	// of the lower bound. As a result, current liquidity must already include the lower bound tick
+	// so we skip it.
+	startTick = startTick + 1
+
+	startTickKey := types.TickIndexToBytes(startTick)
 	boundTickKey := types.TickIndexToBytes(boundTick.Int64())
 
 	// define iterator depending on swap strategy
@@ -388,18 +415,17 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	for ; iterator.Valid(); iterator.Next() {
 		tickIndex, err := types.TickIndexFromBytes(iterator.Key())
 		if err != nil {
-			return []query.TickLiquidityNet{}, err
+			return []queryproto.TickLiquidityNet{}, err
 		}
 
-		tickStruct := model.TickInfo{}
-		err = proto.Unmarshal(iterator.Value(), &tickStruct)
+		tickStruct, err := ParseTickFromBz(iterator.Value())
 		if err != nil {
-			return []query.TickLiquidityNet{}, err
+			return []queryproto.TickLiquidityNet{}, err
 		}
 
-		liquidityDepth := query.TickLiquidityNet{
+		liquidityDepth := queryproto.TickLiquidityNet{
 			LiquidityNet: tickStruct.LiquidityNet,
-			TickIndex:    sdk.NewInt(tickIndex),
+			TickIndex:    tickIndex,
 		}
 		liquidityDepths = append(liquidityDepths, liquidityDepth)
 	}
@@ -407,16 +433,16 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	return liquidityDepths, nil
 }
 
-func (k Keeper) getTickByTickIndex(ctx sdk.Context, poolId uint64, tickIndex sdk.Int) (model.TickInfo, error) {
+func (k Keeper) getTickByTickIndex(ctx sdk.Context, poolId uint64, tickIndex int64) (model.TickInfo, error) {
 	store := ctx.KVStore(k.storeKey)
-	keyTick := types.KeyTick(poolId, tickIndex.Int64())
+	keyTick := types.KeyTick(poolId, tickIndex)
 	tickStruct := model.TickInfo{}
 	found, err := osmoutils.Get(store, keyTick, &tickStruct)
 	if err != nil {
 		return model.TickInfo{}, err
 	}
 	if !found {
-		return model.TickInfo{}, types.TickNotFoundError{Tick: tickIndex.Int64()}
+		return model.TickInfo{}, types.TickNotFoundError{Tick: tickIndex}
 	}
 	return tickStruct, nil
 }

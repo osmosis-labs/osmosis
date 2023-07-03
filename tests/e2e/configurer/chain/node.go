@@ -12,8 +12,8 @@ import (
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/initialization"
 )
 
 type NodeConfig struct {
@@ -32,6 +32,7 @@ type NodeConfig struct {
 
 // NewNodeConfig returens new initialized NodeConfig.
 func NewNodeConfig(t *testing.T, initNode *initialization.Node, initConfig *initialization.NodeConfig, chainId string, containerManager *containers.Manager) *NodeConfig {
+	t.Helper()
 	return &NodeConfig{
 		Node:             *initNode,
 		SnapshotInterval: initConfig.SnapshotInterval,

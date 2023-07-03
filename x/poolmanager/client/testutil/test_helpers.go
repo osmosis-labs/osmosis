@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v15/app"
-	poolmanagercli "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/cli"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/app"
+	poolmanagercli "github.com/osmosis-labs/osmosis/v16/x/poolmanager/client/cli"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -31,11 +31,12 @@ func MsgCreatePool(
 	owner fmt.Stringer,
 	tokenWeights string,
 	initialDeposit string,
-	swapFee string,
+	spreadFactor string,
 	exitFee string,
 	futureGovernor string,
 	extraArgs ...string,
 ) (testutil.BufferWriter, error) {
+	t.Helper()
 	args := []string{}
 
 	jsonFile := testutil.WriteToNewTempFile(t,
@@ -52,7 +53,7 @@ func MsgCreatePool(
 			poolmanagercli.PoolFileInitialDeposit,
 			initialDeposit,
 			poolmanagercli.PoolFileSwapFee,
-			swapFee,
+			spreadFactor,
 			poolmanagercli.PoolFileExitFee,
 			exitFee,
 			poolmanagercli.PoolFileExitFee,

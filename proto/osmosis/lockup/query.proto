@@ -9,7 +9,7 @@ import "google/protobuf/duration.proto";
 import "osmosis/lockup/lock.proto";
 import "osmosis/lockup/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v15/x/lockup/types";
+option go_package = "github.com/osmosis-labs/osmosis/v16/x/lockup/types";
 
 // Query defines the gRPC querier service.
 service Query {
@@ -83,16 +83,32 @@ service Query {
         "/osmosis/lockup/v1beta1/locked_by_id/{lock_id}";
   }
 
+  // Returns lock record by id
+  rpc LockRewardReceiver(LockRewardReceiverRequest)
+      returns (LockRewardReceiverResponse) {
+    option (google.api.http).get =
+        "/osmosis/lockup/v1beta1/lock_reward_receiver/{lock_id}";
+  }
+
   // Returns next lock ID
   rpc NextLockID(NextLockIDRequest) returns (NextLockIDResponse) {
     option (google.api.http).get = "/osmosis/lockup/v1beta1/next_lock_id";
   }
 
-  // Returns synthetic lockups by native lockup id
+  // Returns synthetic lockup by native lockup id
+  // Deprecated: use SyntheticLockupByLockupID instead
   rpc SyntheticLockupsByLockupID(SyntheticLockupsByLockupIDRequest)
       returns (SyntheticLockupsByLockupIDResponse) {
+    option deprecated = true;
     option (google.api.http).get =
         "/osmosis/lockup/v1beta1/synthetic_lockups_by_lock_id/{lock_id}";
+  }
+
+  // Returns synthetic lockup by native lockup id
+  rpc SyntheticLockupByLockupID(SyntheticLockupByLockupIDRequest)
+      returns (SyntheticLockupByLockupIDResponse) {
+    option (google.api.http).get =
+        "/osmosis/lockup/v1beta1/synthetic_lockup_by_lock_id/{lock_id}";
   }
 
   // Returns account locked records with longer duration
@@ -244,12 +260,24 @@ message LockedDenomResponse {
 message LockedRequest { uint64 lock_id = 1; };
 message LockedResponse { PeriodLock lock = 1; };
 
+message LockRewardReceiverRequest { uint64 lock_id = 1; };
+message LockRewardReceiverResponse { string reward_receiver = 1; };
+
 message NextLockIDRequest {};
 message NextLockIDResponse { uint64 lock_id = 1; };
 
-message SyntheticLockupsByLockupIDRequest { uint64 lock_id = 1; }
+message SyntheticLockupsByLockupIDRequest {
+  option deprecated = true;
+  uint64 lock_id = 1;
+}
 message SyntheticLockupsByLockupIDResponse {
+  option deprecated = true;
   repeated SyntheticLock synthetic_locks = 1 [ (gogoproto.nullable) = false ];
+}
+
+message SyntheticLockupByLockupIDRequest { uint64 lock_id = 1; }
+message SyntheticLockupByLockupIDResponse {
+  SyntheticLock synthetic_lock = 1 [ (gogoproto.nullable) = false ];
 }
 
 message AccountLockedLongerDurationRequest {

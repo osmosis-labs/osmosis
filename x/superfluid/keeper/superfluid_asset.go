@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -24,7 +24,7 @@ func (k Keeper) BeginUnwindSuperfluidAsset(ctx sdk.Context, epochNum int64, asse
 // Returns amount * (1 - k.RiskFactor(asset))
 // Fow now, the risk factor is a global constant.
 // It will move towards per pool functions.
-func (k Keeper) GetRiskAdjustedOsmoValue(ctx sdk.Context, asset types.SuperfluidAsset, amount sdk.Int) sdk.Int {
+func (k Keeper) GetRiskAdjustedOsmoValue(ctx sdk.Context, amount sdk.Int) sdk.Int {
 	minRiskFactor := k.GetParams(ctx).MinimumRiskFactor
 	return amount.Sub(amount.ToDec().Mul(minRiskFactor).RoundInt())
 }

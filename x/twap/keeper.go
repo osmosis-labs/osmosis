@@ -8,7 +8,7 @@ import (
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v16/x/twap/types"
 )
 
 type Keeper struct {
@@ -65,7 +65,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	})
 
 	for _, twap := range genState.Twaps {
-		k.storeNewRecord(ctx, twap)
+		k.StoreNewRecord(ctx, twap)
 	}
 }
 

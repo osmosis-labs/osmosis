@@ -5,7 +5,7 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -15,6 +15,7 @@ type Keeper struct {
 
 	gammKeeper           types.PoolModuleI
 	concentratedKeeper   types.PoolModuleI
+	cosmwasmpoolKeeper   types.PoolModuleI
 	poolIncentivesKeeper types.PoolIncentivesKeeperI
 	bankKeeper           types.BankI
 	accountKeeper        types.AccountI
@@ -32,7 +33,7 @@ type Keeper struct {
 	paramSpace paramtypes.Subspace
 }
 
-func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI) *Keeper {
+func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -42,10 +43,11 @@ func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper
 		types.Balancer:     gammKeeper,
 		types.Stableswap:   gammKeeper,
 		types.Concentrated: concentratedKeeper,
+		types.CosmWasm:     cosmwasmpoolKeeper,
 	}
 
 	routesList := []types.PoolModuleI{
-		gammKeeper, concentratedKeeper,
+		gammKeeper, concentratedKeeper, cosmwasmpoolKeeper,
 	}
 
 	return &Keeper{
@@ -53,6 +55,7 @@ func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper
 		paramSpace:          paramSpace,
 		gammKeeper:          gammKeeper,
 		concentratedKeeper:  concentratedKeeper,
+		cosmwasmpoolKeeper:  cosmwasmpoolKeeper,
 		bankKeeper:          bankKeeper,
 		accountKeeper:       accountKeeper,
 		communityPoolKeeper: communityPoolKeeper,

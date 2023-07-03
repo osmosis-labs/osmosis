@@ -37,6 +37,7 @@ const (
 
 var (
 	precisionReuse       = new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision), nil)
+	precisionReuseSDK    = new(big.Int).Exp(big.NewInt(10), big.NewInt(sdk.Precision), nil)
 	fivePrecision        = new(big.Int).Quo(precisionReuse, big.NewInt(2))
 	precisionMultipliers []*big.Int
 	zeroInt              = big.NewInt(0)
@@ -305,6 +306,17 @@ func (d BigDec) MulTruncate(d2 BigDec) BigDec {
 	return BigDec{chopped}
 }
 
+// multiplication round up
+func (d BigDec) MulRoundUp(d2 BigDec) BigDec {
+	mul := new(big.Int).Mul(d.i, d2.i)
+	chopped := chopPrecisionAndRoundUpBigDec(mul)
+
+	if chopped.BitLen() > maxDecBitLen {
+		panic("Int overflow")
+	}
+	return BigDec{chopped}
+}
+
 // multiplication
 func (d BigDec) MulInt(i BigInt) BigDec {
 	mul := new(big.Int).Mul(d.i, i.i)
@@ -381,7 +393,7 @@ func (d BigDec) QuoRoundUp(d2 BigDec) BigDec {
 	mul.Mul(mul, precisionReuse)
 
 	quo := new(big.Int).Quo(mul, d2.i)
-	chopped := chopPrecisionAndRoundUp(quo)
+	chopped := chopPrecisionAndRoundUpBigDec(quo)
 
 	if chopped.BitLen() > maxDecBitLen {
 		panic("Int overflow")
@@ -557,6 +569,13 @@ func (d BigDec) SDKDec() sdk.Dec {
 	return truncatedDec
 }
 
+// SDKDecRoundUp returns the Sdk.Dec representation of a BigDec.
+// Round up at precision end.
+// Values in any additional decimal places are truncated.
+func (d BigDec) SDKDecRoundUp() sdk.Dec {
+	return sdk.NewDecFromBigIntWithPrec(chopPrecisionAndRoundUpSDKDec(d.i), sdk.Precision)
+}
+
 // BigDecFromSdkDec returns the BigDec representation of an SDKDec.
 // Values in any additional decimal places are truncated.
 func BigDecFromSDKDec(d sdk.Dec) BigDec {
@@ -628,8 +647,18 @@ func chopPrecisionAndRound(d *big.Int) *big.Int {
 	}
 }
 
+// chopPrecisionAndRoundUpBigDec removes a Precision amount of rightmost digits and rounds up.
+func chopPrecisionAndRoundUpBigDec(d *big.Int) *big.Int {
+	return chopPrecisionAndRoundUp(d, precisionReuse)
+}
+
+// chopPrecisionAndRoundUpSDKDec removes  sdk.Precision amount of rightmost digits and rounds up.
+func chopPrecisionAndRoundUpSDKDec(d *big.Int) *big.Int {
+	return chopPrecisionAndRoundUp(d, precisionReuseSDK)
+}
+
 // chopPrecisionAndRoundUp removes a Precision amount of rightmost digits and rounds up.
-func chopPrecisionAndRoundUp(d *big.Int) *big.Int {
+func chopPrecisionAndRoundUp(d *big.Int, precisionReuse *big.Int) *big.Int {
 	// remove the negative and add it back when returning
 	if d.Sign() == -1 {
 		// make d positive, compute chopped value, and then un-mutate d
@@ -887,12 +916,16 @@ func MaxDec(d1, d2 BigDec) BigDec {
 
 // DecEq returns true if two given decimals are equal.
 // Intended to be used with require/assert:  require.True(t, DecEq(...))
+//
+//nolint:thelper
 func DecEq(t *testing.T, exp, got BigDec) (*testing.T, bool, string, string, string) {
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
 
 // DecApproxEq returns true if the differences between two given decimals are smaller than the tolerance range.
 // Intended to be used with require/assert:  require.True(t, DecEq(...))
+//
+//nolint:thelper
 func DecApproxEq(t *testing.T, d1 BigDec, d2 BigDec, tol BigDec) (*testing.T, bool, string, string, string) {
 	diff := d1.Sub(d2).Abs()
 	return t, diff.LTE(tol), "expected |d1 - d2| <:\t%v\ngot |d1 - d2| = \t\t%v", tol.String(), diff.String()
@@ -1019,6 +1052,9 @@ func (d BigDec) PowerIntegerMut(power uint64) BigDec {
 // If a greater exponent is given, the function panics.
 // The error is not bounded but expected to be around 10^-18, use with care.
 // See the underlying Exp2, LogBase2 and Mul for the details of their bounds.
+// WARNING: This function is broken for base < 1. The reason is that logarithm function is
+// negative between zero and 1, and the Exp2(k) is undefined for negative k.
+// As a result, this function panics if called for d < 1.
 func (d BigDec) Power(power BigDec) BigDec {
 	if d.IsNegative() {
 		panic(fmt.Sprintf("negative base is not supported for Power(), base was (%s)", d))
@@ -1037,6 +1073,9 @@ func (d BigDec) Power(power BigDec) BigDec {
 	}
 	if d.IsZero() {
 		return ZeroDec()
+	}
+	if d.LT(OneDec()) {
+		panic(fmt.Sprintf("Power() is not supported for base < 1, base was (%s)", d))
 	}
 	if d.Equal(twoBigDec) {
 		return Exp2(power)

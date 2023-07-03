@@ -10,8 +10,9 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "osmosis/lockup/lock.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model";
+option go_package = "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model";
 
 // Position contains position's id, address, pool id, lower tick, upper tick
 // join time, and liquidity.
@@ -33,7 +34,14 @@ message Position {
   ];
 }
 
-message PositionWithUnderlyingAssetBreakdown {
+// FullPositionBreakdown returns:
+// - the position itself
+// - the amount the position translates in terms of asset0 and asset1
+// - the amount of claimable fees
+// - the amount of claimable incentives
+// - the amount of incentives that would be forfeited if the position was closed
+// now
+message FullPositionBreakdown {
   Position position = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.v1beta1.Coin asset0 = 2 [
     (gogoproto.nullable) = false,
@@ -43,4 +51,21 @@ message PositionWithUnderlyingAssetBreakdown {
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
   ];
+  repeated cosmos.base.v1beta1.Coin claimable_spread_rewards = 4 [
+    (gogoproto.moretags) = "yaml:\"claimable_spread_rewards\"",
+    (gogoproto.nullable) = false
+  ];
+  repeated cosmos.base.v1beta1.Coin claimable_incentives = 5 [
+    (gogoproto.moretags) = "yaml:\"claimable_incentives\"",
+    (gogoproto.nullable) = false
+  ];
+  repeated cosmos.base.v1beta1.Coin forfeited_incentives = 6 [
+    (gogoproto.moretags) = "yaml:\"forfeited_incentives\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message PositionWithPeriodLock {
+  Position position = 1 [ (gogoproto.nullable) = false ];
+  osmosis.lockup.PeriodLock locks = 2 [ (gogoproto.nullable) = false ];
 }

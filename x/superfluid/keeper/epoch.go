@@ -2,16 +2,20 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 )
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) error {
@@ -91,6 +95,8 @@ func (k Keeper) distributeSuperfluidGauges(ctx sdk.Context) {
 	// only distribute to active gauges that are for perpetual synthetic denoms
 	distrGauges := []incentivestypes.Gauge{}
 	for _, gauge := range gauges {
+		// we filter superfluid gauges by using the distributeTo denom in the gauge.
+		// If the denom in the gauge is a synthetic denom, we append the gauge to the gauge list to distribute to.
 		isSynthetic := lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom)
 		if isSynthetic && gauge.IsPerpetual {
 			distrGauges = append(distrGauges, gauge)
@@ -118,6 +124,7 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		bondDenom := k.sk.BondDenom(ctx)
 		osmoPoolAsset := pool.GetTotalPoolLiquidity(ctx).AmountOf(bondDenom)
 		if osmoPoolAsset.IsZero() {
+			err := fmt.Errorf("pool %d has zero OSMO amount", poolId)
 			// Pool has unexpectedly removed Osmo from its assets.
 			k.Logger(ctx).Error(err.Error())
 			k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
@@ -125,6 +132,54 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		}
 
 		multiplier := k.calculateOsmoBackingPerShare(pool, osmoPoolAsset)
+		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, multiplier)
+	} else if asset.AssetType == types.SuperfluidAssetTypeConcentratedShare {
+		// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
+		poolId := cltypes.MustGetPoolIdFromShareDenom(asset.Denom)
+		pool, err := k.clk.GetConcentratedPoolById(ctx, poolId)
+		if err != nil {
+			k.Logger(ctx).Error(err.Error())
+			// Pool has unexpectedly removed Osmo from its assets.
+			k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
+			return err
+		}
+
+		// get underlying assets from all liquidity in a full range position
+		// note: this is not the same as the total liquidity in the pool, as this includes positions not in the full range
+		bondDenom := k.sk.BondDenom(ctx)
+		fullRangeLiquidity, err := k.clk.GetFullRangeLiquidityInPool(ctx, poolId)
+		if err != nil {
+			k.Logger(ctx).Error(err.Error())
+			k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
+			return fmt.Errorf("failed to retrieve full range liquidity from pool (%d): %w", poolId, err)
+		}
+
+		position := model.Position{
+			LowerTick: cltypes.MinInitializedTick,
+			UpperTick: cltypes.MaxTick,
+			Liquidity: fullRangeLiquidity,
+		}
+		// Note that the returned amounts are rounded up. This should be fine as they both are used for calculating the multiplier.
+		asset0, asset1, err := cl.CalculateUnderlyingAssetsFromPosition(ctx, position, pool)
+		if err != nil {
+			k.Logger(ctx).Error(err.Error())
+			k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
+			return err
+		}
+		assets := sdk.NewCoins(asset0, asset1)
+
+		// get OSMO amount from underlying assets
+		osmoPoolAsset := assets.AmountOf(bondDenom)
+		if osmoPoolAsset.IsZero() {
+			// Pool has unexpectedly removed OSMO from its assets.
+			err := errors.New("pool has unexpectedly removed OSMO as one of its underlying assets")
+			k.Logger(ctx).Error(err.Error())
+			k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
+			return err
+		}
+
+		// calculate multiplier and set it
+		multiplier := osmoPoolAsset.ToDec().Quo(fullRangeLiquidity)
 		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, multiplier)
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 		// TODO: Consider deleting superfluid asset type native

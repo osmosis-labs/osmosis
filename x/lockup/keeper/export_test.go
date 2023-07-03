@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -24,4 +24,8 @@ func (k Keeper) GetCoinsFromLocks(locks []types.PeriodLock) sdk.Coins {
 
 func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Coins) error {
 	return k.lock(ctx, lock, tokensToLock)
+}
+
+func (k Keeper) UnlockMaturedLockInternalLogic(ctx sdk.Context, lock types.PeriodLock) error {
+	return k.unlockMaturedLockInternalLogic(ctx, lock)
 }

@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	osmoapp "github.com/osmosis-labs/osmosis/v15/app"
-	"github.com/osmosis-labs/osmosis/v15/x/lockup"
-	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v16/app"
+	"github.com/osmosis-labs/osmosis/v16/x/lockup"
+	"github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,25 +24,28 @@ var (
 		LastLockId: 10,
 		Locks: []types.PeriodLock{
 			{
-				ID:       1,
-				Owner:    acc1.String(),
-				Duration: time.Second,
-				EndTime:  time.Time{},
-				Coins:    sdk.Coins{sdk.NewInt64Coin("foo", 10000000)},
+				ID:                    1,
+				Owner:                 acc1.String(),
+				RewardReceiverAddress: "",
+				Duration:              time.Second,
+				EndTime:               time.Time{},
+				Coins:                 sdk.Coins{sdk.NewInt64Coin("foo", 10000000)},
 			},
 			{
-				ID:       2,
-				Owner:    acc1.String(),
-				Duration: time.Hour,
-				EndTime:  time.Time{},
-				Coins:    sdk.Coins{sdk.NewInt64Coin("foo", 15000000)},
+				ID:                    2,
+				Owner:                 acc1.String(),
+				RewardReceiverAddress: acc2.String(),
+				Duration:              time.Hour,
+				EndTime:               time.Time{},
+				Coins:                 sdk.Coins{sdk.NewInt64Coin("foo", 15000000)},
 			},
 			{
-				ID:       3,
-				Owner:    acc2.String(),
-				Duration: time.Minute,
-				EndTime:  time.Time{},
-				Coins:    sdk.Coins{sdk.NewInt64Coin("foo", 5000000)},
+				ID:                    3,
+				Owner:                 acc2.String(),
+				RewardReceiverAddress: acc1.String(),
+				Duration:              time.Minute,
+				EndTime:               time.Time{},
+				Coins:                 sdk.Coins{sdk.NewInt64Coin("foo", 5000000)},
 			},
 		},
 	}
@@ -90,32 +93,36 @@ func TestExportGenesis(t *testing.T) {
 	require.Equal(t, genesisExported.LastLockId, uint64(11))
 	require.Equal(t, genesisExported.Locks, []types.PeriodLock{
 		{
-			ID:       1,
-			Owner:    acc1.String(),
-			Duration: time.Second,
-			EndTime:  time.Time{},
-			Coins:    sdk.Coins{sdk.NewInt64Coin("foo", 10000000)},
+			ID:                    1,
+			Owner:                 acc1.String(),
+			RewardReceiverAddress: "",
+			Duration:              time.Second,
+			EndTime:               time.Time{},
+			Coins:                 sdk.Coins{sdk.NewInt64Coin("foo", 10000000)},
 		},
 		{
-			ID:       11,
-			Owner:    acc2.String(),
-			Duration: time.Second * 5,
-			EndTime:  time.Time{},
-			Coins:    sdk.Coins{sdk.NewInt64Coin("foo", 5000000)},
+			ID:                    11,
+			Owner:                 acc2.String(),
+			RewardReceiverAddress: "",
+			Duration:              time.Second * 5,
+			EndTime:               time.Time{},
+			Coins:                 sdk.Coins{sdk.NewInt64Coin("foo", 5000000)},
 		},
 		{
-			ID:       3,
-			Owner:    acc2.String(),
-			Duration: time.Minute,
-			EndTime:  time.Time{},
-			Coins:    sdk.Coins{sdk.NewInt64Coin("foo", 5000000)},
+			ID:                    3,
+			Owner:                 acc2.String(),
+			RewardReceiverAddress: acc1.String(),
+			Duration:              time.Minute,
+			EndTime:               time.Time{},
+			Coins:                 sdk.Coins{sdk.NewInt64Coin("foo", 5000000)},
 		},
 		{
-			ID:       2,
-			Owner:    acc1.String(),
-			Duration: time.Hour,
-			EndTime:  time.Time{},
-			Coins:    sdk.Coins{sdk.NewInt64Coin("foo", 15000000)},
+			ID:                    2,
+			Owner:                 acc1.String(),
+			RewardReceiverAddress: acc2.String(),
+			Duration:              time.Hour,
+			EndTime:               time.Time{},
+			Coins:                 sdk.Coins{sdk.NewInt64Coin("foo", 15000000)},
 		},
 	})
 }

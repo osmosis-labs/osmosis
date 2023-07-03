@@ -5,14 +5,15 @@ import (
 
 	gogotypes "github.com/gogo/protobuf/types"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 func (k Keeper) MarshalPool(pool poolmanagertypes.PoolI) ([]byte, error) {
@@ -78,7 +79,7 @@ func (k Keeper) GetCFMMPool(ctx sdk.Context, poolId uint64) (types.CFMMPoolI, er
 	}
 
 	if !pool.IsActive(ctx) {
-		return &balancer.Pool{}, sdkerrors.Wrapf(types.ErrPoolLocked, "swap on inactive pool")
+		return &balancer.Pool{}, errorsmod.Wrapf(types.ErrPoolLocked, "swap on inactive pool")
 	}
 	return pool, nil
 }
@@ -284,7 +285,7 @@ func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (poolmanagertypes.Po
 		return poolmanagertypes.Stableswap, nil
 	default:
 		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
-		return -1, sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
+		return -1, errorsmod.Wrap(sdkerrors.ErrUnpackAny, errMsg)
 	}
 }
 
@@ -295,6 +296,16 @@ func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins
 		return nil, err
 	}
 	return pool.GetTotalPoolLiquidity(ctx), nil
+}
+
+// GetTotalPoolShares returns the total number of pool shares for the given pool.
+func (k Keeper) GetTotalPoolShares(ctx sdk.Context, poolId uint64) (sdk.Int, error) {
+	pool, err := k.GetCFMMPool(ctx, poolId)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	return pool.GetTotalShares(), nil
 }
 
 // setStableSwapScalingFactors sets the stable swap scaling factors.
@@ -316,10 +327,10 @@ func (k Keeper) setStableSwapScalingFactors(ctx sdk.Context, poolId uint64, scal
 	return k.setPool(ctx, stableswapPool)
 }
 
-// convertToCFMMPool converts PoolI to CFMMPoolI by casting the input.
+// asCFMMPool converts PoolI to CFMMPoolI by casting the input.
 // Returns the pool of the CFMMPoolI or error if the given pool does not implement
 // CFMMPoolI.
-func convertToCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {
+func asCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {
 	cfmmPool, ok := pool.(types.CFMMPoolI)
 	if !ok {
 		return nil, fmt.Errorf("given pool does not implement CFMMPoolI, implements %T", pool)

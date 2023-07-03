@@ -1,6 +1,7 @@
 package osmoutils
 
 import (
+	"reflect"
 	"sort"
 
 	"golang.org/x/exp/constraints"
@@ -50,6 +51,19 @@ func ContainsDuplicate[T any](arr []T) bool {
 	return false
 }
 
+// ContainsDuplicateDeepEqual returns true if there are duplicates
+// in the slice by performing deep comparison. This is useful
+// for comparing matrices or slices of pointers.
+// Returns false if there are no deep equal duplicates.
+func ContainsDuplicateDeepEqual[T any](multihops []T) bool {
+	for i := 0; i < len(multihops)-1; i++ {
+		if reflect.DeepEqual(multihops[i], multihops[i+1]) {
+			return true
+		}
+	}
+	return false
+}
+
 type LessFunc[T any] func(a, b T) bool
 
 // MergeSlices efficiently merges two sorted slices into a single sorted slice.
@@ -77,4 +91,14 @@ func MergeSlices[T any](slice1, slice2 []T, less LessFunc[T]) []T {
 	result = append(result, slice2[j:]...)
 
 	return result
+}
+
+// Contains returns true if the slice contains the item, false otherwise.
+func Contains[T comparable](slice []T, item T) bool {
+	for _, a := range slice {
+		if a == item {
+			return true
+		}
+	}
+	return false
 }

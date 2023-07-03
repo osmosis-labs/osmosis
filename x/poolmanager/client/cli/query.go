@@ -8,8 +8,8 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 var customRouterFlagOverride = map[string]string{
@@ -26,6 +26,9 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdEstimateSinglePoolSwapExactAmountIn)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdEstimateSinglePoolSwapExactAmountOut)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdSpotPrice)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTotalPoolLiquidity)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdAllPools)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdPool)
 
 	return cmd
 }
@@ -67,13 +70,23 @@ func GetCmdNumPools() (*osmocli.QueryDescriptor, *queryproto.NumPoolsRequest) {
 	}, &queryproto.NumPoolsRequest{}
 }
 
+// GetCmdAllPools return all pools available across Osmosis modules.
+func GetCmdAllPools() (*osmocli.QueryDescriptor, *queryproto.AllPoolsRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "all-pools",
+		Short: "Query all pools on the Osmosis chain",
+		Long:  "{{.Short}}",
+	}, &queryproto.AllPoolsRequest{}
+}
+
 // GetCmdPool returns pool information.
 func GetCmdPool() (*osmocli.QueryDescriptor, *queryproto.PoolRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "pool [poolID]",
 		Short: "Query pool",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} pool 1`}, &queryproto.PoolRequest{}
+{{.CommandPrefix}} pool 1`,
+	}, &queryproto.PoolRequest{}
 }
 
 func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *queryproto.SpotPriceRequest) {
@@ -82,7 +95,8 @@ func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *queryproto.SpotPriceRequest) 
 		Short: "Query spot-price",
 		Long: `Query spot-price
 {{.CommandPrefix}} spot-price 1 uosmo ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
-`}, &queryproto.SpotPriceRequest{}
+`,
+	}, &queryproto.SpotPriceRequest{}
 }
 
 func EstimateSwapExactAmountInParseArgs(args []string, fs *flag.FlagSet) (proto.Message, error) {
@@ -141,4 +155,13 @@ func GetCmdEstimateSinglePoolSwapExactAmountOut() (*osmocli.QueryDescriptor, *qu
 {{.CommandPrefix}} estimate-single-pool-swap-exact-amount-out 1 uosmo 1000stake`,
 		QueryFnName: "EstimateSinglePoolSwapExactAmountOut",
 	}, &queryproto.EstimateSinglePoolSwapExactAmountOutRequest{}
+}
+
+func GetCmdTotalPoolLiquidity() (*osmocli.QueryDescriptor, *queryproto.TotalPoolLiquidityRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "total-pool-liquidity [poolID]",
+		Short: "Query total-pool-liquidity",
+		Long: `{{.Short}} 
+		{{.CommandPrefix}} total-pool-liquidity 1`,
+	}, &queryproto.TotalPoolLiquidityRequest{}
 }

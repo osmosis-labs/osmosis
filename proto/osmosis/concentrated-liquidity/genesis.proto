@@ -11,7 +11,7 @@ import "osmosis/concentrated-liquidity/position.proto";
 import "osmosis/concentrated-liquidity/tickInfo.proto";
 import "osmosis/concentrated-liquidity/incentive_record.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis";
+option go_package = "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types/genesis";
 
 // FullTick contains tick index and pool id along with other tick model
 // information.
@@ -35,8 +35,8 @@ message PoolData {
   // pool's ticks
   repeated FullTick ticks = 2
       [ (gogoproto.moretags) = "yaml:\"ticks\"", (gogoproto.nullable) = false ];
-  AccumObject fee_accumulator = 3 [
-    (gogoproto.moretags) = "yaml:\"fee_accumulator\"",
+  AccumObject spread_reward_accumulator = 3 [
+    (gogoproto.moretags) = "yaml:\"spread_reward_accumulator\"",
     (gogoproto.nullable) = false
   ];
   repeated AccumObject incentives_accumulators = 4 [
@@ -48,6 +48,15 @@ message PoolData {
       [ (gogoproto.nullable) = false ];
 }
 
+message PositionData {
+  Position position = 1;
+  uint64 lock_id = 2 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
+  osmosis.accum.v1beta1.Record spread_reward_accum_record = 3
+      [ (gogoproto.nullable) = false ];
+  repeated osmosis.accum.v1beta1.Record uptime_accum_records = 4
+      [ (gogoproto.nullable) = false ];
+}
+
 // GenesisState defines the concentrated liquidity module's genesis state.
 message GenesisState {
   // params are all the parameters of the module
@@ -55,10 +64,13 @@ message GenesisState {
   // pool data containining serialized pool struct and ticks.
   repeated PoolData pool_data = 2 [ (gogoproto.nullable) = false ];
 
-  repeated Position positions = 3 [ (gogoproto.nullable) = false ];
+  repeated PositionData position_data = 3 [ (gogoproto.nullable) = false ];
 
   uint64 next_position_id = 4
       [ (gogoproto.moretags) = "yaml:\"next_position_id\"" ];
+
+  uint64 next_incentive_record_id = 5
+      [ (gogoproto.moretags) = "yaml:\"next_incentive_record_id\"" ];
 }
 
 message AccumObject {

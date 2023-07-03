@@ -26,28 +26,31 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
+	icq "github.com/cosmos/ibc-apps/modules/async-icq/v4"
 	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
-	icq "github.com/strangelove-ventures/async-icq/v4"
 
-	_ "github.com/osmosis-labs/osmosis/v15/client/docs/statik"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/clmodule"
-	downtimemodule "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/module"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm"
-	gammclient "github.com/osmosis-labs/osmosis/v15/x/gamm/client"
-	"github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/ibcratelimitmodule"
-	"github.com/osmosis-labs/osmosis/v15/x/incentives"
-	"github.com/osmosis-labs/osmosis/v15/x/lockup"
-	"github.com/osmosis-labs/osmosis/v15/x/mint"
-	poolincentives "github.com/osmosis-labs/osmosis/v15/x/pool-incentives"
-	poolincentivesclient "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/client"
-	poolmanager "github.com/osmosis-labs/osmosis/v15/x/poolmanager/module"
-	"github.com/osmosis-labs/osmosis/v15/x/protorev"
-	superfluid "github.com/osmosis-labs/osmosis/v15/x/superfluid"
-	superfluidclient "github.com/osmosis-labs/osmosis/v15/x/superfluid/client"
-	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory"
-	"github.com/osmosis-labs/osmosis/v15/x/twap/twapmodule"
-	"github.com/osmosis-labs/osmosis/v15/x/txfees"
-	valsetprefmodule "github.com/osmosis-labs/osmosis/v15/x/valset-pref/valpref-module"
+	_ "github.com/osmosis-labs/osmosis/v16/client/docs/statik"
+	clclient "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/clmodule"
+	cwpoolclient "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/client"
+	cosmwasmpoolmodule "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/module"
+	downtimemodule "github.com/osmosis-labs/osmosis/v16/x/downtime-detector/module"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm"
+	gammclient "github.com/osmosis-labs/osmosis/v16/x/gamm/client"
+	"github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/ibcratelimitmodule"
+	"github.com/osmosis-labs/osmosis/v16/x/incentives"
+	"github.com/osmosis-labs/osmosis/v16/x/lockup"
+	"github.com/osmosis-labs/osmosis/v16/x/mint"
+	poolincentives "github.com/osmosis-labs/osmosis/v16/x/pool-incentives"
+	poolincentivesclient "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/client"
+	poolmanager "github.com/osmosis-labs/osmosis/v16/x/poolmanager/module"
+	"github.com/osmosis-labs/osmosis/v16/x/protorev"
+	superfluid "github.com/osmosis-labs/osmosis/v16/x/superfluid"
+	superfluidclient "github.com/osmosis-labs/osmosis/v16/x/superfluid/client"
+	"github.com/osmosis-labs/osmosis/v16/x/tokenfactory"
+	"github.com/osmosis-labs/osmosis/v16/x/twap/twapmodule"
+	"github.com/osmosis-labs/osmosis/v16/x/txfees"
+	valsetprefmodule "github.com/osmosis-labs/osmosis/v16/x/valset-pref/valpref-module"
 	"github.com/osmosis-labs/osmosis/x/epochs"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
@@ -78,6 +81,10 @@ var AppModuleBasics = []module.AppModuleBasic{
 			superfluidclient.UpdateUnpoolWhitelistProposalHandler,
 			gammclient.ReplaceMigrationRecordsProposalHandler,
 			gammclient.UpdateMigrationRecordsProposalHandler,
+			clclient.CreateConcentratedLiquidityPoolProposalHandler,
+			clclient.TickSpacingDecreaseProposalHandler,
+			cwpoolclient.UploadCodeIdAndWhitelistProposalHandler,
+			cwpoolclient.MigratePoolContractsProposalHandler,
 		)...,
 	),
 	params.AppModuleBasic{},
@@ -108,4 +115,5 @@ var AppModuleBasics = []module.AppModuleBasic{
 	ibc_hooks.AppModuleBasic{},
 	ibcratelimitmodule.AppModuleBasic{},
 	router.AppModuleBasic{},
+	cosmwasmpoolmodule.AppModuleBasic{},
 }

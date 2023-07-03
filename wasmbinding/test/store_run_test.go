@@ -14,7 +14,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app"
+	"github.com/osmosis-labs/osmosis/v16/app"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 )
 
 func TestNoStorageWithoutProposal(t *testing.T) {
@@ -35,6 +36,7 @@ func TestNoStorageWithoutProposal(t *testing.T) {
 }
 
 func storeCodeViaProposal(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress) {
+	t.Helper()
 	govKeeper := osmosis.GovKeeper
 	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
 	require.NoError(t, err)
@@ -57,6 +59,7 @@ func storeCodeViaProposal(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp
 }
 
 func TestStoreCodeProposal(t *testing.T) {
+	apptesting.SkipIfWSL(t)
 	osmosis, ctx := CreateTestInput()
 	myActorAddress := RandomAccountAddress()
 	wasmKeeper := osmosis.WasmKeeper
@@ -82,6 +85,7 @@ type HackatomExampleInitMsg struct {
 }
 
 func TestInstantiateContract(t *testing.T) {
+	apptesting.SkipIfWSL(t)
 	osmosis, ctx := CreateTestInput()
 	funder := RandomAccountAddress()
 	benefit, arb := RandomAccountAddress(), RandomAccountAddress()

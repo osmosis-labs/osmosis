@@ -3,7 +3,7 @@ package v15
 import (
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,22 +12,22 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	icqkeeper "github.com/strangelove-ventures/async-icq/v4/keeper"
-	icqtypes "github.com/strangelove-ventures/async-icq/v4/types"
+	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v4/keeper"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v4/types"
 
-	"github.com/osmosis-labs/osmosis/v15/wasmbinding"
-	ibcratelimit "github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v16/wasmbinding"
+	ibcratelimit "github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/types"
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
-	"github.com/osmosis-labs/osmosis/v15/app/keepers"
-	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
-	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
-	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v16/app/keepers"
+	appParams "github.com/osmosis-labs/osmosis/v16/app/params"
+	"github.com/osmosis-labs/osmosis/v16/app/upgrades"
+	gammkeeper "github.com/osmosis-labs/osmosis/v16/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/stableswap"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v16/x/poolmanager"
 )
 
 func CreateUpgradeHandler(
@@ -102,7 +102,7 @@ func migrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.
 	// initialize the stableswap pool
 	stableswapPool, err := stableswap.NewStableswapPool(
 		poolId,
-		stableswap.PoolParams{SwapFee: balancerPool.GetSwapFee(ctx), ExitFee: balancerPool.GetExitFee(ctx)},
+		stableswap.PoolParams{SwapFee: balancerPool.GetSpreadFactor(ctx), ExitFee: balancerPool.GetExitFee(ctx)},
 		balancerPoolLiquidity,
 		[]uint64{1, 1},
 		"osmo1k8c2m5cn322akk5wy8lpt87dd2f4yh9afcd7af", // Stride Foundation 2/3 multisig

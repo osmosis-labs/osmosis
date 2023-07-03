@@ -3,8 +3,8 @@ package twap
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -80,6 +80,6 @@ func (l *concentratedLiquidityListener) AfterLastPoolPositionRemoved(ctx sdk.Con
 	l.k.trackChangedPool(ctx, poolId)
 }
 
-func (l *concentratedLiquidityListener) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+func (l *concentratedLiquidityListener) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 	l.k.trackChangedPool(ctx, poolId)
 }

@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/client"
+	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/client/queryproto"
 )
 
 type Querier struct {
@@ -19,6 +19,26 @@ type Querier struct {
 }
 
 var _ queryproto.QueryServer = Querier{}
+
+func (q Querier) TotalPoolLiquidity(grpcCtx context.Context,
+	req *queryproto.TotalPoolLiquidityRequest,
+) (*queryproto.TotalPoolLiquidityResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.TotalPoolLiquidity(ctx, *req)
+}
+
+func (q Querier) TotalLiquidity(grpcCtx context.Context,
+	req *queryproto.TotalLiquidityRequest,
+) (*queryproto.TotalLiquidityResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.TotalLiquidity(ctx, *req)
+}
 
 func (q Querier) SpotPrice(grpcCtx context.Context,
 	req *queryproto.SpotPriceRequest,

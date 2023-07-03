@@ -1,12 +1,14 @@
 package txfees
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/txfees/keeper"
-	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v16/x/txfees/keeper"
+	"github.com/osmosis-labs/osmosis/v16/x/txfees/types"
 )
 
 func NewUpdateFeeTokenProposalHandler(k keeper.Keeper) govtypes.Handler {
@@ -15,7 +17,7 @@ func NewUpdateFeeTokenProposalHandler(k keeper.Keeper) govtypes.Handler {
 		case *types.UpdateFeeTokenProposal:
 			return handleUpdateFeeTokenProposal(ctx, k, c)
 		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized txfees proposal content type: %T", c)
+			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized txfees proposal content type: %T", c)
 		}
 	}
 }

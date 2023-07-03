@@ -19,16 +19,16 @@ import (
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/util"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
-	twapqueryproto "github.com/osmosis-labs/osmosis/v15/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v16/x/poolmanager/client/queryproto"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v16/x/protorev/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
+	twapqueryproto "github.com/osmosis-labs/osmosis/v16/x/twap/client/queryproto"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -270,17 +270,18 @@ func (n *NodeConfig) QueryPoolType(poolId string) string {
 	return poolTypeResponse.PoolType
 }
 
-func (n *NodeConfig) QueryConcentratedPositions(address string) []model.PositionWithUnderlyingAssetBreakdown {
+func (n *NodeConfig) QueryConcentratedPositions(address string) []model.FullPositionBreakdown {
 	path := fmt.Sprintf("/osmosis/concentratedliquidity/v1beta1/positions/%s", address)
 
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
-	var positionsResponse query.QueryUserPositionsResponse
+	var positionsResponse queryproto.UserPositionsResponse
 	err = util.Cdc.UnmarshalJSON(bz, &positionsResponse)
 	require.NoError(n.t, err)
 	return positionsResponse.Positions
 }
+
 func (n *NodeConfig) QueryConcentratedPool(poolId uint64) (cltypes.ConcentratedPoolExtension, error) {
 	path := fmt.Sprintf("/osmosis/poolmanager/v1beta1/pools/%d", poolId)
 	bz, err := n.QueryGRPCGateway(path)
@@ -301,6 +302,28 @@ func (n *NodeConfig) QueryConcentratedPool(poolId uint64) (cltypes.ConcentratedP
 	}
 
 	return poolCLextension, nil
+}
+
+func (n *NodeConfig) QueryCFMMPool(poolId uint64) (gammtypes.CFMMPoolI, error) {
+	path := fmt.Sprintf("/osmosis/poolmanager/v1beta1/pools/%d", poolId)
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var poolResponse poolmanagerqueryproto.PoolResponse
+	err = util.Cdc.UnmarshalJSON(bz, &poolResponse)
+	require.NoError(n.t, err)
+
+	var pool poolmanagertypes.PoolI
+	err = util.Cdc.UnpackAny(poolResponse.Pool, &pool)
+	require.NoError(n.t, err)
+
+	cfmmPool, ok := pool.(gammtypes.CFMMPoolI)
+
+	if !ok {
+		return nil, fmt.Errorf("invalid pool type: %T", pool)
+	}
+
+	return cfmmPool, nil
 }
 
 // QueryBalancer returns balances at the address.
@@ -497,6 +520,19 @@ func (n *NodeConfig) QueryCurrentEpoch(identifier string) int64 {
 	return response.CurrentEpoch
 }
 
+func (n *NodeConfig) QueryConcentratedPooIdLinkFromCFMM(cfmmPoolId uint64) uint64 {
+	path := fmt.Sprintf("/osmosis/gamm/v1beta1/concentrated_pool_id_link_from_cfmm/%d", cfmmPoolId)
+
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	//nolint:staticcheck
+	var response gammtypes.QueryConcentratedPoolIdLinkFromCFMMResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err)
+	return response.ConcentratedPoolId
+}
+
 func (n *NodeConfig) QueryArithmeticTwapToNow(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) (sdk.Dec, error) {
 	path := "osmosis/twap/v1beta1/ArithmeticTwapToNow"
 
@@ -617,4 +653,39 @@ func (n *NodeConfig) QueryListSnapshots() ([]*tmabcitypes.Snapshot, error) {
 	}
 
 	return listSnapshots.Snapshots, nil
+}
+
+// QueryAllSuperfluidAssets returns all authorized superfluid assets.
+func (n *NodeConfig) QueryAllSuperfluidAssets() []superfluidtypes.SuperfluidAsset {
+	path := "/osmosis/superfluid/v1beta1/all_assets"
+
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	//nolint:staticcheck
+	var response superfluidtypes.AllAssetsResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err)
+	return response.Assets
+}
+
+func (n *NodeConfig) QueryCommunityPoolModuleAccount() string {
+	cmd := []string{"osmosisd", "query", "auth", "module-accounts", "--output=json"}
+
+	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	require.NoError(n.t, err)
+	var result map[string][]interface{}
+	err = json.Unmarshal(out.Bytes(), &result)
+	require.NoError(n.t, err)
+	for _, acc := range result["accounts"] {
+		account, ok := acc.(map[string]interface{})
+		require.True(n.t, ok)
+		if account["name"] == "distribution" {
+			moduleAccount, ok := account["base_account"].(map[string]interface{})["address"].(string)
+			require.True(n.t, ok)
+			return moduleAccount
+		}
+	}
+	require.True(n.t, false, "distribution module account not found")
+	return ""
 }

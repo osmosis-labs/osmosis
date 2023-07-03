@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 
@@ -146,6 +146,57 @@ func (k Keeper) DeleteAllPoolsForBaseDenom(ctx sdk.Context, baseDenom string) {
 	k.DeleteAllEntriesForKeyPrefix(ctx, key)
 }
 
+// SetSwapsToBackrun sets the swaps to backrun, updated via hooks
+func (k Keeper) SetSwapsToBackrun(ctx sdk.Context, swapsToBackrun types.Route) error {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSwapsToBackrun)
+
+	bz, err := swapsToBackrun.Marshal()
+	if err != nil {
+		return err
+	}
+
+	store.Set(types.KeyPrefixSwapsToBackrun, bz)
+
+	return nil
+}
+
+// GetSwapsToBackrun returns the swaps to backrun, updated via hooks
+func (k Keeper) GetSwapsToBackrun(ctx sdk.Context) (types.Route, error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSwapsToBackrun)
+	bz := store.Get(types.KeyPrefixSwapsToBackrun)
+
+	swapsToBackrun := types.Route{}
+	err := swapsToBackrun.Unmarshal(bz)
+	if err != nil {
+		return types.Route{}, err
+	}
+
+	return swapsToBackrun, nil
+}
+
+// DeleteSwapsToBackrun deletes the swaps to backrun
+func (k Keeper) DeleteSwapsToBackrun(ctx sdk.Context) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSwapsToBackrun)
+	store.Delete(types.KeyPrefixSwapsToBackrun)
+}
+
+// AddSwapToSwapsToBackrun appends a swap to the swaps to backrun
+func (k Keeper) AddSwapsToSwapsToBackrun(ctx sdk.Context, swaps []types.Trade) error {
+	swapsToBackrun, err := k.GetSwapsToBackrun(ctx)
+	if err != nil {
+		return err
+	}
+
+	swapsToBackrun.Trades = append(swapsToBackrun.Trades, swaps...)
+
+	err = k.SetSwapsToBackrun(ctx, swapsToBackrun)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // DeleteAllEntriesForKeyPrefix deletes all the entries from the store for the given key prefix
 func (k Keeper) DeleteAllEntriesForKeyPrefix(ctx sdk.Context, keyPrefix []byte) {
 	store := ctx.KVStore(k.storeKey)
@@ -179,6 +230,7 @@ func (k Keeper) SetDaysSinceModuleGenesis(ctx sdk.Context, daysSinceGenesis uint
 	store.Set(types.KeyPrefixDaysSinceGenesis, sdk.Uint64ToBigEndian(daysSinceGenesis))
 }
 
+// Deprecated: Can be removed in v16
 // GetDeveloperFees returns the fees the developers can withdraw from the module account
 func (k Keeper) GetDeveloperFees(ctx sdk.Context, denom string) (sdk.Coin, error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDeveloperFees)
@@ -198,6 +250,7 @@ func (k Keeper) GetDeveloperFees(ctx sdk.Context, denom string) (sdk.Coin, error
 	return developerFees, nil
 }
 
+// Deprecated: Used in v16 upgrade, can be removed in v17
 // GetAllDeveloperFees returns all the developer fees the developer account can withdraw
 func (k Keeper) GetAllDeveloperFees(ctx sdk.Context) ([]sdk.Coin, error) {
 	fees := make([]sdk.Coin, 0)
@@ -218,6 +271,7 @@ func (k Keeper) GetAllDeveloperFees(ctx sdk.Context) ([]sdk.Coin, error) {
 	return fees, nil
 }
 
+// Deprecated: Can be removed in v16
 // SetDeveloperFees sets the fees the developers can withdraw from the module account
 func (k Keeper) SetDeveloperFees(ctx sdk.Context, developerFees sdk.Coin) error {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDeveloperFees)
@@ -233,6 +287,7 @@ func (k Keeper) SetDeveloperFees(ctx sdk.Context, developerFees sdk.Coin) error 
 	return nil
 }
 
+// Deprecated: Used in v16 upgrade, can be removed in v17
 // DeleteDeveloperFees deletes the developer fees given a denom
 func (k Keeper) DeleteDeveloperFees(ctx sdk.Context, denom string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDeveloperFees)

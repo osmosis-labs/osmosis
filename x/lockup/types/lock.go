@@ -8,14 +8,24 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// defaultOwnerReceiverPlaceholder is used as a place holder for default owner receiver for the
+// reward receiver field.
+// Using this as the value for reward receiver would indicate that the lock's reward receiver is the owner.
+const DefaultOwnerReceiverPlaceholder = ""
+
 // NewPeriodLock returns a new instance of period lock.
-func NewPeriodLock(ID uint64, owner sdk.AccAddress, duration time.Duration, endTime time.Time, coins sdk.Coins) PeriodLock {
+func NewPeriodLock(ID uint64, owner sdk.AccAddress, reward_address string, duration time.Duration, endTime time.Time, coins sdk.Coins) PeriodLock {
+	// sanity check once more to ensure if reward_address == owner, we store empty string
+	if owner.String() == reward_address {
+		reward_address = DefaultOwnerReceiverPlaceholder
+	}
 	return PeriodLock{
-		ID:       ID,
-		Owner:    owner.String(),
-		Duration: duration,
-		EndTime:  endTime,
-		Coins:    coins,
+		ID:                    ID,
+		Owner:                 owner.String(),
+		RewardReceiverAddress: reward_address,
+		Duration:              duration,
+		EndTime:               endTime,
+		Coins:                 coins,
 	}
 }
 
@@ -27,6 +37,11 @@ func (p PeriodLock) IsUnlocking() bool {
 // IsUnlocking returns lock started unlocking already.
 func (p SyntheticLock) IsUnlocking() bool {
 	return !p.EndTime.Equal(time.Time{})
+}
+
+// IsNil returns if the synthetic lock is nil.
+func (p SyntheticLock) IsNil() bool {
+	return p == (SyntheticLock{})
 }
 
 // OwnerAddress returns locks owner address.

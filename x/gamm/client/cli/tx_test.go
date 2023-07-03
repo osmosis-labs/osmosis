@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/client/cli"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/client/cli"
 )
 
 func TestParseCoinsNoSort(t *testing.T) {
@@ -61,7 +61,6 @@ func TestParseCoinsNoSort(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-
 			coins, err := cli.ParseCoinsNoSort(tc.coinsStr)
 
 			require.NoError(t, err)

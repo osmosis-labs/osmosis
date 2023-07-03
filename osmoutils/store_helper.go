@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
 
@@ -85,7 +86,7 @@ func GetIterValuesWithStop[T any](
 
 // HasAnyAtPrefix returns true if there is at least one value in the given prefix.
 func HasAnyAtPrefix[T any](storeObj store.KVStore, prefix []byte, parseValue func([]byte) (T, error)) (bool, error) {
-	_, err := GetFirstValueInRange(storeObj, prefix, sdk.PrefixEndBytes(prefix),false,  parseValue)
+	_, err := GetFirstValueInRange(storeObj, prefix, sdk.PrefixEndBytes(prefix), false, parseValue)
 	if err != nil {
 		if err == ErrNoValuesInRange {
 			return false, nil
@@ -180,8 +181,24 @@ func MustGetDec(store store.KVStore, key []byte) sdk.Dec {
 	return result.Dec
 }
 
+// GetDec gets dec value from store at key. Returns error if:
+// - database error occurs.
+// - no value at given key is found.
+func GetDec(store store.KVStore, key []byte) (sdk.Dec, error) {
+	result := &sdk.DecProto{}
+	isFound, err := Get(store, key, result)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	if !isFound {
+		return sdk.Dec{}, DecNotFoundError{Key: string(key)}
+	}
+	return result.Dec, nil
+}
+
 // Get returns a value at key by mutating the result parameter. Returns true if the value was found and the
-// result mutated correctly. If the value is not in the store, returns false. Returns error only when database or serialization errors occur. (And when an error occurs, returns false)
+// result mutated correctly. If the value is not in the store, returns false.
+// Returns error only when database or serialization errors occur. (And when an error occurs, returns false)
 func Get(store store.KVStore, key []byte, result proto.Message) (found bool, err error) {
 	b := store.Get(key)
 	if b == nil {
@@ -191,4 +208,15 @@ func Get(store store.KVStore, key []byte, result proto.Message) (found bool, err
 		return true, err
 	}
 	return true, nil
+}
+
+// DeleteAllKeysFromPrefix deletes all store records that contains the given prefixKey.
+func DeleteAllKeysFromPrefix(ctx sdk.Context, store store.KVStore, prefixKey []byte) {
+	prefixStore := prefix.NewStore(store, prefixKey)
+	iter := prefixStore.Iterator(nil, nil)
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		prefixStore.Delete(iter.Key())
+	}
 }

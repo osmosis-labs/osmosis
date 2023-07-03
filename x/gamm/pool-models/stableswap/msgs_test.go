@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
-	stableswap "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	appParams "github.com/osmosis-labs/osmosis/v16/app/params"
+	stableswap "github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 )
 
 func baseCreatePoolMsgGen(sender sdk.AccAddress) *stableswap.MsgCreateStableswapPool {
@@ -118,7 +118,7 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "negative swap fee with zero exit fee",
+			name: "negative spread factor with zero exit fee",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.PoolParams = &stableswap.PoolParams{
 					SwapFee: sdk.NewDecWithPrec(-1, 2),
@@ -193,7 +193,7 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 			expectPass: true,
 		},
 		{
-			name: "zero swap fee, zero exit fee",
+			name: "zero spread factor, zero exit fee",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.PoolParams = &stableswap.PoolParams{
 					ExitFee: sdk.NewDecWithPrec(0, 0),
@@ -338,7 +338,6 @@ func (suite *TestSuite) TestMsgCreateStableswapPool() {
 
 	for name, tc := range tests {
 		suite.Run(name, func() {
-
 			pool, err := tc.msg.CreatePool(suite.Ctx, 1)
 
 			if tc.expectError {

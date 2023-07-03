@@ -11,9 +11,9 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types/genesis"
 )
 
 const (
@@ -25,18 +25,6 @@ const (
 func (k Keeper) getAllPositions(ctx sdk.Context) ([]model.Position, error) {
 	return osmoutils.GatherValuesFromStorePrefix(
 		ctx.KVStore(k.storeKey), types.PositionIdPrefix, ParsePositionFromBz)
-}
-
-// ParseLiquidityFromBz parses and returns a position's liquidity from a byte array.
-// Returns an error if the byte array is empty.
-// Returns an error if fails to parse.
-func ParseLiquidityFromBz(bz []byte) (sdk.Dec, error) {
-	if len(bz) == 0 {
-		return sdk.Dec{}, errors.New("position not found")
-	}
-	liquidityStruct := &sdk.DecProto{}
-	err := proto.Unmarshal(bz, liquidityStruct)
-	return liquidityStruct.Dec, err
 }
 
 // ParsePositionIdFromBz parses and returns a position's id from a byte array.
@@ -104,7 +92,7 @@ func ParseFullTickFromBytes(key, value []byte) (tick genesis.FullTick, err error
 		return genesis.FullTick{}, types.ValueNotFoundForKeyError{Key: key}
 	}
 
-	if len(key) != types.TickKeyLengthBytes {
+	if len(key) != types.KeyTickLengthBytes {
 		return genesis.FullTick{}, types.InvalidTickKeyByteLengthError{Length: len(key)}
 	}
 
@@ -176,8 +164,7 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 	// We only care about the last 4 components, which are:
 	// - pool id
 	// - min uptime
-	// - incentive denom
-	// - incentive creator
+	// - incentive id
 
 	relevantIncentiveKeyComponents := incentiveRecordKeyComponents[len(incentiveRecordKeyComponents)-4:]
 
@@ -196,30 +183,26 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 		return types.IncentiveRecord{}, err
 	}
 
-	incentiveDenom := relevantIncentiveKeyComponents[2]
-
-	// Note that we skip the first byte since we prefix addresses by length in key
-	incentiveCreator, err := sdk.AccAddressFromBech32(relevantIncentiveKeyComponents[3])
-	if err != nil {
-		return types.IncentiveRecord{}, err
-	}
-
 	incentiveBody, err := ParseIncentiveRecordBodyFromBz(value)
 	if err != nil {
 		return types.IncentiveRecord{}, err
 	}
 
+	incentiveRecordId, err := strconv.ParseUint(relevantIncentiveKeyComponents[2], 10, 64)
+	if err != nil {
+		return types.IncentiveRecord{}, err
+	}
+
 	incentiveRecordBody := types.IncentiveRecordBody{
-		RemainingAmount: incentiveBody.RemainingAmount,
-		EmissionRate:    incentiveBody.EmissionRate,
-		StartTime:       incentiveBody.StartTime,
+		RemainingCoin: incentiveBody.RemainingCoin,
+		EmissionRate:  incentiveBody.EmissionRate,
+		StartTime:     incentiveBody.StartTime,
 	}
 
 	return types.IncentiveRecord{
-		PoolId:               poolId,
-		IncentiveDenom:       incentiveDenom,
-		IncentiveCreatorAddr: incentiveCreator.String(),
-		IncentiveRecordBody:  incentiveRecordBody,
-		MinUptime:            types.SupportedUptimes[minUptimeIndex],
+		PoolId:              poolId,
+		IncentiveRecordBody: incentiveRecordBody,
+		MinUptime:           types.SupportedUptimes[minUptimeIndex],
+		IncentiveId:         incentiveRecordId,
 	}, nil
 }

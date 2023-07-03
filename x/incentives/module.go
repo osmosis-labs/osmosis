@@ -27,11 +27,12 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v15/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v15/x/incentives/simulation"
-	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v15/x/mint/client/rest"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v16/x/incentives/client/cli"
+	"github.com/osmosis-labs/osmosis/v16/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v16/x/incentives/simulation"
+	"github.com/osmosis-labs/osmosis/v16/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v16/x/mint/client/rest"
 )
 
 var (
@@ -113,13 +114,13 @@ type AppModule struct {
 	keeper keeper.Keeper
 
 	accountKeeper stakingtypes.AccountKeeper
-	bankKeeper    stakingtypes.BankKeeper
+	bankKeeper    osmosimtypes.BankKeeper
 	epochKeeper   types.EpochKeeper
 }
 
 // NewAppModule creates a new AppModule struct.
 func NewAppModule(keeper keeper.Keeper,
-	accountKeeper stakingtypes.AccountKeeper, bankKeeper stakingtypes.BankKeeper,
+	accountKeeper stakingtypes.AccountKeeper, bankKeeper osmosimtypes.BankKeeper,
 	epochKeeper types.EpochKeeper,
 ) AppModule {
 	return AppModule{

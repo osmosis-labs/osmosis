@@ -11,10 +11,11 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -231,6 +232,8 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+	cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 	cmd.Flags().String(FlagMigrationRecords, "", "The migration records array")
 
 	return cmd
@@ -285,6 +288,8 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+	cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 	cmd.Flags().String(FlagMigrationRecords, "", "The migration records array")
 
 	return cmd
@@ -332,7 +337,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (
 		return nil, errors.New("deposit tokens and token weights should have same length")
 	}
 
-	swapFee, err := sdk.NewDecFromStr(pool.SwapFee)
+	spreadFactor, err := sdk.NewDecFromStr(pool.SwapFee)
 	if err != nil {
 		return nil, err
 	}
@@ -355,7 +360,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (
 	}
 
 	poolParams := &balancer.PoolParams{
-		SwapFee: swapFee,
+		SwapFee: spreadFactor,
 		ExitFee: exitFee,
 	}
 
@@ -427,7 +432,7 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, fs *flag.FlagSet)
 		return nil, err
 	}
 
-	swapFee, err := sdk.NewDecFromStr(flags.SwapFee)
+	spreadFactor, err := sdk.NewDecFromStr(flags.SwapFee)
 	if err != nil {
 		return nil, err
 	}
@@ -438,7 +443,7 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, fs *flag.FlagSet)
 	}
 
 	poolParams := &stableswap.PoolParams{
-		SwapFee: swapFee,
+		SwapFee: spreadFactor,
 		ExitFee: exitFee,
 	}
 
@@ -626,7 +631,7 @@ func ParseCoinsNoSort(coinsStr string) (sdk.Coins, error) {
 	return sdk.NormalizeCoins(decCoins), nil
 }
 
-func parseMigrationRecords(cmd *cobra.Command) ([]types.BalancerToConcentratedPoolLink, error) {
+func parseMigrationRecords(cmd *cobra.Command) ([]gammmigration.BalancerToConcentratedPoolLink, error) {
 	assetsStr, err := cmd.Flags().GetString(FlagMigrationRecords)
 	if err != nil {
 		return nil, err
@@ -634,7 +639,11 @@ func parseMigrationRecords(cmd *cobra.Command) ([]types.BalancerToConcentratedPo
 
 	assets := strings.Split(assetsStr, ",")
 
-	replaceMigrations := []types.BalancerToConcentratedPoolLink{}
+	if len(assets)%2 != 0 {
+		return nil, errors.New("migration records should be a list of balancer pool id and concentrated pool id pairs")
+	}
+
+	replaceMigrations := []gammmigration.BalancerToConcentratedPoolLink{}
 	i := 0
 	for i < len(assets) {
 		balancerPoolId, err := strconv.Atoi(assets[i])
@@ -646,7 +655,7 @@ func parseMigrationRecords(cmd *cobra.Command) ([]types.BalancerToConcentratedPo
 			return nil, err
 		}
 
-		replaceMigrations = append(replaceMigrations, types.BalancerToConcentratedPoolLink{
+		replaceMigrations = append(replaceMigrations, gammmigration.BalancerToConcentratedPoolLink{
 			BalancerPoolId: uint64(balancerPoolId),
 			ClPoolId:       uint64(clPoolId),
 		})

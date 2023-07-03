@@ -21,9 +21,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v15/simulation/executor/internal/executortypes"
-	"github.com/osmosis-labs/osmosis/v15/simulation/executor/internal/stats"
-	"github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v16/simulation/executor/internal/executortypes"
+	"github.com/osmosis-labs/osmosis/v16/simulation/executor/internal/stats"
+	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
 )
 
 const AverageBlockTime = 6 * time.Second
@@ -45,6 +45,7 @@ func SimulateFromSeed(
 	initFunctions InitFunctions,
 	config Config,
 ) (lastCommitId storetypes.CommitID, stopEarly bool, err error) {
+	tb.Helper()
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	// TODO: Understand exit pattern, this is so screwed up. Then delete ^
 
@@ -122,6 +123,7 @@ func cursedInitializationLogic(
 	initFunctions InitFunctions,
 	config *Config,
 ) (*simtypes.SimCtx, *simState, Params, error) {
+	tb.Helper()
 	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(config.Seed))
 
 	r := rand.New(rand.NewSource(config.Seed))
@@ -156,7 +158,7 @@ func cursedInitializationLogic(
 	// must set version in order to generate hashes
 	initialHeader.Version.Block = 11
 
-	simState := newSimulatorState(simParams, initialHeader, tb, w, validators, *config)
+	simState := newSimulatorState(tb, simParams, initialHeader, w, validators, *config)
 
 	// TODO: If simulation has a param export path configured, export params here.
 

@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	pool_incentives "github.com/osmosis-labs/osmosis/v15/x/pool-incentives"
+	pool_incentives "github.com/osmosis-labs/osmosis/v16/x/pool-incentives"
 
-	simapp "github.com/osmosis-labs/osmosis/v15/app"
+	simapp "github.com/osmosis-labs/osmosis/v16/app"
 
-	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
 )
 
 var (
@@ -47,6 +47,19 @@ var (
 					PoolId:   2,
 					GaugeId:  2,
 					Duration: time.Second,
+				},
+				// This duplication with zero duration
+				// can happen with "NoLock" gauges
+				// where the link containing the duration
+				// is used to signify that the gauge is internal
+				// while the link without the duration is used
+				// for general purpose. This redundancy is
+				// made for convinience of plugging in the
+				// later added "NoLock" gauge into the existing
+				// logic without having to change majority of the queries.
+				{
+					PoolId:  2,
+					GaugeId: 2,
 				},
 			},
 		},
@@ -93,24 +106,24 @@ func TestInitGenesis(t *testing.T) {
 	require.Equal(t, distrInfo, *genesis.DistrInfo)
 }
 
-func (suite *KeeperTestSuite) TestExportGenesis() {
-	ctx := suite.App.BaseApp.NewContext(false, tmproto.Header{})
+func (s *KeeperTestSuite) TestExportGenesis() {
+	ctx := s.App.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
-	suite.App.PoolIncentivesKeeper.InitGenesis(ctx, &genesis)
+	s.App.PoolIncentivesKeeper.InitGenesis(ctx, &genesis)
 
-	lockableDurations := suite.App.PoolIncentivesKeeper.GetLockableDurations(ctx)
-	suite.App.IncentivesKeeper.SetLockableDurations(ctx, lockableDurations)
-	poolId := suite.PrepareBalancerPool()
+	lockableDurations := s.App.PoolIncentivesKeeper.GetLockableDurations(ctx)
+	s.App.IncentivesKeeper.SetLockableDurations(ctx, lockableDurations)
+	poolId := s.PrepareBalancerPool()
 
 	durations := []time.Duration{
 		time.Second,
 		time.Minute,
 		time.Hour,
 	}
-	suite.App.PoolIncentivesKeeper.SetLockableDurations(ctx, durations)
-	savedDurations := suite.App.PoolIncentivesKeeper.GetLockableDurations(ctx)
-	suite.Equal(savedDurations, durations)
+	s.App.PoolIncentivesKeeper.SetLockableDurations(ctx, durations)
+	savedDurations := s.App.PoolIncentivesKeeper.GetLockableDurations(ctx)
+	s.Equal(savedDurations, durations)
 	var expectedPoolToGauges types.PoolToGauges
 	var gauge uint64
 	for _, duration := range durations {
@@ -122,9 +135,9 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 		expectedPoolToGauges.PoolToGauge = append(expectedPoolToGauges.PoolToGauge, poolToGauge)
 	}
 
-	genesisExported := suite.App.PoolIncentivesKeeper.ExportGenesis(ctx)
-	suite.Equal(genesisExported.Params, genesis.Params)
-	suite.Equal(genesisExported.LockableDurations, durations)
-	suite.Equal(genesisExported.DistrInfo, genesis.DistrInfo)
-	suite.Equal(genesisExported.PoolToGauges, &expectedPoolToGauges)
+	genesisExported := s.App.PoolIncentivesKeeper.ExportGenesis(ctx)
+	s.Equal(genesisExported.Params, genesis.Params)
+	s.Equal(genesisExported.LockableDurations, durations)
+	s.Equal(genesisExported.DistrInfo, genesis.DistrInfo)
+	s.Equal(genesisExported.PoolToGauges, &expectedPoolToGauges)
 }

@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app"
+	"github.com/osmosis-labs/osmosis/v16/app"
 )
 
 func CreateTestInput() (*app.OsmosisApp, sdk.Context) {
@@ -23,6 +23,7 @@ func CreateTestInput() (*app.OsmosisApp, sdk.Context) {
 }
 
 func FundAccount(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, acct sdk.AccAddress) {
+	t.Helper()
 	err := simapp.FundAccount(osmosis.BankKeeper, ctx, acct, sdk.NewCoins(
 		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 	))

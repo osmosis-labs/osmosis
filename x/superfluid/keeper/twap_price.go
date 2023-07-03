@@ -3,8 +3,8 @@ package keeper
 import (
 	"github.com/gogo/protobuf/proto"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,15 +33,18 @@ func (k Keeper) SetOsmoEquivalentMultiplier(ctx sdk.Context, epoch int64, denom 
 	prefixStore.Set([]byte(denom), bz)
 }
 
-func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sdk.Int) sdk.Int {
+func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sdk.Int) (sdk.Int, error) {
 	multiplier := k.GetOsmoEquivalentMultiplier(ctx, denom)
 	if multiplier.IsZero() {
-		return sdk.ZeroInt()
+		return sdk.ZeroInt(), nil
 	}
 
 	decAmt := multiplier.Mul(amount.ToDec())
-	asset := k.GetSuperfluidAsset(ctx, denom)
-	return k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
+	_, err := k.GetSuperfluidAsset(ctx, denom)
+	if err != nil {
+		return sdk.ZeroInt(), err
+	}
+	return k.GetRiskAdjustedOsmoValue(ctx, decAmt.RoundInt()), nil
 }
 
 func (k Keeper) DeleteOsmoEquivalentMultiplier(ctx sdk.Context, denom string) {

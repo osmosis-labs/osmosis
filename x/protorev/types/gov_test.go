@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
 )
 
 type GovTestSuite struct {
@@ -39,7 +39,9 @@ func (suite *GovTestSuite) TestEnableProposal() {
 
 	for _, tc := range testCases {
 		proposal := types.NewSetProtoRevEnabledProposal("title", "description", tc.enabled)
-		suite.Require().Equal(tc.enabled, proposal.(*types.SetProtoRevEnabledProposal).Enabled)
+		setProtoRevEnabledProposal, ok := proposal.(*types.SetProtoRevEnabledProposal)
+		suite.Require().True(ok, "proposal is not a SetProtoRevEnabledProposal")
+		suite.Require().Equal(tc.enabled, setProtoRevEnabledProposal.Enabled)
 	}
 }
 

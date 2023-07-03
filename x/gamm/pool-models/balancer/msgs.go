@@ -1,16 +1,16 @@
 package balancer
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 const (
 	TypeMsgCreateBalancerPool = "create_balancer_pool"
-	TypeMsgMigrateShares      = "migrate_shares"
 )
 
 var (
@@ -37,7 +37,7 @@ func (msg MsgCreateBalancerPool) Type() string  { return TypeMsgCreateBalancerPo
 func (msg MsgCreateBalancerPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	err = validateUserSpecifiedPoolAssets(msg.PoolAssets)
@@ -103,29 +103,4 @@ func (msg MsgCreateBalancerPool) CreatePool(ctx sdk.Context, poolID uint64) (poo
 
 func (msg MsgCreateBalancerPool) GetPoolType() poolmanagertypes.PoolType {
 	return poolmanagertypes.Balancer
-}
-
-var _ sdk.Msg = &MsgMigrateSharesToFullRangeConcentratedPosition{}
-
-func (msg MsgMigrateSharesToFullRangeConcentratedPosition) Route() string { return types.RouterKey }
-func (msg MsgMigrateSharesToFullRangeConcentratedPosition) Type() string  { return TypeMsgMigrateShares }
-func (msg MsgMigrateSharesToFullRangeConcentratedPosition) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
-	}
-
-	return nil
-}
-
-func (msg MsgMigrateSharesToFullRangeConcentratedPosition) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-func (msg MsgMigrateSharesToFullRangeConcentratedPosition) GetSigners() []sdk.AccAddress {
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{sender}
 }

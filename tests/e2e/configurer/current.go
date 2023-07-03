@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/initialization"
 )
 
 type CurrentBranchConfigurer struct {
@@ -17,6 +17,7 @@ type CurrentBranchConfigurer struct {
 var _ Configurer = (*CurrentBranchConfigurer)(nil)
 
 func NewCurrentBranchConfigurer(t *testing.T, chainConfigs []*chain.Config, setupTests setupFn, containerManager *containers.Manager) Configurer {
+	t.Helper()
 	return &CurrentBranchConfigurer{
 		baseConfigurer: baseConfigurer{
 			chainConfigs:     chainConfigs,

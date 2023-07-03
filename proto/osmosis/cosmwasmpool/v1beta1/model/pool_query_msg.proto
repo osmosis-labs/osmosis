@@ -1,0 +1,69 @@
+syntax = "proto3";
+package osmosis.cosmwasmpool.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/cosmwasm/msg";
+
+// ===================== GetSwapFeeQueryMsg
+message GetSwapFeeQueryMsg {
+  // get_swap_fee is the query strcuture to get swap fee.
+  EmptyStruct get_swap_fee = 1 [ (gogoproto.nullable) = false ];
+}
+
+message GetSwapFeeQueryMsgResponse {
+  // swap_fee is the swap fee for this swap estimate.
+  string swap_fee = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// ===================== SpotPriceQueryMsg
+message SpotPrice {
+  // quote_asset_denom is the quote asset of the spot query.
+  string quote_asset_denom = 1;
+
+  // base_asset_denom is the base asset of the spot query.
+  string base_asset_denom = 2;
+}
+
+message SpotPriceQueryMsg {
+  // spot_price is the structure containing request field of the spot price
+  // query message.
+  SpotPrice spot_price = 1 [ (gogoproto.nullable) = false ];
+}
+
+message SpotPriceQueryMsgResponse {
+  // spot_price is the spot price returned.
+  string spot_price = 1;
+}
+
+// ===================== GetTotalPoolLiquidityQueryMsg
+message EmptyStruct {}
+
+message GetTotalPoolLiquidityQueryMsg {
+  // get_total_pool_liquidity is the structure containing request field of the
+  // total pool liquidity query message.
+  EmptyStruct get_total_pool_liquidity = 1 [ (gogoproto.nullable) = false ];
+}
+
+message GetTotalPoolLiquidityQueryMsgResponse {
+  //  total_pool_liquidity is the total liquidity in the pool denominated in
+  //  coins.
+  repeated cosmos.base.v1beta1.Coin total_pool_liquidity = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+// ===================== GetTotalSharesQueryMsg
+message GetTotalSharesQueryMsg {
+  // get_total_shares is the structure containing request field of the
+  // total shares query message.
+  EmptyStruct get_total_shares = 1 [ (gogoproto.nullable) = false ];
+}
+
+message GetTotalSharesQueryMsgResponse {
+  // total_shares is the amount of shares returned.
+  string total_shares = 1;
+}

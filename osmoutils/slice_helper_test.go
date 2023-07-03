@@ -73,3 +73,53 @@ func TestMergeSlices(t *testing.T) {
 		})
 	}
 }
+
+func TestContainsDuplicateDeepEqual(t *testing.T) {
+	tests := []struct {
+		input []interface{}
+		want  bool
+	}{
+		{[]interface{}{[]int{1, 2, 3}, []int{4, 5, 6}}, false},
+		{[]interface{}{[]int{1, 2, 3}, []int{1, 2, 3}}, true},
+		{[]interface{}{[]string{"hello", "world"}, []string{"goodbye", "world"}}, false},
+		{[]interface{}{[]string{"hello", "world"}, []string{"hello", "world"}}, true},
+		{[]interface{}{[][]int{{1, 2}, {3, 4}}, [][]int{{1, 2}, {3, 4}}}, true},
+	}
+
+	for _, tt := range tests {
+		got := osmoutils.ContainsDuplicateDeepEqual(tt.input)
+		require.Equal(t, tt.want, got)
+	}
+}
+
+func TestContains(t *testing.T) {
+	testCases := []struct {
+		name   string
+		slice  []int
+		item   int
+		expect bool
+	}{
+		{
+			name:   "Contains - item is in the slice",
+			slice:  []int{1, 2, 3, 4, 5},
+			item:   3,
+			expect: true,
+		},
+		{
+			name:   "Contains - item is not in the slice",
+			slice:  []int{1, 2, 3, 4, 5},
+			item:   6,
+			expect: false,
+		},
+		// add more test cases here...
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := osmoutils.Contains(tc.slice, tc.item)
+			if got != tc.expect {
+				t.Fatalf("Contains(%v, %v): expected %v, got %v", tc.slice, tc.item, tc.expect, got)
+			}
+		})
+	}
+}

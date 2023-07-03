@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v16/x/twap/types"
 )
 
 func (s *TestSuite) TestMigrateExistingPools() {
@@ -32,6 +32,7 @@ func (s *TestSuite) TestMigrateExistingPools() {
 	// iterate through all pools, check that all state entries have been correctly updated
 	for poolId := 1; poolId <= int(latestPoolId); poolId++ {
 		recentTwapRecords, err := s.twapkeeper.GetAllMostRecentRecordsForPool(s.Ctx, uint64(poolId))
+		s.Require().NoError(err)
 		poolDenoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, uint64(poolId))
 		s.Require().NoError(err)
 		denomPairs := types.GetAllUniqueDenomPairs(poolDenoms)

@@ -7,9 +7,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v15/x/twap"
-	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v16/x/twap"
+	"github.com/osmosis-labs/osmosis/v16/x/twap/types"
 )
 
 type computeTwapTestCase struct {
@@ -298,7 +298,6 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap() {
 		tc := tc
 		s.Run(name, func() {
 			osmoassert.ConditionalPanic(s.T(), tc.expPanic, func() {
-
 				geometricStrategy := &twap.GeometricTwapStrategy{TwapKeeper: *s.App.TwapKeeper}
 				actualTwap := geometricStrategy.ComputeTwap(tc.startRecord, tc.endRecord, tc.quoteAsset)
 

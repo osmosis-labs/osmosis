@@ -4,49 +4,57 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	gammkeeper "github.com/osmosis-labs/osmosis/v16/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/stableswap"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+)
+
+const (
+	BAR   = "bar"
+	BAZ   = "baz"
+	FOO   = "foo"
+	UOSMO = "uosmo"
+	STAKE = "stake"
 )
 
 var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
-	sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
-	sdk.NewCoin("foo", sdk.NewInt(10000000000)),
-	sdk.NewCoin("bar", sdk.NewInt(10000000000)),
-	sdk.NewCoin("baz", sdk.NewInt(10000000000)),
+	sdk.NewCoin(UOSMO, sdk.NewInt(10000000000)),
+	sdk.NewCoin(FOO, sdk.NewInt(10000000000)),
+	sdk.NewCoin(BAR, sdk.NewInt(10000000000)),
+	sdk.NewCoin(BAZ, sdk.NewInt(10000000000)),
 )
 
 var DefaultPoolAssets = []balancer.PoolAsset{
 	{
 		Weight: sdk.NewInt(100),
-		Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
+		Token:  sdk.NewCoin(FOO, sdk.NewInt(5000000)),
 	},
 	{
 		Weight: sdk.NewInt(200),
-		Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
+		Token:  sdk.NewCoin(BAR, sdk.NewInt(5000000)),
 	},
 	{
 		Weight: sdk.NewInt(300),
-		Token:  sdk.NewCoin("baz", sdk.NewInt(5000000)),
+		Token:  sdk.NewCoin(BAZ, sdk.NewInt(5000000)),
 	},
 	{
 		Weight: sdk.NewInt(400),
-		Token:  sdk.NewCoin("uosmo", sdk.NewInt(5000000)),
+		Token:  sdk.NewCoin(UOSMO, sdk.NewInt(5000000)),
 	},
 }
 
 var DefaultStableswapLiquidity = sdk.NewCoins(
-	sdk.NewCoin("foo", sdk.NewInt(10000000)),
-	sdk.NewCoin("bar", sdk.NewInt(10000000)),
-	sdk.NewCoin("baz", sdk.NewInt(10000000)),
+	sdk.NewCoin(FOO, sdk.NewInt(10000000)),
+	sdk.NewCoin(BAR, sdk.NewInt(10000000)),
+	sdk.NewCoin(BAZ, sdk.NewInt(10000000)),
 )
 
 var ImbalancedStableswapLiquidity = sdk.NewCoins(
-	sdk.NewCoin("foo", sdk.NewInt(10_000_000_000)),
-	sdk.NewCoin("bar", sdk.NewInt(20_000_000_000)),
-	sdk.NewCoin("baz", sdk.NewInt(30_000_000_000)),
+	sdk.NewCoin(FOO, sdk.NewInt(10_000_000_000)),
+	sdk.NewCoin(BAR, sdk.NewInt(20_000_000_000)),
+	sdk.NewCoin(BAZ, sdk.NewInt(30_000_000_000)),
 )
 
 // PrepareBalancerPoolWithCoins returns a balancer pool
@@ -78,24 +86,26 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithCoinsAndWeights(coins sdk.Coin
 	})
 }
 
+var zeroDec = sdk.ZeroDec()
+var oneThirdSpotPriceUnits = sdk.NewDec(1).Quo(sdk.NewDec(3)).
+	MulIntMut(gammtypes.SpotPriceSigFigs).RoundInt().ToDec().QuoInt(gammtypes.SpotPriceSigFigs)
+
 // PrepareBalancerPool returns a Balancer pool's pool-ID with pool params set in PrepareBalancerPoolWithPoolParams.
 func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
 	poolId := s.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-		SwapFee: sdk.NewDec(0),
-		ExitFee: sdk.NewDec(0),
+		SwapFee: zeroDec,
+		ExitFee: zeroDec,
 	})
 
-	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, "foo", "bar")
+	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, FOO, BAR)
 	s.NoError(err)
-	s.Equal(sdk.NewDec(2).String(), spotPrice.String())
-	spotPrice, err = s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, "bar", "baz")
+	s.Equal(sdk.NewDec(2), spotPrice)
+	spotPrice, err = s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, BAR, BAZ)
 	s.NoError(err)
-	s.Equal(sdk.NewDecWithPrec(15, 1).String(), spotPrice.String())
-	spotPrice, err = s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, "baz", "foo")
+	s.Equal(sdk.NewDecWithPrec(15, 1), spotPrice)
+	spotPrice, err = s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, BAZ, FOO)
 	s.NoError(err)
-	oneThird := sdk.NewDec(1).Quo(sdk.NewDec(3))
-	sp := oneThird.MulInt(gammtypes.SpotPriceSigFigs).RoundInt().ToDec().QuoInt(gammtypes.SpotPriceSigFigs)
-	s.Equal(sp.String(), spotPrice.String())
+	s.Equal(oneThirdSpotPriceUnits, spotPrice)
 
 	return poolId
 }
@@ -151,7 +161,7 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer
 // PrepareCustomBalancerPool sets up a Balancer pool with an array of assets and given parameters
 func (s *KeeperTestHelper) PrepareCustomBalancerPool(assets []balancer.PoolAsset, params balancer.PoolParams) uint64 {
 	// Add coins for pool creation fee + coins needed to mint balances
-	fundCoins := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000000)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(UOSMO, sdk.NewInt(10000000000)))
 	for _, a := range assets {
 		fundCoins = fundCoins.Add(a.Token)
 	}
@@ -210,8 +220,8 @@ func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice sdk.De
 		s.Require().NoError(err)
 	} else {
 		swapOut := sdk.NewCoins(sdk.NewCoin(quoteDenom, sdk.NewInt(amountTrade.RoundInt64()).Abs()))
-		swapFee := pool.GetSwapFee(s.Ctx)
-		tokenIn, err := pool.CalcInAmtGivenOut(s.Ctx, swapOut, baseDenom, swapFee)
+		spreadFactor := pool.GetSpreadFactor(s.Ctx)
+		tokenIn, err := pool.CalcInAmtGivenOut(s.Ctx, swapOut, baseDenom, spreadFactor)
 		s.Require().NoError(err)
 		s.FundAcc(s.TestAccs[0], sdk.NewCoins(tokenIn))
 		msg := gammtypes.MsgSwapExactAmountOut{

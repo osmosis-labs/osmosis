@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
 )
 
 // InitGenesis initializes the module's state from a provided genesis state.
@@ -80,6 +80,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	// Configure the pool weights for genesis. This roughly correlates to the ms of execution time
 	// by pool type.
 	k.SetPoolWeights(ctx, genState.PoolWeights)
+
+	// Set the profits that have been collected by Protorev.
+	for _, coin := range genState.Profits {
+		if err := k.UpdateProfitsByDenom(ctx, coin.Denom, coin.Amount); err != nil {
+			panic(err)
+		}
+	}
 }
 
 // ExportGenesis returns the module's exported genesis. ExportGenesis intentionally ignores a few of the errors thrown
@@ -145,6 +152,9 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	if pointCount, err := k.GetPointCountForBlock(ctx); err == nil {
 		genesis.PointCountForBlock = pointCount
 	}
+
+	// Export the profits that have been collected by Protorev.
+	genesis.Profits = k.GetAllProfits(ctx)
 
 	return genesis
 }

@@ -14,7 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-	"github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/types"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -61,6 +61,19 @@ func (chain *TestChain) InstantiateRLContract(suite *suite.Suite, quotas string)
 	addr, _, err := contractKeeper.Instantiate(chain.GetContext(), codeID, creator, creator, initMsgBz, "rate limiting contract", nil)
 	suite.Require().NoError(err)
 	return addr
+}
+
+func (chain *TestChain) StoreContractCodeDirect(suite *suite.Suite, path string) uint64 {
+	osmosisApp := chain.GetOsmosisApp()
+	govKeeper := wasmkeeper.NewGovPermissionKeeper(osmosisApp.WasmKeeper)
+	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+
+	wasmCode, err := os.ReadFile(path)
+	suite.Require().NoError(err)
+	accessEveryone := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeEverybody}
+	codeID, _, err := govKeeper.Create(chain.GetContext(), creator, wasmCode, &accessEveryone)
+	suite.Require().NoError(err)
+	return codeID
 }
 
 func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string, codeID uint64) sdk.AccAddress {

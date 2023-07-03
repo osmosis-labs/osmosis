@@ -1,10 +1,12 @@
 syntax = "proto3";
 package osmosis.poolincentives.v1beta1;
 
+import "cosmos_proto/cosmos.proto";
+import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "osmosis/pool-incentives/v1beta1/incentives.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types";
 
 // ReplacePoolIncentivesProposal is a gov Content type for updating the pool
 // incentives. If a ReplacePoolIncentivesProposal passes, the proposal’s records
@@ -17,6 +19,8 @@ message ReplacePoolIncentivesProposal {
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.goproto_stringer) = false;
+  option (amino.name) = "osmosis/ReplacePoolIncentivesProposal";
+  option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
 
   string title = 1;
   string description = 2;
@@ -42,6 +46,8 @@ message UpdatePoolIncentivesProposal {
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.goproto_stringer) = false;
+  option (amino.name) = "osmosis/UpdatePoolIncentivesProposal";
+  option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
 
   string title = 1;
   string description = 2;

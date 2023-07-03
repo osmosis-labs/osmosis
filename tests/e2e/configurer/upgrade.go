@@ -12,12 +12,13 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
-	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
+	v16 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v16"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/initialization"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 )
 
 type UpgradeSettings struct {
@@ -35,6 +36,7 @@ type UpgradeConfigurer struct {
 var _ Configurer = (*UpgradeConfigurer)(nil)
 
 func NewUpgradeConfigurer(t *testing.T, chainConfigs []*chain.Config, setupTests setupFn, containerManager *containers.Manager, upgradeVersion string, forkHeight int64) Configurer {
+	t.Helper()
 	return &UpgradeConfigurer{
 		baseConfigurer: baseConfigurer{
 			chainConfigs:     chainConfigs,
@@ -126,6 +128,15 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 
+	// Create DAI/OSMO pool from v16 migration testing with superfluid enabled.
+	config.DaiOsmoPoolIdv16 = chainANode.CreateBalancerPool("daiosmov16.json", initialization.ValidatorWalletName)
+	daiOsmoShareDenom := fmt.Sprintf("gamm/pool/%d", config.DaiOsmoPoolIdv16)
+	chainA.EnableSuperfluidAsset(daiOsmoShareDenom)
+
+	// Do the same for chain b.
+	chainBNode.CreateBalancerPool("daiosmov16.json", initialization.ValidatorWalletName)
+	chainA.EnableSuperfluidAsset(daiOsmoShareDenom)
+
 	config.PreUpgradePoolId = chainANode.CreateBalancerPool("pool1A.json", initialization.ValidatorWalletName)
 	poolShareDenom := fmt.Sprintf("gamm/pool/%d", config.PreUpgradePoolId)
 	chainBNode.CreateBalancerPool("pool1B.json", initialization.ValidatorWalletName)
@@ -192,6 +203,18 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 		return err
 	}
 	fmt.Print("123456", result)
+	// fund the community pool with one dai
+	oneDai := sdk.NewCoin(v16.DAIIBCDenom, sdk.NewInt(1000000000000000000))
+	communityPoolFunder := chainANode.CreateWalletAndFund("communityPoolFunder", []string{
+		oneDai.String(),
+	})
+	chainANode.FundCommunityPool(communityPoolFunder, oneDai.String())
+
+	communityPoolFunder = chainBNode.CreateWalletAndFund("communityPoolFunder", []string{
+		oneDai.String(),
+	})
+	chainBNode.FundCommunityPool(communityPoolFunder, oneDai.String())
+
 	return nil
 }
 

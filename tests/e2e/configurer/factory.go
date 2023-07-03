@@ -4,9 +4,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/initialization"
 )
 
 type Configurer interface {
@@ -106,6 +106,7 @@ var (
 // - If !isIBCEnabled and !isUpgradeEnabled, we only need one chain at the current
 // Git branch version of the Osmosis code.
 func New(t *testing.T, isIBCEnabled, isDebugLogEnabled bool, upgradeSettings UpgradeSettings) (Configurer, error) {
+	t.Helper()
 	containerManager, err := containers.NewManager(upgradeSettings.IsEnabled, upgradeSettings.ForkHeight > 0, isDebugLogEnabled)
 	if err != nil {
 		return nil, err

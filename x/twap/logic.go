@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v16/x/twap/types"
 )
 
 func newTwapRecord(k types.PoolManagerInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
@@ -93,7 +93,7 @@ func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 		// that there is a swap against this pool in this same block.
 		// furthermore, this protects against an edge case where a pool is created
 		// during EndBlock, after twapkeeper's endblock.
-		k.storeNewRecord(ctx, record)
+		k.StoreNewRecord(ctx, record)
 	}
 	k.trackChangedPool(ctx, poolId)
 	return err
@@ -124,7 +124,7 @@ func (k Keeper) EndBlock(ctx sdk.Context) {
 //     number of denoms in the pool.
 func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 	// Will only err if pool doesn't have most recent entry set
-	records, err := k.getAllMostRecentRecordsForPool(ctx, poolId)
+	records, err := k.GetAllMostRecentRecordsForPool(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -144,15 +144,39 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 	}
 
 	for _, record := range records {
-		newRecord := k.updateRecord(ctx, record)
-		k.storeNewRecord(ctx, newRecord)
+		newRecord, err := k.updateRecord(ctx, record)
+		if err != nil {
+			return err
+		}
+		k.StoreNewRecord(ctx, newRecord)
 	}
 	return nil
 }
 
 // updateRecord returns a new record with updated accumulators and block time
 // for the current block time.
-func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.TwapRecord {
+func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) (types.TwapRecord, error) {
+	// Returns error for last updated records in the same block.
+	// Exception: record is initialized when creating a pool,
+	// then the TwapAccumulator variables are zero.
+
+	// Handle record after creating pool
+	// Incase record height should equal to ctx height
+	// But ArithmeticTwapAccumulators should be zero
+	if (record.Height == ctx.BlockHeight() || record.Time.Equal(ctx.BlockTime())) &&
+		!record.P1ArithmeticTwapAccumulator.IsZero() &&
+		!record.P0ArithmeticTwapAccumulator.IsZero() {
+		return types.TwapRecord{}, types.InvalidUpdateRecordError{}
+	} else if record.Height > ctx.BlockHeight() || record.Time.After(ctx.BlockTime()) {
+		// Normal case, ctx should be after record height & time
+		return types.TwapRecord{}, types.InvalidUpdateRecordError{
+			RecordBlockHeight: record.Height,
+			RecordTime:        record.Time,
+			ActualBlockHeight: ctx.BlockHeight(),
+			ActualTime:        ctx.BlockTime(),
+		}
+	}
+
 	newRecord := recordWithUpdatedAccumulators(record, ctx.BlockTime())
 	newRecord.Height = ctx.BlockHeight()
 
@@ -164,7 +188,7 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 	newRecord.P1LastSpotPrice = newSp1
 	newRecord.LastErrorTime = lastErrorTime
 
-	return newRecord
+	return newRecord, nil
 }
 
 // pruneRecords prunes twap records that happened earlier than recordHistoryKeepPeriod

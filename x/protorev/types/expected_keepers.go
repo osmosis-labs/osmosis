@@ -3,8 +3,8 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -26,9 +26,6 @@ type BankKeeper interface {
 // creating a x/protorev keeper.
 type GAMMKeeper interface {
 	GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.CFMMPoolI, error)
-	GetPoolsAndPoke(ctx sdk.Context) (res []gammtypes.CFMMPoolI, err error)
-	GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error)
-	GetPoolType(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolType, error)
 }
 
 // PoolManagerKeeper defines the PoolManager contract that must be fulfilled when
@@ -46,6 +43,17 @@ type PoolManagerKeeper interface {
 		routes []poolmanagertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
 	) (tokenOutAmount sdk.Int, err error)
+
+	AllPools(
+		ctx sdk.Context,
+	) ([]poolmanagertypes.PoolI, error)
+	GetPool(
+		ctx sdk.Context,
+		poolId uint64,
+	) (poolmanagertypes.PoolI, error)
+	GetPoolModule(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolModuleI, error)
+	GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error)
+	RouteGetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error)
 }
 
 // EpochKeeper defines the Epoch contract that must be fulfilled when

@@ -2,15 +2,13 @@ package simulation
 
 import (
 	"fmt"
-	"math/rand"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	osmosimtypes "github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
-	valsetkeeper "github.com/osmosis-labs/osmosis/v15/x/valset-pref"
-	"github.com/osmosis-labs/osmosis/v15/x/valset-pref/types"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
+	valsetkeeper "github.com/osmosis-labs/osmosis/v16/x/valset-pref"
+	"github.com/osmosis-labs/osmosis/v16/x/valset-pref/types"
 )
 
 func RandomMsgSetValSetPreference(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgSetValidatorSetPreference, error) {
@@ -41,6 +39,8 @@ func RandomMsgDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, 
 		return nil, fmt.Errorf("%s is not present", sdk.DefaultBondDenom)
 	}
 
+	rand := sim.GetRand()
+
 	delegationCoin := rand.Intn(int(amount.Int64()))
 
 	return &types.MsgDelegateToValidatorSet{
@@ -59,6 +59,8 @@ func RandomMsgUnDelegateFromValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimC
 	if err != nil {
 		return nil, fmt.Errorf("no delegations found")
 	}
+
+	rand := sim.GetRand()
 
 	delegation := preferences.Preferences[rand.Intn(len(preferences.Preferences))]
 	val, err := sdk.ValAddressFromBech32(delegation.ValOperAddress)
@@ -152,7 +154,7 @@ func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx
 }
 
 func RandomValidator(ctx sdk.Context, sim *osmosimtypes.SimCtx) *stakingtypes.Validator {
-	rand.New(rand.NewSource(time.Now().UnixNano()))
+	rand := sim.GetRand()
 
 	validators := sim.StakingKeeper().GetAllValidators(ctx)
 	if len(validators) == 0 {
@@ -166,7 +168,7 @@ func GetRandomValAndWeights(ctx sdk.Context, k valsetkeeper.Keeper, sim *osmosim
 	var preferences []types.ValidatorPreference
 
 	// Generate random validators with random weights that sums to 1
-	for remainingWeight.GT(sdk.ZeroDec()) {
+	for remainingWeight.IsPositive() {
 		randValidator := RandomValidator(ctx, sim)
 		if randValidator == nil {
 			return nil, fmt.Errorf("No validator")
@@ -175,7 +177,7 @@ func GetRandomValAndWeights(ctx sdk.Context, k valsetkeeper.Keeper, sim *osmosim
 		randValue := sim.RandomDecAmount(remainingWeight)
 
 		remainingWeight = remainingWeight.Sub(randValue)
-		if !randValue.Equal(sdk.ZeroDec()) {
+		if !randValue.IsZero() {
 			preferences = append(preferences, types.ValidatorPreference{
 				ValOperAddress: randValidator.OperatorAddress,
 				Weight:         randValue,

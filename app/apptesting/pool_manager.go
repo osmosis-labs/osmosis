@@ -5,8 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanager "github.com/osmosis-labs/osmosis/v15/x/poolmanager"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
+	poolmanager "github.com/osmosis-labs/osmosis/v16/x/poolmanager"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
@@ -40,21 +41,38 @@ func (s *KeeperTestHelper) CreatePoolFromType(poolType poolmanagertypes.PoolType
 	case poolmanagertypes.Concentrated:
 		s.PrepareConcentratedPool()
 		return
+	case poolmanagertypes.CosmWasm:
+		s.PrepareCosmWasmPool()
+		return
 	}
 }
 
 // CreatePoolFromTypeWithCoins creates a pool with the given type and initialized with the given coins.
 func (s *KeeperTestHelper) CreatePoolFromTypeWithCoins(poolType poolmanagertypes.PoolType, coins sdk.Coins) uint64 {
-	var poolId uint64
-	if poolType == poolmanagertypes.Balancer {
-		poolId = s.PrepareBalancerPoolWithCoins(coins...)
-	} else if poolType == poolmanagertypes.Concentrated {
+	return s.CreatePoolFromTypeWithCoinsAndSpreadFactor(poolType, coins, sdk.ZeroDec())
+}
+
+// CreatePoolFromTypeWithCoinsAndSpreadFactor creates a pool with given type, initialized with the given coins as initial liquidity and spread factor.
+func (s *KeeperTestHelper) CreatePoolFromTypeWithCoinsAndSpreadFactor(poolType poolmanagertypes.PoolType, coins sdk.Coins, spreadFactor sdk.Dec) uint64 {
+	switch poolType {
+	case poolmanagertypes.Balancer:
+		poolId := s.PrepareCustomBalancerPoolFromCoins(coins, balancer.PoolParams{
+			SwapFee: spreadFactor,
+			ExitFee: sdk.ZeroDec(),
+		})
+		return poolId
+	case poolmanagertypes.Concentrated:
 		s.Require().Len(coins, 2)
-		clPool := s.PrepareConcentratedPoolWithCoins(coins[0].Denom, coins[1].Denom)
-		s.CreateFullRangePosition(clPool, coins)
-		poolId = clPool.GetId()
-	} else {
+		pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], coins[0].Denom, coins[1].Denom, DefaultTickSpacing, spreadFactor)
+		s.CreateFullRangePosition(pool, coins)
+		return pool.GetId()
+	case poolmanagertypes.CosmWasm:
+		s.Require().Len(coins, 2)
+		pool := s.PrepareCustomTransmuterPool(s.TestAccs[0], []string{coins[0].Denom, coins[1].Denom})
+		s.JoinTransmuterPool(s.TestAccs[0], pool.GetId(), coins)
+		return pool.GetId()
+	default:
 		s.FailNow(fmt.Sprintf("unsupported pool type for this operation (%s)", poolmanagertypes.PoolType_name[int32(poolType)]))
 	}
-	return poolId
+	return 0
 }

@@ -4,7 +4,7 @@ Osmosis v13 Gov Prop: <https://www.mintscan.io/osmosis/proposals/370>
 
 Countdown: <https://www.mintscan.io/osmosis/blocks/7241500>
 
-Height: 6246000 TODO: Update upgrade height
+Height: 7241500
 
 ## Memory Requirements
 

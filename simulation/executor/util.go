@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
 )
 
 func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B) {
+	tb.Helper()
 	testingMode = false
 
 	if _t, ok := tb.(*testing.T); ok {

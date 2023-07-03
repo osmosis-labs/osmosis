@@ -9,11 +9,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v15/app"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/cli"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
-	poolmanagertestutil "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/testutil"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/app"
+	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/client/cli"
+	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/client/queryproto"
+	poolmanagertestutil "github.com/osmosis-labs/osmosis/v16/x/poolmanager/client/testutil"
+	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -63,7 +63,6 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-
 	// TODO: re-enable this once poolmanager is fully merged.
 	t.SkipNow()
 
@@ -530,7 +529,13 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 				err = clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType)
 				s.Require().NoError(err, out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
+				var txResp *sdk.TxResponse
+				switch resp := tc.respType.(type) {
+				case *sdk.TxResponse:
+					txResp = resp
+				default:
+					s.T().Fatalf("unexpected response type: %T", tc.respType)
+				}
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 			}
 		})

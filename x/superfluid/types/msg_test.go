@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
@@ -16,11 +16,6 @@ func TestAuthzMsg(t *testing.T) {
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	coin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))
-
-	const (
-		mockGranter string = "cosmos1abc"
-		mockGrantee string = "cosmos1xyz"
-	)
 
 	testCases := []struct {
 		name string

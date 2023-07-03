@@ -9,7 +9,7 @@ import "osmosis/protorev/v1beta1/protorev.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v15/x/protorev/types";
+option go_package = "github.com/osmosis-labs/osmosis/v16/x/protorev/types";
 
 // Query defines the gRPC querier service.
 service Query {
@@ -107,6 +107,13 @@ service Query {
   rpc GetProtoRevEnabled(QueryGetProtoRevEnabledRequest)
       returns (QueryGetProtoRevEnabledResponse) {
     option (google.api.http).get = "/osmosis/v14/protorev/enabled";
+  }
+
+  // GetProtoRevPool queries the pool id used via the highest liquidity method
+  // for arbitrage route building given a pair of denominations
+  rpc GetProtoRevPool(QueryGetProtoRevPoolRequest)
+      returns (QueryGetProtoRevPoolResponse) {
+    option (google.api.http).get = "/osmosis/v14/protorev/pool";
   }
 }
 
@@ -300,4 +307,21 @@ message QueryGetProtoRevEnabledRequest {}
 message QueryGetProtoRevEnabledResponse {
   // enabled is whether the module is enabled
   bool enabled = 1 [ (gogoproto.moretags) = "yaml:\"enabled\"" ];
+}
+
+// QueryGetProtoRevPoolRequest is request type for the
+// Query/GetProtoRevPool RPC method.
+message QueryGetProtoRevPoolRequest {
+  // base_denom is the base denom set in protorev for the denom pair to pool
+  // mapping
+  string base_denom = 1 [ (gogoproto.moretags) = "yaml:\"base_denom\"" ];
+  // other_denom is the other denom for the denom pair to pool mapping
+  string other_denom = 2 [ (gogoproto.moretags) = "yaml:\"other_denom\"" ];
+}
+
+// QueryGetProtoRevPoolResponse is response type for the
+// Query/GetProtoRevPool RPC method.
+message QueryGetProtoRevPoolResponse {
+  // pool_id is the pool_id stored for the denom pair
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }

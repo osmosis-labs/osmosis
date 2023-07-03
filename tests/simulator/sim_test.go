@@ -13,9 +13,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	osmosim "github.com/osmosis-labs/osmosis/v15/simulation/executor"
-	"github.com/osmosis-labs/osmosis/v15/simulation/simtypes/simlogger"
-	txfeetypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
+	osmosim "github.com/osmosis-labs/osmosis/v16/simulation/executor"
+	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes/simlogger"
+	txfeetypes "github.com/osmosis-labs/osmosis/v16/x/txfees/types"
 )
 
 // Profile with:
@@ -47,6 +47,7 @@ func TestFullAppSimulation(t *testing.T) {
 }
 
 func fullAppSimulation(tb testing.TB, is_testing bool) {
+	tb.Helper()
 	// TODO: Get SDK simulator fixed to have min fees possible
 	txfeetypes.ConsensusMinFee = sdk.ZeroDec()
 	config, db, logger, cleanup, err := osmosim.SetupSimulation("goleveldb-app-sim", "Simulation")

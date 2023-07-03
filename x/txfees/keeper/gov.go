@@ -3,10 +3,15 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v16/x/txfees/types"
 )
 
 func (k Keeper) HandleUpdateFeeTokenProposal(ctx sdk.Context, p *types.UpdateFeeTokenProposal) error {
 	// setFeeToken internally calls ValidateFeeToken
-	return k.setFeeToken(ctx, p.Feetoken)
+	for _, feeToken := range p.Feetokens {
+		if err := k.setFeeToken(ctx, feeToken); err != nil {
+			return err
+		}
+	}
+	return nil
 }

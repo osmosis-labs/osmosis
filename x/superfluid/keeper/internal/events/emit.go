@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 )
 
 func EmitSetSuperfluidAssetEvent(ctx sdk.Context, denom string, assetType types.SuperfluidAssetType) {
@@ -58,6 +58,25 @@ func newSuperfluidDelegateEvent(lockId uint64, valAddress string) sdk.Event {
 	return sdk.NewEvent(
 		types.TypeEvtSuperfluidDelegate,
 		sdk.NewAttribute(types.AttributeLockId, osmoutils.Uint64ToString(lockId)),
+		sdk.NewAttribute(types.AttributeValidator, valAddress),
+	)
+}
+
+func EmitCreateFullRangePositionAndSuperfluidDelegateEvent(ctx sdk.Context, lockId, positionId uint64, valAddress string) {
+	if ctx.EventManager() == nil {
+		return
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		newCreateFullRangePositionAndSuperfluidDelegateEvent(lockId, positionId, valAddress),
+	})
+}
+
+func newCreateFullRangePositionAndSuperfluidDelegateEvent(lockId, positionId uint64, valAddress string) sdk.Event {
+	return sdk.NewEvent(
+		types.TypeEvtCreateFullRangePositionAndSFDelegate,
+		sdk.NewAttribute(types.AttributeLockId, osmoutils.Uint64ToString(lockId)),
+		sdk.NewAttribute(types.AttributePositionId, osmoutils.Uint64ToString(positionId)),
 		sdk.NewAttribute(types.AttributeValidator, valAddress),
 	)
 }

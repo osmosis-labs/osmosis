@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"strconv"
 	"strings"
 	"testing"
 
@@ -11,10 +12,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v15/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
 )
 
 // BenchmarkBalancerSwapHighestLiquidityArb benchmarks a balancer swap that creates a single three hop arbitrage
@@ -71,23 +72,22 @@ func BenchmarkFourHopHotRouteArb(b *testing.B) {
 	benchmarkWrapper(b, msgs, 1)
 }
 
-func (suite *KeeperTestSuite) TestAnteHandle() {
+func (s *KeeperTestSuite) TestAnteHandle() {
 	type param struct {
-		msgs                []sdk.Msg
-		txFee               sdk.Coins
-		minGasPrices        sdk.DecCoins
-		gasLimit            uint64
-		isCheckTx           bool
-		baseDenomGas        bool
+		trades              []types.Trade
 		expectedNumOfTrades sdk.Int
 		expectedProfits     []sdk.Coin
 		expectedPoolPoints  uint64
 	}
 
-	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
+	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
-	acc1 := suite.App.AccountKeeper.NewAccountWithAddress(suite.Ctx, addr0)
-	suite.App.AccountKeeper.SetAccount(suite.Ctx, acc1)
+	acc1 := s.App.AccountKeeper.NewAccountWithAddress(s.Ctx, addr0)
+	s.App.AccountKeeper.SetAccount(s.Ctx, acc1)
+
+	// Set protorev developer account
+	devAccount := apptesting.CreateRandomAccounts(1)[0]
+	s.App.ProtoRevKeeper.SetDeveloperAccount(s.Ctx, devAccount)
 
 	// Keep testing order consistent to make adding tests easier
 	// Add all tests that are not expected to execute a trade first
@@ -100,12 +100,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 		{
 			name: "Random Msg - Expect Nothing to Happen",
 			params: param{
-				msgs:                []sdk.Msg{testdata.NewTestMsg(addr0)},
-				txFee:               sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
-				minGasPrices:        sdk.NewDecCoins(),
-				gasLimit:            500000,
-				isCheckTx:           false,
-				baseDenomGas:        true,
+				trades:              []types.Trade{},
 				expectedNumOfTrades: sdk.ZeroInt(),
 				expectedProfits:     []sdk.Coin{},
 				expectedPoolPoints:  0,
@@ -115,24 +110,13 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 		{
 			name: "No Arb",
 			params: param{
-				msgs: []sdk.Msg{
-					&poolmanagertypes.MsgSwapExactAmountIn{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountInRoute{
-							{
-								PoolId:        12,
-								TokenOutDenom: "akash",
-							},
-						},
-						TokenIn:           sdk.NewCoin("juno", sdk.NewInt(10)),
-						TokenOutMinAmount: sdk.NewInt(1),
+				trades: []types.Trade{
+					{
+						Pool:     12,
+						TokenOut: "akash",
+						TokenIn:  "juno",
 					},
 				},
-				txFee:               sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))),
-				minGasPrices:        sdk.NewDecCoins(),
-				gasLimit:            500000,
-				isCheckTx:           false,
-				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.ZeroInt(),
 				expectedProfits:     []sdk.Coin{},
 				expectedPoolPoints:  0,
@@ -142,24 +126,13 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 		{
 			name: "Mainnet Arb (Block: 5905150) - Highest Liquidity Pool Build",
 			params: param{
-				msgs: []sdk.Msg{
-					&poolmanagertypes.MsgSwapExactAmountIn{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountInRoute{
-							{
-								PoolId:        23,
-								TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
-							},
-						},
-						TokenIn:           sdk.NewCoin("ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0", sdk.NewInt(10000)),
-						TokenOutMinAmount: sdk.NewInt(10000),
+				trades: []types.Trade{
+					{
+						Pool:     23,
+						TokenOut: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
+						TokenIn:  "ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0",
 					},
 				},
-				txFee:               sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))),
-				minGasPrices:        sdk.NewDecCoins(),
-				gasLimit:            500000,
-				isCheckTx:           false,
-				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.OneInt(),
 				expectedProfits: []sdk.Coin{
 					{
@@ -174,24 +147,13 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 		{
 			name: "Mainnet Arb Route - Multi Asset, Same Weights (Block: 6906570) - Hot Route Build - Atom Arb",
 			params: param{
-				msgs: []sdk.Msg{
-					&poolmanagertypes.MsgSwapExactAmountIn{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountInRoute{
-							{
-								PoolId:        33,
-								TokenOutDenom: "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293",
-							},
-						},
-						TokenIn:           sdk.NewCoin("Atom", sdk.NewInt(10000)),
-						TokenOutMinAmount: sdk.NewInt(10000),
+				trades: []types.Trade{
+					{
+						Pool:     33,
+						TokenOut: "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293",
+						TokenIn:  "Atom",
 					},
 				},
-				txFee:               sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))),
-				minGasPrices:        sdk.NewDecCoins(),
-				gasLimit:            500000,
-				isCheckTx:           false,
-				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.NewInt(2),
 				expectedProfits: []sdk.Coin{
 					{
@@ -210,24 +172,13 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 		{
 			name: "Stableswap Test Arb Route - Hot Route Build",
 			params: param{
-				msgs: []sdk.Msg{
-					&poolmanagertypes.MsgSwapExactAmountIn{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountInRoute{
-							{
-								PoolId:        29,
-								TokenOutDenom: types.OsmosisDenomination,
-							},
-						},
-						TokenIn:           sdk.NewCoin("usdc", sdk.NewInt(10000)),
-						TokenOutMinAmount: sdk.NewInt(100),
+				trades: []types.Trade{
+					{
+						Pool:     29,
+						TokenOut: types.OsmosisDenomination,
+						TokenIn:  "usdc",
 					},
 				},
-				txFee:               sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))),
-				minGasPrices:        sdk.NewDecCoins(),
-				gasLimit:            500000,
-				isCheckTx:           false,
-				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.NewInt(3),
 				expectedProfits: []sdk.Coin{
 					{
@@ -246,24 +197,13 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 		{
 			name: "Four Pool Arb Route - Hot Route Build",
 			params: param{
-				msgs: []sdk.Msg{
-					&poolmanagertypes.MsgSwapExactAmountIn{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountInRoute{
-							{
-								PoolId:        37,
-								TokenOutDenom: "test/2",
-							},
-						},
-						TokenIn:           sdk.NewCoin("Atom", sdk.NewInt(10000)),
-						TokenOutMinAmount: sdk.NewInt(100),
+				trades: []types.Trade{
+					{
+						Pool:     37,
+						TokenOut: "test/2",
+						TokenIn:  "Atom",
 					},
 				},
-				txFee:               sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))),
-				minGasPrices:        sdk.NewDecCoins(),
-				gasLimit:            500000,
-				isCheckTx:           false,
-				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.NewInt(4),
 				expectedProfits: []sdk.Coin{
 					{
@@ -282,24 +222,13 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 		{
 			name: "Two Pool Arb Route - Hot Route Build",
 			params: param{
-				msgs: []sdk.Msg{
-					&poolmanagertypes.MsgSwapExactAmountIn{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountInRoute{
-							{
-								PoolId:        38,
-								TokenOutDenom: "test/3",
-							},
-						},
-						TokenIn:           sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000)),
-						TokenOutMinAmount: sdk.NewInt(100),
+				trades: []types.Trade{
+					{
+						Pool:     38,
+						TokenOut: "test/3",
+						TokenIn:  types.OsmosisDenomination,
 					},
 				},
-				txFee:               sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))),
-				minGasPrices:        sdk.NewDecCoins(),
-				gasLimit:            500000,
-				isCheckTx:           false,
-				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.NewInt(5),
 				expectedProfits: []sdk.Coin{
 					{
@@ -322,24 +251,13 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 		{ // This test the tx pool points limit caps the number of iterations
 			name: "Doomsday Test - Stableswap - Tx Pool Points Limit",
 			params: param{
-				msgs: []sdk.Msg{
-					&poolmanagertypes.MsgSwapExactAmountIn{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountInRoute{
-							{
-								PoolId:        41,
-								TokenOutDenom: "usdc",
-							},
-						},
-						TokenIn:           sdk.NewCoin("busd", sdk.NewInt(10000)),
-						TokenOutMinAmount: sdk.NewInt(100),
+				trades: []types.Trade{
+					{
+						Pool:     41,
+						TokenOut: "usdc",
+						TokenIn:  "busd",
 					},
 				},
-				txFee:               sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))),
-				minGasPrices:        sdk.NewDecCoins(),
-				gasLimit:            500000,
-				isCheckTx:           false,
-				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.NewInt(5),
 				expectedProfits: []sdk.Coin{
 					{
@@ -362,24 +280,13 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 		{ // This test the block pool points limit caps the number of iterations within a tx
 			name: "Doomsday Test - Stableswap - Block Pool Points Limit - Within a tx",
 			params: param{
-				msgs: []sdk.Msg{
-					&poolmanagertypes.MsgSwapExactAmountIn{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountInRoute{
-							{
-								PoolId:        41,
-								TokenOutDenom: "usdc",
-							},
-						},
-						TokenIn:           sdk.NewCoin("busd", sdk.NewInt(10000)),
-						TokenOutMinAmount: sdk.NewInt(100),
+				trades: []types.Trade{
+					{
+						Pool:     41,
+						TokenOut: "usdc",
+						TokenIn:  "busd",
 					},
 				},
-				txFee:               sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))),
-				minGasPrices:        sdk.NewDecCoins(),
-				gasLimit:            500000,
-				isCheckTx:           false,
-				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.NewInt(5),
 				expectedProfits: []sdk.Coin{
 					{
@@ -402,24 +309,13 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 		{ // This test the block pool points limit caps the number of txs processed if already reached the limit
 			name: "Doomsday Test - Stableswap - Block Pool Points Limit Already Reached - New tx",
 			params: param{
-				msgs: []sdk.Msg{
-					&poolmanagertypes.MsgSwapExactAmountIn{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountInRoute{
-							{
-								PoolId:        41,
-								TokenOutDenom: "usdc",
-							},
-						},
-						TokenIn:           sdk.NewCoin("busd", sdk.NewInt(10000)),
-						TokenOutMinAmount: sdk.NewInt(100),
+				trades: []types.Trade{
+					{
+						Pool:     41,
+						TokenOut: "usdc",
+						TokenIn:  "busd",
 					},
 				},
-				txFee:               sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))),
-				minGasPrices:        sdk.NewDecCoins(),
-				gasLimit:            500000,
-				isCheckTx:           false,
-				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.NewInt(5),
 				expectedProfits: []sdk.Coin{
 					{
@@ -442,129 +338,146 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 	}
 
 	// Ensure that the max points per tx is enough for the test suite
-	suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 18)
-	suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 100)
-	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2})
+	err := s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, 18)
+	s.Require().NoError(err)
+	err = s.App.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, 100)
+	s.Require().NoError(err)
+	s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2})
 
 	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			suite.Ctx = suite.Ctx.WithIsCheckTx(tc.params.isCheckTx)
-			suite.Ctx = suite.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
-			suite.Ctx = suite.Ctx.WithMinGasPrices(tc.params.minGasPrices)
+		s.Run(tc.name, func() {
+			s.Ctx = s.Ctx.WithIsCheckTx(false)
+			s.Ctx = s.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+			s.Ctx = s.Ctx.WithMinGasPrices(sdk.NewDecCoins())
+
+			gasLimit := uint64(500000)
+			txFee := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000)))
 
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
 			signerData := authsigning.SignerData{
-				ChainID:       suite.Ctx.ChainID(),
+				ChainID:       s.Ctx.ChainID(),
 				AccountNumber: accNums[0],
 				Sequence:      accSeqs[0],
 			}
-			gasLimit := tc.params.gasLimit
+
 			sigV2, _ := clienttx.SignWithPrivKey(
 				1,
 				signerData,
 				txBuilder,
 				privs[0],
-				suite.clientCtx.TxConfig,
+				s.clientCtx.TxConfig,
 				accSeqs[0],
 			)
-			simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, tc.params.txFee)
+
+			err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, addr0, txFee)
+			s.Require().NoError(err)
 
 			var tx authsigning.Tx
-			var msgs []sdk.Msg
+			msgs := []sdk.Msg{testdata.NewTestMsg(addr0)}
 
 			// Lower the max points per tx and block if the test cases are doomsday testing
 			if strings.Contains(tc.name, "Tx Pool Points Limit") {
-				suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 5)
+				err := s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, 5)
+				s.Require().NoError(err)
 			} else if strings.Contains(tc.name, "Block Pool Points Limit - Within a tx") {
-				suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 35)
+				err := s.App.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, 35)
+				s.Require().NoError(err)
 			} else if strings.Contains(tc.name, "Block Pool Points Limit Already Reached") {
-				suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 33)
+				err := s.App.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, 33)
+				s.Require().NoError(err)
 			}
 
 			if strings.Contains(tc.name, "Doomsday") {
+				singleTrade := tc.params.trades[0]
 				for i := 0; i < 100; i++ {
-					msgs = append(msgs, tc.params.msgs...)
+					tc.params.trades = append(tc.params.trades, singleTrade)
 				}
 
-				txBuilder.SetMsgs(msgs...)
-				txBuilder.SetSignatures(sigV2)
+				err := txBuilder.SetMsgs(msgs...)
+				s.Require().NoError(err)
+				err = txBuilder.SetSignatures(sigV2)
+				s.Require().NoError(err)
 				txBuilder.SetMemo("")
-				txBuilder.SetFeeAmount(tc.params.txFee)
+				txBuilder.SetFeeAmount(txFee)
 				txBuilder.SetGasLimit(gasLimit)
 				tx = txBuilder.GetTx()
 			} else {
-				msgs = tc.params.msgs
-				tx = suite.BuildTx(txBuilder, msgs, sigV2, "", tc.params.txFee, gasLimit)
+				tx = s.BuildTx(txBuilder, msgs, sigV2, "", txFee, gasLimit)
 			}
 
-			protoRevDecorator := keeper.NewProtoRevDecorator(*suite.App.ProtoRevKeeper)
+			protoRevDecorator := keeper.NewProtoRevDecorator(*s.App.ProtoRevKeeper)
 			posthandlerProtoRev := sdk.ChainAnteDecorators(protoRevDecorator)
 
 			// Added so we can check the gas consumed during the posthandler
-			suite.Ctx = suite.Ctx.WithGasMeter(sdk.NewGasMeter(tc.params.gasLimit))
-			halfGas := tc.params.gasLimit / 2
-			suite.Ctx.GasMeter().ConsumeGas(halfGas, "consume half gas")
-			gasBefore := suite.Ctx.GasMeter().GasConsumed()
-			gasLimitBefore := suite.Ctx.GasMeter().Limit()
+			s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(gasLimit))
+			halfGas := gasLimit / 2
+			s.Ctx.GasMeter().ConsumeGas(halfGas, "consume half gas")
 
-			_, err := posthandlerProtoRev(suite.Ctx, tx, false)
+			// Set pools to backrun
+			s.App.AppKeepers.ProtoRevKeeper.AddSwapsToSwapsToBackrun(s.Ctx, tc.params.trades)
 
-			gasAfter := suite.Ctx.GasMeter().GasConsumed()
-			gasLimitAfter := suite.Ctx.GasMeter().Limit()
+			gasBefore := s.Ctx.GasMeter().GasConsumed()
+			gasLimitBefore := s.Ctx.GasMeter().Limit()
+
+			_, err = posthandlerProtoRev(s.Ctx, tx, false)
+
+			gasAfter := s.Ctx.GasMeter().GasConsumed()
+			gasLimitAfter := s.Ctx.GasMeter().Limit()
 
 			if tc.expectPass {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 				// Check that the gas consumed is the same before and after the posthandler
-				suite.Require().Equal(gasBefore, gasAfter)
+				s.Require().Equal(gasBefore, gasAfter)
 				// Check that the gas limit is the same before and after the posthandler
-				suite.Require().Equal(gasLimitBefore, gasLimitAfter)
+				s.Require().Equal(gasLimitBefore, gasLimitAfter)
 
-				suite.Ctx = suite.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+				s.Ctx = s.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 
 				// Check that the number of trades is correct
-				numOfTrades, _ := suite.App.ProtoRevKeeper.GetNumberOfTrades(suite.Ctx)
-				suite.Require().Equal(tc.params.expectedNumOfTrades, numOfTrades)
+				numOfTrades, _ := s.App.ProtoRevKeeper.GetNumberOfTrades(s.Ctx)
+				s.Require().Equal(tc.params.expectedNumOfTrades, numOfTrades)
 
 				// Check that the profits are correct
-				profits := suite.App.ProtoRevKeeper.GetAllProfits(suite.Ctx)
-				suite.Require().Equal(tc.params.expectedProfits, profits)
+				profits := s.App.ProtoRevKeeper.GetAllProfits(s.Ctx)
+				s.Require().Equal(tc.params.expectedProfits, profits)
 
 				// Check the current pool point count
-				pointCount, err := suite.App.ProtoRevKeeper.GetPointCountForBlock(suite.Ctx)
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.params.expectedPoolPoints, pointCount)
+				pointCount, err := s.App.ProtoRevKeeper.GetPointCountForBlock(s.Ctx)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.params.expectedPoolPoints, pointCount)
 
+				_, remainingBlockPoolPoints, err := s.App.ProtoRevKeeper.GetRemainingPoolPoints(s.Ctx)
+				s.Require().NoError(err)
+
+				lastEvent := s.Ctx.EventManager().Events()[len(s.Ctx.EventManager().Events())-1]
+				for _, attr := range lastEvent.Attributes {
+					if string(attr.Key) == "block_pool_points_remaining" {
+						s.Require().Equal(strconv.FormatUint(remainingBlockPoolPoints, 10), string(attr.Value))
+					}
+				}
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
+
+			s.App.AppKeepers.ProtoRevKeeper.DeleteSwapsToBackrun(s.Ctx)
 
 			// Reset the max points per tx and block
 			if strings.Contains(tc.name, "Tx Pool Points Limit") {
-				suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 18)
+				err = s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, 18)
+				s.Require().NoError(err)
 			} else if strings.Contains(tc.name, "Block Pool Points Limit") {
-				suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 100)
+				err = s.App.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, 100)
+				s.Require().NoError(err)
 			}
-
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestExtractSwappedPools() {
+func (s *KeeperTestSuite) TestExtractSwappedPools() {
 	type param struct {
-		msgs                 []sdk.Msg
-		txFee                sdk.Coins
-		minGasPrices         sdk.DecCoins
-		gasLimit             uint64
-		isCheckTx            bool
-		baseDenomGas         bool
-		expectedNumOfPools   int
 		expectedSwappedPools []keeper.SwapToBackrun
+		expectedNumOfPools   int
 	}
-
-	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
-	priv0, _, addr0 := testdata.KeyTestPubAddr()
-	acc1 := suite.App.AccountKeeper.NewAccountWithAddress(suite.Ctx, addr0)
-	suite.App.AccountKeeper.SetAccount(suite.Ctx, acc1)
 
 	tests := []struct {
 		name       string
@@ -574,24 +487,6 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 		{
 			name: "Single Swap",
 			params: param{
-				msgs: []sdk.Msg{
-					&poolmanagertypes.MsgSwapExactAmountIn{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountInRoute{
-							{
-								PoolId:        28,
-								TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
-							},
-						},
-						TokenIn:           sdk.NewCoin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", sdk.NewInt(10000)),
-						TokenOutMinAmount: sdk.NewInt(10000),
-					},
-				},
-				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
-				minGasPrices:       sdk.NewDecCoins(),
-				gasLimit:           500000,
-				isCheckTx:          false,
-				baseDenomGas:       true,
 				expectedNumOfPools: 1,
 				expectedSwappedPools: []keeper.SwapToBackrun{
 					{
@@ -606,35 +501,6 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 		{
 			name: "Two Swaps",
 			params: param{
-				msgs: []sdk.Msg{
-					&poolmanagertypes.MsgSwapExactAmountIn{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountInRoute{
-							{
-								PoolId:        28,
-								TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
-							},
-						},
-						TokenIn:           sdk.NewCoin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", sdk.NewInt(10000)),
-						TokenOutMinAmount: sdk.NewInt(10000),
-					},
-					&poolmanagertypes.MsgSwapExactAmountIn{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountInRoute{
-							{
-								PoolId:        22,
-								TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
-							},
-						},
-						TokenIn:           sdk.NewCoin("uosmo", sdk.NewInt(10000)),
-						TokenOutMinAmount: sdk.NewInt(10000),
-					},
-				},
-				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
-				minGasPrices:       sdk.NewDecCoins(),
-				gasLimit:           500000,
-				isCheckTx:          false,
-				baseDenomGas:       true,
 				expectedNumOfPools: 2,
 				expectedSwappedPools: []keeper.SwapToBackrun{
 					{
@@ -654,24 +520,6 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 		{
 			name: "Single Swap Amount Out Test",
 			params: param{
-				msgs: []sdk.Msg{
-					&poolmanagertypes.MsgSwapExactAmountOut{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountOutRoute{
-							{
-								PoolId:       28,
-								TokenInDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
-							},
-						},
-						TokenOut:         sdk.NewCoin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", sdk.NewInt(10000)),
-						TokenInMaxAmount: sdk.NewInt(10000),
-					},
-				},
-				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
-				minGasPrices:       sdk.NewDecCoins(),
-				gasLimit:           500000,
-				isCheckTx:          false,
-				baseDenomGas:       true,
 				expectedNumOfPools: 1,
 				expectedSwappedPools: []keeper.SwapToBackrun{
 					{
@@ -686,32 +534,6 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 		{
 			name: "Single Swap with multiple hops (swapOut)",
 			params: param{
-				msgs: []sdk.Msg{
-					&poolmanagertypes.MsgSwapExactAmountOut{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountOutRoute{
-							{
-								PoolId:       28,
-								TokenInDenom: "atom",
-							},
-							{
-								PoolId:       30,
-								TokenInDenom: "weth",
-							},
-							{
-								PoolId:       35,
-								TokenInDenom: "bitcoin",
-							},
-						},
-						TokenOut:         sdk.NewCoin("akash", sdk.NewInt(10000)),
-						TokenInMaxAmount: sdk.NewInt(10000),
-					},
-				},
-				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
-				minGasPrices:       sdk.NewDecCoins(),
-				gasLimit:           500000,
-				isCheckTx:          false,
-				baseDenomGas:       true,
 				expectedNumOfPools: 3,
 				expectedSwappedPools: []keeper.SwapToBackrun{
 					{
@@ -736,36 +558,6 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 		{
 			name: "Single Swap with multiple hops (swapIn)",
 			params: param{
-				msgs: []sdk.Msg{
-					&poolmanagertypes.MsgSwapExactAmountIn{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountInRoute{
-							{
-								PoolId:        28,
-								TokenOutDenom: "atom",
-							},
-							{
-								PoolId:        30,
-								TokenOutDenom: "weth",
-							},
-							{
-								PoolId:        35,
-								TokenOutDenom: "bitcoin",
-							},
-							{
-								PoolId:        36,
-								TokenOutDenom: "juno",
-							},
-						},
-						TokenIn:           sdk.NewCoin("akash", sdk.NewInt(10000)),
-						TokenOutMinAmount: sdk.NewInt(1),
-					},
-				},
-				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
-				minGasPrices:       sdk.NewDecCoins(),
-				gasLimit:           500000,
-				isCheckTx:          false,
-				baseDenomGas:       true,
 				expectedNumOfPools: 4,
 				expectedSwappedPools: []keeper.SwapToBackrun{
 					{
@@ -795,32 +587,6 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 		{
 			name: "Single Swap with multiple hops (gamm msg swapOut)",
 			params: param{
-				msgs: []sdk.Msg{
-					&gammtypes.MsgSwapExactAmountOut{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountOutRoute{
-							{
-								PoolId:       28,
-								TokenInDenom: "atom",
-							},
-							{
-								PoolId:       30,
-								TokenInDenom: "weth",
-							},
-							{
-								PoolId:       35,
-								TokenInDenom: "bitcoin",
-							},
-						},
-						TokenOut:         sdk.NewCoin("akash", sdk.NewInt(10000)),
-						TokenInMaxAmount: sdk.NewInt(10000),
-					},
-				},
-				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
-				minGasPrices:       sdk.NewDecCoins(),
-				gasLimit:           500000,
-				isCheckTx:          false,
-				baseDenomGas:       true,
 				expectedNumOfPools: 3,
 				expectedSwappedPools: []keeper.SwapToBackrun{
 					{
@@ -845,36 +611,6 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 		{
 			name: "Single Swap with multiple hops (gamm swapIn)",
 			params: param{
-				msgs: []sdk.Msg{
-					&gammtypes.MsgSwapExactAmountIn{
-						Sender: addr0.String(),
-						Routes: []poolmanagertypes.SwapAmountInRoute{
-							{
-								PoolId:        28,
-								TokenOutDenom: "atom",
-							},
-							{
-								PoolId:        30,
-								TokenOutDenom: "weth",
-							},
-							{
-								PoolId:        35,
-								TokenOutDenom: "bitcoin",
-							},
-							{
-								PoolId:        36,
-								TokenOutDenom: "juno",
-							},
-						},
-						TokenIn:           sdk.NewCoin("akash", sdk.NewInt(10000)),
-						TokenOutMinAmount: sdk.NewInt(1),
-					},
-				},
-				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
-				minGasPrices:       sdk.NewDecCoins(),
-				gasLimit:           500000,
-				isCheckTx:          false,
-				baseDenomGas:       true,
 				expectedNumOfPools: 4,
 				expectedSwappedPools: []keeper.SwapToBackrun{
 					{
@@ -904,44 +640,19 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 	}
 
 	for _, tc := range tests {
-		suite.Run(tc.name, func() {
+		s.Run(tc.name, func() {
 
-			suite.Ctx = suite.Ctx.WithIsCheckTx(tc.params.isCheckTx)
-			suite.Ctx = suite.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
-			suite.Ctx = suite.Ctx.WithMinGasPrices(tc.params.minGasPrices)
-			msgs := tc.params.msgs
-
-			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
-			signerData := authsigning.SignerData{
-				ChainID:       suite.Ctx.ChainID(),
-				AccountNumber: accNums[0],
-				Sequence:      accSeqs[0],
+			for _, swap := range tc.params.expectedSwappedPools {
+				s.App.ProtoRevKeeper.AddSwapsToSwapsToBackrun(s.Ctx, []types.Trade{{Pool: swap.PoolId, TokenIn: swap.TokenInDenom, TokenOut: swap.TokenOutDenom}})
 			}
-			gasLimit := tc.params.gasLimit
-			sigV2, _ := clienttx.SignWithPrivKey(
-				1,
-				signerData,
-				txBuilder,
-				privs[0],
-				suite.clientCtx.TxConfig,
-				accSeqs[0],
-			)
-			simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, tc.params.txFee)
 
-			// Can't use test suite BuildTx because it doesn't allow for multiple msgs
-			txBuilder.SetMsgs(msgs...)
-			txBuilder.SetSignatures(sigV2)
-			txBuilder.SetMemo("")
-			txBuilder.SetFeeAmount(tc.params.txFee)
-			txBuilder.SetGasLimit(gasLimit)
-
-			tx := txBuilder.GetTx()
-
-			swappedPools := keeper.ExtractSwappedPools(tx)
+			swappedPools := s.App.ProtoRevKeeper.ExtractSwappedPools(s.Ctx)
 			if tc.expectPass {
-				suite.Require().Equal(tc.params.expectedNumOfPools, len(swappedPools))
-				suite.Require().Equal(tc.params.expectedSwappedPools, swappedPools)
+				s.Require().Equal(tc.params.expectedNumOfPools, len(swappedPools))
+				s.Require().Equal(tc.params.expectedSwappedPools, swappedPools)
 			}
+
+			s.App.ProtoRevKeeper.DeleteSwapsToBackrun(s.Ctx)
 		})
 	}
 }
@@ -950,17 +661,21 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 // messages to be sent, and the expected number of trades. It then runs the benchmark and checks the
 // number of trades after the post handler is run.
 func benchmarkWrapper(b *testing.B, msgs []sdk.Msg, expectedTrades int) {
+	b.Helper()
 	b.ReportAllocs()
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		suite, tx, postHandler := setUpBenchmarkSuite(msgs)
+		s, tx, postHandler := setUpBenchmarkSuite(msgs)
 
 		b.StartTimer()
-		postHandler(suite.Ctx, tx, false)
+		_, err := postHandler(s.Ctx, tx, false)
+		if err != nil {
+			b.Fatal(err)
+		}
 		b.StopTimer()
 
-		numberTrades, err := suite.App.ProtoRevKeeper.GetNumberOfTrades(suite.Ctx)
+		numberTrades, err := s.App.ProtoRevKeeper.GetNumberOfTrades(s.Ctx)
 		if err != nil {
 			if expectedTrades != 0 {
 				b.Fatal("error getting number of trades")
@@ -976,42 +691,44 @@ func benchmarkWrapper(b *testing.B, msgs []sdk.Msg, expectedTrades int) {
 // It returns the app configured to the correct state, a valid tx, and the protorev post handler.
 func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.AnteHandler) {
 	// Create a new test suite
-	suite := new(KeeperTestSuite)
-	suite.SetT(&testing.T{})
-	suite.SetupTest()
+	s := new(KeeperTestSuite)
+	s.SetT(&testing.T{})
+	s.SetupTest()
 
 	// Set up the app to the correct state to run the test
-	suite.Ctx = suite.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
-	suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 40)
-	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2})
+	s.Ctx = s.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	err := s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, 40)
+	s.Require().NoError(err)
+	s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2})
 
 	// Init a new account and fund it with tokens for gas fees
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
-	acc1 := suite.App.AccountKeeper.NewAccountWithAddress(suite.Ctx, addr0)
-	suite.App.AccountKeeper.SetAccount(suite.Ctx, acc1)
-	simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))))
+	acc1 := s.App.AccountKeeper.NewAccountWithAddress(s.Ctx, addr0)
+	s.App.AccountKeeper.SetAccount(s.Ctx, acc1)
+	err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, addr0, sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))))
+	s.Require().NoError(err)
 
 	// Build the tx
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
 	signerData := authsigning.SignerData{
-		ChainID:       suite.Ctx.ChainID(),
+		ChainID:       s.Ctx.ChainID(),
 		AccountNumber: accNums[0],
 		Sequence:      accSeqs[0],
 	}
-	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
+	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 	sigV2, _ := clienttx.SignWithPrivKey(
 		1,
 		signerData,
 		txBuilder,
 		privs[0],
-		suite.clientCtx.TxConfig,
+		s.clientCtx.TxConfig,
 		accSeqs[0],
 	)
-	tx := suite.BuildTx(txBuilder, msgs, sigV2, "", sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))), 500000)
+	tx := s.BuildTx(txBuilder, msgs, sigV2, "", sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))), 500000)
 
 	// Set up the post handler
-	protoRevDecorator := keeper.NewProtoRevDecorator(*suite.App.ProtoRevKeeper)
+	protoRevDecorator := keeper.NewProtoRevDecorator(*s.App.ProtoRevKeeper)
 	posthandlerProtoRev := sdk.ChainAnteDecorators(protoRevDecorator)
 
-	return suite, tx, posthandlerProtoRev
+	return s, tx, posthandlerProtoRev
 }

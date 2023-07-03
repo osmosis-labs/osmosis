@@ -1,0 +1,14 @@
+syntax = "proto3";
+package osmosis.cosmwasmpool.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/cosmwasm/msg";
+
+// ===================== InstantiateMsg
+message InstantiateMsg {
+  // pool_asset_denoms is the list of asset denoms that are initialized
+  // at pool creation time.
+  repeated string pool_asset_denoms = 1;
+}

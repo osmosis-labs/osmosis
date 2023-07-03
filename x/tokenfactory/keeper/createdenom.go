@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
 )
 
 // ConvertToBaseToken converts a fee amount in a whitelisted fee token to the base fee token amount
@@ -28,15 +28,18 @@ func (k Keeper) CreateDenom(ctx sdk.Context, creatorAddr string, subdenom string
 // Runs CreateDenom logic after the charge and all denom validation has been handled.
 // Made into a second function for genesis initialization.
 func (k Keeper) createDenomAfterValidation(ctx sdk.Context, creatorAddr string, denom string) (err error) {
-	denomMetaData := banktypes.Metadata{
-		DenomUnits: []*banktypes.DenomUnit{{
-			Denom:    denom,
-			Exponent: 0,
-		}},
-		Base: denom,
-	}
+	_, exists := k.bankKeeper.GetDenomMetaData(ctx, denom)
+	if !exists {
+		denomMetaData := banktypes.Metadata{
+			DenomUnits: []*banktypes.DenomUnit{{
+				Denom:    denom,
+				Exponent: 0,
+			}},
+			Base: denom,
+		}
 
-	k.bankKeeper.SetDenomMetaData(ctx, denomMetaData)
+		k.bankKeeper.SetDenomMetaData(ctx, denomMetaData)
+	}
 
 	authorityMetadata := types.DenomAuthorityMetadata{
 		Admin: creatorAddr,
@@ -71,16 +74,25 @@ func (k Keeper) validateCreateDenom(ctx sdk.Context, creatorAddr string, subdeno
 }
 
 func (k Keeper) chargeForCreateDenom(ctx sdk.Context, creatorAddr string, subdenom string) (err error) {
-	// Send creation fee to community pool
-	creationFee := k.GetParams(ctx).DenomCreationFee
-	accAddr, err := sdk.AccAddressFromBech32(creatorAddr)
-	if err != nil {
-		return err
-	}
-	if creationFee != nil {
-		if err := k.communityPoolKeeper.FundCommunityPool(ctx, creationFee, accAddr); err != nil {
+	params := k.GetParams(ctx)
+
+	// if DenomCreationFee is non-zero, transfer the tokens from the creator
+	// account to community pool
+	if params.DenomCreationFee != nil {
+		accAddr, err := sdk.AccAddressFromBech32(creatorAddr)
+		if err != nil {
+			return err
+		}
+
+		if err := k.communityPoolKeeper.FundCommunityPool(ctx, params.DenomCreationFee, accAddr); err != nil {
 			return err
 		}
 	}
+
+	// if DenomCreationGasConsume is non-zero, consume the gas
+	if params.DenomCreationGasConsume != 0 {
+		ctx.GasMeter().ConsumeGas(params.DenomCreationGasConsume, "consume denom creation gas")
+	}
+
 	return nil
 }

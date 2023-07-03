@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 )
 
 type UpgradeTestSuite struct {
@@ -53,7 +53,7 @@ func (suite *UpgradeTestSuite) TestPoolMigration() {
 				plan := upgradetypes.Plan{Name: "v12", Height: dummyUpgradeHeight}
 				err := suite.App.UpgradeKeeper.ScheduleUpgrade(suite.Ctx, plan)
 				suite.Require().NoError(err)
-				plan, exists := suite.App.UpgradeKeeper.GetUpgradePlan(suite.Ctx)
+				_, exists := suite.App.UpgradeKeeper.GetUpgradePlan(suite.Ctx)
 				suite.Require().True(exists)
 
 				suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight)

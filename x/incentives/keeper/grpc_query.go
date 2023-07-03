@@ -7,13 +7,15 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v16/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -138,13 +140,13 @@ func (q Querier) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest)
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Owner) == 0 && len(req.LockIds) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	diff := req.EndEpoch - q.Keeper.GetEpochInfo(ctx).CurrentEpoch
 	if diff > 365 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "end epoch out of ranges")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "end epoch out of ranges")
 	}
 
 	if len(req.Owner) != 0 {

@@ -3,18 +3,17 @@ package gammsimulation
 import (
 	"errors"
 	"fmt"
-	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
-	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/keeper"
+	balancertypes "github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
@@ -146,7 +145,7 @@ func RandomSwapExactAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Cont
 	randomCoinSubset := sim.RandSubsetCoins(sdk.NewCoins(sdk.NewCoin(accCoinIn.Denom, accCoinIn.Amount)))
 
 	// calculate the minimum number of tokens received from input of tokenIn
-	tokenOutMin, err := pool.CalcOutAmtGivenIn(ctx, randomCoinSubset, coinOut.Denom, pool.GetSwapFee(ctx))
+	tokenOutMin, err := pool.CalcOutAmtGivenIn(ctx, randomCoinSubset, coinOut.Denom, pool.GetSpreadFactor(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -184,11 +183,11 @@ func RandomSwapExactAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Con
 	randomCoinInSubset := osmoutils.MinCoins(sdk.NewCoins(coinIn), sdk.NewCoins(accCoin))
 
 	// utilize CalcOutAmtGivenIn to calculate tokenOut and use tokenOut to calculate tokenInMax
-	tokenOut, err := pool.CalcOutAmtGivenIn(ctx, randomCoinInSubset, coinOut.Denom, pool.GetSwapFee(ctx))
+	tokenOut, err := pool.CalcOutAmtGivenIn(ctx, randomCoinInSubset, coinOut.Denom, pool.GetSpreadFactor(ctx))
 	if err != nil {
 		return nil, err
 	}
-	tokenInMax, err := pool.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), coinIn.Denom, pool.GetSwapFee(ctx))
+	tokenInMax, err := pool.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), coinIn.Denom, pool.GetSpreadFactor(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +219,7 @@ func RandomJoinSwapExternAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk
 	newTokenIn := osmoutils.MinCoins(sdk.NewCoins(coinIn), sdk.NewCoins(tokenIn))
 
 	// calc shares out with tokenIn
-	minShareOutAmt, _, err := pool.CalcJoinPoolShares(ctx, newTokenIn, pool.GetSwapFee(ctx))
+	minShareOutAmt, _, err := pool.CalcJoinPoolShares(ctx, newTokenIn, pool.GetSpreadFactor(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -252,7 +251,7 @@ func RandomJoinSwapShareAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk
 	newTokenIn := osmoutils.MinCoins(sdk.NewCoins(coinIn), sdk.NewCoins(tokenIn))
 
 	// calc shares out with tokenIn
-	minShareOutAmt, _, err := pool.CalcJoinPoolShares(ctx, newTokenIn, pool.GetSwapFee(ctx))
+	minShareOutAmt, _, err := pool.CalcJoinPoolShares(ctx, newTokenIn, pool.GetSpreadFactor(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -262,7 +261,7 @@ func RandomJoinSwapShareAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk
 	if !ok {
 		return nil, fmt.Errorf("pool with id %d does not support this kind of join", pool_id)
 	}
-	tokenInAmount, err := extendedPool.CalcTokenInShareAmountOut(ctx, tokenIn.Denom, minShareOutAmt, pool.GetSwapFee(ctx))
+	tokenInAmount, err := extendedPool.CalcTokenInShareAmountOut(ctx, tokenIn.Denom, minShareOutAmt, pool.GetSpreadFactor(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -307,7 +306,7 @@ func RandomExitSwapExternAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sd
 
 	// get amount of coinIn from exitedCoins and calculate how much of tokenOut you should get from that
 	exitedCoinsIn := exitedCoins.AmountOf(coinIn.Denom)
-	tokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(sdk.NewCoin(coinIn.Denom, exitedCoinsIn)), coinOut.Denom, pool.GetSwapFee(ctx))
+	tokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(sdk.NewCoin(coinIn.Denom, exitedCoinsIn)), coinOut.Denom, pool.GetSpreadFactor(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -349,7 +348,7 @@ func RandomExitSwapShareAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.
 
 	// get amount of coinIn from exitedCoins and calculate how much of tokenOut you should get from that
 	exitedCoinsIn := exitedCoins.AmountOf(coinIn.Denom)
-	tokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(sdk.NewCoin(coinIn.Denom, exitedCoinsIn)), coinOut.Denom, pool.GetSwapFee(ctx))
+	tokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(sdk.NewCoin(coinIn.Denom, exitedCoinsIn)), coinOut.Denom, pool.GetSpreadFactor(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -368,7 +367,7 @@ func RandomExitSwapShareAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.
 
 // TODO: Fix CalcJoinPoolShares API so we don't have to do this
 func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.CFMMPoolI) (sdk.Int, error) {
-	minShareOutAmt, _, err := pool.CalcJoinPoolShares(ctx, tokenIn, pool.GetSwapFee(ctx))
+	minShareOutAmt, _, err := pool.CalcJoinPoolShares(ctx, tokenIn, pool.GetSpreadFactor(ctx))
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -426,6 +425,8 @@ func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64
 	if numPools == 0 {
 		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", fmt.Errorf("no pools exist")
 	}
+
+	rand := sim.GetRand()
 
 	pool := pools[rand.Intn(numPools)]
 
