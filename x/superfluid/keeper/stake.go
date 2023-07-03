@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -664,7 +665,7 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 	}
 }
 
-func (k Keeper) LockExistingFullRangePositionAndSFStake(ctx sdk.Context, positionId uint64, owner sdk.AccAddress, valAddr string) (concentratedLockID uint64, err error) {
+func (k Keeper) LockExistingFullRangePositionAndSFStake(ctx sdk.Context, positionId uint64, sender sdk.AccAddress, valAddr string) (concentratedLockID uint64, err error) {
 	// Retrieve position via ID.
 	position, err := k.clk.GetPosition(ctx, positionId)
 	if err != nil {
@@ -675,14 +676,14 @@ func (k Keeper) LockExistingFullRangePositionAndSFStake(ctx sdk.Context, positio
 	if position.LowerTick != cltypes.MinInitializedTick || position.UpperTick != cltypes.MaxTick {
 		return 0, cltypes.PositionNotFullRangeError{PositionId: positionId, LowerTick: position.LowerTick, UpperTick: position.UpperTick}
 	}
-	if position.Address != owner.String() {
-		return 0, cltypes.PositionOwnerMismatchError{PositionOwner: position.Address, Sender: owner.String()}
+	if position.Address != sender.String() {
+		return 0, cltypes.PositionOwnerMismatchError{PositionOwner: position.Address, Sender: sender.String()}
 	}
 
 	// Mint CL shares (similar to GAMM shares) for the position and lock them for the unbonding duration.
 	// Also sets the position ID to underlying lock ID mapping.
 	lockDuration := k.sk.GetParams(ctx).UnbondingTime
-	concentratedLockId, _, err := k.clk.MintSharesAndLock(ctx, position.PoolId, positionId, owner, lockDuration)
+	concentratedLockId, _, err := k.clk.MintSharesAndLock(ctx, position.PoolId, positionId, sender, lockDuration)
 	if err != nil {
 		return 0, err
 	}
@@ -692,6 +693,20 @@ func (k Keeper) LockExistingFullRangePositionAndSFStake(ctx sdk.Context, positio
 	if err != nil {
 		return 0, err
 	}
+
+	// Emit events.
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
+		),
+		sdk.NewEvent(
+			types.TypeEvtLockExistingFullRangePositionAndSFStake,
+			sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
+			sdk.NewAttribute(types.AttributePositionId, strconv.FormatUint(positionId, 10)),
+			sdk.NewAttribute(types.AttributeConcentratedLockId, strconv.FormatUint(concentratedLockId, 10)),
+		),
+	})
 
 	return concentratedLockId, nil
 }
