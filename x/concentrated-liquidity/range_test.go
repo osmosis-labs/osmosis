@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
@@ -31,6 +32,11 @@ type RangeTestParams struct {
 	// List of addresses to swap from (randomly selected for each swap)
 	numSwapAddresses int
 
+	// -- Pool params --
+
+	spreadFactor sdk.Dec
+	tickSpacing  uint64
+
 	// -- Fuzz params --
 
 	fuzzAssets           bool
@@ -47,6 +53,13 @@ type RangeTestParams struct {
 	newActiveIncentivesBetweenJoins bool
 	// Create new inactive incentive records between each join
 	newInactiveIncentivesBetweenJoins bool
+	// Fund each position address with double the expected amount of assets.
+	// Should only be used for cases where join amount gets pushed up due to
+	// precision near min tick.
+	doubleFundPositionAddr bool
+	// Adjust input amounts for first position to set the starting current tick
+	// to the given value.
+	startingCurrentTick int64
 }
 
 var (
@@ -61,13 +74,70 @@ var (
 		baseEmissionRate:     sdk.NewDec(1),
 		baseIncentiveDenom:   "incentiveDenom",
 
+		// Pool params
+		spreadFactor: DefaultSpreadFactor,
+		tickSpacing:  uint64(1),
+
 		// Fuzz params
 		fuzzNumPositions:     true,
 		fuzzAssets:           true,
 		fuzzSwapAmounts:      true,
 		fuzzTimeBetweenJoins: true,
 	}
+	RangeTestParamsLargeSwap = RangeTestParams{
+		// Base amounts
+		baseNumPositions:     10,
+		baseAssets:           sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(5000000000)), sdk.NewCoin(USDC, sdk.NewInt(5000000000))),
+		baseTimeBetweenJoins: time.Hour,
+		baseSwapAmount:       sdk.Int(sdk.MustNewDecFromStr("100000000000000000000000000000000000000")),
+		numSwapAddresses:     10,
+		baseIncentiveAmount:  sdk.NewInt(1000000000000000000),
+		baseEmissionRate:     sdk.NewDec(1),
+		baseIncentiveDenom:   "incentiveDenom",
+
+		// Pool params
+		spreadFactor: DefaultSpreadFactor,
+		tickSpacing:  uint64(100),
+
+		// Fuzz params
+		fuzzNumPositions:     true,
+		fuzzAssets:           true,
+		fuzzTimeBetweenJoins: true,
+	}
+	RangeTestParamsNoFuzzNoSwap = RangeTestParams{
+		// Base amounts
+		baseNumPositions:     1,
+		baseAssets:           sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(5000000000)), sdk.NewCoin(USDC, sdk.NewInt(5000000000))),
+		baseTimeBetweenJoins: time.Hour,
+		baseIncentiveAmount:  sdk.NewInt(1000000000000000000),
+		baseEmissionRate:     sdk.NewDec(1),
+		baseIncentiveDenom:   "incentiveDenom",
+
+		// Pool params
+		spreadFactor: DefaultSpreadFactor,
+		tickSpacing:  uint64(1),
+	}
 )
+
+func withDoubleFundedLP(params RangeTestParams) RangeTestParams {
+	params.doubleFundPositionAddr = true
+	return params
+}
+
+func withCurrentTick(params RangeTestParams, tick int64) RangeTestParams {
+	params.startingCurrentTick = tick
+	return params
+}
+
+func withTickSpacing(params RangeTestParams, tickSpacing uint64) RangeTestParams {
+	params.tickSpacing = tickSpacing
+	return params
+}
+
+func withNoSwap(params RangeTestParams) RangeTestParams {
+	params.baseSwapAmount = sdk.Int{}
+	return params
+}
 
 // setupRangesAndAssertInvariants sets up the state specified by `testParams` on the given set of ranges.
 // It also asserts global invariants at each intermediate step.
@@ -125,8 +195,19 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 
 			// Set up assets for new position
 			curAssets := getRandomizedAssets(testParams.baseAssets, testParams.fuzzAssets)
+
+			// If a desired current tick was specified, retrieve special asset amounts for the first position
+			if testParams.startingCurrentTick != 0 && curNumPositions == 0 {
+				curAssets = s.getInitialPositionAssets(pool, testParams.startingCurrentTick)
+			}
+
 			roundingError := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), sdk.OneInt()), sdk.NewCoin(pool.GetToken1(), sdk.OneInt()))
 			s.FundAcc(curAddr, curAssets.Add(roundingError...))
+
+			// Double fund LP address if applicable
+			if testParams.doubleFundPositionAddr {
+				s.FundAcc(curAddr, curAssets.Add(roundingError...))
+			}
 
 			// TODO: implement intermediate record creation with fuzzing
 
@@ -151,7 +232,10 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 
 			// Track changes to state
 			actualAddedCoins := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), actualAmt0), sdk.NewCoin(pool.GetToken1(), actualAmt1))
-			totalAssets = totalAssets.Add(actualAddedCoins...).Add(swappedIn).Sub(sdk.NewCoins(swappedOut))
+			totalAssets = totalAssets.Add(actualAddedCoins...)
+			if testParams.baseSwapAmount != (sdk.Int{}) {
+				totalAssets = totalAssets.Add(swappedIn).Sub(sdk.NewCoins(swappedOut))
+			}
 			totalLiquidity = totalLiquidity.Add(curLiquidity)
 			totalTimeElapsed = totalTimeElapsed + timeElapsed
 			allPositionIds = append(allPositionIds, curPositionId)
@@ -174,7 +258,6 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 	// We rebuild coins to handle nil cases cleanly
 	s.Require().Equal(sdk.NewCoins(totalAssets...), sdk.NewCoins(poolAssets.Add(poolSpreadRewards...)...))
 
-	fmt.Println("cumulative emitted incentives: ", cumulativeEmittedIncentives)
 	// Do a final checkpoint for incentives and then run assertions on expected global claimable value
 	cumulativeEmittedIncentives, lastIncentiveTrackerUpdate = s.trackEmittedIncentives(cumulativeEmittedIncentives, lastIncentiveTrackerUpdate)
 	truncatedEmissions, _ := cumulativeEmittedIncentives.TruncateDecimal()
@@ -259,6 +342,19 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 
 	swapOutCoin := sdk.NewCoin(swapOutDenom, baseSwapOutAmount)
 
+	// If the swap we're about to execute will not generate enough input, we skip the swap.
+	if swapOutDenom == pool.GetToken1() {
+		pool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
+		s.Require().NoError(err)
+
+		poolSpotPrice := pool.GetCurrentSqrtPrice().Power(2)
+		minSwapOutAmount := poolSpotPrice.Mul(sdk.SmallestDec()).TruncateInt()
+		poolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
+		if poolBalances.AmountOf(swapOutDenom).LTE(minSwapOutAmount) {
+			return sdk.Coin{}, sdk.Coin{}
+		}
+	}
+
 	// Note that we set the price limit to zero to ensure that the swap can execute in either direction (gets automatically set to correct limit)
 	swappedIn, swappedOut, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, swapOutCoin, swapInDenom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
 	s.Require().NoError(err)
@@ -312,27 +408,44 @@ func (s *KeeperTestSuite) trackEmittedIncentives(cumulativeTrackedIncentives sdk
 			continue
 		}
 
-		secondsEmitted := int64(0)
+		secondsEmitted := sdk.ZeroDec()
 		if recordStartTime.Before(lastTrackerUpdateTime) {
 			// If the record started emitting prior to the last incentiveCreationTime (the last time we checkpointed),
 			// then we assume it has been emitting for the whole period since then.
-			secondsEmitted = int64(s.Ctx.BlockTime().Sub(lastTrackerUpdateTime).Seconds())
+			secondsEmitted = sdk.NewDec(int64(s.Ctx.BlockTime().Sub(lastTrackerUpdateTime))).QuoInt64(int64(time.Second))
 		} else if recordStartTime.Before(s.Ctx.BlockTime()) {
 			// If the record started emitting between the last incentiveCreationTime and now, then we only track the
 			// emissions between when it started and now.
-			secondsEmitted = int64(s.Ctx.BlockTime().Sub(recordStartTime).Seconds())
+			secondsEmitted = sdk.NewDec(int64(s.Ctx.BlockTime().Sub(recordStartTime))).QuoInt64(int64(time.Second))
 		}
 
 		emissionRate := incentiveRecord.IncentiveRecordBody.EmissionRate
 		incentiveDenom := incentiveRecord.IncentiveRecordBody.RemainingCoin.Denom
 
 		// Track emissions for the current record
-		emittedAmount := emissionRate.MulInt64(secondsEmitted)
+		emittedAmount := emissionRate.Mul(secondsEmitted)
 		emittedDecCoin := sdk.NewDecCoinFromDec(incentiveDenom, emittedAmount)
 		updatedTrackedIncentives = updatedTrackedIncentives.Add(emittedDecCoin)
 	}
 
 	return updatedTrackedIncentives, s.Ctx.BlockTime()
+}
+
+// getInitialPositionAssets returns the assets required for the first position in a pool to set the initial current tick to the given value.
+func (s *KeeperTestSuite) getInitialPositionAssets(pool types.ConcentratedPoolExtension, initialCurrentTick int64) sdk.Coins {
+	requiredPrice, err := math.TickToPrice(initialCurrentTick)
+	s.Require().NoError(err)
+
+	// Calculate asset amounts that would be required to get the required spot price (rounding up on asset1 to ensure we stay in the intended tick)
+	asset0Amount := sdk.NewInt(100000000000000)
+	asset1Amount := sdk.NewDecFromInt(asset0Amount).Mul(requiredPrice).Ceil().TruncateInt()
+
+	assetCoins := sdk.NewCoins(
+		sdk.NewCoin(pool.GetToken0(), asset0Amount),
+		sdk.NewCoin(pool.GetToken1(), asset1Amount),
+	)
+
+	return assetCoins
 }
 
 // getFuzzedAssets returns the base asset amount, fuzzing each asset if applicable
