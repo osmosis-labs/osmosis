@@ -524,7 +524,7 @@ func (s *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedPosit
 	sender, err := sdk.AccAddressFromBech32(locks[0].Owner)
 	s.Require().NoError(err)
 	_, err = msgServer.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sdk.WrapSDKContext(s.Ctx),
-		types.NewMsgUnlockAndMigrateSharesToFullRangeConcentratedPosition(sender, locks[0].ID, locks[0].Coins[0]))
+		types.NewMsgUnlockAndMigrateSharesToFullRangeConcentratedPosition(sender, int64(locks[0].ID), locks[0].Coins[0]))
 	s.Require().NoError(err)
 
 	// Asset event emitted
