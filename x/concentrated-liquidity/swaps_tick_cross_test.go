@@ -238,7 +238,9 @@ func (s *KeeperTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice sdk.Dec
 
 	// Start from current pool liquidity and zero amount in.
 	currentLiquidity := pool.GetLiquidity()
+	fmt.Println("currentLiquidity: ", currentLiquidity)
 	amountIn := sdk.ZeroDec()
+	fmt.Println("liquidityNetAmounts: ", liquidityNetAmounts)
 
 	for i, liquidityNetEntry := range liquidityNetAmounts {
 		// Initialize the next initialized tick and its sqrt price.
@@ -248,11 +250,14 @@ func (s *KeeperTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice sdk.Dec
 		// Handle swap depending on the direction.
 		// Left (zero for one) or right (one for zero)
 		var isWithinDesiredBucketAfterSwap bool
+		fmt.Println("zero for one: ", isZeroForOne)
 		if isZeroForOne {
 			// Round up so that we cross the tick by default.
+			fmt.Println("currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice: ", currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice)
 			curAmountIn := math.CalcAmount0Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, true)
 
 			amountIn = amountIn.Add(curAmountIn)
+			fmt.Println("amountIn: ", amountIn)
 
 			// The tick should be crossed if currentTick > expectedTickToSwapTo, unless the intention
 			// is to stay within the same bucket.

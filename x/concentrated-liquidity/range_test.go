@@ -247,6 +247,11 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 		swapInDenom, swapOutDenom = randOrder(pool.GetToken0(), pool.GetToken1())
 	}
 
+	updatedPool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
+	swappedIn, swappedOut := s.executeSwapToTickBoundary(updatedPool, swapAddress, swapInDenom, swapOutDenom, updatedPool.GetCurrentTick()+1, false)
+
+	return swappedIn, swappedOut
+
 	// TODO: pick a more granular amount to fund without losing ability to swap at really high/low ticks
 	swapInFunded := sdk.NewCoin(swapInDenom, sdk.Int(sdk.MustNewDecFromStr("10000000000000000000000000000000000000000")))
 	s.FundAcc(swapAddress, sdk.NewCoins(swapInFunded))
@@ -260,7 +265,37 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 	swapOutCoin := sdk.NewCoin(swapOutDenom, baseSwapOutAmount)
 
 	// Note that we set the price limit to zero to ensure that the swap can execute in either direction (gets automatically set to correct limit)
-	swappedIn, swappedOut, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, swapOutCoin, swapInDenom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
+	swappedIn, swappedOut, _, err = s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, swapOutCoin, swapInDenom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
+	s.Require().NoError(err)
+
+	return swappedIn, swappedOut
+}
+
+// executeSwapToTickBoundary executes a swap against the pool to get to the specified tick boundary, randomizing the chosen tick if applicable.
+func (s *KeeperTestSuite) executeSwapToTickBoundary(pool types.ConcentratedPoolExtension, swapAddress sdk.AccAddress, swapInDenom string, swapOutDenom string, targetTick int64, fuzzTick bool) (sdk.Coin, sdk.Coin) {
+	zeroForOne := swapInDenom == pool.GetToken0()
+
+	pool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+	fmt.Println("current tick: ", pool.GetCurrentTick())
+	currentTick := pool.GetCurrentTick()
+	zeroForOne = currentTick >= targetTick
+	amountInRequired, _, _ := s.computeSwapAmounts(pool.GetId(), pool.GetCurrentSqrtPrice(), targetTick, zeroForOne, false)
+
+	poolSpotPrice := pool.GetCurrentSqrtPrice().Power(2)
+	minSwapOutAmount := poolSpotPrice.Mul(sdk.SmallestDec()).TruncateInt()
+	poolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
+	if poolBalances.AmountOf(swapOutDenom).LTE(minSwapOutAmount) {
+		fmt.Println("skipped")
+		return sdk.Coin{}, sdk.Coin{}
+	}
+
+	fmt.Println("dec amt in required: ", amountInRequired)
+	swapInFunded := sdk.NewCoin(swapInDenom, amountInRequired.TruncateInt())
+	s.FundAcc(swapAddress, sdk.NewCoins(swapInFunded))
+
+	// Execute swap
+	swappedIn, swappedOut, _, err := s.clk.SwapOutAmtGivenIn(s.Ctx, swapAddress, pool, swapInFunded, swapOutDenom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
 	s.Require().NoError(err)
 
 	return swappedIn, swappedOut

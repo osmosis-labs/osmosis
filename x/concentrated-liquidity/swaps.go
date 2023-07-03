@@ -195,12 +195,14 @@ func (k Keeper) swapOutAmtGivenIn(
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
 ) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, err error) {
+	fmt.Println("original inputs:", tokenIn, tokenOutDenom)
 	tokenIn, tokenOut, poolUpdates, totalSpreadFactors, err := k.computeOutAmtGivenIn(ctx, pool.GetId(), tokenIn, tokenOutDenom, spreadFactor, priceLimit)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, err
 	}
 
 	if !tokenOut.Amount.IsPositive() {
+		fmt.Println("tokenOut amount is not positive (in, out): ", tokenIn, tokenOut)
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, types.InvalidAmountCalculatedError{Amount: tokenOut.Amount}
 	}
 
