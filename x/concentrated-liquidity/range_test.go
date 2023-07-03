@@ -234,7 +234,7 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 			// Track changes to state
 			actualAddedCoins := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), actualAmt0), sdk.NewCoin(pool.GetToken1(), actualAmt1))
 			totalAssets = totalAssets.Add(actualAddedCoins...)
-			if testParams.baseSwapAmount != (sdk.Int{}) {
+			if testParams.baseSwapAmount != (sdk.Int{}) && (swappedIn != sdk.Coin{} || swappedOut != sdk.Coin{}) {
 				totalAssets = totalAssets.Add(swappedIn).Sub(sdk.NewCoins(swappedOut))
 			}
 			totalLiquidity = totalLiquidity.Add(curLiquidity)
