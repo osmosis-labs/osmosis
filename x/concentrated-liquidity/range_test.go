@@ -332,8 +332,11 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 	}
 
 	updatedPool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
-	swappedIn, swappedOut := s.executeSwapToTickBoundary(updatedPool, swapAddress, swapInDenom, swapOutDenom, updatedPool.GetCurrentTick()+1, false)
+	// TODO: allow target tick to be specified and fuzzed
+	swappedIn, swappedOut := s.executeSwapToTickBoundary(updatedPool, swapAddress, updatedPool.GetCurrentTick()+1, false)
 
+	// Note: the early return here was simply to rush repro the panic. This logic will ultimately live in separate branches depending on whether
+	// testParams.swapToTickBoundary is enabled or not.
 	return swappedIn, swappedOut
 
 	// TODO: pick a more granular amount to fund without losing ability to swap at really high/low ticks
@@ -369,15 +372,24 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 }
 
 // executeSwapToTickBoundary executes a swap against the pool to get to the specified tick boundary, randomizing the chosen tick if applicable.
-func (s *KeeperTestSuite) executeSwapToTickBoundary(pool types.ConcentratedPoolExtension, swapAddress sdk.AccAddress, swapInDenom string, swapOutDenom string, targetTick int64, fuzzTick bool) (sdk.Coin, sdk.Coin) {
-	zeroForOne := swapInDenom == pool.GetToken0()
+func (s *KeeperTestSuite) executeSwapToTickBoundary(pool types.ConcentratedPoolExtension, swapAddress sdk.AccAddress, targetTick int64, fuzzTick bool) (sdk.Coin, sdk.Coin) {
+	// zeroForOne := swapInDenom == pool.GetToken0()
 
 	pool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
 	s.Require().NoError(err)
 	fmt.Println("current tick: ", pool.GetCurrentTick())
 	currentTick := pool.GetCurrentTick()
-	zeroForOne = currentTick >= targetTick
+	zeroForOne := currentTick >= targetTick
 	amountInRequired, _, _ := s.computeSwapAmounts(pool.GetId(), pool.GetCurrentSqrtPrice(), targetTick, zeroForOne, false)
+
+	var swapInDenom, swapOutDenom string
+	if zeroForOne {
+		swapInDenom = pool.GetToken0()
+		swapOutDenom = pool.GetToken1()
+	} else {
+		swapInDenom = pool.GetToken1()
+		swapOutDenom = pool.GetToken0()
+	}
 
 	poolSpotPrice := pool.GetCurrentSqrtPrice().Power(osmomath.NewBigDec(2))
 	minSwapOutAmount := poolSpotPrice.Mul(osmomath.SmallestDec()).SDKDec().TruncateInt()
