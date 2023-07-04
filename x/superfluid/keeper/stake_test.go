@@ -1285,6 +1285,10 @@ func (s *KeeperTestSuite) TestLockExistingFullRangePositionAndSFStake() {
 				// Check lockID connection with intermediary account
 				intAcc := s.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, clLock.ID)
 				s.Require().Equal(intAcc.String(), expAcc.GetAccAddress().String())
+
+				// Withdraw should error
+				_, _, err = s.App.ConcentratedLiquidityKeeper.WithdrawPosition(s.Ctx, s.TestAccs[0], tc.positionId, sdk.Dec(clLock.Coins[0].Amount))
+				s.Require().ErrorIs(err, cltypes.LockNotMatureError{PositionId: tc.positionId, LockId: clLock.ID})
 			}
 		})
 	}
@@ -1308,7 +1312,6 @@ func (s *KeeperTestSuite) SetupConcentratedSuperfluidEnv(ctx sdk.Context, poolCr
 	s.FundAcc(poolCreateAcc, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100000000000))))
 	balancerPooId, err := poolmanagerKeeper.CreatePool(ctx, msg)
 	s.Require().NoError(err)
-
 
 	// Determine the balancer pool's LP token denomination.
 	balancerPoolDenom := gammtypes.GetPoolShareDenom(balancerPooId)
