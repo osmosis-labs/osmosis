@@ -224,12 +224,6 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	// Transfer the actual amounts of tokens 0 and 1 from the pool to the position owner.
-	err = k.sendCoinsBetweenPoolAndUser(ctx, pool.GetToken0(), pool.GetToken1(), actualAmount0.Abs(), actualAmount1.Abs(), pool.GetAddress(), owner)
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, err
-	}
-
 	// If the requested liquidity amount to withdraw is equal to the available liquidity, delete the position from state.
 	// Ensure we collect any outstanding spread factors and incentives prior to deleting the position from state. This claiming
 	// process also clears position records from spread factor and incentive accumulators.
@@ -252,6 +246,12 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		}
 
 		if !anyPositionsRemainingInPool {
+			// If there are no positions remaining in the pool, settle the final pool position.
+			err := k.settleFinalPoolPosition(ctx, pool.GetId(), actualAmount0, actualAmount1)
+			if err != nil {
+				return sdk.Int{}, sdk.Int{}, err
+			}
+
 			// Reset the current tick and current square root price to initial values of zero since there is no
 			// liquidity left.
 			if err := k.uninitializePool(ctx, pool.GetId()); err != nil {
@@ -264,6 +264,12 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 			// invalid spot price for this pool.
 			k.listeners.AfterLastPoolPositionRemoved(ctx, owner, pool.GetId())
 		}
+	}
+
+	// Transfer the actual amounts of tokens 0 and 1 from the pool to the position owner.
+	err = k.sendCoinsBetweenPoolAndUser(ctx, pool.GetToken0(), pool.GetToken1(), actualAmount0.Abs(), actualAmount1.Abs(), pool.GetAddress(), owner)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
 	}
 
 	tokensRemoved := sdk.Coins{}
@@ -608,6 +614,34 @@ func (k Keeper) validatePositionUpdateById(ctx sdk.Context, positionId uint64, u
 
 		if position.PoolId != poolIdGiven {
 			return types.PositionsNotInSamePoolError{Position1PoolId: position.PoolId, Position2PoolId: poolIdGiven}
+		}
+	}
+
+	return nil
+}
+
+func (k Keeper) settleFinalPoolPosition(ctx sdk.Context, poolId uint64, amount0, amount1 sdk.Int) error {
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	withdrawCoins := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), amount0.Abs()), sdk.NewCoin(pool.GetToken1(), amount1.Abs()))
+
+	// Check if the amount of liquidity left in the pool is less than the amount to withdraw.
+	amountShort := sdk.NewCoins()
+	for _, coin := range withdrawCoins {
+		poolBalance := k.bankKeeper.GetBalance(ctx, pool.GetAddress(), coin.Denom)
+		if poolBalance.Amount.LT(coin.Amount) {
+			amountShort = amountShort.Add(sdk.NewCoin(coin.Denom, coin.Amount.Sub(poolBalance.Amount)))
+		}
+	}
+
+	// If there is a short amount, move the amount short from the spread rewards address to the pool address.
+	if !amountShort.IsZero() {
+		// Move the amount short from the spread rewards address to the pool address.
+		if err := k.bankKeeper.SendCoins(ctx, pool.GetSpreadRewardsAddress(), pool.GetAddress(), amountShort); err != nil {
+			return err
 		}
 	}
 
