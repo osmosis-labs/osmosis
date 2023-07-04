@@ -1309,15 +1309,6 @@ func (s *KeeperTestSuite) SetupConcentratedSuperfluidEnv(ctx sdk.Context, poolCr
 	balancerPooId, err := poolmanagerKeeper.CreatePool(ctx, msg)
 	s.Require().NoError(err)
 
-	// // Join the balancer pool.
-	// // Note the account balance before and after joining the pool.
-	// balanceBeforeJoin := bankKeeper.GetAllBalances(ctx, poolCreateAcc)
-	// _, _, err = gammKeeper.JoinPoolNoSwap(ctx, poolCreateAcc, balancerPooId, gammtypes.OneShare.MulRaw(50), sdk.Coins{})
-	// s.Require().NoError(err)
-	// balanceAfterJoin := bankKeeper.GetAllBalances(ctx, poolCreateAcc)
-
-	// // The balancer join pool amount is the difference between the account balance before and after joining the pool.
-	// joinPoolAmt, _ = balanceBeforeJoin.SafeSub(balanceAfterJoin)
 
 	// Determine the balancer pool's LP token denomination.
 	balancerPoolDenom := gammtypes.GetPoolShareDenom(balancerPooId)
