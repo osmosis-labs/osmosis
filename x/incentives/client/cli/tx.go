@@ -2,6 +2,7 @@ package cli
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -87,11 +88,22 @@ func NewCreateGaugeCmd() *cobra.Command {
 				return err
 			}
 
-			distributeTo := lockuptypes.QueryCondition{
-				LockQueryType: lockuptypes.ByDuration,
-				Denom:         denom,
-				Duration:      duration,
-				Timestamp:     time.Unix(0, 0), // XXX check
+			var distributeTo lockuptypes.QueryCondition
+			// if poolId is 0 it is a guranteed lock gauge
+			// if poolId is > 0 it is a guranteed no-lock gauge
+			if poolId == 0 {
+				distributeTo = lockuptypes.QueryCondition{
+					LockQueryType: lockuptypes.ByDuration,
+					Denom:         denom,
+					Duration:      duration,
+					Timestamp:     time.Unix(0, 0), // XXX check
+				}
+			} else if poolId > 0 {
+				distributeTo = lockuptypes.QueryCondition{
+					LockQueryType: lockuptypes.NoLock,
+				}
+			} else {
+				return fmt.Errorf("Invalid Pool Id")
 			}
 
 			msg := types.NewMsgCreateGauge(
