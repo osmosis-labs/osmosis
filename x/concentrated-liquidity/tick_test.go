@@ -1199,7 +1199,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:        defaultPoolId,
 			tokenIn:       ETH,
-			boundTick:     sdk.NewInt(DefaultMinTick - 1),
+			boundTick:     sdk.NewInt(types.MinCurrentTick - 1),
 			expectedError: true,
 		},
 		{
