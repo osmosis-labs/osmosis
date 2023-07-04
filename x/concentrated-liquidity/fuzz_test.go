@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
-	"sync"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,11 +35,8 @@ func (s *KeeperTestSuite) TestFuzz_GivenSeed() {
 func (s *KeeperTestSuite) FuzzTest(numSwaps int, numPositions int, numFuzzes int) {
 	seed := time.Now().Unix()
 
-	wg := &sync.WaitGroup{}
-
 	for i := 0; i < numFuzzes; i++ {
 		i := i
-		wg.Add(1)
 
 		currentSeed := seed + int64(i)
 		r := rand.New(rand.NewSource(currentSeed))
@@ -50,14 +46,13 @@ func (s *KeeperTestSuite) FuzzTest(numSwaps int, numPositions int, numFuzzes int
 		currentSuite.SetT(s.T())
 
 		currentSuite.Run(fmt.Sprintf("Fuzz %d, seed: %d", i, currentSeed), func() {
+
+			// Run in parallel.
 			currentSuite.T().Parallel()
 
 			currentSuite.individualFuzz(r, i, numSwaps, numPositions)
-			wg.Done()
 		})
 	}
-
-	// wg.Wait()
 }
 
 func (s *KeeperTestSuite) individualFuzz(r *rand.Rand, fuzzNum int, numSwaps int, numPositions int) {
