@@ -1193,8 +1193,12 @@ func (suite *KeeperTestSuite) TestPartialSuperfluidUndelegateToConcentratedPosit
 }
 
 func (s *KeeperTestSuite) TestLockExistingFullRangePositionAndSFStake() {
+	defaultAcc := s.TestAccs[0]
+	nonOwner := s.TestAccs[2]
+
 	testCases := []struct {
 		name                        string
+		sender                      sdk.AccAddress
 		positionId                  uint64
 		lowerTick                   int64
 		upperTick                   int64
@@ -1206,6 +1210,14 @@ func (s *KeeperTestSuite) TestLockExistingFullRangePositionAndSFStake() {
 			positionId: 2,
 			lowerTick:  cltypes.MinInitializedTick,
 			upperTick:  cltypes.MaxTick,
+		},
+		{
+			name:          "sender does not own position",
+			sender:        nonOwner,
+			positionId:    2,
+			lowerTick:     cltypes.MinInitializedTick,
+			upperTick:     cltypes.MaxTick,
+			expectedError: cltypes.PositionOwnerMismatchError{PositionOwner: defaultAcc.String(), Sender: nonOwner.String()},
 		},
 		{
 			name:          "position ID doesn't exist",
@@ -1242,6 +1254,10 @@ func (s *KeeperTestSuite) TestLockExistingFullRangePositionAndSFStake() {
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
+			if tc.sender.Empty() {
+				tc.sender = defaultAcc
+			}
+
 			// Set up testing environment.
 			s.FundAcc(s.TestAccs[1], defaultFunds)
 			valAddr, clPoolId, err := s.SetupConcentratedSuperfluidEnv(s.Ctx, s.TestAccs[1], tc.superfluidNotEnabledOnDenom)
@@ -1249,7 +1265,7 @@ func (s *KeeperTestSuite) TestLockExistingFullRangePositionAndSFStake() {
 			// Create the position specified by the test case.
 			msg := &cltypes.MsgCreatePosition{
 				PoolId:          clPoolId,
-				Sender:          s.TestAccs[0].String(),
+				Sender:          defaultAcc.String(),
 				LowerTick:       tc.lowerTick,
 				UpperTick:       tc.upperTick,
 				TokensProvided:  defaultFunds,
@@ -1257,12 +1273,12 @@ func (s *KeeperTestSuite) TestLockExistingFullRangePositionAndSFStake() {
 				TokenMinAmount1: sdk.ZeroInt(),
 			}
 			msgServer := clkeeper.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
-			s.FundAcc(s.TestAccs[0], defaultFunds)
+			s.FundAcc(defaultAcc, defaultFunds)
 			resp, err := msgServer.CreatePosition(sdk.WrapSDKContext(s.Ctx), msg)
 			s.Require().NoError(err)
 
 			// System under test
-			clLockId, err := s.App.SuperfluidKeeper.LockExistingFullRangePositionAndSFStake(s.Ctx, tc.positionId, s.TestAccs[0], valAddr.String())
+			clLockId, err := s.App.SuperfluidKeeper.LockExistingFullRangePositionAndSFStake(s.Ctx, tc.positionId, tc.sender, valAddr.String())
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().Equal(tc.expectedError.Error(), err.Error())
