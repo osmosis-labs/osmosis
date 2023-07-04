@@ -14,23 +14,33 @@ import (
 )
 
 const (
-	fuzzPoolId         = uint64(1)
-	maxAmountDeposited = 999_999_999_999_999_999
-
-	initialNumPositions = 30
+	maxAmountDeposited  = 999_999_999_999_999_999
+	initialNumPositions = 15
 )
 
 func (s *KeeperTestSuite) TestFuzz() {
-	s.FuzzTest(100, 10)
+	s.FuzzTest(10, 5, 100)
 }
 
 // pre-condition: poolId exists, and has at least one position
-func (s *KeeperTestSuite) FuzzTest(numSwaps int, numPositions int) {
+func (s *KeeperTestSuite) FuzzTest(numSwaps int, numPositions int, numFuzzes int) {
 	seed := time.Now().Unix()
 
+	fmt.Printf("BEGIN FUZZ TEST. seed %d\n\n", seed)
 	r := rand.New(rand.NewSource(seed))
 
-	spreadFactor := sdk.NewDecWithPrec(1, 3)
+	for i := 0; i < numFuzzes; i++ {
+		s.Run(fmt.Sprintf("Fuzz %d", i), func() {
+			s.individualFuzz(r, i, numSwaps, numPositions)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) individualFuzz(r *rand.Rand, fuzzNum int, numSwaps int, numPositions int) {
+	spreadFactors := types.DefaultParams().AuthorizedSpreadFactors
+	numSpreadFactors := len(spreadFactors)
+
+	spreadFactor := spreadFactors[r.Intn(numSpreadFactors)]
 	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, spreadFactor)
 
 	initialAmt0 := randomIntAmount(r)
@@ -43,7 +53,7 @@ func (s *KeeperTestSuite) FuzzTest(numSwaps int, numPositions int) {
 	pool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
 	s.Require().NoError(err)
 
-	fmt.Printf("BEGIN FUZZ TEST. seed %d, initialAmt0 %s initialAmt1 %s \n", seed, initialAmt0, initialAmt1)
+	fmt.Printf("SINGLE FUZZ START: %d. initialAmt0 %s initialAmt1 %s \n", fuzzNum, initialAmt0, initialAmt1)
 
 	s.fuzzTestWithSeed(r, pool.GetId(), numSwaps, numPositions)
 }
@@ -56,7 +66,7 @@ type fuzzState struct {
 func (s *KeeperTestSuite) fuzzTestWithSeed(r *rand.Rand, poolId uint64, numSwaps int, numPositions int) {
 	// Add 1000 random positions
 	for i := 0; i < initialNumPositions; i++ {
-		s.addRandomPositonMinMaxOneSpacing(r)
+		s.addRandomPositonMinMaxOneSpacing(r, poolId)
 	}
 	s.assertWithdrawAllInvariant()
 
@@ -76,7 +86,7 @@ func (s *KeeperTestSuite) fuzzTestWithSeed(r *rand.Rand, poolId uint64, numSwaps
 			s.randomSwap(r, poolId)
 			completedSwaps++
 		} else {
-			s.addOrRemoveLiquidity(r)
+			s.addOrRemoveLiquidity(r, poolId)
 			completedPositions++
 		}
 
@@ -242,12 +252,12 @@ func (s *KeeperTestSuite) selectAction(r *rand.Rand, numSwaps, numPositions, com
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 // Add or remove liquidity
 
-func (s *KeeperTestSuite) addOrRemoveLiquidity(r *rand.Rand) {
+func (s *KeeperTestSuite) addOrRemoveLiquidity(r *rand.Rand, poolId uint64) {
 
 	// shouldAddPosition := s.selectAddOrRemove(r)
 
 	if true {
-		s.addRandomPositonMinMaxOneSpacing(r)
+		s.addRandomPositonMinMaxOneSpacing(r, poolId)
 	} else {
 		fmt.Println("removing position")
 		// s.removeLiquidity(r, randomizedAssets)
@@ -263,11 +273,11 @@ func (s *KeeperTestSuite) selectAddOrRemove(r *rand.Rand) bool {
 	return r.Intn(2) == 0
 }
 
-func (s *KeeperTestSuite) addRandomPositonMinMaxOneSpacing(r *rand.Rand) {
-	s.addRandomPositon(r, types.MinInitializedTick, types.MaxTick, 1)
+func (s *KeeperTestSuite) addRandomPositonMinMaxOneSpacing(r *rand.Rand, poolId uint64) {
+	s.addRandomPositon(r, poolId, types.MinInitializedTick, types.MaxTick, 1)
 }
 
-func (s *KeeperTestSuite) addRandomPositon(r *rand.Rand, minTick, maxTick int64, tickSpacing int64) {
+func (s *KeeperTestSuite) addRandomPositon(r *rand.Rand, poolId uint64, minTick, maxTick int64, tickSpacing int64) {
 	tokenDesired0 := sdk.NewCoin(ETH, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
 	tokenDesired1 := sdk.NewCoin(USDC, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
 	tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
@@ -280,7 +290,7 @@ func (s *KeeperTestSuite) addRandomPositon(r *rand.Rand, minTick, maxTick int64,
 
 	fmt.Println("creating position: ", "accountName", "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1)
 
-	positionId, amt0, amt1, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, fuzzPoolId, s.TestAccs[0], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinInitializedTick, types.MaxTick)
+	positionId, amt0, amt1, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinInitializedTick, types.MaxTick)
 	s.Require().NoError(err)
 	fmt.Printf("actually created: %s%s %s%s \n", amt0, ETH, amt1, USDC)
 
