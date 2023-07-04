@@ -85,7 +85,8 @@ func TestConstants(t *testing.T) {
 }
 
 type FuzzTestSuite struct {
-	positionIds []uint64
+	positionIds     []uint64
+	collectedErrors []error
 }
 
 type KeeperTestSuite struct {

@@ -18,10 +18,18 @@ import (
 const (
 	maxAmountDeposited  = 999_999_999_999_999_999
 	initialNumPositions = 20
+
+	defaultNumSwaps     = 30
+	defaultNumPositions = 10
 )
 
 func (s *KeeperTestSuite) TestFuzz() {
 	s.FuzzTest(30, 10, 100)
+}
+
+func (s *KeeperTestSuite) TestFuzz_GivenSeed() {
+	r := rand.New(rand.NewSource(1688513262))
+	s.individualFuzz(r, 0, defaultNumSwaps, defaultNumPositions)
 }
 
 // pre-condition: poolId exists, and has at least one position
@@ -74,6 +82,15 @@ func (s *KeeperTestSuite) individualFuzz(r *rand.Rand, fuzzNum int, numSwaps int
 	fmt.Printf("SINGLE FUZZ START: %d. initialAmt0 %s initialAmt1 %s \n", fuzzNum, initialAmt0, initialAmt1)
 
 	s.fuzzTestWithSeed(r, pool.GetId(), numSwaps, numPositions)
+
+	// validate if any errrs
+
+	for _, err := range s.collectedErrors {
+		fmt.Println("collected error: ", err)
+	}
+	// If error observed, note seed value and rerun with TestFuzz_GivenSeed
+	// search for "swap error:" in logs for details.
+	s.Require().Empty(s.collectedErrors)
 }
 
 type fuzzState struct {
@@ -243,9 +260,10 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 	}
 	if err != nil {
 		fmt.Printf("swap error: %s\n", err.Error())
+		// Add error to list of errors. Will fail at the end of the fuzz run in hih level test.
+		s.collectedErrors = append(s.collectedErrors, err)
+		return false
 	}
-
-	s.Require().NoError(err)
 
 	// Write only if no error
 	write()
