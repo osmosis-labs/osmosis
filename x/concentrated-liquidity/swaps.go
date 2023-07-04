@@ -113,7 +113,6 @@ func (ss *SwapState) updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal sdk.
 	// We round down here since we want to avoid overdistributing (the "spread factor charge" refers to
 	// the total spread factors that will be accrued to the spread factor accumulator)
 	spreadFactorsAccruedPerUnitOfLiquidity := spreadRewardChargeTotal.QuoTruncate(ss.liquidity)
-	fmt.Println("spreadFactorsAccruedPerUnitOfLiquidity", spreadFactorsAccruedPerUnitOfLiquidity)
 	ss.globalSpreadRewardGrowthPerUnitLiquidity.AddMut(spreadFactorsAccruedPerUnitOfLiquidity)
 }
 
