@@ -665,6 +665,8 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 	}
 }
 
+// LockExistingFullRangePositionAndSFStake locks existing position and superfluid stakes the position.
+// This method would error if the existing position is not a full ranged position.
 func (k Keeper) LockExistingFullRangePositionAndSFStake(ctx sdk.Context, positionId uint64, sender sdk.AccAddress, valAddr string) (concentratedLockID uint64, err error) {
 	// Retrieve position via ID.
 	position, err := k.clk.GetPosition(ctx, positionId)
