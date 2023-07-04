@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
@@ -19,7 +20,7 @@ const (
 )
 
 func (s *KeeperTestSuite) TestFuzz() {
-	s.FuzzTest(10, 5, 100)
+	s.FuzzTest(30, 5, 100)
 }
 
 // pre-condition: poolId exists, and has at least one position
@@ -107,11 +108,13 @@ func (s *KeeperTestSuite) randomSwap(r *rand.Rand, poolId uint64) {
 		// 1. Swap a random amount
 		// 2. Swap near next tick boundary
 		// 3. Swap to later tick boundary (TODO)
-		swapStrategy := r.Intn(2)
+		swapStrategy := r.Intn(3)
 		if swapStrategy == 0 {
 			didSwap = s.swapRandomAmount(r, pool, zfo)
-		} else {
+		} else if swapStrategy == 1 {
 			didSwap = s.swapNearNextTickBoundary(r, pool, zfo)
+		} else {
+			didSwap = s.swapNearInitializedTickBoundary(r, pool, zfo)
 		}
 
 		if !didSwap {
@@ -137,6 +140,22 @@ func (s *KeeperTestSuite) swapNearNextTickBoundary(r *rand.Rand, pool types.Conc
 		targetTick += 1
 	}
 	return s.swapNearTickBoundary(r, pool, targetTick, zfo)
+}
+
+func (s *KeeperTestSuite) swapNearInitializedTickBoundary(r *rand.Rand, pool types.ConcentratedPoolExtension, zfo bool) (didSwap bool) {
+	fmt.Println("swap type: near initialized tick boundary")
+
+	ss := swapstrategy.New(zfo, sdk.ZeroDec(), s.App.GetKey(types.ModuleName), sdk.ZeroDec())
+
+	iter := ss.InitializeNextTickIterator(s.Ctx, pool.GetId(), pool.GetCurrentTick())
+	defer iter.Close()
+
+	s.Require().True(iter.Valid())
+
+	nextInitializedTick, err := types.TickIndexFromBytes(iter.Key())
+	s.Require().NoError(err)
+
+	return s.swapNearTickBoundary(r, pool, nextInitializedTick, zfo)
 }
 
 func (s *KeeperTestSuite) swapNearTickBoundary(r *rand.Rand, pool types.ConcentratedPoolExtension, targetTick int64, zfo bool) (didSwap bool) {
