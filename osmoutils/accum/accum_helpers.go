@@ -1,7 +1,7 @@
 package accum
 
 import (
-	"fmt"
+	// sdk "github.com/cosmos/cosmos-sdk/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -39,8 +39,8 @@ func GetTotalRewards(accum AccumulatorObject, position Record) sdk.DecCoins {
 	totalRewards := position.UnclaimedRewardsTotal
 
 	// TODO: add a check that accum.value is greater than position.InitAccumValue
-	fmt.Println("accum.valuePerShare", accum.valuePerShare)
-	fmt.Println("position.AccumValuePerShare", position.AccumValuePerShare)
+	// fmt.Println("accum.valuePerShare", accum.valuePerShare)
+	// fmt.Println("position.AccumValuePerShare", position.AccumValuePerShare)
 	accumulatorRewards := accum.valuePerShare.Sub(position.AccumValuePerShare).MulDec(position.NumShares)
 	totalRewards = totalRewards.Add(accumulatorRewards...)
 

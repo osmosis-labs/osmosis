@@ -1,6 +1,8 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -138,7 +140,10 @@ func (s *KeeperTestSuite) assertTotalRewardsInvariant(expectedGlobalRewardValues
 // assertWithdrawAllInvariant withdraws all positions from all pools in state and asserts that all pool liquidity was removed from pool balances.
 func (s *KeeperTestSuite) assertWithdrawAllInvariant() {
 	// Get all positions and pool balances across all CL pools in state
-	allPositions, expectedTotalWithdrawn, _, _ := s.getAllPositionsAndPoolBalances(s.Ctx)
+	allPositions, expectedTotalWithdrawn, expectedSpreadRewards, _ := s.getAllPositionsAndPoolBalances(s.Ctx)
+
+	fmt.Println("expectedSpreadRewards", expectedSpreadRewards)
+	fmt.Println("expectedTotalWithdrawn", expectedTotalWithdrawn)
 
 	// Switch to cached context to avoid persisting any changes to state
 	cachedCtx, _ := s.Ctx.CacheContext()
@@ -174,6 +179,10 @@ func (s *KeeperTestSuite) assertWithdrawAllInvariant() {
 	}
 
 	// Assert total withdrawn assets equal to expected
+
+	fmt.Println("expectedSpreadRewards", expectedSpreadRewards)
+	fmt.Printf("expectedTotalWithdrawn %s vs totalWithdrawn %s \n", expectedTotalWithdrawn, totalWithdrawn)
+
 	s.Require().True(errTolerance.EqualCoins(expectedTotalWithdrawn, totalWithdrawn), "expected withdrawn vs. actual: %s vs. %s", expectedTotalWithdrawn, totalWithdrawn)
 
 	// Refetch total pool balances across all pools

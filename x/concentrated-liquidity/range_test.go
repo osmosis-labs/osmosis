@@ -183,6 +183,9 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 		curBlock := 0
 		startNumPositions := len(allPositionIds)
 		for curNumPositions := lastVisitedBlockIndex; curNumPositions < lastVisitedBlockIndex+numPositionSlice[curRange]; curNumPositions++ {
+
+			fmt.Println("\n\nITERATION START---------------------------------")
+
 			// By default we create a new address for each position, but if the test params specify using a single address
 			// for each range, we handle that logic here.
 			var curAddr sdk.AccAddress
@@ -377,7 +380,7 @@ func (s *KeeperTestSuite) executeSwapToTickBoundary(pool types.ConcentratedPoolE
 
 	pool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
 	s.Require().NoError(err)
-	fmt.Println("current tick: ", pool.GetCurrentTick())
+	// fmt.Println("current tick: ", pool.GetCurrentTick())
 	currentTick := pool.GetCurrentTick()
 	zeroForOne := currentTick >= targetTick
 	amountInRequired, _, _ := s.computeSwapAmounts(pool.GetId(), pool.GetCurrentSqrtPrice(), targetTick, zeroForOne, false)
@@ -399,7 +402,7 @@ func (s *KeeperTestSuite) executeSwapToTickBoundary(pool types.ConcentratedPoolE
 		return sdk.Coin{}, sdk.Coin{}
 	}
 
-	fmt.Println("dec amt in required: ", amountInRequired)
+	// fmt.Println("dec amt in required: ", amountInRequired)
 	swapInFunded := sdk.NewCoin(swapInDenom, amountInRequired.TruncateInt())
 	s.FundAcc(swapAddress, sdk.NewCoins(swapInFunded))
 
