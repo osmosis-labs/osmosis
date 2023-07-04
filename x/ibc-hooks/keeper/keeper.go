@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -8,9 +9,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-	"github.com/cosmos/ibc-go/v4/modules/core/exported"
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
+	"strings"
 
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
@@ -79,6 +81,19 @@ func GetPacketAckKey(channel string, packetSequence uint64) []byte {
 	return []byte(fmt.Sprintf("%s::%d::ack", channel, packetSequence))
 }
 
+func GeneratePacketAckValue(packet channeltypes.Packet, contract string) ([]byte, error) {
+	if _, err := sdk.AccAddressFromBech32(contract); err != nil {
+		return nil, sdkerrors.Wrap(types.ErrInvalidContractAddr, contract)
+	}
+
+	packetHash, err := hashPacket(packet)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "could not hash packet")
+	}
+
+	return []byte(fmt.Sprintf("%s::%s", contract, packetHash)), nil
+}
+
 // StorePacketCallback stores which contract will be listening for the ack or timeout of a packet
 func (k Keeper) StorePacketCallback(ctx sdk.Context, channel string, packetSequence uint64, contract string) {
 	store := ctx.KVStore(k.storeKey)
@@ -110,15 +125,39 @@ func (k Keeper) DeletePacketCallback(ctx sdk.Context, channel string, packetSequ
 }
 
 // StorePacketAckActor stores which contract is allowed to send an ack for the packet
-func (k Keeper) StorePacketAckActor(ctx sdk.Context, channel string, packetSequence uint64, contract string) {
+func (k Keeper) StorePacketAckActor(ctx sdk.Context, packet channeltypes.Packet, contract string) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(GetPacketAckKey(channel, packetSequence), []byte(contract))
+	channel := packet.GetSourceChannel()
+	packetSequence := packet.GetSequence()
+
+	val, err := GeneratePacketAckValue(packet, contract)
+	if err != nil {
+		panic(err)
+	}
+	store.Set(GetPacketAckKey(channel, packetSequence), val)
 }
 
-// GetPacketAckActor returns the bech32 addr of the contract that is allowed to send an ack for the packet
-func (k Keeper) GetPacketAckActor(ctx sdk.Context, channel string, packetSequence uint64) string {
+// GetPacketAckActor returns the bech32 addr  of the contract that is allowed to send an ack for the packet and the packet hash
+func (k Keeper) GetPacketAckActor(ctx sdk.Context, channel string, packetSequence uint64) (string, string) {
 	store := ctx.KVStore(k.storeKey)
-	return string(store.Get(GetPacketAckKey(channel, packetSequence)))
+	rawData := store.Get(GetPacketAckKey(channel, packetSequence))
+	if rawData == nil {
+		return "", ""
+	}
+	data := strings.Split(string(rawData), "::")
+	if len(data) != 2 {
+		return "", ""
+	}
+	// validate that the contract is a valid bech32 addr
+	if _, err := sdk.AccAddressFromBech32(data[0]); err != nil {
+		return "", ""
+	}
+	// validate that the hash is a valid sha256sum hash
+	if _, err := hex.DecodeString(data[1]); err != nil {
+		return "", ""
+	}
+
+	return data[0], data[1]
 }
 
 // DeletePacketAckActor deletes the ack actor from storage once it has been used
@@ -137,7 +176,7 @@ func DeriveIntermediateSender(channel, originalSender, bech32Prefix string) (str
 
 // EmitIBCAck emits an event that the IBC packet has been acknowledged
 func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequence uint64) ([]byte, error) {
-	contract := k.GetPacketAckActor(ctx, channel, packetSequence)
+	contract, packetHash := k.GetPacketAckActor(ctx, channel, packetSequence)
 	if contract == "" {
 		return nil, fmt.Errorf("no ack actor set for channel %s packet %d", channel, packetSequence)
 	}
@@ -182,7 +221,7 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 
 	}
 	var newAck channeltypes.Acknowledgement
-	var packet exported.PacketI
+	var packet channeltypes.Packet
 
 	switch ack.Type {
 	case "ack_response":
@@ -194,11 +233,21 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 		newAck = channeltypes.NewResultAcknowledgement(jsonAck)
 	case "ack_error":
 		packet = ack.AckError.Packet
-		newAck = osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrAckFromContract, ack.AckError.ContractError)
+		newAck = osmoutils.NewSuccessAckRepresentingAnError(ctx, types.ErrAckFromContract, []byte(ack.AckError.ErrorResponse), ack.AckError.ErrorDescription)
 	default:
 		return nil, sdkerrors.Wrap(err, "could not unmarshal into IBCAckResponse or IBCAckError")
 	}
 
+	// Validate that the packet returned by the contract matches the one we stored when sending
+	receivedPacketHash, err := hashPacket(packet)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "could not hash packet")
+	}
+	if receivedPacketHash != packetHash {
+		return nil, sdkerrors.Wrap(types.ErrAckPacketMismatch, fmt.Sprintf("packet hash mismatch. Expected %s, got %s", packetHash, receivedPacketHash))
+	}
+
+	// Now we can write the acknowledgement
 	err = k.channelKeeper.WriteAcknowledgement(ctx, cap, packet, newAck)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "could not write acknowledgement")
@@ -209,4 +258,15 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 		return nil, sdkerrors.Wrap(err, "could not marshal acknowledgement")
 	}
 	return response, nil
+}
+
+func hashPacket(packet channeltypes.Packet) (string, error) {
+	// ignore the data here. We only care about the channel information
+	packet.Data = nil
+	bz, err := json.Marshal(packet)
+	if err != nil {
+		return "", sdkerrors.Wrap(err, "could not marshal packet")
+	}
+	packetHash := tmhash.Sum(bz)
+	return hex.EncodeToString(packetHash), nil
 }

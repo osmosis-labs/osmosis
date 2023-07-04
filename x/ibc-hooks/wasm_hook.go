@@ -122,7 +122,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 				return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrAsyncAckNotAllowed)
 			}
 			// Store the contract as the packet's ack actor and return nil
-			h.ibcHooksKeeper.StorePacketAckActor(ctx, packet.GetSourceChannel(), packet.GetSequence(), contractAddr.String())
+			h.ibcHooksKeeper.StorePacketAckActor(ctx, packet, contractAddr.String())
 			return nil
 		}
 	}

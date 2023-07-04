@@ -46,8 +46,9 @@ type IBCAckResponse struct {
 
 // IBCAckError is the error that a contract returns from the sudo() call on RequestAck
 type IBCAckError struct {
-	Packet        channeltypes.Packet `json:"packet"`
-	ContractError string              `json:"contract_error"`
+	Packet           channeltypes.Packet `json:"packet"`
+	ErrorDescription string              `json:"error_description"`
+	ErrorResponse    string              `json:"error_response"`
 }
 
 type IBCAck struct {

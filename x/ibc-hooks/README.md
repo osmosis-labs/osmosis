@@ -279,24 +279,18 @@ pub enum SudoMsg {
 and that sudo call should return an `IBCAckResponse`:
 
 ```rust
-
-#[cw_serde]
-pub struct IBCAckResponse {
-    pub packet: Packet,
-    pub contract_ack: ContractAck,
-}
-
-#[cw_serde]
-pub struct IBCAckError {
-    pub packet: Packet,
-    pub contract_error: String,
-}
-
 #[cw_serde]
 #[serde(tag = "type", content = "content")]
 pub enum IBCAck {
-    AckResponse(IBCAckResponse),
-    AckError(IBCAckError),
+    AckResponse{
+        packet: Packet,
+        contract_ack: ContractAck,
+    },
+    AckError {
+        packet: Packet,
+        error_description: String,
+        error_response: String,
+    }
 }
 ```
 

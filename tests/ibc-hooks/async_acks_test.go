@@ -100,6 +100,7 @@ func (suite *HooksTestSuite) TestWasmHooksAsyncAcks() {
 // TestWasmHooksAsyncErrorAcks tests that the contract can emit an ack that is an error
 // There is considerable repetition here, but since it's only two cases didn't think it was worth it to make it into
 // a table test
+// TODO: This test should no longer work as we are always returning a valid ack. Modify the test accordingly
 func (suite *HooksTestSuite) TestWasmHooksAsyncErrorAcks() {
 	sender := suite.chainB.SenderAccount.GetAddress()
 	osmosisApp := suite.chainA.GetOsmosisApp()

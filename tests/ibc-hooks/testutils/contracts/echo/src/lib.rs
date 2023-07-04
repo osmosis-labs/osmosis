@@ -124,7 +124,8 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, StdError
                 })?,
                 false => to_binary(&IBCAck::AckError {
                     packet,
-                    contract_error: "forced error".to_string(),
+                    error_description: "forced error".to_string(),
+                    error_response: r#"{"error": "forced error"}"#.to_string(),
                 })?
             };
             Ok(Response::new().set_data(data))},

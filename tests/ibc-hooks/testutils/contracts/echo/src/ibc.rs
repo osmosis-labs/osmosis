@@ -19,7 +19,7 @@ pub struct Packet {
     pub source_channel: String,
     pub destination_port: String,
     pub destination_channel: String,
-    pub data: String, // FungiibleTokenData
+    pub data: String, // FungibleTokenData
     pub timeout_height: Height,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timeout_timestamp: Option<u64>,
@@ -58,7 +58,8 @@ pub enum IBCAck {
     },
     AckError {
         packet: Packet,
-        contract_error: String,
+        error_description: String,
+        error_response: String,
     }
 }
 
