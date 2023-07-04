@@ -74,7 +74,7 @@ func TickToPrice(tickIndex int64) (price sdk.Dec, err error) {
 	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(PowTenInternal(-exponentAtPriceOne)).TruncateInt64()
 
 	// Check that the tick index is between min and max value
-	if tickIndex < types.MinInitializedTick {
+	if tickIndex < types.MinCurrentTick {
 		return sdk.Dec{}, types.TickIndexMinimumError{MinTick: types.MinInitializedTick}
 	}
 	if tickIndex > types.MaxTick {
