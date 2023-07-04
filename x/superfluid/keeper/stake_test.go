@@ -1305,6 +1305,13 @@ func (s *KeeperTestSuite) TestLockExistingFullRangePositionAndSFStake() {
 				// Withdraw should error
 				_, _, err = s.App.ConcentratedLiquidityKeeper.WithdrawPosition(s.Ctx, s.TestAccs[0], tc.positionId, sdk.Dec(clLock.Coins[0].Amount))
 				s.Require().ErrorIs(err, cltypes.LockNotMatureError{PositionId: tc.positionId, LockId: clLock.ID})
+
+				// Check if the number of funds delegated to the validator is what we expect.
+				actualDelegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, intAcc, valAddr)
+				s.Require().True(found)
+				expectedDelegation, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(s.Ctx, clLock.Coins[0].Denom, clLock.Coins[0].Amount)
+				s.Require().NoError(err)
+				s.Require().Equal(expectedDelegation.String(), actualDelegation.GetShares().TruncateInt().String())
 			}
 		})
 	}
