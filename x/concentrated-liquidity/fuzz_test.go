@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"sync"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,28 +17,44 @@ import (
 
 const (
 	maxAmountDeposited  = 999_999_999_999_999_999
-	initialNumPositions = 15
+	initialNumPositions = 20
 )
 
 func (s *KeeperTestSuite) TestFuzz() {
-	s.FuzzTest(30, 5, 100)
+	s.FuzzTest(30, 10, 100)
 }
 
 // pre-condition: poolId exists, and has at least one position
 func (s *KeeperTestSuite) FuzzTest(numSwaps int, numPositions int, numFuzzes int) {
 	seed := time.Now().Unix()
 
-	fmt.Printf("BEGIN FUZZ TEST. seed %d\n\n", seed)
-	r := rand.New(rand.NewSource(seed))
+	wg := &sync.WaitGroup{}
 
 	for i := 0; i < numFuzzes; i++ {
-		s.Run(fmt.Sprintf("Fuzz %d", i), func() {
-			s.individualFuzz(r, i, numSwaps, numPositions)
+		i := i
+		wg.Add(1)
+
+		currentSeed := seed + int64(i)
+		r := rand.New(rand.NewSource(currentSeed))
+
+		currentSuite := &KeeperTestSuite{}
+		currentSuite.SetS(s)
+		currentSuite.SetT(s.T())
+
+		currentSuite.Run(fmt.Sprintf("Fuzz %d, seed: %d", i, currentSeed), func() {
+			currentSuite.T().Parallel()
+
+			currentSuite.individualFuzz(r, i, numSwaps, numPositions)
+			wg.Done()
 		})
 	}
+
+	// wg.Wait()
 }
 
 func (s *KeeperTestSuite) individualFuzz(r *rand.Rand, fuzzNum int, numSwaps int, numPositions int) {
+	s.SetupTest()
+
 	spreadFactors := types.DefaultParams().AuthorizedSpreadFactors
 	numSpreadFactors := len(spreadFactors)
 
@@ -150,6 +167,10 @@ func (s *KeeperTestSuite) swapNearInitializedTickBoundary(r *rand.Rand, pool typ
 	iter := ss.InitializeNextTickIterator(s.Ctx, pool.GetId(), pool.GetCurrentTick())
 	defer iter.Close()
 
+	if !iter.Valid() {
+		return false
+	}
+
 	s.Require().True(iter.Valid())
 
 	nextInitializedTick, err := types.TickIndexFromBytes(iter.Key())
@@ -220,6 +241,10 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 			return false
 		}
 	}
+	if err != nil {
+		fmt.Printf("swap error: %s\n", err.Error())
+	}
+
 	s.Require().NoError(err)
 
 	// Write only if no error
