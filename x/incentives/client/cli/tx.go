@@ -87,11 +87,20 @@ func NewCreateGaugeCmd() *cobra.Command {
 				return err
 			}
 
-			distributeTo := lockuptypes.QueryCondition{
-				LockQueryType: lockuptypes.ByDuration,
-				Denom:         denom,
-				Duration:      duration,
-				Timestamp:     time.Unix(0, 0), // XXX check
+			var distributeTo lockuptypes.QueryCondition
+			// if poolId is 0 it is a guranteed lock gauge
+			// if poolId is > 0 it is a guranteed no-lock gauge
+			if poolId == 0 {
+				distributeTo = lockuptypes.QueryCondition{
+					LockQueryType: lockuptypes.ByDuration,
+					Denom:         denom,
+					Duration:      duration,
+					Timestamp:     time.Unix(0, 0), // XXX check
+				}
+			} else if poolId > 0 {
+				distributeTo = lockuptypes.QueryCondition{
+					LockQueryType: lockuptypes.NoLock,
+				}
 			}
 
 			msg := types.NewMsgCreateGauge(
