@@ -595,9 +595,9 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		s.Require().NoError(err)
 
 		var (
-			amountOneIn    sdk.Dec         = sdk.ZeroDec()
-			sqrtPriceStart osmomath.BigDec = pool.GetCurrentSqrtPrice()
-			liquidity                      = pool.GetLiquidity()
+			amountOneIn    = sdk.ZeroDec()
+			sqrtPriceStart = pool.GetCurrentSqrtPrice()
+			liquidity      = pool.GetLiquidity()
 		)
 
 		if tickToSwapTo >= nr1Position.upperTick {
