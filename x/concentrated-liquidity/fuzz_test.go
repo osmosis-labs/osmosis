@@ -23,6 +23,16 @@ const (
 	defaultNumPositions = 10
 )
 
+type swapAmountsMismatchErr struct {
+	swapInFunded       sdk.Coin
+	amountInSwapResult sdk.Coin
+	diff               sdk.Int
+}
+
+func (e swapAmountsMismatchErr) Error() string {
+	return fmt.Sprintf("amounts in mismatch, original %s, swapped in given out: %s, difference of %s", e.swapInFunded, e.amountInSwapResult, e.diff)
+}
+
 func TestFuzz_Many(t *testing.T) {
 	fuzz(t, defaultNumSwaps, defaultNumPositions, 100)
 }
@@ -342,7 +352,7 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 		// This proves that this is a test setup error, not a swap logic error. We need smarter detection of when
 		// a small difference between non-rounded tokenOut in swap out given in and the returned tokenOut here leads
 		// to a large difference in sqrt price (TBD later).
-		s.collectedErrors = append(s.collectedErrors, fmt.Errorf("amounts in mismatch, original %s, swapped in given out: %s, difference of %s", swapInFunded, amountInSwapResult, swapInFunded.Amount.Sub(amountInSwapResult.Amount)))
+		s.collectedErrors = append(s.collectedErrors, swapAmountsMismatchErr{swapInFunded: swapInFunded, amountInSwapResult: amountInSwapResult, diff: swapInFunded.Amount.Sub(amountInSwapResult.Amount)})
 		return true, false
 	}
 
@@ -396,6 +406,11 @@ func (s *KeeperTestSuite) validateNoErrors(possibleErrors []error) {
 		}
 		// TODO: Need to understand why this is happening
 		if errors.As(err, &types.OverChargeSwapOutGivenInError{}) {
+			continue
+		}
+
+		// This is acceptable. See where this error is returned for explanation.
+		if errors.As(err, &swapAmountsMismatchErr{}) {
 			continue
 		}
 
