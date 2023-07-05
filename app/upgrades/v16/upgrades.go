@@ -135,6 +135,7 @@ func CreateUpgradeHandler(
 
 		// Get community pool and Junox/OSMO pool address.
 		communityPoolAddress := keepers.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
+		ctx.Logger().Info("communityPoolAddress:", communityPoolAddress)
 
 		// Determine the amount of OSMO that can be bought with 1 Junox.
 		oneJunox := sdk.NewCoin(JUNOXIBCDenom, sdk.NewInt(1000000000000000000))
