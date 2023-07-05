@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"testing"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,34 +23,33 @@ const (
 	defaultNumPositions = 10
 )
 
-func (s *KeeperTestSuite) TestFuzz() {
-	s.FuzzTest(30, 10, 100)
+func TestFuzz_Many(t *testing.T) {
+	fuzz(t, defaultNumSwaps, defaultNumPositions, 100)
 }
 
 func (s *KeeperTestSuite) TestFuzz_GivenSeed() {
-	r := rand.New(rand.NewSource(1688513262))
-	s.individualFuzz(r, 0, defaultNumSwaps, defaultNumPositions)
+	r := rand.New(rand.NewSource(1688519582))
+	s.individualFuzz(r, 0, 30, 10)
+
+	s.validateNoErrors(s.collectedErrors)
 }
 
 // pre-condition: poolId exists, and has at least one position
-func (s *KeeperTestSuite) FuzzTest(numSwaps int, numPositions int, numFuzzes int) {
+func fuzz(t *testing.T, numSwaps int, numPositions int, numIterations int) {
 	seed := time.Now().Unix()
 
-	for i := 0; i < numFuzzes; i++ {
+	for i := 0; i < numIterations; i++ {
 		i := i
 
 		currentSeed := seed + int64(i)
 		r := rand.New(rand.NewSource(currentSeed))
 
-		currentSuite := &KeeperTestSuite{}
-		currentSuite.SetS(s)
-		currentSuite.SetT(s.T())
-
-		currentSuite.Run(fmt.Sprintf("Fuzz %d, seed: %d", i, currentSeed), func() {
-
-			// Run in parallel.
-			currentSuite.T().Parallel()
-
+		t.Run(fmt.Sprintf("Fuzz %d, seed: %d", i, currentSeed), func(t *testing.T) {
+			t.Parallel()
+			currentSuite := &KeeperTestSuite{}
+			currentSuite.SetT(t)
+			currentSuite.seed = currentSeed
+			currentSuite.iteration = i
 			currentSuite.individualFuzz(r, i, numSwaps, numPositions)
 		})
 	}
@@ -78,14 +78,7 @@ func (s *KeeperTestSuite) individualFuzz(r *rand.Rand, fuzzNum int, numSwaps int
 
 	s.fuzzTestWithSeed(r, pool.GetId(), numSwaps, numPositions)
 
-	// validate if any errrs
-
-	for _, err := range s.collectedErrors {
-		fmt.Println("collected error: ", err)
-	}
-	// If error observed, note seed value and rerun with TestFuzz_GivenSeed
-	// search for "swap error:" in logs for details.
-	s.Require().Empty(s.collectedErrors)
+	s.validateNoErrors(s.collectedErrors)
 }
 
 type fuzzState struct {
@@ -287,6 +280,20 @@ func zfoToDenoms(zfo bool, pool types.ConcentratedPoolExtension) (swapInDenom, s
 		return pool.GetToken0(), pool.GetToken1()
 	} else {
 		return pool.GetToken1(), pool.GetToken0()
+	}
+}
+
+// validate if any errrs
+func (s *KeeperTestSuite) validateNoErrors(possibleErrors []error) {
+	fullMsg := ""
+	for _, err := range possibleErrors {
+		msg := fmt.Sprintf("%s\n", err.Error())
+		fmt.Println(msg)
+		fullMsg += msg
+	}
+
+	if len(possibleErrors) > 0 {
+		s.FailNow(fmt.Sprintf("failed validation for errors seed: %d iteration: %d, %s", s.seed, s.iteration, fullMsg), fullMsg)
 	}
 }
 
