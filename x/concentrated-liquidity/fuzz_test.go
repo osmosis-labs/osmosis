@@ -298,7 +298,7 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 		// 2% tolerance
 		MultiplicativeTolerance: sdk.NewDecWithPrec(2, 2),
 		// Expected amount in returned from swap "in given out" to be smaller
-		// that original amount in given to "out given in".
+		// than original amount in given to "out given in".
 		// Reason: rounding in pool's favor.
 		RoundingDir: osmomath.RoundDown,
 	}
