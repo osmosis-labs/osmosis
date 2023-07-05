@@ -28,6 +28,7 @@ func TestFuzz_Many(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) TestFuzz_GivenSeed() {
+	// Seed 1688572291 - gives mismatch between tokenIn given to "out given in" and token in returned from "in given out"
 	r := rand.New(rand.NewSource(1688572291))
 	s.individualFuzz(r, 0, 30, 10)
 
