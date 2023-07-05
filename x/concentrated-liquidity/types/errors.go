@@ -861,3 +861,13 @@ type SwapNoProgressWithConsumptionError struct {
 func (e SwapNoProgressWithConsumptionError) Error() string {
 	return fmt.Sprintf("did not advance sqrt price after swap step %s, with amounts in (%s), out (%s)", e.ComputedSqrtPrice, e.AmountIn, e.AmountOut)
 }
+
+type ComputedSqrtPriceInequalityError struct {
+	IsZeroForOne                 bool
+	NextInitializedTickSqrtPrice osmomath.BigDec
+	ComputedSqrtPrice            osmomath.BigDec
+}
+
+func (e ComputedSqrtPriceInequalityError) Error() string {
+	return fmt.Sprintf("edge case has occurred when swapping at tick boundaries, with izZeroForOne (%t), NextInitializedTickSqrtPrice (%s), computedSqrtPrice (%s). Please try again with a different swap amount", e.IsZeroForOne, e.NextInitializedTickSqrtPrice, e.ComputedSqrtPrice)
+}
