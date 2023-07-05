@@ -612,7 +612,8 @@ osmosisd query gamm total-share 1
 ## Other resources
 
 * [Creating a liquidity bootstrapping pool](./client/docs/create-lbp-pool.md)
-* [Creating a pool with a pool file](./client/docs/create-pool.md)
+* [Creating a pool with a pool file](./client/docs/create-balancer-pool.md)
+* [Creating a stableswap pool](./client/docs/create-stableswap-pool.md)
 
 ## Events
 
