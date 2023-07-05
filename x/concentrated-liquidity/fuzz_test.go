@@ -135,7 +135,7 @@ func (s *KeeperTestSuite) fuzzTestWithSeed(r *rand.Rand, poolId uint64, numSwaps
 			completedPositions++
 		}
 
-		s.assertWithdrawAllInvariant()
+		s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
 	}
 }
 
