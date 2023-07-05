@@ -423,7 +423,7 @@ func (k Keeper) computeOutAmtGivenIn(
 
 	// Note, this should be impossible to reach but we leave it as a defense-in-depth measure.
 	if swapState.amountSpecifiedRemaining.IsNegative() {
-		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, fmt.Errorf("over charge problem swap out given in by (%s)", swapState.amountSpecifiedRemaining)
+		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, types.OverChargeSwapOutGivenInError{AmountSpecifiedRemaining: swapState.amountSpecifiedRemaining}
 	}
 
 	// Add spread reward growth per share to the pool-global spread reward accumulator.
