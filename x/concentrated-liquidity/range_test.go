@@ -49,10 +49,6 @@ type RangeTestParams struct {
 
 	// Have a single address for all positions in each range
 	singleAddrPerRange bool
-	// Create new active incentive records between each join
-	newActiveIncentivesBetweenJoins bool
-	// Create new inactive incentive records between each join
-	newInactiveIncentivesBetweenJoins bool
 	// Fund each position address with double the expected amount of assets.
 	// Should only be used for cases where join amount gets pushed up due to
 	// precision near min tick.

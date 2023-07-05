@@ -1261,6 +1261,7 @@ func (s *KeeperTestSuite) TestLockExistingFullRangePositionAndSFStake() {
 			// Set up testing environment.
 			s.FundAcc(s.TestAccs[1], defaultFunds)
 			valAddr, clPoolId, err := s.SetupConcentratedSuperfluidEnv(s.Ctx, s.TestAccs[1], tc.superfluidNotEnabledOnDenom)
+			s.Require().NoError(err)
 
 			// Create the position specified by the test case.
 			msg := &cltypes.MsgCreatePosition{
@@ -1354,7 +1355,8 @@ func (s *KeeperTestSuite) SetupConcentratedSuperfluidEnv(ctx sdk.Context, poolCr
 	migrationRecord := gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 		{BalancerPoolId: balancerPooId, ClPoolId: clPoolId},
 	}}
-	gammKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, migrationRecord)
+	err = gammKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, migrationRecord)
+	s.Require().NoError(err)
 
 	// // The unbonding duration is the same as the staking module's unbonding duration.
 	// unbondingDuration := stakingKeeper.GetParams(ctx).UnbondingTime

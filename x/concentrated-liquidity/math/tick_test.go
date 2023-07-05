@@ -398,7 +398,7 @@ func TestPriceToTick(t *testing.T) {
 		tc := tc
 
 		t.Run(name, func(t *testing.T) {
-			// surpress error here, we only listen to errors from system under test.
+			// suppress error here, we only listen to errors from system under test.
 			tick, _ := PriceToTick(tc.price)
 
 			// With tick spacing of one, no rounding should occur.

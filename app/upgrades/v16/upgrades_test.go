@@ -218,7 +218,7 @@ func upgradeProtorevSetup(suite *UpgradeTestSuite) error {
 	suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
 
 	devFee := sdk.NewCoin("uosmo", sdk.NewInt(1000000))
-	if err := suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, devFee); err != nil {
+	if err := suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, devFee); err != nil { //nolint:staticcheck // this can be safely removed in v17
 		return err
 	}
 

@@ -24,6 +24,7 @@ const (
 )
 
 func TestFuzz_Many(t *testing.T) {
+	t.Parallel()
 	fuzz(t, defaultNumSwaps, defaultNumPositions, 100)
 }
 
@@ -36,6 +37,7 @@ func (s *KeeperTestSuite) TestFuzz_GivenSeed() {
 
 // pre-condition: poolId exists, and has at least one position
 func fuzz(t *testing.T, numSwaps int, numPositions int, numIterations int) {
+	t.Helper()
 	seed := time.Now().Unix()
 
 	for i := 0; i < numIterations; i++ {
@@ -83,11 +85,6 @@ func (s *KeeperTestSuite) individualFuzz(r *rand.Rand, fuzzNum int, numSwaps int
 	s.validateNoErrors(s.collectedErrors)
 }
 
-type fuzzState struct {
-	r      *rand.Rand
-	poolId int
-}
-
 func (s *KeeperTestSuite) fuzzTestWithSeed(r *rand.Rand, poolId uint64, numSwaps int, numPositions int) {
 	// Add 1000 random positions
 	for i := 0; i < initialNumPositions; i++ {
@@ -123,7 +120,6 @@ func (s *KeeperTestSuite) fuzzTestWithSeed(r *rand.Rand, poolId uint64, numSwaps
 }
 
 func (s *KeeperTestSuite) randomSwap(r *rand.Rand, poolId uint64) (fatalErr bool) {
-
 	pool, err := s.clk.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
@@ -142,7 +138,6 @@ func (s *KeeperTestSuite) randomSwap(r *rand.Rand, poolId uint64) (fatalErr bool
 	swapStrategy, zfo := updateStrategy()
 
 	for didSwap := false; !didSwap; {
-
 		if swapStrategy == 0 {
 			didSwap, fatalErr = s.swapRandomAmount(r, pool, zfo)
 		} else if swapStrategy == 1 {
@@ -226,9 +221,8 @@ func tickAmtChange(r *rand.Rand, targetAmount sdk.Dec) sdk.Dec {
 
 	// Generate a random percentage under 0.1%
 	randChangePercent := sdk.NewDec(rand.Int63n(1)).QuoInt64(1000)
-	change := targetAmount.Mul(randChangePercent)
 
-	change = sdk.MaxDec(sdk.NewDec(1), randChangePercent)
+	change := sdk.MaxDec(sdk.NewDec(1), randChangePercent)
 
 	switch changeType {
 	case 0:
@@ -308,7 +302,6 @@ func (s *KeeperTestSuite) validateNoErrors(possibleErrors []error) {
 	fullMsg := ""
 	shouldFail := false
 	for _, err := range possibleErrors {
-
 		// TODO: figure out if this is OK
 		// Answer: Ok for now, due to outofbounds=True restriction
 		// Should sanity check that our fuzzer isn't hitting this too often though, that could hit at
@@ -358,7 +351,6 @@ func (s *KeeperTestSuite) selectAction(r *rand.Rand, numSwaps, numPositions, com
 // Add or remove liquidity
 
 func (s *KeeperTestSuite) addOrRemoveLiquidity(r *rand.Rand, poolId uint64) {
-
 	// shouldAddPosition := s.selectAddOrRemove(r)
 
 	if true {
@@ -367,15 +359,6 @@ func (s *KeeperTestSuite) addOrRemoveLiquidity(r *rand.Rand, poolId uint64) {
 		fmt.Println("removing position")
 		// s.removeLiquidity(r, randomizedAssets)
 	}
-
-}
-
-// if true add position, if false remove position
-func (s *KeeperTestSuite) selectAddOrRemove(r *rand.Rand) bool {
-	if len(s.positionIds) == 0 {
-		return true
-	}
-	return r.Intn(2) == 0
 }
 
 func (s *KeeperTestSuite) addRandomPositonMinMaxOneSpacing(r *rand.Rand, poolId uint64) {

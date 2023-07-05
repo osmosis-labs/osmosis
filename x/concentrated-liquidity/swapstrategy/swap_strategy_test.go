@@ -49,7 +49,6 @@ var (
 	defaultAmountReserves   = sdk.NewInt(1_000_000_000)
 	DefaultCoins            = sdk.NewCoins(sdk.NewCoin(ETH, defaultAmountReserves), sdk.NewCoin(USDC, defaultAmountReserves))
 	oneULPDec               = sdk.SmallestDec()
-	oneULPBigDec            = osmomath.SmallestDec()
 )
 
 func TestStrategyTestSuite(t *testing.T) {

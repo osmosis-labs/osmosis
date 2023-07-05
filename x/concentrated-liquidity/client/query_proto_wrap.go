@@ -264,7 +264,7 @@ func (q Querier) UserUnbondingPositions(ctx sdk.Context, req clquery.UserUnbondi
 	cfmmPoolId, err := q.Keeper.GetUserUnbondingPositions(ctx, sdkAddr)
 	return &clquery.UserUnbondingPositionsResponse{
 		PositionsWithPeriodLock: cfmmPoolId,
-	}, nil
+	}, err
 }
 
 // GetTotalLiquidity returns the total liquidity across all concentrated liquidity pools.

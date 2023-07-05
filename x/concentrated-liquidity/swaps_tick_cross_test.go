@@ -503,8 +503,8 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		s.Require().True(isNarrowInRange)
 
 		var (
-			amountZeroIn   sdk.Dec         = sdk.ZeroDec()
-			sqrtPriceStart osmomath.BigDec = pool.GetCurrentSqrtPrice()
+			amountZeroIn   = sdk.ZeroDec()
+			sqrtPriceStart = pool.GetCurrentSqrtPrice()
 
 			liquidity = pool.GetLiquidity()
 		)

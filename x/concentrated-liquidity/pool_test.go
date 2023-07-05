@@ -618,19 +618,19 @@ func (s *KeeperTestSuite) TestValidateTickSpacingUpdate() {
 
 func (s *KeeperTestSuite) TestGetUserUnbondingPositions() {
 	var (
-		defaultFooAsset balancer.PoolAsset = balancer.PoolAsset{
+		defaultFooAsset = balancer.PoolAsset{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 		}
-		defaultBondDenomAsset balancer.PoolAsset = balancer.PoolAsset{
+		defaultBondDenomAsset = balancer.PoolAsset{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000)),
 		}
-		defaultPoolAssets []balancer.PoolAsset = []balancer.PoolAsset{defaultFooAsset, defaultBondDenomAsset}
-		defaultAddress                         = s.TestAccs[0]
-		defaultFunds                           = sdk.NewCoins(defaultPoolAssets[0].Token, sdk.NewCoin("stake", sdk.NewInt(5000000000)))
-		defaultBlockTime                       = time.Unix(1, 1).UTC()
-		defaultLockedAmt                       = sdk.NewCoins(sdk.NewCoin("cl/pool/1", sdk.NewInt(10000)))
+		defaultPoolAssets = []balancer.PoolAsset{defaultFooAsset, defaultBondDenomAsset}
+		defaultAddress    = s.TestAccs[0]
+		defaultFunds      = sdk.NewCoins(defaultPoolAssets[0].Token, sdk.NewCoin("stake", sdk.NewInt(5000000000)))
+		defaultBlockTime  = time.Unix(1, 1).UTC()
+		defaultLockedAmt  = sdk.NewCoins(sdk.NewCoin("cl/pool/1", sdk.NewInt(10000)))
 	)
 
 	tests := []struct {
