@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math"
 	"math/rand"
 	"os/user"
 	"strings"
@@ -19,6 +18,7 @@ import (
 
 	clqueryproto "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
@@ -51,12 +51,12 @@ const (
 )
 
 const (
-	expectedPoolId           uint64 = 1
+	expectedPoolId           uint64 = 1059
 	addressPrefix                   = "osmo"
-	localosmosisFromHomePath        = "/.osmosisd-local"
-	consensusFee                    = "1500uosmo"
+	localosmosisFromHomePath        = "/.osmosisd"
+	consensusFee                    = "3000uosmo"
 	denom0                          = "uosmo"
-	denom1                          = "uusdc"
+	denom1                          = "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7"
 	tickSpacing              int64  = 100
 	accountNamePrefix               = "lo-test"
 	// Note, this is localosmosis-specific.
@@ -65,7 +65,7 @@ const (
 	numSwaps                = 100
 	minAmountDeposited      = int64(1_000_000)
 	randSeed                = 1
-	maxAmountDeposited      = 1_00_000_000
+	maxAmountDeposited      = 890270675365
 	maxAmountSingleSwap     = 1_000_000
 	largeSwapAmount         = 90_000_000_000
 )
@@ -89,19 +89,22 @@ func main() {
 
 	ctx := context.Background()
 
-	clientHome := getClientHomePath()
+	// clientHome := getClientHomePath()
 
 	// Create a Cosmos igniteClient instance
 	igniteClient, err := cosmosclient.New(
 		ctx,
 		cosmosclient.WithAddressPrefix(addressPrefix),
 		cosmosclient.WithKeyringBackend(cosmosaccount.KeyringTest),
-		cosmosclient.WithHome(clientHome),
+		cosmosclient.WithHome("/home/roman/.osmosisd"),
+		cosmosclient.WithNodeAddress("https://rpc.edgenet.osmosis.zone:443"),
 	)
+
 	if err != nil {
+		fmt.Println("HERE")
 		log.Fatal(err)
 	}
-	igniteClient.Factory = igniteClient.Factory.WithGas(300000).WithGasAdjustment(1.3).WithFees(consensusFee)
+	igniteClient.Factory = igniteClient.Factory.WithGas(300000).WithGasAdjustment(2).WithFees(consensusFee)
 
 	statusResp, err := igniteClient.Status(ctx)
 	if err != nil {
@@ -111,7 +114,7 @@ func main() {
 	log.Println("connected to: ", "chain-id", statusResp.NodeInfo.Network, "height", statusResp.SyncInfo.LatestBlockHeight)
 
 	// Print warnings with common problems
-	log.Printf("\n\n\nWARNING 1: your localosmosis and client home are assummed to be %s. Run 'osmosisd get-env' and confirm it matches the path you see printed here\n\n\n", clientHome)
+	// log.Printf("\n\n\nWARNING 1: your localosmosis and client home are assummed to be %s. Run 'osmosisd get-env' and confirm it matches the path you see printed here\n\n\n", clientHome)
 
 	log.Printf("\n\n\nWARNING 2: you are attempting to interact with pool id %d.\nConfirm that the pool exists. if this is not the pool you want to interact with, please change the expectedPoolId variable in the code\n\n\n", expectedPoolId)
 
@@ -151,15 +154,15 @@ func createManyRandomPositions(igniteClient cosmosclient.Client, poolId uint64, 
 			// lo-test1
 			// lo-test2
 			// ...
-			randAccountNum = rand.Intn(8) + 1
+			randAccountNum = rand.Intn(1) + 1
 			accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
 			// minTick <= lowerTick <= upperTick
-			lowerTick = roundTickDown(rand.Int63n(maxTick-minTick+1)+minTick, tickSpacing)
+			lowerTick = types.MinInitializedTick // roundTickDown(rand.Int63n(maxTick-minTick+1)+minTick, tickSpacing)
 			// lowerTick <= upperTick <= maxTick
-			upperTick = roundTickDown(maxTick-rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick)))), tickSpacing)
+			upperTick = types.MaxTick //roundTickDown(maxTick-rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick)))), tickSpacing)
 
-			tokenDesired0 = sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
-			tokenDesired1 = sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
+			tokenDesired0 = sdk.NewCoin(denom0, sdk.NewInt(maxAmountDeposited))
+			tokenDesired1 = sdk.NewCoin(denom1, sdk.NewInt(maxAmountDeposited))
 			tokensDesired = sdk.NewCoins(tokenDesired0, tokenDesired1)
 		)
 
