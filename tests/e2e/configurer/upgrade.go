@@ -171,7 +171,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), poolShareDenom, config.LockupWallet, config.LockupWalletSuperfluid)
 
 	// fund the community pool with one dai
-	oneDai := sdk.NewCoin(v16.DAIIBCDenom, sdk.NewInt(1000000000000000000))
+	oneDai := sdk.NewCoin(v16.JUNOXIBCDenom, sdk.NewInt(1000000000000000000))
 	communityPoolFunder := chainANode.CreateWalletAndFund("communityPoolFunder", []string{
 		oneDai.String(),
 	})

@@ -26,6 +26,7 @@ const (
 	// https://testnet.osmosis.zone/pool/3
 	// Note, new concentrated liquidity pool
 	// spread factor is initialized to be the same as the balancers pool spread factor of 0.2%.
+	// MODIFIED FROM MAINNET OSMO/DAI 674 POOL
 	JunoxOsmoPoolId = uint64(3)
 	// Denom0 translates to a base asset while denom1 to a quote asset
 	// We want quote asset to be Junox so that when the limit orders on ticks
@@ -43,7 +44,8 @@ const (
 )
 
 var (
-	ATOMIBCDenom  = "ibc/A8C2D23A1E6F95DA4E48BA349667E322BD7A6C996D8A4AAE8BA72E190F3D1477"
+	ATOMIBCDenom = "ibc/A8C2D23A1E6F95DA4E48BA349667E322BD7A6C996D8A4AAE8BA72E190F3D1477"
+	// MODIFIED FROM MAINNET DAI IBC DENOM
 	JUNOXIBCDenom = "ibc/8E2FEFCBD754FA3C97411F0126B9EC76191BAA1B3959CB73CECF396A4037BBF0"
 	USDCIBCDenom  = "ibc/6F34E1BD664C36CE49ACC28E60D62559A5F96C4F9A6CCE4FC5A67B2852E24CFE"
 
@@ -55,7 +57,7 @@ var (
 	authorizedQuoteDenoms []string = []string{
 		"uosmo",
 		ATOMIBCDenom,
-		JUNOXIBCDenom,
+		JUNOXIBCDenom, // MODIFIED FROM MAINNET DAI IBC DENOM
 		USDCIBCDenom,
 	}
 
@@ -137,8 +139,20 @@ func CreateUpgradeHandler(
 		communityPoolAddress := keepers.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
 		ctx.Logger().Info(fmt.Sprintf("communityPoolAddress: %s", communityPoolAddress.String()))
 
+		// Fund the community pool with 1 Junox.
+		// MODIFIED FROM MAINNET THIS STEP DOESNT EXIST SINCE THE DAI IS ALREADY IN THE COMMUNITY POOL
+		oneJunox := sdk.NewCoin(JUNOXIBCDenom, sdk.NewInt(1000000))
+		senderAcc, err := sdk.AccAddressFromBech32("osmo1hexs687afngu85gzumg90g5azmq09fq4yz2xhz")
+		if err != nil {
+			return nil, err
+		}
+		err = keepers.DistrKeeper.FundCommunityPool(ctx, sdk.NewCoins(oneJunox), senderAcc)
+		if err != nil {
+			return nil, err
+		}
+
 		// Determine the amount of OSMO that can be bought with 1 Junox.
-		oneJunox := sdk.NewCoin(JUNOXIBCDenom, sdk.NewInt(1000000000000000000))
+		// MODIFIED FROM MAINNET 1 DAI
 		junoxOsmoGammPool, err := keepers.PoolManagerKeeper.GetPool(ctx, JunoxOsmoPoolId)
 		if err != nil {
 			return nil, err

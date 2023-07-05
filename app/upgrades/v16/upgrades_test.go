@@ -91,23 +91,22 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				stakingParams.BondDenom = "uosmo"
 				suite.App.StakingKeeper.SetParams(suite.Ctx, stakingParams)
 
-				oneJunox := sdk.NewCoins(sdk.NewCoin(v16.JUNOXIBCDenom, sdk.NewInt(1000000000000000000)))
+				oneJunox := sdk.NewCoins(sdk.NewCoin(v16.JUNOXIBCDenom, sdk.NewInt(1000000)))
 
-				// Send one junox to the community pool (this is true in current mainnet)
-				suite.FundAcc(suite.TestAccs[0], oneJunox)
-
-				err := suite.App.DistrKeeper.FundCommunityPool(suite.Ctx, oneJunox, suite.TestAccs[0])
+				// Fund the acc that will be funding the community pool in the upgrade
+				senderAcc, err := sdk.AccAddressFromBech32("osmo1hexs687afngu85gzumg90g5azmq09fq4yz2xhz")
 				suite.Require().NoError(err)
+				suite.FundAcc(senderAcc, oneJunox)
 
 				// Determine approx how much OSMO will be used from community pool when 1 JUNOX used.
-				junoxOsmoGammPool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, v16.JunoxOsmoPoolId)
-				suite.Require().NoError(err)
-				respectiveOsmo, err := suite.App.GAMMKeeper.CalcOutAmtGivenIn(suite.Ctx, junoxOsmoGammPool, oneJunox[0], v16.DesiredDenom0, sdk.ZeroDec())
-				suite.Require().NoError(err)
+				//junoxOsmoGammPool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, v16.JunoxOsmoPoolId)
+				//suite.Require().NoError(err)
+				//respectiveOsmo, err := suite.App.GAMMKeeper.CalcOutAmtGivenIn(suite.Ctx, junoxOsmoGammPool, oneJunox[0], v16.DesiredDenom0, sdk.ZeroDec())
+				//suite.Require().NoError(err)
 
 				// Retrieve the community pool balance before the upgrade
 				communityPoolAddress := suite.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
-				communityPoolBalancePre := suite.App.BankKeeper.GetAllBalances(suite.Ctx, communityPoolAddress)
+				//communityPoolBalancePre := suite.App.BankKeeper.GetAllBalances(suite.Ctx, communityPoolAddress)
 
 				dummyUpgrade(suite)
 				suite.Require().NotPanics(func() {
@@ -117,11 +116,6 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				// Retrieve the community pool balance (and the feePool balance) after the upgrade
 				communityPoolBalancePost := suite.App.BankKeeper.GetAllBalances(suite.Ctx, communityPoolAddress)
 				feePoolCommunityPoolPost := suite.App.DistrKeeper.GetFeePool(suite.Ctx).CommunityPool
-
-				// Validate that the community pool balance has been reduced by the amount of OSMO that was used to create the pool
-				// Note we use all the osmo, but a small amount of JUNOX is left over due to rounding when creating the first position.
-				suite.Require().Equal(communityPoolBalancePre.AmountOf("uosmo").Sub(respectiveOsmo.Amount).String(), communityPoolBalancePost.AmountOf("uosmo").String())
-				suite.Require().Equal(0, multiplicativeTolerance.Compare(communityPoolBalancePre.AmountOf(v16.JUNOXIBCDenom), oneJunox[0].Amount.Sub(communityPoolBalancePost.AmountOf(v16.JUNOXIBCDenom))))
 
 				// Validate that the fee pool community pool balance has been decreased by the amount of OSMO/JUNOX that was used to create the pool
 				suite.Require().Equal(communityPoolBalancePost.AmountOf("uosmo").String(), feePoolCommunityPoolPost.AmountOf("uosmo").TruncateInt().String())

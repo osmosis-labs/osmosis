@@ -22,7 +22,7 @@ const (
 )
 
 var (
-	defaultJunoxAmount, _ = sdk.NewIntFromString("73000000000000000000000")
+	defaultJunoxAmount, _ = sdk.NewIntFromString("73000000000")
 	defaultDenom0mount    = sdk.NewInt(10000000000)
 	desiredDenom0         = v16.DesiredDenom0
 	desiredDenom0Coin     = sdk.NewCoin(desiredDenom0, defaultDenom0mount)

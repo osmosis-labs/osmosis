@@ -1662,7 +1662,7 @@ func (s *IntegrationTestSuite) TestAConcentratedLiquidity_CanonicalPool_And_Para
 
 	s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
 	s.Require().Equal(v16.DesiredDenom0, concentratedPool.GetToken0())
-	s.Require().Equal(v16.DAIIBCDenom, concentratedPool.GetToken1())
+	s.Require().Equal(v16.JUNOXIBCDenom, concentratedPool.GetToken1())
 	s.Require().Equal(uint64(v16.TickSpacing), concentratedPool.GetTickSpacing())
 	s.Require().Equal(expectedSpreadReward.String(), concentratedPool.GetSpreadFactor(sdk.Context{}).String())
 
@@ -1692,7 +1692,7 @@ func (s *IntegrationTestSuite) TestAConcentratedLiquidity_CanonicalPool_And_Para
 
 	// This spot price is taken from the balancer pool that was initiated pre upgrade.
 	balancerDaiOsmoPool := s.updatedCFMMPool(chainANode, config.DaiOsmoPoolIdv16)
-	expectedSpotPrice, err := balancerDaiOsmoPool.SpotPrice(sdk.Context{}, v16.DAIIBCDenom, v16.DesiredDenom0)
+	expectedSpotPrice, err := balancerDaiOsmoPool.SpotPrice(sdk.Context{}, v16.JUNOXIBCDenom, v16.DesiredDenom0)
 	s.Require().NoError(err)
 
 	// Allow 0.01% margin of error.
