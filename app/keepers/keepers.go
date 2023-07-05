@@ -146,13 +146,11 @@ type AppKeepers struct {
 	// IBC modules
 	// transfer module
 	RawIcs20TransferAppModule transfer.AppModule
-	PacketFowardModule        packetforward.AppModule
-
-	RateLimitingICS4Wrapper *ibcratelimit.ICS4Wrapper
-	TransferStack           *ibchooks.IBCMiddleware
-	Ics20WasmHooks          *ibchooks.WasmHooks
-	HooksICS4Wrapper        ibchooks.ICS4Middleware
-	PacketForwardKeeper     *packetforwardkeeper.Keeper
+	RateLimitingICS4Wrapper   *ibcratelimit.ICS4Wrapper
+	TransferStack             *ibchooks.IBCMiddleware
+	Ics20WasmHooks            *ibchooks.WasmHooks
+	HooksICS4Wrapper          ibchooks.ICS4Middleware
+	PacketForwardKeeper       *packetforwardkeeper.Keeper
 
 	// keys to access the substores
 	keys    map[string]*sdk.KVStoreKey
@@ -258,9 +256,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.ICAHostKeeper = &icaHostKeeper
 
 	icaHostIBCModule := icahost.NewIBCModule(*appKeepers.ICAHostKeeper)
-
-	appKeepers.PacketFowardModule = packetforward.NewAppModule(appKeepers.PacketForwardKeeper)
-
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
