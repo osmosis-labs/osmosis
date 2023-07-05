@@ -146,6 +146,7 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
+		ctx.Logger().Info("funding community pool with 1 Junox")
 		err = keepers.DistrKeeper.FundCommunityPool(ctx, sdk.NewCoins(oneJunox), senderAcc)
 		if err != nil {
 			return nil, err
@@ -164,6 +165,7 @@ func CreateUpgradeHandler(
 
 		// Create a full range position via the community pool with the funds that were swapped.
 		fullRangeOsmoJunoxCoins := sdk.NewCoins(respectiveOsmo, oneJunox)
+		ctx.Logger().Info("creating full range position with community pool address")
 		_, actualOsmoAmtUsed, actualJunoxAmtUsed, _, err := keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeOsmoJunoxCoins)
 		if err != nil {
 			return nil, err
