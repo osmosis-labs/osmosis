@@ -6,18 +6,25 @@ on:
       - main
       - concentrated-liquidity-main
 
+env:
+  GO_VERSION: '1.20.5'
+
 jobs:
   golangci:
     name: Run golangci-lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - 
+      -
+        name: Check out repository code
+        uses: actions/checkout@v3
+      -
         name: 🐿 Setup Golang
         uses: actions/setup-go@v4
         with:
-          go-version: '^1.20'
-      - uses: technote-space/get-diff-action@v6.1.2
+          go-version: ${{env.GO_VERSION}}
+      -
+        uses: technote-space/get-diff-action@v6.1.2
+        if: env.GIT_DIFF
         with:
           PATTERNS: |
             **/**.go
@@ -25,46 +32,32 @@ jobs:
             go.sum
             .github/**
             Makefile
-      - name: Get data from build cache
-        uses: actions/cache@v3
-        with:
-          # In order:
-          # * Module download cache
-          # * Linter cache (Linux)
-          # * Build cache (Linux)
-          # * Build cache (Mac)
-          # * Build cache (Windows)
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/golangci-lint
-            ~/.cache/go-build
-            ~/Library/Caches/go-build
-            ~\AppData\Local\go-build
-          key: ${{ runner.os }}-go-linter-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-linter-${{ matrix.go-version }}-
+      -
+        name: Run golangci-lint
         if: env.GIT_DIFF
-      - name: Run golangci-lint
         run: make lint
-        if: env.GIT_DIFF
 
   documentation-linter:
     name: Run super-linter
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      -
+        name: Check out repository code
         uses: actions/checkout@v3
         with:
           # Full git history is needed to get a proper list of changed files
           # within `super-linter`.
           fetch-depth: 0
-      - uses: technote-space/get-diff-action@v6.1.2
+      -
+        name: Get git diff
+        uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
             **/**.md
             go.mod
             go.sum
             Makefile
-      - name: Run documentation linter
-        run: make mdlint
+      -
+        name: Run documentation linter
         if: env.GIT_DIFF
+        run: make mdlint

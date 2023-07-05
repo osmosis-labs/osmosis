@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types/genesis"
 )
 
 const (
@@ -62,33 +64,68 @@ func ParseTickFromBz(bz []byte) (tick model.TickInfo, err error) {
 		return model.TickInfo{}, errors.New("tick not found")
 	}
 	err = proto.Unmarshal(bz, &tick)
-	if err != nil {
-		return model.TickInfo{}, err
-	}
-
 	return tick, err
 }
 
-// ParseTickFromBzAndRemoveUnInitializedUptimeTrackers is an extension of ParseTickFromBz.
-// Due to how proto unmarshals empty lists or fields with nil values, we manually iterate over the uptime trackers list
-// and remove instances of empty fields.
-func ParseTickFromBzAndRemoveUnInitializedUptimeTrackers(bz []byte) (model.TickInfo, error) {
-	tick, err := ParseTickFromBz(bz)
+// ParseFullTickFromBytes takes key and value byte slices and attempts to parse
+// them into a FullTick struct. If the key or value is not valid, an appropriate
+// error is returned. The function expects the key to have three components
+// 1. The tick prefix (1 byte)
+// 2. The pool id (8 bytes)
+// 3. The tick index (1 byte for sign + 8 bytes for unsigned integer)
+//
+// The function returns a FullTick struct containing the pool id, tick index, and
+// tick information.
+//
+// Parameters:
+// - key ([]byte): A byte slice representing the key.
+// - value ([]byte): A byte slice representing the value.
+//
+// Returns:
+// - genesis.FullTick: A struct containing the parsed pool id, tick index, and tick information.
+// - error: An error if the key or value is not valid or if the parsing fails.
+func ParseFullTickFromBytes(key, value []byte) (tick genesis.FullTick, err error) {
+	if len(key) == 0 {
+		return genesis.FullTick{}, types.ErrKeyNotFound
+	}
+	if len(value) == 0 {
+		return genesis.FullTick{}, types.ValueNotFoundForKeyError{Key: key}
+	}
+
+	if len(key) != types.KeyTickLengthBytes {
+		return genesis.FullTick{}, types.InvalidTickKeyByteLengthError{Length: len(key)}
+	}
+
+	prefix := key[0:len(types.TickPrefix)]
+	if !bytes.Equal(types.TickPrefix, prefix) {
+		return genesis.FullTick{}, types.InvalidPrefixError{Actual: string(prefix), Expected: string(types.TickPrefix)}
+	}
+
+	key = key[len(types.TickPrefix):]
+
+	// We only care about the last 2 components, which are:
+	// - pool id
+	// - tick index
+	poolIdBytes := key[0:uint64Bytes]
+	poolId := sdk.BigEndianToUint64(poolIdBytes)
+
+	key = key[uint64Bytes:]
+
+	tickIndex, err := types.TickIndexFromBytes(key)
 	if err != nil {
-		return model.TickInfo{}, nil
+		return genesis.FullTick{}, err
 	}
 
-	newTickInfo := model.TickInfo{}
-	newTickInfo.LiquidityGross = tick.LiquidityGross
-	newTickInfo.LiquidityNet = tick.LiquidityNet
-	newTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal = tick.SpreadRewardGrowthOppositeDirectionOfLastTraversal
-	for _, list := range tick.UptimeTrackers.List {
-		if list.UptimeGrowthOutside.Len() != 0 {
-			newTickInfo.UptimeTrackers = tick.UptimeTrackers
-		}
+	tickValue, err := ParseTickFromBz(value)
+	if err != nil {
+		return genesis.FullTick{}, types.ValueParseError{Wrapped: err}
 	}
 
-	return newTickInfo, nil
+	return genesis.FullTick{
+		PoolId:    poolId,
+		TickIndex: tickIndex,
+		Info:      tickValue,
+	}, nil
 }
 
 // ParseIncentiveRecordBodyFromBz parses an IncentiveRecord from a byte array.

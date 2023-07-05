@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	types "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
@@ -141,6 +142,15 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		k.listeners.AfterInitialPoolPositionCreated(ctx, owner, poolId)
 	}
 
+	tokensAdded := sdk.Coins{}
+	if actualAmount0.IsPositive() {
+		tokensAdded = tokensAdded.Add(sdk.NewCoin(pool.GetToken0(), actualAmount0))
+	}
+	if actualAmount1.IsPositive() {
+		tokensAdded = tokensAdded.Add(sdk.NewCoin(pool.GetToken1(), actualAmount1))
+	}
+	k.RecordTotalLiquidityIncrease(ctx, tokensAdded)
+
 	return positionId, actualAmount0, actualAmount1, liquidityDelta, lowerTick, upperTick, nil
 }
 
@@ -170,7 +180,7 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return sdk.Int{}, sdk.Int{}, types.NotPositionOwnerError{PositionId: positionId, Address: owner.String()}
 	}
 
-	// Defense in depth, requestedLiquidityAmountToWithdraw should always be a positive value.
+	// Defense in depth, requestedLiquidityAmountToWithdraw should always be a value that is GE than 0.
 	if requestedLiquidityAmountToWithdraw.IsNegative() {
 		return sdk.Int{}, sdk.Int{}, types.InsufficientLiquidityError{Actual: requestedLiquidityAmountToWithdraw, Available: position.Liquidity}
 	}
@@ -193,21 +203,15 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	// Retrieve the position in the pool for the provided owner and tick range.
-	positionLiquidity, err := k.GetPositionLiquidity(ctx, positionId)
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, err
+	// Check if the requested liquidity amount to withdraw is less than or equal to the available liquidity for the position.
+	// If it is greater than the available liquidity, return an error.
+	if requestedLiquidityAmountToWithdraw.GT(position.Liquidity) {
+		return sdk.Int{}, sdk.Int{}, types.InsufficientLiquidityError{Actual: requestedLiquidityAmountToWithdraw, Available: position.Liquidity}
 	}
 
 	_, _, err = k.collectIncentives(ctx, owner, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
-	}
-
-	// Check if the requested liquidity amount to withdraw is less than or equal to the available liquidity for the position.
-	// If it is greater than the available liquidity, return an error.
-	if requestedLiquidityAmountToWithdraw.GT(positionLiquidity) {
-		return sdk.Int{}, sdk.Int{}, types.InsufficientLiquidityError{Actual: requestedLiquidityAmountToWithdraw, Available: positionLiquidity}
 	}
 
 	// Calculate the change in liquidity for the pool based on the requested amount to withdraw.
@@ -229,7 +233,7 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	// If the requested liquidity amount to withdraw is equal to the available liquidity, delete the position from state.
 	// Ensure we collect any outstanding spread factors and incentives prior to deleting the position from state. This claiming
 	// process also clears position records from spread factor and incentive accumulators.
-	if requestedLiquidityAmountToWithdraw.Equal(positionLiquidity) {
+	if requestedLiquidityAmountToWithdraw.Equal(position.Liquidity) {
 		if _, err := k.collectSpreadRewards(ctx, owner, positionId); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
@@ -261,6 +265,16 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 			k.listeners.AfterLastPoolPositionRemoved(ctx, owner, pool.GetId())
 		}
 	}
+
+	tokensRemoved := sdk.Coins{}
+	if actualAmount0.IsPositive() {
+		tokensRemoved = tokensRemoved.Add(sdk.NewCoin(pool.GetToken0(), actualAmount0))
+	}
+	if actualAmount1.IsPositive() {
+		tokensRemoved = tokensRemoved.Add(sdk.NewCoin(pool.GetToken1(), actualAmount1))
+	}
+	k.RecordTotalLiquidityDecrease(ctx, tokensRemoved)
+
 	event := &liquidityChangeEvent{
 		eventType:      types.TypeEvtWithdrawPosition,
 		positionId:     positionId,
@@ -467,7 +481,8 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 
 	// Calculate the spot price and sqrt price from the amount provided
 	initialSpotPrice := amount1Desired.ToDec().Quo(amount0Desired.ToDec())
-	initialCurSqrtPrice, err := initialSpotPrice.ApproxSqrt()
+	// TODO: any concerns with this being an sdk.Dec?
+	initialCurSqrtPrice, err := osmomath.MonotonicSqrt(initialSpotPrice)
 	if err != nil {
 		return err
 	}
@@ -487,7 +502,7 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	// However, there are ticks only at 100_000_000 X/Y and 100_000_100 X/Y.
 	// In such a case, we do not want to round the sqrt price to 100_000_000 X/Y, but rather
 	// let it float within the possible tick range.
-	pool.SetCurrentSqrtPrice(initialCurSqrtPrice)
+	pool.SetCurrentSqrtPrice(osmomath.BigDecFromSDKDec(initialCurSqrtPrice))
 	pool.SetCurrentTick(initialTick)
 	err = k.setPool(ctx, pool)
 	if err != nil {
@@ -515,7 +530,7 @@ func (k Keeper) uninitializePool(ctx sdk.Context, poolId uint64) error {
 		return types.UninitializedPoolWithLiquidityError{PoolId: poolId}
 	}
 
-	pool.SetCurrentSqrtPrice(sdk.ZeroDec())
+	pool.SetCurrentSqrtPrice(osmomath.ZeroDec())
 	pool.SetCurrentTick(0)
 
 	if err := k.setPool(ctx, pool); err != nil {

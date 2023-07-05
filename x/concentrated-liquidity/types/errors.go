@@ -6,6 +6,8 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 var (
@@ -189,9 +191,9 @@ func (e TokenOutDenomNotInPoolError) Error() string {
 }
 
 type SqrtPriceValidationError struct {
-	SqrtPriceLimit sdk.Dec
-	LowerBound     sdk.Dec
-	UpperBound     sdk.Dec
+	SqrtPriceLimit osmomath.BigDec
+	LowerBound     osmomath.BigDec
+	UpperBound     osmomath.BigDec
 }
 
 func (e SqrtPriceValidationError) Error() string {
@@ -280,7 +282,7 @@ func (e SpotPriceNegativeError) Error() string {
 }
 
 type SqrtPriceNegativeError struct {
-	ProvidedSqrtPrice sdk.Dec
+	ProvidedSqrtPrice osmomath.BigDec
 }
 
 func (e SqrtPriceNegativeError) Error() string {
@@ -839,4 +841,49 @@ type TickToSqrtPriceConversionError struct {
 
 func (e TickToSqrtPriceConversionError) Error() string {
 	return fmt.Sprintf("could not convert next tick  to nextSqrtPrice (%v)", e.NextTick)
+}
+
+type SwapNoProgressError struct {
+	PoolId           uint64
+	UserProvidedCoin sdk.Coin
+}
+
+func (e SwapNoProgressError) Error() string {
+	return fmt.Sprintf("ran out of iterations during swap. Possibly entered an infinite loop. Pool id (%d), user provided coin (%s)", e.PoolId, e.UserProvidedCoin)
+}
+
+type SwapNoProgressWithConsumptionError struct {
+	ComputedSqrtPrice osmomath.BigDec
+	AmountIn          sdk.Dec
+	AmountOut         sdk.Dec
+}
+
+func (e SwapNoProgressWithConsumptionError) Error() string {
+	return fmt.Sprintf("did not advance sqrt price after swap step %s, with amounts in (%s), out (%s)", e.ComputedSqrtPrice, e.AmountIn, e.AmountOut)
+}
+
+type SqrtPriceToTickError struct {
+	OutOfBounds bool
+}
+
+func (e SqrtPriceToTickError) Error() string {
+	return fmt.Sprintf("sqrt price to tick could not find a satisfying tick index. Hit bounds: %v", e.OutOfBounds)
+}
+
+type OverChargeSwapOutGivenInError struct {
+	AmountSpecifiedRemaining sdk.Dec
+}
+
+func (e OverChargeSwapOutGivenInError) Error() string {
+	return fmt.Sprintf("over charge problem swap out given in by (%s)", e.AmountSpecifiedRemaining)
+}
+  
+type ComputedSqrtPriceInequalityError struct {
+	IsZeroForOne                 bool
+	NextInitializedTickSqrtPrice osmomath.BigDec
+	ComputedSqrtPrice            osmomath.BigDec
+}
+
+func (e ComputedSqrtPriceInequalityError) Error() string {
+	return fmt.Sprintf("edge case has occurred when swapping at tick boundaries, with izZeroForOne (%t), NextInitializedTickSqrtPrice (%s), computedSqrtPrice (%s). Please try again with a different swap amount", e.IsZeroForOne, e.NextInitializedTickSqrtPrice, e.ComputedSqrtPrice)
 }

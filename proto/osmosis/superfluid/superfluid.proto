@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "osmosis/lockup/lock.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v16/x/superfluid/types";
 
@@ -81,3 +82,17 @@ message LockIdIntermediaryAccountConnection {
 }
 
 message UnpoolWhitelistedPools { repeated uint64 ids = 1; }
+
+message ConcentratedPoolUserPositionRecord {
+  string validator_address = 1;
+  uint64 position_id = 2;
+  uint64 lock_id = 3;
+  osmosis.lockup.SyntheticLock synthetic_lock = 4
+      [ (gogoproto.nullable) = false ];
+  cosmos.base.v1beta1.Coin delegation_amount = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+  cosmos.base.v1beta1.Coin equivalent_staked_amount = 6
+      [ (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin" ];
+}

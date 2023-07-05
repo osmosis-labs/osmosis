@@ -8,6 +8,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v16/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
@@ -15,8 +16,7 @@ import (
 
 func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 	defaultJoinTime := s.Ctx.BlockTime()
-	owner := s.TestAccs[0]
-	nonOwner := s.TestAccs[1]
+	owner, nonOwner := apptesting.CreateRandomAccounts(1)[0], apptesting.CreateRandomAccounts(1)[0]
 	type sendTest struct {
 		superfluidDelegated    bool
 		superfluidUndelegating bool
@@ -155,9 +155,16 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			}
 			s.Require().NoError(err)
 
-			// Define error tolerance
+			// We allow for an downward additive tolerance of 101 to accommodate our single happy path case while efficiently checking exact balance diffs.
+			//
+			// Using our full range asset amount equations, we get the following:
+			//
+			// expectedAsset0 = floor((liquidityDelta * (maxSqrtPrice - curSqrtPrice)) / (maxSqrtPrice * curSqrtPrice)) = 99999998.000000000000000000
+			// expectedAsset1 = floor(liquidityDelta * (curSqrtPrice - minSqrtPrice)) =  99999899.000000000000000000
+			//
+			// Note that the expected difference valid additive difference of 101 on asset 1.
 			var errTolerance osmomath.ErrTolerance
-			errTolerance.AdditiveTolerance = sdk.NewDec(1)
+			errTolerance.AdditiveTolerance = sdk.NewDec(101)
 			errTolerance.RoundingDir = osmomath.RoundDown
 
 			postAddToPositionStakeSupply := bankKeeper.GetSupply(ctx, bondDenom)

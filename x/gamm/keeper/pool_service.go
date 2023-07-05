@@ -70,7 +70,7 @@ func (k Keeper) InitializePool(ctx sdk.Context, pool poolmanagertypes.PoolI, sen
 	}
 
 	exitFee := cfmmPool.GetExitFee(ctx)
-	if !exitFee.Equal(sdk.ZeroDec()) {
+	if !exitFee.IsZero() {
 		return fmt.Errorf("can not create pool with non zero exit fee, got %d", exitFee)
 	}
 

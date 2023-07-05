@@ -8,10 +8,15 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
+type ExpectedGlobalRewardValues struct {
+	TotalSpreadRewards sdk.Coins
+	TotalIncentives    sdk.Coins
+}
+
 // assertGlobalInvariants asserts all available global invariants (i.e. invariants that should hold on all valid states).
 // Does not persist any changes to state.
-func (s *KeeperTestSuite) assertGlobalInvariants() {
-	s.assertTotalRewardsInvariant()
+func (s *KeeperTestSuite) assertGlobalInvariants(expectedGlobalRewardValues ExpectedGlobalRewardValues) {
+	s.assertTotalRewardsInvariant(expectedGlobalRewardValues)
 	s.assertWithdrawAllInvariant()
 }
 
@@ -31,8 +36,10 @@ func (s *KeeperTestSuite) getAllPositionsAndPoolBalances(ctx sdk.Context) ([]mod
 	for _, pool := range allPools {
 		clPool, ok := pool.(types.ConcentratedPoolExtension)
 		s.Require().True(ok)
-		totalPoolAssets = totalPoolAssets.Add(s.App.BankKeeper.GetAllBalances(ctx, clPool.GetAddress())...)
-		totalSpreadRewards = totalSpreadRewards.Add(s.App.BankKeeper.GetAllBalances(ctx, clPool.GetSpreadRewardsAddress())...)
+		totalPoolAssets = totalPoolAssets.Add(s.App.BankKeeper.GetBalance(ctx, clPool.GetAddress(), clPool.GetToken0()))
+		totalPoolAssets = totalPoolAssets.Add(s.App.BankKeeper.GetBalance(ctx, clPool.GetAddress(), clPool.GetToken1()))
+		totalSpreadRewards = totalSpreadRewards.Add(s.App.BankKeeper.GetBalance(ctx, clPool.GetSpreadRewardsAddress(), clPool.GetToken0()))
+		totalSpreadRewards = totalSpreadRewards.Add(s.App.BankKeeper.GetBalance(ctx, clPool.GetSpreadRewardsAddress(), clPool.GetToken1()))
 		totalIncentives = totalIncentives.Add(s.App.BankKeeper.GetAllBalances(ctx, clPool.GetIncentivesAddress())...)
 	}
 
@@ -48,9 +55,17 @@ func (s *KeeperTestSuite) getAllPositionsAndPoolBalances(ctx sdk.Context) ([]mod
 // 2. Claiming spread rewards and incentives for all positions in state empties all pool reward addresses except for rounding errors
 //
 // This function operates on cached context to avoid persisting any changes to state.
-func (s *KeeperTestSuite) assertTotalRewardsInvariant() {
+func (s *KeeperTestSuite) assertTotalRewardsInvariant(expectedGlobalRewardValues ExpectedGlobalRewardValues) {
 	// Get all positions and total pool balances across all CL pools in state
 	allPositions, initialTotalPoolLiquidity, expectedTotalSpreadRewards, expectedTotalIncentives := s.getAllPositionsAndPoolBalances(s.Ctx)
+
+	if expectedGlobalRewardValues.TotalSpreadRewards != nil {
+		expectedTotalSpreadRewards = expectedGlobalRewardValues.TotalSpreadRewards
+	}
+
+	if expectedGlobalRewardValues.TotalIncentives != nil {
+		expectedTotalIncentives = expectedGlobalRewardValues.TotalIncentives
+	}
 
 	// Switch to cached context to avoid persisting any changes to state
 	cachedCtx, _ := s.Ctx.CacheContext()
@@ -106,10 +121,15 @@ func (s *KeeperTestSuite) assertTotalRewardsInvariant() {
 	s.Require().Equal(initialTotalPoolLiquidity, finalTotalPoolLiquidity)
 
 	// Ensure total remaining spread rewards and incentives are exactly equal to loss due to rounding
-	roundingLossSpread := expectedTotalSpreadRewards.Sub(totalCollectedSpread)
-	s.Require().Equal(roundingLossSpread, remainingTotalSpreadRewards)
-	roundingLossIncentives := expectedTotalIncentives.Sub(totalCollectedIncentives)
-	s.Require().Equal(roundingLossIncentives, remainingTotalIncentives)
+	if expectedGlobalRewardValues.TotalSpreadRewards == nil {
+		roundingLossSpread := expectedTotalSpreadRewards.Sub(totalCollectedSpread)
+		s.Require().Equal(roundingLossSpread, remainingTotalSpreadRewards)
+	}
+
+	if expectedGlobalRewardValues.TotalIncentives == nil {
+		roundingLossIncentives := expectedTotalIncentives.Sub(totalCollectedIncentives)
+		s.Require().Equal(roundingLossIncentives, remainingTotalIncentives)
+	}
 
 	// Ensure no positions were deleted
 	s.Require().Equal(len(allPositions), len(remainingPositions))

@@ -35,8 +35,7 @@ func (s *KeeperTestSuite) AssertPositionsDoNotExist(positionIds []uint64) {
 		oldPositionName := string(types.KeyPositionId(positionId))
 		for _, uptimeAccum := range uptimeAccumulators {
 			// Check if the accumulator contains the position.
-			hasPosition, err := uptimeAccum.HasPosition(oldPositionName)
-			s.Require().NoError(err)
+			hasPosition := uptimeAccum.HasPosition(oldPositionName)
 			s.Require().False(hasPosition)
 		}
 
@@ -57,9 +56,7 @@ func (s *KeeperTestSuite) GetTotalAccruedRewardsByAccumulator(positionId uint64,
 	for i, uptimeAccum := range uptimeAccumulators {
 		newPositionName := string(types.KeyPositionId(positionId))
 		// Check if the accumulator contains the position.
-		hasPosition, err := uptimeAccum.HasPosition(newPositionName)
-		s.Require().NoError(err)
-
+		hasPosition := uptimeAccum.HasPosition(newPositionName)
 		if requireHasPosition {
 			s.Require().True(hasPosition)
 		}
@@ -296,8 +293,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			for uptimeIndex, uptime := range supportedUptimes {
 				// Position-related checks
 
-				recordExists, err := newUptimeAccums[uptimeIndex].HasPosition(positionName)
-				s.Require().NoError(err)
+				recordExists := newUptimeAccums[uptimeIndex].HasPosition(positionName)
 				s.Require().True(recordExists)
 
 				// Ensure position's record has correct values
@@ -313,7 +309,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				if test.positionExists {
 					// Track how much the current uptime accum has grown by
 					actualUptimeAccumDelta[uptimeIndex] = newUptimeAccumValues[uptimeIndex].Sub(initUptimeAccumValues[uptimeIndex])
-					if timeElapsedSec.GT(sdk.ZeroDec()) {
+					if timeElapsedSec.IsPositive() {
 						expectedGrowthCurAccum, _, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, uptime, test.param.liquidityDelta, timeElapsedSec, expectedIncentiveRecords)
 						s.Require().NoError(err)
 						expectedUptimeAccumValueGrowth[uptimeIndex] = expectedGrowthCurAccum
@@ -408,103 +404,6 @@ type positionOwnershipTest struct {
 
 	setupPositions []sdk.AccAddress
 	poolId         uint64
-}
-
-func (s *KeeperTestSuite) runIsPositionOwnerTest(test positionOwnershipTest) {
-	s.SetupTest()
-	p := s.PrepareConcentratedPool()
-	for i, owner := range test.setupPositions {
-		err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, p.GetId(), owner, DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, uint64(i))
-		s.Require().NoError(err)
-	}
-	err := s.App.ConcentratedLiquidityKeeper.EnsurePositionOwner(s.Ctx, test.queryPositionOwner, test.poolId, test.queryPositionId)
-	if test.expPass {
-		s.Require().NoError(err)
-	} else {
-		s.Require().Error(err)
-	}
-
-}
-
-func (s *KeeperTestSuite) TestIsPositionOwnerMultiPosition() {
-	tenAddrOneAddr := []sdk.AccAddress{}
-	for i := 0; i < 10; i++ {
-		tenAddrOneAddr = append(tenAddrOneAddr, s.TestAccs[0])
-	}
-	tenAddrOneAddr = append(tenAddrOneAddr, s.TestAccs[1])
-	tests := map[string]positionOwnershipTest{
-		"prefix malleability (prior bug)": {
-			queryPositionOwner: s.TestAccs[1],
-			queryPositionId:    1, expPass: false,
-			setupPositions: tenAddrOneAddr,
-		},
-		"things work": {
-			queryPositionOwner: s.TestAccs[1],
-			queryPositionId:    10, expPass: true,
-			setupPositions: tenAddrOneAddr,
-		},
-	}
-	for name, test := range tests {
-		s.Run(name, func() {
-			test.poolId = 1
-			s.runIsPositionOwnerTest(test)
-		})
-	}
-}
-
-func (s *KeeperTestSuite) TestIsPositionOwner() {
-	actualOwner := s.TestAccs[0]
-	nonOwner := s.TestAccs[1]
-
-	tests := []struct {
-		name         string
-		ownerToQuery sdk.AccAddress
-		poolId       uint64
-		positionId   uint64
-		isOwner      bool
-	}{
-		{
-			name:         "Happy path",
-			ownerToQuery: actualOwner,
-			poolId:       1,
-			positionId:   DefaultPositionId,
-			isOwner:      true,
-		},
-		{
-			name:         "query non owner",
-			ownerToQuery: nonOwner,
-			poolId:       1,
-			positionId:   DefaultPositionId,
-			isOwner:      false,
-		},
-		{
-			name:         "different pool ID, not the owner",
-			ownerToQuery: actualOwner,
-			poolId:       2,
-			positionId:   DefaultPositionId,
-			isOwner:      false,
-		},
-		{
-			name:         "different position ID, not the owner",
-			ownerToQuery: actualOwner,
-			poolId:       1,
-			positionId:   DefaultPositionId + 1,
-			isOwner:      false,
-		},
-	}
-
-	for _, test := range tests {
-		s.Run(test.name, func() {
-			s.runIsPositionOwnerTest(positionOwnershipTest{
-				queryPositionOwner: test.ownerToQuery,
-				queryPositionId:    test.positionId,
-				expPass:            test.isOwner,
-				// positions 0 and 1 are owned by actualOwner
-				setupPositions: []sdk.AccAddress{actualOwner, actualOwner},
-				poolId:         test.poolId,
-			})
-		})
-	}
 }
 
 func (s *KeeperTestSuite) TestGetUserPositions() {
@@ -1397,8 +1296,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimSpreadRewards(
 		hasPosition := s.clk.HasPosition(s.Ctx, oldPositionId)
 		s.Require().False(hasPosition)
 
-		hasSpreadRewardPositionTracker, err := spreadRewardAccum.HasPosition(types.KeySpreadRewardPositionAccumulator(oldPositionId))
-		s.Require().NoError(err)
+		hasSpreadRewardPositionTracker := spreadRewardAccum.HasPosition(types.KeySpreadRewardPositionAccumulator(oldPositionId))
 		s.Require().False(hasSpreadRewardPositionTracker)
 	}
 }
@@ -2429,6 +2327,8 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 	invalidCoin1Denom := sdk.NewCoins(DefaultCoin0, sdk.NewCoin("invalidDenom", sdk.NewInt(1000000000000000000)))
 	zeroCoins := sdk.NewCoins()
 
+	defaultRemainingLockDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
+
 	tests := []struct {
 		name                  string
 		remainingLockDuration time.Duration
@@ -2437,30 +2337,30 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 	}{
 		{
 			name:                  "valid test",
-			remainingLockDuration: 24 * time.Hour * 14,
+			remainingLockDuration: defaultRemainingLockDuration,
 			coinsForPosition:      DefaultCoins,
 		},
 		{
 			name:                  "invalid coin0 denom",
-			remainingLockDuration: 24 * time.Hour * 14,
+			remainingLockDuration: defaultRemainingLockDuration,
 			coinsForPosition:      invalidCoin0Denom,
 			expectedErr:           types.Amount0IsNegativeError{Amount0: sdk.ZeroInt()},
 		},
 		{
 			name:                  "invalid coin1 denom",
-			remainingLockDuration: 24 * time.Hour * 14,
+			remainingLockDuration: defaultRemainingLockDuration,
 			coinsForPosition:      invalidCoin1Denom,
 			expectedErr:           types.Amount1IsNegativeError{Amount1: sdk.ZeroInt()},
 		},
 		{
 			name:                  "invalid coins amount",
-			remainingLockDuration: 24 * time.Hour * 14,
+			remainingLockDuration: defaultRemainingLockDuration,
 			coinsForPosition:      invalidCoinsAmount,
 			expectedErr:           types.NumCoinsError{NumCoins: len(invalidCoinsAmount)},
 		},
 		{
 			name:                  "edge: both coins amounts' are zero",
-			remainingLockDuration: 24 * time.Hour * 14,
+			remainingLockDuration: defaultRemainingLockDuration,
 			coinsForPosition:      zeroCoins,
 			expectedErr:           types.NumCoinsError{NumCoins: 0},
 		},
@@ -2500,6 +2400,7 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 			// Check locked
 			concentratedLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, concentratedLockId)
 			s.Require().NoError(err)
+
 			s.Require().Equal(concentratedLock.Coins[0].Amount.String(), liquidity.TruncateInt().String())
 			s.Require().False(concentratedLock.IsUnlocking())
 		})
@@ -2540,11 +2441,17 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 		tickRanges      [][]int64
 		rangeTestParams RangeTestParams
 	}{
+		"one range, default params": {
+			tickRanges: [][]int64{
+				{0, 10000},
+			},
+			rangeTestParams: DefaultRangeTestParams,
+		},
 		"one min width range": {
 			tickRanges: [][]int64{
 				{0, 100},
 			},
-			rangeTestParams: DefaultRangeTestParams,
+			rangeTestParams: withTickSpacing(DefaultRangeTestParams, DefaultTickSpacing),
 		},
 		"two adjacent ranges": {
 			tickRanges: [][]int64{
@@ -2553,16 +2460,141 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 			},
 			rangeTestParams: DefaultRangeTestParams,
 		},
+		"two adjacent ranges with current tick smaller than both": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{10000, 20000},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, -20000),
+		},
+		"two adjacent ranges with current tick larger than both": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{10000, 20000},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, 30000),
+		},
+		"two adjacent ranges with current tick exactly on lower bound": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{10000, 20000},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, -10000),
+		},
+		"two adjacent ranges with current tick exactly between both": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{10000, 20000},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, 10000),
+		},
+		"two adjacent ranges with current tick exactly on upper bound": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{10000, 20000},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, 20000),
+		},
+		"two non-adjacent ranges": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{20000, 30000},
+			},
+			rangeTestParams: DefaultRangeTestParams,
+		},
+		"two ranges with one tick gap in between, which is equal to current tick": {
+			tickRanges: [][]int64{
+				{799221, 799997},
+				{799997 + 2, 812343},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, 799997+1),
+		},
 		"one range on large tick": {
 			tickRanges: [][]int64{
 				{207000000, 207000000 + 100},
 			},
+			rangeTestParams: withTickSpacing(DefaultRangeTestParams, DefaultTickSpacing),
+		},
+		"one position adjacent to left of current tick (no swaps)": {
+			tickRanges: [][]int64{
+				{-1, 0},
+			},
+			rangeTestParams: RangeTestParamsNoFuzzNoSwap,
+		},
+		"one position on left of current tick with gap (no swaps)": {
+			tickRanges: [][]int64{
+				{-2, -1},
+			},
+			rangeTestParams: RangeTestParamsNoFuzzNoSwap,
+		},
+		"one position adjacent to right of current tick (no swaps)": {
+			tickRanges: [][]int64{
+				{0, 1},
+			},
+			rangeTestParams: RangeTestParamsNoFuzzNoSwap,
+		},
+		"one position on right of current tick with gap (no swaps)": {
+			tickRanges: [][]int64{
+				{1, 2},
+			},
+			rangeTestParams: RangeTestParamsNoFuzzNoSwap,
 		},
 		"one range on small tick": {
 			tickRanges: [][]int64{
 				{-107000000, -107000000 + 100},
 			},
+			rangeTestParams: withDoubleFundedLP(DefaultRangeTestParams),
 		},
+		"one range on min tick": {
+			tickRanges: [][]int64{
+				{types.MinInitializedTick, types.MinInitializedTick + 100},
+			},
+			rangeTestParams: withDoubleFundedLP(DefaultRangeTestParams),
+		},
+		"initial current tick equal to min initialized tick": {
+			tickRanges: [][]int64{
+				{0, 1},
+			},
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, types.MinInitializedTick),
+		},
+		"three overlapping ranges with no swaps, current tick in one": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{0, 20000},
+				{-7300, 12345},
+			},
+			rangeTestParams: withNoSwap(withCurrentTick(DefaultRangeTestParams, -9000)),
+		},
+		"three overlapping ranges with no swaps, current tick in two of three": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{0, 20000},
+				{-7300, 12345},
+			},
+			rangeTestParams: withNoSwap(withCurrentTick(DefaultRangeTestParams, -7231)),
+		},
+		"three overlapping ranges with no swaps, current tick in all three": {
+			tickRanges: [][]int64{
+				{-10000, 10000},
+				{0, 20000},
+				{-7300, 12345},
+			},
+			rangeTestParams: withNoSwap(withCurrentTick(DefaultRangeTestParams, 109)),
+		},
+		/* TODO: uncomment when infinite loop bug is fixed
+		"one range on max tick": {
+			tickRanges: [][]int64{
+				{types.MaxTick - 100, types.MaxTick},
+			},
+			rangeTestParams: withTickSpacing(DefaultRangeTestParams, DefaultTickSpacing),
+		},
+		"initial current tick equal to max tick": {
+			tickRanges: [][]int64{
+				{0, 1},
+			},
+			rangeTestParams: withCurrentTick(withTickSpacing(DefaultRangeTestParams, uint64(1)), types.MaxTick),
+		},
+		*/
 	}
 
 	for name, tc := range tests {

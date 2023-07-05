@@ -8,17 +8,38 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
 )
 
 func (s *KeeperTestSuite) TestMigrate() {
-	defaultAccount := s.TestAccs[0]
+	defaultAccount := apptesting.CreateRandomAccounts(1)[0]
 	defaultGammShares := sdk.NewCoin("gamm/pool/1", sdk.MustNewDecFromStr("100000000000000000000").RoundInt())
 	invalidGammShares := sdk.NewCoin("gamm/pool/1", sdk.MustNewDecFromStr("190000000000000000001").RoundInt())
 	defaultAccountFunds := sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(200000000000)), sdk.NewCoin("usdc", sdk.NewInt(200000000000)))
+
+	// Explanation of additive tolerance of 100000:
+	//
+	// The balance in the CL pool should be equal to the portion of the user's previous GAMM balances that could be
+	// joined into a full range CL position. These are not exactly equivalent because GAMM pools covers prices (0, inf)
+	// while CL pools cover prices (minSpotPrice, maxSpotPrice), where minSpotPrice and maxSpotPrice are close to the GAMM
+	// boundaries but not exactly on them.
+	//
+	// # Base equations for full range asset amounts:
+	// Expected amount of asset 0: (liquidity * (maxSqrtPrice - curSqrtPrice)) / (maxSqrtPrice * curSqrtPrice)
+	// Expected amount of asset 1: liquidity * (curSqrtPrice - minSqrtPrice)
+	//
+	// # Using scripts in x/concentrated-liquidity/python/swap_test.py, we compute the following:
+	// expectedAsset0 = floor((liquidity * (maxSqrtPrice - curSqrtPrice)) / (maxSqrtPrice * curSqrtPrice)) = 99999999999.000000000000000000
+	// expectedAsset1 = floor(liquidity * (curSqrtPrice - minSqrtPrice)) = 99999900000.000000000000000000
+	//
+	// We add 1 to account for ExitPool rounding exit amount up. This is not an issue since the balance is deducted from the user regardless.
+	// These leaves us with full transfer of asset 0 and a (correct) transfer of asset 1 amounting to full GAMM balance minus 100000.
+	// We expect this tolerance to be sufficient as long as our test cases are on the same order of magnitude.
 	defaultErrorTolerance := osmomath.ErrTolerance{
-		AdditiveTolerance: sdk.NewDec(100),
+		AdditiveTolerance: sdk.NewDec(100000),
 		RoundingDir:       osmomath.RoundDown,
 	}
 	defaultJoinTime := s.Ctx.BlockTime()
@@ -162,8 +183,8 @@ func (s *KeeperTestSuite) TestMigrate() {
 
 		// Set up canonical link between balancer and cl pool
 		if test.setupPoolMigrationLink {
-			record := types.BalancerToConcentratedPoolLink{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()}
-			err = keeper.ReplaceMigrationRecords(s.Ctx, []types.BalancerToConcentratedPoolLink{record})
+			record := gammmigration.BalancerToConcentratedPoolLink{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()}
+			err = keeper.ReplaceMigrationRecords(s.Ctx, []gammmigration.BalancerToConcentratedPoolLink{record})
 			s.Require().NoError(err)
 		}
 
@@ -264,7 +285,7 @@ func (s *KeeperTestSuite) TestMigrate() {
 func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 	tests := []struct {
 		name                        string
-		testingMigrationRecords     []types.BalancerToConcentratedPoolLink
+		testingMigrationRecords     []gammmigration.BalancerToConcentratedPoolLink
 		overwriteBalancerDenom0     string
 		overwriteBalancerDenom1     string
 		createFourAssetBalancerPool bool
@@ -272,7 +293,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 	}{
 		{
 			name: "Non existent balancer pool",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{{
 				BalancerPoolId: 5,
 				ClPoolId:       3,
 			}},
@@ -280,7 +301,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 		},
 		{
 			name: "Non existent concentrated pool",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{{
 				BalancerPoolId: 1,
 				ClPoolId:       5,
 			}},
@@ -288,7 +309,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 		},
 		{
 			name: "Adding two of the same balancer pool id at once should error",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       3,
@@ -302,7 +323,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 		},
 		{
 			name: "Adding two of the same cl pool id at once should error",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       3,
@@ -316,7 +337,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 		},
 		{
 			name: "Normal case with two records",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       3,
@@ -330,7 +351,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 		},
 		{
 			name: "Try to set one of the BalancerPoolIds to a cl pool Id",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 2,
 					ClPoolId:       4,
@@ -344,7 +365,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 		},
 		{
 			name: "Try to set one of the ClPoolIds to a balancer pool Id",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 2,
 					ClPoolId:       1,
@@ -354,7 +375,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 		},
 		{
 			name: "Mismatch denom0 between the two pools",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       3,
@@ -365,7 +386,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 		},
 		{
 			name: "Mismatch denom1 between the two pools",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       3,
@@ -376,7 +397,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 		},
 		{
 			name: "Balancer pool has more than two tokens",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 5,
 					ClPoolId:       3,
@@ -439,8 +460,8 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 	tests := []struct {
 		name                        string
-		testingMigrationRecords     []types.BalancerToConcentratedPoolLink
-		expectedResultingRecords    []types.BalancerToConcentratedPoolLink
+		testingMigrationRecords     []gammmigration.BalancerToConcentratedPoolLink
+		expectedResultingRecords    []gammmigration.BalancerToConcentratedPoolLink
 		isPoolPrepared              bool
 		isPreexistingRecordsSet     bool
 		overwriteBalancerDenom0     string
@@ -450,7 +471,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 	}{
 		{
 			name: "Non existent balancer pool.",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{{
 				BalancerPoolId: 9,
 				ClPoolId:       6,
 			}},
@@ -459,7 +480,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Non existent concentrated pool.",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{{
 				BalancerPoolId: 1,
 				ClPoolId:       9,
 			}},
@@ -468,7 +489,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Adding two of the same balancer pool ids at once should error",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       6,
@@ -483,7 +504,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Adding two of the same cl pool ids at once should error",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       6,
@@ -498,7 +519,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Normal case with two records",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       6,
@@ -508,7 +529,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 					ClPoolId:       8,
 				},
 			},
-			expectedResultingRecords: []types.BalancerToConcentratedPoolLink{
+			expectedResultingRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       6,
@@ -527,7 +548,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Normal case with two records no preexisting records",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       6,
@@ -537,7 +558,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 					ClPoolId:       8,
 				},
 			},
-			expectedResultingRecords: []types.BalancerToConcentratedPoolLink{
+			expectedResultingRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       6,
@@ -552,7 +573,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Modify existing record, delete existing record, leave a record alone, add new record",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       6,
@@ -566,7 +587,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 					ClPoolId:       8,
 				},
 			},
-			expectedResultingRecords: []types.BalancerToConcentratedPoolLink{
+			expectedResultingRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       6,
@@ -585,7 +606,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Try to set one of the BalancerPoolIds to a cl pool Id",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 2,
 					ClPoolId:       4,
@@ -600,7 +621,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Try to set one of the ClPoolIds to a balancer pool Id",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 2,
 					ClPoolId:       1,
@@ -611,7 +632,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Mismatch denom0 between the two pools",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       6,
@@ -623,7 +644,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Mismatch denom1 between the two pools",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       6,
@@ -635,7 +656,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Balancer pool has more than two tokens",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 9,
 					ClPoolId:       6,
@@ -679,7 +700,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 
 			if test.isPreexistingRecordsSet {
 				// Set up existing records so we can update them
-				existingRecords := []types.BalancerToConcentratedPoolLink{
+				existingRecords := []gammmigration.BalancerToConcentratedPoolLink{
 					{
 						BalancerPoolId: 1,
 						ClPoolId:       5,

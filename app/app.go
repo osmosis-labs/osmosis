@@ -14,6 +14,7 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
@@ -459,7 +460,6 @@ func (app *OsmosisApp) customPreUpgradeHandler(upgradeInfo store.UpgradeInfo) {
 	switch upgradeInfo.Name {
 	case "v16":
 		// v16 upgrade handler
-		fmt.Println("Running v16 pre-upgrade handler")
 		// remove the wasm cache for cosmwasm cherry https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-002.md#wasm-module-cache-issue
 		err := os.RemoveAll(app.homePath + "/wasm/wasm/cache")
 		if err != nil {

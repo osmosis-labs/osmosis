@@ -143,7 +143,6 @@ func (s *KeeperTestSuite) TestGetPoolModule() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 			poolmanagerKeeper := s.App.PoolManagerKeeper
@@ -219,7 +218,6 @@ func (s *KeeperTestSuite) TestRouteGetPoolDenoms() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 			poolmanagerKeeper := s.App.PoolManagerKeeper
@@ -275,7 +273,10 @@ func (s *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 			quoteAssetDenom:      "eth",
 			baseAssetDenom:       "usdc",
 			setPositionForCLPool: true,
-			expectedSpotPrice:    sdk.MustNewDecFromStr("4999.999999999999999988"),
+			// We generate this value using the scripts in x/concentrated-liquidity/python
+			// Exact output: 5000.000000000000000129480272834995458481
+			// SDK Bankers rounded output: 5000.000000000000000129
+			expectedSpotPrice: sdk.MustNewDecFromStr("5000.000000000000000129"),
 		},
 		"valid concentrated liquidity pool without position": {
 			preCreatePoolType: types.Concentrated,

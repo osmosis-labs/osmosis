@@ -25,7 +25,7 @@ type lpTest struct {
 	joinTime                          time.Time
 	positionId                        uint64
 	underlyingLockId                  uint64
-	currentSqrtP                      sdk.Dec
+	currentSqrtP                      osmomath.BigDec
 	tokensProvided                    sdk.Coins
 	customTokensProvided              bool
 	amount0Minimum                    sdk.Int
@@ -159,25 +159,6 @@ var (
 			// Rounding up in favor of the pool.
 			amount0Expected: DefaultAmt0Expected.Add(roundingError),
 			amount1Expected: DefaultAmt1Expected,
-		},
-		"use ticks that are not the canonical tick for a given price, expect them to be rounded to the proper tick": {
-			lowerTick:         -161987600,
-			expectedLowerTick: -161000000,
-			upperTick:         -160009800,
-			expectedUpperTick: -160000000,
-			currentTick:       DefaultUpperTick,
-
-			isNotFirstPositionWithSameAccount: true,
-			positionId:                        2,
-
-			liquidityAmount:                        sdk.MustNewDecFromStr("15731321859400083838.506717486806808937").MulInt64(2),
-			preSetChargeSpreadRewards:              oneEth,
-			expectedSpreadRewardGrowthOutsideLower: oneEthCoins,
-			expectedSpreadRewardGrowthOutsideUpper: oneEthCoins,
-
-			// Rounding up in favor of the pool.
-			amount0Expected: sdk.ZeroInt(),
-			amount1Expected: DefaultAmt1,
 		},
 	}
 )
@@ -447,8 +428,20 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			setupConfig: baseCase,
 			sutConfigOverwrite: &lpTest{
 				// Note: subtracting one due to truncations in favor of the pool when withdrawing.
-				amount0Expected:  DefaultAmt0.Sub(sdk.OneInt()),
-				amount1Expected:  DefaultAmt1.Sub(sdk.OneInt()),
+				// amount0Expected = (liquidity * (sqrtPriceB - sqrtPriceA)) / (sqrtPriceB * sqrtPriceA)
+				// Where:
+				// * liquidity = FullRangeLiquidityAmt
+				// * sqrtPriceB = MaxSqrtPrice
+				// * sqrtPriceA = DefaultCurrSqrtPrice
+				// Exact calculation: https://www.wolframalpha.com/input?i=70710678.118654752940000000+*+%2810000000000000000000.000000000000000000+-+70.710678118654752440%29+%2F+%2810000000000000000000.000000000000000000+*+70.710678118654752440%29
+				amount0Expected: sdk.NewInt(999999),
+				// amount1Expected = liq * (sqrtPriceB - sqrtPriceA)
+				// Where:
+				// * liquidity = FullRangeLiquidityAmt
+				// * sqrtPriceB = DefaultCurrSqrtPrice
+				// * sqrtPriceA = MinSqrtPrice
+				// Exact calculation: https://www.wolframalpha.com/input?i=70710678.118654752940000000+*+%2870.710678118654752440+-+0.000001000000000000%29
+				amount1Expected:  sdk.NewInt(4999999929),
 				liquidityAmount:  FullRangeLiquidityAmt,
 				underlyingLockId: 1,
 			},
@@ -663,9 +656,6 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				s.Require().ErrorAs(err, &types.PositionIdNotFoundError{PositionId: config.positionId})
 				s.Require().Equal(clmodel.Position{}, position)
 
-				err = concentratedLiquidityKeeper.EnsurePositionOwner(s.Ctx, owner, config.poolId, config.positionId)
-				s.Require().Error(err, types.NotPositionOwnerError{PositionId: config.positionId, Address: owner.String()})
-
 				// Since the positionLiquidity is deleted, retrieving it should return an error.
 				positionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, config.positionId)
 				s.Require().Error(err)
@@ -769,7 +759,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			// system under test parameters
 			sutConfigOverwrite: &lpTest{
-				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio),
+				amount0Expected: DefaultAmt0Expected.Add(amount0PerfectRatio),
 				// Since we round on the other the asset when we withdraw, asset0 turns into the bottleneck and
 				// thus we cannot use the full amount of asset1. We calculate the below using the following formula and rounding up:
 				// amount1 = L * (sqrtPriceUpper - sqrtPriceLower)
@@ -803,7 +793,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			// system under test parameters
 			sutConfigOverwrite: &lpTest{
-				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio.QuoRaw(2)),
+				amount0Expected: DefaultAmt0Expected.Add(amount0PerfectRatio.QuoRaw(2)),
 				// Since we round on the other the asset when we withdraw, asset0 turns into the bottleneck and
 				// thus we cannot use the full amount of asset1. We calculate the below using the following formula and rounding up:
 				// amount1 = L * (sqrtPriceUpper - sqrtPriceLower)
@@ -838,8 +828,11 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 				// 1998976eth (amount withdrawn with rounded down amounts) + 998977(token amount in)
 				amount0Expected: sdk.NewInt(2997953),
 				// tokens Provided for token1 is 9999999999 (amount withdrawn) + 5000000000 = 14999999999usdc.
-				// we calcualte calc amount1 by using: https://www.wolframalpha.com/input?i=70.728769315114743567+*+212041526.154556192320661969
-				amount1Expected: sdk.NewInt(14997436189),
+				// We calculate calc amount1 by using the following equation:
+				// liq * (sqrtPriceB - sqrtPriceA), where liq is equal to the original joined liq + added liq, sqrtPriceB is current sqrt price, and sqrtPriceA is min sqrt price.
+				// Note that these numbers were calculated using `GetLiquidityFromAmounts` and `TickToSqrtPrice` and thus assume correctness of those functions.
+				// https://www.wolframalpha.com/input?i=212041526.154556192317664016+*+%2870.728769315114743566+-+0.000001000000000000%29
+				amount1Expected: sdk.NewInt(14997435977),
 			},
 			timeElapsed:  defaultTimeElapsed,
 			amount0ToAdd: amount0PerfectRatio,
@@ -989,7 +982,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			sutConfigOverwrite: &lpTest{
 				amount0Minimum: sdk.NewInt(1000000),
 				expectedError: types.InsufficientLiquidityCreatedError{
-					Actual: sdk.NewInt(1997954),
+					Actual: sdk.NewInt(1997954).Sub(roundingError),
 					//  minimum amount we have input becomes default amt 0 expected (from original position withdraw) + 1000000 (input)
 					Minimum:     DefaultAmt0Expected.Add(sdk.NewInt(1000000)),
 					IsTokenZero: true,
@@ -1138,7 +1131,15 @@ func (s *KeeperTestSuite) TestSingleSidedAddToPosition() {
 
 			// system under test parameters
 			sutConfigOverwrite: &lpTest{
-				amount0Expected: DefaultAmt0.Add(DefaultAmt0),
+				// calculated with x/concentrated-liquidity/python/clmath.py
+				// The input values are taken from debugger assumming the rest of the system is correct:
+				// sqrtPriceLowerTick = Decimal("1.000049998750062497000000000000000000")
+				// sqrtPriceUpperTick = Decimal("1.000099995000499938000000000000000000")
+				// liquidity = Decimal("20004500137.498290928785113714000000000000000000")
+				// calc_amount_zero_delta(liquidity, sqrtPriceLowerTick, sqrtPriceUpperTick, False)
+				// Decimal('999999.999999999999999999999957642595723576')
+				// The value above gets rounded down to DefaultAmt0.Sub(sdk.OneInt()). Then, we add DefaultAmt0.
+				amount0Expected: DefaultAmt0.Sub(sdk.OneInt()).Add(DefaultAmt0),
 				amount1Expected: sdk.ZeroInt(),
 				// current tick is 0, so create the position completely above it
 				lowerTick: 100,
@@ -1665,17 +1666,17 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 }
 
 func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
-	sqrt := func(x int64) sdk.Dec {
-		sqrt, err := sdk.NewDec(x).ApproxSqrt()
+	sqrt := func(x int64) osmomath.BigDec {
+		sqrt, err := osmomath.MonotonicSqrt(sdk.NewDec(x))
 		s.Require().NoError(err)
-		return sqrt
+		return osmomath.BigDecFromSDKDec(sqrt)
 	}
 
 	type sendTest struct {
 		amount0Desired        sdk.Int
 		amount1Desired        sdk.Int
 		tickSpacing           uint64
-		expectedCurrSqrtPrice sdk.Dec
+		expectedCurrSqrtPrice osmomath.BigDec
 		expectedTick          int64
 		expectedError         error
 	}
@@ -1912,7 +1913,7 @@ func (s *KeeperTestSuite) TestUninitializePool() {
 
 			actualSqrtPrice := pool.GetCurrentSqrtPrice()
 			actualTick := pool.GetCurrentTick()
-			s.Require().Equal(sdk.ZeroDec(), actualSqrtPrice)
+			s.Require().Equal(osmomath.ZeroDec(), actualSqrtPrice)
 			s.Require().Equal(int64(0), actualTick)
 		})
 	}

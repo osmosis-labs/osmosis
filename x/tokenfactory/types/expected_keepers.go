@@ -24,7 +24,7 @@ type BankKeeper interface {
 
 type AccountKeeper interface {
 	GetAccount(sdk.Context, sdk.AccAddress) authtypes.AccountI
-	SetModuleAccount(ctx sdk.Context, macc authtypes.ModuleAccountI)
+	GetModuleAccount(ctx sdk.Context, moduleName string) authtypes.ModuleAccountI
 }
 
 // BankHooks event hooks

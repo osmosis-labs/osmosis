@@ -193,3 +193,35 @@ func TestCollapseDecCoinsArray(t *testing.T) {
 		})
 	}
 }
+
+func TestConvertCoinsToDecCoins(t *testing.T) {
+	tests := []struct {
+		name             string
+		inputCoins       sdk.Coins
+		expectedDecCoins sdk.DecCoins
+	}{
+		{
+			name:             "Empty input",
+			inputCoins:       sdk.NewCoins(),
+			expectedDecCoins: sdk.NewDecCoins(),
+		},
+		{
+			name:             "Single coin",
+			inputCoins:       sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100000000))),
+			expectedDecCoins: sdk.NewDecCoins(sdk.NewDecCoin("atom", sdk.NewInt(100000000))),
+		},
+		{
+			name:             "Multiple coins",
+			inputCoins:       sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100000000)), sdk.NewCoin("usdc", sdk.NewInt(500000000))),
+			expectedDecCoins: sdk.NewDecCoins(sdk.NewDecCoin("atom", sdk.NewInt(100000000)), sdk.NewDecCoin("usdc", sdk.NewInt(500000000))),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result := osmoutils.ConvertCoinsToDecCoins(test.inputCoins)
+			require.Equal(t, result, test.expectedDecCoins)
+
+		})
+	}
+}

@@ -118,10 +118,6 @@ func (k Keeper) CollectSpreadRewards(ctx sdk.Context, owner sdk.AccAddress, posi
 	return k.collectSpreadRewards(ctx, owner, positionId)
 }
 
-func (k Keeper) EnsurePositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, positionId uint64) error {
-	return k.ensurePositionOwner(ctx, sender, poolId, positionId)
-}
-
 func (k Keeper) PrepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
 	return k.prepareClaimableSpreadRewards(ctx, positionId)
 }
@@ -164,10 +160,6 @@ func (k Keeper) PositionHasActiveUnderlyingLockAndUpdate(ctx sdk.Context, positi
 
 func (k Keeper) UpdateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, liquidity sdk.Dec) error {
 	return k.updateFullRangeLiquidityInPool(ctx, poolId, liquidity)
-}
-
-func (k Keeper) MintSharesAndLock(ctx sdk.Context, concentratedPoolId, positionId uint64, owner sdk.AccAddress, remainingLockDuration time.Duration) (concentratedLockID uint64, underlyingLiquidityTokenized sdk.Coins, err error) {
-	return k.mintSharesAndLock(ctx, concentratedPoolId, positionId, owner, remainingLockDuration)
 }
 
 func (k Keeper) SetPositionIdToLock(ctx sdk.Context, positionId, underlyingLockId uint64) {

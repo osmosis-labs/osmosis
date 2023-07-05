@@ -290,6 +290,21 @@ func (mr *MockPoolModuleIMockRecorder) GetPools(ctx interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPools", reflect.TypeOf((*MockPoolModuleI)(nil).GetPools), ctx)
 }
 
+// GetTotalLiquidity mocks base method.
+func (m *MockPoolModuleI) GetTotalLiquidity(ctx types.Context) (types.Coins, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTotalLiquidity", ctx)
+	ret0, _ := ret[0].(types.Coins)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTotalLiquidity indicates an expected call of GetTotalLiquidity.
+func (mr *MockPoolModuleIMockRecorder) GetTotalLiquidity(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalLiquidity", reflect.TypeOf((*MockPoolModuleI)(nil).GetTotalLiquidity), ctx)
+}
+
 // GetTotalPoolLiquidity mocks base method.
 func (m *MockPoolModuleI) GetTotalPoolLiquidity(ctx types.Context, poolId uint64) (types.Coins, error) {
 	m.ctrl.T.Helper()

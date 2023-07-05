@@ -1,9 +1,16 @@
 package e2e
 
 import (
+	"os"
+	"path/filepath"
+	"strconv"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/util"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
@@ -55,6 +62,13 @@ func (s *IntegrationTestSuite) addrBalance(node *chain.NodeConfig, address strin
 	return addrBalances
 }
 
+func (s *IntegrationTestSuite) getChainACfgs() (*chain.Config, *chain.NodeConfig) {
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+	return chainA, chainANode
+}
+
 // Helper function for calculating uncollected spread rewards since the time that spreadRewardGrowthInsideLast corresponds to
 // positionLiquidity - current position liquidity
 // spreadRewardGrowthBelow - spread reward growth below lower tick
@@ -91,4 +105,52 @@ func (s *IntegrationTestSuite) validateCLPosition(position model.Position, poolI
 	s.Require().Equal(position.PoolId, poolId)
 	s.Require().Equal(position.LowerTick, lowerTick)
 	s.Require().Equal(position.UpperTick, upperTick)
+}
+
+// CheckBalance Checks the balance of an address
+func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr, denom string, amount int64) {
+	// check the balance of the contract
+	s.Require().Eventually(func() bool {
+		// TODO: Change to QueryBalance(addr, denom)
+		balance, err := node.QueryBalances(addr)
+		s.Require().NoError(err)
+		if len(balance) == 0 {
+			return false
+		}
+		// check that the amount is in one of the balances inside the balance list
+		for _, b := range balance {
+			if b.Denom == denom && b.Amount.Int64() == amount {
+				return true
+			}
+		}
+		return false
+	},
+		2*time.Minute,
+		10*time.Millisecond,
+	)
+}
+
+func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) string {
+	// copy the contract from tests/ibc-hooks/bytecode
+	wd, err := os.Getwd()
+	s.NoError(err)
+	// co up two levels
+	projectDir := filepath.Dir(filepath.Dir(wd))
+	_, err = util.CopyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
+	s.NoError(err)
+	node, err := s.configurer.GetChainConfig(0).GetNodeAtIndex(0)
+	s.NoError(err)
+
+	codeId := node.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
+	chain.LatestCodeId++
+	node.InstantiateWasmContract(
+		strconv.Itoa(codeId),
+		`{"count": 0}`,
+		initialization.ValidatorWalletName)
+
+	contracts, err := node.QueryContractsFromId(codeId)
+	s.NoError(err)
+	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
+	contractAddr := contracts[0]
+	return contractAddr
 }

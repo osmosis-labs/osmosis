@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
@@ -17,29 +18,14 @@ import (
 )
 
 const validPoolId = 1
-const defaultTickIndex = 1
-
-var (
-	defaultTickInfo = model.TickInfo{
-		LiquidityGross: DefaultLiquidityAmt,
-		LiquidityNet:   DefaultLiquidityAmt,
-		SpreadRewardGrowthOppositeDirectionOfLastTraversal: DefaultSpreadRewardAccumCoins,
-		UptimeTrackers: model.UptimeTrackers{List: wrapUptimeTrackers(getExpectedUptimes().hundredTokensMultiDenom)},
-	}
-
-	defaultTick = genesis.FullTick{
-		TickIndex: defaultTickIndex,
-		Info:      defaultTickInfo,
-	}
-
-	defaultTickWithoutPoolId = genesis.FullTick{
-		TickIndex: defaultTickIndex,
-		Info:      defaultTickInfo,
-	}
-)
 
 func withTickIndex(tick genesis.FullTick, tickIndex int64) genesis.FullTick {
 	tick.TickIndex = tickIndex
+	return tick
+}
+
+func withPoolId(tick genesis.FullTick, poolId uint64) genesis.FullTick {
+	tick.PoolId = poolId
 	return tick
 }
 
@@ -612,7 +598,6 @@ func (s *KeeperTestSuite) TestCrossTick() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			// Init suite for each test.
 			s.SetupTest()
 
 			// Create a default CL pool
@@ -708,6 +693,8 @@ func (s *KeeperTestSuite) TestCrossTick() {
 }
 
 func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
+	defaultTick := withPoolId(defaultTick, defaultPoolId)
+
 	tests := []struct {
 		name        string
 		presetTicks []genesis.FullTick
@@ -847,9 +834,9 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 			s.SetupTest()
 
 			// Create a default CL pool
-			pool := s.PrepareConcentratedPool()
+			s.PrepareConcentratedPool()
 			for _, tick := range test.presetTicks {
-				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, pool.GetId(), tick.TickIndex, &tick.Info)
+				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, &tick.Info)
 			}
 
 			liquidityForRange, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityForFullRange(s.Ctx, defaultPoolId)
@@ -860,6 +847,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 }
 
 func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
+	defaultTick := withPoolId(defaultTick, defaultPoolId)
+
 	tests := []struct {
 		name        string
 		presetTicks []genesis.FullTick
@@ -1210,7 +1199,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:        defaultPoolId,
 			tokenIn:       ETH,
-			boundTick:     sdk.NewInt(DefaultMinTick - 1),
+			boundTick:     sdk.NewInt(DefaultMinCurrentTick - 1),
 			expectedError: true,
 		},
 		{
@@ -1252,7 +1241,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			// Create a default CL pool
 			pool := s.PrepareConcentratedPool()
 			for _, tick := range test.presetTicks {
-				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, test.poolId, tick.TickIndex, &tick.Info)
+				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, &tick.Info)
 			}
 
 			// Force initialize current sqrt price to 1.
@@ -1261,16 +1250,17 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			curPrice := sdk.OneDec()
 			// TODO: consider adding tests for GetTickLiquidityNetInDirection
 			// with tick spacing > 1, requiring price to tick conversion with rounding.
-			curTick, err := s.PriceToTick(curPrice)
+			curTick, err := math.CalculateSqrtPriceToTick(osmomath.BigDecFromSDKDec(osmomath.MustMonotonicSqrt(curPrice)))
 			s.Require().NoError(err)
+			var curSqrtPrice osmomath.BigDec = osmomath.OneDec()
 			if test.currentPoolTick > 0 {
 				_, sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)
 				s.Require().NoError(err)
 
 				curTick = test.currentPoolTick
-				curPrice = sqrtPrice
+				curSqrtPrice = osmomath.BigDecFromSDKDec(sqrtPrice)
 			}
-			pool.SetCurrentSqrtPrice(curPrice)
+			pool.SetCurrentSqrtPrice(curSqrtPrice)
 			pool.SetCurrentTick(curTick)
 
 			err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
@@ -1401,92 +1391,6 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 				s.Require().ErrorContains(err, test.expectedError.Error())
 			} else {
 				s.Require().NoError(err)
-			}
-		})
-	}
-}
-
-func (s *KeeperTestSuite) TestRoundTickToCanonicalPriceTick() {
-	tests := []struct {
-		name                 string
-		lowerTick            int64
-		upperTick            int64
-		expectedNewLowerTick int64
-		expectedNewUpperTick int64
-		expectedError        error
-	}{
-		{
-			name:                 "exact upper tick for 0.000000000000000003 to exact lower tick for 0.000000000000000002",
-			lowerTick:            -161000000,
-			expectedNewLowerTick: -161000000,
-			upperTick:            -160000000,
-			expectedNewUpperTick: -160000000,
-		},
-		{
-			name:                 "exact upper tick for 0.000000000000000003 to inexact lower tick for 0.000000000000000002",
-			lowerTick:            -161001234,
-			expectedNewLowerTick: -161000000,
-			upperTick:            -160000000,
-			expectedNewUpperTick: -160000000,
-		},
-		{
-			name:                 "inexact upper tick for 0.000000000000000003 to exact lower tick for 0.000000000000000002",
-			lowerTick:            -161000000,
-			expectedNewLowerTick: -161000000,
-			upperTick:            -160001234,
-			expectedNewUpperTick: -160000000,
-		},
-		{
-			name:                 "inexact upper tick for 0.000000000000000003 to inexact lower tick for 0.000000000000000002",
-			lowerTick:            -161001234,
-			expectedNewLowerTick: -161000000,
-			upperTick:            -160001234,
-			expectedNewUpperTick: -160000000,
-		},
-		{
-			name:                 "upper tick one tick away from lower tick",
-			lowerTick:            -161001234,
-			expectedNewLowerTick: -161000000,
-			upperTick:            -160999999,
-			expectedNewUpperTick: -160000000,
-		},
-		{
-			name:                 "error: new upper tick is lower than new lower tick",
-			lowerTick:            -160001234,
-			expectedNewLowerTick: -160000000,
-			upperTick:            -161001234,
-			expectedNewUpperTick: -161000000,
-			expectedError:        types.InvalidLowerUpperTickError{LowerTick: -160000000, UpperTick: -161000000},
-		},
-		{
-			name:                 "error: new upper tick is the same as new lower tick",
-			lowerTick:            -160001234,
-			expectedNewLowerTick: -160000000,
-			upperTick:            -160000000,
-			expectedNewUpperTick: -160000000,
-			expectedError:        types.InvalidLowerUpperTickError{LowerTick: -160000000, UpperTick: -160000000},
-		},
-	}
-
-	for _, test := range tests {
-		s.Run(test.name, func() {
-			s.SetupTest()
-
-			_, sqrtPriceTickLower, err := math.TickToSqrtPrice(test.lowerTick)
-			s.Require().NoError(err)
-			_, sqrtPriceTickUpper, err := math.TickToSqrtPrice(test.upperTick)
-			s.Require().NoError(err)
-
-			// System Under Test
-			newLowerTick, newUpperTick, err := cl.RoundTickToCanonicalPriceTick(test.lowerTick, test.upperTick, sqrtPriceTickLower, sqrtPriceTickUpper, DefaultTickSpacing)
-
-			if test.expectedError != nil {
-				s.Require().Error(err)
-				s.Require().ErrorContains(err, test.expectedError.Error())
-			} else {
-				s.Require().NoError(err)
-				s.Require().Equal(test.expectedNewLowerTick, newLowerTick)
-				s.Require().Equal(test.expectedNewUpperTick, newUpperTick)
 			}
 		})
 	}

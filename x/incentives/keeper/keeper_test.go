@@ -8,7 +8,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v16/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v16/x/incentives/types"
 )
 
 type KeeperTestSuite struct {
@@ -44,4 +46,11 @@ func (s *KeeperTestSuite) ValidateDistributedGauge(gaugeID uint64, expectedFille
 // ValidateNotDistributedGauge checks that the gauge is not updated after distribution
 func (s *KeeperTestSuite) ValidateNotDistributedGauge(gaugeID uint64) {
 	s.ValidateDistributedGauge(gaugeID, 0, sdk.Coins(nil))
+}
+
+func (s *KeeperTestSuite) ValidateIncentiveRecord(poolId uint64, remainingCoin sdk.DecCoin, emissionRate sdk.Dec, incentiveRecord cltypes.IncentiveRecord) {
+	s.Require().Equal(poolId, incentiveRecord.PoolId)
+	s.Require().Equal(emissionRate, incentiveRecord.GetIncentiveRecordBody().EmissionRate)
+	s.Require().Equal(types.DefaultConcentratedUptime, incentiveRecord.MinUptime)
+	s.Require().Equal(remainingCoin, incentiveRecord.GetIncentiveRecordBody().RemainingCoin)
 }
