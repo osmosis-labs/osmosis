@@ -596,12 +596,12 @@ func (k Keeper) computeInAmtGivenOut(
 }
 
 func emitSwapDebugLogs(ctx sdk.Context, swapState SwapState, reachedPrice osmomath.BigDec, amountIn, amountOut, spreadCharge sdk.Dec) {
-	ctx.Logger().Debug("start sqrt price", swapState.sqrtPrice)
-	ctx.Logger().Debug("reached sqrt price", reachedPrice)
-	ctx.Logger().Debug("liquidity", swapState.liquidity)
-	ctx.Logger().Debug("amountIn", amountIn)
-	ctx.Logger().Debug("amountOut", amountOut)
-	ctx.Logger().Debug("spreadRewardChargeTotal", spreadCharge)
+	fmt.Println("start sqrt price", swapState.sqrtPrice)
+	fmt.Println("reached sqrt price", reachedPrice)
+	fmt.Println("liquidity", swapState.liquidity)
+	fmt.Println("amountIn", amountIn)
+	fmt.Println("amountOut", amountOut)
+	fmt.Println("spreadRewardChargeTotal", spreadCharge)
 }
 
 // logic for crossing a tick during a swap
