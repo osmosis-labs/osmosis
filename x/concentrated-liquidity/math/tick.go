@@ -75,7 +75,7 @@ func TickToPrice(tickIndex int64) (price sdk.Dec, err error) {
 
 	// Check that the tick index is between min and max value
 	if tickIndex < types.MinCurrentTick {
-		return sdk.Dec{}, types.TickIndexMinimumError{MinTick: types.MinInitializedTick}
+		return sdk.Dec{}, types.TickIndexMinimumError{MinTick: types.MinCurrentTick}
 	}
 	if tickIndex > types.MaxTick {
 		return sdk.Dec{}, types.TickIndexMaximumError{MaxTick: types.MaxTick}
