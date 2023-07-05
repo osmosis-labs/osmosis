@@ -1107,13 +1107,11 @@ func (s *KeeperTestSuite) IncentivizeInternalGauge(poolIds []uint64, epochDurati
 		weight = sdk.ZeroInt()
 	}
 
-	var gaugeIds []uint64
 	var poolIncentiveRecords []poolincentivetypes.DistrRecord
 	for _, poolId := range poolIds {
 		gaugeIdForPoolId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, poolId, epochDuration)
 		s.Require().NoError(err)
 
-		gaugeIds = append(gaugeIds, gaugeIdForPoolId)
 		poolIncentiveRecords = append(poolIncentiveRecords, poolincentivetypes.DistrRecord{
 			GaugeId: gaugeIdForPoolId,
 			Weight:  weight,
