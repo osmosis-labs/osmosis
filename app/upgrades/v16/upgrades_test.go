@@ -91,18 +91,18 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				stakingParams.BondDenom = "uosmo"
 				suite.App.StakingKeeper.SetParams(suite.Ctx, stakingParams)
 
-				oneDai := sdk.NewCoins(sdk.NewCoin(v16.DAIIBCDenom, sdk.NewInt(1000000000000000000)))
+				oneJunox := sdk.NewCoins(sdk.NewCoin(v16.DAIIBCDenom, sdk.NewInt(1000000000000000000)))
 
 				// Send one dai to the community pool (this is true in current mainnet)
-				suite.FundAcc(suite.TestAccs[0], oneDai)
+				suite.FundAcc(suite.TestAccs[0], oneJunox)
 
-				err := suite.App.DistrKeeper.FundCommunityPool(suite.Ctx, oneDai, suite.TestAccs[0])
+				err := suite.App.DistrKeeper.FundCommunityPool(suite.Ctx, oneJunox, suite.TestAccs[0])
 				suite.Require().NoError(err)
 
 				// Determine approx how much OSMO will be used from community pool when 1 DAI used.
 				daiOsmoGammPool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, v16.DaiOsmoPoolId)
 				suite.Require().NoError(err)
-				respectiveOsmo, err := suite.App.GAMMKeeper.CalcOutAmtGivenIn(suite.Ctx, daiOsmoGammPool, oneDai[0], v16.DesiredDenom0, sdk.ZeroDec())
+				respectiveOsmo, err := suite.App.GAMMKeeper.CalcOutAmtGivenIn(suite.Ctx, daiOsmoGammPool, oneJunox[0], v16.DesiredDenom0, sdk.ZeroDec())
 				suite.Require().NoError(err)
 
 				// Retrieve the community pool balance before the upgrade
@@ -121,7 +121,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				// Validate that the community pool balance has been reduced by the amount of OSMO that was used to create the pool
 				// Note we use all the osmo, but a small amount of DAI is left over due to rounding when creating the first position.
 				suite.Require().Equal(communityPoolBalancePre.AmountOf("uosmo").Sub(respectiveOsmo.Amount).String(), communityPoolBalancePost.AmountOf("uosmo").String())
-				suite.Require().Equal(0, multiplicativeTolerance.Compare(communityPoolBalancePre.AmountOf(v16.DAIIBCDenom), oneDai[0].Amount.Sub(communityPoolBalancePost.AmountOf(v16.DAIIBCDenom))))
+				suite.Require().Equal(0, multiplicativeTolerance.Compare(communityPoolBalancePre.AmountOf(v16.DAIIBCDenom), oneJunox[0].Amount.Sub(communityPoolBalancePost.AmountOf(v16.DAIIBCDenom))))
 
 				// Validate that the fee pool community pool balance has been decreased by the amount of OSMO/DAI that was used to create the pool
 				suite.Require().Equal(communityPoolBalancePost.AmountOf("uosmo").String(), feePoolCommunityPoolPost.AmountOf("uosmo").TruncateInt().String())
