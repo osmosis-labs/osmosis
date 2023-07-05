@@ -102,8 +102,6 @@ func NewCreateGaugeCmd() *cobra.Command {
 				distributeTo = lockuptypes.QueryCondition{
 					LockQueryType: lockuptypes.NoLock,
 				}
-			} else {
-				return fmt.Errorf("Invalid Pool Id")
 			}
 
 			msg := types.NewMsgCreateGauge(
