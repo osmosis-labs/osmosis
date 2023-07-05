@@ -17,7 +17,7 @@ const (
 	tickSpacing100 = 100
 )
 
-// This configuratio is expected to generate the position layout below:
+// This configuration is expected to generate the position layout below:
 //
 //	                                 original_cur_tick
 //		                                    ///               (NR4)
@@ -30,7 +30,7 @@ var (
 	defaultTickSpacingsAway = []uint64{4, 3, 2, 1}
 
 	// this is chosen arbitrarily to allow tests to pass. Thee tests in this suite do not
-	// intend to validate the correctness of the slippage bound. As a result, it irrelevant here
+	// intend to validate the correctness of the slippage bound. As a result, it is irrelevant here
 	// and we can choose any value that works.
 	defaultTokenInMaxAmount = sdk.MustNewDecFromStr("707106781186547528576662335").TruncateInt()
 )
@@ -1042,7 +1042,7 @@ func (s *KeeperTestSuite) TestSwaps_Contiguous_Initialized_TickSpacingOne() {
 		return expectedSwapEndTicks
 	}
 
-	// computeExpectedValuesForTestOneForZero returns the tick to swap to during estimate computation and amountIn multiplier.
+	// computeNextTickToReachAndMultiplier returns the tick to swap to during estimate computation and amountIn multiplier.
 	// It most cases, the tick to swap to is the same as the expected tick to reach after the swap and the multiplier is 1.
 	// The only exception is when performing a second swap in the same direction within the same tick.
 	// In such a case, we need to run our estimate logic one tick further to ensure that our estimate is non-zero.
