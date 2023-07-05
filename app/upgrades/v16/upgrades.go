@@ -139,21 +139,9 @@ func CreateUpgradeHandler(
 		communityPoolAddress := keepers.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
 		ctx.Logger().Info(fmt.Sprintf("communityPoolAddress: %s", communityPoolAddress.String()))
 
-		// Fund the community pool with 1 Junox.
-		// MODIFIED FROM MAINNET THIS STEP DOESNT EXIST SINCE THE DAI IS ALREADY IN THE COMMUNITY POOL
-		oneJunox := sdk.NewCoin(JUNOXIBCDenom, sdk.NewInt(1000000))
-		senderAcc, err := sdk.AccAddressFromBech32("osmo1hexs687afngu85gzumg90g5azmq09fq4yz2xhz")
-		if err != nil {
-			return nil, err
-		}
-		ctx.Logger().Info("funding community pool with 1 Junox")
-		err = keepers.DistrKeeper.FundCommunityPool(ctx, sdk.NewCoins(oneJunox), senderAcc)
-		if err != nil {
-			return nil, err
-		}
-
 		// Determine the amount of OSMO that can be bought with 1 Junox.
 		// MODIFIED FROM MAINNET 1 DAI
+		oneJunox := sdk.NewCoin(JUNOXIBCDenom, sdk.NewInt(1000000))
 		junoxOsmoGammPool, err := keepers.PoolManagerKeeper.GetPool(ctx, JunoxOsmoPoolId)
 		if err != nil {
 			return nil, err
