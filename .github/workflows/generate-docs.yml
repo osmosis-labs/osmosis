@@ -1,54 +1,47 @@
-name: Generate Docs
+name: Update Docs
 
-on: 
+on:
   workflow_dispatch:
 
 jobs:
-  generate-docs:
+  update-docs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+    - name: Check out code
+      uses: actions/checkout@v3
 
-    - name: Setup Go
-      uses: actions/setup-go@v4
+    - name: Set up Go
+      uses: actions/setup-go@v2
       with:
-        go-version: 1.20
+        go-version: 1.18 
 
-    - name: Install yq
+    - name: Install Protoc
       run: |
-        sudo wget https://github.com/mikefarah/yq/releases/download/v4.6.1/yq_linux_amd64 -O /usr/bin/yq
-        sudo chmod +x /usr/bin/yq
-
-    - name: Install protobuf compiler
-      run: |
+        sudo apt-get update -y
         sudo apt-get install -y protobuf-compiler
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '14'
-
-    - name: Run the script
-      run: bash ./scripts/generate-docs.sh
-
-    - name: Commit files
+    - name: Install Protoc-gen-swagger
       run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add -A
-        git commit -m "Add changes" || exit 0  
+        go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@latest
 
-    - name: Push changes
-      uses: ad-m/github-push-action@master
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Install Statik
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y golang-statik
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Run make docs
+      run: |
+        make docs
 
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v5
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        title: "Generated docs updates"
-        body: "Updates to generated docs"
-        branch: "generate-docs-updates"
+        commit-message: Update docs
+        title: 'Update docs'
+        body: 'Update docs'
+        branch: 'docs-update-branch'
