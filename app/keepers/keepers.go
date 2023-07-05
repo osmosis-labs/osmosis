@@ -46,6 +46,8 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
+	icqkeeper "github.com/strangelove-ventures/async-icq/v4/keeper"
+
 	downtimedetector "github.com/osmosis-labs/osmosis/v15/x/downtime-detector"
 	downtimetypes "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/types"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit"
@@ -56,7 +58,6 @@ import (
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
-	icqkeeper "github.com/strangelove-ventures/async-icq/v4/keeper"
 
 	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v4/router"
 	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v4/router/keeper"
@@ -145,11 +146,13 @@ type AppKeepers struct {
 	// IBC modules
 	// transfer module
 	RawIcs20TransferAppModule transfer.AppModule
-	RateLimitingICS4Wrapper   *ibcratelimit.ICS4Wrapper
-	TransferStack             *ibchooks.IBCMiddleware
-	Ics20WasmHooks            *ibchooks.WasmHooks
-	HooksICS4Wrapper          ibchooks.ICS4Middleware
-	PacketForwardKeeper       *packetforwardkeeper.Keeper
+	PacketFowardModule        packetforward.AppModule
+
+	RateLimitingICS4Wrapper *ibcratelimit.ICS4Wrapper
+	TransferStack           *ibchooks.IBCMiddleware
+	Ics20WasmHooks          *ibchooks.WasmHooks
+	HooksICS4Wrapper        ibchooks.ICS4Middleware
+	PacketForwardKeeper     *packetforwardkeeper.Keeper
 
 	// keys to access the substores
 	keys    map[string]*sdk.KVStoreKey
@@ -255,6 +258,9 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.ICAHostKeeper = &icaHostKeeper
 
 	icaHostIBCModule := icahost.NewIBCModule(*appKeepers.ICAHostKeeper)
+
+	appKeepers.PacketFowardModule = packetforward.NewAppModule(appKeepers.PacketForwardKeeper)
+
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
