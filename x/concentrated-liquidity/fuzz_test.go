@@ -277,6 +277,7 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 	// Now, swap in given out with the amount out given by previous swap
 	// We expect the returned amountIn to be roughly equal to the original swapInFunded.
 	cacheCtx, _ = s.Ctx.CacheContext()
+	fmt.Printf("swap out: %s\n", tokenOut)
 	amountInSwapResult, _, _, err := s.clk.SwapInAmtGivenOut(cacheCtx, s.TestAccs[0], pool, tokenOut, swapInFunded.Denom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
 	if errors.As(err, &types.InvalidAmountCalculatedError{}) {
 		// If the swap we're about to execute will not generate enough output, we skip the swap.
@@ -296,7 +297,10 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 	errTolerance := osmomath.ErrTolerance{
 		// 2% tolerance
 		MultiplicativeTolerance: sdk.NewDecWithPrec(2, 2),
-		RoundingDir:             osmomath.RoundDown,
+		// Expected amount in returned from swap "in given out" to be smaller
+		// that original amount in given to "out given in".
+		// Reason: rounding in pool's favor.
+		RoundingDir: osmomath.RoundDown,
 	}
 
 	result := errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(swapInFunded.Amount.ToDec()), osmomath.BigDecFromSDKDec(amountInSwapResult.Amount.ToDec()))
@@ -342,7 +346,7 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 		return true, false
 	}
 
-	// Write out given in only if no error
+	// Write out given in only if no error. In given out state is dropped.
 	writeOutGivenIn()
 
 	return true, false
