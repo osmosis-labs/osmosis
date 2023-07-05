@@ -433,7 +433,7 @@ func (k Keeper) CreateFullRangePositionLocked(ctx sdk.Context, clPoolId uint64, 
 
 	// Mint CL shares (similar to GAMM shares) for the position and lock them for the remaining lock duration.
 	// Also sets the position ID to underlying lock ID mapping.
-	concentratedLockId, _, err := k.mintSharesAndLock(ctx, clPoolId, positionId, owner, remainingLockDuration)
+	concentratedLockId, _, err := k.MintSharesAndLock(ctx, clPoolId, positionId, owner, remainingLockDuration)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
 	}
@@ -453,7 +453,7 @@ func (k Keeper) CreateFullRangePositionUnlocking(ctx sdk.Context, clPoolId uint6
 
 	// Mint cl shares for the position and lock them for the remaining lock duration.
 	// Also sets the position ID to underlying lock ID mapping.
-	concentratedLockId, underlyingLiquidityTokenized, err := k.mintSharesAndLock(ctx, clPoolId, positionId, owner, remainingLockDuration)
+	concentratedLockId, underlyingLiquidityTokenized, err := k.MintSharesAndLock(ctx, clPoolId, positionId, owner, remainingLockDuration)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
 	}
@@ -467,11 +467,11 @@ func (k Keeper) CreateFullRangePositionUnlocking(ctx sdk.Context, clPoolId uint6
 	return positionId, amount0, amount1, liquidity, concentratedLockID, nil
 }
 
-// mintSharesAndLock mints the shares for the full range concentrated liquidity position and locks them for the given duration. It also updates the position ID to underlying lock ID mapping.
+// MintSharesAndLock mints the shares for the full range concentrated liquidity position and locks them for the given duration. It also updates the position ID to underlying lock ID mapping.
 // In the context of concentrated liquidity, shares need to be minted in order for a lock in its current form to be utilized (we cannot lock non-coin objects).
 // In turn, the locks are a prerequisite for superfluid to be enabled.
 // Additionally, the cl share gets sent to the lockup module account, which, in order to be sent via bank, must be minted.
-func (k Keeper) mintSharesAndLock(ctx sdk.Context, concentratedPoolId, positionId uint64, owner sdk.AccAddress, remainingLockDuration time.Duration) (concentratedLockID uint64, underlyingLiquidityTokenized sdk.Coins, err error) {
+func (k Keeper) MintSharesAndLock(ctx sdk.Context, concentratedPoolId, positionId uint64, owner sdk.AccAddress, remainingLockDuration time.Duration) (concentratedLockID uint64, underlyingLiquidityTokenized sdk.Coins, err error) {
 	// Ensure the provided position is full range.
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
