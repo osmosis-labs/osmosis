@@ -50,6 +50,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/x/tokenfactory"
 	"github.com/osmosis-labs/osmosis/v16/x/twap/twapmodule"
 	"github.com/osmosis-labs/osmosis/v16/x/txfees"
+	txfeesclient "github.com/osmosis-labs/osmosis/v16/x/txfees/client"
 	valsetprefmodule "github.com/osmosis-labs/osmosis/v16/x/valset-pref/valpref-module"
 	"github.com/osmosis-labs/osmosis/x/epochs"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
@@ -85,6 +86,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 			clclient.TickSpacingDecreaseProposalHandler,
 			cwpoolclient.UploadCodeIdAndWhitelistProposalHandler,
 			cwpoolclient.MigratePoolContractsProposalHandler,
+			txfeesclient.SubmitUpdateFeeTokenProposalHandler,
 		)...,
 	),
 	params.AppModuleBasic{},
