@@ -7,6 +7,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	v8constants "github.com/osmosis-labs/osmosis/v16/app/upgrades/v8/constants"
+	clkeeper "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
@@ -591,6 +592,84 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition_Event
 				s.Require().ErrorContains(err, tc.expectedError.Error())
 				s.Require().Nil(response)
 				s.AssertEventEmitted(s.Ctx, types.TypeEvtAddToConcentratedLiquiditySuperfluidPosition, tc.expectedAddedToPositionEvent)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestLockExistingFullRangePositionAndSFStake_Events() {
+	testcases := map[string]struct {
+		isFullRangePosition                 bool
+		expectedLockExistingFullRangeEvents int
+		expectedError                       error
+	}{
+		"happy path": {
+			isFullRangePosition:                 true,
+			expectedLockExistingFullRangeEvents: 1,
+		},
+		"non full range": {
+			isFullRangePosition: false,
+			expectedError:       cltypes.PositionNotFullRangeError{PositionId: 2, LowerTick: cltypes.MinInitializedTick + 1, UpperTick: cltypes.MaxTick},
+		},
+	}
+
+	for name, tc := range testcases {
+		s.Run(name, func() {
+			s.SetupTest()
+
+			msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
+			concentratedLiquidityKeeper := s.App.ConcentratedLiquidityKeeper
+			positionOwner := s.TestAccs[0]
+			prepAcc := s.TestAccs[1]
+
+			// Setup the validator, cl pool, and enable sfs on the cl pool.
+			_, _, _, _, valAddr, _ := s.SetupSuperfluidConcentratedPosition(s.Ctx, true, false, false, prepAcc)
+
+			// Create a new position that is not locked.
+			s.FundAcc(positionOwner, defaultFunds)
+			var posId uint64
+			var err error
+			if tc.isFullRangePosition {
+				posId, _, _, _, err = concentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, 1, positionOwner, defaultFunds)
+				s.Require().NoError(err)
+			} else {
+				msg := &cltypes.MsgCreatePosition{
+					PoolId:          1,
+					Sender:          s.TestAccs[0].String(),
+					LowerTick:       cltypes.MinInitializedTick + 1,
+					UpperTick:       cltypes.MaxTick,
+					TokensProvided:  defaultFunds,
+					TokenMinAmount0: sdk.ZeroInt(),
+					TokenMinAmount1: sdk.ZeroInt(),
+				}
+				msgServer := clkeeper.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
+				resp, err := msgServer.CreatePosition(sdk.WrapSDKContext(s.Ctx), msg)
+				s.Require().NoError(err)
+				posId = resp.PositionId
+			}
+
+			// Reset event counts to 0 by creating a new manager.
+			s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
+			s.Equal(0, len(s.Ctx.EventManager().Events()))
+
+			msg := &types.MsgLockExistingFullRangePositionAndSFStake{
+				PositionId: posId,
+				Sender:     positionOwner.String(),
+				ValAddr:    valAddr.String(),
+			}
+
+			// System under test.
+			response, err := msgServer.LockExistingFullRangePositionAndSFStake(sdk.WrapSDKContext(s.Ctx), msg)
+
+			if tc.expectedError == nil {
+				s.NoError(err)
+				s.NotNil(response)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtLockExistingFullRangePositionAndSFStake, tc.expectedLockExistingFullRangeEvents)
+			} else {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
+				s.Require().Nil(response)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtLockExistingFullRangePositionAndSFStake, tc.expectedLockExistingFullRangeEvents)
 			}
 		})
 	}

@@ -52,6 +52,10 @@ service Msg {
   rpc AddToConcentratedLiquiditySuperfluidPosition(
       MsgAddToConcentratedLiquiditySuperfluidPosition)
       returns (MsgAddToConcentratedLiquiditySuperfluidPositionResponse);
+
+  rpc LockExistingFullRangePositionAndSFStake(
+      MsgLockExistingFullRangePositionAndSFStake)
+      returns (MsgLockExistingFullRangePositionAndSFStakeResponse);
 }
 
 message MsgSuperfluidDelegate {
@@ -225,4 +229,16 @@ message MsgAddToConcentratedLiquiditySuperfluidPositionResponse {
     (gogoproto.nullable) = false
   ];
   uint64 lock_id = 4 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
+}
+
+// ===================== MsgLockExistingFullRangePositionAndSFStake
+message MsgLockExistingFullRangePositionAndSFStake {
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string val_addr = 3 [ (gogoproto.moretags) = "yaml:\"val_addr\"" ];
+}
+
+message MsgLockExistingFullRangePositionAndSFStakeResponse {
+  uint64 concentrated_lock_id = 1
+      [ (gogoproto.moretags) = "yaml:\"concentrated_lock_id\"" ];
 }

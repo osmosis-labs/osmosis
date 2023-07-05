@@ -10,6 +10,7 @@ const (
 	TypeEvtSuperfluidUnbondLock                         = "superfluid_unbond_lock"
 	TypeEvtSuperfluidUndelegateAndUnbondLock            = "superfluid_undelegate_and_unbond_lock"
 	TypeEvtAddToConcentratedLiquiditySuperfluidPosition = "add_to_concentrated_liquidity_superfluid_position"
+	TypeEvtLockExistingFullRangePositionAndSFStake      = "lock_existing_full_range_position_and_sf_stake"
 
 	TypeEvtUnpoolId     = "unpool_pool_id"
 	AttributeNewLockIds = "new_lock_ids"
