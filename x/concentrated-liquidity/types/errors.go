@@ -862,6 +862,22 @@ func (e SwapNoProgressWithConsumptionError) Error() string {
 	return fmt.Sprintf("did not advance sqrt price after swap step %s, with amounts in (%s), out (%s)", e.ComputedSqrtPrice, e.AmountIn, e.AmountOut)
 }
 
+type SqrtPriceToTickError struct {
+	OutOfBounds bool
+}
+
+func (e SqrtPriceToTickError) Error() string {
+	return fmt.Sprintf("sqrt price to tick could not find a satisfying tick index. Hit bounds: %v", e.OutOfBounds)
+}
+
+type OverChargeSwapOutGivenInError struct {
+	AmountSpecifiedRemaining sdk.Dec
+}
+
+func (e OverChargeSwapOutGivenInError) Error() string {
+	return fmt.Sprintf("over charge problem swap out given in by (%s)", e.AmountSpecifiedRemaining)
+}
+  
 type ComputedSqrtPriceInequalityError struct {
 	IsZeroForOne                 bool
 	NextInitializedTickSqrtPrice osmomath.BigDec

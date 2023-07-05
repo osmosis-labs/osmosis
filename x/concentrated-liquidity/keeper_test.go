@@ -27,6 +27,7 @@ import (
 
 var (
 	DefaultMinTick, DefaultMaxTick       = types.MinInitializedTick, types.MaxTick
+	DefaultMinCurrentTick                = types.MinCurrentTick
 	DefaultLowerPrice                    = sdk.NewDec(4545)
 	DefaultLowerTick                     = int64(30545000)
 	DefaultUpperPrice                    = sdk.NewDec(5500)
@@ -85,8 +86,16 @@ func TestConstants(t *testing.T) {
 	require.Equal(t, DefaultLiquidityAmt, liq)
 }
 
+type FuzzTestSuite struct {
+	positionIds     []uint64
+	iteration       int
+	seed            int64
+	collectedErrors []error
+}
+
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
+	FuzzTestSuite
 	clk               *concentrated_liquidity.Keeper
 	authorizedUptimes []time.Duration
 }

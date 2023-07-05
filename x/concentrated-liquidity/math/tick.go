@@ -74,8 +74,8 @@ func TickToPrice(tickIndex int64) (price sdk.Dec, err error) {
 	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(PowTenInternal(-exponentAtPriceOne)).TruncateInt64()
 
 	// Check that the tick index is between min and max value
-	if tickIndex < types.MinInitializedTick {
-		return sdk.Dec{}, types.TickIndexMinimumError{MinTick: types.MinInitializedTick}
+	if tickIndex < types.MinCurrentTick {
+		return sdk.Dec{}, types.TickIndexMinimumError{MinTick: types.MinCurrentTick}
 	}
 	if tickIndex > types.MaxTick {
 		return sdk.Dec{}, types.TickIndexMaximumError{MaxTick: types.MaxTick}
@@ -271,7 +271,7 @@ func CalculateSqrtPriceToTick(sqrtPrice osmomath.BigDec) (tickIndex int64, err e
 	// already shifted and making it exclusive would make min/max tick impossible to reach by construction.
 	// We do this primary for code simplicity, as alternatives would require more branching and special cases.
 	if (!outOfBounds && sqrtPrice.GTE(sqrtPriceTplus2)) || (outOfBounds && sqrtPrice.GT(sqrtPriceTplus2)) || sqrtPrice.LT(sqrtPriceTmin1) {
-		return 0, fmt.Errorf("sqrt price to tick could not find a satisfying tick index. Hit bounds: %v", outOfBounds)
+		return 0, types.SqrtPriceToTickError{OutOfBounds: outOfBounds}
 	}
 
 	// We expect this case to only be hit when the original provided sqrt price is exactly equal to the max sqrt price.
