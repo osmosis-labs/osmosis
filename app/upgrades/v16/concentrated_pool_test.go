@@ -22,12 +22,12 @@ const (
 )
 
 var (
-	defaultDaiAmount, _ = sdk.NewIntFromString("73000000000000000000000")
-	defaultDenom0mount  = sdk.NewInt(10000000000)
-	desiredDenom0       = v16.DesiredDenom0
-	desiredDenom0Coin   = sdk.NewCoin(desiredDenom0, defaultDenom0mount)
-	junoxCoin             = sdk.NewCoin(v16.JUNOXIBCDenom, defaultDaiAmount)
-	usdcCoin            = sdk.NewCoin(v16.USDCIBCDenom, defaultDaiAmount)
+	defaultJunoxAmount, _ = sdk.NewIntFromString("73000000000000000000000")
+	defaultDenom0mount    = sdk.NewInt(10000000000)
+	desiredDenom0         = v16.DesiredDenom0
+	desiredDenom0Coin     = sdk.NewCoin(desiredDenom0, defaultDenom0mount)
+	junoxCoin             = sdk.NewCoin(v16.JUNOXIBCDenom, defaultJunoxAmount)
+	usdcCoin              = sdk.NewCoin(v16.USDCIBCDenom, defaultJunoxAmount)
 )
 
 func (suite *ConcentratedUpgradeTestSuite) SetupTest() {

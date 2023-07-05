@@ -78,12 +78,12 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				upgradeSetup()
 
 				// Create earlier pools
-				for i := uint64(1); i < v16.DaiOsmoPoolId; i++ {
-					suite.PrepareBalancerPoolWithCoins(desiredDenom0Coin, daiCoin)
+				for i := uint64(1); i < v16.JunoxOsmoPoolId; i++ {
+					suite.PrepareBalancerPoolWithCoins(desiredDenom0Coin, junoxCoin)
 				}
 
-				// Create DAI / OSMO pool
-				suite.PrepareBalancerPoolWithCoins(daiCoin, desiredDenom0Coin)
+				// Create JUNOX / OSMO pool
+				suite.PrepareBalancerPoolWithCoins(junoxCoin, desiredDenom0Coin)
 
 			},
 			func() {
@@ -91,18 +91,18 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				stakingParams.BondDenom = "uosmo"
 				suite.App.StakingKeeper.SetParams(suite.Ctx, stakingParams)
 
-				oneJunox := sdk.NewCoins(sdk.NewCoin(v16.DAIIBCDenom, sdk.NewInt(1000000000000000000)))
+				oneJunox := sdk.NewCoins(sdk.NewCoin(v16.JUNOXIBCDenom, sdk.NewInt(1000000000000000000)))
 
-				// Send one dai to the community pool (this is true in current mainnet)
+				// Send one junox to the community pool (this is true in current mainnet)
 				suite.FundAcc(suite.TestAccs[0], oneJunox)
 
 				err := suite.App.DistrKeeper.FundCommunityPool(suite.Ctx, oneJunox, suite.TestAccs[0])
 				suite.Require().NoError(err)
 
-				// Determine approx how much OSMO will be used from community pool when 1 DAI used.
-				daiOsmoGammPool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, v16.DaiOsmoPoolId)
+				// Determine approx how much OSMO will be used from community pool when 1 JUNOX used.
+				junoxOsmoGammPool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, v16.JunoxOsmoPoolId)
 				suite.Require().NoError(err)
-				respectiveOsmo, err := suite.App.GAMMKeeper.CalcOutAmtGivenIn(suite.Ctx, daiOsmoGammPool, oneJunox[0], v16.DesiredDenom0, sdk.ZeroDec())
+				respectiveOsmo, err := suite.App.GAMMKeeper.CalcOutAmtGivenIn(suite.Ctx, junoxOsmoGammPool, oneJunox[0], v16.DesiredDenom0, sdk.ZeroDec())
 				suite.Require().NoError(err)
 
 				// Retrieve the community pool balance before the upgrade
@@ -119,20 +119,20 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				feePoolCommunityPoolPost := suite.App.DistrKeeper.GetFeePool(suite.Ctx).CommunityPool
 
 				// Validate that the community pool balance has been reduced by the amount of OSMO that was used to create the pool
-				// Note we use all the osmo, but a small amount of DAI is left over due to rounding when creating the first position.
+				// Note we use all the osmo, but a small amount of JUNOX is left over due to rounding when creating the first position.
 				suite.Require().Equal(communityPoolBalancePre.AmountOf("uosmo").Sub(respectiveOsmo.Amount).String(), communityPoolBalancePost.AmountOf("uosmo").String())
-				suite.Require().Equal(0, multiplicativeTolerance.Compare(communityPoolBalancePre.AmountOf(v16.DAIIBCDenom), oneJunox[0].Amount.Sub(communityPoolBalancePost.AmountOf(v16.DAIIBCDenom))))
+				suite.Require().Equal(0, multiplicativeTolerance.Compare(communityPoolBalancePre.AmountOf(v16.JUNOXIBCDenom), oneJunox[0].Amount.Sub(communityPoolBalancePost.AmountOf(v16.JUNOXIBCDenom))))
 
-				// Validate that the fee pool community pool balance has been decreased by the amount of OSMO/DAI that was used to create the pool
+				// Validate that the fee pool community pool balance has been decreased by the amount of OSMO/JUNOX that was used to create the pool
 				suite.Require().Equal(communityPoolBalancePost.AmountOf("uosmo").String(), feePoolCommunityPoolPost.AmountOf("uosmo").TruncateInt().String())
-				suite.Require().Equal(communityPoolBalancePost.AmountOf(v16.DAIIBCDenom).String(), feePoolCommunityPoolPost.AmountOf(v16.DAIIBCDenom).TruncateInt().String())
+				suite.Require().Equal(communityPoolBalancePost.AmountOf(v16.JUNOXIBCDenom).String(), feePoolCommunityPoolPost.AmountOf(v16.JUNOXIBCDenom).TruncateInt().String())
 
 				// Get balancer pool's spot price.
-				balancerSpotPrice, err := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, v16.DaiOsmoPoolId, v16.DAIIBCDenom, v16.DesiredDenom0)
+				balancerSpotPrice, err := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, v16.JunoxOsmoPoolId, v16.JUNOXIBCDenom, v16.DesiredDenom0)
 				suite.Require().NoError(err)
 
 				// Validate CL pool was created.
-				concentratedPool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, v16.DaiOsmoPoolId+1)
+				concentratedPool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, v16.JunoxOsmoPoolId+1)
 				suite.Require().NoError(err)
 				suite.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
 
@@ -140,7 +140,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				concentratedTypePool, ok := concentratedPool.(cltypes.ConcentratedPoolExtension)
 				suite.Require().True(ok)
 				suite.Require().Equal(v16.DesiredDenom0, concentratedTypePool.GetToken0())
-				suite.Require().Equal(v16.DAIIBCDenom, concentratedTypePool.GetToken1())
+				suite.Require().Equal(v16.JUNOXIBCDenom, concentratedTypePool.GetToken1())
 
 				// Validate that the spot price of the CL pool is what we expect
 				suite.Require().Equal(0, multiplicativeTolerance.CompareBigDec(concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), osmomath.BigDecFromSDKDec(balancerSpotPrice)))
@@ -152,7 +152,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 				// Validate that the link is correct.
 				link := migrationInfo.BalancerToConcentratedPoolLinks[0]
-				suite.Require().Equal(v16.DaiOsmoPoolId, link.BalancerPoolId)
+				suite.Require().Equal(v16.JunoxOsmoPoolId, link.BalancerPoolId)
 				suite.Require().Equal(concentratedPool.GetId(), link.ClPoolId)
 
 				// Check authorized denoms are set correctly.
