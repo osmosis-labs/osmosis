@@ -40,7 +40,7 @@ message Pool {
   string token1 = 7;
 
   string current_sqrt_price = 8 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "github.com/osmosis-labs/osmosis/osmomath.BigDec",
     (gogoproto.moretags) = "yaml:\"spot_price\"",
     (gogoproto.nullable) = false
   ];

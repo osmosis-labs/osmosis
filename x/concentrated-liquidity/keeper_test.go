@@ -26,27 +26,32 @@ import (
 
 var (
 	DefaultMinTick, DefaultMaxTick       = types.MinInitializedTick, types.MaxTick
+	DefaultMinCurrentTick                = types.MinCurrentTick
 	DefaultLowerPrice                    = sdk.NewDec(4545)
 	DefaultLowerTick                     = int64(30545000)
 	DefaultUpperPrice                    = sdk.NewDec(5500)
 	DefaultUpperTick                     = int64(31500000)
 	DefaultCurrPrice                     = sdk.NewDec(5000)
 	DefaultCurrTick                int64 = 31000000
-	DefaultCurrSqrtPrice, _              = osmomath.MonotonicSqrt(DefaultCurrPrice) // 70.710678118654752440
-	DefaultZeroSpreadFactor              = sdk.ZeroDec()
-	DefaultSpreadRewardAccumCoins        = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
-	DefaultPositionId                    = uint64(1)
-	DefaultUnderlyingLockId              = uint64(0)
-	DefaultJoinTime                      = time.Unix(0, 0).UTC()
-	ETH                                  = "eth"
-	DefaultAmt0                          = sdk.NewInt(1000000)
-	DefaultAmt0Expected                  = sdk.NewInt(998976)
-	DefaultCoin0                         = sdk.NewCoin(ETH, DefaultAmt0)
-	USDC                                 = "usdc"
-	DefaultAmt1                          = sdk.NewInt(5000000000)
-	DefaultAmt1Expected                  = sdk.NewInt(5000000000)
-	DefaultCoin1                         = sdk.NewCoin(USDC, DefaultAmt1)
-	DefaultCoins                         = sdk.NewCoins(DefaultCoin0, DefaultCoin1)
+	DefaultCurrSqrtPrice                 = func() osmomath.BigDec {
+		curSqrtPrice, _ := osmomath.MonotonicSqrt(DefaultCurrPrice) // 70.710678118654752440
+		return osmomath.BigDecFromSDKDec(curSqrtPrice)
+	}()
+
+	DefaultZeroSpreadFactor       = sdk.ZeroDec()
+	DefaultSpreadRewardAccumCoins = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
+	DefaultPositionId             = uint64(1)
+	DefaultUnderlyingLockId       = uint64(0)
+	DefaultJoinTime               = time.Unix(0, 0).UTC()
+	ETH                           = "eth"
+	DefaultAmt0                   = sdk.NewInt(1000000)
+	DefaultAmt0Expected           = sdk.NewInt(998976)
+	DefaultCoin0                  = sdk.NewCoin(ETH, DefaultAmt0)
+	USDC                          = "usdc"
+	DefaultAmt1                   = sdk.NewInt(5000000000)
+	DefaultAmt1Expected           = sdk.NewInt(5000000000)
+	DefaultCoin1                  = sdk.NewCoin(USDC, DefaultAmt1)
+	DefaultCoins                  = sdk.NewCoins(DefaultCoin0, DefaultCoin1)
 
 	// Both of the following liquidity values are calculated in x/concentrated-liquidity/python/swap_test.py
 	DefaultLiquidityAmt   = sdk.MustNewDecFromStr("1517882343.751510417627556287")
@@ -80,8 +85,16 @@ func TestConstants(t *testing.T) {
 	require.Equal(t, DefaultLiquidityAmt, liq)
 }
 
+type FuzzTestSuite struct {
+	positionIds     []uint64
+	iteration       int
+	seed            int64
+	collectedErrors []error
+}
+
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
+	FuzzTestSuite
 	clk               *cl.Keeper
 	authorizedUptimes []time.Duration
 }
@@ -481,7 +494,7 @@ func (s *KeeperTestSuite) runMultiplePositionRanges(ranges [][]int64, rangeTestP
 	rand.Seed(2) //nolint:staticcheck // Deterministic seed for testing
 
 	// TODO: add pool-related fuzz params (spread factor & number of pools)
-	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultSpreadFactor)
+	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, rangeTestParams.tickSpacing, rangeTestParams.spreadFactor)
 
 	// Run full state determined by params while asserting invariants at each intermediate step
 	s.setupRangesAndAssertInvariants(pool, ranges, rangeTestParams)

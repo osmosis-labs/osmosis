@@ -26,14 +26,21 @@ const (
 )
 
 var (
-	DefaultSpotPrice              = sdk.MustNewDecFromStr("0.2")
-	DefaultReverseSpotPrice       = sdk.NewDec(1).Quo(DefaultSpotPrice)
-	DefaultSqrtSpotPrice, _       = osmomath.MonotonicSqrt(DefaultSpotPrice)
-	DefaultLiquidityAmt           = sdk.MustNewDecFromStr("1517882343.751510418088349649")
-	DefaultCurrTick         int64 = 310000
-	DefaultCurrPrice              = sdk.NewDec(5000)
-	DefaultCurrSqrtPrice, _       = osmomath.MonotonicSqrt(DefaultCurrPrice) // 70.710678118654752440
-	DefaultSpreadFactor           = sdk.MustNewDecFromStr("0.01")
+	DefaultSpotPrice        = sdk.MustNewDecFromStr("0.2")
+	DefaultReverseSpotPrice = sdk.NewDec(1).Quo(DefaultSpotPrice)
+	DefaultSqrtSpotPrice    = func() osmomath.BigDec {
+		sqrtPrice, _ := osmomath.MonotonicSqrt(DefaultSpotPrice)
+		return osmomath.BigDecFromSDKDec(sqrtPrice)
+	}()
+	DefaultLiquidityAmt        = sdk.MustNewDecFromStr("1517882343.751510418088349649")
+	DefaultCurrTick      int64 = 310000
+	DefaultCurrPrice           = sdk.NewDec(5000)
+	DefaultCurrSqrtPrice       = func() osmomath.BigDec {
+		sqrtPrice, _ := osmomath.MonotonicSqrt(DefaultCurrPrice)
+		return osmomath.BigDecFromSDKDec(sqrtPrice)
+	}() // 70.710678118654752440
+
+	DefaultSpreadFactor = sdk.MustNewDecFromStr("0.01")
 )
 
 type ConcentratedPoolTestSuite struct {
@@ -132,7 +139,7 @@ func (s *ConcentratedPoolTestSuite) TestString() {
 	pool, err := model.NewConcentratedLiquidityPool(1, "foo", "bar", DefaultTickSpacing, DefaultSpreadFactor)
 	s.Require().NoError(err)
 	poolString := pool.String()
-	s.Require().Equal(poolString, "{\"address\":\"osmo19e2mf7cywkv7zaug6nk5f87d07fxrdgrladvymh2gwv5crvm3vnsuewhh7\",\"incentives_address\":\"osmo156gncm3w2hdvuxxaejue8nejxgdgsrvdf7jftntuhxnaarhxcuas4ywjxf\",\"spread_rewards_address\":\"osmo10t3u6ze74jn7et6rluuxyf9vr2arykewmhcx67svg6heuu0gte2syfudcv\",\"id\":1,\"current_tick_liquidity\":\"0.000000000000000000\",\"token0\":\"foo\",\"token1\":\"bar\",\"current_sqrt_price\":\"0.000000000000000000\",\"tick_spacing\":1,\"exponent_at_price_one\":-6,\"spread_factor\":\"0.010000000000000000\",\"last_liquidity_update\":\"0001-01-01T00:00:00Z\"}")
+	s.Require().Equal(poolString, "{\"address\":\"osmo19e2mf7cywkv7zaug6nk5f87d07fxrdgrladvymh2gwv5crvm3vnsuewhh7\",\"incentives_address\":\"osmo156gncm3w2hdvuxxaejue8nejxgdgsrvdf7jftntuhxnaarhxcuas4ywjxf\",\"spread_rewards_address\":\"osmo10t3u6ze74jn7et6rluuxyf9vr2arykewmhcx67svg6heuu0gte2syfudcv\",\"id\":1,\"current_tick_liquidity\":\"0.000000000000000000\",\"token0\":\"foo\",\"token1\":\"bar\",\"current_sqrt_price\":\"0.000000000000000000000000000000000000\",\"tick_spacing\":1,\"exponent_at_price_one\":-6,\"spread_factor\":\"0.010000000000000000\",\"last_liquidity_update\":\"0001-01-01T00:00:00Z\"}")
 }
 
 // TestSpotPrice tests the SpotPrice method of the ConcentratedPoolTestSuite.
@@ -314,15 +321,19 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 	// Set up the test suite.
 	s.Setup()
 
-	negativeOne := sdk.NewDec(-1)
+	var (
+		negativeOne    = osmomath.NewBigDec(-1)
+		negativeOneDec = sdk.OneDec().Neg()
+	)
+
 	tests := []struct {
 		name             string
 		currentLiquidity sdk.Dec
 		currentTick      int64
-		currentSqrtPrice sdk.Dec
+		currentSqrtPrice osmomath.BigDec
 		newLiquidity     sdk.Dec
 		newTick          int64
-		newSqrtPrice     sdk.Dec
+		newSqrtPrice     osmomath.BigDec
 		expectErr        error
 	}{
 		{
@@ -330,9 +341,9 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			currentLiquidity: DefaultLiquidityAmt,
 			currentTick:      DefaultCurrTick,
 			currentSqrtPrice: DefaultCurrSqrtPrice,
-			newLiquidity:     DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
+			newLiquidity:     DefaultLiquidityAmt.MulInt64(2),
 			newTick:          DefaultCurrTick * 2,
-			newSqrtPrice:     DefaultCurrSqrtPrice.Mul(sdk.NewDec(2)),
+			newSqrtPrice:     DefaultCurrSqrtPrice.MulInt64(2),
 			expectErr:        nil,
 		},
 		{
@@ -340,10 +351,10 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			currentLiquidity: DefaultLiquidityAmt,
 			currentTick:      DefaultCurrTick,
 			currentSqrtPrice: DefaultCurrSqrtPrice,
-			newLiquidity:     negativeOne,
+			newLiquidity:     negativeOneDec,
 			newTick:          DefaultCurrTick,
 			newSqrtPrice:     DefaultCurrSqrtPrice,
-			expectErr:        types.NegativeLiquidityError{Liquidity: negativeOne},
+			expectErr:        types.NegativeLiquidityError{Liquidity: negativeOneDec},
 		},
 		{
 			name:             "negative square root price",
@@ -559,16 +570,17 @@ func (s *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			return sqrtPrice
 		}
 
-		defaultLiquidityDelta = sdk.NewDec(1000)
+		defaultLiquidityDelta       = sdk.NewDec(1000)
+		defaultLiquidityDeltaBigDec = osmomath.NewBigDec(1000)
 
-		lowerTick      = int64(-99)
-		lowerSqrtPrice = tickToSqrtPrice(lowerTick)
+		lowerTick            = int64(-99)
+		lowerSqrtPriceBigDec = osmomath.BigDecFromSDKDec(tickToSqrtPrice(lowerTick))
 
-		midtick      = int64(2)
-		midSqrtPrice = tickToSqrtPrice(midtick)
+		midtick            = int64(2)
+		midSqrtPriceBigDec = osmomath.BigDecFromSDKDec(tickToSqrtPrice(midtick))
 
-		uppertick      = int64(74)
-		upperSqrtPrice = tickToSqrtPrice(uppertick)
+		uppertick            = int64(74)
+		upperSqrtPriceBigDec = osmomath.BigDecFromSDKDec(tickToSqrtPrice(uppertick))
 	)
 
 	tests := map[string]struct {
@@ -589,8 +601,8 @@ func (s *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			liquidityDelta:              defaultLiquidityDelta,
 			shouldTestRoundingInvariant: true,
 
-			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDelta, midSqrtPrice, upperSqrtPrice, true),
-			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDelta, midSqrtPrice, lowerSqrtPrice, true),
+			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDeltaBigDec, midSqrtPriceBigDec, upperSqrtPriceBigDec, true).SDKDec(),
+			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDeltaBigDec, midSqrtPriceBigDec, lowerSqrtPriceBigDec, true).SDKDec(),
 		},
 		"current in range, negative liquidity": {
 			currentTick:    midtick,
@@ -598,8 +610,8 @@ func (s *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			upperTick:      uppertick,
 			liquidityDelta: defaultLiquidityDelta.Neg(),
 
-			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDelta.Neg(), midSqrtPrice, upperSqrtPrice, false),
-			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDelta.Neg(), midSqrtPrice, lowerSqrtPrice, false),
+			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDeltaBigDec.Neg(), midSqrtPriceBigDec, upperSqrtPriceBigDec, false).SDKDec(),
+			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDeltaBigDec.Neg(), midSqrtPriceBigDec, lowerSqrtPriceBigDec, false).SDKDec(),
 		},
 		"current below range, positive liquidity": {
 			currentTick:    lowerTick,
@@ -607,7 +619,7 @@ func (s *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			upperTick:      uppertick,
 			liquidityDelta: defaultLiquidityDelta,
 
-			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDelta, midSqrtPrice, upperSqrtPrice, true),
+			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDeltaBigDec, midSqrtPriceBigDec, upperSqrtPriceBigDec, true).SDKDec(),
 			expectedAmount1: sdk.ZeroDec(),
 		},
 		"current below range, negative liquidity": {
@@ -616,7 +628,7 @@ func (s *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			upperTick:      uppertick,
 			liquidityDelta: defaultLiquidityDelta.Neg(),
 
-			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDelta.Neg(), midSqrtPrice, upperSqrtPrice, false),
+			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDeltaBigDec.Neg(), midSqrtPriceBigDec, upperSqrtPriceBigDec, false).SDKDec(),
 			expectedAmount1: sdk.ZeroDec(),
 		},
 		"current above range, positive liquidity": {
@@ -626,7 +638,7 @@ func (s *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			liquidityDelta: defaultLiquidityDelta,
 
 			expectedAmount0: sdk.ZeroDec(),
-			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDelta, lowerSqrtPrice, midSqrtPrice, true),
+			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDeltaBigDec, lowerSqrtPriceBigDec, midSqrtPriceBigDec, true).SDKDec(),
 		},
 		"current above range, negative liquidity": {
 			currentTick:    uppertick,
@@ -635,7 +647,7 @@ func (s *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			liquidityDelta: defaultLiquidityDelta.Neg(),
 
 			expectedAmount0: sdk.ZeroDec(),
-			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDelta.Neg(), tickToSqrtPrice(lowerTick), midSqrtPrice, false),
+			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDeltaBigDec.Neg(), lowerSqrtPriceBigDec, midSqrtPriceBigDec, false).SDKDec(),
 		},
 
 		// errors
@@ -681,7 +693,8 @@ func (s *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			pool := model.Pool{
 				CurrentTick: tc.currentTick,
 			}
-			_, pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick)
+			_, currenTicktSqrtPrice, _ := clmath.TickToSqrtPrice(pool.CurrentTick)
+			pool.CurrentSqrtPrice = osmomath.BigDecFromSDKDec(currenTicktSqrtPrice)
 
 			actualAmount0, actualAmount1, err := pool.CalcActualAmounts(s.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
 
@@ -775,7 +788,8 @@ func (s *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 				CurrentTick:          tc.currentTick,
 				CurrentTickLiquidity: defaultLiquidityAmt,
 			}
-			_, pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick)
+			_, currenTicktSqrtPrice, _ := clmath.TickToSqrtPrice(pool.CurrentTick)
+			pool.CurrentSqrtPrice = osmomath.BigDecFromSDKDec(currenTicktSqrtPrice)
 
 			wasUpdated := pool.UpdateLiquidityIfActivePosition(s.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
 			if tc.lowerTick <= tc.currentTick && tc.currentTick <= tc.upperTick {
@@ -799,7 +813,7 @@ func (s *ConcentratedPoolTestSuite) TestPoolSetMethods() {
 
 	tests := map[string]struct {
 		currentTick              int64
-		currentSqrtPrice         sdk.Dec
+		currentSqrtPrice         osmomath.BigDec
 		tickSpacing              uint64
 		lastLiquidityUpdateDelta time.Duration
 	}{

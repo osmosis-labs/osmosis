@@ -36,7 +36,7 @@ on:
 env:
   GOLANG_VERSION: 1.18
   GENESIS_URL: https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
-  ADDRBOOK_URL: https://dl2.quicksync.io/json/addrbook.osmosis.json
+  ADDRBOOK_URL: https://rpc.osmosis.zone/addrbook
   SNAPSHOT_BUCKET: https://snapshots.osmosis.zone
   RPC_ENDPOINT: https://rpc.osmosis.zone
   LCD_ENDPOINT: https://lcd.osmosis.zone
@@ -114,7 +114,7 @@ jobs:
           SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/$REPO_MAJOR_VERSION/snapshots.json
 
           # Get the latest pre-epoch snapshot information from bucket
-          SNAPSHOT_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" $SNAPSHOT_INFO_URL)
+          SNAPSHOT_INFO=$(curl -sL --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" $SNAPSHOT_INFO_URL)
           SNAPSHOT_URL=$(echo $SNAPSHOT_INFO | jq -r '.[] | select(.type == "pre-epoch").url')
           SNAPSHOT_ID=$(echo $SNAPSHOT_INFO |  jq -r '.[] | select(.type == "pre-epoch").filename' | cut -f 1 -d '.')
 
@@ -143,7 +143,7 @@ jobs:
             # (Snapshot is taken 100 blocks before epoch)
 
             SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/v$REPO_MAJOR_VERSION/snapshots.json
-            SNAPSHOT_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" $SNAPSHOT_INFO_URL)
+            SNAPSHOT_INFO=$(curl -sL --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" $SNAPSHOT_INFO_URL)
             SNAPSHOT_BLOCK_HEIGHT=$(echo $SNAPSHOT_INFO | jq -r '.[] | select(.type == "pre-epoch").height')
             LAST_EPOCH_BLOCK_HEIGHT=$(($SNAPSHOT_BLOCK_HEIGHT + 100))
           fi
@@ -156,7 +156,7 @@ jobs:
 
           # Edit config.toml
           dasel put string -f $CONFIG_FOLDER/config.toml '.tx_index.indexer' null
-          dasel put string -f $CONFIG_FOLDER/config.toml '.p2p.persistent_peers' 'b59016320a74525f92dbc3348521c64f2bf3f006@p2p.archive.osmosis.zone:26656'
+          dasel put string -f $CONFIG_FOLDER/config.toml '.p2p.persistent_peers' '37c195e518c001099f956202d34af029b04f2c97@p2p.archive.osmosis.zone:26656'
           dasel put string -f $CONFIG_FOLDER/config.toml 'seeds' ''
 
           # Edit app.toml

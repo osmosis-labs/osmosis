@@ -15,6 +15,7 @@ func GetTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(cmd, NewBeginUnlockingAllCmd)
 	osmocli.AddTxCmd(cmd, NewBeginUnlockByIDCmd)
 	osmocli.AddTxCmd(cmd, NewForceUnlockByIdCmd)
+	osmocli.AddTxCmd(cmd, NewSetRewardReceiverAddress)
 
 	return cmd
 }
@@ -61,4 +62,13 @@ func NewForceUnlockByIdCmd() (*osmocli.TxCliDesc, *types.MsgForceUnlock) {
 		},
 		Flags: osmocli.FlagDesc{OptionalFlags: []*pflag.FlagSet{FlagSetUnlockTokens()}},
 	}, &types.MsgForceUnlock{}
+}
+
+// NewSetRewardReceiverAddress sets the reward receiver address.
+func NewSetRewardReceiverAddress() (*osmocli.TxCliDesc, *types.MsgSetRewardReceiverAddress) {
+	return &osmocli.TxCliDesc{
+		Use:   "set-reward-receiver-address [lock-id] [reward-receiver]",
+		Short: "sets reward receiver address for the designated lock id",
+		Long:  "sets reward receiver address for the designated lock id",
+	}, &types.MsgSetRewardReceiverAddress{}
 }

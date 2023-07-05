@@ -2,7 +2,7 @@
 
 The below is an example of the pool.json file for a [liquidity
 bootstrapping
-pool](https://docs.balancer.finance/guides/crp-tutorial/liquidity-bootstrapping).
+pool](https://balancer.gitbook.io/balancer/guides/crp-tutorial/liquidity-bootstrapping).
 
 A liquidity bootstrapping pool's weight begins at the weight set in the
 `weights` parameter and linearly shifts the weights until
