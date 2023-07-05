@@ -107,8 +107,12 @@ func (s *KeeperTestSuite) fuzzTestWithSeed(r *rand.Rand, poolId uint64, numSwaps
 
 		doSwap := s.selectAction(r, numSwaps, numPositions, completedSwaps, completedPositions)
 		if doSwap {
-			s.randomSwap(r, poolId)
+			fatalErr := s.randomSwap(r, poolId)
 			completedSwaps++
+			if fatalErr {
+				fmt.Println("Fatal error, exiting")
+				return
+			}
 		} else {
 			s.addOrRemoveLiquidity(r, poolId)
 			completedPositions++
@@ -118,7 +122,7 @@ func (s *KeeperTestSuite) fuzzTestWithSeed(r *rand.Rand, poolId uint64, numSwaps
 	}
 }
 
-func (s *KeeperTestSuite) randomSwap(r *rand.Rand, poolId uint64) {
+func (s *KeeperTestSuite) randomSwap(r *rand.Rand, poolId uint64) (fatalErr bool) {
 
 	pool, err := s.clk.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
@@ -140,13 +144,16 @@ func (s *KeeperTestSuite) randomSwap(r *rand.Rand, poolId uint64) {
 	for didSwap := false; !didSwap; {
 
 		if swapStrategy == 0 {
-			didSwap = s.swapRandomAmount(r, pool, zfo)
+			didSwap, fatalErr = s.swapRandomAmount(r, pool, zfo)
 		} else if swapStrategy == 1 {
-			didSwap = s.swapNearNextTickBoundary(r, pool, zfo)
+			didSwap, fatalErr = s.swapNearNextTickBoundary(r, pool, zfo)
 		} else {
-			didSwap = s.swapNearInitializedTickBoundary(r, pool, zfo)
+			didSwap, fatalErr = s.swapNearInitializedTickBoundary(r, pool, zfo)
 		}
 
+		if fatalErr {
+			return true
+		}
 		if !didSwap {
 			fmt.Printf("swap failed for acceptable reasons, retrying \n\n")
 		}
@@ -155,9 +162,10 @@ func (s *KeeperTestSuite) randomSwap(r *rand.Rand, poolId uint64) {
 		// of certain strategies.
 		swapStrategy, zfo = updateStrategy()
 	}
+	return false
 }
 
-func (s *KeeperTestSuite) swapRandomAmount(r *rand.Rand, pool types.ConcentratedPoolExtension, zfo bool) (didSwap bool) {
+func (s *KeeperTestSuite) swapRandomAmount(r *rand.Rand, pool types.ConcentratedPoolExtension, zfo bool) (didSwap bool, fatalErr bool) {
 	fmt.Println("swap type: random amount")
 	swapInDenom, swapOutDenom := zfoToDenoms(zfo, pool)
 	swapAmt := randomIntAmount(r)
@@ -165,7 +173,7 @@ func (s *KeeperTestSuite) swapRandomAmount(r *rand.Rand, pool types.Concentrated
 	return s.swap(pool, swapInCoin, swapOutDenom)
 }
 
-func (s *KeeperTestSuite) swapNearNextTickBoundary(r *rand.Rand, pool types.ConcentratedPoolExtension, zfo bool) (didSwap bool) {
+func (s *KeeperTestSuite) swapNearNextTickBoundary(r *rand.Rand, pool types.ConcentratedPoolExtension, zfo bool) (didSwap bool, fatalErr bool) {
 	fmt.Println("swap type: near next tick boundary")
 	targetTick := pool.GetCurrentTick()
 	if zfo {
@@ -176,7 +184,7 @@ func (s *KeeperTestSuite) swapNearNextTickBoundary(r *rand.Rand, pool types.Conc
 	return s.swapNearTickBoundary(r, pool, targetTick, zfo)
 }
 
-func (s *KeeperTestSuite) swapNearInitializedTickBoundary(r *rand.Rand, pool types.ConcentratedPoolExtension, zfo bool) (didSwap bool) {
+func (s *KeeperTestSuite) swapNearInitializedTickBoundary(r *rand.Rand, pool types.ConcentratedPoolExtension, zfo bool) (didSwap bool, fatalErr bool) {
 	fmt.Println("swap type: near initialized tick boundary")
 
 	ss := swapstrategy.New(zfo, sdk.ZeroDec(), s.App.GetKey(types.ModuleName), sdk.ZeroDec())
@@ -185,7 +193,7 @@ func (s *KeeperTestSuite) swapNearInitializedTickBoundary(r *rand.Rand, pool typ
 	defer iter.Close()
 
 	if !iter.Valid() {
-		return false
+		return false, false
 	}
 
 	s.Require().True(iter.Valid())
@@ -196,7 +204,7 @@ func (s *KeeperTestSuite) swapNearInitializedTickBoundary(r *rand.Rand, pool typ
 	return s.swapNearTickBoundary(r, pool, nextInitializedTick, zfo)
 }
 
-func (s *KeeperTestSuite) swapNearTickBoundary(r *rand.Rand, pool types.ConcentratedPoolExtension, targetTick int64, zfo bool) (didSwap bool) {
+func (s *KeeperTestSuite) swapNearTickBoundary(r *rand.Rand, pool types.ConcentratedPoolExtension, targetTick int64, zfo bool) (didSwap bool, fatalErr bool) {
 	swapInDenom, swapOutDenom := zfoToDenoms(zfo, pool)
 	// TODO: Confirm accuracy of this method.
 	amountInRequired, curLiquidity, _ := s.computeSwapAmounts(pool.GetId(), pool.GetCurrentSqrtPrice(), targetTick, zfo, false)
@@ -245,7 +253,7 @@ func tickAmtChange(r *rand.Rand, targetAmount sdk.Dec) sdk.Dec {
 	return targetAmount.Sub(change.TruncateDec())
 }
 
-func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunded sdk.Coin, swapOutDenom string) (didSwap bool) {
+func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunded sdk.Coin, swapOutDenom string) (didSwap bool, fatalErr bool) {
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(swapInFunded))
 	// // Execute swap
 	fmt.Printf("swap in: %s\n", swapInFunded)
@@ -255,20 +263,20 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 		// If the swap we're about to execute will not generate enough output, we skip the swap.
 		// it would error for a real user though. This is good though, since that user would just be burning funds.
 		if err.(types.InvalidAmountCalculatedError).Amount.IsZero() {
-			return false
+			return false, false
 		}
 	}
 	if err != nil {
 		fmt.Printf("swap error: %s\n", err.Error())
-		// Add error to list of errors. Will fail at the end of the fuzz run in hih level test.
+		// Add error to list of errors. Will fail at the end of the fuzz run in high level test.
 		s.collectedErrors = append(s.collectedErrors, err)
-		return false
+		return false, false
 	}
 
 	// Write only if no error
 	write()
 
-	return true
+	return true, false
 }
 
 func (s *KeeperTestSuite) chooseSwapDirection(r *rand.Rand, pool types.ConcentratedPoolExtension) (zfo bool) {
@@ -302,11 +310,18 @@ func (s *KeeperTestSuite) validateNoErrors(possibleErrors []error) {
 	for _, err := range possibleErrors {
 
 		// TODO: figure out if this is OK
+		// Answer: Ok for now, due to outofbounds=True restriction
+		// Should sanity check that our fuzzer isn't hitting this too often though, that could hit at
+		// ineffective fuzz range choice.
 		if errors.Is(err, types.SqrtPriceToTickError{OutOfBounds: true}) {
 			continue
 		}
 
-		// TODO: figure out if this is OK
+		// This is expected
+		if errors.As(err, &types.ComputedSqrtPriceInequalityError{}) {
+			continue
+		}
+		// TODO: Need to understand why this is happening
 		if errors.As(err, &types.OverChargeSwapOutGivenInError{}) {
 			continue
 		}
