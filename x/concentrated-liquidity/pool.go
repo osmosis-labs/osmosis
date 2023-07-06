@@ -364,7 +364,7 @@ func (k Keeper) GetUserUnbondingPositions(ctx sdk.Context, address sdk.AccAddres
 		// If we have hit this logic branch, it means that, at one point, the lockId provided existed. If we fetch it again
 		// and it doesn't exist, that means that the lock has matured.
 		lock, err := k.lockupKeeper.GetLockByID(ctx, lockId)
-		if err == errorsmod.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", lock.GetID())) {
+		if errors.Is(err, errorsmod.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", lockId))) {
 			continue
 		}
 		if err != nil {
