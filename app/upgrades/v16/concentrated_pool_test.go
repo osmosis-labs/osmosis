@@ -22,12 +22,12 @@ const (
 )
 
 var (
-	defaultDaiAmount, _ = sdk.NewIntFromString("73000000000000000000000")
-	defaultDenom0mount  = sdk.NewInt(10000000000)
-	desiredDenom0       = v16.DesiredDenom0
-	desiredDenom0Coin   = sdk.NewCoin(desiredDenom0, defaultDenom0mount)
-	daiCoin             = sdk.NewCoin(v16.DAIIBCDenom, defaultDaiAmount)
-	usdcCoin            = sdk.NewCoin(v16.USDCIBCDenom, defaultDaiAmount)
+	defaultJunoxAmount, _ = sdk.NewIntFromString("73000000000")
+	defaultDenom0mount    = sdk.NewInt(10000000000)
+	desiredDenom0         = v16.DesiredDenom0
+	desiredDenom0Coin     = sdk.NewCoin(desiredDenom0, defaultDenom0mount)
+	junoxCoin             = sdk.NewCoin(v16.JUNOXIBCDenom, defaultJunoxAmount)
+	usdcCoin              = sdk.NewCoin(v16.USDCIBCDenom, defaultJunoxAmount)
 )
 
 func (suite *ConcentratedUpgradeTestSuite) SetupTest() {
@@ -48,19 +48,19 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateConcentratedPoolFromCFMM() 
 		expectError          error
 	}{
 		"success": {
-			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, junoxCoin),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        desiredDenom0,
-			expectedDenoms:       []string{desiredDenom0, daiCoin.Denom},
+			expectedDenoms:       []string{desiredDenom0, junoxCoin.Denom},
 		},
 		"error: invalid denom 0": {
-			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, junoxCoin),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        v16.USDCIBCDenom,
 			expectError:          v16.NoDesiredDenomInPoolError{v16.USDCIBCDenom},
 		},
 		"error: pool with 3 assets, must have two": {
-			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin, usdcCoin),
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, junoxCoin, usdcCoin),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        v16.USDCIBCDenom,
 			expectError:          v16.ErrMustHaveTwoDenoms,
@@ -125,37 +125,37 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiquid
 		expectError                error
 	}{
 		"success - denoms reordered relative to balancer": {
-			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, junoxCoin),
 			cfmmPoolIdToLinkWith: validPoolId,
 			// lexicographically ordered
-			expectedBalancerDenoms: []string{daiCoin.Denom, desiredDenom0Coin.Denom},
+			expectedBalancerDenoms: []string{junoxCoin.Denom, desiredDenom0Coin.Denom},
 			// determined by desired denom 0
-			expectedConcentratedDenoms: []string{desiredDenom0Coin.Denom, daiCoin.Denom},
+			expectedConcentratedDenoms: []string{desiredDenom0Coin.Denom, junoxCoin.Denom},
 			desiredDenom0:              desiredDenom0,
 		},
 		"success - denoms are not reordered relative to balancer": {
-			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, junoxCoin),
 			cfmmPoolIdToLinkWith: validPoolId,
 			// lexicographically ordered
-			expectedBalancerDenoms: []string{daiCoin.Denom, desiredDenom0Coin.Denom},
+			expectedBalancerDenoms: []string{junoxCoin.Denom, desiredDenom0Coin.Denom},
 			// determined by desired denom 0
-			expectedConcentratedDenoms: []string{daiCoin.Denom, desiredDenom0Coin.Denom},
-			desiredDenom0:              daiCoin.Denom,
+			expectedConcentratedDenoms: []string{junoxCoin.Denom, desiredDenom0Coin.Denom},
+			desiredDenom0:              junoxCoin.Denom,
 		},
 		"error: invalid denom 0": {
-			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, junoxCoin),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        v16.USDCIBCDenom,
 			expectError:          v16.NoDesiredDenomInPoolError{v16.USDCIBCDenom},
 		},
 		"error: pool with 3 assets, must have two": {
-			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin, usdcCoin),
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, junoxCoin, usdcCoin),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        v16.USDCIBCDenom,
 			expectError:          v16.ErrMustHaveTwoDenoms,
 		},
 		"error: invalid denom durations": {
-			poolLiquidity:         sdk.NewCoins(desiredDenom0Coin, daiCoin),
+			poolLiquidity:         sdk.NewCoins(desiredDenom0Coin, junoxCoin),
 			cfmmPoolIdToLinkWith:  validPoolId,
 			desiredDenom0:         desiredDenom0,
 			setupInvalidDuraitons: true,

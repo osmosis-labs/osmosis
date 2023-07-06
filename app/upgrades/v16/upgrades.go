@@ -22,14 +22,15 @@ import (
 )
 
 const (
-	// DAI/OSMO pool ID
-	// https://app.osmosis.zone/pool/674
+	// JUNOX/OSMO pool ID
+	// https://testnet.osmosis.zone/pool/3
 	// Note, new concentrated liquidity pool
 	// spread factor is initialized to be the same as the balancers pool spread factor of 0.2%.
-	DaiOsmoPoolId = uint64(674)
+	// MODIFIED FROM MAINNET OSMO/DAI 674 POOL
+	JunoxOsmoPoolId = uint64(3)
 	// Denom0 translates to a base asset while denom1 to a quote asset
-	// We want quote asset to be DAI so that when the limit orders on ticks
-	// are implemented, we have tick spacing in terms of DAI as the quote.
+	// We want quote asset to be Junox so that when the limit orders on ticks
+	// are implemented, we have tick spacing in terms of Junox as the quote.
 	DesiredDenom0 = "uosmo"
 	// TODO: confirm pre-launch.
 	TickSpacing = 1
@@ -43,9 +44,10 @@ const (
 )
 
 var (
-	ATOMIBCDenom = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
-	DAIIBCDenom  = "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7"
-	USDCIBCDenom = "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858"
+	ATOMIBCDenom = "ibc/A8C2D23A1E6F95DA4E48BA349667E322BD7A6C996D8A4AAE8BA72E190F3D1477"
+	// MODIFIED FROM MAINNET DAI IBC DENOM
+	JUNOXIBCDenom = "ibc/8E2FEFCBD754FA3C97411F0126B9EC76191BAA1B3959CB73CECF396A4037BBF0"
+	USDCIBCDenom  = "ibc/6F34E1BD664C36CE49ACC28E60D62559A5F96C4F9A6CCE4FC5A67B2852E24CFE"
 
 	// authorized_quote_denoms quote assets that can be used as token1
 	// when creating a pool. We limit the quote assets to a small set
@@ -55,7 +57,7 @@ var (
 	authorizedQuoteDenoms []string = []string{
 		"uosmo",
 		ATOMIBCDenom,
-		DAIIBCDenom,
+		JUNOXIBCDenom, // MODIFIED FROM MAINNET DAI IBC DENOM
 		USDCIBCDenom,
 	}
 
@@ -122,9 +124,9 @@ func CreateUpgradeHandler(
 		defaultConcentratedLiquidityParams.IsPermissionlessPoolCreationEnabled = IsPermissionlessPoolCreationEnabledCL
 		keepers.ConcentratedLiquidityKeeper.SetParams(ctx, defaultConcentratedLiquidityParams)
 
-		// Create a concentrated liquidity pool for DAI/OSMO.
-		// Link the DAI/OSMO balancer pool to the cl pool.
-		clPool, err := createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, DaiOsmoPoolId, DesiredDenom0, keepers)
+		// Create a concentrated liquidity pool for Junox/OSMO.
+		// Link the Junox/OSMO balancer pool to the cl pool.
+		clPool, err := createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, JunoxOsmoPoolId, DesiredDenom0, keepers)
 		if err != nil {
 			return nil, err
 		}
@@ -133,23 +135,26 @@ func CreateUpgradeHandler(
 
 		// Create a position to initialize the balancerPool.
 
-		// Get community pool and DAI/OSMO pool address.
+		// Get community pool and Junox/OSMO pool address.
 		communityPoolAddress := keepers.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
+		ctx.Logger().Info(fmt.Sprintf("communityPoolAddress: %s", communityPoolAddress.String()))
 
-		// Determine the amount of OSMO that can be bought with 1 DAI.
-		oneDai := sdk.NewCoin(DAIIBCDenom, sdk.NewInt(1000000000000000000))
-		daiOsmoGammPool, err := keepers.PoolManagerKeeper.GetPool(ctx, DaiOsmoPoolId)
+		// Determine the amount of OSMO that can be bought with 1 Junox.
+		// MODIFIED FROM MAINNET 1 DAI
+		oneJunox := sdk.NewCoin(JUNOXIBCDenom, sdk.NewInt(1000000))
+		junoxOsmoGammPool, err := keepers.PoolManagerKeeper.GetPool(ctx, JunoxOsmoPoolId)
 		if err != nil {
 			return nil, err
 		}
-		respectiveOsmo, err := keepers.GAMMKeeper.CalcOutAmtGivenIn(ctx, daiOsmoGammPool, oneDai, DesiredDenom0, sdk.ZeroDec())
+		respectiveOsmo, err := keepers.GAMMKeeper.CalcOutAmtGivenIn(ctx, junoxOsmoGammPool, oneJunox, DesiredDenom0, sdk.ZeroDec())
 		if err != nil {
 			return nil, err
 		}
 
 		// Create a full range position via the community pool with the funds that were swapped.
-		fullRangeOsmoDaiCoins := sdk.NewCoins(respectiveOsmo, oneDai)
-		_, actualOsmoAmtUsed, actualDaiAmtUsed, _, err := keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeOsmoDaiCoins)
+		fullRangeOsmoJunoxCoins := sdk.NewCoins(respectiveOsmo, oneJunox)
+		ctx.Logger().Info("creating full range position with community pool address")
+		_, actualOsmoAmtUsed, actualJunoxAmtUsed, _, err := keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeOsmoJunoxCoins)
 		if err != nil {
 			return nil, err
 		}
@@ -158,8 +163,8 @@ func CreateUpgradeHandler(
 
 		// Remove coins we used from the community pool to make the CL position
 		feePool := keepers.DistrKeeper.GetFeePool(ctx)
-		fulllRangeOsmoDaiCoinsUsed := sdk.NewCoins(sdk.NewCoin(DesiredDenom0, actualOsmoAmtUsed), sdk.NewCoin(DAIIBCDenom, actualDaiAmtUsed))
-		newPool, negative := feePool.CommunityPool.SafeSub(sdk.NewDecCoinsFromCoins(fulllRangeOsmoDaiCoinsUsed...))
+		fulllRangeOsmoJunoxCoinsUsed := sdk.NewCoins(sdk.NewCoin(DesiredDenom0, actualOsmoAmtUsed), sdk.NewCoin(JUNOXIBCDenom, actualJunoxAmtUsed))
+		newPool, negative := feePool.CommunityPool.SafeSub(sdk.NewDecCoinsFromCoins(fulllRangeOsmoJunoxCoinsUsed...))
 		if negative {
 			return nil, fmt.Errorf("community pool cannot be negative: %s", newPool)
 		}
@@ -190,10 +195,11 @@ func CreateUpgradeHandler(
 
 		updateTokenFactoryParams(ctx, keepers.TokenFactoryKeeper)
 
-		// Transfers out all the dev fees in kvstore to dev account during upgrade
-		if err := keepers.ProtoRevKeeper.SendDeveloperFeesToDeveloperAccount(ctx); err != nil {
-			return nil, err
-		}
+		// commented out since we have not set developer account yet thus this line would panic
+		// // Transfers out all the dev fees in kvstore to dev account during upgrade
+		// if err := keepers.ProtoRevKeeper.SendDeveloperFeesToDeveloperAccount(ctx); err != nil {
+		// 	return nil, err
+		// }
 
 		ctx.Logger().Info(`
         .:^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^:.
