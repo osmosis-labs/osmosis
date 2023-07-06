@@ -86,7 +86,7 @@ func TestConstants(t *testing.T) {
 }
 
 type FuzzTestSuite struct {
-	positionIds     []uint64
+	positionData    []positionAndLiquidity
 	iteration       int
 	seed            int64
 	collectedErrors []error

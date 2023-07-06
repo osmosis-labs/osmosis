@@ -23,13 +23,30 @@ const (
 	defaultNumPositions = 10
 )
 
+type swapAmountsMismatchErr struct {
+	swapInFunded       sdk.Coin
+	amountInSwapResult sdk.Coin
+	diff               sdk.Int
+}
+
+func (e swapAmountsMismatchErr) Error() string {
+	return fmt.Sprintf("amounts in mismatch, original %s, swapped in given out: %s, difference of %s", e.swapInFunded, e.amountInSwapResult, e.diff)
+}
+
+type positionAndLiquidity struct {
+	positionId   uint64
+	liquidity    sdk.Dec
+	accountIndex int
+}
+
 func TestFuzz_Many(t *testing.T) {
 	t.Parallel()
 	fuzz(t, defaultNumSwaps, defaultNumPositions, 100)
 }
 
 func (s *KeeperTestSuite) TestFuzz_GivenSeed() {
-	r := rand.New(rand.NewSource(1688520583))
+	// Seed 1688572291 - gives mismatch between tokenIn given to "out given in" and token in returned from "in given out"
+	r := rand.New(rand.NewSource(1688572291))
 	s.individualFuzz(r, 0, 30, 10)
 
 	s.validateNoErrors(s.collectedErrors)
@@ -115,7 +132,7 @@ func (s *KeeperTestSuite) fuzzTestWithSeed(r *rand.Rand, poolId uint64, numSwaps
 			completedPositions++
 		}
 
-		s.assertWithdrawAllInvariant()
+		s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
 	}
 }
 
@@ -220,9 +237,8 @@ func tickAmtChange(r *rand.Rand, targetAmount sdk.Dec) sdk.Dec {
 	changeType := r.Intn(3)
 
 	// Generate a random percentage under 0.1%
-	randChangePercent := sdk.NewDec(rand.Int63n(1)).QuoInt64(1000)
-
-	change := sdk.MaxDec(sdk.NewDec(1), randChangePercent)
+	randChangePercent := sdk.NewDec(r.Int63n(1)).QuoInt64(1000)
+	change := targetAmount.Mul(randChangePercent)
 
 	switch changeType {
 	case 0:
@@ -251,8 +267,8 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(swapInFunded))
 	// // Execute swap
 	fmt.Printf("swap in: %s\n", swapInFunded)
-	cacheCtx, write := s.Ctx.CacheContext()
-	_, _, _, err := s.clk.SwapOutAmtGivenIn(cacheCtx, s.TestAccs[0], pool, swapInFunded, swapOutDenom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
+	cacheCtx, writeOutGivenIn := s.Ctx.CacheContext()
+	_, tokenOut, _, err := s.clk.SwapOutAmtGivenIn(cacheCtx, s.TestAccs[0], pool, swapInFunded, swapOutDenom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
 	if errors.As(err, &types.InvalidAmountCalculatedError{}) {
 		// If the swap we're about to execute will not generate enough output, we skip the swap.
 		// it would error for a real user though. This is good though, since that user would just be burning funds.
@@ -261,14 +277,86 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 		}
 	}
 	if err != nil {
-		fmt.Printf("swap error: %s\n", err.Error())
+		fmt.Printf("swap error in out given in: %s\n", err.Error())
 		// Add error to list of errors. Will fail at the end of the fuzz run in high level test.
 		s.collectedErrors = append(s.collectedErrors, err)
 		return false, false
 	}
 
-	// Write only if no error
-	write()
+	// Now, swap in given out with the amount out given by previous swap
+	// We expect the returned amountIn to be roughly equal to the original swapInFunded.
+	cacheCtx, _ = s.Ctx.CacheContext()
+	fmt.Printf("swap out: %s\n", tokenOut)
+	amountInSwapResult, _, _, err := s.clk.SwapInAmtGivenOut(cacheCtx, s.TestAccs[0], pool, tokenOut, swapInFunded.Denom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
+	if errors.As(err, &types.InvalidAmountCalculatedError{}) {
+		// If the swap we're about to execute will not generate enough output, we skip the swap.
+		// it would error for a real user though. This is good though, since that user would just be burning funds.
+		if err.(types.InvalidAmountCalculatedError).Amount.IsZero() {
+			return false, false
+		}
+	}
+
+	if err != nil {
+		fmt.Printf("swap error in in given out: %s\n", err.Error())
+		// Add error to list of errors. Will fail at the end of the fuzz run in high level test.
+		s.collectedErrors = append(s.collectedErrors, err)
+		return false, false
+	}
+
+	errTolerance := osmomath.ErrTolerance{
+		// 2% tolerance
+		MultiplicativeTolerance: sdk.NewDecWithPrec(2, 2),
+		// Expected amount in returned from swap "in given out" to be smaller
+		// than original amount in given to "out given in".
+		// Reason: rounding in pool's favor.
+		RoundingDir: osmomath.RoundDown,
+	}
+
+	result := errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(swapInFunded.Amount.ToDec()), osmomath.BigDecFromSDKDec(amountInSwapResult.Amount.ToDec()))
+
+	if result != 0 {
+		// Note: did some investigations into why this happens.
+		// Seed: 1688572291
+		//
+		// Logs & Prints (only relevant parts for brevity):
+		//
+		//
+		// swap out given in
+		//
+		// swap in: 53154819938620036019618231426080065450usdc
+		// start sqrt price 1.925114640286395175000000000000000000
+		// reached sqrt price 9990000000000000000.001925114640286395490901354505635230
+		// liquidity 5315481993862003602.985114363264252712
+		// amountIn 53101665118681415983598613194653985385.000000000000000000
+		//
+		// swap in given out
+		// start sqrt price 1.925114640286395175000000000000000000
+		// reached sqrt price 5504536865264953043.262903126972924283156861610109232553
+		// liquidity 5315481993862003602.985114363264252712
+		// amountIn 29259266591865455675844375866509084121.000000000000000000
+		//
+		// Note that reached sqrt price is different in both cases leading to different amounts in.
+		// Traced the values with clmath.py.
+		// Conclusion: the small rounding difference uner 1 unit leads to such a large difference because
+		// the affected sqrt price range is long
+		//
+		// This is what we get in in given out calculation of sqrt price with non-rounded tokenOut:
+		// get_next_sqrt_price_from_amount0_out_round_up(liquidity, sqrtPriceCurrent, amountOutGiven)
+		// Decimal('9989999999999999983.247487166393337205203511259650091832')
+		//
+		// This is what we get in in given out calculation of sqrt price with rounded tokenOut:
+		// get_next_sqrt_price_from_amount0_out_round_up(liquidity, sqrtPriceCurrent, amountOutTests)
+		// Decimal('5504536865264953043.262903126972924283156861610109232553')
+		//
+		// This proves that this is a test setup error, not a swap logic error. We need smarter detection of when
+		// a small difference between non-rounded tokenOut in swap out given in and the returned tokenOut here leads
+		// to a large difference in sqrt price (TBD later).
+		s.collectedErrors = append(s.collectedErrors, swapAmountsMismatchErr{swapInFunded: swapInFunded, amountInSwapResult: amountInSwapResult, diff: swapInFunded.Amount.Sub(amountInSwapResult.Amount)})
+		return true, false
+	}
+
+	// Write out given in only if no error. In given out state is dropped.
+	writeOutGivenIn()
 
 	return true, false
 }
@@ -319,6 +407,11 @@ func (s *KeeperTestSuite) validateNoErrors(possibleErrors []error) {
 			continue
 		}
 
+		// This is acceptable. See where this error is returned for explanation.
+		if errors.As(err, &swapAmountsMismatchErr{}) {
+			continue
+		}
+
 		shouldFail = true
 
 		msg := fmt.Sprintf("%s\n", err.Error())
@@ -351,14 +444,20 @@ func (s *KeeperTestSuite) selectAction(r *rand.Rand, numSwaps, numPositions, com
 // Add or remove liquidity
 
 func (s *KeeperTestSuite) addOrRemoveLiquidity(r *rand.Rand, poolId uint64) {
-	// shouldAddPosition := s.selectAddOrRemove(r)
-
-	if true {
+	if s.selectAddOrRemove(r) {
 		s.addRandomPositonMinMaxOneSpacing(r, poolId)
 	} else {
-		fmt.Println("removing position")
-		// s.removeLiquidity(r, randomizedAssets)
+		s.removeRandomPosition(r)
 	}
+
+}
+
+// if true add position, if false remove position
+func (s *KeeperTestSuite) selectAddOrRemove(r *rand.Rand) bool {
+	if len(s.positionData) == 0 {
+		return true
+	}
+	return r.Intn(2) == 0
 }
 
 func (s *KeeperTestSuite) addRandomPositonMinMaxOneSpacing(r *rand.Rand, poolId uint64) {
@@ -366,23 +465,77 @@ func (s *KeeperTestSuite) addRandomPositonMinMaxOneSpacing(r *rand.Rand, poolId 
 }
 
 func (s *KeeperTestSuite) addRandomPositon(r *rand.Rand, poolId uint64, minTick, maxTick int64, tickSpacing int64) {
-	tokenDesired0 := sdk.NewCoin(ETH, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
-	tokenDesired1 := sdk.NewCoin(USDC, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
+	tokenDesired0 := sdk.NewCoin(ETH, sdk.NewInt(r.Int63n(maxAmountDeposited)))
+	tokenDesired1 := sdk.NewCoin(USDC, sdk.NewInt(r.Int63n(maxAmountDeposited)))
 	tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
 
-	s.FundAcc(s.TestAccs[0], tokensDesired)
+	accountIndex := r.Intn(len(s.TestAccs))
 
-	lowerTick := roundTickDownSpacing(rand.Int63n(maxTick-minTick+1)+minTick, tickSpacing)
+	s.FundAcc(s.TestAccs[accountIndex], tokensDesired)
+
+	lowerTick := roundTickDownSpacing(r.Int63n(maxTick-minTick+1)+minTick, tickSpacing)
 	// lowerTick <= upperTick <= maxTick
-	upperTick := roundTickDownSpacing(maxTick-rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick)))), tickSpacing)
+	upperTick := roundTickDownSpacing(maxTick-r.Int63n(int64(math.Abs(float64(maxTick-lowerTick)))), tickSpacing)
 
 	fmt.Println("creating position: ", "accountName", "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1)
 
-	positionId, amt0, amt1, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinInitializedTick, types.MaxTick)
+	positionId, amt0, amt1, liq, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[accountIndex], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinInitializedTick, types.MaxTick)
 	s.Require().NoError(err)
 	fmt.Printf("actually created: %s%s %s%s \n", amt0, ETH, amt1, USDC)
 
-	s.positionIds = append(s.positionIds, positionId)
+	s.positionData = append(s.positionData, positionAndLiquidity{
+		positionId:   positionId,
+		liquidity:    liq,
+		accountIndex: accountIndex,
+	})
+}
+
+func (s *KeeperTestSuite) removeRandomPosition(r *rand.Rand) {
+	if len(s.positionData) == 0 {
+		return
+	}
+
+	positionIndexToRemove := r.Intn(len(s.positionData))
+	positionData := s.positionData[positionIndexToRemove]
+
+	positionIdToRemove := positionData.positionId
+
+	withdrawMultiplier := s.choosePartialOrFullWithdraw(r)
+
+	liqToWithdraw := positionData.liquidity
+
+	liqToWithdrawAfterMultiplier := liqToWithdraw.Mul(withdrawMultiplier)
+
+	// Only apply multiplier if it does not make the liquidity be zero
+	if !liqToWithdrawAfterMultiplier.IsZero() {
+		liqToWithdraw = liqToWithdrawAfterMultiplier
+	}
+
+	fmt.Println("withdrawing position: ", "position id", positionIdToRemove, "amtToWithdraw", liqToWithdraw)
+
+	_, _, err := s.App.ConcentratedLiquidityKeeper.WithdrawPosition(s.Ctx, s.TestAccs[positionData.accountIndex], positionIdToRemove, liqToWithdraw)
+	s.Require().NoError(err)
+
+	s.positionData[positionIndexToRemove].liquidity = positionData.liquidity.Sub(liqToWithdraw)
+
+	// if full withdraw, remove position from slice
+	if s.positionData[positionIndexToRemove].liquidity.IsZero() {
+		s.positionData = append(s.positionData[:positionIndexToRemove], s.positionData[positionIndexToRemove+1:]...)
+	}
+}
+
+// returns multiplier of the liqudity to withdraw
+func (s *KeeperTestSuite) choosePartialOrFullWithdraw(r *rand.Rand) sdk.Dec {
+	multiplier := sdk.OneDec()
+	if r.Intn(2) == 0 {
+		// full withdraw
+		return multiplier
+	}
+
+	// partial withdraw
+	multiplier = multiplier.Mul(sdk.NewDec(r.Int63n(100))).QuoInt64(100)
+
+	return multiplier
 }
 
 func roundTickDownSpacing(tickIndex int64, tickSpacing int64) int64 {
@@ -406,5 +559,5 @@ func roundTickDownSpacing(tickIndex int64, tickSpacing int64) int64 {
 }
 
 func randomIntAmount(r *rand.Rand) sdk.Int {
-	return sdk.NewInt(rand.Int63n(maxAmountDeposited))
+	return sdk.NewInt(r.Int63n(maxAmountDeposited))
 }
