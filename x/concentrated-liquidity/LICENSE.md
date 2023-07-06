@@ -3,9 +3,9 @@ Licensor: 		Osmosis Foundation Ltd.
 Licensed Work:	Supercharged Liquidity Module
 			The Licensed Work is © 2023 Osmosis Foundation Ltd.
 
-Additional Use Grant: Any uses identified and defined in a governance proposal passed by the Osmosis DAO, which can be found at https://www.mintscan.io/osmosis/proposals or other blockchain explorer.
+Additional Use Grant: Any uses identified and defined in a governance proposal passed by the Osmosis DAO, which can be found at <https://www.mintscan.io/osmosis/proposals> or other blockchain explorer.
 
-Change Date: For Supercharged Liquidity Module, change date is the earlier of two years from the date of adoption of the governance proposal implementing this change by the Osmosis DAO or a date specified by the adoption of a governance proposal setting the change date by the Osmosis DAO, which can be found at https://www.mintscan.io/osmosis/proposals or other blockchain explorer. 
+Change Date: For Supercharged Liquidity Module, change date is the earlier of two years from the date of adoption of the governance proposal implementing this change by the Osmosis DAO or a date specified by the adoption of a governance proposal setting the change date by the Osmosis DAO, which can be found at <https://www.mintscan.io/osmosis/proposals> or other blockchain explorer. 
 
 Change License: GNU General Public License v.2 or later
 
