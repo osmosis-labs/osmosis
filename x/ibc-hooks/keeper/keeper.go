@@ -225,7 +225,7 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 
 	switch ack.Type {
 	case "ack_response":
-		jsonAck, err := json.Marshal(ack.AckResponse)
+		jsonAck, err := json.Marshal(ack.AckResponse.ContractAck)
 		if err != nil {
 			return nil, sdkerrors.Wrap(err, "could not marshal acknowledgement")
 		}
