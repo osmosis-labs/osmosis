@@ -40,7 +40,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+<<<<<<< HEAD
 ## v15.2.0
+=======
+## Unreleased
+
+### State Breaking
+
+* [#5532](https://github.com/osmosis-labs/osmosis/pull/5532) fix: Fix x/tokenfactory genesis import denoms reset x/bank existing denom metadata
+
+### Misc Improvements
+
+* [#5534](https://github.com/osmosis-labs/osmosis/pull/5534) fix: fix the account number of x/tokenfactory module account
+* [#5750](https://github.com/osmosis-labs/osmosis/pull/5750) feat: add cli commmand for converting proto structs to proto marshalled bytes
+
+## v16.0.0
+Osmosis Labs is excited to announce the release of v16.0.0, a major upgrade that includes a number of new features and improvements like introduction of new modules, updates existing APIs, and dependency updates. This upgrade aims to enhance capital efficiency by introducing SuperCharged Liquidity, introduce custom liquidity pools backed by CosmWasm smart contracts, and improve overall functionality.
+
+New Modules and Features:
+
+SuperCharged Liquidity Module (x/concentrated-liquidity):
+- Introduces a game-changing pool model that enhances captical efficiency in Osmosis.
+
+CosmWasm Pool Module (x/cosmwasmpool):
+- Enables the creation and management of liquidity pools backed by CosmWasm smart contracts.
+
+ProtoRev Changes (x/protorev):
+- Modifies the payment schedule for the dev account from weekly to after every trade.
+- Triggers backruns, joinPool, and exitPool using hooks.
+
+TokenFactory before send hooks (x/tokenfactory):
+- This enhancement allows for executing custom logic before sending tokens, providing more flexibility
+and control over token transfers.
+
+>>>>>>> 0bdbca24 (Add debug command for conversion to proto marshalled bytes (#5750))
 
 ### Security
 
