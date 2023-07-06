@@ -93,7 +93,7 @@ message MsgSetDeveloperAccountResponse {}
 
 // MsgSetPoolWeights defines the Msg/SetPoolWeights request type.
 message MsgSetPoolWeights {
-  option (amino.name) = "osmosis/MsgSetMaxPoolPointsPerTx";
+  option (amino.name) = "osmosis/MsgSetPoolWeights";
 
   // admin is the account that is authorized to set the pool weights.
   string admin = 1 [
@@ -112,7 +112,7 @@ message MsgSetPoolWeightsResponse {}
 
 // MsgSetMaxPoolPointsPerTx defines the Msg/SetMaxPoolPointsPerTx request type.
 message MsgSetMaxPoolPointsPerTx {
-  option (amino.name) = "osmosis/MsgSetMaxPoolPointsPerBlock";
+  option (amino.name) = "osmosis/MsgSetMaxPoolPointsPerTx";
 
   // admin is the account that is authorized to set the max pool points per tx.
   string admin = 1 [
