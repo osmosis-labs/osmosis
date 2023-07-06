@@ -33,6 +33,12 @@ func (e swapAmountsMismatchErr) Error() string {
 	return fmt.Sprintf("amounts in mismatch, original %s, swapped in given out: %s, difference of %s", e.swapInFunded, e.amountInSwapResult, e.diff)
 }
 
+type positionAndLiquidity struct {
+	positionId   uint64
+	liquidity    sdk.Dec
+	accountIndex int
+}
+
 func TestFuzz_Many(t *testing.T) {
 	fuzz(t, defaultNumSwaps, defaultNumPositions, 100)
 }
@@ -129,12 +135,11 @@ func (s *KeeperTestSuite) fuzzTestWithSeed(r *rand.Rand, poolId uint64, numSwaps
 			completedPositions++
 		}
 
-		s.assertWithdrawAllInvariant()
+		s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
 	}
 }
 
 func (s *KeeperTestSuite) randomSwap(r *rand.Rand, poolId uint64) (fatalErr bool) {
-
 	pool, err := s.clk.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
@@ -446,21 +451,17 @@ func (s *KeeperTestSuite) selectAction(r *rand.Rand, numSwaps, numPositions, com
 // Add or remove liquidity
 
 func (s *KeeperTestSuite) addOrRemoveLiquidity(r *rand.Rand, poolId uint64) {
-
-	// shouldAddPosition := s.selectAddOrRemove(r)
-
-	if true {
+	if s.selectAddOrRemove(r) {
 		s.addRandomPositonMinMaxOneSpacing(r, poolId)
 	} else {
-		fmt.Println("removing position")
-		// s.removeLiquidity(r, randomizedAssets)
+		s.removeRandomPosition(r)
 	}
 
 }
 
 // if true add position, if false remove position
 func (s *KeeperTestSuite) selectAddOrRemove(r *rand.Rand) bool {
-	if len(s.positionIds) == 0 {
+	if len(s.positionData) == 0 {
 		return true
 	}
 	return r.Intn(2) == 0
@@ -475,7 +476,9 @@ func (s *KeeperTestSuite) addRandomPositon(r *rand.Rand, poolId uint64, minTick,
 	tokenDesired1 := sdk.NewCoin(USDC, sdk.NewInt(r.Int63n(maxAmountDeposited)))
 	tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
 
-	s.FundAcc(s.TestAccs[0], tokensDesired)
+	accountIndex := r.Intn(len(s.TestAccs))
+
+	s.FundAcc(s.TestAccs[accountIndex], tokensDesired)
 
 	lowerTick := roundTickDownSpacing(r.Int63n(maxTick-minTick+1)+minTick, tickSpacing)
 	// lowerTick <= upperTick <= maxTick
@@ -483,11 +486,63 @@ func (s *KeeperTestSuite) addRandomPositon(r *rand.Rand, poolId uint64, minTick,
 
 	fmt.Println("creating position: ", "accountName", "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1)
 
-	positionId, amt0, amt1, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinInitializedTick, types.MaxTick)
+	positionId, amt0, amt1, liq, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[accountIndex], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinInitializedTick, types.MaxTick)
 	s.Require().NoError(err)
 	fmt.Printf("actually created: %s%s %s%s \n", amt0, ETH, amt1, USDC)
 
-	s.positionIds = append(s.positionIds, positionId)
+	s.positionData = append(s.positionData, positionAndLiquidity{
+		positionId:   positionId,
+		liquidity:    liq,
+		accountIndex: accountIndex,
+	})
+}
+
+func (s *KeeperTestSuite) removeRandomPosition(r *rand.Rand) {
+	if len(s.positionData) == 0 {
+		return
+	}
+
+	positionIndexToRemove := r.Intn(len(s.positionData))
+	positionData := s.positionData[positionIndexToRemove]
+
+	positionIdToRemove := positionData.positionId
+
+	withdrawMultiplier := s.choosePartialOrFullWithdraw(r)
+
+	liqToWithdraw := positionData.liquidity
+
+	liqToWithdrawAfterMultiplier := liqToWithdraw.Mul(withdrawMultiplier)
+
+	// Only apply multiplier if it does not make the liquidity be zero
+	if !liqToWithdrawAfterMultiplier.IsZero() {
+		liqToWithdraw = liqToWithdrawAfterMultiplier
+	}
+
+	fmt.Println("withdrawing position: ", "position id", positionIdToRemove, "amtToWithdraw", liqToWithdraw)
+
+	_, _, err := s.App.ConcentratedLiquidityKeeper.WithdrawPosition(s.Ctx, s.TestAccs[positionData.accountIndex], positionIdToRemove, liqToWithdraw)
+	s.Require().NoError(err)
+
+	s.positionData[positionIndexToRemove].liquidity = positionData.liquidity.Sub(liqToWithdraw)
+
+	// if full withdraw, remove position from slice
+	if s.positionData[positionIndexToRemove].liquidity.IsZero() {
+		s.positionData = append(s.positionData[:positionIndexToRemove], s.positionData[positionIndexToRemove+1:]...)
+	}
+}
+
+// returns multiplier of the liqudity to withdraw
+func (s *KeeperTestSuite) choosePartialOrFullWithdraw(r *rand.Rand) sdk.Dec {
+	multiplier := sdk.OneDec()
+	if r.Intn(2) == 0 {
+		// full withdraw
+		return multiplier
+	}
+
+	// partial withdraw
+	multiplier = multiplier.Mul(sdk.NewDec(r.Int63n(100))).QuoInt64(100)
+
+	return multiplier
 }
 
 func roundTickDownSpacing(tickIndex int64, tickSpacing int64) int64 {
