@@ -45,7 +45,8 @@ func TestFuzz_Many(t *testing.T) {
 
 func (s *KeeperTestSuite) TestFuzz_GivenSeed() {
 	// Seed 1688572291 - gives mismatch between tokenIn given to "out given in" and token in returned from "in given out"
-	r := rand.New(rand.NewSource(1688572291))
+	// Seed 1688658883- causes an error in swap in given out due to rounding (acceptable).
+	r := rand.New(rand.NewSource(1688658883))
 	s.individualFuzz(r, 0, 30, 10)
 
 	s.validateNoErrors(s.collectedErrors)
@@ -270,7 +271,10 @@ func tickAmtChange(r *rand.Rand, targetAmount sdk.Dec) sdk.Dec {
 }
 
 func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunded sdk.Coin, swapOutDenom string) (didSwap bool, fatalErr bool) {
-	s.FundAcc(s.TestAccs[0], sdk.NewCoins(swapInFunded))
+	// Reason for adding one int:
+	// Seed 1688658883- causes an error in swap in given out due to rounding (acceptable). This is because we use
+	// token out from "swap out given in" as an input to "in given out". "in given out" rounds by one in pool's favor
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(swapInFunded).Add(sdk.NewCoin(swapInFunded.Denom, sdk.OneInt())))
 	// // Execute swap
 	fmt.Printf("swap in: %s\n", swapInFunded)
 	cacheCtx, writeOutGivenIn := s.Ctx.CacheContext()
