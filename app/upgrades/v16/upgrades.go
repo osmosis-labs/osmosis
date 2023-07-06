@@ -195,10 +195,11 @@ func CreateUpgradeHandler(
 
 		updateTokenFactoryParams(ctx, keepers.TokenFactoryKeeper)
 
-		// Transfers out all the dev fees in kvstore to dev account during upgrade
-		if err := keepers.ProtoRevKeeper.SendDeveloperFeesToDeveloperAccount(ctx); err != nil {
-			return nil, err
-		}
+		// commented out since we have not set developer account yet thus this line would panic
+		// // Transfers out all the dev fees in kvstore to dev account during upgrade
+		// if err := keepers.ProtoRevKeeper.SendDeveloperFeesToDeveloperAccount(ctx); err != nil {
+		// 	return nil, err
+		// }
 
 		ctx.Logger().Info(`
         .:^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^:.
