@@ -156,10 +156,8 @@ func init() {
 	setWhitelistedQuery("/osmosis.downtimedetector.v1beta1.Query/RecoveredSinceDowntimeOfLength", &downtimequerytypes.RecoveredSinceDowntimeOfLengthResponse{})
 
 	// concentrated-liquidity
-	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/Pools", &concentratedliquidityquery.PoolsResponse{})
 	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/UserPositions", &concentratedliquidityquery.UserPositionsResponse{})
 	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/LiquidityPerTickRange", &concentratedliquidityquery.LiquidityPerTickRangeResponse{})
-	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/LiquidityNetInDirection", &concentratedliquidityquery.LiquidityNetInDirectionResponse{})
 	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/ClaimableSpreadRewards", &concentratedliquidityquery.ClaimableSpreadRewardsResponse{})
 	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/ClaimableIncentives", &concentratedliquidityquery.ClaimableIncentivesResponse{})
 	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/PositionById", &concentratedliquidityquery.PositionByIdResponse{})
