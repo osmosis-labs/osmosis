@@ -2,10 +2,9 @@ package swapstrategy
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	dbm "github.com/tendermint/tm-db"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	dbm "github.com/tendermint/tm-db"
 )
 
 // swapStrategy defines the interface for computing a swap.

@@ -1,11 +1,10 @@
 package keeper
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v16/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // BeforeEpochStart is the epoch start hook.

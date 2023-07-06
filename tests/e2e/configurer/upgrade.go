@@ -9,7 +9,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
 	v16 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v16"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/chain"

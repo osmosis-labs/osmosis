@@ -16,25 +16,22 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v16/x/lockup/client/cli"
 	"github.com/osmosis-labs/osmosis/v16/x/lockup/client/rest"
 	"github.com/osmosis-labs/osmosis/v16/x/lockup/keeper"
-
 	simulation "github.com/osmosis-labs/osmosis/v16/x/lockup/simulation"
 	"github.com/osmosis-labs/osmosis/v16/x/lockup/types"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (

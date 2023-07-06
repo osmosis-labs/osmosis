@@ -5,13 +5,11 @@ import (
 	"sort"
 	"strings"
 
-	"gopkg.in/yaml.v2"
-
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	"gopkg.in/yaml.v2"
 )
 
 type poolAssetPretty struct {

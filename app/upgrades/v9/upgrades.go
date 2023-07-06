@@ -9,16 +9,13 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
-	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-
 	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
 	icacontrollertypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/controller/types"
 	icahosttypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
-
 	"github.com/osmosis-labs/osmosis/v16/app/keepers"
 	"github.com/osmosis-labs/osmosis/v16/app/upgrades"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 )
 
 const preUpgradeAppVersion = 8

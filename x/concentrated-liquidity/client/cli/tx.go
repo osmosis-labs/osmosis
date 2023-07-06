@@ -7,17 +7,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-
-	"github.com/spf13/cobra"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/spf13/cobra"
 )
 
 func NewTxCmd() *cobra.Command {

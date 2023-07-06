@@ -20,15 +20,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
-	simulation "github.com/osmosis-labs/osmosis/v16/x/tokenfactory/simulation"
-
 	"github.com/osmosis-labs/osmosis/v16/x/tokenfactory/client/cli"
 	"github.com/osmosis-labs/osmosis/v16/x/tokenfactory/keeper"
+	simulation "github.com/osmosis-labs/osmosis/v16/x/tokenfactory/simulation"
 	"github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (

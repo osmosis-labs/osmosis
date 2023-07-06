@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"math/rand"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	legacysimexec "github.com/cosmos/cosmos-sdk/x/simulation"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
 )
 

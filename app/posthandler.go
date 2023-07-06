@@ -2,7 +2,6 @@ package app
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	protorevkeeper "github.com/osmosis-labs/osmosis/v16/x/protorev/keeper"
 )
 

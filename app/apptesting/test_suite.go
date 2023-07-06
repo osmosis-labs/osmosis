@@ -23,6 +23,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/gogo/protobuf/proto"
+	"github.com/osmosis-labs/osmosis/v16/app"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v16/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v16/x/mint/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -30,16 +37,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
-
-	"github.com/osmosis-labs/osmosis/v16/app"
-
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-
-	lockupkeeper "github.com/osmosis-labs/osmosis/v16/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v16/x/mint/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 type KeeperTestHelper struct {

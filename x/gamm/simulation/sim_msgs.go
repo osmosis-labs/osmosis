@@ -5,9 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
-
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/keeper"

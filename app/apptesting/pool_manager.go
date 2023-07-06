@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
 	poolmanager "github.com/osmosis-labs/osmosis/v16/x/poolmanager"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"

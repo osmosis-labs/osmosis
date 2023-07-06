@@ -6,7 +6,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/events"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"

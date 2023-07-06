@@ -9,11 +9,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
-
 	"github.com/osmosis-labs/osmosis/v16/simulation/executor/internal/stats"
 	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes/simlogger"
+	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 )
 
 // List of available flags for the simulator

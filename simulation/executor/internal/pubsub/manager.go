@@ -2,9 +2,8 @@ package pubsub
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"go.uber.org/multierr"
-
 	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
+	"go.uber.org/multierr"
 )
 
 var _ simtypes.PubSubManager = &Manager{}

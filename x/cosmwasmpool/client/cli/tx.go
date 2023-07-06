@@ -13,13 +13,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/cosmwasm/msg"
 	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/model"
 	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 func NewTxCmd() *cobra.Command {

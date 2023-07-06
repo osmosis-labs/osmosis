@@ -4,11 +4,9 @@ import (
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client"
-
-	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/client/cli"
-
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
+	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/client/cli"
 )
 
 var (

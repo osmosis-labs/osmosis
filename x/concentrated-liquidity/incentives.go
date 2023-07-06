@@ -9,14 +9,13 @@ import (
 	sdkprefix "github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"golang.org/x/exp/slices"
-
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	"golang.org/x/exp/slices"
 )
 
 // createUptimeAccumulators creates accumulator objects in store for each supported uptime for the given poolId.

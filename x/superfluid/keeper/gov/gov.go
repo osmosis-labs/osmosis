@@ -6,12 +6,11 @@ import (
 	"sort"
 	"strings"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v16/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v16/x/superfluid/keeper/internal/events"
 	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek types.EpochKeeper, p *types.SetSuperfluidAssetsProposal) error {

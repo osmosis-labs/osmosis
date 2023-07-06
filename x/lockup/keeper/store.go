@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
-
-	"github.com/osmosis-labs/osmosis/v16/x/lockup/types"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
+	"github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 )
 
 // GetLastLockID returns ID used last time.

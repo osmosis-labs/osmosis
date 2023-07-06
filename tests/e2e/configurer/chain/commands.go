@@ -11,26 +11,20 @@ import (
 	"sync"
 	"time"
 
-	"github.com/tendermint/tendermint/libs/bytes"
-
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+	app "github.com/osmosis-labs/osmosis/v16/app"
 	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/initialization"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/util"
-
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/p2p"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-
-	app "github.com/osmosis-labs/osmosis/v16/app"
-
-	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 )
 
 // The value is returned as a string, so we have to unmarshal twice

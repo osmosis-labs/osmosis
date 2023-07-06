@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
@@ -877,7 +876,7 @@ type OverChargeSwapOutGivenInError struct {
 func (e OverChargeSwapOutGivenInError) Error() string {
 	return fmt.Sprintf("over charge problem swap out given in by (%s)", e.AmountSpecifiedRemaining)
 }
-  
+
 type ComputedSqrtPriceInequalityError struct {
 	IsZeroForOne                 bool
 	NextInitializedTickSqrtPrice osmomath.BigDec

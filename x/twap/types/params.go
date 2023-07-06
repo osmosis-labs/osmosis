@@ -5,7 +5,6 @@ import (
 	"time"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 

@@ -5,13 +5,12 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v16/x/valset-pref/types"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 func GetTxCmd() *cobra.Command {

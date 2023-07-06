@@ -3,7 +3,6 @@ package v16
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-
 	"github.com/osmosis-labs/osmosis/v16/app/keepers"
 	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	gammkeeper "github.com/osmosis-labs/osmosis/v16/x/gamm/keeper"

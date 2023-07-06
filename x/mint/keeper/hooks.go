@@ -3,11 +3,10 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v16/x/mint/types"
-	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v16/x/mint/types"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // BeforeEpochStart is a hook which is executed before the start of an epoch. It is a no-op for mint module.

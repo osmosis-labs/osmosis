@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
 	"github.com/osmosis-labs/osmosis/v16/app/keepers"
 	"github.com/osmosis-labs/osmosis/v16/app/upgrades"
 )

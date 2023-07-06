@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 )
 
 const (

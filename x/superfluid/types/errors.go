@@ -5,7 +5,6 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 

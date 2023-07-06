@@ -3,9 +3,8 @@ package keeper
 import (
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v16/x/incentives/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v16/x/incentives/types"
 )
 
 // findIndex takes an array of IDs. Then return the index of a specific ID.

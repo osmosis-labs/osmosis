@@ -1,9 +1,8 @@
 package clmocks
 
 import (
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
 
 type ConcentratedLiquidityListenerMock struct {

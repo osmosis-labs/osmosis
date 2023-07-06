@@ -1,10 +1,9 @@
 package client
 
 import (
+	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	"github.com/osmosis-labs/osmosis/v16/x/superfluid/client/cli"
 	"github.com/osmosis-labs/osmosis/v16/x/superfluid/client/rest"
-
-	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 )
 
 var (

@@ -2,7 +2,6 @@ package ibc_rate_limit
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/types"
 )
 

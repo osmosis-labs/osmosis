@@ -11,14 +11,10 @@ import (
 	"time"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
-	tmabcitypes "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/util"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
@@ -30,6 +26,8 @@ import (
 	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 	twapqueryproto "github.com/osmosis-labs/osmosis/v16/x/twap/client/queryproto"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	"github.com/stretchr/testify/require"
+	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 )
 
 // QueryProtoRevNumberOfTrades gets the number of trades the protorev module has executed.

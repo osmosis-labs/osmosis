@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -16,8 +17,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/gogo/protobuf/proto"
-	tmjson "github.com/tendermint/tendermint/libs/json"
-
+	"github.com/osmosis-labs/osmosis/v16/tests/e2e/util"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
@@ -28,10 +28,7 @@ import (
 	twaptypes "github.com/osmosis-labs/osmosis/v16/x/twap/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v16/x/txfees/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
-
-	types1 "github.com/cosmos/cosmos-sdk/codec/types"
-
-	"github.com/osmosis-labs/osmosis/v16/tests/e2e/util"
+	tmjson "github.com/tendermint/tendermint/libs/json"
 )
 
 // NodeConfig is a confiuration for the node supplied from the test runner

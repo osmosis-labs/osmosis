@@ -5,9 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 )
 
 func stakingSyntheticDenom(denom, valAddr string) string {

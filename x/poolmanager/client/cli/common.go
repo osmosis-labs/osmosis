@@ -5,9 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	flag "github.com/spf13/pflag"
-
 	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	flag "github.com/spf13/pflag"
 )
 
 func swapAmountInRoutes(fs *flag.FlagSet) ([]types.SwapAmountInRoute, error) {

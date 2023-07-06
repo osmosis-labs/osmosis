@@ -2,7 +2,6 @@ package client
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	ibcratelimit "github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit"
 	"github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/client/queryproto"
 )

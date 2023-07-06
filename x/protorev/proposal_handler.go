@@ -1,12 +1,10 @@
 package protorev
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
 	errorsmod "cosmossdk.io/errors"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/osmosis-labs/osmosis/v16/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
 )

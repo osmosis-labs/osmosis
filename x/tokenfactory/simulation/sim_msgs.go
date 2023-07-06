@@ -3,14 +3,12 @@ package simulation
 import (
 	"errors"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
-
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v16/x/tokenfactory/keeper"
 	"github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // RandomMsgCreateDenom creates a random tokenfactory denom that is no greater than 44 alphanumeric characters

@@ -4,12 +4,10 @@ import (
 	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	cosmwasmutils "github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/cosmwasm/msg"
 	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
-
-	cosmwasmutils "github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 )
 
 type Pool struct {

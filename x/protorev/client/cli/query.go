@@ -3,12 +3,10 @@ package cli
 import (
 	"encoding/json"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-
-	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-
-	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
 )
 
 // NewCmdQuery returns the cli query commands for this module

@@ -2,7 +2,6 @@ package apptesting
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	gammkeeper "github.com/osmosis-labs/osmosis/v16/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"

@@ -6,16 +6,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
+	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/osmosis-labs/osmosis/v16/app/params"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
-
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 //nolint:deadcode,unused

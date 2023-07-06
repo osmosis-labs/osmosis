@@ -3,7 +3,6 @@ package keeper
 import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 )

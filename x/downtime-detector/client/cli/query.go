@@ -3,12 +3,11 @@ package cli
 import (
 	"time"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v16/x/downtime-detector/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v16/x/downtime-detector/types"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 func GetQueryCmd() *cobra.Command {

@@ -13,10 +13,9 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"golang.org/x/exp/maps"
-
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
+	"golang.org/x/exp/maps"
 )
 
 // Manager defines a simulation manager that provides the high level utility

@@ -9,7 +9,6 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
 	"github.com/cosmos/ibc-go/v4/modules/core/exported"
-
 	"github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/types"
 )
 

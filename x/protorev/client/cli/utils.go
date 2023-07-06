@@ -8,9 +8,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	flag "github.com/spf13/pflag"
-
 	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
+	flag "github.com/spf13/pflag"
 )
 
 // ------------ types/functions to handle a SetHotRoutes CLI TX ------------ //

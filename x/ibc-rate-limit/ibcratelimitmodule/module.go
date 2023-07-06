@@ -5,24 +5,21 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	abci "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit"
 	ibcratelimitclient "github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/client"
 	ibcratelimitcli "github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/client/cli"
 	"github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/client/grpc"
 	"github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/types"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (

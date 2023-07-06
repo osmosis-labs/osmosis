@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	validatorprefkeeper "github.com/osmosis-labs/osmosis/v16/x/valset-pref"
 	"github.com/osmosis-labs/osmosis/v16/x/valset-pref/client/queryproto"
 )

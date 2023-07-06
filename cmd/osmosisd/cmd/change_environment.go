@@ -6,9 +6,8 @@ import (
 	"path/filepath"
 
 	"github.com/joho/godotenv"
-	"github.com/spf13/cobra"
-
 	"github.com/osmosis-labs/osmosis/v16/app"
+	"github.com/spf13/cobra"
 )
 
 const (

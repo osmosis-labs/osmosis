@@ -5,10 +5,9 @@ package simulation
 import (
 	"math/rand"
 
-	"github.com/osmosis-labs/osmosis/v16/x/mint/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/osmosis-labs/osmosis/v16/x/mint/types"
 )
 
 // Simulation parameter constants.

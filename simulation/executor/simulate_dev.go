@@ -7,14 +7,13 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/osmosis-labs/osmosis/v16/simulation/executor/internal/stats"
+	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
-
-	"github.com/osmosis-labs/osmosis/v16/simulation/executor/internal/stats"
-	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
 )
 
 type simState struct {

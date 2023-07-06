@@ -4,14 +4,12 @@ import (
 	"errors"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
-
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v16/x/lockup/keeper"
 	"github.com/osmosis-labs/osmosis/v16/x/lockup/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func RandomMsgLockTokens(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgLockTokens, error) {

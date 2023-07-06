@@ -10,9 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 	"github.com/cosmos/ibc-go/v4/testing/simapp/helpers"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	"github.com/osmosis-labs/osmosis/v16/app"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type TestChain struct {

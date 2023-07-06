@@ -6,11 +6,9 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/osmosis-labs/osmosis/v16/x/txfees/keeper/txfee_filters"
 	"github.com/osmosis-labs/osmosis/v16/x/txfees/types"
-
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // MempoolFeeDecorator will check if the transaction's fee is at least as large

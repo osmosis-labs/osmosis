@@ -7,9 +7,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/pkg/errors"
-
 	"github.com/osmosis-labs/osmosis/v16/cmd/querygen/templates"
+	"github.com/pkg/errors"
 )
 
 var grpcTemplate template.Template

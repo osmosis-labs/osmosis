@@ -4,7 +4,6 @@ import (
 	"os"
 
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
-
 	osmosis "github.com/osmosis-labs/osmosis/v16/app"
 	"github.com/osmosis-labs/osmosis/v16/app/params"
 	"github.com/osmosis-labs/osmosis/v16/cmd/osmosisd/cmd"

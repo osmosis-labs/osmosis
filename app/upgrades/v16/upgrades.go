@@ -4,16 +4,13 @@ import (
 	"fmt"
 	"time"
 
+	cosmwasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
 	"github.com/osmosis-labs/osmosis/v16/app/keepers"
 	"github.com/osmosis-labs/osmosis/v16/app/upgrades"
-
-	cosmwasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"

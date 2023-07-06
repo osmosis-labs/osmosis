@@ -2,7 +2,6 @@ package client
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	downtimedetector "github.com/osmosis-labs/osmosis/v16/x/downtime-detector"
 	"github.com/osmosis-labs/osmosis/v16/x/downtime-detector/client/queryproto"
 )

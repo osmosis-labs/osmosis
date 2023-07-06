@@ -1,12 +1,9 @@
 package v9
 
 import (
-	"github.com/osmosis-labs/osmosis/v16/app/upgrades"
-
 	store "github.com/cosmos/cosmos-sdk/store/types"
-
 	icahosttypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/types"
-
+	"github.com/osmosis-labs/osmosis/v16/app/upgrades"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
 )
 

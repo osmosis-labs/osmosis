@@ -1,9 +1,8 @@
 package cli
 
 import (
-	flag "github.com/spf13/pflag"
-
 	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	flag "github.com/spf13/pflag"
 )
 
 const (

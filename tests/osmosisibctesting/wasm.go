@@ -5,17 +5,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/tidwall/gjson"
-
-	"github.com/stretchr/testify/require"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/types"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"github.com/tidwall/gjson"
 )
 
 func (chain *TestChain) StoreContractCode(suite *suite.Suite, path string) {

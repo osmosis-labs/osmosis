@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
 )

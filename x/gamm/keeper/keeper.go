@@ -3,12 +3,11 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 )
 
 func permContains(perms []string, perm string) bool {

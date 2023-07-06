@@ -4,13 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	db "github.com/tendermint/tm-db"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/v16/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	db "github.com/tendermint/tm-db"
 )
 
 // getDistributedCoinsFromGauges returns coins that have been distributed already from the provided gauges

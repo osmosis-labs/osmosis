@@ -1,12 +1,11 @@
 package cli
 
 import (
-	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
-
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 )
 
 // GetQueryCmd returns the cli query commands for this module.

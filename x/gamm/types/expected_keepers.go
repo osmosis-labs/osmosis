@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
 	"github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"

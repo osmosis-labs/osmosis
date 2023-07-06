@@ -1,10 +1,9 @@
 package superfluid
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v16/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // BeginBlocker is called on every block.

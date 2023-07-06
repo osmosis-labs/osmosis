@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/unknownproto"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
-
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/util"
 )
 

@@ -2,7 +2,6 @@ package cosmwasmpool
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 

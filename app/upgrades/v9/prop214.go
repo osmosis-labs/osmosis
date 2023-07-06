@@ -2,7 +2,6 @@ package v9
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	gammkeeper "github.com/osmosis-labs/osmosis/v16/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
 )

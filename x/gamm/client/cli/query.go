@@ -6,18 +6,16 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
-	"gopkg.in/yaml.v2"
-
+	"github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
+	"gopkg.in/yaml.v2"
 )
 
 // GetQueryCmd returns the cli query commands for this module.

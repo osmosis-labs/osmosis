@@ -7,14 +7,13 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types/simulation"
+	markov "github.com/osmosis-labs/osmosis/v16/simulation/simtypes/transitionmatrix"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"golang.org/x/exp/maps"
-
-	markov "github.com/osmosis-labs/osmosis/v16/simulation/simtypes/transitionmatrix"
 )
 
 type mockValidator struct {

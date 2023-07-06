@@ -5,12 +5,11 @@ import (
 	"strings"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // SlashLockupsForValidatorSlash should be called before the validator at valAddr is slashed.

@@ -1,10 +1,9 @@
 package keeper
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/v16/x/lockup/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Relock unlock previous lockID and create a new lock with newCoins with same duration and endtime.

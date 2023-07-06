@@ -4,17 +4,15 @@ import (
 	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	db "github.com/tendermint/tm-db"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	events "github.com/osmosis-labs/osmosis/v16/x/poolmanager/events"
-
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	events "github.com/osmosis-labs/osmosis/v16/x/poolmanager/events"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	db "github.com/tendermint/tm-db"
 )
 
 // SwapState defines the state of a swap.

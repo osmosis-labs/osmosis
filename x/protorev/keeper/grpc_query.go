@@ -4,10 +4,9 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
 )
 
 var _ types.QueryServer = Querier{}

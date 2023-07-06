@@ -3,30 +3,6 @@ package app
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/client"
-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	icq "github.com/cosmos/ibc-apps/modules/async-icq/v4"
-
-	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v4/modules/core"
-	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
-	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
-
-	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v4/router"
-	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
-
-	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
-
-	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
-	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
-
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v4/types"
-
-	downtimemodule "github.com/osmosis-labs/osmosis/v16/x/downtime-detector/module"
-	downtimetypes "github.com/osmosis-labs/osmosis/v16/x/downtime-detector/types"
-
-	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
-
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -37,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
+	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -53,10 +30,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
+	icq "github.com/cosmos/ibc-apps/modules/async-icq/v4"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v4/types"
+	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
+	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v4/modules/core"
+	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
+	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
 	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
 	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
 	_ "github.com/osmosis-labs/osmosis/v16/client/docs/statik"
@@ -65,6 +50,8 @@ import (
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	cwpoolmodule "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/module"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types"
+	downtimemodule "github.com/osmosis-labs/osmosis/v16/x/downtime-detector/module"
+	downtimetypes "github.com/osmosis-labs/osmosis/v16/x/downtime-detector/types"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm"
 	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/ibcratelimitmodule"
@@ -93,6 +80,10 @@ import (
 	valsetprefmodule "github.com/osmosis-labs/osmosis/v16/x/valset-pref/valpref-module"
 	"github.com/osmosis-labs/osmosis/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
+	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
+	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v4/router"
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 )
 
 // moduleAccountPermissions defines module account permissions

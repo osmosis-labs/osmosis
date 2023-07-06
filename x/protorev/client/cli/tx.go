@@ -5,20 +5,16 @@ import (
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
-
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // NewCmdTx returns the cli transaction commands for this module

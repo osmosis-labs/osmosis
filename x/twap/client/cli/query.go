@@ -8,12 +8,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/spf13/cobra"
-
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	poolmanager "github.com/osmosis-labs/osmosis/v16/x/poolmanager/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v16/x/twap/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v16/x/twap/types"
+	"github.com/spf13/cobra"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
@@ -154,7 +153,7 @@ func twapQueryParseArgs(args []string) (poolId uint64, baseDenom string, startTi
 	// <UINT PARSE>
 	poolId, err = osmocli.ParseUint(args[0], "poolId")
 	if err != nil {
-		return
+		return poolId, baseDenom, startTime, endTime, err
 	}
 
 	// <DENOM PARSE>
@@ -163,7 +162,7 @@ func twapQueryParseArgs(args []string) (poolId uint64, baseDenom string, startTi
 	// <UNIX TIME PARSE>
 	startTime, err = osmocli.ParseUnixTime(args[2], "start time")
 	if err != nil {
-		return
+		return poolId, baseDenom, startTime, endTime, err
 	}
 
 	// END TIME PARSE: ONEOF {<UNIX TIME PARSE>, <DURATION>}
@@ -175,7 +174,7 @@ func twapQueryParseArgs(args []string) (poolId uint64, baseDenom string, startTi
 		duration, err2 := time.ParseDuration(args[3])
 		if err2 != nil {
 			err = err2
-			return
+			return poolId, baseDenom, startTime, endTime, err
 		}
 		endTime = startTime.Add(duration)
 	}

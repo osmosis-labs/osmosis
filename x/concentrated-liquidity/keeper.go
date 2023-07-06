@@ -3,10 +3,8 @@ package concentrated_liquidity
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	gogotypes "github.com/gogo/protobuf/types"
-
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
+	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )

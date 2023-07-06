@@ -5,28 +5,25 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
+	clkeeper "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
+	clclient "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/cli"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/grpc"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
 	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/simulation"
-
-	clkeeper "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
-	clclient "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/grpc"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types/genesis"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (

@@ -8,14 +8,12 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-
 	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/config"
-
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/containers"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/initialization"
+	"github.com/stretchr/testify/require"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 type Config struct {

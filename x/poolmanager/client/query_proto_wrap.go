@@ -1,15 +1,13 @@
 package client
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v16/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // This file should evolve to being code gen'd, off of `proto/poolmanager/v1beta/query.yml`
