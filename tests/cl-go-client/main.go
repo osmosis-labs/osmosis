@@ -51,13 +51,16 @@ const (
 
 	// addToPositions creates a position and adds to it
 	addToPositions
+
+	// withdrawPositions withdraws a position
+	withdrawPositions
 )
 
 const (
 	expectedPoolId           uint64 = 1
 	addressPrefix                   = "osmo"
 	localosmosisFromHomePath        = "/.osmosisd-local"
-	consensusFee                    = "1500uosmo"
+	consensusFee                    = "3000uosmo"
 	denom0                          = "uosmo"
 	denom1                          = "uusdc"
 	tickSpacing              int64  = 100
@@ -133,6 +136,8 @@ func main() {
 		return
 	case addToPositions:
 		createManyRandomPositionsAndAddToIt(igniteClient, expectedPoolId, numPositions)
+	case withdrawPositions:
+		createManyRandomPositionsToWithdraw(igniteClient, expectedPoolId, numPositions)
 	case makeManySmallSwaps:
 		swapRandomSmallAmountsContinuously(igniteClient, expectedPoolId, numSwaps)
 		return
@@ -168,13 +173,15 @@ func createRandomPosition(igniteClient cosmosclient.Client, poolId uint64) (stri
 	return accountName, lowerTick, upperTick, tokensDesired, nil
 }
 
-func createManyRandomPositions(igniteClient cosmosclient.Client, poolId uint64, numPositions int) {
+func createManyRandomPositions(igniteClient cosmosclient.Client, poolId uint64, numPositions int) error {
 	for i := 0; i < numPositions; i++ {
 		_, _, _, _, err := createRandomPosition(igniteClient, poolId)
 		if err != nil {
 			// Handle the error
+			return err
 		}
 	}
+	return nil
 }
 
 func createManyRandomPositionsAndAddToIt(igniteClient cosmosclient.Client, poolId uint64, numPositions int) error {
@@ -195,6 +202,29 @@ func createManyRandomPositionsAndAddToIt(igniteClient cosmosclient.Client, poolI
 			}
 
 			_, _, _, err = addToPosition(igniteClient, positionId, accountName, randAmt0, randAmt1, defaultMinAmount, defaultMinAmount)
+			return err
+		})
+	}
+
+	return nil
+}
+
+func createManyRandomPositionsToWithdraw(igniteClient cosmosclient.Client, poolId uint64, numPositions int) error {
+	for i := 0; i < numPositions; i++ {
+		accountName, lowerTick, upperTick, tokensDesired, err := createRandomPosition(igniteClient, poolId)
+		if err != nil {
+			return err
+		}
+
+		runMessageWithRetries(func() error {
+			positionId, _, _, positionLiquidity, err := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokensDesired, defaultMinAmount, defaultMinAmount)
+			if err != nil {
+				return err
+			}
+
+			randAmtToWithdraw := sdk.NewDec(rand.Int63n(positionLiquidity.TruncateInt64()))
+
+			_, _, err = withdrawPosition(igniteClient, positionId, accountName, randAmtToWithdraw)
 			return err
 		})
 	}
@@ -409,13 +439,39 @@ func addToPosition(client cosmosclient.Client, positionId uint64, senderKeyringA
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
 	}
-	resp := cltypes.MsgCreatePositionResponse{}
+	resp := cltypes.MsgAddToPositionResponse{}
 	if err := txResp.Decode(&resp); err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
 	}
 	log.Println("Added to position: position id", resp.PositionId, "amount0", resp.Amount0, "amount1", resp.Amount1)
 
 	return resp.PositionId, resp.Amount0, resp.Amount1, nil
+}
+
+func withdrawPosition(client cosmosclient.Client, positionId uint64, senderKeyringAccountName string, liquidityAmt sdk.Dec) (sdk.Int, sdk.Int, error) {
+	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
+	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
+	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
+
+	log.Println("Withdraw position started: position id", positionId, "accountName", senderKeyringAccountName, "LiquidityAmount", liquidityAmt)
+
+	msg := &cltypes.MsgWithdrawPosition{
+		PositionId:      positionId,
+		Sender:          senderAddress,
+		LiquidityAmount: liquidityAmt,
+	}
+
+	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+	resp := cltypes.MsgWithdrawPositionResponse{}
+	if err := txResp.Decode(&resp); err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+	log.Println("withdraw position complete:", "amount0", resp.Amount0, "amount1", resp.Amount1)
+
+	return resp.Amount0, resp.Amount1, nil
 }
 
 func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, tokenInCoin sdk.Coin, tokenOutDenom string, tokenOutMinAmount sdk.Int) (sdk.Int, error) {
