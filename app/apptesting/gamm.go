@@ -86,24 +86,26 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithCoinsAndWeights(coins sdk.Coin
 	})
 }
 
+var zeroDec = sdk.ZeroDec()
+var oneThirdSpotPriceUnits = sdk.NewDec(1).Quo(sdk.NewDec(3)).
+	MulIntMut(gammtypes.SpotPriceSigFigs).RoundInt().ToDec().QuoInt(gammtypes.SpotPriceSigFigs)
+
 // PrepareBalancerPool returns a Balancer pool's pool-ID with pool params set in PrepareBalancerPoolWithPoolParams.
 func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
 	poolId := s.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-		SwapFee: sdk.NewDec(0),
-		ExitFee: sdk.NewDec(0),
+		SwapFee: zeroDec,
+		ExitFee: zeroDec,
 	})
 
 	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, FOO, BAR)
 	s.NoError(err)
-	s.Equal(sdk.NewDec(2).String(), spotPrice.String())
+	s.Equal(sdk.NewDec(2), spotPrice)
 	spotPrice, err = s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, BAR, BAZ)
 	s.NoError(err)
-	s.Equal(sdk.NewDecWithPrec(15, 1).String(), spotPrice.String())
+	s.Equal(sdk.NewDecWithPrec(15, 1), spotPrice)
 	spotPrice, err = s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, BAZ, FOO)
 	s.NoError(err)
-	oneThird := sdk.NewDec(1).Quo(sdk.NewDec(3))
-	sp := oneThird.MulInt(gammtypes.SpotPriceSigFigs).RoundInt().ToDec().QuoInt(gammtypes.SpotPriceSigFigs)
-	s.Equal(sp.String(), spotPrice.String())
+	s.Equal(oneThirdSpotPriceUnits, spotPrice)
 
 	return poolId
 }

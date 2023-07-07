@@ -32,6 +32,7 @@ import (
 	_ "github.com/osmosis-labs/osmosis/v16/client/docs/statik"
 	clclient "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/clmodule"
+	cwpoolclient "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/client"
 	cosmwasmpoolmodule "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/module"
 	downtimemodule "github.com/osmosis-labs/osmosis/v16/x/downtime-detector/module"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm"
@@ -49,6 +50,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/x/tokenfactory"
 	"github.com/osmosis-labs/osmosis/v16/x/twap/twapmodule"
 	"github.com/osmosis-labs/osmosis/v16/x/txfees"
+	txfeesclient "github.com/osmosis-labs/osmosis/v16/x/txfees/client"
 	valsetprefmodule "github.com/osmosis-labs/osmosis/v16/x/valset-pref/valpref-module"
 	"github.com/osmosis-labs/osmosis/x/epochs"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
@@ -82,6 +84,9 @@ var AppModuleBasics = []module.AppModuleBasic{
 			gammclient.UpdateMigrationRecordsProposalHandler,
 			clclient.CreateConcentratedLiquidityPoolProposalHandler,
 			clclient.TickSpacingDecreaseProposalHandler,
+			cwpoolclient.UploadCodeIdAndWhitelistProposalHandler,
+			cwpoolclient.MigratePoolContractsProposalHandler,
+			txfeesclient.SubmitUpdateFeeTokenProposalHandler,
 		)...,
 	),
 	params.AppModuleBasic{},

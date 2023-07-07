@@ -39,9 +39,7 @@ func TestPoolModuleSuite(t *testing.T) {
 }
 
 func (s *PoolModuleSuite) TestInitializePool() {
-	var (
-		validInstantitateMsg = s.GetTransmuterInstantiateMsgBytes(defaultDenoms)
-	)
+	validInstantitateMsg := s.GetTransmuterInstantiateMsgBytes(defaultDenoms)
 
 	tests := map[string]struct {
 		codeid            uint64
@@ -101,7 +99,7 @@ func (s *PoolModuleSuite) TestInitializePool() {
 			}
 			s.Require().NoError(err)
 
-			pool, err := cosmwasmPoolKeeper.GetPool(s.Ctx, defaultPoolId)
+			pool, err := cosmwasmPoolKeeper.GetPoolById(s.Ctx, defaultPoolId)
 			s.Require().NoError(err)
 
 			cosmWasmPool, ok := pool.(*model.Pool)

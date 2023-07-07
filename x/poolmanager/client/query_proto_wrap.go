@@ -106,6 +106,7 @@ func (q Querier) Pool(ctx sdk.Context, req queryproto.PoolRequest) (*queryproto.
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+	pool = pool.AsSerializablePool()
 
 	any, err := codectypes.NewAnyWithValue(pool)
 	if err != nil {
@@ -125,7 +126,7 @@ func (q Querier) AllPools(ctx sdk.Context, req queryproto.AllPoolsRequest) (*que
 
 	var anyPools []*codectypes.Any
 	for _, pool := range pools {
-		any, err := codectypes.NewAnyWithValue(pool)
+		any, err := codectypes.NewAnyWithValue(pool.AsSerializablePool())
 		if err != nil {
 			return nil, err
 		}
@@ -175,5 +176,16 @@ func (q Querier) TotalPoolLiquidity(ctx sdk.Context, req queryproto.TotalPoolLiq
 
 	return &queryproto.TotalPoolLiquidityResponse{
 		Liquidity: coins,
+	}, nil
+}
+
+// TotalLiquidity returns the total liquidity across all pools.
+func (q Querier) TotalLiquidity(ctx sdk.Context, req queryproto.TotalLiquidityRequest) (*queryproto.TotalLiquidityResponse, error) {
+	totalLiquidity, err := q.K.TotalLiquidity(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &queryproto.TotalLiquidityResponse{
+		Liquidity: totalLiquidity,
 	}, nil
 }

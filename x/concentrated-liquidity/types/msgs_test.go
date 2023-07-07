@@ -128,6 +128,19 @@ func TestMsgCreatePosition(t *testing.T) {
 			expectPass: false,
 		},
 		{
+			name: "upper tick is same as lower tick",
+			msg: types.MsgCreatePosition{
+				PoolId:          1,
+				Sender:          addr1,
+				LowerTick:       10,
+				UpperTick:       10,
+				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", sdk.ZeroInt()), sdk.NewCoin("osmo", sdk.ZeroInt())),
+				TokenMinAmount0: sdk.OneInt(),
+				TokenMinAmount1: sdk.OneInt(),
+			},
+			expectPass: false,
+		},
+		{
 			name: "negative amount",
 			msg: types.MsgCreatePosition{
 				PoolId:          1,
@@ -157,6 +170,70 @@ func TestMsgCreatePosition(t *testing.T) {
 
 	for _, test := range tests {
 		runValidateBasicTest(t, test.name, &test.msg, test.expectPass, types.TypeMsgCreatePosition)
+	}
+}
+
+func TestMsgAddToPosition(t *testing.T) {
+	baseMsg := types.MsgAddToPosition{
+		PositionId:      1,
+		Sender:          addr1,
+		Amount0:         sdk.OneInt(),
+		Amount1:         sdk.OneInt(),
+		TokenMinAmount0: sdk.OneInt(),
+		TokenMinAmount1: sdk.OneInt(),
+	}
+
+	tests := []struct {
+		name       string
+		msgFn      func() types.MsgAddToPosition
+		expectPass bool
+	}{
+		{
+			name:       "proper msg",
+			msgFn:      func() types.MsgAddToPosition { return baseMsg },
+			expectPass: true,
+		},
+		{
+			name:       "proper msg",
+			msgFn:      func() types.MsgAddToPosition { copy := baseMsg; copy.Sender = invalidAddr.String(); return copy },
+			expectPass: false,
+		},
+		{
+			name:       "position id zero",
+			msgFn:      func() types.MsgAddToPosition { copy := baseMsg; copy.PositionId = 0; return copy },
+			expectPass: false,
+		},
+		{
+			name:       "amount0 is negative",
+			msgFn:      func() types.MsgAddToPosition { copy := baseMsg; copy.Amount0 = sdk.OneInt().Neg(); return copy },
+			expectPass: false,
+		},
+		{
+			name:       "amount1 is negative",
+			msgFn:      func() types.MsgAddToPosition { copy := baseMsg; copy.Amount1 = sdk.OneInt().Neg(); return copy },
+			expectPass: false,
+		},
+		{
+			name:       "token min amount0 is negative",
+			msgFn:      func() types.MsgAddToPosition { copy := baseMsg; copy.TokenMinAmount0 = sdk.OneInt().Neg(); return copy },
+			expectPass: false,
+		},
+		{
+			name:       "token min amount1 is negative",
+			msgFn:      func() types.MsgAddToPosition { copy := baseMsg; copy.TokenMinAmount1 = sdk.OneInt().Neg(); return copy },
+			expectPass: false,
+		},
+		{
+			name: "proper msg",
+			// sanity check that above edits weren't mutative
+			msgFn:      func() types.MsgAddToPosition { return baseMsg },
+			expectPass: true,
+		},
+	}
+
+	for _, test := range tests {
+		msg := test.msgFn()
+		runValidateBasicTest(t, test.name, &msg, test.expectPass, types.TypeAddToPosition)
 	}
 }
 

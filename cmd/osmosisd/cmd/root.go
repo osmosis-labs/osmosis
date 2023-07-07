@@ -43,6 +43,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/cosmos/cosmos-sdk/client/config"
+
 	osmosis "github.com/osmosis-labs/osmosis/v16/app"
 )
 
@@ -169,6 +170,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 	debugCmd := debug.Cmd()
 	debugCmd.AddCommand(ConvertBech32Cmd())
+	debugCmd.AddCommand(DebugProtoMarshalledBytes())
 
 	rootCmd.AddCommand(
 		// genutilcli.InitCmd(osmosis.ModuleBasics, osmosis.DefaultNodeHome),

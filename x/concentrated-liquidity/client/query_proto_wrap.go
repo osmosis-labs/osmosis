@@ -238,3 +238,43 @@ func (q Querier) TickAccumulatorTrackers(ctx sdk.Context, req clquery.TickAccumu
 		UptimeTrackers: tickInfo.UptimeTrackers.List,
 	}, nil
 }
+
+// CFMMPoolIdLinkFromConcentratedPoolId queries the cfmm pool id linked to a concentrated pool id.
+func (q Querier) CFMMPoolIdLinkFromConcentratedPoolId(ctx sdk.Context, req clquery.CFMMPoolIdLinkFromConcentratedPoolIdRequest) (*clquery.CFMMPoolIdLinkFromConcentratedPoolIdResponse, error) {
+	if req.ConcentratedPoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid cfmm pool id")
+	}
+	cfmmPoolId, err := q.Keeper.GetLinkedBalancerPoolID(ctx, req.ConcentratedPoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &clquery.CFMMPoolIdLinkFromConcentratedPoolIdResponse{
+		CfmmPoolId: cfmmPoolId,
+	}, nil
+}
+
+// UserUnbodingPositions returns all the unbonding concentrated liquidity positions along with their respective period lock.
+func (q Querier) UserUnbondingPositions(ctx sdk.Context, req clquery.UserUnbondingPositionsRequest) (*clquery.UserUnbondingPositionsResponse, error) {
+	sdkAddr, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	cfmmPoolId, err := q.Keeper.GetUserUnbondingPositions(ctx, sdkAddr)
+	return &clquery.UserUnbondingPositionsResponse{
+		PositionsWithPeriodLock: cfmmPoolId,
+	}, nil
+}
+
+// GetTotalLiquidity returns the total liquidity across all concentrated liquidity pools.
+func (q Querier) GetTotalLiquidity(ctx sdk.Context, req clquery.GetTotalLiquidityRequest) (*clquery.GetTotalLiquidityResponse, error) {
+	totalLiquidity, err := q.Keeper.GetTotalLiquidity(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &clquery.GetTotalLiquidityResponse{
+		TotalLiquidity: totalLiquidity,
+	}, nil
+}

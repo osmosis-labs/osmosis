@@ -3,11 +3,11 @@ package keeper
 import (
 	"fmt"
 	"sort"
-	"time"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -19,56 +19,56 @@ import (
 func (k Keeper) MigrateUnlockedPositionFromBalancerToConcentrated(ctx sdk.Context,
 	sender sdk.AccAddress, sharesToMigrate sdk.Coin,
 	tokenOutMins sdk.Coins,
-) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, poolIdLeaving, poolIdEntering uint64, err error) {
+) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, poolIdLeaving, poolIdEntering uint64, err error) {
 	// Get the balancer poolId by parsing the gamm share denom.
 	poolIdLeaving, err = types.GetPoolIdFromShareDenom(sharesToMigrate.Denom)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
 
 	// Find the governance sanctioned link between the balancer pool and a concentrated pool.
 	poolIdEntering, err = k.GetLinkedConcentratedPoolID(ctx, poolIdLeaving)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
 
 	// Get the concentrated pool from the message and type cast it to ConcentratedPoolExtension.
 	concentratedPool, err := k.concentratedLiquidityKeeper.GetConcentratedPoolById(ctx, poolIdEntering)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
 
 	// Exit the balancer pool position.
 	exitCoins, err := k.ExitPool(ctx, sender, poolIdLeaving, sharesToMigrate.Amount, tokenOutMins)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
 	// Defense in depth, ensuring we are returning exactly two coins.
 	if len(exitCoins) != 2 {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, fmt.Errorf("Balancer pool must have exactly two tokens")
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, fmt.Errorf("Balancer pool must have exactly two tokens")
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position.
-	positionId, amount0, amount1, liquidity, joinTime, err = k.concentratedLiquidityKeeper.CreateFullRangePosition(ctx, concentratedPool.GetId(), sender, exitCoins)
+	positionId, amount0, amount1, liquidity, err = k.concentratedLiquidityKeeper.CreateFullRangePosition(ctx, concentratedPool.GetId(), sender, exitCoins)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
-	return positionId, amount0, amount1, liquidity, joinTime, poolIdLeaving, poolIdEntering, nil
+	return positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, nil
 }
 
 // GetAllMigrationInfo gets all existing links between Balancer Pool and Concentrated Pool,
 // wraps and returns them in `MigrationRecords`.
-func (k Keeper) GetAllMigrationInfo(ctx sdk.Context) (types.MigrationRecords, error) {
+func (k Keeper) GetAllMigrationInfo(ctx sdk.Context) (gammmigration.MigrationRecords, error) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixMigrationInfoBalancerPool)
 
 	iter := prefixStore.Iterator(nil, nil)
 	defer iter.Close()
 
-	balancerToClPoolLinks := []types.BalancerToConcentratedPoolLink{}
+	balancerToClPoolLinks := []gammmigration.BalancerToConcentratedPoolLink{}
 	for ; iter.Valid(); iter.Next() {
 		// balancer Pool Id
-		balancerToClPoolLink := types.BalancerToConcentratedPoolLink{}
+		balancerToClPoolLink := gammmigration.BalancerToConcentratedPoolLink{}
 		balancerToClPoolLink.BalancerPoolId = sdk.BigEndianToUint64(iter.Key())
 
 		// concentrated Pool Id
@@ -77,7 +77,7 @@ func (k Keeper) GetAllMigrationInfo(ctx sdk.Context) (types.MigrationRecords, er
 		balancerToClPoolLinks = append(balancerToClPoolLinks, balancerToClPoolLink)
 	}
 
-	migrationRecords := types.MigrationRecords{}
+	migrationRecords := gammmigration.MigrationRecords{}
 	migrationRecords.BalancerToConcentratedPoolLinks = balancerToClPoolLinks
 	return migrationRecords, nil
 }
@@ -113,7 +113,7 @@ func (k Keeper) GetLinkedBalancerPoolID(ctx sdk.Context, concentratedPoolId uint
 // OverwriteMigrationRecordsAndRedirectDistrRecords sets the balancer to gamm pool migration info to the store and deletes all existing records
 // migrationInfo in state is completely overwitten by the given migrationInfo.
 // Additionally, the distribution record for the balancer pool is modified to redirect incentives to the new concentrated pool.
-func (k Keeper) OverwriteMigrationRecordsAndRedirectDistrRecords(ctx sdk.Context, migrationInfo types.MigrationRecords) error {
+func (k Keeper) OverwriteMigrationRecordsAndRedirectDistrRecords(ctx sdk.Context, migrationInfo gammmigration.MigrationRecords) error {
 	store := ctx.KVStore(k.storeKey)
 
 	// delete all existing migration records
@@ -138,7 +138,7 @@ func (k Keeper) OverwriteMigrationRecordsAndRedirectDistrRecords(ctx sdk.Context
 }
 
 // SetMigrationRecords is used in initGenesis, setting the balancer to gamm pool migration info in store.
-func (k Keeper) SetMigrationRecords(ctx sdk.Context, migrationInfo types.MigrationRecords) {
+func (k Keeper) SetMigrationRecords(ctx sdk.Context, migrationInfo gammmigration.MigrationRecords) {
 	store := ctx.KVStore(k.storeKey)
 
 	for _, balancerToCLPoolLink := range migrationInfo.BalancerToConcentratedPoolLinks {
@@ -199,7 +199,7 @@ func (k Keeper) redirectDistributionRecord(ctx sdk.Context, cfmmPoolId, clPoolId
 // 3) the balancer pool has exactly two tokens
 // 4) the denoms of the tokens in the balancer pool match the denoms of the tokens in the gamm pool
 // It also reorders records from lowest to highest balancer pool ID if they are not provided in order already.
-func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConcentratedPoolLink) error {
+func (k Keeper) validateRecords(ctx sdk.Context, records []gammmigration.BalancerToConcentratedPoolLink) error {
 	lastBalancerPoolID := uint64(0)
 	balancerIdFlags := make(map[uint64]bool, len(records))
 	clIdFlags := make(map[uint64]bool, len(records))
@@ -285,7 +285,7 @@ func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConce
 
 // ReplaceMigrationRecords gets the current migration records and replaces it in its entirety with the provided records.
 // It is checked for no err when a proposal is made, and executed when a proposal passes.
-func (k Keeper) ReplaceMigrationRecords(ctx sdk.Context, records []types.BalancerToConcentratedPoolLink) error {
+func (k Keeper) ReplaceMigrationRecords(ctx sdk.Context, records []gammmigration.BalancerToConcentratedPoolLink) error {
 	err := k.validateRecords(ctx, records)
 	if err != nil {
 		return err
@@ -308,13 +308,13 @@ func (k Keeper) ReplaceMigrationRecords(ctx sdk.Context, records []types.Balance
 
 // UpdateMigrationRecords gets the current migration records and only updates the records that are provided.
 // It is checked for no err when a proposal is made, and executed when a proposal passes.
-func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []types.BalancerToConcentratedPoolLink) error {
+func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []gammmigration.BalancerToConcentratedPoolLink) error {
 	err := k.validateRecords(ctx, records)
 	if err != nil {
 		return err
 	}
 
-	recordsMap := make(map[uint64]types.BalancerToConcentratedPoolLink, len(records))
+	recordsMap := make(map[uint64]gammmigration.BalancerToConcentratedPoolLink, len(records))
 
 	// Set up a map of the existing records
 	migrationInfos, err := k.GetAllMigrationInfo(ctx)
@@ -330,7 +330,7 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []types.Balancer
 		recordsMap[record.BalancerPoolId] = record
 	}
 
-	newRecords := []types.BalancerToConcentratedPoolLink{}
+	newRecords := []gammmigration.BalancerToConcentratedPoolLink{}
 
 	// Iterate through the map and add all the records to a new list
 	// if the clPoolId is 0, we remove the entire record
@@ -347,7 +347,7 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []types.Balancer
 
 	// We now have a list of all previous records, as well as records that have been updated.
 	// We can now remove all previous records and replace them with the new ones.
-	err = k.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, types.MigrationRecords{
+	err = k.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, gammmigration.MigrationRecords{
 		BalancerToConcentratedPoolLinks: newRecords,
 	})
 	if err != nil {

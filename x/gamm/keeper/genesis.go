@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 )
 
 // InitGenesis initializes the x/gamm module's state from a provided genesis
@@ -36,7 +37,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState, unpack
 	k.setTotalLiquidity(ctx, liquidity)
 
 	if genState.MigrationRecords == nil {
-		k.SetMigrationRecords(ctx, types.MigrationRecords{})
+		k.SetMigrationRecords(ctx, gammmigration.MigrationRecords{})
 	} else {
 		k.SetMigrationRecords(ctx, *genState.MigrationRecords)
 	}

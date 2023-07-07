@@ -6,6 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 )
 
@@ -267,6 +269,144 @@ func (s *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbonding
 	totalSuperfluidDelegationsRes, err := s.queryClient.TotalSuperfluidDelegations(sdk.WrapSDKContext(s.Ctx), &types.TotalSuperfluidDelegationsRequest{})
 	s.Require().NoError(err)
 	s.Require().Equal(totalSuperfluidDelegationsRes.TotalDelegations, sdk.NewInt(30000000))
+}
+
+func (s *KeeperTestSuite) TestUserConcentratedSuperfluidPositionsBondedAndUnbonding() {
+	s.SetupTest()
+
+	// Setup 2 validators.
+	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
+
+	// Set staking parameters (needed since stake is not a valid quote denom).
+	stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
+	stakingParams.BondDenom = "uosmo"
+	s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
+
+	coins := sdk.NewCoins(sdk.NewCoin("token0", sdk.NewInt(1000000000000)), sdk.NewCoin(s.App.StakingKeeper.BondDenom(s.Ctx), sdk.NewInt(1000000000000)))
+
+	// Prepare 2 concentrated pools.
+	clPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(coins[0].Denom, coins[1].Denom)
+	clPoolId := clPool.GetId()
+	denom := cltypes.GetConcentratedLockupDenomFromPoolId(1)
+
+	clPool2 := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(coins[0].Denom, coins[1].Denom)
+	clPoolId2 := clPool2.GetId()
+	denom2 := cltypes.GetConcentratedLockupDenomFromPoolId(2)
+
+	// Add both pools as superfluid assets.
+	err := s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{
+		Denom:     denom,
+		AssetType: types.SuperfluidAssetTypeConcentratedShare,
+	})
+	s.Require().NoError(err)
+
+	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{
+		Denom:     denom2,
+		AssetType: types.SuperfluidAssetTypeConcentratedShare,
+	})
+	s.Require().NoError(err)
+
+	duration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
+
+	// Create 4 positions in pool 1 that are superfluid delegated.
+	expectedBondedPositionIds := []uint64{}
+	expectedBondedLockIds := []uint64{}
+	expectedBondedTotalSharesLocked := sdk.Coins{}
+	for i := 0; i < 4; i++ {
+		posId, _, _, _, lockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPoolId, s.TestAccs[0], coins, duration)
+		s.Require().NoError(err)
+
+		lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lockId)
+		s.Require().NoError(err)
+
+		err = s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, lock.Owner, lock.ID, valAddrs[0].String())
+		s.Require().NoError(err)
+
+		expectedBondedPositionIds = append(expectedBondedPositionIds, posId)
+		expectedBondedLockIds = append(expectedBondedLockIds, lockId)
+		expectedBondedTotalSharesLocked = expectedBondedTotalSharesLocked.Add(lock.Coins[0])
+	}
+
+	// Create 1 position in pool 1 that is not superfluid delegated.
+	_, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId, s.TestAccs[0], coins)
+	s.Require().NoError(err)
+
+	// Create 4 positions in pool 2 that are superfluid undelegating.
+	expectedUnbondingPositionIds := []uint64{}
+	expectedUnbondingLockIds := []uint64{}
+	expectedUnbondingTotalSharesLocked := sdk.Coins{}
+	for i := 0; i < 4; i++ {
+		posId, _, _, _, lockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPoolId2, s.TestAccs[0], coins, duration)
+		s.Require().NoError(err)
+
+		lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lockId)
+		s.Require().NoError(err)
+
+		err = s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, lock.Owner, lock.ID, valAddrs[0].String())
+		s.Require().NoError(err)
+
+		_, err = s.App.SuperfluidKeeper.SuperfluidUndelegateAndUnbondLock(s.Ctx, lockId, lock.Owner, lock.Coins[0].Amount)
+		s.Require().NoError(err)
+
+		expectedUnbondingPositionIds = append(expectedUnbondingPositionIds, posId)
+		expectedUnbondingLockIds = append(expectedUnbondingLockIds, lockId)
+		expectedUnbondingTotalSharesLocked = expectedUnbondingTotalSharesLocked.Add(lock.Coins[0])
+	}
+
+	// Create 1 position in pool 2 that is not superfluid delegated.
+	_, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId2, s.TestAccs[0], coins)
+	s.Require().NoError(err)
+
+	// Query the bonded positions.
+	bondedRes, err := s.queryClient.UserConcentratedSuperfluidPositionsDelegated(sdk.WrapSDKContext(s.Ctx), &types.UserConcentratedSuperfluidPositionsDelegatedRequest{
+		DelegatorAddress: s.TestAccs[0].String(),
+	})
+	s.Require().NoError(err)
+
+	// The result should only have the four bonded superfluid positions
+	s.Require().Equal(4, len(bondedRes.ClPoolUserPositionRecords))
+	s.Require().Equal(4, len(expectedBondedPositionIds))
+	s.Require().Equal(4, len(expectedBondedLockIds))
+
+	actualBondedPositionIds := []uint64{}
+	actualBondedLockIds := []uint64{}
+	actualBondedTotalSharesLocked := sdk.Coins{}
+	for _, record := range bondedRes.ClPoolUserPositionRecords {
+		s.Require().Equal(record.ValidatorAddress, valAddrs[0].String()) // User 0 only used this validator
+		actualBondedPositionIds = append(actualBondedPositionIds, record.PositionId)
+		actualBondedLockIds = append(actualBondedLockIds, record.LockId)
+		actualBondedTotalSharesLocked = actualBondedTotalSharesLocked.Add(record.DelegationAmount)
+	}
+
+	s.Require().True(osmoutils.ContainsDuplicateDeepEqual([]interface{}{expectedBondedPositionIds, actualBondedPositionIds}))
+	s.Require().True(osmoutils.ContainsDuplicateDeepEqual([]interface{}{expectedBondedLockIds, actualBondedLockIds}))
+	s.Require().Equal(expectedBondedTotalSharesLocked, actualBondedTotalSharesLocked)
+
+	// Query the unbonding positions.
+	unbondingRes, err := s.queryClient.UserConcentratedSuperfluidPositionsUndelegating(sdk.WrapSDKContext(s.Ctx), &types.UserConcentratedSuperfluidPositionsUndelegatingRequest{
+		DelegatorAddress: s.TestAccs[0].String(),
+	})
+	s.Require().NoError(err)
+
+	// The result should only have the four unbonding superfluid positions
+	s.Require().Equal(4, len(unbondingRes.ClPoolUserPositionRecords))
+	s.Require().Equal(4, len(expectedUnbondingPositionIds))
+	s.Require().Equal(4, len(expectedUnbondingLockIds))
+
+	actualUnbondingPositionIds := []uint64{}
+	actualUnbondingLockIds := []uint64{}
+	actualUnbondingTotalSharesLocked := sdk.Coins{}
+	for _, record := range unbondingRes.ClPoolUserPositionRecords {
+		s.Require().Equal(record.ValidatorAddress, valAddrs[0].String()) // User 0 only used this validator
+		actualUnbondingPositionIds = append(actualUnbondingPositionIds, record.PositionId)
+		actualUnbondingLockIds = append(actualUnbondingLockIds, record.LockId)
+		actualUnbondingTotalSharesLocked = actualUnbondingTotalSharesLocked.Add(record.DelegationAmount)
+	}
+
+	s.Require().True(osmoutils.ContainsDuplicateDeepEqual([]interface{}{expectedUnbondingPositionIds, actualUnbondingPositionIds}))
+	s.Require().True(osmoutils.ContainsDuplicateDeepEqual([]interface{}{expectedUnbondingLockIds, actualUnbondingLockIds}))
+	s.Require().Equal(expectedUnbondingTotalSharesLocked, actualUnbondingTotalSharesLocked)
+
 }
 
 func (s *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {

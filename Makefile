@@ -296,7 +296,7 @@ test-e2e: e2e-setup test-e2e-ci e2e-remove-resources
 # does not do any validation about the state of the Docker environment
 # As a result, avoid using this locally.
 test-e2e-ci:
-	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=False OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION)  go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=False OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION) go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -p 4
 
 # test-e2e-debug runs a full e2e test suite but does
 # not attempt to delete Docker resources at the end.
@@ -446,9 +446,36 @@ localnet-state-export-stop:
 
 localnet-state-export-clean: localnet-clean
 
-# create 1000 concentrated-liquidity positions in localosmosis at pool id 1
+# create 100 concentrated-liquidity positions in localosmosis at pool id 1
 localnet-cl-create-positions:
-	go run tests/cl-go-client/main.go
+	go run tests/cl-go-client/main.go --operation 0
+
+# does 100 small randomized swaps in localosmosis at pool id 1
+localnet-cl-small-swap:
+	go run tests/cl-go-client/main.go --operation 1
+
+# does 100 large swaps where the output of the previous swap is swapped back at the
+# next swap. localosmosis at pool id 1
+localnet-cl-large-swap:
+	go run tests/cl-go-client/main.go --operation 2
+
+# creates a gauge and waits for one epoch so that the gauge
+# is converted into an incentive record for pool id 1.
+localnet-cl-external-incentive:
+	go run tests/cl-go-client/main.go --operation 3
+
+# attempts to create a CL pool at id 1.
+# if pool already exists, this is a no-op.
+# if pool with different id is desired, tweak expectedPoolId
+# in the script.
+localnet-cl-create-pool:
+	go run tests/cl-go-client/main.go --operation 4
+
+# does both of localnet-cl-create-positions and localnet-cl-small-swap
+localnet-cl-positions-small-swaps: localnet-cl-create-positions localnet-cl-small-swap
+
+# does both of localnet-cl-create-positions and localnet-cl-large-swap
+localnet-cl-positions-large-swaps: localnet-cl-create-positions localnet-cl-large-swap
 
 # This script retrieves Uniswap v3 Ethereum position data
 # from subgraph. It uses WETH / USDC pool. This is helpful
@@ -478,6 +505,8 @@ cl-create-bigbang-config:
 go-mock-update:
 	mockgen -source=x/poolmanager/types/routes.go -destination=tests/mocks/pool_module.go -package=mocks
 	mockgen -source=x/poolmanager/types/pool.go -destination=tests/mocks/pool.go -package=mocks
+	mockgen -source=x/gamm/types/pool.go -destination=tests/mocks/cfmm_pool.go -package=mocks
+	mockgen -source=x/concentrated-liquidity/types/cl_pool_extensionI.go -destination=tests/mocks/cl_pool.go -package=mocks
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \

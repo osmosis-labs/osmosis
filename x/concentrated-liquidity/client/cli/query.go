@@ -18,6 +18,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetClaimableSpreadRewards)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetClaimableIncentives)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetIncentiveRecords)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCFMMPoolIdLinkFromConcentratedPoolId)
 	cmd.AddCommand(
 		osmocli.GetParams[*queryproto.ParamsRequest](
 			types.ModuleName, queryproto.NewQueryClient),
@@ -81,4 +82,22 @@ func GetIncentiveRecords() (*osmocli.QueryDescriptor, *queryproto.IncentiveRecor
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} incentive-records 1`,
 	}, &queryproto.IncentiveRecordsRequest{}
+}
+
+func GetCFMMPoolIdLinkFromConcentratedPoolId() (*osmocli.QueryDescriptor, *queryproto.CFMMPoolIdLinkFromConcentratedPoolIdRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "cfmm-pool-link-from-cl [poolId]",
+		Short: "Query cfmm pool id link from concentrated pool id",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} cfmm-pool-link-from-cl 1`,
+	}, &queryproto.CFMMPoolIdLinkFromConcentratedPoolIdRequest{}
+}
+
+func GetTotalLiquidity() (*osmocli.QueryDescriptor, *queryproto.GetTotalLiquidityRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "total-liquidity",
+		Short: "Query total liquidity across all concentrated pool",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} total-liquidity 1`,
+	}, &queryproto.GetTotalLiquidityRequest{}
 }

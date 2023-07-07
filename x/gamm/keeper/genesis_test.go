@@ -7,9 +7,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 )
 
-var DefaultMigrationRecords = types.MigrationRecords{BalancerToConcentratedPoolLinks: []types.BalancerToConcentratedPoolLink{
+var DefaultMigrationRecords = gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 	{BalancerPoolId: 1, ClPoolId: 4},
 	{BalancerPoolId: 2, ClPoolId: 5},
 	{BalancerPoolId: 3, ClPoolId: 6},
@@ -69,7 +70,8 @@ func (s *KeeperTestSuite) TestGammInitGenesis() {
 	_, err = s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, 7)
 	s.Require().Error(err)
 
-	liquidity := s.App.GAMMKeeper.GetTotalLiquidity(s.Ctx)
+	liquidity, err := s.App.GAMMKeeper.GetTotalLiquidity(s.Ctx)
+	s.Require().NoError(err)
 	expectedLiquidity := sdk.NewCoins(sdk.NewInt64Coin("bar", 15000000), sdk.NewInt64Coin("baz", 15000000), sdk.NewInt64Coin("foo", 15000000), sdk.NewInt64Coin("uosmo", 15000000))
 	s.Require().Equal(expectedLiquidity.String(), liquidity.String())
 

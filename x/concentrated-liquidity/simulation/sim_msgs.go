@@ -114,7 +114,7 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	}
 
 	withdrawAmount := sim.RandomDecAmount(position.Liquidity)
-	if withdrawAmount.TruncateDec().LT(sdk.ZeroDec()) {
+	if withdrawAmount.TruncateDec().IsNegative() {
 		return nil, fmt.Errorf("Invalid withdraw amount")
 	}
 
@@ -371,7 +371,7 @@ func RandomPrepareCreatePositionFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, 
 	}
 
 	//  Retrieve minTick and maxTick from kprecision factor
-	minTick, maxTick := cltypes.MinTick, cltypes.MaxTick
+	minTick, maxTick := cltypes.MinInitializedTick, cltypes.MaxTick
 
 	// Randomize lowerTick and upperTick from max values to create position
 	lowerTick, upperTick, err := getRandomTickPositions(sim, minTick, maxTick, clPool.GetTickSpacing())

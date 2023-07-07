@@ -1,0 +1,47 @@
+name: Update Docs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.18 
+
+    - name: Install Protoc
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y protobuf-compiler
+
+    - name: Install Protoc-gen-swagger
+      run: |
+        go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@latest
+
+    - name: Install Statik
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y golang-statik
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Run make docs
+      run: |
+        make docs
+
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: Update docs
+        title: 'Update docs'
+        body: 'Update docs'
+        branch: 'docs-update-branch'

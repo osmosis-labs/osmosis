@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -11,6 +12,7 @@ import (
 
 	incentivetypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
 	"github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -25,20 +27,53 @@ func NewQuerier(k Keeper) Querier {
 	return Querier{Keeper: k}
 }
 
-// GaugeIds takes provided gauge request and returns the respective gaugeIDs.
+// GaugeIds takes provided gauge request and returns the respective internally incentivized gaugeIDs.
+// If internally incentivized for a given pool id is not found, returns an error.
 func (q Querier) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) (*types.QueryGaugeIdsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	lockableDurations := q.Keeper.GetLockableDurations(sdkCtx)
-	distrInfo := q.Keeper.GetDistrInfo(sdkCtx)
-	gaugeIdsWithDuration := make([]*types.QueryGaugeIdsResponse_GaugeIdWithDuration, len(lockableDurations))
 
+	distrInfo := q.Keeper.GetDistrInfo(sdkCtx)
 	totalWeightDec := distrInfo.TotalWeight.ToDec()
 	incentivePercentage := sdk.NewDec(0)
 	percentMultiplier := sdk.NewInt(100)
+
+	pool, err := q.Keeper.poolmanagerKeeper.GetPool(sdkCtx, req.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	isConcentratedPool := pool.GetType() == poolmanagertypes.Concentrated
+	if isConcentratedPool {
+		incentiveEpochDuration := q.Keeper.incentivesKeeper.GetEpochInfo(sdkCtx).Duration
+		gaugeId, err := q.Keeper.GetPoolGaugeId(sdkCtx, req.PoolId, incentiveEpochDuration)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		for _, record := range distrInfo.Records {
+			if record.GaugeId == gaugeId {
+				// Pool incentive % = (gauge_id_weight / sum_of_all_pool_gauge_weight) * 100
+				incentivePercentage = record.Weight.ToDec().Quo(totalWeightDec).MulInt(percentMultiplier)
+			}
+		}
+
+		return &types.QueryGaugeIdsResponse{
+			GaugeIdsWithDuration: []*types.QueryGaugeIdsResponse_GaugeIdWithDuration{
+				{
+					GaugeId:                  gaugeId,
+					Duration:                 incentiveEpochDuration,
+					GaugeIncentivePercentage: incentivePercentage.String(),
+				},
+			},
+		}, nil
+	}
+
+	lockableDurations := q.Keeper.GetLockableDurations(sdkCtx)
+	gaugeIdsWithDuration := make([]*types.QueryGaugeIdsResponse_GaugeIdWithDuration, len(lockableDurations))
 
 	for i, duration := range lockableDurations {
 		gaugeId, err := q.Keeper.GetPoolGaugeId(sdkCtx, req.PoolId, duration)
@@ -107,7 +142,9 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 	// While there are exceptions, typically the number of incentivizedPools
 	// equals to the number of incentivized gauges / number of lockable durations.
 	incentivizedPools := make([]types.IncentivizedPool, 0, len(distrInfo.Records)/len(lockableDurations))
+	incentivizedPoolIDs := make(map[uint64]time.Duration)
 
+	// Loop over the distribution records and fill in the incentivized pools struct.
 	for _, record := range distrInfo.Records {
 		for _, lockableDuration := range lockableDurations {
 			poolId, err := q.Keeper.GetPoolIdFromGaugeId(sdkCtx, record.GaugeId, lockableDuration)
@@ -116,6 +153,39 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 					PoolId:           poolId,
 					LockableDuration: lockableDuration,
 					GaugeId:          record.GaugeId,
+				}
+
+				incentivizedPools = append(incentivizedPools, incentivizedPool)
+				incentivizedPoolIDs[poolId] = lockableDuration
+			}
+		}
+	}
+
+	// Only run the following if the above loop determined there were incentivized pools.
+	if len(incentivizedPoolIDs) > 0 {
+		// Retrieve the migration records between balancer pools and concentrated liquidity pools.
+		// This comes from the superfluid keeper, since superfluid is the only pool incentives connected
+		// module that has access to the gamm modules store.
+		migrationRecords, err := q.gammKeeper.GetAllMigrationInfo(sdkCtx)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		// Iterate over all migration records.
+		for _, record := range migrationRecords.BalancerToConcentratedPoolLinks {
+			// If the cl pool is not in the list of incentivized pools, skip it.
+			lockableDuration, incentivized := incentivizedPoolIDs[record.ClPoolId]
+			if !incentivized {
+				continue
+			}
+
+			// Add the indirectly incentivized balancer pools to the list of incentivized pools.
+			gaugeId, err := q.Keeper.GetPoolGaugeId(sdkCtx, record.BalancerPoolId, lockableDuration)
+			if err == nil {
+				incentivizedPool := types.IncentivizedPool{
+					PoolId:           record.BalancerPoolId,
+					LockableDuration: lockableDuration,
+					GaugeId:          gaugeId,
 				}
 
 				incentivizedPools = append(incentivizedPools, incentivizedPool)
@@ -136,7 +206,7 @@ func (q Querier) ExternalIncentiveGauges(ctx context.Context, req *types.QueryEx
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	store := sdkCtx.KVStore(q.Keeper.storeKey)
-	prefixStore := prefix.NewStore(store, []byte("pool-incentives"))
+	prefixStore := prefix.NewStore(store, []byte("pool-incentives/"))
 
 	iterator := prefixStore.Iterator(nil, nil)
 	defer iterator.Close()

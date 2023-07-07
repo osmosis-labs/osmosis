@@ -22,6 +22,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -44,6 +45,15 @@ import (
 type KeeperTestHelper struct {
 	suite.Suite
 
+	// defaults to false,
+	// set to true if any method that potentially alters baseapp/abci is used.
+	// this controls whether or not we can re-use the app instance, or have to set a new one.
+	hasUsedAbci bool
+	// defaults to false, set to true if we want to use a new app instance with caching enabled.
+	// then on new setup test call, we just drop the current cache.
+	// this is not always enabled, because some tests may take a painful performance hit due to CacheKv.
+	withCaching bool
+
 	App         *app.OsmosisApp
 	Ctx         sdk.Context
 	QueryHelper *baseapp.QueryServiceTestHelper
@@ -51,14 +61,41 @@ type KeeperTestHelper struct {
 }
 
 var (
-	SecondaryDenom  = "uion"
-	SecondaryAmount = sdk.NewInt(100000000)
+	SecondaryDenom       = "uion"
+	SecondaryAmount      = sdk.NewInt(100000000)
+	baseTestAccts        = []sdk.AccAddress{}
+	defaultTestStartTime = time.Now().UTC()
 )
 
+func init() {
+	baseTestAccts = CreateRandomAccounts(3)
+}
+
 // Setup sets up basic environment for suite (App, Ctx, and test accounts)
+// preserves the caching enabled/disabled state.
 func (s *KeeperTestHelper) Setup() {
-	s.App = app.Setup(false)
+	dir, err := os.MkdirTemp("", "osmosisd-test-home")
+	if err != nil {
+		panic(fmt.Sprintf("failed creating temporary directory: %v", err))
+	}
+	s.T().Cleanup(func() { os.RemoveAll(dir); s.withCaching = false })
+	s.App = app.SetupWithCustomHome(false, dir)
 	s.setupGeneral()
+}
+
+// resets the test environment
+// requires that all commits go through helpers in s.
+// On first reset, will instantiate a new app, with caching enabled.
+// NOTE: If you are using ABCI methods, usage of Reset vs Setup has not been well tested.
+// It is believed to work, but if you get an odd error, try changing the call to this for setup to sanity check.
+// whats supposed to happen is a new setup call, and reset just does that in such a case.
+func (s *KeeperTestHelper) Reset() {
+	if s.hasUsedAbci || !s.withCaching {
+		s.withCaching = true
+		s.Setup()
+	} else {
+		s.setupGeneral()
+	}
 }
 
 func (s *KeeperTestHelper) SetupWithLevelDb() func() {
@@ -69,21 +106,28 @@ func (s *KeeperTestHelper) SetupWithLevelDb() func() {
 }
 
 func (s *KeeperTestHelper) setupGeneral() {
-	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: defaultTestStartTime})
+	if s.withCaching {
+		s.Ctx, _ = s.Ctx.CacheContext()
+	}
 	s.QueryHelper = &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: s.App.GRPCQueryRouter(),
 		Ctx:             s.Ctx,
 	}
 
 	s.SetEpochStartTime()
-	s.TestAccs = CreateRandomAccounts(3)
+	s.TestAccs = []sdk.AccAddress{}
+	s.TestAccs = append(s.TestAccs, baseTestAccts...)
 	s.SetupConcentratedLiquidityDenomsAndPoolCreation()
+	s.hasUsedAbci = false
 }
 
 func (s *KeeperTestHelper) SetupTestForInitGenesis() {
 	// Setting to True, leads to init genesis not running
 	s.App = app.Setup(true)
 	s.Ctx = s.App.BaseApp.NewContext(true, tmtypes.Header{})
+	// TODO: not sure
+	s.hasUsedAbci = true
 }
 
 func (s *KeeperTestHelper) SetEpochStartTime() {
@@ -123,6 +167,8 @@ func (s *KeeperTestHelper) Commit() {
 	newHeader := tmtypes.Header{Height: oldHeight + 1, ChainID: oldHeader.ChainID, Time: oldHeader.Time.Add(time.Second)}
 	s.App.BeginBlock(abci.RequestBeginBlock{Header: newHeader})
 	s.Ctx = s.App.GetBaseApp().NewContext(false, newHeader)
+
+	s.hasUsedAbci = true
 }
 
 // FundAcc funds target address with specified amount.
@@ -152,8 +198,8 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 	s.FundAcc(sdk.AccAddress(valAddr), selfBond)
 
 	stakingHandler := staking.NewHandler(*s.App.StakingKeeper)
-	stakingCoin := sdk.NewCoin(sdk.DefaultBondDenom, selfBond[0].Amount)
-	ZeroCommission := stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	stakingCoin := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: selfBond[0].Amount}
+	ZeroCommission := stakingtypes.NewCommissionRates(zeroDec, zeroDec, zeroDec)
 	msg, err := stakingtypes.NewMsgCreateValidator(valAddr, valPub, stakingCoin, stakingtypes.Description{}, ZeroCommission, sdk.OneInt())
 	s.Require().NoError(err)
 	res, err := stakingHandler(s.Ctx, msg)
@@ -242,12 +288,14 @@ func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, prop
 	fmt.Println("beginning block ", s.Ctx.BlockHeight())
 	s.App.BeginBlocker(s.Ctx, reqBeginBlock)
 	s.Ctx = s.App.NewContext(false, reqBeginBlock.Header)
+	s.hasUsedAbci = true
 }
 
 // EndBlock ends the block, and runs commit
 func (s *KeeperTestHelper) EndBlock() {
 	reqEndBlock := abci.RequestEndBlock{Height: s.Ctx.BlockHeight()}
 	s.App.EndBlocker(s.Ctx, reqEndBlock)
+	s.hasUsedAbci = true
 }
 
 func (s *KeeperTestHelper) RunMsg(msg sdk.Msg) (*sdk.Result, error) {
@@ -258,6 +306,7 @@ func (s *KeeperTestHelper) RunMsg(msg sdk.Msg) (*sdk.Result, error) {
 		return handler(s.Ctx, msg)
 	}
 	s.FailNow("msg %v could not be ran", msg)
+	s.hasUsedAbci = true
 	return nil, fmt.Errorf("msg %v could not be ran", msg)
 }
 
@@ -371,6 +420,14 @@ func (s *KeeperTestHelper) LockTokens(addr sdk.AccAddress, coins sdk.Coins, dura
 	return msgResponse.ID
 }
 
+// LockTokensNoFund locks tokens and returns a lockID.
+func (s *KeeperTestHelper) LockTokensNoFund(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockID uint64) {
+	msgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
+	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(s.Ctx), lockuptypes.NewMsgLockTokens(addr, duration, coins))
+	s.Require().NoError(err)
+	return msgResponse.ID
+}
+
 // BuildTx builds a transaction.
 func (s *KeeperTestHelper) BuildTx(
 	txBuilder client.TxBuilder,
@@ -398,6 +455,7 @@ func (s *KeeperTestHelper) StateNotAltered() {
 	s.App.Commit()
 	newState := s.App.ExportState(s.Ctx)
 	s.Require().Equal(oldState, newState)
+	s.hasUsedAbci = true
 }
 
 func (s *KeeperTestHelper) SkipIfWSL() {
@@ -441,29 +499,30 @@ func TestMessageAuthzSerialization(t *testing.T, msg sdk.Msg) {
 		mockMsgExec   authz.MsgExec
 	)
 
+	// mutates mockMsg
+	testSerDeser := func(msg proto.Message, mockMsg proto.Message) {
+		msgGrantBytes := json.RawMessage(sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(msg)))
+		err := authzcodec.ModuleCdc.UnmarshalJSON(msgGrantBytes, mockMsg)
+		require.NoError(t, err)
+	}
+
 	// Authz: Grant Msg
 	typeURL := sdk.MsgTypeURL(msg)
 	grant, err := authz.NewGrant(someDate, authz.NewGenericAuthorization(typeURL), someDate.Add(time.Hour))
 	require.NoError(t, err)
 
 	msgGrant := authz.MsgGrant{Granter: mockGranter, Grantee: mockGrantee, Grant: grant}
-	msgGrantBytes := json.RawMessage(sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msgGrant)))
-	err = authzcodec.ModuleCdc.UnmarshalJSON(msgGrantBytes, &mockMsgGrant)
-	require.NoError(t, err)
+	testSerDeser(&msgGrant, &mockMsgGrant)
 
 	// Authz: Revoke Msg
 	msgRevoke := authz.MsgRevoke{Granter: mockGranter, Grantee: mockGrantee, MsgTypeUrl: typeURL}
-	msgRevokeByte := json.RawMessage(sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msgRevoke)))
-	err = authzcodec.ModuleCdc.UnmarshalJSON(msgRevokeByte, &mockMsgRevoke)
-	require.NoError(t, err)
+	testSerDeser(&msgRevoke, &mockMsgRevoke)
 
 	// Authz: Exec Msg
 	msgAny, err := cdctypes.NewAnyWithValue(msg)
 	require.NoError(t, err)
 	msgExec := authz.MsgExec{Grantee: mockGrantee, Msgs: []*cdctypes.Any{msgAny}}
-	execMsgByte := json.RawMessage(sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msgExec)))
-	err = authzcodec.ModuleCdc.UnmarshalJSON(execMsgByte, &mockMsgExec)
-	require.NoError(t, err)
+	testSerDeser(&msgExec, &mockMsgExec)
 	require.Equal(t, msgExec.Msgs[0].Value, mockMsgExec.Msgs[0].Value)
 }
 

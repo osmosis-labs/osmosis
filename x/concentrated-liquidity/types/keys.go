@@ -16,7 +16,7 @@ const (
 	KeySeparator = "|"
 
 	uint64ByteSize = 8
-	uintBase       = 10
+	base10         = 10
 
 	ConcentratedLiquidityTokenPrefix = "cl/pool"
 )
@@ -45,17 +45,27 @@ var (
 	LockToPositionPrefix                  = []byte{0x10}
 	ConcentratedLockPrefix                = []byte{0x11}
 
+	KeyNextGlobalIncentiveRecordId = []byte{0x12}
+
+	KeyTotalLiquidity = []byte{0x13}
+
 	// TickPrefix + pool id
 	KeyTickPrefixByPoolIdLengthBytes = len(TickPrefix) + uint64ByteSize
 	// TickPrefix + pool id + sign byte(negative / positive prefix) + tick index: 18bytes in total
 	KeyTickLengthBytes = KeyTickPrefixByPoolIdLengthBytes + 1 + uint64ByteSize
 )
 
-// TickIndexToBytes converts a tick index to a byte slice. Negative tick indexes
-// are prefixed with 0x00 a byte and positive tick indexes are prefixed with a
-// 0x01 byte. We do this because big endian byte encoding does not give us in
-// order iteration in state due to the tick index values being signed integers, thus
-// iterating starting from positive then to negative.
+// TickIndexToBytes converts a tick index to a byte slice. The encoding is:
+// - Negative tick indexes are prefixed with a byte `b`
+// - Positive tick indexes are prefixed with a byte `b + 1`.
+// - Then we encode sign || BigEndian(uint64(tickIndex))
+//
+// This leading sign byte is to ensure we can iterate over the tick indexes in order.
+// 2's complement guarantees that negative integers are in order when iterating.
+// However they are not in order relative to positive integers (as 2's complement flips the leading bit)
+// Hence we use the leading sign byte to ensure that negative tick indexes
+// are in order relative to positive tick indexes.
+// TODO: Test key iteration property
 func TickIndexToBytes(tickIndex int64) []byte {
 	key := make([]byte, 9)
 	if tickIndex < 0 {
@@ -76,7 +86,14 @@ func TickIndexFromBytes(bz []byte) (int64, error) {
 		return 0, InvalidTickIndexEncodingError{Length: len(bz)}
 	}
 
-	return int64(sdk.BigEndianToUint64(bz[1:])), nil
+	i := int64(sdk.BigEndianToUint64(bz[1:]))
+	// ensure sign byte is correct, these errors should never occur.
+	if bz[0] == TickNegativePrefix[0] && i >= 0 {
+		return 0, InvalidTickIndexEncodingError{Length: len(bz)}
+	} else if bz[0] == TickPositivePrefix[0] && i < 0 {
+		return 0, InvalidTickIndexEncodingError{Length: len(bz)}
+	}
+	return i, nil
 }
 
 // KeyTick generates a tick key for a given pool and tick index by concatenating
@@ -132,8 +149,8 @@ func keyTickPrefixByPoolIdPrealloc(poolId uint64, preAllocBytes int) []byte {
 
 // PositionId<>LockId and LockId<>PositionId Prefix Keys
 func PositionIdForLockIdKeys(positionId, lockId uint64) (positionIdToLockIdKey []byte, lockIdToPositionIdKey []byte) {
-	positionIdToLockIdKey = []byte(fmt.Sprintf("%s%d", PositionToLockPrefix, positionId))
-	lockIdToPositionIdKey = []byte(fmt.Sprintf("%s%d", LockToPositionPrefix, lockId))
+	positionIdToLockIdKey = KeyPositionIdForLock(positionId)
+	lockIdToPositionIdKey = KeyLockIdForPositionId(lockId)
 	return positionIdToLockIdKey, lockIdToPositionIdKey
 }
 
@@ -167,13 +184,13 @@ func KeyAddressPoolIdPositionId(addr sdk.AccAddress, poolId uint64, positionId u
 // KeyAddressAndPoolId returns the prefix key used to create KeyAddressPoolIdPositionId, which only includes addr + pool id.
 // This key can be used to iterate over users positions for a specific pool.
 func KeyAddressAndPoolId(addr sdk.AccAddress, poolId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%s%x%s%d", PositionPrefix, KeySeparator, addr.Bytes(), KeySeparator, poolId))
+	return []byte(fmt.Sprintf("%s%s%x%s%d%s", PositionPrefix, KeySeparator, addr.Bytes(), KeySeparator, poolId, KeySeparator))
 }
 
 // KeyUserPositions returns the prefix key used to create KeyAddressPoolIdPositionId, which only includes the addr.
 // This key can be used to iterate over all positions that a specific address has.
 func KeyUserPositions(addr sdk.AccAddress) []byte {
-	return []byte(fmt.Sprintf("%s%s%x", PositionPrefix, KeySeparator, addr.Bytes()))
+	return []byte(fmt.Sprintf("%s%s%x%s", PositionPrefix, KeySeparator, addr.Bytes(), KeySeparator))
 }
 
 // Pool Position Prefix Keys
@@ -205,22 +222,22 @@ func KeyPool(poolId uint64) []byte {
 }
 
 // Incentive Prefix Keys
-// KeyIncentiveRecord is the key used to store incentive record struct for the
-// pool id + min uptime index + denom + addr combination.
-func KeyIncentiveRecord(poolId uint64, minUptimeIndex int, denom string, addr sdk.AccAddress) []byte {
-	return []byte(fmt.Sprintf("%s%s%d%s%d%s%s%s%s", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex, KeySeparator, denom, KeySeparator, addr))
+// KeyIncentiveRecord is the key used to store incentive records using the combination of
+// pool id + min uptime index + incentive record id.
+func KeyIncentiveRecord(poolId uint64, minUptimeIndex int, id uint64) []byte {
+	return []byte(fmt.Sprintf("%s%s%d%s%d%s%d%s", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex, KeySeparator, id, KeySeparator))
 }
 
 // KeyUptimeIncentiveRecords returns the prefix key for incentives records using the combination of pool id + min uptime index.
 // This can be used to iterate over incentive records for the pool id + min upttime index combination.
 func KeyUptimeIncentiveRecords(poolId uint64, minUptimeIndex int) []byte {
-	return []byte(fmt.Sprintf("%s%s%d%s%d", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex))
+	return []byte(fmt.Sprintf("%s%s%d%s%d%s", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex, KeySeparator))
 }
 
 // KeyPoolIncentiveRecords returns the prefix key for incentives records using given pool id.
 // This can be used to iterate over all incentive records for the pool.
 func KeyPoolIncentiveRecords(poolId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%s%d", IncentivePrefix, KeySeparator, poolId))
+	return []byte(fmt.Sprintf("%s%s%d%s", IncentivePrefix, KeySeparator, poolId, KeySeparator))
 }
 
 // Spread Reward Accumulator Prefix Keys
@@ -229,16 +246,17 @@ func KeySpreadRewardPositionAccumulator(positionId uint64) string {
 	return strings.Join([]string{string(SpreadRewardPositionAccumulatorPrefix), strconv.FormatUint(positionId, 10)}, KeySeparator)
 }
 
+// This is guaranteed to not contain "||" so it can be used as an accumulator name.
 func KeySpreadRewardPoolAccumulator(poolId uint64) string {
-	poolIdStr := strconv.FormatUint(poolId, uintBase)
+	poolIdStr := strconv.FormatUint(poolId, base10)
 	return strings.Join([]string{string(KeySpreadRewardPoolAccumulatorPrefix), poolIdStr}, "/")
 }
 
 // Uptme Accumulator Prefix Keys
-
+// This is guaranteed to not contain "||" so it can be used as an accumulator name.
 func KeyUptimeAccumulator(poolId uint64, uptimeIndex uint64) string {
-	poolIdStr := strconv.FormatUint(poolId, uintBase)
-	uptimeIndexStr := strconv.FormatUint(uptimeIndex, uintBase)
+	poolIdStr := strconv.FormatUint(poolId, base10)
+	uptimeIndexStr := strconv.FormatUint(uptimeIndex, base10)
 	return strings.Join([]string{string(UptimeAccumulatorPrefix), poolIdStr, uptimeIndexStr}, "/")
 }
 
@@ -271,4 +289,8 @@ func MustGetPoolIdFromShareDenom(denom string) uint64 {
 		panic(err)
 	}
 	return poolId
+}
+
+func GetDenomPrefix(denom string) []byte {
+	return append(KeyTotalLiquidity, []byte(denom)...)
 }

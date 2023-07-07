@@ -172,7 +172,7 @@ func (server msgServer) CreateFullRangePositionAndSuperfluidDelegate(goCtx conte
 	if err != nil {
 		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
 	}
-	positionId, _, _, _, _, lockId, err := server.keeper.clk.CreateFullRangePositionLocked(ctx, msg.PoolId, address, msg.Coins, server.keeper.sk.GetParams(ctx).UnbondingTime)
+	positionId, _, _, _, lockId, err := server.keeper.clk.CreateFullRangePositionLocked(ctx, msg.PoolId, address, msg.Coins, server.keeper.sk.GetParams(ctx).UnbondingTime)
 	if err != nil {
 		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
 	}
@@ -205,7 +205,7 @@ func (server msgServer) UnlockAndMigrateSharesToFullRangeConcentratedPosition(go
 		return nil, err
 	}
 
-	positionId, amount0, amount1, liquidity, joinTime, poolIdLeaving, poolIdEntering, clLockId, err := server.keeper.RouteLockedBalancerToConcentratedMigration(ctx, sender, msg.LockId, msg.SharesToMigrate, msg.TokenOutMins)
+	positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, clLockId, err := server.keeper.RouteLockedBalancerToConcentratedMigration(ctx, sender, msg.LockId, msg.SharesToMigrate, msg.TokenOutMins)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +221,6 @@ func (server msgServer) UnlockAndMigrateSharesToFullRangeConcentratedPosition(go
 			sdk.NewAttribute(types.AttributeAmount0, amount0.String()),
 			sdk.NewAttribute(types.AttributeAmount1, amount1.String()),
 			sdk.NewAttribute(types.AttributeLiquidity, liquidity.String()),
-			sdk.NewAttribute(types.AttributeJoinTime, joinTime.String()),
 		),
 	})
 
@@ -242,4 +241,20 @@ func (server msgServer) AddToConcentratedLiquiditySuperfluidPosition(goCtx conte
 	}
 
 	return &types.MsgAddToConcentratedLiquiditySuperfluidPositionResponse{PositionId: newPositionId, Amount0: actualAmount0, Amount1: actualAmount1, LockId: newLockId, NewLiquidity: newLiquidity}, nil
+}
+
+func (server msgServer) LockExistingFullRangePositionAndSFStake(goCtx context.Context, msg *types.MsgLockExistingFullRangePositionAndSFStake) (*types.MsgLockExistingFullRangePositionAndSFStakeResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	concentratedLockId, err := server.keeper.LockExistingFullRangePositionAndSFStake(ctx, msg.PositionId, sender, msg.ValAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgLockExistingFullRangePositionAndSFStakeResponse{ConcentratedLockId: concentratedLockId}, nil
 }

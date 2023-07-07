@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
@@ -62,9 +63,9 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 
 	// calculate liquidityNet, which we take into account and track depending on whether liquidityIn is positive or negative
 	if upper {
-		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Sub(liquidityDelta)
+		tickInfo.LiquidityNet.SubMut(liquidityDelta)
 	} else {
-		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Add(liquidityDelta)
+		tickInfo.LiquidityNet.AddMut(liquidityDelta)
 	}
 
 	k.SetTickInfo(ctx, poolId, tickIndex, &tickInfo)
@@ -176,13 +177,13 @@ func validateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int
 	}
 
 	// Check if the lower tick value is within the valid range of MinTick to MaxTick.
-	if lowerTick < types.MinTick || lowerTick >= types.MaxTick {
-		return types.InvalidTickError{Tick: lowerTick, IsLower: true, MinTick: types.MinTick, MaxTick: types.MaxTick}
+	if lowerTick < types.MinInitializedTick || lowerTick >= types.MaxTick {
+		return types.InvalidTickError{Tick: lowerTick, IsLower: true, MinTick: types.MinInitializedTick, MaxTick: types.MaxTick}
 	}
 
 	// Check if the upper tick value is within the valid range of MinTick to MaxTick.
-	if upperTick > types.MaxTick || upperTick <= types.MinTick {
-		return types.InvalidTickError{Tick: upperTick, IsLower: false, MinTick: types.MinTick, MaxTick: types.MaxTick}
+	if upperTick > types.MaxTick || upperTick <= types.MinInitializedTick {
+		return types.InvalidTickError{Tick: upperTick, IsLower: false, MinTick: types.MinInitializedTick, MaxTick: types.MaxTick}
 	}
 
 	// Check if the lower tick value is greater than or equal to the upper tick value.
@@ -200,12 +201,12 @@ func validateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int
 // the first tick (given our precision) that is able to represent this price is -161000000, so we use this tick instead.
 //
 // This really only applies to very small tick values, as the increment of a single tick continues to get smaller as the tick value gets smaller.
-func roundTickToCanonicalPriceTick(lowerTick, upperTick int64, priceTickLower, priceTickUpper sdk.Dec, tickSpacing uint64) (int64, int64, error) {
-	newLowerTick, err := math.PriceToTickRoundDown(priceTickLower, tickSpacing)
+func roundTickToCanonicalPriceTick(lowerTick, upperTick int64, sqrtPriceTickLower, sqrtPriceTickUpper sdk.Dec, tickSpacing uint64) (int64, int64, error) {
+	newLowerTick, err := math.SqrtPriceToTickRoundDownSpacing(sqrtPriceTickLower, tickSpacing)
 	if err != nil {
 		return 0, 0, err
 	}
-	newUpperTick, err := math.PriceToTickRoundDown(priceTickUpper, tickSpacing)
+	newUpperTick, err := math.SqrtPriceToTickRoundDownSpacing(sqrtPriceTickUpper, tickSpacing)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -222,18 +223,13 @@ func roundTickToCanonicalPriceTick(lowerTick, upperTick int64, priceTickLower, p
 
 // GetTickLiquidityForFullRange returns an array of liquidity depth for all ticks existing from min tick ~ max tick.
 func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]queryproto.LiquidityDepthWithRange, error) {
-	pool, err := k.getPoolById(ctx, poolId)
-	if err != nil {
-		return []queryproto.LiquidityDepthWithRange{}, err
-	}
-
 	// use false for zeroForOne since we're going from lower tick -> upper tick
 	zeroForOne := false
-	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec(), pool.GetTickSpacing())
+	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
 
 	// set current tick to min tick, and find the first initialized tick starting from min tick -1.
 	// we do -1 to make min tick inclusive.
-	currentTick := types.MinTick - 1
+	currentTick := types.MinCurrentTick
 
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, currentTick)
 	defer nextTickIter.Close()
@@ -343,19 +339,19 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 
 	// use max or min tick if provided bound is nil
 
-	ctx.Logger().Debug(fmt.Sprintf("min_tick %d\n", types.MinTick))
+	ctx.Logger().Debug(fmt.Sprintf("min_tick %d\n", types.MinInitializedTick))
 	ctx.Logger().Debug(fmt.Sprintf("max_tick %d\n", types.MaxTick))
 
 	if boundTick.IsNil() {
 		if zeroForOne {
-			boundTick = sdk.NewInt(types.MinTick)
+			boundTick = sdk.NewInt(types.MinInitializedTick)
 		} else {
 			boundTick = sdk.NewInt(types.MaxTick)
 		}
 	}
 
 	liquidityDepths := []queryproto.TickLiquidityNet{}
-	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec(), p.GetTickSpacing())
+	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
 
 	currentTick := p.GetCurrentTick()
 	_, currentTickSqrtPrice, err := math.TickToSqrtPrice(currentTick)
@@ -374,7 +370,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 		}
 		ctx.Logger().Debug(fmt.Sprintf("validateTick %s; validate sqrtPrice %s\n", validateTick.String(), validateSqrtPrice.String()))
 
-		if err := swapStrategy.ValidateSqrtPrice(validateSqrtPrice, currentTickSqrtPrice); err != nil {
+		if err := swapStrategy.ValidateSqrtPrice(validateSqrtPrice, osmomath.BigDecFromSDKDec(currentTickSqrtPrice)); err != nil {
 			return err
 		}
 
@@ -395,6 +391,15 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	store := ctx.KVStore(k.storeKey)
 	prefixBz := types.KeyTickPrefixByPoolId(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
+
+	// If zero for one, we use reverse iterator. As a result, we need to increment the start tick by 1
+	// so that we include the start tick in the search.
+	//
+	// If one for zero, we use forward iterator. However, our definition of the active range is inclusive
+	// of the lower bound. As a result, current liquidity must already include the lower bound tick
+	// so we skip it.
+	startTick = startTick + 1
+
 	startTickKey := types.TickIndexToBytes(startTick)
 	boundTickKey := types.TickIndexToBytes(boundTick.Int64())
 
