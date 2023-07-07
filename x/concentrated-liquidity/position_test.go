@@ -2629,6 +2629,6 @@ func (s *KeeperTestSuite) TestPositionCreationPanic() {
 	// Create position 2 adjacent and below position 1
 	// This triggers a panic, likely due to incorrect spread factor tracking/initialization
 	s.FundAcc(testAddr[2], DefaultRangeTestParams.baseAssets)
-	_, _, _, _, _, _, err = s.clk.CreatePosition(s.Ctx, pool.GetId(), testAddr[2], DefaultRangeTestParams.baseAssets, sdk.ZeroInt(), sdk.ZeroInt(), -200, -101) // -100, 0)
+	_, _, _, _, _, _, err = s.clk.CreatePosition(s.Ctx, pool.GetId(), testAddr[2], DefaultRangeTestParams.baseAssets, sdk.ZeroInt(), sdk.ZeroInt(), -200, -100) // -100, 0)
 	s.Require().NoError(err)
 }
