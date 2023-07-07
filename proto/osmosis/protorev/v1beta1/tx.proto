@@ -93,6 +93,8 @@ message MsgSetDeveloperAccountResponse {}
 
 // MsgSetPoolWeights defines the Msg/SetPoolWeights request type.
 message MsgSetPoolWeights {
+  option (amino.name) = "osmosis/MsgSetPoolWeights";
+
   // admin is the account that is authorized to set the pool weights.
   string admin = 1 [
     (gogoproto.moretags) = "yaml:\"admin\"",
@@ -110,6 +112,8 @@ message MsgSetPoolWeightsResponse {}
 
 // MsgSetMaxPoolPointsPerTx defines the Msg/SetMaxPoolPointsPerTx request type.
 message MsgSetMaxPoolPointsPerTx {
+  option (amino.name) = "osmosis/MsgSetMaxPoolPointsPerTx";
+
   // admin is the account that is authorized to set the max pool points per tx.
   string admin = 1 [
     (gogoproto.moretags) = "yaml:\"admin\"",
@@ -128,6 +132,8 @@ message MsgSetMaxPoolPointsPerTxResponse {}
 // MsgSetMaxPoolPointsPerBlock defines the Msg/SetMaxPoolPointsPerBlock request
 // type.
 message MsgSetMaxPoolPointsPerBlock {
+  option (amino.name) = "osmosis/MsgSetPoolWeights";
+
   // admin is the account that is authorized to set the max pool points per
   // block.
   string admin = 1 [
@@ -146,6 +152,8 @@ message MsgSetMaxPoolPointsPerBlockResponse {}
 
 // MsgSetBaseDenoms defines the Msg/SetBaseDenoms request type.
 message MsgSetBaseDenoms {
+  option (amino.name) = "osmosis/MsgSetBaseDenoms";
+
   // admin is the account that is authorized to set the base denoms.
   string admin = 1 [
     (gogoproto.moretags) = "yaml:\"admin\"",

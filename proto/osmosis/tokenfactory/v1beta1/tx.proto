@@ -89,6 +89,7 @@ message MsgChangeAdmin {
 // MsgChangeAdmin message.
 message MsgChangeAdminResponse {}
 
+<<<<<<< HEAD
 // // MsgSetBeforeSendHook is the sdk.Msg type for allowing an admin account to
 // // assign a CosmWasm contract to call with a BeforeSend hook
 // message MsgSetBeforeSendHook {
@@ -97,6 +98,18 @@ message MsgChangeAdminResponse {}
 //   string cosmwasm_address = 3
 //       [ (gogoproto.moretags) = "yaml:\"cosmwasm_address\"" ];
 // }
+=======
+// MsgSetBeforeSendHook is the sdk.Msg type for allowing an admin account to
+// assign a CosmWasm contract to call with a BeforeSend hook
+message MsgSetBeforeSendHook {
+  option (amino.name) = "osmosis/tokenfactory/set-beforesend-hook";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+  string cosmwasm_address = 3
+      [ (gogoproto.moretags) = "yaml:\"cosmwasm_address\"" ];
+}
+>>>>>>> 1e3149f0 ([Chore] Add amino name for tx msgs (#5784))
 
 // // MsgSetBeforeSendHookResponse defines the response structure for an
 // executed
@@ -118,6 +131,8 @@ message MsgSetDenomMetadata {
 message MsgSetDenomMetadataResponse {}
 
 message MsgForceTransfer {
+  option (amino.name) = "osmosis/tokenfactory/force-transfer";
+
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   cosmos.base.v1beta1.Coin amount = 2 [
     (gogoproto.moretags) = "yaml:\"amount\"",
