@@ -122,6 +122,8 @@ message MsgLockAndSuperfluidDelegateResponse { uint64 ID = 1; }
 // MsgCreateFullRangePositionAndSuperfluidDelegate creates a full range position
 // in a concentrated liquidity pool, then superfluid delegates.
 message MsgCreateFullRangePositionAndSuperfluidDelegate {
+  option (amino.name) = "osmosis/full-range-and-sf-delegate";
+
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   repeated cosmos.base.v1beta1.Coin coins = 2 [
     (gogoproto.nullable) = false,
@@ -157,6 +159,8 @@ message MsgUnPoolWhitelistedPoolResponse {
 // =====================
 // MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition
 message MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition {
+  option (amino.name) = "osmosis/unlock-and-migrate";
+
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   int64 lock_id = 2 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
   cosmos.base.v1beta1.Coin shares_to_migrate = 3 [
@@ -196,6 +200,8 @@ message MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse {
 
 // ===================== MsgAddToConcentratedLiquiditySuperfluidPosition
 message MsgAddToConcentratedLiquiditySuperfluidPosition {
+  option (amino.name) = "osmosis/add-to-cl-superfluid-position";
+
   uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
   string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   cosmos.base.v1beta1.Coin token_desired0 = 3 [
@@ -233,6 +239,8 @@ message MsgAddToConcentratedLiquiditySuperfluidPositionResponse {
 
 // ===================== MsgLockExistingFullRangePositionAndSFStake
 message MsgLockExistingFullRangePositionAndSFStake {
+  option (amino.name) = "osmosis/lock-existing-full-range-and-sf-stake";
+
   uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
   string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   string val_addr = 3 [ (gogoproto.moretags) = "yaml:\"val_addr\"" ];
