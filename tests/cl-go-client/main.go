@@ -17,6 +17,7 @@ import (
 	"github.com/ignite/cli/ignite/pkg/cosmosaccount"
 	"github.com/ignite/cli/ignite/pkg/cosmosclient"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	clqueryproto "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
@@ -478,7 +479,7 @@ func claimSpreadRewardsOp(igniteClient cosmosclient.Client) {
 	}
 
 	// Set positionIds to a random subset of allUserPositionIds
-	positionIds := getRandomSubset(allUserPositionIds)
+	positionIds := osmoutils.GetRandomSubset(allUserPositionIds)
 
 	log.Println("position IDs chosen: ", positionIds)
 
@@ -528,7 +529,7 @@ func claimIncentivesOp(igniteClient cosmosclient.Client) {
 	}
 
 	// Set positionIds to a random subset of allUserPositionIds
-	positionIds := getRandomSubset(allUserPositionIds)
+	positionIds := osmoutils.GetRandomSubset(allUserPositionIds)
 
 	log.Println("position IDs chosen: ", positionIds)
 
@@ -607,14 +608,4 @@ func roundTickDown(tickIndex int64, tickSpacing int64) int64 {
 		tickIndex = tickIndex - tickIndexModulus
 	}
 	return tickIndex
-}
-
-// getRandomSubset returns a random subset of the given slice
-func getRandomSubset(slice []uint64) []uint64 {
-	rand.Shuffle(len(slice), func(i, j int) {
-		slice[i], slice[j] = slice[j], slice[i]
-	})
-
-	n := rand.Intn(len(slice))
-	return slice[:n]
 }
