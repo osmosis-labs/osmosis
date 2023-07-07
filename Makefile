@@ -471,6 +471,9 @@ localnet-cl-external-incentive:
 localnet-cl-create-pool:
 	go run tests/cl-go-client/main.go --operation 4
 
+localnet-cl-add-to-positions:
+	go run tests/cl-go-client/main.go --operation 5
+
 # does both of localnet-cl-create-positions and localnet-cl-small-swap
 localnet-cl-positions-small-swaps: localnet-cl-create-positions localnet-cl-small-swap
 

@@ -48,6 +48,9 @@ const (
 
 	// createPoolOperation creates a pool with expectedPoolId.
 	createPoolOperation
+
+	// addToPositions creates a position and adds to it
+	addToPositions
 )
 
 const (
@@ -128,6 +131,8 @@ func main() {
 	case createPositions:
 		createManyRandomPositions(igniteClient, expectedPoolId, numPositions)
 		return
+	case addToPositions:
+		createManyRandomPositionsAndAddToIt(igniteClient, expectedPoolId, numPositions)
 	case makeManySmallSwaps:
 		swapRandomSmallAmountsContinuously(igniteClient, expectedPoolId, numSwaps)
 		return
@@ -142,32 +147,59 @@ func main() {
 	}
 }
 
-func createManyRandomPositions(igniteClient cosmosclient.Client, poolId uint64, numPositions int) {
+func createRandomPosition(igniteClient cosmosclient.Client, poolId uint64) (string, int64, int64, sdk.Coins, error) {
 	minTick, maxTick := cltypes.MinInitializedTick, cltypes.MaxTick
 	log.Println(minTick, " ", maxTick)
-	for i := 0; i < numPositions; i++ {
-		var (
-			// 1 to 9. These are localosmosis keyring test accounts with names such as:
-			// lo-test1
-			// lo-test2
-			// ...
-			randAccountNum = rand.Intn(8) + 1
-			accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
-			// minTick <= lowerTick <= upperTick
-			lowerTick = roundTickDown(rand.Int63n(maxTick-minTick+1)+minTick, tickSpacing)
-			// lowerTick <= upperTick <= maxTick
-			upperTick = roundTickDown(maxTick-rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick)))), tickSpacing)
 
-			tokenDesired0 = sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
-			tokenDesired1 = sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
-			tokensDesired = sdk.NewCoins(tokenDesired0, tokenDesired1)
-		)
+	// Generate random values for position creation
+	randAccountNum := rand.Intn(8) + 1
+	accountName := fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
+	lowerTick := roundTickDown(rand.Int63n(maxTick-minTick+1)+minTick, tickSpacing)
+	upperTick := roundTickDown(maxTick-rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick)))), tickSpacing)
+	tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
+	tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
+	tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
+
+	runMessageWithRetries(func() error {
+		_, _, _, _, err := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokensDesired, defaultMinAmount, defaultMinAmount)
+		return err
+	})
+
+	return accountName, lowerTick, upperTick, tokensDesired, nil
+}
+
+func createManyRandomPositions(igniteClient cosmosclient.Client, poolId uint64, numPositions int) {
+	for i := 0; i < numPositions; i++ {
+		_, _, _, _, err := createRandomPosition(igniteClient, poolId)
+		if err != nil {
+			// Handle the error
+		}
+	}
+}
+
+func createManyRandomPositionsAndAddToIt(igniteClient cosmosclient.Client, poolId uint64, numPositions int) error {
+	for i := 0; i < numPositions; i++ {
+		accountName, lowerTick, upperTick, tokensDesired, err := createRandomPosition(igniteClient, poolId)
+		if err != nil {
+			return err
+		}
+
+		// Add to position
+		randAmt0 := sdk.NewInt(rand.Int63n(maxAmountDeposited))
+		randAmt1 := sdk.NewInt(rand.Int63n(maxAmountDeposited))
 
 		runMessageWithRetries(func() error {
-			_, _, _, err := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokensDesired, defaultMinAmount, defaultMinAmount)
+			positionId, _, _, _, err := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokensDesired, defaultMinAmount, defaultMinAmount)
+			if err != nil {
+				return err
+			}
+
+			_, _, _, err = addToPosition(igniteClient, positionId, accountName, randAmt0, randAmt1, defaultMinAmount, defaultMinAmount)
 			return err
 		})
 	}
+
+	return nil
 }
 
 func swapRandomSmallAmountsContinuously(igniteClient cosmosclient.Client, poolId uint64, numSwaps int) {
@@ -329,7 +361,7 @@ func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 	return resp.PoolID
 }
 
-func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokensProvided sdk.Coins, tokenMinAmount0, tokenMinAmount1 sdk.Int) (amountCreated0, amountCreated1 sdk.Int, liquidityCreated sdk.Dec, err error) {
+func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokensProvided sdk.Coins, tokenMinAmount0, tokenMinAmount1 sdk.Int) (positionId uint64, amountCreated0, amountCreated1 sdk.Int, liquidityCreated sdk.Dec, err error) {
 	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
 	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
 	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
@@ -347,14 +379,43 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 	}
 	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
 	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 	resp := cltypes.MsgCreatePositionResponse{}
 	if err := txResp.Decode(&resp); err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
-	log.Println("created position: amt0", resp.Amount0, "amt1", resp.Amount1, "liquidity", resp.LiquidityCreated)
-	return resp.Amount0, resp.Amount1, resp.LiquidityCreated, nil
+	log.Println("created position: positionId", positionId, "amt0", resp.Amount0, "amt1", resp.Amount1, "liquidity", resp.LiquidityCreated)
+
+	return resp.PositionId, resp.Amount0, resp.Amount1, resp.LiquidityCreated, nil
+}
+
+func addToPosition(client cosmosclient.Client, positionId uint64, senderKeyringAccountName string, amount0 sdk.Int, amount1 sdk.Int, tokenMinAmount0, tokenMinAmount1 sdk.Int) (uint64, sdk.Int, sdk.Int, error) {
+	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
+	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
+	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
+
+	log.Println("Adding To position: position id", positionId, "accountName", senderKeyringAccountName, "amount0", amount0, "amount1", amount1, "defaultMinAmount", defaultMinAmount)
+
+	msg := &cltypes.MsgAddToPosition{
+		PositionId:      positionId,
+		Sender:          senderAddress,
+		Amount0:         amount0,
+		Amount1:         amount1,
+		TokenMinAmount0: tokenMinAmount0,
+		TokenMinAmount1: tokenMinAmount1,
+	}
+	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, err
+	}
+	resp := cltypes.MsgCreatePositionResponse{}
+	if err := txResp.Decode(&resp); err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, err
+	}
+	log.Println("Added to position: position id", resp.PositionId, "amount0", resp.Amount0, "amount1", resp.Amount1)
+
+	return resp.PositionId, resp.Amount0, resp.Amount1, nil
 }
 
 func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, tokenInCoin sdk.Coin, tokenOutDenom string, tokenOutMinAmount sdk.Int) (sdk.Int, error) {
