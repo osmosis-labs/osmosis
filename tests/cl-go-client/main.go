@@ -48,13 +48,19 @@ const (
 
 	// createPoolOperation creates a pool with expectedPoolId.
 	createPoolOperation
+
+	// claimSpreadRewardsOperation claims a random subset of spread rewards from a random account.
+	claimSpreadRewardsOperation
+
+	// claimIncentivesOperation claims a random subset of incentives from a random account.
+	claimIncentivesOperation
 )
 
 const (
 	expectedPoolId           uint64 = 1
 	addressPrefix                   = "osmo"
 	localosmosisFromHomePath        = "/.osmosisd-local"
-	consensusFee                    = "1500uosmo"
+	consensusFee                    = "3000uosmo"
 	denom0                          = "uosmo"
 	denom1                          = "uusdc"
 	tickSpacing              int64  = 100
@@ -137,6 +143,10 @@ func main() {
 		createExternalCLIncentive(igniteClient, expectedPoolId, externalGaugeCoins, expectedEpochIdentifier)
 	case createPoolOperation:
 		createPoolOp(igniteClient)
+	case claimSpreadRewardsOperation:
+		claimSpreadRewardsOp(igniteClient)
+	case claimIncentivesOperation:
+		claimIncentivesOp(igniteClient)
 	default:
 		log.Fatalf("invalid operation: %d", desiredOperation)
 	}
@@ -246,7 +256,7 @@ func createExternalCLIncentive(igniteClient cosmosclient.Client, poolId uint64, 
 
 	epochsQueryClient := epochstypes.NewQueryClient(igniteClient.Context())
 	currentEpochResponse, err := epochsQueryClient.CurrentEpoch(context.Background(), &epochstypes.QueryCurrentEpochRequest{
-		expectedEpochIdentifier,
+		Identifier: expectedEpochIdentifier,
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -276,7 +286,7 @@ func createExternalCLIncentive(igniteClient cosmosclient.Client, poolId uint64, 
 	for {
 		// Wait for 1 epoch to pass
 		currentEpochResponse, err = epochsQueryClient.CurrentEpoch(context.Background(), &epochstypes.QueryCurrentEpochRequest{
-			expectedEpochIdentifier,
+			Identifier: expectedEpochIdentifier,
 		})
 		if err != nil {
 			log.Fatal(err)
@@ -438,6 +448,106 @@ func createPoolOp(igniteClient cosmosclient.Client) {
 	}
 }
 
+func claimSpreadRewardsOp(igniteClient cosmosclient.Client) {
+	var (
+		randAccountNum = rand.Intn(8) + 1
+		accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
+	)
+
+	// Instantiate a query client
+	clClient := clqueryproto.NewQueryClient(igniteClient.Context())
+
+	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
+	senderAddress := getAccountAddressFromKeyring(igniteClient, accountName)
+	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
+
+	userPositionResp, err := clClient.UserPositions(context.Background(), &clqueryproto.UserPositionsRequest{
+		Address: senderAddress,
+		PoolId:  0,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(userPositionResp.Positions) == 0 {
+		return
+	}
+
+	var allUserPositionIds []uint64
+	for _, position := range userPositionResp.Positions {
+		allUserPositionIds = append(allUserPositionIds, position.Position.PositionId)
+	}
+
+	// Set positionIds to a random subset of allUserPositionIds
+	positionIds := getRandomSubset(allUserPositionIds)
+
+	log.Println("position IDs chosen: ", positionIds)
+
+	msg := &cltypes.MsgCollectSpreadRewards{
+		PositionIds: positionIds,
+		Sender:      senderAddress,
+	}
+	txResp, err := igniteClient.BroadcastTx(accountName, msg)
+	if err != nil {
+		log.Fatal(err)
+	}
+	collectSpreadRewardsResp := &cltypes.MsgCollectSpreadRewardsResponse{}
+	if err := txResp.Decode(collectSpreadRewardsResp); err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("total spread rewards claimed: ", collectSpreadRewardsResp.CollectedSpreadRewards.String())
+}
+
+func claimIncentivesOp(igniteClient cosmosclient.Client) {
+	var (
+		randAccountNum = rand.Intn(8) + 1
+		accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
+	)
+
+	// Instantiate a query client
+	clClient := clqueryproto.NewQueryClient(igniteClient.Context())
+
+	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
+	senderAddress := getAccountAddressFromKeyring(igniteClient, accountName)
+	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
+
+	userPositionResp, err := clClient.UserPositions(context.Background(), &clqueryproto.UserPositionsRequest{
+		Address: senderAddress,
+		PoolId:  0,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(userPositionResp.Positions) == 0 {
+		return
+	}
+
+	var allUserPositionIds []uint64
+	for _, position := range userPositionResp.Positions {
+		allUserPositionIds = append(allUserPositionIds, position.Position.PositionId)
+	}
+
+	// Set positionIds to a random subset of allUserPositionIds
+	positionIds := getRandomSubset(allUserPositionIds)
+
+	log.Println("position IDs chosen: ", positionIds)
+
+	msg := &cltypes.MsgCollectIncentives{
+		PositionIds: positionIds,
+		Sender:      senderAddress,
+	}
+	txResp, err := igniteClient.BroadcastTx(accountName, msg)
+	if err != nil {
+		log.Fatal(err)
+	}
+	collectIncentivesResp := &cltypes.MsgCollectIncentivesResponse{}
+	if err := txResp.Decode(collectIncentivesResp); err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("total incentives claimed: ", collectIncentivesResp.CollectedIncentives.String())
+}
+
 func getAccountAddressFromKeyring(igniteClient cosmosclient.Client, accountName string) string {
 	account, err := igniteClient.Account(accountName)
 	if err != nil {
@@ -497,4 +607,14 @@ func roundTickDown(tickIndex int64, tickSpacing int64) int64 {
 		tickIndex = tickIndex - tickIndexModulus
 	}
 	return tickIndex
+}
+
+// getRandomSubset returns a random subset of the given slice
+func getRandomSubset(slice []uint64) []uint64 {
+	rand.Shuffle(len(slice), func(i, j int) {
+		slice[i], slice[j] = slice[j], slice[i]
+	})
+
+	n := rand.Intn(len(slice))
+	return slice[:n]
 }
