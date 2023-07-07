@@ -157,9 +157,15 @@ func createRandomPosition(igniteClient cosmosclient.Client, poolId uint64) (stri
 	log.Println(minTick, " ", maxTick)
 
 	// Generate random values for position creation
+	// 1 to 9. These are localosmosis keyring test accounts with names such as:
+	// lo-test1
+	// lo-test2
+	// ...
 	randAccountNum := rand.Intn(8) + 1
 	accountName := fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
+	// minTick <= lowerTick <= upperTick
 	lowerTick := roundTickDown(rand.Int63n(maxTick-minTick+1)+minTick, tickSpacing)
+	// lowerTick <= upperTick <= maxTick
 	upperTick := roundTickDown(maxTick-rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick)))), tickSpacing)
 	tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
 	tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
