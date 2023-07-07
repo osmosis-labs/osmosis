@@ -2604,3 +2604,31 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 		})
 	}
 }
+
+// Reproduce panic in position creation
+// Specific case that leads to invalid state: current tick is above the entire range, fees have been generated on the pool, and the upper tick is already initialized while the lower isn't
+func (s *KeeperTestSuite) TestPositionCreationPanic() {
+	s.SetupTest()
+
+	testAddr := apptesting.CreateRandomAccounts(4)
+
+	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, 1, DefaultSpreadFactor)
+
+	// Create position 1
+	s.FundAcc(testAddr[0], DefaultRangeTestParams.baseAssets)
+	_, _, _, _, _, _, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), testAddr[0], DefaultRangeTestParams.baseAssets, sdk.ZeroInt(), sdk.ZeroInt(), -100, 0) // -200, -100)
+	s.Require().NoError(err)
+
+	// Swap tick to top of position 1's range
+	s.FundAcc(testAddr[1], sdk.NewCoins(sdk.NewCoin(ETH, sdk.Int(sdk.MustNewDecFromStr("10000000000000000000000000000000000000000")))))
+	swapOutCoin := sdk.NewCoin(USDC, sdk.NewInt(10000000))
+	swapInDenom := ETH
+	_, _, _, err = s.clk.SwapInAmtGivenOut(s.Ctx, testAddr[1], pool, swapOutCoin, swapInDenom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
+	s.Require().NoError(err)
+
+	// Create position 2 adjacent and below position 1
+	// This triggers a panic, likely due to incorrect spread factor tracking/initialization
+	s.FundAcc(testAddr[2], DefaultRangeTestParams.baseAssets)
+	_, _, _, _, _, _, err = s.clk.CreatePosition(s.Ctx, pool.GetId(), testAddr[2], DefaultRangeTestParams.baseAssets, sdk.ZeroInt(), sdk.ZeroInt(), -200, -101) // -100, 0)
+	s.Require().NoError(err)
+}
