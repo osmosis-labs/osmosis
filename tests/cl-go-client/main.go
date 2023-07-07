@@ -217,14 +217,14 @@ func createManyRandomPositionsToWithdraw(igniteClient cosmosclient.Client, poolI
 		}
 
 		runMessageWithRetries(func() error {
-			positionId, _, _, positionLiquidity, err := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokensDesired, defaultMinAmount, defaultMinAmount)
+			positionId, _, _, _, err := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokensDesired, defaultMinAmount, defaultMinAmount)
 			if err != nil {
 				return err
 			}
 
-			randAmtToWithdraw := sdk.NewDec(rand.Int63n(positionLiquidity.TruncateInt64()))
+			randAmt := sdk.NewInt(rand.Int63n(maxAmountDeposited))
 
-			_, _, err = withdrawPosition(igniteClient, positionId, accountName, randAmtToWithdraw)
+			_, _, err = withdrawPosition(igniteClient, positionId, accountName, randAmt.ToDec())
 			return err
 		})
 	}
