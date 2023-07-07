@@ -481,6 +481,13 @@ localnet-cl-claim-spread-rewards:
 localnet-cl-claim-incentives:
 	go run tests/cl-go-client/main.go --operation 6
 
+localnet-cl-add-to-positions:
+	go run tests/cl-go-client/main.go --operation 7
+
+localnet-cl-withdraw-positions:
+	go run tests/cl-go-client/main.go --operation 8
+
+
 # does both of localnet-cl-create-positions and localnet-cl-small-swap
 localnet-cl-positions-small-swaps: localnet-cl-create-positions localnet-cl-small-swap
 
