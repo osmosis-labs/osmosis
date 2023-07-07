@@ -10,12 +10,12 @@ import (
 
 // Parameter store keys.
 var (
-	KeyAuthorizedTickSpacing              = []byte("AuthorizedTickSpacing")
-	KeyAuthorizedSpreadFactors            = []byte("AuthorizedSpreadFactors")
-	KeyDiscountRate                       = []byte("DiscountRate")
-	KeyAuthorizedQuoteDenoms              = []byte("AuthorizedQuoteDenoms")
-	KeyAuthorizedUptimes                  = []byte("AuthorizedUptimes")
-	KeyIsPermisionlessPoolCreationEnabled = []byte("IsPermisionlessPoolCreationEnabled")
+	KeyAuthorizedTickSpacing               = []byte("AuthorizedTickSpacing")
+	KeyAuthorizedSpreadFactors             = []byte("AuthorizedSpreadFactors")
+	KeyDiscountRate                        = []byte("DiscountRate")
+	KeyAuthorizedQuoteDenoms               = []byte("AuthorizedQuoteDenoms")
+	KeyAuthorizedUptimes                   = []byte("AuthorizedUptimes")
+	KeyIsPermissionlessPoolCreationEnabled = []byte("IsPermissionlessPoolCreationEnabled")
 
 	_ paramtypes.ParamSet = &Params{}
 )
@@ -82,7 +82,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyAuthorizedTickSpacing, &p.AuthorizedTickSpacing, validateTicks),
 		paramtypes.NewParamSetPair(KeyAuthorizedSpreadFactors, &p.AuthorizedSpreadFactors, validateSpreadFactors),
 		paramtypes.NewParamSetPair(KeyAuthorizedQuoteDenoms, &p.AuthorizedQuoteDenoms, validateAuthorizedQuoteDenoms),
-		paramtypes.NewParamSetPair(KeyIsPermisionlessPoolCreationEnabled, &p.IsPermissionlessPoolCreationEnabled, validateIsPermissionLessPoolCreationEnabled),
+		paramtypes.NewParamSetPair(KeyIsPermissionlessPoolCreationEnabled, &p.IsPermissionlessPoolCreationEnabled, validateIsPermissionLessPoolCreationEnabled),
 		paramtypes.NewParamSetPair(KeyDiscountRate, &p.BalancerSharesRewardDiscount, validateBalancerSharesDiscount),
 		paramtypes.NewParamSetPair(KeyAuthorizedUptimes, &p.AuthorizedUptimes, validateAuthorizedUptimes),
 	}
