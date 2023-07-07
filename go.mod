@@ -21,7 +21,7 @@ require (
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230629191111-f375469de8b6
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230623115558-38aaab07d343
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230707192814-b6283c63146e
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230328024000-175ec88e4304
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230602130523-f9a94d8bbd10
 	github.com/pkg/errors v0.9.1
@@ -63,7 +63,6 @@ require (
 	github.com/google/btree v1.1.2 // indirect
 	github.com/junk1tm/musttag v0.5.0 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.4 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/maratori/testableexamples v1.0.0 // indirect
 	github.com/nunnatsa/ginkgolinter v0.9.0 // indirect
 	github.com/regen-network/cosmos-proto v0.3.1 // indirect
