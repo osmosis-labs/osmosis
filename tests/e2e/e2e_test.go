@@ -36,9 +36,9 @@ import (
 )
 
 // TODO: Find more scalable way to do this
-func (s *IntegrationTestSuite) TestAllE2E() {
-	t := s.T()
-	t.Parallel()
+// note: I don't think that these run in parallel.  When linting, it complains about the t.Parallel() call
+// being missing from the function TestAllE2E.  So, I think that the tests don't actually run in parallel, and when they do, they fail.
+func (s *IntegrationTestSuite) TestAllE2E() { //nolint:tparallel
 	// There appears to be an E2E quirk that requires a sleep here
 	time.Sleep(3 * time.Second)
 
