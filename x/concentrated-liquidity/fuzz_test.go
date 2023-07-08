@@ -40,6 +40,7 @@ type positionAndLiquidity struct {
 }
 
 func TestFuzz_Many(t *testing.T) {
+	t.Parallel()
 	fuzz(t, defaultNumSwaps, defaultNumPositions, 100)
 }
 
@@ -54,6 +55,7 @@ func (s *KeeperTestSuite) TestFuzz_GivenSeed() {
 
 // pre-condition: poolId exists, and has at least one position
 func fuzz(t *testing.T, numSwaps int, numPositions int, numIterations int) {
+	t.Helper()
 	seed := time.Now().Unix()
 
 	for i := 0; i < numIterations; i++ {
@@ -154,7 +156,6 @@ func (s *KeeperTestSuite) randomSwap(r *rand.Rand, poolId uint64) (fatalErr bool
 	swapStrategy, zfo := updateStrategy()
 
 	for didSwap := false; !didSwap; {
-
 		if swapStrategy == 0 {
 			didSwap, fatalErr = s.swapRandomAmount(r, pool, zfo)
 		} else if swapStrategy == 1 {
@@ -237,10 +238,9 @@ func tickAmtChange(r *rand.Rand, targetAmount sdk.Dec) sdk.Dec {
 	changeType := r.Intn(3)
 
 	// Generate a random percentage under 0.1%
-	randChangePercent := sdk.NewDec(r.Int63n(1)).QuoInt64(1000)
-	change := targetAmount.Mul(randChangePercent)
+	randChangePercent := sdk.NewDec(r.Int63n(1)).QuoInt64(1000) //nolint:staticcheck // note: the linter warning on this is that r.Int63n(1) always returns zero.
 
-	change = sdk.MaxDec(sdk.NewDec(1), randChangePercent)
+	change := sdk.MaxDec(sdk.NewDec(1), randChangePercent)
 
 	switch changeType {
 	case 0:
@@ -277,7 +277,7 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 	if errors.As(err, &types.InvalidAmountCalculatedError{}) {
 		// If the swap we're about to execute will not generate enough output, we skip the swap.
 		// it would error for a real user though. This is good though, since that user would just be burning funds.
-		if err.(types.InvalidAmountCalculatedError).Amount.IsZero() {
+		if err.(types.InvalidAmountCalculatedError).Amount.IsZero() { //nolint:forcetypeassert
 			return false, false
 		}
 	}
@@ -296,7 +296,7 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 	if errors.As(err, &types.InvalidAmountCalculatedError{}) {
 		// If the swap we're about to execute will not generate enough output, we skip the swap.
 		// it would error for a real user though. This is good though, since that user would just be burning funds.
-		if err.(types.InvalidAmountCalculatedError).Amount.IsZero() {
+		if err.(types.InvalidAmountCalculatedError).Amount.IsZero() { //nolint:forcetypeassert
 			return false, false
 		}
 	}
@@ -395,7 +395,6 @@ func (s *KeeperTestSuite) validateNoErrors(possibleErrors []error) {
 	fullMsg := ""
 	shouldFail := false
 	for _, err := range possibleErrors {
-
 		// TODO: figure out if this is OK
 		// Answer: Ok for now, due to outofbounds=True restriction
 		// Should sanity check that our fuzzer isn't hitting this too often though, that could hit at
@@ -455,7 +454,6 @@ func (s *KeeperTestSuite) addOrRemoveLiquidity(r *rand.Rand, poolId uint64) {
 	} else {
 		s.removeRandomPosition(r)
 	}
-
 }
 
 // if true add position, if false remove position
