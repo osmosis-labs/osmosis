@@ -1,8 +1,10 @@
 package osmoutils_test
 
 import (
+	"math/rand"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -122,4 +124,51 @@ func TestContains(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetRandomSubset(t *testing.T) {
+	tests := []struct {
+		name  string
+		slice []int
+	}{
+		{
+			name:  "Empty slice",
+			slice: []int{},
+		},
+		{
+			name:  "Slice of integers",
+			slice: []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+		},
+	}
+
+	rand.Seed(time.Now().UnixNano())
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := osmoutils.GetRandomSubset(tt.slice)
+
+			// Check if the length of the returned subset is less than or equal to the length of the original slice
+			if len(got) > len(tt.slice) {
+				t.Errorf("GetRandomSubset() returned subset length %d, expected less than or equal to %d", len(got), len(tt.slice))
+			}
+
+			// Check if the returned subset contains only elements from the original slice
+			for _, v := range got {
+				if !contains(tt.slice, v) {
+					t.Errorf("GetRandomSubset() returned element %v not found in the original slice", v)
+				}
+			}
+		})
+	}
+}
+
+// contains checks if a slice contains a specific element
+func contains(slice interface{}, element interface{}) bool {
+	s := reflect.ValueOf(slice)
+	for i := 0; i < s.Len(); i++ {
+		if reflect.DeepEqual(s.Index(i).Interface(), element) {
+			return true
+		}
+	}
+	return false
 }
