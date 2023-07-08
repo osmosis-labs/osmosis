@@ -37,6 +37,8 @@ import (
 
 // TODO: Find more scalable way to do this
 func (s *IntegrationTestSuite) TestAllE2E() {
+	t := s.T()
+	t.Parallel()
 	// There appears to be an E2E quirk that requires a sleep here
 	time.Sleep(3 * time.Second)
 
