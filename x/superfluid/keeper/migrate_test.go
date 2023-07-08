@@ -1267,7 +1267,7 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 		// Find the largest numPosition value and set numAccounts to be one greater than the largest position value
 		// The first account is used to create pools and the rest are used to create positions
 		largestPositionValue := osmoutils.Max(numBondedSuperfluid, numUnbondingSuperfluidLocked, numUnbondingSuperfluidUnlocking, numVanillaLockLocked, numVanillaLockUnlocking, numNoLock)
-		numAccounts := largestPositionValue.(int) + 1
+		numAccounts := largestPositionValue.(int) + 1 //nolint:forcetypeassert // We know this is an int
 
 		positions := Positions{
 			numAccounts:                     numAccounts,
