@@ -92,9 +92,7 @@ var (
 )
 
 func main() {
-	var (
-		desiredOperation int
-	)
+	var desiredOperation int
 
 	flag.IntVar(&desiredOperation, "operation", 0, fmt.Sprintf("operation to run:\ncreate positions: %v, make many swaps: %v", createPositions, makeManySmallSwaps))
 

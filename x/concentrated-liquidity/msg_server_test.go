@@ -458,7 +458,6 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 }
 
 func (s *KeeperTestSuite) TestFungify_Events() {
-
 	s.T().Skip("TODO: re-enable fungify test if message is restored")
 
 	testcases := map[string]struct {

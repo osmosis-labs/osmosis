@@ -883,30 +883,31 @@ func (s *KeeperTestSuite) TestGetPoolFromGaugeId() {
 // TestFunctionalInternalExternalCLGauge is a functional test that covers more complex scenarios relating to distributing incentives through gauges
 // at the end of each epoch.
 //
-//
 // Testing strategy:
 // 1. Initialize variables.
 // 2. Setup CL pool and gauge (gauge automatically gets created at the end of CL pool creation).
 // 3. Create external no-lock gauges for CL pools
 // 4. Create Distribution records to incentivize internal CL no-lock gauges
 // 5. let epoch 1 pass
-// 		- we only distribute external incentive in epoch 1.
-//  	- Check that incentive record has been correctly created and gauge has been correctly updated.
-// 		- all perpetual gauges must finish distributing records
-// 		- ClPool1 will recieve full 1Musdc, 1Meth in this epoch.
-//	 	- ClPool2 will recieve 500kusdc, 500keth in this epoch.
-//      - ClPool3 will recieve full 1Musdc, 1Meth in this epoch whereas
+//   - we only distribute external incentive in epoch 1.
+//   - Check that incentive record has been correctly created and gauge has been correctly updated.
+//   - all perpetual gauges must finish distributing records
+//   - ClPool1 will recieve full 1Musdc, 1Meth in this epoch.
+//   - ClPool2 will recieve 500kusdc, 500keth in this epoch.
+//   - ClPool3 will recieve full 1Musdc, 1Meth in this epoch whereas
+//
 // 6. Remove distribution records for internal incentives using HandleReplacePoolIncentivesProposal
 // 7. let epoch 2 pass
-//		-  We distribute internal incentive in epoch 2.
-// 		- check only external non-perpetual gauges with 2 epochs distributed
-// 		- check gauge has been correctly updated
-// 		- ClPool1 will already have 1Musdc, 1Meth (from epoch1) as external incentive. Will recieve 750Kstake as internal incentive.
-// 		- ClPool2 will already have 500kusdc, 500keth (from epoch1) as external incentive. Will recieve 500kusdc, 500keth (from epoch 2) as external incentive and 750Kstake as internal incentive.
-// 	    - ClPool3 will already have 1M, 1M (from epoch1) as external incentive. This pool will not recieve any internal incentive.
+//   - We distribute internal incentive in epoch 2.
+//   - check only external non-perpetual gauges with 2 epochs distributed
+//   - check gauge has been correctly updated
+//   - ClPool1 will already have 1Musdc, 1Meth (from epoch1) as external incentive. Will recieve 750Kstake as internal incentive.
+//   - ClPool2 will already have 500kusdc, 500keth (from epoch1) as external incentive. Will recieve 500kusdc, 500keth (from epoch 2) as external incentive and 750Kstake as internal incentive.
+//   - ClPool3 will already have 1M, 1M (from epoch1) as external incentive. This pool will not recieve any internal incentive.
+//
 // 8. let epoch 3 pass
-// 		- nothing distributes as non-perpetual gauges with 2 epochs have ended and perpetual gauges have not been reloaded
-//		- nothing should change in terms of incentive records
+//   - nothing distributes as non-perpetual gauges with 2 epochs have ended and perpetual gauges have not been reloaded
+//   - nothing should change in terms of incentive records
 func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 	// 1. Initialize variables
 	s.SetupTest()
@@ -1078,7 +1079,6 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 	// should be the same as the one from after Epoch2.
 	s.Require().Equal(clPool1IncentiveRecordsAtEpoch2, clPool1IncentiveRecordsAtEpoch3)
 	s.Require().Equal(clPool2IncentiveRecordsAtEpoch2, clPool2IncentiveRecordsAtEpoch3)
-
 }
 
 func (s *KeeperTestSuite) CreateNoLockExternalGauges(clPoolId uint64, externalGaugeCoins sdk.Coins, gaugeCreator sdk.AccAddress, numEpochsPaidOver uint64) uint64 {

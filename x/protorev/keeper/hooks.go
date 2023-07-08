@@ -13,9 +13,7 @@ type Hooks struct {
 	k Keeper
 }
 
-var (
-	_ gammtypes.GammHooks = Hooks{}
-)
+var _ gammtypes.GammHooks = Hooks{}
 
 // Create new ProtoRev hooks.
 func (k Keeper) Hooks() Hooks { return Hooks{k} }

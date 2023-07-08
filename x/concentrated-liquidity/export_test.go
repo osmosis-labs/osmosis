@@ -59,7 +59,8 @@ func (k Keeper) SwapOutAmtGivenIn(
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	spreadFactor sdk.Dec,
-	priceLimit sdk.Dec) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, err error) {
+	priceLimit sdk.Dec,
+) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, err error) {
 	return k.swapOutAmtGivenIn(ctx, sender, pool, tokenIn, tokenOutDenom, spreadFactor, priceLimit)
 }
 
@@ -70,7 +71,6 @@ func (k Keeper) ComputeOutAmtGivenIn(
 	tokenOutDenom string,
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
-
 ) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, totalSpreadRewards sdk.Dec, err error) {
 	return k.computeOutAmtGivenIn(ctx, poolId, tokenInMin, tokenOutDenom, spreadFactor, priceLimit)
 }
@@ -82,7 +82,8 @@ func (k Keeper) SwapInAmtGivenOut(
 	desiredTokenOut sdk.Coin,
 	tokenInDenom string,
 	spreadFactor sdk.Dec,
-	priceLimit sdk.Dec) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, err error) {
+	priceLimit sdk.Dec,
+) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, err error) {
 	return k.swapInAmtGivenOut(ctx, sender, pool, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit)
 }
 
@@ -93,7 +94,6 @@ func (k Keeper) ComputeInAmtGivenOut(
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
 	poolId uint64,
-
 ) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, totalSpreadRewards sdk.Dec, err error) {
 	return k.computeInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit, poolId)
 }
@@ -340,7 +340,8 @@ func (k Keeper) GetLargestSupportedUptimeDuration(ctx sdk.Context) time.Duration
 
 func (k Keeper) SetupSwapStrategy(ctx sdk.Context, p types.ConcentratedPoolExtension,
 	spreadFactor sdk.Dec, tokenInDenom string,
-	priceLimit sdk.Dec) (strategy swapstrategy.SwapStrategy, sqrtPriceLimit sdk.Dec, err error) {
+	priceLimit sdk.Dec,
+) (strategy swapstrategy.SwapStrategy, sqrtPriceLimit sdk.Dec, err error) {
 	return k.setupSwapStrategy(p, spreadFactor, tokenInDenom, priceLimit)
 }
 

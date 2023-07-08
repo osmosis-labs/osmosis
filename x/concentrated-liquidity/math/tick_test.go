@@ -652,6 +652,7 @@ func TestPriceToTick_ErrorCases(t *testing.T) {
 		})
 	}
 }
+
 func TestTickToPrice_ErrorCases(t *testing.T) {
 	testCases := map[string]struct {
 		tickIndex int64
@@ -711,6 +712,7 @@ func TestCalculatePriceToTick(t *testing.T) {
 		})
 	}
 }
+
 func TestPowTenInternal(t *testing.T) {
 	testCases := map[string]struct {
 		exponent             int64

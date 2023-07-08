@@ -1318,10 +1318,10 @@ func (s *KeeperTestSuite) TestLockExistingFullRangePositionAndSFStake() {
 }
 
 func (s *KeeperTestSuite) SetupConcentratedSuperfluidEnv(ctx sdk.Context, poolCreateAcc sdk.AccAddress, superfluidNotEnabledOnDenom bool) (valAddr sdk.ValAddress, clPoolId uint64, err error) {
-	//bankKeeper := s.App.BankKeeper
+	// bankKeeper := s.App.BankKeeper
 	gammKeeper := s.App.GAMMKeeper
 	superfluidKeeper := s.App.SuperfluidKeeper
-	//stakingKeeper := s.App.StakingKeeper
+	// stakingKeeper := s.App.StakingKeeper
 	poolmanagerKeeper := s.App.PoolManagerKeeper
 
 	// Set up a single validator.

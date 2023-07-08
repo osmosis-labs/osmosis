@@ -1,4 +1,4 @@
-package grpc 
+package grpc
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
 // SOURCE AT `proto/osmosis/poolmanager/v1beta1/query.yml`
@@ -129,4 +129,3 @@ func (q Querier) AllPools(grpcCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.AllPools(ctx, *req)
 }
-

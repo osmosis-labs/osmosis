@@ -412,9 +412,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		nr2TickSpacingsAway = 5
 	)
 
-	var (
-		desiredPositionTickSpacingsAway = []uint64{nr1TickSpacingsAway, nr2TickSpacingsAway}
-	)
+	desiredPositionTickSpacingsAway := []uint64{nr1TickSpacingsAway, nr2TickSpacingsAway}
 
 	// validateAfterFirstSwap runs validation logic of the system's state after the first swap executes.
 	// It validates the following:
@@ -755,7 +753,6 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 
 	s.Run("one for zero", func() {
 		testCases := map[string]testCase{
-
 			// Group 1:
 			// Test setup:
 			// swap 1: just enough to cross upper tick of NR1
@@ -823,7 +820,6 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		for name, tc := range testCases {
 			tc := tc
 			s.Run(name, func() {
-
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				// 1. Prepare pool and positions for test
 

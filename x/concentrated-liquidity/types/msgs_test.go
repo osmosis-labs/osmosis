@@ -20,8 +20,10 @@ type extMsg interface {
 	Type() string
 }
 
-var addr1 string
-var invalidAddr sdk.AccAddress
+var (
+	addr1       string
+	invalidAddr sdk.AccAddress
+)
 
 func init() {
 	appParams.SetAddressPrefixes()
@@ -238,7 +240,7 @@ func TestMsgAddToPosition(t *testing.T) {
 }
 
 func TestMsgFungifyChargedPositions(t *testing.T) {
-	var validPositionIds = []uint64{1, 2}
+	validPositionIds := []uint64{1, 2}
 
 	tests := []struct {
 		name       string

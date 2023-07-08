@@ -53,7 +53,6 @@ func TestConcentratedPoolTestSuite(t *testing.T) {
 
 // TestGetAddress tests the GetAddress method of pool
 func (s *ConcentratedPoolTestSuite) TestGetAddress() {
-
 	tests := []struct {
 		name          string
 		expectedPanic bool
@@ -94,7 +93,6 @@ func (s *ConcentratedPoolTestSuite) TestGetAddress() {
 
 // TestGetIncentivesAddress tests the GetIncentivesAddress method of pool
 func (s *ConcentratedPoolTestSuite) TestGetIncentivesAddress() {
-
 	tests := []struct {
 		name          string
 		expectedPanic bool

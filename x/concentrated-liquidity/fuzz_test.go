@@ -460,7 +460,6 @@ func (s *KeeperTestSuite) addOrRemoveLiquidity(r *rand.Rand, poolId uint64) {
 	} else {
 		s.removeRandomPosition(r)
 	}
-
 }
 
 // if true add position, if false remove position

@@ -94,9 +94,7 @@ type PoolUpdates struct {
 	NewSqrtPrice   osmomath.BigDec
 }
 
-var (
-	smallestDec = sdk.SmallestDec()
-)
+var smallestDec = sdk.SmallestDec()
 
 // updateSpreadRewardGrowthGlobal updates the swap state's spread reward growth global per unit of liquidity
 // when liquidity is positive.
@@ -610,7 +608,8 @@ func (k Keeper) swapCrossTickLogic(ctx sdk.Context,
 	nextInitializedTick int64, nextTickIter db.Iterator,
 	p types.ConcentratedPoolExtension,
 	spreadRewardAccum accum.AccumulatorObject, uptimeAccums []accum.AccumulatorObject,
-	tokenInDenom string) (SwapState, error) {
+	tokenInDenom string,
+) (SwapState, error) {
 	nextInitializedTickInfo, err := ParseTickFromBz(nextTickIter.Value())
 	if err != nil {
 		return swapState, err

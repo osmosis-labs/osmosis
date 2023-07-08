@@ -1760,12 +1760,10 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 }
 
 func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() {
-	var (
-		errToleranceOneRoundUp = osmomath.ErrTolerance{
-			AdditiveTolerance: sdk.OneDec(),
-			RoundingDir:       osmomath.RoundUp,
-		}
-	)
+	errToleranceOneRoundUp := osmomath.ErrTolerance{
+		AdditiveTolerance: sdk.OneDec(),
+		RoundingDir:       osmomath.RoundUp,
+	}
 	tests := makeTests(positionCases)
 
 	for name, tc := range tests {

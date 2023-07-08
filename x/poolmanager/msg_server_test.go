@@ -104,7 +104,6 @@ func (s *KeeperTestSuite) TestSplitRouteSwapExactAmountIn() {
 				s.AssertEventEmitted(ctx, types.TypeMsgSplitRouteSwapExactAmountIn, tc.expectedSplitRouteSwapEvent)
 				s.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 			}
-
 		})
 	}
 }
@@ -192,7 +191,6 @@ func (s *KeeperTestSuite) TestSplitRouteSwapExactAmountOut() {
 				s.AssertEventEmitted(ctx, types.TypeMsgSplitRouteSwapExactAmountOut, tc.expectedSplitRouteSwapEvent)
 				s.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 			}
-
 		})
 	}
 }

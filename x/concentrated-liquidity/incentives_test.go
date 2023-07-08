@@ -3205,7 +3205,6 @@ func (s *KeeperTestSuite) TestPrepareClaimAllIncentivesForPosition() {
 			for i, uptimeAccumDiffPostClaim := range uptimeAccumsDiffPostClaim {
 				s.Require().Equal(expectedForfeitedIncentives[i].Amount, uptimeAccumDiffPostClaim.Amount)
 			}
-
 		})
 	}
 }
@@ -4236,7 +4235,6 @@ func (s *KeeperTestSuite) TestGetIncentiveRecordSerialized() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-
 			s.SetupTest()
 			k := s.App.ConcentratedLiquidityKeeper
 

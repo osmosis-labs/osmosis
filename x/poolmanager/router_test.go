@@ -645,10 +645,10 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100000)),
 			tokenOutMinAmount: sdk.NewInt(1),
 		},
-		//TODO:
-		//change values in and out to be different with each swap module type
-		//tests for stable-swap pools
-		//edge cases:
+		// TODO:
+		// change values in and out to be different with each swap module type
+		// tests for stable-swap pools
+		// edge cases:
 		//  * invalid route length
 		//  * pool does not exist
 		//  * swap errors

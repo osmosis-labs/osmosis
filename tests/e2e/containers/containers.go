@@ -130,7 +130,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 	maxDebugLogTriesLeft := maxDebugLogsPerCommand
 
 	expectedSequence := 0
-	var sequenceMismatchRegex = regexp.MustCompile(`account sequence mismatch, expected (\d+),`)
+	sequenceMismatchRegex := regexp.MustCompile(`account sequence mismatch, expected (\d+),`)
 
 	// We use the `require.Eventually` function because it is only allowed to do one transaction per block without
 	// sequence numbers. For simplicity, we avoid keeping track of the sequence number and just use the `require.Eventually`.

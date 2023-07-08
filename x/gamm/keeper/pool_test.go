@@ -734,7 +734,6 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 				suite.Require().NoError(err)
 				suite.Require().Equal(neededLpLiquidity, tc.expectedLpLiquidity)
 			}
-
 		})
 	}
 }

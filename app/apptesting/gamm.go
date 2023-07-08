@@ -86,9 +86,11 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithCoinsAndWeights(coins sdk.Coin
 	})
 }
 
-var zeroDec = sdk.ZeroDec()
-var oneThirdSpotPriceUnits = sdk.NewDec(1).Quo(sdk.NewDec(3)).
-	MulIntMut(gammtypes.SpotPriceSigFigs).RoundInt().ToDec().QuoInt(gammtypes.SpotPriceSigFigs)
+var (
+	zeroDec                = sdk.ZeroDec()
+	oneThirdSpotPriceUnits = sdk.NewDec(1).Quo(sdk.NewDec(3)).
+				MulIntMut(gammtypes.SpotPriceSigFigs).RoundInt().ToDec().QuoInt(gammtypes.SpotPriceSigFigs)
+)
 
 // PrepareBalancerPool returns a Balancer pool's pool-ID with pool params set in PrepareBalancerPoolWithPoolParams.
 func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {

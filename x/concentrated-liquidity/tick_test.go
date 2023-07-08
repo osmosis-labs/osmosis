@@ -361,7 +361,6 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			} else {
 				s.Require().True(gasConsumed < uint64(types.BaseGasFeeForInitializingTick))
 			}
-
 		})
 	}
 }
@@ -1089,12 +1088,10 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			boundTick:       sdk.NewInt(-15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
-
 					LiquidityNet: sdk.NewDec(-20),
 					TickIndex:    10,
 				},
 				{
-
 					LiquidityNet: sdk.NewDec(20),
 					TickIndex:    -10,
 				},

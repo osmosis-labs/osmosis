@@ -143,7 +143,6 @@ func withNoSwap(params RangeTestParams) RangeTestParams {
 // setupRangesAndAssertInvariants sets up the state specified by `testParams` on the given set of ranges.
 // It also asserts global invariants at each intermediate step.
 func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.ConcentratedPoolExtension, ranges [][]int64, testParams RangeTestParams) {
-
 	// --- Parse test params ---
 
 	// Prepare a slice tracking how many positions to create on each range.

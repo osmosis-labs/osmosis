@@ -238,7 +238,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	wg.Add(6)
 
-	var errCh = make(chan error, 2)
+	errCh := make(chan error, 2)
 
 	oneDai := sdk.NewCoin(v16.DAIIBCDenom, sdk.NewInt(1000000000000000000))
 

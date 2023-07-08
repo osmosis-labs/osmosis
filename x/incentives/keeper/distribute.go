@@ -303,7 +303,6 @@ func (k Keeper) distributeInternal(
 	// Fails if the pool found is not a CL pool.
 	if gauge.DistributeTo.LockQueryType == lockuptypes.NoLock {
 		pool, err := k.GetPoolFromGaugeId(ctx, gauge.Id, gauge.DistributeTo.Duration)
-
 		if err != nil {
 			return nil, err
 		}

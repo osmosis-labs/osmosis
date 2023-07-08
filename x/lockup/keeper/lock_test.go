@@ -612,10 +612,8 @@ func (s *KeeperTestSuite) TestSetLockRewardReceiverAddress() {
 				s.Require().NoError(err)
 				s.Require().Equal(lock.RewardReceiverAddress, newReceiver.String())
 			}
-
 		})
 	}
-
 }
 
 func (s *KeeperTestSuite) TestCreateLockNoSend() {
@@ -889,6 +887,7 @@ func (s *KeeperTestSuite) TestLock() {
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, acc.GetAddress(), "stake")
 	s.Require().Equal(sdk.NewInt(0).String(), balance.Amount.String())
 }
+
 func (s *KeeperTestSuite) TestSplitLock() {
 	defaultAmount := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(200)))
 	defaultHalfAmount := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(40)), sdk.NewCoin("bar", sdk.NewInt(110)))

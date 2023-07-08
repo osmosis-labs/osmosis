@@ -84,7 +84,6 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 				// Create DAI / OSMO pool
 				suite.PrepareBalancerPoolWithCoins(daiCoin, desiredDenom0Coin)
-
 			},
 			func() {
 				stakingParams := suite.App.StakingKeeper.GetParams(suite.Ctx)

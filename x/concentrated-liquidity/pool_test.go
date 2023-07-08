@@ -654,7 +654,6 @@ func (s *KeeperTestSuite) TestGetUserUnbondingPositions() {
 						Liquidity:  sdk.MustNewDecFromStr("10000.000000000000001000"),
 					},
 					Locks: lockuptypes.PeriodLock{
-
 						ID:       2,
 						Owner:    defaultAddress.String(),
 						Duration: time.Hour,

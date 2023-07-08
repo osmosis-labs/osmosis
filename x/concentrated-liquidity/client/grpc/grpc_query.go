@@ -1,4 +1,4 @@
-package grpc 
+package grpc
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
 // SOURCE AT `proto/osmosis/concentrated-liquidity/query.yml`
@@ -159,4 +159,3 @@ func (q Querier) CFMMPoolIdLinkFromConcentratedPoolId(grpcCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.CFMMPoolIdLinkFromConcentratedPoolId(ctx, *req)
 }
-
