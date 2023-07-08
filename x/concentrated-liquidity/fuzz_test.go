@@ -23,13 +23,13 @@ const (
 	defaultNumPositions = 10
 )
 
-type swapAmountsMismatchError struct {
+type swapAmountsMismatchErr struct {
 	swapInFunded       sdk.Coin
 	amountInSwapResult sdk.Coin
 	diff               sdk.Int
 }
 
-func (e swapAmountsMismatchError) Error() string {
+func (e swapAmountsMismatchErr) Error() string {
 	return fmt.Sprintf("amounts in mismatch, original %s, swapped in given out: %s, difference of %s", e.swapInFunded, e.amountInSwapResult, e.diff)
 }
 
@@ -40,7 +40,6 @@ type positionAndLiquidity struct {
 }
 
 func TestFuzz_Many(t *testing.T) {
-	t.Parallel()
 	fuzz(t, defaultNumSwaps, defaultNumPositions, 100)
 }
 
@@ -55,7 +54,6 @@ func (s *KeeperTestSuite) TestFuzz_GivenSeed() {
 
 // pre-condition: poolId exists, and has at least one position
 func fuzz(t *testing.T, numSwaps int, numPositions int, numIterations int) {
-	t.Helper()
 	seed := time.Now().Unix()
 
 	for i := 0; i < numIterations; i++ {
@@ -156,6 +154,7 @@ func (s *KeeperTestSuite) randomSwap(r *rand.Rand, poolId uint64) (fatalErr bool
 	swapStrategy, zfo := updateStrategy()
 
 	for didSwap := false; !didSwap; {
+
 		if swapStrategy == 0 {
 			didSwap, fatalErr = s.swapRandomAmount(r, pool, zfo)
 		} else if swapStrategy == 1 {
@@ -238,8 +237,10 @@ func tickAmtChange(r *rand.Rand, targetAmount sdk.Dec) sdk.Dec {
 	changeType := r.Intn(3)
 
 	// Generate a random percentage under 0.1%
-	randChangePercent := sdk.NewDec(r.Int63n(10)).QuoInt64(10000)
+	randChangePercent := sdk.NewDec(r.Int63n(1)).QuoInt64(1000)
 	change := targetAmount.Mul(randChangePercent)
+
+	change = sdk.MaxDec(sdk.NewDec(1), randChangePercent)
 
 	switch changeType {
 	case 0:
@@ -269,20 +270,17 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 	// Seed 1688658883- causes an error in swap in given out due to rounding (acceptable). This is because we use
 	// token out from "swap out given in" as an input to "in given out". "in given out" rounds by one in pool's favor
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(swapInFunded).Add(sdk.NewCoin(swapInFunded.Denom, sdk.OneInt())))
-	// Execute swap
+	// // Execute swap
 	fmt.Printf("swap in: %s\n", swapInFunded)
 	cacheCtx, writeOutGivenIn := s.Ctx.CacheContext()
 	_, tokenOut, _, err := s.clk.SwapOutAmtGivenIn(cacheCtx, s.TestAccs[0], pool, swapInFunded, swapOutDenom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
-
-	var calcErr *types.InvalidAmountCalculatedError
-	if errors.As(err, &calcErr) {
+	if errors.As(err, &types.InvalidAmountCalculatedError{}) {
 		// If the swap we're about to execute will not generate enough output, we skip the swap.
 		// it would error for a real user though. This is good though, since that user would just be burning funds.
-		if calcErr.Amount.IsZero() {
+		if err.(types.InvalidAmountCalculatedError).Amount.IsZero() {
 			return false, false
 		}
 	}
-
 	if err != nil {
 		fmt.Printf("swap error in out given in: %s\n", err.Error())
 		// Add error to list of errors. Will fail at the end of the fuzz run in high level test.
@@ -295,12 +293,10 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 	cacheCtx, _ = s.Ctx.CacheContext()
 	fmt.Printf("swap out: %s\n", tokenOut)
 	amountInSwapResult, _, _, err := s.clk.SwapInAmtGivenOut(cacheCtx, s.TestAccs[0], pool, tokenOut, swapInFunded.Denom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
-
-	var calcError types.InvalidAmountCalculatedError
-	if errors.As(err, &calcError) {
+	if errors.As(err, &types.InvalidAmountCalculatedError{}) {
 		// If the swap we're about to execute will not generate enough output, we skip the swap.
 		// it would error for a real user though. This is good though, since that user would just be burning funds.
-		if calcError.Amount.IsZero() {
+		if err.(types.InvalidAmountCalculatedError).Amount.IsZero() {
 			return false, false
 		}
 	}
@@ -360,7 +356,7 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 		// This proves that this is a test setup error, not a swap logic error. We need smarter detection of when
 		// a small difference between non-rounded tokenOut in swap out given in and the returned tokenOut here leads
 		// to a large difference in sqrt price (TBD later).
-		s.collectedErrors = append(s.collectedErrors, swapAmountsMismatchError{swapInFunded: swapInFunded, amountInSwapResult: amountInSwapResult, diff: swapInFunded.Amount.Sub(amountInSwapResult.Amount)})
+		s.collectedErrors = append(s.collectedErrors, swapAmountsMismatchErr{swapInFunded: swapInFunded, amountInSwapResult: amountInSwapResult, diff: swapInFunded.Amount.Sub(amountInSwapResult.Amount)})
 		return true, false
 	}
 
@@ -399,6 +395,7 @@ func (s *KeeperTestSuite) validateNoErrors(possibleErrors []error) {
 	fullMsg := ""
 	shouldFail := false
 	for _, err := range possibleErrors {
+
 		// TODO: figure out if this is OK
 		// Answer: Ok for now, due to outofbounds=True restriction
 		// Should sanity check that our fuzzer isn't hitting this too often though, that could hit at
@@ -417,7 +414,7 @@ func (s *KeeperTestSuite) validateNoErrors(possibleErrors []error) {
 		}
 
 		// This is acceptable. See where this error is returned for explanation.
-		if errors.As(err, &swapAmountsMismatchError{}) {
+		if errors.As(err, &swapAmountsMismatchErr{}) {
 			continue
 		}
 
@@ -458,6 +455,7 @@ func (s *KeeperTestSuite) addOrRemoveLiquidity(r *rand.Rand, poolId uint64) {
 	} else {
 		s.removeRandomPosition(r)
 	}
+
 }
 
 // if true add position, if false remove position
