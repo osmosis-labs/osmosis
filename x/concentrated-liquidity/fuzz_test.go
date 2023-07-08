@@ -238,7 +238,7 @@ func tickAmtChange(r *rand.Rand, targetAmount sdk.Dec) sdk.Dec {
 	changeType := r.Intn(3)
 
 	// Generate a random percentage under 0.1%
-	randChangePercent := sdk.NewDec(r.Int63n(1)).QuoInt64(1000) //nolint:staticcheck // note: the linter warning on this is that r.Int63n(1) always returns zero.
+	randChangePercent := sdk.NewDec(r.Int63n(1000)).QuoInt64(1_000_000)
 
 	change := sdk.MaxDec(sdk.NewDec(1), randChangePercent)
 
