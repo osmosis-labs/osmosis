@@ -175,6 +175,13 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 	}
 
 	switch fType.Type.Kind() {
+	case reflect.Bool:
+		b, err := strconv.ParseBool(arg)
+		if err != nil {
+			return fmt.Errorf("could not parse %s as bool for field %s: %w", arg, fType.Name, err)
+		}
+		fVal.SetBool(b)
+		return nil
 	// SetUint allows anyof type u8, u16, u32, u64, and uint
 	case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uint:
 		u, err := ParseUint(arg, fType.Name)

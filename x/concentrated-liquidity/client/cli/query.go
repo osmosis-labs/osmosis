@@ -19,6 +19,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetClaimableIncentives)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetIncentiveRecords)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCFMMPoolIdLinkFromConcentratedPoolId)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetTickLiquidityNetInDirection)
 	cmd.AddCommand(
 		osmocli.GetParams[*queryproto.ParamsRequest](
 			types.ModuleName, queryproto.NewQueryClient),
@@ -100,4 +101,13 @@ func GetTotalLiquidity() (*osmocli.QueryDescriptor, *queryproto.GetTotalLiquidit
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} total-liquidity 1`,
 	}, &queryproto.GetTotalLiquidityRequest{}
+}
+
+func GetTickLiquidityNetInDirection() (*osmocli.QueryDescriptor, *queryproto.LiquidityNetInDirectionRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "liquidity-net-in-direction [pool-id] [token-in-denom] [start-tick] [use-current-tick] [bound-tick] [use-no-bound]",
+		Short: "Query liquidity net in direction",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} 4 uosmo "[-18000000]" true "[-9000000]" true`,
+	}, &queryproto.LiquidityNetInDirectionRequest{}
 }
