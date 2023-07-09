@@ -371,6 +371,8 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 
 	// Since our base unit of time is nanoseconds, we divide with truncation by 10^9 to get
 	// time elapsed in seconds
+	fmt.Println("BLOCKTIME", ctx.BlockTime())
+	fmt.Println("LAST LIQUIDITY UPDATE", pool.GetLastLiquidityUpdate())
 	timeElapsedNanoSec := sdk.NewDec(int64(ctx.BlockTime().Sub(pool.GetLastLiquidityUpdate())))
 	timeElapsedSec := timeElapsedNanoSec.Quo(dec1e9)
 
