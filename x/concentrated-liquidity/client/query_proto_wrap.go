@@ -188,12 +188,22 @@ func (q Querier) PoolAccumulatorRewards(ctx sdk.Context, req clquery.PoolAccumul
 		return nil, status.Error(codes.InvalidArgument, "pool id is zero")
 	}
 
-	spreadRewardsAcc, err := q.Keeper.GetSpreadRewardAccumulator(ctx, req.PoolId)
+	// We utilize a cache context here as we need to update the global uptime accumulators but
+	// we don't want to persist the changes to the store.
+	cacheCtx, _ := ctx.CacheContext()
+
+	// Sync global uptime accumulators to ensure the uptime tracker init values are up to date.
+	err := q.Keeper.UpdatePoolUptimeAccumulatorsToNow(cacheCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	uptimeAccValues, err := q.Keeper.GetUptimeAccumulatorValues(ctx, req.PoolId)
+	spreadRewardsAcc, err := q.Keeper.GetSpreadRewardAccumulator(cacheCtx, req.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	uptimeAccValues, err := q.Keeper.GetUptimeAccumulatorValues(cacheCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

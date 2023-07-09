@@ -1075,7 +1075,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				// Use cache context to avoid persisting updates for the next function
 				// that relies on the same test cases and setup.
 				cacheCtx, _ := s.Ctx.CacheContext()
-				err = clKeeper.UpdateUptimeAccumulatorsToNow(cacheCtx, tc.poolId)
+				err = clKeeper.UpdatePoolUptimeAccumulatorsToNow(cacheCtx, tc.poolId)
 
 				validateResult(cacheCtx, err, tc, balancerPoolId, clPool.GetId(), initUptimeAccumValues, qualifyingBalancerLiquidity, qualifyingLiquidity)
 
@@ -3152,7 +3152,7 @@ func (s *KeeperTestSuite) TestPrepareClaimAllIncentivesForPosition() {
 
 			// Update the uptime accumulators to the current block time.
 			// This is done to determine the exact amount of incentives we expect to be forfeited, if any.
-			err = s.clk.UpdateUptimeAccumulatorsToNow(s.Ctx, pool.GetId())
+			err = s.clk.UpdatePoolUptimeAccumulatorsToNow(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
 
 			// Retrieve the uptime accumulators for the pool.
