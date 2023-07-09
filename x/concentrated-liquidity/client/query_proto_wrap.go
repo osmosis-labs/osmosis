@@ -193,6 +193,7 @@ func (q Querier) PoolAccumulatorRewards(ctx sdk.Context, req clquery.PoolAccumul
 	// We utilize a cache context here as we need to update the global uptime accumulators but
 	// we don't want to persist the changes to the store.
 	fmt.Println("pre cache context time", ctx.BlockTime())
+	fmt.Println("block height", ctx.BlockHeight())
 	cacheCtx, _ := ctx.CacheContext()
 
 	// Sync global uptime accumulators to ensure the uptime tracker init values are up to date.
