@@ -111,3 +111,21 @@ func GetTickLiquidityNetInDirection() (*osmocli.QueryDescriptor, *queryproto.Liq
 {{.CommandPrefix}} 4 uosmo "[-18000000]" true "[-9000000]" true`,
 	}, &queryproto.LiquidityNetInDirectionRequest{}
 }
+
+func GetPoolAccumulatorRewards() (*osmocli.QueryDescriptor, *queryproto.PoolAccumulatorRewardsRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "pool-accumulator-rewards [pool-id]",
+		Short: "Query pool accumulator rewards",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} pool-accumulator-rewards 1`,
+	}, &queryproto.PoolAccumulatorRewardsRequest{}
+}
+
+func GetTickAccumulatorTrackers() (*osmocli.QueryDescriptor, *queryproto.TickAccumulatorTrackersRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "tick-accumulator-trackers [pool-id] [tick-index]",
+		Short: "Query tick accumulator trackers",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} tick-accumulator-trackers 1 "[-18000000]"`,
+	}, &queryproto.TickAccumulatorTrackersRequest{}
+}
