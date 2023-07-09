@@ -659,6 +659,102 @@ func (m *MsgSetRewardReceiverAddressResponse) GetSuccess() bool {
 	return false
 }
 
+type MsgRebondTokens struct {
+	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
+	ID    uint64 `protobuf:"varint,2,opt,name=ID,proto3" json:"ID,omitempty"`
+}
+
+func (m *MsgRebondTokens) Reset()         { *m = MsgRebondTokens{} }
+func (m *MsgRebondTokens) String() string { return proto.CompactTextString(m) }
+func (*MsgRebondTokens) ProtoMessage()    {}
+func (*MsgRebondTokens) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcdad5af0d24735f, []int{12}
+}
+func (m *MsgRebondTokens) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRebondTokens) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRebondTokens.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRebondTokens) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRebondTokens.Merge(m, src)
+}
+func (m *MsgRebondTokens) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRebondTokens) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRebondTokens.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRebondTokens proto.InternalMessageInfo
+
+func (m *MsgRebondTokens) GetOwner() string {
+	if m != nil {
+		return m.Owner
+	}
+	return ""
+}
+
+func (m *MsgRebondTokens) GetID() uint64 {
+	if m != nil {
+		return m.ID
+	}
+	return 0
+}
+
+type MsgRebondTokensResponse struct {
+	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+}
+
+func (m *MsgRebondTokensResponse) Reset()         { *m = MsgRebondTokensResponse{} }
+func (m *MsgRebondTokensResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgRebondTokensResponse) ProtoMessage()    {}
+func (*MsgRebondTokensResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcdad5af0d24735f, []int{13}
+}
+func (m *MsgRebondTokensResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRebondTokensResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRebondTokensResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRebondTokensResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRebondTokensResponse.Merge(m, src)
+}
+func (m *MsgRebondTokensResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRebondTokensResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRebondTokensResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRebondTokensResponse proto.InternalMessageInfo
+
+func (m *MsgRebondTokensResponse) GetSuccess() bool {
+	if m != nil {
+		return m.Success
+	}
+	return false
+}
+
 func init() {
 	proto.RegisterType((*MsgLockTokens)(nil), "osmosis.lockup.MsgLockTokens")
 	proto.RegisterType((*MsgLockTokensResponse)(nil), "osmosis.lockup.MsgLockTokensResponse")
@@ -672,6 +768,8 @@ func init() {
 	proto.RegisterType((*MsgForceUnlockResponse)(nil), "osmosis.lockup.MsgForceUnlockResponse")
 	proto.RegisterType((*MsgSetRewardReceiverAddress)(nil), "osmosis.lockup.MsgSetRewardReceiverAddress")
 	proto.RegisterType((*MsgSetRewardReceiverAddressResponse)(nil), "osmosis.lockup.MsgSetRewardReceiverAddressResponse")
+	proto.RegisterType((*MsgRebondTokens)(nil), "osmosis.lockup.MsgRebondTokens")
+	proto.RegisterType((*MsgRebondTokensResponse)(nil), "osmosis.lockup.MsgRebondTokensResponse")
 }
 
 func init() { proto.RegisterFile("osmosis/lockup/tx.proto", fileDescriptor_bcdad5af0d24735f) }
@@ -755,6 +853,7 @@ type MsgClient interface {
 	ForceUnlock(ctx context.Context, in *MsgForceUnlock, opts ...grpc.CallOption) (*MsgForceUnlockResponse, error)
 	// SetRewardReceiverAddress edits the reward receiver for the given lock ID
 	SetRewardReceiverAddress(ctx context.Context, in *MsgSetRewardReceiverAddress, opts ...grpc.CallOption) (*MsgSetRewardReceiverAddressResponse, error)
+	RebondTokens(ctx context.Context, in *MsgRebondTokens, opts ...grpc.CallOption) (*MsgRebondTokensResponse, error)
 }
 
 type msgClient struct {
@@ -819,6 +918,15 @@ func (c *msgClient) SetRewardReceiverAddress(ctx context.Context, in *MsgSetRewa
 	return out, nil
 }
 
+func (c *msgClient) RebondTokens(ctx context.Context, in *MsgRebondTokens, opts ...grpc.CallOption) (*MsgRebondTokensResponse, error) {
+	out := new(MsgRebondTokensResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.lockup.Msg/RebondTokens", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// LockTokens lock tokens
@@ -832,6 +940,7 @@ type MsgServer interface {
 	ForceUnlock(context.Context, *MsgForceUnlock) (*MsgForceUnlockResponse, error)
 	// SetRewardReceiverAddress edits the reward receiver for the given lock ID
 	SetRewardReceiverAddress(context.Context, *MsgSetRewardReceiverAddress) (*MsgSetRewardReceiverAddressResponse, error)
+	RebondTokens(context.Context, *MsgRebondTokens) (*MsgRebondTokensResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -855,6 +964,9 @@ func (*UnimplementedMsgServer) ForceUnlock(ctx context.Context, req *MsgForceUnl
 }
 func (*UnimplementedMsgServer) SetRewardReceiverAddress(ctx context.Context, req *MsgSetRewardReceiverAddress) (*MsgSetRewardReceiverAddressResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetRewardReceiverAddress not implemented")
+}
+func (*UnimplementedMsgServer) RebondTokens(ctx context.Context, req *MsgRebondTokens) (*MsgRebondTokensResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RebondTokens not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -969,6 +1081,24 @@ func _Msg_SetRewardReceiverAddress_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_RebondTokens_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRebondTokens)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RebondTokens(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.lockup.Msg/RebondTokens",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RebondTokens(ctx, req.(*MsgRebondTokens))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.lockup.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -996,6 +1126,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetRewardReceiverAddress",
 			Handler:    _Msg_SetRewardReceiverAddress_Handler,
+		},
+		{
+			MethodName: "RebondTokens",
+			Handler:    _Msg_RebondTokens_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1469,6 +1603,74 @@ func (m *MsgSetRewardReceiverAddressResponse) MarshalToSizedBuffer(dAtA []byte) 
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgRebondTokens) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRebondTokens) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRebondTokens) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ID != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.ID))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRebondTokensResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRebondTokensResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRebondTokensResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Success {
+		i--
+		if m.Success {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -1663,6 +1865,34 @@ func (m *MsgSetRewardReceiverAddress) Size() (n int) {
 }
 
 func (m *MsgSetRewardReceiverAddressResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Success {
+		n += 2
+	}
+	return n
+}
+
+func (m *MsgRebondTokens) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.ID != 0 {
+		n += 1 + sovTx(uint64(m.ID))
+	}
+	return n
+}
+
+func (m *MsgRebondTokensResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2857,6 +3087,177 @@ func (m *MsgSetRewardReceiverAddressResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgSetRewardReceiverAddressResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Success", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Success = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRebondTokens) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRebondTokens: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRebondTokens: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+			}
+			m.ID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRebondTokensResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRebondTokensResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRebondTokensResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

@@ -248,3 +248,29 @@ func (server msgServer) SetRewardReceiverAddress(goCtx context.Context, msg *typ
 
 	return &types.MsgSetRewardReceiverAddressResponse{Success: true}, nil
 }
+
+// RebondTokens attempts to rebond tokens from the unlock queue to the original lock. This is only allowed if the lock is still in the unbonding period.
+// Fails if the lock is not in the unbonding period.
+func (server msgServer) RebondTokens(goCtx context.Context, msg *types.MsgRebondTokens) (*types.MsgRebondTokensResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	owner, err := sdk.AccAddressFromBech32(msg.Owner)
+	if err != nil {
+		return &types.MsgRebondTokensResponse{Success: false}, err
+	}
+
+	err = server.keeper.RebondTokens(ctx, msg.ID, owner, msg.Coins)
+	if err != nil {
+		return &types.MsgRebondTokensResponse{Success: false}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtRebondTokens,
+			sdk.NewAttribute(types.AttributePeriodLockID, osmoutils.Uint64ToString(msg.ID)),
+			sdk.NewAttribute(types.AttributePeriodLockOwner, msg.Owner),
+		),
+	})
+
+	return &types.MsgRebondTokensResponse{Success: true}, nil
+}

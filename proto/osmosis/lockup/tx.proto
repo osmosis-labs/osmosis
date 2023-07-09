@@ -24,6 +24,7 @@ service Msg {
   // SetRewardReceiverAddress edits the reward receiver for the given lock ID
   rpc SetRewardReceiverAddress(MsgSetRewardReceiverAddress)
       returns (MsgSetRewardReceiverAddressResponse);
+  rpc RebondTokens(MsgRebondTokens) returns (MsgRebondTokensResponse);
 }
 
 message MsgLockTokens {
@@ -113,3 +114,9 @@ message MsgSetRewardReceiverAddress {
       [ (gogoproto.moretags) = "yaml:\"reward_receiver\"" ];
 }
 message MsgSetRewardReceiverAddressResponse { bool success = 1; }
+message MsgRebondTokens {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  uint64 ID = 2;
+}
+
+message MsgRebondTokensResponse { bool success = 1; }

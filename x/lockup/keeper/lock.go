@@ -904,3 +904,50 @@ func (k Keeper) getCoinsFromLocks(locks []types.PeriodLock) sdk.Coins {
 	}
 	return coins
 }
+
+func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddress) error {
+	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
+
+	if lock.Owner != owner.String() {
+		return fmt.Errorf("lock %d is not owned by %s", lockID, owner)
+	}
+
+	if !lock.IsUnlocking() {
+		return fmt.Errorf("lock %d is not unlocking, rebonding only possible in unlocking stage", lockID)
+	}
+
+	// If all checks pass, we can rebond the tokens
+	err = k.rebondTokens(ctx, *lock)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// rebondTokens is called by lockup rebond function.
+func (k Keeper) rebondTokens(ctx sdk.Context, lock types.PeriodLock) error {
+	// remove lock from unlocking queue
+	err := k.deleteLockRefs(ctx, types.KeyPrefixUnlocking, lock)
+	if err != nil {
+		return err
+	}
+
+	// restart lock timer and set back to the store
+	lock.EndTime = ctx.BlockTime().Add(lock.Duration)
+	err = k.setLock(ctx, lock)
+	if err != nil {
+		return err
+	}
+
+	// add lock refs into not unlocking queue
+	err = k.addLockRefs(ctx, lock)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
