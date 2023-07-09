@@ -566,7 +566,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	newPositionId := k.getNextPositionIdAndIncrement(ctx)
 
 	// Update pool uptime accumulators to now.
-	if err := k.updatePoolUptimeAccumulatorsToNow(ctx, poolId); err != nil {
+	if err := k.UpdatePoolUptimeAccumulatorsToNow(ctx, poolId); err != nil {
 		return 0, err
 	}
 

@@ -1081,7 +1081,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			}
 
 			// Update the accumulators for defaultPoolId to the current time
-			err = s.clk.UpdateUptimeAccumulatorsToNow(s.Ctx, defaultPoolId)
+			err = s.clk.UpdatePoolUptimeAccumulatorsToNow(s.Ctx, defaultPoolId)
 			s.Require().NoError(err)
 
 			// Get the unclaimed rewards for all the positions that are being migrated
@@ -1337,7 +1337,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 	// prior to running fungify. However, we do not want the mutations made in test setup to have
 	// impact on the system under test because it (fungify) must update the uptime accumulators itself.
 	cacheCtx, _ := s.Ctx.CacheContext()
-	err := s.clk.UpdateUptimeAccumulatorsToNow(cacheCtx, pool.GetId())
+	err := s.clk.UpdatePoolUptimeAccumulatorsToNow(cacheCtx, pool.GetId())
 	s.Require().NoError(err)
 
 	claimableIncentives := sdk.NewCoins()
