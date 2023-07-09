@@ -242,10 +242,6 @@ func CalcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 	return calcAccruedIncentivesForAccum(ctx, accumUptime, qualifyingLiquidity, timeElapsed, poolIncentiveRecords)
 }
 
-func (k Keeper) UpdateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) error {
-	return k.updatePoolUptimeAccumulatorsToNow(ctx, poolId)
-}
-
 func (k Keeper) UpdateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool types.ConcentratedPoolExtension, uptimeAccums []accum.AccumulatorObject) error {
 	return k.updateGivenPoolUptimeAccumulatorsToNow(ctx, pool, uptimeAccums)
 }
