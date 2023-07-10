@@ -2,6 +2,7 @@ package concentrated_liquidity_test
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -2161,4 +2162,33 @@ func (s *KeeperTestSuite) TestValidatePositionUpdateById() {
 			s.Require().NoError(err)
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestReproLpNegativeCoinError() {
+	s.SetupTest()
+	defaultPositionCoins := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
+
+	// Fund test accounts
+	s.FundAcc(s.TestAccs[0], defaultPositionCoins)
+
+	// Create CL pool with an initial position
+	pool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(DefaultCoin0.Denom, DefaultCoin1.Denom)
+
+	// Set upper tick to match case on edgenet
+	upperTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), -8000000)
+	s.Require().NoError(err)
+	upperTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal = sdk.NewDecCoins(sdk.NewDecCoinFromDec(DefaultCoin0.Denom, sdk.MustNewDecFromStr("3017.724386859215719071")), sdk.NewDecCoinFromDec(DefaultCoin1.Denom, sdk.MustNewDecFromStr("0.000000059682991575")))
+	upperTickInfo.UptimeTrackers.List[0].UptimeGrowthOutside = sdk.NewDecCoins(sdk.NewDecCoinFromDec(DefaultCoin1.Denom, sdk.MustNewDecFromStr("0.000000323787565319")))
+	s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, pool.GetId(), -8000000, &upperTickInfo)
+
+	// Set lower tick to match case on edgenet
+	lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), -18000000)
+	s.Require().NoError(err)
+	lowerTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal = sdk.NewDecCoins(sdk.NewDecCoinFromDec(DefaultCoin0.Denom, sdk.MustNewDecFromStr("3018.046158063060864102")), sdk.NewDecCoinFromDec(DefaultCoin1.Denom, sdk.MustNewDecFromStr("0.000000059880143539")))
+	lowerTickInfo.UptimeTrackers.List[0].UptimeGrowthOutside = sdk.NewDecCoins(sdk.NewDecCoinFromDec(DefaultCoin1.Denom, sdk.MustNewDecFromStr("0.000000324498544006")))
+	s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, pool.GetId(), -18000000, &lowerTickInfo)
+
+	// LP between the upper and lower ticks
+	_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], sdk.NewCoins(sdk.NewCoin(DefaultCoin1.Denom, sdk.NewInt(1000000))), sdk.ZeroInt(), sdk.ZeroInt(), -18000000, -8000000)
+	fmt.Println("err", err)
 }
