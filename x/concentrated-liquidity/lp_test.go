@@ -2166,10 +2166,6 @@ func (s *KeeperTestSuite) TestValidatePositionUpdateById() {
 
 func (s *KeeperTestSuite) TestReproLpNegativeCoinError() {
 	s.SetupTest()
-	defaultPositionCoins := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
-
-	// Fund test accounts
-	s.FundAcc(s.TestAccs[0], defaultPositionCoins)
 
 	// Create CL pool with an initial position
 	pool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(DefaultCoin0.Denom, DefaultCoin1.Denom)
@@ -2189,6 +2185,6 @@ func (s *KeeperTestSuite) TestReproLpNegativeCoinError() {
 	s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, pool.GetId(), -18000000, &lowerTickInfo)
 
 	// LP between the upper and lower ticks
-	_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], sdk.NewCoins(sdk.NewCoin(DefaultCoin1.Denom, sdk.NewInt(1000000))), sdk.ZeroInt(), sdk.ZeroInt(), -18000000, -8000000)
+	_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(DefaultCoin1.Denom, sdk.NewInt(1000000))), sdk.ZeroInt(), sdk.ZeroInt(), -18000000, -8000000)
 	fmt.Println("err", err)
 }
