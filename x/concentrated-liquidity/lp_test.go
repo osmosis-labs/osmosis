@@ -2184,6 +2184,17 @@ func (s *KeeperTestSuite) TestReproLpNegativeCoinError() {
 	lowerTickInfo.UptimeTrackers.List[0].UptimeGrowthOutside = sdk.NewDecCoins(sdk.NewDecCoinFromDec(DefaultCoin1.Denom, sdk.MustNewDecFromStr("0.000000324498544006")))
 	s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, pool.GetId(), -18000000, &lowerTickInfo)
 
+	// Match global accum values to edgenet
+	spreadRewardsAcc, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+
+	spreadRewardsAcc.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec(DefaultCoin0.Denom, sdk.MustNewDecFromStr("3250.491920434783037596")), sdk.NewDecCoinFromDec(DefaultCoin1.Denom, sdk.MustNewDecFromStr("0.000000224660354336"))))
+
+	uptimeAccs, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+
+	uptimeAccs[0].AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec(DefaultCoin1.Denom, sdk.MustNewDecFromStr("0.000000407423884553"))))
+
 	// LP between the upper and lower ticks
 	_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(DefaultCoin1.Denom, sdk.NewInt(1000000))), sdk.ZeroInt(), sdk.ZeroInt(), -18000000, -8000000)
 	fmt.Println("err", err)
