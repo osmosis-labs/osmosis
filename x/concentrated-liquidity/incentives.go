@@ -654,6 +654,8 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 		return []sdk.DecCoins{}, err
 	}
 
+	fmt.Printf("GetUptimeGrowthInsideRange %d %d\n", lowerTick, upperTick)
+
 	// Get current, lower, and upper ticks
 	currentTick := pool.GetCurrentTick()
 	lowerTickInfo, err := k.GetTickInfo(ctx, poolId, lowerTick)
@@ -669,7 +671,9 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 	// Note that we regard "within range" to mean [lowerTick, upperTick),
 	// inclusive of lowerTick and exclusive of upperTick.
 	lowerTickUptimeValues := getUptimeTrackerValues(lowerTickInfo.UptimeTrackers.List)
+	fmt.Println("lowerTickUptimeValues", lowerTickUptimeValues)
 	upperTickUptimeValues := getUptimeTrackerValues(upperTickInfo.UptimeTrackers.List)
+	fmt.Println("upperTickUptimeValues", upperTickUptimeValues)
 	// If current tick is below range, we subtract uptime growth of upper tick from that of lower tick
 	if currentTick < lowerTick {
 		return osmoutils.SubDecCoinArrays(lowerTickUptimeValues, upperTickUptimeValues)
@@ -726,6 +730,8 @@ func (k Keeper) initOrUpdatePositionUptimeAccumulators(ctx sdk.Context, poolId u
 	if err != nil {
 		return err
 	}
+
+	fmt.Printf("initOrUpdatePositionUptimeAccumulators %d %d", lowerTick, upperTick)
 
 	// Get uptime accumulators for every supported uptime.
 	uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, poolId)

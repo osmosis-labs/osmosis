@@ -119,9 +119,14 @@ func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	tickStruct := model.TickInfo{}
 	key := types.KeyTick(poolId, tickIndex)
 
+	fmt.Println("GetTickInfo", tickIndex)
+
 	found, err := osmoutils.Get(store, key, &tickStruct)
 	// return 0 values if key has not been initialized
 	if !found {
+
+		fmt.Println("WRONG: re-initializing tick")
+
 		// If tick has not yet been initialized, we create a new one and initialize
 		// the spread reward growth opposite direction of last traversal value.
 		initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, err := k.getInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx, poolId, tickIndex)
@@ -150,6 +155,8 @@ func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	if err != nil {
 		return tickStruct, err
 	}
+
+	fmt.Println("correct: existing tick")
 
 	return tickStruct, nil
 }
