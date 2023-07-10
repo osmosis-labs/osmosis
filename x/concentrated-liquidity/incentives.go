@@ -317,7 +317,7 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 	return totalRewards, nil
 }
 
-// updatePoolUptimeAccumulatorsToNow syncs all uptime accumulators that are refetched from state for the given
+// UpdatePoolUptimeAccumulatorsToNow syncs all uptime accumulators that are refetched from state for the given
 // poold id to be up to date for the given pool. Updates the pool last liquidity update time with
 // the current block time and writes the updated pool to state.
 // Specifically, it gets the time elapsed since the last update and divides it
@@ -328,8 +328,8 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 // * this function fetches the uptime accumulators from state.
 // * this function fetches a pool from state by id.
 // updateGivenPoolUptimeAccumulatorsToNow is used in swaps for performance reasons to minimize state reads.
-// updatePoolUptimeAccumulatorsToNow is used in all other cases.
-func (k Keeper) updatePoolUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) error {
+// UpdatePoolUptimeAccumulatorsToNow is used in all other cases.
+func (k Keeper) UpdatePoolUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) error {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return err
@@ -722,7 +722,7 @@ func (k Keeper) initOrUpdatePositionUptimeAccumulators(ctx sdk.Context, poolId u
 	// We update accumulators _prior_ to any position-related updates to ensure
 	// past rewards aren't distributed to new liquidity. We also update pool's
 	// LastLiquidityUpdate here.
-	err := k.updatePoolUptimeAccumulatorsToNow(ctx, poolId)
+	err := k.UpdatePoolUptimeAccumulatorsToNow(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -874,7 +874,7 @@ func (k Keeper) prepareClaimAllIncentivesForPosition(ctx sdk.Context, positionId
 		return sdk.Coins{}, sdk.Coins{}, err
 	}
 
-	err = k.updatePoolUptimeAccumulatorsToNow(ctx, position.PoolId)
+	err = k.UpdatePoolUptimeAccumulatorsToNow(ctx, position.PoolId)
 	if err != nil {
 		return sdk.Coins{}, sdk.Coins{}, err
 	}
@@ -1062,7 +1062,7 @@ func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 	}
 
 	// Sync global uptime accumulators to current blocktime to ensure consistency in reward emissions
-	err = k.updatePoolUptimeAccumulatorsToNow(ctx, poolId)
+	err = k.UpdatePoolUptimeAccumulatorsToNow(ctx, poolId)
 	if err != nil {
 		return types.IncentiveRecord{}, err
 	}

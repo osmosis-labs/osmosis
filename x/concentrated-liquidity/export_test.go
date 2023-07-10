@@ -162,10 +162,6 @@ func (k Keeper) UpdateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, l
 	return k.updateFullRangeLiquidityInPool(ctx, poolId, liquidity)
 }
 
-func (k Keeper) MintSharesAndLock(ctx sdk.Context, concentratedPoolId, positionId uint64, owner sdk.AccAddress, remainingLockDuration time.Duration) (concentratedLockID uint64, underlyingLiquidityTokenized sdk.Coins, err error) {
-	return k.mintSharesAndLock(ctx, concentratedPoolId, positionId, owner, remainingLockDuration)
-}
-
 func (k Keeper) SetPositionIdToLock(ctx sdk.Context, positionId, underlyingLockId uint64) {
 	k.setPositionIdToLock(ctx, positionId, underlyingLockId)
 }
@@ -244,10 +240,6 @@ func (k Keeper) CreateUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
 
 func CalcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, qualifyingLiquidity sdk.Dec, timeElapsed sdk.Dec, poolIncentiveRecords []types.IncentiveRecord) (sdk.DecCoins, []types.IncentiveRecord, error) {
 	return calcAccruedIncentivesForAccum(ctx, accumUptime, qualifyingLiquidity, timeElapsed, poolIncentiveRecords)
-}
-
-func (k Keeper) UpdateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) error {
-	return k.updatePoolUptimeAccumulatorsToNow(ctx, poolId)
 }
 
 func (k Keeper) UpdateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool types.ConcentratedPoolExtension, uptimeAccums []accum.AccumulatorObject) error {

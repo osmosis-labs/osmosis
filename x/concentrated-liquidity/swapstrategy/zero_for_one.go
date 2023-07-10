@@ -26,6 +26,8 @@ type zeroForOneStrategy struct {
 
 var _ SwapStrategy = (*zeroForOneStrategy)(nil)
 
+func (s zeroForOneStrategy) ZeroForOne() bool { return true }
+
 // GetSqrtTargetPrice returns the target square root price given the next tick square root price.
 // If the given nextTickSqrtPrice is less than the sqrt price limit, the sqrt price limit is returned.
 // Otherwise, the input nextTickSqrtPrice is returned.

@@ -296,7 +296,7 @@ test-e2e: e2e-setup test-e2e-ci e2e-remove-resources
 # does not do any validation about the state of the Docker environment
 # As a result, avoid using this locally.
 test-e2e-ci:
-	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=False OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION)  go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=False OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION) go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -p 4
 
 # test-e2e-debug runs a full e2e test suite but does
 # not attempt to delete Docker resources at the end.
@@ -470,6 +470,23 @@ localnet-cl-external-incentive:
 # in the script.
 localnet-cl-create-pool:
 	go run tests/cl-go-client/main.go --operation 4
+
+# claims spread rewards for a random account for a random
+# subset of positions.
+localnet-cl-claim-spread-rewards:
+	go run tests/cl-go-client/main.go --operation 5
+
+# claims incentives for a random account for a random
+# subset of positions.
+localnet-cl-claim-incentives:
+	go run tests/cl-go-client/main.go --operation 6
+
+localnet-cl-add-to-positions:
+	go run tests/cl-go-client/main.go --operation 7
+
+localnet-cl-withdraw-positions:
+	go run tests/cl-go-client/main.go --operation 8
+
 
 # does both of localnet-cl-create-positions and localnet-cl-small-swap
 localnet-cl-positions-small-swaps: localnet-cl-create-positions localnet-cl-small-swap

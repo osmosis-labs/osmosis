@@ -1,0 +1,52 @@
+# Workflow: E2E Initialization Instructions
+#
+# Guides contributors when changes are made to the 'tests/e2e/initialization' module. 
+# Provides backporting and follow-up instructions in the PR comments.
+#
+# Triggers: 
+# - Pull Request Opened, Synchronized, Reopened
+# - Path: 'tests/e2e/initialization/**' (any file in the initialization directory or subdirectories)
+#
+# Secrets: 
+# GITHUB_TOKEN: Created automatically by GitHub, used for commenting on the PR
+
+name: E2E Initialization Instructions
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    paths:
+      - 'tests/e2e/initialization/**'
+
+permissions: 
+  pull-requests: write 
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    steps:
+      - 
+        name: Checkout code
+        uses: actions/checkout@v3
+      - 
+        name: Comment on PR
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            **Important Notice** 
+            
+            This PR includes modifications to the `tests/e2e/initialization` module.
+            Please follow the instructions below:
+
+            1. Backport these changes to the previous Osmosis version's branch.
+            2. Run the script inside a Docker container to update genesis and configs for pre-upgrade Osmosis.
+            3. Merge the backported changes.
+            4. The image will be built and uploaded to Docker Hub [here](https://hub.docker.com/r/osmolabs/osmosis-e2e-init-chain/tags).
+            5. Grab the latest image and update it in the PR to the main branch replacing the `previousVersionInitTag` in the `osmosis/tests/e2e/containers/config.go`
+            
+            Please let us know if you need any help.
+          mode: upsert
+          comment_tag: instructions

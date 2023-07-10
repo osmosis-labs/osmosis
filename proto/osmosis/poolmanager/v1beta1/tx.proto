@@ -2,6 +2,7 @@ syntax = "proto3";
 package osmosis.poolmanager.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/poolmanager/v1beta1/swap_route.proto";
 
@@ -20,6 +21,8 @@ service Msg {
 
 // ===================== MsgSwapExactAmountIn
 message MsgSwapExactAmountIn {
+  option (amino.name) = "osmosis/poolmanager/swap-exact-amount-in";
+
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   repeated SwapAmountInRoute routes = 2 [ (gogoproto.nullable) = false ];
   cosmos.base.v1beta1.Coin token_in = 3 [
@@ -43,6 +46,8 @@ message MsgSwapExactAmountInResponse {
 
 // ===================== MsgSplitRouteSwapExactAmountIn
 message MsgSplitRouteSwapExactAmountIn {
+  option (amino.name) = "osmosis/poolmanager/split-amount-in";
+
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   repeated SwapAmountInSplitRoute routes = 2 [ (gogoproto.nullable) = false ];
   string token_in_denom = 3
@@ -64,6 +69,8 @@ message MsgSplitRouteSwapExactAmountInResponse {
 
 // ===================== MsgSwapExactAmountOut
 message MsgSwapExactAmountOut {
+  option (amino.name) = "osmosis/poolmanager/swap-exact-amount-out";
+
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   repeated SwapAmountOutRoute routes = 2 [ (gogoproto.nullable) = false ];
   string token_in_max_amount = 3 [
@@ -87,6 +94,8 @@ message MsgSwapExactAmountOutResponse {
 
 // ===================== MsgSplitRouteSwapExactAmountOut
 message MsgSplitRouteSwapExactAmountOut {
+  option (amino.name) = "osmosis/poolmanager/split-amount-out";
+
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   repeated SwapAmountOutSplitRoute routes = 2 [ (gogoproto.nullable) = false ];
   string token_out_denom = 3

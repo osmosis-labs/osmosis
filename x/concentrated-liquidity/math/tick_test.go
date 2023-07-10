@@ -134,12 +134,12 @@ func TestTickToSqrtPrice(t *testing.T) {
 			expectedPrice: types.MinSpotPrice,
 		},
 		"error: tickIndex less than minimum": {
-			tickIndex:     types.MinInitializedTick - 1,
-			expectedError: types.TickIndexMinimumError{MinTick: types.MinInitializedTick},
+			tickIndex:     types.MinCurrentTick - 1,
+			expectedError: types.TickIndexMinimumError{MinTick: types.MinCurrentTick},
 		},
 		"error: tickIndex greater than maximum": {
-			tickIndex:     342000000 + 1,
-			expectedError: types.TickIndexMaximumError{MaxTick: 342000000},
+			tickIndex:     types.MaxTick + 1,
+			expectedError: types.TickIndexMaximumError{MaxTick: types.MaxTick},
 		},
 		"Gyen <> USD, tick -20594000 -> price 0.0074060": {
 			tickIndex:     -20594000,
@@ -264,9 +264,9 @@ func TestTicksToSqrtPrice(t *testing.T) {
 			expectedLowerPrice: types.MinSpotPrice,
 		},
 		"error: lowerTickIndex less than minimum": {
-			lowerTickIndex: sdk.NewInt(types.MinInitializedTick - 1),
+			lowerTickIndex: sdk.NewInt(types.MinCurrentTick - 1),
 			upperTickIndex: sdk.NewInt(36073300),
-			expectedError:  types.TickIndexMinimumError{MinTick: types.MinInitializedTick},
+			expectedError:  types.TickIndexMinimumError{MinTick: types.MinCurrentTick},
 		},
 		"error: upperTickIndex greater than maximum": {
 			lowerTickIndex: sdk.NewInt(types.MinInitializedTick),
@@ -660,7 +660,7 @@ func TestTickToPrice_ErrorCases(t *testing.T) {
 			tickIndex: types.MaxTick + 1,
 		},
 		"tick index is less than min tick": {
-			tickIndex: types.MinInitializedTick - 1,
+			tickIndex: types.MinCurrentTick - 1,
 		},
 	}
 	for name, tc := range testCases {
