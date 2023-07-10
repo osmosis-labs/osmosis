@@ -671,13 +671,18 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 	// Note that we regard "within range" to mean [lowerTick, upperTick),
 	// inclusive of lowerTick and exclusive of upperTick.
 	lowerTickUptimeValues := getUptimeTrackerValues(lowerTickInfo.UptimeTrackers.List)
+	fmt.Println("globalUptimeValues", globalUptimeValues)
 	fmt.Println("lowerTickUptimeValues", lowerTickUptimeValues)
 	upperTickUptimeValues := getUptimeTrackerValues(upperTickInfo.UptimeTrackers.List)
 	fmt.Println("upperTickUptimeValues", upperTickUptimeValues)
+	fmt.Println("currentTick", currentTick)
 	// If current tick is below range, we subtract uptime growth of upper tick from that of lower tick
 	if currentTick < lowerTick {
+		fmt.Println("WRONG: currentTick < lowerTick")
 		return osmoutils.SubDecCoinArrays(lowerTickUptimeValues, upperTickUptimeValues)
 	} else if currentTick < upperTick {
+		fmt.Println("WRONG: currentTick < upperTick")
+
 		// If current tick is within range, we subtract uptime growth of lower and upper tick from global growth
 		globalMinusUpper, err := osmoutils.SubDecCoinArrays(globalUptimeValues, upperTickUptimeValues)
 		if err != nil {
@@ -686,6 +691,11 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 
 		return osmoutils.SubDecCoinArrays(globalMinusUpper, lowerTickUptimeValues)
 	} else {
+		// It is also:
+		// above = global - upper
+		// below = lower
+		// alternative: global - upper - lower
+		fmt.Println("CORRECT PATH: currentTick >= upperTick: upperTickUptimeValues - lowerTickUptimeValues")
 		// If current tick is above range, we subtract uptime growth of lower tick from that of upper tick
 		return osmoutils.SubDecCoinArrays(upperTickUptimeValues, lowerTickUptimeValues)
 	}
