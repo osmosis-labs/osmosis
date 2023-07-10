@@ -12,7 +12,7 @@ If it is something that can be handled by a parameter change, we encourage you t
 
 For a bug that is non-sensitive and/or operational in nature rather than a critical vulnerability, please add it as a GitHub issue.
 
-If it is not triaged in a couple of days, feel free to tag @p0mvn, @czarcas7ic, @mattverse, @daniel-farina, @ValarDragon
+If it is not triaged in a couple of days, feel free to tag @p0mvn, @czarcas7ic, @mattverse, @daniel-farina, @ValarDragon, @AlpinYukseloglu 
 
 ## Critical Bug or Security Issue
 
