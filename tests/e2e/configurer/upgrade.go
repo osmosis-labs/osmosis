@@ -289,6 +289,16 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	wg.Wait()
 
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		uc.t.Logf("Query num pools and save it for the upgrade")
+		result := chainANode.QueryStargate("/osmosis.gamm.v1beta1.Query/NumPools", "gamm", "QueryNumPoolsRequest", []string{})
+		println(result)
+	}()
+
+	wg.Wait()
+
 	close(errCh)
 
 	for err := range errCh {
