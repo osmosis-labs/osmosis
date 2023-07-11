@@ -80,6 +80,16 @@ func (q Querier) NumPools(grpcCtx context.Context,
 	return q.Q.NumPools(ctx, *req)
 }
 
+func (q Querier) EstimateSwapExactAmountOutWithPrimitiveTypes(grpcCtx context.Context,
+	req *queryproto.EstimateSwapExactAmountOutWithPrimitiveTypesRequest,
+) (*queryproto.EstimateSwapExactAmountOutResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.EstimateSwapExactAmountOutWithPrimitiveTypes(ctx, *req)
+}
+
 func (q Querier) EstimateSwapExactAmountOut(grpcCtx context.Context,
 	req *queryproto.EstimateSwapExactAmountOutRequest,
 ) (*queryproto.EstimateSwapExactAmountOutResponse, error) {
@@ -88,6 +98,16 @@ func (q Querier) EstimateSwapExactAmountOut(grpcCtx context.Context,
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.EstimateSwapExactAmountOut(ctx, *req)
+}
+
+func (q Querier) EstimateSwapExactAmountInWithPrimitiveTypes(grpcCtx context.Context,
+	req *queryproto.EstimateSwapExactAmountInWithPrimitiveTypesRequest,
+) (*queryproto.EstimateSwapExactAmountInResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.EstimateSwapExactAmountInWithPrimitiveTypes(ctx, *req)
 }
 
 func (q Querier) EstimateSwapExactAmountIn(grpcCtx context.Context,

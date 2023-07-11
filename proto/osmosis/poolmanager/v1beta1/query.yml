@@ -13,11 +13,23 @@ queries:
       query_func: "k.EstimateSwapExactAmountIn"
     cli:
       cmd: "EstimateSwapExactAmountIn"
+  EstimateSwapExactAmountInWithPrimitiveTypes:
+    proto_wrapper:
+      query_func: "k.EstimateSwapExactAmountInWithPrimitiveTypes"
+      response: "*queryproto.EstimateSwapExactAmountInResponse"
+    cli:
+      cmd: "EstimateSwapExactAmountInWithPrimitiveTypes"
   EstimateSwapExactAmountOut:
     proto_wrapper:
       query_func: "k.EstimateSwapExactAmountOut"
     cli:
       cmd: "EstimateSwapExactAmountOut"
+  EstimateSwapExactAmountOutWithPrimitiveTypes:
+    proto_wrapper:
+      query_func: "k.EstimateSwapExactAmountOutWithPrimitiveTypes"
+      response: "*queryproto.EstimateSwapExactAmountOutResponse"
+    cli:
+      cmd: "EstimateSwapExactAmountOutWithPrimitiveTypes"
   EstimateSinglePoolSwapExactAmountIn:
     proto_wrapper:
       query_func: "k.EstimateSinglePoolSwapExactAmountIn"
