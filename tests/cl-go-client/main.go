@@ -17,6 +17,7 @@ import (
 	"github.com/ignite/cli/ignite/pkg/cosmosaccount"
 	"github.com/ignite/cli/ignite/pkg/cosmosclient"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	clqueryproto "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
@@ -48,13 +49,25 @@ const (
 
 	// createPoolOperation creates a pool with expectedPoolId.
 	createPoolOperation
+
+	// claimSpreadRewardsOperation claims a random subset of spread rewards from a random account.
+	claimSpreadRewardsOperation
+
+	// claimIncentivesOperation claims a random subset of incentives from a random account.
+	claimIncentivesOperation
+
+	// addToPositions creates a position and adds to it
+	addToPositions
+
+	// withdrawPositions withdraws a position
+	withdrawPositions
 )
 
 const (
 	expectedPoolId           uint64 = 1
 	addressPrefix                   = "osmo"
 	localosmosisFromHomePath        = "/.osmosisd-local"
-	consensusFee                    = "1500uosmo"
+	consensusFee                    = "3000uosmo"
 	denom0                          = "uosmo"
 	denom1                          = "uusdc"
 	tickSpacing              int64  = 100
@@ -128,6 +141,10 @@ func main() {
 	case createPositions:
 		createManyRandomPositions(igniteClient, expectedPoolId, numPositions)
 		return
+	case addToPositions:
+		addToPositionsOp(igniteClient)
+	case withdrawPositions:
+		withdrawPositionsOp(igniteClient)
 	case makeManySmallSwaps:
 		swapRandomSmallAmountsContinuously(igniteClient, expectedPoolId, numSwaps)
 		return
@@ -137,37 +154,51 @@ func main() {
 		createExternalCLIncentive(igniteClient, expectedPoolId, externalGaugeCoins, expectedEpochIdentifier)
 	case createPoolOperation:
 		createPoolOp(igniteClient)
+	case claimSpreadRewardsOperation:
+		claimSpreadRewardsOp(igniteClient)
+	case claimIncentivesOperation:
+		claimIncentivesOp(igniteClient)
 	default:
 		log.Fatalf("invalid operation: %d", desiredOperation)
 	}
 }
 
-func createManyRandomPositions(igniteClient cosmosclient.Client, poolId uint64, numPositions int) {
+func createRandomPosition(igniteClient cosmosclient.Client, poolId uint64) (string, int64, int64, sdk.Coins, error) {
 	minTick, maxTick := cltypes.MinInitializedTick, cltypes.MaxTick
 	log.Println(minTick, " ", maxTick)
+
+	// Generate random values for position creation
+	// 1 to 9. These are localosmosis keyring test accounts with names such as:
+	// lo-test1
+	// lo-test2
+	// ...
+	randAccountNum := rand.Intn(8) + 1
+	accountName := fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
+	// minTick <= lowerTick <= upperTick
+	lowerTick := roundTickDown(rand.Int63n(maxTick-minTick+1)+minTick, tickSpacing)
+	// lowerTick <= upperTick <= maxTick
+	upperTick := roundTickDown(maxTick-rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick)))), tickSpacing)
+	tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
+	tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
+	tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
+
+	runMessageWithRetries(func() error {
+		_, _, _, _, err := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokensDesired, defaultMinAmount, defaultMinAmount)
+		return err
+	})
+
+	return accountName, lowerTick, upperTick, tokensDesired, nil
+}
+
+func createManyRandomPositions(igniteClient cosmosclient.Client, poolId uint64, numPositions int) error {
 	for i := 0; i < numPositions; i++ {
-		var (
-			// 1 to 9. These are localosmosis keyring test accounts with names such as:
-			// lo-test1
-			// lo-test2
-			// ...
-			randAccountNum = rand.Intn(8) + 1
-			accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
-			// minTick <= lowerTick <= upperTick
-			lowerTick = roundTickDown(rand.Int63n(maxTick-minTick+1)+minTick, tickSpacing)
-			// lowerTick <= upperTick <= maxTick
-			upperTick = roundTickDown(maxTick-rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick)))), tickSpacing)
-
-			tokenDesired0 = sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
-			tokenDesired1 = sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
-			tokensDesired = sdk.NewCoins(tokenDesired0, tokenDesired1)
-		)
-
-		runMessageWithRetries(func() error {
-			_, _, _, err := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokensDesired, defaultMinAmount, defaultMinAmount)
+		_, _, _, _, err := createRandomPosition(igniteClient, poolId)
+		if err != nil {
+			// Handle the error
 			return err
-		})
+		}
 	}
+	return nil
 }
 
 func swapRandomSmallAmountsContinuously(igniteClient cosmosclient.Client, poolId uint64, numSwaps int) {
@@ -246,7 +277,7 @@ func createExternalCLIncentive(igniteClient cosmosclient.Client, poolId uint64, 
 
 	epochsQueryClient := epochstypes.NewQueryClient(igniteClient.Context())
 	currentEpochResponse, err := epochsQueryClient.CurrentEpoch(context.Background(), &epochstypes.QueryCurrentEpochRequest{
-		expectedEpochIdentifier,
+		Identifier: expectedEpochIdentifier,
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -276,7 +307,7 @@ func createExternalCLIncentive(igniteClient cosmosclient.Client, poolId uint64, 
 	for {
 		// Wait for 1 epoch to pass
 		currentEpochResponse, err = epochsQueryClient.CurrentEpoch(context.Background(), &epochstypes.QueryCurrentEpochRequest{
-			expectedEpochIdentifier,
+			Identifier: expectedEpochIdentifier,
 		})
 		if err != nil {
 			log.Fatal(err)
@@ -329,7 +360,7 @@ func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 	return resp.PoolID
 }
 
-func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokensProvided sdk.Coins, tokenMinAmount0, tokenMinAmount1 sdk.Int) (amountCreated0, amountCreated1 sdk.Int, liquidityCreated sdk.Dec, err error) {
+func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokensProvided sdk.Coins, tokenMinAmount0, tokenMinAmount1 sdk.Int) (positionId uint64, amountCreated0, amountCreated1 sdk.Int, liquidityCreated sdk.Dec, err error) {
 	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
 	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
 	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
@@ -347,14 +378,116 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 	}
 	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
 	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 	resp := cltypes.MsgCreatePositionResponse{}
 	if err := txResp.Decode(&resp); err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
-	log.Println("created position: amt0", resp.Amount0, "amt1", resp.Amount1, "liquidity", resp.LiquidityCreated)
-	return resp.Amount0, resp.Amount1, resp.LiquidityCreated, nil
+	log.Println("created position: positionId", positionId, "amt0", resp.Amount0, "amt1", resp.Amount1, "liquidity", resp.LiquidityCreated)
+
+	return resp.PositionId, resp.Amount0, resp.Amount1, resp.LiquidityCreated, nil
+}
+
+func addToPositionsOp(igniteClient cosmosclient.Client) {
+	var (
+		randAccountNum = rand.Intn(8) + 1
+		accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
+	)
+
+	// Instantiate a query client
+	clClient := clqueryproto.NewQueryClient(igniteClient.Context())
+
+	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
+	senderAddress := getAccountAddressFromKeyring(igniteClient, accountName)
+	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
+
+	userPositionResp, err := clClient.UserPositions(context.Background(), &clqueryproto.UserPositionsRequest{
+		Address: senderAddress,
+		PoolId:  0,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(userPositionResp.Positions) == 0 {
+		log.Println("No position")
+		return
+	}
+
+	for _, position := range userPositionResp.Positions {
+		position := position.Position
+
+		randAmt0 := sdk.NewInt(rand.Int63n(maxAmountDeposited))
+		randAmt1 := sdk.NewInt(rand.Int63n(maxAmountDeposited))
+
+		log.Println("Adding To position: position id", position.PositionId, "accountName", position.Address, "amount0", randAmt0, "amount1", randAmt1, "defaultMinAmount", defaultMinAmount)
+
+		msg := &cltypes.MsgAddToPosition{
+			PositionId:      position.PositionId,
+			Sender:          senderAddress,
+			Amount0:         randAmt0,
+			Amount1:         randAmt1,
+			TokenMinAmount0: defaultMinAmount,
+			TokenMinAmount1: defaultMinAmount,
+		}
+		txResp, err := igniteClient.BroadcastTx(accountName, msg)
+		if err != nil {
+			return
+		}
+		resp := cltypes.MsgAddToPositionResponse{}
+		if err := txResp.Decode(&resp); err != nil {
+			return
+		}
+		log.Println("Added to position: position id", resp.PositionId, "amount0", resp.Amount0, "amount1", resp.Amount1)
+	}
+}
+
+func withdrawPositionsOp(igniteClient cosmosclient.Client) {
+	var (
+		randAccountNum = rand.Intn(8) + 1
+		accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
+	)
+
+	// Instantiate a query client
+	clClient := clqueryproto.NewQueryClient(igniteClient.Context())
+
+	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
+	senderAddress := getAccountAddressFromKeyring(igniteClient, accountName)
+	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
+
+	userPositionResp, err := clClient.UserPositions(context.Background(), &clqueryproto.UserPositionsRequest{
+		Address: senderAddress,
+		PoolId:  0,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(userPositionResp.Positions) == 0 {
+		return
+	}
+
+	for _, position := range userPositionResp.Positions {
+		position := position.Position
+		log.Println("Withdraw position started: position id", position.PositionId, "accountName", position.Address, "LiquidityAmount", position.Liquidity)
+
+		msg := &cltypes.MsgWithdrawPosition{
+			PositionId:      position.PositionId,
+			Sender:          position.Address,
+			LiquidityAmount: position.Liquidity,
+		}
+
+		txResp, err := igniteClient.BroadcastTx(accountName, msg)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		resp := cltypes.MsgWithdrawPositionResponse{}
+		if err := txResp.Decode(&resp); err != nil {
+			log.Println(err)
+			return
+		}
+		log.Println("withdraw position complete:", "amount0", resp.Amount0, "amount1", resp.Amount1)
+	}
 }
 
 func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, tokenInCoin sdk.Coin, tokenOutDenom string, tokenOutMinAmount sdk.Int) (sdk.Int, error) {
@@ -436,6 +569,106 @@ func createPoolOp(igniteClient cosmosclient.Client) {
 	} else {
 		log.Println("pool already exists. Tweak expectedPoolId variable if you want another pool, current expectedPoolId", expectedPoolId)
 	}
+}
+
+func claimSpreadRewardsOp(igniteClient cosmosclient.Client) {
+	var (
+		randAccountNum = rand.Intn(8) + 1
+		accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
+	)
+
+	// Instantiate a query client
+	clClient := clqueryproto.NewQueryClient(igniteClient.Context())
+
+	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
+	senderAddress := getAccountAddressFromKeyring(igniteClient, accountName)
+	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
+
+	userPositionResp, err := clClient.UserPositions(context.Background(), &clqueryproto.UserPositionsRequest{
+		Address: senderAddress,
+		PoolId:  0,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(userPositionResp.Positions) == 0 {
+		return
+	}
+
+	var allUserPositionIds []uint64
+	for _, position := range userPositionResp.Positions {
+		allUserPositionIds = append(allUserPositionIds, position.Position.PositionId)
+	}
+
+	// Set positionIds to a random subset of allUserPositionIds
+	positionIds := osmoutils.GetRandomSubset(allUserPositionIds)
+
+	log.Println("position IDs chosen: ", positionIds)
+
+	msg := &cltypes.MsgCollectSpreadRewards{
+		PositionIds: positionIds,
+		Sender:      senderAddress,
+	}
+	txResp, err := igniteClient.BroadcastTx(accountName, msg)
+	if err != nil {
+		log.Fatal(err)
+	}
+	collectSpreadRewardsResp := &cltypes.MsgCollectSpreadRewardsResponse{}
+	if err := txResp.Decode(collectSpreadRewardsResp); err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("total spread rewards claimed: ", collectSpreadRewardsResp.CollectedSpreadRewards.String())
+}
+
+func claimIncentivesOp(igniteClient cosmosclient.Client) {
+	var (
+		randAccountNum = rand.Intn(8) + 1
+		accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
+	)
+
+	// Instantiate a query client
+	clClient := clqueryproto.NewQueryClient(igniteClient.Context())
+
+	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
+	senderAddress := getAccountAddressFromKeyring(igniteClient, accountName)
+	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
+
+	userPositionResp, err := clClient.UserPositions(context.Background(), &clqueryproto.UserPositionsRequest{
+		Address: senderAddress,
+		PoolId:  0,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(userPositionResp.Positions) == 0 {
+		return
+	}
+
+	var allUserPositionIds []uint64
+	for _, position := range userPositionResp.Positions {
+		allUserPositionIds = append(allUserPositionIds, position.Position.PositionId)
+	}
+
+	// Set positionIds to a random subset of allUserPositionIds
+	positionIds := osmoutils.GetRandomSubset(allUserPositionIds)
+
+	log.Println("position IDs chosen: ", positionIds)
+
+	msg := &cltypes.MsgCollectIncentives{
+		PositionIds: positionIds,
+		Sender:      senderAddress,
+	}
+	txResp, err := igniteClient.BroadcastTx(accountName, msg)
+	if err != nil {
+		log.Fatal(err)
+	}
+	collectIncentivesResp := &cltypes.MsgCollectIncentivesResponse{}
+	if err := txResp.Decode(collectIncentivesResp); err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("total incentives claimed: ", collectIncentivesResp.CollectedIncentives.String())
 }
 
 func getAccountAddressFromKeyring(igniteClient cosmosclient.Client, accountName string) string {

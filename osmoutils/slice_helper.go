@@ -1,6 +1,7 @@
 package osmoutils
 
 import (
+	"math/rand"
 	"reflect"
 	"sort"
 
@@ -101,4 +102,18 @@ func Contains[T comparable](slice []T, item T) bool {
 		}
 	}
 	return false
+}
+
+// GetRandomSubset returns a random subset of the given slice
+func GetRandomSubset[T any](slice []T) []T {
+	if len(slice) == 0 {
+		return []T{}
+	}
+
+	rand.Shuffle(len(slice), func(i, j int) {
+		slice[i], slice[j] = slice[j], slice[i]
+	})
+
+	n := rand.Intn(len(slice))
+	return slice[:n]
 }

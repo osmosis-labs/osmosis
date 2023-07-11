@@ -69,6 +69,8 @@ message MsgBeginUnlockingResponse {
 // MsgExtendLockup extends the existing lockup's duration.
 // The new duration is longer than the original.
 message MsgExtendLockup {
+  option (amino.name) = "osmosis/lockup/extend-lockup";
+
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   uint64 ID = 2;
 
@@ -89,6 +91,8 @@ message MsgExtendLockupResponse { bool success = 1; }
 // MsgForceUnlock unlocks locks immediately for
 // addresses registered via governance.
 message MsgForceUnlock {
+  option (amino.name) = "osmosis/lockup/force-unlock-tokens";
+
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   uint64 ID = 2;
   // Amount of unlocking coins. Unlock all if not set.
@@ -101,6 +105,8 @@ message MsgForceUnlock {
 message MsgForceUnlockResponse { bool success = 1; }
 
 message MsgSetRewardReceiverAddress {
+  option (amino.name) = "osmosis/lockup/set-reward-receiver-address";
+
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   uint64 lockID = 2;
   string reward_receiver = 3

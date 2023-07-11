@@ -242,3 +242,19 @@ func (server msgServer) AddToConcentratedLiquiditySuperfluidPosition(goCtx conte
 
 	return &types.MsgAddToConcentratedLiquiditySuperfluidPositionResponse{PositionId: newPositionId, Amount0: actualAmount0, Amount1: actualAmount1, LockId: newLockId, NewLiquidity: newLiquidity}, nil
 }
+
+func (server msgServer) LockExistingFullRangePositionAndSFStake(goCtx context.Context, msg *types.MsgLockExistingFullRangePositionAndSFStake) (*types.MsgLockExistingFullRangePositionAndSFStakeResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	concentratedLockId, err := server.keeper.LockExistingFullRangePositionAndSFStake(ctx, msg.PositionId, sender, msg.ValAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgLockExistingFullRangePositionAndSFStakeResponse{ConcentratedLockId: concentratedLockId}, nil
+}
