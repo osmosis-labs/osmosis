@@ -1,0 +1,78 @@
+# This is an example .goreleaser.yml file with some sensible defaults.
+# Make sure to check the documentation at https://goreleaser.com
+before:
+  hooks:
+    - go mod tidy
+
+env:
+  - CGO_ENABLED=1
+  - TM_VERSION=1.2.3
+
+builds:
+  - id: darwin
+    main: ./cmd/osmosisd/main.go
+    binary: osmosisd
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CC=o64-clang
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w 
+      - -X main.commit={{.Commit}} 
+      - -X main.date={{ .CommitDate }} 
+      - -X github.com/cosmos/cosmos-sdk/version.Name=osmosis 
+      - -X github.com/cosmos/cosmos-sdk/version.AppName=osmosisd 
+      - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }} 
+      - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }} 
+      - -X github.com/tendermint/tendermint/version.TMCoreSemVer={{ .Env.TM_VERSION }}
+      - -linkmode=external
+    tags:
+      - netgo
+      - ledger
+      - static_wasm
+    overrides:
+      - goos: darwin
+        goarch: arm64
+        env:
+          - CC=oa64-clang
+
+universal_binaries:
+  - id: darwin
+
+  # - id: darwin-arm64
+  #   main: ./cmd/osmosisd/main.go
+  #   env:
+  #   - CC=oa64-clang
+  #   binary: osmosisd
+  #   goos:
+  #     - darwin
+  #   goarch:
+  #     - arm64
+  #   flags:
+  #     - -mod=readonly
+  #   ldflags:
+  #     - -s -w 
+  #     - -X main.commit={{.Commit}} 
+  #     - -X main.date={{ .CommitDate }} 
+  #     - -X github.com/cosmos/cosmos-sdk/version.Name=osmosis 
+  #     - -X github.com/cosmos/cosmos-sdk/version.AppName=osmosisd 
+  #     - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }} 
+  #     - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }} 
+  #     - -X github.com/tendermint/tendermint/version.TMCoreSemVer={{ .Env.TM_VERSION }}
+  #     - -linkmode=external
+  #   tags:
+  #     - netgo
+  #     - ledger
+  #     - static_wasm
+
+# universal_binaries:
+#   - id: darwin
+#     ids:
+#       - darwin-amd64
+#       - darwin-arm64
+#     replace: false
