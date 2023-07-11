@@ -136,7 +136,7 @@ archives:
       - osmosisd-linux-amd64
       - osmosisd-linux-arm64
     name_template: "{{.ProjectName}}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
-    format: zip
+    format: tar.gz
     files:
       - none*
   - id: binaries
