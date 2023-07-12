@@ -326,7 +326,8 @@ replace (
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230712110120-7e3886509fbd
 
 	// N.B. v0.19.5 contains a breaking change to the IAVL API
-	github.com/cosmos/iavl v0.19.5 => github.com/cosmos/iavl v0.19.4
+	// github.com/cosmos/iavl v0.19.5 => github.com/cosmos/iavl v0.19.4
+
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
