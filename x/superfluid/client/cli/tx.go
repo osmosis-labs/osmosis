@@ -38,7 +38,6 @@ func GetTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(cmd, NewCreateFullRangePositionAndSuperfluidDelegateCmd)
 	osmocli.AddTxCmd(cmd, NewAddToConcentratedLiquiditySuperfluidPositionCmd)
 	osmocli.AddTxCmd(cmd, NewUnlockAndMigrateSharesToFullRangeConcentratedPositionCmd)
-	osmocli.AddTxCmd(cmd, NewLockExistingFullRangePositionAndSFStakeCmd)
 
 	return cmd
 }
@@ -423,12 +422,4 @@ func NewUnlockAndMigrateSharesToFullRangeConcentratedPositionCmd() (*osmocli.TxC
 		Short:   "unlock and migrate gamm shares to full range concentrated position",
 		Example: "unlock-and-migrate-cl 10 25000000000gamm/pool/2 1000000000uosmo,10000000uion",
 	}, &types.MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{}
-}
-
-func NewLockExistingFullRangePositionAndSFStakeCmd() (*osmocli.TxCliDesc, *types.MsgLockExistingFullRangePositionAndSFStake) {
-	return &osmocli.TxCliDesc{
-		Use:     "lock-cl-position-and-sfs [position-id] [val-addr]",
-		Short:   "lock and existing cl position and superfluid stake it to the provided validator",
-		Example: "lock-cl-position-and-sfs 22 osmovaloper1h2c47vd943scjlfum6yc5frvu2l279lwjep5d6",
-	}, &types.MsgLockExistingFullRangePositionAndSFStake{}
 }
