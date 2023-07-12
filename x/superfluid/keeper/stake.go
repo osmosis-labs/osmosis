@@ -2,12 +2,10 @@ package keeper
 
 import (
 	"fmt"
-	"strconv"
 
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 
@@ -663,52 +661,4 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 		// if valid delegation has been found, increment delegation index
 		fn(index+int64(i), delegation)
 	}
-}
-
-// LockExistingFullRangePositionAndSFStake locks existing position and superfluid stakes the position.
-// This method would error if the existing position is not a full ranged position.
-func (k Keeper) LockExistingFullRangePositionAndSFStake(ctx sdk.Context, positionId uint64, sender sdk.AccAddress, valAddr string) (concentratedLockID uint64, err error) {
-	// Retrieve position via ID.
-	position, err := k.clk.GetPosition(ctx, positionId)
-	if err != nil {
-		return 0, err
-	}
-
-	// Check that the position is full range and belongs to the owner.
-	if position.LowerTick != cltypes.MinInitializedTick || position.UpperTick != cltypes.MaxTick {
-		return 0, cltypes.PositionNotFullRangeError{PositionId: positionId, LowerTick: position.LowerTick, UpperTick: position.UpperTick}
-	}
-	if position.Address != sender.String() {
-		return 0, cltypes.PositionOwnerMismatchError{PositionOwner: position.Address, Sender: sender.String()}
-	}
-
-	// Mint CL shares (similar to GAMM shares) for the position and lock them for the unbonding duration.
-	// Also sets the position ID to underlying lock ID mapping.
-	lockDuration := k.sk.GetParams(ctx).UnbondingTime
-	concentratedLockId, _, err := k.clk.MintSharesAndLock(ctx, position.PoolId, positionId, sender, lockDuration)
-	if err != nil {
-		return 0, err
-	}
-
-	// Superfluid delegate the newly created concentrated lock.
-	err = k.SuperfluidDelegate(ctx, position.Address, concentratedLockId, valAddr)
-	if err != nil {
-		return 0, err
-	}
-
-	// Emit events.
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
-		),
-		sdk.NewEvent(
-			types.TypeEvtLockExistingFullRangePositionAndSFStake,
-			sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
-			sdk.NewAttribute(types.AttributePositionId, strconv.FormatUint(positionId, 10)),
-			sdk.NewAttribute(types.AttributeConcentratedLockId, strconv.FormatUint(concentratedLockId, 10)),
-		),
-	})
-
-	return concentratedLockId, nil
 }
