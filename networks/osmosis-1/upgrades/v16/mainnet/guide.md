@@ -97,7 +97,7 @@ Create the v16 folder, make the build, and copy the daemon over to that folder
 mkdir -p ~/.osmosisd/cosmovisor/upgrades/v16/bin
 cd $HOME/osmosis
 git pull
-git checkout v16.0.0
+git checkout v16.1.0
 make build
 cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v16/bin
 ```
@@ -115,7 +115,7 @@ Now, at the upgrade height, Cosmovisor will upgrade to the v16 binary
 ```{.sh}
 cd $HOME/osmosis
 git pull
-git checkout v16.0.0
+git checkout v16.1.0
 make install
 ```
 
