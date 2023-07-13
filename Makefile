@@ -194,7 +194,7 @@ distclean: clean
 VERSION := 
 MODFILES := ./go.mod ./osmoutils/go.mod ./osmomath/go.mod ./x/epochs/go.mod ./x/ibc-hooks/go.mod ./tests/cl-genesis-positions/go.mod ./tests/cl-go-client/go.mod
 # run with VERSION argument specified
-# e.g) make update-version VERSION=v0.45.1-0.20230523200430-193959b898ec
+# e.g) make update-sdk-version VERSION=v0.45.1-0.20230523200430-193959b898ec
 # This will change sdk dependencyu version for go.mod in root directory + all sub-modules in this repo.
 update-sdk-version:
 	@if [ -z "$(VERSION)" ]; then \
