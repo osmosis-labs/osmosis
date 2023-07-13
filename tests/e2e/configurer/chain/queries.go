@@ -423,18 +423,21 @@ func (n *NodeConfig) QueryWasmSmartObject(contract string, msg string) (resultOb
 	return resultObject, nil
 }
 
-func (n *NodeConfig) QueryStargate(queryPath string, module string, structName string, structArguments []string) interface{} {
-	cmd := []string{"osmosisd", "query", "proto-marshalled-bytes", queryPath, module, structName}
+func (n *NodeConfig) QueryStargate(queryPath string, module string, structName string, structArguments []string) (result map[string][]interface{}, err error) {
+	cmd := []string{"osmosisd", "debug", "proto-marshalled-bytes", queryPath, module, structName}
 	cmd = append(cmd, structArguments...)
-	cmd = append(cmd, "--output=json")
 
 	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
-	require.NoError(n.t, err)
-	var result map[string][]interface{}
+	if err != nil {
+		return nil, err
+	}
+	
 	err = json.Unmarshal(out.Bytes(), &result)
-	require.NoError(n.t, err)
+	if err != nil {
+		return nil, err
+	}
 
-	return result
+	return result, nil
 }
 
 func (n *NodeConfig) QueryWasmSmartArray(contract string, msg string) (resultArray []interface{}, err error) {
