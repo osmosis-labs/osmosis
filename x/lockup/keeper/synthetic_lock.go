@@ -71,7 +71,9 @@ func (k Keeper) GetAllSyntheticLockupsByAddr(ctx sdk.Context, owner sdk.AccAddre
 		if err != nil {
 			panic(err)
 		}
-		synthLocks = append(synthLocks, synthLock)
+		if synthLock.UnderlyingLockId != 0 {
+			synthLocks = append(synthLocks, synthLock)
+		}
 	}
 	return synthLocks
 }
