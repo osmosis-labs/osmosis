@@ -105,7 +105,8 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.Ac
 		return nil, err
 	}
 
-	synthlock, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
+	// TODO: Handle found case in a better way, with state breaking update
+	synthlock, _, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -382,7 +383,8 @@ func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	// 2) If lock is bonded, move it to unlocking
 	// 3) Run logic to delete unlocking metadata, and send tokens to owner.
 
-	synthLock, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
+	// TODO: Use found instead of !synthLock.IsNil() later on.
+	synthLock, _, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
 	if err != nil {
 		return err
 	}
@@ -766,7 +768,8 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 	}
 
 	// increase synthetic lockup's accumulation store
-	synthLock, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
+	// TODO: In next state break, do err != nil || found == false
+	synthLock, _, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
 	if err != nil {
 		return err
 	}
