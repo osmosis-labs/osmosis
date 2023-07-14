@@ -65,9 +65,6 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent o
 	// Estimate the amount of token zero needed until the target sqrt price is reached.
 	amountZeroIn := math.CalcAmount0Delta(liquidityBigDec, sqrtPriceTargetBigDec, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
 
-	fmt.Println("liquidity", liquidity)
-	fmt.Println("amountZeroInRemainingBigDec before fee", amountZeroInRemainingBigDec)
-
 	// Calculate sqrtPriceNext on the amount of token remaining after spread reward.
 	amountZeroInRemainingLessSpreadReward := amountZeroInRemainingBigDec.Mul(oneBigDec.Sub(osmomath.BigDecFromSDKDec(s.spreadFactor)))
 
