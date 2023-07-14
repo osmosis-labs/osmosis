@@ -237,11 +237,12 @@ func (k Keeper) routeMigration(ctx sdk.Context, sender sdk.AccAddress, providedL
 
 	lockId := uint64(providedLockId)
 
-	synthLockBeforeMigration, err = k.lk.GetSyntheticLockupByUnderlyingLockId(ctx, lockId)
+	synthLockBeforeMigration, _, err = k.lk.GetSyntheticLockupByUnderlyingLockId(ctx, lockId)
 	if err != nil {
 		return lockuptypes.SyntheticLock{}, Unsupported, err
 	}
 
+	// TODO: Change to if !found
 	if synthLockBeforeMigration == (lockuptypes.SyntheticLock{}) {
 		migrationType = NonSuperfluid
 	} else if strings.Contains(synthLockBeforeMigration.SynthDenom, "superbonding") {
