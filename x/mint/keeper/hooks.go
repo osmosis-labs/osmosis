@@ -58,6 +58,8 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			return err
 		}
 
+		ctx.Logger().Info(fmt.Sprintf("Mint hooks, minted coins: %s, height %d", mintedCoins, ctx.BlockHeight()))
+
 		// send the minted coins to the fee collector account
 		err = k.DistributeMintedCoin(ctx, mintedCoin)
 		if err != nil {

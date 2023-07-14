@@ -301,6 +301,7 @@ func (k Keeper) computeOutAmtGivenIn(
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
 ) (tokenIn, tokenOut sdk.Coin, poolUpdates PoolUpdates, totalSpreadFactors sdk.Dec, err error) {
+	ctx.Logger().Info(fmt.Sprintf("Swap in, pool id %d, tokenIn %s, height %d", poolId, tokenInMin, ctx.BlockHeight()))
 	// Get pool and asset info
 	p, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
