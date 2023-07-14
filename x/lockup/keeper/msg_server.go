@@ -208,7 +208,8 @@ func (server msgServer) ForceUnlock(goCtx context.Context, msg *types.MsgForceUn
 	}
 
 	// check that given lock is not superfluid staked
-	synthLock, err := server.keeper.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
+	// TODO: Next state break do found, instead !synthlock.IsNil()
+	synthLock, _, err := server.keeper.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
 	if err != nil {
 		return &types.MsgForceUnlockResponse{Success: false}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
