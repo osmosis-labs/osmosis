@@ -65,14 +65,14 @@ func (k Keeper) SwapOutAmtGivenIn(
 
 func (k Keeper) ComputeOutAmtGivenIn(
 	ctx sdk.Context,
-	poolId uint64,
+	pool types.ConcentratedPoolExtension,
 	tokenInMin sdk.Coin,
 	tokenOutDenom string,
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
 
 ) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, totalSpreadRewards sdk.Dec, err error) {
-	return k.computeOutAmtGivenIn(ctx, poolId, tokenInMin, tokenOutDenom, spreadFactor, priceLimit)
+	return k.computeOutAmtGivenIn(ctx, pool, tokenInMin, tokenOutDenom, spreadFactor, priceLimit)
 }
 
 func (k Keeper) SwapInAmtGivenOut(
@@ -88,14 +88,14 @@ func (k Keeper) SwapInAmtGivenOut(
 
 func (k Keeper) ComputeInAmtGivenOut(
 	ctx sdk.Context,
+	pool types.ConcentratedPoolExtension,
 	desiredTokenOut sdk.Coin,
 	tokenInDenom string,
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
-	poolId uint64,
 
 ) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, totalSpreadRewards sdk.Dec, err error) {
-	return k.computeInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit, poolId)
+	return k.computeInAmtGivenOut(ctx, pool, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit)
 }
 
 func (k Keeper) InitOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {

@@ -2075,7 +2075,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 			cacheCtx, _ := s.Ctx.CacheContext()
 			tokenIn, tokenOut, poolUpdates, totalSpreadRewards, err := s.App.ConcentratedLiquidityKeeper.ComputeOutAmtGivenIn(
 				cacheCtx,
-				pool.GetId(),
+				pool,
 				test.tokenIn, test.tokenOutDenom,
 				test.spreadFactor, test.priceLimit)
 
@@ -2090,6 +2090,9 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 				// check that the pool has not been modified after performing calc
 				s.assertPoolNotModified(poolBeforeCalc)
 			}
+
+			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
 
 			// perform swap
 			tokenIn, tokenOut, poolUpdates, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
@@ -2153,6 +2156,9 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 			spreadFactorAccum, err = s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
 			spreadFactorAccum.AddToAccumulator(DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)))
+
+			pool, err = s.clk.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
 
 			// perform swap
 			_, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
@@ -2219,10 +2225,13 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 
 			// perform compute
 			cacheCtx, _ := s.Ctx.CacheContext()
+			pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+
 			tokenIn, tokenOut, poolUpdates, totalSpreadRewards, err := s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
-				cacheCtx,
+				cacheCtx, pool,
 				test.tokenOut, test.tokenInDenom,
-				test.spreadFactor, test.priceLimit, pool.GetId())
+				test.spreadFactor, test.priceLimit)
 			if test.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -2231,6 +2240,9 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 				expectedSpreadRewards := tokenIn.Amount.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).TruncateInt()
 				s.Require().Equal(expectedSpreadRewards.String(), totalSpreadRewards.TruncateInt().String())
 			}
+
+			pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
 
 			// perform swap
 			tokenIn, tokenOut, poolUpdates, err = s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
@@ -2287,6 +2299,9 @@ func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
 			spreadFactorAccum, err = s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
 			spreadFactorAccum.AddToAccumulator(DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)))
+
+			pool, err = s.clk.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
 
 			// perform swap
 			_, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
@@ -2717,10 +2732,13 @@ func (s *KeeperTestSuite) TestComputeOutAmtGivenIn() {
 			s.setupAndFundSwapTest()
 			poolBeforeCalc := s.preparePoolAndDefaultPositions(test)
 
+			pool, err := s.clk.GetPoolById(s.Ctx, poolBeforeCalc.GetId())
+			s.Require().NoError(err)
+
 			// perform calc
-			_, _, _, _, err := s.App.ConcentratedLiquidityKeeper.ComputeOutAmtGivenIn(
+			_, _, _, _, err = s.App.ConcentratedLiquidityKeeper.ComputeOutAmtGivenIn(
 				s.Ctx,
-				poolBeforeCalc.GetId(),
+				pool,
 				test.tokenIn, test.tokenOutDenom,
 				test.spreadFactor, test.priceLimit)
 			s.Require().NoError(err)
@@ -2742,10 +2760,13 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn_NonMutative() {
 			s.setupAndFundSwapTest()
 			poolBeforeCalc := s.preparePoolAndDefaultPositions(test)
 
+			pool, err := s.clk.GetPoolById(s.Ctx, poolBeforeCalc.GetId())
+			s.Require().NoError(err)
+
 			// perform calc
-			_, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(
+			_, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(
 				s.Ctx,
-				poolBeforeCalc,
+				pool,
 				test.tokenIn, test.tokenOutDenom,
 				test.spreadFactor)
 			s.Require().NoError(err)
@@ -2776,11 +2797,13 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
 		s.Run(name, func() {
 			s.setupAndFundSwapTest()
 			poolBeforeCalc := s.preparePoolAndDefaultPositions(test)
+			pool, err := s.clk.GetPoolById(s.Ctx, poolBeforeCalc.GetId())
+			s.Require().NoError(err)
 
 			// perform calc
-			_, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(
+			_, err = s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenIn(
 				s.Ctx,
-				poolBeforeCalc,
+				pool,
 				test.tokenIn, test.tokenOutDenom,
 				test.spreadFactor)
 			s.Require().NoError(err)
@@ -2803,11 +2826,15 @@ func (s *KeeperTestSuite) TestComputeInAmtGivenOut() {
 			s.setupAndFundSwapTest()
 			poolBeforeCalc := s.preparePoolAndDefaultPositions(test)
 
+			pool, err := s.clk.GetPoolById(s.Ctx, poolBeforeCalc.GetId())
+			s.Require().NoError(err)
+
 			// perform calc
-			_, _, _, _, err := s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
+			_, _, _, _, err = s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
 				s.Ctx,
+				pool,
 				test.tokenOut, test.tokenInDenom,
-				test.spreadFactor, test.priceLimit, poolBeforeCalc.GetId())
+				test.spreadFactor, test.priceLimit)
 			s.Require().NoError(err)
 
 			// check that the pool has not been modified after performing calc
@@ -2827,15 +2854,18 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 			userBalanceBeforeSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
 			poolBalanceBeforeSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, poolBefore.GetAddress())
 
+			pool, err := s.clk.GetPoolById(s.Ctx, poolBefore.GetId())
+			s.Require().NoError(err)
+
 			// system under test
 			firstTokenIn, firstTokenOut, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
-				s.Ctx, s.TestAccs[0], poolBefore,
+				s.Ctx, s.TestAccs[0], pool,
 				test.tokenIn, test.tokenOutDenom,
 				DefaultZeroSpreadFactor, test.priceLimit)
 			s.Require().NoError(err)
 
 			secondTokenIn, secondTokenOut, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
-				s.Ctx, s.TestAccs[0], poolBefore,
+				s.Ctx, s.TestAccs[0], pool,
 				firstTokenOut, firstTokenIn.Denom,
 				DefaultZeroSpreadFactor, sdk.ZeroDec(),
 			)
@@ -2904,15 +2934,18 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapInAmtGivenOut() {
 			userBalanceBeforeSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
 			poolBalanceBeforeSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, poolBefore.GetAddress())
 
+			pool, err := s.clk.GetPoolById(s.Ctx, poolBefore.GetId())
+			s.Require().NoError(err)
+
 			// system under test
 			firstTokenIn, firstTokenOut, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
-				s.Ctx, s.TestAccs[0], poolBefore,
+				s.Ctx, s.TestAccs[0], pool,
 				test.tokenOut, test.tokenInDenom,
 				DefaultZeroSpreadFactor, test.priceLimit)
 			s.Require().NoError(err)
 
 			secondTokenIn, secondTokenOut, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
-				s.Ctx, s.TestAccs[0], poolBefore,
+				s.Ctx, s.TestAccs[0], pool,
 				firstTokenIn, firstTokenOut.Denom,
 				DefaultZeroSpreadFactor, sdk.ZeroDec(),
 			)
@@ -3404,10 +3437,87 @@ func (s *KeeperTestSuite) TestInfiniteSwapLoop_OutGivenIn() {
 	swapEthFunded := sdk.NewCoin(ETH, sdk.Int(sdk.MustNewDecFromStr("10000000000000000000000000000000000000000")))
 	swapUSDCFunded := sdk.NewCoin(USDC, sdk.Int(sdk.MustNewDecFromStr("10000")))
 	s.FundAcc(swapAddress, sdk.NewCoins(swapEthFunded, swapUSDCFunded))
+	pool, err = s.clk.GetPoolById(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+
 	_, tokenOut, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, sdk.NewCoin(USDC, sdk.NewInt(10000)), ETH, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
 	s.Require().NoError(err)
 
 	// Swap back in the amount that was swapped out to test the inverse relationship
 	_, _, _, err = s.clk.SwapOutAmtGivenIn(s.Ctx, swapAddress, pool, tokenOut, ETH, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
 	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) TestCheckSwapGas() {
+	maxGasToConsume := uint64(50_000_000) // this is the max amount of gas allowed in protorev
+	s.SetupTest()
+	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, 1, sdk.ZeroDec())
+
+	testAccs := apptesting.CreateRandomAccounts(2)
+	positionOwner := testAccs[0]
+
+	ethToFund := sdk.NewCoin(ETH, sdk.Int(sdk.MustNewDecFromStr("10000000000000000000000000000000000000000")))
+	usdcToFund := sdk.NewCoin(USDC, sdk.Int(sdk.MustNewDecFromStr("10000000000000000000000000000000000000000")))
+
+	// Create position near min tick
+	s.FundAcc(positionOwner, sdk.NewCoins(ethToFund, usdcToFund))
+	_, _, _, _, _, _, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), positionOwner, DefaultRangeTestParams.baseAssets, sdk.ZeroInt(), sdk.ZeroInt(), -100, 100)
+	s.Require().NoError(err)
+
+	swapAddress := testAccs[1]
+	s.FundAcc(swapAddress, sdk.NewCoins(ethToFund, usdcToFund))
+
+	pool, err = s.clk.GetPoolById(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+
+	// make simple swap and check gas (no-tick cross)
+	_, _, _, err = s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, sdk.NewCoin(USDC, sdk.NewInt(100_000_000)), ETH, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
+	s.Require().NoError(err)
+
+	s.Require().True(s.Ctx.GasMeter().GasConsumed() < maxGasToConsume)
+
+	// cross x number of tick in left to right direction and check gas (contains accumulator)
+	// initialize 50 positions in left to right direction
+	lowerTick := int64(-100)
+	upperTick := int64(100)
+	for i := 1; i <= 50; i++ {
+		_, _, _, _, _, _, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), positionOwner, DefaultRangeTestParams.baseAssets, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+		s.Require().NoError(err)
+
+		lowerTick += 100
+		upperTick += 100
+	}
+
+	// initialize 50 positions in right to left direction
+	lowerTick = int64(-100)
+	upperTick = int64(100)
+	for i := 1; i <= 50; i++ {
+		_, _, _, _, _, _, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), positionOwner, DefaultRangeTestParams.baseAssets, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+		s.Require().NoError(err)
+
+		lowerTick -= 100
+		upperTick -= 100
+	}
+
+	pool, err = s.clk.GetPoolById(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+
+	// Make a large swap in OutGivenIn (positive tick direction) from currentTick = -20 to 1735
+	// Amount of tickCrossed = 1754
+	// Make sure the gas is < 50M
+	_, _, _, err = s.clk.SwapOutAmtGivenIn(s.Ctx, swapAddress, pool, sdk.NewCoin(USDC, sdk.NewInt(100_000_000_000)), ETH, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
+	s.Require().NoError(err)
+
+	s.Require().True(s.Ctx.GasMeter().GasConsumed() < maxGasToConsume)
+
+	pool, err = s.clk.GetPoolById(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+
+	// Make a large swap in InGivenOut (negative tick direction) from currentTick = 1735 to 736
+	// Amount of tickCrossed = 998
+	// Make sure the gas is < 50M
+	_, _, _, err = s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, sdk.NewCoin(USDC, sdk.NewInt(50_000_000_000)), ETH, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
+	s.Require().NoError(err)
+
+	s.Require().True(s.Ctx.GasMeter().GasConsumed() < maxGasToConsume)
 }

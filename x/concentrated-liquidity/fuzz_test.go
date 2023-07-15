@@ -278,6 +278,9 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 	// // Execute swap
 	fmt.Printf("swap in: %s\n", swapInFunded)
 	cacheCtx, writeOutGivenIn := s.Ctx.CacheContext()
+	pool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+
 	_, tokenOut, _, err := s.clk.SwapOutAmtGivenIn(cacheCtx, s.TestAccs[0], pool, swapInFunded, swapOutDenom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
 	if errors.As(err, &types.InvalidAmountCalculatedError{}) {
 		// If the swap we're about to execute will not generate enough output, we skip the swap.
@@ -297,6 +300,9 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 	// We expect the returned amountIn to be roughly equal to the original swapInFunded.
 	cacheCtx, _ = s.Ctx.CacheContext()
 	fmt.Printf("swap out: %s\n", tokenOut)
+	pool, err = s.clk.GetPoolById(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+
 	amountInSwapResult, _, _, err := s.clk.SwapInAmtGivenOut(cacheCtx, s.TestAccs[0], pool, tokenOut, swapInFunded.Denom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
 	if errors.As(err, &types.InvalidAmountCalculatedError{}) {
 		// If the swap we're about to execute will not generate enough output, we skip the swap.
