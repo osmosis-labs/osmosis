@@ -660,10 +660,6 @@ func (k Keeper) updatePoolForSwap(
 	// Fixed gas consumption per swap to prevent spam
 	poolId := pool.GetId()
 	ctx.GasMeter().ConsumeGas(gammtypes.BalancerGasFeeForSwap, "cl pool swap computation")
-	pool, err := k.getPoolById(ctx, poolId)
-	if err != nil {
-		return err
-	}
 
 	// Spread factors should already be rounded up to a whole number dec, but we do this as a precaution
 	spreadFactorsRoundedUp := sdk.NewCoin(swapDetails.TokenIn.Denom, totalSpreadFactors.Ceil().TruncateInt())
@@ -672,7 +668,7 @@ func (k Keeper) updatePoolForSwap(
 	swapDetails.TokenIn.Amount = swapDetails.TokenIn.Amount.Sub(spreadFactorsRoundedUp.Amount)
 
 	// Send the input token from the user to the pool's primary address
-	err = k.bankKeeper.SendCoins(ctx, swapDetails.Sender, pool.GetAddress(), sdk.Coins{
+	err := k.bankKeeper.SendCoins(ctx, swapDetails.Sender, pool.GetAddress(), sdk.Coins{
 		swapDetails.TokenIn,
 	})
 	if err != nil {
