@@ -656,7 +656,7 @@ func (q Querier) filterConcentratedPositionLocks(ctx sdk.Context, positions []mo
 			return nil, err
 		}
 
-		syntheticLock, err := q.Keeper.lk.GetSyntheticLockupByUnderlyingLockId(ctx, lockId)
+		syntheticLock, _, err := q.Keeper.lk.GetSyntheticLockupByUnderlyingLockId(ctx, lockId)
 		if err != nil {
 			return nil, err
 		}

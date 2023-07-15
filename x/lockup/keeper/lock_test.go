@@ -1042,8 +1042,9 @@ func (s *KeeperTestSuite) AddTokensToLockForSynth() {
 		}
 		// by GetSyntheticLockupByUnderlyingLockId
 		for i := uint64(1); i <= 3; i++ {
-			synthlockByLockup, err := s.App.LockupKeeper.GetSyntheticLockupByUnderlyingLockId(s.Ctx, i)
+			synthlockByLockup, found, err := s.App.LockupKeeper.GetSyntheticLockupByUnderlyingLockId(s.Ctx, i)
 			s.Require().NoError(err)
+			s.Require().True(found)
 			s.Require().Equal(synthlockByLockup, synthlocks[(int(i)-1)*3+int(i)])
 
 		}
@@ -1503,8 +1504,9 @@ func (s *KeeperTestSuite) TestForceUnlock() {
 
 		// if it was superfluid delegated lock,
 		// confirm that we don't have associated synth lock
-		synthLock, err := s.App.LockupKeeper.GetSyntheticLockupByUnderlyingLockId(s.Ctx, lock.ID)
+		synthLock, found, err := s.App.LockupKeeper.GetSyntheticLockupByUnderlyingLockId(s.Ctx, lock.ID)
 		s.Require().NoError(err)
+		s.Require().False(found)
 		s.Require().Equal((lockuptypes.SyntheticLock{}), synthLock)
 
 		// check if lock is deleted by checking trying to get lock ID

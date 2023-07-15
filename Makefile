@@ -188,6 +188,32 @@ distclean: clean
 	rm -rf vendor/
 
 ###############################################################################
+###                           Dependency Updates                            ###
+###############################################################################
+
+VERSION := 
+MODFILES := ./go.mod ./osmoutils/go.mod ./osmomath/go.mod ./x/epochs/go.mod ./x/ibc-hooks/go.mod ./tests/cl-genesis-positions/go.mod ./tests/cl-go-client/go.mod
+# run with VERSION argument specified
+# e.g) make update-sdk-version VERSION=v0.45.1-0.20230523200430-193959b898ec
+# This will change sdk dependencyu version for go.mod in root directory + all sub-modules in this repo.
+update-sdk-version:
+	@if [ -z "$(VERSION)" ]; then \
+		echo "VERSION not set"; \
+		exit 1; \
+	fi
+	@echo "Updating version to $(VERSION)"
+	@for modfile in $(MODFILES); do \
+		if [ -e "$$modfile" ]; then \
+			sed -i '' 's|github.com/osmosis-labs/cosmos-sdk v[0-9a-z.\-]*|github.com/osmosis-labs/cosmos-sdk $(VERSION)|g' $$modfile; \
+			cd `dirname $$modfile`; \
+			go mod tidy; \
+			cd - > /dev/null; \
+		else \
+			echo "File $$modfile does not exist"; \
+		fi; \
+	done
+
+###############################################################################
 ###                                  Proto                                  ###
 ###############################################################################
 
