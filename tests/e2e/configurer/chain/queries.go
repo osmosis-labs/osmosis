@@ -424,7 +424,8 @@ func (n *NodeConfig) QueryWasmSmartObject(contract string, msg string) (resultOb
 }
 
 func (n *NodeConfig) QueryStargate(queryPath string, module string, structName string, structArguments []string) (result map[string][]interface{}, err error) {
-	cmd := []string{"osmosisd", "debug", "proto-marshalled-bytes", queryPath, module, structName}
+	newQueryPath := "\"" + queryPath + "\""
+	cmd := []string{"osmosisd", "debug", "proto-marshalled-bytes", newQueryPath, module, structName}
 	cmd = append(cmd, structArguments...)
 
 	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")

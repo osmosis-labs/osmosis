@@ -292,7 +292,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		result, err := chainANode.QueryStargate("/osmosis.gamm.v1beta1.Query/NumPools", "gamm", "QueryNumPoolsRequest", []string{})
+		result, err := chainANode.QueryStargate("/osmosis.poolmanager.v1beta1.Query/NumPools", "poolmanager", "NumPoolsRequest", []string{})
 		if err != nil {
 			errCh <- err
 		}
