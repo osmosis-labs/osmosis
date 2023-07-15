@@ -42,7 +42,7 @@ type LockupKeeper interface {
 	GetAllSyntheticLockups(ctx sdk.Context) []lockuptypes.SyntheticLock
 	CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string, unlockDuration time.Duration, isUnlocking bool) error
 	DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) error
-	GetSyntheticLockupByUnderlyingLockId(ctx sdk.Context, lockID uint64) (lockuptypes.SyntheticLock, error)
+	GetSyntheticLockupByUnderlyingLockId(ctx sdk.Context, lockID uint64) (lockuptypes.SyntheticLock, bool, error)
 }
 
 type LockupMsgServer interface {
