@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/internal/unsafeconv"
 )
 
 // We keep this object as a way to interface with the methods, even though
@@ -90,7 +91,7 @@ func (accum AccumulatorObject) MustGetPosition(name string) Record {
 // GetPosition returns the position associated with the given address. If the position does not exist, returns an error.
 func (accum AccumulatorObject) GetPosition(name string) (Record, error) {
 	position := Record{}
-	found, err := osmoutils.Get(accum.store, FormatPositionPrefixKey(accum.name, name), &position)
+	found, err := osmoutils.GetStrKey(accum.store, FormatPositionPrefixKeyS(accum.name, name), &position)
 	if err != nil {
 		return Record{}, err
 	}
@@ -378,7 +379,8 @@ func (accum AccumulatorObject) GetPositionSize(name string) (sdk.Dec, error) {
 // HasPosition returns true if a position with the given name exists,
 // false otherwise.
 func (accum AccumulatorObject) HasPosition(name string) bool {
-	containsKey := accum.store.Has(FormatPositionPrefixKey(accum.name, name))
+	key := unsafeconv.UnsafeStrToBytes(FormatPositionPrefixKeyS(accum.name, name))
+	containsKey := accum.store.Has(key)
 	return containsKey
 }
 

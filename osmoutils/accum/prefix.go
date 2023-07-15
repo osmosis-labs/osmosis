@@ -27,3 +27,7 @@ func formatAccumPrefixKey(accumName string) []byte {
 func FormatPositionPrefixKey(accumName, name string) []byte {
 	return []byte(fmt.Sprintf(positionPrefixKey+"%s"+KeySeparator+"%s", accumName, name))
 }
+
+func FormatPositionPrefixKeyS(accumName, name string) string {
+	return fmt.Sprintf(positionPrefixKey+"%s"+KeySeparator+"%s", accumName, name)
+}

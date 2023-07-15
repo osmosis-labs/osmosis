@@ -8,6 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/internal/unsafeconv"
+
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/gogo/protobuf/proto"
 )
@@ -155,6 +157,11 @@ func MustSet(storeObj store.KVStore, key []byte, value proto.Message) {
 	storeObj.Set(key, bz)
 }
 
+func MustSetStrKey(storeObj store.KVStore, keyS string, value proto.Message) {
+	key := unsafeconv.UnsafeStrToBytes(keyS)
+	MustSet(storeObj, key, value)
+}
+
 // MustGet gets key from store by mutating result
 // Panics on any error.
 func MustGet(store store.KVStore, key []byte, result proto.Message) {
@@ -208,6 +215,11 @@ func Get(store store.KVStore, key []byte, result proto.Message) (found bool, err
 		return true, err
 	}
 	return true, nil
+}
+
+func GetStrKey(store store.KVStore, keyS string, result proto.Message) (found bool, err error) {
+	key := unsafeconv.UnsafeStrToBytes(keyS)
+	return Get(store, key, result)
 }
 
 // DeleteAllKeysFromPrefix deletes all store records that contains the given prefixKey.
