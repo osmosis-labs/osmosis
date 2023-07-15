@@ -264,10 +264,7 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 			return nil, err
 		}
 
-		totalSharesRemaining, err := spreadRewardAccumulator.GetTotalShares()
-		if err != nil {
-			return nil, err
-		}
+		totalSharesRemaining := spreadRewardAccumulator.GetTotalShares()
 
 		// if there are no shares remaining, the dust is ignored. Otherwise, it is added back to the global accumulator.
 		// Total shares remaining can be zero if we claim in withdrawPosition for the last position in the pool.
