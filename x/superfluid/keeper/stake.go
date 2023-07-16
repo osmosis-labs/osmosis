@@ -469,10 +469,11 @@ func (k Keeper) unbondLock(ctx sdk.Context, underlyingLockId uint64, sender stri
 	if err != nil {
 		return 0, err
 	}
-	synthLock, err := k.lk.GetSyntheticLockupByUnderlyingLockId(ctx, underlyingLockId)
+	synthLock, _, err := k.lk.GetSyntheticLockupByUnderlyingLockId(ctx, underlyingLockId)
 	if err != nil {
 		return 0, err
 	}
+	// TODO: Use !found
 	if synthLock == (lockuptypes.SyntheticLock{}) {
 		return 0, types.ErrNotSuperfluidUsedLockup
 	}
@@ -496,10 +497,11 @@ func (k Keeper) alreadySuperfluidStaking(ctx sdk.Context, lockID uint64) bool {
 		return true
 	}
 
-	synthLock, err := k.lk.GetSyntheticLockupByUnderlyingLockId(ctx, lockID)
+	synthLock, _, err := k.lk.GetSyntheticLockupByUnderlyingLockId(ctx, lockID)
 	if err != nil {
 		return false
 	}
+	// TODO: return found
 	return synthLock != (lockuptypes.SyntheticLock{})
 }
 
