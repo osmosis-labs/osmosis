@@ -393,7 +393,7 @@ func (s *KeeperTestSuite) computeSwapAmountsInGivenOut(poolId uint64, curSqrtPri
 			if amountOut.IsZero() && isWithinDesiredBucketAfterSwap {
 				nextInitTickSqrtPrice := osmomath.BigDecFromSDKDec(s.tickToSqrtPrice(liquidityNetAmounts[i+1].TickIndex))
 
-				// We discound by two so that we do no cross any tick and remain in the same bucket.
+				// We discount by two so that we do no cross any tick and remain in the same bucket.
 				curAmountIn := math.CalcAmount1Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, false).QuoInt64(2)
 				amountOut = amountOut.Add(curAmountIn.SDKDecRoundUp())
 			}
@@ -1068,7 +1068,6 @@ func (s *KeeperTestSuite) TestSwaps_Contiguous_Initialized_TickSpacingOne() {
 		// Validate the positions
 		s.Require().NotEmpty(expectedIsPositionActiveFlags)
 		for i, expectedActivePositionIndex := range expectedIsPositionActiveFlags {
-
 			isInRange := pool.IsCurrentTickInRange(positionMeta[i].lowerTick, positionMeta[i].upperTick)
 			s.Require().Equal(expectedActivePositionIndex, isInRange, fmt.Sprintf("position %d", i))
 		}
