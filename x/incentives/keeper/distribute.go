@@ -302,6 +302,7 @@ func (k Keeper) distributeInternal(
 	// Currently, this flow is only used for CL pools. Fails if the pool is not found.
 	// Fails if the pool found is not a CL pool.
 	if gauge.DistributeTo.LockQueryType == lockuptypes.NoLock {
+		ctx.Logger().Debug("distributeInternal NoLock gauge", "module", types.ModuleName, "gaugeId", gauge.Id, "height", ctx.BlockHeight())
 		pool, err := k.GetPoolFromGaugeId(ctx, gauge.Id, gauge.DistributeTo.Duration)
 
 		if err != nil {
@@ -329,6 +330,7 @@ func (k Keeper) distributeInternal(
 			// Note: reason why we do millisecond conversion is because floats are non-deterministic.
 			emissionRate := sdk.NewDecFromInt(remainAmountPerEpoch).QuoTruncate(sdk.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(sdk.NewInt(1000)))
 
+			ctx.Logger().Debug("distributeInternal, CreateIncentiveRecord NoLock gauge", "module", types.ModuleName, "gaugeId", gauge.Id, "poolId", pool.GetId(), "remainCoinPerEpoch", remainCoinPerEpoch, "height", ctx.BlockHeight())
 			_, err := k.clk.CreateIncentive(ctx,
 				pool.GetId(),
 				k.ak.GetModuleAddress(types.ModuleName),
@@ -358,6 +360,7 @@ func (k Keeper) distributeInternal(
 
 		for _, lock := range locks {
 			distrCoins := sdk.Coins{}
+			ctx.Logger().Debug("distributeInternal, distribute to lock", "module", types.ModuleName, "gaugeId", gauge.Id, "lockId", lock.ID, "remainCons", remainCoins, "height", ctx.BlockHeight())
 			for _, coin := range remainCoins {
 				// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
 				denomLockAmt := lock.Coins.AmountOfNoDenomValidation(denom)
@@ -435,6 +438,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 		// send based on synthetic lockup coins if it's distributing to synthetic lockups
 		var err error
 		if lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom) {
+			ctx.Logger().Debug("distributeSyntheticInternal, gauge id %d, %d", "module", types.ModuleName, "gaugeId", gauge.Id, "height", ctx.BlockHeight())
 			gaugeDistributedCoins, err = k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
 		} else {
 			gaugeDistributedCoins, err = k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)

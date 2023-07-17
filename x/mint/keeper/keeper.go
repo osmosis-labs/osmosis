@@ -183,6 +183,7 @@ func (k Keeper) distributeToModule(ctx sdk.Context, recipientModule string, mint
 	if err != nil {
 		return sdk.Int{}, err
 	}
+	ctx.Logger().Info("distributeToModule", "module", types.ModuleName, "recepientModule", recipientModule, "distributionCoin", distributionCoin, "height", ctx.BlockHeight())
 	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, recipientModule, sdk.NewCoins(distributionCoin)); err != nil {
 		return sdk.Int{}, err
 	}
