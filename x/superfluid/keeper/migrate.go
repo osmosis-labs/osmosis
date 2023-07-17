@@ -108,7 +108,7 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 		// Note that lock's id is the same as the originalLockId since all shares are being migrated
 		// and old lock is deleted
 		gammLockToMigrate = preMigrationLock
-		intermediateAccount, err = k.SuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), originalLockId)
+		intermediateAccount, err = k.ForceSuperfluidUndelegate(ctx, sender.String(), originalLockId)
 		if err != nil {
 			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
 		}
