@@ -336,7 +336,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 			expectPass: true,
 		},
 		{
-			name: "Concentrated Liquidity - Many Ticks Run Out of Gas While Rebalacing, Ensure Fail User Tx",
+			name: "Concentrated Liquidity - Many Ticks Run Out of Gas While Rebalacing, Ensure Doesn't Fail User Tx",
 			params: param{
 				trades: []types.Trade{
 					{
