@@ -20,6 +20,9 @@ service Msg {
   rpc SuperfluidUndelegate(MsgSuperfluidUndelegate)
       returns (MsgSuperfluidUndelegateResponse);
 
+  rpc ForceSuperfluidUndelegate(MsgForceSuperfluidUndelegate)
+      returns (MsgForceSuperfluidUndelegateResponse);
+
   // Execute superfluid redelegation for a lockup
   // rpc SuperfluidRedelegate(MsgSuperfluidRedelegate) returns
   // (MsgSuperfluidRedelegateResponse);
@@ -70,6 +73,15 @@ message MsgSuperfluidUndelegate {
   uint64 lock_id = 2;
 }
 message MsgSuperfluidUndelegateResponse {}
+
+message MsgForceSuperfluidUndelegate {
+  option (amino.name) = "osmosis/force-superfluid-undelegate";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 lock_id = 2;
+}
+
+message MsgForceSuperfluidUndelegateResponse {}
 
 message MsgSuperfluidUnbondLock {
   option (amino.name) = "osmosis/superfluid-unbond-lock";

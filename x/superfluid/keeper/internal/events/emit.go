@@ -116,6 +116,23 @@ func newSuperfluidUndelegateEvent(lockId uint64) sdk.Event {
 	)
 }
 
+func EmitForceSuperfluidUndelegateEvent(ctx sdk.Context, lockId uint64) {
+	if ctx.EventManager() == nil {
+		return
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		newForceSuperfluidUndelegateEvent(lockId),
+	})
+}
+
+func newForceSuperfluidUndelegateEvent(lockId uint64) sdk.Event {
+	return sdk.NewEvent(
+		types.TypeEvtForceSuperfluidUndelegate,
+		sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", lockId)),
+	)
+}
+
 func EmitSuperfluidUnbondLockEvent(ctx sdk.Context, lockId uint64) {
 	if ctx.EventManager() == nil {
 		return

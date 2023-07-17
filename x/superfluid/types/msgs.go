@@ -16,6 +16,7 @@ const (
 	TypeMsgSuperfluidRedelegate                         = "superfluid_redelegate"
 	TypeMsgSuperfluidUnbondLock                         = "superfluid_unbond_underlying_lock"
 	TypeMsgSuperfluidUndeledgateAndUnbondLock           = "superfluid_undelegate_and_unbond_lock"
+	TypeMsgForceSuperfluidUndelegate                    = "force_superfluid_undelegate"
 	TypeMsgLockAndSuperfluidDelegate                    = "lock_and_superfluid_delegate"
 	TypeMsgUnPoolWhitelistedPool                        = "unpool_whitelisted_pool"
 	TypeMsgUnlockAndMigrateShares                       = "unlock_and_migrate_shares"
@@ -85,6 +86,38 @@ func (m MsgSuperfluidUndelegate) GetSignBytes() []byte {
 }
 
 func (m MsgSuperfluidUndelegate) GetSigners() []sdk.AccAddress {
+	sender, _ := sdk.AccAddressFromBech32(m.Sender)
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgForceSuperfluidUndelegate{}
+
+// NewMsgForceSuperfluidUndelegate creates a message to do force superfluid undelegation.
+func NewMsgForceSuperfluidUndelegate(sender sdk.AccAddress, lockId uint64) *MsgForceSuperfluidUndelegate {
+	return &MsgForceSuperfluidUndelegate{
+		Sender: sender.String(),
+		LockId: lockId,
+	}
+}
+
+func (m MsgForceSuperfluidUndelegate) Route() string { return RouterKey }
+func (m MsgForceSuperfluidUndelegate) Type() string  { return TypeMsgForceSuperfluidUndelegate }
+
+func (m MsgForceSuperfluidUndelegate) ValidateBasic() error {
+	if m.Sender == "" {
+		return fmt.Errorf("sender should not be an empty address")
+	}
+	if m.LockId == 0 {
+		return fmt.Errorf("lock id should be positive: %d < 0", m.LockId)
+	}
+	return nil
+}
+
+func (m MsgForceSuperfluidUndelegate) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+func (m MsgForceSuperfluidUndelegate) GetSigners() []sdk.AccAddress {
 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
 	return []sdk.AccAddress{sender}
 }

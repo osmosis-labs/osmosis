@@ -9,6 +9,7 @@ const (
 	TypeEvtSuperfluidUndelegate                         = "superfluid_undelegate"
 	TypeEvtSuperfluidUnbondLock                         = "superfluid_unbond_lock"
 	TypeEvtSuperfluidUndelegateAndUnbondLock            = "superfluid_undelegate_and_unbond_lock"
+	TypeEvtForceSuperfluidUndelegate                    = "force_superfluid_undelegate"
 	TypeEvtAddToConcentratedLiquiditySuperfluidPosition = "add_to_concentrated_liquidity_superfluid_position"
 
 	TypeEvtUnpoolId     = "unpool_pool_id"

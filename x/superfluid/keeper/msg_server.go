@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -13,6 +14,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v16/x/superfluid/keeper/internal/events"
 	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
+
+	errorsmod "cosmossdk.io/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type msgServer struct {
@@ -64,6 +68,36 @@ func (server msgServer) SuperfluidUndelegate(goCtx context.Context, msg *types.M
 		events.EmitSuperfluidUndelegateEvent(ctx, msg.LockId)
 	}
 	return &types.MsgSuperfluidUndelegateResponse{}, err
+}
+
+// ForceSuperfluidUndelegate is a method to force undelegate superfluid staked asset.
+// This method is only allowed to be called whitelisted addresses.
+func (server msgServer) ForceSuperfluidUndelegate(goCtx context.Context, msg *types.MsgForceSuperfluidUndelegate) (*types.MsgForceSuperfluidUndelegateResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// check if the sender is allowed to force undelegate
+	forceUndelegateAllowedAddresses := server.keeper.GetParams(ctx).ForceSuperfluidUndelegateAllowedAddresses
+	isSenderAllowed := false
+	for _, addr := range forceUndelegateAllowedAddresses {
+		if addr == msg.Sender {
+			isSenderAllowed = true
+			break
+		}
+	}
+
+	// return error if the sender is not allowed to force undelegate
+	if !isSenderAllowed {
+		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("msg sender (%s) is not allowed to force undeledate superfluid staking position", msg.Sender))
+	}
+
+	// perform force undelegate
+	_, err := server.keeper.ForceSuperfluidUndelegate(ctx, msg.Sender, msg.LockId)
+	if err != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	events.EmitForceSuperfluidUndelegateEvent(ctx, msg.LockId)
+	return &types.MsgForceSuperfluidUndelegateResponse{}, nil
 }
 
 // SuperfluidRedelegate is a method to redelegate superfluid staked asset into a different validator.
