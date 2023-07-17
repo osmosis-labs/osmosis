@@ -188,6 +188,32 @@ distclean: clean
 	rm -rf vendor/
 
 ###############################################################################
+###                           Dependency Updates                            ###
+###############################################################################
+
+VERSION := 
+MODFILES := ./go.mod ./osmoutils/go.mod ./osmomath/go.mod ./x/epochs/go.mod ./x/ibc-hooks/go.mod ./tests/cl-genesis-positions/go.mod ./tests/cl-go-client/go.mod
+# run with VERSION argument specified
+# e.g) make update-sdk-version VERSION=v0.45.1-0.20230523200430-193959b898ec
+# This will change sdk dependencyu version for go.mod in root directory + all sub-modules in this repo.
+update-sdk-version:
+	@if [ -z "$(VERSION)" ]; then \
+		echo "VERSION not set"; \
+		exit 1; \
+	fi
+	@echo "Updating version to $(VERSION)"
+	@for modfile in $(MODFILES); do \
+		if [ -e "$$modfile" ]; then \
+			sed -i '' 's|github.com/osmosis-labs/cosmos-sdk v[0-9a-z.\-]*|github.com/osmosis-labs/cosmos-sdk $(VERSION)|g' $$modfile; \
+			cd `dirname $$modfile`; \
+			go mod tidy; \
+			cd - > /dev/null; \
+		else \
+			echo "File $$modfile does not exist"; \
+		fi; \
+	done
+
+###############################################################################
 ###                                  Proto                                  ###
 ###############################################################################
 
@@ -470,6 +496,23 @@ localnet-cl-external-incentive:
 # in the script.
 localnet-cl-create-pool:
 	go run tests/cl-go-client/main.go --operation 4
+
+# claims spread rewards for a random account for a random
+# subset of positions.
+localnet-cl-claim-spread-rewards:
+	go run tests/cl-go-client/main.go --operation 5
+
+# claims incentives for a random account for a random
+# subset of positions.
+localnet-cl-claim-incentives:
+	go run tests/cl-go-client/main.go --operation 6
+
+localnet-cl-add-to-positions:
+	go run tests/cl-go-client/main.go --operation 7
+
+localnet-cl-withdraw-positions:
+	go run tests/cl-go-client/main.go --operation 8
+
 
 # does both of localnet-cl-create-positions and localnet-cl-small-swap
 localnet-cl-positions-small-swaps: localnet-cl-create-positions localnet-cl-small-swap

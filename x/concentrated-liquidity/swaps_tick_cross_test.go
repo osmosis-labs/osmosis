@@ -28,6 +28,11 @@ const (
 // min tick                                                      max tick
 var (
 	defaultTickSpacingsAway = []uint64{4, 3, 2, 1}
+
+	// this is chosen arbitrarily to allow tests to pass. Thee tests in this suite do not
+	// intend to validate the correctness of the slippage bound. As a result, it is irrelevant here
+	// and we can choose any value that works.
+	defaultTokenInMaxAmount = sdk.MustNewDecFromStr("707106781186547528576662335").TruncateInt()
 )
 
 // CreatePositionTickSpacingsFromCurrentTick creates a position with the passed in tick spacings away from the current tick.
@@ -147,6 +152,33 @@ func (s *KeeperTestSuite) swapOneForZeroRight(poolId uint64, amount sdk.Coin) {
 
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(amount))
 	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, amount, pool.GetToken0(), sdk.ZeroInt(), sdk.ZeroDec())
+	s.Require().NoError(err)
+}
+
+// swapInGivenOutZeroForOneLeft swaps in given out in the left (zfo) direction of the swap.
+// Asserts that no error is returned.
+// When swapping in given out, we provide token to swap out but eventually get charged token in.
+// Therefore we must also estimate the token in amount and pre-fund the account with it.
+func (s *KeeperTestSuite) swapInGivenOutZeroForOneLeft(poolId uint64, tokenOut sdk.Coin, estimatedTokenIn sdk.Dec) {
+	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	tokenInDenom := pool.GetToken0()
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(tokenInDenom, estimatedTokenIn.Ceil().TruncateInt())))
+	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, tokenInDenom, defaultTokenInMaxAmount, tokenOut, sdk.ZeroDec())
+	s.Require().NoError(err)
+}
+
+// swapInGivenOutOneForZeroRight swaps in given out in the right (ofz) direction of the swap.
+// When swapping in given out, we provide token to swap out but eventually get charged token in.
+// Therefore we must also estimate the token in amount and pre-fund the account with it.
+func (s *KeeperTestSuite) swapInGivenOutOneForZeroRight(poolId uint64, tokenOut sdk.Coin, estimatedTokenIn sdk.Dec) {
+	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	tokenInDenom := pool.GetToken1()
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(tokenInDenom, estimatedTokenIn.Ceil().TruncateInt())))
+	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, tokenInDenom, defaultTokenInMaxAmount, tokenOut, sdk.ZeroDec())
 	s.Require().NoError(err)
 }
 
@@ -302,6 +334,94 @@ func (s *KeeperTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice osmomat
 		}
 	}
 	return amountIn, currentLiquidity, curSqrtPrice
+}
+
+func (s *KeeperTestSuite) computeSwapAmountsInGivenOut(poolId uint64, curSqrtPrice osmomath.BigDec, expectedTickToSwapTo int64, isZeroForOne bool, shouldStayWithinTheSameBucket bool) (sdk.Dec, osmomath.BigDec, osmomath.BigDec) {
+	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	originalCurrentTick := pool.GetCurrentTick()
+
+	tokenOutDenom := pool.GetToken0()
+	if !isZeroForOne {
+		tokenOutDenom = pool.GetToken1()
+	}
+
+	// Get liquidity net amounts for tokenIn estimation.
+	liquidityNetAmounts, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityNetInDirection(s.Ctx, poolId, tokenOutDenom, sdk.Int{}, sdk.Int{})
+	s.Require().NoError(err)
+
+	currentTick := originalCurrentTick
+	// compute current sqrt price if not provided
+	if curSqrtPrice.IsNil() {
+		curSqrtPrice = osmomath.BigDecFromSDKDec(s.tickToSqrtPrice(currentTick))
+	}
+
+	// Start from current pool liquidity and zero amount in.
+	currentLiquidity := osmomath.BigDecFromSDKDec(pool.GetLiquidity())
+	amountOut := sdk.ZeroDec()
+
+	for i, liquidityNetEntry := range liquidityNetAmounts {
+		// Initialize the next initialized tick and its sqrt price.
+		nextInitializedTick := liquidityNetEntry.TickIndex
+		nextInitTickSqrtPrice := osmomath.BigDecFromSDKDec(s.tickToSqrtPrice(nextInitializedTick))
+
+		// Handle swap depending on the direction.
+		// Left (zero for one) or right (one for zero)
+		var isWithinDesiredBucketAfterSwap bool
+		if isZeroForOne {
+			// Round up so that we cross the tick by default.
+			curAmountOut := math.CalcAmount1Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, false)
+
+			amountOut = amountOut.Add(curAmountOut.SDKDec())
+
+			// The tick should be crossed if currentTick > expectedTickToSwapTo, unless the intention
+			// is to stay within the same bucket.
+			shouldCrossTick := currentTick > expectedTickToSwapTo && !shouldStayWithinTheSameBucket
+			if shouldCrossTick {
+				// Runs regular tick crossing logic.
+				curSqrtPrice = osmomath.BigDecFromSDKDec(s.tickToSqrtPrice(nextInitializedTick))
+				currentLiquidity = currentLiquidity.Sub(osmomath.BigDecFromSDKDec(liquidityNetEntry.LiquidityNet))
+				currentTick = nextInitializedTick - 1
+			}
+
+			// Determine if we've reached the desired bucket.
+			isWithinDesiredBucketAfterSwap = currentTick == expectedTickToSwapTo || shouldStayWithinTheSameBucket
+
+			// This in an edge case when going left in second swap after previously going right
+			// and indetending to stay within the same bucket.
+			if amountOut.IsZero() && isWithinDesiredBucketAfterSwap {
+				nextInitTickSqrtPrice := osmomath.BigDecFromSDKDec(s.tickToSqrtPrice(liquidityNetAmounts[i+1].TickIndex))
+
+				// We discound by two so that we do no cross any tick and remain in the same bucket.
+				curAmountIn := math.CalcAmount1Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, false).QuoInt64(2)
+				amountOut = amountOut.Add(curAmountIn.SDKDecRoundUp())
+			}
+		} else {
+			// Round up so that we cross the tick by default.
+			curAmountOut := math.CalcAmount0Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, false)
+			amountOut = amountOut.Add(curAmountOut.SDKDec())
+
+			// The tick should be crossed if currentTick <= expectedTickToSwapTo, unless the intention
+			// is to stay within the same bucket.
+			shouldCrossTick := currentTick <= expectedTickToSwapTo && !shouldStayWithinTheSameBucket
+			if shouldCrossTick {
+				// Runs regular tick crossing logic.
+				curSqrtPrice = osmomath.BigDecFromSDKDec(s.tickToSqrtPrice(nextInitializedTick))
+				currentLiquidity = currentLiquidity.Add(osmomath.BigDecFromSDKDec(liquidityNetEntry.LiquidityNet))
+				currentTick = nextInitializedTick
+			}
+
+			// Determine if we've reached the desired bucket.
+			isWithinDesiredBucketAfterSwap = currentTick == expectedTickToSwapTo || shouldStayWithinTheSameBucket
+		}
+
+		// Stop if the desired bucket is activated.
+		if isWithinDesiredBucketAfterSwap {
+			break
+		}
+	}
+	return amountOut, currentLiquidity, curSqrtPrice
 }
 
 // TestSwapOutGivenIn_Tick_Initialization_And_Crossing tests that ticks are initialized and updated correctly
@@ -868,11 +988,12 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 	})
 }
 
-// TestSwapOutGivenIn_Contiguous_Initialized_TickSpacingOne tests swapping multiple times in various directions
+// TestSwaps_Contiguous_Initialized_TickSpacingOne tests swapping multiple times in various directions
 // when there are contiguous ticks initialized on a swap range in a pool with tick spacing of 1.
 // For position layout, see diagram above the definition of defaultTickSpacingsAway variable.
 // For specific test vectors, follow the table-driven names below.
-func (s *KeeperTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickSpacingOne() {
+// It uses both swap in given out and swap out given in methods.
+func (s *KeeperTestSuite) TestSwaps_Contiguous_Initialized_TickSpacingOne() {
 	// defines an individual test case
 	type continugousTestCase struct {
 		// This defines how many ticks away from current the swap should reach
@@ -935,59 +1056,73 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickSpacingO
 				nextTickToReachInCompute = nextTickToReachInCompute + 1
 			}
 
-			// Note: 50% is chosen arbitrarily to ensure that we stay within a bucket.
 			return nextTickToReachInCompute, sdk.NewDecWithPrec(5, 1)
 		}
 
 		return expectedSwapEndTick, sdk.OneDec()
 	}
 
-	s.Run("tick spacing one, contiguosly initialized", func() {
-		testcases := map[string]continugousTestCase{
-			"zero for one, swap to the middle tick to the left of the original current, then swap again to the leftmost tick": {
-				swapEndTicksAwayFromOriginalCurrent: []int64{-3, -4},
-				isPositionActiveFlag:                []bool{true, false, false, false},
-			},
-			"zero for one, swap to the middle tick to the left of the original current, then swap again to the rightmost tick smaller than the original current": {
-				swapEndTicksAwayFromOriginalCurrent: []int64{-3, -1},
-				isPositionActiveFlag:                []bool{true, true, true, true},
-			},
-			"zero for one, swap to the middle tick to the left of the original current and swap again but stay within the same initialized tick": {
-				swapEndTicksAwayFromOriginalCurrent: []int64{-3, -3},
-				isPositionActiveFlag:                []bool{true, true, false, false},
-			},
-			"zero for one, swap to the middle tick to the left of the original current and then swap all the way back to the right of the original current tick": {
-				swapEndTicksAwayFromOriginalCurrent: []int64{-3, 1},
-				isPositionActiveFlag:                []bool{true, true, true, false},
-			},
-			"zero for one, swap beyond the leftmost tick": {
-				swapEndTicksAwayFromOriginalCurrent: []int64{-3, types.MinInitializedTick},
-				isPositionActiveFlag:                []bool{false, false, false, false},
-			},
+	validateActivePositions := func(poolId uint64, positionMeta []positionMeta, expectedIsPositionActiveFlags []bool) {
+		// Refetch pool
+		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+		s.Require().NoError(err)
 
-			"one for zero, swap to the middle tick to the left of the original current, then swap again to the leftmost tick": {
-				swapEndTicksAwayFromOriginalCurrent: []int64{2, 3},
-				isPositionActiveFlag:                []bool{true, false, false, false},
-			},
-			"one for zero, swap to the middle tick to the left of the original current, then swap again to the rightmost tick smaller than the original current": {
-				swapEndTicksAwayFromOriginalCurrent: []int64{2, 1},
-				isPositionActiveFlag:                []bool{true, true, true, false},
-			},
-			"one for zero, swap to the middle tick to the left of the original current and swap again but stay within the same initialized tick": {
-				swapEndTicksAwayFromOriginalCurrent: []int64{2, 2},
-				isOneForZeroWithinSameTick:          true,
-				isPositionActiveFlag:                []bool{true, true, false, false},
-			},
-			"one for zero, swap to the middle tick to the left of the original current and then swap all the way back to the right of the original current tick": {
-				swapEndTicksAwayFromOriginalCurrent: []int64{2, -2},
-				isPositionActiveFlag:                []bool{true, true, true, false},
-			},
-			"one for zero, swap beyond the rightmost tick": {
-				swapEndTicksAwayFromOriginalCurrent: []int64{2, types.MaxTick},
-				isPositionActiveFlag:                []bool{false, false, false, false},
-			},
+		// Validate the positions
+		s.Require().NotEmpty(expectedIsPositionActiveFlags)
+		for i, expectedActivePositionIndex := range expectedIsPositionActiveFlags {
+
+			isInRange := pool.IsCurrentTickInRange(positionMeta[i].lowerTick, positionMeta[i].upperTick)
+			s.Require().Equal(expectedActivePositionIndex, isInRange, fmt.Sprintf("position %d", i))
 		}
+	}
 
+	// Note, that we use the same test cases for both kinds of swaps.
+	testcases := map[string]continugousTestCase{
+		"zero for one, swap to the middle tick to the left of the original current, then swap again to the leftmost tick": {
+			swapEndTicksAwayFromOriginalCurrent: []int64{-3, -4},
+			isPositionActiveFlag:                []bool{true, false, false, false},
+		},
+		"zero for one, swap to the middle tick to the left of the original current, then swap again to the rightmost tick smaller than the original current": {
+			swapEndTicksAwayFromOriginalCurrent: []int64{-3, -1},
+			isPositionActiveFlag:                []bool{true, true, true, true},
+		},
+		"zero for one, swap to the middle tick to the left of the original current and swap again but stay within the same initialized tick": {
+			swapEndTicksAwayFromOriginalCurrent: []int64{-3, -3},
+			isPositionActiveFlag:                []bool{true, true, false, false},
+		},
+		"zero for one, swap to the middle tick to the left of the original current and then swap all the way back to the right of the original current tick": {
+			swapEndTicksAwayFromOriginalCurrent: []int64{-3, 1},
+			isPositionActiveFlag:                []bool{true, true, true, false},
+		},
+		"zero for one, swap beyond the leftmost tick": {
+			swapEndTicksAwayFromOriginalCurrent: []int64{-3, types.MinInitializedTick},
+			isPositionActiveFlag:                []bool{false, false, false, false},
+		},
+
+		"one for zero, swap to the middle tick to the left of the original current, then swap again to the leftmost tick": {
+			swapEndTicksAwayFromOriginalCurrent: []int64{2, 3},
+			isPositionActiveFlag:                []bool{true, false, false, false},
+		},
+		"one for zero, swap to the middle tick to the left of the original current, then swap again to the rightmost tick smaller than the original current": {
+			swapEndTicksAwayFromOriginalCurrent: []int64{2, 1},
+			isPositionActiveFlag:                []bool{true, true, true, false},
+		},
+		"one for zero, swap to the middle tick to the left of the original current and swap again but stay within the same initialized tick": {
+			swapEndTicksAwayFromOriginalCurrent: []int64{2, 2},
+			isOneForZeroWithinSameTick:          true,
+			isPositionActiveFlag:                []bool{true, true, false, false},
+		},
+		"one for zero, swap to the middle tick to the left of the original current and then swap all the way back to the right of the original current tick": {
+			swapEndTicksAwayFromOriginalCurrent: []int64{2, -2},
+			isPositionActiveFlag:                []bool{true, true, true, false},
+		},
+		"one for zero, swap beyond the rightmost tick": {
+			swapEndTicksAwayFromOriginalCurrent: []int64{2, types.MaxTick},
+			isPositionActiveFlag:                []bool{false, false, false, false},
+		},
+	}
+
+	s.Run("swap out given in", func() {
 		for name, tc := range testcases {
 			s.Run(name, func() {
 				s.SetupTest()
@@ -1046,17 +1181,117 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Contiguous_Initialized_TickSpacingO
 					curTick = expectedSwapEndTick
 				}
 
-				// Refetch pool
-				pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+				// Validate active positions.
+				validateActivePositions(poolId, positionMeta, tc.isPositionActiveFlag)
+			})
+		}
+	})
+
+	s.Run("swap in given out", func() {
+		// estimateAmountInFromRounding is a helper to estimate the impact of amountOut rounding on the amountIn and next sqrt price.
+		// This is necessary for correct amount in estimation to pre-fund the swapper account to. It is also required for updating
+		// the "current sqrt price" for the next swap in the sequence as defined by our test configuration.
+		estimateAmountInFromRounding := func(isZeroForOne bool, nextSqrtPrice osmomath.BigDec, liq osmomath.BigDec, amountOutDifference osmomath.BigDec) (sdk.Dec, osmomath.BigDec) {
+			if !liq.IsPositive() {
+				return sdk.ZeroDec(), nextSqrtPrice
+			}
+
+			if isZeroForOne {
+				// Round down since we want to overestimate the change in sqrt price stemming from the amount out going right-to-left
+				// from the current sqrt price.  This overestimated value is then used to calculate amount in charged on the user.
+				// Since amount in is overestimated, this done in favor of the pool.
+				updatedNextCurSqrtPrice := math.GetNextSqrtPriceFromAmount1OutRoundingDown(nextSqrtPrice, liq, amountOutDifference)
+				// Round up since we want to overestimate the amount in in favor of the pool.
+				return math.CalcAmount0Delta(liq, updatedNextCurSqrtPrice, nextSqrtPrice, true).SDKDecRoundUp(), updatedNextCurSqrtPrice
+			}
+
+			// Round up since we want to overestimate the change in sqrt price stemming from the amount out going left-to-right
+			// from the current sqrt price. This overestimated value is then used to calculate amount in charged on the user.
+			// Since amount in is overestimated, this is done in favor of the pool.
+			updatedNextCurSqrtPrice := math.GetNextSqrtPriceFromAmount0OutRoundingUp(nextSqrtPrice, liq, amountOutDifference)
+			// Round up since we want to overestimate the amount in in favor of the pool.
+			return math.CalcAmount1Delta(liq, updatedNextCurSqrtPrice, nextSqrtPrice, true).SDKDecRoundUp(), updatedNextCurSqrtPrice
+		}
+
+		for name, tc := range testcases {
+			s.Run(name, func() {
+				s.SetupTest()
+
+				poolId, positionMeta := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
+				s.Require().Equal(len(tc.isPositionActiveFlag), len(positionMeta))
+
+				// Refetch pool.
+				pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 				s.Require().NoError(err)
 
-				// Validate the positions
-				s.Require().NotEmpty(tc.isPositionActiveFlag)
-				for i, expectedActivePositionIndex := range tc.isPositionActiveFlag {
+				// Compute expected ticks from test case configuration.
+				expectedSwapEndTicks := computeExpectedTicks(poolId, tc)
 
-					isInRange := pool.IsCurrentTickInRange(positionMeta[i].lowerTick, positionMeta[i].upperTick)
-					s.Require().Equal(expectedActivePositionIndex, isInRange, fmt.Sprintf("position %d", i))
+				// Determine if swaps within the same tick are expected.
+				// This is so that we discount the last swap by 50% to make
+				// sure to remain within the same tick and never cross.
+				isWithinTheSameTick := osmoutils.ContainsDuplicate(expectedSwapEndTicks)
+
+				// Perform the swaps
+				curSqrtPrice := osmomath.BigDec{}
+				curTick := pool.GetCurrentTick()
+				// For every expected, swap, estimate the amount in needed
+				// to reach it and run validations after the swap.
+				for i, expectedSwapEndTick := range expectedSwapEndTicks {
+					// Determine if we are swapping zero for one or one for zero.
+					isZeroForOne := expectedSwapEndTick <= curTick && !tc.isOneForZeroWithinSameTick
+
+					// This is used to control the computations for the last swap when swapping
+					// See definition of computeNextTickToReachAndMultiplier for more details.
+					shouldStayWithinTheSameTickInCompute := isWithinTheSameTick && i == len(expectedSwapEndTicks)-1
+					nextTickToReachInCompute, withinTheSameTickDiscount := computeNextTickToReachAndMultiplier(isZeroForOne, expectedSwapEndTick, shouldStayWithinTheSameTickInCompute)
+
+					tokenInDenom := pool.GetToken0()
+					if !isZeroForOne {
+						tokenInDenom = pool.GetToken1()
+					}
+
+					// Estimate the amountOut necessary to reach the expected swap end tick, the expected liquidity and
+					// the "current sqrt price" for next swap.
+					amountOut, expectedLiquidity, nextSqrtPrice := s.computeSwapAmountsInGivenOut(poolId, curSqrtPrice, nextTickToReachInCompute, isZeroForOne, shouldStayWithinTheSameTickInCompute)
+					amountIn, _, _ := s.computeSwapAmounts(poolId, curSqrtPrice, nextTickToReachInCompute, isZeroForOne, shouldStayWithinTheSameTickInCompute)
+
+					s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(tokenInDenom, amountIn.Ceil().TruncateInt().Add(sdk.OneInt()))))
+
+					// Discount the amount in by 50% if we are swapping within the same tick.
+					amountOutRoundedUp := amountOut.Mul(withinTheSameTickDiscount).Ceil().TruncateInt()
+
+					// Notice how we round the amount out up above. This causes issues in one for zero direction as this rounding
+					// makes us go further than expected with swap out given in. To compensate for this, we estimate the
+					// impact of the rounding to correctly update the "curSqrtPrice" at the end of this loop for
+					// properly estimating the next swap. This also allows us to precisely calculate by how many tokens in we need
+					// to pre-fund the swapper account.
+					amountOutDifference := amountOutRoundedUp.ToDec().Sub(amountOut)
+					amountInFromRounding, updatedNextCurSqrtPrice := estimateAmountInFromRounding(isZeroForOne, nextSqrtPrice, expectedLiquidity, osmomath.BigDecFromSDKDec(amountOutDifference))
+					amountInToPreFund := amountIn.Add(amountInFromRounding)
+
+					// Perform the swap in the desired direction.
+					if isZeroForOne {
+						amountOutCoin := sdk.NewCoin(pool.GetToken1(), amountOutRoundedUp)
+						s.swapInGivenOutZeroForOneLeft(poolId, amountOutCoin, amountInToPreFund)
+					} else {
+						// s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(tokenInDenom, sdk.NewInt(amountInFromRounding.Ceil().TruncateInt64()))))
+
+						amountInCoin := sdk.NewCoin(pool.GetToken0(), amountOutRoundedUp)
+						s.swapInGivenOutOneForZeroRight(poolId, amountInCoin, amountInToPreFund)
+					}
+
+					// Validate that current tick and current liquidity are as expected.
+					s.assertPoolTickEquals(poolId, expectedSwapEndTick)
+					s.assertPoolLiquidityEquals(poolId, expectedLiquidity.SDKDec())
+
+					// Update the current sqrt price and tick for next swap.
+					curSqrtPrice = updatedNextCurSqrtPrice
+					curTick = expectedSwapEndTick
 				}
+
+				// Validate active positions.
+				validateActivePositions(poolId, positionMeta, tc.isPositionActiveFlag)
 			})
 		}
 	})

@@ -139,8 +139,9 @@ func (s *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 	})
 
 	expectedSynthLock := *synthLock
-	actualSynthLock, err := s.App.LockupKeeper.GetSyntheticLockupByUnderlyingLockId(s.Ctx, 1)
+	actualSynthLock, found, err := s.App.LockupKeeper.GetSyntheticLockupByUnderlyingLockId(s.Ctx, 1)
 	s.Require().NoError(err)
+	s.Require().True(found)
 	s.Require().Equal(expectedSynthLock, actualSynthLock)
 
 	allSynthLocks := s.App.LockupKeeper.GetAllSyntheticLockups(s.Ctx)
