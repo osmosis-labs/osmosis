@@ -282,18 +282,41 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, err
 	}
 
+	contractAddr := sdk.MustAccAddressFromBech32(cosmwasmPool.GetContractAddress())
+
+	// Send token in max amount from sender to the pool
+	// We do this because sudo message does not support sending coins from the sender
+	// And we need to send the max amount because we do not know how much the contract will use.
+	if err := k.bankKeeper.SendCoins(ctx, sender, contractAddr, sdk.NewCoins(sdk.NewCoin(tokenInDenom, tokenInMaxAmount))); err != nil {
+		return sdk.Int{}, err
+	}
+
+	// Note that the contract sends the token out back to the sender after the swap
+	// As a result, we do not need to worry about sending token out here.
 	request := msg.NewSwapExactAmountOutSudoMsg(sender.String(), tokenInDenom, tokenOut, tokenInMaxAmount, swapFee)
 	response, err := cosmwasm.Sudo[msg.SwapExactAmountOutSudoMsg, msg.SwapExactAmountOutSudoMsgResponse](ctx, k.contractKeeper, cosmwasmPool.GetContractAddress(), request)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	// Send token in from sender to the pool
-	// We do this because sudo message does not support sending coins from the sender
-	// However, note that the contract sends the token back to the sender after the swap
-	// As a result, we do not need to worry about sending it back here.
-	if err := k.bankKeeper.SendCoins(ctx, sender, sdk.MustAccAddressFromBech32(cosmwasmPool.GetContractAddress()), sdk.NewCoins(sdk.NewCoin(tokenInDenom, response.TokenInAmount))); err != nil {
-		return sdk.Int{}, err
+	tokenInExcessiveAmount := tokenInMaxAmount.Sub(response.TokenInAmount)
+
+	// Do not send any coins if excessive amount is zero
+
+	// required amount should be less than or equal to max amount
+	if tokenInExcessiveAmount.IsNegative() {
+		return sdk.Int{}, types.NegativeExcessiveTokenInAmountError{
+			TokenInMaxAmount:       tokenInMaxAmount,
+			TokenInRequiredAmount:  response.TokenInAmount,
+			TokenInExcessiveAmount: tokenInExcessiveAmount,
+		}
+	}
+
+	// Send excessibe token in from pool back to sender
+	if tokenInExcessiveAmount.IsPositive() {
+		if err := k.bankKeeper.SendCoins(ctx, contractAddr, sender, sdk.NewCoins(sdk.NewCoin(tokenInDenom, tokenInExcessiveAmount))); err != nil {
+			return sdk.Int{}, err
+		}
 	}
 
 	return response.TokenInAmount, nil
