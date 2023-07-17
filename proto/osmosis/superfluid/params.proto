@@ -17,4 +17,10 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
+
+  // force_superfluid_undelegate_allowed_addresses is a list of addresses that
+  // are allowed to force undelegate superfluid staking positions.
+  repeated string force_superfluid_undelegate_allowed_addresses = 2
+      [ (gogoproto.moretags) =
+            "yaml:\"force_superfluid_undelegate_allowed_addresses\"" ];
 }
