@@ -901,7 +901,7 @@ func (s *KeeperTestSuite) setUpPools() {
 	s.Require().NoError(err)
 }
 
-func (s *KeeperTestSuite) CreateCLPoolAndArbRouteWithManyTicks() {
+func (s *KeeperTestSuite) CreateCLPoolAndArbRouteWith_28000_Ticks() {
 	// Create the CL pool
 	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[2], "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", "uosmo", 100, sdk.NewDecWithPrec(2, 3))
 	fundCoins := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000000000000000)), sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", sdk.NewInt(1000000000000000000)))

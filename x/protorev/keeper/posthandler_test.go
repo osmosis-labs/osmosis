@@ -435,7 +435,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 			}
 
 			if strings.Contains(tc.name, "Concentrated Liquidity") {
-				s.CreateCLPoolAndArbRouteWithManyTicks()
+				s.CreateCLPoolAndArbRouteWith_28000_Ticks()
 			}
 
 			protoRevDecorator := keeper.NewProtoRevDecorator(*s.App.ProtoRevKeeper)
