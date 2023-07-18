@@ -15,33 +15,33 @@ option go_package = "github.com/osmosis-labs/osmosis/v17/x/protorev/types";
 service Query {
   // Params queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/osmosis/v14/protorev/params";
+    option (google.api.http).get = "/osmosis/protorev/params";
   }
 
   // GetProtoRevNumberOfTrades queries the number of arbitrage trades the module
   // has executed
   rpc GetProtoRevNumberOfTrades(QueryGetProtoRevNumberOfTradesRequest)
       returns (QueryGetProtoRevNumberOfTradesResponse) {
-    option (google.api.http).get = "/osmosis/v14/protorev/number_of_trades";
+    option (google.api.http).get = "/osmosis/protorev/number_of_trades";
   }
 
   // GetProtoRevProfitsByDenom queries the profits of the module by denom
   rpc GetProtoRevProfitsByDenom(QueryGetProtoRevProfitsByDenomRequest)
       returns (QueryGetProtoRevProfitsByDenomResponse) {
-    option (google.api.http).get = "/osmosis/v14/protorev/profits_by_denom";
+    option (google.api.http).get = "/osmosis/protorev/profits_by_denom";
   }
 
   // GetProtoRevAllProfits queries all of the profits from the module
   rpc GetProtoRevAllProfits(QueryGetProtoRevAllProfitsRequest)
       returns (QueryGetProtoRevAllProfitsResponse) {
-    option (google.api.http).get = "/osmosis/v14/protorev/all_profits";
+    option (google.api.http).get = "/osmosis/protorev/all_profits";
   }
 
   // GetProtoRevStatisticsByRoute queries the number of arbitrages and profits
   // that have been executed for a given route
   rpc GetProtoRevStatisticsByRoute(QueryGetProtoRevStatisticsByRouteRequest)
       returns (QueryGetProtoRevStatisticsByRouteResponse) {
-    option (google.api.http).get = "/osmosis/v14/protorev/statistics_by_route";
+    option (google.api.http).get = "/osmosis/protorev/statistics_by_route";
   }
 
   // GetProtoRevAllRouteStatistics queries all of routes that the module has
@@ -49,42 +49,40 @@ service Query {
   // accumulated for each route
   rpc GetProtoRevAllRouteStatistics(QueryGetProtoRevAllRouteStatisticsRequest)
       returns (QueryGetProtoRevAllRouteStatisticsResponse) {
-    option (google.api.http).get = "/osmosis/v14/protorev/all_route_statistics";
+    option (google.api.http).get = "/osmosis/protorev/all_route_statistics";
   }
 
   // GetProtoRevTokenPairArbRoutes queries all of the hot routes that the module
   // is currently arbitraging
   rpc GetProtoRevTokenPairArbRoutes(QueryGetProtoRevTokenPairArbRoutesRequest)
       returns (QueryGetProtoRevTokenPairArbRoutesResponse) {
-    option (google.api.http).get =
-        "/osmosis/v14/protorev/token_pair_arb_routes";
+    option (google.api.http).get = "/osmosis/protorev/token_pair_arb_routes";
   }
 
   // GetProtoRevAdminAccount queries the admin account of the module
   rpc GetProtoRevAdminAccount(QueryGetProtoRevAdminAccountRequest)
       returns (QueryGetProtoRevAdminAccountResponse) {
-    option (google.api.http).get = "/osmosis/v14/protorev/admin_account";
+    option (google.api.http).get = "/osmosis/protorev/admin_account";
   }
 
   // GetProtoRevDeveloperAccount queries the developer account of the module
   rpc GetProtoRevDeveloperAccount(QueryGetProtoRevDeveloperAccountRequest)
       returns (QueryGetProtoRevDeveloperAccountResponse) {
-    option (google.api.http).get = "/osmosis/v14/protorev/developer_account";
+    option (google.api.http).get = "/osmosis/protorev/developer_account";
   }
 
   // GetProtoRevPoolWeights queries the weights of each pool type currently
   // being used by the module
   rpc GetProtoRevPoolWeights(QueryGetProtoRevPoolWeightsRequest)
       returns (QueryGetProtoRevPoolWeightsResponse) {
-    option (google.api.http).get = "/osmosis/v14/protorev/pool_weights";
+    option (google.api.http).get = "/osmosis/protorev/pool_weights";
   }
 
   // GetProtoRevMaxPoolPointsPerTx queries the maximum number of pool points
   // that can be consumed per transaction
   rpc GetProtoRevMaxPoolPointsPerTx(QueryGetProtoRevMaxPoolPointsPerTxRequest)
       returns (QueryGetProtoRevMaxPoolPointsPerTxResponse) {
-    option (google.api.http).get =
-        "/osmosis/v14/protorev/max_pool_points_per_tx";
+    option (google.api.http).get = "/osmosis/protorev/max_pool_points_per_tx";
   }
 
   // GetProtoRevMaxPoolPointsPerBlock queries the maximum number of pool points
@@ -93,27 +91,27 @@ service Query {
       QueryGetProtoRevMaxPoolPointsPerBlockRequest)
       returns (QueryGetProtoRevMaxPoolPointsPerBlockResponse) {
     option (google.api.http).get =
-        "/osmosis/v14/protorev/max_pool_points_per_block";
+        "/osmosis/protorev/max_pool_points_per_block";
   }
 
   // GetProtoRevBaseDenoms queries the base denoms that the module is currently
   // utilizing for arbitrage
   rpc GetProtoRevBaseDenoms(QueryGetProtoRevBaseDenomsRequest)
       returns (QueryGetProtoRevBaseDenomsResponse) {
-    option (google.api.http).get = "/osmosis/v14/protorev/base_denoms";
+    option (google.api.http).get = "/osmosis/protorev/base_denoms";
   }
 
   // GetProtoRevEnabled queries whether the module is enabled or not
   rpc GetProtoRevEnabled(QueryGetProtoRevEnabledRequest)
       returns (QueryGetProtoRevEnabledResponse) {
-    option (google.api.http).get = "/osmosis/v14/protorev/enabled";
+    option (google.api.http).get = "/osmosis/protorev/enabled";
   }
 
   // GetProtoRevPool queries the pool id used via the highest liquidity method
   // for arbitrage route building given a pair of denominations
   rpc GetProtoRevPool(QueryGetProtoRevPoolRequest)
       returns (QueryGetProtoRevPoolResponse) {
-    option (google.api.http).get = "/osmosis/v14/protorev/pool";
+    option (google.api.http).get = "/osmosis/protorev/pool";
   }
 }
 
