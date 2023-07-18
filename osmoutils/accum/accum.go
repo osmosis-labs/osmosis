@@ -65,19 +65,19 @@ func MakeAccumulatorWithValueAndShare(accumStore store.KVStore, accumName string
 }
 
 // Gets the current value of the accumulator corresponding to accumName in accumStore
-func GetAccumulator(accumStore store.KVStore, accumName string) (AccumulatorObject, error) {
+func GetAccumulator(accumStore store.KVStore, accumName string) (*AccumulatorObject, error) {
 	accumContent := AccumulatorContent{}
 	found, err := osmoutils.Get(accumStore, formatAccumPrefixKey(accumName), &accumContent)
 	if err != nil {
-		return AccumulatorObject{}, err
+		return &AccumulatorObject{}, err
 	}
 	if !found {
-		return AccumulatorObject{}, AccumDoesNotExistError{AccumName: accumName}
+		return &AccumulatorObject{}, AccumDoesNotExistError{AccumName: accumName}
 	}
 
 	accum := AccumulatorObject{accumStore, accumName, accumContent.AccumValue, accumContent.TotalShares}
 
-	return accum, nil
+	return &accum, nil
 }
 
 // MustGetPosition returns the position associated with the given address. No errors in position retrieval are allowed.
@@ -146,7 +146,7 @@ func (accum *AccumulatorObject) NewPositionIntervalAccumulation(name string, num
 		return err
 	}
 
-	initOrUpdatePosition(*accum, intervalAccumulationPerShare, name, numShareUnits, sdk.NewDecCoins(), options)
+	initOrUpdatePosition(accum, intervalAccumulationPerShare, name, numShareUnits, sdk.NewDecCoins(), options)
 
 	// Update total shares in accum (re-fetch accum from state to ensure it's up to date)
 	updatedAccum, err := GetAccumulator(accum.store, accum.name)
@@ -199,13 +199,13 @@ func (accum *AccumulatorObject) AddToPositionIntervalAccumulation(name string, n
 	}
 
 	// Get addr's current position
-	position, err := GetPosition(*accum, name)
+	position, err := GetPosition(accum, name)
 	if err != nil {
 		return err
 	}
 
 	// Save current number of shares and unclaimed rewards
-	unclaimedRewards := GetTotalRewards(*accum, position)
+	unclaimedRewards := GetTotalRewards(accum, position)
 	oldNumShares, err := accum.GetPositionSize(name)
 	if err != nil {
 		return err
@@ -213,7 +213,7 @@ func (accum *AccumulatorObject) AddToPositionIntervalAccumulation(name string, n
 
 	// Update user's position with new number of shares while moving its unaccrued rewards
 	// into UnclaimedRewards. Starting accumulator value is moved up to accum'scurrent value
-	initOrUpdatePosition(*accum, intervalAccumulationPerShare, name, oldNumShares.Add(newShares), unclaimedRewards, position.Options)
+	initOrUpdatePosition(accum, intervalAccumulationPerShare, name, oldNumShares.Add(newShares), unclaimedRewards, position.Options)
 
 	// Update total shares in accum (re-fetch accum from state to ensure it's up to date)
 	updatedAccum, err := GetAccumulator(accum.store, accum.name)
@@ -247,7 +247,7 @@ func (accum *AccumulatorObject) RemoveFromPositionIntervalAccumulation(name stri
 	}
 
 	// Get addr's current position
-	position, err := GetPosition(*accum, name)
+	position, err := GetPosition(accum, name)
 	if err != nil {
 		return err
 	}
@@ -258,14 +258,14 @@ func (accum *AccumulatorObject) RemoveFromPositionIntervalAccumulation(name stri
 	}
 
 	// Save current number of shares and unclaimed rewards
-	unclaimedRewards := GetTotalRewards(*accum, position)
+	unclaimedRewards := GetTotalRewards(accum, position)
 	oldNumShares, err := accum.GetPositionSize(name)
 	if err != nil {
 		return err
 	}
 
 	// Update user's position with new number of shares
-	initOrUpdatePosition(*accum, intervalAccumulationPerShare, name, oldNumShares.Sub(numSharesToRemove), unclaimedRewards, position.Options)
+	initOrUpdatePosition(accum, intervalAccumulationPerShare, name, oldNumShares.Sub(numSharesToRemove), unclaimedRewards, position.Options)
 
 	updatedAccum, err := GetAccumulator(accum.store, accum.name)
 	if err != nil {
@@ -313,14 +313,14 @@ func (accum *AccumulatorObject) UpdatePositionIntervalAccumulation(name string, 
 // Returns nil on success, error otherwise.
 func (accum *AccumulatorObject) SetPositionIntervalAccumulation(name string, intervalAccumulationPerShare sdk.DecCoins) error {
 	// Get addr's current position
-	position, err := GetPosition(*accum, name)
+	position, err := GetPosition(accum, name)
 	if err != nil {
 		return err
 	}
 
 	// Update the user's position with the new accumulator value. The unclaimed rewards, options, and
 	// the number of shares stays the same as in the original position.
-	initOrUpdatePosition(*accum, intervalAccumulationPerShare, name, position.NumShares, position.UnclaimedRewardsTotal, position.Options)
+	initOrUpdatePosition(accum, intervalAccumulationPerShare, name, position.NumShares, position.UnclaimedRewardsTotal, position.Options)
 
 	return nil
 }
@@ -366,7 +366,7 @@ func (accum AccumulatorObject) deletePosition(positionName string) {
 // GetPositionSize returns the number of shares the position with the given
 // name has in the accumulator. Returns error if position does not exist
 // or if fails to retrieve position from state.
-func (accum AccumulatorObject) GetPositionSize(name string) (sdk.Dec, error) {
+func (accum *AccumulatorObject) GetPositionSize(name string) (sdk.Dec, error) {
 	position, err := GetPosition(accum, name)
 	if err != nil {
 		return sdk.Dec{}, err
@@ -400,7 +400,7 @@ func (accum AccumulatorObject) GetValue() sdk.DecCoins {
 // Returns error if
 // - no position exists for the given address
 // - any database errors occur.
-func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, sdk.DecCoins, error) {
+func (accum *AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, sdk.DecCoins, error) {
 	position, err := GetPosition(accum, positionName)
 	if err != nil {
 		return sdk.Coins{}, sdk.DecCoins{}, NoPositionError{positionName}
@@ -426,14 +426,15 @@ func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, sdk
 
 // GetTotalShares returns the total number of shares in the accumulator
 func (accum AccumulatorObject) GetTotalShares() (sdk.Dec, error) {
-	accum, err := GetAccumulator(accum.store, accum.name)
-	return accum.totalShares, err
+	// TODO: Make this not do an extra get.
+	accumPtr, err := GetAccumulator(accum.store, accum.name)
+	return accumPtr.totalShares, err
 }
 
 // AddToUnclaimedRewards adds the given amount of rewards to the unclaimed rewards
 // for the given position. Returns error if no position exists for the given position name.
 // Returns error if any database errors occur or if neggative rewards are provided.
-func (accum AccumulatorObject) AddToUnclaimedRewards(positionName string, rewardsToAddTotal sdk.DecCoins) error {
+func (accum *AccumulatorObject) AddToUnclaimedRewards(positionName string, rewardsToAddTotal sdk.DecCoins) error {
 	position, err := GetPosition(accum, positionName)
 	if err != nil {
 		return err

@@ -651,8 +651,8 @@ func (s *KeeperTestSuite) TestCrossTick() {
 				nextTickInfo = &model.TickInfo{}
 			}
 
-			var uptimeAccums []accum.AccumulatorObject
-			var spreadRewardAccum accum.AccumulatorObject
+			var uptimeAccums []*accum.AccumulatorObject
+			var spreadRewardAccum *accum.AccumulatorObject
 			if test.poolToGet == validPoolId {
 				uptimeAccums, err = s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, test.poolToGet)
 				s.Require().NoError(err)
