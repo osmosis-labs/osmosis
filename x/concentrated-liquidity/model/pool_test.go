@@ -206,7 +206,7 @@ func (s *ConcentratedPoolTestSuite) TestSpotPrice() {
 			}
 
 			// Check the spot price of the mock pool using the SpotPrice method.
-			spotPriceFromMethod, err := mock_pool.SpotPrice(sdk.Context{}, tc.param.baseDenom, tc.param.quoteDenom)
+			spotPriceFromMethod, err := mock_pool.SpotPrice(sdk.Context{}, tc.param.quoteDenom, tc.param.baseDenom)
 
 			if tc.expectedErr != nil {
 				s.Require().Error(err)
