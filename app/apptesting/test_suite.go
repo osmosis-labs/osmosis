@@ -130,6 +130,18 @@ func (s *KeeperTestHelper) SetupTestForInitGenesis() {
 	s.hasUsedAbci = true
 }
 
+// RunTestCaseWithoutStateUpdates runs the testcase as a callback with the given name.
+// Does not persist any state changes. This is useful when test suite uses common state setup
+// but desures each test case to be run in isolation.
+func (s *KeeperTestHelper) RunTestCaseWithoutStateUpdates(name string, cb func(t *testing.T)) {
+	originalCtx := s.Ctx
+	s.Ctx, _ = s.Ctx.CacheContext()
+
+	s.T().Run(name, cb)
+
+	s.Ctx = originalCtx
+}
+
 func (s *KeeperTestHelper) SetEpochStartTime() {
 	epochsKeeper := s.App.EpochsKeeper
 
