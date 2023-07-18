@@ -63,6 +63,7 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 
 	// Delete swaps to backrun for next transaction without consuming gas
 	// from the current transaction's gas meter, but instead from a new gas meter with 50mil gas.
+	// 50 mil gas was chosen as an arbitrary large number to ensure deletion does not run out of gas.
 	protoRevDec.ProtoRevKeeper.DeleteSwapsToBackrun(ctx.WithGasMeter(sdk.NewGasMeter(sdk.Gas(50_000_000))))
 
 	return next(ctx, tx, simulate)
