@@ -355,7 +355,7 @@ func (suite *AccumTestSuite) TestNewPositionIntervalAccumulation() {
 			numShareUnits:                positionOne.NumShares,
 			intervalAccumulationPerShare: defaultAccObject.GetValue().MulDec(sdk.NewDec(-1)),
 			expectedPosition: accumPackage.Record{
-				NumShares:             positionTwo.NumShares,
+				NumShares:             positionOne.NumShares,
 				AccumValuePerShare:    defaultAccObject.GetValue().MulDec(sdk.NewDec(-1)),
 				UnclaimedRewardsTotal: emptyCoins,
 			},
