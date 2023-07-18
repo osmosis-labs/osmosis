@@ -40,9 +40,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-<<<<<<< HEAD
-## v15.2.0
-=======
 ## Unreleased
 
 ### State Breaking
@@ -73,7 +70,6 @@ TokenFactory before send hooks (x/tokenfactory):
 - This enhancement allows for executing custom logic before sending tokens, providing more flexibility
 and control over token transfers.
 
->>>>>>> 0bdbca24 (Add debug command for conversion to proto marshalled bytes (#5750))
 
 ### Security
 

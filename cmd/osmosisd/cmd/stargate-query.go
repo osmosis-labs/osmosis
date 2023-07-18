@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v16/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v15/wasmbinding"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -22,18 +22,17 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
-	downtimequerytypes "github.com/osmosis-labs/osmosis/v16/x/downtime-detector/client/queryproto"
-	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v16/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v16/x/poolmanager/client/queryproto"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
-	twapquerytypes "github.com/osmosis-labs/osmosis/v16/x/twap/client/queryproto"
-	txfeestypes "github.com/osmosis-labs/osmosis/v16/x/txfees/types"
-	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	downtimequerytypes "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/client/queryproto"
+	epochtypes "github.com/osmosis-labs/osmosis/v15/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	twapquerytypes "github.com/osmosis-labs/osmosis/v15/x/twap/client/queryproto"
+	txfeestypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 )
 
 // convert requested proto struct into proto marshalled bytes
@@ -330,14 +329,6 @@ func GetStructAndFill(queryPath, module, structName string, structArguments ...s
 		case "NextLockIDRequest":
 			v := &lockuptypes.NextLockIDRequest{}
 			return v, nil
-		case "LockRewardReceiverRequest":
-			v := &lockuptypes.LockRewardReceiverRequest{}
-			lockId, err := strconv.ParseUint(structArguments[0], 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			v.LockId = lockId
-			return v, nil
 		}
 	case "mint":
 		switch structName {
@@ -388,24 +379,6 @@ func GetStructAndFill(queryPath, module, structName string, structArguments ...s
 			return nil, fmt.Errorf("swap route parsing not supported yet")
 		case "EstimateSwapExactAmountOutRequest":
 			return nil, fmt.Errorf("swap route parsing not supported yet")
-		case "PoolRequest":
-			v := &poolmanagerqueryproto.PoolRequest{}
-			poolId, err := strconv.ParseUint(structArguments[0], 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			v.PoolId = poolId
-			return v, nil
-		case "SpotPriceRequest":
-			v := &poolmanagerqueryproto.SpotPriceRequest{}
-			poolId, err := strconv.ParseUint(structArguments[0], 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			v.PoolId = poolId
-			v.BaseAssetDenom = structArguments[1]
-			v.QuoteAssetDenom = structArguments[2]
-			return v, nil
 		}
 	case "txfees":
 		switch structName {
@@ -504,122 +477,6 @@ func GetStructAndFill(queryPath, module, structName string, structArguments ...s
 		switch structName {
 		case "RecoveredSinceDowntimeOfLengthRequest":
 			v := &downtimequerytypes.RecoveredSinceDowntimeOfLengthRequest{}
-			return v, nil
-		}
-	case "concentrated-liquidity":
-		switch structName {
-		case "PoolsRequest":
-			v := &concentratedliquidityquery.PoolsRequest{}
-			return v, nil
-		case "UserPositionsRequest":
-			v := &concentratedliquidityquery.UserPositionsRequest{}
-			v.Address = structArguments[0]
-			poolId, err := strconv.ParseUint(structArguments[1], 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			v.PoolId = poolId
-			return v, nil
-		case "LiquidityPerTickRangeRequest":
-			v := &concentratedliquidityquery.LiquidityPerTickRangeRequest{}
-			poolId, err := strconv.ParseUint(structArguments[1], 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			v.PoolId = poolId
-			return v, nil
-		case "LiquidityNetInDirectionRequest":
-			v := &concentratedliquidityquery.LiquidityNetInDirectionRequest{}
-			poolId, err := strconv.ParseUint(structArguments[0], 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			v.PoolId = poolId
-			v.TokenIn = structArguments[1]
-			startTick, err := strconv.ParseInt(structArguments[2], 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			v.StartTick = startTick
-			useCurTick, err := strconv.ParseBool(structArguments[3])
-			if err != nil {
-				return nil, err
-			}
-			v.UseCurTick = useCurTick
-			boundTick, err := strconv.ParseInt(structArguments[4], 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			v.BoundTick = boundTick
-			useNoBound, err := strconv.ParseBool(structArguments[5])
-			if err != nil {
-				return nil, err
-			}
-			v.UseNoBound = useNoBound
-			return v, nil
-		case "ClaimableSpreadRewardsRequest":
-			v := &concentratedliquidityquery.ClaimableSpreadRewardsRequest{}
-			positionId, err := strconv.ParseUint(structArguments[0], 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			v.PositionId = positionId
-			return v, nil
-		case "ClaimableIncentivesRequest":
-			v := &concentratedliquidityquery.ClaimableIncentivesRequest{}
-			positionId, err := strconv.ParseUint(structArguments[0], 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			v.PositionId = positionId
-			return v, nil
-		case "PositionByIdRequest":
-			v := &concentratedliquidityquery.PositionByIdRequest{}
-			positionId, err := strconv.ParseUint(structArguments[0], 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			v.PositionId = positionId
-			return v, nil
-		case "ParamsRequest":
-			v := &concentratedliquidityquery.ParamsRequest{}
-			return v, nil
-		case "PoolAccumulatorRewardsRequest":
-			v := &concentratedliquidityquery.PoolAccumulatorRewardsRequest{}
-			poolId, err := strconv.ParseUint(structArguments[0], 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			v.PoolId = poolId
-			return v, nil
-		case "IncentiveRecordsRequest":
-			v := &concentratedliquidityquery.PoolAccumulatorRewardsRequest{}
-			poolId, err := strconv.ParseUint(structArguments[0], 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			v.PoolId = poolId
-			return v, nil
-		case "TickAccumulatorTrackersRequest":
-			v := &concentratedliquidityquery.TickAccumulatorTrackersRequest{}
-			poolId, err := strconv.ParseUint(structArguments[0], 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			v.PoolId = poolId
-			tickIndex, err := strconv.ParseInt(structArguments[1], 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			v.TickIndex = tickIndex
-			return v, nil
-		case "CFMMPoolIdLinkFromConcentratedPoolIdRequest":
-			v := &concentratedliquidityquery.CFMMPoolIdLinkFromConcentratedPoolIdRequest{}
-			poolId, err := strconv.ParseUint(structArguments[0], 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			v.ConcentratedPoolId = poolId
 			return v, nil
 		}
 	}
