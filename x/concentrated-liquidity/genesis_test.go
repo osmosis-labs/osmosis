@@ -506,7 +506,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			s.Require().NoError(err)
 
 			// Check pools
-			spreadFactorAccums := []accum.AccumulatorObject{}
+			spreadFactorAccums := []*accum.AccumulatorObject{}
 			incentiveRecords := []types.IncentiveRecord{}
 			s.Require().Equal(len(clPoolsAfterInitialization), len(tc.genesis.PoolData))
 			for i, actualPoolI := range clPoolsAfterInitialization {

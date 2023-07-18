@@ -23,7 +23,7 @@ func (k Keeper) createSpreadRewardAccumulator(ctx sdk.Context, poolId uint64) er
 
 // GetSpreadRewardAccumulator gets the spread reward accumulator object using the given poolOd
 // returns error if accumulator for the given poolId does not exist.
-func (k Keeper) GetSpreadRewardAccumulator(ctx sdk.Context, poolId uint64) (accum.AccumulatorObject, error) {
+func (k Keeper) GetSpreadRewardAccumulator(ctx sdk.Context, poolId uint64) (*accum.AccumulatorObject, error) {
 	return accum.GetAccumulator(ctx.KVStore(k.storeKey), types.KeySpreadRewardPoolAccumulator(poolId))
 }
 
@@ -297,7 +297,7 @@ func calculateSpreadRewardGrowth(targetTick int64, ticksSpreadRewardGrowthOpposi
 // as we must set the position's accumulator value to the sum of
 // - the spread reward/uptime growth inside at position creation time (position.InitAccumValue)
 // - spread reward/uptime growth outside at the current block time (spreadRewardGrowthOutside/uptimeGrowthOutside)
-func updatePositionToInitValuePlusGrowthOutside(accumulator accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) error {
+func updatePositionToInitValuePlusGrowthOutside(accumulator *accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) error {
 	position, err := accum.GetPosition(accumulator, positionKey)
 	if err != nil {
 		return err

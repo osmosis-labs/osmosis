@@ -77,7 +77,7 @@ func (s *KeeperTestSuite) TestCreateAndGetSpreadRewardAccumulator() {
 				s.Require().NoError(err)
 			} else {
 				s.Require().Error(err)
-				s.Require().Equal(accum.AccumulatorObject{}, poolSpreadRewardAccumulator)
+				s.Require().Equal(&accum.AccumulatorObject{}, poolSpreadRewardAccumulator)
 			}
 		})
 	}
