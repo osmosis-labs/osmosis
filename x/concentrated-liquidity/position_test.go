@@ -2730,7 +2730,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange() {
 	// We initialized the lower tick's accumulator (DefaultCurrTick - 25) to be greater than the upper tick's accumulator (DefaultCurrTick + 50)
 	// Whenever the current tick is above the position's range, we compute in range accumulator as upper tick accumulator - lower tick accumulator
 	// In this case, it ends up being negative, which is now supported.
-	_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultCurrTick-25, DefaultCurrTick+50)
+	negativeIntervalAccumPositionId, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultCurrTick-25, DefaultCurrTick+50)
 	s.Require().NoError(err)
 
 	// Increase block time
@@ -2848,4 +2848,21 @@ func (s *KeeperTestSuite) TestNegativeTickRange() {
 			TotalIncentives:                       sdk.NewCoins(sdk.NewCoin("uosmo", expectedTotalIncentiveRewards.Ceil().TruncateInt())),
 		})
 	})
+
+	// Export and import genesis to make sure that negative accumulation does not lead to unexpected
+	// panics in serialization and deserialization.
+	spreadRewardAccumulator, err := s.clk.GetSpreadRewardAccumulator(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	accum, err := spreadRewardAccumulator.GetPosition(types.KeySpreadRewardPositionAccumulator(negativeIntervalAccumPositionId))
+	s.Require().NoError(err)
+
+	// Validate that at least one accumulator is negative for the test to be valid.
+	s.Require().True(accum.AccumValuePerShare.IsAnyNegative())
+
+	export := s.clk.ExportGenesis(s.Ctx)
+
+	s.SetupTest()
+
+	s.clk.InitGenesis(s.Ctx, *export)
 }
