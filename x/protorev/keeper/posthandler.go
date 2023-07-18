@@ -58,7 +58,7 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 		write()
 		ctx.EventManager().EmitEvents(cacheCtx.EventManager().Events())
 	} else {
-		ctx.Logger().Error("ProtoRevTrade failed with error", err)
+		ctx.Logger().Error("ProtoRevTrade failed with error: " + err.Error())
 	}
 
 	// Delete swaps to backrun for next transaction without consuming gas
