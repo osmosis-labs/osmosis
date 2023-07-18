@@ -145,7 +145,7 @@ Pools have the following parameters:
 
 The GAMM module also has a **PoolCreationFee** parameter, which currently is set to `100000000 uosmo` or `100 OSMO`.
 
-[comment]: <> (TODO Add better description of how the weights affect things)
+<!-- [comment]: <> (TODO Add better description of how the weights affect things) -->
 
 </br>
 </br>
@@ -383,7 +383,7 @@ Swap a **maximum** of `.407239 AKT` through `pool 3` into **exactly** `.140530 O
 osmosisd tx gamm swap-exact-amount-out 140530uosmo 407239 --swap-route-pool-ids 3 --swap-route-denoms ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4 --from WALLET_NAME --chain-id osmosis-1
 ```
 
-[comment]: <> (Other resources Creating a liquidity bootstrapping pool and Creating a pool with a pool file)
+<!-- [comment]: <> (Other resources Creating a liquidity bootstrapping pool and Creating a pool with a pool file) -->
 :::
 
 ## Queries and Transactions

@@ -14,10 +14,9 @@ they can easily be signalled upon such events.
 1. **[Concept](#concepts)**
 2. **[State](#state)**
 3. **[Events](#events)**
-4. **[Keeper](#keeper)**
+4. **[Keeper](#keepers)**
 5. **[Hooks](#hooks)**
 6. **[Queries](#queries)**
-7. **[Downtime Recovery](#downtime-recovery)**
 
 ## Concepts
 
