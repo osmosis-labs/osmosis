@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 )
 
 var (
@@ -56,10 +55,6 @@ func (k Keeper) ValidateGammLockForSuperfluidStaking(ctx sdk.Context, sender sdk
 
 func (k Keeper) GetExistingLockRemainingDuration(ctx sdk.Context, lock *lockuptypes.PeriodLock) (time.Duration, error) {
 	return k.getExistingLockRemainingDuration(ctx, lock)
-}
-
-func (k Keeper) PartialSuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, sender string, lockID uint64, amountToUndelegate sdk.Coin) (intermediaryAcc types.SuperfluidIntermediaryAccount, newlock *lockuptypes.PeriodLock, err error) {
-	return k.partialSuperfluidUndelegateToConcentratedPosition(ctx, sender, lockID, amountToUndelegate)
 }
 
 func (k Keeper) DistributeSuperfluidGauges(ctx sdk.Context) {

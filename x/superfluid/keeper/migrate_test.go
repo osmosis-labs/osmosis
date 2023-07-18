@@ -68,22 +68,11 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 			superfluidDelegated:      true,
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 		},
-		"lock that is superfluid delegated, not unlocking (partial shares)": {
-			// migrateSuperfluidBondedBalancerToConcentrated
-			superfluidDelegated:      true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.4"),
-		},
 		"lock that is superfluid undelegating, not unlocking (full shares)": {
 			// migrateSuperfluidUnbondingBalancerToConcentrated
 			superfluidDelegated:      true,
 			superfluidUndelegating:   true,
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-		},
-		"lock that is superfluid undelegating, not unlocking (partial shares)": {
-			// migrateSuperfluidUnbondingBalancerToConcentrated
-			superfluidDelegated:      true,
-			superfluidUndelegating:   true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.4"),
 		},
 		"lock that is superfluid undelegating, unlocking (full shares)": {
 			// migrateSuperfluidUnbondingBalancerToConcentrated
@@ -91,13 +80,6 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 			superfluidUndelegating:   true,
 			unlocking:                true,
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-		},
-		"lock that is superfluid undelegating, unlocking (partial shares)": {
-			// migrateSuperfluidUnbondingBalancerToConcentrated
-			superfluidDelegated:      true,
-			superfluidUndelegating:   true,
-			unlocking:                true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.3"),
 		},
 		"no lock (partial shares)": {
 			// MigrateUnlockedPositionFromBalancerToConcentrated
@@ -132,13 +114,6 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 			superfluidDelegated:      true,
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10000))),
-			expectedError:            gammtypes.ErrLimitMinAmount,
-		},
-		"error: lock that is superfluid delegated, not unlocking (partial shares, min exit coins more than being exitted": {
-			// migrateSuperfluidBondedBalancerToConcentrated
-			superfluidDelegated:      true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.5"),
-			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(3000))),
 			expectedError:            gammtypes.ErrLimitMinAmount,
 		},
 		"error: lock that is superfluid undelegating, not unlocking, min exit coins more than being exitted": {
@@ -287,9 +262,6 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 	testCases := map[string]sendTest{
 		"lock that is superfluid delegated, not unlocking (full shares)": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-		},
-		"lock that is superfluid delegated, not unlocking (partial shares)": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.5"),
 		},
 		"error: migrate more shares than lock has": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1.1"),
@@ -450,16 +422,9 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrated()
 		"lock that is superfluid undelegating, not unlocking (full shares)": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 		},
-		"lock that is superfluid undelegating, not unlocking (partial shares)": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.5"),
-		},
 		"lock that is superfluid undelegating, unlocking (full shares)": {
 			unlocking:                true,
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-		},
-		"lock that is superfluid undelegating, unlocking (partial shares)": {
-			unlocking:                true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.3"),
 		},
 		"error: invalid validator address": {
 			overwriteValidatorAddress: true,
@@ -580,16 +545,9 @@ func (s *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated() {
 		"lock that is not superfluid delegated, not unlocking (full shares)": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 		},
-		"lock that is not superfluid delegated, not unlocking (partial shares)": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.9"),
-		},
 		"lock that is not superfluid delegated, unlocking (full shares)": {
 			unlocking:                true,
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-		},
-		"lock that is not superfluid delegated, unlocking (partial shares)": {
-			unlocking:                true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.6"),
 		},
 		"error: lock that is not superfluid delegated, not unlocking (full shares), token out mins is more than exit coins": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
@@ -754,19 +712,8 @@ func (s *KeeperTestSuite) TestValidateMigration() {
 			isSuperfluidDelegated:    false,
 			isSuperfluidUndelegating: false,
 		},
-		"lock that is not superfluid delegated, unlocking (partial shares)": {
-			unlocking:                true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.6"),
-			isSuperfluidDelegated:    false,
-			isSuperfluidUndelegating: false,
-		},
 		"lock that is superfluid undelegating, not unlocking (full shares)": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			isSuperfluidDelegated:    true,
-			isSuperfluidUndelegating: true,
-		},
-		"lock that is superfluid undelegating, not unlocking (partial shares)": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.5"),
 			isSuperfluidDelegated:    true,
 			isSuperfluidUndelegating: true,
 		},
@@ -776,18 +723,8 @@ func (s *KeeperTestSuite) TestValidateMigration() {
 			isSuperfluidDelegated:    true,
 			isSuperfluidUndelegating: true,
 		},
-		"lock that is superfluid undelegating, unlocking (partial shares)": {
-			unlocking:                true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.3"),
-			isSuperfluidDelegated:    true,
-			isSuperfluidUndelegating: true,
-		},
 		"lock that is superfluid delegated, not unlocking (full shares)": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			isSuperfluidDelegated:    true,
-		},
-		"lock that is superfluid delegated, not unlocking (partial shares)": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.5"),
 			isSuperfluidDelegated:    true,
 		},
 		"error: denom prefix error": {

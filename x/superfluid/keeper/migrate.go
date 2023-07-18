@@ -84,8 +84,6 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
 	}
 
-	isPartialMigration := sharesToMigrate.Amount.LT(preMigrationLock.Coins[0].Amount)
-
 	// Get the validator address from the synth denom and ensure it is a valid address.
 	valAddr := strings.Split(synthDenomBeforeMigration, "/")[4]
 	_, err = sdk.ValAddressFromBech32(valAddr)
@@ -97,21 +95,13 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 	// If all shares are being migrated, this deletes the connection between the gamm lock and the intermediate account, deletes the synthetic lock, and burns the synthetic osmo.
 	intermediateAccount := types.SuperfluidIntermediaryAccount{}
 	var gammLockToMigrate *lockuptypes.PeriodLock
-	if isPartialMigration {
-		// Note that lock's id is different from the originalLockId since it was split.
-		// The original lock id stays in gamm.
-		intermediateAccount, gammLockToMigrate, err = k.partialSuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), originalLockId, sharesToMigrate)
-		if err != nil {
-			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
-		}
-	} else {
-		// Note that lock's id is the same as the originalLockId since all shares are being migrated
-		// and old lock is deleted
-		gammLockToMigrate = preMigrationLock
-		intermediateAccount, err = k.SuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), originalLockId)
-		if err != nil {
-			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
-		}
+
+	// Note that lock's id is the same as the originalLockId since all shares are being migrated
+	// and old lock is deleted
+	gammLockToMigrate = preMigrationLock
+	intermediateAccount, err = k.SuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), originalLockId)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
 	}
 
 	// Force unlock, validate the provided sharesToMigrate, and exit the balancer pool.
