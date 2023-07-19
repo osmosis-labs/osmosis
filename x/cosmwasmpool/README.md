@@ -127,9 +127,8 @@ graph TD;
   Sender((Sender))
   Sender -- 1. swap --> x/poolmanager
   x/poolmanager -- 2. route msg to --> x/cosmwasmpool
-  x/cosmwasmpool -- 3. sudo execute contract --> x/wasm
-
-  x/cosmwasmpool -- 4. send token_in from sender to wasm/pool --> x/bank
+  x/cosmwasmpool -- 3. send token_in from sender to wasm/pool --> x/bank
+  x/cosmwasmpool -- 4. sudo execute contract --> x/wasm
   x/wasm -- 5. sudo --> wasm/pool
   wasm/pool -- 6. send token_out to sender --> x/bank
 ```
