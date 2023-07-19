@@ -88,7 +88,7 @@ func (server msgServer) ForceSuperfluidUndelegate(goCtx context.Context, msg *ty
 
 	// return error if the sender is not allowed to force undelegate
 	if !isSenderAllowed {
-		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("msg sender (%s) is not allowed to force undeledate superfluid staking position", msg.Sender))
+		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("msg sender (%s) is not allowed to force undelegate superfluid staking position", msg.Sender))
 	}
 
 	// perform force undelegate
