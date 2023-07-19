@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -132,6 +133,108 @@ func (s *KeeperTestSuite) TestMsgSuperfluidUndelegate() {
 		} else {
 			s.Require().Error(err)
 		}
+	}
+}
+
+func (s *KeeperTestSuite) TestMsgForceSuperfluidUndelegate() {
+
+	forceSuperfluidUndelegateAllowedAddresses := []string{
+		sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(),
+		sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(),
+		sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String(),
+	}
+
+	type param struct {
+		lockOwner   sdk.AccAddress
+		undelegator sdk.AccAddress
+		duration    time.Duration
+	}
+
+	tests := []struct {
+		name       string
+		param      param
+		expectPass bool
+	}{
+		{
+			name: "unknown undelegator",
+			param: param{
+				lockOwner:   sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				undelegator: sdk.AccAddress([]byte("addr2---------------")),
+				duration:    time.Hour * 504,
+			},
+			expectPass: false,
+		},
+		{
+			name: "allowed undelegator 0",
+			param: param{
+				lockOwner:   sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				undelegator: sdk.MustAccAddressFromBech32(forceSuperfluidUndelegateAllowedAddresses[0]),
+				duration:    time.Hour * 504,
+			},
+			expectPass: true,
+		},
+		{
+			name: "allowed undelegator 1",
+			param: param{
+				lockOwner:   sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				undelegator: sdk.MustAccAddressFromBech32(forceSuperfluidUndelegateAllowedAddresses[0]),
+				duration:    time.Hour * 504,
+			},
+			expectPass: true,
+		},
+		{
+			name: "allowed undelegator 2",
+			param: param{
+				lockOwner:   sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				undelegator: sdk.MustAccAddressFromBech32(forceSuperfluidUndelegateAllowedAddresses[0]),
+				duration:    time.Hour * 504,
+			},
+			expectPass: true,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+
+			// set params with allowed addresses
+			params := s.App.SuperfluidKeeper.GetParams(s.Ctx)
+			s.App.SuperfluidKeeper.SetParams(s.Ctx, types.Params{
+				MinimumRiskFactor:                         params.MinimumRiskFactor,
+				ForceSuperfluidUndelegateAllowedAddresses: forceSuperfluidUndelegateAllowedAddresses,
+			})
+
+			params = s.App.SuperfluidKeeper.GetParams(s.Ctx)
+
+			lockupMsgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
+			c := sdk.WrapSDKContext(s.Ctx)
+
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+
+			coinsToLock := sdk.NewCoins(sdk.NewCoin(denoms[0], sdk.NewInt(20)))
+
+			s.FundAcc(test.param.lockOwner, coinsToLock)
+			resp, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(test.param.lockOwner, test.param.duration, coinsToLock))
+			s.Require().NoError(err)
+
+			valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
+
+			msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
+
+			// delegate
+			_, err = msgServer.SuperfluidDelegate(c, types.NewMsgSuperfluidDelegate(test.param.lockOwner, resp.ID, valAddrs[0]))
+			s.Require().NoError(err)
+
+			// force undelegate
+			_, err = msgServer.ForceSuperfluidUndelegate(c, types.NewMsgForceSuperfluidUndelegate(test.param.undelegator, resp.ID))
+
+			if test.expectPass {
+				s.Require().NoError(err)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtForceSuperfluidUndelegate, 1)
+			} else {
+				s.Require().Error(err)
+			}
+		})
 	}
 }
 

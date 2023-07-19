@@ -72,6 +72,7 @@ func (server msgServer) SuperfluidUndelegate(goCtx context.Context, msg *types.M
 
 // ForceSuperfluidUndelegate is a method to force undelegate superfluid staked asset.
 // This method is only allowed to be called whitelisted addresses.
+// With whitelisted addresses, we can force undelegate superfluid staked asset without being a lock owner.
 func (server msgServer) ForceSuperfluidUndelegate(goCtx context.Context, msg *types.MsgForceSuperfluidUndelegate) (*types.MsgForceSuperfluidUndelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
