@@ -591,6 +591,171 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 	}
 }
 
+func (s *KeeperTestSuite) TestForceSuperfluidUndelegate() {
+	testCases := []struct {
+		name                  string
+		validatorStats        []stakingtypes.BondStatus
+		superDelegations      []superfluidDelegation
+		superUnbondingLockIds []uint64
+		expSuperUnbondingErr  []bool
+		// expected amount of delegation to intermediary account
+		expInterDelegation []sdk.Dec
+	}{
+		{
+			"with single validator and single superfluid delegation and single undelegation",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			[]uint64{1},
+			[]bool{false},
+			[]sdk.Dec{sdk.ZeroDec()},
+		},
+		{
+			"with single validator and additional superfluid delegations and single undelegation",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {0, 0, 0, 1000000}},
+			[]uint64{1},
+			[]bool{false},
+			[]sdk.Dec{sdk.ZeroDec()},
+		},
+		{
+			"with multiple validators and multiple superfluid delegations and multiple undelegations",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
+			[]uint64{1, 2},
+			[]bool{false, false},
+			[]sdk.Dec{sdk.ZeroDec()},
+		},
+		{
+			"add unbonding validator",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonding},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
+			[]uint64{1, 2},
+			[]bool{false, false},
+			[]sdk.Dec{sdk.ZeroDec()},
+		},
+		{
+			"add unbonded validator",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
+			[]uint64{1, 2},
+			[]bool{false, false},
+			[]sdk.Dec{sdk.ZeroDec()},
+		},
+		{
+			"undelegating not available lock id",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			[]uint64{2},
+			[]bool{true},
+			[]sdk.Dec{},
+		},
+		{
+			"try undelegating twice for same lock id",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			[]uint64{1, 1},
+			[]bool{false, true},
+			[]sdk.Dec{sdk.ZeroDec()},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			notLockOwner := "osmo1notlockowner"
+
+			bondDenom := s.App.StakingKeeper.GetParams(s.Ctx).BondDenom
+
+			// setup validators
+			valAddrs := s.SetupValidators(tc.validatorStats)
+
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+
+			// setup superfluid delegations
+			_, intermediaryAccs, _ := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
+			s.checkIntermediaryAccountDelegations(intermediaryAccs)
+
+			for index, lockId := range tc.superUnbondingLockIds {
+				// get intermediary account
+				accAddr := s.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, lockId)
+				intermediaryAcc := s.App.SuperfluidKeeper.GetIntermediaryAccount(s.Ctx, accAddr)
+				valAddr := intermediaryAcc.ValAddr
+
+				lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lockId)
+				if err != nil {
+					lock = &lockuptypes.PeriodLock{}
+				}
+
+				// get pre-superfluid delgations osmo supply and supplyWithOffset
+				presupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
+				presupplyWithOffset := s.App.BankKeeper.GetSupplyWithOffset(s.Ctx, bondDenom)
+
+				// superfluid undelegate works eventhough sender is not the lock owner
+
+				_, err = s.App.SuperfluidKeeper.ForceSuperfluidUndelegate(s.Ctx, notLockOwner, lockId)
+				if tc.expSuperUnbondingErr[index] {
+					s.Require().Error(err)
+					continue
+				}
+				s.Require().NoError(err)
+
+				// ensure post-superfluid delegations osmo supplywithoffset is the same while supply is not
+				postsupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
+				postsupplyWithOffset := s.App.BankKeeper.GetSupplyWithOffset(s.Ctx, bondDenom)
+				s.Require().False(postsupply.IsEqual(presupply), "presupply: %s   postsupply: %s", presupply, postsupply)
+				s.Require().True(postsupplyWithOffset.IsEqual(presupplyWithOffset))
+
+				// check lockId and intermediary account connection deletion
+				addr := s.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, lockId)
+				s.Require().Equal(addr.String(), "")
+
+				// check bonding synthetic lockup deletion
+				_, err = s.App.LockupKeeper.GetSyntheticLockup(s.Ctx, lockId, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
+				s.Require().Error(err)
+
+				// check unbonding synthetic lockup creation
+				// since this is the concentrated liquidity path, no new synthetic lockup should be created
+				synthLock, err := s.App.LockupKeeper.GetSyntheticLockup(s.Ctx, lockId, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
+				s.Require().Error(err)
+				s.Require().Nil(synthLock)
+			}
+
+			// check invariant is fine
+			reason, broken := keeper.AllInvariants(*s.App.SuperfluidKeeper)(s.Ctx)
+			s.Require().False(broken, reason)
+
+			// check remaining intermediary account delegation
+			for index, expDelegation := range tc.expInterDelegation {
+				acc := intermediaryAccs[index]
+				valAddr, err := sdk.ValAddressFromBech32(acc.ValAddr)
+				s.Require().NoError(err)
+				delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, acc.GetAccAddress(), valAddr)
+				if expDelegation.IsZero() {
+					s.Require().False(found, "expected no delegation, found delegation w/ %d shares", delegation.Shares)
+				} else {
+					s.Require().True(found)
+					s.Require().Equal(expDelegation, delegation.Shares)
+				}
+			}
+
+			// try undelegating twice
+			for index, lockId := range tc.superUnbondingLockIds {
+				if tc.expSuperUnbondingErr[index] {
+					continue
+				}
+
+				_, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lockId)
+				s.Require().NoError(err)
+
+				_, err = s.App.SuperfluidKeeper.ForceSuperfluidUndelegate(s.Ctx, notLockOwner, lockId)
+				s.Require().Error(err)
+			}
+		})
+	}
+}
+
 // TestSuperfluidUnbondLock tests the following.
 //  1. test SuperfluidUnbondLock does not work before undelegation
 //  2. test SuperfluidUnbondLock makes underlying lock start unlocking
