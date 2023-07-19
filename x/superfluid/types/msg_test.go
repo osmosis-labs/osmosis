@@ -66,6 +66,13 @@ func TestAuthzMsg(t *testing.T) {
 				PoolId: 1,
 			},
 		},
+		{
+			name: "MsgForceSuperfluidUndelegate",
+			msg: &types.MsgForceSuperfluidUndelegate{
+				Sender: addr1,
+				LockId: 1,
+			},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

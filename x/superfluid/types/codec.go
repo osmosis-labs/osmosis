@@ -12,6 +12,7 @@ import (
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgSuperfluidDelegate{}, "osmosis/superfluid-delegate", nil)
 	cdc.RegisterConcrete(&MsgSuperfluidUndelegate{}, "osmosis/superfluid-undelegate", nil)
+	cdc.RegisterConcrete(&MsgForceSuperfluidUndelegate{}, "osmosis/force-superfluid-undelegate", nil)
 	cdc.RegisterConcrete(&MsgLockAndSuperfluidDelegate{}, "osmosis/lock-and-superfluid-delegate", nil)
 	cdc.RegisterConcrete(&MsgSuperfluidUnbondLock{}, "osmosis/superfluid-unbond-lock", nil)
 	cdc.RegisterConcrete(&MsgSuperfluidUndelegateAndUnbondLock{}, "osmosis/sf-undelegate-and-unbond-lock", nil)
@@ -29,6 +30,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgSuperfluidDelegate{},
 		&MsgSuperfluidUndelegate{},
+		&MsgForceSuperfluidUndelegate{},
 		&MsgLockAndSuperfluidDelegate{},
 		&MsgSuperfluidUnbondLock{},
 		&MsgSuperfluidUndelegateAndUnbondLock{},

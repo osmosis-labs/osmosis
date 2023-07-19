@@ -693,7 +693,6 @@ func (s *KeeperTestSuite) TestForceSuperfluidUndelegate() {
 				presupplyWithOffset := s.App.BankKeeper.GetSupplyWithOffset(s.Ctx, bondDenom)
 
 				// superfluid undelegate works eventhough sender is not the lock owner
-
 				_, err = s.App.SuperfluidKeeper.ForceSuperfluidUndelegate(s.Ctx, notLockOwner, lockId)
 				if tc.expSuperUnbondingErr[index] {
 					s.Require().Error(err)
