@@ -78,16 +78,16 @@ func (server msgServer) ForceSuperfluidUndelegate(goCtx context.Context, msg *ty
 
 	// check if the sender is allowed to force undelegate
 	forceUndelegateAllowedAddresses := server.keeper.GetParams(ctx).ForceSuperfluidUndelegateAllowedAddresses
-	isSenderAllowed := false
+	allowed := false
 	for _, addr := range forceUndelegateAllowedAddresses {
 		if addr == msg.Sender {
-			isSenderAllowed = true
+			allowed = true
 			break
 		}
 	}
 
 	// return error if the sender is not allowed to force undelegate
-	if !isSenderAllowed {
+	if !allowed {
 		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("msg sender (%s) is not allowed to force undelegate superfluid staking position", msg.Sender))
 	}
 
