@@ -292,6 +292,26 @@ type MsgSuperfluidUndelegate struct {
 - Immediately burn undelegated `Osmo`
 - Delete the connection between `lockID` and `IntermediaryAccount`
 
+### Superfluid Force Undelegate
+  
+```{.go}
+type MsgForceSuperfluidUndelegate struct {
+  Sender string
+  LockId uint64
+}
+```
+
+**State Modifications:**
+
+- Check if `Sender` is in the list of `ForceSuperfluidUndelegateAllowedAddresses` specified in params store
+- Lookup `lock` by `LockID`
+- Validate if the lock has single coin, but does not check if `Sender` is `lock.Owner`
+- Get the `IntermediaryAccount` for this `lockID`
+- Delete the connection between `lockID` and `IntermediaryAccount`
+- Delete the `SyntheticLockup` associated to this `lockID` + `ValAddr`
+  pair
+- Undelegates the superfluid staking position associated with the `lockID` and burns the underlying osmo tokens
+
 ### Lock and Superfluid Delegate
 
 ```{.go}
