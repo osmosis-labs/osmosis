@@ -44,12 +44,12 @@ func getUptimeTrackerValues(uptimeTrackers []model.UptimeTracker) []sdk.DecCoins
 
 // GetUptimeAccumulators gets the uptime accumulator objects for the given poolId
 // Returns error if accumulator for the given poolId does not exist.
-func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.AccumulatorObject, error) {
-	accums := make([]accum.AccumulatorObject, len(types.SupportedUptimes))
+func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]*accum.AccumulatorObject, error) {
+	accums := make([]*accum.AccumulatorObject, len(types.SupportedUptimes))
 	for uptimeIndex := range types.SupportedUptimes {
 		acc, err := accum.GetAccumulator(ctx.KVStore(k.storeKey), types.KeyUptimeAccumulator(poolId, uint64(uptimeIndex)))
 		if err != nil {
-			return []accum.AccumulatorObject{}, err
+			return []*accum.AccumulatorObject{}, err
 		}
 
 		accums[uptimeIndex] = acc
@@ -123,7 +123,7 @@ func (k Keeper) getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ct
 // CONTRACT: the caller validates that the pool with the given id exists.
 // CONTRACT: caller is responsible for the uptimeAccums to be up-to-date.
 // CONTRACT: uptimeAccums are associated with the given pool id.
-func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64, uptimeAccums []accum.AccumulatorObject) (uint64, sdk.Dec, error) {
+func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64, uptimeAccums []*accum.AccumulatorObject) (uint64, sdk.Dec, error) {
 	// Get CL pool from ID
 	clPool, err := k.getPoolById(ctx, clPoolId)
 	if err != nil {
@@ -245,7 +245,7 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64,
 // CONTRACT: the caller validates that the pool with the given id exists.
 // CONTRACT: caller is responsible for the uptimeAccums to be up-to-date.
 // CONTRACT: uptimeAccums are associated with the given pool id.
-func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uint64, balPoolId uint64, uptimeAccums []accum.AccumulatorObject) (sdk.Coins, error) {
+func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uint64, balPoolId uint64, uptimeAccums []*accum.AccumulatorObject) (sdk.Coins, error) {
 	// Get CL pool from ID. This also serves as an early pool existence check.
 	clPool, err := k.getPoolById(ctx, clPoolId)
 	if err != nil {
@@ -364,7 +364,7 @@ var dec1e9 = sdk.NewDec(1e9)
 // * this function does not refetch the uptime accumulators from state.
 // * this function operates on the given pool directly, instead of fetching it from state.
 // This is to avoid unnecessary state reads during swaps for performance reasons.
-func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool types.ConcentratedPoolExtension, uptimeAccums []accum.AccumulatorObject) error {
+func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool types.ConcentratedPoolExtension, uptimeAccums []*accum.AccumulatorObject) error {
 	if pool == nil {
 		return types.ErrPoolNil
 	}
@@ -788,7 +788,7 @@ func (k Keeper) initOrUpdatePositionUptimeAccumulators(ctx sdk.Context, poolId u
 // - fails to claim rewards
 // - fails to check if position record exists
 // - fails to update position accumulator with the current growth inside the position
-func updateAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) (sdk.Coins, sdk.DecCoins, error) {
+func updateAccumAndClaimRewards(accum *accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) (sdk.Coins, sdk.DecCoins, error) {
 	// Set the position's accumulator value to it's initial value at creation time plus the growth outside at this moment.
 	err := updatePositionToInitValuePlusGrowthOutside(accum, positionKey, growthOutside)
 	if err != nil {
@@ -828,7 +828,7 @@ func updateAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey strin
 // Returns nil on success. Error otherwise.
 // NOTE: It is only used by fungifyChargedPosition which we disabled for launch.
 // nolint: unused
-func moveRewardsToNewPositionAndDeleteOldAcc(accum accum.AccumulatorObject, oldPositionName, newPositionName string, growthOutside sdk.DecCoins) error {
+func moveRewardsToNewPositionAndDeleteOldAcc(accum *accum.AccumulatorObject, oldPositionName, newPositionName string, growthOutside sdk.DecCoins) error {
 	if oldPositionName == newPositionName {
 		return types.ModifySamePositionAccumulatorError{PositionAccName: oldPositionName}
 	}

@@ -223,16 +223,6 @@ osmo-basepair pool of an asset. The multiplier is set once per epoch, at
 the beginning of the epoch. In the future, we will switch this out to
 use a TWAP instead.
 
-### State changes
-
-The state of superfluid module state modifiers are classified into below
-categories.
-
-- [Proposals](07_proposals.md)
-- [Messages](03_messages.md)
-- [Epoch](04_epoch.md)
-- [Hooks](06_hooks.md)
-
 ### Messages
 
 ### Superfluid Delegate
