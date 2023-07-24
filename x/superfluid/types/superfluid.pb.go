@@ -10,7 +10,7 @@ import (
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	_ "github.com/gogo/protobuf/types"
-	types1 "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
+	types1 "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	io "io"
 	math "math"
 	math_bits "math/bits"
