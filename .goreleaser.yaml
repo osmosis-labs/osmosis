@@ -135,7 +135,7 @@ archives:
       - osmosisd-darwin-universal
       - osmosisd-linux-amd64
       - osmosisd-linux-arm64
-    name_template: "{{.ProjectName}}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    name_template: "{{.ProjectName}}-{{ .Os }}-{{ .Arch }}"
     format: tar.gz
     files:
       - none*
@@ -144,13 +144,13 @@ archives:
       - osmosisd-darwin-universal
       - osmosisd-linux-amd64
       - osmosisd-linux-arm64
-    name_template: "{{.ProjectName}}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    name_template: "{{.ProjectName}}-{{ .Os }}-{{ .Arch }}"
     format: binary
     files:
       - none*
 
 checksum:
-  name_template: "{{.ProjectName}}-{{ .Version }}-checksums.txt"
+  name_template: "checksums.txt"
   algorithm: sha256
 
 # Docs: https://goreleaser.com/customization/homebrew/
@@ -213,18 +213,19 @@ release:
     make install
     ````
 
-    ## 🐳 Docker
+    ## 🐳 Run with Docker
 
+    As an alternative to installing and running osmosisd on your system, you may run osmosisd in a Docker container.
     The following Docker images are available in our registry:
 
-    | Image                                        | Description                              |
-    |----------------------------------------------|------------------------------------------|
-    | `osmolabs/osmosis:{{ .Version }}`            | Default image based on Distroless        |
-    | `osmolabs/osmosis:{{ .Version }}-distroless` | Distroless image  (same as above)        |
-    | `osmolabs/osmosis:{{ .Version }}-nonroot`    | Distroless non-root image                |
-    | `osmolabs/osmosis:{{ .Version }}-alpine`     | Alpine image                             |
+    | Image Name | Base | Description |
+    |------------|------|---------|
+    | `osmolabs/osmosis:{{ .Version }}`            | `distroless/static-debian11` | Default image based on Distroless        |
+    | `osmolabs/osmosis:{{ .Version }}-distroless` | `distroless/static-debian11` |  Distroless image (same as above)        |
+    | `osmolabs/osmosis:{{ .Version }}-nonroot`    | `distroless/static-debian11:nonroot` |  Distroless non-root image     |            |
+    | `osmolabs/osmosis:{{ .Version }}-alpine`     | `alpine` |  Alpine image                 |
 
-    Example:
+    Example run:
 
     ```bash
     docker run osmolabs/osmosis:{{ .Version }} version
