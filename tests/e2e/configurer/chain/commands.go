@@ -422,7 +422,7 @@ func (n *NodeConfig) LockTokens(tokens string, duration string, from string) int
 	require.NoError(n.t, err)
 
 	// Extract the lock ID from the response
-	startIndex := strings.Index(resp.String(), `[{"key":"lock_id","value":"`) + len(`[{"key":"lock_id","value":"`)
+	startIndex := strings.Index(resp.String(), `[{"key":"period_lock_id","value":"`) + len(`[{"key":"period_lock_id","value":"`)
 	endIndex := strings.Index(resp.String()[startIndex:], `"`)
 
 	// Extract the lock ID substring
