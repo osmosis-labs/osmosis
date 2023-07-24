@@ -27,7 +27,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
-	v16 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v16"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/initialization"
@@ -124,15 +123,6 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 		s.T().Run("AddToExistingLockPostUpgrade", func(t *testing.T) {
 			t.Parallel()
 			s.AddToExistingLockPostUpgrade()
-		})
-	}
-
-	if s.skipUpgrade {
-		s.T().Skip("Skipping ConcentratedLiquidity_CanonicalPool_And_Parameters test")
-	} else {
-		s.T().Run("ConcentratedLiquidity_CanonicalPool_And_Parameters", func(t *testing.T) {
-			t.Parallel()
-			s.ConcentratedLiquidity_CanonicalPool_And_Parameters()
 		})
 	}
 
@@ -1752,58 +1742,4 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	// uosmo = 2_000_000
 	// quote assset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
 	osmoassert.DecApproxEq(s.T(), sdk.NewDecWithPrec(5, 1), afterSwapTwapBOverA, sdk.NewDecWithPrec(1, 2))
-}
-
-// Tests that v16 upgrade correctly creates the canonical OSMO-DAI pool in the upgrade.
-// Prefixed with "A" to run before TestConcentratedLiquidity that resets the pool creation
-// parameter.
-func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPool_And_Parameters() {
-	if s.skipUpgrade {
-		s.T().Skip("Skipping v16 canonical pool creation test because upgrade is not enabled")
-	}
-
-	expectedSpreadReward := sdk.MustNewDecFromStr("0.002")
-
-	_, chainANode := s.getChainACfgs()
-
-	// Taken from: https://app.osmosis.zone/pool/674
-	concentratedPoolId := chainANode.QueryConcentratedPooIdLinkFromCFMM(config.DaiOsmoPoolIdv16)
-
-	concentratedPool := s.updatedConcentratedPool(chainANode, concentratedPoolId)
-
-	s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
-	s.Require().Equal(v16.DesiredDenom0, concentratedPool.GetToken0())
-	s.Require().Equal(v16.DAIIBCDenom, concentratedPool.GetToken1())
-	s.Require().Equal(uint64(v16.TickSpacing), concentratedPool.GetTickSpacing())
-	s.Require().Equal(expectedSpreadReward.String(), concentratedPool.GetSpreadFactor(sdk.Context{}).String())
-
-	// Check that the cl pool denom is now an authorized superfluid denom.
-	superfluidAssets := chainANode.QueryAllSuperfluidAssets()
-
-	found := false
-	for _, superfluidAsset := range superfluidAssets {
-		if superfluidAsset.Denom == cltypes.GetConcentratedLockupDenomFromPoolId(concentratedPoolId) {
-			found = true
-			break
-		}
-	}
-
-	s.Require().True(found, "concentrated liquidity pool denom not found in superfluid assets")
-
-	// Check that the community pool module account possesses a position
-	communityPoolAddress := chainANode.QueryCommunityPoolModuleAccount()
-	positions := chainANode.QueryConcentratedPositions(communityPoolAddress)
-	s.Require().Len(positions, 1)
-
-	// This spot price is taken from the balancer pool that was initiated pre upgrade.
-	balancerDaiOsmoPool := s.updatedCFMMPool(chainANode, config.DaiOsmoPoolIdv16)
-	expectedSpotPrice, err := balancerDaiOsmoPool.SpotPrice(sdk.Context{}, v16.DAIIBCDenom, v16.DesiredDenom0)
-	s.Require().NoError(err)
-
-	// Allow 0.01% margin of error.
-	multiplicativeTolerance := osmomath.ErrTolerance{
-		MultiplicativeTolerance: sdk.MustNewDecFromStr("0.0001"),
-	}
-
-	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(expectedSpotPrice), concentratedPool.GetCurrentSqrtPrice().PowerInteger(2)))
 }
