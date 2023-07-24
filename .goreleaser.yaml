@@ -1,0 +1,254 @@
+project_name: osmosisd
+
+env:
+  - CGO_ENABLED=1
+  - COSMWASM_VERSION=1.2.3
+
+builds:
+  - id: osmosisd-darwin-amd64
+    main: ./cmd/osmosisd/main.go
+    binary: osmosisd
+    hooks:
+      pre:
+        - wget https://github.com/CosmWasm/wasmvm/releases/download/v{{ .Env.COSMWASM_VERSION }}/libwasmvmstatic_darwin.a -O /lib/libwasmvmstatic_darwin.a
+    env:
+      - CC=o64-clang
+      - CGO_LDFLAGS=-L/lib
+    goos:
+      - darwin
+    goarch:
+      - amd64
+    flags:
+      - -mod=readonly
+      - -trimpath
+    ldflags:
+      - -X github.com/cosmos/cosmos-sdk/version.Name=osmosis
+      - -X github.com/cosmos/cosmos-sdk/version.AppName=osmosisd
+      - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
+      - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
+      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,static_wasm
+      - -w -s
+      - -linkmode=external
+    tags:
+      - netgo
+      - ledger
+      - static_wasm
+
+  - id: osmosisd-darwin-arm64
+    main: ./cmd/osmosisd/main.go
+    binary: osmosisd
+    hooks:
+      pre:
+        - wget https://github.com/CosmWasm/wasmvm/releases/download/v{{ .Env.COSMWASM_VERSION }}/libwasmvmstatic_darwin.a -O /lib/libwasmvmstatic_darwin.a
+    env:
+      - CC=oa64-clang
+      - CGO_LDFLAGS=-L/lib
+    goos:
+      - darwin
+    goarch:
+      - arm64
+    flags:
+      - -mod=readonly
+      - -trimpath
+    ldflags:
+      - -X github.com/cosmos/cosmos-sdk/version.Name=osmosis
+      - -X github.com/cosmos/cosmos-sdk/version.AppName=osmosisd
+      - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
+      - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
+      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,static_wasm
+      - -w -s
+      - -linkmode=external
+    tags:
+      - netgo
+      - ledger
+      - static_wasm
+
+  - id: osmosisd-linux-amd64
+    main: ./cmd/osmosisd
+    binary: osmosisd
+    hooks:
+      pre:
+        - wget https://github.com/CosmWasm/wasmvm/releases/download/v{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.x86_64.a -O /usr/lib/x86_64-linux-gnu/libwasmvm_muslc.a
+    goos:
+      - linux
+    goarch:
+      - amd64
+    env:
+      - CC=x86_64-linux-gnu-gcc
+    flags:
+      - -mod=readonly
+      - -trimpath
+    ldflags:
+      - -X github.com/cosmos/cosmos-sdk/version.Name=osmosis
+      - -X github.com/cosmos/cosmos-sdk/version.AppName=osmosisd
+      - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
+      - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
+      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc
+      - -w -s
+      - -linkmode=external
+      - -extldflags '-Wl,-z,muldefs -static -lm'
+    tags:
+      - netgo
+      - ledger
+      - muslc
+
+  - id: osmosisd-linux-arm64
+    main: ./cmd/osmosisd
+    binary: osmosisd
+    hooks:
+      pre:
+        - wget https://github.com/CosmWasm/wasmvm/releases/download/v{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.aarch64.a -O /usr/lib/aarch64-linux-gnu/libwasmvm_muslc.a
+    goos:
+      - linux
+    goarch:
+      - arm64
+    env:
+      - CC=aarch64-linux-gnu-gcc
+    flags:
+      - -mod=readonly
+      - -trimpath
+    ldflags:
+      - -X github.com/cosmos/cosmos-sdk/version.Name=osmosis 
+      - -X github.com/cosmos/cosmos-sdk/version.AppName=osmosisd 
+      - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }} 
+      - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
+      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc
+      - -w -s
+      - -linkmode=external
+      - -extldflags '-Wl,-z,muldefs -static -lm'
+    tags:
+      - netgo
+      - ledger
+      - muslc
+
+universal_binaries:
+  - id: osmosisd-darwin-universal
+    ids:
+      - osmosisd-darwin-amd64
+      - osmosisd-darwin-arm64
+    replace: true
+    name_template: "{{.ProjectName}}"
+
+archives:
+  - id: zipped
+    builds:
+      - osmosisd-darwin-universal
+      - osmosisd-linux-amd64
+      - osmosisd-linux-arm64
+    name_template: "{{.ProjectName}}-{{ .Os }}-{{ .Arch }}"
+    format: tar.gz
+    files:
+      - none*
+  - id: binaries
+    builds:
+      - osmosisd-darwin-universal
+      - osmosisd-linux-amd64
+      - osmosisd-linux-arm64
+    name_template: "{{.ProjectName}}-{{ .Os }}-{{ .Arch }}"
+    format: binary
+    files:
+      - none*
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+# Docs: https://goreleaser.com/customization/homebrew/
+brews:
+  - name: osmosisd
+    folder: Formula
+    ids:
+    - binaries
+    homepage: "https://gihub.com/osmosis-labs/osmosis"
+    description: "osmosisd binary to interact with the Osmosis network"
+    conflicts:
+      - osmosisd
+    test: |
+      system "#{bin}/osmosisd version"
+    install: |
+      bin.install 'osmosisd'
+    skip_upload: true
+    # # Uncomment line below if you want to try to commit the updated formula
+    # skip_upload: false
+    # repository:
+    #   owner: osmosis-labs
+    #   name: homebrew-osmosis
+    #   branch: main
+    #   pull_request:
+    #     enabled: true
+    # commit_author:
+    #   name: osmo-bot
+    #   email: devops@osmosis.team
+    # commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+
+# Docs: https://goreleaser.com/customization/changelog/
+changelog:
+  skip: true
+
+# Docs: https://goreleaser.com/customization/release/
+release:
+  github:
+    owner: osmosis-labs
+    name: osmosis
+  replace_existing_draft: true
+  header: |
+    < DESCRIPTION OF RELEASE >
+
+    ## Changelog
+
+    See the full changelog [here](https://github.com/osmosis-labs/osmosis/blob/v{{ .Version }}/CHANGELOG.md)
+
+    ## ⚡️ Binaries
+
+    Binaries for Linux (amd64 and arm64) are available below.
+    Darwin users can use the same universal binary for both amd64 and arm64.
+
+    #### 🔨 Build from source
+
+    If you prefer to build from source, you can use the following commands:
+
+    ````bash
+    git clone https://github.com/osmosis-labs/osmosis
+    cd osmosis && git checkout v{{ .Version }}
+    make install
+    ````
+
+    ## 🐳 Run with Docker
+
+    As an alternative to installing and running osmosisd on your system, you may run osmosisd in a Docker container.
+    The following Docker images are available in our registry:
+
+    | Image Name | Base | Description |
+    |------------|------|---------|
+    | `osmolabs/osmosis:{{ .Version }}`            | `distroless/static-debian11` | Default image based on Distroless        |
+    | `osmolabs/osmosis:{{ .Version }}-distroless` | `distroless/static-debian11` |  Distroless image (same as above)        |
+    | `osmolabs/osmosis:{{ .Version }}-nonroot`    | `distroless/static-debian11:nonroot` |  Distroless non-root image     |            |
+    | `osmolabs/osmosis:{{ .Version }}-alpine`     | `alpine` |  Alpine image                 |
+
+    Example run:
+
+    ```bash
+    docker run osmolabs/osmosis:{{ .Version }} version
+    # v{{ .Version }}
+    ````
+
+    All the images support `arm64` and `amd64` architectures.
+
+  name_template: "Osmosis v{{.Version}} 🧪"
+  mode: replace
+  draft: true
+
+# Docs: https://goreleaser.com/customization/announce/
+#
+# We could automatically announce the release in
+# - discord
+# - slack
+# - twitter
+# - webhooks
+# - telegram
+# - reddit
+#
+# announce:
+  # discord:
+  #   enabled: true
+  #   message_template: 'New {{.Tag}} is out!'
