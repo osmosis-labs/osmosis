@@ -3411,3 +3411,111 @@ func (s *KeeperTestSuite) TestInfiniteSwapLoop_OutGivenIn() {
 	_, _, _, err = s.clk.SwapOutAmtGivenIn(s.Ctx, swapAddress, pool, tokenOut, ETH, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
 	s.Require().NoError(err)
 }
+
+func (s *KeeperTestSuite) TestComputeMaxInAmtGivenMaxTicksCrossed() {
+	tests := []struct {
+		name            string
+		tokenInDenom    string
+		tokenOutDenom   string
+		maxTicksCrossed uint64
+		expectedError   error
+	}{
+		{
+			name:            "happy path, ETH in, max ticks equal to number of initialized ticks in swap direction",
+			tokenInDenom:    ETH,
+			tokenOutDenom:   USDC,
+			maxTicksCrossed: 3,
+		},
+		{
+			name:            "happy path, USDC in, max ticks equal to number of initialized ticks in swap direction",
+			tokenInDenom:    USDC,
+			tokenOutDenom:   ETH,
+			maxTicksCrossed: 3,
+		},
+		{
+			name:            "ETH in, max ticks less than number of initialized ticks in swap direction",
+			tokenInDenom:    ETH,
+			tokenOutDenom:   USDC,
+			maxTicksCrossed: 2,
+		},
+		{
+			name:            "USDC in, max ticks less than number of initialized ticks in swap direction",
+			tokenInDenom:    USDC,
+			tokenOutDenom:   ETH,
+			maxTicksCrossed: 2,
+		},
+		{
+			name:            "ETH in, max ticks greater than number of initialized ticks in swap direction",
+			tokenInDenom:    ETH,
+			tokenOutDenom:   USDC,
+			maxTicksCrossed: 4,
+		},
+		{
+			name:            "USDC in, max ticks greater than number of initialized ticks in swap direction",
+			tokenInDenom:    USDC,
+			tokenOutDenom:   ETH,
+			maxTicksCrossed: 4,
+		},
+		{
+			name:            "error: tokenInDenom not in pool",
+			tokenInDenom:    "BTC",
+			tokenOutDenom:   ETH,
+			maxTicksCrossed: 4,
+			expectedError:   types.TokenInDenomNotInPoolError{TokenInDenom: "BTC"},
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+			clPool := s.PrepareConcentratedPool()
+			expectedResultingTokenOutAmount := sdk.ZeroInt()
+
+			// Create positions and calculate expected resulting tokens
+			positions := []struct {
+				lowerTick, upperTick int64
+				maxTicks             uint64
+			}{
+				{DefaultLowerTick, DefaultUpperTick, 0},                 // Surrounding the current price
+				{DefaultLowerTick - 10000, DefaultLowerTick, 1},         // Below the position surrounding the current price
+				{DefaultLowerTick - 20000, DefaultLowerTick - 10000, 2}, // Below the position below the position surrounding the current price
+				{DefaultUpperTick, DefaultUpperTick + 10000, 1},         // Above the position surrounding the current price
+				{DefaultUpperTick + 10000, DefaultUpperTick + 20000, 2}, // Above the position above the position surrounding the current price
+			}
+
+			// Create positions and determine how much token out we should expect given the maxTicksCrossed provided.
+			for _, pos := range positions {
+				amt0, amt1 := s.createPositionAndFundAcc(clPool, pos.lowerTick, pos.upperTick)
+				expectedResultingTokenOutAmount = s.calculateExpectedTokens(test.tokenInDenom, test.maxTicksCrossed, pos.maxTicks, amt0, amt1, expectedResultingTokenOutAmount)
+			}
+
+			// System Under Test
+			_, resultingTokenOut, err := s.App.ConcentratedLiquidityKeeper.ComputeMaxInAmtGivenMaxTicksCrossed(s.Ctx, clPool.GetId(), test.tokenInDenom, test.maxTicksCrossed)
+
+			if test.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, test.expectedError.Error())
+			} else {
+				s.Require().NoError(err)
+
+				errTolerance := osmomath.ErrTolerance{AdditiveTolerance: sdk.NewDec(int64(test.maxTicksCrossed))}
+				s.Require().Equal(0, errTolerance.Compare(expectedResultingTokenOutAmount, resultingTokenOut.Amount), "expected: %s, got: %s", expectedResultingTokenOutAmount, resultingTokenOut.Amount)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) createPositionAndFundAcc(clPool types.ConcentratedPoolExtension, lowerTick, upperTick int64) (amt0, amt1 sdk.Int) {
+	s.FundAcc(s.TestAccs[0], DefaultCoins)
+	_, amt0, amt1, _, _, _, _ = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+	return
+}
+
+func (s *KeeperTestSuite) calculateExpectedTokens(tokenInDenom string, testMaxTicks, positionMaxTicks uint64, amt0, amt1, currentTotal sdk.Int) sdk.Int {
+	if tokenInDenom == ETH && testMaxTicks > positionMaxTicks {
+		return currentTotal.Add(amt1)
+	} else if tokenInDenom == USDC && testMaxTicks > positionMaxTicks {
+		return currentTotal.Add(amt0)
+	}
+	return currentTotal
+}

@@ -808,3 +808,133 @@ func edgeCaseInequalityBasedOnSwapStrategy(isZeroForOne bool, nextInitializedTic
 	}
 	return nextInitializedTickSqrtPrice.LT(computedSqrtPrice)
 }
+
+// Returns the maximum amount of the tokenInDenom that can be swapped into the pool
+// to swap through all the liquidity from the current tick through the maxTicksCrossed tick,
+// but not exceed it.
+//
+// The protorev use case for this will be to call this method to X number of ticks based
+// on what is acceptable gas-wise and use the maxTokenIn as the upper bound for the binary
+// search if it's less than the default protorev binary search upper bound. This will then
+// allow the module to intelligently limit the gas-usage and compute time for assessing the
+// backrunning opportunities of routes that contain a concentrated liquidity pool(s).
+func (k Keeper) ComputeMaxInAmtGivenMaxTicksCrossed(
+	ctx sdk.Context,
+	poolId uint64,
+	tokenInDenom string,
+	maxTicksCrossed uint64,
+) (maxTokenIn, resultingTokenOut sdk.Coin, err error) {
+	p, err := k.getPoolForSwap(ctx, poolId)
+	if err != nil {
+		return sdk.Coin{}, sdk.Coin{}, err
+	}
+
+	tokenOutDenom := ""
+
+	if tokenInDenom != p.GetToken0() && tokenInDenom != p.GetToken1() {
+		return sdk.Coin{}, sdk.Coin{}, types.TokenInDenomNotInPoolError{TokenInDenom: tokenInDenom}
+	}
+
+	if tokenInDenom == p.GetToken0() {
+		tokenOutDenom = p.GetToken1()
+	} else {
+		tokenOutDenom = p.GetToken0()
+	}
+
+	swapStrategy, _, err := k.setupSwapStrategy(p, p.GetSpreadFactor(ctx), tokenInDenom, sdk.ZeroDec())
+	if err != nil {
+		return sdk.Coin{}, sdk.Coin{}, err
+	}
+
+	// Initialize swap state
+	swapState := newSwapState(types.MaxSpotPrice.RoundInt(), p, swapStrategy)
+
+	nextInitTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
+	defer nextInitTickIter.Close()
+
+	fmt.Println("currTick", p.GetCurrentTick())
+	totalTokenOut := sdk.ZeroDec()
+
+	for i := uint64(0); i < maxTicksCrossed; i++ {
+		sqrtPriceStart := swapState.sqrtPrice
+		// Iterator must be valid to be able to retrieve the next tick from it below.
+		if !nextInitTickIter.Valid() {
+			break
+		}
+
+		nextInitializedTick, err := types.TickIndexFromBytes(nextInitTickIter.Key())
+		if err != nil {
+			return sdk.Coin{}, sdk.Coin{}, err
+		}
+
+		fmt.Println("nextInitializedTick", nextInitializedTick)
+
+		_, nextInitializedTickSqrtPrice, err := math.TickToSqrtPrice(nextInitializedTick)
+		if err != nil {
+			return sdk.Coin{}, sdk.Coin{}, types.TickToSqrtPriceConversionError{NextTick: nextInitializedTick}
+		}
+
+		sqrtPriceTarget := swapStrategy.GetSqrtTargetPrice(nextInitializedTickSqrtPrice)
+
+		computedSqrtPrice, amountOut, amountIn, spreadRewardChargeTotal := swapStrategy.ComputeSwapWithinBucketInGivenOut(
+			swapState.sqrtPrice,
+			sqrtPriceTarget,
+			swapState.liquidity,
+			swapState.amountSpecifiedRemaining,
+		)
+
+		fmt.Println("amountOut", amountOut)
+		fmt.Println("amountIn", amountIn)
+
+		swapState.sqrtPrice = computedSqrtPrice
+		swapState.amountSpecifiedRemaining.SubMut(amountOut)
+		swapState.amountCalculated.AddMut(amountIn.Add(spreadRewardChargeTotal))
+
+		totalTokenOut = totalTokenOut.Add(amountOut)
+
+		nextInitializedTickSqrtPriceBigDec := osmomath.BigDecFromSDKDec(nextInitializedTickSqrtPrice)
+
+		// We do not need to track spread rewards or uptime accums here since we are not actually swapping.
+		if nextInitializedTickSqrtPriceBigDec.Equal(computedSqrtPrice) {
+			nextInitializedTickInfo, err := ParseTickFromBz(nextInitTickIter.Value())
+			if err != nil {
+				return sdk.Coin{}, sdk.Coin{}, err
+			}
+			liquidityNet := nextInitializedTickInfo.LiquidityNet
+			// Move next tick iterator to the next tick as the tick is crossed.
+			nextInitTickIter.Next()
+
+			liquidityNet = swapState.swapStrategy.SetLiquidityDeltaSign(liquidityNet)
+			// Update the swapState's liquidity with the new tick's liquidity
+			swapState.liquidity.AddMut(liquidityNet)
+
+			// Update the swapState's tick with the tick we retrieved liquidity from
+			swapState.tick = swapStrategy.UpdateTickAfterCrossing(nextInitializedTick)
+		} else if edgeCaseInequalityBasedOnSwapStrategy(swapStrategy.ZeroForOne(), nextInitializedTickSqrtPriceBigDec, computedSqrtPrice) {
+			// If, based on the swap strategy, the computedSqrtPrice matches the edge case inequality, we return an error.
+			// This is an edge case that occurs when swapping at/near tick boundaries that will be fixed in the next release.
+			// For now, we return an error and ask the user to try again with a different swap amount.
+			return sdk.Coin{}, sdk.Coin{}, types.ComputedSqrtPriceInequalityError{IsZeroForOne: swapStrategy.ZeroForOne(), ComputedSqrtPrice: computedSqrtPrice, NextInitializedTickSqrtPrice: nextInitializedTickSqrtPriceBigDec}
+		} else if !sqrtPriceStart.Equal(computedSqrtPrice) {
+			// Otherwise if the sqrtPrice calculated from ComputeSwapWithinBucketOutGivenIn(...) does not equal the sqrtPriceStart we started with at the
+			// beginning of this iteration, we set the swapState tick to the corresponding tick of the computedSqrtPrice calculated from ComputeSwapWithinBucketOutGivenIn(...)
+			newTick, err := math.CalculateSqrtPriceToTick(computedSqrtPrice)
+			if err != nil {
+				return sdk.Coin{}, sdk.Coin{}, err
+			}
+			swapState.tick = newTick
+		}
+
+		// If nothing was consumed from swapState.amountSpecifiedRemaining, we break the loop early.
+		if amountOut.IsZero() {
+			break
+		}
+	}
+
+	maxAmt := swapState.amountCalculated.Ceil().TruncateInt()
+	maxTokenIn = sdk.NewCoin(tokenInDenom, maxAmt)
+
+	resultingTokenOut = sdk.NewCoin(tokenOutDenom, totalTokenOut.TruncateInt())
+
+	return maxTokenIn, resultingTokenOut, nil
+}
