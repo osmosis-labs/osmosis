@@ -414,6 +414,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		timeElapsed             time.Duration
 		createLockState         lockState
 		withdrawWithNonOwner    bool
+		isFullLiquidityWithdraw bool
 	}{
 		"base case: withdraw full liquidity amount": {
 			setupConfig: baseCase,
@@ -422,7 +423,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				// Note: subtracting one due to truncations in favor of the pool when withdrawing.
 				amount1Expected: baseCase.amount1Expected.Sub(sdk.OneInt()), // 5000 usdc
 			},
-			timeElapsed: defaultTimeElapsed,
+			timeElapsed:             defaultTimeElapsed,
+			isFullLiquidityWithdraw: true,
 		},
 		"withdraw full liquidity amount with underlying lock that has finished unlocking": {
 			setupConfig: baseCase,
@@ -445,8 +447,9 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				liquidityAmount:  FullRangeLiquidityAmt,
 				underlyingLockId: 1,
 			},
-			createLockState: unlocked,
-			timeElapsed:     defaultTimeElapsed,
+			createLockState:         unlocked,
+			timeElapsed:             defaultTimeElapsed,
+			isFullLiquidityWithdraw: true,
 		},
 		"error: withdraw full liquidity amount but still locked": {
 			setupConfig: baseCase,
@@ -484,7 +487,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				// Note: subtracting one due to truncations in favor of the pool when withdrawing.
 				amount1Expected: baseCase.amount1Expected.Sub(sdk.OneInt()), // 5000 usdc
 			},
-			timeElapsed: 0,
+			timeElapsed:             0,
+			isFullLiquidityWithdraw: true,
 		},
 		"error: no position created": {
 			setupConfig: baseCase,
@@ -696,6 +700,17 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			} else {
 				// Check that the position was updated.
 				s.validatePositionUpdate(s.Ctx, config.positionId, expectedRemainingLiquidity)
+			}
+
+			// Check that ticks were removed if liquidity is fully withdrawn.
+			lowerTickValue := store.Get(types.KeyTick(defaultPoolId, config.lowerTick))
+			upperTickValue := store.Get(types.KeyTick(defaultPoolId, config.upperTick))
+			if tc.isFullLiquidityWithdraw {
+				s.Require().Nil(lowerTickValue)
+				s.Require().Nil(upperTickValue)
+			} else {
+				s.Require().NotNil(lowerTickValue)
+				s.Require().NotNil(upperTickValue)
 			}
 
 			// Check tick state.
