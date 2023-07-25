@@ -812,6 +812,7 @@ func (s *KeeperTestSuite) TestValidateSharesToMigrateUnlockAndExitBalancerPool()
 		},
 		"happy path (partial shares)": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.4"),
+			expectedError:            types.MigratePartialSharesError{SharesToMigrate: "20000000000000000000", SharesInLock: "50000000000000000000"},
 		},
 		"error: lock does not exist": {
 			percentOfSharesToMigrate:  sdk.MustNewDecFromStr("1"),

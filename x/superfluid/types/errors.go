@@ -73,6 +73,15 @@ func (e MigrateMoreSharesThanLockHasError) Error() string {
 	return fmt.Sprintf("cannot migrate more shares (%s) than lock has (%s)", e.SharesToMigrate, e.SharesInLock)
 }
 
+type MigratePartialSharesError struct {
+	SharesToMigrate string
+	SharesInLock    string
+}
+
+func (e MigratePartialSharesError) Error() string {
+	return fmt.Sprintf("cannot partial migrate shares (%s). The lock has (%s)", e.SharesToMigrate, e.SharesInLock)
+}
+
 type TwoTokenBalancerPoolError struct {
 	NumberOfTokens int
 }

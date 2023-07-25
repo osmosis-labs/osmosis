@@ -316,20 +316,15 @@ func (k Keeper) validateSharesToMigrateUnlockAndExitBalancerPool(ctx sdk.Context
 	}
 
 	// Finish unlocking directly for locked or unlocking locks
-	if sharesToMigrate.Equal(gammSharesInLock) {
-		// If migrating the entire lock, force unlock.
-		// This breaks and deletes associated synthetic locks.
-		err = k.lk.ForceUnlock(ctx, *lock)
-		if err != nil {
-			return sdk.Coins{}, err
-		}
-	} else {
-		// Otherwise, we must split the lock and force unlock the partial shares to migrate.
-		// This breaks and deletes associated synthetic locks.
-		err = k.lk.PartialForceUnlock(ctx, *lock, sdk.NewCoins(sharesToMigrate))
-		if err != nil {
-			return sdk.Coins{}, err
-		}
+	if !sharesToMigrate.Equal(gammSharesInLock) {
+		return sdk.Coins{}, types.MigratePartialSharesError{SharesToMigrate: sharesToMigrate.Amount.String(), SharesInLock: gammSharesInLock.Amount.String()}
+	}
+
+	// If migrating the entire lock, force unlock.
+	// This breaks and deletes associated synthetic locks.
+	err = k.lk.ForceUnlock(ctx, *lock)
+	if err != nil {
+		return sdk.Coins{}, err
 	}
 
 	// Exit the balancer pool position.
