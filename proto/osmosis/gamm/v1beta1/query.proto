@@ -10,6 +10,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
+import "osmosis/gamm/v1beta1/shared.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v16/x/gamm/types";
 
@@ -114,6 +115,14 @@ service Query {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/concentrated_pool_id_link_from_cfmm/"
         "{cfmm_pool_id}";
+  }
+
+  // CFMMConcentratedPoolLinks returns migration links between CFMM and
+  // Concentrated pools.
+  rpc CFMMConcentratedPoolLinks(QueryCFMMConcentratedPoolLinksRequest)
+      returns (QueryCFMMConcentratedPoolLinksResponse) {
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/cfmm_concentrated_pool_links";
   }
 }
 
@@ -341,4 +350,11 @@ message QueryConcentratedPoolIdLinkFromCFMMRequest {
 
 message QueryConcentratedPoolIdLinkFromCFMMResponse {
   uint64 concentrated_pool_id = 1;
+}
+
+//=============================== QueryCFMMConcentratedPoolLinks
+message QueryCFMMConcentratedPoolLinksRequest {}
+
+message QueryCFMMConcentratedPoolLinksResponse {
+  MigrationRecords migration_records = 1;
 }
