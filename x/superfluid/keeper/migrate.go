@@ -26,18 +26,22 @@ const (
 // RouteLockedBalancerToConcentratedMigration routes the provided lock to the proper migration function based on the lock status.
 // The testing conditions and scope for the different lock status are as follows:
 // Lock Status = Superfluid delegated
+// - cannot migrate partial shares
 // - Instantly undelegate which will bypass unbonding time.
 // - Create new CL Lock and Re-delegate it as a concentrated liquidity position.
 //
 // Lock Status = Superfluid undelegating
+// - cannot migrate partial shares
 // - Continue undelegating as superfluid unbonding CL Position.
 // - Lock the tokens and create an unlocking syntheticLock (to handle cases of slashing)
 //
 // Lock Status = Locked or unlocking (no superfluid delegation/undelegation)
+// - cannot migrate partial shares
 // - Force unlock tokens from gamm shares.
 // - Create new CL lock and starts unlocking or unlocking where it left off.
 //
 // Lock Status = Unlocked
+// - can migrate partial shares
 // - For ex: LP shares
 // - Create new CL lock and starts unlocking or unlocking where it left off.
 //
