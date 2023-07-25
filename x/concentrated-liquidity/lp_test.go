@@ -1606,7 +1606,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			s.Ctx = s.Ctx.WithBlockTime(expectedUpdateTime)
 
 			// system under test
-			actualAmount0, actualAmount1, err := s.App.ConcentratedLiquidityKeeper.UpdatePosition(
+			actualAmount0, actualAmount1, _, _, err := s.App.ConcentratedLiquidityKeeper.UpdatePosition(
 				s.Ctx,
 				tc.poolId,
 				s.TestAccs[tc.ownerIndex],

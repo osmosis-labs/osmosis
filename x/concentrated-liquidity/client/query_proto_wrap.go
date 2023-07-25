@@ -272,6 +272,10 @@ func (q Querier) UserUnbondingPositions(ctx sdk.Context, req clquery.UserUnbondi
 	}
 
 	cfmmPoolId, err := q.Keeper.GetUserUnbondingPositions(ctx, sdkAddr)
+	if err != nil {
+		return nil, err
+	}
+
 	return &clquery.UserUnbondingPositionsResponse{
 		PositionsWithPeriodLock: cfmmPoolId,
 	}, nil

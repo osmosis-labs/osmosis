@@ -28,10 +28,10 @@ import (
 // if we are initializing or updating an upper tick, we subtract the liquidityIn from the LiquidityNet
 // if we are initializing or updating a lower tick, we add the liquidityIn from the LiquidityNet
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
-func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int64, tickIndex int64, liquidityDelta sdk.Dec, upper bool) (err error) {
+func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int64, tickIndex int64, liquidityDelta sdk.Dec, upper bool) (tickIsEmpty bool, err error) {
 	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	// If both liquidity fields are zero, we consume the base gas spread factor for initializing a tick.
@@ -48,7 +48,7 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 		if tickIndex <= currentTick {
 			accum, err := k.GetSpreadRewardAccumulator(ctx, poolId)
 			if err != nil {
-				return err
+				return false, err
 			}
 
 			tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal = accum.GetValue()
@@ -68,8 +68,14 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 		tickInfo.LiquidityNet.AddMut(liquidityDelta)
 	}
 
+	// If liquidity is now zero, this tick is being un-initialized.
+
+	if tickInfo.LiquidityGross.IsZero() && tickInfo.LiquidityNet.IsZero() {
+		tickIsEmpty = true
+	}
+
 	k.SetTickInfo(ctx, poolId, tickIndex, &tickInfo)
-	return nil
+	return tickIsEmpty, nil
 }
 
 // crossTick crosses the given tick. The tick is specified by its index and tick info.
@@ -158,6 +164,12 @@ func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tic
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyTick(poolId, tickIndex)
 	osmoutils.MustSet(store, key, tickInfo)
+}
+
+func (k Keeper) RemoveTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.KeyTick(poolId, tickIndex)
+	store.Delete(key)
 }
 
 func (k Keeper) GetAllInitializedTicksForPool(ctx sdk.Context, poolId uint64) ([]genesis.FullTick, error) {
