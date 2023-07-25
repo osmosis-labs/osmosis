@@ -266,7 +266,7 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		}
 	}
 
-	// If tick now has no liquidity in it, delete it from state.
+	// If lowertick/uppertick has no liquidity in it, delete it from state.
 	if lowerTickIsEmpty {
 		k.RemoveTickInfo(ctx, position.PoolId, position.LowerTick)
 	}
