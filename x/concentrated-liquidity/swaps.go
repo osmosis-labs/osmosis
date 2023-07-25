@@ -818,7 +818,9 @@ func (k Keeper) ComputeMaxInAmtGivenMaxTicksCrossed(
 	tokenInDenom string,
 	maxTicksCrossed uint64,
 ) (maxTokenIn, resultingTokenOut sdk.Coin, err error) {
-	p, err := k.getPoolForSwap(ctx, poolId)
+	cacheCtx, _ := ctx.CacheContext()
+
+	p, err := k.getPoolForSwap(cacheCtx, poolId)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, err
 	}
@@ -837,7 +839,7 @@ func (k Keeper) ComputeMaxInAmtGivenMaxTicksCrossed(
 	}
 
 	// Setup the swap strategy
-	swapStrategy, _, err := k.setupSwapStrategy(p, p.GetSpreadFactor(ctx), tokenInDenom, sdk.ZeroDec())
+	swapStrategy, _, err := k.setupSwapStrategy(p, p.GetSpreadFactor(cacheCtx), tokenInDenom, sdk.ZeroDec())
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, err
 	}
@@ -845,7 +847,7 @@ func (k Keeper) ComputeMaxInAmtGivenMaxTicksCrossed(
 	// Initialize swap state
 	swapState := newSwapState(types.MaxSpotPrice.RoundInt(), p, swapStrategy)
 
-	nextInitTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
+	nextInitTickIter := swapStrategy.InitializeNextTickIterator(cacheCtx, poolId, swapState.tick)
 	defer nextInitTickIter.Close()
 
 	totalTokenOut := sdk.ZeroDec()
