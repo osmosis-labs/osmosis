@@ -1616,12 +1616,12 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			)
 			s.Require().NoError(err)
 
-			// explicitly make update time different to ensure that the pool is updated with last liqudity update.
+			// explicitly make update time different to ensure that the pool is updated with last liquidity update.
 			expectedUpdateTime := tc.joinTime.Add(time.Second)
 			s.Ctx = s.Ctx.WithBlockTime(expectedUpdateTime)
 
 			// system under test
-			actualAmount0, actualAmount1, _, _, err := s.App.ConcentratedLiquidityKeeper.UpdatePosition(
+			actualAmount0, actualAmount1, lowerTickIsEmpty, upperTickIsEmpty, err := s.App.ConcentratedLiquidityKeeper.UpdatePosition(
 				s.Ctx,
 				tc.poolId,
 				s.TestAccs[tc.ownerIndex],
@@ -1638,6 +1638,14 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				s.Require().Equal(sdk.Int{}, actualAmount1)
 			} else {
 				s.Require().NoError(err)
+
+				if tc.liquidityDelta.Equal(DefaultLiquidityAmt.Neg()) {
+					s.Require().True(lowerTickIsEmpty)
+					s.Require().True(upperTickIsEmpty)
+				} else {
+					s.Require().False(lowerTickIsEmpty)
+					s.Require().False(upperTickIsEmpty)
+				}
 
 				var (
 					expectedAmount0 sdk.Dec

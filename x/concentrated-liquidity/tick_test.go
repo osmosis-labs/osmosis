@@ -297,7 +297,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			if test.tickExists {
 				tickInfoBefore, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, test.param.tickIndex)
 				s.Require().NoError(err)
-				_, err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, currentTick, test.param.tickIndex, DefaultLiquidityAmt, test.param.upper)
+				tickIsEmpty, err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, currentTick, test.param.tickIndex, DefaultLiquidityAmt, test.param.upper)
+				s.Require().False(tickIsEmpty)
 				s.Require().NoError(err)
 				if tickInfoBefore.LiquidityGross.IsZero() && test.param.tickIndex <= pool.GetCurrentTick() {
 					tickInfoAfter, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, test.param.tickIndex)
@@ -328,7 +329,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 
 			// System under test.
 			// Initialize or update the tick according to the test case
-			_, err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, currentTick, test.param.tickIndex, test.param.liquidityIn, test.param.upper)
+			tickIsEmpty, err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, currentTick, test.param.tickIndex, test.param.liquidityIn, test.param.upper)
 			if tickInfoAfter.LiquidityGross.IsZero() && test.param.tickIndex <= pool.GetCurrentTick() {
 				tickInfoAfter, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, test.param.tickIndex)
 				s.Require().NoError(err)
@@ -339,6 +340,12 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 				return
 			}
 			s.Require().NoError(err)
+
+			if test.expectedLiquidityGross.IsZero() && test.expectedLiquidityNet.IsZero() {
+				s.Require().True(tickIsEmpty)
+			} else {
+				s.Require().False(tickIsEmpty)
+			}
 
 			// Get the tick info for poolId 1 again
 			tickInfoAfter, err = s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, test.param.tickIndex)
