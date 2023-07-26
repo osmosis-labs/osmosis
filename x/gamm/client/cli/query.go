@@ -352,7 +352,7 @@ Example:
 	)
 }
 
-// GetConcentratedPoolIdLinkFromCFMMRequest returns concentrated pool id that is linked to the given cfmm pool id.
+// GetConcentratedPoolIdLinkFromCFMMRequest returns all concentrated pool id to cfmm pool id links.
 func GetCFMMConcentratedPoolLinksRequest() (*osmocli.QueryDescriptor, *types.QueryCFMMConcentratedPoolLinksRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "cfmm-cl-pool-links",
