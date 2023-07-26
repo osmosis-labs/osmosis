@@ -43,7 +43,7 @@ pre-install new binaries, and cosmovisor will automatically update them
 based on on-chain SoftwareUpgrade proposals.
 
 You should review the docs for cosmovisor located here:
-<https://docs.cosmos.network/master/run-node/cosmovisor.html>
+<https://docs.cosmos.network/main/tooling/cosmovisor>
 
 If you choose to use cosmovisor, please continue with these
 instructions:
@@ -97,7 +97,7 @@ Create the v16 folder, make the build, and copy the daemon over to that folder
 mkdir -p ~/.osmosisd/cosmovisor/upgrades/v16/bin
 cd $HOME/osmosis
 git pull
-git checkout v16.0.0
+git checkout v16.1.0
 make build
 cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v16/bin
 ```
@@ -115,7 +115,7 @@ Now, at the upgrade height, Cosmovisor will upgrade to the v16 binary
 ```{.sh}
 cd $HOME/osmosis
 git pull
-git checkout v16.0.0
+git checkout v16.1.0
 make install
 ```
 

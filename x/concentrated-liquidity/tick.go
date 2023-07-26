@@ -79,7 +79,7 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 // CONTRACT: the caller validates that the pool with the given id exists.
 // CONTRACT: caller is responsible for the uptimeAccums to be up-to-date.
 // CONTRACT: uptimeAccums are associated with the given pool id.
-func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo *model.TickInfo, swapStateSpreadRewardGrowth sdk.DecCoin, spreadRewardAccumValue sdk.DecCoins, uptimeAccums []accum.AccumulatorObject) (liquidityDelta sdk.Dec, err error) {
+func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo *model.TickInfo, swapStateSpreadRewardGrowth sdk.DecCoin, spreadRewardAccumValue sdk.DecCoins, uptimeAccums []*accum.AccumulatorObject) (liquidityDelta sdk.Dec, err error) {
 	if tickInfo == nil {
 		return sdk.Dec{}, types.ErrNextTickInfoNil
 	}

@@ -39,7 +39,10 @@ func (k Keeper) GetSyntheticLockup(ctx sdk.Context, lockID uint64, synthdenom st
 // Error is returned if:
 // - there are more than one synthetic lockup objects with the same underlying lock ID.
 // - there is no synthetic lockup object with the given underlying lock ID.
-func (k Keeper) GetSyntheticLockupByUnderlyingLockId(ctx sdk.Context, lockID uint64) (types.SyntheticLock, error) {
+// Returns (syntheticLockup, found, error)
+// intended behavior for most callers is to check:
+// if !found || err != nil { handle_it }
+func (k Keeper) GetSyntheticLockupByUnderlyingLockId(ctx sdk.Context, lockID uint64) (types.SyntheticLock, bool, error) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, combineKeys(types.KeyPrefixSyntheticLockup, sdk.Uint64ToBigEndian(lockID)))
 	defer iterator.Close()
@@ -49,17 +52,17 @@ func (k Keeper) GetSyntheticLockupByUnderlyingLockId(ctx sdk.Context, lockID uin
 		synthLock := types.SyntheticLock{}
 		err := proto.Unmarshal(iterator.Value(), &synthLock)
 		if err != nil {
-			return types.SyntheticLock{}, err
+			return types.SyntheticLock{}, true, err
 		}
 		synthLocks = append(synthLocks, synthLock)
 	}
 	if len(synthLocks) > 1 {
-		return types.SyntheticLock{}, fmt.Errorf("synthetic lockup with same lock id should not exist")
+		return types.SyntheticLock{}, true, fmt.Errorf("synthetic lockup with same lock id should not exist")
 	}
 	if len(synthLocks) == 0 {
-		return types.SyntheticLock{}, nil
+		return types.SyntheticLock{}, false, nil
 	}
-	return synthLocks[0], nil
+	return synthLocks[0], true, nil
 }
 
 // GetAllSyntheticLockupsByAddr gets all the synthetic lockups from all the locks owned by the given address.
@@ -67,11 +70,13 @@ func (k Keeper) GetAllSyntheticLockupsByAddr(ctx sdk.Context, owner sdk.AccAddre
 	synthLocks := []types.SyntheticLock{}
 	locks := k.GetAccountPeriodLocks(ctx, owner)
 	for _, lock := range locks {
-		synthLock, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
+		synthLock, found, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
 		if err != nil {
 			panic(err)
 		}
-		synthLocks = append(synthLocks, synthLock)
+		if found {
+			synthLocks = append(synthLocks, synthLock)
+		}
 	}
 	return synthLocks
 }
@@ -108,7 +113,8 @@ func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, synthDenom
 	// There is no relationship between unbonding and bonding synthetic lockup, it's managed separately
 	// A separate accumulation store is incremented with the synth denom.
 
-	synthLock, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lockID)
+	// TODO: Next state break change !synthlock.IsNil -> found
+	synthLock, _, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lockID)
 	if err != nil {
 		return err
 	}

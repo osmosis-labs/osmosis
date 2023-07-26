@@ -31,7 +31,7 @@ const (
 	// We want quote asset to be DAI so that when the limit orders on ticks
 	// are implemented, we have tick spacing in terms of DAI as the quote.
 	DesiredDenom0 = "uosmo"
-	TickSpacing = 100
+	TickSpacing   = 100
 
 	// isPermissionlessPoolCreationEnabledCL is a boolean that determines if
 	// concentrated liquidity pools can be created via message. At launch,

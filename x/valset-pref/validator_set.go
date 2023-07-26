@@ -353,10 +353,11 @@ func (k Keeper) ForceUnlockBondedOsmo(ctx sdk.Context, lockID uint64, delegatorA
 	}
 
 	// Ensured the lock has no superfluid relation by checking that there are no synthetic locks
-	synthLocks, err := k.lockupKeeper.GetSyntheticLockupByUnderlyingLockId(ctx, lockID)
+	synthLocks, _, err := k.lockupKeeper.GetSyntheticLockupByUnderlyingLockId(ctx, lockID)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
+	// TODO: use found
 	if synthLocks != (lockuptypes.SyntheticLock{}) {
 		return sdk.Coin{}, fmt.Errorf("cannot use DelegateBondedTokens being used for superfluid.")
 	}

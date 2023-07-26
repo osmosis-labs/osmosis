@@ -9,8 +9,10 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 )
@@ -2603,4 +2605,56 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 			s.runMultiplePositionRanges(tc.tickRanges, tc.rangeTestParams)
 		})
 	}
+}
+
+// This test reproduces the panic stemming from the negative range accumulator whenever
+// lower tick accumulator is greater than upper tick accumulator and current tick is above the position's range.
+func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
+	s.SetupTest()
+	// Initialize pool with non-zero spread factor.
+	spreadFactor := sdk.NewDecWithPrec(3, 3)
+	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], DefaultCoin0.Denom, DefaultCoin1.Denom, 1, spreadFactor)
+	poolId := pool.GetId()
+
+	// Create full range position
+	s.FundAcc(s.TestAccs[0], DefaultCoins)
+	s.CreateFullRangePosition(pool, DefaultCoins)
+
+	// Initialize position at a higher range
+	s.FundAcc(s.TestAccs[0], DefaultCoins)
+	_, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultCurrTick+50, DefaultCurrTick+100)
+	s.Require().NoError(err)
+
+	// Refetch pool
+	pool, err = s.clk.GetPoolById(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	// Swap to approximately tick 50 below current
+	amountZeroIn := math.CalcAmount0Delta(osmomath.BigDecFromSDKDec(pool.GetLiquidity()), pool.GetCurrentSqrtPrice(), osmomath.BigDecFromSDKDec(s.tickToSqrtPrice(DefaultCurrTick-50)), true)
+	coinZeroIn := sdk.NewCoin(pool.GetToken0(), amountZeroIn.SDKDec().TruncateInt())
+
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(coinZeroIn))
+	_, err = s.clk.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, coinZeroIn, pool.GetToken1(), sdk.ZeroInt(), spreadFactor)
+	s.Require().NoError(err)
+
+	// Refetch pool
+	pool, err = s.clk.GetPoolById(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	// Swap to approximately DefaultCurrTick + 150
+	amountOneIn := math.CalcAmount1Delta(osmomath.BigDecFromSDKDec(pool.GetLiquidity()), pool.GetCurrentSqrtPrice(), osmomath.BigDecFromSDKDec(s.tickToSqrtPrice(DefaultCurrTick+150)), true)
+	coinOneIn := sdk.NewCoin(pool.GetToken1(), amountOneIn.SDKDec().TruncateInt())
+
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(coinOneIn))
+	_, err = s.clk.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, coinOneIn, pool.GetToken0(), sdk.ZeroInt(), spreadFactor)
+	s.Require().NoError(err)
+
+	// This currently panics due to the lack of support for negative range accumulators.
+	// We initialized the lower tick's accumulator (DefaultCurrTick - 25) to be greater than the upper tick's accumulator (DefaultCurrTick + 50)
+	// Whenever the current tick is above the position's range, we compute in range accumulator as upper tick accumulator - lower tick accumulator
+	// In this case, it ends up being negative, which is not supported.
+	// The fix is to be implmeneted in: https://github.com/osmosis-labs/osmosis/issues/5854
+	osmoassert.ConditionalPanic(s.T(), true, func() {
+		s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultCurrTick-25, DefaultCurrTick+50)
+	})
 }

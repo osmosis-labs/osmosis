@@ -58,7 +58,7 @@ $$y = L \sqrt P$$
 Note the square root around price. By tracking it this way, we can utilize the
 following core property of the architecture:
 
-$$L = \Delta Y / \Delta \sqrt P$$
+$$L = \Delta y / \Delta \sqrt P$$
 
 Since only one of the following changes at a time:
 

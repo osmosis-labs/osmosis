@@ -4075,7 +4075,7 @@ func (s *KeeperTestSuite) TestGetLargestAuthorizedAndSupportedUptimes() {
 // 2ETH
 var defaultGlobalRewardGrowth = sdk.NewDecCoins(oneEth.Add(oneEth))
 
-func (s *KeeperTestSuite) prepareSpreadRewardsAccumulator() accum.AccumulatorObject {
+func (s *KeeperTestSuite) prepareSpreadRewardsAccumulator() *accum.AccumulatorObject {
 	pool := s.PrepareConcentratedPool()
 	testAccumulator, err := s.clk.GetSpreadRewardAccumulator(s.Ctx, pool.GetId())
 	s.Require().NoError(err)

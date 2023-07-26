@@ -2,12 +2,10 @@ package keeper
 
 import (
 	"fmt"
-	"strconv"
 
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 
@@ -366,14 +364,6 @@ func (k Keeper) partialSuperfluidUndelegate(ctx sdk.Context, sender string, lock
 	return k.createSyntheticLockup(ctx, newLock.ID, intermediaryAcc, unlockingStatus)
 }
 
-// partialSuperfluidUndelegateToConcentratedPosition starts undelegating a portion of a superfluid delegated position for the given lock. It behaves similarly to partialSuperfluidUndelegate,
-// however it does not create a new synthetic lockup representing the unstaking side. This is because after the time this function is called, we might
-// want to perform more operations prior to creating a lock. Once the actual lock is created, the synthetic lockup representing the unstaking side
-// should eventually be created as well. Use this function with caution to avoid accidentally missing synthetic lock creation.
-func (k Keeper) partialSuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, sender string, gammLockID uint64, amountToUndelegate sdk.Coin) (types.SuperfluidIntermediaryAccount, *lockuptypes.PeriodLock, error) {
-	return k.partialUndelegateCommon(ctx, sender, gammLockID, amountToUndelegate)
-}
-
 // SuperfluidUnbondLock unbonds the lock that has been used for superfluid staking.
 // This method would return an error if the underlying lock is not superfluid undelegating.
 func (k Keeper) SuperfluidUnbondLock(ctx sdk.Context, underlyingLockId uint64, sender string) error {
@@ -471,10 +461,11 @@ func (k Keeper) unbondLock(ctx sdk.Context, underlyingLockId uint64, sender stri
 	if err != nil {
 		return 0, err
 	}
-	synthLock, err := k.lk.GetSyntheticLockupByUnderlyingLockId(ctx, underlyingLockId)
+	synthLock, _, err := k.lk.GetSyntheticLockupByUnderlyingLockId(ctx, underlyingLockId)
 	if err != nil {
 		return 0, err
 	}
+	// TODO: Use !found
 	if synthLock == (lockuptypes.SyntheticLock{}) {
 		return 0, types.ErrNotSuperfluidUsedLockup
 	}
@@ -498,10 +489,11 @@ func (k Keeper) alreadySuperfluidStaking(ctx sdk.Context, lockID uint64) bool {
 		return true
 	}
 
-	synthLock, err := k.lk.GetSyntheticLockupByUnderlyingLockId(ctx, lockID)
+	synthLock, _, err := k.lk.GetSyntheticLockupByUnderlyingLockId(ctx, lockID)
 	if err != nil {
 		return false
 	}
+	// TODO: return found
 	return synthLock != (lockuptypes.SyntheticLock{})
 }
 
@@ -663,52 +655,4 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 		// if valid delegation has been found, increment delegation index
 		fn(index+int64(i), delegation)
 	}
-}
-
-// LockExistingFullRangePositionAndSFStake locks existing position and superfluid stakes the position.
-// This method would error if the existing position is not a full ranged position.
-func (k Keeper) LockExistingFullRangePositionAndSFStake(ctx sdk.Context, positionId uint64, sender sdk.AccAddress, valAddr string) (concentratedLockID uint64, err error) {
-	// Retrieve position via ID.
-	position, err := k.clk.GetPosition(ctx, positionId)
-	if err != nil {
-		return 0, err
-	}
-
-	// Check that the position is full range and belongs to the owner.
-	if position.LowerTick != cltypes.MinInitializedTick || position.UpperTick != cltypes.MaxTick {
-		return 0, cltypes.PositionNotFullRangeError{PositionId: positionId, LowerTick: position.LowerTick, UpperTick: position.UpperTick}
-	}
-	if position.Address != sender.String() {
-		return 0, cltypes.PositionOwnerMismatchError{PositionOwner: position.Address, Sender: sender.String()}
-	}
-
-	// Mint CL shares (similar to GAMM shares) for the position and lock them for the unbonding duration.
-	// Also sets the position ID to underlying lock ID mapping.
-	lockDuration := k.sk.GetParams(ctx).UnbondingTime
-	concentratedLockId, _, err := k.clk.MintSharesAndLock(ctx, position.PoolId, positionId, sender, lockDuration)
-	if err != nil {
-		return 0, err
-	}
-
-	// Superfluid delegate the newly created concentrated lock.
-	err = k.SuperfluidDelegate(ctx, position.Address, concentratedLockId, valAddr)
-	if err != nil {
-		return 0, err
-	}
-
-	// Emit events.
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
-		),
-		sdk.NewEvent(
-			types.TypeEvtLockExistingFullRangePositionAndSFStake,
-			sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
-			sdk.NewAttribute(types.AttributePositionId, strconv.FormatUint(positionId, 10)),
-			sdk.NewAttribute(types.AttributeConcentratedLockId, strconv.FormatUint(concentratedLockId, 10)),
-		),
-	})
-
-	return concentratedLockId, nil
 }
