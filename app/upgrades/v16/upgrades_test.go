@@ -74,7 +74,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 	multiplicativeTolerance := osmomath.ErrTolerance{
 		MultiplicativeTolerance: sdk.MustNewDecFromStr("0.0001"),
 	}
-
+	defaultDaiAmount, _ := sdk.NewIntFromString("73000000000000000000000")
 	testCases := []struct {
 		name         string
 		pre_upgrade  func()
@@ -88,11 +88,11 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 				// Create earlier pools
 				for i := uint64(1); i < v16.DaiOsmoPoolId; i++ {
-					suite.PrepareBalancerPoolWithCoins(desiredDenom0Coin, daiCoin)
+					suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000000)), sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", defaultDaiAmount))
 				}
 
 				// Create DAI / OSMO pool
-				suite.PrepareBalancerPoolWithCoins(daiCoin, desiredDenom0Coin)
+				suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", defaultDaiAmount), sdk.NewCoin("uosmo", sdk.NewInt(10000000000)))
 
 			},
 			func() {

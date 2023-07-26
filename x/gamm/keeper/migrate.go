@@ -13,6 +13,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	clmodel "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
 )
 
 // MigrateUnlockedPositionFromBalancerToConcentrated migrates unlocked lp tokens from a balancer pool to a concentrated liquidity pool.

@@ -21,6 +21,13 @@ func ProposalUpdateMigrationRecordsRESTHandler(clientCtx client.Context) govrest
 	}
 }
 
+func ProposalCreateConcentratedLiquidityPoolAndLinkToCFMMHandler(clientCtx client.Context) govrest.ProposalRESTHandler {
+	return govrest.ProposalRESTHandler{
+		SubRoute: "create-cl-pool-and-cfmm-link",
+		Handler:  emptyHandler(clientCtx),
+	}
+}
+
 func emptyHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 	}

@@ -37,3 +37,7 @@ func GetMaximalNoSwapLPAmount(ctx sdk.Context, pool types.CFMMPoolI, shareOutAmo
 func (k Keeper) RedirectDistributionRecord(ctx sdk.Context, cfmmPoolId, clPoolId uint64) error {
 	return k.redirectDistributionRecord(ctx, cfmmPoolId, clPoolId)
 }
+
+func (k Keeper) CreateConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLinkWith uint64, desiredDenom0 string, tickSpacing uint64) (poolmanagertypes.PoolI, error) {
+	return k.createConcentratedPoolFromCFMM(ctx, cfmmPoolIdToLinkWith, desiredDenom0, tickSpacing)
+}
