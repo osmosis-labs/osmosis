@@ -52,7 +52,7 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 		return nil, err
 	}
 
-	positionId, actualAmount0, actualAmount1, liquidityCreated, lowerTick, upperTick, err := server.keeper.createPosition(ctx, msg.PoolId, sender, msg.TokensProvided, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick)
+	positionId, actualAmount0, actualAmount1, liquidityCreated, lowerTick, upperTick, err := server.keeper.CreatePosition(ctx, msg.PoolId, sender, msg.TokensProvided, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick)
 	if err != nil {
 		return nil, err
 	}
