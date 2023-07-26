@@ -30,6 +30,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdEstimateSwapExactAmountIn)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdEstimateSwapExactAmountOut)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetConcentratedPoolIdLinkFromCFMMRequest)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCFMMConcentratedPoolLinksRequest)
 	cmd.AddCommand(
 		GetCmdNumPools(),
 		GetCmdPoolParams(),
@@ -349,4 +350,14 @@ Example:
 `,
 		types.ModuleName, types.NewQueryClient,
 	)
+}
+
+// GetConcentratedPoolIdLinkFromCFMMRequest returns all concentrated pool id to cfmm pool id links.
+func GetCFMMConcentratedPoolLinksRequest() (*osmocli.QueryDescriptor, *types.QueryCFMMConcentratedPoolLinksRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "cfmm-cl-pool-links",
+		Short: "Query all concentrated pool and cfmm pool id links",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} cfmm-cl-pool-links`,
+	}, &types.QueryCFMMConcentratedPoolLinksRequest{}
 }
