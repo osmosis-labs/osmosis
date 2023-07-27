@@ -20,6 +20,7 @@ var (
 		StableWeight:       5, // it takes around 5 ms to simulate and execute a stable swap
 		BalancerWeight:     2, // it takes around 2 ms to simulate and execute a balancer swap
 		ConcentratedWeight: 2, // it takes around 2 ms to simulate and execute a concentrated swap
+		CosmwasmWeight:     5, // it takes around 5 ms to simulate and execute a cosmwasm swap
 	}
 	DefaultDaysSinceModuleGenesis    = uint64(0)
 	DefaultDeveloperFees             = []sdk.Coin{}

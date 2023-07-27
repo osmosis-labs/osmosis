@@ -340,7 +340,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 			params: param{
 				trades: []types.Trade{
 					{
-						Pool:     50,
+						Pool:     51,
 						TokenOut: "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 						TokenIn:  "uosmo",
 					},
