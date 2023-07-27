@@ -102,9 +102,9 @@ func NewCmdCreateConcentratedLiquidityPoolsProposal() *cobra.Command {
 		Long: strings.TrimSpace(`Submit a create concentrated liquidity pool proposal.
 
 Passing in FlagPoolRecords separated by commas would be parsed automatically to pairs of pool records.
-Ex) --pool-records=uion,uosmo,100,-6,0.003,stake,uosmo,1000,-6,0.005 ->
-[uion<>uosmo, tickSpacing 100, exponentAtPriceOne -6, spreadFactor 0.3%]
-[stake<>uosmo, tickSpacing 1000, exponentAtPriceOne -6, spreadFactor 0.5%]
+Ex) --pool-records=uion,uosmo,100,0.003,stake,uosmo,1000,0.005 ->
+[uion<>uosmo, tickSpacing 100, spreadFactor 0.3%]
+[stake<>uosmo, tickSpacing 1000, spreadFactor 0.5%]
 
 		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -315,28 +315,21 @@ func parsePoolRecords(cmd *cobra.Command) ([]types.PoolRecord, error) {
 			return nil, err
 		}
 
-		exponentAtPriceOneStr := poolRecords[i+3]
-		exponentAtPriceOne, ok := sdk.NewIntFromString(exponentAtPriceOneStr)
-		if !ok {
-			return nil, fmt.Errorf("invalid exponentAtPriceOne: %s", exponentAtPriceOneStr)
-		}
-
-		spreadFactorStr := poolRecords[i+4]
+		spreadFactorStr := poolRecords[i+3]
 		spreadFactor, err := sdk.NewDecFromStr(spreadFactorStr)
 		if err != nil {
 			return nil, err
 		}
 
 		finalPoolRecords = append(finalPoolRecords, types.PoolRecord{
-			Denom0:             denom0,
-			Denom1:             denom1,
-			TickSpacing:        uint64(tickSpacing),
-			ExponentAtPriceOne: exponentAtPriceOne,
-			SpreadFactor:       spreadFactor,
+			Denom0:       denom0,
+			Denom1:       denom1,
+			TickSpacing:  uint64(tickSpacing),
+			SpreadFactor: spreadFactor,
 		})
 
-		// increase counter by the next 5
-		i = i + 5
+		// increase counter by the next 4
+		i = i + 4
 	}
 
 	return finalPoolRecords, nil

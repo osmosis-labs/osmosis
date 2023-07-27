@@ -164,11 +164,10 @@ func (m *PoolIdToTickSpacingRecord) GetNewTickSpacing() uint64 {
 }
 
 type PoolRecord struct {
-	Denom0             string                                 `protobuf:"bytes,1,opt,name=denom0,proto3" json:"denom0,omitempty" yaml:"denom0"`
-	Denom1             string                                 `protobuf:"bytes,2,opt,name=denom1,proto3" json:"denom1,omitempty" yaml:"denom1"`
-	TickSpacing        uint64                                 `protobuf:"varint,3,opt,name=tick_spacing,json=tickSpacing,proto3" json:"tick_spacing,omitempty" yaml:"tick_spacing"`
-	ExponentAtPriceOne github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=exponent_at_price_one,json=exponentAtPriceOne,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"exponent_at_price_one" yaml:"exponent_at_price_one"`
-	SpreadFactor       github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=spread_factor,json=spreadFactor,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"spread_factor" yaml:"spread_factor"`
+	Denom0       string                                 `protobuf:"bytes,1,opt,name=denom0,proto3" json:"denom0,omitempty" yaml:"denom0"`
+	Denom1       string                                 `protobuf:"bytes,2,opt,name=denom1,proto3" json:"denom1,omitempty" yaml:"denom1"`
+	TickSpacing  uint64                                 `protobuf:"varint,3,opt,name=tick_spacing,json=tickSpacing,proto3" json:"tick_spacing,omitempty" yaml:"tick_spacing"`
+	SpreadFactor github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=spread_factor,json=spreadFactor,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"spread_factor" yaml:"spread_factor"`
 }
 
 func (m *PoolRecord) Reset()         { *m = PoolRecord{} }
@@ -402,9 +401,6 @@ func (this *PoolRecord) Equal(that interface{}) bool {
 	if this.TickSpacing != that1.TickSpacing {
 		return false
 	}
-	if !this.ExponentAtPriceOne.Equal(that1.ExponentAtPriceOne) {
-		return false
-	}
 	if !this.SpreadFactor.Equal(that1.SpreadFactor) {
 		return false
 	}
@@ -574,16 +570,6 @@ func (m *PoolRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintGov(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x2a
-	{
-		size := m.ExponentAtPriceOne.Size()
-		i -= size
-		if _, err := m.ExponentAtPriceOne.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintGov(dAtA, i, uint64(size))
-	}
-	i--
 	dAtA[i] = 0x22
 	if m.TickSpacing != 0 {
 		i = encodeVarintGov(dAtA, i, uint64(m.TickSpacing))
@@ -696,8 +682,6 @@ func (m *PoolRecord) Size() (n int) {
 	if m.TickSpacing != 0 {
 		n += 1 + sovGov(uint64(m.TickSpacing))
 	}
-	l = m.ExponentAtPriceOne.Size()
-	n += 1 + l + sovGov(uint64(l))
 	l = m.SpreadFactor.Size()
 	n += 1 + l + sovGov(uint64(l))
 	return n
@@ -1206,40 +1190,6 @@ func (m *PoolRecord) Unmarshal(dAtA []byte) error {
 				}
 			}
 		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ExponentAtPriceOne", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGov
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthGov
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthGov
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.ExponentAtPriceOne.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SpreadFactor", wireType)
 			}
