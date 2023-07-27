@@ -275,7 +275,7 @@ type PoolWeights struct {
 	BalancerWeight uint64 `protobuf:"varint,2,opt,name=balancer_weight,json=balancerWeight,proto3" json:"balancer_weight,omitempty" yaml:"balancer_weight"`
 	// The weight of a concentrated pool
 	ConcentratedWeight uint64 `protobuf:"varint,3,opt,name=concentrated_weight,json=concentratedWeight,proto3" json:"concentrated_weight,omitempty" yaml:"concentrated_weight"`
-	// The weight of a CosmWasm pool
+	// The weight of a cosmwasm pool
 	CosmwasmWeight uint64 `protobuf:"varint,4,opt,name=cosmwasm_weight,json=cosmwasmWeight,proto3" json:"cosmwasm_weight,omitempty" yaml:"cw_weight"`
 }
 
