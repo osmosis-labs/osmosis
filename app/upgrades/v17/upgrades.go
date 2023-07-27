@@ -7,6 +7,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v16/app/keepers"
 	"github.com/osmosis-labs/osmosis/v16/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
 )
 
 func CreateUpgradeHandler(
@@ -22,6 +23,9 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
+
+		// Reset the pool weights upon upgrade. This will add support for CW pools on ProtoRev.
+		keepers.ProtoRevKeeper.SetPoolWeights(ctx, types.DefaultPoolWeights)
 
 		return migrations, nil
 	}
