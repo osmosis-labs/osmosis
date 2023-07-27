@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
-	v16 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v16"
+	v17 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v17"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v16/tests/e2e/containers"
@@ -141,24 +141,18 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	wg.Add(2)
 
-	var daiOsmoPoolIdv16 uint64
-
 	go func() {
 		defer wg.Done()
-		daiOsmoPoolIdv16 = chainANode.CreateBalancerPool("daiosmov16.json", initialization.ValidatorWalletName)
-		daiOsmoShareDenom := fmt.Sprintf("gamm/pool/%d", daiOsmoPoolIdv16)
-		chainANode.EnableSuperfluidAsset(chainA, daiOsmoShareDenom)
+		chainANode.FundCommunityPool(initialization.ValidatorWalletName, strAllUpgradeBaseDenoms())
 	}()
 
 	go func() {
 		defer wg.Done()
-		chainBNode.CreateBalancerPool("daiosmov16.json", initialization.ValidatorWalletName)
+		chainBNode.FundCommunityPool(initialization.ValidatorWalletName, strAllUpgradeBaseDenoms())
 	}()
 
 	// Wait for all goroutines to complete
 	wg.Wait()
-
-	config.DaiOsmoPoolIdv16 = daiOsmoPoolIdv16
 
 	var (
 		poolShareDenom             string
@@ -236,11 +230,9 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	config.LockupWalletSuperfluid = lockupWalletSuperfluid
 	config.StableswapWallet = stableswapWallet
 
-	wg.Add(6)
+	wg.Add(4)
 
 	var errCh = make(chan error, 2)
-
-	oneDai := sdk.NewCoin(v16.DAIIBCDenom, sdk.NewInt(1000000000000000000))
 
 	go func() {
 		defer wg.Done()
@@ -267,24 +259,6 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 		defer wg.Done()
 		uc.t.Logf("Lock and add to existing lock for both regular and superfluid lockups on chainA")
 		chainANode.LockAndAddToExistingLock(chainA, sdk.NewInt(1000000000000000000), poolShareDenom, config.LockupWallet, config.LockupWalletSuperfluid)
-	}()
-
-	go func() {
-		defer wg.Done()
-		uc.t.Logf("Funding chainA's community pool with 1 DAI to be used for the upgrade")
-		communityPoolFunder := chainANode.CreateWalletAndFund("communityPoolFunder", []string{
-			oneDai.String(),
-		})
-		chainANode.FundCommunityPool(communityPoolFunder, oneDai.String())
-	}()
-
-	go func() {
-		defer wg.Done()
-		uc.t.Logf("Funding chainB's community pool with 1 DAI to be used for the upgrade")
-		communityPoolFunder := chainBNode.CreateWalletAndFund("communityPoolFunder", []string{
-			oneDai.String(),
-		})
-		chainBNode.FundCommunityPool(communityPoolFunder, oneDai.String())
 	}()
 
 	wg.Wait()
@@ -414,4 +388,16 @@ func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHe
 	chainConfig.WaitUntilHeight(propHeight)
 	uc.t.Logf("upgrade successful on chain %s", chainConfig.Id)
 	return nil
+}
+
+func strAllUpgradeBaseDenoms() string {
+	upgradeBaseDenoms := ""
+	n := len(v17.AssetPairs)
+	for i, assetPair := range v17.AssetPairs {
+		upgradeBaseDenoms += "2000000" + assetPair.BaseAsset
+		if i < n-1 { // Check if it's not the last iteration
+			upgradeBaseDenoms += ","
+		}
+	}
+	return upgradeBaseDenoms
 }
