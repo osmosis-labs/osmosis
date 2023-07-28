@@ -13,12 +13,12 @@
       "darwin/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v16.1.1/osmosisd-16.1.1-darwin-amd64?checksum=sha256:d856ebda9c31f052d10a78443967a93374f2033292f0afdb6434b82b4ed79790",
       "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v16.1.1/osmosisd-16.1.1-linux-amd64?checksum=sha256:f838618633c1d42f593dc33d26b25842f5900961e987fc08570bb81a062e311d"
     },
-    "cosmos_sdk_version": "0.45",
+    "cosmos_sdk_version": "osmosis-labs/cosmos-sdk@0.45.0-rc1.0.20230703010110-ed4eb883f2a6",
     "consensus": {
       "type": "tendermint",
-      "version": "0.34.24"
+      "version": "informalsystems/tendermint@0.34.24"
     },
-    "cosmwasm_version": "0.30",
+    "cosmwasm_version": "osmosis-labs/wasmd@0.31.0-osmo-v16",
     "cosmwasm_enabled": true,
     "ibc_go_version": "4.3.1",
     "ics_enabled": [
