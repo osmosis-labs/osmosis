@@ -92,18 +92,6 @@ It's important to note that the _**contract itselfs hold tokens that are provide
 
 One of the main reason why CosmWasm pool is implemented as a module + contract rather than a contract only is that it allows us to use the existing pool manager module to handle swap, which means things like swap routing, cross chain swap, and other functionality that depends on existing pool interface works out of the box.
 
-```mermaid
-graph TD;
-  Sender((Sender))
-  Sender -- swap --> x/poolmanager
-  x/poolmanager -- route msg to --> x/cosmwasmpool
-  x/cosmwasmpool -- sudo execute contract --> x/wasm
-  x/wasm -- sudo --> wasm/pool
-
-  x/cosmwasmpool -- send token_in from sender to wasm/pool --> x/bank
-  wasm/pool -- send token_out to sender --> x/bank
-```
-
 Pool contract's sudo endpoint expect the following message variant:
 
 ```rs
@@ -131,12 +119,44 @@ SwapExactAmountOut {
 },
 ```
 
+`SwapExactAmountIn`
+
+
+```mermaid
+graph TD;
+  Sender((Sender))
+  Sender -- 1. swap --> x/poolmanager
+  x/poolmanager -- 2. route msg to --> x/cosmwasmpool
+  x/cosmwasmpool -- 3. send token_in from sender to wasm/pool --> x/bank
+  x/cosmwasmpool -- 4. sudo execute contract --> x/wasm
+  x/wasm -- 5. sudo --> wasm/pool
+  wasm/pool -- 6. send token_out to sender --> x/bank
+```
+
+
+`SwapExactAmountOut`
+
+```mermaid
+graph TD;
+  Sender((Sender))
+  Sender -- 1. swap --> x/poolmanager
+  x/poolmanager -- 2. route msg to --> x/cosmwasmpool
+  x/cosmwasmpool -- 3. sudo execute contract --> x/wasm
+ 
+  x/cosmwasmpool -- 4. send token_in_max_amount from sender to wasm/pool --> x/bank
+  x/wasm -- 5. sudo --> wasm/pool
+  x/cosmwasmpool -- 6. send remaining wasm/pool to sender --> x/bank
+  
+  wasm/pool -- 7. send token_out to sender --> x/bank
+```
+
 The reason why this needs to be sudo endpoint, which can only be called by the chain itself, is that the chain can provide correct information about `swap_fee`, which can be deviated from contract defined `swap_fee` in multihop scenario.
 
 `swap_fee` in this context is intended to be fee that is collected by liquidity providers. If the contract provider wants to collect fee for itself, it should implement its own fee collection mechanism.
 
 And because sudo message can't attach funds like execute message, chain-side is required to perform sending token to the contract and ensure that `token_in` and `token_in_max_amount` is exactly the same amount of token that gets sent to the contract.
 
+And the reason why the sequence is a little bit different for `SwapExactAmountIn` and `SwapExactAmountOut` is that, for `SwapExactAmountIn`, it is known beforehand how much `token_in_amount` to be sent to the contract and let it process, but for `SwapExactAmountOut`, it isn't, so we need to sent `token_in_max_amount` to the contract and let it process, then send the remaining token back to the sender.
 
 ## Deactivating
 
