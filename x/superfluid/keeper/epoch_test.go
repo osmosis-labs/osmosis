@@ -7,12 +7,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v16/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v17/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v17/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {

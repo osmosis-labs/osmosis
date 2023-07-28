@@ -6,10 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 const (
@@ -205,10 +205,6 @@ func UpdatePosValueToInitValuePlusGrowthOutside(spreadRewardAccumulator *accum.A
 
 func UpdatePositionToInitValuePlusGrowthOutside(accumulator *accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) error {
 	return updatePositionToInitValuePlusGrowthOutside(accumulator, positionKey, growthOutside)
-}
-
-func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (positionId uint64, actualAmount0 sdk.Int, actualAmount1 sdk.Int, liquidityDelta sdk.Dec, lowerTickResult int64, upperTickResult int64, err error) {
-	return k.createPosition(ctx, poolId, owner, tokensProvided, amount0Min, amount1Min, lowerTick, upperTick)
 }
 
 func (k Keeper) AddToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added, amount0Min, amount1Min sdk.Int) (uint64, sdk.Int, sdk.Int, error) {

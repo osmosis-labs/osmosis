@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
+	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
 )
 
 const (
