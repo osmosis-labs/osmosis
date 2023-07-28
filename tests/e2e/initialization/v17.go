@@ -55,7 +55,7 @@ var AssetPairs = []AssetPair{
 	},
 	{
 		BaseAsset:         CMSTIBCDenom,
-		SpreadFactor:      sdk.MustNewDecFromStr("0.0001"), // Normally 0.0002, but is not authorized
+		SpreadFactor:      sdk.MustNewDecFromStr("0.0005"), // Normally 0.0002, but is not authorized so we round up.
 		LinkedClassicPool: 857,
 		Superfluid:        false,
 	},
