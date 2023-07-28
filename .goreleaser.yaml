@@ -162,8 +162,7 @@ changelog:
 # Docs: https://goreleaser.com/customization/release/
 release:
   github:
-    owner: niccoloraspa
-    # owner: osmosis-labs
+    owner: osmosis-labs
     name: osmosis
   replace_existing_draft: true
   header: |
