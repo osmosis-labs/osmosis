@@ -61,3 +61,14 @@ type PoolManagerKeeper interface {
 type EpochKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochtypes.EpochInfo
 }
+
+// ConcentratedLiquidityKeeper defines the ConcentratedLiquidity contract that must be fulfilled when
+// creating a x/protorev keeper.
+type ConcentratedLiquidityKeeper interface {
+	ComputeMaxInAmtGivenMaxTicksCrossed(
+		ctx sdk.Context,
+		poolId uint64,
+		tokenInDenom string,
+		maxTicksCrossed uint64,
+	) (maxTokenIn, resultingTokenOut sdk.Coin, err error)
+}
