@@ -61,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#5849] (https://github.com/osmosis-labs/osmosis/pull/5849) CL: Lower gas for leaving a position and withdrawing rewards
 * [#5855](https://github.com/osmosis-labs/osmosis/pull/5855) feat(x/cosmwasmpool): Sending token_in_max_amount to the contract before running contract msg 
 * [#5893] (https://github.com/osmosis-labs/osmosis/pull/5893) Export createPosition method in CL so other modules can use it in testing
+* [#5870] (https://github.com/osmosis-labs/osmosis/pull/5870) Remove v14/ separator in protorev rest endpoints
 
 ### Minor improvements & Bug Fixes
 

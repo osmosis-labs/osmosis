@@ -34,7 +34,7 @@ import (
 
 // QueryProtoRevNumberOfTrades gets the number of trades the protorev module has executed.
 func (n *NodeConfig) QueryProtoRevNumberOfTrades() (sdk.Int, error) {
-	path := "/osmosis/v14/protorev/number_of_trades"
+	path := "/osmosis/protorev/number_of_trades"
 
 	bz, err := n.QueryGRPCGateway(path)
 	if err != nil {
@@ -50,7 +50,7 @@ func (n *NodeConfig) QueryProtoRevNumberOfTrades() (sdk.Int, error) {
 
 // QueryProtoRevProfits gets the profits the protorev module has made.
 func (n *NodeConfig) QueryProtoRevProfits() ([]sdk.Coin, error) {
-	path := "/osmosis/v14/protorev/all_profits"
+	path := "/osmosis/protorev/all_profits"
 
 	bz, err := n.QueryGRPCGateway(path)
 	if err != nil {
@@ -66,7 +66,7 @@ func (n *NodeConfig) QueryProtoRevProfits() ([]sdk.Coin, error) {
 
 // QueryProtoRevAllRouteStatistics gets all of the route statistics that the module has recorded.
 func (n *NodeConfig) QueryProtoRevAllRouteStatistics() ([]protorevtypes.RouteStatistics, error) {
-	path := "/osmosis/v14/protorev/all_route_statistics"
+	path := "/osmosis/protorev/all_route_statistics"
 
 	bz, err := n.QueryGRPCGateway(path)
 	if err != nil {
@@ -82,7 +82,7 @@ func (n *NodeConfig) QueryProtoRevAllRouteStatistics() ([]protorevtypes.RouteSta
 
 // QueryProtoRevTokenPairArbRoutes gets all of the token pair hot routes that the module is currently using.
 func (n *NodeConfig) QueryProtoRevTokenPairArbRoutes() ([]protorevtypes.TokenPairArbRoutes, error) {
-	path := "/osmosis/v14/protorev/token_pair_arb_routes"
+	path := "/osmosis/protorev/token_pair_arb_routes"
 
 	bz, err := n.QueryGRPCGateway(path)
 	if err != nil {
@@ -98,7 +98,7 @@ func (n *NodeConfig) QueryProtoRevTokenPairArbRoutes() ([]protorevtypes.TokenPai
 
 // QueryProtoRevDeveloperAccount gets the developer account of the module.
 func (n *NodeConfig) QueryProtoRevDeveloperAccount() (sdk.AccAddress, error) {
-	path := "/osmosis/v14/protorev/developer_account"
+	path := "/osmosis/protorev/developer_account"
 
 	bz, err := n.QueryGRPCGateway(path)
 	if err != nil {
@@ -120,7 +120,7 @@ func (n *NodeConfig) QueryProtoRevDeveloperAccount() (sdk.AccAddress, error) {
 
 // QueryProtoRevPoolWeights gets the pool point weights of the module.
 func (n *NodeConfig) QueryProtoRevPoolWeights() (protorevtypes.PoolWeights, error) {
-	path := "/osmosis/v14/protorev/pool_weights"
+	path := "/osmosis/protorev/pool_weights"
 
 	bz, err := n.QueryGRPCGateway(path)
 	if err != nil {
@@ -136,7 +136,7 @@ func (n *NodeConfig) QueryProtoRevPoolWeights() (protorevtypes.PoolWeights, erro
 
 // QueryProtoRevMaxPoolPointsPerTx gets the max pool points per tx of the module.
 func (n *NodeConfig) QueryProtoRevMaxPoolPointsPerTx() (uint64, error) {
-	path := "/osmosis/v14/protorev/max_pool_points_per_tx"
+	path := "/osmosis/protorev/max_pool_points_per_tx"
 
 	bz, err := n.QueryGRPCGateway(path)
 	if err != nil {
@@ -152,7 +152,7 @@ func (n *NodeConfig) QueryProtoRevMaxPoolPointsPerTx() (uint64, error) {
 
 // QueryProtoRevMaxPoolPointsPerBlock gets the max pool points per block of the module.
 func (n *NodeConfig) QueryProtoRevMaxPoolPointsPerBlock() (uint64, error) {
-	path := "/osmosis/v14/protorev/max_pool_points_per_block"
+	path := "/osmosis/protorev/max_pool_points_per_block"
 
 	bz, err := n.QueryGRPCGateway(path)
 	if err != nil {
@@ -168,7 +168,7 @@ func (n *NodeConfig) QueryProtoRevMaxPoolPointsPerBlock() (uint64, error) {
 
 // QueryProtoRevBaseDenoms gets the base denoms used to construct cyclic arbitrage routes.
 func (n *NodeConfig) QueryProtoRevBaseDenoms() ([]protorevtypes.BaseDenom, error) {
-	path := "/osmosis/v14/protorev/base_denoms"
+	path := "/osmosis/protorev/base_denoms"
 
 	bz, err := n.QueryGRPCGateway(path)
 	if err != nil {
@@ -184,7 +184,7 @@ func (n *NodeConfig) QueryProtoRevBaseDenoms() ([]protorevtypes.BaseDenom, error
 
 // QueryProtoRevEnabled queries if the protorev module is enabled.
 func (n *NodeConfig) QueryProtoRevEnabled() (bool, error) {
-	path := "/osmosis/v14/protorev/enabled"
+	path := "/osmosis/protorev/enabled"
 
 	bz, err := n.QueryGRPCGateway(path)
 	if err != nil {
