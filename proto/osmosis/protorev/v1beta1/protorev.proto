@@ -87,6 +87,9 @@ message PoolWeights {
   // The weight of a concentrated pool
   uint64 concentrated_weight = 3
       [ (gogoproto.moretags) = "yaml:\"concentrated_weight\"" ];
+  // The weight of a cosmwasm pool
+  uint64 cosmwasm_weight = 4
+      [ (gogoproto.moretags) = "yaml:\"cosmwasm_weight\"" ];
 }
 
 // BaseDenom represents a single base denom that the module uses for its
