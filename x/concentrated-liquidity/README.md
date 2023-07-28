@@ -872,6 +872,115 @@ Then, we either proceed to the next swap step or finalize the swap.
 Once the swap is completed, we persiste the swap state to the global state
 (if mutative action is performed) and return the `amountCalculated` to the user.
 
+## Liquidity depths calculation
+
+### Calculating liquidity for buckets
+Each bucket (the area between two initialized ticks) contains ceratin amount of liquidity. The liquidity amount can be obtained through `GetTickLiquidityNetInDirection` query. `GetTickLiquidityNetInDirection` returns two results:
+- `expectedStartTickLiquidity` which is the global liquidity, the cumulative liquidity from the bucket of the current price
+- `expectedLiquidityDepths` which is list of liquidity deltas for each and every initialized tick for the full price range in a certain direction that should be cumulatively added to or subtracted starting from the global liquidity in order to get the liquidity for an arbitrary range.
+
+Querying in two different directions is possible, one being 'one for zero', which is in the direction of max tick, the other direction being 'zero for one', which is in the direction of min tick.
+
+If the direction is zero for one, the liquidity for a bucket in tick can be calculated as follows: L<sub>t</sub> = L<sub>t-1</sub> - ΔL<sub>t</sub>, t=1,2, ...
+
+If the direction is one for zero, the liquidity for the bucket in the designated tick can be calculated as follows: L<sub>t</sub> = L<sub>t-1</sub> + ΔL<sub>t</sub>, t=1,2
+
+where L<sub>0</sub> is the global(cumulative liquidity).
+
+### Deducing the quantity of tokens X and Y for a tick range
+Having obtained the liquidity depths for each liquidity buckets in the pool, we can derive an equation to calculate the quantity of each token locked for a certain price range. Let *i* and *j* be the indexes of lower and upper tick boundaries of the range we want to calculate, let P<sub>0</sub> be current price and P<sub>a</sub>, P<sub>b</sub> prices for lower tick and upper tick respectively, where P<sub>a</sub>, P<sub>b</sub> are defined as the following:
+<p align="center"> 
+P<sub>a</sub> = 1.0001<sup>i</sup>, P<sub>b</sub> = 1.0001<sup>j</sup>
+</p>
+
+Let *L* be the total liquidity locked within price range [P<sub>a</sub>, P<sub>b</sub>]. The real reserve curve with liquidity *L*  is:
+
+$(x + \frac{L}{\sqrt{P_b}})(y + L\sqrt{P_a}) = L^2$
+
+Given the amount of liquidity, the quantity of tokens available in the price range [P<sub>a</sub>, P<sub>b</sub>] can be derived as follows:
+
+- If $P_a \leq P_a$:
+$x = L \left(\frac{1}{\sqrt{P_a}} - \frac{1}{\sqrt{P_b}}\right)$
+$y = 0$
+
+- If $P_a \geq P_b$:
+$x = 0$
+$y = L \left(\sqrt{P_b} - \sqrt{P_a}\right)$
+
+- If $P_a \in (P_a, P_b)$:
+$x = \left(\frac{1}{{\sqrt{P_a}}} - \frac{1}{{\sqrt{P_b}}}\right)$
+$y = L \left(\sqrt{P_a} - \sqrt{P_b}\right)$
+
+This can be written as: 
+
+$x = \left(\frac{1}{\sqrt{z}} - \frac{1}{\sqrt{P_b}}\right)$ 
+
+$y = L \left(\sqrt{z} - \sqrt{P_a}\right)$
+
+where:
+
+$z = P_a \quad \forall \quad P \leq P_a$  
+$z = P_0 \quad \forall \quad P \in (P_a, P_b)$  
+$z = P_b \quad \forall \quad P \geq P_b$  
+
+### Calculating Pool Depths
+Pool depths here refers to the token required to shift the pool price to a certain tick.
+
+Let i<sub>0</sub> be the integer index identifying a current tick (this is the tick that corresponds to the square root of the current price). Let δ be the desired depth level and d be the associated change in ticks such that 
+
+$\delta = \frac{P_1}{P_0} - 1 = \frac{1.0001^{(i_0 + d)}}{1.0001^{i_0}} - 1$
+
+The change in ticks $d$ can be found as follows:
+
+$d = \log_{1.0001}(\delta + 1)$
+
+e.g. $d = -513$ for $\delta = -5\%$
+
+Note that as the current price formally belongs only to the first range [s<sub>0</sub>, s<sub>1</sub>] or [s<sub>1</sub>, s<sub>0</sub>], where s<sub>0</sub> is the left (when the price grows) or the right (when the price drops) boundary of the current liquidity segment (segment that contains the current price). Mathematically, as we always start calculations from the current price, when recovering the token amounts, all ranges contain only one of the tokens (X or Y depending on the direction of the price change). When swapping, one of the tokens is exchanged for the token being sold. We need to find how much we can swap until the price reaches a certain level.
+
+The Pool Depths expressed in units of asset X or Y in calculated as follows:
+
+$Depth_{x}(\delta) = \sum_{i=0}^{n}x_{i}$
+$Depth_{y}(\delta) = \sum_{i=0}^{n}y_{i}$
+
+where:
+$x_i = L_i \left(\frac{1}{\sqrt{P_{a}(i)}} - \frac{1}{\sqrt{P_{b}(i)}}\right), i = 0, \dots, n$
+
+$y_i = L_i \left(\sqrt{P_{b}(i)} - \sqrt{P_{a}(i)}\right), i = 0, \dots, n$
+
+### Calculating Liquidator Depths
+Liquidator Depth refers to the real price slippage, the real price slippage (average execution price in relation to the current price) from the liquidator's point of view. That is, the amount of tokens that can be liquidated so that the real price slippage does not exceed certain level.
+
+The idea to determine the depth is to swap the maximum possible amount per each liquidity segment until a realized slippage doesn’t exceed a desired level. For the last segment the procedure is repeated per tick until the desired realized slippage is achieved.
+Maximum token amounts that can be locked within each segment or tick (and exchanged for another token when the price crosses the ticks) can be derived as follows:
+
+$x_i = L_i \left(\frac{1}{\sqrt{P_{a}(i)}} - \frac{1}{\sqrt{P_{b}(i)}}\right)$
+
+$y_i = L_i \left(\sqrt{P_{b}(i)} - \sqrt{P_{a}(i)}\right)$
+
+Starting from the current tick *i<sub>0</sub>*  and swapping one token for another one, the average execution price at the end of each tick *i*  can be determined as follows:
+
+$P_i = \frac{(Y_{i-1} + y_i)}{X_{i-1} + x}, \quad i = i_0, \ldots, i_N$
+
+$Y_i = Y_{i-1} + y_i, \quad Y_0 = 0$
+
+$X_i = X_{i-1} + x_i, \quad X_0 = 0$
+
+The slippage equals to:
+
+$Slippage_i = P_i - P_0 - 1$
+
+The algorithm to determine the depth is then the following:
+
+Calculate $X_i$ and $Y_i$ while $|Slippage_i| \leq \delta$ at some $i = N$
+
+Then 
+
+$Depth_x (\delta) = X_N$
+
+$Depth_y (\delta) = Y_N$
+
+
 ## Migration
 
 Users can migrate their Balancer positions to a Concentrated Liquidity full range

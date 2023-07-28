@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v16/app"
-	osmosim "github.com/osmosis-labs/osmosis/v16/simulation/executor"
-	osmosimtypes "github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v17/app"
+	osmosim "github.com/osmosis-labs/osmosis/v17/simulation/executor"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v17/simulation/simtypes"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
