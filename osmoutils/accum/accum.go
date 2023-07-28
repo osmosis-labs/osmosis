@@ -344,12 +344,7 @@ func (accum *AccumulatorObject) DeletePosition(positionName string) (sdk.DecCoin
 	}
 
 	accum.store.Delete(FormatPositionPrefixKey(accum.name, positionName))
-
-	totalShares, err := accum.GetTotalShares()
-	if err != nil {
-		return sdk.DecCoins{}, err
-	}
-	accum.totalShares = totalShares.Sub(position.NumShares)
+	accum.totalShares.SubMut(position.NumShares)
 	err = setAccumulator(accum, accum.valuePerShare, accum.totalShares)
 	if err != nil {
 		return sdk.DecCoins{}, err
@@ -425,10 +420,8 @@ func (accum *AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, sd
 }
 
 // GetTotalShares returns the total number of shares in the accumulator
-func (accum AccumulatorObject) GetTotalShares() (sdk.Dec, error) {
-	// TODO: Make this not do an extra get.
-	accumPtr, err := GetAccumulator(accum.store, accum.name)
-	return accumPtr.totalShares, err
+func (accum AccumulatorObject) GetTotalShares() sdk.Dec {
+	return accum.totalShares
 }
 
 // AddToUnclaimedRewards adds the given amount of rewards to the unclaimed rewards

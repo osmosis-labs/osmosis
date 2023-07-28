@@ -174,6 +174,8 @@ func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes
 			totalWeight += poolWeights.StableWeight
 		case poolmanagertypes.Concentrated:
 			totalWeight += poolWeights.ConcentratedWeight
+		case poolmanagertypes.CosmWasm:
+			totalWeight += poolWeights.CosmwasmWeight
 		default:
 			return 0, fmt.Errorf("invalid pool type")
 		}
