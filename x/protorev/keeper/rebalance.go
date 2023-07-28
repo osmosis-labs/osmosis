@@ -224,7 +224,7 @@ func (k Keeper) ExecuteTrade(ctx sdk.Context, route poolmanagertypes.SwapAmountI
 
 	// Send the developer fee to the developer address
 	if err := k.SendDeveloperFee(ctx, sdk.NewCoin(inputCoin.Denom, profit)); err != nil {
-		ctx.Logger().Error("failed to send developer fee", "error", err)
+		ctx.Logger().Error("failed to send developer fee: " + err.Error())
 	}
 
 	// Create and emit the backrun event and add it to the context
