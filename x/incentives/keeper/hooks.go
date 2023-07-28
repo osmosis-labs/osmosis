@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
@@ -19,6 +21,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	if epochIdentifier == params.DistrEpochIdentifier {
 		// begin distribution if it's start time
 		gauges := k.GetUpcomingGauges(ctx)
+		ctx.Logger().Info(fmt.Sprintf("x/incentives AfterEpochEnd, num upcoming gauges %d, %d", len(gauges), ctx.BlockHeight()))
 		for _, gauge := range gauges {
 			if !ctx.BlockTime().Before(gauge.StartTime) {
 				if err := k.moveUpcomingGaugeToActiveGauge(ctx, gauge); err != nil {
@@ -43,6 +46,8 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				distrGauges = append(distrGauges, gauge)
 			}
 		}
+
+		ctx.Logger().Info("AfterEpochEnd: distributing to gauges", "module", types.ModuleName, "numGauges", len(distrGauges), "height", ctx.BlockHeight())
 		_, err := k.Distribute(ctx, distrGauges)
 		if err != nil {
 			return err
