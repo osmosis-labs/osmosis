@@ -150,11 +150,11 @@ Each version is identified by a specific id, name, tag, block height and softwar
 Assuming that your osmosis home it's already initialized with the desired genesis and configuration,
 to replay the chain from genesis using Cosmovisor:
 
-1. Install version `v1.2.0`` from the official [repository](https://github.com/cosmos/cosmos-sdk/tree/main/tools/cosmovisor).
+1. Install version `v1.2.0` from the official [repository](https://github.com/cosmos/cosmos-sdk/tree/main/tools/cosmovisor).
 
 Alternatively, you can download the appropriate binary for your platform from our mirrors:
 
-| Platform | Architecture | Binary URL                                                                                                 |
+| Platform | Architecture | Cosmovisor Binary URL                                                                                      |
 |----------|--------------|------------------------------------------------------------------------------------------------------------|
 | darwin   | amd64        | [Download](https://osmosis.fra1.digitaloceanspaces.com/binaries/cosmovisor/cosmovisor-v1.2.0-darwin-amd64) |
 | darwin   | arm64        | [Download](https://osmosis.fra1.digitaloceanspaces.com/binaries/cosmovisor/cosmovisor-v1.2.0-darwin-arm64) |
