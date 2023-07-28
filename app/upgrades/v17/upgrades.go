@@ -10,12 +10,12 @@ import (
 
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 
-	"github.com/osmosis-labs/osmosis/v16/app/keepers"
-	"github.com/osmosis-labs/osmosis/v16/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v17/app/keepers"
+	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
 )
 
 func CreateUpgradeHandler(
