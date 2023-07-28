@@ -8,13 +8,13 @@ import (
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	appParams "github.com/osmosis-labs/osmosis/v16/app/params"
-	osmosimtypes "github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
-	sdkrand "github.com/osmosis-labs/osmosis/v16/simulation/simtypes/random"
-	clkeeper "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
-	clmodeltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	minttypes "github.com/osmosis-labs/osmosis/v16/x/mint/types"
+	appParams "github.com/osmosis-labs/osmosis/v17/app/params"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v17/simulation/simtypes"
+	sdkrand "github.com/osmosis-labs/osmosis/v17/simulation/simtypes/random"
+	clkeeper "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
+	clmodeltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	minttypes "github.com/osmosis-labs/osmosis/v17/x/mint/types"
 )
 
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
