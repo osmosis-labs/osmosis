@@ -45,17 +45,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### State Breaking
 
 * [#5532](https://github.com/osmosis-labs/osmosis/pull/5532) fix: Fix x/tokenfactory genesis import denoms reset x/bank existing denom metadata
+* [#5874](https://github.com/osmosis-labs/osmosis/pull/5874) Remove Partial Migration from superfluid migration to CL
 
 ### BugFix
 
 * [#5831](https://github.com/osmosis-labs/osmosis/pull/5831) Fix superfluid_delegations query
 * [#5835](https://github.com/osmosis-labs/osmosis/pull/5835) Fix println's for "amountZeroInRemainingBigDec before fee" making it into production
+* [#5841] (https://github.com/osmosis-labs/osmosis/pull/5841) Fix protorev's out of gas erroring of the user's transcation.
 
 ### Misc Improvements
 
 * [#5534](https://github.com/osmosis-labs/osmosis/pull/5534) fix: fix the account number of x/tokenfactory module account
 * [#5750](https://github.com/osmosis-labs/osmosis/pull/5750) feat: add cli commmand for converting proto structs to proto marshalled bytes
 * [#5889](https://github.com/osmosis-labs/osmosis/pull/5889) provides an API for protorev to determine max amountIn that can be swapped based on max ticks willing to be traversed
+* [#5893] (https://github.com/osmosis-labs/osmosis/pull/5893) Export createPosition method in CL so other modules can use it in testing
 
 ### Minor improvements & Bug Fixes
 

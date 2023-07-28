@@ -6,7 +6,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
 // x/superfluid module errors.
@@ -71,6 +71,15 @@ type MigrateMoreSharesThanLockHasError struct {
 
 func (e MigrateMoreSharesThanLockHasError) Error() string {
 	return fmt.Sprintf("cannot migrate more shares (%s) than lock has (%s)", e.SharesToMigrate, e.SharesInLock)
+}
+
+type MigratePartialSharesError struct {
+	SharesToMigrate string
+	SharesInLock    string
+}
+
+func (e MigratePartialSharesError) Error() string {
+	return fmt.Sprintf("cannot partial migrate shares (%s). The lock has (%s)", e.SharesToMigrate, e.SharesInLock)
 }
 
 type TwoTokenBalancerPoolError struct {

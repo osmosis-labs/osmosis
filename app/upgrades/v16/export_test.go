@@ -4,11 +4,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
-	"github.com/osmosis-labs/osmosis/v16/app/keepers"
-	gammkeeper "github.com/osmosis-labs/osmosis/v16/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v16/x/poolmanager"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v16/x/tokenfactory/keeper"
+	"github.com/osmosis-labs/osmosis/v17/app/keepers"
+	gammkeeper "github.com/osmosis-labs/osmosis/v17/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v17/x/poolmanager"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v17/x/tokenfactory/keeper"
 )
 
 var (
