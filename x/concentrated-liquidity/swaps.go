@@ -808,3 +808,125 @@ func edgeCaseInequalityBasedOnSwapStrategy(isZeroForOne bool, nextInitializedTic
 	}
 	return nextInitializedTickSqrtPrice.LT(computedSqrtPrice)
 }
+
+// ComputeMaxInAmtGivenMaxTicksCrossed calculates the maximum amount of the tokenInDenom that can be swapped
+// into the pool to swap through all the liquidity from the current tick through the maxTicksCrossed tick,
+// but not exceed it.
+func (k Keeper) ComputeMaxInAmtGivenMaxTicksCrossed(
+	ctx sdk.Context,
+	poolId uint64,
+	tokenInDenom string,
+	maxTicksCrossed uint64,
+) (maxTokenIn, resultingTokenOut sdk.Coin, err error) {
+	cacheCtx, _ := ctx.CacheContext()
+
+	p, err := k.getPoolForSwap(cacheCtx, poolId)
+	if err != nil {
+		return sdk.Coin{}, sdk.Coin{}, err
+	}
+
+	// Validate tokenInDenom exists in the pool
+	if tokenInDenom != p.GetToken0() && tokenInDenom != p.GetToken1() {
+		return sdk.Coin{}, sdk.Coin{}, types.TokenInDenomNotInPoolError{TokenInDenom: tokenInDenom}
+	}
+
+	// Determine the tokenOutDenom based on the tokenInDenom
+	var tokenOutDenom string
+	if tokenInDenom == p.GetToken0() {
+		tokenOutDenom = p.GetToken1()
+	} else {
+		tokenOutDenom = p.GetToken0()
+	}
+
+	// Setup the swap strategy
+	swapStrategy, _, err := k.setupSwapStrategy(p, p.GetSpreadFactor(cacheCtx), tokenInDenom, sdk.ZeroDec())
+	if err != nil {
+		return sdk.Coin{}, sdk.Coin{}, err
+	}
+
+	// Initialize swap state
+	// Utilize the total amount of tokenOutDenom in the pool as the specified amountOut, since we want
+	// the limitation to be the tick crossing, not the amountOut.
+	balances := k.bankKeeper.GetAllBalances(ctx, p.GetAddress())
+	swapState := newSwapState(balances.AmountOf(tokenOutDenom), p, swapStrategy)
+
+	nextInitTickIter := swapStrategy.InitializeNextTickIterator(cacheCtx, poolId, swapState.tick)
+	defer nextInitTickIter.Close()
+
+	totalTokenOut := sdk.ZeroDec()
+
+	for i := uint64(0); i < maxTicksCrossed; i++ {
+		// Check if the iterator is valid
+		if !nextInitTickIter.Valid() {
+			break
+		}
+
+		nextInitializedTick, err := types.TickIndexFromBytes(nextInitTickIter.Key())
+		if err != nil {
+			return sdk.Coin{}, sdk.Coin{}, err
+		}
+
+		_, nextInitializedTickSqrtPrice, err := math.TickToSqrtPrice(nextInitializedTick)
+		if err != nil {
+			return sdk.Coin{}, sdk.Coin{}, types.TickToSqrtPriceConversionError{NextTick: nextInitializedTick}
+		}
+
+		sqrtPriceTarget := swapStrategy.GetSqrtTargetPrice(nextInitializedTickSqrtPrice)
+
+		// Compute the swap
+		computedSqrtPrice, amountOut, amountIn, spreadRewardChargeTotal := swapStrategy.ComputeSwapWithinBucketInGivenOut(
+			swapState.sqrtPrice,
+			sqrtPriceTarget,
+			swapState.liquidity,
+			swapState.amountSpecifiedRemaining,
+		)
+
+		swapState.sqrtPrice = computedSqrtPrice
+		swapState.amountSpecifiedRemaining.SubMut(amountOut)
+		swapState.amountCalculated.AddMut(amountIn.Add(spreadRewardChargeTotal))
+
+		totalTokenOut = totalTokenOut.Add(amountOut)
+
+		// Check if the tick needs to be updated
+		nextInitializedTickSqrtPriceBigDec := osmomath.BigDecFromSDKDec(nextInitializedTickSqrtPrice)
+
+		// We do not need to track spread rewards or uptime accums here since we are not actually swapping.
+		if nextInitializedTickSqrtPriceBigDec.Equal(computedSqrtPrice) {
+			nextInitializedTickInfo, err := ParseTickFromBz(nextInitTickIter.Value())
+			if err != nil {
+				return sdk.Coin{}, sdk.Coin{}, err
+			}
+			liquidityNet := nextInitializedTickInfo.LiquidityNet
+
+			nextInitTickIter.Next()
+
+			liquidityNet = swapState.swapStrategy.SetLiquidityDeltaSign(liquidityNet)
+			swapState.liquidity.AddMut(liquidityNet)
+
+			swapState.tick = swapStrategy.UpdateTickAfterCrossing(nextInitializedTick)
+		} else if edgeCaseInequalityBasedOnSwapStrategy(swapStrategy.ZeroForOne(), nextInitializedTickSqrtPriceBigDec, computedSqrtPrice) {
+			return sdk.Coin{}, sdk.Coin{}, types.ComputedSqrtPriceInequalityError{
+				IsZeroForOne:                 swapStrategy.ZeroForOne(),
+				ComputedSqrtPrice:            computedSqrtPrice,
+				NextInitializedTickSqrtPrice: nextInitializedTickSqrtPriceBigDec,
+			}
+		} else if !swapState.sqrtPrice.Equal(computedSqrtPrice) {
+			newTick, err := math.CalculateSqrtPriceToTick(computedSqrtPrice)
+			if err != nil {
+				return sdk.Coin{}, sdk.Coin{}, err
+			}
+			swapState.tick = newTick
+		}
+
+		// Break the loop early if nothing was consumed from swapState.amountSpecifiedRemaining
+		if amountOut.IsZero() {
+			break
+		}
+	}
+
+	maxAmt := swapState.amountCalculated.Ceil().TruncateInt()
+	maxTokenIn = sdk.NewCoin(tokenInDenom, maxAmt)
+	resultingTokenOut = sdk.NewCoin(tokenOutDenom, totalTokenOut.TruncateInt())
+
+	return maxTokenIn, resultingTokenOut, nil
+}
