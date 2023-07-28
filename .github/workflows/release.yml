@@ -1,0 +1,21 @@
+# This workflow creates a release using 'make release' command.
+
+name: release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    name: Create release
+    runs-on: self-hosted
+    steps:
+      -
+        name: Check out repository code
+        uses: actions/checkout@v3
+      - 
+        name: Make release
+        run: |
+          make release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
