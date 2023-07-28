@@ -954,10 +954,9 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 	// setup wallets and send gamm tokens to these wallets (both chains)
 	superfluidVotingWallet := chainANode.CreateWallet("TestSuperfluidVoting")
 	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[2].PublicAddress, superfluidVotingWallet)
-	chainANode.LockTokens(fmt.Sprintf("%v%s", sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluidVotingWallet)
+	lockId := chainANode.LockTokens(fmt.Sprintf("%v%s", sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluidVotingWallet)
 	chainA.LatestLockNumber += 1
-	lastLockNumber := chainA.LatestLockNumber
-	chainANode.SuperfluidDelegate(lastLockNumber, chainA.NodeConfigs[2].OperatorAddress, superfluidVotingWallet)
+	chainANode.SuperfluidDelegate(lockId, chainA.NodeConfigs[2].OperatorAddress, superfluidVotingWallet)
 
 	// create a text prop, deposit and vote yes
 	chainANode.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)), false)
@@ -1319,8 +1318,8 @@ func (s *IntegrationTestSuite) AddToExistingLockPostUpgrade() {
 	preUpgradePoolShareDenom := fmt.Sprintf("gamm/pool/%d", config.PreUpgradePoolId)
 
 	lockupWalletAddr, lockupWalletSuperfluidAddr := chainANode.GetWallet("lockup-wallet"), chainANode.GetWallet("lockup-wallet-superfluid")
-	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletAddr)
-	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletSuperfluidAddr)
+	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletAddr, 1)
+	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletSuperfluidAddr, 2)
 }
 
 // TestAddToExistingLock tests lockups to both regular and superfluid locks.

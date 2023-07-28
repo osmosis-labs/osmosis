@@ -26,18 +26,22 @@ const (
 // RouteLockedBalancerToConcentratedMigration routes the provided lock to the proper migration function based on the lock status.
 // The testing conditions and scope for the different lock status are as follows:
 // Lock Status = Superfluid delegated
+// - cannot migrate partial shares
 // - Instantly undelegate which will bypass unbonding time.
 // - Create new CL Lock and Re-delegate it as a concentrated liquidity position.
 //
 // Lock Status = Superfluid undelegating
+// - cannot migrate partial shares
 // - Continue undelegating as superfluid unbonding CL Position.
 // - Lock the tokens and create an unlocking syntheticLock (to handle cases of slashing)
 //
 // Lock Status = Locked or unlocking (no superfluid delegation/undelegation)
+// - cannot migrate partial shares
 // - Force unlock tokens from gamm shares.
 // - Create new CL lock and starts unlocking or unlocking where it left off.
 //
 // Lock Status = Unlocked
+// - can migrate partial shares
 // - For ex: LP shares
 // - Create new CL lock and starts unlocking or unlocking where it left off.
 //
@@ -84,8 +88,6 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
 	}
 
-	isPartialMigration := sharesToMigrate.Amount.LT(preMigrationLock.Coins[0].Amount)
-
 	// Get the validator address from the synth denom and ensure it is a valid address.
 	valAddr := strings.Split(synthDenomBeforeMigration, "/")[4]
 	_, err = sdk.ValAddressFromBech32(valAddr)
@@ -96,28 +98,16 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 	// Superfluid undelegate the portion of shares the user is migrating from the superfluid delegated position.
 	// If all shares are being migrated, this deletes the connection between the gamm lock and the intermediate account, deletes the synthetic lock, and burns the synthetic osmo.
 	intermediateAccount := types.SuperfluidIntermediaryAccount{}
-	var gammLockToMigrate *lockuptypes.PeriodLock
-	if isPartialMigration {
-		// Note that lock's id is different from the originalLockId since it was split.
-		// The original lock id stays in gamm.
-		intermediateAccount, gammLockToMigrate, err = k.partialSuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), originalLockId, sharesToMigrate)
-		if err != nil {
-			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
-		}
-	} else {
-		// Note that lock's id is the same as the originalLockId since all shares are being migrated
-		// and old lock is deleted
-		gammLockToMigrate = preMigrationLock
-		intermediateAccount, err = k.SuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), originalLockId)
-		if err != nil {
-			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
-		}
+
+	intermediateAccount, err = k.SuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), originalLockId)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
 	}
 
 	// Force unlock, validate the provided sharesToMigrate, and exit the balancer pool.
 	// This will return the coins that will be used to create the concentrated liquidity position.
 	// It also returns the lock object that contains the remaining shares that were not used in this migration.
-	exitCoins, err := k.validateSharesToMigrateUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, gammLockToMigrate, sharesToMigrate, tokenOutMins)
+	exitCoins, err := k.validateSharesToMigrateUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, preMigrationLock, sharesToMigrate, tokenOutMins)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
 	}
@@ -326,20 +316,14 @@ func (k Keeper) validateSharesToMigrateUnlockAndExitBalancerPool(ctx sdk.Context
 	}
 
 	// Finish unlocking directly for locked or unlocking locks
-	if sharesToMigrate.Equal(gammSharesInLock) {
-		// If migrating the entire lock, force unlock.
-		// This breaks and deletes associated synthetic locks.
-		err = k.lk.ForceUnlock(ctx, *lock)
-		if err != nil {
-			return sdk.Coins{}, err
-		}
-	} else {
-		// Otherwise, we must split the lock and force unlock the partial shares to migrate.
-		// This breaks and deletes associated synthetic locks.
-		err = k.lk.PartialForceUnlock(ctx, *lock, sdk.NewCoins(sharesToMigrate))
-		if err != nil {
-			return sdk.Coins{}, err
-		}
+	if !sharesToMigrate.Equal(gammSharesInLock) {
+		return sdk.Coins{}, types.MigratePartialSharesError{SharesToMigrate: sharesToMigrate.Amount.String(), SharesInLock: gammSharesInLock.Amount.String()}
+	}
+
+	// Force migrate, which breaks and deletes associated synthetic locks.
+	err = k.lk.ForceUnlock(ctx, *lock)
+	if err != nil {
+		return sdk.Coins{}, err
 	}
 
 	// Exit the balancer pool position.

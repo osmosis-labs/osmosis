@@ -32,7 +32,7 @@ const noUnderlyingLockId = uint64(0)
 // - the liquidity delta is zero
 // - the amount0 or amount1 returned from the position update is less than the given minimums
 // - the pool or user does not have enough tokens to satisfy the requested amount
-func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (positionId uint64, actualAmount0 sdk.Int, actualAmount1 sdk.Int, liquidityDelta sdk.Dec, lowerTickResult int64, upperTickResult int64, err error) {
+func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (positionId uint64, actualAmount0 sdk.Int, actualAmount1 sdk.Int, liquidityDelta sdk.Dec, lowerTickResult int64, upperTickResult int64, err error) {
 	// Use the current blockTime as the position's join time.
 	joinTime := ctx.BlockTime()
 
@@ -367,7 +367,7 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 	if !amount1MinGiven.IsZero() {
 		minimumAmount1 = amount1Withdrawn.Add(amount1MinGiven)
 	}
-	newPositionId, actualAmount0, actualAmount1, _, _, _, err := k.createPosition(ctx, position.PoolId, owner, tokensProvided, minimumAmount0, minimumAmount1, position.LowerTick, position.UpperTick)
+	newPositionId, actualAmount0, actualAmount1, _, _, _, err := k.CreatePosition(ctx, position.PoolId, owner, tokensProvided, minimumAmount0, minimumAmount1, position.LowerTick, position.UpperTick)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
 	}

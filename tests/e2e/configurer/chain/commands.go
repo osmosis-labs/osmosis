@@ -414,32 +414,33 @@ func (n *NodeConfig) VoteNoProposal(from string, proposalNumber int) {
 	n.LogActionF("successfully voted no on proposal: %d", proposalNumber)
 }
 
-func (n *NodeConfig) LockTokens(tokens string, duration string, from string) {
+func (n *NodeConfig) LockTokens(tokens string, duration string, from string) int {
 	n.LogActionF("locking %s for %s", tokens, duration)
 	cmd := []string{"osmosisd", "tx", "lockup", "lock-tokens", tokens, fmt.Sprintf("--duration=%s", duration), fmt.Sprintf("--from=%s", from)}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+
+	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
+
+	// Extract the lock ID from the response
+	startIndex := strings.Index(resp.String(), `[{"key":"period_lock_id","value":"`) + len(`[{"key":"period_lock_id","value":"`)
+	endIndex := strings.Index(resp.String()[startIndex:], `"`)
+
+	// Extract the lock ID substring
+	lockIDStr := resp.String()[startIndex : startIndex+endIndex]
+
+	// Convert the lock ID from string to int
+	lockID, err := strconv.Atoi(lockIDStr)
+	require.NoError(n.t, err)
+
 	n.LogActionF("successfully created lock")
+
+	return lockID
 }
 
-func (n *NodeConfig) AddToExistingLock(tokens sdk.Int, denom, duration, from string) {
-	n.LogActionF("retrieving existing lock ID")
-	durationPath := fmt.Sprintf("/osmosis/lockup/v1beta1/account_locked_longer_duration/%s?duration=%s", from, duration)
-	bz, err := n.QueryGRPCGateway(durationPath)
-	require.NoError(n.t, err)
-	var accountLockedDurationResp lockuptypes.AccountLockedDurationResponse
-	err = util.Cdc.UnmarshalJSON(bz, &accountLockedDurationResp)
-	require.NoError(n.t, err)
-	var lockID string
-	for _, periodLock := range accountLockedDurationResp.Locks {
-		if periodLock.Coins.AmountOf(denom).GT(sdk.ZeroInt()) {
-			lockID = fmt.Sprintf("%v", periodLock.ID)
-			break
-		}
-	}
+func (n *NodeConfig) AddToExistingLock(tokens sdk.Int, denom, duration, from string, lockID int) {
 	n.LogActionF("noting previous lockup amount")
-	path := fmt.Sprintf("/osmosis/lockup/v1beta1/locked_by_id/%s", lockID)
-	bz, err = n.QueryGRPCGateway(path)
+	path := fmt.Sprintf("/osmosis/lockup/v1beta1/locked_by_id/%d", lockID)
+	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 	var lockedResp lockuptypes.LockedResponse
 	err = util.Cdc.UnmarshalJSON(bz, &lockedResp)
@@ -708,19 +709,19 @@ func (n *NodeConfig) EnableSuperfluidAsset(srcChain *Config, denom string) {
 
 func (n *NodeConfig) LockAndAddToExistingLock(srcChain *Config, amount sdk.Int, denom, lockupWalletAddr, lockupWalletSuperfluidAddr string) {
 	// lock tokens
-	n.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletAddr)
+	lockID := n.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletAddr)
 	srcChain.LatestLockNumber += 1
-	fmt.Println("lock number: ", srcChain.LatestLockNumber)
+	fmt.Println("lock number: ", lockID)
 	// add to existing lock
-	n.AddToExistingLock(amount, denom, "240s", lockupWalletAddr)
+	n.AddToExistingLock(amount, denom, "240s", lockupWalletAddr, lockID)
 
 	// superfluid lock tokens
-	n.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletSuperfluidAddr)
+	lockID = n.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletSuperfluidAddr)
 	srcChain.LatestLockNumber += 1
-	fmt.Println("lock number: ", srcChain.LatestLockNumber)
-	n.SuperfluidDelegate(srcChain.LatestLockNumber, srcChain.NodeConfigs[1].OperatorAddress, lockupWalletSuperfluidAddr)
+	fmt.Println("lock number: ", lockID)
+	n.SuperfluidDelegate(lockID, srcChain.NodeConfigs[1].OperatorAddress, lockupWalletSuperfluidAddr)
 	// add to existing lock
-	n.AddToExistingLock(amount, denom, "240s", lockupWalletSuperfluidAddr)
+	n.AddToExistingLock(amount, denom, "240s", lockupWalletSuperfluidAddr, lockID)
 }
 
 // TODO remove chain from this as input

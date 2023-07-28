@@ -503,3 +503,18 @@ func (q Querier) ConcentratedPoolIdLinkFromCFMM(ctx context.Context, req *types.
 		ConcentratedPoolId: poolIdEntering,
 	}, nil
 }
+
+func (q Querier) CFMMConcentratedPoolLinks(ctx context.Context, req *types.QueryCFMMConcentratedPoolLinksRequest) (*types.QueryCFMMConcentratedPoolLinksResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	poolLinks, err := q.Keeper.GetAllMigrationInfo(sdk.UnwrapSDKContext(ctx))
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryCFMMConcentratedPoolLinksResponse{
+		MigrationRecords: &poolLinks,
+	}, nil
+}

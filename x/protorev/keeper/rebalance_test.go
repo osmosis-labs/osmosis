@@ -149,7 +149,7 @@ var twoPoolRoute = poolmanagertypes.SwapAmountInRoutes{
 	},
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        39,
-		TokenOutDenom: "test/3",
+		TokenOutDenom: "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 	},
 }
 
@@ -388,10 +388,10 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 			name: "2-Pool Route Arb",
 			param: param{
 				route:          twoPoolRoute,
-				inputCoin:      sdk.NewCoin("test/3", sdk.NewInt(989_000_000)),
+				inputCoin:      sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", sdk.NewInt(989_000_000)),
 				expectedProfit: sdk.NewInt(218_149_058),
 			},
-			arbDenom:            "test/3",
+			arbDenom:            "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 			expectPass:          true,
 			expectedNumOfTrades: sdk.NewInt(3),
 		},
@@ -517,9 +517,9 @@ func (s *KeeperTestSuite) TestIterateRoutes() {
 			params: paramm{
 				routes:                     []poolmanagertypes.SwapAmountInRoutes{twoPoolRoute},
 				expectedMaxProfitAmount:    sdk.NewInt(198_653_535),
-				expectedMaxProfitInputCoin: sdk.NewCoin("test/3", sdk.NewInt(989_000_000)),
+				expectedMaxProfitInputCoin: sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", sdk.NewInt(989_000_000)),
 				expectedOptimalRoute:       twoPoolRoute,
-				arbDenom:                   "test/3",
+				arbDenom:                   "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 			},
 			expectPass: true,
 		},

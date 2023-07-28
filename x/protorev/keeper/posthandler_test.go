@@ -225,7 +225,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 				trades: []types.Trade{
 					{
 						Pool:     38,
-						TokenOut: "test/3",
+						TokenOut: "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 						TokenIn:  types.OsmosisDenomination,
 					},
 				},
@@ -236,7 +236,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(15_767_231),
 					},
 					{
-						Denom:  "test/3",
+						Denom:  "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 						Amount: sdk.NewInt(218_149_058),
 					},
 					{
@@ -265,7 +265,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(15_767_231),
 					},
 					{
-						Denom:  "test/3",
+						Denom:  "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 						Amount: sdk.NewInt(218_149_058),
 					},
 					{
@@ -294,7 +294,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(15_767_231),
 					},
 					{
-						Denom:  "test/3",
+						Denom:  "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 						Amount: sdk.NewInt(218_149_058),
 					},
 					{
@@ -323,7 +323,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(15_767_231),
 					},
 					{
-						Denom:  "test/3",
+						Denom:  "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 						Amount: sdk.NewInt(218_149_058),
 					},
 					{
@@ -332,6 +332,35 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 					},
 				},
 				expectedPoolPoints: 33,
+			},
+			expectPass: true,
+		},
+		{
+			name: "Concentrated Liquidity - Many Ticks Run Out of Gas While Rebalacing, Ensure Doesn't Fail User Tx",
+			params: param{
+				trades: []types.Trade{
+					{
+						Pool:     50,
+						TokenOut: "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
+						TokenIn:  "uosmo",
+					},
+				},
+				expectedNumOfTrades: sdk.NewInt(5),
+				expectedProfits: []sdk.Coin{
+					{
+						Denom:  "Atom",
+						Amount: sdk.NewInt(15_767_231),
+					},
+					{
+						Denom:  "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
+						Amount: sdk.NewInt(218_149_058),
+					},
+					{
+						Denom:  types.OsmosisDenomination,
+						Amount: sdk.NewInt(56_609_900),
+					},
+				},
+				expectedPoolPoints: 37,
 			},
 			expectPass: true,
 		},
@@ -403,6 +432,10 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 				tx = txBuilder.GetTx()
 			} else {
 				tx = s.BuildTx(txBuilder, msgs, sigV2, "", txFee, gasLimit)
+			}
+
+			if strings.Contains(tc.name, "Concentrated Liquidity") {
+				s.CreateCLPoolAndArbRouteWith_28000_Ticks()
 			}
 
 			protoRevDecorator := keeper.NewProtoRevDecorator(*s.App.ProtoRevKeeper)
