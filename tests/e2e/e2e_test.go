@@ -1753,6 +1753,8 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	osmoassert.DecApproxEq(s.T(), sdk.NewDecWithPrec(5, 1), afterSwapTwapBOverA, sdk.NewDecWithPrec(1, 2))
 }
 
+// START: CAN REMOVE POST v17 UPGRADE
+
 // Tests that v17 upgrade correctly creates the canonical pools in the upgrade handler.
 func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPools() {
 	if s.skipUpgrade {
@@ -1806,3 +1808,5 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPools() {
 	positions := chainANode.QueryConcentratedPositions(communityPoolAddress)
 	s.Require().Len(positions, len(v17.AssetPairs))
 }
+
+// END: CAN REMOVE POST v17 UPGRADE

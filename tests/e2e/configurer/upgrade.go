@@ -139,6 +139,8 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	// Wait for all goroutines to complete
 	wg.Wait()
 
+	// START: CAN REMOVE POST v17 UPGRADE
+
 	wg.Add(2)
 
 	go func() {
@@ -151,8 +153,9 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 		chainBNode.FundCommunityPool(initialization.ValidatorWalletName, strAllUpgradeBaseDenoms())
 	}()
 
-	// Wait for all goroutines to complete
 	wg.Wait()
+
+	// END: CAN REMOVE POST v17 UPGRADE
 
 	var (
 		poolShareDenom             string
