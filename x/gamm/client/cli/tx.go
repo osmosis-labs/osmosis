@@ -63,7 +63,7 @@ For stableswap (demonstrating need for a 1:1000 scaling factor, see doc)
 {
 	"initial-deposit": "1000000uusdc,1000miliusdc",
 	"swap-fee": "0.01",
-	"exit-fee": "0.01",
+	"exit-fee": "0.00",
 	"future-governor": "168h",
 	"scaling-factors": "1000,1"
 }
