@@ -96,8 +96,9 @@ var (
 	StakeAmountIntB  = sdk.NewInt(StakeAmountB)
 	StakeAmountCoinB = sdk.NewCoin(OsmoDenom, StakeAmountIntB)
 
-	// Can be removed after v17 upgrade.
+	// START: CAN REMOVE POST v17 UPGRADE
 	BaseDenomBalances = strAllUpgradeBaseDenoms()
+	// END: CAN REMOVE POST v17 UPGRADE
 
 	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom, IonBalanceA, IonDenom, UstBalanceA, UstIBCDenom, LuncBalanceA, LuncIBCDenom)
 	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom, IonBalanceB, IonDenom)
@@ -108,7 +109,7 @@ var (
 	WalletFeeTokens = sdk.NewCoin(E2EFeeToken, sdk.NewInt(WalletFeeBalance))
 )
 
-// Can be removed after v17 upgrade.
+// START: CAN REMOVE POST v17 UPGRADE
 func strAllUpgradeBaseDenoms() string {
 	upgradeBaseDenoms := fmt.Sprintf("%s%s,", DaiBalanceA, DaiDenom)
 	n := len(AssetPairs)
@@ -123,6 +124,8 @@ func strAllUpgradeBaseDenoms() string {
 	}
 	return upgradeBaseDenoms
 }
+
+// END: CAN REMOVE POST v17 UPGRADE
 
 func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHeight int) error {
 	serverCtx := server.NewDefaultContext()
@@ -350,13 +353,14 @@ func updateBankGenesis(appGenState map[string]json.RawMessage) func(s *banktypes
 			setDenomMetadata(bankGenState, denom)
 		}
 
-		// Can be removed after v17 upgrade.
+		// START: CAN REMOVE POST v17 UPGRADE
 		for _, assetPair := range AssetPairs {
 			if assetPair.BaseAsset == "uion" {
 				continue
 			}
 			setDenomMetadata(bankGenState, assetPair.BaseAsset)
 		}
+		// END: CAN REMOVE POST v17 UPGRADE
 
 		// Update pool balances with initial liquidity.
 		gammGenState := &gammtypes.GenesisState{}
@@ -403,6 +407,8 @@ func updatePoolIncentiveGenesis(pooliGenState *poolitypes.GenesisState) {
 	pooliGenState.Params = poolitypes.Params{
 		MintedDenom: OsmoDenom,
 	}
+
+	// START: CAN REMOVE POST v17 UPGRADE
 	poolToGauges := poolitypes.PoolToGauges{}
 	currentGaugeId := uint64(1)
 	for _, assetPair := range AssetPairs {
@@ -417,6 +423,7 @@ func updatePoolIncentiveGenesis(pooliGenState *poolitypes.GenesisState) {
 		}
 	}
 	pooliGenState.PoolToGauges = &poolToGauges
+	// END: CAN REMOVE POST v17 UPGRADE
 }
 
 func updateIncentivesGenesis(incentivesGenState *incentivestypes.GenesisState) {
@@ -429,7 +436,7 @@ func updateIncentivesGenesis(incentivesGenState *incentivestypes.GenesisState) {
 		DistrEpochIdentifier: "day",
 	}
 
-	// Add gauge here
+	// START: CAN REMOVE POST v17 UPGRADE
 	gauges := []incentivestypes.Gauge{}
 	currentGaugeId := uint64(1)
 	for _, assetPair := range AssetPairs {
@@ -457,6 +464,7 @@ func updateIncentivesGenesis(incentivesGenState *incentivestypes.GenesisState) {
 
 	incentivesGenState.Gauges = gauges
 	incentivesGenState.LastGaugeId = currentGaugeId
+	// END: CAN REMOVE POST v17 UPGRADE
 }
 
 func updateMintGenesis(mintGenState *minttypes.GenesisState) {
@@ -471,7 +479,7 @@ func updateTxfeesGenesis(txfeesGenState *txfeestypes.GenesisState) {
 	}
 }
 
-// Can be removed after v17 upgrade.
+// START: CAN REMOVE POST v17 UPGRADE
 type ByLinkedClassicPool []AssetPair
 
 func (a ByLinkedClassicPool) Len() int      { return len(a) }
@@ -479,6 +487,8 @@ func (a ByLinkedClassicPool) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a ByLinkedClassicPool) Less(i, j int) bool {
 	return a[i].LinkedClassicPool < a[j].LinkedClassicPool
 }
+
+// END: CAN REMOVE POST v17 UPGRADE
 
 func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 	gammGenState.Params.PoolCreationFee = tenOsmo
@@ -489,7 +499,7 @@ func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 
 	lastPoolID := uint64(1) // To keep track of the last assigned pool ID
 
-	// Can be removed after v17 upgrade.
+	// START: CAN REMOVE POST v17 UPGRADE
 
 	// Sort AssetPairs based on LinkedClassicPool values.
 	sort.Sort(ByLinkedClassicPool(AssetPairs))
@@ -511,6 +521,7 @@ func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 		// Update the lastPoolID to the current pool ID.
 		lastPoolID = poolID
 	}
+	// END: CAN REMOVE POST v17 UPGRADE
 
 	// Note that we set the next pool number as 1 greater than the latest created pool.
 	// This is to ensure that migrations are performed correctly.
