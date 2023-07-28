@@ -40,6 +40,8 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 		return k.FundCommunityPoolFromModule(ctx, asset)
 	}
 
+	ctx.Logger().Info("AllocateAsset minted amount", "module", types.ModuleName, "totalMintedAmount", asset.Amount, "height", ctx.BlockHeight())
+
 	assetAmountDec := asset.Amount.ToDec()
 	totalWeightDec := distrInfo.TotalWeight.ToDec()
 	for _, record := range distrInfo.Records {
@@ -59,6 +61,7 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 		}
 
 		coins := sdk.NewCoins(sdk.NewCoin(asset.Denom, allocatingAmount))
+		ctx.Logger().Debug("Adding to gauge rewards", "module", types.ModuleName, "gaugeId", record.GaugeId, "coins", coins.String(), "height", ctx.BlockHeight())
 		err := k.incentivesKeeper.AddToGaugeRewards(ctx, k.accountKeeper.GetModuleAddress(types.ModuleName), coins, record.GaugeId)
 		if err != nil {
 			return err
