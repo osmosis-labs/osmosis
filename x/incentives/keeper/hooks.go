@@ -1,15 +1,11 @@
 package keeper
 
 import (
-<<<<<<< HEAD
-	"github.com/osmosis-labs/osmosis/v16/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
-=======
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
->>>>>>> afc8b5a1 (refactor: add logs for minted rewards pipeline (#5856))
+	"github.com/osmosis-labs/osmosis/v16/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
+
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
