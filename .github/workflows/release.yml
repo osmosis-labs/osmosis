@@ -1,12 +1,17 @@
-# This workflow creates a release using 'make release' command.
+# This workflow creates a release using goreleaser
+# via the 'make release' command.
 
-name: release
+name: Create release
 
 on:
   workflow_dispatch:
     inputs:
       release_tag:
+        description: 'The desired tag for the release (e.g. v0.1.0).'
         required: true
+
+permissions:
+  contents: write
 
 jobs:
   release:
@@ -22,6 +27,7 @@ jobs:
       - 
         name: Make release
         run: |
+          sudo rm -rf dist
           make release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
