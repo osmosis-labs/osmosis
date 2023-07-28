@@ -563,6 +563,7 @@ release:
 	docker run \
 		--rm \
 		-e GITHUB_TOKEN=$(GITHUB_TOKEN) \
+		-e COSMWASM_VERSION=$(COSMWASM_VERSION) \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v `pwd`:/go/src/osmosisd \
 		-w /go/src/osmosisd \
@@ -577,6 +578,7 @@ endif
 release-dry-run:
 	docker run \
 		--rm \
+		-e COSMWASM_VERSION=$(COSMWASM_VERSION) \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v `pwd`:/go/src/osmosisd \
 		-w /go/src/osmosisd \
@@ -588,6 +590,7 @@ release-dry-run:
 release-snapshot:
 	docker run \
 		--rm \
+		-e COSMWASM_VERSION=$(COSMWASM_VERSION) \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v `pwd`:/go/src/osmosisd \
 		-w /go/src/osmosisd \
