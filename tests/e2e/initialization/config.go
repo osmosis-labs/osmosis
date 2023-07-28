@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/server"
@@ -21,6 +22,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v16/x/mint/types"
 	poolitypes "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
@@ -94,7 +96,8 @@ var (
 	StakeAmountIntB  = sdk.NewInt(StakeAmountB)
 	StakeAmountCoinB = sdk.NewCoin(OsmoDenom, StakeAmountIntB)
 
-	DaiOsmoPoolBalances = fmt.Sprintf("%s%s", DaiBalanceA, DaiDenom)
+	// Can be removed after v17 upgrade.
+	BaseDenomBalances = strAllUpgradeBaseDenoms()
 
 	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom, IonBalanceA, IonDenom, UstBalanceA, UstIBCDenom, LuncBalanceA, LuncIBCDenom)
 	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom, IonBalanceB, IonDenom)
@@ -104,6 +107,22 @@ var (
 	fiftyOsmo       = sdk.Coins{sdk.NewInt64Coin(OsmoDenom, 50_000_000)}
 	WalletFeeTokens = sdk.NewCoin(E2EFeeToken, sdk.NewInt(WalletFeeBalance))
 )
+
+// Can be removed after v17 upgrade.
+func strAllUpgradeBaseDenoms() string {
+	upgradeBaseDenoms := fmt.Sprintf("%s%s,", DaiBalanceA, DaiDenom)
+	n := len(AssetPairs)
+	for i, assetPair := range AssetPairs {
+		if assetPair.BaseAsset == "uion" {
+			continue
+		}
+		upgradeBaseDenoms += "2000000" + assetPair.BaseAsset
+		if i < n-1 { // Check if it's not the last iteration
+			upgradeBaseDenoms += ","
+		}
+	}
+	return upgradeBaseDenoms
+}
 
 func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHeight int) error {
 	serverCtx := server.NewDefaultContext()
@@ -200,11 +219,11 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 	configDir := chain.nodes[0].configDir()
 	for _, val := range chain.nodes {
 		if chain.chainMeta.Id == ChainAID {
-			if err := addAccount(configDir, "", InitBalanceStrA+","+DaiOsmoPoolBalances, val.keyInfo.GetAddress(), forkHeight); err != nil {
+			if err := addAccount(configDir, "", InitBalanceStrA+","+BaseDenomBalances, val.keyInfo.GetAddress(), forkHeight); err != nil {
 				return err
 			}
 		} else if chain.chainMeta.Id == ChainBID {
-			if err := addAccount(configDir, "", InitBalanceStrB+","+DaiOsmoPoolBalances, val.keyInfo.GetAddress(), forkHeight); err != nil {
+			if err := addAccount(configDir, "", InitBalanceStrB+","+BaseDenomBalances, val.keyInfo.GetAddress(), forkHeight); err != nil {
 				return err
 			}
 		}
@@ -331,6 +350,14 @@ func updateBankGenesis(appGenState map[string]json.RawMessage) func(s *banktypes
 			setDenomMetadata(bankGenState, denom)
 		}
 
+		// Can be removed after v17 upgrade.
+		for _, assetPair := range AssetPairs {
+			if assetPair.BaseAsset == "uion" {
+				continue
+			}
+			setDenomMetadata(bankGenState, assetPair.BaseAsset)
+		}
+
 		// Update pool balances with initial liquidity.
 		gammGenState := &gammtypes.GenesisState{}
 		util.Cdc.MustUnmarshalJSON(appGenState[gammtypes.ModuleName], gammGenState)
@@ -376,6 +403,20 @@ func updatePoolIncentiveGenesis(pooliGenState *poolitypes.GenesisState) {
 	pooliGenState.Params = poolitypes.Params{
 		MintedDenom: OsmoDenom,
 	}
+	poolToGauges := poolitypes.PoolToGauges{}
+	currentGaugeId := uint64(1)
+	for _, assetPair := range AssetPairs {
+		for _, duration := range pooliGenState.LockableDurations {
+			poolToGauge := poolitypes.PoolToGauge{
+				PoolId:   assetPair.LinkedClassicPool,
+				GaugeId:  currentGaugeId,
+				Duration: duration,
+			}
+			currentGaugeId++
+			poolToGauges.PoolToGauge = append(poolToGauges.PoolToGauge, poolToGauge)
+		}
+	}
+	pooliGenState.PoolToGauges = &poolToGauges
 }
 
 func updateIncentivesGenesis(incentivesGenState *incentivestypes.GenesisState) {
@@ -387,6 +428,35 @@ func updateIncentivesGenesis(incentivesGenState *incentivestypes.GenesisState) {
 	incentivesGenState.Params = incentivestypes.Params{
 		DistrEpochIdentifier: "day",
 	}
+
+	// Add gauge here
+	gauges := []incentivestypes.Gauge{}
+	currentGaugeId := uint64(1)
+	for _, assetPair := range AssetPairs {
+		denom := fmt.Sprintf("gamm/pool/%d", assetPair.LinkedClassicPool)
+		for _, duration := range incentivesGenState.LockableDurations {
+			queryCondition := lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.ByDuration,
+				Denom:         denom,
+				Duration:      duration,
+			}
+			gauge := incentivestypes.NewGauge(
+				currentGaugeId,
+				true,
+				queryCondition,
+				sdk.NewCoins(),
+				time.Time{},
+				0,
+				0,
+				sdk.NewCoins(),
+			)
+			currentGaugeId++
+			gauges = append(gauges, gauge)
+		}
+	}
+
+	incentivesGenState.Gauges = gauges
+	incentivesGenState.LastGaugeId = currentGaugeId
 }
 
 func updateMintGenesis(mintGenState *minttypes.GenesisState) {
@@ -401,22 +471,50 @@ func updateTxfeesGenesis(txfeesGenState *txfeestypes.GenesisState) {
 	}
 }
 
+// Can be removed after v17 upgrade.
+type ByLinkedClassicPool []AssetPair
+
+func (a ByLinkedClassicPool) Len() int      { return len(a) }
+func (a ByLinkedClassicPool) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a ByLinkedClassicPool) Less(i, j int) bool {
+	return a[i].LinkedClassicPool < a[j].LinkedClassicPool
+}
+
 func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 	gammGenState.Params.PoolCreationFee = tenOsmo
 	// setup fee pool, between "e2e_default_fee_token" and "uosmo"
-	uosmoFeeTokenPool := setupPool(1, "uosmo", E2EFeeToken)
+	uosmoFeeTokenPool := setupPool(1, "uosmo", E2EFeeToken, "0.01")
 
 	gammGenState.Pools = []*types1.Any{uosmoFeeTokenPool}
 
-	// Notice that this is non-inclusive. The DAI/OSMO pool should be created in the
-	// pre-upgrade logic of the upgrade configurer.
-	for poolId := uint64(2); poolId < DaiOsmoPoolId; poolId++ {
-		gammGenState.Pools = append(gammGenState.Pools, setupPool(poolId, OsmoDenom, AtomDenom))
+	lastPoolID := uint64(1) // To keep track of the last assigned pool ID
+
+	// Can be removed after v17 upgrade.
+
+	// Sort AssetPairs based on LinkedClassicPool values.
+	sort.Sort(ByLinkedClassicPool(AssetPairs))
+
+	// Create earlier pools or dummy pools if needed
+	for _, assetPair := range AssetPairs {
+		poolID := assetPair.LinkedClassicPool
+
+		// If LinkedClassicPool is specified, but it's smaller than the current pool ID,
+		// create dummy pools to fill the gap.
+		for lastPoolID+1 < poolID {
+			gammGenState.Pools = append(gammGenState.Pools, setupPool(lastPoolID+1, OsmoDenom, AtomDenom, "0.01"))
+			lastPoolID++
+		}
+
+		// Now create the pool with the correct pool ID.
+		gammGenState.Pools = append(gammGenState.Pools, setupPool(poolID, assetPair.BaseAsset, QuoteAsset, assetPair.SpreadFactor.String()))
+
+		// Update the lastPoolID to the current pool ID.
+		lastPoolID = poolID
 	}
 
 	// Note that we set the next pool number as 1 greater than the latest created pool.
 	// This is to ensure that migrations are performed correctly.
-	gammGenState.NextPoolNumber = DaiOsmoPoolId
+	gammGenState.NextPoolNumber = lastPoolID + 1
 }
 
 func updatePoolManagerGenesis(appGenState map[string]json.RawMessage) func(*poolmanagertypes.GenesisState) {
@@ -566,8 +664,8 @@ func setDenomMetadata(genState *banktypes.GenesisState, denom string) {
 
 // sets up a pool with 1% fee, equal weights, and given denoms with supply of 100000000000,
 // and a given pool id.
-func setupPool(poolId uint64, denomA, denomB string) *types1.Any {
-	feePoolParams := balancer.NewPoolParams(sdk.MustNewDecFromStr("0.01"), sdk.ZeroDec(), nil)
+func setupPool(poolId uint64, denomA, denomB, spreadFactor string) *types1.Any {
+	feePoolParams := balancer.NewPoolParams(sdk.MustNewDecFromStr(spreadFactor), sdk.ZeroDec(), nil)
 	feePoolAssets := []balancer.PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
