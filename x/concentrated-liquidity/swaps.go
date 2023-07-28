@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	events "github.com/osmosis-labs/osmosis/v17/x/poolmanager/events"
 
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
