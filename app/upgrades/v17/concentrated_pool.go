@@ -4,11 +4,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
-	"github.com/osmosis-labs/osmosis/v16/app/keepers"
 	v16 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v16"
 	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	gammkeeper "github.com/osmosis-labs/osmosis/v16/x/gamm/keeper"
-	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 	"github.com/osmosis-labs/osmosis/v16/x/poolmanager"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
@@ -49,31 +47,6 @@ func createConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLinkWith uint64
 
 	createPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolCreatorAddress, desiredDenom0, denom1, TickSpacing, spreadFactor)
 	concentratedPool, err := poolmanagerKeeper.CreateConcentratedPoolAsPoolManager(ctx, createPoolMsg)
-	if err != nil {
-		return nil, err
-	}
-
-	return concentratedPool, nil
-}
-
-// createCanonicalConcentratedLiquidityPoolAndMigrationLink creates a new concentrated liquidity pool from an existing CFMM pool.
-// This method calls OverwriteMigrationRecords, which creates a migration link between the CFMM/CL pool as well as migrates the
-// gauges and distribution records from the CFMM pool to the new CL pool.
-// Returns error if fails to create concentrated liquidity pool from CFMM pool.
-func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, cfmmPoolId uint64, desiredDenom0 string, spreadFactor sdk.Dec, keepers *keepers.AppKeepers) (poolmanagertypes.PoolI, error) {
-	concentratedPool, err := createConcentratedPoolFromCFMM(ctx, cfmmPoolId, desiredDenom0, spreadFactor, *keepers.AccountKeeper, *keepers.GAMMKeeper, *keepers.PoolManagerKeeper)
-	if err != nil {
-		return nil, err
-	}
-
-	// Set the migration link in x/gamm.
-	// This will also migrate the CFMM distribution records to point to the new CL pool.
-	err = keepers.GAMMKeeper.UpdateMigrationRecords(ctx, []gammmigration.BalancerToConcentratedPoolLink{
-		{
-			BalancerPoolId: cfmmPoolId,
-			ClPoolId:       concentratedPool.GetId(),
-		},
-	})
 	if err != nil {
 		return nil, err
 	}

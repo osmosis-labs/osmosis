@@ -11,6 +11,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
 
 	"github.com/osmosis-labs/osmosis/v16/app/keepers"
@@ -37,14 +38,22 @@ func CreateUpgradeHandler(
 		// fullRangeCoinsUsed tracks the coins we use in the below for loop from the community pool to create the full range position for each new pool.
 		fullRangeCoinsUsed := sdk.NewCoins()
 
+		poolLinks := []gammmigration.BalancerToConcentratedPoolLink{}
+
 		for _, assetPair := range AssetPairs {
 			// Create a concentrated liquidity pool for asset pair.
-			clPool, err := createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, assetPair.LinkedClassicPool, assetPair.BaseAsset, assetPair.SpreadFactor, keepers)
+			clPool, err := createConcentratedPoolFromCFMM(ctx, assetPair.LinkedClassicPool, assetPair.BaseAsset, assetPair.SpreadFactor, *keepers.AccountKeeper, *keepers.GAMMKeeper, *keepers.PoolManagerKeeper)
 			if err != nil {
 				return nil, err
 			}
 			clPoolId := clPool.GetId()
 			clPoolDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPoolId)
+
+			// Add the pool link to the list of pool links (we set them all at once later)
+			poolLinks = append(poolLinks, gammmigration.BalancerToConcentratedPoolLink{
+				BalancerPoolId: assetPair.LinkedClassicPool,
+				ClPoolId:       clPoolId,
+			})
 
 			// Determine the amount of baseAsset that can be bought with 1 OSMO.
 			oneOsmo := sdk.NewCoin(QuoteAsset, sdk.NewInt(1000000))
@@ -88,6 +97,13 @@ func CreateUpgradeHandler(
 				twapRecord.LastErrorTime = time.Time{}
 				keepers.TwapKeeper.StoreNewRecord(ctx, twapRecord)
 			}
+		}
+
+		// Set the migration links in x/gamm.
+		// This will also migrate the CFMM distribution records to point to the new CL pools.
+		err = keepers.GAMMKeeper.UpdateMigrationRecords(ctx, poolLinks)
+		if err != nil {
+			return nil, err
 		}
 
 		// Because we had done direct sends from the community pool, we need to manually change the fee pool to reflect the change in balance.
