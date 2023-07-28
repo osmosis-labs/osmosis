@@ -11,11 +11,11 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -63,7 +63,7 @@ For stableswap (demonstrating need for a 1:1000 scaling factor, see doc)
 {
 	"initial-deposit": "1000000uusdc,1000miliusdc",
 	"swap-fee": "0.01",
-	"exit-fee": "0.01",
+	"exit-fee": "0.00",
 	"future-governor": "168h",
 	"scaling-factors": "1000,1"
 }

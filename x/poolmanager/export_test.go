@@ -3,7 +3,7 @@ package poolmanager
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 var IntMaxValue = intMaxValue
