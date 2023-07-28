@@ -16,6 +16,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v17/app/keepers"
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 )
 
 func CreateUpgradeHandler(
@@ -118,6 +119,14 @@ func CreateUpgradeHandler(
 		// Update and set the new fee pool
 		feePool.CommunityPool = newPool
 		keepers.DistrKeeper.SetFeePool(ctx, feePool)
+
+		// Reset the pool weights upon upgrade. This will add support for CW pools on ProtoRev.
+		keepers.ProtoRevKeeper.SetPoolWeights(ctx, types.PoolWeights{
+			BalancerWeight:     1,
+			StableWeight:       4,
+			ConcentratedWeight: 300,
+			CosmwasmWeight:     300,
+		})
 
 		return migrations, nil
 	}

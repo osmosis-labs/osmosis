@@ -140,6 +140,8 @@ func (s *KeeperTestSuite) SetupTest() {
 		sdk.NewCoin("hook", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("eth", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("gamm/pool/1", sdk.NewInt(9000000000000000000)),
+		sdk.NewCoin(apptesting.DefaultTransmuterDenomA, sdk.NewInt(9000000000000000000)),
+		sdk.NewCoin(apptesting.DefaultTransmuterDenomB, sdk.NewInt(9000000000000000000)),
 	)
 	s.fundAllAccountsWith()
 	s.Commit()
@@ -895,6 +897,10 @@ func (s *KeeperTestSuite) setUpPools() {
 	// Create a concentrated liquidity pool for epoch_hook testing
 	// Pool 49
 	s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("epochTwo", "uosmo")
+
+	// Create a cosmwasm pool for testing
+	// Pool 50
+	s.PrepareCosmWasmPool()
 
 	// Set all of the pool info into the stores
 	err := s.App.ProtoRevKeeper.UpdatePools(s.Ctx)
