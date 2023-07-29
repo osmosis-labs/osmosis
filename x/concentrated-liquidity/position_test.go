@@ -15,6 +15,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 const (
@@ -1447,7 +1448,7 @@ func (s *KeeperTestSuite) TestFunctionalFungifyChargedPositions() {
 
 	s.TestAccs = apptesting.CreateRandomAccounts(5)
 	s.FundAcc(s.TestAccs[4], ethFunded)
-	coinIn, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, s.TestAccs[4], pool, usdcSupply, ETH, DefaultSpreadFactor, types.MinSpotPrice)
+	coinIn, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, s.TestAccs[4], &pool, usdcSupply, ETH, DefaultSpreadFactor, types.MinSpotPrice)
 	s.Require().NoError(err)
 
 	// --- Set up expected spread rewards and incentives ---
@@ -2430,7 +2431,7 @@ func (s *KeeperTestSuite) TestTickRoundingEdgeCase() {
 	s.FundAcc(swapAddr, sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(1000000000000000000))))
 	pool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
 	s.Require().NoError(err)
-	_, _, _, err = s.clk.SwapInAmtGivenOut(s.Ctx, swapAddr, pool, desiredTokenOut, ETH, sdk.ZeroDec(), sdk.ZeroDec())
+	_, _, _, err = s.clk.SwapInAmtGivenOut(s.Ctx, swapAddr, &pool, desiredTokenOut, ETH, sdk.ZeroDec(), sdk.ZeroDec())
 	s.Require().NoError(err)
 
 	// Both positions should be able to withdraw successfully
@@ -2636,11 +2637,8 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	coinZeroIn := sdk.NewCoin(pool.GetToken0(), amountZeroIn.SDKDec().TruncateInt())
 
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(coinZeroIn))
-	_, err = s.clk.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, coinZeroIn, pool.GetToken1(), sdk.ZeroInt(), spreadFactor)
-	s.Require().NoError(err)
-
-	// Refetch pool
-	pool, err = s.clk.GetPoolById(s.Ctx, poolId)
+	poolInterface := pool.(poolmanagertypes.PoolI)
+	_, err = s.clk.SwapExactAmountIn(s.Ctx, s.TestAccs[0], &poolInterface, coinZeroIn, pool.GetToken1(), sdk.ZeroInt(), spreadFactor)
 	s.Require().NoError(err)
 
 	// Swap to approximately DefaultCurrTick + 150
@@ -2648,7 +2646,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	coinOneIn := sdk.NewCoin(pool.GetToken1(), amountOneIn.SDKDec().TruncateInt())
 
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(coinOneIn))
-	_, err = s.clk.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, coinOneIn, pool.GetToken0(), sdk.ZeroInt(), spreadFactor)
+	_, err = s.clk.SwapExactAmountIn(s.Ctx, s.TestAccs[0], &poolInterface, coinOneIn, pool.GetToken0(), sdk.ZeroInt(), spreadFactor)
 	s.Require().NoError(err)
 
 	// This currently panics due to the lack of support for negative range accumulators.

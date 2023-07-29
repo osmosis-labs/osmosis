@@ -74,7 +74,7 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit sdk.I
 	// profited amount of the orignal asset through the highest uosmo liquidity pool
 	conversionTokenOut, err := swapModule.CalcOutAmtGivenIn(
 		ctx,
-		conversionPool,
+		&conversionPool,
 		sdk.NewCoin(inputCoin.Denom, profit),
 		types.OsmosisDenomination,
 		conversionPool.GetSpreadFactor(ctx),

@@ -11,6 +11,7 @@ import (
 	events "github.com/osmosis-labs/osmosis/v17/x/poolmanager/events"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
@@ -120,7 +121,7 @@ func (ss *SwapState) updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal sdk.
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolI poolmanagertypes.PoolI,
+	poolI *poolmanagertypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
@@ -131,7 +132,7 @@ func (k Keeper) SwapExactAmountIn(
 	}
 
 	// Convert pool interface to CL pool type
-	pool, err := asConcentrated(poolI)
+	pool, err := asConcentrated((*poolI))
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -141,7 +142,7 @@ func (k Keeper) SwapExactAmountIn(
 
 	// Change priceLimit based on which direction we are swapping
 	priceLimit := swapstrategy.GetPriceLimit(zeroForOne)
-	tokenIn, tokenOut, _, err := k.swapOutAmtGivenIn(ctx, sender, pool, tokenIn, tokenOutDenom, spreadFactor, priceLimit)
+	tokenIn, tokenOut, _, err := k.swapOutAmtGivenIn(ctx, sender, &pool, tokenIn, tokenOutDenom, spreadFactor, priceLimit)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -163,7 +164,7 @@ func (k Keeper) SwapExactAmountIn(
 func (k Keeper) SwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	poolI poolmanagertypes.PoolI,
+	poolI *poolmanagertypes.PoolI,
 	tokenInDenom string,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
@@ -173,7 +174,7 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, types.DenomDuplicatedError{TokenInDenom: tokenInDenom, TokenOutDenom: tokenOut.Denom}
 	}
 
-	pool, err := asConcentrated(poolI)
+	pool, err := asConcentrated((*poolI))
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -183,7 +184,7 @@ func (k Keeper) SwapExactAmountOut(
 	// change priceLimit based on which direction we are swapping
 	// if zeroForOne == true, use MinSpotPrice else use MaxSpotPrice
 	priceLimit := swapstrategy.GetPriceLimit(zeroForOne)
-	tokenIn, tokenOut, _, err := k.swapInAmtGivenOut(ctx, sender, pool, tokenOut, tokenInDenom, spreadFactor, priceLimit)
+	tokenIn, tokenOut, _, err := k.swapInAmtGivenOut(ctx, sender, &pool, tokenOut, tokenInDenom, spreadFactor, priceLimit)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -205,7 +206,7 @@ func (k Keeper) SwapExactAmountOut(
 func (k Keeper) swapOutAmtGivenIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	pool types.ConcentratedPoolExtension,
+	pool *types.ConcentratedPoolExtension,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	spreadFactor sdk.Dec,
@@ -222,7 +223,7 @@ func (k Keeper) swapOutAmtGivenIn(
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
 	// Also emits swap event and updates related liquidity metrics
-	if err := k.updatePoolForSwap(ctx, pool, SwapDetails{sender, tokenIn, tokenOut}, poolUpdates, totalSpreadFactors); err != nil {
+	if err := k.updatePoolForSwap(ctx, *pool, SwapDetails{sender, tokenIn, tokenOut}, poolUpdates, totalSpreadFactors); err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, err
 	}
 
@@ -234,7 +235,7 @@ func (k Keeper) swapOutAmtGivenIn(
 func (k *Keeper) swapInAmtGivenOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	pool types.ConcentratedPoolExtension,
+	pool *types.ConcentratedPoolExtension,
 	desiredTokenOut sdk.Coin,
 	tokenInDenom string,
 	spreadFactor sdk.Dec,
@@ -252,7 +253,7 @@ func (k *Keeper) swapInAmtGivenOut(
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
 	// Also emits swap event and updates related liquidity metrics
-	if err := k.updatePoolForSwap(ctx, pool, SwapDetails{sender, tokenIn, tokenOut}, poolUpdates, totalSpreadFactors); err != nil {
+	if err := k.updatePoolForSwap(ctx, *pool, SwapDetails{sender, tokenIn, tokenOut}, poolUpdates, totalSpreadFactors); err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, err
 	}
 
@@ -261,18 +262,18 @@ func (k *Keeper) swapInAmtGivenOut(
 
 func (k Keeper) CalcOutAmtGivenIn(
 	ctx sdk.Context,
-	poolI poolmanagertypes.PoolI,
+	poolI *poolmanagertypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	spreadFactor sdk.Dec,
 ) (tokenOut sdk.Coin, err error) {
 	cacheCtx, _ := ctx.CacheContext()
-	pool, err := asConcentrated(poolI)
+	pool, err := asConcentrated((*poolI))
 	if err != nil {
 		return sdk.Coin{}, err
 	}
 
-	_, tokenOut, _, _, err = k.computeOutAmtGivenIn(cacheCtx, pool, tokenIn, tokenOutDenom, spreadFactor, sdk.ZeroDec())
+	_, tokenOut, _, _, err = k.computeOutAmtGivenIn(cacheCtx, &pool, tokenIn, tokenOutDenom, spreadFactor, sdk.ZeroDec())
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -281,18 +282,18 @@ func (k Keeper) CalcOutAmtGivenIn(
 
 func (k Keeper) CalcInAmtGivenOut(
 	ctx sdk.Context,
-	poolI poolmanagertypes.PoolI,
+	poolI *poolmanagertypes.PoolI,
 	tokenOut sdk.Coin,
 	tokenInDenom string,
 	spreadFactor sdk.Dec,
 ) (tokenIn sdk.Coin, err error) {
 	cacheCtx, _ := ctx.CacheContext()
-	pool, err := asConcentrated(poolI)
+	pool, err := asConcentrated((*poolI))
 	if err != nil {
 		return sdk.Coin{}, err
 	}
 
-	tokenIn, _, _, _, err = k.computeInAmtGivenOut(cacheCtx, pool, tokenOut, tokenInDenom, spreadFactor, sdk.ZeroDec())
+	tokenIn, _, _, _, err = k.computeInAmtGivenOut(cacheCtx, &pool, tokenOut, tokenInDenom, spreadFactor, sdk.ZeroDec())
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -306,7 +307,7 @@ func (k Keeper) CalcInAmtGivenOut(
 // Note that passing in 0 for `priceLimit` will result in the price limit being set to the max/min value based on swap direction
 func (k Keeper) computeOutAmtGivenIn(
 	ctx sdk.Context,
-	pool types.ConcentratedPoolExtension,
+	pool *types.ConcentratedPoolExtension,
 	tokenInMin sdk.Coin,
 	tokenOutDenom string,
 	spreadFactor sdk.Dec,
@@ -319,13 +320,15 @@ func (k Keeper) computeOutAmtGivenIn(
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 	}
 
-	poolId := p.GetId()
+	poolId := (*p).GetId()
+	poolToken0 := (*p).GetToken0()
+	poolToken1 := (*p).GetToken1()
 
-	if err := checkDenomValidity(tokenInMin.Denom, tokenOutDenom, p.GetToken0(), p.GetToken1()); err != nil {
+	if err := checkDenomValidity(tokenInMin.Denom, tokenOutDenom, poolToken0, poolToken1); err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 	}
 
-	swapStrategy, sqrtPriceLimit, err := k.setupSwapStrategy(p, spreadFactor, tokenInMin.Denom, priceLimit)
+	swapStrategy, sqrtPriceLimit, err := k.setupSwapStrategy(*p, spreadFactor, tokenInMin.Denom, priceLimit)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 	}
@@ -337,7 +340,7 @@ func (k Keeper) computeOutAmtGivenIn(
 
 	// initialize swap state with the following parameters:
 	// as we iterate through the following for loop, this swap state will get updated after each required iteration
-	swapState := newSwapState(tokenInMin.Amount, p, swapStrategy)
+	swapState := newSwapState(tokenInMin.Amount, *p, swapStrategy)
 
 	nextInitTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
 	defer nextInitTickIter.Close()
@@ -406,7 +409,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		// bucket has been consumed and we must move on to the next bucket to complete the swap
 		if nextInitializedTickSqrtPriceBigDec.Equal(computedSqrtPrice) {
 			swapState, err = k.swapCrossTickLogic(ctx, swapState, swapStrategy,
-				nextInitializedTick, nextInitTickIter, p, spreadRewardAccumulator, uptimeAccums, tokenInMin.Denom)
+				nextInitializedTick, nextInitTickIter, *p, spreadRewardAccumulator, uptimeAccums, tokenInMin.Denom)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 			}
@@ -465,7 +468,7 @@ func (k Keeper) computeOutAmtGivenIn(
 // However, there are no token transfers or pool updates done in this method. These mutations are performed in swapOutAmtGivenIn.
 func (k Keeper) computeInAmtGivenOut(
 	ctx sdk.Context,
-	pool types.ConcentratedPoolExtension,
+	pool *types.ConcentratedPoolExtension,
 	desiredTokenOut sdk.Coin,
 	tokenInDenom string,
 	spreadFactor sdk.Dec,
@@ -476,20 +479,22 @@ func (k Keeper) computeInAmtGivenOut(
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 	}
 
-	poolId := p.GetId()
+	poolId := (*p).GetId()
+	poolToken0 := (*p).GetToken0()
+	poolToken1 := (*p).GetToken1()
 
-	if err := checkDenomValidity(tokenInDenom, desiredTokenOut.Denom, p.GetToken0(), p.GetToken1()); err != nil {
+	if err := checkDenomValidity(tokenInDenom, desiredTokenOut.Denom, poolToken0, poolToken1); err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 	}
 
-	swapStrategy, sqrtPriceLimit, err := k.setupSwapStrategy(p, spreadFactor, tokenInDenom, priceLimit)
+	swapStrategy, sqrtPriceLimit, err := k.setupSwapStrategy(*p, spreadFactor, tokenInDenom, priceLimit)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 	}
 
 	// initialize swap state with the following parameters:
 	// as we iterate through the following for loop, this swap state will get updated after each required iteration
-	swapState := newSwapState(desiredTokenOut.Amount, p, swapStrategy)
+	swapState := newSwapState(desiredTokenOut.Amount, *p, swapStrategy)
 
 	nextInitTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, swapState.tick)
 	defer nextInitTickIter.Close()
@@ -559,7 +564,7 @@ func (k Keeper) computeInAmtGivenOut(
 		// bucket has been consumed and we must move on to the next bucket by crossing a tick to complete the swap
 		if nextInitializedTickSqrtPriceBigDec.Equal(computedSqrtPrice) {
 			swapState, err = k.swapCrossTickLogic(ctx, swapState, swapStrategy,
-				nextInitializedTick, nextInitTickIter, p, spreadRewardAccumulator, uptimeAccums, tokenInDenom)
+				nextInitializedTick, nextInitTickIter, *p, spreadRewardAccumulator, uptimeAccums, tokenInDenom)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 			}
@@ -785,13 +790,14 @@ func (k Keeper) setupSwapStrategy(p types.ConcentratedPoolExtension, spreadFacto
 	return swapStrategy, sqrtPriceLimit, nil
 }
 
-func (k Keeper) validatePoolHasPositions(ctx sdk.Context, pool types.ConcentratedPoolExtension) (types.ConcentratedPoolExtension, error) {
-	hasPositionInPool, err := k.HasAnyPositionForPool(ctx, pool.GetId())
+func (k Keeper) validatePoolHasPositions(ctx sdk.Context, pool *types.ConcentratedPoolExtension) (*types.ConcentratedPoolExtension, error) {
+	poolId := (*pool).GetId()
+	hasPositionInPool, err := k.HasAnyPositionForPool(ctx, poolId)
 	if err != nil {
 		return pool, err
 	}
 	if !hasPositionInPool {
-		return pool, types.NoSpotPriceWhenNoLiquidityError{PoolId: pool.GetId()}
+		return pool, types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId}
 	}
 	return pool, nil
 }

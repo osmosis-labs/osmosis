@@ -51,7 +51,7 @@ type PoolModuleI interface {
 	SwapExactAmountIn(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
-		pool PoolI,
+		pool *PoolI,
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		tokenOutMinAmount sdk.Int,
@@ -61,7 +61,7 @@ type PoolModuleI interface {
 	// Returns error if the given pool is not a CFMM pool. Returns error on internal calculations.
 	CalcOutAmtGivenIn(
 		ctx sdk.Context,
-		poolI PoolI,
+		poolI *PoolI,
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		spreadFactor sdk.Dec,
@@ -70,7 +70,7 @@ type PoolModuleI interface {
 	SwapExactAmountOut(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
-		pool PoolI,
+		pool *PoolI,
 		tokenInDenom string,
 		tokenInMaxAmount sdk.Int,
 		tokenOut sdk.Coin,
@@ -80,7 +80,7 @@ type PoolModuleI interface {
 	// Returns error if the given pool is not a CFMM pool. Returns error on internal calculations.
 	CalcInAmtGivenOut(
 		ctx sdk.Context,
-		poolI PoolI,
+		poolI *PoolI,
 		tokenOut sdk.Coin,
 		tokenInDenom string,
 		spreadFactor sdk.Dec,

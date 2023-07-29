@@ -55,7 +55,7 @@ func (k Keeper) SendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 stri
 func (k Keeper) SwapOutAmtGivenIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	pool types.ConcentratedPoolExtension,
+	pool *types.ConcentratedPoolExtension,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	spreadFactor sdk.Dec,
@@ -65,7 +65,7 @@ func (k Keeper) SwapOutAmtGivenIn(
 
 func (k Keeper) ComputeOutAmtGivenIn(
 	ctx sdk.Context,
-	pool types.ConcentratedPoolExtension,
+	pool *types.ConcentratedPoolExtension,
 	tokenInMin sdk.Coin,
 	tokenOutDenom string,
 	spreadFactor sdk.Dec,
@@ -78,7 +78,7 @@ func (k Keeper) ComputeOutAmtGivenIn(
 func (k Keeper) SwapInAmtGivenOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
-	pool types.ConcentratedPoolExtension,
+	pool *types.ConcentratedPoolExtension,
 	desiredTokenOut sdk.Coin,
 	tokenInDenom string,
 	spreadFactor sdk.Dec,
@@ -88,7 +88,7 @@ func (k Keeper) SwapInAmtGivenOut(
 
 func (k Keeper) ComputeInAmtGivenOut(
 	ctx sdk.Context,
-	pool types.ConcentratedPoolExtension,
+	pool *types.ConcentratedPoolExtension,
 	desiredTokenOut sdk.Coin,
 	tokenInDenom string,
 	spreadFactor sdk.Dec,

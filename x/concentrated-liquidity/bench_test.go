@@ -17,6 +17,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
 	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 type BenchTestSuite struct {
@@ -236,8 +237,9 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 
 		b.StartTimer()
 
+		poolInterface := pool.(poolmanagertypes.PoolI)
 		// System under test
-		_, err = clKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, largeSwapInCoin, DefaultCoin1.Denom, sdk.NewInt(1), pool.GetSpreadFactor(s.Ctx))
+		_, err = clKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], &poolInterface, largeSwapInCoin, DefaultCoin1.Denom, sdk.NewInt(1), pool.GetSpreadFactor(s.Ctx))
 		b.StopTimer()
 		noError(b, err)
 

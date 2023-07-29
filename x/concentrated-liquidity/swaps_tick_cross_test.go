@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 const (
@@ -140,7 +141,8 @@ func (s *KeeperTestSuite) swapZeroForOneLeft(poolId uint64, amount sdk.Coin) {
 	s.Require().NoError(err)
 
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(amount))
-	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, amount, pool.GetToken1(), sdk.ZeroInt(), sdk.ZeroDec())
+	poolInterface := pool.(poolmanagertypes.PoolI)
+	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], &poolInterface, amount, pool.GetToken1(), sdk.ZeroInt(), sdk.ZeroDec())
 	s.Require().NoError(err)
 }
 
@@ -150,8 +152,10 @@ func (s *KeeperTestSuite) swapOneForZeroRight(poolId uint64, amount sdk.Coin) {
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
+	poolInterface := pool.(poolmanagertypes.PoolI)
+
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(amount))
-	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, amount, pool.GetToken0(), sdk.ZeroInt(), sdk.ZeroDec())
+	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], &poolInterface, amount, pool.GetToken0(), sdk.ZeroInt(), sdk.ZeroDec())
 	s.Require().NoError(err)
 }
 
@@ -164,8 +168,10 @@ func (s *KeeperTestSuite) swapInGivenOutZeroForOneLeft(poolId uint64, tokenOut s
 	s.Require().NoError(err)
 
 	tokenInDenom := pool.GetToken0()
+	poolInterface := pool.(poolmanagertypes.PoolI)
+
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(tokenInDenom, estimatedTokenIn.Ceil().TruncateInt())))
-	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, tokenInDenom, defaultTokenInMaxAmount, tokenOut, sdk.ZeroDec())
+	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], &poolInterface, tokenInDenom, defaultTokenInMaxAmount, tokenOut, sdk.ZeroDec())
 	s.Require().NoError(err)
 }
 
@@ -177,8 +183,10 @@ func (s *KeeperTestSuite) swapInGivenOutOneForZeroRight(poolId uint64, tokenOut 
 	s.Require().NoError(err)
 
 	tokenInDenom := pool.GetToken1()
+	poolInterface := pool.(poolmanagertypes.PoolI)
+
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(tokenInDenom, estimatedTokenIn.Ceil().TruncateInt())))
-	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, tokenInDenom, defaultTokenInMaxAmount, tokenOut, sdk.ZeroDec())
+	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], &poolInterface, tokenInDenom, defaultTokenInMaxAmount, tokenOut, sdk.ZeroDec())
 	s.Require().NoError(err)
 }
 
@@ -1340,8 +1348,9 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 		pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 		s.Require().NoError(err)
 
+		poolInterface := pool.(poolmanagertypes.PoolI)
 		// Validate cannot swap left again
-		_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, smallTokenZeroCoinIn, tokeOneDenom, sdk.ZeroInt(), sdk.ZeroDec())
+		_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], &poolInterface, smallTokenZeroCoinIn, tokeOneDenom, sdk.ZeroInt(), sdk.ZeroDec())
 		s.Require().Error(err)
 		s.Require().ErrorContains(err, types.InvalidAmountCalculatedError{Amount: sdk.ZeroInt()}.Error())
 
@@ -1383,8 +1392,9 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 		pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 		s.Require().NoError(err)
 
+		poolInterface := pool.(poolmanagertypes.PoolI)
 		// Validate cannot swap right again
-		_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, smallTokenOneCoinIn, tokenZeroDenom, sdk.ZeroInt(), sdk.ZeroDec())
+		_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], &poolInterface, smallTokenOneCoinIn, tokenZeroDenom, sdk.ZeroInt(), sdk.ZeroDec())
 		s.Require().Error(err)
 		s.Require().ErrorContains(err, types.InvalidAmountCalculatedError{Amount: sdk.ZeroInt()}.Error())
 
