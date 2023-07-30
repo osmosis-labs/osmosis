@@ -23,15 +23,15 @@ import (
 // initOrUpdateTick retrieves the tickInfo from the specified tickIndex and updates both the liquidityNet and LiquidityGross.
 // The given currentTick value is used to determine the strategy for updating the spread factor accumulator.
 // We update the tick's spread reward growth opposite direction of last traversal accumulator to the spread reward growth global when tick index is <= current tick.
-// Otherwise, it is set to zero.
+// Otherwise, it is set to zero. If the liquidityDelta causes the tick to be empty, a boolean flags that the tick is empty for the withdrawPosition method to handle later (removes the tick from state).
 // Note that liquidityDelta can be either positive or negative depending on whether we are adding or removing liquidity.
 // if we are initializing or updating an upper tick, we subtract the liquidityIn from the LiquidityNet
 // if we are initializing or updating a lower tick, we add the liquidityIn from the LiquidityNet
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
-func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int64, tickIndex int64, liquidityDelta sdk.Dec, upper bool) (err error) {
+func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int64, tickIndex int64, liquidityDelta sdk.Dec, upper bool) (tickIsEmpty bool, err error) {
 	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	// If both liquidity fields are zero, we consume the base gas spread factor for initializing a tick.
@@ -48,7 +48,7 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 		if tickIndex <= currentTick {
 			accum, err := k.GetSpreadRewardAccumulator(ctx, poolId)
 			if err != nil {
-				return err
+				return false, err
 			}
 
 			tickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal = accum.GetValue()
@@ -68,8 +68,13 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 		tickInfo.LiquidityNet.AddMut(liquidityDelta)
 	}
 
+	// If liquidity is now zero, this tick is flagged to be un-initialized at the end of the withdrawPosition method.
+	if tickInfo.LiquidityGross.IsZero() && tickInfo.LiquidityNet.IsZero() {
+		tickIsEmpty = true
+	}
+
 	k.SetTickInfo(ctx, poolId, tickIndex, &tickInfo)
-	return nil
+	return tickIsEmpty, nil
 }
 
 // crossTick crosses the given tick. The tick is specified by its index and tick info.
@@ -158,6 +163,13 @@ func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tic
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyTick(poolId, tickIndex)
 	osmoutils.MustSet(store, key, tickInfo)
+}
+
+// RemoveTickInfo removes the tickInfo from state.
+func (k Keeper) RemoveTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.KeyTick(poolId, tickIndex)
+	store.Delete(key)
 }
 
 func (k Keeper) GetAllInitializedTicksForPool(ctx sdk.Context, poolId uint64) ([]genesis.FullTick, error) {
