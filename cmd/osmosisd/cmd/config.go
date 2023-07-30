@@ -145,9 +145,9 @@ node = "{{ .Node }}"
 # Transaction broadcasting mode (sync|async)
 broadcast-mode = "{{ .BroadcastMode }}"
 # Human-readable denoms
-# If enabled, when using CLI, user can input base denoms (uatom, uscrt, uweth, uwbtc, etc.) instead of their ibc equivalents.
+# If enabled, when using CLI, user can input base denoms (baseatom, basescrt, baseweth, basewbtc, basewbtc.grv etc.) instead of their ibc equivalents.
 human-readable-denoms-input = {{ .HumanReadableDenomsInput }}
-# If enabled, CLI response return base denoms (uatom, uscrt, uweth, uwbtc, etc.) instead of their ibc equivalents.
+# If enabled, CLI response return base denoms (baseatom, basescrt, baseweth, basewbtc, basewbtc.grv etc.) instead of their ibc equivalents.
 human-readable-denoms-output = {{ .HumanReadableDenomsOutput }}
 
 

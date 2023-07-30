@@ -64,9 +64,9 @@ type Trace struct {
 }
 
 type Asset struct {
-	Display string  `json:"display"`
-	Base    string  `json:"base"`
-	Traces  []Trace `json:"traces"`
+	Symbol string  `json:"symbol"`
+	Base   string  `json:"base"`
+	Traces []Trace `json:"traces"`
 }
 
 type AssetList struct {
@@ -80,7 +80,7 @@ var (
 	testnetId = "osmo-test-5"
 )
 
-func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, udenomToIBC, IBCtoUdenom bool) (map[string]string, map[string]string) {
+func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, basedenomToIBC, IBCtoBasedenom bool) (map[string]string, map[string]string) {
 	//var assetListURL string
 	var assetList AssetList
 
@@ -130,14 +130,14 @@ func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, udenomToIBC
 	baseMap := make(map[string]string)
 	baseMapRev := make(map[string]string)
 
-	if udenomToIBC {
+	if basedenomToIBC {
 		for _, asset := range assetList.Assets {
-			baseMap["u"+asset.Display] = asset.Base
+			baseMap["base"+strings.ToLower(asset.Symbol)] = asset.Base
 		}
 	}
-	if IBCtoUdenom {
+	if IBCtoBasedenom {
 		for _, asset := range assetList.Assets {
-			baseMapRev[asset.Base] = "u" + asset.Display
+			baseMapRev[asset.Base] = "base" + strings.ToLower(asset.Symbol)
 		}
 	}
 	return baseMap, baseMapRev
@@ -298,8 +298,10 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 				// Parse and replace denoms in args
 				for i, arg := range args {
 					for short, full := range assetMap {
-						if strings.Contains(arg, short) {
-							args[i] = strings.Replace(arg, short, full, -1)
+						lowerArg := strings.ToLower(arg)
+						lowerShort := strings.ToLower(short)
+						if strings.Contains(lowerArg, lowerShort) {
+							args[i] = strings.Replace(lowerArg, lowerShort, full, -1)
 						}
 					}
 				}
@@ -308,7 +310,9 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 				cmd.Flags().VisitAll(func(flag *pflag.Flag) {
 					for short, full := range assetMap {
 						if strings.Contains(flag.Value.String(), short) {
-							newFlagValue := strings.Replace(flag.Value.String(), short, full, -1)
+							lowerFlagValue := strings.ToLower(flag.Value.String())
+							lowerShort := strings.ToLower(short)
+							newFlagValue := strings.Replace(lowerFlagValue, lowerShort, full, -1)
 							if err := cmd.Flags().Set(flag.Name, newFlagValue); err != nil {
 								fmt.Println("Failed to set flag:", err)
 							}
