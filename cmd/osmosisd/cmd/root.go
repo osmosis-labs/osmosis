@@ -95,7 +95,9 @@ func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, basedenomTo
 		return nil, nil
 	}
 
-	// Try to open the manually generated asset list.
+	// The order of precedence for asset list is:
+	//  - If the manually generated asset list (generated via the `update-asset-list` cli cmd) exists (noted by -manual.json ending), use it.
+	//  - If the manually generated asset list does not exist, fall back to the embedded asset list.
 	localFile, err := os.Open(fileName)
 	if err != nil {
 		// If we can't open the local file, fall back to the embedded file.
@@ -203,38 +205,6 @@ func (cw *customWriter) Write(p []byte) (n int, err error) {
 
 	// Write the new string to the original output.
 	return cw.originalOut.Write([]byte(buf.String()))
-}
-
-func genAutoCompleteCmd(rootCmd *cobra.Command) {
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "enable-cli-autocomplete [bash|zsh|fish|powershell]",
-		Short: "Generates cli completion scripts",
-		Long: `To configure your shell to load completions for each session, add to your profile:
-
-# bash example
-echo '. <(osmosisd enable-cli-autocomplete bash)' >> ~/.profile
-source ~/.profile
-
-# zsh example
-echo '. <(osmosisd enable-cli-autocomplete zsh)' >> ~/.zshrc
-source ~/.zshrc
-`,
-		DisableFlagsInUseLine: true,
-		ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
-		Args:                  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			switch args[0] {
-			case "bash":
-				_ = cmd.Root().GenBashCompletion(os.Stdout)
-			case "zsh":
-				_ = cmd.Root().GenZshCompletion(os.Stdout)
-			case "fish":
-				_ = cmd.Root().GenFishCompletion(os.Stdout, true)
-			case "powershell":
-				_ = cmd.Root().GenPowerShellCompletionWithDesc(os.Stdout)
-			}
-		},
-	})
 }
 
 // NewRootCmd creates a new root command for simd. It is called once in the
@@ -616,4 +586,36 @@ Outputs:
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 
 	return cmd
+}
+
+func genAutoCompleteCmd(rootCmd *cobra.Command) {
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "enable-cli-autocomplete [bash|zsh|fish|powershell]",
+		Short: "Generates cli completion scripts",
+		Long: `To configure your shell to load completions for each session, add to your profile:
+
+# bash example
+echo '. <(osmosisd enable-cli-autocomplete bash)' >> ~/.profile
+source ~/.profile
+
+# zsh example
+echo '. <(osmosisd enable-cli-autocomplete zsh)' >> ~/.zshrc
+source ~/.zshrc
+`,
+		DisableFlagsInUseLine: true,
+		ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
+		Args:                  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			switch args[0] {
+			case "bash":
+				_ = cmd.Root().GenBashCompletion(os.Stdout)
+			case "zsh":
+				_ = cmd.Root().GenZshCompletion(os.Stdout)
+			case "fish":
+				_ = cmd.Root().GenFishCompletion(os.Stdout, true)
+			case "powershell":
+				_ = cmd.Root().GenPowerShellCompletionWithDesc(os.Stdout)
+			}
+		},
+	})
 }
