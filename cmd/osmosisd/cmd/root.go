@@ -2,9 +2,15 @@ package cmd
 
 import (
 	// "fmt"
+
+	"encoding/json"
+	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -12,6 +18,7 @@ import (
 
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	tmcmds "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
@@ -46,6 +53,146 @@ import (
 
 	osmosis "github.com/osmosis-labs/osmosis/v17/app"
 )
+
+type Trace struct {
+	Type         string `json:"type"`
+	Counterparty struct {
+		BaseDenom string `json:"base_denom"`
+	} `json:"counterparty"`
+}
+
+type Asset struct {
+	Display string  `json:"display"`
+	Base    string  `json:"base"`
+	Traces  []Trace `json:"traces"`
+}
+
+type AssetList struct {
+	Assets []Asset `json:"assets"`
+}
+
+func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, udenomToIBC, IBCtoUdenom bool) (map[string]string, map[string]string) {
+	var assetListURL string
+	var assetList AssetList
+
+	chainId := GetChainId(initClientCtx, cmd)
+
+	if chainId == "osmosis-1" || chainId == "" {
+		assetListURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmosis-1/osmosis-1.assetlist.json"
+	} else if chainId == "osmo-test-5" {
+		assetListURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmo-test-5/osmo-test-5.assetlist.json"
+	} else {
+		return nil, nil
+	}
+
+	// Try to fetch the asset list from the URL
+	resp, err := http.Get(assetListURL)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		// If the request failed, fall back to loading from the file system
+		fileName := ""
+		if chainId == "osmosis-1" || chainId == "" {
+			fileName = "cmd/osmosisd/cmd/osmosis-1-assetlist.json"
+		} else if chainId == "osmo-test-5" {
+			fileName = "cmd/osmosisd/cmd/osmo-test-5-assetlist.json"
+		} else {
+			return nil, nil
+		}
+		jsonFile, err := os.Open(fileName)
+		if err != nil {
+			return nil, nil
+		}
+		defer jsonFile.Close()
+		byteValue, _ := io.ReadAll(jsonFile)
+		err = json.Unmarshal(byteValue, &assetList)
+		if err != nil {
+			return nil, nil
+		}
+	} else {
+		// If the request succeeded, decode the response body
+		defer resp.Body.Close()
+		err = json.NewDecoder(resp.Body).Decode(&assetList)
+		if err != nil {
+			return nil, nil
+		}
+	}
+
+	baseMap := make(map[string]string)
+	baseMapRev := make(map[string]string)
+
+	if udenomToIBC {
+		for _, asset := range assetList.Assets {
+			baseMap["u"+asset.Display] = asset.Base
+		}
+	}
+	if IBCtoUdenom {
+		for _, asset := range assetList.Assets {
+			baseMapRev[asset.Base] = "u" + asset.Display
+		}
+	}
+	return baseMap, baseMapRev
+}
+
+type customWriter struct {
+	originalOut io.Writer
+	baseMap     map[string]string
+}
+
+func (cw *customWriter) Write(p []byte) (n int, err error) {
+	// Convert byte slice to string.
+	s := string(p)
+
+	// Buffer to hold the new string.
+	var buf strings.Builder
+
+	// Index where the current denom starts. -1 if we're not currently in a denom.
+	denomStart := -1
+
+	re, err := regexp.Compile("[^a-zA-Z0-9]")
+	if err != nil {
+		return 0, err
+	}
+
+	for i := 0; i < len(s); i++ {
+		if denomStart == -1 {
+			// If we're not currently in a denom, check if this character starts a new denom.
+			// Contract: IBC denoms are always 68 characters long.
+			if i <= len(s)-68 && s[i:i+4] == "ibc/" {
+				denomStart = i
+				continue
+			}
+			// Write the character to the buffer.
+			buf.WriteByte(s[i])
+		} else if re.MatchString(string(s[i])) {
+			// We've reached the end of the line containing the denom.
+			denom := s[denomStart:i]
+			if replacement, ok := cw.baseMap[denom]; ok {
+				// If the denom is in the map, write the replacement to the buffer.
+				buf.WriteString(replacement)
+			} else {
+				// If the denom is not in the map, write the original denom to the buffer.
+				buf.WriteString(denom)
+			}
+			// Write the character to the buffer.
+			buf.WriteByte(s[i])
+
+			// We're no longer in a denom.
+			denomStart = -1
+		}
+	}
+
+	// If we're still in a denom at the end of the string, write the rest of the denom to the buffer.
+	if denomStart != -1 {
+		denom := s[denomStart:]
+		if replacement, ok := cw.baseMap[denom]; ok {
+			buf.WriteString(replacement)
+		} else {
+			buf.WriteString(denom)
+		}
+	}
+
+	// Write the new string to the original output.
+	return cw.originalOut.Write([]byte(buf.String()))
+}
 
 func genAutoCompleteCmd(rootCmd *cobra.Command) {
 	rootCmd.AddCommand(&cobra.Command{
@@ -102,13 +249,14 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithViper("OSMOSIS")
 
 	// Allows you to add extra params to your client.toml
-	// gas, gas-price, gas-adjustment
+	// gas, gas-price, gas-adjustment, and human-readable-denoms
 	SetCustomEnvVariablesFromClientToml(initClientCtx)
+	humanReadableDenomsInput, humanReadableDenomsOutput := GetHumanReadableDenomEnvVariables()
 
 	rootCmd := &cobra.Command{
 		Use:   "osmosisd",
 		Short: "Start osmosis app",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -118,10 +266,46 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 				return err
 			}
 
+			// Only loads asset list into a map if human readable denoms are enabled.
+			assetMap, assetMapRev := map[string]string{}, map[string]string{}
+			if humanReadableDenomsInput || humanReadableDenomsOutput {
+				assetMap, assetMapRev = loadAssetList(initClientCtx, cmd, humanReadableDenomsInput, humanReadableDenomsOutput)
+			}
+
+			// If enabled, CLI output will be parsed and human readable denominations will be used in place of ibc denoms.
+			if humanReadableDenomsOutput {
+				initClientCtx.Output = &customWriter{originalOut: os.Stdout, baseMap: assetMapRev}
+			}
+
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
 			}
 			customAppTemplate, customAppConfig := initAppConfig()
+
+			// If enabled, CLI input will be parsed and human readable denominations will be automatically converted to ibc denoms.
+			if humanReadableDenomsInput {
+				// Parse and replace denoms in args
+				for i, arg := range args {
+					for short, full := range assetMap {
+						if strings.Contains(arg, short) {
+							args[i] = strings.Replace(arg, short, full, -1)
+						}
+					}
+				}
+
+				// Parse and replace denoms in flags
+				cmd.Flags().VisitAll(func(flag *pflag.Flag) {
+					for short, full := range assetMap {
+						if strings.Contains(flag.Value.String(), short) {
+							newFlagValue := strings.Replace(flag.Value.String(), short, full, -1)
+							if err := cmd.Flags().Set(flag.Name, newFlagValue); err != nil {
+								fmt.Println("Failed to set flag:", err)
+							}
+						}
+					}
+				})
+			}
+
 			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig)
 		},
 		SilenceUsage: true,
