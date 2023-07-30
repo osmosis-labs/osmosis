@@ -160,6 +160,9 @@ func (cw *customWriter) Write(p []byte) (n int, err error) {
 	// Index where the current denom starts. -1 if we're not currently in a denom.
 	denomStart := -1
 
+	// Counter for slashes encountered
+	slashCounter := 0
+
 	re, err := regexp.Compile("[^a-zA-Z0-9/-]")
 	if err != nil {
 		return 0, err
@@ -168,28 +171,38 @@ func (cw *customWriter) Write(p []byte) (n int, err error) {
 	for i := 0; i < len(s); i++ {
 		if denomStart == -1 {
 			// If we're not currently in a denom, check if this character starts a new denom.
-			// Contract: IBC denoms are always 68 characters long.
-			if i <= len(s)-68 && s[i:i+4] == "ibc/" {
+			// Check for "ibc/" or "factory/" prefix.
+			if strings.HasPrefix(s[i:], "ibc/") || strings.HasPrefix(s[i:], "factory/") {
+				slashCounter = 0
 				denomStart = i
 				continue
 			}
 			// Write the character to the buffer.
 			buf.WriteByte(s[i])
-		} else if re.MatchString(string(s[i])) {
-			// We've reached the end of the line containing the denom.
-			denom := s[denomStart:i]
-			if replacement, ok := cw.baseMap[denom]; ok {
-				// If the denom is in the map, write the replacement to the buffer.
-				buf.WriteString(replacement)
-			} else {
-				// If the denom is not in the map, write the original denom to the buffer.
-				buf.WriteString(denom)
+		} else {
+			// For factory denoms, we keep track of slashes to find the second slash.
+			if s[i] == '/' {
+				slashCounter++
 			}
-			// Write the new line character to the buffer.
-			buf.WriteByte(s[i])
 
-			// We're no longer in a denom.
-			denomStart = -1
+			// For "ibc/" we find the end by length, for "factory/" we find the end by second slash and regex.
+			if (strings.HasPrefix(s[denomStart:], "ibc/") && i-denomStart == 68) || (strings.HasPrefix(s[denomStart:], "factory/") && slashCounter == 2 && re.MatchString(string(s[i]))) {
+				// We've reached the end of the line containing the denom.
+				denom := s[denomStart:i]
+				if replacement, ok := cw.baseMap[denom]; ok {
+					// If the denom is in the map, write the replacement to the buffer.
+					buf.WriteString(replacement)
+				} else {
+					// If the denom is not in the map, write the original denom to the buffer.
+					buf.WriteString(denom)
+				}
+				// Write the new line character to the buffer.
+				buf.WriteByte(s[i])
+
+				// We're no longer in a denom.
+				denomStart = -1
+				slashCounter = 0
+			}
 		}
 	}
 
