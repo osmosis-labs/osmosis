@@ -191,8 +191,8 @@ func CalculateSpreadRewardGrowth(targetTick int64, spreadRewardGrowthOutside sdk
 	return calculateSpreadRewardGrowth(targetTick, spreadRewardGrowthOutside, currentTick, spreadRewardsGrowthGlobal, isUpperTick)
 }
 
-func (k Keeper) GetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
-	return k.getInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx, poolId, tick)
+func (k Keeper) GetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, pool types.ConcentratedPoolExtension, tick int64) (sdk.DecCoins, error) {
+	return k.getInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx, pool, tick)
 }
 
 func ValidateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int64) error {
@@ -254,8 +254,8 @@ func (k Keeper) SetMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []
 	return k.setMultipleIncentiveRecords(ctx, incentiveRecords)
 }
 
-func (k Keeper) GetInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, poolId uint64, tick int64) ([]sdk.DecCoins, error) {
-	return k.getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ctx, poolId, tick)
+func (k Keeper) GetInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, pool types.ConcentratedPoolExtension, tick int64) ([]sdk.DecCoins, error) {
+	return k.getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ctx, pool, tick)
 }
 
 func (k Keeper) InitOrUpdatePositionUptimeAccumulators(ctx sdk.Context, poolId uint64, position sdk.Dec, lowerTick, upperTick int64, liquidityDelta sdk.Dec, positionId uint64) error {

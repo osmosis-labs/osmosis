@@ -485,16 +485,11 @@ func (s *KeeperTestSuite) TestCalculateSpreadRewardGrowth() {
 }
 
 func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick() {
-	const (
-		validPoolId = 1
-	)
-
 	sqrtPrice := osmomath.MustMonotonicSqrt(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()))
 	initialPoolTick, err := clmath.SqrtPriceToTickRoundDownSpacing(sqrtPrice, DefaultTickSpacing)
 	s.Require().NoError(err)
 
 	tests := map[string]struct {
-		poolId                          uint64
 		tick                            int64
 		initialGlobalSpreadRewardGrowth sdk.DecCoin
 		shouldAvoidCreatingAccum        bool
@@ -503,35 +498,24 @@ func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLas
 		expectError                                                       error
 	}{
 		"current tick > tick -> spread reward growth global": {
-			poolId:                          validPoolId,
 			tick:                            initialPoolTick - 1,
 			initialGlobalSpreadRewardGrowth: oneEth,
 
 			expectedInitialSpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth),
 		},
 		"current tick == tick -> spread reward growth global": {
-			poolId:                          validPoolId,
 			tick:                            initialPoolTick,
 			initialGlobalSpreadRewardGrowth: oneEth,
 
 			expectedInitialSpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth),
 		},
 		"current tick < tick -> empty coins": {
-			poolId:                          validPoolId,
 			tick:                            initialPoolTick + 1,
 			initialGlobalSpreadRewardGrowth: oneEth,
 
 			expectedInitialSpreadRewardGrowthOppositeDirectionOfLastTraversal: cl.EmptyCoins,
 		},
-		"pool does not exist": {
-			poolId:                          validPoolId + 1,
-			tick:                            initialPoolTick - 1,
-			initialGlobalSpreadRewardGrowth: oneEth,
-
-			expectError: types.PoolNotFoundError{PoolId: validPoolId + 1},
-		},
 		"accumulator does not exist": {
-			poolId:                          validPoolId,
 			tick:                            0,
 			initialGlobalSpreadRewardGrowth: oneEth,
 			shouldAvoidCreatingAccum:        true,
@@ -545,7 +529,6 @@ func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLas
 		s.Run(name, func() {
 			s.SetupTest()
 			ctx := s.Ctx
-			clKeeper := s.App.ConcentratedLiquidityKeeper
 
 			pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, ETH, USDC, DefaultTickSpacing, DefaultZeroSpreadFactor)
 			s.Require().NoError(err)
@@ -558,24 +541,26 @@ func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLas
 			// is not initialized.
 			s.setListenerMockOnConcentratedLiquidityKeeper()
 
-			err = clKeeper.SetPool(ctx, &pool)
+			err = s.clk.SetPool(ctx, &pool)
 			s.Require().NoError(err)
 
 			if !tc.shouldAvoidCreatingAccum {
-				err = clKeeper.CreateSpreadRewardAccumulator(ctx, validPoolId)
+				err = s.clk.CreateSpreadRewardAccumulator(ctx, pool.GetId())
 				s.Require().NoError(err)
 
 				// Setup test position to make sure that tick is initialized
 				// We also set up uptime accums to ensure position creation works as intended
-				err = clKeeper.CreateUptimeAccumulators(ctx, validPoolId)
+				err = s.clk.CreateUptimeAccumulators(ctx, pool.GetId())
 				s.Require().NoError(err)
-				s.SetupDefaultPosition(validPoolId)
+				s.SetupDefaultPosition(pool.GetId())
 
-				s.AddToSpreadRewardAccumulator(validPoolId, tc.initialGlobalSpreadRewardGrowth)
+				s.AddToSpreadRewardAccumulator(pool.GetId(), tc.initialGlobalSpreadRewardGrowth)
 			}
 
 			// System under test.
-			initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, err := clKeeper.GetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx, tc.poolId, tc.tick)
+			clpool, err := s.clk.GetPoolById(ctx, pool.GetId())
+			s.Require().NoError(err)
+			initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, err := s.clk.GetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx, clpool, tc.tick)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)

@@ -125,38 +125,41 @@ func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 	key := types.KeyTick(poolId, tickIndex)
 
 	found, err := osmoutils.Get(store, key, &tickStruct)
-	// return 0 values if key has not been initialized
 	if !found {
-		// If tick has not yet been initialized, we create a new one and initialize
-		// the spread reward growth opposite direction of last traversal value.
-		initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, err := k.getInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx, poolId, tickIndex)
-		if err != nil {
-			return tickStruct, err
-		}
-
-		// Sync global uptime accumulators to ensure the uptime tracker init values are up to date.
-		if err := k.UpdatePoolUptimeAccumulatorsToNow(ctx, poolId); err != nil {
-			return tickStruct, err
-		}
-
-		// Initialize uptime trackers for the new tick to the appropriate starting values.
-		valuesToAdd, err := k.getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ctx, poolId, tickIndex)
-		if err != nil {
-			return tickStruct, err
-		}
-
-		initialUptimeTrackers := []model.UptimeTracker{}
-		for _, uptimeTrackerValue := range valuesToAdd {
-			initialUptimeTrackers = append(initialUptimeTrackers, model.UptimeTracker{UptimeGrowthOutside: uptimeTrackerValue})
-		}
-
-		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, UptimeTrackers: model.UptimeTrackers{List: initialUptimeTrackers}}, nil
+		return k.makeInitialTickInfo(ctx, poolId, tickIndex)
 	}
+	return tickStruct, err
+}
+
+func (k Keeper) makeInitialTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickStruct model.TickInfo, err error) {
+	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return tickStruct, err
 	}
 
-	return tickStruct, nil
+	// We initialize the spread reward growth opposite direction of last traversal value.
+	initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, err := k.getInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx, pool, tickIndex)
+	if err != nil {
+		return tickStruct, err
+	}
+
+	// Sync global uptime accumulators to ensure the uptime tracker init values are up to date.
+	if err := k.updatePoolUptimeAccumulatorsToNowWithPool(ctx, pool); err != nil {
+		return tickStruct, err
+	}
+
+	// Initialize uptime trackers for the new tick to the appropriate starting values.
+	valuesToAdd, err := k.getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ctx, pool, tickIndex)
+	if err != nil {
+		return tickStruct, err
+	}
+
+	initialUptimeTrackers := []model.UptimeTracker{}
+	for _, uptimeTrackerValue := range valuesToAdd {
+		initialUptimeTrackers = append(initialUptimeTrackers, model.UptimeTracker{UptimeGrowthOutside: uptimeTrackerValue})
+	}
+
+	return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, UptimeTrackers: model.UptimeTrackers{List: initialUptimeTrackers}}, nil
 }
 
 func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo *model.TickInfo) {
