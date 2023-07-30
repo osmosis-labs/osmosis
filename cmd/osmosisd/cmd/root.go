@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -147,11 +146,6 @@ func (cw *customWriter) Write(p []byte) (n int, err error) {
 	// Index where the current denom starts. -1 if we're not currently in a denom.
 	denomStart := -1
 
-	re, err := regexp.Compile("[^a-zA-Z0-9]")
-	if err != nil {
-		return 0, err
-	}
-
 	for i := 0; i < len(s); i++ {
 		if denomStart == -1 {
 			// If we're not currently in a denom, check if this character starts a new denom.
@@ -162,7 +156,7 @@ func (cw *customWriter) Write(p []byte) (n int, err error) {
 			}
 			// Write the character to the buffer.
 			buf.WriteByte(s[i])
-		} else if re.MatchString(string(s[i])) {
+		} else if s[i] == '\n' || s[i] == ' ' || s[i] == '"' || s[i] == ',' {
 			// We've reached the end of the line containing the denom.
 			denom := s[denomStart:i]
 			if replacement, ok := cw.baseMap[denom]; ok {
@@ -172,7 +166,7 @@ func (cw *customWriter) Write(p []byte) (n int, err error) {
 				// If the denom is not in the map, write the original denom to the buffer.
 				buf.WriteString(denom)
 			}
-			// Write the character to the buffer.
+			// Write the new line character to the buffer.
 			buf.WriteByte(s[i])
 
 			// We're no longer in a denom.
