@@ -3,6 +3,7 @@ package cmd
 import (
 	// "fmt"
 
+	"embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -38,6 +39,7 @@ import (
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -71,46 +73,55 @@ type AssetList struct {
 	Assets []Asset `json:"assets"`
 }
 
+var (
+	//go:embed "osmosis-1-assetlist.json" "osmo-test-5-assetlist.json"
+	assetFS   embed.FS
+	mainnetId = "osmosis-1"
+	testnetId = "osmo-test-5"
+)
+
 func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, udenomToIBC, IBCtoUdenom bool) (map[string]string, map[string]string) {
-	var assetListURL string
+	//var assetListURL string
 	var assetList AssetList
 
 	chainId := GetChainId(initClientCtx, cmd)
 
-	if chainId == "osmosis-1" || chainId == "" {
-		assetListURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmosis-1/osmosis-1.assetlist.json"
-	} else if chainId == "osmo-test-5" {
-		assetListURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmo-test-5/osmo-test-5.assetlist.json"
+	fileName := ""
+	if chainId == mainnetId || chainId == "" {
+		fileName = "cmd/osmosisd/cmd/osmosis-1-assetlist-manual.json"
+	} else if chainId == testnetId {
+		fileName = "cmd/osmosisd/cmd/osmo-test-5-assetlist-manual.json"
 	} else {
 		return nil, nil
 	}
 
-	// Try to fetch the asset list from the URL
-	resp, err := http.Get(assetListURL)
-	if err != nil || resp.StatusCode != http.StatusOK {
-		// If the request failed, fall back to loading from the file system
-		fileName := ""
-		if chainId == "osmosis-1" || chainId == "" {
-			fileName = "cmd/osmosisd/cmd/osmosis-1-assetlist.json"
-		} else if chainId == "osmo-test-5" {
-			fileName = "cmd/osmosisd/cmd/osmo-test-5-assetlist.json"
+	// Try to open the manually generated asset list.
+	localFile, err := os.Open(fileName)
+	if err != nil {
+		// If we can't open the local file, fall back to the embedded file.
+		if chainId == mainnetId || chainId == "" {
+			fileName = "osmosis-1-assetlist.json"
+		} else if chainId == testnetId {
+			fileName = "osmo-test-5-assetlist.json"
 		} else {
 			return nil, nil
 		}
-		jsonFile, err := os.Open(fileName)
+		embeddedFile, err := assetFS.Open(fileName)
 		if err != nil {
 			return nil, nil
 		}
-		defer jsonFile.Close()
-		byteValue, _ := io.ReadAll(jsonFile)
+		defer embeddedFile.Close()
+
+		byteValue, _ := io.ReadAll(embeddedFile)
 		err = json.Unmarshal(byteValue, &assetList)
 		if err != nil {
 			return nil, nil
 		}
 	} else {
-		// If the request succeeded, decode the response body
-		defer resp.Body.Close()
-		err = json.NewDecoder(resp.Body).Decode(&assetList)
+		// If the local file opens successfully, use it instead of the embedded file.
+		defer localFile.Close()
+		byteValue, _ := io.ReadAll(localFile)
+		err = json.Unmarshal(byteValue, &assetList)
 		if err != nil {
 			return nil, nil
 		}
@@ -409,6 +420,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		ConfigCmd(),
 		ChangeEnvironmentCmd(),
 		PrintEnvironmentCmd(),
+		UpdateAssetListCmd(osmosis.DefaultNodeHome, osmosis.ModuleBasics),
 	)
 
 	server.AddCommands(rootCmd, osmosis.DefaultNodeHome, newApp, createOsmosisAppAndExport, addModuleInitFlags)
@@ -551,4 +563,53 @@ func createOsmosisAppAndExport(
 	}
 
 	return app.ExportAppStateAndValidators(forZeroHeight, jailWhiteList, modulesToExport)
+}
+
+func UpdateAssetListCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "update-asset-list [chain-id]",
+		Short: "Updates asset list used by the CLI to replace ibc denoms with human readable names",
+		Long: `Updates asset list used by the CLI to replace ibc denoms with human readable names.
+Outputs:
+	- cmd/osmosisd/cmd/osmosis-1-assetlist-manual.json for osmosis-1
+	- cmd/osmosisd/cmd/osmo-test-5-assetlist-manual.json for osmo-test-5
+`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			assetListURL := ""
+			fileName := ""
+
+			if args[0] == mainnetId || args[0] == "" {
+				assetListURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmosis-1/osmosis-1.assetlist.json"
+				fileName = "cmd/osmosisd/cmd/osmosis-1-assetlist-manual.json"
+			} else if args[0] == testnetId {
+				assetListURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmo-test-5/osmo-test-5.assetlist.json"
+				fileName = "cmd/osmosisd/cmd/osmo-test-5-assetlist-manual.json"
+			} else {
+				return nil
+			}
+
+			// Try to fetch the asset list from the URL
+			resp, err := http.Get(assetListURL)
+			if err != nil {
+				return err
+			}
+			defer resp.Body.Close()
+
+			// Create a new file
+			out, err := os.Create(fileName)
+			if err != nil {
+				return err
+			}
+			defer out.Close()
+
+			// Copy the response body to the new file
+			_, err = io.Copy(out, resp.Body)
+			return err
+		},
+	}
+
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
+
+	return cmd
 }
