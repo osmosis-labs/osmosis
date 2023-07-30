@@ -2,7 +2,6 @@ project_name: osmosisd
 
 env:
   - CGO_ENABLED=1
-  - COSMWASM_VERSION=1.2.3
 
 builds:
   - id: osmosisd-darwin-amd64
@@ -10,7 +9,7 @@ builds:
     binary: osmosisd
     hooks:
       pre:
-        - wget https://github.com/CosmWasm/wasmvm/releases/download/v{{ .Env.COSMWASM_VERSION }}/libwasmvmstatic_darwin.a -O /lib/libwasmvmstatic_darwin.a
+        - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvmstatic_darwin.a -O /lib/libwasmvmstatic_darwin.a
     env:
       - CC=o64-clang
       - CGO_LDFLAGS=-L/lib
@@ -39,7 +38,7 @@ builds:
     binary: osmosisd
     hooks:
       pre:
-        - wget https://github.com/CosmWasm/wasmvm/releases/download/v{{ .Env.COSMWASM_VERSION }}/libwasmvmstatic_darwin.a -O /lib/libwasmvmstatic_darwin.a
+        - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvmstatic_darwin.a -O /lib/libwasmvmstatic_darwin.a
     env:
       - CC=oa64-clang
       - CGO_LDFLAGS=-L/lib
@@ -68,7 +67,7 @@ builds:
     binary: osmosisd
     hooks:
       pre:
-        - wget https://github.com/CosmWasm/wasmvm/releases/download/v{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.x86_64.a -O /usr/lib/x86_64-linux-gnu/libwasmvm_muslc.a
+        - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.x86_64.a -O /usr/lib/x86_64-linux-gnu/libwasmvm_muslc.a
     goos:
       - linux
     goarch:
@@ -97,7 +96,7 @@ builds:
     binary: osmosisd
     hooks:
       pre:
-        - wget https://github.com/CosmWasm/wasmvm/releases/download/v{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.aarch64.a -O /usr/lib/aarch64-linux-gnu/libwasmvm_muslc.a
+        - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.aarch64.a -O /usr/lib/aarch64-linux-gnu/libwasmvm_muslc.a
     goos:
       - linux
     goarch:
@@ -126,8 +125,7 @@ universal_binaries:
     ids:
       - osmosisd-darwin-amd64
       - osmosisd-darwin-arm64
-    replace: true
-    name_template: "{{.ProjectName}}"
+    replace: false
 
 archives:
   - id: zipped
@@ -135,7 +133,9 @@ archives:
       - osmosisd-darwin-universal
       - osmosisd-linux-amd64
       - osmosisd-linux-arm64
-    name_template: "{{.ProjectName}}-{{ .Os }}-{{ .Arch }}"
+      - osmosisd-darwin-amd64
+      - osmosisd-darwin-arm64
+    name_template: "{{.ProjectName}}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     format: tar.gz
     files:
       - none*
@@ -143,43 +143,17 @@ archives:
     builds:
       - osmosisd-darwin-universal
       - osmosisd-linux-amd64
-      - osmosisd-linux-arm64
-    name_template: "{{.ProjectName}}-{{ .Os }}-{{ .Arch }}"
+      - osmosisd-linux-amd64
+      - osmosisd-darwin-amd64
+      - osmosisd-darwin-arm64
+    name_template: "{{.ProjectName}}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     format: binary
     files:
       - none*
 
 checksum:
-  name_template: "checksums.txt"
+  name_template: "sha256sum.txt"
   algorithm: sha256
-
-# Docs: https://goreleaser.com/customization/homebrew/
-brews:
-  - name: osmosisd
-    folder: Formula
-    ids:
-    - binaries
-    homepage: "https://gihub.com/osmosis-labs/osmosis"
-    description: "osmosisd binary to interact with the Osmosis network"
-    conflicts:
-      - osmosisd
-    test: |
-      system "#{bin}/osmosisd version"
-    install: |
-      bin.install 'osmosisd'
-    skip_upload: true
-    # # Uncomment line below if you want to try to commit the updated formula
-    # skip_upload: false
-    # repository:
-    #   owner: osmosis-labs
-    #   name: homebrew-osmosis
-    #   branch: main
-    #   pull_request:
-    #     enabled: true
-    # commit_author:
-    #   name: osmo-bot
-    #   email: devops@osmosis.team
-    # commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
 
 # Docs: https://goreleaser.com/customization/changelog/
 changelog:
@@ -200,8 +174,8 @@ release:
 
     ## ⚡️ Binaries
 
-    Binaries for Linux (amd64 and arm64) are available below.
-    Darwin users can use the same universal binary for both amd64 and arm64.
+    Binaries for Linux and Darwin (amd64 and arm64) are available below.
+    Darwin users can also use the same universal binary `osmosisd-{{ .Version }}-darwin-all` for both amd64 and arm64.
 
     #### 🔨 Build from source
 
@@ -218,12 +192,12 @@ release:
     As an alternative to installing and running osmosisd on your system, you may run osmosisd in a Docker container.
     The following Docker images are available in our registry:
 
-    | Image Name | Base | Description |
-    |------------|------|---------|
-    | `osmolabs/osmosis:{{ .Version }}`            | `distroless/static-debian11` | Default image based on Distroless        |
-    | `osmolabs/osmosis:{{ .Version }}-distroless` | `distroless/static-debian11` |  Distroless image (same as above)        |
-    | `osmolabs/osmosis:{{ .Version }}-nonroot`    | `distroless/static-debian11:nonroot` |  Distroless non-root image     |            |
-    | `osmolabs/osmosis:{{ .Version }}-alpine`     | `alpine` |  Alpine image                 |
+    | Image Name                                   | Base                                 | Description                       |
+    |----------------------------------------------|--------------------------------------|-----------------------------------|
+    | `osmolabs/osmosis:{{ .Version }}`            | `distroless/static-debian11`         | Default image based on Distroless |
+    | `osmolabs/osmosis:{{ .Version }}-distroless` | `distroless/static-debian11`         | Distroless image (same as above)  |
+    | `osmolabs/osmosis:{{ .Version }}-nonroot`    | `distroless/static-debian11:nonroot` | Distroless non-root image         |
+    | `osmolabs/osmosis:{{ .Version }}-alpine`     | `alpine`                             | Alpine image                      |
 
     Example run:
 
@@ -239,7 +213,6 @@ release:
   draft: true
 
 # Docs: https://goreleaser.com/customization/announce/
-#
 # We could automatically announce the release in
 # - discord
 # - slack
