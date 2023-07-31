@@ -138,17 +138,15 @@ func (s *KeeperTestSuite) TestInfiniteTrackBeforeSend() {
 	for _, tc := range []struct {
 		name            string
 		useFactoryDenom bool
-		expectedPanic   bool
+		expectedError   bool
 	}{
 		{
 			name:            "sending tokenfactory denom from module to module with infinite contract should panic",
 			useFactoryDenom: true,
-			expectedPanic:   true,
 		},
 		{
 			name:            "sending non-tokenfactory denom from module to module with infinite contract should not panic",
 			useFactoryDenom: false,
-			expectedPanic:   false,
 		},
 	} {
 		s.Run(fmt.Sprintf("Case %s", tc.name), func() {
@@ -181,15 +179,13 @@ func (s *KeeperTestSuite) TestInfiniteTrackBeforeSend() {
 			_, err = s.msgServer.SetBeforeSendHook(sdk.WrapSDKContext(s.Ctx), types.NewMsgSetBeforeSendHook(s.TestAccs[0].String(), factoryDenom, cosmwasmAddress.String()))
 			s.Require().NoError(err, "test: %v", tc.name)
 
-			if tc.expectedPanic {
-				s.Require().Panics(func() {
-					s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, "mint", "distribution", tokenToSend)
-				})
-			} else {
-				s.Require().NotPanics(func() {
-					s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, "mint", "distribution", tokenToSend)
-				})
-			}
+			// track before send suppresses in any case, thus we expect no error
+			err = s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, "mint", "distribution", tokenToSend)
+			s.Require().NoError(err)
+
+			distributionModuleAddress := s.App.AccountKeeper.GetModuleAddress("distribution")
+			distributionModuleBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, distributionModuleAddress)
+			s.Require().True(distributionModuleBalances.IsEqual(tokenToSend))
 		})
 	}
 }
