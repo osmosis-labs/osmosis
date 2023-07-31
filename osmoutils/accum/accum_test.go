@@ -344,12 +344,16 @@ func (suite *AccumTestSuite) TestNewPositionIntervalAccumulation() {
 			},
 			options: &emptyPositionOptions,
 		},
-		"negative acc value - error": {
+		"negative acc value - no error": {
 			accObject:                    defaultAccObject,
 			name:                         testAddressOne,
 			numShareUnits:                positionOne.NumShares,
 			intervalAccumulationPerShare: defaultAccObject.GetValue().MulDec(sdk.NewDec(-1)),
-			expectedError:                accumPackage.NegativeIntervalAccumulationPerShareError{defaultAccObject.GetValue().MulDec(sdk.NewDec(-1))},
+			expectedPosition: accumPackage.Record{
+				NumShares:             positionOne.NumShares,
+				AccumValuePerShare:    defaultAccObject.GetValue().MulDec(sdk.NewDec(-1)),
+				UnclaimedRewardsTotal: emptyCoins,
+			},
 		},
 	}
 

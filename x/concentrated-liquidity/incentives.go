@@ -810,7 +810,8 @@ func updateAccumAndClaimRewards(accum *accum.AccumulatorObject, positionKey stri
 		// The position accumulator value must always equal to the growth inside at the time of last update.
 		// Since this is the time we update the accumulator, we must subtract the growth outside from the global accumulator value
 		// to get growth inside at the current block time.
-		currentGrowthInsideForPosition := accum.GetValue().Sub(growthOutside)
+		// Note: this is SafeSub because interval accumulation is allowed to be negative.
+		currentGrowthInsideForPosition, _ := accum.GetValue().SafeSub(growthOutside)
 		err := accum.SetPositionIntervalAccumulation(positionKey, currentGrowthInsideForPosition)
 		if err != nil {
 			return sdk.Coins{}, sdk.DecCoins{}, err
