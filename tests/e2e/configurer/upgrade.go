@@ -419,14 +419,13 @@ func strAllUpgradeBaseDenoms() string {
 
 func v17GetSuperfluidAssets() string {
 	assets := ""
-	n := len(v17.AssetPairsForTestsOnly)
-	for i, assetPair := range v17.AssetPairsForTestsOnly {
+	for _, assetPair := range v17.AssetPairsForTestsOnly {
 		if assetPair.Superfluid {
-			assets += fmt.Sprintf("gamm/pool/%d", assetPair.LinkedClassicPool)
-			if i < n-1 { // Check if it's not the last iteration
-				assets += ","
-			}
+			assets += fmt.Sprintf("gamm/pool/%d,", assetPair.LinkedClassicPool)
 		}
+	}
+	if len(assets) > 0 {
+		assets = assets[:len(assets)-1]
 	}
 	return assets
 }
