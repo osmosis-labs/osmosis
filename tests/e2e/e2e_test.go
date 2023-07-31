@@ -1763,7 +1763,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPools() {
 
 	_, chainANode := s.getChainACfgs()
 
-	for _, assetPair := range v17.AssetPairs {
+	for _, assetPair := range v17.AssetPairsForTestsOnly {
 		expectedSpreadFactor := assetPair.SpreadFactor
 		concentratedPoolId := chainANode.QueryConcentratedPooIdLinkFromCFMM(assetPair.LinkedClassicPool)
 		concentratedPool := s.updatedConcentratedPool(chainANode, concentratedPoolId)
@@ -1806,7 +1806,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPools() {
 	// Check that the community pool module account possesses positions for all the canonical pools.
 	communityPoolAddress := chainANode.QueryCommunityPoolModuleAccount()
 	positions := chainANode.QueryConcentratedPositions(communityPoolAddress)
-	s.Require().Len(positions, len(v17.AssetPairs))
+	s.Require().Len(positions, len(v17.AssetPairsForTestsOnly))
 }
 
 // END: CAN REMOVE POST v17 UPGRADE

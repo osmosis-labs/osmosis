@@ -1,10 +1,14 @@
 package v17
 
 import (
+	"fmt"
+
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v17/app/keepers"
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v17 upgrade.
@@ -23,6 +27,87 @@ const (
 	QuoteAsset  = "uosmo"
 	TickSpacing = 100
 )
+
+type AssetPair struct {
+	BaseAsset         string
+	SpreadFactor      sdk.Dec
+	LinkedClassicPool uint64
+	Superfluid        bool
+}
+
+var AssetPairs = []AssetPair{
+	{LinkedClassicPool: 837},
+	{
+		SpreadFactor:      sdk.MustNewDecFromStr("0.0005"), // Normally 0.0002, but is not authorized
+		LinkedClassicPool: 857,
+	},
+	{LinkedClassicPool: 712},
+	{LinkedClassicPool: 773},
+	{LinkedClassicPool: 9},
+	{LinkedClassicPool: 3},
+	{LinkedClassicPool: 812},
+	{LinkedClassicPool: 584},
+	{LinkedClassicPool: 604},
+	{LinkedClassicPool: 497},
+	{LinkedClassicPool: 806},
+	{LinkedClassicPool: 907},
+	{LinkedClassicPool: 1013},
+	{LinkedClassicPool: 15},
+	{LinkedClassicPool: 586},
+	{LinkedClassicPool: 627},
+	{LinkedClassicPool: 795},
+	{LinkedClassicPool: 730},
+	{LinkedClassicPool: 7},
+	{LinkedClassicPool: 1039},
+	{LinkedClassicPool: 5},
+	{LinkedClassicPool: 573},
+	{LinkedClassicPool: 641},
+	{LinkedClassicPool: 605},
+	{LinkedClassicPool: 971},
+	{LinkedClassicPool: 625},
+}
+
+// AssetPairs contract: all AssetPairs being initialized in this upgrade handler all have the same quote asset (OSMO).
+func InitializeAssetPairs(ctx sdk.Context, keepers *keepers.AppKeepers) []AssetPair {
+	gammKeeper := keepers.GAMMKeeper
+	superfluidKeeper := keepers.SuperfluidKeeper
+	for i, assetPair := range AssetPairs {
+		pool, err := gammKeeper.GetCFMMPool(ctx, assetPair.LinkedClassicPool)
+		if err != nil {
+			panic(err)
+		}
+
+		// Set the base asset as the non-osmo asset in the pool
+		poolLiquidity := pool.GetTotalPoolLiquidity(ctx)
+		for _, coin := range poolLiquidity {
+			if coin.Denom != QuoteAsset {
+				AssetPairs[i].BaseAsset = coin.Denom
+				break
+			}
+		}
+		fmt.Println("assetPair.BaseAsset: ", assetPair.BaseAsset)
+
+		// If the spread factor is not manually set above, set it to the the same value as the pool's spread factor.
+		if assetPair.SpreadFactor.IsNil() {
+			AssetPairs[i].SpreadFactor = pool.GetSpreadFactor(ctx)
+		}
+
+		// Check if the pool is superfluid.
+		// If the pool is superfluid, set the superfluid flag to true.
+		poolShareDenom := fmt.Sprintf("gamm/pool/%d", assetPair.LinkedClassicPool)
+		_, err = superfluidKeeper.GetSuperfluidAsset(ctx, poolShareDenom)
+		if err == nil {
+			AssetPairs[i].Superfluid = true
+		}
+	}
+	return AssetPairs
+}
+
+// The values below this comment are used strictly for testing.
+// The above code pulls desired values directly from the pool.
+// For E2E / gotests, the pools we need don't already exist, so we need to hardcode the values here.
+
+// These values will be pulled directly from the existing
 
 var (
 	ION            = "uion"
@@ -53,15 +138,7 @@ var (
 	GRAVIBCDenom   = "ibc/E97634A40119F1898989C2A23224ED83FDD0A57EA46B3A094E287288D1672B44"
 )
 
-type AssetPair struct {
-	BaseAsset         string
-	SpreadFactor      sdk.Dec
-	LinkedClassicPool uint64
-	Superfluid        bool
-}
-
-// AssetPairs contract: all AssetPairs being initialized in this upgrade handler all have the same quote asset (OSMO).
-var AssetPairs = []AssetPair{
+var AssetPairsForTestsOnly = []AssetPair{
 	{
 		BaseAsset:         ISTIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),

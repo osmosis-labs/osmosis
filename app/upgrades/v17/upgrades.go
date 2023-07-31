@@ -41,7 +41,9 @@ func CreateUpgradeHandler(
 
 		poolLinks := []gammmigration.BalancerToConcentratedPoolLink{}
 
-		for _, assetPair := range AssetPairs {
+		assetPairs := InitializeAssetPairs(ctx, keepers)
+
+		for _, assetPair := range assetPairs {
 			// Create a concentrated liquidity pool for asset pair.
 			clPool, err := createConcentratedPoolFromCFMM(ctx, assetPair.LinkedClassicPool, assetPair.BaseAsset, assetPair.SpreadFactor, *keepers.AccountKeeper, *keepers.GAMMKeeper, *keepers.PoolManagerKeeper)
 			if err != nil {

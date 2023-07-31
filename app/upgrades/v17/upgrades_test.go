@@ -15,6 +15,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v17/app/keepers"
 	v17 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v17"
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
@@ -69,23 +70,26 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 	testCases := []struct {
 		name        string
-		pre_upgrade func() (sdk.Coins, uint64)
-		upgrade     func(sdk.Coins, uint64)
+		pre_upgrade func(sdk.Context, *keepers.AppKeepers) (sdk.Coins, uint64)
+		upgrade     func(sdk.Context, *keepers.AppKeepers, sdk.Coins, uint64)
 	}{
 		{
 			"Test that the upgrade succeeds",
-			func() (sdk.Coins, uint64) {
+			func(ctx sdk.Context, keepers *keepers.AppKeepers) (sdk.Coins, uint64) {
 				upgradeSetup()
 
 				var lastPoolID uint64 // To keep track of the last assigned pool ID
 
 				// Sort AssetPairs based on LinkedClassicPool values.
+				// We sort both pairs because we use the test asset pairs to create initial state,
+				// then use the actual asset pairs to verify the result is correct.
+				sort.Sort(ByLinkedClassicPool(v17.AssetPairsForTestsOnly))
 				sort.Sort(ByLinkedClassicPool(v17.AssetPairs))
 
 				expectedCoinsUsedInUpgradeHandler := sdk.NewCoins()
 
 				// Create earlier pools or dummy pools if needed
-				for _, assetPair := range v17.AssetPairs {
+				for _, assetPair := range v17.AssetPairsForTestsOnly {
 					poolID := assetPair.LinkedClassicPool
 
 					// If LinkedClassicPool is specified, but it's smaller than the current pool ID,
@@ -124,7 +128,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				return expectedCoinsUsedInUpgradeHandler, lastPoolID
 
 			},
-			func(expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
+			func(ctx sdk.Context, keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
 				stakingParams := suite.App.StakingKeeper.GetParams(suite.Ctx)
 				stakingParams.BondDenom = "uosmo"
 				suite.App.StakingKeeper.SetParams(suite.Ctx, stakingParams)
@@ -143,7 +147,9 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				communityPoolBalancePost := suite.App.BankKeeper.GetAllBalances(suite.Ctx, communityPoolAddress)
 				feePoolCommunityPoolPost := suite.App.DistrKeeper.GetFeePool(suite.Ctx).CommunityPool
 
-				for i, assetPair := range v17.AssetPairs {
+				assetPairs := v17.InitializeAssetPairs(ctx, keepers)
+
+				for i, assetPair := range assetPairs {
 					// Validate that the community pool balance has been reduced by the amount of baseAsset that was used to create the pool.
 					suite.Require().Equal(communityPoolBalancePre.AmountOf(assetPair.BaseAsset).Sub(expectedCoinsUsedInUpgradeHandler.AmountOf(assetPair.BaseAsset)).String(), communityPoolBalancePost.AmountOf(assetPair.BaseAsset).String())
 
@@ -192,18 +198,18 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 				// Validate that all links were created.
 				migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
-				suite.Require().Equal(len(v17.AssetPairs), len(migrationInfo.BalancerToConcentratedPoolLinks))
+				suite.Require().Equal(len(assetPairs), len(migrationInfo.BalancerToConcentratedPoolLinks))
 				suite.Require().NoError(err)
 
 			},
 		},
 		{
 			"Fails because CFMM pool is not found",
-			func() (sdk.Coins, uint64) {
+			func(ctx sdk.Context, keepers *keepers.AppKeepers) (sdk.Coins, uint64) {
 				upgradeSetup()
 				return sdk.NewCoins(), 0
 			},
-			func(expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
+			func(ctx sdk.Context, keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
 				dummyUpgrade(suite)
 				suite.Require().Panics(func() {
 					suite.App.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{})
@@ -216,8 +222,8 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
 			suite.SetupTest() // reset
 
-			expectedCoinsUsedInUpgradeHandler, lastPoolID := tc.pre_upgrade()
-			tc.upgrade(expectedCoinsUsedInUpgradeHandler, lastPoolID)
+			expectedCoinsUsedInUpgradeHandler, lastPoolID := tc.pre_upgrade(suite.Ctx, &suite.App.AppKeepers)
+			tc.upgrade(suite.Ctx, &suite.App.AppKeepers, expectedCoinsUsedInUpgradeHandler, lastPoolID)
 		})
 	}
 }
