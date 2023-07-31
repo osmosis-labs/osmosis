@@ -146,8 +146,10 @@ node = "{{ .Node }}"
 broadcast-mode = "{{ .BroadcastMode }}"
 # Human-readable denoms
 # If enabled, when using CLI, user can input base denoms (baseatom, basescrt, baseweth, basewbtc, basewbtc.grv etc.) instead of their ibc equivalents.
+# This feature isn't stable yet, and outputs will change in subsequent releases
 human-readable-denoms-input = {{ .HumanReadableDenomsInput }}
 # If enabled, CLI response return base denoms (baseatom, basescrt, baseweth, basewbtc, basewbtc.grv etc.) instead of their ibc equivalents.
+# This feature isn't stable yet, and outputs will change in subsequent releases
 human-readable-denoms-output = {{ .HumanReadableDenomsOutput }}
 
 
