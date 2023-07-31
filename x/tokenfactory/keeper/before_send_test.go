@@ -183,6 +183,7 @@ func (s *KeeperTestSuite) TestInfiniteTrackBeforeSend() {
 			err = s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, "mint", "distribution", tokenToSend)
 			s.Require().NoError(err)
 
+			// send should happen regardless of trackBeforeSend results
 			distributionModuleAddress := s.App.AccountKeeper.GetModuleAddress("distribution")
 			distributionModuleBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, distributionModuleAddress)
 			s.Require().True(distributionModuleBalances.IsEqual(tokenToSend))
