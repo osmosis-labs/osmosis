@@ -86,6 +86,8 @@ func (h Hooks) BlockBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount 
 
 // callBeforeSendListener iterates over each coin and sends corresponding sudo msg to the contract address stored in state.
 // If blockBeforeSend is true, sudoMsg wraps BlockBeforeSendMsg, otherwise sudoMsg wraps TrackBeforeSendMsg.
+// Note that we gas meter trackBeforeSend to prevent infinite contract calls.
+// CONTRACT: this should not be called in beginBlock or endBlock since out of gas will cause this method to panic.
 func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins, blockBeforeSend bool) error {
 	for _, coin := range amount {
 		cosmwasmAddress := k.GetBeforeSendHook(ctx, coin.Denom)
