@@ -275,7 +275,7 @@ func (k Keeper) ExtendSearchRangeIfNeeded(
 	// If the profit for the maximum amount in is still increasing, then we can increase the range of the binary search
 	if maxInProfit.GTE(sdk.ZeroInt()) {
 		maxInPlusOne := curRight.Add(sdk.OneInt()).Mul(route.StepSize)
-		if updatedMax.LT(maxInPlusOne) {
+		if updatedMax.Mul(route.StepSize).LT(maxInPlusOne) {
 			return curLeft, curRight, nil
 		}
 
