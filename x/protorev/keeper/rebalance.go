@@ -136,7 +136,11 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, rema
 	}
 
 	// Update the search range if the max input amount is too small/large
-	curLeft, curRight = k.UpdateSearchRangeIfNeeded(ctx, route, inputDenom, curLeft, curRight)
+	curLeft, curRight, err = k.UpdateSearchRangeIfNeeded(ctx, route, inputDenom, curLeft, curRight)
+	if err != nil {
+		return sdk.Coin{}, sdk.ZeroInt(), err
+	}
+
 	// Binary search to find the max profit
 	for iteration := 0; curLeft.LT(curRight) && iteration < types.MaxIterations; iteration++ {
 		curMid := (curLeft.Add(curRight)).Quo(sdk.NewInt(2))
@@ -169,13 +173,16 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, rema
 	return tokenIn, profit, nil
 }
 
-// UpdateSearchRangeIfNeeded updates the search range for the binary search.
+// UpdateSearchRangeIfNeeded updates the search range for the binary search. First, we check if there are any
+// concentrated liquidity pools in the route. If there are, then we may need to reduce the upper bound of the
+// binary search since it is gas intensive to move across several ticks. Next, we determine if the current bound
+// includes the optimal amount in. If it does not, then we can extend the search range to capture more profits.
 func (k Keeper) UpdateSearchRangeIfNeeded(
 	ctx sdk.Context,
 	route RouteMetaData,
 	inputDenom string,
 	curLeft, curRight sdk.Int,
-) (sdk.Int, sdk.Int) {
+) (sdk.Int, sdk.Int, error) {
 	// Retrieve all concentrated liquidity pools in the route
 	clPools := make([]uint64, 0)
 	inputMap := make(map[uint64]string)
@@ -184,7 +191,7 @@ func (k Keeper) UpdateSearchRangeIfNeeded(
 	for _, route := range route.Route {
 		pool, err := k.poolmanagerKeeper.GetPool(ctx, route.PoolId)
 		if err != nil {
-			return sdk.OneInt(), sdk.OneInt()
+			return sdk.ZeroInt(), sdk.ZeroInt(), err
 		}
 
 		if pool.GetType() == poolmanagertypes.Concentrated {
@@ -195,23 +202,21 @@ func (k Keeper) UpdateSearchRangeIfNeeded(
 		prevInput = route.TokenOutDenom
 	}
 
-	// If there are any concentrated liquidity pools in the route, then we might want
-	// to reduce the search range since it is gas intensive to move across several ticks.
+	// If there are concentrated liquidity pools in the route, then we may need to reduce the upper bound of the binary search.
 	updatedMax, err := k.ReduceSearchRangeIfNeeded(ctx, clPools, inputDenom, inputMap, curLeft, curRight)
 	if err != nil {
-		return sdk.OneInt(), sdk.OneInt()
+		return sdk.ZeroInt(), sdk.ZeroInt(), err
 	}
 
 	if updatedMax.LT(curRight) {
-		return curLeft, updatedMax
+		return curLeft, updatedMax, nil
 	}
 
 	return k.ExtendSearchRangeIfNeeded(ctx, route, inputDenom, curLeft, curRight, updatedMax)
 }
 
-// ReduceSearchRangeIfNeeded reduces the search range if the max input amount is too large. This is
-// particularly useful for concentrated liquidity pools where the max input amount is very large and
-// the binary search is too gas intensive.
+// ReduceSearchRangeIfNeeded returns the max amount in that can be used for the binary search
+// respecting the max ticks moved across all concentrated liquidity pools in the route.
 func (k Keeper) ReduceSearchRangeIfNeeded(
 	ctx sdk.Context,
 	clPools []uint64,
@@ -219,7 +224,7 @@ func (k Keeper) ReduceSearchRangeIfNeeded(
 	inputMap map[uint64]string,
 	curLeft, curRight sdk.Int,
 ) (sdk.Int, error) {
-	// Find the max amount in that can be used for the binary search
+	// Find the max amount in that can be used for the binary search (in terms of uosmo)
 	maxInputAmount, stepSize, err := k.MaxInputAmount(ctx)
 	if err != nil {
 		return sdk.ZeroInt(), err
@@ -260,19 +265,24 @@ func (k Keeper) ExtendSearchRangeIfNeeded(
 	route RouteMetaData,
 	inputDenom string,
 	curLeft, curRight, updatedMax sdk.Int,
-) (sdk.Int, sdk.Int) {
+) (sdk.Int, sdk.Int, error) {
 	// Get the profit for the maximum amount in
 	_, maxInProfit, err := k.EstimateMultihopProfit(ctx, inputDenom, curRight.Mul(route.StepSize), route.Route)
 	if err != nil {
-		return curLeft, curRight
+		return sdk.ZeroInt(), sdk.ZeroInt(), err
 	}
 
 	// If the profit for the maximum amount in is still increasing, then we can increase the range of the binary search
 	if maxInProfit.GTE(sdk.ZeroInt()) {
+		maxInPlusOne := curRight.Add(sdk.OneInt()).Mul(route.StepSize)
+		if updatedMax.LT(maxInPlusOne) {
+			return curLeft, curRight, nil
+		}
+
 		// Get the profit for the maximum amount in + 1
-		_, maxInProfitPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, curRight.Add(sdk.OneInt()).Mul(route.StepSize), route.Route)
+		_, maxInProfitPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, maxInPlusOne, route.Route)
 		if err != nil {
-			return curLeft, curRight
+			return sdk.ZeroInt(), sdk.ZeroInt(), err
 		}
 
 		// Change the range of the binary search if the profit is still increasing
@@ -282,14 +292,12 @@ func (k Keeper) ExtendSearchRangeIfNeeded(
 		}
 	}
 
-	return curLeft, curRight
+	return curLeft, curRight, nil
 }
 
 // MaxInputAmount returns the max input amount that can be used in any route. We use uosmo as the base
 // unit of account for the max input amount.
 func (k Keeper) MaxInputAmount(ctx sdk.Context) (sdk.Int, sdk.Int, error) {
-	// Determine the max amount in that can be used for the binary search
-	// in terms of uosmo.
 	baseDenom, err := k.GetAllBaseDenoms(ctx)
 	if err != nil {
 		return sdk.ZeroInt(), sdk.ZeroInt(), err
