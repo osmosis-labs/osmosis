@@ -1417,6 +1417,8 @@ the lower one is greater than or equal to the upper.
 This is not an issue because it gets canceled out by the "interval accumulation outside at time t'" that is added to
 the "interval accumulation inside at time t" before being subtracted from the global accumulator at the time of claiming.
 
+Perhaps even more importantly, as long as the _change_ in interval accumulation is tracked correctly, the initial value should not make a difference.
+
 Interestingly, this edge case should not be possible in the other direction. That is, we cannot get negative
 interval accumulation inside if the upper is initialized after the lower and the current tick is less than the upper tick.
 The reason is that if the current tick is less than the tick we initialize, the snapshot becomes 0 by convention.
