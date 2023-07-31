@@ -104,9 +104,8 @@ func InitializeAssetPairs(ctx sdk.Context, keepers *keepers.AppKeepers) []AssetP
 
 // The values below this comment are used strictly for testing.
 // The above code pulls desired values directly from the pool.
-// For E2E / gotests, the pools we need don't already exist, so we need to hardcode the values here.
-
-// These values will be pulled directly from the existing
+// For E2E / gotests, the pools we need don't exist already, so we need to hardcode the values here.
+// These values will be pulled directly from the existing pools in the upgrade handler.
 
 var (
 	ION            = "uion"

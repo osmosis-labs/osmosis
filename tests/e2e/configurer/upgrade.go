@@ -403,6 +403,8 @@ func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHe
 	return nil
 }
 
+// START: CAN REMOVE POST v17 UPGRADE
+
 func strAllUpgradeBaseDenoms() string {
 	upgradeBaseDenoms := ""
 	n := len(v17.AssetPairsForTestsOnly)
@@ -414,8 +416,6 @@ func strAllUpgradeBaseDenoms() string {
 	}
 	return upgradeBaseDenoms
 }
-
-// START: CAN REMOVE POST v17 UPGRADE
 
 func v17GetSuperfluidAssets() string {
 	assets := ""
