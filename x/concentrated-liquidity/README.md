@@ -1353,6 +1353,78 @@ func (k Keeper) collectSpreadRewards(
 
 This returns the amount of spread rewards collected by the user.
 
+## Interval Accumulation
+
+As mentioned in the previous sections, to collect spread rewards,
+we utilize a rewards accumulator abstraction with an interval accumulation extension.
+
+The accumulator abstraction can be summarized by the following bullet points:
+- accumulator values are per-share
+- per-pool-global ever-increasing accumulator
+- each position takes a snapshot of the accumulator at the time of creation
+- assume t' represents the time of claiming rewards and t represents the time of position's snapshot of
+the global accumulator. Then, the total position's rewards are equal to
+`(global accumulator at time t' - position snapshot at time t) * number of shares
+
+Interval accumulation further extends this abstraction where positions only accumulate the rewards whenever they are active.
+That is, the current tick is within the position's range.
+
+To calculate that, we utilize tick accumulators. Each tick accumulator is updated whenever it is crossed. It can be thought
+of as having the snapshot of the global accumulator when going in the opposite direction of the last traversal. For example, assume that
+we are reasoning about the snapshot value of tick 100 when the current tick is 150. Then, we know that the value of the tick is 100
+contains rewards accrued before crossing tick 100 when going from the left to the right.
+
+Fundamentally, our base accumulator abstraction changes to the following:
+- accumulator values are per-share (still the same)
+- per-pool-global ever-increasing accumulator (still the same)
+- each position takes a snapshot of the rewards accumulated while the position is active at the time of its creation (as defined by tick accumulator snapshots) (changed)
+- assume t' represents the time of claiming rewards and t represents the time of the position's snapshot of the interval accumulation.
+Then, the total position's rewards are equal to `(global accumulator at time t' - interval accumulation outside at time t' - interval accumulation inside at time t) * number of shares
+Essentially, this gives us interval accumulation inside between times t and t' for each share of the position.
+
+By convention, we initialize the tick snapshot to either:
+a) 0 if the current tick is < tick
+b) global accumulator value if the current tick is >= tick
+
+This is done to ensure that the tick accumulator always contains the rewards accrued before crossing the tick from left to right.
+
+Since tick accumulator snapshots are initialized at different times, their comparison is not meaningful.
+
+By having tick snapshots at each edge of the position and a global value, we can compute how many rewards are accrued inside
+the position. It accounts for all rewards accrued between position creation and the time of claiming rewards whenever the following
+is true:
+`lower tick <= current tick < upper tick``
+
+For this reason, there are 3 ways to compute the rewards accrued inside the position:
+1. current tick is below the position's range (current tick < lower tick)
+- Then, we compute rewards as `lower tick snapshot - upper tick snapshot`
+2. current tick is within the position's range (lower tick <= current tick < upper tick)
+- Then, we compute rewards as `global accumulator - upper tick snapshot - lower tick snapshot`
+3. current tick is above the position's range (current tick >= upper tick)
+- Then, we compute rewards as `upper tick accumulator - lower tick accumulator`
+
+### Negative Interval Accumulation Edge Case Behavior
+
+Note, that if we initialize the lower tick after the upper tick is already initialized,
+for example, by another position, this might lead to negative accumulation inside
+the interval. This is only possible if the current tick is greater than the lower tick
+that is being initialized.
+
+The reason is that we initialize the lower tick accumulator to the global accumulator
+if the current tick >= tick. As a result, when subtracting the lower tick snapshot from the upper,
+the lower one is greater than or equal to the upper.
+
+This is not an issue because it gets canceled out by the "interval accumulation outside at time t'" that is added to
+the "interval accumulation inside at time t" before being subtracted from the global accumulator at the time of claiming.
+
+Perhaps even more importantly, as long as the _change_ in interval accumulation is tracked correctly, the initial value should not make a difference.
+
+Interestingly, this edge case should not be possible in the other direction. That is, we cannot get negative
+interval accumulation inside if the upper is initialized after the lower and the current tick is less than the upper tick.
+The reason is that if the current tick is less than the tick we initialize, the snapshot becomes 0 by convention.
+As a result, the subtraction from the global accumulator for computing interval accumulation never leads to a
+negative value.
+
 ## Swaps
 
 Swapping within a single tick works as the regular `xy = k` curve. For swaps
