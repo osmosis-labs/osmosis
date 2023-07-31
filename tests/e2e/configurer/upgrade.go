@@ -141,7 +141,9 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	// START: CAN REMOVE POST v17 UPGRADE
 
-	wg.Add(2)
+	v17SuperfluidAssets := v17GetSuperfluidAssets()
+
+	wg.Add(4)
 
 	go func() {
 		defer wg.Done()
@@ -151,6 +153,16 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	go func() {
 		defer wg.Done()
 		chainBNode.FundCommunityPool(initialization.ValidatorWalletName, strAllUpgradeBaseDenoms())
+	}()
+
+	go func() {
+		defer wg.Done()
+		chainANode.EnableSuperfluidAsset(chainA, v17SuperfluidAssets)
+	}()
+
+	go func() {
+		defer wg.Done()
+		chainBNode.EnableSuperfluidAsset(chainB, v17SuperfluidAssets)
 	}()
 
 	wg.Wait()
@@ -193,8 +205,6 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	config.PreUpgradePoolId = preUpgradePoolId
 	config.PreUpgradeStableSwapPoolId = preUpgradeStableSwapPoolId
-
-	fmt.Println("poolShareDenom: ", poolShareDenom)
 
 	var (
 		lockupWallet           string
@@ -404,3 +414,19 @@ func strAllUpgradeBaseDenoms() string {
 	}
 	return upgradeBaseDenoms
 }
+
+// START: CAN REMOVE POST v17 UPGRADE
+
+func v17GetSuperfluidAssets() string {
+	assets := ""
+	n := len(v17.AssetPairsForTestsOnly)
+	for i, assetPair := range v17.AssetPairsForTestsOnly {
+		assets += fmt.Sprintf("gamm/pool/%d", assetPair.LinkedClassicPool)
+		if i < n-1 { // Check if it's not the last iteration
+			assets += ","
+		}
+	}
+	return assets
+}
+
+// END: CAN REMOVE POST v17 UPGRADE

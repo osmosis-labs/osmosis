@@ -85,7 +85,6 @@ func InitializeAssetPairs(ctx sdk.Context, keepers *keepers.AppKeepers) []AssetP
 				break
 			}
 		}
-		fmt.Println("assetPair.BaseAsset: ", assetPair.BaseAsset)
 
 		// If the spread factor is not manually set above, set it to the the same value as the pool's spread factor.
 		if assetPair.SpreadFactor.IsNil() {
