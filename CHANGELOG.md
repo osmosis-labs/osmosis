@@ -40,7 +40,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## v16.1.2
+
+### Misc Improvements
+
+* [#5915](https://github.com/osmosis-labs/osmosis/pull/5915) New command for generating shell auto-completes for osmosisd (`osmosisd enable-cli-autocomplete bash`). UX flow around this will change.
+* [#5920](https://github.com/osmosis-labs/osmosis/pull/5920) Experimental support for human readable IBC denoms in CLI arguments and outputs. (Will change in subsequent releases, regenerate client.toml to see new fields `human-readable-denoms-input`, `human-readable-denoms-output`)
+* More debug logs around epoch / daily emissions
+
+## v16.1.1
 
 ### State Breaking
 
