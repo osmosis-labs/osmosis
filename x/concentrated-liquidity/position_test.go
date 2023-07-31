@@ -10,7 +10,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
