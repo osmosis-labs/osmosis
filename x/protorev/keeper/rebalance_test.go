@@ -165,6 +165,30 @@ var extendedRangeRoute = poolmanagertypes.SwapAmountInRoutes{
 	},
 }
 
+// Tests the binary search range for CL pools
+var clPoolRoute = poolmanagertypes.SwapAmountInRoutes{
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        49,
+		TokenOutDenom: "uosmo",
+	},
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        50,
+		TokenOutDenom: "epochTwo",
+	},
+}
+
+// Tests reducing the binary search range
+var reducedRangeRoute = poolmanagertypes.SwapAmountInRoutes{
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        49,
+		TokenOutDenom: "uosmo",
+	},
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        52,
+		TokenOutDenom: "epochTwo",
+	},
+}
+
 // EstimateMultiHopSwap Panic catching test
 var panicRoute = poolmanagertypes.SwapAmountInRoutes{
 	poolmanagertypes.SwapAmountInRoute{
@@ -289,6 +313,26 @@ func (s *KeeperTestSuite) TestFindMaxProfitRoute() {
 				routePoolPoints: 0,
 			},
 			expectPass: false,
+		},
+		{
+			name: "CL Route",
+			param: param{
+				route:           clPoolRoute,
+				expectedAmtIn:   sdk.NewInt(131_072_000_000),
+				expectedProfit:  sdk.NewInt(295_125_808),
+				routePoolPoints: 7,
+			},
+			expectPass: true,
+		},
+		{
+			name: "Reduced Range Route", // This will search up to 60_000_000uosmo
+			param: param{
+				route:           reducedRangeRoute,
+				expectedAmtIn:   sdk.NewInt(60_000_000),
+				expectedProfit:  sdk.NewInt(31_474),
+				routePoolPoints: 7,
+			},
+			expectPass: true,
 		},
 	}
 

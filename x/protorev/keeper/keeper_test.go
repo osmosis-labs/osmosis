@@ -888,6 +888,17 @@ func (s *KeeperTestSuite) setUpPools() {
 			},
 			scalingFactors: []uint64{1, 1},
 		},
+		{ // Pool 49 - Used for CL testing
+			initialLiquidity: sdk.NewCoins(
+				sdk.NewCoin("uosmo", sdk.NewInt(10_000_000_000_000)),
+				sdk.NewCoin("epochTwo", sdk.NewInt(8_000_000_000_000)),
+			),
+			poolParams: stableswap.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(0, 2),
+				ExitFee: sdk.NewDecWithPrec(0, 2),
+			},
+			scalingFactors: []uint64{1, 1},
+		},
 	}
 
 	for _, pool := range s.stableSwapPools {
@@ -895,12 +906,31 @@ func (s *KeeperTestSuite) setUpPools() {
 	}
 
 	// Create a concentrated liquidity pool for epoch_hook testing
-	// Pool 49
+	// Pool 50
 	s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("epochTwo", "uosmo")
 
 	// Create a cosmwasm pool for testing
-	// Pool 50
+	// Pool 51
 	s.PrepareCosmWasmPool()
+
+	// Create a concentrated liquidity pool for range testing
+	// Pool 52
+	// Create the CL pool
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[2], "epochTwo", "uosmo", 100, sdk.NewDecWithPrec(2, 3))
+	fundCoins := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000000000000000)), sdk.NewCoin("epochTwo", sdk.NewInt(1000000000000000000)))
+	s.FundAcc(s.TestAccs[2], fundCoins)
+
+	// Create 100 ticks in the CL pool, 50 on each side
+	tokensProvided := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000)), sdk.NewCoin("epochTwo", sdk.NewInt(10000000)))
+	amount0Min := sdk.NewInt(0)
+	amount1Min := sdk.NewInt(0)
+	lowerTick := int64(0)
+	upperTick := int64(100)
+
+	for i := int64(0); i < 50; i++ {
+		s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[2], tokensProvided, amount0Min, amount1Min, lowerTick-(100*i), upperTick-(100*i))
+		s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[2], tokensProvided, amount0Min, amount1Min, lowerTick+(100*i), upperTick+(100*i))
+	}
 
 	// Set all of the pool info into the stores
 	err := s.App.ProtoRevKeeper.UpdatePools(s.Ctx)

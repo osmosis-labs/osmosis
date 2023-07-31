@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
@@ -30,13 +32,10 @@ func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remaining
 
 		// If the profit is greater than zero, then we convert the profits to uosmo and compare profits in terms of uosmo
 		if profit.GT(sdk.ZeroInt()) {
-			if inputCoin.Denom != types.OsmosisDenomination {
-				uosmoProfit, err := k.ConvertProfits(ctx, inputCoin, profit)
-				if err != nil {
-					k.Logger(ctx).Error("Error converting profits: ", err)
-					continue
-				}
-				profit = uosmoProfit
+			profit, err := k.ConvertProfits(ctx, inputCoin, profit)
+			if err != nil {
+				k.Logger(ctx).Error("Error converting profits: ", err)
+				continue
 			}
 
 			// Select the optimal route King of the Hill style (route with the highest profit will be executed)
@@ -53,6 +52,10 @@ func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remaining
 
 // ConvertProfits converts the profit denom to uosmo to allow for a fair comparison of profits
 func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit sdk.Int) (sdk.Int, error) {
+	if inputCoin.Denom == types.OsmosisDenomination {
+		return profit, nil
+	}
+
 	// Get highest liquidity pool ID for the input coin and uosmo
 	conversionPoolID, err := k.GetPoolForDenomPair(ctx, types.OsmosisDenomination, inputCoin.Denom)
 	if err != nil {
@@ -132,9 +135,8 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, rema
 		return sdk.Coin{}, sdk.ZeroInt(), err
 	}
 
-	// Extend the search range if the max input amount is too small
-	curLeft, curRight = k.UpdateSearchRange(ctx, route, inputDenom, curLeft, curRight)
-
+	// Update the search range if the max input amount is too small/large
+	curLeft, curRight = k.UpdateSearchRangeIfNeeded(ctx, route, inputDenom, curLeft, curRight)
 	// Binary search to find the max profit
 	for iteration := 0; curLeft.LT(curRight) && iteration < types.MaxIterations; iteration++ {
 		curMid := (curLeft.Add(curRight)).Quo(sdk.NewInt(2))
@@ -167,8 +169,8 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, rema
 	return tokenIn, profit, nil
 }
 
-// UpdateSearchRange updates the search range for the binary search.
-func (k Keeper) UpdateSearchRange(
+// UpdateSearchRangeIfNeeded updates the search range for the binary search.
+func (k Keeper) UpdateSearchRangeIfNeeded(
 	ctx sdk.Context,
 	route RouteMetaData,
 	inputDenom string,
@@ -194,16 +196,14 @@ func (k Keeper) UpdateSearchRange(
 	}
 
 	// If there are any concentrated liquidity pools in the route, then we might want
-	// to reduce the search range since it is gas intensive to move across several ticks
-	//
-	// TODO: Refactor a bit so that its clear that its only the use case for CL pools
-	updatedMax := k.ReduceSearchRangeIfNeeded(ctx, clPools, inputDenom, inputMap, curLeft, curRight)
-	if updatedMax.LT(curRight) {
-		return curLeft, updatedMax
+	// to reduce the search range since it is gas intensive to move across several ticks.
+	updatedMax, err := k.ReduceSearchRangeIfNeeded(ctx, clPools, inputDenom, inputMap, curLeft, curRight)
+	if err != nil {
+		return sdk.OneInt(), sdk.OneInt()
 	}
 
-	if updatedMax.GT(types.MaxInputAmount) {
-		updatedMax = types.MaxInputAmount
+	if updatedMax.LT(curRight) {
+		return curLeft, updatedMax
 	}
 
 	return k.ExtendSearchRangeIfNeeded(ctx, route, inputDenom, curLeft, curRight, updatedMax)
@@ -218,31 +218,17 @@ func (k Keeper) ReduceSearchRangeIfNeeded(
 	inputDenom string,
 	inputMap map[uint64]string,
 	curLeft, curRight sdk.Int,
-) sdk.Int {
-	// Iterate through all CL pools and determine the maximal amount of input that can be used
-	// respecting the max ticks moved
-	baseDenom, err := k.GetAllBaseDenoms(ctx)
+) (sdk.Int, error) {
+	// Find the max amount in that can be used for the binary search
+	maxInputAmount, stepSize, err := k.MaxInputAmount(ctx)
 	if err != nil {
-		return sdk.ZeroInt()
+		return sdk.ZeroInt(), err
 	}
 
-	uosmoStepSize := sdk.ZeroInt()
-	foundUosmo := false
-	for _, denom := range baseDenom {
-		if denom.Denom == types.OsmosisDenomination {
-			uosmoStepSize = denom.StepSize
-			foundUosmo = true
-			break
-		}
-	}
-
-	if !foundUosmo {
-		return sdk.ZeroInt()
-	}
-
-	maxAmountIn := types.MaxInputAmount.Mul(uosmoStepSize)
+	// Iterate through all CL pools and determine the maximal amount of input that can be used
+	// respecting the max ticks moved.
 	for _, poolId := range clPools {
-		maxInAmount, _, err := k.concentratedLiquidityKeeper.ComputeMaxInAmtGivenMaxTicksCrossed(
+		maxInForPool, _, err := k.concentratedLiquidityKeeper.ComputeMaxInAmtGivenMaxTicksCrossed(
 			ctx,
 			poolId,
 			inputMap[poolId],
@@ -250,24 +236,22 @@ func (k Keeper) ReduceSearchRangeIfNeeded(
 		)
 
 		// In the case where we cannot calculate the max in amount, we short circuit the search
-		// and return the current left and right bounds as equal. This means no search will be executed.
+		// and return an upper bound of 0. This will cause the binary search to not run.
 		if err != nil {
-			return sdk.ZeroInt()
+			return sdk.ZeroInt(), err
 		}
 
-		// Convert the input amount for comparison
-		amount, err := k.ConvertProfits(ctx, maxInAmount, maxInAmount.Amount)
+		maxInForPoolInOsmo, err := k.ConvertProfits(ctx, maxInForPool, maxInForPool.Amount)
 		if err != nil {
-			return sdk.ZeroInt()
+			return sdk.ZeroInt(), err
 		}
 
-		// If the max input amount is less than the current max input amount, then we update the current max input amount
-		if amount.LT(maxAmountIn) {
-			maxAmountIn = amount
+		if maxInForPoolInOsmo.LT(maxInputAmount) {
+			maxInputAmount = maxInForPoolInOsmo
 		}
 	}
 
-	return maxAmountIn.Quo(uosmoStepSize)
+	return maxInputAmount.Quo(stepSize), nil
 }
 
 // Determine if the binary search range needs to be extended
@@ -299,6 +283,33 @@ func (k Keeper) ExtendSearchRangeIfNeeded(
 	}
 
 	return curLeft, curRight
+}
+
+// MaxInputAmount returns the max input amount that can be used in any route. We use uosmo as the base
+// unit of account for the max input amount.
+func (k Keeper) MaxInputAmount(ctx sdk.Context) (sdk.Int, sdk.Int, error) {
+	// Determine the max amount in that can be used for the binary search
+	// in terms of uosmo.
+	baseDenom, err := k.GetAllBaseDenoms(ctx)
+	if err != nil {
+		return sdk.ZeroInt(), sdk.ZeroInt(), err
+	}
+
+	uosmoStepSize := sdk.ZeroInt()
+	foundUosmo := false
+	for _, denom := range baseDenom {
+		if denom.Denom == types.OsmosisDenomination {
+			uosmoStepSize = denom.StepSize
+			foundUosmo = true
+			break
+		}
+	}
+
+	if !foundUosmo {
+		return sdk.ZeroInt(), sdk.ZeroInt(), fmt.Errorf("uosmo not found in base denoms")
+	}
+
+	return types.ExtendedMaxInputAmount.Mul(uosmoStepSize), uosmoStepSize, nil
 }
 
 // ExecuteTrade inputs a route, amount in, and rebalances the pool
