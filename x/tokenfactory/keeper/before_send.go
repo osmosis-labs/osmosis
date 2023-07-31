@@ -98,6 +98,9 @@ func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress,
 			var msgBz []byte
 
 			// get msgBz, either BlockBeforeSend or TrackBeforeSend
+			// Note that for trackBeforeSend, we need to gas meter computations to prevent infinite loop
+			// specifically because module to module sends are not gas metered.
+			// We don't need to do this for blockBeforeSend since blockBeforeSend is not called during module to module sends.
 			if blockBeforeSend {
 				msg := types.BlockBeforeSendSudoMsg{
 					BlockBeforeSend: types.BlockBeforeSendMsg{
@@ -121,8 +124,12 @@ func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress,
 				return err
 			}
 
-			em := sdk.NewEventManager()
+			// if its track before send, apply gas meter to prevent infinite loop
+			if !blockBeforeSend {
+				ctx = ctx.WithGasMeter(sdk.NewGasMeter(types.TrackBeforeSendGasLimit))
+			}
 
+			em := sdk.NewEventManager()
 			_, err = k.contractKeeper.Sudo(ctx.WithEventManager(em), cwAddr, msgBz)
 			if err != nil {
 				return errorsmod.Wrapf(err, "failed to call before send hook for denom %s", coin.Denom)
