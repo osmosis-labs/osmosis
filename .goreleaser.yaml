@@ -143,7 +143,7 @@ archives:
     builds:
       - osmosisd-darwin-universal
       - osmosisd-linux-amd64
-      - osmosisd-linux-amd64
+      - osmosisd-linux-arm64
       - osmosisd-darwin-amd64
       - osmosisd-darwin-arm64
     name_template: "{{.ProjectName}}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
