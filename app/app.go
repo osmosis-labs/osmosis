@@ -48,23 +48,24 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v16/app/keepers"
-	"github.com/osmosis-labs/osmosis/v16/app/upgrades"
-	v10 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v10"
-	v11 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v11"
-	v12 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v12"
-	v13 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v13"
-	v14 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v14"
-	v15 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v15"
-	v16 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v16"
-	v3 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v3"
-	v4 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v4"
-	v5 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v5"
-	v6 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v6"
-	v7 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v7"
-	v8 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v8"
-	v9 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v9"
-	_ "github.com/osmosis-labs/osmosis/v16/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v17/app/keepers"
+	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
+	v10 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v10"
+	v11 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v11"
+	v12 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v12"
+	v13 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v13"
+	v14 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v14"
+	v15 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v15"
+	v16 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v16"
+	v17 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v17"
+	v3 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v3"
+	v4 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v5"
+	v6 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v6"
+	v7 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v7"
+	v8 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v8"
+	v9 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v9"
+	_ "github.com/osmosis-labs/osmosis/v17/client/docs/statik"
 )
 
 const appName = "OsmosisApp"
@@ -102,7 +103,7 @@ var (
 
 	// _ sdksimapp.App = (*OsmosisApp)(nil)
 
-	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade}
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
 
@@ -451,7 +452,8 @@ func (app *OsmosisApp) setupUpgradeStoreLoaders() {
 
 	for _, upgrade := range Upgrades {
 		if upgradeInfo.Name == upgrade.UpgradeName {
-			app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &upgrade.StoreUpgrades))
+			storeUpgrades := upgrade.StoreUpgrades
+			app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 		}
 	}
 }

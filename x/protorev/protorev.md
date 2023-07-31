@@ -656,53 +656,53 @@ osmosisd query protorev params
 
 | Verb | Method | Description |
 | --- | --- | --- |
-| gRPC | osmosis.v14.protorev.Query/Params | Queries the parameters of the module |
-| gRPC | osmosis.v14.protorev.Query/GetProtoRevNumberOfTrades | Queries the number of arbitrage trades the module has executed |
-| gRPC | osmosis.v14.protorev.Query/GetProtoRevProfitsByDenom | Queries the profits of the module by denom |
-| gRPC | osmosis.v14.protorev.Query/GetProtoRevAllProfits | Queries all of the profits from the module |
-| gRPC | osmosis.v14.protorev.Query/GetProtoRevStatisticsByRoute | Queries the number of arbitrages and profits that have been executed for a given route |
-| gRPC | osmosis.v14.protorev.Query/GetProtoRevAllStatistics | Queries all of routes that the module has arbitrage against and the number of trades and profits that have been executed for each route |
-| gRPC | osmosis.v14.protorev.Query/GetProtoRevTokenPairArbRoutes | Queries all of the hot routes that the module is currently arbitraging |
-| gRPC | osmosis.v14.protorev.Query/GetProtoRevMaxPoolPointsPerTx | Queries the ProtoRev max pool points per transaction |
-| gRPC | osmosis.v14.protorev.Query/GetProtoRevMaxPoolPointsPerBlock | Queries the ProtoRev max pool points per block |
-| gRPC | osmosis.v14.protorev.Query/GetProtoRevAdminAccount | Queries the admin account of the ProtoRev |
-| gRPC | osmosis.v14.protorev.Query/GetProtoRevDeveloperAccount | Queries the developer account of the ProtoRev |
-| gRPC | osmosis.v14.protorev.Query/GetProtoRevBaseDenoms | Queries the ProtoRev base denoms used to create cyclic arbitrage routes |
-| gRPC | osmosis.v14.protorev.Query/GetProtoRevEnabled | Queries whether the ProtoRev module is currently enabled |
-| gRPC | osmosis.14.protorev.Query/GetProtoRevPoolWeights | Queries the number of pool points each pool type will consume when executing and simulating trades |
-| gRPC | osmosis.14.protorev.Query/GetProtoRevPool | Queries the pool id for a given denom pair stored in ProtoRev |
-| GET | /osmosis/v14/protorev/params | Queries the parameters of the module |
-| GET | /osmosis/v14/protorev/number_of_trades | Queries the number of arbitrage trades the module has executed |
-| GET | /osmosis/v14/protorev/profits_by_denom | Queries the profits of the module by denom |
-| GET | /osmosis/v14/protorev/all_profits | Queries all of the profits from the module |
-| GET | /osmosis/v14/protorev/statistics_by_route | Queries the number of arbitrages and profits that have happened for a given route |
-| GET | /osmosis/v14/protorev/all_route_statistics | Queries all of routes that the module has arbitrage against and the number of trades and profits that have happened for each route |
-| GET | /osmosis/v14/protorev/token_pair_arb_routes | Queries all of the hot routes that the module is currently arbitraging |
-| GET | /osmosis/v14/protorev/max_pool_points_per_tx | Queries the maximum number of pool points that can be consumed per transaction |
-| GET | /osmosis/v14/protorev/max_pool_points_per_block | Queries the maximum number of pool points that can be consumed per block |
-| GET | /osmosis/v14/protorev/admin_account | Queries the admin account of the ProtoRev |
-| GET | /osmosis/v14/protorev/developer_account | Queries the developer account of the ProtoRev |
-| GET | /osmosis/v14/protorev/base_denoms | Queries the base denominations ProtoRev is currently using to create cyclic arbitrage routes |
-| GET | /osmosis/v14/protorev/enabled | Queries whether the ProtoRev module is currently enabled |
-| GET | /osmosis/v14/protorev/pool_weights | Queries the number of pool points each pool type will consume when executing and simulating trades |
-| GET | /osmosis/v14/protorev/pool | Queries the pool id for a given denom pair stored in ProtoRev |
+| gRPC | osmosis.protorev.Query/Params | Queries the parameters of the module |
+| gRPC | osmosis.protorev.Query/GetProtoRevNumberOfTrades | Queries the number of arbitrage trades the module has executed |
+| gRPC | osmosis.protorev.Query/GetProtoRevProfitsByDenom | Queries the profits of the module by denom |
+| gRPC | osmosis.protorev.Query/GetProtoRevAllProfits | Queries all of the profits from the module |
+| gRPC | osmosis.protorev.Query/GetProtoRevStatisticsByRoute | Queries the number of arbitrages and profits that have been executed for a given route |
+| gRPC | osmosis.protorev.Query/GetProtoRevAllStatistics | Queries all of routes that the module has arbitrage against and the number of trades and profits that have been executed for each route |
+| gRPC | osmosis.protorev.Query/GetProtoRevTokenPairArbRoutes | Queries all of the hot routes that the module is currently arbitraging |
+| gRPC | osmosis.protorev.Query/GetProtoRevMaxPoolPointsPerTx | Queries the ProtoRev max pool points per transaction |
+| gRPC | osmosis.protorev.Query/GetProtoRevMaxPoolPointsPerBlock | Queries the ProtoRev max pool points per block |
+| gRPC | osmosis.protorev.Query/GetProtoRevAdminAccount | Queries the admin account of the ProtoRev |
+| gRPC | osmosis.protorev.Query/GetProtoRevDeveloperAccount | Queries the developer account of the ProtoRev |
+| gRPC | osmosis.protorev.Query/GetProtoRevBaseDenoms | Queries the ProtoRev base denoms used to create cyclic arbitrage routes |
+| gRPC | osmosis.protorev.Query/GetProtoRevEnabled | Queries whether the ProtoRev module is currently enabled |
+| gRPC | osmosis.protorev.Query/GetProtoRevPoolWeights | Queries the number of pool points each pool type will consume when executing and simulating trades |
+| gRPC | osmosis.protorev.Query/GetProtoRevPool | Queries the pool id for a given denom pair stored in ProtoRev |
+| GET | /osmosis/protorev/params | Queries the parameters of the module |
+| GET | /osmosis/protorev/number_of_trades | Queries the number of arbitrage trades the module has executed |
+| GET | /osmosis/protorev/profits_by_denom | Queries the profits of the module by denom |
+| GET | /osmosis/protorev/all_profits | Queries all of the profits from the module |
+| GET | /osmosis/protorev/statistics_by_route | Queries the number of arbitrages and profits that have happened for a given route |
+| GET | /osmosis/protorev/all_route_statistics | Queries all of routes that the module has arbitrage against and the number of trades and profits that have happened for each route |
+| GET | /osmosis/protorev/token_pair_arb_routes | Queries all of the hot routes that the module is currently arbitraging |
+| GET | /osmosis/protorev/max_pool_points_per_tx | Queries the maximum number of pool points that can be consumed per transaction |
+| GET | /osmosis/protorev/max_pool_points_per_block | Queries the maximum number of pool points that can be consumed per block |
+| GET | /osmosis/protorev/admin_account | Queries the admin account of the ProtoRev |
+| GET | /osmosis/protorev/developer_account | Queries the developer account of the ProtoRev |
+| GET | /osmosis/protorev/base_denoms | Queries the base denominations ProtoRev is currently using to create cyclic arbitrage routes |
+| GET | /osmosis/protorev/enabled | Queries whether the ProtoRev module is currently enabled |
+| GET | /osmosis/protorev/pool_weights | Queries the number of pool points each pool type will consume when executing and simulating trades |
+| GET | /osmosis/protorev/pool | Queries the pool id for a given denom pair stored in ProtoRev |
 
 ### Transactions
 
 | Verb | Method | Description |
 | --- | --- | --- |
-| gRPC | osmosis.v14.protorev.Msg/SetHotRoutes | Sets the hot routes that will be explored when creating cyclic arbitrage routes. Can only be called by the admin account |
-| gRPC | osmosis.v14.protorev.Msg/SetDeveloperAccount | Sets the account that can withdraw a portion of the profit from the ProtoRev module. Can only be called by the admin account |
-| gRPC | osmosis.v14.protorev.Msg/SetMaxPoolPointsPerTx | Sets the maximum number of pool points that can be consumed per transaction |
-| gRPC | osmosis.v14.protorev.Msg/SetMaxPoolPointsPerBlock | Sets the maximum number of routes that can be iterated per block |
-| gRPC | osmosis.v14.protorev.Msg/SetBaseDenoms | Sets the base denominations the ProtoRev module will use to create cyclic arbitrage routes |
-| gRPC | osmosis.v14.protorev.Msg/SetPoolWeights | Sets the amount of pool points each pool type will consume when executing and simulating trades |
-| POST | /osmosis/v14/protorev/set_hot_routes | Sets the hot routes that will be explored when creating cyclic arbitrage routes. Can only be called by the admin account |
-| POST | /osmosis/v14/protorev/set_developer_account | Sets the account that can withdraw a portion of the profit from the ProtoRev module. Can only be called by the admin account |
-| POST | /osmosis/v14/protorev/set_max_pool_points_per_tx | Sets the maximum number of pool points that can be consumed per transaction |
-| POST | /osmosis/v14/protorev/set_max_pool_points_per_block | Sets the maximum number of pool points that can be consumed per block |
-| POST | /osmosis/v14/protorev/set_pool_weights | Sets the amount of pool points each pool type will consume when executing and simulating trades |
-| POST | /osmosis/v14/protorev/set_base_denoms | Sets the base denominations that will be used by ProtoRev to construct cyclic arbitrage routes |
+| gRPC | osmosis.protorev.Msg/SetHotRoutes | Sets the hot routes that will be explored when creating cyclic arbitrage routes. Can only be called by the admin account |
+| gRPC | osmosis.protorev.Msg/SetDeveloperAccount | Sets the account that can withdraw a portion of the profit from the ProtoRev module. Can only be called by the admin account |
+| gRPC | osmosis.protorev.Msg/SetMaxPoolPointsPerTx | Sets the maximum number of pool points that can be consumed per transaction |
+| gRPC | osmosis.protorev.Msg/SetMaxPoolPointsPerBlock | Sets the maximum number of routes that can be iterated per block |
+| gRPC | osmosis.protorev.Msg/SetBaseDenoms | Sets the base denominations the ProtoRev module will use to create cyclic arbitrage routes |
+| gRPC | osmosis.protorev.Msg/SetPoolWeights | Sets the amount of pool points each pool type will consume when executing and simulating trades |
+| POST | /osmosis/protorev/set_hot_routes | Sets the hot routes that will be explored when creating cyclic arbitrage routes. Can only be called by the admin account |
+| POST | /osmosis/protorev/set_developer_account | Sets the account that can withdraw a portion of the profit from the ProtoRev module. Can only be called by the admin account |
+| POST | /osmosis/protorev/set_max_pool_points_per_tx | Sets the maximum number of pool points that can be consumed per transaction |
+| POST | /osmosis/protorev/set_max_pool_points_per_block | Sets the maximum number of pool points that can be consumed per block |
+| POST | /osmosis/protorev/set_pool_weights | Sets the amount of pool points each pool type will consume when executing and simulating trades |
+| POST | /osmosis/protorev/set_base_denoms | Sets the base denominations that will be used by ProtoRev to construct cyclic arbitrage routes |
 
 ## Events
 

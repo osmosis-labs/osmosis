@@ -8,11 +8,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
-	clmath "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
-	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
+	clmath "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
+	clmodel "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
 const (
@@ -1245,10 +1245,10 @@ func (s *KeeperTestSuite) TestInitOrUpdateSpreadRewardAccumulatorPosition_Updati
 				s.crossTickAndChargeSpreadReward(poolId, DefaultLowerTick)
 			}
 
-			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, poolId, pool.GetCurrentTick(), DefaultLowerTick, DefaultLiquidityAmt, false)
+			_, err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, poolId, pool.GetCurrentTick(), DefaultLowerTick, DefaultLiquidityAmt, false)
 			s.Require().NoError(err)
 
-			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, poolId, pool.GetCurrentTick(), DefaultUpperTick, DefaultLiquidityAmt, true)
+			_, err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, poolId, pool.GetCurrentTick(), DefaultUpperTick, DefaultLiquidityAmt, true)
 			s.Require().NoError(err)
 
 			// InitOrUpdateSpreadRewardAccumulatorPosition #1 lower tick to upper tick

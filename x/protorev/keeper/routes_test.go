@@ -3,8 +3,8 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 )
 
 type TestRoute struct {
@@ -347,12 +347,29 @@ func (s *KeeperTestSuite) TestCalculateRoutePoolPoints() {
 			expectedRoutePoolPoints: 11,
 			expectedPass:            false,
 		},
+		{
+			description:             "Valid route with a cosmwasm pool",
+			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 50, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}},
+			expectedRoutePoolPoints: 8,
+			expectedPass:            true,
+		},
+		{
+			description:             "Valid route with cw pool, balancer, stable swap and cl pool",
+			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 50, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 49, TokenOutDenom: ""}},
+			expectedRoutePoolPoints: 10,
+			expectedPass:            true,
+		},
 	}
 
 	for _, tc := range cases {
 		s.Run(tc.description, func() {
 			s.SetupTest()
-			s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, types.PoolWeights{StableWeight: 3, BalancerWeight: 2, ConcentratedWeight: 1})
+			s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, types.PoolWeights{
+				StableWeight:       3,
+				BalancerWeight:     2,
+				ConcentratedWeight: 1,
+				CosmwasmWeight:     4,
+			})
 
 			routePoolPoints, err := s.App.ProtoRevKeeper.CalculateRoutePoolPoints(s.Ctx, tc.route)
 			if tc.expectedPass {
