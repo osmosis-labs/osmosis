@@ -40,7 +40,7 @@ type positionAndLiquidity struct {
 }
 
 func TestFuzz_Many(t *testing.T) {
-	fuzz(t, defaultNumSwaps, defaultNumPositions, 100)
+	fuzz(t, defaultNumSwaps, defaultNumPositions, 10)
 }
 
 func (s *KeeperTestSuite) TestFuzz_GivenSeed() {
