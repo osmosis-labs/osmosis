@@ -9,6 +9,10 @@ import (
 )
 
 type ExpectedGlobalRewardValues struct {
+	// By default, the global reward checks just ensure that rounding is done
+	// in the pools favor.
+	// The tolerance here ensures that it rounded in the pools favor by at
+	// _at most_ ExpectedAdditiveTolerance units.
 	ExpectedAdditiveTolerance sdk.Dec
 	TotalSpreadRewards        sdk.Coins
 	TotalIncentives           sdk.Coins
