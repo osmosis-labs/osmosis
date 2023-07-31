@@ -172,6 +172,11 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			tmcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 
+			err = writeConfigToFile(filepath.Join(config.RootDir, "config", "client.toml"), &OsmosisCustomClient{})
+			if err != nil {
+				return errors.Wrap(err, "Failed to write client.toml file")
+			}
+
 			createEnv, _ := cmd.Flags().GetBool(FlagSetEnv)
 			if createEnv {
 				err = CreateEnvFile(cmd)
