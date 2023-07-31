@@ -421,9 +421,11 @@ func v17GetSuperfluidAssets() string {
 	assets := ""
 	n := len(v17.AssetPairsForTestsOnly)
 	for i, assetPair := range v17.AssetPairsForTestsOnly {
-		assets += fmt.Sprintf("gamm/pool/%d", assetPair.LinkedClassicPool)
-		if i < n-1 { // Check if it's not the last iteration
-			assets += ","
+		if assetPair.Superfluid {
+			assets += fmt.Sprintf("gamm/pool/%d", assetPair.LinkedClassicPool)
+			if i < n-1 { // Check if it's not the last iteration
+				assets += ","
+			}
 		}
 	}
 	return assets
