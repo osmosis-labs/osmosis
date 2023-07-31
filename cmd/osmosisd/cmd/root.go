@@ -56,6 +56,21 @@ import (
 	osmosis "github.com/osmosis-labs/osmosis/v17/app"
 )
 
+type AssetList struct {
+	Assets []Asset `json:"assets"`
+}
+type Asset struct {
+	DenomUnits []DenomUnit `json:"denom_units"`
+	Symbol     string      `json:"symbol"`
+	Base       string      `json:"base"`
+	Traces     []Trace     `json:"traces"`
+}
+
+type DenomUnit struct {
+	Denom    string `json:"denom"`
+	Exponent uint64 `json:"exponent"`
+}
+
 type Trace struct {
 	Type         string `json:"type"`
 	Counterparty struct {
@@ -63,14 +78,9 @@ type Trace struct {
 	} `json:"counterparty"`
 }
 
-type Asset struct {
-	Symbol string  `json:"symbol"`
-	Base   string  `json:"base"`
-	Traces []Trace `json:"traces"`
-}
-
-type AssetList struct {
-	Assets []Asset `json:"assets"`
+type DenomUnitMap struct {
+	Base       string
+	DenomUnits []DenomUnit `json:"denom_units"`
 }
 
 var (
@@ -80,8 +90,7 @@ var (
 	testnetId = "osmo-test-5"
 )
 
-func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, basedenomToIBC, IBCtoBasedenom bool) (map[string]string, map[string]string) {
-	//var assetListURL string
+func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, basedenomToIBC, IBCtoBasedenom bool) (map[string]DenomUnitMap, map[string]string) {
 	var assetList AssetList
 
 	chainId := GetChainId(initClientCtx, cmd)
@@ -129,12 +138,16 @@ func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, basedenomTo
 		}
 	}
 
-	baseMap := make(map[string]string)
+	baseMap := make(map[string]DenomUnitMap)
 	baseMapRev := make(map[string]string)
 
 	if basedenomToIBC {
 		for _, asset := range assetList.Assets {
-			baseMap["base"+strings.ToLower(asset.Symbol)] = asset.Base
+			DenomUnitMap := DenomUnitMap{
+				Base:       asset.Base,
+				DenomUnits: asset.DenomUnits,
+			}
+			baseMap["base"+strings.ToLower(asset.Symbol)] = DenomUnitMap
 		}
 	}
 	if IBCtoBasedenom {
@@ -261,7 +274,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			}
 
 			// Only loads asset list into a map if human readable denoms are enabled.
-			assetMap, assetMapRev := map[string]string{}, map[string]string{}
+			assetMap, assetMapRev := map[string]DenomUnitMap{}, map[string]string{}
 			if humanReadableDenomsInput || humanReadableDenomsOutput {
 				assetMap, assetMapRev = loadAssetList(initClientCtx, cmd, humanReadableDenomsInput, humanReadableDenomsOutput)
 			}
@@ -280,25 +293,56 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			if humanReadableDenomsInput {
 				// Parse and replace denoms in args
 				for i, arg := range args {
-					for short, full := range assetMap {
-						lowerArg := strings.ToLower(arg)
-						lowerShort := strings.ToLower(short)
-						if strings.Contains(lowerArg, lowerShort) {
-							args[i] = strings.Replace(lowerArg, lowerShort, full, -1)
+					lowerCaseArg := strings.ToLower(arg)
+					lowerCaseArgArray := strings.Split(lowerCaseArg, ",")
+					re := regexp.MustCompile(`^(\d+)(.+)`)
+
+					for i, lowerCaseArg := range lowerCaseArgArray {
+						match := re.FindStringSubmatch(lowerCaseArg)
+						if len(match) == 3 {
+							// If the index has a length of 3 then it has a number and a denom (this is a coin object)
+							// Note, index 0 is the entire string, index 1 is the number, and index 2 is the denom
+							if _, ok := assetMap[match[2]]; ok {
+								// In this case, we just need to replace the denom with the base denom and retain the number
+								lowerCaseArgArray[i] = match[1] + assetMap[match[2]].Base
+							}
+						} else {
+							if _, ok := assetMap[lowerCaseArg]; ok {
+								// In this case, we just need to replace the denom with the base denom
+								lowerCaseArgArray[i] = assetMap[lowerCaseArg].Base
+							}
 						}
 					}
+					args[i] = strings.Join(lowerCaseArgArray, ",")
 				}
 
 				// Parse and replace denoms in flags
 				cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-					for short, full := range assetMap {
-						if strings.Contains(flag.Value.String(), short) {
-							lowerFlagValue := strings.ToLower(flag.Value.String())
-							lowerShort := strings.ToLower(short)
-							newFlagValue := strings.Replace(lowerFlagValue, lowerShort, full, -1)
-							if err := cmd.Flags().Set(flag.Name, newFlagValue); err != nil {
-								fmt.Println("Failed to set flag:", err)
+					lowerCaseFlagValue := strings.ToLower(flag.Value.String())
+					lowerCaseFlagValueArray := strings.Split(lowerCaseFlagValue, ",")
+
+					re := regexp.MustCompile(`^(\d+)(.+)`)
+
+					for i, lowerCaseFlagValue := range lowerCaseFlagValueArray {
+						match := re.FindStringSubmatch(lowerCaseFlagValue)
+						if len(match) == 3 {
+							// If the index has a length of 3 then it has a number and a denom (this is a coin object)
+							// Note, index 0 is the entire string, index 1 is the number, and index 2 is the denom
+							if _, ok := assetMap[match[2]]; ok {
+								// In this case, we just need to replace the denom with the base denom and retain the number
+								lowerCaseFlagValueArray[i] = strings.Replace(lowerCaseFlagValue, match[2], assetMap[match[2]].Base, -1)
 							}
+						} else {
+							if _, ok := assetMap[lowerCaseFlagValue]; ok {
+								// Otherwise, we just need to replace the denom with the base denom
+								lowerCaseFlagValueArray[i] = assetMap[lowerCaseFlagValue].Base
+							}
+						}
+					}
+					newLowerCaseFlagValue := strings.Join(lowerCaseFlagValueArray, ",")
+					if lowerCaseFlagValue != newLowerCaseFlagValue {
+						if err := cmd.Flags().Set(flag.Name, newLowerCaseFlagValue); err != nil {
+							fmt.Println("Failed to set flag:", err)
 						}
 					}
 				})
