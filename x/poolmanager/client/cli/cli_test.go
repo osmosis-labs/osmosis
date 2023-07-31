@@ -541,3 +541,23 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 		})
 	}
 }
+
+func TestEstimateTradeBasedOnPriceImpact(t *testing.T) {
+	desc, _ := cli.GetCmdEstimateTradeBasedOnPriceImpact()
+	tcs := map[string]osmocli.QueryCliTestCase[*queryproto.EstimateTradeBasedOnPriceImpactRequest]{
+		"basic test": {
+			Cmd: "100node0token stake 1 0.01 0.02",
+			ExpectedQuery: &queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin: sdk.Coin{
+					Denom:  "node0token",
+					Amount: sdk.NewInt(100),
+				},
+				ToCoinDenom:    "stake",
+				PoolId:         1,
+				MaxPriceImpact: sdk.MustNewDecFromStr("0.01"), // equivalent to 0.01
+				TwapPrice:      sdk.MustNewDecFromStr("0.02"), // equivalent to 0.02
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}

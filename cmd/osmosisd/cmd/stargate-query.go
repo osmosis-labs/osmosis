@@ -406,6 +406,8 @@ func GetStructAndFill(queryPath, module, structName string, structArguments ...s
 			v.BaseAssetDenom = structArguments[1]
 			v.QuoteAssetDenom = structArguments[2]
 			return v, nil
+		case "EstimateTradeBasedOnPriceImpactRequest":
+			return nil, fmt.Errorf("swap route parsing not supported yet")
 		}
 	case "txfees":
 		switch structName {
