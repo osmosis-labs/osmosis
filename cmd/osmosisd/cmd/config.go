@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"text/template"
 
@@ -15,6 +16,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	viper "github.com/spf13/viper"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
+)
+
+// Default constants
+const (
+	chainID        = ""
+	keyringBackend = "os"
+	output         = "text"
+	node           = "tcp://localhost:26657"
+	broadcastMode  = "sync"
 )
 
 type OsmosisCustomClient struct {
@@ -29,6 +39,31 @@ type OsmosisCustomClient struct {
 	Fees                      string `mapstructure:"fees" json:"fees"`
 	HumanReadableDenomsInput  bool   `mapstructure:"human-readable-denoms-input" json:"human-readable-denoms-input"`
 	HumanReadableDenomsOutput bool   `mapstructure:"human-readable-denoms-output" json:"human-readable-denoms-output"`
+}
+
+// defaultClientConfig returns the reference to ClientConfig with default values.
+func defaultClientConfig() *OsmosisCustomClient {
+	return &OsmosisCustomClient{ChainID: chainID, KeyringBackend: keyringBackend, Output: output, Node: node, BroadcastMode: broadcastMode}
+}
+
+func (c *OsmosisCustomClient) SetChainID(chainID string) {
+	c.ChainID = chainID
+}
+
+func (c *OsmosisCustomClient) SetKeyringBackend(keyringBackend string) {
+	c.KeyringBackend = keyringBackend
+}
+
+func (c *OsmosisCustomClient) SetOutput(output string) {
+	c.Output = output
+}
+
+func (c *OsmosisCustomClient) SetNode(node string) {
+	c.Node = node
+}
+
+func (c *OsmosisCustomClient) SetBroadcastMode(broadcastMode string) {
+	c.BroadcastMode = broadcastMode
 }
 
 // Override sdk ConfigCmd func
@@ -165,9 +200,10 @@ fees = "{{ .Fees }}"
 `
 
 // writeConfigToFile parses defaultConfigTemplate, renders config using the template and writes it to
-// configFilePath.
+// configFilePath. If nil is provided as config, the default config is used.
 func writeConfigToFile(configFilePath string, config *OsmosisCustomClient) error {
 	var buffer bytes.Buffer
+	defaultOsmosisCustomClient := defaultClientConfig()
 
 	tmpl := template.New("clientConfigFileTemplate")
 	configTemplate, err := tmpl.Parse(defaultConfigTemplate)
@@ -175,7 +211,31 @@ func writeConfigToFile(configFilePath string, config *OsmosisCustomClient) error
 		return err
 	}
 
-	if err := configTemplate.Execute(&buffer, config); err != nil {
+	// Loop through the fields of the provided config and replace values in the default client
+	if config != nil {
+		configValue := reflect.ValueOf(config).Elem()
+		defaultValue := reflect.ValueOf(defaultOsmosisCustomClient).Elem()
+
+		for i := 0; i < configValue.NumField(); i++ {
+			configField := configValue.Field(i)
+			defaultField := defaultValue.Field(i)
+
+			// Check if the field is a pointer type
+			if configField.Kind() == reflect.Ptr {
+				// If it's a pointer type, check if it's nil
+				if !configField.IsNil() {
+					defaultField.Set(configField.Elem())
+				}
+			} else {
+				// For non-pointer types, check if the value is the zero value
+				if !reflect.DeepEqual(configField.Interface(), reflect.Zero(configField.Type()).Interface()) {
+					defaultField.Set(configField)
+				}
+			}
+		}
+	}
+
+	if err := configTemplate.Execute(&buffer, defaultOsmosisCustomClient); err != nil {
 		return err
 	}
 
