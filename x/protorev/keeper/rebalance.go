@@ -224,11 +224,11 @@ func (k Keeper) CalculateUpperBoundForSearch(
 			// If the pool is a concentrated liquidity pool, then check the maximum amount in that can be used
 			// and determine what this amount is as an input at the previous pool (working all the way up to the
 			// beginning of the route).
-			_, maxTokenOut, err := k.concentratedLiquidityKeeper.ComputeMaxInAmtGivenMaxTicksCrossed(
+			maxTokenIn, _, err := k.concentratedLiquidityKeeper.ComputeMaxInAmtGivenMaxTicksCrossed(
 				ctx,
 				pool.GetId(),
-				hop.TokenOutDenom,
-				types.MaxTicksMoved,
+				tokenOut,
+				types.MaxTicksCrossed,
 			)
 			if err != nil {
 				return sdk.ZeroInt(), err
@@ -236,7 +236,7 @@ func (k Keeper) CalculateUpperBoundForSearch(
 
 			// if there have been no other CL pools in the route, then we can set the intermediate coin to the max input amount
 			if intermidiateCoin.IsNil() {
-				intermidiateCoin = maxTokenOut
+				intermidiateCoin = maxTokenIn
 				continue
 			}
 
@@ -247,8 +247,8 @@ func (k Keeper) CalculateUpperBoundForSearch(
 				return sdk.ZeroInt(), err
 			}
 
-			if intermidiateCoin.Amount.GT(maxTokenOut.Amount) {
-				intermidiateCoin = maxTokenOut
+			if intermidiateCoin.Amount.GT(maxTokenIn.Amount) {
+				intermidiateCoin = maxTokenIn
 			}
 		case !intermidiateCoin.IsNil():
 			// If we have already seen a CL pool in the route, then simply propagate the intermediate coin up
