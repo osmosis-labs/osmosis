@@ -340,12 +340,12 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 			params: param{
 				trades: []types.Trade{
 					{
-						Pool:     53,
+						Pool:     54,
 						TokenOut: "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 						TokenIn:  "uosmo",
 					},
 				},
-				expectedNumOfTrades: sdk.NewInt(5),
+				expectedNumOfTrades: sdk.NewInt(6),
 				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
@@ -357,7 +357,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 					},
 					{
 						Denom:  types.OsmosisDenomination,
-						Amount: sdk.NewInt(56_609_900),
+						Amount: sdk.NewInt(56_653_504),
 					},
 				},
 				expectedPoolPoints: 37,

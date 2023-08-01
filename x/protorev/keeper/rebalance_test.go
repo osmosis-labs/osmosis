@@ -166,7 +166,7 @@ var extendedRangeRoute = poolmanagertypes.SwapAmountInRoutes{
 }
 
 // Tests the binary search range for CL pools
-var clPoolRoute = poolmanagertypes.SwapAmountInRoutes{
+var clPoolRouteExtended = poolmanagertypes.SwapAmountInRoutes{
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        49,
 		TokenOutDenom: "uosmo",
@@ -177,8 +177,20 @@ var clPoolRoute = poolmanagertypes.SwapAmountInRoutes{
 	},
 }
 
+// Tests multiple CL pools in the same route
+var clPoolRouteMulti = poolmanagertypes.SwapAmountInRoutes{
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        52,
+		TokenOutDenom: "uosmo",
+	},
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        53,
+		TokenOutDenom: "epochTwo",
+	},
+}
+
 // Tests reducing the binary search range
-var reducedRangeRoute = poolmanagertypes.SwapAmountInRoutes{
+var clPoolRoute = poolmanagertypes.SwapAmountInRoutes{
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        49,
 		TokenOutDenom: "uosmo",
@@ -315,9 +327,9 @@ func (s *KeeperTestSuite) TestFindMaxProfitRoute() {
 			expectPass: false,
 		},
 		{
-			name: "CL Route",
+			name: "CL Route (extended range)",
 			param: param{
-				route:           clPoolRoute,
+				route:           clPoolRouteExtended,
 				expectedAmtIn:   sdk.NewInt(131_072_000_000),
 				expectedProfit:  sdk.NewInt(295_125_808),
 				routePoolPoints: 7,
@@ -325,12 +337,22 @@ func (s *KeeperTestSuite) TestFindMaxProfitRoute() {
 			expectPass: true,
 		},
 		{
-			name: "Reduced Range Route", // This will search up to 60_000_000uosmo
+			name: "CL Route", // This will search up to 131072 * stepsize
 			param: param{
-				route:           reducedRangeRoute,
-				expectedAmtIn:   sdk.NewInt(60_000_000),
-				expectedProfit:  sdk.NewInt(31_474),
+				route:           clPoolRoute,
+				expectedAmtIn:   sdk.NewInt(13_159_000_000),
+				expectedProfit:  sdk.NewInt(18_055_586),
 				routePoolPoints: 7,
+			},
+			expectPass: true,
+		},
+		{
+			name: "CL Route Multi",
+			param: param{
+				route:           clPoolRouteMulti, // this will search up to 999 * stepsize
+				expectedAmtIn:   sdk.NewInt(414_000_000),
+				expectedProfit:  sdk.NewInt(171_555_698),
+				routePoolPoints: 12,
 			},
 			expectPass: true,
 		},

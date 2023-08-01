@@ -916,21 +916,18 @@ func (s *KeeperTestSuite) setUpPools() {
 	// Create a concentrated liquidity pool for range testing
 	// Pool 52
 	// Create the CL pool
-	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[2], "epochTwo", "uosmo", 100, sdk.NewDecWithPrec(2, 3))
-	fundCoins := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000000000000000)), sdk.NewCoin("epochTwo", sdk.NewInt(1000000000000000000)))
-	s.FundAcc(s.TestAccs[2], fundCoins)
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "epochTwo", "uosmo", apptesting.DefaultTickSpacing, sdk.ZeroDec())
+	fundCoins := sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(10_000_000_000_000)), sdk.NewCoin("uosmo", sdk.NewInt(10_000_000_000_000)))
+	s.FundAcc(s.TestAccs[0], fundCoins)
+	s.CreateFullRangePosition(clPool, fundCoins)
 
-	// Create 100 ticks in the CL pool, 50 on each side
-	tokensProvided := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000)), sdk.NewCoin("epochTwo", sdk.NewInt(10000000)))
-	amount0Min := sdk.NewInt(0)
-	amount1Min := sdk.NewInt(0)
-	lowerTick := int64(0)
-	upperTick := int64(100)
-
-	for i := int64(0); i < 50; i++ {
-		s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[2], tokensProvided, amount0Min, amount1Min, lowerTick-(100*i), upperTick-(100*i))
-		s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[2], tokensProvided, amount0Min, amount1Min, lowerTick+(100*i), upperTick+(100*i))
-	}
+	// Create a concentrated liquidity pool for range testing
+	// Pool 52
+	// Create the CL pool
+	clPool = s.PrepareCustomConcentratedPool(s.TestAccs[0], "epochTwo", "uosmo", apptesting.DefaultTickSpacing, sdk.ZeroDec())
+	fundCoins = sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(2_000_000_000)), sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000)))
+	s.FundAcc(s.TestAccs[0], fundCoins)
+	s.CreateFullRangePosition(clPool, fundCoins)
 
 	// Set all of the pool info into the stores
 	err := s.App.ProtoRevKeeper.UpdatePools(s.Ctx)
