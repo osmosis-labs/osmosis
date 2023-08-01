@@ -327,7 +327,7 @@ func (s *KeeperTestSuite) TestFindMaxProfitRoute() {
 			expectPass: false,
 		},
 		{
-			name: "CL Route (extended range)",
+			name: "CL Route (extended range)", // This will search up to 131072 * stepsize
 			param: param{
 				route:           clPoolRouteExtended,
 				expectedAmtIn:   sdk.NewInt(131_072_000_000),
@@ -347,7 +347,7 @@ func (s *KeeperTestSuite) TestFindMaxProfitRoute() {
 			expectPass: true,
 		},
 		{
-			name: "CL Route Multi",
+			name: "CL Route Reduced Range",
 			param: param{
 				route:           clPoolRouteMulti, // this will search up to 999 * stepsize
 				expectedAmtIn:   sdk.NewInt(414_000_000),
