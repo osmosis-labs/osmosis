@@ -68,6 +68,8 @@ func (q Querier) EstimateSwapExactAmountInWithPrimitiveTypes(ctx sdk.Context, re
 		var route types.SwapAmountInRoute
 		route.PoolId = poolId
 		route.TokenOutDenom = req.RoutesTokenOutDenom[idx]
+
+		routes = append(routes, route)
 	}
 
 	tokenOutAmount, err := q.K.MultihopEstimateOutGivenExactAmountIn(ctx, routes, tokenIn)

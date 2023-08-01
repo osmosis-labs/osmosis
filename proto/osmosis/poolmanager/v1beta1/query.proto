@@ -33,6 +33,10 @@ service Query {
   // routes_pool_id field corresponds to the respective routes_token_out_denom
   // value, thus they are required to have the same length and are grouped
   // together as pairs.
+  // example usage:
+  // http://0.0.0.0:1317/osmosis/poolmanager/v1beta1/1/estimate/
+  // swap_exact_amount_in_with_primitive_types?token_in=100000stake&routes_token_out_denom=uatom
+  // &routes_token_out_denom=uion&routes_pool_id=1&routes_pool_id=2
   rpc EstimateSwapExactAmountInWithPrimitiveTypes(
       EstimateSwapExactAmountInWithPrimitiveTypesRequest)
       returns (EstimateSwapExactAmountInResponse) {

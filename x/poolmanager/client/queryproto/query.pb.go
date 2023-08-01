@@ -1268,6 +1268,10 @@ type QueryClient interface {
 	// routes_pool_id field corresponds to the respective routes_token_out_denom
 	// value, thus they are required to have the same length and are grouped
 	// together as pairs.
+	// example usage:
+	// http://0.0.0.0:1317/osmosis/poolmanager/v1beta1/1/estimate/
+	// swap_exact_amount_in_with_primitive_types?token_in=100000stake&routes_token_out_denom=uatom
+	// &routes_token_out_denom=uion&routes_pool_id=1&routes_pool_id=2
 	EstimateSwapExactAmountInWithPrimitiveTypes(ctx context.Context, in *EstimateSwapExactAmountInWithPrimitiveTypesRequest, opts ...grpc.CallOption) (*EstimateSwapExactAmountInResponse, error)
 	EstimateSinglePoolSwapExactAmountIn(ctx context.Context, in *EstimateSinglePoolSwapExactAmountInRequest, opts ...grpc.CallOption) (*EstimateSwapExactAmountInResponse, error)
 	// Estimates swap amount in given out.
@@ -1426,6 +1430,10 @@ type QueryServer interface {
 	// routes_pool_id field corresponds to the respective routes_token_out_denom
 	// value, thus they are required to have the same length and are grouped
 	// together as pairs.
+	// example usage:
+	// http://0.0.0.0:1317/osmosis/poolmanager/v1beta1/1/estimate/
+	// swap_exact_amount_in_with_primitive_types?token_in=100000stake&routes_token_out_denom=uatom
+	// &routes_token_out_denom=uion&routes_pool_id=1&routes_pool_id=2
 	EstimateSwapExactAmountInWithPrimitiveTypes(context.Context, *EstimateSwapExactAmountInWithPrimitiveTypesRequest) (*EstimateSwapExactAmountInResponse, error)
 	EstimateSinglePoolSwapExactAmountIn(context.Context, *EstimateSinglePoolSwapExactAmountInRequest) (*EstimateSwapExactAmountInResponse, error)
 	// Estimates swap amount in given out.
