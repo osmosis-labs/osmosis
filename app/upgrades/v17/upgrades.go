@@ -166,13 +166,13 @@ func FlipTwapSpotPriceRecords(ctx sdk.Context, poolIds []uint64, keepers *keeper
 			twapRecord.LastErrorTime = time.Time{}
 			oldAsset0Denom := twapRecord.Asset0Denom
 			oldAsset1Denom := twapRecord.Asset1Denom
-			// oldSpotPrice0 := twapRecord.P0LastSpotPrice
-			// oldSpotPrice1 := twapRecord.P1LastSpotPrice
+			oldSpotPrice0 := twapRecord.P0LastSpotPrice
+			oldSpotPrice1 := twapRecord.P1LastSpotPrice
 
 			twapRecord.Asset0Denom = oldAsset1Denom
 			twapRecord.Asset1Denom = oldAsset0Denom
-			// twapRecord.P0LastSpotPrice = oldSpotPrice1
-			// twapRecord.P1LastSpotPrice = oldSpotPrice0
+			twapRecord.P0LastSpotPrice = oldSpotPrice1
+			twapRecord.P1LastSpotPrice = oldSpotPrice0
 			keepers.TwapKeeper.StoreNewRecord(ctx, oldAsset0Denom, oldAsset1Denom, twapRecord)
 		}
 	}
