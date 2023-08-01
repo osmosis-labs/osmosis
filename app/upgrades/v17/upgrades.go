@@ -25,12 +25,10 @@ func CreateUpgradeHandler(
 		}
 
 		// Reset the pool weights upon upgrade. This will add support for CW pools on ProtoRev.
-		keepers.ProtoRevKeeper.SetPoolWeights(ctx, types.PoolWeights{
-			BalancerWeight:     1,
-			StableWeight:       4,
-			ConcentratedWeight: 300,
-			CosmwasmWeight:     300,
-		})
+		info := types.DefaultPoolTypeInfo
+		info.Concentrated.Weight = 200
+
+		keepers.ProtoRevKeeper.SetInfoByPoolType(ctx, info)
 
 		return migrations, nil
 	}

@@ -71,11 +71,11 @@ service Query {
     option (google.api.http).get = "/osmosis/protorev/developer_account";
   }
 
-  // GetProtoRevPoolTypeInfo queries the info of each pool type currently
-  // being used by the module
-  rpc GetProtoRevPoolTypeInfo(QueryGetProtoRevPoolTypeInfoRequest)
-      returns (QueryGetProtoRevPoolTypeInfoResponse) {
-    option (google.api.http).get = "/osmosis/protorev/pool_type_info";
+  // GetProtoRevInfoByPoolType queries pool type information that is currently
+  // being utilized by the module
+  rpc GetProtoRevInfoByPoolType(QueryGetProtoRevInfoByPoolTypeRequest)
+      returns (QueryGetProtoRevInfoByPoolTypeResponse) {
+    option (google.api.http).get = "/osmosis/protorev/info_by_pool_type";
   }
 
   // GetProtoRevMaxPoolPointsPerTx queries the maximum number of pool points
@@ -242,17 +242,17 @@ message QueryGetProtoRevDeveloperAccountResponse {
       [ (gogoproto.moretags) = "yaml:\"developer_account\"" ];
 }
 
-// QueryGetProtoRevPoolTypeInfoRequest is request type for the
-// Query/GetProtoRevPoolWeights RPC method.
-message QueryGetProtoRevPoolTypeInfoRequest {}
+// QueryGetProtoRevInfoByPoolTypeRequest is request type for the
+// Query/GetProtoRevInfoByPoolType RPC method.
+message QueryGetProtoRevInfoByPoolTypeRequest {}
 
-// QueryGetProtoRevPoolTypeInfoResponse is response type for the
-// Query/GetProtoRevPoolWeights RPC method.
-message QueryGetProtoRevPoolTypeInfoResponse {
-  // PoolTypeInfo contains all information pertaining to how different
+// QueryGetProtoRevInfoByPoolTypeResponse is response type for the
+// Query/GetProtoRevInfoByPoolType RPC method.
+message QueryGetProtoRevInfoByPoolTypeResponse {
+  // InfoByPoolType contains all information pertaining to how different
   // pool types are handled by the module.
-  PoolTypeInfo pool_type_info = 1 [
-    (gogoproto.moretags) = "yaml:\"pool_type_info\"",
+  InfoByPoolType info_by_pool_type = 1 [
+    (gogoproto.moretags) = "yaml:\"info_by_pool_type\"",
     (gogoproto.nullable) = false
   ];
 }

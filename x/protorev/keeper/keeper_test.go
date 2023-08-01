@@ -78,12 +78,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		panic(err)
 	}
 
-	poolWeights := types.PoolWeights{
-		StableWeight:       5, // it takes around 5 ms to simulate and execute a stable swap
-		BalancerWeight:     2, // it takes around 2 ms to simulate and execute a balancer swap
-		ConcentratedWeight: 2, // it takes around 2 ms to simulate and execute a concentrated swap
-	}
-	s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, poolWeights)
+	s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, types.DefaultPoolTypeInfo)
 
 	// Configure the initial base denoms used for cyclic route building
 	baseDenomPriorities := []types.BaseDenom{

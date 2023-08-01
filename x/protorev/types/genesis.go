@@ -16,18 +16,18 @@ var (
 			StepSize: sdk.NewInt(1_000_000),
 		},
 	}
-	DefaultPoolTypeInfo = PoolTypeInfo{
-		BalancerInfo: &BalancerPoolInfo{
+	DefaultPoolTypeInfo = InfoByPoolType{
+		Balancer: &BalancerPoolInfo{
 			Weight: 2, // it takes around 2 ms to simulate and execute a balancer swap
 		},
-		StableInfo: &StablePoolInfo{
+		Stable: &StablePoolInfo{
 			Weight: 5, // it takes around 5 ms to simulate and execute a stable swap
 		},
-		ConcentratedInfo: &ConcentratedPoolInfo{
-			Weight:   10, // it takes around 10 ms to simulate and execute a concentrated swap
-			MaxTicks: MaxTicksMoved,
+		Concentrated: &ConcentratedPoolInfo{
+			Weight:          10, // it takes around 10 ms to simulate and execute a concentrated swap
+			MaxTicksCrossed: MaxTicksMoved,
 		},
-		CosmwasmInfo: &CosmwasmPoolInfo{
+		Cosmwasm: &CosmwasmPoolInfo{
 			WeightMap: make(map[string]uint64),
 		},
 	}
@@ -47,7 +47,7 @@ func DefaultGenesis() *GenesisState {
 		Params:                 DefaultParams(),
 		TokenPairArbRoutes:     DefaultTokenPairArbRoutes,
 		BaseDenoms:             DefaultBaseDenoms,
-		PoolTypeInfo:           DefaultPoolTypeInfo,
+		InfoByPoolType:         DefaultPoolTypeInfo,
 		DaysSinceModuleGenesis: DefaultDaysSinceModuleGenesis,
 		DeveloperFees:          DefaultDeveloperFees,
 		DeveloperAddress:       DefaultDeveloperAddress,
@@ -72,7 +72,7 @@ func (gs GenesisState) Validate() error {
 	}
 
 	// Validate the pool type information
-	if err := gs.PoolTypeInfo.Validate(); err != nil {
+	if err := gs.InfoByPoolType.Validate(); err != nil {
 		return err
 	}
 

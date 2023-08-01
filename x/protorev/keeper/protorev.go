@@ -448,18 +448,18 @@ func (k Keeper) SetMaxPointsPerBlock(ctx sdk.Context, maxPoints uint64) error {
 	return nil
 }
 
-// GetPoolTypeInfo retrieves the metadata about the different pool types. This is used to determine the weights of
+// GetInfoByPoolType retrieves the metadata about the different pool types. This is used to determine the execution costs of
 // different pool types when calculating the optimal route. Additionally, it allows for more flexibility in the future
 // if we want to add more pool types and custom handling around each pool type.
-func (k Keeper) GetPoolTypeInfo(ctx sdk.Context) types.PoolTypeInfo {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPoolWeights)
-	poolWeights := &types.PoolTypeInfo{}
-	osmoutils.MustGet(store, types.KeyPrefixPoolWeights, poolWeights)
+func (k Keeper) GetInfoByPoolType(ctx sdk.Context) types.InfoByPoolType {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPoolTypeInfo)
+	poolWeights := &types.InfoByPoolType{}
+	osmoutils.MustGet(store, types.KeyPrefixPoolTypeInfo, poolWeights)
 	return *poolWeights
 }
 
-// SetPoolTypeInfo sets the weights of different pool types.
-func (k Keeper) SetPoolTypeInfo(ctx sdk.Context, poolWeights types.PoolTypeInfo) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPoolWeights)
-	osmoutils.MustSet(store, types.KeyPrefixPoolWeights, &poolWeights)
+// SetInfoByPoolType sets the pool type information.
+func (k Keeper) SetInfoByPoolType(ctx sdk.Context, poolWeights types.InfoByPoolType) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPoolTypeInfo)
+	osmoutils.MustSet(store, types.KeyPrefixPoolTypeInfo, &poolWeights)
 }

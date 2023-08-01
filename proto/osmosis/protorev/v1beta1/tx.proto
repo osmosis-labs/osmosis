@@ -39,10 +39,11 @@ service Msg {
         "/osmosis/protorev/set_max_pool_points_per_block";
   };
 
-  // SetPoolTypeInfo sets the weights of each pool type and more in the store.
-  // Can only be called by the admin account.
-  rpc SetPoolTypeInfo(MsgSetPoolTypeInfo) returns (MsgSetPoolTypeInfoResponse) {
-    option (google.api.http).post = "/osmosis/protorev/set_pool_type_info";
+  // SetInfoByPoolType sets the pool type information needed to make smart
+  // assumptions about swapping on different pool types
+  rpc SetInfoByPoolType(MsgSetInfoByPoolType)
+      returns (MsgSetInfoByPoolTypeResponse) {
+    option (google.api.http).post = "/osmosis/protorev/set_info_by_pool_type";
   };
 
   // SetBaseDenoms sets the base denoms that will be used to create cyclic
@@ -90,24 +91,24 @@ message MsgSetDeveloperAccount {
 // type.
 message MsgSetDeveloperAccountResponse {}
 
-// MsgSetPoolTypeInfo defines the Msg/SetPoolTypeInfo request type.
-message MsgSetPoolTypeInfo {
-  option (amino.name) = "osmosis/MsgSetPoolWeights";
+// MsgSetInfoByPoolType defines the Msg/SetInfoByPoolType request type.
+message MsgSetInfoByPoolType {
+  option (amino.name) = "osmosis/MsgSetInfoByPoolType";
 
   // admin is the account that is authorized to set the pool weights.
   string admin = 1 [
     (gogoproto.moretags) = "yaml:\"admin\"",
     (cosmos_proto.scalar) = "cosmos.AddressString"
   ];
-  // pool_type_info contains information about the pool types and their weights.
-  PoolTypeInfo pool_type_info = 2 [
-    (gogoproto.moretags) = "yaml:\"pool_type_info\"",
+  // info_by_pool_type contains information about the pool types.
+  InfoByPoolType info_by_pool_type = 2 [
+    (gogoproto.moretags) = "yaml:\"info_by_pool_type\"",
     (gogoproto.nullable) = false
   ];
 }
 
-// MsgSetPoolTypeInfoResponse defines the Msg/SetPoolTypeInfo response type.
-message MsgSetPoolTypeInfoResponse {}
+// MsgSetInfoByPoolTypeResponse defines the Msg/SetInfoByPoolType response type.
+message MsgSetInfoByPoolTypeResponse {}
 
 // MsgSetMaxPoolPointsPerTx defines the Msg/SetMaxPoolPointsPerTx request type.
 message MsgSetMaxPoolPointsPerTx {

@@ -42,26 +42,26 @@ func ValidateBaseDenoms(denoms []BaseDenom) error {
 	return nil
 }
 
-// ---------------------- PoolTypeInfo Validation ---------------------- //
+// ---------------------- InfoByPoolType Validation ---------------------- //
 // Validates the information about each pool type that is used throughout the module.
-func (info *PoolTypeInfo) Validate() error {
+func (info *InfoByPoolType) Validate() error {
 	if info == nil {
 		return fmt.Errorf("pool type info cannot be nil")
 	}
 
-	if err := info.BalancerInfo.Validate(); err != nil {
+	if err := info.Balancer.Validate(); err != nil {
 		return err
 	}
 
-	if err := info.StableInfo.Validate(); err != nil {
+	if err := info.Stable.Validate(); err != nil {
 		return err
 	}
 
-	if err := info.ConcentratedInfo.Validate(); err != nil {
+	if err := info.Concentrated.Validate(); err != nil {
 		return err
 	}
 
-	if err := info.CosmwasmInfo.Validate(); err != nil {
+	if err := info.Cosmwasm.Validate(); err != nil {
 		return err
 	}
 
@@ -104,7 +104,7 @@ func (c *ConcentratedPoolInfo) Validate() error {
 		return fmt.Errorf("concentrated pool weight cannot be 0")
 	}
 
-	if c.MaxTicks == 0 || c.MaxTicks > MaxTicksMoved {
+	if c.MaxTicksCrossed == 0 || c.MaxTicksCrossed > MaxTicksMoved {
 		return fmt.Errorf("max ticks moved cannot be 0 or greater than %d", MaxTicksMoved)
 	}
 

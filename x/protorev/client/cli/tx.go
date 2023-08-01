@@ -29,7 +29,7 @@ func NewCmdTx() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, CmdSetMaxPoolPointsPerBlock)
 	txCmd.AddCommand(
 		CmdSetDeveloperHotRoutes().BuildCommandCustomFn(),
-		CmdSetPoolWeights().BuildCommandCustomFn(),
+		CmdSetInfoByPoolType().BuildCommandCustomFn(),
 		CmdSetBaseDenoms().BuildCommandCustomFn(),
 		CmdSetProtoRevAdminAccountProposal(),
 		CmdSetProtoRevEnabledProposal(),
@@ -141,8 +141,8 @@ func CmdSetMaxPoolPointsPerBlock() (*osmocli.TxCliDesc, *types.MsgSetMaxPoolPoin
 	}, &types.MsgSetMaxPoolPointsPerBlock{}
 }
 
-// CmdSetPoolWeights implements the command to set the pool weights used to estimate execution costs
-func CmdSetPoolWeights() *osmocli.TxCliDesc {
+// CmdSetInfoByPoolType implements the command to set the pool information used throughout the module
+func CmdSetInfoByPoolType() *osmocli.TxCliDesc {
 	desc := osmocli.TxCliDesc{
 		Use:   "set-pool-weights [path/to/routes.json]",
 		Short: "set the protorev pool weights",
@@ -156,7 +156,7 @@ func CmdSetPoolWeights() *osmocli.TxCliDesc {
 		`,
 		Example:          fmt.Sprintf(`$ %s tx protorev set-pool-weights weights.json --from mykey`, version.AppName),
 		NumArgs:          1,
-		ParseAndBuildMsg: BuildSetPoolWeightsMsg,
+		ParseAndBuildMsg: BuildSetPoolTypeInfoMsg,
 	}
 
 	return &desc

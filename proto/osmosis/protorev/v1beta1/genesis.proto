@@ -25,11 +25,11 @@ message GenesisState {
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"base_denoms\""
   ];
-  // The pool type info that is being used to calculate the weight (compute
-  // cost) of each route and more.
-  PoolTypeInfo pool_type_info = 4 [
+  // Information that is used to estimate execution time / gas
+  // consumption of a swap on a given pool type.
+  InfoByPoolType info_by_pool_type = 4 [
     (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"pool_weights\""
+    (gogoproto.moretags) = "yaml:\"info_by_pool_type\""
   ];
   // The number of days since module genesis.
   uint64 days_since_module_genesis = 5

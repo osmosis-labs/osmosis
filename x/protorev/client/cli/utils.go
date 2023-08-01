@@ -122,10 +122,10 @@ func BuildSetHotRoutesMsg(clientCtx client.Context, args []string, fs *flag.Flag
 	}, nil
 }
 
-// ------------ types/functions to handle a SetPoolWeights CLI TX ------------ //
-type createPoolWeightsInput types.PoolWeights
+// ------------ types/functions to handle a SetInfoByPoolType CLI TX ------------ //
+type createInfoByPoolTypeInput types.InfoByPoolType
 
-type XCreatePoolWeightsInputs createPoolWeightsInput
+type XCreatePoolWeightsInputs createInfoByPoolTypeInput
 
 type XCreatePoolWeightsExceptions struct {
 	XCreatePoolWeightsInputs
@@ -133,7 +133,7 @@ type XCreatePoolWeightsExceptions struct {
 }
 
 // UnmarshalJSON should error if there are fields unexpected.
-func (release *createPoolWeightsInput) UnmarshalJSON(data []byte) error {
+func (release *createInfoByPoolTypeInput) UnmarshalJSON(data []byte) error {
 	var createPoolWeightsE XCreatePoolWeightsExceptions
 	dec := json.NewDecoder(bytes.NewReader(data))
 	dec.DisallowUnknownFields() // Force
@@ -142,18 +142,18 @@ func (release *createPoolWeightsInput) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	*release = createPoolWeightsInput(createPoolWeightsE.XCreatePoolWeightsInputs)
+	*release = createInfoByPoolTypeInput(createPoolWeightsE.XCreatePoolWeightsInputs)
 	return nil
 }
 
-// BuildSetPoolWeightsMsg builds a MsgSetPoolWeights from the provided json file
-func BuildSetPoolWeightsMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
+// BuildSetPoolTypeInfoMsg builds a MsgSetInfoByPoolType from the provided json file
+func BuildSetPoolTypeInfoMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
 	if len(args) == 0 {
 		return nil, fmt.Errorf("must provide a json file")
 	}
 
 	// Read the json file
-	input := &createPoolWeightsInput{}
+	input := &createInfoByPoolTypeInput{}
 	path := args[0]
 	contents, err := os.ReadFile(path)
 	if err != nil {
@@ -167,9 +167,9 @@ func BuildSetPoolWeightsMsg(clientCtx client.Context, args []string, fs *flag.Fl
 
 	// Build the msg
 	admin := clientCtx.GetFromAddress().String()
-	return &types.MsgSetPoolWeights{
-		Admin:       admin,
-		PoolWeights: types.PoolWeights(*input),
+	return &types.MsgSetInfoByPoolType{
+		Admin:          admin,
+		InfoByPoolType: types.InfoByPoolType(*input),
 	}, nil
 }
 

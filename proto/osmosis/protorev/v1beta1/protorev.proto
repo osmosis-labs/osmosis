@@ -73,24 +73,20 @@ message RouteStatistics {
   repeated uint64 route = 3 [ (gogoproto.moretags) = "yaml:\"route\"" ];
 }
 
-// PoolTypeInfo contains the weights of all of the different pool types and
-// other info. This distinction is made and necessary because the execution time
-// ranges significantly between the different pool types. Each weight roughly
-// corresponds to the amount of time (in ms) it takes to execute a swap on that
-// pool type.
-message PoolTypeInfo {
-  // The stableswap pool info
-  StablePoolInfo stable_info = 1
-      [ (gogoproto.moretags) = "yaml:\"stable_pool_info\"" ];
+// InfoByPoolType contains information pertaining to how expensive (in terms of
+// gas and time) it is to execute a swap on a given pool type. This distinction
+// is made and necessary because the execution time ranges significantly between
+// the different pool types.
+message InfoByPoolType {
+  // The stable pool info
+  StablePoolInfo stable = 1 [ (gogoproto.moretags) = "yaml:\"stable\"" ];
   // The balancer pool info
-  BalancerPoolInfo balancer_info = 2
-      [ (gogoproto.moretags) = "yaml:\"balancer_pool_info\"" ];
+  BalancerPoolInfo balancer = 2 [ (gogoproto.moretags) = "yaml:\"balancer\"" ];
   // The concentrated pool info
-  ConcentratedPoolInfo concentrated_info = 3
-      [ (gogoproto.moretags) = "yaml:\"concentrated_pool_info\"" ];
+  ConcentratedPoolInfo concentrated = 3
+      [ (gogoproto.moretags) = "yaml:\"concentrated\"" ];
   // The cosmwasm pool info
-  CosmwasmPoolInfo cosmwasm_info = 4
-      [ (gogoproto.moretags) = "yaml:\"cosmwasm_pool_info\"" ];
+  CosmwasmPoolInfo cosmwasm = 4 [ (gogoproto.moretags) = "yaml:\"cosmwasm\"" ];
 }
 
 // StablePoolInfo contains meta data pertaining to a stableswap pool type.
@@ -111,7 +107,8 @@ message ConcentratedPoolInfo {
   // The weight of a concentrated pool
   uint64 weight = 1 [ (gogoproto.moretags) = "yaml:\"weight\"" ];
   // The maximum number of ticks we can move when rebalancing
-  uint64 max_ticks = 2 [ (gogoproto.moretags) = "yaml:\"max_ticks\"" ];
+  uint64 max_ticks_crossed = 2
+      [ (gogoproto.moretags) = "yaml:\"max_ticks_crossed\"" ];
 }
 
 // CosmwasmPoolInfo contains meta data pertaining to a cosmwasm pool type.

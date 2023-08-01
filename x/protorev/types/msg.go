@@ -10,7 +10,7 @@ var (
 	_ sdk.Msg = &MsgSetDeveloperAccount{}
 	_ sdk.Msg = &MsgSetMaxPoolPointsPerTx{}
 	_ sdk.Msg = &MsgSetMaxPoolPointsPerBlock{}
-	_ sdk.Msg = &MsgSetPoolTypeInfo{}
+	_ sdk.Msg = &MsgSetInfoByPoolType{}
 	_ sdk.Msg = &MsgSetBaseDenoms{}
 )
 
@@ -19,7 +19,7 @@ const (
 	TypeMsgSetDeveloperAccount      = "set_developer_account"
 	TypeMsgSetMaxPoolPointsPerTx    = "set_max_pool_points_per_tx"
 	TypeMsgSetMaxPoolPointsPerBlock = "set_max_pool_points_per_block"
-	TypeMsgSetPoolTypeInfo          = "set_pool_type_info"
+	TypeMsgSetPoolTypeInfo          = "set_info_by_pool_type"
 	TypeMsgSetBaseDenoms            = "set_base_denoms"
 )
 
@@ -205,33 +205,33 @@ func (msg MsgSetMaxPoolPointsPerBlock) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// ---------------------- Interface for MsgSetPoolWeights ---------------------- //
-// NewMsgSetPoolTypeInfo creates a new MsgSetPoolTypeInfo instance
-func NewMsgSetPoolTypeInfo(admin string, poolTypeInfo PoolTypeInfo) *MsgSetPoolTypeInfo {
-	return &MsgSetPoolTypeInfo{
-		Admin:        admin,
-		PoolTypeInfo: poolTypeInfo,
+// ---------------------- Interface for MsgSetInfoByPoolType ---------------------- //
+// NewMsgSetPoolTypeInfo creates a new MsgSetInfoByPoolType instance
+func NewMsgSetPoolTypeInfo(admin string, infoByPoolType InfoByPoolType) *MsgSetInfoByPoolType {
+	return &MsgSetInfoByPoolType{
+		Admin:          admin,
+		InfoByPoolType: infoByPoolType,
 	}
 }
 
 // Route returns the name of the module
-func (msg MsgSetPoolTypeInfo) Route() string {
+func (msg MsgSetInfoByPoolType) Route() string {
 	return RouterKey
 }
 
 // Type returns the type of the message
-func (msg MsgSetPoolTypeInfo) Type() string {
+func (msg MsgSetInfoByPoolType) Type() string {
 	return TypeMsgSetPoolTypeInfo
 }
 
-// ValidateBasic validates the MsgSetPoolWeights
-func (msg MsgSetPoolTypeInfo) ValidateBasic() error {
+// ValidateBasic validates the MsgSetInfoByPoolType
+func (msg MsgSetInfoByPoolType) ValidateBasic() error {
 	// Account must be a valid bech32 address
 	if _, err := sdk.AccAddressFromBech32(msg.Admin); err != nil {
 		return errorsmod.Wrap(err, "invalid admin address (must be bech32)")
 	}
 
-	if err := msg.PoolTypeInfo.Validate(); err != nil {
+	if err := msg.InfoByPoolType.Validate(); err != nil {
 		return err
 	}
 
@@ -239,12 +239,12 @@ func (msg MsgSetPoolTypeInfo) ValidateBasic() error {
 }
 
 // GetSignBytes encodes the message for signing
-func (msg MsgSetPoolTypeInfo) GetSignBytes() []byte {
+func (msg MsgSetInfoByPoolType) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
-func (msg MsgSetPoolTypeInfo) GetSigners() []sdk.AccAddress {
+func (msg MsgSetInfoByPoolType) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Admin)
 	return []sdk.AccAddress{addr}
 }

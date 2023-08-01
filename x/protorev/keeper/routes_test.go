@@ -199,11 +199,7 @@ func (s *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 
 	for _, tc := range cases {
 		s.Run(tc.description, func() {
-			s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, types.PoolWeights{
-				StableWeight:       5,
-				BalancerWeight:     2,
-				ConcentratedWeight: 2,
-			})
+			s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, types.DefaultPoolTypeInfo)
 
 			baseDenom := types.BaseDenom{
 				Denom:    tc.swapDenom,
@@ -274,11 +270,7 @@ func (s *KeeperTestSuite) TestBuildHotRoutes() {
 
 	for _, tc := range cases {
 		s.Run(tc.description, func() {
-			s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, types.PoolWeights{
-				StableWeight:       5,
-				BalancerWeight:     2,
-				ConcentratedWeight: 2,
-			})
+			s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, types.DefaultPoolTypeInfo)
 
 			routes, err := s.App.ProtoRevKeeper.BuildHotRoutes(s.Ctx, tc.swapIn, tc.swapOut, tc.poolId)
 
@@ -364,12 +356,7 @@ func (s *KeeperTestSuite) TestCalculateRoutePoolPoints() {
 	for _, tc := range cases {
 		s.Run(tc.description, func() {
 			s.SetupTest()
-			s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, types.PoolWeights{
-				StableWeight:       3,
-				BalancerWeight:     2,
-				ConcentratedWeight: 1,
-				CosmwasmWeight:     4,
-			})
+			s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, types.DefaultPoolTypeInfo)
 
 			routePoolPoints, err := s.App.ProtoRevKeeper.CalculateRoutePoolPoints(s.Ctx, tc.route)
 			if tc.expectedPass {
