@@ -2,9 +2,16 @@ package cmd
 
 import (
 	// "fmt"
+
+	"embed"
+	"encoding/json"
+	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -12,6 +19,7 @@ import (
 
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	tmcmds "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
@@ -31,6 +39,7 @@ import (
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -47,36 +56,181 @@ import (
 	osmosis "github.com/osmosis-labs/osmosis/v17/app"
 )
 
-func genAutoCompleteCmd(rootCmd *cobra.Command) {
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "enable-cli-autocomplete [bash|zsh|fish|powershell]",
-		Short: "Generates cli completion scripts",
-		Long: `To configure your shell to load completions for each session, add to your profile:
+type AssetList struct {
+	Assets []Asset `json:"assets"`
+}
+type Asset struct {
+	DenomUnits []DenomUnit `json:"denom_units"`
+	Symbol     string      `json:"symbol"`
+	Base       string      `json:"base"`
+	Traces     []Trace     `json:"traces"`
+}
 
-# bash example
-echo '. <(osmosisd enable-cli-autocomplete bash)' >> ~/.profile
-source ~/.profile
+type DenomUnit struct {
+	Denom    string `json:"denom"`
+	Exponent uint64 `json:"exponent"`
+}
 
-# zsh example
-echo '. <(osmosisd enable-cli-autocomplete zsh)' >> ~/.zshrc
-source ~/.zshrc
-`,
-		DisableFlagsInUseLine: true,
-		ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
-		Args:                  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			switch args[0] {
-			case "bash":
-				_ = cmd.Root().GenBashCompletion(os.Stdout)
-			case "zsh":
-				_ = cmd.Root().GenZshCompletion(os.Stdout)
-			case "fish":
-				_ = cmd.Root().GenFishCompletion(os.Stdout, true)
-			case "powershell":
-				_ = cmd.Root().GenPowerShellCompletionWithDesc(os.Stdout)
+type Trace struct {
+	Type         string `json:"type"`
+	Counterparty struct {
+		BaseDenom string `json:"base_denom"`
+	} `json:"counterparty"`
+}
+
+type DenomUnitMap struct {
+	Base       string
+	DenomUnits []DenomUnit `json:"denom_units"`
+}
+
+var (
+	//go:embed "osmosis-1-assetlist.json" "osmo-test-5-assetlist.json"
+	assetFS   embed.FS
+	mainnetId = "osmosis-1"
+	testnetId = "osmo-test-5"
+)
+
+func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, basedenomToIBC, IBCtoBasedenom bool) (map[string]DenomUnitMap, map[string]string) {
+	var assetList AssetList
+
+	chainId := GetChainId(initClientCtx, cmd)
+
+	fileName := ""
+	if chainId == mainnetId || chainId == "" {
+		fileName = "cmd/osmosisd/cmd/osmosis-1-assetlist-manual.json"
+	} else if chainId == testnetId {
+		fileName = "cmd/osmosisd/cmd/osmo-test-5-assetlist-manual.json"
+	} else {
+		return nil, nil
+	}
+
+	// The order of precedence for asset list is:
+	//  - If the manually generated asset list (generated via the `update-asset-list` cli cmd) exists (noted by -manual.json ending), use it.
+	//  - If the manually generated asset list does not exist, fall back to the embedded asset list.
+	localFile, err := os.Open(fileName)
+	if err != nil {
+		// If we can't open the local file, fall back to the embedded file.
+		if chainId == mainnetId || chainId == "" {
+			fileName = "osmosis-1-assetlist.json"
+		} else if chainId == testnetId {
+			fileName = "osmo-test-5-assetlist.json"
+		} else {
+			return nil, nil
+		}
+		embeddedFile, err := assetFS.Open(fileName)
+		if err != nil {
+			return nil, nil
+		}
+		defer embeddedFile.Close()
+
+		byteValue, _ := io.ReadAll(embeddedFile)
+		err = json.Unmarshal(byteValue, &assetList)
+		if err != nil {
+			return nil, nil
+		}
+	} else {
+		// If the local file opens successfully, use it instead of the embedded file.
+		defer localFile.Close()
+		byteValue, _ := io.ReadAll(localFile)
+		err = json.Unmarshal(byteValue, &assetList)
+		if err != nil {
+			return nil, nil
+		}
+	}
+
+	baseMap := make(map[string]DenomUnitMap)
+	baseMapRev := make(map[string]string)
+
+	if basedenomToIBC {
+		for _, asset := range assetList.Assets {
+			DenomUnitMap := DenomUnitMap{
+				Base:       asset.Base,
+				DenomUnits: asset.DenomUnits,
 			}
-		},
-	})
+			baseMap["base"+strings.ToLower(asset.Symbol)] = DenomUnitMap
+		}
+	}
+	if IBCtoBasedenom {
+		for _, asset := range assetList.Assets {
+			baseMapRev[asset.Base] = "base" + strings.ToLower(asset.Symbol)
+		}
+	}
+	return baseMap, baseMapRev
+}
+
+type customWriter struct {
+	originalOut io.Writer
+	baseMap     map[string]string
+}
+
+func (cw *customWriter) Write(p []byte) (n int, err error) {
+	// Convert byte slice to string.
+	s := string(p)
+
+	// Buffer to hold the new string.
+	var buf strings.Builder
+
+	// Index where the current denom starts. -1 if we're not currently in a denom.
+	denomStart := -1
+
+	// Counter for slashes encountered
+	slashCounter := 0
+
+	re, err := regexp.Compile("[^a-zA-Z0-9/-]")
+	if err != nil {
+		return 0, err
+	}
+
+	for i := 0; i < len(s); i++ {
+		if denomStart == -1 {
+			// If we're not currently in a denom, check if this character starts a new denom.
+			// Check for "ibc/" or "factory/" prefix.
+			if strings.HasPrefix(s[i:], "ibc/") || strings.HasPrefix(s[i:], "factory/") {
+				slashCounter = 0
+				denomStart = i
+				continue
+			}
+			// Write the character to the buffer.
+			buf.WriteByte(s[i])
+		} else {
+			// For factory denoms, we keep track of slashes to find the second slash.
+			if s[i] == '/' {
+				slashCounter++
+			}
+
+			// For "ibc/" we find the end by length, for "factory/" we find the end by second slash and regex.
+			if (strings.HasPrefix(s[denomStart:], "ibc/") && i-denomStart == 68) || (strings.HasPrefix(s[denomStart:], "factory/") && slashCounter == 2 && re.MatchString(string(s[i]))) {
+				// We've reached the end of the line containing the denom.
+				denom := s[denomStart:i]
+				if replacement, ok := cw.baseMap[denom]; ok {
+					// If the denom is in the map, write the replacement to the buffer.
+					buf.WriteString(replacement)
+				} else {
+					// If the denom is not in the map, write the original denom to the buffer.
+					buf.WriteString(denom)
+				}
+				// Write the new line character to the buffer.
+				buf.WriteByte(s[i])
+
+				// We're no longer in a denom.
+				denomStart = -1
+				slashCounter = 0
+			}
+		}
+	}
+
+	// If we're still in a denom at the end of the string, write the rest of the denom to the buffer.
+	if denomStart != -1 {
+		denom := s[denomStart:]
+		if replacement, ok := cw.baseMap[denom]; ok {
+			buf.WriteString(replacement)
+		} else {
+			buf.WriteString(denom)
+		}
+	}
+
+	// Write the new string to the original output.
+	return cw.originalOut.Write([]byte(buf.String()))
 }
 
 // NewRootCmd creates a new root command for simd. It is called once in the
@@ -102,13 +256,14 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithViper("OSMOSIS")
 
 	// Allows you to add extra params to your client.toml
-	// gas, gas-price, gas-adjustment
+	// gas, gas-price, gas-adjustment, and human-readable-denoms
 	SetCustomEnvVariablesFromClientToml(initClientCtx)
+	humanReadableDenomsInput, humanReadableDenomsOutput := GetHumanReadableDenomEnvVariables()
 
 	rootCmd := &cobra.Command{
 		Use:   "osmosisd",
 		Short: "Start osmosis app",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -118,10 +273,81 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 				return err
 			}
 
+			// Only loads asset list into a map if human readable denoms are enabled.
+			assetMap, assetMapRev := map[string]DenomUnitMap{}, map[string]string{}
+			if humanReadableDenomsInput || humanReadableDenomsOutput {
+				assetMap, assetMapRev = loadAssetList(initClientCtx, cmd, humanReadableDenomsInput, humanReadableDenomsOutput)
+			}
+
+			// If enabled, CLI output will be parsed and human readable denominations will be used in place of ibc denoms.
+			if humanReadableDenomsOutput {
+				initClientCtx.Output = &customWriter{originalOut: os.Stdout, baseMap: assetMapRev}
+			}
+
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
 			}
 			customAppTemplate, customAppConfig := initAppConfig()
+
+			// If enabled, CLI input will be parsed and human readable denominations will be automatically converted to ibc denoms.
+			if humanReadableDenomsInput {
+				// Parse and replace denoms in args
+				for i, arg := range args {
+					lowerCaseArg := strings.ToLower(arg)
+					lowerCaseArgArray := strings.Split(lowerCaseArg, ",")
+					re := regexp.MustCompile(`^(\d+)(.+)`)
+
+					for i, lowerCaseArg := range lowerCaseArgArray {
+						match := re.FindStringSubmatch(lowerCaseArg)
+						if len(match) == 3 {
+							// If the index has a length of 3 then it has a number and a denom (this is a coin object)
+							// Note, index 0 is the entire string, index 1 is the number, and index 2 is the denom
+							if _, ok := assetMap[match[2]]; ok {
+								// In this case, we just need to replace the denom with the base denom and retain the number
+								lowerCaseArgArray[i] = match[1] + assetMap[match[2]].Base
+							}
+						} else {
+							if _, ok := assetMap[lowerCaseArg]; ok {
+								// In this case, we just need to replace the denom with the base denom
+								lowerCaseArgArray[i] = assetMap[lowerCaseArg].Base
+							}
+						}
+					}
+					args[i] = strings.Join(lowerCaseArgArray, ",")
+				}
+
+				// Parse and replace denoms in flags
+				cmd.Flags().VisitAll(func(flag *pflag.Flag) {
+					lowerCaseFlagValue := strings.ToLower(flag.Value.String())
+					lowerCaseFlagValueArray := strings.Split(lowerCaseFlagValue, ",")
+
+					re := regexp.MustCompile(`^(\d+)(.+)`)
+
+					for i, lowerCaseFlagValue := range lowerCaseFlagValueArray {
+						match := re.FindStringSubmatch(lowerCaseFlagValue)
+						if len(match) == 3 {
+							// If the index has a length of 3 then it has a number and a denom (this is a coin object)
+							// Note, index 0 is the entire string, index 1 is the number, and index 2 is the denom
+							if _, ok := assetMap[match[2]]; ok {
+								// In this case, we just need to replace the denom with the base denom and retain the number
+								lowerCaseFlagValueArray[i] = strings.Replace(lowerCaseFlagValue, match[2], assetMap[match[2]].Base, -1)
+							}
+						} else {
+							if _, ok := assetMap[lowerCaseFlagValue]; ok {
+								// Otherwise, we just need to replace the denom with the base denom
+								lowerCaseFlagValueArray[i] = assetMap[lowerCaseFlagValue].Base
+							}
+						}
+					}
+					newLowerCaseFlagValue := strings.Join(lowerCaseFlagValueArray, ",")
+					if lowerCaseFlagValue != newLowerCaseFlagValue {
+						if err := cmd.Flags().Set(flag.Name, newLowerCaseFlagValue); err != nil {
+							fmt.Println("Failed to set flag:", err)
+						}
+					}
+				})
+			}
+
 			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig)
 		},
 		SilenceUsage: true,
@@ -225,6 +451,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		ConfigCmd(),
 		ChangeEnvironmentCmd(),
 		PrintEnvironmentCmd(),
+		UpdateAssetListCmd(osmosis.DefaultNodeHome, osmosis.ModuleBasics),
 	)
 
 	server.AddCommands(rootCmd, osmosis.DefaultNodeHome, newApp, createOsmosisAppAndExport, addModuleInitFlags)
@@ -367,4 +594,85 @@ func createOsmosisAppAndExport(
 	}
 
 	return app.ExportAppStateAndValidators(forZeroHeight, jailWhiteList, modulesToExport)
+}
+
+func UpdateAssetListCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "update-asset-list [chain-id]",
+		Short: "Updates asset list used by the CLI to replace ibc denoms with human readable names",
+		Long: `Updates asset list used by the CLI to replace ibc denoms with human readable names.
+Outputs:
+	- cmd/osmosisd/cmd/osmosis-1-assetlist-manual.json for osmosis-1
+	- cmd/osmosisd/cmd/osmo-test-5-assetlist-manual.json for osmo-test-5
+`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			assetListURL := ""
+			fileName := ""
+
+			if args[0] == mainnetId || args[0] == "" {
+				assetListURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmosis-1/osmosis-1.assetlist.json"
+				fileName = "cmd/osmosisd/cmd/osmosis-1-assetlist-manual.json"
+			} else if args[0] == testnetId {
+				assetListURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmo-test-5/osmo-test-5.assetlist.json"
+				fileName = "cmd/osmosisd/cmd/osmo-test-5-assetlist-manual.json"
+			} else {
+				return nil
+			}
+
+			// Try to fetch the asset list from the URL
+			resp, err := http.Get(assetListURL)
+			if err != nil {
+				return err
+			}
+			defer resp.Body.Close()
+
+			// Create a new file
+			out, err := os.Create(fileName)
+			if err != nil {
+				return err
+			}
+			defer out.Close()
+
+			// Copy the response body to the new file
+			_, err = io.Copy(out, resp.Body)
+			return err
+		},
+	}
+
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
+
+	return cmd
+}
+
+func genAutoCompleteCmd(rootCmd *cobra.Command) {
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "enable-cli-autocomplete [bash|zsh|fish|powershell]",
+		Short: "Generates cli completion scripts",
+		Long: `To configure your shell to load completions for each session, add to your profile:
+
+# bash example
+echo '. <(osmosisd enable-cli-autocomplete bash)' >> ~/.profile
+source ~/.profile
+
+# zsh example
+echo '. <(osmosisd enable-cli-autocomplete zsh)' >> ~/.zshrc
+source ~/.zshrc
+`,
+		DisableFlagsInUseLine: true,
+		ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
+		Args:                  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			switch args[0] {
+			case "bash":
+				_ = cmd.Root().GenBashCompletion(os.Stdout)
+			case "zsh":
+				_ = cmd.Root().GenZshCompletion(os.Stdout)
+			case "fish":
+				_ = cmd.Root().GenFishCompletion(os.Stdout, true)
+			case "powershell":
+				_ = cmd.Root().GenPowerShellCompletionWithDesc(os.Stdout)
+			}
+		},
+	})
 }

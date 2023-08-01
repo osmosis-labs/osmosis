@@ -484,59 +484,48 @@ func (s *KeeperTestSuite) TestCalculateSpreadRewardGrowth() {
 	}
 }
 
-func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick() {
-	const (
-		validPoolId = 1
-	)
+// Test what happens if somehow the accumulator didn't exist.
+// TODO: Does this test even matter? We should never be in a situation where the accumulator doesn't exist
+func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTickAccumDoesntExist() {
+	pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, ETH, USDC, DefaultTickSpacing, DefaultZeroSpreadFactor)
+	s.Require().NoError(err)
 
+	// N.B.: we set the listener mock because we would like to avoid
+	// utilizing the production listeners, because we are testing a case that should be impossible
+	s.setListenerMockOnConcentratedLiquidityKeeper()
+
+	err = s.clk.SetPool(s.Ctx, &pool)
+	s.Require().NoError(err)
+
+	// System under test.
+	_, err = s.clk.GetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(s.Ctx, &pool, 0)
+	s.Require().Error(err)
+	s.Require().ErrorIs(err, accum.AccumDoesNotExistError{AccumName: types.KeySpreadRewardPoolAccumulator(validPoolId)})
+}
+
+func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick() {
 	sqrtPrice := osmomath.MustMonotonicSqrt(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()))
 	initialPoolTick, err := clmath.SqrtPriceToTickRoundDownSpacing(sqrtPrice, DefaultTickSpacing)
 	s.Require().NoError(err)
+	initialGlobalSpreadRewardGrowth := oneEth
 
 	tests := map[string]struct {
-		poolId                          uint64
 		tick                            int64
 		initialGlobalSpreadRewardGrowth sdk.DecCoin
-		shouldAvoidCreatingAccum        bool
 
 		expectedInitialSpreadRewardGrowthOppositeDirectionOfLastTraversal sdk.DecCoins
-		expectError                                                       error
 	}{
 		"current tick > tick -> spread reward growth global": {
-			poolId:                          validPoolId,
-			tick:                            initialPoolTick - 1,
-			initialGlobalSpreadRewardGrowth: oneEth,
-
+			tick: initialPoolTick - 1,
 			expectedInitialSpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth),
 		},
 		"current tick == tick -> spread reward growth global": {
-			poolId:                          validPoolId,
-			tick:                            initialPoolTick,
-			initialGlobalSpreadRewardGrowth: oneEth,
-
+			tick: initialPoolTick,
 			expectedInitialSpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth),
 		},
 		"current tick < tick -> empty coins": {
-			poolId:                          validPoolId,
-			tick:                            initialPoolTick + 1,
-			initialGlobalSpreadRewardGrowth: oneEth,
-
+			tick: initialPoolTick + 1,
 			expectedInitialSpreadRewardGrowthOppositeDirectionOfLastTraversal: cl.EmptyCoins,
-		},
-		"pool does not exist": {
-			poolId:                          validPoolId + 1,
-			tick:                            initialPoolTick - 1,
-			initialGlobalSpreadRewardGrowth: oneEth,
-
-			expectError: types.PoolNotFoundError{PoolId: validPoolId + 1},
-		},
-		"accumulator does not exist": {
-			poolId:                          validPoolId,
-			tick:                            0,
-			initialGlobalSpreadRewardGrowth: oneEth,
-			shouldAvoidCreatingAccum:        true,
-
-			expectError: accum.AccumDoesNotExistError{AccumName: types.KeySpreadRewardPoolAccumulator(validPoolId)},
 		},
 	}
 
@@ -544,44 +533,12 @@ func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLas
 		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
-			ctx := s.Ctx
-			clKeeper := s.App.ConcentratedLiquidityKeeper
+			pool := s.preparePoolAndDefaultPosition()
+			s.AddToSpreadRewardAccumulator(pool.GetId(), initialGlobalSpreadRewardGrowth)
 
-			pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, ETH, USDC, DefaultTickSpacing, DefaultZeroSpreadFactor)
+			clpool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
-
-			// N.B.: we set the listener mock because we would like to avoid
-			// utilizing the production listeners. The production listeners
-			// are irrelevant in the context of the system under test. However,
-			// setting them up would require compromising being able to set up other
-			// edge case tests. For example, the test case where spread reward accumulator
-			// is not initialized.
-			s.setListenerMockOnConcentratedLiquidityKeeper()
-
-			err = clKeeper.SetPool(ctx, &pool)
-			s.Require().NoError(err)
-
-			if !tc.shouldAvoidCreatingAccum {
-				err = clKeeper.CreateSpreadRewardAccumulator(ctx, validPoolId)
-				s.Require().NoError(err)
-
-				// Setup test position to make sure that tick is initialized
-				// We also set up uptime accums to ensure position creation works as intended
-				err = clKeeper.CreateUptimeAccumulators(ctx, validPoolId)
-				s.Require().NoError(err)
-				s.SetupDefaultPosition(validPoolId)
-
-				s.AddToSpreadRewardAccumulator(validPoolId, tc.initialGlobalSpreadRewardGrowth)
-			}
-
-			// System under test.
-			initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, err := clKeeper.GetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx, tc.poolId, tc.tick)
-
-			if tc.expectError != nil {
-				s.Require().Error(err)
-				s.Require().ErrorIs(err, tc.expectError)
-				return
-			}
+			initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, err := s.clk.GetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(s.Ctx, clpool, tc.tick)
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedInitialSpreadRewardGrowthOppositeDirectionOfLastTraversal, initialSpreadRewardGrowthOppositeDirectionOfLastTraversal)
 		})
