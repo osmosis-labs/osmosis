@@ -171,19 +171,31 @@ const defaultConfigTemplate = `# This is a TOML config file.
 
 # The network chain ID
 chain-id = "{{ .ChainID }}"
+
 # The keyring's backend, where the keys are stored (os|file|kwallet|pass|test|memory)
 keyring-backend = "{{ .KeyringBackend }}"
+
 # CLI output format (text|json)
 output = "{{ .Output }}"
+
 # <host>:<port> to Tendermint RPC interface for this chain
 node = "{{ .Node }}"
+
 # Transaction broadcasting mode (sync|async)
 broadcast-mode = "{{ .BroadcastMode }}"
-# Human-readable denoms
-# If enabled, when using CLI, user can input base denoms (baseatom, basescrt, baseweth, basewbtc, basewbtc.grv etc.) instead of their ibc equivalents.
+
+# Human-readable denoms: Input
+# If enabled, when using CLI, user can input 0 exponent denoms (atom, scrt, avax, wbtc, etc.) instead of their ibc equivalents.
+# Note, this will also change the coin's value to it's base value if the input or flag is a coin.
+# Example:
+#  		* 10.45atom input will automatically change to 10450000ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
+#  		* uakt will change to ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4
+#		* 12000000uscrt will change to 12000000ibc/0954E1C28EB7AF5B72D24F3BC2B47BBB2FDF91BDDFD57B74B99E133AED40972A
 # This feature isn't stable yet, and outputs will change in subsequent releases
 human-readable-denoms-input = {{ .HumanReadableDenomsInput }}
-# If enabled, CLI response return base denoms (baseatom, basescrt, baseweth, basewbtc, basewbtc.grv etc.) instead of their ibc equivalents.
+
+# Human-readable denoms: Output
+# If enabled, CLI response return base denoms (uatom, uscrt, wavax-wei, wbtc-satoshi, etc.) instead of their ibc equivalents.
 # This feature isn't stable yet, and outputs will change in subsequent releases
 human-readable-denoms-output = {{ .HumanReadableDenomsOutput }}
 
