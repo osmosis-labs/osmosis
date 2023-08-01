@@ -287,9 +287,10 @@ func (k Keeper) executeSafeSwap(
 		return sdk.NewCoin(tokenInDenom, sdk.ZeroInt()), err
 	}
 
-	liquidTokenAmt := liquidity.AmountOf(outputCoin.Denom)
+	// At most we can swap half of the liquidity in the pool
+	liquidTokenAmt := liquidity.AmountOf(outputCoin.Denom).Quo(sdk.NewInt(2))
 	if liquidTokenAmt.LT(outputCoin.Amount) {
-		outputCoin.Amount = liquidTokenAmt.Quo(sdk.NewInt(2))
+		outputCoin.Amount = liquidTokenAmt
 	}
 
 	amt, err := k.poolmanagerKeeper.MultihopEstimateInGivenExactAmountOut(
