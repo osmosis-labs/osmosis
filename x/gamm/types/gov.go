@@ -4,13 +4,17 @@ import (
 	"fmt"
 	"strings"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
 )
 
 const (
-	ProposalTypeUpdateMigrationRecords  = "UpdateMigrationRecords"
-	ProposalTypeReplaceMigrationRecords = "ReplaceMigrationRecords"
+	ProposalTypeUpdateMigrationRecords     = "UpdateMigrationRecords"
+	ProposalTypeReplaceMigrationRecords    = "ReplaceMigrationRecords"
+	ProposalTypeSetScalingFactorController = "SetScalingFactorController"
 )
 
 // Init registers proposals to update and replace migration records.
@@ -19,11 +23,14 @@ func init() {
 	govtypes.RegisterProposalTypeCodec(&UpdateMigrationRecordsProposal{}, "osmosis/UpdateMigrationRecordsProposal")
 	govtypes.RegisterProposalType(ProposalTypeReplaceMigrationRecords)
 	govtypes.RegisterProposalTypeCodec(&ReplaceMigrationRecordsProposal{}, "osmosis/ReplaceMigrationRecordsProposal")
+	govtypes.RegisterProposalType(ProposalTypeSetScalingFactorController)
+	govtypes.RegisterProposalTypeCodec(&SetScalingFactorControllerProposal{}, "osmosis/SetScalingFactorControllerProposal")
 }
 
 var (
 	_ govtypes.Content = &UpdateMigrationRecordsProposal{}
 	_ govtypes.Content = &ReplaceMigrationRecordsProposal{}
+	_ govtypes.Content = &SetScalingFactorControllerProposal{}
 )
 
 // NewReplacePoolIncentivesProposal returns a new instance of a replace migration record's proposal struct.
@@ -128,5 +135,55 @@ func (p UpdateMigrationRecordsProposal) String() string {
   Description: %s
   Records:     %s
 `, p.Title, p.Description, recordsStr))
+	return b.String()
+}
+
+// NewSetScalingFactorControllerProposal returns a new instance of a replace migration record's proposal struct.
+func NewSetScalingFactorControllerProposal(title, description string, poolId uint64, controllerAddress string) govtypes.Content {
+	return &SetScalingFactorControllerProposal{
+		Title:             title,
+		Description:       description,
+		PoolId:            poolId,
+		ControllerAddress: controllerAddress,
+	}
+}
+
+// GetTitle gets the title of the proposal
+func (p *SetScalingFactorControllerProposal) GetTitle() string { return p.Title }
+
+// GetDescription gets the description of the proposal
+func (p *SetScalingFactorControllerProposal) GetDescription() string { return p.Description }
+
+// ProposalRoute returns the router key for the proposal
+func (p *SetScalingFactorControllerProposal) ProposalRoute() string { return RouterKey }
+
+// ProposalType returns the type of the proposal
+func (p *SetScalingFactorControllerProposal) ProposalType() string {
+	return ProposalTypeReplaceMigrationRecords
+}
+
+// ValidateBasic validates a governance proposal's abstract and basic contents
+func (p *SetScalingFactorControllerProposal) ValidateBasic() error {
+	err := govtypes.ValidateAbstract(p)
+	if err != nil {
+		return err
+	}
+	_, err = sdk.AccAddressFromBech32(p.ControllerAddress)
+	if err != nil {
+		return fmt.Errorf("Invalid controller address (%s)", err)
+	}
+
+	return nil
+}
+
+// String returns a string containing the migration record's proposal.
+func (p SetScalingFactorControllerProposal) String() string {
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf(`Set Scaling Factor Controller Address Proposal:
+  Title:             %s
+  Description:       %s
+  PoolId:            %d
+  ControllerAddress: %s
+`, p.Title, p.Description, p.PoolId, p.ControllerAddress))
 	return b.String()
 }
