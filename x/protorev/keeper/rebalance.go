@@ -326,8 +326,7 @@ func (k Keeper) ExtendSearchRangeIfNeeded(
 	// If the profit for the maximum amount in is still increasing, then we can increase the range of the binary search
 	if maxInProfit.GTE(sdk.ZeroInt()) {
 		// Get the profit for the maximum amount in + 1
-		maxInPlusOne := curRight.Add(sdk.OneInt().Mul(route.StepSize))
-		_, maxInProfitPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, maxInPlusOne.Mul(route.StepSize), route.Route)
+		_, maxInProfitPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, curRight.Add(sdk.OneInt()).Mul(route.StepSize), route.Route)
 		if err != nil {
 			return sdk.ZeroInt(), sdk.ZeroInt(), err
 		}
