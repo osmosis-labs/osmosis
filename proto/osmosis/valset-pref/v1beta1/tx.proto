@@ -99,6 +99,8 @@ message MsgUndelegateFromValidatorSet {
 message MsgUndelegateFromValidatorSetResponse {}
 
 message MsgRedelegateValidatorSet {
+  option (amino.name) = "osmosis/valset-pref/MsgRedelegateValidatorSet";
+
   // delegator is the user who is trying to create a validator-set.
   string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
 
