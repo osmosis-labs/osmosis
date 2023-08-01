@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#5532](https://github.com/osmosis-labs/osmosis/pull/5532) fix: Fix x/tokenfactory genesis import denoms reset x/bank existing denom metadata
 * [#5869](https://github.com/osmosis-labs/osmosis/pull/5869) fix negative interval accumulation with spread rewards
+* [#5872](https://github.com/osmosis-labs/osmosis/pull/5872) fix negative interval accumulation with incentive rewards
 * [#5883](https://github.com/osmosis-labs/osmosis/pull/5883) feat: Uninitialize empty ticks
 * [#5874](https://github.com/osmosis-labs/osmosis/pull/5874) Remove Partial Migration from superfluid migration to CL
 * [#5901](https://github.com/osmosis-labs/osmosis/pull/5901) Adding support for CW pools in ProtoRev

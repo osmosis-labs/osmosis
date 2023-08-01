@@ -2607,7 +2607,8 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 	}
 }
 
-// This test validates the edge case where the range accumulator becomes negative.
+// This test validates the edge case where the range accumulators become negative.
+// It validates both spread and incentive rewards.
 // It happens if we initialize a lower tick after the upper AND the current tick is above the position's range.
 // To replicate, we create 3 positions full range, A and B.
 // Full range position is created to inject some base liquidity.
@@ -2617,6 +2618,12 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 // This results in the lower tick of position A being initialized to a greater value than its upper tick.
 // Note, that we ensure that the current tick is above the position's range so that when we compute
 // the in-range accumulator, it becomes negative (computed as upper tick acc - lower tick acc when current tick > upper tick of a position).
+//
+// Note that there is another edge case possible where we initialize an upper tick when current tick > upper tick to a positive value.
+// Then, the current tick moves under the lower tick of a future position. As a result, when the position gets initialized,
+// the lower tick gets the accumulator value of zero if it is new, resulting in interval accumulation of:
+// lower tick accumulator snapshot - upper tick accumulator snapshot = 0 - positive value = negative value.
+// This case is covered here implicitly.
 //
 // Finally, there are 4 sub-tests run to ensure that the total rewards are collected correctly:
 // - Current tick is not moved.
@@ -2628,12 +2635,16 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 
 	var (
 		// Initialize pool with non-zero spread factor.
-		spreadFactor = sdk.NewDecWithPrec(3, 3)
-		pool         = s.PrepareCustomConcentratedPool(s.TestAccs[0], DefaultCoin0.Denom, DefaultCoin1.Denom, 1, spreadFactor)
-		poolId       = pool.GetId()
-		denom0       = pool.GetToken0()
-		denom1       = pool.GetToken1()
+		spreadFactor     = sdk.NewDecWithPrec(3, 3)
+		pool             = s.PrepareCustomConcentratedPool(s.TestAccs[0], DefaultCoin0.Denom, DefaultCoin1.Denom, 1, spreadFactor)
+		poolId           = pool.GetId()
+		denom0           = pool.GetToken0()
+		denom1           = pool.GetToken1()
+		rewardsPerSecond = sdk.NewDec(1000)
 	)
+
+	_, err := s.clk.CreateIncentive(s.Ctx, poolId, s.TestAccs[0], sdk.NewCoin("uosmo", sdk.NewInt(1_000_000)), rewardsPerSecond, s.Ctx.BlockTime(), time.Nanosecond)
+	s.Require().NoError(err)
 
 	// Estimates how much to swap in to approximately reach the given tick
 	// in the zero for one direction (left). Assumes current sqrt price
@@ -2671,18 +2682,24 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	s.FundAcc(s.TestAccs[0], DefaultCoins)
 	s.CreateFullRangePosition(pool, DefaultCoins)
 
-	expectedTotalRewards := sdk.NewCoins()
+	expectedTotalSpreadRewards := sdk.NewCoins()
+	expectedTotalIncentiveRewards := sdk.ZeroDec()
 
 	// Initialize position at a higher range
 	s.FundAcc(s.TestAccs[0], DefaultCoins)
-	_, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultCurrTick+50, DefaultCurrTick+100)
+	_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultCurrTick+50, DefaultCurrTick+100)
 	s.Require().NoError(err)
 
 	// Estimate how much to swap in to approximately DefaultCurrTick - 50
 	coinZeroIn := estimateCoinZeroIn(DefaultCurrTick - 50)
 
 	// Update expected spread rewards
-	expectedTotalRewards = expectedTotalRewards.Add(sdk.NewCoin(denom0, coinZeroIn.Amount.ToDec().Mul(spreadFactor).Ceil().TruncateInt()))
+	expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(sdk.NewCoin(denom0, coinZeroIn.Amount.ToDec().Mul(spreadFactor).Ceil().TruncateInt()))
+
+	// Increase block time
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second))
+	// Update expected incentive rewards
+	expectedTotalIncentiveRewards = expectedTotalIncentiveRewards.Add(rewardsPerSecond)
 
 	s.swapZeroForOneLeftWithSpread(poolId, coinZeroIn, spreadFactor)
 
@@ -2694,41 +2711,59 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	coinOneIn := estimateCoinOneIn(DefaultCurrTick + 150)
 
 	// Update expected spread rewards
-	expectedTotalRewards = expectedTotalRewards.Add(sdk.NewCoin(denom1, coinOneIn.Amount.ToDec().Mul(spreadFactor).Ceil().TruncateInt()))
+	expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(sdk.NewCoin(denom1, coinOneIn.Amount.ToDec().Mul(spreadFactor).Ceil().TruncateInt()))
+
+	// Increase block time
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second))
+	// Update expected incentive rewards
+	expectedTotalIncentiveRewards = expectedTotalIncentiveRewards.Add(rewardsPerSecond)
 
 	s.swapOneForZeroRightWithSpread(poolId, coinOneIn, spreadFactor)
+
+	// Increase block time
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second))
+	// Update expected incentive rewards
+	expectedTotalIncentiveRewards = expectedTotalIncentiveRewards.Add(rewardsPerSecond)
 
 	// This previously paniced due to the lack of support for negative range accumulators.
 	// See issue: https://github.com/osmosis-labs/osmosis/issues/5854
 	// We initialized the lower tick's accumulator (DefaultCurrTick - 25) to be greater than the upper tick's accumulator (DefaultCurrTick + 50)
 	// Whenever the current tick is above the position's range, we compute in range accumulator as upper tick accumulator - lower tick accumulator
 	// In this case, it ends up being negative, which is now supported.
-	_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultCurrTick-25, DefaultCurrTick+50)
+	negativeIntervalAccumPositionId, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultCurrTick-25, DefaultCurrTick+50)
 	s.Require().NoError(err)
 
-	// Refetch pool
-	pool, err = s.clk.GetPoolById(s.Ctx, poolId)
-	s.Require().NoError(err)
+	// Increase block time
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second))
+	// Update expected incentive rewards
+	expectedTotalIncentiveRewards = expectedTotalIncentiveRewards.Add(rewardsPerSecond)
 
 	s.T().Run("assert rewards when current tick is not moved (stays above position with negative in-range accumulator)", func(t *testing.T) {
 		// Assert global invariants
 		s.assertGlobalInvariants(ExpectedGlobalRewardValues{
 			// Additive tolerance of 1 for each position.
-			ExpectedAdditiveTolerance: sdk.OneDec().MulInt64(3),
-			TotalSpreadRewards:        expectedTotalRewards,
+			ExpectedAdditiveSpreadRewardTolerance: sdk.OneDec().MulInt64(3),
+			TotalSpreadRewards:                    expectedTotalSpreadRewards,
+			TotalIncentives:                       sdk.NewCoins(sdk.NewCoin("uosmo", expectedTotalIncentiveRewards.Ceil().TruncateInt())),
 		})
 	})
 
 	s.RunTestCaseWithoutStateUpdates("assert rewards when current tick is below the position with negative accumulator", func(t *testing.T) {
-		// Make closure-local copy of expectedTotalRewards
-		expectedTotalRewards := expectedTotalRewards
+		// Make closure-local copy of expectedTotalSpreadRewards
+		expectedTotalSpreadRewards := expectedTotalSpreadRewards
+		expectedTotalIncentiveRewards := expectedTotalIncentiveRewards
 
 		// Swap third time to cover the newly created position with negative range accumulator
 		// Swap to approximately DefaultCurrTick - 50
 		coinZeroIn = estimateCoinZeroIn(DefaultCurrTick - 50)
 
 		// Update expected spread rewards
-		expectedTotalRewards = expectedTotalRewards.Add(sdk.NewCoin(denom0, coinZeroIn.Amount.ToDec().Mul(spreadFactor).Ceil().TruncateInt()))
+		expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(sdk.NewCoin(denom0, coinZeroIn.Amount.ToDec().Mul(spreadFactor).Ceil().TruncateInt()))
+
+		// Increase block time
+		s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second))
+		// Update expected incentive rewards
+		expectedTotalIncentiveRewards = expectedTotalIncentiveRewards.Add(rewardsPerSecond)
 
 		// Move current tick to be below the expected position
 		s.swapZeroForOneLeftWithSpread(poolId, coinZeroIn, spreadFactor)
@@ -2736,21 +2771,28 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 		// Assert global invariants
 		s.assertGlobalInvariants(ExpectedGlobalRewardValues{
 			// Additive tolerance of 1 for each position.
-			ExpectedAdditiveTolerance: sdk.OneDec().MulInt64(3),
-			TotalSpreadRewards:        expectedTotalRewards,
+			ExpectedAdditiveSpreadRewardTolerance: sdk.OneDec().MulInt64(3),
+			TotalSpreadRewards:                    expectedTotalSpreadRewards,
+			TotalIncentives:                       sdk.NewCoins(sdk.NewCoin("uosmo", expectedTotalIncentiveRewards.Ceil().TruncateInt())),
 		})
 	})
 
 	s.RunTestCaseWithoutStateUpdates("assert rewards when current tick is inside the position with negative accumulator", func(t *testing.T) {
-		// Make closure-local copy of expectedTotalRewards
-		expectedTotalRewards := expectedTotalRewards
+		// Make closure-local copy of expectedTotalSpreadRewards
+		expectedTotalSpreadRewards := expectedTotalSpreadRewards
+		expectedTotalIncentiveRewards := expectedTotalIncentiveRewards
 
 		// Swap third time to cover the newly created position with negative range accumulator
 		// Swap to approximately DefaultCurrTick - 10
 		coinZeroIn = estimateCoinZeroIn(DefaultCurrTick - 10)
 
 		// Update expected spread rewards
-		expectedTotalRewards = expectedTotalRewards.Add(sdk.NewCoin(denom0, coinZeroIn.Amount.ToDec().Mul(spreadFactor).Ceil().TruncateInt()))
+		expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(sdk.NewCoin(denom0, coinZeroIn.Amount.ToDec().Mul(spreadFactor).Ceil().TruncateInt()))
+
+		// Increase block time
+		s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second))
+		// Update expected incentive rewards
+		expectedTotalIncentiveRewards = expectedTotalIncentiveRewards.Add(rewardsPerSecond)
 
 		// Move current tick to be inside of the new position
 		s.swapZeroForOneLeftWithSpread(poolId, coinZeroIn, spreadFactor)
@@ -2758,21 +2800,28 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 		// Assert global invariants
 		s.assertGlobalInvariants(ExpectedGlobalRewardValues{
 			// Additive tolerance of 1 for each position.
-			ExpectedAdditiveTolerance: sdk.OneDec().MulInt64(3),
-			TotalSpreadRewards:        expectedTotalRewards,
+			ExpectedAdditiveSpreadRewardTolerance: sdk.OneDec().MulInt64(3),
+			TotalSpreadRewards:                    expectedTotalSpreadRewards,
+			TotalIncentives:                       sdk.NewCoins(sdk.NewCoin("uosmo", expectedTotalIncentiveRewards.Ceil().TruncateInt())),
 		})
 	})
 
 	s.RunTestCaseWithoutStateUpdates("assert rewards when current tick is above the position with negative accumulator", func(t *testing.T) {
-		// Make closure-local copy of expectedTotalRewards
-		expectedTotalRewards := expectedTotalRewards
+		// Make closure-local copy of expectedTotalSpreadRewards
+		expectedTotalSpreadRewards := expectedTotalSpreadRewards
+		expectedTotalIncentiveRewards := expectedTotalIncentiveRewards
 
 		// Swap third time to cover the newly created position with negative range accumulator
 		// Swap to approximately DefaultCurrTick - 50
 		coinZeroIn = estimateCoinZeroIn(DefaultCurrTick - 50)
 
 		// Update expected spread rewards
-		expectedTotalRewards = expectedTotalRewards.Add(sdk.NewCoin(denom0, coinZeroIn.Amount.ToDec().Mul(spreadFactor).Ceil().TruncateInt()))
+		expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(sdk.NewCoin(denom0, coinZeroIn.Amount.ToDec().Mul(spreadFactor).Ceil().TruncateInt()))
+
+		// Increase block time
+		s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second))
+		// Update expected incentive rewards
+		expectedTotalIncentiveRewards = expectedTotalIncentiveRewards.Add(rewardsPerSecond)
 
 		// Swap inside the new position so that it accumulates rewards
 		s.swapZeroForOneLeftWithSpread(poolId, coinZeroIn, spreadFactor)
@@ -2781,7 +2830,12 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 		coinOneIn := estimateCoinOneIn(DefaultCurrTick + 150)
 
 		// Update expected spread rewards
-		expectedTotalRewards = expectedTotalRewards.Add(sdk.NewCoin(denom1, coinOneIn.Amount.ToDec().Mul(spreadFactor).Ceil().TruncateInt()))
+		expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(sdk.NewCoin(denom1, coinOneIn.Amount.ToDec().Mul(spreadFactor).Ceil().TruncateInt()))
+
+		// Increase block time
+		s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second))
+		// Update expected incentive rewards
+		expectedTotalIncentiveRewards = expectedTotalIncentiveRewards.Add(rewardsPerSecond)
 
 		// Swap back to take current tick be above the new position
 		s.swapOneForZeroRightWithSpread(poolId, coinOneIn, spreadFactor)
@@ -2789,8 +2843,26 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 		// Assert global invariants
 		s.assertGlobalInvariants(ExpectedGlobalRewardValues{
 			// Additive tolerance of 1 for each position.
-			ExpectedAdditiveTolerance: sdk.OneDec().MulInt64(3),
-			TotalSpreadRewards:        expectedTotalRewards,
+			ExpectedAdditiveSpreadRewardTolerance: sdk.OneDec().MulInt64(3),
+			TotalSpreadRewards:                    expectedTotalSpreadRewards,
+			TotalIncentives:                       sdk.NewCoins(sdk.NewCoin("uosmo", expectedTotalIncentiveRewards.Ceil().TruncateInt())),
 		})
 	})
+
+	// Export and import genesis to make sure that negative accumulation does not lead to unexpected
+	// panics in serialization and deserialization.
+	spreadRewardAccumulator, err := s.clk.GetSpreadRewardAccumulator(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	accum, err := spreadRewardAccumulator.GetPosition(types.KeySpreadRewardPositionAccumulator(negativeIntervalAccumPositionId))
+	s.Require().NoError(err)
+
+	// Validate that at least one accumulator is negative for the test to be valid.
+	s.Require().True(accum.AccumValuePerShare.IsAnyNegative())
+
+	export := s.clk.ExportGenesis(s.Ctx)
+
+	s.SetupTest()
+
+	s.clk.InitGenesis(s.Ctx, *export)
 }
