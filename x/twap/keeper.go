@@ -65,7 +65,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	})
 
 	for _, twap := range genState.Twaps {
-		k.StoreNewRecord(ctx, twap)
+		k.StoreNewRecord(ctx, twap.Asset0Denom, twap.Asset1Denom, twap)
 	}
 }
 

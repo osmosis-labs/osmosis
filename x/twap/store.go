@@ -163,9 +163,10 @@ func (k Keeper) getAllHistoricalPoolIndexedTWAPs(ctx sdk.Context) ([]types.TwapR
 }
 
 // StoreNewRecord stores a record, in both the most recent record store and historical stores.
-func (k Keeper) StoreNewRecord(ctx sdk.Context, twap types.TwapRecord) {
+// NOTE: if it's a new Record make sure to update asset0 and asset1 as well.
+func (k Keeper) StoreNewRecord(ctx sdk.Context, asset0 string, asset1 string, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.FormatMostRecentTWAPKey(twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
+	key := types.FormatMostRecentTWAPKey(twap.PoolId, asset0, asset1)
 	osmoutils.MustSet(store, key, &twap)
 	k.storeHistoricalTWAP(ctx, twap)
 }

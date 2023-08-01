@@ -130,6 +130,12 @@ func CreateUpgradeHandler(
 			CosmwasmWeight:     300,
 		})
 
+		// // migrate twap records for CL Pools
+		// err = FlipTwapSpotPriceRecords(ctx, []uint64{1}, keepers)
+		// if err != nil {
+		// 	return nil, err
+		// }
+
 		return migrations, nil
 	}
 }

@@ -122,7 +122,7 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 			s.Ctx = s.Ctx.WithBlockTime(tc.time)
 			tc.expRecord.Time = tc.time
 
-			s.twapkeeper.StoreNewRecord(s.Ctx, tc.startRecord)
+			s.twapkeeper.StoreNewRecord(s.Ctx, tc.baseDenom, tc.quoteDenom, tc.startRecord)
 
 			actualRecord, err := s.twapkeeper.GetBeginBlockAccumulatorRecord(s.Ctx, tc.poolId, tc.baseDenom, tc.quoteDenom)
 
