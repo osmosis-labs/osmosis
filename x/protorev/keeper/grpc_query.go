@@ -169,15 +169,15 @@ func (q Querier) GetProtoRevDeveloperAccount(c context.Context, req *types.Query
 	return &types.QueryGetProtoRevDeveloperAccountResponse{DeveloperAccount: developerAccount.String()}, nil
 }
 
-// GetProtoRevPoolWeights queries the weights of each pool type that is being used for arbitrage
-func (q Querier) GetProtoRevPoolWeights(c context.Context, req *types.QueryGetProtoRevPoolWeightsRequest) (*types.QueryGetProtoRevPoolWeightsResponse, error) {
+// GetProtoRevPoolTypeInfo queries the pool type info used by the module for arbitrage
+func (q Querier) GetProtoRevPoolTypeInfo(c context.Context, req *types.QueryGetProtoRevPoolTypeInfoRequest) (*types.QueryGetProtoRevPoolTypeInfoResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	poolWeights := q.Keeper.GetPoolWeights(ctx)
+	poolTypeInfo := q.Keeper.GetPoolTypeInfo(ctx)
 
-	return &types.QueryGetProtoRevPoolWeightsResponse{PoolWeights: poolWeights}, nil
+	return &types.QueryGetProtoRevPoolTypeInfoResponse{PoolTypeInfo: poolTypeInfo}, nil
 }
 
 // GetProtoRevPoolPointsPerTx queries the maximum number of pool points that can be consumed per transaction

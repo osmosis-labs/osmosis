@@ -282,7 +282,7 @@ func (s *KeeperTestSuite) TestGetProtoRevDeveloperAccount() {
 }
 
 // TestGetProtoRevPoolWeights tests the query to retrieve the pool weights
-func (s *KeeperTestSuite) TestGetProtoRevPoolWeights() {
+func (s *KeeperTestSuite) TestGetProtoRevPoolTypeInfo() {
 	// Set the pool weights
 	poolWeights := types.PoolWeights{
 		StableWeight:       5,

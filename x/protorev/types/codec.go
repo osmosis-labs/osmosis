@@ -20,7 +20,7 @@ const (
 	setDeveloperAccount      = "osmosis/MsgSetDeveloperAccount"
 	setMaxPoolPointsPerTx    = "osmosis/MsgSetMaxPoolPointsPerTx"
 	setMaxPoolPointsPerBlock = "osmosis/MsgSetMaxPoolPointsPerBlock"
-	setPoolWeights           = "osmosis/MsgSetPoolWeights"
+	setPoolTypeInfo          = "osmosis/MsgSetPoolTypeInfo"
 	setBaseDenoms            = "osmosis/MsgSetBaseDenoms"
 
 	// proposals
@@ -40,7 +40,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgSetDeveloperAccount{}, setDeveloperAccount, nil)
 	cdc.RegisterConcrete(&MsgSetMaxPoolPointsPerTx{}, setMaxPoolPointsPerTx, nil)
 	cdc.RegisterConcrete(&MsgSetMaxPoolPointsPerBlock{}, setMaxPoolPointsPerBlock, nil)
-	cdc.RegisterConcrete(&MsgSetPoolWeights{}, setPoolWeights, nil)
+	cdc.RegisterConcrete(&MsgSetPoolTypeInfo{}, setPoolTypeInfo, nil)
 	cdc.RegisterConcrete(&MsgSetBaseDenoms{}, setBaseDenoms, nil)
 
 	// proposals
@@ -55,7 +55,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgSetDeveloperAccount{},
 		&MsgSetMaxPoolPointsPerTx{},
 		&MsgSetMaxPoolPointsPerBlock{},
-		&MsgSetPoolWeights{},
+		&MsgSetPoolTypeInfo{},
 		&MsgSetBaseDenoms{},
 	)
 

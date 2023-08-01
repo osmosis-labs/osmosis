@@ -34,7 +34,7 @@ const (
 	prefixMaxPoolPointsPerBlock
 	prefixPoolPointCountForBlock
 	prefixLatestBlockHeight
-	prefixPoolWeights
+	prefixPoolTypeInfo
 	prefixSwapsToBackrun
 )
 
@@ -84,8 +84,8 @@ var (
 	// KeyPrefixLatestBlockHeight is the prefix for store that keeps track of the latest recorded block height
 	KeyPrefixLatestBlockHeight = []byte{prefixLatestBlockHeight}
 
-	// KeyPrefixPoolWeights is the prefix for store that keeps track of the weights for different pool types
-	KeyPrefixPoolWeights = []byte{prefixPoolWeights}
+	// KeyPrefixPoolTypeInfo is the prefix for store that keeps track of the pool type info
+	KeyPrefixPoolTypeInfo = []byte{prefixPoolTypeInfo}
 
 	// KeyPrefixSwapsToBackrun is the prefix for store that keeps track of the swaps that need to be backrun for a given tx
 	KeyPrefixSwapsToBackrun = []byte{prefixSwapsToBackrun}

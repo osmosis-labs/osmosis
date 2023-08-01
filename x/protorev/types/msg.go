@@ -10,7 +10,7 @@ var (
 	_ sdk.Msg = &MsgSetDeveloperAccount{}
 	_ sdk.Msg = &MsgSetMaxPoolPointsPerTx{}
 	_ sdk.Msg = &MsgSetMaxPoolPointsPerBlock{}
-	_ sdk.Msg = &MsgSetPoolWeights{}
+	_ sdk.Msg = &MsgSetPoolTypeInfo{}
 	_ sdk.Msg = &MsgSetBaseDenoms{}
 )
 
@@ -19,7 +19,7 @@ const (
 	TypeMsgSetDeveloperAccount      = "set_developer_account"
 	TypeMsgSetMaxPoolPointsPerTx    = "set_max_pool_points_per_tx"
 	TypeMsgSetMaxPoolPointsPerBlock = "set_max_pool_points_per_block"
-	TypeMsgSetPoolWeights           = "set_pool_weights"
+	TypeMsgSetPoolTypeInfo          = "set_pool_type_info"
 	TypeMsgSetBaseDenoms            = "set_base_denoms"
 )
 
@@ -206,32 +206,32 @@ func (msg MsgSetMaxPoolPointsPerBlock) GetSigners() []sdk.AccAddress {
 }
 
 // ---------------------- Interface for MsgSetPoolWeights ---------------------- //
-// NewMsgSetPoolWeights creates a new MsgSetPoolWeights instance
-func NewMsgSetPoolWeights(admin string, poolWeights PoolWeights) *MsgSetPoolWeights {
-	return &MsgSetPoolWeights{
-		Admin:       admin,
-		PoolWeights: poolWeights,
+// NewMsgSetPoolTypeInfo creates a new MsgSetPoolTypeInfo instance
+func NewMsgSetPoolTypeInfo(admin string, poolTypeInfo PoolTypeInfo) *MsgSetPoolTypeInfo {
+	return &MsgSetPoolTypeInfo{
+		Admin:        admin,
+		PoolTypeInfo: poolTypeInfo,
 	}
 }
 
 // Route returns the name of the module
-func (msg MsgSetPoolWeights) Route() string {
+func (msg MsgSetPoolTypeInfo) Route() string {
 	return RouterKey
 }
 
 // Type returns the type of the message
-func (msg MsgSetPoolWeights) Type() string {
-	return TypeMsgSetPoolWeights
+func (msg MsgSetPoolTypeInfo) Type() string {
+	return TypeMsgSetPoolTypeInfo
 }
 
 // ValidateBasic validates the MsgSetPoolWeights
-func (msg MsgSetPoolWeights) ValidateBasic() error {
+func (msg MsgSetPoolTypeInfo) ValidateBasic() error {
 	// Account must be a valid bech32 address
 	if _, err := sdk.AccAddressFromBech32(msg.Admin); err != nil {
 		return errorsmod.Wrap(err, "invalid admin address (must be bech32)")
 	}
 
-	if err := msg.PoolWeights.Validate(); err != nil {
+	if err := msg.PoolTypeInfo.Validate(); err != nil {
 		return err
 	}
 
@@ -239,12 +239,12 @@ func (msg MsgSetPoolWeights) ValidateBasic() error {
 }
 
 // GetSignBytes encodes the message for signing
-func (msg MsgSetPoolWeights) GetSignBytes() []byte {
+func (msg MsgSetPoolTypeInfo) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
-func (msg MsgSetPoolWeights) GetSigners() []sdk.AccAddress {
+func (msg MsgSetPoolTypeInfo) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Admin)
 	return []sdk.AccAddress{addr}
 }

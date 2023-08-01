@@ -448,17 +448,18 @@ func (k Keeper) SetMaxPointsPerBlock(ctx sdk.Context, maxPoints uint64) error {
 	return nil
 }
 
-// GetPoolWeights retrieves the weights of different pool types. The weight of a pool type roughly
-// corresponds to the amount of time it will take to simulate and execute a swap on that pool type (in ms).
-func (k Keeper) GetPoolWeights(ctx sdk.Context) types.PoolWeights {
+// GetPoolTypeInfo retrieves the metadata about the different pool types. This is used to determine the weights of
+// different pool types when calculating the optimal route. Additionally, it allows for more flexibility in the future
+// if we want to add more pool types and custom handling around each pool type.
+func (k Keeper) GetPoolTypeInfo(ctx sdk.Context) types.PoolTypeInfo {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPoolWeights)
-	poolWeights := &types.PoolWeights{}
+	poolWeights := &types.PoolTypeInfo{}
 	osmoutils.MustGet(store, types.KeyPrefixPoolWeights, poolWeights)
 	return *poolWeights
 }
 
-// SetPoolWeights sets the weights of different pool types.
-func (k Keeper) SetPoolWeights(ctx sdk.Context, poolWeights types.PoolWeights) {
+// SetPoolTypeInfo sets the weights of different pool types.
+func (k Keeper) SetPoolTypeInfo(ctx sdk.Context, poolWeights types.PoolTypeInfo) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPoolWeights)
 	osmoutils.MustSet(store, types.KeyPrefixPoolWeights, &poolWeights)
 }
