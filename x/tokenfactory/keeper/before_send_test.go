@@ -130,28 +130,37 @@ func (s *KeeperTestSuite) TestBeforeSendHook() {
 func (s *KeeperTestSuite) TestInfiniteTrackBeforeSend() {
 	s.SkipIfWSL()
 
-	// load wasm file
-	wasmFile := "./testdata/infinite_track_beforesend.wasm"
-	wasmCode, err := os.ReadFile(wasmFile)
-	s.Require().NoError(err)
-
 	for _, tc := range []struct {
 		name            string
+		wasmFile        string
+		tokenToSend     sdk.Coins
 		useFactoryDenom bool
 		expectedError   bool
 	}{
 		{
 			name:            "sending tokenfactory denom from module to module with infinite contract should panic",
+			wasmFile:        "./testdata/infinite_track_beforesend.wasm",
 			useFactoryDenom: true,
 		},
 		{
 			name:            "sending non-tokenfactory denom from module to module with infinite contract should not panic",
+			wasmFile:        "./testdata/infinite_track_beforesend.wasm",
+			tokenToSend:     sdk.NewCoins(sdk.NewInt64Coin("foo", 1000000)),
 			useFactoryDenom: false,
+		},
+		{
+			name:            "Try using no 100 ",
+			wasmFile:        "./testdata/no100.wasm",
+			useFactoryDenom: true,
 		},
 	} {
 		s.Run(fmt.Sprintf("Case %s", tc.name), func() {
 			// setup test
 			s.SetupTest()
+
+			// load wasm file
+			wasmCode, err := os.ReadFile(tc.wasmFile)
+			s.Require().NoError(err)
 
 			// instantiate wasm code
 			codeID, _, err := s.contractKeeper.Create(s.Ctx, s.TestAccs[0], wasmCode, nil)
@@ -166,9 +175,9 @@ func (s *KeeperTestSuite) TestInfiniteTrackBeforeSend() {
 
 			var tokenToSend sdk.Coins
 			if tc.useFactoryDenom {
-				tokenToSend = sdk.NewCoins(sdk.NewInt64Coin(factoryDenom, 1000000))
+				tokenToSend = sdk.NewCoins(sdk.NewInt64Coin(factoryDenom, 100))
 			} else {
-				tokenToSend = sdk.NewCoins(sdk.NewInt64Coin("foo", 1000000))
+				tokenToSend = tc.tokenToSend
 			}
 
 			// send the mint module tokenToSend
