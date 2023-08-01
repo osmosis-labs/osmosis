@@ -327,6 +327,23 @@ func (k Keeper) setStableSwapScalingFactors(ctx sdk.Context, poolId uint64, scal
 	return k.setPool(ctx, stableswapPool)
 }
 
+// setStableSwapScalingFactorController updates the scaling factor controller address for a stable swap pool
+// errors if the pool does not exist or is not a stable swap pool
+func (k Keeper) setStableSwapScalingFactorController(ctx sdk.Context, poolId uint64, controllerAddress string) error {
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
+	if err != nil {
+		return err
+	}
+	stableswapPool, ok := pool.(*stableswap.Pool)
+	if !ok {
+		return fmt.Errorf("pool id %d is not of type stableswap pool", poolId)
+	}
+
+	stableswapPool.ScalingFactorController = controllerAddress
+
+	return k.setPool(ctx, stableswapPool)
+}
+
 // asCFMMPool converts PoolI to CFMMPoolI by casting the input.
 // Returns the pool of the CFMMPoolI or error if the given pool does not implement
 // CFMMPoolI.
