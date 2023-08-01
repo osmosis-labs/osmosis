@@ -125,12 +125,51 @@ func CreateUpgradeHandler(
 		// Reset the pool weights upon upgrade. This will add support for CW pools on ProtoRev.
 		keepers.ProtoRevKeeper.SetInfoByPoolType(ctx, types.DefaultPoolTypeInfo)
 
-		// // migrate twap records for CL Pools
-		// err = FlipTwapSpotPriceRecords(ctx, []uint64{1}, keepers)
-		// if err != nil {
-		// 	return nil, err
-		// }
+		// get all the existing CL pools
+		pools, err := keepers.ConcentratedLiquidityKeeper.GetPools(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, pool := range pools {
+			// migrate twap records for CL Pools
+			err = FlipTwapSpotPriceRecords(ctx, []uint64{pool.GetId()}, keepers)
+			if err != nil {
+				return nil, err
+			}
+		}
 
 		return migrations, nil
 	}
+}
+
+func FlipTwapSpotPriceRecords(ctx sdk.Context, poolIds []uint64, keepers *keepers.AppKeepers) error {
+	for _, poolId := range poolIds {
+		// check that this is a cl pool
+		_, err := keepers.ConcentratedLiquidityKeeper.GetConcentratedPoolById(ctx, poolId)
+		if err != nil {
+			return err
+		}
+
+		// check that the twap record exists
+		clPoolTwapRecords, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, poolId)
+		if err != nil {
+			return err
+		}
+
+		for _, twapRecord := range clPoolTwapRecords {
+			twapRecord.LastErrorTime = time.Time{}
+			oldAsset0Denom := twapRecord.Asset0Denom
+			oldAsset1Denom := twapRecord.Asset1Denom
+			// oldSpotPrice0 := twapRecord.P0LastSpotPrice
+			// oldSpotPrice1 := twapRecord.P1LastSpotPrice
+
+			twapRecord.Asset0Denom = oldAsset1Denom
+			twapRecord.Asset1Denom = oldAsset0Denom
+			// twapRecord.P0LastSpotPrice = oldSpotPrice1
+			// twapRecord.P1LastSpotPrice = oldSpotPrice0
+			keepers.TwapKeeper.StoreNewRecord(ctx, oldAsset0Denom, oldAsset1Denom, twapRecord)
+		}
+	}
+	return nil
 }

@@ -273,13 +273,13 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 	pool5Min2SBaseMsAB, pool5Min2SBaseMsAC, pool5Min2SBaseMsBC,
 		pool5Min1SBaseMsAB, pool5Min1SBaseMsAC, pool5Min1SBaseMsBC,
 		pool5BaseSecBaseMsAB, pool5BaseSecBaseMsAC, pool5BaseSecBaseMsBC,
-		pool5Plus1SBaseMsAB, pool5Plus1SBaseMsAC, pool5Plus1SBaseMsBC := s.createTestRecordsFromTimeInPool(baseTime, 5)
+		pool5Plus1SBaseMsAB, pool5Plus1SBaseMsAC, pool5Plus1SBaseMsBC := s.CreateTestRecordsFromTimeInPool(baseTime, 5)
 
 	// Create 12 records in the same pool from base time - 1 ms, each record with the difference of 1 second between them
 	pool5Min2SMin1MsAB, pool5Min2SMin1MsAC, pool5Min2SMin1MsBC,
 		pool5Min1SMin1MsAB, pool5Min1SMin1MsAC, pool5Min1SMin1MsBC,
 		pool5BaseSecMin1MsAB, pool5BaseSecMin1MsAC, pool5BaseSecMin1MsBC,
-		pool5Plus1SMin1MsAB, pool5Plus1SMin1MsAC, pool5Plus1SMin1MsBC := s.createTestRecordsFromTimeInPool(baseTime.Add(-time.Millisecond), 5)
+		pool5Plus1SMin1MsAB, pool5Plus1SMin1MsAC, pool5Plus1SMin1MsBC := s.CreateTestRecordsFromTimeInPool(baseTime.Add(-time.Millisecond), 5)
 
 	tests := map[string]struct {
 		// order does not follow any specific pattern
