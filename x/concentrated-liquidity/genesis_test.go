@@ -11,12 +11,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	osmoapp "github.com/osmosis-labs/osmosis/v16/app"
-	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
-	clmodule "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/clmodule"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types/genesis"
+	osmoapp "github.com/osmosis-labs/osmosis/v17/app"
+	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
+	clmodule "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/clmodule"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types/genesis"
 )
 
 type singlePoolGenesisEntry struct {
@@ -533,8 +533,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				s.Require().NoError(err)
 				for j, actualIncentiveAccum := range acutalIncentiveAccums {
 					expectedAccum := tc.genesis.PoolData[i].IncentivesAccumulators
-					actualTotalShares, err := actualIncentiveAccum.GetTotalShares()
-					s.Require().NoError(err)
+					actualTotalShares := actualIncentiveAccum.GetTotalShares()
 
 					s.Require().Equal(expectedAccum[j].GetName(), actualIncentiveAccum.GetName())
 					s.Require().Equal(expectedAccum[j].AccumContent.AccumValue, actualIncentiveAccum.GetValue())
@@ -580,8 +579,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			for i, accumObject := range spreadFactorAccums {
 				s.Require().Equal(spreadFactorAccums[i].GetValue(), tc.expectedspreadFactorAccumValues[i].AccumContent.AccumValue)
 
-				totalShares, err := accumObject.GetTotalShares()
-				s.Require().NoError(err)
+				totalShares := accumObject.GetTotalShares()
 				s.Require().Equal(totalShares, tc.expectedspreadFactorAccumValues[i].AccumContent.TotalShares)
 			}
 

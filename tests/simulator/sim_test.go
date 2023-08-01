@@ -13,9 +13,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	osmosim "github.com/osmosis-labs/osmosis/v16/simulation/executor"
-	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes/simlogger"
-	txfeetypes "github.com/osmosis-labs/osmosis/v16/x/txfees/types"
+	osmosim "github.com/osmosis-labs/osmosis/v17/simulation/executor"
+	"github.com/osmosis-labs/osmosis/v17/simulation/simtypes/simlogger"
+	txfeetypes "github.com/osmosis-labs/osmosis/v17/x/txfees/types"
 )
 
 // Profile with:

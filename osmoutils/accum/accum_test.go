@@ -38,8 +38,7 @@ func (suite *AccumTestSuite) MakeAndGetAccumulator(name string) *accumPackage.Ac
 }
 
 func (suite *AccumTestSuite) TotalSharesCheck(accum *accumPackage.AccumulatorObject, expected sdk.Dec) {
-	shareCount, err := accum.GetTotalShares()
-	suite.Require().NoError(err)
+	shareCount := accum.GetTotalShares()
 	suite.Require().Equal(expected.String(), shareCount.String())
 }
 
@@ -232,45 +231,40 @@ func (suite *AccumTestSuite) TestNewPosition() {
 	// once at beginning so we can test duplicate positions
 	suite.SetupTest()
 
-	// Setup.
-	defaultAccObject := accumPackage.MakeTestAccumulator(suite.store, testNameOne, emptyCoins, emptyDec)
-
-	nonEmptyAccObject := accumPackage.MakeTestAccumulator(suite.store, testNameTwo, initialCoinsDenomOne, emptyDec)
-
 	tests := map[string]struct {
-		accObject        *accumPackage.AccumulatorObject
+		initialCoins     sdk.DecCoins
 		name             string
 		numShareUnits    sdk.Dec
 		options          *accumPackage.Options
 		expectedPosition accumPackage.Record
 	}{
 		"test address one - position created": {
-			accObject:        defaultAccObject,
+			initialCoins:     emptyCoins,
 			name:             testAddressOne,
 			numShareUnits:    positionOne.NumShares,
 			expectedPosition: positionOne,
 		},
 		"test address two (non-nil options) - position created": {
-			accObject:        defaultAccObject,
+			initialCoins:     emptyCoins,
 			name:             testAddressTwo,
 			numShareUnits:    positionTwo.NumShares,
 			expectedPosition: positionTwo,
 			options:          &emptyPositionOptions,
 		},
 		"test address one - position overwritten": {
-			accObject:        defaultAccObject,
+			initialCoins:     emptyCoins,
 			name:             testAddressOne,
 			numShareUnits:    positionOneV2.NumShares,
 			expectedPosition: positionOneV2,
 		},
 		"test address three - added": {
-			accObject:        defaultAccObject,
+			initialCoins:     emptyCoins,
 			name:             testAddressThree,
 			numShareUnits:    positionThree.NumShares,
 			expectedPosition: positionThree,
 		},
 		"test address one with non-empty accumulator - position created": {
-			accObject:        nonEmptyAccObject,
+			initialCoins:     initialCoinsDenomOne,
 			name:             testAddressOne,
 			numShareUnits:    positionOne.NumShares,
 			expectedPosition: withInitialAccumValue(positionOne, initialCoinsDenomOne),
@@ -280,24 +274,25 @@ func (suite *AccumTestSuite) TestNewPosition() {
 	for name, tc := range tests {
 		tc := tc
 		suite.Run(name, func() {
-			originalAccValue := tc.accObject.GetTotalShareField()
+			accObject := accumPackage.MakeTestAccumulator(suite.store, name, tc.initialCoins, emptyDec)
+			originalAccValue := accObject.GetTotalShareField()
 			expectedAccValue := originalAccValue.Add(tc.numShareUnits)
 
 			// System under test.
-			err := tc.accObject.NewPosition(tc.name, tc.numShareUnits, tc.options)
+			err := accObject.NewPosition(tc.name, tc.numShareUnits, tc.options)
 			suite.Require().NoError(err)
 
 			// Assertions.
-			position := tc.accObject.MustGetPosition(tc.name)
+			position := accObject.MustGetPosition(tc.name)
 
 			suite.Require().Equal(tc.expectedPosition.NumShares, position.NumShares)
 			suite.Require().Equal(tc.expectedPosition.AccumValuePerShare, position.AccumValuePerShare)
 			suite.Require().Equal(tc.expectedPosition.UnclaimedRewardsTotal, position.UnclaimedRewardsTotal)
 
 			// ensure receiver was mutated
-			suite.Require().Equal(expectedAccValue, tc.accObject.GetTotalShareField())
+			suite.Require().Equal(expectedAccValue, accObject.GetTotalShareField())
 			// ensure state was mutated
-			suite.TotalSharesCheck(tc.accObject, expectedAccValue)
+			suite.TotalSharesCheck(accObject, expectedAccValue)
 
 			if tc.options == nil {
 				suite.Require().Nil(position.Options)
