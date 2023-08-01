@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"text/template"
 
 	"github.com/spf13/cobra"
@@ -17,15 +18,17 @@ import (
 )
 
 type OsmosisCustomClient struct {
-	ChainID        string `mapstructure:"chain-id" json:"chain-id"`
-	KeyringBackend string `mapstructure:"keyring-backend" json:"keyring-backend"`
-	Output         string `mapstructure:"output" json:"output"`
-	Node           string `mapstructure:"node" json:"node"`
-	BroadcastMode  string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
-	Gas            string `mapstructure:"gas" json:"gas"`
-	GasPrices      string `mapstructure:"gas-prices" json:"gas-prices"`
-	GasAdjustment  string `mapstructure:"gas-adjustment" json:"gas-adjustment"`
-	Fees           string `mapstructure:"fees" json:"fees"`
+	ChainID                   string `mapstructure:"chain-id" json:"chain-id"`
+	KeyringBackend            string `mapstructure:"keyring-backend" json:"keyring-backend"`
+	Output                    string `mapstructure:"output" json:"output"`
+	Node                      string `mapstructure:"node" json:"node"`
+	BroadcastMode             string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
+	Gas                       string `mapstructure:"gas" json:"gas"`
+	GasPrices                 string `mapstructure:"gas-prices" json:"gas-prices"`
+	GasAdjustment             string `mapstructure:"gas-adjustment" json:"gas-adjustment"`
+	Fees                      string `mapstructure:"fees" json:"fees"`
+	HumanReadableDenomsInput  bool   `mapstructure:"human-readable-denoms-input" json:"human-readable-denoms-input"`
+	HumanReadableDenomsOutput bool   `mapstructure:"human-readable-denoms-output" json:"human-readable-denoms-output"`
 }
 
 // Override sdk ConfigCmd func
@@ -141,6 +144,13 @@ output = "{{ .Output }}"
 node = "{{ .Node }}"
 # Transaction broadcasting mode (sync|async)
 broadcast-mode = "{{ .BroadcastMode }}"
+# Human-readable denoms
+# If enabled, when using CLI, user can input base denoms (baseatom, basescrt, baseweth, basewbtc, basewbtc.grv etc.) instead of their ibc equivalents.
+# This feature isn't stable yet, and outputs will change in subsequent releases
+human-readable-denoms-input = {{ .HumanReadableDenomsInput }}
+# If enabled, CLI response return base denoms (baseatom, basescrt, baseweth, basewbtc, basewbtc.grv etc.) instead of their ibc equivalents.
+# This feature isn't stable yet, and outputs will change in subsequent releases
+human-readable-denoms-output = {{ .HumanReadableDenomsOutput }}
 
 
 ###############################################################################
@@ -227,8 +237,38 @@ func SetCustomEnvVariablesFromClientToml(ctx client.Context) {
 	setEnvFromConfig("gas-adjustment", "OSMOSISD_GAS_ADJUSTMENT")
 	// fees
 	setEnvFromConfig("fees", "OSMOSISD_FEES")
+	// human readable denoms
+	setEnvFromConfig("human-readable-denoms-input", "OSMOSISD_HUMAN_READABLE_DENOMS_INPUT")
+	setEnvFromConfig("human-readable-denoms-output", "OSMOSISD_HUMAN_READABLE_DENOMS_OUTPUT")
 }
 
 func errUnknownConfigKey(key string) error {
 	return fmt.Errorf("unknown configuration key: %q", key)
+}
+
+func GetHumanReadableDenomEnvVariables() (bool, bool) {
+	humanReadableDenomsInputStr := os.Getenv("OSMOSISD_HUMAN_READABLE_DENOMS_INPUT")
+	humanReadableDenomsInput, err := strconv.ParseBool(humanReadableDenomsInputStr)
+	if err != nil {
+		return false, false
+	}
+	humanReadableDenomsOutputStr := os.Getenv("OSMOSISD_HUMAN_READABLE_DENOMS_OUTPUT")
+	humanReadableDenomsOutput, err := strconv.ParseBool(humanReadableDenomsOutputStr)
+	if err != nil {
+		return false, false
+	}
+	return humanReadableDenomsInput, humanReadableDenomsOutput
+}
+
+func GetChainId(initClientCtx client.Context, cmd *cobra.Command) string {
+	chainID := initClientCtx.ChainID
+
+	// Get the pflag.FlagSet for the command.
+	flagSet := cmd.Flags()
+
+	// Check if the "chain-id" flag exists.
+	if chainIDFlag := flagSet.Lookup(flags.FlagChainID); chainIDFlag != nil {
+		chainID = chainIDFlag.Value.String()
+	}
+	return chainID
 }

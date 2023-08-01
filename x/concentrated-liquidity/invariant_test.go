@@ -4,13 +4,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
 type ExpectedGlobalRewardValues struct {
-	TotalSpreadRewards sdk.Coins
-	TotalIncentives    sdk.Coins
+	// By default, the global reward checks just ensure that rounding is done
+	// in the pools favor.
+	// The tolerance here ensures that it rounded in the pools favor by at
+	// _at most_ ExpectedAdditiveTolerance units.
+	ExpectedAdditiveTolerance sdk.Dec
+	TotalSpreadRewards        sdk.Coins
+	TotalIncentives           sdk.Coins
 }
 
 // assertGlobalInvariants asserts all available global invariants (i.e. invariants that should hold on all valid states).
@@ -102,12 +107,18 @@ func (s *KeeperTestSuite) assertTotalRewardsInvariant(expectedGlobalRewardValues
 		totalCollectedIncentives = totalCollectedIncentives.Add(collectedIncentives...)
 	}
 
+	additiveTolerance := sdk.Dec{}
+	if !expectedGlobalRewardValues.ExpectedAdditiveTolerance.IsNil() {
+		additiveTolerance = expectedGlobalRewardValues.ExpectedAdditiveTolerance
+	}
+
 	// For global invariant checks, we simply ensure that any rounding error was in the pool's favor.
 	// This is to allow for cases where we slightly overround, which would otherwise fail here.
 	// TODO: create ErrTolerance type that allows for additive OR multiplicative tolerance to allow for
 	// tightening this check further.
 	errTolerance := osmomath.ErrTolerance{
-		RoundingDir: osmomath.RoundDown,
+		AdditiveTolerance: additiveTolerance,
+		RoundingDir:       osmomath.RoundDown,
 	}
 
 	// Assert total collected spread rewards and incentives equal to expected
