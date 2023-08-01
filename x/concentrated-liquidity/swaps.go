@@ -311,19 +311,21 @@ func (k Keeper) computeOutAmtGivenIn(
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
 ) (tokenIn, tokenOut sdk.Coin, poolUpdates PoolUpdates, totalSpreadFactors sdk.Dec, err error) {
+
 	fmt.Println("POOLS LIQUIDITY BEGINNING: ", pool.GetLiquidity())
 	// Get pool and asset info
 	// this also checks if pool has any position to perform swap.
-	p, err := k.getPoolById(ctx, pool.GetId())
+	// p, err := k.getPoolById(ctx, pool.GetId())
+	// if err != nil {
+	// 	return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
+	// }
+
+	err = k.validatePoolHasPositions(ctx, pool.GetId())
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 	}
 
-	p, err = k.validatePoolHasPositions(ctx, p)
-	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
-	}
-
+	p := pool
 	poolId := p.GetId()
 
 	if err := checkDenomValidity(tokenInMin.Denom, tokenOutDenom, p.GetToken0(), p.GetToken1()); err != nil {
@@ -477,11 +479,12 @@ func (k Keeper) computeInAmtGivenOut(
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
 ) (tokenIn, tokenOut sdk.Coin, poolUpdates PoolUpdates, totalSpreadFactors sdk.Dec, err error) {
-	p, err := k.validatePoolHasPositions(ctx, pool)
+	err = k.validatePoolHasPositions(ctx, pool.GetId())
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 	}
 
+	p := pool
 	poolId := p.GetId()
 
 	if err := checkDenomValidity(tokenInDenom, desiredTokenOut.Denom, p.GetToken0(), p.GetToken1()); err != nil {
@@ -774,15 +777,15 @@ func (k Keeper) setupSwapStrategy(p types.ConcentratedPoolExtension, spreadFacto
 	return swapStrategy, sqrtPriceLimit, nil
 }
 
-func (k Keeper) validatePoolHasPositions(ctx sdk.Context, pool types.ConcentratedPoolExtension) (types.ConcentratedPoolExtension, error) {
-	hasPositionInPool, err := k.HasAnyPositionForPool(ctx, pool.GetId())
+func (k Keeper) validatePoolHasPositions(ctx sdk.Context, poolId uint64) error {
+	hasPositionInPool, err := k.HasAnyPositionForPool(ctx, poolId)
 	if err != nil {
-		return pool, err
+		return err
 	}
 	if !hasPositionInPool {
-		return pool, types.NoSpotPriceWhenNoLiquidityError{PoolId: pool.GetId()}
+		return types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId}
 	}
-	return pool, nil
+	return nil
 }
 
 func (k Keeper) getSwapAccumulators(ctx sdk.Context, poolId uint64) (*accum.AccumulatorObject, []*accum.AccumulatorObject, error) {
