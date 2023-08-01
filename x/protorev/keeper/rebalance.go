@@ -242,63 +242,21 @@ func (k Keeper) CalculateUpperBoundForSearch(
 
 			// In the scenario where there are multiple CL pools in a route, we select the one that inputs
 			// the smaller amount to ensure we do not overstep the max ticks moved.
-			liquidity, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, pool.GetId())
+			intermidiateCoin, err = k.executeSafeSwap(ctx, pool.GetId(), intermidiateCoin, tokenOut, route.StepSize)
 			if err != nil {
 				return sdk.ZeroInt(), err
 			}
 
-			liquidTokenAmt := liquidity.AmountOf(intermidiateCoin.Denom)
-			if liquidTokenAmt.LT(intermidiateCoin.Amount) {
-				intermidiateCoin.Amount = liquidTokenAmt.Sub(sdk.OneInt().Mul(route.StepSize))
-			}
-
-			amtOut, err := k.poolmanagerKeeper.MultihopEstimateOutGivenExactAmountIn(
-				ctx,
-				poolmanagertypes.SwapAmountInRoutes{
-					{
-						PoolId:        pool.GetId(),
-						TokenOutDenom: tokenOut,
-					},
-				},
-				sdk.NewCoin(intermidiateCoin.Denom, intermidiateCoin.Amount),
-			)
-			if err != nil {
-				return sdk.ZeroInt(), err
-			}
-
-			if amtOut.GT(maxTokenOut.Amount) {
+			if intermidiateCoin.Amount.GT(maxTokenOut.Amount) {
 				intermidiateCoin = maxTokenOut
-			} else {
-				intermidiateCoin = sdk.NewCoin(tokenOut, amtOut)
 			}
 		case !intermidiateCoin.IsNil():
-			// In the case where the liquidity in the pool is less than the max amount out, we want to
-			// use the liquidity - 1 to ensure we do not attempt to move more liquidity than is available.
-			liquidity, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, pool.GetId())
+			// If we have already seen a CL pool in the route, then simply propagate the intermediate coin up
+			// the route.
+			intermidiateCoin, err = k.executeSafeSwap(ctx, pool.GetId(), intermidiateCoin, tokenOut, route.StepSize)
 			if err != nil {
 				return sdk.ZeroInt(), err
 			}
-
-			liquidTokenAmt := liquidity.AmountOf(intermidiateCoin.Denom)
-			if liquidTokenAmt.LT(intermidiateCoin.Amount) {
-				intermidiateCoin.Amount = liquidTokenAmt.Sub(sdk.OneInt().Mul(route.StepSize))
-			}
-
-			amtOut, err := k.poolmanagerKeeper.MultihopEstimateOutGivenExactAmountIn(
-				ctx,
-				poolmanagertypes.SwapAmountInRoutes{
-					{
-						PoolId:        pool.GetId(),
-						TokenOutDenom: tokenOut,
-					},
-				},
-				sdk.NewCoin(intermidiateCoin.Denom, intermidiateCoin.Amount),
-			)
-			if err != nil {
-				return sdk.ZeroInt(), err
-			}
-
-			intermidiateCoin = sdk.NewCoin(tokenOut, amtOut)
 		}
 	}
 
@@ -316,8 +274,41 @@ func (k Keeper) CalculateUpperBoundForSearch(
 	return upperBound, nil
 }
 
-// ExecuteSafeSwap executes a safe swap by first ensuring the swap amount is less than the
+// executeSafeSwap executes a safe swap by first ensuring the swap amount is less than the
 // amount of total liquidity in the pool.
+func (k Keeper) executeSafeSwap(
+	ctx sdk.Context,
+	poolID uint64,
+	inputCoin sdk.Coin,
+	tokenOutDenom string,
+	stepSize sdk.Int,
+) (sdk.Coin, error) {
+	liquidity, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolID)
+	if err != nil {
+		return sdk.NewCoin(tokenOutDenom, sdk.ZeroInt()), err
+	}
+
+	liquidTokenAmt := liquidity.AmountOf(inputCoin.Denom)
+	if liquidTokenAmt.LT(inputCoin.Amount) {
+		inputCoin.Amount = liquidTokenAmt.Sub(sdk.OneInt().Mul(stepSize))
+	}
+
+	amt, err := k.poolmanagerKeeper.MultihopEstimateOutGivenExactAmountIn(
+		ctx,
+		poolmanagertypes.SwapAmountInRoutes{
+			{
+				PoolId:        poolID,
+				TokenOutDenom: tokenOutDenom,
+			},
+		},
+		inputCoin,
+	)
+	if err != nil {
+		return sdk.NewCoin(tokenOutDenom, amt), err
+	}
+
+	return sdk.NewCoin(tokenOutDenom, amt), nil
+}
 
 // Determine if the binary search range needs to be extended
 func (k Keeper) ExtendSearchRangeIfNeeded(
