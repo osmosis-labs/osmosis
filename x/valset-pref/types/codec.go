@@ -10,11 +10,11 @@ import (
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgSetValidatorSetPreference{}, "osmosis/valset-pref/MsgSetValidatorSetPreference", nil)
-	cdc.RegisterConcrete(&MsgDelegateToValidatorSet{}, "osmosis/valset-pref/MsgDelegateToValidatorSet", nil)
-	cdc.RegisterConcrete(&MsgUndelegateFromValidatorSet{}, "osmosis/valset-pref/MsgUndelegateFromValidatorSet", nil)
-	cdc.RegisterConcrete(&MsgWithdrawDelegationRewards{}, "osmosis/valset-pref/MsgWithdrawDelegationRewards", nil)
-	cdc.RegisterConcrete(&MsgRedelegateValidatorSet{}, "osmosis/valset-pref/MsgRedelegateValidatorSet", nil)
+	cdc.RegisterConcrete(&MsgSetValidatorSetPreference{}, "osmosis/MsgSetValidatorSetPreference", nil)
+	cdc.RegisterConcrete(&MsgDelegateToValidatorSet{}, "osmosis/MsgDelegateToValidatorSet", nil)
+	cdc.RegisterConcrete(&MsgUndelegateFromValidatorSet{}, "osmosis/MsgUndelegateFromValidatorSet", nil)
+	cdc.RegisterConcrete(&MsgWithdrawDelegationRewards{}, "osmosis/MsgWithdrawDelegationRewards", nil)
+	cdc.RegisterConcrete(&MsgRedelegateValidatorSet{}, "osmosis/MsgRedelegateValidatorSet", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
