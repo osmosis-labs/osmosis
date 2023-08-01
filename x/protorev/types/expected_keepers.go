@@ -44,6 +44,11 @@ type PoolManagerKeeper interface {
 		tokenIn sdk.Coin,
 	) (tokenOutAmount sdk.Int, err error)
 
+	MultihopEstimateInGivenExactAmountOut(
+		ctx sdk.Context,
+		routes []poolmanagertypes.SwapAmountOutRoute,
+		tokenOut sdk.Coin) (tokenInAmount sdk.Int, err error)
+
 	AllPools(
 		ctx sdk.Context,
 	) ([]poolmanagertypes.PoolI, error)
