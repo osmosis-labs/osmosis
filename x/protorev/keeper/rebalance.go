@@ -216,9 +216,9 @@ func (k Keeper) CalculateUpperBoundForSearch(
 			return sdk.ZeroInt(), err
 		}
 
-		tokenOut := inputDenom
+		tokenInDenom := inputDenom
 		if index > 0 {
-			tokenOut = route.Route[index-1].TokenOutDenom
+			tokenInDenom = route.Route[index-1].TokenOutDenom
 		}
 
 		switch {
@@ -226,36 +226,35 @@ func (k Keeper) CalculateUpperBoundForSearch(
 			// If the pool is a concentrated liquidity pool, then check the maximum amount in that can be used
 			// and determine what this amount is as an input at the previous pool (working all the way up to the
 			// beginning of the route).
-			_, maxTokenOut, err := k.concentratedLiquidityKeeper.ComputeMaxInAmtGivenMaxTicksCrossed(
+			maxTokenIn, maxTokenOut, err := k.concentratedLiquidityKeeper.ComputeMaxInAmtGivenMaxTicksCrossed(
 				ctx,
 				pool.GetId(),
-				hop.TokenOutDenom,
+				tokenInDenom,
 				poolInfo.Concentrated.MaxTicksCrossed,
 			)
 			if err != nil {
 				return sdk.ZeroInt(), err
 			}
 
-			// if there have been no other CL pools in the route, then we can set the intermediate coin to the max input amount
-			if intermidiateCoin.IsNil() {
-				intermidiateCoin = maxTokenOut
+			// if there have been no other CL pools in the route, then we can set the intermediate coin to the max input amount.
+			// Additionally, if the amount of the previous token is greater than the possible amount from this pool, then we
+			// can set the intermediate coin to the max input amount (from the current pool). Otherwise we have to do a
+			// safe swap given the previous max amount.
+			if intermidiateCoin.IsNil() || maxTokenOut.Amount.LT(intermidiateCoin.Amount) {
+				intermidiateCoin = maxTokenIn
 				continue
 			}
 
 			// In the scenario where there are multiple CL pools in a route, we select the one that inputs
 			// the smaller amount to ensure we do not overstep the max ticks moved.
-			intermidiateCoin, err = k.executeSafeSwap(ctx, pool.GetId(), intermidiateCoin, tokenOut, route.StepSize)
+			intermidiateCoin, err = k.executeSafeSwap(ctx, pool.GetId(), intermidiateCoin, tokenInDenom, route.StepSize)
 			if err != nil {
 				return sdk.ZeroInt(), err
-			}
-
-			if intermidiateCoin.Amount.GT(maxTokenOut.Amount) {
-				intermidiateCoin = maxTokenOut
 			}
 		case !intermidiateCoin.IsNil():
 			// If we have already seen a CL pool in the route, then simply propagate the intermediate coin up
 			// the route.
-			intermidiateCoin, err = k.executeSafeSwap(ctx, pool.GetId(), intermidiateCoin, tokenOut, route.StepSize)
+			intermidiateCoin, err = k.executeSafeSwap(ctx, pool.GetId(), intermidiateCoin, tokenInDenom, route.StepSize)
 			if err != nil {
 				return sdk.ZeroInt(), err
 			}
@@ -281,35 +280,36 @@ func (k Keeper) CalculateUpperBoundForSearch(
 func (k Keeper) executeSafeSwap(
 	ctx sdk.Context,
 	poolID uint64,
-	inputCoin sdk.Coin,
-	tokenOutDenom string,
+	outputCoin sdk.Coin,
+	tokenInDenom string,
 	stepSize sdk.Int,
 ) (sdk.Coin, error) {
 	liquidity, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolID)
 	if err != nil {
-		return sdk.NewCoin(tokenOutDenom, sdk.ZeroInt()), err
+		return sdk.NewCoin(tokenInDenom, sdk.ZeroInt()), err
 	}
 
-	liquidTokenAmt := liquidity.AmountOf(inputCoin.Denom)
-	if liquidTokenAmt.LT(inputCoin.Amount) {
-		inputCoin.Amount = liquidTokenAmt.Sub(sdk.OneInt().Mul(stepSize))
+	// At most we can swap half of the liquidity in the pool
+	liquidTokenAmt := liquidity.AmountOf(outputCoin.Denom).Quo(sdk.NewInt(2))
+	if liquidTokenAmt.LT(outputCoin.Amount) {
+		outputCoin.Amount = liquidTokenAmt
 	}
 
-	amt, err := k.poolmanagerKeeper.MultihopEstimateOutGivenExactAmountIn(
+	amt, err := k.poolmanagerKeeper.MultihopEstimateInGivenExactAmountOut(
 		ctx,
-		poolmanagertypes.SwapAmountInRoutes{
+		poolmanagertypes.SwapAmountOutRoutes{
 			{
-				PoolId:        poolID,
-				TokenOutDenom: tokenOutDenom,
+				PoolId:       poolID,
+				TokenInDenom: tokenInDenom,
 			},
 		},
-		inputCoin,
+		outputCoin,
 	)
 	if err != nil {
-		return sdk.NewCoin(tokenOutDenom, amt), err
+		return sdk.NewCoin(tokenInDenom, sdk.ZeroInt()), err
 	}
 
-	return sdk.NewCoin(tokenOutDenom, amt), nil
+	return sdk.NewCoin(tokenInDenom, amt), nil
 }
 
 // Determine if the binary search range needs to be extended

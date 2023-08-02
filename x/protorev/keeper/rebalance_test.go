@@ -4,7 +4,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/protorev/keeper"
 	protorevtypes "github.com/osmosis-labs/osmosis/v17/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 )
@@ -347,9 +349,9 @@ func (s *KeeperTestSuite) TestFindMaxProfitRoute() {
 			expectPass: true,
 		},
 		{
-			name: "CL Route Reduced Range",
+			name: "CL Route Multi", // This will search up to 131072 * stepsize
 			param: param{
-				route:           clPoolRouteMulti, // this will search up to 999 * stepsize
+				route:           clPoolRouteMulti,
 				expectedAmtIn:   sdk.NewInt(414_000_000),
 				expectedProfit:  sdk.NewInt(171_555_698),
 				routePoolPoints: 12,
@@ -732,4 +734,107 @@ func (s *KeeperTestSuite) TestRemainingPoolPointsForTx() {
 			s.Require().Equal(tc.expectedPointCount, points)
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestUpdateSearchRangeIfNeeded() {
+	s.Run("Extended search on stable pools", func() {
+		route := keeper.RouteMetaData{
+			Route:    extendedRangeRoute,
+			StepSize: sdk.NewInt(1_000_000),
+		}
+
+		curLeft, curRight, err := s.App.ProtoRevKeeper.UpdateSearchRangeIfNeeded(
+			s.Ctx,
+			route,
+			"usdx",
+			sdk.OneInt(),
+			types.MaxInputAmount,
+		)
+		s.Require().NoError(err)
+		s.Require().Equal(types.MaxInputAmount, curLeft)
+		s.Require().Equal(types.ExtendedMaxInputAmount, curRight)
+	})
+
+	s.Run("Extended search on CL pools", func() {
+		// Create two massive CL pools with a massive arb
+		clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "atom", "uosmo", apptesting.DefaultTickSpacing, sdk.ZeroDec())
+		fundCoins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(10_000_000_000_000)), sdk.NewCoin("uosmo", sdk.NewInt(10_000_000_000_000)))
+		s.FundAcc(s.TestAccs[0], fundCoins)
+		s.CreateFullRangePosition(clPool, fundCoins)
+
+		clPool2 := s.PrepareCustomConcentratedPool(s.TestAccs[0], "atom", "uosmo", apptesting.DefaultTickSpacing, sdk.ZeroDec())
+		fundCoins = sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(20_000_000_000_000)), sdk.NewCoin("uosmo", sdk.NewInt(10_000_000_000_000)))
+		s.FundAcc(s.TestAccs[0], fundCoins)
+		s.CreateFullRangePosition(clPool2, fundCoins)
+
+		route := keeper.RouteMetaData{
+			Route: poolmanagertypes.SwapAmountInRoutes{
+				poolmanagertypes.SwapAmountInRoute{
+					PoolId:        clPool.GetId(),
+					TokenOutDenom: "uosmo",
+				},
+				poolmanagertypes.SwapAmountInRoute{
+					PoolId:        clPool2.GetId(),
+					TokenOutDenom: "atom",
+				},
+			},
+			StepSize: sdk.NewInt(1_000_000),
+		}
+
+		curLeft, curRight, err := s.App.ProtoRevKeeper.UpdateSearchRangeIfNeeded(
+			s.Ctx,
+			route,
+			"atom",
+			sdk.OneInt(),
+			types.MaxInputAmount,
+		)
+		s.Require().NoError(err)
+		s.Require().Equal(types.MaxInputAmount, curLeft)
+		s.Require().Equal(types.ExtendedMaxInputAmount, curRight)
+	})
+
+	s.Run("Reduced search on CL pools", func() {
+		stablePool := s.createStableswapPool(
+			sdk.NewCoins(
+				sdk.NewCoin("uosmo", sdk.NewInt(25_000_000_000)),
+				sdk.NewCoin("eth", sdk.NewInt(20_000_000_000)),
+			),
+			stableswap.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(0, 2),
+				ExitFee: sdk.NewDecWithPrec(0, 2),
+			},
+			[]uint64{1, 1},
+		)
+
+		// Create two massive CL pools with a massive arb
+		clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "uosmo", apptesting.DefaultTickSpacing, sdk.ZeroDec())
+		fundCoins := sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10_000_000_000_000)), sdk.NewCoin("uosmo", sdk.NewInt(10_000_000_000_000)))
+		s.FundAcc(s.TestAccs[0], fundCoins)
+		s.CreateFullRangePosition(clPool, fundCoins)
+
+		route := keeper.RouteMetaData{
+			Route: poolmanagertypes.SwapAmountInRoutes{
+				poolmanagertypes.SwapAmountInRoute{
+					PoolId:        stablePool,
+					TokenOutDenom: "eth",
+				},
+				poolmanagertypes.SwapAmountInRoute{
+					PoolId:        clPool.GetId(),
+					TokenOutDenom: "uosmo",
+				},
+			},
+			StepSize: sdk.NewInt(1_000_000),
+		}
+
+		curLeft, curRight, err := s.App.ProtoRevKeeper.UpdateSearchRangeIfNeeded(
+			s.Ctx,
+			route,
+			"uosmo",
+			sdk.OneInt(),
+			types.MaxInputAmount,
+		)
+		s.Require().NoError(err)
+		s.Require().Equal(sdk.OneInt(), curLeft)
+		s.Require().Equal(sdk.NewInt(11247), curRight)
+	})
 }

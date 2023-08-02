@@ -920,7 +920,7 @@ func (s *KeeperTestSuite) setUpPools() {
 	s.CreateFullRangePosition(clPool, fundCoins)
 
 	// Create a concentrated liquidity pool for range testing
-	// Pool 52
+	// Pool 53
 	// Create the CL pool
 	clPool = s.PrepareCustomConcentratedPool(s.TestAccs[0], "epochTwo", "uosmo", apptesting.DefaultTickSpacing, sdk.ZeroDec())
 	fundCoins = sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(2_000_000_000)), sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000)))
