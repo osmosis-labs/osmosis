@@ -114,6 +114,22 @@ func (k Keeper) GetPools(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
 	)
 }
 
+// GetPoolIds returns all the poolIds for CL Pools
+func (k Keeper) GetPoolIds(ctx sdk.Context) ([]uint64, error) {
+	poolIds := []uint64{}
+	// get all the existing CL pools
+	pools, err := k.GetPools(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, pool := range pools {
+		poolIds = append(poolIds, pool.GetId())
+	}
+
+	return poolIds, nil
+}
+
 // setPool stores a ConcentratedPoolExtension in the Keeper's KVStore.
 // It returns an error if the provided pool is not of type *model.Pool.
 func (k Keeper) setPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {
