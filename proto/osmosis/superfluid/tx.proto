@@ -52,6 +52,11 @@ service Msg {
   rpc AddToConcentratedLiquiditySuperfluidPosition(
       MsgAddToConcentratedLiquiditySuperfluidPosition)
       returns (MsgAddToConcentratedLiquiditySuperfluidPositionResponse);
+
+  // UnbondConvertAndStake breaks all locks / superfluid staked assets,
+  // converts them to osmo then stakes the osmo to the designated validator.
+  rpc UnbondConvertAndStake(MsgUnbondConvertAndStake)
+      returns (MsgUnbondConvertAndStakeResponse);
 }
 
 message MsgSuperfluidDelegate {
@@ -231,4 +236,35 @@ message MsgAddToConcentratedLiquiditySuperfluidPositionResponse {
     (gogoproto.nullable) = false
   ];
   uint64 lock_id = 4 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
+}
+
+// ===================== MsgUnbondConvertAndStake
+message MsgUnbondConvertAndStake {
+  option (amino.name) = "osmosis/unbond-convert-and-stake";
+
+  uint64 lock_id = 1 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string val_addr = 3;
+  // min_amt_to_stake indicates the minimum amount to stake after conversion
+  string min_amt_to_stake = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"min_amt_to_stake\"",
+    (gogoproto.nullable) = false
+  ];
+  cosmos.base.v1beta1.Coin shares_to_convert_and_stake = 5 [
+    (gogoproto.moretags) = "yaml:\"shares_to_convert_and_stake\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgUnbondConvertAndStakeResponse {
+  string total_amt_staked = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"total_amt_staked\"",
+    (gogoproto.nullable) = false
+  ];
+  string total_shares = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
 }

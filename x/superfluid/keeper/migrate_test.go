@@ -797,7 +797,7 @@ func (s *KeeperTestSuite) TestValidateMigration() {
 	}
 }
 
-func (s *KeeperTestSuite) TestValidateSharesToMigrateUnlockAndExitBalancerPool() {
+func (s *KeeperTestSuite) TestvalidateSharesToUnlockAndExitBalancerPool() {
 	defaultJoinTime := s.Ctx.BlockTime()
 	type sendTest struct {
 		overwritePreMigrationLock bool
@@ -917,7 +917,7 @@ func (s *KeeperTestSuite) TestValidateSharesToMigrateUnlockAndExitBalancerPool()
 			}
 
 			// System under test
-			exitCoins, err := superfluidKeeper.ValidateSharesToMigrateUnlockAndExitBalancerPool(ctx, poolJoinAcc, balancerPooId, lock, coinsToMigrate, tc.tokenOutMins)
+			exitCoins, err := superfluidKeeper.validateSharesToUnlockAndExitBalancerPool(ctx, poolJoinAcc, balancerPooId, lock, coinsToMigrate, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())

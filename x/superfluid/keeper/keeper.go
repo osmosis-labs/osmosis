@@ -27,6 +27,7 @@ type Keeper struct {
 	gk  types.GammKeeper
 	ik  types.IncentivesKeeper
 	clk types.ConcentratedKeeper
+	pmk types.PoolManagerKeeper
 
 	lms types.LockupMsgServer
 }
@@ -34,7 +35,7 @@ type Keeper struct {
 var _ govtypes.StakingKeeper = (*Keeper)(nil)
 
 // NewKeeper returns an instance of Keeper.
-func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, dk types.CommunityPoolKeeper, ek types.EpochKeeper, lk types.LockupKeeper, gk types.GammKeeper, ik types.IncentivesKeeper, lms types.LockupMsgServer, clk types.ConcentratedKeeper) *Keeper {
+func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, dk types.CommunityPoolKeeper, ek types.EpochKeeper, lk types.LockupKeeper, gk types.GammKeeper, ik types.IncentivesKeeper, lms types.LockupMsgServer, clk types.ConcentratedKeeper, pmk types.PoolManagerKeeper) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -52,6 +53,7 @@ func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak authkee
 		gk:         gk,
 		ik:         ik,
 		clk:        clk,
+		pmk:        pmk,
 
 		lms: lms,
 	}

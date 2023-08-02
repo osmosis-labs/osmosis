@@ -2,10 +2,12 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 
@@ -655,4 +657,144 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 		// if valid delegation has been found, increment delegation index
 		fn(index+int64(i), delegation)
 	}
+}
+
+func (k Keeper) UnbondConvertAndStake(ctx sdk.Context, lockID uint64, sender, valAddr string, tokenOutMins sdk.Coins, sharesToConvertAndStake sdk.Coin) error {
+	lock, err := k.lk.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
+
+	senderAddr, err := sdk.AccAddressFromBech32(sender)
+	if err != nil {
+		return err
+	}
+
+	// use routeMigration method to check status of lock(either superfluid staked, superfluid unbonding, vanialla locked, unlocked)
+	synthLockBeforeMigration, migrationType, err := k.routeMigration(ctx, senderAddr, int64(lockID), sharesToConvertAndStake)
+	if err != nil {
+		return err
+	}
+	switch migrationType {
+	case SuperfluidBonded:
+		err = k.convertSuperfluidBondedToStakedOsmo(ctx, senderAddr, valAddr, lockID, sharesToConvertAndStake, tokenOutMins)
+		if err != nil {
+			return err
+		}
+	case SuperfluidUnbonding:
+
+		//
+	case NonSuperfluid:
+
+	case Unlocked:
+
+	default:
+		return fmt.Errorf("unsupported migration type")
+	}
+
+	return nil
+}
+
+func (k Keeper) convertSuperfluidBondedToStakedOsmo(ctx sdk.Context, sender sdk.AccAddress, valAddr string, originalLockId uint64,
+	sharesToStake sdk.Coin, minAmtToStake sdk.Int) (totalAmtConverted sdk.Int, shares sdk.Dec, err error) {
+	// do basic validation before converting
+	poolIdLeaving, preMigrationLock, err := k.validateUnbondConvertAndStake(ctx, sender, originalLockId, sharesToStake)
+	if err != nil {
+		return sdk.ZeroInt(), sdk.ZeroDec(), err
+	}
+
+	// undelegate superfluid delegated position instantly without creating unbonding synth lock (just yet).
+	_, err = k.undelegateCommon(ctx, sender.String(), originalLockId)
+	if err != nil {
+		return sdk.ZeroInt(), sdk.ZeroDec(), err
+	}
+
+	// Force unlock, validate the provided sharesToStake, and exit the balancer pool.
+	// we exit with min token out amount zero since we are checking min amount designated to stake later on anyways.
+	exitCoins, err := k.validateSharesToUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, preMigrationLock, sharesToStake, sdk.NewCoins())
+	if err != nil {
+		return sdk.ZeroInt(), sdk.ZeroDec(), err
+	}
+
+	totalAmtConverted, shares, err = k.convertGammSharesToOsmoAndStake(ctx, sender, valAddr, poolIdLeaving, exitCoins, minAmtToStake)
+	if err != nil {
+		return sdk.ZeroInt(), sdk.ZeroDec(), err
+	}
+
+	return totalAmtConverted, shares, nil
+}
+
+func (k Keeper) validateUnbondConvertAndStake(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) (poolIdLeaving uint64, preMigrationLock *lockuptypes.PeriodLock, err error) {
+	// Defense in depth, ensuring the sharesToMigrate contains gamm pool share prefix.
+	if !strings.HasPrefix(sharesToMigrate.Denom, gammtypes.GAMMTokenPrefix) {
+		return 0, &lockuptypes.PeriodLock{}, types.SharesToMigrateDenomPrefixError{Denom: sharesToMigrate.Denom, ExpectedDenomPrefix: gammtypes.GAMMTokenPrefix}
+	}
+
+	// Get the balancer poolId by parsing the gamm share denom.
+	poolIdLeaving, err = gammtypes.GetPoolIdFromShareDenom(sharesToMigrate.Denom)
+	if err != nil {
+		return 0, &lockuptypes.PeriodLock{}, err
+	}
+
+	// Check that lockID corresponds to sender and that the denomination of LP shares corresponds to the poolId.
+	preMigrationLock, err = k.validateGammLockForSuperfluidStaking(ctx, sender, poolIdLeaving, lockId)
+	if err != nil {
+		return 0, &lockuptypes.PeriodLock{}, err
+	}
+	return poolIdLeaving, preMigrationLock, nil
+}
+
+func (k Keeper) convertGammSharesToOsmoAndStake(
+	ctx sdk.Context,
+	sender sdk.AccAddress, valAddr string,
+	poolIdLeaving uint64, exitCoins sdk.Coins, minAmtToStake sdk.Int,
+) (totalAmtCoverted sdk.Int, shares sdk.Dec, err error) {
+	var nonOsmoCoins sdk.Coins
+	bondDenom := k.sk.BondDenom(ctx)
+
+	// from the exit coins, separate non-bond denom and bond denom.
+	for _, exitCoin := range exitCoins {
+		// if coin is not uosmo, add it to non-osmo Coins
+		if exitCoin.Denom != bondDenom {
+			nonOsmoCoins = append(nonOsmoCoins, exitCoin)
+		}
+	}
+	originalBondDenomAmt := exitCoins.AmountOf(bondDenom)
+
+	// track how much non-uosmo tokens we have converted to uosmo
+	totalAmtCoverted = sdk.ZeroInt()
+
+	// iterate over non-bond denom coins and swap them into bond denom
+	for _, coinToConvert := range nonOsmoCoins {
+		tokenOutAmt, err := k.pmk.SwapExactAmountIn(ctx, sender, poolIdLeaving, coinToConvert, bondDenom, sdk.ZeroInt())
+		if err != nil {
+			return sdk.ZeroInt(), sdk.ZeroDec(), err
+		}
+
+		totalAmtCoverted = totalAmtCoverted.Add(tokenOutAmt)
+	}
+
+	// add the converted amount with the amount of osmo from exit coin to get total amount we would be staking
+	totalAmtToStake := originalBondDenomAmt.Add(totalAmtCoverted)
+
+	// check if the total amount to stake after all conversion is greater than provided min amount to stake
+	if totalAmtToStake.LT(minAmtToStake) {
+		return sdk.ZeroInt(), sdk.ZeroDec(), types.TokenConvertedLessThenDesiredStakeError{
+			ActualTotalAmtToStake:   totalAmtToStake,
+			ExpectedTotalAmtToStake: minAmtToStake,
+		}
+	}
+
+	val, err := k.validateValAddrForDelegate(ctx, valAddr)
+	if err != nil {
+		return sdk.ZeroInt(), sdk.ZeroDec(), err
+	}
+
+	// delegate now!
+	shares, err = k.sk.Delegate(ctx, sender, totalAmtToStake, stakingtypes.Unbonded, val, true)
+	if err != nil {
+		return sdk.ZeroInt(), sdk.ZeroDec(), err
+	}
+
+	return totalAmtCoverted, sdk.ZeroDec(), nil
 }
