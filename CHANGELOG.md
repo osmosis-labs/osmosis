@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### State Breaking
 
 * [#5532](https://github.com/osmosis-labs/osmosis/pull/5532) fix: Fix x/tokenfactory genesis import denoms reset x/bank existing denom metadata
+* [#5863](https://github.com/osmosis-labs/osmosis/pull/5863) fix: swap base/quote asset for CL spot price query
 
 ### BugFix
 
