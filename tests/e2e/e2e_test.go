@@ -27,6 +27,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
+	v17 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v17"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/initialization"
@@ -128,6 +129,15 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 		s.T().Run("AddToExistingLockPostUpgrade", func(t *testing.T) {
 			t.Parallel()
 			s.AddToExistingLockPostUpgrade()
+		})
+	}
+
+	if s.skipUpgrade {
+		s.T().Skip("Skipping ConcentratedLiquidity_CanonicalPools test")
+	} else {
+		s.T().Run("ConcentratedLiquidity_CanonicalPools", func(t *testing.T) {
+			t.Parallel()
+			s.ConcentratedLiquidity_CanonicalPools()
 		})
 	}
 
@@ -1747,3 +1757,61 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	// quote assset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
 	osmoassert.DecApproxEq(s.T(), sdk.NewDecWithPrec(5, 1), afterSwapTwapBOverA, sdk.NewDecWithPrec(1, 2))
 }
+
+// START: CAN REMOVE POST v17 UPGRADE
+
+// Tests that v17 upgrade correctly creates the canonical pools in the upgrade handler.
+func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPools() {
+	if s.skipUpgrade {
+		s.T().Skip("Skipping v17 canonical pools creation test because upgrade is not enabled")
+	}
+
+	_, chainANode := s.getChainACfgs()
+
+	for _, assetPair := range v17.AssetPairsForTestsOnly {
+		expectedSpreadFactor := assetPair.SpreadFactor
+		concentratedPoolId := chainANode.QueryConcentratedPooIdLinkFromCFMM(assetPair.LinkedClassicPool)
+		concentratedPool := s.updatedConcentratedPool(chainANode, concentratedPoolId)
+
+		s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
+		s.Require().Equal(assetPair.BaseAsset, concentratedPool.GetToken0())
+		s.Require().Equal(v17.QuoteAsset, concentratedPool.GetToken1())
+		s.Require().Equal(uint64(v17.TickSpacing), concentratedPool.GetTickSpacing())
+		s.Require().Equal(expectedSpreadFactor.String(), concentratedPool.GetSpreadFactor(sdk.Context{}).String())
+
+		superfluidAssets := chainANode.QueryAllSuperfluidAssets()
+
+		found := false
+		for _, superfluidAsset := range superfluidAssets {
+			if superfluidAsset.Denom == cltypes.GetConcentratedLockupDenomFromPoolId(concentratedPoolId) {
+				found = true
+				break
+			}
+		}
+
+		if assetPair.Superfluid {
+			s.Require().True(found, "concentrated liquidity pool denom not found in superfluid assets")
+		} else {
+			s.Require().False(found, "concentrated liquidity pool denom found in superfluid assets")
+		}
+
+		// This spot price is taken from the balancer pool that was initiated pre upgrade.
+		balancerPool := s.updatedCFMMPool(chainANode, assetPair.LinkedClassicPool)
+		expectedSpotPrice, err := balancerPool.SpotPrice(sdk.Context{}, v17.QuoteAsset, assetPair.BaseAsset)
+		s.Require().NoError(err)
+
+		// Allow 0.1% margin of error.
+		multiplicativeTolerance := osmomath.ErrTolerance{
+			MultiplicativeTolerance: sdk.MustNewDecFromStr("0.001"),
+		}
+
+		s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(expectedSpotPrice), concentratedPool.GetCurrentSqrtPrice().PowerInteger(2)))
+	}
+
+	// Check that the community pool module account possesses positions for all the canonical pools.
+	communityPoolAddress := chainANode.QueryCommunityPoolModuleAccount()
+	positions := chainANode.QueryConcentratedPositions(communityPoolAddress)
+	s.Require().Len(positions, len(v17.AssetPairsForTestsOnly))
+}
+
+// END: CAN REMOVE POST v17 UPGRADE

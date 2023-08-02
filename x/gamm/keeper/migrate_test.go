@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,6 +13,22 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
+)
+
+const (
+	validPoolId = uint64(1)
+)
+
+var (
+	DAIIBCDenom  = "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7"
+	USDCIBCDenom = "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858"
+
+	defaultDaiAmount, _ = sdk.NewIntFromString("73000000000000000000000")
+	defaultDenom0mount  = sdk.NewInt(10000000000)
+	desiredDenom0       = "uosmo"
+	desiredDenom0Coin   = sdk.NewCoin(desiredDenom0, defaultDenom0mount)
+	daiCoin             = sdk.NewCoin(DAIIBCDenom, defaultDaiAmount)
+	usdcCoin            = sdk.NewCoin(USDCIBCDenom, defaultDaiAmount)
 )
 
 func (s *KeeperTestSuite) TestMigrate() {
@@ -995,6 +1012,238 @@ func (suite *KeeperTestSuite) TestRedirectDistributionRecord() {
 			// Validate that old gauge still exist
 			_, err = suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeToRedirect)
 			suite.Require().NoError(err)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestCreateConcentratedPoolFromCFMM() {
+	tests := map[string]struct {
+		poolLiquidity sdk.Coins
+
+		cfmmPoolIdToLinkWith uint64
+		desiredDenom0        string
+		spreadFactor         sdk.Dec
+		expectedDenoms       []string
+		expectError          error
+	}{
+		"success": {
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
+			cfmmPoolIdToLinkWith: validPoolId,
+			desiredDenom0:        desiredDenom0,
+			spreadFactor:         sdk.MustNewDecFromStr("0.0001"),
+			expectedDenoms:       []string{desiredDenom0, daiCoin.Denom},
+		},
+		"error: invalid denom 0": {
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
+			cfmmPoolIdToLinkWith: validPoolId,
+			desiredDenom0:        USDCIBCDenom,
+			spreadFactor:         sdk.MustNewDecFromStr("0.0001"),
+			expectError:          types.NoDesiredDenomInPoolError{DesiredDenom: USDCIBCDenom},
+		},
+		"error: pool with 3 assets, must have two": {
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin, usdcCoin),
+			cfmmPoolIdToLinkWith: validPoolId,
+			desiredDenom0:        USDCIBCDenom,
+			spreadFactor:         sdk.MustNewDecFromStr("0.0001"),
+			expectError:          types.MustHaveTwoDenomsError{NumDenoms: 3},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+
+			balancerId := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
+
+			balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, balancerId)
+			s.Require().NoError(err)
+
+			clPoolReturned, err := s.App.GAMMKeeper.CreateConcentratedPoolFromCFMM(s.Ctx, tc.cfmmPoolIdToLinkWith, tc.desiredDenom0, tc.spreadFactor, defaultTickSpacing)
+
+			if tc.expectError != nil {
+				s.Require().Error(err)
+				s.Require().Nil(clPoolReturned)
+				return
+			}
+			s.Require().NoError(err)
+
+			// Validate that pool saved in state is the same as the one returned
+			clPoolInState, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, clPoolReturned.GetId())
+			s.Require().NoError(err)
+			s.Require().Equal(clPoolReturned, clPoolInState)
+
+			// Validate CL and balancer pools have the same spread factor.
+			s.Require().Equal(tc.spreadFactor, clPoolReturned.GetSpreadFactor(s.Ctx))
+
+			// Validate that CL and balancer pools have the same denoms
+			balancerDenoms, err := s.App.PoolManagerKeeper.RouteGetPoolDenoms(s.Ctx, balancerPool.GetId())
+			s.Require().NoError(err)
+
+			concentratedDenoms, err := s.App.PoolManagerKeeper.RouteGetPoolDenoms(s.Ctx, clPoolReturned.GetId())
+			s.Require().NoError(err)
+
+			// Order between balancer and concentrated might differ
+			// because balancer lexicographically orders denoms but CL does not.
+			s.Require().ElementsMatch(balancerDenoms, concentratedDenoms)
+			s.Require().Equal(tc.expectedDenoms, concentratedDenoms)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrationLink() {
+	s.Setup()
+
+	longestLockableDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
+	s.Require().NoError(err)
+
+	tests := map[string]struct {
+		poolLiquidity              sdk.Coins
+		cfmmPoolIdToLinkWith       uint64
+		desiredDenom0              string
+		spreadFactor               sdk.Dec
+		expectedBalancerDenoms     []string
+		expectedConcentratedDenoms []string
+		setupInvalidDuraitons      bool
+		expectError                error
+	}{
+		"success - denoms reordered relative to balancer": {
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
+			cfmmPoolIdToLinkWith: validPoolId,
+			// lexicographically ordered
+			expectedBalancerDenoms: []string{daiCoin.Denom, desiredDenom0Coin.Denom},
+			// determined by desired denom 0
+			expectedConcentratedDenoms: []string{desiredDenom0Coin.Denom, daiCoin.Denom},
+			desiredDenom0:              desiredDenom0,
+			spreadFactor:               sdk.MustNewDecFromStr("0.0001"),
+		},
+		"success - denoms are not reordered relative to balancer": {
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
+			cfmmPoolIdToLinkWith: validPoolId,
+			// lexicographically ordered
+			expectedBalancerDenoms: []string{daiCoin.Denom, desiredDenom0Coin.Denom},
+			// determined by desired denom 0
+			expectedConcentratedDenoms: []string{daiCoin.Denom, desiredDenom0Coin.Denom},
+			desiredDenom0:              daiCoin.Denom,
+			spreadFactor:               sdk.MustNewDecFromStr("0.0001"),
+		},
+		"error: invalid denom 0": {
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
+			cfmmPoolIdToLinkWith: validPoolId,
+			desiredDenom0:        USDCIBCDenom,
+			spreadFactor:         sdk.MustNewDecFromStr("0.0001"),
+			expectError:          types.NoDesiredDenomInPoolError{DesiredDenom: USDCIBCDenom},
+		},
+		"error: pool with 3 assets, must have two": {
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin, usdcCoin),
+			cfmmPoolIdToLinkWith: validPoolId,
+			desiredDenom0:        USDCIBCDenom,
+			spreadFactor:         sdk.MustNewDecFromStr("0.0001"),
+			expectError:          types.MustHaveTwoDenomsError{NumDenoms: 3},
+		},
+		"error: invalid denom durations": {
+			poolLiquidity:         sdk.NewCoins(desiredDenom0Coin, daiCoin),
+			cfmmPoolIdToLinkWith:  validPoolId,
+			desiredDenom0:         desiredDenom0,
+			spreadFactor:          sdk.MustNewDecFromStr("0.0001"),
+			setupInvalidDuraitons: true,
+			expectError:           types.ErrNoGaugeToRedirect,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+
+			if tc.setupInvalidDuraitons {
+				// Overwrite default lockable durations.
+				s.App.PoolIncentivesKeeper.SetLockableDurations(s.Ctx, []time.Duration{})
+			}
+
+			balancerId := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
+
+			// Another pool for testing that its gauge links are unchanged
+			balancerId2 := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
+
+			balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, balancerId)
+			s.Require().NoError(err)
+
+			// Get balancer gauges.
+			gaugeToRedirect, _ := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerPool.GetId(), longestLockableDuration)
+
+			gaugeToNotRedeirect, _ := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerId2, longestLockableDuration)
+
+			originalDistrInfo := poolincentivestypes.DistrInfo{
+				TotalWeight: sdk.NewInt(100),
+				Records: []poolincentivestypes.DistrRecord{
+					{
+						GaugeId: gaugeToRedirect,
+						Weight:  sdk.NewInt(50),
+					},
+					{
+						GaugeId: gaugeToNotRedeirect,
+						Weight:  sdk.NewInt(50),
+					},
+				},
+			}
+			s.App.PoolIncentivesKeeper.SetDistrInfo(s.Ctx, originalDistrInfo)
+
+			clPool, err := s.App.GAMMKeeper.CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(s.Ctx, tc.cfmmPoolIdToLinkWith, tc.desiredDenom0, tc.spreadFactor, defaultTickSpacing)
+
+			if tc.expectError != nil {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+
+			// Get the new concentrated pool.
+			// Note, + 2 becuse we create 2 balancer pools during test setup, and 1 concentrated pool during migration.
+			clPoolInState, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, validPoolId+2)
+			s.Require().NoError(err)
+			s.Require().Equal(clPool, clPoolInState)
+
+			// Validate that CL and balancer pools have the same denoms
+			balancerDenoms, err := s.App.PoolManagerKeeper.RouteGetPoolDenoms(s.Ctx, balancerPool.GetId())
+			s.Require().NoError(err)
+
+			concentratedDenoms, err := s.App.PoolManagerKeeper.RouteGetPoolDenoms(s.Ctx, clPoolInState.GetId())
+			s.Require().NoError(err)
+
+			// This check does not guarantee order.
+			s.Require().ElementsMatch(balancerDenoms, concentratedDenoms)
+
+			// Validate order of balancer denoms is lexicographically sorted.
+			s.Require().Equal(tc.expectedBalancerDenoms, balancerDenoms)
+
+			// Validate order of concentrated pool denoms which might be different from balancer.
+			s.Require().Equal(tc.expectedConcentratedDenoms, concentratedDenoms)
+
+			// Validate that CFMM gauge is linked to the new concentrated pool.
+			concentratedPoolGaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, clPoolInState.GetId(), s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration)
+			s.Require().NoError(err)
+
+			distrInfo := s.App.PoolIncentivesKeeper.GetDistrInfo(s.Ctx)
+			s.Require().Equal(distrInfo.Records[0].GaugeId, concentratedPoolGaugeId)
+
+			// Validate that distribution record from another pool is not redirected.
+			s.Require().Equal(distrInfo.Records[1].GaugeId, gaugeToNotRedeirect)
+
+			// Validate migration record.
+			migrationInfo, err := s.App.GAMMKeeper.GetAllMigrationInfo(s.Ctx)
+			s.Require().NoError(err)
+			s.Require().Equal(migrationInfo, gammmigration.MigrationRecords{
+				BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
+					{
+						BalancerPoolId: balancerId,
+						ClPoolId:       clPoolInState.GetId(),
+					},
+				},
+			})
+
+			// Validate that old gauge still exist
+			_, err = s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeToRedirect)
+			s.Require().NoError(err)
 		})
 	}
 }
