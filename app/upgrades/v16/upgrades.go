@@ -124,7 +124,7 @@ func CreateUpgradeHandler(
 
 		// Create a concentrated liquidity pool for DAI/OSMO.
 		// Link the DAI/OSMO balancer pool to the cl pool.
-		clPool, err := keepers.GAMMKeeper.CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, DaiOsmoPoolId, DesiredDenom0, TickSpacing, sdk.ZeroDec())
+		clPool, err := keepers.GAMMKeeper.CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, DaiOsmoPoolId, DesiredDenom0, sdk.ZeroDec(), TickSpacing)
 		if err != nil {
 			return nil, err
 		}
