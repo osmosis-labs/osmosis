@@ -4,7 +4,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -105,29 +104,6 @@ func (s *IntegrationTestSuite) validateCLPosition(position model.Position, poolI
 	s.Require().Equal(position.PoolId, poolId)
 	s.Require().Equal(position.LowerTick, lowerTick)
 	s.Require().Equal(position.UpperTick, upperTick)
-}
-
-// CheckBalance Checks the balance of an address
-func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr, denom string, amount int64) {
-	// check the balance of the contract
-	s.Require().Eventually(func() bool {
-		// TODO: Change to QueryBalance(addr, denom)
-		balance, err := node.QueryBalances(addr)
-		s.Require().NoError(err)
-		if len(balance) == 0 {
-			return false
-		}
-		// check that the amount is in one of the balances inside the balance list
-		for _, b := range balance {
-			if b.Denom == denom && b.Amount.Int64() == amount {
-				return true
-			}
-		}
-		return false
-	},
-		2*time.Minute,
-		10*time.Millisecond,
-	)
 }
 
 func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) string {

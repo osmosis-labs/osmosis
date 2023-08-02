@@ -34,11 +34,6 @@ import (
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
-var (
-	// minDecTolerance minimum tolerance for sdk.Dec, given its precision of 18.
-	minDecTolerance = sdk.MustNewDecFromStr("0.000000000000000001")
-)
-
 // TODO: Find more scalable way to do this
 func (s *IntegrationTestSuite) TestAllE2E() {
 	// There appears to be an E2E quirk that requires a sleep here
@@ -1212,13 +1207,10 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 	validatorAddr := chainBNode.GetWallet(initialization.ValidatorWalletName)
 	fmt.Println("Sending IBC transfer IBCWasmHooks")
 	coin := sdk.NewCoin("uosmo", sdk.NewInt(transferAmount))
-	chainBNode.SendIBCTransfer(chainA, validatorAddr, contractAddr,
-		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr), coin)
-
-	// check the balance of the contract
 	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "uosmo"))
 	ibcDenom := denomTrace.IBCDenom()
-	s.CheckBalance(chainANode, contractAddr, ibcDenom, transferAmount)
+	chainBNode.SendIBCTransfer(chainA, validatorAddr, contractAddr,
+		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr), coin, ibcDenom)
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
@@ -1288,10 +1280,7 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 	s.NoError(err)
 	// Send the transfer from chainA to chainB. ChainB will parse the memo and forward the packet back to chainA
 	coin := sdk.NewCoin("uosmo", sdk.NewInt(transferAmount))
-	chainANode.SendIBCTransfer(chainB, validatorAddr, validatorAddr, string(forwardMemo), coin)
-
-	// check the balance of the contract
-	s.CheckBalance(chainANode, contractAddr, "uosmo", transferAmount)
+	chainANode.SendIBCTransferForward(chainA, chainB, validatorAddr, validatorAddr, contractAddr, string(forwardMemo), coin)
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")

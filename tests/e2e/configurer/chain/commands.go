@@ -252,12 +252,42 @@ func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) int {
 	return proposalID
 }
 
-func (n *NodeConfig) SendIBCTransfer(dstChain *Config, from, recipient, memo string, token sdk.Coin) {
+func (n *NodeConfig) SendIBCTransfer(dstChain *Config, from, recipient, memo string, token sdk.Coin, denomOnDestinationChain string) {
 	n.LogActionF("IBC sending %s from %s to %s. memo: %s", token.Amount.String(), from, recipient, memo)
 
-	cmd := []string{"hermes", "tx", "ft-transfer", "--dst-chain", dstChain.Id, "--src-chain", n.chainId, "--src-port", "transfer", "--src-channel", "channel-0", "--amount", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000", "--memo", memo}
-	_, _, err := n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
+	// Check the recipient wallet's balance of the token denom we are sending
+	dstNode, err := dstChain.GetDefaultNode()
 	require.NoError(n.t, err)
+	balance, err := dstNode.QueryBalances(recipient)
+	require.NoError(n.t, err)
+	preSendAmt := balance.AmountOf(denomOnDestinationChain)
+
+	cmd := []string{"hermes", "tx", "ft-transfer", "--dst-chain", dstChain.Id, "--src-chain", n.chainId, "--src-port", "transfer", "--src-channel", "channel-0", "--amount", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000", "--memo", memo}
+	_, _, err = n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
+	require.NoError(n.t, err)
+
+	// Check the recipient wallet's balance of the token denom we are sending, and make sure it increased by the amount we sent
+	expectedPostSendAmt := preSendAmt.Add(token.Amount)
+	n.CheckBalance(dstChain, recipient, denomOnDestinationChain, expectedPostSendAmt.Int64())
+
+	n.LogActionF("successfully submitted sent IBC transfer")
+}
+
+func (n *NodeConfig) SendIBCTransferForward(srcChain *Config, dstChain *Config, from, recipient, forwardTo, memo string, token sdk.Coin) {
+	n.LogActionF("IBC sending %s from %s to %s. memo: %s", token.Amount.String(), from, recipient, memo)
+
+	// Check the forwardTo wallet's balance of the token denom we are sending
+	balance, err := n.QueryBalances(forwardTo)
+	require.NoError(n.t, err)
+	preSendAmt := balance.AmountOf(token.Denom)
+
+	cmd := []string{"hermes", "tx", "ft-transfer", "--dst-chain", dstChain.Id, "--src-chain", n.chainId, "--src-port", "transfer", "--src-channel", "channel-0", "--amount", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000", "--memo", memo}
+	_, _, err = n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
+	require.NoError(n.t, err)
+
+	// Check the forwardTo wallet's balance of the token denom we are sending, and make sure it is the same as the pre-send balance since it gets returned
+	expectedPostSendAmt := preSendAmt.Add(token.Amount)
+	n.CheckBalance(srcChain, forwardTo, token.Denom, expectedPostSendAmt.Int64())
 
 	n.LogActionF("successfully submitted sent IBC transfer")
 }
@@ -823,4 +853,29 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 		return status == proposalStatusPassed
 	}, time.Minute*30, time.Millisecond*500)
 	return nil
+}
+
+// CheckBalance Checks the balance of an address
+func (n *NodeConfig) CheckBalance(chain *Config, addr, denom string, amount int64) {
+	dstNode, err := chain.GetDefaultNode()
+	require.NoError(n.t, err)
+	// check the balance of the contract
+	require.Eventually(n.t, func() bool {
+		// TODO: Change to QueryBalance(addr, denom)
+		balance, err := dstNode.QueryBalances(addr)
+		require.NoError(n.t, err)
+		if len(balance) == 0 {
+			return false
+		}
+		// check that the amount is in one of the balances inside the balance list
+		for _, b := range balance {
+			if b.Denom == denom && b.Amount.Int64() == amount {
+				return true
+			}
+		}
+		return false
+	},
+		2*time.Minute,
+		10*time.Millisecond,
+	)
 }
