@@ -11,7 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 )
 
-// NewGammProposalHandler is a handler for governance proposals on new migration records.
+// NewGammProposalHandler is a handler for governance proposals for the GAMM module.
 func NewGammProposalHandler(k keeper.Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
