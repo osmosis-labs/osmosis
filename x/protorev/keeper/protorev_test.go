@@ -307,17 +307,15 @@ func (s *KeeperTestSuite) TestGetMaxPointsPerBlock() {
 
 // TestGetInfoByPoolType tests the GetInfoByPoolType and SetInfoByPoolType functions.
 func (s *KeeperTestSuite) TestGetInfoByPoolType() {
-	// Should be initialized on genesis
-	poolWeights := s.App.ProtoRevKeeper.GetInfoByPoolType(s.Ctx)
-	s.Require().Equal(types.DefaultPoolTypeInfo, poolWeights)
-
 	// Should be able to set the PoolWeights
 	newRouteWeights := types.DefaultPoolTypeInfo
 	newRouteWeights.Balancer.Weight = 100
-	newRouteWeights.Cosmwasm.WeightMap["wasm1"] = 100
+	newRouteWeights.Cosmwasm.WeightMap = map[string]uint64{
+		"wasm1": 100,
+	}
 
 	s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, newRouteWeights)
 
-	poolWeights = s.App.ProtoRevKeeper.GetInfoByPoolType(s.Ctx)
+	poolWeights := s.App.ProtoRevKeeper.GetInfoByPoolType(s.Ctx)
 	s.Require().Equal(newRouteWeights, poolWeights)
 }

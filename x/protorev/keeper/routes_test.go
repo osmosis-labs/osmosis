@@ -324,13 +324,13 @@ func (s *KeeperTestSuite) TestCalculateRoutePoolPoints() {
 		{
 			description:             "Valid route containing only stable swap pools",
 			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 40, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}},
-			expectedRoutePoolPoints: 9,
+			expectedRoutePoolPoints: 15,
 			expectedPass:            true,
 		},
 		{
 			description:             "Valid route with more than 3 hops",
 			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 40, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 1, TokenOutDenom: ""}},
-			expectedRoutePoolPoints: 11,
+			expectedRoutePoolPoints: 17,
 			expectedPass:            true,
 		},
 		{
@@ -348,7 +348,7 @@ func (s *KeeperTestSuite) TestCalculateRoutePoolPoints() {
 		{
 			description:             "Valid route with cw pool, balancer, stable swap and cl pool",
 			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 51, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 50, TokenOutDenom: ""}},
-			expectedRoutePoolPoints: 10,
+			expectedRoutePoolPoints: 21,
 			expectedPass:            true,
 		},
 	}
@@ -356,7 +356,8 @@ func (s *KeeperTestSuite) TestCalculateRoutePoolPoints() {
 	for _, tc := range cases {
 		s.Run(tc.description, func() {
 			s.SetupTest()
-			s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, types.DefaultPoolTypeInfo)
+			s.Require().NoError(s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, 25))
+			s.Require().NoError(s.App.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, 100))
 
 			routePoolPoints, err := s.App.ProtoRevKeeper.CalculateRoutePoolPoints(s.Ctx, tc.route)
 			if tc.expectedPass {

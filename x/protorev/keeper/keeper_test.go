@@ -78,8 +78,6 @@ func (s *KeeperTestSuite) SetupTest() {
 		panic(err)
 	}
 
-	s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, types.DefaultPoolTypeInfo)
-
 	// Configure the initial base denoms used for cyclic route building
 	baseDenomPriorities := []types.BaseDenom{
 		{
@@ -906,7 +904,12 @@ func (s *KeeperTestSuite) setUpPools() {
 
 	// Create a cosmwasm pool for testing
 	// Pool 51
-	s.PrepareCosmWasmPool()
+	cwPool := s.PrepareCosmWasmPool()
+	poolInfo := types.DefaultPoolTypeInfo
+	poolInfo.Cosmwasm.WeightMap = map[string]uint64{
+		cwPool.GetContractAddress(): 4,
+	}
+	s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, poolInfo)
 
 	// Create a concentrated liquidity pool for range testing
 	// Pool 52

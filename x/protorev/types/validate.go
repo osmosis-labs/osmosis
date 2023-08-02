@@ -104,8 +104,8 @@ func (c *ConcentratedPoolInfo) Validate() error {
 		return fmt.Errorf("concentrated pool weight cannot be 0")
 	}
 
-	if c.MaxTicksCrossed == 0 || c.MaxTicksCrossed > MaxTicksMoved {
-		return fmt.Errorf("max ticks moved cannot be 0 or greater than %d", MaxTicksMoved)
+	if c.MaxTicksCrossed == 0 || c.MaxTicksCrossed > MaxTicksCrossed {
+		return fmt.Errorf("max ticks moved cannot be 0 or greater than %d", MaxTicksCrossed)
 	}
 
 	return nil

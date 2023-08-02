@@ -17,19 +17,17 @@ var (
 		},
 	}
 	DefaultPoolTypeInfo = InfoByPoolType{
-		Balancer: &BalancerPoolInfo{
+		Balancer: BalancerPoolInfo{
 			Weight: 2, // it takes around 2 ms to simulate and execute a balancer swap
 		},
-		Stable: &StablePoolInfo{
+		Stable: StablePoolInfo{
 			Weight: 5, // it takes around 5 ms to simulate and execute a stable swap
 		},
-		Concentrated: &ConcentratedPoolInfo{
+		Concentrated: ConcentratedPoolInfo{
 			Weight:          10, // it takes around 10 ms to simulate and execute a concentrated swap
-			MaxTicksCrossed: MaxTicksMoved,
+			MaxTicksCrossed: MaxTicksCrossed,
 		},
-		Cosmwasm: &CosmwasmPoolInfo{
-			WeightMap: make(map[string]uint64),
-		},
+		Cosmwasm: CosmwasmPoolInfo{},
 	}
 	DefaultDaysSinceModuleGenesis    = uint64(0)
 	DefaultDeveloperFees             = []sdk.Coin{}

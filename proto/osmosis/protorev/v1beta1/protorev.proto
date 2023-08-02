@@ -79,14 +79,25 @@ message RouteStatistics {
 // the different pool types.
 message InfoByPoolType {
   // The stable pool info
-  StablePoolInfo stable = 1 [ (gogoproto.moretags) = "yaml:\"stable\"" ];
+  StablePoolInfo stable = 1 [
+    (gogoproto.moretags) = "yaml:\"stable\"",
+    (gogoproto.nullable) = false
+  ];
   // The balancer pool info
-  BalancerPoolInfo balancer = 2 [ (gogoproto.moretags) = "yaml:\"balancer\"" ];
+  BalancerPoolInfo balancer = 2 [
+    (gogoproto.moretags) = "yaml:\"balancer\"",
+    (gogoproto.nullable) = false
+  ];
   // The concentrated pool info
-  ConcentratedPoolInfo concentrated = 3
-      [ (gogoproto.moretags) = "yaml:\"concentrated\"" ];
+  ConcentratedPoolInfo concentrated = 3 [
+    (gogoproto.moretags) = "yaml:\"concentrated\"",
+    (gogoproto.nullable) = false
+  ];
   // The cosmwasm pool info
-  CosmwasmPoolInfo cosmwasm = 4 [ (gogoproto.moretags) = "yaml:\"cosmwasm\"" ];
+  CosmwasmPoolInfo cosmwasm = 4 [
+    (gogoproto.moretags) = "yaml:\"cosmwasm\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // StablePoolInfo contains meta data pertaining to a stableswap pool type.
@@ -114,8 +125,10 @@ message ConcentratedPoolInfo {
 // CosmwasmPoolInfo contains meta data pertaining to a cosmwasm pool type.
 message CosmwasmPoolInfo {
   // The weight of a cosmwasm pool (by contract address)
-  map<string, uint64> weight_map = 1
-      [ (gogoproto.moretags) = "yaml:\"weight_map\"" ];
+  map<string, uint64> weight_map = 1 [
+    (gogoproto.moretags) = "yaml:\"weight_map\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // BaseDenom represents a single base denom that the module uses for its

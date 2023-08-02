@@ -205,6 +205,8 @@ func (k Keeper) CalculateUpperBoundForSearch(
 ) (sdk.Int, error) {
 	var intermidiateCoin sdk.Coin
 
+	poolInfo := k.GetInfoByPoolType(ctx)
+
 	// Iterate through all CL pools and determine the maximal amount of input that can be used
 	// respecting the max ticks moved.
 	for index := route.Route.Length() - 1; index >= 0; index-- {
@@ -228,7 +230,7 @@ func (k Keeper) CalculateUpperBoundForSearch(
 				ctx,
 				pool.GetId(),
 				hop.TokenOutDenom,
-				types.MaxTicksMoved,
+				poolInfo.Concentrated.MaxTicksCrossed,
 			)
 			if err != nil {
 				return sdk.ZeroInt(), err

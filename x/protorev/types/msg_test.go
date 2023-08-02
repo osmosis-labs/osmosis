@@ -517,10 +517,10 @@ func TestMsgSetPoolTypeInfo(t *testing.T) {
 			"Invalid message (invalid admin)",
 			"admin",
 			types.InfoByPoolType{
-				Balancer:     &types.BalancerPoolInfo{Weight: 1},
-				Stable:       &types.StablePoolInfo{Weight: 1},
-				Concentrated: &types.ConcentratedPoolInfo{Weight: 1, MaxTicksCrossed: 1},
-				Cosmwasm:     &types.CosmwasmPoolInfo{},
+				Balancer:     types.BalancerPoolInfo{Weight: 1},
+				Stable:       types.StablePoolInfo{Weight: 1},
+				Concentrated: types.ConcentratedPoolInfo{Weight: 1, MaxTicksCrossed: 1},
+				Cosmwasm:     types.CosmwasmPoolInfo{},
 			},
 			false,
 		},
@@ -528,10 +528,10 @@ func TestMsgSetPoolTypeInfo(t *testing.T) {
 			"Invalid message (invalid pool weights for balancer)",
 			createAccount().String(),
 			types.InfoByPoolType{
-				Balancer:     &types.BalancerPoolInfo{Weight: 0},
-				Stable:       &types.StablePoolInfo{Weight: 1},
-				Concentrated: &types.ConcentratedPoolInfo{Weight: 1, MaxTicksCrossed: 1},
-				Cosmwasm:     &types.CosmwasmPoolInfo{},
+				Balancer:     types.BalancerPoolInfo{Weight: 0},
+				Stable:       types.StablePoolInfo{Weight: 1},
+				Concentrated: types.ConcentratedPoolInfo{Weight: 1, MaxTicksCrossed: 1},
+				Cosmwasm:     types.CosmwasmPoolInfo{},
 			},
 			false,
 		},
@@ -539,10 +539,10 @@ func TestMsgSetPoolTypeInfo(t *testing.T) {
 			"Invalid message (invalid pool info for cosmwasm)",
 			createAccount().String(),
 			types.InfoByPoolType{
-				Balancer:     &types.BalancerPoolInfo{Weight: 1},
-				Stable:       &types.StablePoolInfo{Weight: 1},
-				Concentrated: &types.ConcentratedPoolInfo{Weight: 1, MaxTicksCrossed: 1},
-				Cosmwasm: &types.CosmwasmPoolInfo{
+				Balancer:     types.BalancerPoolInfo{Weight: 1},
+				Stable:       types.StablePoolInfo{Weight: 1},
+				Concentrated: types.ConcentratedPoolInfo{Weight: 1, MaxTicksCrossed: 1},
+				Cosmwasm: types.CosmwasmPoolInfo{
 					WeightMap: map[string]uint64{
 						"test": 1,
 					},
@@ -554,10 +554,10 @@ func TestMsgSetPoolTypeInfo(t *testing.T) {
 			"Invalid message (invalid pool info for concentrated)",
 			createAccount().String(),
 			types.InfoByPoolType{
-				Balancer:     &types.BalancerPoolInfo{Weight: 1},
-				Stable:       &types.StablePoolInfo{Weight: 1},
-				Concentrated: &types.ConcentratedPoolInfo{Weight: 1},
-				Cosmwasm:     &types.CosmwasmPoolInfo{},
+				Balancer:     types.BalancerPoolInfo{Weight: 1},
+				Stable:       types.StablePoolInfo{Weight: 1},
+				Concentrated: types.ConcentratedPoolInfo{Weight: 1},
+				Cosmwasm:     types.CosmwasmPoolInfo{},
 			},
 			false,
 		},
@@ -565,10 +565,10 @@ func TestMsgSetPoolTypeInfo(t *testing.T) {
 			"Valid message",
 			createAccount().String(),
 			types.InfoByPoolType{
-				Balancer:     &types.BalancerPoolInfo{Weight: 1},
-				Stable:       &types.StablePoolInfo{Weight: 1},
-				Concentrated: &types.ConcentratedPoolInfo{Weight: 1, MaxTicksCrossed: 1},
-				Cosmwasm: &types.CosmwasmPoolInfo{
+				Balancer:     types.BalancerPoolInfo{Weight: 1},
+				Stable:       types.StablePoolInfo{Weight: 1},
+				Concentrated: types.ConcentratedPoolInfo{Weight: 1, MaxTicksCrossed: 1},
+				Cosmwasm: types.CosmwasmPoolInfo{
 					WeightMap: map[string]uint64{
 						createAccount().String(): 1,
 					},
