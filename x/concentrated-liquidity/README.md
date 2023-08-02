@@ -872,6 +872,115 @@ Then, we either proceed to the next swap step or finalize the swap.
 Once the swap is completed, we persiste the swap state to the global state
 (if mutative action is performed) and return the `amountCalculated` to the user.
 
+## Liquidity depths calculation
+
+### Calculating liquidity for buckets
+Each bucket (the area between two initialized ticks) contains ceratin amount of liquidity. The liquidity amount can be obtained through `GetTickLiquidityNetInDirection` query. `GetTickLiquidityNetInDirection` returns two results:
+- `expectedStartTickLiquidity` which is the global liquidity, the cumulative liquidity from the bucket of the current price
+- `expectedLiquidityDepths` which is list of liquidity deltas for each and every initialized tick for the full price range in a certain direction that should be cumulatively added to or subtracted starting from the global liquidity in order to get the liquidity for an arbitrary range.
+
+Querying in two different directions is possible, one being 'one for zero', which is in the direction of max tick, the other direction being 'zero for one', which is in the direction of min tick.
+
+If the direction is zero for one, the liquidity for a bucket in tick can be calculated as follows: L<sub>t</sub> = L<sub>t-1</sub> - ΔL<sub>t</sub>, t=1,2, ...
+
+If the direction is one for zero, the liquidity for the bucket in the designated tick can be calculated as follows: L<sub>t</sub> = L<sub>t-1</sub> + ΔL<sub>t</sub>, t=1,2
+
+where L<sub>0</sub> is the global(cumulative liquidity).
+
+### Deducing the quantity of tokens X and Y for a tick range
+Having obtained the liquidity depths for each liquidity buckets in the pool, we can derive an equation to calculate the quantity of each token locked for a certain price range. Let *i* and *j* be the indexes of lower and upper tick boundaries of the range we want to calculate, let P<sub>0</sub> be current price and P<sub>a</sub>, P<sub>b</sub> prices for lower tick and upper tick respectively, where P<sub>a</sub>, P<sub>b</sub> are defined as the following:
+<p align="center"> 
+P<sub>a</sub> = 1.0001<sup>i</sup>, P<sub>b</sub> = 1.0001<sup>j</sup>
+</p>
+
+Let *L* be the total liquidity locked within price range [P<sub>a</sub>, P<sub>b</sub>]. The real reserve curve with liquidity *L*  is:
+
+$(x + \frac{L}{\sqrt{P_b}})(y + L\sqrt{P_a}) = L^2$
+
+Given the amount of liquidity, the quantity of tokens available in the price range [P<sub>a</sub>, P<sub>b</sub>] can be derived as follows:
+
+- If $P_a \leq P_a$:
+$x = L \left(\frac{1}{\sqrt{P_a}} - \frac{1}{\sqrt{P_b}}\right)$
+$y = 0$
+
+- If $P_a \geq P_b$:
+$x = 0$
+$y = L \left(\sqrt{P_b} - \sqrt{P_a}\right)$
+
+- If $P_a \in (P_a, P_b)$:
+$x = \left(\frac{1}{{\sqrt{P_a}}} - \frac{1}{{\sqrt{P_b}}}\right)$
+$y = L \left(\sqrt{P_a} - \sqrt{P_b}\right)$
+
+This can be written as: 
+
+$x = \left(\frac{1}{\sqrt{z}} - \frac{1}{\sqrt{P_b}}\right)$ 
+
+$y = L \left(\sqrt{z} - \sqrt{P_a}\right)$
+
+where:
+
+$z = P_a \quad \forall \quad P \leq P_a$  
+$z = P_0 \quad \forall \quad P \in (P_a, P_b)$  
+$z = P_b \quad \forall \quad P \geq P_b$  
+
+### Calculating Pool Depths
+Pool depths here refers to the token required to shift the pool price to a certain tick.
+
+Let i<sub>0</sub> be the integer index identifying a current tick (this is the tick that corresponds to the square root of the current price). Let δ be the desired depth level and d be the associated change in ticks such that 
+
+$\delta = \frac{P_1}{P_0} - 1 = \frac{1.0001^{(i_0 + d)}}{1.0001^{i_0}} - 1$
+
+The change in ticks $d$ can be found as follows:
+
+$d = \log_{1.0001}(\delta + 1)$
+
+e.g. $d = -513$ for $\delta = -5\%$
+
+Note that as the current price formally belongs only to the first range [s<sub>0</sub>, s<sub>1</sub>] or [s<sub>1</sub>, s<sub>0</sub>], where s<sub>0</sub> is the left (when the price grows) or the right (when the price drops) boundary of the current liquidity segment (segment that contains the current price). Mathematically, as we always start calculations from the current price, when recovering the token amounts, all ranges contain only one of the tokens (X or Y depending on the direction of the price change). When swapping, one of the tokens is exchanged for the token being sold. We need to find how much we can swap until the price reaches a certain level.
+
+The Pool Depths expressed in units of asset X or Y in calculated as follows:
+
+$Depth_{x}(\delta) = \sum_{i=0}^{n}x_{i}$
+$Depth_{y}(\delta) = \sum_{i=0}^{n}y_{i}$
+
+where:
+$x_i = L_i \left(\frac{1}{\sqrt{P_{a}(i)}} - \frac{1}{\sqrt{P_{b}(i)}}\right), i = 0, \dots, n$
+
+$y_i = L_i \left(\sqrt{P_{b}(i)} - \sqrt{P_{a}(i)}\right), i = 0, \dots, n$
+
+### Calculating Liquidator Depths
+Liquidator Depth refers to the real price slippage, the real price slippage (average execution price in relation to the current price) from the liquidator's point of view. That is, the amount of tokens that can be liquidated so that the real price slippage does not exceed certain level.
+
+The idea to determine the depth is to swap the maximum possible amount per each liquidity segment until a realized slippage doesn’t exceed a desired level. For the last segment the procedure is repeated per tick until the desired realized slippage is achieved.
+Maximum token amounts that can be locked within each segment or tick (and exchanged for another token when the price crosses the ticks) can be derived as follows:
+
+$x_i = L_i \left(\frac{1}{\sqrt{P_{a}(i)}} - \frac{1}{\sqrt{P_{b}(i)}}\right)$
+
+$y_i = L_i \left(\sqrt{P_{b}(i)} - \sqrt{P_{a}(i)}\right)$
+
+Starting from the current tick *i<sub>0</sub>*  and swapping one token for another one, the average execution price at the end of each tick *i*  can be determined as follows:
+
+$P_i = \frac{(Y_{i-1} + y_i)}{X_{i-1} + x}, \quad i = i_0, \ldots, i_N$
+
+$Y_i = Y_{i-1} + y_i, \quad Y_0 = 0$
+
+$X_i = X_{i-1} + x_i, \quad X_0 = 0$
+
+The slippage equals to:
+
+$Slippage_i = P_i - P_0 - 1$
+
+The algorithm to determine the depth is then the following:
+
+Calculate $X_i$ and $Y_i$ while $|Slippage_i| \leq \delta$ at some $i = N$
+
+Then 
+
+$Depth_x (\delta) = X_N$
+
+$Depth_y (\delta) = Y_N$
+
+
 ## Migration
 
 Users can migrate their Balancer positions to a Concentrated Liquidity full range
@@ -1243,6 +1352,92 @@ func (k Keeper) collectSpreadRewards(
 ```
 
 This returns the amount of spread rewards collected by the user.
+
+## Interval Accumulation
+
+Section pre-face: interval accumulation for incentives functions
+similarly to the spread rewards. However, we focus on spread rewards only for brevity.
+
+As mentioned in the previous sections, to collect spread rewards,
+we utilize a rewards accumulator abstraction with an interval accumulation extension.
+
+The accumulator abstraction can be summarized by the following bullet points:
+- accumulator values are per-share
+- per-pool-global ever-increasing accumulator
+- each position takes a snapshot of the accumulator at the time of creation
+- assume t' represents the time of claiming rewards and t represents the time of position's snapshot of
+the global accumulator. Then, the total position's rewards are equal to
+`(global accumulator at time t' - position snapshot at time t) * number of shares
+
+Interval accumulation further extends this abstraction where positions only accumulate the rewards whenever they are active.
+That is, the current tick is within the position's range.
+
+To calculate that, we utilize tick accumulators. Each tick accumulator is updated whenever it is crossed. It can be thought
+of as having the snapshot of the global accumulator when going in the opposite direction of the last traversal. For example, assume that
+we are reasoning about the snapshot value of tick 100 when the current tick is 150. Then, we know that the value of the tick is 100
+contains rewards accrued before crossing tick 100 when going from the left to the right.
+
+Fundamentally, our base accumulator abstraction changes to the following:
+- accumulator values are per-share (still the same)
+- per-pool-global ever-increasing accumulator (still the same)
+- each position takes a snapshot of the rewards accumulated while the position is active at the time of its creation (as defined by tick accumulator snapshots) (changed)
+- assume t' represents the time of claiming rewards and t represents the time of the position's snapshot of the interval accumulation.
+Then, the total position's rewards are equal to `(global accumulator at time t' - interval accumulation outside at time t' - interval accumulation inside at time t) * number of shares
+Essentially, this gives us interval accumulation inside between times t and t' for each share of the position.
+
+By convention, we initialize the tick snapshot to either:
+a) 0 if the current tick is < tick
+b) global accumulator value if the current tick is >= tick
+
+This is done to ensure that the tick accumulator always contains the rewards accrued before crossing the tick from left to right.
+
+Since tick accumulator snapshots are initialized at different times, their comparison is not meaningful.
+
+By having tick snapshots at each edge of the position and a global value, we can compute how many rewards are accrued inside
+the position. It accounts for all rewards accrued between position creation and the time of claiming rewards whenever the following
+is true:
+`lower tick <= current tick < upper tick``
+
+For this reason, there are 3 ways to compute the rewards accrued inside the position:
+1. current tick is below the position's range (current tick < lower tick)
+- Then, we compute rewards as `lower tick snapshot - upper tick snapshot`
+2. current tick is within the position's range (lower tick <= current tick < upper tick)
+- Then, we compute rewards as `global accumulator - upper tick snapshot - lower tick snapshot`
+3. current tick is above the position's range (current tick >= upper tick)
+- Then, we compute rewards as `upper tick accumulator - lower tick accumulator`
+
+### Negative Interval Accumulation Edge Case Behavior
+
+Case 1: Initialize lower tick snapshot to be greater than upper tick snapshot when current tick > upper tick
+
+Note, that if we initialize the lower tick after the upper tick is already initialized,
+for example, by another position, this might lead to negative accumulation inside
+the interval. This is only possible if the current tick is greater than the lower tick
+that is being initialized.
+
+The reason is that we initialize the lower tick accumulator to the global accumulator
+if the current tick >= tick. As a result, when subtracting the lower tick snapshot from the upper,
+the lower one is greater than or equal to the upper.
+
+This is not an issue because it gets canceled out by the "interval accumulation outside at time t'" that is added to
+the "interval accumulation inside at time t" before being subtracted from the global accumulator at the time of claiming.
+
+Perhaps even more importantly, as long as the _change_ in interval accumulation is tracked correctly, the initial value should not make a difference.
+
+Interestingly, this edge case should not be possible in the other direction. That is, we cannot get negative
+interval accumulation inside if the upper is initialized after the lower and the current tick is less than the upper tick.
+The reason is that if the current tick is less than the tick we initialize, the snapshot becomes 0 by convention.
+As a result, the subtraction from the global accumulator for computing interval accumulation never leads to a
+negative value.
+
+Case 2: Initialize lower tick snapshot to be zero while upper tick snapshot to be non-zero when current tick < lower tick
+
+Assume that initially current tick > upper tick and the upper tick gets initialized by some position.
+Then, its accumulator snapshot is set to the global accumulator. Now, assume that the current tick
+moves under the future position's lower tick. Then, the position gets initialized.
+
+As a result, the lower tick is set to 0, and interval accumulation is
+`lower tick snapshot - upper tick snapshot = 0 - positive value = negative value`
 
 ## Swaps
 

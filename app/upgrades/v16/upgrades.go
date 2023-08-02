@@ -8,17 +8,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v16/app/keepers"
-	"github.com/osmosis-labs/osmosis/v16/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v17/app/keepers"
+	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
 
 	cosmwasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v16/x/tokenfactory/keeper"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v17/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v17/x/tokenfactory/types"
 )
 
 const (
@@ -31,7 +31,7 @@ const (
 	// We want quote asset to be DAI so that when the limit orders on ticks
 	// are implemented, we have tick spacing in terms of DAI as the quote.
 	DesiredDenom0 = "uosmo"
-	TickSpacing = 100
+	TickSpacing   = 100
 
 	// isPermissionlessPoolCreationEnabledCL is a boolean that determines if
 	// concentrated liquidity pools can be created via message. At launch,

@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
 var emptyCoins = sdk.DecCoins(nil)
@@ -23,7 +23,7 @@ func (k Keeper) createSpreadRewardAccumulator(ctx sdk.Context, poolId uint64) er
 
 // GetSpreadRewardAccumulator gets the spread reward accumulator object using the given poolOd
 // returns error if accumulator for the given poolId does not exist.
-func (k Keeper) GetSpreadRewardAccumulator(ctx sdk.Context, poolId uint64) (accum.AccumulatorObject, error) {
+func (k Keeper) GetSpreadRewardAccumulator(ctx sdk.Context, poolId uint64) (*accum.AccumulatorObject, error) {
 	return accum.GetAccumulator(ctx.KVStore(k.storeKey), types.KeySpreadRewardPoolAccumulator(poolId))
 }
 
@@ -60,7 +60,8 @@ func (k Keeper) initOrUpdatePositionSpreadRewardAccumulator(ctx sdk.Context, poo
 		return err
 	}
 
-	spreadRewardGrowthInside := spreadRewardAccumulator.GetValue().Sub(spreadRewardGrowthOutside)
+	// Note: this is SafeSub because interval accumulation is allowed to be negative.
+	spreadRewardGrowthInside, _ := spreadRewardAccumulator.GetValue().SafeSub(spreadRewardGrowthOutside)
 
 	if !hasPosition {
 		if !liquidityDelta.IsPositive() {
@@ -136,15 +137,10 @@ func (k Keeper) getSpreadRewardGrowthOutside(ctx sdk.Context, poolId uint64, low
 //
 // The value is chosen as if all of the spread rewards earned to date had occurred below the tick.
 // Returns error if the pool with the given id does exist or if fails to get the spread reward accumulator.
-func (k Keeper) getInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
-	pool, err := k.getPoolById(ctx, poolId)
-	if err != nil {
-		return sdk.DecCoins{}, err
-	}
-
+func (k Keeper) getInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, pool types.ConcentratedPoolExtension, tick int64) (sdk.DecCoins, error) {
 	currentTick := pool.GetCurrentTick()
 	if currentTick >= tick {
-		spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, poolId)
+		spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, pool.GetId())
 		if err != nil {
 			return sdk.DecCoins{}, err
 		}
@@ -264,10 +260,7 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 			return nil, err
 		}
 
-		totalSharesRemaining, err := spreadRewardAccumulator.GetTotalShares()
-		if err != nil {
-			return nil, err
-		}
+		totalSharesRemaining := spreadRewardAccumulator.GetTotalShares()
 
 		// if there are no shares remaining, the dust is ignored. Otherwise, it is added back to the global accumulator.
 		// Total shares remaining can be zero if we claim in withdrawPosition for the last position in the pool.
@@ -297,7 +290,7 @@ func calculateSpreadRewardGrowth(targetTick int64, ticksSpreadRewardGrowthOpposi
 // as we must set the position's accumulator value to the sum of
 // - the spread reward/uptime growth inside at position creation time (position.InitAccumValue)
 // - spread reward/uptime growth outside at the current block time (spreadRewardGrowthOutside/uptimeGrowthOutside)
-func updatePositionToInitValuePlusGrowthOutside(accumulator accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) error {
+func updatePositionToInitValuePlusGrowthOutside(accumulator *accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) error {
 	position, err := accum.GetPosition(accumulator, positionKey)
 	if err != nil {
 		return err

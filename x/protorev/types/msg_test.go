@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 )
 
 func TestMsgSetHotRoutes(t *testing.T) {
@@ -520,6 +520,7 @@ func TestMsgSetPoolWeights(t *testing.T) {
 				BalancerWeight:     1,
 				StableWeight:       1,
 				ConcentratedWeight: 1,
+				CosmwasmWeight:     1,
 			},
 			false,
 		},
@@ -530,6 +531,7 @@ func TestMsgSetPoolWeights(t *testing.T) {
 				BalancerWeight:     0,
 				StableWeight:       1,
 				ConcentratedWeight: 1,
+				CosmwasmWeight:     1,
 			},
 			false,
 		},
@@ -540,6 +542,7 @@ func TestMsgSetPoolWeights(t *testing.T) {
 				BalancerWeight:     1,
 				StableWeight:       1,
 				ConcentratedWeight: 1,
+				CosmwasmWeight:     1,
 			},
 			true,
 		},
